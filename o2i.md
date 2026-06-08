@@ -2,10 +2,14 @@
 title: Von der Orientierung zur Wirkung
 subtitle: "Begriffe und Relationen für wirksames Handeln"
 author: nemron
-version: "0.1"
+version: "0.1 (wip)"
 abstract: |
   Wie werden Orientierung, Wegentscheidung, Umsetzung, Messung und Lernen so verbunden, dass visionsbezogene Wirkung entsteht?
-lang: de
+lang: de-DE
+figureTitle: "Abb."
+figPrefix:
+  - "Abb."
+  - "Abb."
 toc: yes
 toc-depth: 2
 callout-theme: gray
@@ -171,25 +175,23 @@ Ein Beispiel für Bedarfsspezialisierungen sind fachliche Bedarfe und daraus abg
 
 Key Results sind keine Strategie. Sie machen Fortschritt in der Operationalisierung eines wirkungsrelevanten Bedarfs überprüfbar.
 
-#### Initiative
+#### Intervention
 
 > [!definition]
-> Eine **Initiative** (en.: *initiative*; meta: `Initiative`)[^initiative] bezeichnet eine Intervention, mit der Fortschritt in Richtung eines [Key Results](#key-result) erzeugt werden soll. Kurz: Initiative = Mit welcher Intervention erzeugen wir Fortschritt?
+> Eine **Intervention** (en.: *intervention*; meta: `Intervention`)[^intervention] bezeichnet eine gezielte Einwirkung auf einen [operativen Kontext](#kontext), mit der ein [wirkungsrelevanter Bedarf](#bedarf) adressiert und eine strategisch relevante Veränderung erzeugt werden soll. Eine Intervention kann als Projekt, Maßnahme, Experiment, Programm, Initiative oder andere Umsetzungseinheit auftreten. Kurz: Intervention = Womit verändern wir den Kontext?
 >
-> [^initiative]: *Autorenableitung in Anlehnung an Rumelt2011 und Doerr2018*: Initiativen gehören zur Operationalisierung. Sie sind Wirkungshypothesen, keine Garantie für Zielerreichung.
+> [^intervention]: *Autorenableitung in Anlehnung an Rumelt2011, Porter1996 und Doerr2018*: Interventionen gehören zur Operationalisierung einer Wegentscheidung. Sie übersetzen strategische Handlungslogik in konkrete Eingriffe, bleiben aber Wirkungshypothesen und keine Garantie für Zielerreichung.
 
 ### Messung
 
-#### KPI
+#### Measure
 
 > [!definition]
-> Ein **KPI** (en.: *key performance indicator*; meta: `KPI`)[^kpi] bezeichnet eine stabile Messdefinition, mit der ein relevanter Zustand, eine Leistung oder eine Entwicklung in einem [operativen Kontext](#kontext) kontinuierlich beobachtet wird. Kurz: KPI = Womit messen wir einen relevanten Zustand kontinuierlich?
+> Ein **Measure** (de.: *Messgröße*; meta: `Measure`)[^measure] bezeichnet eine stabile Messdefinition, mit der ein relevanter Zustand, eine Leistung oder eine Entwicklung in einem [operativen Kontext](#kontext) beobachtet wird. Ein Measure kann Zielwerte tragen, wenn eine Intervention festlegt, welche Veränderung erreicht werden soll. Kurz: Measure = Womit messen wir einen relevanten Zustand?
 >
-> [^kpi]: *Quellenanker*: Parmenter2020 für KPIs und die Abgrenzung zu anderen Performance-Maßen; Barr2014 für methodische Entwicklung aussagefähiger Performance-Maße. *Autorenableitung in Anlehnung an Doerr2018 und Parmenter2020*: Ein KPI ist nicht identisch mit einem Key Result. Der KPI definiert, was und wie gemessen wird; das Key Result setzt einen konkreten Zielwert für einen KPI in einem Umsetzungszeitraum.
+> [^measure]: *Quellenanker*: Parmenter2020 für KPIs und die Abgrenzung zu anderen Performance-Maßen; Barr2014 für methodische Entwicklung aussagefähiger Performance-Maße. *Autorenableitung in Anlehnung an Doerr2018 und Parmenter2020*: Ein KPI ist eine entscheidungsrelevante Spezialisierung eines Measure. Ein Key Result kann einen konkreten Zielwert für ein Measure in einem Umsetzungszeitraum setzen.
 
 ### Wirkung
-
-%% md2pdf-hide-start %%
 
 ### To be discussed
 
@@ -257,17 +259,17 @@ Fit bedeutet, dass Aktivitäten nicht nur nebeneinander bestehen, sondern sich g
 Vorgemerkte Relationen:
 
 ```text
-CriticalSuccessFactor --selects--> KPI
+CriticalSuccessFactor --selects--> Measure
 ```
 
 Offen ist, ob `CriticalSuccessFactor` als Bestandteil von `Strategy` oder als externes, durch Strategie gerahmtes Element modelliert wird. Falls `CriticalSuccessFactor` Bestandteil von `Strategy` ist, ist eine Kompositionsrelation zu verwenden, keine semantische Rahmenrelation.
 
-Bis `CriticalSuccessFactor` ausmodelliert ist, kann `Strategy --frames--> KPI` als verdichtete Relation verwendet werden. Die Relation bedeutet nicht, dass KPIs direkt aus Strategie entstehen. Sie bedeutet: Strategy rahmt KPIs, bestimmt sie aber nicht unmittelbar; die Auswahl geeigneter KPIs erfolgt über die noch auszuarbeitende CSF-/Performance-Measure-Logik.
+Bis `CriticalSuccessFactor` ausmodelliert ist, kann `Strategy --frames--> Measure` als verdichtete Relation verwendet werden. Die Relation bedeutet nicht, dass Measures direkt aus Strategie entstehen. Sie bedeutet: Strategy rahmt Measures, bestimmt sie aber nicht unmittelbar; die Auswahl geeigneter Measures erfolgt über die noch auszuarbeitende CSF-/Performance-Measure-Logik.
 
 #### Umsetzung
 
 > [!definition]
-> **Umsetzung**[^implementation] ist die Übersetzung der Wegentscheidung in Objectives, Key Results, Initiativen, Verantwortlichkeiten, Takte, Messgrößen und Lernschleifen.
+> **Umsetzung**[^implementation] ist die Übersetzung der Wegentscheidung in Interventionen, Objectives, Key Results, Verantwortlichkeiten, Takte, Measures und Lernschleifen.
 >
 > [^implementation]: *Quellenanker*: Rumelt2011 für die Notwendigkeit kohärenter Aktionen; Doerr2018 für Objectives und Key Results; Parmenter2020 für KPI/CSF-Logik.
 
@@ -286,7 +288,7 @@ In der Regel haben Abteilungen eher:
 
 - Beiträge zur übergeordneten Wirkungskette,
 - Objectives und Key Results,
-- Initiativen oder Courses of Action,
+- Interventionen, Initiativen oder Courses of Action,
 - Capability-Beiträge,
 - Roadmaps,
 - Verantwortlichkeiten für Handlungsfelder oder Aktivitätssysteme.
@@ -302,23 +304,27 @@ Für Organisationen bedeutet das: Ein Bereich kann eine eigene Wegentscheidung b
 >
 > [^effect]: *Autorenableitung in Anlehnung an Porter1996, Doerr2018, Parmenter2020 und Barr2014*: Wirkung wird hier als Ergebnis der Umsetzung einer strategischen Wegentscheidung verstanden. Porter liefert die Logik des Wertbeitrags durch Aktivitätssysteme; Doerr, Parmenter und Barr liefern Instrumente zur Überprüfung von Fortschritt und Performance.
 
-%% md2pdf-hide-end %%
-
 ## Metamodell
 
-Das O2I-Metamodell trennt Semantik und Syntax. Die Semantik definiert die O2I-Begriffslogik; die Syntax beschreibt, wie diese Begriffslogik in einer Modellierungssprache dargestellt wird.
+Das O2I-Metamodell trennt Semantik und Syntax. Die Semantik definiert die O2I-Begriffslogik; die Syntax beschreibt, wie diese Begriffslogik in einer Modellierungssprache dargestellt wird.<!-- TODO: Aus der Einleitung muss klar werden *warum* ein Metamodell im Allgemeinen hilfreich ist und *warum* dieses Metamodell im speziellen hiflreich ist! -->
 
 ### Semantik
 
-Die Semantik trennt Ontologie und Typsystem. Die Ontologie beschreibt zulässige Element- und Relationstypen. Das Typsystem beschreibt Signaturen, Mengen und Kardinalitäten.
+Die O2I-Semantik übersetzt die Terminologie in eine modellierbare Struktur: Sie legt fest, welche semantischen Rollen ein O2I-Modell kennt, welche Relationen zwischen ihnen zulässig sind und nach welchen Regeln Modelle wohlgeformt sind.
 
-> tl;dr. Ontologie sagt, *welche Typen und Relationen existieren*; Typsystem sagt, *welche Mengen, Kardinalitäten und Signaturen zulässig sind*.
+> tl;dr. **Terminologie** definiert, *was die Begriffe fachlich-verbal bedeuten*; **Semantik** konkretisiert diese Bedeutung als *Modelltypen, Relationen und Wohlgeformtheitsregeln*; **Syntax** definiert, *wie diese Semantik in einer Modellierungssprache dargestellt wird*.
 
-#### Ontologie
+Die O2I General Impact Architecture in @fig:o2i-general-impact-architecture zeigt die semantischen Rollen und Makrorelationen des O2I-Metamodells auf abstrakter Ebene.
 
-Die Ontologie verwendet eine kompakte Spezifikationssyntax: `Subject --relation--> Object`. Sie beschreibt zulässige O2I-Kontexte und Relationstypen, keine einzelnen Instanzen und keine Kardinalitäten. Ein Kontext wie `Mission` oder `Vision` ist auf dieser Ebene kein einzelnes ArchiMate-Element, sondern ein semantischer Zusammenhang, der in einem konkreten Modell durch mehrere ArchiMate-Elemente und deren Relationen ausgearbeitet werden kann.
+![O2I - General Impact Architecture](<img/O2I - General Impact Architecture.png>){#fig:o2i-general-impact-architecture width=85%}
 
-Die Ontologie beschreibt daher zunächst Makrorelationen zwischen Kontexten, z. B. `Mission --motivates--> Vision`. Die Syntax legt anschließend fest, wie diese Kontexte mit ArchiMate-Basisformen aufgeklappt werden. Eine Relation wie `Actor --has--> Vision` bedeutet: Ein Akteur kann einen Vision-Kontext haben; wie dieser Kontext intern modelliert wird, ist Gegenstand der Syntax und des konkreten Modells.
+#### Wirkungsrollen
+
+Die O2I-Semantik konkretisiert Terminologiebegriffe als semantische Rollen in einer Wirkungslogik. Rollen wie `Mission`, `Vision`, `Strategy`, `Need`, `Intervention`, `Measure` und `Context` bezeichnen keine ArchiMate-Elementtypen, sondern fachliche Funktionen im Zusammenhang von Orientierung, Wegentscheidung, Bedarf, Umsetzung, Messung und Wirkung.
+
+#### Relationstypen
+
+Relationstypen beschreiben zulässige fachliche Makrorelationen zwischen semantischen Rollen, z. B. `Mission --motivates--> Vision`. O2I verwendet dafür eine kompakte Spezifikationssyntax: `Subject --relation--> Object`.
 
 ```text
 Actor --has--> Principle
@@ -337,28 +343,27 @@ Context --surfaces--> Need
 Need --refines--> Need
 Need --is-grounded-in--> Context
 Need --contributes-to--> Strategy
-Need --frames--> Objective
-Objective --is-evidenced-by--> KeyResult
-KeyResult --sets-target-for--> KPI
-KPI --measures--> Context
-Strategy --frames--> KPI
-Initiative --contributes-to--> KeyResult
-Initiative --changes--> Context
+Intervention --addresses--> Need
+Need --requires--> Intervention
+Strategy --directs--> Intervention
+Intervention --contributes-to--> Strategy
+Intervention --changes--> Context
+Intervention --sets-target-for--> Measure
+Measure --measures--> Context
+Strategy --frames--> Measure
 ```
 
-Die Ontologie bildet eine schlanke Wirkungslogik: Principles leiten Mission und Vision; Mission, verstanden als Existenzzweck, begründet, warum eine Vision angestrebt wird; Vision rahmt Strategy; Context macht Bedarfe sichtbar; Strategy qualifiziert strategisch relevante Bedarfe; Bedarfe können verfeinert werden, Beiträge zu Strategien nachvollziehbar machen und Objectives rahmen; Key Results machen Objective-Fortschritt überprüfbar; Initiativen erzeugen Fortschritt in Richtung Key Results.
+Die Relationstypen bilden eine schlanke Wirkungslogik: Principles leiten Mission und Vision; Mission, verstanden als Existenzzweck, begründet, warum eine Vision angestrebt wird; Vision rahmt Strategy; Context macht Bedarfe sichtbar; Strategy qualifiziert strategisch relevante Bedarfe; Bedarfe können verfeinert werden, Beiträge zu Strategien nachvollziehbar machen und Interventionen erforderlich machen; Interventionen verändern Context und legen Zielwerte für Measures fest; Measures machen relevante Zustände im Context beobachtbar.
 
-`Mission --motivates--> Vision`: Die Vision wird nicht als Nachweis modelliert, sondern als qualitatives Zielbild, das durch eine Mission motiviert wird. Der Nachweis entsteht später über Objective, Key Result, KPI, Initiative und Kontextveränderung.
+`Mission --motivates--> Vision`: Die Vision wird nicht als Nachweis modelliert, sondern als qualitatives Zielbild, das durch eine Mission motiviert wird. Der Nachweis entsteht später über Intervention, Measure und Kontextveränderung.
 
-Eine O2I-Relation zwischen Kontexten muss in der ArchiMate-Syntax nicht als einzelne Kante zwischen zwei Elementen erscheinen. Sie kann durch mehrere Relationen zwischen enthaltenen ArchiMate-Elementen realisiert oder als abgeleitete Makrorelation dokumentiert werden.
+`Intervention --addresses--> Need` bedeutet: Eine Intervention adressiert einen Bedarf, der im operativen Kontext sichtbar und durch Strategie als wirkungsrelevant qualifiziert ist. `Need --requires--> Intervention` bedeutet: Ein wirkungsrelevanter Bedarf kann eine Intervention erforderlich machen, legt aber noch keine Lösung fest. `Intervention --changes--> Context` bedeutet: Eine Intervention verändert die Arbeitsrealität. `Measure --measures--> Context` bedeutet: Eine stabile Messdefinition beobachtet Zustand, Leistung oder Entwicklung in einem operativen Kontext.
 
-`KPI --measures--> Context` bedeutet: Eine stabile Messdefinition beobachtet Zustand, Leistung oder Entwicklung in einem operativen Kontext. `KeyResult --sets-target-for--> KPI` bedeutet: Ein Key Result setzt einen konkreten Zielwert oder Zielzustand für eine Messgröße in einem OKR-Zeitraum. `Objective --is-evidenced-by--> KeyResult` bedeutet: Key Results belegen den Fortschritt eines Objectives. `Initiative --changes--> Context` bedeutet: Eine Initiative verändert die Arbeitsrealität. `Initiative --contributes-to--> KeyResult` bedeutet: Eine Initiative soll Fortschritt auf ein Key Result erzeugen.
+`Intervention --sets-target-for--> Measure` ist eine verdichtete Makrorelation. Sie bedeutet nicht, dass eine Intervention selbst misst oder mit einem Key Result identisch ist. Sie bedeutet: Eine Intervention enthält oder erzeugt eine Zielsetzung, die auf einem Measure ausgedrückt wird. `Strategy --frames--> Measure` ist ebenfalls eine abgeleitete Kurzrelation. Sie steht für die noch nicht ausmodellierte Performance-Logik, dass Measures über strategisch relevante Erfolgsfaktoren mit Strategie verbunden werden. Die Kurzrelation bedeutet nicht, dass Measures direkt aus Strategie entstehen.
 
-`Strategy --frames--> KPI` ist eine abgeleitete Kurzrelation. Sie steht für die noch nicht ausmodellierte Parmenter-Logik, dass KPIs über Critical Success Factors mit Strategie verbunden werden. Die Kurzrelation bedeutet nicht, dass KPIs direkt aus Strategie entstehen.
+#### Wohlgeformtheitsregeln
 
-#### Typsystem
-
-Das Typsystem beschreibt Signaturen, Mengen und Kardinalitäten. Ob ein konkreter Akteur keine, eine oder mehrere Visionen besitzt, ist eine Frage des jeweiligen Modells oder einer Typ- bzw. Kardinalitätsregel. Haskell-artig gelesen lassen sich mehrwertige Relationen über den Zieltyp ausdrücken:
+Wohlgeformtheitsregeln beschreiben Signaturen, Mengen, Kardinalitäten und weitere Constraints für zulässige O2I-Modelle. Ob ein konkreter Akteur keine, eine oder mehrere Visionen besitzt, ist eine Frage des jeweiligen Modells oder einer Kardinalitätsregel. Signaturartig gelesen lassen sich mehrwertige Relationen über den Zieltyp ausdrücken:
 
 ```text
 has :: Actor -> Set Principle
@@ -377,16 +382,17 @@ surfaces :: Context -> Set Need
 refines :: Need -> Set Need
 is-grounded-in :: Need -> Set Context
 contributes-to :: Need -> Set Strategy
-frames :: Need -> Set Objective
-is-evidenced-by :: Objective -> Set KeyResult
-sets-target-for :: KeyResult -> Set KPI
-measures :: KPI -> Set Context
-frames :: Strategy -> Set KPI
-contributes-to :: Initiative -> Set KeyResult
-changes :: Initiative -> Set Context
+addresses :: Intervention -> Set Need
+requires :: Need -> Set Intervention
+directs :: Strategy -> Set Intervention
+contributes-to :: Intervention -> Set Strategy
+changes :: Intervention -> Set Context
+sets-target-for :: Intervention -> Set Measure
+measures :: Measure -> Set Context
+frames :: Strategy -> Set Measure
 ```
 
-Die letzten beiden Relationen sind Container-Relationen zwischen Strategien unterschiedlicher Ebenen, z. B. Konzernstrategie, Ressortstrategie, Geschäftsstrategie und Funktionsstrategie. `directs` steht dabei als Kurzrelation für das Setzen von Zielen, Prioritäten und Leitplanken. Wichtig: Der messbare Beitrag läuft später präziser über Objectives, Key Results, Handlungsfelder, Initiativen und KPIs. Die Strategie-Relation ist eine verdichtete Kurzrelation.
+Die Strategie-Relationen zwischen `Strategy` und `Strategy` sind Container-Relationen zwischen Strategien unterschiedlicher Ebenen, z. B. Konzernstrategie, Ressortstrategie, Geschäftsstrategie und Funktionsstrategie. `directs` steht dabei als Kurzrelation für das Setzen von Zielen, Prioritäten und Leitplanken. Wichtig: Der messbare Beitrag läuft später präziser über Bedarfe, Interventionen, Measures und Kontextveränderungen. Die Strategie-Relation ist eine verdichtete Kurzrelation.
 
 ### Syntax
 
@@ -398,7 +404,9 @@ Dadurch können O2I-Modelle mit TOGAF-basierten Architekturmodellen und -sichten
 
 #### ArchiMate-Profil
 
-Die Syntax verwendet ArchiMate als visuelle Notation. O2I nutzt wenige ArchiMate-Basisformen und legt deren fachliche Lesart im O2I-System fest. Mission, Vision, Strategy, Need und weitere O2I-Begriffe werden in ArchiMate als Modellierungskontexte aufgeklappt: Ein Mission-Kontext wird durch ArchiMate `Driver` modelliert; ein Vision-Kontext durch ArchiMate `Goal`; ein Key-Result-Kontext durch ArchiMate `Outcome`.
+Die Syntax verwendet ArchiMate als visuelle Notation. O2I nutzt wenige ArchiMate-Basisformen und legt deren fachliche Lesart im O2I-System fest. Mission, Vision, Strategy, Need und weitere O2I-Begriffe werden in ArchiMate als Modellierungskontexte aufgeklappt: Ein Mission-Kontext wird durch ArchiMate `Driver` modelliert; ein Vision-Kontext durch ArchiMate `Goal`; ein Measure-Kontext durch ArchiMate `Assessment`.
+
+O2I-Rollen werden in der ArchiMate-Syntax nicht zwingend als einzelne ArchiMate-Elemente dargestellt. Eine Rolle wie `Mission` oder `Vision` kann durch einen Gruppierungsrahmen, ein Teilmodell oder mehrere ArchiMate-Elemente mit Relationen ausgearbeitet werden.
 
 #### Elementabbildung
 
@@ -409,6 +417,7 @@ ArchiMate Principle -> normative Orientierung
 ArchiMate Driver -> begründender, spannungserzeugender oder bedarfsanzeigender Faktor
 ArchiMate Goal -> qualitatives Ziel
 ArchiMate Outcome -> quantitatives Ziel oder quantitative Evidenzgröße
+ArchiMate Assessment -> Messgröße, Bewertung oder beobachtbare Evidenz
 ArchiMate Course of Action -> Wegentscheidung, Handlungslogik oder Intervention
 ArchiMate Work Package -> konkrete Umsetzungseinheit
 ArchiMate Gap -> Differenz zwischen Ist- und Sollzustand
@@ -426,6 +435,8 @@ Der O2I-Modellierungskontext wird über Kontext- oder Gruppierungsrahmen und kon
 
 O2I-Relationen sind fachliche Makrorelationen zwischen Modellierungskontexten. In ArchiMate werden sie durch zulässige ArchiMate-Relationen zwischen konkreten Elementen dargestellt. Die Relation wird mit dem O2I-Relationsnamen beschriftet, wenn dadurch die fachliche Bedeutung präziser wird.
 
+Eine O2I-Relation zwischen Kontexten muss in der ArchiMate-Syntax nicht als einzelne Kante zwischen zwei Elementen erscheinen. Sie kann durch mehrere Relationen zwischen enthaltenen ArchiMate-Elementen realisiert oder als abgeleitete Makrorelation dokumentiert werden.
+
 ```text
 Principle --influence[guides]--> Driver im Kontext Mission
 Principle --influence[guides]--> Goal im Kontext Vision
@@ -436,10 +447,10 @@ To be discussed:
 Course of Action im Kontext Strategy --realization[realizes]--> Goal im Kontext Vision
 Driver im Kontext Need --influence[frames]--> Goal im Kontext Objective
 Outcome im Kontext KeyResult --realization[evidences]--> Goal im Kontext Objective
-Outcome im Kontext KeyResult --association[sets-target-for]--> Assessment im Kontext KPI
-Assessment im Kontext KPI --association[measures]--> Context
-Course of Action im Kontext Initiative --influence[contributes-to]--> Outcome im Kontext KeyResult
-Course of Action im Kontext Initiative --influence[changes]--> Context
+Course of Action im Kontext Intervention --association[sets-target-for]--> Assessment im Kontext Measure
+Assessment im Kontext Measure --association[measures]--> Context
+Course of Action im Kontext Intervention --influence[addresses]--> Driver im Kontext Need
+Course of Action im Kontext Intervention --influence[changes]--> Context
 ```
 
 Die O2I-Relation `Vision --frames--> Strategy` wird in ArchiMate nicht als direkte Kante von einem einzelnen `Goal` zu einem einzelnen `Course of Action` erzwungen. Sie wird über die zulässige ArchiMate-Lesart abgebildet, dass eine Strategie als `Course of Action` ein qualitatives Ziel als `Goal` realisiert. O2I liest diese Struktur fachlich umgekehrt: Die Vision rahmt, welche Strategie sinnvoll ist.
