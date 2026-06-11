@@ -306,31 +306,27 @@ Für Organisationen bedeutet das: Ein Bereich kann eine eigene Wegentscheidung b
 
 ## Metamodell
 
-Das O2I-Metamodell trennt Semantik und Syntax. Die Semantik definiert die O2I-Begriffslogik aus O2I Core, O2I-Kontexten, O2I-Relationen und Wohlgeformtheitsregeln; die Syntax beschreibt, wie diese Begriffslogik in einer Modellierungssprache dargestellt wird.<!-- TODO: Aus der Einleitung muss klar werden *warum* ein Metamodell im Allgemeinen hilfreich ist und *warum* dieses Metamodell im speziellen hiflreich ist! --><!-- ED: approved -->
+Das O2I-Metamodell trennt Semantik und Syntax. Die Semantik definiert die O2I-Begriffslogik aus O2I-Primitives, O2I-Kontexten, O2I-Relationen und Wohlgeformtheitsregeln; die Syntax beschreibt, wie diese Begriffslogik in einer Modellierungssprache dargestellt wird.<!-- TODO: Aus der Einleitung muss klar werden *warum* ein Metamodell im Allgemeinen hilfreich ist und *warum* dieses Metamodell im speziellen hiflreich ist! --><!-- ED: approved -->
 
 ### Semantik
 
-Die O2I-Semantik übersetzt die Terminologie in eine modellierbare Struktur: Sie legt fest, welche O2I-Core-Formen das Modell verwendet, welche O2I-Kontexte diesen Formen fachliche Bedeutung geben, welche Relationen zwischen ihnen zulässig sind und nach welchen Regeln Modelle wohlgeformt sind.<!-- ED: approved -->
+Die O2I-Semantik übersetzt die Terminologie in eine modellierbare Struktur: Sie legt fest, welche O2I-Primitives das Modell verwendet, welche O2I-Kontexte diesen Primitives fachliche Bedeutung geben, welche Relationen zwischen ihnen zulässig sind und nach welchen Regeln Modelle wohlgeformt sind.<!-- ED: approved -->
 
-> tl;dr. **Terminologie** definiert, *was die Begriffe fachlich-verbal bedeuten*; **Semantik** konkretisiert diese Bedeutung als *O2I Core, O2I-Kontexte, O2I-Relationen und Wohlgeformtheitsregeln*; **Syntax** definiert, *wie diese Semantik in einer Modellierungssprache dargestellt wird*.<!-- ED: approved -->
+> tl;dr. **Terminologie** definiert, *was die Begriffe fachlich-verbal bedeuten*; **Semantik** konkretisiert diese Bedeutung als *O2I-Primitives, O2I-Kontexte, O2I-Relationen und Wohlgeformtheitsregeln*; **Syntax** definiert, *wie diese Semantik in einer Modellierungssprache dargestellt wird*.<!-- ED: approved -->
 
-Die Semantik wird im Folgenden in zwei Schritten entfaltet: Zuerst werden die fachlichen O2I-Kontexte geklärt, weil sie die grundlegenden Interpretationsrahmen der Wirkungsarchitektur bilden. Danach wird mit O2I Core der minimale abstrakte Kern beschrieben, über den diese Kontexte modellierbar werden.
+Die O2I-Semantik wird im Folgenden in zwei Schritten entfaltet: Zuerst werden die fachlichen O2I-Kontexte geklärt, weil sie die grundlegenden Interpretationsrahmen von Wirkungsarchitekturen bilden. Danach werden die O2I-Primitives als minimaler abstrakter Formvorrat beschrieben, der in O2I-Kontexten interpretiert wird und dort fachliche Bedeutung erhält.<!-- ED: approved -->
 
 #### O2I-Kontexte
 
-O2I formalisiert fachliche Standardbegriffe als O2I-Kontexte. Ein O2I-Kontext ist ein fachlicher Interpretationskontext, in dem eine O2I-Core-Form Bedeutung erhält. O2I-Kontexte wie `Mission`, `Vision`, `Strategy`, `Need`, `Intervention`, `Measure` und `Context` bezeichnen keine ArchiMate-Elementtypen, sondern fachliche Bedeutungsrahmen für Orientierung, Wegentscheidung, Bedarf, Umsetzung, Messung und Wirkung. Der O2I-Kontext `Context` bezeichnet dabei den operativen Kontext als fachlichen Begriff; er ist vom metasprachlichen Ausdruck "O2I-Kontext" zu unterscheiden.
+O2I formalisiert fachliche Standardbegriffe als O2I-Kontexte. Ein O2I-Kontext ist ein fachlicher Interpretationsrahmen, in dem ein O2I-Primitive Bedeutung erhält. O2I-Kontexte wie `Mission`, `Vision`, `Strategy`, `Need`, `Intervention`, `Measure` und `Context` bezeichnen keine ArchiMate-Elementtypen, sondern fachliche Bedeutungsrahmen für Orientierung, Wegentscheidung, Bedarf, Umsetzung, Messung und Wirkung. Der O2I-Kontext `Context` bezeichnet dabei den operativen Kontext als fachlichen Begriff; er ist vom metasprachlichen Ausdruck "O2I-Kontext" zu unterscheiden.
 
 Die O2I Context View in @fig:o2i-context-view zeigt die Kontextsicht des O2I-Metamodells: O2I-Kontexte und ihre Makrorelationen auf abstrakter Ebene.
 
 ![O2I Context View](<img/O2I Context.png>){#fig:o2i-context-view width=85%}
 
-#### O2I Core
+##### O2I-Kontextrelationen
 
-O2I Core bezeichnet die kleine Menge formaler Kernformen, über die O2I-Kontexte modellierbar werden: `Principle`, `Driver`, `Goal`, `Outcome`, `Assessment`, `Course of Action`, `Gap` und `Work Package`. Eine O2I-Core-Form hat keine vollständige fachliche O2I-Bedeutung für sich allein. Ihre fachliche Lesart entsteht aus der Kombination von Kernform und O2I-Kontext: Ein `Goal` im Kontext `Vision` ist ein qualitatives Zukunftsbild; ein `Goal` im Kontext `Objective` ist ein qualitatives Umsetzungsziel; ein `Course of Action` im Kontext `Strategy` ist eine Wegentscheidung; ein `Course of Action` im Kontext `Intervention` ist eine gezielte Einwirkung.
-
-#### Relationstypen
-
-Relationstypen beschreiben zulässige fachliche Makrorelationen zwischen O2I-Kontexten bzw. zwischen kontextualisierten O2I-Core-Formen, z. B. `Mission --motivates--> Vision`. O2I verwendet dafür eine kompakte Spezifikationssyntax: `Subject --relation--> Object`.
+O2I-Kontextrelationen beschreiben zulässige fachliche Makrorelationen zwischen O2I-Kontexten, z. B. `Mission --motivates--> Vision`. O2I verwendet dafür eine kompakte Spezifikationssyntax: `Subject --relation--> Object`.
 
 ```text
 Actor --has--> Principle
@@ -359,13 +355,17 @@ Measure --measures--> Context
 Strategy --frames--> Measure
 ```
 
-Die Relationstypen bilden eine schlanke Wirkungslogik: Principles leiten Mission und Vision; Mission, verstanden als Existenzzweck, begründet, warum eine Vision angestrebt wird; Vision rahmt Strategy; Context macht Bedarfe sichtbar; Strategy qualifiziert strategisch relevante Bedarfe; Bedarfe können verfeinert werden, Beiträge zu Strategien nachvollziehbar machen und Interventionen erforderlich machen; Interventionen verändern den operativen Context und legen Zielwerte für Measures fest; Measures machen relevante Zustände im operativen Context beobachtbar.
+Die O2I-Kontextrelationen bilden eine schlanke Wirkungslogik: Principles leiten Mission und Vision; Mission, verstanden als Existenzzweck, begründet, warum eine Vision angestrebt wird; Vision rahmt Strategy; Context macht Bedarfe sichtbar; Strategy qualifiziert strategisch relevante Bedarfe; Bedarfe können verfeinert werden, Beiträge zu Strategien nachvollziehbar machen und Interventionen erforderlich machen; Interventionen verändern den operativen Context und legen Zielwerte für Measures fest; Measures machen relevante Zustände im operativen Context beobachtbar.
 
 `Mission --motivates--> Vision`: Die Vision wird nicht als Nachweis modelliert, sondern als qualitatives Zielbild, das durch eine Mission motiviert wird. Der Nachweis entsteht später über Intervention, Measure und Kontextveränderung.
 
 `Intervention --addresses--> Need` bedeutet: Eine Intervention adressiert einen Bedarf, der im operativen Kontext sichtbar und durch Strategie als wirkungsrelevant qualifiziert ist. `Need --requires--> Intervention` bedeutet: Ein wirkungsrelevanter Bedarf kann eine Intervention erforderlich machen, legt aber noch keine Lösung fest. `Intervention --changes--> Context` bedeutet: Eine Intervention verändert die Arbeitsrealität. `Measure --measures--> Context` bedeutet: Eine stabile Messdefinition beobachtet Zustand, Leistung oder Entwicklung in einem operativen Kontext.
 
 `Intervention --sets-target-for--> Measure` ist eine verdichtete Makrorelation. Sie bedeutet nicht, dass eine Intervention selbst misst oder mit einem Key Result identisch ist. Sie bedeutet: Eine Intervention enthält oder erzeugt eine Zielsetzung, die auf einem Measure ausgedrückt wird. `Strategy --frames--> Measure` ist ebenfalls eine abgeleitete Kurzrelation. Sie steht für die noch nicht ausmodellierte Performance-Logik, dass Measures über strategisch relevante Erfolgsfaktoren mit Strategie verbunden werden. Die Kurzrelation bedeutet nicht, dass Measures direkt aus Strategie entstehen.
+
+#### O2I-Primitives
+
+O2I-Primitives sind die abstrakten formalen Träger, die in O2I-Kontexten interpretiert werden und dort fachliche Bedeutung erhalten. Sie umfassen `Principle`, `Driver`, `Goal`, `Outcome`, `Assessment`, `Course of Action`, `Gap` und `Work Package`. Ein O2I-Primitive hat keine vollständige fachliche O2I-Bedeutung für sich allein. Seine fachliche Lesart entsteht aus der Kombination von Primitive und O2I-Kontext: Ein `Goal` im Kontext `Vision` ist ein qualitatives Zukunftsbild; ein `Goal` im Kontext `Objective` ist ein qualitatives Umsetzungsziel; ein `Course of Action` im Kontext `Strategy` ist eine Wegentscheidung; ein `Course of Action` im Kontext `Intervention` ist eine gezielte Einwirkung.
 
 #### Wohlgeformtheitsregeln
 
@@ -404,42 +404,42 @@ Die Strategie-Relationen zwischen `Strategy` und `Strategy` sind Container-Relat
 
 Die ArchiMate-Profilierung bildet die Syntax-Komponente des O2I-Metamodells. O2I definiert die fachliche Semantik; ArchiMate stellt die visuelle Syntax zur Darstellung und Integration von O2I-Modellen mit Enterprise-Architecture-Artefakten bereit.
 
-O2I kann mit ArchiMate modelliert werden, ohne die O2I-Semantik durch ArchiMate-Semantik zu ersetzen. ArchiMate dient dabei als gemeinsame Modellierungssprache; O2I legt fest, welche fachliche Bedeutung die verwendeten Elemente als O2I-Core-Formen in einem O2I-Kontext besitzen.
+O2I kann mit ArchiMate modelliert werden, ohne die O2I-Semantik durch ArchiMate-Semantik zu ersetzen. ArchiMate dient dabei als gemeinsame Modellierungssprache; O2I legt fest, welche fachliche Bedeutung die verwendeten Elemente als O2I-Primitives in einem O2I-Kontext besitzen.
 
 Dadurch können O2I-Modelle mit TOGAF-basierten Architekturmodellen und -sichten (z.B. Business-Capability-Maps, Application Views, Prozessmodellen oder Technologielandschaften) in einer gemeinsamen Modellierungssprache verbunden werden. ArchiMate wird damit nicht nur für Enterprise-Architecture-Strukturen verwendet, sondern auch für die explizite Modellierung von Orientierung und Wirksamkeit. Das Ergebnis ist ein kohärenter Wissensgraph, in dem normative Orientierung, strategische Wegentscheidungen, operative Umsetzung und Architekturartefakte anschlussfähig bleiben.
 
 #### ArchiMate-Profil
 
-Die Syntax verwendet ArchiMate als visuelle Notation. O2I-Core-Formen werden in ArchiMate durch wenige ArchiMate-Basisformen dargestellt. Mission, Vision, Strategy, Need und weitere O2I-Kontexte werden in ArchiMate als strukturierte Modellbereiche aufgeklappt: Ein Mission-Kontext wird durch ArchiMate `Driver` modelliert; ein Vision-Kontext durch ArchiMate `Goal`; ein Measure-Kontext durch ArchiMate `Assessment`.
+Die Syntax verwendet ArchiMate als visuelle Notation. O2I-Primitives werden in ArchiMate durch wenige ArchiMate-Basisformen dargestellt. Mission, Vision, Strategy, Need und weitere O2I-Kontexte werden in ArchiMate als strukturierte Modellbereiche aufgeklappt: Ein Mission-Kontext wird durch ArchiMate `Driver` modelliert; ein Vision-Kontext durch ArchiMate `Goal`; ein Measure-Kontext durch ArchiMate `Assessment`.
 
 O2I-Kontexte werden in der ArchiMate-Syntax nicht zwingend als einzelne ArchiMate-Elemente dargestellt. Ein Kontext wie `Mission` oder `Vision` kann durch einen Gruppierungsrahmen, ein Teilmodell oder mehrere ArchiMate-Elemente mit Relationen ausgearbeitet werden.
 
-#### Core-Abbildung
+#### O2I-Primitives-Abbildung
 
-Die folgende Zuordnung zeigt, wie O2I-Core-Formen durch ArchiMate-Basisformen dargestellt werden und welche Grundlesart sie im O2I-System tragen:
+Die folgende Zuordnung zeigt, wie O2I-Primitives durch ArchiMate-Basisformen dargestellt werden und welche Grundlesart sie im O2I-System tragen:
 
 ```text
-O2I Core Principle -> ArchiMate Principle -> normative Orientierung
-O2I Core Driver -> ArchiMate Driver -> begründender, spannungserzeugender oder bedarfsanzeigender Faktor
-O2I Core Goal -> ArchiMate Goal -> qualitatives Ziel
-O2I Core Outcome -> ArchiMate Outcome -> quantitatives Ziel oder quantitative Evidenzgröße
-O2I Core Assessment -> ArchiMate Assessment -> Messgröße, Bewertung oder beobachtbare Evidenz
-O2I Core Course of Action -> ArchiMate Course of Action -> Wegentscheidung, Handlungslogik oder Intervention
-O2I Core Work Package -> ArchiMate Work Package -> konkrete Umsetzungseinheit
-O2I Core Gap -> ArchiMate Gap -> Differenz zwischen Ist- und Sollzustand
+O2I-Primitive Principle -> ArchiMate Principle -> normative Orientierung
+O2I-Primitive Driver -> ArchiMate Driver -> begründender, spannungserzeugender oder bedarfsanzeigender Faktor
+O2I-Primitive Goal -> ArchiMate Goal -> qualitatives Ziel
+O2I-Primitive Outcome -> ArchiMate Outcome -> quantitatives Ziel oder quantitative Evidenzgröße
+O2I-Primitive Assessment -> ArchiMate Assessment -> Messgröße, Bewertung oder beobachtbare Evidenz
+O2I-Primitive Course of Action -> ArchiMate Course of Action -> Wegentscheidung, Handlungslogik oder Intervention
+O2I-Primitive Work Package -> ArchiMate Work Package -> konkrete Umsetzungseinheit
+O2I-Primitive Gap -> ArchiMate Gap -> Differenz zwischen Ist- und Sollzustand
 ```
 
 Ein ArchiMate `Goal` bezeichnet in O2I grundsätzlich ein qualitatives Ziel. Im Kontext einer Vision ist ein `Goal` als qualitativer Orientierungszustand oder qualitative Ausrichtung zu verstehen. Im Kontext der Operationalisierung ist ein `Goal` als Objective zu verstehen. Ein ArchiMate `Outcome` bezeichnet in O2I grundsätzlich ein quantitatives Ziel oder eine quantitative Evidenzgröße; es wird insbesondere für Key Results verwendet.
 
 Ein ArchiMate `Driver` bezeichnet in O2I grundsätzlich einen begründenden, spannungserzeugenden oder bedarfsanzeigenden Faktor. Im Kontext einer Mission beschreibt ein `Driver` einen Treiber des grundlegenden Existenzzwecks. Im Kontext eines Need beschreibt ein `Driver` einen begründeten Änderungs- oder Handlungsbedarf.
 
-Ein O2I-Kontext wird über Kontext- oder Gruppierungsrahmen und konsistente Modellkonventionen gekennzeichnet, z. B. `Mission : O2I Ctx` oder `Vision : O2I Ctx`. Die Elementsemantik ergibt sich aus der O2I-Core-Form und dem jeweiligen O2I-Kontext.
+Ein O2I-Kontext wird über Kontext- oder Gruppierungsrahmen und konsistente Modellkonventionen gekennzeichnet, z. B. `Mission : O2I Ctx` oder `Vision : O2I Ctx`. Die Elementsemantik ergibt sich aus dem O2I-Primitive und dem jeweiligen O2I-Kontext.
 
 Der O2I-Kontext `Context` ist kein isolierter ArchiMate-Motivationstyp. Ein operativer Kontext wird in ArchiMate durch konkrete Architekturartefakte modelliert, z. B. Business Capability, Business Process oder regulatorische Anforderungen. O2I `Context` ist damit ein fachlicher Interpretationskontext, der durch passende ArchiMate-Elemente instanziiert wird.
 
 #### Relationsabbildung
 
-O2I-Relationen sind fachliche Makrorelationen zwischen O2I-Kontexten bzw. zwischen kontextualisierten O2I-Core-Formen. In ArchiMate werden sie durch zulässige ArchiMate-Relationen zwischen konkreten Elementen dargestellt. Die Relation wird mit dem O2I-Relationsnamen beschriftet, wenn dadurch die fachliche Bedeutung präziser wird.
+O2I-Relationen sind fachliche Makrorelationen zwischen O2I-Kontexten bzw. zwischen kontextualisierten O2I-Primitives. In ArchiMate werden sie durch zulässige ArchiMate-Relationen zwischen konkreten Elementen dargestellt. Die Relation wird mit dem O2I-Relationsnamen beschriftet, wenn dadurch die fachliche Bedeutung präziser wird.
 
 Eine O2I-Relation zwischen O2I-Kontexten muss in der ArchiMate-Syntax nicht als einzelne Kante zwischen zwei Elementen erscheinen. Sie kann durch mehrere Relationen zwischen enthaltenen ArchiMate-Elementen realisiert oder als abgeleitete Makrorelation dokumentiert werden.
 
@@ -484,10 +484,40 @@ Die äußeren O2I-Kästen sind damit O2I-Kontexte; die fachlich wirksame Relatio
 #### Modellierungsregeln
 
 - ArchiMate ist Syntax; O2I ist Semantik.
-- O2I-Begriffe wie Mission, Vision oder Strategy werden als O2I-Kontexte beziehungsweise strukturierte Teilmodelle über O2I-Core-Formen modelliert.
+- O2I-Begriffe wie Mission, Vision oder Strategy werden als O2I-Kontexte beziehungsweise strukturierte Teilmodelle über O2I-Primitives modelliert.
 - Ein ArchiMate `Goal` bezeichnet in O2I ein qualitatives Ziel; ein ArchiMate `Outcome` bezeichnet in O2I ein quantitatives Ziel oder eine quantitative Evidenzgröße.
 - O2I-Makrorelationen dürfen aus mehreren ArchiMate-Relationen abgeleitet werden.
 - Aggregations- oder Kompositionskanten zwischen O2I-Kontexten ersetzen keine fachliche Relation zwischen den enthaltenen Elementen.
 - Gleichartige Elemente dürfen komponiert oder aggregiert werden, wenn dadurch eine fachliche Zerlegung ausgedrückt wird.
 - `Context` wird nicht auf ein einzelnes ArchiMate-Element reduziert, sondern durch konkrete Architekturartefakte instanziiert.
 - Wenn eine O2I-Relation nicht mit einer zulässigen ArchiMate-Relation ausdrückbar ist, muss sie als abgeleitete Relation dokumentiert werden.
+
+# Anhang
+
+## WTF Strategie?
+
+TODO Mittels Terminologie und Metamodell Syntax kurz und knapp aber präzise beantworten.
+
+## WTF Kontext?
+
+TODO Mittels Terminologie und Metamodell Syntax kurz und knapp aber präzise beantworten.
+
+## WTF Bedarf?
+
+TODO Mittels Terminologie und Metamodell Syntax kurz und knapp aber präzise beantworten.
+
+## HTH wirkungsrelevanter Bedarf identifiziert?
+
+TODO Mittels Terminologie und Metamodell Syntax kurz und knapp aber präzise beantworten.
+
+ED note: How the heck do you identify needs that are relevant to effectiveness? How to qualify Need?
+
+## WTF Intervention?
+
+TODO Mittels Terminologie und Metamodell Syntax kurz und knapp aber präzise beantworten.
+
+## HTH Wirkung nachweisen?
+
+TODO Mittels Terminologie und Metamodell Syntax kurz und knapp aber präzise beantworten.
+
+ED note: How to demonstrate effectiveness?
