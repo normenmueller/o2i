@@ -318,7 +318,7 @@ Die O2I-Semantik übersetzt die Terminologie in eine modellierbare Struktur: Sie
 
 Die O2I-Semantik wird im Folgenden in zwei Schritten entfaltet: Zuerst werden die fachlichen O2I-Kontexte geklärt, weil sie die grundlegenden Interpretationsrahmen von Wirkungsarchitekturen bilden. Danach werden die O2I-Primitives als minimaler abstrakter Formvorrat beschrieben, der in O2I-Kontexten interpretiert wird und dort fachliche Bedeutung erhält.<!-- ED: approved -->
 
-#### O2I-Kontexte
+#### Kontexte
 
 O2I formalisiert fachliche Standardbegriffe als O2I-Kontexte. Ein O2I-Kontext ist ein fachlicher Interpretationsrahmen, in dem ein O2I-Primitive Bedeutung erhält. Anders gesagt: O2I-Kontexte wie `Mission`, `Vision`, `Strategy`, `Need`, `Intervention`, `Measure` und `Context` sind fachliche Interpretationsrahmen für die in der Terminologie eingeführten Domänen Orientierung, Wegentscheidung, Kontextualisierung, Operationalisierung, Messung und Wirkung. Der O2I-Kontext `Context` bezeichnet dabei den operativen Kontext als fachlichen Begriff; er ist vom metasprachlichen Ausdruck "O2I-Kontext" zu unterscheiden.<!-- ED: approved -->
 
@@ -327,6 +327,8 @@ O2I formalisiert fachliche Standardbegriffe als O2I-Kontexte. Ein O2I-Kontext is
 ![O2I Context View](<img/O2I Context.png>){#fig:o2i-context-view width=85%}
 
 Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen: Sie zeigt die zuvor eingeführten fachlichen Standardbegriffe als O2I-Kontexte und macht sichtbar, welche Makrorelationen zwischen diesen Kontexten zulässig sind. Sie ersetzt die terminologischen Definitionen nicht, sondern fasst ihre teleologische Wirkungslogik auf Metamodellebene zusammen.<!-- ED: approved -->
+
+Die grafische Sicht dient der Orientierung; die folgende Relationenspezifikation legt die zulässigen O2I-Kontextrelationen explizit fest. Sie macht die Darstellung eindeutig, referenzierbar und als Grundlage für Wohlgeformtheitsregeln verwendbar.<!-- ED: approved -->
 
 O2I-Kontextrelationen beschreiben zulässige fachliche Makrorelationen zwischen O2I-Kontexten, z. B. `Mission --motivates--> Vision`. O2I verwendet dafür eine kompakte Spezifikationssyntax: `Subject --relation--> Object`.
 
@@ -339,7 +341,7 @@ Actor --has--> Context
 Principle --guides--> Mission
 Mission --motivates--> Vision
 Principle --guides--> Vision
-Vision --frames--> Strategy
+Vision --orients--> Strategy
 Strategy --directs--> Strategy
 Strategy --contributes-to--> Strategy
 Strategy --qualifies--> Need
@@ -357,17 +359,48 @@ Measure --measures--> Context
 Strategy --frames--> Measure
 ```
 
-Die O2I-Kontextrelationen bilden eine schlanke Wirkungslogik: Principles leiten Mission und Vision; Mission, verstanden als Existenzzweck, begründet, warum eine Vision angestrebt wird; Vision rahmt Strategy; Context macht Bedarfe sichtbar; Strategy qualifiziert strategisch relevante Bedarfe; Bedarfe können verfeinert werden, Beiträge zu Strategien nachvollziehbar machen und Interventionen erforderlich machen; Interventionen verändern den operativen Context und legen Zielwerte für Measures fest; Measures machen relevante Zustände im operativen Context beobachtbar.
+Die O2I-Kontextrelationen bilden eine schlanke teleologische Wirkungslogik, d.h. die Relationen drücken Zweck-, Mittel-, Qualifikations- und Nachweiszusammenhänge aus:<!-- ED: approved -->
 
-`Mission --motivates--> Vision`: Die Vision wird nicht als Nachweis modelliert, sondern als qualitatives Zielbild, das durch eine Mission motiviert wird. Der Nachweis entsteht später über Intervention, Measure und Kontextveränderung.
+> Leitprinzipien leiten Mission und Vision; Mission, verstanden als Existenzzweck, begründet, warum eine Vision angestrebt wird; Vision gibt der Strategie Richtung; Kontexte machen Bedarfe unterschiedlicher Art sichtbar; Strategie qualifiziert strategisch relevante Bedarfe. Wirkungsrelevante Bedarfe entstehen dort, wo ein Bedarf im operativen Kontext sichtbar wird und durch Strategie als strategisch relevant qualifiziert ist. Bedarfe können verfeinert werden und Beiträge zu Strategien nachvollziehbar machen; Interventionen sind in O2I nur für wirkungsrelevante Bedarfe vorgesehen, verändern den operativen Kontext und legen Zielwerte für Performanzmessungen fest; Performanzmessungen machen relevante Zustände im operativen Kontext beobachtbar.<!-- ED: approved -->
 
-`Intervention --addresses--> Need` bedeutet: Eine Intervention adressiert einen Bedarf, der im operativen Kontext sichtbar und durch Strategie als wirkungsrelevant qualifiziert ist. `Need --requires--> Intervention` bedeutet: Ein wirkungsrelevanter Bedarf kann eine Intervention erforderlich machen, legt aber noch keine Lösung fest. `Intervention --changes--> Context` bedeutet: Eine Intervention verändert die Arbeitsrealität. `Measure --measures--> Context` bedeutet: Eine stabile Messdefinition beobachtet Zustand, Leistung oder Entwicklung in einem operativen Kontext.
+Einige Relationen verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:<!-- ED: approved -->
 
-`Intervention --sets-target-for--> Measure` ist eine verdichtete Makrorelation. Sie bedeutet nicht, dass eine Intervention selbst misst oder mit einem Key Result identisch ist. Sie bedeutet: Eine Intervention enthält oder erzeugt eine Zielsetzung, die auf einem Measure ausgedrückt wird. `Strategy --frames--> Measure` ist ebenfalls eine abgeleitete Kurzrelation. Sie steht für die noch nicht ausmodellierte Performance-Logik, dass Measures über strategisch relevante Erfolgsfaktoren mit Strategie verbunden werden. Die Kurzrelation bedeutet nicht, dass Measures direkt aus Strategie entstehen.
+`Mission --motivates--> Vision`: Die Vision wird nicht als Nachweis modelliert, sondern als qualitatives Zielbild, das durch eine Mission motiviert wird. Der Nachweis entsteht später über Intervention, Measure und Kontextveränderung.<!-- ED: approved -->
 
-#### O2I-Primitives
+`Intervention --addresses--> Need`: Eine Intervention adressiert einen Bedarf, der im operativen Kontext sichtbar *und* durch Strategie als wirkungsrelevant qualifiziert ist.<!-- ED: approved -->
 
-O2I-Primitives sind die abstrakten formalen Träger, die in O2I-Kontexten interpretiert werden und dort fachliche Bedeutung erhalten. Sie umfassen `Principle`, `Driver`, `Goal`, `Outcome`, `Assessment`, `Course of Action`, `Gap` und `Work Package`. Ein O2I-Primitive hat keine vollständige fachliche O2I-Bedeutung für sich allein. Seine fachliche Lesart entsteht aus der Kombination von Primitive und O2I-Kontext: Ein `Goal` im Kontext `Vision` ist ein qualitatives Zukunftsbild; ein `Goal` im Kontext `Objective` ist ein qualitatives Umsetzungsziel; ein `Course of Action` im Kontext `Strategy` ist eine Wegentscheidung; ein `Course of Action` im Kontext `Intervention` ist eine gezielte Einwirkung.
+`Need --requires--> Intervention`: Ein wirkungsrelevanter Bedarf kann eine Intervention erforderlich machen, legt aber noch keine Lösung fest.<!-- ED: approved -->
+
+`Intervention --changes--> Context`: Eine Intervention verändert die Arbeitsrealität.<!-- ED: approved -->
+
+`Measure --measures--> Context`: Eine stabile Messdefinition beobachtet Zustand, Leistung oder Entwicklung in einem operativen Kontext.<!-- ED: approved -->
+
+`Intervention --sets-target-for--> Measure`: Diese Relation ist eine verdichtete Makrorelation. Sie bedeutet nicht, dass eine Intervention selbst misst oder mit einem Key Result identisch ist. Sie bedeutet: Eine Intervention enthält oder erzeugt eine Zielsetzung, die auf einem Measure ausgedrückt wird.<!-- ED: approved -->
+
+`Strategy --frames--> Measure`: Diese Relation ist ebenfalls eine abgeleitete Kurzrelation. Sie steht dafür, dass Measures über strategisch relevante Erfolgsfaktoren mit Strategie verbunden werden. Die Kurzrelation bedeutet nicht, dass Measures direkt aus Strategie entstehen.<!-- ED: approved -->
+
+#### Primitives
+
+O2I-Primitives sind die abstrakten formalen Träger, die in O2I-Kontexten interpretiert werden und dort fachliche Bedeutung erhalten. Sie bilden den minimalen abstrakten Formvorrat des O2I-Metamodells. Ein O2I-Primitive hat keine vollständige fachliche O2I-Bedeutung für sich allein; seine fachliche Lesart entsteht erst durch Interpretation in einem O2I-Kontext.
+
+@Fig:o2i-primitives-view zeigt die Primitives-Sicht des O2I-Metamodells: den abstrakten Formvorrat, mit dem O2I-Kontexte formal ausgearbeitet und interpretiert werden.
+
+![O2I Primitives View](<img/O2I Primitives.png>){#fig:o2i-primitives-view width=75%}
+
+Die Darstellung ist als semantische Übersicht zu lesen: Sie zeigt keine ArchiMate-Elemente, sondern die abstrakten O2I-Primitives, die später in der Syntax auf ArchiMate-Basisformen abgebildet werden. Die grafische Sicht dient der Orientierung; die folgende Spezifikation legt den zulässigen Formvorrat explizit fest.
+
+```text
+O2I-Primitive ::= Principle
+                | Driver
+                | Goal
+                | Outcome
+                | Assessment
+                | Course of Action
+                | Gap
+                | Work Package
+```
+
+Die O2I-Primitives bilden keine zweite Wirkungslogik neben den O2I-Kontextrelationen. Sie sind Formträger: `Principle` trägt normative Orientierung, `Driver` trägt begründende oder spannungserzeugende Faktoren, `Goal` trägt qualitative Zielzustände, `Outcome` trägt quantitative Ziele oder Evidenzgrößen, `Assessment` trägt Bewertungen, Messgrößen oder beobachtbare Evidenz, `Course of Action` trägt Handlungslogik, `Gap` trägt Differenzen zwischen Ist- und Sollzuständen und `Work Package` trägt konkrete Umsetzungseinheiten.
 
 #### Wohlgeformtheitsregeln
 
@@ -382,7 +415,7 @@ has :: Actor -> Set Context
 guides :: Principle -> Set Mission
 guides :: Principle -> Set Vision
 motivates :: Mission -> Set Vision
-frames :: Vision -> Set Strategy
+orients :: Vision -> Set Strategy
 directs :: Strategy -> Set Strategy
 contributes-to :: Strategy -> Set Strategy
 qualifies :: Strategy -> Set Need
@@ -402,6 +435,26 @@ frames :: Strategy -> Set Measure
 
 Die Strategie-Relationen zwischen `Strategy` und `Strategy` sind Container-Relationen zwischen Strategien unterschiedlicher Ebenen, z. B. Konzernstrategie, Ressortstrategie, Geschäftsstrategie und Funktionsstrategie. `directs` steht dabei als Kurzrelation für das Setzen von Zielen, Prioritäten und Leitplanken. Wichtig: Der messbare Beitrag läuft später präziser über Bedarfe, Interventionen, Measures und Kontextveränderungen. Die Strategie-Relation ist eine verdichtete Kurzrelation.
 
+#### Interpretationen
+
+O2I-Interpretationen beschreiben, welche fachliche Bedeutung ein O2I-Primitive in einem bestimmten O2I-Kontext erhält. Sie verbinden damit den abstrakten Formvorrat der O2I-Primitives mit den fachlichen Interpretationsrahmen der O2I-Kontexte.
+
+##### Vision
+
+Ein `Goal` im Kontext `Vision` ist ein qualitatives Zukunftsbild.
+
+##### Objective
+
+Ein `Goal` im Kontext `Objective` ist ein qualitatives Umsetzungsziel.
+
+##### Strategy
+
+Ein `Course of Action` im Kontext `Strategy` ist eine Wegentscheidung.
+
+##### Intervention
+
+Ein `Course of Action` im Kontext `Intervention` ist eine gezielte Einwirkung.
+
 ### Syntax
 
 Die ArchiMate-Profilierung bildet die Syntax-Komponente des O2I-Metamodells. O2I definiert die fachliche Semantik; ArchiMate stellt die visuelle Syntax zur Darstellung und Integration von O2I-Modellen mit Enterprise-Architecture-Artefakten bereit.
@@ -416,7 +469,7 @@ Die Syntax verwendet ArchiMate als visuelle Notation. O2I-Primitives werden in A
 
 O2I-Kontexte werden in der ArchiMate-Syntax nicht zwingend als einzelne ArchiMate-Elemente dargestellt. Ein Kontext wie `Mission` oder `Vision` kann durch einen Gruppierungsrahmen, ein Teilmodell oder mehrere ArchiMate-Elemente mit Relationen ausgearbeitet werden.
 
-#### O2I-Primitives-Abbildung
+#### Primitives-Abbildung
 
 Die folgende Zuordnung zeigt, wie O2I-Primitives durch ArchiMate-Basisformen dargestellt werden und welche Grundlesart sie im O2I-System tragen:
 
@@ -449,10 +502,10 @@ Eine O2I-Relation zwischen O2I-Kontexten muss in der ArchiMate-Syntax nicht als 
 Principle --influence[guides]--> Driver im Kontext Mission
 Principle --influence[guides]--> Goal im Kontext Vision
 Driver im Kontext Mission --influence[motivates]--> Goal im Kontext Vision
+Goal im Kontext Vision --influence[orients]--> Course of Action im Kontext Strategy
 
 To be discussed:
 
-Course of Action im Kontext Strategy --realization[realizes]--> Goal im Kontext Vision
 Driver im Kontext Need --influence[frames]--> Goal im Kontext Objective
 Outcome im Kontext KeyResult --realization[evidences]--> Goal im Kontext Objective
 Course of Action im Kontext Intervention --association[sets-target-for]--> Assessment im Kontext Measure
@@ -461,9 +514,9 @@ Course of Action im Kontext Intervention --influence[addresses]--> Driver im Kon
 Course of Action im Kontext Intervention --influence[changes]--> Context
 ```
 
-Die O2I-Relation `Vision --frames--> Strategy` wird in ArchiMate nicht als direkte Kante von einem einzelnen `Goal` zu einem einzelnen `Course of Action` erzwungen. Sie wird über die zulässige ArchiMate-Lesart abgebildet, dass eine Strategie als `Course of Action` ein qualitatives Ziel als `Goal` realisiert. O2I liest diese Struktur fachlich umgekehrt: Die Vision rahmt, welche Strategie sinnvoll ist.
+Die O2I-Relation `Vision --orients--> Strategy` kann in ArchiMate als `Influence`-Relation von einem `Goal` im Kontext `Vision` zu einem `Course of Action` im Kontext `Strategy` abgebildet werden. Fachlich bedeutet sie: Die Vision gibt der Strategie Richtung; die Strategie bleibt die Wegentscheidung, die diese Richtung unter gegebenen Bedingungen verfolgt.
 
-#### Abgeleitete O2I-Relationen
+#### Abgeleitete Relationen
 
 Eine O2I-Relation darf abgeleitet sein. Sie fasst dann mehrere ArchiMate-Elemente und -Relationen zu einer fachlichen Makrorelation zusammen.
 
