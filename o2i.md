@@ -79,9 +79,11 @@ Eine Definition wird nicht bloß behauptet. Sie wird nur verwendet, wenn sie ent
 
 # System
 
-Das O2I-System definiert die Begriffe, Relationen und Modellierungsregeln, mit denen Orientierung, Wegentscheidung, Operationalisierung, Messung und Wirkung konsistent beschrieben werden.
+Das O2I-System definiert die Begriffe, Relationen und Modellierungsregeln, mit denen Orientierung, Wegentscheidung, Kontextualisierung, Operationalisierung, Messung und Wirkung konsistent beschrieben werden.
 
 ## Terminologie
+
+Die Terminologie beschreibt eine *teleologische Wirkungslogik*: von Orientierung über Wegentscheidung, Kontextualisierung, Operationalisierung und Messung zu Wirkung. Diese sechs *fachlichen Domänen* ordnen die Standardbegriffe, welche O2I anschließend als O2I-Kontexte formalisiert.<!-- ED: approved -->
 
 ### Orientierung <!-- ED: approved -->
 
@@ -318,13 +320,13 @@ Die O2I-Semantik wird im Folgenden in zwei Schritten entfaltet: Zuerst werden di
 
 #### O2I-Kontexte
 
-O2I formalisiert fachliche Standardbegriffe als O2I-Kontexte. Ein O2I-Kontext ist ein fachlicher Interpretationsrahmen, in dem ein O2I-Primitive Bedeutung erhält. O2I-Kontexte wie `Mission`, `Vision`, `Strategy`, `Need`, `Intervention`, `Measure` und `Context` bezeichnen keine ArchiMate-Elementtypen, sondern fachliche Bedeutungsrahmen für Orientierung, Wegentscheidung, Bedarf, Umsetzung, Messung und Wirkung. Der O2I-Kontext `Context` bezeichnet dabei den operativen Kontext als fachlichen Begriff; er ist vom metasprachlichen Ausdruck "O2I-Kontext" zu unterscheiden.
+O2I formalisiert fachliche Standardbegriffe als O2I-Kontexte. Ein O2I-Kontext ist ein fachlicher Interpretationsrahmen, in dem ein O2I-Primitive Bedeutung erhält. Anders gesagt: O2I-Kontexte wie `Mission`, `Vision`, `Strategy`, `Need`, `Intervention`, `Measure` und `Context` sind fachliche Interpretationsrahmen für die in der Terminologie eingeführten Domänen Orientierung, Wegentscheidung, Kontextualisierung, Operationalisierung, Messung und Wirkung. Der O2I-Kontext `Context` bezeichnet dabei den operativen Kontext als fachlichen Begriff; er ist vom metasprachlichen Ausdruck "O2I-Kontext" zu unterscheiden.<!-- ED: approved -->
 
-Die O2I Context View in @fig:o2i-context-view zeigt die Kontextsicht des O2I-Metamodells: O2I-Kontexte und ihre Makrorelationen auf abstrakter Ebene.
+@Fig:o2i-context-view zeigt die Kontextsicht des O2I-Metamodells: O2I-Kontexte und ihre Makrorelationen auf abstrakter Ebene.<!-- ED: approved -->
 
 ![O2I Context View](<img/O2I Context.png>){#fig:o2i-context-view width=85%}
 
-##### O2I-Kontextrelationen
+Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen: Sie zeigt die zuvor eingeführten fachlichen Standardbegriffe als O2I-Kontexte und macht sichtbar, welche Makrorelationen zwischen diesen Kontexten zulässig sind. Sie ersetzt die terminologischen Definitionen nicht, sondern fasst ihre teleologische Wirkungslogik auf Metamodellebene zusammen.<!-- ED: approved -->
 
 O2I-Kontextrelationen beschreiben zulässige fachliche Makrorelationen zwischen O2I-Kontexten, z. B. `Mission --motivates--> Vision`. O2I verwendet dafür eine kompakte Spezifikationssyntax: `Subject --relation--> Object`.
 

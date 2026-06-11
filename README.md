@@ -12,7 +12,7 @@ Der aktive Artikel ist [`o2i.md`](./o2i.md). Das ArchiMate-Modell liegt unter [`
 - ArchiMate als Modellierungssprache für O2I-Modelle verwenden, wobei O2I-Kontexte über O2I-Primitives dargestellt und durch O2I-Relationen zu Wirkungsarchitekturen verbunden werden
 - konkrete Instanzen von der generischen Metamodell-Definition getrennt halten
 
-## Repository layout
+## Layout
 
 ```text
 o2i/
@@ -24,6 +24,14 @@ o2i/
 - `o2i.md`: aktiver Artikel und fachlicher Referenztext
 - `mdl/`: ArchiMate-Modell
 - `img/`: Abbildungen für Artikel und Modellkommunikation
+
+## Build
+
+Das PDF wird aus `o2i.md` mit [`md2pdf`](https://github.com/normenmueller/md2pdf) erzeugt:
+
+```sh
+md2pdf -o o2i.pdf -- o2i.md
+```
 
 ## License
 
