@@ -8,7 +8,8 @@ Der aktive Artikel ist [`o2i.md`](./o2i.md). Das ArchiMate-Modell liegt unter [`
 
 - zentrale Begriffe und Relationen für Wirkungsarchitekturen definieren
 - Terminologie, Semantik und ArchiMate-Syntax sauber trennen
-- ArchiMate als Modellierungssprache für O2I-Modelle verwenden, wobei die Semantik der Elemente durch O2I-Kontexte definiert wird
+- O2I als Metamodell zur Erstellung von Wirkungsarchitekturen definieren, bestehend aus O2I Core, O2I-Kontexten, O2I-Relationen und Wohlgeformtheitsregeln
+- ArchiMate als Modellierungssprache für O2I-Modelle verwenden, wobei O2I-Kontexte über O2I-Core-Formen dargestellt und durch O2I-Relationen zu Wirkungsarchitekturen verbunden werden
 - konkrete Instanzen von der generischen Metamodell-Definition getrennt halten
 
 ## Repository layout
