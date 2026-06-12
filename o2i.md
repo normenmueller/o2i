@@ -290,7 +290,7 @@ In der Regel haben Abteilungen eher:
 
 - Beiträge zur übergeordneten Wirkungskette,
 - Objectives und Key Results,
-- Interventionen, Initiativen oder Courses of Action,
+- Interventionen, Initiativen oder Actions,
 - Capability-Beiträge,
 - Roadmaps,
 - Verantwortlichkeiten für Handlungsfelder oder Aktivitätssysteme.
@@ -316,7 +316,7 @@ Die O2I-Semantik übersetzt die Terminologie in eine modellierbare Struktur: Sie
 
 > tl;dr. **Terminologie** definiert, *was die Begriffe fachlich-verbal bedeuten*; **Semantik** konkretisiert diese Bedeutung als *O2I-Primitives, O2I-Kontexte, O2I-Relationen und Wohlgeformtheitsregeln*; **Syntax** definiert, *wie diese Semantik in einer Modellierungssprache dargestellt wird*.<!-- ED: approved -->
 
-Die O2I-Semantik wird im Folgenden in zwei Schritten entfaltet: Zuerst werden die fachlichen O2I-Kontexte geklärt, weil sie die grundlegenden Interpretationsrahmen von Wirkungsarchitekturen bilden. Danach werden die O2I-Primitives als minimaler abstrakter Formvorrat beschrieben, der in O2I-Kontexten interpretiert wird und dort fachliche Bedeutung erhält.<!-- ED: approved -->
+Die O2I-Semantik wird im Folgenden in vier Perspektiven entfaltet: Zuerst werden die fachlichen O2I-Kontexte und ihre O2I-Relationen geklärt, weil sie die grundlegenden Interpretationsrahmen und Makrorelationen von Wirkungsarchitekturen bilden. Danach werden die O2I-Primitives und die Relationen der Primitives-Sicht als minimaler abstrakter Formvorrat beschrieben. Wohlgeformtheitsregeln legen anschließend fest, welche Strukturen in O2I-Modellen zulässig sind. O2I-Interpretationen beschreiben schließlich, welche fachliche Bedeutung ein O2I-Primitive in einem bestimmten O2I-Kontext erhält.
 
 #### Kontexte
 
@@ -333,11 +333,6 @@ Die grafische Sicht dient der Orientierung; die folgende Relationenspezifikation
 O2I-Kontextrelationen beschreiben zulässige fachliche Makrorelationen zwischen O2I-Kontexten, z. B. `Mission --motivates--> Vision`. O2I verwendet dafür eine kompakte Spezifikationssyntax: `Subject --relation--> Object`.
 
 ```text
-Actor --has--> Principle
-Actor --has--> Mission
-Actor --has--> Vision
-Actor --has--> Strategy
-Actor --has--> Context
 Principle --guides--> Mission
 Mission --motivates--> Vision
 Principle --guides--> Vision
@@ -383,35 +378,59 @@ Einige Relationen verdienen eine präzisierende Lesart, weil sie leicht missvers
 
 O2I-Primitives sind die abstrakten formalen Träger, die in O2I-Kontexten interpretiert werden und dort fachliche Bedeutung erhalten. Sie bilden den minimalen abstrakten Formvorrat des O2I-Metamodells. Ein O2I-Primitive hat keine vollständige fachliche O2I-Bedeutung für sich allein; seine fachliche Lesart entsteht erst durch Interpretation in einem O2I-Kontext.
 
-@Fig:o2i-primitives-view zeigt die Primitives-Sicht des O2I-Metamodells: den abstrakten Formvorrat, mit dem O2I-Kontexte formal ausgearbeitet und interpretiert werden.
+@Fig:o2i-primitives-view zeigt die Primitives-Sicht des O2I-Metamodells: den abstrakten Formvorrat und die Makrorelationen, mit denen O2I-Kontexte formal ausgearbeitet und interpretiert werden.
 
 ![O2I Primitives View](<img/O2I Primitives.png>){#fig:o2i-primitives-view width=75%}
 
-Die Darstellung ist als semantische Übersicht zu lesen: Sie zeigt keine ArchiMate-Elemente, sondern die abstrakten O2I-Primitives, die später in der Syntax auf ArchiMate-Basisformen abgebildet werden. Die grafische Sicht dient der Orientierung; die folgende Spezifikation legt den zulässigen Formvorrat explizit fest.
+Die Darstellung ist als semantische Übersicht zu lesen: Sie zeigt O2I-Primitives, mögliche Strukturierungsrahmen und zulässige Relationen der Primitives-Sicht, noch nicht ihre spätere syntaktische Abbildung. Die grafische Sicht dient der Orientierung; die folgende Spezifikation legt den zulässigen Formvorrat und die Relationen der Primitives-Sicht explizit fest.
 
 ```text
 O2I-Primitive ::= Principle
                 | Driver
-                | Goal
-                | Outcome
-                | Assessment
-                | Course of Action
+                | Objective
+                | Key Result
+                | KPI
+                | Action
                 | Gap
-                | Work Package
 ```
 
-Die O2I-Primitives bilden keine zweite Wirkungslogik neben den O2I-Kontextrelationen. Sie sind Formträger: `Principle` trägt normative Orientierung, `Driver` trägt begründende oder spannungserzeugende Faktoren, `Goal` trägt qualitative Zielzustände, `Outcome` trägt quantitative Ziele oder Evidenzgrößen, `Assessment` trägt Bewertungen, Messgrößen oder beobachtbare Evidenz, `Course of Action` trägt Handlungslogik, `Gap` trägt Differenzen zwischen Ist- und Sollzuständen und `Work Package` trägt konkrete Umsetzungseinheiten.
+Eine `KPI-Domäne` ist ein optionaler Strukturtyp der Primitives-Sicht, aber kein O2I-Primitive. Sie bezeichnet einen Messbereich, in dem relevante Zustände beobachtet werden können, bevor konkrete KPIs festgelegt werden.
+
+```text
+Principle --guides--> Driver
+Principle --guides--> Objective
+Driver --motivates--> Objective
+Driver --determines--> KPI-Domäne
+KPI-Domäne --contains--> KPI
+Key Result --translates-into--> Objective
+Key Result --substantiates--> Objective
+Key Result --sets-target-for--> KPI
+KPI --refines--> KPI
+Action --contributes-to--> Key Result
+Action --addresses--> Gap
+```
+
+Die Relationen der Primitives-Sicht bilden keine zweite Wirkungslogik neben den O2I-Kontextrelationen. Sie beschreiben die abstrakte Formlogik, mit der O2I-Kontexte später interpretiert werden: Prinzipien leiten Treiber und Objectives; Treiber motivieren Objectives und bestimmen relevante Messbereiche; Key Results substantiieren Objectives, können in nachgelagerte Objectives übersetzt werden und setzen Zielwerte für KPIs; KPIs können verfeinert werden; Actions tragen zu Key Results bei und adressieren Gaps.
+
+Einige Relationen der Primitives-Sicht verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:
+
+`Driver --determines--> KPI-Domäne`: Ein Driver bestimmt noch keinen konkreten KPI. Er grenzt zunächst ein, welche Art von Zustand beobachtet werden muss.
+
+`Key Result --sets-target-for--> KPI`: Ein Key Result ist nicht selbst die Messdefinition. Es legt einen Zielwert auf einem KPI fest.
+
+`Key Result --translates-into--> Objective`: Diese Relation beschreibt vertikale Operationalisierung. Ein Key Result einer höheren Ebene kann in ein qualitatives Objective einer nachgelagerten Ebene übersetzt werden.
+
+`KPI --refines--> KPI`: Ein KPI kann in spezifischere KPIs zerlegt werden, ohne dass dadurch ein neuer O2I-Primitive entsteht.
+
+`Action`: Eine Action ist eine Handlungshypothese. Sie kann zu einem Key Result beitragen und einen Gap adressieren, garantiert aber keine Zielerreichung.
+
+`Gap`: Ein Gap wird sichtbar, wenn der durch ein Key Result gesetzte Zielwert und der durch einen KPI beobachtete Istwert auseinanderfallen.
 
 #### Wohlgeformtheitsregeln
 
-Wohlgeformtheitsregeln beschreiben Signaturen, Mengen, Kardinalitäten und weitere Constraints für zulässige O2I-Modelle. Ob ein konkreter Akteur keine, eine oder mehrere Visionen besitzt, ist eine Frage des jeweiligen Modells oder einer Kardinalitätsregel. Signaturartig gelesen lassen sich mehrwertige Relationen über den Zieltyp ausdrücken:
+Wohlgeformtheitsregeln beschreiben Signaturen, Mengen, Kardinalitäten und weitere Constraints für zulässige O2I-Modelle. Signaturartig gelesen lassen sich mehrwertige Relationen über den Zieltyp ausdrücken:
 
 ```text
-has :: Actor -> Set Principle
-has :: Actor -> Set Mission
-has :: Actor -> Set Vision
-has :: Actor -> Set Strategy
-has :: Actor -> Set Context
 guides :: Principle -> Set Mission
 guides :: Principle -> Set Vision
 motivates :: Mission -> Set Vision
@@ -431,7 +450,27 @@ changes :: Intervention -> Set Context
 sets-target-for :: Intervention -> Set Measure
 measures :: Measure -> Set Context
 frames :: Strategy -> Set Measure
+
+guides :: Principle -> Set Driver
+guides :: Principle -> Set Objective
+motivates :: Driver -> Set Objective
+determines :: Driver -> Set KPI-Domäne
+contains :: KPI-Domäne -> Set KPI
+translates-into :: Key Result -> Set Objective
+substantiates :: Key Result -> Set Objective
+sets-target-for :: Key Result -> Set KPI
+refines :: KPI -> Set KPI
+contributes-to :: Action -> Set Key Result
+addresses :: Action -> Set Gap
 ```
+
+Aus diesen Signaturen ergeben sich zusätzliche Modellierungsregeln:
+
+- Ein `Objective` setzt keinen Zielwert für einen `KPI`; Zielwerte werden durch `Key Result` gesetzt.
+- Ein `KPI` ist eine stabile Messdefinition, nicht der beobachtete Messwert.
+- Ein `Key Result` kann in ein nachgelagertes `Objective` übersetzt werden; direkte Key-Result-zu-Key-Result-Abhängigkeiten werden nicht verwendet.
+- Eine `Action` ist eine Handlungshypothese. Sie kann zu einem `Key Result` beitragen, garantiert ihn aber nicht.
+- Ein `Gap` wird durch die Abweichung zwischen Key-Result-Zielwert und KPI-Istwert sichtbar.
 
 Die Strategie-Relationen zwischen `Strategy` und `Strategy` sind Container-Relationen zwischen Strategien unterschiedlicher Ebenen, z. B. Konzernstrategie, Ressortstrategie, Geschäftsstrategie und Funktionsstrategie. `directs` steht dabei als Kurzrelation für das Setzen von Zielen, Prioritäten und Leitplanken. Wichtig: Der messbare Beitrag läuft später präziser über Bedarfe, Interventionen, Measures und Kontextveränderungen. Die Strategie-Relation ist eine verdichtete Kurzrelation.
 
@@ -441,19 +480,31 @@ O2I-Interpretationen beschreiben, welche fachliche Bedeutung ein O2I-Primitive i
 
 ##### Vision
 
-Ein `Goal` im Kontext `Vision` ist ein qualitatives Zukunftsbild.
+Ein `Objective` im Kontext `Vision` ist ein qualitatives Zukunftsbild.
 
 ##### Objective
 
-Ein `Goal` im Kontext `Objective` ist ein qualitatives Umsetzungsziel.
+Ein `Objective` im Kontext `Objective` ist ein qualitatives Umsetzungsziel.
 
 ##### Strategy
 
-Ein `Course of Action` im Kontext `Strategy` ist eine Wegentscheidung.
+Eine `Action` im Kontext `Strategy` ist eine Wegentscheidung.
 
 ##### Intervention
 
-Ein `Course of Action` im Kontext `Intervention` ist eine gezielte Einwirkung.
+Eine `Action` im Kontext `Intervention` ist eine gezielte Einwirkung.
+
+##### Need
+
+TODO: Interpretationen für `Need` ergänzen.
+
+##### Measure
+
+TODO: Interpretationen für `Measure` ergänzen.
+
+##### Context
+
+TODO: Interpretationen für `Context` ergänzen.
 
 ### Syntax
 
@@ -476,15 +527,16 @@ Die folgende Zuordnung zeigt, wie O2I-Primitives durch ArchiMate-Basisformen dar
 ```text
 O2I-Primitive Principle -> ArchiMate Principle -> normative Orientierung
 O2I-Primitive Driver -> ArchiMate Driver -> begründender, spannungserzeugender oder bedarfsanzeigender Faktor
-O2I-Primitive Goal -> ArchiMate Goal -> qualitatives Ziel
-O2I-Primitive Outcome -> ArchiMate Outcome -> quantitatives Ziel oder quantitative Evidenzgröße
-O2I-Primitive Assessment -> ArchiMate Assessment -> Messgröße, Bewertung oder beobachtbare Evidenz
-O2I-Primitive Course of Action -> ArchiMate Course of Action -> Wegentscheidung, Handlungslogik oder Intervention
-O2I-Primitive Work Package -> ArchiMate Work Package -> konkrete Umsetzungseinheit
+O2I-Primitive Objective -> ArchiMate Goal -> qualitatives Ziel
+O2I-Primitive Key Result -> ArchiMate Outcome -> quantitative Evidenzgröße oder Zielwert
+O2I-Primitive KPI -> ArchiMate Assessment -> stabile Messdefinition
+O2I-Primitive Action -> ArchiMate Course of Action -> Wegentscheidung, Handlungslogik oder Intervention
 O2I-Primitive Gap -> ArchiMate Gap -> Differenz zwischen Ist- und Sollzustand
 ```
 
-Ein ArchiMate `Goal` bezeichnet in O2I grundsätzlich ein qualitatives Ziel. Im Kontext einer Vision ist ein `Goal` als qualitativer Orientierungszustand oder qualitative Ausrichtung zu verstehen. Im Kontext der Operationalisierung ist ein `Goal` als Objective zu verstehen. Ein ArchiMate `Outcome` bezeichnet in O2I grundsätzlich ein quantitatives Ziel oder eine quantitative Evidenzgröße; es wird insbesondere für Key Results verwendet.
+Ein ArchiMate `Goal` stellt in O2I das O2I-Primitive `Objective` dar. Im Kontext einer Vision ist es als qualitativer Orientierungszustand oder qualitative Ausrichtung zu verstehen. Im Kontext der Operationalisierung ist es als Objective im OKR-Sinn zu verstehen. Ein ArchiMate `Outcome` stellt in O2I das O2I-Primitive `Key Result` dar. Ein ArchiMate `Assessment` stellt in O2I das O2I-Primitive `KPI` dar.
+
+Ein ArchiMate `Work Package` kann eine konkrete Umsetzungseinheit darstellen, die eine Action realisiert. Es gehört jedoch nicht zum minimalen O2I-Primitive-Vorrat, weil die Semantik der Handlungshypothese bereits durch `Action` getragen wird.
 
 Ein ArchiMate `Driver` bezeichnet in O2I grundsätzlich einen begründenden, spannungserzeugenden oder bedarfsanzeigenden Faktor. Im Kontext einer Mission beschreibt ein `Driver` einen Treiber des grundlegenden Existenzzwecks. Im Kontext eines Need beschreibt ein `Driver` einen begründeten Änderungs- oder Handlungsbedarf.
 
@@ -503,12 +555,10 @@ Principle --influence[guides]--> Driver im Kontext Mission
 Principle --influence[guides]--> Goal im Kontext Vision
 Driver im Kontext Mission --influence[motivates]--> Goal im Kontext Vision
 Goal im Kontext Vision --influence[orients]--> Course of Action im Kontext Strategy
-
-To be discussed:
-
-Driver im Kontext Need --influence[frames]--> Goal im Kontext Objective
-Outcome im Kontext KeyResult --realization[evidences]--> Goal im Kontext Objective
-Course of Action im Kontext Intervention --association[sets-target-for]--> Assessment im Kontext Measure
+Driver im Kontext Need --influence[motivates]--> Goal im Kontext Objective
+Outcome im Kontext Key Result --influence[translates-into]--> Goal im Kontext Objective
+Outcome im Kontext Key Result --realization[substantiates]--> Goal im Kontext Objective
+Outcome im Kontext Key Result --association[sets-target-for]--> Assessment im Kontext Measure
 Assessment im Kontext Measure --association[measures]--> Context
 Course of Action im Kontext Intervention --influence[addresses]--> Driver im Kontext Need
 Course of Action im Kontext Intervention --influence[changes]--> Context
@@ -540,7 +590,7 @@ Die äußeren O2I-Kästen sind damit O2I-Kontexte; die fachlich wirksame Relatio
 
 - ArchiMate ist Syntax; O2I ist Semantik.
 - O2I-Begriffe wie Mission, Vision oder Strategy werden als O2I-Kontexte beziehungsweise strukturierte Teilmodelle über O2I-Primitives modelliert.
-- Ein ArchiMate `Goal` bezeichnet in O2I ein qualitatives Ziel; ein ArchiMate `Outcome` bezeichnet in O2I ein quantitatives Ziel oder eine quantitative Evidenzgröße.
+- Ein ArchiMate `Goal` stellt in O2I ein `Objective` dar; ein ArchiMate `Outcome` stellt ein `Key Result` dar; ein ArchiMate `Assessment` stellt einen `KPI` dar.
 - O2I-Makrorelationen dürfen aus mehreren ArchiMate-Relationen abgeleitet werden.
 - Aggregations- oder Kompositionskanten zwischen O2I-Kontexten ersetzen keine fachliche Relation zwischen den enthaltenen Elementen.
 - Gleichartige Elemente dürfen komponiert oder aggregiert werden, wenn dadurch eine fachliche Zerlegung ausgedrückt wird.
