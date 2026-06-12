@@ -10,6 +10,9 @@ figureTitle: "Abb."
 figPrefix:
   - "Abb."
   - "Abb."
+secPrefix:
+  - "Kap."
+  - "Kap."
 toc: yes
 toc-depth: 2
 callout-theme: gray
@@ -81,7 +84,7 @@ Eine Definition wird nicht bloß behauptet. Sie wird nur verwendet, wenn sie ent
 
 Das O2I-System definiert die Begriffe, Relationen und Modellierungsregeln, mit denen Orientierung, Wegentscheidung, Kontextualisierung, Operationalisierung, Messung und Wirkung konsistent beschrieben werden.
 
-## Terminologie
+## Terminologie {#sec:terminologie}
 
 Die Terminologie beschreibt eine *teleologische Wirkungslogik*: von Orientierung über Wegentscheidung, Kontextualisierung, Operationalisierung und Messung zu Wirkung. Diese sechs *fachlichen Domänen* ordnen die Standardbegriffe, welche O2I anschließend als O2I-Kontexte formalisiert.<!-- ED: approved -->
 
@@ -316,19 +319,37 @@ Die O2I-Semantik übersetzt die Terminologie in eine modellierbare Struktur: Sie
 
 > tl;dr. **Terminologie** definiert, *was die Begriffe fachlich-verbal bedeuten*; **Semantik** konkretisiert diese Bedeutung als *O2I-Primitives, O2I-Kontexte, O2I-Relationen und Wohlgeformtheitsregeln*; **Syntax** definiert, *wie diese Semantik in einer Modellierungssprache dargestellt wird*.<!-- ED: approved -->
 
-Die O2I-Semantik wird im Folgenden in vier Perspektiven entfaltet: Zuerst werden die fachlichen O2I-Kontexte und ihre O2I-Relationen geklärt, weil sie die grundlegenden Interpretationsrahmen und Makrorelationen von Wirkungsarchitekturen bilden. Danach werden die O2I-Primitives und die Relationen der Primitives-Sicht als minimaler abstrakter Formvorrat beschrieben. Wohlgeformtheitsregeln legen anschließend fest, welche Strukturen in O2I-Modellen zulässig sind. O2I-Interpretationen beschreiben schließlich, welche fachliche Bedeutung ein O2I-Primitive in einem bestimmten O2I-Kontext erhält.
+Die O2I-Semantik wird im Folgenden in vier Perspektiven entfaltet: Zuerst werden die fachlichen O2I-Kontexte und ihre O2I-Relationen geklärt, weil sie die grundlegenden Interpretationsrahmen und Makrorelationen von Wirkungsarchitekturen bilden. Danach werden die O2I-Primitives und ihre Relationen als minimaler abstrakter Formvorrat[^formvorrat] beschrieben. Wohlgeformtheitsregeln legen anschließend fest, welche Strukturen als gültige O2I-Modelle gelten. O2I-Interpretationen beschreiben schließlich, welche fachliche Bedeutung ein O2I-Primitive in einem bestimmten O2I-Kontext erhält.
+
+[^formvorrat]: Formvorrat bezeichnet hier die Menge abstrakter Modellformen, mit denen fachliche Inhalte in unterschiedlichen O2I-Kontexten ausgedrückt werden können.
 
 #### Kontexte
 
-O2I formalisiert fachliche Standardbegriffe als O2I-Kontexte. Ein O2I-Kontext ist ein fachlicher Interpretationsrahmen, in dem ein O2I-Primitive Bedeutung erhält. Anders gesagt: O2I-Kontexte wie `Mission`, `Vision`, `Strategy`, `Need`, `Intervention`, `Measure` und `Context` sind fachliche Interpretationsrahmen für die in der Terminologie eingeführten Domänen Orientierung, Wegentscheidung, Kontextualisierung, Operationalisierung, Messung und Wirkung. Der O2I-Kontext `Context` bezeichnet dabei den operativen Kontext als fachlichen Begriff; er ist vom metasprachlichen Ausdruck "O2I-Kontext" zu unterscheiden.<!-- ED: approved -->
+##### Elemente
 
-@Fig:o2i-context-view zeigt die Kontextsicht des O2I-Metamodells: O2I-Kontexte und ihre Makrorelationen auf abstrakter Ebene.<!-- ED: approved -->
+O2I formalisiert die in @sec:terminologie eingeführten fachlichen Standardbegriffe als *O2I-Kontexte*. Ein O2I-Kontext ist ein fachlicher Interpretationsrahmen, in dem O2I-Primitives kontextspezifische Bedeutung erhalten. Die in @sec:terminologie eingeführten Domänen Orientierung, Wegentscheidung, Kontextualisierung, Operationalisierung, Messung und Wirkung bilden die fachliche Ordnung, aus der diese Kontexte hervorgehen. So wird etwa `Mission` als O2I-Kontext modelliert, in dem ein `Driver` als grundlegender Existenzzweck, Antrieb oder Beitragsgrund gelesen wird. Der O2I-Kontext `Context` bezeichnet dabei den operativen Kontext als fachlichen Begriff; er ist vom metasprachlichen Ausdruck "O2I-Kontext" zu unterscheiden.<!-- ED: approved -->
+
+Das Kontext-Inventar legt fest, welche O2I-Kontexte das Metamodell verwendet:
+
+```text
+O2I-Kontext ::= Mission
+              | Vision
+              | Strategy
+              | Need
+              | Intervention
+              | Measure
+              | Context
+```
+
+@Fig:o2i-context-view zeigt das Kontextmodell des O2I-Metamodells: O2I-Kontexte und ihre Relationen.<!-- ED: approved -->
 
 ![O2I Context View](<img/O2I Context.png>){#fig:o2i-context-view width=85%}
 
-Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen: Sie zeigt die zuvor eingeführten fachlichen Standardbegriffe als O2I-Kontexte und macht sichtbar, welche Makrorelationen zwischen diesen Kontexten zulässig sind. Sie ersetzt die terminologischen Definitionen nicht, sondern fasst ihre teleologische Wirkungslogik auf Metamodellebene zusammen.<!-- ED: approved -->
+Die Darstellung ist als semantische Verdichtung der in @sec:terminologie eingeführten fachlichen Standardbegriffe zu lesen: Sie zeigt die zuvor eingeführten fachlichen Standardbegriffe als O2I-Kontexte und macht sichtbar, welche Relationen zwischen diesen Kontexten zulässig sind. Sie ersetzt die terminologischen Definitionen nicht, sondern fasst ihre teleologische Wirkungslogik auf Metamodellebene zusammen.<!-- ED: approved -->
 
-Die grafische Sicht dient der Orientierung; die folgende Relationenspezifikation legt die zulässigen O2I-Kontextrelationen explizit fest. Sie macht die Darstellung eindeutig, referenzierbar und als Grundlage für Wohlgeformtheitsregeln verwendbar.<!-- ED: approved -->
+##### Relationen
+
+Die grafische Sicht dient der Orientierung; die Kontextrelationen legen explizit fest, welche Relationen zwischen O2I-Kontexten zulässig sind. Sie machen die Darstellung eindeutig, referenzierbar und als Grundlage für Wohlgeformtheitsregeln verwendbar.<!-- ED: approved -->
 
 O2I-Kontextrelationen beschreiben zulässige fachliche Makrorelationen zwischen O2I-Kontexten, z. B. `Mission --motivates--> Vision`. O2I verwendet dafür eine kompakte Spezifikationssyntax: `Subject --relation--> Object`.
 
@@ -358,7 +379,7 @@ Die O2I-Kontextrelationen bilden eine schlanke teleologische Wirkungslogik, d.h.
 
 > Leitprinzipien leiten Mission und Vision; Mission, verstanden als Existenzzweck, begründet, warum eine Vision angestrebt wird; Vision gibt der Strategie Richtung; Kontexte machen Bedarfe unterschiedlicher Art sichtbar; Strategie qualifiziert strategisch relevante Bedarfe. Wirkungsrelevante Bedarfe entstehen dort, wo ein Bedarf im operativen Kontext sichtbar wird und durch Strategie als strategisch relevant qualifiziert ist. Bedarfe können verfeinert werden und Beiträge zu Strategien nachvollziehbar machen; Interventionen sind in O2I nur für wirkungsrelevante Bedarfe vorgesehen, verändern den operativen Kontext und legen Zielwerte für Performanzmessungen fest; Performanzmessungen machen relevante Zustände im operativen Kontext beobachtbar.<!-- ED: approved -->
 
-Einige Relationen verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:<!-- ED: approved -->
+Einige O2I-Kontextrelationen verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:<!-- ED: approved -->
 
 `Mission --motivates--> Vision`: Die Vision wird nicht als Nachweis modelliert, sondern als qualitatives Zielbild, das durch eine Mission motiviert wird. Der Nachweis entsteht später über Intervention, Measure und Kontextveränderung.<!-- ED: approved -->
 
@@ -376,13 +397,17 @@ Einige Relationen verdienen eine präzisierende Lesart, weil sie leicht missvers
 
 #### Primitives
 
+##### Elemente
+
 O2I-Primitives sind die abstrakten formalen Träger, die in O2I-Kontexten interpretiert werden und dort fachliche Bedeutung erhalten. Sie bilden den minimalen abstrakten Formvorrat des O2I-Metamodells. Ein O2I-Primitive hat keine vollständige fachliche O2I-Bedeutung für sich allein; seine fachliche Lesart entsteht erst durch Interpretation in einem O2I-Kontext.
 
-@Fig:o2i-primitives-view zeigt die Primitives-Sicht des O2I-Metamodells: den abstrakten Formvorrat und die Makrorelationen, mit denen O2I-Kontexte formal ausgearbeitet und interpretiert werden.
+@Fig:o2i-primitives-view zeigt das Modell der O2I-Primitives im O2I-Metamodell: O2I-Primitives, mögliche Strukturierungsrahmen und ihre Relationen.
 
 ![O2I Primitives View](<img/O2I Primitives.png>){#fig:o2i-primitives-view width=75%}
 
-Die Darstellung ist als semantische Übersicht zu lesen: Sie zeigt O2I-Primitives, mögliche Strukturierungsrahmen und zulässige Relationen der Primitives-Sicht, noch nicht ihre spätere syntaktische Abbildung. Die grafische Sicht dient der Orientierung; die folgende Spezifikation legt den zulässigen Formvorrat und die Relationen der Primitives-Sicht explizit fest.
+Die Darstellung ist als semantische Übersicht des abstrakten Formvorrats zu lesen: Sie zeigt O2I-Primitives, mögliche Strukturierungsrahmen und zulässige Relationen zwischen ihnen, noch nicht ihre spätere syntaktische Abbildung. Die grafische Darstellung dient der Orientierung.
+
+Das Primitive-Inventar legt fest, welche O2I-Primitives das Metamodell verwendet:
 
 ```text
 O2I-Primitive ::= Principle
@@ -394,7 +419,11 @@ O2I-Primitive ::= Principle
                 | Gap
 ```
 
-Eine `KPI-Domäne` ist ein optionaler Strukturtyp der Primitives-Sicht, aber kein O2I-Primitive. Sie bezeichnet einen Messbereich, in dem relevante Zustände beobachtet werden können, bevor konkrete KPIs festgelegt werden.
+Eine `KPI-Domäne` ist ein optionaler Strukturtyp im Modell der O2I-Primitives, aber kein O2I-Primitive. Sie bezeichnet einen Messbereich, in dem relevante Zustände beobachtet werden können, bevor konkrete KPIs festgelegt werden.
+
+##### Relationen
+
+Die Primitive-Relationen legen explizit fest, welche Relationen zwischen O2I-Primitives zulässig sind.
 
 ```text
 Principle --guides--> Driver
@@ -410,9 +439,9 @@ Action --contributes-to--> Key Result
 Action --addresses--> Gap
 ```
 
-Die Relationen der Primitives-Sicht bilden keine zweite Wirkungslogik neben den O2I-Kontextrelationen. Sie beschreiben die abstrakte Formlogik, mit der O2I-Kontexte später interpretiert werden: Prinzipien leiten Treiber und Objectives; Treiber motivieren Objectives und bestimmen relevante Messbereiche; Key Results substantiieren Objectives, können in nachgelagerte Objectives übersetzt werden und setzen Zielwerte für KPIs; KPIs können verfeinert werden; Actions tragen zu Key Results bei und adressieren Gaps.
+Die Primitive-Relationen bilden keine zweite Wirkungslogik neben den Kontextrelationen. Sie beschreiben die abstrakte Formlogik, mit der O2I-Kontexte später interpretiert werden: Prinzipien leiten Treiber und Objectives; Treiber motivieren Objectives und bestimmen relevante Messbereiche; Key Results substantiieren Objectives, können in nachgelagerte Objectives übersetzt werden und setzen Zielwerte für KPIs; KPIs können verfeinert werden; Actions tragen zu Key Results bei und adressieren Gaps.
 
-Einige Relationen der Primitives-Sicht verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:
+Einige Primitive-Relationen verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:
 
 `Driver --determines--> KPI-Domäne`: Ein Driver bestimmt noch keinen konkreten KPI. Er grenzt zunächst ein, welche Art von Zustand beobachtet werden muss.
 
@@ -478,9 +507,21 @@ Die Strategie-Relationen zwischen `Strategy` und `Strategy` sind Container-Relat
 
 O2I-Interpretationen beschreiben, welche fachliche Bedeutung ein O2I-Primitive in einem bestimmten O2I-Kontext erhält. Sie verbinden damit den abstrakten Formvorrat der O2I-Primitives mit den fachlichen Interpretationsrahmen der O2I-Kontexte.
 
+##### Mission
+
+Im Kontext `Mission` sind `Driver` zulässig:
+
+`Driver` $\in$ `Mission`
+
+Ein `Driver` im Kontext `Mission` beschreibt einen grundlegenden Antrieb, Existenzzweck oder Beitragsgrund. Er beantwortet die Frage, warum ein handlungsfähiger Akteur existiert oder welchen grundlegenden Beitrag er leisten soll. Mehrere `Driver` können eine Mission analytisch konkretisieren, gruppieren oder ergänzen; sie ersetzen die terminologische Definition der Mission nicht.
+
 ##### Vision
 
-Ein `Objective` im Kontext `Vision` ist ein qualitatives Zukunftsbild.
+Im Kontext `Vision` sind `Objective` zulässig:
+
+`Objective` $\in$ `Vision`
+
+Ein `Objective` im Kontext `Vision` beschreibt ein qualitatives Zukunftsbild oder eine qualitative Ausrichtung. Es beantwortet die Frage, wohin ein handlungsfähiger Akteur wirken will, ohne bereits festzulegen, wie diese Wirkung erreicht wird. Qualitative Ausrichtungen können zu einem übergeordneten Zukunftsbild beitragen; sie sind Objectives im Kontext `Vision`, keine zusätzlichen O2I-Primitives.
 
 ##### Objective
 
