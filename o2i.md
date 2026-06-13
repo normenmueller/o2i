@@ -327,7 +327,7 @@ Die O2I-Semantik wird im Folgenden in vier Perspektiven entfaltet: Zuerst werden
 
 ##### Elemente
 
-O2I formalisiert die in @sec:terminologie eingeführten fachlichen Standardbegriffe als *O2I-Kontexte*. Ein O2I-Kontext ist ein fachlicher Interpretationsrahmen, in dem O2I-Primitives kontextspezifische Bedeutung erhalten. Die in @sec:terminologie eingeführten Domänen Orientierung, Wegentscheidung, Kontextualisierung, Operationalisierung, Messung und Wirkung bilden die fachliche Ordnung, aus der diese Kontexte hervorgehen. So wird etwa `Mission` als O2I-Kontext modelliert, in dem ein `Driver` als grundlegender Existenzzweck, Antrieb oder Beitragsgrund gelesen wird. Der O2I-Kontext `Context` bezeichnet dabei den operativen Kontext als fachlichen Begriff; er ist vom metasprachlichen Ausdruck "O2I-Kontext" zu unterscheiden.<!-- ED: approved -->
+O2I formalisiert die in @sec:terminologie eingeführten fachlichen Standardbegriffe als *O2I-Kontexte*. Ein O2I-Kontext ist ein fachlicher Interpretationsrahmen, in dem O2I-Primitives kontextspezifische Bedeutung erhalten. Die in @sec:terminologie eingeführten Domänen Orientierung, Wegentscheidung, Kontextualisierung, Operationalisierung, Messung und Wirkung bilden die fachliche Ordnung, aus der diese Kontexte hervorgehen. So wird in der Domäne Orientierung etwa `Mission` als O2I-Kontext modelliert, in dem ein `Driver` als grundlegender Existenzzweck, Antrieb oder Beitragsgrund gelesen wird. Der O2I-Kontext `Context` bezeichnet den operativen Kontext als fachlichen Begriff; er ist vom metasprachlichen Ausdruck "O2I-Kontext" zu unterscheiden.<!-- ED: approved -->
 
 Das Kontext-Inventar legt fest, welche O2I-Kontexte das Metamodell verwendet:
 
@@ -345,13 +345,11 @@ O2I-Kontext ::= Mission
 
 ![O2I Context View](<img/O2I Context.png>){#fig:o2i-context-view width=85%}
 
-Die Darstellung ist als semantische Verdichtung der in @sec:terminologie eingeführten fachlichen Standardbegriffe zu lesen: Sie zeigt die zuvor eingeführten fachlichen Standardbegriffe als O2I-Kontexte und macht sichtbar, welche Relationen zwischen diesen Kontexten zulässig sind. Sie ersetzt die terminologischen Definitionen nicht, sondern fasst ihre teleologische Wirkungslogik auf Metamodellebene zusammen.<!-- ED: approved -->
+Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen: Sie zeigt die zuvor eingeführten fachlichen Standardbegriffe als O2I-Kontexte und macht sichtbar, welche Relationen zwischen diesen Kontexten zulässig sind. Sie ersetzt die terminologischen Definitionen nicht, sondern fasst ihre teleologische Wirkungslogik auf Metamodellebene zusammen.<!-- ED: approved -->
 
 ##### Relationen
 
-Die grafische Sicht dient der Orientierung; die Kontextrelationen legen explizit fest, welche Relationen zwischen O2I-Kontexten zulässig sind. Sie machen die Darstellung eindeutig, referenzierbar und als Grundlage für Wohlgeformtheitsregeln verwendbar.<!-- ED: approved -->
-
-O2I-Kontextrelationen beschreiben zulässige fachliche Makrorelationen zwischen O2I-Kontexten, z. B. `Mission --motivates--> Vision`. O2I verwendet dafür eine kompakte Spezifikationssyntax: `Subject --relation--> Object`.
+Die grafische Sicht dient der Orientierung; die folgenden Kontextrelationen legen explizit fest, welche Relationen zwischen O2I-Kontexten zulässig sind. Sie machen die Darstellung eindeutig, referenzierbar und als Grundlage für Wohlgeformtheitsregeln verwendbar. O2I verwendet dafür eine kompakte Spezifikationssyntax: `Subject --relation--> Object`.<!-- ED: approved -->
 
 ```text
 Principle --guides--> Mission
@@ -375,25 +373,26 @@ Measure --measures--> Context
 Strategy --frames--> Measure
 ```
 
-Die O2I-Kontextrelationen bilden eine schlanke teleologische Wirkungslogik, d.h. die Relationen drücken Zweck-, Mittel-, Qualifikations- und Nachweiszusammenhänge aus:<!-- ED: approved -->
+Die O2I-Kontextrelationen bilden eine schlanke teleologische Wirkungslogik, d. h. die Relationen drücken Zweck-, Mittel-, Qualifikations- und Nachweiszusammenhänge aus.<!-- ED: approved -->
 
+> [!tl;dr] Teleologische O2I-Wirkungslogik
 > Leitprinzipien leiten Mission und Vision; Mission, verstanden als Existenzzweck, begründet, warum eine Vision angestrebt wird; Vision gibt der Strategie Richtung; Kontexte machen Bedarfe unterschiedlicher Art sichtbar; Strategie qualifiziert strategisch relevante Bedarfe. Wirkungsrelevante Bedarfe entstehen dort, wo ein Bedarf im operativen Kontext sichtbar wird und durch Strategie als strategisch relevant qualifiziert ist. Bedarfe können verfeinert werden und Beiträge zu Strategien nachvollziehbar machen; Interventionen sind in O2I nur für wirkungsrelevante Bedarfe vorgesehen, verändern den operativen Kontext und legen Zielwerte für Performanzmessungen fest; Performanzmessungen machen relevante Zustände im operativen Kontext beobachtbar.<!-- ED: approved -->
 
 Einige O2I-Kontextrelationen verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:<!-- ED: approved -->
 
-`Mission --motivates--> Vision`: Die Vision wird nicht als Nachweis modelliert, sondern als qualitatives Zielbild, das durch eine Mission motiviert wird. Der Nachweis entsteht später über Intervention, Measure und Kontextveränderung.<!-- ED: approved -->
+`Intervention --addresses--> Need`: Die Relation setzt einen wirkungsrelevanten Bedarf voraus; ein nur sichtbarer oder nur strategisch relevanter Bedarf reicht nicht.<!-- ED: approved -->
 
-`Intervention --addresses--> Need`: Eine Intervention adressiert einen Bedarf, der im operativen Kontext sichtbar *und* durch Strategie als wirkungsrelevant qualifiziert ist.<!-- ED: approved -->
+`Need --requires--> Intervention`: Die Relation setzt einen wirkungsrelevanten Bedarf voraus. Erst ein Bedarf, der im operativen Kontext sichtbar und durch Strategie als strategisch relevant qualifiziert ist, kann eine Intervention erforderlich machen; er legt aber noch keine Lösung fest.<!-- ED: approved -->
 
-`Need --requires--> Intervention`: Ein wirkungsrelevanter Bedarf kann eine Intervention erforderlich machen, legt aber noch keine Lösung fest.<!-- ED: approved -->
+`Measure --measures--> Context`: Der unmittelbare Messgegenstand ist der operative Kontext. Ein Measure macht einen relevanten Zustand, eine Leistung oder eine Entwicklung in diesem Kontext messbar.<!-- ED: approved -->
 
-`Intervention --changes--> Context`: Eine Intervention verändert die Arbeitsrealität.<!-- ED: approved -->
+`Intervention --sets-target-for--> Measure`: Die Relation bedeutet nicht, dass eine Intervention selbst misst oder mit einem Key Result identisch ist. Sie bedeutet: Eine Intervention enthält oder erzeugt eine Zielsetzung, die auf einem Measure ausgedrückt wird.<!-- ED: approved -->
 
-`Measure --measures--> Context`: Eine stabile Messdefinition beobachtet Zustand, Leistung oder Entwicklung in einem operativen Kontext.<!-- ED: approved -->
+`Strategy --frames--> Measure`: Die Relation steht dafür, dass Measures über strategisch relevante Erfolgsfaktoren mit Strategie verbunden werden. Sie bedeutet nicht, dass Measures direkt aus Strategie entstehen.<!-- ED: approved -->
 
-`Intervention --sets-target-for--> Measure`: Diese Relation ist eine verdichtete Makrorelation. Sie bedeutet nicht, dass eine Intervention selbst misst oder mit einem Key Result identisch ist. Sie bedeutet: Eine Intervention enthält oder erzeugt eine Zielsetzung, die auf einem Measure ausgedrückt wird.<!-- ED: approved -->
-
-`Strategy --frames--> Measure`: Diese Relation ist ebenfalls eine abgeleitete Kurzrelation. Sie steht dafür, dass Measures über strategisch relevante Erfolgsfaktoren mit Strategie verbunden werden. Die Kurzrelation bedeutet nicht, dass Measures direkt aus Strategie entstehen.<!-- ED: approved -->
+<!-- ED note:
+Laut Parmenter sollte das perfekt passen: Performance Measures/KPIs werden über CSFs mit Strategie verbunden. Er spricht von der „linkage of performance measures to strategy through the CSFs“ und davon, dass passende KPIs leichter gefunden werden, wenn die CSFs klar sind.
+-->
 
 #### Primitives
 
