@@ -329,7 +329,7 @@ Die O2I-Semantik wird im Folgenden in vier Perspektiven entfaltet: Zuerst werden
 
 O2I formalisiert die in @sec:terminologie eingeführten fachlichen Standardbegriffe als *O2I-Kontexte*. Ein O2I-Kontext ist ein fachlicher Interpretationsrahmen, in dem O2I-Primitives kontextspezifische Bedeutung erhalten. Die in @sec:terminologie eingeführten Domänen Orientierung, Wegentscheidung, Kontextualisierung, Operationalisierung, Messung und Wirkung bilden die fachliche Ordnung, aus der diese Kontexte hervorgehen. So wird in der Domäne Orientierung etwa `Mission` als O2I-Kontext modelliert, in dem ein `Driver` als grundlegender Existenzzweck, Antrieb oder Beitragsgrund gelesen wird. Der O2I-Kontext `Context` bezeichnet den operativen Kontext als fachlichen Begriff; er ist vom metasprachlichen Ausdruck "O2I-Kontext" zu unterscheiden.<!-- ED: approved -->
 
-Das Kontext-Inventar legt fest, welche O2I-Kontexte das Metamodell verwendet:
+Das Kontext-Inventar legt fest, welche O2I-Kontexte das Metamodell verwendet:<!-- ED: approved -->
 
 ```text
 O2I-Kontext ::= Mission
@@ -339,11 +339,11 @@ O2I-Kontext ::= Mission
               | Intervention
               | Measure
               | Context
-```
+```<!-- ED: approved -->
 
 @Fig:o2i-context-view zeigt das Kontextmodell des O2I-Metamodells: O2I-Kontexte und ihre Relationen.<!-- ED: approved -->
 
-![O2I Context View](<img/O2I Context.png>){#fig:o2i-context-view width=85%}
+![O2I Context View](<img/O2I Context.png>){#fig:o2i-context-view width=85%}<!-- ED: approved -->
 
 Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen: Sie zeigt die zuvor eingeführten fachlichen Standardbegriffe als O2I-Kontexte und macht sichtbar, welche Relationen zwischen diesen Kontexten zulässig sind. Sie ersetzt die terminologischen Definitionen nicht, sondern fasst ihre teleologische Wirkungslogik auf Metamodellebene zusammen.<!-- ED: approved -->
 
@@ -371,7 +371,7 @@ Intervention --changes--> Context
 Intervention --sets-target-for--> Measure
 Measure --measures--> Context
 Strategy --frames--> Measure
-```
+```<!-- ED: approved -->
 
 Die O2I-Kontextrelationen bilden eine schlanke teleologische Wirkungslogik, d. h. die Relationen drücken Zweck-, Mittel-, Qualifikations- und Nachweiszusammenhänge aus.<!-- ED: approved -->
 
@@ -391,22 +391,22 @@ Einige O2I-Kontextrelationen verdienen eine präzisierende Lesart, weil sie leic
 `Strategy --frames--> Measure`: Die Relation steht dafür, dass Measures über strategisch relevante Erfolgsfaktoren mit Strategie verbunden werden. Sie bedeutet nicht, dass Measures direkt aus Strategie entstehen.<!-- ED: approved -->
 
 <!-- ED note:
-Laut Parmenter sollte das perfekt passen: Performance Measures/KPIs werden über CSFs mit Strategie verbunden. Er spricht von der „linkage of performance measures to strategy through the CSFs“ und davon, dass passende KPIs leichter gefunden werden, wenn die CSFs klar sind.
+Laut Parmenter sollte das perfekt passen: Performance Measures/KPIs werden über CSFs mit Strategie verbunden. Er spricht von der "linkage of performance measures to strategy through the CSFs" und davon, dass passende KPIs leichter gefunden werden, wenn die CSFs klar sind.
 -->
 
 #### Primitives
 
 ##### Elemente
 
-O2I-Primitives sind die abstrakten formalen Träger, die in O2I-Kontexten interpretiert werden und dort fachliche Bedeutung erhalten. Sie bilden den minimalen abstrakten Formvorrat des O2I-Metamodells. Ein O2I-Primitive hat keine vollständige fachliche O2I-Bedeutung für sich allein; seine fachliche Lesart entsteht erst durch Interpretation in einem O2I-Kontext.
+O2I-Primitives sind die abstrakten formalen Träger, die in O2I-Kontexten interpretiert werden und dort fachliche Bedeutung erhalten. Sie bilden den minimalen abstrakten Formvorrat des O2I-Metamodells. Ein O2I-Primitive hat keine vollständige fachliche O2I-Bedeutung für sich allein; seine fachliche Lesart entsteht erst durch Interpretation in einem O2I-Kontext (siehe @Sec:interpretationen).<!-- ED: approved -->
 
-@Fig:o2i-primitives-view zeigt das Modell der O2I-Primitives im O2I-Metamodell: O2I-Primitives, mögliche Strukturierungsrahmen und ihre Relationen.
+@Fig:o2i-primitives-view zeigt das Primitives-Modell des O2I-Metamodells: O2I-Primitives, mögliche Strukturierungsrahmen und ihre Relationen.<!-- ED: approved -->
 
 ![O2I Primitives View](<img/O2I Primitives.png>){#fig:o2i-primitives-view width=75%}
 
-Die Darstellung ist als semantische Übersicht des abstrakten Formvorrats zu lesen: Sie zeigt O2I-Primitives, mögliche Strukturierungsrahmen und zulässige Relationen zwischen ihnen, noch nicht ihre spätere syntaktische Abbildung. Die grafische Darstellung dient der Orientierung.
+Die Darstellung ist als semantische Übersicht des abstrakten Formvorrats zu lesen: Sie zeigt O2I-Primitives, mögliche Strukturierungsrahmen und zulässige Relationen zwischen ihnen, noch nicht ihre spätere syntaktische Abbildung. Die grafische Darstellung dient der Orientierung.<!-- ED: approved -->
 
-Das Primitive-Inventar legt fest, welche O2I-Primitives das Metamodell verwendet:
+Das Primitive-Inventar legt fest, welche O2I-Primitives das Metamodell verwendet:<!-- ED: approved -->
 
 ```text
 O2I-Primitive ::= Principle
@@ -416,9 +416,9 @@ O2I-Primitive ::= Principle
                 | KPI
                 | Action
                 | Gap
-```
+```<!-- ED: approved -->
 
-Eine `KPI-Domäne` ist ein optionaler Strukturtyp im Modell der O2I-Primitives, aber kein O2I-Primitive. Sie bezeichnet einen Messbereich, in dem relevante Zustände beobachtet werden können, bevor konkrete KPIs festgelegt werden.
+Eine `KPI-Domäne` ist ein optionaler Strukturtyp im Modell der O2I-Primitives, aber kein O2I-Primitive. Sie bezeichnet einen Messbereich, in dem relevante Zustände beobachtet werden können, bevor konkrete KPIs festgelegt werden.<!-- ED: approved -->
 
 ##### Relationen
 
@@ -502,7 +502,7 @@ Aus diesen Signaturen ergeben sich zusätzliche Modellierungsregeln:
 
 Die Strategie-Relationen zwischen `Strategy` und `Strategy` sind Container-Relationen zwischen Strategien unterschiedlicher Ebenen, z. B. Konzernstrategie, Ressortstrategie, Geschäftsstrategie und Funktionsstrategie. `directs` steht dabei als Kurzrelation für das Setzen von Zielen, Prioritäten und Leitplanken. Wichtig: Der messbare Beitrag läuft später präziser über Bedarfe, Interventionen, Measures und Kontextveränderungen. Die Strategie-Relation ist eine verdichtete Kurzrelation.
 
-#### Interpretationen
+#### Interpretationen {#sec:interpretationen}
 
 O2I-Interpretationen beschreiben, welche fachliche Bedeutung ein O2I-Primitive in einem bestimmten O2I-Kontext erhält. Sie verbinden damit den abstrakten Formvorrat der O2I-Primitives mit den fachlichen Interpretationsrahmen der O2I-Kontexte.
 
