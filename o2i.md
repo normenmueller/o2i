@@ -422,7 +422,7 @@ Eine `KPI-Domäne` ist ein optionaler Strukturtyp im Modell der O2I-Primitives, 
 
 ##### Relationen
 
-Die Primitive-Relationen legen explizit fest, welche Relationen zwischen O2I-Primitives zulässig sind.
+Die Primitive-Relationen legen explizit fest, welche Relationen zwischen O2I-Primitives zulässig sind.<!-- ED: approved -->
 
 ```text
 Principle --guides--> Driver
@@ -436,23 +436,25 @@ Key Result --sets-target-for--> KPI
 KPI --refines--> KPI
 Action --contributes-to--> Key Result
 Action --addresses--> Gap
-```
+```<!-- ED: approved -->
 
-Die Primitive-Relationen bilden keine zweite Wirkungslogik neben den Kontextrelationen. Sie beschreiben die abstrakte Formlogik, mit der O2I-Kontexte später interpretiert werden: Prinzipien leiten Treiber und Objectives; Treiber motivieren Objectives und bestimmen relevante Messbereiche; Key Results substantiieren Objectives, können in nachgelagerte Objectives übersetzt werden und setzen Zielwerte für KPIs; KPIs können verfeinert werden; Actions tragen zu Key Results bei und adressieren Gaps.
+Die Primitive-Relationen bilden keine zweite Wirkungslogik neben den Kontextrelationen. Sie beschreiben die abstrakte Formlogik, die in O2I-Kontexten später interpretiert wird: Prinzipien leiten Treiber und Objectives; Treiber motivieren Objectives und bestimmen relevante Messbereiche; Key Results substantiieren Objectives, können in nachgelagerte Objectives übersetzt werden und setzen Zielwerte für KPIs; KPIs können verfeinert werden; Actions tragen zu Key Results bei und adressieren Gaps.<!-- ED: approved -->
 
-Einige Primitive-Relationen verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:
+Einige Primitive-Relationen verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:<!-- ED: approved -->
 
-`Driver --determines--> KPI-Domäne`: Ein Driver bestimmt noch keinen konkreten KPI. Er grenzt zunächst ein, welche Art von Zustand beobachtet werden muss.
+`Driver --determines--> KPI-Domäne`: Ein Driver bestimmt noch keinen konkreten KPI. Er grenzt einen Messbereich ein, in dem relevante Zustände beobachtet werden können. Die Auswahl konkreter KPIs bleibt ein bewusster Freiheitsgrad der Modellierung.<!-- ED: approved -->
 
-`Key Result --sets-target-for--> KPI`: Ein Key Result ist nicht selbst die Messdefinition. Es legt einen Zielwert auf einem KPI fest.
+`Key Result --substantiates--> Objective`: Ein Key Result substantiiert ein Objective durch quantitative Evidenz. Es ersetzt das qualitative Objective nicht und ist selbst keine Messdefinition.<!-- ED: approved -->
 
-`Key Result --translates-into--> Objective`: Diese Relation beschreibt vertikale Operationalisierung. Ein Key Result einer höheren Ebene kann in ein qualitatives Objective einer nachgelagerten Ebene übersetzt werden.
+`Key Result --translates-into--> Objective`: Diese Relation beschreibt vertikale Operationalisierung. Ein Key Result einer höheren Ebene kann in ein qualitatives Objective einer nachgelagerten Ebene übersetzt werden.<!-- ED: approved -->
 
-`KPI --refines--> KPI`: Ein KPI kann in spezifischere KPIs zerlegt werden, ohne dass dadurch ein neuer O2I-Primitive entsteht.
+`Key Result --sets-target-for--> KPI`: Ein Key Result ist nicht selbst die Messdefinition. Es legt einen Zielwert auf einem KPI fest.<!-- ED: approved -->
 
-`Action`: Eine Action ist eine Handlungshypothese. Sie kann zu einem Key Result beitragen und einen Gap adressieren, garantiert aber keine Zielerreichung.
+`KPI --refines--> KPI`: Ein KPI kann in spezifischere KPIs verfeinert werden, ohne dass dadurch ein neuer O2I-Primitive entsteht.<!-- ED: approved -->
 
-`Gap`: Ein Gap wird sichtbar, wenn der durch ein Key Result gesetzte Zielwert und der durch einen KPI beobachtete Istwert auseinanderfallen.
+`Action --contributes-to--> Key Result`: Eine Action ist eine Handlungshypothese. Sie kann zu einem Key Result beitragen, garantiert dessen Erreichung aber nicht.<!-- ED: approved -->
+
+`Action --addresses--> Gap`: Eine Action adressiert eine sichtbare Abweichung, schließt sie aber nicht automatisch.<!-- ED: approved -->
 
 #### Wohlgeformtheitsregeln
 
