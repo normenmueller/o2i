@@ -18,19 +18,21 @@ Der aktive Artikel ist [`o2i.md`](./o2i.md). Das ArchiMate-Modell liegt unter [`
 o2i/
 |- img/
 |- mdl/
+|- spc/
 |- o2i.md
 ```
 
 - `o2i.md`: aktiver Artikel und fachlicher Referenztext
 - `mdl/`: ArchiMate-Modell
 - `img/`: Abbildungen für Artikel und Modellkommunikation
+- `spc/`: normative Haskell-Spezifikation, deren Codeauszüge im Artikel eingebunden werden
 
 ## Build
 
-Das PDF wird aus `o2i.md` mit [`md2pdf`](https://github.com/normenmueller/md2pdf) erzeugt:
+Das PDF wird aus `o2i.md` mit [`md2pdf`](https://github.com/normenmueller/md2pdf) und `pandoc-include` erzeugt:
 
 ```sh
-md2pdf -o o2i.pdf -- o2i.md
+md2pdf --filter pandoc-include -o o2i.pdf -- o2i.md
 ```
 
 ## License

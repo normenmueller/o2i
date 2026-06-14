@@ -71,18 +71,21 @@ Ein Gap kann auf jeder Ebene entstehen: Bedarfs-Gap, strategischer Gap, Umsetzun
           <element xsi:type="archimate:Grouping" name="Business Process" id="id-447552868a1c4c189a4f01662956a2a4"/>
           <element xsi:type="archimate:Grouping" name="Regulatory compliance" id="id-58052324798649c68ec62120aff6ee0a"/>
         </folder>
-        <element xsi:type="archimate:Grouping" name="Context" id="id-95420d4e66164023b79676213a6147e2">
-          <documentation>Operativer Kontext: konkrete Lage/Arbeitsrealität, aus der Bedarfe sichtbar werden, z.B. Prozess, Capability, System, Kundenerlebnis, regulatorische Anforderung, Schmerzpunkt.
+        <element xsi:type="archimate:Grouping" name="Situation" id="id-95420d4e66164023b79676213a6147e2">
+          <documentation>aka. operativer Kontext: konkrete Lage/Arbeitsrealität, aus der Bedarfe sichtbar werden, z.B. Prozess, Capability, System, Kundenerlebnis, regulatorische Anforderung, Schmerzpunkt.
 
 konkrete Arbeits-, Leistungs- oder Umfeldrealität, in der Bedarfe sichtbar und prüfbar werden</documentation>
         </element>
         <element xsi:type="archimate:Grouping" name="Need" id="id-643791bdae8f4829a2151d7b658d84f1"/>
         <element xsi:type="archimate:Grouping" name="Intervention" id="id-52230b6fa09b477fa7b7187f9bc03376"/>
         <element xsi:type="archimate:Grouping" name="Measure" id="id-a1eb98d8dd174918bb2a8adc88f87295"/>
-        <element xsi:type="archimate:Grouping" name="Principle" id="id-cf054314f7e944cea52ff8ec082377f8">
+        <element xsi:type="archimate:Grouping" name="Ethos" id="id-cf054314f7e944cea52ff8ec082377f8">
           <documentation>kulturell-normative Grundsätze
 
-Nach welchen kulturellen Grundsätzen handeln wir? Wofür stehen wir?</documentation>
+Ethos bezeichnet den kulturell-normativen Orientierungsrahmen eines Akteurs. Darin können einzelne Principle liegen.
+
+Nach welchen kulturellen Grundsätzen handeln wir? Wofür stehen wir?
+</documentation>
         </element>
         <element xsi:type="archimate:Grouping" name="Mission" id="id-209098a723f84d0787eab3cfed0e3db0">
           <documentation>Warum gibt es uns?</documentation>
@@ -90,7 +93,7 @@ Nach welchen kulturellen Grundsätzen handeln wir? Wofür stehen wir?</documenta
         <element xsi:type="archimate:Grouping" name="Vision" id="id-63a27d11822d4ef4b45e65b0e7231fc4">
           <documentation>Vision = Wohin wollen wir wirken?</documentation>
         </element>
-        <element xsi:type="archimate:Grouping" name="Strategy" id="id-fc76733c15ce4d0fa08e1156adfa9879"/>
+        <element xsi:type="archimate:Grouping" name="Direction" id="id-fc76733c15ce4d0fa08e1156adfa9879"/>
       </folder>
     </folder>
     <folder name="Syntax" id="id-528862f7ff2c456898f672cc0b1489b6">

@@ -4,7 +4,7 @@ subtitle: "Begriffe und Relationen für wirksames Handeln"
 author: nemron
 version: "0.1 (wip)"
 abstract: |
-  Wie werden Orientierung, Wegentscheidung, Umsetzung, Messung und Lernen so verbunden, dass visionsbezogene Wirkung entsteht?
+  Wie werden Orientierung, Wegentscheidung, Kontextualisierung und Operationalisierung so verbunden, dass nachvollziehbare Wirkung entsteht?
 lang: de-DE
 figureTitle: "Abb."
 figPrefix:
@@ -14,7 +14,7 @@ secPrefix:
   - "Kap."
   - "Kap."
 toc: yes
-toc-depth: 2
+toc-depth: 3
 callout-theme: gray
 ---
 
@@ -58,19 +58,19 @@ URL: \url{https://publications.opengroup.org/standards/archimate/c260}.
 
 ## Literaturfunktion
 
-Die Literaturquellen werden nicht gleichgewichtig verwendet, sondern nach ihrer Funktion innerhalb des O2I-Systems:
+Die Literaturquellen werden nicht gleichgewichtig verwendet, sondern nach ihrer Funktion innerhalb von O2I:
 
-Rumelt2011, Porter1996 und Mintzberg1985 stützen die Wegentscheidung innerhalb des O2I-Systems: Diagnose, leitende Handlungslogik, Positionierung, Trade-offs, Fit, Kohärenz sowie intendierte und realisierte Strategie.
+Rumelt (2011), Porter (1996) sowie Mintzberg und Waters (1985) stützen die Wegentscheidung innerhalb von O2I: Diagnose, leitende Handlungslogik, Positionierung, Trade-offs, Fit, Kohärenz sowie intendierte und realisierte Strategie.
 
-Doerr2018 stützt die Operationalisierung über Objectives und Key Results.
+Doerr (2018) stützt die Operationalisierung über Objectives und Key Results als überprüfbare Umsetzungs- und Evidenzformen.
 
-Parmenter2020 stützt Messung, Performance-Logik, Critical Success Factors und KPI-Disziplin. Barr2014 ergänzt die methodische KPI-Entwicklung über eine praktische Performance-Measurement-Methodik.
+Parmenter (2020) stützt Messung, Performance-Logik, kritische Erfolgsfaktoren und KPI-Disziplin. Barr (2014) ergänzt die methodische KPI-Entwicklung über eine praktische Performance-Measurement-Methodik.
 
-Collins/Porras1996, Schein2010 und Bourne/Jenkins/Parry2019 stützen Leitprinzipien als kulturell verankerte, normative Orientierungsgröße. George/Haas/McGahan/Schillebeeckx/Tracey2023 und Chua/Miska/Mair/Stahl2024 ergänzen den aktuellen Purpose-Diskurs und schärfen Mission als Existenzzweck.
+Collins und Porras (1996), Schein (2010) und Bourne, Jenkins und Parry (2019) stützen Leitprinzipien als kulturell verankerte, normative Orientierungsgröße. George, Haas, McGahan, Schillebeeckx und Tracey (2023) und Chua, Miska, Mair und Stahl (2024) ergänzen den aktuellen Purpose-Diskurs und schärfen Mission als Existenzzweck.
 
-TOGAF2025 und ArchiMate2026 stützen die Modellierungsebene: TOGAF liefert den Enterprise-Architecture-Bezug, ArchiMate liefert die standardisierte Modellierungssprache, mit der O2I-Modelle an Architekturartefakte anschlussfähig werden.
+The Open Group (2025, 2026) stützt die Modellierungsebene: TOGAF liefert den Enterprise-Architecture-Bezug, ArchiMate liefert die standardisierte Modellierungssprache, mit der O2I-Modelle an Architekturartefakte anschlussfähig werden.
 
-Die Literaturquellen begründen damit unterschiedliche Funktionen innerhalb des O2I-Systems: Orientierung wird in Wegentscheidungen übersetzt, Wegentscheidungen werden operationalisiert, Messung macht relevante Zustände beobachtbar, und Lernschleifen halten das System anpassungsfähig.
+Die Literaturquellen begründen damit unterschiedliche Funktionen innerhalb von O2I: Orientierung wird in Wegentscheidungen übersetzt, Wegentscheidungen werden in wirkungsgerichtete Interventionen operationalisiert, und Wirkung wird über Messung und Nachweislogik nachvollziehbar gemacht.
 
 ## Definitionsregel
 
@@ -80,141 +80,96 @@ Eine Definition wird nicht bloß behauptet. Sie wird nur verwendet, wenn sie ent
 
 *Autorenableitung in Anlehnung an ...:* Der Artikel bildet eine eigene Systematisierung, die auf mindestens einer Quelle beruht, aber über deren Wortlaut oder Begriffssystem hinausgeht.
 
-# System
+# Terminologie {#sec:terminologie}
 
-Das O2I-System definiert die Begriffe, Relationen und Modellierungsregeln, mit denen Orientierung, Wegentscheidung, Kontextualisierung, Operationalisierung, Messung und Wirkung konsistent beschrieben werden.
+Die Terminologie beschreibt eine *teleologische Wirkungslogik*: von Orientierung über Wegentscheidung, Kontextualisierung und Operationalisierung zu Wirkung. Diese fünf *fachlichen Domänen* ordnen die Standardbegriffe, welche O2I anschließend als O2I-Kontexte formalisiert.
 
-## Terminologie {#sec:terminologie}
-
-Die Terminologie beschreibt eine *teleologische Wirkungslogik*: von Orientierung über Wegentscheidung, Kontextualisierung, Operationalisierung und Messung zu Wirkung. Diese sechs *fachlichen Domänen* ordnen die Standardbegriffe, welche O2I anschließend als O2I-Kontexte formalisiert.<!-- ED: approved -->
-
-### Orientierung <!-- ED: approved -->
+## Orientierung 
 
 ![O2I Orientierung](<img/O2I Orientierung.png>){#fig:o2i-orientation width=50%}
 
-#### Leitprinzipien <!-- ED: approved -->
+### Ethos
 
 > [!definition]
-> **Leitprinzipien** (en.: *guiding principles*; meta: `Principle`)[^principles] bezeichnen die **kulturell verankerten und normativen Grundsätze** eines handlungsfähigen Akteurs: wofür er steht, welche Maßstäbe sein Handeln leiten und nach welchen Kriterien Handlungsoptionen als gut, schlecht, akzeptabel oder nicht akzeptabel bewertet werden.
+> Das **Ethos** (en.: *ethos*; meta: `Ethos`)[^ethos] bezeichnet den kulturell-normativen Orientierungsrahmen eines handlungsfähigen Akteurs.
 >
-> <!--Nach welchen kulturellen Grundsätzen handeln wir?-->
-> > [!tldr] Leitprinzipien - \textsc{Wofür} stehen wir?
+> Ein **Leitprinzip** (en.: *principle*; meta: `Principle`)[^principles] bezeichnet einen einzelnen kulturell verankerten und normativen Grundsatz eines handlungsfähigen Akteurs. Es beschreibt, wofür der Akteur steht, welche Maßstäbe sein Handeln leiten und nach welchen Kriterien Handlungsoptionen als gut, schlecht, akzeptabel oder nicht akzeptabel bewertet werden.
 >
-> [^principles]: *Autorenableitung in Anlehnung an Collins/Porras1996, Schein2010, Bourne/Jenkins/Parry2019, Rumelt2011 und Porter1996*: Leitprinzipien werden hier als normativer Orientierungsrahmen verstanden, der Handlungsoptionen begrenzt, Prioritäten prägt und Entscheidungen konsistent macht.
+> Mehrere Leitprinzipien bilden zusammen das Ethos eines Akteurs.
+>
+> > [!tldr] Ethos - \textsc{Wofür} stehen wir?
+>
+> [^ethos]: *Autorenableitung in Anlehnung an Collins und Porras (1996), Schein (2010), Bourne, Jenkins und Parry (2019), Rumelt (2011) und Porter (1996)*: Ethos wird hier als kulturell-normativer Orientierungsrahmen verstanden.
+>
+> [^principles]: *Autorenableitung in Anlehnung an Collins und Porras (1996), Schein (2010), Bourne, Jenkins und Parry (2019), Rumelt (2011) und Porter (1996)*: Leitprinzipien werden hier als normative Grundsätze verstanden, die Handlungsoptionen begrenzen, Prioritäten prägen und Entscheidungen konsistent machen.
 
-#### Mission <!-- ED: approved -->
+### Mission 
 
 > [!definition]
-> Eine **Mission** (en.: *mission*; meta: `Mission`)[^mission] bezeichnet den durch [Leitprinzipien](#leitprinzipien) geleiteten **grundlegenden Existenzzweck** eines handlungsfähigen Akteurs: warum er existiert und welchen Beitrag er leisten soll.
+> Eine **Mission** (en.: *mission*; meta: `Mission`)[^mission] bezeichnet den durch das `Ethos` eines handlungsfähigen Akteurs geprägten **grundlegenden Existenzzweck**: warum der Akteur existiert und welchen Beitrag er leisten soll.
 > 
 > > [!tldr] Mission - \textsc{Warum} gibt es uns?
 >
-> [^mission]: *Autorenableitung in Anlehnung an Rumelt2011*: Rumelt definiert Mission nicht als eigenen Kernbegriff, trennt Strategie aber klar von Ambition, Vision und anderen Führungsbegriffen.
+> [^mission]: *Autorenableitung in Anlehnung an Rumelt (2011)*: Rumelt definiert Mission nicht als eigenen Kernbegriff, trennt Strategie aber klar von Ambition, Vision und anderen Führungsbegriffen.
 
-#### Vision <!-- ED: approved -->
+### Vision 
 
 > [!definition]
-> Eine **Vision** (en.: *vision*; meta: `Vision`)[^vision] bezeichnet einen durch [Mission](#mission) begründeten und durch [Leitprinzipien](#leitprinzipien) geleiteten, von einem handlungsfähigen Akteur **angestrebten, orientierenden Zukunftszustand**: wohin er wirken will, ohne bereits zu erklären, wie Hindernisse überwunden werden.
+> Eine **Vision** (en.: *vision*; meta: `Vision`)[^vision] bezeichnet einen vom `Ethos` geprägten und durch die [Mission](#mission) begründeten, von einem handlungsfähigen Akteur **angestrebten, orientierenden Zukunftszustand**: wohin der Akteur wirken will, ohne bereits festzulegen, wie diese Wirkung erreicht wird.
 > 
 > > [!tldr] Vision - \textsc{Wohin} wollen wir wirken?
 >
-> [^vision]: *Autorenableitung in Anlehnung an Rumelt2011*: Die Definition ist eine redaktionelle Systematisierung. Rumelt liefert vor allem die Abgrenzung: Vision und Ambition sind keine Strategie, weil sie noch nicht erklären, wie eine wesentliche Herausforderung überwunden wird.
+> [^vision]: *Autorenableitung in Anlehnung an Rumelt (2011)*: Die Definition ist eine redaktionelle Systematisierung. Rumelt liefert vor allem die Abgrenzung: Vision und Ambition sind keine Strategie, weil sie noch nicht erklären, wie eine wesentliche Herausforderung überwunden wird.
 
 <!--Vision ist qualitativ, richtungsgebend aber noch keine Wegentscheidung.-->
 
-### Wegentscheidung
+## Wegentscheidung
 
-#### Strategie
-
-> [!definition]
-> **Strategie** (en.: *strategy*; meta: `Strategy`)[^strategy] bezeichnet die begründete und kohärente Wegentscheidung eines handlungsfähigen Akteurs, mit der er festlegt, wie er seine [Vision](#vision) unter gegebenen Bedingungen verwirklichen will und sich damit gegenüber relevanten Alternativen, Wettbewerbern oder Vergleichsangeboten differenziert. Dazu gehören das Setzen von Prioritäten, die bewusste Auswahl und der Ausschluss von Handlungsoptionen sowie die Abstimmung von Aktivitäten und Ressourcen, sodass sie sich gegenseitig verstärken. Kurz: Strategie = Wie verwirklichen wir unsere Vision?
->
-> [^strategy]: *Quellenanker*: Rumelt2011 für Strategie als kohärente Antwort auf eine wesentliche Herausforderung; Porter1996 für Positionierung, Trade-offs und Fit; Mintzberg1985 für Strategie als intendiertes und realisiertes Handlungsmuster; Parmenter2020 für Strategie als Weg zur Verwirklichung der Vision und als Grundlage für die Ableitung von CSFs und Performance-Maßen.
-
-### Kontextualisierung
-
-#### Kontext
+### Strategie
 
 > [!definition]
-> Ein **operativer Kontext** (en.: *operational context*; meta: `Context`)[^context] bezeichnet einen konkreten Arbeits-, Leistungs- oder Umfeldzusammenhang, in dem Bedarfe sichtbar, begründbar oder überprüfbar werden, z. B. Prozess, Capability, System, Kundenerlebnis, regulatorische Anforderung oder Schmerzpunkt. Kurz: Operativer Kontext = Wo wird ein Bedarf sichtbar?
+> **Strategie** (en.: *strategy*; meta: `Strategy`)[^strategy] bezeichnet die begründete und kohärente Wegentscheidung eines handlungsfähigen Akteurs, mit der er festlegt, wie er seine [Vision](#vision) unter gegebenen Bedingungen verwirklichen will und sich damit gegenüber relevanten Alternativen, Wettbewerbern oder Vergleichsangeboten differenziert.
 >
-> [^context]: *Autorenableitung in Anlehnung an Rumelt2011, Porter1996, Doerr2018 und Parmenter2020*: Operativer Kontext wird hier als O2I-spezifischer Brückenbegriff eingeführt, um strategische Auswahl mit konkreter Arbeitsrealität, Operationalisierung und Messbarkeit zu verbinden.
+> > [tl;dr] Strategie - \textsc{Wie} verwirklichen wir unsere Vision?
+>
+> [^strategy]: *Quellenanker*: Rumelt (2011) für Strategie als kohärente Antwort auf eine wesentliche Herausforderung; Porter (1996) für Positionierung, Trade-offs und Fit; Mintzberg und Waters (1985) für Strategie als intendiertes und realisiertes Handlungsmuster; Parmenter (2020) für Strategie als Weg zur Verwirklichung der Vision und als Grundlage für die Ableitung von CSFs und Performance-Maßen.
 
-#### Bedarf
+Dazu muss eine Strategie ihre Bestandteile explizit machen. Eine aufgeschriebene Strategie liefert mindestens Geltungsbereich, abgeleitete Leitplanken, Diagnose, strategische Absicht, Guiding Policy, Positionierung, Trade-offs, kohärente Handlungsfestlegungen und Fit.
+
+#### Geltungsbereich und Strategieebenen
 
 > [!definition]
-> Ein **Bedarf** (en.: *need*; meta: `Need`)[^need] bezeichnet eine begründete Anforderung an Veränderung, Fähigkeit oder Ergebnis, die in einem [operativen Kontext](#kontext) sichtbar wird und durch eine [Strategie](#strategie) als strategisch relevant qualifiziert wird, aber noch keine konkrete Lösung festlegt. Ein Bedarf beschreibt, was benötigt wird, nicht wie es umgesetzt oder erfüllt wird. Bedarfe können in weitere Bedarfe verfeinert werden; jede Verfeinerung bleibt auf der Ebene des Was. Kurz: Bedarf = Was wird benötigt?
+> Der **Geltungsbereich einer Strategie**[^scope] bezeichnet die organisatorische oder sachliche Einheit, für die eine Wegentscheidung gilt.
 >
-> [^need]: *Autorenableitung in Anlehnung an Rumelt2011, Porter1996, Doerr2018 und Parmenter2020*: Bedarf wird hier als O2I-spezifischer Brückenbegriff zwischen Wegentscheidung und Operationalisierung eingeführt. Rumelt und Porter stützen die Ableitung aus strategischer Logik; Doerr und Parmenter stützen die anschließende Operationalisierung und Messbarmachung.
+> [^scope]: *Autorenableitung in Anlehnung an Rumelt (2011) und Porter (1996)*: Eine Wegentscheidung ist nur dann sinnvoll abgrenzbar, wenn klar ist, für welche Herausforderung, welche Positionierung und welches Aktivitätssystem sie gilt.
 
-Ein Bedarf entsteht nicht aus Strategie allein. Er wird in einem operativen Kontext sichtbar, ist dort fachlich verankert und wird durch Strategie als strategisch relevant qualifiziert. Sichtbarkeit und strategische Relevanz sind unabhängige Qualitäten eines Bedarfs:
+Eine Strategie muss ihren Akteur, Zeitraum, Verantwortungsbereich und ihre Entscheidungsebene benennen. Abteilungen haben nicht automatisch Strategien. Nach der hier verwendeten Definition besitzen sie nur dann eine eigene Strategie, wenn sie eine eigene Diagnose, Guiding Policy, Trade-offs und kohärente Handlungslogik besitzen.
 
-| im operativen Kontext sichtbar | strategisch relevant | Begriff |
-|---|---:|---|
-| nein | nein | latenter Bedarf |
-| ja | nein | sichtbar gewordener Bedarf |
-| nein | ja | strategisch relevanter Bedarf |
-| ja | ja | wirkungsrelevanter Bedarf |
+#### Abgeleitete Leitplanken
 
-Je stärker ein operativer Kontext bereits an einer Strategie ausgerichtet ist, desto einfacher ist die strategische Qualifizierung sichtbar gewordener Bedarfe. Die Ausrichtung des Kontextes ersetzt die Qualifizierung jedoch nicht: Auch ein strategienaher Kontext kann Bedarfe sichtbar machen, die nicht strategisch relevant sind.
+**Abgeleitete Leitplanken** bezeichnen Vorgaben aus übergeordneten Strategien, Agenden, Prinzipien oder verbindlichen Rahmenbedingungen, an die eine Strategie anschließen muss.
 
-Ein wirkungsrelevanter Bedarf ist ein Bedarf, der in einem operativen Kontext sichtbar geworden und durch eine Strategie als strategisch relevant qualifiziert ist. Er ist handlungsrelevant, weil seine Bearbeitung plausibel zur angestrebten Wirkung beitragen kann.
-
-Ein Beispiel für Bedarfsspezialisierungen sind fachliche Bedarfe und daraus abgeleitete Digitalisierungsbedarfe. Beide bleiben Bedarfe: Sie beschreiben das Was, nicht die Lösung.
-
-### Operationalisierung
-
-#### Objective
-
-> [!definition]
-> Ein **Objective** (en.: *objective*; meta: `Objective`)[^objective] bezeichnet ein qualitatives, zeitlich begrenztes Umsetzungsziel, das einen [wirkungsrelevanten Bedarf](#bedarf) in einen erreichbaren Zielzustand übersetzt. Kurz: Objective = Was soll zur Bedarfserfüllung erreicht werden?
->
-> [^objective]: *Quellenanker*: Doerr2018 für Objectives als qualitative Ergebnisgröße im OKR-System. *Autorenableitung in Anlehnung an Rumelt2011 und Porter1996*: Objectives werden im Artikel nicht mit Strategie gleichgesetzt. Sie operationalisieren strategische Entscheidungen, ersetzen aber weder Diagnose, Guiding Policy, Trade-offs noch Fit.
-
-#### Key Result
-
-> [!definition]
-> Ein **Key Result** (en.: *key result*; meta: `KeyResult`)[^key-result] bezeichnet eine quantitative Evidenzgröße, mit der Fortschritt oder Erreichung eines [Objectives](#objective) überprüft wird. Kurz: Key Result = Woran erkennen wir quantitativ, ob wir vorankommen?
->
-> [^key-result]: *Quellenanker*: Doerr2018 für Key Results als messbare Evidenz der Objective-Erreichung.
-
-Key Results sind keine Strategie. Sie machen Fortschritt in der Operationalisierung eines wirkungsrelevanten Bedarfs überprüfbar.
-
-#### Intervention
-
-> [!definition]
-> Eine **Intervention** (en.: *intervention*; meta: `Intervention`)[^intervention] bezeichnet eine gezielte Einwirkung auf einen [operativen Kontext](#kontext), mit der ein [wirkungsrelevanter Bedarf](#bedarf) adressiert und eine strategisch relevante Veränderung erzeugt werden soll. Eine Intervention kann als Projekt, Maßnahme, Experiment, Programm, Initiative oder andere Umsetzungseinheit auftreten. Kurz: Intervention = Womit verändern wir den Kontext?
->
-> [^intervention]: *Autorenableitung in Anlehnung an Rumelt2011, Porter1996 und Doerr2018*: Interventionen gehören zur Operationalisierung einer Wegentscheidung. Sie übersetzen strategische Handlungslogik in konkrete Eingriffe, bleiben aber Wirkungshypothesen und keine Garantie für Zielerreichung.
-
-### Messung
-
-#### Measure
-
-> [!definition]
-> Ein **Measure** (de.: *Messgröße*; meta: `Measure`)[^measure] bezeichnet eine stabile Messdefinition, mit der ein relevanter Zustand, eine Leistung oder eine Entwicklung in einem [operativen Kontext](#kontext) beobachtet wird. Ein Measure kann Zielwerte tragen, wenn eine Intervention festlegt, welche Veränderung erreicht werden soll. Kurz: Measure = Womit messen wir einen relevanten Zustand?
->
-> [^measure]: *Quellenanker*: Parmenter2020 für KPIs und die Abgrenzung zu anderen Performance-Maßen; Barr2014 für methodische Entwicklung aussagefähiger Performance-Maße. *Autorenableitung in Anlehnung an Doerr2018 und Parmenter2020*: Ein KPI ist eine entscheidungsrelevante Spezialisierung eines Measure. Ein Key Result kann einen konkreten Zielwert für ein Measure in einem Umsetzungszeitraum setzen.
-
-### Wirkung
-
-### To be discussed
+Eine übergeordnete Strategie richtet eine untergeordnete Strategie aus: Sie gibt Richtung, Prioritäten, Leitplanken, Restriktionen oder Zielbezüge vor, ohne die untergeordnete Strategie vollständig zu determinieren. Die untergeordnete Strategie muss daraus eine eigene Diagnose, Guiding Policy und kohärente Handlungsfestlegungen für ihren eigenen Geltungsbereich ableiten.
 
 #### Diagnose
 
 > [!definition]
 > Die **Diagnose**[^diagnosis] beschreibt die entscheidende Herausforderung, nicht die Gesamtheit aller beobachtbaren Probleme.
 >
-> [^diagnosis]: *Quellenanker*: Rumelt2011.
+> [^diagnosis]: *Quellenanker*: Rumelt (2011).
 
 **Funktion:** Sie reduziert Komplexität und macht bewertbar, ob eine Guiding Policy überhaupt passend ist.
+
+#### Strategische Absicht
+
+**Strategische Absicht** bezeichnet den angestrebten Beitrag einer Strategie zur [Vision](#vision). Sie macht deutlich, welche Wirkung oder welcher Fortschritt durch die Wegentscheidung erreichbar werden soll, ohne bereits die konkrete Intervention festzulegen.
 
 #### Guiding Policy / leitende Handlungslogik
 
 > [!definition]
 > Die **Guiding Policy**[^guiding-policy] legt die grundsätzliche Stoßrichtung fest, mit der die diagnostizierte Herausforderung adressiert wird.
 >
-> [^guiding-policy]: *Quellenanker*: Rumelt2011.
+> [^guiding-policy]: *Quellenanker*: Rumelt (2011).
 
 **Abgrenzung zur Vision:** Die Vision beschreibt einen gewollten Zukunftszustand. Die Guiding Policy beschreibt den gewählten Ansatz, um eine konkrete strategische Herausforderung zu bewältigen.
 
@@ -223,7 +178,7 @@ Key Results sind keine Strategie. Sie machen Fortschritt in der Operationalisier
 > [!definition]
 > **Strategische Positionierung**[^positioning] legt fest, wodurch sich der gewählte Weg von Alternativen unterscheidet.
 >
-> [^positioning]: *Quellenanker*: Porter1996.
+> [^positioning]: *Quellenanker*: Porter (1996).
 
 **Funktion:** Ohne Unterschied keine Strategie, sondern nur Nachahmung oder operative Verbesserung.
 
@@ -232,269 +187,238 @@ Key Results sind keine Strategie. Sie machen Fortschritt in der Operationalisier
 > [!definition]
 > **Trade-offs**[^trade-offs] sind bewusste Nicht-Entscheidungen: Sie definieren, was eine Organisation nicht tut, um die gewählte Position nicht zu verwässern.
 >
-> [^trade-offs]: *Quellenanker*: Porter1996.
+> [^trade-offs]: *Quellenanker*: Porter (1996).
 
 **Funktion:** Trade-offs schützen Fokus, Ressourcen und Identität der Strategie.
-
-#### Fit / Kohärenz
-
-> [!definition]
-> **Fit**[^fit] bezeichnet die gegenseitige Verstärkung von Aktivitäten, Policies und Ressourcenbindungen.
->
-> [^fit]: *Quellenanker*: Porter1996 für Fit zwischen Aktivitäten; Rumelt2011 für Kohärenz als strategische Mindestanforderung.
-
-Fit bedeutet, dass Aktivitäten nicht nur nebeneinander bestehen, sondern sich gegenseitig stützen und verstärken. Eine Aktivität passt zur Strategie, wenn sie die gewählte Position, die bewussten Trade-offs und andere Aktivitäten unterstützt. Fehlt dieser Fit, entsteht keine Strategie, sondern eine lose Sammlung einzelner Maßnahmen.
 
 #### Kohärente Handlungsfestlegungen
 
 > [!definition]
 > **Kohärente Handlungsfestlegungen**[^coherent-actions] sind die strategierelevanten Entscheidungen und Ressourcenbindungen, die die Guiding Policy ausführbar machen.
 >
-> [^coherent-actions]: *Quellenanker*: Rumelt2011.
+> [^coherent-actions]: *Quellenanker*: Rumelt (2011).
 
 **Abgrenzung:** Sie gehören zur Wegentscheidung, soweit sie deren Logik beweisbar machen. Detaillierte Projekte, Sprint-Objectives, OKRs und operative Aufgaben gehören zur Operationalisierung.
 
-#### Critical Success Factor
+#### Fit / Kohärenznachweis
 
 > [!definition]
-> Ein **Critical Success Factor** (en.: *critical success factor*; meta: `CriticalSuccessFactor`)[^critical-success-factor] bezeichnet einen erfolgskritischen Faktor, in dem eine Organisation gut performen muss, damit Strategie wirksam werden kann.
+> **Fit**[^fit] bezeichnet die gegenseitige Verstärkung von Aktivitäten, Policies und Ressourcenbindungen.
 >
-> [^critical-success-factor]: *Quellenanker*: Parmenter2020.
+> [^fit]: *Quellenanker*: Porter (1996) für Fit zwischen Aktivitäten; Rumelt (2011) für Kohärenz als strategische Mindestanforderung.
 
-Vorgemerkte Relationen:
+Fit bedeutet, dass Aktivitäten nicht nur nebeneinander bestehen, sondern sich gegenseitig stützen und verstärken. Eine Aktivität passt zur Strategie, wenn sie die gewählte Position, die bewussten Trade-offs und andere Aktivitäten unterstützt. Fehlt dieser Fit, entsteht keine Strategie, sondern eine lose Sammlung einzelner Maßnahmen.
 
-```text
-CriticalSuccessFactor --selects--> Measure
-```
-
-Offen ist, ob `CriticalSuccessFactor` als Bestandteil von `Strategy` oder als externes, durch Strategie gerahmtes Element modelliert wird. Falls `CriticalSuccessFactor` Bestandteil von `Strategy` ist, ist eine Kompositionsrelation zu verwenden, keine semantische Rahmenrelation.
-
-Bis `CriticalSuccessFactor` ausmodelliert ist, kann `Strategy --frames--> Measure` als verdichtete Relation verwendet werden. Die Relation bedeutet nicht, dass Measures direkt aus Strategie entstehen. Sie bedeutet: Strategy rahmt Measures, bestimmt sie aber nicht unmittelbar; die Auswahl geeigneter Measures erfolgt über die noch auszuarbeitende CSF-/Performance-Measure-Logik.
-
-#### Umsetzung
+### Kritische Erfolgsfaktoren
 
 > [!definition]
-> **Umsetzung**[^implementation] ist die Übersetzung der Wegentscheidung in Interventionen, Objectives, Key Results, Verantwortlichkeiten, Takte, Measures und Lernschleifen.
+> Ein **kritischer Erfolgsfaktor** (en.: *critical success factor*; meta: `CSF`)[^critical-success-factor] bezeichnet einen aus der Strategie abgeleiteten Leistungs- oder Erfolgsbereich, in dem ein handlungsfähiger Akteur gut performen muss, damit die Strategie wirksam werden kann.
 >
-> [^implementation]: *Quellenanker*: Rumelt2011 für die Notwendigkeit kohärenter Aktionen; Doerr2018 für Objectives und Key Results; Parmenter2020 für KPI/CSF-Logik.
+> [^critical-success-factor]: *Quellenanker*: Parmenter (2020).
 
-**Abgrenzung:** Umsetzung ist nicht die Definition der Strategie, sondern deren Operationalisierung. Sie macht die Wegentscheidung arbeitsfähig, überprüfbar und lernfähig.
+Kritische Erfolgsfaktoren gehören nicht zum Kernbegriff Strategie im Sinne von Rumelt, Porter oder Mintzberg. Sie werden aus Strategie abgeleitet und verbinden Wegentscheidung mit Bedarfsqualifikation, Messung und Nachweislogik.
 
-#### Geltungsbereich und organisatorische Ableitung
+## Kontextualisierung
+
+### Situation
 
 > [!definition]
-> Der **Geltungsbereich einer Wirkungskette**[^scope] bezeichnet die organisatorische oder sachliche Einheit, für die Orientierung, Wegentscheidung, Umsetzung, Messung und Wirkung zusammen modelliert werden.
+> Eine **Situation** (en.: *situation*; meta: `Situation`)[^situation] bezeichnet einen konkreten Arbeits-, Leistungs- oder Umfeldzusammenhang, in dem Bedarfe sichtbar, begründbar oder überprüfbar werden, z. B. Prozess, Capability, System, Kundenerlebnis, regulatorische Anforderung oder Schmerzpunkt. Kurz: Situation = Wo wird ein Bedarf sichtbar?
 >
-> [^scope]: *Autorenableitung in Anlehnung an Rumelt2011 und Porter1996*: Eine Wegentscheidung ist nur dann sinnvoll abgrenzbar, wenn klar ist, für welche Herausforderung, welche Positionierung und welches Aktivitätssystem sie gilt.
+> [^situation]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996), Doerr (2018) und Parmenter (2020)*: Situation wird hier als O2I-spezifischer Brückenbegriff eingeführt, um strategische Auswahl mit konkreter Arbeitsrealität, Operationalisierung und Messbarkeit zu verbinden.
 
-Abteilungen haben nicht automatisch Strategien. Nach der hier verwendeten Definition besitzen sie nur dann eine eigene Strategie, wenn sie eine eigene Diagnose, Guiding Policy, Trade-offs und kohärente Handlungslogik besitzen.
-
-In der Regel haben Abteilungen eher:
-
-- Beiträge zur übergeordneten Wirkungskette,
-- Objectives und Key Results,
-- Interventionen, Initiativen oder Actions,
-- Capability-Beiträge,
-- Roadmaps,
-- Verantwortlichkeiten für Handlungsfelder oder Aktivitätssysteme.
-
-Für Organisationen bedeutet das: Ein Bereich kann eine eigene Wegentscheidung besitzen; untergeordnete Einheiten verantworten häufig Beiträge, Capabilities, Roadmaps oder OKR-Sets. Das gehört nicht in die Grunddefinition von Effectiveness, aber in die Modellierung von Geltungsbereich und organisatorischer Ableitung.
-
-**Autorenableitung in Anlehnung an Rumelt2011, Porter1996 und Doerr2018:** Rumelt und Porter begründen die Anforderungen an Strategie; Doerr liefert die Logik, wie Beiträge über Objectives und Key Results ausgerichtet werden können.
-
-#### Wirkung
+### Bedarf
 
 > [!definition]
-> **Wirkung**[^effect] ist die beobachtbare, zur Vision beitragende Veränderung, die aus der Umsetzung einer Wegentscheidung entsteht und an relevanten Ergebnis- und Leistungsmaßen nachvollzogen werden kann.
+> Ein **Bedarf** (en.: *need*; meta: `Need`)[^need] bezeichnet eine begründete Anforderung an Veränderung, Fähigkeit oder Ergebnis, die in einer [Situation](#situation) sichtbar, begründbar oder überprüfbar wird, aber noch keine konkrete Lösung festlegt. Ein Bedarf beschreibt, was benötigt wird, nicht wie es umgesetzt oder erfüllt wird. Bedarfe können in weitere Bedarfe verfeinert werden; jede Verfeinerung bleibt auf der Ebene des Was. Kurz: Bedarf = Was wird benötigt?
 >
-> [^effect]: *Autorenableitung in Anlehnung an Porter1996, Doerr2018, Parmenter2020 und Barr2014*: Wirkung wird hier als Ergebnis der Umsetzung einer strategischen Wegentscheidung verstanden. Porter liefert die Logik des Wertbeitrags durch Aktivitätssysteme; Doerr, Parmenter und Barr liefern Instrumente zur Überprüfung von Fortschritt und Performance.
+> [^need]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996), Doerr (2018) und Parmenter (2020)*: Bedarf wird hier als O2I-spezifischer Brückenbegriff zwischen Wegentscheidung und Operationalisierung eingeführt. Rumelt und Porter stützen die Ableitung aus strategischer Logik; Doerr und Parmenter stützen die anschließende Operationalisierung und Messbarmachung.
 
-## Metamodell
+Ein Bedarf entsteht nicht aus Strategie allein. Er wird in einer Situation sichtbar und ist dort fachlich verankert. Seine Wirkungsrelevanz wird durch Bedarfsqualifikation in der Operationalisierung bestimmt.
 
-Das O2I-Metamodell trennt Semantik und Syntax. Die Semantik definiert die O2I-Begriffslogik aus O2I-Primitives, O2I-Kontexten, O2I-Relationen und Wohlgeformtheitsregeln; die Syntax beschreibt, wie diese Begriffslogik in einer Modellierungssprache dargestellt wird.<!-- TODO: Aus der Einleitung muss klar werden *warum* ein Metamodell im Allgemeinen hilfreich ist und *warum* dieses Metamodell im speziellen hiflreich ist! --><!-- ED: approved -->
+Ein Beispiel für Bedarfsspezialisierungen sind fachliche Bedarfe und daraus abgeleitete Digitalisierungsbedarfe. Beide bleiben Bedarfe: Sie beschreiben das Was, nicht die Lösung.
 
-### Semantik
+## Operationalisierung
 
-Die O2I-Semantik übersetzt die Terminologie in eine modellierbare Struktur: Sie legt fest, welche O2I-Primitives das Modell verwendet, welche O2I-Kontexte diesen Primitives fachliche Bedeutung geben, welche Relationen zwischen ihnen zulässig sind und nach welchen Regeln Modelle wohlgeformt sind.<!-- ED: approved -->
+Operationalisierung übersetzt eine Wegentscheidung und sichtbare Bedarfe in wirkungsgerichtete Handlung. Dazu gehören die Qualifikation von Bedarfen und die Intervention, mit der ein wirkungsrelevanter Bedarf adressiert wird.
 
-> tl;dr. **Terminologie** definiert, *was die Begriffe fachlich-verbal bedeuten*; **Semantik** konkretisiert diese Bedeutung als *O2I-Primitives, O2I-Kontexte, O2I-Relationen und Wohlgeformtheitsregeln*; **Syntax** definiert, *wie diese Semantik in einer Modellierungssprache dargestellt wird*.<!-- ED: approved -->
+### Bedarfsqualifikation
 
-Die O2I-Semantik wird im Folgenden in vier Perspektiven entfaltet: Zuerst werden die fachlichen O2I-Kontexte und ihre O2I-Relationen geklärt, weil sie die grundlegenden Interpretationsrahmen und Makrorelationen von Wirkungsarchitekturen bilden. Danach werden die O2I-Primitives und ihre Relationen als minimaler abstrakter Formvorrat[^formvorrat] beschrieben. Wohlgeformtheitsregeln legen anschließend fest, welche Strukturen als gültige O2I-Modelle gelten. O2I-Interpretationen beschreiben schließlich, welche fachliche Bedeutung ein O2I-Primitive in einem bestimmten O2I-Kontext erhält.
+**Bedarfsqualifikation** bezeichnet die strategische Bewertung, ob ein in einer Situation sichtbar gewordener Bedarf für eine Strategie relevant ist. Ein Bedarf wird wirkungsrelevant, wenn er in einer Situation sichtbar ist und durch eine Strategie als strategisch relevant qualifiziert wird.
+
+Sichtbarkeit und strategische Relevanz sind unabhängige Qualitäten eines Bedarfs:
+
+| in Situation sichtbar | strategisch relevant | Begriff |
+|---|---:|---|
+| nein | nein | latenter Bedarf |
+| ja | nein | sichtbar gewordener Bedarf |
+| nein | ja | strategisch relevanter Bedarf |
+| ja | ja | wirkungsrelevanter Bedarf |
+
+Je stärker eine Situation bereits an einer Strategie ausgerichtet ist, desto einfacher ist die strategische Qualifizierung sichtbar gewordener Bedarfe. Die Ausrichtung der Situation ersetzt die Qualifizierung jedoch nicht: Auch eine strategienahe Situation kann Bedarfe sichtbar machen, die nicht strategisch relevant sind.
+
+Ein wirkungsrelevanter Bedarf ist handlungsrelevant, weil seine Bearbeitung plausibel zur angestrebten Wirkung beitragen kann.
+
+### Intervention
+
+> [!definition]
+> Eine **Intervention** (en.: *intervention*; meta: `Intervention`)[^intervention] bezeichnet eine gezielte Einwirkung auf eine [Situation](#situation), mit der ein wirkungsrelevanter Bedarf adressiert und eine strategisch relevante Veränderung erzeugt werden soll. Eine Intervention kann als Projekt, Maßnahme, Experiment, Programm, Initiative oder andere Umsetzungseinheit auftreten. Kurz: Intervention = Womit verändern wir die Situation?
+>
+> [^intervention]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996) und Doerr (2018)*: Interventionen gehören zur Operationalisierung einer Wegentscheidung. Sie übersetzen strategische Handlungslogik in konkrete Eingriffe, bleiben aber Wirkungshypothesen und keine Garantie für Zielerreichung.
+
+## Wirkung
+
+Wirkung wird in O2I nicht behauptet, sondern über Messung nachvollziehbar gemacht.
+
+> [!definition]
+> **Wirkung**[^effect] bezeichnet eine beobachtbare, zur [Vision](#vision) beitragende Veränderung, die aus der Operationalisierung einer Wegentscheidung entsteht und an relevanten Ergebnis- und Leistungsmaßen nachvollzogen werden kann.
+>
+> [^effect]: *Autorenableitung in Anlehnung an Porter (1996), Doerr (2018), Parmenter (2020) und Barr (2014)*: Wirkung wird hier als Ergebnis der Operationalisierung einer strategischen Wegentscheidung verstanden. Porter liefert die Logik des Wertbeitrags durch Aktivitätssysteme; Doerr, Parmenter und Barr liefern Instrumente zur Überprüfung von Fortschritt und Performance.
+
+### Messung
+
+> [!definition]
+> Eine **Messung** (en.: *measure*; meta: `Measure`)[^measure] bezeichnet eine stabile Messdefinition, mit der ein relevanter Zustand, eine Leistung oder eine Entwicklung in einer [Situation](#situation) beobachtet wird. Eine Messung kann Zielwerte tragen, wenn eine Intervention festlegt, welche Veränderung erreicht werden soll. Kurz: Messung = Womit machen wir relevante Zustände beobachtbar?
+>
+> [^measure]: *Quellenanker*: Parmenter (2020) für KPIs und die Abgrenzung zu anderen Performance-Maßen; Barr (2014) für methodische Entwicklung aussagefähiger Performance-Maße. *Autorenableitung in Anlehnung an Doerr (2018) und Parmenter (2020)*: Ein KPI ist eine entscheidungsrelevante Spezialisierung eines Measure. Ein Key Result kann einen konkreten Zielwert für ein Measure in einem Umsetzungszeitraum setzen.
+
+### Nachweislogik
+
+**Nachweislogik** bezeichnet die fachliche Begründung, wie Messungen als plausible Evidenz für Wirkung gelesen werden. Sie verbindet Interventionen, relevante Messungen, Zielwerte, beobachtete Veränderungen und Lernschleifen, ohne daraus einen automatischen Kausalbeweis abzuleiten.
+
+# Metamodell
+
+Das O2I-Metamodell trennt Semantik und Syntax. Die Semantik definiert die O2I-Begriffslogik aus O2I-Primitives, O2I-Kontexten, O2I-Relationen und Wohlgeformtheitsregeln; die Syntax beschreibt, wie diese Begriffslogik in einer Modellierungssprache dargestellt wird.
+
+## Semantik
+
+Die O2I-Semantik übersetzt die Terminologie in eine modellierbare Struktur: Sie legt fest, welche O2I-Primitives das Modell verwendet, welche O2I-Kontexte diesen Primitives fachliche Bedeutung geben, welche Relationen zwischen ihnen zulässig sind und nach welchen Regeln Modelle wohlgeformt sind.
+
+> tl;dr. **Terminologie** definiert, *was die Begriffe fachlich-verbal bedeuten*; **Semantik** konkretisiert diese Bedeutung als *O2I-Primitives, O2I-Kontexte, O2I-Relationen und Wohlgeformtheitsregeln*; **Syntax** definiert, *wie diese Semantik in einer Modellierungssprache dargestellt wird*.
+
+Die O2I-Semantik besteht aus vier Perspektiven: O2I-Kontexte und ihre Relationen bilden die grundlegenden Interpretationsrahmen und Makrorelationen von Wirkungsarchitekturen. O2I-Primitives und ihre Relationen bilden den minimalen abstrakten Formvorrat[^formvorrat]. Wohlgeformtheitsregeln legen fest, welche Strukturen als gültige O2I-Modelle gelten. O2I-Interpretationen beschreiben, welche fachliche Bedeutung ein O2I-Primitive in einem bestimmten O2I-Kontext erhält.
 
 [^formvorrat]: Formvorrat bezeichnet hier die Menge abstrakter Modellformen, mit denen fachliche Inhalte in unterschiedlichen O2I-Kontexten ausgedrückt werden können.
 
-#### Kontexte
+Die in @sec:terminologie eingeführten Domänen Orientierung, Wegentscheidung, Kontextualisierung, Operationalisierung und Wirkung bilden die fachliche Ordnung, aus der die O2I-Kontexte hervorgehen.
 
-##### Elemente
+### Kontexte
 
-O2I formalisiert die in @sec:terminologie eingeführten fachlichen Standardbegriffe als *O2I-Kontexte*. Ein O2I-Kontext ist ein fachlicher Interpretationsrahmen, in dem O2I-Primitives kontextspezifische Bedeutung erhalten. Die in @sec:terminologie eingeführten Domänen Orientierung, Wegentscheidung, Kontextualisierung, Operationalisierung, Messung und Wirkung bilden die fachliche Ordnung, aus der diese Kontexte hervorgehen. So wird in der Domäne Orientierung etwa `Mission` als O2I-Kontext modelliert, in dem ein `Driver` als grundlegender Existenzzweck, Antrieb oder Beitragsgrund gelesen wird. Der O2I-Kontext `Context` bezeichnet den operativen Kontext als fachlichen Begriff; er ist vom metasprachlichen Ausdruck "O2I-Kontext" zu unterscheiden.<!-- ED: approved -->
+#### Elemente
 
-Das Kontext-Inventar legt fest, welche O2I-Kontexte das Metamodell verwendet:<!-- ED: approved -->
+O2I formalisiert die in @sec:terminologie eingeführten fachlichen Standardbegriffe als *O2I-Kontexte*. Ein O2I-Kontext ist ein fachlicher Interpretationsrahmen, in dem O2I-Primitives kontextspezifische Bedeutung erhalten.
 
-```text
-O2I-Kontext ::= Mission
-              | Vision
-              | Strategy
-              | Need
-              | Intervention
-              | Measure
-              | Context
-```<!-- ED: approved -->
+Das Kontext-Inventar legt fest, welche O2I-Kontexte das Metamodell verwendet. Die folgenden Codeblöcke sind Auszüge aus der normativen Haskell-Spezifikation `spc/O2I.hs`.
 
-@Fig:o2i-context-view zeigt das Kontextmodell des O2I-Metamodells: O2I-Kontexte und ihre Relationen.<!-- ED: approved -->
+```haskell
+!include`snippetStart="-- * Contexts", snippetEnd="-- * Primitives"` spc/O2I.hs
+```
 
-![O2I Context View](<img/O2I Context.png>){#fig:o2i-context-view width=85%}<!-- ED: approved -->
 
-Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen: Sie zeigt die zuvor eingeführten fachlichen Standardbegriffe als O2I-Kontexte und macht sichtbar, welche Relationen zwischen diesen Kontexten zulässig sind. Sie ersetzt die terminologischen Definitionen nicht, sondern fasst ihre teleologische Wirkungslogik auf Metamodellebene zusammen.<!-- ED: approved -->
+Die Kontextarten sind fachlich so zu lesen: `Ethos` bezeichnet den kulturell-normativen Orientierungsrahmen eines Akteurs; darin können einzelne `Principle` liegen. `Mission` bezeichnet den grundlegenden Existenzzweck; ein `Driver` wird darin als grundlegender Existenzzweck, Antrieb oder Beitragsgrund gelesen. `Vision` bezeichnet einen orientierenden Zukunftszustand. `Strategy` bezeichnet die Wegentscheidung unter gegebenen Bedingungen. `Need` bezeichnet einen begründeten Änderungs- oder Handlungsbedarf. `Intervention` bezeichnet eine wirkungsgerichtete Handlung oder Eingriffslogik. `Measure` bezeichnet einen Messrahmen, in dem relevante Zustände beobachtbar werden. `Situation` bezeichnet einen konkreten Arbeits-, Leistungs- oder Umfeldzusammenhang; sie ist vom metasprachlichen Ausdruck "O2I-Kontext" zu unterscheiden.
 
-##### Relationen
+@Fig:o2i-context-view zeigt das Kontextmodell des O2I-Metamodells: O2I-Kontexte und ihre Relationen.
 
-Die grafische Sicht dient der Orientierung; die folgenden Kontextrelationen legen explizit fest, welche Relationen zwischen O2I-Kontexten zulässig sind. Sie machen die Darstellung eindeutig, referenzierbar und als Grundlage für Wohlgeformtheitsregeln verwendbar. O2I verwendet dafür eine kompakte Spezifikationssyntax: `Subject --relation--> Object`.<!-- ED: approved -->
+![O2I Context View](<img/O2I Context.png>){#fig:o2i-context-view width=85%}
 
-```text
-Principle --guides--> Mission
-Mission --motivates--> Vision
-Principle --guides--> Vision
-Vision --orients--> Strategy
-Strategy --directs--> Strategy
-Strategy --contributes-to--> Strategy
-Strategy --qualifies--> Need
-Context --surfaces--> Need
-Need --refines--> Need
-Need --is-grounded-in--> Context
-Need --contributes-to--> Strategy
-Intervention --addresses--> Need
-Need --requires--> Intervention
-Strategy --directs--> Intervention
-Intervention --contributes-to--> Strategy
-Intervention --changes--> Context
-Intervention --sets-target-for--> Measure
-Measure --measures--> Context
-Strategy --frames--> Measure
-```<!-- ED: approved -->
+Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen: Sie zeigt die fachlichen Standardbegriffe als O2I-Kontexte und macht sichtbar, welche Relationen zwischen diesen Kontexten zulässig sind. Sie ersetzt die terminologischen Definitionen nicht, sondern fasst ihre teleologische Wirkungslogik auf Metamodellebene zusammen.
 
-Die O2I-Kontextrelationen bilden eine schlanke teleologische Wirkungslogik, d. h. die Relationen drücken Zweck-, Mittel-, Qualifikations- und Nachweiszusammenhänge aus.<!-- ED: approved -->
+#### Relationen
+
+Die grafische Sicht dient der Orientierung; die folgenden Kontextrelationen legen explizit fest, welche Relationen zwischen O2I-Kontexten zulässig sind. Sie machen die Darstellung eindeutig, referenzierbar und als Grundlage für Wohlgeformtheitsregeln verwendbar. O2I verwendet dafür eine typisierte Spezifikationssyntax: `RelName :: ContextRelation From To`.
+
+```haskell
+!include`snippetStart="-- * Context relations", snippetEnd="-- * Primitive nodes"` spc/O2I.hs
+```
+
+
+Die O2I-Kontextrelationen bilden eine schlanke teleologische Wirkungslogik, d. h. die Relationen drücken Zweck-, Mittel-, Qualifikations- und Nachweiszusammenhänge aus.
 
 > [!tl;dr] Teleologische O2I-Wirkungslogik
-> Leitprinzipien leiten Mission und Vision; Mission, verstanden als Existenzzweck, begründet, warum eine Vision angestrebt wird; Vision gibt der Strategie Richtung; Kontexte machen Bedarfe unterschiedlicher Art sichtbar; Strategie qualifiziert strategisch relevante Bedarfe. Wirkungsrelevante Bedarfe entstehen dort, wo ein Bedarf im operativen Kontext sichtbar wird und durch Strategie als strategisch relevant qualifiziert ist. Bedarfe können verfeinert werden und Beiträge zu Strategien nachvollziehbar machen; Interventionen sind in O2I nur für wirkungsrelevante Bedarfe vorgesehen, verändern den operativen Kontext und legen Zielwerte für Performanzmessungen fest; Performanzmessungen machen relevante Zustände im operativen Kontext beobachtbar.<!-- ED: approved -->
+> Leitprinzipien leiten Mission und Vision; Mission, verstanden als Existenzzweck, begründet, warum eine Vision angestrebt wird; Vision gibt der Strategie Richtung; Situationen machen Bedarfe unterschiedlicher Art sichtbar; Strategie qualifiziert strategisch relevante Bedarfe. Wirkungsrelevante Bedarfe entstehen dort, wo ein Bedarf in einer Situation sichtbar wird und durch Strategie als strategisch relevant qualifiziert ist. Bedarfe können verfeinert werden und Beiträge zu Strategien nachvollziehbar machen; Interventionen sind in O2I nur für wirkungsrelevante Bedarfe vorgesehen, verändern Situationen und legen Zielwerte für Messungen fest; Messungen machen relevante Zustände in Situationen beobachtbar.
 
-Einige O2I-Kontextrelationen verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:<!-- ED: approved -->
+Einige O2I-Kontextrelationen verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:
 
-`Intervention --addresses--> Need`: Die Relation setzt einen wirkungsrelevanten Bedarf voraus; ein nur sichtbarer oder nur strategisch relevanter Bedarf reicht nicht.<!-- ED: approved -->
+`Intervention --addresses--> Need`: Die Relation setzt einen wirkungsrelevanten Bedarf voraus; ein nur sichtbarer oder nur strategisch relevanter Bedarf reicht nicht.
 
-`Need --requires--> Intervention`: Die Relation setzt einen wirkungsrelevanten Bedarf voraus. Erst ein Bedarf, der im operativen Kontext sichtbar und durch Strategie als strategisch relevant qualifiziert ist, kann eine Intervention erforderlich machen; er legt aber noch keine Lösung fest.<!-- ED: approved -->
+`Need --requires--> Intervention`: Die Relation setzt einen wirkungsrelevanten Bedarf voraus. Erst ein Bedarf, der in einer Situation sichtbar und durch Strategie als strategisch relevant qualifiziert ist, kann eine Intervention erforderlich machen; er legt aber noch keine Lösung fest.
 
-`Measure --measures--> Context`: Der unmittelbare Messgegenstand ist der operative Kontext. Ein Measure macht einen relevanten Zustand, eine Leistung oder eine Entwicklung in diesem Kontext messbar.<!-- ED: approved -->
+`Measure --measures--> Situation`: Der unmittelbare Messgegenstand ist die Situation. Ein Measure macht einen relevanten Zustand, eine Leistung oder eine Entwicklung in dieser Situation messbar.
 
-`Intervention --sets-target-for--> Measure`: Die Relation bedeutet nicht, dass eine Intervention selbst misst oder mit einem Key Result identisch ist. Sie bedeutet: Eine Intervention enthält oder erzeugt eine Zielsetzung, die auf einem Measure ausgedrückt wird.<!-- ED: approved -->
+`Intervention --sets-target-for--> Measure`: Die Relation bedeutet nicht, dass eine Intervention selbst misst oder mit einem Key Result identisch ist. Sie bedeutet: Eine Intervention enthält oder erzeugt eine Zielsetzung, die auf einem Measure ausgedrückt wird.
 
-`Strategy --frames--> Measure`: Die Relation steht dafür, dass Measures über strategisch relevante Erfolgsfaktoren mit Strategie verbunden werden. Sie bedeutet nicht, dass Measures direkt aus Strategie entstehen.<!-- ED: approved -->
+`Strategy --frames--> Measure`: Die Relation steht dafür, dass Measures über strategisch relevante Erfolgsfaktoren mit Strategie verbunden werden. Sie bedeutet nicht, dass Measures direkt aus Strategie entstehen.
 
-<!-- ED note:
-Laut Parmenter sollte das perfekt passen: Performance Measures/KPIs werden über CSFs mit Strategie verbunden. Er spricht von der "linkage of performance measures to strategy through the CSFs" und davon, dass passende KPIs leichter gefunden werden, wenn die CSFs klar sind.
--->
+### Primitives
 
-#### Primitives
+#### Elemente
 
-##### Elemente
+O2I-Primitives sind die abstrakten formalen Träger, die in O2I-Kontexten interpretiert werden und dort fachliche Bedeutung erhalten. Sie bilden den minimalen abstrakten Formvorrat des O2I-Metamodells. Ein O2I-Primitive hat keine vollständige fachliche O2I-Bedeutung für sich allein; seine fachliche Lesart entsteht erst durch Interpretation in einem O2I-Kontext (siehe @Sec:interpretationen).
 
-O2I-Primitives sind die abstrakten formalen Träger, die in O2I-Kontexten interpretiert werden und dort fachliche Bedeutung erhalten. Sie bilden den minimalen abstrakten Formvorrat des O2I-Metamodells. Ein O2I-Primitive hat keine vollständige fachliche O2I-Bedeutung für sich allein; seine fachliche Lesart entsteht erst durch Interpretation in einem O2I-Kontext (siehe @Sec:interpretationen).<!-- ED: approved -->
-
-@Fig:o2i-primitives-view zeigt das Primitives-Modell des O2I-Metamodells: O2I-Primitives, mögliche Strukturierungsrahmen und ihre Relationen.<!-- ED: approved -->
+@Fig:o2i-primitives-view zeigt das Primitives-Modell des O2I-Metamodells: O2I-Primitives, mögliche Strukturierungsrahmen und ihre Relationen.
 
 ![O2I Primitives View](<img/O2I Primitives.png>){#fig:o2i-primitives-view width=75%}
 
-Die Darstellung ist als semantische Übersicht des abstrakten Formvorrats zu lesen: Sie zeigt O2I-Primitives, mögliche Strukturierungsrahmen und zulässige Relationen zwischen ihnen, noch nicht ihre spätere syntaktische Abbildung. Die grafische Darstellung dient der Orientierung.<!-- ED: approved -->
+Die Darstellung ist als semantische Übersicht des abstrakten Formvorrats zu lesen: Sie zeigt O2I-Primitives, mögliche Strukturierungsrahmen und zulässige Relationen zwischen ihnen, unabhängig von ihrer syntaktischen Abbildung. Die grafische Darstellung dient der Orientierung.
 
-Das Primitive-Inventar legt fest, welche O2I-Primitives das Metamodell verwendet:<!-- ED: approved -->
+Das Primitive-Inventar legt fest, welche O2I-Primitives das Metamodell verwendet.
 
-```text
-O2I-Primitive ::= Principle
-                | Driver
-                | Objective
-                | Key Result
-                | KPI
-                | Action
-                | Gap
-```<!-- ED: approved -->
-
-Eine `KPI-Domäne` ist ein optionaler Strukturtyp im Modell der O2I-Primitives, aber kein O2I-Primitive. Sie bezeichnet einen Messbereich, in dem relevante Zustände beobachtet werden können, bevor konkrete KPIs festgelegt werden.<!-- ED: approved -->
-
-##### Relationen
-
-Die Primitive-Relationen legen explizit fest, welche Relationen zwischen O2I-Primitives zulässig sind.<!-- ED: approved -->
-
-```text
-Principle --guides--> Driver
-Principle --guides--> Objective
-Driver --motivates--> Objective
-Driver --determines--> KPI-Domäne
-KPI-Domäne --contains--> KPI
-Key Result --translates-into--> Objective
-Key Result --substantiates--> Objective
-Key Result --sets-target-for--> KPI
-KPI --refines--> KPI
-Action --contributes-to--> Key Result
-Action --addresses--> Gap
-```<!-- ED: approved -->
-
-Die Primitive-Relationen bilden keine zweite Wirkungslogik neben den Kontextrelationen. Sie beschreiben die abstrakte Formlogik, die in O2I-Kontexten später interpretiert wird: Prinzipien leiten Treiber und Objectives; Treiber motivieren Objectives und bestimmen relevante Messbereiche; Key Results substantiieren Objectives, können in nachgelagerte Objectives übersetzt werden und setzen Zielwerte für KPIs; KPIs können verfeinert werden; Actions tragen zu Key Results bei und adressieren Gaps.<!-- ED: approved -->
-
-Einige Primitive-Relationen verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:<!-- ED: approved -->
-
-`Driver --determines--> KPI-Domäne`: Ein Driver bestimmt noch keinen konkreten KPI. Er grenzt einen Messbereich ein, in dem relevante Zustände beobachtet werden können. Die Auswahl konkreter KPIs bleibt ein bewusster Freiheitsgrad der Modellierung.<!-- ED: approved -->
-
-`Key Result --substantiates--> Objective`: Ein Key Result substantiiert ein Objective durch quantitative Evidenz. Es ersetzt das qualitative Objective nicht und ist selbst keine Messdefinition.<!-- ED: approved -->
-
-`Key Result --translates-into--> Objective`: Diese Relation beschreibt vertikale Operationalisierung. Ein Key Result einer höheren Ebene kann in ein qualitatives Objective einer nachgelagerten Ebene übersetzt werden.<!-- ED: approved -->
-
-`Key Result --sets-target-for--> KPI`: Ein Key Result ist nicht selbst die Messdefinition. Es legt einen Zielwert auf einem KPI fest.<!-- ED: approved -->
-
-`KPI --refines--> KPI`: Ein KPI kann in spezifischere KPIs verfeinert werden, ohne dass dadurch ein neuer O2I-Primitive entsteht.<!-- ED: approved -->
-
-`Action --contributes-to--> Key Result`: Eine Action ist eine Handlungshypothese. Sie kann zu einem Key Result beitragen, garantiert dessen Erreichung aber nicht.<!-- ED: approved -->
-
-`Action --addresses--> Gap`: Eine Action adressiert eine sichtbare Abweichung, schließt sie aber nicht automatisch.<!-- ED: approved -->
-
-#### Wohlgeformtheitsregeln
-
-Wohlgeformtheitsregeln beschreiben Signaturen, Mengen, Kardinalitäten und weitere Constraints für zulässige O2I-Modelle. Signaturartig gelesen lassen sich mehrwertige Relationen über den Zieltyp ausdrücken:
-
-```text
-guides :: Principle -> Set Mission
-guides :: Principle -> Set Vision
-motivates :: Mission -> Set Vision
-orients :: Vision -> Set Strategy
-directs :: Strategy -> Set Strategy
-contributes-to :: Strategy -> Set Strategy
-qualifies :: Strategy -> Set Need
-surfaces :: Context -> Set Need
-refines :: Need -> Set Need
-is-grounded-in :: Need -> Set Context
-contributes-to :: Need -> Set Strategy
-addresses :: Intervention -> Set Need
-requires :: Need -> Set Intervention
-directs :: Strategy -> Set Intervention
-contributes-to :: Intervention -> Set Strategy
-changes :: Intervention -> Set Context
-sets-target-for :: Intervention -> Set Measure
-measures :: Measure -> Set Context
-frames :: Strategy -> Set Measure
-
-guides :: Principle -> Set Driver
-guides :: Principle -> Set Objective
-motivates :: Driver -> Set Objective
-determines :: Driver -> Set KPI-Domäne
-contains :: KPI-Domäne -> Set KPI
-translates-into :: Key Result -> Set Objective
-substantiates :: Key Result -> Set Objective
-sets-target-for :: Key Result -> Set KPI
-refines :: KPI -> Set KPI
-contributes-to :: Action -> Set Key Result
-addresses :: Action -> Set Gap
+```haskell
+!include`snippetStart="-- * Primitives", snippetEnd="-- * Structuring"` spc/O2I.hs
 ```
 
-Aus diesen Signaturen ergeben sich zusätzliche Modellierungsregeln:
+
+Eine `KPI-Domäne` ist ein optionaler Strukturtyp im Modell der O2I-Primitives, aber kein O2I-Primitive. Sie bezeichnet einen Messbereich, in dem relevante Zustände beobachtet werden können, bevor konkrete KPIs festgelegt werden.
+
+#### Relationen
+
+Die Primitive-Relationen legen explizit fest, welche Relationen zwischen O2I-Primitives zulässig sind. `KPIDomain` ist dabei als Strukturierungsart zulässig, aber kein O2I-Primitive.
+
+```haskell
+!include`snippetStart="-- * Structuring", snippetEnd="-- * Typed instances"` spc/O2I.hs
+```
+
+```haskell
+!include`snippetStart="-- * Primitive nodes", snippetEnd="-- * Primitive relations"` spc/O2I.hs
+```
+
+```haskell
+!include`snippetStart="-- * Primitive relations", snippetEnd="-- * Well-formedness invariants"` spc/O2I.hs
+```
+
+
+Die Primitive-Relationen bilden keine zweite Wirkungslogik neben den Kontextrelationen. Sie beschreiben die abstrakte Formlogik, die in O2I-Kontexten interpretiert wird: Prinzipien leiten Treiber und Objectives; Treiber motivieren Objectives und bestimmen relevante Messbereiche; Key Results substantiieren Objectives, können in nachgelagerte Objectives übersetzt werden und setzen Zielwerte für KPIs; KPIs können verfeinert werden; Actions tragen zu Key Results bei und adressieren Gaps.
+
+Einige Primitive-Relationen verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:
+
+`Driver --determines--> KPI-Domäne`: Ein Driver bestimmt noch keinen konkreten KPI. Er grenzt einen Messbereich ein, in dem relevante Zustände beobachtet werden können. Die Auswahl konkreter KPIs bleibt ein bewusster Freiheitsgrad der Modellierung.
+
+`Key Result --substantiates--> Objective`: Ein Key Result substantiiert ein Objective durch quantitative Evidenz. Es ersetzt das qualitative Objective nicht und ist selbst keine Messdefinition.
+
+`Key Result --translates-into--> Objective`: Diese Relation beschreibt vertikale Operationalisierung. Ein Key Result einer höheren Ebene kann in ein qualitatives Objective einer nachgelagerten Ebene übersetzt werden.
+
+`Key Result --sets-target-for--> KPI`: Ein Key Result ist nicht selbst die Messdefinition. Es legt einen Zielwert auf einem KPI fest.
+
+`KPI --refines--> KPI`: Ein KPI kann in spezifischere KPIs verfeinert werden, ohne dass dadurch ein neuer O2I-Primitive entsteht.
+
+`Action --contributes-to--> Key Result`: Eine Action ist eine Handlungshypothese. Sie kann zu einem Key Result beitragen, garantiert dessen Erreichung aber nicht.
+
+`Action --addresses--> Gap`: Eine Action adressiert eine sichtbare Abweichung, schließt sie aber nicht automatisch.
+
+### Wohlgeformtheitsregeln
+
+Wohlgeformtheitsregeln wiederholen nicht die zulässigen Relationstypen. Sie formulieren Invarianten über typisierte Modellinstanzen. `Ethos`, `Mission` usw. bezeichnen dabei Kontextarten; `Ctx Mission` bezeichnet eine konkrete Mission-Instanz mit Inhalt. Deshalb hat eine Mission-Regel die Form `wfMission :: Ctx Mission -> Bool`, nicht `Mission -> Bool`.
+
+```haskell
+!include`snippetStart="-- * Typed instances", snippetEnd="-- * Context relations"` spc/O2I.hs
+```
+
+```haskell
+!include`snippetStart="-- * Well-formedness invariants", snippetEnd="-- * Well-formedness support"` spc/O2I.hs
+```
+
+
+Aus diesen Invarianten ergeben sich zusätzliche Modellierungsregeln:
 
 - Ein `Objective` setzt keinen Zielwert für einen `KPI`; Zielwerte werden durch `Key Result` gesetzt.
 - Ein `KPI` ist eine stabile Messdefinition, nicht der beobachtete Messwert.
@@ -502,13 +426,13 @@ Aus diesen Signaturen ergeben sich zusätzliche Modellierungsregeln:
 - Eine `Action` ist eine Handlungshypothese. Sie kann zu einem `Key Result` beitragen, garantiert ihn aber nicht.
 - Ein `Gap` wird durch die Abweichung zwischen Key-Result-Zielwert und KPI-Istwert sichtbar.
 
-Die Strategie-Relationen zwischen `Strategy` und `Strategy` sind Container-Relationen zwischen Strategien unterschiedlicher Ebenen, z. B. Konzernstrategie, Ressortstrategie, Geschäftsstrategie und Funktionsstrategie. `directs` steht dabei als Kurzrelation für das Setzen von Zielen, Prioritäten und Leitplanken. Wichtig: Der messbare Beitrag läuft später präziser über Bedarfe, Interventionen, Measures und Kontextveränderungen. Die Strategie-Relation ist eine verdichtete Kurzrelation.
+Die Strategie-Relationen zwischen `Strategy` und `Strategy` sind Ausrichtungsrelationen zwischen Strategien unterschiedlicher Ebenen, z. B. Konzernstrategie, Ressortstrategie, Geschäftsstrategie und Funktionsstrategie. `directs` bedeutet, dass eine übergeordnete Strategie Richtung, Prioritäten, Leitplanken, Restriktionen oder Zielbezüge für eine untergeordnete Strategie vorgibt, ohne diese vollständig zu determinieren. Der messbare Beitrag wird präziser über Bedarfe, Interventionen, Measures und Kontextveränderungen beschrieben. Die Strategie-Relation ist eine verdichtete Kurzrelation, keine Kompositionsrelation.
 
-#### Interpretationen {#sec:interpretationen}
+### Interpretationen {#sec:interpretationen}
 
 O2I-Interpretationen beschreiben, welche fachliche Bedeutung ein O2I-Primitive in einem bestimmten O2I-Kontext erhält. Sie verbinden damit den abstrakten Formvorrat der O2I-Primitives mit den fachlichen Interpretationsrahmen der O2I-Kontexte.
 
-##### Mission
+#### Mission
 
 Im Kontext `Mission` sind `Driver` zulässig:
 
@@ -516,7 +440,7 @@ Im Kontext `Mission` sind `Driver` zulässig:
 
 Ein `Driver` im Kontext `Mission` beschreibt einen grundlegenden Antrieb, Existenzzweck oder Beitragsgrund. Er beantwortet die Frage, warum ein handlungsfähiger Akteur existiert oder welchen grundlegenden Beitrag er leisten soll. Mehrere `Driver` können eine Mission analytisch konkretisieren, gruppieren oder ergänzen; sie ersetzen die terminologische Definition der Mission nicht.
 
-##### Vision
+#### Vision
 
 Im Kontext `Vision` sind `Objective` zulässig:
 
@@ -524,47 +448,55 @@ Im Kontext `Vision` sind `Objective` zulässig:
 
 Ein `Objective` im Kontext `Vision` beschreibt ein qualitatives Zukunftsbild oder eine qualitative Ausrichtung. Es beantwortet die Frage, wohin ein handlungsfähiger Akteur wirken will, ohne bereits festzulegen, wie diese Wirkung erreicht wird. Qualitative Ausrichtungen können zu einem übergeordneten Zukunftsbild beitragen; sie sind Objectives im Kontext `Vision`, keine zusätzlichen O2I-Primitives.
 
-##### Objective
+#### Objective
 
 Ein `Objective` im Kontext `Objective` ist ein qualitatives Umsetzungsziel.
 
-##### Strategy
+#### Strategy
 
 Eine `Action` im Kontext `Strategy` ist eine Wegentscheidung.
 
-##### Intervention
+#### Intervention
 
 Eine `Action` im Kontext `Intervention` ist eine gezielte Einwirkung.
 
-##### Need
+#### Need
 
-TODO: Interpretationen für `Need` ergänzen.
+Im Kontext `Need` sind `Driver` zulässig:
 
-##### Measure
+`Driver` $\in$ `Need`
 
-TODO: Interpretationen für `Measure` ergänzen.
+Ein `Driver` im Kontext `Need` beschreibt einen begründenden, spannungserzeugenden oder bedarfsanzeigenden Faktor. Er macht nachvollziehbar, warum eine Veränderung, Fähigkeit oder ein Ergebnis benötigt wird, ohne bereits eine Lösung festzulegen.
 
-##### Context
+#### Measure
 
-TODO: Interpretationen für `Context` ergänzen.
+Im Kontext `Measure` sind `KPI` zulässig:
 
-### Syntax
+`KPI` $\in$ `Measure`
+
+Ein `KPI` im Kontext `Measure` beschreibt eine stabile Messdefinition, mit der ein relevanter Zustand, eine Leistung oder eine Entwicklung in einer Situation beobachtbar wird. Ein KPI ist nicht der beobachtete Messwert selbst.
+
+#### Situation
+
+Der Kontext `Situation` wird durch konkrete Arbeits-, Leistungs- oder Umfeldzusammenhänge instanziiert. Eine Situation kann z. B. durch Capabilities, Prozesse, Systeme, Kundenerlebnisse, regulatorische Anforderungen oder fachliche Schmerzpunkte beschrieben werden. Sie bildet den fachlichen Ort, an dem Bedarfe sichtbar, begründbar oder überprüfbar werden.
+
+## Syntax
 
 Die ArchiMate-Profilierung bildet die Syntax-Komponente des O2I-Metamodells. O2I definiert die fachliche Semantik; ArchiMate stellt die visuelle Syntax zur Darstellung und Integration von O2I-Modellen mit Enterprise-Architecture-Artefakten bereit.
 
 O2I kann mit ArchiMate modelliert werden, ohne die O2I-Semantik durch ArchiMate-Semantik zu ersetzen. ArchiMate dient dabei als gemeinsame Modellierungssprache; O2I legt fest, welche fachliche Bedeutung die verwendeten Elemente als O2I-Primitives in einem O2I-Kontext besitzen.
 
-Dadurch können O2I-Modelle mit TOGAF-basierten Architekturmodellen und -sichten (z.B. Business-Capability-Maps, Application Views, Prozessmodellen oder Technologielandschaften) in einer gemeinsamen Modellierungssprache verbunden werden. ArchiMate wird damit nicht nur für Enterprise-Architecture-Strukturen verwendet, sondern auch für die explizite Modellierung von Orientierung und Wirksamkeit. Das Ergebnis ist ein kohärenter Wissensgraph, in dem normative Orientierung, strategische Wegentscheidungen, operative Umsetzung und Architekturartefakte anschlussfähig bleiben.
+Dadurch können O2I-Modelle mit TOGAF-basierten Architekturmodellen und -sichten (z.B. Business-Capability-Maps, Application Views, Prozessmodellen oder Technologielandschaften) in einer gemeinsamen Modellierungssprache verbunden werden. ArchiMate wird damit nicht nur für Enterprise-Architecture-Strukturen verwendet, sondern auch für die explizite Modellierung von Orientierung und Wirksamkeit. Das Ergebnis ist ein kohärenter Wissensgraph, in dem normative Orientierung, strategische Wegentscheidungen, Interventionen und Architekturartefakte anschlussfähig bleiben.
 
-#### ArchiMate-Profil
+### ArchiMate-Profil
 
 Die Syntax verwendet ArchiMate als visuelle Notation. O2I-Primitives werden in ArchiMate durch wenige ArchiMate-Basisformen dargestellt. Mission, Vision, Strategy, Need und weitere O2I-Kontexte werden in ArchiMate als strukturierte Modellbereiche aufgeklappt: Ein Mission-Kontext wird durch ArchiMate `Driver` modelliert; ein Vision-Kontext durch ArchiMate `Goal`; ein Measure-Kontext durch ArchiMate `Assessment`.
 
 O2I-Kontexte werden in der ArchiMate-Syntax nicht zwingend als einzelne ArchiMate-Elemente dargestellt. Ein Kontext wie `Mission` oder `Vision` kann durch einen Gruppierungsrahmen, ein Teilmodell oder mehrere ArchiMate-Elemente mit Relationen ausgearbeitet werden.
 
-#### Primitives-Abbildung
+### Primitives-Abbildung
 
-Die folgende Zuordnung zeigt, wie O2I-Primitives durch ArchiMate-Basisformen dargestellt werden und welche Grundlesart sie im O2I-System tragen:
+Die folgende Zuordnung zeigt, wie O2I-Primitives durch ArchiMate-Basisformen dargestellt werden und welche Grundlesart sie im O2I-Metamodell tragen:
 
 ```text
 O2I-Primitive Principle -> ArchiMate Principle -> normative Orientierung
@@ -584,9 +516,9 @@ Ein ArchiMate `Driver` bezeichnet in O2I grundsätzlich einen begründenden, spa
 
 Ein O2I-Kontext wird über Kontext- oder Gruppierungsrahmen und konsistente Modellkonventionen gekennzeichnet, z. B. `Mission : O2I Ctx` oder `Vision : O2I Ctx`. Die Elementsemantik ergibt sich aus dem O2I-Primitive und dem jeweiligen O2I-Kontext.
 
-Der O2I-Kontext `Context` ist kein isolierter ArchiMate-Motivationstyp. Ein operativer Kontext wird in ArchiMate durch konkrete Architekturartefakte modelliert, z. B. Business Capability, Business Process oder regulatorische Anforderungen. O2I `Context` ist damit ein fachlicher Interpretationskontext, der durch passende ArchiMate-Elemente instanziiert wird.
+Der O2I-Kontext `Situation` ist kein isolierter ArchiMate-Motivationstyp. Ein operativer Kontext wird in ArchiMate durch konkrete Architekturartefakte modelliert, z. B. Business Capability, Business Process oder regulatorische Anforderungen. O2I `Situation` ist damit ein fachlicher Interpretationskontext, der durch passende ArchiMate-Elemente instanziiert wird.
 
-#### Relationsabbildung
+### Relationsabbildung
 
 O2I-Relationen sind fachliche Makrorelationen zwischen O2I-Kontexten bzw. zwischen kontextualisierten O2I-Primitives. In ArchiMate werden sie durch zulässige ArchiMate-Relationen zwischen konkreten Elementen dargestellt. Die Relation wird mit dem O2I-Relationsnamen beschriftet, wenn dadurch die fachliche Bedeutung präziser wird.
 
@@ -601,34 +533,34 @@ Driver im Kontext Need --influence[motivates]--> Goal im Kontext Objective
 Outcome im Kontext Key Result --influence[translates-into]--> Goal im Kontext Objective
 Outcome im Kontext Key Result --realization[substantiates]--> Goal im Kontext Objective
 Outcome im Kontext Key Result --association[sets-target-for]--> Assessment im Kontext Measure
-Assessment im Kontext Measure --association[measures]--> Context
+Assessment im Kontext Measure --association[measures]--> Situation
 Course of Action im Kontext Intervention --influence[addresses]--> Driver im Kontext Need
-Course of Action im Kontext Intervention --influence[changes]--> Context
+Course of Action im Kontext Intervention --influence[changes]--> Situation
 ```
 
 Die O2I-Relation `Vision --orients--> Strategy` kann in ArchiMate als `Influence`-Relation von einem `Goal` im Kontext `Vision` zu einem `Course of Action` im Kontext `Strategy` abgebildet werden. Fachlich bedeutet sie: Die Vision gibt der Strategie Richtung; die Strategie bleibt die Wegentscheidung, die diese Richtung unter gegebenen Bedingungen verfolgt.
 
-#### Abgeleitete Relationen
+### Abgeleitete Relationen
 
 Eine O2I-Relation darf abgeleitet sein. Sie fasst dann mehrere ArchiMate-Elemente und -Relationen zu einer fachlichen Makrorelation zusammen.
 
 Beispiel:
 
 ```text
-O2I: Principle --guides--> Mission
+O2I: Ethos --guides--> Mission
 ```
 
 wird syntaktisch modelliert als:
 
 ```text
-O2I-Kontext Principle contains Principle
+O2I-Kontext Ethos contains Principle
 O2I-Kontext Mission contains Driver
 Principle --influence[guides]--> Driver
 ```
 
 Die äußeren O2I-Kästen sind damit O2I-Kontexte; die fachlich wirksame Relation liegt zwischen den enthaltenen ArchiMate-Elementen.
 
-#### Modellierungsregeln
+### Modellierungsregeln
 
 - ArchiMate ist Syntax; O2I ist Semantik.
 - O2I-Begriffe wie Mission, Vision oder Strategy werden als O2I-Kontexte beziehungsweise strukturierte Teilmodelle über O2I-Primitives modelliert.
@@ -636,35 +568,5 @@ Die äußeren O2I-Kästen sind damit O2I-Kontexte; die fachlich wirksame Relatio
 - O2I-Makrorelationen dürfen aus mehreren ArchiMate-Relationen abgeleitet werden.
 - Aggregations- oder Kompositionskanten zwischen O2I-Kontexten ersetzen keine fachliche Relation zwischen den enthaltenen Elementen.
 - Gleichartige Elemente dürfen komponiert oder aggregiert werden, wenn dadurch eine fachliche Zerlegung ausgedrückt wird.
-- `Context` wird nicht auf ein einzelnes ArchiMate-Element reduziert, sondern durch konkrete Architekturartefakte instanziiert.
+- `Situation` wird nicht auf ein einzelnes ArchiMate-Element reduziert, sondern durch konkrete Architekturartefakte instanziiert.
 - Wenn eine O2I-Relation nicht mit einer zulässigen ArchiMate-Relation ausdrückbar ist, muss sie als abgeleitete Relation dokumentiert werden.
-
-# Anhang
-
-## WTF Strategie?
-
-TODO Mittels Terminologie und Metamodell Syntax kurz und knapp aber präzise beantworten.
-
-## WTF Kontext?
-
-TODO Mittels Terminologie und Metamodell Syntax kurz und knapp aber präzise beantworten.
-
-## WTF Bedarf?
-
-TODO Mittels Terminologie und Metamodell Syntax kurz und knapp aber präzise beantworten.
-
-## HTH wirkungsrelevanter Bedarf identifiziert?
-
-TODO Mittels Terminologie und Metamodell Syntax kurz und knapp aber präzise beantworten.
-
-ED note: How the heck do you identify needs that are relevant to effectiveness? How to qualify Need?
-
-## WTF Intervention?
-
-TODO Mittels Terminologie und Metamodell Syntax kurz und knapp aber präzise beantworten.
-
-## HTH Wirkung nachweisen?
-
-TODO Mittels Terminologie und Metamodell Syntax kurz und knapp aber präzise beantworten.
-
-ED note: How to demonstrate effectiveness?
