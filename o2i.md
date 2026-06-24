@@ -134,13 +134,15 @@ Formierung bezeichnet in O2I die fachliche Domäne, in der Orientierung unter ge
 ### Strategie
 
 > [!definition]
-> **Strategie** (en.: *strategy*; meta: `Strategy`)[^strategy] bezeichnet die begründete und kohärente Wegentscheidung eines handlungsfähigen Akteurs, mit der er festlegt, wie er seine [Vision](#vision) unter gegebenen Bedingungen verwirklichen will und sich damit gegenüber relevanten Alternativen, Wettbewerbern oder Vergleichsangeboten differenziert.
+> **Strategie** (en.: *strategy*; meta: `Strategy`)[^strategy] bezeichnet die *begründete und kohärente Wegentscheidung* eines handlungsfähigen Akteurs[^actor], der legitim entscheiden, Ressourcen binden und Verantwortung tragen kann. Mit einer Strategie legt dieser Akteur fest, wie er seine [Vision](#vision) unter gegebenen Bedingungen verwirklichen will und sich damit gegenüber relevanten Alternativen, Wettbewerbern oder Vergleichsangeboten differenziert.
 >
 > > [tl;dr] Strategie - \textsc{Wie} verwirklichen wir unsere Vision?
 >
 > [^strategy]: *Quellenanker*: Rumelt (2011) für Strategie als kohärente Antwort auf eine wesentliche Herausforderung; Porter (1996) für Positionierung, Trade-offs und Fit; Mintzberg und Waters (1985) für Strategie als intendiertes und realisiertes Handlungsmuster; Parmenter (2020) für Strategie als Weg zur Verwirklichung der Vision und als Grundlage für die Ableitung von CSFs und Performance-Maßen.
 
-Dazu muss eine Strategie ihre Bestandteile explizit machen. Eine aufgeschriebene Strategie liefert mindestens Geltungsbereich, abgeleitete Leitplanken, Diagnose, strategische Absicht, Guiding Policy, Positionierung, Trade-offs, kohärente Handlungsfestlegungen und Fit.
+[^actor]: Organisationseinheiten besitzen nicht automatisch eine eigene Strategie. Nach der hier verwendeten Definition gilt dies nur, wenn sie legitim entscheiden, Ressourcen binden, Verantwortung tragen und eine eigene Diagnose, Guiding Policy, Trade-offs und kohärente Handlungslogik ausbilden können.
+
+Als Artefakt muss eine Strategie ihre Bestandteile dokumentieren. Eine explizit formulierte Strategie liefert mindestens Geltungsbereich, abgeleitete Leitplanken, Diagnose, strategische Absicht, Guiding Policy, Positionierung, Trade-offs, kohärente Handlungsfestlegungen und Fit.
 
 #### Geltungsbereich und Strategieebenen
 
@@ -149,7 +151,7 @@ Dazu muss eine Strategie ihre Bestandteile explizit machen. Eine aufgeschriebene
 >
 > [^scope]: *Autorenableitung in Anlehnung an Rumelt (2011) und Porter (1996)*: Eine Wegentscheidung ist nur dann sinnvoll abgrenzbar, wenn klar ist, für welche Herausforderung, welche Positionierung und welches Aktivitätssystem sie gilt.
 
-Eine Strategie muss ihren Akteur, Zeitraum, Verantwortungsbereich und ihre Entscheidungsebene benennen. Abteilungen haben nicht automatisch Strategien. Nach der hier verwendeten Definition besitzen sie nur dann eine eigene Strategie, wenn sie eine eigene Diagnose, Guiding Policy, Trade-offs und kohärente Handlungslogik besitzen.
+Eine Strategie muss ihren Zeitraum, Verantwortungsbereich, Entscheidungsebene sowie die tragenden Verantwortlichkeiten, Entscheidungswege und Umsetzungslogik benennen.
 
 #### Abgeleitete Leitplanken
 
