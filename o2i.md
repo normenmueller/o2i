@@ -4,7 +4,7 @@ subtitle: "Begriffe und Relationen für wirksames Handeln"
 author: nemron
 version: "0.1 (wip)"
 abstract: |
-  Wie werden Orientierung, Wegentscheidung, Kontextualisierung und Operationalisierung so verbunden, dass nachvollziehbare Wirkung entsteht?
+  Wie werden Orientierung, Formierung, Kontextualisierung und Operationalisierung so verbunden, dass nachvollziehbare Wirkung entsteht?
 lang: de-DE
 figureTitle: "Abb."
 figPrefix:
@@ -60,7 +60,7 @@ URL: \url{https://publications.opengroup.org/standards/archimate/c260}.
 
 Die Literaturquellen werden nicht gleichgewichtig verwendet, sondern nach ihrer Funktion innerhalb von O2I:
 
-Rumelt (2011), Porter (1996) sowie Mintzberg und Waters (1985) stützen die Wegentscheidung innerhalb von O2I: Diagnose, leitende Handlungslogik, Positionierung, Trade-offs, Fit, Kohärenz sowie intendierte und realisierte Strategie.
+Rumelt (2011), Porter (1996) sowie Mintzberg und Waters (1985) stützen die Formierung innerhalb von O2I: Diagnose, leitende Handlungslogik, Positionierung, Trade-offs, Fit, Kohärenz sowie intendierte und realisierte Strategie.
 
 Doerr (2018) stützt die Operationalisierung über Objectives und Key Results als überprüfbare Umsetzungs- und Evidenzformen.
 
@@ -70,7 +70,7 @@ Collins und Porras (1996), Schein (2010) und Bourne, Jenkins und Parry (2019) st
 
 The Open Group (2025, 2026) stützt die Modellierungsebene: TOGAF liefert den Enterprise-Architecture-Bezug, ArchiMate liefert die standardisierte Modellierungssprache, mit der O2I-Modelle an Architekturartefakte anschlussfähig werden.
 
-Die Literaturquellen begründen damit unterschiedliche Funktionen innerhalb von O2I: Orientierung wird in Wegentscheidungen übersetzt, Wegentscheidungen werden in wirkungsgerichtete Interventionen operationalisiert, und Wirkung wird über Messung und Nachweislogik nachvollziehbar gemacht.
+Die Literaturquellen begründen damit unterschiedliche Funktionen innerhalb von O2I: Orientierung wird strategisch formiert, Formierung wird in wirkungsgerichtete Interventionen operationalisiert, und Wirkung wird über Messung und Nachweislogik nachvollziehbar gemacht.
 
 ## Definitionsregel
 
@@ -82,9 +82,11 @@ Eine Definition wird nicht bloß behauptet. Sie wird nur verwendet, wenn sie ent
 
 # Terminologie {#sec:terminologie}
 
-Die Terminologie beschreibt eine *teleologische Wirkungslogik*: von Orientierung über Wegentscheidung, Kontextualisierung und Operationalisierung zu Wirkung. Diese fünf *fachlichen Domänen* ordnen die Standardbegriffe, welche O2I anschließend als O2I-Kontexte formalisiert.
+Die Terminologie beschreibt eine *teleologische Wirkungslogik*: von Orientierung über Formierung, Kontextualisierung und Operationalisierung zu Wirkung. Diese fünf *fachlichen Domänen* ordnen die Standardbegriffe, welche O2I anschließend als O2I-Kontexte formalisiert.
 
 ## Orientierung 
+
+Orientierung bezeichnet in O2I die fachliche Domäne, in der ein handlungsfähiger Akteur seinen normativen Rahmen, seinen grundlegenden Existenzzweck und seinen angestrebten Zukunftszustand bestimmt.
 
 ![O2I Orientierung](<img/O2I Orientierung.png>){#fig:o2i-orientation width=50%}
 
@@ -106,7 +108,7 @@ Die Terminologie beschreibt eine *teleologische Wirkungslogik*: von Orientierung
 ### Mission 
 
 > [!definition]
-> Eine **Mission** (en.: *mission*; meta: `Mission`)[^mission] bezeichnet den durch das `Ethos` eines handlungsfähigen Akteurs geprägten **grundlegenden Existenzzweck**: warum der Akteur existiert und welchen Beitrag er leisten soll.
+> Eine **Mission** (en.: *mission*; meta: `Mission`)[^mission] bezeichnet den durch das `Ethos` eines handlungsfähigen Akteurs geprägten *grundlegenden Existenzzweck*: warum der Akteur existiert und welchen Beitrag er leisten soll.
 > 
 > > [!tldr] Mission - \textsc{Warum} gibt es uns?
 >
@@ -115,15 +117,17 @@ Die Terminologie beschreibt eine *teleologische Wirkungslogik*: von Orientierung
 ### Vision 
 
 > [!definition]
-> Eine **Vision** (en.: *vision*; meta: `Vision`)[^vision] bezeichnet einen vom `Ethos` geprägten und durch die [Mission](#mission) begründeten, von einem handlungsfähigen Akteur **angestrebten, orientierenden Zukunftszustand**: wohin der Akteur wirken will, ohne bereits festzulegen, wie diese Wirkung erreicht wird.
+> Eine **Vision** (en.: *vision*; meta: `Vision`)[^vision] bezeichnet einen vom `Ethos` geprägten und durch die [Mission](#mission) begründeten, von einem handlungsfähigen Akteur *angestrebten, orientierenden Zukunftszustand*: wohin der Akteur wirken will, ohne bereits festzulegen, wie diese Wirkung erreicht wird.
 > 
 > > [!tldr] Vision - \textsc{Wohin} wollen wir wirken?
 >
 > [^vision]: *Autorenableitung in Anlehnung an Rumelt (2011)*: Die Definition ist eine redaktionelle Systematisierung. Rumelt liefert vor allem die Abgrenzung: Vision und Ambition sind keine Strategie, weil sie noch nicht erklären, wie eine wesentliche Herausforderung überwunden wird.
 
-<!--Vision ist qualitativ, richtungsgebend aber noch keine Wegentscheidung.-->
+*Hinweis*: Eine Vision ist qualitativ, richtungsgebend aber noch keine Wegentscheidung.
 
-## Wegentscheidung
+## Formierung
+
+Formierung bezeichnet in O2I die fachliche Domäne, in der Orientierung unter gegebenen Bedingungen in eine begründete strategische Wegentscheidung und daraus abgeleitete kritische Erfolgsfaktoren überführt wird.
 
 ### Strategie
 
@@ -212,11 +216,11 @@ Fit bedeutet, dass Aktivitäten nicht nur nebeneinander bestehen, sondern sich g
 ### Kritische Erfolgsfaktoren
 
 > [!definition]
-> Ein **kritischer Erfolgsfaktor** (en.: *critical success factor*; meta: `CSF`)[^critical-success-factor] bezeichnet einen aus der Strategie abgeleiteten Leistungs- oder Erfolgsbereich, in dem ein handlungsfähiger Akteur gut performen muss, damit die Strategie wirksam werden kann.
+> Ein **kritischer Erfolgsfaktor** (en.: *critical success factor*; meta: `CSF`)[^csf] bezeichnet einen aus der Strategie abgeleiteten Leistungs- oder Erfolgsbereich, in dem ein handlungsfähiger Akteur gut performen muss, damit die Strategie wirksam werden kann.
 >
-> [^critical-success-factor]: *Quellenanker*: Parmenter (2020).
+> [^csf]: *Quellenanker*: Parmenter (2020).
 
-Kritische Erfolgsfaktoren gehören nicht zum Kernbegriff Strategie im Sinne von Rumelt, Porter oder Mintzberg. Sie werden aus Strategie abgeleitet und verbinden Wegentscheidung mit Bedarfsqualifikation, Messung und Nachweislogik.
+Kritische Erfolgsfaktoren gehören nicht zum Kernbegriff Strategie im Sinne von Rumelt, Porter oder Mintzberg. Sie werden aus Strategie abgeleitet und verbinden Formierung mit Bedarfsqualifikation, Messung und Nachweislogik.
 
 ## Kontextualisierung
 
@@ -232,7 +236,7 @@ Kritische Erfolgsfaktoren gehören nicht zum Kernbegriff Strategie im Sinne von 
 > [!definition]
 > Ein **Bedarf** (en.: *need*; meta: `Need`)[^need] bezeichnet eine begründete Anforderung an Veränderung, Fähigkeit oder Ergebnis, die in einer [Situation](#situation) sichtbar, begründbar oder überprüfbar wird, aber noch keine konkrete Lösung festlegt. Ein Bedarf beschreibt, was benötigt wird, nicht wie es umgesetzt oder erfüllt wird. Bedarfe können in weitere Bedarfe verfeinert werden; jede Verfeinerung bleibt auf der Ebene des Was. Kurz: Bedarf = Was wird benötigt?
 >
-> [^need]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996), Doerr (2018) und Parmenter (2020)*: Bedarf wird hier als O2I-spezifischer Brückenbegriff zwischen Wegentscheidung und Operationalisierung eingeführt. Rumelt und Porter stützen die Ableitung aus strategischer Logik; Doerr und Parmenter stützen die anschließende Operationalisierung und Messbarmachung.
+> [^need]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996), Doerr (2018) und Parmenter (2020)*: Bedarf wird hier als O2I-spezifischer Brückenbegriff zwischen Formierung und Operationalisierung eingeführt. Rumelt und Porter stützen die Ableitung aus strategischer Logik; Doerr und Parmenter stützen die anschließende Operationalisierung und Messbarmachung.
 
 Ein Bedarf entsteht nicht aus Strategie allein. Er wird in einer Situation sichtbar und ist dort fachlich verankert. Seine Wirkungsrelevanz wird durch Bedarfsqualifikation in der Operationalisierung bestimmt.
 
@@ -240,7 +244,7 @@ Ein Beispiel für Bedarfsspezialisierungen sind fachliche Bedarfe und daraus abg
 
 ## Operationalisierung
 
-Operationalisierung übersetzt eine Wegentscheidung und sichtbare Bedarfe in wirkungsgerichtete Handlung. Dazu gehören die Qualifikation von Bedarfen und die Intervention, mit der ein wirkungsrelevanter Bedarf adressiert wird.
+Operationalisierung übersetzt eine strategische Wegentscheidung und sichtbare Bedarfe in wirkungsgerichtete Handlung. Dazu gehören die Qualifikation von Bedarfen und die Intervention, mit der ein wirkungsrelevanter Bedarf adressiert wird.
 
 ### Bedarfsqualifikation
 
@@ -264,14 +268,14 @@ Ein wirkungsrelevanter Bedarf ist handlungsrelevant, weil seine Bearbeitung plau
 > [!definition]
 > Eine **Intervention** (en.: *intervention*; meta: `Intervention`)[^intervention] bezeichnet eine gezielte Einwirkung auf eine [Situation](#situation), mit der ein wirkungsrelevanter Bedarf adressiert und eine strategisch relevante Veränderung erzeugt werden soll. Eine Intervention kann als Projekt, Maßnahme, Experiment, Programm, Initiative oder andere Umsetzungseinheit auftreten. Kurz: Intervention = Womit verändern wir die Situation?
 >
-> [^intervention]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996) und Doerr (2018)*: Interventionen gehören zur Operationalisierung einer Wegentscheidung. Sie übersetzen strategische Handlungslogik in konkrete Eingriffe, bleiben aber Wirkungshypothesen und keine Garantie für Zielerreichung.
+> [^intervention]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996) und Doerr (2018)*: Interventionen gehören zur Operationalisierung einer strategischen Wegentscheidung. Sie übersetzen strategische Handlungslogik in konkrete Eingriffe, bleiben aber Wirkungshypothesen und keine Garantie für Zielerreichung.
 
 ## Wirkung
 
 Wirkung wird in O2I nicht behauptet, sondern über Messung nachvollziehbar gemacht.
 
 > [!definition]
-> **Wirkung**[^effect] bezeichnet eine beobachtbare, zur [Vision](#vision) beitragende Veränderung, die aus der Operationalisierung einer Wegentscheidung entsteht und an relevanten Ergebnis- und Leistungsmaßen nachvollzogen werden kann.
+> **Wirkung**[^effect] bezeichnet eine beobachtbare, zur [Vision](#vision) beitragende Veränderung, die aus der Operationalisierung einer strategischen Wegentscheidung entsteht und an relevanten Ergebnis- und Leistungsmaßen nachvollzogen werden kann.
 >
 > [^effect]: *Autorenableitung in Anlehnung an Porter (1996), Doerr (2018), Parmenter (2020) und Barr (2014)*: Wirkung wird hier als Ergebnis der Operationalisierung einer strategischen Wegentscheidung verstanden. Porter liefert die Logik des Wertbeitrags durch Aktivitätssysteme; Doerr, Parmenter und Barr liefern Instrumente zur Überprüfung von Fortschritt und Performance.
 
@@ -300,7 +304,7 @@ Die O2I-Semantik besteht aus vier Perspektiven: O2I-Kontexte und ihre Relationen
 
 [^formvorrat]: Formvorrat bezeichnet hier die Menge abstrakter Modellformen, mit denen fachliche Inhalte in unterschiedlichen O2I-Kontexten ausgedrückt werden können.
 
-Die in @sec:terminologie eingeführten Domänen Orientierung, Wegentscheidung, Kontextualisierung, Operationalisierung und Wirkung bilden die fachliche Ordnung, aus der die O2I-Kontexte hervorgehen.
+Die in @sec:terminologie eingeführten Domänen Orientierung, Formierung, Kontextualisierung, Operationalisierung und Wirkung bilden die fachliche Ordnung, aus der die O2I-Kontexte hervorgehen.
 
 ### Kontexte
 

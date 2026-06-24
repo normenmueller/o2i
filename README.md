@@ -32,7 +32,7 @@ o2i/
 Das PDF wird aus `o2i.md` mit [`md2pdf`](https://github.com/normenmueller/md2pdf) und `pandoc-include` erzeugt:
 
 ```sh
-md2pdf --filter pandoc-include -o o2i.pdf -- o2i.md
+md2pdf -o o2i.pdf -- o2i.md --filter pandoc-include
 ```
 
 ## License

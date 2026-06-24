@@ -93,7 +93,9 @@ Nach welchen kulturellen Grundsätzen handeln wir? Wofür stehen wir?
         <element xsi:type="archimate:Grouping" name="Vision" id="id-63a27d11822d4ef4b45e65b0e7231fc4">
           <documentation>Vision = Wohin wollen wir wirken?</documentation>
         </element>
-        <element xsi:type="archimate:Grouping" name="Direction" id="id-fc76733c15ce4d0fa08e1156adfa9879"/>
+        <element xsi:type="archimate:Grouping" name="Strategy" id="id-fc76733c15ce4d0fa08e1156adfa9879">
+          <documentation>alt.: Direction</documentation>
+        </element>
       </folder>
     </folder>
     <folder name="Syntax" id="id-528862f7ff2c456898f672cc0b1489b6">
@@ -449,37 +451,52 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
         </folder>
         <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Orientierung" id="id-24bae562e9b04322b5ee975160de0624">
           <child xsi:type="archimate:DiagramObject" id="id-10d2ccd44a0d4390af95055a035da747" targetConnections="id-c56b42ae23bc439ab0d6efad6794c3fa" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-209098a723f84d0787eab3cfed0e3db0">
-            <bounds x="324" y="240" width="181" height="73"/>
+            <bounds x="192" y="240" width="181" height="73"/>
             <feature name="deriveElementLineColor" value="false"/>
             <feature name="iconColor" value="#feffff"/>
             <sourceConnection xsi:type="archimate:Connection" id="id-024246570ccb4eb2aac12ab90354e1c0" source="id-10d2ccd44a0d4390af95055a035da747" target="id-61349cc01a3246978fd9b5b42743866e" archimateRelationship="id-4ae26bea45bd4597a97e37c1b838d3de"/>
           </child>
           <child xsi:type="archimate:DiagramObject" id="id-136590af6a224b6689af72c90ec669e5" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-cf054314f7e944cea52ff8ec082377f8">
-            <bounds x="192" y="120" width="181" height="73"/>
+            <bounds x="60" y="120" width="181" height="73"/>
             <feature name="deriveElementLineColor" value="false"/>
             <feature name="iconColor" value="#feffff"/>
             <sourceConnection xsi:type="archimate:Connection" id="id-c56b42ae23bc439ab0d6efad6794c3fa" source="id-136590af6a224b6689af72c90ec669e5" target="id-10d2ccd44a0d4390af95055a035da747" archimateRelationship="id-af654424795d4ba79318342f694d68fe"/>
             <sourceConnection xsi:type="archimate:Connection" id="id-8f337dabcfce477f9745e7e76ce084f6" source="id-136590af6a224b6689af72c90ec669e5" target="id-61349cc01a3246978fd9b5b42743866e" archimateRelationship="id-ec81a51ca6ba40ccae49c8be4faa77de"/>
           </child>
           <child xsi:type="archimate:DiagramObject" id="id-61349cc01a3246978fd9b5b42743866e" targetConnections="id-024246570ccb4eb2aac12ab90354e1c0 id-8f337dabcfce477f9745e7e76ce084f6" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-63a27d11822d4ef4b45e65b0e7231fc4">
-            <bounds x="192" y="360" width="181" height="73"/>
+            <bounds x="60" y="360" width="181" height="73"/>
             <feature name="deriveElementLineColor" value="false"/>
             <feature name="iconColor" value="#feffff"/>
           </child>
-          <child xsi:type="archimate:DiagramObject" id="id-f12be91d75e441c8bd871652cd622d06" fillColor="#ffffff" textPosition="1" archimateElement="id-c9c995beb0e645a3a2ca7c4afc3e6e2c" type="1">
-            <bounds x="324" y="96" width="120" height="55"/>
+          <child xsi:type="archimate:DiagramObject" id="id-f12be91d75e441c8bd871652cd622d06" lineColor="#c0c0c0" fillColor="#ffffff" textPosition="1" archimateElement="id-c9c995beb0e645a3a2ca7c4afc3e6e2c" type="1">
+            <bounds x="192" y="96" width="96" height="48"/>
             <feature name="deriveElementLineColor" value="false"/>
             <feature name="lineStyle" value="1"/>
           </child>
           <child xsi:type="archimate:DiagramObject" id="id-34bf75ef0faa4948b8c027df5d1235d3" fillColor="#ffffff" textPosition="1" archimateElement="id-33a10d15dd4f40d3b963608b26edd48d" type="1">
-            <bounds x="443" y="216" width="120" height="55"/>
+            <bounds x="311" y="216" width="96" height="48"/>
             <feature name="deriveElementLineColor" value="false"/>
             <feature name="lineStyle" value="1"/>
           </child>
           <child xsi:type="archimate:DiagramObject" id="id-4bcfbfa1ee1a4b61b7683308007f7c58" fillColor="#ffffff" textPosition="1" archimateElement="id-0645e26eee7b4bf49df671f415323fb1" type="1">
-            <bounds x="144" y="336" width="120" height="55"/>
+            <bounds x="204" y="348" width="96" height="48"/>
             <feature name="deriveElementLineColor" value="false"/>
             <feature name="lineStyle" value="1"/>
+          </child>
+          <child xsi:type="archimate:Note" id="id-3802f669a19c40ceba22818a8fd2234d" lineColor="#c0c0c0" textAlignment="1">
+            <bounds x="245" y="132" width="83" height="25"/>
+            <feature name="deriveElementLineColor" value="false"/>
+            <content>stehen wir?</content>
+          </child>
+          <child xsi:type="archimate:Note" id="id-dea83cc326254d1cb84fe461148df7b6" textAlignment="1">
+            <bounds x="358" y="252" width="83" height="25"/>
+            <feature name="deriveElementLineColor" value="false"/>
+            <content>gibt es uns?</content>
+          </child>
+          <child xsi:type="archimate:Note" id="id-14f50430bd9e4be88ecf62a3dc9ff1ff" textAlignment="1">
+            <bounds x="245" y="384" width="128" height="25"/>
+            <feature name="deriveElementLineColor" value="false"/>
+            <content>wollen wir wirken?</content>
           </child>
         </element>
       </folder>
