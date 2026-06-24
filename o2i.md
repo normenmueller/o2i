@@ -22,7 +22,9 @@ callout-theme: gray
 
 # Einleitung
 
-tbd
+O2I beschreibt, wie Orientierung unter gegebenen Bedingungen in strategische Formierung, kontextualisierte Bedarfe, wirkungsgerichtete Operationalisierung und nachvollziehbare Wirkung überführt wird.
+
+O2I begründet fachliche Relationen wie `Strategy --qualifies--> Need` durch Verbindungen zwischen kontextualisierten O2I-Primitives. O2I-Kontexte geben Bedeutung; O2I-Primitives tragen die modellierten Inhalte. Der Wirkungsgraph entsteht aus diesen Primitives und ihren Relationen.
 
 # Fundament
 
