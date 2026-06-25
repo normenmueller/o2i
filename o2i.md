@@ -42,6 +42,8 @@ Doerr, John (2018): *Measure What Matters: How Google, Bono, and the Gates Found
 
 George, Gerard; Haas, Martine R.; McGahan, Anita M.; Schillebeeckx, Simon J. D.; Tracey, Paul (2023): "Purpose in the For-Profit Firm: A Review and Framework for Management Research". In: *Journal of Management*, 49(6), S. 1841-1869. URL: https://doi.org/10.1177/01492063211006450.
 
+Hamel, Gary; Prahalad, C. K. (1989): "Strategic Intent". In: *Harvard Business Review*, 67(3), S. 63-76.
+
 Mintzberg, Henry; Waters, James A. (1985): "Of Strategies, Deliberate and Emergent". In: *Strategic Management Journal*, 6(3), S. 257-272.
 
 Parmenter, David (2020): *Key Performance Indicators: Developing, Implementing, and Using Winning KPIs*. 4. Aufl. Hoboken, NJ: John Wiley & Sons. URL: https://www.oreilly.com/library/view/key-performance-indicators/9781119620778/.
@@ -62,7 +64,7 @@ URL: \url{https://publications.opengroup.org/standards/archimate/c260}.
 
 Die Literaturquellen werden nicht gleichgewichtig verwendet, sondern nach ihrer Funktion innerhalb von O2I:
 
-Rumelt (2011), Porter (1996) sowie Mintzberg und Waters (1985) stützen die Formierung innerhalb von O2I: Diagnose, leitende Handlungslogik, Positionierung, Trade-offs, Fit, Kohärenz sowie intendierte und realisierte Strategie.
+Rumelt (2011), Porter (1996), Hamel und Prahalad (1989) sowie Mintzberg und Waters (1985) stützen die Formierung innerhalb von O2I: Diagnose, strategische Absicht, leitende Handlungslogik, Positionierung, Trade-offs, Fit, Kohärenz sowie intendierte und realisierte Strategie.
 
 Doerr (2018) stützt die Operationalisierung über Objectives und Key Results als überprüfbare Umsetzungs- und Evidenzformen.
 
@@ -146,21 +148,21 @@ Formierung bezeichnet in O2I die fachliche Domäne, in der Orientierung unter ge
 
 Als Artefakt muss eine Strategie ihre Bestandteile dokumentieren. Eine explizit formulierte Strategie liefert mindestens Geltungsbereich, strategische Verankerung, abgeleitete Leitplanken, Diagnose, strategische Absicht, Guiding Policy, Positionierung, Trade-offs, kohärente Handlungsfestlegungen und Fit.
 
-![O2I Strategiebestandteile](<img/O2I Strategy Constituents.png>){#fig:o2i-strategy-constituents-view width=50%}
+![O2I Strategiebestandteile](<img/O2I Strategy Constituents.png>){#fig:o2i-strategy-constituents-view}
 
 @Fig:o2i-strategy-constituents-view zeigt O2I Strategiebestandteile und ihre fachlichen Beziehungen. Diese Bestandteile sind keine O2I-Kontexte und keine O2I-Primitives; sie beschreiben die innere fachliche Struktur einer explizit formulierten Strategie.
 
 <!--
 ED note:
-- `Scope --frames--> Diagnosis`: passt, weil Geltungsbereich die Einheit bestimmt, für die die Herausforderung gilt.
-- `Guardrails --constrain--> Guiding Policy`: passt, weil Leitplanken Vorgaben/Restriktionen setzen, ohne Diagnose zu ersetzen.
-- `Diagnosis --justifies--> Intent / Guiding Policy`: passt, weil Diagnose erklärt, warum eine Wegentscheidung nötig ist.
-- `Intent --orients--> Guiding Policy`: passt, weil strategische Absicht den angestrebten Beitrag zur Vision vorgibt.
-- `Guiding Policy --guides--> Positioning / Coherent Action Commitments`: passt, weil sie die Stoßrichtung und ausführbare Logik prägt.
-- `Positioning --requires--> Trade-offs`: passt Porter-semantisch.
-- `Trade-offs --constrain--> Coherent Action Commitments`: passt, weil Nicht-Entscheidungen Handlungsfestlegungen begrenzen.
-- `Anchoring --enables--> Coherent Action Commitments`: passt, weil der Text klärt, dass Verankerung Strategie insgesamt betrifft, aber in Handlungsfestlegungen wirksam wird.
-- `Fit --validates--> Positioning / Trade-offs / Coherent Action Commitments`: passt, weil Fit als Kohärenznachweis gelesen wird. Einzige Restnuance: `validates` ist bewusst stark. Da ihr Fit als **Kohärenznachweis** formuliert habt, ist das vertretbar.
+- Scope frames Diagnosis: passt, weil Geltungsbereich die Einheit bestimmt, für die die Herausforderung gilt.
+- Guardrails constrain Guiding Policy: passt, weil Leitplanken Vorgaben/Restriktionen setzen, ohne Diagnose zu ersetzen.
+- Diagnosis justifies Intent / Guiding Policy: passt, weil Diagnose erklärt, warum eine Wegentscheidung nötig ist.
+- Intent orients Guiding Policy: passt, weil strategische Absicht den angestrebten Beitrag zur Vision vorgibt.
+- Guiding Policy guides Positioning / Coherent Action Commitments: passt, weil sie die Stoßrichtung und ausführbare Logik prägt.
+- Positioning requires Trade-offs: passt Porter-semantisch.
+- Trade-offs constrain Coherent Action Commitments: passt, weil Nicht-Entscheidungen Handlungsfestlegungen begrenzen.
+- Anchoring enables Coherent Action Commitments: passt, weil der Text klärt, dass Verankerung Strategie insgesamt betrifft, aber in Handlungsfestlegungen wirksam wird.
+- Fit validates Positioning / Trade-offs / Coherent Action Commitments: passt, weil Fit als Kohärenznachweis gelesen wird. Einzige Restnuance: `validates` ist bewusst stark. Da ihr Fit als **Kohärenznachweis** formuliert habt, ist das vertretbar.
 -->
 
 #### Geltungsbereich
@@ -210,7 +212,10 @@ Diagnose muss eigenständig bleiben. Eine übergeordnete Strategie kann Leitplan
 
 #### Strategische Absicht
 
-**Strategische Absicht** bezeichnet den angestrebten Beitrag einer Strategie zur [Vision](#vision). Sie macht deutlich, welche Wirkung oder welcher Fortschritt durch die Wegentscheidung erreichbar werden soll, ohne bereits die konkrete Intervention festzulegen.
+> [!definition]
+> **Strategische Absicht**[^intent] bezeichnet den angestrebten Beitrag einer Strategie zur [Vision](#vision). Sie macht deutlich, welche Wirkung oder welcher Fortschritt durch die Wegentscheidung erreichbar werden soll, ohne bereits die konkrete Intervention festzulegen.
+>
+> [^intent]: *Autorenableitung in Anlehnung an Hamel und Prahalad (1989), Rumelt (2011), Mintzberg und Waters (1985) und Parmenter (2020)*: Hamel und Prahalad stützen Strategic Intent als langfristig ausrichtende strategische Absicht; Rumelt stützt die Abgrenzung von Vision, Herausforderung und strategischer Antwort; Mintzberg und Waters stützen Strategie als intendiertes Handlungsmuster; Parmenter stützt Strategie als Weg zur Verwirklichung der Vision.
 
 #### Guiding Policy / leitende Handlungslogik
 
