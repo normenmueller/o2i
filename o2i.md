@@ -90,7 +90,9 @@ Die Terminologie beschreibt eine *teleologische Wirkungslogik*: von Orientierung
 
 Orientierung bezeichnet in O2I die fachliche Domäne, in der ein handlungsfähiger Akteur seinen normativen Rahmen, seinen grundlegenden Existenzzweck und seinen angestrebten Zukunftszustand bestimmt.
 
-![O2I Orientierung](<img/O2I Orientierung.png>){#fig:o2i-orientation width=50%}
+![O2I Orientierung](<img/O2I Orientierung.png>){#fig:o2i-orientation-view width=50%}
+
+@Fig:o2i-orientation-view zeigt die Orientierungsbestandteile von O2I: Ethos, Mission und Vision sowie ihre fachlichen Beziehungen. Die Darstellung greift die spätere Kontextsicht des Metamodells vor, dient hier jedoch der terminologischen Einordnung.
 
 ### Ethos
 
@@ -144,6 +146,23 @@ Formierung bezeichnet in O2I die fachliche Domäne, in der Orientierung unter ge
 
 Als Artefakt muss eine Strategie ihre Bestandteile dokumentieren. Eine explizit formulierte Strategie liefert mindestens Geltungsbereich, strategische Verankerung, abgeleitete Leitplanken, Diagnose, strategische Absicht, Guiding Policy, Positionierung, Trade-offs, kohärente Handlungsfestlegungen und Fit.
 
+![O2I Strategiebestandteile](<img/O2I Strategy Constituents.png>){#fig:o2i-strategy-constituents-view width=50%}
+
+@Fig:o2i-strategy-constituents-view zeigt O2I Strategiebestandteile und ihre fachlichen Beziehungen. Diese Bestandteile sind keine O2I-Kontexte und keine O2I-Primitives; sie beschreiben die innere fachliche Struktur einer explizit formulierten Strategie.
+
+<!--
+ED note:
+- `Scope --frames--> Diagnosis`: passt, weil Geltungsbereich die Einheit bestimmt, für die die Herausforderung gilt.
+- `Guardrails --constrain--> Guiding Policy`: passt, weil Leitplanken Vorgaben/Restriktionen setzen, ohne Diagnose zu ersetzen.
+- `Diagnosis --justifies--> Intent / Guiding Policy`: passt, weil Diagnose erklärt, warum eine Wegentscheidung nötig ist.
+- `Intent --orients--> Guiding Policy`: passt, weil strategische Absicht den angestrebten Beitrag zur Vision vorgibt.
+- `Guiding Policy --guides--> Positioning / Coherent Action Commitments`: passt, weil sie die Stoßrichtung und ausführbare Logik prägt.
+- `Positioning --requires--> Trade-offs`: passt Porter-semantisch.
+- `Trade-offs --constrain--> Coherent Action Commitments`: passt, weil Nicht-Entscheidungen Handlungsfestlegungen begrenzen.
+- `Anchoring --enables--> Coherent Action Commitments`: passt, weil der Text klärt, dass Verankerung Strategie insgesamt betrifft, aber in Handlungsfestlegungen wirksam wird.
+- `Fit --validates--> Positioning / Trade-offs / Coherent Action Commitments`: passt, weil Fit als Kohärenznachweis gelesen wird. Einzige Restnuance: `validates` ist bewusst stark. Da ihr Fit als **Kohärenznachweis** formuliert habt, ist das vertretbar.
+-->
+
 #### Geltungsbereich
 
 > [!definition]
@@ -157,6 +176,8 @@ Als Artefakt muss eine Strategie ihre Bestandteile dokumentieren. Eine explizit 
 > **Strategische Verankerung**[^anchoring] bezeichnet die organisatorische und prozessuale Einbettung, durch die eine Strategie entscheidbar, verantwortbar und umsetzbar wird: organisatorisch durch Zeitraum, Verantwortungsbereich, Entscheidungsebene und tragende Verantwortlichkeiten; prozessual durch Entscheidungswege und Umsetzungslogik.
 >
 > [^anchoring]: *Autorenableitung in Anlehnung an Rumelt (2011) und Porter (1996)*: Eine Strategie kann nur kohärent wirksam werden, wenn ihre Wegentscheidung nicht isoliert bleibt, sondern durch Verantwortlichkeiten, Entscheidungswege und eine tragfähige Umsetzungslogik in der Organisation verankert ist. Rumelt stützt die Kohärenz der Handlungsfestlegungen; Porter stützt die Einbettung in ein konsistentes Aktivitätssystem.
+
+Strategische Verankerung betrifft die Strategie insgesamt; sie wird besonders dort wirksam, wo kohärente Handlungsfestlegungen entscheidbar, verantwortbar und umsetzbar werden müssen.
 
 #### Abgeleitete Leitplanken
 
@@ -176,11 +197,16 @@ Eine übergeordnete Strategie richtet eine untergeordnete Strategie aus: Sie gib
 #### Diagnose
 
 > [!definition]
-> Die **Diagnose**[^diagnosis] beschreibt die entscheidende Herausforderung, nicht die Gesamtheit aller beobachtbaren Probleme.
+> Die **Diagnose**[^diagnosis] beschreibt die für den jeweiligen Geltungsbereich strategisch entscheidende Herausforderung: Sie erklärt, warum die Vision unter gegebenen Bedingungen nicht ohne eine kohärente Wegentscheidung erreichbar ist.
 >
 > [^diagnosis]: *Quellenanker*: Rumelt (2011).
 
-**Funktion:** Sie reduziert Komplexität und macht bewertbar, ob eine Guiding Policy überhaupt passend ist.
+Eine Diagnose reduziert Komplexität, indem sie nicht die Gesamtheit aller beobachtbaren Probleme sammelt, sondern die strategisch relevante Herausforderung herausarbeitet. Dadurch wird zunächst bestimmbar, welchen Beitrag die strategische Absicht zur Vision leisten soll; erst danach wird bewertbar, ob die Guiding Policy tatsächlich auf diese Herausforderung passt.
+
+<!--
+ED note:
+Diagnose muss eigenständig bleiben. Eine übergeordnete Strategie kann Leitplanken setzen, aber sie darf die Diagnose der untergeordneten Strategie nicht ersetzen. Sonst wäre die untergeordnete Strategie nur abgeleitete Planung, keine eigene Strategie.
+-->
 
 #### Strategische Absicht
 
@@ -220,6 +246,8 @@ Eine übergeordnete Strategie richtet eine untergeordnete Strategie aus: Sie gib
 >
 > [^coherent-actions]: *Quellenanker*: Rumelt (2011).
 
+Kohärente Handlungsfestlegungen sind nur tragfähig, wenn die dafür erforderlichen Verantwortlichkeiten, Entscheidungswege und Umsetzungslogik strategisch verankert sind.
+
 **Abgrenzung:** Sie gehören zur Wegentscheidung, soweit sie deren Logik beweisbar machen. Detaillierte Projekte, Sprint-Objectives, OKRs und operative Aufgaben gehören zur Operationalisierung.
 
 #### Fit / Kohärenznachweis
@@ -228,6 +256,8 @@ Eine übergeordnete Strategie richtet eine untergeordnete Strategie aus: Sie gib
 > **Fit**[^fit] bezeichnet die gegenseitige Verstärkung von Aktivitäten, Policies und Ressourcenbindungen.
 >
 > [^fit]: *Quellenanker*: Porter (1996) für Fit zwischen Aktivitäten; Rumelt (2011) für Kohärenz als strategische Mindestanforderung.
+
+Fit wirkt in diesem Sinne als Kohärenznachweis für Positionierung, Trade-offs und kohärente Handlungsfestlegungen.
 
 Fit bedeutet, dass Aktivitäten nicht nur nebeneinander bestehen, sondern sich gegenseitig stützen und verstärken. Eine Aktivität passt zur Strategie, wenn sie die gewählte Position, die bewussten Trade-offs und andere Aktivitäten unterstützt. Fehlt dieser Fit, entsteht keine Strategie, sondern eine lose Sammlung einzelner Maßnahmen.
 
