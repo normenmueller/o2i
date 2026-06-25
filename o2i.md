@@ -160,7 +160,16 @@ Als Artefakt muss eine Strategie ihre Bestandteile dokumentieren. Eine explizit 
 
 #### Abgeleitete Leitplanken
 
-**Abgeleitete Leitplanken** bezeichnen Vorgaben aus übergeordneten Strategien, Agenden, Prinzipien oder verbindlichen Rahmenbedingungen, an die eine Strategie anschließen muss.
+> [!definition]
+> **Abgeleitete Leitplanken**[^derived-guardrails] bezeichnen Vorgaben aus übergeordneten Strategien, Agenden, Prinzipien oder verbindlichen Rahmenbedingungen, an die eine Strategie anschließen muss.
+>
+> [^derived-guardrails]: *Autorenableitung in Anlehnung an Rumelt (2011) und Porter (1996)*: Strategien stehen häufig in übergeordneten und untergeordneten Entscheidungszusammenhängen. Übergeordnete Strategien können Richtung, Prioritäten, Restriktionen oder Zielbezüge setzen; die untergeordnete Strategie muss daraus jedoch eine eigene kohärente Antwort für ihren Geltungsbereich bilden. Rumelt stützt, dass eine untergeordnete Strategie trotz übergeordneter Vorgaben eine eigene kohärente Antwort auf ihre spezifische Herausforderung bilden muss; Porter stützt, dass diese Antwort mit Positionierung, Trade-offs und Aktivitätssystem des jeweiligen Geltungsbereichs konsistent sein muss.
+
+<!--
+ED note:
+- Rumelt hilft gegen falsche Ableitung: Eine untergeordnete Strategie darf nicht bloß Vorgaben übernehmen. Sie muss für ihren eigenen Geltungsbereich eine eigene Diagnose, Guiding Policy und kohärente Handlungslogik bilden. Deshalb gibt eine übergeordnete Strategie Leitplanken, determiniert die untergeordnete Strategie aber nicht vollständig.
+- Porter hilft gegen beliebige Anschlussfähigkeit: Eine Strategie ist nur tragfähig, wenn Aktivitäten, Trade-offs und Positionierung zueinander passen. Wenn eine übergeordnete Strategie Leitplanken setzt, muss die untergeordnete Strategie diese so aufnehmen, dass ihr eigenes Aktivitätssystem weiterhin kohärent ist.
+-->
 
 Eine übergeordnete Strategie richtet eine untergeordnete Strategie aus: Sie gibt Richtung, Prioritäten, Leitplanken, Restriktionen oder Zielbezüge vor, ohne die untergeordnete Strategie vollständig zu determinieren. Die untergeordnete Strategie muss daraus eine eigene Diagnose, Guiding Policy und kohärente Handlungsfestlegungen für ihren eigenen Geltungsbereich ableiten.
 
@@ -326,7 +335,6 @@ Das Kontext-Inventar legt fest, welche O2I-Kontexte das Metamodell verwendet. Di
 ```haskell
 !include`snippetStart="-- * Contexts", snippetEnd="-- * Primitives"` spc/O2I.hs
 ```
-
 
 Die Kontextarten sind fachlich so zu lesen: `Ethos` bezeichnet den kulturell-normativen Orientierungsrahmen eines Akteurs; darin können einzelne `Principle` liegen. `Mission` bezeichnet den grundlegenden Existenzzweck; ein `Driver` wird darin als grundlegender Existenzzweck, Antrieb oder Beitragsgrund gelesen. `Vision` bezeichnet einen orientierenden Zukunftszustand. `Strategy` bezeichnet die Wegentscheidung unter gegebenen Bedingungen. `Need` bezeichnet einen begründeten Änderungs- oder Handlungsbedarf. `Intervention` bezeichnet eine wirkungsgerichtete Handlung oder Eingriffslogik. `Measure` bezeichnet einen Messrahmen, in dem relevante Zustände beobachtbar werden. `Situation` bezeichnet einen konkreten Arbeits-, Leistungs- oder Umfeldzusammenhang; sie ist vom metasprachlichen Ausdruck "O2I-Kontext" zu unterscheiden.
 
