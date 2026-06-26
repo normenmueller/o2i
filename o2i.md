@@ -18,13 +18,24 @@ toc-depth: 3
 callout-theme: gray
 ---
 
-> *Disclaimer*: Der Artikel ist bewusst knapp gehalten. Er ist kein Lehrbuch und keine breite Literaturabhandlung, sondern ein wissenschaftlich fundiertes Begriffs- und Modellierungsdokument mit klaren Definitionen, Quellenankern und expliziten Autorenableitungen.
+\newpage
+\begin{flushright}
+\begin{minipage}{0.6\textwidth}
+\itshape
+``We cannot solve our problems with the same thinking we used when we created them.''\\[0.5em]
+\raggedleft
+--- Albert Einstein zugeschrieben
+\end{minipage}
+\end{flushright}
+\newpage
 
 # Einleitung
 
 O2I beschreibt, wie Orientierung unter gegebenen Bedingungen in strategische Formierung, kontextualisierte Bedarfe, wirkungsgerichtete Operationalisierung und nachvollziehbare Wirkung überführt wird.
 
 O2I begründet fachliche Relationen wie `Strategy --qualifies--> Need` durch Verbindungen zwischen kontextualisierten O2I-Primitives. O2I-Kontexte geben Bedeutung; O2I-Primitives tragen die modellierten Inhalte. Der Wirkungsgraph entsteht aus diesen Primitives und ihren Relationen.
+
+> *Disclaimer*: Der Artikel ist bewusst knapp gehalten. Er ist kein Lehrbuch und keine breite Literaturabhandlung, sondern ein wissenschaftlich fundiertes Begriffs- und Modellierungsdokument mit klaren Definitionen, Quellenankern und expliziten Autorenableitungen.
 
 # Fundament
 
