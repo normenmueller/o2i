@@ -122,6 +122,8 @@ Orientierung bezeichnet in O2I die fachliche Domäne, in der ein handlungsfähig
 >
 > [^principles]: *Autorenableitung in Anlehnung an Collins und Porras (1996), Schein (2010), Bourne, Jenkins und Parry (2019), Rumelt (2011) und Porter (1996)*: Leitprinzipien werden hier als normative Grundsätze verstanden, die Handlungsoptionen begrenzen, Prioritäten prägen und Entscheidungen konsistent machen.
 
+Ethos begrenzt, welche Arten von Zielen, Strategien und Handlungen für einen Akteur überhaupt legitim sind. Es ist damit kein Zielbild und keine Strategie, sondern der normative Maßstab, an dem spätere Wegentscheidungen konsistent ausgerichtet werden.
+
 ### Mission 
 
 > [!definition]
@@ -130,6 +132,8 @@ Orientierung bezeichnet in O2I die fachliche Domäne, in der ein handlungsfähig
 > > [!tldr] Mission - \textsc{Warum} gibt es uns?
 >
 > [^mission]: *Autorenableitung in Anlehnung an Rumelt (2011)*: Rumelt definiert Mission nicht als eigenen Kernbegriff, trennt Strategie aber klar von Ambition, Vision und anderen Führungsbegriffen.
+
+Mission begründet, warum ein Akteur überhaupt wirken soll. Sie beschreibt den dauerhaften Beitragsgrund, aber noch keinen angestrebten Zukunftszustand und keine Wegentscheidung.
 
 ### Vision 
 
@@ -140,7 +144,7 @@ Orientierung bezeichnet in O2I die fachliche Domäne, in der ein handlungsfähig
 >
 > [^vision]: *Autorenableitung in Anlehnung an Rumelt (2011)*: Die Definition ist eine redaktionelle Systematisierung. Rumelt liefert vor allem die Abgrenzung: Vision und Ambition sind keine Strategie, weil sie noch nicht erklären, wie eine wesentliche Herausforderung überwunden wird.
 
-*Hinweis*: Eine Vision ist qualitativ, richtungsgebend aber noch keine Wegentscheidung.
+Vision gibt Richtung, ohne den Weg festzulegen. Sie macht die angestrebte Wirkung qualitativ verständlich und bildet damit den Bezugspunkt, an dem Strategie später begründen muss, wie dieser Zukunftszustand unter gegebenen Bedingungen erreichbar werden soll.
 
 ## Formierung
 
@@ -232,6 +236,8 @@ Diagnose muss eigenständig bleiben. Eine übergeordnete Strategie kann Leitplan
 >
 > [^intent]: *Autorenableitung in Anlehnung an Hamel und Prahalad (1989), Rumelt (2011), Mintzberg und Waters (1985) und Parmenter (2020)*: Hamel und Prahalad stützen Strategic Intent als langfristig ausrichtende strategische Absicht; Rumelt stützt die Abgrenzung von Vision, Herausforderung und strategischer Antwort; Mintzberg und Waters stützen Strategie als intendiertes Handlungsmuster; Parmenter stützt Strategie als Weg zur Verwirklichung der Vision.
 
+Strategische Absicht fokussiert die Strategie auf den Beitrag, den sie zur Vision leisten soll. Sie ist konkreter als Vision, aber noch nicht Guiding Policy: Sie beschreibt den intendierten Fortschritt, nicht den gewählten strategischen Ansatz.
+
 #### Guiding Policy / leitende Handlungslogik
 
 > [!definition]
@@ -308,23 +314,48 @@ In O2I begründen kritische Erfolgsfaktoren, welche Primitive-Verbindungen zwisc
 
 ## Kontextualisierung
 
+Kontextualisierung bezeichnet in O2I die fachliche Verankerung eines Bedarfs in einer konkreten Situation, in der der Bedarf sichtbar, begründbar und später überprüfbar wird.
+
 ### Situation
 
+<!--
+ED note:
+Wo wird ein Bedarf fachlich sichtbar?
+
+Ein konkretes Business-Architecture-Artefakt kann in O2I als Situation gelesen werden, wenn daran ein Bedarf fachlich sichtbar, begründbar und später überprüfbar wird.
+-->
+
 > [!definition]
-> Eine **Situation** (en.: *situation*; meta: `Situation`)[^situation] bezeichnet einen konkreten Arbeits-, Leistungs- oder Umfeldzusammenhang, in dem Bedarfe sichtbar, begründbar oder überprüfbar werden, z. B. Prozess, Capability, System, Kundenerlebnis, regulatorische Anforderung oder Schmerzpunkt. Kurz: Situation = Wo wird ein Bedarf sichtbar?
+> Eine **Situation** (en.: *situation*; meta: `Situation`)[^situation] bezeichnet einen fachlich beschriebenen Arbeits-, Leistungs- oder Umfeldzusammenhang, in dem Bedarfe sichtbar, begründbar und später überprüfbar werden. O2I versteht `Situation` als abstrakten fachlichen Interpretationskontext: Konkrete Business-Architecture-Artefakte wie Business Capability, Business Process, Business Object, Business Role, Value Stream oder Regulatory Constraint können als spezielle Situationen gelesen werden, wenn an ihnen Bedarfe sichtbar werden.
 >
-> [^situation]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996), Doerr (2018) und Parmenter (2020)*: Situation wird hier als O2I-spezifischer Brückenbegriff eingeführt, um strategische Auswahl mit konkreter Arbeitsrealität, Operationalisierung und Messbarkeit zu verbinden.
+> > [!tldr] Situation = \textsc{Wo} genau in der fachlichen Realität zeigt sich ein Bedarf?
+>
+> [^situation]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996), Doerr (2018), Parmenter (2020) und The Open Group (2025, 2026)*: Situation wird hier als O2I-spezifischer Brückenbegriff eingeführt, um strategische Auswahl mit fachlich beschriebener Arbeitsrealität, Operationalisierung und Messbarkeit zu verbinden. TOGAF und ArchiMate sind geeignete Strukturierungs- und Notationsgrundlagen für solche Business-Architecture-Artefakte, aber nicht Quelle der O2I-Semantik.
+
+![O2I Situationen](<img/O2I Situation.png>){#fig:o2i-situation-view}
+
+@Fig:o2i-situation-view beantwortet die Frage: Was kann in O2I als Situation gelten? Die Sicht zeigt typische Arten von Situationen: Business-Architecture-Artefakte, die im O2I-Kontext als spezielle Situationen interpretiert werden können. Sie modelliert keine vollständige Business Architecture. Die Relationen zwischen diesen Artefakten folgen der jeweiligen ArchiMate- bzw. TOGAF-Modellierung und werden nicht durch O2I neu definiert.
+
+Eine Situation muss somit fachlich, nicht technisch, beschrieben werden. Sie beschreibt nicht, mit welcher Technologie oder Lösung ein Bedarf erfüllt werden soll, sondern in welchem fachlichen Bezugsraum ein Bedarf sichtbar wird.
 
 ### Bedarf
 
 > [!definition]
-> Ein **Bedarf** (en.: *need*; meta: `Need`)[^need] bezeichnet eine begründete Anforderung an Veränderung, Fähigkeit oder Ergebnis, die in einer [Situation](#situation) sichtbar, begründbar oder überprüfbar wird, aber noch keine konkrete Lösung festlegt. Ein Bedarf beschreibt, was benötigt wird, nicht wie es umgesetzt oder erfüllt wird. Bedarfe können in weitere Bedarfe verfeinert werden; jede Verfeinerung bleibt auf der Ebene des Was. Kurz: Bedarf = Was wird benötigt?
+> Ein **Bedarf** (en.: *need*; meta: `Need`)[^need] bezeichnet eine begründete, auf eine konkrete [Situation](#situation) bezogene Anforderung an Veränderung, die dort sichtbar, begründbar und später überprüfbar wird, aber noch keine konkrete Lösung festlegt. Ein Bedarf beschreibt, was benötigt wird, nicht wie es umgesetzt oder erfüllt wird. Bedarfe können in weitere Bedarfe verfeinert werden; jede Verfeinerung bleibt auf der Ebene des Was.
+>
+> > [!tldr] Bedarf = \textsc{Was} wird benötigt?
 >
 > [^need]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996), Doerr (2018) und Parmenter (2020)*: Bedarf wird hier als O2I-spezifischer Brückenbegriff zwischen Formierung und Operationalisierung eingeführt. Rumelt und Porter stützen die Ableitung aus strategischer Logik; Doerr und Parmenter stützen die anschließende Operationalisierung und Messbarmachung.
 
-Ein Bedarf entsteht nicht aus Strategie allein. Er wird in einer Situation sichtbar und ist dort fachlich verankert. Seine Wirkungsrelevanz wird durch Bedarfsqualifikation in der Operationalisierung bestimmt.
+Ein Bedarf ist in O2I nur zulässig, wenn er auf eine konkrete Situation bezogen ist, etwa eine Business Capability, einen Business Process, ein Business Object, eine Business Role, einen Value Stream oder einen Regulatory Constraint. Ohne diesen Situationsbezug bleibt er eine unqualifizierte Aussage über gewünschten Wandel, aber kein O2I-Bedarf.
 
-Ein Beispiel für Bedarfsspezialisierungen sind fachliche Bedarfe und daraus abgeleitete Digitalisierungsbedarfe. Beide bleiben Bedarfe: Sie beschreiben das Was, nicht die Lösung.
+Der Situationsbezug macht einen Bedarf sichtbar und prüfbar; der Strategiebezug wird erst durch Bedarfsqualifikation hergestellt. Strategie qualifiziert einen sichtbaren Bedarf als strategisch relevant; erst dadurch wird er wirkungsrelevant.
+
+Ein Bedarf ist keine Lösung, keine Maßnahme, kein Projekt und keine Anforderungsspezifikation. Diese können aus einem wirkungsrelevanten Bedarf abgeleitet werden, dürfen den Bedarf aber nicht ersetzen. Ein Bedarf bleibt auf der Ebene des benötigten fachlichen Ergebnisses.
+
+Bedarfe können verfeinert werden, wenn dadurch ihr fachlicher Gehalt präzisiert wird. Eine Verfeinerung bleibt ein Bedarf, solange sie das Was konkretisiert und keine Umsetzung festlegt. Ein Beispiel für Bedarfsspezialisierungen sind fachliche Bedarfe und daraus abgeleitete Digitalisierungsbedarfe. Beide bleiben Bedarfe: Sie beschreiben das Was, nicht die Lösung.
+
+Die spätere Wirkungsrelevanz eines Bedarfs wird nicht durch seine Formulierung behauptet, sondern über Bedarfsqualifikation und anschlussfähige Primitive-Verbindungen begründet.
 
 ## Operationalisierung
 
