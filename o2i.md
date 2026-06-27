@@ -183,6 +183,8 @@ ED note:
 >
 > [^scope]: *Autorenableitung in Anlehnung an Rumelt (2011) und Porter (1996)*: Eine Wegentscheidung ist nur dann sinnvoll abgrenzbar, wenn klar ist, für welche Herausforderung, welche Positionierung und welches Aktivitätssystem sie gilt.
 
+Der Geltungsbereich rahmt die Strategie: Er legt fest, für welche Einheit Diagnose, strategische Absicht, Positionierung, Trade-offs, Handlungsfestlegungen und Fit zu beurteilen sind. Ohne klaren Geltungsbereich bleibt unbestimmt, worauf sich die Wegentscheidung bezieht und wer sie verantworten kann.
+
 #### Strategische Verankerung
 
 > [!definition]
@@ -198,6 +200,8 @@ Strategische Verankerung betrifft die Strategie insgesamt; sie wird besonders do
 > **Abgeleitete Leitplanken**[^derived-guardrails] bezeichnen Vorgaben aus übergeordneten Strategien, Agenden, Prinzipien oder verbindlichen Rahmenbedingungen, an die eine Strategie anschließen muss.
 >
 > [^derived-guardrails]: *Autorenableitung in Anlehnung an Rumelt (2011) und Porter (1996)*: Strategien stehen häufig in übergeordneten und untergeordneten Entscheidungszusammenhängen. Übergeordnete Strategien können Richtung, Prioritäten, Restriktionen oder Zielbezüge setzen; die untergeordnete Strategie muss daraus jedoch eine eigene kohärente Antwort für ihren Geltungsbereich bilden. Rumelt stützt, dass eine untergeordnete Strategie trotz übergeordneter Vorgaben eine eigene kohärente Antwort auf ihre spezifische Herausforderung bilden muss; Porter stützt, dass diese Antwort mit Positionierung, Trade-offs und Aktivitätssystem des jeweiligen Geltungsbereichs konsistent sein muss.
+
+Abgeleitete Leitplanken begrenzen und orientieren die Guiding Policy, ohne die untergeordnete Strategie vollständig festzulegen. Sie sind keine eigene Diagnose und keine fertige Handlungslogik; sie beschreiben die Vorgaben, an die eine Strategie anschließen muss, während sie für ihren Geltungsbereich eine eigenständige kohärente Antwort bildet.
 
 <!--
 ED note:
@@ -231,51 +235,63 @@ Diagnose muss eigenständig bleiben. Eine übergeordnete Strategie kann Leitplan
 #### Guiding Policy / leitende Handlungslogik
 
 > [!definition]
-> Die **Guiding Policy**[^guiding-policy] legt die grundsätzliche Stoßrichtung fest, mit der die diagnostizierte Herausforderung adressiert wird.
+> Die **Guiding Policy**[^guiding-policy] bezeichnet den grundsätzlichen strategischen Ansatz, mit dem die diagnostizierte Herausforderung im Sinne der strategischen Absicht adressiert wird.
 >
 > [^guiding-policy]: *Quellenanker*: Rumelt (2011).
 
-**Abgrenzung zur Vision:** Die Vision beschreibt einen gewollten Zukunftszustand. Die Guiding Policy beschreibt den gewählten Ansatz, um eine konkrete strategische Herausforderung zu bewältigen.
+Die Guiding Policy übersetzt Diagnose und strategische Absicht in eine leitende Handlungslogik: Die Diagnose begründet, welche Herausforderung zu bewältigen ist; die strategische Absicht klärt, welchen Beitrag zur Vision die Strategie leisten soll; die Guiding Policy legt fest, mit welchem Ansatz diese Herausforderung adressiert wird.
+
+<!--
+ED note:
+Strategische Absicht: Absicht = angestrebter Beitrag
+Guiding Policy = gewählter Ansatz.
+-->
+
+Die Guiding Policy ist damit weder Vision noch strategische Absicht noch konkrete Handlungsfestlegung. Sie beschreibt nicht den angestrebten Zukunftszustand, nicht den intendierten Beitrag zur Vision und noch nicht die einzelnen strategierelevanten Entscheidungen oder Ressourcenbindungen. Sie leitet Positionierung und kohärente Handlungsfestlegungen, ohne diese bereits vollständig festzulegen.
 
 #### Strategische Positionierung
 
 > [!definition]
-> **Strategische Positionierung**[^positioning] legt fest, wodurch sich der gewählte Weg von Alternativen unterscheidet.
+> **Strategische Positionierung**[^positioning] bezeichnet die bewusste Festlegung, wodurch sich der gewählte strategische Ansatz von relevanten Alternativen unterscheidet und welche Position dadurch eingenommen oder gestärkt wird.
 >
-> [^positioning]: *Quellenanker*: Porter (1996).
+> [^positioning]: *Quellenanker*: Porter (1996) für Strategie als Wahl einer unterscheidbaren Position und eines dazu passenden Aktivitätssystems. *Autorenableitung in Anlehnung an Porter (1996) und Rumelt (2011)*: In O2I konkretisiert Positionierung die Guiding Policy, indem sie festlegt, wodurch sich der gewählte strategische Ansatz im jeweiligen Geltungsbereich von relevanten Alternativen unterscheidet.
 
-**Funktion:** Ohne Unterschied keine Strategie, sondern nur Nachahmung oder operative Verbesserung.
+Die Guiding Policy beschreibt den grundsätzlichen strategischen Ansatz; die strategische Positionierung konkretisiert, wodurch dieser Ansatz gegenüber relevanten Alternativen unterscheidbar wird. Positionierung ist damit positiver als Trade-offs: Sie beschreibt, wofür der gewählte Weg steht, während Trade-offs festlegen, was bewusst nicht getan wird, um diese Position nicht zu verwässern.
+
+Strategische Positionierung richtet kohärente Handlungsfestlegungen aus. Entscheidungen und Ressourcenbindungen passen nur dann zur Strategie, wenn sie die gewählte Position stützen, sichtbar machen oder gegen relevante Alternativen abgrenzen.
 
 #### Trade-offs
 
 > [!definition]
-> **Trade-offs**[^trade-offs] sind bewusste Nicht-Entscheidungen: Sie definieren, was eine Organisation nicht tut, um die gewählte Position nicht zu verwässern.
+> **Trade-offs**[^trade-offs] bezeichnen bewusste Nicht-Entscheidungen: Sie legen fest, was ein handlungsfähiger Akteur nicht tut, um die gewählte Position nicht zu verwässern.
 >
-> [^trade-offs]: *Quellenanker*: Porter (1996).
+> [^trade-offs]: *Quellenanker*: Porter (1996) für Trade-offs als notwendige Bedingung strategischer Positionierung.
 
-**Funktion:** Trade-offs schützen Fokus, Ressourcen und Identität der Strategie.
+Trade-offs folgen aus Positionierung: Wer eine unterscheidbare Position einnimmt, kann nicht zugleich alle alternativen Wege offenhalten. Trade-offs schützen Fokus, Ressourcen und Identität der Strategie, indem sie verhindern, dass Handlungsfestlegungen die gewählte Position verwässern.
+
+Trade-offs sind keine konkreten Maßnahmen. Sie begrenzen kohärente Handlungsfestlegungen, indem sie festlegen, welche Entscheidungen, Aktivitäten oder Ressourcenbindungen nicht zur Strategie passen.
 
 #### Kohärente Handlungsfestlegungen
 
 > [!definition]
-> **Kohärente Handlungsfestlegungen**[^coherent-actions] sind die strategierelevanten Entscheidungen und Ressourcenbindungen, die die Guiding Policy ausführbar machen.
+> **Kohärente Handlungsfestlegungen**[^coherent-actions] bezeichnen strategierelevante Entscheidungen und Ressourcenbindungen, die die Guiding Policy ausführbar machen und zueinander passen müssen.
 >
-> [^coherent-actions]: *Quellenanker*: Rumelt (2011).
+> [^coherent-actions]: *Quellenanker*: Rumelt (2011) für kohärente Aktionen als Bestandteil guter Strategie. *Autorenableitung in Anlehnung an Porter (1996)*: Handlungsfestlegungen müssen zur gewählten Position, den Trade-offs und dem Aktivitätssystem passen.
 
-Kohärente Handlungsfestlegungen sind nur tragfähig, wenn die dafür erforderlichen Verantwortlichkeiten, Entscheidungswege und Umsetzungslogik strategisch verankert sind.
+Kohärente Handlungsfestlegungen konkretisieren die Guiding Policy, ohne in operative Detailplanung überzugehen. Sie werden durch die Guiding Policy geleitet, durch die strategische Positionierung ausgerichtet, durch Trade-offs begrenzt und durch strategische Verankerung entscheidbar, verantwortbar und umsetzbar gemacht.
 
-**Abgrenzung:** Sie gehören zur Wegentscheidung, soweit sie deren Logik beweisbar machen. Detaillierte Projekte, Sprint-Objectives, OKRs und operative Aufgaben gehören zur Operationalisierung.
+Sie gehören zur Wegentscheidung, soweit sie deren Logik beweisbar machen. Detaillierte Projekte, Sprint-Objectives, OKRs und operative Aufgaben gehören zur Operationalisierung.
 
 #### Fit / Kohärenznachweis
 
 > [!definition]
-> **Fit**[^fit] bezeichnet die gegenseitige Verstärkung von Aktivitäten, Policies und Ressourcenbindungen.
+> **Fit**[^fit] bezeichnet den Kohärenznachweis, dass Positionierung, Trade-offs und kohärente Handlungsfestlegungen zueinander passen und sich gegenseitig stützen.
 >
 > [^fit]: *Quellenanker*: Porter (1996) für Fit zwischen Aktivitäten; Rumelt (2011) für Kohärenz als strategische Mindestanforderung.
 
-Fit wirkt in diesem Sinne als Kohärenznachweis für Positionierung, Trade-offs und kohärente Handlungsfestlegungen.
+Fit ist mehr als Widerspruchsfreiheit. Eine Strategie besitzt Fit, wenn ihre Handlungsfestlegungen die gewählte Position stärken, die bewussten Trade-offs respektieren und sich mit anderen Aktivitäten, Policies und Ressourcenbindungen gegenseitig unterstützen.
 
-Fit bedeutet, dass Aktivitäten nicht nur nebeneinander bestehen, sondern sich gegenseitig stützen und verstärken. Eine Aktivität passt zur Strategie, wenn sie die gewählte Position, die bewussten Trade-offs und andere Aktivitäten unterstützt. Fehlt dieser Fit, entsteht keine Strategie, sondern eine lose Sammlung einzelner Maßnahmen.
+Fit validiert damit nicht einzelne Maßnahmen isoliert, sondern das Zusammenspiel von Positionierung, Trade-offs und kohärenten Handlungsfestlegungen. Fehlt dieser Fit, entsteht keine Strategie, sondern eine lose Sammlung einzelner Maßnahmen.
 
 ### Kritische Erfolgsfaktoren
 

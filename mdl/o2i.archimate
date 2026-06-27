@@ -247,6 +247,7 @@ Hinweis: Verankerung macht die Strategie entscheidbar, verantwortbar und umsetzb
     <element xsi:type="archimate:InfluenceRelationship" name="validates" id="id-34498ddb8f4d4d0ca490b5784babe0ac" source="id-b831fd94030247b0b293e7aa344ffaa7" target="id-f79c71fd74214caf80acec1ddb5426f0"/>
     <element xsi:type="archimate:InfluenceRelationship" name="validates" id="id-e1ec37f18d174d27a2ce84ef19014e59" source="id-b831fd94030247b0b293e7aa344ffaa7" target="id-b6e09ac59a3e4024a90a6622cc799cc6"/>
     <element xsi:type="archimate:InfluenceRelationship" name="validates" id="id-0336b1eeeaeb422b9ea503e343c0c372" source="id-b831fd94030247b0b293e7aa344ffaa7" target="id-9ed8c8e1f3d84401bc683d94912faaa2"/>
+    <element xsi:type="archimate:InfluenceRelationship" name="orients" id="id-b13124b0b2654b7c9a9dfe0eb7e2ab3b" source="id-f79c71fd74214caf80acec1ddb5426f0" target="id-9ed8c8e1f3d84401bc683d94912faaa2"/>
   </folder>
   <folder name="Views" id="id-c4a47547d89649babef754e47e83c429" type="diagrams">
     <folder name="Syntax" id="id-6fd9ede1a32043c0bdec21b826afd949">
@@ -523,6 +524,7 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
               <feature name="deriveElementLineColor" value="false"/>
               <feature name="iconColor" value="#feffff"/>
               <sourceConnection xsi:type="archimate:Connection" id="id-20ad9c5798774c2fb92978d41990891e" source="id-3658838ad1f0454dae908543cba23543" target="id-bae83e58e892480fa0396c8015315453" archimateRelationship="id-6a1d68fb767d4523a653647ca0fe4b66"/>
+              <sourceConnection xsi:type="archimate:Connection" id="id-02348ac0a8d54134a40296f309486c11" source="id-3658838ad1f0454dae908543cba23543" target="id-a5c40e6941494b6e94e27d2ee0af775e" archimateRelationship="id-b13124b0b2654b7c9a9dfe0eb7e2ab3b"/>
             </child>
             <child xsi:type="archimate:DiagramObject" id="id-bae83e58e892480fa0396c8015315453" targetConnections="id-20ad9c5798774c2fb92978d41990891e id-8d6a2dd9b731489d94c84965be6e4b6d" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-b6e09ac59a3e4024a90a6622cc799cc6">
               <bounds x="828" y="492" width="181" height="73"/>
@@ -530,7 +532,7 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
               <feature name="iconColor" value="#feffff"/>
               <sourceConnection xsi:type="archimate:Connection" id="id-6ded68d41c7c482b9d45ef8dbe8777d3" source="id-bae83e58e892480fa0396c8015315453" target="id-a5c40e6941494b6e94e27d2ee0af775e" archimateRelationship="id-270debaea56647cfa9164cc019ebea46"/>
             </child>
-            <child xsi:type="archimate:DiagramObject" id="id-a5c40e6941494b6e94e27d2ee0af775e" targetConnections="id-a95b2d8b48e14c729d2fe29f958347f0 id-6ded68d41c7c482b9d45ef8dbe8777d3 id-13b9cdf0193e4aaa9454df56d87afa26 id-be442d603e02418e81b940f56dc13c9c" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-9ed8c8e1f3d84401bc683d94912faaa2">
+            <child xsi:type="archimate:DiagramObject" id="id-a5c40e6941494b6e94e27d2ee0af775e" targetConnections="id-a95b2d8b48e14c729d2fe29f958347f0 id-6ded68d41c7c482b9d45ef8dbe8777d3 id-13b9cdf0193e4aaa9454df56d87afa26 id-be442d603e02418e81b940f56dc13c9c id-02348ac0a8d54134a40296f309486c11" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-9ed8c8e1f3d84401bc683d94912faaa2">
               <bounds x="336" y="492" width="181" height="73"/>
               <feature name="deriveElementLineColor" value="false"/>
               <feature name="iconColor" value="#feffff"/>
