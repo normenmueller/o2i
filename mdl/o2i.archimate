@@ -551,6 +551,7 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
             </child>
           </element>
         </folder>
+        <folder name="Kontextualisierung" id="id-f3f58c5709ac4001a57535221f0270ab"/>
         <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Orientierung" id="id-24bae562e9b04322b5ee975160de0624">
           <child xsi:type="archimate:DiagramObject" id="id-10d2ccd44a0d4390af95055a035da747" targetConnections="id-c56b42ae23bc439ab0d6efad6794c3fa" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-209098a723f84d0787eab3cfed0e3db0">
             <bounds x="192" y="240" width="181" height="73"/>

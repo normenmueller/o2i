@@ -1,5 +1,5 @@
 ---
-title: Von der Orientierung zur Wirkung
+title: "Von der Orientierung zur Wirkung\\thanks{Publiziert unter \\url{https://github.com/normenmueller/o2i}}"
 subtitle: "Begriffe und Relationen für wirksames Handeln"
 author: nemron
 version: "0.1 (wip)"
@@ -298,9 +298,13 @@ Fit validiert damit nicht einzelne Maßnahmen isoliert, sondern das Zusammenspie
 > [!definition]
 > Ein **kritischer Erfolgsfaktor** (en.: *critical success factor*; meta: `CSF`)[^csf] bezeichnet einen aus der Strategie abgeleiteten Leistungs- oder Erfolgsbereich, in dem ein handlungsfähiger Akteur gut performen muss, damit die Strategie wirksam werden kann.
 >
-> [^csf]: *Quellenanker*: Parmenter (2020).
+> [^csf]: *Quellenanker*: Parmenter (2020). *Autorenableitung in Anlehnung an Rumelt (2011) und Porter (1996)*: Kritische Erfolgsfaktoren werden in O2I aus der strategischen Wegentscheidung abgeleitet, insbesondere aus Guiding Policy, Positionierung, Trade-offs und Fit.
 
-Kritische Erfolgsfaktoren gehören nicht zum Kernbegriff Strategie im Sinne von Rumelt, Porter oder Mintzberg. Sie werden aus Strategie abgeleitet und verbinden Formierung mit Bedarfsqualifikation, Messung und Nachweislogik.
+Kritische Erfolgsfaktoren gehören nicht zum Kernbegriff Strategie im Sinne von Rumelt, Porter oder Mintzberg. Sie werden aus Strategie abgeleitet und verbinden Formierung mit Kontextualisierung, Bedarfsqualifikation, Messung und Nachweislogik.
+
+Sie markieren strategisch relevante Erfolgsbereiche, an denen sichtbar wird, welche Situationen bzw. Bedarfe für die Strategie relevant werden können. Ein kritischer Erfolgsfaktor ist damit noch kein KPI, kein Key Result und keine Maßnahme: Er beschreibt einen Erfolgsbereich, der später in konkreten Situationen kontextualisiert, über Bedarfsqualifikation handlungsrelevant gemacht und über geeignete Messungen überprüfbar wird.
+
+In O2I begründen kritische Erfolgsfaktoren, welche Primitive-Verbindungen zwischen Strategie und Bedarf fachlich plausibel werden können. Dadurch wird eine Relation wie `Strategy --qualifies--> Need` nicht bloß behauptet, sondern über kontextualisierte Primitives motivierbar.
 
 ## Kontextualisierung
 
