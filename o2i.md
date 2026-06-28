@@ -396,9 +396,22 @@ Wirkungsrelevant heißt plausibel handlungsrelevant, nicht bereits wirksam. Erst
 ### Intervention
 
 > [!definition]
-> Eine **Intervention** (en.: *intervention*; meta: `Intervention`)[^intervention] bezeichnet eine gezielte Einwirkung auf eine [Situation](#situation), mit der ein wirkungsrelevanter Bedarf adressiert und eine strategisch relevante Veränderung erzeugt werden soll. Eine Intervention kann als Projekt, Maßnahme, Experiment, Programm, Initiative oder andere Umsetzungseinheit auftreten. Kurz: Intervention = Womit verändern wir die Situation?
+> Eine **Intervention** (en.: *intervention*; meta: `Intervention`)[^intervention] bezeichnet eine gezielte Einwirkung auf eine [Situation](#situation), mit der ein wirkungsrelevanter Bedarf adressiert und eine strategisch relevante Veränderung erzeugt werden soll. Eine Intervention kann als Projekt, Maßnahme, Experiment, Programm, Initiative oder andere Umsetzungseinheit auftreten.
+>
+> > [!tldr] Intervention = \textsc{Wie} verändern wir die Situation?
 >
 > [^intervention]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996) und Doerr (2018)*: Interventionen gehören zur Operationalisierung einer strategischen Wegentscheidung. Sie übersetzen strategische Handlungslogik in konkrete Eingriffe, bleiben aber Wirkungshypothesen und keine Garantie für Zielerreichung.
+
+Eine Intervention setzt einen wirkungsrelevanten Bedarf voraus. Sie adressiert nicht beliebige Wünsche, Lösungsideen oder sichtbare, aber strategisch irrelevante Bedarfe, sondern einen Bedarf, der in einer Situation sichtbar geworden und durch Bedarfsqualifikation als strategisch relevant qualifiziert ist.
+
+Eine Intervention ist weder der Bedarf selbst noch die Wirkung. Sie ist eine Handlungshypothese: Sie beschreibt, wie eine Situation verändert werden soll, und macht die angestrebte Wirkung überprüfbar, ohne sie vorab zu behaupten.
+
+> [!addendum]
+> Das `Wie` einer Strategie und das `Wie` einer Intervention liegen auf unterschiedlichen Ebenen: Strategie beantwortet, wie eine Vision unter gegebenen Bedingungen verwirklicht werden soll; Intervention beantwortet, wie eine konkrete Situation wirkungsgerichtet verändert werden soll.
+>
+> > [!tldr] Strategie beschreibt das strategische `Wie`, Intervention das operative `Wie`.
+
+Damit eine Intervention überprüfbar bleibt, *muss* sie an Messung anschließen. Sie verändert eine Situation und kann Zielwerte oder Zielbezüge für Messungen setzen, an denen später nachvollzogen wird, ob die Bearbeitung des wirkungsrelevanten Bedarfs Wirkung erzeugt hat.
 
 ## Wirkung
 
@@ -468,13 +481,17 @@ Die grafische Sicht dient der Orientierung; die folgenden Kontextrelationen lege
 Die O2I-Kontextrelationen bilden eine schlanke teleologische Wirkungslogik, d. h. die Relationen drücken Zweck-, Mittel-, Qualifikations- und Nachweiszusammenhänge aus.
 
 > [!tl;dr] Teleologische O2I-Wirkungslogik
-> Leitprinzipien leiten Mission und Vision; Mission, verstanden als Existenzzweck, begründet, warum eine Vision angestrebt wird; Vision gibt der Strategie Richtung; Situationen machen Bedarfe unterschiedlicher Art sichtbar; Strategie qualifiziert Bedarfe als strategisch relevant. Wirkungsrelevante Bedarfe entstehen dort, wo ein Bedarf in einer Situation sichtbar wird und durch Strategie als strategisch relevant qualifiziert ist. Bedarfe können verfeinert werden und Beiträge zu Strategien nachvollziehbar machen; Interventionen sind in O2I nur für wirkungsrelevante Bedarfe vorgesehen, verändern Situationen und legen Zielwerte für Messungen fest; Messungen machen relevante Zustände in Situationen beobachtbar.
+> Leitprinzipien leiten Mission und Vision; Mission, verstanden als Existenzzweck, begründet, warum eine Vision angestrebt wird; Vision gibt der Strategie Richtung; Situationen machen Bedarfe unterschiedlicher Art sichtbar; Strategie qualifiziert Bedarfe als strategisch relevant. Wirkungsrelevante Bedarfe entstehen dort, wo ein Bedarf in einer Situation sichtbar wird und durch Strategie als strategisch relevant qualifiziert ist. Bedarfe können verfeinert werden; ihre strategische Relevanz wird über qualifizierende Strategierelationen nachvollziehbar. Interventionen sind in O2I nur für wirkungsrelevante Bedarfe vorgesehen, verändern Situationen und legen Zielwerte für Messungen fest; Messungen machen relevante Zustände in Situationen beobachtbar.
 
 Einige O2I-Kontextrelationen verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:
+
+`Strategy --qualifies--> Need`: Die Relation qualifiziert einen Bedarf als strategisch relevant. Die Rückfrage von einem Bedarf zu einer Strategie ist keine eigene O2I-Relation, sondern eine Graph-Abfrage: Welche `Strategy` qualifiziert diesen `Need`?
 
 `Intervention --addresses--> Need`: Die Relation setzt einen wirkungsrelevanten Bedarf voraus; ein nur sichtbarer oder nur strategisch relevanter Bedarf reicht nicht.
 
 `Need --requires--> Intervention`: Die Relation setzt einen wirkungsrelevanten Bedarf voraus. Erst ein Bedarf, der in einer Situation sichtbar und durch Strategie als strategisch relevant qualifiziert ist, kann eine Intervention erforderlich machen; er legt aber noch keine Lösung fest.
+
+`Strategy --directs--> Intervention`: Die Relation bedeutet, dass Strategie einer Intervention Richtung, Priorität, Grenzen und Kohärenz gibt. Sie bedeutet nicht, dass Strategie Interventionen unmittelbar erzeugt.
 
 `Measure --measures--> Situation`: Der unmittelbare Messgegenstand ist die Situation. Ein Measure macht einen relevanten Zustand, eine Leistung oder eine Entwicklung in dieser Situation messbar.
 

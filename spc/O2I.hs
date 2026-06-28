@@ -60,11 +60,9 @@ data ContextRelation (from :: Context) (to :: Context) where
   SurfacesNeed :: ContextRelation Situation Need
   RefinesNeed :: ContextRelation Need Need
   IsGroundedInSituation :: ContextRelation Need Situation
-  NeedContributesToStrategy :: ContextRelation Need Strategy
   AddressesNeed :: ContextRelation Intervention Need
   RequiresIntervention :: ContextRelation Need Intervention
   DirectsIntervention :: ContextRelation Strategy Intervention
-  InterventionContributesToStrategy :: ContextRelation Intervention Strategy
   ChangesSituation :: ContextRelation Intervention Situation
   SetsTargetForMeasure :: ContextRelation Intervention Measure
   MeasuresSituation :: ContextRelation Measure Situation
