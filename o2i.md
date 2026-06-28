@@ -99,7 +99,7 @@ Eine Definition wird nicht bloß behauptet. Sie wird nur verwendet, wenn sie ent
 
 Die Terminologie beschreibt eine *teleologische Wirkungslogik*: von Orientierung über Formierung, Kontextualisierung und Operationalisierung zu Wirkung. Diese fünf *fachlichen Domänen* ordnen die Standardbegriffe, welche O2I anschließend als O2I-Kontexte formalisiert.
 
-## Orientierung 
+## Orientierung
 
 Orientierung bezeichnet in O2I die fachliche Domäne, in der ein handlungsfähiger Akteur seinen normativen Rahmen, seinen grundlegenden Existenzzweck und seinen angestrebten Zukunftszustand bestimmt.
 
@@ -124,22 +124,22 @@ Orientierung bezeichnet in O2I die fachliche Domäne, in der ein handlungsfähig
 
 Ethos begrenzt, welche Arten von Zielen, Strategien und Handlungen für einen Akteur überhaupt legitim sind. Es ist damit kein Zielbild und keine Strategie, sondern der normative Maßstab, an dem spätere Wegentscheidungen konsistent ausgerichtet werden.
 
-### Mission 
+### Mission
 
 > [!definition]
 > Eine **Mission** (en.: *mission*; meta: `Mission`)[^mission] bezeichnet den durch das `Ethos` eines handlungsfähigen Akteurs geprägten *grundlegenden Existenzzweck*: warum der Akteur existiert und welchen Beitrag er leisten soll.
-> 
+>
 > > [!tldr] Mission - \textsc{Warum} gibt es uns?
 >
 > [^mission]: *Autorenableitung in Anlehnung an Rumelt (2011)*: Rumelt definiert Mission nicht als eigenen Kernbegriff, trennt Strategie aber klar von Ambition, Vision und anderen Führungsbegriffen.
 
 Mission begründet, warum ein Akteur überhaupt wirken soll. Sie beschreibt den dauerhaften Beitragsgrund, aber noch keinen angestrebten Zukunftszustand und keine Wegentscheidung.
 
-### Vision 
+### Vision
 
 > [!definition]
 > Eine **Vision** (en.: *vision*; meta: `Vision`)[^vision] bezeichnet einen vom `Ethos` geprägten und durch die [Mission](#mission) begründeten, von einem handlungsfähigen Akteur *angestrebten, orientierenden Zukunftszustand*: wohin der Akteur wirken will, ohne bereits festzulegen, wie diese Wirkung erreicht wird.
-> 
+>
 > > [!tldr] Vision - \textsc{Wohin} wollen wir wirken?
 >
 > [^vision]: *Autorenableitung in Anlehnung an Rumelt (2011)*: Die Definition ist eine redaktionelle Systematisierung. Rumelt liefert vor allem die Abgrenzung: Vision und Ambition sind keine Strategie, weil sie noch nicht erklären, wie eine wesentliche Herausforderung überwunden wird.
@@ -155,7 +155,7 @@ Formierung bezeichnet in O2I die fachliche Domäne, in der Orientierung unter ge
 > [!definition]
 > **Strategie** (en.: *strategy*; meta: `Strategy`)[^strategy] bezeichnet die *begründete und kohärente Wegentscheidung* eines handlungsfähigen Akteurs[^actor], der legitim entscheiden, Ressourcen binden und Verantwortung tragen kann. Mit einer Strategie legt dieser Akteur fest, wie er seine [Vision](#vision) unter gegebenen Bedingungen verwirklichen will und sich damit gegenüber relevanten Alternativen, Wettbewerbern oder Vergleichsangeboten differenziert.
 >
-> > [tl;dr] Strategie - \textsc{Wie} verwirklichen wir unsere Vision?
+> > [!tldr] Strategie - \textsc{Wie} verwirklichen wir unsere Vision?
 >
 > [^strategy]: *Quellenanker*: Rumelt (2011) für Strategie als kohärente Antwort auf eine wesentliche Herausforderung; Porter (1996) für Positionierung, Trade-offs und Fit; Mintzberg und Waters (1985) für Strategie als intendiertes und realisiertes Handlungsmuster; Parmenter (2020) für Strategie als Weg zur Verwirklichung der Vision und als Grundlage für die Ableitung von CSFs und Performance-Maßen.
 
@@ -347,7 +347,7 @@ Eine Situation muss somit fachlich, nicht technisch, beschrieben werden. Sie bes
 >
 > [^need]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996), Doerr (2018) und Parmenter (2020)*: Bedarf wird hier als O2I-spezifischer Brückenbegriff zwischen Formierung und Operationalisierung eingeführt. Rumelt und Porter stützen die Ableitung aus strategischer Logik; Doerr und Parmenter stützen die anschließende Operationalisierung und Messbarmachung.
 
-Ein Bedarf ist in O2I nur zulässig, wenn er auf eine konkrete Situation bezogen ist, etwa eine Business Capability, einen Business Process, ein Business Object, eine Business Role, einen Value Stream oder einen Regulatory Constraint. Ohne diesen Situationsbezug bleibt er eine unqualifizierte Aussage über gewünschten Wandel, aber kein O2I-Bedarf.
+Ein Bedarf in O2I ist eine *situationsbezogene Anforderung an Veränderung* und folglich nur zulässig, wenn er auf eine konkrete Situation bezogen ist, etwa auf eine Business Capability, einen Business Process, ein Business Object, eine Business Role, einen Value Stream oder einen Regulatory Constraint. Ohne diesen Situationsbezug bleibt er eine unqualifizierte Aussage über gewünschten Wandel, aber kein O2I-Bedarf.
 
 Der Situationsbezug macht einen Bedarf sichtbar und prüfbar; der Strategiebezug wird erst durch Bedarfsqualifikation hergestellt. Strategie qualifiziert einen sichtbaren Bedarf als strategisch relevant; erst dadurch wird er wirkungsrelevant.
 
@@ -359,24 +359,39 @@ Die spätere Wirkungsrelevanz eines Bedarfs wird nicht durch seine Formulierung 
 
 ## Operationalisierung
 
-Operationalisierung übersetzt eine strategische Wegentscheidung und sichtbare Bedarfe in wirkungsgerichtete Handlung. Dazu gehören die Qualifikation von Bedarfen und die Intervention, mit der ein wirkungsrelevanter Bedarf adressiert wird.
+Operationalisierung übersetzt eine strategische Wegentscheidung und in Situationen sichtbar gewordene Bedarfe in wirkungsgerichtete Handlung. Dazu gehören die Qualifikation dieser Bedarfe und die Intervention, mit der ein wirkungsrelevanter Bedarf adressiert wird.
 
 ### Bedarfsqualifikation
 
-**Bedarfsqualifikation** bezeichnet die strategische Bewertung, ob ein in einer Situation sichtbar gewordener Bedarf für eine Strategie relevant ist. Ein Bedarf wird wirkungsrelevant, wenn er in einer Situation sichtbar ist und durch eine Strategie als strategisch relevant qualifiziert wird.
+> [!definition]
+> Eine **Bedarfsqualifikation**[^needs-based-qualification] bezeichnet die strategische Bewertung, ob ein in einer Situation sichtbar gewordener Bedarf für eine Strategie relevant ist.
+>
+> [^needs-based-qualification]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996), Doerr (2018) und Parmenter (2020)*: Bedarfsqualifikation wird in O2I als strategische Bewertung sichtbar gewordener Bedarfe eingeführt. Rumelt und Porter stützen die strategische Begründung und Kohärenz der Qualifikation; Doerr und Parmenter stützen die Operationalisierung qualifizierter Bedarfe.
 
-Sichtbarkeit und strategische Relevanz sind unabhängige Qualitäten eines Bedarfs:
+Die Bedarfsqualifikation unterscheidet folgende Stufen:
 
-| in Situation sichtbar | strategisch relevant | Begriff |
-|---|---:|---|
-| nein | nein | latenter Bedarf |
-| ja | nein | sichtbar gewordener Bedarf |
-| nein | ja | strategisch relevanter Bedarf |
-| ja | ja | wirkungsrelevanter Bedarf |
+Bedarf
 
-Je stärker eine Situation bereits an einer Strategie ausgerichtet ist, desto einfacher ist die strategische Qualifizierung sichtbar gewordener Bedarfe. Die Ausrichtung der Situation ersetzt die Qualifizierung jedoch nicht: Auch eine strategienahe Situation kann Bedarfe sichtbar machen, die nicht strategisch relevant sind.
+: situationsbezogene Anforderung an Veränderung.
 
-Ein wirkungsrelevanter Bedarf ist handlungsrelevant, weil seine Bearbeitung plausibel zur angestrebten Wirkung beitragen kann.
+sichtbar gewordener Bedarf
+
+: Ein Bedarf ist in einer konkreten Situation fachlich sichtbar und prüfbar.
+
+strategisch relevanter Bedarf
+
+: Ein Bedarf ist durch Strategie qualifiziert.
+
+wirkungsrelevanter Bedarf
+
+: Ein Bedarf ist sichtbar und strategisch relevant.
+
+Ein Bedarf ist strategisch relevant qualifiziert, wenn seine Veränderungsanforderung durch eine nachvollziehbare Relation zu Strategieinhalten begründet ist.
+
+> [!addendum]
+> Terminologisch erfolgt diese Begründung über kontextualisierte O2I-Primitives, ohne an dieser Stelle den Formalismus des Metamodells vollständig auszubreiten. Beispiel: `Key Result @ Strategy --translates-into--> Objective @ Need`. Damit ist `Strategy --qualifies--> Need` keine freie Behauptung, sondern eine abgeleitete Makrorelation.
+
+Wirkungsrelevant heißt plausibel handlungsrelevant, nicht bereits wirksam. Erst eine spätere Messung kann zeigen, ob die Bearbeitung eines wirkungsrelevanten Bedarfs tatsächlich Wirkung erzeugt hat.
 
 ### Intervention
 
@@ -453,7 +468,7 @@ Die grafische Sicht dient der Orientierung; die folgenden Kontextrelationen lege
 Die O2I-Kontextrelationen bilden eine schlanke teleologische Wirkungslogik, d. h. die Relationen drücken Zweck-, Mittel-, Qualifikations- und Nachweiszusammenhänge aus.
 
 > [!tl;dr] Teleologische O2I-Wirkungslogik
-> Leitprinzipien leiten Mission und Vision; Mission, verstanden als Existenzzweck, begründet, warum eine Vision angestrebt wird; Vision gibt der Strategie Richtung; Situationen machen Bedarfe unterschiedlicher Art sichtbar; Strategie qualifiziert strategisch relevante Bedarfe. Wirkungsrelevante Bedarfe entstehen dort, wo ein Bedarf in einer Situation sichtbar wird und durch Strategie als strategisch relevant qualifiziert ist. Bedarfe können verfeinert werden und Beiträge zu Strategien nachvollziehbar machen; Interventionen sind in O2I nur für wirkungsrelevante Bedarfe vorgesehen, verändern Situationen und legen Zielwerte für Messungen fest; Messungen machen relevante Zustände in Situationen beobachtbar.
+> Leitprinzipien leiten Mission und Vision; Mission, verstanden als Existenzzweck, begründet, warum eine Vision angestrebt wird; Vision gibt der Strategie Richtung; Situationen machen Bedarfe unterschiedlicher Art sichtbar; Strategie qualifiziert Bedarfe als strategisch relevant. Wirkungsrelevante Bedarfe entstehen dort, wo ein Bedarf in einer Situation sichtbar wird und durch Strategie als strategisch relevant qualifiziert ist. Bedarfe können verfeinert werden und Beiträge zu Strategien nachvollziehbar machen; Interventionen sind in O2I nur für wirkungsrelevante Bedarfe vorgesehen, verändern Situationen und legen Zielwerte für Messungen fest; Messungen machen relevante Zustände in Situationen beobachtbar.
 
 Einige O2I-Kontextrelationen verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:
 
