@@ -192,14 +192,12 @@ Das ist die semantische Herkunft von KPI.</documentation>
     <element xsi:type="archimate:InfluenceRelationship" name="qualifies" id="id-860edaa0e6bd4e0a8c7ca2b25683c1e9" source="id-fc76733c15ce4d0fa08e1156adfa9879" target="id-643791bdae8f4829a2151d7b658d84f1">
       <documentation>Strategie qualifiziert einen Bedarf als strategisch relevant.</documentation>
     </element>
-    <element xsi:type="archimate:InfluenceRelationship" name="contributes-to" id="id-d7188f356e2249b3881e48ac04051e6a" source="id-643791bdae8f4829a2151d7b658d84f1" target="id-fc76733c15ce4d0fa08e1156adfa9879"/>
     <element xsi:type="archimate:InfluenceRelationship" name="refines" id="id-151449788aa04c38bc0fb6a5f046ff54" source="id-643791bdae8f4829a2151d7b658d84f1" target="id-643791bdae8f4829a2151d7b658d84f1"/>
     <element xsi:type="archimate:InfluenceRelationship" name="surfaces" id="id-8b8d6f51c8f041d798805012298c0011" source="id-95420d4e66164023b79676213a6147e2" target="id-643791bdae8f4829a2151d7b658d84f1">
       <documentation>exposes/ reveals
 
 Der operative Kontext bringt einen Bedarf an die Oberfläche.</documentation>
     </element>
-    <element xsi:type="archimate:InfluenceRelationship" name="is-grounded-in" id="id-60c08671ef1b4e429d3e2d91dd1a7b8b" source="id-643791bdae8f4829a2151d7b658d84f1" target="id-95420d4e66164023b79676213a6147e2"/>
     <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-ea8ccb71b7e047c7a6b76db01fa874a2" source="id-54239700651b4cbc80ad0293da25df0d" target="id-55135f187b6d4f8a9929f3988537ea74"/>
     <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-7ea4efb329af43c18437a7fa32c2becb" source="id-54239700651b4cbc80ad0293da25df0d" target="id-05d72db3510b47bea674dba07801e723"/>
     <element xsi:type="archimate:InfluenceRelationship" name="motivates" id="id-79e28b9c3ba649588d3e57785f3d08f4" source="id-55135f187b6d4f8a9929f3988537ea74" target="id-05d72db3510b47bea674dba07801e723"/>
@@ -684,7 +682,7 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
           <feature name="iconColor" value="#feffff"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-e293802f35d044d88cee0326e78f0bc0" source="id-46e2f76416894f9db96f3e1a20707049" target="id-02377c97ec79421394d78a97248c326d" archimateRelationship="id-ea5919b404e94e2eb84fc8868cbdb98c"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-02377c97ec79421394d78a97248c326d" targetConnections="id-e293802f35d044d88cee0326e78f0bc0 id-02fb311fa469407e9dbae7f33e3a3139 id-70ff07d6681740d98600c8f353435231 id-98671c466bd64b91b031cc75aaafbb5b" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-fc76733c15ce4d0fa08e1156adfa9879">
+        <child xsi:type="archimate:DiagramObject" id="id-02377c97ec79421394d78a97248c326d" targetConnections="id-e293802f35d044d88cee0326e78f0bc0 id-02fb311fa469407e9dbae7f33e3a3139 id-70ff07d6681740d98600c8f353435231" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-fc76733c15ce4d0fa08e1156adfa9879">
           <bounds x="780" y="492" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
@@ -725,13 +723,11 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
           <bounds x="456" y="348" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
-          <sourceConnection xsi:type="archimate:Connection" id="id-98671c466bd64b91b031cc75aaafbb5b" source="id-c1dd5227f3464b248c42e7745bddd9d6" target="id-02377c97ec79421394d78a97248c326d" archimateRelationship="id-d7188f356e2249b3881e48ac04051e6a"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-40cf3f6046d24c67879d70f7039a11dd" source="id-c1dd5227f3464b248c42e7745bddd9d6" target="id-c1dd5227f3464b248c42e7745bddd9d6" archimateRelationship="id-151449788aa04c38bc0fb6a5f046ff54">
             <bendpoint startX="114" endX="114"/>
             <bendpoint startX="114" startY="-60" endX="114" endY="-60"/>
             <bendpoint startX="-6" startY="-60" endX="-6" endY="-60"/>
           </sourceConnection>
-          <sourceConnection xsi:type="archimate:Connection" id="id-713b3f18b9df4697b2bb4014d053e66c" source="id-c1dd5227f3464b248c42e7745bddd9d6" target="id-1769327a938e4af3a78297407b66c28a" archimateRelationship="id-60c08671ef1b4e429d3e2d91dd1a7b8b"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-bcef563f5e3944eca18c7e2bcdcf159f" source="id-c1dd5227f3464b248c42e7745bddd9d6" target="id-7a4ce686d266451cbf8919079441912e" archimateRelationship="id-8332e598bc2f4ac8bf18ae67e43cb4ac">
             <bendpoint startX="42" startY="72" endX="42" endY="-72"/>
           </sourceConnection>
@@ -741,7 +737,7 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-1769327a938e4af3a78297407b66c28a" targetConnections="id-713b3f18b9df4697b2bb4014d053e66c id-f2b78b4839bc4f0b8b38e0f80794cf0a id-6194108890f64b929caba5acac75faf1" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-95420d4e66164023b79676213a6147e2">
+        <child xsi:type="archimate:DiagramObject" id="id-1769327a938e4af3a78297407b66c28a" targetConnections="id-f2b78b4839bc4f0b8b38e0f80794cf0a id-6194108890f64b929caba5acac75faf1" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-95420d4e66164023b79676213a6147e2">
           <bounds x="132" y="492" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>

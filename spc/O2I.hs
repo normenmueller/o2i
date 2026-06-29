@@ -59,7 +59,6 @@ data ContextRelation (from :: Context) (to :: Context) where
   QualifiesNeed :: ContextRelation Strategy Need
   SurfacesNeed :: ContextRelation Situation Need
   RefinesNeed :: ContextRelation Need Need
-  IsGroundedInSituation :: ContextRelation Need Situation
   AddressesNeed :: ContextRelation Intervention Need
   RequiresIntervention :: ContextRelation Need Intervention
   DirectsIntervention :: ContextRelation Strategy Intervention

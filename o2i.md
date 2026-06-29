@@ -465,7 +465,7 @@ Die Kontextarten sind fachlich so zu lesen: `Ethos` bezeichnet den kulturell-nor
 
 @Fig:o2i-context-view zeigt das Kontextmodell des O2I-Metamodells: O2I-Kontexte und ihre Relationen.
 
-![O2I Context View](<img/O2I Context.png>){#fig:o2i-context-view width=85%}
+![O2I Kontextmodell](<img/O2I Context.png>){#fig:o2i-context-view}
 
 Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen: Sie zeigt die fachlichen Standardbegriffe als O2I-Kontexte und macht sichtbar, welche Relationen zwischen diesen Kontexten zulässig sind. Sie ersetzt die terminologischen Definitionen nicht, sondern fasst ihre teleologische Wirkungslogik auf Metamodellebene zusammen.
 
@@ -486,6 +486,8 @@ Die O2I-Kontextrelationen bilden eine schlanke teleologische Wirkungslogik, d. h
 Einige O2I-Kontextrelationen verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:
 
 `Strategy --qualifies--> Need`: Die Relation qualifiziert einen Bedarf als strategisch relevant. Die Rückfrage von einem Bedarf zu einer Strategie ist keine eigene O2I-Relation, sondern eine Graph-Abfrage: Welche `Strategy` qualifiziert diesen `Need`?
+
+`Situation --surfaces--> Need`: Die Relation macht einen Bedarf in einer Situation sichtbar. Die Rückfrage von einem Bedarf zu einer Situation ist keine eigene O2I-Relation, sondern eine Graph-Abfrage: Welche `Situation` macht diesen `Need` sichtbar?
 
 `Intervention --addresses--> Need`: Die Relation setzt einen wirkungsrelevanten Bedarf voraus; ein nur sichtbarer oder nur strategisch relevanter Bedarf reicht nicht.
 
