@@ -42,6 +42,8 @@ Um die Key Results in den Kontext des Objectives zu setzen, hilft auch folgender
     <element xsi:type="archimate:Meaning" name="WAS" id="id-ab44c37a5e4e44279f345e1b4b8a8904"/>
     <element xsi:type="archimate:Meaning" name="WIE" id="id-88ed849a9a7e4bd1a02ba7993d34d59d"/>
     <element xsi:type="archimate:Meaning" name="WOHIN" id="id-0645e26eee7b4bf49df671f415323fb1"/>
+    <element xsi:type="archimate:Meaning" name="WO" id="id-d743fa428bab471e9850ad3113aacb3c"/>
+    <element xsi:type="archimate:Meaning" name="WORAN" id="id-44e7b1aa0cb64e36bf8c6664b0f05eb0"/>
   </folder>
   <folder name="Implementation &amp; Migration" id="id-db81c99594df4e209210b0c681f98882" type="implementation_migration">
     <element xsi:type="archimate:WorkPackage" name="Work Package" id="id-21a6814e0787456d81c4fea06b5dc926"/>
@@ -769,7 +771,17 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
           </sourceConnection>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-0c614d411fac4e9b864dc7f072dcecfa" fillColor="#ffffff" textPosition="1" archimateElement="id-88ed849a9a7e4bd1a02ba7993d34d59d" type="1">
-          <bounds x="420" y="540" width="96" height="36"/>
+          <bounds x="420" y="480" width="96" height="36"/>
+          <feature name="deriveElementLineColor" value="false"/>
+          <feature name="lineStyle" value="1"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-e2097d7356fc430d89ff2df255b56710" fillColor="#ffffff" textPosition="1" archimateElement="id-d743fa428bab471e9850ad3113aacb3c" type="1">
+          <bounds x="108" y="480" width="96" height="36"/>
+          <feature name="deriveElementLineColor" value="false"/>
+          <feature name="lineStyle" value="1"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-95d7caa1f64545aba3d020e8d91a18fb" fillColor="#ffffff" textPosition="1" archimateElement="id-44e7b1aa0cb64e36bf8c6664b0f05eb0" type="1">
+          <bounds x="420" y="624" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>

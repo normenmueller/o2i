@@ -33,6 +33,8 @@ callout-theme: gray
 
 O2I beschreibt, wie Orientierung unter gegebenen Bedingungen in strategische Formierung, kontextualisierte Bedarfe, wirkungsgerichtete Operationalisierung und nachvollziehbare Wirkung überführt wird.
 
+O2I wird in diesem Artikel als Framework verstanden. Die O2I-Terminologie liefert die fachliche Begriffswelt auf Basis der herangezogenen Standardliteratur; das O2I-Metamodell formalisiert diese Begriffswelt semantisch und syntaktisch. Zusammen entsteht eine begründete Denk-, Modellierungs- und Nachweislogik für Wirkung.
+
 O2I begründet fachliche Relationen wie `Strategy --qualifies--> Need` durch Verbindungen zwischen kontextualisierten O2I-Primitives. O2I-Kontexte geben Bedeutung; O2I-Primitives tragen die modellierten Inhalte. Der Wirkungsgraph entsteht aus diesen Primitives und ihren Relationen.
 
 > *Disclaimer*: Der Artikel ist bewusst knapp gehalten. Er ist kein Lehrbuch und keine breite Literaturabhandlung, sondern ein wissenschaftlich fundiertes Begriffs- und Modellierungsdokument mit klaren Definitionen, Quellenankern und expliziten Autorenableitungen.
@@ -424,6 +426,8 @@ Wirkung wird in O2I nicht behauptet, sondern durch relationale Nachvollziehbarke
 
 Wirkung ist nicht die Intervention selbst, kein Zielwert und keine bloße Aktivität. Sie bezeichnet eine beobachtbare Veränderung, die über Messung und O2I-Relationen plausibel mit Intervention, Situation, Bedarf und Strategie verbunden ist.
 
+Aus dieser Unterscheidung folgt die ex-post-Bewertung eines Bedarfs: Ein Bedarf ist zunächst wirkungsrelevant, wenn er situativ sichtbar und strategisch relevant ist. Wirkungsvoll wird er erst, wenn seine Bearbeitung nachweisbar Wirkung erzeugt hat.
+
 > [!definition]
 > Ein **wirkungsvoller Bedarf**[^effective-need] bezeichnet einen zuvor wirkungsrelevanten Bedarf, dessen Bearbeitung ex post über Messung und relationale Nachvollziehbarkeit als wirksam begründet werden kann.
 >
@@ -436,13 +440,35 @@ Wirkungsrelevanz ist damit eine ex-ante Handlungsrelevanz; Wirkungsvollheit ist 
 ### Messung
 
 > [!definition]
-> Eine **Messung** (en.: *measure*; meta: `Measure`)[^measure] bezeichnet eine stabile Messdefinition, mit der ein relevanter Zustand, eine Leistung oder eine Entwicklung in einer [Situation](#situation) beobachtet wird. Eine Messung kann Zielwerte tragen, wenn eine Intervention festlegt, welche Veränderung erreicht werden soll. Kurz: Messung = Womit machen wir relevante Zustände beobachtbar?
+> Eine **Messung** (en.: *measure*; meta: `Measure`)[^measure] bezeichnet eine stabile Messdefinition, mit der ein relevanter Zustand, eine relevante Leistung oder eine relevante Entwicklung in einer [Situation](#situation) beobachtbar gemacht wird. Sie wird durch Strategie fachlich gerahmt und macht die durch Interventionen angestrebten Veränderungen beobachtbar.
+>
+> > [!tldr] Messung = \textsc{Woran} erkennen wir Veränderung?
 >
 > [^measure]: *Quellenanker*: Parmenter (2020) für KPIs und die Abgrenzung zu anderen Performance-Maßen; Barr (2014) für methodische Entwicklung aussagefähiger Performance-Maße. *Autorenableitung in Anlehnung an Doerr (2018) und Parmenter (2020)*: Ein KPI ist eine entscheidungsrelevante Spezialisierung eines Measure. Ein Key Result kann einen konkreten Zielwert für ein Measure in einem Umsetzungszeitraum setzen.
 
+In O2I misst eine Messung eine Situation (`Measure --measures--> Situation`). Strategie rahmt, was gemessen werden muss (`Strategy --frames--> Measure`). Interventionen setzen Zielwerte oder Zielbezüge für Messungen, wenn sie eine angestrebte Veränderung überprüfbar machen (`Intervention --sets-target-for--> Measure`).
+
+Eine Messung ist nicht automatisch ein KPI. Ein KPI ist eine entscheidungsrelevante Spezialisierung einer Messung. O2I hält diese Unterscheidung offen, weil nicht jede fachlich notwendige Messung unmittelbar eine steuerungsrelevante Kennzahl ist.
+
+Messung ist nicht Wirkung selbst. Sie macht Zustände und Veränderungen beobachtbar und liefert Evidenz, die erst durch Nachweislogik als Wirkung gelesen werden kann.
+
 ### Nachweislogik
 
-**Nachweislogik** bezeichnet die fachliche Begründung, wie Messungen als plausible Evidenz für Wirkung gelesen werden. Sie verbindet Interventionen, relevante Messungen, Zielwerte, beobachtete Veränderungen und Lernschleifen, ohne daraus einen automatischen Kausalbeweis abzuleiten.
+> [!definition]
+> Eine **Nachweislogik**[^evidence-logic] bezeichnet die nachvollziehbare Verknüpfung von wirkungsrelevantem Bedarf, Intervention, Messung und beobachteter Situationsveränderung, durch die Messwerte als Evidenz für Wirkung interpretiert werden können.
+>
+> > [!tldr] Nachweislogik = \textsc{Warum} darf eine Messung als Evidenz für Wirkung gelten?
+>
+> [^evidence-logic]: *Autorenableitung in Anlehnung an Doerr (2018), Parmenter (2020) und Barr (2014)*: Nachweislogik wird in O2I als verbindendes Begründungselement zwischen Messung und Wirkung eingeführt. Doerr stützt Ziel- und Ergebnisbezüge; Parmenter und Barr stützen Performance-Measurement-Disziplin und die methodische Qualität aussagefähiger Maße.
+
+Nachweislogik ist damit keine zusätzliche Messung, sondern die Begründungsstruktur, die Messungen in den O2I-Wirkungsgraphen einordnet.
+
+> [!addendum]
+> Eine Messung darf in O2I nur dann als Evidenz für eine auf die Vision einzahlende Wirkung interpretiert werden, wenn sie eine relevante Situationsveränderung beobachtet, die auf einen wirkungsrelevanten Bedarf bezogen ist, durch eine Intervention adressiert wurde und im O2I-Graphen relational nachvollziehbar mit Strategie und Vision verbunden ist.
+
+Nachweislogik verbindet Interventionen, relevante Messungen, Zielwerte, beobachtete Veränderungen und Lernschleifen. Sie erklärt, warum beobachtete Veränderungen als plausible Evidenz für Wirkung gelten, ohne daraus einen automatischen Kausalbeweis abzuleiten.
+
+Damit bleibt Nachweislogik von Messung getrennt: Messung macht beobachtbar, Nachweislogik begründet die Wirkungslesart.
 
 # Metamodell
 
