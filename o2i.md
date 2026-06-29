@@ -118,7 +118,7 @@ Orientierung bezeichnet in O2I die fachliche Domäne, in der ein handlungsfähig
 >
 > Mehrere Leitprinzipien bilden zusammen das Ethos eines Akteurs.
 >
-> > [!tldr] Ethos - \textsc{Wofür} stehen wir?
+> > [!tldr] Ethos = \textsc{Wofür} stehen wir?
 >
 > [^ethos]: *Autorenableitung in Anlehnung an Collins und Porras (1996), Schein (2010), Bourne, Jenkins und Parry (2019), Rumelt (2011) und Porter (1996)*: Ethos wird hier als kulturell-normativer Orientierungsrahmen verstanden.
 >
@@ -131,9 +131,9 @@ Ethos begrenzt, welche Arten von Zielen, Strategien und Handlungen für einen Ak
 > [!definition]
 > Eine **Mission** (en.: *mission*; meta: `Mission`)[^mission] bezeichnet den durch das `Ethos` eines handlungsfähigen Akteurs geprägten *grundlegenden Existenzzweck*: warum der Akteur existiert und welchen Beitrag er leisten soll.
 >
-> > [!tldr] Mission - \textsc{Warum} gibt es uns?
+> > [!tldr] Mission = \textsc{Warum} gibt es uns?
 >
-> [^mission]: *Autorenableitung in Anlehnung an Rumelt (2011)*: Rumelt definiert Mission nicht als eigenen Kernbegriff, trennt Strategie aber klar von Ambition, Vision und anderen Führungsbegriffen.
+> [^mission]: *Autorenableitung in Anlehnung an Chua, Miska, Mair und Stahl (2024), George et al. (2023), Collins und Porras (1996), Schein (2010) und Rumelt (2011)*: Mission wird hier als grundlegender Existenzzweck eines handlungsfähigen Akteurs verstanden. Die Purpose-Literatur stützt den Beitrags- und Existenzzweck; Collins, Porras und Schein stützen die normative Einbettung; Rumelt stützt die Abgrenzung von Mission gegenüber Strategie.
 
 Mission begründet, warum ein Akteur überhaupt wirken soll. Sie beschreibt den dauerhaften Beitragsgrund, aber noch keinen angestrebten Zukunftszustand und keine Wegentscheidung.
 
@@ -142,9 +142,9 @@ Mission begründet, warum ein Akteur überhaupt wirken soll. Sie beschreibt den 
 > [!definition]
 > Eine **Vision** (en.: *vision*; meta: `Vision`)[^vision] bezeichnet einen vom `Ethos` geprägten und durch die [Mission](#mission) begründeten, von einem handlungsfähigen Akteur *angestrebten, orientierenden Zukunftszustand*: wohin der Akteur wirken will, ohne bereits festzulegen, wie diese Wirkung erreicht wird.
 >
-> > [!tldr] Vision - \textsc{Wohin} wollen wir wirken?
+> > [!tldr] Vision = \textsc{Wohin} wollen wir wirken?
 >
-> [^vision]: *Autorenableitung in Anlehnung an Rumelt (2011)*: Die Definition ist eine redaktionelle Systematisierung. Rumelt liefert vor allem die Abgrenzung: Vision und Ambition sind keine Strategie, weil sie noch nicht erklären, wie eine wesentliche Herausforderung überwunden wird.
+> [^vision]: *Autorenableitung in Anlehnung an Collins und Porras (1996), Hamel und Prahalad (1989), Rumelt (2011) und Porter (1996)*: Collins und Porras stützen Vision als orientierendes Zukunftsbild; Hamel und Prahalad stützen langfristige strategische Ausrichtung; Rumelt und Porter stützen die Abgrenzung von Vision gegenüber Strategie, weil Vision noch keine kohärente Wegentscheidung, Positionierung, Trade-offs oder Fit liefert.
 
 Vision gibt Richtung, ohne den Weg festzulegen. Sie macht die angestrebte Wirkung qualitativ verständlich und bildet damit den Bezugspunkt, an dem Strategie später begründen muss, wie dieser Zukunftszustand unter gegebenen Bedingungen erreichbar werden soll.
 
@@ -157,7 +157,7 @@ Formierung bezeichnet in O2I die fachliche Domäne, in der Orientierung unter ge
 > [!definition]
 > **Strategie** (en.: *strategy*; meta: `Strategy`)[^strategy] bezeichnet die *begründete und kohärente Wegentscheidung* eines handlungsfähigen Akteurs[^actor], der legitim entscheiden, Ressourcen binden und Verantwortung tragen kann. Mit einer Strategie legt dieser Akteur fest, wie er seine [Vision](#vision) unter gegebenen Bedingungen verwirklichen will und sich damit gegenüber relevanten Alternativen, Wettbewerbern oder Vergleichsangeboten differenziert.
 >
-> > [!tldr] Strategie - \textsc{Wie} verwirklichen wir unsere Vision?
+> > [!tldr] Strategie = \textsc{Wie} verwirklichen wir unsere Vision?
 >
 > [^strategy]: *Quellenanker*: Rumelt (2011) für Strategie als kohärente Antwort auf eine wesentliche Herausforderung; Porter (1996) für Positionierung, Trade-offs und Fit; Mintzberg und Waters (1985) für Strategie als intendiertes und realisiertes Handlungsmuster; Parmenter (2020) für Strategie als Weg zur Verwirklichung der Vision und als Grundlage für die Ableitung von CSFs und Performance-Maßen.
 
@@ -435,7 +435,7 @@ Aus dieser Unterscheidung folgt die ex-post-Bewertung eines Bedarfs: Ein Bedarf 
 >
 > [^effective-need]: *Autorenableitung in Anlehnung an Porter (1996), Doerr (2018), Parmenter (2020) und Barr (2014)*: Wirkungsvoller Bedarf wird in O2I als ex-post-Begriff eingeführt, um wirkungsrelevante Bedarfe von tatsächlich wirksamen Bearbeitungen zu unterscheiden. Porter stützt den strategischen Wirkungsbezug; Doerr, Parmenter und Barr stützen Messung und Nachweislogik.
 
-Wirkungsrelevanz ist damit eine ex-ante Handlungsrelevanz; Wirkungsvollheit ist eine ex-post Nachweisqualität.
+Wirkungsrelevanz ist damit eine Ex-ante-Handlungsrelevanz; Wirkungsvollheit ist eine Ex-post-Nachweisqualität.
 
 ### Messung
 
@@ -444,7 +444,7 @@ Wirkungsrelevanz ist damit eine ex-ante Handlungsrelevanz; Wirkungsvollheit ist 
 >
 > > [!tldr] Messung = \textsc{Woran} erkennen wir Veränderung?
 >
-> [^measure]: *Quellenanker*: Parmenter (2020) für KPIs und die Abgrenzung zu anderen Performance-Maßen; Barr (2014) für methodische Entwicklung aussagefähiger Performance-Maße. *Autorenableitung in Anlehnung an Doerr (2018) und Parmenter (2020)*: Ein KPI ist eine entscheidungsrelevante Spezialisierung eines Measure. Ein Key Result kann einen konkreten Zielwert für ein Measure in einem Umsetzungszeitraum setzen.
+> [^measure]: *Quellenanker*: Parmenter (2020) für KPIs und die Abgrenzung zu anderen Performance-Maßen; Barr (2014) für methodische Entwicklung aussagefähiger Performance-Maße. *Autorenableitung in Anlehnung an Doerr (2018) und Parmenter (2020)*: Ein KPI ist eine entscheidungsrelevante Spezialisierung eines Measure.
 
 In O2I misst eine Messung eine Situation (`Measure --measures--> Situation`). Strategie rahmt, was gemessen werden muss (`Strategy --frames--> Measure`). Interventionen setzen Zielwerte oder Zielbezüge für Messungen, wenn sie eine angestrebte Veränderung überprüfbar machen (`Intervention --sets-target-for--> Measure`).
 
@@ -464,7 +464,7 @@ Messung ist nicht Wirkung selbst. Sie macht Zustände und Veränderungen beobach
 Nachweislogik ist damit keine zusätzliche Messung, sondern die Begründungsstruktur, die Messungen in den O2I-Wirkungsgraphen einordnet.
 
 > [!addendum]
-> Eine Messung darf in O2I nur dann als Evidenz für eine auf die Vision einzahlende Wirkung interpretiert werden, wenn sie eine relevante Situationsveränderung beobachtet, die auf einen wirkungsrelevanten Bedarf bezogen ist, durch eine Intervention adressiert wurde und im O2I-Graphen relational nachvollziehbar mit Strategie und Vision verbunden ist.
+> Eine Messung darf in O2I nur dann als Evidenz für eine auf die Vision einzahlende Wirkung interpretiert werden, wenn sie eine relevante Situationsveränderung beobachtet, die auf einen wirkungsrelevanten Bedarf bezogen ist, dieser Bedarf durch eine Intervention adressiert wurde und im O2I-Graphen relational nachvollziehbar mit Strategie und Vision verbunden ist.
 
 Nachweislogik verbindet Interventionen, relevante Messungen, Zielwerte, beobachtete Veränderungen und Lernschleifen. Sie erklärt, warum beobachtete Veränderungen als plausible Evidenz für Wirkung gelten, ohne daraus einen automatischen Kausalbeweis abzuleiten.
 
