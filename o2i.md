@@ -415,12 +415,23 @@ Damit eine Intervention überprüfbar bleibt, *muss* sie an Messung anschließen
 
 ## Wirkung
 
-Wirkung wird in O2I nicht behauptet, sondern über Messung nachvollziehbar gemacht.
+Wirkung wird in O2I nicht behauptet, sondern durch relationale Nachvollziehbarkeit und Messung begründet. Maßgeblich ist das Zusammenspiel aus qualifiziertem Bedarf, Intervention, veränderter Situation, Messung und nachvollziehbarer Einordnung im O2I-Graphen.
 
 > [!definition]
-> **Wirkung**[^effect] bezeichnet eine beobachtbare, zur [Vision](#vision) beitragende Veränderung, die aus der Operationalisierung einer strategischen Wegentscheidung entsteht und an relevanten Ergebnis- und Leistungsmaßen nachvollzogen werden kann.
+> Eine **Wirkung**[^effect] bezeichnet eine beobachtbare, relational nachvollziehbare und zur [Vision](#vision) beitragende Veränderung, die aus der Operationalisierung einer strategischen Wegentscheidung entsteht und an relevanten Ergebnis- und Leistungsmaßen nachvollzogen werden kann.
 >
 > [^effect]: *Autorenableitung in Anlehnung an Porter (1996), Doerr (2018), Parmenter (2020) und Barr (2014)*: Wirkung wird hier als Ergebnis der Operationalisierung einer strategischen Wegentscheidung verstanden. Porter liefert die Logik des Wertbeitrags durch Aktivitätssysteme; Doerr, Parmenter und Barr liefern Instrumente zur Überprüfung von Fortschritt und Performance.
+
+Wirkung ist nicht die Intervention selbst, kein Zielwert und keine bloße Aktivität. Sie bezeichnet eine beobachtbare Veränderung, die über Messung und O2I-Relationen plausibel mit Intervention, Situation, Bedarf und Strategie verbunden ist.
+
+> [!definition]
+> Ein **wirkungsvoller Bedarf**[^effective-need] bezeichnet einen zuvor wirkungsrelevanten Bedarf, dessen Bearbeitung ex post über Messung und relationale Nachvollziehbarkeit als wirksam begründet werden kann.
+>
+> > [!tldr] wirkungsvoller Bedarf = ex post wirksam begründeter Bedarf
+>
+> [^effective-need]: *Autorenableitung in Anlehnung an Porter (1996), Doerr (2018), Parmenter (2020) und Barr (2014)*: Wirkungsvoller Bedarf wird in O2I als ex-post-Begriff eingeführt, um wirkungsrelevante Bedarfe von tatsächlich wirksamen Bearbeitungen zu unterscheiden. Porter stützt den strategischen Wirkungsbezug; Doerr, Parmenter und Barr stützen Messung und Nachweislogik.
+
+Wirkungsrelevanz ist damit eine ex-ante Handlungsrelevanz; Wirkungsvollheit ist eine ex-post Nachweisqualität.
 
 ### Messung
 
