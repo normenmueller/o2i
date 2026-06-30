@@ -10,6 +10,10 @@ figureTitle: "Abb."
 figPrefix:
   - "Abb."
   - "Abb."
+listingTitle: "Listing"
+lstPrefix:
+  - "Listing"
+  - "Listings"
 secPrefix:
   - "Kap."
   - "Kap."
@@ -517,7 +521,9 @@ Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen. Sie e
 
 ##### Elemente
 
-```haskell
+@lst:o2i-context-types zeigt das Kontext-Inventar und legt fest, welche fachlichen Interpretationsrahmen O2I als Kontexttypen kennt.
+
+```{#lst:o2i-context-types .haskell caption="O2I Kontexttypen"}
 !include`snippetStart="-- ** Contexts", snippetEnd="-- ** Primitives"` spc/O2I.hs
 ```
 
@@ -525,9 +531,9 @@ Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen. Sie e
 
 ##### Relationen
 
-Kontextrelationen beschreiben Makrorelationen zwischen fachlichen Interpretationsrahmen.
+Kontextrelationen beschreiben fachliche Relationen zwischen Kontexttypen. @lst:o2i-context-relations zeigt die zulässigen Kontextrelationen.
 
-```haskell
+```{#lst:o2i-context-relations .haskell caption="O2I Kontextrelationen"}
 !include`snippetStart="-- ** Context relations", snippetEnd="-- ** Primitive nodes"` spc/O2I.hs
 ```
 
@@ -539,7 +545,9 @@ O2I-Primitives sind abstrakte formale Träger fachlicher Inhalte. Sie besitzen k
 
 ##### Elemente
 
-```haskell
+@lst:o2i-primitive-types zeigt das Primitive-Inventar und legt fest, welche abstrakten Träger fachlicher Inhalte O2I kennt.
+
+```{#lst:o2i-primitive-types .haskell caption="O2I Primitive-Typen"}
 !include`snippetStart="-- ** Primitives", snippetEnd="-- ** Structuring"` spc/O2I.hs
 ```
 
@@ -549,9 +557,9 @@ O2I-Primitives sind abstrakte formale Träger fachlicher Inhalte. Sie besitzen k
 
 ##### Relationen
 
-Primitive-Relationen beschreiben die abstrakte Begründungsstruktur zwischen modellierten Inhalten. Sie verbinden Primitives und, wo erforderlich, Strukturierungstypen.
+Primitive-Relationen beschreiben die abstrakte Begründungsstruktur zwischen modellierten Inhalten. Sie verbinden Primitives und, wo erforderlich, Strukturierungstypen. @lst:o2i-primitive-relations zeigt die zulässigen Primitive-Relationen.
 
-```haskell
+```{#lst:o2i-primitive-relations .haskell caption="O2I Primitive-Relationen"}
 !include`snippetStart="-- ** Primitive relations", snippetEnd="-- ** Interpretations"` spc/O2I.hs
 ```
 
@@ -561,7 +569,9 @@ Die typisierte Spezifikation verhindert, dass beliebige Primitive-Relationen als
 
 Strukturierungstypen ordnen Modellelemente, ohne selbst O2I-Kontexte oder O2I-Primitives zu sein.
 
-```haskell
+@lst:o2i-structuring-types zeigt die Strukturierungstypen des Metamodells.
+
+```{#lst:o2i-structuring-types .haskell caption="O2I Strukturierungstypen"}
 !include`snippetStart="-- ** Structuring", snippetEnd="-- ** Typed instances"` spc/O2I.hs
 ```
 
@@ -571,7 +581,9 @@ Strukturierungstypen ordnen Modellelemente, ohne selbst O2I-Kontexte oder O2I-Pr
 
 Instanziierung beschreibt, wie aus O2I-Typen konkrete Modellelemente in einem O2I-Modell entstehen. `Need` ist ein Kontexttyp; ein konkreter Bedarf in einem Modell ist eine `Need`-Instanz. `Objective` ist ein Primitive-Typ; ein konkretes Objective in einem Modell ist eine `Objective`-Instanz.
 
-```haskell
+@lst:o2i-model-instances zeigt die Modellinstanzen, mit denen konkrete Kontexte, Primitives, Strukturierungen und Relationen im Modellgraphen repräsentiert werden.
+
+```{#lst:o2i-model-instances .haskell caption="O2I Modellinstanzen"}
 !include`snippetStart="-- * Model instances", snippetEnd="-- * Validation"` spc/O2I.hs
 ```
 
@@ -591,7 +603,9 @@ Eine Relationsinstanz verbindet konkrete Kontextinstanzen oder konkrete Primitiv
 
 Interpretation legt fest, welche Bedeutung ein O2I-Primitive in einem O2I-Kontext erhält. Dadurch wird derselbe abstrakte Primitive-Typ in unterschiedlichen Kontexten fachlich unterschiedlich lesbar.
 
-```haskell
+@lst:o2i-interpretations zeigt die zulässigen Interpretationen von Primitives in Kontexten.
+
+```{#lst:o2i-interpretations .haskell caption="O2I Interpretationen"}
 !include`snippetStart="-- ** Interpretations", snippetEnd="-- * Model instances"` spc/O2I.hs
 ```
 
@@ -621,7 +635,9 @@ Diese Primitive-Relation kann begründen, warum eine konkrete Strategie einen ko
 
 Wohlgeformtheit prüft, ob ein O2I-Modell die zulässigen Typen, Interpretationen und Relationen einhält. Validierung prüft darüber hinaus, ob zentrale O2I-Aussagen durch den Wirkungsgraphen begründet sind.
 
-```haskell
+@lst:o2i-validation zeigt die zentralen Wohlgeformtheits- und Validierungsregeln.
+
+```{#lst:o2i-validation .haskell caption="O2I Wohlgeformtheit und Validierung"}
 !include`snippetStart="-- * Validation", snippetEnd="-- * Validation support"` spc/O2I.hs
 ```
 
@@ -687,6 +703,7 @@ Outcome im Kontext Strategy --association[sets-target-for]--> Assessment im Kont
 Kontext-Makrorelationen sind dokumentierte O2I-Relationen. In ArchiMate werden sie nicht als primäre ArchiMate-Semantik verstanden, sondern durch Relationen zwischen enthaltenen Elementen, durch beschriftete Dokumentationskanten zwischen Kontextbereichen oder durch explizit dokumentierte Ableitungen dargestellt:
 
 ```text
+Mission --grounds--> Vision
 Vision --orients--> Strategy
 Strategy --qualifies--> Need
 Intervention --addresses--> Need

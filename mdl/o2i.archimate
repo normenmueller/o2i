@@ -186,7 +186,9 @@ Das ist die semantische Herkunft von KPI.</documentation>
 - Konkrete KPI liefern dann die Messdefinitionen innerhalb dieser Domäne.</documentation>
     </element>
     <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-af654424795d4ba79318342f694d68fe" source="id-cf054314f7e944cea52ff8ec082377f8" target="id-209098a723f84d0787eab3cfed0e3db0"/>
-    <element xsi:type="archimate:InfluenceRelationship" name="motivates" id="id-4ae26bea45bd4597a97e37c1b838d3de" source="id-209098a723f84d0787eab3cfed0e3db0" target="id-63a27d11822d4ef4b45e65b0e7231fc4"/>
+    <element xsi:type="archimate:InfluenceRelationship" name="grounds" id="id-4ae26bea45bd4597a97e37c1b838d3de" source="id-209098a723f84d0787eab3cfed0e3db0" target="id-63a27d11822d4ef4b45e65b0e7231fc4">
+      <documentation>alt. motivates</documentation>
+    </element>
     <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-ec81a51ca6ba40ccae49c8be4faa77de" source="id-cf054314f7e944cea52ff8ec082377f8" target="id-63a27d11822d4ef4b45e65b0e7231fc4"/>
     <element xsi:type="archimate:InfluenceRelationship" name="orients" id="id-ea5919b404e94e2eb84fc8868cbdb98c" source="id-63a27d11822d4ef4b45e65b0e7231fc4" target="id-fc76733c15ce4d0fa08e1156adfa9879"/>
     <element xsi:type="archimate:InfluenceRelationship" name="directs" id="id-f48c76aa24864f9c93d325b435368fbf" source="id-fc76733c15ce4d0fa08e1156adfa9879" target="id-fc76733c15ce4d0fa08e1156adfa9879"/>
@@ -213,7 +215,6 @@ Der operative Kontext bringt einen Bedarf an die Oberfläche.</documentation>
       <documentation>alternative: defines-target-for</documentation>
     </element>
     <element xsi:type="archimate:InfluenceRelationship" name="addresses" id="id-930fd47be9404fc39840eab6224b373a" source="id-52230b6fa09b477fa7b7187f9bc03376" target="id-643791bdae8f4829a2151d7b658d84f1"/>
-    <element xsi:type="archimate:InfluenceRelationship" name="requires" id="id-8332e598bc2f4ac8bf18ae67e43cb4ac" source="id-643791bdae8f4829a2151d7b658d84f1" target="id-52230b6fa09b477fa7b7187f9bc03376"/>
     <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-4d61198566484a7aa83aa4b7c638da41" source="id-dee340198eb64cc48b52f8b42cb0c070" target="id-ade8d7923089433c80c7fbac99dea59d"/>
     <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-a30a044049dc479f9c6e10038c4c1a50" source="id-dee340198eb64cc48b52f8b42cb0c070" target="id-af45133ba69842bcbb3bda85551c3dda"/>
     <element xsi:type="archimate:InfluenceRelationship" name="motivates" id="id-e1cf0cb807674c77b1cf41ff9d31ea07" source="id-ade8d7923089433c80c7fbac99dea59d" target="id-af45133ba69842bcbb3bda85551c3dda"/>
@@ -730,9 +731,6 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
             <bendpoint startX="114" startY="-60" endX="114" endY="-60"/>
             <bendpoint startX="-6" startY="-60" endX="-6" endY="-60"/>
           </sourceConnection>
-          <sourceConnection xsi:type="archimate:Connection" id="id-bcef563f5e3944eca18c7e2bcdcf159f" source="id-c1dd5227f3464b248c42e7745bddd9d6" target="id-7a4ce686d266451cbf8919079441912e" archimateRelationship="id-8332e598bc2f4ac8bf18ae67e43cb4ac">
-            <bendpoint startX="42" startY="72" endX="42" endY="-72"/>
-          </sourceConnection>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-dd4a9db3496f43edba27793f9530cca8" fillColor="#ffffff" textPosition="1" archimateElement="id-ab44c37a5e4e44279f345e1b4b8a8904" type="1">
           <bounds x="420" y="336" width="96" height="36"/>
@@ -752,15 +750,13 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-7a4ce686d266451cbf8919079441912e" targetConnections="id-2550a2e83a3f4efebc149054c65b7656 id-bcef563f5e3944eca18c7e2bcdcf159f" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-52230b6fa09b477fa7b7187f9bc03376">
+        <child xsi:type="archimate:DiagramObject" id="id-7a4ce686d266451cbf8919079441912e" targetConnections="id-2550a2e83a3f4efebc149054c65b7656" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-52230b6fa09b477fa7b7187f9bc03376">
           <bounds x="456" y="492" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-f2b78b4839bc4f0b8b38e0f80794cf0a" source="id-7a4ce686d266451cbf8919079441912e" target="id-1769327a938e4af3a78297407b66c28a" archimateRelationship="id-d1599000ce204db8aa5676eef37a8691"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-b70c92baed5347d9bf82e817cf27d177" source="id-7a4ce686d266451cbf8919079441912e" target="id-fdd9362671ff4ce1931be3546a689070" archimateRelationship="id-bf4696f299024bf294f6beacdeef183d"/>
-          <sourceConnection xsi:type="archimate:Connection" id="id-69c37b9faa06444fa6bdb3497779b56b" source="id-7a4ce686d266451cbf8919079441912e" target="id-c1dd5227f3464b248c42e7745bddd9d6" archimateRelationship="id-930fd47be9404fc39840eab6224b373a">
-            <bendpoint startX="-30" startY="-72" endX="-30" endY="72"/>
-          </sourceConnection>
+          <sourceConnection xsi:type="archimate:Connection" id="id-69c37b9faa06444fa6bdb3497779b56b" source="id-7a4ce686d266451cbf8919079441912e" target="id-c1dd5227f3464b248c42e7745bddd9d6" archimateRelationship="id-930fd47be9404fc39840eab6224b373a"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-fdd9362671ff4ce1931be3546a689070" targetConnections="id-8fc250e1dd17420ab56e93364a9ebefc id-b70c92baed5347d9bf82e817cf27d177" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-a1eb98d8dd174918bb2a8adc88f87295">
           <bounds x="456" y="636" width="181" height="73"/>

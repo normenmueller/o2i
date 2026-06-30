@@ -60,7 +60,7 @@ newtype Struct (s :: Structuring) =
 -- ** Context relations
 data ContextRelation (from :: Context) (to :: Context) where
   GuidesMission :: ContextRelation Ethos Mission
-  MotivatesVision :: ContextRelation Mission Vision
+  GroundsVision :: ContextRelation Mission Vision
   GuidesVision :: ContextRelation Ethos Vision
   OrientsStrategy :: ContextRelation Vision Strategy
   DirectsStrategy :: ContextRelation Strategy Strategy
@@ -68,7 +68,6 @@ data ContextRelation (from :: Context) (to :: Context) where
   SurfacesNeed :: ContextRelation Situation Need
   RefinesNeed :: ContextRelation Need Need
   AddressesNeed :: ContextRelation Intervention Need
-  RequiresIntervention :: ContextRelation Need Intervention
   DirectsIntervention :: ContextRelation Strategy Intervention
   ChangesSituation :: ContextRelation Intervention Situation
   SetsTargetForMeasure :: ContextRelation Intervention Measure
@@ -327,7 +326,7 @@ uniqueIds (x:xs) = x `notElem` xs && uniqueIds xs
 
 contextRelationLabel :: SomeContextRelation -> String
 contextRelationLabel (SomeContextRelation GuidesMission) = "guides"
-contextRelationLabel (SomeContextRelation MotivatesVision) = "motivates"
+contextRelationLabel (SomeContextRelation GroundsVision) = "grounds"
 contextRelationLabel (SomeContextRelation GuidesVision) = "guides"
 contextRelationLabel (SomeContextRelation OrientsStrategy) = "orients"
 contextRelationLabel (SomeContextRelation DirectsStrategy) = "directs"
@@ -335,7 +334,6 @@ contextRelationLabel (SomeContextRelation QualifiesNeed) = "qualifies"
 contextRelationLabel (SomeContextRelation SurfacesNeed) = "surfaces"
 contextRelationLabel (SomeContextRelation RefinesNeed) = "refines"
 contextRelationLabel (SomeContextRelation AddressesNeed) = "addresses"
-contextRelationLabel (SomeContextRelation RequiresIntervention) = "requires"
 contextRelationLabel (SomeContextRelation DirectsIntervention) = "directs"
 contextRelationLabel (SomeContextRelation ChangesSituation) = "changes"
 contextRelationLabel (SomeContextRelation SetsTargetForMeasure) =
@@ -345,7 +343,7 @@ contextRelationLabel (SomeContextRelation FramesMeasure) = "frames"
 
 contextRelationDomain :: SomeContextRelation -> (Context, Context)
 contextRelationDomain (SomeContextRelation GuidesMission) = (Ethos, Mission)
-contextRelationDomain (SomeContextRelation MotivatesVision) = (Mission, Vision)
+contextRelationDomain (SomeContextRelation GroundsVision) = (Mission, Vision)
 contextRelationDomain (SomeContextRelation GuidesVision) = (Ethos, Vision)
 contextRelationDomain (SomeContextRelation OrientsStrategy) = (Vision, Strategy)
 contextRelationDomain (SomeContextRelation DirectsStrategy) =
@@ -354,8 +352,6 @@ contextRelationDomain (SomeContextRelation QualifiesNeed) = (Strategy, Need)
 contextRelationDomain (SomeContextRelation SurfacesNeed) = (Situation, Need)
 contextRelationDomain (SomeContextRelation RefinesNeed) = (Need, Need)
 contextRelationDomain (SomeContextRelation AddressesNeed) = (Intervention, Need)
-contextRelationDomain (SomeContextRelation RequiresIntervention) =
-  (Need, Intervention)
 contextRelationDomain (SomeContextRelation DirectsIntervention) =
   (Strategy, Intervention)
 contextRelationDomain (SomeContextRelation ChangesSituation) =
