@@ -472,220 +472,202 @@ Damit bleibt Nachweislogik von Messung getrennt: Messung macht beobachtbar, Nach
 
 # Metamodell
 
-Das O2I-Metamodell trennt Semantik und Syntax. Die Semantik definiert die O2I-Begriffslogik aus O2I-Primitives, O2I-Kontexten, O2I-Relationen und Wohlgeformtheitsregeln; die Syntax beschreibt, wie diese Begriffslogik in einer Modellierungssprache dargestellt wird.
+## Zweck
+
+Das O2I-Metamodell ist der formale Kern des O2I Frameworks. Es übersetzt die O2I-Terminologie in eine prüfbare Modellstruktur: Begriffe werden als Typen gefasst, konkrete Modellelemente werden als Instanzen dieser Typen beschrieben, Primitives erhalten ihre Bedeutung durch Interpretation in Kontexten, und Wohlgeformtheitsregeln prüfen, ob ein Modell die O2I-Wirkungslogik einhält.
+
+Das Metamodell ersetzt die Terminologie nicht. Die Terminologie legt die fachliche Bedeutung fest; das Metamodell macht diese Bedeutung modellierbar, referenzierbar und validierbar.
+
+> [!tldr]
+> Terminologie erklärt Bedeutung; das Metamodell macht Bedeutung prüfbar; Syntax stellt sie dar.
 
 ## Semantik
 
-Die O2I-Semantik übersetzt die Terminologie in eine modellierbare Struktur: Sie legt fest, welche O2I-Primitives das Modell verwendet, welche O2I-Kontexte diesen Primitives fachliche Bedeutung geben, welche Relationen zwischen ihnen zulässig sind und nach welchen Regeln Modelle wohlgeformt sind.
+Die O2I-Semantik definiert, welche Modellformen zulässig sind und wie sie gelesen werden. Sie wird in den folgenden Metamodell-Bausteinen konkretisiert:
 
-> tl;dr. **Terminologie** definiert, *was die Begriffe fachlich-verbal bedeuten*; **Semantik** konkretisiert diese Bedeutung als *O2I-Primitives, O2I-Kontexte, O2I-Relationen und Wohlgeformtheitsregeln*; **Syntax** definiert, *wie diese Semantik in einer Modellierungssprache dargestellt wird*.
+Typen
 
-Die O2I-Semantik besteht aus vier Perspektiven: O2I-Kontexte und ihre Relationen bilden die grundlegenden Interpretationsrahmen und Makrorelationen von Wirkungsarchitekturen. O2I-Primitives und ihre Relationen bilden den minimalen abstrakten Formvorrat[^formvorrat]. Wohlgeformtheitsregeln legen fest, welche Strukturen als gültige O2I-Modelle gelten. O2I-Interpretationen beschreiben, welche fachliche Bedeutung ein O2I-Primitive in einem bestimmten O2I-Kontext erhält.
+: legen fest, welche Kontexte, Primitives, Strukturierungen und Relationen O2I kennt.
 
-[^formvorrat]: Formvorrat bezeichnet hier die Menge abstrakter Modellformen, mit denen fachliche Inhalte in unterschiedlichen O2I-Kontexten ausgedrückt werden können.
+Instanziierung
 
-Die in @sec:terminologie eingeführten Domänen Orientierung, Formierung, Kontextualisierung, Operationalisierung und Wirkung bilden die fachliche Ordnung, aus der die O2I-Kontexte hervorgehen.
+: beschreibt, wie aus O2I-Typen konkrete Modellelemente und Relationen in einem O2I-Modell gebildet werden.
+
+Interpretation
+
+: legt fest, welche Bedeutung ein Primitive in einem Kontext erhält.
+
+Wohlgeformtheit und Validierung
+
+: prüfen, ob Kontextrelationen, Primitive-Relationen und Wirkungsbezüge O2I-konform sind.
+
+Typen und Instanziierung beschreiben die formale Struktur eines O2I-Modells. Interpretation und Validierung legen fest, welche Bedeutung diese Struktur trägt und wann sie O2I-konform ist.
+
+Die Syntax ist davon getrennt. Sie beschreibt erst anschließend, wie diese Semantik in einer Modellierungssprache, insbesondere ArchiMate, dargestellt wird.
+
+## Typen
+
+O2I-Typen beschreiben die abstrakten Arten von Modellelementen. Sie enthalten noch keine konkreten fachlichen Inhalte; sie legen nur fest, welche Formen ein O2I-Modell verwenden darf.
 
 ### Kontexte
 
-#### Elemente
-
-O2I formalisiert die in @sec:terminologie eingeführten fachlichen Standardbegriffe als *O2I-Kontexte*. Ein O2I-Kontext ist ein fachlicher Interpretationsrahmen, in dem O2I-Primitives kontextspezifische Bedeutung erhalten.
-
-Das Kontext-Inventar legt fest, welche O2I-Kontexte das Metamodell verwendet. Die folgenden Codeblöcke sind Auszüge aus der normativen Haskell-Spezifikation `spc/O2I.hs`.
+O2I-Kontexte sind fachliche Interpretationsrahmen. Sie entsprechen den zentralen Standardbegriffen der Terminologie und geben O2I-Primitives ihre kontextspezifische Bedeutung.
 
 ```haskell
-!include`snippetStart="-- * Contexts", snippetEnd="-- * Primitives"` spc/O2I.hs
+!include`snippetStart="-- ** Contexts", snippetEnd="-- ** Primitives"` spc/O2I.hs
 ```
 
-Die Kontextarten sind fachlich so zu lesen: `Ethos` bezeichnet den kulturell-normativen Orientierungsrahmen eines Akteurs; darin können einzelne `Principle` liegen. `Mission` bezeichnet den grundlegenden Existenzzweck; ein `Driver` wird darin als grundlegender Existenzzweck, Antrieb oder Beitragsgrund gelesen. `Vision` bezeichnet einen orientierenden Zukunftszustand. `Strategy` bezeichnet die Wegentscheidung unter gegebenen Bedingungen. `Need` bezeichnet einen begründeten Änderungs- oder Handlungsbedarf. `Intervention` bezeichnet eine wirkungsgerichtete Handlung oder Eingriffslogik. `Measure` bezeichnet einen Messrahmen, in dem relevante Zustände beobachtbar werden. `Situation` bezeichnet einen konkreten Arbeits-, Leistungs- oder Umfeldzusammenhang; sie ist vom metasprachlichen Ausdruck "O2I-Kontext" zu unterscheiden.
+`Ethos`, `Mission` und `Vision` bilden die Orientierung. `Strategy` ist der Kontext für die strategische Wegentscheidung innerhalb der Formierung. Kritische Erfolgsfaktoren sind in O2I kein eigener Kontext, sondern strukturieren die strategische Erfolgslogik; sie vermitteln zwischen Strategie, Bedarfsqualifikation, Messrahmung und späterer Operationalisierung. `Need`, `Intervention`, `Measure` und `Situation` bilden die Kontexte für Kontextualisierung, Operationalisierung und Wirkung.
 
 @Fig:o2i-context-view zeigt das Kontextmodell des O2I-Metamodells: O2I-Kontexte und ihre Relationen.
 
 ![O2I Kontextmodell](<img/O2I Context.png>){#fig:o2i-context-view}
 
-Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen: Sie zeigt die fachlichen Standardbegriffe als O2I-Kontexte und macht sichtbar, welche Relationen zwischen diesen Kontexten zulässig sind. Sie ersetzt die terminologischen Definitionen nicht, sondern fasst ihre teleologische Wirkungslogik auf Metamodellebene zusammen.
-
-#### Relationen
-
-Die grafische Sicht dient der Orientierung; die folgenden Kontextrelationen legen explizit fest, welche Relationen zwischen O2I-Kontexten zulässig sind. Sie machen die Darstellung eindeutig, referenzierbar und als Grundlage für Wohlgeformtheitsregeln verwendbar. O2I verwendet dafür eine typisierte Spezifikationssyntax: `RelName :: ContextRelation From To`.
-
-```haskell
-!include`snippetStart="-- * Context relations", snippetEnd="-- * Primitive nodes"` spc/O2I.hs
-```
-
-
-Die O2I-Kontextrelationen bilden eine schlanke teleologische Wirkungslogik, d. h. die Relationen drücken Zweck-, Mittel-, Qualifikations- und Nachweiszusammenhänge aus.
-
-> [!tl;dr] Teleologische O2I-Wirkungslogik
-> Leitprinzipien leiten Mission und Vision; Mission, verstanden als Existenzzweck, begründet, warum eine Vision angestrebt wird; Vision gibt der Strategie Richtung; Situationen machen Bedarfe unterschiedlicher Art sichtbar; Strategie qualifiziert Bedarfe als strategisch relevant. Wirkungsrelevante Bedarfe entstehen dort, wo ein Bedarf in einer Situation sichtbar wird und durch Strategie als strategisch relevant qualifiziert ist. Bedarfe können verfeinert werden; ihre strategische Relevanz wird über qualifizierende Strategierelationen nachvollziehbar. Interventionen sind in O2I nur für wirkungsrelevante Bedarfe vorgesehen, verändern Situationen und legen Zielwerte für Messungen fest; Messungen machen relevante Zustände in Situationen beobachtbar.
-
-Einige O2I-Kontextrelationen verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:
-
-`Strategy --qualifies--> Need`: Die Relation qualifiziert einen Bedarf als strategisch relevant. Die Rückfrage von einem Bedarf zu einer Strategie ist keine eigene O2I-Relation, sondern eine Graph-Abfrage: Welche `Strategy` qualifiziert diesen `Need`?
-
-`Situation --surfaces--> Need`: Die Relation macht einen Bedarf in einer Situation sichtbar. Die Rückfrage von einem Bedarf zu einer Situation ist keine eigene O2I-Relation, sondern eine Graph-Abfrage: Welche `Situation` macht diesen `Need` sichtbar?
-
-`Intervention --addresses--> Need`: Die Relation setzt einen wirkungsrelevanten Bedarf voraus; ein nur sichtbarer oder nur strategisch relevanter Bedarf reicht nicht.
-
-`Need --requires--> Intervention`: Die Relation setzt einen wirkungsrelevanten Bedarf voraus. Erst ein Bedarf, der in einer Situation sichtbar und durch Strategie als strategisch relevant qualifiziert ist, kann eine Intervention erforderlich machen; er legt aber noch keine Lösung fest.
-
-`Strategy --directs--> Intervention`: Die Relation bedeutet, dass Strategie einer Intervention Richtung, Priorität, Grenzen und Kohärenz gibt. Sie bedeutet nicht, dass Strategie Interventionen unmittelbar erzeugt.
-
-`Measure --measures--> Situation`: Der unmittelbare Messgegenstand ist die Situation. Ein Measure macht einen relevanten Zustand, eine Leistung oder eine Entwicklung in dieser Situation messbar.
-
-`Intervention --sets-target-for--> Measure`: Die Relation bedeutet nicht, dass eine Intervention selbst misst oder mit einem Key Result identisch ist. Sie bedeutet: Eine Intervention enthält oder erzeugt eine Zielsetzung, die auf einem Measure ausgedrückt wird.
-
-`Strategy --frames--> Measure`: Die Relation steht dafür, dass Measures über strategisch relevante Erfolgsfaktoren mit Strategie verbunden werden. Sie bedeutet nicht, dass Measures direkt aus Strategie entstehen.
+Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen. Sie ersetzt die terminologischen Definitionen nicht, sondern zeigt, welche Kontextrelationen auf Metamodellebene zulässig sind.
 
 ### Primitives
 
-#### Elemente
+O2I-Primitives sind abstrakte formale Träger fachlicher Inhalte. Sie besitzen keine vollständige O2I-Bedeutung für sich allein; ihre fachliche Lesart entsteht erst durch Interpretation in einem O2I-Kontext.
 
-O2I-Primitives sind die abstrakten formalen Träger, die in O2I-Kontexten interpretiert werden und dort fachliche Bedeutung erhalten. Sie bilden den minimalen abstrakten Formvorrat des O2I-Metamodells. Ein O2I-Primitive hat keine vollständige fachliche O2I-Bedeutung für sich allein; seine fachliche Lesart entsteht erst durch Interpretation in einem O2I-Kontext (siehe @Sec:interpretationen).
+```haskell
+!include`snippetStart="-- ** Primitives", snippetEnd="-- ** Structuring"` spc/O2I.hs
+```
 
-@Fig:o2i-primitives-view zeigt das Primitives-Modell des O2I-Metamodells: O2I-Primitives, mögliche Strukturierungsrahmen und ihre Relationen.
+@Fig:o2i-primitives-view zeigt das Primitives-Modell des O2I-Metamodells.
 
 ![O2I Primitives View](<img/O2I Primitives.png>){#fig:o2i-primitives-view width=75%}
 
-Die Darstellung ist als semantische Übersicht des abstrakten Formvorrats zu lesen: Sie zeigt O2I-Primitives, mögliche Strukturierungsrahmen und zulässige Relationen zwischen ihnen, unabhängig von ihrer syntaktischen Abbildung. Die grafische Darstellung dient der Orientierung.
+### Strukturierung
 
-Das Primitive-Inventar legt fest, welche O2I-Primitives das Metamodell verwendet.
+Strukturierungstypen ordnen Primitives, ohne selbst O2I-Primitives zu sein.
 
 ```haskell
-!include`snippetStart="-- * Primitives", snippetEnd="-- * Structuring"` spc/O2I.hs
+!include`snippetStart="-- ** Structuring", snippetEnd="-- ** Typed instances"` spc/O2I.hs
 ```
 
+`Domain` und `CSF` sind Strukturierungstypen. Eine `Domain` bezeichnet einen fachlichen Ordnungsbereich, in dem zusammengehörige Primitives oder Strukturierungsbezüge gruppiert werden können. Ein `CSF` bezeichnet einen kritischen Erfolgsbereich, der die strategische Erfolgslogik strukturiert, ohne selbst Strategie, Bedarf, Intervention oder Messung zu sein.
 
-Eine `KPI-Domäne` ist ein optionaler Strukturtyp im Modell der O2I-Primitives, aber kein O2I-Primitive. Sie bezeichnet einen Messbereich, in dem relevante Zustände beobachtet werden können, bevor konkrete KPIs festgelegt werden.
+### Relationen
 
-#### Relationen
-
-Die Primitive-Relationen legen explizit fest, welche Relationen zwischen O2I-Primitives zulässig sind. `KPIDomain` ist dabei als Strukturierungsart zulässig, aber kein O2I-Primitive.
-
-```haskell
-!include`snippetStart="-- * Structuring", snippetEnd="-- * Typed instances"` spc/O2I.hs
-```
+O2I unterscheidet Kontextrelationen und Primitive-Relationen. Kontextrelationen beschreiben Makrorelationen zwischen fachlichen Interpretationsrahmen. Primitive-Relationen beschreiben die abstrakte Begründungsstruktur zwischen modellierten Inhalten.
 
 ```haskell
-!include`snippetStart="-- * Primitive nodes", snippetEnd="-- * Primitive relations"` spc/O2I.hs
+!include`snippetStart="-- ** Context relations", snippetEnd="-- ** Primitive nodes"` spc/O2I.hs
 ```
 
 ```haskell
-!include`snippetStart="-- * Primitive relations", snippetEnd="-- * Well-formedness invariants"` spc/O2I.hs
+!include`snippetStart="-- ** Primitive relations", snippetEnd="-- ** Interpretations"` spc/O2I.hs
 ```
 
+Die typisierte Spezifikation verhindert, dass beliebige Relationen als O2I-Relationen ausgegeben werden. Beispielsweise ist `Strategy --qualifies--> Need` zulässig; `Need --qualifies--> Strategy` ist kein O2I-Relationstyp.
 
-Die Primitive-Relationen bilden keine zweite Wirkungslogik neben den Kontextrelationen. Sie beschreiben die abstrakte Formlogik, die in O2I-Kontexten interpretiert wird: Prinzipien leiten Treiber und Objectives; Treiber motivieren Objectives und bestimmen relevante Messbereiche; Key Results substantiieren Objectives, können in nachgelagerte Objectives übersetzt werden und setzen Zielwerte für KPIs; KPIs können verfeinert werden; Actions tragen zu Key Results bei und adressieren Gaps.
+## Instanziierung
 
-Einige Primitive-Relationen verdienen eine präzisierende Lesart, weil sie leicht missverstanden werden können:
-
-`Driver --determines--> KPI-Domäne`: Ein Driver bestimmt noch keinen konkreten KPI. Er grenzt einen Messbereich ein, in dem relevante Zustände beobachtet werden können. Die Auswahl konkreter KPIs bleibt ein bewusster Freiheitsgrad der Modellierung.
-
-`Key Result --substantiates--> Objective`: Ein Key Result substantiiert ein Objective durch quantitative Evidenz. Es ersetzt das qualitative Objective nicht und ist selbst keine Messdefinition.
-
-`Key Result --translates-into--> Objective`: Diese Relation beschreibt vertikale Operationalisierung. Ein Key Result einer höheren Ebene kann in ein qualitatives Objective einer nachgelagerten Ebene übersetzt werden.
-
-`Key Result --sets-target-for--> KPI`: Ein Key Result ist nicht selbst die Messdefinition. Es legt einen Zielwert auf einem KPI fest.
-
-`KPI --refines--> KPI`: Ein KPI kann in spezifischere KPIs verfeinert werden, ohne dass dadurch ein neuer O2I-Primitive entsteht.
-
-`Action --contributes-to--> Key Result`: Eine Action ist eine Handlungshypothese. Sie kann zu einem Key Result beitragen, garantiert dessen Erreichung aber nicht.
-
-`Action --addresses--> Gap`: Eine Action adressiert eine sichtbare Abweichung, schließt sie aber nicht automatisch.
-
-### Wohlgeformtheitsregeln
-
-Wohlgeformtheitsregeln wiederholen nicht die zulässigen Relationstypen. Sie formulieren Invarianten über typisierte Modellinstanzen. `Ethos`, `Mission` usw. bezeichnen dabei Kontextarten; `Ctx Mission` bezeichnet eine konkrete Mission-Instanz mit Inhalt. Deshalb hat eine Mission-Regel die Form `wfMission :: Ctx Mission -> Bool`, nicht `Mission -> Bool`.
+Instanziierung unterscheidet Typen von konkreten Modellelementen. `Need` ist ein Kontexttyp; eine konkrete Bedarfseinheit in einem Modell ist eine `Need`-Instanz. `Objective` ist ein Primitive-Typ; ein konkretes Objective in einem Modell ist eine Objective-Instanz.
 
 ```haskell
-!include`snippetStart="-- * Typed instances", snippetEnd="-- * Context relations"` spc/O2I.hs
+!include`snippetStart="-- * Model instances", snippetEnd="-- * Validation"` spc/O2I.hs
 ```
+
+### Kontextinstanzen
+
+Eine Kontextinstanz ist ein konkreter fachlicher Interpretationsrahmen in einem Modell, etwa eine konkrete Vision, eine konkrete Strategie, ein konkreter Bedarf oder eine konkrete Situation.
+
+### Primitive-Instanzen
+
+Eine Primitive-Instanz ist ein konkretes modelliertes Inhaltselement, das einem Kontext zugeordnet ist. Seine Bedeutung ergibt sich nicht allein aus dem Primitive-Typ, sondern aus dem Zusammenspiel von Primitive und Kontext.
+
+### Relationsinstanzen
+
+Eine Relationsinstanz verbindet konkrete Kontextinstanzen oder konkrete Primitive-Instanzen. Ihre Zulässigkeit wird gegen die im Metamodell definierten Relationstypen geprüft.
+
+## Interpretation
+
+Interpretation legt fest, welche Bedeutung ein O2I-Primitive in einem O2I-Kontext erhält. Dadurch wird derselbe abstrakte Primitive-Typ in unterschiedlichen Kontexten fachlich unterschiedlich lesbar.
 
 ```haskell
-!include`snippetStart="-- * Well-formedness invariants", snippetEnd="-- * Well-formedness support"` spc/O2I.hs
+!include`snippetStart="-- ** Interpretations", snippetEnd="-- * Model instances"` spc/O2I.hs
 ```
 
+### Primitives
 
-Aus diesen Invarianten ergeben sich zusätzliche Modellierungsregeln:
+Ein `Objective` im Kontext `Vision` beschreibt ein qualitatives Zukunftsbild. Ein `Objective` im Kontext `Need` beschreibt ein benötigtes fachliches Ergebnis. Eine `Action` im Kontext `Strategy` beschreibt eine Wegentscheidung; eine `Action` im Kontext `Intervention` beschreibt eine gezielte Einwirkung. Ein `Gap` im Kontext `Situation` beschreibt eine sichtbare Abweichung in einer Situation.
 
-- Ein `Objective` setzt keinen Zielwert für einen `KPI`; Zielwerte werden durch `Key Result` gesetzt.
-- Ein `KPI` ist eine stabile Messdefinition, nicht der beobachtete Messwert.
-- Ein `Key Result` kann in ein nachgelagertes `Objective` übersetzt werden; direkte Key-Result-zu-Key-Result-Abhängigkeiten werden nicht verwendet.
-- Eine `Action` ist eine Handlungshypothese. Sie kann zu einem `Key Result` beitragen, garantiert ihn aber nicht.
-- Ein `Gap` wird durch die Abweichung zwischen Key-Result-Zielwert und KPI-Istwert sichtbar.
+### Kontextrelationen
 
-Die Strategie-Relationen zwischen `Strategy` und `Strategy` sind Ausrichtungsrelationen zwischen Strategien unterschiedlicher Ebenen, z. B. Konzernstrategie, Ressortstrategie, Geschäftsstrategie und Funktionsstrategie. `directs` bedeutet, dass eine übergeordnete Strategie Richtung, Prioritäten, Leitplanken, Restriktionen oder Zielbezüge für eine untergeordnete Strategie vorgibt, ohne diese vollständig zu determinieren. Der messbare Beitrag wird präziser über Bedarfe, Interventionen, Measures und Kontextveränderungen beschrieben. Die Strategie-Relation ist eine verdichtete Kurzrelation, keine Kompositionsrelation.
+Kontextrelationen sind fachliche Makrorelationen. Sie machen sichtbar, wie O2I-Kontexte zueinander stehen, etwa `Strategy --qualifies--> Need`, `Intervention --addresses--> Need` oder `Measure --measures--> Situation`.
 
-### Interpretationen {#sec:interpretationen}
+Eine Kontextrelation ist nicht automatisch hinreichend begründet. O2I unterscheidet deshalb zwischen zulässiger Makrorelation und validierter Makrorelation.
 
-O2I-Interpretationen beschreiben, welche fachliche Bedeutung ein O2I-Primitive in einem bestimmten O2I-Kontext erhält. Sie verbinden damit den abstrakten Formvorrat der O2I-Primitives mit den fachlichen Interpretationsrahmen der O2I-Kontexte.
+### Primitive-Relationen
 
-#### Mission
+Primitive-Relationen bilden die Begründungsstruktur unterhalb von Kontextrelationen. Sie zeigen, warum eine Makrorelation fachlich belastbar ist.
 
-Im Kontext `Mission` sind `Driver` zulässig:
+Beispiel:
 
-`Driver` $\in$ `Mission`
+```text
+Key Result @ Strategy --translates-into--> Objective @ Need
+```
 
-Ein `Driver` im Kontext `Mission` beschreibt einen grundlegenden Antrieb, Existenzzweck oder Beitragsgrund. Er beantwortet die Frage, warum ein handlungsfähiger Akteur existiert oder welchen grundlegenden Beitrag er leisten soll. Mehrere `Driver` können eine Mission analytisch konkretisieren, gruppieren oder ergänzen; sie ersetzen die terminologische Definition der Mission nicht.
+Diese Primitive-Relation kann begründen, warum eine konkrete Strategie einen konkreten Bedarf qualifiziert. Damit wird `Strategy --qualifies--> Need` nicht bloß behauptet, sondern über kontextualisierte Primitives motiviert.
 
-#### Vision
+## Wohlgeformtheit und Validierung
 
-Im Kontext `Vision` sind `Objective` zulässig:
+Wohlgeformtheit prüft, ob ein O2I-Modell die zulässigen Typen, Interpretationen und Relationen einhält. Validierung prüft darüber hinaus, ob zentrale O2I-Aussagen durch den Wirkungsgraphen begründet sind.
 
-`Objective` $\in$ `Vision`
+```haskell
+!include`snippetStart="-- * Validation", snippetEnd="-- * Validation support"` spc/O2I.hs
+```
 
-Ein `Objective` im Kontext `Vision` beschreibt ein qualitatives Zukunftsbild oder eine qualitative Ausrichtung. Es beantwortet die Frage, wohin ein handlungsfähiger Akteur wirken will, ohne bereits festzulegen, wie diese Wirkung erreicht wird. Qualitative Ausrichtungen können zu einem übergeordneten Zukunftsbild beitragen; sie sind Objectives im Kontext `Vision`, keine zusätzlichen O2I-Primitives.
+### Grundregeln
 
-#### Objective
+Ein Modell ist wohlgeformt, wenn Primitive nur in zulässigen Kontexten verwendet werden, Kontextrelationen typgerecht sind, Primitive-Relationen typgerecht sind und Interventionen nur wirkungsrelevante Bedarfe adressieren.
 
-Ein `Objective` im Kontext `Objective` ist ein qualitatives Umsetzungsziel.
+### Wirkungsrelevanz
 
-#### Strategy
+Ein Bedarf ist im Metamodell wirkungsrelevant, wenn er in einer Situation sichtbar wird und durch Strategie qualifiziert ist. Die strategische Qualifikation muss durch Primitive-Relationen begründbar sein.
 
-Eine `Action` im Kontext `Strategy` ist eine Wegentscheidung.
+Die Spezifikation konkretisiert dafür den zentralen O2I-USP: Eine `Strategy --qualifies--> Need`-Relation zählt nur dann als belastbar, wenn es eine passende Primitive-Begründung gibt, etwa `Key Result @ Strategy --translates-into--> Objective @ Need`.
 
-#### Intervention
+### Wirkungstrace
 
-Eine `Action` im Kontext `Intervention` ist eine gezielte Einwirkung.
+Ein Wirkungstrace entsteht, wenn ein wirkungsrelevanter Bedarf durch eine Intervention adressiert wird, diese Intervention eine Situation verändert, für eine Messung Zielbezüge setzt und diese Messung die veränderte Situation beobachtet.
 
-#### Need
+Die Validierung beweist dadurch keine Kausalität und keine empirische Wirkung. Sie prüft, ob die Wirkungsaussage im O2I-Graphen relational nachvollziehbar ist.
 
-Im Kontext `Need` sind `Driver` zulässig:
+### Abgeleitete Makrorelationen
 
-`Driver` $\in$ `Need`
+Makrorelationen dürfen abgeleitet sein. Eine abgeleitete Makrorelation fasst mehrere Primitive-Relationen oder Syntaxrelationen zu einer fachlichen O2I-Relation zusammen. Entscheidend ist, dass die Ableitung explizit und prüfbar bleibt.
 
-Ein `Driver` im Kontext `Need` beschreibt einen begründenden, spannungserzeugenden oder bedarfsanzeigenden Faktor. Er macht nachvollziehbar, warum eine Veränderung, Fähigkeit oder ein Ergebnis benötigt wird, ohne bereits eine Lösung festzulegen.
+## Haskell-Spezifikation
 
-#### Measure
+### Zweck
 
-Im Kontext `Measure` sind `KPI` zulässig:
+Die Haskell-Spezifikation ist keine Implementierung eines Anwendungssystems. Sie ist eine kompakte, maschinenprüfbare Spezifikation der O2I-Semantik. Ihr Zweck ist, O2I-Modelle nicht nur zu beschreiben, sondern auf zentrale Wohlgeformtheits- und Validierungsregeln prüfen zu können.
 
-`KPI` $\in$ `Measure`
+### Typisierte Relationen
 
-Ein `KPI` im Kontext `Measure` beschreibt eine stabile Messdefinition, mit der ein relevanter Zustand, eine Leistung oder eine Entwicklung in einer Situation beobachtbar wird. Ein KPI ist nicht der beobachtete Messwert selbst.
+Die typtheoretische Spezifikation verwendet `DataKinds` und GADTs, um zulässige Relationstypen auszudrücken. Dadurch wird ein Teil der O2I-Semantik bereits auf Typebene festgelegt.
 
-#### Situation
+### Validierungsregeln
 
-Der Kontext `Situation` wird durch konkrete Arbeits-, Leistungs- oder Umfeldzusammenhänge instanziiert. Eine Situation kann z. B. durch Capabilities, Prozesse, Systeme, Kundenerlebnisse, regulatorische Anforderungen oder fachliche Schmerzpunkte beschrieben werden. Sie bildet den fachlichen Ort, an dem Bedarfe sichtbar, begründbar oder überprüfbar werden.
+Neben den typisierten Relationstypen enthält die Spezifikation ein einfaches Modellgraph-Format und ausführbare Validierungsfunktionen. Die Relationen im Modellgraphen tragen dieselben GADT-Relationszeugen, die auch die typisierte Spezifikation definieren; dadurch wird die Typebene nicht von einer separaten Runtime-Relationsliste entkoppelt. Die Funktionen prüfen unter anderem zulässige Primitive-Platzierung, zulässige Relationen, Wirkungsrelevanz und Wirkungstraces.
+
+### Grenzen der Spezifikation
+
+Die Spezifikation prüft Struktur und Nachvollziehbarkeit, nicht die empirische Wahrheit einer Wirkung. Sie ersetzt keine Messdaten, keine fachliche Bewertung und keinen kausalen Wirkungsnachweis. Sie stellt sicher, dass ein O2I-Modell seine Wirkungsaussagen strukturell begründen kann.
 
 ## Syntax
 
-Die ArchiMate-Profilierung bildet die Syntax-Komponente des O2I-Metamodells. O2I definiert die fachliche Semantik; ArchiMate stellt die visuelle Syntax zur Darstellung und Integration von O2I-Modellen mit Enterprise-Architecture-Artefakten bereit.
-
-O2I kann mit ArchiMate modelliert werden, ohne die O2I-Semantik durch ArchiMate-Semantik zu ersetzen. ArchiMate dient dabei als gemeinsame Modellierungssprache; O2I legt fest, welche fachliche Bedeutung die verwendeten Elemente als O2I-Primitives in einem O2I-Kontext besitzen.
-
-Dadurch können O2I-Modelle mit TOGAF-basierten Architekturmodellen und -sichten (z.B. Business-Capability-Maps, Application Views, Prozessmodellen oder Technologielandschaften) in einer gemeinsamen Modellierungssprache verbunden werden. ArchiMate wird damit nicht nur für Enterprise-Architecture-Strukturen verwendet, sondern auch für die explizite Modellierung von Orientierung und Wirksamkeit. Das Ergebnis ist ein kohärenter Wissensgraph, in dem normative Orientierung, strategische Wegentscheidungen, Interventionen und Architekturartefakte anschlussfähig bleiben.
+Die Syntax beschreibt, wie die O2I-Semantik in einer Modellierungssprache dargestellt wird. O2I verwendet ArchiMate als visuelle Darstellungs- und Integrationssyntax, ohne die O2I-Semantik durch ArchiMate-Semantik zu ersetzen.
 
 ### ArchiMate-Profil
 
-Die Syntax verwendet ArchiMate als visuelle Notation. O2I-Primitives werden in ArchiMate durch wenige ArchiMate-Basisformen dargestellt. Mission, Vision, Strategy, Need und weitere O2I-Kontexte werden in ArchiMate als strukturierte Modellbereiche aufgeklappt: Ein Mission-Kontext wird durch ArchiMate `Driver` modelliert; ein Vision-Kontext durch ArchiMate `Goal`; ein Measure-Kontext durch ArchiMate `Assessment`.
-
-O2I-Kontexte werden in der ArchiMate-Syntax nicht zwingend als einzelne ArchiMate-Elemente dargestellt. Ein Kontext wie `Mission` oder `Vision` kann durch einen Gruppierungsrahmen, ein Teilmodell oder mehrere ArchiMate-Elemente mit Relationen ausgearbeitet werden.
+O2I-Primitives werden in ArchiMate durch wenige ArchiMate-Basisformen dargestellt. O2I-Kontexte werden als Gruppierungsrahmen, Teilmodelle oder klar gekennzeichnete Modellbereiche dargestellt.
 
 ### Primitives-Abbildung
 
-Die folgende Zuordnung zeigt, wie O2I-Primitives durch ArchiMate-Basisformen dargestellt werden und welche Grundlesart sie im O2I-Metamodell tragen:
+Die folgende Zuordnung zeigt, wie O2I-Primitives durch ArchiMate-Basisformen dargestellt werden:
 
 ```text
 O2I-Primitive Principle -> ArchiMate Principle -> normative Orientierung
@@ -697,65 +679,62 @@ O2I-Primitive Action -> ArchiMate Course of Action -> Wegentscheidung, Handlungs
 O2I-Primitive Gap -> ArchiMate Gap -> Differenz zwischen Ist- und Sollzustand
 ```
 
-Ein ArchiMate `Goal` stellt in O2I das O2I-Primitive `Objective` dar. Im Kontext einer Vision ist es als qualitativer Orientierungszustand oder qualitative Ausrichtung zu verstehen. Im Kontext der Operationalisierung ist es als Objective im OKR-Sinn zu verstehen. Ein ArchiMate `Outcome` stellt in O2I das O2I-Primitive `Key Result` dar. Ein ArchiMate `Assessment` stellt in O2I das O2I-Primitive `KPI` dar.
-
-Ein ArchiMate `Work Package` kann eine konkrete Umsetzungseinheit darstellen, die eine Action realisiert. Es gehört jedoch nicht zum minimalen O2I-Primitive-Vorrat, weil die Semantik der Handlungshypothese bereits durch `Action` getragen wird.
-
-Ein ArchiMate `Driver` bezeichnet in O2I grundsätzlich einen begründenden, spannungserzeugenden oder bedarfsanzeigenden Faktor. Im Kontext einer Mission beschreibt ein `Driver` einen Treiber des grundlegenden Existenzzwecks. Im Kontext eines Need beschreibt ein `Driver` einen begründeten Änderungs- oder Handlungsbedarf.
-
-Ein O2I-Kontext wird über Kontext- oder Gruppierungsrahmen und konsistente Modellkonventionen gekennzeichnet, z. B. `Mission : O2I Ctx` oder `Vision : O2I Ctx`. Die Elementsemantik ergibt sich aus dem O2I-Primitive und dem jeweiligen O2I-Kontext.
-
-Der O2I-Kontext `Situation` ist kein isolierter ArchiMate-Motivationstyp. Ein operativer Kontext wird in ArchiMate durch konkrete Architekturartefakte modelliert, z. B. Business Capability, Business Process oder regulatorische Anforderungen. O2I `Situation` ist damit ein fachlicher Interpretationskontext, der durch passende ArchiMate-Elemente instanziiert wird.
+Ein ArchiMate `Goal` stellt in O2I das O2I-Primitive `Objective` dar. Seine Bedeutung hängt vom O2I-Kontext ab: Im Kontext `Vision` beschreibt es einen orientierenden Zukunftszustand; im Kontext `Need` beschreibt es ein benötigtes fachliches Ergebnis.
 
 ### Relationsabbildung
 
-O2I-Relationen sind fachliche Makrorelationen zwischen O2I-Kontexten bzw. zwischen kontextualisierten O2I-Primitives. In ArchiMate werden sie durch zulässige ArchiMate-Relationen zwischen konkreten Elementen dargestellt. Die Relation wird mit dem O2I-Relationsnamen beschriftet, wenn dadurch die fachliche Bedeutung präziser wird.
+O2I-Relationen werden in ArchiMate durch zulässige ArchiMate-Relationen zwischen konkreten Elementen dargestellt. Dabei sind Primitive-Begründungen und Kontext-Makrorelationen zu unterscheiden.
 
-Eine O2I-Relation zwischen O2I-Kontexten muss in der ArchiMate-Syntax nicht als einzelne Kante zwischen zwei Elementen erscheinen. Sie kann durch mehrere Relationen zwischen enthaltenen ArchiMate-Elementen realisiert oder als abgeleitete Makrorelation dokumentiert werden.
+Primitive-Relationen werden zwischen ArchiMate-Elementen abgebildet, die O2I-Primitives darstellen:
 
 ```text
-Principle --influence[guides]--> Driver im Kontext Mission
-Principle --influence[guides]--> Goal im Kontext Vision
+Principle im Kontext Ethos --influence[guides]--> Driver im Kontext Mission
+Principle im Kontext Ethos --influence[guides]--> Goal im Kontext Vision
 Driver im Kontext Mission --influence[motivates]--> Goal im Kontext Vision
-Goal im Kontext Vision --influence[orients]--> Course of Action im Kontext Strategy
-Driver im Kontext Need --influence[motivates]--> Goal im Kontext Objective
-Outcome im Kontext Key Result --influence[translates-into]--> Goal im Kontext Objective
-Outcome im Kontext Key Result --realization[substantiates]--> Goal im Kontext Objective
-Outcome im Kontext Key Result --association[sets-target-for]--> Assessment im Kontext Measure
-Assessment im Kontext Measure --association[measures]--> Situation
-Course of Action im Kontext Intervention --influence[addresses]--> Driver im Kontext Need
-Course of Action im Kontext Intervention --influence[changes]--> Situation
+Outcome im Kontext Strategy --influence[translates-into]--> Goal im Kontext Need
+Outcome im Kontext Strategy --realization[substantiates]--> Goal im Kontext Strategy
+Outcome im Kontext Strategy --association[sets-target-for]--> Assessment im Kontext Measure
+```
+
+Kontext-Makrorelationen sind dokumentierte O2I-Relationen. In ArchiMate werden sie nicht als primäre ArchiMate-Semantik verstanden, sondern durch Relationen zwischen enthaltenen Elementen, durch beschriftete Dokumentationskanten zwischen Kontextbereichen oder durch explizit dokumentierte Ableitungen dargestellt:
+
+```text
+Vision --orients--> Strategy
+Strategy --qualifies--> Need
+Intervention --addresses--> Need
+Intervention --changes--> Situation
+Intervention --sets-target-for--> Measure
+Measure --measures--> Situation
 ```
 
 Die O2I-Relation `Vision --orients--> Strategy` kann in ArchiMate als `Influence`-Relation von einem `Goal` im Kontext `Vision` zu einem `Course of Action` im Kontext `Strategy` abgebildet werden. Fachlich bedeutet sie: Die Vision gibt der Strategie Richtung; die Strategie bleibt die Wegentscheidung, die diese Richtung unter gegebenen Bedingungen verfolgt.
 
 ### Abgeleitete Relationen
 
-Eine O2I-Relation darf abgeleitet sein. Sie fasst dann mehrere ArchiMate-Elemente und -Relationen zu einer fachlichen Makrorelation zusammen.
+Eine O2I-Makrorelation darf aus mehreren ArchiMate-Elementen und -Relationen abgeleitet werden. Entscheidend ist, dass die fachlich wirksame Relation zwischen den enthaltenen Elementen nachvollziehbar bleibt.
 
 Beispiel:
 
 ```text
-O2I: Ethos --guides--> Mission
+O2I: Strategy --qualifies--> Need
 ```
 
-wird syntaktisch modelliert als:
+kann syntaktisch begründet werden als:
 
 ```text
-O2I-Kontext Ethos contains Principle
-O2I-Kontext Mission contains Driver
-Principle --influence[guides]--> Driver
+O2I-Kontext Strategy contains Outcome
+O2I-Kontext Need contains Goal
+Outcome im Kontext Strategy --influence[translates-into]--> Goal im Kontext Need
 ```
 
-Die äußeren O2I-Kästen sind damit O2I-Kontexte; die fachlich wirksame Relation liegt zwischen den enthaltenen ArchiMate-Elementen.
+Die äußeren O2I-Kästen sind damit O2I-Kontexte; die fachlich wirksame Begründung liegt zwischen den enthaltenen Primitives.
 
 ### Modellierungsregeln
 
 - ArchiMate ist Syntax; O2I ist Semantik.
-- O2I-Begriffe wie Mission, Vision oder Strategy werden als O2I-Kontexte beziehungsweise strukturierte Teilmodelle über O2I-Primitives modelliert.
+- O2I-Kontexte werden als strukturierte Modellbereiche über O2I-Primitives modelliert.
 - Ein ArchiMate `Goal` stellt in O2I ein `Objective` dar; ein ArchiMate `Outcome` stellt ein `Key Result` dar; ein ArchiMate `Assessment` stellt einen `KPI` dar.
-- O2I-Makrorelationen dürfen aus mehreren ArchiMate-Relationen abgeleitet werden.
-- Aggregations- oder Kompositionskanten zwischen O2I-Kontexten ersetzen keine fachliche Relation zwischen den enthaltenen Elementen.
-- Gleichartige Elemente dürfen komponiert oder aggregiert werden, wenn dadurch eine fachliche Zerlegung ausgedrückt wird.
-- `Situation` wird nicht auf ein einzelnes ArchiMate-Element reduziert, sondern durch konkrete Architekturartefakte instanziiert.
+- O2I-Makrorelationen dürfen aus mehreren Primitive-Relationen oder Syntaxrelationen abgeleitet werden.
+- Aggregations- oder Kompositionskanten zwischen O2I-Kontexten ersetzen keine fachliche Relation zwischen den enthaltenen Primitives.
+- `Situation` wird nicht auf ein einzelnes ArchiMate-Motivationselement reduziert, sondern durch konkrete fachliche Architekturartefakte instanziiert.
 - Wenn eine O2I-Relation nicht mit einer zulässigen ArchiMate-Relation ausdrückbar ist, muss sie als abgeleitete Relation dokumentiert werden.
