@@ -4,7 +4,7 @@ subtitle: "Begriffe und Relationen für wirksames Handeln"
 author: nemron
 version: "0.1 (wip)"
 abstract: |
-  Wie werden Orientierung, Formierung, Kontextualisierung und Operationalisierung so verbunden, dass nachvollziehbare Wirkung entsteht?
+  Wie werden Orientierung, Formierung, Situierung und Operationalisierung so verbunden, dass nachvollziehbare Wirkung entsteht?
 lang: de-DE
 figureTitle: "Abb."
 figPrefix:
@@ -12,8 +12,8 @@ figPrefix:
   - "Abb."
 listingTitle: "Listing"
 lstPrefix:
-  - "Listing"
-  - "Listings"
+  - "Lst."
+  - "Lst."
 secPrefix:
   - "Kap."
   - "Kap."
@@ -35,7 +35,7 @@ callout-theme: gray
 
 # Einleitung
 
-O2I beschreibt, wie Orientierung unter gegebenen Bedingungen in strategische Formierung, kontextualisierte Bedarfe, wirkungsgerichtete Operationalisierung und nachvollziehbare Wirkung überführt wird.
+O2I beschreibt, wie Orientierung unter gegebenen Bedingungen in strategische Formierung, situierte Bedarfe, wirkungsgerichtete Operationalisierung und nachvollziehbare Wirkung überführt wird.
 
 O2I wird in diesem Artikel als Framework verstanden. Die O2I-Terminologie liefert die fachliche Begriffswelt auf Basis der herangezogenen Standardliteratur; das O2I-Metamodell formalisiert diese Begriffswelt semantisch und syntaktisch. Zusammen entsteht eine begründete Denk-, Modellierungs- und Nachweislogik für Wirkung.
 
@@ -103,7 +103,7 @@ Eine Definition wird nicht bloß behauptet. Sie wird nur verwendet, wenn sie ent
 
 # Terminologie {#sec:terminologie}
 
-Die Terminologie beschreibt eine *teleologische Wirkungslogik*: von Orientierung über Formierung, Kontextualisierung und Operationalisierung zu Wirkung. Diese fünf *fachlichen Domänen* ordnen die Standardbegriffe, welche O2I anschließend als O2I-Kontexte formalisiert.
+Die Terminologie beschreibt eine *teleologische Wirkungslogik*: von Orientierung über Formierung, Situierung und Operationalisierung zu Wirkung. Diese fünf *fachlichen Domänen* ordnen die Standardbegriffe, welche O2I anschließend als O2I-Kontexte formalisiert.
 
 ## Orientierung
 
@@ -312,15 +312,15 @@ Fit validiert damit nicht einzelne Maßnahmen isoliert, sondern das Zusammenspie
 >
 > [^csf]: *Quellenanker*: Parmenter (2020). *Autorenableitung in Anlehnung an Rumelt (2011) und Porter (1996)*: Kritische Erfolgsfaktoren werden in O2I aus der strategischen Wegentscheidung abgeleitet, insbesondere aus Guiding Policy, Positionierung, Trade-offs und Fit.
 
-Kritische Erfolgsfaktoren gehören nicht zum Kernbegriff Strategie im Sinne von Rumelt, Porter oder Mintzberg. Sie werden aus Strategie abgeleitet und verbinden Formierung mit Kontextualisierung, Bedarfsqualifikation, Messung und Nachweislogik.
+Kritische Erfolgsfaktoren gehören nicht zum Kernbegriff Strategie im Sinne von Rumelt, Porter oder Mintzberg. Sie werden aus Strategie abgeleitet und verbinden Formierung mit Situierung, Bedarfsqualifikation, Messung und Nachweislogik.
 
-Sie markieren strategisch relevante Erfolgsbereiche, an denen sichtbar wird, welche Situationen bzw. Bedarfe für die Strategie relevant werden können. Ein kritischer Erfolgsfaktor ist damit noch kein KPI, kein Key Result und keine Maßnahme: Er beschreibt einen Erfolgsbereich, der später in konkreten Situationen kontextualisiert, über Bedarfsqualifikation handlungsrelevant gemacht und über geeignete Messungen überprüfbar wird.
+Sie markieren strategisch relevante Erfolgsbereiche, an denen sichtbar wird, welche Situationen bzw. Bedarfe für die Strategie relevant werden können. Ein kritischer Erfolgsfaktor ist damit noch kein KPI, kein Key Result und keine Maßnahme: Er beschreibt einen Erfolgsbereich, der später in konkreten Situationen situiert, über Bedarfsqualifikation handlungsrelevant gemacht und über geeignete Messungen überprüfbar wird.
 
 In O2I begründen kritische Erfolgsfaktoren, welche Primitive-Verbindungen zwischen Strategie und Bedarf fachlich plausibel werden können. Dadurch wird eine Relation wie `Strategy --qualifies--> Need` nicht bloß behauptet, sondern über kontextualisierte Primitives motivierbar.
 
-## Kontextualisierung
+## Situierung
 
-Kontextualisierung bezeichnet in O2I die fachliche Verankerung eines Bedarfs in einer konkreten Situation, in der der Bedarf sichtbar, begründbar und später überprüfbar wird.
+Situierung bezeichnet in O2I die fachliche Verankerung eines Bedarfs in einer konkreten Situation, in der der Bedarf sichtbar, begründbar und später überprüfbar wird.
 
 ### Situation
 
@@ -521,39 +521,41 @@ Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen. Sie e
 
 ##### Elemente
 
-@lst:o2i-context-types zeigt das Kontext-Inventar und legt fest, welche fachlichen Interpretationsrahmen O2I als Kontexttypen kennt.
+@Lst:o2i-context-types zeigt das Kontext-Inventar und legt fest, welche fachlichen Interpretationsrahmen O2I als Kontexttypen kennt.
 
 ```{#lst:o2i-context-types .haskell caption="O2I Kontexttypen"}
 !include`snippetStart="-- ** Contexts", snippetEnd="-- ** Primitives"` spc/O2I.hs
 ```
 
-`Ethos`, `Mission` und `Vision` bilden eine Orientierung. `Strategy` ist der Kontext für eine strategische Wegentscheidung innerhalb einer Formierung. Kritische Erfolgsfaktoren sind in O2I kein eigener Kontext, sondern strukturieren die strategische Erfolgslogik; sie vermitteln zwischen Strategie, Bedarfsqualifikation, Messrahmung und späterer Operationalisierung. `Need`, `Intervention`, `Measure` und `Situation` bilden die Kontexte für Kontextualisierung, Operationalisierung und Wirkung.
+`Ethos`, `Mission` und `Vision` bilden eine Orientierung. `Strategy` ist der Kontext für eine strategische Wegentscheidung innerhalb einer Formierung. Kritische Erfolgsfaktoren sind in O2I kein eigener Kontext, sondern strukturieren die strategische Erfolgslogik; sie vermitteln zwischen Strategie, Bedarfsqualifikation, Messrahmung und späterer Operationalisierung. `Need`, `Intervention`, `Measure` und `Situation` bilden die Kontexte für Situierung, Operationalisierung und Wirkung.
 
 ##### Relationen
 
-Kontextrelationen beschreiben fachliche Relationen zwischen Kontexttypen. @lst:o2i-context-relations zeigt die zulässigen Kontextrelationen.
+Kontextrelationen beschreiben fachliche Relationen zwischen Kontexttypen. @Lst:o2i-context-relations zeigt die zulässigen Kontextrelationen.
 
 ```{#lst:o2i-context-relations .haskell caption="O2I Kontextrelationen"}
 !include`snippetStart="-- ** Context relations", snippetEnd="-- ** Primitive nodes"` spc/O2I.hs
 ```
 
-Die typisierte Spezifikation verhindert, dass beliebige Kontextrelationen als O2I-Relationen ausgegeben werden. Beispielsweise ist `Strategy --qualifies--> Need` zulässig; `Need --qualifies--> Strategy` ist kein O2I-Relationstyp.
+Diese typisierte Spezifikation verhindert, dass beliebige Kontextrelationen als O2I-Relationen ausgegeben werden. Beispielsweise ist `Strategy --qualifies--> Need` zulässig; `Need --qualifies--> Strategy` ist kein O2I-Relationstyp.
 
 #### Primitives
 
 O2I-Primitives sind abstrakte formale Träger fachlicher Inhalte. Sie besitzen keine vollständige O2I-Bedeutung für sich allein; ihre fachliche Lesart entsteht erst durch Interpretation in einem O2I-Kontext.
 
+@Fig:o2i-primitives-view zeigt das O2I Primitives-Modell des O2I-Metamodells.
+
+![O2I Primitives-Modell](<img/O2I Primitives.png>){#fig:o2i-primitives-view width=75%}
+
+Die Darstellung ist als semantische Übersicht des abstrakten Formvorrats zu lesen. Sie ersetzt weder die Interpretation der Primitives in Kontexten noch die typisierte Spezifikation, sondern zeigt, welche Primitives, Strukturierungstypen und Primitive-Relationen auf Metamodellebene zulässig sind.
+
 ##### Elemente
 
-@lst:o2i-primitive-types zeigt das Primitive-Inventar und legt fest, welche abstrakten Träger fachlicher Inhalte O2I kennt.
+Das Primitive-Inventar legt fest, welche abstrakten Träger fachlicher Inhalte O2I kennt. @Lst:o2i-primitive-types zeigt diese Primitive-Typen.
 
 ```{#lst:o2i-primitive-types .haskell caption="O2I Primitive-Typen"}
 !include`snippetStart="-- ** Primitives", snippetEnd="-- ** Structuring"` spc/O2I.hs
 ```
-
-@Fig:o2i-primitives-view zeigt das Primitives-Modell des O2I-Metamodells.
-
-![O2I Primitives View](<img/O2I Primitives.png>){#fig:o2i-primitives-view width=75%}
 
 ##### Relationen
 
@@ -563,7 +565,7 @@ Primitive-Relationen beschreiben die abstrakte Begründungsstruktur zwischen mod
 !include`snippetStart="-- ** Primitive relations", snippetEnd="-- ** Interpretations"` spc/O2I.hs
 ```
 
-Die typisierte Spezifikation verhindert, dass beliebige Primitive-Relationen als O2I-Relationen ausgegeben werden.
+Diese typisierte Spezifikation verhindert, dass beliebige Primitive-Relationen als O2I-Relationen ausgegeben werden.
 
 #### Strukturierung
 
@@ -744,22 +746,34 @@ Die äußeren O2I-Kästen sind damit O2I-Kontexte; die fachlich wirksame Begrün
 - `Situation` wird nicht auf ein einzelnes ArchiMate-Motivationselement reduziert, sondern durch konkrete fachliche Architekturartefakte instanziiert.
 - Wenn eine O2I-Relation nicht mit einer zulässigen ArchiMate-Relation ausdrückbar ist, muss sie als abgeleitete Relation dokumentiert werden.
 
-## Annex
+# Annex
 
-### Spezifikation
+## Layered Cake
 
-#### Zweck
+Der O2I Layered Cake ist eine beispielhafte Referenzsicht auf einen zusammenhängenden O2I-Wirkungsgraphen. Die Sicht zeigt, wie O2I-Kontexte mit Primitives befüllt und Makrorelationen durch Primitive-Relationen begründet werden.
+
+![O2I Layered Cake](<img/O2I Layered Cake.png>){#fig:o2i-layered-cake}
+
+@Fig:o2i-layered-cake beginnt mit dem Übergang von `Ethos` zu `Mission`. Im Kontext `Ethos` werden `Respect`, `Discipline` und `Independence` als `Principle` interpretiert. `Respect` bezeichnet den normativen Maßstab für den Umgang mit Menschen und Stakeholdern. `Discipline` bezeichnet den Anspruch an Verlässlichkeit, Konsequenz und Ausführung. `Independence` bezeichnet den Anspruch, eigenständig zu urteilen und zu handeln.
+
+Diese Leitprinzipien prägen die Mission `Enable people to act from shared understanding`. `Respect` prägt, dass gemeinsames Verständnis nicht manipulativ ist. `Discipline` prägt, dass gemeinsames Verständnis gepflegt und belastbar bleibt. `Independence` prägt, dass Handeln aus eigenständigem Urteil entsteht.
+
+Damit wird die Makrorelation `Ethos --guides--> Mission` durch Primitive-Relationen der Form `Principle @ Ethos --guides--> Driver @ Mission` begründet.
+
+## Spezifikation
+
+### Zweck
 
 Die Spezifikation ist keine Implementierung eines Anwendungssystems. Sie ist eine kompakte, maschinenprüfbare Spezifikation der O2I-Semantik. Ihr Zweck ist, O2I-Modelle nicht nur zu beschreiben, sondern auf zentrale Wohlgeformtheits- und Validierungsregeln prüfen zu können.
 
-#### Typisierte Relationen
+### Typisierte Relationen
 
 Die typtheoretische Spezifikation verwendet `DataKinds` und GADTs, um zulässige Relationstypen auszudrücken. Dadurch wird ein Teil der O2I-Semantik bereits auf Typebene festgelegt.
 
-#### Validierungsregeln
+### Validierungsregeln
 
 Neben den typisierten Relationstypen enthält die Spezifikation ein einfaches Modellgraph-Format und ausführbare Validierungsfunktionen. Die Relationen im Modellgraphen tragen dieselben GADT-Relationszeugen, die auch die typisierte Spezifikation definieren; dadurch wird die Typebene nicht von einer separaten Runtime-Relationsliste entkoppelt. Die Funktionen prüfen unter anderem zulässige Primitive-Platzierung, zulässige Relationen, Wirkungsrelevanz und Wirkungstraces.
 
-#### Grenzen der Spezifikation
+### Grenzen der Spezifikation
 
 Die Spezifikation prüft Struktur und Nachvollziehbarkeit, nicht die empirische Wahrheit einer Wirkung. Sie ersetzt keine Messdaten, keine fachliche Bewertung und keinen kausalen Wirkungsnachweis. Sie stellt sicher, dass ein O2I-Modell seine Wirkungsaussagen strukturell begründen kann.
