@@ -162,9 +162,12 @@ KPI = konkrete Messdefinition
         </element>
       </folder>
       <folder name="Mission" id="id-2d8075f35f43407f87f46b0a6b5523e8">
-        <element xsi:type="archimate:Grouping" name="Enable people to act from shared understanding :: Driver" id="id-8b33d3d5d316422999552ebb78e7defb"/>
+        <element xsi:type="archimate:Grouping" name="#hggt :: Driver" id="id-8b33d3d5d316422999552ebb78e7defb">
+          <documentation>honest good time together</documentation>
+        </element>
       </folder>
     </folder>
+    <element xsi:type="archimate:Grouping" name="People act confidently from shared understanding :: Objective" id="id-397581ce58054c25bb903a1d927063fd"/>
   </folder>
   <folder name="Relations" id="id-df40b5f1fb2644a68446ad6dc198bc12" type="relations">
     <element xsi:type="archimate:RealizationRelationship" name="realizes" id="id-3cdad1e6fd2a42238260b75fc67c1dee" source="id-a28a1df5342b444c8fe31e62f9e2ca58" target="id-05d72db3510b47bea674dba07801e723">
@@ -224,7 +227,7 @@ Der operative Kontext bringt einen Bedarf an die Oberfläche.</documentation>
     <element xsi:type="archimate:InfluenceRelationship" name="addresses" id="id-930fd47be9404fc39840eab6224b373a" source="id-52230b6fa09b477fa7b7187f9bc03376" target="id-643791bdae8f4829a2151d7b658d84f1"/>
     <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-4d61198566484a7aa83aa4b7c638da41" source="id-dee340198eb64cc48b52f8b42cb0c070" target="id-ade8d7923089433c80c7fbac99dea59d"/>
     <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-a30a044049dc479f9c6e10038c4c1a50" source="id-dee340198eb64cc48b52f8b42cb0c070" target="id-af45133ba69842bcbb3bda85551c3dda"/>
-    <element xsi:type="archimate:InfluenceRelationship" name="motivates" id="id-e1cf0cb807674c77b1cf41ff9d31ea07" source="id-ade8d7923089433c80c7fbac99dea59d" target="id-af45133ba69842bcbb3bda85551c3dda"/>
+    <element xsi:type="archimate:InfluenceRelationship" name="motivates?/ grounds?" id="id-e1cf0cb807674c77b1cf41ff9d31ea07" source="id-ade8d7923089433c80c7fbac99dea59d" target="id-af45133ba69842bcbb3bda85551c3dda"/>
     <element xsi:type="archimate:InfluenceRelationship" name="determines" id="id-e3391250befe46ab89a8ff5852287179" source="id-ade8d7923089433c80c7fbac99dea59d" target="id-72043be07b814560a797a2dec8130315"/>
     <element xsi:type="archimate:AggregationRelationship" id="id-d3b17506b8c546788826b2572c55680a" source="id-72043be07b814560a797a2dec8130315" target="id-b6d54675e24e4d3bb58d652fdfe5c493"/>
     <element xsi:type="archimate:InfluenceRelationship" name="refines" id="id-ab628a3864b24378ba32fa111f3005ba" source="id-b6d54675e24e4d3bb58d652fdfe5c493" target="id-b6d54675e24e4d3bb58d652fdfe5c493"/>
@@ -280,6 +283,11 @@ Hinweis: Verankerung macht die Strategie entscheidbar, verantwortbar und umsetzb
     <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-a41831151d524193a3ca0e35d36b359f" source="id-c328327ed26b4a5089b8274e62a2b15d" target="id-8b33d3d5d316422999552ebb78e7defb">
       <documentation>Independence prägt, dass Handeln aus eigenständigem Urteil entsteht.</documentation>
     </element>
+    <element xsi:type="archimate:AssignmentRelationship" id="id-ea267b9491464836b78a983c916fff98" source="id-63a27d11822d4ef4b45e65b0e7231fc4" target="id-397581ce58054c25bb903a1d927063fd"/>
+    <element xsi:type="archimate:InfluenceRelationship" name="grounds" id="id-cfdc36698da44e3fac9e11465d59a06a" source="id-8b33d3d5d316422999552ebb78e7defb" target="id-397581ce58054c25bb903a1d927063fd"/>
+    <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-cfe0bca3095d4fb4835066ba0122fffa" source="id-1ec4121bd2874e6f8468f24da5ca2abc" target="id-397581ce58054c25bb903a1d927063fd"/>
+    <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-d07a674aac8844f59f4a08a34b7d41a5" source="id-ab5a8fc3167e451b8faa07efea8cdd1d" target="id-397581ce58054c25bb903a1d927063fd"/>
+    <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-72e049f5223e4476b67a58d03fe8782a" source="id-c328327ed26b4a5089b8274e62a2b15d" target="id-397581ce58054c25bb903a1d927063fd"/>
   </folder>
   <folder name="Views" id="id-c4a47547d89649babef754e47e83c429" type="diagrams">
     <folder name="Syntax" id="id-6fd9ede1a32043c0bdec21b826afd949">
@@ -817,7 +825,9 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
-          <sourceConnection xsi:type="archimate:Connection" id="id-469d580161a74c9a88d9c602841229a5" source="id-151babcc82344900ae9244c74e10232f" target="id-7239d7237795459cb2867c350bd44523" archimateRelationship="id-e1cf0cb807674c77b1cf41ff9d31ea07"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-469d580161a74c9a88d9c602841229a5" source="id-151babcc82344900ae9244c74e10232f" target="id-7239d7237795459cb2867c350bd44523" archimateRelationship="id-e1cf0cb807674c77b1cf41ff9d31ea07">
+            <feature name="labelExpression" value="motivates?/ &#xA;grounds?"/>
+          </sourceConnection>
           <sourceConnection xsi:type="archimate:Connection" id="id-ccf1c35d33bc406dbf58c15369dfadae" source="id-151babcc82344900ae9244c74e10232f" target="id-89e71a7c99b34c24abf24a24ed4a38f8" archimateRelationship="id-e3391250befe46ab89a8ff5852287179"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-6d91062aadc548e38f0d6e6b928e1ec2" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-cd9b992017fa4ebb84842d36185b63de">
@@ -892,28 +902,34 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
         <property key="version" value="0.3"/>
       </element>
       <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Layered Cake" id="id-b1e7c56b04d341c2907c0fb832ad3495">
-        <child xsi:type="archimate:DiagramObject" id="id-f3f547585d84458e869955594fb9c903" targetConnections="id-93ccb0bbc0314fbc9ca813b5c7e31bc3" font="1|Arial|14.0|0|COCOA|1|Arial" textAlignment="1" archimateElement="id-209098a723f84d0787eab3cfed0e3db0">
+        <child xsi:type="archimate:DiagramObject" id="id-f3f547585d84458e869955594fb9c903" targetConnections="id-93ccb0bbc0314fbc9ca813b5c7e31bc3" font="1|Arial|14.0|0|COCOA|1|Arial" fontColor="#c0c0c0" lineColor="#c0c0c0" textAlignment="1" archimateElement="id-209098a723f84d0787eab3cfed0e3db0">
           <bounds x="743" y="264" width="217" height="97"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
-          <sourceConnection xsi:type="archimate:Connection" id="id-dee666a99d4f4e3f9910ed1be68858fc" source="id-f3f547585d84458e869955594fb9c903" target="id-a110c028198a402599d5cb4546f6c2d2" archimateRelationship="id-4ae26bea45bd4597a97e37c1b838d3de"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-dee666a99d4f4e3f9910ed1be68858fc" fontColor="#c0c0c0" lineWidth="3" lineColor="#c0c0c0" source="id-f3f547585d84458e869955594fb9c903" target="id-a110c028198a402599d5cb4546f6c2d2" archimateRelationship="id-4ae26bea45bd4597a97e37c1b838d3de">
+            <bendpoint startX="1" startY="180" endX="174"/>
+          </sourceConnection>
           <sourceConnection xsi:type="archimate:Connection" id="id-8c40687b9d07407287f353105b3dadb1" source="id-f3f547585d84458e869955594fb9c903" target="id-10aaf66f1b96459c96773cb52c6f5a89" archimateRelationship="id-027d3edbe35b434ebeae1815df5e4dd9"/>
           <child xsi:type="archimate:DiagramObject" id="id-10aaf66f1b96459c96773cb52c6f5a89" targetConnections="id-8c40687b9d07407287f353105b3dadb1 id-35290f35f0c74219b7d96ec15c9da105 id-0bdddaa505c64d6c9959af3aa0f657ae id-5126cbd39bfb4d3e99f8d5d5efa6545a" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-8b33d3d5d316422999552ebb78e7defb">
             <bounds x="24" y="24" width="169" height="56"/>
             <feature name="deriveElementLineColor" value="false"/>
             <feature name="iconColor" value="#feffff"/>
             <feature name="lineStyle" value="0"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-54365b9bce284da2bafed7beff5321c7" source="id-10aaf66f1b96459c96773cb52c6f5a89" target="id-841dfa7518d749a1bcb3c2dbb60794c9" archimateRelationship="id-cfdc36698da44e3fac9e11465d59a06a"/>
           </child>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-5e7b41b571f246f58a46e0044cc0f5a2" font="1|Arial|14.0|0|COCOA|1|Arial" textAlignment="1" archimateElement="id-cf054314f7e944cea52ff8ec082377f8">
+        <child xsi:type="archimate:DiagramObject" id="id-5e7b41b571f246f58a46e0044cc0f5a2" font="1|Arial|14.0|0|COCOA|1|Arial" fontColor="#c0c0c0" lineColor="#c0c0c0" textAlignment="1" archimateElement="id-cf054314f7e944cea52ff8ec082377f8">
           <bounds x="420" y="84" width="517" height="97"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
-          <sourceConnection xsi:type="archimate:Connection" id="id-93ccb0bbc0314fbc9ca813b5c7e31bc3" font="1|Lucida Grande|12.0|1|COCOA|1|LucidaGrande-Bold" lineWidth="3" source="id-5e7b41b571f246f58a46e0044cc0f5a2" target="id-f3f547585d84458e869955594fb9c903" archimateRelationship="id-af654424795d4ba79318342f694d68fe">
+          <sourceConnection xsi:type="archimate:Connection" id="id-93ccb0bbc0314fbc9ca813b5c7e31bc3" fontColor="#c0c0c0" lineWidth="3" lineColor="#c0c0c0" source="id-5e7b41b571f246f58a46e0044cc0f5a2" target="id-f3f547585d84458e869955594fb9c903" archimateRelationship="id-af654424795d4ba79318342f694d68fe">
             <bendpoint startX="366" endX="193" endY="-180"/>
             <bendpoint startX="366" startY="180" endX="193"/>
           </sourceConnection>
-          <sourceConnection xsi:type="archimate:Connection" id="id-70d0b127f7dc4b719ebde7e5d686df89" source="id-5e7b41b571f246f58a46e0044cc0f5a2" target="id-a110c028198a402599d5cb4546f6c2d2" archimateRelationship="id-ec81a51ca6ba40ccae49c8be4faa77de"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-70d0b127f7dc4b719ebde7e5d686df89" fontColor="#c0c0c0" lineWidth="3" lineColor="#c0c0c0" source="id-5e7b41b571f246f58a46e0044cc0f5a2" target="id-a110c028198a402599d5cb4546f6c2d2" archimateRelationship="id-ec81a51ca6ba40ccae49c8be4faa77de">
+            <bendpoint startX="-366" endX="-366" endY="-360"/>
+            <bendpoint startX="-366" startY="360" endX="-366"/>
+          </sourceConnection>
           <sourceConnection xsi:type="archimate:Connection" id="id-347cd86c37be4685b10d314cde0a49ac" source="id-5e7b41b571f246f58a46e0044cc0f5a2" target="id-14027fd85b7948c58abcaec164483854" archimateRelationship="id-7631e1aa1a9142d086a3e41e8fc4936e"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-ee12c24ccba2403496d7233c310cf6ce" source="id-5e7b41b571f246f58a46e0044cc0f5a2" target="id-e919f30526874a9fba1cfb2db46fa4a7" archimateRelationship="id-038a9dc19fa8422b917ff11e1b86feaa"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-b4f459966a9e4518947d7f0c6eafa9f1" source="id-5e7b41b571f246f58a46e0044cc0f5a2" target="id-ed8898484d89437089f9a639b24e3392" archimateRelationship="id-ed62b7b56129438394acd22fc5b0b90a"/>
@@ -922,14 +938,22 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
             <feature name="deriveElementLineColor" value="false"/>
             <feature name="iconColor" value="#feffff"/>
             <feature name="lineStyle" value="0"/>
-            <sourceConnection xsi:type="archimate:Connection" id="id-0bdddaa505c64d6c9959af3aa0f657ae" source="id-e919f30526874a9fba1cfb2db46fa4a7" target="id-10aaf66f1b96459c96773cb52c6f5a89" archimateRelationship="id-0479ed41741a416ab42f3a1540e2481d"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-0bdddaa505c64d6c9959af3aa0f657ae" source="id-e919f30526874a9fba1cfb2db46fa4a7" target="id-10aaf66f1b96459c96773cb52c6f5a89" archimateRelationship="id-0479ed41741a416ab42f3a1540e2481d">
+              <feature name="nameVisible" value="false"/>
+            </sourceConnection>
+            <sourceConnection xsi:type="archimate:Connection" id="id-316eb823cacc4f4e8029d945f7b981f1" source="id-e919f30526874a9fba1cfb2db46fa4a7" target="id-841dfa7518d749a1bcb3c2dbb60794c9" archimateRelationship="id-d07a674aac8844f59f4a08a34b7d41a5"/>
           </child>
           <child xsi:type="archimate:DiagramObject" id="id-14027fd85b7948c58abcaec164483854" targetConnections="id-347cd86c37be4685b10d314cde0a49ac" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-1ec4121bd2874e6f8468f24da5ca2abc">
             <bounds x="12" y="24" width="157" height="56"/>
             <feature name="deriveElementLineColor" value="false"/>
             <feature name="iconColor" value="#feffff"/>
             <feature name="lineStyle" value="0"/>
-            <sourceConnection xsi:type="archimate:Connection" id="id-35290f35f0c74219b7d96ec15c9da105" source="id-14027fd85b7948c58abcaec164483854" target="id-10aaf66f1b96459c96773cb52c6f5a89" archimateRelationship="id-d8e13181c37d4ba8864dce49fb691372"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-35290f35f0c74219b7d96ec15c9da105" source="id-14027fd85b7948c58abcaec164483854" target="id-10aaf66f1b96459c96773cb52c6f5a89" archimateRelationship="id-d8e13181c37d4ba8864dce49fb691372">
+              <feature name="nameVisible" value="false"/>
+            </sourceConnection>
+            <sourceConnection xsi:type="archimate:Connection" id="id-de769ab0dcef4f2aaf238a2cc8853633" source="id-14027fd85b7948c58abcaec164483854" target="id-841dfa7518d749a1bcb3c2dbb60794c9" archimateRelationship="id-cfe0bca3095d4fb4835066ba0122fffa">
+              <feature name="nameVisible" value="false"/>
+            </sourceConnection>
           </child>
           <child xsi:type="archimate:DiagramObject" id="id-ed8898484d89437089f9a639b24e3392" targetConnections="id-b4f459966a9e4518947d7f0c6eafa9f1" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-c328327ed26b4a5089b8274e62a2b15d">
             <bounds x="348" y="24" width="157" height="56"/>
@@ -937,16 +961,26 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
             <feature name="iconColor" value="#feffff"/>
             <feature name="lineStyle" value="0"/>
             <sourceConnection xsi:type="archimate:Connection" id="id-5126cbd39bfb4d3e99f8d5d5efa6545a" source="id-ed8898484d89437089f9a639b24e3392" target="id-10aaf66f1b96459c96773cb52c6f5a89" archimateRelationship="id-a41831151d524193a3ca0e35d36b359f"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-b40b22987b20415ca4a86f6bfef9c769" source="id-ed8898484d89437089f9a639b24e3392" target="id-841dfa7518d749a1bcb3c2dbb60794c9" archimateRelationship="id-72e049f5223e4476b67a58d03fe8782a">
+              <feature name="nameVisible" value="false"/>
+            </sourceConnection>
           </child>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-a110c028198a402599d5cb4546f6c2d2" targetConnections="id-dee666a99d4f4e3f9910ed1be68858fc id-70d0b127f7dc4b719ebde7e5d686df89" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-63a27d11822d4ef4b45e65b0e7231fc4">
-          <bounds x="588" y="444" width="181" height="73"/>
+        <child xsi:type="archimate:DiagramObject" id="id-a110c028198a402599d5cb4546f6c2d2" targetConnections="id-dee666a99d4f4e3f9910ed1be68858fc id-70d0b127f7dc4b719ebde7e5d686df89" font="1|Arial|14.0|0|COCOA|1|Arial" fontColor="#c0c0c0" lineColor="#c0c0c0" textAlignment="1" archimateElement="id-63a27d11822d4ef4b45e65b0e7231fc4">
+          <bounds x="567" y="444" width="222" height="97"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-938e841cab8d47a290323899a0853297" source="id-a110c028198a402599d5cb4546f6c2d2" target="id-502260a3137f4d0e98239713392e61af" archimateRelationship="id-ea5919b404e94e2eb84fc8868cbdb98c"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-b32d2982ac1e4dfeae95056af37f3bb6" source="id-a110c028198a402599d5cb4546f6c2d2" target="id-841dfa7518d749a1bcb3c2dbb60794c9" archimateRelationship="id-ea267b9491464836b78a983c916fff98"/>
+          <child xsi:type="archimate:DiagramObject" id="id-841dfa7518d749a1bcb3c2dbb60794c9" targetConnections="id-b32d2982ac1e4dfeae95056af37f3bb6 id-54365b9bce284da2bafed7beff5321c7 id-de769ab0dcef4f2aaf238a2cc8853633 id-316eb823cacc4f4e8029d945f7b981f1 id-b40b22987b20415ca4a86f6bfef9c769" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-397581ce58054c25bb903a1d927063fd">
+            <bounds x="12" y="24" width="186" height="56"/>
+            <feature name="deriveElementLineColor" value="false"/>
+            <feature name="iconColor" value="#feffff"/>
+            <feature name="lineStyle" value="0"/>
+          </child>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-502260a3137f4d0e98239713392e61af" targetConnections="id-938e841cab8d47a290323899a0853297 id-7e1da4c6d3bd4d61aef1eae26ab413ce id-351b7038231a4bb8b2b44668d251f376" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-fc76733c15ce4d0fa08e1156adfa9879">
-          <bounds x="588" y="576" width="181" height="73"/>
+          <bounds x="588" y="1008" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-7e1da4c6d3bd4d61aef1eae26ab413ce" source="id-502260a3137f4d0e98239713392e61af" target="id-502260a3137f4d0e98239713392e61af" archimateRelationship="id-f48c76aa24864f9c93d325b435368fbf">
@@ -967,23 +1001,23 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
           </sourceConnection>
           <sourceConnection xsi:type="archimate:Connection" id="id-0df4213517204ecab994be08bea9e579" source="id-502260a3137f4d0e98239713392e61af" target="id-2d3a51a2724b47eba03695c56e9ef830" archimateRelationship="id-e5ccfcc502fe4890946d4a06b9bd034e"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-226b09aff5254f83aa28f2fd9a86b354" fillColor="#ffffff" textPosition="1" archimateElement="id-c9c995beb0e645a3a2ca7c4afc3e6e2c" type="1">
+        <child xsi:type="archimate:DiagramObject" id="id-226b09aff5254f83aa28f2fd9a86b354" fontColor="#c0c0c0" lineColor="#c0c0c0" fillColor="#ffffff" textPosition="1" archimateElement="id-c9c995beb0e645a3a2ca7c4afc3e6e2c" type="1">
           <bounds x="864" y="72" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-372783ca080b4e8788dcb2c24f1aee2a" fillColor="#ffffff" textPosition="1" archimateElement="id-33a10d15dd4f40d3b963608b26edd48d" type="1">
+        <child xsi:type="archimate:DiagramObject" id="id-372783ca080b4e8788dcb2c24f1aee2a" fontColor="#c0c0c0" lineColor="#c0c0c0" fillColor="#ffffff" textPosition="1" archimateElement="id-33a10d15dd4f40d3b963608b26edd48d" type="1">
           <bounds x="899" y="252" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-1a12079cfce8446dbe80d0950e2963a5" fillColor="#ffffff" textPosition="1" archimateElement="id-88ed849a9a7e4bd1a02ba7993d34d59d" type="1">
-          <bounds x="720" y="564" width="96" height="36"/>
+          <bounds x="720" y="995" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-01ecb87fbbfc4e32875c8597743d87b9" targetConnections="id-55b760d187e04b8a809e2b58de434d0f id-787219317f8740738b157d618564e612 id-085022e69b744556a69325802fc7a4a8 id-75bbd929463e43ef9728fdede79f1259" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-643791bdae8f4829a2151d7b658d84f1">
-          <bounds x="264" y="432" width="181" height="73"/>
+          <bounds x="264" y="864" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-787219317f8740738b157d618564e612" source="id-01ecb87fbbfc4e32875c8597743d87b9" target="id-01ecb87fbbfc4e32875c8597743d87b9" archimateRelationship="id-151449788aa04c38bc0fb6a5f046ff54">
@@ -993,25 +1027,25 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
           </sourceConnection>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-fa0c2bfd527f4dc2a39c091d2bc1b2f0" fillColor="#ffffff" textPosition="1" archimateElement="id-ab44c37a5e4e44279f345e1b4b8a8904" type="1">
-          <bounds x="228" y="420" width="96" height="36"/>
+          <bounds x="228" y="852" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-1e03f964a2394daebfca114b59f866a7" targetConnections="id-5de1566a19194cda9d07fc386c16711c id-f6ce024020fa4ff79308f87184952f65" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-95420d4e66164023b79676213a6147e2">
-          <bounds x="-60" y="576" width="181" height="73"/>
+          <bounds x="-60" y="1008" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-085022e69b744556a69325802fc7a4a8" source="id-1e03f964a2394daebfca114b59f866a7" target="id-01ecb87fbbfc4e32875c8597743d87b9" archimateRelationship="id-8b8d6f51c8f041d798805012298c0011">
             <bendpoint startX="162" startY="-144" endX="-162"/>
           </sourceConnection>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-adedb852b96f4af1bf6c0454b1726a3c" fillColor="#ffffff" textPosition="1" archimateElement="id-0645e26eee7b4bf49df671f415323fb1" type="1">
-          <bounds x="732" y="432" width="96" height="36"/>
+        <child xsi:type="archimate:DiagramObject" id="id-adedb852b96f4af1bf6c0454b1726a3c" fontColor="#c0c0c0" lineColor="#c0c0c0" fillColor="#ffffff" textPosition="1" archimateElement="id-0645e26eee7b4bf49df671f415323fb1" type="1">
+          <bounds x="720" y="432" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-2d3a51a2724b47eba03695c56e9ef830" targetConnections="id-0df4213517204ecab994be08bea9e579" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-52230b6fa09b477fa7b7187f9bc03376">
-          <bounds x="264" y="576" width="181" height="73"/>
+          <bounds x="264" y="1008" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-5de1566a19194cda9d07fc386c16711c" source="id-2d3a51a2724b47eba03695c56e9ef830" target="id-1e03f964a2394daebfca114b59f866a7" archimateRelationship="id-d1599000ce204db8aa5676eef37a8691"/>
@@ -1019,7 +1053,7 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
           <sourceConnection xsi:type="archimate:Connection" id="id-75bbd929463e43ef9728fdede79f1259" source="id-2d3a51a2724b47eba03695c56e9ef830" target="id-01ecb87fbbfc4e32875c8597743d87b9" archimateRelationship="id-930fd47be9404fc39840eab6224b373a"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-c1797d1f9bd248729e1398a86d52ff39" targetConnections="id-553fa88d11e343019a9c2ab617c32609 id-bdaed2696c274544a3bc116acad9c2cc" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-a1eb98d8dd174918bb2a8adc88f87295">
-          <bounds x="264" y="720" width="181" height="73"/>
+          <bounds x="264" y="1152" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-f6ce024020fa4ff79308f87184952f65" source="id-c1797d1f9bd248729e1398a86d52ff39" target="id-1e03f964a2394daebfca114b59f866a7" archimateRelationship="id-03e6bf475386495e813c00c29ccc2607">
@@ -1027,17 +1061,17 @@ Ein Course of Action beschreibt den Handlungsansatz, mit dem der Gap adressiert 
           </sourceConnection>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-9a7e94d71a7c4c0c8a3b9d3ba8ef1a61" fillColor="#ffffff" textPosition="1" archimateElement="id-88ed849a9a7e4bd1a02ba7993d34d59d" type="1">
-          <bounds x="228" y="564" width="96" height="36"/>
+          <bounds x="228" y="996" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-a85ba5ca51094a2789d2455603aae631" fillColor="#ffffff" textPosition="1" archimateElement="id-d743fa428bab471e9850ad3113aacb3c" type="1">
-          <bounds x="-84" y="564" width="96" height="36"/>
+          <bounds x="-84" y="996" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-116e551fd4a34c3a870b6d799d225d14" fillColor="#ffffff" textPosition="1" archimateElement="id-44e7b1aa0cb64e36bf8c6664b0f05eb0" type="1">
-          <bounds x="228" y="708" width="96" height="36"/>
+          <bounds x="228" y="1140" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>

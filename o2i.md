@@ -754,11 +754,17 @@ Der O2I Layered Cake ist eine beispielhafte Referenzsicht auf einen zusammenhän
 
 ![O2I Layered Cake](<img/O2I Layered Cake.png>){#fig:o2i-layered-cake}
 
-@Fig:o2i-layered-cake beginnt mit dem Übergang von `Ethos` zu `Mission`. Im Kontext `Ethos` werden `Respect`, `Discipline` und `Independence` als `Principle` interpretiert. `Respect` bezeichnet den normativen Maßstab für den Umgang mit Menschen und Stakeholdern. `Discipline` bezeichnet den Anspruch an Verlässlichkeit, Konsequenz und Ausführung. `Independence` bezeichnet den Anspruch, eigenständig zu urteilen und zu handeln.
+@Fig:o2i-layered-cake beginnt mit dem Übergang von `Ethos` zu `Mission`. Im Kontext `Ethos` werden `Respect`, `Discipline` und `Independence` als `Principle` interpretiert. `Respect` bezeichnet den normativen Maßstab für den Umgang mit Menschen. `Discipline` bezeichnet den Anspruch an Verlässlichkeit, Konsequenz und Ausführung. `Independence` bezeichnet den Anspruch, eigenständig zu urteilen und zu handeln.
 
-Diese Leitprinzipien prägen die Mission `Enable people to act from shared understanding`. `Respect` prägt, dass gemeinsames Verständnis nicht manipulativ ist. `Discipline` prägt, dass gemeinsames Verständnis gepflegt und belastbar bleibt. `Independence` prägt, dass Handeln aus eigenständigem Urteil entsteht.
+Diese Leitprinzipien prägen die Mission `#hggt` (*honest good time together*): eine aufrichtige, gute gemeinsame Zeit. `Respect` prägt, dass diese gemeinsame Zeit nicht instrumentell oder manipulativ verstanden wird. `Discipline` prägt, dass Aufrichtigkeit gepflegt und belastbar bleibt. `Independence` prägt, dass gemeinsames Handeln eigenständiges Urteil voraussetzt.
 
 Damit wird die Makrorelation `Ethos --guides--> Mission` durch Primitive-Relationen der Form `Principle @ Ethos --guides--> Driver @ Mission` begründet.
+
+Der nächste Übergang führt von `Mission` zu `Vision`. Im Kontext `Vision` wird `People act confidently from shared understanding` als `Objective` interpretiert. Die Mission `#hggt` begründet dieses Objective: Eine aufrichtige, gute gemeinsame Zeit entsteht, wenn Menschen aus geteilter Verständigung heraus sicher und begründet handeln können. Salopp: Alle handeln auf derselben Wissensbasis. *No secrets.*
+
+Die Leitprinzipien aus `Ethos` prägen zugleich diese Vision. `Respect` verhindert, dass geteilte Verständigung instrumentell oder manipulativ verstanden wird. `Discipline` macht sie belastbar und konsequent. `Independence` stellt sicher, dass gemeinsames Verständnis eigenständiges Urteil nicht ersetzt, sondern ermöglicht.
+
+Damit werden auch die Makrorelationen `Mission --grounds--> Vision` und `Ethos --guides--> Vision` durch Primitive-Relationen begründet.
 
 ## Spezifikation
 
