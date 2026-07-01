@@ -35,9 +35,7 @@ callout-theme: gray
 
 \begin{center}
 \begin{minipage}{0.72\textwidth}
-\textbf{\textsc{Vorbemerkung}}
-
-Dieser Artikel ist bewusst knapp gehalten. Er ist kein Lehrbuch und keine breite Literaturabhandlung, sondern ein wissenschaftlich fundiertes Begriffs- und Modellierungsdokument mit klaren Definitionen, Quellenankern und expliziten Autorenableitungen.
+\textbf{\textsc{Vorbemerkung}.} \textit{Dieser Artikel ist bewusst knapp gehalten. Er ist kein Lehrbuch und keine breite Literaturabhandlung, sondern ein wissenschaftlich fundiertes Begriffs- und Modellierungsdokument mit klaren Definitionen, Quellenankern und expliziten Autorenableitungen.}
 \end{minipage}
 \end{center}
 \newpage
@@ -825,7 +823,23 @@ tbd
 
 # Fazit
 
-tbd
+O2I beschreibt ein Framework für Wirkungsarchitekturen: Es verbindet standardliteraturbasierte Terminologie und ein semantisch und syntaktisch ausgearbeitetes Metamodell zu einer prüfbaren Denk-, Modellierungs- und Nachweislogik für *orientierte Wirkung*.
+
+> [!tldr] O2I USP
+> - Orientierte Wirkung wird relational nachvollziehbar.
+> - Kontextrelationen werden durch Primitive-Relationen begründet.
+> - Strategie wird nicht als Absichtserklärung akzeptiert, sondern durch Handlungsfestlegungen und Erfolgsbezüge prüfbar.
+> - Bedarfe werden erst wirkungsrelevant, wenn sie situativ sichtbar und strategisch qualifiziert sind.
+> - Wirkung wird nicht behauptet, sondern über Intervention, Messung und Graph-Nachvollziehbarkeit begründet.
+
+> `Strategy --qualifies--> Need <--surfaces-- Situation`.
+
+<!--
+ED note: Alternative:
+Kurz: Ein Bedarf wird wirkungsrelevant, wenn er aus einer Situation sichtbar wird (`Situation surfaces Need`) und durch Strategie qualifiziert ist (`Strategy qualifies Need`).
+-->
+
+\newpage
 
 # Annex
 
