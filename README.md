@@ -35,5 +35,8 @@ md2pdf -- o2i.md
 
 ## License
 
-See [LICENSE](./LICENSE).
+O2I article text, diagrams, and models are licensed under [CC BY 4.0](./LICENSE).
+
+The Haskell specification in [`spc/`](./spc/) is licensed under [Apache-2.0](./spc/LICENSE).
+
 © 2026 [nemron](https://github.com/normenmueller)
