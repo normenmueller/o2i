@@ -185,6 +185,8 @@ Formierung bezeichnet in O2I die fachliche Domäne, in der Orientierung unter ge
 
 Als Artefakt muss eine Strategie ihre Bestandteile dokumentieren. Eine explizit formulierte Strategie liefert mindestens Geltungsbereich, strategische Verankerung, abgeleitete Leitplanken, Diagnose, strategische Absicht, Guiding Policy, Positionierung, Trade-offs, kohärente Handlungsfestlegungen und Fit.
 
+O2I modelliert Strategie dabei nicht als bloße Absichtserklärung. Strategische Handlungsfestlegungen sind durch Rumelts Konzept kohärenter Handlungen, Porters Aktivitätssysteme und Mintzbergs Verständnis von Strategie als Handlungsmuster begründbar. Ergänzend macht O2I eine Wegentscheidung prüfbar, indem sie mit nachvollziehbaren Erfolgsbezügen verbunden wird; diese Lesart ist eine Autorenableitung in Anlehnung an Doerr.
+
 ![O2I Strategiebestandteile](<img/O2I Strategy Constituents.png>){#fig:o2i-strategy-constituents-view}
 
 @Fig:o2i-strategy-constituents-view zeigt O2I Strategiebestandteile und ihre fachlichen Beziehungen. Diese Bestandteile sind keine O2I-Kontexte und keine O2I-Primitives; sie beschreiben die innere fachliche Struktur einer explizit formulierten Strategie.
@@ -626,7 +628,9 @@ Interpretation legt fest, welche Bedeutung ein O2I-Primitive in einem O2I-Kontex
 
 #### Primitives
 
-Ein `Objective` im Kontext `Vision` beschreibt ein qualitatives Zukunftsbild. Ein `Objective` im Kontext `Need` beschreibt ein benötigtes fachliches Ergebnis. Eine `Action` im Kontext `Strategy` beschreibt eine Wegentscheidung; eine `Action` im Kontext `Intervention` beschreibt eine gezielte Einwirkung. Ein `Gap` im Kontext `Situation` beschreibt eine sichtbare Abweichung in einer Situation.
+Ein `Objective` im Kontext `Vision` beschreibt ein qualitatives Zukunftsbild. Ein `Objective` im Kontext `Need` beschreibt ein benötigtes fachliches Ergebnis. Eine `Action` im Kontext `Strategy` beschreibt eine kohärente strategische Handlungsfestlegung; eine `Action` im Kontext `Intervention` beschreibt eine gezielte Einwirkung. Ein `Gap` im Kontext `Situation` beschreibt eine sichtbare Abweichung in einer Situation.
+
+Im Metamodell werden kohärente strategische Handlungsfestlegungen als `Action @ Strategy` modelliert. Die nachvollziehbaren Erfolgsbezüge einer Strategie werden als `Key Result @ Strategy` modelliert. `Key Result @ Strategy` ist keine klassische Strategiekategorie, sondern eine O2I-Autorenableitung in Anlehnung an Doerr.
 
 #### Kontextrelationen
 
