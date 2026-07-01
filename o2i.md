@@ -101,7 +101,7 @@ Eine Definition wird nicht bloß behauptet. Sie wird nur verwendet, wenn sie ent
 
 *Autorenableitung in Anlehnung an ...:* Der Artikel bildet eine eigene Systematisierung, die auf mindestens einer Quelle beruht, aber über deren Wortlaut oder Begriffssystem hinausgeht.
 
-# Terminologie {#sec:terminologie}
+# Terminologie
 
 Die Terminologie beschreibt eine *teleologische Wirkungslogik*: von Orientierung über Formierung, Situierung und Operationalisierung zu Wirkung. Diese fünf *fachlichen Domänen* ordnen die Standardbegriffe, welche O2I anschließend als O2I-Kontexte formalisiert.
 
@@ -746,9 +746,7 @@ Die äußeren O2I-Kästen sind damit O2I-Kontexte; die fachlich wirksame Begrün
 - `Situation` wird nicht auf ein einzelnes ArchiMate-Motivationselement reduziert, sondern durch konkrete fachliche Architekturartefakte instanziiert.
 - Wenn eine O2I-Relation nicht mit einer zulässigen ArchiMate-Relation ausdrückbar ist, muss sie als abgeleitete Relation dokumentiert werden.
 
-# Annex
-
-## Layered Cake
+# Illustration
 
 Der O2I Layered Cake ist eine beispielhafte Referenzsicht auf einen zusammenhängenden O2I-Wirkungsgraphen. Die Sicht zeigt, wie O2I-Kontexte mit Primitives befüllt und Makrorelationen durch Primitive-Relationen begründet werden.
 
@@ -773,6 +771,18 @@ Damit adressiert die Strategy-Struktur zentrale Strategiebestandteile aus der Te
 Die zweite Strategie `Organizational transparency` ist im Layered Cake als übergeordnete Strategie modelliert. Ihre eigene Ethos- und Mission-Herleitung wird bewusst nicht ausmodelliert, damit die Sicht den Fokus auf Strategy-to-Strategy-Begründungen behält. Die Vision `Organizational transparency` richtet das strategische Objective `Make critical knowledge transparent and usable` aus. Die Diagnose `Hidden knowledge fragments organizational action` begründet dieses Objective; der `Key Result` `90% of critical decisions are traceable to shared evidence` substantiiert es. Die Action `Establish shared evidence practices` trägt zu diesem Key Result bei; das Principle `Default to shared evidence over private interpretation` leitet die Action.
 
 Zwischen beiden Strategien zeigt der Layered Cake zwei Begründungsebenen. `Default to shared evidence over private interpretation @ Organizational transparency` leitet `Act from evidence, not assumptions @ Shared understanding` und begründet damit die Makrorelation `Organizational transparency --directs--> Shared understanding`. Die Relation `80% of decisions reference shared decision records @ Shared understanding --contributes-to--> 90% of critical decisions are traceable to shared evidence @ Organizational transparency` zeigt den Erfolgsbeitrag. Zusätzlich zeigt `Create shared decision records @ Shared understanding --contributes-to--> Establish shared evidence practices @ Organizational transparency` den Umsetzungsbeitrag. Die Action-Relation begründet nicht `directs`; `directs` wird durch die Principle-Relation getragen.
+
+Der Übergang zu `Situation` und `Need` zeigt, wie ein Bedarf sichtbar und anschließend strategisch qualifiziert wird. Die Situation wird durch `Information Management` als `Business Capability` fachlich verankert. `Information Management` umfasst das Sammeln, Organisieren, Verteilen und Sichern von Informationen sowie Werkzeuge, Richtlinien und Prozesse für Informationsnutzung, Archivierung und Pflichtkommunikation. Damit wird der Bedarf nicht freischwebend formuliert, sondern an einem konkreten Situationsanker sichtbar.
+
+Im Need-Kontext beschreibt `Unshared and untraceable decisions create action uncertainty` als `Driver`, warum in dieser Situation Veränderung benötigt wird. Dieser Driver begründet zwei Need-Objectives: `Increase traceable decisions` und `Increase shared decision traceability`. Das erste Objective ist sichtbar, aber noch nicht hinreichend strategisch qualifiziert. Das zweite Objective wird durch den strategischen Key Result `80% of decisions reference shared decision records` qualifiziert: Der strategische Erfolgsnachweis verlangt nicht nur nach nachverfolgbaren Entscheidungen, sondern nach Entscheidungen, die in einer gemeinsamen, referenzierbaren Form nachvollziehbar werden. Dadurch wird `Increase shared decision traceability` zum wirkungsrelevanten Bedarf.
+
+Der Need-Kontext enthält bewusst keine Key Results. Ein Bedarf beschreibt, was benötigt wird, nicht wie Erfolg gemessen oder umgesetzt wird. Zielwerte und Messlogik werden später über `Intervention` und `Measure` operationalisiert. Auch die strategische Action `Create shared decision records` wird nicht direkt mit dem Need gleichgesetzt; sie bleibt eine kohärente strategische Handlungsfestlegung, die im nächsten Schritt eine Intervention leiten kann.
+
+# Fazit
+
+tbd
+
+# Annex
 
 ## Spezifikation
 
