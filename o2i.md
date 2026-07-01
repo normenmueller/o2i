@@ -745,6 +745,8 @@ Der O2I Layered Cake ist eine beispielhafte Referenzsicht auf einen zusammenhän
 
 ![O2I Layered Cake](<img/O2I Layered Cake.png>){#fig:o2i-layered-cake}
 
+## Orientierung
+
 @Fig:o2i-layered-cake beginnt mit dem Übergang von `Ethos` zu `Mission`. Im Kontext `Ethos` werden `Respect`, `Discipline` und `Independence` als `Principle` interpretiert. `Respect` bezeichnet den normativen Maßstab für den Umgang mit Menschen. `Discipline` bezeichnet den Anspruch an Verlässlichkeit, Konsequenz und Ausführung. `Independence` bezeichnet den Anspruch, eigenständig zu urteilen und zu handeln.
 
 Diese Leitprinzipien prägen die Mission `#hggt` (*honest good time together*): eine aufrichtige, gute gemeinsame Zeit. `Respect` prägt, dass diese gemeinsame Zeit nicht instrumentell oder manipulativ verstanden wird. `Discipline` prägt, dass Aufrichtigkeit gepflegt und belastbar bleibt. `Independence` prägt, dass gemeinsames Handeln eigenständiges Urteil voraussetzt.
@@ -757,6 +759,10 @@ Die Leitprinzipien aus `Ethos` prägen zugleich diese Vision. `Respect` verhinde
 
 Damit werden auch die Makrorelationen `Mission --grounds--> Vision` und `Ethos --guides--> Vision` durch Primitive-Relationen begründet.
 
+## Formierung
+
+Aus Orientierung wird Formierung, sobald die Vision in eine strategische Wegentscheidung übersetzt wird.
+
 Aus der Vision `People act confidently from shared understanding` wird im Layered Cake die Strategie `Shared understanding` ausgerichtet. Das Objective `Make shared understanding actionable` konkretisiert, wie der visionäre Zustand strategisch bearbeitbar wird. Die Diagnose wird durch `Fragmented understanding blocks confident action` als `Driver` modelliert; dieser Driver begründet das strategische Objective. Der `Key Result` `80% of decisions reference shared decision records` substantiiert dieses Objective, während die `Action` `Create shared decision records` zu diesem Key Result beiträgt. Das Principle `Act from evidence, not assumptions` leitet die Action.
 
 Damit adressiert die Strategy-Struktur zentrale Strategiebestandteile aus der Terminologie: Diagnose, strategische Absicht, Guiding Policy, Trade-offs, kohärente Handlungsfestlegungen und strategischen Erfolgsnachweis. Strategische Positionierung und Fit/Kohärenznachweis werden im Layered Cake nicht als eigene Primitives modelliert. Positionierung ergibt sich als abgeleitete Lesart aus der strukturierten Kombination von Objective, Principle, Action und Key Result. Fit ist eine Validierungslogik über diese Struktur: Die Strategy-Primitives müssen kohärent zusammenpassen und durch ihre Relationen eine belastbare strategische Wegentscheidung tragen.
@@ -765,11 +771,33 @@ Die zweite Strategie `Organizational transparency` ist im Layered Cake als über
 
 Zwischen beiden Strategien zeigt der Layered Cake zwei Begründungsebenen. `Default to shared evidence over private interpretation @ Organizational transparency` leitet `Act from evidence, not assumptions @ Shared understanding` und begründet damit die Makrorelation `Organizational transparency --directs--> Shared understanding`. Die Relation `80% of decisions reference shared decision records @ Shared understanding --contributes-to--> 90% of critical decisions are traceable to shared evidence @ Organizational transparency` zeigt den Erfolgsbeitrag. Zusätzlich zeigt `Create shared decision records @ Shared understanding --contributes-to--> Establish shared evidence practices @ Organizational transparency` den Umsetzungsbeitrag. Die Action-Relation begründet nicht `directs`; `directs` wird durch die Principle-Relation getragen.
 
+## Situierung
+
+Aus Formierung wird Situierung, sobald eine Strategie auf eine konkrete Situation trifft und Bedarfe sichtbar sowie strategisch qualifizierbar werden.
+
 Der Übergang zu `Situation` und `Need` zeigt, wie ein Bedarf sichtbar und anschließend strategisch qualifiziert wird. Die Situation wird durch `Information Management` als `Business Capability` fachlich verankert. In einer realen Instanz wäre diese Situation typischerweise durch eine Business Architecture, etwa eine Business Capability Map, weiter ausmodelliert. `Information Management` umfasst das Sammeln, Organisieren, Verteilen und Sichern von Informationen sowie Werkzeuge, Richtlinien und Prozesse für Informationsnutzung, Archivierung und Pflichtkommunikation. Damit wird sichergestellt, dass Bedarfe nicht freischwebend formuliert werden, sondern in einem fachlich beschriebenen Bezugsraum sichtbar werden.
 
 Im Need-Kontext beschreibt `Unshared and untraceable decisions create action uncertainty` als `Driver`, warum in dieser Situation Veränderung benötigt wird. Aus diesem Driver können unterschiedliche Need-Objectives entstehen: `Increase traceable decisions` und `Increase shared decision traceability`. Das erste Objective ist in der Situation sichtbar, wird durch die Strategie aber nicht als strategisch relevant qualifiziert. Das zweite Objective kann dagegen durch die Strategie als wirkungsrelevant qualifiziert werden: Der strategische Key Result `80% of decisions reference shared decision records` verlangt nicht nur nach nachverfolgbaren Entscheidungen, sondern nach Entscheidungen, die in einer gemeinsamen, referenzierbaren Form nachvollziehbar werden. Dadurch wird `Increase shared decision traceability` zum wirkungsrelevanten Bedarf.
 
 Der Need-Kontext enthält bewusst keine Key Results. Ein Bedarf beschreibt, was benötigt wird, nicht wie Erfolg gemessen oder umgesetzt wird. Zielwerte und Messlogik werden später über `Intervention` und `Measure` operationalisiert. Auch die strategische Action `Create shared decision records` wird nicht direkt mit dem Need gleichgesetzt; sie bleibt eine kohärente strategische Handlungsfestlegung, die im nächsten Schritt eine Intervention leiten kann.
+
+## Operationalisierung
+
+Aus Situierung wird Operationalisierung, sobald ein wirkungsrelevanter Bedarf durch eine Intervention adressiert wird.
+
+Die Intervention `Establish shared decision evidence practice` wird als `Action` modelliert. Sie adressiert den wirkungsrelevanten Bedarf `Increase shared decision traceability`, nicht den lediglich sichtbaren Bedarf `Increase traceable decisions`. Damit bleibt die Intervention an den strategisch qualifizierten Bedarf gebunden.
+
+Die strategische Action `Create shared decision records` wird nicht mit der Intervention gleichgesetzt. Sie leitet die Intervention, indem sie die strategische Handlungsfestlegung in eine konkrete Einwirkung übersetzt. Dadurch wird `Strategy --directs--> Intervention` durch `Action @ Strategy --guides--> Action @ Intervention` begründet. `Intervention --addresses--> Need` wird durch `Action @ Intervention --addresses--> Objective @ Need` konkretisiert.
+
+In konkreten Instanzen kann eine solche Intervention etwa durch epistemische Knowledge-Graph-Ansätze wie noEA[^noea] oder durch agentische Reasoning-Unterstützung wie ai4X[^ai4x] realisiert werden.
+
+[^noea]: noEA: <https://github.com/normenmueller/noEA>.
+
+[^ai4x]: ai4X: <https://github.com/normenmueller/ai4X>.
+
+## Wirkung
+
+tbd
 
 # Fazit
 
