@@ -33,15 +33,31 @@ callout-theme: gray
 \end{flushright}
 \newpage
 
+\begin{center}
+\begin{minipage}{0.72\textwidth}
+\textbf{\textsc{Vorbemerkung}}
+
+Dieser Artikel ist bewusst knapp gehalten. Er ist kein Lehrbuch und keine breite Literaturabhandlung, sondern ein wissenschaftlich fundiertes Begriffs- und Modellierungsdokument mit klaren Definitionen, Quellenankern und expliziten Autorenableitungen.
+\end{minipage}
+\end{center}
+\newpage
+
 # Einleitung
 
 O2I beschreibt, wie Orientierung unter gegebenen Bedingungen in strategische Formierung, situierte Bedarfe, wirkungsgerichtete Operationalisierung und nachvollziehbare Wirkung überführt wird.
 
-O2I wird in diesem Artikel als Framework verstanden. Die O2I-Terminologie liefert die fachliche Begriffswelt auf Basis der herangezogenen Standardliteratur; das O2I-Metamodell formalisiert diese Begriffswelt semantisch und syntaktisch. Zusammen entsteht eine begründete Denk-, Modellierungs- und Nachweislogik für Wirkung.
+O2I wird in diesem Artikel als Framework verstanden. Die O2I-Terminologie liefert die fachliche Begriffswelt auf Basis der herangezogenen Standardliteratur; das O2I-Metamodell formalisiert diese Begriffswelt semantisch und syntaktisch; die Illustration zeigt an einem zusammenhängenden Beispiel, wie daraus ein O2I-Wirkungsgraph entsteht. Zusammen entsteht eine begründete Denk-, Modellierungs- und Nachweislogik für Wirkung.
 
 O2I begründet fachliche Relationen wie `Strategy --qualifies--> Need` durch Verbindungen zwischen kontextualisierten O2I-Primitives. O2I-Kontexte geben Bedeutung; O2I-Primitives tragen die modellierten Inhalte. Der Wirkungsgraph entsteht aus diesen Primitives und ihren Relationen.
 
-> *Disclaimer*: Der Artikel ist bewusst knapp gehalten. Er ist kein Lehrbuch und keine breite Literaturabhandlung, sondern ein wissenschaftlich fundiertes Begriffs- und Modellierungsdokument mit klaren Definitionen, Quellenankern und expliziten Autorenableitungen.
+> [!tldr] O2I Wirkungskette
+> O2I beschreibt Wirkung als nachvollziehbare Kette:
+>
+> - **Orientierung**: normativer und intentionaler Ausgangspunkt
+> - **Formierung**: strategische Wegentscheidung
+> - **Situierung**: Bedarf wird in einer Situation sichtbar
+> - **Operationalisierung**: Sichtbarer Bedarf wird qualifiziert und durch Intervention und Messung handlungs- und nachweisfähig
+> - **Wirkung**: beobachtete Veränderung und Evidenz
 
 # Fundament
 
@@ -359,6 +375,10 @@ Die spätere Wirkungsrelevanz eines Bedarfs wird nicht durch seine Formulierung 
 ## Operationalisierung
 
 Operationalisierung übersetzt eine strategische Wegentscheidung und in Situationen sichtbar gewordene Bedarfe in wirkungsgerichtete Handlung. Dazu gehören die Qualifikation dieser Bedarfe und die Intervention, mit der ein wirkungsrelevanter Bedarf adressiert wird.
+
+<!--
+ED note: Operationalisierung bedeutet: eine strategisch qualifizierte Absicht wird in überprüfbare Handlung, Intervention und Messbarkeit übersetzt.
+-->
 
 ### Bedarfsqualifikation
 
