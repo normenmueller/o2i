@@ -493,6 +493,8 @@ Damit bleibt Nachweislogik von Messung getrennt: Messung macht beobachtbar, Nach
 
 Das O2I-Metamodell ist der formale Kern des O2I Frameworks. Es übersetzt die O2I-Terminologie in eine prüfbare Modellstruktur: Begriffe werden als Typen gefasst, konkrete Modellelemente werden als Instanzen dieser Typen beschrieben, Primitives erhalten ihre Bedeutung durch Interpretation in Kontexten, und Wohlgeformtheitsregeln prüfen, ob ein Modell die O2I-Wirkungslogik einhält.
 
+Die Haskell-Spezifikation in `spc/O2I.hs` ist keine Implementierung eines Anwendungssystems. Sie ist eine kompakte, maschinenprüfbare Spezifikation der O2I-Semantik.
+
 Das Metamodell ersetzt die Terminologie nicht. Die Terminologie legt die fachliche Bedeutung fest; das Metamodell macht diese Bedeutung modellierbar, referenzierbar und validierbar.
 
 > [!tldr]
@@ -513,6 +515,8 @@ Instanziierung
 Interpretation
 
 : legt fest, welche Bedeutung ein Primitive in einem Kontext erhält.
+
+Die Haskell-Spezifikation verwendet `DataKinds` und GADTs, um zulässige Relationstypen auf Typebene auszudrücken. Dadurch wird ein Teil der O2I-Semantik bereits in der Spezifikation typisiert.
 
 Typen und Instanziierung beschreiben die formale Struktur eines O2I-Modells. Interpretation legt fest, welche Bedeutung diese Struktur trägt. Wohlgeformtheit und Validierung prüfen anschließend, ob ein Modell O2I-konform ist.
 
@@ -650,7 +654,7 @@ Diese Primitive-Relation kann begründen, warum eine konkrete Strategie einen ko
 
 ## Wohlgeformtheit und Validierung
 
-Wohlgeformtheit prüft, ob ein O2I-Modell die zulässigen Typen, Interpretationen und Relationen einhält. Validierung prüft darüber hinaus, ob zentrale O2I-Aussagen durch den Wirkungsgraphen begründet sind.
+Wohlgeformtheit prüft, ob ein O2I-Modell die zulässigen Typen, Interpretationen und Relationen einhält. Validierung prüft darüber hinaus, ob zentrale O2I-Aussagen durch den Wirkungsgraphen begründet sind. Die Relationen im Modellgraphen tragen dieselben GADT-Relationszeugen, die auch die typisierte Spezifikation definieren; dadurch wird die Typebene nicht von einer separaten Runtime-Relationsliste entkoppelt.
 
 @lst:o2i-validation zeigt die zentralen Wohlgeformtheits- und Validierungsregeln.
 
@@ -672,7 +676,7 @@ Die Spezifikation konkretisiert dafür den zentralen O2I-USP: Eine `Strategy --q
 
 Ein Wirkungstrace entsteht, wenn eine wirkungsrelevante `Need`-Instanz durch eine `Intervention`-Instanz adressiert wird, diese `Intervention`-Instanz eine `Situation`-Instanz verändert, für eine `Measure`-Instanz Zielbezüge setzt und diese `Measure`-Instanz die veränderte `Situation`-Instanz beobachtet.
 
-Die Validierung beweist dadurch keine Kausalität und keine empirische Wirkung. Sie prüft, ob die Wirkungsaussage im O2I-Graphen relational nachvollziehbar ist.
+Die Validierung beweist dadurch keine Kausalität und keine empirische Wirkung. Sie prüft, ob die Wirkungsaussage im O2I-Graphen relational nachvollziehbar ist. Sie ersetzt keine Messdaten, keine fachliche Bewertung und keinen kausalen Wirkungsnachweis.
 
 ### Abgeleitete Makrorelationen
 
@@ -838,25 +842,3 @@ O2I beschreibt ein Framework für Wirkungsarchitekturen: Es verbindet standardli
 ED note: Alternative:
 Kurz: Ein Bedarf wird wirkungsrelevant, wenn er aus einer Situation sichtbar wird (`Situation surfaces Need`) und durch Strategie qualifiziert ist (`Strategy qualifies Need`).
 -->
-
-\newpage
-
-# Annex
-
-## Spezifikation
-
-### Zweck
-
-Die Spezifikation ist keine Implementierung eines Anwendungssystems. Sie ist eine kompakte, maschinenprüfbare Spezifikation der O2I-Semantik. Ihr Zweck ist, O2I-Modelle nicht nur zu beschreiben, sondern auf zentrale Wohlgeformtheits- und Validierungsregeln prüfen zu können.
-
-### Typisierte Relationen
-
-Die typtheoretische Spezifikation verwendet `DataKinds` und GADTs, um zulässige Relationstypen auszudrücken. Dadurch wird ein Teil der O2I-Semantik bereits auf Typebene festgelegt.
-
-### Validierungsregeln
-
-Neben den typisierten Relationstypen enthält die Spezifikation ein einfaches Modellgraph-Format und ausführbare Validierungsfunktionen. Die Relationen im Modellgraphen tragen dieselben GADT-Relationszeugen, die auch die typisierte Spezifikation definieren; dadurch wird die Typebene nicht von einer separaten Runtime-Relationsliste entkoppelt. Die Funktionen prüfen unter anderem zulässige Primitive-Platzierung, zulässige Relationen, Wirkungsrelevanz und Wirkungstraces.
-
-### Grenzen der Spezifikation
-
-Die Spezifikation prüft Struktur und Nachvollziehbarkeit, nicht die empirische Wahrheit einer Wirkung. Sie ersetzt keine Messdaten, keine fachliche Bewertung und keinen kausalen Wirkungsnachweis. Sie stellt sicher, dass ein O2I-Modell seine Wirkungsaussagen strukturell begründen kann.
