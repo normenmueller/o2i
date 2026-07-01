@@ -324,15 +324,8 @@ Situierung bezeichnet in O2I die fachliche Verankerung eines Bedarfs in einer ko
 
 ### Situation
 
-<!--
-ED note:
-Wo wird ein Bedarf fachlich sichtbar?
-
-Ein konkretes Business-Architecture-Artefakt kann in O2I als Situation gelesen werden, wenn daran ein Bedarf fachlich sichtbar, begründbar und später überprüfbar wird.
--->
-
 > [!definition]
-> Eine **Situation** (en.: *situation*; meta: `Situation`)[^situation] bezeichnet einen fachlich beschriebenen Arbeits-, Leistungs- oder Umfeldzusammenhang, in dem Bedarfe sichtbar, begründbar und später überprüfbar werden. O2I versteht `Situation` als abstrakten fachlichen Interpretationskontext: Konkrete Business-Architecture-Artefakte wie Business Capability, Business Process, Business Object, Business Role, Value Stream oder Regulatory Constraint können als spezielle Situationen gelesen werden, wenn an ihnen Bedarfe sichtbar werden.
+> Eine **Situation** (en.: *situation*; meta: `Situation`)[^situation] bezeichnet einen fachlich beschriebenen Arbeits-, Leistungs- oder Umfeldzusammenhang, in dem Bedarfe sichtbar, begründbar und später überprüfbar werden. O2I versteht `Situation` als abstrakten fachlichen Interpretationskontext: Konkrete Business-Architecture-Artefakte wie Business Capability, Business Process, Business Object, Business Role, Value Stream oder Regulatory Constraint konstituieren eine Situation als Situationsanker, wenn an ihnen Bedarfe sichtbar werden.
 >
 > > [!tldr] Situation = \textsc{Wo} genau in der fachlichen Realität zeigt sich ein Bedarf?
 >
@@ -340,7 +333,7 @@ Ein konkretes Business-Architecture-Artefakt kann in O2I als Situation gelesen w
 
 ![O2I Situationen](<img/O2I Situation.png>){#fig:o2i-situation-view}
 
-@Fig:o2i-situation-view beantwortet die Frage: Was kann in O2I als Situation gelten? Die Sicht zeigt typische Arten von Situationen: Business-Architecture-Artefakte, die im O2I-Kontext als spezielle Situationen interpretiert werden können. Sie modelliert keine vollständige Business Architecture. Die Relationen zwischen diesen Artefakten folgen der jeweiligen ArchiMate- bzw. TOGAF-Modellierung und werden nicht durch O2I neu definiert.
+@Fig:o2i-situation-view beantwortet die Frage: Wodurch wird eine Situation fachlich verankert? Die Sicht zeigt typische Situationsanker: Business-Architecture-Artefakte, durch die eine Situation fachlich beschrieben und verankert wird. Sie modelliert keine vollständige Business Architecture. Die Relationen zwischen diesen Artefakten folgen der jeweiligen ArchiMate- bzw. TOGAF-Modellierung und werden nicht durch O2I neu definiert.
 
 Eine Situation muss somit fachlich, nicht technisch, beschrieben werden. Sie beschreibt nicht, mit welcher Technologie oder Lösung ein Bedarf erfüllt werden soll, sondern in welchem fachlichen Bezugsraum ein Bedarf sichtbar wird.
 
