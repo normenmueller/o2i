@@ -2,7 +2,7 @@
 title: "Von der Orientierung zur Wirkung\\thanks{Publiziert unter \\url{https://github.com/normenmueller/o2i}}"
 subtitle: "Begriffe und Relationen für wirksames Handeln"
 author: nemron
-version: "0.1 (wip)"
+version: "0.1"
 abstract: |
   Wie werden Orientierung, Formierung, Situierung und Operationalisierung so verbunden, dass nachvollziehbare Wirkung entsteht?
 lang: de-DE
@@ -179,7 +179,7 @@ Formierung bezeichnet in O2I die fachliche Domäne, in der Orientierung unter ge
 ### Strategie
 
 > [!definition]
-> **Strategie** (en.: *strategy*; meta: `Strategy`)[^strategy] bezeichnet die *begründete und kohärente Wegentscheidung* eines handlungsfähigen Akteurs[^actor], der legitim entscheiden, Ressourcen binden und Verantwortung tragen kann. Mit einer Strategie legt dieser Akteur fest, wie er seine [Vision](#vision) unter gegebenen Bedingungen verwirklichen will und sich damit gegenüber relevanten Alternativen, Wettbewerbern oder Vergleichsangeboten differenziert.
+> **Strategie** (en.: *strategy*; meta: `Strategy`)[^strategy] bezeichnet die *begründete und kohärente Wegentscheidung* eines handlungsfähigen Akteurs[^actor], der legitim entscheiden, Ressourcen binden und Verantwortung tragen kann. Mit einer Strategie legt dieser Akteur fest, wie er seine [Vision](#vision) unter gegebenen Bedingungen verwirklichen will und sich dabei gegenüber relevanten Alternativen unterscheidbar festlegt.
 >
 > > [!tldr] Strategie = \textsc{Wie} verwirklichen wir unsere Vision?
 >
@@ -194,19 +194,6 @@ O2I modelliert Strategie dabei nicht als bloße Absichtserklärung. Strategische
 ![O2I Strategiebestandteile](<img/O2I Strategy Constituents.png>){#fig:o2i-strategy-constituents-view}
 
 @Fig:o2i-strategy-constituents-view zeigt O2I Strategiebestandteile und ihre fachlichen Beziehungen. Diese Bestandteile sind keine O2I-Kontexte und keine O2I-Primitives; sie beschreiben die innere fachliche Struktur einer explizit formulierten Strategie.
-
-<!--
-ED note:
-- Scope frames Diagnosis: passt, weil Geltungsbereich die Einheit bestimmt, für die die Herausforderung gilt.
-- Guardrails constrain Guiding Policy: passt, weil Leitplanken Vorgaben/Restriktionen setzen, ohne Diagnose zu ersetzen.
-- Diagnosis justifies Intent / Guiding Policy: passt, weil Diagnose erklärt, warum eine Wegentscheidung nötig ist.
-- Intent orients Guiding Policy: passt, weil strategische Absicht den angestrebten Beitrag zur Vision vorgibt.
-- Guiding Policy guides Positioning / Coherent Action Commitments: passt, weil sie die Stoßrichtung und ausführbare Logik prägt.
-- Positioning requires Trade-offs: passt Porter-semantisch.
-- Trade-offs constrain Coherent Action Commitments: passt, weil Nicht-Entscheidungen Handlungsfestlegungen begrenzen.
-- Anchoring enables Coherent Action Commitments: passt, weil der Text klärt, dass Verankerung Strategie insgesamt betrifft, aber in Handlungsfestlegungen wirksam wird.
-- Fit validates Positioning / Trade-offs / Coherent Action Commitments: passt, weil Fit als Kohärenznachweis gelesen wird. Einzige Restnuance: `validates` ist bewusst stark. Da ihr Fit als **Kohärenznachweis** formuliert habt, ist das vertretbar.
--->
 
 #### Geltungsbereich
 
@@ -235,12 +222,6 @@ Strategische Verankerung betrifft die Strategie insgesamt; sie wird besonders do
 
 Abgeleitete Leitplanken begrenzen und orientieren die Guiding Policy, ohne die untergeordnete Strategie vollständig festzulegen. Sie sind keine eigene Diagnose und keine fertige Handlungslogik; sie beschreiben die Vorgaben, an die eine Strategie anschließen muss, während sie für ihren Geltungsbereich eine eigenständige kohärente Antwort bildet.
 
-<!--
-ED note:
-- Rumelt hilft gegen falsche Ableitung: Eine untergeordnete Strategie darf nicht bloß Vorgaben übernehmen. Sie muss für ihren eigenen Geltungsbereich eine eigene Diagnose, Guiding Policy und kohärente Handlungslogik bilden. Deshalb gibt eine übergeordnete Strategie Leitplanken, determiniert die untergeordnete Strategie aber nicht vollständig.
-- Porter hilft gegen beliebige Anschlussfähigkeit: Eine Strategie ist nur tragfähig, wenn Aktivitäten, Trade-offs und Positionierung zueinander passen. Wenn eine übergeordnete Strategie Leitplanken setzt, muss die untergeordnete Strategie diese so aufnehmen, dass ihr eigenes Aktivitätssystem weiterhin kohärent ist.
--->
-
 Eine übergeordnete Strategie richtet eine untergeordnete Strategie aus: Sie gibt Richtung, Prioritäten, Leitplanken, Restriktionen oder Zielbezüge vor, ohne die untergeordnete Strategie vollständig zu determinieren. Die untergeordnete Strategie muss daraus eine eigene Diagnose, Guiding Policy und kohärente Handlungsfestlegungen für ihren eigenen Geltungsbereich ableiten.
 
 #### Diagnose
@@ -251,11 +232,6 @@ Eine übergeordnete Strategie richtet eine untergeordnete Strategie aus: Sie gib
 > [^diagnosis]: *Quellenanker*: Rumelt (2011).
 
 Eine Diagnose reduziert Komplexität, indem sie nicht die Gesamtheit aller beobachtbaren Probleme sammelt, sondern die strategisch relevante Herausforderung herausarbeitet. Dadurch wird zunächst bestimmbar, welchen Beitrag die strategische Absicht zur Vision leisten soll; erst danach wird bewertbar, ob die Guiding Policy tatsächlich auf diese Herausforderung passt.
-
-<!--
-ED note:
-Diagnose muss eigenständig bleiben. Eine übergeordnete Strategie kann Leitplanken setzen, aber sie darf die Diagnose der untergeordneten Strategie nicht ersetzen. Sonst wäre die untergeordnete Strategie nur abgeleitete Planung, keine eigene Strategie.
--->
 
 #### Strategische Absicht
 
@@ -274,12 +250,6 @@ Strategische Absicht fokussiert die Strategie auf den Beitrag, den sie zur Visio
 > [^guiding-policy]: *Quellenanker*: Rumelt (2011).
 
 Die Guiding Policy übersetzt Diagnose und strategische Absicht in eine leitende Handlungslogik: Die Diagnose begründet, welche Herausforderung zu bewältigen ist; die strategische Absicht klärt, welchen Beitrag zur Vision die Strategie leisten soll; die Guiding Policy legt fest, mit welchem Ansatz diese Herausforderung adressiert wird.
-
-<!--
-ED note:
-Strategische Absicht: Absicht = angestrebter Beitrag
-Guiding Policy = gewählter Ansatz.
--->
 
 Die Guiding Policy ist damit weder Vision noch strategische Absicht noch konkrete Handlungsfestlegung. Sie beschreibt nicht den angestrebten Zukunftszustand, nicht den intendierten Beitrag zur Vision und noch nicht die einzelnen strategierelevanten Entscheidungen oder Ressourcenbindungen. Sie leitet Positionierung und kohärente Handlungsfestlegungen, ohne diese bereits vollständig festzulegen.
 
@@ -330,7 +300,7 @@ Fit validiert damit nicht einzelne Maßnahmen isoliert, sondern das Zusammenspie
 ### Kritische Erfolgsfaktoren
 
 > [!definition]
-> Ein **kritischer Erfolgsfaktor** (en.: *critical success factor*; meta: `CSF`)[^csf] bezeichnet einen aus der Strategie abgeleiteten Leistungs- oder Erfolgsbereich, in dem ein handlungsfähiger Akteur gut performen muss, damit die Strategie wirksam werden kann.
+> Ein **kritischer Erfolgsfaktor** (en.: *critical success factor*)[^csf] bezeichnet einen aus der Strategie abgeleiteten Leistungs- oder Erfolgsbereich, in dem ein handlungsfähiger Akteur gut performen muss, damit die Strategie wirksam werden kann.
 >
 > [^csf]: *Quellenanker*: Parmenter (2020). *Autorenableitung in Anlehnung an Rumelt (2011) und Porter (1996)*: Kritische Erfolgsfaktoren werden in O2I aus der strategischen Wegentscheidung abgeleitet, insbesondere aus Guiding Policy, Positionierung, Trade-offs und Fit.
 
@@ -381,10 +351,6 @@ Die spätere Wirkungsrelevanz eines Bedarfs wird nicht durch seine Formulierung 
 ## Operationalisierung
 
 Operationalisierung übersetzt eine strategische Wegentscheidung und in Situationen sichtbar gewordene Bedarfe in wirkungsgerichtete Handlung. Dazu gehören die Qualifikation dieser Bedarfe und die Intervention, mit der ein wirkungsrelevanter Bedarf adressiert wird.
-
-<!--
-ED note: Operationalisierung bedeutet: eine strategisch qualifizierte Absicht wird in überprüfbare Handlung, Intervention und Messbarkeit übersetzt.
--->
 
 ### Bedarfsqualifikation
 
@@ -443,7 +409,7 @@ Damit eine Intervention überprüfbar bleibt, *muss* sie an Messung anschließen
 Wirkung wird in O2I nicht behauptet, sondern durch relationale Nachvollziehbarkeit und Messung begründet. Maßgeblich ist das Zusammenspiel aus qualifiziertem Bedarf, Intervention, veränderter Situation, Messung und nachvollziehbarer Einordnung im O2I-Graphen.
 
 > [!definition]
-> Eine **Wirkung**[^effect] bezeichnet eine beobachtbare, relational nachvollziehbare und zur [Vision](#vision) beitragende Veränderung, die aus der Operationalisierung einer strategischen Wegentscheidung entsteht und an relevanten Ergebnis- und Leistungsmaßen nachvollzogen werden kann.
+> Eine **Wirkung**[^effect] bezeichnet eine beobachtbare und relational nachvollziehbare Veränderung, die aus der Operationalisierung einer strategischen Wegentscheidung entsteht und über relevante Ergebnis- und Leistungsmaße als Beitrag zur [Vision](#vision) begründet werden kann.
 >
 > [^effect]: *Autorenableitung in Anlehnung an Porter (1996), Doerr (2018), Parmenter (2020) und Barr (2014)*: Wirkung wird hier als Ergebnis der Operationalisierung einer strategischen Wegentscheidung verstanden. Porter liefert die Logik des Wertbeitrags durch Aktivitätssysteme; Doerr, Parmenter und Barr liefern Instrumente zur Überprüfung von Fortschritt und Performance.
 
@@ -463,15 +429,15 @@ Wirkungsrelevanz ist damit eine Ex-ante-Handlungsrelevanz; Wirkungsvollheit ist 
 ### Messung
 
 > [!definition]
-> Eine **Messung** (en.: *measure*; meta: `Measure`)[^measure] bezeichnet eine stabile Messdefinition, mit der ein relevanter Zustand, eine relevante Leistung oder eine relevante Entwicklung in einer [Situation](#situation) beobachtbar gemacht wird. Sie wird durch Strategie fachlich gerahmt und macht die durch Interventionen angestrebten Veränderungen beobachtbar.
+> Eine **Messung** (en.: *measure*; meta: `Measure`)[^measure] bezeichnet den fachlichen Messrahmen, in dem ein relevanter Zustand, eine relevante Leistung oder eine relevante Entwicklung in einer [Situation](#situation) beobachtbar gemacht wird. Sie wird durch Strategie fachlich gerahmt und macht die durch Interventionen angestrebten Veränderungen über geeignete Messdefinitionen, insbesondere KPIs, beobachtbar.
 >
 > > [!tldr] Messung = \textsc{Woran} erkennen wir Veränderung?
 >
-> [^measure]: *Quellenanker*: Parmenter (2020) für KPIs und die Abgrenzung zu anderen Performance-Maßen; Barr (2014) für methodische Entwicklung aussagefähiger Performance-Maße. *Autorenableitung in Anlehnung an Doerr (2018) und Parmenter (2020)*: Ein KPI ist eine entscheidungsrelevante Spezialisierung eines Measure.
+> [^measure]: *Quellenanker*: Parmenter (2020) für KPIs und die Abgrenzung zu anderen Performance-Maßen; Barr (2014) für methodische Entwicklung aussagefähiger Performance-Maße. *Autorenableitung in Anlehnung an Doerr (2018), Parmenter (2020) und Barr (2014)*: `Measure` wird in O2I als Messrahmen modelliert; konkrete stabile Messdefinitionen werden als KPIs oder andere geeignete Messgrößen innerhalb dieses Rahmens geführt.
 
 In O2I misst eine Messung eine Situation (`Measure --measures--> Situation`). Strategie rahmt, was gemessen werden muss (`Strategy --frames--> Measure`). Interventionen setzen Zielwerte oder Zielbezüge für Messungen, wenn sie eine angestrebte Veränderung überprüfbar machen (`Intervention --sets-target-for--> Measure`).
 
-Eine Messung ist nicht automatisch ein KPI. Ein KPI ist eine entscheidungsrelevante Spezialisierung einer Messung. O2I hält diese Unterscheidung offen, weil nicht jede fachlich notwendige Messung unmittelbar eine steuerungsrelevante Kennzahl ist.
+Eine Messung ist nicht automatisch ein KPI. Ein KPI ist eine stabile, entscheidungsrelevante Messdefinition innerhalb eines Messrahmens. O2I hält diese Unterscheidung offen, weil nicht jede fachlich notwendige Messung unmittelbar eine steuerungsrelevante Kennzahl ist.
 
 Messung ist nicht Wirkung selbst. Sie macht Zustände und Veränderungen beobachtbar und liefert Evidenz, die erst durch Nachweislogik als Wirkung gelesen werden kann.
 
@@ -499,7 +465,7 @@ Damit bleibt Nachweislogik von Messung getrennt: Messung macht beobachtbar, Nach
 
 Das O2I-Metamodell ist der formale Kern des O2I Frameworks. Es übersetzt die O2I-Terminologie in eine prüfbare Modellstruktur: Begriffe werden als Typen gefasst, konkrete Modellelemente werden als Instanzen dieser Typen beschrieben, Primitives erhalten ihre Bedeutung durch Interpretation in Kontexten, und Wohlgeformtheitsregeln prüfen, ob ein Modell die O2I-Wirkungslogik einhält.
 
-Die Haskell-Spezifikation in `spc/O2I.hs` ist keine Implementierung eines Anwendungssystems. Sie ist eine kompakte, maschinenprüfbare Spezifikation der O2I-Semantik.
+Die Haskell-Spezifikation in `spc/O2I.hs` ist keine Implementierung eines Anwendungssystems und keine allgemeine Modellierungs-DSL. Sie ist eine kompakte, maschinenprüfbare Validierungsspezifikation der O2I-Semantik: Sie typisiert zulässige Modellformen und formuliert prüfbare Wohlgeformtheits- und Nachweisregeln.
 
 Das Metamodell ersetzt die Terminologie nicht. Die Terminologie legt die fachliche Bedeutung fest; das Metamodell macht diese Bedeutung modellierbar, referenzierbar und validierbar.
 
@@ -557,7 +523,7 @@ Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen. Sie e
 Kontextrelationen beschreiben fachliche Relationen zwischen Kontexttypen. @Lst:o2i-context-relations zeigt die zulässigen Kontextrelationen.
 
 ```{#lst:o2i-context-relations .haskell caption="O2I Kontextrelationen"}
-!include`snippetStart="-- ** Context relations", snippetEnd="-- ** Primitive nodes"` spc/O2I.hs
+!include`snippetStart="-- ** Semantic relations", snippetEnd="-- *** Situation anchor relations"` spc/O2I.hs
 ```
 
 Diese typisierte Spezifikation verhindert, dass beliebige Kontextrelationen als O2I-Relationen ausgegeben werden. Beispielsweise ist `Strategy --qualifies--> Need` zulässig; `Need --qualifies--> Strategy` ist kein O2I-Relationstyp.
@@ -570,7 +536,7 @@ O2I-Primitives sind abstrakte formale Träger fachlicher Inhalte. Sie besitzen k
 
 ![O2I Primitives-Modell](<img/O2I Primitives.png>){#fig:o2i-primitives-view width=75%}
 
-Die Darstellung ist als semantische Übersicht des abstrakten Formvorrats zu lesen. Sie ersetzt weder die Interpretation der Primitives in Kontexten noch die typisierte Spezifikation, sondern zeigt, welche Primitives, Strukturierungstypen und Primitive-Relationen auf Metamodellebene zulässig sind.
+Die Darstellung ist als semantische Übersicht des abstrakten Formvorrats zu lesen. Sie ersetzt weder die Interpretation der Primitives in Kontexten noch die typisierte Spezifikation, sondern zeigt, welche Primitives, Strukturierungstypen und Primitive-Relationen auf Metamodellebene vorkommen. Die konkrete Zulässigkeit einer Relation ergibt sich erst aus ihren kontextualisierten Endpunkten in der typisierten Spezifikation; beispielsweise ist `sets-target-for` in O2I als `KeyResult @ Intervention -> KPI @ Measure` typisiert.
 
 ##### Elemente
 
@@ -582,13 +548,25 @@ Das Primitive-Inventar legt fest, welche abstrakten Träger fachlicher Inhalte O
 
 ##### Relationen
 
-Primitive-Relationen beschreiben die abstrakte Begründungsstruktur zwischen modellierten Inhalten. Sie verbinden Primitives und, wo erforderlich, Strukturierungstypen. @lst:o2i-primitive-relations zeigt die zulässigen Primitive-Relationen.
+Primitive-Relationen beschreiben die abstrakte Begründungsstruktur zwischen modellierten Inhalten. Sie verbinden kontextualisierte Primitives und, wo erforderlich, Strukturierungen oder Situationsanker. Die Spezifikation gliedert sie in drei fokussierte Ausschnitte: @Lst:o2i-primitive-relations-orientation-strategy zeigt Orientierungs- und Strategie-Bezüge, @Lst:o2i-primitive-relations-need-measure zeigt Bedarfs- und Messrahmungsbezüge, @Lst:o2i-primitive-relations-intervention-effect zeigt Interventions- und Wirkungsbezüge.
 
-```{#lst:o2i-primitive-relations .haskell caption="O2I Primitive-Relationen"}
-!include`snippetStart="-- ** Primitive relations", snippetEnd="-- ** Interpretations"` spc/O2I.hs
+```{#lst:o2i-primitive-relations-orientation-strategy .haskell caption="O2I Primitive-Relationen: Orientierung und Strategie"}
+!include`snippetStart="-- **** Orientation and strategy evidence", snippetEnd="-- **** Need and measurement evidence"` spc/O2I.hs
 ```
 
-Diese typisierte Spezifikation verhindert, dass beliebige Primitive-Relationen als O2I-Relationen ausgegeben werden.
+@Lst:o2i-primitive-relations-need-measure konkretisiert die Begründungsstruktur für Bedarfsqualifikation und Messrahmung.
+
+```{#lst:o2i-primitive-relations-need-measure .haskell caption="O2I Primitive-Relationen: Bedarf und Messrahmung"}
+!include`snippetStart="-- **** Need and measurement evidence", snippetEnd="-- **** Intervention and effect evidence"` spc/O2I.hs
+```
+
+@Lst:o2i-primitive-relations-intervention-effect konkretisiert die Begründungsstruktur für Intervention, Zielbezug, Situationsveränderung und Messbeobachtung.
+
+```{#lst:o2i-primitive-relations-intervention-effect .haskell caption="O2I Primitive-Relationen: Intervention und Wirkung"}
+!include`snippetStart="-- **** Intervention and effect evidence", snippetEnd="-- ** Interpretations"` spc/O2I.hs
+```
+
+Diese typisierten Spezifikationen verhindern, dass beliebige Primitive-Relationen als O2I-Relationen ausgegeben werden. Eine Relation wird nicht nur nach Primitive-Art, sondern nach kontextualisiertem Endpunkt typisiert, etwa `KeyResult @ Strategy -> Objective @ Need`.
 
 #### Strukturierung
 
@@ -597,10 +575,18 @@ Strukturierungstypen ordnen Modellelemente, ohne selbst O2I-Kontexte oder O2I-Pr
 @lst:o2i-structuring-types zeigt die Strukturierungstypen des Metamodells.
 
 ```{#lst:o2i-structuring-types .haskell caption="O2I Strukturierungstypen"}
-!include`snippetStart="-- ** Structuring", snippetEnd="-- ** Typed instances"` spc/O2I.hs
+!include`snippetStart="-- ** Structuring", snippetEnd="-- ** Situation anchors"` spc/O2I.hs
 ```
 
-`Domain` und `CSF` sind Strukturierungstypen. Eine `Domain` bezeichnet einen fachlichen Ordnungsbereich, in dem zusammengehörige Modellelemente oder Strukturierungsbezüge gruppiert werden können. Ein `CSF` bezeichnet einen kritischen Erfolgsbereich, der die strategische Erfolgslogik strukturiert, ohne selbst Strategie, Bedarf, Intervention oder Messung zu sein.
+`Domain` ist der generische Strukturierungstyp des O2I-Metamodells. Eine `Domain` bezeichnet einen fachlichen Ordnungsbereich, in dem zusammengehörige Modellelemente oder Strukturierungsbezüge gruppiert werden können. Ein kritischer Erfolgsfaktor (`CSF`) ist in O2I keine eigene Metamodellart, sondern kann als benannte strategische Domain modelliert werden.
+
+#### Situationsanker
+
+Situationsanker verankern eine `Situation` in konkreten Business-Architecture-Artefakten. Sie sind weder O2I-Kontexte noch O2I-Primitives, sondern fachliche Anker, an denen Bedarfe sichtbar, Interventionen wirksam und Messungen beobachtbar werden. @Lst:o2i-situation-anchor-types zeigt das zulässige Inventar dieser Anker.
+
+```{#lst:o2i-situation-anchor-types .haskell caption="O2I Situationsanker"}
+!include`snippetStart="-- ** Situation anchors", snippetEnd="-- ** Node kinds"` spc/O2I.hs
+```
 
 ### Instanziierung
 
@@ -622,7 +608,10 @@ Eine Primitive-Instanz ist ein konkretes modelliertes Inhaltselement, das einer 
 
 #### Relationsinstanzen
 
-Eine Relationsinstanz verbindet konkrete Kontextinstanzen oder konkrete Primitive-Instanzen. Ihre Zulässigkeit wird gegen die im Metamodell definierten Relationstypen geprüft.
+Eine Relationsinstanz verbindet konkrete Kontext-, Primitive-, Strukturierungs- oder Ankerinstanzen. Ihre Zulässigkeit wird gegen die im Metamodell definierten Relationstypen geprüft.
+
+> [!note]
+> Verfeinerung ist in O2I eine generische Modellierungsoperation zur fachlichen Präzisierung von Modellelementen. Sie ist keine Relation, die im Kernmodell Wirkungsrelevanz oder Wirkungsevidenz begründet.
 
 ### Interpretation
 
@@ -636,7 +625,7 @@ Interpretation legt fest, welche Bedeutung ein O2I-Primitive in einem O2I-Kontex
 
 #### Primitives
 
-Ein `Objective` im Kontext `Vision` beschreibt ein qualitatives Zukunftsbild. Ein `Objective` im Kontext `Need` beschreibt ein benötigtes fachliches Ergebnis. Eine `Action` im Kontext `Strategy` beschreibt eine kohärente strategische Handlungsfestlegung; eine `Action` im Kontext `Intervention` beschreibt eine gezielte Einwirkung. Ein `Gap` im Kontext `Situation` beschreibt eine sichtbare Abweichung in einer Situation.
+Ein `Objective` im Kontext `Vision` beschreibt ein qualitatives Zukunftsbild. Ein `Objective` im Kontext `Need` beschreibt ein benötigtes fachliches Ergebnis. Ein `Driver` im Kontext `Strategy` beschreibt die Diagnose; ein `Principle` im Kontext `Strategy` beschreibt die leitende Handlungslogik. Eine `Action` im Kontext `Strategy` beschreibt eine kohärente strategische Handlungsfestlegung; eine `Action` im Kontext `Intervention` beschreibt eine gezielte Einwirkung. Ein `Key Result` im Kontext `Intervention` beschreibt den überprüfbaren Ziel- oder Ergebnisbezug einer Intervention.
 
 Im Metamodell werden kohärente strategische Handlungsfestlegungen als `Action @ Strategy` modelliert. Die nachvollziehbaren Erfolgsbezüge einer Strategie werden als `Key Result @ Strategy` modelliert. `Key Result @ Strategy` ist keine klassische Strategiekategorie, sondern eine O2I-Autorenableitung in Anlehnung an Doerr.
 
@@ -648,7 +637,7 @@ Eine Kontextrelation ist nicht automatisch hinreichend begründet. O2I untersche
 
 #### Primitive-Relationen
 
-Primitive-Relationen bilden die Begründungsstruktur unterhalb von Kontextrelationen. Sie zeigen, warum eine Makrorelation fachlich belastbar ist.
+Primitive-Relationen bilden die Begründungsstruktur unterhalb von Kontextrelationen. Sie zeigen, warum eine Makrorelation fachlich belastbar ist. Für `Strategy --frames--> Measure` unterscheidet O2I dabei bewusst zwei Rollen: `Driver @ Strategy --indicates--> Domain @ Measure` zeigt den relevanten Beobachtungsbereich an; `Key Result @ Strategy --determines--> Domain @ Measure` bestimmt, welcher Messbereich für den strategischen Erfolgsnachweis maßgeblich ist.
 
 Beispiel:
 
@@ -660,17 +649,23 @@ Diese Primitive-Relation kann begründen, warum eine konkrete Strategie einen ko
 
 ## Wohlgeformtheit und Validierung
 
-Wohlgeformtheit prüft, ob ein O2I-Modell die zulässigen Typen, Interpretationen und Relationen einhält. Validierung prüft darüber hinaus, ob zentrale O2I-Aussagen durch den Wirkungsgraphen begründet sind. Die Relationen im Modellgraphen tragen dieselben GADT-Relationszeugen, die auch die typisierte Spezifikation definieren; dadurch wird die Typebene nicht von einer separaten Runtime-Relationsliste entkoppelt.
+Wohlgeformtheit prüft, ob ein O2I-Modell die zulässigen Typen, Interpretationen und Relationen einhält. Validierung prüft darüber hinaus, ob zentrale O2I-Aussagen durch den Wirkungsgraphen begründet sind. Die Haskell-Spezifikation definiert zulässige Relationstypen als GADT-Relationszeugen; konkrete Modellinstanzen werden anschließend über `wfEdge`, `wfContextEvidence` und weitere Validierungsregeln gegen diese Relationstypen geprüft.
 
 @lst:o2i-validation zeigt die zentralen Wohlgeformtheits- und Validierungsregeln.
 
 ```{#lst:o2i-validation .haskell caption="O2I Wohlgeformtheit und Validierung"}
-!include`snippetStart="-- * Validation", snippetEnd="-- * Validation support"` spc/O2I.hs
+!include`snippetStart="-- * Validation", snippetEnd="-- ** Effect trace"` spc/O2I.hs
+```
+
+@lst:o2i-effect-trace zeigt die Trace-Regel für relational nachvollziehbare Wirkung.
+
+```{#lst:o2i-effect-trace .haskell caption="O2I Wirkungstrace"}
+!include`snippetStart="-- ** Effect trace", snippetEnd="-- * Validation support"` spc/O2I.hs
 ```
 
 ### Grundregeln
 
-Ein Modell ist wohlgeformt, wenn Primitive nur in zulässigen Kontexten verwendet werden, Kontextrelationen typgerecht sind, Primitive-Relationen typgerecht sind und Interventionen nur wirkungsrelevante Bedarfe adressieren.
+Ein Modell ist wohlgeformt, wenn Primitive nur in zulässigen Kontexten verwendet werden, Domains nur in zulässigen Kontexten stehen, Situationsanker nur in `Situation` vorkommen, Relationen typgerecht sind und Interventionen nur wirkungsrelevante Bedarfe adressieren.
 
 ### Wirkungsrelevanz
 
@@ -680,7 +675,7 @@ Die Spezifikation konkretisiert dafür den zentralen O2I-USP: Eine `Strategy --q
 
 ### Wirkungstrace
 
-Ein Wirkungstrace entsteht, wenn eine wirkungsrelevante `Need`-Instanz durch eine `Intervention`-Instanz adressiert wird, diese `Intervention`-Instanz eine `Situation`-Instanz verändert, für eine `Measure`-Instanz Zielbezüge setzt und diese `Measure`-Instanz die veränderte `Situation`-Instanz beobachtet.
+Ein Wirkungstrace entsteht, wenn dieselbe `Strategy`-Instanz eine `Need`-Instanz qualifiziert, eine `Intervention`-Instanz richtet und eine `Measure`-Instanz rahmt; wenn diese Intervention den wirkungsrelevanten Bedarf adressiert, eine über Situationsanker verankerte `Situation` verändert, Zielbezüge für die Messung setzt und diese Messung denselben Situationsbezug beobachtet. Die Messrahmung ist nur belastbar, wenn ein Strategy-Driver den Beobachtungsbereich anzeigt und ein Strategy-Key-Result denselben Messbereich für den Erfolgsnachweis bestimmt.
 
 Die Validierung beweist dadurch keine Kausalität und keine empirische Wirkung. Sie prüft, ob die Wirkungsaussage im O2I-Graphen relational nachvollziehbar ist. Sie ersetzt keine Messdaten, keine fachliche Bewertung und keinen kausalen Wirkungsnachweis.
 
@@ -707,7 +702,6 @@ O2I-Primitive Objective -> ArchiMate Goal -> qualitatives Ziel
 O2I-Primitive Key Result -> ArchiMate Outcome -> quantitative Evidenzgröße oder Zielwert
 O2I-Primitive KPI -> ArchiMate Assessment -> stabile Messdefinition
 O2I-Primitive Action -> ArchiMate Course of Action -> Wegentscheidung, Handlungslogik oder Intervention
-O2I-Primitive Gap -> ArchiMate Gap -> Differenz zwischen Ist- und Sollzustand
 ```
 
 Ein ArchiMate `Goal` stellt in O2I das O2I-Primitive `Objective` dar. Seine Bedeutung hängt vom O2I-Kontext ab: Im Kontext `Vision` beschreibt es einen orientierenden Zukunftszustand; im Kontext `Need` beschreibt es ein benötigtes fachliches Ergebnis.
@@ -721,18 +715,28 @@ Primitive-Relationen werden zwischen ArchiMate-Elementen abgebildet, die O2I-Pri
 ```text
 Principle im Kontext Ethos --influence[guides]--> Driver im Kontext Mission
 Principle im Kontext Ethos --influence[guides]--> Goal im Kontext Vision
-Driver im Kontext Mission --influence[motivates]--> Goal im Kontext Vision
+Driver im Kontext Mission --influence[grounds]--> Goal im Kontext Vision
 Outcome im Kontext Strategy --influence[translates-into]--> Goal im Kontext Need
 Outcome im Kontext Strategy --realization[substantiates]--> Goal im Kontext Strategy
-Outcome im Kontext Strategy --association[sets-target-for]--> Assessment im Kontext Measure
+Driver im Kontext Strategy --influence[indicates]--> Grouping im Kontext Measure
+Outcome im Kontext Strategy --influence[determines]--> Grouping im Kontext Measure
+Grouping im Kontext Measure --aggregation[contains]--> Assessment im Kontext Measure
+Outcome im Kontext Intervention --association[sets-target-for]--> Assessment im Kontext Measure
 ```
 
 Kontext-Makrorelationen sind dokumentierte O2I-Relationen. In ArchiMate werden sie nicht als primäre ArchiMate-Semantik verstanden, sondern durch Relationen zwischen enthaltenen Elementen, durch beschriftete Dokumentationskanten zwischen Kontextbereichen oder durch explizit dokumentierte Ableitungen dargestellt:
 
 ```text
+Ethos --guides--> Mission
+Ethos --guides--> Vision
 Mission --grounds--> Vision
 Vision --orients--> Strategy
+Strategy --directs--> Strategy
+Strategy --contributes-to--> Strategy
 Strategy --qualifies--> Need
+Strategy --directs--> Intervention
+Strategy --frames--> Measure
+Situation --surfaces--> Need
 Intervention --addresses--> Need
 Intervention --changes--> Situation
 Intervention --sets-target-for--> Measure
@@ -797,7 +801,7 @@ Diese Leitprinzipien prägen die Mission `#hggt` (*honest good time together*): 
 
 Damit wird die Makrorelation `Ethos --guides--> Mission` durch Primitive-Relationen der Form `Principle @ Ethos --guides--> Driver @ Mission` begründet.
 
-Der nächste Übergang führt von `Mission` zu `Vision`. Im Kontext `Vision` wird `People act confidently from shared understanding` als `Objective` interpretiert. Die Mission `#hggt` begründet dieses Objective: Eine aufrichtige, gute gemeinsame Zeit entsteht, wenn Menschen aus geteilter Verständigung heraus sicher und begründet handeln können. Salopp: Alle handeln auf derselben Wissensbasis. *No secrets.*
+Der nächste Übergang führt von `Mission` zu `Vision`. Im Kontext `Vision` wird `People act confidently from shared understanding` als `Objective` interpretiert. Die Mission `#hggt` begründet dieses Objective: Eine aufrichtige, gute gemeinsame Zeit entsteht, wenn Menschen aus geteilter Verständigung heraus sicher und begründet handeln können. Die Vision übersetzt damit den Mission-Driver in einen orientierenden Zustand gemeinsamer Wissens- und Entscheidungsgrundlagen.
 
 Die Leitprinzipien aus `Ethos` prägen zugleich diese Vision. `Respect` verhindert, dass geteilte Verständigung instrumentell oder manipulativ verstanden wird. `Discipline` macht sie belastbar und konsequent. `Independence` stellt sicher, dass gemeinsames Verständnis eigenständiges Urteil nicht ersetzt, sondern ermöglicht.
 
@@ -807,13 +811,13 @@ Damit werden auch die Makrorelationen `Mission --grounds--> Vision` und `Ethos -
 
 Aus Orientierung wird Formierung, sobald die Vision in eine strategische Wegentscheidung übersetzt wird.
 
-Aus der Vision `People act confidently from shared understanding` wird im Layered Cake die Strategie `Shared understanding` ausgerichtet. Das Objective `Make shared understanding actionable` konkretisiert, wie der visionäre Zustand strategisch bearbeitbar wird. Die Diagnose wird durch `Fragmented understanding blocks confident action` als `Driver` modelliert; dieser Driver begründet das strategische Objective. Der `Key Result` `80% of decisions reference shared decision records` substantiiert dieses Objective, während die `Action` `Create shared decision records` zu diesem Key Result beiträgt. Das Principle `Act from evidence, not assumptions` leitet die Action. Die Domain `CSF` ordnet den strategischen Key Result als kritischen Erfolgsbereich; sie ist hier eine benannte Domain, kein eigener O2I-Typ.
+Aus der Vision `People act confidently from shared understanding` wird im Layered Cake die Strategie `Shared understanding` ausgerichtet. Das Objective `Make shared understanding actionable` konkretisiert, wie der visionäre Zustand strategisch bearbeitbar wird. Die Diagnose wird durch `Fragmented understanding blocks confident action` als `Driver` modelliert; dieser Driver begründet das strategische Objective. Der `Key Result` `80% of decisions reference shared decision records` substantiiert dieses Objective, während die `Action` `Create shared decision records` zu diesem Key Result beiträgt. Das Principle `Act from evidence, not assumptions` leitet die Action. Die Domain `Shared decision evidence` ordnet den strategischen Key Result als kritischen Erfolgsbereich; sie ist eine benannte Domain, kein eigener O2I-Typ.
 
 Damit adressiert die Strategy-Struktur zentrale Strategiebestandteile aus der Terminologie: Diagnose, strategische Absicht, Guiding Policy, Trade-offs, kohärente Handlungsfestlegungen und strategischen Erfolgsnachweis. Strategische Positionierung und Fit/Kohärenznachweis werden im Layered Cake nicht als eigene Primitives modelliert. Positionierung ergibt sich als abgeleitete Lesart aus der strukturierten Kombination von Objective, Principle, Action und Key Result. Fit ist eine Validierungslogik über diese Struktur: Die Strategy-Primitives müssen kohärent zusammenpassen und durch ihre Relationen eine belastbare strategische Wegentscheidung tragen.
 
 Die zweite Strategie `Organizational transparency` ist im Layered Cake als übergeordnete Strategie modelliert. Ihre eigene Ethos- und Mission-Herleitung wird bewusst nicht ausmodelliert, damit die Sicht den Fokus auf Strategy-to-Strategy-Begründungen behält. Die Vision `Organizational transparency` richtet das strategische Objective `Make critical knowledge transparent and usable` aus. Die Diagnose `Hidden knowledge fragments organizational action` begründet dieses Objective; der `Key Result` `90% of critical decisions are traceable to shared evidence` substantiiert es. Die Action `Establish shared evidence practices` trägt zu diesem Key Result bei; das Principle `Default to shared evidence over private interpretation` leitet die Action.
 
-Zwischen beiden Strategien zeigt der Layered Cake zwei Begründungsebenen. `Default to shared evidence over private interpretation @ Organizational transparency` leitet `Act from evidence, not assumptions @ Shared understanding` und begründet damit die Makrorelation `Organizational transparency --directs--> Shared understanding`. Die Relation `80% of decisions reference shared decision records @ Shared understanding --contributes-to--> 90% of critical decisions are traceable to shared evidence @ Organizational transparency` zeigt den Erfolgsbeitrag. Zusätzlich zeigt `Create shared decision records @ Shared understanding --contributes-to--> Establish shared evidence practices @ Organizational transparency` den Umsetzungsbeitrag. Die Action-Relation begründet nicht `directs`; `directs` wird durch die Principle-Relation getragen.
+Zwischen beiden Strategien zeigt der Layered Cake zwei Begründungsebenen. `Default to shared evidence over private interpretation @ Organizational transparency` leitet `Act from evidence, not assumptions @ Shared understanding` und begründet damit die Makrorelation `Organizational transparency --directs--> Shared understanding`. Die Relation `80% of decisions reference shared decision records @ Shared understanding --contributes-to--> 90% of critical decisions are traceable to shared evidence @ Organizational transparency` zeigt den Erfolgsbeitrag. Zusätzlich zeigt `Create shared decision records @ Shared understanding --contributes-to--> Establish shared evidence practices @ Organizational transparency` den Umsetzungsbeitrag. Zusammen begründen diese Beitragsrelationen die Makrorelation `Shared understanding --contributes-to--> Organizational transparency`. Die Action-Relation begründet nicht `directs`; `directs` wird durch die Principle-Relation getragen.
 
 ## Situierung
 
@@ -835,17 +839,11 @@ Die strategische Action `Create shared decision records` wird nicht mit der Inte
 
 Damit wird `Intervention --addresses--> Need` nicht als bloße Behauptung gelesen: Die Intervention setzt eine konkrete Action an, formuliert einen überprüfbaren Ergebnisbezug und verbindet diesen Ergebnisbezug relational mit dem wirkungsrelevanten Need-Objective.
 
-In konkreten Instanzen kann eine solche Intervention etwa durch epistemische Knowledge-Graph-Ansätze wie noEA[^noea] oder durch agentische Reasoning-Unterstützung wie ai4X[^ai4x] realisiert werden.
-
-[^noea]: noEA: <https://github.com/normenmueller/noEA>.
-
-[^ai4x]: ai4X: <https://github.com/normenmueller/ai4X>.
-
 ## Wirkung
 
 Aus Operationalisierung wird Wirkung erst, wenn die veränderte Situation messbar beobachtet und relational in den O2I-Graphen eingeordnet wird.
 
-Im Layered Cake rahmt die Strategie die Messung über `Strategy --frames--> Measure`. Diese Makrorelation wird durch `80% of decisions reference shared decision records @ Strategy --determines--> Decision traceability @ Measure` konkretisiert: Die Strategie bestimmt, welcher Messbereich für den Wirkungsnachweis relevant ist. Innerhalb dieses Messbereichs wird `Shared decision traceability rate` als `KPI` modelliert.
+Im Layered Cake rahmt die Strategie die Messung über `Strategy --frames--> Measure`. Diese Makrorelation wird durch zwei Primitive-Relationen konkretisiert: `Fragmented understanding blocks confident action @ Strategy --indicates--> Decision traceability @ Measure` zeigt den relevanten Beobachtungsbereich an; `80% of decisions reference shared decision records @ Strategy --determines--> Decision traceability @ Measure` bestimmt denselben Messbereich als strategischen Erfolgsnachweis. Innerhalb dieses Messbereichs wird `Shared decision traceability rate` als `KPI` modelliert.
 
 Die Intervention setzt den Zielbezug für diese Messung: `70% of relevant decisions are captured as shared decision records @ Intervention --sets-target-for--> Shared decision traceability rate @ Measure`. Zugleich verändert die Intervention die Situation über `Establish shared decision evidence practice @ Intervention --changes--> Information Management @ Situation`. Der KPI misst damit nicht abstrakt Wirkung, sondern beobachtet den Situationsanker, an dem die Intervention eine Veränderung bewirken soll.
 
@@ -866,10 +864,5 @@ O2I beschreibt ein Framework für Wirkungsarchitekturen: Es verbindet standardli
 \begin{center}
 \texttt{\detokenize{Strategy --qualifies--> Need <--surfaces-- Situation}}
 \end{center}
-
-<!--
-ED note: Alternative:
-Kurz: Ein Bedarf wird wirkungsrelevant, wenn er aus einer Situation sichtbar wird (`Situation surfaces Need`) und durch Strategie qualifiziert ist (`Strategy qualifies Need`).
--->
 
 O2I folgt damit einer einfachen Grundidee: *panta rhei* - alles fließt. Orientierung, Strategie, Bedarfe, Interventionen und Wirkung bleiben nicht statisch, sondern werden im Wirkungsgraphen fortlaufend nachvollziehbar, überprüfbar und lernfähig verbunden.

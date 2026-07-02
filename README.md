@@ -39,6 +39,15 @@ Das PDF wird aus `o2i.md` mit [`md2pdf`](https://github.com/normenmueller/md2pdf
 md2pdf -- o2i.md
 ```
 
+## Verify
+
+```sh
+ghc -Wall -Werror -fno-code spc/O2I.hs
+hindent --line-length 80 --validate spc/O2I.hs
+pandoc o2i.md --filter pandoc-include -t markdown
+md2pdf -- o2i.md
+```
+
 ## License
 
 O2I article text, diagrams, and models are licensed under [CC BY 4.0](./LICENSE).

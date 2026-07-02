@@ -11,6 +11,12 @@ from pathlib import Path
 XSI_TYPE = "{http://www.w3.org/2001/XMLSchema-instance}type"
 
 PRESETS = {
+    "strategy-constituents": (
+        "O2I Strategy Constituents",
+        Path("mdl/o2i-strategy-constituents.md"),
+    ),
+    "situation": ("O2I Situation", Path("mdl/o2i-situation.md")),
+    "orientation": ("O2I Orientierung", Path("mdl/o2i-orientation.md")),
     "context": ("O2I Context", Path("mdl/o2i-context.md")),
     "primitives": ("O2I Primitives", Path("mdl/o2i-primitives.md")),
     "layered-cake": ("O2I Layered Cake", Path("mdl/o2i-layered-cake.md")),
