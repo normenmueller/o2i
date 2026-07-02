@@ -20,6 +20,12 @@ secPrefix:
 toc: yes
 toc-depth: 3
 callout-theme: gray
+papersize: a4
+geometry:
+  - left=4.4cm
+  - right=4.4cm
+  - top=4.8cm
+  - bottom=3.9cm
 ---
 
 \newpage
@@ -54,7 +60,7 @@ O2I begründet fachliche Relationen wie `Strategy --qualifies--> Need` durch Ver
 > - **Orientierung**: normativer und intentionaler Ausgangspunkt
 > - **Formierung**: strategische Wegentscheidung
 > - **Situierung**: Bedarf wird in einer Situation sichtbar
-> - **Operationalisierung**: Sichtbarer Bedarf wird qualifiziert und durch Intervention und Messung handlungs- und nachweisfähig
+> - **Operationalisierung**: Sichtbarer Bedarf wird qualifiziert, handlungs- und nachweisfähig
 > - **Wirkung**: beobachtete Veränderung und Evidenz
 
 # Fundament
@@ -769,7 +775,19 @@ Die äußeren O2I-Kästen sind damit O2I-Kontexte; die fachlich wirksame Begrün
 
 Der O2I Layered Cake ist eine beispielhafte Referenzsicht auf einen zusammenhängenden O2I-Wirkungsgraphen. Die Sicht zeigt, wie O2I-Kontexte mit Primitives befüllt und Makrorelationen durch Primitive-Relationen begründet werden.
 
-![O2I Layered Cake](<img/O2I Layered Cake.png>){#fig:o2i-layered-cake}
+\clearpage
+\newgeometry{margin=8mm}
+\begin{landscape}
+\begin{center}
+\vspace*{\fill}
+\includegraphics[width=\linewidth,height=0.86\textheight,keepaspectratio]{img/O2I Layered Cake.png}
+\captionof{figure}{O2I Layered Cake}
+\label{fig:o2i-layered-cake}
+\vspace*{\fill}
+\end{center}
+\end{landscape}
+\restoregeometry
+\clearpage
 
 ## Orientierung
 
@@ -838,13 +856,16 @@ Wirkung wird im Layered Cake daher nicht als isoliertes Modellelement behauptet.
 O2I beschreibt ein Framework für Wirkungsarchitekturen: Es verbindet standardliteraturbasierte Terminologie und ein semantisch und syntaktisch ausgearbeitetes Metamodell zu einer prüfbaren Denk-, Modellierungs- und Nachweislogik für *orientierte Wirkung*.
 
 > [!tldr] O2I USP
+>
 > - Orientierte Wirkung wird relational nachvollziehbar.
 > - Kontextrelationen werden durch Primitive-Relationen begründet.
 > - Strategie wird nicht als Absichtserklärung akzeptiert, sondern durch Handlungsfestlegungen und Erfolgsbezüge prüfbar.
 > - Bedarfe werden erst wirkungsrelevant, wenn sie situativ sichtbar und strategisch qualifiziert sind.
 > - Wirkung wird nicht behauptet, sondern über Intervention, Messung und Graph-Nachvollziehbarkeit begründet.
 
-> `Strategy --qualifies--> Need <--surfaces-- Situation`.
+\begin{center}
+\texttt{\detokenize{Strategy --qualifies--> Need <--surfaces-- Situation}}
+\end{center}
 
 <!--
 ED note: Alternative:
@@ -852,4 +873,3 @@ Kurz: Ein Bedarf wird wirkungsrelevant, wenn er aus einer Situation sichtbar wir
 -->
 
 O2I folgt damit einer einfachen Grundidee: *panta rhei* - alles fließt. Orientierung, Strategie, Bedarfe, Interventionen und Wirkung bleiben nicht statisch, sondern werden im Wirkungsgraphen fortlaufend nachvollziehbar, überprüfbar und lernfähig verbunden.
-
