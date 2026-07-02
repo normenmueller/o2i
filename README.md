@@ -2,13 +2,19 @@
 
 O2I ist ein generisches Framework für Wirkungsarchitekturen: Es beschreibt, wie Orientierung, Formierung, Situierung, Operationalisierung und Wirkung fachlich begründet, modelliert und nachvollzogen werden können. Das O2I-Metamodell bildet den formalen Kern des Frameworks.
 
-Der aktive Artikel ist [`o2i.md`](./o2i.md). Das ArchiMate-Modell liegt unter [`mdl/o2i.archimate`](./mdl/o2i.archimate).
+Der aktive Artikel ist [`o2i.md`](./o2i.md). Das ArchiMate-Modell liegt unter [`mdl/o2i.archimate`](./mdl/o2i.archimate). Die normative Haskell-Spezifikation liegt unter [`spc/O2I.hs`](./spc/O2I.hs).
 
 ## Purpose
 
-- O2I als Framework für Wirkungsarchitekturen beschreiben
-- zentrale Begriffe und Relationen für Wirkung definieren
-- Terminologie, Semantik und ArchiMate-Syntax sauber trennen
+O2I dient dazu, *orientierte Wirkung* nachvollziehbar und nachweisbar modellierbar zu machen. Es verbindet standardliteraturbasierte Terminologie, ein semantisch und syntaktisch ausgearbeitetes Metamodell sowie eine maschinenprüfbare Haskell-Spezifikation.
+
+## USP
+
+- Orientierte Wirkung wird relational nachvollziehbar.
+- Kontextrelationen werden durch Primitive-Relationen begründet.
+- Strategie wird nicht als Absichtserklärung akzeptiert, sondern durch Handlungsfestlegungen und Erfolgsbezüge prüfbar.
+- Bedarfe werden erst wirkungsrelevant, wenn sie situativ sichtbar und strategisch qualifiziert sind.
+- Wirkung wird nicht behauptet, sondern über Intervention, Messung und Graph-Nachvollziehbarkeit begründet.
 
 ## Layout
 
