@@ -789,7 +789,7 @@ Damit werden auch die Makrorelationen `Mission --grounds--> Vision` und `Ethos -
 
 Aus Orientierung wird Formierung, sobald die Vision in eine strategische Wegentscheidung übersetzt wird.
 
-Aus der Vision `People act confidently from shared understanding` wird im Layered Cake die Strategie `Shared understanding` ausgerichtet. Das Objective `Make shared understanding actionable` konkretisiert, wie der visionäre Zustand strategisch bearbeitbar wird. Die Diagnose wird durch `Fragmented understanding blocks confident action` als `Driver` modelliert; dieser Driver begründet das strategische Objective. Der `Key Result` `80% of decisions reference shared decision records` substantiiert dieses Objective, während die `Action` `Create shared decision records` zu diesem Key Result beiträgt. Das Principle `Act from evidence, not assumptions` leitet die Action.
+Aus der Vision `People act confidently from shared understanding` wird im Layered Cake die Strategie `Shared understanding` ausgerichtet. Das Objective `Make shared understanding actionable` konkretisiert, wie der visionäre Zustand strategisch bearbeitbar wird. Die Diagnose wird durch `Fragmented understanding blocks confident action` als `Driver` modelliert; dieser Driver begründet das strategische Objective. Der `Key Result` `80% of decisions reference shared decision records` substantiiert dieses Objective, während die `Action` `Create shared decision records` zu diesem Key Result beiträgt. Das Principle `Act from evidence, not assumptions` leitet die Action. Die Domain `CSF` ordnet den strategischen Key Result als kritischen Erfolgsbereich; sie ist hier eine benannte Domain, kein eigener O2I-Typ.
 
 Damit adressiert die Strategy-Struktur zentrale Strategiebestandteile aus der Terminologie: Diagnose, strategische Absicht, Guiding Policy, Trade-offs, kohärente Handlungsfestlegungen und strategischen Erfolgsnachweis. Strategische Positionierung und Fit/Kohärenznachweis werden im Layered Cake nicht als eigene Primitives modelliert. Positionierung ergibt sich als abgeleitete Lesart aus der strukturierten Kombination von Objective, Principle, Action und Key Result. Fit ist eine Validierungslogik über diese Struktur: Die Strategy-Primitives müssen kohärent zusammenpassen und durch ihre Relationen eine belastbare strategische Wegentscheidung tragen.
 
@@ -813,7 +813,9 @@ Aus Situierung wird Operationalisierung, sobald ein wirkungsrelevanter Bedarf du
 
 Die Intervention `Establish shared decision evidence practice` wird als `Action` modelliert. Sie adressiert den wirkungsrelevanten Bedarf `Increase shared decision traceability`, nicht den lediglich sichtbaren Bedarf `Increase traceable decisions`. Damit bleibt die Intervention an den strategisch qualifizierten Bedarf gebunden.
 
-Die strategische Action `Create shared decision records` wird nicht mit der Intervention gleichgesetzt. Sie leitet die Intervention, indem sie die strategische Handlungsfestlegung in eine konkrete Einwirkung übersetzt. Dadurch wird `Strategy --directs--> Intervention` durch `Action @ Strategy --guides--> Action @ Intervention` begründet. `Intervention --addresses--> Need` wird durch `Action @ Intervention --addresses--> Objective @ Need` konkretisiert.
+Die strategische Action `Create shared decision records` wird nicht mit der Intervention gleichgesetzt. Sie leitet die Intervention, indem sie die strategische Handlungsfestlegung in eine konkrete Einwirkung übersetzt. Dadurch wird `Strategy --directs--> Intervention` durch `Action @ Strategy --guides--> Action @ Intervention` begründet. Der interventionsbezogene Key Result `70% of relevant decisions are captured as shared decision records` substantiiert den qualifizierten Bedarf `Increase shared decision traceability` und trägt zugleich zum strategischen Key Result `80% of decisions reference shared decision records` bei.
+
+Damit wird `Intervention --addresses--> Need` nicht als bloße Behauptung gelesen: Die Intervention setzt eine konkrete Action an, formuliert einen überprüfbaren Ergebnisbezug und verbindet diesen Ergebnisbezug relational mit dem wirkungsrelevanten Need-Objective.
 
 In konkreten Instanzen kann eine solche Intervention etwa durch epistemische Knowledge-Graph-Ansätze wie noEA[^noea] oder durch agentische Reasoning-Unterstützung wie ai4X[^ai4x] realisiert werden.
 
@@ -823,7 +825,13 @@ In konkreten Instanzen kann eine solche Intervention etwa durch epistemische Kno
 
 ## Wirkung
 
-tbd
+Aus Operationalisierung wird Wirkung erst, wenn die veränderte Situation messbar beobachtet und relational in den O2I-Graphen eingeordnet wird.
+
+Im Layered Cake rahmt die Strategie die Messung über `Strategy --frames--> Measure`. Diese Makrorelation wird durch `80% of decisions reference shared decision records @ Strategy --determines--> Decision traceability @ Measure` konkretisiert: Die Strategie bestimmt, welcher Messbereich für den Wirkungsnachweis relevant ist. Innerhalb dieses Messbereichs wird `Shared decision traceability rate` als `KPI` modelliert.
+
+Die Intervention setzt den Zielbezug für diese Messung: `70% of relevant decisions are captured as shared decision records @ Intervention --sets-target-for--> Shared decision traceability rate @ Measure`. Zugleich verändert die Intervention die Situation über `Establish shared decision evidence practice @ Intervention --changes--> Information Management @ Situation`. Der KPI misst damit nicht abstrakt Wirkung, sondern beobachtet den Situationsanker, an dem die Intervention eine Veränderung bewirken soll.
+
+Wirkung wird im Layered Cake daher nicht als isoliertes Modellelement behauptet. Sie ergibt sich aus der nachvollziehbaren Kette von wirkungsrelevantem Bedarf, Intervention, veränderter Situation, strategisch gerahmter Messung und Nachweislogik. Fit bleibt dabei eine Validierungsfrage: Die Relationen von Vision, Strategie, Need, Intervention, Measure und Situation müssen kohärent zusammenpassen, damit eine Messung als Evidenz für orientierte Wirkung gelesen werden darf.
 
 # Fazit
 
@@ -842,3 +850,6 @@ O2I beschreibt ein Framework für Wirkungsarchitekturen: Es verbindet standardli
 ED note: Alternative:
 Kurz: Ein Bedarf wird wirkungsrelevant, wenn er aus einer Situation sichtbar wird (`Situation surfaces Need`) und durch Strategie qualifiziert ist (`Strategy qualifies Need`).
 -->
+
+O2I folgt damit einer einfachen Grundidee: *panta rhei* - alles fließt. Orientierung, Strategie, Bedarfe, Interventionen und Wirkung bleiben nicht statisch, sondern werden im Wirkungsgraphen fortlaufend nachvollziehbar, überprüfbar und lernfähig verbunden.
+
