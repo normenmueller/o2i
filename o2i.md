@@ -2,7 +2,8 @@
 title: "Von der Orientierung zur Wirkung\\thanks{Publiziert unter \\url{https://github.com/normenmueller/o2i}}"
 subtitle: "Begriffe und Relationen für wirksames Handeln"
 author: nemron
-version: "0.1"
+version: "0.2"
+status: "wip"
 abstract: |
   Wie werden Orientierung, Formierung, Situierung und Operationalisierung so verbunden, dass nachvollziehbare Wirkung entsteht?
 lang: de-DE
