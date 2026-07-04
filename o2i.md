@@ -1,5 +1,5 @@
 ---
-title: "Von der Orientierung zur Wirkung\\thanks{Publiziert unter \\url{https://github.com/normenmueller/o2i}}"
+title: "Von Orientierung zur Wirkung\\thanks{Publiziert unter \\url{https://github.com/normenmueller/o2i}}"
 subtitle: "Begriffe und Relationen für wirksames Handeln"
 author: nemron
 version: "0.2"
@@ -49,14 +49,16 @@ geometry:
 
 # Einleitung
 
+O2I steht für *Orientation to Impact*. O2I dient dazu, *orientierte Wirkung* nachvollziehbar und nachweisbar modellierbar zu machen.
+
 O2I beschreibt, wie Orientierung unter gegebenen Bedingungen in strategische Formierung, situierte Bedarfe, wirkungsgerichtete Operationalisierung und nachvollziehbare Wirkung überführt wird.
 
 O2I wird in diesem Artikel als Framework verstanden. Die O2I-Terminologie liefert die fachliche Begriffswelt auf Basis der herangezogenen Standardliteratur; das O2I-Metamodell formalisiert diese Begriffswelt semantisch und syntaktisch; die Illustration zeigt an einem zusammenhängenden Beispiel, wie daraus ein O2I-Wirkungsgraph entsteht. Zusammen entsteht eine begründete Denk-, Modellierungs- und Nachweislogik für Wirkung.
 
-O2I begründet fachliche Relationen wie `Strategy --qualifies--> Need` durch Verbindungen zwischen kontextualisierten O2I-Primitives. O2I-Kontexte geben Bedeutung; O2I-Primitives tragen die modellierten Inhalte. Der Wirkungsgraph entsteht aus diesen Primitives und ihren Relationen.
+Die zentrale Idee von O2I ist, fachliche Relationen wie die O2I-Relation `Strategy --qualifies--> Need` nicht nur zu behaupten, sondern im O2I-Wirkungsgraphen zu begründen. O2I-Kontexte geben Bedeutung; O2I-Primitives tragen die modellierten Inhalte; Relationen zwischen kontextualisierten Primitives machen die fachliche Begründung nachvollziehbar.
 
-> [!tldr] O2I Wirkungskette
-> O2I beschreibt Wirkung als nachvollziehbare Kette:
+> [!tldr] O2I Wirkungslogik
+> O2I lässt sich einführend als Folge fachlicher Übergänge lesen:
 >
 > - **Orientierung**: normativer und intentionaler Ausgangspunkt
 > - **Formierung**: strategische Wegentscheidung
@@ -381,7 +383,7 @@ wirkungsrelevanter Bedarf
 Ein Bedarf ist strategisch relevant qualifiziert, wenn seine Veränderungsanforderung durch eine nachvollziehbare Relation zu Strategieinhalten begründet ist.
 
 > [!addendum]
-> Terminologisch erfolgt diese Begründung über kontextualisierte O2I-Primitives, ohne an dieser Stelle den Formalismus des Metamodells vollständig auszubreiten. Beispiel: `Key Result @ Strategy --translates-into--> Objective @ Need`. Damit ist `Strategy --qualifies--> Need` keine freie Behauptung, sondern eine abgeleitete Makrorelation.
+> Terminologisch erfolgt diese Begründung über kontextualisierte O2I-Primitives, ohne an dieser Stelle den Formalismus des Metamodells vollständig auszubreiten. Beispiel: `Key Result @ Strategy --translates-into--> Objective @ Need`. Damit ist `Strategy --qualifies--> Need` in O2I keine freie Behauptung, sondern eine als Autorenableitung eingeführte Makrorelation.
 
 Wirkungsrelevant heißt plausibel handlungsrelevant, nicht bereits wirksam. Erst eine spätere Messung kann zeigen, ob die Bearbeitung eines wirkungsrelevanten Bedarfs tatsächlich Wirkung erzeugt hat.
 
