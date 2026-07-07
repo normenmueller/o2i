@@ -104,17 +104,19 @@ URL: \url{https://publications.opengroup.org/standards/archimate/c260}.
 
 Die Literaturquellen werden nicht gleichgewichtig verwendet, sondern nach ihrer Funktion innerhalb von O2I:
 
-Rumelt (2011), Porter (1996), Hamel und Prahalad (1989) sowie Mintzberg und Waters (1985) stützen die Formierung innerhalb von O2I: Diagnose, strategische Absicht, leitende Handlungslogik, Positionierung, Trade-offs, Fit, Kohärenz sowie intendierte und realisierte Strategie.
+Collins und Porras (1996), Schein (2010) sowie Bourne, Jenkins und Parry (2019) stützen Orientierung als normativen und kulturell verankerten Ausgangspunkt. George, Haas, McGahan, Schillebeeckx und Tracey (2023) sowie Chua, Miska, Mair und Stahl (2024) ergänzen den aktuellen Purpose-Diskurs und schärfen Mission als Existenzzweck.
 
-Doerr (2018) stützt die Operationalisierung über Objectives und Key Results als überprüfbare Umsetzungs- und Evidenzformen.
+Rumelt (2011), Porter (1996), Hamel und Prahalad (1989) sowie Mintzberg und Waters (1985) stützen die strategische Formierung: Diagnose, strategische Absicht, leitende Handlungslogik, Positionierung, Trade-offs, Fit, Kohärenz sowie intendierte und realisierte Strategie. Parmenter (2020) stützt darin kritische Erfolgsfaktoren als abgeleitete strategische Erfolgsbereiche.
 
-Parmenter (2020) stützt Messung, Performance-Logik, kritische Erfolgsfaktoren und KPI-Disziplin. Barr (2014) ergänzt die methodische KPI-Entwicklung über eine praktische Performance-Measurement-Methodik.
+TOGAF und ArchiMate stützen Situierung, indem sie fachliche Business-Architecture-Artefakte bereitstellen, an denen Bedarfe sichtbar und verortbar werden.
 
-Collins und Porras (1996), Schein (2010) und Bourne, Jenkins und Parry (2019) stützen Leitprinzipien als kulturell verankerte, normative Orientierungsgröße. George, Haas, McGahan, Schillebeeckx und Tracey (2023) und Chua, Miska, Mair und Stahl (2024) ergänzen den aktuellen Purpose-Diskurs und schärfen Mission als Existenzzweck.
+Rumelt (2011) und Porter (1996) stützen die Bedarfsqualifikation innerhalb der Operationalisierung, indem sie strategische Relevanz aus Herausforderung, Positionierung, Trade-offs und Aktivitätssystem begründbar machen. Doerr (2018) stützt Operationalisierung über Objectives und Key Results als überprüfbare Umsetzungs- und Evidenzformen.
+
+Parmenter (2020) stützt Performance-Logik und KPI-Disziplin. Barr (2014) ergänzt die methodische KPI-Entwicklung über eine praktische Performance-Measurement-Methodik. Doerr (2018) ergänzt Wirkung und Messung durch Ziel- und Ergebnisbezüge.
 
 The Open Group (2025, 2026) stützt die Modellierungsebene: TOGAF liefert den Enterprise-Architecture-Bezug, ArchiMate liefert die standardisierte Modellierungssprache, mit der O2I-Modelle an Architekturartefakte anschlussfähig werden.
 
-Die Literaturquellen begründen damit unterschiedliche Funktionen innerhalb von O2I: Orientierung wird strategisch formiert, Formierung wird in wirkungsgerichtete Interventionen operationalisiert, und Wirkung wird über Messung und Nachweislogik nachvollziehbar gemacht.
+Die Literaturquellen begründen damit unterschiedliche Funktionen innerhalb von O2I: Orientierung wird formiert, Formierung wird situiert und operationalisiert, und Wirkung wird über Messung, Nachweislogik und Modellierbarkeit nachvollziehbar gemacht.
 
 ## Definitionsregel
 
