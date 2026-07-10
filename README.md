@@ -2,7 +2,7 @@
 
 O2I ist ein generisches Framework für Wirkungsarchitekturen: Es beschreibt, wie Orientierung, Formierung, Situierung, Operationalisierung und Wirkung fachlich begründet, modelliert und nachvollzogen werden können. Das O2I-Metamodell bildet den formalen Kern des Frameworks.
 
-Der aktive Artikel ist [`o2i.md`](./o2i.md). Das ArchiMate-Modell liegt unter [`mdl/o2i.archimate`](./mdl/o2i.archimate). Die normative Haskell-Spezifikation liegt unter [`spc/O2I.hs`](./spc/O2I.hs).
+Der aktive Artikel ist [`o2i.md`](./o2i.md). Das ArchiMate-Modell liegt unter [`mdl/o2i.archimate`](./mdl/o2i.archimate). Die normative Haskell-Spezifikation liegt als Library unter [`spc/src/lib`](./spc/src/lib/).
 
 ## Purpose
 
@@ -23,13 +23,18 @@ o2i/
 |- img/
 |- mdl/
 |- spc/
+|  |- src/lib/
+|  |- src/app/
+|  |- tst/
 |- o2i.md
 ```
 
 - `o2i.md`: aktiver Artikel und fachlicher Referenztext
 - `mdl/`: ArchiMate-Modell
 - `img/`: Abbildungen für Artikel und Modellkommunikation
-- `spc/`: normative Haskell-Spezifikation, deren Codeauszüge im Artikel eingebunden werden
+- `spc/src/lib/`: normative Haskell-Library, deren Codeauszüge im Artikel eingebunden werden
+- `spc/src/app/`: minimaler Einstiegspunkt für spätere Validierungswerkzeuge
+- `spc/tst/`: Haskell-Validierungsbeispiele und Tests
 
 ## Build
 
@@ -42,8 +47,9 @@ md2pdf -- o2i.md
 ## Verify
 
 ```sh
-ghc -Wall -Werror -fno-code spc/O2I.hs
-hindent --line-length 80 --validate spc/O2I.hs
+cabal --project-dir=spc build all --ghc-options=-Werror
+cabal --project-dir=spc test all
+hindent --line-length 80 --validate spc/src/lib/O2I.hs spc/src/lib/O2I/*.hs spc/src/app/Main.hs spc/tst/Main.hs
 pandoc o2i.md --filter pandoc-include -t markdown
 md2pdf -- o2i.md
 ```
@@ -52,6 +58,6 @@ md2pdf -- o2i.md
 
 O2I article text, diagrams, and models are licensed under [CC BY 4.0](./LICENSE).
 
-The Haskell specification in [`spc/`](./spc/) is licensed under [Apache-2.0](./spc/LICENSE).
+The Haskell specification in [`spc/src/lib`](./spc/src/lib/) is licensed under [Apache-2.0](./spc/LICENSE).
 
 © 2026 [nemron](https://github.com/normenmueller)

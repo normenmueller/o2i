@@ -470,7 +470,7 @@ Damit bleibt Nachweislogik von Messung getrennt: Messung macht beobachtbar, Nach
 
 Das O2I-Metamodell ist der formale Kern des O2I Frameworks. Es übersetzt die O2I-Terminologie in eine prüfbare Modellstruktur: Begriffe werden als Typen gefasst, konkrete Modellelemente werden als Instanzen dieser Typen beschrieben, Primitives erhalten ihre Bedeutung durch Interpretation in Kontexten, und Wohlgeformtheitsregeln prüfen, ob ein Modell die O2I-Wirkungslogik einhält.
 
-Die Haskell-Spezifikation in `spc/O2I.hs` ist keine Implementierung eines Anwendungssystems und keine allgemeine Modellierungs-DSL. Sie ist eine kompakte, maschinenprüfbare Validierungsspezifikation der O2I-Semantik: Sie typisiert zulässige Modellformen und formuliert prüfbare Wohlgeformtheits- und Nachweisregeln.
+Die Haskell-Spezifikation in `spc/src/lib/` ist keine Implementierung eines Anwendungssystems und keine allgemeine Modellierungs-DSL. Sie ist eine kompakte, maschinenprüfbare Validierungsspezifikation der O2I-Semantik: Sie typisiert zulässige Modellformen und unterscheidet strukturelle Wohlgeformtheit von vollständiger Wirkungsvalidierung.
 
 Das Metamodell ersetzt die Terminologie nicht. Die Terminologie legt die fachliche Bedeutung fest; das Metamodell macht diese Bedeutung modellierbar, referenzierbar und validierbar.
 
@@ -518,7 +518,7 @@ Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen. Sie e
 @Lst:o2i-context-types zeigt das Kontext-Inventar und legt fest, welche fachlichen Interpretationsrahmen O2I als Kontexttypen kennt.
 
 ```{#lst:o2i-context-types .haskell caption="O2I Kontexttypen"}
-!include`snippetStart="-- ** Contexts", snippetEnd="-- ** Primitives"` spc/O2I.hs
+!include`snippetStart="-- ** Contexts", snippetEnd="-- ** Primitives"` spc/src/lib/O2I/Elements.hs
 ```
 
 `Ethos`, `Mission` und `Vision` bilden eine Orientierung. `Strategy` ist der Kontext für eine strategische Wegentscheidung innerhalb einer Formierung. Kritische Erfolgsfaktoren sind in O2I kein eigener Kontext, sondern strukturieren die strategische Erfolgslogik; sie vermitteln zwischen Strategie, Bedarfsqualifikation, Messrahmung und späterer Operationalisierung. `Need`, `Intervention`, `Measure` und `Situation` bilden die Kontexte für Situierung, Operationalisierung und Wirkung.
@@ -528,7 +528,7 @@ Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen. Sie e
 Kontextrelationen beschreiben fachliche Relationen zwischen Kontexttypen. @Lst:o2i-context-relations zeigt die zulässigen Kontextrelationen.
 
 ```{#lst:o2i-context-relations .haskell caption="O2I Kontextrelationen"}
-!include`snippetStart="-- ** Semantic relations", snippetEnd="-- *** Situation anchor relations"` spc/O2I.hs
+!include`snippetStart="-- ** Semantic relations", snippetEnd="-- *** Situation anchor relations"` spc/src/lib/O2I/Relation.hs
 ```
 
 Diese typisierte Spezifikation verhindert, dass beliebige Kontextrelationen als O2I-Relationen ausgegeben werden. Beispielsweise ist `Strategy --qualifies--> Need` zulässig; `Need --qualifies--> Strategy` ist kein O2I-Relationstyp.
@@ -548,7 +548,7 @@ Die Darstellung ist als semantische Übersicht des abstrakten Formvorrats zu les
 Das Primitive-Inventar legt fest, welche abstrakten Träger fachlicher Inhalte O2I kennt. @Lst:o2i-primitive-types zeigt diese Primitive-Typen.
 
 ```{#lst:o2i-primitive-types .haskell caption="O2I Primitive-Typen"}
-!include`snippetStart="-- ** Primitives", snippetEnd="-- ** Structuring"` spc/O2I.hs
+!include`snippetStart="-- ** Primitives", snippetEnd="-- ** Structuring"` spc/src/lib/O2I/Elements.hs
 ```
 
 ##### Relationen
@@ -556,19 +556,19 @@ Das Primitive-Inventar legt fest, welche abstrakten Träger fachlicher Inhalte O
 Primitive-Relationen beschreiben die abstrakte Begründungsstruktur zwischen modellierten Inhalten. Sie verbinden kontextualisierte Primitives und, wo erforderlich, Strukturierungen oder Situationsanker. Die Spezifikation gliedert sie in drei fokussierte Ausschnitte: @Lst:o2i-primitive-relations-orientation-strategy zeigt Orientierungs- und Strategie-Bezüge, @Lst:o2i-primitive-relations-need-measure zeigt Bedarfs- und Messrahmungsbezüge, @Lst:o2i-primitive-relations-intervention-effect zeigt Interventions- und Wirkungsbezüge.
 
 ```{#lst:o2i-primitive-relations-orientation-strategy .haskell caption="O2I Primitive-Relationen: Orientierung und Strategie"}
-!include`snippetStart="-- **** Orientation and strategy evidence", snippetEnd="-- **** Need and measurement evidence"` spc/O2I.hs
+!include`snippetStart="-- **** Orientation and strategy evidence", snippetEnd="-- **** Need and measurement evidence"` spc/src/lib/O2I/Relation.hs
 ```
 
 @Lst:o2i-primitive-relations-need-measure konkretisiert die Begründungsstruktur für Bedarfsqualifikation und Messrahmung.
 
 ```{#lst:o2i-primitive-relations-need-measure .haskell caption="O2I Primitive-Relationen: Bedarf und Messrahmung"}
-!include`snippetStart="-- **** Need and measurement evidence", snippetEnd="-- **** Intervention and effect evidence"` spc/O2I.hs
+!include`snippetStart="-- **** Need and measurement evidence", snippetEnd="-- **** Intervention and effect evidence"` spc/src/lib/O2I/Relation.hs
 ```
 
 @Lst:o2i-primitive-relations-intervention-effect konkretisiert die Begründungsstruktur für Intervention, Zielbezug, Situationsveränderung und Messbeobachtung.
 
 ```{#lst:o2i-primitive-relations-intervention-effect .haskell caption="O2I Primitive-Relationen: Intervention und Wirkung"}
-!include`snippetStart="-- **** Intervention and effect evidence", snippetEnd="-- ** Interpretations"` spc/O2I.hs
+!include`snippetStart="-- **** Intervention and effect evidence", snippetEnd="-- ** Dynamic relation representation"` spc/src/lib/O2I/Relation.hs
 ```
 
 Diese typisierten Spezifikationen verhindern, dass beliebige Primitive-Relationen als O2I-Relationen ausgegeben werden. Eine Relation wird nicht nur nach Primitive-Art, sondern nach kontextualisiertem Endpunkt typisiert, etwa `KeyResult @ Strategy -> Objective @ Need`.
@@ -580,7 +580,7 @@ Strukturierungstypen ordnen Modellelemente, ohne selbst O2I-Kontexte oder O2I-Pr
 @lst:o2i-structuring-types zeigt die Strukturierungstypen des Metamodells.
 
 ```{#lst:o2i-structuring-types .haskell caption="O2I Strukturierungstypen"}
-!include`snippetStart="-- ** Structuring", snippetEnd="-- ** Situation anchors"` spc/O2I.hs
+!include`snippetStart="-- ** Structuring", snippetEnd="-- ** Situation anchors"` spc/src/lib/O2I/Elements.hs
 ```
 
 `Domain` ist der generische Strukturierungstyp des O2I-Metamodells. Eine `Domain` bezeichnet einen fachlichen Ordnungsbereich, in dem zusammengehörige Modellelemente oder Strukturierungsbezüge gruppiert werden können. Ein kritischer Erfolgsfaktor (`CSF`) ist in O2I keine eigene Metamodellart, sondern kann als benannte strategische Domain modelliert werden.
@@ -590,17 +590,17 @@ Strukturierungstypen ordnen Modellelemente, ohne selbst O2I-Kontexte oder O2I-Pr
 Situationsanker verankern eine `Situation` in konkreten Business-Architecture-Artefakten. Sie sind weder O2I-Kontexte noch O2I-Primitives, sondern fachliche Anker, an denen Bedarfe sichtbar, Interventionen wirksam und Messungen beobachtbar werden. @Lst:o2i-situation-anchor-types zeigt das zulässige Inventar dieser Anker.
 
 ```{#lst:o2i-situation-anchor-types .haskell caption="O2I Situationsanker"}
-!include`snippetStart="-- ** Situation anchors", snippetEnd="-- ** Node kinds"` spc/O2I.hs
+!include`snippetStart="-- ** Situation anchors", snippetEnd="-- ** Node kinds"` spc/src/lib/O2I/Elements.hs
 ```
 
 ### Instanziierung
 
 Instanziierung beschreibt, wie aus O2I-Typen konkrete Modellelemente in einem O2I-Modell entstehen. `Need` ist ein Kontexttyp; ein konkreter Bedarf in einem Modell ist eine `Need`-Instanz. `Objective` ist ein Primitive-Typ; ein konkretes Objective in einem Modell ist eine `Objective`-Instanz.
 
-@lst:o2i-model-instances zeigt die Modellinstanzen, mit denen konkrete Kontexte, Primitives, Strukturierungen und Relationen im Modellgraphen repräsentiert werden.
+@lst:o2i-model-graph zeigt den generischen konkreten O2I-Modellgraphen, mit dem konkrete Kontexte, Primitives, Strukturierungen, Situationsanker und Relationen repräsentiert werden.
 
-```{#lst:o2i-model-instances .haskell caption="O2I Modellinstanzen"}
-!include`snippetStart="-- * Model instances", snippetEnd="-- * Validation"` spc/O2I.hs
+```{#lst:o2i-model-graph .haskell caption="O2I Modellgraph"}
+!include`snippetStart="-- * Model graph", snippetEnd="-- * Graph queries"` spc/src/lib/O2I/Graph.hs
 ```
 
 #### Kontextinstanzen
@@ -625,8 +625,10 @@ Interpretation legt fest, welche Bedeutung ein O2I-Primitive in einem O2I-Kontex
 @lst:o2i-interpretations zeigt die zulässigen Interpretationen von Primitives in Kontexten.
 
 ```{#lst:o2i-interpretations .haskell caption="O2I Interpretationen"}
-!include`snippetStart="-- ** Interpretations", snippetEnd="-- * Model instances"` spc/O2I.hs
+!include`snippetStart="-- ** Interpretations", snippetEnd="-- * End of elements"` spc/src/lib/O2I/Elements.hs
 ```
+
+Die GADT-Konstruktoren bilden den typisierten Spezifikationskern der Interpretationen. `allowedInterpretation` ist die Runtime-Projektion dieser Interpretationen: Die Funktion macht die typisierten Interpretationszeugen zur Laufzeit als prüfbare Ja/Nein-Entscheidung für konkrete Modellelemente verfügbar. Dadurch wird keine zweite fachliche Zulässigkeitstabelle gepflegt.
 
 #### Primitives
 
@@ -654,23 +656,23 @@ Diese Primitive-Relation kann begründen, warum eine konkrete Strategie einen ko
 
 ## Wohlgeformtheit und Validierung
 
-Wohlgeformtheit prüft, ob ein O2I-Modell die zulässigen Typen, Interpretationen und Relationen einhält. Validierung prüft darüber hinaus, ob zentrale O2I-Aussagen durch den Wirkungsgraphen begründet sind. Die Haskell-Spezifikation definiert zulässige Relationstypen als GADT-Relationszeugen; konkrete Modellinstanzen werden anschließend über `wfEdge`, `wfContextEvidence` und weitere Validierungsregeln gegen diese Relationstypen geprüft.
+Wohlgeformtheit prüft, ob ein O2I-Modell die zulässigen Typen, Interpretationen und Relationen einhält. Wirkungsvalidierung prüft darüber hinaus, ob zentrale O2I-Aussagen durch den Wirkungsgraphen begründet sind. `wfModel` beschreibt die strukturelle Wohlgeformtheit eines Modells; `validEffectModel` beschreibt die stärkere Wirkungsvalidität und verlangt für jedes adressierte `Need` jeder `Intervention` einen vollständigen Wirkungstrace. Die Haskell-Spezifikation definiert zulässige Relationstypen als GADT-Relationszeugen; konkrete Modellgraphen werden anschließend über `wfEdge`, `wfContextEvidence`, `validEffectModel` und weitere Validierungsregeln gegen diese Relationstypen geprüft.
 
 @lst:o2i-validation zeigt die zentralen Wohlgeformtheits- und Validierungsregeln.
 
 ```{#lst:o2i-validation .haskell caption="O2I Wohlgeformtheit und Validierung"}
-!include`snippetStart="-- * Validation", snippetEnd="-- ** Effect trace"` spc/O2I.hs
+!include`snippetStart="-- * Validation", snippetEnd="-- ** Effect trace"` spc/src/lib/O2I/Validation.hs
 ```
 
 @lst:o2i-effect-trace zeigt die Trace-Regel für relational nachvollziehbare Wirkung.
 
 ```{#lst:o2i-effect-trace .haskell caption="O2I Wirkungstrace"}
-!include`snippetStart="-- ** Effect trace", snippetEnd="-- * Validation support"` spc/O2I.hs
+!include`snippetStart="-- ** Effect trace", snippetEnd="-- * Validation support"` spc/src/lib/O2I/Validation.hs
 ```
 
 ### Grundregeln
 
-Ein Modell ist wohlgeformt, wenn Primitive nur in zulässigen Kontexten verwendet werden, Domains nur in zulässigen Kontexten stehen, Situationsanker nur in `Situation` vorkommen, Relationen typgerecht sind und Interventionen nur wirkungsrelevante Bedarfe adressieren.
+Ein Modell ist wohlgeformt, wenn Primitive nur in zulässigen Kontexten verwendet werden, Domains nur in zulässigen Kontexten stehen, Situationsanker nur in `Situation` vorkommen und Relationen typgerecht sind. Ein Modell ist als Wirkungsmodell valide, wenn es darüber hinaus die O2I-Wirkungslogik erfüllt, insbesondere Interventionen nur wirkungsrelevante Bedarfe adressieren.
 
 ### Wirkungsrelevanz
 

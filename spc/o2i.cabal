@@ -1,0 +1,65 @@
+cabal-version: 3.0
+
+name: o2i
+version: 0.2.0.0
+synopsis: Typed validation core for the O2I metamodel.
+category: Formal Methods, Modelling
+description:
+  O2I provides a compact Haskell library for the typed semantic core and
+  validation rules of the Orientation to Impact metamodel.
+license: Apache-2.0
+license-file: LICENSE
+author: Normen Mueller
+maintainer: normen.mueller@gmail.com
+build-type: Simple
+common warnings
+  ghc-options:
+    -Wall
+
+common language
+  default-language: Haskell2010
+
+library
+  import:
+    warnings,
+    language
+  exposed-modules:
+    O2I,
+    O2I.Elements,
+    O2I.Graph,
+    O2I.Relation,
+    O2I.Validation
+  build-depends:
+    base >=4.18 && <4.19
+  hs-source-dirs:
+    src/lib
+
+executable o2i
+  import:
+    warnings,
+    language
+  main-is:
+    Main.hs
+  build-depends:
+    base >=4.18 && <4.19,
+    o2i
+  hs-source-dirs:
+    src/app
+
+test-suite o2i-test
+  import:
+    warnings,
+    language
+  type:
+    exitcode-stdio-1.0
+  main-is:
+    Main.hs
+  build-depends:
+    base >=4.18 && <4.19,
+    o2i
+  hs-source-dirs:
+    tst
+
+source-repository head
+  type: git
+  location: https://github.com/normenmueller/o2i.git
