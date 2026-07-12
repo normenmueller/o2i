@@ -49,11 +49,13 @@ geometry:
 
 # Einleitung
 
-O2I steht für *Orientation to Impact*. O2I dient dazu, *orientierte Wirkung* nachvollziehbar und nachweisbar modellierbar zu machen.
+O2I steht für *Orientation to Impact*.
+
+!include`snippetStart="<!-- O2I PURPOSE START -->", snippetEnd="<!-- O2I PURPOSE END -->"` README.md
 
 O2I beschreibt, wie Orientierung unter gegebenen Bedingungen in strategische Formierung, situierte Bedarfe, wirkungsgerichtete Operationalisierung und nachvollziehbare Wirkung überführt wird.
 
-O2I wird in diesem Artikel als Framework verstanden. Die O2I-Terminologie liefert die fachliche Begriffswelt auf Basis der herangezogenen Standardliteratur; das O2I-Metamodell formalisiert diese Begriffswelt semantisch und syntaktisch; die Illustration zeigt an einem zusammenhängenden Beispiel, wie daraus ein O2I-Wirkungsgraph entsteht. Zusammen entsteht eine begründete Denk-, Modellierungs- und Nachweislogik für Wirkung.
+Der Artikel entfaltet O2I als Framework, indem er die fachliche Begriffswelt auf Basis der Standardliteratur terminologisch begründet, semantisch und syntaktisch im Metamodell formalisiert und ihre Anwendung anhand eines zusammenhängenden O2I-Wirkungsgraphen illustriert.
 
 Die zentrale Idee von O2I ist, fachliche Relationen wie die O2I-Relation `Strategy --qualifies--> Need` nicht nur zu behaupten, sondern im O2I-Wirkungsgraphen zu begründen. O2I-Kontexte geben Bedeutung; O2I-Primitives tragen die modellierten Inhalte; Relationen zwischen kontextualisierten Primitives machen die fachliche Begründung nachvollziehbar.
 
@@ -860,11 +862,7 @@ O2I beschreibt ein Framework für Wirkungsarchitekturen: Es verbindet standardli
 
 > [!tldr] O2I USP
 >
-> - Orientierte Wirkung wird relational nachvollziehbar.
-> - Kontextrelationen werden durch Primitive-Relationen begründet.
-> - Strategie wird nicht als Absichtserklärung akzeptiert, sondern durch Handlungsfestlegungen und Erfolgsbezüge prüfbar.
-> - Bedarfe werden erst wirkungsrelevant, wenn sie situativ sichtbar und strategisch qualifiziert sind.
-> - Wirkung wird nicht behauptet, sondern über Intervention, Messung und Graph-Nachvollziehbarkeit begründet.
+> !include`snippetStart="<!-- O2I USP START -->", snippetEnd="<!-- O2I USP END -->"` README.md
 
 \begin{center}
 \texttt{\detokenize{Strategy --qualifies--> Need <--surfaces-- Situation}}

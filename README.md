@@ -6,15 +6,19 @@ Der aktive Artikel ist [`o2i.md`](./o2i.md). Das ArchiMate-Modell liegt unter [`
 
 ## Purpose
 
+<!-- O2I PURPOSE START -->
 O2I dient dazu, *orientierte Wirkung* durch relationale Modellierung nachvollziehbar und durch Messung und Evidenz nachweisbar zu machen. Es verbindet standardliteraturbasierte Terminologie, ein semantisch und syntaktisch ausgearbeitetes Metamodell sowie eine maschinenprüfbare Haskell-Spezifikation.
+<!-- O2I PURPOSE END -->
 
 ## USP
 
+<!-- O2I USP START -->
 - Orientierte Wirkung wird relational nachvollziehbar.
 - Kontextrelationen werden durch Primitive-Relationen begründet.
 - Strategie wird nicht als Absichtserklärung akzeptiert, sondern durch Handlungsfestlegungen und Erfolgsbezüge prüfbar.
 - Bedarfe werden erst wirkungsrelevant, wenn sie situativ sichtbar und strategisch qualifiziert sind.
 - Wirkung wird nicht behauptet, sondern über Intervention, Messung und Graph-Nachvollziehbarkeit begründet.
+<!-- O2I USP END -->
 
 ## Layout
 
