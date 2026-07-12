@@ -871,3 +871,7 @@ O2I beschreibt ein Framework für Wirkungsarchitekturen: Es verbindet standardli
 \end{center}
 
 O2I folgt damit einer einfachen Grundidee: *panta rhei* - alles fließt. Orientierung, Strategie, Bedarfe, Interventionen und Wirkung bleiben nicht statisch, sondern werden im Wirkungsgraphen fortlaufend nachvollziehbar, überprüfbar und lernfähig verbunden.
+
+# Danksagung
+
+!include ACKNOWLEDGEMENTS.md
