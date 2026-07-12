@@ -136,7 +136,10 @@ Die Terminologie beschreibt eine *teleologische Wirkungslogik*: von Orientierung
 
 ## Orientierung
 
-Orientierung bezeichnet in O2I die fachliche Domäne, in der ein handlungsfähiger Akteur seinen normativen Rahmen, seinen grundlegenden Existenzzweck und seinen angestrebten Zukunftszustand bestimmt.
+> [!definition]
+> **Orientierung**[^orientation-domain] bezeichnet in O2I die fachliche Domäne, in der ein handlungsfähiger Akteur seinen normativen Rahmen, seinen grundlegenden Existenzzweck und seinen angestrebten Zukunftszustand bestimmt.
+>
+> [^orientation-domain]: *Autorenableitung in Anlehnung an Collins und Porras (1996), Schein (2010), Bourne, Jenkins und Parry (2019), George et al. (2023) sowie Chua, Miska, Mair und Stahl (2024)*: O2I fasst kulturell-normative Orientierung, Existenzzweck und Zukunftsbild als zusammenhängende fachliche Domäne.
 
 ![O2I Orientierung](<img/O2I Orientierung.png>){#fig:o2i-orientation-view width=50%}
 
@@ -183,7 +186,10 @@ Vision gibt Richtung, ohne den Weg festzulegen. Sie macht die angestrebte Wirkun
 
 ## Formierung
 
-Formierung bezeichnet in O2I die fachliche Domäne, in der Orientierung unter gegebenen Bedingungen in eine begründete strategische Wegentscheidung und daraus abgeleitete kritische Erfolgsfaktoren überführt wird.
+> [!definition]
+> **Formierung**[^formation-domain] bezeichnet in O2I die fachliche Domäne, in der Orientierung unter gegebenen Bedingungen in eine begründete strategische Wegentscheidung und daraus abgeleitete kritische Erfolgsfaktoren überführt wird.
+>
+> [^formation-domain]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996), Hamel und Prahalad (1989), Mintzberg und Waters (1985) sowie Parmenter (2020)*: O2I fasst strategische Wegentscheidung und abgeleitete Erfolgsbereiche als zusammenhängende fachliche Domäne.
 
 ### Strategie
 
@@ -194,7 +200,7 @@ Formierung bezeichnet in O2I die fachliche Domäne, in der Orientierung unter ge
 >
 > [^strategy]: *Quellenanker*: Rumelt (2011) für Strategie als kohärente Antwort auf eine wesentliche Herausforderung; Porter (1996) für Positionierung, Trade-offs und Fit; Mintzberg und Waters (1985) für Strategie als intendiertes und realisiertes Handlungsmuster; Parmenter (2020) für Strategie als Weg zur Verwirklichung der Vision und als Grundlage für die Ableitung von CSFs und Performance-Maßen.
 
-[^actor]: Organisationseinheiten besitzen nicht automatisch eine eigene Strategie. Nach der hier verwendeten Definition gilt dies nur, wenn sie legitim entscheiden, Ressourcen binden, Verantwortung tragen und eine eigene Diagnose, Guiding Policy, Trade-offs und kohärente Handlungslogik ausbilden können.
+[^actor]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996) und Mintzberg und Waters (1985)*: Organisationseinheiten besitzen nicht automatisch eine eigene Strategie. Nach der hier verwendeten Definition gilt dies nur, wenn sie legitim entscheiden, Ressourcen binden, Verantwortung tragen und eine eigene Diagnose, Guiding Policy, Trade-offs und kohärente Handlungslogik ausbilden können.
 
 Als Artefakt muss eine Strategie ihre Bestandteile dokumentieren. Eine explizit formulierte Strategie liefert mindestens Geltungsbereich, strategische Verankerung, abgeleitete Leitplanken, Diagnose, strategische Absicht, Guiding Policy, Positionierung, Trade-offs, kohärente Handlungsfestlegungen und Fit.
 
@@ -321,7 +327,10 @@ In O2I begründen kritische Erfolgsfaktoren, welche Primitive-Verbindungen zwisc
 
 ## Situierung
 
-Situierung bezeichnet in O2I die fachliche Verankerung eines Bedarfs in einer konkreten Situation, in der der Bedarf sichtbar, begründbar und später überprüfbar wird.
+> [!definition]
+> **Situierung**[^situating-domain] bezeichnet in O2I die fachliche Domäne, in der ein Bedarf in einer konkreten Situation verankert und dadurch sichtbar, begründbar und später überprüfbar wird.
+>
+> [^situating-domain]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996), Doerr (2018), Parmenter (2020) und The Open Group (2025, 2026)*: O2I verbindet strategische Relevanz mit fachlich beschriebener Arbeitsrealität in einer eigenständigen Domäne.
 
 ### Situation
 
@@ -355,7 +364,10 @@ Durch seinen Situationsbezug ist ein O2I-Bedarf sichtbar und prüfbar, aber noch
 
 ## Operationalisierung
 
-Operationalisierung übersetzt eine strategische Wegentscheidung und in Situationen sichtbar gewordene Bedarfe in wirkungsgerichtete Handlung. Dazu gehören die Qualifikation dieser Bedarfe und die Intervention, mit der ein wirkungsrelevanter Bedarf adressiert wird.
+> [!definition]
+> **Operationalisierung**[^operationalization-domain] bezeichnet in O2I die fachliche Domäne, in der sichtbar gewordene Bedarfe strategisch qualifiziert und durch Interventionen handlungs- und nachweisfähig gemacht werden.
+>
+> [^operationalization-domain]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996), Doerr (2018), Parmenter (2020) und Barr (2014)*: O2I fasst Bedarfsqualifikation, Intervention und Messanschluss als zusammenhängende fachliche Domäne.
 
 ### Bedarfsqualifikation
 
@@ -411,10 +423,8 @@ Damit eine Intervention überprüfbar bleibt, *muss* sie an Messung anschließen
 
 ## Wirkung
 
-Wirkung wird in O2I nicht behauptet, sondern durch relationale Nachvollziehbarkeit und Messung begründet. Maßgeblich ist das Zusammenspiel aus qualifiziertem Bedarf, Intervention, veränderter Situation, Messung und nachvollziehbarer Einordnung im O2I-Graphen.
-
 > [!definition]
-> Eine **Wirkung**[^effect] bezeichnet eine beobachtbare und relational nachvollziehbare Veränderung, die als möglicher Beitrag der Operationalisierung einer strategischen Wegentscheidung zur [Vision](#vision) begründet werden kann.
+> **Wirkung** bezeichnet in O2I die fachliche Domäne, in der beobachtete Veränderung relational und empirisch begründet wird. Eine **Wirkung**[^effect] bezeichnet darin eine beobachtbare und relational nachvollziehbare Veränderung, die als möglicher Beitrag der Operationalisierung einer strategischen Wegentscheidung zur [Vision](#vision) begründet werden kann.
 >
 > [^effect]: *Autorenableitung in Anlehnung an Porter (1996), Doerr (2018), Parmenter (2020) und Barr (2014)*: Wirkung wird hier als beobachtete Veränderung mit plausibler relationaler Attribution zur Operationalisierung einer strategischen Wegentscheidung verstanden. Porter liefert die Logik des Wertbeitrags durch Aktivitätssysteme; Doerr, Parmenter und Barr liefern Instrumente zur Überprüfung von Fortschritt und Performance.
 
@@ -434,15 +444,15 @@ Wirkungsrelevanz ist damit eine Ex-ante-Handlungsrelevanz; Wirkungsvollheit ist 
 ### Messung
 
 > [!definition]
-> Eine **Messung** (en.: *measure*; meta: `Measure`)[^measure] bezeichnet den fachlichen Messrahmen, in dem ein relevanter Zustand, eine relevante Leistung oder eine relevante Entwicklung in einer [Situation](#situation) beobachtbar gemacht wird. Sie wird durch Strategie fachlich gerahmt und macht die durch Interventionen angestrebten Veränderungen über geeignete Messdefinitionen, insbesondere KPIs, beobachtbar.
+> Eine **Messung** (en.: *measure*; meta: `Measure`)[^measure] bezeichnet den fachlichen Messrahmen, in dem ein relevanter Zustand, eine relevante Leistung oder eine relevante Entwicklung in einer [Situation](#situation) beobachtbar gemacht wird. Sie wird durch Strategie fachlich gerahmt und macht die durch Interventionen angestrebten Veränderungen über KPIs beobachtbar.
 >
 > > [!tldr] Messung = \textsc{Woran} erkennen wir Veränderung?
 >
-> [^measure]: *Quellenanker*: Parmenter (2020) für KPIs und die Abgrenzung zu anderen Performance-Maßen; Barr (2014) für methodische Entwicklung aussagefähiger Performance-Maße. *Autorenableitung in Anlehnung an Doerr (2018), Parmenter (2020) und Barr (2014)*: `Measure` wird in O2I als Messrahmen modelliert; konkrete stabile Messdefinitionen werden als KPIs oder andere geeignete Messgrößen innerhalb dieses Rahmens geführt.
+> [^measure]: *Quellenanker*: Parmenter (2020) für KPIs und die Abgrenzung zu anderen Performance-Maßen; Barr (2014) für methodische Entwicklung aussagefähiger Performance-Maße. *Autorenableitung in Anlehnung an Doerr (2018), Parmenter (2020) und Barr (2014)*: `Measure` wird in O2I als Messrahmen modelliert; konkrete stabile Messdefinitionen werden als KPIs innerhalb dieses Rahmens geführt.
 
 In O2I misst eine Messung eine Situation (`Measure --measures--> Situation`). Strategie rahmt, was gemessen werden muss (`Strategy --frames--> Measure`). Interventionen setzen Zielwerte oder Zielbezüge für Messungen, wenn sie eine angestrebte Veränderung überprüfbar machen (`Intervention --sets-target-for--> Measure`).
 
-Eine Messung ist nicht automatisch ein KPI. Ein KPI ist eine stabile, entscheidungsrelevante Messdefinition innerhalb eines Messrahmens. O2I hält diese Unterscheidung offen, weil nicht jede fachlich notwendige Messung unmittelbar eine steuerungsrelevante Kennzahl ist.
+`Measure` und KPI bezeichnen unterschiedliche Modellebenen: `Measure` ist der fachliche Messrahmen; ein KPI ist eine stabile, entscheidungsrelevante Messdefinition innerhalb dieses Rahmens. O2I-Messbeobachtungen beziehen sich auf einen solchen KPI.
 
 Messung ist nicht Wirkung selbst. Sie macht Zustände und Veränderungen beobachtbar und liefert Evidenz, die erst durch Nachweislogik als Wirkung gelesen werden kann.
 
@@ -497,9 +507,9 @@ Damit bleibt Nachweislogik von Messung getrennt: Messung macht beobachtbar, Nach
 
 ## Zweck
 
-Das O2I-Metamodell ist der formale Kern des O2I Frameworks. Es übersetzt die O2I-Terminologie in eine prüfbare Modellstruktur: Begriffe werden als Typen gefasst, konkrete Modellelemente werden als Instanzen dieser Typen beschrieben, Primitives erhalten ihre Bedeutung durch Interpretation in Kontexten, und Wohlgeformtheitsregeln prüfen, ob ein Modell die O2I-Wirkungslogik einhält.
+Das O2I-Metamodell ist der formale Kern des O2I Frameworks. Es übersetzt die O2I-Terminologie in eine prüfbare Modellstruktur: Begriffe werden als Typen gefasst, konkrete Modellelemente werden als Instanzen dieser Typen beschrieben, Primitives erhalten ihre Bedeutung durch Interpretation in Kontexten, und die gestufte Validierung prüft, ob ein Modell die O2I-Wirkungslogik einhält.
 
-Die Haskell-Spezifikation in `spc/src/lib/` ist keine Implementierung eines Anwendungssystems und keine allgemeine Modellierungs-DSL. Sie ist eine kompakte, maschinenprüfbare Validierungsspezifikation der O2I-Semantik: Sie typisiert zulässige Modellformen und unterscheidet strukturelle Wohlgeformtheit, relationale Wirkungsnachvollziehbarkeit und empirische Wirkungsevidenz.
+Die Haskell-Spezifikation in `spc/src/lib/` ist keine Implementierung eines Anwendungssystems und keine allgemeine Modellierungs-DSL. Sie ist eine kompakte, maschinenprüfbare Validierungsspezifikation der O2I-Semantik: Sie typisiert zulässige Modellformen und unterscheidet strukturelle Wohlgeformtheit, semantische Gültigkeit, relationale Wirkungsnachvollziehbarkeit und empirische Wirkungsevidenz.
 
 Das Metamodell ersetzt die Terminologie nicht. Die Terminologie legt die fachliche Bedeutung fest; das Metamodell macht diese Bedeutung modellierbar, referenzierbar und validierbar.
 
@@ -509,6 +519,8 @@ Das Metamodell ersetzt die Terminologie nicht. Die Terminologie legt die fachlic
 ## Semantik
 
 Die O2I-Semantik definiert, welche Modellformen zulässig sind und wie sie gelesen werden. Sie wird in den folgenden semantischen Bausteinen konkretisiert:
+
+Die Haskell-Library trennt dafür drei Verantwortungsbereiche: `O2I.Language` definiert den semantischen Formvorrat, `O2I.Graph` repräsentiert konkrete O2I-Graphen und `O2I.Validation` prüft diese Graphen stufenweise. Das Typsystem beschränkt zulässige Interpretationen und Relationsdomänen; die Laufzeitvalidierung prüft konkrete Bezeichner, Eigentümerschaft, globale Invarianten und vollständige Wirkungspfade. `O2I` bildet die kuratierte Gesamtfassade.
 
 Typen
 
@@ -534,7 +546,10 @@ O2I-Typen beschreiben die abstrakten Arten von Modellelementen. Sie enthalten no
 
 #### Kontexte
 
-O2I-Kontexte sind fachliche Interpretationsrahmen. Sie entsprechen den zentralen Standardbegriffen der Terminologie und geben O2I-Primitives ihre kontextspezifische Bedeutung.
+> [!definition]
+> Ein **O2I-Kontext**[^o2i-context] bezeichnet einen fachlichen Interpretationsrahmen, der einem O2I-Primitive seine kontextspezifische Bedeutung gibt.
+>
+> [^o2i-context]: *Autorenableitung in Anlehnung an Collins und Porras (1996), Schein (2010), Rumelt (2011), Porter (1996), Doerr (2018), Parmenter (2020), Barr (2014) und The Open Group (2025, 2026)*: O2I formalisiert die quellenbasierten Terminologiebegriffe als unterscheidbare semantische Interpretationsrahmen.
 
 @Fig:o2i-context-view zeigt das Kontextmodell des O2I-Metamodells: O2I-Kontexte und ihre Relationen.
 
@@ -547,7 +562,7 @@ Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen. Sie e
 @Lst:o2i-context-types zeigt das Kontext-Inventar und legt fest, welche fachlichen Interpretationsrahmen O2I als Kontexttypen kennt.
 
 ```{#lst:o2i-context-types .haskell caption="O2I Kontexttypen"}
-!include`snippetStart="-- ** Contexts", snippetEnd="-- ** Primitives"` spc/src/lib/O2I/Types.hs
+!include`snippetStart="-- ** Contexts", snippetEnd="-- ** Primitives"` spc/src/lib/O2I/Language/Element.hs
 ```
 
 `Ethos`, `Mission` und `Vision` bilden eine Orientierung. `Strategy` ist der Kontext für eine strategische Wegentscheidung innerhalb einer Formierung. Kritische Erfolgsfaktoren sind in O2I kein eigener Kontext, sondern strukturieren die strategische Erfolgslogik; sie vermitteln zwischen Strategie, Bedarfsqualifikation, Messrahmung und späterer Operationalisierung. `Need`, `Intervention`, `Measure` und `Situation` bilden die Kontexte für Situierung, Operationalisierung und Wirkung.
@@ -557,14 +572,17 @@ Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen. Sie e
 Kontextrelationen beschreiben fachliche Relationen zwischen Kontexttypen. @Lst:o2i-context-relations zeigt exemplarisch ihre kontextsensitive Typisierung; das vollständige Inventar liegt in der totalen Relationsregistry der Spezifikation.
 
 ```{#lst:o2i-context-relations .haskell caption="O2I Kontextrelationen (Auszug)"}
-!include`snippetStart="-- ** Context macrorelations", snippetEnd="-- ** Remaining context macrorelations"` spc/src/lib/O2I/Relation.hs
+!include`snippetStart="-- ** Context macrorelations", snippetEnd="-- ** Remaining context macrorelations"` spc/src/lib/O2I/Language/Relation.hs
 ```
 
 Diese typisierte Spezifikation verhindert, dass beliebige Kontextrelationen als O2I-Relationen ausgegeben werden. Beispielsweise ist `Strategy --qualifies--> Need` zulässig; `Need --qualifies--> Strategy` ist kein O2I-Relationstyp.
 
 #### Primitives
 
-O2I-Primitives sind abstrakte formale Träger fachlicher Inhalte. Sie besitzen keine vollständige O2I-Bedeutung für sich allein; ihre fachliche Lesart entsteht erst durch Interpretation in einem O2I-Kontext.
+> [!definition]
+> Ein **O2I-Primitive**[^o2i-primitive] bezeichnet einen abstrakten formalen Träger fachlicher Inhalte, dessen O2I-Bedeutung durch Interpretation in einem O2I-Kontext entsteht.
+>
+> [^o2i-primitive]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996), Doerr (2018), Parmenter (2020), Barr (2014) und The Open Group (2026)*: O2I verdichtet fachliche Strategie-, Ziel-, Handlungs- und Messbegriffe zu einem kleinen kontextualisierbaren Formvorrat.
 
 @Fig:o2i-primitives-view zeigt das O2I Primitives-Modell des O2I-Metamodells.
 
@@ -577,7 +595,7 @@ Die Darstellung ist als semantische Übersicht des abstrakten Formvorrats zu les
 Das Primitive-Inventar legt fest, welche abstrakten Träger fachlicher Inhalte O2I kennt. @Lst:o2i-primitive-types zeigt diese Primitive-Typen.
 
 ```{#lst:o2i-primitive-types .haskell caption="O2I Primitive-Typen"}
-!include`snippetStart="-- ** Primitives", snippetEnd="-- ** Structuring"` spc/src/lib/O2I/Types.hs
+!include`snippetStart="-- ** Primitives", snippetEnd="-- ** Structuring"` spc/src/lib/O2I/Language/Element.hs
 ```
 
 ##### Relationen
@@ -587,51 +605,69 @@ Primitive-Relationen beschreiben die abstrakte Begründungsstruktur zwischen mod
 @Lst:o2i-primitive-relations-orientation-strategy zeigt den typisierten Übergang von Orientierung zu Formierung.
 
 ```{#lst:o2i-primitive-relations-orientation-strategy .haskell caption="O2I Primitive-Relationen: Orientierung und Strategie (Auszug)"}
-!include`snippetStart="-- ** Orientation and strategy evidence", snippetEnd="-- ** Remaining orientation and strategy evidence"` spc/src/lib/O2I/Relation.hs
+!include`snippetStart="-- ** Orientation and strategy evidence", snippetEnd="-- ** Remaining orientation and strategy evidence"` spc/src/lib/O2I/Language/Relation.hs
 ```
 
 @Lst:o2i-primitive-relations-need-measure konkretisiert die Begründungsstruktur für Bedarfsqualifikation und Messrahmung.
 
 ```{#lst:o2i-primitive-relations-need-measure .haskell caption="O2I Primitive-Relationen: Bedarf und Messrahmung (Auszug)"}
-!include`snippetStart="-- ** Need and measurement evidence", snippetEnd="-- ** Remaining need and measurement evidence"` spc/src/lib/O2I/Relation.hs
+!include`snippetStart="-- ** Need and measurement evidence", snippetEnd="-- ** Remaining need and measurement evidence"` spc/src/lib/O2I/Language/Relation.hs
 ```
 
 @Lst:o2i-primitive-relations-intervention-effect konkretisiert die Begründungsstruktur für Intervention, Zielbezug, Situationsveränderung und Messbeobachtung.
 
 ```{#lst:o2i-primitive-relations-intervention-effect .haskell caption="O2I Primitive-Relationen: Intervention und Wirkung (Auszug)"}
-!include`snippetStart="-- ** Intervention and effect evidence", snippetEnd="-- ** Remaining intervention and effect evidence"` spc/src/lib/O2I/Relation.hs
+!include`snippetStart="-- ** Intervention and effect evidence", snippetEnd="-- ** Remaining intervention and effect evidence"` spc/src/lib/O2I/Language/Relation.hs
 ```
 
 Diese typisierten Spezifikationen verhindern, dass beliebige Primitive-Relationen als O2I-Relationen ausgegeben werden. Eine Relation wird nicht nur nach Primitive-Art, sondern nach kontextualisiertem Endpunkt typisiert, etwa `KeyResult @ Strategy -> Objective @ Need`.
 
 #### Strukturierung
 
-Strukturierungstypen ordnen Modellelemente, ohne selbst O2I-Kontexte oder O2I-Primitives zu sein.
+> [!definition]
+> Eine **Domain**[^o2i-domain] bezeichnet einen fachlichen Ordnungsbereich für zusammengehörige Modellelemente oder Strukturierungsbezüge. Sie ist weder O2I-Kontext noch O2I-Primitive.
+>
+> [^o2i-domain]: *Autorenableitung in Anlehnung an Parmenter (2020) und The Open Group (2026)*: O2I verallgemeinert fachliche Erfolgs- und Messbereiche zu einem einheitlichen Strukturierungstyp.
 
 @lst:o2i-structuring-types zeigt die Strukturierungstypen des Metamodells.
 
 ```{#lst:o2i-structuring-types .haskell caption="O2I Strukturierungstypen"}
-!include`snippetStart="-- ** Structuring", snippetEnd="-- ** Situation anchors"` spc/src/lib/O2I/Types.hs
+!include`snippetStart="-- ** Structuring", snippetEnd="-- ** Situation anchors"` spc/src/lib/O2I/Language/Element.hs
 ```
 
-`Domain` ist der generische Strukturierungstyp des O2I-Metamodells. Eine `Domain` bezeichnet einen fachlichen Ordnungsbereich, in dem zusammengehörige Modellelemente oder Strukturierungsbezüge gruppiert werden können. Ein kritischer Erfolgsfaktor (`CSF`) ist in O2I keine eigene Metamodellart, sondern kann als benannte strategische Domain modelliert werden.
+`Domain` ist der generische Strukturierungstyp des O2I-Metamodells. Ein kritischer Erfolgsfaktor (`CSF`) ist in O2I keine eigene Metamodellart, sondern kann als benannte strategische Domain modelliert werden.
 
 #### Situationsanker
 
-Situationsanker verankern eine `Situation` in konkreten Business-Architecture-Artefakten. Sie sind weder O2I-Kontexte noch O2I-Primitives, sondern fachliche Anker, an denen Bedarfe sichtbar, Interventionen wirksam und Messungen beobachtbar werden. @Lst:o2i-situation-anchor-types zeigt das zulässige Inventar dieser Anker.
+> [!definition]
+> Ein **Situationsanker**[^o2i-situation-anchor] bezeichnet ein konkretes Business-Architecture-Artefakt, das eine `Situation` fachlich konstituiert und an dem Bedarfe sichtbar, Interventionen wirksam und Messungen beobachtbar werden. Er ist weder O2I-Kontext noch O2I-Primitive.
+>
+> [^o2i-situation-anchor]: *Autorenableitung in Anlehnung an The Open Group (2025, 2026)*: O2I verwendet Business-Architecture-Artefakte als fachliche Anker für Situierung, Intervention und Messung.
+
+@Lst:o2i-situation-anchor-types zeigt das zulässige Inventar dieser Anker.
 
 ```{#lst:o2i-situation-anchor-types .haskell caption="O2I Situationsanker"}
-!include`snippetStart="-- ** Situation anchors", snippetEnd="-- ** Node kinds"` spc/src/lib/O2I/Types.hs
+!include`snippetStart="-- ** Situation anchors", snippetEnd="-- ** Node kinds"` spc/src/lib/O2I/Language/Element.hs
 ```
 
 ### Instanziierung
 
 Instanziierung beschreibt, wie aus O2I-Typen konkrete Modellelemente in einem O2I-Modell entstehen. `Need` ist ein Kontexttyp; ein konkreter Bedarf in einem Modell ist eine `Need`-Instanz. `Objective` ist ein Primitive-Typ; ein konkretes Objective in einem Modell ist eine `Objective`-Instanz.
 
+Die Validierung konkretisiert eine Modellinstanz in aufeinander aufbauenden Stufen:
+
+```text
+RawGraph
+  -> WellFormedGraph
+  -> SemanticallyValidModel
+  -> TraceableEffectModel
+  -> EvidenceAssessedModel
+```
+
 @lst:o2i-model-graph zeigt den generischen konkreten O2I-Modellgraphen, mit dem konkrete Kontexte, Primitives, Strukturierungen, Situationsanker und Relationen repräsentiert werden.
 
 ```{#lst:o2i-model-graph .haskell caption="O2I Modellgraph"}
-!include`snippetStart="-- * Typed model graph", snippetEnd="-- * Validated model stage"` spc/src/lib/O2I/Model.hs
+!include`snippetStart="-- * Typed model graph", snippetEnd="-- * Validated model stage"` spc/src/lib/O2I/Graph/Typed.hs
 ```
 
 #### Kontextinstanzen
@@ -656,7 +692,7 @@ Interpretation legt fest, welche Bedeutung ein O2I-Primitive in einem O2I-Kontex
 @lst:o2i-interpretations zeigt die zulässigen Interpretationen von Primitives in Kontexten.
 
 ```{#lst:o2i-interpretations .haskell caption="O2I Interpretationen"}
-!include`snippetStart="-- ** Interpretations", snippetEnd="-- ** Interpretation registry"` spc/src/lib/O2I/Types.hs
+!include`snippetStart="-- ** Interpretations", snippetEnd="-- ** Interpretation registry"` spc/src/lib/O2I/Language/Interpretation.hs
 ```
 
 Die GADT-Konstruktoren bilden den typisierten Spezifikationskern der Interpretationen. Die endliche Registry projiziert diese Interpretationszeugen in eine zur Laufzeit prüfbare Zuordnung für konkrete Modellelemente. Dadurch wird keine zweite fachliche Zulässigkeitstabelle gepflegt.
@@ -687,29 +723,56 @@ Diese Primitive-Relation kann begründen, warum eine konkrete Strategie einen ko
 
 ## Wohlgeformtheit und Validierung
 
-O2I unterscheidet drei aufeinander aufbauende Validierungsstufen. Ein `WellFormedModel` erfüllt die strukturellen Typ-, Interpretations- und Relationsregeln. Ein `TraceableEffectModel` weist für jeden durch eine Intervention adressierten Bedarf einen vollständigen relationalen Wirkungstrace von Vision bis Situationsanker nach. Ein `EvidenceAssessedModel` ergänzt diesen Trace um konsistente Messbeobachtungen sowie getrennte Bewertungen von Effekt und Zielerreichung.
+O2I unterscheidet einen ungeprüften Rohgraphen und vier aufeinander aufbauende Validierungsstufen. Ein `RawGraph` enthält ungeprüfte Eingabedaten. Ein `WellFormedGraph` erfüllt die strukturellen Typ-, Interpretations- und Relationsregeln. Ein `SemanticallyValidModel` erfüllt zusätzlich die globalen Need- und Strategy-Invarianten. Ein `TraceableEffectModel` weist für jeden durch eine Intervention adressierten Bedarf einen vollständigen relationalen Wirkungstrace von Vision bis Situationsanker nach. Ein `EvidenceAssessedModel` ergänzt diesen Trace um konsistente Messbeobachtungen sowie getrennte Bewertungen von Effekt und Zielerreichung.
 
-@Lst:o2i-validation zeigt die strukturelle Elaborierung eines Rohmodells in ein opakes, wohlgeformtes Modell.
+@Lst:o2i-validation zeigt die strukturelle Elaborierung eines `RawGraph` in einen opaken `WellFormedGraph`.
 
-```{#lst:o2i-validation .haskell caption="O2I Wohlgeformtheit und Validierung"}
-!include`snippetStart="validateStructure ::", snippetEnd="nodeErrors ::"` spc/src/lib/O2I/Internal/Elaboration.hs
+```{#lst:o2i-validation .haskell caption="O2I Strukturvalidierung"}
+!include`snippetStart="-- * Structural validation", snippetEnd="nodeErrors ::"` spc/src/lib/O2I/Validation/Structure.hs
 ```
 
-@Lst:o2i-effect-trace zeigt die zweite Validierungsstufe für relational nachvollziehbare Wirkung.
+@Lst:o2i-semantic-validation zeigt die zweite Validierungsstufe für semantische Gültigkeit.
+
+```{#lst:o2i-semantic-validation .haskell caption="O2I Semantikvalidierung"}
+!include`snippetStart="-- * Semantic validation", snippetEnd="-- * Validated model access"` spc/src/lib/O2I/Validation/Semantics.hs
+```
+
+@Lst:o2i-effect-trace zeigt die dritte Validierungsstufe für relational nachvollziehbare Wirkung.
 
 ```{#lst:o2i-effect-trace .haskell caption="O2I Wirkungstrace"}
-!include`snippetStart="-- * Traceability validation", snippetEnd="matchesInterventionNeed ::"` spc/src/lib/O2I/Trace.hs
+!include`snippetStart="-- * Traceability validation", snippetEnd="matchesInterventionNeed ::"` spc/src/lib/O2I/Validation/Trace.hs
 ```
 
-@Lst:o2i-evidence-validation zeigt die dritte Validierungsstufe für empirische Wirkungsevidenz.
+@Lst:o2i-evidence-validation zeigt die vierte Validierungsstufe für empirische Wirkungsevidenz.
 
 ```{#lst:o2i-evidence-validation .haskell caption="O2I Evidenzvalidierung"}
-!include`snippetStart="-- * Evidence validation", snippetEnd="claimsByTrace ::"` spc/src/lib/O2I/Evidence.hs
+!include`snippetStart="-- * Evidence validation", snippetEnd="claimsByTrace ::"` spc/src/lib/O2I/Validation/Evidence.hs
 ```
 
 ### Grundregeln
 
 Ein Modell ist wohlgeformt, wenn Bezeichner eindeutig sind, Eigentümer existieren, Primitives nur in zulässigen Kontexten verwendet werden, Domains nur in zulässigen Kontexten stehen, Situationsanker nur in `Situation` vorkommen und Relationsendpunkte typgerecht sind. Fehler werden akkumuliert, damit eine Prüfung sämtliche erkannten Strukturverletzungen gemeinsam ausweist.
+
+### Semantische Gültigkeit
+
+Ein strukturell wohlgeformter Graph ist semantisch gültig, wenn jeder Bedarf einen `Driver` und ein `Objective` besitzt, durch mindestens eine Situation sichtbar wird, jeder Need-Driver an einen diese Situation konstituierenden Situationsanker gebunden ist und jedes Need-Objective durch einen Need-Driver begründet wird. Die strategische Qualifikation ist davon unabhängig: Ein vollständig situierter Bedarf kann semantisch gültig sein, ohne bereits wirkungsrelevant zu sein.
+
+Jede Strategy-Instanz besitzt genau eine vollständige Formulierung. Sie umfasst Geltungsbereich, strategische Verankerung, abgeleitete Leitplanken, Diagnose, strategische Absicht, Guiding Policy, Positionierung, Trade-offs, kohärente Handlungsfestlegungen, strategische Key Results und Fit-Begründung. Sämtliche Textfelder müssen nichtleer sein; Action- und Key-Result-Referenzen müssen innerhalb ihrer Rolle eindeutig sein. @Lst:o2i-strategy-formulation zeigt die strukturierte Repräsentation dieser Bestandteile.
+
+```{#lst:o2i-strategy-formulation .haskell caption="O2I Strategy-Formulierung"}
+!include`snippetStart="-- * Strategy formulation input", snippetEnd="-- | A Strategy formulation"` spc/src/lib/O2I/Validation/Semantics.hs
+```
+
+Die Formulierung muss ihre Primitive-Rollen derselben Strategy-Instanz zuordnen und relational kohärent sein: Der Diagnosis-Driver begründet das Intent-Objective, die Guiding Policy führt jede gelistete Action, jede gelistete Action trägt zu mindestens einem gelisteten Key Result bei und jedes gelistete Key Result substantiiert das Intent-Objective.
+
+```text
+Driver --grounds--> Objective
+Principle --guides--> Action
+Action --contributes-to--> Key Result
+Key Result --substantiates--> Objective
+```
+
+Nur O2I-Primitives, die einer validierten Strategy-Formulierung in der jeweiligen Rolle zugeordnet sind, dürfen Strategy-bezogene Makrorelationen oder Wirkungstraces begründen. Weitere Strategy-Primitives können im Graphen bestehen, tragen jedoch ohne diese Zuordnung keine formale Strategy-Evidenz.
 
 ### Wirkungsrelevanz
 
@@ -768,6 +831,7 @@ Primitive-Relationen werden zwischen ArchiMate-Elementen abgebildet, die O2I-Pri
 Principle im Kontext Ethos --influence[guides]--> Driver im Kontext Mission
 Principle im Kontext Ethos --influence[guides]--> Goal im Kontext Vision
 Driver im Kontext Mission --influence[grounds]--> Goal im Kontext Vision
+Principle im Kontext Strategy --association[guides]--> Course of Action im Kontext Strategy
 Outcome im Kontext Strategy --influence[translates-into]--> Goal im Kontext Need
 Outcome im Kontext Strategy --realization[substantiates]--> Goal im Kontext Strategy
 Driver im Kontext Strategy --influence[indicates]--> Grouping im Kontext Measure

@@ -23,5 +23,6 @@
 - `Outcome` --sets-target-for--> `Assessment` (AssociationRelationship)
 - `Outcome` --substantiates--> `Goal` (RealizationRelationship)
 - `Outcome` --translates-into--> `Goal` (InfluenceRelationship)
+- `Principle` --guides--> `Course of Action` (AssociationRelationship)
 - `Principle` --guides--> `Driver` (InfluenceRelationship)
 - `Principle` --guides--> `Goal` (InfluenceRelationship)

@@ -1,8 +1,11 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Relational effect traces and traceability validation.
-module O2I.Trace
+-- | Relational effect-trace derivation and validation.
+--
+-- Trace validation derives complete paths only from semantically valid O2I
+-- graphs; it does not assess empirical observations.
+module O2I.Validation.Trace
   ( EffectTrace
   , EffectTraceId
   , TraceableEffectModel
@@ -21,9 +24,10 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
 import Data.Validation (Validation(..))
-import O2I.Model
-import O2I.Relation
-import O2I.Types
+import O2I.Graph.Typed
+import O2I.Language.Element
+import O2I.Language.Relation
+import O2I.Validation.Semantics
 
 -- * Effect trace
 data EffectTraceKey = EffectTraceKey
@@ -47,10 +51,14 @@ data EffectTraceKey = EffectTraceKey
   , keySituationAnchor :: RawNodeId
   } deriving (Eq, Ord, Show)
 
+-- | Stable identity derived from every constituent of one complete trace.
 newtype EffectTraceId =
   EffectTraceId EffectTraceKey
   deriving (Eq, Ord, Show)
 
+-- | Read-only projection of one complete relational effect path.
+--
+-- Strategy roles are derived exclusively from its validated formulation.
 data EffectTrace = EffectTrace
   { effectTraceIdentifier :: EffectTraceId
   , effectTraceIntervention :: RawNodeId
@@ -60,24 +68,36 @@ data EffectTrace = EffectTrace
   , effectTraceAnchor :: RawNodeId
   } deriving (Eq, Show)
 
+-- | Opaque semantic model with at least one complete effect trace and full
+-- trace coverage for every Need addressed by every Intervention.
 data TraceableEffectModel = TraceableEffectModel
-  { traceableWellFormedModel :: WellFormedModel
+  { traceableSemanticallyValidModel :: SemanticallyValidModel
   , validatedTraces :: NonEmpty.NonEmpty EffectTrace
   , traceIndex :: Map EffectTraceId EffectTrace
   }
 
+-- | Violations of relational effect traceability.
 data TraceabilityError
   = NoIntervention
+    -- ^ The model contains no Intervention from which a trace can be derived.
   | InterventionWithoutNeed RawNodeId
+    -- ^ An Intervention addresses no Need.
   | MissingMacroEvidence RawNodeId RelationName RawNodeId
+    -- ^ A context macrorelation lacks its required primitive evidence.
   | MissingEffectTrace RawNodeId RawNodeId
+    -- ^ An Intervention/Need pair has no complete relational effect path.
   deriving (Eq, Show)
 
 -- * Traceability validation
+-- | Derive and validate relational effect traces from a semantic model.
+--
+-- This stage relies on established Need and Strategy invariants. It requires
+-- primitive evidence for every macrorelation and a complete path for every
+-- addressed Need. It does not assess observations or causal attribution.
 validateTraceability ::
-     WellFormedModel
+     SemanticallyValidModel
   -> Validation (NonEmpty.NonEmpty TraceabilityError) TraceableEffectModel
-validateTraceability model =
+validateTraceability semantic =
   case NonEmpty.nonEmpty errors of
     Just failures -> Failure failures
     Nothing ->
@@ -85,16 +105,17 @@ validateTraceability model =
         Just nonEmptyTraces ->
           Success
             TraceableEffectModel
-              { traceableWellFormedModel = model
+              { traceableSemanticallyValidModel = semantic
               , validatedTraces = nonEmptyTraces
               , traceIndex = indexedTraces
               }
         Nothing -> Failure (NonEmpty.singleton NoIntervention)
   where
+    model = semanticModel semantic
     interventions = contextNodesOf model Intervention
     indexedTraces =
       Map.fromList
-        [(traceIdentifier trace, trace) | trace <- traceCandidates model]
+        [(traceIdentifier trace, trace) | trace <- traceCandidates semantic]
     traces = Map.elems indexedTraces
     addressed intervention =
       outgoingContextTargets model intervention (nameOf addressesNeed)
@@ -109,37 +130,48 @@ validateTraceability model =
           | need <- needs
           , not (any (matchesInterventionNeed intervention need) traces)
           ]
-    errors = macroEvidenceErrors model ++ interventionErrors
+    errors = macroEvidenceErrors semantic ++ interventionErrors
 
 matchesInterventionNeed :: RawNodeId -> RawNodeId -> EffectTrace -> Bool
 matchesInterventionNeed intervention need trace =
   effectTraceIntervention trace == intervention && effectTraceNeed trace == need
 
+-- | Enumerate all distinct validated effect traces.
 effectTraces :: TraceableEffectModel -> NonEmpty.NonEmpty EffectTrace
 effectTraces = validatedTraces
 
+-- | Resolve a trace identifier within its validated traceable model.
 lookupEffectTrace :: TraceableEffectModel -> EffectTraceId -> Maybe EffectTrace
 lookupEffectTrace model identifier = Map.lookup identifier (traceIndex model)
 
+-- | Read the stable identity of an effect trace.
 traceIdentifier :: EffectTrace -> EffectTraceId
 traceIdentifier = effectTraceIdentifier
 
+-- | Read the Need context justified by an effect trace.
 traceNeed :: EffectTrace -> ContextRef 'Need
 traceNeed = ContextRef . effectTraceNeed
 
+-- | Read the Intervention Key Result that operationalizes the traced Need.
 traceInterventionKeyResult :: EffectTrace -> RawNodeId
 traceInterventionKeyResult = effectTraceInterventionKeyResult
 
+-- | Read the KPI used to observe the traced Situation anchor.
 traceKPI :: EffectTrace -> RawNodeId
 traceKPI = effectTraceKPI
 
+-- | Read the Situation anchor changed and measured by the trace.
 traceAnchor :: EffectTrace -> RawNodeId
 traceAnchor = effectTraceAnchor
 
-traceCandidates :: WellFormedModel -> [EffectTrace]
-traceCandidates model = do
+traceCandidates :: SemanticallyValidModel -> [EffectTrace]
+traceCandidates semantic = do
   vision <- contextNodesOf model Vision
   strategy <- contextNodesOf model Strategy
+  formulation <-
+    case Map.lookup strategy (strategyFormulations semantic) of
+      Just validated -> [strategyFormulationData validated]
+      Nothing -> []
   need <- contextNodesOf model Need
   intervention <- contextNodesOf model Intervention
   measure <- contextNodesOf model Measure
@@ -154,24 +186,28 @@ traceCandidates model = do
   require (has model intervention setsTargetForMeasure measure)
   require (has model measure measuresSituation situation)
   visionObjective <- primitiveNodesIn model vision Objective
-  strategyObjective <- primitiveNodesIn model strategy Objective
+  strategyObjective <- [rawFormulationIntent formulation]
   require
     (has
        model
        visionObjective
        orientsVisionObjectiveToStrategyObjective
        strategyObjective)
-  strategyDriver <- primitiveNodesIn model strategy Driver
+  strategyDriver <- [rawFormulationDiagnosis formulation]
   require
-    (has model strategyDriver groundsStrategyDriverToObjective strategyObjective)
-  strategyKeyResult <- primitiveNodesIn model strategy KeyResult
+    $ has
+        model
+        strategyDriver
+        groundsStrategyDriverToObjective
+        strategyObjective
+  strategyKeyResult <- NonEmpty.toList (rawFormulationKeyResults formulation)
   require
     (has
        model
        strategyKeyResult
        substantiatesStrategyKeyResultObjective
        strategyObjective)
-  strategyAction <- primitiveNodesIn model strategy Action
+  strategyAction <- NonEmpty.toList (rawFormulationActions formulation)
   require
     (has
        model
@@ -270,22 +306,24 @@ traceCandidates model = do
       , effectTraceKPI = kpi
       , effectTraceAnchor = anchor
       }
+  where
+    model = semanticModel semantic
 
 require :: Bool -> [()]
 require True = [()]
 require False = []
 
-has :: WellFormedModel -> RawNodeId -> Relation from to -> RawNodeId -> Bool
+has :: WellFormedGraph -> RawNodeId -> Relation from to -> RawNodeId -> Bool
 has model from relation to = hasEdge model from (nameOf relation) to
 
-hasAnchor :: WellFormedModel -> RawNodeId -> RelationName -> RawNodeId -> Bool
+hasAnchor :: WellFormedGraph -> RawNodeId -> RelationName -> RawNodeId -> Bool
 hasAnchor = hasEdge
 
 nameOf :: Relation from to -> RelationName
 nameOf = relationName . relationSpec
 
-macroEvidenceErrors :: WellFormedModel -> [TraceabilityError]
-macroEvidenceErrors model =
+macroEvidenceErrors :: SemanticallyValidModel -> [TraceabilityError]
+macroEvidenceErrors semantic =
   [ MissingMacroEvidence from relationName' to
   | SomeEdge edge <- modelEdges model
   , let relation = edgeRelation edge
@@ -293,12 +331,18 @@ macroEvidenceErrors model =
   , let relationName' = nameOf relation
   , let from = unNodeId (edgeFrom edge)
   , let to = unNodeId (edgeTo edge)
-  , not (hasMacroEvidence model evidenceKind from to)
+  , not (hasMacroEvidence semantic evidenceKind from to)
   ]
+  where
+    model = semanticModel semantic
 
 hasMacroEvidence ::
-     WellFormedModel -> MacroEvidenceKind -> RawNodeId -> RawNodeId -> Bool
-hasMacroEvidence model evidenceKind from to =
+     SemanticallyValidModel
+  -> MacroEvidenceKind
+  -> RawNodeId
+  -> RawNodeId
+  -> Bool
+hasMacroEvidence semantic evidenceKind from to =
   case evidenceKind of
     GuidesMissionEvidence ->
       anyRelation Principle guidesEthosPrincipleToMissionDriver Driver
@@ -307,14 +351,29 @@ hasMacroEvidence model evidenceKind from to =
     GuidesVisionEvidence ->
       anyRelation Principle guidesEthosPrincipleToVisionObjective Objective
     OrientsStrategyEvidence ->
-      anyRelation Objective orientsVisionObjectiveToStrategyObjective Objective
+      anyBetween
+        (primitiveNodesIn model from Objective)
+        orientsVisionObjectiveToStrategyObjective
+        (strategyIntents to)
     DirectsStrategyEvidence ->
-      anyRelation Principle guidesStrategyPrincipleToPrinciple Principle
+      anyBetween
+        (strategyPolicies from)
+        guidesStrategyPrincipleToPrinciple
+        (strategyPolicies to)
     ContributesToStrategyEvidence ->
-      anyRelation KeyResult contributesStrategyKeyResultToKeyResult KeyResult
-        || anyRelation Action contributesStrategyActionToAction Action
+      anyBetween
+        (strategyKeyResults from)
+        contributesStrategyKeyResultToKeyResult
+        (strategyKeyResults to)
+        || anyBetween
+             (strategyActions from)
+             contributesStrategyActionToAction
+             (strategyActions to)
     QualifiesNeedEvidence ->
-      anyRelation KeyResult translatesStrategyKeyResultToNeedObjective Objective
+      anyBetween
+        (strategyKeyResults from)
+        translatesStrategyKeyResultToNeedObjective
+        (primitiveNodesIn model to Objective)
     SurfacesNeedEvidence ->
       anyAnchorToPrimitive
         (nameOf (anchorsNeedDriver SBusinessCapability))
@@ -325,7 +384,10 @@ hasMacroEvidence model evidenceKind from to =
         substantiatesInterventionKeyResultNeedObjective
         Objective
     DirectsInterventionEvidence ->
-      anyRelation Action guidesStrategyActionToInterventionAction Action
+      anyBetween
+        (strategyActions from)
+        guidesStrategyActionToInterventionAction
+        (primitiveNodesIn model to Action)
     ChangesSituationEvidence ->
       anyPrimitiveToAnchor Action (nameOf (changesAnchor SBusinessCapability))
     SetsTargetForMeasureEvidence ->
@@ -334,12 +396,28 @@ hasMacroEvidence model evidenceKind from to =
       anyPrimitiveToAnchor KPI (nameOf (measuresAnchor SBusinessCapability))
     FramesMeasureEvidence -> anyFramesEvidence
   where
+    model = semanticModel semantic
     anyRelation fromPrimitive primitiveRelation toPrimitive =
+      anyBetween
+        (primitiveNodesIn model from fromPrimitive)
+        primitiveRelation
+        (primitiveNodesIn model to toPrimitive)
+    anyBetween sources relation targets =
       or
-        [ has model source primitiveRelation target
-        | source <- primitiveNodesIn model from fromPrimitive
-        , target <- primitiveNodesIn model to toPrimitive
+        [ has model source relation target
+        | source <- sources
+        , target <- targets
         ]
+    strategyRole selector strategy =
+      case Map.lookup strategy (strategyFormulations semantic) of
+        Just formulation -> selector (strategyFormulationData formulation)
+        Nothing -> []
+    strategyIntents = strategyRole (pure . rawFormulationIntent)
+    strategyPolicies = strategyRole (pure . rawFormulationGuidingPolicy)
+    strategyActions = strategyRole (NonEmpty.toList . rawFormulationActions)
+    strategyKeyResults =
+      strategyRole (NonEmpty.toList . rawFormulationKeyResults)
+    strategyDiagnoses = strategyRole (pure . rawFormulationDiagnosis)
     constituted = nameOf (constitutedByAnchor SBusinessCapability)
     anyAnchorToPrimitive anchorRelation toPrimitive =
       or
@@ -360,8 +438,8 @@ hasMacroEvidence model evidenceKind from to =
         [ has model driver indicatesMeasureDomain domain
           && has model keyResult determinesMeasureDomain domain
           && has model domain containsMeasureKPI kpi
-        | driver <- primitiveNodesIn model from Driver
-        , keyResult <- primitiveNodesIn model from KeyResult
+        | driver <- strategyDiagnoses from
+        , keyResult <- strategyKeyResults from
         , domain <- structuringNodesIn model to Domain
         , kpi <- primitiveNodesIn model to KPI
         ]

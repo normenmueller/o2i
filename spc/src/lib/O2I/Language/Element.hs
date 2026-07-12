@@ -4,8 +4,12 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeOperators #-}
 
--- | O2I type universes, typed identifiers, and interpretations.
-module O2I.Types
+-- | Type universes and singleton witnesses of the O2I semantic language.
+--
+-- Language modules define admissible O2I vocabulary independently of any
+-- concrete graph. Graph modules instantiate this vocabulary; Validation
+-- modules establish semantic claims about those graph instances.
+module O2I.Language.Element
   ( RawNodeId(..)
   , NodeId(..)
   , ContextRef(..)
@@ -34,141 +38,164 @@ module O2I.Types
   , someSStructuring
   , someSAnchor
   , eqSNodeKind
-  , Interpretation(..)
-  , InterpretationCode(..)
-  , InterpretationSpec(..)
-  , SomeInterpretation(..)
-  , interpretationSpec
-  , interpretationCodeOf
-  , interpretationIdentity
-  , allInterpretations
-  , lookupInterpretation
   ) where
 
 import Data.Text (Text)
 import Data.Type.Equality ((:~:)(Refl))
 
+-- | Stable, untyped identifier supplied by a raw graph.
 newtype RawNodeId = RawNodeId
-  { rawNodeIdText :: Text
+  { rawNodeIdText :: Text -- ^ Identifier text; uniqueness is validated later.
   } deriving (Eq, Ord, Show)
 
+-- | Identifier indexed by the statically known kind of its node.
 newtype NodeId (kind :: NodeKind) = NodeId
-  { unNodeId :: RawNodeId
+  { unNodeId :: RawNodeId -- ^ Erase the kind index for runtime lookup.
   } deriving (Eq, Ord, Show)
 
+-- | Reference to a context whose context type is known statically.
 newtype ContextRef (context :: Context) = ContextRef
-  { contextRefId :: RawNodeId
+  { contextRefId :: RawNodeId -- ^ Runtime identifier of the context node.
   } deriving (Eq, Ord, Show)
 
 -- * Type universes
 -- ** Contexts
+-- | Closed universe of O2I interpretation contexts.
 data Context
-  = Ethos
-  | Mission
-  | Vision
-  | Strategy
-  | Situation
-  | Need
-  | Intervention
-  | Measure
+  = Ethos -- ^ Normative principles for what an actor stands for.
+  | Mission -- ^ Enduring reason and motivating purpose.
+  | Vision -- ^ Desired future orientation.
+  | Strategy -- ^ Coherent strategic path decision.
+  | Situation -- ^ Business-architecture setting in which needs surface.
+  | Need -- ^ Situated requirement for change.
+  | Intervention -- ^ Deliberate action that addresses a need.
+  | Measure -- ^ Observation and target frame for effect evidence.
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 -- ** Primitives
+-- | Closed universe of reusable semantic primitives.
 data Primitive
-  = Principle
-  | Driver
-  | Objective
-  | KeyResult
-  | KPI
-  | Action
+  = Principle -- ^ Normative or guiding rule.
+  | Driver -- ^ Motivating condition or diagnosed challenge.
+  | Objective -- ^ Qualitative intended state.
+  | KeyResult -- ^ Quantified result that substantiates an objective.
+  | KPI -- ^ Stable definition of an observed quantity.
+  | Action -- ^ Deliberate action hypothesis or commitment.
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 -- ** Structuring
+-- | Closed universe of semantic organization outside Context and Primitive.
 data Structuring =
-  Domain
+  Domain -- ^ Named semantic domain that groups related model elements.
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 -- ** Situation anchors
+-- | Business-architecture forms that can constitute a Situation.
 data SituationAnchor
-  = BusinessCapability
-  | BusinessProcess
-  | BusinessObject
-  | BusinessRole
-  | ValueStream
-  | RegulatoryConstraint
+  = BusinessCapability -- ^ Ability the business possesses or requires.
+  | BusinessProcess -- ^ Structured business behavior.
+  | BusinessObject -- ^ Business-relevant information or concept.
+  | BusinessRole -- ^ Organizational responsibility or participation.
+  | ValueStream -- ^ End-to-end progression that creates value.
+  | RegulatoryConstraint -- ^ Externally imposed business constraint.
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 -- ** Node kinds
+-- | Type-level classification of every admissible graph node.
 data NodeKind
-  = ContextKind Context
-  | PrimitiveKind Context Primitive
-  | StructuringKind Context Structuring
-  | AnchorKind SituationAnchor
+  = ContextKind Context -- ^ Context node of the indexed context.
+  | PrimitiveKind Context Primitive -- ^ Primitive interpreted in a context.
+  | StructuringKind Context Structuring -- ^ Structure owned by a context.
+  | AnchorKind SituationAnchor -- ^ Situation anchor of the indexed form.
 
 -- * Singleton witnesses
+-- | Singleton witness that reifies a type-level 'Context'.
 data SContext (context :: Context) where
-  SEthos :: SContext 'Ethos
-  SMission :: SContext 'Mission
-  SVision :: SContext 'Vision
-  SStrategy :: SContext 'Strategy
-  SSituation :: SContext 'Situation
-  SNeed :: SContext 'Need
-  SIntervention :: SContext 'Intervention
-  SMeasure :: SContext 'Measure
+  SEthos :: SContext 'Ethos -- ^ Witness 'Ethos'.
+  SMission :: SContext 'Mission -- ^ Witness 'Mission'.
+  SVision :: SContext 'Vision -- ^ Witness 'Vision'.
+  SStrategy :: SContext 'Strategy -- ^ Witness 'Strategy'.
+  SSituation :: SContext 'Situation -- ^ Witness 'Situation'.
+  SNeed :: SContext 'Need -- ^ Witness 'Need'.
+  SIntervention :: SContext 'Intervention -- ^ Witness 'Intervention'.
+  SMeasure :: SContext 'Measure -- ^ Witness 'Measure'.
 
 deriving instance Show (SContext context)
 
+-- | Singleton witness that reifies a type-level 'Primitive'.
 data SPrimitive (primitive :: Primitive) where
-  SPrinciple :: SPrimitive 'Principle
-  SDriver :: SPrimitive 'Driver
-  SObjective :: SPrimitive 'Objective
-  SKeyResult :: SPrimitive 'KeyResult
-  SKPI :: SPrimitive 'KPI
-  SAction :: SPrimitive 'Action
+  SPrinciple :: SPrimitive 'Principle -- ^ Witness 'Principle'.
+  SDriver :: SPrimitive 'Driver -- ^ Witness 'Driver'.
+  SObjective :: SPrimitive 'Objective -- ^ Witness 'Objective'.
+  SKeyResult :: SPrimitive 'KeyResult -- ^ Witness 'KeyResult'.
+  SKPI :: SPrimitive 'KPI -- ^ Witness 'KPI'.
+  SAction :: SPrimitive 'Action -- ^ Witness 'Action'.
 
 deriving instance Show (SPrimitive primitive)
 
+-- | Singleton witness that reifies a type-level 'Structuring'.
 data SStructuring (structuring :: Structuring) where
-  SDomain :: SStructuring 'Domain
+  SDomain :: SStructuring 'Domain -- ^ Witness 'Domain'.
 
 deriving instance Show (SStructuring structuring)
 
+-- | Singleton witness that reifies a type-level 'SituationAnchor'.
 data SSituationAnchor (anchor :: SituationAnchor) where
   SBusinessCapability :: SSituationAnchor 'BusinessCapability
+    -- ^ Witness 'BusinessCapability'.
   SBusinessProcess :: SSituationAnchor 'BusinessProcess
+    -- ^ Witness 'BusinessProcess'.
   SBusinessObject :: SSituationAnchor 'BusinessObject
+    -- ^ Witness 'BusinessObject'.
   SBusinessRole :: SSituationAnchor 'BusinessRole
+    -- ^ Witness 'BusinessRole'.
   SValueStream :: SSituationAnchor 'ValueStream
+    -- ^ Witness 'ValueStream'.
   SRegulatoryConstraint :: SSituationAnchor 'RegulatoryConstraint
+    -- ^ Witness 'RegulatoryConstraint'.
 
 deriving instance Show (SSituationAnchor anchor)
 
+-- | Singleton witness for a complete type-level 'NodeKind'.
 data SNodeKind (kind :: NodeKind) where
   SContextKind :: SContext context -> SNodeKind ('ContextKind context)
+    -- ^ Witness a context-node kind.
   SPrimitiveKind
     :: SContext context
     -> SPrimitive primitive
     -> SNodeKind ('PrimitiveKind context primitive)
+    -- ^ Witness a contextualized primitive-node kind.
   SStructuringKind
     :: SContext context
     -> SStructuring structuring
     -> SNodeKind ('StructuringKind context structuring)
+    -- ^ Witness a contextualized structuring-node kind.
   SAnchorKind :: SSituationAnchor anchor -> SNodeKind ('AnchorKind anchor)
+    -- ^ Witness a Situation-anchor node kind.
 
 deriving instance Show (SNodeKind kind)
 
+-- | Existential context witness used when the context is known only at runtime.
 data SomeSContext where
   SomeSContext :: SContext context -> SomeSContext
+    -- ^ Hide the context index while retaining its witness.
 
+-- | Existential primitive witness for runtime reification.
 data SomeSPrimitive where
   SomeSPrimitive :: SPrimitive primitive -> SomeSPrimitive
+    -- ^ Hide the primitive index while retaining its witness.
 
+-- | Existential structuring witness for runtime reification.
 data SomeSStructuring where
   SomeSStructuring :: SStructuring structuring -> SomeSStructuring
+    -- ^ Hide the structuring index while retaining its witness.
 
+-- | Existential Situation-anchor witness for runtime reification.
 data SomeSAnchor where
   SomeSAnchor :: SSituationAnchor anchor -> SomeSAnchor
+    -- ^ Hide the anchor index while retaining its witness.
 
+-- | Project a singleton context witness to its runtime value.
 contextValue :: SContext context -> Context
 contextValue SEthos = Ethos
 contextValue SMission = Mission
@@ -179,6 +206,7 @@ contextValue SNeed = Need
 contextValue SIntervention = Intervention
 contextValue SMeasure = Measure
 
+-- | Project a singleton primitive witness to its runtime value.
 primitiveValue :: SPrimitive primitive -> Primitive
 primitiveValue SPrinciple = Principle
 primitiveValue SDriver = Driver
@@ -187,9 +215,11 @@ primitiveValue SKeyResult = KeyResult
 primitiveValue SKPI = KPI
 primitiveValue SAction = Action
 
+-- | Project a singleton structuring witness to its runtime value.
 structuringValue :: SStructuring structuring -> Structuring
 structuringValue SDomain = Domain
 
+-- | Project a singleton anchor witness to its runtime value.
 anchorValue :: SSituationAnchor anchor -> SituationAnchor
 anchorValue SBusinessCapability = BusinessCapability
 anchorValue SBusinessProcess = BusinessProcess
@@ -198,6 +228,7 @@ anchorValue SBusinessRole = BusinessRole
 anchorValue SValueStream = ValueStream
 anchorValue SRegulatoryConstraint = RegulatoryConstraint
 
+-- | Erase a node-kind singleton while retaining its complete classification.
 nodeKindValue :: SNodeKind kind -> NodeKindValue
 nodeKindValue (SContextKind context) = ContextNodeKind (contextValue context)
 nodeKindValue (SPrimitiveKind context primitive) =
@@ -206,13 +237,15 @@ nodeKindValue (SStructuringKind context structuring) =
   StructuringNodeKind (contextValue context) (structuringValue structuring)
 nodeKindValue (SAnchorKind anchor) = AnchorNodeKind (anchorValue anchor)
 
+-- | Runtime projection of a type-level 'NodeKind'.
 data NodeKindValue
-  = ContextNodeKind Context
-  | PrimitiveNodeKind Context Primitive
-  | StructuringNodeKind Context Structuring
-  | AnchorNodeKind SituationAnchor
+  = ContextNodeKind Context -- ^ A context node.
+  | PrimitiveNodeKind Context Primitive -- ^ A contextualized primitive.
+  | StructuringNodeKind Context Structuring -- ^ A contextual structure.
+  | AnchorNodeKind SituationAnchor -- ^ A Situation anchor.
   deriving (Eq, Ord, Show)
 
+-- | Reify any runtime context as an existential singleton witness.
 someSContext :: Context -> SomeSContext
 someSContext Ethos = SomeSContext SEthos
 someSContext Mission = SomeSContext SMission
@@ -223,6 +256,7 @@ someSContext Need = SomeSContext SNeed
 someSContext Intervention = SomeSContext SIntervention
 someSContext Measure = SomeSContext SMeasure
 
+-- | Reify any runtime primitive as an existential singleton witness.
 someSPrimitive :: Primitive -> SomeSPrimitive
 someSPrimitive Principle = SomeSPrimitive SPrinciple
 someSPrimitive Driver = SomeSPrimitive SDriver
@@ -231,9 +265,11 @@ someSPrimitive KeyResult = SomeSPrimitive SKeyResult
 someSPrimitive KPI = SomeSPrimitive SKPI
 someSPrimitive Action = SomeSPrimitive SAction
 
+-- | Reify any runtime structuring value as an existential singleton witness.
 someSStructuring :: Structuring -> SomeSStructuring
 someSStructuring Domain = SomeSStructuring SDomain
 
+-- | Reify any runtime Situation anchor as an existential singleton witness.
 someSAnchor :: SituationAnchor -> SomeSAnchor
 someSAnchor BusinessCapability = SomeSAnchor SBusinessCapability
 someSAnchor BusinessProcess = SomeSAnchor SBusinessProcess
@@ -242,6 +278,7 @@ someSAnchor BusinessRole = SomeSAnchor SBusinessRole
 someSAnchor ValueStream = SomeSAnchor SValueStream
 someSAnchor RegulatoryConstraint = SomeSAnchor SRegulatoryConstraint
 
+-- | Decide equality of two node-kind witnesses and return type equality proof.
 eqSNodeKind :: SNodeKind left -> SNodeKind right -> Maybe (left :~: right)
 eqSNodeKind (SContextKind left) (SContextKind right) = do
   Refl <- eqSContext left right
@@ -292,151 +329,3 @@ eqSAnchor SBusinessRole SBusinessRole = Just Refl
 eqSAnchor SValueStream SValueStream = Just Refl
 eqSAnchor SRegulatoryConstraint SRegulatoryConstraint = Just Refl
 eqSAnchor _ _ = Nothing
-
--- * Contextual interpretations
--- ** Interpretations
-data Interpretation (context :: Context) (primitive :: Primitive) where
-  PrincipleInEthos :: Interpretation 'Ethos 'Principle
-  DriverInMission :: Interpretation 'Mission 'Driver
-  ObjectiveInVision :: Interpretation 'Vision 'Objective
-  DriverInStrategy :: Interpretation 'Strategy 'Driver
-  ObjectiveInStrategy :: Interpretation 'Strategy 'Objective
-  PrincipleInStrategy :: Interpretation 'Strategy 'Principle
-  KeyResultInStrategy :: Interpretation 'Strategy 'KeyResult
-  ActionInStrategy :: Interpretation 'Strategy 'Action
-  DriverInNeed :: Interpretation 'Need 'Driver
-  ObjectiveInNeed :: Interpretation 'Need 'Objective
-  ActionInIntervention :: Interpretation 'Intervention 'Action
-  KeyResultInIntervention :: Interpretation 'Intervention 'KeyResult
-  KPIInMeasure :: Interpretation 'Measure 'KPI
-
-deriving instance Show (Interpretation context primitive)
-
--- ** Interpretation registry
-data InterpretationSpec context primitive = InterpretationSpec
-  { interpretationCode :: InterpretationCode
-  , interpretationContext :: SContext context
-  , interpretationPrimitive :: SPrimitive primitive
-  , interpretationWitness :: Interpretation context primitive
-  }
-
-data SomeInterpretation where
-  SomeInterpretation
-    :: InterpretationSpec context primitive -> SomeInterpretation
-
-instance Show SomeInterpretation where
-  show (SomeInterpretation spec) = show (interpretationCode spec)
-
-data InterpretationCode
-  = PrincipleInEthosCode
-  | DriverInMissionCode
-  | ObjectiveInVisionCode
-  | DriverInStrategyCode
-  | ObjectiveInStrategyCode
-  | PrincipleInStrategyCode
-  | KeyResultInStrategyCode
-  | ActionInStrategyCode
-  | DriverInNeedCode
-  | ObjectiveInNeedCode
-  | ActionInInterventionCode
-  | KeyResultInInterventionCode
-  | KPIInMeasureCode
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
-interpretationSpec ::
-     Interpretation context primitive -> InterpretationSpec context primitive
-interpretationSpec PrincipleInEthos =
-  InterpretationSpec PrincipleInEthosCode SEthos SPrinciple PrincipleInEthos
-interpretationSpec DriverInMission =
-  InterpretationSpec DriverInMissionCode SMission SDriver DriverInMission
-interpretationSpec ObjectiveInVision =
-  InterpretationSpec ObjectiveInVisionCode SVision SObjective ObjectiveInVision
-interpretationSpec DriverInStrategy =
-  InterpretationSpec DriverInStrategyCode SStrategy SDriver DriverInStrategy
-interpretationSpec ObjectiveInStrategy =
-  InterpretationSpec
-    ObjectiveInStrategyCode
-    SStrategy
-    SObjective
-    ObjectiveInStrategy
-interpretationSpec PrincipleInStrategy =
-  InterpretationSpec
-    PrincipleInStrategyCode
-    SStrategy
-    SPrinciple
-    PrincipleInStrategy
-interpretationSpec KeyResultInStrategy =
-  InterpretationSpec
-    KeyResultInStrategyCode
-    SStrategy
-    SKeyResult
-    KeyResultInStrategy
-interpretationSpec ActionInStrategy =
-  InterpretationSpec ActionInStrategyCode SStrategy SAction ActionInStrategy
-interpretationSpec DriverInNeed =
-  InterpretationSpec DriverInNeedCode SNeed SDriver DriverInNeed
-interpretationSpec ObjectiveInNeed =
-  InterpretationSpec ObjectiveInNeedCode SNeed SObjective ObjectiveInNeed
-interpretationSpec ActionInIntervention =
-  InterpretationSpec
-    ActionInInterventionCode
-    SIntervention
-    SAction
-    ActionInIntervention
-interpretationSpec KeyResultInIntervention =
-  InterpretationSpec
-    KeyResultInInterventionCode
-    SIntervention
-    SKeyResult
-    KeyResultInIntervention
-interpretationSpec KPIInMeasure =
-  InterpretationSpec KPIInMeasureCode SMeasure SKPI KPIInMeasure
-
-allInterpretations :: [SomeInterpretation]
-allInterpretations = map interpretationFromCode [minBound .. maxBound]
-
-interpretationFromCode :: InterpretationCode -> SomeInterpretation
-interpretationFromCode PrincipleInEthosCode =
-  SomeInterpretation (interpretationSpec PrincipleInEthos)
-interpretationFromCode DriverInMissionCode =
-  SomeInterpretation (interpretationSpec DriverInMission)
-interpretationFromCode ObjectiveInVisionCode =
-  SomeInterpretation (interpretationSpec ObjectiveInVision)
-interpretationFromCode DriverInStrategyCode =
-  SomeInterpretation (interpretationSpec DriverInStrategy)
-interpretationFromCode ObjectiveInStrategyCode =
-  SomeInterpretation (interpretationSpec ObjectiveInStrategy)
-interpretationFromCode PrincipleInStrategyCode =
-  SomeInterpretation (interpretationSpec PrincipleInStrategy)
-interpretationFromCode KeyResultInStrategyCode =
-  SomeInterpretation (interpretationSpec KeyResultInStrategy)
-interpretationFromCode ActionInStrategyCode =
-  SomeInterpretation (interpretationSpec ActionInStrategy)
-interpretationFromCode DriverInNeedCode =
-  SomeInterpretation (interpretationSpec DriverInNeed)
-interpretationFromCode ObjectiveInNeedCode =
-  SomeInterpretation (interpretationSpec ObjectiveInNeed)
-interpretationFromCode ActionInInterventionCode =
-  SomeInterpretation (interpretationSpec ActionInIntervention)
-interpretationFromCode KeyResultInInterventionCode =
-  SomeInterpretation (interpretationSpec KeyResultInIntervention)
-interpretationFromCode KPIInMeasureCode =
-  SomeInterpretation (interpretationSpec KPIInMeasure)
-
-lookupInterpretation :: Context -> Primitive -> Maybe SomeInterpretation
-lookupInterpretation context primitive = go allInterpretations
-  where
-    go [] = Nothing
-    go (candidate@(SomeInterpretation spec):rest)
-      | contextValue (interpretationContext spec) == context
-          && primitiveValue (interpretationPrimitive spec) == primitive =
-        Just candidate
-      | otherwise = go rest
-
-interpretationCodeOf :: SomeInterpretation -> InterpretationCode
-interpretationCodeOf (SomeInterpretation spec) = interpretationCode spec
-
-interpretationIdentity :: SomeInterpretation -> (Context, Primitive)
-interpretationIdentity (SomeInterpretation spec) =
-  ( contextValue (interpretationContext spec)
-  , primitiveValue (interpretationPrimitive spec))

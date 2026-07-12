@@ -23,5 +23,6 @@
 - `Key Result` --sets-target-for--> `KPI` (InfluenceRelationship)
 - `Key Result` --substantiates--> `Objective` (InfluenceRelationship)
 - `Key Result` --translates-into--> `Objective` (InfluenceRelationship)
+- `Principle` --guides--> `Action` (InfluenceRelationship)
 - `Principle` --guides--> `Driver` (InfluenceRelationship)
 - `Principle` --guides--> `Objective` (InfluenceRelationship)

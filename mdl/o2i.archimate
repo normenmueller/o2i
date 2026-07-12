@@ -394,6 +394,8 @@ Das ist die semantische Herkunft von KPI.</documentation>
     <element xsi:type="archimate:AssociationRelationship" name="sets-target-for" id="id-4d1b94e8f72a46e497c8c584253412b4" source="id-a28a1df5342b444c8fe31e62f9e2ca58" target="id-cc8c646d677e49c4939062215b2e8c7d" directed="true">
       <documentation>defines desired level</documentation>
     </element>
+    <element xsi:type="archimate:AssociationRelationship" name="guides" id="id-801126f6ce1b43cca11149121adfec58" source="id-54239700651b4cbc80ad0293da25df0d" target="id-25f3ffe61f93476db90607538dad5b22" directed="true"/>
+    <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-0d6162ad89fb467eb127b704b2a06f67" source="id-dee340198eb64cc48b52f8b42cb0c070" target="id-cd9b992017fa4ebb84842d36185b63de"/>
   </folder>
   <folder name="Views" id="id-c4a47547d89649babef754e47e83c429" type="diagrams">
     <folder name="Syntax" id="id-6fd9ede1a32043c0bdec21b826afd949">
@@ -424,7 +426,7 @@ Das ist die semantische Herkunft von KPI.</documentation>
           </sourceConnection>
           <sourceConnection xsi:type="archimate:Connection" id="id-9a2d5897bcd044499c42a00aeaef30d7" source="id-d79185a672874100a01b8a9e7dac9a4d" target="id-25abddd1adb04d6e9eaad2c57c64bbe2" archimateRelationship="id-6e0e68027fcb4bd190f20f861bd78cb9"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-dae31e0d08a64042a3f85220431549f2" textPosition="1" archimateElement="id-25f3ffe61f93476db90607538dad5b22">
+        <child xsi:type="archimate:DiagramObject" id="id-dae31e0d08a64042a3f85220431549f2" targetConnections="id-4775081d84634b6294c20872bf1474cf" textPosition="1" archimateElement="id-25f3ffe61f93476db90607538dad5b22">
           <bounds x="293" y="429" width="120" height="49"/>
           <feature name="deriveElementLineColor" value="false"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-4c1654be3470482f8b381660d12f2e5a" source="id-dae31e0d08a64042a3f85220431549f2" target="id-d79185a672874100a01b8a9e7dac9a4d" archimateRelationship="id-a4c98b99981e40968f2638423df0cc2b"/>
@@ -434,6 +436,10 @@ Das ist die semantische Herkunft von KPI.</documentation>
           <feature name="deriveElementLineColor" value="false"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-1b7bbeac1cda4d87a5b8c156d62fe0fc" lineWidth="2" source="id-fea3fa8da352452080aacf9fd96930b1" target="id-e0f4484c9806440da7ab4d0693c6da57" archimateRelationship="id-7ea4efb329af43c18437a7fa32c2becb"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-9261b5ef5cc74482b8b06fb7c6beb07a" lineWidth="2" source="id-fea3fa8da352452080aacf9fd96930b1" target="id-79f9317ee4f7445e8e08498453e76cfa" archimateRelationship="id-ea8ccb71b7e047c7a6b76db01fa874a2"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-4775081d84634b6294c20872bf1474cf" source="id-fea3fa8da352452080aacf9fd96930b1" target="id-dae31e0d08a64042a3f85220431549f2" archimateRelationship="id-801126f6ce1b43cca11149121adfec58">
+            <bendpoint startX="-125" startY="21" endX="-125" endY="-393"/>
+            <bendpoint startX="-125" startY="393" endX="-125" endY="-21"/>
+          </sourceConnection>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-25abddd1adb04d6e9eaad2c57c64bbe2" targetConnections="id-d6b7c4f788ae4768b81808b91963131f id-9a2d5897bcd044499c42a00aeaef30d7" font="1|Lucida Grande|12.0|1|COCOA|1|LucidaGrande-Bold" textAlignment="1" archimateElement="id-6e5d5a1f511747a893cabae235cdaa84">
           <bounds x="552" y="294" width="157" height="109"/>
@@ -752,6 +758,10 @@ Das ist die semantische Herkunft von KPI.</documentation>
           <feature name="lineStyle" value="0"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-76f2022158b04bc3815a4802d1dd2c27" source="id-9aa8ae36972c4b81aab7ede708887c85" target="id-151babcc82344900ae9244c74e10232f" archimateRelationship="id-4d61198566484a7aa83aa4b7c638da41"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-3bf06825d29d49abbd0534492e686f9f" source="id-9aa8ae36972c4b81aab7ede708887c85" target="id-7239d7237795459cb2867c350bd44523" archimateRelationship="id-a30a044049dc479f9c6e10038c4c1a50"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-4b2924766dd0488e8bac2b706ace5ab2" source="id-9aa8ae36972c4b81aab7ede708887c85" target="id-6d91062aadc548e38f0d6e6b928e1ec2" archimateRelationship="id-0d6162ad89fb467eb127b704b2a06f67">
+            <bendpoint startX="-126" startY="20" endX="-126" endY="-461"/>
+            <bendpoint startX="-126" startY="452" endX="-126" endY="-29"/>
+          </sourceConnection>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-151babcc82344900ae9244c74e10232f" targetConnections="id-76f2022158b04bc3815a4802d1dd2c27" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-ade8d7923089433c80c7fbac99dea59d">
           <bounds x="528" y="144" width="109" height="56"/>
@@ -761,7 +771,7 @@ Das ist die semantische Herkunft von KPI.</documentation>
           <sourceConnection xsi:type="archimate:Connection" id="id-469d580161a74c9a88d9c602841229a5" source="id-151babcc82344900ae9244c74e10232f" target="id-7239d7237795459cb2867c350bd44523" archimateRelationship="id-e1cf0cb807674c77b1cf41ff9d31ea07"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-ccf1c35d33bc406dbf58c15369dfadae" source="id-151babcc82344900ae9244c74e10232f" target="id-89e71a7c99b34c24abf24a24ed4a38f8" archimateRelationship="id-e3391250befe46ab89a8ff5852287179"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-6d91062aadc548e38f0d6e6b928e1ec2" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-cd9b992017fa4ebb84842d36185b63de">
+        <child xsi:type="archimate:DiagramObject" id="id-6d91062aadc548e38f0d6e6b928e1ec2" targetConnections="id-4b2924766dd0488e8bac2b706ace5ab2" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-cd9b992017fa4ebb84842d36185b63de">
           <bounds x="372" y="529" width="109" height="56"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>

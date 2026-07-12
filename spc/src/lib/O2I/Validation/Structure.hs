@@ -1,8 +1,11 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeOperators #-}
 
--- | Raw-to-typed O2I model elaboration.
-module O2I.Internal.Elaboration
+-- | Structural elaboration from unchecked to typed O2I graphs.
+--
+-- Structural validation proves identifier, ownership, interpretation, and
+-- relation-domain integrity without asserting semantic completeness.
+module O2I.Validation.Structure
   ( StructuralError(..)
   , validateStructure
   ) where
@@ -14,26 +17,43 @@ import Data.Map.Strict (Map)
 import Data.Maybe (isNothing)
 import Data.Type.Equality ((:~:)(Refl))
 import Data.Validation (Validation(..))
-import O2I.Model
-import O2I.Model.Raw
-import O2I.Relation
-import O2I.Types
+import O2I.Graph.Raw
+import O2I.Graph.Typed
+import O2I.Language.Element
+import O2I.Language.Interpretation
+import O2I.Language.Relation
 
+-- | Structural violations detected while elaborating a 'RawGraph'.
 data StructuralError
   = DuplicateNodeId RawNodeId
+    -- ^ More than one node declares the same identifier.
   | DuplicateEdge RawEdge
+    -- ^ The exact same directed edge occurs more than once.
   | UnknownOwner RawNodeId RawNodeId
+    -- ^ A child node identifies an owner that is not a declared context.
   | InvalidPrimitiveInterpretation RawNodeId Context Primitive
+    -- ^ A Primitive is inadmissible in its owning Context.
   | InvalidStructuringContext RawNodeId Context Structuring
+    -- ^ A structuring form is inadmissible in its owning Context.
   | InvalidAnchorContext RawNodeId Context SituationAnchor
+    -- ^ A Situation anchor is not owned by a Situation context.
   | UnknownEdgeEndpoint RawEdge RawNodeId
+    -- ^ An edge endpoint does not identify a declared node.
   | UnknownRelation RelationName
+    -- ^ An edge names no registered O2I relation.
   | InvalidRelationDomain RawEdge NodeKindValue NodeKindValue
+    -- ^ Endpoint kinds do not match the named relation specification.
   | ElaborationInvariantViolation
+    -- ^ Internal elaboration failed after all public checks succeeded.
   deriving (Eq, Show)
 
+-- * Structural validation
+-- | Elaborate unchecked input into an opaque structurally typed graph.
+--
+-- Independent errors accumulate. Success guarantees unique IDs and edges,
+-- valid ownership and interpretations, known relations, and typed endpoints.
 validateStructure ::
-     RawModel -> Validation (NonEmpty.NonEmpty StructuralError) WellFormedModel
+     RawGraph -> Validation (NonEmpty.NonEmpty StructuralError) WellFormedGraph
 validateStructure raw =
   case NonEmpty.nonEmpty errors of
     Just failures -> Failure failures
@@ -44,7 +64,7 @@ validateStructure raw =
   where
     errors = nodeErrors raw ++ edgeErrors raw
 
-nodeErrors :: RawModel -> [StructuralError]
+nodeErrors :: RawGraph -> [StructuralError]
 nodeErrors raw = duplicateIdErrors ++ concatMap validateNode (rawNodes raw)
   where
     identifiers = map rawNodeId (rawNodes raw)
@@ -73,7 +93,7 @@ nodeErrors raw = duplicateIdErrors ++ concatMap validateNode (rawNodes raw)
           | context /= Situation
           ]
 
-edgeErrors :: RawModel -> [StructuralError]
+edgeErrors :: RawGraph -> [StructuralError]
 edgeErrors raw = duplicateEdgeErrors ++ concatMap validateEdge (rawEdges raw)
   where
     duplicateEdgeErrors = map DuplicateEdge (duplicates (rawEdges raw))
@@ -114,7 +134,7 @@ matchesKinds fromKind toKind (SomeRelation relation) =
    in nodeKindValue (relationFrom spec) == fromKind
         && nodeKindValue (relationTo spec) == toKind
 
-buildModel :: RawModel -> Maybe WellFormedModel
+buildModel :: RawGraph -> Maybe WellFormedGraph
 buildModel raw = do
   contexts <- traverse buildContext contextNodes
   let contextMap = Map.fromList [(someNodeRawId node, node) | node <- contexts]
@@ -122,7 +142,7 @@ buildModel raw = do
   let nodes =
         Map.fromList [(someNodeRawId node, node) | node <- contexts ++ children]
   edges <- traverse (buildEdge nodes) (rawEdges raw)
-  pure (mkWellFormedModel nodes edges)
+  pure (mkWellFormedGraph nodes edges)
   where
     contextNodes = [node | node@(RawContextNode _ _) <- rawNodes raw]
     childNodes = [node | node <- rawNodes raw, not (isContextNode node)]
@@ -196,12 +216,12 @@ isContextNode :: RawNode -> Bool
 isContextNode (RawContextNode _ _) = True
 isContextNode _ = False
 
-contextKinds :: RawModel -> Map RawNodeId Context
+contextKinds :: RawGraph -> Map RawNodeId Context
 contextKinds raw =
   Map.fromList
     [(identifier, context) | RawContextNode identifier context <- rawNodes raw]
 
-rawNodeKinds :: RawModel -> Map RawNodeId NodeKindValue
+rawNodeKinds :: RawGraph -> Map RawNodeId NodeKindValue
 rawNodeKinds raw = Map.fromList (mapMaybeKind (rawNodes raw))
   where
     owners = contextKinds raw

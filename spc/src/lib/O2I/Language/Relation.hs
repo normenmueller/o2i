@@ -3,8 +3,11 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Typed O2I relations and their total runtime metadata projection.
-module O2I.Relation
+-- | Typed relations of the O2I semantic language.
+--
+-- Relation witnesses define admissible connections independently of concrete
+-- graph instances and provide a total runtime projection for validation.
+module O2I.Language.Relation
   ( Relation
   , SomeRelation(..)
   , FixedRelationCode(..)
@@ -67,99 +70,127 @@ module O2I.Relation
   ) where
 
 import Data.Text (Text)
-import O2I.Types
+import O2I.Language.Element
 
+-- | Stable codes for relations whose endpoints are not anchor-parameterized.
 data FixedRelationCode
-  = GuidesMissionCode
-  | GroundsVisionCode
-  | GuidesVisionCode
-  | OrientsStrategyCode
-  | DirectsStrategyCode
-  | ContributesToStrategyCode
-  | QualifiesNeedCode
-  | SurfacesNeedCode
-  | AddressesNeedCode
-  | DirectsInterventionCode
-  | ChangesSituationCode
-  | SetsTargetForMeasureCode
-  | MeasuresSituationCode
-  | FramesMeasureCode
+  = GuidesMissionCode -- ^ Code for 'guidesMission'.
+  | GroundsVisionCode -- ^ Code for 'groundsVision'.
+  | GuidesVisionCode -- ^ Code for 'guidesVision'.
+  | OrientsStrategyCode -- ^ Code for 'orientsStrategy'.
+  | DirectsStrategyCode -- ^ Code for 'directsStrategy'.
+  | ContributesToStrategyCode -- ^ Code for 'contributesToStrategy'.
+  | QualifiesNeedCode -- ^ Code for 'qualifiesNeed'.
+  | SurfacesNeedCode -- ^ Code for 'surfacesNeed'.
+  | AddressesNeedCode -- ^ Code for 'addressesNeed'.
+  | DirectsInterventionCode -- ^ Code for 'directsIntervention'.
+  | ChangesSituationCode -- ^ Code for 'changesSituation'.
+  | SetsTargetForMeasureCode -- ^ Code for 'setsTargetForMeasure'.
+  | MeasuresSituationCode -- ^ Code for 'measuresSituation'.
+  | FramesMeasureCode -- ^ Code for 'framesMeasure'.
   | GuidesEthosPrincipleToMissionDriverCode
+    -- ^ Code for 'guidesEthosPrincipleToMissionDriver'.
   | GuidesEthosPrincipleToVisionObjectiveCode
+    -- ^ Code for 'guidesEthosPrincipleToVisionObjective'.
   | GroundsMissionDriverToVisionObjectiveCode
+    -- ^ Code for 'groundsMissionDriverToVisionObjective'.
   | OrientsVisionObjectiveToStrategyObjectiveCode
+    -- ^ Code for 'orientsVisionObjectiveToStrategyObjective'.
   | GroundsStrategyDriverToObjectiveCode
+    -- ^ Code for 'groundsStrategyDriverToObjective'.
   | SubstantiatesStrategyKeyResultObjectiveCode
+    -- ^ Code for 'substantiatesStrategyKeyResultObjective'.
   | GuidesStrategyPrincipleToActionCode
+    -- ^ Code for 'guidesStrategyPrincipleToAction'.
   | ContributesStrategyActionToKeyResultCode
+    -- ^ Code for 'contributesStrategyActionToKeyResult'.
   | GuidesStrategyPrincipleToPrincipleCode
+    -- ^ Code for 'guidesStrategyPrincipleToPrinciple'.
   | ContributesStrategyKeyResultToKeyResultCode
+    -- ^ Code for 'contributesStrategyKeyResultToKeyResult'.
   | ContributesStrategyActionToActionCode
+    -- ^ Code for 'contributesStrategyActionToAction'.
   | TranslatesStrategyKeyResultToNeedObjectiveCode
+    -- ^ Code for 'translatesStrategyKeyResultToNeedObjective'.
   | GroundsNeedDriverToObjectiveCode
-  | IndicatesMeasureDomainCode
-  | DeterminesMeasureDomainCode
-  | ContainsStrategyKeyResultCode
-  | ContainsMeasureKPICode
+    -- ^ Code for 'groundsNeedDriverToObjective'.
+  | IndicatesMeasureDomainCode -- ^ Code for 'indicatesMeasureDomain'.
+  | DeterminesMeasureDomainCode -- ^ Code for 'determinesMeasureDomain'.
+  | ContainsStrategyKeyResultCode -- ^ Code for 'containsStrategyKeyResult'.
+  | ContainsMeasureKPICode -- ^ Code for 'containsMeasureKPI'.
   | GuidesStrategyActionToInterventionActionCode
+    -- ^ Code for 'guidesStrategyActionToInterventionAction'.
   | ContributesInterventionActionToKeyResultCode
+    -- ^ Code for 'contributesInterventionActionToKeyResult'.
   | SubstantiatesInterventionKeyResultNeedObjectiveCode
+    -- ^ Code for 'substantiatesInterventionKeyResultNeedObjective'.
   | ContributesInterventionKeyResultToStrategyKeyResultCode
-  | SetsTargetForMeasureKPICode
+    -- ^ Code for 'contributesInterventionKeyResultToStrategyKeyResult'.
+  | SetsTargetForMeasureKPICode -- ^ Code for 'setsTargetForMeasureKPI'.
   deriving (Bounded, Enum, Eq, Ord, Show)
 
+-- | Relation families instantiated separately for each Situation-anchor form.
 data AnchorRelationFamily
-  = ConstitutedByAnchorFamily
-  | AnchorsNeedDriverFamily
-  | ChangesAnchorFamily
-  | MeasuresAnchorFamily
+  = ConstitutedByAnchorFamily -- ^ Situation constitution family.
+  | AnchorsNeedDriverFamily -- ^ Need-driver anchoring family.
+  | ChangesAnchorFamily -- ^ Intervention change family.
+  | MeasuresAnchorFamily -- ^ KPI observation family.
   deriving (Bounded, Enum, Eq, Ord, Show)
 
+-- | Complete runtime identity of a relation specification.
 data RelationCode
-  = FixedRelation FixedRelationCode
-  | AnchorRelation AnchorRelationFamily SituationAnchor
+  = FixedRelation FixedRelationCode -- ^ A relation with fixed endpoint kinds.
+  | AnchorRelation AnchorRelationFamily SituationAnchor -- ^ Anchor instance.
   deriving (Eq, Ord, Show)
 
+-- | Primitive-level evidence obligation attached to a context macrorelation.
 data MacroEvidenceKind
-  = GuidesMissionEvidence
-  | GroundsVisionEvidence
-  | GuidesVisionEvidence
-  | OrientsStrategyEvidence
-  | DirectsStrategyEvidence
-  | ContributesToStrategyEvidence
-  | QualifiesNeedEvidence
-  | SurfacesNeedEvidence
-  | AddressesNeedEvidence
-  | DirectsInterventionEvidence
-  | ChangesSituationEvidence
-  | SetsTargetForMeasureEvidence
-  | MeasuresSituationEvidence
-  | FramesMeasureEvidence
+  = GuidesMissionEvidence -- ^ Evidence for 'guidesMission'.
+  | GroundsVisionEvidence -- ^ Evidence for 'groundsVision'.
+  | GuidesVisionEvidence -- ^ Evidence for 'guidesVision'.
+  | OrientsStrategyEvidence -- ^ Evidence for 'orientsStrategy'.
+  | DirectsStrategyEvidence -- ^ Evidence for 'directsStrategy'.
+  | ContributesToStrategyEvidence -- ^ Evidence for 'contributesToStrategy'.
+  | QualifiesNeedEvidence -- ^ Evidence for 'qualifiesNeed'.
+  | SurfacesNeedEvidence -- ^ Evidence for 'surfacesNeed'.
+  | AddressesNeedEvidence -- ^ Evidence for 'addressesNeed'.
+  | DirectsInterventionEvidence -- ^ Evidence for 'directsIntervention'.
+  | ChangesSituationEvidence -- ^ Evidence for 'changesSituation'.
+  | SetsTargetForMeasureEvidence -- ^ Evidence for 'setsTargetForMeasure'.
+  | MeasuresSituationEvidence -- ^ Evidence for 'measuresSituation'.
+  | FramesMeasureEvidence -- ^ Evidence for 'framesMeasure'.
   deriving (Bounded, Enum, Eq, Ord, Show)
 
+-- | Semantic role of a relation in the O2I effect graph.
 data RelationSemantics
-  = MacroRelation MacroEvidenceKind
-  | EvidenceRelation
+  = MacroRelation MacroEvidenceKind -- ^ Claim requiring primitive evidence.
+  | EvidenceRelation -- ^ Relation that can contribute such evidence.
   deriving (Eq, Ord, Show)
 
+-- | Stable serialized name used by raw graph edges.
 newtype RelationName = RelationName
-  { relationNameText :: Text
+  { relationNameText :: Text -- ^ Machine-readable relation identifier.
   } deriving (Eq, Ord, Show)
 
+-- | Authoritative metadata and endpoint witnesses for a typed relation.
 data RelationSpec from to = RelationSpec
-  { relationCode :: RelationCode
-  , relationSemantics :: RelationSemantics
-  , relationName :: RelationName
-  , relationLabel :: Text
-  , relationFrom :: SNodeKind from
-  , relationTo :: SNodeKind to
+  { relationCode :: RelationCode -- ^ Stable finite-registry identity.
+  , relationSemantics :: RelationSemantics -- ^ Macro or evidence role.
+  , relationName :: RelationName -- ^ Name accepted in raw graph input.
+  , relationLabel :: Text -- ^ Concise human-readable relation label.
+  , relationFrom :: SNodeKind from -- ^ Statically witnessed source kind.
+  , relationTo :: SNodeKind to -- ^ Statically witnessed target kind.
   }
 
+-- | Typed proof that one node kind may relate to another.
 data Relation (from :: NodeKind) (to :: NodeKind) where
   Relation :: RelationSpec from to -> Relation from to
+    -- ^ Construct a typed witness from authoritative relation metadata.
 
+-- | Existential typed relation for heterogeneous runtime registries.
 data SomeRelation where
   SomeRelation :: Relation from to -> SomeRelation
+    -- ^ Hide endpoint indices while retaining their typed witnesses.
 
 instance Eq SomeRelation where
   left == right = relationCodeOf left == relationCodeOf right
@@ -167,22 +198,28 @@ instance Eq SomeRelation where
 instance Show SomeRelation where
   show = show . relationNameOf
 
+-- | Reveal the metadata carried by a typed relation witness.
 relationSpec :: Relation from to -> RelationSpec from to
 relationSpec (Relation spec) = spec
 
+-- | Return the stable code of an existential relation.
 relationCodeOf :: SomeRelation -> RelationCode
 relationCodeOf (SomeRelation relation) = relationCode (relationSpec relation)
 
+-- | Return the semantic role of an existential relation.
 relationSemanticsOf :: SomeRelation -> RelationSemantics
 relationSemanticsOf (SomeRelation relation) =
   relationSemantics (relationSpec relation)
 
+-- | Return the serialized name of an existential relation.
 relationNameOf :: SomeRelation -> RelationName
 relationNameOf (SomeRelation relation) = relationName (relationSpec relation)
 
+-- | Return the serialized name of a statically typed relation.
 relationNameFor :: Relation from to -> RelationName
 relationNameFor = relationName . relationSpec
 
+-- | Project name and endpoint kinds for runtime validation and introspection.
 relationIdentity :: SomeRelation -> (RelationName, NodeKindValue, NodeKindValue)
 relationIdentity (SomeRelation relation) =
   let spec = relationSpec relation
@@ -268,6 +305,7 @@ anchorRelation family anchor name label semantics from to =
 
 -- * Typed relation specifications
 -- ** Context macrorelations
+-- | State that Ethos normatively guides Mission.
 guidesMission :: Relation ('ContextKind 'Ethos) ('ContextKind 'Mission)
 guidesMission =
   fixedContextRelation
@@ -278,6 +316,7 @@ guidesMission =
     SEthos
     SMission
 
+-- | State that Mission provides the reason for Vision.
 groundsVision :: Relation ('ContextKind 'Mission) ('ContextKind 'Vision)
 groundsVision =
   fixedContextRelation
@@ -289,6 +328,7 @@ groundsVision =
     SVision
 
 -- ** Remaining context macrorelations
+-- | State that Ethos normatively guides Vision.
 guidesVision :: Relation ('ContextKind 'Ethos) ('ContextKind 'Vision)
 guidesVision =
   fixedContextRelation
@@ -299,6 +339,7 @@ guidesVision =
     SEthos
     SVision
 
+-- | State that Vision gives direction to Strategy.
 orientsStrategy :: Relation ('ContextKind 'Vision) ('ContextKind 'Strategy)
 orientsStrategy =
   fixedContextRelation
@@ -309,6 +350,7 @@ orientsStrategy =
     SVision
     SStrategy
 
+-- | State that one Strategy directs another Strategy.
 directsStrategy :: Relation ('ContextKind 'Strategy) ('ContextKind 'Strategy)
 directsStrategy =
   fixedContextRelation
@@ -319,6 +361,7 @@ directsStrategy =
     SStrategy
     SStrategy
 
+-- | State that one Strategy contributes to another Strategy.
 contributesToStrategy ::
      Relation ('ContextKind 'Strategy) ('ContextKind 'Strategy)
 contributesToStrategy =
@@ -330,6 +373,7 @@ contributesToStrategy =
     SStrategy
     SStrategy
 
+-- | Qualify a situated Need as strategically relevant.
 qualifiesNeed :: Relation ('ContextKind 'Strategy) ('ContextKind 'Need)
 qualifiesNeed =
   fixedContextRelation
@@ -340,6 +384,7 @@ qualifiesNeed =
     SStrategy
     SNeed
 
+-- | State that a Need becomes visible in a Situation.
 surfacesNeed :: Relation ('ContextKind 'Situation) ('ContextKind 'Need)
 surfacesNeed =
   fixedContextRelation
@@ -350,6 +395,7 @@ surfacesNeed =
     SSituation
     SNeed
 
+-- | State that an Intervention addresses a Need.
 addressesNeed :: Relation ('ContextKind 'Intervention) ('ContextKind 'Need)
 addressesNeed =
   fixedContextRelation
@@ -360,6 +406,7 @@ addressesNeed =
     SIntervention
     SNeed
 
+-- | State that Strategy directs an Intervention.
 directsIntervention ::
      Relation ('ContextKind 'Strategy) ('ContextKind 'Intervention)
 directsIntervention =
@@ -371,6 +418,7 @@ directsIntervention =
     SStrategy
     SIntervention
 
+-- | State that an Intervention changes a Situation.
 changesSituation ::
      Relation ('ContextKind 'Intervention) ('ContextKind 'Situation)
 changesSituation =
@@ -382,6 +430,7 @@ changesSituation =
     SIntervention
     SSituation
 
+-- | State that an Intervention establishes targets for a Measure context.
 setsTargetForMeasure ::
      Relation ('ContextKind 'Intervention) ('ContextKind 'Measure)
 setsTargetForMeasure =
@@ -393,6 +442,7 @@ setsTargetForMeasure =
     SIntervention
     SMeasure
 
+-- | State that a Measure context observes a Situation.
 measuresSituation :: Relation ('ContextKind 'Measure) ('ContextKind 'Situation)
 measuresSituation =
   fixedContextRelation
@@ -403,6 +453,7 @@ measuresSituation =
     SMeasure
     SSituation
 
+-- | State that Strategy frames the admissible measurement domain.
 framesMeasure :: Relation ('ContextKind 'Strategy) ('ContextKind 'Measure)
 framesMeasure =
   fixedContextRelation
@@ -414,6 +465,7 @@ framesMeasure =
     SMeasure
 
 -- ** Situation anchor relation
+-- | Relate a Situation to a constituent anchor of the witnessed form.
 constitutedByAnchor ::
      SSituationAnchor anchor
   -> Relation ('ContextKind 'Situation) ('AnchorKind anchor)
@@ -428,6 +480,7 @@ constitutedByAnchor anchor =
     (SAnchorKind anchor)
 
 -- ** Orientation and strategy evidence
+-- | Let an Ethos Principle guide a Mission Driver.
 guidesEthosPrincipleToMissionDriver ::
      Relation
        ('PrimitiveKind 'Ethos 'Principle)
@@ -442,6 +495,7 @@ guidesEthosPrincipleToMissionDriver =
     SMission
     SDriver
 
+-- | Let an Ethos Principle guide a Vision Objective.
 guidesEthosPrincipleToVisionObjective ::
      Relation
        ('PrimitiveKind 'Ethos 'Principle)
@@ -456,6 +510,7 @@ guidesEthosPrincipleToVisionObjective =
     SVision
     SObjective
 
+-- | Ground a Vision Objective in a Mission Driver.
 groundsMissionDriverToVisionObjective ::
      Relation
        ('PrimitiveKind 'Mission 'Driver)
@@ -471,6 +526,7 @@ groundsMissionDriverToVisionObjective =
     SObjective
 
 -- ** Remaining orientation and strategy evidence
+-- | Orient a Strategy Objective through a Vision Objective.
 orientsVisionObjectiveToStrategyObjective ::
      Relation
        ('PrimitiveKind 'Vision 'Objective)
@@ -485,6 +541,7 @@ orientsVisionObjectiveToStrategyObjective =
     SStrategy
     SObjective
 
+-- | Ground a Strategy Objective in its diagnosed Driver.
 groundsStrategyDriverToObjective ::
      Relation
        ('PrimitiveKind 'Strategy 'Driver)
@@ -499,6 +556,7 @@ groundsStrategyDriverToObjective =
     SStrategy
     SObjective
 
+-- | Make a Strategy Key Result substantiate its strategic Objective.
 substantiatesStrategyKeyResultObjective ::
      Relation
        ('PrimitiveKind 'Strategy 'KeyResult)
@@ -513,6 +571,7 @@ substantiatesStrategyKeyResultObjective =
     SStrategy
     SObjective
 
+-- | Make a Strategy Principle guide a coherent strategic Action.
 guidesStrategyPrincipleToAction ::
      Relation
        ('PrimitiveKind 'Strategy 'Principle)
@@ -527,6 +586,7 @@ guidesStrategyPrincipleToAction =
     SStrategy
     SAction
 
+-- | Make a strategic Action contribute to a strategic Key Result.
 contributesStrategyActionToKeyResult ::
      Relation
        ('PrimitiveKind 'Strategy 'Action)
@@ -541,6 +601,7 @@ contributesStrategyActionToKeyResult =
     SStrategy
     SKeyResult
 
+-- | Make a Principle in a directing Strategy guide another Principle.
 guidesStrategyPrincipleToPrinciple ::
      Relation
        ('PrimitiveKind 'Strategy 'Principle)
@@ -555,6 +616,7 @@ guidesStrategyPrincipleToPrinciple =
     SStrategy
     SPrinciple
 
+-- | Make one Strategy Key Result contribute to another Strategy Key Result.
 contributesStrategyKeyResultToKeyResult ::
      Relation
        ('PrimitiveKind 'Strategy 'KeyResult)
@@ -569,6 +631,7 @@ contributesStrategyKeyResultToKeyResult =
     SStrategy
     SKeyResult
 
+-- | Make one strategic Action contribute to another strategic Action.
 contributesStrategyActionToAction ::
      Relation
        ('PrimitiveKind 'Strategy 'Action)
@@ -584,6 +647,7 @@ contributesStrategyActionToAction =
     SAction
 
 -- ** Need and measurement evidence
+-- | Translate a Strategy Key Result into a Need Objective.
 translatesStrategyKeyResultToNeedObjective ::
      Relation
        ('PrimitiveKind 'Strategy 'KeyResult)
@@ -598,6 +662,7 @@ translatesStrategyKeyResultToNeedObjective =
     SNeed
     SObjective
 
+-- | Ground a Need Objective in its situated Driver.
 groundsNeedDriverToObjective ::
      Relation ('PrimitiveKind 'Need 'Driver) ('PrimitiveKind 'Need 'Objective)
 groundsNeedDriverToObjective =
@@ -611,6 +676,7 @@ groundsNeedDriverToObjective =
     SObjective
 
 -- ** Remaining need and measurement evidence
+-- | Attach a Need Driver to a Situation anchor of the witnessed form.
 anchorsNeedDriver ::
      SSituationAnchor anchor
   -> Relation ('AnchorKind anchor) ('PrimitiveKind 'Need 'Driver)
@@ -624,6 +690,7 @@ anchorsNeedDriver anchor =
     (SAnchorKind anchor)
     (SPrimitiveKind SNeed SDriver)
 
+-- | Let the strategic diagnosis indicate a measurement Domain.
 indicatesMeasureDomain ::
      Relation
        ('PrimitiveKind 'Strategy 'Driver)
@@ -636,6 +703,7 @@ indicatesMeasureDomain =
     (SPrimitiveKind SStrategy SDriver)
     (SStructuringKind SMeasure SDomain)
 
+-- | Let a Strategy Key Result determine a measurement Domain.
 determinesMeasureDomain ::
      Relation
        ('PrimitiveKind 'Strategy 'KeyResult)
@@ -648,6 +716,7 @@ determinesMeasureDomain =
     (SPrimitiveKind SStrategy SKeyResult)
     (SStructuringKind SMeasure SDomain)
 
+-- | Group a Strategy Key Result in a Strategy Domain.
 containsStrategyKeyResult ::
      Relation
        ('StructuringKind 'Strategy 'Domain)
@@ -660,6 +729,7 @@ containsStrategyKeyResult =
     (SStructuringKind SStrategy SDomain)
     (SPrimitiveKind SStrategy SKeyResult)
 
+-- | Group a KPI in a Measure Domain.
 containsMeasureKPI ::
      Relation ('StructuringKind 'Measure 'Domain) ('PrimitiveKind 'Measure 'KPI)
 containsMeasureKPI =
@@ -671,6 +741,7 @@ containsMeasureKPI =
     (SPrimitiveKind SMeasure SKPI)
 
 -- ** Intervention and effect evidence
+-- | Guide an Intervention Action through a coherent strategic Action.
 guidesStrategyActionToInterventionAction ::
      Relation
        ('PrimitiveKind 'Strategy 'Action)
@@ -685,6 +756,7 @@ guidesStrategyActionToInterventionAction =
     SIntervention
     SAction
 
+-- | Make an Intervention Action contribute to its Key Result.
 contributesInterventionActionToKeyResult ::
      Relation
        ('PrimitiveKind 'Intervention 'Action)
@@ -700,6 +772,7 @@ contributesInterventionActionToKeyResult =
     SKeyResult
 
 -- ** Remaining intervention and effect evidence
+-- | Make an Intervention Key Result substantiate a Need Objective.
 substantiatesInterventionKeyResultNeedObjective ::
      Relation
        ('PrimitiveKind 'Intervention 'KeyResult)
@@ -714,6 +787,7 @@ substantiatesInterventionKeyResultNeedObjective =
     SNeed
     SObjective
 
+-- | Link an Intervention Key Result back to its Strategy Key Result.
 contributesInterventionKeyResultToStrategyKeyResult ::
      Relation
        ('PrimitiveKind 'Intervention 'KeyResult)
@@ -728,6 +802,7 @@ contributesInterventionKeyResultToStrategyKeyResult =
     SStrategy
     SKeyResult
 
+-- | Let an Intervention Key Result set the target for a KPI.
 setsTargetForMeasureKPI ::
      Relation
        ('PrimitiveKind 'Intervention 'KeyResult)
@@ -742,6 +817,7 @@ setsTargetForMeasureKPI =
     SMeasure
     SKPI
 
+-- | State which Situation anchor an Intervention Action changes.
 changesAnchor ::
      SSituationAnchor anchor
   -> Relation ('PrimitiveKind 'Intervention 'Action) ('AnchorKind anchor)
@@ -755,6 +831,7 @@ changesAnchor anchor =
     (SPrimitiveKind SIntervention SAction)
     (SAnchorKind anchor)
 
+-- | State which Situation anchor a KPI observes.
 measuresAnchor ::
      SSituationAnchor anchor
   -> Relation ('PrimitiveKind 'Measure 'KPI) ('AnchorKind anchor)
@@ -769,6 +846,7 @@ measuresAnchor anchor =
     (SAnchorKind anchor)
 
 -- * Total relation registry
+-- | Complete finite list of stable relation codes.
 allRelationCodes :: [RelationCode]
 allRelationCodes =
   map FixedRelation [minBound .. maxBound]
@@ -777,6 +855,7 @@ allRelationCodes =
        , anchor <- [minBound .. maxBound]
        ]
 
+-- | Reify a stable runtime relation code as an existential typed witness.
 reifyRelation :: RelationCode -> SomeRelation
 reifyRelation (FixedRelation code) = reifyFixedRelation code
 reifyRelation (AnchorRelation family anchorKind) =
@@ -854,8 +933,13 @@ reifyAnchorRelation ChangesAnchorFamily anchor =
 reifyAnchorRelation MeasuresAnchorFamily anchor =
   SomeRelation (measuresAnchor anchor)
 
+-- | Complete registry of all typed O2I relations.
 allRelations :: [SomeRelation]
 allRelations = map reifyRelation allRelationCodes
 
+-- | Resolve all relations serialized under a runtime name.
+--
+-- Structural elaboration selects the candidate whose typed endpoints match the
+-- concrete edge. Registry identity uniqueness prevents duplicate witnesses.
 lookupRelations :: RelationName -> [SomeRelation]
 lookupRelations name = filter ((== name) . relationNameOf) allRelations

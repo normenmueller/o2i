@@ -1,4 +1,7 @@
--- | Public facade for the O2I typed validation core.
+-- | Public facade for the O2I semantic language and validation core.
+--
+-- Language defines admissible O2I meaning, Graph represents concrete model
+-- instances, and Validation establishes progressively stronger guarantees.
 module O2I
   ( RawNodeId(..)
   , ContextRef
@@ -76,8 +79,15 @@ module O2I
   , allRelationCodes
   , allRelations
   , lookupRelations
-  , module O2I.Model.Raw
-  , WellFormedModel
+  , module O2I.Graph
+  , StrategyAnchoring(..)
+  , RawStrategyFormulation(..)
+  , StrategyFormulation
+  , StrategyTextField(..)
+  , StrategyPrimitiveRole(..)
+  , SemanticallyValidModel
+  , strategyFormulations
+  , strategyFormulationData
   , EffectTrace
   , EffectTraceId
   , TraceableEffectModel
@@ -105,18 +115,15 @@ module O2I
   , Validation(..)
   , Check
   , StructuralError(..)
+  , ModelInvariantError(..)
   , TraceabilityError(..)
   , EvidenceError(..)
   , validateStructure
+  , validateModelSemantics
   , validateTraceability
   , assessEffectEvidence
   ) where
 
-import Data.Validation (Validation(..))
-import O2I.Evidence
-import O2I.Model (WellFormedModel)
-import O2I.Model.Raw
-import O2I.Relation
-import O2I.Trace
-import O2I.Types
+import O2I.Graph
+import O2I.Language
 import O2I.Validation

@@ -1,7 +1,10 @@
 {-# LANGUAGE DataKinds #-}
 
--- | Time-based observations and empirical effect assessment.
-module O2I.Evidence
+-- | Empirical evidence validation for relationally traceable effects.
+--
+-- Evidence validation checks observations and criteria against established
+-- effect traces without claiming methodological proof of causality.
+module O2I.Validation.Evidence
   ( Unit(..)
   , Quantity(..)
   , EvidenceSource(..)
@@ -28,100 +31,136 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Time (UTCTime)
 import Data.Validation (Validation(..))
-import O2I.Trace
-import O2I.Types
+import O2I.Language.Element
+import O2I.Validation.Trace
 
 -- * Evidence types
+-- | Named measurement unit shared by observations and criteria.
 newtype Unit = Unit
-  { unitName :: Text
+  { unitName :: Text -- ^ Nonblank unit name required by evidence validation.
   } deriving (Eq, Ord, Show)
 
+-- | Exact measured or criterion value with its unit.
 data Quantity = Quantity
-  { magnitude :: Rational
-  , unit :: Unit
+  { magnitude :: Rational -- ^ Exact numeric magnitude.
+  , unit :: Unit -- ^ Semantic unit of the magnitude.
   } deriving (Eq, Show)
 
+-- | Human-auditable provenance of an observation.
 newtype EvidenceSource = EvidenceSource
-  { evidenceSourceName :: Text
+  { evidenceSourceName :: Text -- ^ Nonblank source description.
   } deriving (Eq, Ord, Show)
 
+-- | One timestamped observation of a KPI at a Situation anchor.
 data Observation = Observation
-  { observationKPI :: RawNodeId
-  , observationAnchor :: RawNodeId
-  , observedAt :: UTCTime
-  , observedValue :: Quantity
-  , observationSource :: EvidenceSource
+  { observationKPI :: RawNodeId -- ^ Observed KPI; must match the trace.
+  , observationAnchor :: RawNodeId -- ^ Anchor; must match the trace.
+  , observedAt :: UTCTime -- ^ Observation timestamp.
+  , observedValue :: Quantity -- ^ Observed quantity.
+  , observationSource :: EvidenceSource -- ^ Auditable provenance.
   } deriving (Eq, Show)
 
+-- | Required direction and minimum magnitude of observed change.
 data EffectCriterion
-  = IncreaseByAtLeast Quantity
-  | DecreaseByAtLeast Quantity
+  = IncreaseByAtLeast Quantity -- ^ Require at least this positive increase.
+  | DecreaseByAtLeast Quantity -- ^ Require at least this positive decrease.
   deriving (Eq, Show)
 
+-- | Required absolute target range at follow-up.
 data TargetCriterion
-  = AtLeast Quantity
-  | AtMost Quantity
-  | Within Quantity Quantity
+  = AtLeast Quantity -- ^ Require a value at or above the threshold.
+  | AtMost Quantity -- ^ Require a value at or below the threshold.
+  | Within Quantity Quantity -- ^ Require an inclusive lower/upper range.
   deriving (Eq, Show)
 
+-- | Ex-ante evidence design for one effect trace.
 data EvidencePlan = EvidencePlan
-  { establishedAt :: UTCTime
-  , interventionStartedAt :: UTCTime
-  , targetDueAt :: UTCTime
-  , effectCriterion :: EffectCriterion
-  , targetCriterion :: TargetCriterion
+  { establishedAt :: UTCTime -- ^ Time at which the plan was fixed.
+  , interventionStartedAt :: UTCTime -- ^ Intervention start time.
+  , targetDueAt :: UTCTime -- ^ Due date for target attainment.
+  , effectCriterion :: EffectCriterion -- ^ Criterion for observed change.
+  , targetCriterion :: TargetCriterion -- ^ Criterion for target attainment.
   } deriving (Eq, Show)
 
+-- | Submitted evidence for one validated effect trace.
 data EvidenceClaim = EvidenceClaim
-  { evidenceTrace :: EffectTraceId
-  , evidenceInterventionKeyResult :: RawNodeId
-  , evidencePlan :: EvidencePlan
-  , baseline :: Observation
-  , followUp :: Observation
+  { evidenceTrace :: EffectTraceId -- ^ Trace being assessed.
+  , evidenceInterventionKeyResult :: RawNodeId -- ^ Claimed operational result.
+  , evidencePlan :: EvidencePlan -- ^ Ex-ante criteria and timing.
+  , baseline :: Observation -- ^ Observation before intervention start.
+  , followUp :: Observation -- ^ Observation after intervention start.
   } deriving (Eq, Show)
 
+-- | Result of evaluating observed change against its effect criterion.
 data CriterionResult
-  = Satisfied
-  | NotSatisfied
+  = Satisfied -- ^ Observed change meets the effect criterion.
+  | NotSatisfied -- ^ Observed change does not meet the effect criterion.
   deriving (Eq, Show)
 
+-- | Result of evaluating follow-up against target value and due date.
 data TargetResult
-  = ObservedSatisfiedOnTime
-  | ObservedSatisfiedAfterDue
-  | NotSatisfiedAtFollowUp
+  = ObservedSatisfiedOnTime -- ^ Target met no later than its due date.
+  | ObservedSatisfiedAfterDue -- ^ Target met, but only after its due date.
+  | NotSatisfiedAtFollowUp -- ^ Follow-up does not meet the target.
   deriving (Eq, Show)
 
+-- | Validated effect and target assessment for one evidence claim.
 data EffectAssessment = EffectAssessment
-  { assessedClaim :: EvidenceClaim
-  , effectResult :: CriterionResult
-  , targetResult :: TargetResult
+  { assessedClaim :: EvidenceClaim -- ^ Evidence underlying the assessment.
+  , effectResult :: CriterionResult -- ^ Change criterion outcome.
+  , targetResult :: TargetResult -- ^ Target criterion and timeliness outcome.
   } deriving (Eq, Show)
 
 -- * Evidence-assessed model
+-- | Opaque traceable model with exactly one valid evidence claim per trace.
+--
+-- This stage establishes evidence consistency and criteria evaluation. It does
+-- not constitute methodological proof that an Intervention caused the change.
 data EvidenceAssessedModel = EvidenceAssessedModel
   { assessedTraceableModel :: TraceableEffectModel
   , validatedAssessments :: NonEmpty.NonEmpty EffectAssessment
   }
 
+-- | Violations detected while validating empirical effect evidence.
 data EvidenceError
   = UnknownEffectTrace EffectTraceId
+    -- ^ A claim refers to no trace in the supplied traceable model.
   | DuplicateEvidenceClaim EffectTraceId Int
+    -- ^ More than one claim targets the same effect trace.
   | InterventionKeyResultMismatch EffectTraceId RawNodeId RawNodeId
+    -- ^ Claimed Intervention Key Result differs from the trace.
   | ObservationKPIMismatch EffectTraceId RawNodeId RawNodeId
+    -- ^ An observation uses a KPI other than the traced KPI.
   | ObservationAnchorMismatch EffectTraceId RawNodeId RawNodeId
+    -- ^ An observation uses an anchor other than the traced anchor.
   | ObservationUnitMismatch EffectTraceId Unit Unit
+    -- ^ Baseline and follow-up use different units.
   | CriterionUnitMismatch EffectTraceId Unit Unit
+    -- ^ A criterion unit differs from the observation unit.
   | InvalidObservationOrder EffectTraceId
+    -- ^ Baseline, intervention start, and follow-up are not ordered.
   | InvalidEvidencePlanOrder EffectTraceId
+    -- ^ The evidence plan was not established before intervention start.
   | InvalidTargetDueDate EffectTraceId
+    -- ^ The target due date is not after intervention start.
   | InvalidEffectCriterion EffectTraceId
+    -- ^ The minimum effect magnitude is not strictly positive.
   | InvalidTargetCriterion EffectTraceId
+    -- ^ Target bounds use different units or an inverted range.
   | EmptyUnit EffectTraceId
+    -- ^ At least one observation or criterion has a blank unit.
   | EmptyEvidenceSource EffectTraceId
+    -- ^ At least one observation has blank provenance.
   | MissingEvidenceClaim EffectTraceId
+    -- ^ A validated effect trace has no evidence claim.
   deriving (Eq, Show)
 
 -- * Evidence validation
+-- | Validate and assess exactly one evidence claim for every effect trace.
+--
+-- The input must already be relationally traceable. Independent evidence
+-- errors accumulate. Success guarantees trace alignment, compatible units,
+-- valid temporal ordering, nonblank provenance, and evaluated criteria.
 assessEffectEvidence ::
      TraceableEffectModel
   -> NonEmpty.NonEmpty EvidenceClaim
@@ -163,9 +202,13 @@ duplicateClaimErrors claimIndex =
   , length claims > 1
   ]
 
+-- | Enumerate all validated effect assessments.
 effectAssessments :: EvidenceAssessedModel -> NonEmpty.NonEmpty EffectAssessment
 effectAssessments = validatedAssessments
 
+-- | Test whether any trace for a Need has satisfied its effect criterion.
+--
+-- Target attainment is deliberately independent and is not required here.
 isEffectiveNeed :: EvidenceAssessedModel -> ContextRef 'Need -> Bool
 isEffectiveNeed model need =
   any supportsNeed (NonEmpty.toList (validatedAssessments model))

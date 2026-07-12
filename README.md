@@ -4,6 +4,12 @@ O2I ist ein generisches Framework für Wirkungsarchitekturen: Es beschreibt, wie
 
 Der aktive Artikel ist [`o2i.md`](./o2i.md). Das ArchiMate-Modell liegt unter [`mdl/o2i.archimate`](./mdl/o2i.archimate). Die normative Haskell-Spezifikation liegt als Library unter [`spc/src/lib`](./spc/src/lib/).
 
+Die öffentliche Haskell-API gliedert sich in `O2I.Language` für den semantischen Formvorrat, `O2I.Graph` für konkrete Graphen und `O2I.Validation` für gestufte Prüfungen. `O2I` bildet die kuratierte Gesamtfassade.
+
+```text
+RawGraph -> WellFormedGraph -> SemanticallyValidModel -> TraceableEffectModel -> EvidenceAssessedModel
+```
+
 ## Purpose
 
 <!-- O2I PURPOSE START -->
@@ -28,7 +34,6 @@ o2i/
 |- mdl/
 |- spc/
 |  |- src/lib/
-|  |- src/app/
 |  |- tst/
 |- o2i.md
 ```
@@ -37,7 +42,6 @@ o2i/
 - `mdl/`: ArchiMate-Modell
 - `img/`: Abbildungen für Artikel und Modellkommunikation
 - `spc/src/lib/`: normative Haskell-Library, deren Codeauszüge im Artikel eingebunden werden
-- `spc/src/app/`: minimaler Einstiegspunkt für spätere Validierungswerkzeuge
 - `spc/tst/`: Haskell-Validierungsbeispiele und Tests
 
 ## Build
@@ -52,8 +56,9 @@ md2pdf -- o2i.md
 
 ```sh
 cabal --project-dir=spc build all --ghc-options=-Werror
-cabal --project-dir=spc test all
-hindent --line-length 80 --validate spc/src/lib/O2I.hs spc/src/lib/O2I/*.hs spc/src/app/Main.hs spc/tst/Main.hs
+cabal --project-dir=spc test all --ghc-options=-Werror
+cabal --project-dir=spc haddock all
+hindent --line-length 80 --validate spc/src/lib/O2I.hs spc/src/lib/O2I/*.hs spc/src/lib/O2I/Language/*.hs spc/src/lib/O2I/Graph/*.hs spc/src/lib/O2I/Validation/*.hs spc/tst/Main.hs
 pandoc o2i.md --filter pandoc-include -t markdown
 md2pdf -- o2i.md
 ```

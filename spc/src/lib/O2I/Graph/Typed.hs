@@ -3,19 +3,28 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE StandaloneDeriving #-}
 
--- | Typed concrete O2I model graph and safe graph queries.
-module O2I.Model
+-- | Structurally typed O2I graph and total graph queries.
+--
+-- Graph modules instantiate the O2I language. They establish structural
+-- typing only; semantic completeness belongs to the Validation namespace.
+module O2I.Graph.Typed
   ( Node(..)
   , SomeNode(..)
   , Edge(..)
   , SomeEdge(..)
-  , WellFormedModel
-  , mkWellFormedModel
+  , WellFormedGraph
+  , mkWellFormedGraph
   , modelNodes
   , modelEdges
   , nodeId
   , nodeKind
   , nodeOwner
+  , someNodeId
+  , someNodeKind
+  , someNodeOwner
+  , someEdgeFrom
+  , someEdgeRelation
+  , someEdgeTo
   , lookupNode
   , contextNodesOf
   , primitiveNodesIn
@@ -27,15 +36,18 @@ module O2I.Model
 
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
-import O2I.Relation
-import O2I.Types
+import O2I.Language.Element
+import O2I.Language.Interpretation
+import O2I.Language.Relation
 
 -- * Typed model graph
+-- | Structurally validated node indexed by its complete semantic kind.
 data Node (kind :: NodeKind) where
   ContextNode
     :: NodeId ('ContextKind context)
     -> SContext context
     -> Node ('ContextKind context)
+    -- ^ Validated context node.
   PrimitiveNode
     :: NodeId ('PrimitiveKind context primitive)
     -> NodeId ('ContextKind context)
@@ -43,34 +55,42 @@ data Node (kind :: NodeKind) where
     -> SPrimitive primitive
     -> Interpretation context primitive
     -> Node ('PrimitiveKind context primitive)
+    -- ^ Validated contextualized Primitive with interpretation proof.
   StructuringNode
     :: NodeId ('StructuringKind context structuring)
     -> NodeId ('ContextKind context)
     -> SContext context
     -> SStructuring structuring
     -> Node ('StructuringKind context structuring)
+    -- ^ Validated contextualized structuring node.
   AnchorNode
     :: NodeId ('AnchorKind anchor)
     -> NodeId ('ContextKind 'Situation)
     -> SSituationAnchor anchor
     -> Node ('AnchorKind anchor)
+    -- ^ Validated Situation anchor.
 
 deriving instance Show (Node kind)
 
+-- | Existential validated node for heterogeneous graph storage.
 data SomeNode where
   SomeNode :: Node kind -> SomeNode
+    -- ^ Hide the node-kind index while retaining its typed node.
 
 instance Show SomeNode where
   show (SomeNode node) = show node
 
+-- | Structurally validated edge whose endpoint kinds match its relation.
 data Edge (from :: NodeKind) (to :: NodeKind) = Edge
-  { edgeFrom :: NodeId from
-  , edgeRelation :: Relation from to
-  , edgeTo :: NodeId to
+  { edgeFrom :: NodeId from -- ^ Typed source node identifier.
+  , edgeRelation :: Relation from to -- ^ Typed admissibility witness.
+  , edgeTo :: NodeId to -- ^ Typed target node identifier.
   }
 
+-- | Existential validated edge for heterogeneous graph storage.
 data SomeEdge where
   SomeEdge :: Edge from to -> SomeEdge
+    -- ^ Hide endpoint indices while retaining a typed edge.
 
 instance Show SomeEdge where
   show (SomeEdge edge) =
@@ -86,27 +106,47 @@ instance Eq SomeEdge where
            == relationName (relationSpec (edgeRelation right))
       && unNodeId (edgeTo left) == unNodeId (edgeTo right)
 
+-- | Read the source identifier of a validated edge.
+someEdgeFrom :: SomeEdge -> RawNodeId
+someEdgeFrom (SomeEdge edge) = unNodeId (edgeFrom edge)
+
+-- | Read the serialized relation name of a validated edge.
+someEdgeRelation :: SomeEdge -> RelationName
+someEdgeRelation (SomeEdge edge) = relationNameFor (edgeRelation edge)
+
+-- | Read the target identifier of a validated edge.
+someEdgeTo :: SomeEdge -> RawNodeId
+someEdgeTo (SomeEdge edge) = unNodeId (edgeTo edge)
+
 -- * Validated model stage
-data WellFormedModel = WellFormedModel
+-- | Opaque graph with valid IDs, ownership, interpretations, and edges.
+--
+-- Construction is restricted to structural validation.
+data WellFormedGraph = WellFormedGraph
   { typedNodes :: Map RawNodeId SomeNode
   , typedEdges :: [SomeEdge]
   }
 
-mkWellFormedModel :: Map RawNodeId SomeNode -> [SomeEdge] -> WellFormedModel
-mkWellFormedModel = WellFormedModel
+-- | Internal constructor used after all structural checks have succeeded.
+mkWellFormedGraph :: Map RawNodeId SomeNode -> [SomeEdge] -> WellFormedGraph
+mkWellFormedGraph = WellFormedGraph
 
-modelNodes :: WellFormedModel -> [SomeNode]
+-- | Enumerate validated nodes without exposing graph constructors.
+modelNodes :: WellFormedGraph -> [SomeNode]
 modelNodes = Map.elems . typedNodes
 
-modelEdges :: WellFormedModel -> [SomeEdge]
+-- | Enumerate validated edges without exposing graph constructors.
+modelEdges :: WellFormedGraph -> [SomeEdge]
 modelEdges = typedEdges
 
+-- | Read the kind-indexed identifier of a validated node.
 nodeId :: Node kind -> NodeId kind
 nodeId (ContextNode identifier _) = identifier
 nodeId (PrimitiveNode identifier _ _ _ _) = identifier
 nodeId (StructuringNode identifier _ _ _) = identifier
 nodeId (AnchorNode identifier _ _) = identifier
 
+-- | Recover the singleton kind witness carried by a validated node.
 nodeKind :: Node kind -> SNodeKind kind
 nodeKind (ContextNode _ context) = SContextKind context
 nodeKind (PrimitiveNode _ _ context primitive _) =
@@ -115,23 +155,39 @@ nodeKind (StructuringNode _ _ context structuring) =
   SStructuringKind context structuring
 nodeKind (AnchorNode _ _ anchor) = SAnchorKind anchor
 
+-- | Return the owning context ID; context nodes have no owner.
 nodeOwner :: Node kind -> Maybe RawNodeId
 nodeOwner (ContextNode _ _) = Nothing
 nodeOwner (PrimitiveNode _ owner _ _ _) = Just (unNodeId owner)
 nodeOwner (StructuringNode _ owner _ _) = Just (unNodeId owner)
 nodeOwner (AnchorNode _ owner _) = Just (unNodeId owner)
 
-lookupNode :: WellFormedModel -> RawNodeId -> Maybe SomeNode
+-- | Read an existential validated node identifier.
+someNodeId :: SomeNode -> RawNodeId
+someNodeId (SomeNode node) = unNodeId (nodeId node)
+
+-- | Read the complete runtime kind of an existential validated node.
+someNodeKind :: SomeNode -> NodeKindValue
+someNodeKind (SomeNode node) = nodeKindValue (nodeKind node)
+
+-- | Read the optional owner of an existential validated node.
+someNodeOwner :: SomeNode -> Maybe RawNodeId
+someNodeOwner (SomeNode node) = nodeOwner node
+
+-- | Look up a validated node by its unique raw identifier.
+lookupNode :: WellFormedGraph -> RawNodeId -> Maybe SomeNode
 lookupNode model identifier = Map.lookup identifier (typedNodes model)
 
-contextNodesOf :: WellFormedModel -> Context -> [RawNodeId]
+-- | Enumerate context-node identifiers of the requested context type.
+contextNodesOf :: WellFormedGraph -> Context -> [RawNodeId]
 contextNodesOf model expected =
   [ unNodeId identifier
   | SomeNode (ContextNode identifier context) <- modelNodes model
   , contextValue context == expected
   ]
 
-primitiveNodesIn :: WellFormedModel -> RawNodeId -> Primitive -> [RawNodeId]
+-- | Enumerate primitive nodes of a kind owned by one context node.
+primitiveNodesIn :: WellFormedGraph -> RawNodeId -> Primitive -> [RawNodeId]
 primitiveNodesIn model owner expected =
   [ unNodeId identifier
   | SomeNode (PrimitiveNode identifier context _ primitive _) <-
@@ -140,7 +196,8 @@ primitiveNodesIn model owner expected =
   , primitiveValue primitive == expected
   ]
 
-structuringNodesIn :: WellFormedModel -> RawNodeId -> Structuring -> [RawNodeId]
+-- | Enumerate structuring nodes of a kind owned by one context node.
+structuringNodesIn :: WellFormedGraph -> RawNodeId -> Structuring -> [RawNodeId]
 structuringNodesIn model owner expected =
   [ unNodeId identifier
   | SomeNode (StructuringNode identifier context _ structuring) <-
@@ -149,14 +206,16 @@ structuringNodesIn model owner expected =
   , structuringValue structuring == expected
   ]
 
-anchorNodesIn :: WellFormedModel -> RawNodeId -> [RawNodeId]
+-- | Enumerate Situation anchors owned by one Situation context.
+anchorNodesIn :: WellFormedGraph -> RawNodeId -> [RawNodeId]
 anchorNodesIn model owner =
   [ unNodeId identifier
   | SomeNode (AnchorNode identifier context _) <- modelNodes model
   , unNodeId context == owner
   ]
 
-hasEdge :: WellFormedModel -> RawNodeId -> RelationName -> RawNodeId -> Bool
+-- | Test whether an exact validated edge exists.
+hasEdge :: WellFormedGraph -> RawNodeId -> RelationName -> RawNodeId -> Bool
 hasEdge model from relation to = any matches (modelEdges model)
   where
     matches (SomeEdge edge) =
@@ -165,8 +224,9 @@ hasEdge model from relation to = any matches (modelEdges model)
         && unNodeId (edgeTo edge) == to
 
 -- * Graph queries
+-- | Find context targets reached from a source by a named context relation.
 outgoingContextTargets ::
-     WellFormedModel -> RawNodeId -> RelationName -> [RawNodeId]
+     WellFormedGraph -> RawNodeId -> RelationName -> [RawNodeId]
 outgoingContextTargets model from relation =
   [ unNodeId (edgeTo edge)
   | SomeEdge edge <- modelEdges model
