@@ -66,6 +66,8 @@ Die zentrale Idee von O2I ist, fachliche Relationen wie die O2I-Relation `Strate
 > - **Operationalisierung**: Sichtbarer Bedarf wird qualifiziert, handlungs- und nachweisfähig
 > - **Wirkung**: beobachtete Veränderung und Evidenz
 
+Die Wirkungskette ist nicht linear abgeschlossen: Beobachtete Wirkung liefert Evidenz, um Situationen neu zu bewerten und weitere Bedarfe sichtbar zu machen.
+
 # Fundament
 
 ## Literaturbasis
@@ -337,7 +339,7 @@ Eine Situation muss somit fachlich, nicht technisch, beschrieben werden. Sie bes
 ### Bedarf
 
 > [!definition]
-> Ein **Bedarf** (en.: *need*; meta: `Need`)[^need] bezeichnet eine begründete, auf eine konkrete [Situation](#situation) bezogene Anforderung an Veränderung, die dort sichtbar, begründbar und später überprüfbar wird, aber noch keine konkrete Lösung festlegt. Ein Bedarf beschreibt, was benötigt wird, nicht wie es umgesetzt oder erfüllt wird. Bedarfe können in weitere Bedarfe verfeinert werden; jede Verfeinerung bleibt auf der Ebene des Was.
+> Ein **Bedarf** (en.: *need*; meta: `Need`)[^need] bezeichnet eine begründete, auf eine konkrete [Situation](#situation) bezogene Anforderung an Veränderung, die dort sichtbar, begründbar und später überprüfbar wird, aber noch keine konkrete Lösung festlegt. Ein Bedarf beschreibt, was benötigt wird, nicht wie es umgesetzt oder erfüllt wird.
 >
 > > [!tldr] Bedarf = \textsc{Was} wird benötigt?
 >
@@ -345,13 +347,9 @@ Eine Situation muss somit fachlich, nicht technisch, beschrieben werden. Sie bes
 
 Ein Bedarf in O2I ist eine *situationsbezogene Anforderung an Veränderung* und folglich nur zulässig, wenn er auf eine konkrete Situation bezogen ist, etwa auf eine Business Capability, einen Business Process, ein Business Object, eine Business Role, einen Value Stream oder einen Regulatory Constraint. Ohne diesen Situationsbezug bleibt er eine unqualifizierte Aussage über gewünschten Wandel, aber kein O2I-Bedarf.
 
-Der Situationsbezug macht einen Bedarf sichtbar und prüfbar; der Strategiebezug wird erst durch Bedarfsqualifikation hergestellt. Strategie qualifiziert einen sichtbaren Bedarf als strategisch relevant; erst dadurch wird er wirkungsrelevant.
+Ein Bedarf ist keine Lösung, keine Maßnahme, kein Projekt und keine Anforderungsspezifikation. Diese können seine spätere Bearbeitung konkretisieren, dürfen ihn aber nicht ersetzen. Ein Bedarf bleibt auf der Ebene des benötigten fachlichen Ergebnisses.
 
-Ein Bedarf ist keine Lösung, keine Maßnahme, kein Projekt und keine Anforderungsspezifikation. Diese können aus einem wirkungsrelevanten Bedarf abgeleitet werden, dürfen den Bedarf aber nicht ersetzen. Ein Bedarf bleibt auf der Ebene des benötigten fachlichen Ergebnisses.
-
-Bedarfe können verfeinert werden, wenn dadurch ihr fachlicher Gehalt präzisiert wird. Eine Verfeinerung bleibt ein Bedarf, solange sie das Was konkretisiert und keine Umsetzung festlegt. Ein Beispiel für Bedarfsspezialisierungen sind fachliche Bedarfe und daraus abgeleitete Digitalisierungsbedarfe. Beide bleiben Bedarfe: Sie beschreiben das Was, nicht die Lösung.
-
-Die spätere Wirkungsrelevanz eines Bedarfs wird nicht durch seine Formulierung behauptet, sondern über Bedarfsqualifikation und anschlussfähige Primitive-Verbindungen begründet.
+Durch seinen Situationsbezug ist ein O2I-Bedarf sichtbar und prüfbar, aber noch nicht strategisch relevant. Diese Relevanz wird erst durch die Bedarfsqualifikation begründet, die den Bedarf über anschlussfähige Primitive-Verbindungen auf eine Strategie bezieht. Erst als sichtbar gewordener und strategisch relevanter Bedarf ist er wirkungsrelevant.
 
 ## Operationalisierung
 
@@ -616,7 +614,7 @@ Eine Primitive-Instanz ist ein konkretes modelliertes Inhaltselement, das einer 
 Eine Relationsinstanz verbindet konkrete Kontext-, Primitive-, Strukturierungs- oder Ankerinstanzen. Ihre Zulässigkeit wird gegen die im Metamodell definierten Relationstypen geprüft.
 
 > [!note]
-> Verfeinerung ist in O2I eine generische Modellierungsoperation zur fachlichen Präzisierung von Modellelementen. Sie ist keine Relation, die im Kernmodell Wirkungsrelevanz oder Wirkungsevidenz begründet.
+> Verfeinerung ist eine generische Modellierungsoperation zur fachlichen Präzisierung von O2I-Modellelementen. Sie verändert weder deren O2I-Typ noch deren kontextuelle Interpretation und begründet keine Wirkungsrelevanz oder Wirkungsevidenz. Deshalb führt das O2I-Metamodell `refines` nicht als eigene Relation.
 
 ### Interpretation
 
