@@ -19,6 +19,7 @@ PRESETS = {
     "orientation": ("O2I Orientierung", Path("mdl/o2i-orientation.md")),
     "context": ("O2I Context", Path("mdl/o2i-context.md")),
     "primitives": ("O2I Primitives", Path("mdl/o2i-primitives.md")),
+    "syntax": ("O2I Syntax", Path("mdl/o2i-syntax.md")),
     "layered-cake": ("O2I Layered Cake", Path("mdl/o2i-layered-cake.md")),
 }
 

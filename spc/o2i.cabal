@@ -24,13 +24,22 @@ library
     warnings,
     language
   exposed-modules:
-    O2I,
-    O2I.Elements,
-    O2I.Graph,
+    O2I
+  other-modules:
+    O2I.Evidence,
+    O2I.Internal.Elaboration,
+    O2I.Model,
+    O2I.Model.Raw,
     O2I.Relation,
+    O2I.Trace,
+    O2I.Types,
     O2I.Validation
   build-depends:
-    base >=4.18 && <4.19
+    base >=4.18 && <4.19,
+    containers >=0.6 && <0.7,
+    text >=2.0 && <2.1,
+    time >=1.12 && <1.13,
+    validation >=1.1 && <1.2
   hs-source-dirs:
     src/lib
 
@@ -56,7 +65,14 @@ test-suite o2i-test
     Main.hs
   build-depends:
     base >=4.18 && <4.19,
-    o2i
+    o2i,
+    tasty >=1.4 && <1.6,
+    tasty-hunit >=0.10 && <0.11,
+    tasty-quickcheck >=0.10 && <0.12,
+    QuickCheck >=2.14 && <2.16,
+    text >=2.0 && <2.1,
+    time >=1.12 && <1.13,
+    validation >=1.1 && <1.2
   hs-source-dirs:
     tst
 

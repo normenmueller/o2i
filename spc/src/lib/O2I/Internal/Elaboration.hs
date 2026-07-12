@@ -1,0 +1,223 @@
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE TypeOperators #-}
+
+-- | Raw-to-typed O2I model elaboration.
+module O2I.Internal.Elaboration
+  ( StructuralError(..)
+  , validateStructure
+  ) where
+
+import Data.List (group, sort)
+import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
+import Data.Map.Strict (Map)
+import Data.Maybe (isNothing)
+import Data.Type.Equality ((:~:)(Refl))
+import Data.Validation (Validation(..))
+import O2I.Model
+import O2I.Model.Raw
+import O2I.Relation
+import O2I.Types
+
+data StructuralError
+  = DuplicateNodeId RawNodeId
+  | DuplicateEdge RawEdge
+  | UnknownOwner RawNodeId RawNodeId
+  | InvalidPrimitiveInterpretation RawNodeId Context Primitive
+  | InvalidStructuringContext RawNodeId Context Structuring
+  | InvalidAnchorContext RawNodeId Context SituationAnchor
+  | UnknownEdgeEndpoint RawEdge RawNodeId
+  | UnknownRelation RelationName
+  | InvalidRelationDomain RawEdge NodeKindValue NodeKindValue
+  | ElaborationInvariantViolation
+  deriving (Eq, Show)
+
+validateStructure ::
+     RawModel -> Validation (NonEmpty.NonEmpty StructuralError) WellFormedModel
+validateStructure raw =
+  case NonEmpty.nonEmpty errors of
+    Just failures -> Failure failures
+    Nothing ->
+      case buildModel raw of
+        Just model -> Success model
+        Nothing -> Failure (NonEmpty.singleton ElaborationInvariantViolation)
+  where
+    errors = nodeErrors raw ++ edgeErrors raw
+
+nodeErrors :: RawModel -> [StructuralError]
+nodeErrors raw = duplicateIdErrors ++ concatMap validateNode (rawNodes raw)
+  where
+    identifiers = map rawNodeId (rawNodes raw)
+    duplicateIdErrors = map DuplicateNodeId (duplicates identifiers)
+    owners = contextKinds raw
+    validateNode (RawContextNode _ _) = []
+    validateNode (RawPrimitiveNode identifier owner primitive) =
+      case Map.lookup owner owners of
+        Nothing -> [UnknownOwner identifier owner]
+        Just context ->
+          [ InvalidPrimitiveInterpretation identifier context primitive
+          | isNothing (lookupInterpretation context primitive)
+          ]
+    validateNode (RawStructuringNode identifier owner structuring) =
+      case Map.lookup owner owners of
+        Nothing -> [UnknownOwner identifier owner]
+        Just context ->
+          [ InvalidStructuringContext identifier context structuring
+          | context `notElem` [Strategy, Measure]
+          ]
+    validateNode (RawAnchorNode identifier owner anchor) =
+      case Map.lookup owner owners of
+        Nothing -> [UnknownOwner identifier owner]
+        Just context ->
+          [ InvalidAnchorContext identifier context anchor
+          | context /= Situation
+          ]
+
+edgeErrors :: RawModel -> [StructuralError]
+edgeErrors raw = duplicateEdgeErrors ++ concatMap validateEdge (rawEdges raw)
+  where
+    duplicateEdgeErrors = map DuplicateEdge (duplicates (rawEdges raw))
+    kinds = rawNodeKinds raw
+    validateEdge edge =
+      endpointErrors edge fromKind toKind
+        ++ relationErrors edge fromKind toKind candidates
+      where
+        fromKind = Map.lookup (rawEdgeFrom edge) kinds
+        toKind = Map.lookup (rawEdgeTo edge) kinds
+        candidates = lookupRelations (rawEdgeRelation edge)
+
+endpointErrors ::
+     RawEdge -> Maybe NodeKindValue -> Maybe NodeKindValue -> [StructuralError]
+endpointErrors edge fromKind toKind =
+  [UnknownEdgeEndpoint edge (rawEdgeFrom edge) | isNothing fromKind]
+    ++ [UnknownEdgeEndpoint edge (rawEdgeTo edge) | isNothing toKind]
+
+relationErrors ::
+     RawEdge
+  -> Maybe NodeKindValue
+  -> Maybe NodeKindValue
+  -> [SomeRelation]
+  -> [StructuralError]
+relationErrors edge fromKind toKind candidates = unknownErrors ++ domainErrors
+  where
+    unknownErrors = [UnknownRelation (rawEdgeRelation edge) | null candidates]
+    domainErrors =
+      case (fromKind, toKind, candidates) of
+        (Just from, Just to, _:_)
+          | not (any (matchesKinds from to) candidates) ->
+            [InvalidRelationDomain edge from to]
+        _ -> []
+
+matchesKinds :: NodeKindValue -> NodeKindValue -> SomeRelation -> Bool
+matchesKinds fromKind toKind (SomeRelation relation) =
+  let spec = relationSpec relation
+   in nodeKindValue (relationFrom spec) == fromKind
+        && nodeKindValue (relationTo spec) == toKind
+
+buildModel :: RawModel -> Maybe WellFormedModel
+buildModel raw = do
+  contexts <- traverse buildContext contextNodes
+  let contextMap = Map.fromList [(someNodeRawId node, node) | node <- contexts]
+  children <- traverse (buildChild contextMap) childNodes
+  let nodes =
+        Map.fromList [(someNodeRawId node, node) | node <- contexts ++ children]
+  edges <- traverse (buildEdge nodes) (rawEdges raw)
+  pure (mkWellFormedModel nodes edges)
+  where
+    contextNodes = [node | node@(RawContextNode _ _) <- rawNodes raw]
+    childNodes = [node | node <- rawNodes raw, not (isContextNode node)]
+
+buildContext :: RawNode -> Maybe SomeNode
+buildContext (RawContextNode identifier context) =
+  case someSContext context of
+    SomeSContext witness ->
+      Just (SomeNode (ContextNode (NodeId identifier) witness))
+buildContext _ = Nothing
+
+buildChild :: Map RawNodeId SomeNode -> RawNode -> Maybe SomeNode
+buildChild contexts (RawPrimitiveNode identifier owner primitive) = do
+  SomeNode (ContextNode ownerId context) <- Map.lookup owner contexts
+  SomeSPrimitive primitiveWitness <- pure (someSPrimitive primitive)
+  SomeInterpretation spec <-
+    lookupInterpretation (contextValue context) primitive
+  Refl <-
+    eqSNodeKind
+      (SPrimitiveKind context primitiveWitness)
+      (SPrimitiveKind
+         (interpretationContext spec)
+         (interpretationPrimitive spec))
+  pure
+    (SomeNode
+       (PrimitiveNode
+          (NodeId identifier)
+          ownerId
+          context
+          primitiveWitness
+          (interpretationWitness spec)))
+buildChild contexts (RawStructuringNode identifier owner structuring) = do
+  SomeNode (ContextNode ownerId context) <- Map.lookup owner contexts
+  SomeSStructuring witness <- pure (someSStructuring structuring)
+  pure (SomeNode (StructuringNode (NodeId identifier) ownerId context witness))
+buildChild contexts (RawAnchorNode identifier owner anchor) = do
+  SomeNode (ContextNode ownerId context) <- Map.lookup owner contexts
+  SomeSAnchor witness <- pure (someSAnchor anchor)
+  Refl <- eqSNodeKind (SContextKind context) (SContextKind SSituation)
+  pure (SomeNode (AnchorNode (NodeId identifier) ownerId witness))
+buildChild _ (RawContextNode _ _) = Nothing
+
+buildEdge :: Map RawNodeId SomeNode -> RawEdge -> Maybe SomeEdge
+buildEdge nodes raw = do
+  SomeNode fromNode <- Map.lookup (rawEdgeFrom raw) nodes
+  SomeNode toNode <- Map.lookup (rawEdgeTo raw) nodes
+  relation <-
+    firstMatching fromNode toNode (lookupRelations (rawEdgeRelation raw))
+  pure relation
+  where
+    firstMatching :: Node left -> Node right -> [SomeRelation] -> Maybe SomeEdge
+    firstMatching _ _ [] = Nothing
+    firstMatching fromNode toNode (SomeRelation relation:rest) =
+      let spec = relationSpec relation
+       in case ( eqSNodeKind (nodeKind fromNode) (relationFrom spec)
+               , eqSNodeKind (nodeKind toNode) (relationTo spec)) of
+            (Just Refl, Just Refl) ->
+              Just (SomeEdge (Edge (nodeId fromNode) relation (nodeId toNode)))
+            _ -> firstMatching fromNode toNode rest
+
+rawNodeId :: RawNode -> RawNodeId
+rawNodeId (RawContextNode identifier _) = identifier
+rawNodeId (RawPrimitiveNode identifier _ _) = identifier
+rawNodeId (RawStructuringNode identifier _ _) = identifier
+rawNodeId (RawAnchorNode identifier _ _) = identifier
+
+someNodeRawId :: SomeNode -> RawNodeId
+someNodeRawId (SomeNode node) = unNodeId (nodeId node)
+
+isContextNode :: RawNode -> Bool
+isContextNode (RawContextNode _ _) = True
+isContextNode _ = False
+
+contextKinds :: RawModel -> Map RawNodeId Context
+contextKinds raw =
+  Map.fromList
+    [(identifier, context) | RawContextNode identifier context <- rawNodes raw]
+
+rawNodeKinds :: RawModel -> Map RawNodeId NodeKindValue
+rawNodeKinds raw = Map.fromList (mapMaybeKind (rawNodes raw))
+  where
+    owners = contextKinds raw
+    mapMaybeKind [] = []
+    mapMaybeKind (node:rest) =
+      case rawKind owners node of
+        Just kind -> (rawNodeId node, kind) : mapMaybeKind rest
+        Nothing -> mapMaybeKind rest
+
+rawKind :: Map RawNodeId Context -> RawNode -> Maybe NodeKindValue
+rawKind _ (RawContextNode _ context) = Just (ContextNodeKind context)
+rawKind owners (RawPrimitiveNode _ owner primitive) =
+  PrimitiveNodeKind <$> Map.lookup owner owners <*> pure primitive
+rawKind owners (RawStructuringNode _ owner structuring) =
+  StructuringNodeKind <$> Map.lookup owner owners <*> pure structuring
+rawKind _ (RawAnchorNode _ _ anchor) = Just (AnchorNodeKind anchor)
+
+duplicates :: Ord value => [value] -> [value]
+duplicates = map head . filter ((> 1) . length) . group . sort

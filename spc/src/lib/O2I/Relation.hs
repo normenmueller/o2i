@@ -1,403 +1,861 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE OverloadedStrings #-}
 
--- | Allowed O2I relation types.
+-- | Typed O2I relations and their total runtime metadata projection.
 module O2I.Relation
-  ( Relation(..)
+  ( Relation
   , SomeRelation(..)
-  , RelationKey(..)
-  , NodeKindValue(..)
-  , NodeKindPattern(..)
-  , RelationDomain
-  , relationKey
-  , relationLabel
-  , relationDomain
-  , contextDomain
-  , primitiveDomain
-  , matchesDomain
+  , FixedRelationCode(..)
+  , AnchorRelationFamily(..)
+  , RelationCode(..)
+  , RelationSemantics(..)
+  , MacroEvidenceKind(..)
+  , RelationName(..)
+  , RelationSpec(..)
+  , relationSpec
+  , relationCodeOf
+  , relationSemanticsOf
+  , relationNameOf
+  , relationNameFor
+  , relationIdentity
+  , guidesMission
+  , groundsVision
+  , guidesVision
+  , orientsStrategy
+  , directsStrategy
+  , contributesToStrategy
+  , qualifiesNeed
+  , surfacesNeed
+  , addressesNeed
+  , directsIntervention
+  , changesSituation
+  , setsTargetForMeasure
+  , measuresSituation
+  , framesMeasure
+  , constitutedByAnchor
+  , guidesEthosPrincipleToMissionDriver
+  , guidesEthosPrincipleToVisionObjective
+  , groundsMissionDriverToVisionObjective
+  , orientsVisionObjectiveToStrategyObjective
+  , groundsStrategyDriverToObjective
+  , substantiatesStrategyKeyResultObjective
+  , guidesStrategyPrincipleToAction
+  , contributesStrategyActionToKeyResult
+  , guidesStrategyPrincipleToPrinciple
+  , contributesStrategyKeyResultToKeyResult
+  , contributesStrategyActionToAction
+  , translatesStrategyKeyResultToNeedObjective
+  , groundsNeedDriverToObjective
+  , anchorsNeedDriver
+  , indicatesMeasureDomain
+  , determinesMeasureDomain
+  , containsStrategyKeyResult
+  , containsMeasureKPI
+  , guidesStrategyActionToInterventionAction
+  , contributesInterventionActionToKeyResult
+  , substantiatesInterventionKeyResultNeedObjective
+  , contributesInterventionKeyResultToStrategyKeyResult
+  , setsTargetForMeasureKPI
+  , changesAnchor
+  , measuresAnchor
+  , allRelationCodes
+  , reifyRelation
+  , allRelations
+  , lookupRelations
   ) where
 
-import O2I.Elements
+import Data.Text (Text)
+import O2I.Types
 
--- * Type-level relations
--- ** Semantic relations
-data Relation (from :: NodeKind) (to :: NodeKind)
-  -- *** Context macrorelations
- where
-  GuidesMission :: Relation (ContextKind Ethos) (ContextKind Mission)
-  GroundsVision :: Relation (ContextKind Mission) (ContextKind Vision)
-  GuidesVision :: Relation (ContextKind Ethos) (ContextKind Vision)
-  OrientsStrategy :: Relation (ContextKind Vision) (ContextKind Strategy)
-  DirectsStrategy :: Relation (ContextKind Strategy) (ContextKind Strategy)
-  ContributesToStrategy
-    :: Relation (ContextKind Strategy) (ContextKind Strategy)
-  QualifiesNeed :: Relation (ContextKind Strategy) (ContextKind Need)
-  SurfacesNeed :: Relation (ContextKind Situation) (ContextKind Need)
-  AddressesNeed :: Relation (ContextKind Intervention) (ContextKind Need)
-  DirectsIntervention
-    :: Relation (ContextKind Strategy) (ContextKind Intervention)
-  ChangesSituation
-    :: Relation (ContextKind Intervention) (ContextKind Situation)
-  SetsTargetForMeasure
-    :: Relation (ContextKind Intervention) (ContextKind Measure)
-  MeasuresSituation :: Relation (ContextKind Measure) (ContextKind Situation)
-  FramesMeasure :: Relation (ContextKind Strategy) (ContextKind Measure)
-  -- *** Situation anchor relations
-  ConstitutedByAnchor :: Relation (ContextKind Situation) (AnchorKind anchor)
-  -- *** Primitive evidence relations
-  -- **** Orientation and strategy evidence
-  GuidesEthosPrincipleToMissionDriver
-    :: Relation (PrimitiveKind Ethos Principle) (PrimitiveKind Mission Driver)
-  GuidesEthosPrincipleToVisionObjective
-    :: Relation (PrimitiveKind Ethos Principle) (PrimitiveKind Vision Objective)
-  GroundsMissionDriverToVisionObjective
-    :: Relation (PrimitiveKind Mission Driver) (PrimitiveKind Vision Objective)
-  OrientsVisionObjectiveToStrategyObjective
-    :: Relation
-         (PrimitiveKind Vision Objective)
-         (PrimitiveKind Strategy Objective)
-  GroundsStrategyDriverToObjective
-    :: Relation
-         (PrimitiveKind Strategy Driver)
-         (PrimitiveKind Strategy Objective)
-  SubstantiatesStrategyKeyResultObjective
-    :: Relation
-         (PrimitiveKind Strategy KeyResult)
-         (PrimitiveKind Strategy Objective)
-  GuidesStrategyPrincipleToAction
-    :: Relation
-         (PrimitiveKind Strategy Principle)
-         (PrimitiveKind Strategy Action)
-  ContributesStrategyActionToKeyResult
-    :: Relation
-         (PrimitiveKind Strategy Action)
-         (PrimitiveKind Strategy KeyResult)
-  GuidesStrategyPrincipleToPrinciple
-    :: Relation
-         (PrimitiveKind Strategy Principle)
-         (PrimitiveKind Strategy Principle)
-  ContributesStrategyKeyResultToKeyResult
-    :: Relation
-         (PrimitiveKind Strategy KeyResult)
-         (PrimitiveKind Strategy KeyResult)
-  ContributesStrategyActionToAction
-    :: Relation (PrimitiveKind Strategy Action) (PrimitiveKind Strategy Action)
-  -- **** Need and measurement evidence
-  TranslatesStrategyKeyResultToNeedObjective
-    :: Relation
-         (PrimitiveKind Strategy KeyResult)
-         (PrimitiveKind Need Objective)
-  GroundsNeedDriverToObjective
-    :: Relation (PrimitiveKind Need Driver) (PrimitiveKind Need Objective)
-  AnchorsNeedDriver :: Relation (AnchorKind anchor) (PrimitiveKind Need Driver)
-  IndicatesMeasureDomain
-    :: Relation (PrimitiveKind Strategy Driver) (StructuringKind Measure Domain)
-  DeterminesMeasureDomain
-    :: Relation
-         (PrimitiveKind Strategy KeyResult)
-         (StructuringKind Measure Domain)
-  ContainsStrategyKeyResult
-    :: Relation
-         (StructuringKind Strategy Domain)
-         (PrimitiveKind Strategy KeyResult)
-  ContainsMeasureKPI
-    :: Relation (StructuringKind Measure Domain) (PrimitiveKind Measure KPI)
-  -- **** Intervention and effect evidence
-  GuidesStrategyActionToInterventionAction
-    :: Relation
-         (PrimitiveKind Strategy Action)
-         (PrimitiveKind Intervention Action)
-  ContributesInterventionActionToKeyResult
-    :: Relation
-         (PrimitiveKind Intervention Action)
-         (PrimitiveKind Intervention KeyResult)
-  SubstantiatesInterventionKeyResultNeedObjective
-    :: Relation
-         (PrimitiveKind Intervention KeyResult)
-         (PrimitiveKind Need Objective)
-  ContributesInterventionKeyResultToStrategyKeyResult
-    :: Relation
-         (PrimitiveKind Intervention KeyResult)
-         (PrimitiveKind Strategy KeyResult)
-  SetsTargetForMeasureKPI
-    :: Relation
-         (PrimitiveKind Intervention KeyResult)
-         (PrimitiveKind Measure KPI)
-  ChangesAnchor
-    :: Relation (PrimitiveKind Intervention Action) (AnchorKind anchor)
-  MeasuresAnchor :: Relation (PrimitiveKind Measure KPI) (AnchorKind anchor)
+data FixedRelationCode
+  = GuidesMissionCode
+  | GroundsVisionCode
+  | GuidesVisionCode
+  | OrientsStrategyCode
+  | DirectsStrategyCode
+  | ContributesToStrategyCode
+  | QualifiesNeedCode
+  | SurfacesNeedCode
+  | AddressesNeedCode
+  | DirectsInterventionCode
+  | ChangesSituationCode
+  | SetsTargetForMeasureCode
+  | MeasuresSituationCode
+  | FramesMeasureCode
+  | GuidesEthosPrincipleToMissionDriverCode
+  | GuidesEthosPrincipleToVisionObjectiveCode
+  | GroundsMissionDriverToVisionObjectiveCode
+  | OrientsVisionObjectiveToStrategyObjectiveCode
+  | GroundsStrategyDriverToObjectiveCode
+  | SubstantiatesStrategyKeyResultObjectiveCode
+  | GuidesStrategyPrincipleToActionCode
+  | ContributesStrategyActionToKeyResultCode
+  | GuidesStrategyPrincipleToPrincipleCode
+  | ContributesStrategyKeyResultToKeyResultCode
+  | ContributesStrategyActionToActionCode
+  | TranslatesStrategyKeyResultToNeedObjectiveCode
+  | GroundsNeedDriverToObjectiveCode
+  | IndicatesMeasureDomainCode
+  | DeterminesMeasureDomainCode
+  | ContainsStrategyKeyResultCode
+  | ContainsMeasureKPICode
+  | GuidesStrategyActionToInterventionActionCode
+  | ContributesInterventionActionToKeyResultCode
+  | SubstantiatesInterventionKeyResultNeedObjectiveCode
+  | ContributesInterventionKeyResultToStrategyKeyResultCode
+  | SetsTargetForMeasureKPICode
+  deriving (Bounded, Enum, Eq, Ord, Show)
 
--- ** Dynamic relation representation
+data AnchorRelationFamily
+  = ConstitutedByAnchorFamily
+  | AnchorsNeedDriverFamily
+  | ChangesAnchorFamily
+  | MeasuresAnchorFamily
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+data RelationCode
+  = FixedRelation FixedRelationCode
+  | AnchorRelation AnchorRelationFamily SituationAnchor
+  deriving (Eq, Ord, Show)
+
+data MacroEvidenceKind
+  = GuidesMissionEvidence
+  | GroundsVisionEvidence
+  | GuidesVisionEvidence
+  | OrientsStrategyEvidence
+  | DirectsStrategyEvidence
+  | ContributesToStrategyEvidence
+  | QualifiesNeedEvidence
+  | SurfacesNeedEvidence
+  | AddressesNeedEvidence
+  | DirectsInterventionEvidence
+  | ChangesSituationEvidence
+  | SetsTargetForMeasureEvidence
+  | MeasuresSituationEvidence
+  | FramesMeasureEvidence
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+data RelationSemantics
+  = MacroRelation MacroEvidenceKind
+  | EvidenceRelation
+  deriving (Eq, Ord, Show)
+
+newtype RelationName = RelationName
+  { relationNameText :: Text
+  } deriving (Eq, Ord, Show)
+
+data RelationSpec from to = RelationSpec
+  { relationCode :: RelationCode
+  , relationSemantics :: RelationSemantics
+  , relationName :: RelationName
+  , relationLabel :: Text
+  , relationFrom :: SNodeKind from
+  , relationTo :: SNodeKind to
+  }
+
+data Relation (from :: NodeKind) (to :: NodeKind) where
+  Relation :: RelationSpec from to -> Relation from to
+
 data SomeRelation where
   SomeRelation :: Relation from to -> SomeRelation
 
-data RelationKey
-  = RKGuidesMission
-  | RKGroundsVision
-  | RKGuidesVision
-  | RKOrientsStrategy
-  | RKDirectsStrategy
-  | RKContributesToStrategy
-  | RKQualifiesNeed
-  | RKSurfacesNeed
-  | RKAddressesNeed
-  | RKDirectsIntervention
-  | RKChangesSituation
-  | RKSetsTargetForMeasure
-  | RKMeasuresSituation
-  | RKFramesMeasure
-  | RKConstitutedByAnchor
-  | RKGuidesEthosPrincipleToMissionDriver
-  | RKGuidesEthosPrincipleToVisionObjective
-  | RKGroundsMissionDriverToVisionObjective
-  | RKOrientsVisionObjectiveToStrategyObjective
-  | RKGroundsStrategyDriverToObjective
-  | RKSubstantiatesStrategyKeyResultObjective
-  | RKGuidesStrategyPrincipleToAction
-  | RKContributesStrategyActionToKeyResult
-  | RKGuidesStrategyPrincipleToPrinciple
-  | RKContributesStrategyKeyResultToKeyResult
-  | RKContributesStrategyActionToAction
-  | RKTranslatesStrategyKeyResultToNeedObjective
-  | RKGroundsNeedDriverToObjective
-  | RKAnchorsNeedDriver
-  | RKIndicatesMeasureDomain
-  | RKDeterminesMeasureDomain
-  | RKContainsStrategyKeyResult
-  | RKContainsMeasureKPI
-  | RKGuidesStrategyActionToInterventionAction
-  | RKContributesInterventionActionToKeyResult
-  | RKSubstantiatesInterventionKeyResultNeedObjective
-  | RKContributesInterventionKeyResultToStrategyKeyResult
-  | RKSetsTargetForMeasureKPI
-  | RKChangesAnchor
-  | RKMeasuresAnchor
-  deriving (Eq, Show)
-
 instance Eq SomeRelation where
-  left == right = relationKey left == relationKey right
+  left == right = relationCodeOf left == relationCodeOf right
 
 instance Show SomeRelation where
-  show = relationLabel
+  show = show . relationNameOf
 
-data NodeKindValue
-  = ContextNodeKind Context
-  | PrimitiveNodeKind Context Primitive
-  | StructuringNodeKind Context Structuring
-  | AnchorNodeKind SituationAnchor
-  deriving (Eq, Show)
+relationSpec :: Relation from to -> RelationSpec from to
+relationSpec (Relation spec) = spec
 
-data NodeKindPattern
-  = Exact NodeKindValue
-  | AnyAnchor
-  deriving (Eq, Show)
+relationCodeOf :: SomeRelation -> RelationCode
+relationCodeOf (SomeRelation relation) = relationCode (relationSpec relation)
 
-type RelationDomain = (NodeKindPattern, NodeKindPattern)
+relationSemanticsOf :: SomeRelation -> RelationSemantics
+relationSemanticsOf (SomeRelation relation) =
+  relationSemantics (relationSpec relation)
 
-matchesDomain :: RelationDomain -> (NodeKindValue, NodeKindValue) -> Bool
-matchesDomain (fromPattern, toPattern) (fromKind, toKind) =
-  matchesKind fromPattern fromKind && matchesKind toPattern toKind
+relationNameOf :: SomeRelation -> RelationName
+relationNameOf (SomeRelation relation) = relationName (relationSpec relation)
 
-matchesKind :: NodeKindPattern -> NodeKindValue -> Bool
-matchesKind (Exact expected) actual = expected == actual
-matchesKind AnyAnchor (AnchorNodeKind _) = True
-matchesKind AnyAnchor _ = False
+relationNameFor :: Relation from to -> RelationName
+relationNameFor = relationName . relationSpec
 
-relationKey :: SomeRelation -> RelationKey
-relationKey (SomeRelation GuidesMission) = RKGuidesMission
-relationKey (SomeRelation GroundsVision) = RKGroundsVision
-relationKey (SomeRelation GuidesVision) = RKGuidesVision
-relationKey (SomeRelation OrientsStrategy) = RKOrientsStrategy
-relationKey (SomeRelation DirectsStrategy) = RKDirectsStrategy
-relationKey (SomeRelation ContributesToStrategy) = RKContributesToStrategy
-relationKey (SomeRelation QualifiesNeed) = RKQualifiesNeed
-relationKey (SomeRelation SurfacesNeed) = RKSurfacesNeed
-relationKey (SomeRelation AddressesNeed) = RKAddressesNeed
-relationKey (SomeRelation DirectsIntervention) = RKDirectsIntervention
-relationKey (SomeRelation ChangesSituation) = RKChangesSituation
-relationKey (SomeRelation SetsTargetForMeasure) = RKSetsTargetForMeasure
-relationKey (SomeRelation MeasuresSituation) = RKMeasuresSituation
-relationKey (SomeRelation FramesMeasure) = RKFramesMeasure
-relationKey (SomeRelation ConstitutedByAnchor) = RKConstitutedByAnchor
-relationKey (SomeRelation GuidesEthosPrincipleToMissionDriver) =
-  RKGuidesEthosPrincipleToMissionDriver
-relationKey (SomeRelation GuidesEthosPrincipleToVisionObjective) =
-  RKGuidesEthosPrincipleToVisionObjective
-relationKey (SomeRelation GroundsMissionDriverToVisionObjective) =
-  RKGroundsMissionDriverToVisionObjective
-relationKey (SomeRelation OrientsVisionObjectiveToStrategyObjective) =
-  RKOrientsVisionObjectiveToStrategyObjective
-relationKey (SomeRelation GroundsStrategyDriverToObjective) =
-  RKGroundsStrategyDriverToObjective
-relationKey (SomeRelation SubstantiatesStrategyKeyResultObjective) =
-  RKSubstantiatesStrategyKeyResultObjective
-relationKey (SomeRelation GuidesStrategyPrincipleToAction) =
-  RKGuidesStrategyPrincipleToAction
-relationKey (SomeRelation ContributesStrategyActionToKeyResult) =
-  RKContributesStrategyActionToKeyResult
-relationKey (SomeRelation GuidesStrategyPrincipleToPrinciple) =
-  RKGuidesStrategyPrincipleToPrinciple
-relationKey (SomeRelation ContributesStrategyKeyResultToKeyResult) =
-  RKContributesStrategyKeyResultToKeyResult
-relationKey (SomeRelation ContributesStrategyActionToAction) =
-  RKContributesStrategyActionToAction
-relationKey (SomeRelation TranslatesStrategyKeyResultToNeedObjective) =
-  RKTranslatesStrategyKeyResultToNeedObjective
-relationKey (SomeRelation GroundsNeedDriverToObjective) =
-  RKGroundsNeedDriverToObjective
-relationKey (SomeRelation AnchorsNeedDriver) = RKAnchorsNeedDriver
-relationKey (SomeRelation IndicatesMeasureDomain) = RKIndicatesMeasureDomain
-relationKey (SomeRelation DeterminesMeasureDomain) = RKDeterminesMeasureDomain
-relationKey (SomeRelation ContainsStrategyKeyResult) =
-  RKContainsStrategyKeyResult
-relationKey (SomeRelation ContainsMeasureKPI) = RKContainsMeasureKPI
-relationKey (SomeRelation GuidesStrategyActionToInterventionAction) =
-  RKGuidesStrategyActionToInterventionAction
-relationKey (SomeRelation ContributesInterventionActionToKeyResult) =
-  RKContributesInterventionActionToKeyResult
-relationKey (SomeRelation SubstantiatesInterventionKeyResultNeedObjective) =
-  RKSubstantiatesInterventionKeyResultNeedObjective
-relationKey (SomeRelation ContributesInterventionKeyResultToStrategyKeyResult) =
-  RKContributesInterventionKeyResultToStrategyKeyResult
-relationKey (SomeRelation SetsTargetForMeasureKPI) = RKSetsTargetForMeasureKPI
-relationKey (SomeRelation ChangesAnchor) = RKChangesAnchor
-relationKey (SomeRelation MeasuresAnchor) = RKMeasuresAnchor
+relationIdentity :: SomeRelation -> (RelationName, NodeKindValue, NodeKindValue)
+relationIdentity (SomeRelation relation) =
+  let spec = relationSpec relation
+   in ( relationName spec
+      , nodeKindValue (relationFrom spec)
+      , nodeKindValue (relationTo spec))
 
-relationLabel :: SomeRelation -> String
-relationLabel (SomeRelation GuidesMission) = "guides"
-relationLabel (SomeRelation GroundsVision) = "grounds"
-relationLabel (SomeRelation GuidesVision) = "guides"
-relationLabel (SomeRelation OrientsStrategy) = "orients"
-relationLabel (SomeRelation DirectsStrategy) = "directs"
-relationLabel (SomeRelation ContributesToStrategy) = "contributes-to"
-relationLabel (SomeRelation QualifiesNeed) = "qualifies"
-relationLabel (SomeRelation SurfacesNeed) = "surfaces"
-relationLabel (SomeRelation AddressesNeed) = "addresses"
-relationLabel (SomeRelation DirectsIntervention) = "directs"
-relationLabel (SomeRelation ChangesSituation) = "changes"
-relationLabel (SomeRelation SetsTargetForMeasure) = "sets-target-for"
-relationLabel (SomeRelation MeasuresSituation) = "measures"
-relationLabel (SomeRelation FramesMeasure) = "frames"
-relationLabel (SomeRelation ConstitutedByAnchor) = "is-constituted-by"
-relationLabel (SomeRelation GuidesEthosPrincipleToMissionDriver) = "guides"
-relationLabel (SomeRelation GuidesEthosPrincipleToVisionObjective) = "guides"
-relationLabel (SomeRelation GroundsMissionDriverToVisionObjective) = "grounds"
-relationLabel (SomeRelation OrientsVisionObjectiveToStrategyObjective) =
-  "orients"
-relationLabel (SomeRelation GroundsStrategyDriverToObjective) = "grounds"
-relationLabel (SomeRelation SubstantiatesStrategyKeyResultObjective) =
-  "substantiates"
-relationLabel (SomeRelation GuidesStrategyPrincipleToAction) = "guides"
-relationLabel (SomeRelation ContributesStrategyActionToKeyResult) =
-  "contributes-to"
-relationLabel (SomeRelation GuidesStrategyPrincipleToPrinciple) = "guides"
-relationLabel (SomeRelation ContributesStrategyKeyResultToKeyResult) =
-  "contributes-to"
-relationLabel (SomeRelation ContributesStrategyActionToAction) =
-  "contributes-to"
-relationLabel (SomeRelation TranslatesStrategyKeyResultToNeedObjective) =
-  "translates-into"
-relationLabel (SomeRelation GroundsNeedDriverToObjective) = "grounds"
-relationLabel (SomeRelation AnchorsNeedDriver) = "anchors"
-relationLabel (SomeRelation IndicatesMeasureDomain) = "indicates"
-relationLabel (SomeRelation DeterminesMeasureDomain) = "determines"
-relationLabel (SomeRelation ContainsStrategyKeyResult) = "contains"
-relationLabel (SomeRelation ContainsMeasureKPI) = "contains"
-relationLabel (SomeRelation GuidesStrategyActionToInterventionAction) = "guides"
-relationLabel (SomeRelation ContributesInterventionActionToKeyResult) =
-  "contributes-to"
-relationLabel (SomeRelation SubstantiatesInterventionKeyResultNeedObjective) =
-  "substantiates"
-relationLabel (SomeRelation ContributesInterventionKeyResultToStrategyKeyResult) =
-  "contributes-to"
-relationLabel (SomeRelation SetsTargetForMeasureKPI) = "sets-target-for"
-relationLabel (SomeRelation ChangesAnchor) = "changes"
-relationLabel (SomeRelation MeasuresAnchor) = "measures"
+fixedContextRelation ::
+     FixedRelationCode
+  -> MacroEvidenceKind
+  -> Text
+  -> Text
+  -> SContext from
+  -> SContext to
+  -> Relation ('ContextKind from) ('ContextKind to)
+fixedContextRelation code semantics name label from to =
+  Relation
+    RelationSpec
+      { relationCode = FixedRelation code
+      , relationSemantics = MacroRelation semantics
+      , relationName = RelationName name
+      , relationLabel = label
+      , relationFrom = SContextKind from
+      , relationTo = SContextKind to
+      }
 
-relationDomain :: SomeRelation -> RelationDomain
-relationDomain (SomeRelation GuidesMission) = contextDomain Ethos Mission
-relationDomain (SomeRelation GroundsVision) = contextDomain Mission Vision
-relationDomain (SomeRelation GuidesVision) = contextDomain Ethos Vision
-relationDomain (SomeRelation OrientsStrategy) = contextDomain Vision Strategy
-relationDomain (SomeRelation DirectsStrategy) = contextDomain Strategy Strategy
-relationDomain (SomeRelation ContributesToStrategy) =
-  contextDomain Strategy Strategy
-relationDomain (SomeRelation QualifiesNeed) = contextDomain Strategy Need
-relationDomain (SomeRelation SurfacesNeed) = contextDomain Situation Need
-relationDomain (SomeRelation AddressesNeed) = contextDomain Intervention Need
-relationDomain (SomeRelation DirectsIntervention) =
-  contextDomain Strategy Intervention
-relationDomain (SomeRelation ChangesSituation) =
-  contextDomain Intervention Situation
-relationDomain (SomeRelation SetsTargetForMeasure) =
-  contextDomain Intervention Measure
-relationDomain (SomeRelation MeasuresSituation) =
-  contextDomain Measure Situation
-relationDomain (SomeRelation FramesMeasure) = contextDomain Strategy Measure
-relationDomain (SomeRelation ConstitutedByAnchor) =
-  (Exact (ContextNodeKind Situation), AnyAnchor)
-relationDomain (SomeRelation GuidesEthosPrincipleToMissionDriver) =
-  primitiveDomain Ethos Principle Mission Driver
-relationDomain (SomeRelation GuidesEthosPrincipleToVisionObjective) =
-  primitiveDomain Ethos Principle Vision Objective
-relationDomain (SomeRelation GroundsMissionDriverToVisionObjective) =
-  primitiveDomain Mission Driver Vision Objective
-relationDomain (SomeRelation OrientsVisionObjectiveToStrategyObjective) =
-  primitiveDomain Vision Objective Strategy Objective
-relationDomain (SomeRelation GroundsStrategyDriverToObjective) =
-  primitiveDomain Strategy Driver Strategy Objective
-relationDomain (SomeRelation SubstantiatesStrategyKeyResultObjective) =
-  primitiveDomain Strategy KeyResult Strategy Objective
-relationDomain (SomeRelation GuidesStrategyPrincipleToAction) =
-  primitiveDomain Strategy Principle Strategy Action
-relationDomain (SomeRelation ContributesStrategyActionToKeyResult) =
-  primitiveDomain Strategy Action Strategy KeyResult
-relationDomain (SomeRelation GuidesStrategyPrincipleToPrinciple) =
-  primitiveDomain Strategy Principle Strategy Principle
-relationDomain (SomeRelation ContributesStrategyKeyResultToKeyResult) =
-  primitiveDomain Strategy KeyResult Strategy KeyResult
-relationDomain (SomeRelation ContributesStrategyActionToAction) =
-  primitiveDomain Strategy Action Strategy Action
-relationDomain (SomeRelation TranslatesStrategyKeyResultToNeedObjective) =
-  primitiveDomain Strategy KeyResult Need Objective
-relationDomain (SomeRelation GroundsNeedDriverToObjective) =
-  primitiveDomain Need Driver Need Objective
-relationDomain (SomeRelation AnchorsNeedDriver) =
-  (AnyAnchor, Exact (PrimitiveNodeKind Need Driver))
-relationDomain (SomeRelation IndicatesMeasureDomain) =
-  ( Exact (PrimitiveNodeKind Strategy Driver)
-  , Exact (StructuringNodeKind Measure Domain))
-relationDomain (SomeRelation DeterminesMeasureDomain) =
-  ( Exact (PrimitiveNodeKind Strategy KeyResult)
-  , Exact (StructuringNodeKind Measure Domain))
-relationDomain (SomeRelation ContainsStrategyKeyResult) =
-  ( Exact (StructuringNodeKind Strategy Domain)
-  , Exact (PrimitiveNodeKind Strategy KeyResult))
-relationDomain (SomeRelation ContainsMeasureKPI) =
-  ( Exact (StructuringNodeKind Measure Domain)
-  , Exact (PrimitiveNodeKind Measure KPI))
-relationDomain (SomeRelation GuidesStrategyActionToInterventionAction) =
-  primitiveDomain Strategy Action Intervention Action
-relationDomain (SomeRelation ContributesInterventionActionToKeyResult) =
-  primitiveDomain Intervention Action Intervention KeyResult
-relationDomain (SomeRelation SubstantiatesInterventionKeyResultNeedObjective) =
-  primitiveDomain Intervention KeyResult Need Objective
-relationDomain (SomeRelation ContributesInterventionKeyResultToStrategyKeyResult) =
-  primitiveDomain Intervention KeyResult Strategy KeyResult
-relationDomain (SomeRelation SetsTargetForMeasureKPI) =
-  primitiveDomain Intervention KeyResult Measure KPI
-relationDomain (SomeRelation ChangesAnchor) =
-  (Exact (PrimitiveNodeKind Intervention Action), AnyAnchor)
-relationDomain (SomeRelation MeasuresAnchor) =
-  (Exact (PrimitiveNodeKind Measure KPI), AnyAnchor)
+fixedPrimitiveRelation ::
+     FixedRelationCode
+  -> Text
+  -> Text
+  -> SContext fromContext
+  -> SPrimitive fromPrimitive
+  -> SContext toContext
+  -> SPrimitive toPrimitive
+  -> Relation
+       ('PrimitiveKind fromContext fromPrimitive)
+       ('PrimitiveKind toContext toPrimitive)
+fixedPrimitiveRelation code name label fromCtx fromPrim toCtx toPrim =
+  fixedRelation
+    code
+    name
+    label
+    (SPrimitiveKind fromCtx fromPrim)
+    (SPrimitiveKind toCtx toPrim)
 
-contextDomain :: Context -> Context -> RelationDomain
-contextDomain from to =
-  (Exact (ContextNodeKind from), Exact (ContextNodeKind to))
+fixedRelation ::
+     FixedRelationCode
+  -> Text
+  -> Text
+  -> SNodeKind from
+  -> SNodeKind to
+  -> Relation from to
+fixedRelation code name label from to =
+  Relation
+    RelationSpec
+      { relationCode = FixedRelation code
+      , relationSemantics = EvidenceRelation
+      , relationName = RelationName name
+      , relationLabel = label
+      , relationFrom = from
+      , relationTo = to
+      }
 
-primitiveDomain ::
-     Context -> Primitive -> Context -> Primitive -> RelationDomain
-primitiveDomain fromCtx fromPrim toCtx toPrim =
-  ( Exact (PrimitiveNodeKind fromCtx fromPrim)
-  , Exact (PrimitiveNodeKind toCtx toPrim))
+anchorRelation ::
+     AnchorRelationFamily
+  -> SSituationAnchor anchor
+  -> Text
+  -> Text
+  -> RelationSemantics
+  -> SNodeKind from
+  -> SNodeKind to
+  -> Relation from to
+anchorRelation family anchor name label semantics from to =
+  Relation
+    RelationSpec
+      { relationCode = AnchorRelation family (anchorValue anchor)
+      , relationSemantics = semantics
+      , relationName = RelationName name
+      , relationLabel = label
+      , relationFrom = from
+      , relationTo = to
+      }
+
+-- * Typed relation specifications
+-- ** Context macrorelations
+guidesMission :: Relation ('ContextKind 'Ethos) ('ContextKind 'Mission)
+guidesMission =
+  fixedContextRelation
+    GuidesMissionCode
+    GuidesMissionEvidence
+    "ethos-guides-mission"
+    "guides"
+    SEthos
+    SMission
+
+groundsVision :: Relation ('ContextKind 'Mission) ('ContextKind 'Vision)
+groundsVision =
+  fixedContextRelation
+    GroundsVisionCode
+    GroundsVisionEvidence
+    "mission-grounds-vision"
+    "grounds"
+    SMission
+    SVision
+
+-- ** Remaining context macrorelations
+guidesVision :: Relation ('ContextKind 'Ethos) ('ContextKind 'Vision)
+guidesVision =
+  fixedContextRelation
+    GuidesVisionCode
+    GuidesVisionEvidence
+    "ethos-guides-vision"
+    "guides"
+    SEthos
+    SVision
+
+orientsStrategy :: Relation ('ContextKind 'Vision) ('ContextKind 'Strategy)
+orientsStrategy =
+  fixedContextRelation
+    OrientsStrategyCode
+    OrientsStrategyEvidence
+    "vision-orients-strategy"
+    "orients"
+    SVision
+    SStrategy
+
+directsStrategy :: Relation ('ContextKind 'Strategy) ('ContextKind 'Strategy)
+directsStrategy =
+  fixedContextRelation
+    DirectsStrategyCode
+    DirectsStrategyEvidence
+    "strategy-directs-strategy"
+    "directs"
+    SStrategy
+    SStrategy
+
+contributesToStrategy ::
+     Relation ('ContextKind 'Strategy) ('ContextKind 'Strategy)
+contributesToStrategy =
+  fixedContextRelation
+    ContributesToStrategyCode
+    ContributesToStrategyEvidence
+    "strategy-contributes-to-strategy"
+    "contributes-to"
+    SStrategy
+    SStrategy
+
+qualifiesNeed :: Relation ('ContextKind 'Strategy) ('ContextKind 'Need)
+qualifiesNeed =
+  fixedContextRelation
+    QualifiesNeedCode
+    QualifiesNeedEvidence
+    "strategy-qualifies-need"
+    "qualifies"
+    SStrategy
+    SNeed
+
+surfacesNeed :: Relation ('ContextKind 'Situation) ('ContextKind 'Need)
+surfacesNeed =
+  fixedContextRelation
+    SurfacesNeedCode
+    SurfacesNeedEvidence
+    "situation-surfaces-need"
+    "surfaces"
+    SSituation
+    SNeed
+
+addressesNeed :: Relation ('ContextKind 'Intervention) ('ContextKind 'Need)
+addressesNeed =
+  fixedContextRelation
+    AddressesNeedCode
+    AddressesNeedEvidence
+    "intervention-addresses-need"
+    "addresses"
+    SIntervention
+    SNeed
+
+directsIntervention ::
+     Relation ('ContextKind 'Strategy) ('ContextKind 'Intervention)
+directsIntervention =
+  fixedContextRelation
+    DirectsInterventionCode
+    DirectsInterventionEvidence
+    "strategy-directs-intervention"
+    "directs"
+    SStrategy
+    SIntervention
+
+changesSituation ::
+     Relation ('ContextKind 'Intervention) ('ContextKind 'Situation)
+changesSituation =
+  fixedContextRelation
+    ChangesSituationCode
+    ChangesSituationEvidence
+    "intervention-changes-situation"
+    "changes"
+    SIntervention
+    SSituation
+
+setsTargetForMeasure ::
+     Relation ('ContextKind 'Intervention) ('ContextKind 'Measure)
+setsTargetForMeasure =
+  fixedContextRelation
+    SetsTargetForMeasureCode
+    SetsTargetForMeasureEvidence
+    "intervention-sets-target-for-measure"
+    "sets-target-for"
+    SIntervention
+    SMeasure
+
+measuresSituation :: Relation ('ContextKind 'Measure) ('ContextKind 'Situation)
+measuresSituation =
+  fixedContextRelation
+    MeasuresSituationCode
+    MeasuresSituationEvidence
+    "measure-measures-situation"
+    "measures"
+    SMeasure
+    SSituation
+
+framesMeasure :: Relation ('ContextKind 'Strategy) ('ContextKind 'Measure)
+framesMeasure =
+  fixedContextRelation
+    FramesMeasureCode
+    FramesMeasureEvidence
+    "strategy-frames-measure"
+    "frames"
+    SStrategy
+    SMeasure
+
+-- ** Situation anchor relation
+constitutedByAnchor ::
+     SSituationAnchor anchor
+  -> Relation ('ContextKind 'Situation) ('AnchorKind anchor)
+constitutedByAnchor anchor =
+  anchorRelation
+    ConstitutedByAnchorFamily
+    anchor
+    "situation-is-constituted-by-anchor"
+    "is-constituted-by"
+    EvidenceRelation
+    (SContextKind SSituation)
+    (SAnchorKind anchor)
+
+-- ** Orientation and strategy evidence
+guidesEthosPrincipleToMissionDriver ::
+     Relation
+       ('PrimitiveKind 'Ethos 'Principle)
+       ('PrimitiveKind 'Mission 'Driver)
+guidesEthosPrincipleToMissionDriver =
+  fixedPrimitiveRelation
+    GuidesEthosPrincipleToMissionDriverCode
+    "ethos-principle-guides-mission-driver"
+    "guides"
+    SEthos
+    SPrinciple
+    SMission
+    SDriver
+
+guidesEthosPrincipleToVisionObjective ::
+     Relation
+       ('PrimitiveKind 'Ethos 'Principle)
+       ('PrimitiveKind 'Vision 'Objective)
+guidesEthosPrincipleToVisionObjective =
+  fixedPrimitiveRelation
+    GuidesEthosPrincipleToVisionObjectiveCode
+    "ethos-principle-guides-vision-objective"
+    "guides"
+    SEthos
+    SPrinciple
+    SVision
+    SObjective
+
+groundsMissionDriverToVisionObjective ::
+     Relation
+       ('PrimitiveKind 'Mission 'Driver)
+       ('PrimitiveKind 'Vision 'Objective)
+groundsMissionDriverToVisionObjective =
+  fixedPrimitiveRelation
+    GroundsMissionDriverToVisionObjectiveCode
+    "mission-driver-grounds-vision-objective"
+    "grounds"
+    SMission
+    SDriver
+    SVision
+    SObjective
+
+-- ** Remaining orientation and strategy evidence
+orientsVisionObjectiveToStrategyObjective ::
+     Relation
+       ('PrimitiveKind 'Vision 'Objective)
+       ('PrimitiveKind 'Strategy 'Objective)
+orientsVisionObjectiveToStrategyObjective =
+  fixedPrimitiveRelation
+    OrientsVisionObjectiveToStrategyObjectiveCode
+    "vision-objective-orients-strategy-objective"
+    "orients"
+    SVision
+    SObjective
+    SStrategy
+    SObjective
+
+groundsStrategyDriverToObjective ::
+     Relation
+       ('PrimitiveKind 'Strategy 'Driver)
+       ('PrimitiveKind 'Strategy 'Objective)
+groundsStrategyDriverToObjective =
+  fixedPrimitiveRelation
+    GroundsStrategyDriverToObjectiveCode
+    "strategy-driver-grounds-strategy-objective"
+    "grounds"
+    SStrategy
+    SDriver
+    SStrategy
+    SObjective
+
+substantiatesStrategyKeyResultObjective ::
+     Relation
+       ('PrimitiveKind 'Strategy 'KeyResult)
+       ('PrimitiveKind 'Strategy 'Objective)
+substantiatesStrategyKeyResultObjective =
+  fixedPrimitiveRelation
+    SubstantiatesStrategyKeyResultObjectiveCode
+    "strategy-key-result-substantiates-strategy-objective"
+    "substantiates"
+    SStrategy
+    SKeyResult
+    SStrategy
+    SObjective
+
+guidesStrategyPrincipleToAction ::
+     Relation
+       ('PrimitiveKind 'Strategy 'Principle)
+       ('PrimitiveKind 'Strategy 'Action)
+guidesStrategyPrincipleToAction =
+  fixedPrimitiveRelation
+    GuidesStrategyPrincipleToActionCode
+    "strategy-principle-guides-strategy-action"
+    "guides"
+    SStrategy
+    SPrinciple
+    SStrategy
+    SAction
+
+contributesStrategyActionToKeyResult ::
+     Relation
+       ('PrimitiveKind 'Strategy 'Action)
+       ('PrimitiveKind 'Strategy 'KeyResult)
+contributesStrategyActionToKeyResult =
+  fixedPrimitiveRelation
+    ContributesStrategyActionToKeyResultCode
+    "strategy-action-contributes-to-strategy-key-result"
+    "contributes-to"
+    SStrategy
+    SAction
+    SStrategy
+    SKeyResult
+
+guidesStrategyPrincipleToPrinciple ::
+     Relation
+       ('PrimitiveKind 'Strategy 'Principle)
+       ('PrimitiveKind 'Strategy 'Principle)
+guidesStrategyPrincipleToPrinciple =
+  fixedPrimitiveRelation
+    GuidesStrategyPrincipleToPrincipleCode
+    "strategy-principle-guides-strategy-principle"
+    "guides"
+    SStrategy
+    SPrinciple
+    SStrategy
+    SPrinciple
+
+contributesStrategyKeyResultToKeyResult ::
+     Relation
+       ('PrimitiveKind 'Strategy 'KeyResult)
+       ('PrimitiveKind 'Strategy 'KeyResult)
+contributesStrategyKeyResultToKeyResult =
+  fixedPrimitiveRelation
+    ContributesStrategyKeyResultToKeyResultCode
+    "strategy-key-result-contributes-to-strategy-key-result"
+    "contributes-to"
+    SStrategy
+    SKeyResult
+    SStrategy
+    SKeyResult
+
+contributesStrategyActionToAction ::
+     Relation
+       ('PrimitiveKind 'Strategy 'Action)
+       ('PrimitiveKind 'Strategy 'Action)
+contributesStrategyActionToAction =
+  fixedPrimitiveRelation
+    ContributesStrategyActionToActionCode
+    "strategy-action-contributes-to-strategy-action"
+    "contributes-to"
+    SStrategy
+    SAction
+    SStrategy
+    SAction
+
+-- ** Need and measurement evidence
+translatesStrategyKeyResultToNeedObjective ::
+     Relation
+       ('PrimitiveKind 'Strategy 'KeyResult)
+       ('PrimitiveKind 'Need 'Objective)
+translatesStrategyKeyResultToNeedObjective =
+  fixedPrimitiveRelation
+    TranslatesStrategyKeyResultToNeedObjectiveCode
+    "strategy-key-result-translates-into-need-objective"
+    "translates-into"
+    SStrategy
+    SKeyResult
+    SNeed
+    SObjective
+
+groundsNeedDriverToObjective ::
+     Relation ('PrimitiveKind 'Need 'Driver) ('PrimitiveKind 'Need 'Objective)
+groundsNeedDriverToObjective =
+  fixedPrimitiveRelation
+    GroundsNeedDriverToObjectiveCode
+    "need-driver-grounds-need-objective"
+    "grounds"
+    SNeed
+    SDriver
+    SNeed
+    SObjective
+
+-- ** Remaining need and measurement evidence
+anchorsNeedDriver ::
+     SSituationAnchor anchor
+  -> Relation ('AnchorKind anchor) ('PrimitiveKind 'Need 'Driver)
+anchorsNeedDriver anchor =
+  anchorRelation
+    AnchorsNeedDriverFamily
+    anchor
+    "situation-anchor-anchors-need-driver"
+    "anchors"
+    EvidenceRelation
+    (SAnchorKind anchor)
+    (SPrimitiveKind SNeed SDriver)
+
+indicatesMeasureDomain ::
+     Relation
+       ('PrimitiveKind 'Strategy 'Driver)
+       ('StructuringKind 'Measure 'Domain)
+indicatesMeasureDomain =
+  fixedRelation
+    IndicatesMeasureDomainCode
+    "strategy-driver-indicates-measure-domain"
+    "indicates"
+    (SPrimitiveKind SStrategy SDriver)
+    (SStructuringKind SMeasure SDomain)
+
+determinesMeasureDomain ::
+     Relation
+       ('PrimitiveKind 'Strategy 'KeyResult)
+       ('StructuringKind 'Measure 'Domain)
+determinesMeasureDomain =
+  fixedRelation
+    DeterminesMeasureDomainCode
+    "strategy-key-result-determines-measure-domain"
+    "determines"
+    (SPrimitiveKind SStrategy SKeyResult)
+    (SStructuringKind SMeasure SDomain)
+
+containsStrategyKeyResult ::
+     Relation
+       ('StructuringKind 'Strategy 'Domain)
+       ('PrimitiveKind 'Strategy 'KeyResult)
+containsStrategyKeyResult =
+  fixedRelation
+    ContainsStrategyKeyResultCode
+    "strategy-domain-contains-strategy-key-result"
+    "contains"
+    (SStructuringKind SStrategy SDomain)
+    (SPrimitiveKind SStrategy SKeyResult)
+
+containsMeasureKPI ::
+     Relation ('StructuringKind 'Measure 'Domain) ('PrimitiveKind 'Measure 'KPI)
+containsMeasureKPI =
+  fixedRelation
+    ContainsMeasureKPICode
+    "measure-domain-contains-measure-kpi"
+    "contains"
+    (SStructuringKind SMeasure SDomain)
+    (SPrimitiveKind SMeasure SKPI)
+
+-- ** Intervention and effect evidence
+guidesStrategyActionToInterventionAction ::
+     Relation
+       ('PrimitiveKind 'Strategy 'Action)
+       ('PrimitiveKind 'Intervention 'Action)
+guidesStrategyActionToInterventionAction =
+  fixedPrimitiveRelation
+    GuidesStrategyActionToInterventionActionCode
+    "strategy-action-guides-intervention-action"
+    "guides"
+    SStrategy
+    SAction
+    SIntervention
+    SAction
+
+contributesInterventionActionToKeyResult ::
+     Relation
+       ('PrimitiveKind 'Intervention 'Action)
+       ('PrimitiveKind 'Intervention 'KeyResult)
+contributesInterventionActionToKeyResult =
+  fixedPrimitiveRelation
+    ContributesInterventionActionToKeyResultCode
+    "intervention-action-contributes-to-intervention-key-result"
+    "contributes-to"
+    SIntervention
+    SAction
+    SIntervention
+    SKeyResult
+
+-- ** Remaining intervention and effect evidence
+substantiatesInterventionKeyResultNeedObjective ::
+     Relation
+       ('PrimitiveKind 'Intervention 'KeyResult)
+       ('PrimitiveKind 'Need 'Objective)
+substantiatesInterventionKeyResultNeedObjective =
+  fixedPrimitiveRelation
+    SubstantiatesInterventionKeyResultNeedObjectiveCode
+    "intervention-key-result-substantiates-need-objective"
+    "substantiates"
+    SIntervention
+    SKeyResult
+    SNeed
+    SObjective
+
+contributesInterventionKeyResultToStrategyKeyResult ::
+     Relation
+       ('PrimitiveKind 'Intervention 'KeyResult)
+       ('PrimitiveKind 'Strategy 'KeyResult)
+contributesInterventionKeyResultToStrategyKeyResult =
+  fixedPrimitiveRelation
+    ContributesInterventionKeyResultToStrategyKeyResultCode
+    "intervention-key-result-contributes-to-strategy-key-result"
+    "contributes-to"
+    SIntervention
+    SKeyResult
+    SStrategy
+    SKeyResult
+
+setsTargetForMeasureKPI ::
+     Relation
+       ('PrimitiveKind 'Intervention 'KeyResult)
+       ('PrimitiveKind 'Measure 'KPI)
+setsTargetForMeasureKPI =
+  fixedPrimitiveRelation
+    SetsTargetForMeasureKPICode
+    "intervention-key-result-sets-target-for-measure-kpi"
+    "sets-target-for"
+    SIntervention
+    SKeyResult
+    SMeasure
+    SKPI
+
+changesAnchor ::
+     SSituationAnchor anchor
+  -> Relation ('PrimitiveKind 'Intervention 'Action) ('AnchorKind anchor)
+changesAnchor anchor =
+  anchorRelation
+    ChangesAnchorFamily
+    anchor
+    "intervention-action-changes-situation-anchor"
+    "changes"
+    EvidenceRelation
+    (SPrimitiveKind SIntervention SAction)
+    (SAnchorKind anchor)
+
+measuresAnchor ::
+     SSituationAnchor anchor
+  -> Relation ('PrimitiveKind 'Measure 'KPI) ('AnchorKind anchor)
+measuresAnchor anchor =
+  anchorRelation
+    MeasuresAnchorFamily
+    anchor
+    "measure-kpi-measures-situation-anchor"
+    "measures"
+    EvidenceRelation
+    (SPrimitiveKind SMeasure SKPI)
+    (SAnchorKind anchor)
+
+-- * Total relation registry
+allRelationCodes :: [RelationCode]
+allRelationCodes =
+  map FixedRelation [minBound .. maxBound]
+    ++ [ AnchorRelation family anchor
+       | family <- [minBound .. maxBound]
+       , anchor <- [minBound .. maxBound]
+       ]
+
+reifyRelation :: RelationCode -> SomeRelation
+reifyRelation (FixedRelation code) = reifyFixedRelation code
+reifyRelation (AnchorRelation family anchorKind) =
+  case someSAnchor anchorKind of
+    SomeSAnchor anchor -> reifyAnchorRelation family anchor
+
+reifyFixedRelation :: FixedRelationCode -> SomeRelation
+reifyFixedRelation GuidesMissionCode = SomeRelation guidesMission
+reifyFixedRelation GroundsVisionCode = SomeRelation groundsVision
+reifyFixedRelation GuidesVisionCode = SomeRelation guidesVision
+reifyFixedRelation OrientsStrategyCode = SomeRelation orientsStrategy
+reifyFixedRelation DirectsStrategyCode = SomeRelation directsStrategy
+reifyFixedRelation ContributesToStrategyCode =
+  SomeRelation contributesToStrategy
+reifyFixedRelation QualifiesNeedCode = SomeRelation qualifiesNeed
+reifyFixedRelation SurfacesNeedCode = SomeRelation surfacesNeed
+reifyFixedRelation AddressesNeedCode = SomeRelation addressesNeed
+reifyFixedRelation DirectsInterventionCode = SomeRelation directsIntervention
+reifyFixedRelation ChangesSituationCode = SomeRelation changesSituation
+reifyFixedRelation SetsTargetForMeasureCode = SomeRelation setsTargetForMeasure
+reifyFixedRelation MeasuresSituationCode = SomeRelation measuresSituation
+reifyFixedRelation FramesMeasureCode = SomeRelation framesMeasure
+reifyFixedRelation GuidesEthosPrincipleToMissionDriverCode =
+  SomeRelation guidesEthosPrincipleToMissionDriver
+reifyFixedRelation GuidesEthosPrincipleToVisionObjectiveCode =
+  SomeRelation guidesEthosPrincipleToVisionObjective
+reifyFixedRelation GroundsMissionDriverToVisionObjectiveCode =
+  SomeRelation groundsMissionDriverToVisionObjective
+reifyFixedRelation OrientsVisionObjectiveToStrategyObjectiveCode =
+  SomeRelation orientsVisionObjectiveToStrategyObjective
+reifyFixedRelation GroundsStrategyDriverToObjectiveCode =
+  SomeRelation groundsStrategyDriverToObjective
+reifyFixedRelation SubstantiatesStrategyKeyResultObjectiveCode =
+  SomeRelation substantiatesStrategyKeyResultObjective
+reifyFixedRelation GuidesStrategyPrincipleToActionCode =
+  SomeRelation guidesStrategyPrincipleToAction
+reifyFixedRelation ContributesStrategyActionToKeyResultCode =
+  SomeRelation contributesStrategyActionToKeyResult
+reifyFixedRelation GuidesStrategyPrincipleToPrincipleCode =
+  SomeRelation guidesStrategyPrincipleToPrinciple
+reifyFixedRelation ContributesStrategyKeyResultToKeyResultCode =
+  SomeRelation contributesStrategyKeyResultToKeyResult
+reifyFixedRelation ContributesStrategyActionToActionCode =
+  SomeRelation contributesStrategyActionToAction
+reifyFixedRelation TranslatesStrategyKeyResultToNeedObjectiveCode =
+  SomeRelation translatesStrategyKeyResultToNeedObjective
+reifyFixedRelation GroundsNeedDriverToObjectiveCode =
+  SomeRelation groundsNeedDriverToObjective
+reifyFixedRelation IndicatesMeasureDomainCode =
+  SomeRelation indicatesMeasureDomain
+reifyFixedRelation DeterminesMeasureDomainCode =
+  SomeRelation determinesMeasureDomain
+reifyFixedRelation ContainsStrategyKeyResultCode =
+  SomeRelation containsStrategyKeyResult
+reifyFixedRelation ContainsMeasureKPICode = SomeRelation containsMeasureKPI
+reifyFixedRelation GuidesStrategyActionToInterventionActionCode =
+  SomeRelation guidesStrategyActionToInterventionAction
+reifyFixedRelation ContributesInterventionActionToKeyResultCode =
+  SomeRelation contributesInterventionActionToKeyResult
+reifyFixedRelation SubstantiatesInterventionKeyResultNeedObjectiveCode =
+  SomeRelation substantiatesInterventionKeyResultNeedObjective
+reifyFixedRelation ContributesInterventionKeyResultToStrategyKeyResultCode =
+  SomeRelation contributesInterventionKeyResultToStrategyKeyResult
+reifyFixedRelation SetsTargetForMeasureKPICode =
+  SomeRelation setsTargetForMeasureKPI
+
+reifyAnchorRelation ::
+     AnchorRelationFamily -> SSituationAnchor anchor -> SomeRelation
+reifyAnchorRelation ConstitutedByAnchorFamily anchor =
+  SomeRelation (constitutedByAnchor anchor)
+reifyAnchorRelation AnchorsNeedDriverFamily anchor =
+  SomeRelation (anchorsNeedDriver anchor)
+reifyAnchorRelation ChangesAnchorFamily anchor =
+  SomeRelation (changesAnchor anchor)
+reifyAnchorRelation MeasuresAnchorFamily anchor =
+  SomeRelation (measuresAnchor anchor)
+
+allRelations :: [SomeRelation]
+allRelations = map reifyRelation allRelationCodes
+
+lookupRelations :: RelationName -> [SomeRelation]
+lookupRelations name = filter ((== name) . relationNameOf) allRelations

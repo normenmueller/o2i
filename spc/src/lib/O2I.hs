@@ -1,12 +1,122 @@
 -- | Public facade for the O2I typed validation core.
 module O2I
-  ( module O2I.Elements
-  , module O2I.Graph
-  , module O2I.Relation
-  , module O2I.Validation
+  ( RawNodeId(..)
+  , ContextRef
+  , contextRefId
+  , Context(..)
+  , Primitive(..)
+  , Structuring(..)
+  , SituationAnchor(..)
+  , NodeKindValue(..)
+  , SContext(..)
+  , SPrimitive(..)
+  , SStructuring(..)
+  , SSituationAnchor(..)
+  , contextValue
+  , primitiveValue
+  , nodeKindValue
+  , InterpretationCode(..)
+  , SomeInterpretation
+  , interpretationCodeOf
+  , interpretationIdentity
+  , allInterpretations
+  , lookupInterpretation
+  , Relation
+  , SomeRelation
+  , FixedRelationCode(..)
+  , AnchorRelationFamily(..)
+  , RelationCode(..)
+  , RelationSemantics(..)
+  , MacroEvidenceKind(..)
+  , RelationName(..)
+  , relationNameFor
+  , relationNameOf
+  , relationCodeOf
+  , relationIdentity
+  , guidesMission
+  , groundsVision
+  , guidesVision
+  , orientsStrategy
+  , directsStrategy
+  , contributesToStrategy
+  , qualifiesNeed
+  , surfacesNeed
+  , addressesNeed
+  , directsIntervention
+  , changesSituation
+  , setsTargetForMeasure
+  , measuresSituation
+  , framesMeasure
+  , constitutedByAnchor
+  , guidesEthosPrincipleToMissionDriver
+  , guidesEthosPrincipleToVisionObjective
+  , groundsMissionDriverToVisionObjective
+  , orientsVisionObjectiveToStrategyObjective
+  , groundsStrategyDriverToObjective
+  , substantiatesStrategyKeyResultObjective
+  , guidesStrategyPrincipleToAction
+  , contributesStrategyActionToKeyResult
+  , guidesStrategyPrincipleToPrinciple
+  , contributesStrategyKeyResultToKeyResult
+  , contributesStrategyActionToAction
+  , translatesStrategyKeyResultToNeedObjective
+  , groundsNeedDriverToObjective
+  , anchorsNeedDriver
+  , indicatesMeasureDomain
+  , determinesMeasureDomain
+  , containsStrategyKeyResult
+  , containsMeasureKPI
+  , guidesStrategyActionToInterventionAction
+  , contributesInterventionActionToKeyResult
+  , substantiatesInterventionKeyResultNeedObjective
+  , contributesInterventionKeyResultToStrategyKeyResult
+  , setsTargetForMeasureKPI
+  , changesAnchor
+  , measuresAnchor
+  , allRelationCodes
+  , allRelations
+  , lookupRelations
+  , module O2I.Model.Raw
+  , WellFormedModel
+  , EffectTrace
+  , EffectTraceId
+  , TraceableEffectModel
+  , effectTraces
+  , traceIdentifier
+  , lookupEffectTrace
+  , traceNeed
+  , traceInterventionKeyResult
+  , traceKPI
+  , traceAnchor
+  , Unit(..)
+  , Quantity(..)
+  , EvidenceSource(..)
+  , Observation(..)
+  , EffectCriterion(..)
+  , TargetCriterion(..)
+  , EvidencePlan(..)
+  , EvidenceClaim(..)
+  , CriterionResult(..)
+  , TargetResult(..)
+  , EffectAssessment(..)
+  , EvidenceAssessedModel
+  , effectAssessments
+  , isEffectiveNeed
+  , Validation(..)
+  , Check
+  , StructuralError(..)
+  , TraceabilityError(..)
+  , EvidenceError(..)
+  , validateStructure
+  , validateTraceability
+  , assessEffectEvidence
   ) where
 
-import O2I.Elements
-import O2I.Graph
+import Data.Validation (Validation(..))
+import O2I.Evidence
+import O2I.Model (WellFormedModel)
+import O2I.Model.Raw
 import O2I.Relation
+import O2I.Trace
+import O2I.Types
 import O2I.Validation

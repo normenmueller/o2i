@@ -7,8 +7,8 @@
 - Shortened the paper title to "Von Orientierung zur Wirkung".
 - Refined the introduction for clearer first-reader orientation and terminology.
 - Reordered the literature-function section along the O2I domains.
-- Reworked the Haskell specification under `spc/` into a Library-first Cabal project with typed elements, relations, graph representation, validation rules, and tests.
 - Clarified the O2I feedback loop, need qualification flow, and generic refinement semantics.
+- Reworked the Haskell specification under `spc/` into a Library-first Cabal project with typed model graphs, total relation registries, three-stage validation, separate effect and target assessment, and tests.
 
 ## [0.1] - 2026-07-02
 

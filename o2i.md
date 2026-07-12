@@ -387,7 +387,7 @@ Ein Bedarf ist strategisch relevant qualifiziert, wenn seine Veränderungsanford
 > [!addendum]
 > Terminologisch erfolgt diese Begründung über kontextualisierte O2I-Primitives, ohne an dieser Stelle den Formalismus des Metamodells vollständig auszubreiten. Beispiel: `Key Result @ Strategy --translates-into--> Objective @ Need`. Damit ist `Strategy --qualifies--> Need` in O2I keine freie Behauptung, sondern eine als Autorenableitung eingeführte Makrorelation.
 
-Wirkungsrelevant heißt plausibel handlungsrelevant, nicht bereits wirksam. Erst eine spätere Messung kann zeigen, ob die Bearbeitung eines wirkungsrelevanten Bedarfs tatsächlich Wirkung erzeugt hat.
+Wirkungsrelevant heißt plausibel handlungsrelevant, nicht bereits wirksam. Erst eine spätere Messung kann zeigen, ob für die Bearbeitung eines wirkungsrelevanten Bedarfs positive Wirkungsevidenz vorliegt.
 
 ### Intervention
 
@@ -407,27 +407,27 @@ Eine Intervention ist weder der Bedarf selbst noch die Wirkung. Sie ist eine Han
 >
 > > [!tldr] Strategie beschreibt das strategische `Wie`, Intervention das operative `Wie`.
 
-Damit eine Intervention überprüfbar bleibt, *muss* sie an Messung anschließen. Sie verändert eine Situation und kann Zielwerte oder Zielbezüge für Messungen setzen, an denen später nachvollzogen wird, ob die Bearbeitung des wirkungsrelevanten Bedarfs Wirkung erzeugt hat.
+Damit eine Intervention überprüfbar bleibt, *muss* sie an Messung anschließen. Sie verändert eine Situation und kann Zielwerte oder Zielbezüge für Messungen setzen, an denen später nachvollzogen wird, ob für die Bearbeitung des wirkungsrelevanten Bedarfs positive Wirkungsevidenz vorliegt.
 
 ## Wirkung
 
 Wirkung wird in O2I nicht behauptet, sondern durch relationale Nachvollziehbarkeit und Messung begründet. Maßgeblich ist das Zusammenspiel aus qualifiziertem Bedarf, Intervention, veränderter Situation, Messung und nachvollziehbarer Einordnung im O2I-Graphen.
 
 > [!definition]
-> Eine **Wirkung**[^effect] bezeichnet eine beobachtbare und relational nachvollziehbare Veränderung, die aus der Operationalisierung einer strategischen Wegentscheidung entsteht und über relevante Ergebnis- und Leistungsmaße als Beitrag zur [Vision](#vision) begründet werden kann.
+> Eine **Wirkung**[^effect] bezeichnet eine beobachtbare und relational nachvollziehbare Veränderung, die als möglicher Beitrag der Operationalisierung einer strategischen Wegentscheidung zur [Vision](#vision) begründet werden kann.
 >
-> [^effect]: *Autorenableitung in Anlehnung an Porter (1996), Doerr (2018), Parmenter (2020) und Barr (2014)*: Wirkung wird hier als Ergebnis der Operationalisierung einer strategischen Wegentscheidung verstanden. Porter liefert die Logik des Wertbeitrags durch Aktivitätssysteme; Doerr, Parmenter und Barr liefern Instrumente zur Überprüfung von Fortschritt und Performance.
+> [^effect]: *Autorenableitung in Anlehnung an Porter (1996), Doerr (2018), Parmenter (2020) und Barr (2014)*: Wirkung wird hier als beobachtete Veränderung mit plausibler relationaler Attribution zur Operationalisierung einer strategischen Wegentscheidung verstanden. Porter liefert die Logik des Wertbeitrags durch Aktivitätssysteme; Doerr, Parmenter und Barr liefern Instrumente zur Überprüfung von Fortschritt und Performance.
 
 Wirkung ist nicht die Intervention selbst, kein Zielwert und keine bloße Aktivität. Sie bezeichnet eine beobachtbare Veränderung, die über Messung und O2I-Relationen plausibel mit Intervention, Situation, Bedarf und Strategie verbunden ist.
 
-Aus dieser Unterscheidung folgt die ex-post-Bewertung eines Bedarfs: Ein Bedarf ist zunächst wirkungsrelevant, wenn er situativ sichtbar und strategisch relevant ist. Wirkungsvoll wird er erst, wenn seine Bearbeitung nachweisbar Wirkung erzeugt hat.
+Aus dieser Unterscheidung folgt die ex-post-Bewertung eines Bedarfs: Ein Bedarf ist zunächst wirkungsrelevant, wenn er situativ sichtbar und strategisch relevant ist. Wirkungsvoll wird er erst, wenn für seine Bearbeitung positive Wirkungsevidenz vorliegt.
 
 > [!definition]
-> Ein **wirkungsvoller Bedarf**[^effective-need] bezeichnet einen zuvor wirkungsrelevanten Bedarf, dessen Bearbeitung ex post über Messung und relationale Nachvollziehbarkeit als wirksam begründet werden kann.
+> Ein **wirkungsvoller Bedarf**[^effective-need] bezeichnet einen zuvor wirkungsrelevanten Bedarf, dessen Bearbeitung ex post durch positive Wirkungsevidenz gestützt wird.
 >
-> > [!tldr] wirkungsvoller Bedarf = ex post wirksam begründeter Bedarf
+> > [!tldr] wirkungsvoller Bedarf = ex post durch positive Wirkungsevidenz gestützter Bedarf
 >
-> [^effective-need]: *Autorenableitung in Anlehnung an Porter (1996), Doerr (2018), Parmenter (2020) und Barr (2014)*: Wirkungsvoller Bedarf wird in O2I als ex-post-Begriff eingeführt, um wirkungsrelevante Bedarfe von tatsächlich wirksamen Bearbeitungen zu unterscheiden. Porter stützt den strategischen Wirkungsbezug; Doerr, Parmenter und Barr stützen Messung und Nachweislogik.
+> [^effective-need]: *Autorenableitung in Anlehnung an Porter (1996), Doerr (2018), Parmenter (2020) und Barr (2014)*: Wirkungsvoller Bedarf wird in O2I als ex-post-Begriff eingeführt, um wirkungsrelevante Bedarfe von Bedarfen mit positiver Wirkungsevidenz zu unterscheiden. Porter stützt den strategischen Wirkungsbezug; Doerr, Parmenter und Barr stützen Messung und Nachweislogik.
 
 Wirkungsrelevanz ist damit eine Ex-ante-Handlungsrelevanz; Wirkungsvollheit ist eine Ex-post-Nachweisqualität.
 
@@ -445,6 +445,23 @@ In O2I misst eine Messung eine Situation (`Measure --measures--> Situation`). St
 Eine Messung ist nicht automatisch ein KPI. Ein KPI ist eine stabile, entscheidungsrelevante Messdefinition innerhalb eines Messrahmens. O2I hält diese Unterscheidung offen, weil nicht jede fachlich notwendige Messung unmittelbar eine steuerungsrelevante Kennzahl ist.
 
 Messung ist nicht Wirkung selbst. Sie macht Zustände und Veränderungen beobachtbar und liefert Evidenz, die erst durch Nachweislogik als Wirkung gelesen werden kann.
+
+> [!definition]
+> Eine **Messbeobachtung**[^observation] bezeichnet einen zeitlich bestimmten, quellengebundenen Messwert eines KPI an einem Situationsanker.
+>
+> [^observation]: *Autorenableitung in Anlehnung an Parmenter (2020) und Barr (2014)*: Messbeobachtung verbindet eine definierte Kennzahl mit Messwert, Zeitpunkt, Einheit, Quelle und fachlichem Beobachtungsgegenstand.
+
+> [!definition]
+> Ein **Effektkriterium**[^effect-criterion] bezeichnet die vorab festgelegte Mindestveränderung gegenüber einer Baseline, ab der eine Beobachtung als Evidenz für positive Wirkung gilt.
+>
+> [^effect-criterion]: *Autorenableitung in Anlehnung an Parmenter (2020) und Barr (2014)*: Das Effektkriterium operationalisiert eine relevante Veränderung unabhängig von der Zielerreichung.
+
+> [!definition]
+> Ein **Zielkriterium**[^target-criterion] bezeichnet den vorab festgelegten Messwert oder Wertebereich, anhand dessen die Zielerreichung zu einem Beobachtungszeitpunkt beurteilt wird.
+>
+> [^target-criterion]: *Autorenableitung in Anlehnung an Doerr (2018), Parmenter (2020) und Barr (2014)*: Das Zielkriterium operationalisiert den angestrebten Ergebniszustand unabhängig von der gegenüber der Baseline beobachteten Wirkung.
+
+Effekt und Zielerreichung sind damit getrennte Aussagen: Eine relevante Verbesserung kann eintreten, ohne dass das Ziel bereits erreicht ist; umgekehrt kann ein Zielwert erreicht sein, ohne dass die Intervention eine relevante Verbesserung gegenüber der Baseline erzeugt hat.
 
 ### Nachweislogik
 
@@ -464,13 +481,25 @@ Nachweislogik verbindet Interventionen, relevante Messungen, Zielwerte, beobacht
 
 Damit bleibt Nachweislogik von Messung getrennt: Messung macht beobachtbar, Nachweislogik begründet die Wirkungslesart.
 
+> [!addendum] Wirkungsevidenz und Kausalität
+> O2I kann feststellen:
+>
+> - Eine Intervention adressiert einen wirkungsrelevanten Bedarf.
+> - Sie ist auf denselben Situationsanker gerichtet, den der KPI misst.
+> - Der Messwert steigt nach der Intervention von 40 % auf 75 %.
+> - Effekt- und Zielkriterium sind erfüllt.
+>
+> O2I kann daraus jedoch nicht nachweisen, dass allein die Intervention den Anstieg verursacht hat. Auch parallele Maßnahmen, organisatorische Veränderungen oder externe Einflüsse können beigetragen haben.
+>
+> Ein kausaler Nachweis benötigt zusätzlich ein geeignetes Untersuchungsdesign, beispielsweise eine Kontrollgruppe, einen kontrafaktischen Vergleich oder eine belastbare Zeitreihenanalyse.
+
 # Metamodell
 
 ## Zweck
 
 Das O2I-Metamodell ist der formale Kern des O2I Frameworks. Es übersetzt die O2I-Terminologie in eine prüfbare Modellstruktur: Begriffe werden als Typen gefasst, konkrete Modellelemente werden als Instanzen dieser Typen beschrieben, Primitives erhalten ihre Bedeutung durch Interpretation in Kontexten, und Wohlgeformtheitsregeln prüfen, ob ein Modell die O2I-Wirkungslogik einhält.
 
-Die Haskell-Spezifikation in `spc/src/lib/` ist keine Implementierung eines Anwendungssystems und keine allgemeine Modellierungs-DSL. Sie ist eine kompakte, maschinenprüfbare Validierungsspezifikation der O2I-Semantik: Sie typisiert zulässige Modellformen und unterscheidet strukturelle Wohlgeformtheit von vollständiger Wirkungsvalidierung.
+Die Haskell-Spezifikation in `spc/src/lib/` ist keine Implementierung eines Anwendungssystems und keine allgemeine Modellierungs-DSL. Sie ist eine kompakte, maschinenprüfbare Validierungsspezifikation der O2I-Semantik: Sie typisiert zulässige Modellformen und unterscheidet strukturelle Wohlgeformtheit, relationale Wirkungsnachvollziehbarkeit und empirische Wirkungsevidenz.
 
 Das Metamodell ersetzt die Terminologie nicht. Die Terminologie legt die fachliche Bedeutung fest; das Metamodell macht diese Bedeutung modellierbar, referenzierbar und validierbar.
 
@@ -518,17 +547,17 @@ Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen. Sie e
 @Lst:o2i-context-types zeigt das Kontext-Inventar und legt fest, welche fachlichen Interpretationsrahmen O2I als Kontexttypen kennt.
 
 ```{#lst:o2i-context-types .haskell caption="O2I Kontexttypen"}
-!include`snippetStart="-- ** Contexts", snippetEnd="-- ** Primitives"` spc/src/lib/O2I/Elements.hs
+!include`snippetStart="-- ** Contexts", snippetEnd="-- ** Primitives"` spc/src/lib/O2I/Types.hs
 ```
 
 `Ethos`, `Mission` und `Vision` bilden eine Orientierung. `Strategy` ist der Kontext für eine strategische Wegentscheidung innerhalb einer Formierung. Kritische Erfolgsfaktoren sind in O2I kein eigener Kontext, sondern strukturieren die strategische Erfolgslogik; sie vermitteln zwischen Strategie, Bedarfsqualifikation, Messrahmung und späterer Operationalisierung. `Need`, `Intervention`, `Measure` und `Situation` bilden die Kontexte für Situierung, Operationalisierung und Wirkung.
 
 ##### Relationen
 
-Kontextrelationen beschreiben fachliche Relationen zwischen Kontexttypen. @Lst:o2i-context-relations zeigt die zulässigen Kontextrelationen.
+Kontextrelationen beschreiben fachliche Relationen zwischen Kontexttypen. @Lst:o2i-context-relations zeigt exemplarisch ihre kontextsensitive Typisierung; das vollständige Inventar liegt in der totalen Relationsregistry der Spezifikation.
 
-```{#lst:o2i-context-relations .haskell caption="O2I Kontextrelationen"}
-!include`snippetStart="-- ** Semantic relations", snippetEnd="-- *** Situation anchor relations"` spc/src/lib/O2I/Relation.hs
+```{#lst:o2i-context-relations .haskell caption="O2I Kontextrelationen (Auszug)"}
+!include`snippetStart="-- ** Context macrorelations", snippetEnd="-- ** Remaining context macrorelations"` spc/src/lib/O2I/Relation.hs
 ```
 
 Diese typisierte Spezifikation verhindert, dass beliebige Kontextrelationen als O2I-Relationen ausgegeben werden. Beispielsweise ist `Strategy --qualifies--> Need` zulässig; `Need --qualifies--> Strategy` ist kein O2I-Relationstyp.
@@ -548,27 +577,29 @@ Die Darstellung ist als semantische Übersicht des abstrakten Formvorrats zu les
 Das Primitive-Inventar legt fest, welche abstrakten Träger fachlicher Inhalte O2I kennt. @Lst:o2i-primitive-types zeigt diese Primitive-Typen.
 
 ```{#lst:o2i-primitive-types .haskell caption="O2I Primitive-Typen"}
-!include`snippetStart="-- ** Primitives", snippetEnd="-- ** Structuring"` spc/src/lib/O2I/Elements.hs
+!include`snippetStart="-- ** Primitives", snippetEnd="-- ** Structuring"` spc/src/lib/O2I/Types.hs
 ```
 
 ##### Relationen
 
-Primitive-Relationen beschreiben die abstrakte Begründungsstruktur zwischen modellierten Inhalten. Sie verbinden kontextualisierte Primitives und, wo erforderlich, Strukturierungen oder Situationsanker. Die Spezifikation gliedert sie in drei fokussierte Ausschnitte: @Lst:o2i-primitive-relations-orientation-strategy zeigt Orientierungs- und Strategie-Bezüge, @Lst:o2i-primitive-relations-need-measure zeigt Bedarfs- und Messrahmungsbezüge, @Lst:o2i-primitive-relations-intervention-effect zeigt Interventions- und Wirkungsbezüge.
+Primitive-Relationen beschreiben die abstrakte Begründungsstruktur zwischen modellierten Inhalten. Sie verbinden kontextualisierte Primitives und, wo erforderlich, Strukturierungen oder Situationsanker. Die Spezifikation gliedert repräsentative typisierte Ausschnitte in Orientierungs- und Strategie-Bezüge, Bedarfs- und Messrahmungsbezüge sowie Interventions- und Wirkungsbezüge; die totale Relationsregistry enthält das vollständige Inventar.
 
-```{#lst:o2i-primitive-relations-orientation-strategy .haskell caption="O2I Primitive-Relationen: Orientierung und Strategie"}
-!include`snippetStart="-- **** Orientation and strategy evidence", snippetEnd="-- **** Need and measurement evidence"` spc/src/lib/O2I/Relation.hs
+@Lst:o2i-primitive-relations-orientation-strategy zeigt den typisierten Übergang von Orientierung zu Formierung.
+
+```{#lst:o2i-primitive-relations-orientation-strategy .haskell caption="O2I Primitive-Relationen: Orientierung und Strategie (Auszug)"}
+!include`snippetStart="-- ** Orientation and strategy evidence", snippetEnd="-- ** Remaining orientation and strategy evidence"` spc/src/lib/O2I/Relation.hs
 ```
 
 @Lst:o2i-primitive-relations-need-measure konkretisiert die Begründungsstruktur für Bedarfsqualifikation und Messrahmung.
 
-```{#lst:o2i-primitive-relations-need-measure .haskell caption="O2I Primitive-Relationen: Bedarf und Messrahmung"}
-!include`snippetStart="-- **** Need and measurement evidence", snippetEnd="-- **** Intervention and effect evidence"` spc/src/lib/O2I/Relation.hs
+```{#lst:o2i-primitive-relations-need-measure .haskell caption="O2I Primitive-Relationen: Bedarf und Messrahmung (Auszug)"}
+!include`snippetStart="-- ** Need and measurement evidence", snippetEnd="-- ** Remaining need and measurement evidence"` spc/src/lib/O2I/Relation.hs
 ```
 
 @Lst:o2i-primitive-relations-intervention-effect konkretisiert die Begründungsstruktur für Intervention, Zielbezug, Situationsveränderung und Messbeobachtung.
 
-```{#lst:o2i-primitive-relations-intervention-effect .haskell caption="O2I Primitive-Relationen: Intervention und Wirkung"}
-!include`snippetStart="-- **** Intervention and effect evidence", snippetEnd="-- ** Dynamic relation representation"` spc/src/lib/O2I/Relation.hs
+```{#lst:o2i-primitive-relations-intervention-effect .haskell caption="O2I Primitive-Relationen: Intervention und Wirkung (Auszug)"}
+!include`snippetStart="-- ** Intervention and effect evidence", snippetEnd="-- ** Remaining intervention and effect evidence"` spc/src/lib/O2I/Relation.hs
 ```
 
 Diese typisierten Spezifikationen verhindern, dass beliebige Primitive-Relationen als O2I-Relationen ausgegeben werden. Eine Relation wird nicht nur nach Primitive-Art, sondern nach kontextualisiertem Endpunkt typisiert, etwa `KeyResult @ Strategy -> Objective @ Need`.
@@ -580,7 +611,7 @@ Strukturierungstypen ordnen Modellelemente, ohne selbst O2I-Kontexte oder O2I-Pr
 @lst:o2i-structuring-types zeigt die Strukturierungstypen des Metamodells.
 
 ```{#lst:o2i-structuring-types .haskell caption="O2I Strukturierungstypen"}
-!include`snippetStart="-- ** Structuring", snippetEnd="-- ** Situation anchors"` spc/src/lib/O2I/Elements.hs
+!include`snippetStart="-- ** Structuring", snippetEnd="-- ** Situation anchors"` spc/src/lib/O2I/Types.hs
 ```
 
 `Domain` ist der generische Strukturierungstyp des O2I-Metamodells. Eine `Domain` bezeichnet einen fachlichen Ordnungsbereich, in dem zusammengehörige Modellelemente oder Strukturierungsbezüge gruppiert werden können. Ein kritischer Erfolgsfaktor (`CSF`) ist in O2I keine eigene Metamodellart, sondern kann als benannte strategische Domain modelliert werden.
@@ -590,7 +621,7 @@ Strukturierungstypen ordnen Modellelemente, ohne selbst O2I-Kontexte oder O2I-Pr
 Situationsanker verankern eine `Situation` in konkreten Business-Architecture-Artefakten. Sie sind weder O2I-Kontexte noch O2I-Primitives, sondern fachliche Anker, an denen Bedarfe sichtbar, Interventionen wirksam und Messungen beobachtbar werden. @Lst:o2i-situation-anchor-types zeigt das zulässige Inventar dieser Anker.
 
 ```{#lst:o2i-situation-anchor-types .haskell caption="O2I Situationsanker"}
-!include`snippetStart="-- ** Situation anchors", snippetEnd="-- ** Node kinds"` spc/src/lib/O2I/Elements.hs
+!include`snippetStart="-- ** Situation anchors", snippetEnd="-- ** Node kinds"` spc/src/lib/O2I/Types.hs
 ```
 
 ### Instanziierung
@@ -600,7 +631,7 @@ Instanziierung beschreibt, wie aus O2I-Typen konkrete Modellelemente in einem O2
 @lst:o2i-model-graph zeigt den generischen konkreten O2I-Modellgraphen, mit dem konkrete Kontexte, Primitives, Strukturierungen, Situationsanker und Relationen repräsentiert werden.
 
 ```{#lst:o2i-model-graph .haskell caption="O2I Modellgraph"}
-!include`snippetStart="-- * Model graph", snippetEnd="-- * Graph queries"` spc/src/lib/O2I/Graph.hs
+!include`snippetStart="-- * Typed model graph", snippetEnd="-- * Validated model stage"` spc/src/lib/O2I/Model.hs
 ```
 
 #### Kontextinstanzen
@@ -625,10 +656,10 @@ Interpretation legt fest, welche Bedeutung ein O2I-Primitive in einem O2I-Kontex
 @lst:o2i-interpretations zeigt die zulässigen Interpretationen von Primitives in Kontexten.
 
 ```{#lst:o2i-interpretations .haskell caption="O2I Interpretationen"}
-!include`snippetStart="-- ** Interpretations", snippetEnd="-- * End of elements"` spc/src/lib/O2I/Elements.hs
+!include`snippetStart="-- ** Interpretations", snippetEnd="-- ** Interpretation registry"` spc/src/lib/O2I/Types.hs
 ```
 
-Die GADT-Konstruktoren bilden den typisierten Spezifikationskern der Interpretationen. `allowedInterpretation` ist die Runtime-Projektion dieser Interpretationen: Die Funktion macht die typisierten Interpretationszeugen zur Laufzeit als prüfbare Ja/Nein-Entscheidung für konkrete Modellelemente verfügbar. Dadurch wird keine zweite fachliche Zulässigkeitstabelle gepflegt.
+Die GADT-Konstruktoren bilden den typisierten Spezifikationskern der Interpretationen. Die endliche Registry projiziert diese Interpretationszeugen in eine zur Laufzeit prüfbare Zuordnung für konkrete Modellelemente. Dadurch wird keine zweite fachliche Zulässigkeitstabelle gepflegt.
 
 #### Primitives
 
@@ -656,23 +687,29 @@ Diese Primitive-Relation kann begründen, warum eine konkrete Strategie einen ko
 
 ## Wohlgeformtheit und Validierung
 
-Wohlgeformtheit prüft, ob ein O2I-Modell die zulässigen Typen, Interpretationen und Relationen einhält. Wirkungsvalidierung prüft darüber hinaus, ob zentrale O2I-Aussagen durch den Wirkungsgraphen begründet sind. `wfModel` beschreibt die strukturelle Wohlgeformtheit eines Modells; `validEffectModel` beschreibt die stärkere Wirkungsvalidität und verlangt für jedes adressierte `Need` jeder `Intervention` einen vollständigen Wirkungstrace. Die Haskell-Spezifikation definiert zulässige Relationstypen als GADT-Relationszeugen; konkrete Modellgraphen werden anschließend über `wfEdge`, `wfContextEvidence`, `validEffectModel` und weitere Validierungsregeln gegen diese Relationstypen geprüft.
+O2I unterscheidet drei aufeinander aufbauende Validierungsstufen. Ein `WellFormedModel` erfüllt die strukturellen Typ-, Interpretations- und Relationsregeln. Ein `TraceableEffectModel` weist für jeden durch eine Intervention adressierten Bedarf einen vollständigen relationalen Wirkungstrace von Vision bis Situationsanker nach. Ein `EvidenceAssessedModel` ergänzt diesen Trace um konsistente Messbeobachtungen sowie getrennte Bewertungen von Effekt und Zielerreichung.
 
-@lst:o2i-validation zeigt die zentralen Wohlgeformtheits- und Validierungsregeln.
+@Lst:o2i-validation zeigt die strukturelle Elaborierung eines Rohmodells in ein opakes, wohlgeformtes Modell.
 
 ```{#lst:o2i-validation .haskell caption="O2I Wohlgeformtheit und Validierung"}
-!include`snippetStart="-- * Validation", snippetEnd="-- ** Effect trace"` spc/src/lib/O2I/Validation.hs
+!include`snippetStart="validateStructure ::", snippetEnd="nodeErrors ::"` spc/src/lib/O2I/Internal/Elaboration.hs
 ```
 
-@lst:o2i-effect-trace zeigt die Trace-Regel für relational nachvollziehbare Wirkung.
+@Lst:o2i-effect-trace zeigt die zweite Validierungsstufe für relational nachvollziehbare Wirkung.
 
 ```{#lst:o2i-effect-trace .haskell caption="O2I Wirkungstrace"}
-!include`snippetStart="-- ** Effect trace", snippetEnd="-- * Validation support"` spc/src/lib/O2I/Validation.hs
+!include`snippetStart="-- * Traceability validation", snippetEnd="matchesInterventionNeed ::"` spc/src/lib/O2I/Trace.hs
+```
+
+@Lst:o2i-evidence-validation zeigt die dritte Validierungsstufe für empirische Wirkungsevidenz.
+
+```{#lst:o2i-evidence-validation .haskell caption="O2I Evidenzvalidierung"}
+!include`snippetStart="-- * Evidence validation", snippetEnd="claimsByTrace ::"` spc/src/lib/O2I/Evidence.hs
 ```
 
 ### Grundregeln
 
-Ein Modell ist wohlgeformt, wenn Primitive nur in zulässigen Kontexten verwendet werden, Domains nur in zulässigen Kontexten stehen, Situationsanker nur in `Situation` vorkommen und Relationen typgerecht sind. Ein Modell ist als Wirkungsmodell valide, wenn es darüber hinaus die O2I-Wirkungslogik erfüllt, insbesondere Interventionen nur wirkungsrelevante Bedarfe adressieren.
+Ein Modell ist wohlgeformt, wenn Bezeichner eindeutig sind, Eigentümer existieren, Primitives nur in zulässigen Kontexten verwendet werden, Domains nur in zulässigen Kontexten stehen, Situationsanker nur in `Situation` vorkommen und Relationsendpunkte typgerecht sind. Fehler werden akkumuliert, damit eine Prüfung sämtliche erkannten Strukturverletzungen gemeinsam ausweist.
 
 ### Wirkungsrelevanz
 
@@ -684,7 +721,13 @@ Die Spezifikation konkretisiert dafür den zentralen O2I-USP: Eine `Strategy --q
 
 Ein Wirkungstrace entsteht, wenn dieselbe `Strategy`-Instanz eine `Need`-Instanz qualifiziert, eine `Intervention`-Instanz richtet und eine `Measure`-Instanz rahmt; wenn diese Intervention den wirkungsrelevanten Bedarf adressiert, eine über Situationsanker verankerte `Situation` verändert, Zielbezüge für die Messung setzt und diese Messung denselben Situationsbezug beobachtet. Die Messrahmung ist nur belastbar, wenn ein Strategy-Driver den Beobachtungsbereich anzeigt und ein Strategy-Key-Result denselben Messbereich für den Erfolgsnachweis bestimmt.
 
-Die Validierung beweist dadurch keine Kausalität und keine empirische Wirkung. Sie prüft, ob die Wirkungsaussage im O2I-Graphen relational nachvollziehbar ist. Sie ersetzt keine Messdaten, keine fachliche Bewertung und keinen kausalen Wirkungsnachweis.
+Ein vollständiger Wirkungstrace ist relational nachvollziehbar, aber noch keine empirische Wirkungsevidenz. Erst konsistente Baseline- und Folgebeobachtungen desselben KPI am selben Situationsanker erlauben die getrennte Bewertung von Effektkriterium und Zielkriterium. Jede aktuelle Bewertung ordnet einem Trace genau einen Evidenzanspruch zu.
+
+### Wirkungsevidenz
+
+Wirkungsevidenz bewertet einen bereits vollständigen Wirkungstrace. Ein `EvidencePlan` bindet Effekt- und Zielkriterium sowie den Zieltermin und wird vor Beginn der Intervention festgelegt. Eine Messbeobachtung trägt KPI, Situationsanker, Zeitpunkt, Wert, Einheit und Quelle; Einheit und Evidenzquelle müssen benannt sein. Baseline und Folgebeobachtung müssen denselben KPI, denselben Situationsanker und dieselbe Einheit verwenden; die Baseline liegt vor, die Folgebeobachtung nach dem Beginn der Intervention. Das Effektkriterium prüft die relevante Veränderung gegenüber der Baseline. Das Zielkriterium prüft unabhängig davon den beobachteten Zielstatus.
+
+Die Evidenzebene besteht aus `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion` und `EvidenceClaim`. Diese Typen sind weder O2I-Kontexte noch O2I-Primitives. Sie bewerten die empirische Evidenz eines relational vollständigen Wirkungstraces.
 
 ### Abgeleitete Makrorelationen
 
@@ -693,6 +736,8 @@ Makrorelationen dürfen abgeleitet sein. Eine abgeleitete Makrorelation fasst me
 ## Syntax
 
 Die Syntax beschreibt, wie die O2I-Semantik in einer Modellierungssprache dargestellt wird. O2I verwendet ArchiMate als visuelle Darstellungs- und Integrationssyntax, ohne die O2I-Semantik durch ArchiMate-Semantik zu ersetzen.
+
+Evidenztypen wie `Observation`, `EffectCriterion` und `TargetCriterion` sind weder O2I-Kontexte noch O2I-Primitives. Ihre konkrete Persistenz- oder Darstellungsform ist nicht Bestandteil des ArchiMate-Profils; sie werden durch die Validierungsspezifikation an einen Wirkungstrace gebunden.
 
 ### ArchiMate-Profil
 
@@ -854,7 +899,9 @@ Im Layered Cake rahmt die Strategie die Messung über `Strategy --frames--> Meas
 
 Die Intervention setzt den Zielbezug für diese Messung: `70% of relevant decisions are captured as shared decision records @ Intervention --sets-target-for--> Shared decision traceability rate @ Measure`. Zugleich verändert die Intervention die Situation über `Establish shared decision evidence practice @ Intervention --changes--> Information Management @ Situation`. Der KPI misst damit nicht abstrakt Wirkung, sondern beobachtet den Situationsanker, an dem die Intervention eine Veränderung bewirken soll.
 
-Wirkung wird im Layered Cake daher nicht als isoliertes Modellelement behauptet. Sie ergibt sich aus der nachvollziehbaren Kette von wirkungsrelevantem Bedarf, Intervention, veränderter Situation, strategisch gerahmter Messung und Nachweislogik. Fit bleibt dabei eine Validierungsfrage: Die Relationen von Vision, Strategie, Need, Intervention, Measure und Situation müssen kohärent zusammenpassen, damit eine Messung als Evidenz für orientierte Wirkung gelesen werden darf.
+Für die Evidenzbewertung wird eine Baseline von 40 % vor Beginn der Intervention und eine Folgebeobachtung von 75 % danach angenommen. Das Effektkriterium verlangt eine Steigerung um mindestens zehn Prozentpunkte; das Zielkriterium verlangt mindestens 70 %. Die Folgebeobachtung erfüllt beide Kriterien: Sie belegt eine relevante Verbesserung gegenüber der Baseline und einen beobachteten Zielstatus. Beide Aussagen bleiben getrennt prüfbar.
+
+Wirkung wird im Layered Cake daher nicht als isoliertes Modellelement behauptet. Sie wird durch die nachvollziehbare Kette von wirkungsrelevantem Bedarf, Intervention, veränderter Situation, strategisch gerahmter Messung und konsistenter Evidenz begründet. Fit bleibt dabei eine Validierungsfrage: Die Relationen von Vision, Strategie, Need, Intervention, Measure und Situation müssen kohärent zusammenpassen, damit eine Messbeobachtung als Evidenz für orientierte Wirkung gelesen werden darf.
 
 # Fazit
 

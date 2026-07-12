@@ -19,6 +19,7 @@
 - `Domain` --contains--> `KPI` (AggregationRelationship)
 - `Driver` --grounds--> `Objective` (InfluenceRelationship)
 - `Driver` --indicates--> `Domain` (InfluenceRelationship)
+- `Key Result` --determines--> `Domain` (InfluenceRelationship)
 - `Key Result` --sets-target-for--> `KPI` (InfluenceRelationship)
 - `Key Result` --substantiates--> `Objective` (InfluenceRelationship)
 - `Key Result` --translates-into--> `Objective` (InfluenceRelationship)
