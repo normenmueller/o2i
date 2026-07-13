@@ -18,8 +18,10 @@ the canonical repository memory.
 - Distinguish terminology, model-theoretic semantics, type-level
   specification, executable validation, and notation.
 - Communicate directly, precisely, and evidence-grounded. Use concise German
-  when the user writes German and German umlauts unless a technical context
-  requires ASCII.
+  when the user writes German. Use German umlauts in German prose; otherwise
+  default to ASCII unless an established file notation requires Unicode.
+- Use Unicode `→` for navigation chains in GitHub-only README files. In
+  PDF-relevant Markdown, use ASCII `->` or LaTeX `$\to$`.
 - Answer by default in very short, focused, precise form, roughly within one
   quarter page. Never omit material risks, contradictions, findings, or
   verification results for brevity.

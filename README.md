@@ -10,18 +10,12 @@ Die öffentliche Haskell-API gliedert sich in `O2I.Language` für den semantisch
 RawGraph -> WellFormedGraph -> SemanticallyValidModel -> TraceableEffectModel -> EvidenceAssessedModel
 ```
 
-## Agentic AI
-
-Die hostneutrale Agent-Memory liegt unter [`.ai4X/`](./.ai4X/). Laufzeitspezifische Host-Adapter werden lokal materialisiert und nicht versioniert, beispielsweise mit [ai4X](https://github.com/normenmueller/ai4X).
-
-Für agentische Arbeit gilt folgende Lesereihenfolge:
-
-1. [`.ai4X/BEHAVIOR.md`](./.ai4X/BEHAVIOR.md) für Verhalten und Arbeitsregeln
-2. [`.ai4X/CONTEXT.md`](./.ai4X/CONTEXT.md) für Projektverständnis und fachliche Entscheidungen
-3. [`.ai4X/STATE.md`](./.ai4X/STATE.md) für aktuellen Stand und nächste Schritte
-4. [`o2i.md`](./o2i.md) als fachliche Referenz
-5. [`spc/`](./spc/) für Formalisierung und Validierung
-6. [`mdl/`](./mdl/) für Modell und konkrete Syntax
+> [!IMPORTANT]
+> **Agentic AI Support**
+>
+> Die hostneutrale Agent-Memory liegt unter [`.ai4X/`](./.ai4X/). Laufzeitspezifische Host-Adapter werden lokal materialisiert und nicht versioniert, beispielsweise mit [ai4X](https://github.com/normenmueller/ai4X).
+>
+> Empfohlene Lesereihenfolge: [`.ai4X/BEHAVIOR.md`](./.ai4X/BEHAVIOR.md) → [`.ai4X/CONTEXT.md`](./.ai4X/CONTEXT.md) → [`.ai4X/STATE.md`](./.ai4X/STATE.md) → [`o2i.md`](./o2i.md). Für Formalisierung und Validierung folgt [`spc/`](./spc/), für Modell und konkrete Syntax [`mdl/`](./mdl/).
 
 ## Purpose
 
