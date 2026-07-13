@@ -1,5 +1,6 @@
 *.bak
 .DS_Store
+AGENTS.md
 o2i.pdf
 dist-newstyle/
 *.hi
