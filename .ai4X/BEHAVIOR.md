@@ -82,9 +82,10 @@ the canonical repository memory.
 - Keep O2I generic and independent of any concrete instance.
 - Keep Terminology, Semantics, and Syntax separate.
 - Treat ArchiMate as notation, never as the source of O2I semantics.
-- Treat `O2I Primitives` as the authoritative semantic view and `O2I Syntax` as
-  its concrete ArchiMate realization. Keep both views and the paper's syntax
-  mapping synchronized.
+- Treat `O2I Context` and `O2I Primitives` as normative semantic views of the
+  O2I context and primitive models. Treat `O2I Syntax` as their concrete
+  ArchiMate realization. Keep these views, the article, the Haskell library,
+  and the tests semantically synchronized.
 - After every change to `mdl/o2i.archimate`, regenerate and inspect all review
   snapshots with `python3 utl/extract-archimate-view.py --preset all`.
 - Use relation syntax `Subject --relation--> Object` unless explicitly changed.
