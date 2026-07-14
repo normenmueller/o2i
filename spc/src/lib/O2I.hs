@@ -4,12 +4,13 @@
 -- instances, and Validation establishes progressively stronger guarantees.
 module O2I
   ( RawNodeId(..)
-  , ContextRef
-  , contextRefId
+  , NodeId(..)
+  , ContextRef(..)
   , Context(..)
   , Primitive(..)
   , Structuring(..)
   , SituationAnchor(..)
+  , NodeKind(..)
   , NodeKindValue(..)
   , SContext(..)
   , SPrimitive(..)
@@ -88,13 +89,17 @@ module O2I
   , SemanticallyValidModel
   , strategyFormulations
   , strategyFormulationData
+  , qualifyingStrategies
   , EffectTrace
   , EffectTraceId
   , TraceableEffectModel
   , effectTraces
   , traceIdentifier
   , lookupEffectTrace
+  , traceStrategy
+  , traceStrategyKeyResult
   , traceNeed
+  , traceIntervention
   , traceInterventionKeyResult
   , traceKPI
   , traceAnchor
@@ -105,7 +110,11 @@ module O2I
   , EffectCriterion(..)
   , TargetCriterion(..)
   , EvidencePlan(..)
-  , EvidenceClaim(..)
+  , EvidenceReadyModel
+  , evidencePlans
+  , readyEffectTraces
+  , readyTracesForIntervention
+  , FollowUpObservation(..)
   , CriterionResult(..)
   , TargetResult(..)
   , EffectAssessment(..)
@@ -117,10 +126,12 @@ module O2I
   , StructuralError(..)
   , ModelInvariantError(..)
   , TraceabilityError(..)
+  , EvidenceReadinessError(..)
   , EvidenceError(..)
   , validateStructure
   , validateModelSemantics
   , validateTraceability
+  , validateEvidenceReadinessAt
   , assessEffectEvidence
   ) where
 

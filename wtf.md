@@ -58,7 +58,11 @@ Weiterlesen: [Bedarf](./o2i.md#bedarf)
 
 ## HTH "Bedarfsqualifikation"?
 
+<!-- How the heck to qualify need? -->
+
 Die Situation macht einen Bedarf sichtbar; die Strategie macht ihn relevant. Dafür müssen Strategie- und Bedarf-Inhalte über zulässige Primitive-Relationen verbunden sein, beispielsweise `Key Result @ Strategy --translates-into--> Objective @ Need`. Erst dann wird ein sichtbarer Bedarf wirkungsrelevant, aber noch nicht wirksam.
+
+Haskell: [`qualifyingStrategies`](./spc/src/lib/O2I/Validation/Semantics.hs)
 
 Weiterlesen: [Bedarfsqualifikation](./o2i.md#bedarfsqualifikation), [Wirkungsrelevanz](./o2i.md#wirkungsrelevanz)
 
@@ -82,9 +86,13 @@ Weiterlesen: [Messung](./o2i.md#messung)
 
 ## HTH "Wirkungsnachweis"?
 
+<!-- How the heck to demonstrate effectivness? -->
+
 > [!NOTE]
 > **Nachweislogik** = *Warum* darf eine Messung als Evidenz für Wirkung gelten?
 
 Wirkung ist nicht nachgewiesen, nur weil ein KPI grün wird. O2I verlangt einen vollständigen relationalen Wirkungstrace sowie konsistente Baseline- und Folgebeobachtungen desselben KPI am selben Situationsanker. Ein vorab festgelegtes Effektkriterium entscheidet, ob positive Wirkungsevidenz vorliegt; das Zielkriterium bewertet getrennt die Zielerreichung. Das stützt plausible Attribution, aber keinen Kausalbeweis.
+
+Haskell: [`validateTraceability`](./spc/src/lib/O2I/Validation/Trace.hs) -> [`validateEvidenceReadinessAt`](./spc/src/lib/O2I/Validation/Readiness.hs) -> [`assessEffectEvidence`](./spc/src/lib/O2I/Validation/Evidence.hs)
 
 Weiterlesen: [Nachweislogik](./o2i.md#nachweislogik), [Wirkungstrace](./o2i.md#wirkungstrace), [Wirkungsevidenz](./o2i.md#wirkungsevidenz), [Plausible Attribution](./o2i.md#plausible-attribution)

@@ -18,6 +18,7 @@ module O2I.Validation.Semantics
   , modelGraph
   , strategyFormulations
   , strategyFormulationData
+  , qualifyingStrategies
   ) where
 
 import Data.List (group, nub, sort)
@@ -178,6 +179,37 @@ strategyFormulations = semanticallyValidStrategies
 -- | Access the validated source data of one Strategy formulation.
 strategyFormulationData :: StrategyFormulation -> RawStrategyFormulation
 strategyFormulationData = validatedStrategyFormulation
+
+-- | Find Strategies that qualify one situated Need.
+--
+-- A result requires both the Strategy-to-Need macrorelation and its primitive
+-- evidence from a Key Result listed in that Strategy's validated formulation
+-- to an Objective owned by the requested Need. An empty result means that the
+-- Need is situated but not strategically qualified.
+qualifyingStrategies ::
+     SemanticallyValidModel -> ContextRef 'Need -> [ContextRef 'Strategy]
+qualifyingStrategies semantic need =
+  [ ContextRef strategy
+  | strategy <- contextNodesOf graph Strategy
+  , hasRelation graph strategy qualifiesNeed needIdentifier
+  , Just formulation <- [Map.lookup strategy (strategyFormulations semantic)]
+  , let keyResults =
+          NonEmpty.toList
+            (rawFormulationKeyResults (strategyFormulationData formulation))
+  , any
+      (\keyResult ->
+         any
+           (hasRelation
+              graph
+              keyResult
+              translatesStrategyKeyResultToNeedObjective)
+           needObjectives)
+      keyResults
+  ]
+  where
+    graph = modelGraph semantic
+    needIdentifier = contextRefId need
+    needObjectives = primitiveNodesIn graph needIdentifier Objective
 
 needErrors :: WellFormedGraph -> [ModelInvariantError]
 needErrors graph = concatMap errorsForNeed (contextNodesOf graph Need)

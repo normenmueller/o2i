@@ -35,6 +35,7 @@ library
     O2I.Language.Interpretation,
     O2I.Language.Relation,
     O2I.Validation.Evidence,
+    O2I.Validation.Readiness,
     O2I.Validation.Semantics,
     O2I.Validation.Structure,
     O2I.Validation.Trace

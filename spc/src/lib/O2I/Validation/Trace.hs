@@ -14,7 +14,10 @@ module O2I.Validation.Trace
   , effectTraces
   , lookupEffectTrace
   , traceIdentifier
+  , traceStrategy
+  , traceStrategyKeyResult
   , traceNeed
+  , traceIntervention
   , traceInterventionKeyResult
   , traceKPI
   , traceAnchor
@@ -61,6 +64,8 @@ newtype EffectTraceId =
 -- Strategy roles are derived exclusively from its validated formulation.
 data EffectTrace = EffectTrace
   { effectTraceIdentifier :: EffectTraceId
+  , effectTraceStrategy :: RawNodeId
+  , effectTraceStrategyKeyResult :: RawNodeId
   , effectTraceIntervention :: RawNodeId
   , effectTraceNeed :: RawNodeId
   , effectTraceInterventionKeyResult :: RawNodeId
@@ -148,9 +153,22 @@ lookupEffectTrace model identifier = Map.lookup identifier (traceIndex model)
 traceIdentifier :: EffectTrace -> EffectTraceId
 traceIdentifier = effectTraceIdentifier
 
+-- | Read the Strategy that governs an effect trace.
+traceStrategy :: EffectTrace -> ContextRef 'Strategy
+traceStrategy = ContextRef . effectTraceStrategy
+
+-- | Read the strategic Key Result connected to an effect trace.
+traceStrategyKeyResult ::
+     EffectTrace -> NodeId ('PrimitiveKind 'Strategy 'KeyResult)
+traceStrategyKeyResult = NodeId . effectTraceStrategyKeyResult
+
 -- | Read the Need context justified by an effect trace.
 traceNeed :: EffectTrace -> ContextRef 'Need
 traceNeed = ContextRef . effectTraceNeed
+
+-- | Read the Intervention that realizes an effect trace.
+traceIntervention :: EffectTrace -> ContextRef 'Intervention
+traceIntervention = ContextRef . effectTraceIntervention
 
 -- | Read the Intervention Key Result that operationalizes the traced Need.
 traceInterventionKeyResult :: EffectTrace -> RawNodeId
@@ -300,6 +318,8 @@ traceCandidates semantic = do
   pure
     EffectTrace
       { effectTraceIdentifier = EffectTraceId key
+      , effectTraceStrategy = strategy
+      , effectTraceStrategyKeyResult = strategyKeyResult
       , effectTraceIntervention = intervention
       , effectTraceNeed = need
       , effectTraceInterventionKeyResult = interventionKeyResult

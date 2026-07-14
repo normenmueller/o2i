@@ -471,6 +471,15 @@ Messung ist nicht Wirkung selbst. Sie macht Zustände und Veränderungen beobach
 
 Effekt und Zielerreichung sind damit getrennte Aussagen: Eine relevante Verbesserung kann eintreten, ohne dass das Ziel bereits erreicht ist; umgekehrt kann ein Zielwert erreicht sein, ohne dass die Intervention eine relevante Verbesserung gegenüber der Baseline erzeugt hat.
 
+> [!definition]
+> **Evidenzbereitschaft**[^evidence-readiness] bezeichnet die ex-ante Nachweisqualität eines vollständigen Wirkungstraces, für den vor Beginn der Intervention eine Baseline, Effekt- und Zielkriterium, Zieltermin sowie Quellenbezug verbindlich festgelegt sind.
+>
+> > [!tldr] Evidenzbereitschaft = Wirkungstrace vor Interventionsbeginn mess- und bewertbar festgelegt
+>
+> [^evidence-readiness]: *Autorenableitung in Anlehnung an Doerr (2018), Parmenter (2020) und Barr (2014)*: O2I verbindet die Vorabfestlegung von Messgröße, Baseline, Kriterien, Zieltermin und Quellenbezug zu einer prüfbaren ex-ante Nachweisqualität.
+
+Evidenzbereitschaft ist noch keine Wirkungsevidenz. Sie stellt sicher, dass die spätere Wirkungsbewertung nicht erst im Nachhinein an beobachtete Ergebnisse angepasst wird.
+
 ### Nachweislogik
 
 > [!definition]
@@ -513,7 +522,7 @@ Damit bleibt Nachweislogik von Messung getrennt: Messung macht beobachtbar, Nach
 
 Das O2I-Metamodell ist der formale Kern des O2I Frameworks. Es übersetzt die O2I-Terminologie in eine prüfbare Modellstruktur: Begriffe werden als Typen gefasst, konkrete Modellelemente werden als Instanzen dieser Typen beschrieben, Primitives erhalten ihre Bedeutung durch Interpretation in Kontexten, und die gestufte Validierung prüft, ob ein Modell die O2I-Wirkungslogik einhält.
 
-Die Haskell-Spezifikation in `spc/src/lib/` ist keine Implementierung eines Anwendungssystems und keine allgemeine Modellierungs-DSL. Sie ist eine kompakte, maschinenprüfbare Validierungsspezifikation der O2I-Semantik: Sie typisiert zulässige Modellformen und unterscheidet strukturelle Wohlgeformtheit, semantische Gültigkeit, relationale Wirkungsnachvollziehbarkeit und empirische Wirkungsevidenz.
+Die Haskell-Spezifikation in `spc/src/lib/` ist keine Implementierung eines Anwendungssystems und keine allgemeine Modellierungs-DSL. Sie ist eine kompakte, maschinenprüfbare Validierungsspezifikation der O2I-Semantik: Sie typisiert zulässige Modellformen und unterscheidet strukturelle Wohlgeformtheit, semantische Gültigkeit, relationale Wirkungsnachvollziehbarkeit, ex-ante Evidenzbereitschaft und empirische Wirkungsevidenz.
 
 Das Metamodell ersetzt die Terminologie nicht. Die Terminologie legt die fachliche Bedeutung fest; das Metamodell macht diese Bedeutung modellierbar, referenzierbar und validierbar.
 
@@ -667,6 +676,7 @@ RawGraph
   -> WellFormedGraph
   -> SemanticallyValidModel
   -> TraceableEffectModel
+  -> EvidenceReadyModel
   -> EvidenceAssessedModel
 ```
 
@@ -729,7 +739,7 @@ Diese Primitive-Relation kann begründen, warum eine konkrete Strategie einen ko
 
 ## Wohlgeformtheit und Validierung
 
-O2I unterscheidet einen ungeprüften Rohgraphen und vier aufeinander aufbauende Validierungsstufen. Ein `RawGraph` enthält ungeprüfte Eingabedaten. Ein `WellFormedGraph` erfüllt die strukturellen Typ-, Interpretations- und Relationsregeln. Ein `SemanticallyValidModel` erfüllt zusätzlich die globalen Need- und Strategy-Invarianten. Ein `TraceableEffectModel` weist für jeden durch eine Intervention adressierten Bedarf einen vollständigen relationalen Wirkungstrace von Vision bis Situationsanker nach. Ein `EvidenceAssessedModel` ergänzt diesen Trace um konsistente Messbeobachtungen sowie getrennte Bewertungen von Effekt und Zielerreichung.
+O2I unterscheidet einen ungeprüften Rohgraphen und fünf aufeinander aufbauende Validierungsstufen. Ein `RawGraph` enthält ungeprüfte Eingabedaten. Ein `WellFormedGraph` erfüllt die strukturellen Typ-, Interpretations- und Relationsregeln. Ein `SemanticallyValidModel` erfüllt zusätzlich die globalen Need- und Strategy-Invarianten. Ein `TraceableEffectModel` weist für jeden durch eine Intervention adressierten Bedarf einen vollständigen relationalen Wirkungstrace von Vision bis Situationsanker nach. Ein `EvidenceReadyModel` ergänzt jeden Trace vor Interventionsbeginn um einen validierten Evidenzplan. Ein `EvidenceAssessedModel` bewertet konsistente Folgebeobachtungen getrennt nach Effekt und Zielerreichung.
 
 @Lst:o2i-validation zeigt die strukturelle Elaborierung eines `RawGraph` in einen opaken `WellFormedGraph`.
 
@@ -749,10 +759,16 @@ O2I unterscheidet einen ungeprüften Rohgraphen und vier aufeinander aufbauende 
 !include`snippetStart="-- * Traceability validation", snippetEnd="matchesInterventionNeed ::"` spc/src/lib/O2I/Validation/Trace.hs
 ```
 
-@Lst:o2i-evidence-validation zeigt die vierte Validierungsstufe für empirische Wirkungsevidenz.
+@Lst:o2i-readiness-validation zeigt die vierte Validierungsstufe für ex-ante Evidenzbereitschaft.
+
+```{#lst:o2i-readiness-validation .haskell caption="O2I Evidenzbereitschaft"}
+!include`snippetStart="-- * Readiness validation", snippetEnd="plansByTrace ::"` spc/src/lib/O2I/Validation/Readiness.hs
+```
+
+@Lst:o2i-evidence-validation zeigt die fünfte Validierungsstufe für empirische Wirkungsevidenz.
 
 ```{#lst:o2i-evidence-validation .haskell caption="O2I Evidenzvalidierung"}
-!include`snippetStart="-- * Evidence validation", snippetEnd="claimsByTrace ::"` spc/src/lib/O2I/Validation/Evidence.hs
+!include`snippetStart="-- * Evidence validation", snippetEnd="followUpsByTrace ::"` spc/src/lib/O2I/Validation/Evidence.hs
 ```
 
 ### Grundregeln
@@ -786,17 +802,25 @@ Eine `Need`-Instanz ist im Metamodell wirkungsrelevant, wenn sie in einer `Situa
 
 Die Spezifikation konkretisiert dafür den zentralen O2I-USP: Eine `Strategy --qualifies--> Need`-Relation zählt nur dann als belastbar, wenn es eine passende Primitive-Begründung gibt, etwa `Key Result @ Strategy --translates-into--> Objective @ Need`.
 
+Die Abfrage `qualifyingStrategies` ermittelt diese Strategien direkt am semantisch gültigen Modell. Sie benötigt weder Intervention noch Messung und hält Bedarfsqualifikation damit von der späteren Operationalisierung und Wirkungsevidenz getrennt.
+
 ### Wirkungstrace
 
 Ein Wirkungstrace entsteht, wenn dieselbe `Strategy`-Instanz eine `Need`-Instanz qualifiziert, eine `Intervention`-Instanz richtet und eine `Measure`-Instanz rahmt; wenn diese Intervention den wirkungsrelevanten Bedarf adressiert, eine über Situationsanker verankerte `Situation` verändert, Zielbezüge für die Messung setzt und diese Messung denselben Situationsbezug beobachtet. Die Messrahmung ist nur belastbar, wenn ein Strategy-Driver den Beobachtungsbereich anzeigt und ein Strategy-Key-Result denselben Messbereich für den Erfolgsnachweis bestimmt.
 
-Ein vollständiger Wirkungstrace ist relational nachvollziehbar, aber noch keine empirische Wirkungsevidenz. Erst konsistente Baseline- und Folgebeobachtungen desselben KPI am selben Situationsanker erlauben die getrennte Bewertung von Effektkriterium und Zielkriterium. Jede aktuelle Bewertung ordnet einem Trace genau einen Evidenzanspruch zu.
+Ein vollständiger Wirkungstrace ist relational nachvollziehbar, aber weder evidenzbereit noch empirisch bewertet. Die Abfrage `readyTracesForIntervention` liefert ausschließlich Wirkungstraces einer Intervention, deren Evidenzpläne bereits ex ante validiert sind.
+
+### Evidenzbereitschaft
+
+Evidenzbereitschaft setzt einen vollständigen Wirkungstrace voraus. Für jeden Trace wird genau ein `EvidencePlan` validiert, der vor Beginn der Intervention feststeht und Baseline, Effektkriterium, Zielkriterium, Zieltermin sowie Quellenbezug an denselben KPI und Situationsanker bindet. Die Baseline muss vor Interventionsbeginn beobachtet worden sein; Einheiten und Quellen müssen eindeutig benannt sein.
+
+`EvidenceReadyModel` bezeichnet damit den validierten ex-ante Zustand des Wirkungsmodells. Er enthält noch keine Folgebeobachtung und keine Aussage darüber, ob Wirkung oder Zielerreichung eingetreten sind.
 
 ### Wirkungsevidenz
 
-Wirkungsevidenz bewertet einen bereits vollständigen Wirkungstrace. Ein `EvidencePlan` bindet Effekt- und Zielkriterium sowie den Zieltermin und wird vor Beginn der Intervention festgelegt. Eine Messbeobachtung trägt KPI, Situationsanker, Zeitpunkt, Wert, Einheit und Quelle; Einheit und Evidenzquelle müssen benannt sein. Baseline und Folgebeobachtung müssen denselben KPI, denselben Situationsanker und dieselbe Einheit verwenden; die Baseline liegt vor, die Folgebeobachtung nach dem Beginn der Intervention. Das Effektkriterium prüft die relevante Veränderung gegenüber der Baseline. Das Zielkriterium prüft unabhängig davon den beobachteten Zielstatus.
+Wirkungsevidenz bewertet ein evidenzbereites Wirkungsmodell anhand von Folgebeobachtungen nach Beginn der Intervention. Jede Folgebeobachtung muss zum Trace, KPI, Situationsanker und zur Einheit des Evidenzplans passen und einen Quellenbezug tragen. Für jeden Trace ist mindestens eine Folgebeobachtung erforderlich; mehrere zeitlich unterscheidbare Folgebeobachtungen bilden getrennte Bewertungen. Das Effektkriterium prüft die relevante Veränderung gegenüber der Baseline. Das Zielkriterium prüft unabhängig davon Zielstatus und Zieltermin.
 
-Die Evidenzebene besteht aus `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion` und `EvidenceClaim`. Diese Typen sind weder O2I-Kontexte noch O2I-Primitives. Sie bewerten die empirische Evidenz eines relational vollständigen Wirkungstraces.
+Die Evidenzebene besteht aus `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion` und `FollowUpObservation`. Diese Typen sind weder O2I-Kontexte noch O2I-Primitives. Sie planen und bewerten die empirische Evidenz eines relational vollständigen Wirkungstraces.
 
 ### Abgeleitete Makrorelationen
 
@@ -806,7 +830,7 @@ Makrorelationen dürfen abgeleitet sein. Eine abgeleitete Makrorelation fasst me
 
 Die Syntax beschreibt, wie die O2I-Semantik in einer Modellierungssprache dargestellt wird. O2I verwendet ArchiMate als visuelle Darstellungs- und Integrationssyntax, ohne die O2I-Semantik durch ArchiMate-Semantik zu ersetzen.
 
-Evidenztypen wie `Observation`, `EffectCriterion` und `TargetCriterion` sind weder O2I-Kontexte noch O2I-Primitives. Ihre konkrete Persistenz- oder Darstellungsform ist nicht Bestandteil des ArchiMate-Profils; sie werden durch die Validierungsspezifikation an einen Wirkungstrace gebunden.
+Evidenztypen wie `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion` und `FollowUpObservation` sind weder O2I-Kontexte noch O2I-Primitives. Ihre konkrete Persistenz- oder Darstellungsform ist nicht Bestandteil des ArchiMate-Profils; sie werden durch die Validierungsspezifikation an einen Wirkungstrace gebunden.
 
 ### ArchiMate-Profil
 
@@ -969,7 +993,7 @@ Im Layered Cake rahmt die Strategie die Messung über `Strategy --frames--> Meas
 
 Die Intervention setzt den Zielbezug für diese Messung: `70% of relevant decisions are captured as shared decision records @ Intervention --sets-target-for--> Shared decision traceability rate @ Measure`. Zugleich verändert die Intervention die Situation über `Establish shared decision evidence practice @ Intervention --changes--> Information Management @ Situation`. Der KPI misst damit nicht abstrakt Wirkung, sondern beobachtet den Situationsanker, an dem die Intervention eine Veränderung bewirken soll.
 
-Für die Evidenzbewertung wird eine Baseline von 40 % vor Beginn der Intervention und eine Folgebeobachtung von 75 % danach angenommen. Das Effektkriterium verlangt eine Steigerung um mindestens zehn Prozentpunkte; das Zielkriterium verlangt mindestens 70 %. Die Folgebeobachtung erfüllt beide Kriterien: Sie belegt eine relevante Verbesserung gegenüber der Baseline und einen beobachteten Zielstatus. Beide Aussagen bleiben getrennt prüfbar.
+Vor Beginn der Intervention legt ein Evidenzplan eine Baseline von 40 %, eine Steigerung um mindestens zehn Prozentpunkte als Effektkriterium, mindestens 70 % als Zielkriterium sowie den Zieltermin fest. Damit ist der Wirkungstrace evidenzbereit. Eine spätere Folgebeobachtung von 75 % erfüllt beide Kriterien: Sie belegt eine relevante Verbesserung gegenüber der Baseline und einen beobachteten Zielstatus. Beide Aussagen bleiben getrennt prüfbar.
 
 Wirkung wird im Layered Cake daher nicht als isoliertes Modellelement behauptet. Sie wird durch die nachvollziehbare Kette von wirkungsrelevantem Bedarf, Intervention, veränderter Situation, strategisch gerahmter Messung und konsistenter Evidenz begründet. Fit bleibt dabei eine Validierungsfrage: Die Relationen von Vision, Strategie, Need, Intervention, Measure und Situation müssen kohärent zusammenpassen, damit eine Messbeobachtung als Evidenz für orientierte Wirkung gelesen werden darf.
 

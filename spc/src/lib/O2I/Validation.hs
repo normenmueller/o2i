@@ -1,7 +1,8 @@
 -- | Curated facade for the staged O2I validation pipeline.
 --
 -- Validation progresses from structural elaboration through semantic
--- completeness and effect traceability to empirical evidence assessment.
+-- completeness, effect traceability, ex-ante readiness, and ex-post evidence
+-- assessment.
 module O2I.Validation
   ( Validation(..)
   , Check
@@ -15,6 +16,7 @@ module O2I.Validation
   , SemanticallyValidModel
   , strategyFormulations
   , strategyFormulationData
+  , qualifyingStrategies
   , EffectTrace
   , EffectTraceId
   , TraceableEffectModel
@@ -22,7 +24,10 @@ module O2I.Validation
   , effectTraces
   , lookupEffectTrace
   , traceIdentifier
+  , traceStrategy
+  , traceStrategyKeyResult
   , traceNeed
+  , traceIntervention
   , traceInterventionKeyResult
   , traceKPI
   , traceAnchor
@@ -33,23 +38,30 @@ module O2I.Validation
   , EffectCriterion(..)
   , TargetCriterion(..)
   , EvidencePlan(..)
-  , EvidenceClaim(..)
+  , EvidenceReadyModel
+  , evidencePlans
+  , readyEffectTraces
+  , readyTracesForIntervention
+  , FollowUpObservation(..)
   , CriterionResult(..)
   , TargetResult(..)
   , EffectAssessment(..)
   , EvidenceAssessedModel
+  , EvidenceReadinessError(..)
   , EvidenceError(..)
   , effectAssessments
   , isEffectiveNeed
   , validateStructure
   , validateModelSemantics
   , validateTraceability
+  , validateEvidenceReadinessAt
   , assessEffectEvidence
   ) where
 
 import Data.List.NonEmpty (NonEmpty)
 import Data.Validation (Validation(..))
 import O2I.Validation.Evidence
+import O2I.Validation.Readiness
 import O2I.Validation.Semantics
 import O2I.Validation.Structure
 import O2I.Validation.Trace

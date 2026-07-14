@@ -34,10 +34,10 @@ Die normative Haskell-Spezifikation liegt als Library unter [`spc/src/lib`](./sp
 Die Library überführt einen ungeprüften O2I-Graphen durch aufeinander aufbauende Validierungsstufen in ein evidenzbewertetes Wirkungsmodell:
 
 ```text
-RawGraph -> WellFormedGraph -> SemanticallyValidModel -> TraceableEffectModel -> EvidenceAssessedModel
+RawGraph -> WellFormedGraph -> SemanticallyValidModel -> TraceableEffectModel -> EvidenceReadyModel -> EvidenceAssessedModel
 ```
 
-`Graph` bezeichnet die Knoten-Kanten-Repräsentation; `WellFormedGraph` weist zusätzlich ihre lokale graphbezogene Zulässigkeit nach. Ab `SemanticallyValidModel` bezeichnet `Model` die fachlich angereicherte Einheit. Die Modellstufen ergänzen den wohlgeformten Graphen nacheinander um globale fachliche Invarianten, Wirkungstraces und Evidenzbewertungen.
+`Graph` bezeichnet die Knoten-Kanten-Repräsentation; `WellFormedGraph` weist zusätzlich ihre lokale graphbezogene Zulässigkeit nach. Ab `SemanticallyValidModel` bezeichnet `Model` die fachlich angereicherte Einheit. Die Modellstufen ergänzen den wohlgeformten Graphen nacheinander um globale fachliche Invarianten, Wirkungstraces, ex-ante Evidenzpläne und ex-post Evidenzbewertungen.
 
 ## Layout
 

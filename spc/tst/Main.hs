@@ -3,7 +3,7 @@
 
 module Main where
 
-import Data.List (nub)
+import Data.List (nub, sort)
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import Data.Time (UTCTime(..), fromGregorian, secondsToDiffTime)
@@ -19,7 +19,14 @@ tests :: TestTree
 tests =
   testGroup
     "O2I"
-    [structureTests, semanticTests, traceTests, evidenceTests, registryTests]
+    [ structureTests
+    , semanticTests
+    , qualificationTests
+    , traceTests
+    , readinessTests
+    , effectEvidenceTests
+    , registryTests
+    ]
 
 structureTests :: TestTree
 structureTests =
@@ -320,6 +327,37 @@ semanticTests =
               (validateModelSemantics graph [sampleStrategyFormulation])
     ]
 
+qualificationTests :: TestTree
+qualificationTests =
+  testGroup
+    "need qualification"
+    [ testCase "qualified Need returns its Strategy"
+        $ withSemanticallyValid sampleGraph [sampleStrategyFormulation]
+        $ \model ->
+            qualifyingStrategies model (ContextRef needId)
+              @?= [ContextRef strategyId]
+    , testCase "situated unqualified Need returns no Strategy"
+        $ withSemanticallyValid unqualifiedNeedGraph [sampleStrategyFormulation]
+        $ \model -> qualifyingStrategies model (ContextRef needId) @?= []
+    , testCase "qualifies without translates evidence does not qualify"
+        $ withSemanticallyValid
+            qualifiesWithoutTranslationGraph
+            [sampleStrategyFormulation]
+        $ \model -> qualifyingStrategies model (ContextRef needId) @?= []
+    , testCase "unlisted strategic Key Result does not qualify"
+        $ withSemanticallyValid
+            unlistedQualifiesGraph
+            [sampleStrategyFormulation]
+        $ \model -> qualifyingStrategies model (ContextRef needId) @?= []
+    , testCase "multiple Strategies can qualify the same Need"
+        $ withSemanticallyValid
+            multiplyQualifyingGraph
+            [sampleStrategyFormulation, secondStrategyFormulation]
+        $ \model ->
+            sort (qualifyingStrategies model (ContextRef needId))
+              @?= sort [ContextRef strategyId, ContextRef secondStrategyId]
+    ]
+
 traceTests :: TestTree
 traceTests =
   testGroup
@@ -332,6 +370,14 @@ traceTests =
                (validateTraceability model)
      , testCase "complete reference model is traceable"
          $ withTraceable sampleGraph (const (pure ()))
+     , testCase "effect traces expose typed strategic projections"
+         $ withTraceable sampleGraph
+         $ \model ->
+             let trace = NonEmpty.head (effectTraces model)
+              in do
+                   traceStrategy trace @?= ContextRef strategyId
+                   traceStrategyKeyResult trace @?= NodeId strategyKeyResultId
+                   traceIntervention trace @?= ContextRef interventionId
      , testCase "every Intervention must address a Need"
          $ withSemanticallyValid
              (withoutEdge (edge interventionId addressesNeed needId) sampleGraph)
@@ -604,50 +650,60 @@ traceOnlyEdges =
       strategyKeyResultId
   ]
 
-evidenceTests :: TestTree
-evidenceTests =
+readinessTests :: TestTree
+readinessTests =
   testGroup
-    "effect evidence"
-    [ testCase "complete evidence is assessed"
-        $ withAssessed successfulClaim
-        $ \assessment -> do
-            effectResult assessment @?= Satisfied
-            targetResult assessment @?= ObservedSatisfiedOnTime
-    , testCase "effect can be supported before target achievement"
-        $ withAssessed belowTargetClaim
-        $ \assessment -> do
-            effectResult assessment @?= Satisfied
-            targetResult assessment @?= NotSatisfiedAtFollowUp
-    , testCase "target achievement does not imply positive effect"
-        $ withAssessed targetWithoutEffectClaim
-        $ \assessment -> do
-            effectResult assessment @?= NotSatisfied
-            targetResult assessment @?= ObservedSatisfiedOnTime
-    , testCase "late target achievement is distinguished"
-        $ withAssessed lateTargetClaim
-        $ \assessment -> targetResult assessment @?= ObservedSatisfiedAfterDue
-    , testCase "zero effect criteria are rejected"
+    "evidence readiness"
+    [ testCase "complete ex-ante plans establish readiness"
+        $ withReady sampleGraph [sampleStrategyFormulation]
+        $ \ready -> do
+            NonEmpty.length (evidencePlans ready) @?= 1
+            NonEmpty.length (readyEffectTraces ready) @?= 1
+    , testCase "known Intervention has one evidence-ready trace"
+        $ withReady sampleGraph [sampleStrategyFormulation]
+        $ \ready ->
+            length
+              (readyTracesForIntervention ready (ContextRef interventionId))
+              @?= 1
+    , testCase "trace-free Intervention has no evidence-ready trace"
+        $ withReady sampleGraph [sampleStrategyFormulation]
+        $ \ready ->
+            readyTracesForIntervention ready (ContextRef missingId) @?= []
+    , testCase "Intervention may have multiple evidence-ready traces"
+        $ withReady twoPathGraph [sampleStrategyFormulation]
+        $ \ready ->
+            length
+              (readyTracesForIntervention ready (ContextRef interventionId))
+              @?= 2
+    , testCase "plan and baseline may be fixed at the check time"
         $ withTraceable sampleGraph
         $ \model ->
-            let identifier =
-                  traceIdentifier (NonEmpty.head (effectTraces model))
-             in assertEvidenceErrors
-                  [InvalidEffectCriterion identifier]
-                  (assessEffectEvidence
+            let trace = NonEmpty.head (effectTraces model)
+                plan =
+                  (planForTrace trace)
+                    { establishedAt = readinessDate
+                    , baseline =
+                        (baseline (planForTrace trace))
+                          {observedAt = readinessDate}
+                    }
+             in assertSuccess
+                  (validateEvidenceReadinessAt
+                     readinessDate
                      model
-                     (NonEmpty.singleton (zeroEffectClaim identifier)))
-    , testCase "duplicate claims for one trace are rejected"
+                     (NonEmpty.singleton plan))
+    , testCase "duplicate plans for one trace are rejected"
         $ withTraceable sampleGraph
         $ \model ->
-            let identifier =
-                  traceIdentifier (NonEmpty.head (effectTraces model))
-                evidenceClaim = successfulClaim identifier
-             in assertEvidenceErrors
-                  [DuplicateEvidenceClaim identifier 2]
-                  (assessEffectEvidence
+            let trace = NonEmpty.head (effectTraces model)
+                plan = planForTrace trace
+                identifier = traceIdentifier trace
+             in assertReadinessErrors
+                  [DuplicateEvidencePlan identifier 2]
+                  (validateEvidenceReadinessAt
+                     readinessDate
                      model
-                     (evidenceClaim NonEmpty.:| [evidenceClaim]))
-    , testCase "unknown effect traces are rejected exactly"
+                     (plan NonEmpty.:| [plan]))
+    , testCase "unknown planned traces are rejected exactly"
         $ withTraceable twoPathGraph
         $ \twoPath ->
             case filter
@@ -656,151 +712,277 @@ evidenceTests =
               unknownTrace:_ ->
                 withTraceable sampleGraph $ \singlePath ->
                   let knownTrace = NonEmpty.head (effectTraces singlePath)
-                      knownClaim = claimForTrace knownTrace
-                      unknownClaim = claimForTrace unknownTrace
-                   in assertEvidenceErrors
-                        [UnknownEffectTrace (traceIdentifier unknownTrace)]
-                        (assessEffectEvidence
+                      knownPlan = planForTrace knownTrace
+                      unknownPlan = planForTrace unknownTrace
+                   in assertReadinessErrors
+                        [ UnknownEvidencePlanTrace
+                            (traceIdentifier unknownTrace)
+                        ]
+                        (validateEvidenceReadinessAt
+                           readinessDate
                            singlePath
-                           (knownClaim NonEmpty.:| [unknownClaim]))
+                           (knownPlan NonEmpty.:| [unknownPlan]))
               [] -> assertFailure "two-path fixture lacks an unknown trace"
-    , testCase "intervention Key Result must match the trace"
-        $ withTraceable sampleGraph
-        $ \model ->
-            let identifier = traceId model
-             in assertEvidenceErrors
-                  [ InterventionKeyResultMismatch
-                      identifier
-                      interventionKeyResultId
-                      missingId
-                  ]
-                  (assessEffectEvidence
-                     model
-                     (NonEmpty.singleton (mismatchedKeyResultClaim identifier)))
-    , testCase "observed KPI must match the trace"
-        $ withTraceable sampleGraph
-        $ \model ->
-            let identifier = traceId model
-             in assertEvidenceErrors
-                  [ObservationKPIMismatch identifier measureKpiId missingId]
-                  (assessEffectEvidence
-                     model
-                     (NonEmpty.singleton (mismatchedKpiClaim identifier)))
-    , testCase "observed Situation anchor must match the trace"
-        $ withTraceable sampleGraph
-        $ \model ->
-            let identifier = traceId model
-             in assertEvidenceErrors
-                  [ ObservationAnchorMismatch
-                      identifier
-                      situationAnchorId
-                      missingId
-                  ]
-                  (assessEffectEvidence
-                     model
-                     (NonEmpty.singleton (mismatchedAnchorClaim identifier)))
-    , testCase "evidence criteria must precede intervention"
-        $ withTraceable sampleGraph
-        $ \model ->
-            let identifier = traceId model
-             in assertEvidenceErrors
-                  [InvalidEvidencePlanOrder identifier]
-                  (assessEffectEvidence
-                     model
-                     (NonEmpty.singleton (latePlanClaim identifier)))
-    , testCase "target due date must follow intervention"
-        $ withTraceable sampleGraph
-        $ \model ->
-            let identifier = traceId model
-             in assertEvidenceErrors
-                  [InvalidTargetDueDate identifier]
-                  (assessEffectEvidence
-                     model
-                     (NonEmpty.singleton (invalidDueClaim identifier)))
-    , testCase "invalid Within bounds are rejected exactly"
-        $ withTraceable sampleGraph
-        $ \model ->
-            let identifier = traceId model
-             in assertEvidenceErrors
-                  [InvalidTargetCriterion identifier]
-                  (assessEffectEvidence
-                     model
-                     (NonEmpty.singleton (invalidWithinClaim identifier)))
-    , testCase "observation units must match"
-        $ withTraceable sampleGraph
-        $ \model ->
-            let identifier = traceId model
-             in assertEvidenceErrors
-                  [ObservationUnitMismatch identifier percent count]
-                  (assessEffectEvidence
-                     model
-                     (NonEmpty.singleton (mismatchedUnitClaim identifier)))
-    , testCase "criterion units must match observation units"
-        $ withTraceable sampleGraph
-        $ \model ->
-            let identifier = traceId model
-             in assertEvidenceErrors
-                  [CriterionUnitMismatch identifier percent count]
-                  (assessEffectEvidence
-                     model
-                     (NonEmpty.singleton
-                        (mismatchedCriterionUnitClaim identifier)))
-    , testCase "observation time order is validated"
-        $ withTraceable sampleGraph
-        $ \model ->
-            let identifier = traceId model
-             in assertEvidenceErrors
-                  [InvalidObservationOrder identifier]
-                  (assessEffectEvidence
-                     model
-                     (NonEmpty.singleton (invalidTimeClaim identifier)))
-    , testCase "units must be named"
-        $ withTraceable sampleGraph
-        $ \model ->
-            let identifier = traceId model
-             in assertEvidenceErrors
-                  [EmptyUnit identifier]
-                  (assessEffectEvidence
-                     model
-                     (NonEmpty.singleton (emptyUnitClaim identifier)))
-    , testCase "evidence sources must be named"
-        $ withTraceable sampleGraph
-        $ \model ->
-            let identifier = traceId model
-             in assertEvidenceErrors
-                  [EmptyEvidenceSource identifier]
-                  (assessEffectEvidence
-                     model
-                     (NonEmpty.singleton (emptySourceClaim identifier)))
-    , testCase "every trace requires exactly one evidence claim"
+    , testCase "every trace requires one plan"
         $ withTraceable twoPathGraph
         $ \model ->
             case NonEmpty.toList (effectTraces model) of
-              [claimedTrace, omittedTrace] ->
-                assertEvidenceErrors
-                  [MissingEvidenceClaim (traceIdentifier omittedTrace)]
-                  (assessEffectEvidence
+              planned:omitted:_ ->
+                assertReadinessErrors
+                  [MissingEvidencePlan (traceIdentifier omitted)]
+                  (validateEvidenceReadinessAt
+                     readinessDate
                      model
-                     (NonEmpty.singleton (claimForTrace claimedTrace)))
+                     (NonEmpty.singleton (planForTrace planned)))
               traces ->
                 assertFailure
-                  ("expected exactly two traces, got " ++ show (length traces))
+                  ("expected two traces, got " ++ show (length traces))
+    , readinessFailureTest
+        "plan must be established by the check time"
+        readinessDate
+        (\plan -> plan {establishedAt = afterReadinessDate})
+        (\identifier -> [PlanEstablishedAfterCheck identifier])
+    , readinessFailureTest
+        "readiness must be checked before intervention"
+        interventionDate
+        id
+        (\identifier -> [ReadinessCheckedAtOrAfterIntervention identifier])
+    , readinessFailureTest
+        "baseline must be observed by the check time"
+        readinessDate
+        (mapBaseline (\item -> item {observedAt = afterReadinessDate}))
+        (\identifier -> [BaselineObservedAfterCheck identifier])
+    , readinessFailureTest
+        "baseline must precede intervention"
+        readinessDate
+        (mapBaseline (\item -> item {observedAt = interventionDate}))
+        (\identifier ->
+           [ BaselineObservedAfterCheck identifier
+           , BaselineObservedAtOrAfterIntervention identifier
+           ])
+    , readinessFailureTest
+        "target due date must follow intervention"
+        readinessDate
+        (\plan -> plan {targetDueAt = interventionDate})
+        (\identifier -> [InvalidTargetDueDate identifier])
+    , readinessFailureTest
+        "baseline KPI must match the trace"
+        readinessDate
+        (mapBaseline (\item -> item {observationKPI = missingId}))
+        (\identifier -> [BaselineKPIMismatch identifier measureKpiId missingId])
+    , readinessFailureTest
+        "baseline anchor must match the trace"
+        readinessDate
+        (mapBaseline (\item -> item {observationAnchor = missingId}))
+        (\identifier ->
+           [BaselineAnchorMismatch identifier situationAnchorId missingId])
+    , readinessFailureTest
+        "criterion units must match the baseline unit"
+        readinessDate
+        (\plan -> plan {effectCriterion = IncreaseByAtLeast (Quantity 10 count)})
+        (\identifier -> [CriterionUnitMismatch identifier percent count])
+    , readinessFailureTest
+        "effect criterion magnitude must be positive"
+        readinessDate
+        (\plan ->
+           plan {effectCriterion = IncreaseByAtLeast (Quantity 0 percent)})
+        (\identifier -> [InvalidEffectCriterion identifier])
+    , readinessFailureTest
+        "target criterion bounds must be valid"
+        readinessDate
+        (\plan ->
+           plan
+             { targetCriterion =
+                 Within (Quantity 80 percent) (Quantity 70 percent)
+             })
+        (\identifier -> [InvalidTargetCriterion identifier])
+    , readinessFailureTest
+        "target criterion bounds must share one unit"
+        readinessDate
+        (\plan ->
+           plan
+             { targetCriterion =
+                 Within (Quantity 70 percent) (Quantity 80 count)
+             })
+        (\identifier ->
+           [ CriterionUnitMismatch identifier percent count
+           , InvalidTargetCriterion identifier
+           ])
+    , readinessFailureTest
+        "all plan units must be named"
+        readinessDate
+        (replacePlanUnit (Unit " "))
+        (\identifier -> [EmptyUnit identifier])
+    , readinessFailureTest
+        "plan provenance must be nonblank"
+        readinessDate
+        (\plan -> plan {planSource = EvidenceSource " "})
+        (\identifier -> [EmptyPlanSource identifier])
+    , readinessFailureTest
+        "baseline provenance must be nonblank"
+        readinessDate
+        (mapBaseline (\item -> item {observationSource = EvidenceSource " "}))
+        (\identifier -> [EmptyBaselineSource identifier])
+    ]
+
+effectEvidenceTests :: TestTree
+effectEvidenceTests =
+  testGroup
+    "effect evidence"
+    [ testCase "complete evidence is assessed"
+        $ withAssessed id 75 followUpDate
+        $ \assessment -> do
+            effectResult assessment @?= Satisfied
+            targetResult assessment @?= ObservedSatisfiedOnTime
+    , testCase "effect can be supported before target achievement"
+        $ withAssessed id 60 followUpDate
+        $ \assessment -> do
+            effectResult assessment @?= Satisfied
+            targetResult assessment @?= NotSatisfiedAtFollowUp
+    , testCase "target achievement does not imply positive effect"
+        $ withAssessed
+            (\plan ->
+               plan
+                 { baseline = observation 72 baselineDate percent
+                 , effectCriterion = IncreaseByAtLeast (Quantity 10 percent)
+                 })
+            75
+            followUpDate
+        $ \assessment -> do
+            effectResult assessment @?= NotSatisfied
+            targetResult assessment @?= ObservedSatisfiedOnTime
+    , testCase "late target achievement is distinguished"
+        $ withAssessed
+            (\plan -> plan {targetDueAt = earlyTargetDate})
+            75
+            followUpDate
+        $ \assessment -> targetResult assessment @?= ObservedSatisfiedAfterDue
+    , testCase "AtMost targets are assessed"
+        $ withAssessed
+            (\plan ->
+               plan
+                 { baseline = observation 60 baselineDate percent
+                 , effectCriterion = DecreaseByAtLeast (Quantity 10 percent)
+                 , targetCriterion = AtMost (Quantity 50 percent)
+                 })
+            45
+            followUpDate
+        $ \assessment -> do
+            effectResult assessment @?= Satisfied
+            targetResult assessment @?= ObservedSatisfiedOnTime
+    , testCase "Within targets are assessed"
+        $ withAssessed
+            (\plan ->
+               plan
+                 { targetCriterion =
+                     Within (Quantity 70 percent) (Quantity 80 percent)
+                 })
+            75
+            followUpDate
+        $ \assessment -> targetResult assessment @?= ObservedSatisfiedOnTime
+    , testCase "multiple follow-ups per trace are assessed independently"
+        $ withReady sampleGraph [sampleStrategyFormulation]
+        $ \ready ->
+            let trace = NonEmpty.head (readyEffectTraces ready)
+                first = followUpForTrace trace 60 followUpDate percent
+                second = followUpForTrace trace 75 laterFollowUpDate percent
+             in case assessEffectEvidence ready (first NonEmpty.:| [second]) of
+                  Failure errors ->
+                    assertFailure ("evidence errors: " ++ show errors)
+                  Success assessed ->
+                    NonEmpty.length (effectAssessments assessed) @?= 2
+    , testCase "duplicate trace and timestamp pairs are rejected"
+        $ withReady sampleGraph [sampleStrategyFormulation]
+        $ \ready ->
+            let trace = NonEmpty.head (readyEffectTraces ready)
+                followUp = followUpForTrace trace 75 followUpDate percent
+                identifier = traceIdentifier trace
+             in assertEvidenceErrors
+                  [DuplicateFollowUpObservation identifier followUpDate 2]
+                  (assessEffectEvidence ready (followUp NonEmpty.:| [followUp]))
+    , testCase "every ready trace requires a follow-up"
+        $ withReady twoPathGraph [sampleStrategyFormulation]
+        $ \ready ->
+            case NonEmpty.toList (readyEffectTraces ready) of
+              observed:omitted:_ ->
+                assertEvidenceErrors
+                  [MissingFollowUpObservation (traceIdentifier omitted)]
+                  (assessEffectEvidence
+                     ready
+                     (NonEmpty.singleton
+                        (followUpForTrace observed 75 followUpDate percent)))
+              traces ->
+                assertFailure
+                  ("expected two traces, got " ++ show (length traces))
+    , testCase "unknown follow-up traces are rejected exactly"
+        $ withReady twoPathGraph [sampleStrategyFormulation]
+        $ \twoPath ->
+            case filter
+                   ((/= interventionKeyResultId) . traceInterventionKeyResult)
+                   (NonEmpty.toList (readyEffectTraces twoPath)) of
+              unknownTrace:_ ->
+                withReady sampleGraph [sampleStrategyFormulation] $ \single ->
+                  let knownTrace = NonEmpty.head (readyEffectTraces single)
+                      known =
+                        followUpForTrace knownTrace 75 followUpDate percent
+                      unknown =
+                        followUpForTrace unknownTrace 75 followUpDate percent
+                   in assertEvidenceErrors
+                        [UnknownFollowUpTrace (traceIdentifier unknownTrace)]
+                        (assessEffectEvidence
+                           single
+                           (known NonEmpty.:| [unknown]))
+              [] -> assertFailure "two-path fixture lacks an unknown trace"
+    , evidenceFailureTest
+        "follow-up KPI must match the trace"
+        (\item -> item {observationKPI = missingId})
+        (\identifier -> [FollowUpKPIMismatch identifier measureKpiId missingId])
+    , evidenceFailureTest
+        "follow-up anchor must match the trace"
+        (\item -> item {observationAnchor = missingId})
+        (\identifier ->
+           [FollowUpAnchorMismatch identifier situationAnchorId missingId])
+    , evidenceFailureTest
+        "follow-up unit must match the baseline"
+        (\item -> item {observedValue = Quantity 75 count})
+        (\identifier -> [FollowUpUnitMismatch identifier percent count])
+    , evidenceFailureTest
+        "follow-up must be observed after intervention"
+        (\item -> item {observedAt = interventionDate})
+        (\identifier -> [FollowUpObservedAtOrBeforeIntervention identifier])
+    , evidenceFailureTest
+        "follow-up unit must be named"
+        (\item -> item {observedValue = Quantity 75 (Unit " ")})
+        (\identifier ->
+           [ FollowUpUnitMismatch identifier percent (Unit " ")
+           , EmptyFollowUpUnit identifier
+           ])
+    , evidenceFailureTest
+        "follow-up provenance must be nonblank"
+        (\item -> item {observationSource = EvidenceSource " "})
+        (\identifier -> [EmptyFollowUpSource identifier])
     , testCase "positive effect makes the traced Need effective"
-        $ assertEffectiveNeed successfulClaim True
+        $ assertEffectiveNeed id 75 True
     , testCase "missing positive effect leaves the traced Need ineffective"
-        $ assertEffectiveNeed targetWithoutEffectClaim False
+        $ assertEffectiveNeed
+            (\plan -> plan {baseline = observation 72 baselineDate percent})
+            75
+            False
     , QC.testProperty "positive effect thresholds are accepted"
         $ QC.forAll (QC.chooseInteger (1, 100))
         $ \threshold ->
             evidenceSucceeds
-              (\identifier ->
-                 setEffectCriterion
-                   (IncreaseByAtLeast (Quantity (fromInteger threshold) percent))
-                   (claim identifier (fromInteger threshold + 40) targetDate))
+              (\plan ->
+                 plan
+                   { effectCriterion =
+                       IncreaseByAtLeast
+                         (Quantity (fromInteger threshold) percent)
+                   })
+              (fromInteger threshold + 40)
     , QC.testProperty "both effect directions are assessed"
         $ QC.forAll ((,) <$> QC.arbitrary <*> QC.chooseInteger (1, 100))
         $ \(increases, threshold) ->
-            evidenceSucceeds (directionalClaim increases threshold)
+            directionalEvidenceSucceeds increases threshold
     ]
 
 registryTests :: TestTree
@@ -904,6 +1086,15 @@ assertTraceabilityErrors expected result =
     Failure errors -> NonEmpty.toList errors @?= expected
     Success _ -> assertFailure "untraceable effect model was accepted"
 
+assertReadinessErrors ::
+     [EvidenceReadinessError]
+  -> Validation (NonEmpty.NonEmpty EvidenceReadinessError) EvidenceReadyModel
+  -> Assertion
+assertReadinessErrors expected result =
+  case result of
+    Failure errors -> NonEmpty.toList errors @?= expected
+    Success _ -> assertFailure "invalid evidence readiness was accepted"
+
 assertEvidenceErrors ::
      [EvidenceError]
   -> Validation (NonEmpty.NonEmpty EvidenceError) EvidenceAssessedModel
@@ -913,30 +1104,96 @@ assertEvidenceErrors expected result =
     Failure errors -> NonEmpty.toList errors @?= expected
     Success _ -> assertFailure "invalid evidence was accepted"
 
-assertEffectiveNeed :: (EffectTraceId -> EvidenceClaim) -> Bool -> Assertion
-assertEffectiveNeed makeClaim expected =
-  withTraceable sampleGraph $ \model ->
-    let trace = NonEmpty.head (effectTraces model)
-        evidenceClaim = makeClaim (traceIdentifier trace)
-     in case assessEffectEvidence model (NonEmpty.singleton evidenceClaim) of
+withReady ::
+     RawGraph
+  -> [RawStrategyFormulation]
+  -> (EvidenceReadyModel -> Assertion)
+  -> Assertion
+withReady raw formulations action =
+  withSemanticallyValid raw formulations $ \semantic ->
+    case validateTraceability semantic of
+      Failure errors -> assertFailure ("traceability errors: " ++ show errors)
+      Success traceable ->
+        case validateEvidenceReadinessAt
+               readinessDate
+               traceable
+               (fmap planForTrace (effectTraces traceable)) of
+          Failure errors -> assertFailure ("readiness errors: " ++ show errors)
+          Success ready -> action ready
+
+withReadyPlan ::
+     (EvidencePlan -> EvidencePlan)
+  -> (EvidenceReadyModel -> EffectTrace -> Assertion)
+  -> Assertion
+withReadyPlan transform action =
+  withTraceable sampleGraph $ \traceable ->
+    let trace = NonEmpty.head (effectTraces traceable)
+        plan = transform (planForTrace trace)
+     in case validateEvidenceReadinessAt
+               readinessDate
+               traceable
+               (NonEmpty.singleton plan) of
+          Failure errors -> assertFailure ("readiness errors: " ++ show errors)
+          Success ready -> action ready trace
+
+readinessFailureTest ::
+     TestName
+  -> UTCTime
+  -> (EvidencePlan -> EvidencePlan)
+  -> (EffectTraceId -> [EvidenceReadinessError])
+  -> TestTree
+readinessFailureTest name checkedAt transform expected =
+  testCase name
+    $ withTraceable sampleGraph
+    $ \traceable ->
+        let trace = NonEmpty.head (effectTraces traceable)
+            plan = transform (planForTrace trace)
+         in assertReadinessErrors
+              (expected (traceIdentifier trace))
+              (validateEvidenceReadinessAt
+                 checkedAt
+                 traceable
+                 (NonEmpty.singleton plan))
+
+evidenceFailureTest ::
+     TestName
+  -> (Observation -> Observation)
+  -> (EffectTraceId -> [EvidenceError])
+  -> TestTree
+evidenceFailureTest name transform expected =
+  testCase name
+    $ withReadyPlan id
+    $ \ready trace ->
+        let observation' = transform (observation 75 followUpDate percent)
+            followUp = FollowUpObservation (traceIdentifier trace) observation'
+         in assertEvidenceErrors
+              (expected (traceIdentifier trace))
+              (assessEffectEvidence ready (NonEmpty.singleton followUp))
+
+assertEffectiveNeed ::
+     (EvidencePlan -> EvidencePlan) -> Rational -> Bool -> Assertion
+assertEffectiveNeed transform followValue expected =
+  withReadyPlan transform $ \ready trace ->
+    let followUp = followUpForTrace trace followValue followUpDate percent
+     in case assessEffectEvidence ready (NonEmpty.singleton followUp) of
           Failure errors -> assertFailure ("evidence errors: " ++ show errors)
           Success assessed ->
             isEffectiveNeed assessed (traceNeed trace) @?= expected
 
 withAssessed ::
-     (EffectTraceId -> EvidenceClaim)
+     (EvidencePlan -> EvidencePlan)
+  -> Rational
+  -> UTCTime
   -> (EffectAssessment -> Assertion)
   -> Assertion
-withAssessed makeClaim action =
-  withTraceable sampleGraph $ \model ->
+withAssessed transform followValue followTimestamp action =
+  withReadyPlan transform $ \ready trace ->
     case assessEffectEvidence
-           model
-           (NonEmpty.singleton (makeClaim (traceId model))) of
+           ready
+           (NonEmpty.singleton
+              (followUpForTrace trace followValue followTimestamp percent)) of
       Failure errors -> assertFailure ("evidence errors: " ++ show errors)
       Success assessed -> action (NonEmpty.head (effectAssessments assessed))
-
-traceId :: TraceableEffectModel -> EffectTraceId
-traceId = traceIdentifier . NonEmpty.head . effectTraces
 
 traceabilityFails :: RawGraph -> Bool
 traceabilityFails raw =
@@ -956,19 +1213,52 @@ traceabilitySucceeds raw =
         Failure _ -> False
         Success _ -> True
 
-evidenceSucceeds :: (EffectTraceId -> EvidenceClaim) -> Bool
-evidenceSucceeds makeClaim =
+evidenceSucceeds :: (EvidencePlan -> EvidencePlan) -> Rational -> Bool
+evidenceSucceeds transform followValue =
   case validateSemanticRaw sampleGraph [sampleStrategyFormulation] of
     Failure _ -> False
     Success model ->
       case validateTraceability model of
         Failure _ -> False
         Success traceable ->
-          case assessEffectEvidence
-                 traceable
-                 (NonEmpty.singleton (makeClaim (traceId traceable))) of
-            Failure _ -> False
-            Success _ -> True
+          let trace = NonEmpty.head (effectTraces traceable)
+              plan = transform (planForTrace trace)
+           in case validateEvidenceReadinessAt
+                     readinessDate
+                     traceable
+                     (NonEmpty.singleton plan) of
+                Failure _ -> False
+                Success ready ->
+                  case assessEffectEvidence
+                         ready
+                         (NonEmpty.singleton
+                            (followUpForTrace
+                               trace
+                               followValue
+                               followUpDate
+                               percent)) of
+                    Failure _ -> False
+                    Success assessed ->
+                      effectResult (NonEmpty.head (effectAssessments assessed))
+                        == Satisfied
+
+directionalEvidenceSucceeds :: Bool -> Integer -> Bool
+directionalEvidenceSucceeds increases threshold =
+  if increases
+    then evidenceSucceeds
+           (\plan -> plan {effectCriterion = IncreaseByAtLeast quantity})
+           (40 + amount)
+    else evidenceSucceeds
+           (\plan ->
+              plan
+                { baseline = observation 100 baselineDate percent
+                , effectCriterion = DecreaseByAtLeast quantity
+                , targetCriterion = AtMost (Quantity 100 percent)
+                })
+           (100 - amount)
+  where
+    amount = fromInteger threshold
+    quantity = Quantity amount percent
 
 assertSuccess :: Validation errors result -> Assertion
 assertSuccess (Success _) = pure ()
@@ -992,6 +1282,32 @@ unqualifiedNeedGraph =
                          needObjectiveId
                      ])
           (rawEdges sampleGraph)
+    }
+
+qualifiesWithoutTranslationGraph :: RawGraph
+qualifiesWithoutTranslationGraph =
+  withoutEdge
+    (edge
+       strategyKeyResultId
+       translatesStrategyKeyResultToNeedObjective
+       needObjectiveId)
+    sampleGraph
+
+multiplyQualifyingGraph :: RawGraph
+multiplyQualifyingGraph =
+  sampleGraph
+    { rawNodes =
+        RawContextNode secondStrategyId Strategy
+          : secondStrategyNodes
+          ++ rawNodes sampleGraph
+    , rawEdges =
+        edge secondStrategyId qualifiesNeed needId
+          : edge
+              secondStrategyKeyResultId
+              translatesStrategyKeyResultToNeedObjective
+              needObjectiveId
+          : secondStrategyCoherenceEdges
+          ++ rawEdges sampleGraph
     }
 
 sampleStrategyFormulation :: RawStrategyFormulation
@@ -1530,157 +1846,57 @@ macroWithoutEvidenceGraph =
     , rawEdges = edge ethosId guidesMission missionId : rawEdges sampleGraph
     }
 
-successfulClaim :: EffectTraceId -> EvidenceClaim
-successfulClaim identifier = claim identifier 75 targetDate
-
-belowTargetClaim :: EffectTraceId -> EvidenceClaim
-belowTargetClaim identifier = claim identifier 60 targetDate
-
-targetWithoutEffectClaim :: EffectTraceId -> EvidenceClaim
-targetWithoutEffectClaim identifier =
-  setEffectCriterion
-    (IncreaseByAtLeast (Quantity 10 percent))
-    ((claim identifier 75 targetDate)
-       {baseline = observation 72 baselineDate percent})
-
-lateTargetClaim :: EffectTraceId -> EvidenceClaim
-lateTargetClaim identifier = claim identifier 75 earlyTargetDate
-
-mismatchedUnitClaim :: EffectTraceId -> EvidenceClaim
-mismatchedUnitClaim identifier =
-  (successfulClaim identifier) {followUp = observation 75 followUpDate count}
-
-mismatchedCriterionUnitClaim :: EffectTraceId -> EvidenceClaim
-mismatchedCriterionUnitClaim identifier =
-  setEffectCriterion
-    (IncreaseByAtLeast (Quantity 10 count))
-    (successfulClaim identifier)
-
-invalidTimeClaim :: EffectTraceId -> EvidenceClaim
-invalidTimeClaim identifier =
-  (successfulClaim identifier) {baseline = observation 40 followUpDate percent}
-
-mismatchedKeyResultClaim :: EffectTraceId -> EvidenceClaim
-mismatchedKeyResultClaim identifier =
-  (successfulClaim identifier) {evidenceInterventionKeyResult = missingId}
-
-mismatchedKpiClaim :: EffectTraceId -> EvidenceClaim
-mismatchedKpiClaim identifier =
-  (successfulClaim identifier)
-    { followUp =
-        (followUp (successfulClaim identifier)) {observationKPI = missingId}
+planForTrace :: EffectTrace -> EvidencePlan
+planForTrace trace =
+  EvidencePlan
+    { plannedTrace = traceIdentifier trace
+    , establishedAt = criteriaDate
+    , interventionStartedAt = interventionDate
+    , targetDueAt = targetDate
+    , planSource = EvidenceSource "approved measurement plan"
+    , baseline = alignObservation trace (observation 40 baselineDate percent)
+    , effectCriterion = IncreaseByAtLeast (Quantity 10 percent)
+    , targetCriterion = AtLeast (Quantity 70 percent)
     }
 
-mismatchedAnchorClaim :: EffectTraceId -> EvidenceClaim
-mismatchedAnchorClaim identifier =
-  (successfulClaim identifier)
-    { followUp =
-        (followUp (successfulClaim identifier)) {observationAnchor = missingId}
+followUpForTrace ::
+     EffectTrace -> Rational -> UTCTime -> Unit -> FollowUpObservation
+followUpForTrace trace value observationTime observationUnit =
+  FollowUpObservation
+    { followUpTrace = traceIdentifier trace
+    , followUpObservation =
+        alignObservation
+          trace
+          (observation value observationTime observationUnit)
     }
 
-zeroEffectClaim :: EffectTraceId -> EvidenceClaim
-zeroEffectClaim identifier =
-  setEffectCriterion
-    (IncreaseByAtLeast (Quantity 0 percent))
-    (successfulClaim identifier)
+alignObservation :: EffectTrace -> Observation -> Observation
+alignObservation trace item =
+  item {observationKPI = traceKPI trace, observationAnchor = traceAnchor trace}
 
-emptyUnitClaim :: EffectTraceId -> EvidenceClaim
-emptyUnitClaim identifier =
-  setTargetCriterion
-    (AtLeast (Quantity 70 unnamed))
-    (setEffectCriterion
-       (IncreaseByAtLeast (Quantity 10 unnamed))
-       ((successfulClaim identifier)
-          { baseline = observation 40 baselineDate unnamed
-          , followUp = observation 75 followUpDate unnamed
-          }))
-  where
-    unnamed = Unit " "
+mapBaseline :: (Observation -> Observation) -> EvidencePlan -> EvidencePlan
+mapBaseline transform plan = plan {baseline = transform (baseline plan)}
 
-emptySourceClaim :: EffectTraceId -> EvidenceClaim
-emptySourceClaim identifier =
-  (successfulClaim identifier)
-    { followUp =
-        (followUp (successfulClaim identifier))
-          {observationSource = EvidenceSource " "}
-    }
-
-latePlanClaim :: EffectTraceId -> EvidenceClaim
-latePlanClaim identifier =
-  let evidenceClaim = successfulClaim identifier
-   in evidenceClaim
-        { evidencePlan =
-            (evidencePlan evidenceClaim) {establishedAt = interventionDate}
-        }
-
-invalidDueClaim :: EffectTraceId -> EvidenceClaim
-invalidDueClaim identifier =
-  let evidenceClaim = successfulClaim identifier
-   in evidenceClaim
-        { evidencePlan =
-            (evidencePlan evidenceClaim) {targetDueAt = interventionDate}
-        }
-
-invalidWithinClaim :: EffectTraceId -> EvidenceClaim
-invalidWithinClaim identifier =
-  setTargetCriterion
-    (Within (Quantity 80 percent) (Quantity 70 percent))
-    (successfulClaim identifier)
-
-claimForTrace :: EffectTrace -> EvidenceClaim
-claimForTrace trace =
-  evidenceClaim
-    { evidenceInterventionKeyResult = traceInterventionKeyResult trace
-    , baseline = alignObservation (baseline evidenceClaim)
-    , followUp = alignObservation (followUp evidenceClaim)
+replacePlanUnit :: Unit -> EvidencePlan -> EvidencePlan
+replacePlanUnit replacement plan =
+  plan
+    { baseline =
+        (baseline plan)
+          {observedValue = (observedValue (baseline plan)) {unit = replacement}}
+    , effectCriterion = replaceEffectUnit (effectCriterion plan)
+    , targetCriterion = replaceTargetUnit (targetCriterion plan)
     }
   where
-    evidenceClaim = successfulClaim (traceIdentifier trace)
-    alignObservation observation' =
-      observation'
-        {observationKPI = traceKPI trace, observationAnchor = traceAnchor trace}
-
-directionalClaim :: Bool -> Integer -> EffectTraceId -> EvidenceClaim
-directionalClaim increases threshold identifier =
-  if increases
-    then setEffectCriterion
-           (IncreaseByAtLeast quantity)
-           (claim identifier (40 + amount) targetDate)
-    else setTargetCriterion
-           (AtMost (Quantity 40 percent))
-           (setEffectCriterion
-              (DecreaseByAtLeast quantity)
-              (claim identifier (40 - amount) targetDate))
-  where
-    amount = fromInteger threshold
-    quantity = Quantity amount percent
-
-claim :: EffectTraceId -> Rational -> UTCTime -> EvidenceClaim
-claim identifier followValue due =
-  EvidenceClaim
-    { evidenceTrace = identifier
-    , evidenceInterventionKeyResult = interventionKeyResultId
-    , evidencePlan =
-        EvidencePlan
-          { establishedAt = criteriaDate
-          , interventionStartedAt = interventionDate
-          , targetDueAt = due
-          , effectCriterion = IncreaseByAtLeast (Quantity 10 percent)
-          , targetCriterion = AtLeast (Quantity 70 percent)
-          }
-    , baseline = observation 40 baselineDate percent
-    , followUp = observation followValue followUpDate percent
-    }
-
-setEffectCriterion :: EffectCriterion -> EvidenceClaim -> EvidenceClaim
-setEffectCriterion criterion evidenceClaim =
-  evidenceClaim
-    {evidencePlan = (evidencePlan evidenceClaim) {effectCriterion = criterion}}
-
-setTargetCriterion :: TargetCriterion -> EvidenceClaim -> EvidenceClaim
-setTargetCriterion criterion evidenceClaim =
-  evidenceClaim
-    {evidencePlan = (evidencePlan evidenceClaim) {targetCriterion = criterion}}
+    replaceQuantityUnit quantity = quantity {unit = replacement}
+    replaceEffectUnit (IncreaseByAtLeast quantity) =
+      IncreaseByAtLeast (replaceQuantityUnit quantity)
+    replaceEffectUnit (DecreaseByAtLeast quantity) =
+      DecreaseByAtLeast (replaceQuantityUnit quantity)
+    replaceTargetUnit (AtLeast quantity) =
+      AtLeast (replaceQuantityUnit quantity)
+    replaceTargetUnit (AtMost quantity) = AtMost (replaceQuantityUnit quantity)
+    replaceTargetUnit (Within lower upper) =
+      Within (replaceQuantityUnit lower) (replaceQuantityUnit upper)
 
 observation :: Rational -> UTCTime -> Unit -> Observation
 observation value observedTimestamp valueUnit =
@@ -1692,12 +1908,16 @@ observation value observedTimestamp valueUnit =
     , observationSource = EvidenceSource "decision registry"
     }
 
-criteriaDate, baselineDate, interventionDate, earlyTargetDate, targetDate, followUpDate ::
-     UTCTime
+criteriaDate, baselineDate, readinessDate, afterReadinessDate :: UTCTime
 criteriaDate = timestamp 2025 12 1
 
 baselineDate = timestamp 2026 1 1
 
+readinessDate = timestamp 2026 1 15
+
+afterReadinessDate = timestamp 2026 1 20
+
+interventionDate, earlyTargetDate, targetDate, followUpDate :: UTCTime
 interventionDate = timestamp 2026 2 1
 
 earlyTargetDate = timestamp 2026 2 15
@@ -1705,6 +1925,9 @@ earlyTargetDate = timestamp 2026 2 15
 targetDate = timestamp 2026 6 30
 
 followUpDate = timestamp 2026 6 1
+
+laterFollowUpDate :: UTCTime
+laterFollowUpDate = timestamp 2026 6 15
 
 timestamp :: Integer -> Int -> Int -> UTCTime
 timestamp year month day =

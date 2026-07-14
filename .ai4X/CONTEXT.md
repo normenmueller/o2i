@@ -24,6 +24,19 @@ test and apply O2I but never define its generic semantics.
 - O2I therefore defines a checkable effect graph rather than only a terminology
   catalog.
 
+# Qualification And Application Boundary
+
+- Need qualification is an independent, pre-intervention capability. It asks
+  which Strategy qualifies a situated Need and requires neither Intervention
+  nor Measure.
+- Evidence readiness is a generic O2I capability for validating an effect
+  trace before an Intervention starts.
+- O2I does not define Strategic Fit Evaluation, strategic topic complexes,
+  instance-specific scores or statuses, or Domain-bound fit semantics.
+- External evaluations may query O2I effect traces to determine which
+  Strategies connect to an Intervention. Domains are optional instance-level
+  filters, never a prerequisite of generic O2I semantics.
+
 # Semantic Baseline
 
 - O2I separates Terminology, Semantics, and Syntax.
@@ -34,16 +47,16 @@ test and apply O2I but never define its generic semantics.
 - `Domain` is the generic structuring type; names such as CSF or KPI domain are
   domain instances or readings, not metamodel types.
 - `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion`, and
-  `EvidenceClaim` form the evidence layer; they are neither Contexts nor
+  `FollowUpObservation` form the evidence layer; they are neither Contexts nor
   Primitives.
 - Effect and target attainment are assessed independently.
 - O2I validates evidence consistency and plausible attribution, not
   methodological causality.
 - The validation pipeline is
-  `RawGraph -> WellFormedGraph -> SemanticallyValidModel -> TraceableEffectModel -> EvidenceAssessedModel`.
+  `RawGraph -> WellFormedGraph -> SemanticallyValidModel -> TraceableEffectModel -> EvidenceReadyModel -> EvidenceAssessedModel`.
 - `RawGraph` represents unchecked node-edge data; `WellFormedGraph` establishes
   local graph admissibility; model stages add global fachliche invariants,
-  effect traces, and evidence assessments.
+  effect traces, ex-ante evidence readiness, and ex-post evidence assessments.
 - `O2I Context` and `O2I Primitives` are normative semantic visualizations of
   the O2I context and primitive models.
 - Their semantics is defined by O2I and does not derive from ArchiMate.
