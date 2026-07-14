@@ -8,8 +8,8 @@ module O2I.Graph
   , SomeNode
   , SomeEdge
   , WellFormedGraph
-  , modelNodes
-  , modelEdges
+  , graphNodes
+  , graphEdges
   , someNodeId
   , someNodeKind
   , someNodeOwner
@@ -32,10 +32,10 @@ import O2I.Graph.Typed
   , WellFormedGraph
   , anchorNodesIn
   , contextNodesOf
+  , graphEdges
+  , graphNodes
   , hasEdge
   , lookupNode
-  , modelEdges
-  , modelNodes
   , outgoingContextTargets
   , primitiveNodesIn
   , someEdgeFrom

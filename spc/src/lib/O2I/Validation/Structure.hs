@@ -58,8 +58,8 @@ validateStructure raw =
   case NonEmpty.nonEmpty errors of
     Just failures -> Failure failures
     Nothing ->
-      case buildModel raw of
-        Just model -> Success model
+      case buildGraph raw of
+        Just graph -> Success graph
         Nothing -> Failure (NonEmpty.singleton ElaborationInvariantViolation)
   where
     errors = nodeErrors raw ++ edgeErrors raw
@@ -134,8 +134,8 @@ matchesKinds fromKind toKind (SomeRelation relation) =
    in nodeKindValue (relationFrom spec) == fromKind
         && nodeKindValue (relationTo spec) == toKind
 
-buildModel :: RawGraph -> Maybe WellFormedGraph
-buildModel raw = do
+buildGraph :: RawGraph -> Maybe WellFormedGraph
+buildGraph raw = do
   contexts <- traverse buildContext contextNodes
   let contextMap = Map.fromList [(someNodeRawId node, node) | node <- contexts]
   children <- traverse (buildChild contextMap) childNodes

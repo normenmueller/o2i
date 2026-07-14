@@ -15,7 +15,7 @@ module O2I.Validation.Semantics
   , ModelInvariantError(..)
   , SemanticallyValidModel
   , validateModelSemantics
-  , semanticModel
+  , modelGraph
   , strategyFormulations
   , strategyFormulationData
   ) where
@@ -145,13 +145,13 @@ validateModelSemantics ::
      WellFormedGraph
   -> [RawStrategyFormulation]
   -> Validation (NonEmpty ModelInvariantError) SemanticallyValidModel
-validateModelSemantics model rawFormulations =
+validateModelSemantics graph rawFormulations =
   case NonEmpty.nonEmpty errors of
     Just failures -> Failure failures
     Nothing ->
       Success
         SemanticallyValidModel
-          { semanticallyValidGraph = model
+          { semanticallyValidGraph = graph
           , semanticallyValidStrategies =
               Map.fromList
                 [ ( rawFormulationStrategy formulation
@@ -161,14 +161,14 @@ validateModelSemantics model rawFormulations =
           }
   where
     errors =
-      needErrors model
-        ++ formulationCoverageErrors model rawFormulations
-        ++ concatMap (formulationErrors model) rawFormulations
+      needErrors graph
+        ++ formulationCoverageErrors graph rawFormulations
+        ++ concatMap (formulationErrors graph) rawFormulations
 
 -- * Validated model access
 -- | Access the structurally well-formed graph underlying semantic validation.
-semanticModel :: SemanticallyValidModel -> WellFormedGraph
-semanticModel = semanticallyValidGraph
+modelGraph :: SemanticallyValidModel -> WellFormedGraph
+modelGraph = semanticallyValidGraph
 
 -- | Access the complete Strategy formulations indexed by Strategy context.
 strategyFormulations ::
@@ -180,7 +180,7 @@ strategyFormulationData :: StrategyFormulation -> RawStrategyFormulation
 strategyFormulationData = validatedStrategyFormulation
 
 needErrors :: WellFormedGraph -> [ModelInvariantError]
-needErrors model = concatMap errorsForNeed (contextNodesOf model Need)
+needErrors graph = concatMap errorsForNeed (contextNodesOf graph Need)
   where
     errorsForNeed need =
       missingDriverErrors
@@ -189,10 +189,10 @@ needErrors model = concatMap errorsForNeed (contextNodesOf model Need)
         ++ concatMap driverErrors drivers
         ++ concatMap objectiveErrors objectives
       where
-        drivers = primitiveNodesIn model need Driver
-        objectives = primitiveNodesIn model need Objective
-        situations = surfacingSituations model need
-        situatedAnchors = concatMap (constitutingAnchors model) situations
+        drivers = primitiveNodesIn graph need Driver
+        objectives = primitiveNodesIn graph need Objective
+        situations = surfacingSituations graph need
+        situatedAnchors = concatMap (constitutingAnchors graph) situations
         missingDriverErrors = [NeedWithoutDriver need | null drivers]
         missingObjectiveErrors = [NeedWithoutObjective need | null objectives]
         missingSituationErrors =
@@ -207,7 +207,7 @@ needErrors model = concatMap errorsForNeed (contextNodesOf model Need)
               (any
                  (\driver ->
                     hasRelation
-                      model
+                      graph
                       driver
                       groundsNeedDriverToObjective
                       objective)
@@ -215,30 +215,30 @@ needErrors model = concatMap errorsForNeed (contextNodesOf model Need)
           ]
         anchorsDriver anchor driver =
           any
-            (\relation -> hasEdge model anchor relation driver)
+            (\relation -> hasEdge graph anchor relation driver)
             anchorNeedDriverRelationNames
 
 surfacingSituations :: WellFormedGraph -> RawNodeId -> [RawNodeId]
-surfacingSituations model need =
+surfacingSituations graph need =
   [ situation
-  | situation <- contextNodesOf model Situation
-  , hasRelation model situation surfacesNeed need
+  | situation <- contextNodesOf graph Situation
+  , hasRelation graph situation surfacesNeed need
   ]
 
 constitutingAnchors :: WellFormedGraph -> RawNodeId -> [RawNodeId]
-constitutingAnchors model situation =
+constitutingAnchors graph situation =
   [ anchor
-  | anchor <- anchorNodesIn model situation
+  | anchor <- anchorNodesIn graph situation
   , any
-      (\relation -> hasEdge model situation relation anchor)
+      (\relation -> hasEdge graph situation relation anchor)
       constitutedByRelationNames
   ]
 
 formulationCoverageErrors ::
      WellFormedGraph -> [RawStrategyFormulation] -> [ModelInvariantError]
-formulationCoverageErrors model formulations = missingErrors ++ duplicateErrors
+formulationCoverageErrors graph formulations = missingErrors ++ duplicateErrors
   where
-    strategies = contextNodesOf model Strategy
+    strategies = contextNodesOf graph Strategy
     formulationIds = map rawFormulationStrategy formulations
     missingErrors =
       [ StrategyWithoutFormulation strategy
@@ -252,21 +252,21 @@ formulationCoverageErrors model formulations = missingErrors ++ duplicateErrors
 
 formulationErrors ::
      WellFormedGraph -> RawStrategyFormulation -> [ModelInvariantError]
-formulationErrors model formulation =
+formulationErrors graph formulation =
   contextErrors
     ++ textErrors formulation
     ++ duplicateReferenceErrors formulation
     ++ if null contextErrors
-         then primitiveErrors ++ coherenceErrors model formulation
+         then primitiveErrors ++ coherenceErrors graph formulation
          else []
   where
-    contextErrors = strategyReferenceErrors model formulation
-    primitiveErrors = primitiveReferenceErrors model formulation
+    contextErrors = strategyReferenceErrors graph formulation
+    primitiveErrors = primitiveReferenceErrors graph formulation
 
 strategyReferenceErrors ::
      WellFormedGraph -> RawStrategyFormulation -> [ModelInvariantError]
-strategyReferenceErrors model formulation =
-  case lookupNode model strategy of
+strategyReferenceErrors graph formulation =
+  case lookupNode graph strategy of
     Nothing -> [UnknownFormulationStrategy strategy]
     Just (SomeNode (ContextNode _ context))
       | contextValue context == Strategy -> []
@@ -325,7 +325,7 @@ duplicateReferenceErrors formulation = concatMap errorsForRole roleReferences
 
 primitiveReferenceErrors ::
      WellFormedGraph -> RawStrategyFormulation -> [ModelInvariantError]
-primitiveReferenceErrors model formulation =
+primitiveReferenceErrors graph formulation =
   concatMap validateReference references
   where
     strategy = rawFormulationStrategy formulation
@@ -345,12 +345,12 @@ primitiveReferenceErrors model formulation =
                 (NonEmpty.toList (rawFormulationKeyResults formulation)))
     validateReference (role, primitive, reference) =
       [ InvalidStrategyPrimitiveReference strategy role reference primitive
-      | not (validPrimitiveReference model strategy primitive reference)
+      | not (validPrimitiveReference graph strategy primitive reference)
       ]
 
 coherenceErrors ::
      WellFormedGraph -> RawStrategyFormulation -> [ModelInvariantError]
-coherenceErrors model formulation =
+coherenceErrors graph formulation =
   diagnosisErrors ++ policyErrors ++ actionErrors ++ keyResultErrors
   where
     strategy = rawFormulationStrategy formulation
@@ -358,7 +358,7 @@ coherenceErrors model formulation =
     intent = rawFormulationIntent formulation
     policy = rawFormulationGuidingPolicy formulation
     valid primitive reference =
-      validPrimitiveReference model strategy primitive reference
+      validPrimitiveReference graph strategy primitive reference
     validDiagnosis = valid Driver diagnosis
     validIntent = valid Objective intent
     validPolicy = valid Principle policy
@@ -374,7 +374,7 @@ coherenceErrors model formulation =
          RawNodeId -> Relation from to -> RawNodeId -> [ModelInvariantError]
     missing from relation to =
       [ MissingStrategyCoherence strategy from (relationNameFor relation) to
-      | not (hasRelation model from relation to)
+      | not (hasRelation graph from relation to)
       ]
     diagnosisErrors =
       [ error'
@@ -393,7 +393,7 @@ coherenceErrors model formulation =
       , not (null keyResults)
       , not
           (any
-             (hasRelation model action contributesStrategyActionToKeyResult)
+             (hasRelation graph action contributesStrategyActionToKeyResult)
              keyResults)
       ]
     keyResultErrors =
@@ -406,12 +406,12 @@ coherenceErrors model formulation =
 
 validPrimitiveReference ::
      WellFormedGraph -> RawNodeId -> Primitive -> RawNodeId -> Bool
-validPrimitiveReference model strategy primitive reference =
-  reference `elem` primitiveNodesIn model strategy primitive
+validPrimitiveReference graph strategy primitive reference =
+  reference `elem` primitiveNodesIn graph strategy primitive
 
 hasRelation ::
      WellFormedGraph -> RawNodeId -> Relation from to -> RawNodeId -> Bool
-hasRelation model from relation = hasEdge model from (relationNameFor relation)
+hasRelation graph from relation = hasEdge graph from (relationNameFor relation)
 
 constitutedByRelationNames :: [RelationName]
 constitutedByRelationNames =

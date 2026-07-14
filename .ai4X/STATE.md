@@ -5,10 +5,11 @@ instruction override this snapshot.
 
 # Snapshot
 
-- Observed at: 2026-07-13 CEST.
+- Observed at: 2026-07-14 CEST.
 - Mode: `READY`.
 - Branch/upstream: `trunk` / `origin/trunk`.
-- Semantic baseline: `80ac18c formalize complete o2i validation`.
+- Semantic baseline: current revision with an explicit graph/model validation
+  boundary.
 - Agent memory: active in the current repository revision.
 
 # Approved Baseline
@@ -29,17 +30,17 @@ instruction override this snapshot.
 
 # Latest Quality Gate
 
-- Date: 2026-07-12.
-- Reviewed commit: `80ac18c`.
-- Scope: terminology, metamodel, Haskell library, tests, ArchiMate model,
-  snapshots, and PDF rendering.
-- Role separation: external co-author during design and implementation; separate
+- Date: 2026-07-14.
+- Reviewed state: pre-commit scope based on `88be448`.
+- Scope: article introduction, README flow, graph/model validation boundary,
+  Haskell API naming, tests, agent memory, and PDF rendering.
+- Role separation: external Haskell co-author for target design; separate
   external read-only final reviewer.
 - Findings: Blocker 0, High 0, Medium 0, Low 0.
 - Scores: Fachlichkeit 10.0; Metamodell 10.0; Typtheorie 10.0; Haskell 10.0;
-  tests 10.0; formal value 10.0.
+  tests 10.0; formal value 10.0; publication quality 10.0.
 - Checks: Cabal check, `-Werror` build, 102 tests, HIndent 80, Haddock 100%,
-  Pandoc, `md2pdf`, all seven ArchiMate snapshots, and `git diff --check`.
+  Pandoc, `md2pdf`, and `git diff --check`.
 
 # Next Work
 

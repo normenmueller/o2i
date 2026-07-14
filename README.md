@@ -11,14 +11,6 @@ Empfohlene Lesereihenfolge: [`.ai4X/BEHAVIOR.md`](./.ai4X/BEHAVIOR.md) → [`.ai
 
 O2I ist ein generisches Framework für Wirkungsarchitekturen: Es beschreibt, wie Orientierung, Formierung, Situierung, Operationalisierung und Wirkung fachlich begründet, modelliert und dadurch nachvollzogen werden können. Das O2I-Metamodell bildet den formalen Kern des Frameworks.
 
-Der aktive Artikel ist [`o2i.md`](./o2i.md). Das ArchiMate-Modell liegt unter [`mdl/o2i.archimate`](./mdl/o2i.archimate). Die normative Haskell-Spezifikation liegt als Library unter [`spc/src/lib`](./spc/src/lib/).
-
-Die öffentliche Haskell-API gliedert sich in `O2I.Language` für den semantischen Formvorrat, `O2I.Graph` für konkrete Graphen und `O2I.Validation` für gestufte Prüfungen. `O2I` bildet die kuratierte Gesamtfassade.
-
-```text
-RawGraph -> WellFormedGraph -> SemanticallyValidModel -> TraceableEffectModel -> EvidenceAssessedModel
-```
-
 ## Purpose
 
 <!-- O2I PURPOSE START -->
@@ -35,6 +27,18 @@ O2I dient dazu, *orientierte Wirkung* durch relationale Modellierung nachvollzie
 - Wirkung wird nicht behauptet, sondern über Intervention, Messung und Graph-Nachvollziehbarkeit begründet.
 <!-- O2I USP END -->
 
+## Specification
+
+Die normative Haskell-Spezifikation liegt als Library unter [`spc/src/lib`](./spc/src/lib/). Ihre öffentliche API gliedert sich in `O2I.Language` für den semantischen Formvorrat, `O2I.Graph` für konkrete Graphen und `O2I.Validation` für gestufte Prüfungen. `O2I` bildet die kuratierte Gesamtfassade.
+
+Die Library überführt einen ungeprüften O2I-Graphen durch aufeinander aufbauende Validierungsstufen in ein evidenzbewertetes Wirkungsmodell:
+
+```text
+RawGraph -> WellFormedGraph -> SemanticallyValidModel -> TraceableEffectModel -> EvidenceAssessedModel
+```
+
+`Graph` bezeichnet die Knoten-Kanten-Repräsentation; `WellFormedGraph` weist zusätzlich ihre lokale graphbezogene Zulässigkeit nach. Ab `SemanticallyValidModel` bezeichnet `Model` die fachlich angereicherte Einheit. Die Modellstufen ergänzen den wohlgeformten Graphen nacheinander um globale fachliche Invarianten, Wirkungstraces und Evidenzbewertungen.
+
 ## Layout
 
 ```text
@@ -47,7 +51,7 @@ o2i/
 |- o2i.md
 ```
 
-- `o2i.md`: aktiver Artikel und fachlicher Referenztext
+- [`o2i.md`](./o2i.md): aktiver Artikel und fachlicher Referenztext
 - `mdl/`: ArchiMate-Modell
 - `img/`: Abbildungen für Artikel und Modellkommunikation
 - `spc/src/lib/`: normative Haskell-Library, deren Codeauszüge im Artikel eingebunden werden

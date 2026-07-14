@@ -25,14 +25,14 @@ structureTests :: TestTree
 structureTests =
   testGroup
     "structural elaboration"
-    [ testCase "empty model is structurally well-formed"
-        $ assertSuccess (validateStructure emptyModel)
-    , testCase "complete reference model is structurally well-formed"
-        $ assertSuccess (validateStructure sampleModel)
+    [ testCase "empty graph is structurally well-formed"
+        $ assertSuccess (validateStructure emptyGraph)
+    , testCase "complete reference graph is structurally well-formed"
+        $ assertSuccess (validateStructure sampleGraph)
     , testCase "typed edges expose safe total observations"
-        $ withWellFormed sampleModel
-        $ \model ->
-            case modelEdges model of
+        $ withWellFormed sampleGraph
+        $ \graph ->
+            case graphEdges graph of
               candidate:_ -> do
                 someEdgeFrom candidate @?= visionId
                 someEdgeRelation candidate @?= relationNameFor orientsStrategy
@@ -47,13 +47,13 @@ structureTests =
                 , UnknownEdgeEndpoint invalidEdge missingId
                 , UnknownRelation (RelationName "unknown")
                 ]
-                (validateStructure multiplyInvalidModel)
+                (validateStructure multiplyInvalidGraph)
     , testCase "duplicate edges are rejected"
         $ let duplicate = edge visionId orientsStrategy strategyId
            in assertStructuralErrors
                 [DuplicateEdge duplicate]
                 (validateStructure
-                   sampleModel {rawEdges = duplicate : rawEdges sampleModel})
+                   sampleGraph {rawEdges = duplicate : rawEdges sampleGraph})
     , testCase "wrong relation domains are rejected"
         $ let invalidEdge = edge needId qualifiesNeed strategyId
            in assertStructuralErrors
@@ -62,7 +62,7 @@ structureTests =
                     (ContextNodeKind Need)
                     (ContextNodeKind Strategy)
                 ]
-                (validateStructure invalidRelationDomainModel)
+                (validateStructure invalidRelationDomainGraph)
     , testCase "unknown primitive owners are rejected exactly"
         $ assertStructuralErrors
             [UnknownOwner needObjectiveId missingId]
@@ -107,9 +107,9 @@ structureTests =
                 , UnknownEdgeEndpoint invalidEdge to
                 , UnknownRelation relation
                 ]
-                (validateStructure independentlyInvalidEdgeModel)
+                (validateStructure independentlyInvalidEdgeGraph)
     , QC.testProperty "unknown endpoints accumulate"
-        $ QC.forAll unknownEndpointModel
+        $ QC.forAll unknownEndpointGraph
         $ \raw ->
             case validateStructure raw of
               Failure errors ->
@@ -129,38 +129,38 @@ semanticTests =
   testGroup
     "model semantics"
     [ testCase "complete reference model is semantically valid"
-        $ withWellFormed sampleModel
-        $ \model ->
+        $ withWellFormed sampleGraph
+        $ \graph ->
             assertSuccess
-              (validateModelSemantics model [sampleStrategyFormulation])
+              (validateModelSemantics graph [sampleStrategyFormulation])
     , testCase "model without Strategy requires no formulation"
-        $ withWellFormed emptyModel
-        $ \model -> assertSuccess (validateModelSemantics model [])
+        $ withWellFormed emptyGraph
+        $ \graph -> assertSuccess (validateModelSemantics graph [])
     , testCase "every Strategy requires exactly one formulation"
         $ assertSemanticErrorsWith
-            sampleModel
+            sampleGraph
             []
             [StrategyWithoutFormulation strategyId]
     , testCase "duplicate Strategy formulations are rejected exactly"
         $ assertSemanticErrorsWith
-            sampleModel
+            sampleGraph
             [sampleStrategyFormulation, sampleStrategyFormulation]
             [DuplicateStrategyFormulation strategyId]
     , testCase "unknown formulation Strategy is rejected exactly"
         $ assertSemanticErrorsWith
-            emptyModel
+            emptyGraph
             [sampleStrategyFormulation {rawFormulationStrategy = missingId}]
             [UnknownFormulationStrategy missingId]
     , testCase "non-Strategy formulation owner is rejected exactly"
         $ assertSemanticErrorsWith
-            sampleModel
+            sampleGraph
             [ sampleStrategyFormulation
             , sampleStrategyFormulation {rawFormulationStrategy = needId}
             ]
             [FormulationForNonStrategy needId (ContextNodeKind Need)]
     , testCase "all Strategy text fields require nonblank content"
         $ assertSemanticErrorsWith
-            sampleModel
+            sampleGraph
             [blankStrategyFormulation]
             [ EmptyStrategyText strategyId ScopeField
             , EmptyStrategyText strategyId PeriodField
@@ -176,7 +176,7 @@ semanticTests =
             ]
     , testCase "independent role errors accumulate without coherence cascades"
         $ assertSemanticErrorsWith
-            sampleModel
+            sampleGraph
             [invalidRoleStrategyFormulation]
             [ InvalidStrategyPrimitiveReference
                 strategyId
@@ -206,7 +206,7 @@ semanticTests =
             ]
     , testCase "duplicate Action and Key Result references accumulate exactly"
         $ assertSemanticErrorsWith
-            sampleModel
+            sampleGraph
             [duplicateReferenceStrategyFormulation]
             [ DuplicateStrategyPrimitiveReference
                 strategyId
@@ -224,7 +224,7 @@ semanticTests =
                   strategyDriverId
                   groundsStrategyDriverToObjective
                   strategyObjectiveId)
-               sampleModel)
+               sampleGraph)
             [ MissingStrategyCoherence
                 strategyId
                 strategyDriverId
@@ -238,7 +238,7 @@ semanticTests =
                   strategyPrincipleId
                   guidesStrategyPrincipleToAction
                   strategyActionId)
-               sampleModel)
+               sampleGraph)
             [ MissingStrategyCoherence
                 strategyId
                 strategyPrincipleId
@@ -252,7 +252,7 @@ semanticTests =
                   strategyActionId
                   contributesStrategyActionToKeyResult
                   strategyKeyResultId)
-               sampleModel)
+               sampleGraph)
             [StrategyActionWithoutKeyResult strategyId strategyActionId]
     , testCase "every strategic Key Result must substantiate intention"
         $ assertSemanticErrors
@@ -261,7 +261,7 @@ semanticTests =
                   strategyKeyResultId
                   substantiatesStrategyKeyResultObjective
                   strategyObjectiveId)
-               sampleModel)
+               sampleGraph)
             [ MissingStrategyCoherence
                 strategyId
                 strategyKeyResultId
@@ -270,54 +270,54 @@ semanticTests =
             ]
     , testCase "need requires a driver"
         $ assertSemanticErrors
-            (removeNode needDriverId sampleModel)
+            (removeNode needDriverId sampleGraph)
             [ NeedWithoutDriver needId
             , UngroundedNeedObjective needId needObjectiveId
             ]
     , testCase "need requires an objective"
         $ assertSemanticErrors
-            (removeNode needObjectiveId sampleModel)
+            (removeNode needObjectiveId sampleGraph)
             [NeedWithoutObjective needId]
     , testCase "need requires a surfacing situation"
         $ assertSemanticErrors
-            sampleModel
+            sampleGraph
               { rawEdges =
                   filter
                     (/= edge situationId surfacesNeed needId)
-                    (rawEdges sampleModel)
+                    (rawEdges sampleGraph)
               }
             [ NeedWithoutSurfacingSituation needId
             , UnanchoredNeedDriver needId needDriverId
             ]
     , testCase "need driver requires a situation anchor"
         $ assertSemanticErrors
-            sampleModel
+            sampleGraph
               { rawEdges =
                   filter
                     (/= anchorEdge
                           situationAnchorId
                           anchorsNeedDriver
                           needDriverId)
-                    (rawEdges sampleModel)
+                    (rawEdges sampleGraph)
               }
             [UnanchoredNeedDriver needId needDriverId]
     , testCase "need objective requires grounding"
         $ assertSemanticErrors
-            sampleModel
+            sampleGraph
               { rawEdges =
                   filter
                     (/= edge
                           needDriverId
                           groundsNeedDriverToObjective
                           needObjectiveId)
-                    (rawEdges sampleModel)
+                    (rawEdges sampleGraph)
               }
             [UngroundedNeedObjective needId needObjectiveId]
     , testCase "situated unqualified need is semantically valid"
-        $ withWellFormed unqualifiedNeedModel
-        $ \model ->
+        $ withWellFormed unqualifiedNeedGraph
+        $ \graph ->
             assertSuccess
-              (validateModelSemantics model [sampleStrategyFormulation])
+              (validateModelSemantics graph [sampleStrategyFormulation])
     ]
 
 traceTests :: TestTree
@@ -325,16 +325,16 @@ traceTests =
   testGroup
     "relational effect trace"
     ([ testCase "empty model is not traceable"
-         $ withSemanticallyValid emptyModel []
+         $ withSemanticallyValid emptyGraph []
          $ \model ->
              assertTraceabilityErrors
                [NoIntervention]
                (validateTraceability model)
      , testCase "complete reference model is traceable"
-         $ withTraceable sampleModel (const (pure ()))
+         $ withTraceable sampleGraph (const (pure ()))
      , testCase "every Intervention must address a Need"
          $ withSemanticallyValid
-             (withoutEdge (edge interventionId addressesNeed needId) sampleModel)
+             (withoutEdge (edge interventionId addressesNeed needId) sampleGraph)
              [sampleStrategyFormulation]
          $ \model ->
              assertTraceabilityErrors
@@ -342,7 +342,7 @@ traceTests =
                (validateTraceability model)
      , testCase "every addressed need requires a complete trace"
          $ withSemanticallyValid
-             additionalUntracedNeedModel
+             additionalUntracedNeedGraph
              [sampleStrategyFormulation]
          $ \model ->
              assertTraceabilityErrors
@@ -350,7 +350,7 @@ traceTests =
                (validateTraceability model)
      , testCase "every macrorelation requires primitive evidence"
          $ withSemanticallyValid
-             macroWithoutEvidenceModel
+             macroWithoutEvidenceGraph
              [sampleStrategyFormulation]
          $ \model ->
              assertTraceabilityErrors
@@ -361,14 +361,14 @@ traceTests =
                ]
                (validateTraceability model)
      , testCase "parallel primitive paths produce distinct traces"
-         $ withTraceable twoPathModel
+         $ withTraceable twoPathGraph
          $ \model -> do
              let identifiers =
                    map traceIdentifier (NonEmpty.toList (effectTraces model))
              length identifiers @?= 2
              length (nub identifiers) @?= 2
      , testCase "unlisted Strategy primitives cannot substantiate a trace"
-         $ withTraceable unlistedStrategyPathModel
+         $ withTraceable unlistedStrategyPathGraph
          $ \model ->
              map
                traceInterventionKeyResult
@@ -376,53 +376,53 @@ traceTests =
                @?= [interventionKeyResultId]
      , unlistedStrategyMacroTest
          "unlisted intent cannot substantiate orients"
-         unlistedOrientsModel
+         unlistedOrientsGraph
          (edge visionId orientsStrategy strategyId)
          [sampleStrategyFormulation]
          [MissingEffectTrace interventionId needId]
      , unlistedStrategyMacroTest
          "unlisted Key Result cannot substantiate qualifies"
-         unlistedQualifiesModel
+         unlistedQualifiesGraph
          (edge strategyId qualifiesNeed needId)
          [sampleStrategyFormulation]
          [MissingEffectTrace interventionId needId]
      , unlistedStrategyMacroTest
          "unlisted Action cannot substantiate directs Intervention"
-         unlistedDirectsInterventionModel
+         unlistedDirectsInterventionGraph
          (edge strategyId directsIntervention interventionId)
          [sampleStrategyFormulation]
          [MissingEffectTrace interventionId needId]
      , unlistedStrategyMacroTest
          "unlisted diagnosis and Key Result cannot substantiate frames"
-         unlistedFramesModel
+         unlistedFramesGraph
          (edge strategyId framesMeasure measureId)
          [sampleStrategyFormulation]
          [MissingEffectTrace interventionId needId]
      , unlistedStrategyMacroTest
          "unlisted policies cannot substantiate directs Strategy"
-         unlistedDirectsStrategyModel
+         unlistedDirectsStrategyGraph
          (edge strategyId directsStrategy secondStrategyId)
          [sampleStrategyFormulation, secondStrategyFormulation]
          []
      , unlistedStrategyMacroTest
          "unlisted Actions and Key Results cannot substantiate contributes"
-         unlistedContributesStrategyModel
+         unlistedContributesStrategyGraph
          (edge strategyId contributesToStrategy secondStrategyId)
          [sampleStrategyFormulation, secondStrategyFormulation]
          []
      ]
-       ++ map missingEdgeTest (rawEdges sampleModel)
+       ++ map missingEdgeTest (rawEdges sampleGraph)
        ++ [ QC.testProperty "removing any effect-path edge is rejected"
-              $ QC.forAll (QC.elements (rawEdges sampleModel))
+              $ QC.forAll (QC.elements (rawEdges sampleGraph))
               $ \missingEdge ->
                   traceabilityFails
-                    sampleModel
+                    sampleGraph
                       { rawEdges =
-                          filter (/= missingEdge) (rawEdges sampleModel)
+                          filter (/= missingEdge) (rawEdges sampleGraph)
                       }
           , QC.testProperty "all situation anchor types are traceable"
               $ QC.forAll (QC.elements [minBound .. maxBound])
-              $ \anchor -> traceabilitySucceeds (modelWithAnchor anchor)
+              $ \anchor -> traceabilitySucceeds (graphWithAnchor anchor)
           ])
 
 data MissingEdgeExpectation
@@ -432,7 +432,7 @@ data MissingEdgeExpectation
 missingEdgeTest :: RawEdge -> TestTree
 missingEdgeTest missingEdge =
   testCase ("trace rejects missing edge " ++ show missingEdge) $ do
-    let raw = withoutEdge missingEdge sampleModel
+    let raw = withoutEdge missingEdge sampleGraph
     case missingEdgeExpectation missingEdge of
       Just (SemanticExpectation expected) -> assertSemanticErrors raw expected
       Just (TraceExpectation expected) ->
@@ -627,7 +627,7 @@ evidenceTests =
         $ withAssessed lateTargetClaim
         $ \assessment -> targetResult assessment @?= ObservedSatisfiedAfterDue
     , testCase "zero effect criteria are rejected"
-        $ withTraceable sampleModel
+        $ withTraceable sampleGraph
         $ \model ->
             let identifier =
                   traceIdentifier (NonEmpty.head (effectTraces model))
@@ -637,7 +637,7 @@ evidenceTests =
                      model
                      (NonEmpty.singleton (zeroEffectClaim identifier)))
     , testCase "duplicate claims for one trace are rejected"
-        $ withTraceable sampleModel
+        $ withTraceable sampleGraph
         $ \model ->
             let identifier =
                   traceIdentifier (NonEmpty.head (effectTraces model))
@@ -648,13 +648,13 @@ evidenceTests =
                      model
                      (evidenceClaim NonEmpty.:| [evidenceClaim]))
     , testCase "unknown effect traces are rejected exactly"
-        $ withTraceable twoPathModel
+        $ withTraceable twoPathGraph
         $ \twoPath ->
             case filter
                    ((/= interventionKeyResultId) . traceInterventionKeyResult)
                    (NonEmpty.toList (effectTraces twoPath)) of
               unknownTrace:_ ->
-                withTraceable sampleModel $ \singlePath ->
+                withTraceable sampleGraph $ \singlePath ->
                   let knownTrace = NonEmpty.head (effectTraces singlePath)
                       knownClaim = claimForTrace knownTrace
                       unknownClaim = claimForTrace unknownTrace
@@ -665,7 +665,7 @@ evidenceTests =
                            (knownClaim NonEmpty.:| [unknownClaim]))
               [] -> assertFailure "two-path fixture lacks an unknown trace"
     , testCase "intervention Key Result must match the trace"
-        $ withTraceable sampleModel
+        $ withTraceable sampleGraph
         $ \model ->
             let identifier = traceId model
              in assertEvidenceErrors
@@ -678,7 +678,7 @@ evidenceTests =
                      model
                      (NonEmpty.singleton (mismatchedKeyResultClaim identifier)))
     , testCase "observed KPI must match the trace"
-        $ withTraceable sampleModel
+        $ withTraceable sampleGraph
         $ \model ->
             let identifier = traceId model
              in assertEvidenceErrors
@@ -687,7 +687,7 @@ evidenceTests =
                      model
                      (NonEmpty.singleton (mismatchedKpiClaim identifier)))
     , testCase "observed Situation anchor must match the trace"
-        $ withTraceable sampleModel
+        $ withTraceable sampleGraph
         $ \model ->
             let identifier = traceId model
              in assertEvidenceErrors
@@ -700,7 +700,7 @@ evidenceTests =
                      model
                      (NonEmpty.singleton (mismatchedAnchorClaim identifier)))
     , testCase "evidence criteria must precede intervention"
-        $ withTraceable sampleModel
+        $ withTraceable sampleGraph
         $ \model ->
             let identifier = traceId model
              in assertEvidenceErrors
@@ -709,7 +709,7 @@ evidenceTests =
                      model
                      (NonEmpty.singleton (latePlanClaim identifier)))
     , testCase "target due date must follow intervention"
-        $ withTraceable sampleModel
+        $ withTraceable sampleGraph
         $ \model ->
             let identifier = traceId model
              in assertEvidenceErrors
@@ -718,7 +718,7 @@ evidenceTests =
                      model
                      (NonEmpty.singleton (invalidDueClaim identifier)))
     , testCase "invalid Within bounds are rejected exactly"
-        $ withTraceable sampleModel
+        $ withTraceable sampleGraph
         $ \model ->
             let identifier = traceId model
              in assertEvidenceErrors
@@ -727,7 +727,7 @@ evidenceTests =
                      model
                      (NonEmpty.singleton (invalidWithinClaim identifier)))
     , testCase "observation units must match"
-        $ withTraceable sampleModel
+        $ withTraceable sampleGraph
         $ \model ->
             let identifier = traceId model
              in assertEvidenceErrors
@@ -736,7 +736,7 @@ evidenceTests =
                      model
                      (NonEmpty.singleton (mismatchedUnitClaim identifier)))
     , testCase "criterion units must match observation units"
-        $ withTraceable sampleModel
+        $ withTraceable sampleGraph
         $ \model ->
             let identifier = traceId model
              in assertEvidenceErrors
@@ -746,7 +746,7 @@ evidenceTests =
                      (NonEmpty.singleton
                         (mismatchedCriterionUnitClaim identifier)))
     , testCase "observation time order is validated"
-        $ withTraceable sampleModel
+        $ withTraceable sampleGraph
         $ \model ->
             let identifier = traceId model
              in assertEvidenceErrors
@@ -755,7 +755,7 @@ evidenceTests =
                      model
                      (NonEmpty.singleton (invalidTimeClaim identifier)))
     , testCase "units must be named"
-        $ withTraceable sampleModel
+        $ withTraceable sampleGraph
         $ \model ->
             let identifier = traceId model
              in assertEvidenceErrors
@@ -764,7 +764,7 @@ evidenceTests =
                      model
                      (NonEmpty.singleton (emptyUnitClaim identifier)))
     , testCase "evidence sources must be named"
-        $ withTraceable sampleModel
+        $ withTraceable sampleGraph
         $ \model ->
             let identifier = traceId model
              in assertEvidenceErrors
@@ -773,7 +773,7 @@ evidenceTests =
                      model
                      (NonEmpty.singleton (emptySourceClaim identifier)))
     , testCase "every trace requires exactly one evidence claim"
-        $ withTraceable twoPathModel
+        $ withTraceable twoPathGraph
         $ \model ->
             case NonEmpty.toList (effectTraces model) of
               [claimedTrace, omittedTrace] ->
@@ -846,7 +846,7 @@ withWellFormed :: RawGraph -> (WellFormedGraph -> Assertion) -> Assertion
 withWellFormed raw action =
   case validateStructure raw of
     Failure errors -> assertFailure ("structural errors: " ++ show errors)
-    Success model -> action model
+    Success graph -> action graph
 
 withTraceable :: RawGraph -> (TraceableEffectModel -> Assertion) -> Assertion
 withTraceable raw action =
@@ -873,7 +873,7 @@ validateSemanticRaw raw formulations =
   case validateStructure raw of
     Failure errors ->
       error ("test fixture has structural errors: " ++ show errors)
-    Success model -> validateModelSemantics model formulations
+    Success graph -> validateModelSemantics graph formulations
 
 assertSemanticErrors :: RawGraph -> [ModelInvariantError] -> Assertion
 assertSemanticErrors raw expected =
@@ -915,7 +915,7 @@ assertEvidenceErrors expected result =
 
 assertEffectiveNeed :: (EffectTraceId -> EvidenceClaim) -> Bool -> Assertion
 assertEffectiveNeed makeClaim expected =
-  withTraceable sampleModel $ \model ->
+  withTraceable sampleGraph $ \model ->
     let trace = NonEmpty.head (effectTraces model)
         evidenceClaim = makeClaim (traceIdentifier trace)
      in case assessEffectEvidence model (NonEmpty.singleton evidenceClaim) of
@@ -928,7 +928,7 @@ withAssessed ::
   -> (EffectAssessment -> Assertion)
   -> Assertion
 withAssessed makeClaim action =
-  withTraceable sampleModel $ \model ->
+  withTraceable sampleGraph $ \model ->
     case assessEffectEvidence
            model
            (NonEmpty.singleton (makeClaim (traceId model))) of
@@ -958,7 +958,7 @@ traceabilitySucceeds raw =
 
 evidenceSucceeds :: (EffectTraceId -> EvidenceClaim) -> Bool
 evidenceSucceeds makeClaim =
-  case validateSemanticRaw sampleModel [sampleStrategyFormulation] of
+  case validateSemanticRaw sampleGraph [sampleStrategyFormulation] of
     Failure _ -> False
     Success model ->
       case validateTraceability model of
@@ -974,15 +974,15 @@ assertSuccess :: Validation errors result -> Assertion
 assertSuccess (Success _) = pure ()
 assertSuccess (Failure _) = assertFailure "expected validation success"
 
-emptyModel :: RawGraph
-emptyModel = RawGraph [] []
+emptyGraph :: RawGraph
+emptyGraph = RawGraph [] []
 
-sampleModel :: RawGraph
-sampleModel = RawGraph sampleNodes sampleEdges
+sampleGraph :: RawGraph
+sampleGraph = RawGraph sampleNodes sampleEdges
 
-unqualifiedNeedModel :: RawGraph
-unqualifiedNeedModel =
-  sampleModel
+unqualifiedNeedGraph :: RawGraph
+unqualifiedNeedGraph =
+  sampleGraph
     { rawEdges =
         filter
           (`notElem` [ edge strategyId qualifiesNeed needId
@@ -991,7 +991,7 @@ unqualifiedNeedModel =
                          translatesStrategyKeyResultToNeedObjective
                          needObjectiveId
                      ])
-          (rawEdges sampleModel)
+          (rawEdges sampleGraph)
     }
 
 sampleStrategyFormulation :: RawStrategyFormulation
@@ -1077,8 +1077,8 @@ rawNodeIdentifier (RawPrimitiveNode identifier _ _) = identifier
 rawNodeIdentifier (RawStructuringNode identifier _ _) = identifier
 rawNodeIdentifier (RawAnchorNode identifier _ _) = identifier
 
-twoPathModel :: RawGraph
-twoPathModel =
+twoPathGraph :: RawGraph
+twoPathGraph =
   RawGraph (sampleNodes ++ secondPathNodes) (sampleEdges ++ secondPathEdges)
 
 secondPathNodes :: [RawNode]
@@ -1149,8 +1149,8 @@ secondPathEdges =
       (duplicateId situationAnchorId)
   ]
 
-unlistedStrategyPathModel :: RawGraph
-unlistedStrategyPathModel =
+unlistedStrategyPathGraph :: RawGraph
+unlistedStrategyPathGraph =
   RawGraph
     (sampleNodes ++ map duplicateChild childNodes)
     (sampleEdges ++ map duplicateEdge evidenceEdges)
@@ -1164,8 +1164,8 @@ unlistedStrategyPathModel =
                 && isContextId (rawEdgeTo candidate)))
         sampleEdges
 
-unlistedOrientsModel :: RawGraph
-unlistedOrientsModel =
+unlistedOrientsGraph :: RawGraph
+unlistedOrientsGraph =
   replaceStrategyEvidence
     [RawPrimitiveNode unlistedStrategyObjectiveId strategyId Objective]
     [ edge
@@ -1179,8 +1179,8 @@ unlistedOrientsModel =
         unlistedStrategyObjectiveId
     ]
 
-unlistedQualifiesModel :: RawGraph
-unlistedQualifiesModel =
+unlistedQualifiesGraph :: RawGraph
+unlistedQualifiesGraph =
   replaceStrategyEvidence
     [RawPrimitiveNode unlistedStrategyKeyResultId strategyId KeyResult]
     [ edge
@@ -1194,8 +1194,8 @@ unlistedQualifiesModel =
         needObjectiveId
     ]
 
-unlistedDirectsInterventionModel :: RawGraph
-unlistedDirectsInterventionModel =
+unlistedDirectsInterventionGraph :: RawGraph
+unlistedDirectsInterventionGraph =
   replaceStrategyEvidence
     [RawPrimitiveNode unlistedStrategyActionId strategyId Action]
     [ edge
@@ -1209,8 +1209,8 @@ unlistedDirectsInterventionModel =
         interventionActionId
     ]
 
-unlistedFramesModel :: RawGraph
-unlistedFramesModel =
+unlistedFramesGraph :: RawGraph
+unlistedFramesGraph =
   replaceStrategyEvidence
     [ RawPrimitiveNode unlistedStrategyDriverId strategyId Driver
     , RawPrimitiveNode unlistedStrategyKeyResultId strategyId KeyResult
@@ -1224,15 +1224,15 @@ unlistedFramesModel =
 
 replaceStrategyEvidence :: [RawNode] -> [RawEdge] -> [RawEdge] -> RawGraph
 replaceStrategyEvidence addedNodes removedEdges addedEdges =
-  sampleModel
-    { rawNodes = addedNodes ++ rawNodes sampleModel
+  sampleGraph
+    { rawNodes = addedNodes ++ rawNodes sampleGraph
     , rawEdges =
-        addedEdges ++ filter (`notElem` removedEdges) (rawEdges sampleModel)
+        addedEdges ++ filter (`notElem` removedEdges) (rawEdges sampleGraph)
     }
 
-unlistedDirectsStrategyModel :: RawGraph
-unlistedDirectsStrategyModel =
-  twoStrategyModel
+unlistedDirectsStrategyGraph :: RawGraph
+unlistedDirectsStrategyGraph =
+  twoStrategyGraph
     (edge strategyId directsStrategy secondStrategyId)
     [ RawPrimitiveNode unlistedStrategyPrincipleId strategyId Principle
     , RawPrimitiveNode
@@ -1246,9 +1246,9 @@ unlistedDirectsStrategyModel =
         secondUnlistedStrategyPrincipleId
     ]
 
-unlistedContributesStrategyModel :: RawGraph
-unlistedContributesStrategyModel =
-  twoStrategyModel
+unlistedContributesStrategyGraph :: RawGraph
+unlistedContributesStrategyGraph =
+  twoStrategyGraph
     (edge strategyId contributesToStrategy secondStrategyId)
     [ RawPrimitiveNode unlistedStrategyKeyResultId strategyId KeyResult
     , RawPrimitiveNode
@@ -1268,19 +1268,19 @@ unlistedContributesStrategyModel =
         secondUnlistedStrategyActionId
     ]
 
-twoStrategyModel :: RawEdge -> [RawNode] -> [RawEdge] -> RawGraph
-twoStrategyModel macro addedNodes addedEdges =
-  sampleModel
+twoStrategyGraph :: RawEdge -> [RawNode] -> [RawEdge] -> RawGraph
+twoStrategyGraph macro addedNodes addedEdges =
+  sampleGraph
     { rawNodes =
         RawContextNode secondStrategyId Strategy
           : secondStrategyNodes
           ++ addedNodes
-          ++ rawNodes sampleModel
+          ++ rawNodes sampleGraph
     , rawEdges =
         macro
           : secondStrategyCoherenceEdges
           ++ addedEdges
-          ++ rawEdges sampleModel
+          ++ rawEdges sampleGraph
     }
 
 secondStrategyNodes :: [RawNode]
@@ -1362,9 +1362,9 @@ isContextId identifier =
            , situationId
            ]
 
-modelWithAnchor :: SituationAnchor -> RawGraph
-modelWithAnchor anchor =
-  sampleModel {rawNodes = map replaceAnchor (rawNodes sampleModel)}
+graphWithAnchor :: SituationAnchor -> RawGraph
+graphWithAnchor anchor =
+  sampleGraph {rawNodes = map replaceAnchor (rawNodes sampleGraph)}
   where
     replaceAnchor (RawAnchorNode identifier owner _) =
       RawAnchorNode identifier owner anchor
@@ -1459,8 +1459,8 @@ anchorEdge ::
   -> RawEdge
 anchorEdge from relation to = edge from (relation SBusinessCapability) to
 
-multiplyInvalidModel :: RawGraph
-multiplyInvalidModel =
+multiplyInvalidGraph :: RawGraph
+multiplyInvalidGraph =
   RawGraph
     [ RawContextNode strategyId Strategy
     , RawContextNode strategyId Need
@@ -1468,14 +1468,14 @@ multiplyInvalidModel =
     ]
     [RawEdge missingId (RelationName "unknown") strategyId]
 
-invalidRelationDomainModel :: RawGraph
-invalidRelationDomainModel =
+invalidRelationDomainGraph :: RawGraph
+invalidRelationDomainGraph =
   RawGraph
     [RawContextNode strategyId Strategy, RawContextNode needId Need]
     [edge needId qualifiesNeed strategyId]
 
-independentlyInvalidEdgeModel :: RawGraph
-independentlyInvalidEdgeModel =
+independentlyInvalidEdgeGraph :: RawGraph
+independentlyInvalidEdgeGraph =
   RawGraph
     []
     [ RawEdge
@@ -1484,16 +1484,16 @@ independentlyInvalidEdgeModel =
         (RawNodeId "unknown-to")
     ]
 
-unknownEndpointModel :: QC.Gen RawGraph
-unknownEndpointModel = do
+unknownEndpointGraph :: QC.Gen RawGraph
+unknownEndpointGraph = do
   suffix <- QC.listOf1 (QC.elements ['a' .. 'z'])
   let from = RawNodeId ("unknown-from-" <> Text.pack suffix)
       to = RawNodeId ("unknown-to-" <> Text.pack suffix)
   pure (RawGraph [] [RawEdge from (RelationName "unknown") to])
 
-additionalUntracedNeedModel :: RawGraph
-additionalUntracedNeedModel =
-  sampleModel
+additionalUntracedNeedGraph :: RawGraph
+additionalUntracedNeedGraph =
+  sampleGraph
     { rawNodes =
         RawContextNode additionalNeedId Need
           : RawPrimitiveNode additionalNeedDriverId additionalNeedId Driver
@@ -1501,7 +1501,7 @@ additionalUntracedNeedModel =
               additionalNeedObjectiveId
               additionalNeedId
               Objective
-          : rawNodes sampleModel
+          : rawNodes sampleGraph
     , rawEdges =
         edge interventionId addressesNeed additionalNeedId
           : edge situationId surfacesNeed additionalNeedId
@@ -1517,17 +1517,17 @@ additionalUntracedNeedModel =
               interventionKeyResultId
               substantiatesInterventionKeyResultNeedObjective
               additionalNeedObjectiveId
-          : rawEdges sampleModel
+          : rawEdges sampleGraph
     }
 
-macroWithoutEvidenceModel :: RawGraph
-macroWithoutEvidenceModel =
-  sampleModel
+macroWithoutEvidenceGraph :: RawGraph
+macroWithoutEvidenceGraph =
+  sampleGraph
     { rawNodes =
         RawContextNode ethosId Ethos
           : RawContextNode missionId Mission
-          : rawNodes sampleModel
-    , rawEdges = edge ethosId guidesMission missionId : rawEdges sampleModel
+          : rawNodes sampleGraph
+    , rawEdges = edge ethosId guidesMission missionId : rawEdges sampleGraph
     }
 
 successfulClaim :: EffectTraceId -> EvidenceClaim

@@ -5,8 +5,8 @@
 
 -- | Structurally typed O2I graph and total graph queries.
 --
--- Graph modules instantiate the O2I language. They establish structural
--- typing only; semantic completeness belongs to the Validation namespace.
+-- Graph modules instantiate the O2I language. They establish local graph
+-- well-formedness; global semantic completeness belongs to Validation.
 module O2I.Graph.Typed
   ( Node(..)
   , SomeNode(..)
@@ -14,8 +14,8 @@ module O2I.Graph.Typed
   , SomeEdge(..)
   , WellFormedGraph
   , mkWellFormedGraph
-  , modelNodes
-  , modelEdges
+  , graphNodes
+  , graphEdges
   , nodeId
   , nodeKind
   , nodeOwner
@@ -40,7 +40,7 @@ import O2I.Language.Element
 import O2I.Language.Interpretation
 import O2I.Language.Relation
 
--- * Typed model graph
+-- * Typed graph
 -- | Structurally validated node indexed by its complete semantic kind.
 data Node (kind :: NodeKind) where
   ContextNode
@@ -118,7 +118,7 @@ someEdgeRelation (SomeEdge edge) = relationNameFor (edgeRelation edge)
 someEdgeTo :: SomeEdge -> RawNodeId
 someEdgeTo (SomeEdge edge) = unNodeId (edgeTo edge)
 
--- * Validated model stage
+-- * Well-formed graph stage
 -- | Opaque graph with valid IDs, ownership, interpretations, and edges.
 --
 -- Construction is restricted to structural validation.
@@ -132,12 +132,12 @@ mkWellFormedGraph :: Map RawNodeId SomeNode -> [SomeEdge] -> WellFormedGraph
 mkWellFormedGraph = WellFormedGraph
 
 -- | Enumerate validated nodes without exposing graph constructors.
-modelNodes :: WellFormedGraph -> [SomeNode]
-modelNodes = Map.elems . typedNodes
+graphNodes :: WellFormedGraph -> [SomeNode]
+graphNodes = Map.elems . typedNodes
 
 -- | Enumerate validated edges without exposing graph constructors.
-modelEdges :: WellFormedGraph -> [SomeEdge]
-modelEdges = typedEdges
+graphEdges :: WellFormedGraph -> [SomeEdge]
+graphEdges = typedEdges
 
 -- | Read the kind-indexed identifier of a validated node.
 nodeId :: Node kind -> NodeId kind
@@ -176,47 +176,47 @@ someNodeOwner (SomeNode node) = nodeOwner node
 
 -- | Look up a validated node by its unique raw identifier.
 lookupNode :: WellFormedGraph -> RawNodeId -> Maybe SomeNode
-lookupNode model identifier = Map.lookup identifier (typedNodes model)
+lookupNode graph identifier = Map.lookup identifier (typedNodes graph)
 
 -- | Enumerate context-node identifiers of the requested context type.
 contextNodesOf :: WellFormedGraph -> Context -> [RawNodeId]
-contextNodesOf model expected =
+contextNodesOf graph expected =
   [ unNodeId identifier
-  | SomeNode (ContextNode identifier context) <- modelNodes model
+  | SomeNode (ContextNode identifier context) <- graphNodes graph
   , contextValue context == expected
   ]
 
 -- | Enumerate primitive nodes of a kind owned by one context node.
 primitiveNodesIn :: WellFormedGraph -> RawNodeId -> Primitive -> [RawNodeId]
-primitiveNodesIn model owner expected =
+primitiveNodesIn graph owner expected =
   [ unNodeId identifier
   | SomeNode (PrimitiveNode identifier context _ primitive _) <-
-      modelNodes model
+      graphNodes graph
   , unNodeId context == owner
   , primitiveValue primitive == expected
   ]
 
 -- | Enumerate structuring nodes of a kind owned by one context node.
 structuringNodesIn :: WellFormedGraph -> RawNodeId -> Structuring -> [RawNodeId]
-structuringNodesIn model owner expected =
+structuringNodesIn graph owner expected =
   [ unNodeId identifier
   | SomeNode (StructuringNode identifier context _ structuring) <-
-      modelNodes model
+      graphNodes graph
   , unNodeId context == owner
   , structuringValue structuring == expected
   ]
 
 -- | Enumerate Situation anchors owned by one Situation context.
 anchorNodesIn :: WellFormedGraph -> RawNodeId -> [RawNodeId]
-anchorNodesIn model owner =
+anchorNodesIn graph owner =
   [ unNodeId identifier
-  | SomeNode (AnchorNode identifier context _) <- modelNodes model
+  | SomeNode (AnchorNode identifier context _) <- graphNodes graph
   , unNodeId context == owner
   ]
 
 -- | Test whether an exact validated edge exists.
 hasEdge :: WellFormedGraph -> RawNodeId -> RelationName -> RawNodeId -> Bool
-hasEdge model from relation to = any matches (modelEdges model)
+hasEdge graph from relation to = any matches (graphEdges graph)
   where
     matches (SomeEdge edge) =
       unNodeId (edgeFrom edge) == from
@@ -227,9 +227,9 @@ hasEdge model from relation to = any matches (modelEdges model)
 -- | Find context targets reached from a source by a named context relation.
 outgoingContextTargets ::
      WellFormedGraph -> RawNodeId -> RelationName -> [RawNodeId]
-outgoingContextTargets model from relation =
+outgoingContextTargets graph from relation =
   [ unNodeId (edgeTo edge)
-  | SomeEdge edge <- modelEdges model
+  | SomeEdge edge <- graphEdges graph
   , unNodeId (edgeFrom edge) == from
   , relationName (relationSpec (edgeRelation edge)) == relation
   ]

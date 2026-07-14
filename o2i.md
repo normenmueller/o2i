@@ -53,10 +53,6 @@ O2I steht für *Orientation to Impact*.
 
 !include`snippetStart="<!-- O2I PURPOSE START -->", snippetEnd="<!-- O2I PURPOSE END -->"` README.md
 
-O2I beschreibt, wie Orientierung unter gegebenen Bedingungen in strategische Formierung, situierte Bedarfe, wirkungsgerichtete Operationalisierung und nachvollziehbare Wirkung überführt wird.
-
-Der Artikel entfaltet O2I als Framework, indem er die fachliche Begriffswelt auf Basis der Standardliteratur terminologisch begründet, semantisch und syntaktisch im Metamodell formalisiert und ihre Anwendung anhand eines zusammenhängenden O2I-Wirkungsgraphen illustriert.
-
 Die zentrale Idee von O2I ist, fachliche Relationen wie die O2I-Relation `Strategy --qualifies--> Need` nicht nur zu behaupten, sondern im O2I-Wirkungsgraphen zu begründen. O2I-Kontexte geben Bedeutung; O2I-Primitives tragen die modellierten Inhalte; Relationen zwischen kontextualisierten Primitives machen die fachliche Begründung nachvollziehbar.
 
 > [!tldr] O2I Wirkungslogik
@@ -69,6 +65,8 @@ Die zentrale Idee von O2I ist, fachliche Relationen wie die O2I-Relation `Strate
 > - **Wirkung**: beobachtete Veränderung und Evidenz
 
 Die Wirkungskette ist nicht linear abgeschlossen: Beobachtete Wirkung liefert Evidenz, um Situationen neu zu bewerten und weitere Bedarfe sichtbar zu machen.
+
+Der Artikel entfaltet O2I als Framework, indem er die fachliche Begriffswelt auf Basis der Standardliteratur terminologisch begründet, semantisch und syntaktisch im Metamodell formalisiert und ihre Anwendung anhand eines zusammenhängenden O2I-Wirkungsgraphen illustriert.
 
 # Fundament
 
@@ -658,7 +656,9 @@ Diese typisierten Spezifikationen verhindern, dass beliebige Primitive-Relatione
 
 Instanziierung beschreibt, wie aus O2I-Typen konkrete Modellelemente in einem O2I-Modell entstehen. `Need` ist ein Kontexttyp; ein konkreter Bedarf in einem Modell ist eine `Need`-Instanz. `Objective` ist ein Primitive-Typ; ein konkretes Objective in einem Modell ist eine `Objective`-Instanz.
 
-Die Validierung konkretisiert eine Modellinstanz in aufeinander aufbauenden Stufen:
+`Graph` bezeichnet in der folgenden Typfolge die Knoten-Kanten-Repräsentation eines O2I-Modells. Ein `WellFormedGraph` erfüllt die lokale graphbezogene Zulässigkeit von Identitäten, Ownership, Interpretationen und Relationsdomänen. Ab `SemanticallyValidModel` bezeichnet `Model` die fachlich angereicherte Einheit, die den wohlgeformten Graphen stufenweise mit globalen fachlichen Invarianten, abgeleiteten Wirkungstraces und Evidenzbewertungen verbindet. Der Übergang markiert damit die Grenze zwischen lokaler graphbezogener Zulässigkeit und globaler fachlicher Invariantenprüfung.
+
+Die Validierung überführt eine Modellinstanz in aufeinander aufbauende Stufen:
 
 ```text
 RawGraph
@@ -671,7 +671,7 @@ RawGraph
 @lst:o2i-model-graph zeigt den generischen konkreten O2I-Modellgraphen, mit dem konkrete Kontexte, Primitives, Strukturierungen, Situationsanker und Relationen repräsentiert werden.
 
 ```{#lst:o2i-model-graph .haskell caption="O2I Modellgraph"}
-!include`snippetStart="-- * Typed model graph", snippetEnd="-- * Validated model stage"` spc/src/lib/O2I/Graph/Typed.hs
+!include`snippetStart="-- * Typed graph", snippetEnd="-- * Well-formed graph stage"` spc/src/lib/O2I/Graph/Typed.hs
 ```
 
 #### Kontextinstanzen

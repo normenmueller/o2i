@@ -111,14 +111,14 @@ validateTraceability semantic =
               }
         Nothing -> Failure (NonEmpty.singleton NoIntervention)
   where
-    model = semanticModel semantic
-    interventions = contextNodesOf model Intervention
+    graph = modelGraph semantic
+    interventions = contextNodesOf graph Intervention
     indexedTraces =
       Map.fromList
         [(traceIdentifier trace, trace) | trace <- traceCandidates semantic]
     traces = Map.elems indexedTraces
     addressed intervention =
-      outgoingContextTargets model intervention (nameOf addressesNeed)
+      outgoingContextTargets graph intervention (nameOf addressesNeed)
     interventionErrors
       | null interventions = [NoIntervention]
       | otherwise = concatMap errorsForIntervention interventions
@@ -166,116 +166,116 @@ traceAnchor = effectTraceAnchor
 
 traceCandidates :: SemanticallyValidModel -> [EffectTrace]
 traceCandidates semantic = do
-  vision <- contextNodesOf model Vision
-  strategy <- contextNodesOf model Strategy
+  vision <- contextNodesOf graph Vision
+  strategy <- contextNodesOf graph Strategy
   formulation <-
     case Map.lookup strategy (strategyFormulations semantic) of
       Just validated -> [strategyFormulationData validated]
       Nothing -> []
-  need <- contextNodesOf model Need
-  intervention <- contextNodesOf model Intervention
-  measure <- contextNodesOf model Measure
-  situation <- contextNodesOf model Situation
-  require (has model vision orientsStrategy strategy)
-  require (has model strategy qualifiesNeed need)
-  require (has model situation surfacesNeed need)
-  require (has model strategy directsIntervention intervention)
-  require (has model intervention addressesNeed need)
-  require (has model intervention changesSituation situation)
-  require (has model strategy framesMeasure measure)
-  require (has model intervention setsTargetForMeasure measure)
-  require (has model measure measuresSituation situation)
-  visionObjective <- primitiveNodesIn model vision Objective
+  need <- contextNodesOf graph Need
+  intervention <- contextNodesOf graph Intervention
+  measure <- contextNodesOf graph Measure
+  situation <- contextNodesOf graph Situation
+  require (has graph vision orientsStrategy strategy)
+  require (has graph strategy qualifiesNeed need)
+  require (has graph situation surfacesNeed need)
+  require (has graph strategy directsIntervention intervention)
+  require (has graph intervention addressesNeed need)
+  require (has graph intervention changesSituation situation)
+  require (has graph strategy framesMeasure measure)
+  require (has graph intervention setsTargetForMeasure measure)
+  require (has graph measure measuresSituation situation)
+  visionObjective <- primitiveNodesIn graph vision Objective
   strategyObjective <- [rawFormulationIntent formulation]
   require
     (has
-       model
+       graph
        visionObjective
        orientsVisionObjectiveToStrategyObjective
        strategyObjective)
   strategyDriver <- [rawFormulationDiagnosis formulation]
   require
     $ has
-        model
+        graph
         strategyDriver
         groundsStrategyDriverToObjective
         strategyObjective
   strategyKeyResult <- NonEmpty.toList (rawFormulationKeyResults formulation)
   require
     (has
-       model
+       graph
        strategyKeyResult
        substantiatesStrategyKeyResultObjective
        strategyObjective)
   strategyAction <- NonEmpty.toList (rawFormulationActions formulation)
   require
     (has
-       model
+       graph
        strategyAction
        contributesStrategyActionToKeyResult
        strategyKeyResult)
-  needDriver <- primitiveNodesIn model need Driver
-  needObjective <- primitiveNodesIn model need Objective
-  require (has model needDriver groundsNeedDriverToObjective needObjective)
+  needDriver <- primitiveNodesIn graph need Driver
+  needObjective <- primitiveNodesIn graph need Objective
+  require (has graph needDriver groundsNeedDriverToObjective needObjective)
   require
     (has
-       model
+       graph
        strategyKeyResult
        translatesStrategyKeyResultToNeedObjective
        needObjective)
-  interventionAction <- primitiveNodesIn model intervention Action
+  interventionAction <- primitiveNodesIn graph intervention Action
   require
     (has
-       model
+       graph
        strategyAction
        guidesStrategyActionToInterventionAction
        interventionAction)
-  interventionKeyResult <- primitiveNodesIn model intervention KeyResult
+  interventionKeyResult <- primitiveNodesIn graph intervention KeyResult
   require
     (has
-       model
+       graph
        interventionAction
        contributesInterventionActionToKeyResult
        interventionKeyResult)
   require
     (has
-       model
+       graph
        interventionKeyResult
        substantiatesInterventionKeyResultNeedObjective
        needObjective)
   require
     (has
-       model
+       graph
        interventionKeyResult
        contributesInterventionKeyResultToStrategyKeyResult
        strategyKeyResult)
-  domain <- structuringNodesIn model measure Domain
-  require (has model strategyDriver indicatesMeasureDomain domain)
-  require (has model strategyKeyResult determinesMeasureDomain domain)
-  kpi <- primitiveNodesIn model measure KPI
-  require (has model domain containsMeasureKPI kpi)
-  require (has model interventionKeyResult setsTargetForMeasureKPI kpi)
-  anchor <- anchorNodesIn model situation
+  domain <- structuringNodesIn graph measure Domain
+  require (has graph strategyDriver indicatesMeasureDomain domain)
+  require (has graph strategyKeyResult determinesMeasureDomain domain)
+  kpi <- primitiveNodesIn graph measure KPI
+  require (has graph domain containsMeasureKPI kpi)
+  require (has graph interventionKeyResult setsTargetForMeasureKPI kpi)
+  anchor <- anchorNodesIn graph situation
   require
     (hasAnchor
-       model
+       graph
        situation
        (nameOf (constitutedByAnchor SBusinessCapability))
        anchor)
   require
     (hasAnchor
-       model
+       graph
        anchor
        (nameOf (anchorsNeedDriver SBusinessCapability))
        needDriver)
   require
     (hasAnchor
-       model
+       graph
        interventionAction
        (nameOf (changesAnchor SBusinessCapability))
        anchor)
   require
-    (hasAnchor model kpi (nameOf (measuresAnchor SBusinessCapability)) anchor)
+    (hasAnchor graph kpi (nameOf (measuresAnchor SBusinessCapability)) anchor)
   let key =
         EffectTraceKey
           { keyVision = vision
@@ -307,14 +307,14 @@ traceCandidates semantic = do
       , effectTraceAnchor = anchor
       }
   where
-    model = semanticModel semantic
+    graph = modelGraph semantic
 
 require :: Bool -> [()]
 require True = [()]
 require False = []
 
 has :: WellFormedGraph -> RawNodeId -> Relation from to -> RawNodeId -> Bool
-has model from relation to = hasEdge model from (nameOf relation) to
+has graph from relation to = hasEdge graph from (nameOf relation) to
 
 hasAnchor :: WellFormedGraph -> RawNodeId -> RelationName -> RawNodeId -> Bool
 hasAnchor = hasEdge
@@ -325,7 +325,7 @@ nameOf = relationName . relationSpec
 macroEvidenceErrors :: SemanticallyValidModel -> [TraceabilityError]
 macroEvidenceErrors semantic =
   [ MissingMacroEvidence from relationName' to
-  | SomeEdge edge <- modelEdges model
+  | SomeEdge edge <- graphEdges graph
   , let relation = edgeRelation edge
   , MacroRelation evidenceKind <- [relationSemantics (relationSpec relation)]
   , let relationName' = nameOf relation
@@ -334,7 +334,7 @@ macroEvidenceErrors semantic =
   , not (hasMacroEvidence semantic evidenceKind from to)
   ]
   where
-    model = semanticModel semantic
+    graph = modelGraph semantic
 
 hasMacroEvidence ::
      SemanticallyValidModel
@@ -352,7 +352,7 @@ hasMacroEvidence semantic evidenceKind from to =
       anyRelation Principle guidesEthosPrincipleToVisionObjective Objective
     OrientsStrategyEvidence ->
       anyBetween
-        (primitiveNodesIn model from Objective)
+        (primitiveNodesIn graph from Objective)
         orientsVisionObjectiveToStrategyObjective
         (strategyIntents to)
     DirectsStrategyEvidence ->
@@ -373,7 +373,7 @@ hasMacroEvidence semantic evidenceKind from to =
       anyBetween
         (strategyKeyResults from)
         translatesStrategyKeyResultToNeedObjective
-        (primitiveNodesIn model to Objective)
+        (primitiveNodesIn graph to Objective)
     SurfacesNeedEvidence ->
       anyAnchorToPrimitive
         (nameOf (anchorsNeedDriver SBusinessCapability))
@@ -387,7 +387,7 @@ hasMacroEvidence semantic evidenceKind from to =
       anyBetween
         (strategyActions from)
         guidesStrategyActionToInterventionAction
-        (primitiveNodesIn model to Action)
+        (primitiveNodesIn graph to Action)
     ChangesSituationEvidence ->
       anyPrimitiveToAnchor Action (nameOf (changesAnchor SBusinessCapability))
     SetsTargetForMeasureEvidence ->
@@ -396,15 +396,15 @@ hasMacroEvidence semantic evidenceKind from to =
       anyPrimitiveToAnchor KPI (nameOf (measuresAnchor SBusinessCapability))
     FramesMeasureEvidence -> anyFramesEvidence
   where
-    model = semanticModel semantic
+    graph = modelGraph semantic
     anyRelation fromPrimitive primitiveRelation toPrimitive =
       anyBetween
-        (primitiveNodesIn model from fromPrimitive)
+        (primitiveNodesIn graph from fromPrimitive)
         primitiveRelation
-        (primitiveNodesIn model to toPrimitive)
+        (primitiveNodesIn graph to toPrimitive)
     anyBetween sources relation targets =
       or
-        [ has model source relation target
+        [ has graph source relation target
         | source <- sources
         , target <- targets
         ]
@@ -421,25 +421,25 @@ hasMacroEvidence semantic evidenceKind from to =
     constituted = nameOf (constitutedByAnchor SBusinessCapability)
     anyAnchorToPrimitive anchorRelation toPrimitive =
       or
-        [ hasAnchor model from constituted anchor
-          && hasAnchor model anchor anchorRelation target
-        | anchor <- anchorNodesIn model from
-        , target <- primitiveNodesIn model to toPrimitive
+        [ hasAnchor graph from constituted anchor
+          && hasAnchor graph anchor anchorRelation target
+        | anchor <- anchorNodesIn graph from
+        , target <- primitiveNodesIn graph to toPrimitive
         ]
     anyPrimitiveToAnchor fromPrimitive primitiveRelation =
       or
-        [ hasAnchor model to constituted anchor
-          && hasAnchor model source primitiveRelation anchor
-        | source <- primitiveNodesIn model from fromPrimitive
-        , anchor <- anchorNodesIn model to
+        [ hasAnchor graph to constituted anchor
+          && hasAnchor graph source primitiveRelation anchor
+        | source <- primitiveNodesIn graph from fromPrimitive
+        , anchor <- anchorNodesIn graph to
         ]
     anyFramesEvidence =
       or
-        [ has model driver indicatesMeasureDomain domain
-          && has model keyResult determinesMeasureDomain domain
-          && has model domain containsMeasureKPI kpi
+        [ has graph driver indicatesMeasureDomain domain
+          && has graph keyResult determinesMeasureDomain domain
+          && has graph domain containsMeasureKPI kpi
         | driver <- strategyDiagnoses from
         , keyResult <- strategyKeyResults from
-        , domain <- structuringNodesIn model to Domain
-        , kpi <- primitiveNodesIn model to KPI
+        , domain <- structuringNodesIn graph to Domain
+        , kpi <- primitiveNodesIn graph to KPI
         ]

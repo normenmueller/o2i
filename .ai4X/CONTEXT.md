@@ -41,6 +41,9 @@ test and apply O2I but never define its generic semantics.
   methodological causality.
 - The validation pipeline is
   `RawGraph -> WellFormedGraph -> SemanticallyValidModel -> TraceableEffectModel -> EvidenceAssessedModel`.
+- `RawGraph` represents unchecked node-edge data; `WellFormedGraph` establishes
+  local graph admissibility; model stages add global fachliche invariants,
+  effect traces, and evidence assessments.
 - `O2I Context` and `O2I Primitives` are normative semantic visualizations of
   the O2I context and primitive models.
 - Their semantics is defined by O2I and does not derive from ArchiMate.
