@@ -492,6 +492,8 @@ Nachweislogik verbindet Interventionen, relevante Messungen, Zielwerte, beobacht
 Damit bleibt Nachweislogik von Messung getrennt: Messung macht beobachtbar, Nachweislogik begründet die Wirkungslesart.
 
 > [!addendum] Wirkungsevidenz und Kausalität
+> Nachweislogik ermöglicht die begründete Zuordnung einer beobachteten Veränderung zu einer Intervention anhand des vollständigen O2I-Wirkungszusammenhangs. O2I bezeichnet diese Zuordnung als **plausible Attribution**[^plausible-attribution]; sie ist kein Beweis alleiniger Verursachung.
+>
 > O2I kann feststellen:
 >
 > - Eine Intervention adressiert einen wirkungsrelevanten Bedarf.
@@ -502,6 +504,8 @@ Damit bleibt Nachweislogik von Messung getrennt: Messung macht beobachtbar, Nach
 > O2I kann daraus jedoch nicht nachweisen, dass allein die Intervention den Anstieg verursacht hat. Auch parallele Maßnahmen, organisatorische Veränderungen oder externe Einflüsse können beigetragen haben.
 >
 > Ein kausaler Nachweis benötigt zusätzlich ein geeignetes Untersuchungsdesign, beispielsweise eine Kontrollgruppe, einen kontrafaktischen Vergleich oder eine belastbare Zeitreihenanalyse.
+
+[^plausible-attribution]: O2I zeigt: "Diese Intervention ist eine plausible Erklärung für die Wirkung." Es beweist jedoch nicht: "Ausschließlich diese Intervention hat die Wirkung verursacht." Dafür ist ein kausales Untersuchungsdesign erforderlich.
 
 # Metamodell
 
