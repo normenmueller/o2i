@@ -48,9 +48,11 @@ o2i/
 |- spc/
 |  |- src/lib/
 |  |- tst/
+|- wtf.md
 |- o2i.md
 ```
 
+- [`wtf.md`](./wtf.md): kurzer, bewusst direkter Einstieg in zentrale O2I-Fragen
 - [`o2i.md`](./o2i.md): aktiver Artikel und fachlicher Referenztext
 - `mdl/`: ArchiMate-Modell
 - `img/`: Abbildungen für Artikel und Modellkommunikation

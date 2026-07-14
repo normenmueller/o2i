@@ -53,6 +53,7 @@ test and apply O2I but never define its generic semantics.
 
 - `o2i.md`: article and fachliche reference text.
 - `README.md`: canonical shared Purpose and USP snippets included by the article.
+- `wtf.md`: informal, non-normative entry guide linked to the article.
 - `mdl/o2i.archimate`: ArchiMate model.
 - `mdl/o2i-*.md`: generated read-only review snapshots.
 - `img/`: article and model exports.

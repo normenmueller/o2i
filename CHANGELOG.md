@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Added a concise WTF and HTH guide for direct access to central O2I concepts.
+
 ### Changed
 
 - Shortened the paper title to "Von Orientierung zur Wirkung".
