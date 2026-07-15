@@ -69,6 +69,21 @@ test-suite o2i-test
   hs-source-dirs:
     tst
 
+test-suite o2i-language-api-test
+  import:
+    warnings,
+    language
+  type:
+    exitcode-stdio-1.0
+  main-is:
+    Main.hs
+  build-depends:
+    base >=4.18 && <4.19,
+    o2i,
+    template-haskell >=2.20 && <2.21
+  hs-source-dirs:
+    tst/api
+
 source-repository head
   type: git
   location: https://github.com/normenmueller/o2i.git

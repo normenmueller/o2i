@@ -612,12 +612,25 @@ def validate_model(root: ET.Element) -> list[str]:
         for source, relation_id, target in connections:
             source_name, source_type = elements.get(source, ("?", "?"))
             target_name, target_type = elements.get(target, ("?", "?"))
+            (
+                relation_name,
+                relation_type,
+                relation_source,
+                relation_target,
+                directed,
+            ) = relations.get(relation_id, ("?", "?", None, None, False))
+            if source != relation_source:
+                errors.append(
+                    f"{view_name} connection source {source!r} does not match "
+                    f"relationship {relation_id!r} source {relation_source!r}"
+                )
+            if target != relation_target:
+                errors.append(
+                    f"{view_name} connection target {target!r} does not match "
+                    f"relationship {relation_id!r} target {relation_target!r}"
+                )
             if source_type == "Meaning" or target_type == "Meaning":
                 continue
-            relation_name, relation_type, _, _, directed = relations.get(
-                relation_id,
-                ("?", "?", None, None, False),
-            )
             relation_signatures.append(
                 (
                     source_name,

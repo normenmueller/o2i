@@ -4,7 +4,19 @@
 -- relations independently of concrete graph instances and validation stages.
 module O2I.Language
   ( module O2I.Language.Element
-  , module O2I.Language.Interpretation
+  , Interpretation(..)
+  , InterpretationCode(..)
+  , InterpretationSpec
+  , SomeInterpretation
+  , interpretationCode
+  , interpretationContext
+  , interpretationPrimitive
+  , interpretationWitness
+  , interpretationSpec
+  , interpretationCodeOf
+  , interpretationIdentity
+  , allInterpretations
+  , lookupInterpretation
   , module O2I.Language.Relation
   ) where
 

@@ -93,7 +93,9 @@ the canonical repository memory.
 - After every change to `mdl/o2i.archimate`, regenerate and inspect all review
   snapshots with `python3 -B utl/extract-archimate-view.py --preset all`, then
   validate model invariants and snapshot consistency with
-  `python3 -B utl/extract-archimate-view.py --preset all --check`.
+  `python3 -B utl/extract-archimate-view.py --preset all --check`, and run the
+  extractor contract tests with
+  `python3 -B -m unittest discover -s utl -p 'test_*.py'`.
 - Use relation syntax `Subject --relation--> Object` unless explicitly changed.
 - Do not assume every organizational unit has a Strategy.
 - Every definition in `o2i.md` uses the established `[!definition]` callout and
@@ -148,7 +150,7 @@ publication claim derived from them.
 - Build: `cabal build all --ghc-options=-Werror` from `spc/`.
 - Tests: `cabal test all --ghc-options=-Werror` from `spc/`.
 - API documentation: `cabal haddock all` from `spc/`.
-- Format check: `hindent --line-length 80 --validate src/lib/O2I.hs src/lib/O2I/*.hs src/lib/O2I/Language/*.hs src/lib/O2I/Graph/*.hs src/lib/O2I/Validation/*.hs tst/Main.hs` from `spc/`.
+- Format check: `hindent --line-length 80 --validate src/lib/O2I.hs src/lib/O2I/*.hs src/lib/O2I/Language/*.hs src/lib/O2I/Graph/*.hs src/lib/O2I/Validation/*.hs tst/Main.hs tst/api/Main.hs` from `spc/`.
 - Lightweight article check: `pandoc o2i.md --filter pandoc-include -t markdown`.
 - Use `git status --short --branch --untracked-files=all` before edits.
 

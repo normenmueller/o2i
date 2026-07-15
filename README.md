@@ -71,10 +71,11 @@ Das PDF und die TikZ-basierte Nachweisfolge werden reproduzierbar mit `toPDF.sh`
 
 ```sh
 python3 -B utl/extract-archimate-view.py --preset all --check
+python3 -B -m unittest discover -s utl -p 'test_*.py'
 cabal --project-dir=spc build all --ghc-options=-Werror
 cabal --project-dir=spc test all --ghc-options=-Werror
 cabal --project-dir=spc haddock all
-hindent --line-length 80 --validate spc/src/lib/O2I.hs spc/src/lib/O2I/*.hs spc/src/lib/O2I/Language/*.hs spc/src/lib/O2I/Graph/*.hs spc/src/lib/O2I/Validation/*.hs spc/tst/Main.hs
+hindent --line-length 80 --validate spc/src/lib/O2I.hs spc/src/lib/O2I/*.hs spc/src/lib/O2I/Language/*.hs spc/src/lib/O2I/Graph/*.hs spc/src/lib/O2I/Validation/*.hs spc/tst/Main.hs spc/tst/api/Main.hs
 pandoc o2i.md --filter pandoc-include -t markdown
 ./toPDF.sh
 ```

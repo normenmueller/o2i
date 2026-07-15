@@ -10,8 +10,12 @@
 module O2I.Language.Interpretation
   ( Interpretation(..)
   , InterpretationCode(..)
-  , InterpretationSpec(..)
+  , InterpretationSpec
   , SomeInterpretation(..)
+  , interpretationCode
+  , interpretationContext
+  , interpretationPrimitive
+  , interpretationWitness
   , interpretationSpec
   , interpretationCodeOf
   , interpretationIdentity
@@ -57,15 +61,20 @@ data Interpretation (context :: Context) (primitive :: Primitive) where
 deriving instance Show (Interpretation context primitive)
 
 -- ** Interpretation registry
--- | Runtime metadata and static witness for one admissible interpretation.
-data InterpretationSpec context primitive = InterpretationSpec
-  { interpretationCode :: InterpretationCode -- ^ Stable registry code.
-  , interpretationContext :: SContext context -- ^ Context witness.
-  , interpretationPrimitive :: SPrimitive primitive -- ^ Primitive witness.
-  , interpretationWitness :: Interpretation context primitive -- ^ Proof.
-  }
+-- | Canonical metadata and static witness for one admissible interpretation.
+--
+-- Public clients obtain specifications through 'interpretationSpec'.
+data InterpretationSpec context primitive =
+  InterpretationSpec
+    InterpretationCode
+    (SContext context)
+    (SPrimitive primitive)
+    (Interpretation context primitive)
 
--- | Existential interpretation specification for heterogeneous registries.
+-- | Type-erased canonical specification for heterogeneous registries.
+--
+-- Public clients obtain values from 'allInterpretations' or
+-- 'lookupInterpretation'.
 data SomeInterpretation where
   SomeInterpretation
     :: InterpretationSpec context primitive -> SomeInterpretation
@@ -73,6 +82,25 @@ data SomeInterpretation where
 
 instance Show SomeInterpretation where
   show (SomeInterpretation spec) = show (interpretationCode spec)
+
+-- | Project the stable registry code.
+interpretationCode :: InterpretationSpec context primitive -> InterpretationCode
+interpretationCode (InterpretationSpec code _ _ _) = code
+
+-- | Project the Context witness.
+interpretationContext ::
+     InterpretationSpec context primitive -> SContext context
+interpretationContext (InterpretationSpec _ context _ _) = context
+
+-- | Project the Primitive witness.
+interpretationPrimitive ::
+     InterpretationSpec context primitive -> SPrimitive primitive
+interpretationPrimitive (InterpretationSpec _ _ primitive _) = primitive
+
+-- | Project the static interpretation witness.
+interpretationWitness ::
+     InterpretationSpec context primitive -> Interpretation context primitive
+interpretationWitness (InterpretationSpec _ _ _ witness) = witness
 
 -- | Stable runtime identity of every admissible interpretation.
 data InterpretationCode

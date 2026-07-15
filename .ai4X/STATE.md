@@ -35,11 +35,12 @@ instruction override this snapshot.
 
 # Active Quality Gate
 
-- The independent final review of commit `3491904` reported no Blocker or High
-  finding, two Medium findings, and one Low finding.
-- Stable KPI measurement semantics, exact normative ArchiMate relation
-  contracts, and sole root model-version metadata close all three findings in
-  the working tree.
+- The independent final review of commit `42729e4` reported no Blocker or High
+  finding, one Medium finding, and one Low finding.
+- Exact DiagramConnection-to-Relationship endpoint validation with positive
+  and negative contract tests closes the Medium finding in the working tree.
+- Opaque public interpretation metadata with an external-client API test
+  closes the Low finding in the working tree.
 - The WIP status remains intentional for O2I v0.2.
 - ArchiMate 4 mappings use `Capability`, `Process`, `Business Object`, `Role`,
   `Value Stream`, and `Requirement` with explicit O2I specializations.
@@ -57,15 +58,18 @@ instruction override this snapshot.
   types.
 - Deterministic review snapshots include view contracts, visible notes, and
   directed Association semantics. `--check` validates exact normative relation
-  contracts, sole root version `0.2`, model invariants, and snapshot drift.
+  contracts, DiagramConnection-to-Relationship endpoint identity, sole root
+  version `0.2`, model invariants, and snapshot drift.
+- Public interpretation metadata is canonical and opaque; clients can project
+  metadata but cannot construct or update contradictory specifications.
 
 # Current Verification
 
-- `python3 -B utl/extract-archimate-view.py --preset all --check`: passed.
+- ArchiMate model check and three extractor contract tests: passed.
 - `cabal check`: passed.
 - `cabal build all --ghc-options=-Werror`: passed.
-- `cabal test all --ghc-options=-Werror --test-show-details=direct`: 176 tests
-  passed.
+- Both Cabal test suites passed: 176 fachliche tests plus the external-client
+  API-surface test.
 - HIndent 80 validation: passed.
 - Haddock including internal modules: passed with 100% public API coverage.
 - Pandoc include expansion: passed.
@@ -74,7 +78,7 @@ instruction override this snapshot.
 
 # Next Work
 
-- Commit and push the coherent final-review remediation.
+- Commit and push the coherent second final-review remediation.
 - Run a fresh independent final review across terminology, metamodel,
   ArchiMate, Haskell design, tests, formal value, and publication quality.
 - Close any verified findings and repeat the gate until explicit 10/10 approval.
