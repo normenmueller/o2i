@@ -4,20 +4,36 @@
 -- instances, and Validation establishes progressively stronger guarantees.
 module O2I
   ( RawNodeId(..)
-  , NodeId(..)
-  , ContextRef(..)
+  , NodeId
+  , unNodeId
+  , ContextRef
+  , contextRefId
   , Context(..)
   , Primitive(..)
   , Structuring(..)
+  , PerformanceDimensionRole(..)
+  , PerformanceDimensionRoleCode(..)
+  , PerformanceDimensionRoleName(..)
+  , SomePerformanceDimensionRole(..)
   , SituationAnchor(..)
   , NodeKind(..)
   , NodeKindValue(..)
   , SContext(..)
   , SPrimitive(..)
-  , SStructuring(..)
   , SSituationAnchor(..)
   , contextValue
   , primitiveValue
+  , performanceDimensionRoleCode
+  , performanceDimensionRoleCodeOf
+  , performanceDimensionRoleName
+  , performanceDimensionRoleNameOf
+  , performanceDimensionRoleContext
+  , performanceDimensionRoleMember
+  , performanceDimensionMembershipRelationName
+  , performanceDimensionRoleIdentity
+  , allPerformanceDimensionRoles
+  , reifyPerformanceDimensionRole
+  , lookupPerformanceDimensionRole
   , nodeKindValue
   , InterpretationCode(..)
   , SomeInterpretation
@@ -66,10 +82,9 @@ module O2I
   , translatesStrategyKeyResultToNeedObjective
   , groundsNeedDriverToObjective
   , anchorsNeedDriver
-  , indicatesMeasureDomain
-  , determinesMeasureDomain
-  , containsStrategyKeyResult
-  , containsMeasureKPI
+  , indicatesMeasurePerformanceDimension
+  , determinesMeasurePerformanceDimension
+  , containsPerformanceDimension
   , guidesStrategyActionToInterventionAction
   , contributesInterventionActionToKeyResult
   , substantiatesInterventionKeyResultNeedObjective
@@ -89,36 +104,59 @@ module O2I
   , SemanticallyValidModel
   , strategyFormulations
   , strategyFormulationData
+  , lookupSemanticContextRef
   , qualifyingStrategies
   , EffectTrace
   , EffectTraceId
+  , SomeSituationAnchorRef
   , TraceableEffectModel
   , effectTraces
   , traceIdentifier
   , lookupEffectTrace
+  , traceVision
+  , traceVisionObjective
   , traceStrategy
+  , traceStrategyDriver
+  , traceStrategyObjective
   , traceStrategyKeyResult
+  , traceStrategyAction
   , traceNeed
+  , traceNeedDriver
+  , traceNeedObjective
   , traceIntervention
+  , traceInterventionAction
   , traceInterventionKeyResult
+  , traceMeasure
+  , traceMeasurePerformanceDimension
   , traceKPI
-  , traceAnchor
+  , traceSituation
+  , traceSituationAnchor
+  , situationAnchorRefId
+  , situationAnchorRefKind
   , Unit(..)
   , Quantity(..)
+  , RelativeChange(..)
   , EvidenceSource(..)
   , Observation(..)
   , EffectCriterion(..)
   , TargetCriterion(..)
+  , PlannedInterventionStart(..)
   , EvidencePlan(..)
   , EvidenceReadyModel
   , evidencePlans
+  , readinessCheckedAt
+  , plannedInterventionStarts
   , readyEffectTraces
+  , readyInterventions
   , readyTracesForIntervention
+  , ActualInterventionStart(..)
   , FollowUpObservation(..)
   , CriterionResult(..)
   , TargetResult(..)
   , EffectAssessment(..)
   , EvidenceAssessedModel
+  , evidenceAssessedAt
+  , actualInterventionStarts
   , effectAssessments
   , isEffectiveNeed
   , Validation(..)
@@ -132,7 +170,7 @@ module O2I
   , validateModelSemantics
   , validateTraceability
   , validateEvidenceReadinessAt
-  , assessEffectEvidence
+  , assessEffectEvidenceAt
   ) where
 
 import O2I.Graph

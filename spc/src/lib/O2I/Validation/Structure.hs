@@ -4,7 +4,7 @@
 -- | Structural elaboration from unchecked to typed O2I graphs.
 --
 -- Structural validation proves identifier, ownership, interpretation, and
--- relation-domain integrity without asserting semantic completeness.
+-- relation-endpoint integrity without asserting semantic completeness.
 module O2I.Validation.Structure
   ( StructuralError(..)
   , validateStructure
@@ -41,7 +41,7 @@ data StructuralError
     -- ^ An edge endpoint does not identify a declared node.
   | UnknownRelation RelationName
     -- ^ An edge names no registered O2I relation.
-  | InvalidRelationDomain RawEdge NodeKindValue NodeKindValue
+  | InvalidRelationEndpointKinds RawEdge NodeKindValue NodeKindValue
     -- ^ Endpoint kinds do not match the named relation specification.
   | ElaborationInvariantViolation
     -- ^ Internal elaboration failed after all public checks succeeded.
@@ -83,7 +83,7 @@ nodeErrors raw = duplicateIdErrors ++ concatMap validateNode (rawNodes raw)
         Nothing -> [UnknownOwner identifier owner]
         Just context ->
           [ InvalidStructuringContext identifier context structuring
-          | context `notElem` [Strategy, Measure]
+          | isNothing (lookupPerformanceDimensionRole context)
           ]
     validateNode (RawAnchorNode identifier owner anchor) =
       case Map.lookup owner owners of
@@ -118,14 +118,15 @@ relationErrors ::
   -> Maybe NodeKindValue
   -> [SomeRelation]
   -> [StructuralError]
-relationErrors edge fromKind toKind candidates = unknownErrors ++ domainErrors
+relationErrors edge fromKind toKind candidates =
+  unknownErrors ++ endpointKindErrors
   where
     unknownErrors = [UnknownRelation (rawEdgeRelation edge) | null candidates]
-    domainErrors =
+    endpointKindErrors =
       case (fromKind, toKind, candidates) of
         (Just from, Just to, _:_)
           | not (any (matchesKinds from to) candidates) ->
-            [InvalidRelationDomain edge from to]
+            [InvalidRelationEndpointKinds edge from to]
         _ -> []
 
 matchesKinds :: NodeKindValue -> NodeKindValue -> SomeRelation -> Bool
@@ -151,7 +152,7 @@ buildContext :: RawNode -> Maybe SomeNode
 buildContext (RawContextNode identifier context) =
   case someSContext context of
     SomeSContext witness ->
-      Just (SomeNode (ContextNode (NodeId identifier) witness))
+      Just (SomeNode (ContextNode (mkNodeId identifier) witness))
 buildContext _ = Nothing
 
 buildChild :: Map RawNodeId SomeNode -> RawNode -> Maybe SomeNode
@@ -169,20 +170,25 @@ buildChild contexts (RawPrimitiveNode identifier owner primitive) = do
   pure
     (SomeNode
        (PrimitiveNode
-          (NodeId identifier)
+          (mkNodeId identifier)
           ownerId
           context
           primitiveWitness
           (interpretationWitness spec)))
-buildChild contexts (RawStructuringNode identifier owner structuring) = do
+buildChild contexts (RawStructuringNode identifier owner PerformanceDimension) = do
   SomeNode (ContextNode ownerId context) <- Map.lookup owner contexts
-  SomeSStructuring witness <- pure (someSStructuring structuring)
-  pure (SomeNode (StructuringNode (NodeId identifier) ownerId context witness))
+  SomePerformanceDimensionRole role <-
+    lookupPerformanceDimensionRole (contextValue context)
+  Refl <-
+    eqSNodeKind
+      (SContextKind context)
+      (SContextKind (performanceDimensionRoleContext role))
+  pure (SomeNode (PerformanceDimensionNode (mkNodeId identifier) ownerId role))
 buildChild contexts (RawAnchorNode identifier owner anchor) = do
   SomeNode (ContextNode ownerId context) <- Map.lookup owner contexts
   SomeSAnchor witness <- pure (someSAnchor anchor)
   Refl <- eqSNodeKind (SContextKind context) (SContextKind SSituation)
-  pure (SomeNode (AnchorNode (NodeId identifier) ownerId witness))
+  pure (SomeNode (AnchorNode (mkNodeId identifier) ownerId witness))
 buildChild _ (RawContextNode _ _) = Nothing
 
 buildEdge :: Map RawNodeId SomeNode -> RawEdge -> Maybe SomeEdge

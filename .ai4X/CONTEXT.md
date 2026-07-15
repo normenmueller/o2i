@@ -32,7 +32,8 @@ test and apply O2I but never define its generic semantics.
 - Evidence readiness is a generic O2I capability for validating an effect
   trace before an Intervention starts.
 - O2I does not define Strategic Fit Evaluation, strategic topic complexes,
-  instance-specific scores or statuses, or Domain-bound fit semantics.
+  instance-specific scores or statuses, or PerformanceDimension-bound fit
+  semantics.
 - External evaluations may query O2I effect traces to determine which
   Strategies connect to an Intervention. Domains are optional instance-level
   filters, never a prerequisite of generic O2I semantics.
@@ -44,8 +45,10 @@ test and apply O2I but never define its generic semantics.
   `Intervention`, and `Measure`.
 - Primitives: `Principle`, `Driver`, `Objective`, `Key Result`, `KPI`, and
   `Action`.
-- `Domain` is the generic structuring type; names such as CSF or KPI domain are
-  domain instances or readings, not metamodel types.
+- `PerformanceDimension` is one closed structuring type with exactly two roles:
+  a Strategy success dimension contains Strategy Key Results; a Measure
+  measurement dimension contains Measure KPIs. CSF is a fachliche reading of
+  the first role. Other groupings are not O2I PerformanceDimensions.
 - `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion`, and
   `FollowUpObservation` form the evidence layer; they are neither Contexts nor
   Primitives.
@@ -59,8 +62,17 @@ test and apply O2I but never define its generic semantics.
   effect traces, ex-ante evidence readiness, and ex-post evidence assessments.
 - `O2I Context` and `O2I Primitives` are normative semantic visualizations of
   the O2I context and primitive models.
+- `O2I Situation` is the normative semantic visualization of the Situation
+  anchor category, its admissible forms, and Situation constitution.
+- `O2I Situation Anchoring` is the normative semantic visualization of the
+  parameterized Situation-anchor relation families.
+- The concrete ArchiMate 4 syntax maps each Situation-anchor form to its native
+  or explicitly specialized element and applies one parameterized relation
+  mapping; no duplicate 24-edge syntax view is required.
 - Their semantics is defined by O2I and does not derive from ArchiMate.
-- `O2I Syntax` is the concrete ArchiMate realization of these semantic models.
+- `O2I Syntax` is the concrete ArchiMate realization of O2I contexts,
+  contextualized Primitives, PerformanceDimensions, Situation anchors, and
+  their mapped relations.
 
 # Repository Map
 
@@ -72,10 +84,23 @@ test and apply O2I but never define its generic semantics.
 - `img/`: article and model exports.
 - `spc/src/lib/`: normative typed Haskell library.
 - `spc/tst/`: executable validation tests.
-- `utl/extract-archimate-view.py`: deterministic ArchiMate snapshot extractor.
+- `toPDF.sh`: reproducible TikZ and PDF build entry point.
+- `utl/extract-archimate-view.py`: deterministic ArchiMate snapshot extractor
+  and model-contract validator.
 
 # Haskell Architecture
 
+- The Haskell specification is the normative machine-checkable formalization
+  of the technology-independent O2I metamodel, not an independent fachliche
+  layer.
+- Terminology defines fachliche concepts and boundaries; the metamodel defines
+  elements, relations, and invariants; the Haskell specification enforces those
+  invariants mechanically.
+- Formal precision must expose and resolve semantic ambiguity but must never
+  invent fachliche semantics that cannot be justified by the article and
+  metamodel.
+- GADTs, modules, and opaque validation stages are Haskell design decisions;
+  they do not introduce additional O2I fachliche semantics.
 - `O2I.Language`: public semantic language facade.
 - `O2I.Graph`: public facade for concrete effect graphs.
 - `O2I.Validation`: public facade for staged validation.

@@ -52,10 +52,9 @@ module O2I.Language.Relation
   , translatesStrategyKeyResultToNeedObjective
   , groundsNeedDriverToObjective
   , anchorsNeedDriver
-  , indicatesMeasureDomain
-  , determinesMeasureDomain
-  , containsStrategyKeyResult
-  , containsMeasureKPI
+  , indicatesMeasurePerformanceDimension
+  , determinesMeasurePerformanceDimension
+  , containsPerformanceDimension
   , guidesStrategyActionToInterventionAction
   , contributesInterventionActionToKeyResult
   , substantiatesInterventionKeyResultNeedObjective
@@ -114,10 +113,8 @@ data FixedRelationCode
     -- ^ Code for 'translatesStrategyKeyResultToNeedObjective'.
   | GroundsNeedDriverToObjectiveCode
     -- ^ Code for 'groundsNeedDriverToObjective'.
-  | IndicatesMeasureDomainCode -- ^ Code for 'indicatesMeasureDomain'.
-  | DeterminesMeasureDomainCode -- ^ Code for 'determinesMeasureDomain'.
-  | ContainsStrategyKeyResultCode -- ^ Code for 'containsStrategyKeyResult'.
-  | ContainsMeasureKPICode -- ^ Code for 'containsMeasureKPI'.
+  | IndicatesMeasurePerformanceDimensionCode -- ^ Code for 'indicatesMeasurePerformanceDimension'.
+  | DeterminesMeasurePerformanceDimensionCode -- ^ Code for 'determinesMeasurePerformanceDimension'.
   | GuidesStrategyActionToInterventionActionCode
     -- ^ Code for 'guidesStrategyActionToInterventionAction'.
   | ContributesInterventionActionToKeyResultCode
@@ -140,6 +137,7 @@ data AnchorRelationFamily
 -- | Complete runtime identity of a relation specification.
 data RelationCode
   = FixedRelation FixedRelationCode -- ^ A relation with fixed endpoint kinds.
+  | PerformanceDimensionMembership PerformanceDimensionRoleCode -- ^ Membership of a closed PerformanceDimension role.
   | AnchorRelation AnchorRelationFamily SituationAnchor -- ^ Anchor instance.
   deriving (Eq, Ord, Show)
 
@@ -453,7 +451,7 @@ measuresSituation =
     SMeasure
     SSituation
 
--- | State that Strategy frames the admissible measurement domain.
+-- | State that Strategy frames the admissible Measure context.
 framesMeasure :: Relation ('ContextKind 'Strategy) ('ContextKind 'Measure)
 framesMeasure =
   fixedContextRelation
@@ -690,55 +688,53 @@ anchorsNeedDriver anchor =
     (SAnchorKind anchor)
     (SPrimitiveKind SNeed SDriver)
 
--- | Let the strategic diagnosis indicate a measurement Domain.
-indicatesMeasureDomain ::
+-- | Let a Strategy Driver indicate the Measure measurement dimension.
+indicatesMeasurePerformanceDimension ::
      Relation
        ('PrimitiveKind 'Strategy 'Driver)
-       ('StructuringKind 'Measure 'Domain)
-indicatesMeasureDomain =
+       ('StructuringKind 'Measure 'PerformanceDimension)
+indicatesMeasurePerformanceDimension =
   fixedRelation
-    IndicatesMeasureDomainCode
-    "strategy-driver-indicates-measure-domain"
+    IndicatesMeasurePerformanceDimensionCode
+    "strategy-driver-indicates-measure-performance-dimension"
     "indicates"
     (SPrimitiveKind SStrategy SDriver)
-    (SStructuringKind SMeasure SDomain)
+    (SPerformanceDimensionKind MeasureMeasurementDimension)
 
--- | Let a Strategy Key Result determine a measurement Domain.
-determinesMeasureDomain ::
+-- | Let a Strategy Key Result determine the Measure measurement dimension.
+determinesMeasurePerformanceDimension ::
      Relation
        ('PrimitiveKind 'Strategy 'KeyResult)
-       ('StructuringKind 'Measure 'Domain)
-determinesMeasureDomain =
+       ('StructuringKind 'Measure 'PerformanceDimension)
+determinesMeasurePerformanceDimension =
   fixedRelation
-    DeterminesMeasureDomainCode
-    "strategy-key-result-determines-measure-domain"
+    DeterminesMeasurePerformanceDimensionCode
+    "strategy-key-result-determines-measure-performance-dimension"
     "determines"
     (SPrimitiveKind SStrategy SKeyResult)
-    (SStructuringKind SMeasure SDomain)
+    (SPerformanceDimensionKind MeasureMeasurementDimension)
 
--- | Group a Strategy Key Result in a Strategy Domain.
-containsStrategyKeyResult ::
-     Relation
-       ('StructuringKind 'Strategy 'Domain)
-       ('PrimitiveKind 'Strategy 'KeyResult)
-containsStrategyKeyResult =
-  fixedRelation
-    ContainsStrategyKeyResultCode
-    "strategy-domain-contains-strategy-key-result"
-    "contains"
-    (SStructuringKind SStrategy SDomain)
-    (SPrimitiveKind SStrategy SKeyResult)
-
--- | Group a KPI in a Measure Domain.
-containsMeasureKPI ::
-     Relation ('StructuringKind 'Measure 'Domain) ('PrimitiveKind 'Measure 'KPI)
-containsMeasureKPI =
-  fixedRelation
-    ContainsMeasureKPICode
-    "measure-domain-contains-measure-kpi"
-    "contains"
-    (SStructuringKind SMeasure SDomain)
-    (SPrimitiveKind SMeasure SKPI)
+-- | Relate a performance dimension to the member kind admitted by its role.
+containsPerformanceDimension ::
+     PerformanceDimensionRole context member
+  -> Relation
+       ('StructuringKind context 'PerformanceDimension)
+       ('PrimitiveKind context member)
+containsPerformanceDimension role =
+  Relation
+    RelationSpec
+      { relationCode =
+          PerformanceDimensionMembership (performanceDimensionRoleCode role)
+      , relationSemantics = EvidenceRelation
+      , relationName =
+          RelationName (performanceDimensionMembershipRelationName role)
+      , relationLabel = "contains"
+      , relationFrom = SPerformanceDimensionKind role
+      , relationTo =
+          SPrimitiveKind
+            (performanceDimensionRoleContext role)
+            (performanceDimensionRoleMember role)
+      }
 
 -- ** Intervention and effect evidence
 -- | Guide an Intervention Action through a coherent strategic Action.
@@ -850,6 +846,9 @@ measuresAnchor anchor =
 allRelationCodes :: [RelationCode]
 allRelationCodes =
   map FixedRelation [minBound .. maxBound]
+    ++ map
+         (PerformanceDimensionMembership . performanceDimensionRoleCodeOf)
+         allPerformanceDimensionRoles
     ++ [ AnchorRelation family anchor
        | family <- [minBound .. maxBound]
        , anchor <- [minBound .. maxBound]
@@ -858,6 +857,10 @@ allRelationCodes =
 -- | Reify a stable runtime relation code as an existential typed witness.
 reifyRelation :: RelationCode -> SomeRelation
 reifyRelation (FixedRelation code) = reifyFixedRelation code
+reifyRelation (PerformanceDimensionMembership code) =
+  case reifyPerformanceDimensionRole code of
+    SomePerformanceDimensionRole role ->
+      SomeRelation (containsPerformanceDimension role)
 reifyRelation (AnchorRelation family anchorKind) =
   case someSAnchor anchorKind of
     SomeSAnchor anchor -> reifyAnchorRelation family anchor
@@ -904,13 +907,10 @@ reifyFixedRelation TranslatesStrategyKeyResultToNeedObjectiveCode =
   SomeRelation translatesStrategyKeyResultToNeedObjective
 reifyFixedRelation GroundsNeedDriverToObjectiveCode =
   SomeRelation groundsNeedDriverToObjective
-reifyFixedRelation IndicatesMeasureDomainCode =
-  SomeRelation indicatesMeasureDomain
-reifyFixedRelation DeterminesMeasureDomainCode =
-  SomeRelation determinesMeasureDomain
-reifyFixedRelation ContainsStrategyKeyResultCode =
-  SomeRelation containsStrategyKeyResult
-reifyFixedRelation ContainsMeasureKPICode = SomeRelation containsMeasureKPI
+reifyFixedRelation IndicatesMeasurePerformanceDimensionCode =
+  SomeRelation indicatesMeasurePerformanceDimension
+reifyFixedRelation DeterminesMeasurePerformanceDimensionCode =
+  SomeRelation determinesMeasurePerformanceDimension
 reifyFixedRelation GuidesStrategyActionToInterventionActionCode =
   SomeRelation guidesStrategyActionToInterventionAction
 reifyFixedRelation ContributesInterventionActionToKeyResultCode =

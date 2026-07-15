@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
@@ -20,12 +21,108 @@ tests =
   testGroup
     "O2I"
     [ structureTests
+    , performanceDimensionRoleTests
     , semanticTests
     , qualificationTests
     , traceTests
     , readinessTests
     , effectEvidenceTests
     , registryTests
+    ]
+
+performanceDimensionRoleTests :: TestTree
+performanceDimensionRoleTests =
+  testGroup
+    "closed performance-dimension roles"
+    [ testCase "StrategySuccessDimension admits Strategy Key Results"
+        $ withWellFormed strategySuccessPerformanceDimensionGraph
+        $ \graph ->
+            withContextRef graph SStrategy strategyId $ \strategy ->
+              map
+                unNodeId
+                (performanceDimensionNodesIn
+                   graph
+                   strategy
+                   StrategySuccessDimension)
+                @?= [strategyPerformanceDimensionId]
+    , testCase "MeasureMeasurementDimension admits Measure KPIs"
+        $ withWellFormed measureMeasurementPerformanceDimensionGraph
+        $ \graph ->
+            withContextRef graph SMeasure measureId $ \measure ->
+              map
+                unNodeId
+                (performanceDimensionNodesIn
+                   graph
+                   measure
+                   MeasureMeasurementDimension)
+                @?= [measurePerformanceDimensionId]
+    , testCase "the registry contains exactly both admissible roles"
+        $ map performanceDimensionRoleIdentity allPerformanceDimensionRoles
+            @?= [ ( StrategySuccessDimensionCode
+                  , PerformanceDimensionRoleName "strategy-success-dimension"
+                  , Strategy
+                  , KeyResult)
+                , ( MeasureMeasurementDimensionCode
+                  , PerformanceDimensionRoleName "measure-measurement-dimension"
+                  , Measure
+                  , KPI)
+                ]
+    , testCase "performance-dimension relation names are stable" $ do
+        let strategicName =
+              relationNameFor
+                (containsPerformanceDimension StrategySuccessDimension)
+            measurementName =
+              relationNameFor
+                (containsPerformanceDimension MeasureMeasurementDimension)
+        strategicName
+          @?= RelationName
+                "strategy-performance-dimension-contains-strategy-key-result"
+        measurementName
+          @?= RelationName "measure-performance-dimension-contains-measure-kpi"
+        map relationCodeOf (lookupRelations strategicName)
+          @?= [PerformanceDimensionMembership StrategySuccessDimensionCode]
+        map relationCodeOf (lookupRelations measurementName)
+          @?= [PerformanceDimensionMembership MeasureMeasurementDimensionCode]
+        relationNameFor indicatesMeasurePerformanceDimension
+          @?= RelationName
+                "strategy-driver-indicates-measure-performance-dimension"
+        relationNameFor determinesMeasurePerformanceDimension
+          @?= RelationName
+                "strategy-key-result-determines-measure-performance-dimension"
+    , QC.testProperty
+        "raw performance-dimension ownership derives from the role registry"
+        $ QC.forAll (QC.elements [minBound .. maxBound])
+        $ \context -> rawPerformanceDimensionOwnershipMatchesRegistry context
+    , testCase "StrategySuccessDimension rejects non-KeyResult membership"
+        $ let invalidEdge =
+                RawEdge
+                  strategyPerformanceDimensionId
+                  (relationNameFor
+                     (containsPerformanceDimension StrategySuccessDimension))
+                  strategyActionId
+           in assertStructuralErrors
+                [ InvalidRelationEndpointKinds
+                    invalidEdge
+                    (StructuringNodeKind Strategy PerformanceDimension)
+                    (PrimitiveNodeKind Strategy Action)
+                ]
+                (validateStructure strategySuccessDimensionWithActionGraph)
+    , testCase "MeasureMeasurementDimension cannot type a Strategy dimension"
+        $ let invalidEdge =
+                RawEdge
+                  strategyPerformanceDimensionId
+                  (relationNameFor
+                     (containsPerformanceDimension MeasureMeasurementDimension))
+                  strategyKeyResultId
+           in assertStructuralErrors
+                [ InvalidRelationEndpointKinds
+                    invalidEdge
+                    (StructuringNodeKind Strategy PerformanceDimension)
+                    (PrimitiveNodeKind Strategy KeyResult)
+                ]
+                (validateStructure
+                   strategySuccessPerformanceDimensionGraph
+                     {rawEdges = [invalidEdge]})
     ]
 
 structureTests :: TestTree
@@ -45,6 +142,17 @@ structureTests =
                 someEdgeRelation candidate @?= relationNameFor orientsStrategy
                 someEdgeTo candidate @?= strategyId
               [] -> assertFailure "reference graph has no edges"
+    , testCase "validated context lookup returns a typed reference"
+        $ withWellFormed sampleGraph
+        $ \graph ->
+            withContextRef graph SNeed needId $ \need ->
+              contextRefId need @?= needId
+    , testCase "validated context lookup rejects a false type index"
+        $ withWellFormed sampleGraph
+        $ \graph -> lookupContextRef graph SStrategy needId @?= Nothing
+    , testCase "validated context lookup rejects non-context nodes"
+        $ withWellFormed sampleGraph
+        $ \graph -> lookupContextRef graph SNeed needObjectiveId @?= Nothing
     , testCase "structural errors accumulate"
         $ let invalidEdge =
                 RawEdge missingId (RelationName "unknown") strategyId
@@ -61,15 +169,15 @@ structureTests =
                 [DuplicateEdge duplicate]
                 (validateStructure
                    sampleGraph {rawEdges = duplicate : rawEdges sampleGraph})
-    , testCase "wrong relation domains are rejected"
+    , testCase "wrong relation endpoint kinds are rejected"
         $ let invalidEdge = edge needId qualifiesNeed strategyId
            in assertStructuralErrors
-                [ InvalidRelationDomain
+                [ InvalidRelationEndpointKinds
                     invalidEdge
                     (ContextNodeKind Need)
                     (ContextNodeKind Strategy)
                 ]
-                (validateStructure invalidRelationDomainGraph)
+                (validateStructure invalidRelationEndpointsGraph)
     , testCase "unknown primitive owners are rejected exactly"
         $ assertStructuralErrors
             [UnknownOwner needObjectiveId missingId]
@@ -88,11 +196,18 @@ structureTests =
                   []))
     , testCase "invalid structuring contexts are rejected exactly"
         $ assertStructuralErrors
-            [InvalidStructuringContext measureDomainId Need Domain]
+            [ InvalidStructuringContext
+                measurePerformanceDimensionId
+                Need
+                PerformanceDimension
+            ]
             (validateStructure
                (RawGraph
                   [ RawContextNode needId Need
-                  , RawStructuringNode measureDomainId needId Domain
+                  , RawStructuringNode
+                      measurePerformanceDimensionId
+                      needId
+                      PerformanceDimension
                   ]
                   []))
     , testCase "invalid Situation anchor contexts are rejected exactly"
@@ -334,28 +449,36 @@ qualificationTests =
     [ testCase "qualified Need returns its Strategy"
         $ withSemanticallyValid sampleGraph [sampleStrategyFormulation]
         $ \model ->
-            qualifyingStrategies model (ContextRef needId)
-              @?= [ContextRef strategyId]
+            withSemanticContextRef model SNeed needId $ \need ->
+              map contextRefId (qualifyingStrategies model need)
+                @?= [strategyId]
     , testCase "situated unqualified Need returns no Strategy"
         $ withSemanticallyValid unqualifiedNeedGraph [sampleStrategyFormulation]
-        $ \model -> qualifyingStrategies model (ContextRef needId) @?= []
+        $ \model ->
+            withSemanticContextRef model SNeed needId $ \need ->
+              qualifyingStrategies model need @?= []
     , testCase "qualifies without translates evidence does not qualify"
         $ withSemanticallyValid
             qualifiesWithoutTranslationGraph
             [sampleStrategyFormulation]
-        $ \model -> qualifyingStrategies model (ContextRef needId) @?= []
+        $ \model ->
+            withSemanticContextRef model SNeed needId $ \need ->
+              qualifyingStrategies model need @?= []
     , testCase "unlisted strategic Key Result does not qualify"
         $ withSemanticallyValid
             unlistedQualifiesGraph
             [sampleStrategyFormulation]
-        $ \model -> qualifyingStrategies model (ContextRef needId) @?= []
+        $ \model ->
+            withSemanticContextRef model SNeed needId $ \need ->
+              qualifyingStrategies model need @?= []
     , testCase "multiple Strategies can qualify the same Need"
         $ withSemanticallyValid
             multiplyQualifyingGraph
             [sampleStrategyFormulation, secondStrategyFormulation]
         $ \model ->
-            sort (qualifyingStrategies model (ContextRef needId))
-              @?= sort [ContextRef strategyId, ContextRef secondStrategyId]
+            withSemanticContextRef model SNeed needId $ \need ->
+              sort (map contextRefId (qualifyingStrategies model need))
+                @?= sort [strategyId, secondStrategyId]
     ]
 
 traceTests :: TestTree
@@ -370,14 +493,37 @@ traceTests =
                (validateTraceability model)
      , testCase "complete reference model is traceable"
          $ withTraceable sampleGraph (const (pure ()))
-     , testCase "effect traces expose typed strategic projections"
+     , testCase "effect traces expose every typed proof-path constituent"
          $ withTraceable sampleGraph
          $ \model ->
              let trace = NonEmpty.head (effectTraces model)
               in do
-                   traceStrategy trace @?= ContextRef strategyId
-                   traceStrategyKeyResult trace @?= NodeId strategyKeyResultId
-                   traceIntervention trace @?= ContextRef interventionId
+                   contextRefId (traceVision trace) @?= visionId
+                   unNodeId (traceVisionObjective trace) @?= visionObjectiveId
+                   contextRefId (traceStrategy trace) @?= strategyId
+                   unNodeId (traceStrategyDriver trace) @?= strategyDriverId
+                   unNodeId (traceStrategyObjective trace)
+                     @?= strategyObjectiveId
+                   unNodeId (traceStrategyKeyResult trace)
+                     @?= strategyKeyResultId
+                   unNodeId (traceStrategyAction trace) @?= strategyActionId
+                   contextRefId (traceNeed trace) @?= needId
+                   unNodeId (traceNeedDriver trace) @?= needDriverId
+                   unNodeId (traceNeedObjective trace) @?= needObjectiveId
+                   contextRefId (traceIntervention trace) @?= interventionId
+                   unNodeId (traceInterventionAction trace)
+                     @?= interventionActionId
+                   unNodeId (traceInterventionKeyResult trace)
+                     @?= interventionKeyResultId
+                   contextRefId (traceMeasure trace) @?= measureId
+                   unNodeId (traceMeasurePerformanceDimension trace)
+                     @?= measurePerformanceDimensionId
+                   unNodeId (traceKPI trace) @?= measureKpiId
+                   contextRefId (traceSituation trace) @?= situationId
+                   situationAnchorRefId (traceSituationAnchor trace)
+                     @?= situationAnchorId
+                   situationAnchorRefKind (traceSituationAnchor trace)
+                     @?= BusinessCapability
      , testCase "every Intervention must address a Need"
          $ withSemanticallyValid
              (withoutEdge (edge interventionId addressesNeed needId) sampleGraph)
@@ -417,7 +563,7 @@ traceTests =
          $ withTraceable unlistedStrategyPathGraph
          $ \model ->
              map
-               traceInterventionKeyResult
+               (unNodeId . traceInterventionKeyResult)
                (NonEmpty.toList (effectTraces model))
                @?= [interventionKeyResultId]
      , unlistedStrategyMacroTest
@@ -626,9 +772,18 @@ missingMacroEvidence candidate
 
 measureFramingEdges :: [RawEdge]
 measureFramingEdges =
-  [ edge strategyDriverId indicatesMeasureDomain measureDomainId
-  , edge strategyKeyResultId determinesMeasureDomain measureDomainId
-  , edge measureDomainId containsMeasureKPI measureKpiId
+  [ edge
+      strategyDriverId
+      indicatesMeasurePerformanceDimension
+      measurePerformanceDimensionId
+  , edge
+      strategyKeyResultId
+      determinesMeasurePerformanceDimension
+      measurePerformanceDimensionId
+  , edge
+      measurePerformanceDimensionId
+      (containsPerformanceDimension MeasureMeasurementDimension)
+      measureKpiId
   ]
 
 traceOnlyEdges :: [RawEdge]
@@ -659,22 +814,62 @@ readinessTests =
         $ \ready -> do
             NonEmpty.length (evidencePlans ready) @?= 1
             NonEmpty.length (readyEffectTraces ready) @?= 1
+            readinessCheckedAt ready @?= readinessDate
+            plannedInterventionStarts ready @?= [samplePlannedStart]
     , testCase "known Intervention has one evidence-ready trace"
         $ withReady sampleGraph [sampleStrategyFormulation]
         $ \ready ->
-            length
-              (readyTracesForIntervention ready (ContextRef interventionId))
-              @?= 1
+            withOnlyReadyIntervention ready $ \intervention ->
+              length (readyTracesForIntervention ready intervention) @?= 1
     , testCase "trace-free Intervention has no evidence-ready trace"
         $ withReady sampleGraph [sampleStrategyFormulation]
         $ \ready ->
-            readyTracesForIntervention ready (ContextRef missingId) @?= []
+            withWellFormed
+              (RawGraph [RawContextNode missingId Intervention] [])
+              (\graph ->
+                 withContextRef graph SIntervention missingId $ \intervention ->
+                   readyTracesForIntervention ready intervention @?= [])
     , testCase "Intervention may have multiple evidence-ready traces"
         $ withReady twoPathGraph [sampleStrategyFormulation]
         $ \ready ->
-            length
-              (readyTracesForIntervention ready (ContextRef interventionId))
-              @?= 2
+            withOnlyReadyIntervention ready $ \intervention -> do
+              length (readyTracesForIntervention ready intervention) @?= 2
+              plannedInterventionStarts ready @?= [samplePlannedStart]
+    , testCase "contradictory starts for multi-trace Intervention are rejected"
+        $ withTraceable twoPathGraph
+        $ \model ->
+            let contradictory =
+                  samplePlannedStart {plannedStartAt = afterInterventionDate}
+             in assertReadinessErrors
+                  [DuplicatePlannedInterventionStart interventionId 2]
+                  (validateEvidenceReadinessAt
+                     readinessDate
+                     model
+                     [samplePlannedStart, contradictory]
+                     (fmap planForTrace (effectTraces model)))
+    , testCase "unknown planned Intervention timing is rejected"
+        $ withTraceable sampleGraph
+        $ \model ->
+            let unknown = PlannedInterventionStart missingId interventionDate
+             in assertReadinessErrors
+                  [UnknownPlannedInterventionStart missingId]
+                  (validateEvidenceReadinessAt
+                     readinessDate
+                     model
+                     [samplePlannedStart, unknown]
+                     (fmap planForTrace (effectTraces model)))
+    , testCase "every traced Intervention requires planned timing"
+        $ withTraceable sampleGraph
+        $ \model ->
+            let intervention =
+                  traceIntervention (NonEmpty.head (effectTraces model))
+             in assertReadinessErrors
+                  [MissingPlannedInterventionStart intervention]
+                  (validateEvidenceReadinessAt
+                     readinessDate
+                     model
+                     []
+                     (fmap planForTrace (effectTraces model)))
     , testCase "plan and baseline may be fixed at the check time"
         $ withTraceable sampleGraph
         $ \model ->
@@ -690,6 +885,7 @@ readinessTests =
                   (validateEvidenceReadinessAt
                      readinessDate
                      model
+                     (plannedStartsFor model)
                      (NonEmpty.singleton plan))
     , testCase "duplicate plans for one trace are rejected"
         $ withTraceable sampleGraph
@@ -702,12 +898,15 @@ readinessTests =
                   (validateEvidenceReadinessAt
                      readinessDate
                      model
+                     (plannedStartsFor model)
                      (plan NonEmpty.:| [plan]))
     , testCase "unknown planned traces are rejected exactly"
         $ withTraceable twoPathGraph
         $ \twoPath ->
             case filter
-                   ((/= interventionKeyResultId) . traceInterventionKeyResult)
+                   ((/= interventionKeyResultId)
+                      . unNodeId
+                      . traceInterventionKeyResult)
                    (NonEmpty.toList (effectTraces twoPath)) of
               unknownTrace:_ ->
                 withTraceable sampleGraph $ \singlePath ->
@@ -721,6 +920,7 @@ readinessTests =
                         (validateEvidenceReadinessAt
                            readinessDate
                            singlePath
+                           (plannedStartsFor singlePath)
                            (knownPlan NonEmpty.:| [unknownPlan]))
               [] -> assertFailure "two-path fixture lacks an unknown trace"
     , testCase "every trace requires one plan"
@@ -733,6 +933,7 @@ readinessTests =
                   (validateEvidenceReadinessAt
                      readinessDate
                      model
+                     (plannedStartsFor model)
                      (NonEmpty.singleton (planForTrace planned)))
               traces ->
                 assertFailure
@@ -742,24 +943,28 @@ readinessTests =
         readinessDate
         (\plan -> plan {establishedAt = afterReadinessDate})
         (\identifier -> [PlanEstablishedAfterCheck identifier])
-    , readinessFailureTest
-        "readiness must be checked before intervention"
-        interventionDate
-        id
-        (\identifier -> [ReadinessCheckedAtOrAfterIntervention identifier])
+    , testCase "readiness must be checked before planned start"
+        $ withTraceable sampleGraph
+        $ \model ->
+            let intervention =
+                  traceIntervention (NonEmpty.head (effectTraces model))
+             in assertReadinessErrors
+                  [ReadinessCheckedAtOrAfterPlannedStart intervention]
+                  (validateEvidenceReadinessAt
+                     interventionDate
+                     model
+                     (plannedStartsFor model)
+                     (fmap planForTrace (effectTraces model)))
     , readinessFailureTest
         "baseline must be observed by the check time"
         readinessDate
         (mapBaseline (\item -> item {observedAt = afterReadinessDate}))
         (\identifier -> [BaselineObservedAfterCheck identifier])
     , readinessFailureTest
-        "baseline must precede intervention"
+        "baseline cannot be later than the readiness check"
         readinessDate
         (mapBaseline (\item -> item {observedAt = interventionDate}))
-        (\identifier ->
-           [ BaselineObservedAfterCheck identifier
-           , BaselineObservedAtOrAfterIntervention identifier
-           ])
+        (\identifier -> [BaselineObservedAfterCheck identifier])
     , readinessFailureTest
         "target due date must follow intervention"
         readinessDate
@@ -779,14 +984,33 @@ readinessTests =
     , readinessFailureTest
         "criterion units must match the baseline unit"
         readinessDate
-        (\plan -> plan {effectCriterion = IncreaseByAtLeast (Quantity 10 count)})
+        (\plan ->
+           plan
+             {effectCriterion = AbsoluteIncreaseByAtLeast (Quantity 10 count)})
         (\identifier -> [CriterionUnitMismatch identifier percent count])
     , readinessFailureTest
         "effect criterion magnitude must be positive"
         readinessDate
         (\plan ->
-           plan {effectCriterion = IncreaseByAtLeast (Quantity 0 percent)})
+           plan
+             {effectCriterion = AbsoluteIncreaseByAtLeast (Quantity 0 percent)})
         (\identifier -> [InvalidEffectCriterion identifier])
+    , readinessFailureTest
+        "relative effect criterion ratio must be positive"
+        readinessDate
+        (\plan ->
+           plan {effectCriterion = RelativeIncreaseByAtLeast (RelativeChange 0)})
+        (\identifier -> [InvalidEffectCriterion identifier])
+    , readinessFailureTest
+        "relative effect criterion requires nonzero baseline"
+        readinessDate
+        (\plan ->
+           plan
+             { baseline = observation 0 baselineDate percent
+             , effectCriterion =
+                 RelativeIncreaseByAtLeast (RelativeChange (1 / 10))
+             })
+        (\identifier -> [RelativeEffectCriterionWithZeroBaseline identifier])
     , readinessFailureTest
         "target criterion bounds must be valid"
         readinessDate
@@ -811,7 +1035,7 @@ readinessTests =
     , readinessFailureTest
         "all plan units must be named"
         readinessDate
-        (replacePlanUnit (Unit " "))
+        (replacePlanUnit (NamedUnit " "))
         (\identifier -> [EmptyUnit identifier])
     , readinessFailureTest
         "plan provenance must be nonblank"
@@ -831,45 +1055,65 @@ effectEvidenceTests =
     "effect evidence"
     [ testCase "complete evidence is assessed"
         $ withAssessed id 75 followUpDate
-        $ \assessment -> do
+        $ \assessed assessment -> do
             effectResult assessment @?= Satisfied
-            targetResult assessment @?= ObservedSatisfiedOnTime
+            targetResult assessment @?= TargetSatisfiedInObservationByDue
+            evidenceAssessedAt assessed @?= assessmentDate
+            actualInterventionStarts assessed @?= [sampleActualStart]
     , testCase "effect can be supported before target achievement"
         $ withAssessed id 60 followUpDate
-        $ \assessment -> do
+        $ \_ assessment -> do
             effectResult assessment @?= Satisfied
-            targetResult assessment @?= NotSatisfiedAtFollowUp
+            targetResult assessment @?= TargetNotSatisfiedInObservation
     , testCase "target achievement does not imply positive effect"
         $ withAssessed
             (\plan ->
                plan
                  { baseline = observation 72 baselineDate percent
-                 , effectCriterion = IncreaseByAtLeast (Quantity 10 percent)
+                 , effectCriterion =
+                     AbsoluteIncreaseByAtLeast (Quantity 10 percent)
                  })
             75
             followUpDate
-        $ \assessment -> do
+        $ \_ assessment -> do
             effectResult assessment @?= NotSatisfied
-            targetResult assessment @?= ObservedSatisfiedOnTime
-    , testCase "late target achievement is distinguished"
+            targetResult assessment @?= TargetSatisfiedInObservationByDue
+    , testCase "satisfied observation after due is distinguished"
         $ withAssessed
             (\plan -> plan {targetDueAt = earlyTargetDate})
             75
             followUpDate
-        $ \assessment -> targetResult assessment @?= ObservedSatisfiedAfterDue
+        $ \_ assessment ->
+            targetResult assessment @?= TargetSatisfiedInObservationAfterDue
+    , testCase "late actual start does not move the absolute target due time"
+        $ withReadyPlan id
+        $ \ready trace ->
+            let lateStart = sampleActualStart {actualStartAt = assessmentDate}
+                followUp = followUpForTrace trace 75 lateObservationDate percent
+             in case assessEffectEvidenceAt
+                       lateAssessmentDate
+                       ready
+                       [lateStart]
+                       (NonEmpty.singleton followUp) of
+                  Failure errors ->
+                    assertFailure ("evidence errors: " ++ show errors)
+                  Success assessed ->
+                    targetResult (NonEmpty.head (effectAssessments assessed))
+                      @?= TargetSatisfiedInObservationAfterDue
     , testCase "AtMost targets are assessed"
         $ withAssessed
             (\plan ->
                plan
                  { baseline = observation 60 baselineDate percent
-                 , effectCriterion = DecreaseByAtLeast (Quantity 10 percent)
+                 , effectCriterion =
+                     AbsoluteDecreaseByAtLeast (Quantity 10 percent)
                  , targetCriterion = AtMost (Quantity 50 percent)
                  })
             45
             followUpDate
-        $ \assessment -> do
+        $ \_ assessment -> do
             effectResult assessment @?= Satisfied
-            targetResult assessment @?= ObservedSatisfiedOnTime
+            targetResult assessment @?= TargetSatisfiedInObservationByDue
     , testCase "Within targets are assessed"
         $ withAssessed
             (\plan ->
@@ -879,14 +1123,116 @@ effectEvidenceTests =
                  })
             75
             followUpDate
-        $ \assessment -> targetResult assessment @?= ObservedSatisfiedOnTime
+        $ \_ assessment ->
+            targetResult assessment @?= TargetSatisfiedInObservationByDue
+    , testCase "absolute percentage delta is measured in percentage points"
+        $ withAssessed id 50 followUpDate
+        $ \_ assessment -> effectResult assessment @?= Satisfied
+    , testCase "nine percentage points do not satisfy a ten-point delta"
+        $ withAssessed id 49 followUpDate
+        $ \_ assessment -> effectResult assessment @?= NotSatisfied
+    , testCase "relative increase is distinct from absolute delta"
+        $ withAssessed
+            (\plan ->
+               plan
+                 { effectCriterion =
+                     RelativeIncreaseByAtLeast (RelativeChange (1 / 10))
+                 })
+            44
+            followUpDate
+        $ \_ assessment -> effectResult assessment @?= Satisfied
+    , testCase "relative decrease is assessed against baseline magnitude"
+        $ withAssessed
+            (\plan ->
+               plan
+                 { baseline = observation 100 baselineDate percent
+                 , effectCriterion =
+                     RelativeDecreaseByAtLeast (RelativeChange (1 / 10))
+                 , targetCriterion = AtMost (Quantity 100 percent)
+                 })
+            90
+            followUpDate
+        $ \_ assessment -> effectResult assessment @?= Satisfied
+    , testCase "one actual start governs all traces of an Intervention"
+        $ withReady twoPathGraph [sampleStrategyFormulation]
+        $ \ready ->
+            assertSuccess
+              (assessEffectEvidenceAt
+                 assessmentDate
+                 ready
+                 [sampleActualStart]
+                 (followUpsForReady ready 75 followUpDate percent))
+    , testCase "actual start must be after the readiness check"
+        $ withReady sampleGraph [sampleStrategyFormulation]
+        $ \ready ->
+            withOnlyReadyIntervention ready $ \intervention ->
+              let startAtReadiness =
+                    sampleActualStart {actualStartAt = readinessDate}
+               in assertEvidenceErrors
+                    [ActualInterventionStartAtOrBeforeReadiness intervention]
+                    (assessEffectEvidenceAt
+                       assessmentDate
+                       ready
+                       [startAtReadiness]
+                       (followUpsForReady ready 75 followUpDate percent))
+    , testCase "actual start before readiness is rejected"
+        $ withReady sampleGraph [sampleStrategyFormulation]
+        $ \ready ->
+            withOnlyReadyIntervention ready $ \intervention ->
+              let earlyStart =
+                    sampleActualStart {actualStartAt = beforeReadinessDate}
+               in assertEvidenceErrors
+                    [ActualInterventionStartAtOrBeforeReadiness intervention]
+                    (assessEffectEvidenceAt
+                       assessmentDate
+                       ready
+                       [earlyStart]
+                       (followUpsForReady ready 75 followUpDate percent))
+    , testCase "contradictory actual starts are rejected canonically"
+        $ withReady twoPathGraph [sampleStrategyFormulation]
+        $ \ready ->
+            let contradictory =
+                  sampleActualStart {actualStartAt = afterInterventionDate}
+             in assertEvidenceErrors
+                  [DuplicateActualInterventionStart interventionId 2]
+                  (assessEffectEvidenceAt
+                     assessmentDate
+                     ready
+                     [sampleActualStart, contradictory]
+                     (followUpsForReady ready 75 followUpDate percent))
+    , testCase "unknown actual Intervention timing is rejected"
+        $ withReady sampleGraph [sampleStrategyFormulation]
+        $ \ready ->
+            let unknown = ActualInterventionStart missingId interventionDate
+             in assertEvidenceErrors
+                  [UnknownActualInterventionStart missingId]
+                  (assessEffectEvidenceAt
+                     assessmentDate
+                     ready
+                     [sampleActualStart, unknown]
+                     (followUpsForReady ready 75 followUpDate percent))
+    , testCase "every ready Intervention requires actual timing"
+        $ withReady sampleGraph [sampleStrategyFormulation]
+        $ \ready ->
+            withOnlyReadyIntervention ready $ \intervention ->
+              assertEvidenceErrors
+                [MissingActualInterventionStart intervention]
+                (assessEffectEvidenceAt
+                   assessmentDate
+                   ready
+                   []
+                   (followUpsForReady ready 75 followUpDate percent))
     , testCase "multiple follow-ups per trace are assessed independently"
         $ withReady sampleGraph [sampleStrategyFormulation]
         $ \ready ->
             let trace = NonEmpty.head (readyEffectTraces ready)
                 first = followUpForTrace trace 60 followUpDate percent
                 second = followUpForTrace trace 75 laterFollowUpDate percent
-             in case assessEffectEvidence ready (first NonEmpty.:| [second]) of
+             in case assessEffectEvidenceAt
+                       assessmentDate
+                       ready
+                       [sampleActualStart]
+                       (first NonEmpty.:| [second]) of
                   Failure errors ->
                     assertFailure ("evidence errors: " ++ show errors)
                   Success assessed ->
@@ -899,7 +1245,11 @@ effectEvidenceTests =
                 identifier = traceIdentifier trace
              in assertEvidenceErrors
                   [DuplicateFollowUpObservation identifier followUpDate 2]
-                  (assessEffectEvidence ready (followUp NonEmpty.:| [followUp]))
+                  (assessEffectEvidenceAt
+                     assessmentDate
+                     ready
+                     [sampleActualStart]
+                     (followUp NonEmpty.:| [followUp]))
     , testCase "every ready trace requires a follow-up"
         $ withReady twoPathGraph [sampleStrategyFormulation]
         $ \ready ->
@@ -907,8 +1257,10 @@ effectEvidenceTests =
               observed:omitted:_ ->
                 assertEvidenceErrors
                   [MissingFollowUpObservation (traceIdentifier omitted)]
-                  (assessEffectEvidence
+                  (assessEffectEvidenceAt
+                     assessmentDate
                      ready
+                     [sampleActualStart]
                      (NonEmpty.singleton
                         (followUpForTrace observed 75 followUpDate percent)))
               traces ->
@@ -918,7 +1270,9 @@ effectEvidenceTests =
         $ withReady twoPathGraph [sampleStrategyFormulation]
         $ \twoPath ->
             case filter
-                   ((/= interventionKeyResultId) . traceInterventionKeyResult)
+                   ((/= interventionKeyResultId)
+                      . unNodeId
+                      . traceInterventionKeyResult)
                    (NonEmpty.toList (readyEffectTraces twoPath)) of
               unknownTrace:_ ->
                 withReady sampleGraph [sampleStrategyFormulation] $ \single ->
@@ -929,38 +1283,64 @@ effectEvidenceTests =
                         followUpForTrace unknownTrace 75 followUpDate percent
                    in assertEvidenceErrors
                         [UnknownFollowUpTrace (traceIdentifier unknownTrace)]
-                        (assessEffectEvidence
+                        (assessEffectEvidenceAt
+                           assessmentDate
                            single
+                           [sampleActualStart]
                            (known NonEmpty.:| [unknown]))
               [] -> assertFailure "two-path fixture lacks an unknown trace"
     , evidenceFailureTest
         "follow-up KPI must match the trace"
         (\item -> item {observationKPI = missingId})
-        (\identifier -> [FollowUpKPIMismatch identifier measureKpiId missingId])
+        (\identifier _ ->
+           [FollowUpKPIMismatch identifier measureKpiId missingId])
     , evidenceFailureTest
         "follow-up anchor must match the trace"
         (\item -> item {observationAnchor = missingId})
-        (\identifier ->
+        (\identifier _ ->
            [FollowUpAnchorMismatch identifier situationAnchorId missingId])
     , evidenceFailureTest
         "follow-up unit must match the baseline"
         (\item -> item {observedValue = Quantity 75 count})
-        (\identifier -> [FollowUpUnitMismatch identifier percent count])
+        (\identifier _ -> [FollowUpUnitMismatch identifier percent count])
     , evidenceFailureTest
-        "follow-up must be observed after intervention"
+        "follow-up must be observed after actual start"
         (\item -> item {observedAt = interventionDate})
-        (\identifier -> [FollowUpObservedAtOrBeforeIntervention identifier])
+        (\identifier _ -> [FollowUpObservedAtOrBeforeActualStart identifier])
+    , evidenceFailureAtTest
+        "future-dated follow-up is rejected"
+        followUpDate
+        (\item -> item {observedAt = laterFollowUpDate})
+        (\identifier _ -> [FollowUpObservedAfterAssessment identifier])
+    , evidenceFailureAtTest
+        "actual start must precede assessment"
+        interventionDate
+        (\item -> item {observedAt = interventionDate})
+        (\identifier intervention ->
+           [ ActualInterventionStartAtOrAfterAssessment intervention
+           , FollowUpObservedAtOrBeforeActualStart identifier
+           ])
+    , testCase "follow-up may be observed exactly at assessedAt"
+        $ withReadyPlan id
+        $ \ready trace ->
+            assertSuccess
+              (assessEffectEvidenceAt
+                 followUpDate
+                 ready
+                 [sampleActualStart]
+                 (NonEmpty.singleton
+                    (followUpForTrace trace 75 followUpDate percent)))
     , evidenceFailureTest
         "follow-up unit must be named"
-        (\item -> item {observedValue = Quantity 75 (Unit " ")})
-        (\identifier ->
-           [ FollowUpUnitMismatch identifier percent (Unit " ")
+        (\item -> item {observedValue = Quantity 75 (NamedUnit " ")})
+        (\identifier _ ->
+           [ FollowUpUnitMismatch identifier percent (NamedUnit " ")
            , EmptyFollowUpUnit identifier
            ])
     , evidenceFailureTest
         "follow-up provenance must be nonblank"
         (\item -> item {observationSource = EvidenceSource " "})
-        (\identifier -> [EmptyFollowUpSource identifier])
+        (\identifier _ -> [EmptyFollowUpSource identifier])
     , testCase "positive effect makes the traced Need effective"
         $ assertEffectiveNeed id 75 True
     , testCase "missing positive effect leaves the traced Need ineffective"
@@ -975,7 +1355,7 @@ effectEvidenceTests =
               (\plan ->
                  plan
                    { effectCriterion =
-                       IncreaseByAtLeast
+                       AbsoluteIncreaseByAtLeast
                          (Quantity (fromInteger threshold) percent)
                    })
               (fromInteger threshold + 40)
@@ -989,7 +1369,14 @@ registryTests :: TestTree
 registryTests =
   testGroup
     "typed registries"
-    [ QC.testProperty "relation lookup round-trips"
+    [ QC.testProperty
+        "performance-dimension role lookup and reification round-trip"
+        $ QC.forAll
+            (QC.elements allPerformanceDimensionRoles)
+            performanceDimensionRoleRoundTrips
+    , testCase "every performance-dimension role code is represented"
+        $ performanceDimensionRoleCodes @?= [minBound .. maxBound]
+    , QC.testProperty "relation lookup round-trips"
         $ QC.forAll (QC.elements allRelations) relationRoundTrips
     , testCase "relation registry identities are unique"
         $ assertBool "duplicate relation identity" relationRegistryIsUnique
@@ -1000,6 +1387,17 @@ registryTests =
     , testCase "every interpretation code is represented"
         $ interpretationCodes @?= [minBound .. maxBound]
     ]
+
+performanceDimensionRoleRoundTrips :: SomePerformanceDimensionRole -> Bool
+performanceDimensionRoleRoundTrips role =
+  reifyPerformanceDimensionRole (performanceDimensionRoleCodeOf role) == role
+    && lookupPerformanceDimensionRole context == Just role
+  where
+    (_, _, context, _) = performanceDimensionRoleIdentity role
+
+performanceDimensionRoleCodes :: [PerformanceDimensionRoleCode]
+performanceDimensionRoleCodes =
+  map performanceDimensionRoleCodeOf allPerformanceDimensionRoles
 
 relationRoundTrips :: SomeRelation -> Bool
 relationRoundTrips relation =
@@ -1029,6 +1427,37 @@ withWellFormed raw action =
   case validateStructure raw of
     Failure errors -> assertFailure ("structural errors: " ++ show errors)
     Success graph -> action graph
+
+withContextRef ::
+     WellFormedGraph
+  -> SContext context
+  -> RawNodeId
+  -> (ContextRef context -> Assertion)
+  -> Assertion
+withContextRef graph context identifier action =
+  case lookupContextRef graph context identifier of
+    Nothing -> assertFailure "validated Context reference was not found"
+    Just reference -> action reference
+
+withSemanticContextRef ::
+     SemanticallyValidModel
+  -> SContext context
+  -> RawNodeId
+  -> (ContextRef context -> Assertion)
+  -> Assertion
+withSemanticContextRef model context identifier action =
+  case lookupSemanticContextRef model context identifier of
+    Nothing -> assertFailure "semantic Context reference was not found"
+    Just reference -> action reference
+
+withOnlyReadyIntervention ::
+     EvidenceReadyModel -> (ContextRef 'Intervention -> Assertion) -> Assertion
+withOnlyReadyIntervention ready action =
+  case readyInterventions ready of
+    [intervention] -> action intervention
+    interventions ->
+      assertFailure
+        ("expected one ready Intervention, got " ++ show (length interventions))
 
 withTraceable :: RawGraph -> (TraceableEffectModel -> Assertion) -> Assertion
 withTraceable raw action =
@@ -1117,6 +1546,7 @@ withReady raw formulations action =
         case validateEvidenceReadinessAt
                readinessDate
                traceable
+               (plannedStartsFor traceable)
                (fmap planForTrace (effectTraces traceable)) of
           Failure errors -> assertFailure ("readiness errors: " ++ show errors)
           Success ready -> action ready
@@ -1132,6 +1562,7 @@ withReadyPlan transform action =
      in case validateEvidenceReadinessAt
                readinessDate
                traceable
+               (plannedStartsFor traceable)
                (NonEmpty.singleton plan) of
           Failure errors -> assertFailure ("readiness errors: " ++ show errors)
           Success ready -> action ready trace
@@ -1153,29 +1584,47 @@ readinessFailureTest name checkedAt transform expected =
               (validateEvidenceReadinessAt
                  checkedAt
                  traceable
+                 (plannedStartsFor traceable)
                  (NonEmpty.singleton plan))
 
 evidenceFailureTest ::
      TestName
   -> (Observation -> Observation)
-  -> (EffectTraceId -> [EvidenceError])
+  -> (EffectTraceId -> ContextRef 'Intervention -> [EvidenceError])
   -> TestTree
 evidenceFailureTest name transform expected =
+  evidenceFailureAtTest name assessmentDate transform expected
+
+evidenceFailureAtTest ::
+     TestName
+  -> UTCTime
+  -> (Observation -> Observation)
+  -> (EffectTraceId -> ContextRef 'Intervention -> [EvidenceError])
+  -> TestTree
+evidenceFailureAtTest name assessedAt transform expected =
   testCase name
     $ withReadyPlan id
     $ \ready trace ->
         let observation' = transform (observation 75 followUpDate percent)
             followUp = FollowUpObservation (traceIdentifier trace) observation'
          in assertEvidenceErrors
-              (expected (traceIdentifier trace))
-              (assessEffectEvidence ready (NonEmpty.singleton followUp))
+              (expected (traceIdentifier trace) (traceIntervention trace))
+              (assessEffectEvidenceAt
+                 assessedAt
+                 ready
+                 [sampleActualStart]
+                 (NonEmpty.singleton followUp))
 
 assertEffectiveNeed ::
      (EvidencePlan -> EvidencePlan) -> Rational -> Bool -> Assertion
 assertEffectiveNeed transform followValue expected =
   withReadyPlan transform $ \ready trace ->
     let followUp = followUpForTrace trace followValue followUpDate percent
-     in case assessEffectEvidence ready (NonEmpty.singleton followUp) of
+     in case assessEffectEvidenceAt
+               assessmentDate
+               ready
+               [sampleActualStart]
+               (NonEmpty.singleton followUp) of
           Failure errors -> assertFailure ("evidence errors: " ++ show errors)
           Success assessed ->
             isEffectiveNeed assessed (traceNeed trace) @?= expected
@@ -1184,16 +1633,19 @@ withAssessed ::
      (EvidencePlan -> EvidencePlan)
   -> Rational
   -> UTCTime
-  -> (EffectAssessment -> Assertion)
+  -> (EvidenceAssessedModel -> EffectAssessment -> Assertion)
   -> Assertion
 withAssessed transform followValue followTimestamp action =
   withReadyPlan transform $ \ready trace ->
-    case assessEffectEvidence
+    case assessEffectEvidenceAt
+           assessmentDate
            ready
+           [sampleActualStart]
            (NonEmpty.singleton
               (followUpForTrace trace followValue followTimestamp percent)) of
       Failure errors -> assertFailure ("evidence errors: " ++ show errors)
-      Success assessed -> action (NonEmpty.head (effectAssessments assessed))
+      Success assessed ->
+        action assessed (NonEmpty.head (effectAssessments assessed))
 
 traceabilityFails :: RawGraph -> Bool
 traceabilityFails raw =
@@ -1226,11 +1678,14 @@ evidenceSucceeds transform followValue =
            in case validateEvidenceReadinessAt
                      readinessDate
                      traceable
+                     (plannedStartsFor traceable)
                      (NonEmpty.singleton plan) of
                 Failure _ -> False
                 Success ready ->
-                  case assessEffectEvidence
+                  case assessEffectEvidenceAt
+                         assessmentDate
                          ready
+                         [sampleActualStart]
                          (NonEmpty.singleton
                             (followUpForTrace
                                trace
@@ -1246,13 +1701,13 @@ directionalEvidenceSucceeds :: Bool -> Integer -> Bool
 directionalEvidenceSucceeds increases threshold =
   if increases
     then evidenceSucceeds
-           (\plan -> plan {effectCriterion = IncreaseByAtLeast quantity})
+           (\plan -> plan {effectCriterion = AbsoluteIncreaseByAtLeast quantity})
            (40 + amount)
     else evidenceSucceeds
            (\plan ->
               plan
                 { baseline = observation 100 baselineDate percent
-                , effectCriterion = DecreaseByAtLeast quantity
+                , effectCriterion = AbsoluteDecreaseByAtLeast quantity
                 , targetCriterion = AtMost (Quantity 100 percent)
                 })
            (100 - amount)
@@ -1266,6 +1721,77 @@ assertSuccess (Failure _) = assertFailure "expected validation success"
 
 emptyGraph :: RawGraph
 emptyGraph = RawGraph [] []
+
+strategySuccessPerformanceDimensionGraph :: RawGraph
+strategySuccessPerformanceDimensionGraph =
+  RawGraph
+    [ RawContextNode strategyId Strategy
+    , RawPrimitiveNode strategyKeyResultId strategyId KeyResult
+    , RawStructuringNode
+        strategyPerformanceDimensionId
+        strategyId
+        PerformanceDimension
+    ]
+    [ edge
+        strategyPerformanceDimensionId
+        (containsPerformanceDimension StrategySuccessDimension)
+        strategyKeyResultId
+    ]
+
+measureMeasurementPerformanceDimensionGraph :: RawGraph
+measureMeasurementPerformanceDimensionGraph =
+  RawGraph
+    [ RawContextNode measureId Measure
+    , RawPrimitiveNode measureKpiId measureId KPI
+    , RawStructuringNode
+        measurePerformanceDimensionId
+        measureId
+        PerformanceDimension
+    ]
+    [ edge
+        measurePerformanceDimensionId
+        (containsPerformanceDimension MeasureMeasurementDimension)
+        measureKpiId
+    ]
+
+strategySuccessDimensionWithActionGraph :: RawGraph
+strategySuccessDimensionWithActionGraph =
+  RawGraph
+    [ RawContextNode strategyId Strategy
+    , RawPrimitiveNode strategyActionId strategyId Action
+    , RawStructuringNode
+        strategyPerformanceDimensionId
+        strategyId
+        PerformanceDimension
+    ]
+    [ RawEdge
+        strategyPerformanceDimensionId
+        (relationNameFor (containsPerformanceDimension StrategySuccessDimension))
+        strategyActionId
+    ]
+
+rawPerformanceDimensionOwnershipMatchesRegistry :: Context -> Bool
+rawPerformanceDimensionOwnershipMatchesRegistry context =
+  case (lookupPerformanceDimensionRole context, validateStructure raw) of
+    (Just _, Success _) -> True
+    (Nothing, Failure errors) ->
+      NonEmpty.toList errors
+        == [ InvalidStructuringContext
+               genericPerformanceDimensionId
+               context
+               PerformanceDimension
+           ]
+    _ -> False
+  where
+    raw =
+      RawGraph
+        [ RawContextNode performanceDimensionOwnerId context
+        , RawStructuringNode
+            genericPerformanceDimensionId
+            performanceDimensionOwnerId
+            PerformanceDimension
+        ]
+        []
 
 sampleGraph :: RawGraph
 sampleGraph = RawGraph sampleNodes sampleEdges
@@ -1407,7 +1933,10 @@ secondPathNodes =
       interventionId
       KeyResult
   , RawPrimitiveNode (duplicateId measureKpiId) measureId KPI
-  , RawStructuringNode (duplicateId measureDomainId) measureId Domain
+  , RawStructuringNode
+      (duplicateId measurePerformanceDimensionId)
+      measureId
+      PerformanceDimension
   , RawAnchorNode (duplicateId situationAnchorId) situationId BusinessCapability
   ]
 
@@ -1442,14 +1971,17 @@ secondPathEdges =
       (duplicateId interventionKeyResultId)
       contributesInterventionKeyResultToStrategyKeyResult
       strategyKeyResultId
-  , edge strategyDriverId indicatesMeasureDomain (duplicateId measureDomainId)
+  , edge
+      strategyDriverId
+      indicatesMeasurePerformanceDimension
+      (duplicateId measurePerformanceDimensionId)
   , edge
       strategyKeyResultId
-      determinesMeasureDomain
-      (duplicateId measureDomainId)
+      determinesMeasurePerformanceDimension
+      (duplicateId measurePerformanceDimensionId)
   , edge
-      (duplicateId measureDomainId)
-      containsMeasureKPI
+      (duplicateId measurePerformanceDimensionId)
+      (containsPerformanceDimension MeasureMeasurementDimension)
       (duplicateId measureKpiId)
   , edge
       (duplicateId interventionKeyResultId)
@@ -1531,11 +2063,23 @@ unlistedFramesGraph =
     [ RawPrimitiveNode unlistedStrategyDriverId strategyId Driver
     , RawPrimitiveNode unlistedStrategyKeyResultId strategyId KeyResult
     ]
-    [ edge strategyDriverId indicatesMeasureDomain measureDomainId
-    , edge strategyKeyResultId determinesMeasureDomain measureDomainId
+    [ edge
+        strategyDriverId
+        indicatesMeasurePerformanceDimension
+        measurePerformanceDimensionId
+    , edge
+        strategyKeyResultId
+        determinesMeasurePerformanceDimension
+        measurePerformanceDimensionId
     ]
-    [ edge unlistedStrategyDriverId indicatesMeasureDomain measureDomainId
-    , edge unlistedStrategyKeyResultId determinesMeasureDomain measureDomainId
+    [ edge
+        unlistedStrategyDriverId
+        indicatesMeasurePerformanceDimension
+        measurePerformanceDimensionId
+    , edge
+        unlistedStrategyKeyResultId
+        determinesMeasurePerformanceDimension
+        measurePerformanceDimensionId
     ]
 
 replaceStrategyEvidence :: [RawNode] -> [RawEdge] -> [RawEdge] -> RawGraph
@@ -1705,7 +2249,10 @@ sampleNodes =
   , RawPrimitiveNode interventionActionId interventionId Action
   , RawPrimitiveNode interventionKeyResultId interventionId KeyResult
   , RawPrimitiveNode measureKpiId measureId KPI
-  , RawStructuringNode measureDomainId measureId Domain
+  , RawStructuringNode
+      measurePerformanceDimensionId
+      measureId
+      PerformanceDimension
   , RawAnchorNode situationAnchorId situationId BusinessCapability
   ]
 
@@ -1757,9 +2304,18 @@ sampleEdges =
       interventionKeyResultId
       contributesInterventionKeyResultToStrategyKeyResult
       strategyKeyResultId
-  , edge strategyDriverId indicatesMeasureDomain measureDomainId
-  , edge strategyKeyResultId determinesMeasureDomain measureDomainId
-  , edge measureDomainId containsMeasureKPI measureKpiId
+  , edge
+      strategyDriverId
+      indicatesMeasurePerformanceDimension
+      measurePerformanceDimensionId
+  , edge
+      strategyKeyResultId
+      determinesMeasurePerformanceDimension
+      measurePerformanceDimensionId
+  , edge
+      measurePerformanceDimensionId
+      (containsPerformanceDimension MeasureMeasurementDimension)
+      measureKpiId
   , edge interventionKeyResultId setsTargetForMeasureKPI measureKpiId
   , anchorEdge interventionActionId changesAnchor situationAnchorId
   , anchorEdge measureKpiId measuresAnchor situationAnchorId
@@ -1784,8 +2340,8 @@ multiplyInvalidGraph =
     ]
     [RawEdge missingId (RelationName "unknown") strategyId]
 
-invalidRelationDomainGraph :: RawGraph
-invalidRelationDomainGraph =
+invalidRelationEndpointsGraph :: RawGraph
+invalidRelationEndpointsGraph =
   RawGraph
     [RawContextNode strategyId Strategy, RawContextNode needId Need]
     [edge needId qualifiesNeed strategyId]
@@ -1851,13 +2407,29 @@ planForTrace trace =
   EvidencePlan
     { plannedTrace = traceIdentifier trace
     , establishedAt = criteriaDate
-    , interventionStartedAt = interventionDate
     , targetDueAt = targetDate
     , planSource = EvidenceSource "approved measurement plan"
     , baseline = alignObservation trace (observation 40 baselineDate percent)
-    , effectCriterion = IncreaseByAtLeast (Quantity 10 percent)
+    , effectCriterion = AbsoluteIncreaseByAtLeast (Quantity 10 percent)
     , targetCriterion = AtLeast (Quantity 70 percent)
     }
+
+plannedStartsFor :: TraceableEffectModel -> [PlannedInterventionStart]
+plannedStartsFor model =
+  [ samplePlannedStart {plannedIntervention = contextRefId intervention}
+  | intervention <-
+      nub (map traceIntervention (NonEmpty.toList (effectTraces model)))
+  ]
+
+samplePlannedStart :: PlannedInterventionStart
+samplePlannedStart =
+  PlannedInterventionStart
+    {plannedIntervention = interventionId, plannedStartAt = interventionDate}
+
+sampleActualStart :: ActualInterventionStart
+sampleActualStart =
+  ActualInterventionStart
+    {actualIntervention = interventionId, actualStartAt = interventionDate}
 
 followUpForTrace ::
      EffectTrace -> Rational -> UTCTime -> Unit -> FollowUpObservation
@@ -1872,7 +2444,21 @@ followUpForTrace trace value observationTime observationUnit =
 
 alignObservation :: EffectTrace -> Observation -> Observation
 alignObservation trace item =
-  item {observationKPI = traceKPI trace, observationAnchor = traceAnchor trace}
+  item
+    { observationKPI = unNodeId (traceKPI trace)
+    , observationAnchor = situationAnchorRefId (traceSituationAnchor trace)
+    }
+
+followUpsForReady ::
+     EvidenceReadyModel
+  -> Rational
+  -> UTCTime
+  -> Unit
+  -> NonEmpty.NonEmpty FollowUpObservation
+followUpsForReady ready value observationTime observationUnit =
+  fmap
+    (\trace -> followUpForTrace trace value observationTime observationUnit)
+    (readyEffectTraces ready)
 
 mapBaseline :: (Observation -> Observation) -> EvidencePlan -> EvidencePlan
 mapBaseline transform plan = plan {baseline = transform (baseline plan)}
@@ -1888,10 +2474,12 @@ replacePlanUnit replacement plan =
     }
   where
     replaceQuantityUnit quantity = quantity {unit = replacement}
-    replaceEffectUnit (IncreaseByAtLeast quantity) =
-      IncreaseByAtLeast (replaceQuantityUnit quantity)
-    replaceEffectUnit (DecreaseByAtLeast quantity) =
-      DecreaseByAtLeast (replaceQuantityUnit quantity)
+    replaceEffectUnit (AbsoluteIncreaseByAtLeast quantity) =
+      AbsoluteIncreaseByAtLeast (replaceQuantityUnit quantity)
+    replaceEffectUnit (AbsoluteDecreaseByAtLeast quantity) =
+      AbsoluteDecreaseByAtLeast (replaceQuantityUnit quantity)
+    replaceEffectUnit criterion@(RelativeIncreaseByAtLeast _) = criterion
+    replaceEffectUnit criterion@(RelativeDecreaseByAtLeast _) = criterion
     replaceTargetUnit (AtLeast quantity) =
       AtLeast (replaceQuantityUnit quantity)
     replaceTargetUnit (AtMost quantity) = AtMost (replaceQuantityUnit quantity)
@@ -1908,35 +2496,47 @@ observation value observedTimestamp valueUnit =
     , observationSource = EvidenceSource "decision registry"
     }
 
-criteriaDate, baselineDate, readinessDate, afterReadinessDate :: UTCTime
+criteriaDate, baselineDate, beforeReadinessDate, readinessDate :: UTCTime
 criteriaDate = timestamp 2025 12 1
 
 baselineDate = timestamp 2026 1 1
 
+beforeReadinessDate = timestamp 2026 1 10
+
 readinessDate = timestamp 2026 1 15
 
+afterReadinessDate :: UTCTime
 afterReadinessDate = timestamp 2026 1 20
 
-interventionDate, earlyTargetDate, targetDate, followUpDate :: UTCTime
+interventionDate, afterInterventionDate, earlyTargetDate :: UTCTime
 interventionDate = timestamp 2026 2 1
+
+afterInterventionDate = timestamp 2026 3 1
 
 earlyTargetDate = timestamp 2026 2 15
 
+targetDate, followUpDate, laterFollowUpDate, assessmentDate :: UTCTime
 targetDate = timestamp 2026 6 30
 
 followUpDate = timestamp 2026 6 1
 
-laterFollowUpDate :: UTCTime
 laterFollowUpDate = timestamp 2026 6 15
+
+assessmentDate = timestamp 2026 7 1
+
+lateObservationDate, lateAssessmentDate :: UTCTime
+lateObservationDate = timestamp 2026 7 15
+
+lateAssessmentDate = timestamp 2026 8 1
 
 timestamp :: Integer -> Int -> Int -> UTCTime
 timestamp year month day =
   UTCTime (fromGregorian year month day) (secondsToDiffTime 0)
 
 percent, count :: Unit
-percent = Unit "percent"
+percent = PercentagePoints
 
-count = Unit "count"
+count = NamedUnit "count"
 
 ethosId, missionId, visionId, strategyId, needId :: RawNodeId
 ethosId = RawNodeId "ethos"
@@ -1987,12 +2587,21 @@ additionalNeedObjectiveId = RawNodeId "additional-need-objective"
 
 interventionActionId = RawNodeId "intervention-action"
 
-interventionKeyResultId, measureKpiId, measureDomainId :: RawNodeId
+interventionKeyResultId, measureKpiId, measurePerformanceDimensionId ::
+     RawNodeId
 interventionKeyResultId = RawNodeId "intervention-key-result"
 
 measureKpiId = RawNodeId "measure-kpi"
 
-measureDomainId = RawNodeId "measure-domain"
+measurePerformanceDimensionId = RawNodeId "measure-performance-dimension"
+
+strategyPerformanceDimensionId, performanceDimensionOwnerId, genericPerformanceDimensionId ::
+     RawNodeId
+strategyPerformanceDimensionId = RawNodeId "strategy-performance-dimension"
+
+performanceDimensionOwnerId = RawNodeId "performance-dimension-owner"
+
+genericPerformanceDimensionId = RawNodeId "performance-dimension"
 
 situationAnchorId :: RawNodeId
 situationAnchorId = RawNodeId "situation-anchor"

@@ -14,7 +14,7 @@ O2I ist ein generisches Framework für Wirkungsarchitekturen: Es beschreibt, wie
 ## Purpose
 
 <!-- O2I PURPOSE START -->
-O2I dient dazu, *orientierte Wirkung* durch relationale Modellierung nachvollziehbar und durch Messung und Evidenz nachweisbar zu machen. Es verbindet standardliteraturbasierte Terminologie, ein semantisch und syntaktisch ausgearbeitetes Metamodell sowie eine maschinenprüfbare Haskell-Spezifikation.
+O2I dient dazu, *orientierte Wirkung* durch relationale Modellierung nachvollziehbar und durch Messung und Evidenz nachweisbar zu machen. Es verbindet standardliteraturbasierte Terminologie mit einem semantisch und syntaktisch ausgearbeiteten Metamodell. Dessen normative, maschinenprüfbare Formalisierung bildet die Haskell-Spezifikation.
 <!-- O2I PURPOSE END -->
 
 ## USP
@@ -29,7 +29,7 @@ O2I dient dazu, *orientierte Wirkung* durch relationale Modellierung nachvollzie
 
 ## Specification
 
-Die normative Haskell-Spezifikation liegt als Library unter [`spc/src/lib`](./spc/src/lib/). Ihre öffentliche API gliedert sich in `O2I.Language` für den semantischen Formvorrat, `O2I.Graph` für konkrete Graphen und `O2I.Validation` für gestufte Prüfungen. `O2I` bildet die kuratierte Gesamtfassade.
+Die Haskell-Spezifikation unter [`spc/src/lib`](./spc/src/lib/) ist die normative, maschinenprüfbare Formalisierung des O2I-Metamodells. Ihre öffentliche API gliedert sich in `O2I.Language` für den semantischen Formvorrat, `O2I.Graph` für konkrete Graphen und `O2I.Validation` für gestufte Prüfungen. `O2I` bildet die kuratierte Gesamtfassade.
 
 Die Library überführt einen ungeprüften O2I-Graphen durch aufeinander aufbauende Validierungsstufen in ein evidenzbewertetes Wirkungsmodell:
 
@@ -61,21 +61,22 @@ o2i/
 
 ## Build
 
-Das PDF wird aus `o2i.md` mit [`md2pdf`](https://github.com/normenmueller/md2pdf) und `pandoc-include` erzeugt:
+Das PDF und die TikZ-basierte Nachweisfolge werden reproduzierbar mit `toPDF.sh` erzeugt. Das Skript rendert zuerst die Grafik nach `img/` und ruft anschließend [`md2pdf`](https://github.com/normenmueller/md2pdf) auf:
 
 ```sh
-md2pdf -- o2i.md
+./toPDF.sh
 ```
 
 ## Verify
 
 ```sh
+python3 -B utl/extract-archimate-view.py --preset all --check
 cabal --project-dir=spc build all --ghc-options=-Werror
 cabal --project-dir=spc test all --ghc-options=-Werror
 cabal --project-dir=spc haddock all
 hindent --line-length 80 --validate spc/src/lib/O2I.hs spc/src/lib/O2I/*.hs spc/src/lib/O2I/Language/*.hs spc/src/lib/O2I/Graph/*.hs spc/src/lib/O2I/Validation/*.hs spc/tst/Main.hs
 pandoc o2i.md --filter pandoc-include -t markdown
-md2pdf -- o2i.md
+./toPDF.sh
 ```
 
 ## License

@@ -26,9 +26,10 @@ module O2I.Graph.Typed
   , someEdgeRelation
   , someEdgeTo
   , lookupNode
+  , lookupContextRef
   , contextNodesOf
   , primitiveNodesIn
-  , structuringNodesIn
+  , performanceDimensionNodesIn
   , anchorNodesIn
   , hasEdge
   , outgoingContextTargets
@@ -36,6 +37,7 @@ module O2I.Graph.Typed
 
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
+import Data.Type.Equality ((:~:)(Refl))
 import O2I.Language.Element
 import O2I.Language.Interpretation
 import O2I.Language.Relation
@@ -56,13 +58,12 @@ data Node (kind :: NodeKind) where
     -> Interpretation context primitive
     -> Node ('PrimitiveKind context primitive)
     -- ^ Validated contextualized Primitive with interpretation proof.
-  StructuringNode
-    :: NodeId ('StructuringKind context structuring)
+  PerformanceDimensionNode
+    :: NodeId ('StructuringKind context 'PerformanceDimension)
     -> NodeId ('ContextKind context)
-    -> SContext context
-    -> SStructuring structuring
-    -> Node ('StructuringKind context structuring)
-    -- ^ Validated contextualized structuring node.
+    -> PerformanceDimensionRole context member
+    -> Node ('StructuringKind context 'PerformanceDimension)
+    -- ^ Validated performance dimension whose role fixes its member kind.
   AnchorNode
     :: NodeId ('AnchorKind anchor)
     -> NodeId ('ContextKind 'Situation)
@@ -143,7 +144,7 @@ graphEdges = typedEdges
 nodeId :: Node kind -> NodeId kind
 nodeId (ContextNode identifier _) = identifier
 nodeId (PrimitiveNode identifier _ _ _ _) = identifier
-nodeId (StructuringNode identifier _ _ _) = identifier
+nodeId (PerformanceDimensionNode identifier _ _) = identifier
 nodeId (AnchorNode identifier _ _) = identifier
 
 -- | Recover the singleton kind witness carried by a validated node.
@@ -151,15 +152,14 @@ nodeKind :: Node kind -> SNodeKind kind
 nodeKind (ContextNode _ context) = SContextKind context
 nodeKind (PrimitiveNode _ _ context primitive _) =
   SPrimitiveKind context primitive
-nodeKind (StructuringNode _ _ context structuring) =
-  SStructuringKind context structuring
+nodeKind (PerformanceDimensionNode _ _ role) = SPerformanceDimensionKind role
 nodeKind (AnchorNode _ _ anchor) = SAnchorKind anchor
 
 -- | Return the owning context ID; context nodes have no owner.
 nodeOwner :: Node kind -> Maybe RawNodeId
 nodeOwner (ContextNode _ _) = Nothing
 nodeOwner (PrimitiveNode _ owner _ _ _) = Just (unNodeId owner)
-nodeOwner (StructuringNode _ owner _ _) = Just (unNodeId owner)
+nodeOwner (PerformanceDimensionNode _ owner _) = Just (unNodeId owner)
 nodeOwner (AnchorNode _ owner _) = Just (unNodeId owner)
 
 -- | Read an existential validated node identifier.
@@ -177,6 +177,19 @@ someNodeOwner (SomeNode node) = nodeOwner node
 -- | Look up a validated node by its unique raw identifier.
 lookupNode :: WellFormedGraph -> RawNodeId -> Maybe SomeNode
 lookupNode graph identifier = Map.lookup identifier (typedNodes graph)
+
+-- | Resolve a raw identifier as a context reference of the requested type.
+--
+-- Resolution succeeds only for a validated context node of exactly that type.
+lookupContextRef ::
+     WellFormedGraph
+  -> SContext context
+  -> RawNodeId
+  -> Maybe (ContextRef context)
+lookupContextRef graph expected identifier = do
+  SomeNode (ContextNode stored actual) <- lookupNode graph identifier
+  Refl <- eqSNodeKind (SContextKind actual) (SContextKind expected)
+  pure (mkContextRef (unNodeId stored))
 
 -- | Enumerate context-node identifiers of the requested context type.
 contextNodesOf :: WellFormedGraph -> Context -> [RawNodeId]
@@ -196,14 +209,19 @@ primitiveNodesIn graph owner expected =
   , primitiveValue primitive == expected
   ]
 
--- | Enumerate structuring nodes of a kind owned by one context node.
-structuringNodesIn :: WellFormedGraph -> RawNodeId -> Structuring -> [RawNodeId]
-structuringNodesIn graph owner expected =
-  [ unNodeId identifier
-  | SomeNode (StructuringNode identifier context _ structuring) <-
+-- | Enumerate typed performance dimensions of one role and owning Context.
+performanceDimensionNodesIn ::
+     WellFormedGraph
+  -> ContextRef context
+  -> PerformanceDimensionRole context member
+  -> [NodeId ('StructuringKind context 'PerformanceDimension)]
+performanceDimensionNodesIn graph owner role =
+  [ nodeId node
+  | SomeNode node@(PerformanceDimensionNode _ context storedRole) <-
       graphNodes graph
-  , unNodeId context == owner
-  , structuringValue structuring == expected
+  , unNodeId context == contextRefId owner
+  , performanceDimensionRoleCode storedRole == performanceDimensionRoleCode role
+  , Just Refl <- [eqSNodeKind (nodeKind node) (SPerformanceDimensionKind role)]
   ]
 
 -- | Enumerate Situation anchors owned by one Situation context.

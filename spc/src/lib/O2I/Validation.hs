@@ -16,32 +16,53 @@ module O2I.Validation
   , SemanticallyValidModel
   , strategyFormulations
   , strategyFormulationData
+  , lookupSemanticContextRef
   , qualifyingStrategies
   , EffectTrace
   , EffectTraceId
+  , SomeSituationAnchorRef
   , TraceableEffectModel
   , TraceabilityError(..)
   , effectTraces
   , lookupEffectTrace
   , traceIdentifier
+  , traceVision
+  , traceVisionObjective
   , traceStrategy
+  , traceStrategyDriver
+  , traceStrategyObjective
   , traceStrategyKeyResult
+  , traceStrategyAction
   , traceNeed
+  , traceNeedDriver
+  , traceNeedObjective
   , traceIntervention
+  , traceInterventionAction
   , traceInterventionKeyResult
+  , traceMeasure
+  , traceMeasurePerformanceDimension
   , traceKPI
-  , traceAnchor
+  , traceSituation
+  , traceSituationAnchor
+  , situationAnchorRefId
+  , situationAnchorRefKind
   , Unit(..)
   , Quantity(..)
+  , RelativeChange(..)
   , EvidenceSource(..)
   , Observation(..)
   , EffectCriterion(..)
   , TargetCriterion(..)
+  , PlannedInterventionStart(..)
   , EvidencePlan(..)
   , EvidenceReadyModel
   , evidencePlans
+  , readinessCheckedAt
+  , plannedInterventionStarts
   , readyEffectTraces
+  , readyInterventions
   , readyTracesForIntervention
+  , ActualInterventionStart(..)
   , FollowUpObservation(..)
   , CriterionResult(..)
   , TargetResult(..)
@@ -49,13 +70,15 @@ module O2I.Validation
   , EvidenceAssessedModel
   , EvidenceReadinessError(..)
   , EvidenceError(..)
+  , evidenceAssessedAt
+  , actualInterventionStarts
   , effectAssessments
   , isEffectiveNeed
   , validateStructure
   , validateModelSemantics
   , validateTraceability
   , validateEvidenceReadinessAt
-  , assessEffectEvidence
+  , assessEffectEvidenceAt
   ) where
 
 import Data.List.NonEmpty (NonEmpty)

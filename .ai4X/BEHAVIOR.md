@@ -83,11 +83,17 @@ the canonical repository memory.
 - Keep Terminology, Semantics, and Syntax separate.
 - Treat ArchiMate as notation, never as the source of O2I semantics.
 - Treat `O2I Context` and `O2I Primitives` as normative semantic views of the
-  O2I context and primitive models. Treat `O2I Syntax` as their concrete
-  ArchiMate realization. Keep these views, the article, the Haskell library,
-  and the tests semantically synchronized.
+  O2I context and primitive models. Treat `O2I Syntax` as their complete
+  concrete ArchiMate realization. Keep these views, the article, the Haskell
+  library, and the tests semantically synchronized.
+- Keep ArchiMate element and relation documentation semantically synchronized
+  with the article and Haskell specification. Use concise target-state
+  definitions and source anchors; remove alternatives, former names, and
+  editorial history.
 - After every change to `mdl/o2i.archimate`, regenerate and inspect all review
-  snapshots with `python3 utl/extract-archimate-view.py --preset all`.
+  snapshots with `python3 -B utl/extract-archimate-view.py --preset all`, then
+  validate model invariants and snapshot consistency with
+  `python3 -B utl/extract-archimate-view.py --preset all --check`.
 - Use relation syntax `Subject --relation--> Object` unless explicitly changed.
 - Do not assume every organizational unit has a Strategy.
 - Every definition in `o2i.md` uses the established `[!definition]` callout and
@@ -137,7 +143,7 @@ publication claim derived from them.
 
 # Commands And Tooling
 
-- Render: `md2pdf -- o2i.md`.
+- Render: `./toPDF.sh`.
 - Cabal package: `cabal check` from `spc/`.
 - Build: `cabal build all --ghc-options=-Werror` from `spc/`.
 - Tests: `cabal test all --ghc-options=-Werror` from `spc/`.

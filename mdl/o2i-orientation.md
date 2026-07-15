@@ -3,6 +3,12 @@
 > Generated review snapshot of `O2I Orientierung` from `mdl/o2i.archimate`.
 > Review artifact only; source of truth remains the O2I metamodel.
 
+## Notes
+
+- gibt es uns?
+- stehen wir?
+- wollen wir wirken?
+
 ## Nodes
 
 - [Ethos] `Ethos` (Grouping)

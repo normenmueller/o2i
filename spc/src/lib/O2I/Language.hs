@@ -8,6 +8,6 @@ module O2I.Language
   , module O2I.Language.Relation
   ) where
 
-import O2I.Language.Element
+import O2I.Language.Element hiding (mkContextRef, mkNodeId)
 import O2I.Language.Interpretation
 import O2I.Language.Relation

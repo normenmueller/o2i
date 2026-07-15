@@ -8,8 +8,8 @@ instruction override this snapshot.
 - Observed at: 2026-07-15 CEST.
 - Mode: `READY`.
 - Branch/upstream: `trunk` / `origin/trunk`.
-- Active objective: add a concise O2I evidence-sequence visualization before
-  the independent final review.
+- Active objective: commit the remediated review state, repeat the independent
+  final review, and close the gate at 10/10.
 - Agent memory: active in the current repository revision.
 
 # Approved Baseline
@@ -27,60 +27,53 @@ instruction override this snapshot.
   attribution, not causal proof.
 - Need qualification remains an independent pre-intervention query; it does not
   require Intervention or Measure.
-- SFE, strategic topic complexes, scoring, statuses, and Domain-bound fit are
-  external applications, not O2I core semantics.
-- Seven publication-relevant ArchiMate views have deterministic review
-  snapshots, including `O2I Syntax`.
+- SFE, strategic topic complexes, scoring, statuses, and
+  PerformanceDimension-bound fit are external applications, not O2I core
+  semantics.
+- The Layered Cake remains semantic and is not yet converted to concrete
+  ArchiMate syntax.
 
 # Active Quality Gate
 
-- Date: 2026-07-15.
-- Initial independent design review: `APPROVED`.
-- Approved scope: opaque `EvidenceReadyModel`, ex-ante plan and baseline
-  validation, follow-up-only evidence assessment, and a focused reverse Need
-  qualification query.
-- Explicit exclusion: no SFE vocabulary, Domain-based fit query, new Context,
-  Primitive, macrorelation, score, status, or compatibility layer.
-- External Haskell co-author implementation and normative article
-  synchronization are complete. The evidence-sequence visualization and
-  separate final review remain mandatory.
+- The independent final review rejected the preceding state because of an
+  ArchiMate 4 mismatch, incomplete concrete syntax, forgeable public typed
+  references, stale ArchiMate documentation, missing automated model checks,
+  and one undirected syntax association.
+- Every accepted finding is closed in the working tree. The WIP status remains
+  intentional for O2I v0.2.
+- ArchiMate 4 mappings use `Capability`, `Process`, `Business Object`, `Role`,
+  `Value Stream`, and `Requirement` with explicit O2I specializations.
+- `O2I Syntax` defines Context containment, `Primitive @ Context`,
+  PerformanceDimension syntax, and Situation Anchor mappings without redundant
+  example instances or expanded 24-edge anchor syntax.
+- The independent reviewer explicitly approved this lean syntax split after
+  reassessment; the current PNG is synchronized.
+- ArchiMate element, relation, and view documentation is synchronized with the
+  article and Haskell specification.
+- Public typed Haskell references are opaque, nominally typed, and obtained
+  through validated lookup or model queries.
+- Deterministic review snapshots include view contracts, visible notes, and
+  directed Association semantics. `--check` validates model contracts and
+  snapshot drift.
 
 # Current Verification
 
-- Verified scope: evidence readiness, reverse Need qualification,
-  intervention trace query, synchronized article, README, changelog, WTF guide,
-  and repository memory.
-- Checks passed: Cabal check, `-Werror` build, 127 tests, HIndent 80, Haddock
-  100%, Pandoc, `md2pdf`, and `git diff --check`.
-- These checks must be repeated after the evidence-sequence visualization.
-
-# Latest Quality Gate
-
-- Date: 2026-07-14.
-- Reviewed state: pre-commit scope based on `88be448`.
-- Scope: article introduction, README flow, graph/model validation boundary,
-  Haskell API naming, tests, agent memory, and PDF rendering.
-- Role separation: external Haskell co-author for target design; separate
-  external read-only final reviewer.
-- Findings: Blocker 0, High 0, Medium 0, Low 0.
-- Scores: Fachlichkeit 10.0; Metamodell 10.0; Typtheorie 10.0; Haskell 10.0;
-  tests 10.0; formal value 10.0; publication quality 10.0.
-- Checks: Cabal check, `-Werror` build, 102 tests, HIndent 80, Haddock 100%,
-  Pandoc, `md2pdf`, and `git diff --check`.
+- `python3 -B utl/extract-archimate-view.py --preset all --check`: passed.
+- `cabal check`: passed.
+- `cabal build all --ghc-options=-Werror`: passed.
+- `cabal test all --test-show-details=direct`: 158 tests passed.
+- HIndent 80 validation: passed.
+- Haddock including internal modules: passed.
+- Pandoc include expansion: passed.
+- `./toPDF.sh`: passed.
+- `git diff --check`: passed.
 
 # Next Work
 
-- First, visualize the sequence from situated Need through qualification,
-  traceability, ex-ante evidence readiness, and ex-post evidence assessment.
-- Show the Intervention start as the temporal boundary and associate
-  `qualifyingStrategies`, `validateTraceability`,
-  `validateEvidenceReadinessAt`, and `assessEffectEvidence` with their stages.
-- Keep the visualization explanatory rather than normative ArchiMate syntax.
-- Second, re-run all technical and publication checks after integration.
-- Third, run an independent final metamodel, type-theory, Haskell, and
-  formal-value review and close every finding.
-- Only after final approval, review `o2i.md` top-down and paragraph by
-  paragraph.
-- Explain every substantive difference, extension, refinement, and formal
-  consequence before further edits.
+- Commit and push the coherent remediation checkpoint.
+- Run a fresh independent final review across terminology, metamodel,
+  ArchiMate, Haskell design, tests, formal value, and publication quality.
+- Close any verified findings and repeat the gate until explicit 10/10 approval.
+- Then review `o2i.md` top-down and paragraph by paragraph, explaining every
+  substantive difference, extension, refinement, and formal consequence.
 - Backlog: convert the Layered Cake to concrete ArchiMate syntax.

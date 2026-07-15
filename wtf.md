@@ -93,6 +93,6 @@ Weiterlesen: [Messung](./o2i.md#messung)
 
 Wirkung ist nicht nachgewiesen, nur weil ein KPI grün wird. O2I verlangt einen vollständigen relationalen Wirkungstrace sowie konsistente Baseline- und Folgebeobachtungen desselben KPI am selben Situationsanker. Ein vorab festgelegtes Effektkriterium entscheidet, ob positive Wirkungsevidenz vorliegt; das Zielkriterium bewertet getrennt die Zielerreichung. Das stützt plausible Attribution, aber keinen Kausalbeweis.
 
-Haskell: [`validateTraceability`](./spc/src/lib/O2I/Validation/Trace.hs) -> [`validateEvidenceReadinessAt`](./spc/src/lib/O2I/Validation/Readiness.hs) -> [`assessEffectEvidence`](./spc/src/lib/O2I/Validation/Evidence.hs)
+Haskell: [`validateTraceability`](./spc/src/lib/O2I/Validation/Trace.hs) -> [`validateEvidenceReadinessAt`](./spc/src/lib/O2I/Validation/Readiness.hs) -> [`assessEffectEvidenceAt`](./spc/src/lib/O2I/Validation/Evidence.hs)
 
 Weiterlesen: [Nachweislogik](./o2i.md#nachweislogik), [Wirkungstrace](./o2i.md#wirkungstrace), [Wirkungsevidenz](./o2i.md#wirkungsevidenz), [Plausible Attribution](./o2i.md#plausible-attribution)

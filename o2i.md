@@ -200,7 +200,7 @@ Vision gibt Richtung, ohne den Weg festzulegen. Sie macht die angestrebte Wirkun
 
 [^actor]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996) und Mintzberg und Waters (1985)*: Organisationseinheiten besitzen nicht automatisch eine eigene Strategie. Nach der hier verwendeten Definition gilt dies nur, wenn sie legitim entscheiden, Ressourcen binden, Verantwortung tragen und eine eigene Diagnose, Guiding Policy, Trade-offs und kohärente Handlungslogik ausbilden können.
 
-Als Artefakt muss eine Strategie ihre Bestandteile dokumentieren. Eine explizit formulierte Strategie liefert mindestens Geltungsbereich, strategische Verankerung, abgeleitete Leitplanken, Diagnose, strategische Absicht, Guiding Policy, Positionierung, Trade-offs, kohärente Handlungsfestlegungen und Fit.
+Als Artefakt muss eine Strategie ihre Bestandteile dokumentieren. Eine explizit formulierte Strategie liefert mindestens Geltungsbereich, strategische Verankerung, abgeleitete Leitplanken, Diagnose, strategische Absicht, Guiding Policy, Positionierung, Trade-offs, kohärente Handlungsfestlegungen, strategische Erfolgsbezüge und Fit.
 
 O2I modelliert Strategie dabei nicht als bloße Absichtserklärung. Strategische Handlungsfestlegungen sind durch Rumelts Konzept kohärenter Handlungen, Porters Aktivitätssysteme und Mintzbergs Verständnis von Strategie als Handlungsmuster begründbar. Ergänzend macht O2I eine Wegentscheidung prüfbar, indem sie mit nachvollziehbaren Erfolgsbezügen verbunden wird; diese Lesart ist eine Autorenableitung in Anlehnung an Doerr.
 
@@ -299,16 +299,27 @@ Kohärente Handlungsfestlegungen konkretisieren die Guiding Policy, ohne in oper
 
 Sie gehören zur Wegentscheidung, soweit sie deren Logik beweisbar machen. Detaillierte Projekte, Sprint-Objectives, OKRs und operative Aufgaben gehören zur Operationalisierung.
 
+#### Strategischer Erfolgsbezug
+
+> [!definition]
+> Ein **strategischer Erfolgsbezug**[^strategic-success-reference] bezeichnet ein vorab formuliertes, überprüfbares Ergebnis, dessen Erreichen den angestrebten Beitrag einer Strategie stützt.
+>
+> [^strategic-success-reference]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996) und Doerr (2018)*: Rumelt und Porter stützen die Kohärenz zwischen strategischer Absicht, Handlungsfestlegungen und Ergebnislogik; Doerr stützt überprüfbare Ergebnisbezüge. O2I führt den strategischen Erfolgsbezug als verpflichtenden Strategiebestandteil ein, ohne Strategie auf OKR-Mechanik zu reduzieren.
+
+Ein strategischer Erfolgsbezug verbindet strategische Absicht und kohärente Handlungsfestlegungen: Handlungsfestlegungen tragen zu ihm bei; er substantiiert, woran der angestrebte strategische Beitrag erkennbar werden soll. Er ist weder KPI noch Messbeobachtung noch Wirkungsevidenz. Messung und empirische Bewertung folgen erst in Operationalisierung und Wirkung.
+
+Im O2I-Metamodell wird jeder strategische Erfolgsbezug durch mindestens ein `Key Result @ Strategy` modelliert. Diese Key Results gehören nur dann zur Strategie, wenn sie deren Wegentscheidung überprüfbar machen und mit strategischer Absicht sowie kohärenten Handlungsfestlegungen relational verbunden sind.
+
 #### Fit / Kohärenznachweis
 
 > [!definition]
-> **Fit**[^fit] bezeichnet den Kohärenznachweis, dass Positionierung, Trade-offs und kohärente Handlungsfestlegungen zueinander passen und sich gegenseitig stützen.
+> **Fit**[^fit] bezeichnet den Kohärenznachweis, dass Positionierung, Trade-offs, kohärente Handlungsfestlegungen und strategische Erfolgsbezüge zueinander passen und sich gegenseitig stützen.
 >
 > [^fit]: *Quellenanker*: Porter (1996) für Fit zwischen Aktivitäten; Rumelt (2011) für Kohärenz als strategische Mindestanforderung.
 
-Fit ist mehr als Widerspruchsfreiheit. Eine Strategie besitzt Fit, wenn ihre Handlungsfestlegungen die gewählte Position stärken, die bewussten Trade-offs respektieren und sich mit anderen Aktivitäten, Policies und Ressourcenbindungen gegenseitig unterstützen.
+Fit ist mehr als Widerspruchsfreiheit. Eine Strategie besitzt Fit, wenn ihre Handlungsfestlegungen die gewählte Position stärken, die bewussten Trade-offs respektieren, zu ihren Erfolgsbezügen beitragen und sich mit anderen Aktivitäten, Policies und Ressourcenbindungen gegenseitig unterstützen.
 
-Fit validiert damit nicht einzelne Maßnahmen isoliert, sondern das Zusammenspiel von Positionierung, Trade-offs und kohärenten Handlungsfestlegungen. Fehlt dieser Fit, entsteht keine Strategie, sondern eine lose Sammlung einzelner Maßnahmen.
+Fit validiert damit nicht einzelne Bestandteile isoliert, sondern das Zusammenspiel von Positionierung, Trade-offs, kohärenten Handlungsfestlegungen und strategischen Erfolgsbezügen. Fehlt dieser Fit, entsteht keine Strategie, sondern eine lose Sammlung einzelner Festlegungen und Ergebnisbezüge.
 
 ### Kritische Erfolgsfaktoren
 
@@ -339,9 +350,13 @@ In O2I begründen kritische Erfolgsfaktoren, welche Primitive-Verbindungen zwisc
 >
 > [^situation]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996), Doerr (2018), Parmenter (2020) und The Open Group (2025, 2026)*: Situation wird hier als O2I-spezifischer Brückenbegriff eingeführt, um strategische Auswahl mit fachlich beschriebener Arbeitsrealität, Operationalisierung und Messbarkeit zu verbinden. TOGAF und ArchiMate sind geeignete Strukturierungs- und Notationsgrundlagen für solche Business-Architecture-Artefakte, aber nicht Quelle der O2I-Semantik.
 
-![O2I Situationen](<img/O2I Situation.png>){#fig:o2i-situation-view}
+![O2I Situation](<img/O2I Situation.png>){#fig:o2i-situation-view}
 
-@Fig:o2i-situation-view beantwortet die Frage: Wodurch wird eine Situation fachlich verankert? Die Sicht zeigt typische Situationsanker: Business-Architecture-Artefakte, durch die eine Situation fachlich beschrieben und verankert wird. Sie modelliert keine vollständige Business Architecture. Die Relationen zwischen diesen Artefakten folgen der jeweiligen ArchiMate- bzw. TOGAF-Modellierung und werden nicht durch O2I neu definiert.
+@Fig:o2i-situation-view zeigt `SituationAnchor` als abstrakte Metamodellkategorie und Business Capability, Business Process, Business Object, Business Role, Value Stream sowie Regulatory Constraint als deren zulässige Spezialisierungen. Eine Situation wird durch mindestens einen solchen Anker konstituiert. Die Sicht modelliert keine vollständige Business Architecture; Relationen zwischen konkreten Business-Architecture-Artefakten folgen der jeweiligen ArchiMate- bzw. TOGAF-Modellierung.
+
+![O2I Situationsverankerung](<img/O2I Situation Anchoring.png>){#fig:o2i-situation-anchoring-view}
+
+@Fig:o2i-situation-anchoring-view beantwortet darauf aufbauend die Frage: Wie verbindet ein Situationsanker Situation, Bedarf, Intervention und Messung fachlich? Derselbe Anker verortet einen `Driver @ Need`, wird durch eine `Action @ Intervention` verändert und durch einen `KPI @ Measure` beobachtet. Dadurch bleibt der Situationsbezug über Bedarf, Intervention und Messung hinweg relational nachvollziehbar.
 
 Eine Situation muss somit fachlich, nicht technisch, beschrieben werden. Sie beschreibt nicht, mit welcher Technologie oder Lösung ein Bedarf erfüllt werden soll, sondern in welchem fachlichen Bezugsraum ein Bedarf sichtbar wird.
 
@@ -354,7 +369,7 @@ Eine Situation muss somit fachlich, nicht technisch, beschrieben werden. Sie bes
 >
 > [^need]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996), Doerr (2018) und Parmenter (2020)*: Bedarf wird hier als O2I-spezifischer Brückenbegriff zwischen Formierung und Operationalisierung eingeführt. Rumelt und Porter stützen die Ableitung aus strategischer Logik; Doerr und Parmenter stützen die anschließende Operationalisierung und Messbarmachung.
 
-Ein Bedarf in O2I ist eine *situationsbezogene Anforderung an Veränderung* und folglich nur zulässig, wenn er auf eine konkrete Situation bezogen ist, etwa auf eine Business Capability, einen Business Process, ein Business Object, eine Business Role, einen Value Stream oder einen Regulatory Constraint. Ohne diesen Situationsbezug bleibt er eine unqualifizierte Aussage über gewünschten Wandel, aber kein O2I-Bedarf.
+Ein Bedarf in O2I ist eine *situationsbezogene Anforderung an Veränderung* und folglich nur zulässig, wenn die erforderliche Veränderung an mindestens einem Situationsanker einer konkreten Situation sichtbar wird, etwa an einer Business Capability, einem Business Process, einem Business Object, einer Business Role, einem Value Stream oder einem Regulatory Constraint. Die Makrorelation `Situation --surfaces--> Need` macht diesen Bezug explizit. Ohne diesen Situationsbezug bleibt der Bedarf eine unqualifizierte Aussage über gewünschten Wandel, aber kein O2I-Bedarf.
 
 Ein Bedarf ist keine Lösung, keine Maßnahme, kein Projekt und keine Anforderungsspezifikation. Diese können seine spätere Bearbeitung konkretisieren, dürfen ihn aber nicht ersetzen. Ein Bedarf bleibt auf der Ebene des benötigten fachlichen Ergebnisses.
 
@@ -464,6 +479,8 @@ Messung ist nicht Wirkung selbst. Sie macht Zustände und Veränderungen beobach
 >
 > [^effect-criterion]: *Autorenableitung in Anlehnung an Parmenter (2020) und Barr (2014)*: Das Effektkriterium operationalisiert eine relevante Veränderung unabhängig von der Zielerreichung.
 
+Ein Effektkriterium kann eine absolute Veränderung in der Einheit des KPI oder eine relative Veränderung im Verhältnis zur Baseline fordern. Bei Prozentwerten wird eine absolute Veränderung in Prozentpunkten angegeben; eine relative Veränderung bleibt davon semantisch getrennt.
+
 > [!definition]
 > Ein **Zielkriterium**[^target-criterion] bezeichnet den vorab festgelegten Messwert oder Wertebereich, anhand dessen die Zielerreichung zu einem Beobachtungszeitpunkt beurteilt wird.
 >
@@ -478,7 +495,7 @@ Effekt und Zielerreichung sind damit getrennte Aussagen: Eine relevante Verbesse
 >
 > [^evidence-readiness]: *Autorenableitung in Anlehnung an Doerr (2018), Parmenter (2020) und Barr (2014)*: O2I verbindet die Vorabfestlegung von Messgröße, Baseline, Kriterien, Zieltermin und Quellenbezug zu einer prüfbaren ex-ante Nachweisqualität.
 
-Evidenzbereitschaft ist noch keine Wirkungsevidenz. Sie stellt sicher, dass die spätere Wirkungsbewertung nicht erst im Nachhinein an beobachtete Ergebnisse angepasst wird.
+Evidenzbereitschaft ist noch keine Wirkungsevidenz. Sie stellt sicher, dass die spätere Wirkungsbewertung nicht erst im Nachhinein an beobachtete Ergebnisse angepasst wird. Der geplante Interventionsbeginn wird dabei ex ante festgelegt; der tatsächliche Interventionsbeginn wird für die ex-post-Bewertung gesondert erfasst.
 
 ### Nachweislogik
 
@@ -522,12 +539,12 @@ Damit bleibt Nachweislogik von Messung getrennt: Messung macht beobachtbar, Nach
 
 Das O2I-Metamodell ist der formale Kern des O2I Frameworks. Es übersetzt die O2I-Terminologie in eine prüfbare Modellstruktur: Begriffe werden als Typen gefasst, konkrete Modellelemente werden als Instanzen dieser Typen beschrieben, Primitives erhalten ihre Bedeutung durch Interpretation in Kontexten, und die gestufte Validierung prüft, ob ein Modell die O2I-Wirkungslogik einhält.
 
-Die Haskell-Spezifikation in `spc/src/lib/` ist keine Implementierung eines Anwendungssystems und keine allgemeine Modellierungs-DSL. Sie ist eine kompakte, maschinenprüfbare Validierungsspezifikation der O2I-Semantik: Sie typisiert zulässige Modellformen und unterscheidet strukturelle Wohlgeformtheit, semantische Gültigkeit, relationale Wirkungsnachvollziehbarkeit, ex-ante Evidenzbereitschaft und empirische Wirkungsevidenz.
+Die Haskell-Spezifikation in `spc/src/lib/` ist die normative, maschinenprüfbare Formalisierung des O2I-Metamodells. Sie typisiert zulässige Modellformen und unterscheidet strukturelle Wohlgeformtheit, semantische Gültigkeit, relationale Wirkungsnachvollziehbarkeit, ex-ante Evidenzbereitschaft und empirische Wirkungsevidenz. Das Metamodell bleibt technologieunabhängig; GADTs, Module und opake Validierungsstufen sind Haskell-Designentscheidungen und keine zusätzliche O2I-Fachsemantik.
 
 Das Metamodell ersetzt die Terminologie nicht. Die Terminologie legt die fachliche Bedeutung fest; das Metamodell macht diese Bedeutung modellierbar, referenzierbar und validierbar.
 
 > [!tldr]
-> Terminologie erklärt Bedeutung; das Metamodell macht Bedeutung prüfbar; Syntax stellt sie dar.
+> Terminologie erklärt Bedeutung; das Metamodell formalisiert sie; die Haskell-Spezifikation macht sie maschinenprüfbar; Syntax stellt sie dar.
 
 ## Semantik
 
@@ -638,17 +655,19 @@ Diese typisierten Spezifikationen verhindern, dass beliebige Primitive-Relatione
 #### Strukturierung
 
 > [!definition]
-> Eine **Domain**[^o2i-domain] bezeichnet einen fachlichen Ordnungsbereich für zusammengehörige Modellelemente oder Strukturierungsbezüge. Sie ist weder O2I-Kontext noch O2I-Primitive.
+> Eine **Performance-Dimension** (en.: *performance dimension*; meta: `PerformanceDimension`)[^o2i-performance-dimension] bezeichnet eine typisierte Ordnungsachse für Leistung und Erfolg in genau einer von zwei Rollen: Als strategische Erfolgsdimension strukturiert sie `Key Result`-Primitives einer `Strategy`; als Messdimension strukturiert sie `KPI`-Primitives einer `Measure`. Sie ist weder O2I-Kontext noch O2I-Primitive.
 >
-> [^o2i-domain]: *Autorenableitung in Anlehnung an Parmenter (2020) und The Open Group (2026)*: O2I verallgemeinert fachliche Erfolgs- und Messbereiche zu einem einheitlichen Strukturierungstyp.
+> [^o2i-performance-dimension]: *Autorenableitung in Anlehnung an Parmenter (2020) und The Open Group (2026)*: O2I verbindet fachliche Erfolgs- und Messbereiche in einem einheitlichen, typisierten Strukturierungskonzept.
 
-@lst:o2i-structuring-types zeigt die Strukturierungstypen des Metamodells.
+@lst:o2i-structuring-types zeigt den Strukturierungstyp und seine beiden geschlossenen Rollen.
 
-```{#lst:o2i-structuring-types .haskell caption="O2I Strukturierungstypen"}
+```{#lst:o2i-structuring-types .haskell caption="O2I Performance-Dimensionen"}
 !include`snippetStart="-- ** Structuring", snippetEnd="-- ** Situation anchors"` spc/src/lib/O2I/Language/Element.hs
 ```
 
-`Domain` ist der generische Strukturierungstyp des O2I-Metamodells. Ein kritischer Erfolgsfaktor (`CSF`) ist in O2I keine eigene Metamodellart, sondern kann als benannte strategische Domain modelliert werden.
+`PerformanceDimension` ist ein einheitlicher, geschlossener Strukturierungstyp des O2I-Metamodells. `StrategySuccessDimension` und `MeasureMeasurementDimension` bezeichnen seine beiden zulässigen Rollen, keine zusätzlichen Metamodelltypen. Ein kritischer Erfolgsfaktor (`CSF`) kann als benannte strategische Erfolgsdimension modelliert werden; eine Messdimension strukturiert zugehörige KPIs. Andere Gruppierungen sind keine O2I-Performance-Dimensionen.
+
+Die Haskell-Spezifikation typisiert jede Performance-Dimension durch einen `PerformanceDimensionRole`-Zeugen. Derselbe Zeuge bestimmt Eigentümerkontext, zulässigen Mitgliedstyp und `contains`-Relation. Dadurch sind andere Kontexte oder Mitgliedschaften weder Teil des Metamodells noch als typisierte O2I-Relation konstruierbar.
 
 #### Situationsanker
 
@@ -717,7 +736,7 @@ Die GADT-Konstruktoren bilden den typisierten Spezifikationskern der Interpretat
 
 Ein `Objective` im Kontext `Vision` beschreibt ein qualitatives Zukunftsbild. Ein `Objective` im Kontext `Need` beschreibt ein benötigtes fachliches Ergebnis. Ein `Driver` im Kontext `Strategy` beschreibt die Diagnose; ein `Principle` im Kontext `Strategy` beschreibt die leitende Handlungslogik. Eine `Action` im Kontext `Strategy` beschreibt eine kohärente strategische Handlungsfestlegung; eine `Action` im Kontext `Intervention` beschreibt eine gezielte Einwirkung. Ein `Key Result` im Kontext `Intervention` beschreibt den überprüfbaren Ziel- oder Ergebnisbezug einer Intervention.
 
-Im Metamodell werden kohärente strategische Handlungsfestlegungen als `Action @ Strategy` modelliert. Die nachvollziehbaren Erfolgsbezüge einer Strategie werden als `Key Result @ Strategy` modelliert. `Key Result @ Strategy` ist keine klassische Strategiekategorie, sondern eine O2I-Autorenableitung in Anlehnung an Doerr.
+Im Metamodell werden kohärente strategische Handlungsfestlegungen als `Action @ Strategy` modelliert. Strategische Erfolgsbezüge werden als `Key Result @ Strategy` modelliert. `Key Result @ Strategy` ist keine klassische Strategiekategorie, sondern eine O2I-Autorenableitung in Anlehnung an Rumelt, Porter und Doerr.
 
 #### Kontextrelationen
 
@@ -727,7 +746,7 @@ Eine Kontextrelation ist nicht automatisch hinreichend begründet. O2I untersche
 
 #### Primitive-Relationen
 
-Primitive-Relationen bilden die Begründungsstruktur unterhalb von Kontextrelationen. Sie zeigen, warum eine Makrorelation fachlich belastbar ist. Für `Strategy --frames--> Measure` unterscheidet O2I dabei bewusst zwei Rollen: `Driver @ Strategy --indicates--> Domain @ Measure` zeigt den relevanten Beobachtungsbereich an; `Key Result @ Strategy --determines--> Domain @ Measure` bestimmt, welcher Messbereich für den strategischen Erfolgsnachweis maßgeblich ist.
+Primitive-Relationen bilden die Begründungsstruktur unterhalb von Kontextrelationen. Sie zeigen, warum eine Makrorelation fachlich belastbar ist. Für `Strategy --frames--> Measure` unterscheidet O2I dabei bewusst zwei Rollen: `Driver @ Strategy --indicates--> PerformanceDimension @ Measure` zeigt den relevanten Beobachtungsbereich an; `Key Result @ Strategy --determines--> PerformanceDimension @ Measure` bestimmt, welche Messdimension für den strategischen Erfolgsbezug maßgeblich ist.
 
 Beispiel:
 
@@ -740,6 +759,12 @@ Diese Primitive-Relation kann begründen, warum eine konkrete Strategie einen ko
 ## Wohlgeformtheit und Validierung
 
 O2I unterscheidet einen ungeprüften Rohgraphen und fünf aufeinander aufbauende Validierungsstufen. Ein `RawGraph` enthält ungeprüfte Eingabedaten. Ein `WellFormedGraph` erfüllt die strukturellen Typ-, Interpretations- und Relationsregeln. Ein `SemanticallyValidModel` erfüllt zusätzlich die globalen Need- und Strategy-Invarianten. Ein `TraceableEffectModel` weist für jeden durch eine Intervention adressierten Bedarf einen vollständigen relationalen Wirkungstrace von Vision bis Situationsanker nach. Ein `EvidenceReadyModel` ergänzt jeden Trace vor Interventionsbeginn um einen validierten Evidenzplan. Ein `EvidenceAssessedModel` bewertet konsistente Folgebeobachtungen getrennt nach Effekt und Zielerreichung.
+
+@Fig:o2i-evidence-sequence verdichtet die fachliche Nachweisfolge vom sichtbaren Bedarf bis zur Wirkungsevidenz. Sie trennt Bedarfsqualifikation, relationale Wirkungsnachvollziehbarkeit, ex-ante Evidenzbereitschaft und ex-post Evidenzbewertung und markiert den Interventionsbeginn als zeitliche Grenze.
+
+![O2I Nachweisfolge](<img/O2I Nachweisfolge.png>){#fig:o2i-evidence-sequence width=65%}
+
+Die Abbildung fokussiert die Nachweisfolge ab dem semantisch gültigen Modell. Die folgenden Listings zeigen ergänzend die vollständige Validierungskette von der strukturellen Elaborierung bis zur Evidenzbewertung.
 
 @Lst:o2i-validation zeigt die strukturelle Elaborierung eines `RawGraph` in einen opaken `WellFormedGraph`.
 
@@ -773,13 +798,13 @@ O2I unterscheidet einen ungeprüften Rohgraphen und fünf aufeinander aufbauende
 
 ### Grundregeln
 
-Ein Modell ist wohlgeformt, wenn Bezeichner eindeutig sind, Eigentümer existieren, Primitives nur in zulässigen Kontexten verwendet werden, Domains nur in zulässigen Kontexten stehen, Situationsanker nur in `Situation` vorkommen und Relationsendpunkte typgerecht sind. Fehler werden akkumuliert, damit eine Prüfung sämtliche erkannten Strukturverletzungen gemeinsam ausweist.
+Ein Modell ist wohlgeformt, wenn Bezeichner eindeutig sind, Eigentümer existieren, Primitives nur in zulässigen Kontexten verwendet werden, Performance-Dimensionen nur in ihren zulässigen Rollen stehen, Situationsanker nur in `Situation` vorkommen und Relationsendpunkte typgerecht sind. Fehler werden akkumuliert, damit eine Prüfung sämtliche erkannten Strukturverletzungen gemeinsam ausweist.
 
 ### Semantische Gültigkeit
 
 Ein strukturell wohlgeformter Graph ist semantisch gültig, wenn jeder Bedarf einen `Driver` und ein `Objective` besitzt, durch mindestens eine Situation sichtbar wird, jeder Need-Driver an einen diese Situation konstituierenden Situationsanker gebunden ist und jedes Need-Objective durch einen Need-Driver begründet wird. Die strategische Qualifikation ist davon unabhängig: Ein vollständig situierter Bedarf kann semantisch gültig sein, ohne bereits wirkungsrelevant zu sein.
 
-Jede Strategy-Instanz besitzt genau eine vollständige Formulierung. Sie umfasst Geltungsbereich, strategische Verankerung, abgeleitete Leitplanken, Diagnose, strategische Absicht, Guiding Policy, Positionierung, Trade-offs, kohärente Handlungsfestlegungen, strategische Key Results und Fit-Begründung. Sämtliche Textfelder müssen nichtleer sein; Action- und Key-Result-Referenzen müssen innerhalb ihrer Rolle eindeutig sein. @Lst:o2i-strategy-formulation zeigt die strukturierte Repräsentation dieser Bestandteile.
+Jede Strategy-Instanz besitzt genau eine vollständige Formulierung. Sie umfasst Geltungsbereich, strategische Verankerung, abgeleitete Leitplanken, Diagnose, strategische Absicht, Guiding Policy, Positionierung, Trade-offs, kohärente Handlungsfestlegungen, strategische Erfolgsbezüge und Fit-Begründung. Jeder strategische Erfolgsbezug wird durch ein `Key Result @ Strategy` modelliert. Sämtliche Textfelder müssen nichtleer sein; Action- und Key-Result-Referenzen müssen innerhalb ihrer Rolle eindeutig sein. @Lst:o2i-strategy-formulation zeigt die strukturierte Repräsentation dieser Bestandteile.
 
 ```{#lst:o2i-strategy-formulation .haskell caption="O2I Strategy-Formulierung"}
 !include`snippetStart="-- * Strategy formulation input", snippetEnd="-- | A Strategy formulation"` spc/src/lib/O2I/Validation/Semantics.hs
@@ -812,15 +837,15 @@ Ein vollständiger Wirkungstrace ist relational nachvollziehbar, aber weder evid
 
 ### Evidenzbereitschaft
 
-Evidenzbereitschaft setzt einen vollständigen Wirkungstrace voraus. Für jeden Trace wird genau ein `EvidencePlan` validiert, der vor Beginn der Intervention feststeht und Baseline, Effektkriterium, Zielkriterium, Zieltermin sowie Quellenbezug an denselben KPI und Situationsanker bindet. Die Baseline muss vor Interventionsbeginn beobachtet worden sein; Einheiten und Quellen müssen eindeutig benannt sein.
+Evidenzbereitschaft setzt einen vollständigen Wirkungstrace voraus. Für jede Intervention wird genau ein geplanter Beginn und für jeden Trace genau ein `EvidencePlan` validiert. Der Plan bindet Baseline, Effektkriterium, Zielkriterium, Zieltermin sowie Quellenbezug an denselben KPI und Situationsanker. Plan und Baseline müssen spätestens zum expliziten Prüfzeitpunkt feststehen; dieser Prüfzeitpunkt muss vor dem geplanten Interventionsbeginn liegen. Einheiten und Quellen müssen eindeutig benannt sein.
 
 `EvidenceReadyModel` bezeichnet damit den validierten ex-ante Zustand des Wirkungsmodells. Er enthält noch keine Folgebeobachtung und keine Aussage darüber, ob Wirkung oder Zielerreichung eingetreten sind.
 
 ### Wirkungsevidenz
 
-Wirkungsevidenz bewertet ein evidenzbereites Wirkungsmodell anhand von Folgebeobachtungen nach Beginn der Intervention. Jede Folgebeobachtung muss zum Trace, KPI, Situationsanker und zur Einheit des Evidenzplans passen und einen Quellenbezug tragen. Für jeden Trace ist mindestens eine Folgebeobachtung erforderlich; mehrere zeitlich unterscheidbare Folgebeobachtungen bilden getrennte Bewertungen. Das Effektkriterium prüft die relevante Veränderung gegenüber der Baseline. Das Zielkriterium prüft unabhängig davon Zielstatus und Zieltermin.
+Wirkungsevidenz bewertet ein evidenzbereites Wirkungsmodell zu einem expliziten Bewertungszeitpunkt. Für jede Intervention wird genau ein tatsächlicher Beginn erfasst. Jede Folgebeobachtung muss nach diesem Beginn und spätestens zum Bewertungszeitpunkt vorliegen, zum Trace, KPI, Situationsanker und zur Einheit des Evidenzplans passen und einen Quellenbezug tragen. Damit gilt `readinessCheckedAt < actualStartAt < observedAt <= assessedAt`. Für jeden Trace ist mindestens eine Folgebeobachtung erforderlich; mehrere zeitlich unterscheidbare Folgebeobachtungen bilden getrennte Bewertungen. Das Effektkriterium prüft die relevante Veränderung gegenüber der Baseline. Das Zielkriterium prüft unabhängig davon, ob die jeweilige Beobachtung den Zielwert vor oder nach dem Zieltermin erfüllt; es bestimmt ohne Beobachtungsreihe nicht den Zeitpunkt erstmaliger Zielerreichung.
 
-Die Evidenzebene besteht aus `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion` und `FollowUpObservation`. Diese Typen sind weder O2I-Kontexte noch O2I-Primitives. Sie planen und bewerten die empirische Evidenz eines relational vollständigen Wirkungstraces.
+Die Evidenzebene besteht aus `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion`, `PlannedInterventionStart`, `ActualInterventionStart` und `FollowUpObservation`. Diese Typen sind weder O2I-Kontexte noch O2I-Primitives. Sie planen und bewerten die empirische Evidenz eines relational vollständigen Wirkungstraces.
 
 ### Abgeleitete Makrorelationen
 
@@ -830,11 +855,11 @@ Makrorelationen dürfen abgeleitet sein. Eine abgeleitete Makrorelation fasst me
 
 Die Syntax beschreibt, wie die O2I-Semantik in einer Modellierungssprache dargestellt wird. O2I verwendet ArchiMate als visuelle Darstellungs- und Integrationssyntax, ohne die O2I-Semantik durch ArchiMate-Semantik zu ersetzen.
 
-Evidenztypen wie `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion` und `FollowUpObservation` sind weder O2I-Kontexte noch O2I-Primitives. Ihre konkrete Persistenz- oder Darstellungsform ist nicht Bestandteil des ArchiMate-Profils; sie werden durch die Validierungsspezifikation an einen Wirkungstrace gebunden.
+Evidenztypen wie `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion`, `PlannedInterventionStart`, `ActualInterventionStart` und `FollowUpObservation` sind weder O2I-Kontexte noch O2I-Primitives. Ihre konkrete Persistenz- oder Darstellungsform ist nicht Bestandteil des ArchiMate-Profils; sie werden durch die Validierungsspezifikation an einen Wirkungstrace gebunden.
 
 ### ArchiMate-Profil
 
-O2I-Primitives werden in ArchiMate durch wenige ArchiMate-Basisformen dargestellt. O2I-Kontexte werden als Gruppierungsrahmen, Teilmodelle oder klar gekennzeichnete Modellbereiche dargestellt.
+Jeder O2I-Kontext wird als ArchiMate `Grouping` dargestellt. Ein O2I-Primitive wird durch seine Platzierung innerhalb des zugehörigen Kontext-Groupings kontextualisiert; `Primitive @ Context` ist die textuelle Notation dieses Containments. Die O2I-Primitives selbst werden durch wenige ArchiMate-Basisformen dargestellt.
 
 ### Primitives-Abbildung
 
@@ -851,6 +876,40 @@ O2I-Primitive Action -> ArchiMate Course of Action -> Wegentscheidung, Handlungs
 
 Ein ArchiMate `Goal` stellt in O2I das O2I-Primitive `Objective` dar. Seine Bedeutung hängt vom O2I-Kontext ab: Im Kontext `Vision` beschreibt es einen orientierenden Zukunftszustand; im Kontext `Need` beschreibt es ein benötigtes fachliches Ergebnis.
 
+Ein ArchiMate `Outcome` stellt in O2I das O2I-Primitive `Key Result` als quantitatives, überprüfbares Ergebnis oder als Zielwert dar. Im Kontext `Strategy` repräsentiert es einen strategischen Erfolgsbezug; im Kontext `Intervention` einen überprüfbaren Ziel- oder Ergebnisbezug. Es beschreibt, welches Ergebnis Beitrag oder Zielerreichung belegt, nicht wie dieses Ergebnis erreicht wird.
+
+Ein ArchiMate `Assessment` stellt in O2I das O2I-Primitive `KPI` als stabile Messdefinition dar. Beobachtungen und Messwerte gehören zur Evidenzebene und werden nicht durch das `Assessment` selbst repräsentiert.
+
+### Strukturierungsabbildung
+
+Eine O2I-Performance-Dimension wird als ArchiMate `Grouping` innerhalb ihres Eigentümerkontexts dargestellt. Der Kontext bestimmt ihre Rolle und ihre zulässigen Mitglieder: Eine strategische Erfolgsdimension in `Strategy` enthält `Key Result`-Primitives; eine Messdimension in `Measure` enthält `KPI`-Primitives.
+
+### Situationsanker-Abbildung
+
+Situationsanker werden durch die jeweils semantisch entsprechenden ArchiMate-Business-Architecture-Elemente dargestellt:
+
+```text
+O2I BusinessCapability -> ArchiMate Capability
+O2I BusinessProcess -> ArchiMate Process
+O2I BusinessObject -> ArchiMate Business Object
+O2I BusinessRole -> ArchiMate Role
+O2I ValueStream -> ArchiMate Value Stream
+O2I RegulatoryConstraint -> ArchiMate Requirement
+```
+
+`Process` und `Role` werden dabei fachlich als Business Process bzw. Business Role spezialisiert; `Requirement` wird als Regulatory Constraint spezialisiert. Die fachlichen O2I-Ankertypen bleiben dadurch von den generischen ArchiMate-4-Elementtypen unterscheidbar.
+
+Für jede zulässige Ankerform `A` gilt dieselbe parametrisierte Relationsabbildung:
+
+```text
+Situation --aggregation[is-constituted-by]--> A
+A --association[anchors]--> Driver im Kontext Need
+Course of Action im Kontext Intervention --association[changes]--> A
+Assessment im Kontext Measure --association[measures]--> A
+```
+
+Die drei `association`-Relationen sind gerichtet. Die konkrete ArchiMate-Semantik des jeweiligen Business-Architecture-Elements bleibt dabei erhalten.
+
 ### Relationsabbildung
 
 O2I-Relationen werden in ArchiMate durch zulässige ArchiMate-Relationen zwischen konkreten Elementen dargestellt. Dabei sind Primitive-Begründungen und Kontext-Makrorelationen zu unterscheiden.
@@ -866,6 +925,7 @@ Outcome im Kontext Strategy --influence[translates-into]--> Goal im Kontext Need
 Outcome im Kontext Strategy --realization[substantiates]--> Goal im Kontext Strategy
 Driver im Kontext Strategy --influence[indicates]--> Grouping im Kontext Measure
 Outcome im Kontext Strategy --influence[determines]--> Grouping im Kontext Measure
+Grouping im Kontext Strategy --aggregation[contains]--> Outcome im Kontext Strategy
 Grouping im Kontext Measure --aggregation[contains]--> Assessment im Kontext Measure
 Outcome im Kontext Intervention --association[sets-target-for]--> Assessment im Kontext Measure
 ```
@@ -957,9 +1017,9 @@ Damit werden auch die Makrorelationen `Mission --grounds--> Vision` und `Ethos -
 
 Aus Orientierung wird Formierung, sobald die Vision in eine strategische Wegentscheidung übersetzt wird.
 
-Aus der Vision `People act confidently from shared understanding` wird im Layered Cake die Strategie `Shared understanding` ausgerichtet. Das Objective `Make shared understanding actionable` konkretisiert, wie der visionäre Zustand strategisch bearbeitbar wird. Die Diagnose wird durch `Fragmented understanding blocks confident action` als `Driver` modelliert; dieser Driver begründet das strategische Objective. Der `Key Result` `80% of decisions reference shared decision records` substantiiert dieses Objective, während die `Action` `Create shared decision records` zu diesem Key Result beiträgt. Das Principle `Act from evidence, not assumptions` leitet die Action. Die Domain `Shared decision evidence` ordnet den strategischen Key Result als kritischen Erfolgsbereich; sie ist eine benannte Domain, kein eigener O2I-Typ.
+Aus der Vision `People act confidently from shared understanding` wird im Layered Cake die Strategie `Shared understanding` ausgerichtet. Das Objective `Make shared understanding actionable` konkretisiert, wie der visionäre Zustand strategisch bearbeitbar wird. Die Diagnose wird durch `Fragmented understanding blocks confident action` als `Driver` modelliert; dieser Driver begründet das strategische Objective. Der `Key Result` `80% of decisions reference shared decision records` substantiiert dieses Objective, während die `Action` `Create shared decision records` zu diesem Key Result beiträgt. Das Principle `Act from evidence, not assumptions` leitet die Action. Die Performance-Dimension `Shared decision evidence use` ordnet den strategischen Key Result als kritischen Erfolgsbereich; sie ist eine benannte strategische Erfolgsdimension, kein eigener O2I-Typ.
 
-Damit adressiert die Strategy-Struktur zentrale Strategiebestandteile aus der Terminologie: Diagnose, strategische Absicht, Guiding Policy, Trade-offs, kohärente Handlungsfestlegungen und strategischen Erfolgsnachweis. Strategische Positionierung und Fit/Kohärenznachweis werden im Layered Cake nicht als eigene Primitives modelliert. Positionierung ergibt sich als abgeleitete Lesart aus der strukturierten Kombination von Objective, Principle, Action und Key Result. Fit ist eine Validierungslogik über diese Struktur: Die Strategy-Primitives müssen kohärent zusammenpassen und durch ihre Relationen eine belastbare strategische Wegentscheidung tragen.
+Damit adressiert die Strategy-Struktur zentrale Strategiebestandteile aus der Terminologie: Diagnose, strategische Absicht, Guiding Policy, Trade-offs, kohärente Handlungsfestlegungen und strategischen Erfolgsbezug. Strategische Positionierung und Fit/Kohärenznachweis werden im Layered Cake nicht als eigene Primitives modelliert. Positionierung ergibt sich als abgeleitete Lesart aus der strukturierten Kombination von Objective, Principle, Action und Key Result. Fit ist eine Validierungslogik über diese Struktur: Die Strategy-Primitives müssen kohärent zusammenpassen und durch ihre Relationen eine belastbare strategische Wegentscheidung tragen.
 
 Die zweite Strategie `Organizational transparency` ist im Layered Cake als übergeordnete Strategie modelliert. Ihre eigene Ethos- und Mission-Herleitung wird bewusst nicht ausmodelliert, damit die Sicht den Fokus auf Strategy-to-Strategy-Begründungen behält. Die Vision `Organizational transparency` richtet das strategische Objective `Make critical knowledge transparent and usable` aus. Die Diagnose `Hidden knowledge fragments organizational action` begründet dieses Objective; der `Key Result` `90% of critical decisions are traceable to shared evidence` substantiiert es. Die Action `Establish shared evidence practices` trägt zu diesem Key Result bei; das Principle `Default to shared evidence over private interpretation` leitet die Action.
 
@@ -989,11 +1049,11 @@ Damit wird `Intervention --addresses--> Need` nicht als bloße Behauptung gelese
 
 Aus Operationalisierung wird Wirkung erst, wenn die veränderte Situation messbar beobachtet und relational in den O2I-Graphen eingeordnet wird.
 
-Im Layered Cake rahmt die Strategie die Messung über `Strategy --frames--> Measure`. Diese Makrorelation wird durch zwei Primitive-Relationen konkretisiert: `Fragmented understanding blocks confident action @ Strategy --indicates--> Decision traceability @ Measure` zeigt den relevanten Beobachtungsbereich an; `80% of decisions reference shared decision records @ Strategy --determines--> Decision traceability @ Measure` bestimmt denselben Messbereich als strategischen Erfolgsnachweis. Innerhalb dieses Messbereichs wird `Shared decision traceability rate` als `KPI` modelliert.
+Im Layered Cake rahmt die Strategie die Messung über `Strategy --frames--> Measure`. Diese Makrorelation wird durch zwei Primitive-Relationen konkretisiert: `Fragmented understanding blocks confident action @ Strategy --indicates--> Shared decision traceability @ Measure` zeigt den relevanten Beobachtungsbereich an; `80% of decisions reference shared decision records @ Strategy --determines--> Shared decision traceability @ Measure` bestimmt dieselbe Messdimension für den strategischen Erfolgsbezug. Innerhalb dieser Messdimension wird `Shared decision traceability rate` als `KPI` modelliert.
 
 Die Intervention setzt den Zielbezug für diese Messung: `70% of relevant decisions are captured as shared decision records @ Intervention --sets-target-for--> Shared decision traceability rate @ Measure`. Zugleich verändert die Intervention die Situation über `Establish shared decision evidence practice @ Intervention --changes--> Information Management @ Situation`. Der KPI misst damit nicht abstrakt Wirkung, sondern beobachtet den Situationsanker, an dem die Intervention eine Veränderung bewirken soll.
 
-Vor Beginn der Intervention legt ein Evidenzplan eine Baseline von 40 %, eine Steigerung um mindestens zehn Prozentpunkte als Effektkriterium, mindestens 70 % als Zielkriterium sowie den Zieltermin fest. Damit ist der Wirkungstrace evidenzbereit. Eine spätere Folgebeobachtung von 75 % erfüllt beide Kriterien: Sie belegt eine relevante Verbesserung gegenüber der Baseline und einen beobachteten Zielstatus. Beide Aussagen bleiben getrennt prüfbar.
+Vor dem geplanten und tatsächlichen Beginn der Intervention legt ein Evidenzplan eine Baseline von 40 %, eine absolute Steigerung um mindestens zehn Prozentpunkte als Effektkriterium, mindestens 70 % als Zielkriterium sowie den Zieltermin fest. Damit ist der Wirkungstrace evidenzbereit. Für die ex-post-Bewertung werden der tatsächliche Interventionsbeginn und der Bewertungszeitpunkt gesondert erfasst. Eine dazwischen liegende Folgebeobachtung von 75 % erfüllt beide Kriterien: Sie belegt eine relevante Verbesserung gegenüber der Baseline und einen beobachteten Zielstatus. Beide Aussagen bleiben getrennt prüfbar; aus einer einzelnen Beobachtung folgt nicht der Zeitpunkt erstmaliger Zielerreichung.
 
 Wirkung wird im Layered Cake daher nicht als isoliertes Modellelement behauptet. Sie wird durch die nachvollziehbare Kette von wirkungsrelevantem Bedarf, Intervention, veränderter Situation, strategisch gerahmter Messung und konsistenter Evidenz begründet. Fit bleibt dabei eine Validierungsfrage: Die Relationen von Vision, Strategie, Need, Intervention, Measure und Situation müssen kohärent zusammenpassen, damit eine Messbeobachtung als Evidenz für orientierte Wirkung gelesen werden darf.
 

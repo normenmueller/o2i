@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 -- | Relational effect-trace derivation and validation.
@@ -8,19 +9,33 @@
 module O2I.Validation.Trace
   ( EffectTrace
   , EffectTraceId
+  , SomeSituationAnchorRef
   , TraceableEffectModel
   , TraceabilityError(..)
   , validateTraceability
   , effectTraces
   , lookupEffectTrace
   , traceIdentifier
+  , traceVision
+  , traceVisionObjective
   , traceStrategy
+  , traceStrategyDriver
+  , traceStrategyObjective
   , traceStrategyKeyResult
+  , traceStrategyAction
   , traceNeed
+  , traceNeedDriver
+  , traceNeedObjective
   , traceIntervention
+  , traceInterventionAction
   , traceInterventionKeyResult
+  , traceMeasure
+  , traceMeasurePerformanceDimension
   , traceKPI
-  , traceAnchor
+  , traceSituation
+  , traceSituationAnchor
+  , situationAnchorRefId
+  , situationAnchorRefKind
   ) where
 
 import qualified Data.List.NonEmpty as NonEmpty
@@ -48,7 +63,7 @@ data EffectTraceKey = EffectTraceKey
   , keyInterventionAction :: RawNodeId
   , keyInterventionKeyResult :: RawNodeId
   , keyMeasure :: RawNodeId
-  , keyMeasureDomain :: RawNodeId
+  , keyMeasurePerformanceDimension :: RawNodeId
   , keyMeasureKPI :: RawNodeId
   , keySituation :: RawNodeId
   , keySituationAnchor :: RawNodeId
@@ -59,18 +74,52 @@ newtype EffectTraceId =
   EffectTraceId EffectTraceKey
   deriving (Eq, Ord, Show)
 
+-- | Existential reference to a typed constituent of a 'Situation'.
+--
+-- Pattern matching reveals both the anchor-kind witness and the correspondingly
+-- indexed node identifier without erasing either part to a 'RawNodeId'.
+data SomeSituationAnchorRef where
+  SomeSituationAnchorRef
+    :: NodeId ('AnchorKind anchor)
+    -> SSituationAnchor anchor
+    -> SomeSituationAnchorRef
+    -- ^ Hide the anchor index while retaining its witness and typed ID.
+
+instance Eq SomeSituationAnchorRef where
+  left == right =
+    situationAnchorRefId left == situationAnchorRefId right
+      && situationAnchorRefKind left == situationAnchorRefKind right
+
+instance Show SomeSituationAnchorRef where
+  show reference =
+    show (situationAnchorRefId reference, situationAnchorRefKind reference)
+
 -- | Read-only projection of one complete relational effect path.
 --
 -- Strategy roles are derived exclusively from its validated formulation.
 data EffectTrace = EffectTrace
   { effectTraceIdentifier :: EffectTraceId
-  , effectTraceStrategy :: RawNodeId
-  , effectTraceStrategyKeyResult :: RawNodeId
-  , effectTraceIntervention :: RawNodeId
-  , effectTraceNeed :: RawNodeId
-  , effectTraceInterventionKeyResult :: RawNodeId
-  , effectTraceKPI :: RawNodeId
-  , effectTraceAnchor :: RawNodeId
+  , effectTraceVision :: ContextRef 'Vision
+  , effectTraceVisionObjective :: NodeId ('PrimitiveKind 'Vision 'Objective)
+  , effectTraceStrategy :: ContextRef 'Strategy
+  , effectTraceStrategyDriver :: NodeId ('PrimitiveKind 'Strategy 'Driver)
+  , effectTraceStrategyObjective :: NodeId ('PrimitiveKind 'Strategy 'Objective)
+  , effectTraceStrategyKeyResult :: NodeId ('PrimitiveKind 'Strategy 'KeyResult)
+  , effectTraceStrategyAction :: NodeId ('PrimitiveKind 'Strategy 'Action)
+  , effectTraceNeed :: ContextRef 'Need
+  , effectTraceNeedDriver :: NodeId ('PrimitiveKind 'Need 'Driver)
+  , effectTraceNeedObjective :: NodeId ('PrimitiveKind 'Need 'Objective)
+  , effectTraceIntervention :: ContextRef 'Intervention
+  , effectTraceInterventionAction :: NodeId
+      ('PrimitiveKind 'Intervention 'Action)
+  , effectTraceInterventionKeyResult :: NodeId
+      ('PrimitiveKind 'Intervention 'KeyResult)
+  , effectTraceMeasure :: ContextRef 'Measure
+  , effectTraceMeasurePerformanceDimension :: NodeId
+      ('StructuringKind 'Measure 'PerformanceDimension)
+  , effectTraceKPI :: NodeId ('PrimitiveKind 'Measure 'KPI)
+  , effectTraceSituation :: ContextRef 'Situation
+  , effectTraceSituationAnchor :: SomeSituationAnchorRef
   } deriving (Eq, Show)
 
 -- | Opaque semantic model with at least one complete effect trace and full
@@ -139,7 +188,8 @@ validateTraceability semantic =
 
 matchesInterventionNeed :: RawNodeId -> RawNodeId -> EffectTrace -> Bool
 matchesInterventionNeed intervention need trace =
-  effectTraceIntervention trace == intervention && effectTraceNeed trace == need
+  effectTraceIntervention trace == mkContextRef intervention
+    && effectTraceNeed trace == mkContextRef need
 
 -- | Enumerate all distinct validated effect traces.
 effectTraces :: TraceableEffectModel -> NonEmpty.NonEmpty EffectTrace
@@ -153,34 +203,91 @@ lookupEffectTrace model identifier = Map.lookup identifier (traceIndex model)
 traceIdentifier :: EffectTrace -> EffectTraceId
 traceIdentifier = effectTraceIdentifier
 
+-- | Read the Vision that orients the traced Strategy.
+traceVision :: EffectTrace -> ContextRef 'Vision
+traceVision = effectTraceVision
+
+-- | Read the Vision Objective that orients the strategic intent.
+traceVisionObjective ::
+     EffectTrace -> NodeId ('PrimitiveKind 'Vision 'Objective)
+traceVisionObjective = effectTraceVisionObjective
+
 -- | Read the Strategy that governs an effect trace.
 traceStrategy :: EffectTrace -> ContextRef 'Strategy
-traceStrategy = ContextRef . effectTraceStrategy
+traceStrategy = effectTraceStrategy
+
+-- | Read the strategic Driver that grounds the strategic intent.
+traceStrategyDriver :: EffectTrace -> NodeId ('PrimitiveKind 'Strategy 'Driver)
+traceStrategyDriver = effectTraceStrategyDriver
+
+-- | Read the strategic Objective that expresses the strategic intent.
+traceStrategyObjective ::
+     EffectTrace -> NodeId ('PrimitiveKind 'Strategy 'Objective)
+traceStrategyObjective = effectTraceStrategyObjective
 
 -- | Read the strategic Key Result connected to an effect trace.
 traceStrategyKeyResult ::
      EffectTrace -> NodeId ('PrimitiveKind 'Strategy 'KeyResult)
-traceStrategyKeyResult = NodeId . effectTraceStrategyKeyResult
+traceStrategyKeyResult = effectTraceStrategyKeyResult
+
+-- | Read the strategic Action that guides operational execution.
+traceStrategyAction :: EffectTrace -> NodeId ('PrimitiveKind 'Strategy 'Action)
+traceStrategyAction = effectTraceStrategyAction
 
 -- | Read the Need context justified by an effect trace.
 traceNeed :: EffectTrace -> ContextRef 'Need
-traceNeed = ContextRef . effectTraceNeed
+traceNeed = effectTraceNeed
+
+-- | Read the situated Driver that grounds the Need Objective.
+traceNeedDriver :: EffectTrace -> NodeId ('PrimitiveKind 'Need 'Driver)
+traceNeedDriver = effectTraceNeedDriver
+
+-- | Read the required qualitative change expressed by the Need.
+traceNeedObjective :: EffectTrace -> NodeId ('PrimitiveKind 'Need 'Objective)
+traceNeedObjective = effectTraceNeedObjective
 
 -- | Read the Intervention that realizes an effect trace.
 traceIntervention :: EffectTrace -> ContextRef 'Intervention
-traceIntervention = ContextRef . effectTraceIntervention
+traceIntervention = effectTraceIntervention
+
+-- | Read the Intervention Action that changes the Situation anchor.
+traceInterventionAction ::
+     EffectTrace -> NodeId ('PrimitiveKind 'Intervention 'Action)
+traceInterventionAction = effectTraceInterventionAction
 
 -- | Read the Intervention Key Result that operationalizes the traced Need.
-traceInterventionKeyResult :: EffectTrace -> RawNodeId
+traceInterventionKeyResult ::
+     EffectTrace -> NodeId ('PrimitiveKind 'Intervention 'KeyResult)
 traceInterventionKeyResult = effectTraceInterventionKeyResult
 
+-- | Read the Measure context that frames the trace's observations.
+traceMeasure :: EffectTrace -> ContextRef 'Measure
+traceMeasure = effectTraceMeasure
+
+-- | Read the Measure measurement dimension determined by the Strategy.
+traceMeasurePerformanceDimension ::
+     EffectTrace -> NodeId ('StructuringKind 'Measure 'PerformanceDimension)
+traceMeasurePerformanceDimension = effectTraceMeasurePerformanceDimension
+
 -- | Read the KPI used to observe the traced Situation anchor.
-traceKPI :: EffectTrace -> RawNodeId
+traceKPI :: EffectTrace -> NodeId ('PrimitiveKind 'Measure 'KPI)
 traceKPI = effectTraceKPI
 
+-- | Read the Situation changed and observed by the trace.
+traceSituation :: EffectTrace -> ContextRef 'Situation
+traceSituation = effectTraceSituation
+
 -- | Read the Situation anchor changed and measured by the trace.
-traceAnchor :: EffectTrace -> RawNodeId
-traceAnchor = effectTraceAnchor
+traceSituationAnchor :: EffectTrace -> SomeSituationAnchorRef
+traceSituationAnchor = effectTraceSituationAnchor
+
+-- | Erase an existential Situation-anchor reference for runtime comparison.
+situationAnchorRefId :: SomeSituationAnchorRef -> RawNodeId
+situationAnchorRefId (SomeSituationAnchorRef identifier _) = unNodeId identifier
+
+-- | Reify the anchor form of an existential Situation-anchor reference.
+situationAnchorRefKind :: SomeSituationAnchorRef -> SituationAnchor
+situationAnchorRefKind (SomeSituationAnchorRef _ anchor) = anchorValue anchor
 
 traceCandidates :: SemanticallyValidModel -> [EffectTrace]
 traceCandidates semantic = do
@@ -267,13 +374,34 @@ traceCandidates semantic = do
        interventionKeyResult
        contributesInterventionKeyResultToStrategyKeyResult
        strategyKeyResult)
-  domain <- structuringNodesIn graph measure Domain
-  require (has graph strategyDriver indicatesMeasureDomain domain)
-  require (has graph strategyKeyResult determinesMeasureDomain domain)
+  performanceDimensionReference <-
+    performanceDimensionNodesIn
+      graph
+      (mkContextRef measure)
+      MeasureMeasurementDimension
+  let performanceDimension = unNodeId performanceDimensionReference
+  require
+    (has
+       graph
+       strategyDriver
+       indicatesMeasurePerformanceDimension
+       performanceDimension)
+  require
+    (has
+       graph
+       strategyKeyResult
+       determinesMeasurePerformanceDimension
+       performanceDimension)
   kpi <- primitiveNodesIn graph measure KPI
-  require (has graph domain containsMeasureKPI kpi)
+  require
+    (has
+       graph
+       performanceDimension
+       (containsPerformanceDimension MeasureMeasurementDimension)
+       kpi)
   require (has graph interventionKeyResult setsTargetForMeasureKPI kpi)
-  anchor <- anchorNodesIn graph situation
+  anchorReference <- situationAnchorReferencesIn graph situation
+  let anchor = situationAnchorRefId anchorReference
   require
     (hasAnchor
        graph
@@ -310,7 +438,7 @@ traceCandidates semantic = do
           , keyInterventionAction = interventionAction
           , keyInterventionKeyResult = interventionKeyResult
           , keyMeasure = measure
-          , keyMeasureDomain = domain
+          , keyMeasurePerformanceDimension = performanceDimension
           , keyMeasureKPI = kpi
           , keySituation = situation
           , keySituationAnchor = anchor
@@ -318,13 +446,24 @@ traceCandidates semantic = do
   pure
     EffectTrace
       { effectTraceIdentifier = EffectTraceId key
-      , effectTraceStrategy = strategy
-      , effectTraceStrategyKeyResult = strategyKeyResult
-      , effectTraceIntervention = intervention
-      , effectTraceNeed = need
-      , effectTraceInterventionKeyResult = interventionKeyResult
-      , effectTraceKPI = kpi
-      , effectTraceAnchor = anchor
+      , effectTraceVision = mkContextRef vision
+      , effectTraceVisionObjective = mkNodeId visionObjective
+      , effectTraceStrategy = mkContextRef strategy
+      , effectTraceStrategyDriver = mkNodeId strategyDriver
+      , effectTraceStrategyObjective = mkNodeId strategyObjective
+      , effectTraceStrategyKeyResult = mkNodeId strategyKeyResult
+      , effectTraceStrategyAction = mkNodeId strategyAction
+      , effectTraceNeed = mkContextRef need
+      , effectTraceNeedDriver = mkNodeId needDriver
+      , effectTraceNeedObjective = mkNodeId needObjective
+      , effectTraceIntervention = mkContextRef intervention
+      , effectTraceInterventionAction = mkNodeId interventionAction
+      , effectTraceInterventionKeyResult = mkNodeId interventionKeyResult
+      , effectTraceMeasure = mkContextRef measure
+      , effectTraceMeasurePerformanceDimension = performanceDimensionReference
+      , effectTraceKPI = mkNodeId kpi
+      , effectTraceSituation = mkContextRef situation
+      , effectTraceSituationAnchor = anchorReference
       }
   where
     graph = modelGraph semantic
@@ -332,6 +471,14 @@ traceCandidates semantic = do
 require :: Bool -> [()]
 require True = [()]
 require False = []
+
+situationAnchorReferencesIn ::
+     WellFormedGraph -> RawNodeId -> [SomeSituationAnchorRef]
+situationAnchorReferencesIn graph owner =
+  [ SomeSituationAnchorRef identifier anchor
+  | SomeNode (AnchorNode identifier context anchor) <- graphNodes graph
+  , unNodeId context == owner
+  ]
 
 has :: WellFormedGraph -> RawNodeId -> Relation from to -> RawNodeId -> Bool
 has graph from relation to = hasEdge graph from (nameOf relation) to
@@ -417,11 +564,13 @@ hasMacroEvidence semantic evidenceKind from to =
     FramesMeasureEvidence -> anyFramesEvidence
   where
     graph = modelGraph semantic
+    anyRelation :: Primitive -> Relation fromKind toKind -> Primitive -> Bool
     anyRelation fromPrimitive primitiveRelation toPrimitive =
       anyBetween
         (primitiveNodesIn graph from fromPrimitive)
         primitiveRelation
         (primitiveNodesIn graph to toPrimitive)
+    anyBetween :: [RawNodeId] -> Relation fromKind toKind -> [RawNodeId] -> Bool
     anyBetween sources relation targets =
       or
         [ has graph source relation target
@@ -455,11 +604,28 @@ hasMacroEvidence semantic evidenceKind from to =
         ]
     anyFramesEvidence =
       or
-        [ has graph driver indicatesMeasureDomain domain
-          && has graph keyResult determinesMeasureDomain domain
-          && has graph domain containsMeasureKPI kpi
+        [ has
+          graph
+          driver
+          indicatesMeasurePerformanceDimension
+          performanceDimension
+          && has
+               graph
+               keyResult
+               determinesMeasurePerformanceDimension
+               performanceDimension
+          && has
+               graph
+               performanceDimension
+               (containsPerformanceDimension MeasureMeasurementDimension)
+               kpi
         | driver <- strategyDiagnoses from
         , keyResult <- strategyKeyResults from
-        , domain <- structuringNodesIn graph to Domain
+        , performanceDimensionReference <-
+            performanceDimensionNodesIn
+              graph
+              (mkContextRef to)
+              MeasureMeasurementDimension
+        , let performanceDimension = unNodeId performanceDimensionReference
         , kpi <- primitiveNodesIn graph to KPI
         ]

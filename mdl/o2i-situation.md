@@ -5,19 +5,21 @@
 
 ## Nodes
 
+- [Business Capability] `Business Capability` (Grouping)
+- [Business Object] `Business Object` (Grouping)
+- [Business Process] `Business Process` (Grouping)
+- [Business Role] `Business Role` (Grouping)
+- [Regulatory Constraint] `Regulatory Constraint` (Grouping)
 - [Situation] `Situation` (Grouping)
-- [Situation#Business Capability] `Situation#Business Capability` (Grouping)
-- [Situation#Business Object] `Situation#Business Object` (Grouping)
-- [Situation#Business Process] `Situation#Business Process` (Grouping)
-- [Situation#Business Role] `Situation#Business Role` (Grouping)
-- [Situation#Regulatory Constraint] `Situation#Regulatory Constraint` (Grouping)
-- [Situation#Value Stream] `Situation#Value Stream` (Grouping)
+- [Situation Anchor] `Situation Anchor` (Grouping)
+- [Value Stream] `Value Stream` (Grouping)
 
 ## Relations
 
-- `Situation` --is-constituted-by--> `Situation#Business Capability` (AggregationRelationship)
-- `Situation` --is-constituted-by--> `Situation#Business Object` (AggregationRelationship)
-- `Situation` --is-constituted-by--> `Situation#Business Process` (AggregationRelationship)
-- `Situation` --is-constituted-by--> `Situation#Business Role` (AggregationRelationship)
-- `Situation` --is-constituted-by--> `Situation#Regulatory Constraint` (AggregationRelationship)
-- `Situation` --is-constituted-by--> `Situation#Value Stream` (AggregationRelationship)
+- `Business Capability` --kind-of--> `Situation Anchor` (SpecializationRelationship)
+- `Business Object` --kind-of--> `Situation Anchor` (SpecializationRelationship)
+- `Business Process` --kind-of--> `Situation Anchor` (SpecializationRelationship)
+- `Business Role` --kind-of--> `Situation Anchor` (SpecializationRelationship)
+- `Regulatory Constraint` --kind-of--> `Situation Anchor` (SpecializationRelationship)
+- `Situation` --is-constituted-by--> `Situation Anchor` (AggregationRelationship)
+- `Value Stream` --kind-of--> `Situation Anchor` (SpecializationRelationship)

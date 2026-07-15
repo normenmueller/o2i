@@ -4,6 +4,8 @@
 from __future__ import annotations
 
 import argparse
+import difflib
+import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
@@ -16,12 +18,37 @@ PRESETS = {
         Path("mdl/o2i-strategy-constituents.md"),
     ),
     "situation": ("O2I Situation", Path("mdl/o2i-situation.md")),
+    "situation-anchoring": (
+        "O2I Situation Anchoring",
+        Path("mdl/o2i-situation-anchoring.md"),
+    ),
     "orientation": ("O2I Orientierung", Path("mdl/o2i-orientation.md")),
     "context": ("O2I Context", Path("mdl/o2i-context.md")),
     "primitives": ("O2I Primitives", Path("mdl/o2i-primitives.md")),
     "syntax": ("O2I Syntax", Path("mdl/o2i-syntax.md")),
     "layered-cake": ("O2I Layered Cake", Path("mdl/o2i-layered-cake.md")),
 }
+
+REQUIRED_SYNTAX_NODES = {
+    ("Assessment", "Assessment"),
+    ("Course of Action", "CourseOfAction"),
+    ("Driver", "Driver"),
+    ("Goal", "Goal"),
+    ("Outcome", "Outcome"),
+    ("Performance Dimension", "Grouping"),
+    ("Principle", "Principle"),
+}
+
+REQUIRED_SYNTAX_DOCUMENTATION = (
+    "Every O2I Context is represented by an ArchiMate Grouping.",
+    "Primitive @ Context is the textual notation of this containment.",
+    "O2I BusinessCapability -> ArchiMate Capability",
+    "O2I BusinessProcess -> ArchiMate Process",
+    "O2I BusinessObject -> ArchiMate Business Object",
+    "O2I BusinessRole -> ArchiMate Role",
+    "O2I ValueStream -> ArchiMate Value Stream",
+    "O2I RegulatoryConstraint -> ArchiMate Requirement",
+)
 
 
 def xtype(element: ET.Element) -> str:
@@ -30,7 +57,10 @@ def xtype(element: ET.Element) -> str:
 
 def collect_model(root: ET.Element):
     elements: dict[str, tuple[str, str]] = {}
-    relations: dict[str, tuple[str, str, str | None, str | None]] = {}
+    relations: dict[
+        str,
+        tuple[str, str, str | None, str | None, bool],
+    ] = {}
 
     for element in root.iter("element"):
         element_id = element.get("id")
@@ -48,6 +78,7 @@ def collect_model(root: ET.Element):
                 element_type,
                 element.get("source"),
                 element.get("target"),
+                element.get("directed") == "true",
             )
 
     return elements, relations
@@ -63,6 +94,7 @@ def find_view(root: ET.Element, view_name: str) -> ET.Element:
 def collect_view(view: ET.Element):
     object_targets: dict[str, str] = {}
     object_parents: dict[str, str | None] = {}
+    notes: list[str] = []
 
     def walk(node: ET.Element, parent: str | None) -> None:
         node_id = node.get("id")
@@ -71,6 +103,10 @@ def collect_view(view: ET.Element):
             target = node.get("archimateElement")
             if target:
                 object_targets[node_id] = target
+            if xtype(node) == "Note":
+                content = (node.findtext("content") or "").strip()
+                if content:
+                    notes.append(content)
 
         for child in node:
             if child.tag == "child":
@@ -90,7 +126,8 @@ def collect_view(view: ET.Element):
         if relation_id and source and target:
             connections.append((source, relation_id, target))
 
-    return object_targets, object_parents, connections
+    documentation = (view.findtext("documentation") or "").strip()
+    return object_targets, object_parents, connections, notes, documentation
 
 
 def top_container(
@@ -110,10 +147,15 @@ def top_container(
 
 def render(
     elements: dict[str, tuple[str, str]],
-    relations: dict[str, tuple[str, str, str | None, str | None]],
+    relations: dict[
+        str,
+        tuple[str, str, str | None, str | None, bool],
+    ],
     object_targets: dict[str, str],
     object_parents: dict[str, str | None],
     connections: list[tuple[str, str, str]],
+    notes: list[str],
+    documentation: str,
     source_path: Path,
     view_name: str,
     include_meaning: bool,
@@ -137,9 +179,17 @@ def render(
         f"> Generated review snapshot of `{view_name}` from `{source_path}`.",
         "> Review artifact only; source of truth remains the O2I metamodel.",
         "",
-        "## Nodes",
-        "",
     ]
+
+    if documentation:
+        lines.extend(["## View Contract", "", documentation, ""])
+
+    if notes:
+        lines.extend(["## Notes", ""])
+        lines.extend(f"- {note}" for note in sorted(notes))
+        lines.append("")
+
+    lines.extend(["## Nodes", ""])
 
     for element_id in sorted(
         visible_elements,
@@ -155,45 +205,125 @@ def render(
     for source, relation_id, target in connections:
         if source not in visible_elements or target not in visible_elements:
             continue
-        relation_name, relation_type, _, _ = relations.get(
+        relation_name, relation_type, _, _, directed = relations.get(
             relation_id,
-            ("?", "?", None, None),
+            ("?", "?", None, None, False),
         )
         source_name = elements.get(source, ("?", ""))[0]
         target_name = elements.get(target, ("?", ""))[0]
         rendered_relations.append(
-            (source_name, relation_name, target_name, relation_type)
+            (source_name, relation_name, target_name, relation_type, directed)
         )
 
-    for source_name, relation_name, target_name, relation_type in sorted(rendered_relations):
+    for source_name, relation_name, target_name, relation_type, directed in sorted(
+        rendered_relations
+    ):
+        relation_description = relation_type
+        if relation_type == "AssociationRelationship":
+            relation_description += ", directed" if directed else ", undirected"
         lines.append(
-            f"- `{source_name}` --{relation_name}--> `{target_name}` ({relation_type})"
+            f"- `{source_name}` --{relation_name}--> `{target_name}` "
+            f"({relation_description})"
         )
 
     return "\n".join(lines) + "\n"
 
 
-def extract(
+def rendered_view(
     root: ET.Element,
     source_path: Path,
     view_name: str,
-    output_path: Path,
     include_meaning: bool,
-) -> None:
+) -> str:
     elements, relations = collect_model(root)
     view = find_view(root, view_name)
-    object_targets, object_parents, connections = collect_view(view)
-    content = render(
+    object_targets, object_parents, connections, notes, documentation = collect_view(view)
+    return render(
         elements,
         relations,
         object_targets,
         object_parents,
         connections,
+        notes,
+        documentation,
         source_path,
         view_name,
         include_meaning,
     )
-    output_path.write_text(content, encoding="utf-8")
+
+
+def validate_model(root: ET.Element) -> list[str]:
+    elements, relations = collect_model(root)
+    errors: list[str] = []
+
+    for view_name, _ in PRESETS.values():
+        try:
+            view = find_view(root, view_name)
+        except SystemExit:
+            errors.append(f"missing required view: {view_name}")
+            continue
+
+        object_targets, _, connections, notes, documentation = collect_view(view)
+
+        if view_name == "O2I Syntax":
+            visible_nodes = {
+                elements[element_id]
+                for element_id in object_targets.values()
+                if element_id in elements
+                and elements[element_id][1] != "Meaning"
+            }
+            for required in sorted(REQUIRED_SYNTAX_NODES):
+                if required not in visible_nodes:
+                    errors.append(
+                        "O2I Syntax is missing node "
+                        f"{required[0]} ({required[1]})"
+                    )
+
+            for fragment in REQUIRED_SYNTAX_DOCUMENTATION:
+                if fragment not in documentation:
+                    errors.append(
+                        "O2I Syntax documentation is missing: " + fragment
+                    )
+
+            context_note = (
+                "Every O2I Context is represented by an ArchiMate Grouping."
+            )
+            if not any(context_note in note for note in notes):
+                errors.append("O2I Syntax is missing its visible Context note")
+
+        for _, relation_id, _ in connections:
+            relation = relations.get(relation_id)
+            if relation is None:
+                errors.append(
+                    f"{view_name} uses unknown relation: {relation_id}"
+                )
+                continue
+            relation_name, relation_type, _, _, directed = relation
+            if relation_type == "AssociationRelationship" and not directed:
+                errors.append(
+                    f"{view_name} uses undirected association: {relation_name}"
+                )
+
+    return errors
+
+
+def snapshot_diff(output_path: Path, expected: str) -> list[str]:
+    if not output_path.exists():
+        return [f"missing snapshot: {output_path}"]
+
+    actual = output_path.read_text(encoding="utf-8")
+    if actual == expected:
+        return []
+
+    diff = "".join(
+        difflib.unified_diff(
+            actual.splitlines(keepends=True),
+            expected.splitlines(keepends=True),
+            fromfile=str(output_path),
+            tofile=f"generated:{output_path}",
+        )
+    )
+    return [f"snapshot drift: {output_path}\n{diff}"]
 
 
 def main() -> None:
@@ -225,13 +355,31 @@ def main() -> None:
         action="store_true",
         help="Include ArchiMate Meaning elements used as visual labels.",
     )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Validate model invariants and fail on snapshot drift.",
+    )
     args = parser.parse_args()
 
     root = ET.parse(args.model).getroot()
+    errors = validate_model(root) if args.check else []
 
     if args.preset == "all":
         for view_name, output_path in PRESETS.values():
-            extract(root, args.model, view_name, output_path, args.include_meaning)
+            content = rendered_view(
+                root,
+                args.model,
+                view_name,
+                args.include_meaning,
+            )
+            if args.check:
+                errors.extend(snapshot_diff(output_path, content))
+            else:
+                output_path.write_text(content, encoding="utf-8")
+        if errors:
+            print("\n\n".join(errors), file=sys.stderr)
+            raise SystemExit(1)
         return
 
     if args.preset:
@@ -245,7 +393,20 @@ def main() -> None:
     if args.output:
         output_path = args.output
 
-    extract(root, args.model, view_name, output_path, args.include_meaning)
+    content = rendered_view(
+        root,
+        args.model,
+        view_name,
+        args.include_meaning,
+    )
+    if args.check:
+        errors.extend(snapshot_diff(output_path, content))
+    else:
+        output_path.write_text(content, encoding="utf-8")
+
+    if errors:
+        print("\n\n".join(errors), file=sys.stderr)
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

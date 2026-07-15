@@ -18,6 +18,7 @@ module O2I.Validation.Semantics
   , modelGraph
   , strategyFormulations
   , strategyFormulationData
+  , lookupSemanticContextRef
   , qualifyingStrategies
   ) where
 
@@ -180,6 +181,14 @@ strategyFormulations = semanticallyValidStrategies
 strategyFormulationData :: StrategyFormulation -> RawStrategyFormulation
 strategyFormulationData = validatedStrategyFormulation
 
+-- | Resolve a raw identifier as a typed Context in a semantic model.
+lookupSemanticContextRef ::
+     SemanticallyValidModel
+  -> SContext context
+  -> RawNodeId
+  -> Maybe (ContextRef context)
+lookupSemanticContextRef semantic = lookupContextRef (modelGraph semantic)
+
 -- | Find Strategies that qualify one situated Need.
 --
 -- A result requires both the Strategy-to-Need macrorelation and its primitive
@@ -189,7 +198,7 @@ strategyFormulationData = validatedStrategyFormulation
 qualifyingStrategies ::
      SemanticallyValidModel -> ContextRef 'Need -> [ContextRef 'Strategy]
 qualifyingStrategies semantic need =
-  [ ContextRef strategy
+  [ mkContextRef strategy
   | strategy <- contextNodesOf graph Strategy
   , hasRelation graph strategy qualifiesNeed needIdentifier
   , Just formulation <- [Map.lookup strategy (strategyFormulations semantic)]

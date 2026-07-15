@@ -1,6 +1,8 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RoleAnnotations #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeOperators #-}
 
@@ -11,31 +13,46 @@
 -- modules establish semantic claims about those graph instances.
 module O2I.Language.Element
   ( RawNodeId(..)
-  , NodeId(..)
-  , ContextRef(..)
+  , NodeId
+  , unNodeId
+  , ContextRef
+  , contextRefId
+  , mkNodeId
+  , mkContextRef
   , Context(..)
   , Primitive(..)
   , Structuring(..)
+  , PerformanceDimensionRole(..)
+  , PerformanceDimensionRoleCode(..)
+  , PerformanceDimensionRoleName(..)
+  , SomePerformanceDimensionRole(..)
   , SituationAnchor(..)
   , NodeKind(..)
   , SContext(..)
   , SPrimitive(..)
-  , SStructuring(..)
   , SSituationAnchor(..)
   , SNodeKind(..)
   , NodeKindValue(..)
   , SomeSContext(..)
   , SomeSPrimitive(..)
-  , SomeSStructuring(..)
   , SomeSAnchor(..)
+  , performanceDimensionRoleCode
+  , performanceDimensionRoleCodeOf
+  , performanceDimensionRoleName
+  , performanceDimensionRoleNameOf
+  , performanceDimensionRoleContext
+  , performanceDimensionRoleMember
+  , performanceDimensionMembershipRelationName
+  , performanceDimensionRoleIdentity
+  , allPerformanceDimensionRoles
+  , reifyPerformanceDimensionRole
+  , lookupPerformanceDimensionRole
   , contextValue
   , primitiveValue
-  , structuringValue
   , anchorValue
   , nodeKindValue
   , someSContext
   , someSPrimitive
-  , someSStructuring
   , someSAnchor
   , eqSNodeKind
   ) where
@@ -48,15 +65,27 @@ newtype RawNodeId = RawNodeId
   { rawNodeIdText :: Text -- ^ Identifier text; uniqueness is validated later.
   } deriving (Eq, Ord, Show)
 
--- | Identifier indexed by the statically known kind of its node.
+type role NodeId nominal
+
+-- | Opaque identifier whose node kind was established by validation.
 newtype NodeId (kind :: NodeKind) = NodeId
   { unNodeId :: RawNodeId -- ^ Erase the kind index for runtime lookup.
   } deriving (Eq, Ord, Show)
 
--- | Reference to a context whose context type is known statically.
+type role ContextRef nominal
+
+-- | Opaque reference to a context whose type was established by validation.
 newtype ContextRef (context :: Context) = ContextRef
   { contextRefId :: RawNodeId -- ^ Runtime identifier of the context node.
   } deriving (Eq, Ord, Show)
+
+-- | Internally wrap an identifier after its node kind has been validated.
+mkNodeId :: RawNodeId -> NodeId kind
+mkNodeId = NodeId
+
+-- | Internally wrap an identifier after its Context has been validated.
+mkContextRef :: RawNodeId -> ContextRef context
+mkContextRef = ContextRef
 
 -- * Type universes
 -- ** Contexts
@@ -86,8 +115,31 @@ data Primitive
 -- ** Structuring
 -- | Closed universe of semantic organization outside Context and Primitive.
 data Structuring =
-  Domain -- ^ Named semantic domain that groups related model elements.
+  PerformanceDimension
+    -- ^ Closed performance dimension owned by Strategy or Measure.
   deriving (Bounded, Enum, Eq, Ord, Show)
+
+-- | Closed proof of one admissible PerformanceDimension role and member kind.
+--
+-- No constructor exists for another Context or Primitive membership.
+data PerformanceDimensionRole (context :: Context) (member :: Primitive) where
+  StrategySuccessDimension :: PerformanceDimensionRole 'Strategy 'KeyResult
+    -- ^ Strategy success dimension containing Strategy Key Results.
+  MeasureMeasurementDimension :: PerformanceDimensionRole 'Measure 'KPI
+    -- ^ Measure measurement dimension containing Measure KPIs.
+
+deriving instance Show (PerformanceDimensionRole context member)
+
+-- | Stable finite identity of an admissible PerformanceDimension role.
+data PerformanceDimensionRoleCode
+  = StrategySuccessDimensionCode -- ^ Code for 'StrategySuccessDimension'.
+  | MeasureMeasurementDimensionCode -- ^ Code for 'MeasureMeasurementDimension'.
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+-- | Stable semantic name of a PerformanceDimension role.
+newtype PerformanceDimensionRoleName = PerformanceDimensionRoleName
+  { performanceDimensionRoleNameText :: Text -- ^ Machine-readable role name.
+  } deriving (Eq, Ord, Show)
 
 -- ** Situation anchors
 -- | Business-architecture forms that can constitute a Situation.
@@ -133,11 +185,125 @@ data SPrimitive (primitive :: Primitive) where
 
 deriving instance Show (SPrimitive primitive)
 
--- | Singleton witness that reifies a type-level 'Structuring'.
-data SStructuring (structuring :: Structuring) where
-  SDomain :: SStructuring 'Domain -- ^ Witness 'Domain'.
+-- | Existential role for heterogeneous runtime interpretation.
+data SomePerformanceDimensionRole where
+  SomePerformanceDimensionRole
+    :: PerformanceDimensionRole context member -> SomePerformanceDimensionRole
+    -- ^ Hide role indices while retaining their closed witness.
 
-deriving instance Show (SStructuring structuring)
+instance Eq SomePerformanceDimensionRole where
+  left == right =
+    performanceDimensionRoleCodeOf left == performanceDimensionRoleCodeOf right
+
+instance Show SomePerformanceDimensionRole where
+  show = show . performanceDimensionRoleNameOf
+
+data PerformanceDimensionRoleSpec context member = PerformanceDimensionRoleSpec
+  { roleSpecCode :: PerformanceDimensionRoleCode
+  , roleSpecName :: PerformanceDimensionRoleName
+  , roleSpecContext :: SContext context
+  , roleSpecMember :: SPrimitive member
+  , roleSpecMembershipName :: Text
+  }
+
+performanceDimensionRoleSpec ::
+     PerformanceDimensionRole context member
+  -> PerformanceDimensionRoleSpec context member
+performanceDimensionRoleSpec StrategySuccessDimension =
+  PerformanceDimensionRoleSpec
+    { roleSpecCode = StrategySuccessDimensionCode
+    , roleSpecName = PerformanceDimensionRoleName "strategy-success-dimension"
+    , roleSpecContext = SStrategy
+    , roleSpecMember = SKeyResult
+    , roleSpecMembershipName =
+        "strategy-performance-dimension-contains-strategy-key-result"
+    }
+performanceDimensionRoleSpec MeasureMeasurementDimension =
+  PerformanceDimensionRoleSpec
+    { roleSpecCode = MeasureMeasurementDimensionCode
+    , roleSpecName =
+        PerformanceDimensionRoleName "measure-measurement-dimension"
+    , roleSpecContext = SMeasure
+    , roleSpecMember = SKPI
+    , roleSpecMembershipName =
+        "measure-performance-dimension-contains-measure-kpi"
+    }
+
+-- | Return the stable code of a statically known PerformanceDimension role.
+performanceDimensionRoleCode ::
+     PerformanceDimensionRole context member -> PerformanceDimensionRoleCode
+performanceDimensionRoleCode = roleSpecCode . performanceDimensionRoleSpec
+
+-- | Return the stable code of an existential PerformanceDimension role.
+performanceDimensionRoleCodeOf ::
+     SomePerformanceDimensionRole -> PerformanceDimensionRoleCode
+performanceDimensionRoleCodeOf (SomePerformanceDimensionRole role) =
+  performanceDimensionRoleCode role
+
+-- | Return the stable name of a statically known PerformanceDimension role.
+performanceDimensionRoleName ::
+     PerformanceDimensionRole context member -> PerformanceDimensionRoleName
+performanceDimensionRoleName = roleSpecName . performanceDimensionRoleSpec
+
+-- | Return the stable name of an existential PerformanceDimension role.
+performanceDimensionRoleNameOf ::
+     SomePerformanceDimensionRole -> PerformanceDimensionRoleName
+performanceDimensionRoleNameOf (SomePerformanceDimensionRole role) =
+  performanceDimensionRoleName role
+
+-- | Reify the owning Context of a PerformanceDimension role.
+performanceDimensionRoleContext ::
+     PerformanceDimensionRole context member -> SContext context
+performanceDimensionRoleContext = roleSpecContext . performanceDimensionRoleSpec
+
+-- | Reify the only admissible member Primitive of a PerformanceDimension role.
+performanceDimensionRoleMember ::
+     PerformanceDimensionRole context member -> SPrimitive member
+performanceDimensionRoleMember = roleSpecMember . performanceDimensionRoleSpec
+
+-- | Return the stable serialized name of the role's membership relation.
+performanceDimensionMembershipRelationName ::
+     PerformanceDimensionRole context member -> Text
+performanceDimensionMembershipRelationName =
+  roleSpecMembershipName . performanceDimensionRoleSpec
+
+-- | Project stable identity, name, Context, and member Primitive.
+performanceDimensionRoleIdentity ::
+     SomePerformanceDimensionRole
+  -> ( PerformanceDimensionRoleCode
+     , PerformanceDimensionRoleName
+     , Context
+     , Primitive)
+performanceDimensionRoleIdentity (SomePerformanceDimensionRole role) =
+  ( performanceDimensionRoleCode role
+  , performanceDimensionRoleName role
+  , contextValue (performanceDimensionRoleContext role)
+  , primitiveValue (performanceDimensionRoleMember role))
+
+-- | Complete registry of the two admissible PerformanceDimension roles.
+allPerformanceDimensionRoles :: [SomePerformanceDimensionRole]
+allPerformanceDimensionRoles =
+  map reifyPerformanceDimensionRole [minBound .. maxBound]
+
+-- | Reify a stable PerformanceDimension-role code as a typed witness.
+reifyPerformanceDimensionRole ::
+     PerformanceDimensionRoleCode -> SomePerformanceDimensionRole
+reifyPerformanceDimensionRole StrategySuccessDimensionCode =
+  SomePerformanceDimensionRole StrategySuccessDimension
+reifyPerformanceDimensionRole MeasureMeasurementDimensionCode =
+  SomePerformanceDimensionRole MeasureMeasurementDimension
+
+-- | Resolve the unique PerformanceDimension role admitted for a runtime Context.
+--
+-- 'Nothing' means that the Context cannot own a PerformanceDimension.
+lookupPerformanceDimensionRole :: Context -> Maybe SomePerformanceDimensionRole
+lookupPerformanceDimensionRole context = go allPerformanceDimensionRoles
+  where
+    go [] = Nothing
+    go (candidate@(SomePerformanceDimensionRole role):rest)
+      | contextValue (performanceDimensionRoleContext role) == context =
+        Just candidate
+      | otherwise = go rest
 
 -- | Singleton witness that reifies a type-level 'SituationAnchor'.
 data SSituationAnchor (anchor :: SituationAnchor) where
@@ -165,11 +331,10 @@ data SNodeKind (kind :: NodeKind) where
     -> SPrimitive primitive
     -> SNodeKind ('PrimitiveKind context primitive)
     -- ^ Witness a contextualized primitive-node kind.
-  SStructuringKind
-    :: SContext context
-    -> SStructuring structuring
-    -> SNodeKind ('StructuringKind context structuring)
-    -- ^ Witness a contextualized structuring-node kind.
+  SPerformanceDimensionKind
+    :: PerformanceDimensionRole context member
+    -> SNodeKind ('StructuringKind context 'PerformanceDimension)
+    -- ^ Witness a PerformanceDimension-node kind through its closed role.
   SAnchorKind :: SSituationAnchor anchor -> SNodeKind ('AnchorKind anchor)
     -- ^ Witness a Situation-anchor node kind.
 
@@ -184,11 +349,6 @@ data SomeSContext where
 data SomeSPrimitive where
   SomeSPrimitive :: SPrimitive primitive -> SomeSPrimitive
     -- ^ Hide the primitive index while retaining its witness.
-
--- | Existential structuring witness for runtime reification.
-data SomeSStructuring where
-  SomeSStructuring :: SStructuring structuring -> SomeSStructuring
-    -- ^ Hide the structuring index while retaining its witness.
 
 -- | Existential Situation-anchor witness for runtime reification.
 data SomeSAnchor where
@@ -215,10 +375,6 @@ primitiveValue SKeyResult = KeyResult
 primitiveValue SKPI = KPI
 primitiveValue SAction = Action
 
--- | Project a singleton structuring witness to its runtime value.
-structuringValue :: SStructuring structuring -> Structuring
-structuringValue SDomain = Domain
-
 -- | Project a singleton anchor witness to its runtime value.
 anchorValue :: SSituationAnchor anchor -> SituationAnchor
 anchorValue SBusinessCapability = BusinessCapability
@@ -233,8 +389,10 @@ nodeKindValue :: SNodeKind kind -> NodeKindValue
 nodeKindValue (SContextKind context) = ContextNodeKind (contextValue context)
 nodeKindValue (SPrimitiveKind context primitive) =
   PrimitiveNodeKind (contextValue context) (primitiveValue primitive)
-nodeKindValue (SStructuringKind context structuring) =
-  StructuringNodeKind (contextValue context) (structuringValue structuring)
+nodeKindValue (SPerformanceDimensionKind role) =
+  StructuringNodeKind
+    (contextValue (performanceDimensionRoleContext role))
+    PerformanceDimension
 nodeKindValue (SAnchorKind anchor) = AnchorNodeKind (anchorValue anchor)
 
 -- | Runtime projection of a type-level 'NodeKind'.
@@ -265,10 +423,6 @@ someSPrimitive KeyResult = SomeSPrimitive SKeyResult
 someSPrimitive KPI = SomeSPrimitive SKPI
 someSPrimitive Action = SomeSPrimitive SAction
 
--- | Reify any runtime structuring value as an existential singleton witness.
-someSStructuring :: Structuring -> SomeSStructuring
-someSStructuring Domain = SomeSStructuring SDomain
-
 -- | Reify any runtime Situation anchor as an existential singleton witness.
 someSAnchor :: SituationAnchor -> SomeSAnchor
 someSAnchor BusinessCapability = SomeSAnchor SBusinessCapability
@@ -287,9 +441,11 @@ eqSNodeKind (SPrimitiveKind lc lp) (SPrimitiveKind rc rp) = do
   Refl <- eqSContext lc rc
   Refl <- eqSPrimitive lp rp
   pure Refl
-eqSNodeKind (SStructuringKind lc ls) (SStructuringKind rc rs) = do
-  Refl <- eqSContext lc rc
-  Refl <- eqSStructuring ls rs
+eqSNodeKind (SPerformanceDimensionKind left) (SPerformanceDimensionKind right) = do
+  Refl <-
+    eqSContext
+      (performanceDimensionRoleContext left)
+      (performanceDimensionRoleContext right)
   pure Refl
 eqSNodeKind (SAnchorKind left) (SAnchorKind right) = do
   Refl <- eqSAnchor left right
@@ -315,10 +471,6 @@ eqSPrimitive SKeyResult SKeyResult = Just Refl
 eqSPrimitive SKPI SKPI = Just Refl
 eqSPrimitive SAction SAction = Just Refl
 eqSPrimitive _ _ = Nothing
-
-eqSStructuring ::
-     SStructuring left -> SStructuring right -> Maybe (left :~: right)
-eqSStructuring SDomain SDomain = Just Refl
 
 eqSAnchor ::
      SSituationAnchor left -> SSituationAnchor right -> Maybe (left :~: right)

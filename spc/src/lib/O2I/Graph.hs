@@ -17,9 +17,10 @@ module O2I.Graph
   , someEdgeRelation
   , someEdgeTo
   , lookupNode
+  , lookupContextRef
   , contextNodesOf
   , primitiveNodesIn
-  , structuringNodesIn
+  , performanceDimensionNodesIn
   , anchorNodesIn
   , hasEdge
   , outgoingContextTargets
@@ -35,8 +36,10 @@ import O2I.Graph.Typed
   , graphEdges
   , graphNodes
   , hasEdge
+  , lookupContextRef
   , lookupNode
   , outgoingContextTargets
+  , performanceDimensionNodesIn
   , primitiveNodesIn
   , someEdgeFrom
   , someEdgeRelation
@@ -44,5 +47,4 @@ import O2I.Graph.Typed
   , someNodeId
   , someNodeKind
   , someNodeOwner
-  , structuringNodesIn
   )

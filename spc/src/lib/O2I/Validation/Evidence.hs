@@ -2,16 +2,20 @@
 
 -- | Ex-post assessment of empirical evidence for ready effect traces.
 --
--- Evidence assessment checks follow-up observations against ex-ante plans and
--- baselines fixed by evidence readiness. It does not claim causal proof.
+-- Evidence assessment checks actual Intervention timing and follow-up
+-- observations against ex-ante plans and baselines fixed by readiness. It
+-- supports plausible attribution and does not claim causal proof.
 module O2I.Validation.Evidence
-  ( FollowUpObservation(..)
+  ( ActualInterventionStart(..)
+  , FollowUpObservation(..)
   , CriterionResult(..)
   , TargetResult(..)
   , EffectAssessment(..)
   , EvidenceAssessedModel
   , EvidenceError(..)
-  , assessEffectEvidence
+  , assessEffectEvidenceAt
+  , evidenceAssessedAt
+  , actualInterventionStarts
   , effectAssessments
   , isEffectiveNeed
   ) where
@@ -28,6 +32,13 @@ import O2I.Validation.Readiness
 import O2I.Validation.Trace
 
 -- * Follow-up evidence
+-- | Actual temporal boundary shared by every trace of one Intervention.
+data ActualInterventionStart = ActualInterventionStart
+  { actualIntervention :: RawNodeId
+    -- ^ Raw Intervention identifier submitted for validation.
+  , actualStartAt :: UTCTime -- ^ Observed execution start.
+  } deriving (Eq, Show)
+
 -- | One ex-post observation submitted for a validated effect trace.
 data FollowUpObservation = FollowUpObservation
   { followUpTrace :: EffectTraceId -- ^ Trace being assessed.
@@ -40,33 +51,56 @@ data CriterionResult
   | NotSatisfied -- ^ Observed change does not meet the effect criterion.
   deriving (Eq, Show)
 
--- | Result of evaluating follow-up against target value and due date.
+-- | Result of evaluating one follow-up observation against its target.
+--
+-- These outcomes locate and classify only the submitted observation. They do
+-- not establish when target attainment first occurred.
 data TargetResult
-  = ObservedSatisfiedOnTime -- ^ Target met no later than its due date.
-  | ObservedSatisfiedAfterDue -- ^ Target met, but only after its due date.
-  | NotSatisfiedAtFollowUp -- ^ Follow-up does not meet the target.
+  = TargetSatisfiedInObservationByDue
+    -- ^ The observation satisfies the target and is no later than its due time.
+  | TargetSatisfiedInObservationAfterDue
+    -- ^ The observation satisfies the target and occurs after its due time.
+  | TargetNotSatisfiedInObservation
+    -- ^ The observation does not satisfy the target.
   deriving (Eq, Show)
 
 -- | Validated assessment of one follow-up against its fixed evidence plan.
 data EffectAssessment = EffectAssessment
   { assessedFollowUp :: FollowUpObservation -- ^ Assessed ex-post evidence.
   , effectResult :: CriterionResult -- ^ Change criterion outcome.
-  , targetResult :: TargetResult -- ^ Target and timeliness outcome.
+  , targetResult :: TargetResult -- ^ Independent target outcome.
   } deriving (Eq, Show)
 
 -- * Evidence-assessed model
--- | Opaque evidence-ready model with valid follow-ups covering every trace.
+-- | Opaque evidence-ready model with canonical actual timing and valid
+-- follow-ups covering every trace.
 --
--- Multiple follow-ups per trace remain distinct assessments. This stage
--- establishes evidence consistency, not methodological causal proof.
+-- Multiple follow-ups per trace remain distinct assessments. Success
+-- establishes
+-- @readinessCheckedAt < actualStartAt < observedAt <= assessedAt@ for each
+-- assessment and evidence consistency, not methodological causal proof.
 data EvidenceAssessedModel = EvidenceAssessedModel
   { assessedEvidenceReadyModel :: EvidenceReadyModel
+  , validatedAssessedAt :: UTCTime
+  , validatedActualStarts :: Map
+      (ContextRef 'Intervention)
+      ActualInterventionStart
   , validatedAssessments :: NonEmpty.NonEmpty EffectAssessment
   }
 
 -- | Violations detected while validating ex-post effect evidence.
 data EvidenceError
-  = UnknownFollowUpTrace EffectTraceId
+  = UnknownActualInterventionStart RawNodeId
+    -- ^ A timing record refers to no evidence-ready Intervention.
+  | DuplicateActualInterventionStart RawNodeId Int
+    -- ^ More than one actual start was supplied for one Intervention.
+  | MissingActualInterventionStart (ContextRef 'Intervention)
+    -- ^ An evidence-ready Intervention has no canonical actual start.
+  | ActualInterventionStartAtOrBeforeReadiness (ContextRef 'Intervention)
+    -- ^ The actual start does not strictly follow validated readiness.
+  | ActualInterventionStartAtOrAfterAssessment (ContextRef 'Intervention)
+    -- ^ The actual start does not strictly precede the assessment time.
+  | UnknownFollowUpTrace EffectTraceId
     -- ^ A follow-up refers to no ready effect trace.
   | DuplicateFollowUpObservation EffectTraceId UTCTime Int
     -- ^ A trace and observation timestamp occur more than once.
@@ -78,31 +112,44 @@ data EvidenceError
     -- ^ The follow-up anchor differs from the traced anchor.
   | FollowUpUnitMismatch EffectTraceId Unit Unit
     -- ^ The follow-up unit differs from the fixed baseline unit.
-  | FollowUpObservedAtOrBeforeIntervention EffectTraceId
-    -- ^ The follow-up was not observed after the Intervention started.
+  | FollowUpObservedAtOrBeforeActualStart EffectTraceId
+    -- ^ The follow-up was not observed after actual execution started.
+  | FollowUpObservedAfterAssessment EffectTraceId
+    -- ^ The follow-up observation is future-dated at assessment time.
   | EmptyFollowUpUnit EffectTraceId
-    -- ^ The follow-up observation has a blank unit.
+    -- ^ The follow-up observation has a blank named unit.
   | EmptyFollowUpSource EffectTraceId
     -- ^ The follow-up observation has blank provenance.
   deriving (Eq, Show)
 
 -- * Evidence validation
--- | Assess follow-ups against fixed plans and baselines for every ready trace.
+-- | Assess canonical actual timing and follow-ups at an explicit time.
 --
--- Every trace requires at least one follow-up. Multiple follow-ups are allowed,
--- but each trace/timestamp pair must be unique. Effect and target attainment
--- are assessed separately without claiming proof of causality.
-assessEffectEvidence ::
-     EvidenceReadyModel
+-- Every evidence-ready Intervention requires one actual start and every trace
+-- requires at least one follow-up. Multiple follow-ups are allowed, but each
+-- actual start must strictly follow the validated readiness check and strictly
+-- precede the assessment time. Each trace/timestamp pair must be unique.
+-- Effect and target attainment are assessed separately without claiming proof
+-- of causality.
+assessEffectEvidenceAt ::
+     UTCTime
+  -> EvidenceReadyModel
+  -> [ActualInterventionStart]
   -> NonEmpty.NonEmpty FollowUpObservation
   -> Validation (NonEmpty.NonEmpty EvidenceError) EvidenceAssessedModel
-assessEffectEvidence ready followUps =
+assessEffectEvidenceAt assessedAt ready starts followUps =
   case NonEmpty.nonEmpty errors of
     Just failures -> Failure failures
     Nothing ->
       case NonEmpty.nonEmpty assessments of
         Just nonEmptyAssessments ->
-          Success (EvidenceAssessedModel ready nonEmptyAssessments)
+          Success
+            EvidenceAssessedModel
+              { assessedEvidenceReadyModel = ready
+              , validatedAssessedAt = assessedAt
+              , validatedActualStarts = validatedStarts
+              , validatedAssessments = nonEmptyAssessments
+              }
         Nothing ->
           Failure
             (NonEmpty.singleton
@@ -112,16 +159,73 @@ assessEffectEvidence ready followUps =
     followUpList = NonEmpty.toList followUps
     traceable = readyTraceableModel ready
     followUpIndex = followUpsByTrace followUpList
+    startIndex = startsByIntervention starts
     traces = NonEmpty.toList (effectTraces traceable)
+    interventions = readyInterventions ready
+    validatedStarts =
+      Map.fromList
+        [ (intervention, record)
+        | intervention <- interventions
+        , Just record <- [uniqueRecord (contextRefId intervention) startIndex]
+        ]
     errors =
-      duplicateFollowUpErrors followUpList
-        ++ concatMap (followUpErrors ready) followUpList
+      actualStartErrors
+        (readinessCheckedAt ready)
+        assessedAt
+        interventions
+        startIndex
+        ++ duplicateFollowUpErrors followUpList
+        ++ concatMap (followUpErrors assessedAt ready startIndex) followUpList
         ++ [ MissingFollowUpObservation identifier
            | trace <- traces
            , let identifier = traceIdentifier trace
            , Map.notMember identifier followUpIndex
            ]
     assessments = mapMaybe (assessFollowUp ready) followUpList
+
+startsByIntervention ::
+     [ActualInterventionStart]
+  -> Map RawNodeId (NonEmpty.NonEmpty ActualInterventionStart)
+startsByIntervention =
+  Map.fromListWith (<>) . map (\start -> (actualIntervention start, pure start))
+
+actualStartErrors ::
+     UTCTime
+  -> UTCTime
+  -> [ContextRef 'Intervention]
+  -> Map RawNodeId (NonEmpty.NonEmpty ActualInterventionStart)
+  -> [EvidenceError]
+actualStartErrors checkedAt assessedAt interventions startIndex =
+  [ UnknownActualInterventionStart intervention
+  | intervention <- Map.keys startIndex
+  , intervention `notElem` map contextRefId interventions
+  ]
+    ++ [ DuplicateActualInterventionStart intervention (NonEmpty.length records)
+       | (intervention, records) <- Map.toList startIndex
+       , NonEmpty.length records > 1
+       ]
+    ++ [ MissingActualInterventionStart intervention
+       | intervention <- interventions
+       , Map.notMember (contextRefId intervention) startIndex
+       ]
+    ++ [ ActualInterventionStartAtOrBeforeReadiness intervention
+       | intervention <- interventions
+       , Just record <- [uniqueRecord (contextRefId intervention) startIndex]
+       , actualStartAt record <= checkedAt
+       ]
+    ++ [ ActualInterventionStartAtOrAfterAssessment intervention
+       | intervention <- interventions
+       , Just record <- [uniqueRecord (contextRefId intervention) startIndex]
+       , actualStartAt record >= assessedAt
+       ]
+
+uniqueRecord ::
+     Ord key => key -> Map key (NonEmpty.NonEmpty value) -> Maybe value
+uniqueRecord key index = do
+  records <- Map.lookup key index
+  case NonEmpty.toList records of
+    [record] -> Just record
+    _ -> Nothing
 
 followUpsByTrace ::
      [FollowUpObservation] -> Map EffectTraceId [FollowUpObservation]
@@ -143,14 +247,19 @@ duplicateFollowUpErrors followUps =
         | item <- followUps
         ]
 
-followUpErrors :: EvidenceReadyModel -> FollowUpObservation -> [EvidenceError]
-followUpErrors ready followUp =
+followUpErrors ::
+     UTCTime
+  -> EvidenceReadyModel
+  -> Map RawNodeId (NonEmpty.NonEmpty ActualInterventionStart)
+  -> FollowUpObservation
+  -> [EvidenceError]
+followUpErrors assessedAt ready startIndex followUp =
   case ( lookupEffectTrace traceable identifier
        , lookupEvidencePlan ready identifier) of
     (Just trace, Just plan) ->
       bindingErrors trace
         ++ unitErrors plan
-        ++ timeErrors plan
+        ++ timeErrors trace
         ++ provenanceErrors
     _ -> [UnknownFollowUpTrace identifier]
   where
@@ -160,15 +269,16 @@ followUpErrors ready followUp =
     bindingErrors trace =
       [ FollowUpKPIMismatch
         (traceIdentifier trace)
-        (traceKPI trace)
+        (unNodeId (traceKPI trace))
         (observationKPI observation)
-      | observationKPI observation /= traceKPI trace
+      | observationKPI observation /= unNodeId (traceKPI trace)
       ]
         ++ [ FollowUpAnchorMismatch
              (traceIdentifier trace)
-             (traceAnchor trace)
+             (situationAnchorRefId (traceSituationAnchor trace))
              (observationAnchor observation)
-           | observationAnchor observation /= traceAnchor trace
+           | observationAnchor observation
+               /= situationAnchorRefId (traceSituationAnchor trace)
            ]
     unitErrors plan =
       [ FollowUpUnitMismatch
@@ -178,18 +288,26 @@ followUpErrors ready followUp =
       | unit (observedValue observation) /= unit (observedValue (baseline plan))
       ]
         ++ [ EmptyFollowUpUnit identifier
-           | Text.null
-               (Text.strip (unitName (unit (observedValue observation))))
+           | blankUnit (unit (observedValue observation))
            ]
-    timeErrors plan =
-      [ FollowUpObservedAtOrBeforeIntervention identifier
-      | observedAt observation <= interventionStartedAt plan
+    timeErrors trace =
+      [ FollowUpObservedAtOrBeforeActualStart identifier
+      | Just start <-
+          [uniqueRecord (contextRefId (traceIntervention trace)) startIndex]
+      , observedAt observation <= actualStartAt start
       ]
+        ++ [ FollowUpObservedAfterAssessment identifier
+           | observedAt observation > assessedAt
+           ]
     provenanceErrors =
       [ EmptyFollowUpSource identifier
       | Text.null
           (Text.strip (evidenceSourceName (observationSource observation)))
       ]
+
+blankUnit :: Unit -> Bool
+blankUnit PercentagePoints = False
+blankUnit (NamedUnit name) = Text.null (Text.strip name)
 
 assessFollowUp ::
      EvidenceReadyModel -> FollowUpObservation -> Maybe EffectAssessment
@@ -210,16 +328,24 @@ evaluateEffect plan observation =
   where
     before = magnitude (observedValue (baseline plan))
     after = magnitude (observedValue observation)
+    relative increase = increase / abs before
     satisfies =
       case effectCriterion plan of
-        IncreaseByAtLeast quantity -> after - before >= magnitude quantity
-        DecreaseByAtLeast quantity -> before - after >= magnitude quantity
+        AbsoluteIncreaseByAtLeast quantity ->
+          after - before >= magnitude quantity
+        AbsoluteDecreaseByAtLeast quantity ->
+          before - after >= magnitude quantity
+        RelativeIncreaseByAtLeast change ->
+          relative (after - before) >= relativeChangeRatio change
+        RelativeDecreaseByAtLeast change ->
+          relative (before - after) >= relativeChangeRatio change
 
 evaluateTarget :: EvidencePlan -> Observation -> TargetResult
 evaluateTarget plan observation
-  | not satisfied = NotSatisfiedAtFollowUp
-  | observedAt observation <= targetDueAt plan = ObservedSatisfiedOnTime
-  | otherwise = ObservedSatisfiedAfterDue
+  | not satisfied = TargetNotSatisfiedInObservation
+  | observedAt observation <= targetDueAt plan =
+    TargetSatisfiedInObservationByDue
+  | otherwise = TargetSatisfiedInObservationAfterDue
   where
     observed = magnitude (observedValue observation)
     satisfied =
@@ -228,6 +354,14 @@ evaluateTarget plan observation
         AtMost quantity -> observed <= magnitude quantity
         Within lower upper ->
           observed >= magnitude lower && observed <= magnitude upper
+
+-- | Read the time at which the assessed stage was established.
+evidenceAssessedAt :: EvidenceAssessedModel -> UTCTime
+evidenceAssessedAt = validatedAssessedAt
+
+-- | Enumerate canonical actual starts for all assessed Interventions.
+actualInterventionStarts :: EvidenceAssessedModel -> [ActualInterventionStart]
+actualInterventionStarts = Map.elems . validatedActualStarts
 
 -- | Enumerate all validated follow-up assessments.
 effectAssessments :: EvidenceAssessedModel -> NonEmpty.NonEmpty EffectAssessment
