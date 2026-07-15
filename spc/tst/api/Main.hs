@@ -48,6 +48,7 @@ $(assertOrdinaryFunctions
     , 'Language.relationNameOf
     , 'Language.relationNameFor
     , 'Language.relationIdentity
+    , 'Language.reifyRelation
     ])
 
 $(assertAbstractTypes
@@ -237,6 +238,12 @@ main = do
   assert
     "complete relation registry"
     (map Language.relationCodeOf Language.allRelations
+       == Language.allRelationCodes)
+  assert
+    "relation reification roundtrip"
+    (map
+       (Language.relationCodeOf . Language.reifyRelation)
+       Language.allRelationCodes
        == Language.allRelationCodes)
   case Language.lookupRelations (RelationName "vision-orients-strategy") of
     [relation] ->

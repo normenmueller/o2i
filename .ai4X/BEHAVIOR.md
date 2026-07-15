@@ -158,6 +158,7 @@ publication claim derived from them.
 
 - Commit messages are plain lowercase English without type prefixes or
   repository scopes.
+- Do not push Git commits unless the user explicitly requests the push.
 
 # Safety And Maintenance
 
