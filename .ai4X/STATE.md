@@ -35,10 +35,12 @@ instruction override this snapshot.
 
 # Active Quality Gate
 
-- The independent final review of commit `19572d2` reported no Blocker, High,
-  or Medium finding and one Low finding.
-- A positive external API contract for complete `reifyRelation` round-tripping
-  closes the finding in the working tree.
+- The independent final review of substantive commit `a87f333` on 2026-07-15
+  reported no Blocker, High, Medium, or Low finding and explicit approval.
+- Fachlichkeit, Metamodell, Typtheorie, Haskell, tests, formal value, and
+  publication quality each received 10.0.
+- A positive external API contract enforces complete `reifyRelation`
+  round-tripping.
 - The external API suite now binds relation registry, lookup, reification,
   opacity, construction failure, and pattern-matching failure.
 - The WIP status remains intentional for O2I v0.2.
@@ -81,11 +83,7 @@ instruction override this snapshot.
 
 # Next Work
 
-- Commit the positive reification contract locally; pushing remains a user
-  action.
-- Run a fresh independent final review across terminology, metamodel,
-  ArchiMate, Haskell design, tests, formal value, and publication quality.
-- Close any verified findings and repeat the gate until explicit 10/10 approval.
+- The user controls pushing the reviewed local commits.
 - Then review `o2i.md` top-down and paragraph by paragraph, explaining every
   substantive difference, extension, refinement, and formal consequence.
 - Backlog: convert the Layered Cake to concrete ArchiMate syntax.
