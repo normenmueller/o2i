@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import difflib
 import sys
 import xml.etree.ElementTree as ET
@@ -49,6 +50,337 @@ REQUIRED_SYNTAX_DOCUMENTATION = (
     "O2I ValueStream -> ArchiMate Value Stream",
     "O2I RegulatoryConstraint -> ArchiMate Requirement",
 )
+
+
+def contract_edge(
+    source: str,
+    relation: str,
+    target: str,
+    *,
+    source_type: str = "Grouping",
+    relation_type: str = "InfluenceRelationship",
+    directed: bool = False,
+    target_type: str = "Grouping",
+) -> tuple[str, str, str, str, bool, str, str]:
+    """Declare one exact relation in a normative ArchiMate view."""
+    return (
+        source,
+        source_type,
+        relation,
+        relation_type,
+        directed,
+        target,
+        target_type,
+    )
+
+
+RELATION_CONTRACTS = {
+    "O2I Context": frozenset(
+        {
+            contract_edge("Ethos", "guides", "Mission"),
+            contract_edge("Ethos", "guides", "Vision"),
+            contract_edge("Intervention", "addresses", "Need"),
+            contract_edge("Intervention", "changes", "Situation"),
+            contract_edge("Intervention", "sets-target-for", "Measure"),
+            contract_edge("Measure", "measures", "Situation"),
+            contract_edge("Mission", "grounds", "Vision"),
+            contract_edge("Situation", "surfaces", "Need"),
+            contract_edge("Strategy", "contributes-to", "Strategy"),
+            contract_edge("Strategy", "directs", "Intervention"),
+            contract_edge("Strategy", "directs", "Strategy"),
+            contract_edge("Strategy", "frames", "Measure"),
+            contract_edge("Strategy", "qualifies", "Need"),
+            contract_edge("Vision", "orients", "Strategy"),
+        }
+    ),
+    "O2I Primitives": frozenset(
+        {
+            contract_edge("Action", "contributes-to", "Action"),
+            contract_edge("Action", "contributes-to", "Key Result"),
+            contract_edge("Action", "guides", "Action"),
+            contract_edge("Driver", "grounds", "Objective"),
+            contract_edge("Driver", "indicates", "Performance Dimension"),
+            contract_edge("Key Result", "contributes-to", "Key Result"),
+            contract_edge("Key Result", "determines", "Performance Dimension"),
+            contract_edge("Key Result", "sets-target-for", "KPI"),
+            contract_edge("Key Result", "substantiates", "Objective"),
+            contract_edge("Key Result", "translates-into", "Objective"),
+            contract_edge("Objective", "orients", "Objective"),
+            contract_edge(
+                "Performance Dimension",
+                "contains",
+                "KPI",
+                relation_type="AggregationRelationship",
+            ),
+            contract_edge(
+                "Performance Dimension",
+                "contains",
+                "Key Result",
+                relation_type="AggregationRelationship",
+            ),
+            contract_edge("Principle", "guides", "Action"),
+            contract_edge("Principle", "guides", "Driver"),
+            contract_edge("Principle", "guides", "Objective"),
+            contract_edge("Principle", "guides", "Principle"),
+        }
+    ),
+    "O2I Situation": frozenset(
+        {
+            contract_edge(
+                anchor,
+                "kind-of",
+                "Situation Anchor",
+                relation_type="SpecializationRelationship",
+            )
+            for anchor in (
+                "Business Capability",
+                "Business Object",
+                "Business Process",
+                "Business Role",
+                "Regulatory Constraint",
+                "Value Stream",
+            )
+        }
+        | {
+            contract_edge(
+                "Situation",
+                "is-constituted-by",
+                "Situation Anchor",
+                relation_type="AggregationRelationship",
+            )
+        }
+    ),
+    "O2I Situation Anchoring": frozenset(
+        {
+            contract_edge(
+                "Action",
+                "changes",
+                "Situation Anchor",
+                relation_type="AssociationRelationship",
+                directed=True,
+            ),
+            contract_edge("Intervention", "addresses", "Need"),
+            contract_edge("Intervention", "changes", "Situation"),
+            contract_edge("Intervention", "sets-target-for", "Measure"),
+            contract_edge(
+                "KPI",
+                "measures",
+                "Situation Anchor",
+                relation_type="AssociationRelationship",
+                directed=True,
+            ),
+            contract_edge("Measure", "measures", "Situation"),
+            contract_edge(
+                "Situation",
+                "is-constituted-by",
+                "Situation Anchor",
+                relation_type="AggregationRelationship",
+            ),
+            contract_edge("Situation", "surfaces", "Need"),
+            contract_edge(
+                "Situation Anchor",
+                "anchors",
+                "Driver",
+                relation_type="AssociationRelationship",
+                directed=True,
+            ),
+        }
+    ),
+    "O2I Strategy Constituents": frozenset(
+        {
+            contract_edge(
+                "Strategy#Anchoring",
+                "enables",
+                "Strategy#Coherent Action Commitments",
+            ),
+            contract_edge(
+                "Strategy#Coherent Action Commitments",
+                "contributes-to",
+                "Strategy#Success Reference",
+            ),
+            contract_edge(
+                "Strategy#Derived Guardrails",
+                "constrain",
+                "Strategy#Guiding Policy",
+            ),
+            contract_edge(
+                "Strategy#Diagnosis", "justifies", "Strategy#Guiding Policy"
+            ),
+            contract_edge("Strategy#Diagnosis", "justifies", "Strategy#Intent"),
+            contract_edge(
+                "Strategy#Fit",
+                "validates",
+                "Strategy#Coherent Action Commitments",
+            ),
+            contract_edge(
+                "Strategy#Fit", "validates", "Strategy#Positioning"
+            ),
+            contract_edge(
+                "Strategy#Fit", "validates", "Strategy#Success Reference"
+            ),
+            contract_edge("Strategy#Fit", "validates", "Strategy#Trade-offs"),
+            contract_edge(
+                "Strategy#Guiding Policy",
+                "guides",
+                "Strategy#Coherent Action Commitments",
+            ),
+            contract_edge(
+                "Strategy#Guiding Policy", "guides", "Strategy#Positioning"
+            ),
+            contract_edge(
+                "Strategy#Intent", "orients", "Strategy#Guiding Policy"
+            ),
+            contract_edge(
+                "Strategy#Positioning",
+                "orients",
+                "Strategy#Coherent Action Commitments",
+            ),
+            contract_edge(
+                "Strategy#Positioning", "requires", "Strategy#Trade-offs"
+            ),
+            contract_edge("Strategy#Scope", "frames", "Strategy#Diagnosis"),
+            contract_edge(
+                "Strategy#Success Reference", "substantiates", "Strategy#Intent"
+            ),
+            contract_edge(
+                "Strategy#Trade-offs",
+                "constrain",
+                "Strategy#Coherent Action Commitments",
+            ),
+        }
+    ),
+    "O2I Syntax": frozenset(
+        {
+            contract_edge(
+                "Course of Action",
+                "contributes-to",
+                "Course of Action",
+                source_type="CourseOfAction",
+                relation_type="AssociationRelationship",
+                directed=True,
+                target_type="CourseOfAction",
+            ),
+            contract_edge(
+                "Course of Action",
+                "contributes-to",
+                "Outcome",
+                source_type="CourseOfAction",
+                relation_type="RealizationRelationship",
+                target_type="Outcome",
+            ),
+            contract_edge(
+                "Course of Action",
+                "guides",
+                "Course of Action",
+                source_type="CourseOfAction",
+                relation_type="AssociationRelationship",
+                directed=True,
+                target_type="CourseOfAction",
+            ),
+            contract_edge(
+                "Driver",
+                "grounds",
+                "Goal",
+                source_type="Driver",
+                target_type="Goal",
+            ),
+            contract_edge(
+                "Driver",
+                "indicates",
+                "Performance Dimension",
+                source_type="Driver",
+            ),
+            contract_edge(
+                "Goal",
+                "orients",
+                "Goal",
+                source_type="Goal",
+                target_type="Goal",
+            ),
+            contract_edge(
+                "Outcome",
+                "contributes-to",
+                "Outcome",
+                source_type="Outcome",
+                target_type="Outcome",
+            ),
+            contract_edge(
+                "Outcome",
+                "determines",
+                "Performance Dimension",
+                source_type="Outcome",
+            ),
+            contract_edge(
+                "Outcome",
+                "sets-target-for",
+                "Assessment",
+                source_type="Outcome",
+                relation_type="AssociationRelationship",
+                directed=True,
+                target_type="Assessment",
+            ),
+            contract_edge(
+                "Outcome",
+                "substantiates",
+                "Goal",
+                source_type="Outcome",
+                relation_type="RealizationRelationship",
+                target_type="Goal",
+            ),
+            contract_edge(
+                "Outcome",
+                "translates-into",
+                "Goal",
+                source_type="Outcome",
+                target_type="Goal",
+            ),
+            contract_edge(
+                "Performance Dimension",
+                "contains",
+                "Assessment",
+                relation_type="AggregationRelationship",
+                target_type="Assessment",
+            ),
+            contract_edge(
+                "Performance Dimension",
+                "contains",
+                "Outcome",
+                relation_type="AggregationRelationship",
+                target_type="Outcome",
+            ),
+            contract_edge(
+                "Principle",
+                "guides",
+                "Course of Action",
+                source_type="Principle",
+                relation_type="AssociationRelationship",
+                directed=True,
+                target_type="CourseOfAction",
+            ),
+            contract_edge(
+                "Principle",
+                "guides",
+                "Driver",
+                source_type="Principle",
+                target_type="Driver",
+            ),
+            contract_edge(
+                "Principle",
+                "guides",
+                "Goal",
+                source_type="Principle",
+                target_type="Goal",
+            ),
+            contract_edge(
+                "Principle",
+                "guides",
+                "Principle",
+                source_type="Principle",
+                target_type="Principle",
+            ),
+        }
+    ),
+}
 
 
 def xtype(element: ET.Element) -> str:
@@ -256,6 +588,17 @@ def validate_model(root: ET.Element) -> list[str]:
     elements, relations = collect_model(root)
     errors: list[str] = []
 
+    model_versions = [
+        prop.get("value", "")
+        for prop in root.iter("property")
+        if prop.get("key") == "version"
+    ]
+    if model_versions != ["0.2"]:
+        errors.append(
+            "expected exactly one canonical model version 0.2; found: "
+            + repr(model_versions)
+        )
+
     for view_name, _ in PRESETS.values():
         try:
             view = find_view(root, view_name)
@@ -264,6 +607,53 @@ def validate_model(root: ET.Element) -> list[str]:
             continue
 
         object_targets, _, connections, notes, documentation = collect_view(view)
+
+        relation_signatures = []
+        for source, relation_id, target in connections:
+            source_name, source_type = elements.get(source, ("?", "?"))
+            target_name, target_type = elements.get(target, ("?", "?"))
+            if source_type == "Meaning" or target_type == "Meaning":
+                continue
+            relation_name, relation_type, _, _, directed = relations.get(
+                relation_id,
+                ("?", "?", None, None, False),
+            )
+            relation_signatures.append(
+                (
+                    source_name,
+                    source_type,
+                    relation_name,
+                    relation_type,
+                    directed,
+                    target_name,
+                    target_type,
+                )
+            )
+
+        expected_relations = RELATION_CONTRACTS.get(view_name)
+        if expected_relations is not None:
+            actual_relations = frozenset(relation_signatures)
+            for missing in sorted(expected_relations - actual_relations):
+                errors.append(
+                    f"{view_name} is missing contracted relation: "
+                    + format_contract_edge(missing)
+                )
+            for unexpected in sorted(actual_relations - expected_relations):
+                errors.append(
+                    f"{view_name} has uncontracted relation: "
+                    + format_contract_edge(unexpected)
+                )
+
+            duplicates = [
+                signature
+                for signature, count in Counter(relation_signatures).items()
+                if count > 1
+            ]
+            for duplicate in sorted(duplicates):
+                errors.append(
+                    f"{view_name} duplicates contracted relation: "
+                    + format_contract_edge(duplicate)
+                )
 
         if view_name == "O2I Syntax":
             visible_nodes = {
@@ -305,6 +695,17 @@ def validate_model(root: ET.Element) -> list[str]:
                 )
 
     return errors
+
+
+def format_contract_edge(
+    edge: tuple[str, str, str, str, bool, str, str],
+) -> str:
+    source, source_type, relation, relation_type, directed, target, target_type = edge
+    direction = ", directed" if directed else ""
+    return (
+        f"{source} ({source_type}) --{relation} [{relation_type}{direction}]--> "
+        f"{target} ({target_type})"
+    )
 
 
 def snapshot_diff(output_path: Path, expected: str) -> list[str]:

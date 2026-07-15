@@ -49,9 +49,13 @@ test and apply O2I but never define its generic semantics.
   a Strategy success dimension contains Strategy Key Results; a Measure
   measurement dimension contains Measure KPIs. CSF is a fachliche reading of
   the first role. Other groupings are not O2I PerformanceDimensions.
-- `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion`, and
+- `KPIDefinition`, `Unit`, `ValueDomain`, `Level`, `Delta`, `Observation`,
+  `EvidencePlan`, `EffectCriterion`, `TargetCriterion`, and
   `FollowUpObservation` form the evidence layer; they are neither Contexts nor
   Primitives.
+- Each KPI used by an effect trace has exactly one validated stable definition.
+  Measurement levels and absolute changes are distinct types; the definition
+  supplies their shared unit and the admissible domain of levels.
 - Effect and target attainment are assessed independently.
 - O2I validates evidence consistency and plausible attribution, not
   methodological causality.

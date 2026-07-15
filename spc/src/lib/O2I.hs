@@ -134,8 +134,17 @@ module O2I
   , situationAnchorRefId
   , situationAnchorRefKind
   , Unit(..)
-  , Quantity(..)
+  , Level(..)
+  , Delta(..)
+  , ValueDomain(..)
   , RelativeChange(..)
+  , RawKPIDefinition(..)
+  , KPIDefinition
+  , kpiDefinitionKPI
+  , kpiDefinitionUnit
+  , kpiDefinitionDomain
+  , kpiDefinitionMeasurementMethod
+  , kpiDefinitionInterpretation
   , EvidenceSource(..)
   , Observation(..)
   , EffectCriterion(..)
@@ -143,6 +152,8 @@ module O2I
   , PlannedInterventionStart(..)
   , EvidencePlan(..)
   , EvidenceReadyModel
+  , kpiDefinitions
+  , lookupKPIDefinition
   , evidencePlans
   , readinessCheckedAt
   , plannedInterventionStarts

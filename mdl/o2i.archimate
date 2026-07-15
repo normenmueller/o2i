@@ -514,8 +514,6 @@ O2I BusinessObject -> ArchiMate Business Object
 O2I BusinessRole -> ArchiMate Role
 O2I ValueStream -> ArchiMate Value Stream
 O2I RegulatoryConstraint -> ArchiMate Requirement</documentation>
-        <property key="author" value="Dr. Normen Müller"/>
-        <property key="version" value="0.3"/>
       </element>
     </folder>
     <folder name="Semantic" id="id-70adea7d838a4547917f4253d5c53221">
@@ -723,8 +721,6 @@ O2I RegulatoryConstraint -> ArchiMate Requirement</documentation>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
         </child>
-        <property key="author" value="Dr. Normen Müller"/>
-        <property key="version" value="0.3"/>
       </element>
       <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Situation Anchoring" id="id-7e4365b02a58418cb38f4ea25e0aa5dc">
         <child xsi:type="archimate:DiagramObject" id="id-81110f41c9744559bccc4f600f9e06c2" targetConnections="id-552eb38670974e0d9843a03d537ce891 id-b8d051213b0a48fd9b3b187c264485d7" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-95420d4e66164023b79676213a6147e2">
@@ -1367,7 +1363,7 @@ O2I RegulatoryConstraint -> ArchiMate Requirement</documentation>
     </element>
   </folder>
   <property key="author" value="Dr. Normen Müller"/>
-  <property key="version" value="0.1"/>
+  <property key="version" value="0.2"/>
   <purpose>Effectiveness Meta-Model
 = Metamodell für Wirkungsarchitekturen</purpose>
 </archimate:model>

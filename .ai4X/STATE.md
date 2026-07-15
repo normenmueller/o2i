@@ -8,8 +8,8 @@ instruction override this snapshot.
 - Observed at: 2026-07-15 CEST.
 - Mode: `READY`.
 - Branch/upstream: `trunk` / `origin/trunk`.
-- Active objective: commit the remediated review state, repeat the independent
-  final review, and close the gate at 10/10.
+- Active objective: verify and commit the final-review remediation, repeat the
+  independent final review, and close the gate at 10/10.
 - Agent memory: active in the current repository revision.
 
 # Approved Baseline
@@ -35,12 +35,12 @@ instruction override this snapshot.
 
 # Active Quality Gate
 
-- The independent final review rejected the preceding state because of an
-  ArchiMate 4 mismatch, incomplete concrete syntax, forgeable public typed
-  references, stale ArchiMate documentation, missing automated model checks,
-  and one undirected syntax association.
-- Every accepted finding is closed in the working tree. The WIP status remains
-  intentional for O2I v0.2.
+- The independent final review of commit `3491904` reported no Blocker or High
+  finding, two Medium findings, and one Low finding.
+- Stable KPI measurement semantics, exact normative ArchiMate relation
+  contracts, and sole root model-version metadata close all three findings in
+  the working tree.
+- The WIP status remains intentional for O2I v0.2.
 - ArchiMate 4 mappings use `Capability`, `Process`, `Business Object`, `Role`,
   `Value Stream`, and `Requirement` with explicit O2I specializations.
 - `O2I Syntax` defines Context containment, `Primitive @ Context`,
@@ -52,25 +52,29 @@ instruction override this snapshot.
   article and Haskell specification.
 - Public typed Haskell references are opaque, nominally typed, and obtained
   through validated lookup or model queries.
+- Each traced KPI has exactly one validated stable definition. Units and value
+  domains are centralized; measurement levels and absolute deltas are distinct
+  types.
 - Deterministic review snapshots include view contracts, visible notes, and
-  directed Association semantics. `--check` validates model contracts and
-  snapshot drift.
+  directed Association semantics. `--check` validates exact normative relation
+  contracts, sole root version `0.2`, model invariants, and snapshot drift.
 
 # Current Verification
 
 - `python3 -B utl/extract-archimate-view.py --preset all --check`: passed.
 - `cabal check`: passed.
 - `cabal build all --ghc-options=-Werror`: passed.
-- `cabal test all --test-show-details=direct`: 158 tests passed.
+- `cabal test all --ghc-options=-Werror --test-show-details=direct`: 176 tests
+  passed.
 - HIndent 80 validation: passed.
-- Haddock including internal modules: passed.
+- Haddock including internal modules: passed with 100% public API coverage.
 - Pandoc include expansion: passed.
 - `./toPDF.sh`: passed.
 - `git diff --check`: passed.
 
 # Next Work
 
-- Commit and push the coherent remediation checkpoint.
+- Commit and push the coherent final-review remediation.
 - Run a fresh independent final review across terminology, metamodel,
   ArchiMate, Haskell design, tests, formal value, and publication quality.
 - Close any verified findings and repeat the gate until explicit 10/10 approval.

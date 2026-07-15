@@ -25,6 +25,7 @@ tests =
     , semanticTests
     , qualificationTests
     , traceTests
+    , kpiDefinitionTests
     , readinessTests
     , effectEvidenceTests
     , registryTests
@@ -805,6 +806,199 @@ traceOnlyEdges =
       strategyKeyResultId
   ]
 
+kpiDefinitionTests :: TestTree
+kpiDefinitionTests =
+  testGroup
+    "KPI definitions"
+    [ testCase "readiness exposes one validated definition per typed KPI"
+        $ withReady sampleGraph [sampleStrategyFormulation]
+        $ \ready ->
+            case ( kpiDefinitions ready
+                 , NonEmpty.toList (readyEffectTraces ready)) of
+              ([definition], trace:_) -> do
+                unNodeId (kpiDefinitionKPI definition) @?= measureKpiId
+                kpiDefinitionUnit definition @?= percent
+                kpiDefinitionDomain definition @?= percentageDomain
+                kpiDefinitionMeasurementMethod definition
+                  @?= "monthly controlled measurement"
+                kpiDefinitionInterpretation definition
+                  @?= "higher levels indicate better outcomes"
+                lookupKPIDefinition ready (traceKPI trace) @?= Just definition
+              _ -> assertFailure "expected one trace and one KPI definition"
+    , testCase "every traced KPI requires a definition"
+        $ withTraceable sampleGraph
+        $ \model ->
+            let kpi = traceKPI (NonEmpty.head (effectTraces model))
+             in assertReadinessErrors
+                  [MissingKPIDefinition kpi]
+                  (validateReadyWithDefinitions model [])
+    , testCase "identical KPI definitions are rejected as duplicates"
+        $ withTraceable sampleGraph
+        $ \model ->
+            assertReadinessErrors
+              [DuplicateKPIDefinition measureKpiId 2]
+              (validateReadyWithDefinitions
+                 model
+                 [sampleKPIDefinition, sampleKPIDefinition])
+    , testCase "incompatible units conflict for one KPI"
+        $ withTraceable sampleGraph
+        $ \model ->
+            let conflicting = sampleKPIDefinition {rawDefinitionUnit = count}
+             in assertReadinessErrors
+                  [ConflictingKPIDefinition measureKpiId 2]
+                  (validateReadyWithDefinitions
+                     model
+                     [sampleKPIDefinition, conflicting])
+    , testCase "incompatible domains conflict for one KPI"
+        $ withTraceable sampleGraph
+        $ \model ->
+            let conflicting =
+                  sampleKPIDefinition {rawDefinitionDomain = UnboundedDomain}
+             in assertReadinessErrors
+                  [ConflictingKPIDefinition measureKpiId 2]
+                  (validateReadyWithDefinitions
+                     model
+                     [sampleKPIDefinition, conflicting])
+    , testCase "definitions for untraced KPIs are rejected"
+        $ withTraceable sampleGraph
+        $ \model ->
+            let unknown = sampleKPIDefinition {rawDefinitionKPI = missingId}
+             in assertReadinessErrors
+                  [UnknownKPIDefinition missingId]
+                  (validateReadyWithDefinitions
+                     model
+                     [sampleKPIDefinition, unknown])
+    , testCase "inverted bounded domains are rejected"
+        $ withTraceable sampleGraph
+        $ \model ->
+            let domain = BoundedDomain (Level 100) (Level 0)
+                invalid = sampleKPIDefinition {rawDefinitionDomain = domain}
+             in assertReadinessErrors
+                  [InvalidKPIValueDomain measureKpiId domain]
+                  (validateReadyWithDefinitions model [invalid])
+    , testCase "named KPI units must be nonblank"
+        $ withTraceable sampleGraph
+        $ \model ->
+            let invalid =
+                  sampleKPIDefinition {rawDefinitionUnit = NamedUnit " "}
+             in assertReadinessErrors
+                  [EmptyKPIUnit measureKpiId]
+                  (validateReadyWithDefinitions model [invalid])
+    , testCase "measurement methods must be nonblank"
+        $ withTraceable sampleGraph
+        $ \model ->
+            let invalid =
+                  sampleKPIDefinition {rawDefinitionMeasurementMethod = " "}
+             in assertReadinessErrors
+                  [EmptyKPIMeasurementMethod measureKpiId]
+                  (validateReadyWithDefinitions model [invalid])
+    , testCase "KPI interpretations must be nonblank"
+        $ withTraceable sampleGraph
+        $ \model ->
+            let invalid =
+                  sampleKPIDefinition {rawDefinitionInterpretation = " "}
+             in assertReadinessErrors
+                  [EmptyKPIInterpretation measureKpiId]
+                  (validateReadyWithDefinitions model [invalid])
+    , testCase "bounded percentage domain accepts both level boundaries"
+        $ withTraceable sampleGraph
+        $ \model ->
+            let trace = NonEmpty.head (effectTraces model)
+                plan =
+                  (planForTrace trace)
+                    { baseline = observation 0 baselineDate
+                    , effectCriterion = AbsoluteIncreaseByAtLeast (Delta 100)
+                    , targetCriterion = AtLeast (Level 100)
+                    }
+             in assertSuccess
+                  (validateReadyWithPlans
+                     model
+                     (definitionsFor model)
+                     (NonEmpty.singleton plan))
+    , testCase "delta endpoint at a lower domain boundary is valid"
+        $ withTraceable sampleGraph
+        $ \model ->
+            let trace = NonEmpty.head (effectTraces model)
+                plan =
+                  (planForTrace trace)
+                    { baseline = observation 5 baselineDate
+                    , effectCriterion = AbsoluteDecreaseByAtLeast (Delta 5)
+                    , targetCriterion = AtMost (Level 0)
+                    }
+             in assertSuccess
+                  (validateReadyWithPlans
+                     model
+                     (definitionsFor model)
+                     (NonEmpty.singleton plan))
+    , testCase "one KPI definition governs every trace using that KPI"
+        $ withTraceable sharedKpiTwoPathGraph
+        $ \model ->
+            case validateReadyWithDefinitions model (definitionsFor model) of
+              Failure errors ->
+                assertFailure ("readiness errors: " ++ show errors)
+              Success ready -> do
+                length (kpiDefinitions ready) @?= 1
+                NonEmpty.length (evidencePlans ready) @?= 2
+    , testCase "distinct multi-trace KPIs each receive one definition"
+        $ withReady twoPathGraph [sampleStrategyFormulation]
+        $ \ready ->
+            sort (map (unNodeId . kpiDefinitionKPI) (kpiDefinitions ready))
+              @?= sort [measureKpiId, duplicateId measureKpiId]
+    , testCase "multi-trace KPI definitions cannot disagree"
+        $ withTraceable sharedKpiTwoPathGraph
+        $ \model ->
+            let conflicting = sampleKPIDefinition {rawDefinitionUnit = count}
+             in assertReadinessErrors
+                  [ConflictingKPIDefinition measureKpiId 2]
+                  (validateReadyWithDefinitions
+                     model
+                     [sampleKPIDefinition, conflicting])
+    , testCase "all trace plans use the shared KPI domain"
+        $ withTraceable sharedKpiTwoPathGraph
+        $ \model ->
+            case NonEmpty.toList (effectTraces model) of
+              first:second:_ ->
+                let invalid =
+                      (planForTrace second)
+                        {targetCriterion = AtLeast (Level 101)}
+                 in assertReadinessErrors
+                      [ TargetCriterionOutsideDomain
+                          (traceIdentifier second)
+                          (Level 101)
+                          percentageDomain
+                      ]
+                      (validateReadyWithPlans
+                         model
+                         (definitionsFor model)
+                         (planForTrace first NonEmpty.:| [invalid]))
+              traces ->
+                assertFailure
+                  ("expected two traces, got " ++ show (length traces))
+    ]
+
+validateReadyWithDefinitions ::
+     TraceableEffectModel
+  -> [RawKPIDefinition]
+  -> Validation (NonEmpty.NonEmpty EvidenceReadinessError) EvidenceReadyModel
+validateReadyWithDefinitions model definitions =
+  validateReadyWithPlans
+    model
+    definitions
+    (fmap planForTrace (effectTraces model))
+
+validateReadyWithPlans ::
+     TraceableEffectModel
+  -> [RawKPIDefinition]
+  -> NonEmpty.NonEmpty EvidencePlan
+  -> Validation (NonEmpty.NonEmpty EvidenceReadinessError) EvidenceReadyModel
+validateReadyWithPlans model definitions plans =
+  validateEvidenceReadinessAt
+    readinessDate
+    model
+    definitions
+    (plannedStartsFor model)
+    plans
+
 readinessTests :: TestTree
 readinessTests =
   testGroup
@@ -845,6 +1039,7 @@ readinessTests =
                   (validateEvidenceReadinessAt
                      readinessDate
                      model
+                     (definitionsFor model)
                      [samplePlannedStart, contradictory]
                      (fmap planForTrace (effectTraces model)))
     , testCase "unknown planned Intervention timing is rejected"
@@ -856,6 +1051,7 @@ readinessTests =
                   (validateEvidenceReadinessAt
                      readinessDate
                      model
+                     (definitionsFor model)
                      [samplePlannedStart, unknown]
                      (fmap planForTrace (effectTraces model)))
     , testCase "every traced Intervention requires planned timing"
@@ -868,6 +1064,7 @@ readinessTests =
                   (validateEvidenceReadinessAt
                      readinessDate
                      model
+                     (definitionsFor model)
                      []
                      (fmap planForTrace (effectTraces model)))
     , testCase "plan and baseline may be fixed at the check time"
@@ -885,6 +1082,7 @@ readinessTests =
                   (validateEvidenceReadinessAt
                      readinessDate
                      model
+                     (definitionsFor model)
                      (plannedStartsFor model)
                      (NonEmpty.singleton plan))
     , testCase "duplicate plans for one trace are rejected"
@@ -898,6 +1096,7 @@ readinessTests =
                   (validateEvidenceReadinessAt
                      readinessDate
                      model
+                     (definitionsFor model)
                      (plannedStartsFor model)
                      (plan NonEmpty.:| [plan]))
     , testCase "unknown planned traces are rejected exactly"
@@ -920,6 +1119,7 @@ readinessTests =
                         (validateEvidenceReadinessAt
                            readinessDate
                            singlePath
+                           (definitionsFor singlePath)
                            (plannedStartsFor singlePath)
                            (knownPlan NonEmpty.:| [unknownPlan]))
               [] -> assertFailure "two-path fixture lacks an unknown trace"
@@ -933,6 +1133,7 @@ readinessTests =
                   (validateEvidenceReadinessAt
                      readinessDate
                      model
+                     (definitionsFor model)
                      (plannedStartsFor model)
                      (NonEmpty.singleton (planForTrace planned)))
               traces ->
@@ -953,6 +1154,7 @@ readinessTests =
                   (validateEvidenceReadinessAt
                      interventionDate
                      model
+                     (definitionsFor model)
                      (plannedStartsFor model)
                      (fmap planForTrace (effectTraces model)))
     , readinessFailureTest
@@ -982,18 +1184,23 @@ readinessTests =
         (\identifier ->
            [BaselineAnchorMismatch identifier situationAnchorId missingId])
     , readinessFailureTest
-        "criterion units must match the baseline unit"
+        "absolute delta endpoint must remain inside the KPI domain"
         readinessDate
         (\plan ->
            plan
-             {effectCriterion = AbsoluteIncreaseByAtLeast (Quantity 10 count)})
-        (\identifier -> [CriterionUnitMismatch identifier percent count])
+             { baseline = observation 95 baselineDate
+             , effectCriterion = AbsoluteIncreaseByAtLeast (Delta 6)
+             })
+        (\identifier ->
+           [ EffectCriterionOutsideDomain
+               identifier
+               (Level 101)
+               percentageDomain
+           ])
     , readinessFailureTest
         "effect criterion magnitude must be positive"
         readinessDate
-        (\plan ->
-           plan
-             {effectCriterion = AbsoluteIncreaseByAtLeast (Quantity 0 percent)})
+        (\plan -> plan {effectCriterion = AbsoluteIncreaseByAtLeast (Delta 0)})
         (\identifier -> [InvalidEffectCriterion identifier])
     , readinessFailureTest
         "relative effect criterion ratio must be positive"
@@ -1006,7 +1213,7 @@ readinessTests =
         readinessDate
         (\plan ->
            plan
-             { baseline = observation 0 baselineDate percent
+             { baseline = observation 0 baselineDate
              , effectCriterion =
                  RelativeIncreaseByAtLeast (RelativeChange (1 / 10))
              })
@@ -1014,29 +1221,30 @@ readinessTests =
     , readinessFailureTest
         "target criterion bounds must be valid"
         readinessDate
-        (\plan ->
-           plan
-             { targetCriterion =
-                 Within (Quantity 80 percent) (Quantity 70 percent)
-             })
+        (\plan -> plan {targetCriterion = Within (Level 80) (Level 70)})
         (\identifier -> [InvalidTargetCriterion identifier])
     , readinessFailureTest
-        "target criterion bounds must share one unit"
+        "target levels must remain inside the KPI domain"
         readinessDate
-        (\plan ->
-           plan
-             { targetCriterion =
-                 Within (Quantity 70 percent) (Quantity 80 count)
-             })
+        (\plan -> plan {targetCriterion = AtLeast (Level 101)})
         (\identifier ->
-           [ CriterionUnitMismatch identifier percent count
-           , InvalidTargetCriterion identifier
+           [ TargetCriterionOutsideDomain
+               identifier
+               (Level 101)
+               percentageDomain
            ])
     , readinessFailureTest
-        "all plan units must be named"
+        "baseline levels must remain inside the KPI domain"
         readinessDate
-        (replacePlanUnit (NamedUnit " "))
-        (\identifier -> [EmptyUnit identifier])
+        (mapBaseline (\item -> item {observedLevel = Level (-1)}))
+        (\identifier ->
+           [BaselineLevelOutsideDomain identifier (Level (-1)) percentageDomain])
+    , readinessFailureTest
+        "baseline levels cannot exceed the KPI domain"
+        readinessDate
+        (mapBaseline (\item -> item {observedLevel = Level 101}))
+        (\identifier ->
+           [BaselineLevelOutsideDomain identifier (Level 101) percentageDomain])
     , readinessFailureTest
         "plan provenance must be nonblank"
         readinessDate
@@ -1069,9 +1277,8 @@ effectEvidenceTests =
         $ withAssessed
             (\plan ->
                plan
-                 { baseline = observation 72 baselineDate percent
-                 , effectCriterion =
-                     AbsoluteIncreaseByAtLeast (Quantity 10 percent)
+                 { baseline = observation 72 baselineDate
+                 , effectCriterion = AbsoluteIncreaseByAtLeast (Delta 10)
                  })
             75
             followUpDate
@@ -1089,7 +1296,7 @@ effectEvidenceTests =
         $ withReadyPlan id
         $ \ready trace ->
             let lateStart = sampleActualStart {actualStartAt = assessmentDate}
-                followUp = followUpForTrace trace 75 lateObservationDate percent
+                followUp = followUpForTrace trace 75 lateObservationDate
              in case assessEffectEvidenceAt
                        lateAssessmentDate
                        ready
@@ -1104,10 +1311,9 @@ effectEvidenceTests =
         $ withAssessed
             (\plan ->
                plan
-                 { baseline = observation 60 baselineDate percent
-                 , effectCriterion =
-                     AbsoluteDecreaseByAtLeast (Quantity 10 percent)
-                 , targetCriterion = AtMost (Quantity 50 percent)
+                 { baseline = observation 60 baselineDate
+                 , effectCriterion = AbsoluteDecreaseByAtLeast (Delta 10)
+                 , targetCriterion = AtMost (Level 50)
                  })
             45
             followUpDate
@@ -1116,11 +1322,7 @@ effectEvidenceTests =
             targetResult assessment @?= TargetSatisfiedInObservationByDue
     , testCase "Within targets are assessed"
         $ withAssessed
-            (\plan ->
-               plan
-                 { targetCriterion =
-                     Within (Quantity 70 percent) (Quantity 80 percent)
-                 })
+            (\plan -> plan {targetCriterion = Within (Level 70) (Level 80)})
             75
             followUpDate
         $ \_ assessment ->
@@ -1145,10 +1347,10 @@ effectEvidenceTests =
         $ withAssessed
             (\plan ->
                plan
-                 { baseline = observation 100 baselineDate percent
+                 { baseline = observation 100 baselineDate
                  , effectCriterion =
                      RelativeDecreaseByAtLeast (RelativeChange (1 / 10))
-                 , targetCriterion = AtMost (Quantity 100 percent)
+                 , targetCriterion = AtMost (Level 100)
                  })
             90
             followUpDate
@@ -1161,7 +1363,7 @@ effectEvidenceTests =
                  assessmentDate
                  ready
                  [sampleActualStart]
-                 (followUpsForReady ready 75 followUpDate percent))
+                 (followUpsForReady ready 75 followUpDate))
     , testCase "actual start must be after the readiness check"
         $ withReady sampleGraph [sampleStrategyFormulation]
         $ \ready ->
@@ -1174,7 +1376,7 @@ effectEvidenceTests =
                        assessmentDate
                        ready
                        [startAtReadiness]
-                       (followUpsForReady ready 75 followUpDate percent))
+                       (followUpsForReady ready 75 followUpDate))
     , testCase "actual start before readiness is rejected"
         $ withReady sampleGraph [sampleStrategyFormulation]
         $ \ready ->
@@ -1187,7 +1389,7 @@ effectEvidenceTests =
                        assessmentDate
                        ready
                        [earlyStart]
-                       (followUpsForReady ready 75 followUpDate percent))
+                       (followUpsForReady ready 75 followUpDate))
     , testCase "contradictory actual starts are rejected canonically"
         $ withReady twoPathGraph [sampleStrategyFormulation]
         $ \ready ->
@@ -1199,7 +1401,7 @@ effectEvidenceTests =
                      assessmentDate
                      ready
                      [sampleActualStart, contradictory]
-                     (followUpsForReady ready 75 followUpDate percent))
+                     (followUpsForReady ready 75 followUpDate))
     , testCase "unknown actual Intervention timing is rejected"
         $ withReady sampleGraph [sampleStrategyFormulation]
         $ \ready ->
@@ -1210,7 +1412,7 @@ effectEvidenceTests =
                      assessmentDate
                      ready
                      [sampleActualStart, unknown]
-                     (followUpsForReady ready 75 followUpDate percent))
+                     (followUpsForReady ready 75 followUpDate))
     , testCase "every ready Intervention requires actual timing"
         $ withReady sampleGraph [sampleStrategyFormulation]
         $ \ready ->
@@ -1221,13 +1423,13 @@ effectEvidenceTests =
                    assessmentDate
                    ready
                    []
-                   (followUpsForReady ready 75 followUpDate percent))
+                   (followUpsForReady ready 75 followUpDate))
     , testCase "multiple follow-ups per trace are assessed independently"
         $ withReady sampleGraph [sampleStrategyFormulation]
         $ \ready ->
             let trace = NonEmpty.head (readyEffectTraces ready)
-                first = followUpForTrace trace 60 followUpDate percent
-                second = followUpForTrace trace 75 laterFollowUpDate percent
+                first = followUpForTrace trace 60 followUpDate
+                second = followUpForTrace trace 75 laterFollowUpDate
              in case assessEffectEvidenceAt
                        assessmentDate
                        ready
@@ -1241,7 +1443,7 @@ effectEvidenceTests =
         $ withReady sampleGraph [sampleStrategyFormulation]
         $ \ready ->
             let trace = NonEmpty.head (readyEffectTraces ready)
-                followUp = followUpForTrace trace 75 followUpDate percent
+                followUp = followUpForTrace trace 75 followUpDate
                 identifier = traceIdentifier trace
              in assertEvidenceErrors
                   [DuplicateFollowUpObservation identifier followUpDate 2]
@@ -1262,7 +1464,7 @@ effectEvidenceTests =
                      ready
                      [sampleActualStart]
                      (NonEmpty.singleton
-                        (followUpForTrace observed 75 followUpDate percent)))
+                        (followUpForTrace observed 75 followUpDate)))
               traces ->
                 assertFailure
                   ("expected two traces, got " ++ show (length traces))
@@ -1277,10 +1479,8 @@ effectEvidenceTests =
               unknownTrace:_ ->
                 withReady sampleGraph [sampleStrategyFormulation] $ \single ->
                   let knownTrace = NonEmpty.head (readyEffectTraces single)
-                      known =
-                        followUpForTrace knownTrace 75 followUpDate percent
-                      unknown =
-                        followUpForTrace unknownTrace 75 followUpDate percent
+                      known = followUpForTrace knownTrace 75 followUpDate
+                      unknown = followUpForTrace unknownTrace 75 followUpDate
                    in assertEvidenceErrors
                         [UnknownFollowUpTrace (traceIdentifier unknownTrace)]
                         (assessEffectEvidenceAt
@@ -1300,9 +1500,26 @@ effectEvidenceTests =
         (\identifier _ ->
            [FollowUpAnchorMismatch identifier situationAnchorId missingId])
     , evidenceFailureTest
-        "follow-up unit must match the baseline"
-        (\item -> item {observedValue = Quantity 75 count})
-        (\identifier _ -> [FollowUpUnitMismatch identifier percent count])
+        "follow-up level must satisfy the KPI domain"
+        (\item -> item {observedLevel = Level 101})
+        (\identifier _ ->
+           [FollowUpLevelOutsideDomain identifier (Level 101) percentageDomain])
+    , evidenceFailureTest
+        "follow-up level cannot fall below the KPI domain"
+        (\item -> item {observedLevel = Level (-1)})
+        (\identifier _ ->
+           [FollowUpLevelOutsideDomain identifier (Level (-1)) percentageDomain])
+    , testCase "follow-up levels may equal both domain boundaries"
+        $ withReadyPlan id
+        $ \ready trace ->
+            let lower = followUpForTrace trace 0 followUpDate
+                upper = followUpForTrace trace 100 laterFollowUpDate
+             in assertSuccess
+                  (assessEffectEvidenceAt
+                     assessmentDate
+                     ready
+                     [sampleActualStart]
+                     (lower NonEmpty.:| [upper]))
     , evidenceFailureTest
         "follow-up must be observed after actual start"
         (\item -> item {observedAt = interventionDate})
@@ -1328,15 +1545,7 @@ effectEvidenceTests =
                  followUpDate
                  ready
                  [sampleActualStart]
-                 (NonEmpty.singleton
-                    (followUpForTrace trace 75 followUpDate percent)))
-    , evidenceFailureTest
-        "follow-up unit must be named"
-        (\item -> item {observedValue = Quantity 75 (NamedUnit " ")})
-        (\identifier _ ->
-           [ FollowUpUnitMismatch identifier percent (NamedUnit " ")
-           , EmptyFollowUpUnit identifier
-           ])
+                 (NonEmpty.singleton (followUpForTrace trace 75 followUpDate)))
     , evidenceFailureTest
         "follow-up provenance must be nonblank"
         (\item -> item {observationSource = EvidenceSource " "})
@@ -1345,22 +1554,21 @@ effectEvidenceTests =
         $ assertEffectiveNeed id 75 True
     , testCase "missing positive effect leaves the traced Need ineffective"
         $ assertEffectiveNeed
-            (\plan -> plan {baseline = observation 72 baselineDate percent})
+            (\plan -> plan {baseline = observation 72 baselineDate})
             75
             False
     , QC.testProperty "positive effect thresholds are accepted"
-        $ QC.forAll (QC.chooseInteger (1, 100))
+        $ QC.forAll (QC.chooseInteger (1, 60))
         $ \threshold ->
             evidenceSucceeds
               (\plan ->
                  plan
                    { effectCriterion =
-                       AbsoluteIncreaseByAtLeast
-                         (Quantity (fromInteger threshold) percent)
+                       AbsoluteIncreaseByAtLeast (Delta (fromInteger threshold))
                    })
               (fromInteger threshold + 40)
     , QC.testProperty "both effect directions are assessed"
-        $ QC.forAll ((,) <$> QC.arbitrary <*> QC.chooseInteger (1, 100))
+        $ QC.forAll ((,) <$> QC.arbitrary <*> QC.chooseInteger (1, 60))
         $ \(increases, threshold) ->
             directionalEvidenceSucceeds increases threshold
     ]
@@ -1546,6 +1754,7 @@ withReady raw formulations action =
         case validateEvidenceReadinessAt
                readinessDate
                traceable
+               (definitionsFor traceable)
                (plannedStartsFor traceable)
                (fmap planForTrace (effectTraces traceable)) of
           Failure errors -> assertFailure ("readiness errors: " ++ show errors)
@@ -1562,6 +1771,7 @@ withReadyPlan transform action =
      in case validateEvidenceReadinessAt
                readinessDate
                traceable
+               (definitionsFor traceable)
                (plannedStartsFor traceable)
                (NonEmpty.singleton plan) of
           Failure errors -> assertFailure ("readiness errors: " ++ show errors)
@@ -1584,6 +1794,7 @@ readinessFailureTest name checkedAt transform expected =
               (validateEvidenceReadinessAt
                  checkedAt
                  traceable
+                 (definitionsFor traceable)
                  (plannedStartsFor traceable)
                  (NonEmpty.singleton plan))
 
@@ -1605,7 +1816,7 @@ evidenceFailureAtTest name assessedAt transform expected =
   testCase name
     $ withReadyPlan id
     $ \ready trace ->
-        let observation' = transform (observation 75 followUpDate percent)
+        let observation' = transform (observation 75 followUpDate)
             followUp = FollowUpObservation (traceIdentifier trace) observation'
          in assertEvidenceErrors
               (expected (traceIdentifier trace) (traceIntervention trace))
@@ -1619,7 +1830,7 @@ assertEffectiveNeed ::
      (EvidencePlan -> EvidencePlan) -> Rational -> Bool -> Assertion
 assertEffectiveNeed transform followValue expected =
   withReadyPlan transform $ \ready trace ->
-    let followUp = followUpForTrace trace followValue followUpDate percent
+    let followUp = followUpForTrace trace followValue followUpDate
      in case assessEffectEvidenceAt
                assessmentDate
                ready
@@ -1642,7 +1853,7 @@ withAssessed transform followValue followTimestamp action =
            ready
            [sampleActualStart]
            (NonEmpty.singleton
-              (followUpForTrace trace followValue followTimestamp percent)) of
+              (followUpForTrace trace followValue followTimestamp)) of
       Failure errors -> assertFailure ("evidence errors: " ++ show errors)
       Success assessed ->
         action assessed (NonEmpty.head (effectAssessments assessed))
@@ -1678,6 +1889,7 @@ evidenceSucceeds transform followValue =
            in case validateEvidenceReadinessAt
                      readinessDate
                      traceable
+                     (definitionsFor traceable)
                      (plannedStartsFor traceable)
                      (NonEmpty.singleton plan) of
                 Failure _ -> False
@@ -1687,11 +1899,7 @@ evidenceSucceeds transform followValue =
                          ready
                          [sampleActualStart]
                          (NonEmpty.singleton
-                            (followUpForTrace
-                               trace
-                               followValue
-                               followUpDate
-                               percent)) of
+                            (followUpForTrace trace followValue followUpDate)) of
                     Failure _ -> False
                     Success assessed ->
                       effectResult (NonEmpty.head (effectAssessments assessed))
@@ -1701,19 +1909,19 @@ directionalEvidenceSucceeds :: Bool -> Integer -> Bool
 directionalEvidenceSucceeds increases threshold =
   if increases
     then evidenceSucceeds
-           (\plan -> plan {effectCriterion = AbsoluteIncreaseByAtLeast quantity})
+           (\plan -> plan {effectCriterion = AbsoluteIncreaseByAtLeast delta})
            (40 + amount)
     else evidenceSucceeds
            (\plan ->
               plan
-                { baseline = observation 100 baselineDate percent
-                , effectCriterion = AbsoluteDecreaseByAtLeast quantity
-                , targetCriterion = AtMost (Quantity 100 percent)
+                { baseline = observation 100 baselineDate
+                , effectCriterion = AbsoluteDecreaseByAtLeast delta
+                , targetCriterion = AtMost (Level 100)
                 })
            (100 - amount)
   where
     amount = fromInteger threshold
-    quantity = Quantity amount percent
+    delta = Delta amount
 
 assertSuccess :: Validation errors result -> Assertion
 assertSuccess (Success _) = pure ()
@@ -1922,6 +2130,60 @@ rawNodeIdentifier (RawAnchorNode identifier _ _) = identifier
 twoPathGraph :: RawGraph
 twoPathGraph =
   RawGraph (sampleNodes ++ secondPathNodes) (sampleEdges ++ secondPathEdges)
+
+sharedKpiTwoPathGraph :: RawGraph
+sharedKpiTwoPathGraph =
+  RawGraph
+    (sampleNodes ++ sharedKpiSecondPathNodes)
+    (sampleEdges ++ sharedKpiSecondPathEdges)
+
+sharedKpiSecondPathNodes :: [RawNode]
+sharedKpiSecondPathNodes =
+  [ RawPrimitiveNode (duplicateId needDriverId) needId Driver
+  , RawPrimitiveNode (duplicateId needObjectiveId) needId Objective
+  , RawPrimitiveNode (duplicateId interventionActionId) interventionId Action
+  , RawPrimitiveNode
+      (duplicateId interventionKeyResultId)
+      interventionId
+      KeyResult
+  ]
+
+sharedKpiSecondPathEdges :: [RawEdge]
+sharedKpiSecondPathEdges =
+  [ edge
+      strategyKeyResultId
+      translatesStrategyKeyResultToNeedObjective
+      (duplicateId needObjectiveId)
+  , edge
+      (duplicateId needDriverId)
+      groundsNeedDriverToObjective
+      (duplicateId needObjectiveId)
+  , anchorEdge situationAnchorId anchorsNeedDriver (duplicateId needDriverId)
+  , edge
+      strategyActionId
+      guidesStrategyActionToInterventionAction
+      (duplicateId interventionActionId)
+  , edge
+      (duplicateId interventionActionId)
+      contributesInterventionActionToKeyResult
+      (duplicateId interventionKeyResultId)
+  , edge
+      (duplicateId interventionKeyResultId)
+      substantiatesInterventionKeyResultNeedObjective
+      (duplicateId needObjectiveId)
+  , edge
+      (duplicateId interventionKeyResultId)
+      contributesInterventionKeyResultToStrategyKeyResult
+      strategyKeyResultId
+  , edge
+      (duplicateId interventionKeyResultId)
+      setsTargetForMeasureKPI
+      measureKpiId
+  , anchorEdge
+      (duplicateId interventionActionId)
+      changesAnchor
+      situationAnchorId
+  ]
 
 secondPathNodes :: [RawNode]
 secondPathNodes =
@@ -2409,9 +2671,26 @@ planForTrace trace =
     , establishedAt = criteriaDate
     , targetDueAt = targetDate
     , planSource = EvidenceSource "approved measurement plan"
-    , baseline = alignObservation trace (observation 40 baselineDate percent)
-    , effectCriterion = AbsoluteIncreaseByAtLeast (Quantity 10 percent)
-    , targetCriterion = AtLeast (Quantity 70 percent)
+    , baseline = alignObservation trace (observation 40 baselineDate)
+    , effectCriterion = AbsoluteIncreaseByAtLeast (Delta 10)
+    , targetCriterion = AtLeast (Level 70)
+    }
+
+definitionsFor :: TraceableEffectModel -> [RawKPIDefinition]
+definitionsFor model =
+  [ sampleKPIDefinition {rawDefinitionKPI = identifier}
+  | identifier <-
+      nub (map (unNodeId . traceKPI) (NonEmpty.toList (effectTraces model)))
+  ]
+
+sampleKPIDefinition :: RawKPIDefinition
+sampleKPIDefinition =
+  RawKPIDefinition
+    { rawDefinitionKPI = measureKpiId
+    , rawDefinitionUnit = percent
+    , rawDefinitionDomain = percentageDomain
+    , rawDefinitionMeasurementMethod = "monthly controlled measurement"
+    , rawDefinitionInterpretation = "higher levels indicate better outcomes"
     }
 
 plannedStartsFor :: TraceableEffectModel -> [PlannedInterventionStart]
@@ -2431,15 +2710,12 @@ sampleActualStart =
   ActualInterventionStart
     {actualIntervention = interventionId, actualStartAt = interventionDate}
 
-followUpForTrace ::
-     EffectTrace -> Rational -> UTCTime -> Unit -> FollowUpObservation
-followUpForTrace trace value observationTime observationUnit =
+followUpForTrace :: EffectTrace -> Rational -> UTCTime -> FollowUpObservation
+followUpForTrace trace value observationTime =
   FollowUpObservation
     { followUpTrace = traceIdentifier trace
     , followUpObservation =
-        alignObservation
-          trace
-          (observation value observationTime observationUnit)
+        alignObservation trace (observation value observationTime)
     }
 
 alignObservation :: EffectTrace -> Observation -> Observation
@@ -2453,46 +2729,22 @@ followUpsForReady ::
      EvidenceReadyModel
   -> Rational
   -> UTCTime
-  -> Unit
   -> NonEmpty.NonEmpty FollowUpObservation
-followUpsForReady ready value observationTime observationUnit =
+followUpsForReady ready value observationTime =
   fmap
-    (\trace -> followUpForTrace trace value observationTime observationUnit)
+    (\trace -> followUpForTrace trace value observationTime)
     (readyEffectTraces ready)
 
 mapBaseline :: (Observation -> Observation) -> EvidencePlan -> EvidencePlan
 mapBaseline transform plan = plan {baseline = transform (baseline plan)}
 
-replacePlanUnit :: Unit -> EvidencePlan -> EvidencePlan
-replacePlanUnit replacement plan =
-  plan
-    { baseline =
-        (baseline plan)
-          {observedValue = (observedValue (baseline plan)) {unit = replacement}}
-    , effectCriterion = replaceEffectUnit (effectCriterion plan)
-    , targetCriterion = replaceTargetUnit (targetCriterion plan)
-    }
-  where
-    replaceQuantityUnit quantity = quantity {unit = replacement}
-    replaceEffectUnit (AbsoluteIncreaseByAtLeast quantity) =
-      AbsoluteIncreaseByAtLeast (replaceQuantityUnit quantity)
-    replaceEffectUnit (AbsoluteDecreaseByAtLeast quantity) =
-      AbsoluteDecreaseByAtLeast (replaceQuantityUnit quantity)
-    replaceEffectUnit criterion@(RelativeIncreaseByAtLeast _) = criterion
-    replaceEffectUnit criterion@(RelativeDecreaseByAtLeast _) = criterion
-    replaceTargetUnit (AtLeast quantity) =
-      AtLeast (replaceQuantityUnit quantity)
-    replaceTargetUnit (AtMost quantity) = AtMost (replaceQuantityUnit quantity)
-    replaceTargetUnit (Within lower upper) =
-      Within (replaceQuantityUnit lower) (replaceQuantityUnit upper)
-
-observation :: Rational -> UTCTime -> Unit -> Observation
-observation value observedTimestamp valueUnit =
+observation :: Rational -> UTCTime -> Observation
+observation value observedTimestamp =
   Observation
     { observationKPI = measureKpiId
     , observationAnchor = situationAnchorId
     , observedAt = observedTimestamp
-    , observedValue = Quantity value valueUnit
+    , observedLevel = Level value
     , observationSource = EvidenceSource "decision registry"
     }
 
@@ -2537,6 +2789,9 @@ percent, count :: Unit
 percent = PercentagePoints
 
 count = NamedUnit "count"
+
+percentageDomain :: ValueDomain
+percentageDomain = BoundedDomain (Level 0) (Level 100)
 
 ethosId, missionId, visionId, strategyId, needId :: RawNodeId
 ethosId = RawNodeId "ethos"

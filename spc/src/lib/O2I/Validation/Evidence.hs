@@ -2,8 +2,8 @@
 
 -- | Ex-post assessment of empirical evidence for ready effect traces.
 --
--- Evidence assessment checks actual Intervention timing and follow-up
--- observations against ex-ante plans and baselines fixed by readiness. It
+-- Evidence assessment checks actual Intervention timing and follow-up levels
+-- against KPI definitions, ex-ante plans, and baselines fixed by readiness. It
 -- supports plausible attribution and does not claim causal proof.
 module O2I.Validation.Evidence
   ( ActualInterventionStart(..)
@@ -40,6 +40,8 @@ data ActualInterventionStart = ActualInterventionStart
   } deriving (Eq, Show)
 
 -- | One ex-post observation submitted for a validated effect trace.
+--
+-- Its KPI selects the stable definition and value domain fixed at readiness.
 data FollowUpObservation = FollowUpObservation
   { followUpTrace :: EffectTraceId -- ^ Trace being assessed.
   , followUpObservation :: Observation -- ^ Ex-post KPI observation.
@@ -78,7 +80,8 @@ data EffectAssessment = EffectAssessment
 -- Multiple follow-ups per trace remain distinct assessments. Success
 -- establishes
 -- @readinessCheckedAt < actualStartAt < observedAt <= assessedAt@ for each
--- assessment and evidence consistency, not methodological causal proof.
+-- assessment, definition-domain conformance, and evidence consistency, not
+-- methodological causal proof.
 data EvidenceAssessedModel = EvidenceAssessedModel
   { assessedEvidenceReadyModel :: EvidenceReadyModel
   , validatedAssessedAt :: UTCTime
@@ -110,14 +113,12 @@ data EvidenceError
     -- ^ The follow-up KPI differs from the traced KPI.
   | FollowUpAnchorMismatch EffectTraceId RawNodeId RawNodeId
     -- ^ The follow-up anchor differs from the traced anchor.
-  | FollowUpUnitMismatch EffectTraceId Unit Unit
-    -- ^ The follow-up unit differs from the fixed baseline unit.
+  | FollowUpLevelOutsideDomain EffectTraceId Level ValueDomain
+    -- ^ The follow-up level lies outside the KPI's declared domain.
   | FollowUpObservedAtOrBeforeActualStart EffectTraceId
     -- ^ The follow-up was not observed after actual execution started.
   | FollowUpObservedAfterAssessment EffectTraceId
     -- ^ The follow-up observation is future-dated at assessment time.
-  | EmptyFollowUpUnit EffectTraceId
-    -- ^ The follow-up observation has a blank named unit.
   | EmptyFollowUpSource EffectTraceId
     -- ^ The follow-up observation has blank provenance.
   deriving (Eq, Show)
@@ -256,9 +257,9 @@ followUpErrors ::
 followUpErrors assessedAt ready startIndex followUp =
   case ( lookupEffectTrace traceable identifier
        , lookupEvidencePlan ready identifier) of
-    (Just trace, Just plan) ->
+    (Just trace, Just _) ->
       bindingErrors trace
-        ++ unitErrors plan
+        ++ domainErrors trace
         ++ timeErrors trace
         ++ provenanceErrors
     _ -> [UnknownFollowUpTrace identifier]
@@ -280,16 +281,19 @@ followUpErrors assessedAt ready startIndex followUp =
            | observationAnchor observation
                /= situationAnchorRefId (traceSituationAnchor trace)
            ]
-    unitErrors plan =
-      [ FollowUpUnitMismatch
-        identifier
-        (unit (observedValue (baseline plan)))
-        (unit (observedValue observation))
-      | unit (observedValue observation) /= unit (observedValue (baseline plan))
-      ]
-        ++ [ EmptyFollowUpUnit identifier
-           | blankUnit (unit (observedValue observation))
-           ]
+    domainErrors trace =
+      case lookupKPIDefinition ready (traceKPI trace) of
+        Nothing -> []
+        Just definition ->
+          [ FollowUpLevelOutsideDomain
+            identifier
+            (observedLevel observation)
+            (kpiDefinitionDomain definition)
+          | not
+              (levelInDomain
+                 (kpiDefinitionDomain definition)
+                 (observedLevel observation))
+          ]
     timeErrors trace =
       [ FollowUpObservedAtOrBeforeActualStart identifier
       | Just start <-
@@ -304,10 +308,6 @@ followUpErrors assessedAt ready startIndex followUp =
       | Text.null
           (Text.strip (evidenceSourceName (observationSource observation)))
       ]
-
-blankUnit :: Unit -> Bool
-blankUnit PercentagePoints = False
-blankUnit (NamedUnit name) = Text.null (Text.strip name)
 
 assessFollowUp ::
      EvidenceReadyModel -> FollowUpObservation -> Maybe EffectAssessment
@@ -326,15 +326,13 @@ evaluateEffect plan observation =
     then Satisfied
     else NotSatisfied
   where
-    before = magnitude (observedValue (baseline plan))
-    after = magnitude (observedValue observation)
+    before = levelValue (observedLevel (baseline plan))
+    after = levelValue (observedLevel observation)
     relative increase = increase / abs before
     satisfies =
       case effectCriterion plan of
-        AbsoluteIncreaseByAtLeast quantity ->
-          after - before >= magnitude quantity
-        AbsoluteDecreaseByAtLeast quantity ->
-          before - after >= magnitude quantity
+        AbsoluteIncreaseByAtLeast delta -> after - before >= deltaValue delta
+        AbsoluteDecreaseByAtLeast delta -> before - after >= deltaValue delta
         RelativeIncreaseByAtLeast change ->
           relative (after - before) >= relativeChangeRatio change
         RelativeDecreaseByAtLeast change ->
@@ -347,13 +345,13 @@ evaluateTarget plan observation
     TargetSatisfiedInObservationByDue
   | otherwise = TargetSatisfiedInObservationAfterDue
   where
-    observed = magnitude (observedValue observation)
+    observed = levelValue (observedLevel observation)
     satisfied =
       case targetCriterion plan of
-        AtLeast quantity -> observed >= magnitude quantity
-        AtMost quantity -> observed <= magnitude quantity
+        AtLeast level -> observed >= levelValue level
+        AtMost level -> observed <= levelValue level
         Within lower upper ->
-          observed >= magnitude lower && observed <= magnitude upper
+          observed >= levelValue lower && observed <= levelValue upper
 
 -- | Read the time at which the assessed stage was established.
 evidenceAssessedAt :: EvidenceAssessedModel -> UTCTime

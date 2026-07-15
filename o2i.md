@@ -465,21 +465,26 @@ Wirkungsrelevanz ist damit eine Ex-ante-Handlungsrelevanz; Wirkungsvollheit ist 
 
 In O2I misst eine Messung eine Situation (`Measure --measures--> Situation`). Strategie rahmt, was gemessen werden muss (`Strategy --frames--> Measure`). Interventionen setzen Zielwerte oder Zielbezüge für Messungen, wenn sie eine angestrebte Veränderung überprüfbar machen (`Intervention --sets-target-for--> Measure`).
 
-`Measure` und KPI bezeichnen unterschiedliche Modellebenen: `Measure` ist der fachliche Messrahmen; ein KPI ist eine stabile, entscheidungsrelevante Messdefinition innerhalb dieses Rahmens. O2I-Messbeobachtungen beziehen sich auf einen solchen KPI.
+> [!definition]
+> Ein **KPI** (en.: *key performance indicator*; meta: `KPI`)[^kpi] bezeichnet eine stabile, entscheidungsrelevante Messgröße innerhalb einer `Measure`. Seine KPI-Definition legt Maßeinheit, zulässigen Wertebereich, Messmethode und fachliche Interpretation verbindlich fest. Messbeobachtungen sowie Effekt- und Zielkriterien beziehen sich auf diese Definition.
+>
+> [^kpi]: *Quellenanker*: Parmenter (2020) für die stabile, entscheidungsrelevante Definition von KPIs; Barr (2014) für Messmethode und fachliche Interpretation aussagefähiger Performance-Maße. *Autorenableitung*: O2I fasst diese Merkmale in einer validierbaren KPI-Definition zusammen.
+
+`Measure` und KPI bezeichnen unterschiedliche Modellebenen: `Measure` ist der fachliche Messrahmen; ein KPI ist eine stabile, entscheidungsrelevante Messgröße innerhalb dieses Rahmens. Die Evidenzebene repräsentiert ihre verbindliche Semantik durch genau eine validierte `KPIDefinition` je verwendetem KPI.
 
 Messung ist nicht Wirkung selbst. Sie macht Zustände und Veränderungen beobachtbar und liefert Evidenz, die erst durch Nachweislogik als Wirkung gelesen werden kann.
 
 > [!definition]
-> Eine **Messbeobachtung**[^observation] bezeichnet einen zeitlich bestimmten, quellengebundenen Messwert eines KPI an einem Situationsanker.
+> Eine **Messbeobachtung**[^observation] bezeichnet einen zeitlich bestimmten, quellengebundenen Messwert eines KPI an einem Situationsanker. Einheit und zulässiger Wertebereich dieses Messwerts werden durch die referenzierte KPI-Definition bestimmt.
 >
-> [^observation]: *Autorenableitung in Anlehnung an Parmenter (2020) und Barr (2014)*: Messbeobachtung verbindet eine definierte Kennzahl mit Messwert, Zeitpunkt, Einheit, Quelle und fachlichem Beobachtungsgegenstand.
+> [^observation]: *Autorenableitung in Anlehnung an Parmenter (2020) und Barr (2014)*: Messbeobachtung verbindet eine stabile KPI-Definition mit Messwert, Zeitpunkt, Quelle und fachlichem Beobachtungsgegenstand.
 
 > [!definition]
 > Ein **Effektkriterium**[^effect-criterion] bezeichnet die vorab festgelegte Mindestveränderung gegenüber einer Baseline, ab der eine Beobachtung als Evidenz für positive Wirkung gilt.
 >
 > [^effect-criterion]: *Autorenableitung in Anlehnung an Parmenter (2020) und Barr (2014)*: Das Effektkriterium operationalisiert eine relevante Veränderung unabhängig von der Zielerreichung.
 
-Ein Effektkriterium kann eine absolute Veränderung in der Einheit des KPI oder eine relative Veränderung im Verhältnis zur Baseline fordern. Bei Prozentwerten wird eine absolute Veränderung in Prozentpunkten angegeben; eine relative Veränderung bleibt davon semantisch getrennt.
+Ein Effektkriterium kann eine absolute Veränderung in der Einheit des KPI oder eine relative Veränderung im Verhältnis zur Baseline fordern. Messbeobachtungen und Zielkriterien bezeichnen absolute Messniveaus; absolute Effektkriterien bezeichnen dagegen Veränderungen zwischen Messniveaus. Bei Prozentwerten wird eine absolute Veränderung in Prozentpunkten angegeben; eine relative Veränderung bleibt davon semantisch getrennt.
 
 > [!definition]
 > Ein **Zielkriterium**[^target-criterion] bezeichnet den vorab festgelegten Messwert oder Wertebereich, anhand dessen die Zielerreichung zu einem Beobachtungszeitpunkt beurteilt wird.
@@ -489,7 +494,7 @@ Ein Effektkriterium kann eine absolute Veränderung in der Einheit des KPI oder 
 Effekt und Zielerreichung sind damit getrennte Aussagen: Eine relevante Verbesserung kann eintreten, ohne dass das Ziel bereits erreicht ist; umgekehrt kann ein Zielwert erreicht sein, ohne dass die Intervention eine relevante Verbesserung gegenüber der Baseline erzeugt hat.
 
 > [!definition]
-> **Evidenzbereitschaft**[^evidence-readiness] bezeichnet die ex-ante Nachweisqualität eines vollständigen Wirkungstraces, für den vor Beginn der Intervention eine Baseline, Effekt- und Zielkriterium, Zieltermin sowie Quellenbezug verbindlich festgelegt sind.
+> **Evidenzbereitschaft**[^evidence-readiness] bezeichnet die ex-ante Nachweisqualität eines vollständigen Wirkungstraces, für den vor Beginn der Intervention eine stabile KPI-Definition, Baseline, Effekt- und Zielkriterium, Zieltermin sowie Quellenbezug verbindlich festgelegt sind.
 >
 > > [!tldr] Evidenzbereitschaft = Wirkungstrace vor Interventionsbeginn mess- und bewertbar festgelegt
 >
@@ -837,15 +842,15 @@ Ein vollständiger Wirkungstrace ist relational nachvollziehbar, aber weder evid
 
 ### Evidenzbereitschaft
 
-Evidenzbereitschaft setzt einen vollständigen Wirkungstrace voraus. Für jede Intervention wird genau ein geplanter Beginn und für jeden Trace genau ein `EvidencePlan` validiert. Der Plan bindet Baseline, Effektkriterium, Zielkriterium, Zieltermin sowie Quellenbezug an denselben KPI und Situationsanker. Plan und Baseline müssen spätestens zum expliziten Prüfzeitpunkt feststehen; dieser Prüfzeitpunkt muss vor dem geplanten Interventionsbeginn liegen. Einheiten und Quellen müssen eindeutig benannt sein.
+Evidenzbereitschaft setzt einen vollständigen Wirkungstrace voraus. Für jeden im Trace verwendeten KPI wird genau eine `KPIDefinition`, für jede Intervention genau ein geplanter Beginn und für jeden Trace genau ein `EvidencePlan` validiert. Die KPI-Definition legt Einheit, zulässigen Wertebereich, Messmethode und fachliche Interpretation fest. Der Plan bindet Baseline, Effektkriterium, Zielkriterium, Zieltermin sowie Quellenbezug an denselben KPI und Situationsanker. Plan und Baseline müssen spätestens zum expliziten Prüfzeitpunkt feststehen; dieser Prüfzeitpunkt muss vor dem geplanten Interventionsbeginn liegen. Messniveaus, Kriterien und spätere Beobachtungen müssen dem definierten Wertebereich entsprechen; Quellen müssen eindeutig benannt sein.
 
 `EvidenceReadyModel` bezeichnet damit den validierten ex-ante Zustand des Wirkungsmodells. Er enthält noch keine Folgebeobachtung und keine Aussage darüber, ob Wirkung oder Zielerreichung eingetreten sind.
 
 ### Wirkungsevidenz
 
-Wirkungsevidenz bewertet ein evidenzbereites Wirkungsmodell zu einem expliziten Bewertungszeitpunkt. Für jede Intervention wird genau ein tatsächlicher Beginn erfasst. Jede Folgebeobachtung muss nach diesem Beginn und spätestens zum Bewertungszeitpunkt vorliegen, zum Trace, KPI, Situationsanker und zur Einheit des Evidenzplans passen und einen Quellenbezug tragen. Damit gilt `readinessCheckedAt < actualStartAt < observedAt <= assessedAt`. Für jeden Trace ist mindestens eine Folgebeobachtung erforderlich; mehrere zeitlich unterscheidbare Folgebeobachtungen bilden getrennte Bewertungen. Das Effektkriterium prüft die relevante Veränderung gegenüber der Baseline. Das Zielkriterium prüft unabhängig davon, ob die jeweilige Beobachtung den Zielwert vor oder nach dem Zieltermin erfüllt; es bestimmt ohne Beobachtungsreihe nicht den Zeitpunkt erstmaliger Zielerreichung.
+Wirkungsevidenz bewertet ein evidenzbereites Wirkungsmodell zu einem expliziten Bewertungszeitpunkt. Für jede Intervention wird genau ein tatsächlicher Beginn erfasst. Jede Folgebeobachtung muss nach diesem Beginn und spätestens zum Bewertungszeitpunkt vorliegen, zum Trace, KPI und Situationsanker passen, innerhalb des durch die KPI-Definition festgelegten Wertebereichs liegen und einen Quellenbezug tragen. Damit gilt `readinessCheckedAt < actualStartAt < observedAt <= assessedAt`. Für jeden Trace ist mindestens eine Folgebeobachtung erforderlich; mehrere zeitlich unterscheidbare Folgebeobachtungen bilden getrennte Bewertungen. Das Effektkriterium prüft die relevante Veränderung gegenüber der Baseline. Das Zielkriterium prüft unabhängig davon, ob die jeweilige Beobachtung den Zielwert vor oder nach dem Zieltermin erfüllt; es bestimmt ohne Beobachtungsreihe nicht den Zeitpunkt erstmaliger Zielerreichung.
 
-Die Evidenzebene besteht aus `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion`, `PlannedInterventionStart`, `ActualInterventionStart` und `FollowUpObservation`. Diese Typen sind weder O2I-Kontexte noch O2I-Primitives. Sie planen und bewerten die empirische Evidenz eines relational vollständigen Wirkungstraces.
+Die Evidenzebene besteht insbesondere aus `KPIDefinition`, `ValueDomain`, `Level`, `Delta`, `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion`, `PlannedInterventionStart`, `ActualInterventionStart` und `FollowUpObservation`. Diese Typen sind weder O2I-Kontexte noch O2I-Primitives. Sie definieren, planen und bewerten die empirische Evidenz eines relational vollständigen Wirkungstraces.
 
 ### Abgeleitete Makrorelationen
 
@@ -855,7 +860,7 @@ Makrorelationen dürfen abgeleitet sein. Eine abgeleitete Makrorelation fasst me
 
 Die Syntax beschreibt, wie die O2I-Semantik in einer Modellierungssprache dargestellt wird. O2I verwendet ArchiMate als visuelle Darstellungs- und Integrationssyntax, ohne die O2I-Semantik durch ArchiMate-Semantik zu ersetzen.
 
-Evidenztypen wie `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion`, `PlannedInterventionStart`, `ActualInterventionStart` und `FollowUpObservation` sind weder O2I-Kontexte noch O2I-Primitives. Ihre konkrete Persistenz- oder Darstellungsform ist nicht Bestandteil des ArchiMate-Profils; sie werden durch die Validierungsspezifikation an einen Wirkungstrace gebunden.
+Evidenztypen wie `KPIDefinition`, `ValueDomain`, `Level`, `Delta`, `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion`, `PlannedInterventionStart`, `ActualInterventionStart` und `FollowUpObservation` sind weder O2I-Kontexte noch O2I-Primitives. Ihre konkrete Persistenz- oder Darstellungsform ist nicht Bestandteil des ArchiMate-Profils; sie werden durch die Validierungsspezifikation an einen Wirkungstrace gebunden.
 
 ### ArchiMate-Profil
 

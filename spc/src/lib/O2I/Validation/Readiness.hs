@@ -2,13 +2,23 @@
 
 -- | Ex-ante readiness validation for empirical effect evidence.
 --
--- Readiness fixes one complete evidence plan for every validated effect trace
--- and one canonical planned start for every traced Intervention. It does not
--- assess execution timing or follow-up observations.
+-- Readiness fixes one stable definition for every traced KPI, one complete
+-- evidence plan for every validated effect trace, and one canonical planned
+-- start for every traced Intervention. It does not assess execution timing or
+-- follow-up observations.
 module O2I.Validation.Readiness
   ( Unit(..)
-  , Quantity(..)
+  , Level(..)
+  , Delta(..)
+  , ValueDomain(..)
   , RelativeChange(..)
+  , RawKPIDefinition(..)
+  , KPIDefinition
+  , kpiDefinitionKPI
+  , kpiDefinitionUnit
+  , kpiDefinitionDomain
+  , kpiDefinitionMeasurementMethod
+  , kpiDefinitionInterpretation
   , EvidenceSource(..)
   , Observation(..)
   , EffectCriterion(..)
@@ -18,6 +28,8 @@ module O2I.Validation.Readiness
   , EvidenceReadyModel
   , EvidenceReadinessError(..)
   , validateEvidenceReadinessAt
+  , kpiDefinitions
+  , lookupKPIDefinition
   , evidencePlans
   , readinessCheckedAt
   , plannedInterventionStarts
@@ -26,6 +38,7 @@ module O2I.Validation.Readiness
   , readyTracesForIntervention
   , readyTraceableModel
   , lookupEvidencePlan
+  , levelInDomain
   ) where
 
 import Data.List (nub, sort)
@@ -40,21 +53,29 @@ import O2I.Language.Element
 import O2I.Validation.Trace
 
 -- * Evidence design
--- | Unit of an observed or criterion quantity.
---
--- Percentage levels use 'PercentagePoints': a magnitude of @40@ denotes a
--- level of 40 percent, while an absolute delta of @10@ denotes ten percentage
--- points. Relative percentage changes are represented by 'RelativeChange'.
+-- | Stable unit declared once for a KPI definition.
 data Unit
-  = PercentagePoints -- ^ Percentage levels and absolute percentage-point deltas.
+  = PercentagePoints -- ^ Percentage levels and percentage-point deltas.
   | NamedUnit Text -- ^ Extensible non-percentage unit with a nonblank name.
   deriving (Eq, Ord, Show)
 
--- | Exact measured or criterion value with its unit.
-data Quantity = Quantity
-  { magnitude :: Rational -- ^ Exact numeric magnitude.
-  , unit :: Unit -- ^ Semantic unit of the magnitude.
-  } deriving (Eq, Show)
+-- | Exact KPI level, distinct from a change between levels.
+data Level = Level
+  { levelValue :: Rational -- ^ Numeric position within the declared domain.
+  } deriving (Eq, Ord, Show)
+
+-- | Exact absolute change, distinct from a KPI level.
+data Delta = Delta
+  { deltaValue :: Rational -- ^ Absolute displacement between KPI levels.
+  } deriving (Eq, Ord, Show)
+
+-- | Inclusive domain of admissible KPI levels.
+data ValueDomain
+  = UnboundedDomain -- ^ Every rational level is admissible.
+  | LowerBoundedDomain Level -- ^ Levels at or above the bound are admissible.
+  | UpperBoundedDomain Level -- ^ Levels at or below the bound are admissible.
+  | BoundedDomain Level Level -- ^ Inclusive lower and upper level bounds.
+  deriving (Eq, Ord, Show)
 
 -- | Exact unitless ratio for a relative change criterion.
 --
@@ -65,28 +86,58 @@ newtype RelativeChange = RelativeChange
   { relativeChangeRatio :: Rational -- ^ Ratio relative to baseline magnitude.
   } deriving (Eq, Show)
 
+-- | Unchecked definition submitted for a raw KPI identifier.
+data RawKPIDefinition = RawKPIDefinition
+  { rawDefinitionKPI :: RawNodeId -- ^ KPI identifier to define.
+  , rawDefinitionUnit :: Unit -- ^ Stable unit for levels and deltas.
+  , rawDefinitionDomain :: ValueDomain -- ^ Admissible KPI levels.
+  , rawDefinitionMeasurementMethod :: Text
+    -- ^ Stable method by which observations are produced.
+  , rawDefinitionInterpretation :: Text
+    -- ^ Stable fachliche reading of observed levels and changes.
+  } deriving (Eq, Show)
+
+-- | Validated stable definition of one typed Measure KPI.
+--
+-- Construction is restricted to evidence-readiness validation. Exactly one
+-- definition exists for every distinct KPI used by the validated traces.
+data KPIDefinition = KPIDefinition
+  { kpiDefinitionKPI :: NodeId ('PrimitiveKind 'Measure 'KPI)
+    -- ^ Structurally validated KPI governed by this definition.
+  , kpiDefinitionUnit :: Unit -- ^ Stable unit for all levels and deltas.
+  , kpiDefinitionDomain :: ValueDomain -- ^ Validated level domain.
+  , kpiDefinitionMeasurementMethod :: Text -- ^ Nonblank measurement method.
+  , kpiDefinitionInterpretation :: Text -- ^ Nonblank fachliche interpretation.
+  } deriving (Eq, Show)
+
+type KPIDefinitionRegistry
+  = Map (NodeId ('PrimitiveKind 'Measure 'KPI)) KPIDefinition
+
 -- | Human-auditable provenance of a plan or observation.
 newtype EvidenceSource = EvidenceSource
   { evidenceSourceName :: Text -- ^ Nonblank provenance description.
   } deriving (Eq, Ord, Show)
 
--- | One timestamped observation of a KPI at a Situation anchor.
+-- | One timestamped KPI level at a Situation anchor.
+--
+-- The raw KPI identifier selects the validated definition that supplies the
+-- stable unit and admissible value domain.
 data Observation = Observation
   { observationKPI :: RawNodeId -- ^ Observed KPI; must match the trace.
   , observationAnchor :: RawNodeId -- ^ Anchor; must match the trace.
   , observedAt :: UTCTime -- ^ Observation timestamp.
-  , observedValue :: Quantity -- ^ Observed quantity.
+  , observedLevel :: Level -- ^ Observed level in the KPI definition's unit.
   , observationSource :: EvidenceSource -- ^ Auditable provenance.
   } deriving (Eq, Show)
 
 -- | Required direction and minimum magnitude of observed change.
 --
--- Absolute criteria compare quantities in the observation unit. Relative
--- criteria compare the directional delta with the absolute baseline magnitude.
+-- Absolute criteria compare levels using the KPI definition's unit. Relative
+-- criteria compare the directional delta with the absolute baseline level.
 data EffectCriterion
-  = AbsoluteIncreaseByAtLeast Quantity
+  = AbsoluteIncreaseByAtLeast Delta
     -- ^ Require at least this positive absolute increase.
-  | AbsoluteDecreaseByAtLeast Quantity
+  | AbsoluteDecreaseByAtLeast Delta
     -- ^ Require at least this positive absolute decrease.
   | RelativeIncreaseByAtLeast RelativeChange
     -- ^ Require at least this positive relative increase.
@@ -96,9 +147,9 @@ data EffectCriterion
 
 -- | Required absolute target range at follow-up.
 data TargetCriterion
-  = AtLeast Quantity -- ^ Require a value at or above the threshold.
-  | AtMost Quantity -- ^ Require a value at or below the threshold.
-  | Within Quantity Quantity -- ^ Require an inclusive lower/upper range.
+  = AtLeast Level -- ^ Require a level at or above the threshold.
+  | AtMost Level -- ^ Require a level at or below the threshold.
+  | Within Level Level -- ^ Require an inclusive lower/upper level range.
   deriving (Eq, Show)
 
 -- | Planned temporal boundary shared by every trace of one Intervention.
@@ -109,6 +160,8 @@ data PlannedInterventionStart = PlannedInterventionStart
   } deriving (Eq, Show)
 
 -- | Ex-ante evidence design fixed for one effect trace.
+--
+-- The trace identifies the typed KPI and therefore its validated definition.
 data EvidencePlan = EvidencePlan
   { plannedTrace :: EffectTraceId -- ^ Trace governed by this plan.
   , establishedAt :: UTCTime -- ^ Time at which the plan was fixed.
@@ -125,11 +178,14 @@ data EvidencePlan = EvidencePlan
 -- plan per effect trace.
 --
 -- Success establishes complete timing and plan coverage, trace alignment,
--- @establishedAt <= checkedAt < plannedStartAt@, baseline timing, compatible
--- units and criteria, and auditable provenance.
+-- @establishedAt <= checkedAt < plannedStartAt@, one stable definition per KPI,
+-- domain-valid levels and criteria, and auditable provenance.
 data EvidenceReadyModel = EvidenceReadyModel
   { validatedTraceableModel :: TraceableEffectModel
   , validatedReadinessCheckedAt :: UTCTime
+  , validatedKPIDefinitions :: Map
+      (NodeId ('PrimitiveKind 'Measure 'KPI))
+      KPIDefinition
   , validatedEvidencePlans :: NonEmpty.NonEmpty EvidencePlan
   , evidencePlanIndex :: Map EffectTraceId EvidencePlan
   , validatedPlannedStarts :: Map
@@ -139,7 +195,23 @@ data EvidenceReadyModel = EvidenceReadyModel
 
 -- | Violations detected while validating ex-ante evidence readiness.
 data EvidenceReadinessError
-  = UnknownPlannedInterventionStart RawNodeId
+  = UnknownKPIDefinition RawNodeId
+    -- ^ A definition refers to no KPI in the validated traces.
+  | DuplicateKPIDefinition RawNodeId Int
+    -- ^ The same complete definition was submitted more than once.
+  | ConflictingKPIDefinition RawNodeId Int
+    -- ^ Incompatible definitions were submitted for the same KPI.
+  | MissingKPIDefinition (NodeId ('PrimitiveKind 'Measure 'KPI))
+    -- ^ A KPI used by a validated trace has no submitted definition.
+  | InvalidKPIValueDomain RawNodeId ValueDomain
+    -- ^ A bounded domain has an upper bound below its lower bound.
+  | EmptyKPIUnit RawNodeId
+    -- ^ A named KPI unit is blank.
+  | EmptyKPIMeasurementMethod RawNodeId
+    -- ^ A KPI definition has no measurement method.
+  | EmptyKPIInterpretation RawNodeId
+    -- ^ A KPI definition has no fachliche interpretation.
+  | UnknownPlannedInterventionStart RawNodeId
     -- ^ A timing record refers to no Intervention in a validated trace.
   | DuplicatePlannedInterventionStart RawNodeId Int
     -- ^ More than one planned start was supplied for one Intervention.
@@ -163,16 +235,18 @@ data EvidenceReadinessError
     -- ^ The baseline KPI differs from the traced KPI.
   | BaselineAnchorMismatch EffectTraceId RawNodeId RawNodeId
     -- ^ The baseline anchor differs from the traced anchor.
-  | CriterionUnitMismatch EffectTraceId Unit Unit
-    -- ^ An absolute criterion unit differs from the baseline unit.
   | InvalidEffectCriterion EffectTraceId
     -- ^ An absolute magnitude or relative ratio is not strictly positive.
   | RelativeEffectCriterionWithZeroBaseline EffectTraceId
     -- ^ Relative change is undefined for the plan's zero baseline.
   | InvalidTargetCriterion EffectTraceId
-    -- ^ Target bounds use different units or an inverted range.
-  | EmptyUnit EffectTraceId
-    -- ^ The baseline or a criterion has a blank named unit.
+    -- ^ A target range has an inverted lower and upper level.
+  | BaselineLevelOutsideDomain EffectTraceId Level ValueDomain
+    -- ^ The baseline level lies outside the KPI's declared domain.
+  | EffectCriterionOutsideDomain EffectTraceId Level ValueDomain
+    -- ^ The criterion's implied endpoint lies outside the KPI domain.
+  | TargetCriterionOutsideDomain EffectTraceId Level ValueDomain
+    -- ^ A target level lies outside the KPI's declared domain.
   | EmptyPlanSource EffectTraceId
     -- ^ The evidence plan has blank provenance.
   | EmptyBaselineSource EffectTraceId
@@ -180,18 +254,20 @@ data EvidenceReadinessError
   deriving (Eq, Show)
 
 -- * Readiness validation
--- | Validate canonical planned timing and one ex-ante plan per effect trace.
+-- | Validate KPI definitions, canonical timing, and one plan per effect trace.
 --
 -- Plan establishment and baseline observation may equal the explicit check
 -- time. The check must strictly precede each canonical planned start. A target
--- due time is an absolute deadline and must follow that planned start.
+-- due time is an absolute deadline and must follow that planned start. Exactly
+-- one valid definition is required for every distinct KPI used by the traces.
 validateEvidenceReadinessAt ::
      UTCTime
   -> TraceableEffectModel
+  -> [RawKPIDefinition]
   -> [PlannedInterventionStart]
   -> NonEmpty.NonEmpty EvidencePlan
   -> Validation (NonEmpty.NonEmpty EvidenceReadinessError) EvidenceReadyModel
-validateEvidenceReadinessAt checkedAt model starts plans =
+validateEvidenceReadinessAt checkedAt model rawDefinitions starts plans =
   case NonEmpty.nonEmpty errors of
     Just failures -> Failure failures
     Nothing ->
@@ -199,6 +275,7 @@ validateEvidenceReadinessAt checkedAt model starts plans =
         EvidenceReadyModel
           { validatedTraceableModel = model
           , validatedReadinessCheckedAt = checkedAt
+          , validatedKPIDefinitions = definitionRegistry
           , validatedEvidencePlans = plans
           , evidencePlanIndex = Map.map NonEmpty.head planIndex
           , validatedPlannedStarts = validatedStarts
@@ -208,6 +285,9 @@ validateEvidenceReadinessAt checkedAt model starts plans =
     planIndex = plansByTrace planList
     startIndex = startsByIntervention starts
     traces = NonEmpty.toList (effectTraces model)
+    tracedKPIs = sort (nub (map traceKPI traces))
+    definitionIndex = definitionsByKPI rawDefinitions
+    definitionRegistry = buildKPIDefinitionRegistry tracedKPIs definitionIndex
     interventions = tracedInterventions traces
     validatedStarts =
       Map.fromList
@@ -216,14 +296,91 @@ validateEvidenceReadinessAt checkedAt model starts plans =
         , Just record <- [uniqueRecord (contextRefId intervention) startIndex]
         ]
     errors =
-      plannedStartErrors checkedAt interventions startIndex
+      kpiDefinitionErrors tracedKPIs definitionIndex rawDefinitions
+        ++ plannedStartErrors checkedAt interventions startIndex
         ++ duplicatePlanErrors planIndex
-        ++ concatMap (planErrors checkedAt model startIndex) planList
+        ++ concatMap
+             (planErrors checkedAt model definitionRegistry startIndex)
+             planList
         ++ [ MissingEvidencePlan identifier
            | trace <- traces
            , let identifier = traceIdentifier trace
            , Map.notMember identifier planIndex
            ]
+
+definitionsByKPI ::
+     [RawKPIDefinition] -> Map RawNodeId (NonEmpty.NonEmpty RawKPIDefinition)
+definitionsByKPI =
+  Map.fromListWith (<>)
+    . map (\definition -> (rawDefinitionKPI definition, pure definition))
+
+kpiDefinitionErrors ::
+     [NodeId ('PrimitiveKind 'Measure 'KPI)]
+  -> Map RawNodeId (NonEmpty.NonEmpty RawKPIDefinition)
+  -> [RawKPIDefinition]
+  -> [EvidenceReadinessError]
+kpiDefinitionErrors tracedKPIs definitionIndex rawDefinitions =
+  unknownErrors ++ multiplicityErrors ++ missingErrors ++ contentErrors
+  where
+    tracedIdentifiers = map unNodeId tracedKPIs
+    unknownErrors =
+      [ UnknownKPIDefinition identifier
+      | identifier <- Map.keys definitionIndex
+      , identifier `notElem` tracedIdentifiers
+      ]
+    multiplicityErrors =
+      concatMap errorsForMultiplicity (Map.toList definitionIndex)
+    errorsForMultiplicity (identifier, definitions)
+      | NonEmpty.length definitions <= 1 = []
+      | all (== NonEmpty.head definitions) (NonEmpty.tail definitions) =
+        [DuplicateKPIDefinition identifier (NonEmpty.length definitions)]
+      | otherwise =
+        [ConflictingKPIDefinition identifier (NonEmpty.length definitions)]
+    missingErrors =
+      [ MissingKPIDefinition kpi
+      | kpi <- tracedKPIs
+      , Map.notMember (unNodeId kpi) definitionIndex
+      ]
+    contentErrors = concatMap rawKPIDefinitionErrors rawDefinitions
+
+rawKPIDefinitionErrors :: RawKPIDefinition -> [EvidenceReadinessError]
+rawKPIDefinitionErrors definition =
+  [InvalidKPIValueDomain identifier domain | not (validValueDomain domain)]
+    ++ [EmptyKPIUnit identifier | blankUnit (rawDefinitionUnit definition)]
+    ++ [ EmptyKPIMeasurementMethod identifier
+       | blankText (rawDefinitionMeasurementMethod definition)
+       ]
+    ++ [ EmptyKPIInterpretation identifier
+       | blankText (rawDefinitionInterpretation definition)
+       ]
+  where
+    identifier = rawDefinitionKPI definition
+    domain = rawDefinitionDomain definition
+
+buildKPIDefinitionRegistry ::
+     [NodeId ('PrimitiveKind 'Measure 'KPI)]
+  -> Map RawNodeId (NonEmpty.NonEmpty RawKPIDefinition)
+  -> KPIDefinitionRegistry
+buildKPIDefinitionRegistry tracedKPIs definitionIndex =
+  Map.fromList
+    [ (kpi, validateDefinition kpi rawDefinition)
+    | kpi <- tracedKPIs
+    , Just rawDefinition <- [uniqueRecord (unNodeId kpi) definitionIndex]
+    , null (rawKPIDefinitionErrors rawDefinition)
+    ]
+
+validateDefinition ::
+     NodeId ('PrimitiveKind 'Measure 'KPI) -> RawKPIDefinition -> KPIDefinition
+validateDefinition kpi rawDefinition =
+  KPIDefinition
+    { kpiDefinitionKPI = kpi
+    , kpiDefinitionUnit = rawDefinitionUnit rawDefinition
+    , kpiDefinitionDomain = rawDefinitionDomain rawDefinition
+    , kpiDefinitionMeasurementMethod =
+        Text.strip (rawDefinitionMeasurementMethod rawDefinition)
+    , kpiDefinitionInterpretation =
+        Text.strip (rawDefinitionInterpretation rawDefinition)
+    }
 
 tracedInterventions :: [EffectTrace] -> [ContextRef 'Intervention]
 tracedInterventions = sort . nub . map traceIntervention
@@ -286,21 +443,21 @@ duplicatePlanErrors planIndex =
 planErrors ::
      UTCTime
   -> TraceableEffectModel
+  -> KPIDefinitionRegistry
   -> Map RawNodeId (NonEmpty.NonEmpty PlannedInterventionStart)
   -> EvidencePlan
   -> [EvidenceReadinessError]
-planErrors checkedAt model startIndex plan =
+planErrors checkedAt model definitionRegistry startIndex plan =
   case lookupEffectTrace model (plannedTrace plan) of
     Nothing -> [UnknownEvidencePlanTrace (plannedTrace plan)]
     Just trace ->
       timeErrors trace
         ++ bindingErrors trace
-        ++ unitErrors trace
         ++ criterionErrors trace
+        ++ definitionErrors trace
         ++ provenanceErrors trace
   where
     baselineObservation = baseline plan
-    baselineUnit = unit (observedValue baselineObservation)
     timeErrors trace =
       [ PlanEstablishedAfterCheck (traceIdentifier trace)
       | establishedAt plan > checkedAt
@@ -330,48 +487,57 @@ planErrors checkedAt model startIndex plan =
            | observationAnchor baselineObservation
                /= situationAnchorRefId (traceSituationAnchor trace)
            ]
-    unitErrors trace =
-      [ CriterionUnitMismatch (traceIdentifier trace) baselineUnit criterionUnit
-      | criterionUnit <- criterionUnits plan
-      , criterionUnit /= baselineUnit
-      ]
     criterionErrors trace =
       [ InvalidEffectCriterion (traceIdentifier trace)
       | not (validEffectCriterion (effectCriterion plan))
       ]
         ++ [ RelativeEffectCriterionWithZeroBaseline (traceIdentifier trace)
            | isRelativeCriterion (effectCriterion plan)
-           , magnitude (observedValue baselineObservation) == 0
+           , levelValue (observedLevel baselineObservation) == 0
            ]
         ++ [ InvalidTargetCriterion (traceIdentifier trace)
            | not (validTargetCriterion (targetCriterion plan))
            ]
-        ++ [ EmptyUnit (traceIdentifier trace)
-           | any blankUnit (baselineUnit : criterionUnits plan)
-           ]
+    definitionErrors trace =
+      case Map.lookup (traceKPI trace) definitionRegistry of
+        Nothing -> []
+        Just definition -> domainErrors trace definition
+    domainErrors trace definition =
+      baselineErrors ++ effectErrors ++ targetErrors
+      where
+        identifier = traceIdentifier trace
+        domain = kpiDefinitionDomain definition
+        baselineLevel = observedLevel baselineObservation
+        baselineValid = levelInDomain domain baselineLevel
+        baselineErrors =
+          [ BaselineLevelOutsideDomain identifier baselineLevel domain
+          | not baselineValid
+          ]
+        effectErrors =
+          [ EffectCriterionOutsideDomain identifier endpoint domain
+          | baselineValid
+          , validEffectCriterion (effectCriterion plan)
+          , not
+              (isRelativeCriterion (effectCriterion plan)
+                 && levelValue baselineLevel == 0)
+          , let endpoint =
+                  effectCriterionEndpoint baselineLevel (effectCriterion plan)
+          , not (levelInDomain domain endpoint)
+          ]
+        targetErrors =
+          [ TargetCriterionOutsideDomain identifier target domain
+          | target <- nub (targetCriterionLevels (targetCriterion plan))
+          , not (levelInDomain domain target)
+          ]
     provenanceErrors trace =
       [EmptyPlanSource (traceIdentifier trace) | blankSource (planSource plan)]
         ++ [ EmptyBaselineSource (traceIdentifier trace)
            | blankSource (observationSource baselineObservation)
            ]
 
-criterionUnits :: EvidencePlan -> [Unit]
-criterionUnits plan =
-  effectUnits (effectCriterion plan) ++ targetUnits (targetCriterion plan)
-  where
-    effectUnits (AbsoluteIncreaseByAtLeast quantity) = [unit quantity]
-    effectUnits (AbsoluteDecreaseByAtLeast quantity) = [unit quantity]
-    effectUnits (RelativeIncreaseByAtLeast _) = []
-    effectUnits (RelativeDecreaseByAtLeast _) = []
-    targetUnits (AtLeast quantity) = [unit quantity]
-    targetUnits (AtMost quantity) = [unit quantity]
-    targetUnits (Within lower upper) = [unit lower, unit upper]
-
 validEffectCriterion :: EffectCriterion -> Bool
-validEffectCriterion (AbsoluteIncreaseByAtLeast quantity) =
-  magnitude quantity > 0
-validEffectCriterion (AbsoluteDecreaseByAtLeast quantity) =
-  magnitude quantity > 0
+validEffectCriterion (AbsoluteIncreaseByAtLeast delta) = deltaValue delta > 0
+validEffectCriterion (AbsoluteDecreaseByAtLeast delta) = deltaValue delta > 0
 validEffectCriterion (RelativeIncreaseByAtLeast change) =
   relativeChangeRatio change > 0
 validEffectCriterion (RelativeDecreaseByAtLeast change) =
@@ -385,17 +551,60 @@ isRelativeCriterion _ = False
 validTargetCriterion :: TargetCriterion -> Bool
 validTargetCriterion (AtLeast _) = True
 validTargetCriterion (AtMost _) = True
-validTargetCriterion (Within lower upper) =
-  unit lower == unit upper && magnitude lower <= magnitude upper
+validTargetCriterion (Within lower upper) = levelValue lower <= levelValue upper
+
+validValueDomain :: ValueDomain -> Bool
+validValueDomain (BoundedDomain lower upper) =
+  levelValue lower <= levelValue upper
+validValueDomain _ = True
+
+levelInDomain :: ValueDomain -> Level -> Bool
+levelInDomain UnboundedDomain _ = True
+levelInDomain (LowerBoundedDomain lower) level = level >= lower
+levelInDomain (UpperBoundedDomain upper) level = level <= upper
+levelInDomain (BoundedDomain lower upper) level =
+  level >= lower && level <= upper
+
+effectCriterionEndpoint :: Level -> EffectCriterion -> Level
+effectCriterionEndpoint baselineLevel criterion =
+  Level
+    (case criterion of
+       AbsoluteIncreaseByAtLeast delta -> before + deltaValue delta
+       AbsoluteDecreaseByAtLeast delta -> before - deltaValue delta
+       RelativeIncreaseByAtLeast change ->
+         before + abs before * relativeChangeRatio change
+       RelativeDecreaseByAtLeast change ->
+         before - abs before * relativeChangeRatio change)
+  where
+    before = levelValue baselineLevel
+
+targetCriterionLevels :: TargetCriterion -> [Level]
+targetCriterionLevels (AtLeast level) = [level]
+targetCriterionLevels (AtMost level) = [level]
+targetCriterionLevels (Within lower upper) = [lower, upper]
 
 blankUnit :: Unit -> Bool
 blankUnit PercentagePoints = False
 blankUnit (NamedUnit name) = Text.null (Text.strip name)
 
+blankText :: Text -> Bool
+blankText = Text.null . Text.strip
+
 blankSource :: EvidenceSource -> Bool
-blankSource = Text.null . Text.strip . evidenceSourceName
+blankSource = blankText . evidenceSourceName
 
 -- * Validated readiness access
+-- | Enumerate the validated KPI definitions shared by all ready traces.
+kpiDefinitions :: EvidenceReadyModel -> [KPIDefinition]
+kpiDefinitions = Map.elems . validatedKPIDefinitions
+
+-- | Resolve the stable definition of a typed KPI in an evidence-ready model.
+lookupKPIDefinition ::
+     EvidenceReadyModel
+  -> NodeId ('PrimitiveKind 'Measure 'KPI)
+  -> Maybe KPIDefinition
+lookupKPIDefinition model kpi = Map.lookup kpi (validatedKPIDefinitions model)
+
 -- | Enumerate all validated ex-ante evidence plans.
 evidencePlans :: EvidenceReadyModel -> NonEmpty.NonEmpty EvidencePlan
 evidencePlans = validatedEvidencePlans
