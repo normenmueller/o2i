@@ -448,15 +448,15 @@ def collect_view(view: ET.Element):
         if child.tag == "child":
             walk(child, None)
 
-    connections: list[tuple[str, str, str]] = []
+    connections: list[tuple[str | None, str | None, str | None]] = []
     for connection in view.iter("sourceConnection"):
-        relation_id = connection.get("archimateRelationship")
-        source_object = connection.get("source")
-        target_object = connection.get("target")
-        source = object_targets.get(source_object or "")
-        target = object_targets.get(target_object or "")
-        if relation_id and source and target:
-            connections.append((source, relation_id, target))
+        connections.append(
+            (
+                connection.get("source"),
+                connection.get("archimateRelationship"),
+                connection.get("target"),
+            )
+        )
 
     documentation = (view.findtext("documentation") or "").strip()
     return object_targets, object_parents, connections, notes, documentation
@@ -485,7 +485,7 @@ def render(
     ],
     object_targets: dict[str, str],
     object_parents: dict[str, str | None],
-    connections: list[tuple[str, str, str]],
+    connections: list[tuple[str | None, str | None, str | None]],
     notes: list[str],
     documentation: str,
     source_path: Path,
@@ -534,7 +534,11 @@ def render(
     lines.extend(["", "## Relations", ""])
 
     rendered_relations = []
-    for source, relation_id, target in connections:
+    for source_object, relation_id, target_object in connections:
+        source = object_targets.get(source_object or "")
+        target = object_targets.get(target_object or "")
+        if relation_id is None or source is None or target is None:
+            continue
         if source not in visible_elements or target not in visible_elements:
             continue
         relation_name, relation_type, _, _, directed = relations.get(
@@ -609,7 +613,58 @@ def validate_model(root: ET.Element) -> list[str]:
         object_targets, _, connections, notes, documentation = collect_view(view)
 
         relation_signatures = []
-        for source, relation_id, target in connections:
+        for source_object, relation_id, target_object in connections:
+            invalid_reference = False
+            if source_object is None:
+                errors.append(f"{view_name} connection has no source reference")
+                invalid_reference = True
+            elif source_object not in object_targets:
+                errors.append(
+                    f"{view_name} connection has unresolved source reference: "
+                    f"{source_object!r}"
+                )
+                invalid_reference = True
+
+            if relation_id is None:
+                errors.append(
+                    f"{view_name} connection has no relationship reference"
+                )
+                invalid_reference = True
+            elif relation_id not in relations:
+                errors.append(
+                    f"{view_name} connection has unresolved relationship "
+                    f"reference: {relation_id!r}"
+                )
+                invalid_reference = True
+
+            if target_object is None:
+                errors.append(f"{view_name} connection has no target reference")
+                invalid_reference = True
+            elif target_object not in object_targets:
+                errors.append(
+                    f"{view_name} connection has unresolved target reference: "
+                    f"{target_object!r}"
+                )
+                invalid_reference = True
+
+            if invalid_reference:
+                continue
+
+            source = object_targets[source_object]
+            target = object_targets[target_object]
+            if source not in elements:
+                errors.append(
+                    f"{view_name} source object {source_object!r} refers to "
+                    f"unknown model element {source!r}"
+                )
+                continue
+            if target not in elements:
+                errors.append(
+                    f"{view_name} target object {target_object!r} refers to "
+                    f"unknown model element {target!r}"
+                )
+                continue
+
             source_name, source_type = elements.get(source, ("?", "?"))
             target_name, target_type = elements.get(target, ("?", "?"))
             (
@@ -628,6 +683,10 @@ def validate_model(root: ET.Element) -> list[str]:
                 errors.append(
                     f"{view_name} connection target {target!r} does not match "
                     f"relationship {relation_id!r} target {relation_target!r}"
+                )
+            if relation_type == "AssociationRelationship" and not directed:
+                errors.append(
+                    f"{view_name} uses undirected association: {relation_name}"
                 )
             if source_type == "Meaning" or target_type == "Meaning":
                 continue
@@ -693,19 +752,6 @@ def validate_model(root: ET.Element) -> list[str]:
             )
             if not any(context_note in note for note in notes):
                 errors.append("O2I Syntax is missing its visible Context note")
-
-        for _, relation_id, _ in connections:
-            relation = relations.get(relation_id)
-            if relation is None:
-                errors.append(
-                    f"{view_name} uses unknown relation: {relation_id}"
-                )
-                continue
-            relation_name, relation_type, _, _, directed = relation
-            if relation_type == "AssociationRelationship" and not directed:
-                errors.append(
-                    f"{view_name} uses undirected association: {relation_name}"
-                )
 
     return errors
 

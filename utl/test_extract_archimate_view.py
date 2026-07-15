@@ -53,15 +53,59 @@ class RelationshipEndpointContractTest(unittest.TestCase):
         )
         self.assertNotEqual(target, relationship.get("target"))
 
+    def test_missing_relationship_reference_is_rejected(self) -> None:
+        self._assert_connection_reference_error(
+            "archimateRelationship",
+            None,
+            "no relationship reference",
+        )
+
+    def test_unresolved_relationship_reference_is_rejected(self) -> None:
+        self._assert_connection_reference_error(
+            "archimateRelationship",
+            "unknown-relationship",
+            "unresolved relationship reference",
+        )
+
+    def test_missing_source_reference_is_rejected(self) -> None:
+        self._assert_connection_reference_error(
+            "source",
+            None,
+            "no source reference",
+        )
+
+    def test_unresolved_source_reference_is_rejected(self) -> None:
+        self._assert_connection_reference_error(
+            "source",
+            "unknown-source",
+            "unresolved source reference",
+        )
+
+    def test_missing_target_reference_is_rejected(self) -> None:
+        self._assert_connection_reference_error(
+            "target",
+            None,
+            "no target reference",
+        )
+
+    def test_unresolved_target_reference_is_rejected(self) -> None:
+        self._assert_connection_reference_error(
+            "target",
+            "unknown-target",
+            "unresolved target reference",
+        )
+
     def _substantiates_fixture(self):
         root = copy.deepcopy(self.root)
         elements, relations = EXTRACTOR.collect_model(root)
         view = EXTRACTOR.find_view(root, "O2I Primitives")
-        _, _, connections, _, _ = EXTRACTOR.collect_view(view)
+        object_targets, _, connections, _, _ = EXTRACTOR.collect_view(view)
 
-        for source, relation_id, target in connections:
+        for source_object, relation_id, target_object in connections:
             relation_name, _, _, _, _ = relations[relation_id]
             if relation_name == "substantiates":
+                source = object_targets[source_object]
+                target = object_targets[target_object]
                 relationship = next(
                     element
                     for element in root.iter("element")
@@ -72,7 +116,38 @@ class RelationshipEndpointContractTest(unittest.TestCase):
                 self.assertNotEqual(source, target)
                 return root, relationship, source, target
 
-        self.fail("O2I Primitives has no substantiates relationship")
+        self.fail("The O2I Primitives view has no substantiates relationship")
+
+    def _assert_connection_reference_error(
+        self,
+        attribute: str,
+        value: str | None,
+        expected: str,
+    ) -> None:
+        root, connection = self._substantiates_connection_fixture()
+        if value is None:
+            connection.attrib.pop(attribute)
+        else:
+            connection.set(attribute, value)
+
+        errors = EXTRACTOR.validate_model(root)
+
+        self.assertTrue(any(expected in error for error in errors), errors)
+
+    def _substantiates_connection_fixture(self):
+        root = copy.deepcopy(self.root)
+        _, relations = EXTRACTOR.collect_model(root)
+        view = EXTRACTOR.find_view(root, "O2I Primitives")
+
+        for connection in view.iter("sourceConnection"):
+            relation_id = connection.get("archimateRelationship")
+            if relation_id is None:
+                continue
+            relation_name, _, _, _, _ = relations[relation_id]
+            if relation_name == "substantiates":
+                return root, connection
+
+        self.fail("The O2I Primitives view has no substantiates connection")
 
 
 if __name__ == "__main__":

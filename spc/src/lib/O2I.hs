@@ -164,7 +164,10 @@ module O2I
   , FollowUpObservation(..)
   , CriterionResult(..)
   , TargetResult(..)
-  , EffectAssessment(..)
+  , EffectAssessment
+  , assessedFollowUp
+  , effectResult
+  , targetResult
   , EvidenceAssessedModel
   , evidenceAssessedAt
   , actualInterventionStarts

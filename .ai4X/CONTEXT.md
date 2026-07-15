@@ -114,6 +114,9 @@ test and apply O2I but never define its generic semantics.
 - Public interpretation specifications and existential interpretations are
   opaque. Clients obtain canonical values through typed witnesses, registry
   enumeration, or lookup and may only project their metadata.
+- Validated effect assessments are opaque. Clients obtain them only through
+  evidence assessment and may project, but never rewrite, their follow-up,
+  effect, and target results.
 - Haskell excerpts in `o2i.md` are included directly from `spc/src/lib/` via
   `pandoc-include`.
 

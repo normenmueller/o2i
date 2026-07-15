@@ -35,12 +35,13 @@ instruction override this snapshot.
 
 # Active Quality Gate
 
-- The independent final review of commit `42729e4` reported no Blocker or High
-  finding, one Medium finding, and one Low finding.
-- Exact DiagramConnection-to-Relationship endpoint validation with positive
-  and negative contract tests closes the Medium finding in the working tree.
-- Opaque public interpretation metadata with an external-client API test
-  closes the Low finding in the working tree.
+- The independent final review of commit `388ec0b` reported no Blocker, High,
+  or Medium finding and two Low findings.
+- Complete validation of missing, unresolved, and endpoint-inconsistent
+  DiagramConnection references with nine positive and negative contract tests
+  closes the first Low finding in the working tree.
+- Opaque validated `EffectAssessment` values with an external-client API test
+  close the second Low finding in the working tree.
 - The WIP status remains intentional for O2I v0.2.
 - ArchiMate 4 mappings use `Capability`, `Process`, `Business Object`, `Role`,
   `Value Stream`, and `Requirement` with explicit O2I specializations.
@@ -62,23 +63,25 @@ instruction override this snapshot.
   version `0.2`, model invariants, and snapshot drift.
 - Public interpretation metadata is canonical and opaque; clients can project
   metadata but cannot construct or update contradictory specifications.
+- Validated effect assessments are opaque and expose only ordinary projection
+  functions.
 
 # Current Verification
 
-- ArchiMate model check and three extractor contract tests: passed.
+- ArchiMate model check and nine extractor contract tests: passed.
 - `cabal check`: passed.
 - `cabal build all --ghc-options=-Werror`: passed.
 - Both Cabal test suites passed: 176 fachliche tests plus the external-client
   API-surface test.
 - HIndent 80 validation: passed.
 - Haddock including internal modules: passed with 100% public API coverage.
-- Pandoc include expansion: passed.
+- Python compilation and Pandoc include expansion: passed.
 - `./toPDF.sh`: passed.
 - `git diff --check`: passed.
 
 # Next Work
 
-- Commit and push the coherent second final-review remediation.
+- Commit and push the coherent third final-review remediation.
 - Run a fresh independent final review across terminology, metamodel,
   ArchiMate, Haskell design, tests, formal value, and publication quality.
 - Close any verified findings and repeat the gate until explicit 10/10 approval.

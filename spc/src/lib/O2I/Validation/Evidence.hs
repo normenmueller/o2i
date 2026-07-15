@@ -10,7 +10,10 @@ module O2I.Validation.Evidence
   , FollowUpObservation(..)
   , CriterionResult(..)
   , TargetResult(..)
-  , EffectAssessment(..)
+  , EffectAssessment
+  , assessedFollowUp
+  , effectResult
+  , targetResult
   , EvidenceAssessedModel
   , EvidenceError(..)
   , assessEffectEvidenceAt
@@ -67,11 +70,23 @@ data TargetResult
   deriving (Eq, Show)
 
 -- | Validated assessment of one follow-up against its fixed evidence plan.
-data EffectAssessment = EffectAssessment
-  { assessedFollowUp :: FollowUpObservation -- ^ Assessed ex-post evidence.
-  , effectResult :: CriterionResult -- ^ Change criterion outcome.
-  , targetResult :: TargetResult -- ^ Independent target outcome.
-  } deriving (Eq, Show)
+--
+-- Values are produced only by 'assessEffectEvidenceAt'.
+data EffectAssessment =
+  EffectAssessment FollowUpObservation CriterionResult TargetResult
+  deriving (Eq, Show)
+
+-- | Project the assessed ex-post evidence.
+assessedFollowUp :: EffectAssessment -> FollowUpObservation
+assessedFollowUp (EffectAssessment followUp _ _) = followUp
+
+-- | Project the change-criterion outcome.
+effectResult :: EffectAssessment -> CriterionResult
+effectResult (EffectAssessment _ result _) = result
+
+-- | Project the independent target outcome.
+targetResult :: EffectAssessment -> TargetResult
+targetResult (EffectAssessment _ _ result) = result
 
 -- * Evidence-assessed model
 -- | Opaque evidence-ready model with canonical actual timing and valid
@@ -314,11 +329,10 @@ assessFollowUp ::
 assessFollowUp ready followUp = do
   plan <- lookupEvidencePlan ready (followUpTrace followUp)
   pure
-    EffectAssessment
-      { assessedFollowUp = followUp
-      , effectResult = evaluateEffect plan (followUpObservation followUp)
-      , targetResult = evaluateTarget plan (followUpObservation followUp)
-      }
+    (EffectAssessment
+       followUp
+       (evaluateEffect plan (followUpObservation followUp))
+       (evaluateTarget plan (followUpObservation followUp)))
 
 evaluateEffect :: EvidencePlan -> Observation -> CriterionResult
 evaluateEffect plan observation =

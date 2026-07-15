@@ -77,7 +77,10 @@ module O2I.Validation
   , FollowUpObservation(..)
   , CriterionResult(..)
   , TargetResult(..)
-  , EffectAssessment(..)
+  , EffectAssessment
+  , assessedFollowUp
+  , effectResult
+  , targetResult
   , EvidenceAssessedModel
   , EvidenceReadinessError(..)
   , EvidenceError(..)
