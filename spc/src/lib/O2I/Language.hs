@@ -17,7 +17,70 @@ module O2I.Language
   , interpretationIdentity
   , allInterpretations
   , lookupInterpretation
-  , module O2I.Language.Relation
+  , Relation
+  , SomeRelation
+  , FixedRelationCode(..)
+  , AnchorRelationFamily(..)
+  , RelationCode(..)
+  , RelationSemantics(..)
+  , MacroEvidenceKind(..)
+  , RelationName(..)
+  , RelationSpec
+  , relationCode
+  , relationSemantics
+  , relationName
+  , relationLabel
+  , relationFrom
+  , relationTo
+  , relationSpec
+  , relationCodeOf
+  , relationSemanticsOf
+  , relationNameOf
+  , relationNameFor
+  , relationIdentity
+  , guidesMission
+  , groundsVision
+  , guidesVision
+  , orientsStrategy
+  , directsStrategy
+  , contributesToStrategy
+  , qualifiesNeed
+  , surfacesNeed
+  , addressesNeed
+  , directsIntervention
+  , changesSituation
+  , setsTargetForMeasure
+  , measuresSituation
+  , framesMeasure
+  , constitutedByAnchor
+  , guidesEthosPrincipleToMissionDriver
+  , guidesEthosPrincipleToVisionObjective
+  , groundsMissionDriverToVisionObjective
+  , orientsVisionObjectiveToStrategyObjective
+  , groundsStrategyDriverToObjective
+  , substantiatesStrategyKeyResultObjective
+  , guidesStrategyPrincipleToAction
+  , contributesStrategyActionToKeyResult
+  , guidesStrategyPrincipleToPrinciple
+  , contributesStrategyKeyResultToKeyResult
+  , contributesStrategyActionToAction
+  , translatesStrategyKeyResultToNeedObjective
+  , groundsNeedDriverToObjective
+  , anchorsNeedDriver
+  , indicatesMeasurePerformanceDimension
+  , determinesMeasurePerformanceDimension
+  , containsPerformanceDimension
+  , guidesStrategyActionToInterventionAction
+  , contributesInterventionActionToKeyResult
+  , substantiatesInterventionKeyResultNeedObjective
+  , contributesInterventionKeyResultToStrategyKeyResult
+  , setsTargetForMeasureKPI
+  , changesAnchor
+  , measuresAnchor
+  , allRelationCodes
+  , reifyRelation
+  , allRelations
+  , lookupRelations
   ) where
 
 import O2I.Language.Element hiding (mkContextRef, mkNodeId)

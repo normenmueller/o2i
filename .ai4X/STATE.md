@@ -35,13 +35,12 @@ instruction override this snapshot.
 
 # Active Quality Gate
 
-- The independent final review of commit `00e491e` reported no Blocker or High
-  finding, one Medium finding, and one Low finding.
-- Positional opaque `NodeId`, `ContextRef`, and `KPIDefinition` representations
-  close both findings in the working tree.
-- A systematic public-API audit also closes the same construction and record-
-  update class across canonical relation metadata and every validated opaque
-  result type.
+- The independent final review of commit `a5e123a` reported no Blocker, High,
+  or Medium finding and one Low finding.
+- An explicitly curated `O2I.Language` relation facade exports `SomeRelation`
+  opaquely and closes the finding in the working tree.
+- TH, positive registry/lookup use, and separate compile-fail construction and
+  pattern-matching contracts enforce the boundary.
 - The WIP status remains intentional for O2I v0.2.
 - ArchiMate 4 mappings use `Capability`, `Process`, `Business Object`, `Role`,
   `Value Stream`, and `Requirement` with explicit O2I specializations.
@@ -72,18 +71,17 @@ instruction override this snapshot.
 # Current Verification
 
 - ArchiMate model check and nine extractor contract tests: passed.
-- `cabal check`: passed.
-- `cabal build all --ghc-options=-Werror`: passed.
+- `cabal check` and `cabal build all --ghc-options=-Werror`: passed.
 - Both Cabal test suites passed: 176 fachliche tests plus positive, Template
-  Haskell, and compile-fail contracts across every public facade.
-- HIndent 80 validation including all API contract sources: passed.
+  Haskell, and compile-fail public-API contracts.
+- HIndent 80 validation: passed.
 - Haddock including internal and API-test modules: 100% coverage.
 - Pandoc include expansion and `./toPDF.sh`: passed.
 - `git diff --check`: passed.
 
 # Next Work
 
-- Commit and push the coherent opacity remediation.
+- Commit and push the coherent relation-facade remediation.
 - Run a fresh independent final review across terminology, metamodel,
   ArchiMate, Haskell design, tests, formal value, and publication quality.
 - Close any verified findings and repeat the gate until explicit 10/10 approval.

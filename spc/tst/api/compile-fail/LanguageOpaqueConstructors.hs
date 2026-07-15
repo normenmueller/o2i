@@ -24,6 +24,9 @@ forgedRelation ::
        ('Language.ContextKind 'Language.Mission)
 forgedRelation = Language.Relation undefined
 
+forgedSomeRelation :: Language.SomeRelation
+forgedSomeRelation = Language.SomeRelation undefined
+
 forgedRelationSpec ::
      Language.RelationSpec
        ('Language.ContextKind 'Language.Ethos)

@@ -216,6 +216,9 @@ data Relation (from :: NodeKind) (to :: NodeKind) where
     -- ^ Construct a typed witness from authoritative relation metadata.
 
 -- | Existential typed relation for heterogeneous runtime registries.
+--
+-- Public clients obtain values through 'allRelations', 'lookupRelations', or
+-- 'reifyRelation' and inspect them through the total projections below.
 data SomeRelation where
   SomeRelation :: Relation from to -> SomeRelation
     -- ^ Hide endpoint indices while retaining their typed witnesses.

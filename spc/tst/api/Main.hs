@@ -26,6 +26,7 @@ $(assertAbstractTypes
     , "Language.InterpretationSpec"
     , "Language.SomeInterpretation"
     , "Language.Relation"
+    , "Language.SomeRelation"
     , "Language.RelationSpec"
     ])
 
@@ -42,6 +43,11 @@ $(assertOrdinaryFunctions
     , 'Language.relationLabel
     , 'Language.relationFrom
     , 'Language.relationTo
+    , 'Language.relationCodeOf
+    , 'Language.relationSemanticsOf
+    , 'Language.relationNameOf
+    , 'Language.relationNameFor
+    , 'Language.relationIdentity
     ])
 
 $(assertAbstractTypes
@@ -228,6 +234,22 @@ main = do
     (Language.relationCode relationMetadata == FixedRelation OrientsStrategyCode
        && Language.relationName relationMetadata
             == RelationName "vision-orients-strategy")
+  assert
+    "complete relation registry"
+    (map Language.relationCodeOf Language.allRelations
+       == Language.allRelationCodes)
+  case Language.lookupRelations (RelationName "vision-orients-strategy") of
+    [relation] ->
+      assert
+        "relation lookup projections"
+        (Language.relationCodeOf relation == FixedRelation OrientsStrategyCode
+           && Language.relationNameOf relation
+                == RelationName "vision-orients-strategy"
+           && Language.relationIdentity relation
+                == ( RelationName "vision-orients-strategy"
+                   , ContextNodeKind Vision
+                   , ContextNodeKind Strategy))
+    _ -> fail "canonical relation was not uniquely found"
   case validatedValues of
     Left message -> fail message
     Right (ValidatedValues graph semantic traceable ready assessed trace definition assessment) -> do
@@ -417,6 +439,7 @@ checked stage (Failure errors) = Left (stage ++ " failed: " ++ show errors)
 
 data CompileFailKind
   = HiddenConstructors
+  | HiddenPatterns
   | NonRecordSelectors
 
 data CompileFailContract =
@@ -446,6 +469,7 @@ runCompileFailContract (CompileFailContract label source kind names) = do
       expectedReason =
         case kind of
           HiddenConstructors -> "illegal term-level use"
+          HiddenPatterns -> "not in scope: data constructor"
           NonRecordSelectors -> "not a record selector"
   case exitCode of
     ExitSuccess -> fail (label ++ " unexpectedly compiled")
@@ -480,8 +504,14 @@ compileFailContracts =
       , "Language.InterpretationSpec"
       , "Language.SomeInterpretation"
       , "Language.Relation"
+      , "Language.SomeRelation"
       , "Language.RelationSpec"
       ]
+  , CompileFailContract
+      "O2I.Language opaque patterns"
+      "tst/api/compile-fail/LanguageOpaquePatterns.hs"
+      HiddenPatterns
+      ["Language.SomeRelation"]
   , CompileFailContract
       "O2I.Language record updates"
       "tst/api/compile-fail/LanguageRecordUpdates.hs"
