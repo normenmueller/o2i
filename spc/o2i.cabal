@@ -12,6 +12,8 @@ license-file: LICENSE
 author: Normen Mueller
 maintainer: normen.mueller@gmail.com
 build-type: Simple
+extra-source-files:
+  tst/api/compile-fail/*.hs
 common warnings
   ghc-options:
     -Wall
@@ -77,9 +79,12 @@ test-suite o2i-language-api-test
     exitcode-stdio-1.0
   main-is:
     Main.hs
+  other-modules:
+    ApiContractTH
   build-depends:
     base >=4.18 && <4.19,
     o2i,
+    process >=1.6 && <1.7,
     template-haskell >=2.20 && <2.21
   hs-source-dirs:
     tst/api

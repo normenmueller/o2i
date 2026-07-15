@@ -16,7 +16,13 @@ module O2I.Language.Relation
   , RelationSemantics(..)
   , MacroEvidenceKind(..)
   , RelationName(..)
-  , RelationSpec(..)
+  , RelationSpec
+  , relationCode
+  , relationSemantics
+  , relationName
+  , relationLabel
+  , relationFrom
+  , relationTo
   , relationSpec
   , relationCodeOf
   , relationSemanticsOf
@@ -171,14 +177,38 @@ newtype RelationName = RelationName
   } deriving (Eq, Ord, Show)
 
 -- | Authoritative metadata and endpoint witnesses for a typed relation.
-data RelationSpec from to = RelationSpec
-  { relationCode :: RelationCode -- ^ Stable finite-registry identity.
-  , relationSemantics :: RelationSemantics -- ^ Macro or evidence role.
-  , relationName :: RelationName -- ^ Name accepted in raw graph input.
-  , relationLabel :: Text -- ^ Concise human-readable relation label.
-  , relationFrom :: SNodeKind from -- ^ Statically witnessed source kind.
-  , relationTo :: SNodeKind to -- ^ Statically witnessed target kind.
-  }
+data RelationSpec from to =
+  RelationSpec
+    RelationCode
+    RelationSemantics
+    RelationName
+    Text
+    (SNodeKind from)
+    (SNodeKind to)
+
+-- | Project the stable finite-registry identity.
+relationCode :: RelationSpec from to -> RelationCode
+relationCode (RelationSpec code _ _ _ _ _) = code
+
+-- | Project the macro or evidence role.
+relationSemantics :: RelationSpec from to -> RelationSemantics
+relationSemantics (RelationSpec _ semantics _ _ _ _) = semantics
+
+-- | Project the name accepted in raw graph input.
+relationName :: RelationSpec from to -> RelationName
+relationName (RelationSpec _ _ name _ _ _) = name
+
+-- | Project the concise human-readable relation label.
+relationLabel :: RelationSpec from to -> Text
+relationLabel (RelationSpec _ _ _ label _ _) = label
+
+-- | Project the statically witnessed source kind.
+relationFrom :: RelationSpec from to -> SNodeKind from
+relationFrom (RelationSpec _ _ _ _ from _) = from
+
+-- | Project the statically witnessed target kind.
+relationTo :: RelationSpec from to -> SNodeKind to
+relationTo (RelationSpec _ _ _ _ _ to) = to
 
 -- | Typed proof that one node kind may relate to another.
 data Relation (from :: NodeKind) (to :: NodeKind) where
@@ -235,14 +265,13 @@ fixedContextRelation ::
   -> Relation ('ContextKind from) ('ContextKind to)
 fixedContextRelation code semantics name label from to =
   Relation
-    RelationSpec
-      { relationCode = FixedRelation code
-      , relationSemantics = MacroRelation semantics
-      , relationName = RelationName name
-      , relationLabel = label
-      , relationFrom = SContextKind from
-      , relationTo = SContextKind to
-      }
+    (RelationSpec
+       (FixedRelation code)
+       (MacroRelation semantics)
+       (RelationName name)
+       label
+       (SContextKind from)
+       (SContextKind to))
 
 fixedPrimitiveRelation ::
      FixedRelationCode
@@ -272,14 +301,13 @@ fixedRelation ::
   -> Relation from to
 fixedRelation code name label from to =
   Relation
-    RelationSpec
-      { relationCode = FixedRelation code
-      , relationSemantics = EvidenceRelation
-      , relationName = RelationName name
-      , relationLabel = label
-      , relationFrom = from
-      , relationTo = to
-      }
+    (RelationSpec
+       (FixedRelation code)
+       EvidenceRelation
+       (RelationName name)
+       label
+       from
+       to)
 
 anchorRelation ::
      AnchorRelationFamily
@@ -292,14 +320,13 @@ anchorRelation ::
   -> Relation from to
 anchorRelation family anchor name label semantics from to =
   Relation
-    RelationSpec
-      { relationCode = AnchorRelation family (anchorValue anchor)
-      , relationSemantics = semantics
-      , relationName = RelationName name
-      , relationLabel = label
-      , relationFrom = from
-      , relationTo = to
-      }
+    (RelationSpec
+       (AnchorRelation family (anchorValue anchor))
+       semantics
+       (RelationName name)
+       label
+       from
+       to)
 
 -- * Typed relation specifications
 -- ** Context macrorelations
@@ -722,19 +749,15 @@ containsPerformanceDimension ::
        ('PrimitiveKind context member)
 containsPerformanceDimension role =
   Relation
-    RelationSpec
-      { relationCode =
-          PerformanceDimensionMembership (performanceDimensionRoleCode role)
-      , relationSemantics = EvidenceRelation
-      , relationName =
-          RelationName (performanceDimensionMembershipRelationName role)
-      , relationLabel = "contains"
-      , relationFrom = SPerformanceDimensionKind role
-      , relationTo =
-          SPrimitiveKind
-            (performanceDimensionRoleContext role)
-            (performanceDimensionRoleMember role)
-      }
+    (RelationSpec
+       (PerformanceDimensionMembership (performanceDimensionRoleCode role))
+       EvidenceRelation
+       (RelationName (performanceDimensionMembershipRelationName role))
+       "contains"
+       (SPerformanceDimensionKind role)
+       (SPrimitiveKind
+          (performanceDimensionRoleContext role)
+          (performanceDimensionRoleMember role)))
 
 -- ** Intervention and effect evidence
 -- | Guide an Intervention Action through a coherent strategic Action.

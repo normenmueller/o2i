@@ -35,13 +35,13 @@ instruction override this snapshot.
 
 # Active Quality Gate
 
-- The independent final review of commit `388ec0b` reported no Blocker, High,
-  or Medium finding and two Low findings.
-- Complete validation of missing, unresolved, and endpoint-inconsistent
-  DiagramConnection references with nine positive and negative contract tests
-  closes the first Low finding in the working tree.
-- Opaque validated `EffectAssessment` values with an external-client API test
-  close the second Low finding in the working tree.
+- The independent final review of commit `00e491e` reported no Blocker or High
+  finding, one Medium finding, and one Low finding.
+- Positional opaque `NodeId`, `ContextRef`, and `KPIDefinition` representations
+  close both findings in the working tree.
+- A systematic public-API audit also closes the same construction and record-
+  update class across canonical relation metadata and every validated opaque
+  result type.
 - The WIP status remains intentional for O2I v0.2.
 - ArchiMate 4 mappings use `Capability`, `Process`, `Business Object`, `Role`,
   `Value Stream`, and `Requirement` with explicit O2I specializations.
@@ -53,7 +53,8 @@ instruction override this snapshot.
 - ArchiMate element, relation, and view documentation is synchronized with the
   article and Haskell specification.
 - Public typed Haskell references are opaque, nominally typed, and obtained
-  through validated lookup or model queries.
+  through validated lookup or model queries. Ordinary projection functions do
+  not permit record updates.
 - Each traced KPI has exactly one validated stable definition. Units and value
   domains are centralized; measurement levels and absolute deltas are distinct
   types.
@@ -61,27 +62,28 @@ instruction override this snapshot.
   directed Association semantics. `--check` validates exact normative relation
   contracts, DiagramConnection-to-Relationship endpoint identity, sole root
   version `0.2`, model invariants, and snapshot drift.
-- Public interpretation metadata is canonical and opaque; clients can project
-  metadata but cannot construct or update contradictory specifications.
-- Validated effect assessments are opaque and expose only ordinary projection
-  functions.
+- Canonical interpretation and relation metadata and every validated stage,
+  trace, KPI definition, and assessment are opaque and expose only ordinary
+  projection functions.
+- External API contracts combine Template Haskell surface checks, positive
+  full-pipeline use, and compile-fail constructor and record-update tests across
+  all public facades.
 
 # Current Verification
 
 - ArchiMate model check and nine extractor contract tests: passed.
 - `cabal check`: passed.
 - `cabal build all --ghc-options=-Werror`: passed.
-- Both Cabal test suites passed: 176 fachliche tests plus the external-client
-  API-surface test.
-- HIndent 80 validation: passed.
-- Haddock including internal modules: passed with 100% public API coverage.
-- Python compilation and Pandoc include expansion: passed.
-- `./toPDF.sh`: passed.
+- Both Cabal test suites passed: 176 fachliche tests plus positive, Template
+  Haskell, and compile-fail contracts across every public facade.
+- HIndent 80 validation including all API contract sources: passed.
+- Haddock including internal and API-test modules: 100% coverage.
+- Pandoc include expansion and `./toPDF.sh`: passed.
 - `git diff --check`: passed.
 
 # Next Work
 
-- Commit and push the coherent third final-review remediation.
+- Commit and push the coherent opacity remediation.
 - Run a fresh independent final review across terminology, metamodel,
   ArchiMate, Haskell design, tests, formal value, and publication quality.
 - Close any verified findings and repeat the gate until explicit 10/10 approval.

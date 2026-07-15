@@ -101,14 +101,35 @@ data RawKPIDefinition = RawKPIDefinition
 --
 -- Construction is restricted to evidence-readiness validation. Exactly one
 -- definition exists for every distinct KPI used by the validated traces.
-data KPIDefinition = KPIDefinition
-  { kpiDefinitionKPI :: NodeId ('PrimitiveKind 'Measure 'KPI)
-    -- ^ Structurally validated KPI governed by this definition.
-  , kpiDefinitionUnit :: Unit -- ^ Stable unit for all levels and deltas.
-  , kpiDefinitionDomain :: ValueDomain -- ^ Validated level domain.
-  , kpiDefinitionMeasurementMethod :: Text -- ^ Nonblank measurement method.
-  , kpiDefinitionInterpretation :: Text -- ^ Nonblank fachliche interpretation.
-  } deriving (Eq, Show)
+data KPIDefinition =
+  KPIDefinition
+    (NodeId ('PrimitiveKind 'Measure 'KPI))
+    Unit
+    ValueDomain
+    Text
+    Text
+  deriving (Eq, Show)
+
+-- | Project the structurally validated KPI governed by this definition.
+kpiDefinitionKPI :: KPIDefinition -> NodeId ('PrimitiveKind 'Measure 'KPI)
+kpiDefinitionKPI (KPIDefinition kpi _ _ _ _) = kpi
+
+-- | Project the stable unit for all levels and deltas.
+kpiDefinitionUnit :: KPIDefinition -> Unit
+kpiDefinitionUnit (KPIDefinition _ unit _ _ _) = unit
+
+-- | Project the validated domain of admissible KPI levels.
+kpiDefinitionDomain :: KPIDefinition -> ValueDomain
+kpiDefinitionDomain (KPIDefinition _ _ domain _ _) = domain
+
+-- | Project the validated nonblank measurement method.
+kpiDefinitionMeasurementMethod :: KPIDefinition -> Text
+kpiDefinitionMeasurementMethod (KPIDefinition _ _ _ method _) = method
+
+-- | Project the validated nonblank fachliche interpretation.
+kpiDefinitionInterpretation :: KPIDefinition -> Text
+kpiDefinitionInterpretation (KPIDefinition _ _ _ _ interpretation) =
+  interpretation
 
 type KPIDefinitionRegistry
   = Map (NodeId ('PrimitiveKind 'Measure 'KPI)) KPIDefinition
@@ -373,14 +394,11 @@ validateDefinition ::
      NodeId ('PrimitiveKind 'Measure 'KPI) -> RawKPIDefinition -> KPIDefinition
 validateDefinition kpi rawDefinition =
   KPIDefinition
-    { kpiDefinitionKPI = kpi
-    , kpiDefinitionUnit = rawDefinitionUnit rawDefinition
-    , kpiDefinitionDomain = rawDefinitionDomain rawDefinition
-    , kpiDefinitionMeasurementMethod =
-        Text.strip (rawDefinitionMeasurementMethod rawDefinition)
-    , kpiDefinitionInterpretation =
-        Text.strip (rawDefinitionInterpretation rawDefinition)
-    }
+    kpi
+    (rawDefinitionUnit rawDefinition)
+    (rawDefinitionDomain rawDefinition)
+    (Text.strip (rawDefinitionMeasurementMethod rawDefinition))
+    (Text.strip (rawDefinitionInterpretation rawDefinition))
 
 tracedInterventions :: [EffectTrace] -> [ContextRef 'Intervention]
 tracedInterventions = sort . nub . map traceIntervention

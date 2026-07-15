@@ -3,79 +3,202 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 
+-- | External-client contracts for canonical and validated O2I values.
 module Main
   ( main
   ) where
 
-import Control.Monad (unless)
+import ApiContractTH (assertAbstractTypes, assertOrdinaryFunctions)
+import Control.Monad (forM_, unless)
+import Data.List (isInfixOf)
 import qualified Data.List.NonEmpty as NonEmpty
-import Language.Haskell.TH
-  ( Info(VarI)
-  , lookupTypeName
-  , lookupValueName
-  , nameBase
-  , reify
-  )
 import O2I
+import qualified O2I.Graph as Graph
 import O2I.Language
+import qualified O2I.Language as Language
 import qualified O2I.Validation as Validation
+import System.Exit (ExitCode(..))
+import System.Process (readProcessWithExitCode)
 
-$(do
-    specType <- lookupTypeName "InterpretationSpec"
-    someType <- lookupTypeName "SomeInterpretation"
-    specConstructor <- lookupValueName "InterpretationSpec"
-    someConstructor <- lookupValueName "SomeInterpretation"
-    case (specType, someType, specConstructor, someConstructor) of
-      (Just _, Just _, Nothing, Nothing) -> pure []
-      _ -> fail "interpretation metadata types must be public and abstract")
+$(assertAbstractTypes
+    [ "Language.NodeId"
+    , "Language.ContextRef"
+    , "Language.InterpretationSpec"
+    , "Language.SomeInterpretation"
+    , "Language.Relation"
+    , "Language.RelationSpec"
+    ])
 
-$(do
-    let projections =
-          [ 'interpretationCode
-          , 'interpretationContext
-          , 'interpretationPrimitive
-          , 'interpretationWitness
-          ]
-        isNotOrdinaryFunction (_, VarI _ _ Nothing) = False
-        isNotOrdinaryFunction _ = True
-    projectionInfo <-
-      traverse (\name -> fmap ((,) name) (reify name)) projections
-    case filter isNotOrdinaryFunction projectionInfo of
-      [] -> pure []
-      invalid ->
-        fail
-          ("interpretation projections must not be record selectors: "
-             ++ show (map (nameBase . fst) invalid)))
+$(assertOrdinaryFunctions
+    [ 'Language.unNodeId
+    , 'Language.contextRefId
+    , 'Language.interpretationCode
+    , 'Language.interpretationContext
+    , 'Language.interpretationPrimitive
+    , 'Language.interpretationWitness
+    , 'Language.relationCode
+    , 'Language.relationSemantics
+    , 'Language.relationName
+    , 'Language.relationLabel
+    , 'Language.relationFrom
+    , 'Language.relationTo
+    ])
 
-$(do
-    o2iType <- lookupTypeName "O2I.EffectAssessment"
-    validationType <- lookupTypeName "Validation.EffectAssessment"
-    o2iConstructor <- lookupValueName "O2I.EffectAssessment"
-    validationConstructor <- lookupValueName "Validation.EffectAssessment"
-    case (o2iType, validationType, o2iConstructor, validationConstructor) of
-      (Just _, Just _, Nothing, Nothing) -> pure []
-      _ -> fail "EffectAssessment must be abstract through both facades")
+$(assertAbstractTypes
+    ["Graph.SomeNode", "Graph.SomeEdge", "Graph.WellFormedGraph"])
 
-$(do
-    let projections =
-          [ 'O2I.assessedFollowUp
-          , 'O2I.effectResult
-          , 'O2I.targetResult
-          , 'Validation.assessedFollowUp
-          , 'Validation.effectResult
-          , 'Validation.targetResult
-          ]
-        isNotOrdinaryFunction (_, VarI _ _ Nothing) = False
-        isNotOrdinaryFunction _ = True
-    projectionInfo <-
-      traverse (\name -> fmap ((,) name) (reify name)) projections
-    case filter isNotOrdinaryFunction projectionInfo of
-      [] -> pure []
-      invalid ->
-        fail
-          ("assessment projections must not be record selectors: "
-             ++ show (map (nameBase . fst) invalid)))
+$(assertOrdinaryFunctions
+    [ 'Graph.graphNodes
+    , 'Graph.graphEdges
+    , 'Graph.someNodeId
+    , 'Graph.someNodeKind
+    , 'Graph.someNodeOwner
+    , 'Graph.someEdgeFrom
+    , 'Graph.someEdgeRelation
+    , 'Graph.someEdgeTo
+    ])
 
+$(assertAbstractTypes
+    [ "Validation.StrategyFormulation"
+    , "Validation.SemanticallyValidModel"
+    , "Validation.EffectTrace"
+    , "Validation.EffectTraceId"
+    , "Validation.SomeSituationAnchorRef"
+    , "Validation.TraceableEffectModel"
+    , "Validation.KPIDefinition"
+    , "Validation.EvidenceReadyModel"
+    , "Validation.EffectAssessment"
+    , "Validation.EvidenceAssessedModel"
+    ])
+
+$(assertOrdinaryFunctions
+    [ 'Validation.strategyFormulations
+    , 'Validation.strategyFormulationData
+    , 'Validation.effectTraces
+    , 'Validation.traceIdentifier
+    , 'Validation.traceVision
+    , 'Validation.traceVisionObjective
+    , 'Validation.traceStrategy
+    , 'Validation.traceStrategyDriver
+    , 'Validation.traceStrategyObjective
+    , 'Validation.traceStrategyKeyResult
+    , 'Validation.traceStrategyAction
+    , 'Validation.traceNeed
+    , 'Validation.traceNeedDriver
+    , 'Validation.traceNeedObjective
+    , 'Validation.traceIntervention
+    , 'Validation.traceInterventionAction
+    , 'Validation.traceInterventionKeyResult
+    , 'Validation.traceMeasure
+    , 'Validation.traceMeasurePerformanceDimension
+    , 'Validation.traceKPI
+    , 'Validation.traceSituation
+    , 'Validation.traceSituationAnchor
+    , 'Validation.situationAnchorRefId
+    , 'Validation.situationAnchorRefKind
+    , 'Validation.kpiDefinitionKPI
+    , 'Validation.kpiDefinitionUnit
+    , 'Validation.kpiDefinitionDomain
+    , 'Validation.kpiDefinitionMeasurementMethod
+    , 'Validation.kpiDefinitionInterpretation
+    , 'Validation.kpiDefinitions
+    , 'Validation.evidencePlans
+    , 'Validation.readinessCheckedAt
+    , 'Validation.plannedInterventionStarts
+    , 'Validation.readyEffectTraces
+    , 'Validation.readyInterventions
+    , 'Validation.readyTracesForIntervention
+    , 'Validation.assessedFollowUp
+    , 'Validation.effectResult
+    , 'Validation.targetResult
+    , 'Validation.evidenceAssessedAt
+    , 'Validation.actualInterventionStarts
+    , 'Validation.effectAssessments
+    ])
+
+$(assertAbstractTypes
+    [ "O2I.NodeId"
+    , "O2I.ContextRef"
+    , "O2I.SomeInterpretation"
+    , "O2I.Relation"
+    , "O2I.SomeRelation"
+    , "O2I.SomeNode"
+    , "O2I.SomeEdge"
+    , "O2I.WellFormedGraph"
+    , "O2I.StrategyFormulation"
+    , "O2I.SemanticallyValidModel"
+    , "O2I.EffectTrace"
+    , "O2I.EffectTraceId"
+    , "O2I.SomeSituationAnchorRef"
+    , "O2I.TraceableEffectModel"
+    , "O2I.KPIDefinition"
+    , "O2I.EvidenceReadyModel"
+    , "O2I.EffectAssessment"
+    , "O2I.EvidenceAssessedModel"
+    ])
+
+$(assertOrdinaryFunctions
+    [ 'O2I.unNodeId
+    , 'O2I.contextRefId
+    , 'O2I.interpretationCodeOf
+    , 'O2I.interpretationIdentity
+    , 'O2I.relationNameFor
+    , 'O2I.relationNameOf
+    , 'O2I.relationCodeOf
+    , 'O2I.relationIdentity
+    , 'O2I.graphNodes
+    , 'O2I.graphEdges
+    , 'O2I.someNodeId
+    , 'O2I.someNodeKind
+    , 'O2I.someNodeOwner
+    , 'O2I.someEdgeFrom
+    , 'O2I.someEdgeRelation
+    , 'O2I.someEdgeTo
+    , 'O2I.strategyFormulations
+    , 'O2I.strategyFormulationData
+    , 'O2I.effectTraces
+    , 'O2I.traceIdentifier
+    , 'O2I.traceVision
+    , 'O2I.traceVisionObjective
+    , 'O2I.traceStrategy
+    , 'O2I.traceStrategyDriver
+    , 'O2I.traceStrategyObjective
+    , 'O2I.traceStrategyKeyResult
+    , 'O2I.traceStrategyAction
+    , 'O2I.traceNeed
+    , 'O2I.traceNeedDriver
+    , 'O2I.traceNeedObjective
+    , 'O2I.traceIntervention
+    , 'O2I.traceInterventionAction
+    , 'O2I.traceInterventionKeyResult
+    , 'O2I.traceMeasure
+    , 'O2I.traceMeasurePerformanceDimension
+    , 'O2I.traceKPI
+    , 'O2I.traceSituation
+    , 'O2I.traceSituationAnchor
+    , 'O2I.situationAnchorRefId
+    , 'O2I.situationAnchorRefKind
+    , 'O2I.kpiDefinitionKPI
+    , 'O2I.kpiDefinitionUnit
+    , 'O2I.kpiDefinitionDomain
+    , 'O2I.kpiDefinitionMeasurementMethod
+    , 'O2I.kpiDefinitionInterpretation
+    , 'O2I.kpiDefinitions
+    , 'O2I.evidencePlans
+    , 'O2I.readinessCheckedAt
+    , 'O2I.plannedInterventionStarts
+    , 'O2I.readyEffectTraces
+    , 'O2I.readyInterventions
+    , 'O2I.readyTracesForIntervention
+    , 'O2I.assessedFollowUp
+    , 'O2I.effectResult
+    , 'O2I.targetResult
+    , 'O2I.evidenceAssessedAt
+    , 'O2I.actualInterventionStarts
+    , 'O2I.effectAssessments
+    ])
+
+-- | Run positive API use and every compile-fail contract.
 main :: IO ()
 main = do
   let spec = interpretationSpec PrincipleInEthos
@@ -99,9 +222,74 @@ main = do
         "interpretation lookup identity"
         (interpretationIdentity interpretation == (Ethos, Principle))
     Nothing -> fail "canonical interpretation was not found"
-  case validatedAssessment of
+  let relationMetadata = Language.relationSpec Language.orientsStrategy
+  assert
+    "canonical relation metadata projection"
+    (Language.relationCode relationMetadata == FixedRelation OrientsStrategyCode
+       && Language.relationName relationMetadata
+            == RelationName "vision-orients-strategy")
+  case validatedValues of
     Left message -> fail message
-    Right assessment -> do
+    Right (ValidatedValues graph semantic traceable ready assessed trace definition assessment) -> do
+      assert
+        "Graph facade exposes validated nodes"
+        (visionId `elem` map Graph.someNodeId (Graph.graphNodes graph))
+      assert
+        "Graph facade exposes validated edges"
+        (not (null (Graph.graphEdges graph)))
+      case foldr (:) [] (Validation.strategyFormulations semantic) of
+        [formulation] ->
+          assert
+            "validated StrategyFormulation projection"
+            (rawFormulationStrategy
+               (Validation.strategyFormulationData formulation)
+               == strategyId)
+        _ -> fail "expected one validated Strategy formulation"
+      assert
+        "validated traceable-model projection"
+        (NonEmpty.head (Validation.effectTraces traceable) == trace)
+      assert
+        "validated readiness projections"
+        (definition `elem` Validation.kpiDefinitions ready
+           && NonEmpty.head (Validation.readyEffectTraces ready) == trace)
+      assert
+        "validated assessed-model projection"
+        (assessment
+           `elem` NonEmpty.toList (Validation.effectAssessments assessed))
+      assert
+        "Language NodeId projection"
+        (Language.unNodeId (traceKPI trace) == measureKPIId)
+      assert
+        "aggregate NodeId projection"
+        (O2I.unNodeId (traceKPI trace) == measureKPIId)
+      assert
+        "Language ContextRef projection"
+        (Language.contextRefId (traceIntervention trace) == interventionId)
+      assert
+        "aggregate ContextRef projection"
+        (O2I.contextRefId (traceIntervention trace) == interventionId)
+      assert
+        "validated KPI definition projections"
+        (Validation.kpiDefinitionKPI definition == traceKPI trace
+           && Validation.kpiDefinitionUnit definition == PercentagePoints
+           && Validation.kpiDefinitionDomain definition
+                == BoundedDomain (Level 0) (Level 100)
+           && Validation.kpiDefinitionMeasurementMethod definition
+                == "controlled measurement"
+           && Validation.kpiDefinitionInterpretation definition
+                == "higher is better")
+      assert
+        "validation and aggregate KPI projections agree"
+        (O2I.kpiDefinitionKPI definition
+           == Validation.kpiDefinitionKPI definition
+           && O2I.kpiDefinitionUnit definition
+                == Validation.kpiDefinitionUnit definition
+           && O2I.kpiDefinitionDomain definition
+                == Validation.kpiDefinitionDomain definition
+           && O2I.kpiDefinitionMeasurementMethod definition
+                == Validation.kpiDefinitionMeasurementMethod definition
+           && O2I.kpiDefinitionInterpretation definition
+                == Validation.kpiDefinitionInterpretation definition)
       assert
         "aggregate assessed follow-up projection"
         (observedLevel (followUpObservation (O2I.assessedFollowUp assessment))
@@ -118,12 +306,24 @@ main = do
            == O2I.assessedFollowUp assessment
            && Validation.effectResult assessment == O2I.effectResult assessment
            && Validation.targetResult assessment == O2I.targetResult assessment)
+  runCompileFailContracts
 
 assert :: String -> Bool -> IO ()
 assert message condition = unless condition (fail message)
 
-validatedAssessment :: Either String EffectAssessment
-validatedAssessment = do
+data ValidatedValues =
+  ValidatedValues
+    WellFormedGraph
+    SemanticallyValidModel
+    TraceableEffectModel
+    EvidenceReadyModel
+    EvidenceAssessedModel
+    EffectTrace
+    KPIDefinition
+    EffectAssessment
+
+validatedValues :: Either String ValidatedValues
+validatedValues = do
   graph <- checked "structural validation" (validateStructure assessmentGraph)
   model <-
     checked
@@ -188,6 +388,10 @@ validatedAssessment = do
          [definition]
          [plannedStart]
          (NonEmpty.singleton plan))
+  validatedDefinition <-
+    case lookupKPIDefinition ready (traceKPI trace) of
+      Just value -> Right value
+      Nothing -> Left "validated KPI definition was not found"
   assessed <-
     checked
       "evidence validation"
@@ -196,11 +400,195 @@ validatedAssessment = do
          ready
          [actualStart]
          (NonEmpty.singleton followUp))
-  pure (NonEmpty.head (effectAssessments assessed))
+  pure
+    (ValidatedValues
+       graph
+       model
+       traceable
+       ready
+       assessed
+       trace
+       validatedDefinition
+       (NonEmpty.head (effectAssessments assessed)))
 
 checked :: Show error => String -> Validation error value -> Either String value
 checked _ (Success value) = Right value
 checked stage (Failure errors) = Left (stage ++ " failed: " ++ show errors)
+
+data CompileFailKind
+  = HiddenConstructors
+  | NonRecordSelectors
+
+data CompileFailContract =
+  CompileFailContract String FilePath CompileFailKind [String]
+
+runCompileFailContracts :: IO ()
+runCompileFailContracts = forM_ compileFailContracts runCompileFailContract
+
+runCompileFailContract :: CompileFailContract -> IO ()
+runCompileFailContract (CompileFailContract label source kind names) = do
+  (exitCode, standardOutput, standardError) <-
+    readProcessWithExitCode
+      "cabal"
+      [ "exec"
+      , "--"
+      , "ghc"
+      , "-v0"
+      , "-fno-code"
+      , "-fforce-recomp"
+      , "-fmax-errors=100"
+      , "-package"
+      , "o2i"
+      , source
+      ]
+      ""
+  let output = standardOutput ++ standardError
+      expectedReason =
+        case kind of
+          HiddenConstructors -> "illegal term-level use"
+          NonRecordSelectors -> "not a record selector"
+  case exitCode of
+    ExitSuccess -> fail (label ++ " unexpectedly compiled")
+    ExitFailure _ -> do
+      assert
+        (label ++ " failed for the wrong reason")
+        (expectedReason `isInfixOf` map asciiLower output)
+      forM_
+        names
+        (\name ->
+           assert
+             (label ++ " did not reject " ++ name)
+             (mentionsExact name output))
+
+mentionsExact :: String -> String -> Bool
+mentionsExact = isInfixOf
+
+asciiLower :: Char -> Char
+asciiLower character
+  | character >= 'A' && character <= 'Z' =
+    toEnum (fromEnum character + fromEnum 'a' - fromEnum 'A')
+  | otherwise = character
+
+compileFailContracts :: [CompileFailContract]
+compileFailContracts =
+  [ CompileFailContract
+      "O2I.Language opaque constructors"
+      "tst/api/compile-fail/LanguageOpaqueConstructors.hs"
+      HiddenConstructors
+      [ "Language.NodeId"
+      , "Language.ContextRef"
+      , "Language.InterpretationSpec"
+      , "Language.SomeInterpretation"
+      , "Language.Relation"
+      , "Language.RelationSpec"
+      ]
+  , CompileFailContract
+      "O2I.Language record updates"
+      "tst/api/compile-fail/LanguageRecordUpdates.hs"
+      NonRecordSelectors
+      [ "Language.unNodeId"
+      , "Language.contextRefId"
+      , "Language.interpretationCode"
+      , "Language.interpretationContext"
+      , "Language.interpretationPrimitive"
+      , "Language.interpretationWitness"
+      , "Language.relationCode"
+      , "Language.relationSemantics"
+      , "Language.relationName"
+      , "Language.relationLabel"
+      , "Language.relationFrom"
+      , "Language.relationTo"
+      ]
+  , CompileFailContract
+      "O2I.Graph opaque constructors"
+      "tst/api/compile-fail/GraphOpaqueConstructors.hs"
+      HiddenConstructors
+      ["Graph.SomeNode", "Graph.SomeEdge", "Graph.WellFormedGraph"]
+  , CompileFailContract
+      "O2I.Graph record updates"
+      "tst/api/compile-fail/GraphRecordUpdates.hs"
+      NonRecordSelectors
+      ["Graph.someNodeId", "Graph.someEdgeFrom", "Graph.graphNodes"]
+  , CompileFailContract
+      "O2I.Validation opaque constructors"
+      "tst/api/compile-fail/ValidationOpaqueConstructors.hs"
+      HiddenConstructors
+      [ "Validation.StrategyFormulation"
+      , "Validation.SemanticallyValidModel"
+      , "Validation.EffectTrace"
+      , "Validation.EffectTraceId"
+      , "Validation.SomeSituationAnchorRef"
+      , "Validation.TraceableEffectModel"
+      , "Validation.KPIDefinition"
+      , "Validation.EvidenceReadyModel"
+      , "Validation.EffectAssessment"
+      , "Validation.EvidenceAssessedModel"
+      ]
+  , CompileFailContract
+      "O2I.Validation record updates"
+      "tst/api/compile-fail/ValidationRecordUpdates.hs"
+      NonRecordSelectors
+      [ "Validation.strategyFormulationData"
+      , "Validation.strategyFormulations"
+      , "Validation.traceIdentifier"
+      , "Validation.effectTraces"
+      , "Validation.situationAnchorRefId"
+      , "Validation.kpiDefinitionKPI"
+      , "Validation.kpiDefinitionUnit"
+      , "Validation.kpiDefinitionDomain"
+      , "Validation.kpiDefinitionMeasurementMethod"
+      , "Validation.kpiDefinitionInterpretation"
+      , "Validation.kpiDefinitions"
+      , "Validation.assessedFollowUp"
+      , "Validation.effectAssessments"
+      ]
+  , CompileFailContract
+      "O2I aggregate opaque constructors"
+      "tst/api/compile-fail/AggregateOpaqueConstructors.hs"
+      HiddenConstructors
+      [ "O2I.NodeId"
+      , "O2I.ContextRef"
+      , "O2I.SomeInterpretation"
+      , "O2I.Relation"
+      , "O2I.SomeRelation"
+      , "O2I.SomeNode"
+      , "O2I.SomeEdge"
+      , "O2I.WellFormedGraph"
+      , "O2I.StrategyFormulation"
+      , "O2I.SemanticallyValidModel"
+      , "O2I.EffectTrace"
+      , "O2I.EffectTraceId"
+      , "O2I.SomeSituationAnchorRef"
+      , "O2I.TraceableEffectModel"
+      , "O2I.KPIDefinition"
+      , "O2I.EvidenceReadyModel"
+      , "O2I.EffectAssessment"
+      , "O2I.EvidenceAssessedModel"
+      ]
+  , CompileFailContract
+      "O2I aggregate record updates"
+      "tst/api/compile-fail/AggregateRecordUpdates.hs"
+      NonRecordSelectors
+      [ "O2I.unNodeId"
+      , "O2I.contextRefId"
+      , "O2I.someNodeId"
+      , "O2I.someEdgeFrom"
+      , "O2I.graphNodes"
+      , "O2I.strategyFormulationData"
+      , "O2I.strategyFormulations"
+      , "O2I.traceIdentifier"
+      , "O2I.effectTraces"
+      , "O2I.situationAnchorRefId"
+      , "O2I.kpiDefinitionKPI"
+      , "O2I.kpiDefinitionUnit"
+      , "O2I.kpiDefinitionDomain"
+      , "O2I.kpiDefinitionMeasurementMethod"
+      , "O2I.kpiDefinitionInterpretation"
+      , "O2I.kpiDefinitions"
+      , "O2I.assessedFollowUp"
+      , "O2I.effectAssessments"
+      ]
+  ]
 
 assessmentGraph :: RawGraph
 assessmentGraph = RawGraph assessmentNodes assessmentEdges

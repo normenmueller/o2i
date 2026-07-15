@@ -150,7 +150,7 @@ publication claim derived from them.
 - Build: `cabal build all --ghc-options=-Werror` from `spc/`.
 - Tests: `cabal test all --ghc-options=-Werror` from `spc/`.
 - API documentation: `cabal haddock all` from `spc/`.
-- Format check: `hindent --line-length 80 --validate src/lib/O2I.hs src/lib/O2I/*.hs src/lib/O2I/Language/*.hs src/lib/O2I/Graph/*.hs src/lib/O2I/Validation/*.hs tst/Main.hs tst/api/Main.hs` from `spc/`.
+- Format check: `hindent --line-length 80 --validate src/lib/O2I.hs src/lib/O2I/*.hs src/lib/O2I/Language/*.hs src/lib/O2I/Graph/*.hs src/lib/O2I/Validation/*.hs tst/Main.hs tst/api/Main.hs tst/api/ApiContractTH.hs tst/api/compile-fail/*.hs` from `spc/`.
 - Lightweight article check: `pandoc o2i.md --filter pandoc-include -t markdown`.
 - Use `git status --short --branch --untracked-files=all` before edits.
 

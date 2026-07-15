@@ -68,16 +68,24 @@ newtype RawNodeId = RawNodeId
 type role NodeId nominal
 
 -- | Opaque identifier whose node kind was established by validation.
-newtype NodeId (kind :: NodeKind) = NodeId
-  { unNodeId :: RawNodeId -- ^ Erase the kind index for runtime lookup.
-  } deriving (Eq, Ord, Show)
+newtype NodeId (kind :: NodeKind) =
+  NodeId RawNodeId
+  deriving (Eq, Ord, Show)
 
 type role ContextRef nominal
 
 -- | Opaque reference to a context whose type was established by validation.
-newtype ContextRef (context :: Context) = ContextRef
-  { contextRefId :: RawNodeId -- ^ Runtime identifier of the context node.
-  } deriving (Eq, Ord, Show)
+newtype ContextRef (context :: Context) =
+  ContextRef RawNodeId
+  deriving (Eq, Ord, Show)
+
+-- | Erase the validated node-kind index for runtime lookup.
+unNodeId :: NodeId kind -> RawNodeId
+unNodeId (NodeId identifier) = identifier
+
+-- | Read the runtime identifier of a validated Context reference.
+contextRefId :: ContextRef context -> RawNodeId
+contextRefId (ContextRef identifier) = identifier
 
 -- | Internally wrap an identifier after its node kind has been validated.
 mkNodeId :: RawNodeId -> NodeId kind
