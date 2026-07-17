@@ -6,10 +6,9 @@ instruction override this snapshot.
 # Snapshot
 
 - Observed at: 2026-07-17 CEST.
-- Mode: `FINAL_REVIEW_PENDING`.
+- Mode: `READY`.
 - Branch/upstream: `trunk` / `origin/trunk`.
-- Active objective: close the independent review gate for the new formal
-  Need-qualification proposal validation.
+- Active objective: review `o2i.md` top-down and paragraph by paragraph.
 - Agent memory: active in the current repository revision.
 
 # Approved Baseline
@@ -35,7 +34,7 @@ instruction override this snapshot.
 
 # Active Quality Gate
 
-- The current dirty scope adds `validateNeedQualificationProposal` as a formal
+- Commit `d1483e9` adds `validateNeedQualificationProposal` as a formal
   pre-persistence check over an existing Strategy and fully situated Need.
 - Validation returns either accumulated formal errors or an opaque
   `NeedQualificationCandidate`; authorized subject-matter acceptance remains
@@ -43,13 +42,11 @@ instruction override this snapshot.
   `qualifyingStrategies` confirmation.
 - Agentic AI may support proposal analysis but remains optional.
 - A metamodel/type-theory/Haskell co-author participated in design,
-  implementation, modularization, Haddock, and tests. Independent final review
-  of the resulting commit remains pending.
-
-- The independent final review of substantive commit `a87f333` on 2026-07-15
-  reported no Blocker, High, Medium, or Low finding and explicit approval.
-- Fachlichkeit, Metamodell, Typtheorie, Haskell, tests, formal value, and
-  publication quality each received 10.0.
+  implementation, modularization, Haddock, and tests. A separate independent
+  final reviewer reported no Blocker, High, Medium, or Low finding and explicit
+  approval for `d1483e9` on 2026-07-17.
+- Fachlichkeit: 10.0/10.0; Metamodell: 10.0/10.0; Typtheorie: 10.0/10.0;
+  Haskell: 10.0/10.0; tests: 10.0/10.0; formal value: 10.0/10.0.
 - A positive external API contract enforces complete `reifyRelation`
   round-tripping.
 - The external API suite now binds relation registry, lookup, reification,
@@ -85,10 +82,10 @@ instruction override this snapshot.
 
 - ArchiMate model check and nine extractor contract tests: passed.
 - `cabal check` and `cabal build all --ghc-options=-Werror`: passed.
-- Both Cabal test suites passed: 186 fachliche tests plus positive, Template
+- Both Cabal test suites passed: 186 domain tests plus positive, Template
   Haskell, and compile-fail public-API contracts.
 - HIndent 80 validation: passed.
-- Haddock including internal and API-test modules: 100% coverage.
+- Haddock completed; all four public modules have 100% coverage.
 - Pandoc include expansion and `./toPDF.sh`: passed.
 - `git diff --check`: passed.
 

@@ -132,6 +132,9 @@ publication claim derived from them.
 - Final review reports Blocker, High, Medium, and Low findings and separate
   numeric assessments for Fachlichkeit, Metamodell, Typtheorie, Haskell, tests,
   and formal value.
+- Always report every dimension score explicitly as review evidence. Use the
+  aggregate label `10/10` only when every required dimension independently
+  scores `10.0/10.0`; an average or rounded aggregate never qualifies.
 - Fix every finding and repeat read-only review until explicit approval.
 - Record completed gates compactly in `STATE.md`: date, reviewed commit or dirty
   scope, review scope, role separation, findings, closure, and checks. Do not
