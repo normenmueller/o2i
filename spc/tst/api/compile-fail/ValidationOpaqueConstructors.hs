@@ -5,6 +5,21 @@ import qualified O2I.Validation as Validation
 forgedStrategyFormulation :: Validation.StrategyFormulation
 forgedStrategyFormulation = Validation.StrategyFormulation undefined
 
+forgedNeedQualificationSourceReference ::
+     Validation.NeedQualificationSourceReference
+forgedNeedQualificationSourceReference =
+  Validation.NeedQualificationSourceReference undefined
+
+forgedNeedQualificationCandidate :: Validation.NeedQualificationCandidate
+forgedNeedQualificationCandidate =
+  Validation.NeedQualificationCandidate
+    undefined
+    undefined
+    undefined
+    undefined
+    undefined
+    undefined
+
 forgedSemanticallyValidModel :: Validation.SemanticallyValidModel
 forgedSemanticallyValidModel =
   Validation.SemanticallyValidModel undefined undefined

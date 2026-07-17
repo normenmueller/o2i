@@ -67,6 +67,8 @@ $(assertOrdinaryFunctions
 
 $(assertAbstractTypes
     [ "Validation.StrategyFormulation"
+    , "Validation.NeedQualificationSourceReference"
+    , "Validation.NeedQualificationCandidate"
     , "Validation.SemanticallyValidModel"
     , "Validation.EffectTrace"
     , "Validation.EffectTraceId"
@@ -81,6 +83,13 @@ $(assertAbstractTypes
 $(assertOrdinaryFunctions
     [ 'Validation.strategyFormulations
     , 'Validation.strategyFormulationData
+    , 'Validation.needQualificationCandidateStrategy
+    , 'Validation.needQualificationCandidateNeed
+    , 'Validation.needQualificationCandidateKeyResult
+    , 'Validation.needQualificationCandidateObjective
+    , 'Validation.needQualificationCandidateRationale
+    , 'Validation.needQualificationCandidateSourceReference
+    , 'Validation.needQualificationSourceReferenceText
     , 'Validation.effectTraces
     , 'Validation.traceIdentifier
     , 'Validation.traceVision
@@ -133,6 +142,8 @@ $(assertAbstractTypes
     , "O2I.SomeEdge"
     , "O2I.WellFormedGraph"
     , "O2I.StrategyFormulation"
+    , "O2I.NeedQualificationSourceReference"
+    , "O2I.NeedQualificationCandidate"
     , "O2I.SemanticallyValidModel"
     , "O2I.EffectTrace"
     , "O2I.EffectTraceId"
@@ -163,6 +174,13 @@ $(assertOrdinaryFunctions
     , 'O2I.someEdgeTo
     , 'O2I.strategyFormulations
     , 'O2I.strategyFormulationData
+    , 'O2I.needQualificationCandidateStrategy
+    , 'O2I.needQualificationCandidateNeed
+    , 'O2I.needQualificationCandidateKeyResult
+    , 'O2I.needQualificationCandidateObjective
+    , 'O2I.needQualificationCandidateRationale
+    , 'O2I.needQualificationCandidateSourceReference
+    , 'O2I.needQualificationSourceReferenceText
     , 'O2I.effectTraces
     , 'O2I.traceIdentifier
     , 'O2I.traceVision
@@ -335,6 +353,46 @@ main = do
            == O2I.assessedFollowUp assessment
            && Validation.effectResult assessment == O2I.effectResult assessment
            && Validation.targetResult assessment == O2I.targetResult assessment)
+  case needQualificationCandidateValue of
+    Left message -> fail message
+    Right candidate -> do
+      assert
+        "validated qualification candidate projections"
+        (contextRefId (Validation.needQualificationCandidateStrategy candidate)
+           == strategyId
+           && contextRefId (Validation.needQualificationCandidateNeed candidate)
+                == needId
+           && unNodeId
+                (Validation.needQualificationCandidateKeyResult candidate)
+                == strategyKeyResultId
+           && unNodeId
+                (Validation.needQualificationCandidateObjective candidate)
+                == needObjectiveId
+           && Validation.needQualificationCandidateRationale candidate
+                == "documented strategic translation"
+           && Validation.needQualificationSourceReferenceText
+                (Validation.needQualificationCandidateSourceReference candidate)
+                == "strategy/kr-1")
+      assert
+        "aggregate qualification candidate projections agree"
+        (O2I.needQualificationCandidateStrategy candidate
+           == Validation.needQualificationCandidateStrategy candidate
+           && O2I.needQualificationCandidateNeed candidate
+                == Validation.needQualificationCandidateNeed candidate
+           && O2I.needQualificationCandidateKeyResult candidate
+                == Validation.needQualificationCandidateKeyResult candidate
+           && O2I.needQualificationCandidateObjective candidate
+                == Validation.needQualificationCandidateObjective candidate
+           && O2I.needQualificationCandidateRationale candidate
+                == Validation.needQualificationCandidateRationale candidate
+           && O2I.needQualificationCandidateSourceReference candidate
+                == Validation.needQualificationCandidateSourceReference
+                     candidate
+           && O2I.needQualificationSourceReferenceText
+                (O2I.needQualificationCandidateSourceReference candidate)
+                == Validation.needQualificationSourceReferenceText
+                     (Validation.needQualificationCandidateSourceReference
+                        candidate))
   runCompileFailContracts
 
 assert :: String -> Bool -> IO ()
@@ -444,6 +502,40 @@ checked :: Show error => String -> Validation error value -> Either String value
 checked _ (Success value) = Right value
 checked stage (Failure errors) = Left (stage ++ " failed: " ++ show errors)
 
+needQualificationCandidateValue :: Either String NeedQualificationCandidate
+needQualificationCandidateValue = do
+  graph <-
+    checked
+      "qualification graph validation"
+      (validateStructure
+         assessmentGraph
+           { rawEdges =
+               filter
+                 (`notElem` [ edge strategyId qualifiesNeed needId
+                            , edge
+                                strategyKeyResultId
+                                translatesStrategyKeyResultToNeedObjective
+                                needObjectiveId
+                            ])
+                 (rawEdges assessmentGraph)
+           })
+  model <-
+    checked
+      "qualification semantic validation"
+      (validateModelSemantics graph [assessmentStrategyFormulation])
+  checked
+    "Need qualification proposal validation"
+    (validateNeedQualificationProposal
+       model
+       RawNeedQualificationProposal
+         { rawNeedQualificationCandidateStrategy = strategyId
+         , rawNeedQualificationNeed = needId
+         , rawNeedQualificationStrategyKeyResult = strategyKeyResultId
+         , rawNeedQualificationNeedObjective = needObjectiveId
+         , rawNeedQualificationRationale = "documented strategic translation"
+         , rawNeedQualificationSourceReference = "  strategy/kr-1  "
+         })
+
 data CompileFailKind
   = HiddenConstructors
   | HiddenPatterns
@@ -551,6 +643,8 @@ compileFailContracts =
       "tst/api/compile-fail/ValidationOpaqueConstructors.hs"
       HiddenConstructors
       [ "Validation.StrategyFormulation"
+      , "Validation.NeedQualificationSourceReference"
+      , "Validation.NeedQualificationCandidate"
       , "Validation.SemanticallyValidModel"
       , "Validation.EffectTrace"
       , "Validation.EffectTraceId"
@@ -567,6 +661,13 @@ compileFailContracts =
       NonRecordSelectors
       [ "Validation.strategyFormulationData"
       , "Validation.strategyFormulations"
+      , "Validation.needQualificationCandidateStrategy"
+      , "Validation.needQualificationCandidateNeed"
+      , "Validation.needQualificationCandidateKeyResult"
+      , "Validation.needQualificationCandidateObjective"
+      , "Validation.needQualificationCandidateRationale"
+      , "Validation.needQualificationCandidateSourceReference"
+      , "Validation.needQualificationSourceReferenceText"
       , "Validation.traceIdentifier"
       , "Validation.effectTraces"
       , "Validation.situationAnchorRefId"
@@ -592,6 +693,8 @@ compileFailContracts =
       , "O2I.SomeEdge"
       , "O2I.WellFormedGraph"
       , "O2I.StrategyFormulation"
+      , "O2I.NeedQualificationSourceReference"
+      , "O2I.NeedQualificationCandidate"
       , "O2I.SemanticallyValidModel"
       , "O2I.EffectTrace"
       , "O2I.EffectTraceId"
@@ -613,6 +716,13 @@ compileFailContracts =
       , "O2I.graphNodes"
       , "O2I.strategyFormulationData"
       , "O2I.strategyFormulations"
+      , "O2I.needQualificationCandidateStrategy"
+      , "O2I.needQualificationCandidateNeed"
+      , "O2I.needQualificationCandidateKeyResult"
+      , "O2I.needQualificationCandidateObjective"
+      , "O2I.needQualificationCandidateRationale"
+      , "O2I.needQualificationCandidateSourceReference"
+      , "O2I.needQualificationSourceReferenceText"
       , "O2I.traceIdentifier"
       , "O2I.effectTraces"
       , "O2I.situationAnchorRefId"

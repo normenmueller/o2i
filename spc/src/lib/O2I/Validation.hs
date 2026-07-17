@@ -10,6 +10,10 @@ module O2I.Validation
   , StrategyAnchoring(..)
   , RawStrategyFormulation(..)
   , StrategyFormulation
+  , RawNeedQualificationProposal(..)
+  , NeedQualificationSourceReference
+  , NeedQualificationCandidate
+  , NeedQualificationError(..)
   , StrategyTextField(..)
   , StrategyPrimitiveRole(..)
   , ModelInvariantError(..)
@@ -17,6 +21,14 @@ module O2I.Validation
   , strategyFormulations
   , strategyFormulationData
   , lookupSemanticContextRef
+  , needQualificationCandidateStrategy
+  , needQualificationCandidateNeed
+  , needQualificationCandidateKeyResult
+  , needQualificationCandidateObjective
+  , needQualificationCandidateRationale
+  , needQualificationCandidateSourceReference
+  , needQualificationSourceReferenceText
+  , validateNeedQualificationProposal
   , qualifyingStrategies
   , EffectTrace
   , EffectTraceId
@@ -98,6 +110,7 @@ module O2I.Validation
 import Data.List.NonEmpty (NonEmpty)
 import Data.Validation (Validation(..))
 import O2I.Validation.Evidence
+import O2I.Validation.Qualification
 import O2I.Validation.Readiness
 import O2I.Validation.Semantics
 import O2I.Validation.Structure

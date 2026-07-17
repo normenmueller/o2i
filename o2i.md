@@ -412,6 +412,21 @@ Ein Bedarf ist strategisch relevant qualifiziert, wenn seine Veränderungsanford
 > [!addendum]
 > Terminologisch erfolgt diese Begründung über kontextualisierte O2I-Primitives, ohne an dieser Stelle den Formalismus des Metamodells vollständig auszubreiten. Beispiel: `Key Result @ Strategy --translates-into--> Objective @ Need`. Damit ist `Strategy --qualifies--> Need` in O2I keine freie Behauptung, sondern eine als Autorenableitung eingeführte Makrorelation.
 
+> [!definition]
+> Eine **Qualifikationsvorlage** (en.: *need qualification proposal*)[^qualification-submission] bezeichnet die vollständige Vorlage eines situierten Bedarfs zur Prüfung gegen eine bestehende Kandidatenstrategie. Sie referenziert den Bedarf und die Strategie, benennt ein `Key Result @ Strategy` und ein `Objective @ Need` als vorgeschlagene Primitive-Verbindung und enthält dafür eine fachliche Begründung mit Quellenbezug.
+>
+> [^qualification-submission]: *Autorenableitung*: O2I operationalisiert die Bedarfsqualifikation durch die Trennung von fachlicher Begründung, formaler Zulässigkeitsprüfung und legitimierter Entscheidung.
+
+Die Qualifikationsprüfung folgt einer klaren Arbeitsteilung:
+
+1. Der Einreicher legt einen vollständig situierten Bedarf vor und referenziert die bestehende Strategie, an der er sich ausgerichtet hat. Die Strategie selbst ist Bestandteil des O2I-Modells und wird nicht mit der Vorlage eingereicht.
+2. Eine fachliche Analyse schlägt die Primitive-Verbindung samt Begründung und Quellenbezug vor. Agentic AI kann diese Analyse unterstützen; O2I setzt ihren Einsatz nicht voraus und behandelt ihren Vorschlag nicht als Entscheidung.
+3. Nach vollständiger Situierung des Bedarfs und vor der Modellierung von `translates-into` und `qualifies` prüft die O2I-Spezifikation mit `validateNeedQualificationProposal` deterministisch Situierung, Typen, Ownership, Strategy-Rollen, die formale Zulässigkeit der vorgeschlagenen Verbindung sowie das Vorliegen einer nichtleeren Begründung und Quellenreferenz. Bei Fehlern entsteht kein Kandidat; die formalen Fehler sind zu beheben, ohne den Graphen zu verändern oder eine fachliche Annahmeentscheidung zu treffen.
+4. Ein positives Ergebnis ist ein formal zulässiger `NeedQualificationCandidate`, noch keine akzeptierte Qualifikation. Fachlich legitimierte Personen prüfen Begründung und Quelle. Eine Ablehnung lässt den Graphen unverändert.
+5. Bei Annahme werden `Key Result @ Strategy --translates-into--> Objective @ Need` und `Strategy --qualifies--> Need` modelliert und das Modell erneut validiert. Erst wenn `qualifyingStrategies` danach die Strategie als qualifizierend liefert, ist der situierte Bedarf wirkungsrelevant.
+
+Die Qualifikationsvorlage bleibt von einem **Nachweisentwurf** getrennt. Ein Nachweisentwurf beschreibt, wie die Bearbeitung des Bedarfs später überprüfbar werden soll, und umfasst geplante Intervention, Measure und KPI, Baseline, Effekt- und Zielkriterium, Zieltermin sowie Quellenbezug. Er bestimmt nicht die strategische Relevanz des Bedarfs, sondern bereitet dessen Handlungs- und Nachweisfähigkeit vor.
+
 Wirkungsrelevant heißt plausibel handlungsrelevant, nicht bereits wirksam. Erst eine spätere Messung kann zeigen, ob für die Bearbeitung eines wirkungsrelevanten Bedarfs positive Wirkungsevidenz vorliegt.
 
 ### Intervention
@@ -501,6 +516,8 @@ Effekt und Zielerreichung sind damit getrennte Aussagen: Eine relevante Verbesse
 > [^evidence-readiness]: *Autorenableitung in Anlehnung an Doerr (2018), Parmenter (2020) und Barr (2014)*: O2I verbindet die Vorabfestlegung von Messgröße, Baseline, Kriterien, Zieltermin und Quellenbezug zu einer prüfbaren ex-ante Nachweisqualität.
 
 Evidenzbereitschaft ist noch keine Wirkungsevidenz. Sie stellt sicher, dass die spätere Wirkungsbewertung nicht erst im Nachhinein an beobachtete Ergebnisse angepasst wird. Der geplante Interventionsbeginn wird dabei ex ante festgelegt; der tatsächliche Interventionsbeginn wird für die ex-post-Bewertung gesondert erfasst.
+
+Eine organisatorische Einreichung kann den Nachweisentwurf bereits gemeinsam mit der Qualifikationsvorlage verlangen. Im O2I-Modell bleibt die Evidenzbereitschaft jedoch ein nachgelagerter Prüfschritt: Sie setzt einen akzeptierten wirkungsrelevanten Bedarf und einen vollständigen Wirkungstrace voraus und entscheidet nicht über dessen strategische Relevanz.
 
 ### Nachweislogik
 
@@ -831,6 +848,8 @@ Nur O2I-Primitives, die einer validierten Strategy-Formulierung in der jeweilige
 Eine `Need`-Instanz ist im Metamodell wirkungsrelevant, wenn sie in einer `Situation`-Instanz sichtbar wird und durch eine `Strategy`-Instanz qualifiziert ist. Die strategische Qualifikation muss durch Primitive-Relationen begründbar sein.
 
 Die Spezifikation konkretisiert dafür den zentralen O2I-USP: Eine `Strategy --qualifies--> Need`-Relation zählt nur dann als belastbar, wenn es eine passende Primitive-Begründung gibt, etwa `Key Result @ Strategy --translates-into--> Objective @ Need`.
+
+Die Funktion `validateNeedQualificationProposal` prüft nach vollständiger Situierung des Bedarfs und vor der Modellierung dieser Relationen, ob eine Kombination aus Kandidatenstrategie, situiertem Bedarf, strategischem Key Result und Need-Objective formal zulässig ist und eine nichtleere fachliche Begründung mit Quellenreferenz enthält. Bei Fehlern bleibt das Modell unverändert. Ihr opakes Ergebnis `NeedQualificationCandidate` bestätigt ausschließlich die formale Zulässigkeit der Vorlage; es ersetzt weder die fachlich legitimierte Entscheidung noch persistiert es eine Qualifikation. Nach fachlicher Annahme werden beide Relationen modelliert, das Modell erneut validiert und die Qualifikation mit `qualifyingStrategies` abgefragt.
 
 Die Abfrage `qualifyingStrategies` ermittelt diese Strategien direkt am semantisch gültigen Modell. Sie benötigt weder Intervention noch Messung und hält Bedarfsqualifikation damit von der späteren Operationalisierung und Wirkungsevidenz getrennt.
 

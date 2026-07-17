@@ -56,13 +56,42 @@ Bedarf ist das fachliche Was: eine situationsbezogene Anforderung an Veränderun
 
 Weiterlesen: [Bedarf](./o2i.md#bedarf)
 
+## WTF "Submission"?
+
+> [!NOTE]
+> **Submission** = *Was muss für die Prüfung vorliegen?*
+
+Eine Submission trennt zwei Pakete:
+
+**Qualifikationsvorlage**
+
+- vollständig situierter Bedarf mit `Driver`, `Objective` und Situationsanker,
+- Referenz auf die bestehende Strategie, an der sich der Einreicher ausgerichtet hat,
+- vorgeschlagene Verbindung `Key Result @ Strategy --translates-into--> Objective @ Need`,
+- fachliche Begründung und nachvollziehbarer Quellenbezug.
+
+Agentic AI kann die Verbindung vorschlagen und begründen. Nach vollständiger Situierung des Bedarfs und vor der Modellierung von `translates-into` und `qualifies` prüft die O2I-Spezifikation ihre formale Zulässigkeit. Formale Fehler führen zu keinem Kandidaten und zu keiner Graphänderung. Einen positiven `NeedQualificationCandidate` prüfen fachlich legitimierte Personen: Ablehnung lässt den Graphen unverändert; Annahme modelliert beide Relationen, validiert das Modell erneut und macht die qualifizierende Strategie über `qualifyingStrategies` abfragbar.
+
+**Nachweisentwurf**
+
+- geplante Intervention,
+- Measure und KPI,
+- Baseline, Effekt- und Zielkriterium,
+- Zieltermin und Quellenbezug.
+
+Der Nachweisentwurf entscheidet nicht über strategische Relevanz. Er bereitet vor, wie die Bearbeitung des Bedarfs handlungs- und nachweisfähig wird.
+
+Haskell: [`validateNeedQualificationProposal`](./spc/src/lib/O2I/Validation/Qualification.hs), [`validateEvidenceReadinessAt`](./spc/src/lib/O2I/Validation/Readiness.hs)
+
+Weiterlesen: [Bedarfsqualifikation](./o2i.md#bedarfsqualifikation), [Evidenzbereitschaft](./o2i.md#evidenzbereitschaft)
+
 ## HTH "Bedarfsqualifikation"?
 
 <!-- How the heck to qualify need? -->
 
 Die Situation macht einen Bedarf sichtbar; die Strategie macht ihn relevant. Dafür müssen Strategie- und Bedarf-Inhalte über zulässige Primitive-Relationen verbunden sein, beispielsweise `Key Result @ Strategy --translates-into--> Objective @ Need`. Erst dann wird ein sichtbarer Bedarf wirkungsrelevant, aber noch nicht wirksam.
 
-Haskell: [`qualifyingStrategies`](./spc/src/lib/O2I/Validation/Semantics.hs)
+Haskell: [`validateNeedQualificationProposal`](./spc/src/lib/O2I/Validation/Qualification.hs), [`qualifyingStrategies`](./spc/src/lib/O2I/Validation/Semantics.hs)
 
 Weiterlesen: [Bedarfsqualifikation](./o2i.md#bedarfsqualifikation), [Wirkungsrelevanz](./o2i.md#wirkungsrelevanz)
 

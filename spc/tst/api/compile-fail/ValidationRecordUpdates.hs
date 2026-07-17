@@ -10,6 +10,34 @@ rewriteStrategyFormulation formulation =
         Validation.strategyFormulationData formulation
     }
 
+rewriteNeedQualificationCandidate ::
+     Validation.NeedQualificationCandidate
+  -> Validation.NeedQualificationCandidate
+rewriteNeedQualificationCandidate candidate =
+  candidate
+    { Validation.needQualificationCandidateStrategy =
+        Validation.needQualificationCandidateStrategy candidate
+    , Validation.needQualificationCandidateNeed =
+        Validation.needQualificationCandidateNeed candidate
+    , Validation.needQualificationCandidateKeyResult =
+        Validation.needQualificationCandidateKeyResult candidate
+    , Validation.needQualificationCandidateObjective =
+        Validation.needQualificationCandidateObjective candidate
+    , Validation.needQualificationCandidateRationale =
+        Validation.needQualificationCandidateRationale candidate
+    , Validation.needQualificationCandidateSourceReference =
+        Validation.needQualificationCandidateSourceReference candidate
+    }
+
+rewriteNeedQualificationSourceReference ::
+     Validation.NeedQualificationSourceReference
+  -> Validation.NeedQualificationSourceReference
+rewriteNeedQualificationSourceReference reference =
+  reference
+    { Validation.needQualificationSourceReferenceText =
+        Validation.needQualificationSourceReferenceText reference
+    }
+
 rewriteSemanticallyValidModel ::
      Validation.SemanticallyValidModel -> Validation.SemanticallyValidModel
 rewriteSemanticallyValidModel model =

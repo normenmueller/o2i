@@ -29,6 +29,19 @@ test and apply O2I but never define its generic semantics.
 - Need qualification is an independent, pre-intervention capability. It asks
   which Strategy qualifies a situated Need and requires neither Intervention
   nor Measure.
+- O2I may support agentic AI in proposing qualification evidence, but never
+  requires it. Cognitive assessment may be human or AI-assisted; authorized
+  fachliche acceptance remains distinct from deterministic specification
+  validation, and O2I remains fully valid without AI.
+- A Need qualification proposal references an existing candidate Strategy and
+  a situated Need, proposes one Strategy-Key-Result-to-Need-Objective relation,
+  and provides rationale plus a source reference. Validate it after complete
+  Need situating and before persisting `translates-into` and `qualifies`.
+  Specification validation establishes only formal admissibility; authorized
+  fachliche acceptance precedes persistence and renewed model validation.
+- An evidence design may accompany an organizational submission but remains a
+  separate later gate. It prepares actionability and evidence readiness and
+  never determines the Need's strategic relevance.
 - Evidence readiness is a generic O2I capability for validating an effect
   trace before an Intervention starts.
 - O2I does not define Strategic Fit Evaluation, strategic topic complexes,

@@ -32,6 +32,20 @@ forgedWellFormedGraph = O2I.WellFormedGraph undefined undefined
 forgedStrategyFormulation :: O2I.StrategyFormulation
 forgedStrategyFormulation = O2I.StrategyFormulation undefined
 
+forgedNeedQualificationSourceReference :: O2I.NeedQualificationSourceReference
+forgedNeedQualificationSourceReference =
+  O2I.NeedQualificationSourceReference undefined
+
+forgedNeedQualificationCandidate :: O2I.NeedQualificationCandidate
+forgedNeedQualificationCandidate =
+  O2I.NeedQualificationCandidate
+    undefined
+    undefined
+    undefined
+    undefined
+    undefined
+    undefined
+
 forgedSemanticallyValidModel :: O2I.SemanticallyValidModel
 forgedSemanticallyValidModel = O2I.SemanticallyValidModel undefined undefined
 

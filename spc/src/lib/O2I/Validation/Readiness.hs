@@ -94,7 +94,7 @@ data RawKPIDefinition = RawKPIDefinition
   , rawDefinitionMeasurementMethod :: Text
     -- ^ Stable method by which observations are produced.
   , rawDefinitionInterpretation :: Text
-    -- ^ Stable fachliche reading of observed levels and changes.
+    -- ^ Stable subject-matter reading of observed levels and changes.
   } deriving (Eq, Show)
 
 -- | Validated stable definition of one typed Measure KPI.
@@ -126,7 +126,7 @@ kpiDefinitionDomain (KPIDefinition _ _ domain _ _) = domain
 kpiDefinitionMeasurementMethod :: KPIDefinition -> Text
 kpiDefinitionMeasurementMethod (KPIDefinition _ _ _ method _) = method
 
--- | Project the validated nonblank fachliche interpretation.
+-- | Project the validated nonblank subject-matter interpretation.
 kpiDefinitionInterpretation :: KPIDefinition -> Text
 kpiDefinitionInterpretation (KPIDefinition _ _ _ _ interpretation) =
   interpretation
@@ -231,7 +231,7 @@ data EvidenceReadinessError
   | EmptyKPIMeasurementMethod RawNodeId
     -- ^ A KPI definition has no measurement method.
   | EmptyKPIInterpretation RawNodeId
-    -- ^ A KPI definition has no fachliche interpretation.
+    -- ^ A KPI definition has no subject-matter interpretation.
   | UnknownPlannedInterventionStart RawNodeId
     -- ^ A timing record refers to no Intervention in a validated trace.
   | DuplicatePlannedInterventionStart RawNodeId Int

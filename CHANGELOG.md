@@ -4,9 +4,9 @@
 
 ### Summary
 
-- Added the mandatory strategic success reference, Situating and Situation
-  anchors, stable KPI definitions, observations, effect and target criteria,
-  evidence readiness, and plausible attribution.
+- Added the mandatory strategic success reference, qualification submissions,
+  Situating and Situation anchors, stable KPI definitions, observations,
+  effect and target criteria, evidence readiness, and plausible attribution.
 - Removed Direction, open Domain/CSF structuring types, redundant reverse
   relations, and refinement as an O2I core relation.
 - Replaced Contextualization with Situating, defined Situation through anchors,
@@ -18,6 +18,10 @@
 
 ### Added
 
+- Added `validateNeedQualificationProposal` as an opaque pre-persistence check
+  for structurally and relationally admissible Need-qualification candidates
+  with explicit rationale and source reference, distinct from fachliche
+  acceptance and the `qualifyingStrategies` query over accepted relations.
 - Added repository-local agent facades backed by the canonical O2I behavior
   contract.
 - Added a concise WTF and HTH guide for direct access to central O2I concepts.
@@ -31,6 +35,8 @@
 - Reordered the literature-function section along the O2I domains.
 - Clarified the O2I feedback loop, need qualification flow, generic refinement semantics, and the distinction between plausible attribution and causal proof.
 - Clarified evidence logic as a derived justification structure rather than a separate O2I type or model element.
+- Separated qualification submissions, authorized fachliche acceptance, and
+  subsequent evidence-readiness design without requiring agentic AI.
 - Clarified the semantic boundary between structural graph stages and fachlich enriched model stages.
 - Separated `O2I Situation` as the anchor type model from `O2I Situation Anchoring` as the relation model connecting situated Need, Intervention, and Measure semantics, with a parameterized ArchiMate 4 syntax mapping for every anchor form.
 - Clarified the Haskell specification as the normative machine-checkable formalization of the technology-independent O2I metamodel.

@@ -99,12 +99,24 @@ module O2I
   , StrategyAnchoring(..)
   , RawStrategyFormulation(..)
   , StrategyFormulation
+  , RawNeedQualificationProposal(..)
+  , NeedQualificationSourceReference
+  , NeedQualificationCandidate
+  , NeedQualificationError(..)
   , StrategyTextField(..)
   , StrategyPrimitiveRole(..)
   , SemanticallyValidModel
   , strategyFormulations
   , strategyFormulationData
   , lookupSemanticContextRef
+  , needQualificationCandidateStrategy
+  , needQualificationCandidateNeed
+  , needQualificationCandidateKeyResult
+  , needQualificationCandidateObjective
+  , needQualificationCandidateRationale
+  , needQualificationCandidateSourceReference
+  , needQualificationSourceReferenceText
+  , validateNeedQualificationProposal
   , qualifyingStrategies
   , EffectTrace
   , EffectTraceId

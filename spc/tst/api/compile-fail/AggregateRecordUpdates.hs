@@ -25,6 +25,33 @@ rewriteStrategyFormulation formulation =
   formulation
     {O2I.strategyFormulationData = O2I.strategyFormulationData formulation}
 
+rewriteNeedQualificationCandidate ::
+     O2I.NeedQualificationCandidate -> O2I.NeedQualificationCandidate
+rewriteNeedQualificationCandidate candidate =
+  candidate
+    { O2I.needQualificationCandidateStrategy =
+        O2I.needQualificationCandidateStrategy candidate
+    , O2I.needQualificationCandidateNeed =
+        O2I.needQualificationCandidateNeed candidate
+    , O2I.needQualificationCandidateKeyResult =
+        O2I.needQualificationCandidateKeyResult candidate
+    , O2I.needQualificationCandidateObjective =
+        O2I.needQualificationCandidateObjective candidate
+    , O2I.needQualificationCandidateRationale =
+        O2I.needQualificationCandidateRationale candidate
+    , O2I.needQualificationCandidateSourceReference =
+        O2I.needQualificationCandidateSourceReference candidate
+    }
+
+rewriteNeedQualificationSourceReference ::
+     O2I.NeedQualificationSourceReference
+  -> O2I.NeedQualificationSourceReference
+rewriteNeedQualificationSourceReference reference =
+  reference
+    { O2I.needQualificationSourceReferenceText =
+        O2I.needQualificationSourceReferenceText reference
+    }
+
 rewriteSemanticallyValidModel ::
      O2I.SemanticallyValidModel -> O2I.SemanticallyValidModel
 rewriteSemanticallyValidModel model =

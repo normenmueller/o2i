@@ -5,11 +5,11 @@ instruction override this snapshot.
 
 # Snapshot
 
-- Observed at: 2026-07-15 CEST.
-- Mode: `READY`.
+- Observed at: 2026-07-17 CEST.
+- Mode: `FINAL_REVIEW_PENDING`.
 - Branch/upstream: `trunk` / `origin/trunk`.
-- Active objective: verify and commit the final-review remediation, repeat the
-  independent final review, and close the gate at 10/10.
+- Active objective: close the independent review gate for the new formal
+  Need-qualification proposal validation.
 - Agent memory: active in the current repository revision.
 
 # Approved Baseline
@@ -34,6 +34,17 @@ instruction override this snapshot.
   ArchiMate syntax.
 
 # Active Quality Gate
+
+- The current dirty scope adds `validateNeedQualificationProposal` as a formal
+  pre-persistence check over an existing Strategy and fully situated Need.
+- Validation returns either accumulated formal errors or an opaque
+  `NeedQualificationCandidate`; authorized subject-matter acceptance remains
+  separate and precedes persistence, model revalidation, and
+  `qualifyingStrategies` confirmation.
+- Agentic AI may support proposal analysis but remains optional.
+- A metamodel/type-theory/Haskell co-author participated in design,
+  implementation, modularization, Haddock, and tests. Independent final review
+  of the resulting commit remains pending.
 
 - The independent final review of substantive commit `a87f333` on 2026-07-15
   reported no Blocker, High, Medium, or Low finding and explicit approval.
@@ -74,7 +85,7 @@ instruction override this snapshot.
 
 - ArchiMate model check and nine extractor contract tests: passed.
 - `cabal check` and `cabal build all --ghc-options=-Werror`: passed.
-- Both Cabal test suites passed: 176 fachliche tests plus positive, Template
+- Both Cabal test suites passed: 185 fachliche tests plus positive, Template
   Haskell, and compile-fail public-API contracts.
 - HIndent 80 validation: passed.
 - Haddock including internal and API-test modules: 100% coverage.
