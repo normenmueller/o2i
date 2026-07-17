@@ -2,7 +2,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Shared fixtures and validation helpers for O2I fachtests.
+-- | Shared fixtures and validation helpers for O2I domain tests.
 module O2I.Test.Support where
 
 import Data.List (nub)

@@ -413,9 +413,9 @@ Ein Bedarf ist strategisch relevant qualifiziert, wenn seine Veränderungsanford
 > Terminologisch erfolgt diese Begründung über kontextualisierte O2I-Primitives, ohne an dieser Stelle den Formalismus des Metamodells vollständig auszubreiten. Beispiel: `Key Result @ Strategy --translates-into--> Objective @ Need`. Damit ist `Strategy --qualifies--> Need` in O2I keine freie Behauptung, sondern eine als Autorenableitung eingeführte Makrorelation.
 
 > [!definition]
-> Eine **Qualifikationsvorlage** (en.: *need qualification proposal*)[^qualification-submission] bezeichnet die vollständige Vorlage eines situierten Bedarfs zur Prüfung gegen eine bestehende Kandidatenstrategie. Sie referenziert den Bedarf und die Strategie, benennt ein `Key Result @ Strategy` und ein `Objective @ Need` als vorgeschlagene Primitive-Verbindung und enthält dafür eine fachliche Begründung mit Quellenbezug.
+> Eine **Qualifikationsvorlage** (en.: *need qualification proposal*)[^need-qualification-proposal] bezeichnet die vollständige Vorlage eines situierten Bedarfs zur Prüfung gegen eine bestehende Kandidatenstrategie. Sie referenziert den Bedarf und die Strategie, benennt ein `Key Result @ Strategy` und ein `Objective @ Need` als vorgeschlagene Primitive-Verbindung und enthält dafür eine fachliche Begründung mit Quellenbezug.
 >
-> [^qualification-submission]: *Autorenableitung*: O2I operationalisiert die Bedarfsqualifikation durch die Trennung von fachlicher Begründung, formaler Zulässigkeitsprüfung und legitimierter Entscheidung.
+> [^need-qualification-proposal]: *Autorenableitung*: O2I operationalisiert die Bedarfsqualifikation durch die Trennung von fachlicher Begründung, formaler Zulässigkeitsprüfung und legitimierter Entscheidung.
 
 Die Qualifikationsprüfung folgt einer klaren Arbeitsteilung:
 
@@ -425,7 +425,7 @@ Die Qualifikationsprüfung folgt einer klaren Arbeitsteilung:
 4. Ein positives Ergebnis ist ein formal zulässiger `NeedQualificationCandidate`, noch keine akzeptierte Qualifikation. Fachlich legitimierte Personen prüfen Begründung und Quelle. Eine Ablehnung lässt den Graphen unverändert.
 5. Bei Annahme werden `Key Result @ Strategy --translates-into--> Objective @ Need` und `Strategy --qualifies--> Need` modelliert und das Modell erneut validiert. Erst wenn `qualifyingStrategies` danach die Strategie als qualifizierend liefert, ist der situierte Bedarf wirkungsrelevant.
 
-Die Qualifikationsvorlage bleibt von einem **Nachweisentwurf** getrennt. Ein Nachweisentwurf beschreibt, wie die Bearbeitung des Bedarfs später überprüfbar werden soll, und umfasst geplante Intervention, Measure und KPI, Baseline, Effekt- und Zielkriterium, Zieltermin sowie Quellenbezug. Er bestimmt nicht die strategische Relevanz des Bedarfs, sondern bereitet dessen Handlungs- und Nachweisfähigkeit vor.
+Die Qualifikationsvorlage bleibt vom späteren Nachweisentwurf getrennt. Dieser entscheidet nicht über die strategische Relevanz des Bedarfs, sondern bereitet dessen Handlungs- und Nachweisfähigkeit vor.
 
 Wirkungsrelevant heißt plausibel handlungsrelevant, nicht bereits wirksam. Erst eine spätere Messung kann zeigen, ob für die Bearbeitung eines wirkungsrelevanten Bedarfs positive Wirkungsevidenz vorliegt.
 
@@ -507,6 +507,13 @@ Ein Effektkriterium kann eine absolute Veränderung in der Einheit des KPI oder 
 > [^target-criterion]: *Autorenableitung in Anlehnung an Doerr (2018), Parmenter (2020) und Barr (2014)*: Das Zielkriterium operationalisiert den angestrebten Ergebniszustand unabhängig von der gegenüber der Baseline beobachteten Wirkung.
 
 Effekt und Zielerreichung sind damit getrennte Aussagen: Eine relevante Verbesserung kann eintreten, ohne dass das Ziel bereits erreicht ist; umgekehrt kann ein Zielwert erreicht sein, ohne dass die Intervention eine relevante Verbesserung gegenüber der Baseline erzeugt hat.
+
+> [!definition]
+> Ein **Nachweisentwurf** (en.: *evidence design*)[^evidence-design] bezeichnet die ex-ante festgelegte fachliche Planung, wie die Bearbeitung eines wirkungsrelevanten Bedarfs überprüfbar werden soll. Er verbindet eine geplante Intervention mit Measure und KPI, stabiler KPI-Definition, Baseline, Effekt- und Zielkriterium, Zieltermin sowie Quellenbezug.
+>
+> [^evidence-design]: *Autorenableitung in Anlehnung an Doerr (2018), Parmenter (2020) und Barr (2014)*: O2I fasst die vor Interventionsbeginn erforderlichen Mess-, Bewertungs-, Termin- und Herkunftsfestlegungen als eigenständigen Nachweisentwurf zusammen.
+
+Der Nachweisentwurf qualifiziert keinen Bedarf und weist noch keine Wirkung nach. Er bildet die fachliche Grundlage für die anschließende Prüfung der Evidenzbereitschaft.
 
 > [!definition]
 > **Evidenzbereitschaft**[^evidence-readiness] bezeichnet die ex-ante Nachweisqualität eines vollständigen Wirkungstraces, für den vor Beginn der Intervention eine stabile KPI-Definition, Baseline, Effekt- und Zielkriterium, Zieltermin sowie Quellenbezug verbindlich festgelegt sind.
@@ -861,7 +868,7 @@ Ein vollständiger Wirkungstrace ist relational nachvollziehbar, aber weder evid
 
 ### Evidenzbereitschaft
 
-Evidenzbereitschaft setzt einen vollständigen Wirkungstrace voraus. Für jeden im Trace verwendeten KPI wird genau eine `KPIDefinition`, für jede Intervention genau ein geplanter Beginn und für jeden Trace genau ein `EvidencePlan` validiert. Die KPI-Definition legt Einheit, zulässigen Wertebereich, Messmethode und fachliche Interpretation fest. Der Plan bindet Baseline, Effektkriterium, Zielkriterium, Zieltermin sowie Quellenbezug an denselben KPI und Situationsanker. Plan und Baseline müssen spätestens zum expliziten Prüfzeitpunkt feststehen; dieser Prüfzeitpunkt muss vor dem geplanten Interventionsbeginn liegen. Messniveaus, Kriterien und spätere Beobachtungen müssen dem definierten Wertebereich entsprechen; Quellen müssen eindeutig benannt sein.
+Evidenzbereitschaft setzt einen vollständigen Wirkungstrace voraus. Die Spezifikation formalisiert den Nachweisentwurf durch `EvidencePlan`, die zugehörige `KPIDefinition` und `PlannedInterventionStart`. Für jeden im Trace verwendeten KPI wird genau eine `KPIDefinition`, für jede Intervention genau ein geplanter Beginn und für jeden Trace genau ein `EvidencePlan` validiert. Die KPI-Definition legt Einheit, zulässigen Wertebereich, Messmethode und fachliche Interpretation fest. Der Plan bindet Baseline, Effektkriterium, Zielkriterium, Zieltermin sowie Quellenbezug an denselben KPI und Situationsanker. Plan und Baseline müssen spätestens zum expliziten Prüfzeitpunkt feststehen; dieser Prüfzeitpunkt muss vor dem geplanten Interventionsbeginn liegen. Messniveaus, Kriterien und spätere Beobachtungen müssen dem definierten Wertebereich entsprechen; Quellen müssen eindeutig benannt sein.
 
 `EvidenceReadyModel` bezeichnet damit den validierten ex-ante Zustand des Wirkungsmodells. Er enthält noch keine Folgebeobachtung und keine Aussage darüber, ob Wirkung oder Zielerreichung eingetreten sind.
 

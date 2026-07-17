@@ -1,10 +1,11 @@
 {-# LANGUAGE DataKinds #-}
 
--- | Formal admissibility of proposed Need qualifications.
+-- | Auxiliary pre-persistence validation for proposed Need qualifications.
 --
--- This validation stage checks a proposal against an already semantically
--- valid O2I model. It neither accepts subject-matter relevance nor persists the
--- proposed macrorelation and its Primitive evidence.
+-- This gate checks a proposal against a 'SemanticallyValidModel'. It creates no
+-- model stage and remains outside the normative O2I model validation pipeline.
+-- It neither accepts subject-matter relevance nor persists the proposed
+-- macrorelation and its Primitive evidence.
 module O2I.Validation.Qualification
   ( RawNeedQualificationProposal(..)
   , NeedQualificationSourceReference

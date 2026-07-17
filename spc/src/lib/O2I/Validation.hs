@@ -1,8 +1,11 @@
--- | Curated facade for the staged O2I validation pipeline.
+-- | Curated facade for O2I validation.
 --
--- Validation progresses from structural elaboration through semantic
--- completeness, effect traceability, ex-ante readiness, and ex-post evidence
--- assessment.
+-- The normative model validation pipeline progresses from structural
+-- elaboration through semantic completeness, effect traceability, ex-ante
+-- readiness, and ex-post evidence assessment. 'validateNeedQualificationProposal'
+-- is an auxiliary pre-persistence validation gate over a
+-- 'SemanticallyValidModel'; it creates no model stage and remains outside that
+-- pipeline.
 module O2I.Validation
   ( Validation(..)
   , Check

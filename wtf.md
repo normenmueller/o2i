@@ -56,14 +56,10 @@ Bedarf ist das fachliche Was: eine situationsbezogene Anforderung an Veränderun
 
 Weiterlesen: [Bedarf](./o2i.md#bedarf)
 
-## WTF "Submission"?
+## WTF "Qualifikationsvorlage"?
 
 > [!NOTE]
-> **Submission** = *Was muss für die Prüfung vorliegen?*
-
-Eine Submission trennt zwei Pakete:
-
-**Qualifikationsvorlage**
+> **Qualifikationsvorlage** = *Was muss für die Qualifikationsprüfung vorliegen?*
 
 - vollständig situierter Bedarf mit `Driver`, `Objective` und Situationsanker,
 - Referenz auf die bestehende Strategie, an der sich der Einreicher ausgerichtet hat,
@@ -72,16 +68,9 @@ Eine Submission trennt zwei Pakete:
 
 Agentic AI kann die Verbindung vorschlagen und begründen. Nach vollständiger Situierung des Bedarfs und vor der Modellierung von `translates-into` und `qualifies` prüft die O2I-Spezifikation ihre formale Zulässigkeit. Formale Fehler führen zu keinem Kandidaten und zu keiner Graphänderung. Einen positiven `NeedQualificationCandidate` prüfen fachlich legitimierte Personen: Ablehnung lässt den Graphen unverändert; Annahme modelliert beide Relationen, validiert das Modell erneut und macht die qualifizierende Strategie über `qualifyingStrategies` abfragbar.
 
-**Nachweisentwurf**
+Haskell: [`validateNeedQualificationProposal`](./spc/src/lib/O2I/Validation/Qualification.hs)
 
-- geplante Intervention,
-- Measure und KPI,
-- Baseline, Effekt- und Zielkriterium,
-- Zieltermin und Quellenbezug.
-
-Der Nachweisentwurf entscheidet nicht über strategische Relevanz. Er bereitet vor, wie die Bearbeitung des Bedarfs handlungs- und nachweisfähig wird.
-
-Haskell: [`validateNeedQualificationProposal`](./spc/src/lib/O2I/Validation/Qualification.hs), [`validateEvidenceReadinessAt`](./spc/src/lib/O2I/Validation/Readiness.hs)
+Ein Nachweisentwurf gehört nicht zur Qualifikationsvorlage. Eine organisationsspezifische Einreichungsregel kann beides gemeinsam verlangen; die O2I-Gates bleiben dennoch unabhängig.
 
 Weiterlesen: [Bedarfsqualifikation](./o2i.md#bedarfsqualifikation), [Evidenzbereitschaft](./o2i.md#evidenzbereitschaft)
 
@@ -113,6 +102,17 @@ Messung ist das fachliche Woran: der Rahmen, in dem relevante Zustände und Ver�
 
 Weiterlesen: [Messung](./o2i.md#messung)
 
+## WTF "Nachweisentwurf"?
+
+> [!NOTE]
+> **Nachweisentwurf** = *Wie wird die Bearbeitung überprüfbar?*
+
+Für jeden Wirkungstrace einer Intervention muss vor Interventionsbeginn ein validierter Nachweisentwurf vorliegen. Er verbindet Measure und KPI mit Baseline, Effekt- und Zielkriterium, Zieltermin sowie Quellenbezug. Der Nachweisentwurf qualifiziert keinen Bedarf und weist noch keine Wirkung nach; er schafft ex-ante Evidenzbereitschaft.
+
+Haskell: [`validateEvidenceReadinessAt`](./spc/src/lib/O2I/Validation/Readiness.hs)
+
+Weiterlesen: [Evidenzbereitschaft](./o2i.md#evidenzbereitschaft), [Nachweislogik](./o2i.md#nachweislogik)
+
 ## HTH "Wirkungsnachweis"?
 
 <!-- How the heck to demonstrate effectivness? -->
@@ -120,7 +120,7 @@ Weiterlesen: [Messung](./o2i.md#messung)
 > [!NOTE]
 > **Nachweislogik** = *Warum* darf eine Messung als Evidenz für Wirkung gelten?
 
-Wirkung ist nicht nachgewiesen, nur weil ein KPI grün wird. O2I verlangt einen vollständigen relationalen Wirkungstrace sowie konsistente Baseline- und Folgebeobachtungen desselben KPI am selben Situationsanker. Ein vorab festgelegtes Effektkriterium entscheidet, ob positive Wirkungsevidenz vorliegt; das Zielkriterium bewertet getrennt die Zielerreichung. Das stützt plausible Attribution, aber keinen Kausalbeweis.
+Wirkung ist nicht nachgewiesen, nur weil ein KPI grün wird. O2I verlangt zunächst einen vollständigen relationalen Wirkungstrace. Der validierte Nachweisentwurf schafft vor Interventionsbeginn Evidenzbereitschaft; eine spätere Folgebeobachtung desselben KPI am selben Situationsanker liefert die Bewertungsgrundlage. Das Effektkriterium bewertet die Veränderung gegenüber der Baseline, das Zielkriterium getrennt die Zielerreichung. Das stützt plausible Attribution, aber keinen Kausalbeweis.
 
 Haskell: [`validateTraceability`](./spc/src/lib/O2I/Validation/Trace.hs) -> [`validateEvidenceReadinessAt`](./spc/src/lib/O2I/Validation/Readiness.hs) -> [`assessEffectEvidenceAt`](./spc/src/lib/O2I/Validation/Evidence.hs)
 
