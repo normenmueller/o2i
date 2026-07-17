@@ -37,7 +37,7 @@ Die Library überführt einen ungeprüften O2I-Graphen durch aufeinander aufbaue
 RawGraph -> WellFormedGraph -> SemanticallyValidModel -> TraceableEffectModel -> EvidenceReadyModel -> EvidenceAssessedModel
 ```
 
-`Graph` bezeichnet die Knoten-Kanten-Repräsentation; `WellFormedGraph` weist zusätzlich ihre lokale graphbezogene Zulässigkeit nach. Ab `SemanticallyValidModel` bezeichnet `Model` die fachlich angereicherte Einheit. Die Modellstufen ergänzen den wohlgeformten Graphen nacheinander um globale fachliche Invarianten, Wirkungstraces, ex-ante Evidenzpläne und ex-post Evidenzbewertungen.
+Graph bezeichnet als Oberbegriff die Knoten-Kanten-Repräsentation. `RawGraph` ist ihre ungeprüfte, `WellFormedGraph` ihre lokal validierte Form. Ab `SemanticallyValidModel` bezeichnet `Model` die fachlich angereicherte Einheit. Die Modellstufen ergänzen den wohlgeformten Graphen nacheinander um globale fachliche Invarianten, Wirkungstraces, ex-ante Evidenzpläne und ex-post Evidenzbewertungen.
 
 ## Layout
 

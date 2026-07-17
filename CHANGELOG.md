@@ -28,6 +28,7 @@
 - Refined the introduction for clearer first-reader orientation and terminology.
 - Reordered the literature-function section along the O2I domains.
 - Clarified the O2I feedback loop, need qualification flow, generic refinement semantics, and the distinction between plausible attribution and causal proof.
+- Clarified the semantic boundary between structural graph stages and fachlich enriched model stages.
 - Separated `O2I Situation` as the anchor type model from `O2I Situation Anchoring` as the relation model connecting situated Need, Intervention, and Measure semantics, with a parameterized ArchiMate 4 syntax mapping for every anchor form.
 - Clarified the Haskell specification as the normative machine-checkable formalization of the technology-independent O2I metamodel.
 - Introduced the mandatory strategic success reference as the terminology counterpart of `Key Result @ Strategy`.
