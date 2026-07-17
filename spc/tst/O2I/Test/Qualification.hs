@@ -45,6 +45,53 @@ needQualificationTests =
                   @?= "strategy/kr-1"
                 withSemanticContextRef model SNeed needId $ \need ->
                   qualifyingStrategies model need @?= []
+    , testCase "accepted candidate becomes a queryable qualification"
+        $ withSemanticallyValid
+            minimalQualificationGraph
+            [sampleStrategyFormulation]
+        $ \initialModel ->
+            case validateNeedQualificationProposal
+                   initialModel
+                   sampleNeedQualificationProposal of
+              Failure errors ->
+                assertFailure ("qualification errors: " ++ show errors)
+              Success candidate -> do
+                qualifyingStrategies
+                  initialModel
+                  (needQualificationCandidateNeed candidate)
+                  @?= []
+                let acceptedGraph =
+                      minimalQualificationGraph
+                        { rawEdges =
+                            edge
+                              (unNodeId
+                                 (needQualificationCandidateKeyResult candidate))
+                              translatesStrategyKeyResultToNeedObjective
+                              (unNodeId
+                                 (needQualificationCandidateObjective candidate))
+                              : edge
+                                  (contextRefId
+                                     (needQualificationCandidateStrategy
+                                        candidate))
+                                  qualifiesNeed
+                                  (contextRefId
+                                     (needQualificationCandidateNeed candidate))
+                              : rawEdges minimalQualificationGraph
+                        }
+                case validateStructure acceptedGraph of
+                  Failure errors ->
+                    assertFailure ("structural errors: " ++ show errors)
+                  Success graph ->
+                    case validateModelSemantics
+                           graph
+                           [sampleStrategyFormulation] of
+                      Failure errors ->
+                        assertFailure ("semantic errors: " ++ show errors)
+                      Success acceptedModel ->
+                        qualifyingStrategies
+                          acceptedModel
+                          (needQualificationCandidateNeed candidate)
+                          @?= [needQualificationCandidateStrategy candidate]
     , testCase "proposal source reference must not be blank"
         $ withSemanticallyValid
             minimalQualificationGraph

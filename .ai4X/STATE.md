@@ -85,7 +85,7 @@ instruction override this snapshot.
 
 - ArchiMate model check and nine extractor contract tests: passed.
 - `cabal check` and `cabal build all --ghc-options=-Werror`: passed.
-- Both Cabal test suites passed: 185 fachliche tests plus positive, Template
+- Both Cabal test suites passed: 186 fachliche tests plus positive, Template
   Haskell, and compile-fail public-API contracts.
 - HIndent 80 validation: passed.
 - Haddock including internal and API-test modules: 100% coverage.

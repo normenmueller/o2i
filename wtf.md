@@ -78,7 +78,7 @@ Weiterlesen: [Bedarfsqualifikation](./o2i.md#bedarfsqualifikation), [Evidenzbere
 
 <!-- How the heck to qualify need? -->
 
-Die Situation macht einen Bedarf sichtbar; die Strategie macht ihn relevant. Dafür müssen Strategie- und Bedarf-Inhalte über zulässige Primitive-Relationen verbunden sein, beispielsweise `Key Result @ Strategy --translates-into--> Objective @ Need`. Erst dann wird ein sichtbarer Bedarf wirkungsrelevant, aber noch nicht wirksam.
+Die Situation macht einen Bedarf sichtbar; die Strategie macht ihn relevant. Dafür werden `Strategy --qualifies--> Need` und ihre Primitive-Begründung modelliert, beispielsweise `Key Result @ Strategy --translates-into--> Objective @ Need`. Nach erneuter Modellvalidierung muss `qualifyingStrategies` die Strategie liefern. Erst dann ist der sichtbare Bedarf wirkungsrelevant, aber noch nicht wirksam.
 
 Haskell: [`validateNeedQualificationProposal`](./spc/src/lib/O2I/Validation/Qualification.hs), [`qualifyingStrategies`](./spc/src/lib/O2I/Validation/Semantics.hs)
 
@@ -107,7 +107,7 @@ Weiterlesen: [Messung](./o2i.md#messung)
 > [!NOTE]
 > **Nachweisentwurf** = *Wie wird die Bearbeitung überprüfbar?*
 
-Für jeden Wirkungstrace einer Intervention muss vor Interventionsbeginn ein validierter Nachweisentwurf vorliegen. Er verbindet Measure und KPI mit Baseline, Effekt- und Zielkriterium, Zieltermin sowie Quellenbezug. Der Nachweisentwurf qualifiziert keinen Bedarf und weist noch keine Wirkung nach; er schafft ex-ante Evidenzbereitschaft.
+Für jeden Wirkungstrace einer Intervention muss vor Interventionsbeginn ein Nachweisentwurf vorliegen. Er verbindet Measure und KPI mit Baseline, Effekt- und Zielkriterium, Zieltermin sowie Quellenbezug. Der Nachweisentwurf qualifiziert keinen Bedarf und weist noch keine Wirkung nach. Er ist die Eingabegrundlage, aus der `validateEvidenceReadinessAt` ein `EvidenceReadyModel` erzeugen kann.
 
 Haskell: [`validateEvidenceReadinessAt`](./spc/src/lib/O2I/Validation/Readiness.hs)
 
@@ -120,7 +120,7 @@ Weiterlesen: [Evidenzbereitschaft](./o2i.md#evidenzbereitschaft), [Nachweislogik
 > [!NOTE]
 > **Nachweislogik** = *Warum* darf eine Messung als Evidenz für Wirkung gelten?
 
-Wirkung ist nicht nachgewiesen, nur weil ein KPI grün wird. O2I verlangt zunächst einen vollständigen relationalen Wirkungstrace. Der validierte Nachweisentwurf schafft vor Interventionsbeginn Evidenzbereitschaft; eine spätere Folgebeobachtung desselben KPI am selben Situationsanker liefert die Bewertungsgrundlage. Das Effektkriterium bewertet die Veränderung gegenüber der Baseline, das Zielkriterium getrennt die Zielerreichung. Das stützt plausible Attribution, aber keinen Kausalbeweis.
+Wirkung ist nicht nachgewiesen, nur weil ein KPI grün wird. O2I verlangt zunächst einen vollständigen relationalen Wirkungstrace. Der Nachweisentwurf liefert die Eingaben, aus denen `validateEvidenceReadinessAt` vor Interventionsbeginn ein `EvidenceReadyModel` erzeugt; eine spätere Folgebeobachtung desselben KPI am selben Situationsanker liefert die Bewertungsgrundlage. Das Effektkriterium bewertet die Veränderung gegenüber der Baseline, das Zielkriterium getrennt die Zielerreichung. Das stützt plausible Attribution, aber keinen Kausalbeweis.
 
 Haskell: [`validateTraceability`](./spc/src/lib/O2I/Validation/Trace.hs) -> [`validateEvidenceReadinessAt`](./spc/src/lib/O2I/Validation/Readiness.hs) -> [`assessEffectEvidenceAt`](./spc/src/lib/O2I/Validation/Evidence.hs)
 

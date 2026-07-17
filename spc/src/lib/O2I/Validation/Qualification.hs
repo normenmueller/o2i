@@ -153,8 +153,8 @@ needQualificationSourceReferenceText (NeedQualificationSourceReference reference
 -- reference are nonblank, and neither proposed relation already exists.
 --
 -- Failure returns no candidate and accumulates every detected formal error.
--- All errors must be resolved before resubmission; validation makes no
--- subject-matter acceptance decision and leaves the graph unchanged.
+-- Validation makes no subject-matter acceptance decision and leaves the graph
+-- unchanged.
 --
 -- A successful candidate enters this follow-up process:
 --
