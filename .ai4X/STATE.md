@@ -81,6 +81,11 @@ instruction override this snapshot.
 - Pandoc include expansion and `./toPDF.sh`: passed.
 - `git diff --check`: passed.
 
+# Release Note Draft
+
+- `CHANGELOG.md` section `[0.2] - Unreleased` is the canonical v0.2 release-note
+  draft.
+
 # Next Work
 
 - The user controls pushing the reviewed local commits.

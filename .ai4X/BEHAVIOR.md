@@ -62,6 +62,9 @@ the canonical repository memory.
 # Workflow
 
 - Prefer repository patterns and local source files over invention.
+- Keep the active unreleased section of `CHANGELOG.md` synchronized with every
+  release-relevant fachliche, metamodel, specification, tooling, or publication
+  change. Treat its Summary as the canonical draft for the next GitHub release.
 - For conceptual work, discuss semantics before editing unless the user has
   approved the change.
 - For implementation work, inspect relevant files, edit narrowly, verify, and

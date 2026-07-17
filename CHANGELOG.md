@@ -1,6 +1,20 @@
 # Changelog
 
-## [Unreleased]
+## [0.2] - Unreleased
+
+### Summary
+
+- Added the mandatory strategic success reference, Situating and Situation
+  anchors, stable KPI definitions, observations, effect and target criteria,
+  evidence readiness, and plausible attribution.
+- Removed Direction, open Domain/CSF structuring types, redundant reverse
+  relations, and refinement as an O2I core relation.
+- Replaced Contextualization with Situating, defined Situation through anchors,
+  introduced closed PerformanceDimension roles, and separated effect from
+  target attainment.
+- Achieved one machine-checkable semantic chain from Strategy through Need and
+  Intervention to evidence, synchronized across terminology, metamodel,
+  ArchiMate, Haskell, and tests.
 
 ### Added
 
