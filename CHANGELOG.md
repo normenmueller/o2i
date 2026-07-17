@@ -18,6 +18,8 @@
 
 ### Added
 
+- Added repository-local agent facades backed by the canonical O2I behavior
+  contract.
 - Added a concise WTF and HTH guide for direct access to central O2I concepts.
 - Added a compact evidence-sequence visualization from situated Need to ex-post effect evidence.
 - Added deterministic ArchiMate model-contract, relationship-endpoint, and snapshot-drift verification.
