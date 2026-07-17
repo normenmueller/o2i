@@ -511,7 +511,7 @@ Evidenzbereitschaft ist noch keine Wirkungsevidenz. Sie stellt sicher, dass die 
 >
 > [^evidence-logic]: *Autorenableitung in Anlehnung an Doerr (2018), Parmenter (2020) und Barr (2014)*: Nachweislogik wird in O2I als verbindendes Begründungselement zwischen Messung und Wirkung eingeführt. Doerr stützt Ziel- und Ergebnisbezüge; Parmenter und Barr stützen Performance-Measurement-Disziplin und die methodische Qualität aussagefähiger Maße.
 
-Nachweislogik ist damit keine zusätzliche Messung, sondern die Begründungsstruktur, die Messungen in den O2I-Wirkungsgraphen einordnet.
+Nachweislogik ist kein eigener O2I-Typ und kein Modellelement. Sie ergibt sich als Begründungsstruktur aus dem vollständigen Wirkungstrace, dem Evidenzplan, der KPI-Definition, den Messbeobachtungen sowie deren Effekt- und Zielbewertung.
 
 > [!addendum]
 > Eine Messung darf in O2I nur dann als Evidenz für eine auf die Vision einzahlende Wirkung interpretiert werden, wenn sie eine relevante Situationsveränderung beobachtet, die auf einen wirkungsrelevanten Bedarf bezogen ist, dieser Bedarf durch eine Intervention adressiert wurde und im O2I-Graphen relational nachvollziehbar mit Strategie und Vision verbunden ist.
