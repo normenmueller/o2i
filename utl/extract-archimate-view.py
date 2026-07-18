@@ -72,6 +72,8 @@ REQUIRED_SYNTAX_DOCUMENTATION = (
 
 O2I_KIND_PROPERTY = "o2i.kind"
 O2I_TYPE_PROPERTY = "o2i.type"
+O2I_PROFILE_PROPERTY = "o2i.profile"
+O2I_PROFILE_VERSION = "0.2"
 O2I_TYPES_BY_KIND = {
     "Context": frozenset(
         {
@@ -929,15 +931,27 @@ def validate_model(root: ET.Element) -> list[str]:
     elements, relations = collect_model(root)
     errors: list[str] = []
 
-    model_versions = [
+    profile_versions = [
         prop.get("value", "")
-        for prop in root.iter("property")
+        for prop in root.findall("property")
+        if prop.get("key") == O2I_PROFILE_PROPERTY
+    ]
+    if profile_versions != [O2I_PROFILE_VERSION]:
+        errors.append(
+            "expected exactly one canonical O2I profile 0.2; found: "
+            + repr(profile_versions)
+        )
+
+    legacy_profile_versions = [
+        prop.get("value", "")
+        for prop in root.findall("property")
         if prop.get("key") == "version"
     ]
-    if model_versions != ["0.2"]:
+    if legacy_profile_versions:
         errors.append(
-            "expected exactly one canonical model version 0.2; found: "
-            + repr(model_versions)
+            "generic model property 'version' is not an O2I profile alias; "
+            "found: "
+            + repr(legacy_profile_versions)
         )
 
     errors.extend(validate_o2i_ownership(root, relations))

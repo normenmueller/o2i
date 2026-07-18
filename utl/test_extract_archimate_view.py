@@ -29,6 +29,67 @@ class RelationshipEndpointContractTest(unittest.TestCase):
     def test_repository_model_is_valid(self) -> None:
         self.assertEqual([], EXTRACTOR.validate_model(self.root))
 
+    def test_o2i_profile_is_required_as_a_direct_model_property(self) -> None:
+        root = copy.deepcopy(self.root)
+        profile = self._direct_model_property(
+            root,
+            EXTRACTOR.O2I_PROFILE_PROPERTY,
+        )
+        root.remove(profile)
+
+        errors = EXTRACTOR.validate_model(root)
+
+        self.assertIn(
+            "expected exactly one canonical O2I profile 0.2; found: []",
+            errors,
+        )
+
+    def test_duplicate_o2i_profiles_are_rejected(self) -> None:
+        root = copy.deepcopy(self.root)
+        ET.SubElement(
+            root,
+            "property",
+            {
+                "key": EXTRACTOR.O2I_PROFILE_PROPERTY,
+                "value": EXTRACTOR.O2I_PROFILE_VERSION,
+            },
+        )
+
+        errors = EXTRACTOR.validate_model(root)
+
+        self.assertIn(
+            "expected exactly one canonical O2I profile 0.2; found: "
+            "['0.2', '0.2']",
+            errors,
+        )
+
+    def test_unsupported_o2i_profile_is_rejected(self) -> None:
+        root = copy.deepcopy(self.root)
+        profile = self._direct_model_property(
+            root,
+            EXTRACTOR.O2I_PROFILE_PROPERTY,
+        )
+        profile.set("value", "0.1")
+
+        errors = EXTRACTOR.validate_model(root)
+
+        self.assertIn(
+            "expected exactly one canonical O2I profile 0.2; found: ['0.1']",
+            errors,
+        )
+
+    def test_generic_version_property_is_not_an_o2i_profile_alias(self) -> None:
+        root = copy.deepcopy(self.root)
+        ET.SubElement(root, "property", {"key": "version", "value": "0.2"})
+
+        errors = EXTRACTOR.validate_model(root)
+
+        self.assertIn(
+            "generic model property 'version' is not an O2I profile alias; "
+            "found: ['0.2']",
+            errors,
+        )
+
     def test_required_o2i_metadata_is_enforced(self) -> None:
         for identity, required in EXTRACTOR.REQUIRED_O2I_ELEMENT_METADATA.items():
             for key, expected in required.items():
@@ -643,6 +704,19 @@ class RelationshipEndpointContractTest(unittest.TestCase):
         errors = EXTRACTOR.validate_model(root)
 
         self.assertTrue(any(expected in error for error in errors), errors)
+
+    def _direct_model_property(
+        self,
+        root: ET.Element,
+        key: str,
+    ) -> ET.Element:
+        matches = [
+            prop
+            for prop in root.findall("property")
+            if prop.get("key") == key
+        ]
+        self.assertEqual(1, len(matches), matches)
+        return matches[0]
 
     def _substantiates_connection_fixture(self):
         root = copy.deepcopy(self.root)

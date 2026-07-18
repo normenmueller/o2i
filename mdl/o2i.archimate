@@ -388,8 +388,12 @@ Source: O2I syntax mapping based on The Open Group (2026).</documentation>
       <documentation>Hinweis: diese Relation zeigt Umsetzungsbeitrag.</documentation>
     </element>
     <element xsi:type="archimate:AssignmentRelationship" id="id-b3a4bf329b2c49cb88512f97c42ea909" source="id-56d153324b83433f8eae7ec3e947c0e5" target="id-f1c3e54673b74c439ca64b8d91b4d207"/>
-    <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-fb625ef24a8c4ed7be348d25c4fceb26" source="id-cf054314f7e944cea52ff8ec082377f8" target="id-63a27d11822d4ef4b45e65b0e7231fc4"/>
-    <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-bb43d55e900449e1b0ff3e0e8eec1f05" source="id-cf054314f7e944cea52ff8ec082377f8" target="id-209098a723f84d0787eab3cfed0e3db0"/>
+    <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-fb625ef24a8c4ed7be348d25c4fceb26" source="id-cf054314f7e944cea52ff8ec082377f8" target="id-63a27d11822d4ef4b45e65b0e7231fc4">
+      <documentation>prägt, setzt Verhaltensleitplanken, gibt kulturelle Leitlinien, rahmt (sets behavioral guardrails for)</documentation>
+    </element>
+    <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-bb43d55e900449e1b0ff3e0e8eec1f05" source="id-cf054314f7e944cea52ff8ec082377f8" target="id-209098a723f84d0787eab3cfed0e3db0">
+      <documentation>prägt, setzt Verhaltensleitplanken, gibt kulturelle Leitlinien, rahmt (sets behavioral guardrails for)</documentation>
+    </element>
     <element xsi:type="archimate:InfluenceRelationship" name="orients" id="id-9acf0334482342e294ddf4be5096d66a" source="id-63a27d11822d4ef4b45e65b0e7231fc4" target="id-fc76733c15ce4d0fa08e1156adfa9879"/>
     <element xsi:type="archimate:InfluenceRelationship" name="grounds" id="id-76fdb740fff743c5a118d7b977a1e72e" source="id-209098a723f84d0787eab3cfed0e3db0" target="id-63a27d11822d4ef4b45e65b0e7231fc4"/>
     <element xsi:type="archimate:AggregationRelationship" name="is-constituted-by" id="id-faae7b36fcdd4ed8b4f84262e1978fc3" source="id-8c348250cde04e30aa63e18b79a51ccd" target="id-4e17e5ec1696437f837e2ef7ae35ced1"/>
@@ -1455,7 +1459,7 @@ The view intentionally abstracts from concrete Primitive and Structuring instanc
     </element>
   </folder>
   <property key="author" value="Dr. Normen Müller"/>
-  <property key="version" value="0.2"/>
+  <property key="o2i.profile" value="0.2"/>
   <purpose>Effectiveness Meta-Model
 = Metamodell für Wirkungsarchitekturen</purpose>
 </archimate:model>
