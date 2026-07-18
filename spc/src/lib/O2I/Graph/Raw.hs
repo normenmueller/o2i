@@ -19,8 +19,8 @@ data RawNode
     -- ^ Identifier, owning context identifier, and primitive type.
   | RawStructuringNode RawNodeId RawNodeId Structuring
     -- ^ Identifier, owning context identifier, and structuring type.
-  | RawAnchorNode RawNodeId RawNodeId SituationAnchor
-    -- ^ Identifier, owning Situation identifier, and anchor type.
+  | RawAnchorNode RawNodeId SituationAnchor
+    -- ^ Identifier and anchor type.
   deriving (Eq, Show)
 
 -- | Unchecked directed edge identified by endpoints and relation name.

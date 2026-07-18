@@ -30,7 +30,7 @@ module O2I.Graph.Typed
   , contextNodesOf
   , primitiveNodesIn
   , performanceDimensionNodesIn
-  , anchorNodesIn
+  , constitutingAnchorNodes
   , hasEdge
   , outgoingContextTargets
   ) where
@@ -66,7 +66,6 @@ data Node (kind :: NodeKind) where
     -- ^ Validated performance dimension whose role fixes its member kind.
   AnchorNode
     :: NodeId ('AnchorKind anchor)
-    -> NodeId ('ContextKind 'Situation)
     -> SSituationAnchor anchor
     -> Node ('AnchorKind anchor)
     -- ^ Validated Situation anchor.
@@ -122,6 +121,7 @@ someEdgeTo (SomeEdge edge) = unNodeId (edgeTo edge)
 -- * Well-formed graph stage
 -- | Opaque graph with valid IDs, ownership, interpretations, and edges.
 --
+-- PerformanceDimension memberships share one owner Context instance.
 -- Construction is restricted to structural validation.
 data WellFormedGraph = WellFormedGraph
   { typedNodes :: Map RawNodeId SomeNode
@@ -145,7 +145,7 @@ nodeId :: Node kind -> NodeId kind
 nodeId (ContextNode identifier _) = identifier
 nodeId (PrimitiveNode identifier _ _ _ _) = identifier
 nodeId (PerformanceDimensionNode identifier _ _) = identifier
-nodeId (AnchorNode identifier _ _) = identifier
+nodeId (AnchorNode identifier _) = identifier
 
 -- | Recover the singleton kind witness carried by a validated node.
 nodeKind :: Node kind -> SNodeKind kind
@@ -153,14 +153,14 @@ nodeKind (ContextNode _ context) = SContextKind context
 nodeKind (PrimitiveNode _ _ context primitive _) =
   SPrimitiveKind context primitive
 nodeKind (PerformanceDimensionNode _ _ role) = SPerformanceDimensionKind role
-nodeKind (AnchorNode _ _ anchor) = SAnchorKind anchor
+nodeKind (AnchorNode _ anchor) = SAnchorKind anchor
 
--- | Return the owning context ID; context nodes have no owner.
+-- | Return the owning Context ID of a Primitive or structuring element.
 nodeOwner :: Node kind -> Maybe RawNodeId
 nodeOwner (ContextNode _ _) = Nothing
 nodeOwner (PrimitiveNode _ owner _ _ _) = Just (unNodeId owner)
 nodeOwner (PerformanceDimensionNode _ owner _) = Just (unNodeId owner)
-nodeOwner (AnchorNode _ owner _) = Just (unNodeId owner)
+nodeOwner (AnchorNode _ _) = Nothing
 
 -- | Read an existential validated node identifier.
 someNodeId :: SomeNode -> RawNodeId
@@ -224,12 +224,14 @@ performanceDimensionNodesIn graph owner role =
   , Just Refl <- [eqSNodeKind (nodeKind node) (SPerformanceDimensionKind role)]
   ]
 
--- | Enumerate Situation anchors owned by one Situation context.
-anchorNodesIn :: WellFormedGraph -> RawNodeId -> [RawNodeId]
-anchorNodesIn graph owner =
-  [ unNodeId identifier
-  | SomeNode (AnchorNode identifier context _) <- graphNodes graph
-  , unNodeId context == owner
+-- | Enumerate anchors related as constituents of one Situation.
+constitutingAnchorNodes :: WellFormedGraph -> RawNodeId -> [RawNodeId]
+constitutingAnchorNodes graph situation =
+  [ unNodeId (edgeTo edge)
+  | SomeEdge edge <- graphEdges graph
+  , unNodeId (edgeFrom edge) == situation
+  , AnchorRelation ConstitutedByAnchorFamily _ <-
+      [relationCode (relationSpec (edgeRelation edge))]
   ]
 
 -- | Test whether an exact validated edge exists.

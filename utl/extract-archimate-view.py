@@ -34,15 +34,34 @@ REQUIRED_SYNTAX_NODES = {
     ("Assessment", "Assessment"),
     ("Course of Action", "CourseOfAction"),
     ("Driver", "Driver"),
+    ("Driver @ Mission", "Driver"),
     ("Goal", "Goal"),
+    ("O2I Context (Mission)", "Grouping"),
+    ("O2I Context (Strategy)", "Grouping"),
     ("Outcome", "Outcome"),
     ("Performance Dimension", "Grouping"),
+    ("Performance Dimension @ Strategy", "Grouping"),
     ("Principle", "Principle"),
 }
 
 REQUIRED_SYNTAX_DOCUMENTATION = (
-    "Every O2I Context is represented by an ArchiMate Grouping.",
-    "Primitive @ Context is the textual notation of this containment.",
+    "Defines the concrete ArchiMate realization of O2I Contexts, "
+    "contextualized Primitives, PerformanceDimensions, Situation anchors, "
+    "and their relation mappings.",
+    "Every O2I Context and PerformanceDimension is represented by an "
+    "ArchiMate Grouping.",
+    "ArchiMate Groupings introduce no O2I semantics.",
+    "Every concrete Primitive and PerformanceDimension instance has exactly "
+    "one owning Context through composition[contains]",
+    "The Interpretation registry admits Primitive @ Context;",
+    "the role registry admits PerformanceDimension @ Context and constrains "
+    "its member Primitive type and membership relation without interpreting "
+    "the members.",
+    "Visual nesting presents but never replaces persisted ownership.",
+    "Primitive @ Context and PerformanceDimension @ Context are the textual "
+    "O2I notations.",
+    "The bounded ownership examples are syntax exemplars, not fachliche "
+    "instances.",
     "O2I BusinessCapability -> ArchiMate Capability",
     "O2I BusinessProcess -> ArchiMate Process",
     "O2I BusinessObject -> ArchiMate Business Object",
@@ -50,6 +69,86 @@ REQUIRED_SYNTAX_DOCUMENTATION = (
     "O2I ValueStream -> ArchiMate Value Stream",
     "O2I RegulatoryConstraint -> ArchiMate Requirement",
 )
+
+O2I_KIND_PROPERTY = "o2i.kind"
+O2I_TYPE_PROPERTY = "o2i.type"
+O2I_TYPES_BY_KIND = {
+    "Context": frozenset(
+        {
+            "Ethos",
+            "Mission",
+            "Vision",
+            "Strategy",
+            "Situation",
+            "Need",
+            "Intervention",
+            "Measure",
+        }
+    ),
+    "Primitive": frozenset(
+        {"Principle", "Driver", "Objective", "KeyResult", "KPI", "Action"}
+    ),
+    "Structuring": frozenset({"PerformanceDimension"}),
+    "SituationAnchor": frozenset(
+        {
+            "BusinessCapability",
+            "BusinessProcess",
+            "BusinessObject",
+            "BusinessRole",
+            "ValueStream",
+            "RegulatoryConstraint",
+        }
+    ),
+}
+O2I_OWNED_KINDS = frozenset({"Primitive", "Structuring"})
+FORBIDDEN_O2I_METADATA_PROPERTIES = frozenset(
+    {
+        "o2i.context",
+        "o2i.owner",
+        "o2i.role",
+        "o2i.interpretation",
+        "o2i.member",
+    }
+)
+
+REQUIRED_SYNTAX_EXEMPLAR_METADATA = {
+    ("Driver @ Mission", "Driver"): {
+        O2I_KIND_PROPERTY: "Primitive",
+        O2I_TYPE_PROPERTY: "Driver",
+    },
+    ("O2I Context (Mission)", "Grouping"): {
+        O2I_KIND_PROPERTY: "Context",
+        O2I_TYPE_PROPERTY: "Mission",
+    },
+    ("O2I Context (Strategy)", "Grouping"): {
+        O2I_KIND_PROPERTY: "Context",
+        O2I_TYPE_PROPERTY: "Strategy",
+    },
+    ("Performance Dimension @ Strategy", "Grouping"): {
+        O2I_KIND_PROPERTY: "Structuring",
+        O2I_TYPE_PROPERTY: "PerformanceDimension",
+    },
+}
+
+REQUIRED_SITUATION_ANCHOR_METADATA = {
+    (anchor, "Grouping"): {
+        O2I_KIND_PROPERTY: "SituationAnchor",
+        O2I_TYPE_PROPERTY: anchor_type,
+    }
+    for anchor, anchor_type in (
+        ("Business Capability", "BusinessCapability"),
+        ("Business Object", "BusinessObject"),
+        ("Business Process", "BusinessProcess"),
+        ("Business Role", "BusinessRole"),
+        ("Regulatory Constraint", "RegulatoryConstraint"),
+        ("Value Stream", "ValueStream"),
+    )
+}
+
+REQUIRED_O2I_ELEMENT_METADATA = {
+    **REQUIRED_SYNTAX_EXEMPLAR_METADATA,
+    **REQUIRED_SITUATION_ANCHOR_METADATA,
+}
 
 
 def contract_edge(
@@ -252,6 +351,19 @@ RELATION_CONTRACTS = {
     "O2I Syntax": frozenset(
         {
             contract_edge(
+                "O2I Context (Mission)",
+                "contains",
+                "Driver @ Mission",
+                relation_type="CompositionRelationship",
+                target_type="Driver",
+            ),
+            contract_edge(
+                "O2I Context (Strategy)",
+                "contains",
+                "Performance Dimension @ Strategy",
+                relation_type="CompositionRelationship",
+            ),
+            contract_edge(
                 "Course of Action",
                 "contributes-to",
                 "Course of Action",
@@ -414,6 +526,231 @@ def collect_model(root: ET.Element):
             )
 
     return elements, relations
+
+
+def model_elements(root: ET.Element) -> dict[str, ET.Element]:
+    return {
+        element_id: element
+        for element in root.iter("element")
+        if (element_id := element.get("id"))
+        and not xtype(element).endswith("Relationship")
+        and xtype(element) != "ArchimateDiagramModel"
+    }
+
+
+def property_values(element: ET.Element, key: str) -> list[str]:
+    return [
+        prop.get("value", "")
+        for prop in element.findall("property")
+        if prop.get("key") == key
+    ]
+
+
+def element_label(element: ET.Element) -> str:
+    return (
+        f"{element.get('name', '')} ({xtype(element)}, "
+        f"{element.get('id', '?')})"
+    )
+
+
+def required_o2i_metadata_errors(root: ET.Element) -> list[str]:
+    candidates = list(model_elements(root).values())
+    errors: list[str] = []
+
+    for identity, required in REQUIRED_O2I_ELEMENT_METADATA.items():
+        name, element_type = identity
+        matches = [
+            element
+            for element in candidates
+            if element.get("name", "") == name
+            and xtype(element) == element_type
+        ]
+        if len(matches) != 1:
+            errors.append(
+                "expected exactly one metadata-bearing O2I element "
+                f"{name} ({element_type}); found {len(matches)}"
+            )
+            continue
+
+        element = matches[0]
+        for key, expected in required.items():
+            values = property_values(element, key)
+            if values != [expected]:
+                errors.append(
+                    f"{element_label(element)} must declare exactly one "
+                    f"{key}={expected!r}; found {values!r}"
+                )
+
+    return errors
+
+
+def collect_o2i_metadata(
+    root: ET.Element,
+) -> tuple[dict[str, tuple[str, str]], list[str]]:
+    metadata: dict[str, tuple[str, str]] = {}
+    errors: list[str] = []
+
+    for element_id, element in model_elements(root).items():
+        o2i_properties = [
+            prop
+            for prop in element.findall("property")
+            if prop.get("key", "").startswith("o2i.")
+        ]
+        if not o2i_properties:
+            continue
+
+        for prop in o2i_properties:
+            key = prop.get("key", "")
+            if key in FORBIDDEN_O2I_METADATA_PROPERTIES:
+                errors.append(
+                    f"{element_label(element)} must not declare forbidden "
+                    f"O2I metadata property {key!r}"
+                )
+            elif key not in {O2I_KIND_PROPERTY, O2I_TYPE_PROPERTY}:
+                errors.append(
+                    f"{element_label(element)} declares unsupported O2I "
+                    f"metadata property {key!r}"
+                )
+
+        kind_values = property_values(element, O2I_KIND_PROPERTY)
+        type_values = property_values(element, O2I_TYPE_PROPERTY)
+
+        if len(kind_values) != 1:
+            errors.append(
+                f"{element_label(element)} must declare exactly one "
+                f"{O2I_KIND_PROPERTY}; found {kind_values!r}"
+            )
+            continue
+
+        kind = kind_values[0]
+        if kind not in O2I_TYPES_BY_KIND:
+            errors.append(
+                f"{element_label(element)} has invalid {O2I_KIND_PROPERTY} "
+                f"value {kind!r}"
+            )
+            continue
+
+        if len(type_values) != 1:
+            errors.append(
+                f"{element_label(element)} must declare exactly one "
+                f"{O2I_TYPE_PROPERTY}; found {type_values!r}"
+            )
+            continue
+
+        element_type = type_values[0]
+        if element_type not in O2I_TYPES_BY_KIND[kind]:
+            errors.append(
+                f"{element_label(element)} has invalid "
+                f"{O2I_TYPE_PROPERTY} value {element_type!r} for "
+                f"{O2I_KIND_PROPERTY}={kind!r}"
+            )
+            continue
+
+        metadata[element_id] = (kind, element_type)
+
+    return metadata, errors
+
+
+def validate_o2i_ownership(
+    root: ET.Element,
+    relations: dict[
+        str,
+        tuple[str, str, str | None, str | None, bool],
+    ],
+) -> list[str]:
+    """Validate generic O2I metadata and structure, not registry semantics."""
+    model_nodes = model_elements(root)
+    metadata, errors = collect_o2i_metadata(root)
+
+    for error in required_o2i_metadata_errors(root):
+        if error not in errors:
+            errors.append(error)
+
+    ownership_relations = [
+        (relation_id, source, target)
+        for relation_id, (
+            relation_name,
+            relation_type,
+            source,
+            target,
+            _,
+        ) in relations.items()
+        if relation_name == "contains"
+        and relation_type == "CompositionRelationship"
+    ]
+    incoming: dict[str, list[tuple[str, str | None]]] = {}
+    for relation_id, source, target in ownership_relations:
+        if target is not None:
+            incoming.setdefault(target, []).append((relation_id, source))
+
+        source_metadata = metadata.get(source or "")
+        target_metadata = metadata.get(target or "")
+        if source_metadata is None and target_metadata is None:
+            continue
+
+        if source_metadata is None or source_metadata[0] != "Context":
+            errors.append(
+                f"ownership relation {relation_id!r} must start at an element "
+                f"with {O2I_KIND_PROPERTY}='Context'"
+            )
+        if target_metadata is None or target_metadata[0] not in O2I_OWNED_KINDS:
+            errors.append(
+                f"ownership relation {relation_id!r} must end at an element "
+                "with o2i.kind='Primitive' or o2i.kind='Structuring'"
+            )
+
+    for element_id, (kind, _) in metadata.items():
+        ownership = incoming.get(element_id, [])
+        label = element_label(model_nodes[element_id])
+        if kind in O2I_OWNED_KINDS and len(ownership) != 1:
+            errors.append(
+                f"{label} has {len(ownership)} model-wide "
+                "CompositionRelationship[contains] owners; expected exactly one"
+            )
+        if kind in {"Context", "SituationAnchor"} and ownership:
+            relation_ids = [relation_id for relation_id, _ in ownership]
+            errors.append(
+                f"{label} is ownerless but has model-wide "
+                "CompositionRelationship[contains] owners "
+                f"{relation_ids!r}"
+            )
+
+    for relation_id, (
+        relation_name,
+        relation_type,
+        source,
+        target,
+        _,
+    ) in relations.items():
+        if relation_name != "contains" or relation_type != "AggregationRelationship":
+            continue
+        if metadata.get(source or "") != (
+            "Structuring",
+            "PerformanceDimension",
+        ):
+            continue
+
+        target_metadata = metadata.get(target or "")
+        if target_metadata is None or target_metadata[0] != "Primitive":
+            errors.append(
+                f"PerformanceDimension membership {relation_id!r} must end "
+                "at an element with o2i.kind='Primitive'"
+            )
+            continue
+
+        dimension_owners = incoming.get(source or "", [])
+        member_owners = incoming.get(target or "", [])
+        if len(dimension_owners) == 1 and len(member_owners) == 1:
+            dimension_owner = dimension_owners[0][1]
+            member_owner = member_owners[0][1]
+            if dimension_owner != member_owner:
+                errors.append(
+                    f"PerformanceDimension membership {relation_id!r} "
+                    "crosses owning Context element IDs: "
+                    f"{dimension_owner!r} != {member_owner!r}"
+                )
+
+    return errors
 
 
 def find_view(root: ET.Element, view_name: str) -> ET.Element:
@@ -603,6 +940,8 @@ def validate_model(root: ET.Element) -> list[str]:
             + repr(model_versions)
         )
 
+    errors.extend(validate_o2i_ownership(root, relations))
+
     for view_name, _ in PRESETS.values():
         try:
             view = find_view(root, view_name)
@@ -746,12 +1085,6 @@ def validate_model(root: ET.Element) -> list[str]:
                     errors.append(
                         "O2I Syntax documentation is missing: " + fragment
                     )
-
-            context_note = (
-                "Every O2I Context is represented by an ArchiMate Grouping."
-            )
-            if not any(context_note in note for note in notes):
-                errors.append("O2I Syntax is missing its visible Context note")
 
     return errors
 

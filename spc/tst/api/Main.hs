@@ -63,6 +63,7 @@ $(assertOrdinaryFunctions
     , 'Graph.someEdgeFrom
     , 'Graph.someEdgeRelation
     , 'Graph.someEdgeTo
+    , 'Graph.constitutingAnchorNodes
     ])
 
 $(assertAbstractTypes
@@ -172,6 +173,7 @@ $(assertOrdinaryFunctions
     , 'O2I.someEdgeFrom
     , 'O2I.someEdgeRelation
     , 'O2I.someEdgeTo
+    , 'O2I.constitutingAnchorNodes
     , 'O2I.strategyFormulations
     , 'O2I.strategyFormulationData
     , 'O2I.needQualificationCandidateStrategy
@@ -284,6 +286,18 @@ main = do
       assert
         "Graph facade exposes validated edges"
         (not (null (Graph.graphEdges graph)))
+      case Graph.lookupNode graph situationAnchorId of
+        Just anchor ->
+          assert
+            "Situation anchors expose no Context owner"
+            (Graph.someNodeOwner anchor == Nothing)
+        Nothing -> fail "validated Situation anchor was not found"
+      assert
+        "Graph facade resolves Situation constitution relationally"
+        (Graph.constitutingAnchorNodes graph situationId == [situationAnchorId])
+      assert
+        "aggregate facade resolves Situation constitution relationally"
+        (O2I.constitutingAnchorNodes graph situationId == [situationAnchorId])
       case foldr (:) [] (Validation.strategyFormulations semantic) of
         [formulation] ->
           assert
@@ -763,7 +777,7 @@ assessmentNodes =
       measurePerformanceDimensionId
       measureId
       PerformanceDimension
-  , RawAnchorNode situationAnchorId situationId BusinessCapability
+  , RawAnchorNode situationAnchorId BusinessCapability
   ]
 
 assessmentEdges :: [RawEdge]

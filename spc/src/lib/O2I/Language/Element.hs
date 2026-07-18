@@ -129,7 +129,10 @@ data Structuring =
 
 -- | Closed proof of one admissible PerformanceDimension role and member kind.
 --
--- No constructor exists for another Context or Primitive membership.
+-- The role constrains ownership and membership; it does not interpret member
+-- Primitives. Their meaning remains defined by their own contextualized
+-- interpretation witness. No constructor exists for another Context or
+-- Primitive membership.
 data PerformanceDimensionRole (context :: Context) (member :: Primitive) where
   StrategySuccessDimension :: PerformanceDimensionRole 'Strategy 'KeyResult
     -- ^ Strategy success dimension containing Strategy Key Results.
@@ -193,7 +196,7 @@ data SPrimitive (primitive :: Primitive) where
 
 deriving instance Show (SPrimitive primitive)
 
--- | Existential role for heterogeneous runtime interpretation.
+-- | Existential PerformanceDimension role for heterogeneous runtime lookup.
 data SomePerformanceDimensionRole where
   SomePerformanceDimensionRole
     :: PerformanceDimensionRole context member -> SomePerformanceDimensionRole

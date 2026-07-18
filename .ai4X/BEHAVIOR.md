@@ -82,6 +82,14 @@ the canonical repository memory.
   conceptual boundary requires them.
 - Prefer clean redevelopment over compensating constructs or compatibility
   layers.
+- Design every change as a coherent target-state system across terminology,
+  metamodel, specification, notation, tests, and documentation. When one
+  representation exposes a contradiction, redesign the owning semantic core
+  first and then synchronize all dependent representations; never patch an
+  isolated symptom.
+- Apply form follows function strictly. Do not preserve an obsolete abstraction,
+  relation, module, view, or wording for continuity when a simpler fresh design
+  is more logical, modular, robust, and precise.
 - Keep O2I generic and independent of any concrete instance.
 - Keep Terminology, Semantics, and Syntax separate.
 - Treat ArchiMate as notation, never as the source of O2I semantics.

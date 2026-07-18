@@ -365,7 +365,10 @@ strategySuccessDimensionWithActionGraph =
 rawPerformanceDimensionOwnershipMatchesRegistry :: Context -> Bool
 rawPerformanceDimensionOwnershipMatchesRegistry context =
   case (lookupPerformanceDimensionRole context, validateStructure raw) of
-    (Just _, Success _) -> True
+    (Just _, Success graph) ->
+      case lookupNode graph genericPerformanceDimensionId of
+        Just node -> someNodeOwner node == Just performanceDimensionOwnerId
+        Nothing -> False
     (Nothing, Failure errors) ->
       NonEmpty.toList errors
         == [ InvalidStructuringContext
@@ -483,7 +486,7 @@ rawNodeIdentifier :: RawNode -> RawNodeId
 rawNodeIdentifier (RawContextNode identifier _) = identifier
 rawNodeIdentifier (RawPrimitiveNode identifier _ _) = identifier
 rawNodeIdentifier (RawStructuringNode identifier _ _) = identifier
-rawNodeIdentifier (RawAnchorNode identifier _ _) = identifier
+rawNodeIdentifier (RawAnchorNode identifier _) = identifier
 
 twoPathGraph :: RawGraph
 twoPathGraph =
@@ -557,7 +560,7 @@ secondPathNodes =
       (duplicateId measurePerformanceDimensionId)
       measureId
       PerformanceDimension
-  , RawAnchorNode (duplicateId situationAnchorId) situationId BusinessCapability
+  , RawAnchorNode (duplicateId situationAnchorId) BusinessCapability
   ]
 
 secondPathEdges :: [RawEdge]
@@ -808,8 +811,8 @@ duplicateChild (RawPrimitiveNode identifier owner primitive) =
   RawPrimitiveNode (duplicateId identifier) owner primitive
 duplicateChild (RawStructuringNode identifier owner structuring) =
   RawStructuringNode (duplicateId identifier) owner structuring
-duplicateChild (RawAnchorNode identifier owner anchor) =
-  RawAnchorNode (duplicateId identifier) owner anchor
+duplicateChild (RawAnchorNode identifier anchor) =
+  RawAnchorNode (duplicateId identifier) anchor
 duplicateChild node@(RawContextNode _ _) = node
 
 duplicateEdge :: RawEdge -> RawEdge
@@ -846,8 +849,7 @@ graphWithAnchor :: SituationAnchor -> RawGraph
 graphWithAnchor anchor =
   sampleGraph {rawNodes = map replaceAnchor (rawNodes sampleGraph)}
   where
-    replaceAnchor (RawAnchorNode identifier owner _) =
-      RawAnchorNode identifier owner anchor
+    replaceAnchor (RawAnchorNode identifier _) = RawAnchorNode identifier anchor
     replaceAnchor node = node
 
 sampleNodes :: [RawNode]
@@ -873,7 +875,7 @@ sampleNodes =
       measurePerformanceDimensionId
       measureId
       PerformanceDimension
-  , RawAnchorNode situationAnchorId situationId BusinessCapability
+  , RawAnchorNode situationAnchorId BusinessCapability
   ]
 
 sampleEdges :: [RawEdge]

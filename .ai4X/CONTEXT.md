@@ -58,10 +58,32 @@ test and apply O2I but never define its generic semantics.
   `Intervention`, and `Measure`.
 - Primitives: `Principle`, `Driver`, `Objective`, `Key Result`, `KPI`, and
   `Action`.
+- In the ArchiMate syntax, every Primitive and Structuring element has exactly
+  one owning O2I Context through
+  `Context --composition[contains]--> owned element`. A Context may own only
+  Primitives and Structuring elements whose Interpretation or role is
+  admissible for that Context. Visual nesting presents but never replaces this
+  persisted ownership. Import maps it to the Haskell owner field, not to a
+  fachliche `RawEdge`.
+- ArchiMate model metadata uses `o2i.kind` for `Context`, `Primitive`,
+  `Structuring`, or `SituationAnchor` and `o2i.type` for the corresponding O2I
+  constructor. It never duplicates owner, Context, role, interpretation, or
+  membership semantics; ownership derives exclusively from Composition.
+- Situation anchors are independent nodes without a Context owner. Their
+  assignment to one or more Situations is expressed exclusively by typed
+  `is-constituted-by` relations.
+- Every Situation has at least one constituting Situation anchor; every Need is
+  globally situated; every Strategy has exactly one complete, coherent
+  formulation.
 - `PerformanceDimension` is one closed structuring type with exactly two roles:
   a Strategy success dimension contains Strategy Key Results; a Measure
   measurement dimension contains Measure KPIs. CSF is a fachliche reading of
-  the first role. Other groupings are not O2I PerformanceDimensions.
+  the first role. A role constrains admissible member types and membership but
+  never interprets its member Primitives; their meaning remains defined by
+  their own `Primitive @ Context`. Other groupings are not O2I
+  PerformanceDimensions.
+- A PerformanceDimension and every contained member Primitive share the same
+  concrete owner Context instance.
 - `KPIDefinition`, `Unit`, `ValueDomain`, `Level`, `Delta`, `Observation`,
   `EvidencePlan`, `EffectCriterion`, `TargetCriterion`, and
   `FollowUpObservation` form the evidence layer; they are neither Contexts nor
@@ -89,7 +111,8 @@ test and apply O2I but never define its generic semantics.
 - Their semantics is defined by O2I and does not derive from ArchiMate.
 - `O2I Syntax` is the concrete ArchiMate realization of O2I contexts,
   contextualized Primitives, PerformanceDimensions, Situation anchors, and
-  their mapped relations.
+  their mapped relations. ArchiMate `Grouping` realizes Context and
+  PerformanceDimension notation but introduces no O2I semantics.
 
 # Repository Map
 

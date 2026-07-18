@@ -25,7 +25,8 @@
   acceptance and the `qualifyingStrategies` query over accepted relations.
 - Added repository-local agent facades backed by the canonical O2I behavior
   contract.
-- Added a concise WTF and HTH guide for direct access to central O2I concepts.
+- Added a concise WTF and HTH guide with format-neutral minimum contents,
+  validation criteria, process inputs, and results for central O2I concepts.
 - Added a compact evidence-sequence visualization from situated Need to ex-post effect evidence.
 - Added deterministic ArchiMate model-contract, relationship-endpoint, and snapshot-drift verification.
 
@@ -39,8 +40,20 @@
 - Clarified formal validation of need qualification proposals, authorized
   subject-matter acceptance, and subsequent evidence readiness as distinct
   gates without requiring agentic AI.
+- Aligned Situation semantics by requiring every Situation to have at least one
+  constituting Situation anchor.
 - Clarified the semantic boundary between structural graph stages and
   subject-matter-enriched model stages.
+- Made Context ownership explicit and machine-readable in the ArchiMate syntax
+  through one `composition[contains]` per Primitive and Structuring element,
+  mapped to the Haskell owner field rather than a fachliche graph edge; made
+  Situation anchors ownerless and derived their Situation assignment
+  exclusively from typed constitution relations; kept Primitive interpretation
+  and PerformanceDimension role semantics independent of their ArchiMate
+  `Grouping` representation; introduced explicit `o2i.kind` and `o2i.type`
+  classification while deriving ownership exclusively from
+  `composition[contains]`, validated Ownership model-wide, and required every
+  PerformanceDimension member to share its concrete owner Context instance.
 - Separated `O2I Situation` as the anchor type model from `O2I Situation Anchoring` as the relation model connecting situated Need, Intervention, and Measure semantics, with a parameterized ArchiMate 4 syntax mapping for every anchor form.
 - Clarified the Haskell specification as the normative machine-checkable formalization of the technology-independent O2I metamodel.
 - Introduced the mandatory strategic success reference as the terminology counterpart of `Key Result @ Strategy`.

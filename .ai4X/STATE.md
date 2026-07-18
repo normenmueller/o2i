@@ -5,10 +5,11 @@ instruction override this snapshot.
 
 # Snapshot
 
-- Observed at: 2026-07-17 CEST.
+- Observed at: 2026-07-18 CEST.
 - Mode: `READY`.
 - Branch/upstream: `trunk` / `origin/trunk`.
-- Active objective: review `o2i.md` top-down and paragraph by paragraph.
+- Active objective: resume the interrupted `wtf.md` review at Vision after the
+  DB Fv orientation excursion, then review `o2i.md` top-down.
 - Agent memory: active in the current repository revision.
 
 # Approved Baseline
@@ -18,8 +19,9 @@ instruction override this snapshot.
   between contextualized Primitives.
 - Validation pipeline:
   `RawGraph -> WellFormedGraph -> SemanticallyValidModel -> TraceableEffectModel -> EvidenceReadyModel -> EvidenceAssessedModel`.
-- Every Need is globally situated; every Strategy has exactly one complete,
-  coherent formulation.
+- Every Situation has at least one constituting Situation anchor, every Need is
+  globally situated, and every Strategy has exactly one complete, coherent
+  formulation.
 - Only assigned Strategy Primitives may substantiate Strategy traces or macro
   evidence.
 - Effect and target attainment are independent; O2I supports plausible
@@ -34,19 +36,26 @@ instruction override this snapshot.
 
 # Active Quality Gate
 
-- Commit `d1483e9` adds `validateNeedQualificationProposal` as a formal
-  pre-persistence check over an existing Strategy and fully situated Need.
-- Validation returns either accumulated formal errors or an opaque
-  `NeedQualificationCandidate`; authorized subject-matter acceptance remains
-  separate and precedes persistence, model revalidation, and
-  `qualifyingStrategies` confirmation.
-- Agentic AI may support proposal analysis but remains optional.
-- A metamodel/type-theory/Haskell co-author participated in design,
-  implementation, modularization, Haddock, and tests. A separate independent
-  final reviewer reported no Blocker, High, Medium, or Low finding and explicit
-  approval for `d1483e9` on 2026-07-17.
-- Fachlichkeit: 10.0/10.0; Metamodell: 10.0/10.0; Typtheorie: 10.0/10.0;
-  Haskell: 10.0/10.0; tests: 10.0/10.0; formal value: 10.0/10.0.
+- The current uncommitted scope adds format-neutral minimum contents and checks
+  to `wtf.md`, enforces the global Situation-anchor invariant, and makes
+  Context ownership explicit across article, Haskell, ArchiMate syntax,
+  generated snapshots, and executable contracts.
+- Every concrete Primitive and PerformanceDimension has exactly one owning
+  Context. The Interpretation registry admits `Primitive @ Context`; the role
+  registry admits `PerformanceDimension @ Context`, its member type, and its
+  membership relation without interpreting member Primitives.
+- ArchiMate `Grouping` is representation only and introduces no O2I semantics.
+  Ownership is persisted through `composition[contains]`; visual nesting does
+  not replace it.
+- Situation anchors are ownerless nodes assigned to Situations exclusively by
+  typed constitution relations.
+- A metamodel/type-theory/Haskell co-author reviewed and implemented the
+  semantic and executable contracts. The final independent read-only review
+  reports no Blocker, High, Medium, or Low findings and unconditionally
+  approves the bounded Context-ownership scope.
+- Final review scores: Fachlichkeit 10.0/10.0; Metamodell 10.0/10.0;
+  Typtheorie 10.0/10.0; Haskell 10.0/10.0; tests 10.0/10.0; formal value
+  10.0/10.0.
 - A positive external API contract enforces complete `reifyRelation`
   round-tripping.
 - The external API suite now binds relation registry, lookup, reification,
@@ -60,7 +69,7 @@ instruction override this snapshot.
 - The independent reviewer explicitly approved this lean syntax split after
   reassessment; the current PNG is synchronized.
 - ArchiMate element, relation, and view documentation is synchronized with the
-  article and Haskell specification.
+  article and Haskell specification for the current ownership scope.
 - Public typed Haskell references are opaque, nominally typed, and obtained
   through validated lookup or model queries. Ordinary projection functions do
   not permit record updates.
@@ -80,9 +89,10 @@ instruction override this snapshot.
 
 # Current Verification
 
-- ArchiMate model check and nine extractor contract tests: passed.
+- ArchiMate model and snapshot checks plus twenty-four extractor contract tests:
+  passed.
 - `cabal check` and `cabal build all --ghc-options=-Werror`: passed.
-- Both Cabal test suites passed: 186 domain tests plus positive, Template
+- Both Cabal test suites passed: 197 domain tests plus positive, Template
   Haskell, and compile-fail public-API contracts.
 - HIndent 80 validation: passed.
 - Haddock completed; all four public modules have 100% coverage.
@@ -97,6 +107,6 @@ instruction override this snapshot.
 # Next Work
 
 - The user controls pushing the reviewed local commits.
-- Then review `o2i.md` top-down and paragraph by paragraph, explaining every
-  substantive difference, extension, refinement, and formal consequence.
+- Apply the verified ownership syntax to the DB Fv instance, then resume the
+  interrupted `wtf.md` review at Vision and the top-down article review.
 - Backlog: convert the Layered Cake to concrete ArchiMate syntax.

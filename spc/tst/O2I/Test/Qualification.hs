@@ -284,7 +284,7 @@ minimalQualificationGraph =
     , RawPrimitiveNode strategyActionId strategyId Action
     , RawPrimitiveNode needDriverId needId Driver
     , RawPrimitiveNode needObjectiveId needId Objective
-    , RawAnchorNode situationAnchorId situationId BusinessCapability
+    , RawAnchorNode situationAnchorId BusinessCapability
     ]
     [ edge strategyDriverId groundsStrategyDriverToObjective strategyObjectiveId
     , edge strategyPrincipleId guidesStrategyPrincipleToAction strategyActionId

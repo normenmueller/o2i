@@ -145,9 +145,10 @@ data TraceabilityError
 -- * Traceability validation
 -- | Derive and validate relational effect traces from a semantic model.
 --
--- This stage relies on established Need and Strategy invariants. It requires
--- primitive evidence for every macrorelation and a complete path for every
--- addressed Need. It does not assess observations or causal attribution.
+-- This stage relies on established Situation, Need, and Strategy invariants.
+-- It requires primitive evidence for every macrorelation and a complete path
+-- for every addressed Need. It does not assess observations or causal
+-- attribution.
 validateTraceability ::
      SemanticallyValidModel
   -> Validation (NonEmpty.NonEmpty TraceabilityError) TraceableEffectModel
@@ -405,12 +406,6 @@ traceCandidates semantic = do
   require
     (hasAnchor
        graph
-       situation
-       (nameOf (constitutedByAnchor SBusinessCapability))
-       anchor)
-  require
-    (hasAnchor
-       graph
        anchor
        (nameOf (anchorsNeedDriver SBusinessCapability))
        needDriver)
@@ -474,10 +469,11 @@ require False = []
 
 situationAnchorReferencesIn ::
      WellFormedGraph -> RawNodeId -> [SomeSituationAnchorRef]
-situationAnchorReferencesIn graph owner =
+situationAnchorReferencesIn graph situation =
   [ SomeSituationAnchorRef identifier anchor
-  | SomeNode (AnchorNode identifier context anchor) <- graphNodes graph
-  , unNodeId context == owner
+  | rawIdentifier <- constitutingAnchorNodes graph situation
+  , Just (SomeNode (AnchorNode identifier anchor)) <-
+      [lookupNode graph rawIdentifier]
   ]
 
 has :: WellFormedGraph -> RawNodeId -> Relation from to -> RawNodeId -> Bool
@@ -587,20 +583,17 @@ hasMacroEvidence semantic evidenceKind from to =
     strategyKeyResults =
       strategyRole (NonEmpty.toList . rawFormulationKeyResults)
     strategyDiagnoses = strategyRole (pure . rawFormulationDiagnosis)
-    constituted = nameOf (constitutedByAnchor SBusinessCapability)
     anyAnchorToPrimitive anchorRelation toPrimitive =
       or
-        [ hasAnchor graph from constituted anchor
-          && hasAnchor graph anchor anchorRelation target
-        | anchor <- anchorNodesIn graph from
+        [ hasAnchor graph anchor anchorRelation target
+        | anchor <- constitutingAnchorNodes graph from
         , target <- primitiveNodesIn graph to toPrimitive
         ]
     anyPrimitiveToAnchor fromPrimitive primitiveRelation =
       or
-        [ hasAnchor graph to constituted anchor
-          && hasAnchor graph source primitiveRelation anchor
+        [ hasAnchor graph source primitiveRelation anchor
         | source <- primitiveNodesIn graph from fromPrimitive
-        , anchor <- anchorNodesIn graph to
+        , anchor <- constitutingAnchorNodes graph to
         ]
     anyFramesEvidence =
       or

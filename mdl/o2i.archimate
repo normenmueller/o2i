@@ -38,6 +38,16 @@ Source: O2I authors' derivation based on Doerr (2018), Rumelt (2011), and Porter
     <element xsi:type="archimate:Meaning" name="Guiding Policy" id="id-684ded421e0f487aabaf71910e938243"/>
     <element xsi:type="archimate:Meaning" name="Coherent Action" id="id-1667c49476464971872207ecd236283a"/>
     <element xsi:type="archimate:Meaning" name="CSF" id="id-6f4c9da83a944853915bc94d772160c4"/>
+    <element xsi:type="archimate:Driver" name="Driver @ Mission" id="id-34f587fbc060415faf043067eaa8a74d">
+      <documentation>Represents the Primitive side of the O2I ownership syntax using Driver in Mission as an admissible example.
+
+This element is a syntax exemplar and not a fachliche O2I instance. Its owning Mission Context is persisted through composition[contains]; visual nesting only presents that relationship.
+
+Source: O2I syntax mapping based on The Open Group (2026).
+</documentation>
+      <property key="o2i.kind" value="Primitive"/>
+      <property key="o2i.type" value="Driver"/>
+    </element>
   </folder>
   <folder name="Implementation &amp; Migration" id="id-db81c99594df4e209210b0c681f98882" type="implementation_migration"/>
   <folder name="Other" id="id-b9bc8c62493d4d25bec1f06811abc961" type="other">
@@ -109,9 +119,9 @@ Source: O2I authors' derivation based on Collins and Porras (1996), Hamel and Pr
 Source: O2I definition based on Rumelt (2011), Porter (1996), Mintzberg and Waters (1985), and Parmenter (2020).</documentation>
         </element>
         <element xsi:type="archimate:Grouping" name="Situation Anchor" id="id-29dc2a1c293a4400a24d39ff49739734">
-          <documentation>An O2I Situation Anchor is a concrete Business Architecture artifact that constitutes a Situation, anchors a Need Driver, is changed by an Intervention Action, and is observed through a Measure KPI. It is neither an O2I Context nor an O2I Primitive.
+          <documentation>Represents the abstract, non-instantiable metamodel category of O2I Situation anchors.
 
-Admissible forms are Business Capability, Business Process, Business Object, Business Role, Value Stream, and Regulatory Constraint.
+Concrete O2I models instantiate only one of the six admissible forms: Business Capability, Business Process, Business Object, Business Role, Value Stream, or Regulatory Constraint. The category defines their shared relation families and validation rules. It is neither an O2I Context nor an O2I Primitive.
 
 Source: O2I authors' derivation based on The Open Group (2025, 2026).</documentation>
         </element>
@@ -124,105 +134,156 @@ Source: O2I authors' derivation based on Parmenter (2020) and The Open Group (20
         </element>
       </folder>
       <folder name="Situation Anchors" id="id-9903846962b94d8a95521635649ce893">
-        <element xsi:type="archimate:Grouping" name="Business Capability" id="id-4d37096102d147059a7d6068162d4e12"/>
-        <element xsi:type="archimate:Grouping" name="Business Process" id="id-447552868a1c4c189a4f01662956a2a4"/>
-        <element xsi:type="archimate:Grouping" name="Regulatory Constraint" id="id-58052324798649c68ec62120aff6ee0a"/>
-        <element xsi:type="archimate:Grouping" name="Business Object" id="id-f0902613c0e04fa3a30d441fa92eced3"/>
-        <element xsi:type="archimate:Grouping" name="Business Role" id="id-7723b888e63e48a8b7fdbebc63dbaf06"/>
-        <element xsi:type="archimate:Grouping" name="Value Stream" id="id-c948442faaf04b4eb96c569e02a844e2"/>
+        <element xsi:type="archimate:Grouping" name="Business Capability" id="id-4d37096102d147059a7d6068162d4e12">
+          <property key="o2i.kind" value="SituationAnchor"/>
+          <property key="o2i.type" value="BusinessCapability"/>
+        </element>
+        <element xsi:type="archimate:Grouping" name="Business Process" id="id-447552868a1c4c189a4f01662956a2a4">
+          <property key="o2i.kind" value="SituationAnchor"/>
+          <property key="o2i.type" value="BusinessProcess"/>
+        </element>
+        <element xsi:type="archimate:Grouping" name="Regulatory Constraint" id="id-58052324798649c68ec62120aff6ee0a">
+          <property key="o2i.kind" value="SituationAnchor"/>
+          <property key="o2i.type" value="RegulatoryConstraint"/>
+        </element>
+        <element xsi:type="archimate:Grouping" name="Business Object" id="id-f0902613c0e04fa3a30d441fa92eced3">
+          <property key="o2i.kind" value="SituationAnchor"/>
+          <property key="o2i.type" value="BusinessObject"/>
+        </element>
+        <element xsi:type="archimate:Grouping" name="Business Role" id="id-7723b888e63e48a8b7fdbebc63dbaf06">
+          <property key="o2i.kind" value="SituationAnchor"/>
+          <property key="o2i.type" value="BusinessRole"/>
+        </element>
+        <element xsi:type="archimate:Grouping" name="Value Stream" id="id-c948442faaf04b4eb96c569e02a844e2">
+          <property key="o2i.kind" value="SituationAnchor"/>
+          <property key="o2i.type" value="ValueStream"/>
+        </element>
       </folder>
     </folder>
     <folder name="Syntax" id="id-528862f7ff2c456898f672cc0b1489b6">
       <element xsi:type="archimate:Grouping" name="Performance Dimension" id="id-6e5d5a1f511747a893cabae235cdaa84">
-        <documentation>An ArchiMate Grouping represents an O2I Performance Dimension. Its role and admissible members are determined by its owning O2I Context: Strategy contains Key Results; Measure contains KPIs.
+        <documentation>Represents an O2I PerformanceDimension in ArchiMate syntax. The ArchiMate Grouping introduces no O2I semantics.
+
+The O2I role registry determines the admissible owning Context, member Primitive type, and membership relation. Member Primitives retain their own Primitive @ Context interpretation.
 
 Source: O2I syntax mapping based on The Open Group (2026).</documentation>
       </element>
     </folder>
     <folder name="Example" id="id-29aaa03a216c4ad18ad87fbfdfe96bd7">
-      <folder name="Ethos" id="id-7ad67b83b7c84a409c5e06edb32e08eb">
-        <element xsi:type="archimate:Grouping" name="Discipline :: Principle" id="id-ab5a8fc3167e451b8faa07efea8cdd1d">
-          <documentation>Anspruch an Verlässlichkeit, Konsequenz, Ausführung.</documentation>
-        </element>
-        <element xsi:type="archimate:Grouping" name="Independence :: Principle" id="id-c328327ed26b4a5089b8274e62a2b15d">
-          <documentation>eigenständig urteilen und handeln; eigenständiges Urteil, nicht opportunistisch/getrieben.</documentation>
-        </element>
-        <element xsi:type="archimate:Grouping" name="Respect :: Principle" id="id-1ec4121bd2874e6f8468f24da5ca2abc">
-          <documentation>normativer Umgang mit Menschen/Stakeholdern.</documentation>
-        </element>
-        <element xsi:type="archimate:Grouping" name="Ethos" id="id-fc2d86c3ce2246a691f984b242fd5967"/>
-      </folder>
-      <folder name="Mission" id="id-2d8075f35f43407f87f46b0a6b5523e8">
-        <element xsi:type="archimate:Grouping" name="#hggt :: Driver" id="id-8b33d3d5d316422999552ebb78e7defb">
-          <documentation>honest good time together</documentation>
-        </element>
-        <element xsi:type="archimate:Grouping" name="Mission" id="id-b72a61b51dea450894068f77a589d87d"/>
-      </folder>
-      <folder name="Strategies" id="id-04cdb41ef7634fb285a2a28b319d9b4a">
-        <folder name="Shared understanding" id="id-f73fc16d8e68446583d4fc338c09858a">
-          <element xsi:type="archimate:Grouping" name="Fragmented understanding blocks confident action :: Driver" id="id-51e956c289a5471498ec676c382d1dcb">
-            <documentation>strategische Herausforderung / Diagnosegrund</documentation>
+      <folder name="Illustration" id="id-0ae0912d56934922b877dcdd0669f47d">
+        <folder name="Ethos" id="id-7ad67b83b7c84a409c5e06edb32e08eb">
+          <element xsi:type="archimate:Grouping" name="Discipline :: Principle" id="id-ab5a8fc3167e451b8faa07efea8cdd1d">
+            <documentation>Anspruch an Verlässlichkeit, Konsequenz, Ausführung.</documentation>
           </element>
-          <element xsi:type="archimate:Grouping" name="Make shared understanding actionable :: Objective" id="id-b6b7316e5f2d472f82cb6360db59077a">
-            <documentation>strategische Absicht / angestrebter Beitrag</documentation>
+          <element xsi:type="archimate:Grouping" name="Independence :: Principle" id="id-c328327ed26b4a5089b8274e62a2b15d">
+            <documentation>eigenständig urteilen und handeln; eigenständiges Urteil, nicht opportunistisch/getrieben.</documentation>
           </element>
-          <element xsi:type="archimate:Grouping" name="Shared decision evidence use :: Performance Dimension" id="id-2fb50ac1b2a3440695f860b0b1aed15c">
-            <documentation>Lesart: Die strategische Erfolgsdimension ordnet den Einsatz gemeinsamer Entscheidungsnachweise.</documentation>
+          <element xsi:type="archimate:Grouping" name="Respect :: Principle" id="id-1ec4121bd2874e6f8468f24da5ca2abc">
+            <documentation>normativer Umgang mit Menschen/Stakeholdern.</documentation>
           </element>
-          <element xsi:type="archimate:Grouping" name="80% of decisions reference shared decision records :: Key Result" id="id-5da5508c8e1b485bb632cee51bd6ff49">
-            <documentation>strategischer Erfolgsnachweis</documentation>
+          <element xsi:type="archimate:Grouping" name="Ethos" id="id-fc2d86c3ce2246a691f984b242fd5967"/>
+        </folder>
+        <folder name="Intervention" id="id-4dbb370cde4842259a956c1115cfad60">
+          <element xsi:type="archimate:Grouping" name="Intervention" id="id-4acbcc80ba3c45c9843501b1fcc0bc0f"/>
+          <element xsi:type="archimate:Grouping" name="Establish shared decision evidence practice :: Action" id="id-cfbe1f3d0231484da796e310ff68f694"/>
+          <element xsi:type="archimate:Grouping" name="70% of relevant decisions are captured as shared decision records :: Key Result" id="id-e6d92afb406c4d97bddc6d0210821df8"/>
+        </folder>
+        <folder name="Measure" id="id-29102b81c48544f0aa876974bb92bfdb">
+          <element xsi:type="archimate:Grouping" name="Measure" id="id-26cecad3e94b4123a9669f7530fc666e"/>
+          <element xsi:type="archimate:Grouping" name="Shared decision traceability :: Performance Dimension" id="id-3b98d0546b914dd0ab9962dcc1d1bf8b">
+            <documentation>Lesart: Die Messdimension ordnet die gemeinsame Nachvollziehbarkeit von Entscheidungen und bündelt die dafür verwendeten KPIs.</documentation>
           </element>
-          <element xsi:type="archimate:Grouping" name="Create shared decision records :: Action" id="id-c80c65d1f98149c8aa25bc7dd2bbcada">
-            <documentation>kohärente strategische Handlungsfestlegung</documentation>
-          </element>
-          <element xsi:type="archimate:Grouping" name="Act from evidence, not assumptions :: Principle" id="id-beb3184c33554858935c51ea8959567c">
-            <documentation>Guiding Policy, Trade-offs, Entscheidungslogik</documentation>
-          </element>
-          <element xsi:type="archimate:Grouping" name="Shared understanding :: Strategy" id="id-a9ce771c416e45ab8cfb450e032817c0">
-            <documentation>hggt Strategie oder Shared understanding strategy</documentation>
+          <element xsi:type="archimate:Grouping" name="Shared decision traceability rate :: KPI" id="id-3cb2a51bf9b84a5796a8b6134aec7068">
+            <documentation>Stabile Messdefinition, die beobachtbar macht, welcher Anteil relevanter Entscheidungen auf einen gemeinsamen Entscheidungsnachweis referenziert.</documentation>
           </element>
         </folder>
-        <folder name="Organizational transparency" id="id-a78f81eeffa845ed87415030c7630cb4">
-          <element xsi:type="archimate:Grouping" name="Hidden knowledge fragments organizational action :: Driver" id="id-8d15273def204bb6ad8a6832593418dc"/>
-          <element xsi:type="archimate:Grouping" name="Make critical knowledge transparent and usable :: Objective" id="id-256181acce574ac7b73cab4c72b589bb"/>
-          <element xsi:type="archimate:Grouping" name="90% of critical decisions are traceable to shared evidence :: Key Result" id="id-3aea1d97d93149ea8f798a86bda548a4"/>
-          <element xsi:type="archimate:Grouping" name="Default to shared evidence over private interpretation :: Principle" id="id-dc7ff95229114e4d8679435ef8a15e4e"/>
-          <element xsi:type="archimate:Grouping" name="Establish shared evidence practices :: Action" id="id-21a7bff043fe4a79b42b3456c96eb1d0"/>
-          <element xsi:type="archimate:Grouping" name="Organizational transparency :: Strategy" id="id-2b854f0764c948e0b0f224addc96c498">
-            <documentation>Organizational transparency strategy</documentation>
+        <folder name="Mission" id="id-2d8075f35f43407f87f46b0a6b5523e8">
+          <element xsi:type="archimate:Grouping" name="#hggt :: Driver" id="id-8b33d3d5d316422999552ebb78e7defb">
+            <documentation>honest good time together</documentation>
+          </element>
+          <element xsi:type="archimate:Grouping" name="Mission" id="id-b72a61b51dea450894068f77a589d87d"/>
+        </folder>
+        <folder name="Need" id="id-2942dd21bcf94ef5baedda80ddcf763c">
+          <element xsi:type="archimate:Grouping" name="Need" id="id-bc7f441fc807449d89107d25a9722b05"/>
+          <element xsi:type="archimate:Grouping" name="Unshared and untraceable decisions create action uncertainty :: Driver" id="id-c36db08b115646b497521aa21615dcfc"/>
+          <element xsi:type="archimate:Grouping" name="Increase traceable decisions :: Objective" id="id-a8f9ea0933b14bad951f6b32e24ae659"/>
+          <element xsi:type="archimate:Grouping" name="Increase shared decision traceability :: Objective" id="id-ec87d3d4a2b6460ca485b41dbc93f08b"/>
+        </folder>
+        <folder name="Situation" id="id-3a60c765adbb40c9908783836b1d24d2">
+          <element xsi:type="archimate:Grouping" name="Situation" id="id-8c348250cde04e30aa63e18b79a51ccd"/>
+          <element xsi:type="archimate:Grouping" name="Information Management :: Business Capability" id="id-4e17e5ec1696437f837e2ef7ae35ced1">
+            <documentation>Information Management umfasst das Sammeln, Organisieren, Verteilen und Sichern von Informationen sowie die Bereitstellung von Werkzeugen, Richtlinien und Prozessen für Informationsnutzung, Archivierung und Pflichtkommunikation.</documentation>
           </element>
         </folder>
+        <folder name="Strategies" id="id-04cdb41ef7634fb285a2a28b319d9b4a">
+          <folder name="Shared understanding" id="id-f73fc16d8e68446583d4fc338c09858a">
+            <element xsi:type="archimate:Grouping" name="Fragmented understanding blocks confident action :: Driver" id="id-51e956c289a5471498ec676c382d1dcb">
+              <documentation>strategische Herausforderung / Diagnosegrund</documentation>
+            </element>
+            <element xsi:type="archimate:Grouping" name="Make shared understanding actionable :: Objective" id="id-b6b7316e5f2d472f82cb6360db59077a">
+              <documentation>strategische Absicht / angestrebter Beitrag</documentation>
+            </element>
+            <element xsi:type="archimate:Grouping" name="Shared decision evidence use :: Performance Dimension" id="id-2fb50ac1b2a3440695f860b0b1aed15c">
+              <documentation>Lesart: Die strategische Erfolgsdimension ordnet den Einsatz gemeinsamer Entscheidungsnachweise.</documentation>
+            </element>
+            <element xsi:type="archimate:Grouping" name="80% of decisions reference shared decision records :: Key Result" id="id-5da5508c8e1b485bb632cee51bd6ff49">
+              <documentation>strategischer Erfolgsnachweis</documentation>
+            </element>
+            <element xsi:type="archimate:Grouping" name="Create shared decision records :: Action" id="id-c80c65d1f98149c8aa25bc7dd2bbcada">
+              <documentation>kohärente strategische Handlungsfestlegung</documentation>
+            </element>
+            <element xsi:type="archimate:Grouping" name="Act from evidence, not assumptions :: Principle" id="id-beb3184c33554858935c51ea8959567c">
+              <documentation>Guiding Policy, Trade-offs, Entscheidungslogik</documentation>
+            </element>
+            <element xsi:type="archimate:Grouping" name="Shared understanding :: Strategy" id="id-a9ce771c416e45ab8cfb450e032817c0">
+              <documentation>hggt Strategie oder Shared understanding strategy</documentation>
+            </element>
+          </folder>
+          <folder name="Organizational transparency" id="id-a78f81eeffa845ed87415030c7630cb4">
+            <element xsi:type="archimate:Grouping" name="Hidden knowledge fragments organizational action :: Driver" id="id-8d15273def204bb6ad8a6832593418dc"/>
+            <element xsi:type="archimate:Grouping" name="Make critical knowledge transparent and usable :: Objective" id="id-256181acce574ac7b73cab4c72b589bb"/>
+            <element xsi:type="archimate:Grouping" name="90% of critical decisions are traceable to shared evidence :: Key Result" id="id-3aea1d97d93149ea8f798a86bda548a4"/>
+            <element xsi:type="archimate:Grouping" name="Default to shared evidence over private interpretation :: Principle" id="id-dc7ff95229114e4d8679435ef8a15e4e"/>
+            <element xsi:type="archimate:Grouping" name="Establish shared evidence practices :: Action" id="id-21a7bff043fe4a79b42b3456c96eb1d0"/>
+            <element xsi:type="archimate:Grouping" name="Organizational transparency :: Strategy" id="id-2b854f0764c948e0b0f224addc96c498">
+              <documentation>Organizational transparency strategy</documentation>
+            </element>
+          </folder>
+        </folder>
+        <folder name="Visions" id="id-016f74edd2e34a2998d4696c0f85b47b">
+          <element xsi:type="archimate:Grouping" name="Vision" id="id-8b7d8ed119d348c2be0b7573c9954186"/>
+          <element xsi:type="archimate:Grouping" name="People act confidently from shared understanding :: Objective" id="id-397581ce58054c25bb903a1d927063fd"/>
+          <element xsi:type="archimate:Grouping" name="Vision" id="id-56d153324b83433f8eae7ec3e947c0e5"/>
+          <element xsi:type="archimate:Grouping" name="Organizational transparency :: Objective" id="id-f1c3e54673b74c439ca64b8d91b4d207"/>
+        </folder>
       </folder>
-      <folder name="Visions" id="id-016f74edd2e34a2998d4696c0f85b47b">
-        <element xsi:type="archimate:Grouping" name="Vision" id="id-8b7d8ed119d348c2be0b7573c9954186"/>
-        <element xsi:type="archimate:Grouping" name="People act confidently from shared understanding :: Objective" id="id-397581ce58054c25bb903a1d927063fd"/>
-        <element xsi:type="archimate:Grouping" name="Vision" id="id-56d153324b83433f8eae7ec3e947c0e5"/>
-        <element xsi:type="archimate:Grouping" name="Organizational transparency :: Objective" id="id-f1c3e54673b74c439ca64b8d91b4d207"/>
-      </folder>
-      <folder name="Need" id="id-2942dd21bcf94ef5baedda80ddcf763c">
-        <element xsi:type="archimate:Grouping" name="Need" id="id-bc7f441fc807449d89107d25a9722b05"/>
-        <element xsi:type="archimate:Grouping" name="Unshared and untraceable decisions create action uncertainty :: Driver" id="id-c36db08b115646b497521aa21615dcfc"/>
-        <element xsi:type="archimate:Grouping" name="Increase traceable decisions :: Objective" id="id-a8f9ea0933b14bad951f6b32e24ae659"/>
-        <element xsi:type="archimate:Grouping" name="Increase shared decision traceability :: Objective" id="id-ec87d3d4a2b6460ca485b41dbc93f08b"/>
-      </folder>
-      <folder name="Situation" id="id-3a60c765adbb40c9908783836b1d24d2">
-        <element xsi:type="archimate:Grouping" name="Situation" id="id-8c348250cde04e30aa63e18b79a51ccd"/>
-        <element xsi:type="archimate:Grouping" name="Information Management :: Business Capability" id="id-4e17e5ec1696437f837e2ef7ae35ced1">
-          <documentation>Information Management umfasst das Sammeln, Organisieren, Verteilen und Sichern von Informationen sowie die Bereitstellung von Werkzeugen, Richtlinien und Prozessen für Informationsnutzung, Archivierung und Pflichtkommunikation.</documentation>
+      <folder name="Syntax" id="id-65c6a8b2f718439cad4c437adade4fcf">
+        <element xsi:type="archimate:Grouping" name="O2I Context (Mission)" id="id-367fe775ef65480bbae577099fd83b30">
+          <documentation>Represents the Context side of the O2I ownership syntax using Mission as an admissible example.
+
+This element is a syntax exemplar and not a fachliche O2I instance. Every owned Primitive and Structuring element is related through composition[contains]. Each owned element has exactly one owning Context, and only elements whose Interpretation or role is admissible for that Context may be owned. Visual nesting presents but never replaces this persisted ownership.
+
+Source: O2I syntax mapping based on The Open Group (2026).</documentation>
+          <property key="o2i.kind" value="Context"/>
+          <property key="o2i.type" value="Mission"/>
         </element>
-      </folder>
-      <folder name="Intervention" id="id-4dbb370cde4842259a956c1115cfad60">
-        <element xsi:type="archimate:Grouping" name="Intervention" id="id-4acbcc80ba3c45c9843501b1fcc0bc0f"/>
-        <element xsi:type="archimate:Grouping" name="Establish shared decision evidence practice :: Action" id="id-cfbe1f3d0231484da796e310ff68f694"/>
-        <element xsi:type="archimate:Grouping" name="70% of relevant decisions are captured as shared decision records :: Key Result" id="id-e6d92afb406c4d97bddc6d0210821df8"/>
-      </folder>
-      <folder name="Measure" id="id-29102b81c48544f0aa876974bb92bfdb">
-        <element xsi:type="archimate:Grouping" name="Measure" id="id-26cecad3e94b4123a9669f7530fc666e"/>
-        <element xsi:type="archimate:Grouping" name="Shared decision traceability :: Performance Dimension" id="id-3b98d0546b914dd0ab9962dcc1d1bf8b">
-          <documentation>Lesart: Die Messdimension ordnet die gemeinsame Nachvollziehbarkeit von Entscheidungen und bündelt die dafür verwendeten KPIs.</documentation>
+        <element xsi:type="archimate:Grouping" name="O2I Context (Strategy)" id="id-9eb65bc4e62e42e9ad5375725305340c">
+          <documentation>Represents the Context side of the O2I ownership syntax using Strategy as an admissible example.
+
+This element is a syntax exemplar and not a fachliche O2I instance. Every owned Primitive and Structuring element is related through composition[contains]. Each owned element has exactly one owning Context, and only elements whose Interpretation or role is admissible for that Context may be owned. Visual nesting presents but never replaces this persisted ownership.
+
+Source: O2I syntax mapping based on The Open Group (2026).</documentation>
+          <property key="o2i.kind" value="Context"/>
+          <property key="o2i.type" value="Strategy"/>
         </element>
-        <element xsi:type="archimate:Grouping" name="Shared decision traceability rate :: KPI" id="id-3cb2a51bf9b84a5796a8b6134aec7068">
-          <documentation>Stabile Messdefinition, die beobachtbar macht, welcher Anteil relevanter Entscheidungen auf einen gemeinsamen Entscheidungsnachweis referenziert.</documentation>
+        <element xsi:type="archimate:Grouping" name="Performance Dimension @ Strategy" id="id-5d86d1b167d045748a0605ab0cf5a08b">
+          <documentation>Represents the Structuring side of the O2I ownership syntax using a Strategy success dimension as an admissible example. The ArchiMate Grouping introduces no O2I semantics.
+
+This element is a syntax exemplar and not a fachliche O2I instance. Its owning Strategy Context is persisted through composition[contains]. The O2I role registry resolves StrategySuccessDimension, which admits Key Result @ Strategy as its member type and aggregation[contains] as its membership relation. It does not interpret those members; each retains its own Primitive @ Context interpretation.
+
+Source: O2I syntax mapping based on The Open Group (2026).</documentation>
+          <property key="o2i.kind" value="Structuring"/>
+          <property key="o2i.type" value="PerformanceDimension"/>
         </element>
       </folder>
     </folder>
@@ -412,17 +473,19 @@ Source: O2I syntax mapping based on The Open Group (2026).</documentation>
       <documentation>Eine Intervention wirkt auf genau den fachlichen Anker ein, an dem der Bedarf verortet ist.</documentation>
     </element>
     <element xsi:type="archimate:AssociationRelationship" name="measures" id="id-effc668299094bb99029210b54c25c1e" source="id-b6d54675e24e4d3bb58d652fdfe5c493" target="id-29dc2a1c293a4400a24d39ff49739734" directed="true"/>
+    <element xsi:type="archimate:CompositionRelationship" name="contains" id="id-50f9cfe9c60b4075be2d8356a9dabbab" source="id-367fe775ef65480bbae577099fd83b30" target="id-34f587fbc060415faf043067eaa8a74d"/>
+    <element xsi:type="archimate:CompositionRelationship" name="contains" id="id-c5428e3b15ae45ab94164371491bcea5" source="id-9eb65bc4e62e42e9ad5375725305340c" target="id-5d86d1b167d045748a0605ab0cf5a08b"/>
   </folder>
   <folder name="Views" id="id-c4a47547d89649babef754e47e83c429" type="diagrams">
     <folder name="Syntax" id="id-6fd9ede1a32043c0bdec21b826afd949">
       <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Syntax" id="id-84c801b279144e3483efe50d7ea95e4f">
         <child xsi:type="archimate:DiagramObject" id="id-79f9317ee4f7445e8e08498453e76cfa" targetConnections="id-9261b5ef5cc74482b8b06fb7c6beb07a" textPosition="1" archimateElement="id-55135f187b6d4f8a9929f3988537ea74">
-          <bounds x="516" y="156" width="120" height="49"/>
+          <bounds x="731" y="177" width="120" height="49"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-30dbbe611d074db8a205e080a8d5d082" lineWidth="2" source="id-79f9317ee4f7445e8e08498453e76cfa" target="id-e0f4484c9806440da7ab4d0693c6da57" archimateRelationship="id-79e28b9c3ba649588d3e57785f3d08f4"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-d6b7c4f788ae4768b81808b91963131f" source="id-79f9317ee4f7445e8e08498453e76cfa" target="id-25abddd1adb04d6e9eaad2c57c64bbe2" archimateRelationship="id-54738bb1a13e471f91bb59818fdc305b"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-e0f4484c9806440da7ab4d0693c6da57" targetConnections="id-30dbbe611d074db8a205e080a8d5d082 id-3d6c8082ee3748f6b307aeb35058c0fb id-ea38796915ab434da0a6bb0918ba9035 id-1b7bbeac1cda4d87a5b8c156d62fe0fc id-1ee21c8a076247828563f5034887cb88" textPosition="1" archimateElement="id-05d72db3510b47bea674dba07801e723">
-          <bounds x="336" y="273" width="120" height="49"/>
+          <bounds x="551" y="294" width="120" height="49"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-1ee21c8a076247828563f5034887cb88" source="id-e0f4484c9806440da7ab4d0693c6da57" target="id-e0f4484c9806440da7ab4d0693c6da57" archimateRelationship="id-2e47908107494ea5930aed407f624b7b">
             <bendpoint startX="-89" startY="3" endX="-89" endY="3"/>
             <bendpoint startX="-89" startY="-57" endX="-89" endY="-57"/>
@@ -430,10 +493,10 @@ Source: O2I syntax mapping based on The Open Group (2026).</documentation>
           </sourceConnection>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-62200ac6e31442bcb622ef5f5cd326b8" textPosition="1" archimateElement="id-096643e841bb492a9ede1990bc40a442" type="1">
-          <bounds x="319" y="264" width="60" height="25"/>
+          <bounds x="534" y="285" width="60" height="25"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-d79185a672874100a01b8a9e7dac9a4d" targetConnections="id-4c1654be3470482f8b381660d12f2e5a id-de920875d71d4526ba26c684aadb1f6b id-93072ef16e4d4560a7f33791dbadcaec" textPosition="1" archimateElement="id-a28a1df5342b444c8fe31e62f9e2ca58">
-          <bounds x="336" y="396" width="120" height="49"/>
+          <bounds x="551" y="417" width="120" height="49"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="labelExpression" value="Key Result"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-3d6c8082ee3748f6b307aeb35058c0fb" source="id-d79185a672874100a01b8a9e7dac9a4d" target="id-e0f4484c9806440da7ab4d0693c6da57" archimateRelationship="id-3cdad1e6fd2a42238260b75fc67c1dee">
@@ -453,7 +516,7 @@ Source: O2I syntax mapping based on The Open Group (2026).</documentation>
           </sourceConnection>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-dae31e0d08a64042a3f85220431549f2" targetConnections="id-4775081d84634b6294c20872bf1474cf id-ccd45ebacef745e595b53be8741a398d id-7e873ed5236a46d6b5f827fabeeb8202" textPosition="1" archimateElement="id-25f3ffe61f93476db90607538dad5b22">
-          <bounds x="336" y="501" width="120" height="49"/>
+          <bounds x="551" y="522" width="120" height="49"/>
           <feature name="deriveElementLineColor" value="false"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-4c1654be3470482f8b381660d12f2e5a" source="id-dae31e0d08a64042a3f85220431549f2" target="id-d79185a672874100a01b8a9e7dac9a4d" archimateRelationship="id-a4c98b99981e40968f2638423df0cc2b"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-ccd45ebacef745e595b53be8741a398d" source="id-dae31e0d08a64042a3f85220431549f2" target="id-dae31e0d08a64042a3f85220431549f2" archimateRelationship="id-9622a11565c34f0c9f1c159860c143a1">
@@ -468,7 +531,7 @@ Source: O2I syntax mapping based on The Open Group (2026).</documentation>
           </sourceConnection>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-fea3fa8da352452080aacf9fd96930b1" targetConnections="id-29fa2846eec4437f93a17a89ce1e967c" textPosition="1" archimateElement="id-54239700651b4cbc80ad0293da25df0d">
-          <bounds x="336" y="60" width="120" height="55"/>
+          <bounds x="551" y="81" width="120" height="55"/>
           <feature name="deriveElementLineColor" value="false"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-1b7bbeac1cda4d87a5b8c156d62fe0fc" lineWidth="2" source="id-fea3fa8da352452080aacf9fd96930b1" target="id-e0f4484c9806440da7ab4d0693c6da57" archimateRelationship="id-7ea4efb329af43c18437a7fa32c2becb"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-9261b5ef5cc74482b8b06fb7c6beb07a" lineWidth="2" source="id-fea3fa8da352452080aacf9fd96930b1" target="id-79f9317ee4f7445e8e08498453e76cfa" archimateRelationship="id-ea8ccb71b7e047c7a6b76db01fa874a2"/>
@@ -483,19 +546,14 @@ Source: O2I syntax mapping based on The Open Group (2026).</documentation>
           </sourceConnection>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-1cac7255b4a243048e97a488350b1ed6" targetConnections="id-41af91961ed442ac83303c14418ccabb id-463cf66af2a143679a9adc5f868c71a3" textPosition="1" archimateElement="id-cc8c646d677e49c4939062215b2e8c7d">
-          <bounds x="672" y="400" width="120" height="42"/>
+          <bounds x="887" y="421" width="120" height="42"/>
           <feature name="labelExpression" value="KPI"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-053dfbb705ed4cb2a876123e07f65732" textPosition="1" archimateElement="id-cb8f7dc20cb145bb92b046d73555095e" type="1">
-          <bounds x="660" y="393" width="60" height="25"/>
-        </child>
-        <child xsi:type="archimate:Note" id="id-58bcb7d8a8c94087aae2fb8bb05a1f03" textAlignment="1">
-          <bounds x="639" y="486" width="185" height="80"/>
-          <feature name="deriveElementLineColor" value="false"/>
-          <content>Note: Every O2I Context is represented by an ArchiMate Grouping.</content>
+          <bounds x="875" y="414" width="60" height="25"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-25abddd1adb04d6e9eaad2c57c64bbe2" targetConnections="id-d6b7c4f788ae4768b81808b91963131f id-9a2d5897bcd044499c42a00aeaef30d7" font="1|Lucida Grande|12.0|1|COCOA|1|LucidaGrande-Bold" textPosition="1" archimateElement="id-6e5d5a1f511747a893cabae235cdaa84">
-          <bounds x="520" y="272" width="120" height="49"/>
+          <bounds x="735" y="293" width="120" height="49"/>
           <feature name="iconColor" value="#feffff"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-463cf66af2a143679a9adc5f868c71a3" source="id-25abddd1adb04d6e9eaad2c57c64bbe2" target="id-1cac7255b4a243048e97a488350b1ed6" archimateRelationship="id-5d49a97e8a254d2a8f8a6ca17ac71b4a">
             <feature name="nameVisible" value="false"/>
@@ -504,16 +562,45 @@ Source: O2I syntax mapping based on The Open Group (2026).</documentation>
             <feature name="nameVisible" value="false"/>
           </sourceConnection>
         </child>
-        <documentation>Every O2I Context is represented by an ArchiMate Grouping. An O2I Primitive is contextualized by placement inside its owning Context Grouping; Primitive @ Context is the textual notation of this containment.
+        <child xsi:type="archimate:Group" id="id-2cf9c4fe30fe415c857ab855b438e781" name="Ownership-Syntax Beispiele" textAlignment="1" fillColor="#feffff">
+          <bounds x="132" y="108" width="253" height="420"/>
+          <feature name="deriveElementLineColor" value="false"/>
+          <child xsi:type="archimate:DiagramObject" id="id-fdef702512d74dbb869dc2478436e622" textAlignment="1" archimateElement="id-367fe775ef65480bbae577099fd83b30">
+            <bounds x="36" y="36" width="179" height="49"/>
+            <feature name="deriveElementLineColor" value="false"/>
+            <feature name="labelExpression" value="Mission : O2I Context"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-f6312b7c7a0543e5903976ba7f2d6a97" textPosition="0" source="id-fdef702512d74dbb869dc2478436e622" target="id-54b7e4a691ca427e8e950b7447345090" archimateRelationship="id-50f9cfe9c60b4075be2d8356a9dabbab"/>
+          </child>
+          <child xsi:type="archimate:DiagramObject" id="id-54b7e4a691ca427e8e950b7447345090" targetConnections="id-f6312b7c7a0543e5903976ba7f2d6a97" textPosition="1" archimateElement="id-34f587fbc060415faf043067eaa8a74d">
+            <bounds x="66" y="141" width="120" height="55"/>
+            <feature name="deriveElementLineColor" value="false"/>
+          </child>
+          <child xsi:type="archimate:DiagramObject" id="id-f55b5d3a5c784a218687e2aaee4fc056" textAlignment="1" archimateElement="id-9eb65bc4e62e42e9ad5375725305340c">
+            <bounds x="36" y="246" width="179" height="49"/>
+            <feature name="deriveElementLineColor" value="false"/>
+            <feature name="labelExpression" value="Strategy : O2I Context"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-2ff4ef779b1c43debdd1913b553985fb" textPosition="0" source="id-f55b5d3a5c784a218687e2aaee4fc056" target="id-a007755c030a447ea62a23d286b0f57c" archimateRelationship="id-c5428e3b15ae45ab94164371491bcea5"/>
+          </child>
+          <child xsi:type="archimate:DiagramObject" id="id-a007755c030a447ea62a23d286b0f57c" targetConnections="id-2ff4ef779b1c43debdd1913b553985fb" textAlignment="1" archimateElement="id-5d86d1b167d045748a0605ab0cf5a08b">
+            <bounds x="36" y="348" width="179" height="49"/>
+            <feature name="deriveElementLineColor" value="false"/>
+            <feature name="labelExpression" value="Performance Dimension&#xA;@ Strategy"/>
+          </child>
+        </child>
+        <documentation>Defines the concrete ArchiMate realization of O2I Contexts, contextualized Primitives, PerformanceDimensions, Situation anchors, and their relation mappings.
+
+Every O2I Context and PerformanceDimension is represented by an ArchiMate Grouping. ArchiMate Groupings introduce no O2I semantics. Every concrete Primitive and PerformanceDimension instance has exactly one owning Context through composition[contains]. The Interpretation registry admits Primitive @ Context; the role registry admits PerformanceDimension @ Context and constrains its member Primitive type and membership relation without interpreting the members. Visual nesting presents but never replaces persisted ownership. Primitive @ Context and PerformanceDimension @ Context are the textual O2I notations. The bounded ownership examples are syntax exemplars, not fachliche instances.
+
+Situation anchors are independent, ownerless nodes. Their assignment to a Situation is represented exclusively through aggregation[is-constituted-by].
 
 O2I Situation Anchor syntax:
 
-O2I BusinessCapability -> ArchiMate Capability
-O2I BusinessProcess -> ArchiMate Process
-O2I BusinessObject -> ArchiMate Business Object
-O2I BusinessRole -> ArchiMate Role
-O2I ValueStream -> ArchiMate Value Stream
-O2I RegulatoryConstraint -> ArchiMate Requirement</documentation>
+-  O2I BusinessCapability -> ArchiMate Capability
+-  O2I BusinessProcess -> ArchiMate Process
+-  O2I BusinessObject -> ArchiMate Business Object
+-  O2I BusinessRole -> ArchiMate Role
+-  O2I ValueStream -> ArchiMate Value Stream
+-  O2I RegulatoryConstraint -> ArchiMate Requirement</documentation>
       </element>
     </folder>
     <folder name="Semantic" id="id-70adea7d838a4547917f4253d5c53221">
@@ -721,6 +808,9 @@ O2I RegulatoryConstraint -> ArchiMate Requirement</documentation>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
         </child>
+        <documentation>Defines the normative type-level view of O2I Primitives, PerformanceDimension, and admissible relation families.
+
+The view intentionally abstracts from concrete Primitive and Structuring instances and their owning Contexts. It does not assert that every displayed relation is admissible for every Context. Concrete ownership and context-sensitive admissibility are defined by Instantiation, the Interpretation registry, the PerformanceDimension role registry, and the typed Relation registry. Their concrete ArchiMate realization is defined in O2I Syntax.</documentation>
       </element>
       <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Situation Anchoring" id="id-7e4365b02a58418cb38f4ea25e0aa5dc">
         <child xsi:type="archimate:DiagramObject" id="id-81110f41c9744559bccc4f600f9e06c2" targetConnections="id-552eb38670974e0d9843a03d537ce891 id-b8d051213b0a48fd9b3b187c264485d7" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-95420d4e66164023b79676213a6147e2">
@@ -734,6 +824,7 @@ O2I RegulatoryConstraint -> ArchiMate Requirement</documentation>
           <bounds x="228" y="440" width="181" height="84"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
+          <feature name="lineStyle" value="2"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-5277e80f20e040ada890a1217a7c2794" source="id-e129c377518c44e2a5e6180bda67ff19" target="id-599b330d09bb4fae919ccb6f8322838d" archimateRelationship="id-4f19dce96a1c44bbb8086ba1c8d91de8">
             <bendpoint startX="210" startY="-242" endX="-234" endY="152"/>
           </sourceConnection>
@@ -791,6 +882,7 @@ O2I RegulatoryConstraint -> ArchiMate Requirement</documentation>
           <bounds x="372" y="252" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
+          <feature name="lineStyle" value="2"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-c72c45593fd443b2bec187c81c5c4268" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-4d37096102d147059a7d6068162d4e12">
           <bounds x="180" y="372" width="181" height="73"/>

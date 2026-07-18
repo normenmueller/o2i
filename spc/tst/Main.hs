@@ -124,6 +124,85 @@ performanceDimensionRoleTests =
                 (validateStructure
                    strategySuccessPerformanceDimensionGraph
                      {rawEdges = [invalidEdge]})
+    , testCase "Strategy dimension rejects a cross-Strategy Key Result"
+        $ let foreignKeyResultId = RawNodeId "foreign-strategy-key-result"
+              invalidEdge =
+                RawEdge
+                  strategyPerformanceDimensionId
+                  (relationNameFor
+                     (containsPerformanceDimension StrategySuccessDimension))
+                  foreignKeyResultId
+           in assertStructuralErrors
+                [ PerformanceDimensionMembershipOwnerMismatch
+                    invalidEdge
+                    strategyId
+                    secondStrategyId
+                ]
+                (validateStructure
+                   (RawGraph
+                      [ RawContextNode strategyId Strategy
+                      , RawContextNode secondStrategyId Strategy
+                      , RawStructuringNode
+                          strategyPerformanceDimensionId
+                          strategyId
+                          PerformanceDimension
+                      , RawPrimitiveNode
+                          foreignKeyResultId
+                          secondStrategyId
+                          KeyResult
+                      ]
+                      [invalidEdge]))
+    , testCase "Measure dimension rejects a cross-Measure KPI"
+        $ let secondMeasureId = RawNodeId "second-measure"
+              foreignKpiId = RawNodeId "foreign-measure-kpi"
+              invalidEdge =
+                RawEdge
+                  measurePerformanceDimensionId
+                  (relationNameFor
+                     (containsPerformanceDimension MeasureMeasurementDimension))
+                  foreignKpiId
+           in assertStructuralErrors
+                [ PerformanceDimensionMembershipOwnerMismatch
+                    invalidEdge
+                    measureId
+                    secondMeasureId
+                ]
+                (validateStructure
+                   (RawGraph
+                      [ RawContextNode measureId Measure
+                      , RawContextNode secondMeasureId Measure
+                      , RawStructuringNode
+                          measurePerformanceDimensionId
+                          measureId
+                          PerformanceDimension
+                      , RawPrimitiveNode foreignKpiId secondMeasureId KPI
+                      ]
+                      [invalidEdge]))
+    , testCase "membership does not interpret an inadmissible Primitive"
+        $ let invalidPrimitiveId = RawNodeId "strategy-kpi"
+              invalidEdge =
+                RawEdge
+                  strategyPerformanceDimensionId
+                  (relationNameFor
+                     (containsPerformanceDimension StrategySuccessDimension))
+                  invalidPrimitiveId
+           in assertStructuralErrors
+                [ InvalidPrimitiveInterpretation invalidPrimitiveId Strategy KPI
+                , InvalidRelationEndpointKinds
+                    invalidEdge
+                    (StructuringNodeKind Strategy PerformanceDimension)
+                    (PrimitiveNodeKind Strategy KPI)
+                ]
+                (validateStructure
+                   (RawGraph
+                      [ RawContextNode strategyId Strategy
+                      , RawStructuringNode
+                          strategyPerformanceDimensionId
+                          strategyId
+                          PerformanceDimension
+                      , RawPrimitiveNode invalidPrimitiveId strategyId KPI
+                      ]
+                      [invalidEdge]))
     ]
 
 structureTests :: TestTree
@@ -211,15 +290,75 @@ structureTests =
                       PerformanceDimension
                   ]
                   []))
-    , testCase "invalid Situation anchor contexts are rejected exactly"
+    , testCase "unknown structuring owners are rejected exactly"
         $ assertStructuralErrors
-            [InvalidAnchorContext situationAnchorId Need BusinessCapability]
+            [UnknownOwner measurePerformanceDimensionId missingId]
+            (validateStructure
+               (RawGraph
+                  [ RawStructuringNode
+                      measurePerformanceDimensionId
+                      missingId
+                      PerformanceDimension
+                  ]
+                  []))
+    , testCase "primitive owner conflicts are duplicate node declarations"
+        $ assertStructuralErrors
+            [DuplicateNodeId needObjectiveId]
             (validateStructure
                (RawGraph
                   [ RawContextNode needId Need
-                  , RawAnchorNode situationAnchorId needId BusinessCapability
+                  , RawContextNode visionId Vision
+                  , RawPrimitiveNode needObjectiveId needId Objective
+                  , RawPrimitiveNode needObjectiveId visionId Objective
                   ]
                   []))
+    , testCase "structuring owner conflicts are duplicate node declarations"
+        $ assertStructuralErrors
+            [DuplicateNodeId measurePerformanceDimensionId]
+            (validateStructure
+               (RawGraph
+                  [ RawContextNode strategyId Strategy
+                  , RawContextNode measureId Measure
+                  , RawStructuringNode
+                      measurePerformanceDimensionId
+                      strategyId
+                      PerformanceDimension
+                  , RawStructuringNode
+                      measurePerformanceDimensionId
+                      measureId
+                      PerformanceDimension
+                  ]
+                  []))
+    , testCase "performance dimension exposes exactly its declared owner"
+        $ withWellFormed measureMeasurementPerformanceDimensionGraph
+        $ \graph ->
+            case lookupNode graph measurePerformanceDimensionId of
+              Just node -> someNodeOwner node @?= Just measureId
+              Nothing -> assertFailure "performance dimension was not found"
+    , testCase "anchor has no owner and Situation assignment is relational"
+        $ let secondSituationId = RawNodeId "second-situation"
+           in withWellFormed
+                (RawGraph
+                   [ RawContextNode situationId Situation
+                   , RawContextNode secondSituationId Situation
+                   , RawAnchorNode situationAnchorId BusinessCapability
+                   ]
+                   [ anchorEdge
+                       situationId
+                       constitutedByAnchor
+                       situationAnchorId
+                   , anchorEdge
+                       secondSituationId
+                       constitutedByAnchor
+                       situationAnchorId
+                   ]) $ \graph -> do
+                case lookupNode graph situationAnchorId of
+                  Just node -> someNodeOwner node @?= Nothing
+                  Nothing -> assertFailure "Situation anchor was not found"
+                constitutingAnchorNodes graph situationId
+                  @?= [situationAnchorId]
+                constitutingAnchorNodes graph secondSituationId
+                  @?= [situationAnchorId]
     , testCase "edge errors accumulate independently"
         $ let from = RawNodeId "unknown-from"
               to = RawNodeId "unknown-to"
@@ -256,6 +395,19 @@ semanticTests =
         $ \graph ->
             assertSuccess
               (validateModelSemantics graph [sampleStrategyFormulation])
+    , testCase "constituted Situation without surfaced Need is valid"
+        $ withWellFormed
+            (RawGraph
+               [ RawContextNode situationId Situation
+               , RawAnchorNode situationAnchorId BusinessCapability
+               ]
+               [anchorEdge situationId constitutedByAnchor situationAnchorId])
+        $ \graph -> assertSuccess (validateModelSemantics graph [])
+    , testCase "Situation without constituting anchor is rejected"
+        $ assertSemanticErrorsWith
+            (RawGraph [RawContextNode situationId Situation] [])
+            []
+            [SituationWithoutConstitutingAnchor situationId]
     , testCase "model without Strategy requires no formulation"
         $ withWellFormed emptyGraph
         $ \graph -> assertSuccess (validateModelSemantics graph [])
@@ -659,7 +811,11 @@ missingEdgeExpectation candidate
   | candidate == edge needDriverId groundsNeedDriverToObjective needObjectiveId =
     Just (SemanticExpectation [UngroundedNeedObjective needId needObjectiveId])
   | candidate == anchorEdge situationId constitutedByAnchor situationAnchorId =
-    unanchoredNeedDriver
+    Just
+      (SemanticExpectation
+         [ SituationWithoutConstitutingAnchor situationId
+         , UnanchoredNeedDriver needId needDriverId
+         ])
   | candidate == anchorEdge situationAnchorId anchorsNeedDriver needDriverId =
     unanchoredNeedDriver
   | candidate == edge interventionId addressesNeed needId =
@@ -1545,6 +1701,9 @@ registryTests =
             performanceDimensionRoleRoundTrips
     , testCase "every performance-dimension role code is represented"
         $ performanceDimensionRoleCodes @?= [minBound .. maxBound]
+    , testCase
+        "every performance-dimension role member has its own interpretation"
+        $ mapM_ assertRoleMemberInterpretation allPerformanceDimensionRoles
     , QC.testProperty "relation lookup round-trips"
         $ QC.forAll (QC.elements allRelations) relationRoundTrips
     , testCase "relation registry identities are unique"
@@ -1555,6 +1714,14 @@ registryTests =
         $ QC.forAll (QC.elements allInterpretations) interpretationRoundTrips
     , testCase "every interpretation code is represented"
         $ interpretationCodes @?= [minBound .. maxBound]
+    , testCase
+        "Context x Primitive validation matches the registry exhaustively"
+        $ mapM_
+            (\context ->
+               mapM_
+                 (assertInterpretationValidationContract context)
+                 [minBound .. maxBound])
+            [minBound .. maxBound]
     ]
 
 performanceDimensionRoleRoundTrips :: SomePerformanceDimensionRole -> Bool
@@ -1567,6 +1734,17 @@ performanceDimensionRoleRoundTrips role =
 performanceDimensionRoleCodes :: [PerformanceDimensionRoleCode]
 performanceDimensionRoleCodes =
   map performanceDimensionRoleCodeOf allPerformanceDimensionRoles
+
+assertRoleMemberInterpretation :: SomePerformanceDimensionRole -> Assertion
+assertRoleMemberInterpretation role =
+  case lookupInterpretation context member of
+    Just _ -> pure ()
+    Nothing ->
+      assertFailure
+        ("missing independent interpretation for role member "
+           ++ show (context, member))
+  where
+    (_, _, context, member) = performanceDimensionRoleIdentity role
 
 relationRoundTrips :: SomeRelation -> Bool
 relationRoundTrips relation =
@@ -1590,3 +1768,29 @@ interpretationRoundTrips interpretation =
 
 interpretationCodes :: [InterpretationCode]
 interpretationCodes = map interpretationCodeOf allInterpretations
+
+assertInterpretationValidationContract :: Context -> Primitive -> Assertion
+assertInterpretationValidationContract context primitive =
+  case (lookupInterpretation context primitive, validateStructure raw) of
+    (Just _, Success graph) ->
+      case lookupNode graph primitiveId of
+        Just node -> someNodeOwner node @?= Just contextId
+        Nothing ->
+          assertFailure (message ++ ": validated Primitive was not found")
+    (Nothing, Failure errors) ->
+      NonEmpty.toList errors
+        @?= [InvalidPrimitiveInterpretation primitiveId context primitive]
+    (Just _, Failure errors) ->
+      assertFailure (message ++ ": admissible pair failed: " ++ show errors)
+    (Nothing, Success _) ->
+      assertFailure (message ++ ": inadmissible pair was accepted")
+  where
+    contextId = RawNodeId "registry-context"
+    primitiveId = RawNodeId "registry-primitive"
+    raw =
+      RawGraph
+        [ RawContextNode contextId context
+        , RawPrimitiveNode primitiveId contextId primitive
+        ]
+        []
+    message = "Context x Primitive contract " ++ show (context, primitive)

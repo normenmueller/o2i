@@ -35,14 +35,14 @@ data StructuralError
     -- ^ A Primitive is inadmissible in its owning Context.
   | InvalidStructuringContext RawNodeId Context Structuring
     -- ^ A structuring form is inadmissible in its owning Context.
-  | InvalidAnchorContext RawNodeId Context SituationAnchor
-    -- ^ A Situation anchor is not owned by a Situation context.
   | UnknownEdgeEndpoint RawEdge RawNodeId
     -- ^ An edge endpoint does not identify a declared node.
   | UnknownRelation RelationName
     -- ^ An edge names no registered O2I relation.
   | InvalidRelationEndpointKinds RawEdge NodeKindValue NodeKindValue
     -- ^ Endpoint kinds do not match the named relation specification.
+  | PerformanceDimensionMembershipOwnerMismatch RawEdge RawNodeId RawNodeId
+    -- ^ PerformanceDimension and member have different owning Context IDs.
   | ElaborationInvariantViolation
     -- ^ Internal elaboration failed after all public checks succeeded.
   deriving (Eq, Show)
@@ -51,7 +51,8 @@ data StructuralError
 -- | Elaborate unchecked input into an opaque structurally typed graph.
 --
 -- Independent errors accumulate. Success guarantees unique IDs and edges,
--- valid ownership and interpretations, known relations, and typed endpoints.
+-- valid ownership and interpretations, known relations, typed endpoints, and
+-- one shared owner Context instance for each PerformanceDimension membership.
 validateStructure ::
      RawGraph -> Validation (NonEmpty.NonEmpty StructuralError) WellFormedGraph
 validateStructure raw =
@@ -85,22 +86,24 @@ nodeErrors raw = duplicateIdErrors ++ concatMap validateNode (rawNodes raw)
           [ InvalidStructuringContext identifier context structuring
           | isNothing (lookupPerformanceDimensionRole context)
           ]
-    validateNode (RawAnchorNode identifier owner anchor) =
-      case Map.lookup owner owners of
-        Nothing -> [UnknownOwner identifier owner]
-        Just context ->
-          [ InvalidAnchorContext identifier context anchor
-          | context /= Situation
-          ]
+    validateNode (RawAnchorNode _ _) = []
 
 edgeErrors :: RawGraph -> [StructuralError]
 edgeErrors raw = duplicateEdgeErrors ++ concatMap validateEdge (rawEdges raw)
   where
     duplicateEdgeErrors = map DuplicateEdge (duplicates (rawEdges raw))
     kinds = rawNodeKinds raw
+    declarations =
+      Map.fromListWith (++) [(rawNodeId node, [node]) | node <- rawNodes raw]
     validateEdge edge =
       endpointErrors edge fromKind toKind
         ++ relationErrors edge fromKind toKind candidates
+        ++ performanceDimensionMembershipOwnerErrors
+             edge
+             declarations
+             fromKind
+             toKind
+             candidates
       where
         fromKind = Map.lookup (rawEdgeFrom edge) kinds
         toKind = Map.lookup (rawEdgeTo edge) kinds
@@ -134,6 +137,37 @@ matchesKinds fromKind toKind (SomeRelation relation) =
   let spec = relationSpec relation
    in nodeKindValue (relationFrom spec) == fromKind
         && nodeKindValue (relationTo spec) == toKind
+
+performanceDimensionMembershipOwnerErrors ::
+     RawEdge
+  -> Map RawNodeId [RawNode]
+  -> Maybe NodeKindValue
+  -> Maybe NodeKindValue
+  -> [SomeRelation]
+  -> [StructuralError]
+performanceDimensionMembershipOwnerErrors edge declarations (Just fromKind) (Just toKind) candidates
+  | any isMatchingMembership candidates =
+    case ( uniqueDeclaration (rawEdgeFrom edge)
+         , uniqueDeclaration (rawEdgeTo edge)) of
+      (Just (RawStructuringNode _ dimensionOwner PerformanceDimension), Just (RawPrimitiveNode _ memberOwner _))
+        | dimensionOwner /= memberOwner ->
+          [ PerformanceDimensionMembershipOwnerMismatch
+              edge
+              dimensionOwner
+              memberOwner
+          ]
+      _ -> []
+  where
+    isMatchingMembership relation@(SomeRelation witness) =
+      matchesKinds fromKind toKind relation
+        && case relationCode (relationSpec witness) of
+             PerformanceDimensionMembership _ -> True
+             _ -> False
+    uniqueDeclaration identifier =
+      case Map.lookup identifier declarations of
+        Just [node] -> Just node
+        _ -> Nothing
+performanceDimensionMembershipOwnerErrors _ _ _ _ _ = []
 
 buildGraph :: RawGraph -> Maybe WellFormedGraph
 buildGraph raw = do
@@ -184,11 +218,9 @@ buildChild contexts (RawStructuringNode identifier owner PerformanceDimension) =
       (SContextKind context)
       (SContextKind (performanceDimensionRoleContext role))
   pure (SomeNode (PerformanceDimensionNode (mkNodeId identifier) ownerId role))
-buildChild contexts (RawAnchorNode identifier owner anchor) = do
-  SomeNode (ContextNode ownerId context) <- Map.lookup owner contexts
+buildChild _ (RawAnchorNode identifier anchor) = do
   SomeSAnchor witness <- pure (someSAnchor anchor)
-  Refl <- eqSNodeKind (SContextKind context) (SContextKind SSituation)
-  pure (SomeNode (AnchorNode (mkNodeId identifier) ownerId witness))
+  pure (SomeNode (AnchorNode (mkNodeId identifier) witness))
 buildChild _ (RawContextNode _ _) = Nothing
 
 buildEdge :: Map RawNodeId SomeNode -> RawEdge -> Maybe SomeEdge
@@ -213,7 +245,7 @@ rawNodeId :: RawNode -> RawNodeId
 rawNodeId (RawContextNode identifier _) = identifier
 rawNodeId (RawPrimitiveNode identifier _ _) = identifier
 rawNodeId (RawStructuringNode identifier _ _) = identifier
-rawNodeId (RawAnchorNode identifier _ _) = identifier
+rawNodeId (RawAnchorNode identifier _) = identifier
 
 someNodeRawId :: SomeNode -> RawNodeId
 someNodeRawId (SomeNode node) = unNodeId (nodeId node)
@@ -243,7 +275,7 @@ rawKind owners (RawPrimitiveNode _ owner primitive) =
   PrimitiveNodeKind <$> Map.lookup owner owners <*> pure primitive
 rawKind owners (RawStructuringNode _ owner structuring) =
   StructuringNodeKind <$> Map.lookup owner owners <*> pure structuring
-rawKind _ (RawAnchorNode _ _ anchor) = Just (AnchorNodeKind anchor)
+rawKind _ (RawAnchorNode _ anchor) = Just (AnchorNodeKind anchor)
 
 duplicates :: Ord value => [value] -> [value]
 duplicates = map head . filter ((> 1) . length) . group . sort

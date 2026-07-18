@@ -21,7 +21,7 @@ module O2I.Graph
   , contextNodesOf
   , primitiveNodesIn
   , performanceDimensionNodesIn
-  , anchorNodesIn
+  , constitutingAnchorNodes
   , hasEdge
   , outgoingContextTargets
   ) where
@@ -31,7 +31,7 @@ import O2I.Graph.Typed
   ( SomeEdge
   , SomeNode
   , WellFormedGraph
-  , anchorNodesIn
+  , constitutingAnchorNodes
   , contextNodesOf
   , graphEdges
   , graphNodes

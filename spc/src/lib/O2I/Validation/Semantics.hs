@@ -4,8 +4,8 @@
 
 -- | Semantic completeness of structurally valid O2I graphs.
 --
--- This validation stage establishes global Need invariants and complete,
--- coherent Strategy formulations before effect traces may be derived.
+-- This validation stage establishes global Situation and Need invariants and
+-- complete, coherent Strategy formulations before effect traces may be derived.
 module O2I.Validation.Semantics
   ( StrategyAnchoring(..)
   , RawStrategyFormulation(..)
@@ -93,7 +93,9 @@ data StrategyPrimitiveRole
 
 -- | Accumulated semantic invariant violations.
 data ModelInvariantError
-  = NeedWithoutDriver RawNodeId
+  = SituationWithoutConstitutingAnchor RawNodeId
+    -- ^ A Situation has no admissible anchor that constitutes it.
+  | NeedWithoutDriver RawNodeId
     -- ^ A Need has no Driver that states its situated motivation.
   | NeedWithoutObjective RawNodeId
     -- ^ A Need has no Objective that states the required change.
@@ -130,7 +132,8 @@ data ModelInvariantError
     -- ^ A required relation between valid formulation roles is absent.
   deriving (Eq, Show)
 
--- | A structurally valid graph with complete Need and Strategy semantics.
+-- | A structurally valid graph with complete Situation, Need, and Strategy
+-- semantics.
 data SemanticallyValidModel = SemanticallyValidModel
   { semanticallyValidGraph :: WellFormedGraph -- ^ Structurally valid graph.
   , semanticallyValidStrategies :: Map RawNodeId StrategyFormulation
@@ -138,11 +141,13 @@ data SemanticallyValidModel = SemanticallyValidModel
   }
 
 -- * Semantic validation
--- | Establish global Need invariants and complete Strategy formulations.
+-- | Establish global Situation and Need invariants and complete Strategy
+-- formulations.
 --
 -- The input graph must already be structurally valid. Independent semantic
--- errors accumulate. Success guarantees every Need is situated and grounded,
--- and every Strategy has one nonblank, role-correct, coherent formulation.
+-- errors accumulate. Success guarantees every Situation has a constituting
+-- anchor, every Need is situated and grounded, and every Strategy has one
+-- nonblank, role-correct, coherent formulation.
 validateModelSemantics ::
      WellFormedGraph
   -> [RawStrategyFormulation]
@@ -163,7 +168,8 @@ validateModelSemantics graph rawFormulations =
           }
   where
     errors =
-      needErrors graph
+      situationErrors graph
+        ++ needErrors graph
         ++ formulationCoverageErrors graph rawFormulations
         ++ concatMap (formulationErrors graph) rawFormulations
 
@@ -220,6 +226,13 @@ qualifyingStrategies semantic need =
     needIdentifier = contextRefId need
     needObjectives = primitiveNodesIn graph needIdentifier Objective
 
+situationErrors :: WellFormedGraph -> [ModelInvariantError]
+situationErrors graph =
+  [ SituationWithoutConstitutingAnchor situation
+  | situation <- contextNodesOf graph Situation
+  , null (constitutingAnchorNodes graph situation)
+  ]
+
 needErrors :: WellFormedGraph -> [ModelInvariantError]
 needErrors graph = concatMap errorsForNeed (contextNodesOf graph Need)
   where
@@ -233,7 +246,7 @@ needErrors graph = concatMap errorsForNeed (contextNodesOf graph Need)
         drivers = primitiveNodesIn graph need Driver
         objectives = primitiveNodesIn graph need Objective
         situations = surfacingSituations graph need
-        situatedAnchors = concatMap (constitutingAnchors graph) situations
+        situatedAnchors = concatMap (constitutingAnchorNodes graph) situations
         missingDriverErrors = [NeedWithoutDriver need | null drivers]
         missingObjectiveErrors = [NeedWithoutObjective need | null objectives]
         missingSituationErrors =
@@ -264,15 +277,6 @@ surfacingSituations graph need =
   [ situation
   | situation <- contextNodesOf graph Situation
   , hasRelation graph situation surfacesNeed need
-  ]
-
-constitutingAnchors :: WellFormedGraph -> RawNodeId -> [RawNodeId]
-constitutingAnchors graph situation =
-  [ anchor
-  | anchor <- anchorNodesIn graph situation
-  , any
-      (\relation -> hasEdge graph situation relation anchor)
-      constitutedByRelationNames
   ]
 
 formulationCoverageErrors ::
@@ -453,16 +457,6 @@ validPrimitiveReference graph strategy primitive reference =
 hasRelation ::
      WellFormedGraph -> RawNodeId -> Relation from to -> RawNodeId -> Bool
 hasRelation graph from relation = hasEdge graph from (relationNameFor relation)
-
-constitutedByRelationNames :: [RelationName]
-constitutedByRelationNames =
-  [ relationNameFor (constitutedByAnchor SBusinessCapability)
-  , relationNameFor (constitutedByAnchor SBusinessProcess)
-  , relationNameFor (constitutedByAnchor SBusinessObject)
-  , relationNameFor (constitutedByAnchor SBusinessRole)
-  , relationNameFor (constitutedByAnchor SValueStream)
-  , relationNameFor (constitutedByAnchor SRegulatoryConstraint)
-  ]
 
 anchorNeedDriverRelationNames :: [RelationName]
 anchorNeedDriverRelationNames =
