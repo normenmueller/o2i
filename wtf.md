@@ -89,7 +89,7 @@ Strategie ist kein Wunschzettel. Sie beschreibt das strategische Wie: die begrü
 
 Eine vollständige Strategie verbindet `Driver`, `Objective`, `Principle`, mindestens eine `Action` und mindestens ein `Key Result` in ihren festgelegten Strategy-Rollen. Diagnose begründet Absicht, Guiding Policy leitet Handlungsfestlegungen, diese tragen zu Erfolgsbezügen bei und Erfolgsbezüge substantiieren die Absicht. Die Fit-Begründung weist die Kohärenz des Gesamtzusammenhangs nach.
 
-Spezifikation: [`validateModelSemantics`](./spc/src/lib/O2I/Validation/Semantics.hs)
+Spezifikation: [`validateModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs)
 
 Weiterlesen: [Strategie](./o2i.md#strategie)
 
@@ -111,7 +111,7 @@ Situation ist das fachliche Wo eines Bedarfs: der konkrete Arbeits-, Leistungs- 
 
 Der Situationsanker muss nach seiner Business-Architecture-Semantik modelliert sein und den fachlichen Bezugsraum bestimmen. Eine technische Lösung oder Maßnahme ist kein Situationsanker.
 
-Spezifikation: [`validateModelSemantics`](./spc/src/lib/O2I/Validation/Semantics.hs)
+Spezifikation: [`validateModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs)
 
 Weiterlesen: [Situation](./o2i.md#situation)
 
@@ -134,7 +134,7 @@ Bedarf ist das fachliche Was: eine situationsbezogene Anforderung an Veränderun
 
 `validateModelSemantics` prüft die vollständige Situierung. Eine Lösung, Maßnahme oder technische Anforderung ersetzt weder Need-Driver noch Need-Objective.
 
-Spezifikation: [`validateModelSemantics`](./spc/src/lib/O2I/Validation/Semantics.hs)
+Spezifikation: [`validateModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs)
 
 Weiterlesen: [Bedarf](./o2i.md#bedarf)
 
@@ -154,7 +154,7 @@ Weiterlesen: [Bedarf](./o2i.md#bedarf)
 
 Agentic AI kann die Verbindung vorschlagen und begründen. Nach vollständiger Situierung des Bedarfs und vor der Modellierung von `translates-into` und `qualifies` prüft die O2I-Spezifikation ihre formale Zulässigkeit. Formale Fehler führen zu keinem Kandidaten und zu keiner Graphänderung. Einen positiven `NeedQualificationCandidate` prüfen fachlich legitimierte Personen.
 
-Spezifikation: [`validateNeedQualificationProposal`](./spc/src/lib/O2I/Validation/Qualification.hs)
+Spezifikation: [`validateNeedQualificationProposal`](./spc/lib/core/src/O2I/Validation/Qualification.hs)
 
 Ein Nachweisentwurf gehört nicht zur Qualifikationsvorlage. Eine organisationsspezifische Einreichungsregel kann beides gemeinsam verlangen; die O2I-Gates bleiben dennoch unabhängig.
 
@@ -178,7 +178,7 @@ Die Situation macht einen Bedarf sichtbar; die Strategie macht ihn relevant. `va
 
 Bei Ablehnung oder formalen Fehlern bleibt der Graph unverändert. Bei Annahme muss `qualifyingStrategies` die qualifizierende Strategie liefern. Erst dann ist der sichtbare Bedarf wirkungsrelevant, aber noch nicht wirksam.
 
-Spezifikation: [`validateNeedQualificationProposal`](./spc/src/lib/O2I/Validation/Qualification.hs), [`qualifyingStrategies`](./spc/src/lib/O2I/Validation/Semantics.hs)
+Spezifikation: [`validateNeedQualificationProposal`](./spc/lib/core/src/O2I/Validation/Qualification.hs), [`qualifyingStrategies`](./spc/lib/core/src/O2I/Validation/Semantics.hs)
 
 Weiterlesen: [Bedarfsqualifikation](./o2i.md#bedarfsqualifikation), [Wirkungsrelevanz](./o2i.md#wirkungsrelevanz)
 
@@ -202,7 +202,7 @@ Intervention ist das operative Wie: eine gezielte Einwirkung auf eine Situation,
 
 Die Intervention ist als Handlungshypothese nur nachweisfähig, wenn sie in einem vollständigen Wirkungstrace denselben Bedarf und Situationsanker mit Strategie und Messung verbindet.
 
-Spezifikation: [`validateTraceability`](./spc/src/lib/O2I/Validation/Trace.hs)
+Spezifikation: [`validateTraceability`](./spc/lib/core/src/O2I/Validation/Trace.hs)
 
 Weiterlesen: [Intervention](./o2i.md#intervention)
 
@@ -226,7 +226,7 @@ Messung ist das fachliche Woran: der Rahmen, in dem relevante Zustände und Ver�
 
 Ein KPI muss denselben Situationsanker beobachten, den die Intervention verändert. Seine Definition bleibt über Baseline, Kriterien und Folgebeobachtungen stabil.
 
-Spezifikation: [`validateEvidenceReadinessAt`](./spc/src/lib/O2I/Validation/Readiness.hs)
+Spezifikation: [`validateEvidenceReadinessAt`](./spc/lib/core/src/O2I/Validation/Readiness.hs)
 
 Weiterlesen: [Messung](./o2i.md#messung)
 
@@ -251,7 +251,7 @@ Für jeden Wirkungstrace einer Intervention muss vor Interventionsbeginn ein Nac
 
 `validateEvidenceReadinessAt` prüft Vollständigkeit, zeitliche Vorabfestlegung, Trace-Bezug, Wertebereiche und Herkunft. Nur ein fehlerfreies Ergebnis erzeugt ein `EvidenceReadyModel`.
 
-Spezifikation: [`validateEvidenceReadinessAt`](./spc/src/lib/O2I/Validation/Readiness.hs)
+Spezifikation: [`validateEvidenceReadinessAt`](./spc/lib/core/src/O2I/Validation/Readiness.hs)
 
 Weiterlesen: [Evidenzbereitschaft](./o2i.md#evidenzbereitschaft), [Nachweislogik](./o2i.md#nachweislogik)
 
@@ -277,6 +277,6 @@ Weiterlesen: [Evidenzbereitschaft](./o2i.md#evidenzbereitschaft), [Nachweislogik
 
 Das `EvidenceAssessedModel` enthält getrennte Aussagen über positive Wirkungsevidenz und Zielerreichung. Das stützt plausible Attribution, aber keinen Kausalbeweis. `isEffectiveNeed` zeigt, ob mindestens eine Folgebeobachtung die Bearbeitung eines Bedarfs durch positive Wirkungsevidenz stützt.
 
-Spezifikation: [`validateTraceability`](./spc/src/lib/O2I/Validation/Trace.hs) -> [`validateEvidenceReadinessAt`](./spc/src/lib/O2I/Validation/Readiness.hs) -> [`assessEffectEvidenceAt`](./spc/src/lib/O2I/Validation/Evidence.hs)
+Spezifikation: [`validateTraceability`](./spc/lib/core/src/O2I/Validation/Trace.hs) -> [`validateEvidenceReadinessAt`](./spc/lib/core/src/O2I/Validation/Readiness.hs) -> [`assessEffectEvidenceAt`](./spc/lib/core/src/O2I/Validation/Evidence.hs)
 
 Weiterlesen: [Nachweislogik](./o2i.md#nachweislogik), [Wirkungstrace](./o2i.md#wirkungstrace), [Wirkungsevidenz](./o2i.md#wirkungsevidenz), [Plausible Attribution](./o2i.md#plausible-attribution)

@@ -17,8 +17,11 @@ import qualified Test.Tasty.QuickCheck as QC
 withWellFormed :: RawGraph -> (WellFormedGraph -> Assertion) -> Assertion
 withWellFormed raw action =
   case validateStructure raw of
-    Failure errors -> assertFailure ("structural errors: " ++ show errors)
-    Success graph -> action graph
+    StructureModelRejected errors ->
+      assertFailure ("structural errors: " ++ show errors)
+    StructureAccepted graph -> action graph
+    StructureInternalFailure internal ->
+      assertFailure ("internal structural failure: " ++ show internal)
 
 withContextRef ::
      WellFormedGraph
@@ -74,9 +77,11 @@ validateSemanticRaw ::
   -> Validation (NonEmpty.NonEmpty ModelInvariantError) SemanticallyValidModel
 validateSemanticRaw raw formulations =
   case validateStructure raw of
-    Failure errors ->
+    StructureModelRejected errors ->
       error ("test fixture has structural errors: " ++ show errors)
-    Success graph -> validateModelSemantics graph formulations
+    StructureAccepted graph -> validateModelSemantics graph formulations
+    StructureInternalFailure internal ->
+      error ("test fixture triggered internal failure: " ++ show internal)
 
 assertSemanticErrors :: RawGraph -> [ModelInvariantError] -> Assertion
 assertSemanticErrors raw expected =
@@ -89,14 +94,24 @@ assertSemanticErrorsWith raw formulations expected =
     Failure errors -> NonEmpty.toList errors @?= expected
     Success _ -> assertFailure "semantically invalid model was accepted"
 
-assertStructuralErrors ::
-     [StructuralError]
-  -> Validation (NonEmpty.NonEmpty StructuralError) WellFormedGraph
-  -> Assertion
+assertStructuralErrors :: [StructuralError] -> StructureResult -> Assertion
 assertStructuralErrors expected result =
   case result of
-    Failure errors -> NonEmpty.toList errors @?= expected
-    Success _ -> assertFailure "structurally invalid graph was accepted"
+    StructureModelRejected errors -> NonEmpty.toList errors @?= expected
+    StructureAccepted _ ->
+      assertFailure "structurally invalid graph was accepted"
+    StructureInternalFailure internal ->
+      assertFailure
+        ("unexpected internal structural failure: " ++ show internal)
+
+assertStructureAccepted :: StructureResult -> Assertion
+assertStructureAccepted result =
+  case result of
+    StructureAccepted _ -> pure ()
+    StructureModelRejected errors ->
+      assertFailure ("structural errors: " ++ show errors)
+    StructureInternalFailure internal ->
+      assertFailure ("internal structural failure: " ++ show internal)
 
 assertTraceabilityErrors ::
      [TraceabilityError]
@@ -365,11 +380,11 @@ strategySuccessDimensionWithActionGraph =
 rawPerformanceDimensionOwnershipMatchesRegistry :: Context -> Bool
 rawPerformanceDimensionOwnershipMatchesRegistry context =
   case (lookupPerformanceDimensionRole context, validateStructure raw) of
-    (Just _, Success graph) ->
+    (Just _, StructureAccepted graph) ->
       case lookupNode graph genericPerformanceDimensionId of
         Just node -> someNodeOwner node == Just performanceDimensionOwnerId
         Nothing -> False
-    (Nothing, Failure errors) ->
+    (Nothing, StructureModelRejected errors) ->
       NonEmpty.toList errors
         == [ InvalidStructuringContext
                genericPerformanceDimensionId

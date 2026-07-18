@@ -7,6 +7,8 @@
 -- relation-endpoint integrity without asserting semantic completeness.
 module O2I.Validation.Structure
   ( StructuralError(..)
+  , StructureInternalError(..)
+  , StructureResult(..)
   , validateStructure
   ) where
 
@@ -43,9 +45,29 @@ data StructuralError
     -- ^ Endpoint kinds do not match the named relation specification.
   | PerformanceDimensionMembershipOwnerMismatch RawEdge RawNodeId RawNodeId
     -- ^ PerformanceDimension and member have different owning Context IDs.
-  | ElaborationInvariantViolation
-    -- ^ Internal elaboration failed after all public checks succeeded.
   deriving (Eq, Show)
+
+-- | Internal failures after a graph has passed every structural model check.
+data StructureInternalError
+  = ContextElaborationInvariant RawNodeId
+    -- ^ A checked Context declaration could not be elaborated.
+  | ChildElaborationInvariant RawNodeId
+    -- ^ A checked Primitive, structuring element, or anchor could not be elaborated.
+  | EdgeElaborationInvariant RawEdge
+    -- ^ A checked relation could not be elaborated.
+  deriving (Eq, Show)
+
+-- | Total outcome of structural model validation and elaboration.
+data StructureResult
+  = StructureModelRejected (NonEmpty.NonEmpty StructuralError)
+    -- ^ The model violates one or more independently accumulated rules.
+  | StructureAccepted WellFormedGraph
+    -- ^ The model is structurally valid and has been elaborated.
+  | StructureInternalFailure StructureInternalError
+    -- ^ An implementation invariant failed after successful model validation.
+
+newtype StructurallyAdmissibleRawGraph =
+  StructurallyAdmissibleRawGraph RawGraph
 
 -- * Structural validation
 -- | Elaborate unchecked input into an opaque structurally typed graph.
@@ -53,15 +75,24 @@ data StructuralError
 -- Independent errors accumulate. Success guarantees unique IDs and edges,
 -- valid ownership and interpretations, known relations, typed endpoints, and
 -- one shared owner Context instance for each PerformanceDimension membership.
-validateStructure ::
-     RawGraph -> Validation (NonEmpty.NonEmpty StructuralError) WellFormedGraph
+validateStructure :: RawGraph -> StructureResult
 validateStructure raw =
+  case collectStructuralErrors raw of
+    Failure failures -> StructureModelRejected failures
+    Success admissible ->
+      case elaborateStructure admissible of
+        Left internal -> StructureInternalFailure internal
+        Right graph -> StructureAccepted graph
+
+collectStructuralErrors ::
+     RawGraph
+  -> Validation
+       (NonEmpty.NonEmpty StructuralError)
+       StructurallyAdmissibleRawGraph
+collectStructuralErrors raw =
   case NonEmpty.nonEmpty errors of
     Just failures -> Failure failures
-    Nothing ->
-      case buildGraph raw of
-        Just graph -> Success graph
-        Nothing -> Failure (NonEmpty.singleton ElaborationInvariantViolation)
+    Nothing -> Success (StructurallyAdmissibleRawGraph raw)
   where
     errors = nodeErrors raw ++ edgeErrors raw
 
@@ -169,8 +200,10 @@ performanceDimensionMembershipOwnerErrors edge declarations (Just fromKind) (Jus
         _ -> Nothing
 performanceDimensionMembershipOwnerErrors _ _ _ _ _ = []
 
-buildGraph :: RawGraph -> Maybe WellFormedGraph
-buildGraph raw = do
+elaborateStructure ::
+     StructurallyAdmissibleRawGraph
+  -> Either StructureInternalError WellFormedGraph
+elaborateStructure (StructurallyAdmissibleRawGraph raw) = do
   contexts <- traverse buildContext contextNodes
   let contextMap = Map.fromList [(someNodeRawId node, node) | node <- contexts]
   children <- traverse (buildChild contextMap) childNodes
@@ -182,15 +215,22 @@ buildGraph raw = do
     contextNodes = [node | node@(RawContextNode _ _) <- rawNodes raw]
     childNodes = [node | node <- rawNodes raw, not (isContextNode node)]
 
-buildContext :: RawNode -> Maybe SomeNode
+buildContext :: RawNode -> Either StructureInternalError SomeNode
 buildContext (RawContextNode identifier context) =
   case someSContext context of
     SomeSContext witness ->
-      Just (SomeNode (ContextNode (mkNodeId identifier) witness))
-buildContext _ = Nothing
+      Right (SomeNode (ContextNode (mkNodeId identifier) witness))
+buildContext node = Left (ContextElaborationInvariant (rawNodeId node))
 
-buildChild :: Map RawNodeId SomeNode -> RawNode -> Maybe SomeNode
-buildChild contexts (RawPrimitiveNode identifier owner primitive) = do
+buildChild ::
+     Map RawNodeId SomeNode -> RawNode -> Either StructureInternalError SomeNode
+buildChild contexts node =
+  case buildChildMaybe contexts node of
+    Just child -> Right child
+    Nothing -> Left (ChildElaborationInvariant (rawNodeId node))
+
+buildChildMaybe :: Map RawNodeId SomeNode -> RawNode -> Maybe SomeNode
+buildChildMaybe contexts (RawPrimitiveNode identifier owner primitive) = do
   SomeNode (ContextNode ownerId context) <- Map.lookup owner contexts
   SomeSPrimitive primitiveWitness <- pure (someSPrimitive primitive)
   SomeInterpretation spec <-
@@ -209,7 +249,7 @@ buildChild contexts (RawPrimitiveNode identifier owner primitive) = do
           context
           primitiveWitness
           (interpretationWitness spec)))
-buildChild contexts (RawStructuringNode identifier owner PerformanceDimension) = do
+buildChildMaybe contexts (RawStructuringNode identifier owner PerformanceDimension) = do
   SomeNode (ContextNode ownerId context) <- Map.lookup owner contexts
   SomePerformanceDimensionRole role <-
     lookupPerformanceDimensionRole (contextValue context)
@@ -218,13 +258,20 @@ buildChild contexts (RawStructuringNode identifier owner PerformanceDimension) =
       (SContextKind context)
       (SContextKind (performanceDimensionRoleContext role))
   pure (SomeNode (PerformanceDimensionNode (mkNodeId identifier) ownerId role))
-buildChild _ (RawAnchorNode identifier anchor) = do
+buildChildMaybe _ (RawAnchorNode identifier anchor) = do
   SomeSAnchor witness <- pure (someSAnchor anchor)
   pure (SomeNode (AnchorNode (mkNodeId identifier) witness))
-buildChild _ (RawContextNode _ _) = Nothing
+buildChildMaybe _ (RawContextNode _ _) = Nothing
 
-buildEdge :: Map RawNodeId SomeNode -> RawEdge -> Maybe SomeEdge
-buildEdge nodes raw = do
+buildEdge ::
+     Map RawNodeId SomeNode -> RawEdge -> Either StructureInternalError SomeEdge
+buildEdge nodes raw =
+  case buildEdgeMaybe nodes raw of
+    Just result -> Right result
+    Nothing -> Left (EdgeElaborationInvariant raw)
+
+buildEdgeMaybe :: Map RawNodeId SomeNode -> RawEdge -> Maybe SomeEdge
+buildEdgeMaybe nodes raw = do
   SomeNode fromNode <- Map.lookup (rawEdgeFrom raw) nodes
   SomeNode toNode <- Map.lookup (rawEdgeTo raw) nodes
   relation <-

@@ -10,6 +10,8 @@ module O2I.Validation
   ( Validation(..)
   , Check
   , StructuralError(..)
+  , StructureInternalError(..)
+  , StructureResult(..)
   , StrategyAnchoring(..)
   , RawStrategyFormulation(..)
   , StrategyFormulation

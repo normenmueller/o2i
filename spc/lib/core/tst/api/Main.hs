@@ -425,7 +425,8 @@ data ValidatedValues =
 
 validatedValues :: Either String ValidatedValues
 validatedValues = do
-  graph <- checked "structural validation" (validateStructure assessmentGraph)
+  graph <-
+    checkedStructure "structural validation" (validateStructure assessmentGraph)
   model <-
     checked
       "semantic validation"
@@ -516,10 +517,17 @@ checked :: Show error => String -> Validation error value -> Either String value
 checked _ (Success value) = Right value
 checked stage (Failure errors) = Left (stage ++ " failed: " ++ show errors)
 
+checkedStructure :: String -> StructureResult -> Either String WellFormedGraph
+checkedStructure _ (StructureAccepted graph) = Right graph
+checkedStructure stage (StructureModelRejected errors) =
+  Left (stage ++ " failed: " ++ show errors)
+checkedStructure stage (StructureInternalFailure internal) =
+  Left (stage ++ " failed internally: " ++ show internal)
+
 needQualificationCandidateValue :: Either String NeedQualificationCandidate
 needQualificationCandidateValue = do
   graph <-
-    checked
+    checkedStructure
       "qualification graph validation"
       (validateStructure
          assessmentGraph

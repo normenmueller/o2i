@@ -188,6 +188,8 @@ module O2I
   , Validation(..)
   , Check
   , StructuralError(..)
+  , StructureInternalError(..)
+  , StructureResult(..)
   , ModelInvariantError(..)
   , TraceabilityError(..)
   , EvidenceReadinessError(..)

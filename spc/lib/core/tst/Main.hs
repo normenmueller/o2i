@@ -210,9 +210,9 @@ structureTests =
   testGroup
     "structural elaboration"
     [ testCase "empty graph is structurally well-formed"
-        $ assertSuccess (validateStructure emptyGraph)
+        $ assertStructureAccepted (validateStructure emptyGraph)
     , testCase "complete reference graph is structurally well-formed"
-        $ assertSuccess (validateStructure sampleGraph)
+        $ assertStructureAccepted (validateStructure sampleGraph)
     , testCase "typed edges expose safe total observations"
         $ withWellFormed sampleGraph
         $ \graph ->
@@ -374,7 +374,7 @@ structureTests =
         $ QC.forAll unknownEndpointGraph
         $ \raw ->
             case validateStructure raw of
-              Failure errors ->
+              StructureModelRejected errors ->
                 case rawEdges raw of
                   [candidate] ->
                     NonEmpty.toList errors
@@ -383,7 +383,8 @@ structureTests =
                          , UnknownRelation (rawEdgeRelation candidate)
                          ]
                   _ -> False
-              Success _ -> False
+              StructureAccepted _ -> False
+              StructureInternalFailure _ -> False
     ]
 
 semanticTests :: TestTree
@@ -1772,18 +1773,20 @@ interpretationCodes = map interpretationCodeOf allInterpretations
 assertInterpretationValidationContract :: Context -> Primitive -> Assertion
 assertInterpretationValidationContract context primitive =
   case (lookupInterpretation context primitive, validateStructure raw) of
-    (Just _, Success graph) ->
+    (Just _, StructureAccepted graph) ->
       case lookupNode graph primitiveId of
         Just node -> someNodeOwner node @?= Just contextId
         Nothing ->
           assertFailure (message ++ ": validated Primitive was not found")
-    (Nothing, Failure errors) ->
+    (Nothing, StructureModelRejected errors) ->
       NonEmpty.toList errors
         @?= [InvalidPrimitiveInterpretation primitiveId context primitive]
-    (Just _, Failure errors) ->
+    (Just _, StructureModelRejected errors) ->
       assertFailure (message ++ ": admissible pair failed: " ++ show errors)
-    (Nothing, Success _) ->
+    (Nothing, StructureAccepted _) ->
       assertFailure (message ++ ": inadmissible pair was accepted")
+    (_, StructureInternalFailure internal) ->
+      assertFailure (message ++ ": internal failure: " ++ show internal)
   where
     contextId = RawNodeId "registry-context"
     primitiveId = RawNodeId "registry-primitive"

@@ -29,7 +29,7 @@ O2I dient dazu, *orientierte Wirkung* durch relationale Modellierung nachvollzie
 
 ## Specification
 
-Die Haskell-Spezifikation unter [`spc/src/lib`](./spc/src/lib/) ist die normative, maschinenprüfbare Formalisierung des O2I-Metamodells. Ihre öffentliche API gliedert sich in `O2I.Language` für den semantischen Formvorrat, `O2I.Graph` für konkrete Graphen und `O2I.Validation` für gestufte Prüfungen. `O2I` bildet die kuratierte Gesamtfassade.
+Die Haskell-Spezifikation unter [`spc/lib/core`](./spc/lib/core/) ist die normative, maschinenprüfbare Formalisierung des O2I-Metamodells. Ihre öffentliche API gliedert sich in `O2I.Language` für den semantischen Formvorrat, `O2I.Graph` für konkrete Graphen und `O2I.Validation` für gestufte Prüfungen. `O2I` bildet die kuratierte Gesamtfassade.
 
 Die Library überführt einen ungeprüften O2I-Graphen durch aufeinander aufbauende Validierungsstufen in ein evidenzbewertetes Wirkungsmodell:
 
@@ -46,8 +46,11 @@ o2i/
 |- img/
 |- mdl/
 |- spc/
-|  |- src/lib/
-|  |- tst/
+|  |- lib/
+|  |  |- core/
+|  |  |- ins/
+|  |  `- adp/amx/
+|  `- cli/
 |- wtf.md
 |- o2i.md
 ```
@@ -56,8 +59,8 @@ o2i/
 - [`o2i.md`](./o2i.md): aktiver Artikel und fachlicher Referenztext
 - `mdl/`: ArchiMate-Modell
 - `img/`: Abbildungen für Artikel und Modellkommunikation
-- `spc/src/lib/`: normative Haskell-Library, deren Codeauszüge im Artikel eingebunden werden
-- `spc/tst/`: Haskell-Validierungsbeispiele und Tests
+- `spc/lib/core/`: normative Haskell-Library, deren Codeauszüge im Artikel eingebunden werden
+- `spc/lib/core/tst/`: Haskell-Validierungsbeispiele und Tests
 
 ## Build
 
@@ -72,10 +75,11 @@ Das PDF und die TikZ-basierte Nachweisfolge werden reproduzierbar mit `toPDF.sh`
 ```sh
 python3 -B utl/extract-archimate-view.py --preset all --check
 python3 -B -m unittest discover -s utl -p 'test_*.py'
+./utl/check-package-licenses.sh
 cabal --project-dir=spc build all --ghc-options=-Werror
 cabal --project-dir=spc test all --ghc-options=-Werror
 cabal --project-dir=spc haddock all
-hindent --line-length 80 --validate spc/src/lib/O2I.hs spc/src/lib/O2I/*.hs spc/src/lib/O2I/Language/*.hs spc/src/lib/O2I/Graph/*.hs spc/src/lib/O2I/Validation/*.hs spc/tst/Main.hs spc/tst/api/Main.hs spc/tst/api/ApiContractTH.hs spc/tst/api/compile-fail/*.hs
+hindent --line-length 80 --validate spc/lib/core/src/O2I.hs spc/lib/core/src/O2I/*.hs spc/lib/core/src/O2I/Language/*.hs spc/lib/core/src/O2I/Graph/*.hs spc/lib/core/src/O2I/Validation/*.hs spc/lib/core/tst/Main.hs spc/lib/core/tst/api/Main.hs spc/lib/core/tst/api/ApiContractTH.hs spc/lib/core/tst/api/compile-fail/*.hs
 pandoc o2i.md --filter pandoc-include -t markdown
 ./toPDF.sh
 ```
@@ -84,6 +88,6 @@ pandoc o2i.md --filter pandoc-include -t markdown
 
 O2I article text, diagrams, and models are licensed under [CC BY 4.0](./LICENSE).
 
-The Haskell specification in [`spc/src/lib`](./spc/src/lib/) is licensed under [Apache-2.0](./spc/LICENSE).
+The Haskell specification in [`spc/lib/core`](./spc/lib/core/) is licensed under [Apache-2.0](./spc/LICENSE).
 
 © 2026 [nemron](https://github.com/normenmueller)

@@ -1,112 +1,79 @@
 # Purpose
 
-Volatile handoff state for O2I. Observed repository facts and the latest user
-instruction override this snapshot.
+Volatile O2I handoff state. Repository facts and the latest user instruction
+override this snapshot.
 
 # Snapshot
 
 - Observed at: 2026-07-18 CEST.
-- Mode: `READY`.
-- Branch/upstream: `trunk` / `origin/trunk`.
-- Active objective: resume the interrupted `wtf.md` review at Vision after the
-  DB Fv orientation excursion, then review `o2i.md` top-down.
-- Agent memory: active in the current repository revision.
+- Mode: `READY_FOR_IMPLEMENTATION`.
+- Branch/upstream: `trunk` / `origin/trunk`; inspect Git for the current delta.
+- Active objective: approve, implement, and verify the generic O2I AMX
+  inspection architecture before returning to the DB Fv orientation instance.
+- The user controls every push.
 
 # Approved Baseline
 
-- Article: O2I v0.2 WIP, title `Von Orientierung zur Wirkung`.
-- Core thesis: context macrorelations require evidence through relations
-  between contextualized Primitives.
+- O2I v0.2 WIP is a generic framework independent of concrete instances.
+- Context macrorelations require evidence through relations between
+  contextualized Primitives.
 - Validation pipeline:
   `RawGraph -> WellFormedGraph -> SemanticallyValidModel -> TraceableEffectModel -> EvidenceReadyModel -> EvidenceAssessedModel`.
-- Every Situation has at least one constituting Situation anchor, every Need is
-  globally situated, and every Strategy has exactly one complete, coherent
-  formulation.
-- Only assigned Strategy Primitives may substantiate Strategy traces or macro
-  evidence.
-- Effect and target attainment are independent; O2I supports plausible
+- Every Situation has a constituting anchor, every Need is globally situated,
+  and every Strategy has exactly one complete coherent formulation.
+- Need qualification is pre-intervention; evidence readiness is a later gate.
+- Effect and target attainment are independent. O2I supports plausible
   attribution, not causal proof.
-- Need qualification remains an independent pre-intervention query; it does not
-  require Intervention or Measure.
-- SFE, strategic topic complexes, scoring, statuses, and
-  PerformanceDimension-bound fit are external applications, not O2I core
-  semantics.
-- The Layered Cake remains semantic and is not yet converted to concrete
-  ArchiMate syntax.
+- O2I ArchiMate ownership is persisted exclusively through
+  `composition[contains]`; visual nesting carries no ownership semantics.
+- Native AMX `version="5.0.0"` and O2I profile `o2i.profile="0.2"` are distinct.
+- `O2I Context`, `O2I Primitives`, and `O2I Situation` are normative semantic
+  views; `O2I Syntax` is their concrete ArchiMate realization.
+- The semantic Layered Cake remains outside concrete-syntax inspection until
+  its explicit backlog conversion.
 
-# Active Quality Gate
+# Active Architecture Gate
 
-- The current uncommitted scope adds format-neutral minimum contents and checks
-  to `wtf.md`, enforces the global Situation-anchor invariant, and makes
-  Context ownership explicit across article, Haskell, ArchiMate syntax,
-  generated snapshots, and executable contracts.
-- Every concrete Primitive and PerformanceDimension has exactly one owning
-  Context. The Interpretation registry admits `Primitive @ Context`; the role
-  registry admits `PerformanceDimension @ Context`, its member type, and its
-  membership relation without interpreting member Primitives.
-- ArchiMate `Grouping` is representation only and introduces no O2I semantics.
-  Ownership is persisted through `composition[contains]`; visual nesting does
-  not replace it.
-- Situation anchors are ownerless nodes assigned to Situations exclusively by
-  typed constitution relations.
-- A metamodel/type-theory/Haskell co-author reviewed and implemented the
-  semantic and executable contracts. The final independent read-only review
-  reports no Blocker, High, Medium, or Low findings and unconditionally
-  approves the bounded Context-ownership scope.
-- Final review scores: Fachlichkeit 10.0/10.0; Metamodell 10.0/10.0;
-  Typtheorie 10.0/10.0; Haskell 10.0/10.0; tests 10.0/10.0; formal value
-  10.0/10.0.
-- A positive external API contract enforces complete `reifyRelation`
-  round-tripping.
-- The external API suite now binds relation registry, lookup, reification,
-  opacity, construction failure, and pattern-matching failure.
-- The WIP status remains intentional for O2I v0.2.
-- ArchiMate 4 mappings use `Capability`, `Process`, `Business Object`, `Role`,
-  `Value Stream`, and `Requirement` with explicit O2I specializations.
-- `O2I Syntax` defines Context containment, `Primitive @ Context`,
-  PerformanceDimension syntax, and Situation Anchor mappings without redundant
-  example instances or expanded 24-edge anchor syntax.
-- The independent reviewer explicitly approved this lean syntax split after
-  reassessment; the current PNG is synchronized.
-- ArchiMate element, relation, and view documentation is synchronized with the
-  article and Haskell specification for the current ownership scope.
-- Public typed Haskell references are opaque, nominally typed, and obtained
-  through validated lookup or model queries. Ordinary projection functions do
-  not permit record updates.
-- Each traced KPI has exactly one validated stable definition. Units and value
-  domains are centralized; measurement levels and absolute deltas are distinct
-  types.
-- Deterministic review snapshots include view contracts, visible notes, and
-  directed Association semantics. `--check` validates exact normative relation
-  contracts, DiagramConnection-to-Relationship endpoint identity, sole root
-  version `0.2`, model invariants, and snapshot drift.
-- Canonical interpretation and relation metadata and every validated stage,
-  trace, KPI definition, and assessment are opaque and expose only ordinary
-  projection functions.
-- External API contracts combine Template Haskell surface checks, positive
-  full-pipeline use, and compile-fail constructor and record-update tests across
-  all public facades.
+- The target package DAG is `o2i-inspection -> o2i`,
+  `o2i-amx -> o2i-inspection + o2i`, and
+  `o2i-cli -> o2i-inspection + o2i-amx`.
+- The CLI is a thin `optparse-applicative` composition root; reusable model
+  inspection stays in libraries.
+- `pln.md` is the frozen architecture contract. Six independent read-only
+  reviews culminated in three findings closed with the external co-author:
+  adapter-owned profile types remain existential until normalization, Decode
+  distinguishes unavailable from rejected native bindings, and internal
+  structure elaboration failures are not model findings.
+- No further pre-implementation architecture review is required. Implement
+  against the frozen contract, run every deterministic check, then review the
+  resulting code and artifacts independently.
+- Supplemental inputs never influence View scope. Semantic witnesses bind one
+  exact structurally closed graph and its unchanged supplied inputs.
+- Decode, ViewScope, Profile, Structure, Semantics, Traceability, Readiness, and
+  Evidence have disjoint responsibilities and explicit report states.
 
-# Current Verification
+# Current Worktree
 
-- ArchiMate model and snapshot checks plus twenty-four extractor contract tests:
-  passed.
-- `cabal check` and `cabal build all --ghc-options=-Werror`: passed.
-- Both Cabal test suites passed: 197 domain tests plus positive, Template
-  Haskell, and compile-fail public-API contracts.
-- HIndent 80 validation: passed.
-- Haddock completed; all four public modules have 100% coverage.
-- Pandoc include expansion and `./toPDF.sh`: passed.
-- `git diff --check`: passed.
-
-# Release Note Draft
-
-- `CHANGELOG.md` section `[0.2] - Unreleased` is the canonical v0.2 release-note
-  draft.
+- The O2I model uses the direct root property `o2i.profile=0.2`.
+- The extractor enforces that profile, rejects the legacy `version=0.2`
+  property, and has 28 passing contract tests.
+- Model/snapshot checks and `git diff --check` pass for the current scope.
+- The existing semantic core remains unchanged: `cabal check`, both test suites
+  under `-Werror`, 197 domain tests, and API contracts passed at the baseline.
+- Productive CLI, inspection, and AMX packages do not yet exist.
 
 # Next Work
 
-- The user controls pushing the reviewed local commits.
-- Apply the verified ownership syntax to the DB Fv instance, then resume the
-  interrupted `wtf.md` review at Vision and the top-down article review.
-- Backlog: convert the Layered Cake to concrete ArchiMate syntax.
+1. Implement the four-package design, schemas, fixtures, diagnostics, CLI, and
+   tests with the external Haskell co-author against frozen `pln.md`.
+2. Run Cabal, HIndent, Haddock, extractor, Pandoc/PDF, stdin/JSON/determinism,
+   and final six-dimension external review gates.
+3. Create one reviewed local O2I commit; never push without explicit request.
+4. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
+   Ethos/Mission/Vision, then continue the interrupted `wtf.md` review at Vision
+   and the top-down `o2i.md` review.
+
+# Release Note Draft
+
+- `CHANGELOG.md` section `[0.2] - Unreleased` remains the canonical draft.
+- Backlog: add the OMX adapter and convert Layered Cake to concrete syntax.

@@ -122,8 +122,8 @@ test and apply O2I but never define its generic semantics.
 - `mdl/o2i.archimate`: ArchiMate model.
 - `mdl/o2i-*.md`: generated read-only review snapshots.
 - `img/`: article and model exports.
-- `spc/src/lib/`: normative typed Haskell library.
-- `spc/tst/`: executable validation tests.
+- `spc/lib/core/`: normative typed Haskell core library.
+- `spc/lib/core/tst/`: executable validation tests.
 - `toPDF.sh`: reproducible TikZ and PDF build entry point.
 - `utl/extract-archimate-view.py`: deterministic ArchiMate snapshot extractor
   and model-contract validator.
@@ -151,8 +151,8 @@ test and apply O2I but never define its generic semantics.
   graph-wide validation stages, traces, KPI definitions, and assessments are
   opaque. Clients obtain them only through canonical registries, lookup, or
   validation and may project, but never construct or rewrite, their contents.
-- Haskell excerpts in `o2i.md` are included directly from `spc/src/lib/` via
-  `pandoc-include`.
+- Haskell excerpts in `o2i.md` are included directly from
+  `spc/lib/core/src/` via `pandoc-include`.
 
 # Document Architecture
 

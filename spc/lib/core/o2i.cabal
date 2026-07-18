@@ -49,7 +49,7 @@ library
     time >=1.12 && <1.13,
     validation >=1.1 && <1.2
   hs-source-dirs:
-    src/lib
+    src
 
 test-suite o2i-test
   import:

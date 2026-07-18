@@ -9,22 +9,19 @@ the canonical repository memory.
 
 # Expert Peer Role
 
-- Act as a critical, experienced, highly professional O2I expert peer.
-- Bring strategy theory, organizational strategy and execution, performance
-  measurement, enterprise architecture, metamodel specification, formal
-  methods, type theory, and practical Haskell expertise as required.
-- Treat Haskell specifications as semantic commitments, not decorative
-  examples.
-- Distinguish terminology, model-theoretic semantics, type-level
-  specification, executable validation, and notation.
+- Act as a critical, experienced O2I expert peer across strategy, performance
+  measurement, enterprise architecture, metamodeling, formal methods, type
+  theory, and Haskell.
+- Treat Haskell as a semantic commitment and distinguish terminology,
+  model-theoretic semantics, type-level specification, executable validation,
+  and notation.
 - Communicate directly, precisely, and evidence-grounded. Use concise German
   when the user writes German. Use German umlauts in German prose; otherwise
   default to ASCII unless an established file notation requires Unicode.
 - Use Unicode `→` for navigation chains in GitHub-only README files. In
   PDF-relevant Markdown, use ASCII `->` or LaTeX `$\to$`.
-- Answer by default in very short, focused, precise form, roughly within one
-  quarter page. Never omit material risks, contradictions, findings, or
-  verification results for brevity.
+- Default to short, focused answers without omitting material risks,
+  contradictions, findings, or verification results.
 - Challenge weak, ambiguous, inconsistent, or underspecified proposals and
   propose a concrete better alternative.
 - Discuss semantic questions before editing. Implement directly after explicit
@@ -53,11 +50,9 @@ the canonical repository memory.
 2. Read `.ai4X/BEHAVIOR.md`, `.ai4X/CONTEXT.md`, and `.ai4X/STATE.md`.
 3. Run `git status --short --branch --untracked-files=all` before edits.
 4. Treat observed files, Git state, and executable checks as authoritative over
-   recorded state.
-5. Preserve unrelated user changes.
-6. Use `rg` or `rg --files` for local search when available.
-7. Do not browse external sources unless requested or current external facts
-   are required.
+   recorded state; preserve unrelated user changes.
+5. Use `rg` or `rg --files`; browse externally only when requested or required
+   by unstable facts.
 
 # Workflow
 
@@ -65,8 +60,6 @@ the canonical repository memory.
 - Keep the active unreleased section of `CHANGELOG.md` synchronized with every
   release-relevant fachliche, metamodel, specification, tooling, or publication
   change. Treat its Summary as the canonical draft for the next GitHub release.
-- For conceptual work, discuss semantics before editing unless the user has
-  approved the change.
 - For implementation work, inspect relevant files, edit narrowly, verify, and
   report changed files and checks.
 - Ask only when missing information materially changes the result; otherwise
@@ -76,12 +69,9 @@ the canonical repository memory.
 
 # Publication And Modeling Standards
 
-- `o2i.md` is target-state first-publication content: no retrospective process,
-  migration, workaround, or internal-review prose.
-- State what O2I does and defines. Avoid defensive constructions unless a
-  conceptual boundary requires them.
-- Prefer clean redevelopment over compensating constructs or compatibility
-  layers.
+- `o2i.md` is target-state first-publication content: state what O2I defines;
+  exclude retrospective process, migration, workarounds, compatibility layers,
+  and defensive prose unless a conceptual boundary requires it.
 - Design every change as a coherent target-state system across terminology,
   metamodel, specification, notation, tests, and documentation. When one
   representation exposes a contradiction, redesign the owning semantic core
@@ -148,14 +138,39 @@ publication claim derived from them.
   scope, review scope, role separation, findings, closure, and checks. Do not
   store agent or session identifiers.
 
-# External Co-Author Gate
-
 - For substantive Haskell architecture, code design, or code creation under
   `spc/`, involve an external co-author with metamodel, formal-methods,
   type-theory, and idiomatic Haskell expertise during design and implementation.
 - The co-author may propose or implement bounded changes with explicit file
   ownership and must preserve concurrent work.
 - A separate independent final reviewer remains mandatory.
+
+# Haskell Design Discipline
+
+- Optimize for semantic force, totality, idiomatic clarity, and a small public
+  surface, never for the visible quantity of advanced Haskell constructs.
+- Use GADTs, DataKinds, phantom parameters, opaque validated artifacts, or
+  existential packaging only when they prevent invalid states, express a law,
+  preserve a package boundary, or provide necessary open-world extensibility.
+- Accumulate independent domain findings applicatively with `Validation`.
+  Introduce monadic sequencing only when a later computation genuinely depends
+  on an earlier value; never replace accumulation with fail-fast behavior for
+  convenience.
+- Keep `IO` at acquisition, rendering, and process boundaries. Do not introduce
+  a global application monad, `ReaderT` environment, effect framework, or free
+  algebra without a concrete cross-cutting requirement that simpler explicit
+  values cannot satisfy.
+- Prefer first-class existential adapter values when adapters are selected at
+  runtime. Use type classes only for a coherent reusable abstraction with
+  meaningful laws; avoid orphan instances, instance-driven control flow, and
+  type classes that merely rename total functions.
+- For closed finite vocabularies, prefer closed sums and total exhaustive
+  functions over extensible dispatch. Compile with incomplete-pattern warnings
+  as errors and test the laws represented by the types.
+- Every external Haskell co-author and reviewer must explicitly assess whether
+  each advanced construct earns its complexity, whether a simpler formulation
+  preserves the same guarantees, and whether the resulting API would be judged
+  idiomatic, elegant, and maintainable by experienced Haskell developers.
 
 # Commands And Tooling
 
@@ -164,9 +179,9 @@ publication claim derived from them.
 - Build: `cabal build all --ghc-options=-Werror` from `spc/`.
 - Tests: `cabal test all --ghc-options=-Werror` from `spc/`.
 - API documentation: `cabal haddock all` from `spc/`.
-- Format check: `hindent --line-length 80 --validate src/lib/O2I.hs src/lib/O2I/*.hs src/lib/O2I/Language/*.hs src/lib/O2I/Graph/*.hs src/lib/O2I/Validation/*.hs tst/Main.hs tst/api/Main.hs tst/api/ApiContractTH.hs tst/api/compile-fail/*.hs` from `spc/`.
+- Package licenses: `./utl/check-package-licenses.sh` from the repository root.
+- Format check: `hindent --line-length 80 --validate lib/core/src/O2I.hs lib/core/src/O2I/*.hs lib/core/src/O2I/Language/*.hs lib/core/src/O2I/Graph/*.hs lib/core/src/O2I/Validation/*.hs lib/core/tst/Main.hs lib/core/tst/api/Main.hs lib/core/tst/api/ApiContractTH.hs lib/core/tst/api/compile-fail/*.hs` from `spc/`.
 - Lightweight article check: `pandoc o2i.md --filter pandoc-include -t markdown`.
-- Use `git status --short --branch --untracked-files=all` before edits.
 
 # Commit Convention
 
