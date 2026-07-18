@@ -5,6 +5,12 @@
 -- typed operations are read-only observations and graph queries.
 module O2I.Graph
   ( module O2I.Graph.Raw
+  , MacroFactIndex
+  , buildMacroFactIndex
+  , MacroDependency
+  , macroDependencyEdge
+  , macroClaims
+  , macroScopeDependencies
   , SomeNode
   , SomeEdge
   , WellFormedGraph
@@ -26,6 +32,7 @@ module O2I.Graph
   , outgoingContextTargets
   ) where
 
+import O2I.Graph.Macro
 import O2I.Graph.Raw
 import O2I.Graph.Typed
   ( SomeEdge

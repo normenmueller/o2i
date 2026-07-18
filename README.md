@@ -48,8 +48,8 @@ o2i/
 |- spc/
 |  |- lib/
 |  |  |- core/
-|  |  |- ins/
-|  |  `- adp/amx/
+|  |  |- inspection/
+|  |  `- adapter/amx/
 |  `- cli/
 |- wtf.md
 |- o2i.md

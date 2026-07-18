@@ -155,7 +155,7 @@ withReady raw formulations action =
                traceable
                (definitionsFor traceable)
                (plannedStartsFor traceable)
-               (fmap planForTrace (effectTraces traceable)) of
+               (map planForTrace (NonEmpty.toList (effectTraces traceable))) of
           Failure errors -> assertFailure ("readiness errors: " ++ show errors)
           Success ready -> action ready
 
@@ -172,7 +172,7 @@ withReadyPlan transform action =
                traceable
                (definitionsFor traceable)
                (plannedStartsFor traceable)
-               (NonEmpty.singleton plan) of
+               [plan] of
           Failure errors -> assertFailure ("readiness errors: " ++ show errors)
           Success ready -> action ready trace
 
@@ -195,7 +195,7 @@ readinessFailureTest name checkedAt transform expected =
                  traceable
                  (definitionsFor traceable)
                  (plannedStartsFor traceable)
-                 (NonEmpty.singleton plan))
+                 [plan])
 
 evidenceFailureTest ::
      TestName
@@ -223,7 +223,7 @@ evidenceFailureAtTest name assessedAt transform expected =
                  assessedAt
                  ready
                  [sampleActualStart]
-                 (NonEmpty.singleton followUp))
+                 [followUp])
 
 assertEffectiveNeed ::
      (EvidencePlan -> EvidencePlan) -> Rational -> Bool -> Assertion
@@ -234,7 +234,7 @@ assertEffectiveNeed transform followValue expected =
                assessmentDate
                ready
                [sampleActualStart]
-               (NonEmpty.singleton followUp) of
+               [followUp] of
           Failure errors -> assertFailure ("evidence errors: " ++ show errors)
           Success assessed ->
             isEffectiveNeed assessed (traceNeed trace) @?= expected
@@ -251,8 +251,7 @@ withAssessed transform followValue followTimestamp action =
            assessmentDate
            ready
            [sampleActualStart]
-           (NonEmpty.singleton
-              (followUpForTrace trace followValue followTimestamp)) of
+           [followUpForTrace trace followValue followTimestamp] of
       Failure errors -> assertFailure ("evidence errors: " ++ show errors)
       Success assessed ->
         action assessed (NonEmpty.head (effectAssessments assessed))
@@ -290,15 +289,14 @@ evidenceSucceeds transform followValue =
                      traceable
                      (definitionsFor traceable)
                      (plannedStartsFor traceable)
-                     (NonEmpty.singleton plan) of
+                     [plan] of
                 Failure _ -> False
                 Success ready ->
                   case assessEffectEvidenceAt
                          assessmentDate
                          ready
                          [sampleActualStart]
-                         (NonEmpty.singleton
-                            (followUpForTrace trace followValue followUpDate)) of
+                         [followUpForTrace trace followValue followUpDate] of
                     Failure _ -> False
                     Success assessed ->
                       effectResult (NonEmpty.head (effectAssessments assessed))
@@ -1101,14 +1099,11 @@ alignObservation trace item =
     }
 
 followUpsForReady ::
-     EvidenceReadyModel
-  -> Rational
-  -> UTCTime
-  -> NonEmpty.NonEmpty FollowUpObservation
+     EvidenceReadyModel -> Rational -> UTCTime -> [FollowUpObservation]
 followUpsForReady ready value observationTime =
-  fmap
+  map
     (\trace -> followUpForTrace trace value observationTime)
-    (readyEffectTraces ready)
+    (NonEmpty.toList (readyEffectTraces ready))
 
 mapBaseline :: (Observation -> Observation) -> EvidencePlan -> EvidencePlan
 mapBaseline transform plan = plan {baseline = transform (baseline plan)}

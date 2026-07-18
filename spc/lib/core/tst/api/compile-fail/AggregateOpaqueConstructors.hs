@@ -20,6 +20,18 @@ forgedRelation = O2I.Relation undefined
 forgedSomeRelation :: O2I.SomeRelation
 forgedSomeRelation = O2I.SomeRelation undefined
 
+forgedMacroClaim :: O2I.MacroClaim ()
+forgedMacroClaim = O2I.MacroClaim undefined
+
+forgedMacroEvidenceRule :: O2I.MacroEvidenceRule
+forgedMacroEvidenceRule = O2I.MacroEvidenceRule undefined undefined
+
+forgedMacroFactIndex :: O2I.MacroFactIndex () ()
+forgedMacroFactIndex = O2I.MacroFactIndex undefined undefined
+
+forgedMacroDependency :: O2I.MacroDependency ()
+forgedMacroDependency = O2I.MacroDependency undefined
+
 forgedSomeNode :: O2I.SomeNode
 forgedSomeNode = O2I.SomeNode undefined
 
@@ -81,6 +93,9 @@ forgedSituationAnchorRef = O2I.SomeSituationAnchorRef undefined undefined
 forgedTraceableEffectModel :: O2I.TraceableEffectModel
 forgedTraceableEffectModel =
   O2I.TraceableEffectModel undefined undefined undefined
+
+forgedMacroEvidenceWitness :: O2I.MacroEvidenceWitness
+forgedMacroEvidenceWitness = O2I.MacroEvidenceWitness undefined
 
 forgedKPIDefinition :: O2I.KPIDefinition
 forgedKPIDefinition =

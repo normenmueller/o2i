@@ -57,6 +57,9 @@ forgedTraceableEffectModel :: Validation.TraceableEffectModel
 forgedTraceableEffectModel =
   Validation.TraceableEffectModel undefined undefined undefined
 
+forgedMacroEvidenceWitness :: Validation.MacroEvidenceWitness
+forgedMacroEvidenceWitness = Validation.MacroEvidenceWitness undefined
+
 forgedKPIDefinition :: Validation.KPIDefinition
 forgedKPIDefinition =
   Validation.KPIDefinition undefined undefined undefined undefined undefined

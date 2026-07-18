@@ -146,12 +146,13 @@ data EvidenceError
 -- actual start must strictly follow the validated readiness check and strictly
 -- precede the assessment time. Each trace/timestamp pair must be unique.
 -- Effect and target attainment are assessed separately without claiming proof
--- of causality.
+-- of causality. Unchecked follow-ups are a list so that explicit emptiness is
+-- reported together with every independent actual-start defect.
 assessEffectEvidenceAt ::
      UTCTime
   -> EvidenceReadyModel
   -> [ActualInterventionStart]
-  -> NonEmpty.NonEmpty FollowUpObservation
+  -> [FollowUpObservation]
   -> Validation (NonEmpty.NonEmpty EvidenceError) EvidenceAssessedModel
 assessEffectEvidenceAt assessedAt ready starts followUps =
   case NonEmpty.nonEmpty errors of
@@ -166,15 +167,10 @@ assessEffectEvidenceAt assessedAt ready starts followUps =
               , validatedActualStarts = validatedStarts
               , validatedAssessments = nonEmptyAssessments
               }
-        Nothing ->
-          Failure
-            (NonEmpty.singleton
-               (MissingFollowUpObservation
-                  (plannedTrace (NonEmpty.head (evidencePlans ready)))))
+        Nothing -> Failure emptyFollowUpCoverage
   where
-    followUpList = NonEmpty.toList followUps
     traceable = readyTraceableModel ready
-    followUpIndex = followUpsByTrace followUpList
+    followUpIndex = followUpsByTrace followUps
     startIndex = startsByIntervention starts
     traces = NonEmpty.toList (effectTraces traceable)
     interventions = readyInterventions ready
@@ -190,14 +186,18 @@ assessEffectEvidenceAt assessedAt ready starts followUps =
         assessedAt
         interventions
         startIndex
-        ++ duplicateFollowUpErrors followUpList
-        ++ concatMap (followUpErrors assessedAt ready startIndex) followUpList
+        ++ duplicateFollowUpErrors followUps
+        ++ concatMap (followUpErrors assessedAt ready startIndex) followUps
         ++ [ MissingFollowUpObservation identifier
            | trace <- traces
            , let identifier = traceIdentifier trace
            , Map.notMember identifier followUpIndex
            ]
-    assessments = mapMaybe (assessFollowUp ready) followUpList
+    assessments = mapMaybe (assessFollowUp ready) followUps
+    emptyFollowUpCoverage =
+      fmap
+        (MissingFollowUpObservation . traceIdentifier)
+        (readyEffectTraces ready)
 
 startsByIntervention ::
      [ActualInterventionStart]

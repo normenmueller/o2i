@@ -27,6 +27,12 @@ forgedRelation = Language.Relation undefined
 forgedSomeRelation :: Language.SomeRelation
 forgedSomeRelation = Language.SomeRelation undefined
 
+forgedMacroClaim :: Language.MacroClaim ()
+forgedMacroClaim = Language.MacroClaim undefined
+
+forgedMacroEvidenceRule :: Language.MacroEvidenceRule
+forgedMacroEvidenceRule = Language.MacroEvidenceRule undefined undefined
+
 forgedRelationSpec ::
      Language.RelationSpec
        ('Language.ContextKind 'Language.Ethos)

@@ -41,6 +41,11 @@ module O2I
   , interpretationIdentity
   , allInterpretations
   , lookupInterpretation
+  , MacroClaim
+  , MacroEvidenceRule
+  , macroEvidenceRules
+  , macroEvidenceRuleConclusion
+  , macroClaimConclusion
   , Relation
   , SomeRelation
   , FixedRelationCode(..)
@@ -122,6 +127,9 @@ module O2I
   , EffectTraceId
   , SomeSituationAnchorRef
   , TraceableEffectModel
+  , MacroEvidenceWitness
+  , macroEvidenceWitnesses
+  , witnessPremises
   , effectTraces
   , traceIdentifier
   , lookupEffectTrace

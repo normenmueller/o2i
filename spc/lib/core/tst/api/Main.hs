@@ -28,6 +28,8 @@ $(assertAbstractTypes
     , "Language.Relation"
     , "Language.SomeRelation"
     , "Language.RelationSpec"
+    , "Language.MacroClaim"
+    , "Language.MacroEvidenceRule"
     ])
 
 $(assertOrdinaryFunctions
@@ -49,13 +51,24 @@ $(assertOrdinaryFunctions
     , 'Language.relationNameFor
     , 'Language.relationIdentity
     , 'Language.reifyRelation
+    , 'Language.macroEvidenceRuleConclusion
+    , 'Language.macroClaimConclusion
     ])
 
 $(assertAbstractTypes
-    ["Graph.SomeNode", "Graph.SomeEdge", "Graph.WellFormedGraph"])
+    [ "Graph.MacroFactIndex"
+    , "Graph.MacroDependency"
+    , "Graph.SomeNode"
+    , "Graph.SomeEdge"
+    , "Graph.WellFormedGraph"
+    ])
 
 $(assertOrdinaryFunctions
-    [ 'Graph.graphNodes
+    [ 'Graph.buildMacroFactIndex
+    , 'Graph.macroClaims
+    , 'Graph.macroDependencyEdge
+    , 'Graph.macroScopeDependencies
+    , 'Graph.graphNodes
     , 'Graph.graphEdges
     , 'Graph.someNodeId
     , 'Graph.someNodeKind
@@ -75,6 +88,7 @@ $(assertAbstractTypes
     , "Validation.EffectTraceId"
     , "Validation.SomeSituationAnchorRef"
     , "Validation.TraceableEffectModel"
+    , "Validation.MacroEvidenceWitness"
     , "Validation.KPIDefinition"
     , "Validation.EvidenceReadyModel"
     , "Validation.EffectAssessment"
@@ -82,7 +96,9 @@ $(assertAbstractTypes
     ])
 
 $(assertOrdinaryFunctions
-    [ 'Validation.strategyFormulations
+    [ 'Validation.macroEvidenceWitnesses
+    , 'Validation.witnessPremises
+    , 'Validation.strategyFormulations
     , 'Validation.strategyFormulationData
     , 'Validation.needQualificationCandidateStrategy
     , 'Validation.needQualificationCandidateNeed
@@ -139,6 +155,10 @@ $(assertAbstractTypes
     , "O2I.SomeInterpretation"
     , "O2I.Relation"
     , "O2I.SomeRelation"
+    , "O2I.MacroClaim"
+    , "O2I.MacroEvidenceRule"
+    , "O2I.MacroFactIndex"
+    , "O2I.MacroDependency"
     , "O2I.SomeNode"
     , "O2I.SomeEdge"
     , "O2I.WellFormedGraph"
@@ -150,6 +170,7 @@ $(assertAbstractTypes
     , "O2I.EffectTraceId"
     , "O2I.SomeSituationAnchorRef"
     , "O2I.TraceableEffectModel"
+    , "O2I.MacroEvidenceWitness"
     , "O2I.KPIDefinition"
     , "O2I.EvidenceReadyModel"
     , "O2I.EffectAssessment"
@@ -157,7 +178,15 @@ $(assertAbstractTypes
     ])
 
 $(assertOrdinaryFunctions
-    [ 'O2I.unNodeId
+    [ 'O2I.macroEvidenceRuleConclusion
+    , 'O2I.macroClaimConclusion
+    , 'O2I.buildMacroFactIndex
+    , 'O2I.macroClaims
+    , 'O2I.macroDependencyEdge
+    , 'O2I.macroScopeDependencies
+    , 'O2I.macroEvidenceWitnesses
+    , 'O2I.witnessPremises
+    , 'O2I.unNodeId
     , 'O2I.contextRefId
     , 'O2I.interpretationCodeOf
     , 'O2I.interpretationIdentity
@@ -489,7 +518,7 @@ validatedValues = do
          traceable
          [definition]
          [plannedStart]
-         (NonEmpty.singleton plan))
+         [plan])
   validatedDefinition <-
     case lookupKPIDefinition ready (traceKPI trace) of
       Just value -> Right value
@@ -501,7 +530,7 @@ validatedValues = do
          (read "2026-07-01 00:00:00 UTC")
          ready
          [actualStart]
-         (NonEmpty.singleton followUp))
+         [followUp])
   pure
     (ValidatedValues
        graph
@@ -627,6 +656,8 @@ compileFailContracts =
       , "Language.Relation"
       , "Language.SomeRelation"
       , "Language.RelationSpec"
+      , "Language.MacroClaim"
+      , "Language.MacroEvidenceRule"
       ]
   , CompileFailContract
       "O2I.Language opaque patterns"
@@ -654,7 +685,12 @@ compileFailContracts =
       "O2I.Graph opaque constructors"
       "tst/api/compile-fail/GraphOpaqueConstructors.hs"
       HiddenConstructors
-      ["Graph.SomeNode", "Graph.SomeEdge", "Graph.WellFormedGraph"]
+      [ "Graph.MacroFactIndex"
+      , "Graph.MacroDependency"
+      , "Graph.SomeNode"
+      , "Graph.SomeEdge"
+      , "Graph.WellFormedGraph"
+      ]
   , CompileFailContract
       "O2I.Graph record updates"
       "tst/api/compile-fail/GraphRecordUpdates.hs"
@@ -672,6 +708,7 @@ compileFailContracts =
       , "Validation.EffectTraceId"
       , "Validation.SomeSituationAnchorRef"
       , "Validation.TraceableEffectModel"
+      , "Validation.MacroEvidenceWitness"
       , "Validation.KPIDefinition"
       , "Validation.EvidenceReadyModel"
       , "Validation.EffectAssessment"
@@ -711,6 +748,10 @@ compileFailContracts =
       , "O2I.SomeInterpretation"
       , "O2I.Relation"
       , "O2I.SomeRelation"
+      , "O2I.MacroClaim"
+      , "O2I.MacroEvidenceRule"
+      , "O2I.MacroFactIndex"
+      , "O2I.MacroDependency"
       , "O2I.SomeNode"
       , "O2I.SomeEdge"
       , "O2I.WellFormedGraph"
@@ -722,6 +763,7 @@ compileFailContracts =
       , "O2I.EffectTraceId"
       , "O2I.SomeSituationAnchorRef"
       , "O2I.TraceableEffectModel"
+      , "O2I.MacroEvidenceWitness"
       , "O2I.KPIDefinition"
       , "O2I.EvidenceReadyModel"
       , "O2I.EffectAssessment"

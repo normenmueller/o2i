@@ -17,6 +17,12 @@ module O2I.Language
   , interpretationIdentity
   , allInterpretations
   , lookupInterpretation
+  , StrategyPrimitiveRole(..)
+  , MacroClaim
+  , MacroEvidenceRule
+  , macroEvidenceRules
+  , macroEvidenceRuleConclusion
+  , macroClaimConclusion
   , Relation
   , SomeRelation
   , FixedRelationCode(..)
@@ -85,4 +91,5 @@ module O2I.Language
 
 import O2I.Language.Element hiding (mkContextRef, mkNodeId)
 import O2I.Language.Interpretation
+import O2I.Language.Macro
 import O2I.Language.Relation

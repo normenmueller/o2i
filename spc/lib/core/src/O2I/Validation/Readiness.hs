@@ -281,29 +281,33 @@ data EvidenceReadinessError
 -- time. The check must strictly precede each canonical planned start. A target
 -- due time is an absolute deadline and must follow that planned start. Exactly
 -- one valid definition is required for every distinct KPI used by the traces.
+-- Unchecked plans are a list so that explicit emptiness is reported together
+-- with every independent definition and timing defect.
 validateEvidenceReadinessAt ::
      UTCTime
   -> TraceableEffectModel
   -> [RawKPIDefinition]
   -> [PlannedInterventionStart]
-  -> NonEmpty.NonEmpty EvidencePlan
+  -> [EvidencePlan]
   -> Validation (NonEmpty.NonEmpty EvidenceReadinessError) EvidenceReadyModel
 validateEvidenceReadinessAt checkedAt model rawDefinitions starts plans =
   case NonEmpty.nonEmpty errors of
     Just failures -> Failure failures
     Nothing ->
-      Success
-        EvidenceReadyModel
-          { validatedTraceableModel = model
-          , validatedReadinessCheckedAt = checkedAt
-          , validatedKPIDefinitions = definitionRegistry
-          , validatedEvidencePlans = plans
-          , evidencePlanIndex = Map.map NonEmpty.head planIndex
-          , validatedPlannedStarts = validatedStarts
-          }
+      case NonEmpty.nonEmpty plans of
+        Just validatedPlans ->
+          Success
+            EvidenceReadyModel
+              { validatedTraceableModel = model
+              , validatedReadinessCheckedAt = checkedAt
+              , validatedKPIDefinitions = definitionRegistry
+              , validatedEvidencePlans = validatedPlans
+              , evidencePlanIndex = Map.map NonEmpty.head planIndex
+              , validatedPlannedStarts = validatedStarts
+              }
+        Nothing -> Failure emptyPlanCoverage
   where
-    planList = NonEmpty.toList plans
-    planIndex = plansByTrace planList
+    planIndex = plansByTrace plans
     startIndex = startsByIntervention starts
     traces = NonEmpty.toList (effectTraces model)
     tracedKPIs = sort (nub (map traceKPI traces))
@@ -322,12 +326,16 @@ validateEvidenceReadinessAt checkedAt model rawDefinitions starts plans =
         ++ duplicatePlanErrors planIndex
         ++ concatMap
              (planErrors checkedAt model definitionRegistry startIndex)
-             planList
-        ++ [ MissingEvidencePlan identifier
-           | trace <- traces
-           , let identifier = traceIdentifier trace
-           , Map.notMember identifier planIndex
-           ]
+             plans
+        ++ missingPlanErrors
+    missingPlanErrors =
+      [ MissingEvidencePlan identifier
+      | trace <- traces
+      , let identifier = traceIdentifier trace
+      , Map.notMember identifier planIndex
+      ]
+    emptyPlanCoverage =
+      fmap (MissingEvidencePlan . traceIdentifier) (effectTraces model)
 
 definitionsByKPI ::
      [RawKPIDefinition] -> Map RawNodeId (NonEmpty.NonEmpty RawKPIDefinition)

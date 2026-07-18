@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "o2i.command-error/v1",
+  "title": "O2I command error v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "tool", "error"],
+  "properties": {
+    "schema": {"const": "o2i.command-error/v1"},
+    "tool": {"$ref": "#/$defs/tool"},
+    "error": {"$ref": "#/$defs/error"}
+  },
+  "$defs": {
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "reportVersion"],
+      "properties": {
+        "name": {"const": "o2i"},
+        "reportVersion": {"const": "1"}
+      }
+    },
+    "invocationData": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["defect"],
+      "properties": {
+        "defect": {"const": "invalid-invocation"}
+      }
+    },
+    "inputData": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source"],
+      "properties": {
+        "source": {"type": "string"}
+      }
+    },
+    "internalData": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["detail"],
+      "properties": {
+        "detail": {"type": "string"}
+      }
+    },
+    "error": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "classification", "message", "data"],
+          "properties": {
+            "code": {"const": "o2i.invocation.invalid"},
+            "classification": {"const": "invocation"},
+            "message": {"type": "string"},
+            "data": {"$ref": "#/$defs/invocationData"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "classification", "message", "data"],
+          "properties": {
+            "code": {"const": "o2i.input.read-failed"},
+            "classification": {"const": "input-io"},
+            "message": {"type": "string"},
+            "data": {"$ref": "#/$defs/inputData"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "classification", "message", "data"],
+          "properties": {
+            "code": {"const": "o2i.internal.structure-elaboration"},
+            "classification": {"const": "internal"},
+            "message": {"type": "string"},
+            "data": {"$ref": "#/$defs/internalData"}
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,38 @@
+-- | Stable report domain and machine-readable rendering.
+module O2I.Inspection.Report
+  ( StageState(..)
+  , BlockReason(..)
+  , StageReport(..)
+  , StageReports
+  , InspectionResult(..)
+  , NativeBindingFailure(..)
+  , NativeAdapterBinding(..)
+  , FailedViewResolution(..)
+  , ResolvedViewResolution(..)
+  , ViewResolution(..)
+  , RejectedO2IProfile(..)
+  , O2IProfileResolution(..)
+  , ScopeFailure(..)
+  , ScopeResolution(..)
+  , InspectionRequestInfo(..)
+  , InspectionReport
+  , CommandErrorClassification(..)
+  , InvocationDefect(..)
+  , CommandError(..)
+  , nativeAdapterBinding
+  , reportRequestInfo
+  , reportNativeBinding
+  , reportViewResolution
+  , reportProfileResolution
+  , reportScopeResolution
+  , reportStageReports
+  , reportDiagnostics
+  , reportResult
+  , reportExitCode
+  , commandErrorExitCode
+  , stageReportsList
+  , renderInspectionReportJSON
+  , renderCommandErrorJSON
+  ) where
+
+import O2I.Inspection.Report.Internal

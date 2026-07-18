@@ -40,6 +40,9 @@ module O2I.Validation
   , SomeSituationAnchorRef
   , TraceableEffectModel
   , TraceabilityError(..)
+  , MacroEvidenceWitness
+  , macroEvidenceWitnesses
+  , witnessPremises
   , effectTraces
   , lookupEffectTrace
   , traceIdentifier

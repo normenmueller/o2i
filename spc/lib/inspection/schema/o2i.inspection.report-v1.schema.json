@@ -1,0 +1,584 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "o2i.inspection.report/v1",
+  "title": "O2I inspection report v1",
+  "oneOf": [
+    {"$ref": "#/$defs/decodeFailedReport"},
+    {"$ref": "#/$defs/viewFailedReport"},
+    {"$ref": "#/$defs/profileFailedReport"},
+    {"$ref": "#/$defs/scopeFailedReport"},
+    {"$ref": "#/$defs/inspectedReport"}
+  ],
+  "$defs": {
+    "tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "reportVersion"],
+      "properties": {
+        "name": {"const": "o2i"},
+        "reportVersion": {"const": "1"}
+      }
+    },
+    "qName": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["namespace", "localName"],
+      "properties": {
+        "namespace": {"type": ["string", "null"]},
+        "localName": {"type": "string", "minLength": 1}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "inputKind", "sha256"],
+      "properties": {
+        "label": {"type": "string"},
+        "inputKind": {"enum": ["file", "stdin"]},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "adapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "version"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "name": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1}
+      }
+    },
+    "viewSelector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "value"],
+      "properties": {
+        "kind": {"enum": ["name", "id"]},
+        "value": {"type": "string"}
+      }
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "adapter", "viewSelector"],
+      "properties": {
+        "source": {"$ref": "#/$defs/source"},
+        "adapter": {"$ref": "#/$defs/adapter"},
+        "viewSelector": {"$ref": "#/$defs/viewSelector"}
+      }
+    },
+    "pathStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "ordinal"],
+      "properties": {
+        "name": {"$ref": "#/$defs/qName"},
+        "ordinal": {"type": "integer", "minimum": 1}
+      }
+    },
+    "sourceSpan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["startLine", "startColumn", "endLine", "endColumn"],
+      "properties": {
+        "startLine": {"type": "integer", "minimum": 1},
+        "startColumn": {"type": "integer", "minimum": 1},
+        "endLine": {"type": "integer", "minimum": 1},
+        "endColumn": {"type": "integer", "minimum": 1}
+      }
+    },
+    "locationTarget": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {"kind": {"const": "element"}}
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "name"],
+          "properties": {
+            "kind": {"enum": ["attribute", "text-field"]},
+            "name": {"$ref": "#/$defs/qName"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "key"],
+          "properties": {
+            "kind": {"const": "property"},
+            "key": {"type": "string"}
+          }
+        }
+      ]
+    },
+    "location": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "path", "target"],
+      "properties": {
+        "source": {"$ref": "#/$defs/source"},
+        "path": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"$ref": "#/$defs/pathStep"}
+        },
+        "target": {"$ref": "#/$defs/locationTarget"},
+        "span": {"$ref": "#/$defs/sourceSpan"}
+      }
+    },
+    "viewCandidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "location"],
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "location": {"$ref": "#/$defs/location"}
+      }
+    },
+    "viewObservation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {"kind": {"const": "none"}}
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "matches"],
+          "properties": {
+            "kind": {"const": "one"},
+            "matches": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {"$ref": "#/$defs/viewCandidate"}
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "matches"],
+          "properties": {
+            "kind": {"const": "multiple"},
+            "matches": {
+              "type": "array",
+              "minItems": 2,
+              "items": {"$ref": "#/$defs/viewCandidate"}
+            }
+          }
+        }
+      ]
+    },
+    "resolvedView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "location"],
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "location": {"$ref": "#/$defs/location"}
+      }
+    },
+    "viewRejected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "observation", "diagnosticIds"],
+      "properties": {
+        "state": {"const": "rejected"},
+        "observation": {"$ref": "#/$defs/viewObservation"},
+        "diagnosticIds": {"$ref": "#/$defs/nonEmptyDiagnosticIds"}
+      }
+    },
+    "viewResolved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "view"],
+      "properties": {
+        "state": {"const": "resolved"},
+        "view": {"$ref": "#/$defs/resolvedView"}
+      }
+    },
+    "profileObservation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {"kind": {"const": "none"}}
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "values"],
+          "properties": {
+            "kind": {"const": "one"},
+            "values": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {"type": "string"}
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "values"],
+          "properties": {
+            "kind": {"const": "multiple"},
+            "values": {
+              "type": "array",
+              "minItems": 2,
+              "items": {"type": "string"}
+            }
+          }
+        }
+      ]
+    },
+    "profileRejected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "observed", "diagnosticIds"],
+      "properties": {
+        "state": {"const": "rejected"},
+        "observed": {"$ref": "#/$defs/profileObservation"},
+        "diagnosticIds": {"$ref": "#/$defs/nonEmptyDiagnosticIds"}
+      }
+    },
+    "profileResolved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "version"],
+      "properties": {
+        "state": {"const": "resolved"},
+        "version": {"type": "string", "minLength": 1}
+      }
+    },
+    "scopeSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["directOccurrenceCount", "closedOccurrenceCount"],
+      "properties": {
+        "directOccurrenceCount": {"type": "integer", "minimum": 0},
+        "closedOccurrenceCount": {"type": "integer", "minimum": 0}
+      }
+    },
+    "scopeRejected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "summary", "diagnosticIds"],
+      "properties": {
+        "state": {"const": "rejected"},
+        "summary": {"$ref": "#/$defs/scopeSummary"},
+        "diagnosticIds": {"$ref": "#/$defs/nonEmptyDiagnosticIds"}
+      }
+    },
+    "scopeResolved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "summary"],
+      "properties": {
+        "state": {"const": "resolved"},
+        "summary": {"$ref": "#/$defs/scopeSummary"}
+      }
+    },
+    "encodingObservation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": {"enum": ["not-observed", "utf-8-default"]}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value", "location"],
+          "properties": {
+            "kind": {"const": "declared"},
+            "value": {"type": "string"},
+            "location": {"$ref": "#/$defs/location"}
+          }
+        }
+      ]
+    },
+    "nativeBindingFailed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "failure"],
+      "properties": {
+        "state": {"const": "failed"},
+        "failure": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "encoding", "diagnosticIds"],
+              "properties": {
+                "kind": {"const": "unavailable"},
+                "encoding": {"$ref": "#/$defs/encodingObservation"},
+                "diagnosticIds": {"$ref": "#/$defs/nonEmptyDiagnosticIds"}
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "encoding", "rootQName", "nativeVersion", "diagnosticIds"],
+              "properties": {
+                "kind": {"const": "rejected"},
+                "encoding": {"const": "utf-8"},
+                "rootQName": {"$ref": "#/$defs/qName"},
+                "nativeVersion": {"type": ["string", "null"]},
+                "diagnosticIds": {"$ref": "#/$defs/nonEmptyDiagnosticIds"}
+              }
+            }
+          ]
+        }
+      }
+    },
+    "nativeBindingResolved": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "rootQName", "nativeVersion"],
+      "properties": {
+        "state": {"const": "resolved"},
+        "rootQName": {"$ref": "#/$defs/qName"},
+        "nativeVersion": {"type": "string", "minLength": 1}
+      }
+    },
+    "diagnosticIds": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "nonEmptyDiagnosticIds": {
+      "allOf": [
+        {"$ref": "#/$defs/diagnosticIds"},
+        {"minItems": 1}
+      ]
+    },
+    "blockReason": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason", "stage"],
+      "properties": {
+        "reason": {"enum": ["failure", "unavailable"]},
+        "stage": {
+          "enum": ["decode", "view-scope", "profile", "structure", "semantics", "traceability", "readiness", "evidence"]
+        }
+      }
+    },
+    "stageRecord": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["stage", "state", "diagnosticIds"],
+          "properties": {
+            "stage": {
+              "enum": ["decode", "view-scope", "profile", "structure", "semantics", "traceability", "readiness", "evidence"]
+            },
+            "state": {"enum": ["passed", "failed", "unavailable"]},
+            "diagnosticIds": {"$ref": "#/$defs/diagnosticIds"}
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["stage", "state", "diagnosticIds", "blockedBy"],
+          "properties": {
+            "stage": {
+              "enum": ["decode", "view-scope", "profile", "structure", "semantics", "traceability", "readiness", "evidence"]
+            },
+            "state": {"const": "not-run"},
+            "diagnosticIds": {"$ref": "#/$defs/diagnosticIds"},
+            "blockedBy": {"$ref": "#/$defs/blockReason"}
+          }
+        }
+      ]
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "prefixItems": [
+        {"allOf": [{"$ref": "#/$defs/stageRecord"}, {"properties": {"stage": {"const": "decode"}}}]},
+        {"allOf": [{"$ref": "#/$defs/stageRecord"}, {"properties": {"stage": {"const": "view-scope"}}}]},
+        {"allOf": [{"$ref": "#/$defs/stageRecord"}, {"properties": {"stage": {"const": "profile"}}}]},
+        {"allOf": [{"$ref": "#/$defs/stageRecord"}, {"properties": {"stage": {"const": "structure"}}}]},
+        {"allOf": [{"$ref": "#/$defs/stageRecord"}, {"properties": {"stage": {"const": "semantics"}}}]},
+        {"allOf": [{"$ref": "#/$defs/stageRecord"}, {"properties": {"stage": {"const": "traceability"}}}]},
+        {"allOf": [{"$ref": "#/$defs/stageRecord"}, {"properties": {"stage": {"const": "readiness"}}}]},
+        {"allOf": [{"$ref": "#/$defs/stageRecord"}, {"properties": {"stage": {"const": "evidence"}}}]}
+      ]
+    },
+    "failedStages": {
+      "allOf": [
+        {"$ref": "#/$defs/stages"},
+        {"contains": {"properties": {"state": {"const": "failed"}}, "required": ["state"]}, "minContains": 1}
+      ]
+    },
+    "partialStages": {
+      "allOf": [
+        {"$ref": "#/$defs/stages"},
+        {"not": {"contains": {"properties": {"state": {"const": "failed"}}, "required": ["state"]}}},
+        {"contains": {"properties": {"state": {"const": "unavailable"}}, "required": ["state"]}, "minContains": 1}
+      ]
+    },
+    "passedStages": {
+      "allOf": [
+        {"$ref": "#/$defs/stages"},
+        {"not": {"contains": {"properties": {"state": {"enum": ["failed", "unavailable", "not-run"]}}, "required": ["state"]}}}
+      ]
+    },
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": {"type": "string"},
+        "id": {"type": "string"}
+      }
+    },
+    "scalar": {"type": ["string", "integer", "boolean"]},
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "code", "stage", "severity", "disposition", "message", "subjects", "locations", "data"],
+      "properties": {
+        "id": {"type": "string"},
+        "code": {"type": "string", "pattern": "^o2i\\."},
+        "stage": {
+          "enum": ["decode", "view-scope", "profile", "structure", "semantics", "traceability", "readiness", "evidence"]
+        },
+        "severity": {"enum": ["debug", "info", "warn", "error"]},
+        "disposition": {"enum": ["model", "process"]},
+        "message": {"type": "string"},
+        "subjects": {"type": "array", "items": {"$ref": "#/$defs/subject"}},
+        "locations": {"type": "array", "items": {"$ref": "#/$defs/location"}},
+        "data": {"type": "object", "additionalProperties": {"$ref": "#/$defs/scalar"}}
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/diagnostic"}
+    },
+    "decodeFailedReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "tool", "inspectionState", "request", "nativeBinding", "result", "stages", "diagnostics"],
+      "properties": {
+        "schema": {"const": "o2i.inspection.report/v1"},
+        "tool": {"$ref": "#/$defs/tool"},
+        "inspectionState": {"const": "decode-failed"},
+        "request": {"$ref": "#/$defs/request"},
+        "nativeBinding": {"$ref": "#/$defs/nativeBindingFailed"},
+        "result": {"const": "failed"},
+        "stages": {"$ref": "#/$defs/failedStages"},
+        "diagnostics": {"$ref": "#/$defs/diagnostics"}
+      }
+    },
+    "viewFailedReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "tool", "inspectionState", "request", "nativeBinding", "viewResolution", "result", "stages", "diagnostics"],
+      "properties": {
+        "schema": {"const": "o2i.inspection.report/v1"},
+        "tool": {"$ref": "#/$defs/tool"},
+        "inspectionState": {"const": "view-failed"},
+        "request": {"$ref": "#/$defs/request"},
+        "nativeBinding": {"$ref": "#/$defs/nativeBindingResolved"},
+        "viewResolution": {"$ref": "#/$defs/viewRejected"},
+        "result": {"const": "failed"},
+        "stages": {"$ref": "#/$defs/failedStages"},
+        "diagnostics": {"$ref": "#/$defs/diagnostics"}
+      }
+    },
+    "profileFailedReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "tool", "inspectionState", "request", "nativeBinding", "viewResolution", "profileResolution", "result", "stages", "diagnostics"],
+      "properties": {
+        "schema": {"const": "o2i.inspection.report/v1"},
+        "tool": {"$ref": "#/$defs/tool"},
+        "inspectionState": {"const": "profile-failed"},
+        "request": {"$ref": "#/$defs/request"},
+        "nativeBinding": {"$ref": "#/$defs/nativeBindingResolved"},
+        "viewResolution": {"$ref": "#/$defs/viewResolved"},
+        "profileResolution": {"$ref": "#/$defs/profileRejected"},
+        "result": {"const": "failed"},
+        "stages": {"$ref": "#/$defs/failedStages"},
+        "diagnostics": {"$ref": "#/$defs/diagnostics"}
+      }
+    },
+    "scopeFailedReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "tool", "inspectionState", "request", "nativeBinding", "viewResolution", "profileResolution", "scope", "result", "stages", "diagnostics"],
+      "properties": {
+        "schema": {"const": "o2i.inspection.report/v1"},
+        "tool": {"$ref": "#/$defs/tool"},
+        "inspectionState": {"const": "scope-failed"},
+        "request": {"$ref": "#/$defs/request"},
+        "nativeBinding": {"$ref": "#/$defs/nativeBindingResolved"},
+        "viewResolution": {"$ref": "#/$defs/viewResolved"},
+        "profileResolution": {"$ref": "#/$defs/profileResolved"},
+        "scope": {"$ref": "#/$defs/scopeRejected"},
+        "result": {"const": "failed"},
+        "stages": {"$ref": "#/$defs/failedStages"},
+        "diagnostics": {"$ref": "#/$defs/diagnostics"}
+      }
+    },
+    "inspectedReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "result": {"const": "failed"},
+                "stages": {"$ref": "#/$defs/failedStages"}
+              }
+            },
+            {
+              "properties": {
+                "result": {"const": "partial"},
+                "stages": {"$ref": "#/$defs/partialStages"}
+              }
+            },
+            {
+              "properties": {
+                "result": {"const": "passed"},
+                "stages": {"$ref": "#/$defs/passedStages"}
+              }
+            }
+          ]
+        }
+      ],
+      "required": ["schema", "tool", "inspectionState", "request", "nativeBinding", "viewResolution", "profileResolution", "scope", "result", "stages", "diagnostics"],
+      "properties": {
+        "schema": {"const": "o2i.inspection.report/v1"},
+        "tool": {"$ref": "#/$defs/tool"},
+        "inspectionState": {"const": "inspected"},
+        "request": {"$ref": "#/$defs/request"},
+        "nativeBinding": {"$ref": "#/$defs/nativeBindingResolved"},
+        "viewResolution": {"$ref": "#/$defs/viewResolved"},
+        "profileResolution": {"$ref": "#/$defs/profileResolved"},
+        "scope": {"$ref": "#/$defs/scopeResolved"},
+        "result": {"enum": ["passed", "partial", "failed"]},
+        "stages": {"$ref": "#/$defs/stages"},
+        "diagnostics": {"$ref": "#/$defs/diagnostics"}
+      }
+    }
+  }
+}

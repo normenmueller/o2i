@@ -32,6 +32,7 @@ import qualified Data.Text as Text
 import Data.Validation (Validation(..))
 import O2I.Graph.Typed
 import O2I.Language.Element
+import O2I.Language.Macro (StrategyPrimitiveRole(..))
 import O2I.Language.Relation
 
 -- * Strategy formulation input
@@ -80,15 +81,6 @@ data StrategyTextField
   | PositioningField -- ^ Distinct strategic position.
   | TradeOffsField -- ^ Explicit strategic exclusions.
   | FitRationaleField -- ^ Coherence rationale.
-  deriving (Eq, Ord, Show)
-
--- | Primitive roles required by a complete Strategy formulation.
-data StrategyPrimitiveRole
-  = DiagnosisRole -- ^ Driver expressing the decisive challenge.
-  | IntentRole -- ^ Objective expressing the intended contribution.
-  | GuidingPolicyRole -- ^ Principle expressing the chosen approach.
-  | CoherentActionRole -- ^ Action expressing a strategic commitment.
-  | StrategicKeyResultRole -- ^ Key Result expressing strategic evidence.
   deriving (Eq, Ord, Show)
 
 -- | Accumulated semantic invariant violations.

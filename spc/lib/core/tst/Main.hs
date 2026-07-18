@@ -7,6 +7,7 @@ module Main where
 import Data.List (nub, sort)
 import qualified Data.List.NonEmpty as NonEmpty
 import O2I
+import qualified O2I.Language as Language
 import O2I.Test.Qualification (needQualificationTests)
 import O2I.Test.Support
 import Test.Tasty
@@ -24,12 +25,216 @@ tests =
     , performanceDimensionRoleTests
     , semanticTests
     , needQualificationTests
+    , macroRuleTests
     , traceTests
     , kpiDefinitionTests
     , readinessTests
     , effectEvidenceTests
     , registryTests
     ]
+
+macroRuleTests :: TestTree
+macroRuleTests =
+  testGroup
+    "macro evidence rules"
+    [ testCase "every registered macrorelation has exactly one rule"
+        $ macroRuleConclusions @?= registeredMacroConclusions
+    , testCase "kind-mismatched context endpoints do not form a claim"
+        $ null (macroClaims kindMismatchedMacroIndex)
+            @? "unexpected macro claim"
+    , testCase "conservative discovery returns persisted premise occurrences"
+        $ withOnlyMacroClaim baseMacroIndex
+        $ \claim ->
+            map
+              macroDependencyEdge
+              (macroScopeDependencies baseMacroIndex claim)
+              @?= [2 :: Int]
+    , testCase "conservative discovery is monotone under added facts"
+        $ withOnlyMacroClaim baseMacroIndex
+        $ \claim -> do
+            let base =
+                  map
+                    macroDependencyEdge
+                    (macroScopeDependencies baseMacroIndex claim)
+                extended =
+                  map
+                    macroDependencyEdge
+                    (macroScopeDependencies extendedMacroIndex claim)
+            assertBool
+              "an added fact removed a macro dependency"
+              (all (`elem` extended) base)
+            extended @?= [2, 3 :: Int]
+    , testCase "exact-rule fixtures cover every registered macrorelation"
+        $ sort
+            (nub
+               (concatMap
+                  (map (macroClaimConclusion . snd)
+                     . macroClaims
+                     . macroIndexFor)
+                  [sampleGraph, orientationMacroGraph, strategyMacroGraph]))
+            @?= registeredMacroConclusions
+    , testCase "every exact witness premise is conservatively discoverable" $ do
+        assertGraphWitnessesAreConservative
+          sampleGraph
+          [sampleStrategyFormulation]
+        assertGraphWitnessesAreConservative orientationMacroGraph []
+        assertGraphWitnessesAreConservative
+          strategyMacroGraph
+          [sampleStrategyFormulation, secondStrategyFormulation]
+    ]
+
+macroRuleConclusions :: [RelationCode]
+macroRuleConclusions =
+  sort (map macroEvidenceRuleConclusion (NonEmpty.toList macroEvidenceRules))
+
+registeredMacroConclusions :: [RelationCode]
+registeredMacroConclusions =
+  sort
+    [ relationCodeOf relation
+    | relation <- allRelations
+    , MacroRelation _ <- [Language.relationSemanticsOf relation]
+    ]
+
+baseMacroIndex :: MacroFactIndex Int Int
+baseMacroIndex =
+  buildMacroFactIndex
+    macroTestNodes
+    [(1, macroTestClaim), (2, macroTestPremise)]
+
+extendedMacroIndex :: MacroFactIndex Int Int
+extendedMacroIndex =
+  buildMacroFactIndex
+    macroTestNodes
+    [ (1, macroTestClaim)
+    , (2, macroTestPremise)
+    , (3, macroTestPremise)
+    , (4, RawEdge macroEthosId (RelationName "unrelated") macroMissionId)
+    ]
+
+kindMismatchedMacroIndex :: MacroFactIndex Int Int
+kindMismatchedMacroIndex =
+  buildMacroFactIndex
+    [ (1, RawContextNode macroEthosId Ethos)
+    , (2, RawContextNode macroMissionId Vision)
+    ]
+    [(1, macroTestClaim)]
+
+macroTestNodes :: [(Int, RawNode)]
+macroTestNodes =
+  [ (1, RawContextNode macroEthosId Ethos)
+  , (2, RawContextNode macroMissionId Mission)
+  , (3, RawPrimitiveNode macroPrincipleId macroEthosId Principle)
+  , (4, RawPrimitiveNode macroDriverId macroMissionId Driver)
+  ]
+
+macroTestClaim :: RawEdge
+macroTestClaim = edge macroEthosId guidesMission macroMissionId
+
+macroTestPremise :: RawEdge
+macroTestPremise =
+  edge macroPrincipleId guidesEthosPrincipleToMissionDriver macroDriverId
+
+macroEthosId, macroMissionId, macroPrincipleId, macroDriverId :: RawNodeId
+macroEthosId = RawNodeId "macro-ethos"
+
+macroMissionId = RawNodeId "macro-mission"
+
+macroPrincipleId = RawNodeId "macro-principle"
+
+macroDriverId = RawNodeId "macro-driver"
+
+withOnlyMacroClaim ::
+     MacroFactIndex node edge -> (MacroClaim node -> Assertion) -> Assertion
+withOnlyMacroClaim index action =
+  case macroClaims index of
+    [(_, claim)] -> action claim
+    claims ->
+      assertFailure ("expected one macro claim, got " ++ show (length claims))
+
+macroIndexFor :: RawGraph -> MacroFactIndex RawNodeId RawEdge
+macroIndexFor raw =
+  buildMacroFactIndex
+    [(rawNodeIdentifier node, node) | node <- rawNodes raw]
+    [(candidate, candidate) | candidate <- rawEdges raw]
+
+orientationMacroGraph :: RawGraph
+orientationMacroGraph =
+  RawGraph
+    [ RawContextNode macroEthosId Ethos
+    , RawContextNode macroMissionId Mission
+    , RawContextNode orientationVisionId Vision
+    , RawPrimitiveNode macroPrincipleId macroEthosId Principle
+    , RawPrimitiveNode macroDriverId macroMissionId Driver
+    , RawPrimitiveNode orientationObjectiveId orientationVisionId Objective
+    ]
+    [ edge macroEthosId guidesMission macroMissionId
+    , edge macroMissionId groundsVision orientationVisionId
+    , edge macroEthosId guidesVision orientationVisionId
+    , macroTestPremise
+    , edge
+        macroDriverId
+        groundsMissionDriverToVisionObjective
+        orientationObjectiveId
+    , edge
+        macroPrincipleId
+        guidesEthosPrincipleToVisionObjective
+        orientationObjectiveId
+    ]
+
+orientationVisionId, orientationObjectiveId :: RawNodeId
+orientationVisionId = RawNodeId "macro-vision"
+
+orientationObjectiveId = RawNodeId "macro-vision-objective"
+
+strategyMacroGraph :: RawGraph
+strategyMacroGraph =
+  twoStrategyGraph
+    (edge strategyId directsStrategy secondStrategyId)
+    []
+    [ edge strategyId contributesToStrategy secondStrategyId
+    , edge
+        strategyPrincipleId
+        guidesStrategyPrincipleToPrinciple
+        secondStrategyPrincipleId
+    , edge
+        strategyKeyResultId
+        contributesStrategyKeyResultToKeyResult
+        secondStrategyKeyResultId
+    , edge
+        strategyActionId
+        contributesStrategyActionToAction
+        secondStrategyActionId
+    ]
+
+assertGraphWitnessesAreConservative ::
+     RawGraph -> [RawStrategyFormulation] -> Assertion
+assertGraphWitnessesAreConservative raw formulations =
+  withSemanticallyValid raw formulations $ \semantic ->
+    let index = macroIndexFor raw
+     in mapM_
+          (assertExactWitnessIsConservative semantic index)
+          (macroClaims index)
+
+assertExactWitnessIsConservative ::
+     SemanticallyValidModel
+  -> MacroFactIndex RawNodeId RawEdge
+  -> (RawEdge, MacroClaim RawNodeId)
+  -> Assertion
+assertExactWitnessIsConservative semantic index (_, claim) =
+  case macroEvidenceWitnesses semantic claim of
+    [] -> assertFailure "reference macro claim has no exact evidence witness"
+    witnesses ->
+      let dependencies =
+            map macroDependencyEdge (macroScopeDependencies index claim)
+       in mapM_
+            (mapM_
+               (\premise ->
+                  assertBool
+                    "exact premise is absent from conservative discovery"
+                    (premise `elem` dependencies))
+               . NonEmpty.toList
+               . witnessPremises)
+            witnesses
 
 performanceDimensionRoleTests :: TestTree
 performanceDimensionRoleTests =
@@ -1029,10 +1234,7 @@ kpiDefinitionTests =
                     , targetCriterion = AtLeast (Level 100)
                     }
              in assertSuccess
-                  (validateReadyWithPlans
-                     model
-                     (definitionsFor model)
-                     (NonEmpty.singleton plan))
+                  (validateReadyWithPlans model (definitionsFor model) [plan])
     , testCase "delta endpoint at a lower domain boundary is valid"
         $ withTraceable sampleGraph
         $ \model ->
@@ -1044,10 +1246,7 @@ kpiDefinitionTests =
                     , targetCriterion = AtMost (Level 0)
                     }
              in assertSuccess
-                  (validateReadyWithPlans
-                     model
-                     (definitionsFor model)
-                     (NonEmpty.singleton plan))
+                  (validateReadyWithPlans model (definitionsFor model) [plan])
     , testCase "one KPI definition governs every trace using that KPI"
         $ withTraceable sharedKpiTwoPathGraph
         $ \model ->
@@ -1088,7 +1287,7 @@ kpiDefinitionTests =
                       (validateReadyWithPlans
                          model
                          (definitionsFor model)
-                         (planForTrace first NonEmpty.:| [invalid]))
+                         [planForTrace first, invalid])
               traces ->
                 assertFailure
                   ("expected two traces, got " ++ show (length traces))
@@ -1102,12 +1301,12 @@ validateReadyWithDefinitions model definitions =
   validateReadyWithPlans
     model
     definitions
-    (fmap planForTrace (effectTraces model))
+    (map planForTrace (NonEmpty.toList (effectTraces model)))
 
 validateReadyWithPlans ::
      TraceableEffectModel
   -> [RawKPIDefinition]
-  -> NonEmpty.NonEmpty EvidencePlan
+  -> [EvidencePlan]
   -> Validation (NonEmpty.NonEmpty EvidenceReadinessError) EvidenceReadyModel
 validateReadyWithPlans model definitions plans =
   validateEvidenceReadinessAt
@@ -1128,6 +1327,16 @@ readinessTests =
             NonEmpty.length (readyEffectTraces ready) @?= 1
             readinessCheckedAt ready @?= readinessDate
             plannedInterventionStarts ready @?= [samplePlannedStart]
+    , testCase "empty plans accumulate independent readiness defects"
+        $ withTraceable sampleGraph
+        $ \model ->
+            let trace = NonEmpty.head (effectTraces model)
+             in assertReadinessErrors
+                  [ MissingKPIDefinition (traceKPI trace)
+                  , MissingPlannedInterventionStart (traceIntervention trace)
+                  , MissingEvidencePlan (traceIdentifier trace)
+                  ]
+                  (validateEvidenceReadinessAt readinessDate model [] [] [])
     , testCase "known Intervention has one evidence-ready trace"
         $ withReady sampleGraph [sampleStrategyFormulation]
         $ \ready ->
@@ -1159,7 +1368,7 @@ readinessTests =
                      model
                      (definitionsFor model)
                      [samplePlannedStart, contradictory]
-                     (fmap planForTrace (effectTraces model)))
+                     (map planForTrace (NonEmpty.toList (effectTraces model))))
     , testCase "unknown planned Intervention timing is rejected"
         $ withTraceable sampleGraph
         $ \model ->
@@ -1171,7 +1380,7 @@ readinessTests =
                      model
                      (definitionsFor model)
                      [samplePlannedStart, unknown]
-                     (fmap planForTrace (effectTraces model)))
+                     (map planForTrace (NonEmpty.toList (effectTraces model))))
     , testCase "every traced Intervention requires planned timing"
         $ withTraceable sampleGraph
         $ \model ->
@@ -1184,7 +1393,7 @@ readinessTests =
                      model
                      (definitionsFor model)
                      []
-                     (fmap planForTrace (effectTraces model)))
+                     (map planForTrace (NonEmpty.toList (effectTraces model))))
     , testCase "plan and baseline may be fixed at the check time"
         $ withTraceable sampleGraph
         $ \model ->
@@ -1202,7 +1411,7 @@ readinessTests =
                      model
                      (definitionsFor model)
                      (plannedStartsFor model)
-                     (NonEmpty.singleton plan))
+                     [plan])
     , testCase "duplicate plans for one trace are rejected"
         $ withTraceable sampleGraph
         $ \model ->
@@ -1216,7 +1425,7 @@ readinessTests =
                      model
                      (definitionsFor model)
                      (plannedStartsFor model)
-                     (plan NonEmpty.:| [plan]))
+                     [plan, plan])
     , testCase "unknown planned traces are rejected exactly"
         $ withTraceable twoPathGraph
         $ \twoPath ->
@@ -1239,7 +1448,7 @@ readinessTests =
                            singlePath
                            (definitionsFor singlePath)
                            (plannedStartsFor singlePath)
-                           (knownPlan NonEmpty.:| [unknownPlan]))
+                           [knownPlan, unknownPlan])
               [] -> assertFailure "two-path fixture lacks an unknown trace"
     , testCase "every trace requires one plan"
         $ withTraceable twoPathGraph
@@ -1253,7 +1462,7 @@ readinessTests =
                      model
                      (definitionsFor model)
                      (plannedStartsFor model)
-                     (NonEmpty.singleton (planForTrace planned)))
+                     [planForTrace planned])
               traces ->
                 assertFailure
                   ("expected two traces, got " ++ show (length traces))
@@ -1274,7 +1483,7 @@ readinessTests =
                      model
                      (definitionsFor model)
                      (plannedStartsFor model)
-                     (fmap planForTrace (effectTraces model)))
+                     (map planForTrace (NonEmpty.toList (effectTraces model))))
     , readinessFailureTest
         "baseline must be observed by the check time"
         readinessDate
@@ -1386,6 +1595,15 @@ effectEvidenceTests =
             targetResult assessment @?= TargetSatisfiedInObservationByDue
             evidenceAssessedAt assessed @?= assessmentDate
             actualInterventionStarts assessed @?= [sampleActualStart]
+    , testCase "empty follow-ups accumulate independent evidence defects"
+        $ withReady sampleGraph [sampleStrategyFormulation]
+        $ \ready ->
+            let trace = NonEmpty.head (readyEffectTraces ready)
+             in assertEvidenceErrors
+                  [ MissingActualInterventionStart (traceIntervention trace)
+                  , MissingFollowUpObservation (traceIdentifier trace)
+                  ]
+                  (assessEffectEvidenceAt assessmentDate ready [] [])
     , testCase "effect can be supported before target achievement"
         $ withAssessed id 60 followUpDate
         $ \_ assessment -> do
@@ -1419,7 +1637,7 @@ effectEvidenceTests =
                        lateAssessmentDate
                        ready
                        [lateStart]
-                       (NonEmpty.singleton followUp) of
+                       [followUp] of
                   Failure errors ->
                     assertFailure ("evidence errors: " ++ show errors)
                   Success assessed ->
@@ -1552,7 +1770,7 @@ effectEvidenceTests =
                        assessmentDate
                        ready
                        [sampleActualStart]
-                       (first NonEmpty.:| [second]) of
+                       [first, second] of
                   Failure errors ->
                     assertFailure ("evidence errors: " ++ show errors)
                   Success assessed ->
@@ -1569,7 +1787,7 @@ effectEvidenceTests =
                      assessmentDate
                      ready
                      [sampleActualStart]
-                     (followUp NonEmpty.:| [followUp]))
+                     [followUp, followUp])
     , testCase "every ready trace requires a follow-up"
         $ withReady twoPathGraph [sampleStrategyFormulation]
         $ \ready ->
@@ -1581,8 +1799,7 @@ effectEvidenceTests =
                      assessmentDate
                      ready
                      [sampleActualStart]
-                     (NonEmpty.singleton
-                        (followUpForTrace observed 75 followUpDate)))
+                     [followUpForTrace observed 75 followUpDate])
               traces ->
                 assertFailure
                   ("expected two traces, got " ++ show (length traces))
@@ -1605,7 +1822,7 @@ effectEvidenceTests =
                            assessmentDate
                            single
                            [sampleActualStart]
-                           (known NonEmpty.:| [unknown]))
+                           [known, unknown])
               [] -> assertFailure "two-path fixture lacks an unknown trace"
     , evidenceFailureTest
         "follow-up KPI must match the trace"
@@ -1637,7 +1854,7 @@ effectEvidenceTests =
                      assessmentDate
                      ready
                      [sampleActualStart]
-                     (lower NonEmpty.:| [upper]))
+                     [lower, upper])
     , evidenceFailureTest
         "follow-up must be observed after actual start"
         (\item -> item {observedAt = interventionDate})
@@ -1663,7 +1880,7 @@ effectEvidenceTests =
                  followUpDate
                  ready
                  [sampleActualStart]
-                 (NonEmpty.singleton (followUpForTrace trace 75 followUpDate)))
+                 [followUpForTrace trace 75 followUpDate])
     , evidenceFailureTest
         "follow-up provenance must be nonblank"
         (\item -> item {observationSource = EvidenceSource " "})

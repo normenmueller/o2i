@@ -1,0 +1,29 @@
+-- | Adapter-parametric O2I profile projection.
+module O2I.Inspection.Profile
+  ( O2IProfileVersion(..)
+  , ObservedO2IProfile(..)
+  , ResolvedO2IProfile
+  , resolvedProfileVersion
+  , resolveProfileVersion
+  , ObservedProfileFacts(..)
+  , DefectApplicability(..)
+  , DeferredProfileDefect(..)
+  , RootProjection(..)
+  , PersistedDependencyReason(..)
+  , IndexedProfileFact
+  , indexOccurrence
+  , indexNode
+  , indexEdge
+  , indexPresentation
+  , indexDependency
+  , indexReference
+  , ProfileProjection(..)
+  , O2IProfileContract(..)
+  , ResolvedProfileProjection
+  , ProfileResolution(..)
+  , resolveRootProfile
+  , ProfileIndex
+  , buildProfileIndex
+  ) where
+
+import O2I.Inspection.Profile.Internal
