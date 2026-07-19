@@ -18,6 +18,7 @@ module O2I.Adapter.AMX.Internal.Defect
 import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.Map.Strict as Map
 import Data.Text (Text)
+import qualified Data.Text as Text
 import O2I.Inspection.Adapter (ViewSelector(..))
 import O2I.Inspection.Diagnostic
 import O2I.Inspection.Provenance
@@ -26,6 +27,11 @@ import O2I.Inspection.Provenance
 data AMXDecodeDefect
   = MalformedXml
   | UnsafeXml
+  | InputBytesLimitExceeded Int Int
+  | XmlDepthLimitExceeded Int Int
+  | XmlElementsLimitExceeded Int Int
+  | XmlAttributesLimitExceeded Int Int
+  | XmlTextLimitExceeded Int Int
   | InvalidUtf8
   | UnsupportedXmlEncoding Text
   | UnexpectedRootQName ExpandedQName
@@ -71,6 +77,11 @@ data AMXProfileDefect
 data AMXDefectTag
   = MalformedXmlTag
   | UnsafeXmlTag
+  | InputBytesLimitExceededTag
+  | XmlDepthLimitExceededTag
+  | XmlElementsLimitExceededTag
+  | XmlAttributesLimitExceededTag
+  | XmlTextLimitExceededTag
   | InvalidUtf8Tag
   | UnsupportedXmlEncodingTag
   | UnexpectedRootQNameTag
@@ -109,6 +120,11 @@ amxDecodeDefectTag defect =
   case defect of
     MalformedXml -> MalformedXmlTag
     UnsafeXml -> UnsafeXmlTag
+    InputBytesLimitExceeded _ _ -> InputBytesLimitExceededTag
+    XmlDepthLimitExceeded _ _ -> XmlDepthLimitExceededTag
+    XmlElementsLimitExceeded _ _ -> XmlElementsLimitExceededTag
+    XmlAttributesLimitExceeded _ _ -> XmlAttributesLimitExceededTag
+    XmlTextLimitExceeded _ _ -> XmlTextLimitExceededTag
     InvalidUtf8 -> InvalidUtf8Tag
     UnsupportedXmlEncoding _ -> UnsupportedXmlEncodingTag
     UnexpectedRootQName _ -> UnexpectedRootQNameTag
@@ -163,6 +179,26 @@ amxDefectTagSpec tag =
       model
         "amx.decode.xml-unsafe"
         "The input contains a DTD or a non-predefined entity."
+    InputBytesLimitExceededTag ->
+      process
+        "amx.decode.resource.input-bytes"
+        "The input exceeds the native AMX byte limit."
+    XmlDepthLimitExceededTag ->
+      process
+        "amx.decode.resource.xml-depth"
+        "The input exceeds the XML nesting-depth limit."
+    XmlElementsLimitExceededTag ->
+      process
+        "amx.decode.resource.xml-elements"
+        "The input exceeds the XML element-node limit."
+    XmlAttributesLimitExceededTag ->
+      process
+        "amx.decode.resource.xml-attributes"
+        "The input exceeds the XML attribute limit."
+    XmlTextLimitExceededTag ->
+      process
+        "amx.decode.resource.xml-text"
+        "The input exceeds the XML character-data limit."
     InvalidUtf8Tag ->
       model "amx.decode.encoding-invalid" "The input is not valid UTF-8."
     UnsupportedXmlEncodingTag ->
@@ -308,6 +344,16 @@ model code message =
     []
     Map.empty
 
+process :: Text -> Text -> DiagnosticSpec
+process code message =
+  diagnosticSpec
+    (o2iDiagnosticCode code)
+    ErrorSeverity
+    ProcessFailure
+    message
+    []
+    Map.empty
+
 addSubjects :: [DiagnosticSubject] -> DiagnosticSpec -> DiagnosticSpec
 addSubjects subjects specification =
   diagnosticSpec
@@ -323,11 +369,22 @@ decodeSubjects defect =
   case defect of
     MalformedXml -> []
     UnsafeXml -> []
+    InputBytesLimitExceeded limit observed -> limitSubjects limit observed
+    XmlDepthLimitExceeded limit observed -> limitSubjects limit observed
+    XmlElementsLimitExceeded limit observed -> limitSubjects limit observed
+    XmlAttributesLimitExceeded limit observed -> limitSubjects limit observed
+    XmlTextLimitExceeded limit observed -> limitSubjects limit observed
     InvalidUtf8 -> []
     UnsupportedXmlEncoding encoding -> [subject "encoding" encoding]
     UnexpectedRootQName name -> [subject "root-qname" (qNameText name)]
     MissingNativeVersion -> []
     UnsupportedNativeVersion version -> [subject "native-version" version]
+
+limitSubjects :: Int -> Int -> [DiagnosticSubject]
+limitSubjects limit observed =
+  [ subject "limit" (Text.pack (show limit))
+  , subject "observed" (Text.pack (show observed))
+  ]
 
 viewSubjects :: AMXViewDefect -> [DiagnosticSubject]
 viewSubjects defect =

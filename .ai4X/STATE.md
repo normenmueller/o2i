@@ -68,12 +68,10 @@ override this snapshot.
 - Diagnostics are normalized once and every nested reference derives from the
   same canonical set. Human output centrally escapes untrusted terminal control
   characters; JSON remains unchanged.
-- The completed matrix passes all four package-local `cabal check` runs, the
-  all-package `-Werror` build, all eight test suites (Core 239, Inspection 31,
-  AMX 72, CLI 60), 100% Haddock coverage, package-license checks, HIndent for
-  all 90 Haskell files, extractor snapshots and 28 extractor tests, Pandoc,
-  PDF rendering, CLI help/version/partial-inspection smokes, and
-  `git diff --check`.
+- The last complete matrix passed all four package-local `cabal check` runs,
+  the all-package `-Werror` build, all eight test suites, 100% Haddock coverage,
+  package-license checks, HIndent, extractor snapshots and tests, Pandoc, PDF
+  rendering, CLI smokes, and `git diff --check`.
 - The third independent review confirms Fachlichkeit, Metamodell, and CLI at
   10.0, and identifies two open security contracts: request-bound source
   capabilities and deterministic AMX decode resource budgets.
@@ -82,15 +80,23 @@ override this snapshot.
   exact request document, no public binding path remains, and compile-fail plus
   two-source tests cover failure and successful provenance paths. The full
   Haskell verification matrix is green for this batch.
+- The AMX resource-budget batch is implemented and co-author checked: exact
+  budgets constrain input bytes, XML depth, element nodes, attributes, and
+  character data before DOM parsing; a monotonic scanner rejects unsafe XML
+  with bounded memory. Boundary, adversarial entity, CDATA, diagnostic, and API
+  tests pass (AMX 83 plus API contract).
+- The complete post-finding matrix is green: all four package-local Cabal
+  checks, all-package `-Werror` build and eight suites, 100% public Haddock,
+  HIndent, package licenses, extractor snapshots and 28 tests, Pandoc, PDF,
+  file/stdin CLI smokes, and `git diff --check`. Only the independent final
+  re-review remains pending.
 
 # Next Work
 
-1. Close the remaining AMX resource-budget finding with the external co-author,
-   then repeat the complete deterministic matrix.
-2. Repeat the independent read-only review with explicit per-dimension scores.
-3. Present the final eight-Context minimum-contract matrix to the user and
+1. Repeat the independent read-only review with explicit per-dimension scores.
+2. Present the final eight-Context minimum-contract matrix to the user and
    create the reviewed local O2I commit.
-4. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
+3. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
    Ethos/Mission/Vision, then continue the interrupted `wtf.md` review at Vision
    and the top-down `o2i.md` review.
 

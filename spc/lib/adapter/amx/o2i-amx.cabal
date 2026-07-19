@@ -56,7 +56,8 @@ library
     O2I.Adapter.AMX.Internal.Registry,
     O2I.Adapter.AMX.Internal.Types,
     O2I.Adapter.AMX.Internal.View,
-    O2I.Adapter.AMX.Internal.XML
+    O2I.Adapter.AMX.Internal.XML,
+    O2I.Adapter.AMX.Internal.XML.Scan
   build-depends:
     base >=4.18 && <4.19,
     bytestring >=0.11 && <0.12,
@@ -86,6 +87,7 @@ test-suite o2i-amx-test
     O2I.Adapter.AMX.Internal.Types,
     O2I.Adapter.AMX.Internal.View,
     O2I.Adapter.AMX.Internal.XML,
+    O2I.Adapter.AMX.Internal.XML.Scan,
     O2I.Adapter.AMX.Test.Decode,
     O2I.Adapter.AMX.Test.Fixture,
     O2I.Adapter.AMX.Test.Profile,

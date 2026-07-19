@@ -3,6 +3,7 @@
 -- | Safe native AMX XML decoding with stable source paths.
 module O2I.Adapter.AMX.Internal.XML
   ( decodeAMX
+  , decodeAMXWithLimits
   , archiNamespace
   , expectedRootQName
   ) where
@@ -18,6 +19,7 @@ import qualified Data.Text.Encoding as TextEncoding
 import qualified Data.Text.Lazy as LazyText
 import O2I.Adapter.AMX.Internal.Defect
 import O2I.Adapter.AMX.Internal.Types
+import O2I.Adapter.AMX.Internal.XML.Scan
 import O2I.Inspection.Adapter
 import O2I.Inspection.Input
 import O2I.Inspection.Provenance
@@ -40,22 +42,37 @@ xmlnsNamespace = "http://www.w3.org/2000/xmlns/"
 -- entity, resolver, or network use.
 decodeAMX ::
      SourceDocument -> DecodeAttempt SourcePosition AMXDecodeDefect AMXDocument
-decodeAMX source =
-  case stripSupportedBom (sourceDocumentBytes source) of
-    Left encoding -> unsupportedBom encoding
-    Right bytes ->
-      case TextEncoding.decodeUtf8' bytes of
-        Left _ -> unavailable EncodingNotObserved InvalidUtf8
-        Right decoded ->
-          let observation = encodingObservation decoded
-           in case declaredEncoding observation of
-                Just encoding
-                  | not (isUtf8Name encoding) ->
-                    unavailable observation (UnsupportedXmlEncoding encoding)
-                _
-                  | containsUnsafeXml decoded ->
-                    unavailable observation UnsafeXml
-                  | otherwise -> parseNativeDocument observation decoded
+decodeAMX = decodeAMXWithLimits defaultDecodeLimits
+
+-- | Decode with an explicit internal resource contract.
+decodeAMXWithLimits ::
+     DecodeLimits
+  -> SourceDocument
+  -> DecodeAttempt SourcePosition AMXDecodeDefect AMXDocument
+decodeAMXWithLimits limits source =
+  case enforceInputByteLimit limits sourceBytes of
+    Left defect -> unavailable EncodingNotObserved defect
+    Right () -> decodeWithinByteLimit
+  where
+    sourceBytes = sourceDocumentBytes source
+    decodeWithinByteLimit =
+      case stripSupportedBom sourceBytes of
+        Left encoding -> unsupportedBom encoding
+        Right bytes ->
+          case TextEncoding.decodeUtf8' bytes of
+            Left _ -> unavailable EncodingNotObserved InvalidUtf8
+            Right decoded ->
+              let observation = encodingObservation decoded
+               in case declaredEncoding observation of
+                    Just encoding
+                      | not (isUtf8Name encoding) ->
+                        unavailable
+                          observation
+                          (UnsupportedXmlEncoding encoding)
+                    _ ->
+                      case scanXmlText limits decoded of
+                        Left defect -> unavailable observation defect
+                        Right () -> parseNativeDocument observation decoded
 
 stripSupportedBom :: ByteString.ByteString -> Either Text ByteString.ByteString
 stripSupportedBom bytes
@@ -264,68 +281,49 @@ declaredEncoding observation =
 
 xmlDeclarationEncoding :: Text -> Maybe Text
 xmlDeclarationEncoding text
-  | "<?xml" `Text.isPrefixOf` text = do
-    let declaration = Text.takeWhileEnd (/= '<') (Text.takeWhile (/= '>') text)
-    attributeValue "encoding" declaration
+  | Just declaration <- Text.stripPrefix "<?xml" text =
+    attributeValue "encoding" (Text.takeWhile (/= '>') declaration)
   | otherwise = Nothing
 
 attributeValue :: Text -> Text -> Maybe Text
-attributeValue key input = search (Text.drop 5 input)
+attributeValue key = search . Text.dropWhile isXmlSpace
   where
     search remaining =
-      case Text.breakOn key remaining of
-        (_, suffix)
-          | Text.null suffix -> Nothing
-          | otherwise ->
-            let afterKey = Text.drop (Text.length key) suffix
-                afterSpace = Text.dropWhile isXmlSpace afterKey
-             in case Text.uncons afterSpace of
-                  Just ('=', afterEquals) ->
-                    quoted (Text.dropWhile isXmlSpace afterEquals)
-                  _ -> search (Text.drop 1 suffix)
-    quoted value =
-      case Text.uncons value of
-        Just ('\'', rest) -> Just (Text.takeWhile (/= '\'') rest)
-        Just ('"', rest) -> Just (Text.takeWhile (/= '"') rest)
-        _ -> Nothing
+      let (name, afterName) = Text.span isXmlNameCharacter remaining
+          afterSpace = Text.dropWhile isXmlSpace afterName
+       in if Text.null name
+            then Nothing
+            else case Text.uncons afterSpace of
+                   Just ('=', afterEquals) -> do
+                     (value, afterValue) <-
+                       quotedValue (Text.dropWhile isXmlSpace afterEquals)
+                     if name == key
+                       then Just value
+                       else search (Text.dropWhile isXmlSpace afterValue)
+                   _ -> Nothing
+
+quotedValue :: Text -> Maybe (Text, Text)
+quotedValue input = do
+  (quote, value) <- Text.uncons input
+  if quote == '\'' || quote == '"'
+    then do
+      let (literal, closing) = Text.break (== quote) value
+      (_, remaining) <- Text.uncons closing
+      pure (literal, remaining)
+    else Nothing
+
+isXmlNameCharacter :: Char -> Bool
+isXmlNameCharacter character =
+  character `elem` ['a' .. 'z']
+    || character `elem` ['A' .. 'Z']
+    || character `elem` ['0' .. '9']
+    || character `elem` ['_', '-', '.', ':']
 
 isXmlSpace :: Char -> Bool
 isXmlSpace character = character `elem` [' ', '\t', '\r', '\n']
 
 isUtf8Name :: Text -> Bool
 isUtf8Name = (== "utf-8") . Text.toCaseFold
-
-containsUnsafeXml :: Text -> Bool
-containsUnsafeXml = scan
-  where
-    scan remaining
-      | Text.null remaining = False
-      | "<!--" `Text.isPrefixOf` remaining =
-        scanAfter "-->" (Text.drop 4 remaining)
-      | "<![CDATA[" `Text.isPrefixOf` remaining =
-        scanAfter "]]>" (Text.drop 9 remaining)
-      | "<?" `Text.isPrefixOf` remaining =
-        scanAfter "?>" (Text.drop 2 remaining)
-      | "<!DOCTYPE" `Text.isPrefixOf` remaining = True
-      | "<!ENTITY" `Text.isPrefixOf` remaining = True
-      | "&" `Text.isPrefixOf` remaining =
-        case Text.breakOn ";" (Text.drop 1 remaining) of
-          (_, suffix)
-            | Text.null suffix -> scan (Text.drop 1 remaining)
-          (name, suffix) ->
-            if safeEntity name
-              then scan (Text.drop 1 suffix)
-              else True
-      | otherwise = scan (Text.drop 1 remaining)
-    scanAfter marker remaining =
-      case Text.breakOn marker remaining of
-        (_, suffix)
-          | Text.null suffix -> False
-          | otherwise -> scan (Text.drop (Text.length marker) suffix)
-
-safeEntity :: Text -> Bool
-safeEntity name =
-  name `elem` ["amp", "lt", "gt", "quot", "apos"] || "#" `Text.isPrefixOf` name
 
 documentLocation :: SourcePosition
 documentLocation =

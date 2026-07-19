@@ -25,6 +25,9 @@ projectionTests =
         "every concrete defect constructor maps to its catalog tag"
         defectConstructorMappingTest
     , testCase
+        "resource defects retain their stable diagnostic contract"
+        resourceDefectContractTest
+    , testCase
         "relation projection covers the Core registry"
         registryCoverageTest
     , testCase "projected relation crosses Structure" projectionBoundaryTest
@@ -43,17 +46,17 @@ defectCatalogTest = do
   let tags = [minBound .. maxBound]
       specs = map amxDefectTagSpec tags
       codes = map (diagnosticCodeText . specCode) specs
-  length tags @?= 33
+  length tags @?= 38
   length codes @?= length (stableUnique codes)
   assertBool
     "Decode catalog codes must retain their namespace"
-    (all ("o2i.amx.decode." `Text.isPrefixOf`) (take 7 codes))
+    (all ("o2i.amx.decode." `Text.isPrefixOf`) (take 12 codes))
   assertBool
     "View catalog codes must retain their namespace"
-    (all ("o2i.amx.view." `Text.isPrefixOf`) (take 10 (drop 7 codes)))
+    (all ("o2i.amx.view." `Text.isPrefixOf`) (take 10 (drop 12 codes)))
   assertBool
     "Profile catalog codes must retain their namespace"
-    (all ("o2i.amx.profile." `Text.isPrefixOf`) (drop 17 codes))
+    (all ("o2i.amx.profile." `Text.isPrefixOf`) (drop 22 codes))
 
 defectConstructorMappingTest :: Assertion
 defectConstructorMappingTest = do
@@ -73,11 +76,36 @@ decodeDefects :: [AMXDecodeDefect]
 decodeDefects =
   [ MalformedXml
   , UnsafeXml
+  , InputBytesLimitExceeded 10 11
+  , XmlDepthLimitExceeded 10 11
+  , XmlElementsLimitExceeded 10 11
+  , XmlAttributesLimitExceeded 10 11
+  , XmlTextLimitExceeded 10 11
   , InvalidUtf8
   , UnsupportedXmlEncoding "UTF-16"
   , UnexpectedRootQName (expandedQName (Just "urn:test") 'm' "odel")
   , MissingNativeVersion
   , UnsupportedNativeVersion "4.0.0"
+  ]
+
+resourceDefectContractTest :: Assertion
+resourceDefectContractTest = mapM_ assertContract resourceDefectContracts
+  where
+    assertContract (defect, expectedCode) = do
+      let specification = amxDecodeDefectSpec defect
+      diagnosticCodeText (specCode specification) @?= expectedCode
+      specSeverity specification @?= ErrorSeverity
+      specDisposition specification @?= ProcessFailure
+      specSubjects specification
+        @?= [DiagnosticSubject "limit" "10", DiagnosticSubject "observed" "11"]
+
+resourceDefectContracts :: [(AMXDecodeDefect, Text.Text)]
+resourceDefectContracts =
+  [ (InputBytesLimitExceeded 10 11, "o2i.amx.decode.resource.input-bytes")
+  , (XmlDepthLimitExceeded 10 11, "o2i.amx.decode.resource.xml-depth")
+  , (XmlElementsLimitExceeded 10 11, "o2i.amx.decode.resource.xml-elements")
+  , (XmlAttributesLimitExceeded 10 11, "o2i.amx.decode.resource.xml-attributes")
+  , (XmlTextLimitExceeded 10 11, "o2i.amx.decode.resource.xml-text")
   ]
 
 viewDefects :: [AMXViewDefect]
