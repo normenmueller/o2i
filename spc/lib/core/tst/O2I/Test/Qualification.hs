@@ -277,9 +277,15 @@ assertNeedQualificationErrors expected result =
 minimalQualificationGraph :: RawGraph
 minimalQualificationGraph =
   RawGraph
-    [ RawContextNode strategyId Strategy
+    [ RawContextNode ethosId Ethos
+    , RawContextNode missionId Mission
+    , RawContextNode visionId Vision
+    , RawContextNode strategyId Strategy
     , RawContextNode needId Need
     , RawContextNode situationId Situation
+    , RawPrimitiveNode ethosPrincipleId ethosId Principle
+    , RawPrimitiveNode missionDriverId missionId Driver
+    , RawPrimitiveNode visionObjectiveId visionId Objective
     , RawPrimitiveNode strategyDriverId strategyId Driver
     , RawPrimitiveNode strategyObjectiveId strategyId Objective
     , RawPrimitiveNode strategyPrincipleId strategyId Principle
@@ -289,7 +295,20 @@ minimalQualificationGraph =
     , RawPrimitiveNode needObjectiveId needId Objective
     , RawAnchorNode situationAnchorId BusinessCapability
     ]
-    [ edge strategyDriverId groundsStrategyDriverToObjective strategyObjectiveId
+    [ edge ethosPrincipleId guidesEthosPrincipleToMissionDriver missionDriverId
+    , edge
+        missionDriverId
+        groundsMissionDriverToVisionObjective
+        visionObjectiveId
+    , edge
+        ethosPrincipleId
+        guidesEthosPrincipleToVisionObjective
+        visionObjectiveId
+    , edge
+        visionObjectiveId
+        orientsVisionObjectiveToStrategyObjective
+        strategyObjectiveId
+    , edge strategyDriverId groundsStrategyDriverToObjective strategyObjectiveId
     , edge strategyPrincipleId guidesStrategyPrincipleToAction strategyActionId
     , edge
         strategyActionId
@@ -363,7 +382,7 @@ unqualifiedTwoStrategyGraph =
         RawContextNode secondStrategyId Strategy
           : secondStrategyNodes
           ++ rawNodes unqualifiedNeedGraph
-    , rawEdges = secondStrategyCoherenceEdges ++ rawEdges unqualifiedNeedGraph
+    , rawEdges = secondStrategyMinimumEdges ++ rawEdges unqualifiedNeedGraph
     }
 
 sampleNeedQualificationProposal :: RawNeedQualificationProposal
@@ -400,6 +419,6 @@ multiplyQualifyingGraph =
               secondStrategyKeyResultId
               translatesStrategyKeyResultToNeedObjective
               needObjectiveId
-          : secondStrategyCoherenceEdges
+          : secondStrategyMinimumEdges
           ++ rawEdges sampleGraph
     }

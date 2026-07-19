@@ -132,6 +132,7 @@ module O2I
   , witnessPremises
   , effectTraces
   , traceIdentifier
+  , effectTraceIdText
   , lookupEffectTrace
   , traceVision
   , traceVisionObjective

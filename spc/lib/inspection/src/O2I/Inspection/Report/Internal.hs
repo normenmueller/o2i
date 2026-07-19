@@ -27,6 +27,7 @@ module O2I.Inspection.Report.Internal
   , reportViewResolution
   , reportProfileResolution
   , reportScopeResolution
+  , reportSupplementalSources
   , reportStageReports
   , reportDiagnostics
   , reportResult
@@ -47,6 +48,7 @@ import qualified Data.Map.Strict as Map
 import Data.Maybe (catMaybes)
 import Data.Text (Text)
 import O2I.Inspection.Adapter
+import O2I.Inspection.Cardinality
 import O2I.Inspection.Diagnostic
 import O2I.Inspection.Profile
 import O2I.Inspection.Provenance
@@ -191,6 +193,7 @@ data InspectionReport
       ResolvedViewResolution
       ResolvedO2IProfile
       ClosedScopeSummary
+      [SupplementalSource]
       StageReports
       Diagnostics
   deriving (Eq, Show)
@@ -237,7 +240,7 @@ reportRequestInfo report =
     ViewRejectedReport request _ _ _ _ -> request
     ProfileRejectedReport request _ _ _ _ _ -> request
     ScopeRejectedReport request _ _ _ _ _ _ -> request
-    PipelineReport request _ _ _ _ _ _ -> request
+    PipelineReport request _ _ _ _ _ _ _ -> request
 
 -- | Read native binding state without inspecting a report constructor.
 reportNativeBinding :: InspectionReport -> NativeAdapterBinding
@@ -247,7 +250,7 @@ reportNativeBinding report =
     ViewRejectedReport _ binding _ _ _ -> NativeBindingResolved binding
     ProfileRejectedReport _ binding _ _ _ _ -> NativeBindingResolved binding
     ScopeRejectedReport _ binding _ _ _ _ _ -> NativeBindingResolved binding
-    PipelineReport _ binding _ _ _ _ _ -> NativeBindingResolved binding
+    PipelineReport _ binding _ _ _ _ _ _ -> NativeBindingResolved binding
 
 -- | Read View resolution without duplicating the requested selector.
 reportViewResolution :: InspectionReport -> ViewResolution
@@ -257,7 +260,7 @@ reportViewResolution report =
     ViewRejectedReport _ _ failure _ _ -> ViewRejected failure
     ProfileRejectedReport _ _ resolution _ _ _ -> ViewResolved resolution
     ScopeRejectedReport _ _ resolution _ _ _ _ -> ViewResolved resolution
-    PipelineReport _ _ resolution _ _ _ _ -> ViewResolved resolution
+    PipelineReport _ _ resolution _ _ _ _ _ -> ViewResolved resolution
 
 -- | Read root-profile resolution allowed by the report state.
 reportProfileResolution :: InspectionReport -> O2IProfileResolution
@@ -269,7 +272,7 @@ reportProfileResolution report =
       ProfileRejectedResolution rejected
     ScopeRejectedReport _ _ _ resolved _ _ _ ->
       ProfileResolvedResolution resolved
-    PipelineReport _ _ _ resolved _ _ _ -> ProfileResolvedResolution resolved
+    PipelineReport _ _ _ resolved _ _ _ _ -> ProfileResolvedResolution resolved
 
 -- | Read semantic-scope resolution allowed by the report state.
 reportScopeResolution :: InspectionReport -> ScopeResolution
@@ -279,7 +282,17 @@ reportScopeResolution report =
     ViewRejectedReport {} -> ScopeUnavailable
     ProfileRejectedReport {} -> ScopeUnavailable
     ScopeRejectedReport _ _ _ _ failure _ _ -> ScopeRejectedResolution failure
-    PipelineReport _ _ _ _ summary _ _ -> ScopeResolved summary
+    PipelineReport _ _ _ _ summary _ _ _ -> ScopeResolved summary
+
+-- | Read supplemental source identities actually consumed by validation.
+reportSupplementalSources :: InspectionReport -> [SupplementalSource]
+reportSupplementalSources report =
+  case report of
+    DecodeRejectedReport {} -> []
+    ViewRejectedReport {} -> []
+    ProfileRejectedReport {} -> []
+    ScopeRejectedReport {} -> []
+    PipelineReport _ _ _ _ _ sources _ _ -> sources
 
 -- | Read the exact eight stage reports.
 reportStageReports :: InspectionReport -> StageReports
@@ -289,7 +302,7 @@ reportStageReports report =
     ViewRejectedReport _ _ _ stages _ -> stages
     ProfileRejectedReport _ _ _ _ stages _ -> stages
     ScopeRejectedReport _ _ _ _ _ stages _ -> stages
-    PipelineReport _ _ _ _ _ stages _ -> stages
+    PipelineReport _ _ _ _ _ _ stages _ -> stages
 
 -- | Read all diagnostics in deterministic order.
 reportDiagnostics :: InspectionReport -> Diagnostics
@@ -299,7 +312,7 @@ reportDiagnostics report =
     ViewRejectedReport _ _ _ _ diagnostics -> diagnostics
     ProfileRejectedReport _ _ _ _ _ diagnostics -> diagnostics
     ScopeRejectedReport _ _ _ _ _ _ diagnostics -> diagnostics
-    PipelineReport _ _ _ _ _ _ diagnostics -> diagnostics
+    PipelineReport _ _ _ _ _ _ _ diagnostics -> diagnostics
 
 -- | Derive the result solely from stage states.
 reportResult :: InspectionReport -> InspectionResult
@@ -398,6 +411,8 @@ inspectionReportValue report =
      , "inspectionState" .= inspectionStateText report
      , "request" .= requestValue (reportRequestInfo report)
      , "nativeBinding" .= nativeBindingValue (reportNativeBinding report)
+     , "supplementalSources"
+         .= map supplementalSourceValue (reportSupplementalSources report)
      ]
        ++ catMaybes
             [ viewResolutionField (reportViewResolution report)
@@ -587,8 +602,26 @@ diagnosticValue diagnostic =
     , "message" .= diagnosticMessage diagnostic
     , "subjects" .= map subjectValue (diagnosticSubjects diagnostic)
     , "locations" .= map locationValue (diagnosticLocations diagnostic)
+    , "supplementalSources"
+        .= map
+             supplementalSourceValue
+             (diagnosticSupplementalSources diagnostic)
     , "data" .= Map.map diagnosticAtomValue (diagnosticData diagnostic)
     ]
+
+supplementalSourceValue :: SupplementalSource -> Value
+supplementalSourceValue supplemental =
+  object
+    [ "kind" .= supplementalInputKindText (supplementalInputKind supplemental)
+    , "source" .= sourceIdentityValue (supplementalSourceIdentity supplemental)
+    ]
+
+supplementalInputKindText :: SupplementalInputKind -> Text
+supplementalInputKindText kind =
+  case kind of
+    StrategySupplement -> "strategy"
+    ReadinessSupplement -> "readiness"
+    EvidenceSupplement -> "evidence"
 
 subjectValue :: DiagnosticSubject -> Value
 subjectValue subject =
@@ -662,7 +695,7 @@ observedViewValue observation =
     MultipleViewMatches candidates ->
       object
         [ "kind" .= ("multiple" :: Text)
-        , "matches" .= map viewCandidateValue (NonEmpty.toList candidates)
+        , "matches" .= map viewCandidateValue (atLeastTwoToList candidates)
         ]
 
 viewCandidateValue :: ViewCandidate -> Value
@@ -681,7 +714,7 @@ observedProfileValue observation =
       object ["kind" .= ("one" :: Text), "values" .= [version]]
     MultipleO2IProfiles versions ->
       object
-        ["kind" .= ("multiple" :: Text), "values" .= NonEmpty.toList versions]
+        ["kind" .= ("multiple" :: Text), "values" .= atLeastTwoToList versions]
 
 encodingObservationValue :: EncodingObservation -> Value
 encodingObservationValue observation =

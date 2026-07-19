@@ -143,6 +143,10 @@ publication claim derived from them.
   type-theory, and idiomatic Haskell expertise during design and implementation.
 - The co-author may propose or implement bounded changes with explicit file
   ownership and must preserve concurrent work.
+- Assign external co-author implementation work in small, semantically
+  coherent batches with one independently verifiable outcome. Do not combine
+  unrelated findings into one long-running assignment; review and verify each
+  batch before issuing the next.
 - A separate independent final reviewer remains mandatory.
 
 # Haskell Design Discipline

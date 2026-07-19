@@ -1,0 +1,126 @@
+cabal-version: 3.0
+
+name: o2i-cli
+version: 0.2.0.0
+synopsis: Deterministic command-line inspection for O2I models.
+category: Formal Methods, Modelling
+description:
+  The O2I CLI composes native-format adapters with the format-neutral
+  inspection pipeline, renders deterministic human or JSON reports, and keeps
+  process diagnostics separate from report output.
+license: Apache-2.0
+license-file: LICENSE
+author: Normen Mueller
+maintainer: normen.mueller@gmail.com
+build-type: Simple
+data-files:
+  tst/data/malformed.archimate
+  tst/data/partial-strategy.archimate
+  tst/golden/help.txt
+  tst/golden/inspect-human.txt
+  tst/golden/inspect-json.json
+
+flag werror
+  description: Treat compiler warnings as errors during development.
+  default: False
+  manual: True
+
+common warnings
+  ghc-options:
+    -Wall
+    -Wincomplete-patterns
+  if flag(werror)
+    ghc-options:
+      -Werror
+
+common language
+  default-language: Haskell2010
+
+library o2i-cli-internal
+  import:
+    warnings,
+    language
+  visibility: private
+  exposed-modules:
+    O2I.Cli,
+    O2I.Cli.Command,
+    O2I.Cli.Command.Inspect,
+    O2I.Cli.Input,
+    O2I.Cli.Options,
+    O2I.Cli.Output
+  autogen-modules:
+    Paths_o2i_cli
+  other-modules:
+    Paths_o2i_cli
+  build-depends:
+    base >=4.18 && <4.19,
+    bytestring >=0.11 && <0.12,
+    o2i-amx ==0.2.0.0,
+    o2i-inspection ==0.2.0.0,
+    optparse-applicative >=0.18 && <0.20,
+    text >=2.0 && <2.1
+  hs-source-dirs:
+    src/lib
+
+executable o2i
+  import:
+    warnings,
+    language
+  main-is: Main.hs
+  build-depends:
+    base >=4.18 && <4.19,
+    o2i-cli:o2i-cli-internal
+  hs-source-dirs:
+    src/app
+
+test-suite o2i-cli-test
+  import:
+    warnings,
+    language
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+    O2I.Cli.Test.Input,
+    O2I.Cli.Test.Options,
+    O2I.Cli.Test.Output,
+    O2I.Cli.Test.Process,
+    O2I.Cli.Test.Schema,
+    O2I.Cli.Test.Support,
+    Paths_o2i_cli
+  autogen-modules:
+    Paths_o2i_cli
+  build-depends:
+    aeson >=2.2 && <2.3,
+    base >=4.18 && <4.19,
+    bytestring >=0.11 && <0.12,
+    directory >=1.3 && <1.4,
+    o2i-cli:o2i-cli-internal,
+    o2i-inspection ==0.2.0.0,
+    optparse-applicative >=0.18 && <0.20,
+    process >=1.6 && <1.7,
+    tasty >=1.4 && <1.6,
+    tasty-hunit >=0.10 && <0.11,
+    text >=2.0 && <2.1
+  build-tool-depends:
+    o2i-cli:o2i
+  hs-source-dirs:
+    tst
+
+test-suite o2i-cli-api-test
+  import:
+    warnings,
+    language
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+    ApiContractTH
+  build-depends:
+    base >=4.18 && <4.19,
+    o2i-cli:o2i-cli-internal,
+    template-haskell >=2.20 && <2.21
+  hs-source-dirs:
+    tst/api
+
+source-repository head
+  type: git
+  location: https://github.com/normenmueller/o2i.git

@@ -19,6 +19,7 @@ module O2I.Validation.Trace
   , effectTraces
   , lookupEffectTrace
   , traceIdentifier
+  , effectTraceIdText
   , traceVision
   , traceVisionObjective
   , traceStrategy
@@ -44,6 +45,11 @@ module O2I.Validation.Trace
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
+import Data.Text (Text)
+import qualified Data.Text as Text
+import qualified Data.Text.Lazy as LazyText
+import qualified Data.Text.Lazy.Builder as TextBuilder
+import qualified Data.Text.Lazy.Builder.Int as TextBuilder
 import Data.Validation (Validation(..))
 import O2I.Graph.Macro
 import O2I.Graph.Raw
@@ -209,6 +215,46 @@ lookupEffectTrace model identifier = Map.lookup identifier (traceIndex model)
 -- | Read the stable identity of an effect trace.
 traceIdentifier :: EffectTrace -> EffectTraceId
 traceIdentifier = effectTraceIdentifier
+
+-- | Canonically encode every constituent of an opaque effect-trace identity.
+--
+-- The versioned length framing is injective for arbitrary node identifier text
+-- and independent of derived 'Show' representations.
+effectTraceIdText :: EffectTraceId -> Text
+effectTraceIdText (EffectTraceId (EffectTraceKey vision visionObjective strategy strategyDriver strategyObjective strategyKeyResult strategyAction need needDriver needObjective intervention interventionAction interventionKeyResult measure measurePerformanceDimension measureKPI situation situationAnchor)) =
+  canonicalSequence
+    ("o2i-effect-trace-v1"
+       : map
+           rawNodeIdText
+           [ vision
+           , visionObjective
+           , strategy
+           , strategyDriver
+           , strategyObjective
+           , strategyKeyResult
+           , strategyAction
+           , need
+           , needDriver
+           , needObjective
+           , intervention
+           , interventionAction
+           , interventionKeyResult
+           , measure
+           , measurePerformanceDimension
+           , measureKPI
+           , situation
+           , situationAnchor
+           ])
+
+canonicalSequence :: [Text] -> Text
+canonicalSequence values =
+  decimalText (length values) <> ";" <> Text.concat (map canonicalText values)
+
+canonicalText :: Text -> Text
+canonicalText value = decimalText (Text.length value) <> ":" <> value
+
+decimalText :: Integral number => number -> Text
+decimalText = LazyText.toStrict . TextBuilder.toLazyText . TextBuilder.decimal
 
 -- | Read the Vision that orients the traced Strategy.
 traceVision :: EffectTrace -> ContextRef 'Vision

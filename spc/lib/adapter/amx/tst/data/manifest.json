@@ -1,0 +1,179 @@
+{
+  "schema": "o2i.amx.fixtures/v1",
+  "producerOracle": {
+    "name": "Archi",
+    "version": "5.9.0",
+    "nativeVersion": "5.0.0",
+    "o2iProfile": "0.2"
+  },
+  "valid": [
+    {
+      "path": "valid/native/minimal.archimate",
+      "origin": "saved by the user with Archi 5.9.0",
+      "producerVersion": "5.9.0",
+      "sha256": "359b5309a7c66ab3e090ec29f0c5ef135c361825ae0cc7797b5560ae80acff01",
+      "rootQName": "{http://www.archimatetool.com/archimate}model",
+      "nativeVersion": "5.0.0",
+      "modelId": "id-38b61e2f53db4787b817eebd3632eb7f",
+      "views": [
+        {
+          "name": "Default View",
+          "id": "id-e88788554b2449deb90b0f5676c4ce01"
+        }
+      ],
+      "o2iProfile": null,
+      "contract": "decode-only",
+      "expected": {
+        "decode": "passed",
+        "inspectableO2I": false
+      }
+    },
+    {
+      "path": "valid/orientation/ethos.archimate",
+      "origin": "saved by the user with Archi 5.9.0",
+      "producerVersion": "5.9.0",
+      "sha256": "ee3d6bc92a002174f1c93c38bd6081b43bda2e1916f9eb30cbd72b65400771e1",
+      "rootQName": "{http://www.archimatetool.com/archimate}model",
+      "nativeVersion": "5.0.0",
+      "modelId": "id-fdeb02e8264f47299b4a570691c82ca6",
+      "views": [
+        {
+          "name": "O2I Reference - Ethos",
+          "id": "id-fad6c1265c8c4623ab29335326eb23f2"
+        }
+      ],
+      "o2iProfile": "0.2",
+      "contract": "through-semantics",
+      "expected": {
+        "nodes": [
+          {
+            "id": "id-d7c54b15cb1e407eaa770b6769fad6ee",
+            "kind": "Primitive",
+            "type": "Principle",
+            "owner": "id-14b8dcb25f204fe0903e308d7a38f438"
+          },
+          {
+            "id": "id-14b8dcb25f204fe0903e308d7a38f438",
+            "kind": "Context",
+            "type": "Ethos"
+          }
+        ],
+        "edges": [],
+        "semantics": "passed"
+      },
+      "persistedOwnership": {
+        "id": "id-f358d3cc5eea46dc87ac1a2af988d65e",
+        "type": "CompositionRelationship",
+        "name": "contains",
+        "source": "id-14b8dcb25f204fe0903e308d7a38f438",
+        "target": "id-d7c54b15cb1e407eaa770b6769fad6ee"
+      }
+    }
+  ],
+  "pendingValidReferenceContract": "valid/catalog.json",
+  "invalid": [
+    {
+      "path": "invalid/decode/empty.archimate",
+      "origin": "hand-minimized negative fixture",
+      "stage": "decode",
+      "code": "o2i.amx.decode.xml-malformed"
+    },
+    {
+      "path": "invalid/decode/malformed.archimate",
+      "origin": "hand-minimized negative fixture",
+      "stage": "decode",
+      "code": "o2i.amx.decode.xml-malformed"
+    },
+    {
+      "path": "invalid/decode/unsafe-doctype.archimate",
+      "origin": "hand-minimized negative fixture",
+      "stage": "decode",
+      "code": "o2i.amx.decode.xml-unsafe"
+    },
+    {
+      "path": "invalid/decode/wrong-root.archimate",
+      "origin": "hand-minimized negative fixture",
+      "stage": "decode",
+      "code": "o2i.amx.decode.root-qname"
+    },
+    {
+      "path": "invalid/decode/missing-native-version.archimate",
+      "origin": "hand-minimized negative fixture",
+      "stage": "decode",
+      "code": "o2i.amx.decode.native-version-missing"
+    },
+    {
+      "path": "invalid/decode/unsupported-native-version.archimate",
+      "origin": "hand-minimized negative fixture",
+      "stage": "decode",
+      "code": "o2i.amx.decode.native-version-unsupported"
+    },
+    {
+      "path": "invalid/view/duplicate-view-name.archimate",
+      "origin": "hand-minimized negative fixture",
+      "stage": "view-scope",
+      "code": "o2i.amx.view.name-ambiguous"
+    },
+    {
+      "path": "invalid/view/duplicate-view-id.archimate",
+      "origin": "hand-minimized negative fixture",
+      "stage": "view-scope",
+      "code": "o2i.amx.view.id-ambiguous"
+    },
+    {
+      "path": "invalid/view/unresolved-object.archimate",
+      "origin": "hand-minimized negative fixture",
+      "stage": "view-scope",
+      "code": "o2i.amx.view.object-unresolved"
+    },
+    {
+      "path": "invalid/view/empty-view.archimate",
+      "origin": "hand-minimized negative fixture",
+      "stage": "profile",
+      "code": "o2i.inspection.scope.empty"
+    },
+    {
+      "path": "invalid/profile/missing-profile.archimate",
+      "origin": "hand-minimized negative fixture",
+      "stage": "profile",
+      "code": "o2i.amx.profile.missing"
+    },
+    {
+      "path": "invalid/profile/unsupported-profile.archimate",
+      "origin": "hand-minimized negative fixture",
+      "stage": "profile",
+      "code": "o2i.amx.profile.unsupported"
+    },
+    {
+      "path": "invalid/profile/duplicate-profile.archimate",
+      "origin": "hand-minimized negative fixture",
+      "stage": "profile",
+      "code": "o2i.amx.profile.duplicate"
+    },
+    {
+      "path": "invalid/profile/legacy-version-property.archimate",
+      "origin": "hand-minimized negative fixture",
+      "stage": "profile",
+      "code": "o2i.amx.profile.legacy-version-property"
+    },
+    {
+      "path": "invalid/profile/missing-kind.archimate",
+      "origin": "hand-minimized negative fixture",
+      "stage": "profile",
+      "code": "o2i.amx.profile.kind-missing"
+    },
+    {
+      "path": "invalid/profile/wrong-element-representation.archimate",
+      "origin": "hand-minimized negative fixture",
+      "stage": "profile",
+      "code": "o2i.amx.profile.element-representation"
+    },
+    {
+      "path": "invalid/profile/missing-ownership.archimate",
+      "origin": "hand-minimized negative fixture",
+      "stage": "profile",
+      "code": "o2i.amx.profile.ownership-missing"
+    }
+  ],
+  "remainingEvidenceRequirement": "The native minimal and Ethos references are admitted. The seven remaining semantic references stay pending until each is genuinely saved by Archi 5.9.0 and manifest-verified."
+}

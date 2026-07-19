@@ -4,8 +4,8 @@
 
 -- | Semantic completeness of structurally valid O2I graphs.
 --
--- This validation stage establishes global Situation and Need invariants and
--- complete, coherent Strategy formulations before effect traces may be derived.
+-- This validation stage establishes global Context minima and complete,
+-- coherent Strategy formulations before effect traces may be derived.
 module O2I.Validation.Semantics
   ( StrategyAnchoring(..)
   , RawStrategyFormulation(..)
@@ -85,7 +85,21 @@ data StrategyTextField
 
 -- | Accumulated semantic invariant violations.
 data ModelInvariantError
-  = SituationWithoutConstitutingAnchor RawNodeId
+  = EthosWithoutPrinciple RawNodeId
+    -- ^ An Ethos has no Principle expressing its normative content.
+  | MissionWithoutDriver RawNodeId
+    -- ^ A Mission has no Driver expressing its enduring contribution.
+  | MissionWithoutEthosGuidance RawNodeId
+    -- ^ No Ethos Principle guides a Driver owned by the Mission.
+  | VisionWithoutObjective RawNodeId
+    -- ^ A Vision has no Objective expressing an intended future state.
+  | VisionWithoutMissionGrounding RawNodeId
+    -- ^ No Mission Driver grounds an Objective owned by the Vision.
+  | VisionWithoutEthosGuidance RawNodeId
+    -- ^ No Ethos Principle guides an Objective owned by the Vision.
+  | StrategyIntentWithoutVisionOrientation RawNodeId RawNodeId
+    -- ^ No Vision Objective orients the Strategy formulation's intent.
+  | SituationWithoutConstitutingAnchor RawNodeId
     -- ^ A Situation has no admissible anchor that constitutes it.
   | NeedWithoutDriver RawNodeId
     -- ^ A Need has no Driver that states its situated motivation.
@@ -97,6 +111,18 @@ data ModelInvariantError
     -- ^ A Need Driver is not attached to a constituent Situation anchor.
   | UngroundedNeedObjective RawNodeId RawNodeId
     -- ^ A Need Objective is not grounded by a Driver of the same Need.
+  | InterventionWithoutAction RawNodeId
+    -- ^ An Intervention has no Action expressing its intended intervention.
+  | InterventionWithoutKeyResult RawNodeId
+    -- ^ An Intervention has no Key Result expressing its intended outcome.
+  | InterventionWithoutActionContribution RawNodeId
+    -- ^ No owned Intervention Action contributes to an owned Key Result.
+  | MeasureWithoutPerformanceDimension RawNodeId
+    -- ^ A Measure has no owned measurement PerformanceDimension.
+  | MeasureWithoutKPI RawNodeId
+    -- ^ A Measure has no owned KPI expressing an observable quantity.
+  | MeasureWithoutKPIDimensionMembership RawNodeId
+    -- ^ No owned measurement PerformanceDimension contains an owned KPI.
   | StrategyWithoutFormulation RawNodeId
     -- ^ A Strategy context has no submitted formulation.
   | DuplicateStrategyFormulation RawNodeId
@@ -124,7 +150,7 @@ data ModelInvariantError
     -- ^ A required relation between valid formulation roles is absent.
   deriving (Eq, Show)
 
--- | A structurally valid graph with complete Situation, Need, and Strategy
+-- | A structurally valid graph with complete Context minima and Strategy
 -- semantics.
 data SemanticallyValidModel = SemanticallyValidModel
   { semanticallyValidGraph :: WellFormedGraph -- ^ Structurally valid graph.
@@ -133,13 +159,21 @@ data SemanticallyValidModel = SemanticallyValidModel
   }
 
 -- * Semantic validation
--- | Establish global Situation and Need invariants and complete Strategy
--- formulations.
+-- | Establish global Context minima and complete Strategy formulations.
 --
 -- The input graph must already be structurally valid. Independent semantic
--- errors accumulate. Success guarantees every Situation has a constituting
--- anchor, every Need is situated and grounded, and every Strategy has one
--- nonblank, role-correct, coherent formulation.
+-- errors accumulate. Success guarantees every Ethos owns a Principle, every
+-- Mission owns a Driver guided by some Ethos Principle, every Vision owns an
+-- Objective with Mission grounding and Ethos guidance, every Strategy has one
+-- Vision-oriented, nonblank, role-correct, coherent formulation, every
+-- Situation has a constituting anchor, every Need is situated and grounded,
+-- every Intervention connects an owned Action to an owned Key Result, and every
+-- Measure groups an owned KPI in an owned measurement PerformanceDimension.
+--
+-- Orientation evidence is existential per Context requirement. Additional
+-- owned Drivers or Objectives need not repeat the same evidence, and explicit
+-- Context macrorelation edges are not required: persisted Primitive relations
+-- are the semantic basis.
 validateModelSemantics ::
      WellFormedGraph
   -> [RawStrategyFormulation]
@@ -160,10 +194,14 @@ validateModelSemantics graph rawFormulations =
           }
   where
     errors =
-      situationErrors graph
+      orientationErrors graph
+        ++ situationErrors graph
         ++ needErrors graph
+        ++ interventionErrors graph
+        ++ measureErrors graph
         ++ formulationCoverageErrors graph rawFormulations
         ++ concatMap (formulationErrors graph) rawFormulations
+        ++ strategyOrientationErrors graph rawFormulations
 
 -- * Validated model access
 -- | Access the structurally well-formed graph underlying semantic validation.
@@ -218,6 +256,64 @@ qualifyingStrategies semantic need =
     needIdentifier = contextRefId need
     needObjectives = primitiveNodesIn graph needIdentifier Objective
 
+orientationErrors :: WellFormedGraph -> [ModelInvariantError]
+orientationErrors graph =
+  concatMap ethosErrors (contextNodesOf graph Ethos)
+    ++ concatMap missionErrors (contextNodesOf graph Mission)
+    ++ concatMap visionErrors (contextNodesOf graph Vision)
+  where
+    ethosPrinciples = primitivesOwnedBy graph Ethos Principle
+    missionDrivers = primitivesOwnedBy graph Mission Driver
+    ethosErrors ethos =
+      [EthosWithoutPrinciple ethos | null (principlesIn ethos)]
+    missionErrors mission =
+      let drivers = driversIn mission
+       in [MissionWithoutDriver mission | null drivers]
+            ++ [ MissionWithoutEthosGuidance mission
+               | not (null drivers)
+               , not
+                   (hasEvidence
+                      graph
+                      ethosPrinciples
+                      guidesEthosPrincipleToMissionDriver
+                      drivers)
+               ]
+    visionErrors vision =
+      let objectives = objectivesIn vision
+       in [VisionWithoutObjective vision | null objectives]
+            ++ [ VisionWithoutMissionGrounding vision
+               | not (null objectives)
+               , not
+                   (hasEvidence
+                      graph
+                      missionDrivers
+                      groundsMissionDriverToVisionObjective
+                      objectives)
+               ]
+            ++ [ VisionWithoutEthosGuidance vision
+               | not (null objectives)
+               , not
+                   (hasEvidence
+                      graph
+                      ethosPrinciples
+                      guidesEthosPrincipleToVisionObjective
+                      objectives)
+               ]
+    principlesIn owner = primitiveNodesIn graph owner Principle
+    driversIn owner = primitiveNodesIn graph owner Driver
+    objectivesIn owner = primitiveNodesIn graph owner Objective
+
+primitivesOwnedBy :: WellFormedGraph -> Context -> Primitive -> [RawNodeId]
+primitivesOwnedBy graph context primitive =
+  concatMap
+    (\owner -> primitiveNodesIn graph owner primitive)
+    (contextNodesOf graph context)
+
+hasEvidence ::
+     WellFormedGraph -> [RawNodeId] -> Relation from to -> [RawNodeId] -> Bool
+hasEvidence graph sources relation targets =
+  any (\source -> any (hasRelation graph source relation) targets) sources
+
 situationErrors :: WellFormedGraph -> [ModelInvariantError]
 situationErrors graph =
   [ SituationWithoutConstitutingAnchor situation
@@ -271,6 +367,53 @@ surfacingSituations graph need =
   , hasRelation graph situation surfacesNeed need
   ]
 
+interventionErrors :: WellFormedGraph -> [ModelInvariantError]
+interventionErrors graph =
+  concatMap errorsForIntervention (contextNodesOf graph Intervention)
+  where
+    errorsForIntervention intervention =
+      [InterventionWithoutAction intervention | null actions]
+        ++ [InterventionWithoutKeyResult intervention | null keyResults]
+        ++ [ InterventionWithoutActionContribution intervention
+           | not (null actions)
+           , not (null keyResults)
+           , not
+               (hasEvidence
+                  graph
+                  actions
+                  contributesInterventionActionToKeyResult
+                  keyResults)
+           ]
+      where
+        actions = primitiveNodesIn graph intervention Action
+        keyResults = primitiveNodesIn graph intervention KeyResult
+
+measureErrors :: WellFormedGraph -> [ModelInvariantError]
+measureErrors graph = concatMap errorsForMeasure (contextNodesOf graph Measure)
+  where
+    errorsForMeasure measure =
+      [MeasureWithoutPerformanceDimension measure | null dimensions]
+        ++ [MeasureWithoutKPI measure | null kpis]
+        ++ [ MeasureWithoutKPIDimensionMembership measure
+           | not (null dimensions)
+           , not (null kpis)
+           , not
+               (hasEvidence
+                  graph
+                  dimensions
+                  (containsPerformanceDimension MeasureMeasurementDimension)
+                  kpis)
+           ]
+      where
+        dimensions =
+          map
+            unNodeId
+            (performanceDimensionNodesIn
+               graph
+               (mkContextRef measure)
+               MeasureMeasurementDimension)
+        kpis = primitiveNodesIn graph measure KPI
+
 formulationCoverageErrors ::
      WellFormedGraph -> [RawStrategyFormulation] -> [ModelInvariantError]
 formulationCoverageErrors graph formulations = missingErrors ++ duplicateErrors
@@ -286,6 +429,27 @@ formulationCoverageErrors graph formulations = missingErrors ++ duplicateErrors
       [ DuplicateStrategyFormulation strategy
       | strategy <- duplicates formulationIds
       ]
+
+strategyOrientationErrors ::
+     WellFormedGraph -> [RawStrategyFormulation] -> [ModelInvariantError]
+strategyOrientationErrors graph formulations =
+  concatMap errorsForStrategy (contextNodesOf graph Strategy)
+  where
+    visionObjectives = primitivesOwnedBy graph Vision Objective
+    errorsForStrategy strategy =
+      case filter ((== strategy) . rawFormulationStrategy) formulations of
+        [formulation]
+          | validPrimitiveReference graph strategy Objective intent ->
+            [ StrategyIntentWithoutVisionOrientation strategy intent
+            | not
+                (hasEvidence
+                   graph
+                   visionObjectives
+                   orientsVisionObjectiveToStrategyObjective
+                   [intent])
+            ]
+          where intent = rawFormulationIntent formulation
+        _ -> []
 
 formulationErrors ::
      WellFormedGraph -> RawStrategyFormulation -> [ModelInvariantError]
@@ -461,4 +625,4 @@ anchorNeedDriverRelationNames =
   ]
 
 duplicates :: Ord value => [value] -> [value]
-duplicates = map head . filter ((> 1) . length) . group . sort
+duplicates values = [first | first:_:_ <- group (sort values)]

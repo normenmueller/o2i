@@ -5,11 +5,12 @@ override this snapshot.
 
 # Snapshot
 
-- Observed at: 2026-07-18 CEST.
-- Mode: `READY_FOR_IMPLEMENTATION`.
+- Observed at: 2026-07-19 CEST.
+- Mode: `FINAL_REVIEW`.
 - Branch/upstream: `trunk` / `origin/trunk`; inspect Git for the current delta.
-- Active objective: approve, implement, and verify the generic O2I AMX
-  inspection architecture before returning to the DB Fv orientation instance.
+- Active objective: independently review the implemented generic O2I model
+  inspection, AMX adapter, and CLI before returning to the DB Fv orientation
+  instance.
 - The user controls every push.
 
 # Approved Baseline
@@ -34,8 +35,8 @@ override this snapshot.
 
 # Active Architecture Gate
 
-- The target package DAG is `o2i-inspection -> o2i`,
-  `o2i-amx -> o2i-inspection + o2i`, and
+- The package DAG is `o2i-inspection -> o2i-core`,
+  `o2i-amx -> o2i-inspection + o2i-core`, and
   `o2i-cli -> o2i-inspection + o2i-amx`.
 - The CLI is a thin `optparse-applicative` composition root; reusable model
   inspection stays in libraries.
@@ -57,18 +58,24 @@ override this snapshot.
 - The O2I model uses the direct root property `o2i.profile=0.2`.
 - The extractor enforces that profile, rejects the legacy `version=0.2`
   property, and has 28 passing contract tests.
-- Model/snapshot checks and `git diff --check` pass for the current scope.
-- The existing semantic core remains unchanged: `cabal check`, both test suites
-  under `-Werror`, 197 domain tests, and API contracts passed at the baseline.
-- Productive CLI, inspection, and AMX packages do not yet exist.
+- The format-neutral Inspection library, native AMX adapter, and thin CLI are
+  implemented with opaque staged artifacts, exact View selection, source
+  provenance, stable diagnostics, and deterministic human or JSON reports.
+- All four packages pass `cabal check`; all eight Cabal test suites pass under
+  `-Werror`; all 85 Haskell files pass HIndent validation; Haddock, package
+  licenses, extractor snapshots, 28 extractor tests, Pandoc expansion, PDF
+  rendering, CLI help/version smoke tests, and `git diff --check` pass.
+- Every implementation-review finding is closed in the worktree. The resulting
+  implementation still requires one separate read-only final review.
 
 # Next Work
 
-1. Implement the four-package design, schemas, fixtures, diagnostics, CLI, and
-   tests with the external Haskell co-author against frozen `pln.md`.
-2. Run Cabal, HIndent, Haddock, extractor, Pandoc/PDF, stdin/JSON/determinism,
-   and final six-dimension external review gates.
-3. Create one reviewed local O2I commit; never push without explicit request.
+1. Create a local technical checkpoint commit; never push without explicit
+   request.
+2. Run one independent read-only review with explicit per-dimension scores;
+   close every finding in small coherent batches and repeat the review.
+3. Present the final eight-Context minimum-contract matrix to the user and
+   create the reviewed local O2I commit.
 4. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
    Ethos/Mission/Vision, then continue the interrupted `wtf.md` review at Vision
    and the top-down `o2i.md` review.

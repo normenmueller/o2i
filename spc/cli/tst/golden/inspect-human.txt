@@ -1,0 +1,14 @@
+O2I inspection: partial
+Source: <stdin> (stdin)
+SHA-256: 6adc62d01690e46fc7158df3d200b1064839a1f2a024dacce7a6aba911be8926
+Adapter: Archi Model XML (amx 0.2)
+View: name "CLI Scope"
+Stages:
+  decode       passed
+  view-scope   passed
+  profile      passed
+  structure    passed
+  semantics    unavailable
+  traceability not-run (unavailable semantics)
+  readiness    not-run (unavailable semantics)
+  evidence     not-run (unavailable semantics)

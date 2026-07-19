@@ -648,21 +648,6 @@ unlistedStrategyPathGraph =
                 && isContextId (rawEdgeTo candidate)))
         sampleEdges
 
-unlistedOrientsGraph :: RawGraph
-unlistedOrientsGraph =
-  replaceStrategyEvidence
-    [RawPrimitiveNode unlistedStrategyObjectiveId strategyId Objective]
-    [ edge
-        visionObjectiveId
-        orientsVisionObjectiveToStrategyObjective
-        strategyObjectiveId
-    ]
-    [ edge
-        visionObjectiveId
-        orientsVisionObjectiveToStrategyObjective
-        unlistedStrategyObjectiveId
-    ]
-
 unlistedQualifiesGraph :: RawGraph
 unlistedQualifiesGraph =
   replaceStrategyEvidence
@@ -773,10 +758,7 @@ twoStrategyGraph macro addedNodes addedEdges =
           ++ addedNodes
           ++ rawNodes sampleGraph
     , rawEdges =
-        macro
-          : secondStrategyCoherenceEdges
-          ++ addedEdges
-          ++ rawEdges sampleGraph
+        macro : secondStrategyMinimumEdges ++ addedEdges ++ rawEdges sampleGraph
     }
 
 secondStrategyNodes :: [RawNode]
@@ -807,6 +789,14 @@ secondStrategyCoherenceEdges =
       substantiatesStrategyKeyResultObjective
       secondStrategyObjectiveId
   ]
+
+secondStrategyMinimumEdges :: [RawEdge]
+secondStrategyMinimumEdges =
+  edge
+    visionObjectiveId
+    orientsVisionObjectiveToStrategyObjective
+    secondStrategyObjectiveId
+    : secondStrategyCoherenceEdges
 
 secondStrategyFormulation :: RawStrategyFormulation
 secondStrategyFormulation =
@@ -850,7 +840,9 @@ isContextNode _ = False
 isContextId :: RawNodeId -> Bool
 isContextId identifier =
   identifier
-    `elem` [ visionId
+    `elem` [ ethosId
+           , missionId
+           , visionId
            , strategyId
            , needId
            , interventionId
@@ -867,12 +859,16 @@ graphWithAnchor anchor =
 
 sampleNodes :: [RawNode]
 sampleNodes =
-  [ RawContextNode visionId Vision
+  [ RawContextNode ethosId Ethos
+  , RawContextNode missionId Mission
+  , RawContextNode visionId Vision
   , RawContextNode strategyId Strategy
   , RawContextNode needId Need
   , RawContextNode interventionId Intervention
   , RawContextNode measureId Measure
   , RawContextNode situationId Situation
+  , RawPrimitiveNode ethosPrincipleId ethosId Principle
+  , RawPrimitiveNode missionDriverId missionId Driver
   , RawPrimitiveNode visionObjectiveId visionId Objective
   , RawPrimitiveNode strategyDriverId strategyId Driver
   , RawPrimitiveNode strategyObjectiveId strategyId Objective
@@ -954,6 +950,12 @@ sampleEdges =
   , edge interventionKeyResultId setsTargetForMeasureKPI measureKpiId
   , anchorEdge interventionActionId changesAnchor situationAnchorId
   , anchorEdge measureKpiId measuresAnchor situationAnchorId
+  , edge ethosPrincipleId guidesEthosPrincipleToMissionDriver missionDriverId
+  , edge missionDriverId groundsMissionDriverToVisionObjective visionObjectiveId
+  , edge
+      ethosPrincipleId
+      guidesEthosPrincipleToVisionObjective
+      visionObjectiveId
   ]
 
 edge :: RawNodeId -> Relation from to -> RawNodeId -> RawEdge
@@ -1031,10 +1033,16 @@ macroWithoutEvidenceGraph :: RawGraph
 macroWithoutEvidenceGraph =
   sampleGraph
     { rawNodes =
-        RawContextNode ethosId Ethos
-          : RawContextNode missionId Mission
+        RawContextNode secondMissionId Mission
+          : RawPrimitiveNode secondMissionDriverId secondMissionId Driver
           : rawNodes sampleGraph
-    , rawEdges = edge ethosId guidesMission missionId : rawEdges sampleGraph
+    , rawEdges =
+        edge secondMissionId groundsVision visionId
+          : edge
+              ethosPrincipleId
+              guidesEthosPrincipleToMissionDriver
+              secondMissionDriverId
+          : rawEdges sampleGraph
     }
 
 planForTrace :: EffectTrace -> EvidencePlan
@@ -1174,6 +1182,11 @@ strategyId = RawNodeId "strategy"
 
 needId = RawNodeId "need"
 
+secondMissionId, secondMissionDriverId :: RawNodeId
+secondMissionId = RawNodeId "second-mission"
+
+secondMissionDriverId = RawNodeId "second-mission-driver"
+
 additionalNeedId, interventionId :: RawNodeId
 additionalNeedId = RawNodeId "additional-need"
 
@@ -1186,9 +1199,14 @@ situationId = RawNodeId "situation"
 
 missingId = RawNodeId "missing"
 
-visionObjectiveId, strategyDriverId, strategyObjectiveId :: RawNodeId
+ethosPrincipleId, missionDriverId, visionObjectiveId :: RawNodeId
+ethosPrincipleId = RawNodeId "ethos-principle"
+
+missionDriverId = RawNodeId "mission-driver"
+
 visionObjectiveId = RawNodeId "vision-objective"
 
+strategyDriverId, strategyObjectiveId :: RawNodeId
 strategyDriverId = RawNodeId "strategy-driver"
 
 strategyObjectiveId = RawNodeId "strategy-objective"

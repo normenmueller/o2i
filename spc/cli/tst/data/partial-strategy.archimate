@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:archimate="http://www.archimatetool.com/archimate" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="5.0.0">
+  <folder>
+    <element xsi:type="archimate:Grouping" id="strategy" name="Purpose-built Strategy">
+      <property key="o2i.kind" value="Context"/>
+      <property key="o2i.type" value="Strategy"/>
+    </element>
+    <element xsi:type="archimate:ArchimateDiagramModel" id="view" name="CLI Scope">
+      <child xsi:type="archimate:DiagramObject" id="strategy-object" archimateElement="strategy"/>
+    </element>
+  </folder>
+  <property key="o2i.profile" value="0.2"/>
+</archimate:model>

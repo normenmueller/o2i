@@ -5,7 +5,9 @@ module O2I.Inspection.Profile
   , ResolvedO2IProfile
   , resolvedProfileVersion
   , resolveProfileVersion
-  , ObservedProfileFacts(..)
+  , ProfileSnapshot
+  , profileSnapshot
+  , snapshotFact
   , DefectApplicability(..)
   , DeferredProfileDefect(..)
   , RootProjection(..)

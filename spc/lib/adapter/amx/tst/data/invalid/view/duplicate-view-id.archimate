@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:archimate="http://www.archimatetool.com/archimate" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="5.0.0">
+  <folder>
+    <element xsi:type="archimate:ArchimateDiagramModel" id="view" name="A"/>
+    <element xsi:type="archimate:ArchimateDiagramModel" id="view" name="B"/>
+  </folder>
+  <property key="o2i.profile" value="0.2"/>
+</archimate:model>
+

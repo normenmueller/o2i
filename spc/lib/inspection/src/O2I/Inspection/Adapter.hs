@@ -84,5 +84,5 @@ data Adapter where
     -> (document -> ViewSelector -> ViewAttempt viewDefect selectedView)
     -> (viewDefect -> DiagnosticSpec)
     -> O2IProfileContract profileFact profileDefect
-    -> (document -> selectedView -> ObservedProfileFacts profileFact)
+    -> (document -> selectedView -> ProfileSnapshot profileFact)
     -> Adapter

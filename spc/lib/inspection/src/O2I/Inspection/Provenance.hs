@@ -1,14 +1,25 @@
 -- | Stable source identities and occurrence-level provenance.
 module O2I.Inspection.Provenance
   ( SourceInputKind(..)
-  , SourceHash(..)
+  , SourceHash
+  , mkSourceHash
+  , sourceHashFromBytes
+  , sourceHashText
   , SourceIdentity(..)
   , ExpandedQName(..)
-  , PathStep(..)
+  , PathStep
   , mkPathStep
+  , firstPathStep
+  , pathStepAfter
+  , pathStepName
+  , pathStepOrdinal
   , LocationTarget(..)
-  , SourceSpan(..)
+  , SourceSpan
   , mkSourceSpan
+  , spanStartLine
+  , spanStartColumn
+  , spanEndLine
+  , spanEndColumn
   , SourceLocation(..)
   , Located(..)
   , OccurrenceId(..)
@@ -19,10 +30,18 @@ module O2I.Inspection.Provenance
   , Provenance
   , mkProvenance
   , provenanceOccurrences
+  , SupplementalInputKind(..)
+  , SupplementalSource(..)
   ) where
 
+import qualified Crypto.Hash.SHA256 as SHA256
+import qualified Data.ByteString as ByteString
+import Data.ByteString (ByteString)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
+import qualified Data.Text as Text
+import qualified Data.Text.Encoding as TextEncoding
+import Numeric (showHex)
 import Numeric.Natural (Natural)
 
 -- | How the inspected bytes entered the application.
@@ -33,8 +52,19 @@ data SourceInputKind
 
 -- | Lowercase hexadecimal SHA-256 of the exact acquired bytes.
 newtype SourceHash = SourceHash
-  { sourceHashText :: Text
+  { sourceHashText :: Text -- ^ Read the normalized digest.
   } deriving (Eq, Ord, Show)
+
+-- | Validate a lowercase hexadecimal SHA-256 digest.
+mkSourceHash :: Text -> Maybe SourceHash
+mkSourceHash value
+  | Text.length value == 64 && Text.all isLowerHexDigit value =
+    Just (SourceHash value)
+  | otherwise = Nothing
+
+-- | Hash exact source bytes into a valid source identity component.
+sourceHashFromBytes :: ByteString -> SourceHash
+sourceHashFromBytes = SourceHash . sha256Hex
 
 -- | Immutable identity of one complete model input.
 data SourceIdentity = SourceIdentity
@@ -51,8 +81,8 @@ data ExpandedQName = ExpandedQName
 
 -- | One expanded-QName path segment and its one-based sibling ordinal.
 data PathStep = PathStep
-  { pathStepName :: ExpandedQName
-  , pathStepOrdinal :: Natural
+  { pathStepName :: ExpandedQName -- ^ Read the expanded element name.
+  , pathStepOrdinal :: Natural -- ^ Read the one-based sibling ordinal.
   } deriving (Eq, Ord, Show)
 
 -- | Construct a path segment only with a one-based sibling ordinal.
@@ -60,6 +90,15 @@ mkPathStep :: ExpandedQName -> Natural -> Maybe PathStep
 mkPathStep name ordinal
   | ordinal == 0 = Nothing
   | otherwise = Just PathStep {pathStepName = name, pathStepOrdinal = ordinal}
+
+-- | Construct the first sibling occurrence of an expanded QName.
+firstPathStep :: ExpandedQName -> PathStep
+firstPathStep name = PathStep {pathStepName = name, pathStepOrdinal = 1}
+
+-- | Construct the occurrence after a known count of preceding siblings.
+pathStepAfter :: ExpandedQName -> Natural -> PathStep
+pathStepAfter name preceding =
+  PathStep {pathStepName = name, pathStepOrdinal = preceding + 1}
 
 -- | Exact field represented by a source location.
 data LocationTarget
@@ -71,10 +110,10 @@ data LocationTarget
 
 -- | Optional one-based source span.
 data SourceSpan = SourceSpan
-  { spanStartLine :: Natural
-  , spanStartColumn :: Natural
-  , spanEndLine :: Natural
-  , spanEndColumn :: Natural
+  { spanStartLine :: Natural -- ^ Read the one-based start line.
+  , spanStartColumn :: Natural -- ^ Read the one-based start column.
+  , spanEndLine :: Natural -- ^ Read the one-based end line.
+  , spanEndColumn :: Natural -- ^ Read the one-based end column.
   } deriving (Eq, Ord, Show)
 
 -- | Construct a one-based, non-inverted source span.
@@ -159,3 +198,33 @@ mkProvenance = Provenance
 -- | Read all retained occurrences in deterministic source order.
 provenanceOccurrences :: Provenance -> [OccurrenceProvenance]
 provenanceOccurrences (Provenance occurrences) = occurrences
+
+-- | Supplemental input whose source participated in a validation stage.
+data SupplementalInputKind
+  = StrategySupplement
+  | ReadinessSupplement
+  | EvidenceSupplement
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+-- | Identity and role of one supplemental source actually consumed.
+data SupplementalSource = SupplementalSource
+  { supplementalInputKind :: SupplementalInputKind
+  , supplementalSourceIdentity :: SourceIdentity
+  } deriving (Eq, Ord, Show)
+
+isLowerHexDigit :: Char -> Bool
+isLowerHexDigit character =
+  character >= '0' && character <= '9' || character >= 'a' && character <= 'f'
+
+sha256Hex :: ByteString -> Text
+sha256Hex =
+  TextEncoding.decodeUtf8
+    . ByteString.pack
+    . concatMap hexByte
+    . ByteString.unpack
+    . SHA256.hash
+  where
+    hexByte byte =
+      case showHex byte "" of
+        [digit] -> map (fromIntegral . fromEnum) ['0', digit]
+        digits -> map (fromIntegral . fromEnum) digits

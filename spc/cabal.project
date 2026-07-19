@@ -1,3 +1,10 @@
 packages:
   lib/core
   lib/inspection
+  lib/adapter/amx
+  cli
+
+tests: True
+
+constraints:
+  QuickCheck >=2.16 && <2.18

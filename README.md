@@ -31,6 +31,15 @@ O2I dient dazu, *orientierte Wirkung* durch relationale Modellierung nachvollzie
 
 Die Haskell-Spezifikation unter [`spc/lib/core`](./spc/lib/core/) ist die normative, maschinenprüfbare Formalisierung des O2I-Metamodells. Ihre öffentliche API gliedert sich in `O2I.Language` für den semantischen Formvorrat, `O2I.Graph` für konkrete Graphen und `O2I.Validation` für gestufte Prüfungen. `O2I` bildet die kuratierte Gesamtfassade.
 
+Die formatneutrale Library `O2I.Inspection` führt Modellimport, gestufte
+Validierung, Provenienz und Berichterstattung zusammen. `O2I.Adapter.AMX`
+bindet native Archi-Modelle an diesen Vertrag. Der dünne Client `o2i` stellt
+die Inspection für genau eine ausgewählte View bereit:
+
+```sh
+o2i inspect MODEL (--view NAME | --view-id ID) [--verbose | --debug] [--json]
+```
+
 Die Library überführt einen ungeprüften O2I-Graphen durch aufeinander aufbauende Validierungsstufen in ein evidenzbewertetes Wirkungsmodell:
 
 ```text
@@ -60,6 +69,9 @@ o2i/
 - `mdl/`: ArchiMate-Modell
 - `img/`: Abbildungen für Artikel und Modellkommunikation
 - `spc/lib/core/`: normative Haskell-Library, deren Codeauszüge im Artikel eingebunden werden
+- `spc/lib/inspection/`: formatneutrale Inspection-Pipeline und Berichtsmodell
+- `spc/lib/adapter/amx/`: Adapter für native Archi Model XML-Dateien
+- `spc/cli/`: dünner Kommandozeilen-Client für die Inspection
 - `spc/lib/core/tst/`: Haskell-Validierungsbeispiele und Tests
 
 ## Build
@@ -79,7 +91,7 @@ python3 -B -m unittest discover -s utl -p 'test_*.py'
 cabal --project-dir=spc build all --ghc-options=-Werror
 cabal --project-dir=spc test all --ghc-options=-Werror
 cabal --project-dir=spc haddock all
-hindent --line-length 80 --validate spc/lib/core/src/O2I.hs spc/lib/core/src/O2I/*.hs spc/lib/core/src/O2I/Language/*.hs spc/lib/core/src/O2I/Graph/*.hs spc/lib/core/src/O2I/Validation/*.hs spc/lib/core/tst/Main.hs spc/lib/core/tst/api/Main.hs spc/lib/core/tst/api/ApiContractTH.hs spc/lib/core/tst/api/compile-fail/*.hs
+rg --files spc -g '*.hs' | xargs hindent --line-length 80 --validate
 pandoc o2i.md --filter pandoc-include -t markdown
 ./toPDF.sh
 ```
@@ -88,6 +100,6 @@ pandoc o2i.md --filter pandoc-include -t markdown
 
 O2I article text, diagrams, and models are licensed under [CC BY 4.0](./LICENSE).
 
-The Haskell specification in [`spc/lib/core`](./spc/lib/core/) is licensed under [Apache-2.0](./spc/LICENSE).
+The Haskell code under [`spc/`](./spc/) is licensed under [Apache-2.0](./spc/LICENSE).
 
 © 2026 [nemron](https://github.com/normenmueller)

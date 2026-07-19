@@ -5,6 +5,7 @@
 -- orchestrates every supported validation stage, and emits stable reports.
 module O2I.Inspection
   ( module O2I.Inspection.Adapter
+  , module O2I.Inspection.Cardinality
   , module O2I.Inspection.Diagnostic
   , module O2I.Inspection.Import
   , module O2I.Inspection.Input
@@ -17,6 +18,7 @@ module O2I.Inspection
   ) where
 
 import O2I.Inspection.Adapter
+import O2I.Inspection.Cardinality
 import O2I.Inspection.Diagnostic
 import O2I.Inspection.Import
 import O2I.Inspection.Input

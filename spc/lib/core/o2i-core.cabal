@@ -1,6 +1,6 @@
 cabal-version: 3.0
 
-name: o2i
+name: o2i-core
 version: 0.2.0.0
 synopsis: Typed validation core for the O2I metamodel.
 category: Formal Methods, Modelling
@@ -66,11 +66,11 @@ test-suite o2i-test
     O2I.Test.Support
   build-depends:
     base >=4.18 && <4.19,
-    o2i,
+    o2i-core,
     tasty >=1.4 && <1.6,
     tasty-hunit >=0.10 && <0.11,
     tasty-quickcheck >=0.10 && <0.12,
-    QuickCheck >=2.14 && <2.16,
+    QuickCheck >=2.16 && <2.18,
     text >=2.0 && <2.1,
     time >=1.12 && <1.13,
     validation >=1.1 && <1.2
@@ -89,7 +89,7 @@ test-suite o2i-language-api-test
     ApiContractTH
   build-depends:
     base >=4.18 && <4.19,
-    o2i,
+    o2i-core,
     process >=1.6 && <1.7,
     template-haskell >=2.20 && <2.21
   hs-source-dirs:

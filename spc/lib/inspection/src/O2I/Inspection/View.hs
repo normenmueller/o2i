@@ -9,6 +9,7 @@ module O2I.Inspection.View
 
 import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
+import O2I.Inspection.Cardinality
 import O2I.Inspection.Provenance
 
 -- | Exact selected-View request.
@@ -35,7 +36,7 @@ data ResolvedView = ResolvedView
 data ObservedViewResolution
   = NoViewMatch
   | OneViewMatch ViewCandidate
-  | MultipleViewMatches (NonEmpty ViewCandidate)
+  | MultipleViewMatches (AtLeastTwo ViewCandidate)
   deriving (Eq, Show)
 
 -- | Total exact-View resolution result.

@@ -17,9 +17,11 @@ import Data.Map.Strict (Map)
 import Data.Maybe (mapMaybe)
 import qualified Data.Set as Set
 import Data.Text (Text)
-import qualified Data.Text as Text
 import O2I
-import O2I.Inspection.Diagnostic (DiagnosticSubject(..))
+import O2I.Inspection.Diagnostic
+  ( DiagnosticSubject(..)
+  , rawEdgeSubjectIdentifier
+  )
 import O2I.Inspection.Profile.Internal
 import O2I.Inspection.Provenance
 import O2I.Inspection.Scope.Internal
@@ -136,13 +138,7 @@ factSubjects included fact =
     IndexedReference _ _ _ _ -> []
   where
     rawNodeText node = rawNodeIdText (rawNodeIdentifier node)
-    rawEdgeText edge =
-      Text.intercalate
-        ":"
-        [ rawNodeIdText (rawEdgeFrom edge)
-        , relationNameText (rawEdgeRelation edge)
-        , rawNodeIdText (rawEdgeTo edge)
-        ]
+    rawEdgeText = rawEdgeSubjectIdentifier
 
 rawNodeIdentifier :: RawNode -> RawNodeId
 rawNodeIdentifier node =

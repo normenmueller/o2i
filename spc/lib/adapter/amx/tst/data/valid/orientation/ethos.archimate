@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<archimate:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:archimate="http://www.archimatetool.com/archimate" name="O2I RefMod - ethos" id="id-fdeb02e8264f47299b4a570691c82ca6" version="5.0.0">
+  <folder name="Strategy" id="id-9e9727c0b12e4286b2dca4fb46019e1a" type="strategy"/>
+  <folder name="Business" id="id-fb77a29b0aab4357847af4bc8576893b" type="business"/>
+  <folder name="Application" id="id-0bb21b171cc348d8b473e1c30854153a" type="application"/>
+  <folder name="Technology &amp; Physical" id="id-6527cc4846f64d2390fe819aad637c39" type="technology"/>
+  <folder name="Motivation" id="id-d5c37855d0a047779de51308186e5400" type="motivation">
+    <element xsi:type="archimate:Principle" name="Integrity :: Principle" id="id-d7c54b15cb1e407eaa770b6769fad6ee">
+      <property key="o2i.kind" value="Primitive"/>
+      <property key="o2i.type" value="Principle"/>
+    </element>
+  </folder>
+  <folder name="Implementation &amp; Migration" id="id-6417db9d628548fd80e7c19a1acfc761" type="implementation_migration"/>
+  <folder name="Other" id="id-a72f85c3fe3e4a1eb8cf0498fc3ebf58" type="other">
+    <element xsi:type="archimate:Grouping" name="Ethos :: O2I Context" id="id-14b8dcb25f204fe0903e308d7a38f438">
+      <property key="o2i.kind" value="Context"/>
+      <property key="o2i.type" value="Ethos"/>
+    </element>
+  </folder>
+  <folder name="Relations" id="id-98a439ec9bed40749d5298d3bf39f0a7" type="relations">
+    <element xsi:type="archimate:CompositionRelationship" name="contains" id="id-f358d3cc5eea46dc87ac1a2af988d65e" source="id-14b8dcb25f204fe0903e308d7a38f438" target="id-d7c54b15cb1e407eaa770b6769fad6ee"/>
+  </folder>
+  <folder name="Views" id="id-4f3ab5b1a6e34f5baa480a20fb9fa6e9" type="diagrams">
+    <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Reference - Ethos" id="id-fad6c1265c8c4623ab29335326eb23f2">
+      <child xsi:type="archimate:DiagramObject" id="id-2743efbb38bc4ab1b81a6a6520e65a49" textAlignment="1" archimateElement="id-14b8dcb25f204fe0903e308d7a38f438">
+        <bounds x="228" y="60" width="229" height="140"/>
+        <feature name="deriveElementLineColor" value="false"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-59ae2cf0ae1245ed82bb58813750a162" source="id-2743efbb38bc4ab1b81a6a6520e65a49" target="id-78d92884856d44209bef182b2ea8253d" archimateRelationship="id-f358d3cc5eea46dc87ac1a2af988d65e"/>
+        <child xsi:type="archimate:DiagramObject" id="id-78d92884856d44209bef182b2ea8253d" targetConnections="id-59ae2cf0ae1245ed82bb58813750a162" textPosition="1" archimateElement="id-d7c54b15cb1e407eaa770b6769fad6ee">
+          <bounds x="36" y="36" width="154" height="70"/>
+          <feature name="deriveElementLineColor" value="false"/>
+          <feature name="labelExpression" value="Integrity :: Principle"/>
+        </child>
+      </child>
+    </element>
+  </folder>
+  <property key="o2i.profile" value="0.2"/>
+</archimate:model>

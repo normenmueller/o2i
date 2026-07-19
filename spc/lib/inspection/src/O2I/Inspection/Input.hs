@@ -12,13 +12,10 @@ module O2I.Inspection.Input
   ) where
 
 import Control.Exception (IOException, displayException, try)
-import qualified Crypto.Hash.SHA256 as SHA256
 import qualified Data.ByteString as ByteString
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import qualified Data.Text as Text
-import qualified Data.Text.Encoding as TextEncoding
-import Numeric (showHex)
 import O2I.Inspection.Provenance
 import System.IO (stdin)
 
@@ -69,7 +66,7 @@ sourceDocumentFromBytes label kind bytes =
     SourceIdentity
       { sourceDisplayLabel = label
       , sourceInputKind = kind
-      , sourceSha256 = SourceHash (sha256Hex bytes)
+      , sourceSha256 = sourceHashFromBytes bytes
       }
     bytes
 
@@ -80,16 +77,3 @@ sourceDocumentBytes (SourceDocument _ bytes) = bytes
 -- | Access the immutable source identity.
 sourceDocumentIdentity :: SourceDocument -> SourceIdentity
 sourceDocumentIdentity (SourceDocument identity _) = identity
-
-sha256Hex :: ByteString -> Text
-sha256Hex =
-  TextEncoding.decodeUtf8
-    . ByteString.pack
-    . concatMap hexByte
-    . ByteString.unpack
-    . SHA256.hash
-  where
-    hexByte byte =
-      case showHex byte "" of
-        [digit] -> map (fromIntegral . fromEnum) ['0', digit]
-        digits -> map (fromIntegral . fromEnum) digits

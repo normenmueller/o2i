@@ -46,6 +46,7 @@ module O2I.Validation
   , effectTraces
   , lookupEffectTrace
   , traceIdentifier
+  , effectTraceIdText
   , traceVision
   , traceVisionObjective
   , traceStrategy

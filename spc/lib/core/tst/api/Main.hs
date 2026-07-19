@@ -109,6 +109,7 @@ $(assertOrdinaryFunctions
     , 'Validation.needQualificationSourceReferenceText
     , 'Validation.effectTraces
     , 'Validation.traceIdentifier
+    , 'Validation.effectTraceIdText
     , 'Validation.traceVision
     , 'Validation.traceVisionObjective
     , 'Validation.traceStrategy
@@ -205,6 +206,7 @@ $(assertOrdinaryFunctions
     , 'O2I.constitutingAnchorNodes
     , 'O2I.strategyFormulations
     , 'O2I.strategyFormulationData
+    , 'O2I.effectTraceIdText
     , 'O2I.needQualificationCandidateStrategy
     , 'O2I.needQualificationCandidateNeed
     , 'O2I.needQualificationCandidateKeyResult
@@ -611,7 +613,7 @@ runCompileFailContract (CompileFailContract label source kind names) = do
       , "-fforce-recomp"
       , "-fmax-errors=100"
       , "-package"
-      , "o2i"
+      , "o2i-core"
       , source
       ]
       ""
@@ -806,12 +808,16 @@ assessmentGraph = RawGraph assessmentNodes assessmentEdges
 
 assessmentNodes :: [RawNode]
 assessmentNodes =
-  [ RawContextNode visionId Vision
+  [ RawContextNode ethosId Ethos
+  , RawContextNode missionId Mission
+  , RawContextNode visionId Vision
   , RawContextNode strategyId Strategy
   , RawContextNode needId Need
   , RawContextNode interventionId Intervention
   , RawContextNode measureId Measure
   , RawContextNode situationId Situation
+  , RawPrimitiveNode ethosPrincipleId ethosId Principle
+  , RawPrimitiveNode missionDriverId missionId Driver
   , RawPrimitiveNode visionObjectiveId visionId Objective
   , RawPrimitiveNode strategyDriverId strategyId Driver
   , RawPrimitiveNode strategyObjectiveId strategyId Objective
@@ -832,7 +838,13 @@ assessmentNodes =
 
 assessmentEdges :: [RawEdge]
 assessmentEdges =
-  [ edge visionId orientsStrategy strategyId
+  [ edge ethosPrincipleId guidesEthosPrincipleToMissionDriver missionDriverId
+  , edge missionDriverId groundsMissionDriverToVisionObjective visionObjectiveId
+  , edge
+      ethosPrincipleId
+      guidesEthosPrincipleToVisionObjective
+      visionObjectiveId
+  , edge visionId orientsStrategy strategyId
   , edge strategyId qualifiesNeed needId
   , edge situationId surfacesNeed needId
   , edge strategyId directsIntervention interventionId
@@ -926,8 +938,12 @@ assessmentStrategyFormulation =
     , rawFormulationFitRationale = "actions substantiate intent" NonEmpty.:| []
     }
 
-visionId, strategyId, needId, interventionId, measureId, situationId ::
+ethosId, missionId, visionId, strategyId, needId, interventionId, measureId, situationId ::
      RawNodeId
+ethosId = RawNodeId "ethos"
+
+missionId = RawNodeId "mission"
+
 visionId = RawNodeId "vision"
 
 strategyId = RawNodeId "strategy"
@@ -940,9 +956,14 @@ measureId = RawNodeId "measure"
 
 situationId = RawNodeId "situation"
 
-visionObjectiveId, strategyDriverId, strategyObjectiveId :: RawNodeId
+ethosPrincipleId, missionDriverId, visionObjectiveId :: RawNodeId
+ethosPrincipleId = RawNodeId "ethos-principle"
+
+missionDriverId = RawNodeId "mission-driver"
+
 visionObjectiveId = RawNodeId "vision-objective"
 
+strategyDriverId, strategyObjectiveId :: RawNodeId
 strategyDriverId = RawNodeId "strategy-driver"
 
 strategyObjectiveId = RawNodeId "strategy-objective"

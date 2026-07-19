@@ -3,88 +3,188 @@
   "$id": "o2i.inspection.report/v1",
   "title": "O2I inspection report v1",
   "oneOf": [
-    {"$ref": "#/$defs/decodeFailedReport"},
-    {"$ref": "#/$defs/viewFailedReport"},
-    {"$ref": "#/$defs/profileFailedReport"},
-    {"$ref": "#/$defs/scopeFailedReport"},
-    {"$ref": "#/$defs/inspectedReport"}
+    {
+      "$ref": "#/$defs/decodeFailedReport"
+    },
+    {
+      "$ref": "#/$defs/viewFailedReport"
+    },
+    {
+      "$ref": "#/$defs/profileFailedReport"
+    },
+    {
+      "$ref": "#/$defs/scopeFailedReport"
+    },
+    {
+      "$ref": "#/$defs/inspectedReport"
+    }
   ],
   "$defs": {
     "tool": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "reportVersion"],
+      "required": [
+        "name",
+        "reportVersion"
+      ],
       "properties": {
-        "name": {"const": "o2i"},
-        "reportVersion": {"const": "1"}
+        "name": {
+          "const": "o2i"
+        },
+        "reportVersion": {
+          "const": "1"
+        }
       }
     },
     "qName": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["namespace", "localName"],
+      "required": [
+        "namespace",
+        "localName"
+      ],
       "properties": {
-        "namespace": {"type": ["string", "null"]},
-        "localName": {"type": "string", "minLength": 1}
+        "namespace": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "localName": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "source": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["label", "inputKind", "sha256"],
+      "required": [
+        "label",
+        "inputKind",
+        "sha256"
+      ],
       "properties": {
-        "label": {"type": "string"},
-        "inputKind": {"enum": ["file", "stdin"]},
-        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        "label": {
+          "type": "string"
+        },
+        "inputKind": {
+          "enum": [
+            "file",
+            "stdin"
+          ]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
       }
     },
     "adapter": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "name", "version"],
+      "required": [
+        "id",
+        "name",
+        "version"
+      ],
       "properties": {
-        "id": {"type": "string", "minLength": 1},
-        "name": {"type": "string", "minLength": 1},
-        "version": {"type": "string", "minLength": 1}
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "viewSelector": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "value"],
+      "required": [
+        "kind",
+        "value"
+      ],
       "properties": {
-        "kind": {"enum": ["name", "id"]},
-        "value": {"type": "string"}
+        "kind": {
+          "enum": [
+            "name",
+            "id"
+          ]
+        },
+        "value": {
+          "type": "string"
+        }
       }
     },
     "request": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["source", "adapter", "viewSelector"],
+      "required": [
+        "source",
+        "adapter",
+        "viewSelector"
+      ],
       "properties": {
-        "source": {"$ref": "#/$defs/source"},
-        "adapter": {"$ref": "#/$defs/adapter"},
-        "viewSelector": {"$ref": "#/$defs/viewSelector"}
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "adapter": {
+          "$ref": "#/$defs/adapter"
+        },
+        "viewSelector": {
+          "$ref": "#/$defs/viewSelector"
+        }
       }
     },
     "pathStep": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "ordinal"],
+      "required": [
+        "name",
+        "ordinal"
+      ],
       "properties": {
-        "name": {"$ref": "#/$defs/qName"},
-        "ordinal": {"type": "integer", "minimum": 1}
+        "name": {
+          "$ref": "#/$defs/qName"
+        },
+        "ordinal": {
+          "type": "integer",
+          "minimum": 1
+        }
       }
     },
     "sourceSpan": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["startLine", "startColumn", "endLine", "endColumn"],
+      "required": [
+        "startLine",
+        "startColumn",
+        "endLine",
+        "endColumn"
+      ],
       "properties": {
-        "startLine": {"type": "integer", "minimum": 1},
-        "startColumn": {"type": "integer", "minimum": 1},
-        "endLine": {"type": "integer", "minimum": 1},
-        "endColumn": {"type": "integer", "minimum": 1}
+        "startLine": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "startColumn": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "endLine": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "endColumn": {
+          "type": "integer",
+          "minimum": 1
+        }
       }
     },
     "locationTarget": {
@@ -92,25 +192,48 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind"],
-          "properties": {"kind": {"const": "element"}}
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["kind", "name"],
+          "required": [
+            "kind"
+          ],
           "properties": {
-            "kind": {"enum": ["attribute", "text-field"]},
-            "name": {"$ref": "#/$defs/qName"}
+            "kind": {
+              "const": "element"
+            }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "key"],
+          "required": [
+            "kind",
+            "name"
+          ],
           "properties": {
-            "kind": {"const": "property"},
-            "key": {"type": "string"}
+            "kind": {
+              "enum": [
+                "attribute",
+                "text-field"
+              ]
+            },
+            "name": {
+              "$ref": "#/$defs/qName"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "key"
+          ],
+          "properties": {
+            "kind": {
+              "const": "property"
+            },
+            "key": {
+              "type": "string"
+            }
           }
         }
       ]
@@ -118,26 +241,48 @@
     "location": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["source", "path", "target"],
+      "required": [
+        "source",
+        "path",
+        "target"
+      ],
       "properties": {
-        "source": {"$ref": "#/$defs/source"},
+        "source": {
+          "$ref": "#/$defs/source"
+        },
         "path": {
           "type": "array",
           "minItems": 1,
-          "items": {"$ref": "#/$defs/pathStep"}
+          "items": {
+            "$ref": "#/$defs/pathStep"
+          }
         },
-        "target": {"$ref": "#/$defs/locationTarget"},
-        "span": {"$ref": "#/$defs/sourceSpan"}
+        "target": {
+          "$ref": "#/$defs/locationTarget"
+        },
+        "span": {
+          "$ref": "#/$defs/sourceSpan"
+        }
       }
     },
     "viewCandidate": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "name", "location"],
+      "required": [
+        "id",
+        "name",
+        "location"
+      ],
       "properties": {
-        "id": {"type": "string"},
-        "name": {"type": "string"},
-        "location": {"$ref": "#/$defs/location"}
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/$defs/location"
+        }
       }
     },
     "viewObservation": {
@@ -145,33 +290,53 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind"],
-          "properties": {"kind": {"const": "none"}}
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["kind", "matches"],
+          "required": [
+            "kind"
+          ],
           "properties": {
-            "kind": {"const": "one"},
-            "matches": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 1,
-              "items": {"$ref": "#/$defs/viewCandidate"}
+            "kind": {
+              "const": "none"
             }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "matches"],
+          "required": [
+            "kind",
+            "matches"
+          ],
           "properties": {
-            "kind": {"const": "multiple"},
+            "kind": {
+              "const": "one"
+            },
+            "matches": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {
+                "$ref": "#/$defs/viewCandidate"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "matches"
+          ],
+          "properties": {
+            "kind": {
+              "const": "multiple"
+            },
             "matches": {
               "type": "array",
               "minItems": 2,
-              "items": {"$ref": "#/$defs/viewCandidate"}
+              "items": {
+                "$ref": "#/$defs/viewCandidate"
+              }
             }
           }
         }
@@ -180,30 +345,57 @@
     "resolvedView": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "name", "location"],
+      "required": [
+        "id",
+        "name",
+        "location"
+      ],
       "properties": {
-        "id": {"type": "string"},
-        "name": {"type": "string"},
-        "location": {"$ref": "#/$defs/location"}
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "location": {
+          "$ref": "#/$defs/location"
+        }
       }
     },
     "viewRejected": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["state", "observation", "diagnosticIds"],
+      "required": [
+        "state",
+        "observation",
+        "diagnosticIds"
+      ],
       "properties": {
-        "state": {"const": "rejected"},
-        "observation": {"$ref": "#/$defs/viewObservation"},
-        "diagnosticIds": {"$ref": "#/$defs/nonEmptyDiagnosticIds"}
+        "state": {
+          "const": "rejected"
+        },
+        "observation": {
+          "$ref": "#/$defs/viewObservation"
+        },
+        "diagnosticIds": {
+          "$ref": "#/$defs/nonEmptyDiagnosticIds"
+        }
       }
     },
     "viewResolved": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["state", "view"],
+      "required": [
+        "state",
+        "view"
+      ],
       "properties": {
-        "state": {"const": "resolved"},
-        "view": {"$ref": "#/$defs/resolvedView"}
+        "state": {
+          "const": "resolved"
+        },
+        "view": {
+          "$ref": "#/$defs/resolvedView"
+        }
       }
     },
     "profileObservation": {
@@ -211,33 +403,53 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind"],
-          "properties": {"kind": {"const": "none"}}
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["kind", "values"],
+          "required": [
+            "kind"
+          ],
           "properties": {
-            "kind": {"const": "one"},
-            "values": {
-              "type": "array",
-              "minItems": 1,
-              "maxItems": 1,
-              "items": {"type": "string"}
+            "kind": {
+              "const": "none"
             }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "values"],
+          "required": [
+            "kind",
+            "values"
+          ],
           "properties": {
-            "kind": {"const": "multiple"},
+            "kind": {
+              "const": "one"
+            },
+            "values": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "values"
+          ],
+          "properties": {
+            "kind": {
+              "const": "multiple"
+            },
             "values": {
               "type": "array",
               "minItems": 2,
-              "items": {"type": "string"}
+              "items": {
+                "type": "string"
+              }
             }
           }
         }
@@ -246,48 +458,92 @@
     "profileRejected": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["state", "observed", "diagnosticIds"],
+      "required": [
+        "state",
+        "observed",
+        "diagnosticIds"
+      ],
       "properties": {
-        "state": {"const": "rejected"},
-        "observed": {"$ref": "#/$defs/profileObservation"},
-        "diagnosticIds": {"$ref": "#/$defs/nonEmptyDiagnosticIds"}
+        "state": {
+          "const": "rejected"
+        },
+        "observed": {
+          "$ref": "#/$defs/profileObservation"
+        },
+        "diagnosticIds": {
+          "$ref": "#/$defs/nonEmptyDiagnosticIds"
+        }
       }
     },
     "profileResolved": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["state", "version"],
+      "required": [
+        "state",
+        "version"
+      ],
       "properties": {
-        "state": {"const": "resolved"},
-        "version": {"type": "string", "minLength": 1}
+        "state": {
+          "const": "resolved"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "scopeSummary": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["directOccurrenceCount", "closedOccurrenceCount"],
+      "required": [
+        "directOccurrenceCount",
+        "closedOccurrenceCount"
+      ],
       "properties": {
-        "directOccurrenceCount": {"type": "integer", "minimum": 0},
-        "closedOccurrenceCount": {"type": "integer", "minimum": 0}
+        "directOccurrenceCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "closedOccurrenceCount": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "scopeRejected": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["state", "summary", "diagnosticIds"],
+      "required": [
+        "state",
+        "summary",
+        "diagnosticIds"
+      ],
       "properties": {
-        "state": {"const": "rejected"},
-        "summary": {"$ref": "#/$defs/scopeSummary"},
-        "diagnosticIds": {"$ref": "#/$defs/nonEmptyDiagnosticIds"}
+        "state": {
+          "const": "rejected"
+        },
+        "summary": {
+          "$ref": "#/$defs/scopeSummary"
+        },
+        "diagnosticIds": {
+          "$ref": "#/$defs/nonEmptyDiagnosticIds"
+        }
       }
     },
     "scopeResolved": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["state", "summary"],
+      "required": [
+        "state",
+        "summary"
+      ],
       "properties": {
-        "state": {"const": "resolved"},
-        "summary": {"$ref": "#/$defs/scopeSummary"}
+        "state": {
+          "const": "resolved"
+        },
+        "summary": {
+          "$ref": "#/$defs/scopeSummary"
+        }
       }
     },
     "encodingObservation": {
@@ -295,19 +551,36 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind"],
+          "required": [
+            "kind"
+          ],
           "properties": {
-            "kind": {"enum": ["not-observed", "utf-8-default"]}
+            "kind": {
+              "enum": [
+                "not-observed",
+                "utf-8-default"
+              ]
+            }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "value", "location"],
+          "required": [
+            "kind",
+            "value",
+            "location"
+          ],
           "properties": {
-            "kind": {"const": "declared"},
-            "value": {"type": "string"},
-            "location": {"$ref": "#/$defs/location"}
+            "kind": {
+              "const": "declared"
+            },
+            "value": {
+              "type": "string"
+            },
+            "location": {
+              "$ref": "#/$defs/location"
+            }
           }
         }
       ]
@@ -315,31 +588,65 @@
     "nativeBindingFailed": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["state", "failure"],
+      "required": [
+        "state",
+        "failure"
+      ],
       "properties": {
-        "state": {"const": "failed"},
+        "state": {
+          "const": "failed"
+        },
         "failure": {
           "oneOf": [
             {
               "type": "object",
               "additionalProperties": false,
-              "required": ["kind", "encoding", "diagnosticIds"],
+              "required": [
+                "kind",
+                "encoding",
+                "diagnosticIds"
+              ],
               "properties": {
-                "kind": {"const": "unavailable"},
-                "encoding": {"$ref": "#/$defs/encodingObservation"},
-                "diagnosticIds": {"$ref": "#/$defs/nonEmptyDiagnosticIds"}
+                "kind": {
+                  "const": "unavailable"
+                },
+                "encoding": {
+                  "$ref": "#/$defs/encodingObservation"
+                },
+                "diagnosticIds": {
+                  "$ref": "#/$defs/nonEmptyDiagnosticIds"
+                }
               }
             },
             {
               "type": "object",
               "additionalProperties": false,
-              "required": ["kind", "encoding", "rootQName", "nativeVersion", "diagnosticIds"],
+              "required": [
+                "kind",
+                "encoding",
+                "rootQName",
+                "nativeVersion",
+                "diagnosticIds"
+              ],
               "properties": {
-                "kind": {"const": "rejected"},
-                "encoding": {"const": "utf-8"},
-                "rootQName": {"$ref": "#/$defs/qName"},
-                "nativeVersion": {"type": ["string", "null"]},
-                "diagnosticIds": {"$ref": "#/$defs/nonEmptyDiagnosticIds"}
+                "kind": {
+                  "const": "rejected"
+                },
+                "encoding": {
+                  "const": "utf-8"
+                },
+                "rootQName": {
+                  "$ref": "#/$defs/qName"
+                },
+                "nativeVersion": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "diagnosticIds": {
+                  "$ref": "#/$defs/nonEmptyDiagnosticIds"
+                }
               }
             }
           ]
@@ -349,193 +656,2074 @@
     "nativeBindingResolved": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["state", "rootQName", "nativeVersion"],
+      "required": [
+        "state",
+        "rootQName",
+        "nativeVersion"
+      ],
       "properties": {
-        "state": {"const": "resolved"},
-        "rootQName": {"$ref": "#/$defs/qName"},
-        "nativeVersion": {"type": "string", "minLength": 1}
+        "state": {
+          "const": "resolved"
+        },
+        "rootQName": {
+          "$ref": "#/$defs/qName"
+        },
+        "nativeVersion": {
+          "type": "string",
+          "minLength": 1
+        }
       }
     },
     "diagnosticIds": {
       "type": "array",
-      "items": {"type": "string"}
+      "items": {
+        "type": "string"
+      }
     },
     "nonEmptyDiagnosticIds": {
       "allOf": [
-        {"$ref": "#/$defs/diagnosticIds"},
-        {"minItems": 1}
+        {
+          "$ref": "#/$defs/diagnosticIds"
+        },
+        {
+          "minItems": 1
+        }
       ]
     },
-    "blockReason": {
+    "stageName": {
+      "enum": [
+        "decode",
+        "view-scope",
+        "profile",
+        "structure",
+        "semantics",
+        "traceability",
+        "readiness",
+        "evidence"
+      ]
+    },
+    "emptyDiagnosticIds": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/diagnosticIds"
+        },
+        {
+          "maxItems": 0
+        }
+      ]
+    },
+    "passedStage": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["reason", "stage"],
+      "required": [
+        "stage",
+        "state",
+        "diagnosticIds"
+      ],
       "properties": {
-        "reason": {"enum": ["failure", "unavailable"]},
         "stage": {
-          "enum": ["decode", "view-scope", "profile", "structure", "semantics", "traceability", "readiness", "evidence"]
+          "$ref": "#/$defs/stageName"
+        },
+        "state": {
+          "const": "passed"
+        },
+        "diagnosticIds": {
+          "$ref": "#/$defs/emptyDiagnosticIds"
         }
       }
     },
-    "stageRecord": {
-      "oneOf": [
-        {
+    "failedStage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "state",
+        "diagnosticIds"
+      ],
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/stageName"
+        },
+        "state": {
+          "const": "failed"
+        },
+        "diagnosticIds": {
+          "$ref": "#/$defs/nonEmptyDiagnosticIds"
+        }
+      }
+    },
+    "unavailableStage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "state",
+        "diagnosticIds"
+      ],
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/stageName"
+        },
+        "state": {
+          "const": "unavailable"
+        },
+        "diagnosticIds": {
+          "$ref": "#/$defs/emptyDiagnosticIds"
+        }
+      }
+    },
+    "notRunStage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage",
+        "state",
+        "diagnosticIds",
+        "blockedBy"
+      ],
+      "properties": {
+        "stage": {
+          "$ref": "#/$defs/stageName"
+        },
+        "state": {
+          "const": "not-run"
+        },
+        "diagnosticIds": {
+          "$ref": "#/$defs/emptyDiagnosticIds"
+        },
+        "blockedBy": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["stage", "state", "diagnosticIds"],
+          "required": [
+            "reason",
+            "stage"
+          ],
           "properties": {
-            "stage": {
-              "enum": ["decode", "view-scope", "profile", "structure", "semantics", "traceability", "readiness", "evidence"]
+            "reason": {
+              "enum": [
+                "failure",
+                "unavailable"
+              ]
             },
-            "state": {"enum": ["passed", "failed", "unavailable"]},
-            "diagnosticIds": {"$ref": "#/$defs/diagnosticIds"}
+            "stage": {
+              "$ref": "#/$defs/stageName"
+            }
           }
+        }
+      }
+    },
+    "decodeFailedStages": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/stageTuple"
         },
         {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["stage", "state", "diagnosticIds", "blockedBy"],
-          "properties": {
-            "stage": {
-              "enum": ["decode", "view-scope", "profile", "structure", "semantics", "traceability", "readiness", "evidence"]
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/decodeFailed"
             },
-            "state": {"const": "not-run"},
-            "diagnosticIds": {"$ref": "#/$defs/diagnosticIds"},
-            "blockedBy": {"$ref": "#/$defs/blockReason"}
-          }
+            {
+              "$ref": "#/$defs/viewBlockedByDecode"
+            },
+            {
+              "$ref": "#/$defs/profileBlockedByDecode"
+            },
+            {
+              "$ref": "#/$defs/structureBlockedByDecode"
+            },
+            {
+              "$ref": "#/$defs/semanticsBlockedByDecode"
+            },
+            {
+              "$ref": "#/$defs/traceabilityBlockedByDecode"
+            },
+            {
+              "$ref": "#/$defs/readinessBlockedByDecode"
+            },
+            {
+              "$ref": "#/$defs/evidenceBlockedByDecode"
+            }
+          ]
         }
       ]
     },
-    "stages": {
-      "type": "array",
-      "minItems": 8,
-      "maxItems": 8,
-      "prefixItems": [
-        {"allOf": [{"$ref": "#/$defs/stageRecord"}, {"properties": {"stage": {"const": "decode"}}}]},
-        {"allOf": [{"$ref": "#/$defs/stageRecord"}, {"properties": {"stage": {"const": "view-scope"}}}]},
-        {"allOf": [{"$ref": "#/$defs/stageRecord"}, {"properties": {"stage": {"const": "profile"}}}]},
-        {"allOf": [{"$ref": "#/$defs/stageRecord"}, {"properties": {"stage": {"const": "structure"}}}]},
-        {"allOf": [{"$ref": "#/$defs/stageRecord"}, {"properties": {"stage": {"const": "semantics"}}}]},
-        {"allOf": [{"$ref": "#/$defs/stageRecord"}, {"properties": {"stage": {"const": "traceability"}}}]},
-        {"allOf": [{"$ref": "#/$defs/stageRecord"}, {"properties": {"stage": {"const": "readiness"}}}]},
-        {"allOf": [{"$ref": "#/$defs/stageRecord"}, {"properties": {"stage": {"const": "evidence"}}}]}
+    "viewFailedStages": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/stageTuple"
+        },
+        {
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/decodePassed"
+            },
+            {
+              "$ref": "#/$defs/viewFailed"
+            },
+            {
+              "$ref": "#/$defs/profileBlockedByView"
+            },
+            {
+              "$ref": "#/$defs/structureBlockedByView"
+            },
+            {
+              "$ref": "#/$defs/semanticsBlockedByView"
+            },
+            {
+              "$ref": "#/$defs/traceabilityBlockedByView"
+            },
+            {
+              "$ref": "#/$defs/readinessBlockedByView"
+            },
+            {
+              "$ref": "#/$defs/evidenceBlockedByView"
+            }
+          ]
+        }
       ]
     },
-    "failedStages": {
+    "profileFailedStages": {
       "allOf": [
-        {"$ref": "#/$defs/stages"},
-        {"contains": {"properties": {"state": {"const": "failed"}}, "required": ["state"]}, "minContains": 1}
+        {
+          "$ref": "#/$defs/stageTuple"
+        },
+        {
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/decodePassed"
+            },
+            {
+              "$ref": "#/$defs/viewPassed"
+            },
+            {
+              "$ref": "#/$defs/profileFailed"
+            },
+            {
+              "$ref": "#/$defs/structureBlockedByProfile"
+            },
+            {
+              "$ref": "#/$defs/semanticsBlockedByProfile"
+            },
+            {
+              "$ref": "#/$defs/traceabilityBlockedByProfile"
+            },
+            {
+              "$ref": "#/$defs/readinessBlockedByProfile"
+            },
+            {
+              "$ref": "#/$defs/evidenceBlockedByProfile"
+            }
+          ]
+        }
       ]
     },
-    "partialStages": {
+    "structureFailedStages": {
       "allOf": [
-        {"$ref": "#/$defs/stages"},
-        {"not": {"contains": {"properties": {"state": {"const": "failed"}}, "required": ["state"]}}},
-        {"contains": {"properties": {"state": {"const": "unavailable"}}, "required": ["state"]}, "minContains": 1}
+        {
+          "$ref": "#/$defs/stageTuple"
+        },
+        {
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/decodePassed"
+            },
+            {
+              "$ref": "#/$defs/viewPassed"
+            },
+            {
+              "$ref": "#/$defs/profilePassed"
+            },
+            {
+              "$ref": "#/$defs/structureFailed"
+            },
+            {
+              "$ref": "#/$defs/semanticsBlockedByStructure"
+            },
+            {
+              "$ref": "#/$defs/traceabilityBlockedByStructure"
+            },
+            {
+              "$ref": "#/$defs/readinessBlockedByStructure"
+            },
+            {
+              "$ref": "#/$defs/evidenceBlockedByStructure"
+            }
+          ]
+        }
+      ]
+    },
+    "semanticsFailedStages": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/stageTuple"
+        },
+        {
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/decodePassed"
+            },
+            {
+              "$ref": "#/$defs/viewPassed"
+            },
+            {
+              "$ref": "#/$defs/profilePassed"
+            },
+            {
+              "$ref": "#/$defs/structurePassed"
+            },
+            {
+              "$ref": "#/$defs/semanticsFailed"
+            },
+            {
+              "$ref": "#/$defs/traceabilityBlockedBySemanticsFailure"
+            },
+            {
+              "$ref": "#/$defs/readinessBlockedBySemanticsFailure"
+            },
+            {
+              "$ref": "#/$defs/evidenceBlockedBySemanticsFailure"
+            }
+          ]
+        }
+      ]
+    },
+    "semanticsUnavailableStages": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/stageTuple"
+        },
+        {
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/decodePassed"
+            },
+            {
+              "$ref": "#/$defs/viewPassed"
+            },
+            {
+              "$ref": "#/$defs/profilePassed"
+            },
+            {
+              "$ref": "#/$defs/structurePassed"
+            },
+            {
+              "$ref": "#/$defs/semanticsUnavailable"
+            },
+            {
+              "$ref": "#/$defs/traceabilityBlockedBySemanticsUnavailable"
+            },
+            {
+              "$ref": "#/$defs/readinessBlockedBySemanticsUnavailable"
+            },
+            {
+              "$ref": "#/$defs/evidenceBlockedBySemanticsUnavailable"
+            }
+          ]
+        }
+      ]
+    },
+    "traceabilityFailedStages": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/stageTuple"
+        },
+        {
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/decodePassed"
+            },
+            {
+              "$ref": "#/$defs/viewPassed"
+            },
+            {
+              "$ref": "#/$defs/profilePassed"
+            },
+            {
+              "$ref": "#/$defs/structurePassed"
+            },
+            {
+              "$ref": "#/$defs/semanticsPassed"
+            },
+            {
+              "$ref": "#/$defs/traceabilityFailed"
+            },
+            {
+              "$ref": "#/$defs/readinessBlockedByTraceability"
+            },
+            {
+              "$ref": "#/$defs/evidenceBlockedByTraceability"
+            }
+          ]
+        }
+      ]
+    },
+    "readinessFailedStages": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/stageTuple"
+        },
+        {
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/decodePassed"
+            },
+            {
+              "$ref": "#/$defs/viewPassed"
+            },
+            {
+              "$ref": "#/$defs/profilePassed"
+            },
+            {
+              "$ref": "#/$defs/structurePassed"
+            },
+            {
+              "$ref": "#/$defs/semanticsPassed"
+            },
+            {
+              "$ref": "#/$defs/traceabilityPassed"
+            },
+            {
+              "$ref": "#/$defs/readinessFailed"
+            },
+            {
+              "$ref": "#/$defs/evidenceBlockedByReadinessFailure"
+            }
+          ]
+        }
+      ]
+    },
+    "readinessUnavailableStages": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/stageTuple"
+        },
+        {
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/decodePassed"
+            },
+            {
+              "$ref": "#/$defs/viewPassed"
+            },
+            {
+              "$ref": "#/$defs/profilePassed"
+            },
+            {
+              "$ref": "#/$defs/structurePassed"
+            },
+            {
+              "$ref": "#/$defs/semanticsPassed"
+            },
+            {
+              "$ref": "#/$defs/traceabilityPassed"
+            },
+            {
+              "$ref": "#/$defs/readinessUnavailable"
+            },
+            {
+              "$ref": "#/$defs/evidenceBlockedByReadinessUnavailable"
+            }
+          ]
+        }
+      ]
+    },
+    "evidenceFailedStages": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/stageTuple"
+        },
+        {
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/decodePassed"
+            },
+            {
+              "$ref": "#/$defs/viewPassed"
+            },
+            {
+              "$ref": "#/$defs/profilePassed"
+            },
+            {
+              "$ref": "#/$defs/structurePassed"
+            },
+            {
+              "$ref": "#/$defs/semanticsPassed"
+            },
+            {
+              "$ref": "#/$defs/traceabilityPassed"
+            },
+            {
+              "$ref": "#/$defs/readinessPassed"
+            },
+            {
+              "$ref": "#/$defs/evidenceFailed"
+            }
+          ]
+        }
+      ]
+    },
+    "evidenceUnavailableStages": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/stageTuple"
+        },
+        {
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/decodePassed"
+            },
+            {
+              "$ref": "#/$defs/viewPassed"
+            },
+            {
+              "$ref": "#/$defs/profilePassed"
+            },
+            {
+              "$ref": "#/$defs/structurePassed"
+            },
+            {
+              "$ref": "#/$defs/semanticsPassed"
+            },
+            {
+              "$ref": "#/$defs/traceabilityPassed"
+            },
+            {
+              "$ref": "#/$defs/readinessPassed"
+            },
+            {
+              "$ref": "#/$defs/evidenceUnavailable"
+            }
+          ]
+        }
       ]
     },
     "passedStages": {
       "allOf": [
-        {"$ref": "#/$defs/stages"},
-        {"not": {"contains": {"properties": {"state": {"enum": ["failed", "unavailable", "not-run"]}}, "required": ["state"]}}}
+        {
+          "$ref": "#/$defs/stageTuple"
+        },
+        {
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/decodePassed"
+            },
+            {
+              "$ref": "#/$defs/viewPassed"
+            },
+            {
+              "$ref": "#/$defs/profilePassed"
+            },
+            {
+              "$ref": "#/$defs/structurePassed"
+            },
+            {
+              "$ref": "#/$defs/semanticsPassed"
+            },
+            {
+              "$ref": "#/$defs/traceabilityPassed"
+            },
+            {
+              "$ref": "#/$defs/readinessPassed"
+            },
+            {
+              "$ref": "#/$defs/evidencePassed"
+            }
+          ]
+        }
+      ]
+    },
+    "stageTuple": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8
+    },
+    "decodePassed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/passedStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "decode"
+            }
+          }
+        }
+      ]
+    },
+    "viewPassed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/passedStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "view-scope"
+            }
+          }
+        }
+      ]
+    },
+    "profilePassed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/passedStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "profile"
+            }
+          }
+        }
+      ]
+    },
+    "structurePassed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/passedStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "structure"
+            }
+          }
+        }
+      ]
+    },
+    "semanticsPassed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/passedStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "semantics"
+            }
+          }
+        }
+      ]
+    },
+    "traceabilityPassed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/passedStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "traceability"
+            }
+          }
+        }
+      ]
+    },
+    "readinessPassed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/passedStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "readiness"
+            }
+          }
+        }
+      ]
+    },
+    "evidencePassed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/passedStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "evidence"
+            }
+          }
+        }
+      ]
+    },
+    "decodeFailed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/failedStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "decode"
+            }
+          }
+        }
+      ]
+    },
+    "viewFailed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/failedStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "view-scope"
+            }
+          }
+        }
+      ]
+    },
+    "profileFailed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/failedStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "profile"
+            }
+          }
+        }
+      ]
+    },
+    "structureFailed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/failedStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "structure"
+            }
+          }
+        }
+      ]
+    },
+    "semanticsFailed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/failedStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "semantics"
+            }
+          }
+        }
+      ]
+    },
+    "traceabilityFailed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/failedStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "traceability"
+            }
+          }
+        }
+      ]
+    },
+    "readinessFailed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/failedStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "readiness"
+            }
+          }
+        }
+      ]
+    },
+    "evidenceFailed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/failedStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "evidence"
+            }
+          }
+        }
+      ]
+    },
+    "semanticsUnavailable": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/unavailableStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "semantics"
+            }
+          }
+        }
+      ]
+    },
+    "readinessUnavailable": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/unavailableStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "readiness"
+            }
+          }
+        }
+      ]
+    },
+    "evidenceUnavailable": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/unavailableStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "evidence"
+            }
+          }
+        }
+      ]
+    },
+    "viewBlockedByDecode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "view-scope"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "decode"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "profileBlockedByDecode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "profile"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "decode"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "structureBlockedByDecode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "structure"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "decode"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "semanticsBlockedByDecode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "semantics"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "decode"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "traceabilityBlockedByDecode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "traceability"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "decode"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "readinessBlockedByDecode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "readiness"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "decode"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidenceBlockedByDecode": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "evidence"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "decode"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "profileBlockedByView": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "profile"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "view-scope"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "structureBlockedByView": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "structure"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "view-scope"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "semanticsBlockedByView": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "semantics"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "view-scope"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "traceabilityBlockedByView": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "traceability"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "view-scope"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "readinessBlockedByView": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "readiness"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "view-scope"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidenceBlockedByView": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "evidence"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "view-scope"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "structureBlockedByProfile": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "structure"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "profile"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "semanticsBlockedByProfile": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "semantics"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "profile"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "traceabilityBlockedByProfile": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "traceability"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "profile"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "readinessBlockedByProfile": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "readiness"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "profile"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidenceBlockedByProfile": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "evidence"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "profile"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "semanticsBlockedByStructure": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "semantics"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "structure"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "traceabilityBlockedByStructure": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "traceability"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "structure"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "readinessBlockedByStructure": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "readiness"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "structure"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidenceBlockedByStructure": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "evidence"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "structure"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "traceabilityBlockedBySemanticsFailure": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "traceability"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "semantics"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "readinessBlockedBySemanticsFailure": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "readiness"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "semantics"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidenceBlockedBySemanticsFailure": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "evidence"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "semantics"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "traceabilityBlockedBySemanticsUnavailable": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "traceability"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "unavailable",
+                "stage": "semantics"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "readinessBlockedBySemanticsUnavailable": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "readiness"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "unavailable",
+                "stage": "semantics"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidenceBlockedBySemanticsUnavailable": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "evidence"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "unavailable",
+                "stage": "semantics"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "readinessBlockedByTraceability": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "readiness"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "traceability"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidenceBlockedByTraceability": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "evidence"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "traceability"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidenceBlockedByReadinessFailure": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "evidence"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "failure",
+                "stage": "readiness"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidenceBlockedByReadinessUnavailable": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/notRunStage"
+        },
+        {
+          "properties": {
+            "stage": {
+              "const": "evidence"
+            },
+            "blockedBy": {
+              "const": {
+                "reason": "unavailable",
+                "stage": "readiness"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "supplementalSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "source"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "strategy",
+            "readiness",
+            "evidence"
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        }
+      }
+    },
+    "noSupplementalSources": {
+      "type": "array",
+      "maxItems": 0
+    },
+    "strategySources": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "prefixItems": [
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/supplementalSource"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "strategy"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "optionalStrategySources": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/noSupplementalSources"
+        },
+        {
+          "$ref": "#/$defs/strategySources"
+        }
+      ]
+    },
+    "readinessSources": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/supplementalSource"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "strategy"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/supplementalSource"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "readiness"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "evidenceSources": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "prefixItems": [
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/supplementalSource"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "strategy"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/supplementalSource"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "readiness"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/supplementalSource"
+            },
+            {
+              "properties": {
+                "kind": {
+                  "const": "evidence"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "diagnosticSupplementalSources": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/noSupplementalSources"
+        },
+        {
+          "$ref": "#/$defs/strategySources"
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "prefixItems": [
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/supplementalSource"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "const": "readiness"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "prefixItems": [
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/supplementalSource"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "const": "evidence"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
       ]
     },
     "subject": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["kind", "id"],
+      "required": [
+        "kind",
+        "id"
+      ],
       "properties": {
-        "kind": {"type": "string"},
-        "id": {"type": "string"}
+        "kind": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        }
       }
     },
-    "scalar": {"type": ["string", "integer", "boolean"]},
+    "scalar": {
+      "type": [
+        "string",
+        "integer",
+        "boolean"
+      ]
+    },
     "diagnostic": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "code", "stage", "severity", "disposition", "message", "subjects", "locations", "data"],
+      "required": [
+        "id",
+        "code",
+        "stage",
+        "severity",
+        "disposition",
+        "message",
+        "subjects",
+        "locations",
+        "supplementalSources",
+        "data"
+      ],
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "stage": {
+                  "enum": [
+                    "decode",
+                    "view-scope",
+                    "profile",
+                    "structure",
+                    "traceability"
+                  ]
+                },
+                "supplementalSources": {
+                  "$ref": "#/$defs/noSupplementalSources"
+                }
+              }
+            },
+            {
+              "properties": {
+                "stage": {
+                  "const": "semantics"
+                },
+                "supplementalSources": {
+                  "$ref": "#/$defs/optionalStrategySources"
+                }
+              }
+            },
+            {
+              "properties": {
+                "stage": {
+                  "const": "readiness"
+                },
+                "supplementalSources": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 1,
+                  "prefixItems": [
+                    {
+                      "allOf": [
+                        {
+                          "$ref": "#/$defs/supplementalSource"
+                        },
+                        {
+                          "properties": {
+                            "kind": {
+                              "const": "readiness"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "properties": {
+                "stage": {
+                  "const": "evidence"
+                },
+                "supplementalSources": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 1,
+                  "prefixItems": [
+                    {
+                      "allOf": [
+                        {
+                          "$ref": "#/$defs/supplementalSource"
+                        },
+                        {
+                          "properties": {
+                            "kind": {
+                              "const": "evidence"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      ],
       "properties": {
-        "id": {"type": "string"},
-        "code": {"type": "string", "pattern": "^o2i\\."},
-        "stage": {
-          "enum": ["decode", "view-scope", "profile", "structure", "semantics", "traceability", "readiness", "evidence"]
+        "id": {
+          "type": "string"
         },
-        "severity": {"enum": ["debug", "info", "warn", "error"]},
-        "disposition": {"enum": ["model", "process"]},
-        "message": {"type": "string"},
-        "subjects": {"type": "array", "items": {"$ref": "#/$defs/subject"}},
-        "locations": {"type": "array", "items": {"$ref": "#/$defs/location"}},
-        "data": {"type": "object", "additionalProperties": {"$ref": "#/$defs/scalar"}}
+        "code": {
+          "type": "string",
+          "pattern": "^o2i\\."
+        },
+        "stage": {
+          "enum": [
+            "decode",
+            "view-scope",
+            "profile",
+            "structure",
+            "semantics",
+            "traceability",
+            "readiness",
+            "evidence"
+          ]
+        },
+        "severity": {
+          "enum": [
+            "debug",
+            "info",
+            "warn",
+            "error"
+          ]
+        },
+        "disposition": {
+          "enum": [
+            "model",
+            "process"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "subjects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/subject"
+          }
+        },
+        "locations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/location"
+          }
+        },
+        "supplementalSources": {
+          "$ref": "#/$defs/diagnosticSupplementalSources"
+        },
+        "data": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/scalar"
+          }
+        }
       }
     },
     "diagnostics": {
       "type": "array",
-      "items": {"$ref": "#/$defs/diagnostic"}
+      "items": {
+        "$ref": "#/$defs/diagnostic"
+      }
     },
     "decodeFailedReport": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "tool", "inspectionState", "request", "nativeBinding", "result", "stages", "diagnostics"],
+      "required": [
+        "schema",
+        "tool",
+        "inspectionState",
+        "request",
+        "nativeBinding",
+        "supplementalSources",
+        "result",
+        "stages",
+        "diagnostics"
+      ],
       "properties": {
-        "schema": {"const": "o2i.inspection.report/v1"},
-        "tool": {"$ref": "#/$defs/tool"},
-        "inspectionState": {"const": "decode-failed"},
-        "request": {"$ref": "#/$defs/request"},
-        "nativeBinding": {"$ref": "#/$defs/nativeBindingFailed"},
-        "result": {"const": "failed"},
-        "stages": {"$ref": "#/$defs/failedStages"},
-        "diagnostics": {"$ref": "#/$defs/diagnostics"}
+        "schema": {
+          "const": "o2i.inspection.report/v1"
+        },
+        "tool": {
+          "$ref": "#/$defs/tool"
+        },
+        "inspectionState": {
+          "const": "decode-failed"
+        },
+        "request": {
+          "$ref": "#/$defs/request"
+        },
+        "nativeBinding": {
+          "$ref": "#/$defs/nativeBindingFailed"
+        },
+        "supplementalSources": {
+          "$ref": "#/$defs/noSupplementalSources"
+        },
+        "result": {
+          "const": "failed"
+        },
+        "stages": {
+          "$ref": "#/$defs/decodeFailedStages"
+        },
+        "diagnostics": {
+          "$ref": "#/$defs/diagnostics"
+        }
       }
     },
     "viewFailedReport": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "tool", "inspectionState", "request", "nativeBinding", "viewResolution", "result", "stages", "diagnostics"],
+      "required": [
+        "schema",
+        "tool",
+        "inspectionState",
+        "request",
+        "nativeBinding",
+        "viewResolution",
+        "supplementalSources",
+        "result",
+        "stages",
+        "diagnostics"
+      ],
       "properties": {
-        "schema": {"const": "o2i.inspection.report/v1"},
-        "tool": {"$ref": "#/$defs/tool"},
-        "inspectionState": {"const": "view-failed"},
-        "request": {"$ref": "#/$defs/request"},
-        "nativeBinding": {"$ref": "#/$defs/nativeBindingResolved"},
-        "viewResolution": {"$ref": "#/$defs/viewRejected"},
-        "result": {"const": "failed"},
-        "stages": {"$ref": "#/$defs/failedStages"},
-        "diagnostics": {"$ref": "#/$defs/diagnostics"}
+        "schema": {
+          "const": "o2i.inspection.report/v1"
+        },
+        "tool": {
+          "$ref": "#/$defs/tool"
+        },
+        "inspectionState": {
+          "const": "view-failed"
+        },
+        "request": {
+          "$ref": "#/$defs/request"
+        },
+        "nativeBinding": {
+          "$ref": "#/$defs/nativeBindingResolved"
+        },
+        "viewResolution": {
+          "$ref": "#/$defs/viewRejected"
+        },
+        "supplementalSources": {
+          "$ref": "#/$defs/noSupplementalSources"
+        },
+        "result": {
+          "const": "failed"
+        },
+        "stages": {
+          "$ref": "#/$defs/viewFailedStages"
+        },
+        "diagnostics": {
+          "$ref": "#/$defs/diagnostics"
+        }
       }
     },
     "profileFailedReport": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "tool", "inspectionState", "request", "nativeBinding", "viewResolution", "profileResolution", "result", "stages", "diagnostics"],
+      "required": [
+        "schema",
+        "tool",
+        "inspectionState",
+        "request",
+        "nativeBinding",
+        "viewResolution",
+        "profileResolution",
+        "supplementalSources",
+        "result",
+        "stages",
+        "diagnostics"
+      ],
       "properties": {
-        "schema": {"const": "o2i.inspection.report/v1"},
-        "tool": {"$ref": "#/$defs/tool"},
-        "inspectionState": {"const": "profile-failed"},
-        "request": {"$ref": "#/$defs/request"},
-        "nativeBinding": {"$ref": "#/$defs/nativeBindingResolved"},
-        "viewResolution": {"$ref": "#/$defs/viewResolved"},
-        "profileResolution": {"$ref": "#/$defs/profileRejected"},
-        "result": {"const": "failed"},
-        "stages": {"$ref": "#/$defs/failedStages"},
-        "diagnostics": {"$ref": "#/$defs/diagnostics"}
+        "schema": {
+          "const": "o2i.inspection.report/v1"
+        },
+        "tool": {
+          "$ref": "#/$defs/tool"
+        },
+        "inspectionState": {
+          "const": "profile-failed"
+        },
+        "request": {
+          "$ref": "#/$defs/request"
+        },
+        "nativeBinding": {
+          "$ref": "#/$defs/nativeBindingResolved"
+        },
+        "viewResolution": {
+          "$ref": "#/$defs/viewResolved"
+        },
+        "profileResolution": {
+          "$ref": "#/$defs/profileRejected"
+        },
+        "supplementalSources": {
+          "$ref": "#/$defs/noSupplementalSources"
+        },
+        "result": {
+          "const": "failed"
+        },
+        "stages": {
+          "$ref": "#/$defs/profileFailedStages"
+        },
+        "diagnostics": {
+          "$ref": "#/$defs/diagnostics"
+        }
       }
     },
     "scopeFailedReport": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "tool", "inspectionState", "request", "nativeBinding", "viewResolution", "profileResolution", "scope", "result", "stages", "diagnostics"],
+      "required": [
+        "schema",
+        "tool",
+        "inspectionState",
+        "request",
+        "nativeBinding",
+        "viewResolution",
+        "profileResolution",
+        "scope",
+        "supplementalSources",
+        "result",
+        "stages",
+        "diagnostics"
+      ],
       "properties": {
-        "schema": {"const": "o2i.inspection.report/v1"},
-        "tool": {"$ref": "#/$defs/tool"},
-        "inspectionState": {"const": "scope-failed"},
-        "request": {"$ref": "#/$defs/request"},
-        "nativeBinding": {"$ref": "#/$defs/nativeBindingResolved"},
-        "viewResolution": {"$ref": "#/$defs/viewResolved"},
-        "profileResolution": {"$ref": "#/$defs/profileResolved"},
-        "scope": {"$ref": "#/$defs/scopeRejected"},
-        "result": {"const": "failed"},
-        "stages": {"$ref": "#/$defs/failedStages"},
-        "diagnostics": {"$ref": "#/$defs/diagnostics"}
+        "schema": {
+          "const": "o2i.inspection.report/v1"
+        },
+        "tool": {
+          "$ref": "#/$defs/tool"
+        },
+        "inspectionState": {
+          "const": "scope-failed"
+        },
+        "request": {
+          "$ref": "#/$defs/request"
+        },
+        "nativeBinding": {
+          "$ref": "#/$defs/nativeBindingResolved"
+        },
+        "viewResolution": {
+          "$ref": "#/$defs/viewResolved"
+        },
+        "profileResolution": {
+          "$ref": "#/$defs/profileResolved"
+        },
+        "scope": {
+          "$ref": "#/$defs/scopeRejected"
+        },
+        "supplementalSources": {
+          "$ref": "#/$defs/noSupplementalSources"
+        },
+        "result": {
+          "const": "failed"
+        },
+        "stages": {
+          "$ref": "#/$defs/profileFailedStages"
+        },
+        "diagnostics": {
+          "$ref": "#/$defs/diagnostics"
+        }
       }
     },
     "inspectedReport": {
@@ -546,38 +2734,192 @@
           "oneOf": [
             {
               "properties": {
-                "result": {"const": "failed"},
-                "stages": {"$ref": "#/$defs/failedStages"}
+                "result": {
+                  "const": "failed"
+                },
+                "stages": {
+                  "$ref": "#/$defs/structureFailedStages"
+                },
+                "supplementalSources": {
+                  "$ref": "#/$defs/noSupplementalSources"
+                }
               }
             },
             {
               "properties": {
-                "result": {"const": "partial"},
-                "stages": {"$ref": "#/$defs/partialStages"}
+                "result": {
+                  "const": "failed"
+                },
+                "stages": {
+                  "$ref": "#/$defs/semanticsFailedStages"
+                },
+                "supplementalSources": {
+                  "$ref": "#/$defs/optionalStrategySources"
+                }
               }
             },
             {
               "properties": {
-                "result": {"const": "passed"},
-                "stages": {"$ref": "#/$defs/passedStages"}
+                "result": {
+                  "const": "failed"
+                },
+                "stages": {
+                  "$ref": "#/$defs/traceabilityFailedStages"
+                },
+                "supplementalSources": {
+                  "$ref": "#/$defs/optionalStrategySources"
+                }
+              }
+            },
+            {
+              "properties": {
+                "result": {
+                  "const": "failed"
+                },
+                "stages": {
+                  "$ref": "#/$defs/readinessFailedStages"
+                },
+                "supplementalSources": {
+                  "$ref": "#/$defs/readinessSources"
+                }
+              }
+            },
+            {
+              "properties": {
+                "result": {
+                  "const": "failed"
+                },
+                "stages": {
+                  "$ref": "#/$defs/evidenceFailedStages"
+                },
+                "supplementalSources": {
+                  "$ref": "#/$defs/evidenceSources"
+                }
+              }
+            },
+            {
+              "properties": {
+                "result": {
+                  "const": "partial"
+                },
+                "stages": {
+                  "$ref": "#/$defs/semanticsUnavailableStages"
+                },
+                "supplementalSources": {
+                  "$ref": "#/$defs/noSupplementalSources"
+                }
+              }
+            },
+            {
+              "properties": {
+                "result": {
+                  "const": "partial"
+                },
+                "stages": {
+                  "$ref": "#/$defs/readinessUnavailableStages"
+                },
+                "supplementalSources": {
+                  "$ref": "#/$defs/strategySources"
+                }
+              }
+            },
+            {
+              "properties": {
+                "result": {
+                  "const": "partial"
+                },
+                "stages": {
+                  "$ref": "#/$defs/evidenceUnavailableStages"
+                },
+                "supplementalSources": {
+                  "$ref": "#/$defs/readinessSources"
+                }
+              }
+            },
+            {
+              "properties": {
+                "result": {
+                  "const": "passed"
+                },
+                "stages": {
+                  "$ref": "#/$defs/passedStages"
+                },
+                "supplementalSources": {
+                  "$ref": "#/$defs/evidenceSources"
+                }
               }
             }
           ]
         }
       ],
-      "required": ["schema", "tool", "inspectionState", "request", "nativeBinding", "viewResolution", "profileResolution", "scope", "result", "stages", "diagnostics"],
+      "required": [
+        "schema",
+        "tool",
+        "inspectionState",
+        "request",
+        "nativeBinding",
+        "viewResolution",
+        "profileResolution",
+        "scope",
+        "supplementalSources",
+        "result",
+        "stages",
+        "diagnostics"
+      ],
       "properties": {
-        "schema": {"const": "o2i.inspection.report/v1"},
-        "tool": {"$ref": "#/$defs/tool"},
-        "inspectionState": {"const": "inspected"},
-        "request": {"$ref": "#/$defs/request"},
-        "nativeBinding": {"$ref": "#/$defs/nativeBindingResolved"},
-        "viewResolution": {"$ref": "#/$defs/viewResolved"},
-        "profileResolution": {"$ref": "#/$defs/profileResolved"},
-        "scope": {"$ref": "#/$defs/scopeResolved"},
-        "result": {"enum": ["passed", "partial", "failed"]},
-        "stages": {"$ref": "#/$defs/stages"},
-        "diagnostics": {"$ref": "#/$defs/diagnostics"}
+        "schema": {
+          "const": "o2i.inspection.report/v1"
+        },
+        "tool": {
+          "$ref": "#/$defs/tool"
+        },
+        "inspectionState": {
+          "const": "inspected"
+        },
+        "request": {
+          "$ref": "#/$defs/request"
+        },
+        "nativeBinding": {
+          "$ref": "#/$defs/nativeBindingResolved"
+        },
+        "viewResolution": {
+          "$ref": "#/$defs/viewResolved"
+        },
+        "profileResolution": {
+          "$ref": "#/$defs/profileResolved"
+        },
+        "scope": {
+          "$ref": "#/$defs/scopeResolved"
+        },
+        "supplementalSources": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/noSupplementalSources"
+            },
+            {
+              "$ref": "#/$defs/strategySources"
+            },
+            {
+              "$ref": "#/$defs/readinessSources"
+            },
+            {
+              "$ref": "#/$defs/evidenceSources"
+            }
+          ]
+        },
+        "result": {
+          "enum": [
+            "passed",
+            "partial",
+            "failed"
+          ]
+        },
+        "stages": {
+          "$ref": "#/$defs/stageTuple"
+        },
+        "diagnostics": {
+          "$ref": "#/$defs/diagnostics"
+        }
       }
     }
   }

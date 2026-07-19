@@ -40,6 +40,7 @@ library
   exposed-modules:
     O2I.Inspection,
     O2I.Inspection.Adapter,
+    O2I.Inspection.Cardinality,
     O2I.Inspection.Diagnostic,
     O2I.Inspection.Import,
     O2I.Inspection.Input,
@@ -59,7 +60,7 @@ library
     bytestring >=0.11 && <0.12,
     containers >=0.6 && <0.7,
     cryptohash-sha256 >=0.11 && <0.12,
-    o2i ==0.2.0.0,
+    o2i-core ==0.2.0.0,
     text >=2.0 && <2.1,
     time >=1.12 && <1.13
   hs-source-dirs:
@@ -77,11 +78,14 @@ test-suite o2i-inspection-test
     bytestring >=0.11 && <0.12,
     containers >=0.6 && <0.7,
     filepath >=1.4 && <1.6,
-    o2i ==0.2.0.0,
+    jsonschema ==0.2.0.0,
+    o2i-core ==0.2.0.0,
     o2i-inspection,
     tasty >=1.4 && <1.6,
     tasty-hunit >=0.10 && <0.11,
-    text >=2.0 && <2.1
+    text >=2.0 && <2.1,
+    time >=1.12 && <1.13,
+    vector >=0.13 && <0.14
   hs-source-dirs:
     tst
 

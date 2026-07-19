@@ -6,7 +6,9 @@ module O2I.Inspection.Profile.Internal
   , ObservedO2IProfile(..)
   , ResolvedO2IProfile(..)
   , resolveProfileVersion
-  , ObservedProfileFacts(..)
+  , ProfileSnapshot
+  , profileSnapshot
+  , snapshotFact
   , DefectApplicability(..)
   , DeferredProfileDefect(..)
   , RootProjection(..)
@@ -32,6 +34,7 @@ import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import O2I (RawEdge, RawNode)
+import O2I.Inspection.Cardinality
 import O2I.Inspection.Diagnostic
 import O2I.Inspection.Provenance
 import O2I.Inspection.View
@@ -45,7 +48,7 @@ newtype O2IProfileVersion = O2IProfileVersion
 data ObservedO2IProfile
   = NoO2IProfile
   | OneO2IProfile Text
-  | MultipleO2IProfiles (NonEmpty Text)
+  | MultipleO2IProfiles (AtLeastTwo Text)
   deriving (Eq, Show)
 
 -- | Successfully resolved normative profile version.
@@ -58,10 +61,15 @@ newtype ResolvedO2IProfile = ResolvedO2IProfile
 resolveProfileVersion :: O2IProfileVersion -> ResolvedO2IProfile
 resolveProfileVersion = ResolvedO2IProfile
 
--- | Complete source-located observations owned by one adapter.
-newtype ObservedProfileFacts fact = ObservedProfileFacts
-  { observedProfileFacts :: [Located fact]
+-- | Exactly one source-located observation produced by an adapter.
+newtype ProfileSnapshot fact = ProfileSnapshot
+    -- | Recover the single source-located fact carried by the snapshot.
+  { snapshotFact :: Located fact
   } deriving (Eq, Show)
+
+-- | Bind one complete adapter observation to the projection boundary.
+profileSnapshot :: Located fact -> ProfileSnapshot fact
+profileSnapshot = ProfileSnapshot
 
 -- | Reachability condition for one adapter-owned profile defect.
 data DefectApplicability
@@ -165,14 +173,14 @@ data ProfileProjection defect = ProfileProjection
 -- | Pure profile projection and total defect normalization supplied by an
 -- adapter package.
 data O2IProfileContract fact defect = O2IProfileContract
-  { projectProfileFacts :: ObservedProfileFacts fact -> ProfileProjection defect
+  { projectProfileSnapshot :: ProfileSnapshot fact -> ProfileProjection defect
   , profileDefectSpec :: defect -> DiagnosticSpec
   }
 
 -- | Opaque successful root projection retaining adapter-owned existential
 -- facts and defects until scope closure.
 data ResolvedProfileProjection fact defect = ResolvedProfileProjection
-  { resolvedObservedFacts :: ObservedProfileFacts fact
+  { resolvedProfileSnapshot :: ProfileSnapshot fact
   , resolvedProjectedFacts :: [IndexedProfileFact]
   , resolvedDeferredDefects :: [DeferredProfileDefect defect]
   }
@@ -185,9 +193,9 @@ data ProfileResolution fact defect
 -- | Execute root-profile resolution while retaining local deferred defects.
 resolveRootProfile ::
      O2IProfileContract fact defect
-  -> ObservedProfileFacts fact
+  -> ProfileSnapshot fact
   -> ProfileResolution fact defect
-resolveRootProfile contract observations =
+resolveRootProfile contract snapshot =
   case projectedRoot projection of
     RootUnprojectable observed rootDefects ->
       ProfileRejected
@@ -200,12 +208,12 @@ resolveRootProfile contract observations =
           ProfileResolved
             resolved
             ResolvedProfileProjection
-              { resolvedObservedFacts = observations
+              { resolvedProfileSnapshot = snapshot
               , resolvedProjectedFacts = projectedFacts projection
               , resolvedDeferredDefects = localDefects
               }
   where
-    projection = projectProfileFacts contract observations
+    projection = projectProfileSnapshot contract snapshot
     (globalDefectList, localDefects) =
       foldr partitionDefect ([], []) (projectedDefects projection)
     partitionDefect deferred (globals, locals) =

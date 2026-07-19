@@ -6,6 +6,7 @@ module Main where
 
 import Data.List (nub, sort)
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Text as Text
 import O2I
 import qualified O2I.Language as Language
 import O2I.Test.Qualification (needQualificationTests)
@@ -601,6 +602,67 @@ semanticTests =
         $ \graph ->
             assertSuccess
               (validateModelSemantics graph [sampleStrategyFormulation])
+    , testCase "an Ethos with one owned Principle is complete"
+        $ withWellFormed minimalEthosGraph
+        $ \graph -> assertSuccess (validateModelSemantics graph [])
+    , testCase "an empty Ethos is rejected at Semantics"
+        $ assertSemanticErrorsWith
+            (RawGraph [RawContextNode ethosId Ethos] [])
+            []
+            [EthosWithoutPrinciple ethosId]
+    , testCase "primitive evidence completes Orientation without macro edges"
+        $ withWellFormed completeOrientationGraph
+        $ \graph -> assertSuccess (validateModelSemantics graph [])
+    , testCase "an empty Mission is rejected without an evidence cascade"
+        $ assertSemanticErrorsWith
+            minimalEthosGraph
+              { rawNodes =
+                  RawContextNode missionId Mission : rawNodes minimalEthosGraph
+              }
+            []
+            [MissionWithoutDriver missionId]
+    , testCase "a Mission Driver requires guidance from an Ethos Principle"
+        $ assertSemanticErrorsWith
+            missionContentGraph {rawEdges = []}
+            []
+            [MissionWithoutEthosGuidance missionId]
+    , testCase "an empty Vision is rejected without an evidence cascade"
+        $ assertSemanticErrorsWith
+            missionContentGraph
+              { rawNodes =
+                  RawContextNode visionId Vision : rawNodes missionContentGraph
+              }
+            []
+            [VisionWithoutObjective visionId]
+    , testCase "a Vision Objective requires Mission grounding"
+        $ assertSemanticErrorsWith
+            (withoutEdge visionGroundingEdge completeOrientationGraph)
+            []
+            [VisionWithoutMissionGrounding visionId]
+    , testCase "a Vision Objective requires Ethos guidance"
+        $ assertSemanticErrorsWith
+            (withoutEdge visionGuidanceEdge completeOrientationGraph)
+            []
+            [VisionWithoutEthosGuidance visionId]
+    , testCase "explicit Orientation macro edges do not replace evidence"
+        $ assertSemanticErrorsWith
+            orientationMacroOnlyGraph
+            []
+            [ VisionWithoutMissionGrounding visionId
+            , VisionWithoutEthosGuidance visionId
+            ]
+    , testCase "Vision evidence may use different representative Objectives"
+        $ withWellFormed splitVisionEvidenceGraph
+        $ \graph -> assertSuccess (validateModelSemantics graph [])
+    , QC.testProperty
+        "additional owned orientation Primitives need no all-to-all evidence"
+        $ QC.forAll (QC.chooseInt (0, 20))
+        $ semanticsAccepts . orientationGraphWithExtras
+    , QC.testProperty "removing required Orientation evidence is rejected"
+        $ QC.forAll (QC.elements orientationEvidenceEdges)
+        $ \required ->
+            not
+              (semanticsAccepts (withoutEdge required completeOrientationGraph))
     , testCase "constituted Situation without surfaced Need is valid"
         $ withWellFormed
             (RawGraph
@@ -627,6 +689,31 @@ semanticTests =
             sampleGraph
             [sampleStrategyFormulation, sampleStrategyFormulation]
             [DuplicateStrategyFormulation strategyId]
+    , testCase "Strategy intent requires primitive Vision orientation"
+        $ assertSemanticErrors
+            (withoutEdge
+               (edge
+                  visionObjectiveId
+                  orientsVisionObjectiveToStrategyObjective
+                  strategyObjectiveId)
+               sampleGraph)
+            [ StrategyIntentWithoutVisionOrientation
+                strategyId
+                strategyObjectiveId
+            ]
+    , testCase "Strategy orientation needs no explicit Context macro edge"
+        $ withWellFormed
+            (withoutEdge (edge visionId orientsStrategy strategyId) sampleGraph)
+        $ \graph ->
+            assertSuccess
+              (validateModelSemantics graph [sampleStrategyFormulation])
+    , QC.testProperty
+        "additional Vision Objectives need no Strategy orientation edge"
+        $ QC.forAll (QC.chooseInt (0, 20))
+        $ \extraCount ->
+            semanticsAcceptsWith
+              (strategyGraphWithExtraVisionObjectives extraCount)
+              [sampleStrategyFormulation]
     , testCase "unknown formulation Strategy is rejected exactly"
         $ assertSemanticErrorsWith
             emptyGraph
@@ -749,6 +836,86 @@ semanticTests =
                 (relationNameFor substantiatesStrategyKeyResultObjective)
                 strategyObjectiveId
             ]
+    , testCase "an internally complete Intervention is semantically valid"
+        $ withWellFormed minimalInterventionGraph
+        $ \graph -> assertSuccess (validateModelSemantics graph [])
+    , testCase "an empty Intervention reports both missing constituents"
+        $ assertSemanticErrorsWith
+            (RawGraph [RawContextNode interventionId Intervention] [])
+            []
+            [ InterventionWithoutAction interventionId
+            , InterventionWithoutKeyResult interventionId
+            ]
+    , testCase "an Intervention Action does not imply a Key Result"
+        $ assertSemanticErrorsWith
+            (RawGraph
+               [ RawContextNode interventionId Intervention
+               , RawPrimitiveNode interventionActionId interventionId Action
+               ]
+               [])
+            []
+            [InterventionWithoutKeyResult interventionId]
+    , testCase "an Intervention Key Result does not imply an Action"
+        $ assertSemanticErrorsWith
+            (RawGraph
+               [ RawContextNode interventionId Intervention
+               , RawPrimitiveNode
+                   interventionKeyResultId
+                   interventionId
+                   KeyResult
+               ]
+               [])
+            []
+            [InterventionWithoutAction interventionId]
+    , testCase "Intervention Action must contribute to its Key Result"
+        $ assertSemanticErrorsWith
+            minimalInterventionGraph {rawEdges = []}
+            []
+            [InterventionWithoutActionContribution interventionId]
+    , QC.testProperty
+        "additional Intervention content needs no all-to-all contribution"
+        $ QC.forAll (QC.chooseInt (0, 20))
+        $ semanticsAccepts . interventionGraphWithExtras
+    , testCase "an internally complete Measure is semantically valid"
+        $ withWellFormed measureMeasurementPerformanceDimensionGraph
+        $ \graph -> assertSuccess (validateModelSemantics graph [])
+    , testCase "an empty Measure reports both missing constituents"
+        $ assertSemanticErrorsWith
+            (RawGraph [RawContextNode measureId Measure] [])
+            []
+            [ MeasureWithoutPerformanceDimension measureId
+            , MeasureWithoutKPI measureId
+            ]
+    , testCase "a measurement dimension does not imply a KPI"
+        $ assertSemanticErrorsWith
+            (RawGraph
+               [ RawContextNode measureId Measure
+               , RawStructuringNode
+                   measurePerformanceDimensionId
+                   measureId
+                   PerformanceDimension
+               ]
+               [])
+            []
+            [MeasureWithoutKPI measureId]
+    , testCase "a Measure KPI does not imply a measurement dimension"
+        $ assertSemanticErrorsWith
+            (RawGraph
+               [ RawContextNode measureId Measure
+               , RawPrimitiveNode measureKpiId measureId KPI
+               ]
+               [])
+            []
+            [MeasureWithoutPerformanceDimension measureId]
+    , testCase "Measure KPI must belong to its measurement dimension"
+        $ assertSemanticErrorsWith
+            measureMeasurementPerformanceDimensionGraph {rawEdges = []}
+            []
+            [MeasureWithoutKPIDimensionMembership measureId]
+    , QC.testProperty
+        "additional Measure content needs no all-to-all membership"
+        $ QC.forAll (QC.chooseInt (0, 20))
+        $ semanticsAccepts . measureGraphWithExtras
     , testCase "need requires a driver"
         $ assertSemanticErrors
             (removeNode needDriverId sampleGraph)
@@ -801,6 +968,171 @@ semanticTests =
               (validateModelSemantics graph [sampleStrategyFormulation])
     ]
 
+minimalEthosGraph :: RawGraph
+minimalEthosGraph =
+  RawGraph
+    [ RawContextNode ethosId Ethos
+    , RawPrimitiveNode ethosPrincipleId ethosId Principle
+    ]
+    []
+
+missionContentGraph :: RawGraph
+missionContentGraph =
+  RawGraph
+    (RawContextNode missionId Mission
+       : RawPrimitiveNode missionDriverId missionId Driver
+       : rawNodes minimalEthosGraph)
+    [missionGuidanceEdge]
+
+completeOrientationGraph :: RawGraph
+completeOrientationGraph =
+  RawGraph
+    (RawContextNode visionId Vision
+       : RawPrimitiveNode visionObjectiveId visionId Objective
+       : rawNodes missionContentGraph)
+    orientationEvidenceEdges
+
+orientationMacroOnlyGraph :: RawGraph
+orientationMacroOnlyGraph =
+  completeOrientationGraph
+    { rawEdges =
+        [ missionGuidanceEdge
+        , edge ethosId guidesMission missionId
+        , edge missionId groundsVision visionId
+        , edge ethosId guidesVision visionId
+        ]
+    }
+
+splitVisionEvidenceGraph :: RawGraph
+splitVisionEvidenceGraph =
+  completeOrientationGraph
+    { rawNodes =
+        RawPrimitiveNode secondVisionObjectiveId visionId Objective
+          : rawNodes completeOrientationGraph
+    , rawEdges =
+        edge
+          ethosPrincipleId
+          guidesEthosPrincipleToVisionObjective
+          secondVisionObjectiveId
+          : filter (/= visionGuidanceEdge) orientationEvidenceEdges
+    }
+
+orientationGraphWithExtras :: Int -> RawGraph
+orientationGraphWithExtras extraCount =
+  completeOrientationGraph
+    { rawNodes =
+        extraDrivers ++ extraObjectives ++ rawNodes completeOrientationGraph
+    }
+  where
+    suffixes = [1 .. extraCount]
+    extraDrivers =
+      [ RawPrimitiveNode
+        (RawNodeId ("extra-mission-driver-" <> Text.pack (show suffix)))
+        missionId
+        Driver
+      | suffix <- suffixes
+      ]
+    extraObjectives =
+      [ RawPrimitiveNode
+        (RawNodeId ("extra-vision-objective-" <> Text.pack (show suffix)))
+        visionId
+        Objective
+      | suffix <- suffixes
+      ]
+
+strategyGraphWithExtraVisionObjectives :: Int -> RawGraph
+strategyGraphWithExtraVisionObjectives extraCount =
+  sampleGraph {rawNodes = extraObjectives ++ rawNodes sampleGraph}
+  where
+    extraObjectives =
+      [ RawPrimitiveNode
+        (RawNodeId
+           ("extra-strategy-vision-objective-" <> Text.pack (show suffix)))
+        visionId
+        Objective
+      | suffix <- [1 .. extraCount]
+      ]
+
+minimalInterventionGraph :: RawGraph
+minimalInterventionGraph =
+  RawGraph
+    [ RawContextNode interventionId Intervention
+    , RawPrimitiveNode interventionActionId interventionId Action
+    , RawPrimitiveNode interventionKeyResultId interventionId KeyResult
+    ]
+    [ edge
+        interventionActionId
+        contributesInterventionActionToKeyResult
+        interventionKeyResultId
+    ]
+
+interventionGraphWithExtras :: Int -> RawGraph
+interventionGraphWithExtras extraCount =
+  minimalInterventionGraph
+    {rawNodes = extraNodes ++ rawNodes minimalInterventionGraph}
+  where
+    extraNodes = concatMap extraPair [1 .. extraCount]
+    extraPair suffix =
+      [ RawPrimitiveNode (identifier "action" suffix) interventionId Action
+      , RawPrimitiveNode
+          (identifier "key-result" suffix)
+          interventionId
+          KeyResult
+      ]
+    identifier kind suffix =
+      RawNodeId
+        ("extra-intervention-" <> kind <> "-" <> Text.pack (show suffix))
+
+measureGraphWithExtras :: Int -> RawGraph
+measureGraphWithExtras extraCount =
+  measureMeasurementPerformanceDimensionGraph
+    { rawNodes =
+        extraNodes ++ rawNodes measureMeasurementPerformanceDimensionGraph
+    }
+  where
+    extraNodes = concatMap extraPair [1 .. extraCount]
+    extraPair suffix =
+      [ RawStructuringNode
+          (identifier "dimension" suffix)
+          measureId
+          PerformanceDimension
+      , RawPrimitiveNode (identifier "kpi" suffix) measureId KPI
+      ]
+    identifier kind suffix =
+      RawNodeId ("extra-measure-" <> kind <> "-" <> Text.pack (show suffix))
+
+orientationEvidenceEdges :: [RawEdge]
+orientationEvidenceEdges =
+  [missionGuidanceEdge, visionGroundingEdge, visionGuidanceEdge]
+
+missionGuidanceEdge :: RawEdge
+missionGuidanceEdge =
+  edge ethosPrincipleId guidesEthosPrincipleToMissionDriver missionDriverId
+
+visionGroundingEdge :: RawEdge
+visionGroundingEdge =
+  edge missionDriverId groundsMissionDriverToVisionObjective visionObjectiveId
+
+visionGuidanceEdge :: RawEdge
+visionGuidanceEdge =
+  edge ethosPrincipleId guidesEthosPrincipleToVisionObjective visionObjectiveId
+
+secondVisionObjectiveId :: RawNodeId
+secondVisionObjectiveId = RawNodeId "second-vision-objective"
+
+semanticsAccepts :: RawGraph -> Bool
+semanticsAccepts raw = semanticsAcceptsWith raw []
+
+semanticsAcceptsWith :: RawGraph -> [RawStrategyFormulation] -> Bool
+semanticsAcceptsWith raw formulations =
+  case validateStructure raw of
+    StructureAccepted graph ->
+      case validateModelSemantics graph formulations of
+        Success _ -> True
+        Failure _ -> False
+    StructureModelRejected _ -> False
+    StructureInternalFailure _ -> False
+
 traceTests :: TestTree
 traceTests =
   testGroup
@@ -813,6 +1145,12 @@ traceTests =
                (validateTraceability model)
      , testCase "complete reference model is traceable"
          $ withTraceable sampleGraph (const (pure ()))
+     , testCase "effect-trace identity representation is stable"
+         $ withTraceable sampleGraph
+         $ \model ->
+             effectTraceIdText
+               (traceIdentifier (NonEmpty.head (effectTraces model)))
+               @?= "19;19:o2i-effect-trace-v16:vision16:vision-objective8:strategy15:strategy-driver18:strategy-objective19:strategy-key-result15:strategy-action4:need11:need-driver14:need-objective12:intervention19:intervention-action23:intervention-key-result7:measure29:measure-performance-dimension11:measure-kpi9:situation16:situation-anchor"
      , testCase "effect traces expose every typed proof-path constituent"
          $ withTraceable sampleGraph
          $ \model ->
@@ -867,9 +1205,9 @@ traceTests =
          $ \model ->
              assertTraceabilityErrors
                [ MissingMacroEvidence
-                   ethosId
-                   (relationNameFor guidesMission)
-                   missionId
+                   secondMissionId
+                   (relationNameFor groundsVision)
+                   visionId
                ]
                (validateTraceability model)
      , testCase "parallel primitive paths produce distinct traces"
@@ -886,12 +1224,6 @@ traceTests =
                (unNodeId . traceInterventionKeyResult)
                (NonEmpty.toList (effectTraces model))
                @?= [interventionKeyResultId]
-     , unlistedStrategyMacroTest
-         "unlisted intent cannot substantiate orients"
-         unlistedOrientsGraph
-         (edge visionId orientsStrategy strategyId)
-         [sampleStrategyFormulation]
-         [MissingEffectTrace interventionId needId]
      , unlistedStrategyMacroTest
          "unlisted Key Result cannot substantiate qualifies"
          unlistedQualifiesGraph
@@ -973,6 +1305,32 @@ unlistedStrategyMacroTest name raw macro formulations additionalErrors =
 
 missingEdgeExpectation :: RawEdge -> Maybe MissingEdgeExpectation
 missingEdgeExpectation candidate
+  | candidate
+      == edge
+           ethosPrincipleId
+           guidesEthosPrincipleToMissionDriver
+           missionDriverId =
+    Just (SemanticExpectation [MissionWithoutEthosGuidance missionId])
+  | candidate
+      == edge
+           missionDriverId
+           groundsMissionDriverToVisionObjective
+           visionObjectiveId =
+    Just (SemanticExpectation [VisionWithoutMissionGrounding visionId])
+  | candidate
+      == edge
+           ethosPrincipleId
+           guidesEthosPrincipleToVisionObjective
+           visionObjectiveId =
+    Just (SemanticExpectation [VisionWithoutEthosGuidance visionId])
+  | candidate
+      == edge
+           visionObjectiveId
+           orientsVisionObjectiveToStrategyObjective
+           strategyObjectiveId =
+    Just
+      (SemanticExpectation
+         [StrategyIntentWithoutVisionOrientation strategyId strategyObjectiveId])
   | candidate == edge situationId surfacesNeed needId =
     Just
       (SemanticExpectation
@@ -1024,6 +1382,20 @@ missingEdgeExpectation candidate
          ])
   | candidate == anchorEdge situationAnchorId anchorsNeedDriver needDriverId =
     unanchoredNeedDriver
+  | candidate
+      == edge
+           interventionActionId
+           contributesInterventionActionToKeyResult
+           interventionKeyResultId =
+    Just
+      (SemanticExpectation
+         [InterventionWithoutActionContribution interventionId])
+  | candidate
+      == edge
+           measurePerformanceDimensionId
+           (containsPerformanceDimension MeasureMeasurementDimension)
+           measureKpiId =
+    Just (SemanticExpectation [MeasureWithoutKPIDimensionMembership measureId])
   | candidate == edge interventionId addressesNeed needId =
     Just (TraceExpectation [InterventionWithoutNeed interventionId])
   | Just (from, relation, to) <- missingMacroEvidence candidate =

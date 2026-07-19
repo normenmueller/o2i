@@ -13,8 +13,14 @@ module O2I.Inspection.Pipeline
   , InputRequirement(..)
   , StructurallyClosedModel
   , SemanticsWitness
+  , ReadinessWitness
+  , EvidenceWitness
   , prepareSemantics
   , validateScopedSemantics
+  , prepareReadiness
+  , validateScopedReadiness
+  , prepareEvidence
+  , validateScopedEvidence
   , inspect
   , inspectSourceDocument
   ) where
@@ -102,7 +108,19 @@ data StructurallyClosedModel = StructurallyClosedModel
 -- | Opaque, graph-bound input to global semantic validation.
 data SemanticsWitness = SemanticsWitness
   { witnessClosedModel :: StructurallyClosedModel
-  , witnessFormulations :: [RawStrategyFormulation]
+  , witnessStrategyInput :: Maybe (Sourced StrategyFormulationBundle)
+  }
+
+-- | Opaque binding of one traceable model to its exact readiness source.
+data ReadinessWitness = ReadinessWitness
+  { witnessTraceableModel :: TraceableEffectModel
+  , witnessReadinessInput :: Sourced ReadinessBundle
+  }
+
+-- | Opaque binding of one ready model to its exact evidence source.
+data EvidenceWitness = EvidenceWitness
+  { witnessReadyModel :: EvidenceReadyModel
+  , witnessEvidenceInput :: Sourced EvidenceBundle
   }
 
 -- | Prepare semantics only from one exact structurally closed model.
@@ -115,16 +133,13 @@ prepareSemantics closed availability =
     Supplied sourced ->
       Right
         SemanticsWitness
-          { witnessClosedModel = closed
-          , witnessFormulations =
-              strategyFormulationsInput (sourcedValue sourced)
-          }
+          {witnessClosedModel = closed, witnessStrategyInput = Just sourced}
     Absent ->
       case NonEmpty.nonEmpty strategies of
         Nothing ->
           Right
             SemanticsWitness
-              {witnessClosedModel = closed, witnessFormulations = []}
+              {witnessClosedModel = closed, witnessStrategyInput = Nothing}
         Just required ->
           Left (NonEmpty.singleton (StrategyFormulationsRequired required))
   where
@@ -136,7 +151,59 @@ validateScopedSemantics ::
 validateScopedSemantics witness =
   validateModelSemantics
     (structurallyClosedGraph (witnessClosedModel witness))
-    (witnessFormulations witness)
+    (maybe
+       []
+       (strategyFormulationsInput . sourcedValue)
+       (witnessStrategyInput witness))
+
+-- | Prepare readiness only when one complete sourced bundle is supplied.
+prepareReadiness ::
+     TraceableEffectModel
+  -> Availability ReadinessBundle
+  -> Maybe ReadinessWitness
+prepareReadiness traceable availability =
+  case availability of
+    Absent -> Nothing
+    Supplied sourced ->
+      Just
+        ReadinessWitness
+          {witnessTraceableModel = traceable, witnessReadinessInput = sourced}
+
+-- | Validate readiness from the exact model and source carried by the witness.
+validateScopedReadiness ::
+     ReadinessWitness -> Check EvidenceReadinessError EvidenceReadyModel
+validateScopedReadiness witness =
+  validateEvidenceReadinessAt
+    (readinessCheckedAtInput bundle)
+    (witnessTraceableModel witness)
+    (kpiDefinitionsInput bundle)
+    (plannedStartsInput bundle)
+    (evidencePlansInput bundle)
+  where
+    bundle = sourcedValue (witnessReadinessInput witness)
+
+-- | Prepare evidence only when one complete sourced bundle is supplied.
+prepareEvidence ::
+     EvidenceReadyModel -> Availability EvidenceBundle -> Maybe EvidenceWitness
+prepareEvidence ready availability =
+  case availability of
+    Absent -> Nothing
+    Supplied sourced ->
+      Just
+        EvidenceWitness
+          {witnessReadyModel = ready, witnessEvidenceInput = sourced}
+
+-- | Assess evidence from the exact ready model and source in the witness.
+validateScopedEvidence ::
+     EvidenceWitness -> Check EvidenceError EvidenceAssessedModel
+validateScopedEvidence witness =
+  assessEffectEvidenceAt
+    (evidenceAssessedAtInput bundle)
+    (witnessReadyModel witness)
+    (actualStartsInput bundle)
+    (followUpsInput bundle)
+  where
+    bundle = sourcedValue (witnessEvidenceInput witness)
 
 -- | Acquire complete bytes and run the identical inspection path for files
 -- and non-seekable standard input.
@@ -210,7 +277,7 @@ inspectProfile ::
   -> ResolvedViewResolution
   -> InspectionInputs
   -> O2IProfileContract fact defect
-  -> ObservedProfileFacts fact
+  -> ProfileSnapshot fact
   -> InspectionOutcome
 inspectProfile request binding viewResolution inputs contract observations =
   case resolveRootProfile contract observations of
@@ -280,7 +347,8 @@ inspectScope request binding viewResolution profile inputs index =
                    })
             StructureInternalFailure internal ->
               InspectionCommandFailed
-                (StructureInternalCommandError (Text.pack (show internal)))
+                (StructureInternalCommandError
+                   (structureInternalDetail internal))
 
 inspectSemantics ::
      InspectionRequestInfo
@@ -300,6 +368,7 @@ inspectSemantics request binding viewResolution profile inputs closed =
            viewResolution
            profile
            (closedScopeSummary (structurallyClosedScope closed))
+           []
            StagePassed
            StageUnavailable
            (StageNotRun (BlockedByUnavailable SemanticsStage))
@@ -307,31 +376,39 @@ inspectSemantics request binding viewResolution profile inputs closed =
            (StageNotRun (BlockedByUnavailable SemanticsStage))
            [])
     Right witness ->
-      case validateScopedSemantics witness of
-        Failure defects ->
-          let diagnostics = coreDiagnostics closed semanticDefectSpec defects
-           in InspectionCompleted
-                (pipelineReport
-                   request
-                   binding
-                   viewResolution
-                   profile
-                   (closedScopeSummary (structurallyClosedScope closed))
-                   StagePassed
-                   StageFailed
-                   (StageNotRun (BlockedByFailure SemanticsStage))
-                   (StageNotRun (BlockedByFailure SemanticsStage))
-                   (StageNotRun (BlockedByFailure SemanticsStage))
-                   diagnostics)
-        Success semantic ->
-          inspectTraceability
-            request
-            binding
-            viewResolution
-            profile
-            inputs
-            closed
-            semantic
+      let sources = semanticsWitnessSources witness
+       in case validateScopedSemantics witness of
+            Failure defects ->
+              let diagnostics =
+                    coreDiagnosticsWithSources
+                      sources
+                      closed
+                      semanticDefectSpec
+                      defects
+               in InspectionCompleted
+                    (pipelineReport
+                       request
+                       binding
+                       viewResolution
+                       profile
+                       (closedScopeSummary (structurallyClosedScope closed))
+                       sources
+                       StagePassed
+                       StageFailed
+                       (StageNotRun (BlockedByFailure SemanticsStage))
+                       (StageNotRun (BlockedByFailure SemanticsStage))
+                       (StageNotRun (BlockedByFailure SemanticsStage))
+                       diagnostics)
+            Success semantic ->
+              inspectTraceability
+                request
+                binding
+                viewResolution
+                profile
+                inputs
+                closed
+                sources
+                semantic
 
 inspectTraceability ::
      InspectionRequestInfo
@@ -340,9 +417,10 @@ inspectTraceability ::
   -> ResolvedO2IProfile
   -> InspectionInputs
   -> StructurallyClosedModel
+  -> [SupplementalSource]
   -> SemanticallyValidModel
   -> InspectionOutcome
-inspectTraceability request binding viewResolution profile inputs closed semantic =
+inspectTraceability request binding viewResolution profile inputs closed sources semantic =
   case validateTraceability semantic of
     Failure defects ->
       let diagnostics = coreDiagnostics closed traceabilityDefectSpec defects
@@ -353,6 +431,7 @@ inspectTraceability request binding viewResolution profile inputs closed semanti
                viewResolution
                profile
                summary
+               sources
                StagePassed
                StagePassed
                StageFailed
@@ -367,6 +446,7 @@ inspectTraceability request binding viewResolution profile inputs closed semanti
         profile
         inputs
         closed
+        sources
         traceable
   where
     summary = closedScopeSummary (structurallyClosedScope closed)
@@ -378,11 +458,12 @@ inspectReadiness ::
   -> ResolvedO2IProfile
   -> InspectionInputs
   -> StructurallyClosedModel
+  -> [SupplementalSource]
   -> TraceableEffectModel
   -> InspectionOutcome
-inspectReadiness request binding viewResolution profile inputs closed traceable =
-  case readinessInput inputs of
-    Absent ->
+inspectReadiness request binding viewResolution profile inputs closed sources traceable =
+  case prepareReadiness traceable (readinessInput inputs) of
+    Nothing ->
       InspectionCompleted
         (pipelineReport
            request
@@ -390,44 +471,48 @@ inspectReadiness request binding viewResolution profile inputs closed traceable 
            viewResolution
            profile
            summary
+           sources
            StagePassed
            StagePassed
            StagePassed
            StageUnavailable
            (StageNotRun (BlockedByUnavailable ReadinessStage))
            [])
-    Supplied sourced ->
-      case validateEvidenceReadinessAt
-             (readinessCheckedAtInput bundle)
-             traceable
-             (kpiDefinitionsInput bundle)
-             (plannedStartsInput bundle)
-             (evidencePlansInput bundle) of
-        Failure defects ->
-          let diagnostics = coreDiagnostics closed readinessDefectSpec defects
-           in InspectionCompleted
-                (pipelineReport
-                   request
-                   binding
-                   viewResolution
-                   profile
-                   summary
-                   StagePassed
-                   StagePassed
-                   StagePassed
-                   StageFailed
-                   (StageNotRun (BlockedByFailure ReadinessStage))
-                   diagnostics)
-        Success ready ->
-          inspectEvidence
-            request
-            binding
-            viewResolution
-            profile
-            inputs
-            closed
-            ready
-      where bundle = sourcedValue sourced
+    Just witness ->
+      let readinessSource = readinessWitnessSource witness
+          usedSources = sources ++ [readinessSource]
+       in case validateScopedReadiness witness of
+            Failure defects ->
+              let diagnostics =
+                    coreDiagnosticsWithSources
+                      [readinessSource]
+                      closed
+                      readinessDefectSpec
+                      defects
+               in InspectionCompleted
+                    (pipelineReport
+                       request
+                       binding
+                       viewResolution
+                       profile
+                       summary
+                       usedSources
+                       StagePassed
+                       StagePassed
+                       StagePassed
+                       StageFailed
+                       (StageNotRun (BlockedByFailure ReadinessStage))
+                       diagnostics)
+            Success ready ->
+              inspectEvidence
+                request
+                binding
+                viewResolution
+                profile
+                inputs
+                closed
+                usedSources
+                ready
   where
     summary = closedScopeSummary (structurallyClosedScope closed)
 
@@ -438,11 +523,12 @@ inspectEvidence ::
   -> ResolvedO2IProfile
   -> InspectionInputs
   -> StructurallyClosedModel
+  -> [SupplementalSource]
   -> EvidenceReadyModel
   -> InspectionOutcome
-inspectEvidence request binding viewResolution profile inputs closed ready =
-  case evidenceInput inputs of
-    Absent ->
+inspectEvidence request binding viewResolution profile inputs closed sources ready =
+  case prepareEvidence ready (evidenceInput inputs) of
+    Nothing ->
       InspectionCompleted
         (pipelineReport
            request
@@ -450,48 +536,53 @@ inspectEvidence request binding viewResolution profile inputs closed ready =
            viewResolution
            profile
            summary
+           sources
            StagePassed
            StagePassed
            StagePassed
            StagePassed
            StageUnavailable
            [])
-    Supplied sourced ->
-      case assessEffectEvidenceAt
-             (evidenceAssessedAtInput bundle)
-             ready
-             (actualStartsInput bundle)
-             (followUpsInput bundle) of
-        Failure defects ->
-          let diagnostics = coreDiagnostics closed evidenceDefectSpec defects
-           in InspectionCompleted
+    Just witness ->
+      let evidenceSource = evidenceWitnessSource witness
+          usedSources = sources ++ [evidenceSource]
+       in case validateScopedEvidence witness of
+            Failure defects ->
+              let diagnostics =
+                    coreDiagnosticsWithSources
+                      [evidenceSource]
+                      closed
+                      evidenceDefectSpec
+                      defects
+               in InspectionCompleted
+                    (pipelineReport
+                       request
+                       binding
+                       viewResolution
+                       profile
+                       summary
+                       usedSources
+                       StagePassed
+                       StagePassed
+                       StagePassed
+                       StagePassed
+                       StageFailed
+                       diagnostics)
+            Success _ ->
+              InspectionCompleted
                 (pipelineReport
                    request
                    binding
                    viewResolution
                    profile
                    summary
+                   usedSources
                    StagePassed
                    StagePassed
                    StagePassed
                    StagePassed
-                   StageFailed
-                   diagnostics)
-        Success _ ->
-          InspectionCompleted
-            (pipelineReport
-               request
-               binding
-               viewResolution
-               profile
-               summary
-               StagePassed
-               StagePassed
-               StagePassed
-               StagePassed
-               StagePassed
-               [])
-      where bundle = sourcedValue sourced
+                   StagePassed
+                   [])
   where
     summary = closedScopeSummary (structurallyClosedScope closed)
 
@@ -571,6 +662,7 @@ structureFailureReport request binding viewResolution profile scope imported def
     viewResolution
     profile
     (closedScopeSummary scope)
+    []
     (pipelineStageReports
        StageFailed
        (StageNotRun (BlockedByFailure StructureStage))
@@ -591,6 +683,7 @@ pipelineReport ::
   -> ResolvedViewResolution
   -> ResolvedO2IProfile
   -> ClosedScopeSummary
+  -> [SupplementalSource]
   -> StageState
   -> StageState
   -> StageState
@@ -598,13 +691,14 @@ pipelineReport ::
   -> StageState
   -> [Diagnostic]
   -> InspectionReport
-pipelineReport request binding viewResolution profile summary structure semantics trace readiness evidence diagnostics =
+pipelineReport request binding viewResolution profile summary sources structure semantics trace readiness evidence diagnostics =
   PipelineReport
     request
     binding
     viewResolution
     profile
     summary
+    sources
     (pipelineStageReports
        structure
        semantics
@@ -690,6 +784,35 @@ coreDiagnostics closed specification =
   map (coreDiagnostic (structurallyClosedImport closed) specification)
     . NonEmpty.toList
 
+coreDiagnosticsWithSources ::
+     [SupplementalSource]
+  -> StructurallyClosedModel
+  -> (defect -> DiagnosticSpec)
+  -> NonEmpty defect
+  -> [Diagnostic]
+coreDiagnosticsWithSources sources closed specification =
+  map (diagnosticWithSupplementalSources sources)
+    . coreDiagnostics closed specification
+
+semanticsWitnessSources :: SemanticsWitness -> [SupplementalSource]
+semanticsWitnessSources witness =
+  case witnessStrategyInput witness of
+    Nothing -> []
+    Just sourced ->
+      [SupplementalSource StrategySupplement (sourcedFrom sourced)]
+
+readinessWitnessSource :: ReadinessWitness -> SupplementalSource
+readinessWitnessSource witness =
+  SupplementalSource
+    ReadinessSupplement
+    (sourcedFrom (witnessReadinessInput witness))
+
+evidenceWitnessSource :: EvidenceWitness -> SupplementalSource
+evidenceWitnessSource witness =
+  SupplementalSource
+    EvidenceSupplement
+    (sourcedFrom (witnessEvidenceInput witness))
+
 coreDiagnostic ::
      ImportedGraph -> (defect -> DiagnosticSpec) -> defect -> Diagnostic
 coreDiagnostic imported specification defect =
@@ -704,3 +827,13 @@ inputSourceLabel source =
   case source of
     InputPath path -> Text.pack path
     StandardInput -> "<stdin>"
+
+structureInternalDetail :: StructureInternalError -> Text
+structureInternalDetail internal =
+  case internal of
+    ContextElaborationInvariant identifier ->
+      "context-elaboration-invariant:" <> rawNodeIdText identifier
+    ChildElaborationInvariant identifier ->
+      "child-elaboration-invariant:" <> rawNodeIdText identifier
+    EdgeElaborationInvariant edge ->
+      "edge-elaboration-invariant:" <> rawEdgeSubjectIdentifier edge

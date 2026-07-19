@@ -1,0 +1,12 @@
+O2I - From orientation to impact, © 2026 nemron
+
+Usage: o2i COMMAND [--version]
+
+  Inspect an O2I model in one exact Archi View.
+
+Available options:
+  -h,--help                Show this help text
+  --version                Show the O2I version.
+
+Available commands:
+  inspect                  Inspect one View of a native Archi model.

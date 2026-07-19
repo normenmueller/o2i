@@ -25,6 +25,7 @@ module O2I.Inspection.Report
   , reportViewResolution
   , reportProfileResolution
   , reportScopeResolution
+  , reportSupplementalSources
   , reportStageReports
   , reportDiagnostics
   , reportResult
