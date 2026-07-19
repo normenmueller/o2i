@@ -74,20 +74,23 @@ override this snapshot.
 - The repeated independent architecture review reports no findings:
   Fachlichkeit, Metamodell, formal consistency, evidence logic, publication
   clarity, and reproducibility each score 10.0/10.0.
-- `utl/verify.sh` is the canonical local and CI verification contract. It
-  checks model contracts, extractor tests, package metadata and licenses,
-  all-package `-Werror` build and test suites, hermetic external-client API
-  compile contracts, 100% public Haddock, HIndent, Pandoc, isolated TikZ
-  rendering, and an isolated PDF build.
+- `utl/verify.sh` is the canonical staged local and CI verification contract.
+  Its `model`, `haskell`, and `paper` stages check model contracts and extractor
+  tests; package metadata, licenses, all-package `-Werror` builds and tests,
+  hermetic external-client API contracts, 100% public Haddock, and HIndent; and
+  Pandoc, isolated TikZ rendering, and an isolated PDF build. Local execution
+  defaults to all stages; GitHub Actions runs the same stages in parallel and
+  caches Haskell dependencies and verification tooling while keeping each
+  specification build hermetic.
 - External API contracts use exhaustive Template Haskell assertions plus
   compile-pass controls and structured, fixture-local GHC compile-fail
   diagnostics against the exact Cabal build under test; ambient
   `spc/dist-newstyle` state cannot affect their result.
-- The final local Verify run passed and left tracked artifacts unchanged. The
-  independent final review reports no findings and scores Fachlichkeit,
-  Metamodell, Typtheorie, Haskell design, tests, and formal value each
-  10.0/10.0. GitHub Actions provides the cross-platform `ubuntu-24.04` runtime
-  confirmation for every pushed commit.
+- Release-ready changes require a green full local Verify run and green GitHub
+  Actions confirmation on `ubuntu-24.04`; focused stages support development
+  but never replace that combined gate. The independent final review reports no
+  findings and scores Fachlichkeit, Metamodell, Typtheorie, Haskell design,
+  tests, and formal value each 10.0/10.0.
 
 # Next Work
 

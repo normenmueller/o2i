@@ -132,8 +132,9 @@ test and apply O2I but never define its generic semantics.
 - `spc/Makefile`: reproducible local CLI installation and uninstallation.
 - `spc/lib/core/tst/`: executable validation tests.
 - `toPDF.sh`: reproducible TikZ and PDF build entry point.
-- `utl/verify.sh`: canonical non-mutating repository verification used locally
-  and by GitHub Actions.
+- `utl/verify.sh`: canonical staged, non-mutating repository verification;
+  local full verification runs all stages, while GitHub Actions runs the same
+  model, Haskell, and White Paper stages in parallel.
 - `utl/extract-archimate-view.py`: deterministic ArchiMate snapshot extractor
   and model-contract validator.
 

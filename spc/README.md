@@ -34,6 +34,12 @@ verified from the repository root:
 ./utl/verify.sh
 ```
 
+The Haskell stage can be run independently from the repository root:
+
+```sh
+./utl/verify.sh haskell
+```
+
 For focused Haskell development, run the following commands from this
 directory:
 

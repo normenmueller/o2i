@@ -13,10 +13,73 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  verify:
-    name: Verify
+  model:
+    name: Model contracts
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 10
+    env:
+      O2I_DIFF_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify model contracts
+        run: ./utl/verify.sh model
+
+  haskell:
+    name: Haskell specification
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      CABAL_VERSION: 3.14.2.0
+      GHC_VERSION: 9.6.5
+      HINDENT_VERSION: 6.2.1
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Set up Haskell
+        uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
+        with:
+          ghc-version: ${{ env.GHC_VERSION }}
+          cabal-version: ${{ env.CABAL_VERSION }}
+
+      - name: Restore Haskell dependencies and tools
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/.cabal/packages
+            ~/.cabal/store
+            ~/.local/bin/hindent
+          key: haskell-dependencies-${{ runner.os }}-ghc-${{ env.GHC_VERSION }}-cabal-${{ env.CABAL_VERSION }}-hindent-${{ env.HINDENT_VERSION }}-${{ hashFiles('spc/cabal.project', 'spc/**/*.cabal') }}
+          restore-keys: |
+            haskell-dependencies-${{ runner.os }}-ghc-${{ env.GHC_VERSION }}-cabal-${{ env.CABAL_VERSION }}-hindent-${{ env.HINDENT_VERSION }}-
+
+      - name: Install Haskell verification tools
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          export PATH="$HOME/.local/bin:$PATH"
+          if ! command -v hindent >/dev/null 2>&1; then
+            cabal install "hindent-$HINDENT_VERSION" \
+              --installdir="$HOME/.local/bin" \
+              --overwrite-policy=always
+          fi
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Verify Haskell specification
+        run: ./utl/verify.sh haskell
+
+  paper:
+    name: White Paper
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
 
     steps:
       - name: Check out repository
@@ -25,13 +88,7 @@ jobs:
           lfs: true
           persist-credentials: false
 
-      - name: Set up Haskell
-        uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
-        with:
-          ghc-version: 9.6.5
-          cabal-version: 3.14.2.0
-
-      - name: Install system dependencies
+      - name: Install White Paper dependencies
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends \
@@ -45,10 +102,9 @@ jobs:
             texlive-lang-german \
             texlive-latex-base \
             texlive-latex-extra \
+            texlive-plain-generic \
             xz-utils
 
-      - name: Install verification tools
-        run: |
           mkdir -p "$HOME/.local/bin"
 
           curl --fail --location --retry 3 \
@@ -75,7 +131,6 @@ jobs:
             "$HOME/.local/bin/pandoc-crossref"
 
           pipx install pandoc-include==1.4.4
-          cabal install hindent-6.2.1 --overwrite-policy=always
           git clone \
             --filter=blob:none \
             --no-checkout \
@@ -86,5 +141,5 @@ jobs:
           make -C "$RUNNER_TEMP/md2pdf" PREFIX="$HOME/.local" install
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
-      - name: Verify repository
-        run: ./utl/verify.sh
+      - name: Verify White Paper
+        run: ./utl/verify.sh paper

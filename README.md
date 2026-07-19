@@ -118,6 +118,9 @@ Der lokale Prüfvertrag entspricht dem GitHub-Workflow und verändert keine getr
 ./utl/verify.sh
 ```
 
+Für fokussierte Prüfungen stehen `model`, `haskell` und `paper` zur Verfügung.
+GitHub Actions führt dieselben Stufen parallel aus.
+
 ## License
 
 The O2I white paper, diagrams, and models are licensed under [CC BY 4.0](./LICENSE).
