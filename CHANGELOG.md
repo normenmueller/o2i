@@ -16,6 +16,9 @@
 - Achieved one machine-checkable semantic chain from Strategy through Need and
   Intervention to evidence, synchronized across terminology, metamodel,
   ArchiMate, Haskell, and tests.
+- Added deterministic, View-scoped inspection of native Archi models through
+  format-neutral libraries, the AMX adapter, and the thin `o2i` CLI with human
+  and JSON reports.
 
 ### Added
 

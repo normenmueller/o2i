@@ -6,11 +6,10 @@ override this snapshot.
 # Snapshot
 
 - Observed at: 2026-07-19 CEST.
-- Mode: `FINAL_REVIEW`.
+- Mode: `READY`.
 - Branch/upstream: `trunk` / `origin/trunk`; inspect Git for the current delta.
-- Active objective: complete the final independent review of the implemented
-  generic O2I model inspection, AMX adapter, and CLI before returning to the
-  DB Fv orientation instance.
+- Active objective: present the eight-Context minimum-contract matrix, then
+  return to the DB Fv orientation instance.
 - The user controls every push.
 
 # Approved Baseline
@@ -33,21 +32,14 @@ override this snapshot.
 - The semantic Layered Cake remains outside concrete-syntax inspection until
   its explicit backlog conversion.
 
-# Active Architecture Gate
+# Architecture Baseline
 
 - The package DAG is `o2i-inspection -> o2i-core`,
   `o2i-amx -> o2i-inspection + o2i-core`, and
   `o2i-cli -> o2i-inspection + o2i-amx`.
 - The CLI is a thin `optparse-applicative` composition root; reusable model
   inspection stays in libraries.
-- `pln.md` is the frozen architecture contract. Six independent read-only
-  reviews culminated in three findings closed with the external co-author:
-  adapter-owned profile types remain existential until normalization, Decode
-  distinguishes unavailable from rejected native bindings, and internal
-  structure elaboration failures are not model findings.
-- No further pre-implementation architecture review is required. Implement
-  against the frozen contract, run every deterministic check, then review the
-  resulting code and artifacts independently.
+- `pln.md` records the implemented architecture contract and its verification.
 - Supplemental inputs never influence View scope. Semantic witnesses bind one
   exact structurally closed graph and its unchanged supplied inputs.
 - Decode, ViewScope, Profile, Structure, Semantics, Traceability, Readiness, and
@@ -72,9 +64,6 @@ override this snapshot.
   the all-package `-Werror` build, all eight test suites, 100% Haddock coverage,
   package-license checks, HIndent, extractor snapshots and tests, Pandoc, PDF
   rendering, CLI smokes, and `git diff --check`.
-- The third independent review confirms Fachlichkeit, Metamodell, and CLI at
-  10.0, and identifies two open security contracts: request-bound source
-  capabilities and deterministic AMX decode resource budgets.
 - The source-capability batch is closed and externally approved: adapters emit
   only opaque source-relative positions, Inspection alone binds them to the
   exact request document, no public binding path remains, and compile-fail plus
@@ -85,25 +74,18 @@ override this snapshot.
   character data before DOM parsing; a monotonic scanner rejects unsafe XML
   with bounded memory. Boundary, adversarial entity, CDATA, diagnostic, and API
   tests pass (AMX 83 plus API contract).
-- The complete post-finding matrix is green: all four package-local Cabal
+- The independent final review approved commit `ce7726e` without findings or
+  caveats. Fachlichkeit, Metamodell, Typtheorie, Haskell design, AMX adapter and
+  robustness, CLI and UX, tests, formal value, and cross-artifact consistency
+  each score 10.0/10.0. The complete matrix is green: four package-local Cabal
   checks, all-package `-Werror` build and eight suites, 100% public Haddock,
   HIndent, package licenses, extractor snapshots and 28 tests, Pandoc, PDF,
-  file/stdin CLI smokes, and `git diff --check`. Only the independent final
-  re-review remains pending.
-- The independent re-review identified one Low public-API finding: semantics
-  witness operations had no public producer. The co-author internalized the
-  closed model, semantics witness, and both witness operations while retaining
-  the public Readiness/Evidence APIs; TH contracts prove the hidden surface.
-  The complete matrix is green again, including all eight suites, Haddock,
-  artifact checks, PDF, and CLI smokes. Only the final independent re-review on
-  the resulting commit remains pending.
+  file/stdin CLI smokes, and `git diff --check`.
 
 # Next Work
 
-1. Repeat the independent read-only review with explicit per-dimension scores.
-2. Present the final eight-Context minimum-contract matrix to the user and
-   create the reviewed local O2I commit.
-3. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
+1. Present the final eight-Context minimum-contract matrix to the user.
+2. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
    Ethos/Mission/Vision, then continue the interrupted `wtf.md` review at Vision
    and the top-down `o2i.md` review.
 
