@@ -71,6 +71,11 @@ cabal --config-file="$cabal_config" -v0 --project-dir=spc test all \
   --test-log="$test_log" \
   --ghc-options=-Werror
 
+info "Checking external Haskell API contracts."
+python3 -B utl/check_haskell_api_contracts.py \
+  --project-dir "$root/spc" \
+  --builddir "$build"
+
 info "Building Haskell API documentation."
 cabal --config-file="$cabal_config" -v0 --project-dir=spc haddock all \
   --builddir="$build" \

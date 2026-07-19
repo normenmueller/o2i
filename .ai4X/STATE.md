@@ -76,21 +76,25 @@ override this snapshot.
   clarity, and reproducibility each score 10.0/10.0.
 - `utl/verify.sh` is the canonical local and CI verification contract. It
   checks model contracts, extractor tests, package metadata and licenses,
-  all-package `-Werror` build and eight test suites, 100% public Haddock,
-  HIndent, Pandoc, isolated TikZ rendering, and an isolated PDF build.
+  all-package `-Werror` build and test suites, hermetic external-client API
+  compile contracts, 100% public Haddock, HIndent, Pandoc, isolated TikZ
+  rendering, and an isolated PDF build.
+- External API contracts use exhaustive Template Haskell assertions plus
+  compile-pass controls and structured, fixture-local GHC compile-fail
+  diagnostics against the exact Cabal build under test; ambient
+  `spc/dist-newstyle` state cannot affect their result.
 - The final local Verify run passed and left tracked artifacts unchanged. The
-  independent tooling re-review reports no findings after closing Ubuntu TeX
-  provisioning and tool-pinning findings. The first GitHub Actions execution
-  remains the external `ubuntu-24.04` runtime confirmation after commit/push.
+  independent final review reports no findings and scores Fachlichkeit,
+  Metamodell, Typtheorie, Haskell design, tests, and formal value each
+  10.0/10.0. GitHub Actions provides the cross-platform `ubuntu-24.04` runtime
+  confirmation for every pushed commit.
 
 # Next Work
 
-1. Review and commit the current Framework architecture and Verify changes when
-   requested; the user performs every push.
-2. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
+1. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
    Ethos/Mission/Vision.
-3. Continue the collaborative `wtf.md` review with the user at Vision.
-4. Review `o2i.md` collaboratively with the user, top-down and paragraph by
+2. Continue the collaborative `wtf.md` review with the user at Vision.
+3. Review `o2i.md` collaboratively with the user, top-down and paragraph by
    paragraph.
 
 # Release Note Draft

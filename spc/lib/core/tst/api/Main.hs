@@ -9,16 +9,13 @@ module Main
   ) where
 
 import ApiContractTH (assertAbstractTypes, assertOrdinaryFunctions)
-import Control.Monad (forM_, unless)
-import Data.List (isInfixOf)
+import Control.Monad (unless)
 import qualified Data.List.NonEmpty as NonEmpty
 import O2I
 import qualified O2I.Graph as Graph
 import O2I.Language
 import qualified O2I.Language as Language
 import qualified O2I.Validation as Validation
-import System.Exit (ExitCode(..))
-import System.Process (readProcessWithExitCode)
 
 $(assertAbstractTypes
     [ "Language.NodeId"
@@ -256,7 +253,7 @@ $(assertOrdinaryFunctions
     , 'O2I.effectAssessments
     ])
 
--- | Run positive API use and every compile-fail contract.
+-- | Run positive external-client API use.
 main :: IO ()
 main = do
   let spec = interpretationSpec PrincipleInEthos
@@ -438,7 +435,6 @@ main = do
                 == Validation.needQualificationSourceReferenceText
                      (Validation.needQualificationCandidateSourceReference
                         candidate))
-  runCompileFailContracts
 
 assert :: String -> Bool -> IO ()
 assert message condition = unless condition (fail message)
@@ -588,220 +584,6 @@ needQualificationCandidateValue = do
          , rawNeedQualificationRationale = "documented strategic translation"
          , rawNeedQualificationSourceReference = "  strategy/kr-1  "
          })
-
-data CompileFailKind
-  = HiddenConstructors
-  | HiddenPatterns
-  | NonRecordSelectors
-
-data CompileFailContract =
-  CompileFailContract String FilePath CompileFailKind [String]
-
-runCompileFailContracts :: IO ()
-runCompileFailContracts = forM_ compileFailContracts runCompileFailContract
-
-runCompileFailContract :: CompileFailContract -> IO ()
-runCompileFailContract (CompileFailContract label source kind names) = do
-  (exitCode, standardOutput, standardError) <-
-    readProcessWithExitCode
-      "cabal"
-      [ "exec"
-      , "--"
-      , "ghc"
-      , "-v0"
-      , "-fno-code"
-      , "-fforce-recomp"
-      , "-fmax-errors=100"
-      , "-package"
-      , "o2i-core"
-      , source
-      ]
-      ""
-  let output = standardOutput ++ standardError
-      expectedReason =
-        case kind of
-          HiddenConstructors -> "illegal term-level use"
-          HiddenPatterns -> "not in scope: data constructor"
-          NonRecordSelectors -> "not a record selector"
-  case exitCode of
-    ExitSuccess -> fail (label ++ " unexpectedly compiled")
-    ExitFailure _ -> do
-      assert
-        (label ++ " failed for the wrong reason")
-        (expectedReason `isInfixOf` map asciiLower output)
-      forM_
-        names
-        (\name ->
-           assert
-             (label ++ " did not reject " ++ name)
-             (mentionsExact name output))
-
-mentionsExact :: String -> String -> Bool
-mentionsExact = isInfixOf
-
-asciiLower :: Char -> Char
-asciiLower character
-  | character >= 'A' && character <= 'Z' =
-    toEnum (fromEnum character + fromEnum 'a' - fromEnum 'A')
-  | otherwise = character
-
-compileFailContracts :: [CompileFailContract]
-compileFailContracts =
-  [ CompileFailContract
-      "O2I.Language opaque constructors"
-      "tst/api/compile-fail/LanguageOpaqueConstructors.hs"
-      HiddenConstructors
-      [ "Language.NodeId"
-      , "Language.ContextRef"
-      , "Language.InterpretationSpec"
-      , "Language.SomeInterpretation"
-      , "Language.Relation"
-      , "Language.SomeRelation"
-      , "Language.RelationSpec"
-      , "Language.MacroClaim"
-      , "Language.MacroEvidenceRule"
-      ]
-  , CompileFailContract
-      "O2I.Language opaque patterns"
-      "tst/api/compile-fail/LanguageOpaquePatterns.hs"
-      HiddenPatterns
-      ["Language.SomeRelation"]
-  , CompileFailContract
-      "O2I.Language record updates"
-      "tst/api/compile-fail/LanguageRecordUpdates.hs"
-      NonRecordSelectors
-      [ "Language.unNodeId"
-      , "Language.contextRefId"
-      , "Language.interpretationCode"
-      , "Language.interpretationContext"
-      , "Language.interpretationPrimitive"
-      , "Language.interpretationWitness"
-      , "Language.relationCode"
-      , "Language.relationSemantics"
-      , "Language.relationName"
-      , "Language.relationLabel"
-      , "Language.relationFrom"
-      , "Language.relationTo"
-      ]
-  , CompileFailContract
-      "O2I.Graph opaque constructors"
-      "tst/api/compile-fail/GraphOpaqueConstructors.hs"
-      HiddenConstructors
-      [ "Graph.MacroFactIndex"
-      , "Graph.MacroDependency"
-      , "Graph.SomeNode"
-      , "Graph.SomeEdge"
-      , "Graph.WellFormedGraph"
-      ]
-  , CompileFailContract
-      "O2I.Graph record updates"
-      "tst/api/compile-fail/GraphRecordUpdates.hs"
-      NonRecordSelectors
-      ["Graph.someNodeId", "Graph.someEdgeFrom", "Graph.graphNodes"]
-  , CompileFailContract
-      "O2I.Validation opaque constructors"
-      "tst/api/compile-fail/ValidationOpaqueConstructors.hs"
-      HiddenConstructors
-      [ "Validation.StrategyFormulation"
-      , "Validation.NeedQualificationSourceReference"
-      , "Validation.NeedQualificationCandidate"
-      , "Validation.SemanticallyValidModel"
-      , "Validation.EffectTrace"
-      , "Validation.EffectTraceId"
-      , "Validation.SomeSituationAnchorRef"
-      , "Validation.TraceableEffectModel"
-      , "Validation.MacroEvidenceWitness"
-      , "Validation.KPIDefinition"
-      , "Validation.EvidenceReadyModel"
-      , "Validation.EffectAssessment"
-      , "Validation.EvidenceAssessedModel"
-      ]
-  , CompileFailContract
-      "O2I.Validation record updates"
-      "tst/api/compile-fail/ValidationRecordUpdates.hs"
-      NonRecordSelectors
-      [ "Validation.strategyFormulationData"
-      , "Validation.strategyFormulations"
-      , "Validation.needQualificationCandidateStrategy"
-      , "Validation.needQualificationCandidateNeed"
-      , "Validation.needQualificationCandidateKeyResult"
-      , "Validation.needQualificationCandidateObjective"
-      , "Validation.needQualificationCandidateRationale"
-      , "Validation.needQualificationCandidateSourceReference"
-      , "Validation.needQualificationSourceReferenceText"
-      , "Validation.traceIdentifier"
-      , "Validation.effectTraces"
-      , "Validation.situationAnchorRefId"
-      , "Validation.kpiDefinitionKPI"
-      , "Validation.kpiDefinitionUnit"
-      , "Validation.kpiDefinitionDomain"
-      , "Validation.kpiDefinitionMeasurementMethod"
-      , "Validation.kpiDefinitionInterpretation"
-      , "Validation.kpiDefinitions"
-      , "Validation.assessedFollowUp"
-      , "Validation.effectAssessments"
-      ]
-  , CompileFailContract
-      "O2I aggregate opaque constructors"
-      "tst/api/compile-fail/AggregateOpaqueConstructors.hs"
-      HiddenConstructors
-      [ "O2I.NodeId"
-      , "O2I.ContextRef"
-      , "O2I.SomeInterpretation"
-      , "O2I.Relation"
-      , "O2I.SomeRelation"
-      , "O2I.MacroClaim"
-      , "O2I.MacroEvidenceRule"
-      , "O2I.MacroFactIndex"
-      , "O2I.MacroDependency"
-      , "O2I.SomeNode"
-      , "O2I.SomeEdge"
-      , "O2I.WellFormedGraph"
-      , "O2I.StrategyFormulation"
-      , "O2I.NeedQualificationSourceReference"
-      , "O2I.NeedQualificationCandidate"
-      , "O2I.SemanticallyValidModel"
-      , "O2I.EffectTrace"
-      , "O2I.EffectTraceId"
-      , "O2I.SomeSituationAnchorRef"
-      , "O2I.TraceableEffectModel"
-      , "O2I.MacroEvidenceWitness"
-      , "O2I.KPIDefinition"
-      , "O2I.EvidenceReadyModel"
-      , "O2I.EffectAssessment"
-      , "O2I.EvidenceAssessedModel"
-      ]
-  , CompileFailContract
-      "O2I aggregate record updates"
-      "tst/api/compile-fail/AggregateRecordUpdates.hs"
-      NonRecordSelectors
-      [ "O2I.unNodeId"
-      , "O2I.contextRefId"
-      , "O2I.someNodeId"
-      , "O2I.someEdgeFrom"
-      , "O2I.graphNodes"
-      , "O2I.strategyFormulationData"
-      , "O2I.strategyFormulations"
-      , "O2I.needQualificationCandidateStrategy"
-      , "O2I.needQualificationCandidateNeed"
-      , "O2I.needQualificationCandidateKeyResult"
-      , "O2I.needQualificationCandidateObjective"
-      , "O2I.needQualificationCandidateRationale"
-      , "O2I.needQualificationCandidateSourceReference"
-      , "O2I.needQualificationSourceReferenceText"
-      , "O2I.traceIdentifier"
-      , "O2I.effectTraces"
-      , "O2I.situationAnchorRefId"
-      , "O2I.kpiDefinitionKPI"
-      , "O2I.kpiDefinitionUnit"
-      , "O2I.kpiDefinitionDomain"
-      , "O2I.kpiDefinitionMeasurementMethod"
-      , "O2I.kpiDefinitionInterpretation"
-      , "O2I.kpiDefinitions"
-      , "O2I.assessedFollowUp"
-      , "O2I.effectAssessments"
-      ]
-  ]
 
 assessmentGraph :: RawGraph
 assessmentGraph = RawGraph assessmentNodes assessmentEdges

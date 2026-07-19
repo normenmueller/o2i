@@ -16,6 +16,7 @@ build-type: Simple
 extra-source-files:
   schema/o2i.command-error-v1.schema.json
   schema/o2i.inspection.report-v1.schema.json
+  tst/api/compile-pass/*.hs
   tst/api/compile-fail/*.hs
 
 flag werror
@@ -103,7 +104,6 @@ test-suite o2i-inspection-api-test
   build-depends:
     base >=4.18 && <4.19,
     o2i-inspection,
-    process >=1.6 && <1.7,
     template-haskell >=2.20 && <2.21
   hs-source-dirs:
     tst/api

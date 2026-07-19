@@ -43,6 +43,9 @@ cabal test all --ghc-options=-Werror
 cabal haddock all
 ```
 
+The repository verification additionally checks external compile-pass and
+compile-fail clients against the exact Cabal build under test.
+
 Package metadata is checked separately:
 
 ```sh

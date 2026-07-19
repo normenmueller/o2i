@@ -12,8 +12,6 @@ import ApiContractTH
   , assertHiddenValues
   , assertOrdinaryFunctions
   )
-import Control.Monad (forM_, unless)
-import Data.List (isInfixOf)
 import qualified O2I.Inspection.Adapter as Adapter
 import qualified O2I.Inspection.Cardinality as Cardinality
 import qualified O2I.Inspection.Diagnostic as Diagnostic
@@ -24,8 +22,6 @@ import qualified O2I.Inspection.Profile as Profile
 import qualified O2I.Inspection.Provenance as Provenance
 import qualified O2I.Inspection.Report as Report
 import qualified O2I.Inspection.Scope as Scope
-import System.Exit (ExitCode(..))
-import System.Process (readProcessWithExitCode)
 
 $(assertAbstractTypes
     [ "Cardinality.AtLeastTwo"
@@ -228,94 +224,4 @@ $(assertExactArgumentConstructors
     ])
 
 main :: IO ()
-main = forM_ compileFailContracts runCompileFailContract
-
-data CompileFailContract =
-  CompileFailContract String FilePath [String]
-
-runCompileFailContract :: CompileFailContract -> IO ()
-runCompileFailContract (CompileFailContract label source names) = do
-  (exitCode, standardOutput, standardError) <-
-    readProcessWithExitCode
-      "cabal"
-      [ "exec"
-      , "--"
-      , "ghc"
-      , "-v0"
-      , "-fno-code"
-      , "-fforce-recomp"
-      , "-fmax-errors=100"
-      , "-package"
-      , "o2i-inspection"
-      , source
-      ]
-      ""
-  let output = standardOutput ++ standardError
-  case exitCode of
-    ExitSuccess -> fail (label ++ " unexpectedly compiled")
-    ExitFailure _ ->
-      forM_
-        names
-        (\name ->
-           unless
-             (name `isInfixOf` output)
-             (fail (label ++ " did not reject " ++ name)))
-
-compileFailContracts :: [CompileFailContract]
-compileFailContracts =
-  [ CompileFailContract
-      "Inspection opaque constructors"
-      "tst/api/compile-fail/OpaqueConstructors.hs"
-      [ "Adapter.AdapterDescriptor"
-      , "Adapter.NativeVersion"
-      , "Diagnostic.DiagnosticCode"
-      , "Diagnostic.DiagnosticId"
-      , "Diagnostic.DiagnosticSpec"
-      , "Diagnostic.Diagnostic"
-      , "Diagnostic.Diagnostics"
-      , "Diagnostic.diagnosticId"
-      , "Profile.O2IProfileVersion"
-      , "Pipeline.Sourced"
-      , "Provenance.SourceHash"
-      , "Provenance.SourceIdentity"
-      , "Provenance.ExpandedQName"
-      , "Provenance.PathStep"
-      , "Provenance.SourceSpan"
-      , "Provenance.SourcePosition"
-      , "Provenance.SourceLocation"
-      , "Provenance.OccurrenceKind"
-      , "Provenance.OccurrenceId"
-      , "Provenance.OccurrenceProvenance"
-      , "Provenance.ClosedScopeProvenance"
-      , "Provenance.SupplementalSource"
-      , "Provenance.sourceHashText"
-      , "Provenance.sourceDisplayLabel"
-      , "Provenance.qNameNamespace"
-      , "Provenance.pathStepName"
-      , "Provenance.spanStartLine"
-      , "Provenance.locationSource"
-      , "Provenance.occurrenceKindText"
-      , "Provenance.occurrenceIdText"
-      , "Provenance.provenanceOccurrenceId"
-      , "Provenance.closedScopeProvenanceOccurrences"
-      , "Provenance.supplementalInputKind"
-      ]
-  , CompileFailContract
-      "Inspection owns source binding"
-      "tst/api/compile-fail/HiddenSourceBinding.hs"
-      ["Input.sourceDocumentLocator", "Input.bindDocumentPosition"]
-  , CompileFailContract
-      "Adapters emit only source-relative positions"
-      "tst/api/compile-fail/ForeignAdapterLocation.hs"
-      ["Provenance.SourceLocation", "Provenance.SourcePosition"]
-  , CompileFailContract
-      "Inspection-owned diagnostic normalization"
-      "tst/api/compile-fail/HiddenNormalization.hs"
-      [ "Diagnostic.diagnosticFromSpec"
-      , "Diagnostic.diagnosticFromLocated"
-      , "Diagnostic.diagnosticsFromLocated"
-      , "Diagnostic.diagnosticWithSupplementalSources"
-      , "Diagnostic.normalizeDiagnostics"
-      , "Report.nativeAdapterBinding"
-      ]
-  ]
+main = pure ()
