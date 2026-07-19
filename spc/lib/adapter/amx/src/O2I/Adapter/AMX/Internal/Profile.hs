@@ -11,7 +11,8 @@ import O2I.Inspection.Profile
 import O2I.Inspection.Provenance
 
 -- | Complete AMX profile contract paired with the adapter.
-amxProfileContract :: O2IProfileContract AMXProfileFact AMXProfileDefect
+amxProfileContract ::
+     O2IProfileContract SourcePosition AMXProfileFact AMXProfileDefect
 amxProfileContract =
   O2IProfileContract
     { projectProfileSnapshot = projectAMXProfile
@@ -20,7 +21,9 @@ amxProfileContract =
 
 -- | Observe the exact decoded document and already validated selected View.
 observeAMXProfile ::
-     AMXDocument -> AMXSelectedView -> ProfileSnapshot AMXProfileFact
+     AMXDocument
+  -> AMXSelectedView
+  -> ProfileSnapshot SourcePosition AMXProfileFact
 observeAMXProfile document selected =
   profileSnapshot
     (Located

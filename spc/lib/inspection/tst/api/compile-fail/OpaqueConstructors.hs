@@ -70,8 +70,8 @@ forgedPathStep = Provenance.PathStep undefined undefined
 forgedSourceSpan :: Provenance.SourceSpan
 forgedSourceSpan = Provenance.SourceSpan undefined undefined undefined undefined
 
-forgedLocator :: Provenance.SourceLocator
-forgedLocator = Provenance.SourceLocator undefined
+forgedPosition :: Provenance.SourcePosition
+forgedPosition = Provenance.SourcePosition undefined undefined undefined
 
 forgedLocation :: Provenance.SourceLocation
 forgedLocation =

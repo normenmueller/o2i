@@ -74,16 +74,23 @@ override this snapshot.
   all 90 Haskell files, extractor snapshots and 28 extractor tests, Pandoc,
   PDF rendering, CLI help/version/partial-inspection smokes, and
   `git diff --check`.
-- Every second-final-review finding is closed and deterministically verified in
-  the worktree. One separate read-only final re-review remains mandatory.
+- The third independent review confirms Fachlichkeit, Metamodell, and CLI at
+  10.0, and identifies two open security contracts: request-bound source
+  capabilities and deterministic AMX decode resource budgets.
+- The source-capability batch is closed and externally approved: adapters emit
+  only opaque source-relative positions, Inspection alone binds them to the
+  exact request document, no public binding path remains, and compile-fail plus
+  two-source tests cover failure and successful provenance paths. The full
+  Haskell verification matrix is green for this batch.
 
 # Next Work
 
-1. Repeat the independent read-only review with explicit per-dimension scores;
-   close any remaining finding in a small coherent batch.
-2. Present the final eight-Context minimum-contract matrix to the user and
+1. Close the remaining AMX resource-budget finding with the external co-author,
+   then repeat the complete deterministic matrix.
+2. Repeat the independent read-only review with explicit per-dimension scores.
+3. Present the final eight-Context minimum-contract matrix to the user and
    create the reviewed local O2I commit.
-3. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
+4. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
    Ethos/Mission/Vision, then continue the interrupted `wtf.md` review at Vision
    and the top-down `o2i.md` review.
 

@@ -11,6 +11,10 @@ data AtLeastTwo value =
   AtLeastTwo value value [value]
   deriving (Eq, Ord, Show)
 
+instance Functor AtLeastTwo where
+  fmap function (AtLeastTwo first second rest) =
+    AtLeastTwo (function first) (function second) (map function rest)
+
 -- | Construct a sequence from its guaranteed first two elements.
 atLeastTwo :: value -> value -> [value] -> AtLeastTwo value
 atLeastTwo = AtLeastTwo

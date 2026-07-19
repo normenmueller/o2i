@@ -98,9 +98,11 @@ data InspectionResult
 -- | Native-format failure retaining exactly the safe observations.
 data NativeBindingFailure
   = NativeBindingUnavailable
-      DecodeUnavailableObservation
+      (DecodeUnavailableObservation SourceLocation)
       (NonEmpty DiagnosticId)
-  | NativeBindingRejected RejectedNativeBinding (NonEmpty DiagnosticId)
+  | NativeBindingRejected
+      (RejectedNativeBinding SourceLocation)
+      (NonEmpty DiagnosticId)
   deriving (Eq, Show)
 
 -- | Native adapter binding observable in every report state.
@@ -111,13 +113,13 @@ data NativeAdapterBinding
 
 -- | Failed exact View resolution and all stable matching candidates.
 data FailedViewResolution = FailedViewResolution
-  { failedViewObservation :: ObservedViewResolution
+  { failedViewObservation :: ObservedViewResolution SourceLocation
   , failedViewDiagnosticIds :: NonEmpty DiagnosticId
   } deriving (Eq, Show)
 
 -- | Successful exact View resolution.
 newtype ResolvedViewResolution = ResolvedViewResolution
-  { resolvedView :: ResolvedView
+  { resolvedView :: ResolvedView SourceLocation
   } deriving (Eq, Show)
 
 -- | View resolution observable at one report state.
@@ -704,7 +706,7 @@ inclusionReasonText reason =
     NeedDependency -> "need-dependency"
     MacroPremise -> "macro-premise"
 
-resolvedViewValue :: ResolvedView -> Value
+resolvedViewValue :: ResolvedView SourceLocation -> Value
 resolvedViewValue view =
   object
     [ "id" .= resolvedViewId view
@@ -712,7 +714,7 @@ resolvedViewValue view =
     , "location" .= locationValue (resolvedViewLocation view)
     ]
 
-observedViewValue :: ObservedViewResolution -> Value
+observedViewValue :: ObservedViewResolution SourceLocation -> Value
 observedViewValue observation =
   case observation of
     NoViewMatch -> object ["kind" .= ("none" :: Text)]
@@ -725,7 +727,7 @@ observedViewValue observation =
         , "matches" .= map viewCandidateValue (atLeastTwoToList candidates)
         ]
 
-viewCandidateValue :: ViewCandidate -> Value
+viewCandidateValue :: ViewCandidate SourceLocation -> Value
 viewCandidateValue candidate =
   object
     [ "id" .= viewCandidateId candidate
@@ -743,7 +745,7 @@ observedProfileValue observation =
       object
         ["kind" .= ("multiple" :: Text), "values" .= atLeastTwoToList versions]
 
-encodingObservationValue :: EncodingObservation -> Value
+encodingObservationValue :: EncodingObservation SourceLocation -> Value
 encodingObservationValue observation =
   case observation of
     EncodingNotObserved -> object ["kind" .= ("not-observed" :: Text)]

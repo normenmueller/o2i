@@ -18,10 +18,10 @@ module O2I.Inspection.Provenance.Internal
   , LocationTarget(..)
   , SourceSpan(..)
   , mkSourceSpan
-  , SourceLocator(..)
-  , bindSourceLocator
+  , SourcePosition(..)
+  , sourcePosition
   , SourceLocation(..)
-  , locateSource
+  , bindSourcePosition
   , Located(..)
   , OccurrenceKind(..)
   , OccurrenceKindError(..)
@@ -153,14 +153,12 @@ mkSourceSpan startLine startColumn endLine endColumn
         , spanEndColumnValue = endColumn
         }
 
--- | Capability for locating facts in one exact acquired source.
-newtype SourceLocator =
-  SourceLocator SourceIdentity
-  deriving (Eq, Ord, Show)
-
--- | Bind a locator to an immutable source identity inside Inspection.
-bindSourceLocator :: SourceIdentity -> SourceLocator
-bindSourceLocator = SourceLocator
+-- | Source-relative position produced by a concrete-format adapter.
+data SourcePosition = SourcePosition
+  { positionStructuralPath :: NonEmpty PathStep
+  , positionFieldTarget :: LocationTarget
+  , positionSourceSpan :: Maybe SourceSpan
+  } deriving (Eq, Ord, Show)
 
 -- | Stable occurrence location independent of namespace prefixes.
 data SourceLocation = SourceLocation
@@ -170,14 +168,9 @@ data SourceLocation = SourceLocation
   , locationSourceSpan :: Maybe SourceSpan -- ^ Optional concrete text span.
   } deriving (Eq, Ord, Show)
 
--- | Locate relative path, target, and span data in the bound source.
-locateSource ::
-     SourceLocator
-  -> NonEmpty PathStep
-  -> LocationTarget
-  -> Maybe SourceSpan
-  -> SourceLocation
-locateSource (SourceLocator source) path target sourceSpan =
+-- | Bind a source-relative position to the current Inspection request.
+bindSourcePosition :: SourceIdentity -> SourcePosition -> SourceLocation
+bindSourcePosition source (SourcePosition path target sourceSpan) =
   SourceLocation
     { locationSourceIdentity = source
     , locationStructuralPath = path
@@ -185,9 +178,19 @@ locateSource (SourceLocator source) path target sourceSpan =
     , locationSourceSpan = sourceSpan
     }
 
+-- | Construct one source-relative position without binding a source identity.
+sourcePosition ::
+     NonEmpty PathStep -> LocationTarget -> Maybe SourceSpan -> SourcePosition
+sourcePosition path target sourceSpan =
+  SourcePosition
+    { positionStructuralPath = path
+    , positionFieldTarget = target
+    , positionSourceSpan = sourceSpan
+    }
+
 -- | A value tied to one exact source occurrence.
-data Located a = Located
-  { locatedAt :: SourceLocation
+data Located location a = Located
+  { locatedAt :: location
   , locatedValue :: a
   } deriving (Eq, Ord, Show)
 
@@ -248,12 +251,12 @@ data ReferenceRole
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 -- | One reached reference whose cardinality Inspection must decide.
-data ReferenceOccurrence = ReferenceOccurrence
+data ReferenceOccurrence location = ReferenceOccurrence
   { referenceOccurrenceId :: OccurrenceId
   , referenceFromOccurrence :: OccurrenceId
   , referenceRole :: ReferenceRole
   , referenceToken :: Maybe Text
-  , referenceLocation :: SourceLocation
+  , referenceLocation :: location
   } deriving (Eq, Ord, Show)
 
 -- | Why closure includes an occurrence.

@@ -45,8 +45,10 @@ data ClosedScopeSummary = ClosedScopeSummary
 -- | Inspection-owned scope failures.
 data ScopeDefect
   = EmptyO2IScope
-  | UnresolvedReachedReference ReferenceOccurrence
-  | AmbiguousReachedReference ReferenceOccurrence (NonEmpty SourceLocation)
+  | UnresolvedReachedReference (ReferenceOccurrence SourceLocation)
+  | AmbiguousReachedReference
+      (ReferenceOccurrence SourceLocation)
+      (NonEmpty SourceLocation)
   | MissingReachedOccurrenceLocation OccurrenceId
   | AmbiguousReachedOccurrenceLocation OccurrenceId (NonEmpty SourceLocation)
   | MissingReachedInclusionReason OccurrenceId
@@ -56,7 +58,7 @@ data ScopeDefect
 -- discarded; Inspection defects retain their closed constructor.
 data ScopeIssue
   = ProfileIssue Diagnostic
-  | InspectionScopeIssue (Located ScopeDefect)
+  | InspectionScopeIssue (Located SourceLocation ScopeDefect)
   deriving (Eq, Show)
 
 -- | Total scope-closure result.
@@ -67,9 +69,9 @@ data ScopeResult
 -- | Opaque witness that the selected View and persisted profile index reached
 -- a least fixed point without projection defects.
 data SemanticallyClosedScope = SemanticallyClosedScope
-  { closedScopeView :: ResolvedView
+  { closedScopeView :: ResolvedView SourceLocation
   , closedScopeSummary :: ClosedScopeSummary
-  , closedScopeFacts :: [IndexedProfileFact]
+  , closedScopeFacts :: [IndexedProfileFact SourceLocation]
   , closedScopeOccurrences :: Set OccurrenceId
   , closedScopeProvenance :: ClosedScopeProvenance
   }
@@ -118,7 +120,7 @@ scopeDefectSpec (MissingReachedInclusionReason occurrence) =
 -- | Compute the deterministic least fixed point and normalize only reached
 -- profile defects.
 closeScope :: ProfileIndex -> ScopeResult
-closeScope (ProfileIndex contract view projection) =
+closeScope (ProfileIndex profileSpecification view projection) =
   case (NonEmpty.nonEmpty issues, NonEmpty.nonEmpty provenanceEntries) of
     (Just failures, _) -> ScopeRejected summary failures
     (Nothing, Just entries) ->
@@ -170,7 +172,7 @@ closeScope (ProfileIndex contract view projection) =
       [ ProfileIssue
         (diagnosticFromLocated
            ProfileStage
-           (profileDefectSpec contract)
+           profileSpecification
            (deferredDefect deferred))
       | deferred <- resolvedDeferredDefects projection
       , reachedDeferred reached deferred
@@ -194,7 +196,7 @@ data Closure = Closure
   }
 
 closeOccurrences ::
-     [IndexedProfileFact]
+     [IndexedProfileFact SourceLocation]
   -> Map OccurrenceId SourceLocation
   -> [OccurrenceId]
   -> Closure
@@ -253,7 +255,7 @@ addReference ::
      , Seq OccurrenceId
      , Map OccurrenceId [InclusionReason]
      , [ScopeIssue])
-  -> (ReferenceOccurrence, [OccurrenceId], InclusionReason)
+  -> (ReferenceOccurrence SourceLocation, [OccurrenceId], InclusionReason)
   -> ( Set OccurrenceId
      , Seq OccurrenceId
      , Map OccurrenceId [InclusionReason]
@@ -299,7 +301,8 @@ addIssue location defect (reached, queue, reasons, issues) =
   , issues ++ [InspectionScopeIssue (Located location defect)])
 
 locationsByOccurrence ::
-     [IndexedProfileFact] -> Map OccurrenceId (Set SourceLocation)
+     [IndexedProfileFact SourceLocation]
+  -> Map OccurrenceId (Set SourceLocation)
 locationsByOccurrence = Map.fromListWith Set.union . mapMaybe factLocation
   where
     factLocation (IndexedOccurrence occurrence location) =
@@ -352,7 +355,8 @@ occurrenceProvenanceEntry locations reasons occurrence = do
     NonEmpty.nonEmpty (Map.findWithDefault [] occurrence reasons)
   pure (occurrence, location, inclusionReasons)
 
-reachedDeferred :: Set OccurrenceId -> DeferredProfileDefect defect -> Bool
+reachedDeferred ::
+     Set OccurrenceId -> DeferredProfileDefect SourceLocation defect -> Bool
 reachedDeferred reached deferred =
   case defectApplicability deferred of
     GlobalProfileDefect -> True
@@ -370,7 +374,7 @@ stableUnique = go Set.empty
       | Set.member value seen = go seen values
       | otherwise = value : go (Set.insert value seen) values
 
-referenceSubject :: ReferenceOccurrence -> DiagnosticSubject
+referenceSubject :: ReferenceOccurrence SourceLocation -> DiagnosticSubject
 referenceSubject reference =
   DiagnosticSubject
     "reference"

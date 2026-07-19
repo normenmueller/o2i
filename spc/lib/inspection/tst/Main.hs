@@ -93,6 +93,9 @@ tests =
     [ testCase "exact source identity uses SHA-256" sourceIdentityTest
     , testCase "source locations are one-based" sourceLocationInvariantTest
     , testCase
+        "adapter positions bind only to the inspected source"
+        adapterPositionSourceBindingTest
+    , testCase
         "OccurrenceId length framing rejects namespace and path collisions"
         occurrenceIdentityCollisionTest
     , testCase "AtLeastTwo validates its lower bound" atLeastTwoTest
@@ -188,6 +191,78 @@ sourceLocationInvariantTest = do
       spanStartColumn sourceSpan @?= 2
       spanEndLine sourceSpan @?= 3
       spanEndColumn sourceSpan @?= 4
+
+adapterPositionSourceBindingTest :: Assertion
+adapterPositionSourceBindingTest = do
+  let firstSource = sourceDocument "first.archimate" "first"
+      secondSource = sourceDocument "second.archimate" "second"
+      adapters =
+        [ testAdapter DecodeRejectedMode ViewSucceeds RootSucceeds [] []
+        , testAdapter DecodeSucceeds ViewFails RootSucceeds [] []
+        , testAdapter DecodeSucceeds ViewSucceeds RootFails [] []
+        , completeModelAdapter
+        ]
+  mapM_ (assertAdapterSourceBinding firstSource) adapters
+  mapM_ (assertAdapterSourceBinding secondSource) adapters
+
+assertAdapterSourceBinding :: SourceDocument -> Adapter -> Assertion
+assertAdapterSourceBinding document adapter = do
+  report <-
+    completedReport
+      (inspectSourceDocument adapter (ViewById "view-1") noInputs document)
+  let identity = sourceDocumentIdentity document
+      locations = reportSourceLocations report
+  assertBool
+    "source-binding fixture produced no locations"
+    (not (null locations))
+  assertBool
+    "adapter position escaped the inspected source identity"
+    (all ((== identity) . locationSource) locations)
+
+reportSourceLocations :: InspectionReport -> [SourceLocation]
+reportSourceLocations report =
+  nativeLocations (reportNativeBinding report)
+    ++ viewLocations (reportViewResolution report)
+    ++ concatMap
+         diagnosticLocations
+         (diagnosticsList (reportDiagnostics report))
+    ++ maybe
+         []
+         (map provenanceLocation
+            . NonEmpty.toList
+            . closedScopeProvenanceOccurrences)
+         (reportClosedScopeProvenance report)
+
+nativeLocations :: NativeAdapterBinding -> [SourceLocation]
+nativeLocations binding =
+  case binding of
+    NativeBindingResolved _ -> []
+    NativeBindingFailed failure ->
+      case failure of
+        NativeBindingUnavailable observation _ ->
+          encodingLocations (unavailableEncoding observation)
+        NativeBindingRejected rejected _ ->
+          locatedAt (rejectedRootQName rejected)
+            : maybe [] (pure . locatedAt) (rejectedNativeVersion rejected)
+
+encodingLocations :: EncodingObservation SourceLocation -> [SourceLocation]
+encodingLocations observation =
+  case observation of
+    EncodingNotObserved -> []
+    EncodingDefaultedToUtf8 -> []
+    EncodingDeclared declaration -> [locatedAt declaration]
+
+viewLocations :: ViewResolution -> [SourceLocation]
+viewLocations resolution =
+  case resolution of
+    ViewUnavailable -> []
+    ViewResolved resolved -> [resolvedViewLocation (resolvedView resolved)]
+    ViewRejected failure ->
+      case failedViewObservation failure of
+        NoViewMatch -> []
+        OneViewMatch candidate -> [viewCandidateLocation candidate]
+        MultipleViewMatches candidates ->
+          map viewCandidateLocation (atLeastTwoToList candidates)
 
 occurrenceIdentityCollisionTest :: Assertion
 occurrenceIdentityCollisionTest = do
@@ -701,7 +776,7 @@ reachedDefectTest = do
             ViewSucceeds
             RootSucceeds
             missionFacts
-            [reachedDefect missionOccurrence]))
+            [missionOccurrence]))
   case reportScopeResolution report of
     ScopeRejectedResolution _ -> pure ()
     resolution -> assertFailure ("unexpected scope state: " <> show resolution)
@@ -717,7 +792,7 @@ unreachedDefectTest = do
             ViewSucceeds
             RootSucceeds
             missionFacts
-            [reachedDefect (testOccurrence "outside")]))
+            [testOccurrence "outside"]))
   assertBool
     "unreached adapter defect must not be reported"
     ("o2i.test.profile.reached" `notElem` diagnosticCodes report)
@@ -1659,9 +1734,9 @@ alternateAdapter :: Adapter
 alternateAdapter =
   Adapter
     testDescriptor
-    (\locator _ -> DecodePassed testNativeBinding locator)
+    (\_ -> DecodePassed testNativeBinding testPosition)
     (\AlternateDefect -> testSpec "o2i.test.alt.decode")
-    (\locator _ -> ViewPassed (testResolvedViewAt locator) locator)
+    (\position _ -> ViewPassed (testResolvedViewAt position) position)
     (\AlternateDefect -> testSpec "o2i.test.alt.view")
     O2IProfileContract
       { projectProfileSnapshot =
@@ -1682,8 +1757,7 @@ alternateAdapter =
               }
       , profileDefectSpec = \AlternateDefect -> testSpec "o2i.test.alt.profile"
       }
-    (\locator _ ->
-       profileSnapshot (Located (testLocationAt locator) AlternateFact))
+    (\position _ -> profileSnapshot (Located position AlternateFact))
 
 data AdversarialMode
   = AdversarialDecode
@@ -1702,28 +1776,23 @@ adversarialAdapter mode =
     resolveView
     adversarialSpec
     contract
-    (\locator _ ->
-       profileSnapshot (Located (testLocationAt locator) TestProfileFact))
+    (\position _ -> profileSnapshot (Located position TestProfileFact))
   where
-    decode locator _ =
+    decode _ =
       case mode of
         AdversarialDecode ->
           DecodeUnavailable
             (DecodeUnavailableObservation EncodingNotObserved)
-            (Located (testLocationAt locator) AdversarialDefect :| [])
-        AdversarialView -> DecodePassed testNativeBinding locator
-        AdversarialProfile -> DecodePassed testNativeBinding locator
-    resolveView locator _ =
+            (Located testPosition AdversarialDefect :| [])
+        AdversarialView -> DecodePassed testNativeBinding testPosition
+        AdversarialProfile -> DecodePassed testNativeBinding testPosition
+    resolveView position _ =
       case mode of
         AdversarialDecode ->
-          ViewFailed
-            NoViewMatch
-            (Located (testLocationAt locator) AdversarialDefect :| [])
+          ViewFailed NoViewMatch (Located position AdversarialDefect :| [])
         AdversarialView ->
-          ViewFailed
-            NoViewMatch
-            (Located (testLocationAt locator) AdversarialDefect :| [])
-        AdversarialProfile -> ViewPassed (testResolvedViewAt locator) locator
+          ViewFailed NoViewMatch (Located position AdversarialDefect :| [])
+        AdversarialProfile -> ViewPassed (testResolvedViewAt position) position
     contract =
       O2IProfileContract
         { projectProfileSnapshot =
@@ -1762,15 +1831,15 @@ diagnosticContractAdapter point defects =
     contract
     observe
   where
-    decode locator _
+    decode _
       | point == ContractDecode =
         DecodeUnavailable
           (DecodeUnavailableObservation EncodingNotObserved)
-          (locatedDefects locator)
-      | otherwise = DecodePassed testNativeBinding locator
-    resolveView locator _
-      | point == ContractView = ViewFailed NoViewMatch (locatedDefects locator)
-      | otherwise = ViewPassed (testResolvedViewAt locator) locator
+          (locatedDefects testPosition)
+      | otherwise = DecodePassed testNativeBinding testPosition
+    resolveView position _
+      | point == ContractView = ViewFailed NoViewMatch (locatedDefects position)
+      | otherwise = ViewPassed (testResolvedViewAt position) position
     contract =
       O2IProfileContract
         { projectProfileSnapshot = project
@@ -1793,9 +1862,8 @@ diagnosticContractAdapter point defects =
         }
       where
         location = locatedAt (snapshotFact snapshot)
-    observe locator _ =
-      profileSnapshot (Located (testLocationAt locator) TestProfileFact)
-    locatedDefects locator = locatedDefectsAt (testLocationAt locator)
+    observe position _ = profileSnapshot (Located position TestProfileFact)
+    locatedDefects = locatedDefectsAt
     locatedDefectsAt location = fmap (Located location) defects
     scopeDefect located =
       DeferredProfileDefect
@@ -1817,34 +1885,42 @@ diagnosticAdapter :: SourceLocation -> DiagnosticSpec -> Adapter
 diagnosticAdapter location specification =
   Adapter
     testDescriptor
-    (\_ _ ->
+    (\_ ->
        DecodeUnavailable
          (DecodeUnavailableObservation EncodingNotObserved)
-         (Located location specification :| []))
+         (Located boundPosition specification :| []))
     id
-    (\_ _ -> ViewFailed NoViewMatch (Located location TestViewDefect :| []))
+    (\position _ ->
+       ViewFailed NoViewMatch (Located position TestViewDefect :| []))
     testViewSpec
     O2IProfileContract
       { projectProfileSnapshot =
-          \_ ->
-            ProfileProjection
-              { projectedRoot =
-                  RootUnprojectable
-                    NoO2IProfile
-                    (Located location TestRootProfileDefect :| [])
-              , projectedFacts = []
-              , projectedDefects = []
-              }
+          \snapshot ->
+            let position = locatedAt (snapshotFact snapshot)
+             in ProfileProjection
+                  { projectedRoot =
+                      RootUnprojectable
+                        NoO2IProfile
+                        (Located position TestRootProfileDefect :| [])
+                  , projectedFacts = []
+                  , projectedDefects = []
+                  }
       , profileDefectSpec = testProfileSpec
       }
-    (\_ _ -> profileSnapshot (Located location TestProfileFact))
+    (\position _ -> profileSnapshot (Located position TestProfileFact))
+  where
+    boundPosition =
+      sourcePosition
+        (locationPath location)
+        (locationTarget location)
+        (locationSpan location)
 
 testAdapter ::
      DecodeMode
   -> ViewMode
   -> RootMode
   -> [FactTemplate]
-  -> [DeferredProfileDefect TestProfileDefect]
+  -> [OccurrenceId]
   -> Adapter
 testAdapter decodeMode viewMode rootMode templates deferred =
   Adapter
@@ -1856,30 +1932,26 @@ testAdapter decodeMode viewMode rootMode templates deferred =
     contract
     observe
   where
-    decode locator _ =
+    decode _ =
       case decodeMode of
-        DecodeSucceeds -> DecodePassed testNativeBinding locator
+        DecodeSucceeds -> DecodePassed testNativeBinding testPosition
         DecodeUnavailableMode ->
           DecodeUnavailable
             (DecodeUnavailableObservation EncodingNotObserved)
-            (Located (testLocationAt locator) TestDecodeDefect :| [])
+            (Located testPosition TestDecodeDefect :| [])
         DecodeRejectedMode ->
           DecodeRejected
             RejectedNativeBinding
               { rejectedEncoding = Utf8Binding
-              , rejectedRootQName =
-                  Located (testLocationAt locator) testRootQName
-              , rejectedNativeVersion =
-                  Just (Located (testLocationAt locator) "4.0.0")
+              , rejectedRootQName = Located testPosition testRootQName
+              , rejectedNativeVersion = Just (Located testPosition "4.0.0")
               }
-            (Located (testLocationAt locator) TestDecodeDefect :| [])
-    resolveView locator _ =
+            (Located testPosition TestDecodeDefect :| [])
+    resolveView position _ =
       case viewMode of
-        ViewSucceeds -> ViewPassed (testResolvedViewAt locator) locator
+        ViewSucceeds -> ViewPassed (testResolvedViewAt position) position
         ViewFails ->
-          ViewFailed
-            NoViewMatch
-            (Located (testLocationAt locator) TestViewDefect :| [])
+          ViewFailed NoViewMatch (Located position TestViewDefect :| [])
     contract =
       O2IProfileContract
         {projectProfileSnapshot = project, profileDefectSpec = testProfileSpec}
@@ -1901,12 +1973,12 @@ testAdapter decodeMode viewMode rootMode templates deferred =
                      :| [])
         , projectedFacts =
             instantiateFacts (locatedAt (snapshotFact snapshot)) templates
-        , projectedDefects = deferred
+        , projectedDefects =
+            map (reachedDefect (locatedAt (snapshotFact snapshot))) deferred
         }
-    observe locator _ =
-      profileSnapshot (Located (testLocationAt locator) TestProfileFact)
+    observe position _ = profileSnapshot (Located position TestProfileFact)
 
-instantiateFacts :: SourceLocation -> [FactTemplate] -> [IndexedProfileFact]
+instantiateFacts :: location -> [FactTemplate] -> [IndexedProfileFact location]
 instantiateFacts location = map instantiate
   where
     instantiate template =
@@ -1931,11 +2003,14 @@ instantiateFacts location = map instantiate
             matches
             reason
 
-reachedDefect :: OccurrenceId -> DeferredProfileDefect TestProfileDefect
-reachedDefect occurrence =
+reachedDefect ::
+     SourcePosition
+  -> OccurrenceId
+  -> DeferredProfileDefect SourcePosition TestProfileDefect
+reachedDefect location occurrence =
   DeferredProfileDefect
     { defectApplicability = ReachedProfileDefect (occurrence :| [])
-    , deferredDefect = Located testLocation TestReachedProfileDefect
+    , deferredDefect = Located location TestReachedProfileDefect
     }
 
 missionFacts :: [FactTemplate]
@@ -2100,23 +2175,63 @@ testRootQName :: ExpandedQName
 testRootQName = expandedQName (Just "urn:test") 'm' "odel"
 
 testLocation :: SourceLocation
-testLocation = testLocationAt (sourceDocumentLocator testSource)
+testLocation = locationForPath (firstPathStep testRootQName :| [])
 
-testLocationAt :: SourceLocator -> SourceLocation
-testLocationAt locator =
-  locateSource locator (firstPathStep testRootQName :| []) ElementTarget Nothing
+testPosition :: SourcePosition
+testPosition =
+  sourcePosition (firstPathStep testRootQName :| []) ElementTarget Nothing
 
 locationForPath :: NonEmpty PathStep -> SourceLocation
 locationForPath path =
-  locateSource (sourceDocumentLocator testSource) path ElementTarget Nothing
+  firstDiagnosticLocation (runAdapter (locationAdapter path))
 
-testResolvedViewAt :: SourceLocator -> ResolvedView
-testResolvedViewAt locator =
+testResolvedViewAt :: SourcePosition -> ResolvedView SourcePosition
+testResolvedViewAt position =
   ResolvedView
     { resolvedViewId = "view-1"
     , resolvedViewName = "O2I"
-    , resolvedViewLocation = testLocationAt locator
+    , resolvedViewLocation = position
     }
+
+locationAdapter :: NonEmpty PathStep -> Adapter
+locationAdapter path =
+  Adapter
+    testDescriptor
+    (\_ -> DecodePassed testNativeBinding testPosition)
+    testDecodeSpec
+    (\_ _ ->
+       ViewFailed
+         NoViewMatch
+         (Located (sourcePosition path ElementTarget Nothing) TestViewDefect
+            :| []))
+    testViewSpec
+    O2IProfileContract
+      { projectProfileSnapshot =
+          \snapshot ->
+            let position = locatedAt (snapshotFact snapshot)
+             in ProfileProjection
+                  { projectedRoot =
+                      RootUnprojectable
+                        NoO2IProfile
+                        (Located position TestRootProfileDefect :| [])
+                  , projectedFacts = []
+                  , projectedDefects = []
+                  }
+      , profileDefectSpec = testProfileSpec
+      }
+    (\position _ -> profileSnapshot (Located position TestProfileFact))
+
+firstDiagnosticLocation :: InspectionOutcome -> SourceLocation
+firstDiagnosticLocation outcome =
+  case outcome of
+    InspectionCompleted report ->
+      case diagnosticsList (reportDiagnostics report) of
+        [diagnostic] ->
+          case diagnosticLocations diagnostic of
+            [location] -> location
+            _ -> error "expected exactly one diagnostic location"
+        _ -> error "expected exactly one diagnostic"
+    InspectionCommandFailed _ -> error "expected completed inspection"
 
 testDecodeSpec :: TestDecodeDefect -> DiagnosticSpec
 testDecodeSpec TestDecodeDefect = testSpec "o2i.test.decode"

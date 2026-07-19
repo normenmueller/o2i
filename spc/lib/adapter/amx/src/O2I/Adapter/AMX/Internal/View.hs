@@ -20,7 +20,9 @@ import O2I.Inspection.View
 -- | Resolve exactly one View by name or stable identifier and validate every
 -- persisted object, relationship, and connection-endpoint reference in it.
 resolveAMXView ::
-     AMXDocument -> ViewSelector -> ViewAttempt AMXViewDefect AMXSelectedView
+     AMXDocument
+  -> ViewSelector
+  -> ViewAttempt SourcePosition AMXViewDefect AMXSelectedView
 resolveAMXView document selector =
   case matchingViews of
     [] ->
@@ -59,7 +61,7 @@ matches selector view =
     ViewByName name -> elementName view == name
     ViewById identifier -> elementId view == Just identifier
 
-viewCandidate :: AMXElement -> ViewCandidate
+viewCandidate :: AMXElement -> ViewCandidate SourcePosition
 viewCandidate view =
   ViewCandidate
     { viewCandidateId = maybe "" id (elementId view)
@@ -68,7 +70,9 @@ viewCandidate view =
     }
 
 validateSelectedView ::
-     AMXDocument -> AMXElement -> ViewAttempt AMXViewDefect AMXSelectedView
+     AMXDocument
+  -> AMXElement
+  -> ViewAttempt SourcePosition AMXViewDefect AMXSelectedView
 validateSelectedView document view =
   case defects of
     [] ->
@@ -119,7 +123,7 @@ validateSelectedView document view =
 
 data Resolution a = Resolution
   { resultValue :: Maybe a
-  , resultDefects :: [Located AMXViewDefect]
+  , resultDefects :: [Located SourcePosition AMXViewDefect]
   }
 
 resolveObject ::
@@ -237,7 +241,7 @@ resolveConnection relationshipIndex objectIndex presentationIndex connection =
 resolveRelationship ::
      Map Text [AMXElement]
   -> Maybe Text
-  -> SourceLocation
+  -> SourcePosition
   -> Resolution AMXElement
 resolveRelationship index reference location =
   case reference >>= (`Map.lookup` index) of
@@ -266,7 +270,7 @@ resolveEndpoint ::
      Text
   -> Map Text [AMXElement]
   -> Maybe Text
-  -> SourceLocation
+  -> SourcePosition
   -> Resolution AMXElement
 resolveEndpoint role index reference location =
   case reference >>= (`Map.lookup` index) of
@@ -310,7 +314,7 @@ isConnection element =
     == Just (expandedQName (Just archiNamespace) 'C' "onnection")
 
 attributeReferenceLocation ::
-     ExpandedQName -> AMXElement -> Maybe Text -> SourceLocation
+     ExpandedQName -> AMXElement -> Maybe Text -> SourcePosition
 attributeReferenceLocation name element reference =
   case reference of
     Nothing -> amxElementLocation element

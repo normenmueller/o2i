@@ -1,5 +1,5 @@
--- | Opaque source identities, source-bound locations, and closed-scope
--- provenance.
+-- | Opaque source identities, adapter positions, bound locations, and
+-- closed-scope provenance.
 module O2I.Inspection.Provenance
   ( SourceInputKind(..)
   , SourceHash
@@ -29,8 +29,11 @@ module O2I.Inspection.Provenance
   , spanStartColumn
   , spanEndLine
   , spanEndColumn
-  , SourceLocator
-  , locateSource
+  , SourcePosition
+  , sourcePosition
+  , positionPath
+  , positionTarget
+  , positionSpan
   , SourceLocation
   , locationSource
   , locationPath
@@ -64,6 +67,18 @@ import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
 import Numeric.Natural (Natural)
 import O2I.Inspection.Provenance.Internal
+
+-- | Read the source-relative structural path.
+positionPath :: SourcePosition -> NonEmpty PathStep
+positionPath (SourcePosition path _ _) = path
+
+-- | Read the source-relative field target.
+positionTarget :: SourcePosition -> LocationTarget
+positionTarget (SourcePosition _ target _) = target
+
+-- | Read the optional source-relative text span.
+positionSpan :: SourcePosition -> Maybe SourceSpan
+positionSpan (SourcePosition _ _ sourceSpan) = sourceSpan
 
 -- | Read the normalized lowercase hexadecimal digest.
 sourceHashText :: SourceHash -> Text

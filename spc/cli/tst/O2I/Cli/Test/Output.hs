@@ -148,10 +148,10 @@ adversarialAdapter =
         ('a' :| Text.unpack adversarialText)
         ('a' :| Text.unpack adversarialText)
         ('a' :| Text.unpack adversarialText)
-    decode locator _ =
+    decode _ =
       DecodeUnavailable
         (DecodeUnavailableObservation EncodingNotObserved)
-        (Located (adversarialLocation locator) () :| [])
+        (Located adversarialPosition () :| [])
     diagnostic () =
       diagnosticSpec
         (o2iDiagnosticCode ("test." <> adversarialText))
@@ -161,10 +161,9 @@ adversarialAdapter =
         [DiagnosticSubject adversarialText adversarialText]
         mempty
 
-adversarialLocation :: SourceLocator -> SourceLocation
-adversarialLocation locator =
-  locateSource
-    locator
+adversarialPosition :: SourcePosition
+adversarialPosition =
+  sourcePosition
     (firstPathStep name :| [])
     (PropertyTarget adversarialText)
     Nothing

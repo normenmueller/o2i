@@ -52,7 +52,7 @@ $(assertAbstractTypes
     , "Provenance.ExpandedQName"
     , "Provenance.PathStep"
     , "Provenance.SourceSpan"
-    , "Provenance.SourceLocator"
+    , "Provenance.SourcePosition"
     , "Provenance.SourceLocation"
     , "Provenance.OccurrenceKind"
     , "Provenance.OccurrenceId"
@@ -109,6 +109,10 @@ $(assertOrdinaryFunctions
     , 'Provenance.spanStartColumn
     , 'Provenance.spanEndLine
     , 'Provenance.spanEndColumn
+    , 'Provenance.sourcePosition
+    , 'Provenance.positionPath
+    , 'Provenance.positionTarget
+    , 'Provenance.positionSpan
     , 'Provenance.locationSource
     , 'Provenance.locationPath
     , 'Provenance.locationTarget
@@ -273,7 +277,7 @@ compileFailContracts =
       , "Provenance.ExpandedQName"
       , "Provenance.PathStep"
       , "Provenance.SourceSpan"
-      , "Provenance.SourceLocator"
+      , "Provenance.SourcePosition"
       , "Provenance.SourceLocation"
       , "Provenance.OccurrenceKind"
       , "Provenance.OccurrenceId"
@@ -292,6 +296,14 @@ compileFailContracts =
       , "Provenance.closedScopeProvenanceOccurrences"
       , "Provenance.supplementalInputKind"
       ]
+  , CompileFailContract
+      "Inspection owns source binding"
+      "tst/api/compile-fail/HiddenSourceBinding.hs"
+      ["Input.sourceDocumentLocator", "Input.bindDocumentPosition"]
+  , CompileFailContract
+      "Adapters emit only source-relative positions"
+      "tst/api/compile-fail/ForeignAdapterLocation.hs"
+      ["Provenance.SourceLocation", "Provenance.SourcePosition"]
   , CompileFailContract
       "Inspection-owned diagnostic normalization"
       "tst/api/compile-fail/HiddenNormalization.hs"

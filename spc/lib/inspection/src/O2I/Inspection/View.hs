@@ -19,27 +19,29 @@ data ViewSelector
   deriving (Eq, Ord, Show)
 
 -- | One persisted View matching a selector.
-data ViewCandidate = ViewCandidate
+data ViewCandidate location = ViewCandidate
   { viewCandidateId :: Text
   , viewCandidateName :: Text
-  , viewCandidateLocation :: SourceLocation
+  , viewCandidateLocation :: location
   } deriving (Eq, Ord, Show)
 
 -- | Exact resolved View identity.
-data ResolvedView = ResolvedView
+data ResolvedView location = ResolvedView
   { resolvedViewId :: Text
   , resolvedViewName :: Text
-  , resolvedViewLocation :: SourceLocation
+  , resolvedViewLocation :: location
   } deriving (Eq, Ord, Show)
 
 -- | Facts safely observable when View resolution fails.
-data ObservedViewResolution
+data ObservedViewResolution location
   = NoViewMatch
-  | OneViewMatch ViewCandidate
-  | MultipleViewMatches (AtLeastTwo ViewCandidate)
+  | OneViewMatch (ViewCandidate location)
+  | MultipleViewMatches (AtLeastTwo (ViewCandidate location))
   deriving (Eq, Show)
 
 -- | Total exact-View resolution result.
-data ViewAttempt defect selectedView
-  = ViewFailed ObservedViewResolution (NonEmpty (Located defect))
-  | ViewPassed ResolvedView selectedView
+data ViewAttempt location defect selectedView
+  = ViewFailed
+      (ObservedViewResolution location)
+      (NonEmpty (Located location defect))
+  | ViewPassed (ResolvedView location) selectedView

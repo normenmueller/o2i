@@ -10,7 +10,6 @@ import Data.Aeson ((.:), (.:?))
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Lazy as LazyByteString
 import Data.Text (Text)
-import O2I
 import O2I.Adapter.AMX.Internal.Types
 import O2I.Adapter.AMX.Internal.XML
 import O2I.Adapter.AMX.Test.Support
@@ -207,29 +206,14 @@ nativeReferenceTest = do
 ethosReferenceTest :: Assertion
 ethosReferenceTest = do
   bytes <- ByteString.readFile (fixture "valid/orientation/ethos.archimate")
-  let document =
-        sourceDocumentFromBytes
-          "valid/orientation/ethos.archimate"
-          FileSource
-          bytes
+  let document = sourceBytes bytes
       selector = ViewByName "O2I Reference - Ethos"
-      context = RawNodeId "id-14b8dcb25f204fe0903e308d7a38f438"
-      principleId = RawNodeId "id-d7c54b15cb1e407eaa770b6769fad6ee"
   sourceHashText (sourceSha256 (sourceDocumentIdentity document))
     @?= ethosReferenceSha256
-  imported <- projectImportedBytes selector bytes
-  importedRawGraph imported
-    @?= RawGraph
-          [ RawPrimitiveNode principleId context Principle
-          , RawContextNode context Ethos
-          ]
-          []
-  resolvedViewName (importedView imported) @?= "O2I Reference - Ethos"
-  resolvedViewId (importedView imported)
-    @?= "id-fad6c1265c8c4623ab29335326eb23f2"
-  sourceHashText (sourceSha256 (importedSourceIdentity imported))
-    @?= ethosReferenceSha256
   report <- inspectBytes selector bytes
+  requestSourceIdentity (reportRequestInfo report)
+    @?= sourceDocumentIdentity document
+  viewResolutionId report @?= Just "id-fad6c1265c8c4623ab29335326eb23f2"
   take 5 (map reportedState (stageReportsList (reportStageReports report)))
     @?= replicate 5 StagePassed
   diagnosticCodes report @?= ["o2i.traceability.intervention-missing"]

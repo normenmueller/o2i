@@ -21,8 +21,9 @@
 
 - Added format-neutral staged model inspection, a native AMX adapter, and the
   thin `o2i inspect` CLI with exact View selection, file or standard-input
-  acquisition, opaque source-bound identities, mandatory closed-scope
-  provenance, stable diagnostics, and deterministic human or JSON reports.
+  acquisition, opaque source-relative adapter positions, request-bound source
+  identities, mandatory closed-scope provenance, stable diagnostics, and
+  deterministic human or JSON reports.
 - Added `validateNeedQualificationProposal` as an opaque pre-persistence check
   for structurally and relationally admissible Need-qualification candidates
   with explicit rationale and source reference, distinct from subject-matter

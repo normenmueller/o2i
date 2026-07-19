@@ -39,11 +39,11 @@ data AMXViewDefect
   | AmbiguousViewName Text (NonEmpty Text)
   | DuplicateViewId Text (NonEmpty Text)
   | UnresolvedViewObjectReference (Maybe Text)
-  | AmbiguousViewObjectReference Text (NonEmpty SourceLocation)
+  | AmbiguousViewObjectReference Text (NonEmpty SourcePosition)
   | UnresolvedViewRelationshipReference (Maybe Text)
-  | AmbiguousViewRelationshipReference Text (NonEmpty SourceLocation)
+  | AmbiguousViewRelationshipReference Text (NonEmpty SourcePosition)
   | UnresolvedViewConnectionEndpoint Text (Maybe Text)
-  | AmbiguousViewConnectionEndpoint Text Text (NonEmpty SourceLocation)
+  | AmbiguousViewConnectionEndpoint Text Text (NonEmpty SourcePosition)
   | ViewConnectionEndpointMismatch Text Text Text
   deriving (Eq, Show)
 

@@ -21,13 +21,16 @@ import O2I.Inspection.Provenance
 
 -- | Project the sole adapter observation into a total profile result.
 projectAMXProfile ::
-     ProfileSnapshot AMXProfileFact -> ProfileProjection AMXProfileDefect
+     ProfileSnapshot SourcePosition AMXProfileFact
+  -> ProfileProjection SourcePosition AMXProfileDefect
 projectAMXProfile snapshot =
   case locatedValue (snapshotFact snapshot) of
     AMXProfileFact document selected -> projectSnapshot document selected
 
 projectSnapshot ::
-     AMXDocument -> AMXSelectedView -> ProfileProjection AMXProfileDefect
+     AMXDocument
+  -> AMXSelectedView
+  -> ProfileProjection SourcePosition AMXProfileDefect
 projectSnapshot document selected =
   ProfileProjection
     { projectedRoot = rootProjection
@@ -50,7 +53,8 @@ projectSnapshot document selected =
         (relationshipDefects environment)
         (semanticRelationshipElements environment closure)
 
-profileFacts :: Environment -> CandidateClosure -> [IndexedProfileFact]
+profileFacts ::
+     Environment -> CandidateClosure -> [IndexedProfileFact SourcePosition]
 profileFacts environment closure =
   nodeFacts
     ++ relationshipFacts
@@ -84,7 +88,10 @@ profileFacts environment closure =
         semanticRelationships
 
 projectNodeOccurrence ::
-     Environment -> CandidateClosure -> AMXElement -> IndexedProfileFact
+     Environment
+  -> CandidateClosure
+  -> AMXElement
+  -> IndexedProfileFact SourcePosition
 projectNodeOccurrence environment closure element
   | Set.member occurrence (closureCandidates closure) =
     case rawNode environment element of
@@ -97,7 +104,10 @@ projectNodeOccurrence environment closure element
     occurrence = nodeOccurrence element
 
 projectRelationshipOccurrence ::
-     Environment -> CandidateClosure -> AMXElement -> [IndexedProfileFact]
+     Environment
+  -> CandidateClosure
+  -> AMXElement
+  -> [IndexedProfileFact SourcePosition]
 projectRelationshipOccurrence environment closure relationship =
   declarationFact : endpointReferences
   where
@@ -124,7 +134,7 @@ relationshipReference ::
   -> AMXElement
   -> EndpointRole
   -> PersistedDependencyReason
-  -> IndexedProfileFact
+  -> IndexedProfileFact SourcePosition
 relationshipReference environment relationship role reason =
   indexReference occurrence reference matches reason
   where
@@ -168,7 +178,8 @@ referenceOccurrenceKind role =
     SourceEndpoint -> RelationshipSourceReferenceOccurrence
     TargetEndpoint -> RelationshipTargetReferenceOccurrence
 
-projectPresentations :: Environment -> CandidateClosure -> [IndexedProfileFact]
+projectPresentations ::
+     Environment -> CandidateClosure -> [IndexedProfileFact SourcePosition]
 projectPresentations environment closure =
   concatMap objectPresentation objects
     ++ concatMap connectionPresentation connections
@@ -204,7 +215,7 @@ relationshipBackDependencies ::
   -> CandidateClosure
   -> PersistedDependencyReason
   -> AMXElement
-  -> [IndexedProfileFact]
+  -> [IndexedProfileFact SourcePosition]
 relationshipBackDependencies environment closure reason relationship =
   [ indexDependency (nodeOccurrence endpoint) relationOccurrence reason
   | endpoint <- uniqueEndpointElements environment relationship
@@ -214,7 +225,10 @@ relationshipBackDependencies environment closure reason relationship =
     relationOccurrence = relationshipOccurrence relationship
 
 hiddenRelationshipDependencies ::
-     Environment -> CandidateClosure -> AMXElement -> [IndexedProfileFact]
+     Environment
+  -> CandidateClosure
+  -> AMXElement
+  -> [IndexedProfileFact SourcePosition]
 hiddenRelationshipDependencies environment closure relationship =
   case exactSignatures environment relationship of
     signature:_
@@ -227,7 +241,9 @@ hiddenRelationshipDependencies environment closure relationship =
     _ -> []
 
 relationshipDefects ::
-     Environment -> AMXElement -> [DeferredProfileDefect AMXProfileDefect]
+     Environment
+  -> AMXElement
+  -> [DeferredProfileDefect SourcePosition AMXProfileDefect]
 relationshipDefects environment relationship =
   case resolvedSignatures environment relationship of
     [] -> []
@@ -253,8 +269,8 @@ relationshipDefects environment relationship =
 
 deferRelationship ::
      OccurrenceId
-  -> Located AMXProfileDefect
-  -> DeferredProfileDefect AMXProfileDefect
+  -> Located SourcePosition AMXProfileDefect
+  -> DeferredProfileDefect SourcePosition AMXProfileDefect
 deferRelationship occurrence defect =
   DeferredProfileDefect
     { defectApplicability = ReachedProfileDefect (occurrence :| [])

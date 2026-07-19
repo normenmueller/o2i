@@ -27,7 +27,7 @@ projectionTests =
     , testCase
         "relation projection covers the Core registry"
         registryCoverageTest
-    , testCase "projected node and edge identities are stable" graphIdentityTest
+    , testCase "projected relation crosses Structure" projectionBoundaryTest
     , testCase "projection and report bytes are deterministic" determinismTest
     , testCase "diagnostics retain exact source provenance" provenanceTest
     , testCase
@@ -120,11 +120,9 @@ profileDefects =
   , OwnershipOnOwnerlessKind "node"
   ]
 
-sampleLocation :: SourceLocation
+sampleLocation :: SourcePosition
 sampleLocation =
-  locateSource
-    (sourceDocumentLocator
-       (sourceDocumentFromBytes "sample.archimate" FileSource ""))
+  sourcePosition
     (firstPathStep (expandedQName (Just "urn:test") 'm' "odel") :| [])
     ElementTarget
     Nothing
@@ -136,23 +134,12 @@ registryCoverageTest = do
     "every signature must retain the Core semantic name"
     (all (not . Text.null . relationNameText . signatureName) relationSignatures)
 
-graphIdentityTest :: Assertion
-graphIdentityTest = do
-  imported <- projectImportedGraph (connectionModel "relation" "a" "b")
-  let graph = importedRawGraph imported
-  rawNodes graph
-    @?= [ RawContextNode (RawNodeId "left") Mission
-        , RawContextNode (RawNodeId "right") Vision
-        ]
-  rawEdges graph
-    @?= [ RawEdge
-            (RawNodeId "left")
-            (RelationName "mission-grounds-vision")
-            (RawNodeId "right")
-        ]
-
-projectImportedGraph :: Text.Text -> IO ImportedGraph
-projectImportedGraph = projectImportedBytes (ViewByName "Scope") . encode
+projectionBoundaryTest :: Assertion
+projectionBoundaryTest = do
+  report <-
+    inspectText (ViewByName "Scope") (connectionModel "relation" "a" "b")
+  take 4 (map reportedState (stageReportsList (reportStageReports report)))
+    @?= replicate 4 StagePassed
 
 determinismTest :: Assertion
 determinismTest = do

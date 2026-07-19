@@ -36,8 +36,7 @@ data AMXElement = AMXElement
   { amxElementQName :: ExpandedQName
   , amxElementAttributes :: Map ExpandedQName Text
   , amxElementChildren :: [AMXElement]
-  , amxElementLocator :: SourceLocator
-  , amxElementLocation :: SourceLocation
+  , amxElementLocation :: SourcePosition
   , amxElementNamespaces :: Map Text Text
   } deriving (Eq, Show)
 
@@ -101,13 +100,12 @@ endpointQName role =
 elementAttribute :: ExpandedQName -> AMXElement -> Maybe Text
 elementAttribute name = Map.lookup name . amxElementAttributes
 
-elementAttributeLocation :: ExpandedQName -> AMXElement -> SourceLocation
+elementAttributeLocation :: ExpandedQName -> AMXElement -> SourcePosition
 elementAttributeLocation name element =
-  locateSource
-    (amxElementLocator element)
-    (locationPath (amxElementLocation element))
+  sourcePosition
+    (positionPath (amxElementLocation element))
     (AttributeTarget name)
-    (locationSpan (amxElementLocation element))
+    (positionSpan (amxElementLocation element))
 
 elementChildrenNamed :: ExpandedQName -> AMXElement -> [AMXElement]
 elementChildrenNamed name =
@@ -133,7 +131,7 @@ elementOccurrence :: AMXOccurrenceKind -> AMXElement -> OccurrenceId
 elementOccurrence kind element =
   occurrenceId
     (occurrenceKindLiteral (kindLiteral kind))
-    (locationPath (amxElementLocation element))
+    (positionPath (amxElementLocation element))
 
 elementType :: AMXElement -> Maybe ExpandedQName
 elementType element = do

@@ -31,7 +31,7 @@ data ImportedGraph = ImportedGraph
   { importedGraphRaw :: RawGraph
   , importedGraphClosedScopeProvenance :: ClosedScopeProvenance
   , importedGraphSource :: SourceIdentity
-  , importedGraphView :: ResolvedView
+  , importedGraphView :: ResolvedView SourceLocation
   , importedGraphSubjectLocations :: Map (Text, Text) [SourceLocation]
   }
 
@@ -77,7 +77,7 @@ importedSourceIdentity :: ImportedGraph -> SourceIdentity
 importedSourceIdentity = importedGraphSource
 
 -- | Read the exact selected View.
-importedView :: ImportedGraph -> ResolvedView
+importedView :: ImportedGraph -> ResolvedView SourceLocation
 importedView = importedGraphView
 
 -- | Locate normalized diagnostic subjects in the imported source.
@@ -96,7 +96,7 @@ importedLocationsForSubjects imported subjects =
 
 factSubjects ::
      (OccurrenceId -> Bool)
-  -> IndexedProfileFact
+  -> IndexedProfileFact SourceLocation
   -> [((Text, Text), [SourceLocation])]
 factSubjects included fact =
   case fact of

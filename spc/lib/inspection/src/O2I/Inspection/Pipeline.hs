@@ -39,8 +39,15 @@ import O2I.Inspection.Diagnostic.Internal
 import O2I.Inspection.Import
 import O2I.Inspection.Input
 import O2I.Inspection.Profile
+import O2I.Inspection.Profile.Internal
+  ( IndexedProfileFact(..)
+  , ResolvedProfileProjection(..)
+  )
 import O2I.Inspection.Provenance
-import O2I.Inspection.Provenance.Internal (SupplementalSource(..))
+import O2I.Inspection.Provenance.Internal
+  ( SupplementalSource(..)
+  , bindSourcePosition
+  )
 import O2I.Inspection.Report.Internal
 import O2I.Inspection.Scope.Internal
 
@@ -231,7 +238,8 @@ inspect adapter request = do
            (inspectionInputs request)
            document)
 
--- | Run inspection over already acquired exact bytes.
+-- | Run inspection over already acquired exact bytes. Every source-relative
+-- adapter position is bound here to this document's immutable identity.
 inspectSourceDocument ::
      Adapter
   -> ViewSelector
@@ -239,32 +247,50 @@ inspectSourceDocument ::
   -> SourceDocument
   -> InspectionOutcome
 inspectSourceDocument (Adapter descriptor decode decodeSpec resolveView viewSpec contract observe) selector inputs source =
-  case decode (sourceDocumentLocator source) source of
+  case decode source of
     DecodeUnavailable observation defects ->
-      let diagnostics = locatedDiagnostics DecodeStage decodeSpec defects
+      let diagnostics =
+            locatedDiagnostics
+              DecodeStage
+              decodeSpec
+              (fmap (bindLocated sourceIdentity) defects)
        in InspectionCompleted
             (decodeFailureReport
                requestInfo
-               (NativeBindingUnavailable observation)
+               (NativeBindingUnavailable
+                  (bindDecodeUnavailableObservation sourceIdentity observation))
                diagnostics)
     DecodeRejected rejected defects ->
-      let diagnostics = locatedDiagnostics DecodeStage decodeSpec defects
+      let diagnostics =
+            locatedDiagnostics
+              DecodeStage
+              decodeSpec
+              (fmap (bindLocated sourceIdentity) defects)
        in InspectionCompleted
             (decodeFailureReport
                requestInfo
-               (NativeBindingRejected rejected)
+               (NativeBindingRejected
+                  (bindRejectedNativeBinding sourceIdentity rejected))
                diagnostics)
     DecodePassed binding document ->
       case resolveView document selector of
         ViewFailed observation defects ->
-          let diagnostics = locatedDiagnostics ViewScopeStage viewSpec defects
+          let diagnostics =
+                locatedDiagnostics
+                  ViewScopeStage
+                  viewSpec
+                  (fmap (bindLocated sourceIdentity) defects)
            in InspectionCompleted
-                (viewFailureReport requestInfo binding observation diagnostics)
+                (viewFailureReport
+                   requestInfo
+                   binding
+                   (bindObservedViewResolution sourceIdentity observation)
+                   diagnostics)
         ViewPassed view selectedView ->
           inspectProfile
             requestInfo
             binding
-            (ResolvedViewResolution view)
+            (ResolvedViewResolution (bindResolvedView sourceIdentity view))
             inputs
             contract
             (observe document selectedView)
@@ -275,20 +301,24 @@ inspectSourceDocument (Adapter descriptor decode decodeSpec resolveView viewSpec
         , requestAdapter = descriptor
         , requestedViewSelector = selector
         }
+    sourceIdentity = sourceDocumentIdentity source
 
 inspectProfile ::
      InspectionRequestInfo
   -> ResolvedNativeBinding
   -> ResolvedViewResolution
   -> InspectionInputs
-  -> O2IProfileContract fact defect
-  -> ProfileSnapshot fact
+  -> O2IProfileContract SourcePosition fact defect
+  -> ProfileSnapshot SourcePosition fact
   -> InspectionOutcome
 inspectProfile request binding viewResolution inputs contract observations =
   case resolveRootProfile contract observations of
     ProfileRejected observed defects ->
       let diagnostics =
-            locatedDiagnostics ProfileStage (profileDefectSpec contract) defects
+            locatedDiagnostics
+              ProfileStage
+              (profileDefectSpec contract)
+              (fmap (bindLocated sourceIdentity) defects)
        in InspectionCompleted
             (profileFailureReport
                request
@@ -303,7 +333,12 @@ inspectProfile request binding viewResolution inputs contract observations =
         viewResolution
         resolved
         inputs
-        (buildProfileIndex (resolvedView viewResolution) contract projection)
+        (buildProfileIndex
+           (resolvedView viewResolution)
+           contract
+           (bindResolvedProfileProjection sourceIdentity projection))
+  where
+    sourceIdentity = requestSourceIdentity request
 
 inspectScope ::
      InspectionRequestInfo
@@ -616,7 +651,7 @@ decodeFailureReport request failure diagnostics =
 viewFailureReport ::
      InspectionRequestInfo
   -> ResolvedNativeBinding
-  -> ObservedViewResolution
+  -> ObservedViewResolution SourceLocation
   -> NonEmpty Diagnostic
   -> InspectionReport
 viewFailureReport request binding observation diagnostics =
@@ -796,7 +831,7 @@ stageReport stage state diagnostics =
 locatedDiagnostics ::
      InspectionStage
   -> (defect -> DiagnosticSpec)
-  -> NonEmpty (Located defect)
+  -> NonEmpty (Located SourceLocation defect)
   -> NonEmpty Diagnostic
 locatedDiagnostics stage specification =
   fmap (diagnosticFromLocated stage specification)
@@ -863,6 +898,143 @@ coreDiagnostic stage imported specification defect =
     spec
   where
     spec = specification defect
+
+bindLocated ::
+     SourceIdentity
+  -> Located SourcePosition value
+  -> Located SourceLocation value
+bindLocated source (Located position value) =
+  Located (bindSourcePosition source position) value
+
+bindEncodingObservation ::
+     SourceIdentity
+  -> EncodingObservation SourcePosition
+  -> EncodingObservation SourceLocation
+bindEncodingObservation source observation =
+  case observation of
+    EncodingNotObserved -> EncodingNotObserved
+    EncodingDefaultedToUtf8 -> EncodingDefaultedToUtf8
+    EncodingDeclared declaration ->
+      EncodingDeclared (bindLocated source declaration)
+
+bindDecodeUnavailableObservation ::
+     SourceIdentity
+  -> DecodeUnavailableObservation SourcePosition
+  -> DecodeUnavailableObservation SourceLocation
+bindDecodeUnavailableObservation source observation =
+  DecodeUnavailableObservation
+    (bindEncodingObservation source (unavailableEncoding observation))
+
+bindRejectedNativeBinding ::
+     SourceIdentity
+  -> RejectedNativeBinding SourcePosition
+  -> RejectedNativeBinding SourceLocation
+bindRejectedNativeBinding source rejected =
+  RejectedNativeBinding
+    { rejectedEncoding = rejectedEncoding rejected
+    , rejectedRootQName = bindLocated source (rejectedRootQName rejected)
+    , rejectedNativeVersion =
+        fmap (bindLocated source) (rejectedNativeVersion rejected)
+    }
+
+bindViewCandidate ::
+     SourceIdentity
+  -> ViewCandidate SourcePosition
+  -> ViewCandidate SourceLocation
+bindViewCandidate source candidate =
+  ViewCandidate
+    { viewCandidateId = viewCandidateId candidate
+    , viewCandidateName = viewCandidateName candidate
+    , viewCandidateLocation =
+        bindSourcePosition source (viewCandidateLocation candidate)
+    }
+
+bindResolvedView ::
+     SourceIdentity
+  -> ResolvedView SourcePosition
+  -> ResolvedView SourceLocation
+bindResolvedView source view =
+  ResolvedView
+    { resolvedViewId = resolvedViewId view
+    , resolvedViewName = resolvedViewName view
+    , resolvedViewLocation =
+        bindSourcePosition source (resolvedViewLocation view)
+    }
+
+bindObservedViewResolution ::
+     SourceIdentity
+  -> ObservedViewResolution SourcePosition
+  -> ObservedViewResolution SourceLocation
+bindObservedViewResolution source observation =
+  case observation of
+    NoViewMatch -> NoViewMatch
+    OneViewMatch candidate -> OneViewMatch (bindViewCandidate source candidate)
+    MultipleViewMatches candidates ->
+      MultipleViewMatches (fmap (bindViewCandidate source) candidates)
+
+bindResolvedProfileProjection ::
+     SourceIdentity
+  -> ResolvedProfileProjection SourcePosition fact defect
+  -> ResolvedProfileProjection SourceLocation fact defect
+bindResolvedProfileProjection source projection =
+  ResolvedProfileProjection
+    { resolvedProfileSnapshot =
+        profileSnapshot
+          (bindLocated
+             source
+             (snapshotFact (resolvedProfileSnapshot projection)))
+    , resolvedProjectedFacts =
+        map (bindIndexedProfileFact source) (resolvedProjectedFacts projection)
+    , resolvedDeferredDefects =
+        map
+          (bindDeferredProfileDefect source)
+          (resolvedDeferredDefects projection)
+    }
+
+bindDeferredProfileDefect ::
+     SourceIdentity
+  -> DeferredProfileDefect SourcePosition defect
+  -> DeferredProfileDefect SourceLocation defect
+bindDeferredProfileDefect source deferred =
+  DeferredProfileDefect
+    { defectApplicability = defectApplicability deferred
+    , deferredDefect = bindLocated source (deferredDefect deferred)
+    }
+
+bindIndexedProfileFact ::
+     SourceIdentity
+  -> IndexedProfileFact SourcePosition
+  -> IndexedProfileFact SourceLocation
+bindIndexedProfileFact source fact =
+  case fact of
+    IndexedOccurrence occurrence position ->
+      IndexedOccurrence occurrence (bindSourcePosition source position)
+    IndexedNode occurrence node position ->
+      IndexedNode occurrence node (bindSourcePosition source position)
+    IndexedEdge occurrence edge position ->
+      IndexedEdge occurrence edge (bindSourcePosition source position)
+    IndexedSeed presentation target -> IndexedSeed presentation target
+    IndexedDependency from to reason -> IndexedDependency from to reason
+    IndexedReference from reference matches reason ->
+      IndexedReference
+        from
+        (bindReferenceOccurrence source reference)
+        matches
+        reason
+
+bindReferenceOccurrence ::
+     SourceIdentity
+  -> ReferenceOccurrence SourcePosition
+  -> ReferenceOccurrence SourceLocation
+bindReferenceOccurrence source reference =
+  ReferenceOccurrence
+    { referenceOccurrenceId = referenceOccurrenceId reference
+    , referenceFromOccurrence = referenceFromOccurrence reference
+    , referenceRole = referenceRole reference
+    , referenceToken = referenceToken reference
+    , referenceLocation =
+        bindSourcePosition source (referenceLocation reference)
+    }
 
 inputSourceLabel :: InputSource -> Text
 inputSourceLabel source =

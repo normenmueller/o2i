@@ -86,13 +86,13 @@ resolveProfileVersion :: O2IProfileVersion -> ResolvedO2IProfile
 resolveProfileVersion = ResolvedO2IProfile
 
 -- | Exactly one source-located observation produced by an adapter.
-newtype ProfileSnapshot fact = ProfileSnapshot
+newtype ProfileSnapshot location fact = ProfileSnapshot
     -- | Recover the single source-located fact carried by the snapshot.
-  { snapshotFact :: Located fact
+  { snapshotFact :: Located location fact
   } deriving (Eq, Show)
 
 -- | Bind one complete adapter observation to the projection boundary.
-profileSnapshot :: Located fact -> ProfileSnapshot fact
+profileSnapshot :: Located location fact -> ProfileSnapshot location fact
 profileSnapshot = ProfileSnapshot
 
 -- | Reachability condition for one adapter-owned profile defect.
@@ -102,14 +102,14 @@ data DefectApplicability
   deriving (Eq, Show)
 
 -- | Adapter defect retained until Inspection knows whether it is reached.
-data DeferredProfileDefect defect = DeferredProfileDefect
+data DeferredProfileDefect location defect = DeferredProfileDefect
   { defectApplicability :: DefectApplicability
-  , deferredDefect :: Located defect
+  , deferredDefect :: Located location defect
   } deriving (Eq, Show)
 
 -- | Total root projection produced by a notation profile.
-data RootProjection defect
-  = RootUnprojectable ObservedO2IProfile (NonEmpty (Located defect))
+data RootProjection location defect
+  = RootUnprojectable ObservedO2IProfile (NonEmpty (Located location defect))
   | RootProjectable ObservedO2IProfile ResolvedO2IProfile
   deriving (Eq, Show)
 
@@ -124,33 +124,33 @@ data PersistedDependencyReason
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 -- | Format-neutral persisted facts consumed by semantic scope closure.
-data IndexedProfileFact
-  = IndexedOccurrence OccurrenceId SourceLocation
-  | IndexedNode OccurrenceId RawNode SourceLocation
-  | IndexedEdge OccurrenceId RawEdge SourceLocation
+data IndexedProfileFact location
+  = IndexedOccurrence OccurrenceId location
+  | IndexedNode OccurrenceId RawNode location
+  | IndexedEdge OccurrenceId RawEdge location
   | IndexedSeed OccurrenceId OccurrenceId
   | IndexedDependency OccurrenceId OccurrenceId InclusionReason
   | IndexedReference
       OccurrenceId
-      ReferenceOccurrence
+      (ReferenceOccurrence location)
       [OccurrenceId]
       InclusionReason
   deriving (Eq, Show)
 
 -- | Index one persisted occurrence and its exact location.
-indexOccurrence :: OccurrenceId -> SourceLocation -> IndexedProfileFact
+indexOccurrence :: OccurrenceId -> location -> IndexedProfileFact location
 indexOccurrence = IndexedOccurrence
 
 -- | Index one projectable O2I node declaration.
-indexNode :: OccurrenceId -> RawNode -> SourceLocation -> IndexedProfileFact
+indexNode :: OccurrenceId -> RawNode -> location -> IndexedProfileFact location
 indexNode = IndexedNode
 
 -- | Index one projectable O2I relation declaration.
-indexEdge :: OccurrenceId -> RawEdge -> SourceLocation -> IndexedProfileFact
+indexEdge :: OccurrenceId -> RawEdge -> location -> IndexedProfileFact location
 indexEdge = IndexedEdge
 
 -- | Index one direct View presentation and its persisted target.
-indexPresentation :: OccurrenceId -> OccurrenceId -> IndexedProfileFact
+indexPresentation :: OccurrenceId -> OccurrenceId -> IndexedProfileFact location
 indexPresentation = IndexedSeed
 
 -- | Index one adapter-observed persisted semantic dependency.
@@ -158,23 +158,24 @@ indexDependency ::
      OccurrenceId
   -> OccurrenceId
   -> PersistedDependencyReason
-  -> IndexedProfileFact
+  -> IndexedProfileFact location
 indexDependency source target reason =
   IndexedDependency source target (persistedInclusionReason reason)
 
 -- | Index one persisted reference and all of its exact resolution matches.
 indexReference ::
      OccurrenceId
-  -> ReferenceOccurrence
+  -> ReferenceOccurrence location
   -> [OccurrenceId]
   -> PersistedDependencyReason
-  -> IndexedProfileFact
+  -> IndexedProfileFact location
 indexReference source reference matches reason =
   IndexedReference source reference matches (persistedInclusionReason reason)
 
 -- | Add one dependency discovered by the core-owned conservative macro
 -- interpreter. This constructor remains internal to Inspection.
-indexMacroDependency :: OccurrenceId -> OccurrenceId -> IndexedProfileFact
+indexMacroDependency ::
+     OccurrenceId -> OccurrenceId -> IndexedProfileFact location
 indexMacroDependency source target =
   IndexedDependency source target MacroPremise
 
@@ -188,37 +189,41 @@ persistedInclusionReason reason =
     PersistedNeedDependency -> NeedDependency
 
 -- | Total normalized output of one adapter-owned profile projection.
-data ProfileProjection defect = ProfileProjection
-  { projectedRoot :: RootProjection defect
-  , projectedFacts :: [IndexedProfileFact]
-  , projectedDefects :: [DeferredProfileDefect defect]
+data ProfileProjection location defect = ProfileProjection
+  { projectedRoot :: RootProjection location defect
+  , projectedFacts :: [IndexedProfileFact location]
+  , projectedDefects :: [DeferredProfileDefect location defect]
   } deriving (Eq, Show)
 
 -- | Pure profile projection and total defect normalization supplied by an
 -- adapter package.
-data O2IProfileContract fact defect = O2IProfileContract
-  { projectProfileSnapshot :: ProfileSnapshot fact -> ProfileProjection defect
+data O2IProfileContract location fact defect = O2IProfileContract
+  { projectProfileSnapshot :: ProfileSnapshot location fact -> ProfileProjection
+                                                                 location
+                                                                 defect
   , profileDefectSpec :: defect -> DiagnosticSpec
   }
 
 -- | Opaque successful root projection retaining adapter-owned existential
 -- facts and defects until scope closure.
-data ResolvedProfileProjection fact defect = ResolvedProfileProjection
-  { resolvedProfileSnapshot :: ProfileSnapshot fact
-  , resolvedProjectedFacts :: [IndexedProfileFact]
-  , resolvedDeferredDefects :: [DeferredProfileDefect defect]
+data ResolvedProfileProjection location fact defect = ResolvedProfileProjection
+  { resolvedProfileSnapshot :: ProfileSnapshot location fact
+  , resolvedProjectedFacts :: [IndexedProfileFact location]
+  , resolvedDeferredDefects :: [DeferredProfileDefect location defect]
   }
 
 -- | Total root-profile resolution executed by Inspection.
-data ProfileResolution fact defect
-  = ProfileRejected ObservedO2IProfile (NonEmpty (Located defect))
-  | ProfileResolved ResolvedO2IProfile (ResolvedProfileProjection fact defect)
+data ProfileResolution location fact defect
+  = ProfileRejected ObservedO2IProfile (NonEmpty (Located location defect))
+  | ProfileResolved
+      ResolvedO2IProfile
+      (ResolvedProfileProjection location fact defect)
 
 -- | Execute root-profile resolution while retaining local deferred defects.
 resolveRootProfile ::
-     O2IProfileContract fact defect
-  -> ProfileSnapshot fact
-  -> ProfileResolution fact defect
+     O2IProfileContract location fact defect
+  -> ProfileSnapshot location fact
+  -> ProfileResolution location fact defect
 resolveRootProfile contract snapshot =
   case projectedRoot projection of
     RootUnprojectable observed rootDefects ->
@@ -248,16 +253,16 @@ resolveRootProfile contract snapshot =
 -- | Opaque existential index binding one exact View and profile projection.
 data ProfileIndex where
   ProfileIndex
-    :: O2IProfileContract fact defect
-    -> ResolvedView
-    -> ResolvedProfileProjection fact defect
+    :: (defect -> DiagnosticSpec)
+    -> ResolvedView SourceLocation
+    -> ResolvedProfileProjection SourceLocation fact defect
     -> ProfileIndex
 
 -- | Hide adapter-owned profile types in one Inspection-owned index.
 buildProfileIndex ::
-     ResolvedView
-  -> O2IProfileContract fact defect
-  -> ResolvedProfileProjection fact defect
+     ResolvedView SourceLocation
+  -> O2IProfileContract location fact defect
+  -> ResolvedProfileProjection SourceLocation fact defect
   -> ProfileIndex
 buildProfileIndex view contract projection =
-  ProfileIndex contract view projection
+  ProfileIndex (profileDefectSpec contract) view projection

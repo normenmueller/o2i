@@ -37,36 +37,9 @@ inspectBytes selector bytes =
     InspectionCommandFailed commandError ->
       assertFailure ("unexpected command error: " <> show commandError)
 
-projectImportedBytes ::
-     ViewSelector -> ByteString.ByteString -> IO ImportedGraph
-projectImportedBytes selector bytes =
-  case amxAdapter of
-    Adapter _ decode _ resolveView _ contract observe ->
-      let sourceDocument = sourceBytes bytes
-       in case decode (sourceDocumentLocator sourceDocument) sourceDocument of
-            DecodePassed _ document ->
-              case resolveView document selector of
-                ViewPassed selectedIdentity selectedView ->
-                  case resolveRootProfile
-                         contract
-                         (observe document selectedView) of
-                    ProfileResolved _ projection ->
-                      case closeScope
-                             (buildProfileIndex
-                                selectedIdentity
-                                contract
-                                projection) of
-                        ScopeClosed scope -> pure (buildImportedGraph scope)
-                        ScopeRejected _ _ ->
-                          assertFailure "expected a closed projection scope"
-                    ProfileRejected _ _ ->
-                      assertFailure "expected a resolved profile"
-                ViewFailed _ _ -> assertFailure "expected a resolved View"
-            DecodeRejected _ _ -> assertFailure "expected a decoded model"
-            DecodeUnavailable _ _ -> assertFailure "expected a decoded model"
-
-decodeSource :: SourceDocument -> DecodeAttempt AMXDecodeDefect AMXDocument
-decodeSource document = decodeAMX (sourceDocumentLocator document) document
+decodeSource ::
+     SourceDocument -> DecodeAttempt SourcePosition AMXDecodeDefect AMXDocument
+decodeSource = decodeAMX
 
 noInputs :: InspectionInputs
 noInputs =

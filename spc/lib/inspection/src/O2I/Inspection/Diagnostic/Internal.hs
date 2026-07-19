@@ -186,7 +186,7 @@ diagnosticFromSpec stage locations specification =
 diagnosticFromLocated ::
      InspectionStage
   -> (defect -> DiagnosticSpec)
-  -> Located defect
+  -> Located SourceLocation defect
   -> Diagnostic
 diagnosticFromLocated stage specification located =
   diagnosticFromSpec
@@ -198,7 +198,7 @@ diagnosticFromLocated stage specification located =
 diagnosticsFromLocated ::
      InspectionStage
   -> (defect -> DiagnosticSpec)
-  -> NonEmpty (Located defect)
+  -> NonEmpty (Located SourceLocation defect)
   -> Diagnostics
 diagnosticsFromLocated stage specification =
   normalizeDiagnostics

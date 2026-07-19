@@ -133,40 +133,49 @@ data ResolvedNativeBinding = ResolvedNativeBinding
   } deriving (Eq, Ord, Show)
 
 -- | Encoding information that is safe to expose before native binding.
-data EncodingObservation
+data EncodingObservation location
   = EncodingNotObserved
   | EncodingDefaultedToUtf8
-  | EncodingDeclared (Located Text)
+  | EncodingDeclared (Located location Text)
   deriving (Eq, Ord, Show)
 
 -- | Safe observations retained when native decoding is unavailable.
-newtype DecodeUnavailableObservation = DecodeUnavailableObservation
-  { unavailableEncoding :: EncodingObservation
+newtype DecodeUnavailableObservation location = DecodeUnavailableObservation
+  { unavailableEncoding :: EncodingObservation location
   } deriving (Eq, Ord, Show)
 
 -- | Complete safe XML observations that violate the native binding.
-data RejectedNativeBinding = RejectedNativeBinding
+data RejectedNativeBinding location = RejectedNativeBinding
   { rejectedEncoding :: Utf8Binding
-  , rejectedRootQName :: Located ExpandedQName
-  , rejectedNativeVersion :: Maybe (Located Text)
+  , rejectedRootQName :: Located location ExpandedQName
+  , rejectedNativeVersion :: Maybe (Located location Text)
   } deriving (Eq, Ord, Show)
 
 -- | Total native decode result.
-data DecodeAttempt defect document
-  = DecodeUnavailable DecodeUnavailableObservation (NonEmpty (Located defect))
-  | DecodeRejected RejectedNativeBinding (NonEmpty (Located defect))
+data DecodeAttempt location defect document
+  = DecodeUnavailable
+      (DecodeUnavailableObservation location)
+      (NonEmpty (Located location defect))
+  | DecodeRejected
+      (RejectedNativeBinding location)
+      (NonEmpty (Located location defect))
   | DecodePassed ResolvedNativeBinding document
 
 -- | One adapter with existential document, View, fact, and defect types.
+-- Every callback emits source-relative positions; only Inspection binds them
+-- to the identity of the exact document under inspection.
 data Adapter where
   Adapter
     :: AdapterDescriptor
-    -> (SourceLocator -> SourceDocument -> DecodeAttempt decodeDefect document)
+    -> (SourceDocument -> DecodeAttempt SourcePosition decodeDefect document)
     -> (decodeDefect -> DiagnosticSpec)
-    -> (document -> ViewSelector -> ViewAttempt viewDefect selectedView)
+    -> (document -> ViewSelector -> ViewAttempt
+                                      SourcePosition
+                                      viewDefect
+                                      selectedView)
     -> (viewDefect -> DiagnosticSpec)
-    -> O2IProfileContract profileFact profileDefect
-    -> (document -> selectedView -> ProfileSnapshot profileFact)
+    -> O2IProfileContract SourcePosition profileFact profileDefect
+    -> (document -> selectedView -> ProfileSnapshot SourcePosition profileFact)
     -> Adapter
 
 nonEmptyText :: NonEmpty Char -> Text

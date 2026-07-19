@@ -41,7 +41,9 @@ metadataKind element =
 
 -- | Project all reached metadata and ownership violations for one candidate.
 candidateDefects ::
-     Environment -> AMXElement -> [DeferredProfileDefect AMXProfileDefect]
+     Environment
+  -> AMXElement
+  -> [DeferredProfileDefect SourcePosition AMXProfileDefect]
 candidateDefects environment element =
   map (deferCandidate occurrence) (metadataDefects element ++ ownershipDefects)
     ++ representationDefects
@@ -71,7 +73,7 @@ candidateDefects environment element =
             ]
         _ -> []
 
-metadataDefects :: AMXElement -> [Located AMXProfileDefect]
+metadataDefects :: AMXElement -> [Located SourcePosition AMXProfileDefect]
 metadataDefects element =
   unsupported ++ kindDefects ++ typeDefects ++ compatibilityDefects
   where
@@ -130,7 +132,8 @@ metadataDefects element =
             ]
         _ -> []
 
-ownedDefects :: AMXElement -> [AMXElement] -> [Located AMXProfileDefect]
+ownedDefects ::
+     AMXElement -> [AMXElement] -> [Located SourcePosition AMXProfileDefect]
 ownedDefects element ownerships =
   case ownerships of
     [] -> [Located (amxElementLocation element) (MissingOwnership identifier)]
@@ -148,7 +151,8 @@ ownedDefects element ownerships =
         id
         (elementAttribute (expandedQName Nothing 's' "ource") relationship)
 
-ownerlessDefects :: AMXElement -> [AMXElement] -> [Located AMXProfileDefect]
+ownerlessDefects ::
+     AMXElement -> [AMXElement] -> [Located SourcePosition AMXProfileDefect]
 ownerlessDefects element ownerships =
   [ Located
     (amxElementLocation relationship)
@@ -158,8 +162,8 @@ ownerlessDefects element ownerships =
 
 deferCandidate ::
      OccurrenceId
-  -> Located AMXProfileDefect
-  -> DeferredProfileDefect AMXProfileDefect
+  -> Located SourcePosition AMXProfileDefect
+  -> DeferredProfileDefect SourcePosition AMXProfileDefect
 deferCandidate occurrence defect =
   DeferredProfileDefect
     { defectApplicability = ReachedProfileDefect (occurrence :| [])
@@ -279,7 +283,8 @@ actualElementRepresentation element =
 -- | Resolve the exact direct root profile and independent legacy defects.
 projectRootProfile ::
      AMXDocument
-  -> (RootProjection AMXProfileDefect, [DeferredProfileDefect AMXProfileDefect])
+  -> ( RootProjection SourcePosition AMXProfileDefect
+     , [DeferredProfileDefect SourcePosition AMXProfileDefect])
 projectRootProfile document = (root, legacyDefects)
   where
     model = amxDocumentRoot document
@@ -353,13 +358,12 @@ propertyValue :: AMXElement -> Text
 propertyValue =
   maybe "" id . elementAttribute (expandedQName Nothing 'v' "alue")
 
-propertyLocation :: Text -> AMXElement -> SourceLocation
+propertyLocation :: Text -> AMXElement -> SourcePosition
 propertyLocation key property =
-  locateSource
-    (amxElementLocator property)
-    (locationPath location)
+  sourcePosition
+    (positionPath location)
     (PropertyTarget key)
-    (locationSpan location)
+    (positionSpan location)
   where
     location = amxElementLocation property
 
