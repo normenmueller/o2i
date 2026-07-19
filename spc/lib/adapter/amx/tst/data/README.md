@@ -30,4 +30,3 @@ metadata, notation, ownership, membership, relation projection, layout
 non-semantics, repeated occurrence provenance, deterministic reporting, closed
 defect and relation catalogs, API opacity, package licensing, and repository
 integration through the existing Inspection stages.
-

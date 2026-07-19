@@ -179,12 +179,14 @@ publication claim derived from them.
 # Commands And Tooling
 
 - Render: `./toPDF.sh`.
-- Cabal package: `cabal check` from `spc/`.
+- Cabal packages: run `cabal check` separately from `spc/lib/core/`,
+  `spc/lib/inspection/`, `spc/lib/adapter/amx/`, and `spc/cli/`.
 - Build: `cabal build all --ghc-options=-Werror` from `spc/`.
 - Tests: `cabal test all --ghc-options=-Werror` from `spc/`.
 - API documentation: `cabal haddock all` from `spc/`.
 - Package licenses: `./utl/check-package-licenses.sh` from the repository root.
-- Format check: `hindent --line-length 80 --validate lib/core/src/O2I.hs lib/core/src/O2I/*.hs lib/core/src/O2I/Language/*.hs lib/core/src/O2I/Graph/*.hs lib/core/src/O2I/Validation/*.hs lib/core/tst/Main.hs lib/core/tst/api/Main.hs lib/core/tst/api/ApiContractTH.hs lib/core/tst/api/compile-fail/*.hs` from `spc/`.
+- Format check: `rg --files spc -g '*.hs' | xargs hindent --line-length 80
+  --validate` from the repository root.
 - Lightweight article check: `pandoc o2i.md --filter pandoc-include -t markdown`.
 
 # Commit Convention

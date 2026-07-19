@@ -65,15 +65,15 @@ override this snapshot.
   `-Werror`; all 85 Haskell files pass HIndent validation; Haddock, package
   licenses, extractor snapshots, 28 extractor tests, Pandoc expansion, PDF
   rendering, CLI help/version smoke tests, and `git diff --check` pass.
-- Every implementation-review finding is closed in the worktree. The resulting
-  implementation still requires one separate read-only final review.
+- Every implementation-review and first-final-review finding is closed in the
+  worktree. The resulting implementation requires one separate read-only
+  final re-review.
 
 # Next Work
 
-1. Create a local technical checkpoint commit; never push without explicit
-   request.
-2. Run one independent read-only review with explicit per-dimension scores;
-   close every finding in small coherent batches and repeat the review.
+1. Run the complete deterministic verification matrix again.
+2. Repeat the independent read-only review with explicit per-dimension scores;
+   close any remaining finding in a small coherent batch.
 3. Present the final eight-Context minimum-contract matrix to the user and
    create the reviewed local O2I commit.
 4. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
