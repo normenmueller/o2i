@@ -3,14 +3,14 @@
 `WTF` steht hier für `What the f**k?`, `HTH` für `How the heck?`. Dieses Dokument beantwortet naheliegende O2I-Fragen bewusst direkt: kurz genug für den Einstieg, präzise genug, um nichts Falsches mitzunehmen. Für die vollständige fachliche Begründung führen die Verweise in den O2I-Artikel.
 
 > [!NOTE]
-> `Mindestinhalt` bezeichnet, was fachlich vorliegen muss; ein bestimmtes Dokumentformat schreibt O2I nicht vor. `Prüfung` grenzt knapp ab, wann der Inhalt als das jeweilige O2I-Konstrukt gelten kann.
+> `Mindestinhalt` bezeichnet, welche Informationen fachlich mindestens bereitgestellt werden müssen; ein bestimmtes Dokumentformat schreibt O2I nicht vor. `Prüfung` grenzt den Inhalt fachlich ab und benennt die jeweils einschlägigen Validierungsstufen.
 
 ## WTF "Ethos"?
 
 > [!NOTE]
 > **Ethos** = *Wofür* stehen wir?
 
-Ethos ist der kulturell-normative Kompass eines Akteurs: Wofür stehen wir, und was kommt für uns grundsätzlich infrage? Es besteht aus Leitprinzipien, die Handlungsoptionen bewerten und begrenzen. Ethos ist weder Zielbild noch Strategie.
+Ethos ist der kulturell-normative Kompass eines Akteurs: Wofür stehen wir, und was kommt für uns grundsätzlich infrage? Es besteht aus mindestens einem Leitprinzip, das Handlungsoptionen bewertet und begrenzt. Ethos ist weder Zielbild noch Strategie.
 
 **Mindestinhalt**
 
@@ -35,8 +35,8 @@ Mission beantwortet, warum es einen Akteur gibt und welchen dauerhaften Beitrag 
 
 - der handlungsfähige Akteur, für den die Mission gilt,
 - sein dauerhafter Existenzzweck und angestrebter Beitrag,
-- ein `Driver @ Mission`, der diesen Beitragsgrund ausdrückt,
-- der Bezug zu den prägenden Leitprinzipien des Ethos.
+- mindestens ein `Driver @ Mission`, der diesen Beitragsgrund ausdrückt,
+- die Führung mindestens eines Mission-Drivers durch mindestens ein Leitprinzip des Ethos.
 
 **Prüfung**
 
@@ -55,8 +55,8 @@ Vision beschreibt, wohin ein Akteur wirken will: den angestrebten, orientierende
 
 - der handlungsfähige Akteur, für den die Vision gilt,
 - mindestens ein qualitativ beschriebener angestrebter Zukunftszustand als `Objective @ Vision`,
-- die begründende Verbindung zum `Driver @ Mission`,
-- der Bezug zu den prägenden Leitprinzipien des Ethos.
+- die Begründung mindestens eines Vision-Objectives durch einen `Driver @ Mission`,
+- die Führung mindestens eines Vision-Objectives durch ein Leitprinzip des Ethos.
 
 **Prüfung**
 
@@ -124,11 +124,11 @@ Bedarf ist das fachliche Was: eine situationsbezogene Anforderung an Veränderun
 
 **Mindestinhalt**
 
-- ein `Driver @ Need`, der den situierten Veränderungsgrund beschreibt,
-- ein `Objective @ Need`, das die benötigte qualitative Veränderung ausdrückt,
-- eine `Situation --surfaces--> Need`-Relation,
-- die Verankerung des Need-Drivers an einem konstituierenden Situationsanker,
-- `Driver @ Need --grounds--> Objective @ Need`.
+- mindestens ein `Driver @ Need`, der den situierten Veränderungsgrund beschreibt,
+- mindestens ein `Objective @ Need`, das die benötigte qualitative Veränderung ausdrückt,
+- mindestens eine `Situation --surfaces--> Need`-Relation,
+- die Verankerung jedes Need-Drivers an mindestens einem Anker einer sichtbar machenden Situation,
+- die Begründung jedes Need-Objectives durch mindestens einen Driver desselben Needs.
 
 **Prüfung**
 
@@ -192,17 +192,18 @@ Intervention ist das operative Wie: eine gezielte Einwirkung auf eine Situation,
 **Mindestinhalt**
 
 - der adressierte wirkungsrelevante Bedarf,
-- eine `Action @ Intervention`, die die gezielte Einwirkung beschreibt,
-- ein `Key Result @ Intervention`, das das angestrebte überprüfbare Ergebnis ausdrückt,
+- mindestens eine `Action @ Intervention`, die die gezielte Einwirkung beschreibt,
+- mindestens ein `Key Result @ Intervention`, das das angestrebte überprüfbare Ergebnis ausdrückt,
+- mindestens eine `Action --contributes-to--> Key Result`-Relation innerhalb der Intervention,
 - die Verbindung zur richtenden Strategie und ihrer Handlungs- und Erfolgslogik,
 - der zu verändernde Situationsanker,
 - der Zielbezug zur anschließenden Messung.
 
 **Prüfung**
 
-Die Intervention ist als Handlungshypothese nur nachweisfähig, wenn sie in einem vollständigen Wirkungstrace denselben Bedarf und Situationsanker mit Strategie und Messung verbindet.
+`validateModelSemantics` prüft als lokale semantische Mindestgültigkeit mindestens eine eigene Action, ein eigenes Key Result und einen Contribution-Zusammenhang zwischen solchen Elementen. `validateTraceability` prüft anschließend, ob die Intervention in einem vollständigen Wirkungstrace denselben wirkungsrelevanten Bedarf und Situationsanker mit richtender Strategie und zielbezogener Messung verbindet. `validateEvidenceReadinessAt` prüft davon getrennt den zugehörigen Nachweisentwurf vor Interventionsbeginn.
 
-Spezifikation: [`validateTraceability`](./spc/lib/core/src/O2I/Validation/Trace.hs)
+Spezifikation: [`validateModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs), [`validateTraceability`](./spc/lib/core/src/O2I/Validation/Trace.hs), [`validateEvidenceReadinessAt`](./spc/lib/core/src/O2I/Validation/Readiness.hs)
 
 Weiterlesen: [Intervention](./o2i.md#intervention)
 
@@ -216,17 +217,19 @@ Messung ist das fachliche Woran: der Rahmen, in dem relevante Zustände und Ver�
 **Mindestinhalt**
 
 - ein fachlicher Messrahmen als `Measure`,
-- eine Messdimension für die zugehörigen KPIs,
+- mindestens eine Messdimension,
 - mindestens ein `KPI @ Measure`,
+- die Mitgliedschaft mindestens eines eigenen KPI in mindestens einer eigenen Messdimension,
 - eine stabile KPI-Definition mit Einheit, Wertebereich, Messmethode und fachlicher Interpretation,
 - der beobachtete Situationsanker,
-- Rahmung durch Strategie und Zielbezug durch Intervention.
+- die Rahmung durch Strategie,
+- der Zielbezug durch Intervention.
 
 **Prüfung**
 
-Ein KPI muss denselben Situationsanker beobachten, den die Intervention verändert. Seine Definition bleibt über Baseline, Kriterien und Folgebeobachtungen stabil.
+`validateModelSemantics` prüft als lokale semantische Mindestgültigkeit mindestens eine eigene Messdimension, einen eigenen KPI und deren Membership-Zusammenhang. `validateTraceability` prüft anschließend die Rahmung durch Strategie, den Zielbezug durch Intervention und ob ein KPI denselben Situationsanker beobachtet, den die Intervention verändert. `validateEvidenceReadinessAt` prüft davon getrennt die stabile KPI-Definition und den zugehörigen Nachweisentwurf vor Interventionsbeginn.
 
-Spezifikation: [`validateEvidenceReadinessAt`](./spc/lib/core/src/O2I/Validation/Readiness.hs)
+Spezifikation: [`validateModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs), [`validateTraceability`](./spc/lib/core/src/O2I/Validation/Trace.hs), [`validateEvidenceReadinessAt`](./spc/lib/core/src/O2I/Validation/Readiness.hs)
 
 Weiterlesen: [Messung](./o2i.md#messung)
 

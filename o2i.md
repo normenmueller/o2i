@@ -150,7 +150,7 @@ Die Terminologie beschreibt eine *teleologische Wirkungslogik*: von Orientierung
 >
 > Ein **Leitprinzip** (en.: *principle*; meta: `Principle`)[^principles] bezeichnet einen einzelnen kulturell verankerten und normativen Grundsatz eines handlungsfähigen Akteurs. Es beschreibt, wofür der Akteur steht, welche Maßstäbe sein Handeln leiten und nach welchen Kriterien Handlungsoptionen als gut, schlecht, akzeptabel oder nicht akzeptabel bewertet werden.
 >
-> Mehrere Leitprinzipien bilden zusammen das Ethos eines Akteurs.
+> Ein oder mehrere Leitprinzipien bilden das Ethos eines Akteurs.
 >
 > > [!tldr] Ethos = \textsc{Wofür} stehen wir?
 >
@@ -797,7 +797,7 @@ Diese Primitive-Relation kann begründen, warum eine konkrete Strategie einen ko
 
 ## Wohlgeformtheit und Validierung
 
-O2I unterscheidet einen ungeprüften Rohgraphen und fünf aufeinander aufbauende Validierungsstufen. Ein `RawGraph` enthält ungeprüfte Eingabedaten. Ein `WellFormedGraph` erfüllt die strukturellen Typ-, Interpretations- und Relationsregeln. Ein `SemanticallyValidModel` erfüllt zusätzlich die globalen Situation-, Need- und Strategy-Invarianten. Ein `TraceableEffectModel` weist für jeden durch eine Intervention adressierten Bedarf einen vollständigen relationalen Wirkungstrace von Vision bis Situationsanker nach. Ein `EvidenceReadyModel` ergänzt jeden Trace vor Interventionsbeginn um einen validierten Evidenzplan. Ein `EvidenceAssessedModel` bewertet konsistente Folgebeobachtungen getrennt nach Effekt und Zielerreichung.
+O2I unterscheidet einen ungeprüften Rohgraphen und fünf aufeinander aufbauende Validierungsstufen. Ein `RawGraph` enthält ungeprüfte Eingabedaten. Ein `WellFormedGraph` erfüllt die strukturellen Typ-, Interpretations- und Relationsregeln. Ein `SemanticallyValidModel` erfüllt zusätzlich die globalen Mindest- und Evidenzinvarianten aller acht Kontexttypen einschließlich der vollständigen Strategy-Formulierung. Ein `TraceableEffectModel` weist für jeden durch eine Intervention adressierten Bedarf einen vollständigen relationalen Wirkungstrace von Vision bis Situationsanker nach. Ein `EvidenceReadyModel` ergänzt jeden Trace vor Interventionsbeginn um einen validierten Evidenzplan. Ein `EvidenceAssessedModel` bewertet konsistente Folgebeobachtungen getrennt nach Effekt und Zielerreichung.
 
 @Fig:o2i-evidence-sequence verdichtet die fachliche Nachweisfolge vom sichtbaren Bedarf bis zur Wirkungsevidenz. Sie trennt Bedarfsqualifikation, relationale Wirkungsnachvollziehbarkeit, ex-ante Evidenzbereitschaft und ex-post Evidenzbewertung und markiert den Interventionsbeginn als zeitliche Grenze.
 
@@ -843,7 +843,20 @@ Die statische Relationstypisierung sichert Kontext- und Primitive-Typen. Identit
 
 ### Semantische Gültigkeit
 
-Ein strukturell wohlgeformter Graph ist semantisch gültig, wenn jede Situation durch mindestens einen Situationsanker konstituiert wird, jeder Bedarf einen `Driver` und ein `Objective` besitzt, durch mindestens eine Situation sichtbar wird, jeder Need-Driver an einen diese Situation konstituierenden Situationsanker gebunden ist und jedes Need-Objective durch einen Need-Driver begründet wird. Die strategische Qualifikation ist davon unabhängig: Ein vollständig situierter Bedarf kann semantisch gültig sein, ohne bereits wirkungsrelevant zu sein.
+Die folgende Matrix normiert die kontextbezogenen Mindestinhalte und ihre Relationsevidenz für ein `SemanticallyValidModel`. Eine existenzielle Pflicht verlangt mindestens einen passenden Relationszeugen für die jeweilige Kontextinstanz; eine universelle Pflicht gilt für jedes in der bezeichneten Rolle berücksichtigte Element.
+
+| Kontext | Mindestinhalt | Relationsevidenz der semantischen Gültigkeit |
+| --- | --- | --- |
+| `Ethos` | mindestens ein eigenes `Principle` | keine zusätzliche Relationsevidenz |
+| `Mission` | mindestens ein eigener `Driver` | existenziell: Mindestens ein `Principle @ Ethos` führt mindestens einen `Driver` dieser Mission. |
+| `Vision` | mindestens ein eigenes `Objective` | jeweils existenziell: Mindestens ein `Driver @ Mission` begründet ein Objective dieser Vision und mindestens ein `Principle @ Ethos` führt ein Objective dieser Vision; beide Pflichten dürfen verschiedene Objectives als Zeugen verwenden. |
+| `Strategy` | genau eine vollständige Formulierung mit genau einem Diagnosis-`Driver`, einem Intent-`Objective` und einem Guiding-Policy-`Principle` sowie mindestens einer gelisteten `Action` und mindestens einem gelisteten `Key Result` | existenziell: Ein `Objective @ Vision` richtet das Intent-Objective aus. Universell innerhalb der Formulierung: Der Diagnosis-Driver begründet das Intent-Objective, die Guiding Policy führt jede gelistete Action, jede gelistete Action trägt zu mindestens einem gelisteten Key Result bei und jedes gelistete Key Result substantiiert das Intent-Objective. |
+| `Situation` | mindestens ein konstituierender Situationsanker | existenziell: Mindestens ein zulässiger Situationsanker konstituiert diese Situation. |
+| `Need` | mindestens ein eigener `Driver`, mindestens ein eigenes `Objective` und mindestens eine sichtbar machende Situation | existenziell: Mindestens eine `Situation --surfaces--> Need`-Relation liegt vor. Universell: Jeder Driver dieses Needs ist an mindestens einen Anker einer sichtbar machenden Situation gebunden; jedes Objective dieses Needs wird durch mindestens einen Driver desselben Needs begründet. |
+| `Intervention` | mindestens eine eigene `Action` und mindestens ein eigenes `Key Result` | existenziell: Mindestens eine eigene Action trägt zu mindestens einem eigenen Key Result bei. |
+| `Measure` | mindestens eine eigene Messdimension und mindestens ein eigener `KPI` | existenziell: Mindestens eine eigene Messdimension enthält mindestens einen eigenen KPI. |
+
+Existenzielle Relationsevidenz muss von zusätzlichen eigenen Primitives oder Strukturierungselementen desselben Kontexts nicht wiederholt werden; universelle Pflichten sind in der Matrix ausdrücklich als solche benannt. Kontext-Makrorelationen ersetzen die geforderte Primitive-Evidenz nicht. Diese Stufe verlangt noch keine strategische Qualifikation jedes Needs, keinen vollständigen Wirkungstrace, keine KPI-Definition oder Evidenzplanung und keine Beobachtung. Diese Pflichten entstehen erst durch Wirkungsrelevanz, Traceability, Evidenzbereitschaft beziehungsweise Wirkungsevidenz.
 
 Jede Strategy-Instanz besitzt genau eine vollständige Formulierung. Sie umfasst Geltungsbereich, strategische Verankerung, abgeleitete Leitplanken, Diagnose, strategische Absicht, Guiding Policy, Positionierung, Trade-offs, kohärente Handlungsfestlegungen, strategische Erfolgsbezüge und Fit-Begründung. Jeder strategische Erfolgsbezug wird durch ein `Key Result @ Strategy` modelliert. Sämtliche Textfelder müssen nichtleer sein; Action- und Key-Result-Referenzen müssen innerhalb ihrer Rolle eindeutig sein. @Lst:o2i-strategy-formulation zeigt die strukturierte Repräsentation dieser Bestandteile.
 

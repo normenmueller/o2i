@@ -46,6 +46,8 @@
   gates without requiring agentic AI.
 - Aligned Situation semantics by requiring every Situation to have at least one
   constituting Situation anchor.
+- Defined the exact minimum content and relational evidence contract for all
+  eight Context types, including existential and universal obligations.
 - Clarified the semantic boundary between structural graph stages and
   subject-matter-enriched model stages.
 - Made Context ownership explicit and machine-readable in the ArchiMate syntax

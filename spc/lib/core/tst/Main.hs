@@ -836,6 +836,39 @@ semanticTests =
                 (relationNameFor substantiatesStrategyKeyResultObjective)
                 strategyObjectiveId
             ]
+    , testCase "Strategy coherence covers every listed Action and Key Result"
+        $ assertSemanticErrorsWith
+            (withoutEdge
+               (edge
+                  semanticExtraStrategyKeyResultId
+                  substantiatesStrategyKeyResultObjective
+                  strategyObjectiveId)
+               (withoutEdge
+                  (edge
+                     semanticExtraStrategyActionId
+                     contributesStrategyActionToKeyResult
+                     strategyKeyResultId)
+                  (withoutEdge
+                     (edge
+                        strategyPrincipleId
+                        guidesStrategyPrincipleToAction
+                        semanticExtraStrategyActionId)
+                     multiRoleStrategyGraph)))
+            [multiRoleStrategyFormulation]
+            [ MissingStrategyCoherence
+                strategyId
+                strategyPrincipleId
+                (relationNameFor guidesStrategyPrincipleToAction)
+                semanticExtraStrategyActionId
+            , StrategyActionWithoutKeyResult
+                strategyId
+                semanticExtraStrategyActionId
+            , MissingStrategyCoherence
+                strategyId
+                semanticExtraStrategyKeyResultId
+                (relationNameFor substantiatesStrategyKeyResultObjective)
+                strategyObjectiveId
+            ]
     , testCase "an internally complete Intervention is semantically valid"
         $ withWellFormed minimalInterventionGraph
         $ \graph -> assertSuccess (validateModelSemantics graph [])
@@ -916,6 +949,27 @@ semanticTests =
         "additional Measure content needs no all-to-all membership"
         $ QC.forAll (QC.chooseInt (0, 20))
         $ semanticsAccepts . measureGraphWithExtras
+    , testCase "a minimally situated Need is semantically valid"
+        $ withWellFormed minimalNeedGraph
+        $ \graph -> assertSuccess (validateModelSemantics graph [])
+    , testCase "every Need Driver requires a constituting anchor"
+        $ assertSemanticErrorsWith
+            minimalNeedGraph
+              { rawNodes =
+                  RawPrimitiveNode semanticExtraNeedDriverId needId Driver
+                    : rawNodes minimalNeedGraph
+              }
+            []
+            [UnanchoredNeedDriver needId semanticExtraNeedDriverId]
+    , testCase "every Need Objective requires an owned grounding Driver"
+        $ assertSemanticErrorsWith
+            minimalNeedGraph
+              { rawNodes =
+                  RawPrimitiveNode semanticExtraNeedObjectiveId needId Objective
+                    : rawNodes minimalNeedGraph
+              }
+            []
+            [UngroundedNeedObjective needId semanticExtraNeedObjectiveId]
     , testCase "need requires a driver"
         $ assertSemanticErrors
             (removeNode needDriverId sampleGraph)
@@ -1053,6 +1107,55 @@ strategyGraphWithExtraVisionObjectives extraCount =
       | suffix <- [1 .. extraCount]
       ]
 
+multiRoleStrategyGraph :: RawGraph
+multiRoleStrategyGraph =
+  sampleGraph
+    { rawNodes =
+        [ RawPrimitiveNode semanticExtraStrategyActionId strategyId Action
+        , RawPrimitiveNode semanticExtraStrategyKeyResultId strategyId KeyResult
+        ]
+          ++ rawNodes sampleGraph
+    , rawEdges =
+        [ edge
+            strategyPrincipleId
+            guidesStrategyPrincipleToAction
+            semanticExtraStrategyActionId
+        , edge
+            semanticExtraStrategyActionId
+            contributesStrategyActionToKeyResult
+            strategyKeyResultId
+        , edge
+            semanticExtraStrategyKeyResultId
+            substantiatesStrategyKeyResultObjective
+            strategyObjectiveId
+        ]
+          ++ rawEdges sampleGraph
+    }
+
+multiRoleStrategyFormulation :: RawStrategyFormulation
+multiRoleStrategyFormulation =
+  sampleStrategyFormulation
+    { rawFormulationActions =
+        strategyActionId NonEmpty.:| [semanticExtraStrategyActionId]
+    , rawFormulationKeyResults =
+        strategyKeyResultId NonEmpty.:| [semanticExtraStrategyKeyResultId]
+    }
+
+minimalNeedGraph :: RawGraph
+minimalNeedGraph =
+  RawGraph
+    [ RawContextNode situationId Situation
+    , RawAnchorNode situationAnchorId BusinessCapability
+    , RawContextNode needId Need
+    , RawPrimitiveNode needDriverId needId Driver
+    , RawPrimitiveNode needObjectiveId needId Objective
+    ]
+    [ anchorEdge situationId constitutedByAnchor situationAnchorId
+    , edge situationId surfacesNeed needId
+    , anchorEdge situationAnchorId anchorsNeedDriver needDriverId
+    , edge needDriverId groundsNeedDriverToObjective needObjectiveId
+    ]
+
 minimalInterventionGraph :: RawGraph
 minimalInterventionGraph =
   RawGraph
@@ -1119,6 +1222,17 @@ visionGuidanceEdge =
 
 secondVisionObjectiveId :: RawNodeId
 secondVisionObjectiveId = RawNodeId "second-vision-objective"
+
+semanticExtraStrategyActionId, semanticExtraStrategyKeyResultId :: RawNodeId
+semanticExtraStrategyActionId = RawNodeId "semantic-extra-strategy-action"
+
+semanticExtraStrategyKeyResultId =
+  RawNodeId "semantic-extra-strategy-key-result"
+
+semanticExtraNeedDriverId, semanticExtraNeedObjectiveId :: RawNodeId
+semanticExtraNeedDriverId = RawNodeId "semantic-extra-need-driver"
+
+semanticExtraNeedObjectiveId = RawNodeId "semantic-extra-need-objective"
 
 semanticsAccepts :: RawGraph -> Bool
 semanticsAccepts raw = semanticsAcceptsWith raw []
