@@ -90,6 +90,13 @@ override this snapshot.
   HIndent, package licenses, extractor snapshots and 28 tests, Pandoc, PDF,
   file/stdin CLI smokes, and `git diff --check`. Only the independent final
   re-review remains pending.
+- The independent re-review identified one Low public-API finding: semantics
+  witness operations had no public producer. The co-author internalized the
+  closed model, semantics witness, and both witness operations while retaining
+  the public Readiness/Evidence APIs; TH contracts prove the hidden surface.
+  The complete matrix is green again, including all eight suites, Haddock,
+  artifact checks, PDF, and CLI smokes. Only the final independent re-review on
+  the resulting commit remains pending.
 
 # Next Work
 

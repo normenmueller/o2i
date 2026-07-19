@@ -51,7 +51,8 @@
   eight Context types, including existential and universal obligations.
 - Made the public adapter and diagnostic boundary schema-safe by construction
   through validated opaque machine values, Inspection-owned stages and
-  identities, and external-client API contracts.
+  identities, a deliberately reachable Inspection facade, and external-client
+  API contracts.
 - Made all human CLI reports and process diagnostics terminal-safe by centrally
   encoding source-derived control characters without changing JSON reports.
 - Clarified the semantic boundary between structural graph stages and

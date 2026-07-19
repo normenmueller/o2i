@@ -14,12 +14,8 @@ module O2I.Inspection.Pipeline
   , InspectionRequest(..)
   , InspectionOutcome(..)
   , InputRequirement(..)
-  , StructurallyClosedModel
-  , SemanticsWitness
   , ReadinessWitness
   , EvidenceWitness
-  , prepareSemantics
-  , validateScopedSemantics
   , prepareReadiness
   , validateScopedReadiness
   , prepareEvidence

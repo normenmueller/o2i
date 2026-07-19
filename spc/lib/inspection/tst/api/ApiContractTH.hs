@@ -4,6 +4,7 @@
 module ApiContractTH
   ( assertAbstractTypes
   , assertExactArgumentConstructors
+  , assertHiddenTypes
   , assertHiddenValues
   , assertOrdinaryFunctions
   ) where
@@ -49,7 +50,16 @@ assertHiddenValues names = do
   visible <- traverse lookupValueName names
   unless
     (all (== Nothing) visible)
-    (fail ("internal diagnostic functions are visible: " ++ show names))
+    (fail ("internal values are visible: " ++ show names))
+  pure []
+
+-- | Require implementation-only types to be absent from the client scope.
+assertHiddenTypes :: [String] -> Q [Dec]
+assertHiddenTypes names = do
+  visible <- traverse lookupTypeName names
+  unless
+    (all (== Nothing) visible)
+    (fail ("internal types are visible: " ++ show names))
   pure []
 
 -- | Require projections to be ordinary functions, preventing record updates.

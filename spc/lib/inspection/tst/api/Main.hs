@@ -8,6 +8,7 @@ module Main
 import ApiContractTH
   ( assertAbstractTypes
   , assertExactArgumentConstructors
+  , assertHiddenTypes
   , assertHiddenValues
   , assertOrdinaryFunctions
   )
@@ -37,8 +38,6 @@ $(assertAbstractTypes
     , "Diagnostic.Diagnostics"
     , "Import.ImportedGraph"
     , "Input.SourceDocument"
-    , "Pipeline.StructurallyClosedModel"
-    , "Pipeline.SemanticsWitness"
     , "Pipeline.ReadinessWitness"
     , "Pipeline.EvidenceWitness"
     , "Pipeline.Sourced"
@@ -64,12 +63,17 @@ $(assertAbstractTypes
     , "Scope.SemanticallyClosedScope"
     ])
 
+$(assertHiddenTypes
+    ["Pipeline.StructurallyClosedModel", "Pipeline.SemanticsWitness"])
+
 $(assertHiddenValues
     [ "Diagnostic.diagnosticFromSpec"
     , "Diagnostic.diagnosticFromLocated"
     , "Diagnostic.diagnosticsFromLocated"
     , "Diagnostic.diagnosticWithSupplementalSources"
     , "Diagnostic.normalizeDiagnostics"
+    , "Pipeline.prepareSemantics"
+    , "Pipeline.validateScopedSemantics"
     , "Report.nativeAdapterBinding"
     ])
 
