@@ -3,17 +3,15 @@
 <details>
 <summary><strong>Agentic AI Support:</strong> Hier weiterlesen.</summary>
 
-Die hostneutrale Agent-Memory liegt unter [`.ai4X/`](./.ai4X/). Laufzeitspezifische Host-Adapter werden lokal materialisiert und nicht versioniert, beispielsweise mit [ai4X](https://github.com/normenmueller/ai4X).
+Die hostneutrale Agent-Memory liegt unter [`.ai4X/`](./.ai4X/). Versionierte Host-Fassaden wie [`AGENTS.md`](./AGENTS.md) und [`.github/agents/o2i.agent.md`](./.github/agents/o2i.agent.md) verweisen auf diesen kanonischen Vertrag. [ai4X](https://github.com/normenmueller/ai4X) unterstützt die Materialisierung und Verwaltung solcher laufzeitspezifischen Integrationen.
 
 Empfohlene Lesereihenfolge: [`.ai4X/BEHAVIOR.md`](./.ai4X/BEHAVIOR.md) → [`.ai4X/CONTEXT.md`](./.ai4X/CONTEXT.md) → [`.ai4X/STATE.md`](./.ai4X/STATE.md) → [`o2i.md`](./o2i.md). Für Formalisierung und Validierung folgt [`spc/`](./spc/), für Modell und konkrete Syntax [`mdl/`](./mdl/).
 
-Für die maschinenlesbare Prüfung von O2I-Modellen dient der [`o2i` CLI](#command-line); Agenten sollten dessen deterministische JSON-Ausgabe verwenden.
+Für die maschinenlesbare Prüfung von O2I-Modellen dient das Kommando [`o2i`](#command-line); Agenten sollten dessen deterministische JSON-Ausgabe verwenden.
 
 </details>
 
 O2I ist ein generisches Framework für Wirkungsarchitekturen: Es beschreibt, wie Orientierung, Formierung, Situierung, Operationalisierung und Wirkung fachlich begründet, modelliert und dadurch nachvollzogen werden können. Das O2I-Metamodell bildet den formalen Kern des Frameworks.
-
-Aktueller Arbeitsstand: [O2I Framework White Paper (bleeding edge)](./o2i.pdf).
 
 ## Purpose
 
@@ -82,10 +80,12 @@ o2i/
 |  `- cli/
 |- wtf.md
 |- o2i.md
+|- o2i.pdf
 ```
 
 - [`wtf.md`](./wtf.md): kurzer, bewusst direkter Einstieg in zentrale O2I-Fragen
 - [`o2i.md`](./o2i.md): aktives White Paper und fachlicher Referenztext
+- [`o2i.pdf`](./o2i.pdf): bleeding-edge PDF-Fassung des aktiven White Papers
 - `mdl/`: ArchiMate-Modell
 - `img/`: Abbildungen für White Paper und Modellkommunikation
 - [`spc/README.md`](./spc/README.md): technische Architektur, Build und Nutzung der Haskell-Codebasis
