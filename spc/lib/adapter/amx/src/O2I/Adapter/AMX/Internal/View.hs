@@ -145,7 +145,7 @@ resolveObject modelIndex object =
                    (fmap amxElementLocation occurrences))
             ]
   where
-    referenceName = ExpandedQName Nothing "archimateElement"
+    referenceName = expandedQName Nothing 'a' "rchimateElement"
     reference = elementAttribute referenceName object
     location = attributeReferenceLocation referenceName object reference
 
@@ -174,9 +174,9 @@ resolveConnection relationshipIndex objectIndex presentationIndex connection =
         _ -> Resolution Nothing defects
     _ -> Resolution Nothing defects
   where
-    relationshipName = ExpandedQName Nothing "archimateRelationship"
-    sourceName = ExpandedQName Nothing "source"
-    targetName = ExpandedQName Nothing "target"
+    relationshipName = expandedQName Nothing 'a' "rchimateRelationship"
+    sourceName = expandedQName Nothing 's' "ource"
+    targetName = expandedQName Nothing 't' "arget"
     relationshipReference = elementAttribute relationshipName connection
     sourceReference = elementAttribute sourceName connection
     targetReference = elementAttribute targetName connection
@@ -214,9 +214,10 @@ resolveConnection relationshipIndex objectIndex presentationIndex connection =
     presentationFor object =
       Map.lookup (elementOccurrence "view-object" object) presentationIndex
     endpointDefects relation source target =
-      mismatch "source" relation source ++ mismatch "target" relation target
+      mismatch SourceEndpoint relation source
+        ++ mismatch TargetEndpoint relation target
     mismatch role relation object =
-      let expected = elementAttribute (ExpandedQName Nothing role) relation
+      let expected = elementAttribute (endpointQName role) relation
           actual = do
             presentation <- presentationFor object
             elementId (presentationTarget presentation)
@@ -297,11 +298,12 @@ elementsById =
 isDiagramObject :: AMXElement -> Bool
 isDiagramObject element =
   elementType element
-    == Just (ExpandedQName (Just archiNamespace) "DiagramObject")
+    == Just (expandedQName (Just archiNamespace) 'D' "iagramObject")
 
 isConnection :: AMXElement -> Bool
 isConnection element =
-  elementType element == Just (ExpandedQName (Just archiNamespace) "Connection")
+  elementType element
+    == Just (expandedQName (Just archiNamespace) 'C' "onnection")
 
 attributeReferenceLocation ::
      ExpandedQName -> AMXElement -> Maybe Text -> SourceLocation

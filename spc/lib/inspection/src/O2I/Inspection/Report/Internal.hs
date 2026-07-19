@@ -21,7 +21,6 @@ module O2I.Inspection.Report.Internal
   , CommandErrorClassification(..)
   , InvocationDefect(..)
   , CommandError(..)
-  , nativeAdapterBinding
   , reportRequestInfo
   , reportNativeBinding
   , reportViewResolution
@@ -49,7 +48,7 @@ import Data.Maybe (catMaybes)
 import Data.Text (Text)
 import O2I.Inspection.Adapter
 import O2I.Inspection.Cardinality
-import O2I.Inspection.Diagnostic
+import O2I.Inspection.Diagnostic.Internal
 import O2I.Inspection.Profile
 import O2I.Inspection.Provenance
 import O2I.Inspection.Scope
@@ -217,21 +216,6 @@ data CommandError
   | StructureInternalCommandError Text
   deriving (Eq, Show)
 
--- | Normalize one adapter-owned total Decode attempt.
-nativeAdapterBinding ::
-     (defect -> DiagnosticSpec)
-  -> DecodeAttempt defect document
-  -> NativeAdapterBinding
-nativeAdapterBinding defectSpec attempt =
-  case attempt of
-    DecodeUnavailable observation defects ->
-      NativeBindingFailed
-        (NativeBindingUnavailable observation (defectIds defectSpec defects))
-    DecodeRejected binding defects ->
-      NativeBindingFailed
-        (NativeBindingRejected binding (defectIds defectSpec defects))
-    DecodePassed binding _ -> NativeBindingResolved binding
-
 -- | Read common request information.
 reportRequestInfo :: InspectionReport -> InspectionRequestInfo
 reportRequestInfo report =
@@ -389,13 +373,6 @@ renderCommandErrorJSON commandError =
        , "tool" .= toolValue
        , "error" .= commandErrorValue commandError
        ])
-
-defectIds ::
-     (defect -> DiagnosticSpec)
-  -> NonEmpty (Located defect)
-  -> NonEmpty DiagnosticId
-defectIds specification =
-  fmap (diagnosticId . diagnosticFromLocated specification)
 
 stageResult :: [StageReport] -> InspectionResult
 stageResult stages

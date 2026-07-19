@@ -5,6 +5,7 @@ module O2I.Adapter.AMX
   ( amxAdapter
   ) where
 
+import Data.List.NonEmpty (NonEmpty((:|)))
 import O2I.Adapter.AMX.Internal.Defect
 import O2I.Adapter.AMX.Internal.Profile
 import O2I.Adapter.AMX.Internal.View
@@ -16,11 +17,7 @@ import O2I.Inspection.Adapter
 amxAdapter :: Adapter
 amxAdapter =
   Adapter
-    AdapterDescriptor
-      { adapterIdentifier = "amx"
-      , adapterName = "Archi Model XML"
-      , adapterVersion = "0.2"
-      }
+    (adapterDescriptor ('a' :| "mx") ('A' :| "rchi Model XML") ('0' :| ".2"))
     decodeAMX
     amxDecodeDefectSpec
     resolveAMXView

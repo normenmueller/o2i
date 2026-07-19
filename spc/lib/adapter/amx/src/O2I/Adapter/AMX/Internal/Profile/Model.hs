@@ -72,8 +72,7 @@ incomingOwnerships environment element =
     Nothing -> []
     Just identifier ->
       filter
-        ((== Just identifier)
-           . elementAttribute (ExpandedQName Nothing "target"))
+        ((== Just identifier) . elementAttribute (endpointQName TargetEndpoint))
         (environmentOwnerships environment)
 
 -- | Resolve exactly one persisted ownership declaration.
@@ -95,16 +94,17 @@ isOwnershipRelationship relationship =
                 }
 
 -- | Resolve all declaration occurrences referenced by one endpoint token.
-endpointElements :: Environment -> Text -> AMXElement -> [AMXElement]
+endpointElements :: Environment -> EndpointRole -> AMXElement -> [AMXElement]
 endpointElements environment role relationship =
   maybe
     []
     (\identifier ->
        Map.findWithDefault [] identifier (environmentNodeIndex environment))
-    (elementAttribute (ExpandedQName Nothing role) relationship)
+    (elementAttribute (endpointQName role) relationship)
 
 -- | Resolve an endpoint only when its persisted identifier is unique.
-uniqueEndpointElement :: Environment -> Text -> AMXElement -> Maybe AMXElement
+uniqueEndpointElement ::
+     Environment -> EndpointRole -> AMXElement -> Maybe AMXElement
 uniqueEndpointElement environment role relationship =
   case endpointElements environment role relationship of
     [element] -> Just element
@@ -115,7 +115,7 @@ uniqueEndpointElements :: Environment -> AMXElement -> [AMXElement]
 uniqueEndpointElements environment relationship =
   mapMaybe
     (\role -> uniqueEndpointElement environment role relationship)
-    ["source", "target"]
+    [SourceEndpoint, TargetEndpoint]
 
 -- | Resolve unique endpoint occurrence identities in role order.
 uniqueEndpointOccurrences :: Environment -> AMXElement -> [OccurrenceId]

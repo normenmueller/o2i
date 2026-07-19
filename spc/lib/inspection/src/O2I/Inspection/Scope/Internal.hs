@@ -30,7 +30,7 @@ import O2I
   , macroDependencyEdge
   , macroScopeDependencies
   )
-import O2I.Inspection.Diagnostic
+import O2I.Inspection.Diagnostic.Internal
 import O2I.Inspection.Profile.Internal
 import O2I.Inspection.Provenance
 import O2I.Inspection.View
@@ -141,6 +141,7 @@ closeScope (ProfileIndex contract view projection) =
     profileIssues =
       [ ProfileIssue
         (diagnosticFromLocated
+           ProfileStage
            (profileDefectSpec contract)
            (deferredDefect deferred))
       | deferred <- resolvedDeferredDefects projection
@@ -298,7 +299,6 @@ modelSpec :: Text.Text -> Text.Text -> [DiagnosticSubject] -> DiagnosticSpec
 modelSpec code message subjects =
   DiagnosticSpec
     { specCode = DiagnosticCode code
-    , specStage = ProfileStage
     , specSeverity = ErrorSeverity
     , specDisposition = ModelFinding
     , specMessage = message

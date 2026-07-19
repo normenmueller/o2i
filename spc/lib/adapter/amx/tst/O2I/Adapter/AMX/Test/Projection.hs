@@ -45,9 +45,15 @@ defectCatalogTest = do
       codes = map (diagnosticCodeText . specCode) specs
   length tags @?= 33
   length codes @?= length (stableUnique codes)
-  map specStage (take 7 specs) @?= replicate 7 DecodeStage
-  map specStage (take 10 (drop 7 specs)) @?= replicate 10 ViewScopeStage
-  map specStage (drop 17 specs) @?= replicate 16 ProfileStage
+  assertBool
+    "Decode catalog codes must retain their namespace"
+    (all ("o2i.amx.decode." `Text.isPrefixOf`) (take 7 codes))
+  assertBool
+    "View catalog codes must retain their namespace"
+    (all ("o2i.amx.view." `Text.isPrefixOf`) (take 10 (drop 7 codes)))
+  assertBool
+    "Profile catalog codes must retain their namespace"
+    (all ("o2i.amx.profile." `Text.isPrefixOf`) (drop 17 codes))
 
 defectConstructorMappingTest :: Assertion
 defectConstructorMappingTest = do
@@ -69,7 +75,7 @@ decodeDefects =
   , UnsafeXml
   , InvalidUtf8
   , UnsupportedXmlEncoding "UTF-16"
-  , UnexpectedRootQName (ExpandedQName (Just "urn:test") "model")
+  , UnexpectedRootQName (expandedQName (Just "urn:test") 'm' "odel")
   , MissingNativeVersion
   , UnsupportedNativeVersion "4.0.0"
   ]
@@ -124,7 +130,7 @@ sampleLocation =
           , sourceSha256 = sourceHashFromBytes ""
           }
     , locationPath =
-        firstPathStep (ExpandedQName (Just "urn:test") "model") :| []
+        firstPathStep (expandedQName (Just "urn:test") 'm' "odel") :| []
     , locationTarget = ElementTarget
     , locationSpan = Nothing
     }

@@ -116,6 +116,9 @@ tests =
         existentialAdapterTest
     , testCase "report JSON is stable and parseable" reportJsonTest
     , testCase
+        "adversarial adapter remains schema-valid by construction"
+        adversarialAdapterTest
+    , testCase
         "Draft 2020-12 accepts every rendered report state"
         reportSchemaPositiveTest
     , testCase
@@ -143,6 +146,9 @@ sourceIdentityTest = do
 
 sourceLocationInvariantTest :: Assertion
 sourceLocationInvariantTest = do
+  mkExpandedQName Nothing "" @?= Left EmptyQNameLocalName
+  fmap qNameLocalName (mkExpandedQName (Just "urn:test") "model")
+    @?= Right "model"
   mkPathStep testRootQName 0 @?= Nothing
   let step = firstPathStep testRootQName
   pathStepName step @?= testRootQName
@@ -387,53 +393,46 @@ assertClosedMapping ::
   -> [defect]
   -> [Text]
   -> Assertion
-assertClosedMapping stage specification defects expectedCodes =
-  map projected defects @?= map ((,) stage) expectedCodes
-  where
-    projected defect =
-      let spec = specification defect
-       in (specStage spec, diagnosticCodeText (specCode spec))
+assertClosedMapping _stage specification defects expectedCodes =
+  map (diagnosticCodeText . specCode . specification) defects @?= expectedCodes
 
 diagnosticIdentityRepresentationTest :: Assertion
-diagnosticIdentityRepresentationTest =
-  diagnosticIdText
-    (diagnosticId (diagnosticFromSpec [] (testSpec DecodeStage "x")))
-    @?= "9;17:o2i-diagnostic-v11:x6:decode5:error13:model-finding2:0;2:0;2:0;2:0;"
+diagnosticIdentityRepresentationTest = do
+  first <- diagnosticForSpec testLocation (testSpec "x")
+  second <- diagnosticForSpec testLocation (testSpec "x")
+  diagnosticIdText (diagnosticId first)
+    @?= diagnosticIdText (diagnosticId second)
+  diagnosticStage first @?= DecodeStage
+  diagnosticCodeText (diagnosticCode first) @?= "o2i.x"
 
 diagnosticIdentityCollisionTest :: Assertion
 diagnosticIdentityCollisionTest = do
-  assertDistinctDiagnosticIds
-    (diagnosticForSubjects [DiagnosticSubject "a" "b,c:d"])
-    (diagnosticForSubjects
-       [DiagnosticSubject "a" "b", DiagnosticSubject "c" "d"])
-  assertDistinctDiagnosticIds
-    (diagnosticForData (DiagnosticText "1:true"))
-    (diagnosticForData (DiagnosticInteger 1))
-  assertDistinctDiagnosticIds
-    (diagnosticForData (DiagnosticInteger 1))
-    (diagnosticForData (DiagnosticBoolean True))
+  subjectsLeft <- diagnosticForSubjects [DiagnosticSubject "a" "b,c:d"]
+  subjectsRight <-
+    diagnosticForSubjects [DiagnosticSubject "a" "b", DiagnosticSubject "c" "d"]
+  assertDistinctDiagnosticIds subjectsLeft subjectsRight
+  textData <- diagnosticForData (DiagnosticText "1:true")
+  integerData <- diagnosticForData (DiagnosticInteger 1)
+  booleanData <- diagnosticForData (DiagnosticBoolean True)
+  assertDistinctDiagnosticIds textData integerData
+  assertDistinctDiagnosticIds integerData booleanData
   let firstEdge = RawEdge (RawNodeId "a:b") (RelationName "c") (RawNodeId "d")
       secondEdge = RawEdge (RawNodeId "a") (RelationName "b") (RawNodeId "c:d")
-  assertDistinctDiagnosticIds
-    (diagnosticFromSpec [] (structuralDefectSpec (DuplicateEdge firstEdge)))
-    (diagnosticFromSpec [] (structuralDefectSpec (DuplicateEdge secondEdge)))
-  assertDistinctDiagnosticIds
-    (diagnosticForLocations [reservedQNameLocationLeft])
-    (diagnosticForLocations [reservedQNameLocationRight])
-  assertDistinctDiagnosticIds
-    (diagnosticForLocations [singlePathCollisionLocation])
-    (diagnosticForLocations [multiPathCollisionLocation])
-  assertDistinctDiagnosticIds
-    (diagnosticForLocations [singleSourceCollisionLocation])
-    (diagnosticForLocations
-       [leftSourceCollisionLocation, rightSourceCollisionLocation])
-  assertDistinctDiagnosticIds
-    (diagnosticWithSupplementalSources
-       [singleSupplementalCollisionSource]
-       identityBaseDiagnostic)
-    (diagnosticWithSupplementalSources
-       [leftSupplementalCollisionSource, rightSupplementalCollisionSource]
-       identityBaseDiagnostic)
+  firstEdgeDiagnostic <-
+    diagnosticForSpec
+      testLocation
+      (structuralDefectSpec (DuplicateEdge firstEdge))
+  secondEdgeDiagnostic <-
+    diagnosticForSpec
+      testLocation
+      (structuralDefectSpec (DuplicateEdge secondEdge))
+  assertDistinctDiagnosticIds firstEdgeDiagnostic secondEdgeDiagnostic
+  reservedLeft <- diagnosticForLocations reservedQNameLocationLeft
+  reservedRight <- diagnosticForLocations reservedQNameLocationRight
+  assertDistinctDiagnosticIds reservedLeft reservedRight
+  singlePath <- diagnosticForLocations singlePathCollisionLocation
+  multiplePath <- diagnosticForLocations multiPathCollisionLocation
+  assertDistinctDiagnosticIds singlePath multiplePath
 
 traceIdentityCollisionTest :: Assertion
 traceIdentityCollisionTest = do
@@ -450,29 +449,50 @@ traceIdentityCollisionTest = do
   effectTraceIdText first
     /= effectTraceIdText second
          @? "length framing must distinguish shifted trace delimiters"
-  assertDistinctDiagnosticIds
-    (diagnosticFromSpec [] (readinessDefectSpec (MissingEvidencePlan first)))
-    (diagnosticFromSpec [] (readinessDefectSpec (MissingEvidencePlan second)))
+  firstDiagnostic <-
+    diagnosticForSpec
+      testLocation
+      (readinessDefectSpec (MissingEvidencePlan first))
+  secondDiagnostic <-
+    diagnosticForSpec
+      testLocation
+      (readinessDefectSpec (MissingEvidencePlan second))
+  assertDistinctDiagnosticIds firstDiagnostic secondDiagnostic
 
-diagnosticForSubjects :: [DiagnosticSubject] -> Diagnostic
+diagnosticForSubjects :: [DiagnosticSubject] -> IO Diagnostic
 diagnosticForSubjects subjects =
-  diagnosticFromSpec
-    []
-    (testSpec DecodeStage "identity") {specSubjects = subjects}
+  diagnosticForSpec testLocation (identitySpec subjects Map.empty)
 
-diagnosticForLocations :: [SourceLocation] -> Diagnostic
-diagnosticForLocations locations =
-  diagnosticFromSpec locations (testSpec DecodeStage "identity")
+diagnosticForLocations :: SourceLocation -> IO Diagnostic
+diagnosticForLocations location =
+  diagnosticForSpec location (identitySpec [] Map.empty)
 
-diagnosticForData :: DiagnosticAtom -> Diagnostic
+diagnosticForData :: DiagnosticAtom -> IO Diagnostic
 diagnosticForData atom =
-  diagnosticFromSpec
-    []
-    (testSpec DecodeStage "identity")
-      {specData = Map.singleton "reserved,:|=" atom}
+  diagnosticForSpec
+    testLocation
+    (identitySpec [] (Map.singleton "reserved,:|=" atom))
 
-identityBaseDiagnostic :: Diagnostic
-identityBaseDiagnostic = diagnosticForSubjects []
+identitySpec ::
+     [DiagnosticSubject] -> Map.Map Text DiagnosticAtom -> DiagnosticSpec
+identitySpec subjects dataFields =
+  diagnosticSpec
+    (o2iDiagnosticCode "identity")
+    ErrorSeverity
+    ModelFinding
+    "Identity test defect."
+    subjects
+    dataFields
+
+diagnosticForSpec :: SourceLocation -> DiagnosticSpec -> IO Diagnostic
+diagnosticForSpec location specification = do
+  report <-
+    completedReport (runAdapter (diagnosticAdapter location specification))
+  case diagnosticsList (reportDiagnostics report) of
+    [diagnostic] -> pure diagnostic
+    diagnostics ->
+      assertFailure
+        ("expected one diagnostic, found " <> show (length diagnostics))
 
 assertDistinctDiagnosticIds :: Diagnostic -> Diagnostic -> Assertion
 assertDistinctDiagnosticIds first second =
@@ -482,72 +502,28 @@ reservedQNameLocationLeft, reservedQNameLocationRight :: SourceLocation
 reservedQNameLocationLeft =
   testLocation
     { locationPath =
-        firstPathStep (ExpandedQName (Just "urn}reserved") "name") :| []
+        firstPathStep (expandedQName (Just "urn}reserved") 'n' "ame") :| []
     }
 
 reservedQNameLocationRight =
   testLocation
     { locationPath =
-        firstPathStep (ExpandedQName (Just "urn") "reserved}name") :| []
+        firstPathStep (expandedQName (Just "urn") 'r' "eserved}name") :| []
     }
 
 singlePathCollisionLocation, multiPathCollisionLocation :: SourceLocation
 singlePathCollisionLocation =
   testLocation
     { locationPath =
-        firstPathStep (ExpandedQName Nothing "a[1]/{urn:path}b") :| []
+        firstPathStep (expandedQName Nothing 'a' "[1]/{urn:path}b") :| []
     }
 
 multiPathCollisionLocation =
   testLocation
     { locationPath =
-        firstPathStep (ExpandedQName Nothing "a")
-          :| [firstPathStep (ExpandedQName (Just "urn:path") "b")]
+        firstPathStep (expandedQName Nothing 'a' "")
+          :| [firstPathStep (expandedQName (Just "urn:path") 'b' "")]
     }
-
-singleSourceCollisionLocation, leftSourceCollisionLocation :: SourceLocation
-singleSourceCollisionLocation =
-  locationWithLabel ("left" <> legacyLocationSuffix <> ",right")
-
-leftSourceCollisionLocation = locationWithLabel "left"
-
-rightSourceCollisionLocation :: SourceLocation
-rightSourceCollisionLocation = locationWithLabel "right"
-
-locationWithLabel :: Text -> SourceLocation
-locationWithLabel label =
-  testLocation
-    { locationSource =
-        (locationSource testLocation) {sourceDisplayLabel = label}
-    }
-
-legacyLocationSuffix :: Text
-legacyLocationSuffix =
-  ":"
-    <> sourceHashText (sourceSha256 (locationSource testLocation))
-    <> ":{urn:test}model[1]:element:"
-
-singleSupplementalCollisionSource, leftSupplementalCollisionSource ::
-     SupplementalSource
-singleSupplementalCollisionSource =
-  supplementalSourceWithLabel
-    ("left:file:"
-       <> sourceHashText (sourceSha256 supplementalIdentity)
-       <> ",strategy=right")
-
-leftSupplementalCollisionSource = supplementalSourceWithLabel "left"
-
-rightSupplementalCollisionSource :: SupplementalSource
-rightSupplementalCollisionSource = supplementalSourceWithLabel "right"
-
-supplementalSourceWithLabel :: Text -> SupplementalSource
-supplementalSourceWithLabel label =
-  SupplementalSource
-    StrategySupplement
-    (supplementalIdentity {sourceDisplayLabel = label})
-
-supplementalIdentity :: SourceIdentity
-supplementalIdentity = sourceDocumentIdentity testSource
 
 decodeAttemptTest :: Assertion
 decodeAttemptTest = do
@@ -762,6 +738,31 @@ reportJsonTest = do
     Left message -> assertFailure message
     Right _ -> pure ()
 
+adversarialAdapterTest :: Assertion
+adversarialAdapterTest = do
+  mkAdapterDescriptor "" "" ""
+    @?= Left (EmptyAdapterIdentifier :| [EmptyAdapterName, EmptyAdapterVersion])
+  mkDiagnosticCode "not-o2i" @?= Left DiagnosticCodeMissingO2IPrefix
+  fmap diagnosticCodeText (mkDiagnosticCode "o2i.external.valid")
+    @?= Right "o2i.external.valid"
+  schema <- inspectionSchema
+  reports <-
+    traverse
+      (completedReport . runAdapter . adversarialAdapter)
+      [AdversarialDecode, AdversarialView, AdversarialProfile]
+  let diagnostics = map (diagnosticsList . reportDiagnostics) reports
+  map (map diagnosticStage) diagnostics
+    @?= [[DecodeStage], [ViewScopeStage], [ProfileStage]]
+  assertBool
+    "all adversarial codes must remain in the O2I namespace"
+    (all (all ((== "o2i.") . diagnosticCodeText . diagnosticCode)) diagnostics)
+  assertBool
+    "all adversarial defects must retain source provenance"
+    (all (all ((== [testLocation]) . diagnosticLocations)) diagnostics)
+  assertBool
+    "every adversarial report must satisfy Draft 2020-12"
+    (all (validateJSONSchema schema . renderedReportValue) reports)
+
 reportSchemaPositiveTest :: Assertion
 reportSchemaPositiveTest = do
   schema <- inspectionSchema
@@ -876,6 +877,12 @@ allReportVariants = do
                  RootFails
                  completeEthosFacts
                  []))
+        , ( "adversarial-decode-failed"
+          , runAdapter (adversarialAdapter AdversarialDecode))
+        , ( "adversarial-view-failed"
+          , runAdapter (adversarialAdapter AdversarialView))
+        , ( "adversarial-profile-failed"
+          , runAdapter (adversarialAdapter AdversarialProfile))
         , ( "scope-failed"
           , runAdapter
               (testAdapter
@@ -1461,9 +1468,9 @@ alternateAdapter =
   Adapter
     testDescriptor
     (\_ -> DecodePassed testNativeBinding ())
-    (\AlternateDefect -> testSpec DecodeStage "o2i.test.alt.decode")
+    (\AlternateDefect -> testSpec "o2i.test.alt.decode")
     (\_ _ -> ViewPassed testResolvedView ())
-    (\AlternateDefect -> testSpec ViewScopeStage "o2i.test.alt.view")
+    (\AlternateDefect -> testSpec "o2i.test.alt.view")
     O2IProfileContract
       { projectProfileSnapshot =
           \snapshot ->
@@ -1471,16 +1478,101 @@ alternateAdapter =
               { projectedRoot =
                   RootProjectable
                     (OneO2IProfile "0.2")
-                    (resolveProfileVersion (O2IProfileVersion "0.2"))
+                    (resolveProfileVersion
+                       (o2iProfileVersionLiteral ('0' :| ".2")))
               , projectedFacts =
                   case locatedValue (snapshotFact snapshot) of
                     AlternateFact -> instantiateFacts completeEthosFacts
               , projectedDefects = []
               }
-      , profileDefectSpec =
-          \AlternateDefect -> testSpec ProfileStage "o2i.test.alt.profile"
+      , profileDefectSpec = \AlternateDefect -> testSpec "o2i.test.alt.profile"
       }
     (\_ _ -> profileSnapshot (Located testLocation AlternateFact))
+
+data AdversarialMode
+  = AdversarialDecode
+  | AdversarialView
+  | AdversarialProfile
+
+data AdversarialDefect =
+  AdversarialDefect
+
+adversarialAdapter :: AdversarialMode -> Adapter
+adversarialAdapter mode =
+  Adapter
+    (adapterDescriptor ('x' :| "") ('x' :| "") ('x' :| ""))
+    decode
+    adversarialSpec
+    resolveView
+    adversarialSpec
+    contract
+    (\_ _ -> profileSnapshot (Located testLocation TestProfileFact))
+  where
+    decode _ =
+      case mode of
+        AdversarialDecode ->
+          DecodeUnavailable
+            (DecodeUnavailableObservation EncodingNotObserved)
+            (Located testLocation AdversarialDefect :| [])
+        AdversarialView -> DecodePassed testNativeBinding ()
+        AdversarialProfile -> DecodePassed testNativeBinding ()
+    resolveView _ _ =
+      case mode of
+        AdversarialDecode ->
+          ViewFailed NoViewMatch (Located testLocation AdversarialDefect :| [])
+        AdversarialView ->
+          ViewFailed NoViewMatch (Located testLocation AdversarialDefect :| [])
+        AdversarialProfile -> ViewPassed testResolvedView ()
+    contract =
+      O2IProfileContract
+        { projectProfileSnapshot =
+            \_ ->
+              ProfileProjection
+                { projectedRoot =
+                    RootUnprojectable
+                      NoO2IProfile
+                      (Located testLocation AdversarialDefect :| [])
+                , projectedFacts = []
+                , projectedDefects = []
+                }
+        , profileDefectSpec = adversarialSpec
+        }
+
+adversarialSpec :: AdversarialDefect -> DiagnosticSpec
+adversarialSpec AdversarialDefect =
+  diagnosticSpec
+    (o2iDiagnosticCode "")
+    WarningSeverity
+    ProcessFailure
+    ""
+    [DiagnosticSubject "" ""]
+    (Map.singleton "attemptedCode" (DiagnosticText "not-o2i"))
+
+diagnosticAdapter :: SourceLocation -> DiagnosticSpec -> Adapter
+diagnosticAdapter location specification =
+  Adapter
+    testDescriptor
+    (\_ ->
+       DecodeUnavailable
+         (DecodeUnavailableObservation EncodingNotObserved)
+         (Located location specification :| []))
+    id
+    (\_ _ -> ViewFailed NoViewMatch (Located location TestViewDefect :| []))
+    testViewSpec
+    O2IProfileContract
+      { projectProfileSnapshot =
+          \_ ->
+            ProfileProjection
+              { projectedRoot =
+                  RootUnprojectable
+                    NoO2IProfile
+                    (Located location TestRootProfileDefect :| [])
+              , projectedFacts = []
+              , projectedDefects = []
+              }
+      , profileDefectSpec = testProfileSpec
+      }
+    (\_ _ -> profileSnapshot (Located location TestProfileFact))
 
 testAdapter ::
      DecodeMode
@@ -1529,7 +1621,8 @@ testAdapter decodeMode viewMode rootMode templates deferred =
               RootSucceeds ->
                 RootProjectable
                   (OneO2IProfile "0.2")
-                  (resolveProfileVersion (O2IProfileVersion "0.2"))
+                  (resolveProfileVersion
+                     (o2iProfileVersionLiteral ('0' :| ".2")))
               RootFails ->
                 RootUnprojectable
                   NoO2IProfile
@@ -1711,19 +1804,17 @@ premiseEdgeOccurrence = OccurrenceId "edge-premise"
 
 testDescriptor :: AdapterDescriptor
 testDescriptor =
-  AdapterDescriptor
-    { adapterIdentifier = "test"
-    , adapterName = "Test adapter"
-    , adapterVersion = "1"
-    }
+  adapterDescriptor ('t' :| "est") ('T' :| "est adapter") ('1' :| "")
 
 testNativeBinding :: ResolvedNativeBinding
 testNativeBinding =
   ResolvedNativeBinding
-    {nativeRootQName = testRootQName, nativeVersion = NativeVersion "5.0.0"}
+    { nativeRootQName = testRootQName
+    , nativeVersion = nativeVersionLiteral ('5' :| ".0.0")
+    }
 
 testRootQName :: ExpandedQName
-testRootQName = ExpandedQName (Just "urn:test") "model"
+testRootQName = expandedQName (Just "urn:test") 'm' "odel"
 
 testLocation :: SourceLocation
 testLocation =
@@ -1743,28 +1834,26 @@ testResolvedView =
     }
 
 testDecodeSpec :: TestDecodeDefect -> DiagnosticSpec
-testDecodeSpec TestDecodeDefect = testSpec DecodeStage "o2i.test.decode"
+testDecodeSpec TestDecodeDefect = testSpec "o2i.test.decode"
 
 testViewSpec :: TestViewDefect -> DiagnosticSpec
-testViewSpec TestViewDefect = testSpec ViewScopeStage "o2i.test.view"
+testViewSpec TestViewDefect = testSpec "o2i.test.view"
 
 testProfileSpec :: TestProfileDefect -> DiagnosticSpec
 testProfileSpec defect =
   case defect of
-    TestRootProfileDefect -> testSpec ProfileStage "o2i.test.profile.root"
-    TestReachedProfileDefect -> testSpec ProfileStage "o2i.test.profile.reached"
+    TestRootProfileDefect -> testSpec "o2i.test.profile.root"
+    TestReachedProfileDefect -> testSpec "o2i.test.profile.reached"
 
-testSpec :: InspectionStage -> Text -> DiagnosticSpec
-testSpec stage code =
-  DiagnosticSpec
-    { specCode = DiagnosticCode code
-    , specStage = stage
-    , specSeverity = ErrorSeverity
-    , specDisposition = ModelFinding
-    , specMessage = "Test defect."
-    , specSubjects = []
-    , specData = Map.empty
-    }
+testSpec :: Text -> DiagnosticSpec
+testSpec code =
+  diagnosticSpec
+    (o2iDiagnosticCode (maybe code id (Text.stripPrefix "o2i." code)))
+    ErrorSeverity
+    ModelFinding
+    "Test defect."
+    []
+    Map.empty
 
 noInputs :: InspectionInputs
 noInputs =

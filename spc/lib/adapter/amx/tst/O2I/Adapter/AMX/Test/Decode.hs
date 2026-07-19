@@ -44,7 +44,7 @@ decodeValidTest =
   case decodeAMX (source validEmptyModel) of
     DecodePassed binding _ -> do
       nativeRootQName binding @?= expectedRootQName
-      nativeVersion binding @?= NativeVersion "5.0.0"
+      nativeVersionText (nativeVersion binding) @?= "5.0.0"
     _ -> assertFailure "expected a successful native binding"
 
 decodeBomTest :: Assertion

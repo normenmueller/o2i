@@ -195,8 +195,8 @@ nativeReferenceTest = do
   case decodeAMX document of
     DecodePassed binding decoded -> do
       nativeRootQName binding @?= expectedRootQName
-      nativeVersion binding @?= NativeVersion "5.0.0"
-      elementAttribute (ExpandedQName Nothing "id") (amxDocumentRoot decoded)
+      nativeVersionText (nativeVersion binding) @?= "5.0.0"
+      elementAttribute (expandedQName Nothing 'i' "d") (amxDocumentRoot decoded)
         @?= Just "id-38b61e2f53db4787b817eebd3632eb7f"
     DecodeRejected _ _ -> assertFailure "native reference was rejected"
     DecodeUnavailable _ _ -> assertFailure "native reference was unavailable"

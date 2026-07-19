@@ -146,7 +146,7 @@ ownedDefects element ownerships =
       maybe
         "<missing>"
         id
-        (elementAttribute (ExpandedQName Nothing "source") relationship)
+        (elementAttribute (expandedQName Nothing 's' "ource") relationship)
 
 ownerlessDefects :: AMXElement -> [AMXElement] -> [Located AMXProfileDefect]
 ownerlessDefects element ownerships =
@@ -177,12 +177,12 @@ rawNode environment element = do
     Just (PrimitiveType primitive) -> do
       owner <- uniqueOwnership environment element
       ownerId <-
-        RawNodeId <$> elementAttribute (ExpandedQName Nothing "source") owner
+        RawNodeId <$> elementAttribute (expandedQName Nothing 's' "ource") owner
       Just (RawPrimitiveNode identifier ownerId primitive)
     Just (StructuringType structuring) -> do
       owner <- uniqueOwnership environment element
       ownerId <-
-        RawNodeId <$> elementAttribute (ExpandedQName Nothing "source") owner
+        RawNodeId <$> elementAttribute (expandedQName Nothing 's' "ource") owner
       Just (RawStructuringNode identifier ownerId structuring)
     Just (AnchorType anchor) -> Just (RawAnchorNode identifier anchor)
     Nothing -> Nothing
@@ -206,7 +206,7 @@ nodeKind environment element = do
 ownerContext :: Environment -> AMXElement -> Maybe Context
 ownerContext environment element = do
   ownership <- uniqueOwnership environment element
-  source <- elementAttribute (ExpandedQName Nothing "source") ownership
+  source <- elementAttribute (expandedQName Nothing 's' "ource") ownership
   [owner] <-
     pure (Map.findWithDefault [] source (environmentNodeIndex environment))
   kindValue <- singleMetadataValue "o2i.kind" owner
@@ -318,7 +318,7 @@ projectRootProfile document = (root, legacyDefects)
         Nothing ->
           RootProjectable
             observed
-            (resolveProfileVersion (O2IProfileVersion "0.2"))
+            (resolveProfileVersion (o2iProfileVersionLiteral ('0' :| ".2")))
     legacyDefects =
       [ DeferredProfileDefect
         { defectApplicability = GlobalProfileDefect
@@ -347,10 +347,11 @@ directProperties key element =
   ]
 
 propertyKey :: AMXElement -> Text
-propertyKey = maybe "" id . elementAttribute (ExpandedQName Nothing "key")
+propertyKey = maybe "" id . elementAttribute (expandedQName Nothing 'k' "ey")
 
 propertyValue :: AMXElement -> Text
-propertyValue = maybe "" id . elementAttribute (ExpandedQName Nothing "value")
+propertyValue =
+  maybe "" id . elementAttribute (expandedQName Nothing 'v' "alue")
 
 propertyLocation :: Text -> AMXElement -> SourceLocation
 propertyLocation key property =

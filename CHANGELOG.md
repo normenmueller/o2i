@@ -48,6 +48,9 @@
   constituting Situation anchor.
 - Defined the exact minimum content and relational evidence contract for all
   eight Context types, including existential and universal obligations.
+- Made the public adapter and diagnostic boundary schema-safe by construction
+  through validated opaque machine values, Inspection-owned stages and
+  identities, and external-client API contracts.
 - Clarified the semantic boundary between structural graph stages and
   subject-matter-enriched model stages.
 - Made Context ownership explicit and machine-readable in the ArchiMate syntax

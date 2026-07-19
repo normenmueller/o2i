@@ -8,7 +8,6 @@ module O2I.Adapter.AMX.Internal.XML
   ) where
 
 import qualified Data.ByteString as ByteString
-import Data.List (mapAccumL)
 import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
@@ -17,7 +16,6 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as TextEncoding
 import qualified Data.Text.Lazy as LazyText
-import Numeric.Natural (Natural)
 import O2I.Adapter.AMX.Internal.Defect
 import O2I.Adapter.AMX.Internal.Types
 import O2I.Inspection.Adapter
@@ -30,10 +28,10 @@ archiNamespace :: Text
 archiNamespace = "http://www.archimatetool.com/archimate"
 
 expectedRootQName :: ExpandedQName
-expectedRootQName = ExpandedQName (Just archiNamespace) "model"
+expectedRootQName = expandedQName (Just archiNamespace) 'm' "odel"
 
 nativeVersionAttribute :: ExpandedQName
-nativeVersionAttribute = ExpandedQName Nothing "version"
+nativeVersionAttribute = expandedQName Nothing 'v' "ersion"
 
 xmlnsNamespace :: Text
 xmlnsNamespace = "http://www.w3.org/2000/xmlns/"
@@ -95,7 +93,10 @@ parseNativeDocument ::
 parseNativeDocument source observation decoded =
   case XML.parseText parserSettings (LazyText.fromStrict decoded) of
     Left _ -> unavailable source observation MalformedXml
-    Right parsed -> bindNativeDocument (annotateDocument source parsed)
+    Right parsed ->
+      case annotateDocument source parsed of
+        Left defect -> unavailable source observation defect
+        Right annotated -> bindNativeDocument annotated
 
 parserSettings :: XML.ParseSettings
 parserSettings =
@@ -111,13 +112,13 @@ bindNativeDocument root =
       DecodePassed
         ResolvedNativeBinding
           { nativeRootQName = amxElementQName root
-          , nativeVersion = NativeVersion "5.0.0"
+          , nativeVersion = nativeVersionLiteral ('5' :| ".0.0")
           }
         AMXDocument
           { amxDocumentRoot = root
           , amxDocumentElements =
               filter
-                ((== ExpandedQName Nothing "element") . amxElementQName)
+                ((== expandedQName Nothing 'e' "lement") . amxElementQName)
                 (elementDescendants root)
           }
     first:rest ->
@@ -151,42 +152,47 @@ bindNativeDocument root =
           ]
     defects = rootDefects ++ versionDefects
 
-annotateDocument :: SourceDocument -> XML.Document -> AMXElement
-annotateDocument source document =
-  annotateElement
-    source
-    (firstPathStep rootName :| [])
-    Map.empty
-    (XML.documentRoot document)
+annotateDocument ::
+     SourceDocument -> XML.Document -> Either AMXDecodeDefect AMXElement
+annotateDocument source document = do
+  rootName <- expandedName (XML.elementName root)
+  annotateElement source (firstPathStep rootName :| []) Map.empty root
   where
-    rootName = expandedName (XML.elementName (XML.documentRoot document))
+    root = XML.documentRoot document
 
 annotateElement ::
      SourceDocument
   -> NonEmpty PathStep
   -> Map Text Text
   -> XML.Element
-  -> AMXElement
-annotateElement source path inherited element =
-  AMXElement
-    { amxElementQName = expandedName (XML.elementName element)
-    , amxElementAttributes =
-        Map.fromList
-          [ (expandedName name, value)
-          | (name, value) <- Map.toList (XML.elementAttributes element)
-          , not (isNamespaceDeclaration name)
-          ]
-    , amxElementChildren = annotatedChildren
-    , amxElementLocation =
-        SourceLocation
-          { locationSource = sourceDocumentIdentity source
-          , locationPath = path
-          , locationTarget = ElementTarget
-          , locationSpan = Nothing
-          }
-    , amxElementNamespaces = namespaces
-    }
+  -> Either AMXDecodeDefect AMXElement
+annotateElement source path inherited element = do
+  name <- expandedName (XML.elementName element)
+  attributes <- fmap Map.fromList (traverse annotateAttribute visibleAttributes)
+  annotatedChildren <- annotateChildren source path namespaces childElements
+  pure
+    AMXElement
+      { amxElementQName = name
+      , amxElementAttributes = attributes
+      , amxElementChildren = annotatedChildren
+      , amxElementLocation =
+          SourceLocation
+            { locationSource = sourceDocumentIdentity source
+            , locationPath = path
+            , locationTarget = ElementTarget
+            , locationSpan = Nothing
+            }
+      , amxElementNamespaces = namespaces
+      }
   where
+    visibleAttributes =
+      [ attribute
+      | attribute@(name, _) <- Map.toList (XML.elementAttributes element)
+      , not (isNamespaceDeclaration name)
+      ]
+    annotateAttribute (name, value) = do
+      expanded <- expandedName name
+      pure (expanded, value)
     namespaces =
       Map.union
         (Map.fromList
@@ -195,34 +201,37 @@ annotateElement source path inherited element =
               (Map.toList (XML.elementAttributes element))))
         inherited
     childElements = [child | XML.NodeElement child <- XML.elementNodes element]
-    (_, annotatedChildren) =
-      mapAccumL (annotateChild source path namespaces) Map.empty childElements
 
-annotateChild ::
+annotateChildren ::
      SourceDocument
   -> NonEmpty PathStep
   -> Map Text Text
-  -> Map ExpandedQName Natural
-  -> XML.Element
-  -> (Map ExpandedQName Natural, AMXElement)
-annotateChild source parentPath namespaces counts child =
-  ( Map.insert name ordinal counts
-  , annotateElement
-      source
-      (appendPath parentPath (pathStepAfter name preceding))
-      namespaces
-      child)
+  -> [XML.Element]
+  -> Either AMXDecodeDefect [AMXElement]
+annotateChildren source parentPath namespaces = go Map.empty
   where
-    name = expandedName (XML.elementName child)
-    preceding = Map.findWithDefault 0 name counts
-    ordinal = preceding + 1
+    go _ [] = Right []
+    go counts (child:rest) = do
+      name <- expandedName (XML.elementName child)
+      let preceding = Map.findWithDefault 0 name counts
+          nextCounts = Map.insert name (preceding + 1) counts
+      annotated <-
+        annotateElement
+          source
+          (appendPath parentPath (pathStepAfter name preceding))
+          namespaces
+          child
+      remaining <- go nextCounts rest
+      pure (annotated : remaining)
 
 appendPath :: NonEmpty value -> value -> NonEmpty value
 appendPath (first :| rest) value = first :| (rest ++ [value])
 
-expandedName :: XML.Name -> ExpandedQName
+expandedName :: XML.Name -> Either AMXDecodeDefect ExpandedQName
 expandedName name =
-  ExpandedQName (XML.nameNamespace name) (XML.nameLocalName name)
+  case mkExpandedQName (XML.nameNamespace name) (XML.nameLocalName name) of
+    Left EmptyQNameLocalName -> Left MalformedXml
+    Right expanded -> Right expanded
 
 isNamespaceDeclaration :: XML.Name -> Bool
 isNamespaceDeclaration name =
@@ -255,7 +264,7 @@ encodingObservation source decoded =
         (Located
            ((documentLocation source)
               { locationTarget =
-                  AttributeTarget (ExpandedQName Nothing "encoding")
+                  AttributeTarget (expandedQName Nothing 'e' "ncoding")
               })
            encoding)
 
@@ -335,7 +344,7 @@ documentLocation :: SourceDocument -> SourceLocation
 documentLocation source =
   SourceLocation
     { locationSource = sourceDocumentIdentity source
-    , locationPath = firstPathStep (ExpandedQName Nothing "document") :| []
+    , locationPath = firstPathStep (expandedQName Nothing 'd' "ocument") :| []
     , locationTarget = ElementTarget
     , locationSpan = Nothing
     }

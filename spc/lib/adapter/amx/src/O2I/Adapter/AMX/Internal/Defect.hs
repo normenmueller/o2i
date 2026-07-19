@@ -153,174 +153,133 @@ amxProfileDefectTag defect =
     DuplicateOwnership _ _ -> DuplicateOwnershipTag
     OwnershipOnOwnerlessKind _ -> OwnershipOnOwnerlessKindTag
 
--- | Stable code, stage, and generic message for every catalog entry.
+-- | Stable code and generic message for every catalog entry.
 amxDefectTagSpec :: AMXDefectTag -> DiagnosticSpec
 amxDefectTagSpec tag =
   case tag of
     MalformedXmlTag ->
-      model
-        DecodeStage
-        "o2i.amx.decode.xml-malformed"
-        "The input is not well-formed XML."
+      model "amx.decode.xml-malformed" "The input is not well-formed XML."
     UnsafeXmlTag ->
       model
-        DecodeStage
-        "o2i.amx.decode.xml-unsafe"
+        "amx.decode.xml-unsafe"
         "The input contains a DTD or a non-predefined entity."
     InvalidUtf8Tag ->
-      model
-        DecodeStage
-        "o2i.amx.decode.encoding-invalid"
-        "The input is not valid UTF-8."
+      model "amx.decode.encoding-invalid" "The input is not valid UTF-8."
     UnsupportedXmlEncodingTag ->
       model
-        DecodeStage
-        "o2i.amx.decode.encoding-unsupported"
+        "amx.decode.encoding-unsupported"
         "The declared or byte-order encoding is not UTF-8."
     UnexpectedRootQNameTag ->
       model
-        DecodeStage
-        "o2i.amx.decode.root-qname"
+        "amx.decode.root-qname"
         "The XML root is not the native Archi model element."
     MissingNativeVersionTag ->
       model
-        DecodeStage
-        "o2i.amx.decode.native-version-missing"
+        "amx.decode.native-version-missing"
         "The native Archi model version is missing."
     UnsupportedNativeVersionTag ->
       model
-        DecodeStage
-        "o2i.amx.decode.native-version-unsupported"
+        "amx.decode.native-version-unsupported"
         "The native Archi model version is unsupported."
     ViewNotFoundTag ->
-      model
-        ViewScopeStage
-        "o2i.amx.view.not-found"
-        "No View matches the exact selector."
+      model "amx.view.not-found" "No View matches the exact selector."
     AmbiguousViewNameTag ->
       model
-        ViewScopeStage
-        "o2i.amx.view.name-ambiguous"
+        "amx.view.name-ambiguous"
         "More than one View has the exact selected name."
     DuplicateViewIdTag ->
       model
-        ViewScopeStage
-        "o2i.amx.view.id-ambiguous"
+        "amx.view.id-ambiguous"
         "More than one View has the selected stable identifier."
     UnresolvedViewObjectReferenceTag ->
       model
-        ViewScopeStage
-        "o2i.amx.view.object-unresolved"
+        "amx.view.object-unresolved"
         "A selected View object does not resolve to a model element."
     AmbiguousViewObjectReferenceTag ->
       model
-        ViewScopeStage
-        "o2i.amx.view.object-ambiguous"
+        "amx.view.object-ambiguous"
         "A selected View object resolves to multiple model elements."
     UnresolvedViewRelationshipReferenceTag ->
       model
-        ViewScopeStage
-        "o2i.amx.view.connection-unresolved"
+        "amx.view.connection-unresolved"
         "A selected View connection does not resolve to a relationship."
     AmbiguousViewRelationshipReferenceTag ->
       model
-        ViewScopeStage
-        "o2i.amx.view.connection-ambiguous"
+        "amx.view.connection-ambiguous"
         "A selected View connection resolves to multiple relationships."
     UnresolvedViewConnectionEndpointTag ->
       model
-        ViewScopeStage
-        "o2i.amx.view.endpoint-unresolved"
+        "amx.view.endpoint-unresolved"
         "A selected View connection endpoint does not resolve."
     AmbiguousViewConnectionEndpointTag ->
       model
-        ViewScopeStage
-        "o2i.amx.view.endpoint-ambiguous"
+        "amx.view.endpoint-ambiguous"
         "A selected View connection endpoint is ambiguous."
     ViewConnectionEndpointMismatchTag ->
       model
-        ViewScopeStage
-        "o2i.amx.view.endpoint-mismatch"
+        "amx.view.endpoint-mismatch"
         "A View connection endpoint differs from its relationship endpoint."
     MissingO2IProfileTag ->
       model
-        ProfileStage
-        "o2i.amx.profile.missing"
+        "amx.profile.missing"
         "The direct root property o2i.profile is missing."
     DuplicateO2IProfileTag ->
       model
-        ProfileStage
-        "o2i.amx.profile.duplicate"
+        "amx.profile.duplicate"
         "The direct root property o2i.profile occurs more than once."
     UnsupportedO2IProfileTag ->
-      model
-        ProfileStage
-        "o2i.amx.profile.unsupported"
-        "The O2I profile version is unsupported."
+      model "amx.profile.unsupported" "The O2I profile version is unsupported."
     LegacyRootVersionPropertyTag ->
       model
-        ProfileStage
-        "o2i.amx.profile.legacy-version-property"
+        "amx.profile.legacy-version-property"
         "The direct root property version is not an O2I profile alias."
     UnsupportedO2IMetadataKeyTag ->
       model
-        ProfileStage
-        "o2i.amx.profile.metadata-key"
+        "amx.profile.metadata-key"
         "An O2I candidate declares an unsupported metadata key."
     MissingO2IKindTag ->
       model
-        ProfileStage
-        "o2i.amx.profile.kind-missing"
+        "amx.profile.kind-missing"
         "An O2I candidate has no direct o2i.kind property."
     DuplicateO2IKindTag ->
       model
-        ProfileStage
-        "o2i.amx.profile.kind-duplicate"
+        "amx.profile.kind-duplicate"
         "An O2I candidate has more than one direct o2i.kind property."
     UnknownO2IKindTag ->
       model
-        ProfileStage
-        "o2i.amx.profile.kind-unknown"
+        "amx.profile.kind-unknown"
         "An O2I candidate declares an unknown o2i.kind value."
     MissingO2ITypeTag ->
       model
-        ProfileStage
-        "o2i.amx.profile.type-missing"
+        "amx.profile.type-missing"
         "An O2I candidate has no direct o2i.type property."
     DuplicateO2ITypeTag ->
       model
-        ProfileStage
-        "o2i.amx.profile.type-duplicate"
+        "amx.profile.type-duplicate"
         "An O2I candidate has more than one direct o2i.type property."
     InvalidO2ITypeForKindTag ->
       model
-        ProfileStage
-        "o2i.amx.profile.type-invalid"
+        "amx.profile.type-invalid"
         "The o2i.type value is invalid for the declared o2i.kind."
     IncompatibleElementRepresentationTag ->
       model
-        ProfileStage
-        "o2i.amx.profile.element-representation"
+        "amx.profile.element-representation"
         "The ArchiMate element does not realize its declared O2I type."
     IncompatibleRelationshipRepresentationTag ->
       model
-        ProfileStage
-        "o2i.amx.profile.relation-representation"
+        "amx.profile.relation-representation"
         "The ArchiMate relationship does not realize the O2I relation."
     MissingOwnershipTag ->
       model
-        ProfileStage
-        "o2i.amx.profile.ownership-missing"
+        "amx.profile.ownership-missing"
         "An owned O2I candidate has no persisted ownership composition."
     DuplicateOwnershipTag ->
       model
-        ProfileStage
-        "o2i.amx.profile.ownership-duplicate"
+        "amx.profile.ownership-duplicate"
         "An owned O2I candidate has multiple ownership compositions."
     OwnershipOnOwnerlessKindTag ->
       model
-        ProfileStage
-        "o2i.amx.profile.ownership-forbidden"
+        "amx.profile.ownership-forbidden"
         "An ownerless O2I candidate has an ownership composition."
 
 amxDecodeDefectSpec :: AMXDecodeDefect -> DiagnosticSpec
@@ -339,20 +298,25 @@ amxProfileDefectSpec defect =
     (profileSubjects defect)
     (amxDefectTagSpec (amxProfileDefectTag defect))
 
-model :: InspectionStage -> Text -> Text -> DiagnosticSpec
-model stage code message =
-  DiagnosticSpec
-    { specCode = DiagnosticCode code
-    , specStage = stage
-    , specSeverity = ErrorSeverity
-    , specDisposition = ModelFinding
-    , specMessage = message
-    , specSubjects = []
-    , specData = Map.empty
-    }
+model :: Text -> Text -> DiagnosticSpec
+model code message =
+  diagnosticSpec
+    (o2iDiagnosticCode code)
+    ErrorSeverity
+    ModelFinding
+    message
+    []
+    Map.empty
 
 addSubjects :: [DiagnosticSubject] -> DiagnosticSpec -> DiagnosticSpec
-addSubjects subjects specification = specification {specSubjects = subjects}
+addSubjects subjects specification =
+  diagnosticSpec
+    (specCode specification)
+    (specSeverity specification)
+    (specDisposition specification)
+    (specMessage specification)
+    subjects
+    (specData specification)
 
 decodeSubjects :: AMXDecodeDefect -> [DiagnosticSubject]
 decodeSubjects defect =

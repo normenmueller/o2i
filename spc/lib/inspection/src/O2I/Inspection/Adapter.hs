@@ -3,9 +3,19 @@
 -- | First-class format-adapter boundary.
 module O2I.Inspection.Adapter
   ( Adapter(..)
-  , AdapterDescriptor(..)
-  , NativeVersion(..)
-  , O2IProfileVersion(..)
+  , AdapterDescriptor
+  , AdapterDescriptorError(..)
+  , mkAdapterDescriptor
+  , adapterDescriptor
+  , adapterIdentifier
+  , adapterName
+  , adapterVersion
+  , NativeVersion
+  , NativeVersionError(..)
+  , mkNativeVersion
+  , nativeVersionLiteral
+  , nativeVersionText
+  , O2IProfileVersion
   , Utf8Binding(..)
   , ResolvedNativeBinding(..)
   , EncodingObservation(..)
@@ -20,24 +30,96 @@ module O2I.Inspection.Adapter
   ) where
 
 import Data.List.NonEmpty (NonEmpty)
+import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
+import qualified Data.Text as Text
 import O2I.Inspection.Diagnostic
 import O2I.Inspection.Input
 import O2I.Inspection.Profile
 import O2I.Inspection.Provenance
 import O2I.Inspection.View
 
--- | Stable adapter identity reported independently of implementation details.
+-- | Validated adapter identity reported independently of implementation details.
 data AdapterDescriptor = AdapterDescriptor
-  { adapterIdentifier :: Text
-  , adapterName :: Text
-  , adapterVersion :: Text
+  { descriptorIdentifier :: Text
+  , descriptorName :: Text
+  , descriptorVersion :: Text
   } deriving (Eq, Ord, Show)
+
+-- | Every empty field found while validating an adapter descriptor.
+data AdapterDescriptorError
+  = EmptyAdapterIdentifier
+  | EmptyAdapterName
+  | EmptyAdapterVersion
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+-- | Validate all report-visible descriptor fields, accumulating empty fields.
+mkAdapterDescriptor ::
+     Text
+  -> Text
+  -> Text
+  -> Either (NonEmpty AdapterDescriptorError) AdapterDescriptor
+mkAdapterDescriptor identifier name version =
+  case NonEmpty.nonEmpty errors of
+    Nothing ->
+      Right
+        AdapterDescriptor
+          { descriptorIdentifier = identifier
+          , descriptorName = name
+          , descriptorVersion = version
+          }
+    Just failures -> Left failures
+  where
+    errors =
+      [EmptyAdapterIdentifier | Text.null identifier]
+        ++ [EmptyAdapterName | Text.null name]
+        ++ [EmptyAdapterVersion | Text.null version]
+
+-- | Construct a descriptor from statically non-empty character sequences.
+adapterDescriptor ::
+     NonEmpty Char -> NonEmpty Char -> NonEmpty Char -> AdapterDescriptor
+adapterDescriptor identifier name version =
+  AdapterDescriptor
+    { descriptorIdentifier = nonEmptyText identifier
+    , descriptorName = nonEmptyText name
+    , descriptorVersion = nonEmptyText version
+    }
+
+-- | Read the non-empty stable adapter identifier.
+adapterIdentifier :: AdapterDescriptor -> Text
+adapterIdentifier (AdapterDescriptor identifier _ _) = identifier
+
+-- | Read the non-empty human-readable adapter name.
+adapterName :: AdapterDescriptor -> Text
+adapterName (AdapterDescriptor _ name _) = name
+
+-- | Read the non-empty adapter contract version.
+adapterVersion :: AdapterDescriptor -> Text
+adapterVersion (AdapterDescriptor _ _ version) = version
 
 -- | Native concrete-format version.
 newtype NativeVersion = NativeVersion
-  { nativeVersionText :: Text
+  { unNativeVersion :: Text
   } deriving (Eq, Ord, Show)
+
+-- | Why native-version text cannot be represented in a report.
+data NativeVersionError =
+  EmptyNativeVersion
+  deriving (Eq, Ord, Show)
+
+-- | Validate report-visible native-version text.
+mkNativeVersion :: Text -> Either NativeVersionError NativeVersion
+mkNativeVersion value
+  | Text.null value = Left EmptyNativeVersion
+  | otherwise = Right (NativeVersion value)
+
+-- | Construct a native version from a statically non-empty character sequence.
+nativeVersionLiteral :: NonEmpty Char -> NativeVersion
+nativeVersionLiteral = NativeVersion . nonEmptyText
+
+-- | Read the validated native-format version.
+nativeVersionText :: NativeVersion -> Text
+nativeVersionText (NativeVersion version) = version
 
 -- | Proof that the complete document was decoded as UTF-8.
 data Utf8Binding =
@@ -86,3 +168,6 @@ data Adapter where
     -> O2IProfileContract profileFact profileDefect
     -> (document -> selectedView -> ProfileSnapshot profileFact)
     -> Adapter
+
+nonEmptyText :: NonEmpty Char -> Text
+nonEmptyText = Text.pack . NonEmpty.toList

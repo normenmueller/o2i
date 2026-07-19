@@ -1,6 +1,10 @@
 -- | Adapter-parametric O2I profile projection.
 module O2I.Inspection.Profile
-  ( O2IProfileVersion(..)
+  ( O2IProfileVersion
+  , O2IProfileVersionError(..)
+  , mkO2IProfileVersion
+  , o2iProfileVersionLiteral
+  , profileVersionText
   , ObservedO2IProfile(..)
   , ResolvedO2IProfile
   , resolvedProfileVersion

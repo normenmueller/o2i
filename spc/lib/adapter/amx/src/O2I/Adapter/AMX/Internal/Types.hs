@@ -8,6 +8,9 @@ module O2I.Adapter.AMX.Internal.Types
   , AMXPresentation(..)
   , AMXConnectionPresentation(..)
   , AMXProfileFact(..)
+  , EndpointRole(..)
+  , endpointRoleText
+  , endpointQName
   , elementAttribute
   , elementAttributeLocation
   , elementChildrenNamed
@@ -69,6 +72,24 @@ data AMXProfileFact =
   AMXProfileFact AMXDocument AMXSelectedView
   deriving (Eq, Show)
 
+-- | Closed native relationship endpoint vocabulary.
+data EndpointRole
+  = SourceEndpoint
+  | TargetEndpoint
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+endpointRoleText :: EndpointRole -> Text
+endpointRoleText role =
+  case role of
+    SourceEndpoint -> "source"
+    TargetEndpoint -> "target"
+
+endpointQName :: EndpointRole -> ExpandedQName
+endpointQName role =
+  case role of
+    SourceEndpoint -> expandedQName Nothing 's' "ource"
+    TargetEndpoint -> expandedQName Nothing 't' "arget"
+
 elementAttribute :: ExpandedQName -> AMXElement -> Maybe Text
 elementAttribute name = Map.lookup name . amxElementAttributes
 
@@ -76,10 +97,9 @@ elementAttributeLocation :: ExpandedQName -> AMXElement -> SourceLocation
 elementAttributeLocation name element =
   (amxElementLocation element) {locationTarget = AttributeTarget name}
 
-elementChildrenNamed :: Text -> AMXElement -> [AMXElement]
-elementChildrenNamed local =
-  filter ((== ExpandedQName Nothing local) . amxElementQName)
-    . amxElementChildren
+elementChildrenNamed :: ExpandedQName -> AMXElement -> [AMXElement]
+elementChildrenNamed name =
+  filter ((== name) . amxElementQName) . amxElementChildren
 
 elementDescendants :: AMXElement -> [AMXElement]
 elementDescendants element =
@@ -88,13 +108,14 @@ elementDescendants element =
     (amxElementChildren element)
 
 elementDirectProperties :: AMXElement -> [AMXElement]
-elementDirectProperties = elementChildrenNamed "property"
+elementDirectProperties =
+  elementChildrenNamed (expandedQName Nothing 'p' "roperty")
 
 elementId :: AMXElement -> Maybe Text
-elementId = elementAttribute (ExpandedQName Nothing "id")
+elementId = elementAttribute (expandedQName Nothing 'i' "d")
 
 elementName :: AMXElement -> Text
-elementName = maybe "" id . elementAttribute (ExpandedQName Nothing "name")
+elementName = maybe "" id . elementAttribute (expandedQName Nothing 'n' "ame")
 
 elementOccurrence :: Text -> AMXElement -> OccurrenceId
 elementOccurrence prefix element =
@@ -104,7 +125,10 @@ elementType :: AMXElement -> Maybe ExpandedQName
 elementType element = do
   value <-
     elementAttribute
-      (ExpandedQName (Just "http://www.w3.org/2001/XMLSchema-instance") "type")
+      (expandedQName
+         (Just "http://www.w3.org/2001/XMLSchema-instance")
+         't'
+         "ype")
       element
   resolveQNameValue element value
 
@@ -119,20 +143,26 @@ isViewElement :: AMXElement -> Bool
 isViewElement element =
   elementType element
     == Just
-         (ExpandedQName
+         (expandedQName
             (Just "http://www.archimatetool.com/archimate")
-            "ArchimateDiagramModel")
+            'A'
+            "rchimateDiagramModel")
 
 resolveQNameValue :: AMXElement -> Text -> Maybe ExpandedQName
 resolveQNameValue element value =
   case Text.breakOn ":" value of
     (prefix, suffix)
       | Text.null suffix ->
-        Just
-          (ExpandedQName (Map.lookup "" (amxElementNamespaces element)) prefix)
+        either
+          (const Nothing)
+          Just
+          (mkExpandedQName (Map.lookup "" (amxElementNamespaces element)) prefix)
       | otherwise -> do
         namespace <- Map.lookup prefix (amxElementNamespaces element)
-        Just (ExpandedQName (Just namespace) (Text.drop 1 suffix))
+        either
+          (const Nothing)
+          Just
+          (mkExpandedQName (Just namespace) (Text.drop 1 suffix))
 
 locationPathText :: SourceLocation -> Text
 locationPathText =

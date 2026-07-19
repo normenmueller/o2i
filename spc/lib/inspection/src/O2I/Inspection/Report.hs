@@ -19,7 +19,6 @@ module O2I.Inspection.Report
   , CommandErrorClassification(..)
   , InvocationDefect(..)
   , CommandError(..)
-  , nativeAdapterBinding
   , reportRequestInfo
   , reportNativeBinding
   , reportViewResolution

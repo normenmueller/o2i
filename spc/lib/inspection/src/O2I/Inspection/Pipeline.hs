@@ -32,7 +32,7 @@ import qualified Data.Text as Text
 import Data.Time (UTCTime)
 import O2I
 import O2I.Inspection.Adapter
-import O2I.Inspection.Diagnostic
+import O2I.Inspection.Diagnostic.Internal
 import O2I.Inspection.Import
 import O2I.Inspection.Input
 import O2I.Inspection.Profile
@@ -234,7 +234,7 @@ inspectSourceDocument ::
 inspectSourceDocument (Adapter descriptor decode decodeSpec resolveView viewSpec contract observe) selector inputs source =
   case decode source of
     DecodeUnavailable observation defects ->
-      let diagnostics = locatedDiagnostics decodeSpec defects
+      let diagnostics = locatedDiagnostics DecodeStage decodeSpec defects
        in InspectionCompleted
             (decodeFailureReport
                requestInfo
@@ -243,7 +243,7 @@ inspectSourceDocument (Adapter descriptor decode decodeSpec resolveView viewSpec
                   (fmap diagnosticId diagnostics))
                (NonEmpty.toList diagnostics))
     DecodeRejected rejected defects ->
-      let diagnostics = locatedDiagnostics decodeSpec defects
+      let diagnostics = locatedDiagnostics DecodeStage decodeSpec defects
        in InspectionCompleted
             (decodeFailureReport
                requestInfo
@@ -252,7 +252,7 @@ inspectSourceDocument (Adapter descriptor decode decodeSpec resolveView viewSpec
     DecodePassed binding document ->
       case resolveView document selector of
         ViewFailed observation defects ->
-          let diagnostics = locatedDiagnostics viewSpec defects
+          let diagnostics = locatedDiagnostics ViewScopeStage viewSpec defects
            in InspectionCompleted
                 (viewFailureReport requestInfo binding observation diagnostics)
         ViewPassed view selectedView ->
@@ -282,7 +282,8 @@ inspectProfile ::
 inspectProfile request binding viewResolution inputs contract observations =
   case resolveRootProfile contract observations of
     ProfileRejected observed defects ->
-      let diagnostics = locatedDiagnostics (profileDefectSpec contract) defects
+      let diagnostics =
+            locatedDiagnostics ProfileStage (profileDefectSpec contract) defects
        in InspectionCompleted
             (profileFailureReport
                request
@@ -381,6 +382,7 @@ inspectSemantics request binding viewResolution profile inputs closed =
             Failure defects ->
               let diagnostics =
                     coreDiagnosticsWithSources
+                      SemanticsStage
                       sources
                       closed
                       semanticDefectSpec
@@ -423,7 +425,12 @@ inspectTraceability ::
 inspectTraceability request binding viewResolution profile inputs closed sources semantic =
   case validateTraceability semantic of
     Failure defects ->
-      let diagnostics = coreDiagnostics closed traceabilityDefectSpec defects
+      let diagnostics =
+            coreDiagnostics
+              TraceabilityStage
+              closed
+              traceabilityDefectSpec
+              defects
        in InspectionCompleted
             (pipelineReport
                request
@@ -485,6 +492,7 @@ inspectReadiness request binding viewResolution profile inputs closed sources tr
             Failure defects ->
               let diagnostics =
                     coreDiagnosticsWithSources
+                      ReadinessStage
                       [readinessSource]
                       closed
                       readinessDefectSpec
@@ -550,6 +558,7 @@ inspectEvidence request binding viewResolution profile inputs closed sources rea
             Failure defects ->
               let diagnostics =
                     coreDiagnosticsWithSources
+                      EvidenceStage
                       [evidenceSource]
                       closed
                       evidenceDefectSpec
@@ -674,7 +683,7 @@ structureFailureReport request binding viewResolution profile scope imported def
   where
     diagnostics =
       map
-        (coreDiagnostic imported structuralDefectSpec)
+        (coreDiagnostic StructureStage imported structuralDefectSpec)
         (NonEmpty.toList defects)
 
 pipelineReport ::
@@ -761,10 +770,12 @@ stageReport stage state diagnostics =
     }
 
 locatedDiagnostics ::
-     (defect -> DiagnosticSpec)
+     InspectionStage
+  -> (defect -> DiagnosticSpec)
   -> NonEmpty (Located defect)
   -> NonEmpty Diagnostic
-locatedDiagnostics specification = fmap (diagnosticFromLocated specification)
+locatedDiagnostics stage specification =
+  fmap (diagnosticFromLocated stage specification)
 
 scopeDiagnostics :: NonEmpty ScopeIssue -> NonEmpty Diagnostic
 scopeDiagnostics = fmap normalizeIssue
@@ -773,26 +784,28 @@ scopeDiagnostics = fmap normalizeIssue
       case issue of
         ProfileIssue diagnostic -> diagnostic
         InspectionScopeIssue defect ->
-          diagnosticFromLocated scopeDefectSpec defect
+          diagnosticFromLocated ProfileStage scopeDefectSpec defect
 
 coreDiagnostics ::
-     StructurallyClosedModel
-  -> (defect -> DiagnosticSpec)
-  -> NonEmpty defect
-  -> [Diagnostic]
-coreDiagnostics closed specification =
-  map (coreDiagnostic (structurallyClosedImport closed) specification)
-    . NonEmpty.toList
-
-coreDiagnosticsWithSources ::
-     [SupplementalSource]
+     InspectionStage
   -> StructurallyClosedModel
   -> (defect -> DiagnosticSpec)
   -> NonEmpty defect
   -> [Diagnostic]
-coreDiagnosticsWithSources sources closed specification =
+coreDiagnostics stage closed specification =
+  map (coreDiagnostic stage (structurallyClosedImport closed) specification)
+    . NonEmpty.toList
+
+coreDiagnosticsWithSources ::
+     InspectionStage
+  -> [SupplementalSource]
+  -> StructurallyClosedModel
+  -> (defect -> DiagnosticSpec)
+  -> NonEmpty defect
+  -> [Diagnostic]
+coreDiagnosticsWithSources stage sources closed specification =
   map (diagnosticWithSupplementalSources sources)
-    . coreDiagnostics closed specification
+    . coreDiagnostics stage closed specification
 
 semanticsWitnessSources :: SemanticsWitness -> [SupplementalSource]
 semanticsWitnessSources witness =
@@ -814,9 +827,14 @@ evidenceWitnessSource witness =
     (sourcedFrom (witnessEvidenceInput witness))
 
 coreDiagnostic ::
-     ImportedGraph -> (defect -> DiagnosticSpec) -> defect -> Diagnostic
-coreDiagnostic imported specification defect =
+     InspectionStage
+  -> ImportedGraph
+  -> (defect -> DiagnosticSpec)
+  -> defect
+  -> Diagnostic
+coreDiagnostic stage imported specification defect =
   diagnosticFromSpec
+    stage
     (importedLocationsForSubjects imported (specSubjects spec))
     spec
   where

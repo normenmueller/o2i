@@ -4,6 +4,8 @@
 module ApiContractTH
   ( assertAbstractTypes
   , assertExactArgumentConstructors
+  , assertHiddenValues
+  , assertOrdinaryFunctions
   ) where
 
 import Control.Monad (unless)
@@ -39,6 +41,29 @@ assertAbstractTypes names = do
   unless
     (null visibleConstructors)
     (fail ("opaque API constructors are visible: " ++ show visibleConstructors))
+  pure []
+
+-- | Require implementation-only functions to be absent from the client scope.
+assertHiddenValues :: [String] -> Q [Dec]
+assertHiddenValues names = do
+  visible <- traverse lookupValueName names
+  unless
+    (all (== Nothing) visible)
+    (fail ("internal diagnostic functions are visible: " ++ show names))
+  pure []
+
+-- | Require projections to be ordinary functions, preventing record updates.
+assertOrdinaryFunctions :: [Name] -> Q [Dec]
+assertOrdinaryFunctions names = do
+  information <- traverse (\name -> fmap ((,) name) (reify name)) names
+  let isRecordSelector (_, VarI _ _ (Just _)) = True
+      isRecordSelector _ = False
+      invalid = filter isRecordSelector information
+  unless
+    (null invalid)
+    (fail
+       ("public projections are record selectors: "
+          ++ show (map (nameBase . fst) invalid)))
   pure []
 
 -- | Require each function's first argument type to have exactly the named

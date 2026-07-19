@@ -3,6 +3,10 @@
 -- | Internal representation of opaque profile artifacts.
 module O2I.Inspection.Profile.Internal
   ( O2IProfileVersion(..)
+  , profileVersionText
+  , O2IProfileVersionError(..)
+  , mkO2IProfileVersion
+  , o2iProfileVersionLiteral
   , ObservedO2IProfile(..)
   , ResolvedO2IProfile(..)
   , resolveProfileVersion
@@ -33,6 +37,7 @@ module O2I.Inspection.Profile.Internal
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
+import qualified Data.Text as Text
 import O2I (RawEdge, RawNode)
 import O2I.Inspection.Cardinality
 import O2I.Inspection.Diagnostic
@@ -41,8 +46,27 @@ import O2I.Inspection.View
 
 -- | Normative concrete-profile version.
 newtype O2IProfileVersion = O2IProfileVersion
-  { profileVersionText :: Text
+  { unO2IProfileVersion :: Text
   } deriving (Eq, Ord, Show)
+
+-- | Why profile-version text cannot be represented in a report.
+data O2IProfileVersionError =
+  EmptyO2IProfileVersion
+  deriving (Eq, Ord, Show)
+
+-- | Validate report-visible O2I profile-version text.
+mkO2IProfileVersion :: Text -> Either O2IProfileVersionError O2IProfileVersion
+mkO2IProfileVersion value
+  | Text.null value = Left EmptyO2IProfileVersion
+  | otherwise = Right (O2IProfileVersion value)
+
+-- | Construct a profile version from a statically non-empty character sequence.
+o2iProfileVersionLiteral :: NonEmpty Char -> O2IProfileVersion
+o2iProfileVersionLiteral = O2IProfileVersion . Text.pack . NonEmpty.toList
+
+-- | Read the validated O2I profile version.
+profileVersionText :: O2IProfileVersion -> Text
+profileVersionText (O2IProfileVersion version) = version
 
 -- | Exact root profile-marker cardinality observed by an adapter.
 data ObservedO2IProfile

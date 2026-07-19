@@ -85,8 +85,8 @@ relationshipAdjacency environment =
 endpointElementsForAdjacency :: Environment -> AMXElement -> [AMXElement]
 endpointElementsForAdjacency environment relationship =
   stableUniqueElements
-    (endpointElements environment "source" relationship
-       ++ endpointElements environment "target" relationship)
+    (endpointElements environment SourceEndpoint relationship
+       ++ endpointElements environment TargetEndpoint relationship)
 
 relationshipEligible :: Environment -> CandidateClosure -> AMXElement -> Bool
 relationshipEligible environment closure relationship
@@ -113,14 +113,13 @@ ownershipEligible environment closure relationship =
     eligible element =
       Set.member (nodeOccurrence element) (closureCandidates closure)
         && case metadataKind element of
-             Just ContextMetadata -> endpointIs "source" element
-             Just PrimitiveMetadata -> endpointIs "target" element
-             Just StructuringMetadata -> endpointIs "target" element
-             Just SituationAnchorMetadata -> endpointIs "target" element
+             Just ContextMetadata -> endpointIs SourceEndpoint element
+             Just PrimitiveMetadata -> endpointIs TargetEndpoint element
+             Just StructuringMetadata -> endpointIs TargetEndpoint element
+             Just SituationAnchorMetadata -> endpointIs TargetEndpoint element
              Nothing -> True
     endpointIs role element =
-      elementAttribute (ExpandedQName Nothing role) relationship
-        == elementId element
+      elementAttribute (endpointQName role) relationship == elementId element
 
 possibleSignatures ::
      Environment -> CandidateClosure -> AMXElement -> [AMXRelationSignature]
@@ -133,8 +132,8 @@ possibleSignatures environment closure relationship =
   , not (null sourceKinds && null targetKinds)
   ]
   where
-    sourceKinds = reachedEndpointKinds "source"
-    targetKinds = reachedEndpointKinds "target"
+    sourceKinds = reachedEndpointKinds SourceEndpoint
+    targetKinds = reachedEndpointKinds TargetEndpoint
     reachedEndpointKinds role =
       [ kind
       | endpoint <- endpointElements environment role relationship
@@ -160,8 +159,8 @@ semanticRelationshipElements environment closure =
 projectedRawEdge ::
      Environment -> CandidateClosure -> AMXElement -> Maybe RawEdge
 projectedRawEdge environment closure relationship = do
-  source <- uniqueEndpointElement environment "source" relationship
-  target <- uniqueEndpointElement environment "target" relationship
+  source <- uniqueEndpointElement environment SourceEndpoint relationship
+  target <- uniqueEndpointElement environment TargetEndpoint relationship
   sourceId <- elementId source
   targetId <- elementId target
   let resolved = resolvedSignatures environment relationship
@@ -193,9 +192,9 @@ projectedRawEdge environment closure relationship = do
 exactSignatures :: Environment -> AMXElement -> [AMXRelationSignature]
 exactSignatures environment relationship = do
   source <-
-    maybeToList (uniqueEndpointElement environment "source" relationship)
+    maybeToList (uniqueEndpointElement environment SourceEndpoint relationship)
   target <-
-    maybeToList (uniqueEndpointElement environment "target" relationship)
+    maybeToList (uniqueEndpointElement environment TargetEndpoint relationship)
   sourceKind <- maybeToList (nodeKind environment source)
   targetKind <- maybeToList (nodeKind environment target)
   signature <- relationSignatures
@@ -212,10 +211,10 @@ resolvedSignatures environment relationship =
     exact -> exact
   where
     sourceKind =
-      uniqueEndpointElement environment "source" relationship
+      uniqueEndpointElement environment SourceEndpoint relationship
         >>= nodeKind environment
     targetKind =
-      uniqueEndpointElement environment "target" relationship
+      uniqueEndpointElement environment TargetEndpoint relationship
         >>= nodeKind environment
     partial =
       [ signature

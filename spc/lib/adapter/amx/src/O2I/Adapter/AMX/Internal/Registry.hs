@@ -18,7 +18,7 @@ import O2I
 import O2I.Adapter.AMX.Internal.Types
 import O2I.Adapter.AMX.Internal.XML (archiNamespace)
 import O2I.Inspection.Profile
-import O2I.Inspection.Provenance (ExpandedQName(..))
+import O2I.Inspection.Provenance (expandedQName, qNameLocalName, qNameNamespace)
 
 -- | One core relation enriched only with its concrete AMX realization.
 data AMXRelationSignature = AMXRelationSignature
@@ -207,7 +207,7 @@ actualRelationshipRepresentation relationship = do
              { relationshipTypeName = qNameLocalName relationshipType
              , relationshipDirected =
                  elementAttribute
-                   (ExpandedQName Nothing "directed")
+                   (expandedQName Nothing 'd' "irected")
                    relationship
                    == Just "true"
              }

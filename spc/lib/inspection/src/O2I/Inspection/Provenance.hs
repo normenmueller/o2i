@@ -6,7 +6,12 @@ module O2I.Inspection.Provenance
   , sourceHashFromBytes
   , sourceHashText
   , SourceIdentity(..)
-  , ExpandedQName(..)
+  , ExpandedQName
+  , ExpandedQNameError(..)
+  , mkExpandedQName
+  , expandedQName
+  , qNameNamespace
+  , qNameLocalName
   , PathStep
   , mkPathStep
   , firstPathStep
@@ -75,9 +80,33 @@ data SourceIdentity = SourceIdentity
 
 -- | Namespace-independent XML name.
 data ExpandedQName = ExpandedQName
-  { qNameNamespace :: Maybe Text
-  , qNameLocalName :: Text
+  { expandedQNameNamespace :: Maybe Text
+  , expandedQNameLocalName :: Text
   } deriving (Eq, Ord, Show)
+
+-- | Why an expanded QName cannot be represented in a report.
+data ExpandedQNameError =
+  EmptyQNameLocalName
+  deriving (Eq, Ord, Show)
+
+-- | Validate the non-empty local name required by report locations.
+mkExpandedQName :: Maybe Text -> Text -> Either ExpandedQNameError ExpandedQName
+mkExpandedQName namespace localName
+  | Text.null localName = Left EmptyQNameLocalName
+  | otherwise = Right (ExpandedQName namespace localName)
+
+-- | Construct an expanded QName from a statically non-empty local name.
+expandedQName :: Maybe Text -> Char -> Text -> ExpandedQName
+expandedQName namespace first rest =
+  ExpandedQName namespace (Text.cons first rest)
+
+-- | Read the optional namespace URI.
+qNameNamespace :: ExpandedQName -> Maybe Text
+qNameNamespace (ExpandedQName namespace _) = namespace
+
+-- | Read the non-empty local name.
+qNameLocalName :: ExpandedQName -> Text
+qNameLocalName (ExpandedQName _ localName) = localName
 
 -- | One expanded-QName path segment and its one-based sibling ordinal.
 data PathStep = PathStep

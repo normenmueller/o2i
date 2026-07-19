@@ -110,7 +110,7 @@ projectRelationshipOccurrence environment closure relationship =
         Nothing -> indexOccurrence occurrence (amxElementLocation relationship)
     endpointReferences =
       [ relationshipReference environment relationship role reason
-      | role <- ["source", "target"]
+      | role <- [SourceEndpoint, TargetEndpoint]
       ]
     reason =
       if isOwnershipRelationship relationship
@@ -122,14 +122,15 @@ projectRelationshipOccurrence environment closure relationship =
 relationshipReference ::
      Environment
   -> AMXElement
-  -> Text.Text
+  -> EndpointRole
   -> PersistedDependencyReason
   -> IndexedProfileFact
 relationshipReference environment relationship role reason =
   indexReference occurrence reference matches reason
   where
     occurrence = relationshipOccurrence relationship
-    attributeName = ExpandedQName Nothing role
+    attributeName = endpointQName role
+    roleText = endpointRoleText role
     token = elementAttribute attributeName relationship
     matches =
       maybe
@@ -145,14 +146,15 @@ relationshipReference environment relationship role reason =
     reference =
       ReferenceOccurrence
         { referenceOccurrenceId =
-            OccurrenceId (occurrenceIdText occurrence <> ":reference:" <> role)
+            OccurrenceId
+              (occurrenceIdText occurrence <> ":reference:" <> roleText)
         , referenceFromOccurrence = occurrence
         , referenceRole =
             if isOwnershipRelationship relationship
-              then if role == "source"
+              then if role == SourceEndpoint
                      then OwnershipSourceReference
                      else OwnershipTargetReference
-              else if role == "source"
+              else if role == SourceEndpoint
                      then RelationSourceReference
                      else RelationTargetReference
         , referenceToken = token
