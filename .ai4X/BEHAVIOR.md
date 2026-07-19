@@ -178,6 +178,7 @@ publication claim derived from them.
 
 # Commands And Tooling
 
+- Canonical full verification: `./utl/verify.sh`.
 - Render: `./toPDF.sh`.
 - Cabal packages: run `cabal check` separately from `spc/lib/core/`,
   `spc/lib/inspection/`, `spc/lib/adapter/amx/`, and `spc/cli/`.

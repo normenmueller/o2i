@@ -10,7 +10,7 @@ documents only the technical codebase and its use.
 | Package | Responsibility |
 | --- | --- |
 | `o2i-core` | Typed O2I language, effect graphs, and staged validation |
-| `o2i-inspection` | Format-neutral import, inspection, provenance, and reports |
+| `o2i-inspection` | Format-neutral staged inspection, provenance, and reports |
 | `o2i-amx` | Native Archi Model XML decoding and O2I profile projection |
 | `o2i-cli` | Thin command-line composition and report rendering |
 
@@ -27,7 +27,15 @@ The curated public facades are `O2I`, `O2I.Language`, `O2I.Graph`,
 
 ## Build
 
-Run all commands from this directory:
+The complete repository contract, including model and White Paper checks, is
+verified from the repository root:
+
+```sh
+./utl/verify.sh
+```
+
+For focused Haskell development, run the following commands from this
+directory:
 
 ```sh
 cabal build all --ghc-options=-Werror

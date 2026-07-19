@@ -1,5 +1,7 @@
 # O2I
 
+[![Verify](https://github.com/normenmueller/o2i/actions/workflows/verify.yml/badge.svg)](https://github.com/normenmueller/o2i/actions/workflows/verify.yml)
+
 <details>
 <summary><strong>Agentic AI Support:</strong> Hier weiterlesen.</summary>
 
@@ -8,6 +10,8 @@ Die hostneutrale Agent-Memory liegt unter [`.ai4X/`](./.ai4X/). Versionierte Hos
 Empfohlene Lesereihenfolge: [`.ai4X/BEHAVIOR.md`](./.ai4X/BEHAVIOR.md) → [`.ai4X/CONTEXT.md`](./.ai4X/CONTEXT.md) → [`.ai4X/STATE.md`](./.ai4X/STATE.md) → [`o2i.md`](./o2i.md). Für Formalisierung und Validierung folgt [`spc/`](./spc/), für Modell und konkrete Syntax [`mdl/`](./mdl/).
 
 Für die maschinenlesbare Prüfung von O2I-Modellen dient das Kommando [`o2i`](#command-line); Agenten sollten dessen deterministische JSON-Ausgabe verwenden.
+
+Vor Abschluss einer Änderung prüft `./utl/verify.sh` den vollständigen Repository-Vertrag.
 
 </details>
 
@@ -43,7 +47,7 @@ Graph bezeichnet als Oberbegriff die Knoten-Kanten-Repräsentation. `RawGraph` i
 
 ## Command Line
 
-Die formatneutrale Library `O2I.Inspection` führt Modellimport, gestufte Validierung, Provenienz und Berichterstattung zusammen. `O2I.Adapter.AMX` bindet native Archi-Modelle an diesen Vertrag. Der dünne Client `o2i` prüft genau eine ausgewählte View:
+Die formatneutrale Library `O2I.Inspection` führt den gestuften Prüfablauf, Provenienz und Berichterstattung zusammen. `O2I.Adapter.AMX` bindet native Archi-Modelle an diesen Vertrag. Der dünne Client `o2i` prüft genau eine ausgewählte View:
 
 ```sh
 o2i inspect MODEL (--view NAME | --view-id ID) [--verbose | --debug] [--json]
@@ -68,6 +72,7 @@ make uninstall
 
 ```text
 o2i/
+|- acc/
 |- img/
 |- mdl/
 |- spc/
@@ -86,6 +91,7 @@ o2i/
 - [`wtf.md`](./wtf.md): kurzer, bewusst direkter Einstieg in zentrale O2I-Fragen
 - [`o2i.md`](./o2i.md): aktives White Paper und fachlicher Referenztext
 - [`o2i.pdf`](./o2i.pdf): bleeding-edge PDF-Fassung des aktiven White Papers
+- `acc/`: reproduzierbare TikZ-Quellen der White-Paper-Abbildungen
 - `mdl/`: ArchiMate-Modell
 - `img/`: Abbildungen für White Paper und Modellkommunikation
 - [`spc/README.md`](./spc/README.md): technische Architektur, Build und Nutzung der Haskell-Codebasis
@@ -98,7 +104,7 @@ o2i/
 
 ## Build
 
-Das PDF und die TikZ-basierte Nachweisfolge werden reproduzierbar mit `toPDF.sh` erzeugt. Das Skript rendert zuerst die Grafik nach `img/` und ruft anschließend [`md2pdf`](https://github.com/normenmueller/md2pdf) auf:
+Das PDF und die TikZ-basierten Abbildungen werden reproduzierbar mit `toPDF.sh` erzeugt. Das Skript rendert zunächst alle Abbildungen aus `acc/` nach `img/` und ruft anschließend [`md2pdf`](https://github.com/normenmueller/md2pdf) auf:
 
 ```sh
 ./toPDF.sh
@@ -106,16 +112,10 @@ Das PDF und die TikZ-basierte Nachweisfolge werden reproduzierbar mit `toPDF.sh`
 
 ## Verify
 
+Der lokale Prüfvertrag entspricht dem GitHub-Workflow und verändert keine getrackten Arbeitsartefakte:
+
 ```sh
-python3 -B utl/extract-archimate-view.py --preset all --check
-python3 -B -m unittest discover -s utl -p 'test_*.py'
-./utl/check-package-licenses.sh
-cabal --project-dir=spc build all --ghc-options=-Werror
-cabal --project-dir=spc test all --ghc-options=-Werror
-cabal --project-dir=spc haddock all
-rg --files spc -g '*.hs' | xargs hindent --line-length 80 --validate
-pandoc o2i.md --filter pandoc-include -t markdown
-./toPDF.sh
+./utl/verify.sh
 ```
 
 ## License

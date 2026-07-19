@@ -8,7 +8,8 @@ override this snapshot.
 - Observed at: 2026-07-19 CEST.
 - Mode: `READY`.
 - Branch/upstream: `trunk` / `origin/trunk`; inspect Git for the current delta.
-- Active objective: return to the DB Fv orientation instance.
+- Active objective: preserve the approved Framework architecture and canonical
+  repository verification contract, then resume the DB Fv instance review.
 - The user controls every push.
 
 # Approved Baseline
@@ -52,34 +53,10 @@ override this snapshot.
 - The format-neutral Inspection library, native AMX adapter, and thin CLI are
   implemented with opaque staged artifacts, exact View selection, source
   provenance, stable diagnostics, and deterministic human or JSON reports.
-- Every public Provenance projection is non-updateable, occurrence identities
-  use framed structured encoding, and source locations are bound to the exact
-  inspected document. Every scope-resolved report contains canonical,
-  auditable closed-scope provenance.
-- Diagnostics are normalized once and every nested reference derives from the
-  same canonical set. Human output centrally escapes untrusted terminal control
-  characters; JSON remains unchanged.
-- The last complete matrix passed all four package-local `cabal check` runs,
-  the all-package `-Werror` build, all eight test suites, 100% Haddock coverage,
-  package-license checks, HIndent, extractor snapshots and tests, Pandoc, PDF
-  rendering, CLI smokes, and `git diff --check`.
-- The source-capability batch is closed and externally approved: adapters emit
-  only opaque source-relative positions, Inspection alone binds them to the
-  exact request document, no public binding path remains, and compile-fail plus
-  two-source tests cover failure and successful provenance paths. The full
-  Haskell verification matrix is green for this batch.
-- The AMX resource-budget batch is implemented and co-author checked: exact
-  budgets constrain input bytes, XML depth, element nodes, attributes, and
-  character data before DOM parsing; a monotonic scanner rejects unsafe XML
-  with bounded memory. Boundary, adversarial entity, CDATA, diagnostic, and API
-  tests pass (AMX 83 plus API contract).
-- The independent final review approved commit `ce7726e` without findings or
-  caveats. Fachlichkeit, Metamodell, Typtheorie, Haskell design, AMX adapter and
-  robustness, CLI and UX, tests, formal value, and cross-artifact consistency
-  each score 10.0/10.0. The complete matrix is green: four package-local Cabal
-  checks, all-package `-Werror` build and eight suites, 100% public Haddock,
-  HIndent, package licenses, extractor snapshots and 28 tests, Pandoc, PDF,
-  file/stdin CLI smokes, and `git diff --check`.
+- The independent Haskell/inspection review approved commit `ce7726e` without
+  findings: Fachlichkeit, Metamodell, Typtheorie, Haskell design, AMX adapter,
+  CLI/UX, tests, formal value, and cross-artifact consistency each score
+  10.0/10.0.
 - `spc/Makefile` installs the exact project-local `o2i` executable under
   `$(DESTDIR)$(PREFIX)/bin/o2i` and removes only that path. Temporary-prefix
   installation, version execution, and idempotent uninstallation pass.
@@ -89,13 +66,31 @@ override this snapshot.
   without findings. Fachlichkeit, Metamodell, terminology/WTF consistency,
   specification fidelity, Haskell/API consistency, and cross-artifact
   synchronization each score 10.0/10.0.
+- The Framework architecture visualization distinguishes the fachliche,
+  metamodel, executable-formalization, and instance levels; locates the
+  evidence layer inside metamodel semantics; and separates foundation,
+  illustration, trace structure, and evidence result. TikZ sources reside in
+  `acc/` and render reproducibly through `toPDF.sh`.
+- The repeated independent architecture review reports no findings:
+  Fachlichkeit, Metamodell, formal consistency, evidence logic, publication
+  clarity, and reproducibility each score 10.0/10.0.
+- `utl/verify.sh` is the canonical local and CI verification contract. It
+  checks model contracts, extractor tests, package metadata and licenses,
+  all-package `-Werror` build and eight test suites, 100% public Haddock,
+  HIndent, Pandoc, isolated TikZ rendering, and an isolated PDF build.
+- The final local Verify run passed and left tracked artifacts unchanged. The
+  independent tooling re-review reports no findings after closing Ubuntu TeX
+  provisioning and tool-pinning findings. The first GitHub Actions execution
+  remains the external `ubuntu-24.04` runtime confirmation after commit/push.
 
 # Next Work
 
-1. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
+1. Review and commit the current Framework architecture and Verify changes when
+   requested; the user performs every push.
+2. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
    Ethos/Mission/Vision.
-2. Continue the collaborative `wtf.md` review with the user at Vision.
-3. Review `o2i.md` collaboratively with the user, top-down and paragraph by
+3. Continue the collaborative `wtf.md` review with the user at Vision.
+4. Review `o2i.md` collaboratively with the user, top-down and paragraph by
    paragraph.
 
 # Release Note Draft

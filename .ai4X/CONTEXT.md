@@ -123,6 +123,7 @@ test and apply O2I but never define its generic semantics.
 - `mdl/o2i.archimate`: ArchiMate model.
 - `mdl/o2i-*.md`: generated read-only review snapshots.
 - `img/`: White Paper and model exports.
+- `acc/`: reproducible TikZ sources for White Paper figures.
 - `spc/README.md`: non-normative technical codebase and usage documentation.
 - `spc/lib/core/`: normative typed Haskell core library.
 - `spc/lib/inspection/`: format-neutral model inspection and reporting.
@@ -131,6 +132,8 @@ test and apply O2I but never define its generic semantics.
 - `spc/Makefile`: reproducible local CLI installation and uninstallation.
 - `spc/lib/core/tst/`: executable validation tests.
 - `toPDF.sh`: reproducible TikZ and PDF build entry point.
+- `utl/verify.sh`: canonical non-mutating repository verification used locally
+  and by GitHub Actions.
 - `utl/extract-archimate-view.py`: deterministic ArchiMate snapshot extractor
   and model-contract validator.
 

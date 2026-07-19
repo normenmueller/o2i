@@ -1,0 +1,90 @@
+name: Verify
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          lfs: true
+          persist-credentials: false
+
+      - name: Set up Haskell
+        uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
+        with:
+          ghc-version: 9.6.5
+          cabal-version: 3.14.2.0
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends \
+            ca-certificates \
+            curl \
+            lmodern \
+            pipx \
+            poppler-utils \
+            texlive-fonts-extra \
+            texlive-fonts-recommended \
+            texlive-lang-german \
+            texlive-latex-base \
+            texlive-latex-extra \
+            xz-utils
+
+      - name: Install verification tools
+        run: |
+          mkdir -p "$HOME/.local/bin"
+
+          curl --fail --location --retry 3 \
+            --output "$RUNNER_TEMP/pandoc.tar.gz" \
+            https://github.com/jgm/pandoc/releases/download/3.9/pandoc-3.9-linux-amd64.tar.gz
+          echo "872a10c7ec29d5278831d855b11bd4ade0df4d5ec9a089a3197bc63a37eb4003  $RUNNER_TEMP/pandoc.tar.gz" \
+            | sha256sum --check
+          tar --extract --gzip \
+            --file "$RUNNER_TEMP/pandoc.tar.gz" \
+            --directory "$RUNNER_TEMP"
+          cp --recursive "$RUNNER_TEMP/pandoc-3.9/." "$HOME/.local/"
+
+          curl --fail --location --retry 3 \
+            --output "$RUNNER_TEMP/pandoc-crossref.tar.xz" \
+            https://github.com/lierdakil/pandoc-crossref/releases/download/v0.3.24/pandoc-crossref-Linux-X64.tar.xz
+          echo "0a019c6627347fc2fd72ecf7df8f95fb7929ceb84fc0fbb0340a6f53cd34fd95  $RUNNER_TEMP/pandoc-crossref.tar.xz" \
+            | sha256sum --check
+          mkdir "$RUNNER_TEMP/pandoc-crossref"
+          tar --extract --xz \
+            --file "$RUNNER_TEMP/pandoc-crossref.tar.xz" \
+            --directory "$RUNNER_TEMP/pandoc-crossref"
+          install \
+            "$(find "$RUNNER_TEMP/pandoc-crossref" -type f -name pandoc-crossref -print -quit)" \
+            "$HOME/.local/bin/pandoc-crossref"
+
+          pipx install pandoc-include==1.4.4
+          cabal install hindent-6.2.1 --overwrite-policy=always
+          git clone \
+            --filter=blob:none \
+            --no-checkout \
+            https://github.com/normenmueller/md2pdf.git \
+            "$RUNNER_TEMP/md2pdf"
+          git -C "$RUNNER_TEMP/md2pdf" checkout \
+            8e820351113c60f7b6a55cb5d4fcf0bfe5f9faef
+          make -C "$RUNNER_TEMP/md2pdf" PREFIX="$HOME/.local" install
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Verify repository
+        run: ./utl/verify.sh

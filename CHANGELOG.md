@@ -35,6 +35,8 @@
 - Added reproducible `make install` and `make uninstall` targets for the local
   `o2i` CLI and documented file- and standard-input inspection for human and
   agentic use.
+- Added one non-mutating repository verification contract shared by local use
+  and GitHub Actions, with a README status badge.
 - Added `validateNeedQualificationProposal` as an opaque pre-persistence check
   for structurally and relationally admissible Need-qualification candidates
   with explicit rationale and source reference, distinct from subject-matter
@@ -44,6 +46,9 @@
 - Added a concise WTF and HTH guide with format-neutral minimum contents,
   validation criteria, process inputs, and results for central O2I concepts.
 - Added a compact evidence-sequence visualization from situated Need to ex-post effect evidence.
+- Added a framework-architecture visualization that distinguishes O2I's four
+  architectural levels and locates the evidence layer within metamodel
+  semantics.
 - Added deterministic ArchiMate model-contract, relationship-endpoint, and snapshot-drift verification.
 
 ### Changed

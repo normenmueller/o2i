@@ -67,6 +67,22 @@ Die zentrale Idee von O2I ist, fachliche Relationen wie die O2I-Relation `Strate
 
 Die Wirkungskette ist nicht linear abgeschlossen: Beobachtete Wirkung liefert Evidenz, um Situationen neu zu bewerten und weitere Bedarfe sichtbar zu machen.
 
+@Fig:o2i-framework-architecture ordnet die Bestandteile des O2I Frameworks, ihre Architekturebenen und ihre Beziehungen zueinander.
+
+![O2I Frameworkarchitektur](<img/O2I Frameworkarchitektur.png>){#fig:o2i-framework-architecture width=90%}
+
+\clearpage
+
+O2I unterscheidet vier Architekturebenen: die fachliche Ebene, die Metamodellebene, die ausführbare Formalisierungsebene und die Instanzebene. Die Literaturbasis ist ihre wissenschaftliche Grundlage; Illustration und Wirkungsevidenz sind Vermittlung bzw. Ergebnis, keine weiteren Architekturebenen.
+
+Die Literaturbasis begründet die Terminologie und ihre Autorenableitungen. Die Terminologie ordnet Orientierung, Formierung, Situierung, Operationalisierung und Wirkung als fachliche Domänen. Sie schafft damit eine gemeinsame Begriffswelt und wird im Metamodell formalisiert.
+
+Das Metamodell ist der formale Kern des Frameworks. Seine Semantik definiert Typen, Relationen und Invarianten; seine Syntax bestimmt deren konkrete Darstellung. Die Evidenzebene ist ein abgegrenzter Teil dieser Semantik: Sie definiert KPI-Definitionen, Evidenzpläne, Kriterien und Beobachtungen, durch die ein relational vollständiger Wirkungstrace ex ante evidenzbereit und ex post empirisch bewertbar wird. Die formale Spezifikation macht die Metamodellregeln maschinenprüfbar; sie ist keine zusätzliche fachliche Ebene.
+
+Ein O2I-Wirkungsgraph instanziiert das Metamodell, verbindet kontextualisierte Inhalte relational und kann durch die Syntax konkret dargestellt werden. Die formale Spezifikation prüft diese Instanz und leitet aus einem gültigen Graphen vollständige Wirkungstraces ab. Die Illustration veranschaulicht diese Anwendung, ohne selbst einen normativen Frameworkbestandteil zu bilden.
+
+Der Wirkungstrace ist die validierte relationale Struktur; relationale Nachvollziehbarkeit ist die dadurch erreichte Modelleigenschaft. Die Evidenzebene bindet Nachweisentwurf und Beobachtungen an diese Struktur. Die formale Spezifikation prüft und bewertet die gebundene Evidenz. Wirkungsevidenz bewertet Effekt und Zielerreichung getrennt und stützt bei beobachteter Veränderung eine plausible Attribution, beweist aber keine Kausalität.
+
 Das White Paper entfaltet O2I als Framework, indem es die fachliche Begriffswelt auf Basis der Standardliteratur terminologisch begründet, semantisch und syntaktisch im Metamodell formalisiert und ihre Anwendung anhand eines zusammenhängenden O2I-Wirkungsgraphen illustriert.
 
 # Fundament
@@ -905,6 +921,8 @@ Evidenzbereitschaft setzt einen vollständigen Wirkungstrace voraus. Die Spezifi
 Wirkungsevidenz bewertet ein evidenzbereites Wirkungsmodell zu einem expliziten Bewertungszeitpunkt. Für jede Intervention wird genau ein tatsächlicher Beginn erfasst. Jede Folgebeobachtung muss nach diesem Beginn und spätestens zum Bewertungszeitpunkt vorliegen, zum Trace, KPI und Situationsanker passen, innerhalb des durch die KPI-Definition festgelegten Wertebereichs liegen und einen Quellenbezug tragen. Damit gilt `readinessCheckedAt < actualStartAt < observedAt <= assessedAt`. Für jeden Trace ist mindestens eine Folgebeobachtung erforderlich; mehrere zeitlich unterscheidbare Folgebeobachtungen bilden getrennte Bewertungen. Das Effektkriterium prüft die relevante Veränderung gegenüber der Baseline. Das Zielkriterium prüft unabhängig davon, ob die jeweilige Beobachtung den Zielwert vor oder nach dem Zieltermin erfüllt; es bestimmt ohne Beobachtungsreihe nicht den Zeitpunkt erstmaliger Zielerreichung.
 
 Die Evidenzebene besteht insbesondere aus `KPIDefinition`, `ValueDomain`, `Level`, `Delta`, `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion`, `PlannedInterventionStart`, `ActualInterventionStart` und `FollowUpObservation`. Diese Typen sind weder O2I-Kontexte noch O2I-Primitives. Sie definieren, planen und bewerten die empirische Evidenz eines relational vollständigen Wirkungstraces.
+
+Ihre Einordnung als Teil der Metamodellsemantik zeigt @Fig:o2i-framework-architecture.
 
 ### Abgeleitete Makrorelationen
 

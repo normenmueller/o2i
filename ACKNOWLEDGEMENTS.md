@@ -1,4 +1,4 @@
-Mein Dank gilt Dr. Christine Müller, Sebastian Henze und Paula Schneider für ihre frühen Reviews, die wertvollen Diskussionen und ihre Bereitschaft, O2I früh anzuwenden und kritisch zu erproben.
+Mein Dank gilt Dr. Christine Müller, Sebastian Henze und Paula Schneider für ihre frühen Reviews und die fachliche Begleitung von O2I v0.1, die wertvollen Diskussionen sowie ihre Bereitschaft, diese erste Fassung früh anzuwenden und kritisch zu erproben.
 
 Dr. Christine Müller danke ich für die kritischen Diskussionen auf der konzeptionellen Metaebene.
 
