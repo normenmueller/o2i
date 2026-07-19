@@ -8,8 +8,7 @@ override this snapshot.
 - Observed at: 2026-07-19 CEST.
 - Mode: `READY`.
 - Branch/upstream: `trunk` / `origin/trunk`; inspect Git for the current delta.
-- Active objective: present the eight-Context minimum-contract matrix, then
-  return to the DB Fv orientation instance.
+- Active objective: return to the DB Fv orientation instance.
 - The user controls every push.
 
 # Approved Baseline
@@ -81,11 +80,13 @@ override this snapshot.
   checks, all-package `-Werror` build and eight suites, 100% public Haddock,
   HIndent, package licenses, extractor snapshots and 28 tests, Pandoc, PDF,
   file/stdin CLI smokes, and `git diff --check`.
+- `spc/Makefile` installs the exact project-local `o2i` executable under
+  `$(DESTDIR)$(PREFIX)/bin/o2i` and removes only that path. Temporary-prefix
+  installation, version execution, and idempotent uninstallation pass.
 
 # Next Work
 
-1. Present the final eight-Context minimum-contract matrix to the user.
-2. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
+1. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
    Ethos/Mission/Vision, then continue the interrupted `wtf.md` review at Vision
    and the top-down `o2i.md` review.
 

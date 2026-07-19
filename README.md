@@ -7,6 +7,8 @@ Die hostneutrale Agent-Memory liegt unter [`.ai4X/`](./.ai4X/). Laufzeitspezifis
 
 Empfohlene Lesereihenfolge: [`.ai4X/BEHAVIOR.md`](./.ai4X/BEHAVIOR.md) → [`.ai4X/CONTEXT.md`](./.ai4X/CONTEXT.md) → [`.ai4X/STATE.md`](./.ai4X/STATE.md) → [`o2i.md`](./o2i.md). Für Formalisierung und Validierung folgt [`spc/`](./spc/), für Modell und konkrete Syntax [`mdl/`](./mdl/).
 
+Für die maschinenlesbare Prüfung von O2I-Modellen dient der [`o2i` CLI](#command-line); Agenten sollten dessen deterministische JSON-Ausgabe verwenden.
+
 </details>
 
 O2I ist ein generisches Framework für Wirkungsarchitekturen: Es beschreibt, wie Orientierung, Formierung, Situierung, Operationalisierung und Wirkung fachlich begründet, modelliert und dadurch nachvollzogen werden können. Das O2I-Metamodell bildet den formalen Kern des Frameworks.
@@ -31,15 +33,6 @@ O2I dient dazu, *orientierte Wirkung* durch relationale Modellierung nachvollzie
 
 Die Haskell-Spezifikation unter [`spc/lib/core`](./spc/lib/core/) ist die normative, maschinenprüfbare Formalisierung des O2I-Metamodells. Ihre öffentliche API gliedert sich in `O2I.Language` für den semantischen Formvorrat, `O2I.Graph` für konkrete Graphen und `O2I.Validation` für gestufte Prüfungen. `O2I` bildet die kuratierte Gesamtfassade.
 
-Die formatneutrale Library `O2I.Inspection` führt Modellimport, gestufte
-Validierung, Provenienz und Berichterstattung zusammen. `O2I.Adapter.AMX`
-bindet native Archi-Modelle an diesen Vertrag. Der dünne Client `o2i` stellt
-die Inspection für genau eine ausgewählte View bereit:
-
-```sh
-o2i inspect MODEL (--view NAME | --view-id ID) [--verbose | --debug] [--json]
-```
-
 Die Library überführt einen ungeprüften O2I-Graphen durch aufeinander aufbauende Validierungsstufen in ein evidenzbewertetes Wirkungsmodell:
 
 ```text
@@ -48,6 +41,29 @@ RawGraph -> WellFormedGraph -> SemanticallyValidModel -> TraceableEffectModel ->
 
 Graph bezeichnet als Oberbegriff die Knoten-Kanten-Repräsentation. `RawGraph` ist ihre ungeprüfte, `WellFormedGraph` ihre lokal validierte Form. Ab `SemanticallyValidModel` bezeichnet `Model` die fachlich angereicherte Einheit. Die Modellstufen ergänzen den wohlgeformten Graphen nacheinander um globale fachliche Invarianten, Wirkungstraces, ex-ante Evidenzpläne und ex-post Evidenzbewertungen.
 
+## Command Line
+
+Die formatneutrale Library `O2I.Inspection` führt Modellimport, gestufte Validierung, Provenienz und Berichterstattung zusammen. `O2I.Adapter.AMX` bindet native Archi-Modelle an diesen Vertrag. Der dünne Client `o2i` prüft genau eine ausgewählte View:
+
+```sh
+o2i inspect MODEL (--view NAME | --view-id ID) [--verbose | --debug] [--json]
+```
+
+Ein Modell kann als Datei oder über die Standardeingabe geprüft werden. JSON eignet sich für reproduzierbare Automatisierung und agentische Verarbeitung:
+
+```sh
+o2i inspect mdl/my.archimate --view "My view"
+cat mdl/my.archimate | o2i inspect - --view "My view" --json
+```
+
+Der lokale Client wird standardmäßig unter `~/.local/bin/o2i` installiert. `PREFIX` bestimmt ein abweichendes Zielpräfix; `DESTDIR` ermöglicht eine vorgelagerte Paketierungswurzel:
+
+```sh
+cd spc
+make install
+make uninstall
+```
+
 ## Layout
 
 ```text
@@ -55,6 +71,7 @@ o2i/
 |- img/
 |- mdl/
 |- spc/
+|  |- Makefile
 |  |- lib/
 |  |  |- core/
 |  |  |- inspection/
@@ -72,6 +89,7 @@ o2i/
 - `spc/lib/inspection/`: formatneutrale Inspection-Pipeline und Berichtsmodell
 - `spc/lib/adapter/amx/`: Adapter für native Archi Model XML-Dateien
 - `spc/cli/`: dünner Kommandozeilen-Client für die Inspection
+- `spc/Makefile`: reproduzierbare lokale Installation und Deinstallation des Clients
 - `spc/lib/core/tst/`: Haskell-Validierungsbeispiele und Tests
 
 ## Build

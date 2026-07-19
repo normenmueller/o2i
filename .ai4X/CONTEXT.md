@@ -123,10 +123,23 @@ test and apply O2I but never define its generic semantics.
 - `mdl/o2i-*.md`: generated read-only review snapshots.
 - `img/`: article and model exports.
 - `spc/lib/core/`: normative typed Haskell core library.
+- `spc/lib/inspection/`: format-neutral model inspection and reporting.
+- `spc/lib/adapter/amx/`: native Archi Model XML adapter.
+- `spc/cli/`: thin `o2i` command-line client.
+- `spc/Makefile`: reproducible local CLI installation and uninstallation.
 - `spc/lib/core/tst/`: executable validation tests.
 - `toPDF.sh`: reproducible TikZ and PDF build entry point.
 - `utl/extract-archimate-view.py`: deterministic ArchiMate snapshot extractor
   and model-contract validator.
+
+# Model Inspection
+
+- Use `o2i inspect MODEL (--view NAME | --view-id ID)` to validate exactly one
+  O2I View from a native Archi model.
+- Use standard input and `--json` for deterministic agentic processing:
+  `cat mdl/my.archimate | o2i inspect - --view "My view" --json`.
+- The CLI is only a rendering and composition boundary. Inspection semantics,
+  staged validation, provenance, and reports remain in the libraries.
 
 # Haskell Architecture
 

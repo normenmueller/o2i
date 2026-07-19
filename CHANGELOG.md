@@ -27,6 +27,9 @@
   acquisition, opaque source-relative adapter positions, request-bound source
   identities, mandatory closed-scope provenance, resource-bounded native XML
   decoding, stable diagnostics, and deterministic human or JSON reports.
+- Added reproducible `make install` and `make uninstall` targets for the local
+  `o2i` CLI and documented file- and standard-input inspection for human and
+  agentic use.
 - Added `validateNeedQualificationProposal` as an opaque pre-persistence check
   for structurally and relationally admissible Need-qualification candidates
   with explicit rationale and source reference, distinct from subject-matter
