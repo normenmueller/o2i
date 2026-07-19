@@ -161,7 +161,7 @@ data DecodeAttempt defect document
 data Adapter where
   Adapter
     :: AdapterDescriptor
-    -> (SourceDocument -> DecodeAttempt decodeDefect document)
+    -> (SourceLocator -> SourceDocument -> DecodeAttempt decodeDefect document)
     -> (decodeDefect -> DiagnosticSpec)
     -> (document -> ViewSelector -> ViewAttempt viewDefect selectedView)
     -> (viewDefect -> DiagnosticSpec)

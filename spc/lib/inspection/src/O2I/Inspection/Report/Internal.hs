@@ -15,6 +15,7 @@ module O2I.Inspection.Report.Internal
   , RejectedO2IProfile(..)
   , O2IProfileResolution(..)
   , ScopeFailure(..)
+  , ResolvedScope(..)
   , ScopeResolution(..)
   , InspectionRequestInfo(..)
   , InspectionReport(..)
@@ -26,6 +27,7 @@ module O2I.Inspection.Report.Internal
   , reportViewResolution
   , reportProfileResolution
   , reportScopeResolution
+  , reportClosedScopeProvenance
   , reportSupplementalSources
   , reportStageReports
   , reportDiagnostics
@@ -144,11 +146,18 @@ data ScopeFailure = ScopeFailure
   , rejectedScopeDiagnosticIds :: NonEmpty DiagnosticId
   } deriving (Eq, Show)
 
+-- | Summary and mandatory provenance of a successfully resolved scope.
+data ResolvedScope = ResolvedScope
+  { resolvedScopeSummary :: ClosedScopeSummary -- ^ Closure cardinalities.
+  , resolvedScopeProvenance :: ClosedScopeProvenance
+    -- ^ Complete canonical provenance artifact.
+  } deriving (Eq, Show)
+
 -- | Semantic closure state observable in reports.
 data ScopeResolution
   = ScopeUnavailable
   | ScopeRejectedResolution ScopeFailure
-  | ScopeResolved ClosedScopeSummary
+  | ScopeResolved ResolvedScope
   deriving (Eq, Show)
 
 -- | Common immutable request information retained in every report.
@@ -191,7 +200,7 @@ data InspectionReport
       ResolvedNativeBinding
       ResolvedViewResolution
       ResolvedO2IProfile
-      ClosedScopeSummary
+      ResolvedScope
       [SupplementalSource]
       StageReports
       Diagnostics
@@ -266,7 +275,15 @@ reportScopeResolution report =
     ViewRejectedReport {} -> ScopeUnavailable
     ProfileRejectedReport {} -> ScopeUnavailable
     ScopeRejectedReport _ _ _ _ failure _ _ -> ScopeRejectedResolution failure
-    PipelineReport _ _ _ _ summary _ _ _ -> ScopeResolved summary
+    PipelineReport _ _ _ _ scope _ _ _ -> ScopeResolved scope
+
+-- | Read the mandatory artifact of a successfully resolved scope.
+reportClosedScopeProvenance :: InspectionReport -> Maybe ClosedScopeProvenance
+reportClosedScopeProvenance report =
+  case reportScopeResolution report of
+    ScopeResolved scope -> Just (resolvedScopeProvenance scope)
+    ScopeUnavailable -> Nothing
+    ScopeRejectedResolution _ -> Nothing
 
 -- | Read supplemental source identities actually consumed by validation.
 reportSupplementalSources :: InspectionReport -> [SupplementalSource]
@@ -535,12 +552,14 @@ scopeResolutionField resolution =
                      diagnosticIdText
                      (NonEmpty.toList (rejectedScopeDiagnosticIds failure))
             ])
-    ScopeResolved summary ->
+    ScopeResolved scope ->
       Just
         ( "scope"
         , object
             [ "state" .= ("resolved" :: Text)
-            , "summary" .= scopeSummaryValue summary
+            , "summary" .= scopeSummaryValue (resolvedScopeSummary scope)
+            , "provenance"
+                .= closedScopeProvenanceValue (resolvedScopeProvenance scope)
             ])
 
 stageReportValue :: StageReport -> Value
@@ -653,6 +672,37 @@ scopeSummaryValue summary =
     [ "directOccurrenceCount" .= directOccurrenceCount summary
     , "closedOccurrenceCount" .= closedOccurrenceCount summary
     ]
+
+closedScopeProvenanceValue :: ClosedScopeProvenance -> Value
+closedScopeProvenanceValue provenance =
+  object
+    [ "occurrences"
+        .= map
+             occurrenceProvenanceValue
+             (NonEmpty.toList (closedScopeProvenanceOccurrences provenance))
+    ]
+
+occurrenceProvenanceValue :: OccurrenceProvenance -> Value
+occurrenceProvenanceValue provenance =
+  object
+    [ "occurrenceId" .= occurrenceIdText (provenanceOccurrenceId provenance)
+    , "location" .= locationValue (provenanceLocation provenance)
+    , "inclusionReasons"
+        .= map
+             inclusionReasonText
+             (NonEmpty.toList (provenanceReasons provenance))
+    ]
+
+inclusionReasonText :: InclusionReason -> Text
+inclusionReasonText reason =
+  case reason of
+    DirectPresentation -> "direct-presentation"
+    RelationshipEndpoint -> "relationship-endpoint"
+    ContextOwnership -> "context-ownership"
+    PerformanceDimensionMembership -> "performance-dimension-membership"
+    SituationDependency -> "situation-dependency"
+    NeedDependency -> "need-dependency"
+    MacroPremise -> "macro-premise"
 
 resolvedViewValue :: ResolvedView -> Value
 resolvedViewValue view =

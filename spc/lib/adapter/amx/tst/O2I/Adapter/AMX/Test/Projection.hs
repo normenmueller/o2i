@@ -122,18 +122,12 @@ profileDefects =
 
 sampleLocation :: SourceLocation
 sampleLocation =
-  SourceLocation
-    { locationSource =
-        SourceIdentity
-          { sourceDisplayLabel = "sample.archimate"
-          , sourceInputKind = FileSource
-          , sourceSha256 = sourceHashFromBytes ""
-          }
-    , locationPath =
-        firstPathStep (expandedQName (Just "urn:test") 'm' "odel") :| []
-    , locationTarget = ElementTarget
-    , locationSpan = Nothing
-    }
+  locateSource
+    (sourceDocumentLocator
+       (sourceDocumentFromBytes "sample.archimate" FileSource ""))
+    (firstPathStep (expandedQName (Just "urn:test") 'm' "odel") :| [])
+    ElementTarget
+    Nothing
 
 registryCoverageTest :: Assertion
 registryCoverageTest = do

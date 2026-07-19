@@ -36,27 +36,31 @@ nativeVersionAttribute = expandedQName Nothing 'v' "ersion"
 xmlnsNamespace :: Text
 xmlnsNamespace = "http://www.w3.org/2000/xmlns/"
 
--- | Decode exact source bytes without DTD, entity, resolver, or network use.
-decodeAMX :: SourceDocument -> DecodeAttempt AMXDecodeDefect AMXDocument
-decodeAMX source =
+-- | Decode exact source bytes with the locator bound by Inspection, without
+-- DTD, entity, resolver, or network use.
+decodeAMX ::
+     SourceLocator
+  -> SourceDocument
+  -> DecodeAttempt AMXDecodeDefect AMXDocument
+decodeAMX locator source =
   case stripSupportedBom (sourceDocumentBytes source) of
-    Left encoding -> unsupportedBom source encoding
+    Left encoding -> unsupportedBom locator encoding
     Right bytes ->
       case TextEncoding.decodeUtf8' bytes of
-        Left _ -> unavailable source EncodingNotObserved InvalidUtf8
+        Left _ -> unavailable locator EncodingNotObserved InvalidUtf8
         Right decoded ->
-          let observation = encodingObservation source decoded
+          let observation = encodingObservation locator decoded
            in case declaredEncoding observation of
                 Just encoding
                   | not (isUtf8Name encoding) ->
                     unavailable
-                      source
+                      locator
                       observation
                       (UnsupportedXmlEncoding encoding)
                 _
                   | containsUnsafeXml decoded ->
-                    unavailable source observation UnsafeXml
-                  | otherwise -> parseNativeDocument source observation decoded
+                    unavailable locator observation UnsafeXml
+                  | otherwise -> parseNativeDocument locator observation decoded
 
 stripSupportedBom :: ByteString.ByteString -> Either Text ByteString.ByteString
 stripSupportedBom bytes
@@ -71,31 +75,31 @@ stripSupportedBom bytes
   | otherwise = Right bytes
 
 unsupportedBom ::
-     SourceDocument -> Text -> DecodeAttempt AMXDecodeDefect document
-unsupportedBom source encoding =
-  unavailable source EncodingNotObserved (UnsupportedXmlEncoding encoding)
+     SourceLocator -> Text -> DecodeAttempt AMXDecodeDefect document
+unsupportedBom locator encoding =
+  unavailable locator EncodingNotObserved (UnsupportedXmlEncoding encoding)
 
 unavailable ::
-     SourceDocument
+     SourceLocator
   -> EncodingObservation
   -> AMXDecodeDefect
   -> DecodeAttempt AMXDecodeDefect document
-unavailable source observation defect =
+unavailable locator observation defect =
   DecodeUnavailable
     (DecodeUnavailableObservation observation)
-    (Located (documentLocation source) defect :| [])
+    (Located (documentLocation locator) defect :| [])
 
 parseNativeDocument ::
-     SourceDocument
+     SourceLocator
   -> EncodingObservation
   -> Text
   -> DecodeAttempt AMXDecodeDefect AMXDocument
-parseNativeDocument source observation decoded =
+parseNativeDocument locator observation decoded =
   case XML.parseText parserSettings (LazyText.fromStrict decoded) of
-    Left _ -> unavailable source observation MalformedXml
+    Left _ -> unavailable locator observation MalformedXml
     Right parsed ->
-      case annotateDocument source parsed of
-        Left defect -> unavailable source observation defect
+      case annotateDocument locator parsed of
+        Left defect -> unavailable locator observation defect
         Right annotated -> bindNativeDocument annotated
 
 parserSettings :: XML.ParseSettings
@@ -153,35 +157,30 @@ bindNativeDocument root =
     defects = rootDefects ++ versionDefects
 
 annotateDocument ::
-     SourceDocument -> XML.Document -> Either AMXDecodeDefect AMXElement
-annotateDocument source document = do
+     SourceLocator -> XML.Document -> Either AMXDecodeDefect AMXElement
+annotateDocument locator document = do
   rootName <- expandedName (XML.elementName root)
-  annotateElement source (firstPathStep rootName :| []) Map.empty root
+  annotateElement locator (firstPathStep rootName :| []) Map.empty root
   where
     root = XML.documentRoot document
 
 annotateElement ::
-     SourceDocument
+     SourceLocator
   -> NonEmpty PathStep
   -> Map Text Text
   -> XML.Element
   -> Either AMXDecodeDefect AMXElement
-annotateElement source path inherited element = do
+annotateElement locator path inherited element = do
   name <- expandedName (XML.elementName element)
   attributes <- fmap Map.fromList (traverse annotateAttribute visibleAttributes)
-  annotatedChildren <- annotateChildren source path namespaces childElements
+  annotatedChildren <- annotateChildren locator path namespaces childElements
   pure
     AMXElement
       { amxElementQName = name
       , amxElementAttributes = attributes
       , amxElementChildren = annotatedChildren
-      , amxElementLocation =
-          SourceLocation
-            { locationSource = sourceDocumentIdentity source
-            , locationPath = path
-            , locationTarget = ElementTarget
-            , locationSpan = Nothing
-            }
+      , amxElementLocator = locator
+      , amxElementLocation = locateSource locator path ElementTarget Nothing
       , amxElementNamespaces = namespaces
       }
   where
@@ -203,12 +202,12 @@ annotateElement source path inherited element = do
     childElements = [child | XML.NodeElement child <- XML.elementNodes element]
 
 annotateChildren ::
-     SourceDocument
+     SourceLocator
   -> NonEmpty PathStep
   -> Map Text Text
   -> [XML.Element]
   -> Either AMXDecodeDefect [AMXElement]
-annotateChildren source parentPath namespaces = go Map.empty
+annotateChildren locator parentPath namespaces = go Map.empty
   where
     go _ [] = Right []
     go counts (child:rest) = do
@@ -217,7 +216,7 @@ annotateChildren source parentPath namespaces = go Map.empty
           nextCounts = Map.insert name (preceding + 1) counts
       annotated <-
         annotateElement
-          source
+          locator
           (appendPath parentPath (pathStepAfter name preceding))
           namespaces
           child
@@ -255,17 +254,18 @@ namespaceBinding (name, value)
     Just (prefix, value)
   | otherwise = Nothing
 
-encodingObservation :: SourceDocument -> Text -> EncodingObservation
-encodingObservation source decoded =
+encodingObservation :: SourceLocator -> Text -> EncodingObservation
+encodingObservation locator decoded =
   case xmlDeclarationEncoding decoded of
     Nothing -> EncodingDefaultedToUtf8
     Just encoding ->
       EncodingDeclared
         (Located
-           ((documentLocation source)
-              { locationTarget =
-                  AttributeTarget (expandedQName Nothing 'e' "ncoding")
-              })
+           (locateSource
+              locator
+              (locationPath (documentLocation locator))
+              (AttributeTarget (expandedQName Nothing 'e' "ncoding"))
+              Nothing)
            encoding)
 
 declaredEncoding :: EncodingObservation -> Maybe Text
@@ -340,11 +340,10 @@ safeEntity :: Text -> Bool
 safeEntity name =
   name `elem` ["amp", "lt", "gt", "quot", "apos"] || "#" `Text.isPrefixOf` name
 
-documentLocation :: SourceDocument -> SourceLocation
-documentLocation source =
-  SourceLocation
-    { locationSource = sourceDocumentIdentity source
-    , locationPath = firstPathStep (expandedQName Nothing 'd' "ocument") :| []
-    , locationTarget = ElementTarget
-    , locationSpan = Nothing
-    }
+documentLocation :: SourceLocator -> SourceLocation
+documentLocation locator =
+  locateSource
+    locator
+    (firstPathStep (expandedQName Nothing 'd' "ocument") :| [])
+    ElementTarget
+    Nothing

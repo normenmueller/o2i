@@ -1,11 +1,15 @@
--- | Stable source identities and occurrence-level provenance.
+-- | Opaque source identities, source-bound locations, and closed-scope
+-- provenance.
 module O2I.Inspection.Provenance
   ( SourceInputKind(..)
   , SourceHash
   , mkSourceHash
   , sourceHashFromBytes
   , sourceHashText
-  , SourceIdentity(..)
+  , SourceIdentity
+  , sourceDisplayLabel
+  , sourceInputKind
+  , sourceSha256
   , ExpandedQName
   , ExpandedQNameError(..)
   , mkExpandedQName
@@ -25,80 +29,57 @@ module O2I.Inspection.Provenance
   , spanStartColumn
   , spanEndLine
   , spanEndColumn
-  , SourceLocation(..)
+  , SourceLocator
+  , locateSource
+  , SourceLocation
+  , locationSource
+  , locationPath
+  , locationTarget
+  , locationSpan
   , Located(..)
-  , OccurrenceId(..)
+  , OccurrenceKind
+  , OccurrenceKindError(..)
+  , mkOccurrenceKind
+  , occurrenceKindLiteral
+  , occurrenceKindText
+  , OccurrenceId
+  , occurrenceId
+  , occurrenceIdText
   , ReferenceRole(..)
   , ReferenceOccurrence(..)
   , InclusionReason(..)
-  , OccurrenceProvenance(..)
-  , Provenance
-  , mkProvenance
-  , provenanceOccurrences
+  , OccurrenceProvenance
+  , provenanceOccurrenceId
+  , provenanceLocation
+  , provenanceReasons
+  , ClosedScopeProvenance
+  , closedScopeProvenanceOccurrences
   , SupplementalInputKind(..)
-  , SupplementalSource(..)
+  , SupplementalSource
+  , supplementalInputKind
+  , supplementalSourceIdentity
   ) where
 
-import qualified Crypto.Hash.SHA256 as SHA256
-import qualified Data.ByteString as ByteString
-import Data.ByteString (ByteString)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
-import qualified Data.Text as Text
-import qualified Data.Text.Encoding as TextEncoding
-import Numeric (showHex)
 import Numeric.Natural (Natural)
+import O2I.Inspection.Provenance.Internal
 
--- | How the inspected bytes entered the application.
-data SourceInputKind
-  = FileSource
-  | StandardInputSource
-  deriving (Eq, Ord, Show)
+-- | Read the normalized lowercase hexadecimal digest.
+sourceHashText :: SourceHash -> Text
+sourceHashText (SourceHash value) = value
 
--- | Lowercase hexadecimal SHA-256 of the exact acquired bytes.
-newtype SourceHash = SourceHash
-  { sourceHashText :: Text -- ^ Read the normalized digest.
-  } deriving (Eq, Ord, Show)
+-- | Read the human-readable acquisition label.
+sourceDisplayLabel :: SourceIdentity -> Text
+sourceDisplayLabel (SourceIdentity label _ _) = label
 
--- | Validate a lowercase hexadecimal SHA-256 digest.
-mkSourceHash :: Text -> Maybe SourceHash
-mkSourceHash value
-  | Text.length value == 64 && Text.all isLowerHexDigit value =
-    Just (SourceHash value)
-  | otherwise = Nothing
+-- | Read how the exact source bytes were acquired.
+sourceInputKind :: SourceIdentity -> SourceInputKind
+sourceInputKind (SourceIdentity _ kind _) = kind
 
--- | Hash exact source bytes into a valid source identity component.
-sourceHashFromBytes :: ByteString -> SourceHash
-sourceHashFromBytes = SourceHash . sha256Hex
-
--- | Immutable identity of one complete model input.
-data SourceIdentity = SourceIdentity
-  { sourceDisplayLabel :: Text
-  , sourceInputKind :: SourceInputKind
-  , sourceSha256 :: SourceHash
-  } deriving (Eq, Ord, Show)
-
--- | Namespace-independent XML name.
-data ExpandedQName = ExpandedQName
-  { expandedQNameNamespace :: Maybe Text
-  , expandedQNameLocalName :: Text
-  } deriving (Eq, Ord, Show)
-
--- | Why an expanded QName cannot be represented in a report.
-data ExpandedQNameError =
-  EmptyQNameLocalName
-  deriving (Eq, Ord, Show)
-
--- | Validate the non-empty local name required by report locations.
-mkExpandedQName :: Maybe Text -> Text -> Either ExpandedQNameError ExpandedQName
-mkExpandedQName namespace localName
-  | Text.null localName = Left EmptyQNameLocalName
-  | otherwise = Right (ExpandedQName namespace localName)
-
--- | Construct an expanded QName from a statically non-empty local name.
-expandedQName :: Maybe Text -> Char -> Text -> ExpandedQName
-expandedQName namespace first rest =
-  ExpandedQName namespace (Text.cons first rest)
+-- | Read the digest of the complete acquired bytes.
+sourceSha256 :: SourceIdentity -> SourceHash
+sourceSha256 (SourceIdentity _ _ sourceHash) = sourceHash
 
 -- | Read the optional namespace URI.
 qNameNamespace :: ExpandedQName -> Maybe Text
@@ -108,152 +89,76 @@ qNameNamespace (ExpandedQName namespace _) = namespace
 qNameLocalName :: ExpandedQName -> Text
 qNameLocalName (ExpandedQName _ localName) = localName
 
--- | One expanded-QName path segment and its one-based sibling ordinal.
-data PathStep = PathStep
-  { pathStepName :: ExpandedQName -- ^ Read the expanded element name.
-  , pathStepOrdinal :: Natural -- ^ Read the one-based sibling ordinal.
-  } deriving (Eq, Ord, Show)
+-- | Read the expanded element name.
+pathStepName :: PathStep -> ExpandedQName
+pathStepName (PathStep name _) = name
 
--- | Construct a path segment only with a one-based sibling ordinal.
-mkPathStep :: ExpandedQName -> Natural -> Maybe PathStep
-mkPathStep name ordinal
-  | ordinal == 0 = Nothing
-  | otherwise = Just PathStep {pathStepName = name, pathStepOrdinal = ordinal}
+-- | Read the one-based sibling ordinal.
+pathStepOrdinal :: PathStep -> Natural
+pathStepOrdinal (PathStep _ ordinal) = ordinal
 
--- | Construct the first sibling occurrence of an expanded QName.
-firstPathStep :: ExpandedQName -> PathStep
-firstPathStep name = PathStep {pathStepName = name, pathStepOrdinal = 1}
+-- | Read the one-based start line.
+spanStartLine :: SourceSpan -> Natural
+spanStartLine (SourceSpan startLine _ _ _) = startLine
 
--- | Construct the occurrence after a known count of preceding siblings.
-pathStepAfter :: ExpandedQName -> Natural -> PathStep
-pathStepAfter name preceding =
-  PathStep {pathStepName = name, pathStepOrdinal = preceding + 1}
+-- | Read the one-based start column.
+spanStartColumn :: SourceSpan -> Natural
+spanStartColumn (SourceSpan _ startColumn _ _) = startColumn
 
--- | Exact field represented by a source location.
-data LocationTarget
-  = ElementTarget
-  | AttributeTarget ExpandedQName
-  | PropertyTarget Text
-  | TextFieldTarget ExpandedQName
-  deriving (Eq, Ord, Show)
+-- | Read the one-based end line.
+spanEndLine :: SourceSpan -> Natural
+spanEndLine (SourceSpan _ _ endLine _) = endLine
 
--- | Optional one-based source span.
-data SourceSpan = SourceSpan
-  { spanStartLine :: Natural -- ^ Read the one-based start line.
-  , spanStartColumn :: Natural -- ^ Read the one-based start column.
-  , spanEndLine :: Natural -- ^ Read the one-based end line.
-  , spanEndColumn :: Natural -- ^ Read the one-based end column.
-  } deriving (Eq, Ord, Show)
+-- | Read the one-based end column.
+spanEndColumn :: SourceSpan -> Natural
+spanEndColumn (SourceSpan _ _ _ endColumn) = endColumn
 
--- | Construct a one-based, non-inverted source span.
-mkSourceSpan :: Natural -> Natural -> Natural -> Natural -> Maybe SourceSpan
-mkSourceSpan startLine startColumn endLine endColumn
-  | any (== 0) [startLine, startColumn, endLine, endColumn] = Nothing
-  | (endLine, endColumn) < (startLine, startColumn) = Nothing
-  | otherwise =
-    Just
-      SourceSpan
-        { spanStartLine = startLine
-        , spanStartColumn = startColumn
-        , spanEndLine = endLine
-        , spanEndColumn = endColumn
-        }
+-- | Read the exact acquired source.
+locationSource :: SourceLocation -> SourceIdentity
+locationSource (SourceLocation source _ _ _) = source
 
--- | Stable occurrence location independent of namespace prefixes.
-data SourceLocation = SourceLocation
-  { locationSource :: SourceIdentity
-  , locationPath :: NonEmpty PathStep
-  , locationTarget :: LocationTarget
-  , locationSpan :: Maybe SourceSpan
-  } deriving (Eq, Ord, Show)
+-- | Read the non-empty structural source path.
+locationPath :: SourceLocation -> NonEmpty PathStep
+locationPath (SourceLocation _ path _ _) = path
 
--- | A value tied to one exact source occurrence.
-data Located a = Located
-  { locatedAt :: SourceLocation
-  , locatedValue :: a
-  } deriving (Eq, Ord, Show)
+-- | Read the exact field represented by the location.
+locationTarget :: SourceLocation -> LocationTarget
+locationTarget (SourceLocation _ _ target _) = target
 
--- | Adapter-stable identity of one persisted or presented occurrence.
-newtype OccurrenceId = OccurrenceId
-  { occurrenceIdText :: Text
-  } deriving (Eq, Ord, Show)
+-- | Read the optional concrete text span.
+locationSpan :: SourceLocation -> Maybe SourceSpan
+locationSpan (SourceLocation _ _ _ sourceSpan) = sourceSpan
 
--- | Semantic use of a persisted reference during closure.
-data ReferenceRole
-  = RelationSourceReference
-  | RelationTargetReference
-  | OwnershipSourceReference
-  | OwnershipTargetReference
-  | PresentationTargetReference
-  | ConnectionRelationshipReference
-  deriving (Bounded, Enum, Eq, Ord, Show)
+-- | Read the adapter-owned non-empty occurrence kind.
+occurrenceKindText :: OccurrenceKind -> Text
+occurrenceKindText (OccurrenceKind kind) = kind
 
--- | One reached reference whose cardinality Inspection must decide.
-data ReferenceOccurrence = ReferenceOccurrence
-  { referenceOccurrenceId :: OccurrenceId
-  , referenceFromOccurrence :: OccurrenceId
-  , referenceRole :: ReferenceRole
-  , referenceToken :: Maybe Text
-  , referenceLocation :: SourceLocation
-  } deriving (Eq, Ord, Show)
+-- | Read the canonical length-framed occurrence identity.
+occurrenceIdText :: OccurrenceId -> Text
+occurrenceIdText (OccurrenceId identifier) = identifier
 
--- | Why closure includes an occurrence.
-data InclusionReason
-  = DirectPresentation
-  | RelationshipEndpoint
-  | ContextOwnership
-  | PerformanceDimensionMembership
-  | SituationDependency
-  | NeedDependency
-  | MacroPremise
-  deriving (Bounded, Enum, Eq, Ord, Show)
+-- | Read the included occurrence identity.
+provenanceOccurrenceId :: OccurrenceProvenance -> OccurrenceId
+provenanceOccurrenceId (OccurrenceProvenance identifier _ _) = identifier
 
--- | Provenance retained for one included source occurrence.
-data OccurrenceProvenance = OccurrenceProvenance
-  { provenanceOccurrenceId :: OccurrenceId
-  , provenanceLocation :: SourceLocation
-  , provenanceReasons :: [InclusionReason]
-  } deriving (Eq, Show)
+-- | Read the occurrence's unique source location.
+provenanceLocation :: OccurrenceProvenance -> SourceLocation
+provenanceLocation (OccurrenceProvenance _ location _) = location
 
--- | Complete ordered provenance of an imported graph.
-newtype Provenance =
-  Provenance [OccurrenceProvenance]
-  deriving (Eq, Show)
+-- | Read the canonical non-empty reasons for inclusion.
+provenanceReasons :: OccurrenceProvenance -> NonEmpty InclusionReason
+provenanceReasons (OccurrenceProvenance _ _ reasons) = reasons
 
--- | Construct ordered provenance for an opaque imported graph.
-mkProvenance :: [OccurrenceProvenance] -> Provenance
-mkProvenance = Provenance
+-- | Read the canonically ordered complete occurrence audit trail.
+closedScopeProvenanceOccurrences ::
+     ClosedScopeProvenance -> NonEmpty OccurrenceProvenance
+closedScopeProvenanceOccurrences (ClosedScopeProvenance occurrences) =
+  occurrences
 
--- | Read all retained occurrences in deterministic source order.
-provenanceOccurrences :: Provenance -> [OccurrenceProvenance]
-provenanceOccurrences (Provenance occurrences) = occurrences
+-- | Read the role of the consumed supplemental source.
+supplementalInputKind :: SupplementalSource -> SupplementalInputKind
+supplementalInputKind (SupplementalSource kind _) = kind
 
--- | Supplemental input whose source participated in a validation stage.
-data SupplementalInputKind
-  = StrategySupplement
-  | ReadinessSupplement
-  | EvidenceSupplement
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | Identity and role of one supplemental source actually consumed.
-data SupplementalSource = SupplementalSource
-  { supplementalInputKind :: SupplementalInputKind
-  , supplementalSourceIdentity :: SourceIdentity
-  } deriving (Eq, Ord, Show)
-
-isLowerHexDigit :: Char -> Bool
-isLowerHexDigit character =
-  character >= '0' && character <= '9' || character >= 'a' && character <= 'f'
-
-sha256Hex :: ByteString -> Text
-sha256Hex =
-  TextEncoding.decodeUtf8
-    . ByteString.pack
-    . concatMap hexByte
-    . ByteString.unpack
-    . SHA256.hash
-  where
-    hexByte byte =
-      case showHex byte "" of
-        [digit] -> map (fromIntegral . fromEnum) ['0', digit]
-        digits -> map (fromIntegral . fromEnum) digits
+-- | Read the immutable identity of the consumed supplemental source.
+supplementalSourceIdentity :: SupplementalSource -> SourceIdentity
+supplementalSourceIdentity (SupplementalSource _ identity) = identity

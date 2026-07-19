@@ -4,12 +4,20 @@ module O2I.Cli.Test.Process
   ( tests
   ) where
 
+import Control.Exception (bracket)
 import Data.Aeson (Value(..), decodeStrict')
 import Data.Aeson.Key (Key)
 import qualified Data.Aeson.KeyMap as KeyMap
 import qualified Data.ByteString as ByteString
+import qualified Data.ByteString.Char8 as ByteStringChar8
+import Data.Char (ord)
+import Data.Text (Text)
+import qualified Data.Text as Text
+import qualified Data.Text.Encoding as TextEncoding
 import O2I.Cli.Test.Support
+import System.Directory (getTemporaryDirectory, removeFile)
 import System.Exit (ExitCode(..))
+import System.IO (hClose, openBinaryTempFile)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 
@@ -43,6 +51,10 @@ tests =
         streamSeparation
     , testCase "verbose leaves report bytes unchanged" verboseReport
     , testCase "debug includes verbose diagnostics" debugIncludesVerbose
+    , testCase "adversarial file name preserves human structure" hostileFileName
+    , testCase
+        "adversarial View selector preserves diagnostic prefixes"
+        hostileViewSelector
     , testCase "repeated process output is deterministic" repeatedOutput
     , testCase "repeated diagnostics are deterministic" repeatedDiagnostics
     , testCase "human report golden" humanGolden
@@ -227,6 +239,37 @@ debugIncludesVerbose = do
   assertContains (processStderr debug) "[o2i|info] Inspected <stdin>"
   assertContains (processStderr debug) "[o2i|debug] decode=passed"
 
+hostileFileName :: Assertion
+hostileFileName =
+  withAdversarialFixture $ \path -> do
+    result <-
+      runO2I
+        ["inspect", path, "--view", "CLI Scope", "--debug"]
+        ByteString.empty
+    processExitCode result @?= ExitFailure 3
+    assertContains
+      (processStdout result)
+      (TextEncoding.encodeUtf8 expectedTerminalEscapeFragment)
+    assertContains (processStderr result) "[o2i|info] Inspected "
+    assertTerminalSafe (processStdout result)
+    assertTerminalSafe (processStderr result)
+    assertPrefixed (processStderr result)
+
+hostileViewSelector :: Assertion
+hostileViewSelector = do
+  bytes <- fixtureBytes "partial-strategy.archimate"
+  result <-
+    runO2I
+      ["inspect", "-", "--view", Text.unpack adversarialText, "--debug"]
+      bytes
+  processExitCode result @?= ExitFailure 1
+  let escaped = TextEncoding.encodeUtf8 expectedTerminalEscapeFragment
+  assertContains (processStdout result) escaped
+  assertContains (processStderr result) escaped
+  assertTerminalSafe (processStdout result)
+  assertTerminalSafe (processStderr result)
+  assertPrefixed (processStderr result)
+
 repeatedOutput :: Assertion
 repeatedOutput = do
   first <- partialStdin ["--view", "CLI Scope", "--json"]
@@ -288,3 +331,49 @@ countOccurrences needle haystack
             + countOccurrences
                 needle
                 (ByteString.drop (ByteString.length needle) suffix)
+
+withAdversarialFixture :: (FilePath -> IO value) -> IO value
+withAdversarialFixture action = bracket create removeFile action
+  where
+    create = do
+      temporary <- getTemporaryDirectory
+      bytes <- fixtureBytes "partial-strategy.archimate"
+      (path, handle) <-
+        openBinaryTempFile
+          temporary
+          ("o2i-" <> Text.unpack adversarialText <> ".archimate")
+      ByteString.hPut handle bytes
+      hClose handle
+      pure path
+
+adversarialText :: Text
+adversarialText = "file\\literal\r\n\ESC\DEL\x0085\&\x009f\x03a9"
+
+-- This expected fragment is intentionally literal and independent of the
+-- production encoder exercised by the process.
+expectedTerminalEscapeFragment :: Text
+expectedTerminalEscapeFragment =
+  "file\\\\literal\\u{000D}\\u{000A}\\u{001B}\\u{007F}\\u{0085}\\u{009F}\x03a9"
+
+assertTerminalSafe :: ByteString.ByteString -> Assertion
+assertTerminalSafe bytes =
+  case TextEncoding.decodeUtf8' bytes of
+    Left failure -> assertFailure (show failure)
+    Right rendered ->
+      assertBool
+        "human process output contains raw controls"
+        (Text.all safeCharacter rendered)
+  where
+    safeCharacter character =
+      let code = ord character
+       in character == '\n'
+            || (code > 0x1f
+                  && code /= 0x7f
+                  && not (code >= 0x80 && code <= 0x9f))
+
+assertPrefixed :: ByteString.ByteString -> Assertion
+assertPrefixed bytes =
+  mapM_
+    (assertBool "diagnostic prefix was displaced"
+       . ByteString.isPrefixOf "[o2i|")
+    (ByteStringChar8.lines bytes)

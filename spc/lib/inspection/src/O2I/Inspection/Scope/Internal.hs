@@ -13,7 +13,7 @@ module O2I.Inspection.Scope.Internal
   ) where
 
 import Data.List (foldl')
-import Data.List.NonEmpty (NonEmpty)
+import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
@@ -33,6 +33,7 @@ import O2I
 import O2I.Inspection.Diagnostic.Internal
 import O2I.Inspection.Profile.Internal
 import O2I.Inspection.Provenance
+import O2I.Inspection.Provenance.Internal (mkClosedScopeProvenance)
 import O2I.Inspection.View
 
 -- | Direct and transitively closed occurrence cardinalities.
@@ -46,6 +47,9 @@ data ScopeDefect
   = EmptyO2IScope
   | UnresolvedReachedReference ReferenceOccurrence
   | AmbiguousReachedReference ReferenceOccurrence (NonEmpty SourceLocation)
+  | MissingReachedOccurrenceLocation OccurrenceId
+  | AmbiguousReachedOccurrenceLocation OccurrenceId (NonEmpty SourceLocation)
+  | MissingReachedInclusionReason OccurrenceId
   deriving (Eq, Show)
 
 -- | Reached adapter defects are normalized before their existential type is
@@ -67,7 +71,7 @@ data SemanticallyClosedScope = SemanticallyClosedScope
   , closedScopeSummary :: ClosedScopeSummary
   , closedScopeFacts :: [IndexedProfileFact]
   , closedScopeOccurrences :: Set OccurrenceId
-  , closedScopeReasons :: Map OccurrenceId [InclusionReason]
+  , closedScopeProvenance :: ClosedScopeProvenance
   }
 
 -- | Total stable diagnostic projection for every Inspection scope defect.
@@ -91,22 +95,45 @@ scopeDefectSpec (AmbiguousReachedReference reference locations) =
         "match-count"
         (Text.pack (show (NonEmpty.length locations)))
     ]
+scopeDefectSpec (MissingReachedOccurrenceLocation occurrence) =
+  modelSpec
+    "o2i.inspection.scope.location-missing"
+    "A reached occurrence has no auditable source location."
+    [occurrenceSubject occurrence]
+scopeDefectSpec (AmbiguousReachedOccurrenceLocation occurrence locations) =
+  modelSpec
+    "o2i.inspection.scope.location-ambiguous"
+    "A reached occurrence identity denotes multiple source locations."
+    [ occurrenceSubject occurrence
+    , DiagnosticSubject
+        "location-count"
+        (Text.pack (show (NonEmpty.length locations)))
+    ]
+scopeDefectSpec (MissingReachedInclusionReason occurrence) =
+  modelSpec
+    "o2i.inspection.scope.inclusion-reason-missing"
+    "A reached occurrence has no auditable inclusion reason."
+    [occurrenceSubject occurrence]
 
 -- | Compute the deterministic least fixed point and normalize only reached
 -- profile defects.
 closeScope :: ProfileIndex -> ScopeResult
 closeScope (ProfileIndex contract view projection) =
-  case NonEmpty.nonEmpty issues of
-    Just failures -> ScopeRejected summary failures
-    Nothing ->
+  case (NonEmpty.nonEmpty issues, NonEmpty.nonEmpty provenanceEntries) of
+    (Just failures, _) -> ScopeRejected summary failures
+    (Nothing, Just entries) ->
       ScopeClosed
         SemanticallyClosedScope
           { closedScopeView = view
           , closedScopeSummary = summary
           , closedScopeFacts = facts
           , closedScopeOccurrences = reached
-          , closedScopeReasons = reasons
+          , closedScopeProvenance = mkClosedScopeProvenance entries
           }
+    (Nothing, Nothing) ->
+      ScopeRejected
+        summary
+        (InspectionScopeIssue (Located viewLocation EmptyO2IScope) :| [])
   where
     persistedFacts = resolvedProjectedFacts projection
     macroIndex =
@@ -125,7 +152,8 @@ closeScope (ProfileIndex contract view projection) =
       concatMap
         (\(presentation, target) -> [presentation, target])
         presentations
-    occurrenceLocations = locationsByOccurrence facts
+    occurrenceLocationSets = locationsByOccurrence facts
+    occurrenceLocations = fmap Set.findMin occurrenceLocationSets
     closure = closeOccurrences facts occurrenceLocations seeds
     reached = closureReached closure
     reasons = closureReasons closure
@@ -147,7 +175,17 @@ closeScope (ProfileIndex contract view projection) =
       | deferred <- resolvedDeferredDefects projection
       , reachedDeferred reached deferred
       ]
-    issues = emptyIssues ++ closureIssues closure ++ profileIssues
+    provenanceIssues =
+      concatMap
+        (occurrenceProvenanceIssues viewLocation occurrenceLocationSets reasons)
+        (Set.toAscList reached)
+    provenanceEntries =
+      mapMaybe
+        (occurrenceProvenanceEntry occurrenceLocationSets reasons)
+        (Set.toAscList reached)
+    issues =
+      emptyIssues ++ closureIssues closure ++ profileIssues ++ provenanceIssues
+    viewLocation = resolvedViewLocation view
 
 data Closure = Closure
   { closureReached :: Set OccurrenceId
@@ -260,16 +298,59 @@ addIssue location defect (reached, queue, reasons, issues) =
   , reasons
   , issues ++ [InspectionScopeIssue (Located location defect)])
 
-locationsByOccurrence :: [IndexedProfileFact] -> Map OccurrenceId SourceLocation
-locationsByOccurrence = Map.fromList . mapMaybe factLocation
+locationsByOccurrence ::
+     [IndexedProfileFact] -> Map OccurrenceId (Set SourceLocation)
+locationsByOccurrence = Map.fromListWith Set.union . mapMaybe factLocation
   where
     factLocation (IndexedOccurrence occurrence location) =
-      Just (occurrence, location)
+      Just (occurrence, Set.singleton location)
     factLocation (IndexedNode occurrence _ location) =
-      Just (occurrence, location)
+      Just (occurrence, Set.singleton location)
     factLocation (IndexedEdge occurrence _ location) =
-      Just (occurrence, location)
+      Just (occurrence, Set.singleton location)
     factLocation _ = Nothing
+
+occurrenceProvenanceIssues ::
+     SourceLocation
+  -> Map OccurrenceId (Set SourceLocation)
+  -> Map OccurrenceId [InclusionReason]
+  -> OccurrenceId
+  -> [ScopeIssue]
+occurrenceProvenanceIssues fallback locations reasons occurrence =
+  locationIssues ++ reasonIssues
+  where
+    locationIssues =
+      case Set.toAscList (Map.findWithDefault Set.empty occurrence locations) of
+        [] ->
+          [ InspectionScopeIssue
+              (Located fallback (MissingReachedOccurrenceLocation occurrence))
+          ]
+        [_] -> []
+        first:rest ->
+          [ InspectionScopeIssue
+              (Located
+                 first
+                 (AmbiguousReachedOccurrenceLocation occurrence (first :| rest)))
+          ]
+    reasonIssues =
+      [ InspectionScopeIssue
+        (Located fallback (MissingReachedInclusionReason occurrence))
+      | null (Map.findWithDefault [] occurrence reasons)
+      ]
+
+occurrenceProvenanceEntry ::
+     Map OccurrenceId (Set SourceLocation)
+  -> Map OccurrenceId [InclusionReason]
+  -> OccurrenceId
+  -> Maybe (OccurrenceId, SourceLocation, NonEmpty InclusionReason)
+occurrenceProvenanceEntry locations reasons occurrence = do
+  location <-
+    case Set.toAscList (Map.findWithDefault Set.empty occurrence locations) of
+      [single] -> Just single
+      _ -> Nothing
+  inclusionReasons <-
+    NonEmpty.nonEmpty (Map.findWithDefault [] occurrence reasons)
+  pure (occurrence, location, inclusionReasons)
 
 reachedDeferred :: Set OccurrenceId -> DeferredProfileDefect defect -> Bool
 reachedDeferred reached deferred =
@@ -294,6 +375,10 @@ referenceSubject reference =
   DiagnosticSubject
     "reference"
     (occurrenceIdText (referenceOccurrenceId reference))
+
+occurrenceSubject :: OccurrenceId -> DiagnosticSubject
+occurrenceSubject occurrence =
+  DiagnosticSubject "occurrence" (occurrenceIdText occurrence)
 
 modelSpec :: Text.Text -> Text.Text -> [DiagnosticSubject] -> DiagnosticSpec
 modelSpec code message subjects =

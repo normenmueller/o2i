@@ -101,7 +101,9 @@ validateSelectedView document view =
     presentations = mapMaybe resultValue objectResults
     presentationIndex =
       Map.fromList
-        [ ( elementOccurrence "view-object" (presentationElement presentation)
+        [ ( elementOccurrence
+              ViewObjectOccurrence
+              (presentationElement presentation)
           , presentation)
         | presentation <- presentations
         ]
@@ -212,7 +214,9 @@ resolveConnection relationshipIndex objectIndex presentationIndex connection =
                endpointDefects relation source target
              _ -> []
     presentationFor object =
-      Map.lookup (elementOccurrence "view-object" object) presentationIndex
+      Map.lookup
+        (elementOccurrence ViewObjectOccurrence object)
+        presentationIndex
     endpointDefects relation source target =
       mismatch SourceEndpoint relation source
         ++ mismatch TargetEndpoint relation target
@@ -315,7 +319,7 @@ attributeReferenceLocation name element reference =
 displayId :: AMXElement -> Text
 displayId element =
   maybe
-    (occurrenceIdText (elementOccurrence "xml" element))
+    (occurrenceIdText (elementOccurrence XmlOccurrence element))
     id
     (elementId element)
 

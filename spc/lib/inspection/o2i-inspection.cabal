@@ -54,6 +54,7 @@ library
   other-modules:
     O2I.Inspection.Diagnostic.Internal,
     O2I.Inspection.Profile.Internal,
+    O2I.Inspection.Provenance.Internal,
     O2I.Inspection.Report.Internal,
     O2I.Inspection.Scope.Internal
   build-depends:

@@ -19,6 +19,9 @@ tests =
     "JSON schema"
     [ testCase "inspection document discriminator" inspectionDiscriminator
     , testCase "inspection has exactly eight stages" eightStages
+    , testCase
+        "resolved scope carries mandatory closed provenance"
+        resolvedScopeProvenance
     , testCase "command-error document discriminator" commandDiscriminator
     , testCase "JSON is one prefix-free document" prefixFreeDocument
     ]
@@ -38,6 +41,15 @@ eightStages = do
   case field "stages" (decoded (processStdout result)) of
     Just (Array stages) -> length stages @?= 8
     _ -> assertFailure "missing stages array"
+
+resolvedScopeProvenance :: Assertion
+resolvedScopeProvenance = do
+  bytes <- fixtureBytes "partial-strategy.archimate"
+  result <- runO2I ["inspect", "-", "--view-id", "view", "--json"] bytes
+  let decodedReport = decoded (processStdout result)
+  case nestedField ["scope", "provenance", "occurrences"] decodedReport of
+    Just (Array occurrences) -> length occurrences @?= 2
+    _ -> assertFailure "resolved scope omitted closed provenance"
 
 commandDiscriminator :: Assertion
 commandDiscriminator = do
@@ -75,3 +87,9 @@ field key value =
   case value of
     Object object -> KeyMap.lookup key object
     _ -> Nothing
+
+nestedField :: [Key] -> Value -> Maybe Value
+nestedField keys value =
+  case keys of
+    [] -> Just value
+    key:rest -> field key value >>= nestedField rest

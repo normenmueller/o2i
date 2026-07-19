@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module O2I.Cli.Test.Output
@@ -5,8 +6,17 @@ module O2I.Cli.Test.Output
   ) where
 
 import qualified Data.ByteString as ByteString
+import qualified Data.ByteString.Char8 as ByteStringChar8
 import qualified Data.ByteString.Lazy as LazyByteString
+import Data.Char (chr, ord)
+import Data.List.NonEmpty (NonEmpty((:|)))
+import Data.Text (Text)
+import qualified Data.Text as Text
+import qualified Data.Text.Encoding as TextEncoding
+import O2I.Adapter.AMX (amxAdapter)
+import O2I.Cli.Options (Verbosity(DebugVerbosity))
 import O2I.Cli.Output
+import O2I.Cli.TerminalText (terminalSafeText)
 import O2I.Inspection
 import System.Directory (getTemporaryDirectory, removeFile)
 import System.IO (hClose, openBinaryTempFile)
@@ -17,22 +27,77 @@ tests :: TestTree
 tests =
   testGroup
     "output"
-    [ testCase "invocation errors prefix every line" prefixedInvocation
+    [ testCase "terminal encoding covers C0, DEL, and C1" controlEncoding
+    , testCase "terminal encoding preserves readable text" readableEncoding
+    , testCase "invocation errors retain one intact prefix" prefixedInvocation
     , testCase "input errors do not enter stdout report syntax" inputError
+    , testCase
+        "adapter and diagnostic scalars are terminal-safe"
+        hostileInspection
+    , testCase "SourceLocation scalars are terminal-safe" hostileLocation
     , testCase "human output contains no ANSI escape" ansiFree
     , testCase "closed output handle is normalized" closedHandle
     ]
+
+controlEncoding :: Assertion
+controlEncoding = do
+  terminalSafeText "\r\n\ESC\DEL\x0085\&\x009f"
+    @?= "\\u{000D}\\u{000A}\\u{001B}\\u{007F}\\u{0085}\\u{009F}"
+  let controls =
+        Text.pack (map chr ([0x00 .. 0x1f] <> [0x7f] <> [0x80 .. 0x9f]))
+      encoded = terminalSafeText controls
+  assertBool "encoded controls remain in output" (terminalSafe encoded)
+  countText "\\u{" encoded @?= 65
+
+readableEncoding :: Assertion
+readableEncoding = do
+  terminalSafeText "Visible ASCII and Unicode: \x00c4\& \x03a9\& \x2192"
+    @?= "Visible ASCII and Unicode: \x00c4\& \x03a9\& \x2192"
+  terminalSafeText "literal \\u{000A}" @?= "literal \\\\u{000A}"
 
 prefixedInvocation :: Assertion
 prefixedInvocation =
   renderHumanCommandError
     (InvocationCommandError InvalidInvocation "first line\nsecond line")
-    @?= "[o2i|error] first line\n[o2i|error] second line\n"
+    @?= "[o2i|error] first line\\u{000A}second line\n"
 
 inputError :: Assertion
 inputError =
   renderHumanCommandError (InputCommandError "missing" "not found")
     @?= "[o2i|error] Cannot read missing: not found\n"
+
+hostileInspection :: Assertion
+hostileInspection = do
+  report <- adversarialReport
+  let human = LazyByteString.toStrict (renderHumanReport report)
+      diagnostics =
+        LazyByteString.toStrict (renderHumanDiagnostics DebugVerbosity report)
+      escaped = TextEncoding.encodeUtf8 (terminalSafeText adversarialText)
+  assertContains human ("Adapter: a" <> escaped)
+  assertContains human ("View: id \"" <> escaped <> "\"")
+  assertContains diagnostics ("[o2i|warn] o2i.test." <> escaped)
+  assertContains diagnostics ("[" <> escaped <> "=" <> escaped <> "]")
+  assertTerminalSafe human
+  assertTerminalSafe diagnostics
+  assertPrefixed diagnostics
+
+hostileLocation :: Assertion
+hostileLocation = do
+  report <- adversarialReport
+  case concatMap
+         diagnosticLocations
+         (diagnosticsList (reportDiagnostics report)) of
+    location:_ -> do
+      let rendered = renderHumanSourceLocation location
+          escaped = terminalSafeText adversarialText
+      assertBool
+        "property target was not encoded"
+        (("target=property:" <> escaped) `Text.isInfixOf` rendered)
+      assertBool
+        "QName path was not encoded"
+        (("{" <> escaped <> "}q" <> escaped) `Text.isInfixOf` rendered)
+      assertBool "location contains raw controls" (terminalSafe rendered)
+    [] -> assertFailure "adversarial diagnostic has no SourceLocation"
 
 ansiFree :: Assertion
 ansiFree =
@@ -53,3 +118,98 @@ closedHandle = do
   written <- writeHandleBytes handle "report"
   removeFile path
   assertBool "closed handle should reject output" (not written)
+
+adversarialReport :: IO InspectionReport
+adversarialReport =
+  case inspectSourceDocument
+         adversarialAdapter
+         (ViewById adversarialText)
+         emptyInputs
+         (sourceDocumentFromBytes adversarialText FileSource "model") of
+    InspectionCompleted report -> pure report
+    InspectionCommandFailed failure ->
+      fail ("unexpected command failure: " <> show failure)
+
+adversarialAdapter :: Adapter
+adversarialAdapter =
+  case amxAdapter of
+    Adapter _ _ _ resolveView viewDefect contract observe ->
+      Adapter
+        descriptor
+        decode
+        diagnostic
+        resolveView
+        viewDefect
+        contract
+        observe
+  where
+    descriptor =
+      adapterDescriptor
+        ('a' :| Text.unpack adversarialText)
+        ('a' :| Text.unpack adversarialText)
+        ('a' :| Text.unpack adversarialText)
+    decode locator _ =
+      DecodeUnavailable
+        (DecodeUnavailableObservation EncodingNotObserved)
+        (Located (adversarialLocation locator) () :| [])
+    diagnostic () =
+      diagnosticSpec
+        (o2iDiagnosticCode ("test." <> adversarialText))
+        WarningSeverity
+        ModelFinding
+        adversarialText
+        [DiagnosticSubject adversarialText adversarialText]
+        mempty
+
+adversarialLocation :: SourceLocator -> SourceLocation
+adversarialLocation locator =
+  locateSource
+    locator
+    (firstPathStep name :| [])
+    (PropertyTarget adversarialText)
+    Nothing
+  where
+    name = expandedQName (Just adversarialText) 'q' adversarialText
+
+emptyInputs :: InspectionInputs
+emptyInputs =
+  InspectionInputs
+    {strategyInput = Absent, readinessInput = Absent, evidenceInput = Absent}
+
+adversarialText :: Text
+adversarialText = "ASCII\\literal\r\n\ESC\DEL\x0085\&\x009f\x03a9"
+
+terminalSafe :: Text -> Bool
+terminalSafe = Text.all safeCharacter
+  where
+    safeCharacter character =
+      let code = ord character
+       in code > 0x1f && code /= 0x7f && not (code >= 0x80 && code <= 0x9f)
+
+assertTerminalSafe :: ByteString.ByteString -> Assertion
+assertTerminalSafe bytes =
+  case TextEncoding.decodeUtf8' bytes of
+    Left failure -> assertFailure (show failure)
+    Right rendered ->
+      assertBool
+        "human output contains raw controls"
+        (Text.all
+           (\character ->
+              character == '\n' || terminalSafe (Text.singleton character))
+           rendered)
+
+assertPrefixed :: ByteString.ByteString -> Assertion
+assertPrefixed bytes =
+  mapM_
+    (assertBool "diagnostic prefix was displaced"
+       . ByteString.isPrefixOf "[o2i|")
+    (ByteStringChar8.lines bytes)
+
+assertContains :: ByteString.ByteString -> ByteString.ByteString -> Assertion
+assertContains actual expected =
+  assertBool
+    ("missing expected bytes: " <> show expected)
+    (ByteString.isInfixOf expected actual)
+
+countText :: Text -> Text -> Int
+countText needle = length . Text.breakOnAll needle

@@ -192,7 +192,7 @@ nativeReferenceTest = do
           bytes
   sourceHashText (sourceSha256 (sourceDocumentIdentity document))
     @?= nativeReferenceSha256
-  case decodeAMX document of
+  case decodeSource document of
     DecodePassed binding decoded -> do
       nativeRootQName binding @?= expectedRootQName
       nativeVersionText (nativeVersion binding) @?= "5.0.0"

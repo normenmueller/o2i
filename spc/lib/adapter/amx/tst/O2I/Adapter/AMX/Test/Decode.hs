@@ -41,7 +41,7 @@ decodeEmptyTest =
 
 decodeValidTest :: Assertion
 decodeValidTest =
-  case decodeAMX (source validEmptyModel) of
+  case decodeSource (source validEmptyModel) of
     DecodePassed binding _ -> do
       nativeRootQName binding @?= expectedRootQName
       nativeVersionText (nativeVersion binding) @?= "5.0.0"
@@ -49,7 +49,7 @@ decodeValidTest =
 
 decodeBomTest :: Assertion
 decodeBomTest =
-  case decodeAMX
+  case decodeSource
          (sourceBytes
             (ByteString.pack [239, 187, 191] <> encode validEmptyModel)) of
     DecodePassed _ _ -> pure ()
@@ -94,7 +94,7 @@ decodeEntityTest =
 
 decodeCommentTest :: Assertion
 decodeCommentTest =
-  case decodeAMX (source (model "<!-- <!DOCTYPE harmless> -->" [])) of
+  case decodeSource (source (model "<!-- <!DOCTYPE harmless> -->" [])) of
     DecodePassed _ _ -> pure ()
     _ -> assertFailure "comment content is not a DTD declaration"
 

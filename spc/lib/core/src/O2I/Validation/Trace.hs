@@ -88,8 +88,9 @@ newtype EffectTraceId =
 
 -- | Existential reference to a typed constituent of a 'Situation'.
 --
--- Pattern matching reveals both the anchor-kind witness and the correspondingly
--- indexed node identifier without erasing either part to a 'RawNodeId'.
+-- Public clients inspect the opaque reference through 'situationAnchorRefId'
+-- and 'situationAnchorRefKind'. The existential packaging retains the typed
+-- identifier and its anchor-kind witness internally.
 data SomeSituationAnchorRef where
   SomeSituationAnchorRef
     :: NodeId ('AnchorKind anchor)

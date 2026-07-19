@@ -131,25 +131,25 @@ elementsById =
 
 -- | Stable occurrence identity of a model declaration.
 nodeOccurrence :: AMXElement -> OccurrenceId
-nodeOccurrence = elementOccurrence "node"
+nodeOccurrence = elementOccurrence NodeOccurrence
 
 -- | Stable occurrence identity of a relationship declaration.
 relationshipOccurrence :: AMXElement -> OccurrenceId
-relationshipOccurrence = elementOccurrence "relationship"
+relationshipOccurrence = elementOccurrence RelationshipOccurrence
 
 -- | Stable occurrence identity of a diagram object.
 presentationOccurrence :: AMXElement -> OccurrenceId
-presentationOccurrence = elementOccurrence "presentation"
+presentationOccurrence = elementOccurrence PresentationOccurrence
 
 -- | Stable occurrence identity of a diagram connection.
 connectionOccurrence :: AMXElement -> OccurrenceId
-connectionOccurrence = elementOccurrence "connection"
+connectionOccurrence = elementOccurrence ConnectionOccurrence
 
 -- | Persisted identifier or deterministic occurrence fallback for diagnostics.
 displayId :: AMXElement -> Text
 displayId element =
   maybe
-    (occurrenceIdText (elementOccurrence "xml" element))
+    (occurrenceIdText (elementOccurrence XmlOccurrence element))
     id
     (elementId element)
 
@@ -162,4 +162,4 @@ stableUniqueElements = go Set.empty
       | Set.member occurrence seen = go seen rest
       | otherwise = element : go (Set.insert occurrence seen) rest
       where
-        occurrence = elementOccurrence "xml" element
+        occurrence = elementOccurrence XmlOccurrence element

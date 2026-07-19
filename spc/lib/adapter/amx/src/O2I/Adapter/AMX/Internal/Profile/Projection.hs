@@ -130,7 +130,6 @@ relationshipReference environment relationship role reason =
   where
     occurrence = relationshipOccurrence relationship
     attributeName = endpointQName role
-    roleText = endpointRoleText role
     token = elementAttribute attributeName relationship
     matches =
       maybe
@@ -146,8 +145,7 @@ relationshipReference environment relationship role reason =
     reference =
       ReferenceOccurrence
         { referenceOccurrenceId =
-            OccurrenceId
-              (occurrenceIdText occurrence <> ":reference:" <> roleText)
+            elementOccurrence (referenceOccurrenceKind role) relationship
         , referenceFromOccurrence = occurrence
         , referenceRole =
             if isOwnershipRelationship relationship
@@ -163,6 +161,12 @@ relationshipReference environment relationship role reason =
               Nothing -> amxElementLocation relationship
               Just _ -> elementAttributeLocation attributeName relationship
         }
+
+referenceOccurrenceKind :: EndpointRole -> AMXOccurrenceKind
+referenceOccurrenceKind role =
+  case role of
+    SourceEndpoint -> RelationshipSourceReferenceOccurrence
+    TargetEndpoint -> RelationshipTargetReferenceOccurrence
 
 projectPresentations :: Environment -> CandidateClosure -> [IndexedProfileFact]
 projectPresentations environment closure =

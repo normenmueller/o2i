@@ -11,18 +11,21 @@ module O2I.Cli.Output
   , renderHumanReport
   , renderHumanDiagnostics
   , renderHumanCommandError
+  , renderHumanSourceLocation
   , writeHandleBytes
   ) where
 
 import Control.Exception (IOException, try)
 import Control.Monad (void)
 import qualified Data.ByteString.Lazy as LazyByteString
+import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as TextEncoding
 import qualified Data.Text.Lazy.Builder as Builder
 import qualified Data.Text.Lazy.Encoding as LazyTextEncoding
 import O2I.Cli.Options
+import O2I.Cli.TerminalText (terminalSafeText)
 import O2I.Inspection
 import System.IO (Handle, hFlush, stderr, stdout)
 
@@ -90,10 +93,13 @@ renderHumanReport report =
   encodeBuilder
     (line ("O2I inspection: " <> resultText (reportResult report))
        <> line ("Source: " <> sourceText source)
-       <> line ("SHA-256: " <> sourceHashText (sourceSha256 source))
+       <> line
+            ("SHA-256: "
+               <> terminalSafeText (sourceHashText (sourceSha256 source)))
        <> supplementalSourceLines (reportSupplementalSources report)
        <> line ("Adapter: " <> adapterText (requestAdapter request))
        <> line ("View: " <> selectorText (requestedViewSelector request))
+       <> closedScopeProvenanceLines (reportClosedScopeProvenance report)
        <> line "Stages:"
        <> foldMap stageLine stages)
   where
@@ -116,7 +122,7 @@ renderHumanDiagnostics verbosity report =
         prefixedLine
           "info"
           ("Inspected "
-             <> sourceDisplayLabel source
+             <> terminalSafeText (sourceDisplayLabel source)
              <> " with result "
              <> resultText (reportResult report)
              <> ".")
@@ -135,9 +141,9 @@ renderHumanDiagnostics verbosity report =
     renderDiagnostic diagnostic =
       prefixedLine
         (severityText (diagnosticSeverity diagnostic))
-        (diagnosticCodeText (diagnosticCode diagnostic)
+        (terminalSafeText (diagnosticCodeText (diagnosticCode diagnostic))
            <> ": "
-           <> diagnosticMessage diagnostic
+           <> terminalSafeText (diagnosticMessage diagnostic)
            <> verboseSubjects diagnostic
            <> debugLocations diagnostic
            <> debugSupplementalSources diagnostic)
@@ -174,13 +180,16 @@ renderHumanDiagnostics verbosity report =
 -- | Render one command failure as a prefixed human process error.
 renderHumanCommandError :: CommandError -> LazyByteString.ByteString
 renderHumanCommandError commandError =
-  encodeBuilder (foldMap (prefixedLine "error") (nonEmptyLines message))
+  encodeBuilder (prefixedLine "error" message)
   where
     message =
       case commandError of
-        InvocationCommandError _ detail -> detail
+        InvocationCommandError _ detail -> terminalSafeText detail
         InputCommandError source detail ->
-          "Cannot read " <> source <> ": " <> detail
+          "Cannot read "
+            <> terminalSafeText source
+            <> ": "
+            <> terminalSafeText detail
         StructureInternalCommandError _ ->
           "Structural elaboration failed after model checks passed."
 
@@ -219,9 +228,6 @@ line value = Builder.fromText value <> Builder.singleton '\n'
 prefixedLine :: Text -> Text -> Builder.Builder
 prefixedLine level message = line ("[o2i|" <> level <> "] " <> message)
 
-nonEmptyLines :: Text -> [Text]
-nonEmptyLines = filter (not . Text.null) . Text.lines . Text.strip
-
 ensureLineEnding :: Text -> Text
 ensureLineEnding value = Text.stripEnd value <> "\n"
 
@@ -234,7 +240,7 @@ resultText result =
 
 sourceText :: SourceIdentity -> Text
 sourceText source =
-  sourceDisplayLabel source
+  terminalSafeText (sourceDisplayLabel source)
     <> " ("
     <> inputKindText (sourceInputKind source)
     <> ")"
@@ -258,7 +264,7 @@ supplementalSourceText supplemental =
     <> ": "
     <> sourceText source
     <> " sha256="
-    <> sourceHashText (sourceSha256 source)
+    <> terminalSafeText (sourceHashText (sourceSha256 source))
   where
     source = supplementalSourceIdentity supplemental
 
@@ -269,20 +275,106 @@ supplementalKindText kind =
     ReadinessSupplement -> "readiness"
     EvidenceSupplement -> "evidence"
 
+closedScopeProvenanceLines :: Maybe ClosedScopeProvenance -> Builder.Builder
+closedScopeProvenanceLines maybeProvenance =
+  case maybeProvenance of
+    Nothing -> mempty
+    Just provenance ->
+      line "Closed scope provenance:"
+        <> foldMap
+             (line . ("  " <>) . occurrenceProvenanceText)
+             (NonEmpty.toList (closedScopeProvenanceOccurrences provenance))
+
+occurrenceProvenanceText :: OccurrenceProvenance -> Text
+occurrenceProvenanceText provenance =
+  terminalSafeText (occurrenceIdText (provenanceOccurrenceId provenance))
+    <> " | "
+    <> renderHumanSourceLocation (provenanceLocation provenance)
+    <> " | reasons="
+    <> Text.intercalate
+         ","
+         (map
+            inclusionReasonText
+            (NonEmpty.toList (provenanceReasons provenance)))
+
+-- | Render one complete location with every source-derived scalar encoded.
+renderHumanSourceLocation :: SourceLocation -> Text
+renderHumanSourceLocation location =
+  sourceText source
+    <> " sha256="
+    <> terminalSafeText (sourceHashText (sourceSha256 source))
+    <> " path="
+    <> Text.intercalate "/" (map pathStepText path)
+    <> " target="
+    <> locationTargetText (locationTarget location)
+    <> maybe "" fullSpanText (locationSpan location)
+  where
+    source = locationSource location
+    path = NonEmpty.toList (locationPath location)
+
+pathStepText :: PathStep -> Text
+pathStepText step =
+  "{"
+    <> maybe "" terminalSafeText (qNameNamespace name)
+    <> "}"
+    <> terminalSafeText (qNameLocalName name)
+    <> "["
+    <> naturalText (pathStepOrdinal step)
+    <> "]"
+  where
+    name = pathStepName step
+
+locationTargetText :: LocationTarget -> Text
+locationTargetText target =
+  case target of
+    ElementTarget -> "element"
+    AttributeTarget name -> "attribute:" <> qNameText name
+    PropertyTarget key -> "property:" <> terminalSafeText key
+    TextFieldTarget name -> "text-field:" <> qNameText name
+
+qNameText :: ExpandedQName -> Text
+qNameText name =
+  "{"
+    <> maybe "" terminalSafeText (qNameNamespace name)
+    <> "}"
+    <> terminalSafeText (qNameLocalName name)
+
+fullSpanText :: SourceSpan -> Text
+fullSpanText sourceSpan =
+  " span="
+    <> naturalText (spanStartLine sourceSpan)
+    <> ":"
+    <> naturalText (spanStartColumn sourceSpan)
+    <> "-"
+    <> naturalText (spanEndLine sourceSpan)
+    <> ":"
+    <> naturalText (spanEndColumn sourceSpan)
+
+inclusionReasonText :: InclusionReason -> Text
+inclusionReasonText reason =
+  case reason of
+    DirectPresentation -> "direct-presentation"
+    RelationshipEndpoint -> "relationship-endpoint"
+    ContextOwnership -> "context-ownership"
+    PerformanceDimensionMembership -> "performance-dimension-membership"
+    SituationDependency -> "situation-dependency"
+    NeedDependency -> "need-dependency"
+    MacroPremise -> "macro-premise"
+
 adapterText :: AdapterDescriptor -> Text
 adapterText adapter =
-  adapterName adapter
+  terminalSafeText (adapterName adapter)
     <> " ("
-    <> adapterIdentifier adapter
+    <> terminalSafeText (adapterIdentifier adapter)
     <> " "
-    <> adapterVersion adapter
+    <> terminalSafeText (adapterVersion adapter)
     <> ")"
 
 selectorText :: ViewSelector -> Text
 selectorText selector =
   case selector of
-    ViewByName name -> "name " <> quoted name
-    ViewById identifier -> "id " <> quoted identifier
+    ViewByName name -> "name " <> quoted (terminalSafeText name)
+    ViewById identifier -> "id " <> quoted (terminalSafeText identifier)
 
 quoted :: Text -> Text
 quoted value = "\"" <> value <> "\""
@@ -329,11 +421,14 @@ severityText severity =
     ErrorSeverity -> "error"
 
 subjectText :: DiagnosticSubject -> Text
-subjectText subject = subjectKind subject <> "=" <> subjectIdentifier subject
+subjectText subject =
+  terminalSafeText (subjectKind subject)
+    <> "="
+    <> terminalSafeText (subjectIdentifier subject)
 
 locationText :: SourceLocation -> Text
 locationText location =
-  sourceDisplayLabel (locationSource location)
+  terminalSafeText (sourceDisplayLabel (locationSource location))
     <> maybe "" spanText (locationSpan location)
 
 spanText :: SourceSpan -> Text

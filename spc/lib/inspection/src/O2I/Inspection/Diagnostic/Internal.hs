@@ -15,12 +15,17 @@ module O2I.Inspection.Diagnostic.Internal
   , DiagnosticSpec(..)
   , diagnosticSpec
   , Diagnostic(..)
+  , diagnosticId
   , Diagnostics
+  , NonEmptyDiagnostics
   , diagnosticFromSpec
   , diagnosticFromLocated
   , diagnosticsFromLocated
   , diagnosticWithSupplementalSources
   , normalizeDiagnostics
+  , normalizeNonEmptyDiagnostics
+  , forgetNonEmptyDiagnostics
+  , nonEmptyDiagnosticIds
   , diagnosticsList
   , rawEdgeSubjectIdentifier
   , structuralDefectSpec
@@ -30,12 +35,12 @@ module O2I.Inspection.Diagnostic.Internal
   , evidenceDefectSpec
   ) where
 
-import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Ratio (denominator, numerator)
+import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Lazy as LazyText
@@ -140,9 +145,8 @@ diagnosticSpec code severity disposition message subjects dataFields =
 
 -- | Normalized diagnostic retained in reports.
 data Diagnostic = Diagnostic
-  { diagnosticId :: DiagnosticId
+  { diagnosticStage :: InspectionStage
   , diagnosticCode :: DiagnosticCode
-  , diagnosticStage :: InspectionStage
   , diagnosticSeverity :: DiagnosticSeverity
   , diagnosticDisposition :: DiagnosticDisposition
   , diagnosticMessage :: Text
@@ -150,11 +154,16 @@ data Diagnostic = Diagnostic
   , diagnosticLocations :: [SourceLocation]
   , diagnosticSupplementalSources :: [SupplementalSource]
   , diagnosticData :: Map Text DiagnosticAtom
-  } deriving (Eq, Show)
+  } deriving (Eq, Ord, Show)
 
 -- | Deterministically ordered diagnostics.
 newtype Diagnostics =
   Diagnostics [Diagnostic]
+  deriving (Eq, Show)
+
+-- | A canonically ordered, non-empty diagnostic set.
+newtype NonEmptyDiagnostics =
+  NonEmptyDiagnostics (NonEmpty Diagnostic)
   deriving (Eq, Show)
 
 -- | Normalize a specification at its Inspection-owned pipeline stage.
@@ -162,9 +171,8 @@ diagnosticFromSpec ::
      InspectionStage -> [SourceLocation] -> DiagnosticSpec -> Diagnostic
 diagnosticFromSpec stage locations specification =
   Diagnostic
-    { diagnosticId = diagnosticIdentity stage specification locations []
+    { diagnosticStage = stage
     , diagnosticCode = specCode specification
-    , diagnosticStage = stage
     , diagnosticSeverity = specSeverity specification
     , diagnosticDisposition = specDisposition specification
     , diagnosticMessage = specMessage specification
@@ -197,79 +205,53 @@ diagnosticsFromLocated stage specification =
     . map (diagnosticFromLocated stage specification)
     . NonEmpty.toList
 
--- | Attach consumed supplemental sources and refresh diagnostic identity.
+-- | Attach consumed supplemental sources; identity remains a derived value.
 diagnosticWithSupplementalSources ::
      [SupplementalSource] -> Diagnostic -> Diagnostic
 diagnosticWithSupplementalSources sources diagnostic =
-  diagnostic
-    { diagnosticId =
-        diagnosticIdentityFields
-          (diagnosticCode diagnostic)
-          (diagnosticStage diagnostic)
-          (diagnosticSeverity diagnostic)
-          (diagnosticDisposition diagnostic)
-          (diagnosticSubjects diagnostic)
-          (diagnosticLocations diagnostic)
-          sources
-          (diagnosticData diagnostic)
-    , diagnosticSupplementalSources = sources
-    }
+  diagnostic {diagnosticSupplementalSources = sources}
 
--- | Sort diagnostics by stage, code, subject, and source occurrence.
+-- | Canonicalize one finding collection as a fully ordered mathematical set.
 normalizeDiagnostics :: [Diagnostic] -> Diagnostics
-normalizeDiagnostics = Diagnostics . sortOn diagnosticSortKey
+normalizeDiagnostics = Diagnostics . canonicalDiagnostics
+
+-- | Canonicalize a statically non-empty finding collection exactly once.
+normalizeNonEmptyDiagnostics :: NonEmpty Diagnostic -> NonEmptyDiagnostics
+normalizeNonEmptyDiagnostics =
+  NonEmptyDiagnostics . fmap NonEmpty.head . NonEmpty.group1 . NonEmpty.sort
+
+-- | Forget only the non-empty witness, preserving the normalized artifact.
+forgetNonEmptyDiagnostics :: NonEmptyDiagnostics -> Diagnostics
+forgetNonEmptyDiagnostics (NonEmptyDiagnostics diagnostics) =
+  Diagnostics (NonEmpty.toList diagnostics)
+
+-- | Read every canonical identity while retaining non-emptiness.
+nonEmptyDiagnosticIds :: NonEmptyDiagnostics -> NonEmpty DiagnosticId
+nonEmptyDiagnosticIds (NonEmptyDiagnostics diagnostics) =
+  fmap diagnosticId diagnostics
 
 -- | Read diagnostics in canonical order.
 diagnosticsList :: Diagnostics -> [Diagnostic]
 diagnosticsList (Diagnostics diagnostics) = diagnostics
 
-diagnosticSortKey :: Diagnostic -> (Int, Text, Text, Text, Text)
-diagnosticSortKey diagnostic =
-  ( fromEnum (diagnosticStage diagnostic)
-  , diagnosticCodeText (diagnosticCode diagnostic)
-  , subjectsKey (diagnosticSubjects diagnostic)
-  , locationsKey (diagnosticLocations diagnostic)
-  , supplementalSourcesKey (diagnosticSupplementalSources diagnostic))
+canonicalDiagnostics :: [Diagnostic] -> [Diagnostic]
+canonicalDiagnostics = Set.toAscList . Set.fromList
 
-diagnosticIdentity ::
-     InspectionStage
-  -> DiagnosticSpec
-  -> [SourceLocation]
-  -> [SupplementalSource]
-  -> DiagnosticId
-diagnosticIdentity stage specification locations sources =
-  diagnosticIdentityFields
-    (specCode specification)
-    stage
-    (specSeverity specification)
-    (specDisposition specification)
-    (specSubjects specification)
-    locations
-    sources
-    (specData specification)
-
-diagnosticIdentityFields ::
-     DiagnosticCode
-  -> InspectionStage
-  -> DiagnosticSeverity
-  -> DiagnosticDisposition
-  -> [DiagnosticSubject]
-  -> [SourceLocation]
-  -> [SupplementalSource]
-  -> Map Text DiagnosticAtom
-  -> DiagnosticId
-diagnosticIdentityFields code stage severity disposition subjects locations sources dataFields =
+-- | Derive identity from the complete canonical diagnostic key.
+diagnosticId :: Diagnostic -> DiagnosticId
+diagnosticId diagnostic =
   DiagnosticId
     (canonicalSequence
        [ "o2i-diagnostic-v1"
-       , diagnosticCodeText code
-       , inspectionStageText stage
-       , diagnosticSeverityText severity
-       , diagnosticDispositionText disposition
-       , subjectsKey subjects
-       , locationsKey locations
-       , supplementalSourcesKey sources
-       , diagnosticDataKey dataFields
+       , inspectionStageText (diagnosticStage diagnostic)
+       , diagnosticCodeText (diagnosticCode diagnostic)
+       , diagnosticSeverityText (diagnosticSeverity diagnostic)
+       , diagnosticDispositionText (diagnosticDisposition diagnostic)
+       , diagnosticMessage diagnostic
+       , subjectsKey (diagnosticSubjects diagnostic)
+       , locationsKey (diagnosticLocations diagnostic)
+       , supplementalSourcesKey (diagnosticSupplementalSources diagnostic)
+       , diagnosticDataKey (diagnosticData diagnostic)
        ])
 
 inspectionStageText :: InspectionStage -> Text

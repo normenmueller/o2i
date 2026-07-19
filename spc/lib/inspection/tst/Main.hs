@@ -10,6 +10,7 @@ import qualified Data.Aeson.KeyMap as KeyMap
 import qualified Data.ByteString as ByteString
 import qualified Data.ByteString.Lazy as LazyByteString
 import Data.JSON.JSONSchema (validateJSONSchema)
+import Data.List (nub, sort)
 import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
@@ -17,6 +18,7 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Time (UTCTime(..), fromGregorian, secondsToDiffTime)
 import qualified Data.Vector as Vector
+import Numeric.Natural (Natural)
 import O2I
 import O2I.Inspection
 import System.FilePath ((</>))
@@ -61,6 +63,18 @@ data RootMode
   = RootSucceeds
   | RootFails
 
+data DiagnosticContractPoint
+  = ContractDecode
+  | ContractView
+  | ContractProfile
+  | ContractScope
+  deriving (Eq, Show)
+
+data ContractDefect = ContractDefect
+  { contractDefectCode :: Text
+  , contractDefectMessage :: Text
+  } deriving (Eq, Show)
+
 data FactTemplate
   = OccurrenceTemplate OccurrenceId
   | NodeTemplate OccurrenceId RawNode
@@ -78,6 +92,9 @@ tests =
     "o2i-inspection"
     [ testCase "exact source identity uses SHA-256" sourceIdentityTest
     , testCase "source locations are one-based" sourceLocationInvariantTest
+    , testCase
+        "OccurrenceId length framing rejects namespace and path collisions"
+        occurrenceIdentityCollisionTest
     , testCase "AtLeastTwo validates its lower bound" atLeastTwoTest
     , testCase "profile snapshots contain exactly one fact" profileSnapshotTest
     , testCase
@@ -90,6 +107,9 @@ tests =
         "diagnostic identity rejects delimiter collisions"
         diagnosticIdentityCollisionTest
     , testCase
+        "diagnostic sets are canonical across Decode, View, Profile, and Scope"
+        diagnosticSetCanonicalizationTest
+    , testCase
         "effect-trace identity rejects constituent collisions"
         traceIdentityCollisionTest
     , testCase "decode result is total" decodeAttemptTest
@@ -101,6 +121,9 @@ tests =
     , testCase
         "closure includes core-derived macro premise relations"
         macroPremiseClosureTest
+    , testCase
+        "closed-scope provenance is complete and canonical"
+        closedScopeProvenanceTest
     , testCase
         "unresolved reached references fail Profile"
         unresolvedReferenceTest
@@ -165,6 +188,24 @@ sourceLocationInvariantTest = do
       spanStartColumn sourceSpan @?= 2
       spanEndLine sourceSpan @?= 3
       spanEndColumn sourceSpan @?= 4
+
+occurrenceIdentityCollisionTest :: Assertion
+occurrenceIdentityCollisionTest = do
+  let namespaceLeft =
+        occurrenceForPath
+          (firstPathStep (expandedQName (Just "urn}reserved") 'n' "ame") :| [])
+      namespaceRight =
+        occurrenceForPath
+          (firstPathStep (expandedQName (Just "urn") 'r' "eserved}name") :| [])
+      pathLeft =
+        occurrenceForPath
+          (firstPathStep (expandedQName Nothing 'a' "[1]/{urn:path}b") :| [])
+      pathRight =
+        occurrenceForPath
+          (firstPathStep (expandedQName Nothing 'a' "")
+             :| [firstPathStep (expandedQName (Just "urn:path") 'b' "")])
+  namespaceLeft /= namespaceRight @? "namespace delimiters must not collide"
+  pathLeft /= pathRight @? "path delimiters must not collide"
 
 atLeastTwoTest :: Assertion
 atLeastTwoTest = do
@@ -407,6 +448,11 @@ diagnosticIdentityRepresentationTest = do
 
 diagnosticIdentityCollisionTest :: Assertion
 diagnosticIdentityCollisionTest = do
+  firstMessage <-
+    diagnosticForSpec testLocation (identitySpecWithMessage "first message")
+  secondMessage <-
+    diagnosticForSpec testLocation (identitySpecWithMessage "second message")
+  assertDistinctDiagnosticIds firstMessage secondMessage
   subjectsLeft <- diagnosticForSubjects [DiagnosticSubject "a" "b,c:d"]
   subjectsRight <-
     diagnosticForSubjects [DiagnosticSubject "a" "b", DiagnosticSubject "c" "d"]
@@ -433,6 +479,78 @@ diagnosticIdentityCollisionTest = do
   singlePath <- diagnosticForLocations singlePathCollisionLocation
   multiplePath <- diagnosticForLocations multiPathCollisionLocation
   assertDistinctDiagnosticIds singlePath multiplePath
+
+diagnosticSetCanonicalizationTest :: Assertion
+diagnosticSetCanonicalizationTest =
+  mapM_
+    assertCanonicalAt
+    [ContractDecode, ContractView, ContractProfile, ContractScope]
+  where
+    first = ContractDefect "same" "z-last diagnostic"
+    second = ContractDefect "same" "a-first diagnostic"
+    assertCanonicalAt point = do
+      firstReport <-
+        completedReport
+          (runAdapter
+             (diagnosticContractAdapter point (first :| [second, first])))
+      secondReport <-
+        completedReport
+          (runAdapter
+             (diagnosticContractAdapter point (second :| [first, second])))
+      renderInspectionReportJSON firstReport
+        @?= renderInspectionReportJSON secondReport
+      let diagnostics = diagnosticsList (reportDiagnostics firstReport)
+          identifiers = map diagnosticId diagnostics
+          expectedStage = contractInspectionStage point
+      map (diagnosticCodeText . diagnosticCode) diagnostics
+        @?= replicate 2 "o2i.test.contract.same"
+      map diagnosticMessage diagnostics
+        @?= ["a-first diagnostic", "z-last diagnostic"]
+      length identifiers @?= 2
+      length (nub identifiers) @?= length identifiers
+      stageDiagnosticIds expectedStage firstReport @?= identifiers
+      nestedDiagnosticIds point firstReport @?= identifiers
+
+contractInspectionStage :: DiagnosticContractPoint -> InspectionStage
+contractInspectionStage point =
+  case point of
+    ContractDecode -> DecodeStage
+    ContractView -> ViewScopeStage
+    ContractProfile -> ProfileStage
+    ContractScope -> ProfileStage
+
+stageDiagnosticIds :: InspectionStage -> InspectionReport -> [DiagnosticId]
+stageDiagnosticIds stage report =
+  concat
+    [ reportedDiagnosticIds stageReport
+    | stageReport <- stageReportsList (reportStageReports report)
+    , reportedStage stageReport == stage
+    ]
+
+nestedDiagnosticIds ::
+     DiagnosticContractPoint -> InspectionReport -> [DiagnosticId]
+nestedDiagnosticIds point report =
+  case point of
+    ContractDecode ->
+      case reportNativeBinding report of
+        NativeBindingFailed (NativeBindingUnavailable _ identifiers) ->
+          NonEmpty.toList identifiers
+        _ -> []
+    ContractView ->
+      case reportViewResolution report of
+        ViewRejected failure ->
+          NonEmpty.toList (failedViewDiagnosticIds failure)
+        _ -> []
+    ContractProfile ->
+      case reportProfileResolution report of
+        ProfileRejectedResolution failure ->
+          NonEmpty.toList (rejectedProfileDiagnosticIds failure)
+        _ -> []
+    ContractScope ->
+      case reportScopeResolution report of
+        ScopeRejectedResolution failure ->
+          NonEmpty.toList (rejectedScopeDiagnosticIds failure)
+        _ -> []
 
 traceIdentityCollisionTest :: Assertion
 traceIdentityCollisionTest = do
@@ -476,11 +594,22 @@ diagnosticForData atom =
 identitySpec ::
      [DiagnosticSubject] -> Map.Map Text DiagnosticAtom -> DiagnosticSpec
 identitySpec subjects dataFields =
+  identitySpecFor "Identity test defect." subjects dataFields
+
+identitySpecWithMessage :: Text -> DiagnosticSpec
+identitySpecWithMessage message = identitySpecFor message [] Map.empty
+
+identitySpecFor ::
+     Text
+  -> [DiagnosticSubject]
+  -> Map.Map Text DiagnosticAtom
+  -> DiagnosticSpec
+identitySpecFor message subjects dataFields =
   diagnosticSpec
     (o2iDiagnosticCode "identity")
     ErrorSeverity
     ModelFinding
-    "Identity test defect."
+    message
     subjects
     dataFields
 
@@ -500,30 +629,22 @@ assertDistinctDiagnosticIds first second =
 
 reservedQNameLocationLeft, reservedQNameLocationRight :: SourceLocation
 reservedQNameLocationLeft =
-  testLocation
-    { locationPath =
-        firstPathStep (expandedQName (Just "urn}reserved") 'n' "ame") :| []
-    }
+  locationForPath
+    (firstPathStep (expandedQName (Just "urn}reserved") 'n' "ame") :| [])
 
 reservedQNameLocationRight =
-  testLocation
-    { locationPath =
-        firstPathStep (expandedQName (Just "urn") 'r' "eserved}name") :| []
-    }
+  locationForPath
+    (firstPathStep (expandedQName (Just "urn") 'r' "eserved}name") :| [])
 
 singlePathCollisionLocation, multiPathCollisionLocation :: SourceLocation
 singlePathCollisionLocation =
-  testLocation
-    { locationPath =
-        firstPathStep (expandedQName Nothing 'a' "[1]/{urn:path}b") :| []
-    }
+  locationForPath
+    (firstPathStep (expandedQName Nothing 'a' "[1]/{urn:path}b") :| [])
 
 multiPathCollisionLocation =
-  testLocation
-    { locationPath =
-        firstPathStep (expandedQName Nothing 'a' "")
-          :| [firstPathStep (expandedQName (Just "urn:path") 'b' "")]
-    }
+  locationForPath
+    (firstPathStep (expandedQName Nothing 'a' "")
+       :| [firstPathStep (expandedQName (Just "urn:path") 'b' "")])
 
 decodeAttemptTest :: Assertion
 decodeAttemptTest = do
@@ -596,14 +717,11 @@ unreachedDefectTest = do
             ViewSucceeds
             RootSucceeds
             missionFacts
-            [reachedDefect (OccurrenceId "outside")]))
+            [reachedDefect (testOccurrence "outside")]))
   assertBool
     "unreached adapter defect must not be reported"
     ("o2i.test.profile.reached" `notElem` diagnosticCodes report)
-  reportScopeResolution report
-    @?= ScopeResolved
-          ClosedScopeSummary
-            {directOccurrenceCount = 1, closedOccurrenceCount = 3}
+  assertResolvedScopeSummary 1 3 report
 
 repeatedPresentationTest :: Assertion
 repeatedPresentationTest = do
@@ -616,10 +734,7 @@ repeatedPresentationTest = do
             RootSucceeds
             repeatedMissionFacts
             []))
-  reportScopeResolution report
-    @?= ScopeResolved
-          ClosedScopeSummary
-            {directOccurrenceCount = 2, closedOccurrenceCount = 4}
+  assertResolvedScopeSummary 2 4 report
 
 macroPremiseClosureTest :: Assertion
 macroPremiseClosureTest = do
@@ -632,10 +747,62 @@ macroPremiseClosureTest = do
             RootSucceeds
             macroPremiseFacts
             []))
-  reportScopeResolution report
-    @?= ScopeResolved
-          ClosedScopeSummary
-            {directOccurrenceCount = 1, closedOccurrenceCount = 7}
+  assertResolvedScopeSummary 1 7 report
+
+closedScopeProvenanceTest :: Assertion
+closedScopeProvenanceTest = do
+  report <-
+    completedReport
+      (runAdapter
+         (testAdapter
+            DecodeSucceeds
+            ViewSucceeds
+            RootSucceeds
+            (macroPremiseFacts
+               ++ [ DependencyTemplate
+                      macroEdgeOccurrence
+                      ethosOccurrence
+                      PersistedContextOwnership
+                  , DependencyTemplate
+                      macroEdgeOccurrence
+                      ethosOccurrence
+                      PersistedRelationshipEndpoint
+                  ])
+            []))
+  provenance <-
+    case reportClosedScopeProvenance report of
+      Nothing -> assertFailure "resolved scope omitted mandatory provenance"
+      Just artifact -> pure artifact
+  let occurrences =
+        NonEmpty.toList (closedScopeProvenanceOccurrences provenance)
+      actualIds = map provenanceOccurrenceId occurrences
+      expectedReasons =
+        [ (macroPresentation, [DirectPresentation])
+        , (macroEdgeOccurrence, [DirectPresentation])
+        , (ethosOccurrence, [RelationshipEndpoint, ContextOwnership])
+        , (missionOccurrence, [RelationshipEndpoint])
+        , (premiseEdgeOccurrence, [MacroPremise])
+        , (principleOccurrence, [RelationshipEndpoint])
+        , (driverOccurrence, [RelationshipEndpoint])
+        ]
+  actualIds @?= sort (map fst expectedReasons)
+  map
+    (\occurrence ->
+       ( provenanceOccurrenceId occurrence
+       , NonEmpty.toList (provenanceReasons occurrence)))
+    occurrences
+    @?= sort expectedReasons
+  map provenanceLocation occurrences @?= replicate 7 testLocation
+
+assertResolvedScopeSummary ::
+     Natural -> Natural -> InspectionReport -> Assertion
+assertResolvedScopeSummary direct closed report =
+  case reportScopeResolution report of
+    ScopeResolved scope ->
+      resolvedScopeSummary scope
+        @?= ClosedScopeSummary
+              {directOccurrenceCount = direct, closedOccurrenceCount = closed}
+    resolution -> assertFailure ("unexpected scope state: " <> show resolution)
 
 unresolvedReferenceTest :: Assertion
 unresolvedReferenceTest = do
@@ -713,9 +880,7 @@ emptyStrategyInputTest = do
          noInputs
            { strategyInput =
                Supplied
-                 (Sourced
-                    (sourceDocumentIdentity testSource)
-                    (StrategyFormulationBundle []))
+                 (sourcedFromDocument testSource (StrategyFormulationBundle []))
            })
   reportScopeResolution supplied @?= reportScopeResolution unavailable
   reportResult supplied @?= InspectionFailed
@@ -784,6 +949,8 @@ reportSchemaNegativeTest = do
       semanticFailureValue = renderedReportValue semanticFailure
       impossible =
         [ ("result contradicts stages", setField "result" "passed" partialValue)
+        , ( "resolved scope omits mandatory provenance"
+          , removeScopeProvenance partialValue)
         , ( "blocked stage is not the earliest unavailable stage"
           , modifyStage 5 (setBlockedByStage "profile") partialValue)
         , ( "not-run successor claims to have passed"
@@ -805,31 +972,43 @@ supplementalSourceRetentionTest = do
   map supplementalInputKind (reportSupplementalSources complete)
     @?= [StrategySupplement, ReadinessSupplement, EvidenceSupplement]
   reportResult complete @?= InspectionPassed
-  let firstIdentity = sourceIdentity "strategy-a.json" "same formulation"
-      secondIdentity = sourceIdentity "strategy-b.json" "same formulation"
-      supplied identity =
+  let firstDocument = sourceDocument "strategy-a.json" "same formulation"
+      secondDocument = sourceDocument "strategy-b.json" "same formulation"
+      firstIdentity = sourceDocumentIdentity firstDocument
+      secondIdentity = sourceDocumentIdentity secondDocument
+      supplied document =
         noInputs
           { strategyInput =
-              Supplied (Sourced identity (StrategyFormulationBundle []))
+              Supplied
+                (sourcedFromDocument document (StrategyFormulationBundle []))
           }
   first <-
     completedReport
-      (runAdapterWithInputs strategyModelAdapter (supplied firstIdentity))
+      (runAdapterWithInputs strategyModelAdapter (supplied firstDocument))
   second <-
     completedReport
-      (runAdapterWithInputs strategyModelAdapter (supplied secondIdentity))
+      (runAdapterWithInputs strategyModelAdapter (supplied secondDocument))
   sourceSha256 firstIdentity @?= sourceSha256 secondIdentity
-  reportSupplementalSources first
-    @?= [SupplementalSource StrategySupplement firstIdentity]
-  reportSupplementalSources second
-    @?= [SupplementalSource StrategySupplement secondIdentity]
+  map supplementalTuple (reportSupplementalSources first)
+    @?= [(StrategySupplement, firstIdentity)]
+  map supplementalTuple (reportSupplementalSources second)
+    @?= [(StrategySupplement, secondIdentity)]
   renderInspectionReportJSON first
     /= renderInspectionReportJSON second
          @? "reports must distinguish equal data supplied by different sources"
-  map diagnosticSupplementalSources (diagnosticsList (reportDiagnostics first))
-    @?= [[SupplementalSource StrategySupplement firstIdentity]]
-  map diagnosticSupplementalSources (diagnosticsList (reportDiagnostics second))
-    @?= [[SupplementalSource StrategySupplement secondIdentity]]
+  map
+    (map supplementalTuple . diagnosticSupplementalSources)
+    (diagnosticsList (reportDiagnostics first))
+    @?= [[(StrategySupplement, firstIdentity)]]
+  map
+    (map supplementalTuple . diagnosticSupplementalSources)
+    (diagnosticsList (reportDiagnostics second))
+    @?= [[(StrategySupplement, secondIdentity)]]
+
+supplementalTuple ::
+     SupplementalSource -> (SupplementalInputKind, SourceIdentity)
+supplementalTuple supplemental =
+  (supplementalInputKind supplemental, supplementalSourceIdentity supplemental)
 
 allReportVariants :: IO [(String, InspectionReport)]
 allReportVariants = do
@@ -839,8 +1018,8 @@ allReportVariants = do
         strategyOnly
           { readinessInput =
               Supplied
-                (Sourced
-                   readinessSourceIdentity
+                (sourcedFromDocument
+                   readinessSourceDocument
                    (ReadinessBundle readinessDate [] [] []))
           }
       evidenceUnavailable = inputs {evidenceInput = Absent}
@@ -848,8 +1027,8 @@ allReportVariants = do
         inputs
           { evidenceInput =
               Supplied
-                (Sourced
-                   evidenceSourceIdentity
+                (sourcedFromDocument
+                   evidenceSourceDocument
                    (EvidenceBundle assessmentDate [] []))
           }
       cases =
@@ -912,8 +1091,8 @@ allReportVariants = do
               noInputs
                 { strategyInput =
                     Supplied
-                      (Sourced
-                         strategySourceIdentity
+                      (sourcedFromDocument
+                         strategySourceDocument
                          (StrategyFormulationBundle []))
                 })
         , ("traceability-failed", runAdapter goodEthosAdapter)
@@ -967,6 +1146,20 @@ copyField key source target =
         (\value -> setField key value target)
         (KeyMap.lookup key object)
     _ -> target
+
+removeScopeProvenance :: Aeson.Value -> Aeson.Value
+removeScopeProvenance document =
+  case document of
+    Aeson.Object object ->
+      case KeyMap.lookup "scope" object of
+        Just (Aeson.Object scope) ->
+          Aeson.Object
+            (KeyMap.insert
+               "scope"
+               (Aeson.Object (KeyMap.delete "provenance" scope))
+               object)
+        _ -> document
+    _ -> document
 
 modifyStage :: Int -> (Aeson.Value -> Aeson.Value) -> Aeson.Value -> Aeson.Value
 modifyStage index transform document =
@@ -1104,13 +1297,13 @@ validInspectionInputs = do
     InspectionInputs
       { strategyInput =
           Supplied
-            (Sourced
-               strategySourceIdentity
+            (sourcedFromDocument
+               strategySourceDocument
                (StrategyFormulationBundle [completeStrategyFormulation]))
       , readinessInput =
           Supplied
-            (Sourced
-               readinessSourceIdentity
+            (sourcedFromDocument
+               readinessSourceDocument
                ReadinessBundle
                  { readinessCheckedAtInput = readinessDate
                  , kpiDefinitionsInput = [definition]
@@ -1119,8 +1312,8 @@ validInspectionInputs = do
                  })
       , evidenceInput =
           Supplied
-            (Sourced
-               evidenceSourceIdentity
+            (sourcedFromDocument
+               evidenceSourceDocument
                EvidenceBundle
                  { evidenceAssessedAtInput = assessmentDate
                  , actualStartsInput = [actualStart]
@@ -1178,17 +1371,16 @@ renameGraph renames graph =
         , rawEdgeTo = rename (rawEdgeTo edge)
         }
 
-sourceIdentity :: Text -> ByteString.ByteString -> SourceIdentity
-sourceIdentity label bytes =
-  sourceDocumentIdentity (sourceDocumentFromBytes label FileSource bytes)
+sourceDocument :: Text -> ByteString.ByteString -> SourceDocument
+sourceDocument label = sourceDocumentFromBytes label FileSource
 
-strategySourceIdentity, readinessSourceIdentity, evidenceSourceIdentity ::
-     SourceIdentity
-strategySourceIdentity = sourceIdentity "strategy.json" "strategy-input"
+strategySourceDocument, readinessSourceDocument, evidenceSourceDocument ::
+     SourceDocument
+strategySourceDocument = sourceDocument "strategy.json" "strategy-input"
 
-readinessSourceIdentity = sourceIdentity "readiness.json" "readiness-input"
+readinessSourceDocument = sourceDocument "readiness.json" "readiness-input"
 
-evidenceSourceIdentity = sourceIdentity "evidence.json" "evidence-input"
+evidenceSourceDocument = sourceDocument "evidence.json" "evidence-input"
 
 completeModelFacts :: [FactTemplate]
 completeModelFacts = graphFacts completeRawGraph
@@ -1213,10 +1405,10 @@ graphFacts graph =
 
 indexedOccurrence :: Text -> Int -> OccurrenceId
 indexedOccurrence prefix index =
-  OccurrenceId (prefix <> "-" <> Text.pack (show index))
+  testOccurrence (prefix <> "-" <> Text.pack (show index))
 
 completePresentation :: OccurrenceId
-completePresentation = OccurrenceId "presentation-complete"
+completePresentation = testOccurrence "presentation-complete"
 
 completeRawGraph :: RawGraph
 completeRawGraph = RawGraph completeNodes completeEdges
@@ -1467,9 +1659,9 @@ alternateAdapter :: Adapter
 alternateAdapter =
   Adapter
     testDescriptor
-    (\_ -> DecodePassed testNativeBinding ())
+    (\locator _ -> DecodePassed testNativeBinding locator)
     (\AlternateDefect -> testSpec "o2i.test.alt.decode")
-    (\_ _ -> ViewPassed testResolvedView ())
+    (\locator _ -> ViewPassed (testResolvedViewAt locator) locator)
     (\AlternateDefect -> testSpec "o2i.test.alt.view")
     O2IProfileContract
       { projectProfileSnapshot =
@@ -1482,12 +1674,16 @@ alternateAdapter =
                        (o2iProfileVersionLiteral ('0' :| ".2")))
               , projectedFacts =
                   case locatedValue (snapshotFact snapshot) of
-                    AlternateFact -> instantiateFacts completeEthosFacts
+                    AlternateFact ->
+                      instantiateFacts
+                        (locatedAt (snapshotFact snapshot))
+                        completeEthosFacts
               , projectedDefects = []
               }
       , profileDefectSpec = \AlternateDefect -> testSpec "o2i.test.alt.profile"
       }
-    (\_ _ -> profileSnapshot (Located testLocation AlternateFact))
+    (\locator _ ->
+       profileSnapshot (Located (testLocationAt locator) AlternateFact))
 
 data AdversarialMode
   = AdversarialDecode
@@ -1506,35 +1702,41 @@ adversarialAdapter mode =
     resolveView
     adversarialSpec
     contract
-    (\_ _ -> profileSnapshot (Located testLocation TestProfileFact))
+    (\locator _ ->
+       profileSnapshot (Located (testLocationAt locator) TestProfileFact))
   where
-    decode _ =
+    decode locator _ =
       case mode of
         AdversarialDecode ->
           DecodeUnavailable
             (DecodeUnavailableObservation EncodingNotObserved)
-            (Located testLocation AdversarialDefect :| [])
-        AdversarialView -> DecodePassed testNativeBinding ()
-        AdversarialProfile -> DecodePassed testNativeBinding ()
-    resolveView _ _ =
+            (Located (testLocationAt locator) AdversarialDefect :| [])
+        AdversarialView -> DecodePassed testNativeBinding locator
+        AdversarialProfile -> DecodePassed testNativeBinding locator
+    resolveView locator _ =
       case mode of
         AdversarialDecode ->
-          ViewFailed NoViewMatch (Located testLocation AdversarialDefect :| [])
+          ViewFailed
+            NoViewMatch
+            (Located (testLocationAt locator) AdversarialDefect :| [])
         AdversarialView ->
-          ViewFailed NoViewMatch (Located testLocation AdversarialDefect :| [])
-        AdversarialProfile -> ViewPassed testResolvedView ()
+          ViewFailed
+            NoViewMatch
+            (Located (testLocationAt locator) AdversarialDefect :| [])
+        AdversarialProfile -> ViewPassed (testResolvedViewAt locator) locator
     contract =
       O2IProfileContract
         { projectProfileSnapshot =
-            \_ ->
-              ProfileProjection
-                { projectedRoot =
-                    RootUnprojectable
-                      NoO2IProfile
-                      (Located testLocation AdversarialDefect :| [])
-                , projectedFacts = []
-                , projectedDefects = []
-                }
+            \snapshot ->
+              let location = locatedAt (snapshotFact snapshot)
+               in ProfileProjection
+                    { projectedRoot =
+                        RootUnprojectable
+                          NoO2IProfile
+                          (Located location AdversarialDefect :| [])
+                    , projectedFacts = []
+                    , projectedDefects = []
+                    }
         , profileDefectSpec = adversarialSpec
         }
 
@@ -1548,11 +1750,74 @@ adversarialSpec AdversarialDefect =
     [DiagnosticSubject "" ""]
     (Map.singleton "attemptedCode" (DiagnosticText "not-o2i"))
 
+diagnosticContractAdapter ::
+     DiagnosticContractPoint -> NonEmpty ContractDefect -> Adapter
+diagnosticContractAdapter point defects =
+  Adapter
+    testDescriptor
+    decode
+    contractDefectSpec
+    resolveView
+    contractDefectSpec
+    contract
+    observe
+  where
+    decode locator _
+      | point == ContractDecode =
+        DecodeUnavailable
+          (DecodeUnavailableObservation EncodingNotObserved)
+          (locatedDefects locator)
+      | otherwise = DecodePassed testNativeBinding locator
+    resolveView locator _
+      | point == ContractView = ViewFailed NoViewMatch (locatedDefects locator)
+      | otherwise = ViewPassed (testResolvedViewAt locator) locator
+    contract =
+      O2IProfileContract
+        { projectProfileSnapshot = project
+        , profileDefectSpec = contractDefectSpec
+        }
+    project snapshot =
+      ProfileProjection
+        { projectedRoot =
+            if point == ContractProfile
+              then RootUnprojectable NoO2IProfile (locatedDefectsAt location)
+              else RootProjectable
+                     (OneO2IProfile "0.2")
+                     (resolveProfileVersion
+                        (o2iProfileVersionLiteral ('0' :| ".2")))
+        , projectedFacts = instantiateFacts location missionFacts
+        , projectedDefects =
+            if point == ContractScope
+              then map scopeDefect (NonEmpty.toList (locatedDefectsAt location))
+              else []
+        }
+      where
+        location = locatedAt (snapshotFact snapshot)
+    observe locator _ =
+      profileSnapshot (Located (testLocationAt locator) TestProfileFact)
+    locatedDefects locator = locatedDefectsAt (testLocationAt locator)
+    locatedDefectsAt location = fmap (Located location) defects
+    scopeDefect located =
+      DeferredProfileDefect
+        { defectApplicability = ReachedProfileDefect (missionOccurrence :| [])
+        , deferredDefect = located
+        }
+
+contractDefectSpec :: ContractDefect -> DiagnosticSpec
+contractDefectSpec defect =
+  diagnosticSpec
+    (o2iDiagnosticCode ("test.contract." <> contractDefectCode defect))
+    ErrorSeverity
+    ModelFinding
+    (contractDefectMessage defect)
+    []
+    Map.empty
+
 diagnosticAdapter :: SourceLocation -> DiagnosticSpec -> Adapter
 diagnosticAdapter location specification =
   Adapter
     testDescriptor
-    (\_ ->
+    (\_ _ ->
        DecodeUnavailable
          (DecodeUnavailableObservation EncodingNotObserved)
          (Located location specification :| []))
@@ -1591,30 +1856,34 @@ testAdapter decodeMode viewMode rootMode templates deferred =
     contract
     observe
   where
-    decode _ =
+    decode locator _ =
       case decodeMode of
-        DecodeSucceeds -> DecodePassed testNativeBinding ()
+        DecodeSucceeds -> DecodePassed testNativeBinding locator
         DecodeUnavailableMode ->
           DecodeUnavailable
             (DecodeUnavailableObservation EncodingNotObserved)
-            (Located testLocation TestDecodeDefect :| [])
+            (Located (testLocationAt locator) TestDecodeDefect :| [])
         DecodeRejectedMode ->
           DecodeRejected
             RejectedNativeBinding
               { rejectedEncoding = Utf8Binding
-              , rejectedRootQName = Located testLocation testRootQName
-              , rejectedNativeVersion = Just (Located testLocation "4.0.0")
+              , rejectedRootQName =
+                  Located (testLocationAt locator) testRootQName
+              , rejectedNativeVersion =
+                  Just (Located (testLocationAt locator) "4.0.0")
               }
-            (Located testLocation TestDecodeDefect :| [])
-    resolveView _ _ =
+            (Located (testLocationAt locator) TestDecodeDefect :| [])
+    resolveView locator _ =
       case viewMode of
-        ViewSucceeds -> ViewPassed testResolvedView ()
+        ViewSucceeds -> ViewPassed (testResolvedViewAt locator) locator
         ViewFails ->
-          ViewFailed NoViewMatch (Located testLocation TestViewDefect :| [])
+          ViewFailed
+            NoViewMatch
+            (Located (testLocationAt locator) TestViewDefect :| [])
     contract =
       O2IProfileContract
         {projectProfileSnapshot = project, profileDefectSpec = testProfileSpec}
-    project _ =
+    project snapshot =
       ProfileProjection
         { projectedRoot =
             case rootMode of
@@ -1626,20 +1895,25 @@ testAdapter decodeMode viewMode rootMode templates deferred =
               RootFails ->
                 RootUnprojectable
                   NoO2IProfile
-                  (Located testLocation TestRootProfileDefect :| [])
-        , projectedFacts = instantiateFacts templates
+                  (Located
+                     (locatedAt (snapshotFact snapshot))
+                     TestRootProfileDefect
+                     :| [])
+        , projectedFacts =
+            instantiateFacts (locatedAt (snapshotFact snapshot)) templates
         , projectedDefects = deferred
         }
-    observe _ _ = profileSnapshot (Located testLocation TestProfileFact)
+    observe locator _ =
+      profileSnapshot (Located (testLocationAt locator) TestProfileFact)
 
-instantiateFacts :: [FactTemplate] -> [IndexedProfileFact]
-instantiateFacts = map instantiate
+instantiateFacts :: SourceLocation -> [FactTemplate] -> [IndexedProfileFact]
+instantiateFacts location = map instantiate
   where
     instantiate template =
       case template of
-        OccurrenceTemplate occurrence -> indexOccurrence occurrence testLocation
-        NodeTemplate occurrence node -> indexNode occurrence node testLocation
-        EdgeTemplate occurrence edge -> indexEdge occurrence edge testLocation
+        OccurrenceTemplate occurrence -> indexOccurrence occurrence location
+        NodeTemplate occurrence node -> indexNode occurrence node location
+        EdgeTemplate occurrence edge -> indexEdge occurrence edge location
         SeedTemplate presentation target ->
           indexPresentation presentation target
         DependencyTemplate source target reason ->
@@ -1648,11 +1922,11 @@ instantiateFacts = map instantiate
           indexReference
             source
             ReferenceOccurrence
-              { referenceOccurrenceId = OccurrenceId "reference"
+              { referenceOccurrenceId = testOccurrence "reference"
               , referenceFromOccurrence = source
               , referenceRole = OwnershipTargetReference
               , referenceToken = Just "missing"
-              , referenceLocation = testLocation
+              , referenceLocation = location
               }
             matches
             reason
@@ -1769,38 +2043,47 @@ macroPremiseFacts =
   ]
 
 missionPresentation :: OccurrenceId
-missionPresentation = OccurrenceId "presentation-mission"
+missionPresentation = testOccurrence "presentation-mission"
 
 ethosPresentation :: OccurrenceId
-ethosPresentation = OccurrenceId "presentation-ethos"
+ethosPresentation = testOccurrence "presentation-ethos"
 
 secondPresentation :: OccurrenceId
-secondPresentation = OccurrenceId "presentation-second"
+secondPresentation = testOccurrence "presentation-second"
 
 strategyPresentation :: OccurrenceId
-strategyPresentation = OccurrenceId "presentation-strategy"
+strategyPresentation = testOccurrence "presentation-strategy"
 
 macroPresentation :: OccurrenceId
-macroPresentation = OccurrenceId "presentation-macro"
+macroPresentation = testOccurrence "presentation-macro"
 
 missionOccurrence :: OccurrenceId
-missionOccurrence = OccurrenceId "node-mission"
+missionOccurrence = testOccurrence "node-mission"
 
 driverOccurrence :: OccurrenceId
-driverOccurrence = OccurrenceId "node-driver"
+driverOccurrence = testOccurrence "node-driver"
 
 strategyOccurrence :: OccurrenceId
-strategyOccurrence = OccurrenceId "node-strategy"
+strategyOccurrence = testOccurrence "node-strategy"
 
 ethosOccurrence, principleOccurrence, macroEdgeOccurrence, premiseEdgeOccurrence ::
      OccurrenceId
-ethosOccurrence = OccurrenceId "node-ethos"
+ethosOccurrence = testOccurrence "node-ethos"
 
-principleOccurrence = OccurrenceId "node-principle"
+principleOccurrence = testOccurrence "node-principle"
 
-macroEdgeOccurrence = OccurrenceId "edge-macro"
+macroEdgeOccurrence = testOccurrence "edge-macro"
 
-premiseEdgeOccurrence = OccurrenceId "edge-premise"
+premiseEdgeOccurrence = testOccurrence "edge-premise"
+
+testOccurrence :: Text -> OccurrenceId
+testOccurrence token =
+  occurrenceId
+    (occurrenceKindLiteral ('t' :| "est"))
+    (firstPathStep (expandedQName Nothing 'o' ("ccurrence-" <> token)) :| [])
+
+occurrenceForPath :: NonEmpty PathStep -> OccurrenceId
+occurrenceForPath = occurrenceId (occurrenceKindLiteral ('t' :| "est"))
 
 testDescriptor :: AdapterDescriptor
 testDescriptor =
@@ -1817,20 +2100,22 @@ testRootQName :: ExpandedQName
 testRootQName = expandedQName (Just "urn:test") 'm' "odel"
 
 testLocation :: SourceLocation
-testLocation =
-  SourceLocation
-    { locationSource = sourceDocumentIdentity testSource
-    , locationPath = firstPathStep testRootQName :| []
-    , locationTarget = ElementTarget
-    , locationSpan = Nothing
-    }
+testLocation = testLocationAt (sourceDocumentLocator testSource)
 
-testResolvedView :: ResolvedView
-testResolvedView =
+testLocationAt :: SourceLocator -> SourceLocation
+testLocationAt locator =
+  locateSource locator (firstPathStep testRootQName :| []) ElementTarget Nothing
+
+locationForPath :: NonEmpty PathStep -> SourceLocation
+locationForPath path =
+  locateSource (sourceDocumentLocator testSource) path ElementTarget Nothing
+
+testResolvedViewAt :: SourceLocator -> ResolvedView
+testResolvedViewAt locator =
   ResolvedView
     { resolvedViewId = "view-1"
     , resolvedViewName = "O2I"
-    , resolvedViewLocation = testLocation
+    , resolvedViewLocation = testLocationAt locator
     }
 
 testDecodeSpec :: TestDecodeDefect -> DiagnosticSpec

@@ -8,9 +8,9 @@ override this snapshot.
 - Observed at: 2026-07-19 CEST.
 - Mode: `FINAL_REVIEW`.
 - Branch/upstream: `trunk` / `origin/trunk`; inspect Git for the current delta.
-- Active objective: independently review the implemented generic O2I model
-  inspection, AMX adapter, and CLI before returning to the DB Fv orientation
-  instance.
+- Active objective: complete the final independent review of the implemented
+  generic O2I model inspection, AMX adapter, and CLI before returning to the
+  DB Fv orientation instance.
 - The user controls every push.
 
 # Approved Baseline
@@ -61,22 +61,29 @@ override this snapshot.
 - The format-neutral Inspection library, native AMX adapter, and thin CLI are
   implemented with opaque staged artifacts, exact View selection, source
   provenance, stable diagnostics, and deterministic human or JSON reports.
-- All four packages pass `cabal check`; all eight Cabal test suites pass under
-  `-Werror`; all 85 Haskell files pass HIndent validation; Haddock, package
-  licenses, extractor snapshots, 28 extractor tests, Pandoc expansion, PDF
-  rendering, CLI help/version smoke tests, and `git diff --check` pass.
-- Every implementation-review and first-final-review finding is closed in the
-  worktree. The resulting implementation requires one separate read-only
-  final re-review.
+- Every public Provenance projection is non-updateable, occurrence identities
+  use framed structured encoding, and source locations are bound to the exact
+  inspected document. Every scope-resolved report contains canonical,
+  auditable closed-scope provenance.
+- Diagnostics are normalized once and every nested reference derives from the
+  same canonical set. Human output centrally escapes untrusted terminal control
+  characters; JSON remains unchanged.
+- The completed matrix passes all four package-local `cabal check` runs, the
+  all-package `-Werror` build, all eight test suites (Core 239, Inspection 31,
+  AMX 72, CLI 60), 100% Haddock coverage, package-license checks, HIndent for
+  all 90 Haskell files, extractor snapshots and 28 extractor tests, Pandoc,
+  PDF rendering, CLI help/version/partial-inspection smokes, and
+  `git diff --check`.
+- Every second-final-review finding is closed and deterministically verified in
+  the worktree. One separate read-only final re-review remains mandatory.
 
 # Next Work
 
-1. Run the complete deterministic verification matrix again.
-2. Repeat the independent read-only review with explicit per-dimension scores;
+1. Repeat the independent read-only review with explicit per-dimension scores;
    close any remaining finding in a small coherent batch.
-3. Present the final eight-Context minimum-contract matrix to the user and
+2. Present the final eight-Context minimum-contract matrix to the user and
    create the reviewed local O2I commit.
-4. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
+3. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
    Ethos/Mission/Vision, then continue the interrupted `wtf.md` review at Vision
    and the top-down `o2i.md` review.
 

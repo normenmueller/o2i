@@ -10,6 +10,7 @@ import qualified Data.Text as Text
 import qualified Data.Text.Encoding as TextEncoding
 import O2I.Adapter.AMX
 import O2I.Adapter.AMX.Internal.Defect
+import O2I.Adapter.AMX.Internal.Types (AMXDocument)
 import O2I.Adapter.AMX.Internal.XML
 import O2I.Inspection
 import System.FilePath ((</>))
@@ -17,7 +18,7 @@ import Test.Tasty.HUnit (assertFailure)
 
 decodeCodes :: SourceDocument -> [Text]
 decodeCodes document =
-  case decodeAMX document of
+  case decodeSource document of
     DecodeUnavailable _ defects -> codes amxDecodeDefectSpec defects
     DecodeRejected _ defects -> codes amxDecodeDefectSpec defects
     DecodePassed _ _ -> []
@@ -41,22 +42,31 @@ projectImportedBytes ::
 projectImportedBytes selector bytes =
   case amxAdapter of
     Adapter _ decode _ resolveView _ contract observe ->
-      case decode (sourceBytes bytes) of
-        DecodePassed _ document ->
-          case resolveView document selector of
-            ViewPassed selectedIdentity selectedView ->
-              case resolveRootProfile contract (observe document selectedView) of
-                ProfileResolved _ projection ->
-                  case closeScope
-                         (buildProfileIndex selectedIdentity contract projection) of
-                    ScopeClosed scope -> pure (buildImportedGraph scope)
-                    ScopeRejected _ _ ->
-                      assertFailure "expected a closed projection scope"
-                ProfileRejected _ _ ->
-                  assertFailure "expected a resolved profile"
-            ViewFailed _ _ -> assertFailure "expected a resolved View"
-        DecodeRejected _ _ -> assertFailure "expected a decoded model"
-        DecodeUnavailable _ _ -> assertFailure "expected a decoded model"
+      let sourceDocument = sourceBytes bytes
+       in case decode (sourceDocumentLocator sourceDocument) sourceDocument of
+            DecodePassed _ document ->
+              case resolveView document selector of
+                ViewPassed selectedIdentity selectedView ->
+                  case resolveRootProfile
+                         contract
+                         (observe document selectedView) of
+                    ProfileResolved _ projection ->
+                      case closeScope
+                             (buildProfileIndex
+                                selectedIdentity
+                                contract
+                                projection) of
+                        ScopeClosed scope -> pure (buildImportedGraph scope)
+                        ScopeRejected _ _ ->
+                          assertFailure "expected a closed projection scope"
+                    ProfileRejected _ _ ->
+                      assertFailure "expected a resolved profile"
+                ViewFailed _ _ -> assertFailure "expected a resolved View"
+            DecodeRejected _ _ -> assertFailure "expected a decoded model"
+            DecodeUnavailable _ _ -> assertFailure "expected a decoded model"
+
+decodeSource :: SourceDocument -> DecodeAttempt AMXDecodeDefect AMXDocument
+decodeSource document = decodeAMX (sourceDocumentLocator document) document
 
 noInputs :: InspectionInputs
 noInputs =

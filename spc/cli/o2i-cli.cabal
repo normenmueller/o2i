@@ -47,7 +47,8 @@ library o2i-cli-internal
     O2I.Cli.Command.Inspect,
     O2I.Cli.Input,
     O2I.Cli.Options,
-    O2I.Cli.Output
+    O2I.Cli.Output,
+    O2I.Cli.TerminalText
   autogen-modules:
     Paths_o2i_cli
   other-modules:
@@ -94,6 +95,7 @@ test-suite o2i-cli-test
     base >=4.18 && <4.19,
     bytestring >=0.11 && <0.12,
     directory >=1.3 && <1.4,
+    o2i-amx ==0.2.0.0,
     o2i-cli:o2i-cli-internal,
     o2i-inspection ==0.2.0.0,
     optparse-applicative >=0.18 && <0.20,

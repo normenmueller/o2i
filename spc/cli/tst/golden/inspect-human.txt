@@ -3,6 +3,9 @@ Source: <stdin> (stdin)
 SHA-256: 6adc62d01690e46fc7158df3d200b1064839a1f2a024dacce7a6aba911be8926
 Adapter: Archi Model XML (amx 0.2)
 View: name "CLI Scope"
+Closed scope provenance:
+  o2i-occurrence/v1:12:70726573656e746174696f6e1:341:3138:687474703a2f2f7777772e61726368696d617465746f6f6c2e636f6d2f61726368696d6174655:6d6f64656c1:311:306:666f6c6465721:311:307:656c656d656e741:321:305:6368696c641:31 | <stdin> (stdin) sha256=6adc62d01690e46fc7158df3d200b1064839a1f2a024dacce7a6aba911be8926 path={http://www.archimatetool.com/archimate}model[1]/{}folder[1]/{}element[2]/{}child[1] target=element | reasons=direct-presentation
+  o2i-occurrence/v1:4:6e6f64651:331:3138:687474703a2f2f7777772e61726368696d617465746f6f6c2e636f6d2f61726368696d6174655:6d6f64656c1:311:306:666f6c6465721:311:307:656c656d656e741:31 | <stdin> (stdin) sha256=6adc62d01690e46fc7158df3d200b1064839a1f2a024dacce7a6aba911be8926 path={http://www.archimatetool.com/archimate}model[1]/{}folder[1]/{}element[1] target=element | reasons=direct-presentation
 Stages:
   decode       passed
   view-scope   passed

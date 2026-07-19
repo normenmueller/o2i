@@ -5,7 +5,7 @@ module O2I.Inspection.Import
   ( ImportedGraph
   , buildImportedGraph
   , importedRawGraph
-  , importedProvenance
+  , importedClosedScopeProvenance
   , importedSourceIdentity
   , importedView
   , importedLocationsForSubjects
@@ -14,7 +14,6 @@ module O2I.Inspection.Import
 import Data.List (nub)
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
-import Data.Maybe (mapMaybe)
 import qualified Data.Set as Set
 import Data.Text (Text)
 import O2I
@@ -30,7 +29,7 @@ import O2I.Inspection.View
 -- | Raw graph bound to complete occurrence provenance for one closed View.
 data ImportedGraph = ImportedGraph
   { importedGraphRaw :: RawGraph
-  , importedGraphProvenance :: Provenance
+  , importedGraphClosedScopeProvenance :: ClosedScopeProvenance
   , importedGraphSource :: SourceIdentity
   , importedGraphView :: ResolvedView
   , importedGraphSubjectLocations :: Map (Text, Text) [SourceLocation]
@@ -53,7 +52,7 @@ buildImportedGraph scope =
               , included occurrence
               ]
           }
-    , importedGraphProvenance = mkProvenance provenance
+    , importedGraphClosedScopeProvenance = closedScopeProvenance scope
     , importedGraphSource =
         locationSource (resolvedViewLocation (closedScopeView scope))
     , importedGraphView = closedScopeView scope
@@ -62,34 +61,16 @@ buildImportedGraph scope =
   where
     facts = closedScopeFacts scope
     included occurrence = Set.member occurrence (closedScopeOccurrences scope)
-    provenance = mapMaybe occurrenceProvenance retainedOccurrences
-    retainedOccurrences =
-      stableUnique
-        [ occurrence
-        | fact <- facts
-        , Just (occurrence, _) <- [factLocation fact]
-        , included occurrence
-        ]
-    locations = Map.fromList (mapMaybe factLocation facts)
     subjectLocations =
       Map.fromListWith (flip (++)) (concatMap (factSubjects included) facts)
-    occurrenceProvenance occurrence = do
-      location <- Map.lookup occurrence locations
-      pure
-        OccurrenceProvenance
-          { provenanceOccurrenceId = occurrence
-          , provenanceLocation = location
-          , provenanceReasons =
-              Map.findWithDefault [] occurrence (closedScopeReasons scope)
-          }
 
 -- | Read the exact unchecked graph sent to structural validation.
 importedRawGraph :: ImportedGraph -> RawGraph
 importedRawGraph = importedGraphRaw
 
--- | Read complete ordered occurrence provenance.
-importedProvenance :: ImportedGraph -> Provenance
-importedProvenance = importedGraphProvenance
+-- | Read the canonical provenance artifact of the imported closed scope.
+importedClosedScopeProvenance :: ImportedGraph -> ClosedScopeProvenance
+importedClosedScopeProvenance = importedGraphClosedScopeProvenance
 
 -- | Read the immutable acquired-source identity.
 importedSourceIdentity :: ImportedGraph -> SourceIdentity
@@ -112,13 +93,6 @@ importedLocationsForSubjects imported subjects =
           (subjectKind subject, subjectIdentifier subject)
           (importedGraphSubjectLocations imported)
     ]
-
-factLocation :: IndexedProfileFact -> Maybe (OccurrenceId, SourceLocation)
-factLocation (IndexedOccurrence occurrence location) =
-  Just (occurrence, location)
-factLocation (IndexedNode occurrence _ location) = Just (occurrence, location)
-factLocation (IndexedEdge occurrence _ location) = Just (occurrence, location)
-factLocation _ = Nothing
 
 factSubjects ::
      (OccurrenceId -> Bool)
@@ -147,11 +121,3 @@ rawNodeIdentifier node =
     RawPrimitiveNode identifier _ _ -> identifier
     RawStructuringNode identifier _ _ -> identifier
     RawAnchorNode identifier _ -> identifier
-
-stableUnique :: Ord value => [value] -> [value]
-stableUnique = go Set.empty
-  where
-    go _ [] = []
-    go seen (value:values)
-      | Set.member value seen = go seen values
-      | otherwise = value : go (Set.insert value seen) values

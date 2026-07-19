@@ -13,6 +13,7 @@ module O2I.Inspection.Report
   , RejectedO2IProfile(..)
   , O2IProfileResolution(..)
   , ScopeFailure(..)
+  , ResolvedScope(..)
   , ScopeResolution(..)
   , InspectionRequestInfo(..)
   , InspectionReport
@@ -24,6 +25,7 @@ module O2I.Inspection.Report
   , reportViewResolution
   , reportProfileResolution
   , reportScopeResolution
+  , reportClosedScopeProvenance
   , reportSupplementalSources
   , reportStageReports
   , reportDiagnostics

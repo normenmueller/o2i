@@ -9,6 +9,7 @@ module O2I.Inspection.Input
   , sourceDocumentFromBytes
   , sourceDocumentBytes
   , sourceDocumentIdentity
+  , sourceDocumentLocator
   ) where
 
 import Control.Exception (IOException, displayException, try)
@@ -17,6 +18,10 @@ import Data.ByteString (ByteString)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import O2I.Inspection.Provenance
+import O2I.Inspection.Provenance.Internal
+  ( SourceIdentity(..)
+  , bindSourceLocator
+  )
 import System.IO (stdin)
 
 -- | Source selected by a caller independently of CLI parsing.
@@ -62,13 +67,7 @@ acquireInput source =
 sourceDocumentFromBytes ::
      Text -> SourceInputKind -> ByteString -> SourceDocument
 sourceDocumentFromBytes label kind bytes =
-  SourceDocument
-    SourceIdentity
-      { sourceDisplayLabel = label
-      , sourceInputKind = kind
-      , sourceSha256 = sourceHashFromBytes bytes
-      }
-    bytes
+  SourceDocument (SourceIdentity label kind (sourceHashFromBytes bytes)) bytes
 
 -- | Access the exact acquired bytes.
 sourceDocumentBytes :: SourceDocument -> ByteString
@@ -77,3 +76,7 @@ sourceDocumentBytes (SourceDocument _ bytes) = bytes
 -- | Access the immutable source identity.
 sourceDocumentIdentity :: SourceDocument -> SourceIdentity
 sourceDocumentIdentity (SourceDocument identity _) = identity
+
+-- | Obtain the only locator capability bound to this exact document.
+sourceDocumentLocator :: SourceDocument -> SourceLocator
+sourceDocumentLocator = bindSourceLocator . sourceDocumentIdentity

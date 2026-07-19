@@ -8,8 +8,8 @@ module O2I.Adapter.AMX.Internal.Types
   , AMXPresentation(..)
   , AMXConnectionPresentation(..)
   , AMXProfileFact(..)
+  , AMXOccurrenceKind(..)
   , EndpointRole(..)
-  , endpointRoleText
   , endpointQName
   , elementAttribute
   , elementAttributeLocation
@@ -36,6 +36,7 @@ data AMXElement = AMXElement
   { amxElementQName :: ExpandedQName
   , amxElementAttributes :: Map ExpandedQName Text
   , amxElementChildren :: [AMXElement]
+  , amxElementLocator :: SourceLocator
   , amxElementLocation :: SourceLocation
   , amxElementNamespaces :: Map Text Text
   } deriving (Eq, Show)
@@ -72,17 +73,24 @@ data AMXProfileFact =
   AMXProfileFact AMXDocument AMXSelectedView
   deriving (Eq, Show)
 
+-- | Closed AMX occurrence vocabulary, distinct from persisted model IDs and
+-- human presentation labels.
+data AMXOccurrenceKind
+  = XmlOccurrence
+  | NodeOccurrence
+  | RelationshipOccurrence
+  | PresentationOccurrence
+  | ConnectionOccurrence
+  | ViewObjectOccurrence
+  | RelationshipSourceReferenceOccurrence
+  | RelationshipTargetReferenceOccurrence
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
 -- | Closed native relationship endpoint vocabulary.
 data EndpointRole
   = SourceEndpoint
   | TargetEndpoint
   deriving (Bounded, Enum, Eq, Ord, Show)
-
-endpointRoleText :: EndpointRole -> Text
-endpointRoleText role =
-  case role of
-    SourceEndpoint -> "source"
-    TargetEndpoint -> "target"
 
 endpointQName :: EndpointRole -> ExpandedQName
 endpointQName role =
@@ -95,7 +103,11 @@ elementAttribute name = Map.lookup name . amxElementAttributes
 
 elementAttributeLocation :: ExpandedQName -> AMXElement -> SourceLocation
 elementAttributeLocation name element =
-  (amxElementLocation element) {locationTarget = AttributeTarget name}
+  locateSource
+    (amxElementLocator element)
+    (locationPath (amxElementLocation element))
+    (AttributeTarget name)
+    (locationSpan (amxElementLocation element))
 
 elementChildrenNamed :: ExpandedQName -> AMXElement -> [AMXElement]
 elementChildrenNamed name =
@@ -117,9 +129,11 @@ elementId = elementAttribute (expandedQName Nothing 'i' "d")
 elementName :: AMXElement -> Text
 elementName = maybe "" id . elementAttribute (expandedQName Nothing 'n' "ame")
 
-elementOccurrence :: Text -> AMXElement -> OccurrenceId
-elementOccurrence prefix element =
-  OccurrenceId (prefix <> ":" <> locationPathText (amxElementLocation element))
+elementOccurrence :: AMXOccurrenceKind -> AMXElement -> OccurrenceId
+elementOccurrence kind element =
+  occurrenceId
+    (occurrenceKindLiteral (kindLiteral kind))
+    (locationPath (amxElementLocation element))
 
 elementType :: AMXElement -> Maybe ExpandedQName
 elementType element = do
@@ -164,17 +178,16 @@ resolveQNameValue element value =
           Just
           (mkExpandedQName (Just namespace) (Text.drop 1 suffix))
 
-locationPathText :: SourceLocation -> Text
-locationPathText =
-  Text.intercalate "/" . map pathStepText . toList . locationPath
-  where
-    toList (first :| rest) = first : rest
-    pathStepText step =
-      let name = pathStepName step
-       in "{"
-            <> maybe "" id (qNameNamespace name)
-            <> "}"
-            <> qNameLocalName name
-            <> "["
-            <> Text.pack (show (pathStepOrdinal step))
-            <> "]"
+kindLiteral :: AMXOccurrenceKind -> NonEmpty Char
+kindLiteral kind =
+  case kind of
+    XmlOccurrence -> 'x' :| "ml"
+    NodeOccurrence -> 'n' :| "ode"
+    RelationshipOccurrence -> 'r' :| "elationship"
+    PresentationOccurrence -> 'p' :| "resentation"
+    ConnectionOccurrence -> 'c' :| "onnection"
+    ViewObjectOccurrence -> 'v' :| "iew-object"
+    RelationshipSourceReferenceOccurrence ->
+      'r' :| "elationship-source-reference"
+    RelationshipTargetReferenceOccurrence ->
+      'r' :| "elationship-target-reference"

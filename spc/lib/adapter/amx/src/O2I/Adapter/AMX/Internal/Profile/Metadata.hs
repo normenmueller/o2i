@@ -355,7 +355,13 @@ propertyValue =
 
 propertyLocation :: Text -> AMXElement -> SourceLocation
 propertyLocation key property =
-  (amxElementLocation property) {locationTarget = PropertyTarget key}
+  locateSource
+    (amxElementLocator property)
+    (locationPath location)
+    (PropertyTarget key)
+    (locationSpan location)
+  where
+    location = amxElementLocation property
 
 singleValue :: [value] -> Maybe value
 singleValue values =

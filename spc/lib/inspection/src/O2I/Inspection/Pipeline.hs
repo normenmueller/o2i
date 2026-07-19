@@ -3,7 +3,10 @@
 -- | Complete format-neutral, staged O2I inspection flow.
 module O2I.Inspection.Pipeline
   ( Availability(..)
-  , Sourced(..)
+  , Sourced
+  , sourcedFromDocument
+  , sourcedFrom
+  , sourcedValue
   , StrategyFormulationBundle(..)
   , ReadinessBundle(..)
   , EvidenceBundle(..)
@@ -37,6 +40,7 @@ import O2I.Inspection.Import
 import O2I.Inspection.Input
 import O2I.Inspection.Profile
 import O2I.Inspection.Provenance
+import O2I.Inspection.Provenance.Internal (SupplementalSource(..))
 import O2I.Inspection.Report.Internal
 import O2I.Inspection.Scope.Internal
 
@@ -48,9 +52,13 @@ data Availability a
 
 -- | Supplemental value tied to its immutable source identity.
 data Sourced a = Sourced
-  { sourcedFrom :: SourceIdentity
-  , sourcedValue :: a
+  { sourcedFrom :: SourceIdentity -- ^ Identity of the complete source input.
+  , sourcedValue :: a -- ^ Value decoded from that exact source.
   } deriving (Eq, Show)
+
+-- | Bind one supplemental value to the exact document from which it came.
+sourcedFromDocument :: SourceDocument -> a -> Sourced a
+sourcedFromDocument document = Sourced (sourceDocumentIdentity document)
 
 -- | Complete, source-ordered Strategy formulation submission.
 newtype StrategyFormulationBundle = StrategyFormulationBundle
@@ -102,7 +110,6 @@ data StructurallyClosedModel = StructurallyClosedModel
   { structurallyClosedGraph :: WellFormedGraph
   , structurallyClosedScope :: SemanticallyClosedScope
   , structurallyClosedImport :: ImportedGraph
-  , structurallyClosedProvenance :: Provenance
   }
 
 -- | Opaque, graph-bound input to global semantic validation.
@@ -232,23 +239,21 @@ inspectSourceDocument ::
   -> SourceDocument
   -> InspectionOutcome
 inspectSourceDocument (Adapter descriptor decode decodeSpec resolveView viewSpec contract observe) selector inputs source =
-  case decode source of
+  case decode (sourceDocumentLocator source) source of
     DecodeUnavailable observation defects ->
       let diagnostics = locatedDiagnostics DecodeStage decodeSpec defects
        in InspectionCompleted
             (decodeFailureReport
                requestInfo
-               (NativeBindingUnavailable
-                  observation
-                  (fmap diagnosticId diagnostics))
-               (NonEmpty.toList diagnostics))
+               (NativeBindingUnavailable observation)
+               diagnostics)
     DecodeRejected rejected defects ->
       let diagnostics = locatedDiagnostics DecodeStage decodeSpec defects
        in InspectionCompleted
             (decodeFailureReport
                requestInfo
-               (NativeBindingRejected rejected (fmap diagnosticId diagnostics))
-               (NonEmpty.toList diagnostics))
+               (NativeBindingRejected rejected)
+               diagnostics)
     DecodePassed binding document ->
       case resolveView document selector of
         ViewFailed observation defects ->
@@ -344,7 +349,6 @@ inspectScope request binding viewResolution profile inputs index =
                    { structurallyClosedGraph = graph
                    , structurallyClosedScope = scope
                    , structurallyClosedImport = imported
-                   , structurallyClosedProvenance = importedProvenance imported
                    })
             StructureInternalFailure internal ->
               InspectionCommandFailed
@@ -368,7 +372,7 @@ inspectSemantics request binding viewResolution profile inputs closed =
            binding
            viewResolution
            profile
-           (closedScopeSummary (structurallyClosedScope closed))
+           (resolvedScopeFor closed)
            []
            StagePassed
            StageUnavailable
@@ -393,7 +397,7 @@ inspectSemantics request binding viewResolution profile inputs closed =
                        binding
                        viewResolution
                        profile
-                       (closedScopeSummary (structurallyClosedScope closed))
+                       (resolvedScopeFor closed)
                        sources
                        StagePassed
                        StageFailed
@@ -437,7 +441,7 @@ inspectTraceability request binding viewResolution profile inputs closed sources
                binding
                viewResolution
                profile
-               summary
+               resolvedScope
                sources
                StagePassed
                StagePassed
@@ -456,7 +460,7 @@ inspectTraceability request binding viewResolution profile inputs closed sources
         sources
         traceable
   where
-    summary = closedScopeSummary (structurallyClosedScope closed)
+    resolvedScope = resolvedScopeFor closed
 
 inspectReadiness ::
      InspectionRequestInfo
@@ -477,7 +481,7 @@ inspectReadiness request binding viewResolution profile inputs closed sources tr
            binding
            viewResolution
            profile
-           summary
+           resolvedScope
            sources
            StagePassed
            StagePassed
@@ -503,7 +507,7 @@ inspectReadiness request binding viewResolution profile inputs closed sources tr
                        binding
                        viewResolution
                        profile
-                       summary
+                       resolvedScope
                        usedSources
                        StagePassed
                        StagePassed
@@ -522,7 +526,7 @@ inspectReadiness request binding viewResolution profile inputs closed sources tr
                 usedSources
                 ready
   where
-    summary = closedScopeSummary (structurallyClosedScope closed)
+    resolvedScope = resolvedScopeFor closed
 
 inspectEvidence ::
      InspectionRequestInfo
@@ -543,7 +547,7 @@ inspectEvidence request binding viewResolution profile inputs closed sources rea
            binding
            viewResolution
            profile
-           summary
+           resolvedScope
            sources
            StagePassed
            StagePassed
@@ -569,7 +573,7 @@ inspectEvidence request binding viewResolution profile inputs closed sources rea
                        binding
                        viewResolution
                        profile
-                       summary
+                       resolvedScope
                        usedSources
                        StagePassed
                        StagePassed
@@ -584,7 +588,7 @@ inspectEvidence request binding viewResolution profile inputs closed sources rea
                    binding
                    viewResolution
                    profile
-                   summary
+                   resolvedScope
                    usedSources
                    StagePassed
                    StagePassed
@@ -593,19 +597,21 @@ inspectEvidence request binding viewResolution profile inputs closed sources rea
                    StagePassed
                    [])
   where
-    summary = closedScopeSummary (structurallyClosedScope closed)
+    resolvedScope = resolvedScopeFor closed
 
 decodeFailureReport ::
      InspectionRequestInfo
-  -> NativeBindingFailure
-  -> [Diagnostic]
+  -> (NonEmpty DiagnosticId -> NativeBindingFailure)
+  -> NonEmpty Diagnostic
   -> InspectionReport
 decodeFailureReport request failure diagnostics =
-  DecodeRejectedReport
-    request
-    failure
-    (earlyStageReports DecodeStage diagnostics)
-    (normalizeDiagnostics diagnostics)
+  let normalized = normalizeNonEmptyDiagnostics diagnostics
+      artifact = forgetNonEmptyDiagnostics normalized
+   in DecodeRejectedReport
+        request
+        (failure (nonEmptyDiagnosticIds normalized))
+        (earlyStageReports DecodeStage artifact)
+        artifact
 
 viewFailureReport ::
      InspectionRequestInfo
@@ -614,12 +620,14 @@ viewFailureReport ::
   -> NonEmpty Diagnostic
   -> InspectionReport
 viewFailureReport request binding observation diagnostics =
-  ViewRejectedReport
-    request
-    binding
-    (FailedViewResolution observation (fmap diagnosticId diagnostics))
-    (earlyStageReports ViewScopeStage (NonEmpty.toList diagnostics))
-    (normalizeDiagnostics (NonEmpty.toList diagnostics))
+  let normalized = normalizeNonEmptyDiagnostics diagnostics
+      artifact = forgetNonEmptyDiagnostics normalized
+   in ViewRejectedReport
+        request
+        binding
+        (FailedViewResolution observation (nonEmptyDiagnosticIds normalized))
+        (earlyStageReports ViewScopeStage artifact)
+        artifact
 
 profileFailureReport ::
      InspectionRequestInfo
@@ -629,13 +637,15 @@ profileFailureReport ::
   -> NonEmpty Diagnostic
   -> InspectionReport
 profileFailureReport request binding viewResolution observed diagnostics =
-  ProfileRejectedReport
-    request
-    binding
-    viewResolution
-    (RejectedO2IProfile observed (fmap diagnosticId diagnostics))
-    (earlyStageReports ProfileStage (NonEmpty.toList diagnostics))
-    (normalizeDiagnostics (NonEmpty.toList diagnostics))
+  let normalized = normalizeNonEmptyDiagnostics diagnostics
+      artifact = forgetNonEmptyDiagnostics normalized
+   in ProfileRejectedReport
+        request
+        binding
+        viewResolution
+        (RejectedO2IProfile observed (nonEmptyDiagnosticIds normalized))
+        (earlyStageReports ProfileStage artifact)
+        artifact
 
 scopeFailureReport ::
      InspectionRequestInfo
@@ -646,14 +656,16 @@ scopeFailureReport ::
   -> NonEmpty Diagnostic
   -> InspectionReport
 scopeFailureReport request binding viewResolution profile summary diagnostics =
-  ScopeRejectedReport
-    request
-    binding
-    viewResolution
-    profile
-    (ScopeFailure summary (fmap diagnosticId diagnostics))
-    (earlyStageReports ProfileStage (NonEmpty.toList diagnostics))
-    (normalizeDiagnostics (NonEmpty.toList diagnostics))
+  let normalized = normalizeNonEmptyDiagnostics diagnostics
+      artifact = forgetNonEmptyDiagnostics normalized
+   in ScopeRejectedReport
+        request
+        binding
+        viewResolution
+        profile
+        (ScopeFailure summary (nonEmptyDiagnosticIds normalized))
+        (earlyStageReports ProfileStage artifact)
+        artifact
 
 structureFailureReport ::
      InspectionRequestInfo
@@ -665,33 +677,34 @@ structureFailureReport ::
   -> NonEmpty StructuralError
   -> InspectionReport
 structureFailureReport request binding viewResolution profile scope imported defects =
-  PipelineReport
-    request
-    binding
-    viewResolution
-    profile
-    (closedScopeSummary scope)
-    []
-    (pipelineStageReports
-       StageFailed
-       (StageNotRun (BlockedByFailure StructureStage))
-       (StageNotRun (BlockedByFailure StructureStage))
-       (StageNotRun (BlockedByFailure StructureStage))
-       (StageNotRun (BlockedByFailure StructureStage))
-       diagnostics)
-    (normalizeDiagnostics diagnostics)
-  where
-    diagnostics =
-      map
-        (coreDiagnostic StructureStage imported structuralDefectSpec)
-        (NonEmpty.toList defects)
+  let normalized =
+        normalizeNonEmptyDiagnostics
+          (fmap
+             (coreDiagnostic StructureStage imported structuralDefectSpec)
+             defects)
+      diagnostics = forgetNonEmptyDiagnostics normalized
+   in PipelineReport
+        request
+        binding
+        viewResolution
+        profile
+        (resolvedScopeForScope scope)
+        []
+        (pipelineStageReports
+           StageFailed
+           (StageNotRun (BlockedByFailure StructureStage))
+           (StageNotRun (BlockedByFailure StructureStage))
+           (StageNotRun (BlockedByFailure StructureStage))
+           (StageNotRun (BlockedByFailure StructureStage))
+           diagnostics)
+        diagnostics
 
 pipelineReport ::
      InspectionRequestInfo
   -> ResolvedNativeBinding
   -> ResolvedViewResolution
   -> ResolvedO2IProfile
-  -> ClosedScopeSummary
+  -> ResolvedScope
   -> [SupplementalSource]
   -> StageState
   -> StageState
@@ -700,24 +713,35 @@ pipelineReport ::
   -> StageState
   -> [Diagnostic]
   -> InspectionReport
-pipelineReport request binding viewResolution profile summary sources structure semantics trace readiness evidence diagnostics =
-  PipelineReport
-    request
-    binding
-    viewResolution
-    profile
-    summary
-    sources
-    (pipelineStageReports
-       structure
-       semantics
-       trace
-       readiness
-       evidence
-       diagnostics)
-    (normalizeDiagnostics diagnostics)
+pipelineReport request binding viewResolution profile scope sources structure semantics trace readiness evidence diagnostics =
+  let artifact = normalizeDiagnostics diagnostics
+   in PipelineReport
+        request
+        binding
+        viewResolution
+        profile
+        scope
+        sources
+        (pipelineStageReports
+           structure
+           semantics
+           trace
+           readiness
+           evidence
+           artifact)
+        artifact
 
-earlyStageReports :: InspectionStage -> [Diagnostic] -> StageReports
+resolvedScopeFor :: StructurallyClosedModel -> ResolvedScope
+resolvedScopeFor = resolvedScopeForScope . structurallyClosedScope
+
+resolvedScopeForScope :: SemanticallyClosedScope -> ResolvedScope
+resolvedScopeForScope scope =
+  ResolvedScope
+    { resolvedScopeSummary = closedScopeSummary scope
+    , resolvedScopeProvenance = closedScopeProvenance scope
+    }
+
+earlyStageReports :: InspectionStage -> Diagnostics -> StageReports
 earlyStageReports failedStage diagnostics =
   StageReports
     { decodeStageReport = beforeOrAt DecodeStage
@@ -743,7 +767,7 @@ pipelineStageReports ::
   -> StageState
   -> StageState
   -> StageState
-  -> [Diagnostic]
+  -> Diagnostics
   -> StageReports
 pipelineStageReports structure semantics trace readiness evidence diagnostics =
   StageReports
@@ -757,14 +781,14 @@ pipelineStageReports structure semantics trace readiness evidence diagnostics =
     , evidenceStageReport = stageReport EvidenceStage evidence diagnostics
     }
 
-stageReport :: InspectionStage -> StageState -> [Diagnostic] -> StageReport
+stageReport :: InspectionStage -> StageState -> Diagnostics -> StageReport
 stageReport stage state diagnostics =
   StageReport
     { reportedStage = stage
     , reportedState = state
     , reportedDiagnosticIds =
         [ diagnosticId diagnostic
-        | diagnostic <- diagnosticsList (normalizeDiagnostics diagnostics)
+        | diagnostic <- diagnosticsList diagnostics
         , diagnosticStage diagnostic == stage
         ]
     }

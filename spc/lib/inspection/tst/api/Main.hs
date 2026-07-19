@@ -34,22 +34,31 @@ $(assertAbstractTypes
     , "Diagnostic.DiagnosticId"
     , "Diagnostic.DiagnosticSpec"
     , "Diagnostic.Diagnostic"
+    , "Diagnostic.Diagnostics"
     , "Import.ImportedGraph"
     , "Input.SourceDocument"
     , "Pipeline.StructurallyClosedModel"
     , "Pipeline.SemanticsWitness"
     , "Pipeline.ReadinessWitness"
     , "Pipeline.EvidenceWitness"
+    , "Pipeline.Sourced"
     , "Profile.IndexedProfileFact"
     , "Profile.O2IProfileVersion"
     , "Profile.ProfileSnapshot"
     , "Profile.ResolvedProfileProjection"
     , "Profile.ProfileIndex"
     , "Provenance.SourceHash"
+    , "Provenance.SourceIdentity"
     , "Provenance.ExpandedQName"
     , "Provenance.PathStep"
     , "Provenance.SourceSpan"
-    , "Provenance.Provenance"
+    , "Provenance.SourceLocator"
+    , "Provenance.SourceLocation"
+    , "Provenance.OccurrenceKind"
+    , "Provenance.OccurrenceId"
+    , "Provenance.OccurrenceProvenance"
+    , "Provenance.ClosedScopeProvenance"
+    , "Provenance.SupplementalSource"
     , "Report.StageReports"
     , "Report.InspectionReport"
     , "Scope.SemanticallyClosedScope"
@@ -88,8 +97,30 @@ $(assertOrdinaryFunctions
     , 'Diagnostic.diagnosticSupplementalSources
     , 'Diagnostic.diagnosticData
     , 'Profile.profileVersionText
+    , 'Provenance.sourceHashText
+    , 'Provenance.sourceDisplayLabel
+    , 'Provenance.sourceInputKind
+    , 'Provenance.sourceSha256
     , 'Provenance.qNameNamespace
     , 'Provenance.qNameLocalName
+    , 'Provenance.pathStepName
+    , 'Provenance.pathStepOrdinal
+    , 'Provenance.spanStartLine
+    , 'Provenance.spanStartColumn
+    , 'Provenance.spanEndLine
+    , 'Provenance.spanEndColumn
+    , 'Provenance.locationSource
+    , 'Provenance.locationPath
+    , 'Provenance.locationTarget
+    , 'Provenance.locationSpan
+    , 'Provenance.occurrenceKindText
+    , 'Provenance.occurrenceIdText
+    , 'Provenance.provenanceOccurrenceId
+    , 'Provenance.provenanceLocation
+    , 'Provenance.provenanceReasons
+    , 'Provenance.closedScopeProvenanceOccurrences
+    , 'Provenance.supplementalInputKind
+    , 'Provenance.supplementalSourceIdentity
     ])
 
 $(assertExactArgumentConstructors
@@ -233,8 +264,33 @@ compileFailContracts =
       , "Diagnostic.DiagnosticId"
       , "Diagnostic.DiagnosticSpec"
       , "Diagnostic.Diagnostic"
+      , "Diagnostic.Diagnostics"
+      , "Diagnostic.diagnosticId"
       , "Profile.O2IProfileVersion"
+      , "Pipeline.Sourced"
+      , "Provenance.SourceHash"
+      , "Provenance.SourceIdentity"
       , "Provenance.ExpandedQName"
+      , "Provenance.PathStep"
+      , "Provenance.SourceSpan"
+      , "Provenance.SourceLocator"
+      , "Provenance.SourceLocation"
+      , "Provenance.OccurrenceKind"
+      , "Provenance.OccurrenceId"
+      , "Provenance.OccurrenceProvenance"
+      , "Provenance.ClosedScopeProvenance"
+      , "Provenance.SupplementalSource"
+      , "Provenance.sourceHashText"
+      , "Provenance.sourceDisplayLabel"
+      , "Provenance.qNameNamespace"
+      , "Provenance.pathStepName"
+      , "Provenance.spanStartLine"
+      , "Provenance.locationSource"
+      , "Provenance.occurrenceKindText"
+      , "Provenance.occurrenceIdText"
+      , "Provenance.provenanceOccurrenceId"
+      , "Provenance.closedScopeProvenanceOccurrences"
+      , "Provenance.supplementalInputKind"
       ]
   , CompileFailContract
       "Inspection-owned diagnostic normalization"

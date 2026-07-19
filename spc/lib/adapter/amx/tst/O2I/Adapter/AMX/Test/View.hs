@@ -240,7 +240,9 @@ repeatedPresentationTest = do
                  (diagramObject "first" "mission"
                     <> diagramObject "second" "mission"))
          [profileProperty])
-  reportScopeResolution report
-    @?= ScopeResolved
-          ClosedScopeSummary
-            {directOccurrenceCount = 2, closedOccurrenceCount = 3}
+  case reportScopeResolution report of
+    ScopeResolved scope ->
+      resolvedScopeSummary scope
+        @?= ClosedScopeSummary
+              {directOccurrenceCount = 2, closedOccurrenceCount = 3}
+    resolution -> assertFailure ("unexpected scope state: " <> show resolution)
