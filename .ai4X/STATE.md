@@ -83,12 +83,20 @@ override this snapshot.
 - `spc/Makefile` installs the exact project-local `o2i` executable under
   `$(DESTDIR)$(PREFIX)/bin/o2i` and removes only that path. Temporary-prefix
   installation, version execution, and idempotent uninstallation pass.
+- The rendered WIP White Paper is tracked as the Git-LFS artifact `o2i.pdf` and
+  linked from the repository README at deliberate reviewed checkpoints.
+- The independent article/WTF/specification synchronization review is complete
+  without findings. Fachlichkeit, Metamodell, terminology/WTF consistency,
+  specification fidelity, Haskell/API consistency, and cross-artifact
+  synchronization each score 10.0/10.0.
 
 # Next Work
 
 1. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
-   Ethos/Mission/Vision, then continue the interrupted `wtf.md` review at Vision
-   and the top-down `o2i.md` review.
+   Ethos/Mission/Vision.
+2. Continue the collaborative `wtf.md` review with the user at Vision.
+3. Review `o2i.md` collaboratively with the user, top-down and paragraph by
+   paragraph.
 
 # Release Note Draft
 

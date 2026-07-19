@@ -13,6 +13,8 @@ Für die maschinenlesbare Prüfung von O2I-Modellen dient der [`o2i` CLI](#comma
 
 O2I ist ein generisches Framework für Wirkungsarchitekturen: Es beschreibt, wie Orientierung, Formierung, Situierung, Operationalisierung und Wirkung fachlich begründet, modelliert und dadurch nachvollzogen werden können. Das O2I-Metamodell bildet den formalen Kern des Frameworks.
 
+Aktueller Arbeitsstand: [O2I Framework White Paper (bleeding edge)](./o2i.pdf).
+
 ## Purpose
 
 <!-- O2I PURPOSE START -->
@@ -72,6 +74,7 @@ o2i/
 |- mdl/
 |- spc/
 |  |- Makefile
+|  |- README.md
 |  |- lib/
 |  |  |- core/
 |  |  |- inspection/
@@ -82,10 +85,11 @@ o2i/
 ```
 
 - [`wtf.md`](./wtf.md): kurzer, bewusst direkter Einstieg in zentrale O2I-Fragen
-- [`o2i.md`](./o2i.md): aktiver Artikel und fachlicher Referenztext
+- [`o2i.md`](./o2i.md): aktives White Paper und fachlicher Referenztext
 - `mdl/`: ArchiMate-Modell
-- `img/`: Abbildungen für Artikel und Modellkommunikation
-- `spc/lib/core/`: normative Haskell-Library, deren Codeauszüge im Artikel eingebunden werden
+- `img/`: Abbildungen für White Paper und Modellkommunikation
+- [`spc/README.md`](./spc/README.md): technische Architektur, Build und Nutzung der Haskell-Codebasis
+- `spc/lib/core/`: normative Haskell-Library, deren Codeauszüge im White Paper eingebunden werden
 - `spc/lib/inspection/`: formatneutrale Inspection-Pipeline und Berichtsmodell
 - `spc/lib/adapter/amx/`: Adapter für native Archi Model XML-Dateien
 - `spc/cli/`: dünner Kommandozeilen-Client für die Inspection
@@ -116,7 +120,7 @@ pandoc o2i.md --filter pandoc-include -t markdown
 
 ## License
 
-O2I article text, diagrams, and models are licensed under [CC BY 4.0](./LICENSE).
+The O2I white paper, diagrams, and models are licensed under [CC BY 4.0](./LICENSE).
 
 The Haskell code under [`spc/`](./spc/) is licensed under [Apache-2.0](./spc/LICENSE).
 

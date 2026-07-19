@@ -1,4 +1,5 @@
 ---
+kind: "White Paper"
 title: "Von Orientierung zur Wirkung\\thanks{Publiziert unter \\url{https://github.com/normenmueller/o2i}}"
 subtitle: "Begriffe und Relationen für wirksames Handeln"
 author: nemron
@@ -42,7 +43,7 @@ geometry:
 
 \begin{center}
 \begin{minipage}{0.72\textwidth}
-\textbf{\textsc{Vorbemerkung}.} \textit{Dieser Artikel ist bewusst knapp gehalten. Er ist kein Lehrbuch und keine breite Literaturabhandlung, sondern ein wissenschaftlich fundiertes Begriffs- und Modellierungsdokument mit klaren Definitionen, Quellenankern und expliziten Autorenableitungen.}
+\textbf{\textsc{Vorbemerkung}.} \textit{Dieses White Paper ist bewusst knapp gehalten. Es ist kein Lehrbuch und keine breite Literaturabhandlung, sondern ein wissenschaftlich fundiertes Begriffs- und Modellierungsdokument mit klaren Definitionen, Quellenankern und expliziten Autorenableitungen.}
 \end{minipage}
 \end{center}
 \newpage
@@ -66,7 +67,7 @@ Die zentrale Idee von O2I ist, fachliche Relationen wie die O2I-Relation `Strate
 
 Die Wirkungskette ist nicht linear abgeschlossen: Beobachtete Wirkung liefert Evidenz, um Situationen neu zu bewerten und weitere Bedarfe sichtbar zu machen.
 
-Der Artikel entfaltet O2I als Framework, indem er die fachliche Begriffswelt auf Basis der Standardliteratur terminologisch begründet, semantisch und syntaktisch im Metamodell formalisiert und ihre Anwendung anhand eines zusammenhängenden O2I-Wirkungsgraphen illustriert.
+Das White Paper entfaltet O2I als Framework, indem es die fachliche Begriffswelt auf Basis der Standardliteratur terminologisch begründet, semantisch und syntaktisch im Metamodell formalisiert und ihre Anwendung anhand eines zusammenhängenden O2I-Wirkungsgraphen illustriert.
 
 # Fundament
 
@@ -126,7 +127,7 @@ Eine Definition wird nicht bloß behauptet. Sie wird nur verwendet, wenn sie ent
 
 *Direkter Quellenanker:* Der Begriff oder die Argumentationslogik wird unmittelbar aus einer Quelle übernommen oder eng paraphrasiert.
 
-*Autorenableitung in Anlehnung an ...:* Der Artikel bildet eine eigene Systematisierung, die auf mindestens einer Quelle beruht, aber über deren Wortlaut oder Begriffssystem hinausgeht.
+*Autorenableitung in Anlehnung an ...:* Das White Paper bildet eine eigene Systematisierung, die auf mindestens einer Quelle beruht, aber über deren Wortlaut oder Begriffssystem hinausgeht.
 
 # Terminologie
 
@@ -797,7 +798,7 @@ Diese Primitive-Relation kann begründen, warum eine konkrete Strategie einen ko
 
 ## Wohlgeformtheit und Validierung
 
-O2I unterscheidet einen ungeprüften Rohgraphen und fünf aufeinander aufbauende Validierungsstufen. Ein `RawGraph` enthält ungeprüfte Eingabedaten. Ein `WellFormedGraph` erfüllt die strukturellen Typ-, Interpretations- und Relationsregeln. Ein `SemanticallyValidModel` erfüllt zusätzlich die globalen Mindest- und Evidenzinvarianten aller acht Kontexttypen einschließlich der vollständigen Strategy-Formulierung. Ein `TraceableEffectModel` weist für jeden durch eine Intervention adressierten Bedarf einen vollständigen relationalen Wirkungstrace von Vision bis Situationsanker nach. Ein `EvidenceReadyModel` ergänzt jeden Trace vor Interventionsbeginn um einen validierten Evidenzplan. Ein `EvidenceAssessedModel` bewertet konsistente Folgebeobachtungen getrennt nach Effekt und Zielerreichung.
+O2I unterscheidet einen ungeprüften Rohgraphen und fünf aufeinander aufbauende Validierungsstufen. Ein `RawGraph` enthält ungeprüfte Eingabedaten. Ein `WellFormedGraph` erfüllt die strukturellen Typ-, Interpretations- und Relationsregeln. Ein `SemanticallyValidModel` erfüllt zusätzlich die globalen Mindestinvarianten und die Relationsevidenz aller acht Kontexttypen einschließlich der vollständigen Strategy-Formulierung. Ein `TraceableEffectModel` weist für jeden durch eine Intervention adressierten Bedarf einen vollständigen relationalen Wirkungstrace von Vision bis Situationsanker nach. Ein `EvidenceReadyModel` ergänzt jeden Trace vor Interventionsbeginn um einen validierten Evidenzplan. Ein `EvidenceAssessedModel` bewertet konsistente Folgebeobachtungen getrennt nach Effekt und Zielerreichung.
 
 @Fig:o2i-evidence-sequence verdichtet die fachliche Nachweisfolge vom sichtbaren Bedarf bis zur Wirkungsevidenz. Sie trennt Bedarfsqualifikation, relationale Wirkungsnachvollziehbarkeit, ex-ante Evidenzbereitschaft und ex-post Evidenzbewertung und markiert den Interventionsbeginn als zeitliche Grenze.
 

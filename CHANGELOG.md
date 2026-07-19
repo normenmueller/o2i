@@ -22,6 +22,11 @@
 
 ### Added
 
+- Added a strictly technical `spc/README.md` for the Haskell package
+  architecture, build, verification, installation, and CLI usage without
+  introducing a competing source of O2I subject-matter semantics.
+- Added the Git-LFS-tracked bleeding-edge `o2i.pdf` and linked it directly from
+  the repository README.
 - Added format-neutral staged model inspection, a native AMX adapter, and the
   thin `o2i inspect` CLI with exact View selection, file or standard-input
   acquisition, opaque source-relative adapter positions, request-bound source
@@ -43,6 +48,8 @@
 
 ### Changed
 
+- Declared the O2I publication as the O2I Framework White Paper without
+  changing its title.
 - Shortened the paper title to "Von Orientierung zur Wirkung".
 - Refined the introduction for clearer first-reader orientation and terminology.
 - Reordered the literature-function section along the O2I domains.
@@ -62,7 +69,8 @@
 - Made all human CLI reports and process diagnostics terminal-safe by centrally
   encoding source-derived control characters without changing JSON reports.
 - Clarified the semantic boundary between structural graph stages and
-  subject-matter-enriched model stages.
+  subject-matter-enriched model stages, including the distinction between
+  context-level relation evidence and empirical evidence stages.
 - Made Context ownership explicit and machine-readable in the ArchiMate syntax
   through one `composition[contains]` per Primitive and Structuring element,
   mapped to the Haskell owner field rather than a fachliche graph edge; made

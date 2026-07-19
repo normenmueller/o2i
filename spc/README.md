@@ -1,0 +1,75 @@
+# O2I Haskell Specification
+
+This directory contains the machine-checkable Haskell formalization of the O2I
+metamodel and the tooling that inspects concrete O2I models. The normative
+subject-matter definitions remain in the [O2I White Paper](../o2i.md); this file
+documents only the technical codebase and its use.
+
+## Packages
+
+| Package | Responsibility |
+| --- | --- |
+| `o2i-core` | Typed O2I language, effect graphs, and staged validation |
+| `o2i-inspection` | Format-neutral import, inspection, provenance, and reports |
+| `o2i-amx` | Native Archi Model XML decoding and O2I profile projection |
+| `o2i-cli` | Thin command-line composition and report rendering |
+
+The dependency direction is:
+
+```text
+o2i-inspection -> o2i-core
+o2i-amx        -> o2i-inspection + o2i-core
+o2i-cli        -> o2i-inspection + o2i-amx
+```
+
+The curated public facades are `O2I`, `O2I.Language`, `O2I.Graph`,
+`O2I.Validation`, `O2I.Inspection`, and `O2I.Adapter.AMX`.
+
+## Build
+
+Run all commands from this directory:
+
+```sh
+cabal build all --ghc-options=-Werror
+cabal test all --ghc-options=-Werror
+cabal haddock all
+```
+
+Package metadata is checked separately:
+
+```sh
+(cd lib/core && cabal check)
+(cd lib/inspection && cabal check)
+(cd lib/adapter/amx && cabal check)
+(cd cli && cabal check)
+```
+
+## Install
+
+The local CLI is installed under `~/.local/bin/o2i` by default:
+
+```sh
+make install
+make uninstall
+```
+
+`PREFIX` changes the installation prefix. `DESTDIR` adds a packaging root
+without changing the logical prefix.
+
+## Inspect
+
+The CLI inspects exactly one View of a native Archi model:
+
+```sh
+o2i inspect MODEL (--view NAME | --view-id ID) [--verbose | --debug] [--json]
+```
+
+It accepts a file or standard input. JSON output is deterministic and suited to
+automation and agentic processing:
+
+```sh
+cat ../mdl/my.archimate | o2i inspect - --view "My view" --json
+```
+
+The CLI contains no validation semantics. It delegates inspection to the
+libraries and renders their result.

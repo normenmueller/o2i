@@ -116,12 +116,14 @@ test and apply O2I but never define its generic semantics.
 
 # Repository Map
 
-- `o2i.md`: article and fachliche reference text.
-- `README.md`: canonical shared Purpose and USP snippets included by the article.
-- `wtf.md`: informal, non-normative entry guide linked to the article.
+- `o2i.md`: White Paper and fachliche reference text.
+- `README.md`: canonical shared Purpose and USP snippets included by the White
+  Paper.
+- `wtf.md`: informal, non-normative entry guide linked to the White Paper.
 - `mdl/o2i.archimate`: ArchiMate model.
 - `mdl/o2i-*.md`: generated read-only review snapshots.
-- `img/`: article and model exports.
+- `img/`: White Paper and model exports.
+- `spc/README.md`: non-normative technical codebase and usage documentation.
 - `spc/lib/core/`: normative typed Haskell core library.
 - `spc/lib/inspection/`: format-neutral model inspection and reporting.
 - `spc/lib/adapter/amx/`: native Archi Model XML adapter.
@@ -150,7 +152,7 @@ test and apply O2I but never define its generic semantics.
   elements, relations, and invariants; the Haskell specification enforces those
   invariants mechanically.
 - Formal precision must expose and resolve semantic ambiguity but must never
-  invent fachliche semantics that cannot be justified by the article and
+  invent fachliche semantics that cannot be justified by the White Paper and
   metamodel.
 - GADTs, modules, and opaque validation stages are Haskell design decisions;
   they do not introduce additional O2I fachliche semantics.
@@ -169,7 +171,7 @@ test and apply O2I but never define its generic semantics.
 
 # Document Architecture
 
-- The article progresses through Einleitung, Fundament, Terminologie,
+- The White Paper progresses through Einleitung, Fundament, Terminologie,
   Metamodell, Illustration, Fazit, and acknowledgements.
 - The Semantik section is organized by Kontexte, Primitives,
   Wohlgeformtheitsregeln, and Interpretationen.
