@@ -209,6 +209,8 @@ O2I modelliert Strategie dabei nicht als bloße Absichtserklärung. Strategische
 
 @Fig:o2i-strategy-constituents-view zeigt O2I Strategiebestandteile und ihre fachlichen Beziehungen. Diese Bestandteile sind keine O2I-Kontexte und keine O2I-Primitives; sie beschreiben die innere fachliche Struktur einer explizit formulierten Strategie.
 
+Die Bezeichner der Sicht ordnen die textuellen Strategiebestandteile eindeutig zu: `Strategy#Scope` bezeichnet den Geltungsbereich, `Strategy#Anchoring` die strategische Verankerung, `Strategy#Derived Guardrails` die abgeleiteten Leitplanken, `Strategy#Diagnosis` die Diagnose, `Strategy#Intent` die strategische Absicht, `Strategy#Guiding Policy` die Guiding Policy, `Strategy#Positioning` die strategische Positionierung, `Strategy#Trade-offs` die Trade-offs, `Strategy#Coherent Action Commitments` die kohärenten Handlungsfestlegungen, `Strategy#Success Reference` den strategischen Erfolgsbezug und `Strategy#Fit` den Kohärenznachweis.
+
 #### Geltungsbereich
 
 > [!definition]
