@@ -39,6 +39,7 @@ module O2I.Inspection.Diagnostic
   , diagnosticsList
   , rawEdgeSubjectIdentifier
   , structuralDefectSpec
+  , candidatePropositionSpec
   , semanticDefectSpec
   , traceabilityDefectSpec
   , readinessDefectSpec
@@ -59,6 +60,7 @@ import O2I.Inspection.Diagnostic.Internal
   , DiagnosticSubject(..)
   , Diagnostics
   , InspectionStage(..)
+  , candidatePropositionSpec
   , diagnosticSpec
   , diagnosticsList
   , evidenceDefectSpec

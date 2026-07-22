@@ -10,11 +10,21 @@ module O2I.Validation.Semantics
   ( StrategyAnchoring(..)
   , RawStrategyFormulation(..)
   , StrategyFormulation
+  , Elaboration(..)
+  , Maturity(..)
+  , CandidateModelProposition(..)
+  , ModelAssessment
   , StrategyTextField(..)
   , StrategyPrimitiveRole(..)
   , ModelInvariantError(..)
   , SemanticallyValidModel
   , validateModelSemantics
+  , assessModelSemantics
+  , assessedSemanticModel
+  , assessmentInvariantErrors
+  , assessmentCandidatePropositions
+  , contextElaboration
+  , modelMaturity
   , modelGraph
   , strategyFormulations
   , strategyFormulationData
@@ -30,10 +40,17 @@ import Data.Map.Strict (Map)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Validation (Validation(..))
+import O2I.Graph.Raw (CandidateGraphProposition(..), RawEdge(..), RawNode(..))
 import O2I.Graph.Typed
+import O2I.Language.Claim
 import O2I.Language.Element
 import O2I.Language.Macro (StrategyPrimitiveRole(..))
 import O2I.Language.Relation
+import O2I.Validation.Structure
+  ( StructuralAssessment
+  , structuralCandidatePropositions
+  , structuralGraph
+  )
 
 -- * Strategy formulation input
 -- | Organizational and procedural anchoring of a Strategy.
@@ -67,6 +84,34 @@ newtype StrategyFormulation = StrategyFormulation
   { validatedStrategyFormulation :: RawStrategyFormulation
     -- ^ Source formulation whose invariants have been established.
   } deriving (Eq, Show)
+
+-- | Derived availability of one Context's mandatory semantic content.
+data Elaboration
+  = Referenced
+    -- ^ Asserted identity and type exist without a complete valid content bundle.
+  | Elaborated
+    -- ^ Mandatory asserted content passes semantic validation in this boundary.
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+-- | Derived semantic maturity of one inspected model boundary.
+data Maturity
+  = Skeleton
+    -- ^ No Context in scope has a complete validated content bundle.
+  | Draft
+    -- ^ Some content is elaborated while unresolved or invalid claims remain.
+  | SemanticallyValid
+    -- ^ No candidate remains and global semantic validation has succeeded.
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+-- | Candidate proposition retained by model assessment and excluded from semantics.
+data CandidateModelProposition
+  = CandidateModelNode RawNode
+    -- ^ Proposed element declaration.
+  | CandidateModelEdge RawEdge
+    -- ^ Proposed relation declaration.
+  | CandidateStrategyFormulation RawNodeId
+    -- ^ Proposed Strategy content bundle, identified by its Strategy Context.
+  deriving (Eq, Show)
 
 -- | Text-bearing fields whose entries must carry semantic content.
 data StrategyTextField
@@ -158,6 +203,19 @@ data SemanticallyValidModel = SemanticallyValidModel
     -- ^ Exactly one complete formulation for every Strategy context.
   }
 
+-- | Opaque result of assessing asserted and candidate model propositions.
+--
+-- The assessment retains diagnostics and partial Context elaboration without
+-- weakening 'SemanticallyValidModel'. A semantic model is exposed only when
+-- no candidate remains and every asserted invariant has passed.
+data ModelAssessment = ModelAssessment
+  { assessedErrors :: [ModelInvariantError]
+  , assessedCandidates :: [CandidateModelProposition]
+  , assessedElaborations :: Map RawNodeId Elaboration
+  , assessedModel :: Maybe SemanticallyValidModel
+  , assessedMaturity :: Maturity
+  }
+
 -- * Semantic validation
 -- | Establish global Context minima and complete Strategy formulations.
 --
@@ -202,6 +260,129 @@ validateModelSemantics graph rawFormulations =
         ++ formulationCoverageErrors graph rawFormulations
         ++ concatMap (formulationErrors graph) rawFormulations
         ++ strategyOrientationErrors graph rawFormulations
+
+-- | Assess explicit claim commitments without weakening semantic validation.
+--
+-- Candidate graph and Strategy-content propositions are retained as unresolved
+-- findings and excluded from validation. Asserted propositions are validated
+-- exactly as by 'validateModelSemantics'. A successful semantic artifact is
+-- available only when no candidate proposition remains.
+assessModelSemantics ::
+     StructuralAssessment -> [Claim RawStrategyFormulation] -> ModelAssessment
+assessModelSemantics structure formulationClaims =
+  ModelAssessment
+    { assessedErrors = errors
+    , assessedCandidates = candidates
+    , assessedElaborations = elaborations
+    , assessedModel = semantic
+    , assessedMaturity = maturity
+    }
+  where
+    graph = structuralGraph structure
+    assertedFormulations =
+      [ claimedProposition formulation
+      | formulation <- formulationClaims
+      , claimCommitment formulation == Asserted
+      ]
+    candidates =
+      map graphCandidate (structuralCandidatePropositions structure)
+        ++ [ CandidateStrategyFormulation
+             (rawFormulationStrategy (claimedProposition formulation))
+           | formulation <- formulationClaims
+           , claimCommitment formulation == Candidate
+           ]
+    validation = validateModelSemantics graph assertedFormulations
+    allErrors =
+      case validation of
+        Failure failures -> NonEmpty.toList failures
+        Success _ -> []
+    errors = allErrors
+    semantic =
+      case (candidates, validation) of
+        ([], Success model) -> Just model
+        _ -> Nothing
+    elaborations =
+      Map.fromList
+        [ (context, elaborationFor context allErrors)
+        | context <- contextIdentifiers graph
+        ]
+    maturity
+      | Just _ <- semantic = SemanticallyValid
+      | Elaborated `elem` Map.elems elaborations = Draft
+      | otherwise = Skeleton
+
+-- | Read the exact semantic model, if every asserted claim validated and no
+-- candidate remains.
+assessedSemanticModel :: ModelAssessment -> Maybe SemanticallyValidModel
+assessedSemanticModel = assessedModel
+
+-- | Read every failed invariant over asserted propositions.
+assessmentInvariantErrors :: ModelAssessment -> [ModelInvariantError]
+assessmentInvariantErrors = assessedErrors
+
+-- | Read candidate propositions excluded from validated semantics.
+assessmentCandidatePropositions ::
+     ModelAssessment -> [CandidateModelProposition]
+assessmentCandidatePropositions = assessedCandidates
+
+-- | Derive semantic-content availability for one asserted Context in scope.
+--
+-- Returns 'Nothing' when the identifier is not an asserted Context declaration
+-- in this assessment boundary. Candidate content never yields 'Elaborated'.
+contextElaboration :: ModelAssessment -> RawNodeId -> Maybe Elaboration
+contextElaboration assessment identifier =
+  Map.lookup identifier (assessedElaborations assessment)
+
+-- | Read the maturity derived for this exact model assessment boundary.
+modelMaturity :: ModelAssessment -> Maturity
+modelMaturity = assessedMaturity
+
+graphCandidate :: CandidateGraphProposition -> CandidateModelProposition
+graphCandidate proposition =
+  case proposition of
+    CandidateNodeProposition node -> CandidateModelNode node
+    CandidateEdgeProposition edge -> CandidateModelEdge edge
+
+contextIdentifiers :: WellFormedGraph -> [RawNodeId]
+contextIdentifiers graph =
+  concatMap (contextNodesOf graph) [minBound .. maxBound]
+
+elaborationFor :: RawNodeId -> [ModelInvariantError] -> Elaboration
+elaborationFor context errors
+  | any (elem context . invariantContexts) errors = Referenced
+  | otherwise = Elaborated
+
+invariantContexts :: ModelInvariantError -> [RawNodeId]
+invariantContexts invariant =
+  case invariant of
+    EthosWithoutPrinciple context -> [context]
+    MissionWithoutDriver context -> [context]
+    MissionWithoutEthosGuidance context -> [context]
+    VisionWithoutObjective context -> [context]
+    VisionWithoutMissionGrounding context -> [context]
+    VisionWithoutEthosGuidance context -> [context]
+    StrategyIntentWithoutVisionOrientation context _ -> [context]
+    SituationWithoutConstitutingAnchor context -> [context]
+    NeedWithoutDriver context -> [context]
+    NeedWithoutObjective context -> [context]
+    NeedWithoutSurfacingSituation context -> [context]
+    UnanchoredNeedDriver context _ -> [context]
+    UngroundedNeedObjective context _ -> [context]
+    InterventionWithoutAction context -> [context]
+    InterventionWithoutKeyResult context -> [context]
+    InterventionWithoutActionContribution context -> [context]
+    MeasureWithoutPerformanceDimension context -> [context]
+    MeasureWithoutKPI context -> [context]
+    MeasureWithoutKPIDimensionMembership context -> [context]
+    StrategyWithoutFormulation context -> [context]
+    DuplicateStrategyFormulation context -> [context]
+    UnknownFormulationStrategy context -> [context]
+    FormulationForNonStrategy context _ -> [context]
+    EmptyStrategyText context _ -> [context]
+    DuplicateStrategyPrimitiveReference context _ _ -> [context]
+    InvalidStrategyPrimitiveReference context _ _ _ -> [context]
+    StrategyActionWithoutKeyResult context _ -> [context]
+    MissingStrategyCoherence context _ _ _ -> [context]
 
 -- * Validated model access
 -- | Access the structurally well-formed graph underlying semantic validation.

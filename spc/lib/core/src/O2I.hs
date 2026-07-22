@@ -3,7 +3,14 @@
 -- Language defines admissible O2I meaning, Graph represents concrete model
 -- instances, and Validation establishes progressively stronger guarantees.
 module O2I
-  ( RawNodeId(..)
+  ( Commitment(..)
+  , Claim
+  , claimWithCommitment
+  , candidateClaim
+  , assertedClaim
+  , claimCommitment
+  , claimedProposition
+  , RawNodeId(..)
   , NodeId
   , unNodeId
   , ContextRef
@@ -104,6 +111,10 @@ module O2I
   , StrategyAnchoring(..)
   , RawStrategyFormulation(..)
   , StrategyFormulation
+  , Elaboration(..)
+  , Maturity(..)
+  , CandidateModelProposition(..)
+  , ModelAssessment
   , RawNeedQualificationProposal(..)
   , NeedQualificationSourceReference
   , NeedQualificationCandidate
@@ -198,13 +209,23 @@ module O2I
   , Check
   , StructuralError(..)
   , StructureInternalError(..)
+  , StructuralAssessment
   , StructureResult(..)
   , ModelInvariantError(..)
   , TraceabilityError(..)
   , EvidenceReadinessError(..)
   , EvidenceError(..)
   , validateStructure
+  , validateClaimStructure
+  , structuralGraph
+  , structuralCandidatePropositions
   , validateModelSemantics
+  , assessModelSemantics
+  , assessedSemanticModel
+  , assessmentInvariantErrors
+  , assessmentCandidatePropositions
+  , contextElaboration
+  , modelMaturity
   , validateTraceability
   , validateEvidenceReadinessAt
   , assessEffectEvidenceAt

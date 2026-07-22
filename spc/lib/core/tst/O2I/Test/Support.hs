@@ -19,7 +19,7 @@ withWellFormed raw action =
   case validateStructure raw of
     StructureModelRejected errors ->
       assertFailure ("structural errors: " ++ show errors)
-    StructureAccepted graph -> action graph
+    StructureAccepted assessment -> action (structuralGraph assessment)
     StructureInternalFailure internal ->
       assertFailure ("internal structural failure: " ++ show internal)
 
@@ -79,7 +79,8 @@ validateSemanticRaw raw formulations =
   case validateStructure raw of
     StructureModelRejected errors ->
       error ("test fixture has structural errors: " ++ show errors)
-    StructureAccepted graph -> validateModelSemantics graph formulations
+    StructureAccepted assessment ->
+      validateModelSemantics (structuralGraph assessment) formulations
     StructureInternalFailure internal ->
       error ("test fixture triggered internal failure: " ++ show internal)
 
@@ -378,8 +379,8 @@ strategySuccessDimensionWithActionGraph =
 rawPerformanceDimensionOwnershipMatchesRegistry :: Context -> Bool
 rawPerformanceDimensionOwnershipMatchesRegistry context =
   case (lookupPerformanceDimensionRole context, validateStructure raw) of
-    (Just _, StructureAccepted graph) ->
-      case lookupNode graph genericPerformanceDimensionId of
+    (Just _, StructureAccepted assessment) ->
+      case lookupNode (structuralGraph assessment) genericPerformanceDimensionId of
         Just node -> someNodeOwner node == Just performanceDimensionOwnerId
         Nothing -> False
     (Nothing, StructureModelRejected errors) ->

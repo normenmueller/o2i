@@ -5,9 +5,12 @@
 module O2I.Graph.Raw
   ( RawNode(..)
   , RawEdge(..)
+  , CandidateGraphProposition(..)
+  , RawClaimGraph(..)
   , RawGraph(..)
   ) where
 
+import O2I.Language.Claim (Claim)
 import O2I.Language.Element
 import O2I.Language.Relation (RelationName)
 
@@ -30,8 +33,25 @@ data RawEdge = RawEdge
   , rawEdgeTo :: RawNodeId -- ^ Declared target node identifier.
   } deriving (Eq, Ord, Show)
 
--- | Unchecked graph input; structural guarantees are established later.
+-- | Structurally admissible candidate retained but not graph-elaborated.
+data CandidateGraphProposition
+  = CandidateNodeProposition RawNode
+    -- ^ Proposed node declaration excluded from the typed graph.
+  | CandidateEdgeProposition RawEdge
+    -- ^ Proposed relation declaration excluded from the typed graph.
+  deriving (Eq, Show)
+
+-- | Unchecked atomic graph claims for explicitly incomplete modeling.
+data RawClaimGraph = RawClaimGraph
+  { rawNodeClaims :: [Claim RawNode] -- ^ Node claims in source order.
+  , rawEdgeClaims :: [Claim RawEdge] -- ^ Relation claims in source order.
+  } deriving (Eq, Show)
+
+-- | Unchecked asserted graph input; structural guarantees are established later.
+--
+-- Use 'RawClaimGraph' when candidate propositions are present. Supplying a
+-- 'RawGraph' explicitly asserts every contained proposition.
 data RawGraph = RawGraph
-  { rawNodes :: [RawNode] -- ^ Nodes in source order.
-  , rawEdges :: [RawEdge] -- ^ Edges in source order.
+  { rawNodes :: [RawNode] -- ^ Asserted nodes in source order.
+  , rawEdges :: [RawEdge] -- ^ Asserted relations in source order.
   } deriving (Eq, Show)

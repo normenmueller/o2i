@@ -81,9 +81,9 @@ needQualificationTests =
                 case validateStructure acceptedGraph of
                   StructureModelRejected errors ->
                     assertFailure ("structural errors: " ++ show errors)
-                  StructureAccepted graph ->
+                  StructureAccepted assessment ->
                     case validateModelSemantics
-                           graph
+                           (structuralGraph assessment)
                            [sampleStrategyFormulation] of
                       Failure errors ->
                         assertFailure ("semantic errors: " ++ show errors)

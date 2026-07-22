@@ -3,7 +3,8 @@
 -- The language defines elements, context-sensitive interpretations, and typed
 -- relations independently of concrete graph instances and validation stages.
 module O2I.Language
-  ( module O2I.Language.Element
+  ( module O2I.Language.Claim
+  , module O2I.Language.Element
   , Interpretation(..)
   , InterpretationCode(..)
   , InterpretationSpec
@@ -89,6 +90,7 @@ module O2I.Language
   , lookupRelations
   ) where
 
+import O2I.Language.Claim
 import O2I.Language.Element hiding (mkContextRef, mkNodeId)
 import O2I.Language.Interpretation
 import O2I.Language.Macro

@@ -138,6 +138,9 @@ tests =
         "supplied empty Strategy input is validated"
         emptyStrategyInputTest
     , testCase
+        "candidate Strategy content is warned and excluded"
+        candidateStrategyInputTest
+    , testCase
         "different existential profile types remain isolated"
         existentialAdapterTest
     , testCase "report JSON is stable and parseable" reportJsonTest
@@ -314,9 +317,11 @@ closedCoreDefectMappingTest = do
     [ DuplicateNodeId node
     , DuplicateEdge edge
     , UnknownOwner node other
+    , AssertedNodeDependsOnCandidate node other
     , InvalidPrimitiveInterpretation node Mission Objective
     , InvalidStructuringContext node Mission PerformanceDimension
     , UnknownEdgeEndpoint edge other
+    , AssertedEdgeDependsOnCandidate edge other
     , UnknownRelation relation
     , InvalidRelationEndpointKinds
         edge
@@ -327,12 +332,25 @@ closedCoreDefectMappingTest = do
     [ "o2i.structure.node-id-duplicate"
     , "o2i.structure.edge-duplicate"
     , "o2i.structure.owner-unknown"
+    , "o2i.structure.asserted-node-depends-on-candidate"
     , "o2i.structure.interpretation-invalid"
     , "o2i.structure.structuring-context-invalid"
     , "o2i.structure.endpoint-unknown"
+    , "o2i.structure.asserted-edge-depends-on-candidate"
     , "o2i.structure.relation-unknown"
     , "o2i.structure.relation-endpoint-kinds-invalid"
     , "o2i.structure.membership-owner-mismatch"
+    ]
+  assertClosedMapping
+    SemanticsStage
+    candidatePropositionSpec
+    [ CandidateModelNode (RawContextNode node Strategy)
+    , CandidateModelEdge edge
+    , CandidateStrategyFormulation node
+    ]
+    [ "o2i.claim.candidate-excluded"
+    , "o2i.claim.candidate-excluded"
+    , "o2i.claim.candidate-excluded"
     ]
   assertClosedMapping
     SemanticsStage
@@ -961,6 +979,34 @@ emptyStrategyInputTest = do
   reportResult supplied @?= InspectionFailed
   diagnosticCodes supplied @?= ["o2i.semantics.formulation-missing"]
 
+candidateStrategyInputTest :: Assertion
+candidateStrategyInputTest = do
+  report <-
+    completedReport
+      (runAdapterWithInputs
+         completeModelAdapter
+         noInputs
+           { strategyInput =
+               Supplied
+                 (sourcedFromDocument
+                    strategySourceDocument
+                    (StrategyFormulationBundle
+                       [candidateClaim completeStrategyFormulation]))
+           })
+  reportResult report @?= InspectionFailed
+  let diagnostics = diagnosticsList (reportDiagnostics report)
+  map (diagnosticCodeText . diagnosticCode) diagnostics
+    @?= ["o2i.claim.candidate-excluded", "o2i.semantics.formulation-missing"]
+  map diagnosticSeverity diagnostics @?= [WarningSeverity, ErrorSeverity]
+  map reportedState (take 6 (stageReportsList (reportStageReports report)))
+    @?= [ StagePassed
+        , StagePassed
+        , StagePassed
+        , StagePassed
+        , StageFailed
+        , StageNotRun (BlockedByFailure SemanticsStage)
+        ]
+
 existentialAdapterTest :: Assertion
 existentialAdapterTest = do
   first <- completedReport (runAdapter goodEthosAdapter)
@@ -1374,7 +1420,8 @@ validInspectionInputs = do
           Supplied
             (sourcedFromDocument
                strategySourceDocument
-               (StrategyFormulationBundle [completeStrategyFormulation]))
+               (StrategyFormulationBundle
+                  [assertedClaim completeStrategyFormulation]))
       , readinessInput =
           Supplied
             (sourcedFromDocument
@@ -1402,8 +1449,10 @@ completeTraceableModel = completeTraceableModelFor completeRawGraph
 completeTraceableModelFor :: RawGraph -> IO TraceableEffectModel
 completeTraceableModelFor graphInput =
   case validateStructure graphInput of
-    StructureAccepted graph ->
-      case validateModelSemantics graph [completeStrategyFormulation] of
+    StructureAccepted assessment ->
+      case validateModelSemantics
+             (structuralGraph assessment)
+             [completeStrategyFormulation] of
         Failure defects ->
           assertFailure ("complete Semantics fixture failed: " <> show defects)
         Success semantic ->

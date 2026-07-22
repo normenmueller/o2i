@@ -2,13 +2,10 @@ module ValidationRecordUpdates where
 
 import qualified O2I.Validation as Validation
 
-rewriteStrategyFormulation ::
-     Validation.StrategyFormulation -> Validation.StrategyFormulation
-rewriteStrategyFormulation formulation =
-  formulation
-    { Validation.strategyFormulationData =
-        Validation.strategyFormulationData formulation
-    }
+rewriteModelAssessment ::
+     Validation.ModelAssessment -> Validation.ModelAssessment
+rewriteModelAssessment assessment =
+  assessment {Validation.modelMaturity = Validation.modelMaturity assessment}
 
 rewriteNeedQualificationCandidate ::
      Validation.NeedQualificationCandidate

@@ -65,7 +65,7 @@ sourcedFromDocument document = Sourced (sourceDocumentIdentity document)
 
 -- | Complete, source-ordered Strategy formulation submission.
 newtype StrategyFormulationBundle = StrategyFormulationBundle
-  { strategyFormulationsInput :: [RawStrategyFormulation]
+  { strategyFormulationsInput :: [Claim RawStrategyFormulation]
   } deriving (Eq, Show)
 
 -- | Complete ex-ante evidence-readiness submission.
@@ -110,10 +110,13 @@ data InputRequirement =
 
 -- | Opaque binding of one exact graph to its closed scope and provenance.
 data StructurallyClosedModel = StructurallyClosedModel
-  { structurallyClosedGraph :: WellFormedGraph
+  { structurallyClosedStructure :: StructuralAssessment
   , structurallyClosedScope :: SemanticallyClosedScope
   , structurallyClosedImport :: ImportedGraph
   }
+
+structurallyClosedGraph :: StructurallyClosedModel -> WellFormedGraph
+structurallyClosedGraph = structuralGraph . structurallyClosedStructure
 
 -- | Opaque, graph-bound input to global semantic validation.
 data SemanticsWitness = SemanticsWitness
@@ -156,11 +159,10 @@ prepareSemantics closed availability =
     strategies = contextNodesOf (structurallyClosedGraph closed) Strategy
 
 -- | Validate the exact graph and formulations carried by the witness.
-validateScopedSemantics ::
-     SemanticsWitness -> Check ModelInvariantError SemanticallyValidModel
+validateScopedSemantics :: SemanticsWitness -> ModelAssessment
 validateScopedSemantics witness =
-  validateModelSemantics
-    (structurallyClosedGraph (witnessClosedModel witness))
+  assessModelSemantics
+    (structurallyClosedStructure (witnessClosedModel witness))
     (maybe
        []
        (strategyFormulationsInput . sourcedValue)
@@ -369,7 +371,7 @@ inspectScope request binding viewResolution profile inputs index =
                    scope
                    imported
                    defects)
-            StructureAccepted graph ->
+            StructureAccepted assessment ->
               inspectSemantics
                 request
                 binding
@@ -377,7 +379,7 @@ inspectScope request binding viewResolution profile inputs index =
                 profile
                 inputs
                 (StructurallyClosedModel
-                   { structurallyClosedGraph = graph
+                   { structurallyClosedStructure = assessment
                    , structurallyClosedScope = scope
                    , structurallyClosedImport = imported
                    })
@@ -413,39 +415,82 @@ inspectSemantics request binding viewResolution profile inputs closed =
            [])
     Right witness ->
       let sources = semanticsWitnessSources witness
+          candidateDiagnostics assessment =
+            map
+              (diagnosticWithSupplementalSources sources
+                 . coreDiagnostic
+                     SemanticsStage
+                     (structurallyClosedImport closed)
+                     candidatePropositionSpec)
+              (assessmentCandidatePropositions assessment)
        in case validateScopedSemantics witness of
-            Failure defects ->
-              let diagnostics =
-                    coreDiagnosticsWithSources
-                      SemanticsStage
-                      sources
-                      closed
-                      semanticDefectSpec
-                      defects
-               in InspectionCompleted
-                    (pipelineReport
-                       request
-                       binding
-                       viewResolution
-                       profile
-                       (resolvedScopeFor closed)
-                       sources
-                       StagePassed
-                       StageFailed
-                       (StageNotRun (BlockedByFailure SemanticsStage))
-                       (StageNotRun (BlockedByFailure SemanticsStage))
-                       (StageNotRun (BlockedByFailure SemanticsStage))
-                       diagnostics)
-            Success semantic ->
-              inspectTraceability
-                request
-                binding
-                viewResolution
-                profile
-                inputs
-                closed
-                sources
-                semantic
+            assessment
+              | Just defects <-
+                  NonEmpty.nonEmpty (assessmentInvariantErrors assessment) ->
+                let diagnostics =
+                      coreDiagnosticsWithSources
+                        SemanticsStage
+                        sources
+                        closed
+                        semanticDefectSpec
+                        defects
+                        ++ candidateDiagnostics assessment
+                 in InspectionCompleted
+                      (pipelineReport
+                         request
+                         binding
+                         viewResolution
+                         profile
+                         (resolvedScopeFor closed)
+                         sources
+                         StagePassed
+                         StageFailed
+                         (StageNotRun (BlockedByFailure SemanticsStage))
+                         (StageNotRun (BlockedByFailure SemanticsStage))
+                         (StageNotRun (BlockedByFailure SemanticsStage))
+                         diagnostics)
+              | candidates <- assessmentCandidatePropositions assessment
+              , not (null candidates) ->
+                let diagnostics = candidateDiagnostics assessment
+                 in InspectionCompleted
+                      (pipelineReport
+                         request
+                         binding
+                         viewResolution
+                         profile
+                         (resolvedScopeFor closed)
+                         sources
+                         StagePassed
+                         StageUnavailable
+                         (StageNotRun (BlockedByUnavailable SemanticsStage))
+                         (StageNotRun (BlockedByUnavailable SemanticsStage))
+                         (StageNotRun (BlockedByUnavailable SemanticsStage))
+                         diagnostics)
+              | Just semantic <- assessedSemanticModel assessment ->
+                inspectTraceability
+                  request
+                  binding
+                  viewResolution
+                  profile
+                  inputs
+                  closed
+                  sources
+                  semantic
+              | otherwise ->
+                InspectionCompleted
+                  (pipelineReport
+                     request
+                     binding
+                     viewResolution
+                     profile
+                     (resolvedScopeFor closed)
+                     sources
+                     StagePassed
+                     StageUnavailable
+                     (StageNotRun (BlockedByUnavailable SemanticsStage))
+                     (StageNotRun (BlockedByUnavailable SemanticsStage))
+                     (StageNotRun (BlockedByUnavailable SemanticsStage))
+                     [])
 
 inspectTraceability ::
      InspectionRequestInfo

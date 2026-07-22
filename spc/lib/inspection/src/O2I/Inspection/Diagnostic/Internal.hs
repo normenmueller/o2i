@@ -29,6 +29,7 @@ module O2I.Inspection.Diagnostic.Internal
   , diagnosticsList
   , rawEdgeSubjectIdentifier
   , structuralDefectSpec
+  , candidatePropositionSpec
   , semanticDefectSpec
   , traceabilityDefectSpec
   , readinessDefectSpec
@@ -428,6 +429,11 @@ structuralDefectSpec defect =
         "o2i.structure.owner-unknown"
         "An owned node refers to an unknown Context."
         [nodeSubject identifier, ownerSubject owner]
+    AssertedNodeDependsOnCandidate identifier owner ->
+      coreSpec
+        "o2i.structure.asserted-node-depends-on-candidate"
+        "An asserted node depends on a candidate Context declaration."
+        [nodeSubject identifier, ownerSubject owner]
     InvalidPrimitiveInterpretation identifier context primitive ->
       coreSpec
         "o2i.structure.interpretation-invalid"
@@ -448,6 +454,11 @@ structuralDefectSpec defect =
       coreSpec
         "o2i.structure.endpoint-unknown"
         "A relation endpoint refers to an unknown node."
+        [edgeSubject edge, nodeSubject identifier]
+    AssertedEdgeDependsOnCandidate edge identifier ->
+      coreSpec
+        "o2i.structure.asserted-edge-depends-on-candidate"
+        "An asserted relation depends on a candidate endpoint declaration."
         [edgeSubject edge, nodeSubject identifier]
     UnknownRelation relation ->
       coreSpec
@@ -470,6 +481,23 @@ structuralDefectSpec defect =
         , DiagnosticSubject "dimension-owner" (rawNodeIdText dimensionOwner)
         , DiagnosticSubject "member-owner" (rawNodeIdText memberOwner)
         ]
+
+-- | Warning emitted for a candidate proposition excluded from semantics.
+candidatePropositionSpec :: CandidateModelProposition -> DiagnosticSpec
+candidatePropositionSpec proposition =
+  DiagnosticSpec
+    { specCode = DiagnosticCode "o2i.claim.candidate-excluded"
+    , specSeverity = WarningSeverity
+    , specDisposition = ModelFinding
+    , specMessage =
+        "A candidate proposition is excluded from validated semantics."
+    , specSubjects =
+        case proposition of
+          CandidateModelNode node -> [nodeSubject (rawNodeIdentifier node)]
+          CandidateModelEdge edge -> [edgeSubject edge]
+          CandidateStrategyFormulation strategy -> [nodeSubject strategy]
+    , specData = Map.empty
+    }
 
 -- | Total diagnostic mapping for every global semantic invariant defect.
 semanticDefectSpec :: ModelInvariantError -> DiagnosticSpec
@@ -825,6 +853,14 @@ rawEdgeSubjectIdentifier edge =
     , relationNameText (rawEdgeRelation edge)
     , rawNodeIdText (rawEdgeTo edge)
     ]
+
+rawNodeIdentifier :: RawNode -> RawNodeId
+rawNodeIdentifier node =
+  case node of
+    RawContextNode identifier _ -> identifier
+    RawPrimitiveNode identifier _ _ -> identifier
+    RawStructuringNode identifier _ _ -> identifier
+    RawAnchorNode identifier _ -> identifier
 
 relationSubject :: RelationName -> DiagnosticSubject
 relationSubject relation =

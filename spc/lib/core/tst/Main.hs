@@ -22,7 +22,8 @@ tests :: TestTree
 tests =
   testGroup
     "O2I"
-    [ structureTests
+    [ claimStateTests
+    , structureTests
     , performanceDimensionRoleTests
     , semanticTests
     , needQualificationTests
@@ -33,6 +34,301 @@ tests =
     , effectEvidenceTests
     , registryTests
     ]
+
+claimStateTests :: TestTree
+claimStateTests =
+  testGroup
+    "claim state"
+    [ testCase "claim projections preserve explicit commitment" $ do
+        claimCommitment (candidateClaim strategyNode) @?= Candidate
+        claimCommitment (assertedClaim strategyNode) @?= Asserted
+        claimedProposition (claimWithCommitment Candidate strategyNode)
+          @?= strategyNode
+    , testCase "candidate declarations are retained but excluded"
+        $ case validateClaimStructure candidateOnlyGraph of
+            StructureAccepted structure -> do
+              let graph = structuralGraph structure
+              assertBool
+                "candidate node entered typed graph"
+                (null (graphNodes graph))
+              assertBool
+                "candidate edge entered typed graph"
+                (null (graphEdges graph))
+              structuralCandidatePropositions structure
+                @?= [CandidateNodeProposition strategyNode]
+              let assessment = assessModelSemantics structure []
+              contextElaboration assessment strategyId @?= Nothing
+              modelMaturity assessment @?= Skeleton
+              assertNoSemanticModel assessment
+            StructureModelRejected errors ->
+              assertFailure ("unexpected structural errors: " ++ show errors)
+            StructureInternalFailure internal ->
+              assertFailure ("unexpected internal failure: " ++ show internal)
+    , testCase "valid candidate relation is retained but excluded"
+        $ case validateClaimStructure validCandidateEdgeGraph of
+            StructureAccepted structure -> do
+              graphEdges (structuralGraph structure) @?= []
+              structuralCandidatePropositions structure
+                @?= [CandidateEdgeProposition candidateDependencyEdge]
+            StructureModelRejected errors ->
+              assertFailure ("unexpected structural errors: " ++ show errors)
+            StructureInternalFailure internal ->
+              assertFailure ("unexpected internal failure: " ++ show internal)
+    , testCase "candidate-owned-by-candidate is structurally admissible"
+        $ case validateClaimStructure candidateOwnedByCandidateGraph of
+            StructureAccepted structure -> do
+              assertBool
+                "candidate-owned node entered typed graph"
+                (null (graphNodes (structuralGraph structure)))
+              structuralCandidatePropositions structure
+                @?= [ CandidateNodeProposition strategyNode
+                    , CandidateNodeProposition strategyActionNode
+                    ]
+            StructureModelRejected errors ->
+              assertFailure ("unexpected structural errors: " ++ show errors)
+            StructureInternalFailure internal ->
+              assertFailure ("unexpected internal failure: " ++ show internal)
+    , testCase "candidate declaration identity is validated"
+        $ assertStructuralErrors
+            [DuplicateNodeId strategyId]
+            (validateClaimStructure candidateDuplicateDeclarationGraph)
+    , testCase "candidate ownership possibility is validated"
+        $ assertStructuralErrors
+            [UnknownOwner strategyActionId missingId]
+            (validateClaimStructure candidateUnknownOwnerGraph)
+    , testCase "candidate contextual type is validated"
+        $ assertStructuralErrors
+            [InvalidPrimitiveInterpretation strategyActionId Ethos Action]
+            (validateClaimStructure candidateInvalidInterpretationGraph)
+    , testCase "asserted ownership cannot depend on a candidate Context"
+        $ assertStructuralErrors
+            [AssertedNodeDependsOnCandidate strategyActionId strategyId]
+            (validateClaimStructure assertedOwnerCandidateGraph)
+    , testCase "asserted relation cannot depend on a candidate endpoint"
+        $ assertStructuralErrors
+            [ AssertedEdgeDependsOnCandidate
+                candidateDependencyEdge
+                secondStrategyId
+            ]
+            (validateClaimStructure assertedEdgeCandidateGraph)
+    , testCase "candidate unknown relation is rejected precisely"
+        $ assertStructuralErrors
+            [UnknownRelation (RelationName "unknown")]
+            (validateClaimStructure candidateUnknownRelationGraph)
+    , testCase "candidate wrong endpoint kinds are rejected precisely"
+        $ assertStructuralErrors
+            [ InvalidRelationEndpointKinds
+                wrongKindCandidateEdge
+                (ContextNodeKind Strategy)
+                (PrimitiveNodeKind Strategy Action)
+            ]
+            (validateClaimStructure candidateWrongKindsGraph)
+    , testCase "candidate propositions keep an otherwise valid model Draft"
+        $ withClaimStructure candidateExtendedSampleGraph
+        $ \structure -> do
+            let graph = structuralGraph structure
+                assessment =
+                  assessModelSemantics
+                    structure
+                    [assertedClaim sampleStrategyFormulation]
+            modelMaturity assessment @?= Draft
+            assertNoSemanticModel assessment
+            assessmentInvariantErrors assessment @?= []
+            assessmentCandidatePropositions assessment
+              @?= [ CandidateModelNode
+                      (RawContextNode secondStrategyId Strategy)
+                  , CandidateModelEdge candidateDependencyEdge
+                  ]
+            mapM_
+              (\context ->
+                 contextElaboration assessment context @?= Just Elaborated)
+              (contextIdentifiersOf graph)
+    , testCase "missing asserted content yields a referenced Skeleton"
+        $ withStructural (RawGraph [strategyNode] [])
+        $ \structure -> do
+            let assessment = assessModelSemantics structure []
+            modelMaturity assessment @?= Skeleton
+            contextElaboration assessment strategyId @?= Just Referenced
+            assertNoSemanticModel assessment
+    , testCase "candidate Strategy content never elaborates its Context"
+        $ withStructural sampleGraph
+        $ \structure -> do
+            let assessment =
+                  assessModelSemantics
+                    structure
+                    [candidateClaim sampleStrategyFormulation]
+            contextElaboration assessment strategyId @?= Just Referenced
+            CandidateStrategyFormulation strategyId
+              `elem` assessmentCandidatePropositions assessment
+                       @? "candidate formulation was not retained"
+            assessmentInvariantErrors assessment
+              @?= [StrategyWithoutFormulation strategyId]
+            modelMaturity assessment @?= Draft
+            assertNoSemanticModel assessment
+    , testCase "candidate content does not satisfy an asserted minimum"
+        $ withClaimStructure candidateEthosContentGraph
+        $ \structure -> do
+            let assessment = assessModelSemantics structure []
+            assessmentInvariantErrors assessment
+              @?= [EthosWithoutPrinciple ethosId]
+            contextElaboration assessment ethosId @?= Just Referenced
+            assessmentCandidatePropositions assessment
+              @?= [CandidateModelNode ethosPrincipleNode]
+            assertNoSemanticModel assessment
+    , testCase "candidate does not hide asserted defects"
+        $ withClaimStructure candidateExtendedSampleGraph
+        $ \structure -> do
+            let assessment = assessModelSemantics structure []
+            assessmentInvariantErrors assessment
+              @?= [StrategyWithoutFormulation strategyId]
+            contextElaboration assessment strategyId @?= Just Referenced
+    , testCase "fully asserted semantic model reaches exact maturity"
+        $ withStructural sampleGraph
+        $ \structure -> do
+            let assessment =
+                  assessModelSemantics
+                    structure
+                    [assertedClaim sampleStrategyFormulation]
+            modelMaturity assessment @?= SemanticallyValid
+            assertBool
+              "semantic model was not exposed"
+              (case assessedSemanticModel assessment of
+                 Just _ -> True
+                 Nothing -> False)
+    ]
+
+strategyNode :: RawNode
+strategyNode = RawContextNode strategyId Strategy
+
+strategyActionNode :: RawNode
+strategyActionNode = RawPrimitiveNode strategyActionId strategyId Action
+
+candidateOnlyGraph :: RawClaimGraph
+candidateOnlyGraph = RawClaimGraph [candidateClaim strategyNode] []
+
+candidateOwnedByCandidateGraph :: RawClaimGraph
+candidateOwnedByCandidateGraph =
+  RawClaimGraph
+    [candidateClaim strategyNode, candidateClaim strategyActionNode]
+    []
+
+candidateDuplicateDeclarationGraph :: RawClaimGraph
+candidateDuplicateDeclarationGraph =
+  RawClaimGraph
+    [ candidateClaim strategyNode
+    , candidateClaim (RawContextNode strategyId Need)
+    ]
+    []
+
+candidateUnknownOwnerGraph :: RawClaimGraph
+candidateUnknownOwnerGraph =
+  RawClaimGraph
+    [candidateClaim (RawPrimitiveNode strategyActionId missingId Action)]
+    []
+
+candidateInvalidInterpretationGraph :: RawClaimGraph
+candidateInvalidInterpretationGraph =
+  RawClaimGraph
+    [ candidateClaim (RawContextNode ethosId Ethos)
+    , candidateClaim (RawPrimitiveNode strategyActionId ethosId Action)
+    ]
+    []
+
+assertedOwnerCandidateGraph :: RawClaimGraph
+assertedOwnerCandidateGraph =
+  RawClaimGraph
+    [ candidateClaim strategyNode
+    , assertedClaim (RawPrimitiveNode strategyActionId strategyId Action)
+    ]
+    []
+
+candidateDependencyEdge :: RawEdge
+candidateDependencyEdge = edge strategyId contributesToStrategy secondStrategyId
+
+validCandidateEdgeGraph :: RawClaimGraph
+validCandidateEdgeGraph =
+  RawClaimGraph
+    [ assertedClaim strategyNode
+    , assertedClaim (RawContextNode secondStrategyId Strategy)
+    ]
+    [candidateClaim candidateDependencyEdge]
+
+assertedEdgeCandidateGraph :: RawClaimGraph
+assertedEdgeCandidateGraph =
+  RawClaimGraph
+    [ assertedClaim strategyNode
+    , candidateClaim (RawContextNode secondStrategyId Strategy)
+    ]
+    [assertedClaim candidateDependencyEdge]
+
+unknownCandidateEdge :: RawEdge
+unknownCandidateEdge =
+  RawEdge strategyId (RelationName "unknown") secondStrategyId
+
+candidateUnknownRelationGraph :: RawClaimGraph
+candidateUnknownRelationGraph =
+  RawClaimGraph
+    [ assertedClaim strategyNode
+    , assertedClaim (RawContextNode secondStrategyId Strategy)
+    ]
+    [candidateClaim unknownCandidateEdge]
+
+wrongKindCandidateEdge :: RawEdge
+wrongKindCandidateEdge = edge strategyId contributesToStrategy strategyActionId
+
+candidateWrongKindsGraph :: RawClaimGraph
+candidateWrongKindsGraph =
+  RawClaimGraph
+    [assertedClaim strategyNode, assertedClaim strategyActionNode]
+    [candidateClaim wrongKindCandidateEdge]
+
+candidateExtendedSampleGraph :: RawClaimGraph
+candidateExtendedSampleGraph =
+  RawClaimGraph
+    (map assertedClaim (rawNodes sampleGraph)
+       ++ [candidateClaim (RawContextNode secondStrategyId Strategy)])
+    (map assertedClaim (rawEdges sampleGraph)
+       ++ [candidateClaim candidateDependencyEdge])
+
+candidateEthosContentGraph :: RawClaimGraph
+candidateEthosContentGraph =
+  RawClaimGraph
+    [ assertedClaim (RawContextNode ethosId Ethos)
+    , candidateClaim ethosPrincipleNode
+    ]
+    []
+
+ethosPrincipleNode :: RawNode
+ethosPrincipleNode = RawPrimitiveNode ethosPrincipleId ethosId Principle
+
+withClaimStructure ::
+     RawClaimGraph -> (StructuralAssessment -> Assertion) -> Assertion
+withClaimStructure raw action =
+  case validateClaimStructure raw of
+    StructureAccepted assessment -> action assessment
+    StructureModelRejected errors ->
+      assertFailure ("unexpected structural errors: " ++ show errors)
+    StructureInternalFailure internal ->
+      assertFailure ("unexpected internal failure: " ++ show internal)
+
+withStructural :: RawGraph -> (StructuralAssessment -> Assertion) -> Assertion
+withStructural raw action =
+  case validateStructure raw of
+    StructureAccepted assessment -> action assessment
+    StructureModelRejected errors ->
+      assertFailure ("unexpected structural errors: " ++ show errors)
+    StructureInternalFailure internal ->
+      assertFailure ("unexpected internal failure: " ++ show internal)
+
+contextIdentifiersOf :: WellFormedGraph -> [RawNodeId]
+contextIdentifiersOf graph =
+  concatMap (contextNodesOf graph) [minBound .. maxBound]
+
+assertNoSemanticModel :: ModelAssessment -> Assertion
+assertNoSemanticModel assessment =
+  case assessedSemanticModel assessment of
+    Nothing -> pure ()
+    Just _ -> assertFailure "unresolved assessment exposed semantic model"
 
 macroRuleTests :: TestTree
 macroRuleTests =
@@ -1240,8 +1536,8 @@ semanticsAccepts raw = semanticsAcceptsWith raw []
 semanticsAcceptsWith :: RawGraph -> [RawStrategyFormulation] -> Bool
 semanticsAcceptsWith raw formulations =
   case validateStructure raw of
-    StructureAccepted graph ->
-      case validateModelSemantics graph formulations of
+    StructureAccepted assessment ->
+      case validateModelSemantics (structuralGraph assessment) formulations of
         Success _ -> True
         Failure _ -> False
     StructureModelRejected _ -> False
@@ -2476,8 +2772,8 @@ interpretationCodes = map interpretationCodeOf allInterpretations
 assertInterpretationValidationContract :: Context -> Primitive -> Assertion
 assertInterpretationValidationContract context primitive =
   case (lookupInterpretation context primitive, validateStructure raw) of
-    (Just _, StructureAccepted graph) ->
-      case lookupNode graph primitiveId of
+    (Just _, StructureAccepted assessment) ->
+      case lookupNode (structuralGraph assessment) primitiveId of
         Just node -> someNodeOwner node @?= Just contextId
         Nothing ->
           assertFailure (message ++ ": validated Primitive was not found")

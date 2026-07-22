@@ -4,9 +4,9 @@ module LanguageRecordUpdates where
 
 import qualified O2I.Language as Language
 
-rewriteNodeId :: Language.NodeId kind -> Language.NodeId kind
-rewriteNodeId identifier =
-  identifier {Language.unNodeId = Language.unNodeId identifier}
+rewriteClaim :: Language.Claim value -> Language.Claim value
+rewriteClaim modelClaim =
+  modelClaim {Language.claimCommitment = Language.claimCommitment modelClaim}
 
 rewriteContextRef :: Language.ContextRef context -> Language.ContextRef context
 rewriteContextRef reference =

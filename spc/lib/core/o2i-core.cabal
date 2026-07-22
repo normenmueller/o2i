@@ -35,6 +35,7 @@ library
     O2I.Graph.Macro,
     O2I.Graph.Raw,
     O2I.Graph.Typed,
+    O2I.Language.Claim,
     O2I.Language.Element,
     O2I.Language.Interpretation,
     O2I.Language.Macro,

@@ -11,10 +11,15 @@ module O2I.Validation
   , Check
   , StructuralError(..)
   , StructureInternalError(..)
+  , StructuralAssessment
   , StructureResult(..)
   , StrategyAnchoring(..)
   , RawStrategyFormulation(..)
   , StrategyFormulation
+  , Elaboration(..)
+  , Maturity(..)
+  , CandidateModelProposition(..)
+  , ModelAssessment
   , RawNeedQualificationProposal(..)
   , NeedQualificationSourceReference
   , NeedQualificationCandidate
@@ -110,7 +115,16 @@ module O2I.Validation
   , effectAssessments
   , isEffectiveNeed
   , validateStructure
+  , validateClaimStructure
+  , structuralGraph
+  , structuralCandidatePropositions
   , validateModelSemantics
+  , assessModelSemantics
+  , assessedSemanticModel
+  , assessmentInvariantErrors
+  , assessmentCandidatePropositions
+  , contextElaboration
+  , modelMaturity
   , validateTraceability
   , validateEvidenceReadinessAt
   , assessEffectEvidenceAt

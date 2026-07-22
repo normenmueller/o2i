@@ -4,8 +4,8 @@ module LanguageOpaqueConstructors where
 
 import qualified O2I.Language as Language
 
-forgedNodeId :: Language.NodeId ('Language.ContextKind 'Language.Need)
-forgedNodeId = Language.NodeId undefined
+forgedClaim :: Language.Claim ()
+forgedClaim = Language.Claim Language.Asserted ()
 
 forgedContextRef :: Language.ContextRef 'Language.Need
 forgedContextRef = Language.ContextRef undefined

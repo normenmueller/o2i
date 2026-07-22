@@ -2,13 +2,12 @@ module ValidationOpaqueConstructors where
 
 import qualified O2I.Validation as Validation
 
-forgedStrategyFormulation :: Validation.StrategyFormulation
-forgedStrategyFormulation = Validation.StrategyFormulation undefined
+forgedStructuralAssessment :: Validation.StructuralAssessment
+forgedStructuralAssessment = Validation.StructuralAssessment undefined undefined
 
-forgedNeedQualificationSourceReference ::
-     Validation.NeedQualificationSourceReference
-forgedNeedQualificationSourceReference =
-  Validation.NeedQualificationSourceReference undefined
+forgedModelAssessment :: Validation.ModelAssessment
+forgedModelAssessment =
+  Validation.ModelAssessment undefined undefined undefined undefined undefined
 
 forgedNeedQualificationCandidate :: Validation.NeedQualificationCandidate
 forgedNeedQualificationCandidate =

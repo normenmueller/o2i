@@ -8,8 +8,12 @@
 module O2I.Validation.Structure
   ( StructuralError(..)
   , StructureInternalError(..)
+  , StructuralAssessment
   , StructureResult(..)
   , validateStructure
+  , validateClaimStructure
+  , structuralGraph
+  , structuralCandidatePropositions
   ) where
 
 import Data.List (group, sort)
@@ -21,6 +25,7 @@ import Data.Type.Equality ((:~:)(Refl))
 import Data.Validation (Validation(..))
 import O2I.Graph.Raw
 import O2I.Graph.Typed
+import O2I.Language.Claim
 import O2I.Language.Element
 import O2I.Language.Interpretation
 import O2I.Language.Relation
@@ -33,12 +38,16 @@ data StructuralError
     -- ^ The exact same directed edge occurs more than once.
   | UnknownOwner RawNodeId RawNodeId
     -- ^ A child node identifies an owner that is not a declared context.
+  | AssertedNodeDependsOnCandidate RawNodeId RawNodeId
+    -- ^ An asserted owned node depends on a candidate Context declaration.
   | InvalidPrimitiveInterpretation RawNodeId Context Primitive
     -- ^ A Primitive is inadmissible in its owning Context.
   | InvalidStructuringContext RawNodeId Context Structuring
     -- ^ A structuring form is inadmissible in its owning Context.
   | UnknownEdgeEndpoint RawEdge RawNodeId
     -- ^ An edge endpoint does not identify a declared node.
+  | AssertedEdgeDependsOnCandidate RawEdge RawNodeId
+    -- ^ An asserted edge depends on a candidate endpoint declaration.
   | UnknownRelation RelationName
     -- ^ An edge names no registered O2I relation.
   | InvalidRelationEndpointKinds RawEdge NodeKindValue NodeKindValue
@@ -61,13 +70,30 @@ data StructureInternalError
 data StructureResult
   = StructureModelRejected (NonEmpty.NonEmpty StructuralError)
     -- ^ The model violates one or more independently accumulated rules.
-  | StructureAccepted WellFormedGraph
-    -- ^ The model is structurally valid and has been elaborated.
+  | StructureAccepted StructuralAssessment
+    -- ^ Every proposition is structurally valid and assertions are elaborated.
   | StructureInternalFailure StructureInternalError
     -- ^ An implementation invariant failed after successful model validation.
 
+-- | Opaque structural result separating asserted semantics from candidates.
+--
+-- The graph contains only asserted propositions. Retained candidates have
+-- passed the same applicable identity, ownership, interpretation, relation,
+-- endpoint-kind, and membership-owner checks but remain outside that graph.
+data StructuralAssessment =
+  StructuralAssessment WellFormedGraph [CandidateGraphProposition]
+
 newtype StructurallyAdmissibleRawGraph =
-  StructurallyAdmissibleRawGraph RawGraph
+  StructurallyAdmissibleRawGraph RawClaimGraph
+
+-- | Read the exact asserted graph established by structural validation.
+structuralGraph :: StructuralAssessment -> WellFormedGraph
+structuralGraph (StructuralAssessment graph _) = graph
+
+-- | Read structurally admissible candidates excluded from the asserted graph.
+structuralCandidatePropositions ::
+     StructuralAssessment -> [CandidateGraphProposition]
+structuralCandidatePropositions (StructuralAssessment _ candidates) = candidates
 
 -- * Structural validation
 -- | Elaborate unchecked input into an opaque structurally typed graph.
@@ -77,15 +103,29 @@ newtype StructurallyAdmissibleRawGraph =
 -- one shared owner Context instance for each PerformanceDimension membership.
 validateStructure :: RawGraph -> StructureResult
 validateStructure raw =
+  validateClaimStructure
+    RawClaimGraph
+      { rawNodeClaims = map assertedClaim (rawNodes raw)
+      , rawEdgeClaims = map assertedClaim (rawEdges raw)
+      }
+
+-- | Elaborate explicit node and relation claims into the asserted typed graph.
+--
+-- Every proposition is structurally inspected. Candidate propositions may
+-- depend on asserted or candidate declarations. Asserted propositions may
+-- depend only on asserted declarations; commitments are never promoted or
+-- downgraded.
+validateClaimStructure :: RawClaimGraph -> StructureResult
+validateClaimStructure raw =
   case collectStructuralErrors raw of
     Failure failures -> StructureModelRejected failures
     Success admissible ->
       case elaborateStructure admissible of
         Left internal -> StructureInternalFailure internal
-        Right graph -> StructureAccepted graph
+        Right assessment -> StructureAccepted assessment
 
 collectStructuralErrors ::
-     RawGraph
+     RawClaimGraph
   -> Validation
        (NonEmpty.NonEmpty StructuralError)
        StructurallyAdmissibleRawGraph
@@ -96,38 +136,73 @@ collectStructuralErrors raw =
   where
     errors = nodeErrors raw ++ edgeErrors raw
 
-nodeErrors :: RawGraph -> [StructuralError]
-nodeErrors raw = duplicateIdErrors ++ concatMap validateNode (rawNodes raw)
+nodeErrors :: RawClaimGraph -> [StructuralError]
+nodeErrors raw = duplicateIdErrors ++ concatMap validateClaim nodeClaims
   where
-    identifiers = map rawNodeId (rawNodes raw)
+    nodeClaims = rawNodeClaims raw
+    nodes = map claimedProposition nodeClaims
+    assertedNodes = assertedValues nodeClaims
+    candidateNodes = candidateValues nodeClaims
+    assertedIdentifiers = map rawNodeId assertedNodes
+    candidateOnlyIdentifiers =
+      [ rawNodeId node
+      | node <- candidateNodes
+      , rawNodeId node `notElem` assertedIdentifiers
+      ]
+    identifiers = map rawNodeId nodes
     duplicateIdErrors = map DuplicateNodeId (duplicates identifiers)
-    owners = contextKinds raw
-    validateNode (RawContextNode _ _) = []
-    validateNode (RawPrimitiveNode identifier owner primitive) =
+    assertedOwners = contextKindsOf assertedNodes
+    owners = contextKindsOf nodes
+    validateClaim claim =
+      validateNode (claimCommitment claim) (claimedProposition claim)
+    validateNode _ (RawContextNode _ _) = []
+    validateNode commitment (RawPrimitiveNode identifier owner primitive) =
       case Map.lookup owner owners of
         Nothing -> [UnknownOwner identifier owner]
         Just context ->
-          [ InvalidPrimitiveInterpretation identifier context primitive
-          | isNothing (lookupInterpretation context primitive)
-          ]
-    validateNode (RawStructuringNode identifier owner structuring) =
+          dependencyErrors commitment identifier owner
+            ++ [ InvalidPrimitiveInterpretation identifier context primitive
+               | isNothing (lookupInterpretation context primitive)
+               ]
+    validateNode commitment (RawStructuringNode identifier owner structuring) =
       case Map.lookup owner owners of
         Nothing -> [UnknownOwner identifier owner]
         Just context ->
-          [ InvalidStructuringContext identifier context structuring
-          | isNothing (lookupPerformanceDimensionRole context)
-          ]
-    validateNode (RawAnchorNode _ _) = []
+          dependencyErrors commitment identifier owner
+            ++ [ InvalidStructuringContext identifier context structuring
+               | isNothing (lookupPerformanceDimensionRole context)
+               ]
+    validateNode _ (RawAnchorNode _ _) = []
+    dependencyErrors commitment identifier owner =
+      [ AssertedNodeDependsOnCandidate identifier owner
+      | commitment == Asserted
+      , owner `elem` candidateOnlyIdentifiers
+      , Map.notMember owner assertedOwners
+      ]
 
-edgeErrors :: RawGraph -> [StructuralError]
-edgeErrors raw = duplicateEdgeErrors ++ concatMap validateEdge (rawEdges raw)
+edgeErrors :: RawClaimGraph -> [StructuralError]
+edgeErrors raw = duplicateEdgeErrors ++ concatMap validateClaim edgeClaims
   where
-    duplicateEdgeErrors = map DuplicateEdge (duplicates (rawEdges raw))
+    edgeClaims = rawEdgeClaims raw
+    edges = map claimedProposition edgeClaims
+    assertedIdentifiers = map rawNodeId (assertedValues (rawNodeClaims raw))
+    candidateOnlyIdentifiers =
+      [ rawNodeId node
+      | node <- candidateValues (rawNodeClaims raw)
+      , rawNodeId node `notElem` assertedIdentifiers
+      ]
+    duplicateEdgeErrors = map DuplicateEdge (duplicates edges)
     kinds = rawNodeKinds raw
     declarations =
-      Map.fromListWith (++) [(rawNodeId node, [node]) | node <- rawNodes raw]
-    validateEdge edge =
-      endpointErrors edge fromKind toKind
+      Map.fromListWith
+        (++)
+        [ (rawNodeId node, [node])
+        | node <- map claimedProposition (rawNodeClaims raw)
+        ]
+    validateClaim claim =
+      validateEdge (claimCommitment claim) (claimedProposition claim)
+    validateEdge commitment edge =
+      endpointErrors commitment candidateOnlyIdentifiers edge fromKind toKind
         ++ relationErrors edge fromKind toKind candidates
         ++ performanceDimensionMembershipOwnerErrors
              edge
@@ -141,10 +216,22 @@ edgeErrors raw = duplicateEdgeErrors ++ concatMap validateEdge (rawEdges raw)
         candidates = lookupRelations (rawEdgeRelation edge)
 
 endpointErrors ::
-     RawEdge -> Maybe NodeKindValue -> Maybe NodeKindValue -> [StructuralError]
-endpointErrors edge fromKind toKind =
-  [UnknownEdgeEndpoint edge (rawEdgeFrom edge) | isNothing fromKind]
-    ++ [UnknownEdgeEndpoint edge (rawEdgeTo edge) | isNothing toKind]
+     Commitment
+  -> [RawNodeId]
+  -> RawEdge
+  -> Maybe NodeKindValue
+  -> Maybe NodeKindValue
+  -> [StructuralError]
+endpointErrors commitment candidates edge fromKind toKind =
+  endpointError (rawEdgeFrom edge) fromKind
+    ++ endpointError (rawEdgeTo edge) toKind
+  where
+    endpointError identifier kind
+      | commitment == Asserted
+      , identifier `elem` candidates =
+        [AssertedEdgeDependsOnCandidate edge identifier]
+      | not (isNothing kind) = []
+      | otherwise = [UnknownEdgeEndpoint edge identifier]
 
 relationErrors ::
      RawEdge
@@ -202,18 +289,24 @@ performanceDimensionMembershipOwnerErrors _ _ _ _ _ = []
 
 elaborateStructure ::
      StructurallyAdmissibleRawGraph
-  -> Either StructureInternalError WellFormedGraph
+  -> Either StructureInternalError StructuralAssessment
 elaborateStructure (StructurallyAdmissibleRawGraph raw) = do
   contexts <- traverse buildContext contextNodes
   let contextMap = Map.fromList [(someNodeRawId node, node) | node <- contexts]
   children <- traverse (buildChild contextMap) childNodes
   let nodes =
         Map.fromList [(someNodeRawId node, node) | node <- contexts ++ children]
-  edges <- traverse (buildEdge nodes) (rawEdges raw)
-  pure (mkWellFormedGraph nodes edges)
+  edges <- traverse (buildEdge nodes) assertedEdges
+  pure
+    (StructuralAssessment (mkWellFormedGraph nodes edges) candidatePropositions)
   where
-    contextNodes = [node | node@(RawContextNode _ _) <- rawNodes raw]
-    childNodes = [node | node <- rawNodes raw, not (isContextNode node)]
+    assertedNodes = assertedValues (rawNodeClaims raw)
+    assertedEdges = assertedValues (rawEdgeClaims raw)
+    contextNodes = [node | node@(RawContextNode _ _) <- assertedNodes]
+    childNodes = [node | node <- assertedNodes, not (isContextNode node)]
+    candidatePropositions =
+      map CandidateNodeProposition (candidateValues (rawNodeClaims raw))
+        ++ map CandidateEdgeProposition (candidateValues (rawEdgeClaims raw))
 
 buildContext :: RawNode -> Either StructureInternalError SomeNode
 buildContext (RawContextNode identifier context) =
@@ -301,15 +394,16 @@ isContextNode :: RawNode -> Bool
 isContextNode (RawContextNode _ _) = True
 isContextNode _ = False
 
-contextKinds :: RawGraph -> Map RawNodeId Context
-contextKinds raw =
+contextKindsOf :: [RawNode] -> Map RawNodeId Context
+contextKindsOf nodes =
   Map.fromList
-    [(identifier, context) | RawContextNode identifier context <- rawNodes raw]
+    [(identifier, context) | RawContextNode identifier context <- nodes]
 
-rawNodeKinds :: RawGraph -> Map RawNodeId NodeKindValue
-rawNodeKinds raw = Map.fromList (mapMaybeKind (rawNodes raw))
+rawNodeKinds :: RawClaimGraph -> Map RawNodeId NodeKindValue
+rawNodeKinds raw = Map.fromList (mapMaybeKind nodes)
   where
-    owners = contextKinds raw
+    nodes = map claimedProposition (rawNodeClaims raw)
+    owners = contextKindsOf nodes
     mapMaybeKind [] = []
     mapMaybeKind (node:rest) =
       case rawKind owners node of
@@ -326,3 +420,17 @@ rawKind _ (RawAnchorNode _ anchor) = Just (AnchorNodeKind anchor)
 
 duplicates :: Ord value => [value] -> [value]
 duplicates = map head . filter ((> 1) . length) . group . sort
+
+assertedValues :: [Claim value] -> [value]
+assertedValues claims =
+  [ claimedProposition proposition
+  | proposition <- claims
+  , claimCommitment proposition == Asserted
+  ]
+
+candidateValues :: [Claim value] -> [value]
+candidateValues claims =
+  [ claimedProposition proposition
+  | proposition <- claims
+  , claimCommitment proposition == Candidate
+  ]

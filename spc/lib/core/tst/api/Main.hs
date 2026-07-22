@@ -18,7 +18,8 @@ import qualified O2I.Language as Language
 import qualified O2I.Validation as Validation
 
 $(assertAbstractTypes
-    [ "Language.NodeId"
+    [ "Language.Claim"
+    , "Language.NodeId"
     , "Language.ContextRef"
     , "Language.InterpretationSpec"
     , "Language.SomeInterpretation"
@@ -30,7 +31,12 @@ $(assertAbstractTypes
     ])
 
 $(assertOrdinaryFunctions
-    [ 'Language.unNodeId
+    [ 'Language.claimWithCommitment
+    , 'Language.candidateClaim
+    , 'Language.assertedClaim
+    , 'Language.claimCommitment
+    , 'Language.claimedProposition
+    , 'Language.unNodeId
     , 'Language.contextRefId
     , 'Language.interpretationCode
     , 'Language.interpretationContext
@@ -77,7 +83,9 @@ $(assertOrdinaryFunctions
     ])
 
 $(assertAbstractTypes
-    [ "Validation.StrategyFormulation"
+    [ "Validation.StructuralAssessment"
+    , "Validation.ModelAssessment"
+    , "Validation.StrategyFormulation"
     , "Validation.NeedQualificationSourceReference"
     , "Validation.NeedQualificationCandidate"
     , "Validation.SemanticallyValidModel"
@@ -93,7 +101,15 @@ $(assertAbstractTypes
     ])
 
 $(assertOrdinaryFunctions
-    [ 'Validation.macroEvidenceWitnesses
+    [ 'Validation.assessModelSemantics
+    , 'Validation.structuralGraph
+    , 'Validation.structuralCandidatePropositions
+    , 'Validation.assessedSemanticModel
+    , 'Validation.assessmentInvariantErrors
+    , 'Validation.assessmentCandidatePropositions
+    , 'Validation.contextElaboration
+    , 'Validation.modelMaturity
+    , 'Validation.macroEvidenceWitnesses
     , 'Validation.witnessPremises
     , 'Validation.strategyFormulations
     , 'Validation.strategyFormulationData
@@ -148,7 +164,9 @@ $(assertOrdinaryFunctions
     ])
 
 $(assertAbstractTypes
-    [ "O2I.NodeId"
+    [ "O2I.Claim"
+    , "O2I.ModelAssessment"
+    , "O2I.NodeId"
     , "O2I.ContextRef"
     , "O2I.SomeInterpretation"
     , "O2I.Relation"
@@ -160,6 +178,7 @@ $(assertAbstractTypes
     , "O2I.SomeNode"
     , "O2I.SomeEdge"
     , "O2I.WellFormedGraph"
+    , "O2I.StructuralAssessment"
     , "O2I.StrategyFormulation"
     , "O2I.NeedQualificationSourceReference"
     , "O2I.NeedQualificationCandidate"
@@ -176,7 +195,20 @@ $(assertAbstractTypes
     ])
 
 $(assertOrdinaryFunctions
-    [ 'O2I.macroEvidenceRuleConclusion
+    [ 'O2I.claimWithCommitment
+    , 'O2I.candidateClaim
+    , 'O2I.assertedClaim
+    , 'O2I.claimCommitment
+    , 'O2I.claimedProposition
+    , 'O2I.assessedSemanticModel
+    , 'O2I.assessmentInvariantErrors
+    , 'O2I.assessmentCandidatePropositions
+    , 'O2I.contextElaboration
+    , 'O2I.modelMaturity
+    , 'O2I.assessModelSemantics
+    , 'O2I.structuralGraph
+    , 'O2I.structuralCandidatePropositions
+    , 'O2I.macroEvidenceRuleConclusion
     , 'O2I.macroClaimConclusion
     , 'O2I.buildMacroFactIndex
     , 'O2I.macroClaims
@@ -545,7 +577,8 @@ checked _ (Success value) = Right value
 checked stage (Failure errors) = Left (stage ++ " failed: " ++ show errors)
 
 checkedStructure :: String -> StructureResult -> Either String WellFormedGraph
-checkedStructure _ (StructureAccepted graph) = Right graph
+checkedStructure _ (StructureAccepted assessment) =
+  Right (structuralGraph assessment)
 checkedStructure stage (StructureModelRejected errors) =
   Left (stage ++ " failed: " ++ show errors)
 checkedStructure stage (StructureInternalFailure internal) =
