@@ -26,6 +26,7 @@ import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import O2I
   ( buildMacroFactIndex
+  , claimedProposition
   , macroClaims
   , macroDependencyEdge
   , macroScopeDependencies
@@ -140,14 +141,27 @@ closeScope (ProfileIndex profileSpecification view projection) =
     persistedFacts = resolvedProjectedFacts projection
     macroIndex =
       buildMacroFactIndex
-        [(occurrence, node) | IndexedNode occurrence node _ <- persistedFacts]
-        [(occurrence, edge) | IndexedEdge occurrence edge _ <- persistedFacts]
+        [ (occurrence, claimedProposition node)
+        | IndexedNode occurrence node _ <- persistedFacts
+        ]
+        [ (occurrence, claimedProposition edge)
+        | IndexedEdge occurrence edge _ <- persistedFacts
+        ]
     macroDependencies =
       [ indexMacroDependency conclusion (macroDependencyEdge dependency)
       | (conclusion, claim) <- macroClaims macroIndex
       , dependency <- macroScopeDependencies macroIndex claim
       ]
-    facts = persistedFacts ++ macroDependencies
+    collectiveDependencies =
+      [ IndexedDependency
+        claimOccurrence
+        participantOccurrence
+        CollectiveRealizationParticipant
+      | IndexedCollectiveStrategyRealization claimOccurrence _ contributorOccurrences targetOccurrence _ <-
+          persistedFacts
+      , participantOccurrence <- contributorOccurrences ++ [targetOccurrence]
+      ]
+    facts = persistedFacts ++ collectiveDependencies ++ macroDependencies
     presentations =
       [(presentation, target) | IndexedSeed presentation target <- facts]
     seeds =
@@ -310,6 +324,8 @@ locationsByOccurrence = Map.fromListWith Set.union . mapMaybe factLocation
     factLocation (IndexedNode occurrence _ location) =
       Just (occurrence, Set.singleton location)
     factLocation (IndexedEdge occurrence _ location) =
+      Just (occurrence, Set.singleton location)
+    factLocation (IndexedCollectiveStrategyRealization occurrence _ _ _ location) =
       Just (occurrence, Set.singleton location)
     factLocation _ = Nothing
 

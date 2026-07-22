@@ -41,6 +41,10 @@ module O2I.Inspection.Diagnostic
   , structuralDefectSpec
   , candidatePropositionSpec
   , semanticDefectSpec
+  , collectiveRealizationErrorSpec
+  , candidateCollectiveRealizationErrorSpec
+  , candidateCollectiveRealizationIssueSpec
+  , candidateCollectiveRealizationSpec
   , traceabilityDefectSpec
   , readinessDefectSpec
   , evidenceDefectSpec
@@ -60,7 +64,11 @@ import O2I.Inspection.Diagnostic.Internal
   , DiagnosticSubject(..)
   , Diagnostics
   , InspectionStage(..)
+  , candidateCollectiveRealizationErrorSpec
+  , candidateCollectiveRealizationIssueSpec
+  , candidateCollectiveRealizationSpec
   , candidatePropositionSpec
+  , collectiveRealizationErrorSpec
   , diagnosticSpec
   , diagnosticsList
   , evidenceDefectSpec

@@ -173,7 +173,11 @@ adversarialPosition =
 emptyInputs :: InspectionInputs
 emptyInputs =
   InspectionInputs
-    {strategyInput = Absent, readinessInput = Absent, evidenceInput = Absent}
+    { strategyInput = Absent
+    , collectiveFitInput = Absent
+    , readinessInput = Absent
+    , evidenceInput = Absent
+    }
 
 adversarialText :: Text
 adversarialText = "ASCII\\literal\r\n\ESC\DEL\x0085\&\x009f\x03a9"

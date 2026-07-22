@@ -78,7 +78,14 @@ data ContractDefect = ContractDefect
 data FactTemplate
   = OccurrenceTemplate OccurrenceId
   | NodeTemplate OccurrenceId RawNode
+  | NodeClaimTemplate OccurrenceId (Claim RawNode)
   | EdgeTemplate OccurrenceId RawEdge
+  | EdgeClaimTemplate OccurrenceId (Claim RawEdge)
+  | CollectiveTemplate
+      OccurrenceId
+      RawCollectiveStrategyRealization
+      [OccurrenceId]
+      OccurrenceId
   | SeedTemplate OccurrenceId OccurrenceId
   | DependencyTemplate OccurrenceId OccurrenceId PersistedDependencyReason
   | ReferenceTemplate OccurrenceId [OccurrenceId] PersistedDependencyReason
@@ -140,6 +147,21 @@ tests =
     , testCase
         "candidate Strategy content is warned and excluded"
         candidateStrategyInputTest
+    , testCase
+        "explicit graph Candidates survive import and remain excluded"
+        candidateGraphClaimsInspectionTest
+    , testCase
+        "valid asserted collective claim is retained by Semantics"
+        validCollectiveInspectionTest
+    , testCase
+        "collective Candidate is warned, excluded, and keeps Draft maturity"
+        candidateCollectiveInspectionTest
+    , testCase
+        "malformed collective Candidate retains structural diagnostics"
+        malformedCandidateCollectiveInspectionTest
+    , testCase
+        "asserted collective semantic defects fail Semantics"
+        assertedCollectiveFailureInspectionTest
     , testCase
         "different existential profile types remain isolated"
         existentialAdapterTest
@@ -1007,6 +1029,116 @@ candidateStrategyInputTest = do
         , StageNotRun (BlockedByFailure SemanticsStage)
         ]
 
+candidateGraphClaimsInspectionTest :: Assertion
+candidateGraphClaimsInspectionTest = do
+  let candidateNodeId = RawNodeId "candidate-strategy"
+      candidateNodeOccurrence = testOccurrence "candidate-node"
+      candidateEdgeOccurrence = testOccurrence "candidate-edge"
+      facts =
+        completeModelFacts
+          ++ [ NodeClaimTemplate
+                 candidateNodeOccurrence
+                 (candidateClaim (RawContextNode candidateNodeId Strategy))
+             , SeedTemplate completePresentation candidateNodeOccurrence
+             , EdgeClaimTemplate
+                 candidateEdgeOccurrence
+                 (candidateClaim
+                    (completeEdge
+                       completeStrategyId
+                       directsStrategy
+                       completeStrategyId))
+             , SeedTemplate completePresentation candidateEdgeOccurrence
+             ]
+      inputs =
+        noInputs
+          { strategyInput =
+              Supplied
+                (sourcedFromDocument
+                   strategySourceDocument
+                   (StrategyFormulationBundle
+                      [assertedClaim completeStrategyFormulation]))
+          }
+  report <-
+    completedReport
+      (runAdapterWithInputs
+         (testAdapter DecodeSucceeds ViewSucceeds RootSucceeds facts [])
+         inputs)
+  reportMaturity report @?= Just Draft
+  semanticsState report @?= StageUnavailable
+  diagnosticCodes report
+    @?= ["o2i.claim.candidate-excluded", "o2i.claim.candidate-excluded"]
+
+validCollectiveInspectionTest :: Assertion
+validCollectiveInspectionTest = do
+  report <- completedReport (runCollectiveInspection assertedCollectiveClaim)
+  schema <- inspectionSchema
+  assertBool
+    "collective report failed Draft 2020-12 validation"
+    (validateJSONSchema schema (renderedReportValue report))
+  reportMaturity report @?= Just SemanticallyValid
+  reportMaturityText report @?= Just "semantically-valid"
+  case Aeson.decode (renderInspectionReportJSON report) of
+    Just (Aeson.Object objectValue) ->
+      KeyMap.lookup "maturity" objectValue
+        @?= Just (Aeson.String "semantically-valid")
+    _ -> assertFailure "collective report did not encode one JSON object"
+  semanticsState report @?= StagePassed
+  case reportSemanticAssessment report of
+    Nothing -> assertFailure "missing complete semantic assessment"
+    Just assessment ->
+      map
+        collectiveRealizationId
+        (semanticCollectiveStrategyRealizations assessment)
+        @?= [collectiveInspectionClaimId]
+  assertBool
+    "collective participant closure reason was not retained"
+    (CollectiveRealizationParticipant
+       `elem` concatMap
+                (NonEmpty.toList . provenanceReasons)
+                (maybe
+                   []
+                   (NonEmpty.toList . closedScopeProvenanceOccurrences)
+                   (reportClosedScopeProvenance report)))
+
+candidateCollectiveInspectionTest :: Assertion
+candidateCollectiveInspectionTest = do
+  report <-
+    completedReport
+      (runCollectiveInspection
+         assertedCollectiveClaim {rawCommitment = Candidate})
+  reportMaturity report @?= Just Draft
+  semanticsState report @?= StageUnavailable
+  diagnosticCodes report @?= ["o2i.claim.collective-candidate-excluded"]
+  case reportSemanticAssessment report of
+    Nothing -> assertFailure "missing Candidate semantic assessment"
+    Just assessment ->
+      length (semanticCollectiveStrategyRealizations assessment) @?= 0
+
+malformedCandidateCollectiveInspectionTest :: Assertion
+malformedCandidateCollectiveInspectionTest = do
+  report <-
+    completedReport
+      (runCollectiveInspection
+         assertedCollectiveClaim
+           { rawCommitment = Candidate
+           , rawContributors = [collectiveContributorOneId]
+           })
+  reportMaturity report @?= Just Draft
+  semanticsState report @?= StageUnavailable
+  diagnosticCodes report
+    @?= [ "o2i.claim.collective-candidate-excluded"
+        , "o2i.semantics.collective.contributors-too-few"
+        ]
+
+assertedCollectiveFailureInspectionTest :: Assertion
+assertedCollectiveFailureInspectionTest = do
+  report <-
+    completedReport
+      (runCollectiveInspectionWithFit assertedCollectiveClaim Absent)
+  reportMaturity report @?= Just Draft
+  semanticsState report @?= StageFailed
+  diagnosticCodes report @?= ["o2i.semantics.collective.fit-evidence-not-found"]
+
 existentialAdapterTest :: Assertion
 existentialAdapterTest = do
   first <- completedReport (runAdapter goodEthosAdapter)
@@ -1422,6 +1554,7 @@ validInspectionInputs = do
                strategySourceDocument
                (StrategyFormulationBundle
                   [assertedClaim completeStrategyFormulation]))
+      , collectiveFitInput = Absent
       , readinessInput =
           Supplied
             (sourcedFromDocument
@@ -1498,9 +1631,11 @@ renameGraph renames graph =
 sourceDocument :: Text -> ByteString.ByteString -> SourceDocument
 sourceDocument label = sourceDocumentFromBytes label FileSource
 
-strategySourceDocument, readinessSourceDocument, evidenceSourceDocument ::
+strategySourceDocument, collectiveFitSourceDocument, readinessSourceDocument, evidenceSourceDocument ::
      SourceDocument
 strategySourceDocument = sourceDocument "strategy.json" "strategy-input"
+
+collectiveFitSourceDocument = sourceDocument "collective-fit.json" "fit-input"
 
 readinessSourceDocument = sourceDocument "readiness.json" "readiness-input"
 
@@ -1698,6 +1833,208 @@ completeStrategyFormulation =
     , rawFormulationKeyResults = completeStrategyKeyResultId :| []
     , rawFormulationFitRationale = "actions substantiate intent" :| []
     }
+
+runCollectiveInspection :: RawCollectiveStrategyRealization -> InspectionOutcome
+runCollectiveInspection claim =
+  runCollectiveInspectionWithFit
+    claim
+    (Supplied
+       (sourcedFromDocument
+          collectiveFitSourceDocument
+          (CollectiveFitEvidenceBundle [collectiveInspectionFit])))
+
+runCollectiveInspectionWithFit ::
+     RawCollectiveStrategyRealization
+  -> Availability CollectiveFitEvidenceBundle
+  -> InspectionOutcome
+runCollectiveInspectionWithFit claim fitAvailability =
+  runAdapterWithInputs
+    (testAdapter
+       DecodeSucceeds
+       ViewSucceeds
+       RootSucceeds
+       (collectiveInspectionFacts claim)
+       [])
+    noInputs
+      { strategyInput =
+          Supplied
+            (sourcedFromDocument
+               strategySourceDocument
+               (StrategyFormulationBundle collectiveInspectionFormulations))
+      , collectiveFitInput = fitAvailability
+      }
+
+collectiveInspectionFacts :: RawCollectiveStrategyRealization -> [FactTemplate]
+collectiveInspectionFacts claim =
+  graphFacts collectiveInspectionGraph
+    ++ [ CollectiveTemplate
+           collectiveClaimOccurrence
+           claim
+           [ nodeOccurrence collectiveContributorOneId
+           , nodeOccurrence collectiveContributorTwoId
+           ]
+           (nodeOccurrence completeStrategyId)
+       , SeedTemplate completePresentation collectiveClaimOccurrence
+       ]
+  where
+    nodeOccurrence identifier =
+      case [ occurrence
+           | (index, node) <- zip [(1 :: Int) ..] collectiveInspectionNodes
+           , testRawNodeIdentifier node == identifier
+           , let occurrence = indexedOccurrence "node" index
+           ] of
+        occurrence:_ -> occurrence
+        [] -> error "collective fixture participant is absent"
+
+collectiveInspectionGraph :: RawGraph
+collectiveInspectionGraph =
+  RawGraph collectiveInspectionNodes collectiveInspectionEdges
+
+collectiveInspectionNodes :: [RawNode]
+collectiveInspectionNodes =
+  completeNodes
+    ++ contributorNodes "one" collectiveContributorOneId
+    ++ contributorNodes "two" collectiveContributorTwoId
+  where
+    contributorNodes prefix strategy =
+      [ RawContextNode strategy Strategy
+      , RawPrimitiveNode (contributorId prefix "driver") strategy Driver
+      , RawPrimitiveNode (contributorId prefix "objective") strategy Objective
+      , RawPrimitiveNode (contributorId prefix "principle") strategy Principle
+      , RawPrimitiveNode (contributorId prefix "action") strategy Action
+      , RawPrimitiveNode (contributorId prefix "key-result") strategy KeyResult
+      ]
+
+collectiveInspectionEdges :: [RawEdge]
+collectiveInspectionEdges =
+  completeEdges
+    ++ contributorEdges "one" collectiveContributorOneId
+    ++ contributorEdges "two" collectiveContributorTwoId
+    ++ [ completeEdge
+           collectiveContributorOneId
+           contributesToStrategy
+           completeStrategyId
+       , completeEdge
+           collectiveContributorTwoId
+           contributesToStrategy
+           completeStrategyId
+       , completeEdge
+           (contributorId "one" "key-result")
+           contributesStrategyKeyResultToKeyResult
+           completeStrategyKeyResultId
+       , completeEdge
+           (contributorId "two" "action")
+           contributesStrategyActionToAction
+           completeStrategyActionId
+       ]
+  where
+    contributorEdges prefix strategy =
+      [ completeEdge
+          completeVisionObjectiveId
+          orientsVisionObjectiveToStrategyObjective
+          (contributorId prefix "objective")
+      , completeEdge
+          (contributorId prefix "driver")
+          groundsStrategyDriverToObjective
+          (contributorId prefix "objective")
+      , completeEdge
+          (contributorId prefix "principle")
+          guidesStrategyPrincipleToAction
+          (contributorId prefix "action")
+      , completeEdge
+          (contributorId prefix "key-result")
+          substantiatesStrategyKeyResultObjective
+          (contributorId prefix "objective")
+      , completeEdge
+          (contributorId prefix "action")
+          contributesStrategyActionToKeyResult
+          (contributorId prefix "key-result")
+      , completeEdge completeVisionId orientsStrategy strategy
+      ]
+
+collectiveInspectionFormulations :: [Claim RawStrategyFormulation]
+collectiveInspectionFormulations =
+  map
+    assertedClaim
+    [ completeStrategyFormulation
+    , contributorFormulation "one" collectiveContributorOneId
+    , contributorFormulation "two" collectiveContributorTwoId
+    ]
+  where
+    contributorFormulation prefix strategy =
+      completeStrategyFormulation
+        { rawFormulationStrategy = strategy
+        , rawFormulationDiagnosis = contributorId prefix "driver"
+        , rawFormulationIntent = contributorId prefix "objective"
+        , rawFormulationGuidingPolicy = contributorId prefix "principle"
+        , rawFormulationActions = contributorId prefix "action" :| []
+        , rawFormulationKeyResults = contributorId prefix "key-result" :| []
+        }
+
+collectiveInspectionClaimId :: ClaimId
+collectiveInspectionClaimId = ClaimId "inspection-collective"
+
+assertedCollectiveClaim :: RawCollectiveStrategyRealization
+assertedCollectiveClaim =
+  RawCollectiveStrategyRealization
+    { rawRealizationId = collectiveInspectionClaimId
+    , rawContributors = [collectiveContributorOneId, collectiveContributorTwoId]
+    , rawTarget = completeStrategyId
+    , rawCollectiveFitEvidence = collectiveInspectionFitRef
+    , rawCommitment = Asserted
+    }
+
+collectiveInspectionFit :: RawCollectiveFitEvidence
+collectiveInspectionFit =
+  RawCollectiveFitEvidence
+    { rawFitEvidenceRef = collectiveInspectionFitRef
+    , rawFitContributors =
+        [collectiveContributorOneId, collectiveContributorTwoId]
+    , rawFitTarget = completeStrategyId
+    , rawMutualCoherenceEvidence =
+        [ RawMutualCoherenceEvidence
+            collectiveContributorOneId
+            collectiveContributorTwoId
+            "The contributor commitments are mutually coherent."
+        ]
+    , rawFitTargetGuidingPolicy = completeStrategyPrincipleId
+    , rawFitTargetTradeOffs =
+        NonEmpty.toList (rawFormulationTradeOffs completeStrategyFormulation)
+    , rawContributorCompatibilityEvidence =
+        [ compatibility collectiveContributorOneId
+        , compatibility collectiveContributorTwoId
+        ]
+    , rawViableInteractionEvidence = ["The actions interact viably."]
+    }
+  where
+    compatibility contributor =
+      RawContributorCompatibilityEvidence
+        contributor
+        "Compatible with the target Guiding Policy."
+        "Compatible with the target Trade-offs."
+
+collectiveInspectionFitRef :: CollectiveFitEvidenceRef
+collectiveInspectionFitRef = CollectiveFitEvidenceRef "inspection-fit"
+
+collectiveContributorOneId, collectiveContributorTwoId :: RawNodeId
+collectiveContributorOneId = RawNodeId "collective-contributor-one"
+
+collectiveContributorTwoId = RawNodeId "collective-contributor-two"
+
+contributorId :: Text -> Text -> RawNodeId
+contributorId prefix suffix =
+  RawNodeId ("collective-contributor-" <> prefix <> "-" <> suffix)
+
+collectiveClaimOccurrence :: OccurrenceId
+collectiveClaimOccurrence = testOccurrence "collective-claim"
+
+testRawNodeIdentifier :: RawNode -> RawNodeId
+testRawNodeIdentifier node =
+  case node of
+    RawContextNode identifier _ -> identifier
+    RawPrimitiveNode identifier _ _ -> identifier
+    RawStructuringNode identifier _ _ -> identifier
+    RawAnchorNode identifier _ -> identifier
 
 completeEthosId, completeMissionId, completeVisionId, completeStrategyId ::
      RawNodeId
@@ -2033,8 +2370,21 @@ instantiateFacts location = map instantiate
     instantiate template =
       case template of
         OccurrenceTemplate occurrence -> indexOccurrence occurrence location
-        NodeTemplate occurrence node -> indexNode occurrence node location
-        EdgeTemplate occurrence edge -> indexEdge occurrence edge location
+        NodeTemplate occurrence node ->
+          indexNode occurrence (assertedClaim node) location
+        NodeClaimTemplate occurrence claim ->
+          indexNode occurrence claim location
+        EdgeTemplate occurrence edge ->
+          indexEdge occurrence (assertedClaim edge) location
+        EdgeClaimTemplate occurrence claim ->
+          indexEdge occurrence claim location
+        CollectiveTemplate occurrence claim contributors target ->
+          indexCollectiveStrategyRealization
+            occurrence
+            claim
+            contributors
+            target
+            location
         SeedTemplate presentation target ->
           indexPresentation presentation target
         DependencyTemplate source target reason ->
@@ -2307,7 +2657,11 @@ testSpec code =
 noInputs :: InspectionInputs
 noInputs =
   InspectionInputs
-    {strategyInput = Absent, readinessInput = Absent, evidenceInput = Absent}
+    { strategyInput = Absent
+    , collectiveFitInput = Absent
+    , readinessInput = Absent
+    , evidenceInput = Absent
+    }
 
 runAdapter :: Adapter -> InspectionOutcome
 runAdapter adapter = runAdapterWithInputs adapter noInputs
@@ -2328,3 +2682,11 @@ diagnosticCodes =
   map (diagnosticCodeText . diagnosticCode)
     . diagnosticsList
     . reportDiagnostics
+
+semanticsState :: InspectionReport -> StageState
+semanticsState report =
+  case filter
+         ((== SemanticsStage) . reportedStage)
+         (stageReportsList (reportStageReports report)) of
+    stage:_ -> reportedState stage
+    [] -> error "the eight-stage report omitted Semantics"

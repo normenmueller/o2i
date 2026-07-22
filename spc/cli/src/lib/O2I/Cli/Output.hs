@@ -97,6 +97,7 @@ renderHumanReport report =
             ("SHA-256: "
                <> terminalSafeText (sourceHashText (sourceSha256 source)))
        <> supplementalSourceLines (reportSupplementalSources report)
+       <> maybe mempty (line . ("Maturity: " <>)) (reportMaturityText report)
        <> line ("Adapter: " <> adapterText (requestAdapter request))
        <> line ("View: " <> selectorText (requestedViewSelector request))
        <> closedScopeProvenanceLines (reportClosedScopeProvenance report)
@@ -272,6 +273,7 @@ supplementalKindText :: SupplementalInputKind -> Text
 supplementalKindText kind =
   case kind of
     StrategySupplement -> "strategy"
+    CollectiveFitSupplement -> "collective-fit"
     ReadinessSupplement -> "readiness"
     EvidenceSupplement -> "evidence"
 
@@ -360,6 +362,7 @@ inclusionReasonText reason =
     SituationDependency -> "situation-dependency"
     NeedDependency -> "need-dependency"
     MacroPremise -> "macro-premise"
+    CollectiveRealizationParticipant -> "collective-realization-participant"
 
 adapterText :: AdapterDescriptor -> Text
 adapterText adapter =

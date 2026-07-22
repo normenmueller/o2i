@@ -40,6 +40,7 @@ absentInputs =
   inspectionInputs (inspectionRequestFor (options (ViewName "Exact")))
     @?= InspectionInputs
           { strategyInput = Absent
+          , collectiveFitInput = Absent
           , readinessInput = Absent
           , evidenceInput = Absent
           }

@@ -20,6 +20,7 @@ module O2I.Inspection.Profile
   , indexOccurrence
   , indexNode
   , indexEdge
+  , indexCollectiveStrategyRealization
   , indexPresentation
   , indexDependency
   , indexReference

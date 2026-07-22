@@ -268,6 +268,7 @@ data InclusionReason
   | SituationDependency
   | NeedDependency
   | MacroPremise
+  | CollectiveRealizationParticipant
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 -- | Audit record for one occurrence in a closed semantic scope.
@@ -306,6 +307,7 @@ mkClosedScopeProvenance entries =
 -- | Supplemental input whose source participated in a validation stage.
 data SupplementalInputKind
   = StrategySupplement
+  | CollectiveFitSupplement
   | ReadinessSupplement
   | EvidenceSupplement
   deriving (Bounded, Enum, Eq, Ord, Show)

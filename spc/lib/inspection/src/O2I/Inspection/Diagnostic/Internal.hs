@@ -31,6 +31,10 @@ module O2I.Inspection.Diagnostic.Internal
   , structuralDefectSpec
   , candidatePropositionSpec
   , semanticDefectSpec
+  , collectiveRealizationErrorSpec
+  , candidateCollectiveRealizationErrorSpec
+  , candidateCollectiveRealizationIssueSpec
+  , candidateCollectiveRealizationSpec
   , traceabilityDefectSpec
   , readinessDefectSpec
   , evidenceDefectSpec
@@ -340,6 +344,7 @@ supplementalInputKindKey :: SupplementalInputKind -> Text
 supplementalInputKindKey kind =
   case kind of
     StrategySupplement -> "strategy"
+    CollectiveFitSupplement -> "collective-fit"
     ReadinessSupplement -> "readiness"
     EvidenceSupplement -> "evidence"
 
@@ -658,6 +663,175 @@ semanticDefectSpec defect =
         ]
   where
     semantic = coreSpec
+
+-- | Total diagnostic mapping for collective realization failures.
+collectiveRealizationErrorSpec ::
+     CollectiveStrategyRealizationError -> DiagnosticSpec
+collectiveRealizationErrorSpec defect =
+  case defect of
+    EmptyCollectiveRealizationClaimId ->
+      collective "claim-id-empty" "A collective claim identifier is empty." []
+    DuplicateCollectiveRealizationClaimId identifier ->
+      collective
+        "claim-id-duplicate"
+        "A collective claim identifier is declared more than once."
+        [claimSubject identifier]
+    EmptyCollectiveFitEvidenceReference identifier ->
+      collective
+        "fit-reference-empty"
+        "A collective claim has an empty Fit evidence reference."
+        [claimSubject identifier]
+    TooFewCollectiveContributors identifier ->
+      collective
+        "contributors-too-few"
+        "A collective claim has fewer than two contributors."
+        [claimSubject identifier]
+    DuplicateCollectiveContributor identifier contributor ->
+      collective
+        "contributor-duplicate"
+        "A collective claim repeats a contributor."
+        [claimSubject identifier, nodeSubject contributor]
+    CollectiveContributorIsTarget identifier contributor ->
+      collective
+        "self-participation"
+        "A collective contributor is also the target."
+        [claimSubject identifier, nodeSubject contributor]
+    UnknownCollectiveParticipant identifier role participant ->
+      collective
+        "participant-unknown"
+        "A collective claim refers to an unknown participant."
+        [ claimSubject identifier
+        , collectiveRoleSubject role
+        , nodeSubject participant
+        ]
+    NonStrategyCollectiveParticipant identifier role participant kind ->
+      collective
+        "participant-not-strategy"
+        "A collective participant is not a Strategy."
+        [ claimSubject identifier
+        , collectiveRoleSubject role
+        , nodeSubject participant
+        , nodeKindSubject "node-kind" kind
+        ]
+    AssertedCollectiveRealizationIssue identifier issue ->
+      withClaim identifier (collectiveRealizationIssueSpec ErrorSeverity issue)
+  where
+    collective suffix message subjects =
+      coreSpec ("o2i.semantics.collective." <> suffix) message subjects
+
+-- | Candidate structural failures remain visible as warnings.
+candidateCollectiveRealizationErrorSpec ::
+     CollectiveStrategyRealizationError -> DiagnosticSpec
+candidateCollectiveRealizationErrorSpec defect =
+  (collectiveRealizationErrorSpec defect) {specSeverity = WarningSeverity}
+
+-- | Candidate semantic deficiencies remain visible as warnings.
+candidateCollectiveRealizationIssueSpec ::
+     ClaimId -> CollectiveStrategyRealizationIssue -> DiagnosticSpec
+candidateCollectiveRealizationIssueSpec identifier =
+  withClaim identifier . collectiveRealizationIssueSpec WarningSeverity
+
+-- | Warning emitted for an excluded collective Candidate claim.
+candidateCollectiveRealizationSpec :: ClaimId -> DiagnosticSpec
+candidateCollectiveRealizationSpec identifier =
+  DiagnosticSpec
+    { specCode = DiagnosticCode "o2i.claim.collective-candidate-excluded"
+    , specSeverity = WarningSeverity
+    , specDisposition = ModelFinding
+    , specMessage =
+        "A candidate collective claim is excluded from validated semantics."
+    , specSubjects = [claimSubject identifier]
+    , specData = Map.empty
+    }
+
+collectiveRealizationIssueSpec ::
+     DiagnosticSeverity -> CollectiveStrategyRealizationIssue -> DiagnosticSpec
+collectiveRealizationIssueSpec severity issue =
+  (case issue of
+     CollectiveFitEvidenceNotFound reference ->
+       issueSpec "fit-evidence-not-found" [fitSubject reference]
+     CollectiveFitEvidenceAmbiguous reference ->
+       issueSpec "fit-evidence-ambiguous" [fitSubject reference]
+     MissingContributorContribution contributor target ->
+       issueSpec
+         "contribution-missing"
+         [nodeSubject contributor, nodeSubject target]
+     UncoveredTargetKeyResult identifier ->
+       issueSpec "target-key-result-uncovered" [nodeSubject identifier]
+     UncoveredTargetAction identifier ->
+       issueSpec "target-action-uncovered" [nodeSubject identifier]
+     CollectiveFitContributorsMismatch ->
+       issueSpec "fit-contributors-mismatch" []
+     CollectiveFitTargetMismatch expected actual ->
+       issueSpec
+         "fit-target-mismatch"
+         [nodeSubject expected, nodeSubject actual]
+     InvalidMutualCoherencePair left right ->
+       issueSpec "coherence-pair-invalid" [nodeSubject left, nodeSubject right]
+     DuplicateMutualCoherencePair left right ->
+       issueSpec
+         "coherence-pair-duplicate"
+         [nodeSubject left, nodeSubject right]
+     MissingMutualCoherencePair left right ->
+       issueSpec "coherence-pair-missing" [nodeSubject left, nodeSubject right]
+     EmptyCollectiveFitEvidence dimension ->
+       issueSpec "fit-evidence-empty" [fitDimensionSubject dimension]
+     InvalidContributorCompatibilityContributor contributor ->
+       issueSpec "compatibility-contributor-invalid" [nodeSubject contributor]
+     DuplicateContributorCompatibilityContributor contributor ->
+       issueSpec "compatibility-contributor-duplicate" [nodeSubject contributor]
+     MissingContributorCompatibilityEvidence contributor dimension ->
+       issueSpec
+         "compatibility-evidence-missing"
+         [nodeSubject contributor, fitDimensionSubject dimension]
+     EmptyContributorCompatibilityEvidence contributor dimension ->
+       issueSpec
+         "compatibility-evidence-empty"
+         [nodeSubject contributor, fitDimensionSubject dimension]
+     CollectiveFitGuidingPolicyMismatch expected actual ->
+       issueSpec
+         "guiding-policy-mismatch"
+         [nodeSubject expected, nodeSubject actual]
+     CollectiveFitTradeOffsMismatch -> issueSpec "trade-offs-mismatch" []
+     MissingTargetStrategyFormulation target ->
+       issueSpec "target-formulation-missing" [nodeSubject target])
+    {specSeverity = severity}
+  where
+    issueSpec suffix subjects =
+      coreSpec
+        ("o2i.semantics.collective." <> suffix)
+        "Collective Strategy realization validation failed."
+        subjects
+
+withClaim :: ClaimId -> DiagnosticSpec -> DiagnosticSpec
+withClaim identifier specification =
+  specification
+    {specSubjects = claimSubject identifier : specSubjects specification}
+
+claimSubject :: ClaimId -> DiagnosticSubject
+claimSubject = DiagnosticSubject "collective-claim" . claimIdText
+
+fitSubject :: CollectiveFitEvidenceRef -> DiagnosticSubject
+fitSubject =
+  DiagnosticSubject "collective-fit-evidence" . collectiveFitEvidenceRefText
+
+collectiveRoleSubject :: CollectiveParticipantRole -> DiagnosticSubject
+collectiveRoleSubject role =
+  DiagnosticSubject
+    "participant-role"
+    (case role of
+       CollectiveContributor -> "contributor"
+       CollectiveTarget -> "target")
+
+fitDimensionSubject :: CollectiveFitDimension -> DiagnosticSubject
+fitDimensionSubject dimension =
+  DiagnosticSubject
+    "fit-dimension"
+    (case dimension of
+       MutualCoherenceFit -> "mutual-coherence"
+       GuidingPolicyCompatibilityFit -> "guiding-policy-compatibility"
+       TradeOffCompatibilityFit -> "trade-off-compatibility"
+       ViableInteractionFit -> "viable-interaction")
 
 -- | Total diagnostic mapping for every traceability defect.
 traceabilityDefectSpec :: TraceabilityError -> DiagnosticSpec

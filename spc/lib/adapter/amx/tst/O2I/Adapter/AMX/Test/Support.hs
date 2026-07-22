@@ -44,7 +44,11 @@ decodeSource = decodeAMX
 noInputs :: InspectionInputs
 noInputs =
   InspectionInputs
-    {strategyInput = Absent, readinessInput = Absent, evidenceInput = Absent}
+    { strategyInput = Absent
+    , collectiveFitInput = Absent
+    , readinessInput = Absent
+    , evidenceInput = Absent
+    }
 
 diagnosticCodes :: InspectionReport -> [Text]
 diagnosticCodes =

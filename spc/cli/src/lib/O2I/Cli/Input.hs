@@ -25,6 +25,7 @@ inspectionRequestFor options =
     , inspectionInputs =
         InspectionInputs
           { strategyInput = Absent
+          , collectiveFitInput = Absent
           , readinessInput = Absent
           , evidenceInput = Absent
           }

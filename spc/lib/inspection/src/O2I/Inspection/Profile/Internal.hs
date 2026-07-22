@@ -21,6 +21,7 @@ module O2I.Inspection.Profile.Internal
   , indexOccurrence
   , indexNode
   , indexEdge
+  , indexCollectiveStrategyRealization
   , indexPresentation
   , indexDependency
   , indexReference
@@ -38,7 +39,7 @@ import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified Data.Text as Text
-import O2I (RawEdge, RawNode)
+import O2I (Claim, RawCollectiveStrategyRealization, RawEdge, RawNode)
 import O2I.Inspection.Cardinality
 import O2I.Inspection.Diagnostic
 import O2I.Inspection.Provenance
@@ -126,8 +127,14 @@ data PersistedDependencyReason
 -- | Format-neutral persisted facts consumed by semantic scope closure.
 data IndexedProfileFact location
   = IndexedOccurrence OccurrenceId location
-  | IndexedNode OccurrenceId RawNode location
-  | IndexedEdge OccurrenceId RawEdge location
+  | IndexedNode OccurrenceId (Claim RawNode) location
+  | IndexedEdge OccurrenceId (Claim RawEdge) location
+  | IndexedCollectiveStrategyRealization
+      OccurrenceId
+      RawCollectiveStrategyRealization
+      [OccurrenceId]
+      OccurrenceId
+      location
   | IndexedSeed OccurrenceId OccurrenceId
   | IndexedDependency OccurrenceId OccurrenceId InclusionReason
   | IndexedReference
@@ -142,12 +149,24 @@ indexOccurrence :: OccurrenceId -> location -> IndexedProfileFact location
 indexOccurrence = IndexedOccurrence
 
 -- | Index one projectable O2I node declaration.
-indexNode :: OccurrenceId -> RawNode -> location -> IndexedProfileFact location
+indexNode ::
+     OccurrenceId -> Claim RawNode -> location -> IndexedProfileFact location
 indexNode = IndexedNode
 
 -- | Index one projectable O2I relation declaration.
-indexEdge :: OccurrenceId -> RawEdge -> location -> IndexedProfileFact location
+indexEdge ::
+     OccurrenceId -> Claim RawEdge -> location -> IndexedProfileFact location
 indexEdge = IndexedEdge
+
+-- | Index one collective claim and its resolved participant occurrences.
+indexCollectiveStrategyRealization ::
+     OccurrenceId
+  -> RawCollectiveStrategyRealization
+  -> [OccurrenceId]
+  -> OccurrenceId
+  -> location
+  -> IndexedProfileFact location
+indexCollectiveStrategyRealization = IndexedCollectiveStrategyRealization
 
 -- | Index one direct View presentation and its persisted target.
 indexPresentation :: OccurrenceId -> OccurrenceId -> IndexedProfileFact location

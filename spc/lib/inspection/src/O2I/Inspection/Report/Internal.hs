@@ -18,6 +18,7 @@ module O2I.Inspection.Report.Internal
   , ResolvedScope(..)
   , ScopeResolution(..)
   , InspectionRequestInfo(..)
+  , InspectionSemanticAssessment(..)
   , InspectionReport(..)
   , CommandErrorClassification(..)
   , InvocationDefect(..)
@@ -29,6 +30,10 @@ module O2I.Inspection.Report.Internal
   , reportScopeResolution
   , reportClosedScopeProvenance
   , reportSupplementalSources
+  , reportSemanticAssessment
+  , reportMaturity
+  , reportMaturityText
+  , semanticCollectiveStrategyRealizations
   , reportStageReports
   , reportDiagnostics
   , reportResult
@@ -48,6 +53,12 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import Data.Maybe (catMaybes)
 import Data.Text (Text)
+import O2I
+  ( CollectiveStrategyRealization
+  , CollectiveStrategyRealizationAssessment
+  , Maturity(..)
+  , collectiveStrategyRealizations
+  )
 import O2I.Inspection.Adapter
 import O2I.Inspection.Cardinality
 import O2I.Inspection.Diagnostic.Internal
@@ -169,6 +180,12 @@ data InspectionRequestInfo = InspectionRequestInfo
   , requestedViewSelector :: ViewSelector
   } deriving (Eq, Show)
 
+-- | Semantic result for the complete inspected claim boundary.
+data InspectionSemanticAssessment =
+  InspectionSemanticAssessment
+    Maturity
+    (Maybe CollectiveStrategyRealizationAssessment)
+
 -- | State-indexed inspection report. Constructors are private to Inspection.
 data InspectionReport
   = DecodeRejectedReport
@@ -204,9 +221,9 @@ data InspectionReport
       ResolvedO2IProfile
       ResolvedScope
       [SupplementalSource]
+      (Maybe InspectionSemanticAssessment)
       StageReports
       Diagnostics
-  deriving (Eq, Show)
 
 -- | Stable command-error classification.
 data CommandErrorClassification
@@ -235,7 +252,7 @@ reportRequestInfo report =
     ViewRejectedReport request _ _ _ _ -> request
     ProfileRejectedReport request _ _ _ _ _ -> request
     ScopeRejectedReport request _ _ _ _ _ _ -> request
-    PipelineReport request _ _ _ _ _ _ _ -> request
+    PipelineReport request _ _ _ _ _ _ _ _ -> request
 
 -- | Read native binding state without inspecting a report constructor.
 reportNativeBinding :: InspectionReport -> NativeAdapterBinding
@@ -245,7 +262,7 @@ reportNativeBinding report =
     ViewRejectedReport _ binding _ _ _ -> NativeBindingResolved binding
     ProfileRejectedReport _ binding _ _ _ _ -> NativeBindingResolved binding
     ScopeRejectedReport _ binding _ _ _ _ _ -> NativeBindingResolved binding
-    PipelineReport _ binding _ _ _ _ _ _ -> NativeBindingResolved binding
+    PipelineReport _ binding _ _ _ _ _ _ _ -> NativeBindingResolved binding
 
 -- | Read View resolution without duplicating the requested selector.
 reportViewResolution :: InspectionReport -> ViewResolution
@@ -255,7 +272,7 @@ reportViewResolution report =
     ViewRejectedReport _ _ failure _ _ -> ViewRejected failure
     ProfileRejectedReport _ _ resolution _ _ _ -> ViewResolved resolution
     ScopeRejectedReport _ _ resolution _ _ _ _ -> ViewResolved resolution
-    PipelineReport _ _ resolution _ _ _ _ _ -> ViewResolved resolution
+    PipelineReport _ _ resolution _ _ _ _ _ _ -> ViewResolved resolution
 
 -- | Read root-profile resolution allowed by the report state.
 reportProfileResolution :: InspectionReport -> O2IProfileResolution
@@ -267,7 +284,8 @@ reportProfileResolution report =
       ProfileRejectedResolution rejected
     ScopeRejectedReport _ _ _ resolved _ _ _ ->
       ProfileResolvedResolution resolved
-    PipelineReport _ _ _ resolved _ _ _ _ -> ProfileResolvedResolution resolved
+    PipelineReport _ _ _ resolved _ _ _ _ _ ->
+      ProfileResolvedResolution resolved
 
 -- | Read semantic-scope resolution allowed by the report state.
 reportScopeResolution :: InspectionReport -> ScopeResolution
@@ -277,7 +295,7 @@ reportScopeResolution report =
     ViewRejectedReport {} -> ScopeUnavailable
     ProfileRejectedReport {} -> ScopeUnavailable
     ScopeRejectedReport _ _ _ _ failure _ _ -> ScopeRejectedResolution failure
-    PipelineReport _ _ _ _ scope _ _ _ -> ScopeResolved scope
+    PipelineReport _ _ _ _ scope _ _ _ _ -> ScopeResolved scope
 
 -- | Read the mandatory artifact of a successfully resolved scope.
 reportClosedScopeProvenance :: InspectionReport -> Maybe ClosedScopeProvenance
@@ -295,7 +313,35 @@ reportSupplementalSources report =
     ViewRejectedReport {} -> []
     ProfileRejectedReport {} -> []
     ScopeRejectedReport {} -> []
-    PipelineReport _ _ _ _ _ sources _ _ -> sources
+    PipelineReport _ _ _ _ _ sources _ _ _ -> sources
+
+-- | Read the complete semantic assessment when Semantics was assessed.
+reportSemanticAssessment ::
+     InspectionReport -> Maybe InspectionSemanticAssessment
+reportSemanticAssessment report =
+  case report of
+    PipelineReport _ _ _ _ _ _ assessment _ _ -> assessment
+    DecodeRejectedReport {} -> Nothing
+    ViewRejectedReport {} -> Nothing
+    ProfileRejectedReport {} -> Nothing
+    ScopeRejectedReport {} -> Nothing
+
+-- | Read exact maturity after Semantics assessment.
+reportMaturity :: InspectionReport -> Maybe Maturity
+reportMaturity = fmap semanticAssessmentMaturity . reportSemanticAssessment
+
+-- | Read the stable external text of exact post-Semantics maturity.
+reportMaturityText :: InspectionReport -> Maybe Text
+reportMaturityText = fmap maturityText . reportMaturity
+
+-- | Enumerate retained validated collective realizations.
+semanticCollectiveStrategyRealizations ::
+     InspectionSemanticAssessment -> [CollectiveStrategyRealization]
+semanticCollectiveStrategyRealizations (InspectionSemanticAssessment _ assessment) =
+  maybe [] collectiveStrategyRealizations assessment
+
+semanticAssessmentMaturity :: InspectionSemanticAssessment -> Maturity
+semanticAssessmentMaturity (InspectionSemanticAssessment maturity _) = maturity
 
 -- | Read the exact eight stage reports.
 reportStageReports :: InspectionReport -> StageReports
@@ -305,7 +351,7 @@ reportStageReports report =
     ViewRejectedReport _ _ _ stages _ -> stages
     ProfileRejectedReport _ _ _ _ stages _ -> stages
     ScopeRejectedReport _ _ _ _ _ stages _ -> stages
-    PipelineReport _ _ _ _ _ _ stages _ -> stages
+    PipelineReport _ _ _ _ _ _ _ stages _ -> stages
 
 -- | Read all diagnostics in deterministic order.
 reportDiagnostics :: InspectionReport -> Diagnostics
@@ -315,7 +361,7 @@ reportDiagnostics report =
     ViewRejectedReport _ _ _ _ diagnostics -> diagnostics
     ProfileRejectedReport _ _ _ _ _ diagnostics -> diagnostics
     ScopeRejectedReport _ _ _ _ _ _ diagnostics -> diagnostics
-    PipelineReport _ _ _ _ _ _ _ diagnostics -> diagnostics
+    PipelineReport _ _ _ _ _ _ _ _ diagnostics -> diagnostics
 
 -- | Derive the result solely from stage states.
 reportResult :: InspectionReport -> InspectionResult
@@ -414,6 +460,7 @@ inspectionReportValue report =
             [ viewResolutionField (reportViewResolution report)
             , profileResolutionField (reportProfileResolution report)
             , scopeResolutionField (reportScopeResolution report)
+            , maturityField (reportMaturity report)
             ]
        ++ [ "result" .= inspectionResultText (reportResult report)
           , "stages"
@@ -428,6 +475,16 @@ inspectionReportValue report =
 
 toolValue :: Value
 toolValue = object ["name" .= ("o2i" :: Text), "reportVersion" .= ("1" :: Text)]
+
+maturityField :: Maybe Maturity -> Maybe Pair
+maturityField = fmap ("maturity" .=) . fmap maturityText
+
+maturityText :: Maturity -> Text
+maturityText maturity =
+  case maturity of
+    Skeleton -> "skeleton"
+    Draft -> "draft"
+    SemanticallyValid -> "semantically-valid"
 
 requestValue :: InspectionRequestInfo -> Value
 requestValue request =
@@ -618,6 +675,7 @@ supplementalInputKindText :: SupplementalInputKind -> Text
 supplementalInputKindText kind =
   case kind of
     StrategySupplement -> "strategy"
+    CollectiveFitSupplement -> "collective-fit"
     ReadinessSupplement -> "readiness"
     EvidenceSupplement -> "evidence"
 
@@ -705,6 +763,7 @@ inclusionReasonText reason =
     SituationDependency -> "situation-dependency"
     NeedDependency -> "need-dependency"
     MacroPremise -> "macro-premise"
+    CollectiveRealizationParticipant -> "collective-realization-participant"
 
 resolvedViewValue :: ResolvedView SourceLocation -> Value
 resolvedViewValue view =

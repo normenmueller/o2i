@@ -33,6 +33,7 @@ $(assertAbstractTypes
     , "Diagnostic.Diagnostic"
     , "Diagnostic.Diagnostics"
     , "Import.ImportedGraph"
+    , "Import.ImportedCollectiveClaim"
     , "Input.SourceDocument"
     , "Pipeline.ReadinessWitness"
     , "Pipeline.EvidenceWitness"
@@ -55,6 +56,7 @@ $(assertAbstractTypes
     , "Provenance.ClosedScopeProvenance"
     , "Provenance.SupplementalSource"
     , "Report.StageReports"
+    , "Report.InspectionSemanticAssessment"
     , "Report.InspectionReport"
     , "Scope.SemanticallyClosedScope"
     ])
@@ -96,6 +98,15 @@ $(assertOrdinaryFunctions
     , 'Diagnostic.diagnosticLocations
     , 'Diagnostic.diagnosticSupplementalSources
     , 'Diagnostic.diagnosticData
+    , 'Import.importedClaimGraph
+    , 'Import.importedCollectiveClaims
+    , 'Import.importedCollectiveOccurrence
+    , 'Import.importedCollectiveClaim
+    , 'Import.importedCollectiveLocation
+    , 'Report.reportSemanticAssessment
+    , 'Report.reportMaturity
+    , 'Report.reportMaturityText
+    , 'Report.semanticCollectiveStrategyRealizations
     , 'Profile.profileVersionText
     , 'Provenance.sourceHashText
     , 'Provenance.sourceDisplayLabel
@@ -170,6 +181,17 @@ $(assertExactArgumentConstructors
         , "InvalidStrategyPrimitiveReference"
         , "StrategyActionWithoutKeyResult"
         , "MissingStrategyCoherence"
+        ])
+    , ( 'Diagnostic.collectiveRealizationErrorSpec
+      , [ "EmptyCollectiveRealizationClaimId"
+        , "DuplicateCollectiveRealizationClaimId"
+        , "EmptyCollectiveFitEvidenceReference"
+        , "TooFewCollectiveContributors"
+        , "DuplicateCollectiveContributor"
+        , "CollectiveContributorIsTarget"
+        , "UnknownCollectiveParticipant"
+        , "NonStrategyCollectiveParticipant"
+        , "AssertedCollectiveRealizationIssue"
         ])
     , ( 'Diagnostic.traceabilityDefectSpec
       , [ "NoIntervention"

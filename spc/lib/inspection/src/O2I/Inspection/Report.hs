@@ -16,6 +16,7 @@ module O2I.Inspection.Report
   , ResolvedScope(..)
   , ScopeResolution(..)
   , InspectionRequestInfo(..)
+  , InspectionSemanticAssessment
   , InspectionReport
   , CommandErrorClassification(..)
   , InvocationDefect(..)
@@ -27,6 +28,10 @@ module O2I.Inspection.Report
   , reportScopeResolution
   , reportClosedScopeProvenance
   , reportSupplementalSources
+  , reportSemanticAssessment
+  , reportMaturity
+  , reportMaturityText
+  , semanticCollectiveStrategyRealizations
   , reportStageReports
   , reportDiagnostics
   , reportResult

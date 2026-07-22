@@ -518,7 +518,8 @@
         "performance-dimension-membership",
         "situation-dependency",
         "need-dependency",
-        "macro-premise"
+        "macro-premise",
+        "collective-realization-participant"
       ]
     },
     "occurrenceProvenance": {
@@ -2213,6 +2214,7 @@
         "kind": {
           "enum": [
             "strategy",
+            "collective-fit",
             "readiness",
             "evidence"
           ]
@@ -2247,17 +2249,39 @@
         }
       ]
     },
-    "optionalStrategySources": {
-      "oneOf": [
+    "strategyAndFitSources": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
         {
-          "$ref": "#/$defs/noSupplementalSources"
+          "allOf": [
+            {"$ref": "#/$defs/supplementalSource"},
+            {"properties": {"kind": {"const": "strategy"}}}
+          ]
         },
         {
-          "$ref": "#/$defs/strategySources"
+          "allOf": [
+            {"$ref": "#/$defs/supplementalSource"},
+            {"properties": {"kind": {"const": "collective-fit"}}}
+          ]
         }
       ]
     },
-    "readinessSources": {
+    "optionalSemanticSources": {
+      "oneOf": [
+        {"$ref": "#/$defs/noSupplementalSources"},
+        {"$ref": "#/$defs/strategySources"},
+        {"$ref": "#/$defs/strategyAndFitSources"}
+      ]
+    },
+    "semanticSources": {
+      "oneOf": [
+        {"$ref": "#/$defs/strategySources"},
+        {"$ref": "#/$defs/strategyAndFitSources"}
+      ]
+    },
+    "readinessSourcesWithoutFit": {
       "type": "array",
       "minItems": 2,
       "maxItems": 2,
@@ -2292,7 +2316,7 @@
         }
       ]
     },
-    "evidenceSources": {
+    "evidenceSourcesWithoutFit": {
       "type": "array",
       "minItems": 3,
       "maxItems": 3,
@@ -2341,6 +2365,39 @@
         }
       ]
     },
+    "readinessSourcesWithFit": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "prefixItems": [
+        {"allOf": [{"$ref": "#/$defs/supplementalSource"}, {"properties": {"kind": {"const": "strategy"}}}]},
+        {"allOf": [{"$ref": "#/$defs/supplementalSource"}, {"properties": {"kind": {"const": "collective-fit"}}}]},
+        {"allOf": [{"$ref": "#/$defs/supplementalSource"}, {"properties": {"kind": {"const": "readiness"}}}]}
+      ]
+    },
+    "readinessSources": {
+      "oneOf": [
+        {"$ref": "#/$defs/readinessSourcesWithoutFit"},
+        {"$ref": "#/$defs/readinessSourcesWithFit"}
+      ]
+    },
+    "evidenceSourcesWithFit": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "prefixItems": [
+        {"allOf": [{"$ref": "#/$defs/supplementalSource"}, {"properties": {"kind": {"const": "strategy"}}}]},
+        {"allOf": [{"$ref": "#/$defs/supplementalSource"}, {"properties": {"kind": {"const": "collective-fit"}}}]},
+        {"allOf": [{"$ref": "#/$defs/supplementalSource"}, {"properties": {"kind": {"const": "readiness"}}}]},
+        {"allOf": [{"$ref": "#/$defs/supplementalSource"}, {"properties": {"kind": {"const": "evidence"}}}]}
+      ]
+    },
+    "evidenceSources": {
+      "oneOf": [
+        {"$ref": "#/$defs/evidenceSourcesWithoutFit"},
+        {"$ref": "#/$defs/evidenceSourcesWithFit"}
+      ]
+    },
     "diagnosticSupplementalSources": {
       "oneOf": [
         {
@@ -2348,6 +2405,9 @@
         },
         {
           "$ref": "#/$defs/strategySources"
+        },
+        {
+          "$ref": "#/$defs/strategyAndFitSources"
         },
         {
           "type": "array",
@@ -2456,7 +2516,7 @@
                   "const": "semantics"
                 },
                 "supplementalSources": {
-                  "$ref": "#/$defs/optionalStrategySources"
+                  "$ref": "#/$defs/optionalSemanticSources"
                 }
               }
             },
@@ -2814,7 +2874,7 @@
                   "$ref": "#/$defs/semanticsFailedStages"
                 },
                 "supplementalSources": {
-                  "$ref": "#/$defs/optionalStrategySources"
+                  "$ref": "#/$defs/optionalSemanticSources"
                 }
               }
             },
@@ -2827,7 +2887,7 @@
                   "$ref": "#/$defs/traceabilityFailedStages"
                 },
                 "supplementalSources": {
-                  "$ref": "#/$defs/optionalStrategySources"
+                  "$ref": "#/$defs/optionalSemanticSources"
                 }
               }
             },
@@ -2879,7 +2939,7 @@
                   "$ref": "#/$defs/readinessUnavailableStages"
                 },
                 "supplementalSources": {
-                  "$ref": "#/$defs/strategySources"
+                  "$ref": "#/$defs/semanticSources"
                 }
               }
             },
@@ -2951,6 +3011,13 @@
         "scope": {
           "$ref": "#/$defs/scopeResolved"
         },
+        "maturity": {
+          "enum": [
+            "skeleton",
+            "draft",
+            "semantically-valid"
+          ]
+        },
         "supplementalSources": {
           "oneOf": [
             {
@@ -2958,6 +3025,9 @@
             },
             {
               "$ref": "#/$defs/strategySources"
+            },
+            {
+              "$ref": "#/$defs/strategyAndFitSources"
             },
             {
               "$ref": "#/$defs/readinessSources"

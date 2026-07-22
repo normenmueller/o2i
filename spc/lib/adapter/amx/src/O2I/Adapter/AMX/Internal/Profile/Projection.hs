@@ -10,6 +10,7 @@ import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import qualified Data.Text as Text
+import O2I (assertedClaim)
 import O2I.Adapter.AMX.Internal.Defect
 import O2I.Adapter.AMX.Internal.Profile.Closure
 import O2I.Adapter.AMX.Internal.Profile.Metadata
@@ -97,7 +98,7 @@ projectNodeOccurrence environment closure element
     case rawNode environment element of
       Just node
         | representationCompatible element (nodeKind environment element) ->
-          indexNode occurrence node (amxElementLocation element)
+          indexNode occurrence (assertedClaim node) (amxElementLocation element)
       _ -> indexOccurrence occurrence (amxElementLocation element)
   | otherwise = indexOccurrence occurrence (amxElementLocation element)
   where
@@ -116,7 +117,11 @@ projectRelationshipOccurrence environment closure relationship =
       case if isOwnershipRelationship relationship
              then Nothing
              else projectedRawEdge environment closure relationship of
-        Just edge -> indexEdge occurrence edge (amxElementLocation relationship)
+        Just edge ->
+          indexEdge
+            occurrence
+            (assertedClaim edge)
+            (amxElementLocation relationship)
         Nothing -> indexOccurrence occurrence (amxElementLocation relationship)
     endpointReferences =
       [ relationshipReference environment relationship role reason

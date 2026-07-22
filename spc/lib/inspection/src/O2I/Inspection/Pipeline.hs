@@ -8,6 +8,7 @@ module O2I.Inspection.Pipeline
   , sourcedFrom
   , sourcedValue
   , StrategyFormulationBundle(..)
+  , CollectiveFitEvidenceBundle(..)
   , ReadinessBundle(..)
   , EvidenceBundle(..)
   , InspectionInputs(..)
@@ -24,6 +25,7 @@ module O2I.Inspection.Pipeline
   , inspectSourceDocument
   ) where
 
+import Data.List (group, sort)
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
@@ -68,6 +70,11 @@ newtype StrategyFormulationBundle = StrategyFormulationBundle
   { strategyFormulationsInput :: [Claim RawStrategyFormulation]
   } deriving (Eq, Show)
 
+-- | Complete, source-ordered collective Fit evidence submission.
+newtype CollectiveFitEvidenceBundle = CollectiveFitEvidenceBundle
+  { collectiveFitEvidenceInput :: [RawCollectiveFitEvidence]
+  } deriving (Eq, Show)
+
 -- | Complete ex-ante evidence-readiness submission.
 data ReadinessBundle = ReadinessBundle
   { readinessCheckedAtInput :: UTCTime
@@ -86,6 +93,7 @@ data EvidenceBundle = EvidenceBundle
 -- | Inputs independently required by later normative stages.
 data InspectionInputs = InspectionInputs
   { strategyInput :: Availability StrategyFormulationBundle
+  , collectiveFitInput :: Availability CollectiveFitEvidenceBundle
   , readinessInput :: Availability ReadinessBundle
   , evidenceInput :: Availability EvidenceBundle
   } deriving (Eq, Show)
@@ -101,7 +109,6 @@ data InspectionRequest = InspectionRequest
 data InspectionOutcome
   = InspectionCompleted InspectionReport
   | InspectionCommandFailed CommandError
-  deriving (Eq, Show)
 
 -- | Missing information that prevents semantic validation from starting.
 data InputRequirement =
@@ -122,6 +129,15 @@ structurallyClosedGraph = structuralGraph . structurallyClosedStructure
 data SemanticsWitness = SemanticsWitness
   { witnessClosedModel :: StructurallyClosedModel
   , witnessStrategyInput :: Maybe (Sourced StrategyFormulationBundle)
+  , witnessCollectiveFitInput :: Maybe (Sourced CollectiveFitEvidenceBundle)
+  }
+
+data CollectiveInspection = CollectiveInspection
+  { inspectedCollectiveDiagnostics :: [Diagnostic]
+  , inspectedCollectiveFatal :: Bool
+  , inspectedCollectiveCandidates :: Bool
+  , inspectedCollectiveAssessment :: Maybe
+      CollectiveStrategyRealizationAssessment
   }
 
 -- | Opaque binding of one traceable model to its exact readiness source.
@@ -140,23 +156,32 @@ data EvidenceWitness = EvidenceWitness
 prepareSemantics ::
      StructurallyClosedModel
   -> Availability StrategyFormulationBundle
+  -> Availability CollectiveFitEvidenceBundle
   -> Either (NonEmpty InputRequirement) SemanticsWitness
-prepareSemantics closed availability =
-  case availability of
+prepareSemantics closed strategyAvailability fitAvailability =
+  case strategyAvailability of
     Supplied sourced ->
       Right
         SemanticsWitness
-          {witnessClosedModel = closed, witnessStrategyInput = Just sourced}
+          { witnessClosedModel = closed
+          , witnessStrategyInput = Just sourced
+          , witnessCollectiveFitInput = available fitAvailability
+          }
     Absent ->
       case NonEmpty.nonEmpty strategies of
         Nothing ->
           Right
             SemanticsWitness
-              {witnessClosedModel = closed, witnessStrategyInput = Nothing}
+              { witnessClosedModel = closed
+              , witnessStrategyInput = Nothing
+              , witnessCollectiveFitInput = available fitAvailability
+              }
         Just required ->
           Left (NonEmpty.singleton (StrategyFormulationsRequired required))
   where
     strategies = contextNodesOf (structurallyClosedGraph closed) Strategy
+    available Absent = Nothing
+    available (Supplied sourced) = Just sourced
 
 -- | Validate the exact graph and formulations carried by the witness.
 validateScopedSemantics :: SemanticsWitness -> ModelAssessment
@@ -360,7 +385,7 @@ inspectScope request binding viewResolution profile inputs index =
                diagnostics)
     ScopeClosed scope ->
       let imported = buildImportedGraph scope
-       in case validateStructure (importedRawGraph imported) of
+       in case validateClaimStructure (importedClaimGraph imported) of
             StructureModelRejected defects ->
               InspectionCompleted
                 (structureFailureReport
@@ -397,7 +422,10 @@ inspectSemantics ::
   -> StructurallyClosedModel
   -> InspectionOutcome
 inspectSemantics request binding viewResolution profile inputs closed =
-  case prepareSemantics closed (strategyInput inputs) of
+  case prepareSemantics
+         closed
+         (strategyInput inputs)
+         (collectiveFitInput inputs) of
     Left _ ->
       InspectionCompleted
         (pipelineReport
@@ -407,6 +435,7 @@ inspectSemantics request binding viewResolution profile inputs closed =
            profile
            (resolvedScopeFor closed)
            []
+           Nothing
            StagePassed
            StageUnavailable
            (StageNotRun (BlockedByUnavailable SemanticsStage))
@@ -443,6 +472,10 @@ inspectSemantics request binding viewResolution profile inputs closed =
                          profile
                          (resolvedScopeFor closed)
                          sources
+                         (Just
+                            (InspectionSemanticAssessment
+                               (modelMaturity assessment)
+                               Nothing))
                          StagePassed
                          StageFailed
                          (StageNotRun (BlockedByFailure SemanticsStage))
@@ -460,6 +493,10 @@ inspectSemantics request binding viewResolution profile inputs closed =
                          profile
                          (resolvedScopeFor closed)
                          sources
+                         (Just
+                            (InspectionSemanticAssessment
+                               (modelMaturity assessment)
+                               Nothing))
                          StagePassed
                          StageUnavailable
                          (StageNotRun (BlockedByUnavailable SemanticsStage))
@@ -467,15 +504,62 @@ inspectSemantics request binding viewResolution profile inputs closed =
                          (StageNotRun (BlockedByUnavailable SemanticsStage))
                          diagnostics)
               | Just semantic <- assessedSemanticModel assessment ->
-                inspectTraceability
-                  request
-                  binding
-                  viewResolution
-                  profile
-                  inputs
-                  closed
-                  sources
-                  semantic
+                let collective =
+                      inspectCollectiveSemantics closed sources witness semantic
+                    maturity
+                      | inspectedCollectiveFatal collective = Draft
+                      | inspectedCollectiveCandidates collective = Draft
+                      | otherwise = SemanticallyValid
+                    semanticAssessment =
+                      InspectionSemanticAssessment
+                        maturity
+                        (inspectedCollectiveAssessment collective)
+                    diagnostics = inspectedCollectiveDiagnostics collective
+                 in if inspectedCollectiveFatal collective
+                      then InspectionCompleted
+                             (pipelineReport
+                                request
+                                binding
+                                viewResolution
+                                profile
+                                (resolvedScopeFor closed)
+                                sources
+                                (Just semanticAssessment)
+                                StagePassed
+                                StageFailed
+                                (StageNotRun (BlockedByFailure SemanticsStage))
+                                (StageNotRun (BlockedByFailure SemanticsStage))
+                                (StageNotRun (BlockedByFailure SemanticsStage))
+                                diagnostics)
+                      else if inspectedCollectiveCandidates collective
+                             then InspectionCompleted
+                                    (pipelineReport
+                                       request
+                                       binding
+                                       viewResolution
+                                       profile
+                                       (resolvedScopeFor closed)
+                                       sources
+                                       (Just semanticAssessment)
+                                       StagePassed
+                                       StageUnavailable
+                                       (StageNotRun
+                                          (BlockedByUnavailable SemanticsStage))
+                                       (StageNotRun
+                                          (BlockedByUnavailable SemanticsStage))
+                                       (StageNotRun
+                                          (BlockedByUnavailable SemanticsStage))
+                                       diagnostics)
+                             else inspectTraceability
+                                    request
+                                    binding
+                                    viewResolution
+                                    profile
+                                    inputs
+                                    closed
+                                    sources
+                                    semanticAssessment
+                                    semantic
               | otherwise ->
                 InspectionCompleted
                   (pipelineReport
@@ -485,12 +569,114 @@ inspectSemantics request binding viewResolution profile inputs closed =
                      profile
                      (resolvedScopeFor closed)
                      sources
+                     (Just
+                        (InspectionSemanticAssessment
+                           (modelMaturity assessment)
+                           Nothing))
                      StagePassed
                      StageUnavailable
                      (StageNotRun (BlockedByUnavailable SemanticsStage))
                      (StageNotRun (BlockedByUnavailable SemanticsStage))
                      (StageNotRun (BlockedByUnavailable SemanticsStage))
                      [])
+
+inspectCollectiveSemantics ::
+     StructurallyClosedModel
+  -> [SupplementalSource]
+  -> SemanticsWitness
+  -> SemanticallyValidModel
+  -> CollectiveInspection
+inspectCollectiveSemantics closed sources witness semantic =
+  CollectiveInspection
+    { inspectedCollectiveDiagnostics =
+        assertedDiagnostics ++ candidateDiagnostics ++ duplicateDiagnostics
+    , inspectedCollectiveFatal = assertedFatal || duplicateFatal
+    , inspectedCollectiveCandidates = not (null candidateClaims)
+    , inspectedCollectiveAssessment =
+        if assertedFatal || duplicateFatal
+          then Nothing
+          else assertedAssessment
+    }
+  where
+    importedClaims = importedCollectiveClaims (structurallyClosedImport closed)
+    claims = map importedCollectiveClaim importedClaims
+    assertedClaims = filter ((== Asserted) . rawCommitment) claims
+    candidateClaims = filter ((== Candidate) . rawCommitment) claims
+    fitEvidence =
+      maybe
+        []
+        (collectiveFitEvidenceInput . sourcedValue)
+        (witnessCollectiveFitInput witness)
+    assertedValidation =
+      validateCollectiveStrategyRealizations semantic fitEvidence assertedClaims
+    assertedErrors =
+      case assertedValidation of
+        Failure errors -> NonEmpty.toList errors
+        Success _ -> []
+    assertedAssessment =
+      case assertedValidation of
+        Failure _ -> Nothing
+        Success assessment -> Just assessment
+    assertedFatal = not (null assertedErrors)
+    assertedDiagnostics =
+      map
+        (withSources . collectiveDiagnostic collectiveRealizationErrorSpec)
+        assertedErrors
+    candidateResults =
+      [ ( claim
+        , validateCollectiveStrategyRealizations semantic fitEvidence [claim])
+      | claim <- candidateClaims
+      ]
+    candidateDiagnostics = concatMap candidateResultDiagnostics candidateResults
+    candidateResultDiagnostics (claim, result) =
+      withSources
+        (collectiveDiagnostic
+           id
+           (candidateCollectiveRealizationSpec (rawRealizationId claim)))
+        : case result of
+            Failure errors ->
+              map
+                (withSources
+                   . collectiveDiagnostic
+                       candidateCollectiveRealizationErrorSpec)
+                (NonEmpty.toList errors)
+            Success assessment ->
+              [ withSources
+                (collectiveDiagnostic
+                   id
+                   (candidateCollectiveRealizationIssueSpec
+                      (rawRealizationId claim)
+                      issue))
+              | candidate <- candidateCollectiveStrategyRealizations assessment
+              , issue <- candidateCollectiveIssues candidate
+              ]
+    duplicateIdentifiers = duplicates (map rawRealizationId claims)
+    duplicateCommitments identifier =
+      [ rawCommitment claim
+      | claim <- claims
+      , rawRealizationId claim == identifier
+      ]
+    duplicateFatal =
+      any (elem Asserted . duplicateCommitments) duplicateIdentifiers
+    duplicateDiagnostics =
+      [ withSources
+        (collectiveDiagnostic
+           (if Asserted `elem` duplicateCommitments identifier
+              then collectiveRealizationErrorSpec
+              else candidateCollectiveRealizationErrorSpec)
+           (DuplicateCollectiveRealizationClaimId identifier))
+      | identifier <- duplicateIdentifiers
+      ]
+    collectiveDiagnostic specification defect =
+      coreDiagnostic
+        SemanticsStage
+        (structurallyClosedImport closed)
+        specification
+        defect
+    withSources = diagnosticWithSupplementalSources sources
+
+duplicates :: Ord value => [value] -> [value]
+duplicates = map head . filter ((> 1) . length) . group . sort
 
 inspectTraceability ::
      InspectionRequestInfo
@@ -500,9 +686,10 @@ inspectTraceability ::
   -> InspectionInputs
   -> StructurallyClosedModel
   -> [SupplementalSource]
+  -> InspectionSemanticAssessment
   -> SemanticallyValidModel
   -> InspectionOutcome
-inspectTraceability request binding viewResolution profile inputs closed sources semantic =
+inspectTraceability request binding viewResolution profile inputs closed sources semanticAssessment semantic =
   case validateTraceability semantic of
     Failure defects ->
       let diagnostics =
@@ -519,6 +706,7 @@ inspectTraceability request binding viewResolution profile inputs closed sources
                profile
                resolvedScope
                sources
+               (Just semanticAssessment)
                StagePassed
                StagePassed
                StageFailed
@@ -534,6 +722,7 @@ inspectTraceability request binding viewResolution profile inputs closed sources
         inputs
         closed
         sources
+        semanticAssessment
         traceable
   where
     resolvedScope = resolvedScopeFor closed
@@ -546,9 +735,10 @@ inspectReadiness ::
   -> InspectionInputs
   -> StructurallyClosedModel
   -> [SupplementalSource]
+  -> InspectionSemanticAssessment
   -> TraceableEffectModel
   -> InspectionOutcome
-inspectReadiness request binding viewResolution profile inputs closed sources traceable =
+inspectReadiness request binding viewResolution profile inputs closed sources semanticAssessment traceable =
   case prepareReadiness traceable (readinessInput inputs) of
     Nothing ->
       InspectionCompleted
@@ -559,6 +749,7 @@ inspectReadiness request binding viewResolution profile inputs closed sources tr
            profile
            resolvedScope
            sources
+           (Just semanticAssessment)
            StagePassed
            StagePassed
            StagePassed
@@ -585,6 +776,7 @@ inspectReadiness request binding viewResolution profile inputs closed sources tr
                        profile
                        resolvedScope
                        usedSources
+                       (Just semanticAssessment)
                        StagePassed
                        StagePassed
                        StagePassed
@@ -600,6 +792,7 @@ inspectReadiness request binding viewResolution profile inputs closed sources tr
                 inputs
                 closed
                 usedSources
+                semanticAssessment
                 ready
   where
     resolvedScope = resolvedScopeFor closed
@@ -612,9 +805,10 @@ inspectEvidence ::
   -> InspectionInputs
   -> StructurallyClosedModel
   -> [SupplementalSource]
+  -> InspectionSemanticAssessment
   -> EvidenceReadyModel
   -> InspectionOutcome
-inspectEvidence request binding viewResolution profile inputs closed sources ready =
+inspectEvidence request binding viewResolution profile inputs closed sources semanticAssessment ready =
   case prepareEvidence ready (evidenceInput inputs) of
     Nothing ->
       InspectionCompleted
@@ -625,6 +819,7 @@ inspectEvidence request binding viewResolution profile inputs closed sources rea
            profile
            resolvedScope
            sources
+           (Just semanticAssessment)
            StagePassed
            StagePassed
            StagePassed
@@ -651,6 +846,7 @@ inspectEvidence request binding viewResolution profile inputs closed sources rea
                        profile
                        resolvedScope
                        usedSources
+                       (Just semanticAssessment)
                        StagePassed
                        StagePassed
                        StagePassed
@@ -666,6 +862,7 @@ inspectEvidence request binding viewResolution profile inputs closed sources rea
                    profile
                    resolvedScope
                    usedSources
+                   (Just semanticAssessment)
                    StagePassed
                    StagePassed
                    StagePassed
@@ -766,6 +963,7 @@ structureFailureReport request binding viewResolution profile scope imported def
         profile
         (resolvedScopeForScope scope)
         []
+        Nothing
         (pipelineStageReports
            StageFailed
            (StageNotRun (BlockedByFailure StructureStage))
@@ -782,6 +980,7 @@ pipelineReport ::
   -> ResolvedO2IProfile
   -> ResolvedScope
   -> [SupplementalSource]
+  -> Maybe InspectionSemanticAssessment
   -> StageState
   -> StageState
   -> StageState
@@ -789,7 +988,7 @@ pipelineReport ::
   -> StageState
   -> [Diagnostic]
   -> InspectionReport
-pipelineReport request binding viewResolution profile scope sources structure semantics trace readiness evidence diagnostics =
+pipelineReport request binding viewResolution profile scope sources assessment structure semantics trace readiness evidence diagnostics =
   let artifact = normalizeDiagnostics diagnostics
    in PipelineReport
         request
@@ -798,6 +997,7 @@ pipelineReport request binding viewResolution profile scope sources structure se
         profile
         scope
         sources
+        assessment
         (pipelineStageReports
            structure
            semantics
@@ -908,11 +1108,22 @@ coreDiagnosticsWithSources stage sources closed specification =
     . coreDiagnostics stage closed specification
 
 semanticsWitnessSources :: SemanticsWitness -> [SupplementalSource]
-semanticsWitnessSources witness =
-  case witnessStrategyInput witness of
-    Nothing -> []
-    Just sourced ->
-      [SupplementalSource StrategySupplement (sourcedFrom sourced)]
+semanticsWitnessSources witness = strategySources ++ fitSources
+  where
+    strategySources =
+      case witnessStrategyInput witness of
+        Nothing -> []
+        Just sourced ->
+          [SupplementalSource StrategySupplement (sourcedFrom sourced)]
+    fitSources
+      | null
+          (importedCollectiveClaims
+             (structurallyClosedImport (witnessClosedModel witness))) = []
+      | otherwise =
+        case witnessCollectiveFitInput witness of
+          Nothing -> []
+          Just sourced ->
+            [SupplementalSource CollectiveFitSupplement (sourcedFrom sourced)]
 
 readinessWitnessSource :: ReadinessWitness -> SupplementalSource
 readinessWitnessSource witness =
@@ -1054,6 +1265,13 @@ bindIndexedProfileFact source fact =
       IndexedNode occurrence node (bindSourcePosition source position)
     IndexedEdge occurrence edge position ->
       IndexedEdge occurrence edge (bindSourcePosition source position)
+    IndexedCollectiveStrategyRealization occurrence claim contributors target position ->
+      IndexedCollectiveStrategyRealization
+        occurrence
+        claim
+        contributors
+        target
+        (bindSourcePosition source position)
     IndexedSeed presentation target -> IndexedSeed presentation target
     IndexedDependency from to reason -> IndexedDependency from to reason
     IndexedReference from reference matches reason ->
