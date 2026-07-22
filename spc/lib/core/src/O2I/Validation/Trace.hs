@@ -14,6 +14,7 @@ module O2I.Validation.Trace
   , TraceabilityError(..)
   , MacroEvidenceWitness
   , macroEvidenceWitnesses
+  , macroEvidenceWitnessesFor
   , witnessPremises
   , validateTraceability
   , effectTraces
@@ -573,6 +574,22 @@ macroEvidenceWitnesses semantic claim
       , consistentBindings
           (concatMap matchedPremiseBindings (NonEmpty.toList matches))
       ]
+
+-- | Select exact witnesses for one registered context macrorelation claim.
+macroEvidenceWitnessesFor ::
+     SemanticallyValidModel
+  -> RawNodeId
+  -> RelationCode
+  -> RawNodeId
+  -> [MacroEvidenceWitness]
+macroEvidenceWitnessesFor semantic source conclusion target =
+  concat
+    [ macroEvidenceWitnesses semantic claim
+    | (_, claim) <- macroClaims (semanticMacroFactIndex semantic)
+    , claimContextIdentifier ClaimSource claim == source
+    , macroClaimConclusion claim == conclusion
+    , claimContextIdentifier ClaimTarget claim == target
+    ]
 
 -- | Enumerate the non-empty persisted premise set of an exact witness.
 witnessPremises :: MacroEvidenceWitness -> NonEmpty.NonEmpty RawEdge

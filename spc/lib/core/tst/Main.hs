@@ -9,6 +9,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import O2I
 import qualified O2I.Language as Language
+import O2I.Test.Collective (collectiveTests)
 import O2I.Test.Qualification (needQualificationTests)
 import O2I.Test.Support
 import Test.Tasty
@@ -23,6 +24,7 @@ tests =
   testGroup
     "O2I"
     [ claimStateTests
+    , collectiveTests
     , structureTests
     , performanceDimensionRoleTests
     , semanticTests

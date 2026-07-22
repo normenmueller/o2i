@@ -115,6 +115,19 @@ module O2I
   , Maturity(..)
   , CandidateModelProposition(..)
   , ModelAssessment
+  , ClaimId(..)
+  , CollectiveFitEvidenceRef(..)
+  , RawMutualCoherenceEvidence(..)
+  , RawContributorCompatibilityEvidence(..)
+  , RawCollectiveFitEvidence(..)
+  , RawCollectiveStrategyRealization(..)
+  , CollectiveParticipantRole(..)
+  , CollectiveFitDimension(..)
+  , CollectiveStrategyRealizationIssue(..)
+  , CollectiveStrategyRealizationError(..)
+  , CollectiveStrategyRealization
+  , CandidateCollectiveStrategyRealization
+  , CollectiveStrategyRealizationAssessment
   , RawNeedQualificationProposal(..)
   , NeedQualificationSourceReference
   , NeedQualificationCandidate
@@ -226,6 +239,18 @@ module O2I
   , assessmentCandidatePropositions
   , contextElaboration
   , modelMaturity
+  , validateCollectiveStrategyRealizations
+  , collectiveStrategyRealizations
+  , candidateCollectiveStrategyRealizations
+  , lookupCollectiveStrategyRealization
+  , collectiveRealizationsForTarget
+  , collectiveRealizationId
+  , collectiveContributors
+  , collectiveTarget
+  , collectiveFitEvidenceReference
+  , collectiveContributionEvidence
+  , candidateCollectiveClaim
+  , candidateCollectiveIssues
   , validateTraceability
   , validateEvidenceReadinessAt
   , assessEffectEvidenceAt

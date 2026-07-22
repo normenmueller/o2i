@@ -40,6 +40,7 @@ library
     O2I.Language.Interpretation,
     O2I.Language.Macro,
     O2I.Language.Relation,
+    O2I.Validation.Collective,
     O2I.Validation.Evidence,
     O2I.Validation.Qualification,
     O2I.Validation.Readiness,
@@ -64,6 +65,7 @@ test-suite o2i-test
   main-is:
     Main.hs
   other-modules:
+    O2I.Test.Collective,
     O2I.Test.Qualification,
     O2I.Test.Support
   build-depends:

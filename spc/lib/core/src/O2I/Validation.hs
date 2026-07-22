@@ -20,6 +20,19 @@ module O2I.Validation
   , Maturity(..)
   , CandidateModelProposition(..)
   , ModelAssessment
+  , ClaimId(..)
+  , CollectiveFitEvidenceRef(..)
+  , RawMutualCoherenceEvidence(..)
+  , RawContributorCompatibilityEvidence(..)
+  , RawCollectiveFitEvidence(..)
+  , RawCollectiveStrategyRealization(..)
+  , CollectiveParticipantRole(..)
+  , CollectiveFitDimension(..)
+  , CollectiveStrategyRealizationIssue(..)
+  , CollectiveStrategyRealizationError(..)
+  , CollectiveStrategyRealization
+  , CandidateCollectiveStrategyRealization
+  , CollectiveStrategyRealizationAssessment
   , RawNeedQualificationProposal(..)
   , NeedQualificationSourceReference
   , NeedQualificationCandidate
@@ -125,6 +138,18 @@ module O2I.Validation
   , assessmentCandidatePropositions
   , contextElaboration
   , modelMaturity
+  , validateCollectiveStrategyRealizations
+  , collectiveStrategyRealizations
+  , candidateCollectiveStrategyRealizations
+  , lookupCollectiveStrategyRealization
+  , collectiveRealizationsForTarget
+  , collectiveRealizationId
+  , collectiveContributors
+  , collectiveTarget
+  , collectiveFitEvidenceReference
+  , collectiveContributionEvidence
+  , candidateCollectiveClaim
+  , candidateCollectiveIssues
   , validateTraceability
   , validateEvidenceReadinessAt
   , assessEffectEvidenceAt
@@ -132,6 +157,7 @@ module O2I.Validation
 
 import Data.List.NonEmpty (NonEmpty)
 import Data.Validation (Validation(..))
+import O2I.Validation.Collective
 import O2I.Validation.Evidence
 import O2I.Validation.Qualification
 import O2I.Validation.Readiness

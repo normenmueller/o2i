@@ -86,6 +86,9 @@ $(assertAbstractTypes
     [ "Validation.StructuralAssessment"
     , "Validation.ModelAssessment"
     , "Validation.StrategyFormulation"
+    , "Validation.CollectiveStrategyRealization"
+    , "Validation.CandidateCollectiveStrategyRealization"
+    , "Validation.CollectiveStrategyRealizationAssessment"
     , "Validation.NeedQualificationSourceReference"
     , "Validation.NeedQualificationCandidate"
     , "Validation.SemanticallyValidModel"
@@ -109,6 +112,18 @@ $(assertOrdinaryFunctions
     , 'Validation.assessmentCandidatePropositions
     , 'Validation.contextElaboration
     , 'Validation.modelMaturity
+    , 'Validation.validateCollectiveStrategyRealizations
+    , 'Validation.collectiveStrategyRealizations
+    , 'Validation.candidateCollectiveStrategyRealizations
+    , 'Validation.lookupCollectiveStrategyRealization
+    , 'Validation.collectiveRealizationsForTarget
+    , 'Validation.collectiveRealizationId
+    , 'Validation.collectiveContributors
+    , 'Validation.collectiveTarget
+    , 'Validation.collectiveFitEvidenceReference
+    , 'Validation.collectiveContributionEvidence
+    , 'Validation.candidateCollectiveClaim
+    , 'Validation.candidateCollectiveIssues
     , 'Validation.macroEvidenceWitnesses
     , 'Validation.witnessPremises
     , 'Validation.strategyFormulations
@@ -180,6 +195,9 @@ $(assertAbstractTypes
     , "O2I.WellFormedGraph"
     , "O2I.StructuralAssessment"
     , "O2I.StrategyFormulation"
+    , "O2I.CollectiveStrategyRealization"
+    , "O2I.CandidateCollectiveStrategyRealization"
+    , "O2I.CollectiveStrategyRealizationAssessment"
     , "O2I.NeedQualificationSourceReference"
     , "O2I.NeedQualificationCandidate"
     , "O2I.SemanticallyValidModel"
@@ -205,6 +223,18 @@ $(assertOrdinaryFunctions
     , 'O2I.assessmentCandidatePropositions
     , 'O2I.contextElaboration
     , 'O2I.modelMaturity
+    , 'O2I.validateCollectiveStrategyRealizations
+    , 'O2I.collectiveStrategyRealizations
+    , 'O2I.candidateCollectiveStrategyRealizations
+    , 'O2I.lookupCollectiveStrategyRealization
+    , 'O2I.collectiveRealizationsForTarget
+    , 'O2I.collectiveRealizationId
+    , 'O2I.collectiveContributors
+    , 'O2I.collectiveTarget
+    , 'O2I.collectiveFitEvidenceReference
+    , 'O2I.collectiveContributionEvidence
+    , 'O2I.candidateCollectiveClaim
+    , 'O2I.candidateCollectiveIssues
     , 'O2I.assessModelSemantics
     , 'O2I.structuralGraph
     , 'O2I.structuralCandidatePropositions
@@ -288,6 +318,18 @@ $(assertOrdinaryFunctions
 -- | Run positive external-client API use.
 main :: IO ()
 main = do
+  let compatibilityEvidence =
+        RawContributorCompatibilityEvidence
+          strategyId
+          "compatible with the target Guiding Policy"
+          "compatible with the target Trade-offs"
+  assert
+    "raw collective compatibility evidence is contributor-bound"
+    (rawCompatibilityContributor compatibilityEvidence == strategyId
+       && rawGuidingPolicyCompatibilityRationale compatibilityEvidence
+            == "compatible with the target Guiding Policy"
+       && rawTradeOffCompatibilityRationale compatibilityEvidence
+            == "compatible with the target Trade-offs")
   let spec = interpretationSpec PrincipleInEthos
   assert
     "interpretation code projection"
