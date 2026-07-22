@@ -20,7 +20,7 @@ O2I ist ein generisches Framework für Wirkungsarchitekturen: Es beschreibt, wie
 ## Purpose
 
 <!-- O2I PURPOSE START -->
-O2I dient dazu, *orientierte Wirkung* durch relationale Modellierung nachvollziehbar und durch Messung und Evidenz nachweisbar zu machen. Es verbindet standardliteraturbasierte Terminologie mit einem semantisch und syntaktisch ausgearbeiteten Metamodell. Dessen normative, maschinenprüfbare Formalisierung bildet die Haskell-Spezifikation.
+O2I dient dazu, *orientierte Wirkung* durch relationale Modellierung nachvollziehbar und durch Messung und Evidenz nachweisbar zu machen. Es verbindet standardliteraturbasierte Terminologie mit einem semantisch und syntaktisch ausgearbeiteten Metamodell. Die Haskell-Spezifikation formalisiert dieses Metamodell normativ und maschinenprüfbar.
 <!-- O2I PURPOSE END -->
 
 ## USP
@@ -35,7 +35,7 @@ O2I dient dazu, *orientierte Wirkung* durch relationale Modellierung nachvollzie
 
 ## Specification
 
-Die Haskell-Spezifikation unter [`spc/lib/core`](./spc/lib/core/) ist die normative, maschinenprüfbare Formalisierung des O2I-Metamodells. Ihre öffentliche API gliedert sich in `O2I.Language` für den semantischen Formvorrat, `O2I.Graph` für konkrete Graphen und `O2I.Validation` für gestufte Prüfungen. `O2I` bildet die kuratierte Gesamtfassade.
+Die Haskell-Spezifikation unter [`spc/lib/core`](./spc/lib/core/) formalisiert das O2I-Metamodell normativ und maschinenprüfbar. Ihre öffentliche API gliedert sich in `O2I.Language` für den semantischen Formvorrat, `O2I.Graph` für konkrete Graphen und `O2I.Validation` für gestufte Prüfungen. `O2I` bildet die kuratierte Gesamtfassade.
 
 Die Library überführt einen ungeprüften O2I-Graphen durch aufeinander aufbauende Validierungsstufen in ein evidenzbewertetes Wirkungsmodell:
 

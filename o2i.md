@@ -587,7 +587,7 @@ Damit bleibt Nachweislogik von Messung getrennt: Messung macht beobachtbar, Nach
 
 Das O2I-Metamodell ist der formale Kern des O2I Frameworks. Es übersetzt die O2I-Terminologie in eine prüfbare Modellstruktur: Begriffe werden als Typen gefasst, konkrete Modellelemente werden als Instanzen dieser Typen beschrieben, Primitives erhalten ihre Bedeutung durch Interpretation in Kontexten, und die gestufte Validierung prüft, ob ein Modell die O2I-Wirkungslogik einhält.
 
-Die Haskell-Spezifikation in `spc/lib/core/` ist die normative, maschinenprüfbare Formalisierung des O2I-Metamodells. Sie typisiert zulässige Modellformen und unterscheidet strukturelle Wohlgeformtheit, semantische Gültigkeit, relationale Wirkungsnachvollziehbarkeit, ex-ante Evidenzbereitschaft und empirische Wirkungsevidenz. Das Metamodell bleibt technologieunabhängig; GADTs, Module und opake Validierungsstufen sind Haskell-Designentscheidungen und keine zusätzliche O2I-Fachsemantik.
+Die Haskell-Spezifikation in `spc/lib/core/` formalisiert das O2I-Metamodell normativ und maschinenprüfbar. Sie typisiert zulässige Modellformen und unterscheidet strukturelle Wohlgeformtheit, semantische Gültigkeit, relationale Wirkungsnachvollziehbarkeit, ex-ante Evidenzbereitschaft und empirische Wirkungsevidenz. Das Metamodell bleibt technologieunabhängig; GADTs, Module und opake Validierungsstufen sind Haskell-Designentscheidungen und keine zusätzliche O2I-Fachsemantik.
 
 Das Metamodell ersetzt die Terminologie nicht. Die Terminologie legt die fachliche Bedeutung fest; das Metamodell macht diese Bedeutung modellierbar, referenzierbar und validierbar.
 
