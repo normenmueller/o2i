@@ -41,10 +41,10 @@
       "class": "semantic-reference",
       "status": "admitted-archi-saved",
       "extends": null,
-      "contract": "Smallest inspectable O2I View: one Ethos context owns one Principle; Profile, Structure, and Semantics pass.",
+      "contract": "Smallest inspectable O2I View: one Ethos context contextualizes one Principle; Profile, Structure, and Semantics pass.",
       "inspection": "through-semantics",
       "producerVersion": "Archi 5.9.0",
-      "sha256": "ee3d6bc92a002174f1c93c38bd6081b43bda2e1916f9eb30cbd72b65400771e1",
+      "sha256": "0d891904a1855ba37d40ce2ad9d88e4a5b1ff5cb04a71f10f045a512f23afee7",
       "modelId": "id-fdeb02e8264f47299b4a570691c82ca6",
       "selectedView": {
         "name": "O2I Reference - Ethos",
@@ -67,10 +67,10 @@
         ],
         "edges": []
       },
-      "persistedOwnership": {
+      "persistedContextualization": {
         "id": "id-f358d3cc5eea46dc87ac1a2af988d65e",
         "type": "CompositionRelationship",
-        "name": "contains",
+        "name": "contextualizes",
         "source": "id-14b8dcb25f204fe0903e308d7a38f438",
         "target": "id-d7c54b15cb1e407eaa770b6769fad6ee"
       }
@@ -80,7 +80,7 @@
       "class": "semantic-reference",
       "status": "pending-external-archi-save",
       "extends": "valid/orientation/ethos.archimate",
-      "contract": "Adds Mission with one owned Driver and persisted context and primitive evidence for ethos-guides-mission.",
+      "contract": "Adds Mission with one contextualized Driver and persisted context and primitive evidence for ethos-guides-mission.",
       "inspection": "through-semantics"
     },
     {
@@ -88,7 +88,7 @@
       "class": "semantic-reference",
       "status": "pending-external-archi-save",
       "extends": "valid/orientation/mission.archimate",
-      "contract": "Adds Vision with one owned Objective and persisted evidence for mission-grounds-vision and ethos-guides-vision.",
+      "contract": "Adds Vision with one contextualized Objective and persisted evidence for mission-grounds-vision and ethos-guides-vision.",
       "inspection": "through-semantics"
     },
     {
@@ -96,7 +96,7 @@
       "class": "semantic-reference",
       "status": "pending-external-archi-save",
       "extends": "valid/orientation/vision.archimate",
-      "contract": "Adds Strategy with diagnosis, intent, guiding policy, coherent Action and Key Result, their ownership and coherence relations, and Vision-to-Strategy orientation.",
+      "contract": "Adds Strategy with diagnosis, intent, guiding policy, coherent Action and Key Result, their contextualization and coherence relations, and Vision-to-Strategy orientation.",
       "inspection": "through-semantics-with-complete-strategy-input-derived-from-manifested-stable-ids"
     },
     {
@@ -104,7 +104,7 @@
       "class": "semantic-reference",
       "status": "pending-external-archi-save",
       "extends": "valid/formation/strategy.archimate",
-      "contract": "Adds one constituted Situation and one situated Need with owned Driver and Objective, anchor, grounding, surfacing, and Strategy qualification evidence.",
+      "contract": "Adds one constituted Situation and one situated Need with contextualized Driver and Objective, anchor, grounding, surfacing, and Strategy qualification evidence.",
       "inspection": "through-semantics-with-complete-strategy-input-derived-from-manifested-stable-ids"
     },
     {
@@ -112,7 +112,7 @@
       "class": "semantic-reference",
       "status": "pending-external-archi-save",
       "extends": "valid/situation/need.archimate",
-      "contract": "Adds Intervention with owned Action and Key Result plus persisted directing, need-addressing, and situation-changing evidence.",
+      "contract": "Adds Intervention with contextualized Action and Key Result plus persisted directing, need-addressing, and situation-changing evidence.",
       "inspection": "through-semantics-with-complete-strategy-input-derived-from-manifested-stable-ids"
     },
     {
@@ -120,7 +120,7 @@
       "class": "semantic-reference",
       "status": "pending-external-archi-save",
       "extends": "valid/operationalization/intervention.archimate",
-      "contract": "Adds Measure with measurement dimension and owned KPI plus persisted framing, target-setting, and situation-measurement evidence.",
+      "contract": "Adds Measure with measurement dimension and contextualized KPI plus persisted framing, target-setting, and situation-measurement evidence.",
       "inspection": "through-semantics-with-complete-strategy-input-derived-from-manifested-stable-ids"
     },
     {

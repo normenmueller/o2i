@@ -6,9 +6,9 @@ Its exact SHA-256 and native identities are admitted in `manifest.json` and
 and its auto-created Default View is not an inspectable O2I scope.
 
 `orientation/ethos.archimate` was also genuinely saved by the user with Archi
-5.9.0. Its admitted View projects exactly one Ethos owning one Principle and
-passes Profile, Structure, and Semantics without requiring a context
-macrorelation.
+5.9.0. Its admitted View projects exactly one Ethos contextualizing one
+Principle and passes Profile, Structure, and Semantics without requiring a
+context macrorelation.
 
 The remaining seven required paths and their cumulative semantic contracts are
 fixed in `catalog.json`; each remains `pending-external-archi-save` without an

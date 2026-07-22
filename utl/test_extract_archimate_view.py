@@ -188,7 +188,9 @@ class RelationshipEndpointContractTest(unittest.TestCase):
             errors,
         )
 
-    def test_hidden_duplicate_ownership_is_rejected_model_wide(self) -> None:
+    def test_hidden_duplicate_contextualization_is_rejected_model_wide(
+        self,
+    ) -> None:
         root = copy.deepcopy(self.root)
         owner = self._append_context_element(
             root,
@@ -197,7 +199,7 @@ class RelationshipEndpointContractTest(unittest.TestCase):
             "Mission",
         )
         target = self._model_element(root, "Driver @ Mission", "Driver")
-        self._append_ownership_relationship(
+        self._append_contextualization_relationship(
             root,
             "hidden-duplicate-owner",
             owner,
@@ -208,48 +210,68 @@ class RelationshipEndpointContractTest(unittest.TestCase):
 
         self.assertIn(
             f"{EXTRACTOR.element_label(target)} has 2 model-wide "
-            "CompositionRelationship[contains] owners; expected exactly one",
+            "CompositionRelationship[contextualizes] contextualizations; "
+            "expected exactly one",
             errors,
         )
 
-    def test_hidden_anchor_ownership_is_rejected_model_wide(self) -> None:
+    def test_hidden_anchor_contextualization_is_rejected_model_wide(
+        self,
+    ) -> None:
         root = copy.deepcopy(self.root)
         owner = self._model_element(root, "O2I Context (Strategy)", "Grouping")
         anchor = self._model_element(root, "Business Capability", "Grouping")
         relation_id = "hidden-anchor-owner"
-        self._append_ownership_relationship(root, relation_id, owner, anchor)
+        self._append_contextualization_relationship(
+            root,
+            relation_id,
+            owner,
+            anchor,
+        )
 
         errors = EXTRACTOR.validate_model(root)
 
         self.assertIn(
-            f"{EXTRACTOR.element_label(anchor)} is ownerless but has "
-            "model-wide CompositionRelationship[contains] owners "
+            f"{EXTRACTOR.element_label(anchor)} must not be contextualized "
+            "but has model-wide CompositionRelationship[contextualizes] "
+            "contextualizations "
             f"[{relation_id!r}]",
             errors,
         )
         self.assertIn(
-            f"ownership relation {relation_id!r} must end at an element with "
+            f"contextualization relation {relation_id!r} must end at an "
+            "element with "
             "o2i.kind='Primitive' or o2i.kind='Structuring'",
             errors,
         )
 
-    def test_hidden_context_ownership_is_rejected_model_wide(self) -> None:
+    def test_hidden_context_contextualization_is_rejected_model_wide(
+        self,
+    ) -> None:
         root = copy.deepcopy(self.root)
         owner = self._model_element(root, "O2I Context (Mission)", "Grouping")
         target = self._model_element(root, "O2I Context (Strategy)", "Grouping")
         relation_id = "hidden-context-owner"
-        self._append_ownership_relationship(root, relation_id, owner, target)
+        self._append_contextualization_relationship(
+            root,
+            relation_id,
+            owner,
+            target,
+        )
 
         errors = EXTRACTOR.validate_model(root)
 
         self.assertIn(
-            f"{EXTRACTOR.element_label(target)} is ownerless but has "
-            "model-wide CompositionRelationship[contains] owners "
+            f"{EXTRACTOR.element_label(target)} must not be contextualized "
+            "but has model-wide CompositionRelationship[contextualizes] "
+            "contextualizations "
             f"[{relation_id!r}]",
             errors,
         )
 
-    def test_missing_primitive_ownership_is_rejected_model_wide(self) -> None:
+    def test_missing_primitive_contextualization_is_rejected_model_wide(
+        self,
+    ) -> None:
         root = copy.deepcopy(self.root)
         primitive = self._append_o2i_element(
             root,
@@ -263,11 +285,14 @@ class RelationshipEndpointContractTest(unittest.TestCase):
 
         self.assertIn(
             f"{EXTRACTOR.element_label(primitive)} has 0 model-wide "
-            "CompositionRelationship[contains] owners; expected exactly one",
+            "CompositionRelationship[contextualizes] contextualizations; "
+            "expected exactly one",
             errors,
         )
 
-    def test_missing_structuring_ownership_is_rejected_model_wide(self) -> None:
+    def test_missing_structuring_contextualization_is_rejected_model_wide(
+        self,
+    ) -> None:
         root = copy.deepcopy(self.root)
         structuring = self._append_o2i_element(
             root,
@@ -281,7 +306,8 @@ class RelationshipEndpointContractTest(unittest.TestCase):
 
         self.assertIn(
             f"{EXTRACTOR.element_label(structuring)} has 0 model-wide "
-            "CompositionRelationship[contains] owners; expected exactly one",
+            "CompositionRelationship[contextualizes] contextualizations; "
+            "expected exactly one",
             errors,
         )
 
@@ -300,7 +326,7 @@ class RelationshipEndpointContractTest(unittest.TestCase):
             "Primitive",
             "KeyResult",
         )
-        self._append_ownership_relationship(
+        self._append_contextualization_relationship(
             root,
             "foreign-key-result-owner",
             foreign_owner,
@@ -322,8 +348,8 @@ class RelationshipEndpointContractTest(unittest.TestCase):
         errors = EXTRACTOR.validate_model(root)
 
         self.assertIn(
-            f"PerformanceDimension membership {relation_id!r} crosses owning "
-            "Context element IDs: "
+            f"PerformanceDimension membership {relation_id!r} crosses "
+            "contextualizing Context element IDs: "
             "'id-9eb65bc4e62e42e9ad5375725305340c' != "
             "'foreign-strategy'",
             errors,
@@ -337,24 +363,24 @@ class RelationshipEndpointContractTest(unittest.TestCase):
         kpi = self._append_o2i_element(
             root,
             "mission-kpi",
-            "KPI owned by Mission",
+            "KPI contextualized by Mission",
             "Primitive",
             "KPI",
         )
         dimension = self._append_o2i_element(
             root,
             "mission-performance-dimension",
-            "PerformanceDimension owned by Mission",
+            "PerformanceDimension contextualized by Mission",
             "Structuring",
             "PerformanceDimension",
         )
-        self._append_ownership_relationship(
+        self._append_contextualization_relationship(
             root,
             "mission-kpi-owner",
             mission,
             kpi,
         )
-        self._append_ownership_relationship(
+        self._append_contextualization_relationship(
             root,
             "mission-dimension-owner",
             mission,
@@ -363,7 +389,7 @@ class RelationshipEndpointContractTest(unittest.TestCase):
 
         self.assertEqual([], EXTRACTOR.validate_model(root))
 
-    def test_syntax_ownership_exemplar_nodes_are_required(self) -> None:
+    def test_syntax_contextualization_exemplar_nodes_are_required(self) -> None:
         required = (
             ("Driver @ Mission", "Driver"),
             ("O2I Context (Mission)", "Grouping"),
@@ -383,16 +409,20 @@ class RelationshipEndpointContractTest(unittest.TestCase):
                     errors,
                 )
 
-    def test_syntax_ownership_edges_require_composition(self) -> None:
-        ownership_edges = (
+    def test_syntax_contextualization_edges_require_composition(self) -> None:
+        contextualization_edges = (
             ("O2I Context (Mission)", "Driver @ Mission"),
             ("O2I Context (Strategy)", "Performance Dimension @ Strategy"),
         )
 
-        for source, target in ownership_edges:
+        for source, target in contextualization_edges:
             with self.subTest(source=source, target=target):
                 root = copy.deepcopy(self.root)
-                relationship = self._ownership_relationship(root, source, target)
+                relationship = self._contextualization_relationship(
+                    root,
+                    source,
+                    target,
+                )
                 relationship.set(
                     EXTRACTOR.XSI_TYPE,
                     "archimate:AssignmentRelationship",
@@ -419,7 +449,7 @@ class RelationshipEndpointContractTest(unittest.TestCase):
         documentation.text = (
             "Every O2I Context is represented by an ArchiMate Grouping. "
             "An O2I Primitive is contextualized by placement inside its "
-            "owning Context Grouping."
+            "contextualizing Context Grouping."
         )
 
         errors = EXTRACTOR.validate_model(root)
@@ -435,7 +465,7 @@ class RelationshipEndpointContractTest(unittest.TestCase):
         self.assertTrue(
             any(
                 "documentation is missing: Visual nesting presents but never "
-                "replaces persisted ownership." in error
+                "replaces explicit contextualization." in error
                 for error in errors
             ),
             errors,
@@ -566,7 +596,7 @@ class RelationshipEndpointContractTest(unittest.TestCase):
         )
         return matches[0]
 
-    def _append_ownership_relationship(
+    def _append_contextualization_relationship(
         self,
         root: ET.Element,
         relation_id: str,
@@ -583,7 +613,7 @@ class RelationshipEndpointContractTest(unittest.TestCase):
             "element",
             {
                 EXTRACTOR.XSI_TYPE: "archimate:CompositionRelationship",
-                "name": "contains",
+                "name": "contextualizes",
                 "id": relation_id,
                 "source": source.get("id", ""),
                 "target": target.get("id", ""),
@@ -664,7 +694,7 @@ class RelationshipEndpointContractTest(unittest.TestCase):
         )
         return element
 
-    def _ownership_relationship(
+    def _contextualization_relationship(
         self,
         root: ET.Element,
         source_name: str,
@@ -680,12 +710,12 @@ class RelationshipEndpointContractTest(unittest.TestCase):
             if (
                 elements.get(source, (None, None))[0] == source_name
                 and elements.get(target, (None, None))[0] == target_name
-                and element.get("name") == "contains"
+                and element.get("name") == "contextualizes"
             ):
                 return element
 
         self.fail(
-            "The O2I Syntax view has no ownership relationship from "
+            "The O2I Syntax view has no contextualization relationship from "
             f"{source_name} to {target_name}"
         )
 

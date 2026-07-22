@@ -440,7 +440,7 @@ Die Qualifikationsprüfung folgt einer klaren Arbeitsteilung:
 
 1. Der Einreicher legt einen vollständig situierten Bedarf vor und referenziert die bestehende Strategie, an der er sich ausgerichtet hat. Die Strategie selbst ist Bestandteil des O2I-Modells und wird nicht mit der Vorlage eingereicht.
 2. Eine fachliche Analyse schlägt die Primitive-Verbindung samt Begründung und Quellenbezug vor. Agentic AI kann diese Analyse unterstützen; O2I setzt ihren Einsatz nicht voraus und behandelt ihren Vorschlag nicht als Entscheidung.
-3. Nach vollständiger Situierung des Bedarfs und vor der Modellierung von `translates-into` und `qualifies` prüft die O2I-Spezifikation mit `validateNeedQualificationProposal` deterministisch Situierung, Typen, Ownership, Strategy-Rollen, die formale Zulässigkeit der vorgeschlagenen Verbindung sowie das Vorliegen einer nichtleeren Begründung und Quellenreferenz. Ein Fehlerergebnis erzeugt keinen Kandidaten und keine fachliche Annahmeentscheidung; die Prüfung lässt den Graphen unverändert.
+3. Nach vollständiger Situierung des Bedarfs und vor der Modellierung von `translates-into` und `qualifies` prüft die O2I-Spezifikation mit `validateNeedQualificationProposal` deterministisch Situierung, Typen, Kontextualisierung, Strategy-Rollen, die formale Zulässigkeit der vorgeschlagenen Verbindung sowie das Vorliegen einer nichtleeren Begründung und Quellenreferenz. Ein Fehlerergebnis erzeugt keinen Kandidaten und keine fachliche Annahmeentscheidung; die Prüfung lässt den Graphen unverändert.
 4. Ein positives Ergebnis ist ein formal zulässiger `NeedQualificationCandidate`, noch keine akzeptierte Qualifikation. Fachlich legitimierte Personen prüfen Begründung und Quelle. Eine Ablehnung lässt den Graphen unverändert.
 5. Bei Annahme werden `Key Result @ Strategy --translates-into--> Objective @ Need` und `Strategy --qualifies--> Need` modelliert und das Modell erneut validiert. Erst wenn `qualifyingStrategies` danach die Strategie als qualifizierend liefert, ist der situierte Bedarf wirkungsrelevant.
 
@@ -598,7 +598,7 @@ Das Metamodell ersetzt die Terminologie nicht. Die Terminologie legt die fachlic
 
 Die O2I-Semantik definiert, welche Modellformen zulässig sind und wie sie gelesen werden. Sie wird in den folgenden semantischen Bausteinen konkretisiert:
 
-Die Haskell-Library trennt dafür drei Verantwortungsbereiche: `O2I.Language` definiert den semantischen Formvorrat, `O2I.Graph` repräsentiert konkrete O2I-Graphen und `O2I.Validation` prüft diese Graphen stufenweise. Das Typsystem beschränkt zulässige Interpretationen und Relationsdomänen; die Laufzeitvalidierung prüft konkrete Bezeichner, Eigentümerschaft, globale Invarianten und vollständige Wirkungspfade. `O2I` bildet die kuratierte Gesamtfassade.
+Die Haskell-Library trennt dafür drei Verantwortungsbereiche: `O2I.Language` definiert den semantischen Formvorrat, `O2I.Graph` repräsentiert konkrete O2I-Graphen und `O2I.Validation` prüft diese Graphen stufenweise. Das Typsystem beschränkt zulässige Interpretationen und Relationsdomänen; die Laufzeitvalidierung prüft konkrete Bezeichner, Kontextzuordnungen, globale Invarianten und vollständige Wirkungspfade. `O2I` bildet die kuratierte Gesamtfassade.
 
 Typen
 
@@ -666,7 +666,7 @@ Diese typisierte Spezifikation verhindert, dass beliebige Kontextrelationen als 
 
 ![O2I Primitives-Modell](<img/O2I Primitives.png>){#fig:o2i-primitives-view width=75%}
 
-Die Darstellung ist als semantische Übersicht des abstrakten Formvorrats zu lesen. Sie ersetzt weder die Interpretation der Primitives in Kontexten noch die typisierte Spezifikation, sondern zeigt, welche Primitives, Strukturierungstypen und Primitive-Relationen auf Metamodellebene vorkommen. Sie abstrahiert von konkreten Primitive- und Strukturierungsinstanzen sowie deren Eigentümerkontexten; diese werden durch Instanziierung, Interpretation und Rollenregistry bestimmt. Die konkrete Zulässigkeit einer Relation ergibt sich erst aus ihren kontextualisierten Endpunkten in der typisierten Spezifikation; beispielsweise ist `sets-target-for` in O2I als `KeyResult @ Intervention -> KPI @ Measure` typisiert.
+Die Darstellung ist als semantische Übersicht des abstrakten Formvorrats zu lesen. Sie ersetzt weder die Interpretation der Primitives in Kontexten noch die typisierte Spezifikation, sondern zeigt, welche Primitives, Strukturierungstypen und Primitive-Relationen auf Metamodellebene vorkommen. Sie abstrahiert von konkreten Primitive- und Strukturierungsinstanzen sowie deren kontextualisierenden Kontextinstanzen; diese werden durch Instanziierung, Interpretation und Rollenregistry bestimmt. Die konkrete Zulässigkeit einer Relation ergibt sich erst aus ihren kontextualisierten Endpunkten in der typisierten Spezifikation; beispielsweise ist `sets-target-for` in O2I als `KeyResult @ Intervention -> KPI @ Measure` typisiert.
 
 ##### Elemente
 
@@ -715,7 +715,7 @@ Diese typisierten Spezifikationen verhindern, dass beliebige Primitive-Relatione
 
 `PerformanceDimension` ist ein einheitlicher, geschlossener Strukturierungstyp des O2I-Metamodells. `StrategySuccessDimension` und `MeasureMeasurementDimension` bezeichnen seine beiden zulässigen Rollen, keine zusätzlichen Metamodelltypen. Ein kritischer Erfolgsfaktor (`CSF`) kann als benannte strategische Erfolgsdimension modelliert werden; eine Messdimension strukturiert zugehörige KPIs. Andere Strukturierungsformen sind keine O2I-Performance-Dimensionen.
 
-Die Haskell-Spezifikation typisiert jede Performance-Dimension durch einen `PerformanceDimensionRole`-Zeugen. Derselbe Zeuge bestimmt Eigentümerkontext, zulässigen Mitgliedstyp und `contains`-Relation. Die Rolle interpretiert die enthaltenen Primitives nicht; deren Bedeutung bleibt durch ihr jeweiliges `Primitive @ Context` bestimmt. Dadurch sind andere Kontexte oder Mitgliedschaften weder Teil des Metamodells noch als typisierte O2I-Relation konstruierbar.
+Die Haskell-Spezifikation typisiert jede Performance-Dimension durch einen `PerformanceDimensionRole`-Zeugen. Derselbe Zeuge bestimmt den zulässigen Kontexttyp, den zulässigen Mitgliedstyp und die `contains`-Relation. Die Rolle interpretiert die enthaltenen Primitives nicht; deren Bedeutung bleibt durch ihr jeweiliges `Primitive @ Context` bestimmt. Dadurch sind andere Kontexte oder Mitgliedschaften weder Teil des Metamodells noch als typisierte O2I-Relation konstruierbar.
 
 #### Situationsanker
 
@@ -734,7 +734,7 @@ Die Haskell-Spezifikation typisiert jede Performance-Dimension durch einen `Perf
 
 Instanziierung beschreibt, wie aus O2I-Typen konkrete Modellelemente in einem O2I-Modell entstehen. `Need` ist ein Kontexttyp; ein konkreter Bedarf in einem Modell ist eine `Need`-Instanz. `Objective` ist ein Primitive-Typ; ein konkretes Objective in einem Modell ist eine `Objective`-Instanz.
 
-Graph bezeichnet als Oberbegriff die Knoten-Kanten-Repräsentation eines O2I-Modells. `RawGraph` ist ihre ungeprüfte, `WellFormedGraph` ihre lokal validierte Form. Ein `WellFormedGraph` erfüllt die lokale graphbezogene Zulässigkeit von Identitäten, Ownership, Interpretationen und Relationsdomänen. Ab `SemanticallyValidModel` bezeichnet `Model` die fachlich angereicherte Einheit, die den wohlgeformten Graphen stufenweise mit globalen fachlichen Invarianten, abgeleiteten Wirkungstraces und Evidenzbewertungen verbindet. Der Übergang markiert damit die Grenze zwischen lokaler graphbezogener Zulässigkeit und globaler fachlicher Invariantenprüfung.
+Graph bezeichnet als Oberbegriff die Knoten-Kanten-Repräsentation eines O2I-Modells. `RawGraph` ist ihre ungeprüfte, `WellFormedGraph` ihre lokal validierte Form. Ein `WellFormedGraph` erfüllt die lokale graphbezogene Zulässigkeit von Identitäten, Kontextualisierungen, Interpretationen und Relationsdomänen. Ab `SemanticallyValidModel` bezeichnet `Model` die fachlich angereicherte Einheit, die den wohlgeformten Graphen stufenweise mit globalen fachlichen Invarianten, abgeleiteten Wirkungstraces und Evidenzbewertungen verbindet. Der Übergang markiert damit die Grenze zwischen lokaler graphbezogener Zulässigkeit und globaler fachlicher Invariantenprüfung.
 
 Die Validierung überführt eine Modellinstanz in aufeinander aufbauende Stufen:
 
@@ -759,15 +759,15 @@ Eine Kontextinstanz ist ein konkreter fachlicher Interpretationsrahmen in einem 
 
 #### Primitive-Instanzen
 
-Eine Primitive-Instanz ist ein konkretes modelliertes Inhaltselement mit genau einer Eigentümer-Kontextinstanz. Sie ist nur zulässig, wenn die Interpretationsregistry für die Kombination aus Kontexttyp und Primitive-Typ eine Interpretation liefert. Ihre Bedeutung ergibt sich damit aus dem Zusammenspiel von Primitive-Typ und Eigentümerkontext. Ownership ist Bestandteil der Knoteninstanz und keine fachliche Relationsinstanz.
+Eine Primitive-Instanz ist ein konkretes modelliertes Inhaltselement, das durch genau eine Kontextinstanz kontextualisiert wird. Sie ist nur zulässig, wenn die Interpretationsregistry für die Kombination aus Kontexttyp und Primitive-Typ eine Interpretation liefert. Ihre Bedeutung ergibt sich damit aus dem Zusammenspiel von Primitive-Typ und kontextualisierender Kontextinstanz. Die Kontextzuordnung wird technisch im Owner-Feld der Knoteninstanz repräsentiert und bildet keine fachliche Relationsinstanz.
 
 #### Strukturierungsinstanzen
 
-Eine Strukturierungsinstanz besitzt ebenfalls genau eine Eigentümer-Kontextinstanz. Sie ist nur zulässig, wenn die Rollenregistry für ihren Typ im betreffenden Kontext eine Rolle liefert. Bei einer `PerformanceDimension` bestimmt diese Rolle den zulässigen Mitgliedstyp und die Mitgliedschaftsrelation. Sie interpretiert die Mitglieder nicht; jedes enthaltene Primitive erhält seine Bedeutung weiterhin durch sein eigenes `Primitive @ Context`.
+Eine Strukturierungsinstanz wird ebenfalls durch genau eine Kontextinstanz kontextualisiert. Sie ist nur zulässig, wenn die Rollenregistry für ihren Typ im betreffenden Kontext eine Rolle liefert. Bei einer `PerformanceDimension` bestimmt diese Rolle den zulässigen Mitgliedstyp und die Mitgliedschaftsrelation. Sie interpretiert die Mitglieder nicht; jedes enthaltene Primitive erhält seine Bedeutung weiterhin durch sein eigenes `Primitive @ Context`.
 
 #### Situationsankerinstanzen
 
-Eine Situationsankerinstanz ist ein eigenständiges Modellelement ohne Eigentümerkontext. Ihre Zuordnung zu einer oder mehreren Situation-Instanzen wird ausschließlich durch typisierte `is-constituted-by`-Relationsinstanzen ausgedrückt.
+Eine Situationsankerinstanz ist ein eigenständiges Modellelement und wird nicht durch eine Kontextinstanz kontextualisiert. Ihre Zuordnung zu einer oder mehreren Situation-Instanzen wird ausschließlich durch typisierte `is-constituted-by`-Relationsinstanzen ausgedrückt.
 
 #### Relationsinstanzen
 
@@ -856,9 +856,9 @@ Die Abbildung fokussiert die Nachweisfolge ab dem semantisch gültigen Modell. D
 
 ### Grundregeln
 
-Ein Modell ist wohlgeformt, wenn Bezeichner eindeutig sind, Eigentümerkontexte von Primitive- und Strukturierungsinstanzen existieren, Primitives nur in zulässigen Kontexten verwendet werden, Performance-Dimensionen nur in ihren zulässigen Rollen stehen, Situationsanker zulässige Formen besitzen und Relationsendpunkte typgerecht sind. Fehler werden akkumuliert, damit eine Prüfung sämtliche erkannten Strukturverletzungen gemeinsam ausweist.
+Ein Modell ist wohlgeformt, wenn Bezeichner eindeutig sind, Primitive- und Strukturierungsinstanzen genau einer existierenden Kontextinstanz zugeordnet sind, Primitives nur in zulässigen Kontexten verwendet werden, Performance-Dimensionen nur in ihren zulässigen Rollen stehen, Situationsanker zulässige Formen besitzen und Relationsendpunkte typgerecht sind. Fehler werden akkumuliert, damit eine Prüfung sämtliche erkannten Strukturverletzungen gemeinsam ausweist.
 
-Die statische Relationstypisierung sichert Kontext- und Primitive-Typen. Identitätsabhängige Invarianten konkreter Modellinstanzen prüft die Runtime-Validierung; dazu gehört, dass eine Performance-Dimension und ihre Mitglieder dieselbe Eigentümer-Kontextinstanz besitzen. Erst eine erfolgreiche Validierung erzeugt den opaken `WellFormedGraph`, der diese Garantien nach außen bewahrt. Ausführbare Tests prüfen diesen Vertrag, führen jedoch keine zusätzliche O2I-Semantik ein.
+Die statische Relationstypisierung sichert Kontext- und Primitive-Typen. Identitätsabhängige Invarianten konkreter Modellinstanzen prüft die Runtime-Validierung; dazu gehört, dass eine Performance-Dimension und ihre Mitglieder durch dieselbe konkrete Kontextinstanz kontextualisiert werden. Erst eine erfolgreiche Validierung erzeugt den opaken `WellFormedGraph`, der diese Garantien nach außen bewahrt. Ausführbare Tests prüfen diesen Vertrag, führen jedoch keine zusätzliche O2I-Semantik ein. In der Haskell-Repräsentation heißt die dafür gespeicherte Kontextreferenz technisch `owner` beziehungsweise `Context Ownership`.
 
 ### Semantische Gültigkeit
 
@@ -936,35 +936,35 @@ Evidenztypen wie `KPIDefinition`, `ValueDomain`, `Level`, `Delta`, `Observation`
 
 ### ArchiMate-Profil
 
-@Fig:o2i-syntax-view verdichtet das ArchiMate-Profil mit seinen Element- und Relationsabbildungen sowie der Syntax für Kontext-Ownership.
+@Fig:o2i-syntax-view verdichtet das ArchiMate-Profil mit seinen Element- und Relationsabbildungen sowie der Syntax für Kontextualisierung.
 
 Jeder O2I-Kontext wird als ArchiMate `Grouping` dargestellt. Das Grouping
-besitzt jedes ihm zugeordnete Primitive und Strukturierungselement über eine
-gerichtete ArchiMate `Composition` mit dem Label `contains`:
+kontextualisiert jedes ihm zugeordnete Primitive und Strukturierungselement
+über eine gerichtete ArchiMate `Composition` mit dem Label `contextualizes`:
 
 ```text
-O2I Context --composition[contains]--> owned element
+O2I Context --composition[contextualizes]--> contextualized element
 ```
 
-Jedes Primitive und jedes Strukturierungselement besitzt genau einen solchen
-Eigentümerkontext. Ein Kontext komponiert ausschließlich Primitive und
+Jedes Primitive und jedes Strukturierungselement wird durch genau eine solche
+Kontextinstanz kontextualisiert. Ein Kontext kontextualisiert ausschließlich Primitive und
 Strukturierungselemente, deren Interpretation beziehungsweise Rolle für diesen
 Kontext im Metamodell zulässig ist. Die visuelle Platzierung innerhalb des
-Groupings stellt diese persistierte Beziehung dar, ersetzt sie aber nicht.
+Groupings stellt diese explizite Kontextualisierung dar, ersetzt sie aber nicht.
 `Primitive @ Context` beziehungsweise `PerformanceDimension @ Context` sind
 die textuelle O2I-Notation der jeweiligen kontextualisierten Instanz. Das
 ArchiMate `Grouping` ist ausschließlich ihre konkrete Darstellungsform.
 Bei der Überführung in die Haskell-Spezifikation wird die Composition auf das
-Owner-Feld des Knotens abgebildet und nicht als fachliche `RawEdge`
+technische Owner-Feld des Knotens abgebildet und nicht als fachliche `RawEdge`
 interpretiert. Die O2I-Primitives selbst werden durch wenige
 ArchiMate-Basisformen dargestellt.
 
-Der in @Fig:o2i-syntax-view abgegrenzte Bereich `Ownership-Syntax Beispiele`
+Der in @Fig:o2i-syntax-view abgegrenzte Bereich `Kontextualisierungs-Syntax Beispiele`
 zeigt die beiden Zulässigkeitsmechanismen. `Driver @ Mission` veranschaulicht
-Primitive-Ownership: `Mission` lässt `Driver` über die Interpretationsregistry
+Primitive-Kontextualisierung: `Mission` lässt `Driver` über die Interpretationsregistry
 eindeutig zu. `PerformanceDimension @ Strategy` veranschaulicht
-Structuring-Ownership: Die
-Rollenregistry ordnet der Performance-Dimension im Eigentümerkontext `Strategy`
+Strukturierungskontextualisierung: Die
+Rollenregistry ordnet der Performance-Dimension im Kontext `Strategy`
 die Rolle `StrategySuccessDimension` zu und lässt damit ausschließlich
 `Key Result @ Strategy` als Mitgliedstyp zu. Sie interpretiert diese Mitglieder
 nicht; deren Bedeutung folgt weiterhin aus ihrem eigenen `Primitive @ Context`.
@@ -993,13 +993,13 @@ Ein ArchiMate `Assessment` stellt in O2I das O2I-Primitive `KPI` als stabile Mes
 
 ### Strukturierungsabbildung
 
-Eine O2I-Performance-Dimension wird als ArchiMate `Grouping` innerhalb ihres
-Eigentümerkontexts dargestellt und durch dessen Ownership-Composition
-besessen. Das `Grouping` bildet ausschließlich die O2I-Performance-Dimension
+Eine O2I-Performance-Dimension wird als ArchiMate `Grouping` innerhalb ihrer
+kontextualisierenden Kontextinstanz dargestellt und durch deren
+`composition[contextualizes]` kontextualisiert. Das `Grouping` bildet ausschließlich die O2I-Performance-Dimension
 ab und führt keine eigene Semantik ein. Die O2I-Rollenregistry bestimmt Rolle,
 zulässigen Mitgliedstyp und Mitgliedschaftsrelation: Eine strategische
 Erfolgsdimension in `Strategy` enthält `Key Result`-Primitives; eine
-Messdimension in `Measure` enthält `KPI`-Primitives. Diese Kontext-Ownership
+Messdimension in `Measure` enthält `KPI`-Primitives. Diese Kontextualisierung
 ist von der Aggregation `contains` zu ihren Mitgliedern zu unterscheiden.
 
 ### Situationsanker-Abbildung
@@ -1017,7 +1017,7 @@ O2I RegulatoryConstraint -> ArchiMate Requirement
 
 `Process` und `Role` werden dabei fachlich als Business Process bzw. Business Role spezialisiert; `Requirement` wird als Regulatory Constraint spezialisiert. Die fachlichen O2I-Ankertypen bleiben dadurch von den generischen ArchiMate-4-Elementtypen unterscheidbar.
 
-Situationsanker besitzen keinen Eigentümerkontext. Die folgende `is-constituted-by`-Relation ist ihre alleinige semantische Zuordnung zu einer Situation.
+Situationsanker werden nicht durch eine Kontextinstanz kontextualisiert. Die folgende `is-constituted-by`-Relation ist ihre alleinige semantische Zuordnung zu einer Situation.
 
 Für jede zulässige Ankerform `A` gilt dieselbe parametrisierte Relationsabbildung:
 
@@ -1050,7 +1050,7 @@ Grouping im Kontext Measure --aggregation[contains]--> Assessment im Kontext Mea
 Outcome im Kontext Intervention --association[sets-target-for]--> Assessment im Kontext Measure
 ```
 
-Kontext-Makrorelationen sind dokumentierte O2I-Relationen. In ArchiMate werden sie nicht als primäre ArchiMate-Semantik verstanden, sondern durch Relationen zwischen enthaltenen Elementen, durch beschriftete Dokumentationskanten zwischen Kontextbereichen oder durch explizit dokumentierte Ableitungen dargestellt:
+Kontext-Makrorelationen sind dokumentierte O2I-Relationen. In ArchiMate werden sie nicht als primäre ArchiMate-Semantik verstanden, sondern durch Relationen zwischen kontextualisierten Elementen, durch beschriftete Dokumentationskanten zwischen Kontextbereichen oder durch explizit dokumentierte Ableitungen dargestellt:
 
 ```text
 Ethos --guides--> Mission
@@ -1084,12 +1084,12 @@ O2I: Strategy --qualifies--> Need
 kann syntaktisch begründet werden als:
 
 ```text
-O2I-Kontext Strategy contains Outcome
-O2I-Kontext Need contains Goal
+O2I-Kontext Strategy contextualizes Outcome
+O2I-Kontext Need contextualizes Goal
 Outcome im Kontext Strategy --influence[translates-into]--> Goal im Kontext Need
 ```
 
-Die äußeren O2I-Kästen sind damit O2I-Kontexte; die fachlich wirksame Begründung liegt zwischen den enthaltenen Primitives.
+Die äußeren O2I-Kästen sind damit O2I-Kontexte; die fachlich wirksame Begründung liegt zwischen den kontextualisierten Primitives.
 
 ### Modellierungsregeln
 

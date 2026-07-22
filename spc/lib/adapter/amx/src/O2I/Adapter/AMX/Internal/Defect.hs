@@ -308,15 +308,15 @@ amxDefectTagSpec tag =
     MissingOwnershipTag ->
       model
         "amx.profile.ownership-missing"
-        "An owned O2I candidate has no persisted ownership composition."
+        "An O2I Primitive or PerformanceDimension has no persisted contextualization composition."
     DuplicateOwnershipTag ->
       model
         "amx.profile.ownership-duplicate"
-        "An owned O2I candidate has multiple ownership compositions."
+        "An O2I Primitive or PerformanceDimension has multiple contextualization compositions."
     OwnershipOnOwnerlessKindTag ->
       model
         "amx.profile.ownership-forbidden"
-        "An ownerless O2I candidate has an ownership composition."
+        "An O2I Context or SituationAnchor has a forbidden contextualization composition."
 
 amxDecodeDefectSpec :: AMXDecodeDefect -> DiagnosticSpec
 amxDecodeDefectSpec defect =

@@ -39,12 +39,11 @@ Source: O2I authors' derivation based on Doerr (2018), Rumelt (2011), and Porter
     <element xsi:type="archimate:Meaning" name="Coherent Action" id="id-1667c49476464971872207ecd236283a"/>
     <element xsi:type="archimate:Meaning" name="CSF" id="id-6f4c9da83a944853915bc94d772160c4"/>
     <element xsi:type="archimate:Driver" name="Driver @ Mission" id="id-34f587fbc060415faf043067eaa8a74d">
-      <documentation>Represents the Primitive side of the O2I ownership syntax using Driver in Mission as an admissible example.
+      <documentation>Represents the Primitive side of the O2I contextualization syntax using Driver in Mission as an admissible example.
 
-This element is a syntax exemplar and not a fachliche O2I instance. Its owning Mission Context is persisted through composition[contains]; visual nesting only presents that relationship.
+This element is a syntax exemplar and not a fachliche O2I instance. Its Mission Context contextualizes it through composition[contextualizes]; visual nesting only presents that relationship.
 
-Source: O2I syntax mapping based on The Open Group (2026).
-</documentation>
+Source: O2I syntax mapping based on The Open Group (2026).</documentation>
       <property key="o2i.kind" value="Primitive"/>
       <property key="o2i.type" value="Driver"/>
     </element>
@@ -164,7 +163,7 @@ Source: O2I authors' derivation based on Parmenter (2020) and The Open Group (20
       <element xsi:type="archimate:Grouping" name="Performance Dimension" id="id-6e5d5a1f511747a893cabae235cdaa84">
         <documentation>Represents an O2I PerformanceDimension in ArchiMate syntax. The ArchiMate Grouping introduces no O2I semantics.
 
-The O2I role registry determines the admissible owning Context, member Primitive type, and membership relation. Member Primitives retain their own Primitive @ Context interpretation.
+The O2I role registry determines the admissible contextualizing Context, member Primitive type, and membership relation. Member Primitives retain their respective Primitive @ Context interpretation.
 
 Source: O2I syntax mapping based on The Open Group (2026).</documentation>
       </element>
@@ -259,27 +258,27 @@ Source: O2I syntax mapping based on The Open Group (2026).</documentation>
       </folder>
       <folder name="Syntax" id="id-65c6a8b2f718439cad4c437adade4fcf">
         <element xsi:type="archimate:Grouping" name="O2I Context (Mission)" id="id-367fe775ef65480bbae577099fd83b30">
-          <documentation>Represents the Context side of the O2I ownership syntax using Mission as an admissible example.
+          <documentation>Represents the Context side of the O2I contextualization syntax using Mission as an admissible example.
 
-This element is a syntax exemplar and not a fachliche O2I instance. Every owned Primitive and Structuring element is related through composition[contains]. Each owned element has exactly one owning Context, and only elements whose Interpretation or role is admissible for that Context may be owned. Visual nesting presents but never replaces this persisted ownership.
+This element is a syntax exemplar and not a fachliche O2I instance. It contextualizes each Primitive and Structuring element through composition[contextualizes]. Each such element is contextualized by exactly one Context, and a Context may contextualize only elements whose Interpretation or role is admissible for it. Visual nesting presents but never replaces explicit contextualization.
 
 Source: O2I syntax mapping based on The Open Group (2026).</documentation>
           <property key="o2i.kind" value="Context"/>
           <property key="o2i.type" value="Mission"/>
         </element>
         <element xsi:type="archimate:Grouping" name="O2I Context (Strategy)" id="id-9eb65bc4e62e42e9ad5375725305340c">
-          <documentation>Represents the Context side of the O2I ownership syntax using Strategy as an admissible example.
+          <documentation>Represents the Context side of the O2I contextualization syntax using Strategy as an admissible example.
 
-This element is a syntax exemplar and not a fachliche O2I instance. Every owned Primitive and Structuring element is related through composition[contains]. Each owned element has exactly one owning Context, and only elements whose Interpretation or role is admissible for that Context may be owned. Visual nesting presents but never replaces this persisted ownership.
+This element is a syntax exemplar and not a fachliche O2I instance. It contextualizes each Primitive and Structuring element through composition[contextualizes]. Each such element is contextualized by exactly one Context, and a Context may contextualize only elements whose Interpretation or role is admissible for it. Visual nesting presents but never replaces explicit contextualization.
 
 Source: O2I syntax mapping based on The Open Group (2026).</documentation>
           <property key="o2i.kind" value="Context"/>
           <property key="o2i.type" value="Strategy"/>
         </element>
         <element xsi:type="archimate:Grouping" name="Performance Dimension @ Strategy" id="id-5d86d1b167d045748a0605ab0cf5a08b">
-          <documentation>Represents the Structuring side of the O2I ownership syntax using a Strategy success dimension as an admissible example. The ArchiMate Grouping introduces no O2I semantics.
+          <documentation>Represents the Structuring side of the O2I contextualization syntax using a Strategy success dimension as an admissible example. The ArchiMate Grouping introduces no O2I semantics.
 
-This element is a syntax exemplar and not a fachliche O2I instance. Its owning Strategy Context is persisted through composition[contains]. The O2I role registry resolves StrategySuccessDimension, which admits Key Result @ Strategy as its member type and aggregation[contains] as its membership relation. It does not interpret those members; each retains its own Primitive @ Context interpretation.
+This element is a syntax exemplar and not a fachliche O2I instance. Its Strategy Context contextualizes it through composition[contextualizes]. The O2I role registry resolves StrategySuccessDimension, which admits Key Result @ Strategy as its member type and aggregation[contains] as its membership relation. It does not interpret those members; each retains its own Primitive @ Context interpretation.
 
 Source: O2I syntax mapping based on The Open Group (2026).</documentation>
           <property key="o2i.kind" value="Structuring"/>
@@ -477,8 +476,8 @@ Source: O2I syntax mapping based on The Open Group (2026).</documentation>
       <documentation>Eine Intervention wirkt auf genau den fachlichen Anker ein, an dem der Bedarf verortet ist.</documentation>
     </element>
     <element xsi:type="archimate:AssociationRelationship" name="measures" id="id-effc668299094bb99029210b54c25c1e" source="id-b6d54675e24e4d3bb58d652fdfe5c493" target="id-29dc2a1c293a4400a24d39ff49739734" directed="true"/>
-    <element xsi:type="archimate:CompositionRelationship" name="contains" id="id-50f9cfe9c60b4075be2d8356a9dabbab" source="id-367fe775ef65480bbae577099fd83b30" target="id-34f587fbc060415faf043067eaa8a74d"/>
-    <element xsi:type="archimate:CompositionRelationship" name="contains" id="id-c5428e3b15ae45ab94164371491bcea5" source="id-9eb65bc4e62e42e9ad5375725305340c" target="id-5d86d1b167d045748a0605ab0cf5a08b"/>
+    <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-50f9cfe9c60b4075be2d8356a9dabbab" source="id-367fe775ef65480bbae577099fd83b30" target="id-34f587fbc060415faf043067eaa8a74d"/>
+    <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-c5428e3b15ae45ab94164371491bcea5" source="id-9eb65bc4e62e42e9ad5375725305340c" target="id-5d86d1b167d045748a0605ab0cf5a08b"/>
   </folder>
   <folder name="Views" id="id-c4a47547d89649babef754e47e83c429" type="diagrams">
     <folder name="Syntax" id="id-6fd9ede1a32043c0bdec21b826afd949">
@@ -566,7 +565,7 @@ Source: O2I syntax mapping based on The Open Group (2026).</documentation>
             <feature name="nameVisible" value="false"/>
           </sourceConnection>
         </child>
-        <child xsi:type="archimate:Group" id="id-2cf9c4fe30fe415c857ab855b438e781" name="Ownership-Syntax Beispiele" textAlignment="1" fillColor="#feffff">
+        <child xsi:type="archimate:Group" id="id-2cf9c4fe30fe415c857ab855b438e781" name="Kontextualisierungs-Syntax Beispiele" textAlignment="1" fillColor="#feffff">
           <bounds x="132" y="108" width="253" height="420"/>
           <feature name="deriveElementLineColor" value="false"/>
           <child xsi:type="archimate:DiagramObject" id="id-fdef702512d74dbb869dc2478436e622" textAlignment="1" archimateElement="id-367fe775ef65480bbae577099fd83b30">
@@ -593,9 +592,9 @@ Source: O2I syntax mapping based on The Open Group (2026).</documentation>
         </child>
         <documentation>Defines the concrete ArchiMate realization of O2I Contexts, contextualized Primitives, PerformanceDimensions, Situation anchors, and their relation mappings.
 
-Every O2I Context and PerformanceDimension is represented by an ArchiMate Grouping. ArchiMate Groupings introduce no O2I semantics. Every concrete Primitive and PerformanceDimension instance has exactly one owning Context through composition[contains]. The Interpretation registry admits Primitive @ Context; the role registry admits PerformanceDimension @ Context and constrains its member Primitive type and membership relation without interpreting the members. Visual nesting presents but never replaces persisted ownership. Primitive @ Context and PerformanceDimension @ Context are the textual O2I notations. The bounded ownership examples are syntax exemplars, not fachliche instances.
+Every O2I Context and PerformanceDimension is represented by an ArchiMate Grouping. ArchiMate Groupings introduce no O2I semantics. Every concrete Primitive and PerformanceDimension instance is contextualized by exactly one Context through composition[contextualizes]. The Interpretation registry admits Primitive @ Context; the role registry admits PerformanceDimension @ Context and constrains its member Primitive type and membership relation without interpreting the members. Visual nesting presents but never replaces explicit contextualization. Primitive @ Context and PerformanceDimension @ Context are the textual O2I notations. The bounded contextualization examples are syntax exemplars, not fachliche instances.
 
-Situation anchors are independent, ownerless nodes. Their assignment to a Situation is represented exclusively through aggregation[is-constituted-by].
+Situation anchors are independent nodes and are not contextualized by a Context. Their assignment to a Situation is represented exclusively through aggregation[is-constituted-by].
 
 O2I Situation Anchor syntax:
 
@@ -814,7 +813,7 @@ O2I Situation Anchor syntax:
         </child>
         <documentation>Defines the normative type-level view of O2I Primitives, PerformanceDimension, and admissible relation families.
 
-The view intentionally abstracts from concrete Primitive and Structuring instances and their owning Contexts. It does not assert that every displayed relation is admissible for every Context. Concrete ownership and context-sensitive admissibility are defined by Instantiation, the Interpretation registry, the PerformanceDimension role registry, and the typed Relation registry. Their concrete ArchiMate realization is defined in O2I Syntax.</documentation>
+The view intentionally abstracts from concrete Primitive and Structuring instances and from the Context instances that contextualize them. It does not assert that every displayed relation is admissible for every Context. Concrete contextualization and context-sensitive admissibility are defined by Instantiation, the Interpretation registry, the PerformanceDimension role registry, and the typed Relation registry. Their concrete ArchiMate realization is defined in O2I Syntax.</documentation>
       </element>
       <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Situation Anchoring" id="id-7e4365b02a58418cb38f4ea25e0aa5dc">
         <child xsi:type="archimate:DiagramObject" id="id-81110f41c9744559bccc4f600f9e06c2" targetConnections="id-552eb38670974e0d9843a03d537ce891 id-b8d051213b0a48fd9b3b187c264485d7" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-95420d4e66164023b79676213a6147e2">

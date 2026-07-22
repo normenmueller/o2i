@@ -24,8 +24,10 @@ override this snapshot.
 - Need qualification is pre-intervention; evidence readiness is a later gate.
 - Effect and target attainment are independent. O2I supports plausible
   attribution, not causal proof.
-- O2I ArchiMate ownership is persisted exclusively through
-  `composition[contains]`; visual nesting carries no ownership semantics.
+- O2I ArchiMate contextualization is expressed exclusively through
+  `composition[contextualizes]`; visual nesting carries no contextualization
+  semantics. The Haskell graph represents this assignment through its
+  technical owner field.
 - Native AMX `version="5.0.0"` and O2I profile `o2i.profile="0.2"` are distinct.
 - `O2I Context`, `O2I Primitives`, and `O2I Situation` are normative semantic
   views; `O2I Syntax` is their concrete ArchiMate realization.
@@ -66,6 +68,10 @@ override this snapshot.
   without findings. Fachlichkeit, Metamodell, terminology/WTF consistency,
   specification fidelity, Haskell/API consistency, and cross-artifact
   synchronization each score 10.0/10.0.
+- The 2026-07-22 contextualization-syntax gate is complete: the external
+  co-author updated the AMX adapter and tests, and an independent closure review
+  found no findings. Fachlichkeit, Metamodell, Typtheorie, Haskell design,
+  tests, formal value, and cross-artifact consistency each score 10.0/10.0.
 - The Framework architecture visualization distinguishes the fachliche,
   metamodel, executable-formalization, and instance levels; locates the
   evidence layer inside metamodel semantics; and separates foundation,

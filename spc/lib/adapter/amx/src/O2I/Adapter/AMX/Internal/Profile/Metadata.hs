@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Direct O2I metadata, ownership syntax, and node projection.
+-- | Direct O2I metadata, contextualization syntax, and node projection.
 module O2I.Adapter.AMX.Internal.Profile.Metadata
   ( MetadataKind(..)
   , metadataKind
@@ -39,7 +39,7 @@ metadataKind :: AMXElement -> Maybe MetadataKind
 metadataKind element =
   singleMetadataValue "o2i.kind" element >>= metadataKindFromText
 
--- | Project all reached metadata and ownership violations for one candidate.
+-- | Project metadata and Context Ownership violations for one candidate.
 candidateDefects ::
      Environment
   -> AMXElement

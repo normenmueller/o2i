@@ -18,7 +18,7 @@
     </element>
   </folder>
   <folder name="Relations" id="id-98a439ec9bed40749d5298d3bf39f0a7" type="relations">
-    <element xsi:type="archimate:CompositionRelationship" name="contains" id="id-f358d3cc5eea46dc87ac1a2af988d65e" source="id-14b8dcb25f204fe0903e308d7a38f438" target="id-d7c54b15cb1e407eaa770b6769fad6ee"/>
+    <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-f358d3cc5eea46dc87ac1a2af988d65e" source="id-14b8dcb25f204fe0903e308d7a38f438" target="id-d7c54b15cb1e407eaa770b6769fad6ee"/>
   </folder>
   <folder name="Views" id="id-4f3ab5b1a6e34f5baa480a20fb9fa6e9" type="diagrams">
     <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Reference - Ethos" id="id-fad6c1265c8c4623ab29335326eb23f2">

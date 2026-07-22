@@ -77,16 +77,18 @@
 - Clarified the semantic boundary between structural graph stages and
   subject-matter-enriched model stages, including the distinction between
   context-level relation evidence and empirical evidence stages.
-- Made Context ownership explicit and machine-readable in the ArchiMate syntax
-  through one `composition[contains]` per Primitive and Structuring element,
-  mapped to the Haskell owner field rather than a fachliche graph edge; made
+- Made contextualization by Context instances explicit and machine-readable in the ArchiMate
+  syntax through one `composition[contextualizes]` per Primitive and
+  Structuring element, mapped to the technical Haskell owner field rather than
+  a fachliche graph edge; made
   Situation anchors ownerless and derived their Situation assignment
   exclusively from typed constitution relations; kept Primitive interpretation
   and PerformanceDimension role semantics independent of their ArchiMate
   `Grouping` representation; introduced explicit `o2i.kind` and `o2i.type`
-  classification while deriving ownership exclusively from
-  `composition[contains]`, validated Ownership model-wide, and required every
-  PerformanceDimension member to share its concrete owner Context instance.
+  classification while deriving contextualization exclusively from
+  `composition[contextualizes]`, validated technical Ownership model-wide, and
+  required every PerformanceDimension member to share its concrete owner
+  Context instance.
 - Separated `O2I Situation` as the anchor type model from `O2I Situation Anchoring` as the relation model connecting situated Need, Intervention, and Measure semantics, with a parameterized ArchiMate 4 syntax mapping for every anchor form.
 - Clarified the Haskell specification as the normative machine-checkable formalization of the technology-independent O2I metamodel.
 - Introduced the mandatory strategic success reference as the terminology counterpart of `Key Result @ Strategy`.

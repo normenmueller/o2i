@@ -32,7 +32,7 @@
       "path": "valid/orientation/ethos.archimate",
       "origin": "saved by the user with Archi 5.9.0",
       "producerVersion": "5.9.0",
-      "sha256": "ee3d6bc92a002174f1c93c38bd6081b43bda2e1916f9eb30cbd72b65400771e1",
+      "sha256": "0d891904a1855ba37d40ce2ad9d88e4a5b1ff5cb04a71f10f045a512f23afee7",
       "rootQName": "{http://www.archimatetool.com/archimate}model",
       "nativeVersion": "5.0.0",
       "modelId": "id-fdeb02e8264f47299b4a570691c82ca6",
@@ -61,10 +61,10 @@
         "edges": [],
         "semantics": "passed"
       },
-      "persistedOwnership": {
+      "persistedContextualization": {
         "id": "id-f358d3cc5eea46dc87ac1a2af988d65e",
         "type": "CompositionRelationship",
-        "name": "contains",
+        "name": "contextualizes",
         "source": "id-14b8dcb25f204fe0903e308d7a38f438",
         "target": "id-d7c54b15cb1e407eaa770b6769fad6ee"
       }

@@ -79,13 +79,7 @@ validEthosModel =
   model
     (grouping "ethos" "Ethos" (Text.concat ethosMetadata)
        <> principle "principle" principleMetadata
-       <> relationship
-            "ownership"
-            "CompositionRelationship"
-            "contains"
-            "ethos"
-            "principle"
-            False
+       <> contextualization "ownership" "ethos" "principle"
        <> view
             "view"
             "Scope"
@@ -113,13 +107,7 @@ obligatedModel =
   model
     (grouping "mission" "Mission" (Text.concat contextMetadata)
        <> driver "driver" ""
-       <> relationship
-            "ownership"
-            "CompositionRelationship"
-            "contains"
-            "mission"
-            "driver"
-            False
+       <> contextualization "ownership" "mission" "driver"
        <> view "view" "Scope" (diagramObject "object" "mission"))
     [profileProperty]
 
@@ -146,13 +134,7 @@ invalidInterpretationModel =
   model
     (grouping "mission" "Mission" (Text.concat contextMetadata)
        <> assessment "kpi" primitiveKpiMetadata
-       <> relationship
-            "ownership"
-            "CompositionRelationship"
-            "contains"
-            "mission"
-            "kpi"
-            False
+       <> contextualization "ownership" "mission" "kpi"
        <> view "view" "Scope" (diagramObject "object" "mission"))
     [profileProperty]
 
@@ -177,20 +159,8 @@ duplicateOwnershipModel =
     (grouping "mission-a" "Mission A" (Text.concat contextMetadata)
        <> grouping "mission-b" "Mission B" (Text.concat contextMetadata)
        <> driver "driver" primitiveMetadata
-       <> relationship
-            "ownership-a"
-            "CompositionRelationship"
-            "contains"
-            "mission-a"
-            "driver"
-            False
-       <> relationship
-            "ownership-b"
-            "CompositionRelationship"
-            "contains"
-            "mission-b"
-            "driver"
-            False
+       <> contextualization "ownership-a" "mission-a" "driver"
+       <> contextualization "ownership-b" "mission-b" "driver"
        <> view "view" "Scope" (diagramObject "object" "driver"))
     [profileProperty]
 
@@ -199,13 +169,7 @@ ownerlessOwnershipModel =
   model
     (grouping "mission-a" "Mission A" (Text.concat contextMetadata)
        <> grouping "mission-b" "Mission B" (Text.concat contextMetadata)
-       <> relationship
-            "ownership"
-            "CompositionRelationship"
-            "contains"
-            "mission-a"
-            "mission-b"
-            False
+       <> contextualization "ownership" "mission-a" "mission-b"
        <> view "view" "Scope" (diagramObject "object" "mission-b"))
     [profileProperty]
 
@@ -213,13 +177,7 @@ invalidOwnershipModel :: Text
 invalidOwnershipModel =
   model
     (driver "driver" primitiveMetadata
-       <> relationship
-            "ownership"
-            "CompositionRelationship"
-            "contains"
-            "missing"
-            "driver"
-            False
+       <> contextualization "ownership" "missing" "driver"
        <> view "view" "Scope" (diagramObject "object" "driver"))
     [profileProperty]
 
@@ -230,20 +188,8 @@ invalidMembershipModel =
        <> grouping "strategy-b" "Strategy B" (Text.concat strategyMetadata)
        <> grouping "dimension" "Dimension" structuringMetadata
        <> outcome "key-result" keyResultMetadata
-       <> relationship
-            "dimension-owner"
-            "CompositionRelationship"
-            "contains"
-            "strategy-a"
-            "dimension"
-            False
-       <> relationship
-            "result-owner"
-            "CompositionRelationship"
-            "contains"
-            "strategy-b"
-            "key-result"
-            False
+       <> contextualization "dimension-owner" "strategy-a" "dimension"
+       <> contextualization "result-owner" "strategy-b" "key-result"
        <> relationship
             "membership"
             "AggregationRelationship"
@@ -252,6 +198,43 @@ invalidMembershipModel =
             "key-result"
             False
        <> view "view" "Scope" (diagramObject "object" "dimension"))
+    [profileProperty]
+
+legacyOwnershipLabelModel :: Text
+legacyOwnershipLabelModel =
+  model
+    (grouping "mission" "Mission" (Text.concat contextMetadata)
+       <> driver "driver" primitiveMetadata
+       <> relationship
+            "legacy-ownership"
+            "CompositionRelationship"
+            "contains"
+            "mission"
+            "driver"
+            False
+       <> view "view" "Scope" (diagramObject "object" "driver"))
+    [profileProperty]
+
+validMembershipModel :: Text
+validMembershipModel =
+  model
+    (grouping "measure" "Measure" (Text.concat (metadata "Context" "Measure"))
+       <> grouping "dimension" "Dimension" structuringMetadata
+       <> assessment "kpi" primitiveKpiMetadata
+       <> contextualization "dimension-owner" "measure" "dimension"
+       <> contextualization "kpi-owner" "measure" "kpi"
+       <> relationship
+            "membership"
+            "AggregationRelationship"
+            "contains"
+            "dimension"
+            "kpi"
+            False
+       <> view
+            "view"
+            "Scope"
+            (diagramObject "dimension-object" "dimension"
+               <> diagramObject "kpi-object" "kpi"))
     [profileProperty]
 
 unknownRelationModel :: Text
@@ -399,6 +382,17 @@ relationship identifier relationType name sourceId targetId directed =
     <> if directed
          then " directed=\"true\"/>"
          else "/>"
+
+-- | Persist one native contextualization and thereby its Context Ownership.
+contextualization :: Text -> Text -> Text -> Text
+contextualization identifier contextId elementId =
+  relationship
+    identifier
+    "CompositionRelationship"
+    "contextualizes"
+    contextId
+    elementId
+    False
 
 view :: Text -> Text -> Text -> Text
 view identifier name children =

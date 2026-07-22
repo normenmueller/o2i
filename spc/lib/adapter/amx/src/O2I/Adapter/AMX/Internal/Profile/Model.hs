@@ -65,7 +65,7 @@ buildEnvironment document selected =
            not (isRelationshipElement element || isViewElement element))
         declarations
 
--- | Persisted ownership declarations targeting one element.
+-- | Persisted contextualizations implementing technical Context Ownership.
 incomingOwnerships :: Environment -> AMXElement -> [AMXElement]
 incomingOwnerships environment element =
   case elementId element of
@@ -75,17 +75,17 @@ incomingOwnerships environment element =
         ((== Just identifier) . elementAttribute (endpointQName TargetEndpoint))
         (environmentOwnerships environment)
 
--- | Resolve exactly one persisted ownership declaration.
+-- | Resolve exactly one persisted contextualization.
 uniqueOwnership :: Environment -> AMXElement -> Maybe AMXElement
 uniqueOwnership environment element =
   case incomingOwnerships environment element of
     [ownership] -> Just ownership
     _ -> Nothing
 
--- | Recognize the sole native ownership notation.
+-- | Recognize the sole native contextualization notation.
 isOwnershipRelationship :: AMXElement -> Bool
 isOwnershipRelationship relationship =
-  elementName relationship == "contains"
+  elementName relationship == "contextualizes"
     && actualRelationshipRepresentation relationship
          == Just
               ArchiRelationshipRepresentation

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Concrete O2I profile, ownership, and notation tests.
+-- | Concrete O2I profile, contextualization, and notation tests.
 module O2I.Adapter.AMX.Test.Profile
   ( profileTests
   ) where
@@ -26,7 +26,7 @@ profileTests =
     , testCase "rejects legacy root version independently" legacyProfileTest
     , testCase "names and layout never establish candidacy" noCandidateTest
     , testCase
-        "ownership obligates an endpoint without metadata"
+        "contextualization obligates an endpoint without metadata"
         obligatedMetadataTest
     , testCase "rejects unsupported candidate metadata" metadataKeyTest
     , testCase "rejects missing o2i.kind" missingKindTest
@@ -36,14 +36,20 @@ profileTests =
     , testCase "rejects invalid o2i.type for kind" invalidTypeTest
     , testCase "rejects duplicate kind and type metadata" duplicateMetadataTest
     , testCase "rejects the wrong ArchiMate element notation" wrongNotationTest
-    , testCase "requires ownership for a Primitive" missingOwnershipTest
-    , testCase "visual containment never supplies ownership" visualNestingTest
+    , testCase "requires contextualization for a Primitive" missingOwnershipTest
+    , testCase
+        "visual containment never supplies contextualization"
+        visualNestingTest
+    , testCase
+        "rejects composition[contains] as Context Ownership"
+        legacyOwnershipLabelTest
     , testCase "rejects duplicate ownership" duplicateOwnershipTest
     , testCase "rejects ownership on an ownerless kind" ownerlessOwnershipTest
     , testCase "rejects unresolved ownership references" invalidOwnershipTest
     , testCase
         "projects invalid membership to Structure"
         membershipOwnerMismatchTest
+    , testCase "accepts aggregation[contains] membership" validMembershipTest
     , testCase
         "rejects an incompatible relation representation"
         relationshipRepresentationTest
@@ -238,6 +244,13 @@ visualNestingTest = do
   report <- inspectText (ViewByName "Scope") visualNestingModel
   diagnosticCodes report @?= ["o2i.amx.profile.ownership-missing"]
 
+legacyOwnershipLabelTest :: Assertion
+legacyOwnershipLabelTest = do
+  report <- inspectText (ViewByName "Scope") legacyOwnershipLabelModel
+  assertBool
+    "composition[contains] must not establish Context Ownership"
+    ("o2i.amx.profile.ownership-missing" `elem` diagnosticCodes report)
+
 duplicateOwnershipTest :: Assertion
 duplicateOwnershipTest = do
   report <- inspectText (ViewByName "Scope") duplicateOwnershipModel
@@ -257,6 +270,12 @@ membershipOwnerMismatchTest :: Assertion
 membershipOwnerMismatchTest = do
   report <- inspectText (ViewByName "Scope") invalidMembershipModel
   diagnosticCodes report @?= ["o2i.structure.membership-owner-mismatch"]
+
+validMembershipTest :: Assertion
+validMembershipTest = do
+  report <- inspectText (ViewByName "Scope") validMembershipModel
+  take 5 (map reportedState (stageReportsList (reportStageReports report)))
+    @?= replicate 5 StagePassed
 
 relationshipRepresentationTest :: Assertion
 relationshipRepresentationTest = do

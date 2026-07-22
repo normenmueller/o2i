@@ -58,20 +58,21 @@ test and apply O2I but never define its generic semantics.
   `Intervention`, and `Measure`.
 - Primitives: `Principle`, `Driver`, `Objective`, `Key Result`, `KPI`, and
   `Action`.
-- In the ArchiMate syntax, every Primitive and Structuring element has exactly
-  one owning O2I Context through
-  `Context --composition[contains]--> owned element`. A Context may own only
-  Primitives and Structuring elements whose Interpretation or role is
-  admissible for that Context. Visual nesting presents but never replaces this
-  persisted ownership. Import maps it to the Haskell owner field, not to a
-  fachliche `RawEdge`.
+- In the ArchiMate syntax, every Primitive and Structuring element is
+  contextualized by exactly one O2I Context through
+  `Context --composition[contextualizes]--> contextualized element`. A Context
+  may contextualize only Primitives and Structuring elements whose
+  Interpretation or role is admissible for that Context. Visual nesting
+  presents but never replaces this explicit contextualization. Import maps it
+  to the technical Haskell owner field, not to a fachliche `RawEdge`.
 - ArchiMate model metadata uses `o2i.kind` for `Context`, `Primitive`,
   `Structuring`, or `SituationAnchor` and `o2i.type` for the corresponding O2I
   constructor. It never duplicates owner, Context, role, interpretation, or
-  membership semantics; ownership derives exclusively from Composition.
-- Situation anchors are independent nodes without a Context owner. Their
-  assignment to one or more Situations is expressed exclusively by typed
-  `is-constituted-by` relations.
+  membership semantics; contextualization derives exclusively from
+  Composition.
+- Situation anchors are independent nodes and are not contextualized by a
+  Context. Their assignment to one or more Situations is expressed exclusively
+  by typed `is-constituted-by` relations.
 - Every Situation has at least one constituting Situation anchor; every Need is
   globally situated; every Strategy has exactly one complete, coherent
   formulation.

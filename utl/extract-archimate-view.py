@@ -51,17 +51,20 @@ REQUIRED_SYNTAX_DOCUMENTATION = (
     "Every O2I Context and PerformanceDimension is represented by an "
     "ArchiMate Grouping.",
     "ArchiMate Groupings introduce no O2I semantics.",
-    "Every concrete Primitive and PerformanceDimension instance has exactly "
-    "one owning Context through composition[contains]",
+    "Every concrete Primitive and PerformanceDimension instance is "
+    "contextualized by exactly one Context through "
+    "composition[contextualizes]",
     "The Interpretation registry admits Primitive @ Context;",
     "the role registry admits PerformanceDimension @ Context and constrains "
     "its member Primitive type and membership relation without interpreting "
     "the members.",
-    "Visual nesting presents but never replaces persisted ownership.",
+    "Visual nesting presents but never replaces explicit contextualization.",
     "Primitive @ Context and PerformanceDimension @ Context are the textual "
     "O2I notations.",
-    "The bounded ownership examples are syntax exemplars, not fachliche "
+    "The bounded contextualization examples are syntax exemplars, not fachliche "
     "instances.",
+    "Situation anchors are independent nodes and are not contextualized by a "
+    "Context.",
     "O2I BusinessCapability -> ArchiMate Capability",
     "O2I BusinessProcess -> ArchiMate Process",
     "O2I BusinessObject -> ArchiMate Business Object",
@@ -102,7 +105,7 @@ O2I_TYPES_BY_KIND = {
         }
     ),
 }
-O2I_OWNED_KINDS = frozenset({"Primitive", "Structuring"})
+O2I_CONTEXTUALIZED_KINDS = frozenset({"Primitive", "Structuring"})
 FORBIDDEN_O2I_METADATA_PROPERTIES = frozenset(
     {
         "o2i.context",
@@ -354,14 +357,14 @@ RELATION_CONTRACTS = {
         {
             contract_edge(
                 "O2I Context (Mission)",
-                "contains",
+                "contextualizes",
                 "Driver @ Mission",
                 relation_type="CompositionRelationship",
                 target_type="Driver",
             ),
             contract_edge(
                 "O2I Context (Strategy)",
-                "contains",
+                "contextualizes",
                 "Performance Dimension @ Strategy",
                 relation_type="CompositionRelationship",
             ),
@@ -653,7 +656,7 @@ def collect_o2i_metadata(
     return metadata, errors
 
 
-def validate_o2i_ownership(
+def validate_o2i_contextualization(
     root: ET.Element,
     relations: dict[
         str,
@@ -668,7 +671,7 @@ def validate_o2i_ownership(
         if error not in errors:
             errors.append(error)
 
-    ownership_relations = [
+    contextualization_relations = [
         (relation_id, source, target)
         for relation_id, (
             relation_name,
@@ -677,11 +680,11 @@ def validate_o2i_ownership(
             target,
             _,
         ) in relations.items()
-        if relation_name == "contains"
+        if relation_name == "contextualizes"
         and relation_type == "CompositionRelationship"
     ]
     incoming: dict[str, list[tuple[str, str | None]]] = {}
-    for relation_id, source, target in ownership_relations:
+    for relation_id, source, target in contextualization_relations:
         if target is not None:
             incoming.setdefault(target, []).append((relation_id, source))
 
@@ -692,28 +695,37 @@ def validate_o2i_ownership(
 
         if source_metadata is None or source_metadata[0] != "Context":
             errors.append(
-                f"ownership relation {relation_id!r} must start at an element "
+                f"contextualization relation {relation_id!r} must start at an element "
                 f"with {O2I_KIND_PROPERTY}='Context'"
             )
-        if target_metadata is None or target_metadata[0] not in O2I_OWNED_KINDS:
+        if (
+            target_metadata is None
+            or target_metadata[0] not in O2I_CONTEXTUALIZED_KINDS
+        ):
             errors.append(
-                f"ownership relation {relation_id!r} must end at an element "
+                f"contextualization relation {relation_id!r} must end at an element "
                 "with o2i.kind='Primitive' or o2i.kind='Structuring'"
             )
 
     for element_id, (kind, _) in metadata.items():
-        ownership = incoming.get(element_id, [])
+        contextualizations = incoming.get(element_id, [])
         label = element_label(model_nodes[element_id])
-        if kind in O2I_OWNED_KINDS and len(ownership) != 1:
+        if (
+            kind in O2I_CONTEXTUALIZED_KINDS
+            and len(contextualizations) != 1
+        ):
             errors.append(
-                f"{label} has {len(ownership)} model-wide "
-                "CompositionRelationship[contains] owners; expected exactly one"
+                f"{label} has {len(contextualizations)} model-wide "
+                "CompositionRelationship[contextualizes] contextualizations; "
+                "expected exactly one"
             )
-        if kind in {"Context", "SituationAnchor"} and ownership:
-            relation_ids = [relation_id for relation_id, _ in ownership]
+        if kind in {"Context", "SituationAnchor"} and contextualizations:
+            relation_ids = [
+                relation_id for relation_id, _ in contextualizations
+            ]
             errors.append(
-                f"{label} is ownerless but has model-wide "
-                "CompositionRelationship[contains] owners "
+                f"{label} must not be contextualized but has model-wide "
+                "CompositionRelationship[contextualizes] contextualizations "
                 f"{relation_ids!r}"
             )
 
@@ -748,7 +760,7 @@ def validate_o2i_ownership(
             if dimension_owner != member_owner:
                 errors.append(
                     f"PerformanceDimension membership {relation_id!r} "
-                    "crosses owning Context element IDs: "
+                    "crosses contextualizing Context element IDs: "
                     f"{dimension_owner!r} != {member_owner!r}"
                 )
 
@@ -954,7 +966,7 @@ def validate_model(root: ET.Element) -> list[str]:
             + repr(legacy_profile_versions)
         )
 
-    errors.extend(validate_o2i_ownership(root, relations))
+    errors.extend(validate_o2i_contextualization(root, relations))
 
     for view_name, _ in PRESETS.values():
         try:
