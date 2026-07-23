@@ -364,6 +364,7 @@ inclusionReasonText reason =
     MacroPremise -> "macro-premise"
     CollectiveRealizationSegment -> "collective-realization-segment"
     CollectiveRealizationParticipant -> "collective-realization-participant"
+    CollectiveRealizationContribution -> "collective-realization-contribution"
 
 adapterText :: AdapterDescriptor -> Text
 adapterText adapter =

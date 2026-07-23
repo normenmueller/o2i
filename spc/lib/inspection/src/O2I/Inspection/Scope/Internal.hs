@@ -25,8 +25,13 @@ import Data.Set (Set)
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import O2I
-  ( buildMacroFactIndex
+  ( FixedRelationCode(ContributesToStrategyCode)
+  , RawCollectiveStrategyRealization(..)
+  , RawEdge(..)
+  , RelationCode(FixedRelation)
+  , buildMacroFactIndex
   , claimedProposition
+  , macroClaimConclusion
   , macroClaims
   , macroDependencyEdge
   , macroScopeDependencies
@@ -163,7 +168,33 @@ closeScope (ProfileIndex profileSpecification view projection) =
           persistedFacts
       , participantOccurrence <- contributorOccurrences ++ [targetOccurrence]
       ]
-    facts = persistedFacts ++ collectiveDependencies ++ macroDependencies
+    collectiveContributionDependencies =
+      [ IndexedDependency
+        claimOccurrence
+        conclusionOccurrence
+        CollectiveRealizationContribution
+      | (claimOccurrence, conclusionOccurrence) <-
+          stableUnique
+            [ (claimOccurrence, conclusionOccurrence)
+            | IndexedCollectiveStrategyRealization claimOccurrence claim _ _ _ <-
+                persistedFacts
+            , let realization = claimedProposition claim
+            , contributor <- rawContributors realization
+            , (conclusionOccurrence, macroClaim) <- macroClaims macroIndex
+            , macroClaimConclusion macroClaim
+                == FixedRelation ContributesToStrategyCode
+            , IndexedEdge edgeOccurrence edge _ <- persistedFacts
+            , edgeOccurrence == conclusionOccurrence
+            , let proposition = claimedProposition edge
+            , rawEdgeFrom proposition == contributor
+            , rawEdgeTo proposition == rawTarget realization
+            ]
+      ]
+    facts =
+      persistedFacts
+        ++ collectiveDependencies
+        ++ collectiveContributionDependencies
+        ++ macroDependencies
     presentations =
       [(presentation, target) | IndexedSeed presentation target <- facts]
     seeds =

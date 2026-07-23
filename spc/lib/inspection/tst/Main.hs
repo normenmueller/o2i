@@ -158,6 +158,15 @@ tests =
         "valid asserted collective claim is retained by Semantics"
         validCollectiveInspectionTest
     , testCase
+        "collective Claim closure includes persisted contribution evidence"
+        collectiveContributionClosureTest
+    , testCase
+        "missing persisted collective contribution evidence fails Semantics"
+        missingCollectiveContributionTest
+    , testCase
+        "unrelated evidence and unselected collective Claims remain isolated"
+        collectiveContributionIsolationTest
+    , testCase
         "collective Candidate is warned, excluded, and keeps Draft maturity"
         candidateCollectiveInspectionTest
     , testCase
@@ -1134,11 +1143,141 @@ validCollectiveInspectionTest = do
     "collective segment closure reason was not retained"
     (CollectiveRealizationSegment `elem` collectiveReasons report)
 
+collectiveContributionClosureTest :: Assertion
+collectiveContributionClosureTest = do
+  report <-
+    completedReport
+      (runCollectiveInspectionWithFacts
+         (collectiveScopeFacts collectiveInspectionGraph assertedCollectiveClaim)
+         suppliedCollectiveFit)
+  semanticsState report @?= StagePassed
+  reasonsForOccurrence
+    report
+    (collectiveEdgeOccurrence
+       collectiveInspectionGraph
+       (completeEdge
+          collectiveContributorOneId
+          contributesToStrategy
+          completeStrategyId))
+    @?= [CollectiveRealizationContribution]
+  reasonsForOccurrence
+    report
+    (collectiveEdgeOccurrence
+       collectiveInspectionGraph
+       (completeEdge
+          (contributorId "one" "key-result")
+          contributesStrategyKeyResultToKeyResult
+          completeStrategyKeyResultId))
+    @?= [MacroPremise]
+  reasonsForOccurrence
+    report
+    (collectiveEdgeOccurrence
+       collectiveInspectionGraph
+       (completeEdge
+          collectiveContributorTwoId
+          contributesToStrategy
+          completeStrategyId))
+    @?= [CollectiveRealizationContribution]
+  reasonsForOccurrence
+    report
+    (collectiveEdgeOccurrence
+       collectiveInspectionGraph
+       (completeEdge
+          (contributorId "two" "action")
+          contributesStrategyActionToAction
+          completeStrategyActionId))
+    @?= [MacroPremise]
+
+missingCollectiveContributionTest :: Assertion
+missingCollectiveContributionTest = do
+  report <-
+    completedReport
+      (runCollectiveInspectionWithFacts
+         (collectiveScopeFacts graph assertedCollectiveClaim)
+         suppliedCollectiveFit)
+  semanticsState report @?= StageFailed
+  assertBool
+    "missing persisted macro evidence must remain a semantic failure"
+    ("o2i.semantics.collective.contribution-missing"
+       `elem` diagnosticCodes report)
+  where
+    graph =
+      collectiveInspectionGraph
+        { rawEdges =
+            filter
+              (/= completeEdge
+                    collectiveContributorTwoId
+                    contributesToStrategy
+                    completeStrategyId)
+              (rawEdges collectiveInspectionGraph)
+        }
+
+collectiveContributionIsolationTest :: Assertion
+collectiveContributionIsolationTest = do
+  report <-
+    completedReport
+      (runCollectiveInspectionWithFacts
+         (collectiveScopeFacts graph assertedCollectiveClaim
+            ++ [ CollectiveTemplate
+                   unselectedCollectiveClaimOccurrence
+                   unselectedCollectiveClaim
+                   [ collectiveNodeOccurrence collectiveContributorOneId
+                   , collectiveNodeOccurrence collectiveContributorTwoId
+                   ]
+                   (collectiveNodeOccurrence completeStrategyId)
+               ])
+         suppliedCollectiveFit)
+  semanticsState report @?= StagePassed
+  assertBool
+    "an unselected collective Claim entered the closed scope"
+    (null (reasonsForOccurrence report unselectedCollectiveClaimOccurrence))
+  assertBool
+    "an unrelated contribution edge entered the closed scope"
+    (null
+       (reasonsForOccurrence
+          report
+          (collectiveEdgeOccurrence graph unrelatedContribution)))
+  assertBool
+    "unrelated Primitive evidence entered the closed scope"
+    (null
+       (reasonsForOccurrence
+          report
+          (collectiveEdgeOccurrence graph unrelatedPremise)))
+  where
+    graph =
+      RawGraph
+        (rawNodes collectiveInspectionGraph ++ unrelatedNodes)
+        (rawEdges collectiveInspectionGraph
+           ++ [unrelatedContribution, unrelatedPremise])
+    unrelatedNodes =
+      [ RawContextNode unrelatedStrategyId Strategy
+      , RawPrimitiveNode unrelatedKeyResultId unrelatedStrategyId KeyResult
+      ]
+    unrelatedContribution =
+      completeEdge unrelatedStrategyId contributesToStrategy completeStrategyId
+    unrelatedPremise =
+      completeEdge
+        unrelatedKeyResultId
+        contributesStrategyKeyResultToKeyResult
+        completeStrategyKeyResultId
+
 collectiveReasons :: InspectionReport -> [InclusionReason]
 collectiveReasons =
   concatMap (NonEmpty.toList . provenanceReasons)
     . maybe [] (NonEmpty.toList . closedScopeProvenanceOccurrences)
     . reportClosedScopeProvenance
+
+reasonsForOccurrence :: InspectionReport -> OccurrenceId -> [InclusionReason]
+reasonsForOccurrence report occurrence =
+  [ reason
+  | provenance <-
+      maybe
+        []
+        (NonEmpty.toList . closedScopeProvenanceOccurrences)
+        (reportClosedScopeProvenance report)
+  , provenanceOccurrenceId provenance == occurrence
+  , reason <- NonEmpty.toList (provenanceReasons provenance)
+  ]
 
 candidateCollectiveInspectionTest :: Assertion
 candidateCollectiveInspectionTest = do
@@ -1739,6 +1878,60 @@ graphFacts graph =
          , let occurrence = indexedOccurrence "edge" index
          ]
 
+persistedGraphFacts :: RawGraph -> [FactTemplate]
+persistedGraphFacts graph =
+  nodeFacts ++ edgeFacts ++ endpointDependencies ++ ownershipDependencies
+  where
+    indexedNodes = zip [(1 :: Int) ..] (rawNodes graph)
+    indexedEdges = zip [(1 :: Int) ..] (rawEdges graph)
+    nodeFacts =
+      [ NodeTemplate (indexedOccurrence "node" index) node
+      | (index, node) <- indexedNodes
+      ]
+    edgeFacts =
+      [ EdgeTemplate (indexedOccurrence "edge" index) edge
+      | (index, edge) <- indexedEdges
+      ]
+    endpointDependencies =
+      concat
+        [ [ DependencyTemplate
+              occurrence
+              (nodeOccurrenceFor graph (rawEdgeFrom edge))
+              PersistedRelationshipEndpoint
+          , DependencyTemplate
+              occurrence
+              (nodeOccurrenceFor graph (rawEdgeTo edge))
+              PersistedRelationshipEndpoint
+          ]
+        | (index, edge) <- indexedEdges
+        , let occurrence = indexedOccurrence "edge" index
+        ]
+    ownershipDependencies =
+      [ DependencyTemplate
+        (nodeOccurrenceFor graph owner)
+        (indexedOccurrence "node" index)
+        PersistedContextOwnership
+      | (index, node) <- indexedNodes
+      , owner <- rawNodeOwner node
+      ]
+
+rawNodeOwner :: RawNode -> [RawNodeId]
+rawNodeOwner node =
+  case node of
+    RawPrimitiveNode _ owner _ -> [owner]
+    RawStructuringNode _ owner _ -> [owner]
+    RawContextNode _ _ -> []
+    RawAnchorNode _ _ -> []
+
+nodeOccurrenceFor :: RawGraph -> RawNodeId -> OccurrenceId
+nodeOccurrenceFor graph identifier =
+  case [ indexedOccurrence "node" index
+       | (index, node) <- zip [(1 :: Int) ..] (rawNodes graph)
+       , testRawNodeIdentifier node == identifier
+       ] of
+    occurrence:_ -> occurrence
+    [] -> error "graph fixture endpoint is absent"
+
 indexedOccurrence :: Text -> Int -> OccurrenceId
 indexedOccurrence prefix index =
   testOccurrence (prefix <> "-" <> Text.pack (show index))
@@ -1969,6 +2162,51 @@ collectiveInspectionFacts claim =
            PersistedCollectiveRealizationSegment
        ]
 
+collectiveScopeFacts ::
+     RawGraph -> Claim RawCollectiveStrategyRealization -> [FactTemplate]
+collectiveScopeFacts graph claim =
+  OccurrenceTemplate completePresentation
+    : persistedGraphFacts graph
+    ++ directlyPresentedCollectiveBaseline graph
+    ++ [ CollectiveTemplate
+           collectiveClaimOccurrence
+           claim
+           [ nodeOccurrenceFor graph collectiveContributorOneId
+           , nodeOccurrenceFor graph collectiveContributorTwoId
+           ]
+           (nodeOccurrenceFor graph completeStrategyId)
+       , SeedTemplate completePresentation collectiveClaimOccurrence
+       , OccurrenceTemplate collectiveSegmentOccurrence
+       , DependencyTemplate
+           collectiveClaimOccurrence
+           collectiveSegmentOccurrence
+           PersistedCollectiveRealizationSegment
+       , DependencyTemplate
+           collectiveSegmentOccurrence
+           collectiveClaimOccurrence
+           PersistedCollectiveRealizationSegment
+       ]
+
+directlyPresentedCollectiveBaseline :: RawGraph -> [FactTemplate]
+directlyPresentedCollectiveBaseline graph =
+  [ SeedTemplate completePresentation (nodeOccurrenceFor graph identifier)
+  | node <- rawNodes collectiveInspectionGraph
+  , let identifier = testRawNodeIdentifier node
+  , any ((== identifier) . testRawNodeIdentifier) (rawNodes graph)
+  ]
+    ++ [ SeedTemplate completePresentation (collectiveEdgeOccurrence graph edge)
+       | edge <- rawEdges collectiveInspectionGraph
+       , edge `elem` rawEdges graph
+       , rawEdgeRelation edge `notElem` collectiveContributionRelationNames
+       ]
+
+collectiveContributionRelationNames :: [RelationName]
+collectiveContributionRelationNames =
+  [ relationNameFor contributesToStrategy
+  , relationNameFor contributesStrategyKeyResultToKeyResult
+  , relationNameFor contributesStrategyActionToAction
+  ]
+
 collectiveNodeOccurrence :: RawNodeId -> OccurrenceId
 collectiveNodeOccurrence identifier =
   case [ occurrence
@@ -1978,6 +2216,15 @@ collectiveNodeOccurrence identifier =
        ] of
     occurrence:_ -> occurrence
     [] -> error "collective fixture participant is absent"
+
+collectiveEdgeOccurrence :: RawGraph -> RawEdge -> OccurrenceId
+collectiveEdgeOccurrence graph expected =
+  case [ indexedOccurrence "edge" index
+       | (index, edge) <- zip [(1 :: Int) ..] (rawEdges graph)
+       , edge == expected
+       ] of
+    occurrence:_ -> occurrence
+    [] -> error "collective fixture edge is absent"
 
 collectiveInspectionGraph :: RawGraph
 collectiveInspectionGraph =
@@ -2083,6 +2330,12 @@ candidateCollectiveInspectionClaim :: Claim RawCollectiveStrategyRealization
 candidateCollectiveInspectionClaim =
   candidateClaim collectiveInspectionProposition
 
+unselectedCollectiveClaim :: Claim RawCollectiveStrategyRealization
+unselectedCollectiveClaim =
+  assertedClaim
+    collectiveInspectionProposition
+      {rawRealizationId = ClaimId "inspection-collective-unselected"}
+
 collectiveInspectionFit :: RawCollectiveFitEvidence
 collectiveInspectionFit =
   RawCollectiveFitEvidence
@@ -2115,6 +2368,13 @@ collectiveInspectionFit =
 collectiveInspectionFitRef :: CollectiveFitEvidenceRef
 collectiveInspectionFitRef = CollectiveFitEvidenceRef "inspection-fit"
 
+suppliedCollectiveFit :: Availability CollectiveFitEvidenceBundle
+suppliedCollectiveFit =
+  Supplied
+    (sourcedFromDocument
+       collectiveFitSourceDocument
+       (CollectiveFitEvidenceBundle [collectiveInspectionFit]))
+
 collectiveContributorOneId, collectiveContributorTwoId :: RawNodeId
 collectiveContributorOneId = RawNodeId "collective-contributor-one"
 
@@ -2132,6 +2392,15 @@ duplicateCollectiveClaimOccurrence = testOccurrence "collective-claim-duplicate"
 
 collectiveSegmentOccurrence :: OccurrenceId
 collectiveSegmentOccurrence = testOccurrence "collective-segment"
+
+unselectedCollectiveClaimOccurrence :: OccurrenceId
+unselectedCollectiveClaimOccurrence =
+  testOccurrence "collective-claim-unselected"
+
+unrelatedStrategyId, unrelatedKeyResultId :: RawNodeId
+unrelatedStrategyId = RawNodeId "collective-unrelated-strategy"
+
+unrelatedKeyResultId = RawNodeId "collective-unrelated-key-result"
 
 testRawNodeIdentifier :: RawNode -> RawNodeId
 testRawNodeIdentifier node =

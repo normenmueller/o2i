@@ -95,6 +95,8 @@ test-suite o2i-amx-test
     O2I.Adapter.AMX.Test.Decode,
     O2I.Adapter.AMX.Test.Collective,
     O2I.Adapter.AMX.Test.Collective.Contract,
+    O2I.Adapter.AMX.Test.Collective.Evidence,
+    O2I.Adapter.AMX.Test.Collective.Evidence.Scenario,
     O2I.Adapter.AMX.Test.Collective.Fixture,
     O2I.Adapter.AMX.Test.Collective.Scenario,
     O2I.Adapter.AMX.Test.Fixture,

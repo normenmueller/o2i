@@ -270,6 +270,7 @@ data InclusionReason
   | MacroPremise
   | CollectiveRealizationSegment
   | CollectiveRealizationParticipant
+  | CollectiveRealizationContribution
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 -- | Audit record for one occurrence in a closed semantic scope.

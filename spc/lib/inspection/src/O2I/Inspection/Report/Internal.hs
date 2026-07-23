@@ -765,6 +765,7 @@ inclusionReasonText reason =
     MacroPremise -> "macro-premise"
     CollectiveRealizationSegment -> "collective-realization-segment"
     CollectiveRealizationParticipant -> "collective-realization-participant"
+    CollectiveRealizationContribution -> "collective-realization-contribution"
 
 resolvedViewValue :: ResolvedView SourceLocation -> Value
 resolvedViewValue view =
