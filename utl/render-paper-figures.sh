@@ -32,3 +32,4 @@ render() {
 
 render "acc/o2i-evidence-sequence.tex" "img/O2I Nachweisfolge"
 render "acc/o2i-framework-architecture.tex" "img/O2I Frameworkarchitektur"
+render "acc/o2i-model-state.tex" "img/O2I Modellzustand"

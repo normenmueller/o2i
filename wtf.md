@@ -93,6 +93,53 @@ Spezifikation: [`validateModelSemantics`](./spc/lib/core/src/O2I/Validation/Sema
 
 Weiterlesen: [Strategie](./o2i.md#strategie)
 
+## WTF "Kollektive Strategierealisierung"?
+
+> [!NOTE]
+> **Kollektive Strategierealisierung** = *Realisieren mehrere Strategien gemeinsam eine Zielstrategie?*
+
+Ein binärer Strategiebeitrag sagt nur, dass eine Strategie zu einer anderen beiträgt. Kollektive Strategierealisierung ist stärker: Mindestens zwei Strategien realisieren eine Zielstrategie gemeinsam. Keine davon realisiert das Ziel allein.
+
+**Mindestinhalt**
+
+- mindestens zwei verschiedene beitragende Strategy-Instanzen,
+- genau eine andere Ziel-Strategy,
+- eine eigene begründete `contributes-to`-Makrorelation jedes Beitragenden zum Ziel,
+- gemeinsame Abdeckung aller Actions und Key Results der Ziel-Strategy,
+- paarweise Kohärenz der Beitragenden,
+- Kompatibilität jedes Beitrags mit Guiding Policy und Trade-offs des Ziels,
+- eine tragfähige Interaktion der Beiträge.
+
+**Prüfung**
+
+`assessCollectiveStrategyRealizations` erhält Candidate-Diagnosen und sämtliche fatalen Fehler. `validateCollectiveStrategyRealizations` liefert nur für ein insgesamt fehlerfreies Assessment opake Realisierungszeugen. Eine direkte binäre `Strategy --realizes--> Strategy`-Relation ist unzulässig; `directs` und `contributes-to` behalten ihre jeweils eigene Bedeutung.
+
+Spezifikation: [`assessCollectiveStrategyRealizations`](./spc/lib/core/src/O2I/Validation/Collective.hs), [`validateCollectiveStrategyRealizations`](./spc/lib/core/src/O2I/Validation/Collective.hs)
+
+Weiterlesen: [Strategiebeitrag und kollektive Strategierealisierung](./o2i.md#strategiebeitrag-und-kollektive-strategierealisierung), [Kollektive Strategierealisierung im Metamodell](./o2i.md#kollektive-strategierealisierung)
+
+## WTF "Modellzustand"?
+
+> [!NOTE]
+> **Modellzustand** = *Welche Aussagen gelten bereits, welche Kontexte sind elaboriert und wie reif ist das Gesamtmodell?*
+
+O2I trennt drei Ebenen: `Commitment` kennzeichnet den Aussageanspruch eines Claims als `Candidate` oder `Asserted`. `Elaboration` beschreibt abgeleitet den verpflichtenden Inhalt einer Kontextinstanz als `Referenced` oder `Elaborated`. `Maturity` beschreibt abgeleitet die geprüfte Modellgrenze als `Skeleton`, `Draft` oder `SemanticallyValid`.
+
+**Mindestinhalt**
+
+- atomare Claims mit eindeutigem Aussageanspruch,
+- vollständige verpflichtende Inhalte für jeden zu elaborierenden Kontext,
+- alle Abhängigkeiten und Evidenzen der `Asserted`-Claims,
+- keine manuell gesetzten Werte für `Elaboration` oder `Maturity`.
+
+**Prüfung**
+
+Candidates bleiben diagnostizierbar, erfüllen jedoch keine semantische Pflicht. Ein Kontext ist nur durch vollständige gültige `Asserted`-Inhalte elaboriert. Das Modell ist `SemanticallyValid`, wenn keine Candidates verbleiben und die globale Semantikprüfung erfolgreich ist; andernfalls ist es abhängig von der Kontextelaboration `Draft` oder `Skeleton`.
+
+Spezifikation: [`Commitment`](./spc/lib/core/src/O2I/Language/Claim.hs), [`assessModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs)
+
+Weiterlesen: [Claims](./o2i.md#claims), [Modellzustand](./o2i.md#modellzustand)
+
 ## WTF "Situation"?
 
 > [!NOTE]

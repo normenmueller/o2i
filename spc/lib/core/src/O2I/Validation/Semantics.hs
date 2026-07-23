@@ -85,6 +85,7 @@ newtype StrategyFormulation = StrategyFormulation
     -- ^ Source formulation whose invariants have been established.
   } deriving (Eq, Show)
 
+-- * Semantic assessment state
 -- | Derived availability of one Context's mandatory semantic content.
 data Elaboration
   = Referenced
@@ -113,6 +114,7 @@ data CandidateModelProposition
     -- ^ Proposed Strategy content bundle, identified by its Strategy Context.
   deriving (Eq, Show)
 
+-- * Semantic validation diagnostics
 -- | Text-bearing fields whose entries must carry semantic content.
 data StrategyTextField
   = ScopeField -- ^ Applicability scope.

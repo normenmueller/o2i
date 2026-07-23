@@ -9,6 +9,7 @@ module O2I.Language.Claim
   , claimedProposition
   ) where
 
+-- * Claim commitment
 -- | Whether a model proposition is proposed or asserted as semantically true.
 --
 -- Candidate propositions remain inspectable but never enter validated O2I
@@ -27,6 +28,7 @@ data Claim proposition =
   Claim Commitment proposition
   deriving (Eq, Ord, Show)
 
+-- * Claim construction and access
 -- | Construct a claim with an explicit commitment.
 claimWithCommitment :: Commitment -> proposition -> Claim proposition
 claimWithCommitment = Claim

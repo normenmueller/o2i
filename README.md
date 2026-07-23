@@ -37,6 +37,8 @@ O2I dient dazu, *orientierte Wirkung* durch relationale Modellierung nachvollzie
 
 Die Haskell-Spezifikation unter [`spc/lib/core`](./spc/lib/core/) formalisiert das O2I-Metamodell normativ und maschinenprüfbar. Ihre öffentliche API gliedert sich in `O2I.Language` für den semantischen Formvorrat, `O2I.Graph` für konkrete Graphen und `O2I.Validation` für gestufte Prüfungen. `O2I` bildet die kuratierte Gesamtfassade.
 
+Claims unterscheiden vorgeschlagene von behaupteten Modellaussagen. Die Validierung leitet daraus Kontextelaboration und Modellreife ab und prüft kollektive Strategierealisierung als n-äre Aussage getrennt von binären Strategiebeiträgen.
+
 Die Library überführt einen ungeprüften O2I-Graphen durch aufeinander aufbauende Validierungsstufen in ein evidenzbewertetes Wirkungsmodell:
 
 ```text
@@ -47,11 +49,13 @@ Graph bezeichnet als Oberbegriff die Knoten-Kanten-Repräsentation. `RawGraph` i
 
 ## Command Line
 
-Die formatneutrale Library `O2I.Inspection` führt den gestuften Prüfablauf, Provenienz und Berichterstattung zusammen. `O2I.Adapter.AMX` bindet native Archi-Modelle an diesen Vertrag. Der dünne Client `o2i` prüft genau eine ausgewählte View:
+Die formatneutrale Library `O2I.Inspection` führt den gestuften Prüfablauf, Provenienz und Berichterstattung zusammen. `O2I.Adapter.AMX` bindet native Archi-Modelle an diesen Vertrag. Der dünne Client `o2i` verwendet genau eine ausgewählte View als Ausgangspunkt:
 
 ```sh
 o2i inspect MODEL (--view NAME | --view-id ID) [--verbose | --debug] [--json]
 ```
+
+Die Prüfung schließt ausschließlich exakt persistierte O2I-Abhängigkeiten dieser View mit ihrer Provenienz ein. Sie erfindet keine Relationen und beanstandet keine unabhängigen Defekte außerhalb des geschlossenen Scopes.
 
 Ein Modell kann als Datei oder über die Standardeingabe geprüft werden. JSON eignet sich für reproduzierbare Automatisierung und agentische Verarbeitung:
 

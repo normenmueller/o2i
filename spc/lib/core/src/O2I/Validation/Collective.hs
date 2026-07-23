@@ -52,6 +52,7 @@ import O2I.Validation.Collective.Types
 import O2I.Validation.Semantics
 import O2I.Validation.Trace.Evidence
 
+-- * Collective Strategy realization input
 -- | Stable occurrence identity of one collective claim.
 newtype ClaimId = ClaimId
   { claimIdText :: Text
@@ -73,6 +74,7 @@ data CollectiveParticipantRole
   | CollectiveTarget
   deriving (Eq, Ord, Show)
 
+-- * Collective Strategy realization validation vocabulary
 -- | Fatal structural defect of a collective proposition.
 --
 -- Structural validity is independent of commitment: Candidate and Asserted
@@ -148,6 +150,7 @@ data SemanticEvaluation =
     [CollectiveStrategyRealizationIssue]
     [(ContextRef 'Strategy, Maybe (NonEmpty MacroEvidenceWitness))]
 
+-- * Collective Strategy realization assessment
 -- | Assess every collective claim against one exact semantic model.
 --
 -- Structural defects and Asserted semantic deficiencies accumulate as fatal

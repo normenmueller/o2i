@@ -19,6 +19,10 @@
 - Added deterministic, View-scoped inspection of native Archi models through
   format-neutral libraries, the AMX adapter, and the thin `o2i` CLI with human
   and JSON reports.
+- Added explicit Claim commitment, derived Context elaboration and model
+  maturity, plus n-ary collective Strategy realization with exact contributor
+  evidence, target coverage, structured collective Fit, native AMX Junction
+  projection, and provenance-preserving partial-View closure.
 
 ### Added
 
@@ -77,6 +81,8 @@
 - Clarified the semantic boundary between structural graph stages and
   subject-matter-enriched model stages, including the distinction between
   context-level relation evidence and empirical evidence stages.
+- Distinguished binary Strategy contribution from collective Strategy
+  realization and excluded direct binary `realizes` claims from O2I semantics.
 - Made contextualization by Context instances explicit and machine-readable in the ArchiMate
   syntax through one `composition[contextualizes]` per Primitive and
   Structuring element, mapped to the technical Haskell owner field rather than

@@ -340,6 +340,22 @@ Fit ist mehr als Widerspruchsfreiheit. Eine Strategie besitzt Fit, wenn ihre Han
 
 Fit validiert damit nicht einzelne Bestandteile isoliert, sondern das Zusammenspiel von Positionierung, Trade-offs, kohärenten Handlungsfestlegungen und strategischen Erfolgsbezügen. Fehlt dieser Fit, entsteht keine Strategie, sondern eine lose Sammlung einzelner Festlegungen und Ergebnisbezüge.
 
+### Strategiebeitrag und kollektive Strategierealisierung
+
+> [!definition]
+> Ein **Strategiebeitrag** bezeichnet einen fachlich begründeten Beitrag einer Strategie zu einer anderen Strategie. Er wird in O2I als binäre Relation `Strategy --contributes-to--> Strategy` modelliert und durch zulässige Primitive-Relationen zwischen beiden Strategien belegt.
+
+Ein Strategiebeitrag behauptet weder vollständige Realisierung noch kollektiven Fit. Eine Strategie kann zu mehreren Strategien beitragen; umgekehrt kann eine Strategie Beiträge mehrerer Strategien erhalten. Jede Relation bleibt eine eigenständige Aussage mit eigener Begründung.
+
+> [!definition]
+> Eine **kollektive Strategierealisierung**[^collective-strategy-realization] bezeichnet die begründete Aussage, dass mindestens zwei beitragende Strategien eine Zielstrategie gemeinsam realisieren. Sie setzt individuelle Strategiebeiträge, kollektive Abdeckung und kollektiven Fit voraus.
+>
+> [^collective-strategy-realization]: *Autorenableitung in Anlehnung an Rumelt (2011) und Porter (1996)*: Rumelt stützt die Kohärenz strategischer Handlungsfestlegungen; Porter stützt Fit und gegenseitige Verstärkung in Aktivitätssystemen. O2I überträgt diese Anforderungen auf das Zusammenspiel mehrerer Strategien und formalisiert kollektive Strategierealisierung als n-äre Aussage.
+
+Kollektive Abdeckung verlangt, dass die Beiträge aller beteiligten Strategien gemeinsam sämtliche kohärenten Handlungsfestlegungen und strategischen Erfolgsbezüge der Zielstrategie abdecken. Kollektiver Fit verlangt zusätzlich paarweise Kohärenz der beitragenden Strategien, ihre Vereinbarkeit mit Guiding Policy und Trade-offs der Zielstrategie sowie eine tragfähige Interaktion ihrer Beiträge. Er ist vom Fit innerhalb einer einzelnen Strategie zu unterscheiden.
+
+Eine kollektive Strategierealisierung wird nicht in binäre `Strategy --realizes--> Strategy`-Relationen zerlegt. Die Beteiligten realisieren die Zielstrategie nur gemeinsam; jeder einzelne Beitrag bleibt eine `contributes-to`-Relation. `Strategy --directs--> Strategy` beschreibt davon getrennt die top-down gerichtete Ausrichtung einer Strategie.
+
 ### Kritische Erfolgsfaktoren
 
 > [!definition]
@@ -776,6 +792,21 @@ Eine Relationsinstanz verbindet konkrete Kontext-, Primitive-, Strukturierungs- 
 > [!note]
 > Verfeinerung ist eine generische Modellierungsoperation zur fachlichen Präzisierung von O2I-Modellelementen. Sie verändert weder deren O2I-Typ noch deren kontextuelle Interpretation und begründet keine Wirkungsrelevanz oder Wirkungsevidenz. Deshalb führt das O2I-Metamodell `refines` nicht als eigene Relation.
 
+#### Claims
+
+> [!definition]
+> Ein **Claim** bezeichnet eine atomare, notationunabhängige Modellaussage. Er trägt genau ein `Commitment`: `Candidate` kennzeichnet eine formal prüfbare, semantisch noch nicht behauptete Aussage; `Asserted` kennzeichnet eine als semantisch gültig behauptete Aussage.
+
+Claims erfassen unter anderem Elementdeklarationen, Kontextualisierungen, Relationsinstanzen, Strategy-Formulierungen und kollektive Strategierealisierungen. Ein Claim ist kein zusätzliches O2I-Modellelement und kein Knoten des Wirkungsgraphen. Er qualifiziert den Aussageanspruch einer modellierten Proposition.
+
+@Lst:o2i-claim-commitment zeigt den geschlossenen Aussagenstatus. Ein `Candidate` bleibt prüf- und diagnostizierbar, geht jedoch nicht in validierte O2I-Semantik, Abfragen, Wirkungstraces oder Evidenzbewertungen ein. Ein `Asserted` muss sämtliche anwendbaren Typ-, Abhängigkeits-, Evidenz- und Vollständigkeitspflichten erfüllen.
+
+```{#lst:o2i-claim-commitment .haskell caption="O2I Claim-Commitment"}
+!include`snippetStart="-- * Claim commitment", snippetEnd="-- * Claim construction and access"` spc/lib/core/src/O2I/Language/Claim.hs
+```
+
+`NeedQualificationCandidate` bezeichnet davon unabhängig das opake positive Ergebnis der formalen Prüfung einer Qualifikationsvorlage. Es ist kein `Candidate`-Commitment und behauptet noch keine persistierte `Strategy --qualifies--> Need`-Relation.
+
 ### Interpretation
 
 Interpretation legt fest, welche Bedeutung ein O2I-Primitive in einem O2I-Kontext erhält. Dadurch wird derselbe abstrakte Primitive-Typ in unterschiedlichen Kontexten fachlich unterschiedlich lesbar.
@@ -822,9 +853,9 @@ O2I unterscheidet einen ungeprüften Rohgraphen und fünf aufeinander aufbauende
 
 ![O2I Nachweisfolge](<img/O2I Nachweisfolge.png>){#fig:o2i-evidence-sequence width=65%}
 
-Die Abbildung fokussiert die Nachweisfolge ab dem semantisch gültigen Modell. Die folgenden Listings zeigen ergänzend die vollständige Validierungskette von der strukturellen Elaborierung bis zur Evidenzbewertung.
+Die Abbildung fokussiert die Nachweisfolge ab dem semantisch gültigen Modell. Die folgenden Listings zeigen ergänzend die vollständige Validierungskette von der strukturellen Prüfung bis zur Evidenzbewertung.
 
-@Lst:o2i-validation zeigt die strukturelle Elaborierung eines `RawGraph` in einen opaken `WellFormedGraph`.
+@Lst:o2i-validation zeigt die strukturelle Validierung eines `RawGraph` zu einem opaken `WellFormedGraph`.
 
 ```{#lst:o2i-validation .haskell caption="O2I Strukturvalidierung"}
 !include`snippetStart="-- * Structural validation", snippetEnd="nodeErrors ::"` spc/lib/core/src/O2I/Validation/Structure.hs
@@ -853,6 +884,30 @@ Die Abbildung fokussiert die Nachweisfolge ab dem semantisch gültigen Modell. D
 ```{#lst:o2i-evidence-validation .haskell caption="O2I Evidenzvalidierung"}
 !include`snippetStart="-- * Evidence validation", snippetEnd="followUpsByTrace ::"` spc/lib/core/src/O2I/Validation/Evidence.hs
 ```
+
+### Modellzustand
+
+`Commitment`, `Elaboration` und `Maturity` bezeichnen drei verschiedene Ebenen. `Commitment` ist der explizite Aussageanspruch eines einzelnen Claims. `Elaboration` ist der abgeleitete Zustand des verpflichtenden Inhalts einer konkreten Kontextinstanz. `Maturity` ist der abgeleitete Zustand der gesamten geprüften Modellgrenze. Keiner dieser Werte ist ein frei gesetztes fachliches O2I-Element.
+
+@Lst:o2i-semantic-assessment-state zeigt die beiden abgeleiteten Statusmengen.
+
+```{#lst:o2i-semantic-assessment-state .haskell caption="O2I Kontextelaboration und Modellreife"}
+!include`snippetStart="-- * Semantic assessment state", snippetEnd="-- * Semantic validation diagnostics"` spc/lib/core/src/O2I/Validation/Semantics.hs
+```
+
+Für eine behauptete Kontextinstanz gilt `Elaborated` genau dann, wenn ihr vollständiger verpflichtender Inhalt durch gültige `Asserted`-Claims innerhalb der geprüften Modellgrenze vorliegt. Andernfalls ist sie `Referenced`. Ein `Candidate` erfüllt keine verpflichtende Proposition und keine Abhängigkeit. Zusätzliche Candidates setzen einen unabhängig vollständig belegten Kontext jedoch nicht auf `Referenced` zurück.
+
+Die Modellreife wird deterministisch abgeleitet:
+
+```text
+SemanticallyValid  keine Candidates; globale semantische Validierung erfolgreich
+Draft              andernfalls, wenn mindestens ein Kontext Elaborated ist
+Skeleton           andernfalls; kein Kontext ist Elaborated
+```
+
+@Fig:o2i-model-state zeigt den Zusammenhang. Der Candidate-Zweig bleibt diagnostizierbar, ist jedoch von validierter Semantik ausgeschlossen. Ein vollständig durch `Asserted`-Claims elaborierter Kontext kann deshalb in einem `Draft` liegen, wenn ein zusätzlicher Candidate innerhalb der Modellgrenze ungeklärt bleibt.
+
+![O2I Modellzustand](<img/O2I Modellzustand.png>){#fig:o2i-model-state width=72%}
 
 ### Grundregeln
 
@@ -893,6 +948,27 @@ Key Result --substantiates--> Objective
 ```
 
 Nur O2I-Primitives, die einer validierten Strategy-Formulierung in der jeweiligen Rolle zugeordnet sind, dürfen Strategy-bezogene Makrorelationen oder Wirkungstraces begründen. Weitere Strategy-Primitives können im Graphen bestehen, tragen jedoch ohne diese Zuordnung keine formale Strategy-Evidenz.
+
+### Kollektive Strategierealisierung
+
+Eine kollektive Strategierealisierung ist eine n-äre Modellaussage über mindestens zwei beitragende Strategy-Instanzen und genau eine davon verschiedene Ziel-Strategy. Sie ist weder ein zusätzliches O2I-Element noch eine binäre Relationsinstanz. @Lst:o2i-collective-strategy-realization zeigt ihre notationunabhängige Eingabeform.
+
+```{#lst:o2i-collective-strategy-realization .haskell caption="O2I kollektive Strategierealisierung"}
+!include`snippetStart="-- * Collective Strategy realization input", snippetEnd="-- * Collective Strategy realization validation vocabulary"` spc/lib/core/src/O2I/Validation/Collective.hs
+```
+
+Eine kollektive Strategierealisierung ist semantisch gültig, wenn:
+
+1. mindestens zwei verschiedene beitragende Strategy-Instanzen teilnehmen;
+2. genau eine andere Strategy-Instanz das Ziel bildet;
+3. kein Beitragender zugleich Ziel ist;
+4. jeder Beitragende durch mindestens eine eigene, zulässig begründete `Strategy --contributes-to--> Strategy`-Makrorelation zum Ziel beiträgt;
+5. die Vereinigungsmenge dieser Beitragsevidenz sämtliche Actions und Key Results der validierten Ziel-Strategy-Formulierung abdeckt;
+6. strukturierte Fit-Evidenz paarweise Kohärenz, Guiding-Policy-Kompatibilität, Trade-off-Kompatibilität und tragfähige Interaktion belegt.
+
+Beitragsevidenz und kollektiver Fit sind unabhängige Pflichten. Organisatorische Zugehörigkeit, gemeinsame Ausrichtung oder bloße Widerspruchsfreiheit begründen keine kollektive Realisierung. Eine direkte binäre `Strategy --realizes--> Strategy`-Relation ist deshalb kein zulässiger O2I-Relationstyp.
+
+Die Prüfung setzt ein `SemanticallyValidModel` voraus und erzeugt keinen zusätzlichen Zustand der allgemeinen Validierungskette. Ein strukturell gültiger `Candidate` bleibt mit seinen fachlichen Defiziten diagnostizierbar, erzeugt jedoch keinen Realisierungszeugen. Ein `Asserted` muss sämtliche Pflichten erfüllen. Erst ein fehlerfreies Gesamtassessment stellt die validierten kollektiven Realisierungen als opake Zeugen und Abfragen bereit.
 
 ### Wirkungsrelevanz
 
@@ -971,6 +1047,27 @@ nicht; deren Bedeutung folgt weiterhin aus ihrem eigenen `Primitive @ Context`.
 Die Syntaxexemplare sind keine fachlichen Modellinstanzen.
 
 ![O2I ArchiMate-Syntax](<img/O2I Syntax.png>){#fig:o2i-syntax-view width=85%}
+
+### Claim-Abbildung
+
+Die konkrete ArchiMate-Syntax einer kollektiven Strategierealisierung verwendet eine AND-Junction als Repräsentation des n-ären Claims. Diese Junction trägt genau folgende O2I-Metadaten:
+
+```text
+o2i.kind = Claim
+o2i.type = CollectiveStrategyRealization
+o2i.commitment = candidate | asserted
+o2i.collective-fit-evidence = <nichtleere Referenz>
+```
+
+Mindestens zwei eingehende und genau eine ausgehende ArchiMate `Realization` verbinden die beitragenden Strategy-Kontexte über die Junction mit der Ziel-Strategy. Jedes Segment trägt exakt das Label `realizes` und keine eigenen O2I-Metadaten. Beitrags- und Zielrolle folgen ausschließlich aus Richtung und Topologie.
+
+Die Junction-Segmente sind konkrete Syntax und erzeugen keine binären O2I-`realizes`-Relationen. OR-Junctions, gemischte Relationstypen, Junction-Ketten, doppelte Beitragende, Selbstbeteiligung, kein oder mehrere Ziele sowie eine Junction mit global nur einem Beitragenden sind unzulässig. Sichtbare Platzhalter, Asteriske oder Notizen zählen nicht als Beitragende.
+
+### View-Scope
+
+Eine ausgewählte ArchiMate-View bildet den Ausgangspunkt einer Inspection, nicht ihre semantische Grenze. Sobald sie einen Bestandteil einer persistierten kollektiven Strategierealisierung zeigt, schließt die AMX-Projektion die vollständige Junction, sämtliche Segmente, Beitragenden, das Ziel und die persistierte Beitragsevidenz aus dem Modell ein. Jede Ergänzung bewahrt ihre Herkunft; die Closure erzeugt oder errät keine Aussage.
+
+Eine View darf nur einen Teil der Beitragenden darstellen. Für einen global vollständigen Claim wird dies als Information mit sichtbarer und gesamter Anzahl ausgewiesen. Ein global unvollständiger `Candidate` bleibt dagegen unvollständig, auch wenn die ausgewählte View vollständig erscheint. Unabhängige Defekte außerhalb des geschlossenen Scopes gehören nicht zum Ergebnis dieser Inspection.
 
 ### Primitives-Abbildung
 

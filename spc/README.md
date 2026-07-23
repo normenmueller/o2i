@@ -25,6 +25,11 @@ o2i-cli        -> o2i-inspection + o2i-amx
 The curated public facades are `O2I`, `O2I.Language`, `O2I.Graph`,
 `O2I.Validation`, `O2I.Inspection`, and `O2I.Adapter.AMX`.
 
+The Core distinguishes `Candidate` and `Asserted` claims, derives
+Context-level `Elaboration` and model-level `Maturity`, and validates
+collective Strategy realization as an opaque n-ary witness separate from
+binary Strategy contribution.
+
 ## Build
 
 The complete repository contract, including model and White Paper checks, is
@@ -75,7 +80,7 @@ without changing the logical prefix.
 
 ## Inspect
 
-The CLI inspects exactly one View of a native Archi model:
+The CLI uses exactly one View of a native Archi model as the inspection seed:
 
 ```sh
 o2i inspect MODEL (--view NAME | --view-id ID) [--verbose | --debug] [--json]
@@ -87,6 +92,10 @@ automation and agentic processing:
 ```sh
 cat ../mdl/my.archimate | o2i inspect - --view "My view" --json
 ```
+
+Inspection closes only the exact persisted O2I dependencies reached from that
+seed and retains their provenance. It neither invents relations nor reports
+independent defects outside the closed scope.
 
 The CLI contains no validation semantics. It delegates inspection to the
 libraries and renders their result.
