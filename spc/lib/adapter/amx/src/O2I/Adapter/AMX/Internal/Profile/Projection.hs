@@ -14,6 +14,7 @@ import O2I (assertedClaim)
 import O2I.Adapter.AMX.Internal.Defect
 import O2I.Adapter.AMX.Internal.Profile.Closure
 import O2I.Adapter.AMX.Internal.Profile.Collective
+import O2I.Adapter.AMX.Internal.Profile.Collective.Index
 import O2I.Adapter.AMX.Internal.Profile.Metadata
 import O2I.Adapter.AMX.Internal.Profile.Model
 import O2I.Adapter.AMX.Internal.Registry
@@ -36,16 +37,20 @@ projectSnapshot ::
 projectSnapshot document selected =
   ProfileProjection
     { projectedRoot = rootProjection
-    , projectedFacts = profileFacts environment closure
+    , projectedFacts =
+        profileFacts environment collectiveIndex closure semanticRelationships
     , projectedDefects =
         rootDeferred
           ++ nodeDeferred
           ++ relationDeferred
-          ++ collectiveDefects environment
+          ++ collectiveDefects environment collectiveIndex
     }
   where
     environment = buildEnvironment document selected
-    closure = candidateClosure environment
+    collectiveIndex = buildCollectiveIndex environment
+    closure = candidateClosure environment collectiveIndex
+    semanticRelationships =
+      semanticRelationshipElements environment collectiveIndex closure
     (rootProjection, rootDeferred) = projectRootProfile document
     nodeDeferred =
       concatMap
@@ -56,16 +61,18 @@ projectSnapshot document selected =
         , Set.member (nodeOccurrence element) (closureCandidates closure)
         ]
     relationDeferred =
-      concatMap
-        (relationshipDefects environment)
-        (semanticRelationshipElements environment closure)
+      concatMap (relationshipDefects environment) semanticRelationships
 
 profileFacts ::
-     Environment -> CandidateClosure -> [IndexedProfileFact SourcePosition]
-profileFacts environment closure =
+     Environment
+  -> CollectiveIndex
+  -> CandidateClosure
+  -> [AMXElement]
+  -> [IndexedProfileFact SourcePosition]
+profileFacts environment collectiveIndex closure semanticRelationships =
   nodeFacts
     ++ relationshipFacts
-    ++ collectiveFacts environment
+    ++ collectiveFacts collectiveIndex
     ++ presentationFacts
     ++ ownershipDependencies
     ++ hiddenDependencies
@@ -76,7 +83,6 @@ profileFacts environment closure =
         (filter
            (not . isCollectiveClaimCandidate)
            (environmentNodes environment))
-    semanticRelationships = semanticRelationshipElements environment closure
     retainedRelationships =
       stableUniqueElements
         (environmentOwnerships environment ++ semanticRelationships)
@@ -84,7 +90,12 @@ profileFacts environment closure =
       concatMap
         (projectRelationshipOccurrence environment closure)
         retainedRelationships
-    presentationFacts = projectPresentations environment closure
+    presentationFacts =
+      projectPresentations
+        environment
+        collectiveIndex
+        closure
+        semanticRelationships
     ownershipDependencies =
       concatMap
         (relationshipBackDependencies
@@ -193,14 +204,21 @@ referenceOccurrenceKind role =
     TargetEndpoint -> RelationshipTargetReferenceOccurrence
 
 projectPresentations ::
-     Environment -> CandidateClosure -> [IndexedProfileFact SourcePosition]
-projectPresentations environment closure =
+     Environment
+  -> CollectiveIndex
+  -> CandidateClosure
+  -> [AMXElement]
+  -> [IndexedProfileFact SourcePosition]
+projectPresentations environment collectiveIndex closure semanticRelationships =
   concatMap objectPresentation objects
     ++ concatMap connectionPresentation connections
   where
     selected = environmentSelectedView environment
     objects = selectedPresentations selected
     connections = selectedConnections selected
+    semanticRelationshipOccurrences =
+      Set.fromList (map relationshipOccurrence semanticRelationships)
+    segmentOccurrences = collectiveSegmentOccurrences collectiveIndex
     objectPresentation presentation =
       let source = presentationOccurrence (presentationElement presentation)
           target = nodeOccurrence (presentationTarget presentation)
@@ -215,10 +233,8 @@ projectPresentations environment closure =
       let source = connectionOccurrence (connectionElement connection)
           target = relationshipOccurrence (connectionRelationship connection)
        in if Set.member target (closureRelationships closure)
-               || connectionRelationship connection
-                    `elem` semanticRelationshipElements environment closure
-               || connectionRelationship connection
-                    `elem` collectiveSegmentElements environment
+               || Set.member target semanticRelationshipOccurrences
+               || Set.member target segmentOccurrences
             then [ indexOccurrence
                      source
                      (amxElementLocation (connectionElement connection))

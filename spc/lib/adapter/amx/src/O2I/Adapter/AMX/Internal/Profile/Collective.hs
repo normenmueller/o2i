@@ -5,7 +5,6 @@ module O2I.Adapter.AMX.Internal.Profile.Collective
   ( collectiveFacts
   , collectiveDefects
   , collectiveRawClaims
-  , collectiveSegmentElements
   , isCollectiveClaimCandidate
   ) where
 
@@ -13,6 +12,7 @@ import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.Set as Set
 import O2I
 import O2I.Adapter.AMX.Internal.Defect
+import O2I.Adapter.AMX.Internal.Profile.Collective.Index
 import O2I.Adapter.AMX.Internal.Profile.Collective.Syntax
 import O2I.Adapter.AMX.Internal.Profile.Model
 import O2I.Adapter.AMX.Internal.Types
@@ -21,10 +21,9 @@ import O2I.Inspection.Provenance
 
 -- | Project complete collective claims and every closure dependency without
 -- manufacturing binary semantic edges.
-collectiveFacts :: Environment -> [IndexedProfileFact SourcePosition]
-collectiveFacts environment = concatMap facts observations
+collectiveFacts :: CollectiveIndex -> [IndexedProfileFact SourcePosition]
+collectiveFacts index = concatMap facts (collectiveObservations index)
   where
-    observations = collectiveObservations environment
     facts observation =
       claimOccurrenceFact
         : segmentOccurrenceFacts
@@ -69,7 +68,8 @@ collectiveFacts environment = concatMap facts observations
             _ -> []
 
 -- | Enumerate globally well-formed native collective claims with commitment.
-collectiveRawClaims :: Environment -> [Claim RawCollectiveStrategyRealization]
+collectiveRawClaims ::
+     CollectiveIndex -> [Claim RawCollectiveStrategyRealization]
 collectiveRawClaims =
   foldr
     (\observation rest ->
@@ -82,9 +82,11 @@ collectiveRawClaims =
 -- | Retain complete-model syntax findings until the selected View reaches any
 -- Junction or segment occurrence of the claim.
 collectiveDefects ::
-     Environment -> [DeferredProfileDefect SourcePosition AMXProfileDefect]
-collectiveDefects environment =
-  concatMap deferred (collectiveObservations environment)
+     Environment
+  -> CollectiveIndex
+  -> [DeferredProfileDefect SourcePosition AMXProfileDefect]
+collectiveDefects environment index =
+  concatMap deferred (collectiveObservations index)
   where
     deferred observation =
       map (defer observation) (observedDefects observation)
@@ -122,24 +124,12 @@ partialViewFinding environment observation =
       Set.fromList (map relationshipOccurrence (observedIncoming observation))
     shown =
       Set.size
-        (Set.fromList
-           [ occurrence
-           | connection <-
-               selectedConnections (environmentSelectedView environment)
-           , let occurrence =
-                   relationshipOccurrence (connectionRelationship connection)
-           , Set.member occurrence incomingOccurrences
-           ])
+        (Set.intersection
+           incomingOccurrences
+           (environmentPresentedRelations environment))
     total = length (observedContributors observation)
 
 observationOccurrences :: CollectiveObservation -> NonEmpty OccurrenceId
 observationOccurrences observation =
   nodeOccurrence (observedJunction observation)
     :| map relationshipOccurrence (observedSegments observation)
-
--- | Every persisted relationship incident to an O2I collective claim
--- candidate, regardless of whether its concrete segment syntax is valid.
-collectiveSegmentElements :: Environment -> [AMXElement]
-collectiveSegmentElements environment =
-  stableUniqueElements
-    (concatMap observedSegments (collectiveObservations environment))

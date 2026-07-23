@@ -167,6 +167,9 @@ tests =
         "unrelated evidence and unselected collective Claims remain isolated"
         collectiveContributionIsolationTest
     , testCase
+        "collective contribution closure has linear occurrence cardinality"
+        collectiveContributionScaleContractTest
+    , testCase
         "collective Candidate is warned, excluded, and keeps Draft maturity"
         candidateCollectiveInspectionTest
     , testCase
@@ -1260,6 +1263,68 @@ collectiveContributionIsolationTest = do
         unrelatedKeyResultId
         contributesStrategyKeyResultToKeyResult
         completeStrategyKeyResultId
+
+collectiveContributionScaleContractTest :: Assertion
+collectiveContributionScaleContractTest = do
+  baselineReport <-
+    completedReport
+      (runCollectiveInspectionWithFacts
+         (collectiveScopeFacts collectiveInspectionGraph assertedCollectiveClaim)
+         suppliedCollectiveFit)
+  scaled <-
+    completedReport
+      (runCollectiveInspectionWithFacts
+         (collectiveScopeFacts collectiveInspectionGraph assertedCollectiveClaim
+            ++ concatMap additionalClaim [2 .. claimCount])
+         suppliedCollectiveFit)
+  semanticsState scaled @?= StagePassed
+  case reportSemanticAssessment scaled of
+    Nothing -> assertFailure "missing scaled semantic assessment"
+    Just assessment ->
+      length (semanticCollectiveStrategyRealizations assessment) @?= claimCount
+  case (reportScopeResolution baselineReport, reportScopeResolution scaled) of
+    (ScopeResolved baselineScope, ScopeResolved scaledScope) -> do
+      let baselineSummary = resolvedScopeSummary baselineScope
+          scaledSummary = resolvedScopeSummary scaledScope
+          additions = fromIntegral (claimCount - 1)
+      directOccurrenceCount scaledSummary
+        @?= directOccurrenceCount baselineSummary
+        + additions
+      closedOccurrenceCount scaledSummary
+        @?= closedOccurrenceCount baselineSummary
+        + 2 * additions
+    _ -> assertFailure "expected baseline and scaled closed scopes"
+  reasonsForOccurrence
+    scaled
+    (collectiveEdgeOccurrence
+       collectiveInspectionGraph
+       (completeEdge
+          collectiveContributorOneId
+          contributesToStrategy
+          completeStrategyId))
+    @?= [CollectiveRealizationContribution]
+  where
+    claimCount = 64
+    additionalClaim number =
+      [ CollectiveTemplate
+          claimOccurrence
+          (assertedClaim
+             collectiveInspectionProposition
+               { rawRealizationId =
+                   ClaimId ("inspection-collective-" <> Text.pack (show number))
+               })
+          [ collectiveNodeOccurrence collectiveContributorOneId
+          , collectiveNodeOccurrence collectiveContributorTwoId
+          ]
+          (collectiveNodeOccurrence completeStrategyId)
+      , OccurrenceTemplate presentationOccurrence
+      , SeedTemplate presentationOccurrence claimOccurrence
+      ]
+      where
+        claimOccurrence =
+          testOccurrence ("collective-claim-" <> Text.pack (show number))
+        presentationOccurrence =
+          testOccurrence ("collective-presentation-" <> Text.pack (show number))
 
 collectiveReasons :: InspectionReport -> [InclusionReason]
 collectiveReasons =

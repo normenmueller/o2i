@@ -3,7 +3,7 @@
 -- | Native collective Strategy-realization syntax recognition.
 module O2I.Adapter.AMX.Internal.Profile.Collective.Syntax
   ( CollectiveObservation(..)
-  , collectiveObservations
+  , observeCollective
   , isCollectiveClaimCandidate
   ) where
 
@@ -50,14 +50,12 @@ isCollectiveClaimCandidate element =
           || singlePropertyValue "o2i.type" element
                == Just "CollectiveStrategyRealization")
 
-collectiveObservations :: Environment -> [CollectiveObservation]
-collectiveObservations environment =
-  map
-    (observeCollective environment)
-    (filter isCollectiveClaimCandidate (environmentNodes environment))
-
-observeCollective :: Environment -> AMXElement -> CollectiveObservation
-observeCollective environment junction =
+observeCollective ::
+     Environment
+  -> Map.Map Text [AMXElement]
+  -> AMXElement
+  -> CollectiveObservation
+observeCollective environment relationshipAdjacency junction =
   CollectiveObservation
     { observedJunction = junction
     , observedSegments = segments
@@ -73,7 +71,11 @@ observeCollective environment junction =
     }
   where
     identifier = elementId junction
-    segments = incidentRelationships environment identifier
+    segments =
+      maybe
+        []
+        (\stableId -> Map.findWithDefault [] stableId relationshipAdjacency)
+        identifier
     incoming =
       filter
         ((== identifier) . elementAttribute (endpointQName TargetEndpoint))
@@ -397,17 +399,6 @@ duplicateContributorDefects claim = go Set.empty
               (Defect.DuplicateCollectiveContributor claim contributor)
               : go seen rest
           | otherwise -> go (Set.insert contributor seen) rest
-
-incidentRelationships :: Environment -> Maybe Text -> [AMXElement]
-incidentRelationships _ Nothing = []
-incidentRelationships environment (Just identifier) =
-  filter
-    (\relationship ->
-       elementAttribute (endpointQName SourceEndpoint) relationship
-         == Just identifier
-         || elementAttribute (endpointQName TargetEndpoint) relationship
-              == Just identifier)
-    (environmentRelationships environment)
 
 collectiveCommitment :: AMXElement -> Maybe Commitment
 collectiveCommitment element =

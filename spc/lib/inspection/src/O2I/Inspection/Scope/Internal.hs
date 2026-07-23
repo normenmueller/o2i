@@ -154,9 +154,10 @@ closeScope (ProfileIndex profileSpecification view projection) =
         [ (occurrence, claimedProposition edge)
         | IndexedEdge occurrence edge _ <- persistedFacts
         ]
+    indexedMacroClaims = macroClaims macroIndex
     macroDependencies =
       [ indexMacroDependency conclusion (macroDependencyEdge dependency)
-      | (conclusion, claim) <- macroClaims macroIndex
+      | (conclusion, claim) <- indexedMacroClaims
       , dependency <- macroScopeDependencies macroIndex claim
       ]
     collectiveDependencies =
@@ -180,16 +181,32 @@ closeScope (ProfileIndex profileSpecification view projection) =
                 persistedFacts
             , let realization = claimedProposition claim
             , contributor <- rawContributors realization
-            , (conclusionOccurrence, macroClaim) <- macroClaims macroIndex
-            , macroClaimConclusion macroClaim
-                == FixedRelation ContributesToStrategyCode
-            , IndexedEdge edgeOccurrence edge _ <- persistedFacts
-            , edgeOccurrence == conclusionOccurrence
-            , let proposition = claimedProposition edge
-            , rawEdgeFrom proposition == contributor
-            , rawEdgeTo proposition == rawTarget realization
+            , conclusionOccurrence <-
+                Map.findWithDefault
+                  []
+                  (contributor, rawTarget realization)
+                  contributionConclusions
             ]
       ]
+    persistedEdgesByOccurrence =
+      Map.fromListWith
+        (flip (++))
+        [ (occurrence, [claimedProposition edge])
+        | IndexedEdge occurrence edge _ <- persistedFacts
+        ]
+    contributionConclusions =
+      Map.fromListWith
+        (flip (++))
+        [ ((rawEdgeFrom edge, rawEdgeTo edge), [conclusionOccurrence])
+        | (conclusionOccurrence, macroClaim) <- indexedMacroClaims
+        , macroClaimConclusion macroClaim
+            == FixedRelation ContributesToStrategyCode
+        , edge <-
+            Map.findWithDefault
+              []
+              conclusionOccurrence
+              persistedEdgesByOccurrence
+        ]
     facts =
       persistedFacts
         ++ collectiveDependencies

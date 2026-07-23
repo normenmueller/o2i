@@ -10,6 +10,7 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import O2I
 import O2I.Adapter.AMX.Internal.Profile.Collective
+import O2I.Adapter.AMX.Internal.Profile.Collective.Index
 import O2I.Adapter.AMX.Internal.Profile.Model
 import O2I.Adapter.AMX.Internal.Types
 import O2I.Adapter.AMX.Internal.View
@@ -164,7 +165,8 @@ collectiveContractTests =
 assertedProjectionTest :: Assertion
 assertedProjectionTest = do
   environment <- environmentFor "Partial" assertedModel
-  collectiveRawClaims environment @?= [expectedClaim Asserted]
+  collectiveRawClaims (buildCollectiveIndex environment)
+    @?= [expectedClaim Asserted]
   report <- inspectText (ViewByName "Partial") assertedModel
   take 4 (map reportedState (stageReportsList (reportStageReports report)))
     @?= replicate 4 StagePassed
@@ -175,7 +177,8 @@ assertedProjectionTest = do
 candidateProjectionTest :: Assertion
 candidateProjectionTest = do
   environment <- environmentFor "Partial" candidateModel
-  collectiveRawClaims environment @?= [expectedClaim Candidate]
+  collectiveRawClaims (buildCollectiveIndex environment)
+    @?= [expectedClaim Candidate]
 
 duplicateClaimIdTest :: Assertion
 duplicateClaimIdTest = do
@@ -380,7 +383,7 @@ ambiguousParticipantTest = do
 nonStrategyParticipantTest :: Assertion
 nonStrategyParticipantTest = do
   environment <- environmentFor "Scope" nonStrategyParticipantModel
-  case collectiveRawClaims environment of
+  case collectiveRawClaims (buildCollectiveIndex environment) of
     [claim] ->
       rawContributors (claimedProposition claim)
         @?= [RawNodeId "mission", RawNodeId "contributor-b"]
@@ -398,7 +401,7 @@ nonStrategyParticipantTest = do
 incompleteCandidateTest :: Assertion
 incompleteCandidateTest = do
   environment <- environmentFor "Scope" incompleteCandidateModel
-  collectiveRawClaims environment @?= []
+  collectiveRawClaims (buildCollectiveIndex environment) @?= []
   report <- inspectText (ViewByName "Scope") incompleteCandidateModel
   diagnosticCodes report @?= ["o2i.amx.profile.collective.target"]
   stageState ProfileStage report @?= StageFailed

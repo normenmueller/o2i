@@ -12,13 +12,12 @@ module O2I.Adapter.AMX.Internal.Profile.Closure
 
 import Control.Monad (guard)
 import Data.List (foldl')
-import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Sequence
 import Data.Sequence (Seq((:<|)), (|>))
 import qualified Data.Set as Set
 import Data.Set (Set)
 import O2I
-import O2I.Adapter.AMX.Internal.Profile.Collective
+import O2I.Adapter.AMX.Internal.Profile.Collective.Index
 import O2I.Adapter.AMX.Internal.Profile.Metadata
 import O2I.Adapter.AMX.Internal.Profile.Model
 import O2I.Adapter.AMX.Internal.Registry
@@ -32,25 +31,21 @@ data CandidateClosure = CandidateClosure
   } deriving (Eq, Show)
 
 -- | Compute candidacy using indexed relationship adjacency and a work queue.
-candidateClosure :: Environment -> CandidateClosure
-candidateClosure environment =
+candidateClosure :: Environment -> CollectiveIndex -> CandidateClosure
+candidateClosure environment collectiveIndex =
   processCandidates
     initialCandidates
-    (Sequence.fromList intrinsicOccurrences)
+    (Sequence.fromList intrinsicNodes)
     Set.empty
   where
-    intrinsicOccurrences =
-      [ nodeOccurrence node
-      | node <- environmentNodes environment
-      , hasDirectO2IMetadata node
-      ]
+    intrinsicNodes = filter hasDirectO2IMetadata (environmentNodes environment)
+    intrinsicOccurrences = map nodeOccurrence intrinsicNodes
     initialCandidates = Set.fromList intrinsicOccurrences
-    adjacency = relationshipAdjacency environment
     processCandidates candidates Sequence.Empty relationships =
       CandidateClosure
         {closureCandidates = candidates, closureRelationships = relationships}
     processCandidates candidates (current :<| queue) relationships =
-      let adjacent = Map.findWithDefault [] current adjacency
+      let adjacent = relationshipsAtEndpoint collectiveIndex (elementId current)
           (nextCandidates, nextQueue, nextRelationships) =
             foldl' reachRelationship (candidates, queue, relationships) adjacent
        in processCandidates nextCandidates nextQueue nextRelationships
@@ -61,7 +56,7 @@ candidateClosure environment =
         foldl'
           addEndpoint
           (candidates, queue, Set.insert occurrence relationships)
-          (uniqueEndpointOccurrences environment relationship)
+          (uniqueEndpointElements environment relationship)
       where
         occurrence = relationshipOccurrence relationship
         closure =
@@ -70,24 +65,11 @@ candidateClosure environment =
             , closureRelationships = relationships
             }
     addEndpoint state@(candidates, queue, relationships) endpoint
-      | Set.member endpoint candidates = state
+      | Set.member occurrence candidates = state
       | otherwise =
-        (Set.insert endpoint candidates, queue |> endpoint, relationships)
-
-relationshipAdjacency :: Environment -> Map.Map OccurrenceId [AMXElement]
-relationshipAdjacency environment =
-  Map.fromListWith
-    (flip (++))
-    [ (nodeOccurrence endpoint, [relationship])
-    | relationship <- environmentRelationships environment
-    , endpoint <- endpointElementsForAdjacency environment relationship
-    ]
-
-endpointElementsForAdjacency :: Environment -> AMXElement -> [AMXElement]
-endpointElementsForAdjacency environment relationship =
-  stableUniqueElements
-    (endpointElements environment SourceEndpoint relationship
-       ++ endpointElements environment TargetEndpoint relationship)
+        (Set.insert occurrence candidates, queue |> endpoint, relationships)
+      where
+        occurrence = nodeOccurrence endpoint
 
 relationshipEligible :: Environment -> CandidateClosure -> AMXElement -> Bool
 relationshipEligible environment closure relationship
@@ -146,13 +128,14 @@ endpointCompatible :: [NodeKindValue] -> NodeKindValue -> Bool
 endpointCompatible observed expected = null observed || expected `elem` observed
 
 -- | Retain registered semantic relationships for deferred Inspection closure.
-semanticRelationshipElements :: Environment -> CandidateClosure -> [AMXElement]
-semanticRelationshipElements environment closure =
+semanticRelationshipElements ::
+     Environment -> CollectiveIndex -> CandidateClosure -> [AMXElement]
+semanticRelationshipElements environment collectiveIndex closure =
   [ relationship
   | relationship <- environmentRelationships environment
   , not (isOwnershipRelationship relationship)
-  , relationship `notElem` collectiveSegmentElements environment
   , let occurrence = relationshipOccurrence relationship
+  , not (Set.member occurrence (collectiveSegmentOccurrences collectiveIndex))
   , Set.member occurrence (closureRelationships closure)
       || not (null (exactSignatures environment relationship))
   ]

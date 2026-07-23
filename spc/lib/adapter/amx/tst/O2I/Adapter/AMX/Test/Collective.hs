@@ -5,10 +5,11 @@ module O2I.Adapter.AMX.Test.Collective
 
 import O2I.Adapter.AMX.Test.Collective.Contract (collectiveContractTests)
 import O2I.Adapter.AMX.Test.Collective.Evidence (collectiveEvidenceTests)
+import O2I.Adapter.AMX.Test.Collective.Index (collectiveIndexTests)
 import Test.Tasty (TestTree, testGroup)
 
 collectiveTests :: TestTree
 collectiveTests =
   testGroup
     "collective realization"
-    [collectiveContractTests, collectiveEvidenceTests]
+    [collectiveContractTests, collectiveEvidenceTests, collectiveIndexTests]
