@@ -42,6 +42,8 @@ library
     O2I.Language.Macro,
     O2I.Language.Relation,
     O2I.Validation.Collective,
+    O2I.Validation.Collective.Fit,
+    O2I.Validation.Collective.Types,
     O2I.Validation.Evidence,
     O2I.Validation.Qualification,
     O2I.Validation.Readiness,
@@ -102,6 +104,32 @@ test-suite o2i-macro-index-internal-test
     O2I.Language.Element,
     O2I.Language.Macro,
     O2I.Language.Relation
+  build-depends:
+    base >=4.18 && <4.19,
+    containers >=0.6 && <0.7,
+    tasty >=1.4 && <1.6,
+    tasty-hunit >=0.10 && <0.11,
+    tasty-quickcheck >=0.10 && <0.12,
+    QuickCheck >=2.16 && <2.18,
+    text >=2.0 && <2.1
+  hs-source-dirs:
+    tst/internal,
+    src
+
+-- This component compiles the private collective-Fit index directly. It keeps
+-- deterministic lookup-work accounting outside the public validation API.
+test-suite o2i-collective-fit-internal-test
+  import:
+    warnings,
+    language
+  type:
+    exitcode-stdio-1.0
+  main-is:
+    CollectiveFitMain.hs
+  other-modules:
+    O2I.Language.Element,
+    O2I.Validation.Collective.Fit,
+    O2I.Validation.Collective.Types
   build-depends:
     base >=4.18 && <4.19,
     containers >=0.6 && <0.7,

@@ -47,6 +47,8 @@ import O2I.Graph.Typed
 import O2I.Language.Claim
 import O2I.Language.Element
 import O2I.Language.Relation
+import O2I.Validation.Collective.Fit
+import O2I.Validation.Collective.Types
 import O2I.Validation.Semantics
 import O2I.Validation.Trace.Evidence
 
@@ -54,37 +56,6 @@ import O2I.Validation.Trace.Evidence
 newtype ClaimId = ClaimId
   { claimIdText :: Text
   } deriving (Eq, Ord, Show)
-
--- | Stable reference to one structured collective-Fit evidence bundle.
-newtype CollectiveFitEvidenceRef = CollectiveFitEvidenceRef
-  { collectiveFitEvidenceRefText :: Text
-  } deriving (Eq, Ord, Show)
-
--- | Pairwise rationale that two contributors are mutually coherent.
-data RawMutualCoherenceEvidence = RawMutualCoherenceEvidence
-  { rawCoherenceContributorA :: RawNodeId
-  , rawCoherenceContributorB :: RawNodeId
-  , rawCoherenceRationale :: Text
-  } deriving (Eq, Show)
-
--- | One contributor's compatibility with the target Strategy constraints.
-data RawContributorCompatibilityEvidence = RawContributorCompatibilityEvidence
-  { rawCompatibilityContributor :: RawNodeId
-  , rawGuidingPolicyCompatibilityRationale :: Text
-  , rawTradeOffCompatibilityRationale :: Text
-  } deriving (Eq, Show)
-
--- | Structured collective-Fit evidence bound to one participant set.
-data RawCollectiveFitEvidence = RawCollectiveFitEvidence
-  { rawFitEvidenceRef :: CollectiveFitEvidenceRef
-  , rawFitContributors :: [RawNodeId]
-  , rawFitTarget :: RawNodeId
-  , rawMutualCoherenceEvidence :: [RawMutualCoherenceEvidence]
-  , rawFitTargetGuidingPolicy :: RawNodeId
-  , rawFitTargetTradeOffs :: [Text]
-  , rawContributorCompatibilityEvidence :: [RawContributorCompatibilityEvidence]
-  , rawViableInteractionEvidence :: [Text]
-  } deriving (Eq, Show)
 
 -- | Unchecked collective Strategy-realization proposition.
 --
@@ -101,36 +72,6 @@ data CollectiveParticipantRole
   = CollectiveContributor
   | CollectiveTarget
   deriving (Eq, Ord, Show)
-
--- | Required dimension of structured collective Fit.
-data CollectiveFitDimension
-  = MutualCoherenceFit
-  | GuidingPolicyCompatibilityFit
-  | TradeOffCompatibilityFit
-  | ViableInteractionFit
-  deriving (Eq, Ord, Show)
-
--- | Semantic deficiency of one structurally valid collective claim.
-data CollectiveStrategyRealizationIssue
-  = CollectiveFitEvidenceNotFound CollectiveFitEvidenceRef
-  | CollectiveFitEvidenceAmbiguous CollectiveFitEvidenceRef
-  | MissingContributorContribution RawNodeId RawNodeId
-  | UncoveredTargetKeyResult RawNodeId
-  | UncoveredTargetAction RawNodeId
-  | CollectiveFitContributorsMismatch
-  | CollectiveFitTargetMismatch RawNodeId RawNodeId
-  | InvalidMutualCoherencePair RawNodeId RawNodeId
-  | DuplicateMutualCoherencePair RawNodeId RawNodeId
-  | MissingMutualCoherencePair RawNodeId RawNodeId
-  | EmptyCollectiveFitEvidence CollectiveFitDimension
-  | InvalidContributorCompatibilityContributor RawNodeId
-  | DuplicateContributorCompatibilityContributor RawNodeId
-  | MissingContributorCompatibilityEvidence RawNodeId CollectiveFitDimension
-  | EmptyContributorCompatibilityEvidence RawNodeId CollectiveFitDimension
-  | CollectiveFitGuidingPolicyMismatch RawNodeId RawNodeId
-  | CollectiveFitTradeOffsMismatch
-  | MissingTargetStrategyFormulation RawNodeId
-  deriving (Eq, Show)
 
 -- | Fatal structural defect of a collective proposition.
 --
@@ -235,8 +176,9 @@ assessCollectiveStrategyRealizations semantic fitEvidence claims =
     structuralErrors =
       concat [NonEmpty.toList failures | Failure failures <- structuralResults]
     structuralClaims = [structural | Success structural <- structuralResults]
+    fitIndex = buildCollectiveFitIndex fitEvidence
     evaluations =
-      map (evaluateCollective semantic evidence fitEvidence) structuralClaims
+      map (evaluateCollective semantic evidence fitIndex) structuralClaims
     errors =
       identityErrors
         ++ structuralErrors
@@ -417,10 +359,10 @@ participantErrors graph claim role participant =
 evaluateCollective ::
      SemanticallyValidModel
   -> MacroEvidenceContext
-  -> [RawCollectiveFitEvidence]
+  -> CollectiveFitIndex
   -> StructurallyValidCollective
   -> SemanticEvaluation
-evaluateCollective semantic evidence fitEvidence structural =
+evaluateCollective semantic evidence fitIndex structural =
   SemanticEvaluation structural issues contributionEvidence
   where
     claim = claimedProposition (structurallyValidClaim structural)
@@ -448,14 +390,26 @@ evaluateCollective semantic evidence fitEvidence structural =
         | (_, Just witnesses) <- contributionEvidence
         ]
     coverageIssues = targetCoverageIssues semantic target witnessPremiseEdges
-    fitIssues =
-      collectiveFitIssues
-        semantic
+    fitAssessment =
+      assessCollectiveFit
+        fitIndex
         contributors
         target
+        (collectiveFitTargetExpectation semantic target)
         (rawCollectiveFitEvidence claim)
-        fitEvidence
+    fitIssues = collectiveFitAssessmentIssues fitAssessment
     issues = contributionIssues ++ coverageIssues ++ fitIssues
+
+collectiveFitTargetExpectation ::
+     SemanticallyValidModel -> RawNodeId -> CollectiveFitTargetExpectation
+collectiveFitTargetExpectation semantic target =
+  case Map.lookup target (strategyFormulations semantic) of
+    Nothing -> MissingCollectiveFitTarget
+    Just formulation ->
+      ExpectedCollectiveFitTarget
+        (rawFormulationGuidingPolicy raw)
+        (NonEmpty.toList (rawFormulationTradeOffs raw))
+      where raw = strategyFormulationData formulation
 
 evaluationErrors :: SemanticEvaluation -> [CollectiveStrategyRealizationError]
 evaluationErrors (SemanticEvaluation structural issues _)
@@ -516,141 +470,6 @@ targetCoverageIssues semantic target premises =
            ]
       where raw = strategyFormulationData formulation
 
-collectiveFitIssues ::
-     SemanticallyValidModel
-  -> [RawNodeId]
-  -> RawNodeId
-  -> CollectiveFitEvidenceRef
-  -> [RawCollectiveFitEvidence]
-  -> [CollectiveStrategyRealizationIssue]
-collectiveFitIssues semantic contributors target evidenceRef evidence =
-  case filter ((== evidenceRef) . rawFitEvidenceRef) evidence of
-    [] -> [CollectiveFitEvidenceNotFound evidenceRef]
-    [_first, _second] -> [CollectiveFitEvidenceAmbiguous evidenceRef]
-    _:_:_ -> [CollectiveFitEvidenceAmbiguous evidenceRef]
-    [fit] -> validateFit fit
-  where
-    validateFit fit =
-      participantIssues
-        ++ coherenceIssues contributors (rawMutualCoherenceEvidence fit)
-        ++ targetFormulationIssues fit
-        ++ compatibilityIssues
-             contributors
-             (rawContributorCompatibilityEvidence fit)
-        ++ statementIssues
-             ViableInteractionFit
-             (rawViableInteractionEvidence fit)
-      where
-        participantIssues =
-          [ CollectiveFitContributorsMismatch
-          | sort (rawFitContributors fit) /= sort contributors
-          ]
-            ++ [ CollectiveFitTargetMismatch target (rawFitTarget fit)
-               | rawFitTarget fit /= target
-               ]
-        targetFormulationIssues evidence' =
-          case Map.lookup target (strategyFormulations semantic) of
-            Nothing -> [MissingTargetStrategyFormulation target]
-            Just formulation ->
-              [ CollectiveFitGuidingPolicyMismatch
-                (rawFormulationGuidingPolicy raw)
-                (rawFitTargetGuidingPolicy evidence')
-              | rawFitTargetGuidingPolicy evidence'
-                  /= rawFormulationGuidingPolicy raw
-              ]
-                ++ [ CollectiveFitTradeOffsMismatch
-                   | rawFitTargetTradeOffs evidence'
-                       /= NonEmpty.toList (rawFormulationTradeOffs raw)
-                   ]
-              where raw = strategyFormulationData formulation
-
-coherenceIssues ::
-     [RawNodeId]
-  -> [RawMutualCoherenceEvidence]
-  -> [CollectiveStrategyRealizationIssue]
-coherenceIssues contributors evidence =
-  invalidPairIssues
-    ++ duplicatePairIssues
-    ++ missingPairIssues
-    ++ blankRationaleIssues
-  where
-    expectedPairs = unorderedPairs contributors
-    actualPairs =
-      [ canonicalPair
-        (rawCoherenceContributorA item)
-        (rawCoherenceContributorB item)
-      | item <- evidence
-      ]
-    invalidPairIssues =
-      [ InvalidMutualCoherencePair left right
-      | item <- evidence
-      , let left = rawCoherenceContributorA item
-      , let right = rawCoherenceContributorB item
-      , left == right
-          || left `notElem` contributors
-          || right `notElem` contributors
-      ]
-    duplicatePairIssues =
-      [ uncurry DuplicateMutualCoherencePair pair
-      | pair <- duplicates actualPairs
-      ]
-    missingPairIssues =
-      [ uncurry MissingMutualCoherencePair pair
-      | pair <- expectedPairs
-      , pair `notElem` actualPairs
-      ]
-    blankRationaleIssues =
-      [ EmptyCollectiveFitEvidence MutualCoherenceFit
-      | item <- evidence
-      , Text.null (Text.strip (rawCoherenceRationale item))
-      ]
-
-compatibilityIssues ::
-     [RawNodeId]
-  -> [RawContributorCompatibilityEvidence]
-  -> [CollectiveStrategyRealizationIssue]
-compatibilityIssues contributors evidence =
-  invalidContributorIssues
-    ++ duplicateContributorIssues
-    ++ missingContributorIssues
-    ++ emptyRationaleIssues
-  where
-    evidenceContributors = map rawCompatibilityContributor evidence
-    invalidContributorIssues =
-      [ InvalidContributorCompatibilityContributor contributor
-      | contributor <- evidenceContributors
-      , contributor `notElem` contributors
-      ]
-    duplicateContributorIssues =
-      [ DuplicateContributorCompatibilityContributor contributor
-      | contributor <- duplicates evidenceContributors
-      ]
-    missingContributorIssues =
-      [ MissingContributorCompatibilityEvidence contributor dimension
-      | contributor <- contributors
-      , contributor `notElem` evidenceContributors
-      , dimension <- [GuidingPolicyCompatibilityFit, TradeOffCompatibilityFit]
-      ]
-    emptyRationaleIssues = concatMap emptyRationales evidence
-    emptyRationales item =
-      [ EmptyContributorCompatibilityEvidence
-        (rawCompatibilityContributor item)
-        GuidingPolicyCompatibilityFit
-      | Text.null (Text.strip (rawGuidingPolicyCompatibilityRationale item))
-      ]
-        ++ [ EmptyContributorCompatibilityEvidence
-             (rawCompatibilityContributor item)
-             TradeOffCompatibilityFit
-           | Text.null (Text.strip (rawTradeOffCompatibilityRationale item))
-           ]
-
-statementIssues ::
-     CollectiveFitDimension -> [Text] -> [CollectiveStrategyRealizationIssue]
-statementIssues dimension statements =
-  [ EmptyCollectiveFitEvidence dimension
-  | null statements || any (Text.null . Text.strip) statements
-  ]
-
 coveredBy :: Relation from to -> RawNodeId -> [RawEdge] -> Bool
 coveredBy relation target =
   any
@@ -689,18 +508,6 @@ stableDistinct = foldl add []
     add values value
       | value `elem` values = values
       | otherwise = values ++ [value]
-
-unorderedPairs :: Ord value => [value] -> [(value, value)]
-unorderedPairs values =
-  [ canonicalPair left right
-  | (position, left) <- zip [0 :: Int ..] values
-  , right <- drop (position + 1) values
-  ]
-
-canonicalPair :: Ord value => value -> value -> (value, value)
-canonicalPair left right
-  | left <= right = (left, right)
-  | otherwise = (right, left)
 
 blankClaimId :: ClaimId -> Bool
 blankClaimId = Text.null . Text.strip . claimIdText
