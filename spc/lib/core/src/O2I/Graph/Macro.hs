@@ -23,6 +23,7 @@ module O2I.Graph.Macro
   , macroScopeDependencies
   , MacroLookupWork
   , macroLookupNodeOccurrences
+  , macroLookupEdgeBucketProbes
   , macroLookupEdgeOccurrences
   , macroLookupClaimOccurrences
   , macroScopeDependencyWork

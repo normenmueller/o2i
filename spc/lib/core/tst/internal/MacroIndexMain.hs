@@ -39,6 +39,9 @@ tests =
               macroLookupNodeOccurrences
                 (macroScopeDependencyWork sparseIndex sparseClaim)
                 @?= 2
+              macroLookupEdgeBucketProbes
+                (macroScopeDependencyWork sparseIndex sparseClaim)
+                @?= 2
               macroLookupEdgeOccurrences
                 (macroScopeDependencyWork sparseIndex sparseClaim)
                 @?= 1
@@ -46,6 +49,56 @@ tests =
         let sparseSize = rawCount `mod` 200
          in addressedContract (sparseMacroIndexWith sparseSize)
               == addressedContract baseMacroIndex
+    , testCase "degree skew selects the lower-occurrence target adjacency"
+        $ withAddressedClaim (denseMacroIndex 1 2 1000 0)
+        $ \index claim -> do
+            let work = macroScopeDependencyWork index claim
+            macroLookupNodeOccurrences work @?= 3
+            macroLookupEdgeBucketProbes work @?= 3
+            macroLookupEdgeOccurrences work @?= 3
+            map macroDependencyEdge (macroScopeDependencies index claim)
+              @?= [91, 17, 44 :: Int]
+    , testCase "degree skew selects the lower-occurrence source adjacency"
+        $ withAddressedClaim (denseMacroIndex 2 1 0 1000)
+        $ \index claim -> do
+            let work = macroScopeDependencyWork index claim
+            macroLookupNodeOccurrences work @?= 3
+            macroLookupEdgeBucketProbes work @?= 3
+            macroLookupEdgeOccurrences work @?= 3
+            map macroDependencyEdge (macroScopeDependencies index claim)
+              @?= [91, 17, 44 :: Int]
+    , testCase "visited work includes filtered selected-side occurrences"
+        $ withAddressedClaim (denseMacroIndex 3 40 8 20)
+        $ \index claim -> do
+            let work = macroScopeDependencyWork index claim
+            macroLookupNodeOccurrences work @?= 43
+            macroLookupEdgeBucketProbes work @?= 43
+            macroLookupEdgeOccurrences work @?= 11
+            map macroDependencyEdge (macroScopeDependencies index claim)
+              @?= [91, 17, 44 :: Int]
+    , QC.testProperty
+        "dense selector lookup scales with the lower occurrence degree" $ \(QC.Positive rawSources) (QC.Positive rawTargets) (QC.NonNegative rawSourceDecoys) (QC.NonNegative rawTargetDecoys) ->
+        let sourceCount = 1 + rawSources `mod` 60
+            targetCount = 1 + rawTargets `mod` 60
+            sourceDecoys = rawSourceDecoys `mod` 40
+            targetDecoys = rawTargetDecoys `mod` 40
+         in case addressedContract
+                   (denseMacroIndex
+                      sourceCount
+                      targetCount
+                      sourceDecoys
+                      targetDecoys) of
+              Nothing -> QC.counterexample "missing addressed dense claim" False
+              Just (work, dependencies) ->
+                QC.conjoin
+                  [ macroLookupNodeOccurrences work QC.=== sourceCount
+                      + targetCount
+                  , macroLookupEdgeBucketProbes work QC.=== sourceCount
+                      + targetCount
+                  , macroLookupEdgeOccurrences work QC.=== 3
+                      + min sourceDecoys targetDecoys
+                  , dependencies QC.=== [91, 17, 44]
+                  ]
     ]
 
 addressedContract :: MacroFactIndex Int Int -> Maybe (MacroLookupWork, [Int])
@@ -98,6 +151,83 @@ sparseMacroIndexWith sparseSize =
           (unrelatedEthosId ordinal)
           guidesMission
           (unrelatedMissionId ordinal))
+
+denseMacroIndex :: Int -> Int -> Int -> Int -> MacroFactIndex Int Int
+denseMacroIndex sourceCount targetCount sourceDecoys targetDecoys =
+  buildMacroFactIndex nodes edges
+  where
+    sourceIds = map denseSourceId [1 .. sourceCount]
+    targetIds = map denseTargetId [1 .. targetCount]
+    externalSourceIds = map denseExternalSourceId [1 .. targetDecoys]
+    externalTargetIds = map denseExternalTargetId [1 .. sourceDecoys]
+    nodes =
+      [ (1, RawContextNode macroEthosId Ethos)
+      , (2, RawContextNode macroMissionId Mission)
+      , (3, RawContextNode denseExternalEthosId Ethos)
+      , (4, RawContextNode denseExternalMissionId Mission)
+      ]
+        ++ zipWith
+             (\occurrence identifier ->
+                (occurrence, RawPrimitiveNode identifier macroEthosId Principle))
+             [100 ..]
+             sourceIds
+        ++ zipWith
+             (\occurrence identifier ->
+                (occurrence, RawPrimitiveNode identifier macroMissionId Driver))
+             [1000 ..]
+             targetIds
+        ++ zipWith
+             (\occurrence identifier ->
+                ( occurrence
+                , RawPrimitiveNode identifier denseExternalEthosId Principle))
+             [2000 ..]
+             externalSourceIds
+        ++ zipWith
+             (\occurrence identifier ->
+                ( occurrence
+                , RawPrimitiveNode identifier denseExternalMissionId Driver))
+             [3000 ..]
+             externalTargetIds
+    edges =
+      [ (1, macroTestClaim)
+      , (91, densePremise (last sourceIds) (last targetIds))
+      , (17, densePremise (head sourceIds) (head targetIds))
+      , (44, densePremise (head sourceIds) (head targetIds))
+      ]
+        ++ zipWith
+             (\occurrence target ->
+                (occurrence, densePremise (head sourceIds) target))
+             [4000 ..]
+             externalTargetIds
+        ++ zipWith
+             (\occurrence source ->
+                (occurrence, densePremise source (head targetIds)))
+             [5000 ..]
+             externalSourceIds
+
+densePremise :: RawNodeId -> RawNodeId -> RawEdge
+densePremise source target =
+  relationEdge source guidesEthosPrincipleToMissionDriver target
+
+denseSourceId :: Int -> RawNodeId
+denseSourceId ordinal =
+  RawNodeId ("dense-principle-" <> Text.pack (show ordinal))
+
+denseTargetId :: Int -> RawNodeId
+denseTargetId ordinal = RawNodeId ("dense-driver-" <> Text.pack (show ordinal))
+
+denseExternalSourceId :: Int -> RawNodeId
+denseExternalSourceId ordinal =
+  RawNodeId ("external-principle-" <> Text.pack (show ordinal))
+
+denseExternalTargetId :: Int -> RawNodeId
+denseExternalTargetId ordinal =
+  RawNodeId ("external-driver-" <> Text.pack (show ordinal))
+
+denseExternalEthosId, denseExternalMissionId :: RawNodeId
+denseExternalEthosId = RawNodeId "dense-external-ethos"
+
+denseExternalMissionId = RawNodeId "dense-external-mission"
 
 macroTestNodes :: [(Int, RawNode)]
 macroTestNodes =

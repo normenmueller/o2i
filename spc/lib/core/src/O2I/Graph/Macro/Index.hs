@@ -14,6 +14,7 @@ module O2I.Graph.Macro.Index
   , factValue
   , MacroLookupWork
   , macroLookupNodeOccurrences
+  , macroLookupEdgeBucketProbes
   , macroLookupEdgeOccurrences
   , macroLookupClaimOccurrences
   , IndexedLookup(..)
@@ -43,6 +44,12 @@ data OccurrenceFact occurrence value = OccurrenceFact
   , factValue :: value
   }
 
+-- | One stable adjacency bucket with an eagerly cached occurrence count.
+data OccurrenceBucket occurrence value = OccurrenceBucket
+  { occurrenceBucketCardinality :: !Int
+  , occurrenceBucketFacts :: [OccurrenceFact occurrence value]
+  }
+
 -- | Occurrence-preserving indexes over persisted graph facts.
 --
 -- Primitive owner/type buckets also determine canonical Interpretation,
@@ -57,9 +64,12 @@ data FactIndex node edge = FactIndex
   , indexedStructuringByOwnerType :: Map
       (RawNodeId, Structuring)
       [OccurrenceFact node RawNode]
-  , indexedEdgesByCodeEndpoints :: Map
-      (RelationCode, RawNodeId, RawNodeId)
-      [OccurrenceFact edge RawEdge]
+  , indexedEdgesByCodeSource :: Map
+      (RelationCode, RawNodeId)
+      (OccurrenceBucket edge RawEdge)
+  , indexedEdgesByCodeTarget :: Map
+      (RelationCode, RawNodeId)
+      (OccurrenceBucket edge RawEdge)
   , indexedConstituentAnchors :: Map RawNodeId [RawNodeId]
   , indexedEdgesInOrder :: [OccurrenceFact edge RawEdge]
   }
@@ -68,21 +78,24 @@ data FactIndex node edge = FactIndex
 data MacroLookupWork = MacroLookupWork
   { macroLookupNodeOccurrences :: Int
     -- ^ Node occurrences read from addressed selector buckets.
+  , macroLookupEdgeBucketProbes :: Int
+    -- ^ Relation/endpoint adjacency buckets addressed by premise lookup.
   , macroLookupEdgeOccurrences :: Int
-    -- ^ Edge occurrences read from addressed relation/endpoint buckets.
+    -- ^ Edge occurrences visited in addressed adjacency buckets.
   , macroLookupClaimOccurrences :: Int
     -- ^ Claim occurrences read from one exact conclusion bucket.
   } deriving (Eq, Show)
 
 instance Semigroup MacroLookupWork where
-  MacroLookupWork leftNodes leftEdges leftClaims <> MacroLookupWork rightNodes rightEdges rightClaims =
+  MacroLookupWork leftNodes leftProbes leftEdges leftClaims <> MacroLookupWork rightNodes rightProbes rightEdges rightClaims =
     MacroLookupWork
       (leftNodes + rightNodes)
+      (leftProbes + rightProbes)
       (leftEdges + rightEdges)
       (leftClaims + rightClaims)
 
 instance Monoid MacroLookupWork where
-  mempty = MacroLookupWork 0 0 0
+  mempty = MacroLookupWork 0 0 0 0
 
 -- | Stable indexed values and the occurrence work required to address them.
 data IndexedLookup value = IndexedLookup
@@ -97,7 +110,8 @@ buildFactIndex nodes edges =
     { indexedContextsByIdentity = contextsByIdentity
     , indexedPrimitivesByOwnerType = primitivesByOwnerType
     , indexedStructuringByOwnerType = structuringByOwnerType
-    , indexedEdgesByCodeEndpoints = edgesByCodeEndpoints
+    , indexedEdgesByCodeSource = edgesByCodeSource
+    , indexedEdgesByCodeTarget = edgesByCodeTarget
     , indexedConstituentAnchors = constituentAnchors
     , indexedEdgesInOrder = edgeFacts
     }
@@ -139,17 +153,15 @@ buildFactIndex nodes edges =
       | fact <- edgeFacts
       , code <- relationCodesFor nodesById (factValue fact)
       ]
-    edgesByCodeEndpoints =
+    edgesByCodeSource =
       Map.map
-        (map snd)
+        (occurrenceBucket . map snd)
         (stableBuckets
-           (\(code, fact) ->
-              let edge = factValue fact
-               in (code, rawEdgeFrom edge, rawEdgeTo edge))
+           (\(code, fact) -> (code, rawEdgeFrom (factValue fact)))
            codedEdges)
     edgesByCodeTarget =
       Map.map
-        (map snd)
+        (occurrenceBucket . map snd)
         (stableBuckets
            (\(code, fact) -> (code, rawEdgeTo (factValue fact)))
            codedEdges)
@@ -174,6 +186,11 @@ claimBucketLookup values =
   IndexedLookup values mempty {macroLookupClaimOccurrences = length values}
 
 -- | Resolve persisted premise edges through relation-code/endpoint buckets.
+--
+-- For each finite relation code, both addressed endpoint sides are probed once
+-- to compare cached occurrence cardinalities. Only the lower-cardinality side
+-- is traversed. Abstracting from ordered-map and set factors, lookup work is
+-- @O(C * (S + T) + V_selected)@.
 premiseEdgeFactsBetween ::
      FactIndex node edge
   -> MacroRelationPattern
@@ -182,31 +199,82 @@ premiseEdgeFactsBetween ::
   -> IndexedLookup (OccurrenceFact edge RawEdge)
 premiseEdgeFactsBetween index pattern' sources targets =
   IndexedLookup
-    (Map.elems
-       (Map.fromList
-          [ (factOrdinal fact, fact)
-          | code <- relationPatternCodes pattern'
-          , source <- stableDistinct sources
-          , target <- stableDistinct targets
-          , fact <-
-              Map.findWithDefault
-                []
-                (code, source, target)
-                (indexedEdgesByCodeEndpoints index)
-          ]))
-    mempty
-      { macroLookupEdgeOccurrences =
-          sum
-            [ length
-              (Map.findWithDefault
-                 []
-                 (code, source, target)
-                 (indexedEdgesByCodeEndpoints index))
-            | code <- relationPatternCodes pattern'
-            , source <- stableDistinct sources
-            , target <- stableDistinct targets
-            ]
-      }
+    (orderedOccurrenceFacts (concatMap fst searches))
+    (foldMap snd searches)
+  where
+    sourceIdentifiers = stableDistinct sources
+    targetIdentifiers = stableDistinct targets
+    sourceSet = Set.fromList sourceIdentifiers
+    targetSet = Set.fromList targetIdentifiers
+    searches =
+      [ premiseFactsForCode
+        index
+        code
+        sourceIdentifiers
+        sourceSet
+        targetIdentifiers
+        targetSet
+      | code <- relationPatternCodes pattern'
+      ]
+
+premiseFactsForCode ::
+     FactIndex node edge
+  -> RelationCode
+  -> [RawNodeId]
+  -> Set.Set RawNodeId
+  -> [RawNodeId]
+  -> Set.Set RawNodeId
+  -> ([OccurrenceFact edge RawEdge], MacroLookupWork)
+premiseFactsForCode index code sources sourceSet targets targetSet
+  | null sources || null targets = ([], mempty)
+  | sourceCardinality <= targetCardinality =
+    selectedFacts
+      sourceBuckets
+      sourceCardinality
+      (\edge -> Set.member (rawEdgeTo edge) targetSet)
+  | otherwise =
+    selectedFacts
+      targetBuckets
+      targetCardinality
+      (\edge -> Set.member (rawEdgeFrom edge) sourceSet)
+  where
+    sourceBuckets =
+      addressedBuckets (indexedEdgesByCodeSource index) code sources
+    targetBuckets =
+      addressedBuckets (indexedEdgesByCodeTarget index) code targets
+    sourceCardinality = sum (map occurrenceBucketCardinality sourceBuckets)
+    targetCardinality = sum (map occurrenceBucketCardinality targetBuckets)
+    bucketProbes = length sourceBuckets + length targetBuckets
+    selectedFacts buckets cardinality matches =
+      ( filter (matches . factValue) visited
+      , mempty
+          { macroLookupEdgeBucketProbes = bucketProbes
+          , macroLookupEdgeOccurrences = cardinality
+          })
+      where
+        visited = concatMap occurrenceBucketFacts buckets
+
+addressedBuckets ::
+     Map (RelationCode, RawNodeId) (OccurrenceBucket occurrence value)
+  -> RelationCode
+  -> [RawNodeId]
+  -> [OccurrenceBucket occurrence value]
+addressedBuckets adjacency code =
+  map
+    (\identifier ->
+       Map.findWithDefault emptyOccurrenceBucket (code, identifier) adjacency)
+
+occurrenceBucket ::
+     [OccurrenceFact occurrence value] -> OccurrenceBucket occurrence value
+occurrenceBucket facts = OccurrenceBucket (length facts) facts
+
+emptyOccurrenceBucket :: OccurrenceBucket occurrence value
+emptyOccurrenceBucket = OccurrenceBucket 0 []
+
+orderedOccurrenceFacts ::
+     [OccurrenceFact occurrence value] -> [OccurrenceFact occurrence value]
+orderedOccurrenceFacts =
+  Map.elems . Map.fromList . map (\fact -> (factOrdinal fact, fact))
 
 -- | Resolve Primitive occurrences by exact owner and Primitive type.
 ownedPrimitiveIdentifiers ::
@@ -315,7 +383,7 @@ endpointKindOccurs nodesById expected identifier =
 
 buildConstituentAnchors ::
      [OccurrenceFact node RawNode]
-  -> Map (RelationCode, RawNodeId) [OccurrenceFact edge RawEdge]
+  -> Map (RelationCode, RawNodeId) (OccurrenceBucket edge RawEdge)
   -> Map RawNodeId [RawNodeId]
 buildConstituentAnchors nodeFacts edgesByCodeTarget =
   Map.map (map third . sortOn firstTwo) (stableBuckets fstValue occurrences)
@@ -330,10 +398,12 @@ buildConstituentAnchors nodeFacts edgesByCodeTarget =
         , (anchorOrdinal, factOrdinal edgeFact, anchorIdentifier))
       | (anchorOrdinal, anchorIdentifier, anchor) <- anchorFacts
       , edgeFact <-
-          Map.findWithDefault
-            []
-            (AnchorRelation ConstitutedByAnchorFamily anchor, anchorIdentifier)
-            edgesByCodeTarget
+          occurrenceBucketFacts
+            (Map.findWithDefault
+               emptyOccurrenceBucket
+               ( AnchorRelation ConstitutedByAnchorFamily anchor
+               , anchorIdentifier)
+               edgesByCodeTarget)
       , let edge = factValue edgeFact
       ]
     fstValue (key, _) = key
