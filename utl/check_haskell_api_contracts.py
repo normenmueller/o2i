@@ -78,6 +78,11 @@ CONTRACTS = (
                 "ValidationRecordUpdates.hs",
                 (("GHC-47535", 20),),
             ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "ValidationCollectiveParallelCommitment.hs",
+                (("GHC-76037", 1),),
+            ),
         ),
     ),
     PackageContract(

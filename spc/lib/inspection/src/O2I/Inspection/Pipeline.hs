@@ -25,7 +25,6 @@ module O2I.Inspection.Pipeline
   , inspectSourceDocument
   ) where
 
-import Data.List (group, sort)
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
@@ -588,85 +587,48 @@ inspectCollectiveSemantics ::
   -> CollectiveInspection
 inspectCollectiveSemantics closed sources witness semantic =
   CollectiveInspection
-    { inspectedCollectiveDiagnostics =
-        assertedDiagnostics ++ candidateDiagnostics ++ duplicateDiagnostics
-    , inspectedCollectiveFatal = assertedFatal || duplicateFatal
-    , inspectedCollectiveCandidates = not (null candidateClaims)
-    , inspectedCollectiveAssessment =
-        if assertedFatal || duplicateFatal
-          then Nothing
-          else assertedAssessment
+    { inspectedCollectiveDiagnostics = diagnostics
+    , inspectedCollectiveFatal = not (null errors)
+    , inspectedCollectiveCandidates = not (null candidates)
+    , inspectedCollectiveAssessment = assessment
     }
   where
     importedClaims = importedCollectiveClaims (structurallyClosedImport closed)
     claims = map importedCollectiveClaim importedClaims
-    assertedClaims = filter ((== Asserted) . rawCommitment) claims
-    candidateClaims = filter ((== Candidate) . rawCommitment) claims
     fitEvidence =
       maybe
         []
         (collectiveFitEvidenceInput . sourcedValue)
         (witnessCollectiveFitInput witness)
-    assertedValidation =
-      validateCollectiveStrategyRealizations semantic fitEvidence assertedClaims
-    assertedErrors =
-      case assertedValidation of
-        Failure errors -> NonEmpty.toList errors
+    validation =
+      validateCollectiveStrategyRealizations semantic fitEvidence claims
+    errors =
+      case validation of
+        Failure failures -> NonEmpty.toList failures
         Success _ -> []
-    assertedAssessment =
-      case assertedValidation of
+    assessment =
+      case validation of
         Failure _ -> Nothing
-        Success assessment -> Just assessment
-    assertedFatal = not (null assertedErrors)
-    assertedDiagnostics =
+        Success result -> Just result
+    candidates = maybe [] candidateCollectiveStrategyRealizations assessment
+    diagnostics =
       map
         (withSources . collectiveDiagnostic collectiveRealizationErrorSpec)
-        assertedErrors
-    candidateResults =
-      [ ( claim
-        , validateCollectiveStrategyRealizations semantic fitEvidence [claim])
-      | claim <- candidateClaims
-      ]
-    candidateDiagnostics = concatMap candidateResultDiagnostics candidateResults
-    candidateResultDiagnostics (claim, result) =
+        errors
+        ++ concatMap candidateDiagnostics candidates
+    candidateDiagnostics candidate =
       withSources
-        (collectiveDiagnostic
-           id
-           (candidateCollectiveRealizationSpec (rawRealizationId claim)))
-        : case result of
-            Failure errors ->
-              map
-                (withSources
-                   . collectiveDiagnostic
-                       candidateCollectiveRealizationErrorSpec)
-                (NonEmpty.toList errors)
-            Success assessment ->
-              [ withSources
-                (collectiveDiagnostic
-                   id
-                   (candidateCollectiveRealizationIssueSpec
-                      (rawRealizationId claim)
-                      issue))
-              | candidate <- candidateCollectiveStrategyRealizations assessment
-              , issue <- candidateCollectiveIssues candidate
-              ]
-    duplicateIdentifiers = duplicates (map rawRealizationId claims)
-    duplicateCommitments identifier =
-      [ rawCommitment claim
-      | claim <- claims
-      , rawRealizationId claim == identifier
-      ]
-    duplicateFatal =
-      any (elem Asserted . duplicateCommitments) duplicateIdentifiers
-    duplicateDiagnostics =
-      [ withSources
-        (collectiveDiagnostic
-           (if Asserted `elem` duplicateCommitments identifier
-              then collectiveRealizationErrorSpec
-              else candidateCollectiveRealizationErrorSpec)
-           (DuplicateCollectiveRealizationClaimId identifier))
-      | identifier <- duplicateIdentifiers
-      ]
+        (collectiveDiagnostic id (candidateCollectiveRealizationSpec identifier))
+        : [ withSources
+            (collectiveDiagnostic
+               id
+               (candidateCollectiveRealizationIssueSpec identifier issue))
+          | issue <- candidateCollectiveIssues candidate
+          ]
+      where
+        identifier =
+          rawRealizationId
+            (claimedProposition (candidateCollectiveClaim candidate))
     collectiveDiagnostic specification defect =
       coreDiagnostic
         SemanticsStage
@@ -674,14 +636,6 @@ inspectCollectiveSemantics closed sources witness semantic =
         specification
         defect
     withSources = diagnosticWithSupplementalSources sources
-
-duplicates :: Ord value => [value] -> [value]
-duplicates = foldr collect [] . group . sort
-  where
-    collect values rest =
-      case values of
-        first:_:_ -> first : rest
-        _ -> rest
 
 inspectTraceability ::
      InspectionRequestInfo

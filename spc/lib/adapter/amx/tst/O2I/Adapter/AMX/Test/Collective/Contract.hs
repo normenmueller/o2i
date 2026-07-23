@@ -382,7 +382,8 @@ nonStrategyParticipantTest = do
   environment <- environmentFor "Scope" nonStrategyParticipantModel
   case collectiveRawClaims environment of
     [claim] ->
-      rawContributors claim @?= [RawNodeId "mission", RawNodeId "contributor-b"]
+      rawContributors (claimedProposition claim)
+        @?= [RawNodeId "mission", RawNodeId "contributor-b"]
     claims ->
       assertFailure ("expected one projected collective claim: " <> show claims)
   report <- inspectText (ViewByName "Scope") nonStrategyParticipantModel

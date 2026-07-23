@@ -9,15 +9,16 @@ import O2I
 import O2I.Adapter.AMX.Test.Collective.Fixture
 import O2I.Adapter.AMX.Test.Support
 
-expectedClaim :: Commitment -> RawCollectiveStrategyRealization
+expectedClaim :: Commitment -> Claim RawCollectiveStrategyRealization
 expectedClaim commitment =
-  RawCollectiveStrategyRealization
-    { rawRealizationId = ClaimId "claim"
-    , rawContributors = [RawNodeId "contributor-a", RawNodeId "contributor-b"]
-    , rawTarget = RawNodeId "target"
-    , rawCollectiveFitEvidence = CollectiveFitEvidenceRef "fit-claim"
-    , rawCommitment = commitment
-    }
+  claimWithCommitment
+    commitment
+    RawCollectiveStrategyRealization
+      { rawRealizationId = ClaimId "claim"
+      , rawContributors = [RawNodeId "contributor-a", RawNodeId "contributor-b"]
+      , rawTarget = RawNodeId "target"
+      , rawCollectiveFitEvidence = CollectiveFitEvidenceRef "fit-claim"
+      }
 
 assertedModel, candidateModel :: Text
 assertedModel =

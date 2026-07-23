@@ -47,6 +47,9 @@ collectiveTests =
         "contributor lower bound and distinctness accumulate"
         contributorCardinalityTest
     , testCase
+        "all Candidate structural defects are fatal"
+        candidateStructuralFailureTest
+    , testCase
         "target self-participation is rejected"
         contributorTargetSeparationTest
     , testCase
@@ -164,10 +167,10 @@ assertedContributionErrorTest :: Assertion
 assertedContributionErrorTest =
   withCollectiveSemanticModel missingSecondContributionGraph $ \semantic ->
     assertCollectiveErrors
-      [ AssertedCollectiveRealizationIssue
+      [ AssertedCollectiveIssue
           collectiveClaimId
           (MissingContributorContribution contributorTwoId strategyId)
-      , AssertedCollectiveRealizationIssue
+      , AssertedCollectiveIssue
           collectiveClaimId
           (UncoveredTargetAction strategyActionId)
       ]
@@ -180,7 +183,7 @@ collectiveCoverageTest :: Assertion
 collectiveCoverageTest =
   withCollectiveSemanticModel coverageGapGraph $ \semantic ->
     assertCollectiveErrors
-      [ AssertedCollectiveRealizationIssue
+      [ AssertedCollectiveIssue
           collectiveClaimId
           (UncoveredTargetAction strategyActionId)
       ]
@@ -194,7 +197,7 @@ collectiveFitTest =
   withCollectiveSemanticModel completeCollectiveGraph $ \semantic ->
     assertCollectiveErrors
       (map
-         (AssertedCollectiveRealizationIssue collectiveClaimId)
+         (AssertedCollectiveIssue collectiveClaimId)
          [ CollectiveFitContributorsMismatch
          , CollectiveFitTargetMismatch strategyId contributorOneId
          , MissingMutualCoherencePair contributorOneId contributorTwoId
@@ -222,7 +225,7 @@ contributorCompatibilityTest =
   withCollectiveSemanticModel completeCollectiveGraph $ \semantic ->
     assertCollectiveErrors
       (map
-         (AssertedCollectiveRealizationIssue collectiveClaimId)
+         (AssertedCollectiveIssue collectiveClaimId)
          [ InvalidContributorCompatibilityContributor ethosId
          , DuplicateContributorCompatibilityContributor contributorOneId
          , MissingContributorCompatibilityEvidence
@@ -260,13 +263,13 @@ collectiveFitReferenceTest :: Assertion
 collectiveFitReferenceTest =
   withCollectiveSemanticModel completeCollectiveGraph $ \semantic -> do
     assertCollectiveErrors
-      [ AssertedCollectiveRealizationIssue
+      [ AssertedCollectiveIssue
           collectiveClaimId
           (CollectiveFitEvidenceNotFound fitEvidenceRef)
       ]
       (validateCollectiveStrategyRealizations semantic [] [assertedCollective])
     assertCollectiveErrors
-      [ AssertedCollectiveRealizationIssue
+      [ AssertedCollectiveIssue
           collectiveClaimId
           (CollectiveFitEvidenceAmbiguous fitEvidenceRef)
       ]
@@ -279,123 +282,207 @@ contributorCardinalityTest :: Assertion
 contributorCardinalityTest =
   withCollectiveSemanticModel completeCollectiveGraph $ \semantic ->
     assertCollectiveErrors
-      [ TooFewCollectiveContributors collectiveClaimId
-      , DuplicateCollectiveContributor collectiveClaimId contributorOneId
-      ]
+      (map
+         CollectiveStructuralError
+         [ TooFewCollectiveContributors collectiveClaimId
+         , DuplicateCollectiveContributor collectiveClaimId contributorOneId
+         ])
       (validateCollectiveStrategyRealizations
          semantic
          [completeFit]
-         [ assertedCollective
-             {rawContributors = [contributorOneId, contributorOneId]}
+         [ assertedClaim
+             (collectiveProposition
+                {rawContributors = [contributorOneId, contributorOneId]})
          ])
+
+candidateStructuralFailureTest :: Assertion
+candidateStructuralFailureTest =
+  withCollectiveSemanticModel completeCollectiveGraph $ \semantic ->
+    mapM_ (assertCandidateFailure semantic) candidateStructuralCases
+  where
+    assertCandidateFailure semantic (proposition, expected) =
+      assertCollectiveErrors
+        (map CollectiveStructuralError expected)
+        (validateCollectiveStrategyRealizations
+           semantic
+           [completeFit]
+           [candidateClaim proposition])
+    candidateStructuralCases =
+      [ ( collectiveProposition {rawRealizationId = ClaimId " "}
+        , [EmptyCollectiveRealizationClaimId])
+      , ( collectiveProposition
+            {rawCollectiveFitEvidence = CollectiveFitEvidenceRef " "}
+        , [EmptyCollectiveFitEvidenceReference collectiveClaimId])
+      , ( collectiveProposition {rawContributors = [contributorOneId]}
+        , [TooFewCollectiveContributors collectiveClaimId])
+      , ( collectiveProposition
+            { rawContributors =
+                [contributorOneId, contributorTwoId, contributorOneId]
+            }
+        , [DuplicateCollectiveContributor collectiveClaimId contributorOneId])
+      , ( collectiveProposition
+            {rawContributors = [contributorOneId, strategyId]}
+        , [CollectiveContributorIsTarget collectiveClaimId strategyId])
+      , ( collectiveProposition
+            {rawContributors = [missingId, contributorTwoId]}
+        , [ UnknownCollectiveParticipant
+              collectiveClaimId
+              CollectiveContributor
+              missingId
+          ])
+      , ( collectiveProposition {rawContributors = [ethosId, contributorTwoId]}
+        , [ NonStrategyCollectiveParticipant
+              collectiveClaimId
+              CollectiveContributor
+              ethosId
+              (ContextNodeKind Ethos)
+          ])
+      , ( collectiveProposition {rawTarget = missingId}
+        , [ UnknownCollectiveParticipant
+              collectiveClaimId
+              CollectiveTarget
+              missingId
+          ])
+      , ( collectiveProposition {rawTarget = ethosId}
+        , [ NonStrategyCollectiveParticipant
+              collectiveClaimId
+              CollectiveTarget
+              ethosId
+              (ContextNodeKind Ethos)
+          ])
+      ]
 
 contributorTargetSeparationTest :: Assertion
 contributorTargetSeparationTest =
   withCollectiveSemanticModel completeCollectiveGraph $ \semantic ->
     assertCollectiveErrors
-      [CollectiveContributorIsTarget collectiveClaimId strategyId]
+      [ CollectiveStructuralError
+          (CollectiveContributorIsTarget collectiveClaimId strategyId)
+      ]
       (validateCollectiveStrategyRealizations
          semantic
          [completeFit]
-         [assertedCollective {rawContributors = [contributorOneId, strategyId]}])
+         [ assertedClaim
+             (collectiveProposition
+                {rawContributors = [contributorOneId, strategyId]})
+         ])
 
 contributorTypingTest :: Assertion
 contributorTypingTest =
   withCollectiveSemanticModel completeCollectiveGraph $ \semantic ->
     assertCollectiveErrors
-      [ UnknownCollectiveParticipant
-          collectiveClaimId
-          CollectiveContributor
-          missingId
-      , NonStrategyCollectiveParticipant
-          collectiveClaimId
-          CollectiveContributor
-          ethosId
-          (ContextNodeKind Ethos)
-      ]
+      (map
+         CollectiveStructuralError
+         [ UnknownCollectiveParticipant
+             collectiveClaimId
+             CollectiveContributor
+             missingId
+         , NonStrategyCollectiveParticipant
+             collectiveClaimId
+             CollectiveContributor
+             ethosId
+             (ContextNodeKind Ethos)
+         ])
       (validateCollectiveStrategyRealizations
          semantic
          [completeFit]
-         [assertedCollective {rawContributors = [missingId, ethosId]}])
+         [ assertedClaim
+             (collectiveProposition {rawContributors = [missingId, ethosId]})
+         ])
 
 targetTypingTest :: Assertion
 targetTypingTest =
   withCollectiveSemanticModel completeCollectiveGraph $ \semantic -> do
     assertCollectiveErrors
-      [ UnknownCollectiveParticipant
-          collectiveClaimId
-          CollectiveTarget
-          missingId
+      [ CollectiveStructuralError
+          (UnknownCollectiveParticipant
+             collectiveClaimId
+             CollectiveTarget
+             missingId)
       ]
       (validateCollectiveStrategyRealizations
          semantic
          [completeFit]
-         [assertedCollective {rawTarget = missingId}])
+         [assertedClaim (collectiveProposition {rawTarget = missingId})])
     assertCollectiveErrors
-      [ NonStrategyCollectiveParticipant
-          collectiveClaimId
-          CollectiveTarget
-          ethosId
-          (ContextNodeKind Ethos)
+      [ CollectiveStructuralError
+          (NonStrategyCollectiveParticipant
+             collectiveClaimId
+             CollectiveTarget
+             ethosId
+             (ContextNodeKind Ethos))
       ]
       (validateCollectiveStrategyRealizations
          semantic
          [completeFit]
-         [assertedCollective {rawTarget = ethosId}])
+         [assertedClaim (collectiveProposition {rawTarget = ethosId})])
 
 claimIdentityTest :: Assertion
 claimIdentityTest =
   withCollectiveSemanticModel completeCollectiveGraph $ \semantic ->
-    assertCollectiveErrors
-      [DuplicateCollectiveRealizationClaimId collectiveClaimId]
-      (validateCollectiveStrategyRealizations
-         semantic
-         [completeFit]
-         [assertedCollective, candidateCollective])
+    mapM_
+      (assertDuplicateIdentity semantic)
+      [ [candidateCollective, candidateCollective]
+      , [candidateCollective, assertedCollective]
+      , [assertedCollective, assertedCollective]
+      ]
+  where
+    assertDuplicateIdentity semantic claims =
+      assertCollectiveErrors
+        [ CollectiveStructuralError
+            (DuplicateCollectiveRealizationClaimId collectiveClaimId)
+        ]
+        (validateCollectiveStrategyRealizations semantic [completeFit] claims)
 
 blankIdentityTest :: Assertion
 blankIdentityTest =
   withCollectiveSemanticModel completeCollectiveGraph $ \semantic ->
     assertCollectiveErrors
-      [ EmptyCollectiveRealizationClaimId
-      , EmptyCollectiveFitEvidenceReference (ClaimId " ")
-      ]
+      (map
+         CollectiveStructuralError
+         [ EmptyCollectiveRealizationClaimId
+         , EmptyCollectiveFitEvidenceReference (ClaimId " ")
+         ])
       (validateCollectiveStrategyRealizations
          semantic
          [completeFit]
-         [ assertedCollective
-             { rawRealizationId = ClaimId " "
-             , rawCollectiveFitEvidence = CollectiveFitEvidenceRef ""
-             }
+         [ assertedClaim
+             (collectiveProposition
+                { rawRealizationId = ClaimId " "
+                , rawCollectiveFitEvidence = CollectiveFitEvidenceRef ""
+                })
          ])
 
 independentErrorAccumulationTest :: Assertion
 independentErrorAccumulationTest =
   withCollectiveSemanticModel missingSecondContributionGraph $ \semantic ->
     assertCollectiveErrors
-      [ UnknownCollectiveParticipant
-          (ClaimId "malformed-candidate")
-          CollectiveContributor
-          missingId
-      , NonStrategyCollectiveParticipant
-          (ClaimId "malformed-candidate")
-          CollectiveContributor
-          ethosId
-          (ContextNodeKind Ethos)
-      , AssertedCollectiveRealizationIssue
+      [ CollectiveStructuralError
+          (UnknownCollectiveParticipant
+             (ClaimId "malformed-candidate")
+             CollectiveContributor
+             missingId)
+      , CollectiveStructuralError
+          (NonStrategyCollectiveParticipant
+             (ClaimId "malformed-candidate")
+             CollectiveContributor
+             ethosId
+             (ContextNodeKind Ethos))
+      , AssertedCollectiveIssue
           collectiveClaimId
           (MissingContributorContribution contributorTwoId strategyId)
-      , AssertedCollectiveRealizationIssue
+      , AssertedCollectiveIssue
           collectiveClaimId
           (UncoveredTargetAction strategyActionId)
       ]
       (validateCollectiveStrategyRealizations
          semantic
          [completeFit]
-         [ candidateCollective
-             { rawRealizationId = ClaimId "malformed-candidate"
-             , rawContributors = [missingId, ethosId]
-             }
+         [ candidateClaim
+             (collectiveProposition
+                { rawRealizationId = ClaimId "malformed-candidate"
+                , rawContributors = [missingId, ethosId]
+                })
          , assertedCollective
          ])
 
@@ -440,18 +527,20 @@ collectiveClaimId = ClaimId "collective-realization"
 fitEvidenceRef :: CollectiveFitEvidenceRef
 fitEvidenceRef = CollectiveFitEvidenceRef "collective-fit"
 
-assertedCollective :: RawCollectiveStrategyRealization
-assertedCollective =
+collectiveProposition :: RawCollectiveStrategyRealization
+collectiveProposition =
   RawCollectiveStrategyRealization
     { rawRealizationId = collectiveClaimId
     , rawContributors = [contributorOneId, contributorTwoId]
     , rawTarget = strategyId
     , rawCollectiveFitEvidence = fitEvidenceRef
-    , rawCommitment = Asserted
     }
 
-candidateCollective :: RawCollectiveStrategyRealization
-candidateCollective = assertedCollective {rawCommitment = Candidate}
+assertedCollective :: Claim RawCollectiveStrategyRealization
+assertedCollective = assertedClaim collectiveProposition
+
+candidateCollective :: Claim RawCollectiveStrategyRealization
+candidateCollective = candidateClaim collectiveProposition
 
 completeFit :: RawCollectiveFitEvidence
 completeFit =

@@ -183,16 +183,7 @@ $(assertExactArgumentConstructors
         , "MissingStrategyCoherence"
         ])
     , ( 'Diagnostic.collectiveRealizationErrorSpec
-      , [ "EmptyCollectiveRealizationClaimId"
-        , "DuplicateCollectiveRealizationClaimId"
-        , "EmptyCollectiveFitEvidenceReference"
-        , "TooFewCollectiveContributors"
-        , "DuplicateCollectiveContributor"
-        , "CollectiveContributorIsTarget"
-        , "UnknownCollectiveParticipant"
-        , "NonStrategyCollectiveParticipant"
-        , "AssertedCollectiveRealizationIssue"
-        ])
+      , ["CollectiveStructuralError", "AssertedCollectiveIssue"])
     , ( 'Diagnostic.traceabilityDefectSpec
       , [ "NoIntervention"
         , "InterventionWithoutNeed"

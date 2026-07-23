@@ -68,8 +68,8 @@ collectiveFacts environment = concatMap facts observations
               ]
             _ -> []
 
--- | Enumerate only globally well-formed native collective claims.
-collectiveRawClaims :: Environment -> [RawCollectiveStrategyRealization]
+-- | Enumerate globally well-formed native collective claims with commitment.
+collectiveRawClaims :: Environment -> [Claim RawCollectiveStrategyRealization]
 collectiveRawClaims =
   foldr
     (\observation rest ->
@@ -111,7 +111,7 @@ partialViewFinding environment observation =
                 (amxElementLocation
                    (selectedViewElement (environmentSelectedView environment)))
                 (PartialCollectiveView
-                   (claimIdText (rawRealizationId claim))
+                   (claimIdText (rawRealizationId (claimedProposition claim)))
                    shown
                    total)
           }

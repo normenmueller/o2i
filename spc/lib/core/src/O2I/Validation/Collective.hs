@@ -12,6 +12,7 @@ module O2I.Validation.Collective
   , CollectiveParticipantRole(..)
   , CollectiveFitDimension(..)
   , CollectiveStrategyRealizationIssue(..)
+  , CollectiveStrategyRealizationStructuralError(..)
   , CollectiveStrategyRealizationError(..)
   , CollectiveStrategyRealization
   , CandidateCollectiveStrategyRealization
@@ -82,13 +83,14 @@ data RawCollectiveFitEvidence = RawCollectiveFitEvidence
   , rawViableInteractionEvidence :: [Text]
   } deriving (Eq, Show)
 
--- | Unchecked collective Strategy-realization claim.
+-- | Unchecked collective Strategy-realization proposition.
+--
+-- Commitment belongs exclusively to the enclosing 'Claim'.
 data RawCollectiveStrategyRealization = RawCollectiveStrategyRealization
   { rawRealizationId :: ClaimId
   , rawContributors :: [RawNodeId]
   , rawTarget :: RawNodeId
   , rawCollectiveFitEvidence :: CollectiveFitEvidenceRef
-  , rawCommitment :: Commitment
   } deriving (Eq, Show)
 
 -- | Participant position used by precise typing diagnostics.
@@ -127,8 +129,11 @@ data CollectiveStrategyRealizationIssue
   | MissingTargetStrategyFormulation RawNodeId
   deriving (Eq, Show)
 
--- | Fatal structural defect or Asserted semantic deficiency.
-data CollectiveStrategyRealizationError
+-- | Fatal structural defect of a collective proposition.
+--
+-- Structural validity is independent of commitment: Candidate and Asserted
+-- claims must satisfy the same identity, topology, and participant contracts.
+data CollectiveStrategyRealizationStructuralError
   = EmptyCollectiveRealizationClaimId
   | DuplicateCollectiveRealizationClaimId ClaimId
   | EmptyCollectiveFitEvidenceReference ClaimId
@@ -141,9 +146,16 @@ data CollectiveStrategyRealizationError
       CollectiveParticipantRole
       RawNodeId
       NodeKindValue
-  | AssertedCollectiveRealizationIssue
-      ClaimId
-      CollectiveStrategyRealizationIssue
+  deriving (Eq, Show)
+
+-- | Fatal structural defect or Asserted semantic deficiency.
+--
+-- A structurally valid Candidate is represented in the successful assessment,
+-- never as an error. Its semantic issues remain diagnostic information because
+-- Candidates cannot construct semantic witnesses.
+data CollectiveStrategyRealizationError
+  = CollectiveStructuralError CollectiveStrategyRealizationStructuralError
+  | AssertedCollectiveIssue ClaimId CollectiveStrategyRealizationIssue
   deriving (Eq, Show)
 
 -- | Internal representation with at least two values by construction.
@@ -162,7 +174,7 @@ data CollectiveStrategyRealization =
 -- | Opaque diagnostic assessment of one excluded Candidate claim.
 data CandidateCollectiveStrategyRealization =
   CandidateCollectiveStrategyRealization
-    RawCollectiveStrategyRealization
+    (Claim RawCollectiveStrategyRealization)
     [CollectiveStrategyRealizationIssue]
 
 -- | Opaque result containing validated assertions and excluded candidates.
@@ -173,7 +185,7 @@ data CollectiveStrategyRealizationAssessment =
 
 data StructurallyValidCollective =
   StructurallyValidCollective
-    RawCollectiveStrategyRealization
+    (Claim RawCollectiveStrategyRealization)
     (AtLeastTwo (ContextRef 'Strategy))
     (ContextRef 'Strategy)
 
@@ -191,7 +203,7 @@ data SemanticEvaluation =
 validateCollectiveStrategyRealizations ::
      SemanticallyValidModel
   -> [RawCollectiveFitEvidence]
-  -> [RawCollectiveStrategyRealization]
+  -> [Claim RawCollectiveStrategyRealization]
   -> Validation
        (NonEmpty CollectiveStrategyRealizationError)
        CollectiveStrategyRealizationAssessment
@@ -205,8 +217,10 @@ validateCollectiveStrategyRealizations semantic fitEvidence claims =
            (mapMaybe candidateAssessment evaluations))
   where
     identityErrors =
-      [ DuplicateCollectiveRealizationClaimId identifier
-      | identifier <- duplicates (map rawRealizationId claims)
+      [ CollectiveStructuralError
+        (DuplicateCollectiveRealizationClaimId identifier)
+      | identifier <-
+          duplicates (map (rawRealizationId . claimedProposition) claims)
       ]
     structuralValidation = validateCollectiveStructure (modelGraph semantic)
     structuralResults = map structuralValidation claims
@@ -280,9 +294,10 @@ collectiveContributionEvidence ::
 collectiveContributionEvidence (CollectiveStrategyRealization _ _ _ _ evidence) =
   evidence
 
--- | Read the raw Candidate claim retained for diagnostics.
+-- | Read the commitment-bearing Candidate claim retained for diagnostics.
 candidateCollectiveClaim ::
-     CandidateCollectiveStrategyRealization -> RawCollectiveStrategyRealization
+     CandidateCollectiveStrategyRealization
+  -> Claim RawCollectiveStrategyRealization
 candidateCollectiveClaim (CandidateCollectiveStrategyRealization claim _) =
   claim
 
@@ -295,13 +310,13 @@ candidateCollectiveIssues (CandidateCollectiveStrategyRealization _ issues) =
 
 validateCollectiveStructure ::
      WellFormedGraph
-  -> RawCollectiveStrategyRealization
+  -> Claim RawCollectiveStrategyRealization
   -> Validation
        (NonEmpty CollectiveStrategyRealizationError)
        StructurallyValidCollective
 validateCollectiveStructure graph claim =
   case NonEmpty.nonEmpty errors of
-    Just failures -> Failure failures
+    Just failures -> Failure (fmap CollectiveStructuralError failures)
     Nothing ->
       case distinctContributors of
         first:second:rest ->
@@ -313,16 +328,20 @@ validateCollectiveStructure graph claim =
                   (mkContextRef second)
                   (map mkContextRef rest))
                (mkContextRef target))
-        _ -> Failure (TooFewCollectiveContributors identifier :| [])
+        _ ->
+          Failure
+            (CollectiveStructuralError (TooFewCollectiveContributors identifier)
+               :| [])
   where
-    identifier = rawRealizationId claim
-    contributors = rawContributors claim
+    proposition = claimedProposition claim
+    identifier = rawRealizationId proposition
+    contributors = rawContributors proposition
     distinctContributors = stableDistinct contributors
-    target = rawTarget claim
+    target = rawTarget proposition
     errors =
       [EmptyCollectiveRealizationClaimId | blankClaimId identifier]
         ++ [ EmptyCollectiveFitEvidenceReference identifier
-           | blankFitReference (rawCollectiveFitEvidence claim)
+           | blankFitReference (rawCollectiveFitEvidence proposition)
            ]
         ++ [ TooFewCollectiveContributors identifier
            | length distinctContributors < 2
@@ -343,7 +362,7 @@ participantErrors ::
   -> ClaimId
   -> CollectiveParticipantRole
   -> RawNodeId
-  -> [CollectiveStrategyRealizationError]
+  -> [CollectiveStrategyRealizationStructuralError]
 participantErrors graph claim role participant =
   case lookupNode graph participant of
     Nothing -> [UnknownCollectiveParticipant claim role participant]
@@ -365,7 +384,7 @@ evaluateCollective ::
 evaluateCollective semantic fitEvidence structural =
   SemanticEvaluation structural issues contributionEvidence
   where
-    claim = structurallyValidClaim structural
+    claim = claimedProposition (structurallyValidClaim structural)
     contributors = structurallyValidContributorIds structural
     target = contextRefId (structurallyValidTarget structural)
     contributionEvidence =
@@ -401,27 +420,30 @@ evaluateCollective semantic fitEvidence structural =
 
 evaluationErrors :: SemanticEvaluation -> [CollectiveStrategyRealizationError]
 evaluationErrors (SemanticEvaluation structural issues _)
-  | rawCommitment claim == Asserted =
-    map (AssertedCollectiveRealizationIssue (rawRealizationId claim)) issues
+  | claimCommitment claim == Asserted =
+    map
+      (AssertedCollectiveIssue (rawRealizationId (claimedProposition claim)))
+      issues
   | otherwise = []
   where
     claim = structurallyValidClaim structural
 
 assertedWitness :: SemanticEvaluation -> Maybe CollectiveStrategyRealization
 assertedWitness (SemanticEvaluation structural issues evidence)
-  | rawCommitment claim == Asserted
+  | claimCommitment claim == Asserted
   , null issues
   , Just validatedEvidence <- traverse requireEvidence evidence =
     Just
       (CollectiveStrategyRealization
-         (rawRealizationId claim)
+         (rawRealizationId proposition)
          (structurallyValidContributors structural)
          (structurallyValidTarget structural)
-         (rawCollectiveFitEvidence claim)
+         (rawCollectiveFitEvidence proposition)
          validatedEvidence)
   | otherwise = Nothing
   where
     claim = structurallyValidClaim structural
+    proposition = claimedProposition claim
     requireEvidence (contributor, Just witnesses) =
       Just (contributor, witnesses)
     requireEvidence (_, Nothing) = Nothing
@@ -429,7 +451,7 @@ assertedWitness (SemanticEvaluation structural issues evidence)
 candidateAssessment ::
      SemanticEvaluation -> Maybe CandidateCollectiveStrategyRealization
 candidateAssessment (SemanticEvaluation structural issues _)
-  | rawCommitment claim == Candidate =
+  | claimCommitment claim == Candidate =
     Just (CandidateCollectiveStrategyRealization claim issues)
   | otherwise = Nothing
   where
@@ -598,7 +620,7 @@ coveredBy relation target =
          && rawEdgeTo edge == target)
 
 structurallyValidClaim ::
-     StructurallyValidCollective -> RawCollectiveStrategyRealization
+     StructurallyValidCollective -> Claim RawCollectiveStrategyRealization
 structurallyValidClaim (StructurallyValidCollective claim _ _) = claim
 
 structurallyValidContributors ::

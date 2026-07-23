@@ -32,7 +32,6 @@ module O2I.Inspection.Diagnostic.Internal
   , candidatePropositionSpec
   , semanticDefectSpec
   , collectiveRealizationErrorSpec
-  , candidateCollectiveRealizationErrorSpec
   , candidateCollectiveRealizationIssueSpec
   , candidateCollectiveRealizationSpec
   , traceabilityDefectSpec
@@ -669,6 +668,15 @@ collectiveRealizationErrorSpec ::
      CollectiveStrategyRealizationError -> DiagnosticSpec
 collectiveRealizationErrorSpec defect =
   case defect of
+    CollectiveStructuralError structural ->
+      collectiveRealizationStructuralErrorSpec structural
+    AssertedCollectiveIssue identifier issue ->
+      withClaim identifier (collectiveRealizationIssueSpec ErrorSeverity issue)
+
+collectiveRealizationStructuralErrorSpec ::
+     CollectiveStrategyRealizationStructuralError -> DiagnosticSpec
+collectiveRealizationStructuralErrorSpec defect =
+  case defect of
     EmptyCollectiveRealizationClaimId ->
       collective "claim-id-empty" "A collective claim identifier is empty." []
     DuplicateCollectiveRealizationClaimId identifier ->
@@ -713,17 +721,9 @@ collectiveRealizationErrorSpec defect =
         , nodeSubject participant
         , nodeKindSubject "node-kind" kind
         ]
-    AssertedCollectiveRealizationIssue identifier issue ->
-      withClaim identifier (collectiveRealizationIssueSpec ErrorSeverity issue)
   where
     collective suffix message subjects =
       coreSpec ("o2i.semantics.collective." <> suffix) message subjects
-
--- | Candidate structural failures remain visible as warnings.
-candidateCollectiveRealizationErrorSpec ::
-     CollectiveStrategyRealizationError -> DiagnosticSpec
-candidateCollectiveRealizationErrorSpec defect =
-  (collectiveRealizationErrorSpec defect) {specSeverity = WarningSeverity}
 
 -- | Candidate semantic deficiencies remain visible as warnings.
 candidateCollectiveRealizationIssueSpec ::

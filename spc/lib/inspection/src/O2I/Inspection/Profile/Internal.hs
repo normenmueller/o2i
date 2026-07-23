@@ -132,7 +132,7 @@ data IndexedProfileFact location
   | IndexedEdge OccurrenceId (Claim RawEdge) location
   | IndexedCollectiveStrategyRealization
       OccurrenceId
-      RawCollectiveStrategyRealization
+      (Claim RawCollectiveStrategyRealization)
       [OccurrenceId]
       OccurrenceId
       location
@@ -162,7 +162,7 @@ indexEdge = IndexedEdge
 -- | Index one collective claim and its resolved participant occurrences.
 indexCollectiveStrategyRealization ::
      OccurrenceId
-  -> RawCollectiveStrategyRealization
+  -> Claim RawCollectiveStrategyRealization
   -> [OccurrenceId]
   -> OccurrenceId
   -> location

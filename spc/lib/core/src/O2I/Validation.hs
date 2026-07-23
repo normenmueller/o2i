@@ -29,6 +29,7 @@ module O2I.Validation
   , CollectiveParticipantRole(..)
   , CollectiveFitDimension(..)
   , CollectiveStrategyRealizationIssue(..)
+  , CollectiveStrategyRealizationStructuralError(..)
   , CollectiveStrategyRealizationError(..)
   , CollectiveStrategyRealization
   , CandidateCollectiveStrategyRealization

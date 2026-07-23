@@ -124,6 +124,7 @@ module O2I
   , CollectiveParticipantRole(..)
   , CollectiveFitDimension(..)
   , CollectiveStrategyRealizationIssue(..)
+  , CollectiveStrategyRealizationStructuralError(..)
   , CollectiveStrategyRealizationError(..)
   , CollectiveStrategyRealization
   , CandidateCollectiveStrategyRealization

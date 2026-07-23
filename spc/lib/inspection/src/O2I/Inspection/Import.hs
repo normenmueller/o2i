@@ -45,7 +45,7 @@ data ImportedGraph = ImportedGraph
 data ImportedCollectiveClaim =
   ImportedCollectiveClaim
     OccurrenceId
-    RawCollectiveStrategyRealization
+    (Claim RawCollectiveStrategyRealization)
     SourceLocation
 
 -- | Build the format-neutral graph only from a successful closure witness.
@@ -98,9 +98,9 @@ importedCollectiveOccurrence :: ImportedCollectiveClaim -> OccurrenceId
 importedCollectiveOccurrence (ImportedCollectiveClaim occurrence _ _) =
   occurrence
 
--- | Read the raw collective claim imported from one occurrence.
+-- | Read the commitment-bearing collective claim imported from one occurrence.
 importedCollectiveClaim ::
-     ImportedCollectiveClaim -> RawCollectiveStrategyRealization
+     ImportedCollectiveClaim -> Claim RawCollectiveStrategyRealization
 importedCollectiveClaim (ImportedCollectiveClaim _ claim _) = claim
 
 -- | Read the source location of an imported collective claim.
@@ -147,7 +147,8 @@ factSubjects included fact =
         [(("edge", rawEdgeText (claimedProposition claim)), [location])]
     IndexedCollectiveStrategyRealization occurrence claim _ _ location
       | included occurrence ->
-        [ ( ("collective-claim", claimIdText (rawRealizationId claim))
+        [ ( ( "collective-claim"
+            , claimIdText (rawRealizationId (claimedProposition claim)))
           , [location])
         ]
     IndexedOccurrence _ _ -> []

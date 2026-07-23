@@ -84,7 +84,7 @@ data FactTemplate
   | EdgeClaimTemplate OccurrenceId (Claim RawEdge)
   | CollectiveTemplate
       OccurrenceId
-      RawCollectiveStrategyRealization
+      (Claim RawCollectiveStrategyRealization)
       [OccurrenceId]
       OccurrenceId
   | SeedTemplate OccurrenceId OccurrenceId
@@ -161,8 +161,14 @@ tests =
         "collective Candidate is warned, excluded, and keeps Draft maturity"
         candidateCollectiveInspectionTest
     , testCase
-        "malformed collective Candidate retains structural diagnostics"
+        "collective Candidate semantic issues remain warnings"
+        candidateCollectiveIssueInspectionTest
+    , testCase
+        "malformed collective Candidate fails Semantics"
         malformedCandidateCollectiveInspectionTest
+    , testCase
+        "duplicate collective Candidate identities fail Semantics"
+        duplicateCandidateCollectiveInspectionTest
     , testCase
         "asserted collective semantic defects fail Semantics"
         assertedCollectiveFailureInspectionTest
@@ -1137,9 +1143,7 @@ collectiveReasons =
 candidateCollectiveInspectionTest :: Assertion
 candidateCollectiveInspectionTest = do
   report <-
-    completedReport
-      (runCollectiveInspection
-         assertedCollectiveClaim {rawCommitment = Candidate})
+    completedReport (runCollectiveInspection candidateCollectiveInspectionClaim)
   reportMaturity report @?= Just Draft
   semanticsState report @?= StageUnavailable
   diagnosticCodes report @?= ["o2i.claim.collective-candidate-excluded"]
@@ -1148,21 +1152,60 @@ candidateCollectiveInspectionTest = do
     Just assessment ->
       length (semanticCollectiveStrategyRealizations assessment) @?= 0
 
+candidateCollectiveIssueInspectionTest :: Assertion
+candidateCollectiveIssueInspectionTest = do
+  report <-
+    completedReport
+      (runCollectiveInspectionWithFit candidateCollectiveInspectionClaim Absent)
+  reportMaturity report @?= Just Draft
+  semanticsState report @?= StageUnavailable
+  diagnosticCodes report
+    @?= [ "o2i.claim.collective-candidate-excluded"
+        , "o2i.semantics.collective.fit-evidence-not-found"
+        ]
+  map diagnosticSeverity (diagnosticsList (reportDiagnostics report))
+    @?= [WarningSeverity, WarningSeverity]
+
 malformedCandidateCollectiveInspectionTest :: Assertion
 malformedCandidateCollectiveInspectionTest = do
   report <-
     completedReport
       (runCollectiveInspection
-         assertedCollectiveClaim
-           { rawCommitment = Candidate
-           , rawContributors = [collectiveContributorOneId]
-           })
+         (candidateClaim
+            (collectiveInspectionProposition
+               {rawContributors = [collectiveContributorOneId]})))
   reportMaturity report @?= Just Draft
-  semanticsState report @?= StageUnavailable
-  diagnosticCodes report
-    @?= [ "o2i.claim.collective-candidate-excluded"
-        , "o2i.semantics.collective.contributors-too-few"
-        ]
+  semanticsState report @?= StageFailed
+  diagnosticCodes report @?= ["o2i.semantics.collective.contributors-too-few"]
+  map diagnosticSeverity (diagnosticsList (reportDiagnostics report))
+    @?= [ErrorSeverity]
+
+duplicateCandidateCollectiveInspectionTest :: Assertion
+duplicateCandidateCollectiveInspectionTest = do
+  report <-
+    completedReport
+      (runCollectiveInspectionWithFacts
+         (collectiveInspectionFacts candidateCollectiveInspectionClaim
+            ++ [ CollectiveTemplate
+                   duplicateCollectiveClaimOccurrence
+                   candidateCollectiveInspectionClaim
+                   [ collectiveNodeOccurrence collectiveContributorOneId
+                   , collectiveNodeOccurrence collectiveContributorTwoId
+                   ]
+                   (collectiveNodeOccurrence completeStrategyId)
+               , SeedTemplate
+                   completePresentation
+                   duplicateCollectiveClaimOccurrence
+               ])
+         (Supplied
+            (sourcedFromDocument
+               collectiveFitSourceDocument
+               (CollectiveFitEvidenceBundle [collectiveInspectionFit]))))
+  reportMaturity report @?= Just Draft
+  semanticsState report @?= StageFailed
+  diagnosticCodes report @?= ["o2i.semantics.collective.claim-id-duplicate"]
+  map diagnosticSeverity (diagnosticsList (reportDiagnostics report))
+    @?= [ErrorSeverity]
 
 assertedCollectiveFailureInspectionTest :: Assertion
 assertedCollectiveFailureInspectionTest = do
@@ -1868,7 +1911,8 @@ completeStrategyFormulation =
     , rawFormulationFitRationale = "actions substantiate intent" :| []
     }
 
-runCollectiveInspection :: RawCollectiveStrategyRealization -> InspectionOutcome
+runCollectiveInspection ::
+     Claim RawCollectiveStrategyRealization -> InspectionOutcome
 runCollectiveInspection claim =
   runCollectiveInspectionWithFit
     claim
@@ -1878,17 +1922,21 @@ runCollectiveInspection claim =
           (CollectiveFitEvidenceBundle [collectiveInspectionFit])))
 
 runCollectiveInspectionWithFit ::
-     RawCollectiveStrategyRealization
+     Claim RawCollectiveStrategyRealization
   -> Availability CollectiveFitEvidenceBundle
   -> InspectionOutcome
 runCollectiveInspectionWithFit claim fitAvailability =
+  runCollectiveInspectionWithFacts
+    (collectiveInspectionFacts claim)
+    fitAvailability
+
+runCollectiveInspectionWithFacts ::
+     [FactTemplate]
+  -> Availability CollectiveFitEvidenceBundle
+  -> InspectionOutcome
+runCollectiveInspectionWithFacts facts fitAvailability =
   runAdapterWithInputs
-    (testAdapter
-       DecodeSucceeds
-       ViewSucceeds
-       RootSucceeds
-       (collectiveInspectionFacts claim)
-       [])
+    (testAdapter DecodeSucceeds ViewSucceeds RootSucceeds facts [])
     noInputs
       { strategyInput =
           Supplied
@@ -1898,16 +1946,17 @@ runCollectiveInspectionWithFit claim fitAvailability =
       , collectiveFitInput = fitAvailability
       }
 
-collectiveInspectionFacts :: RawCollectiveStrategyRealization -> [FactTemplate]
+collectiveInspectionFacts ::
+     Claim RawCollectiveStrategyRealization -> [FactTemplate]
 collectiveInspectionFacts claim =
   graphFacts collectiveInspectionGraph
     ++ [ CollectiveTemplate
            collectiveClaimOccurrence
            claim
-           [ nodeOccurrence collectiveContributorOneId
-           , nodeOccurrence collectiveContributorTwoId
+           [ collectiveNodeOccurrence collectiveContributorOneId
+           , collectiveNodeOccurrence collectiveContributorTwoId
            ]
-           (nodeOccurrence completeStrategyId)
+           (collectiveNodeOccurrence completeStrategyId)
        , SeedTemplate completePresentation collectiveClaimOccurrence
        , OccurrenceTemplate collectiveSegmentOccurrence
        , DependencyTemplate
@@ -1919,15 +1968,16 @@ collectiveInspectionFacts claim =
            collectiveClaimOccurrence
            PersistedCollectiveRealizationSegment
        ]
-  where
-    nodeOccurrence identifier =
-      case [ occurrence
-           | (index, node) <- zip [(1 :: Int) ..] collectiveInspectionNodes
-           , testRawNodeIdentifier node == identifier
-           , let occurrence = indexedOccurrence "node" index
-           ] of
-        occurrence:_ -> occurrence
-        [] -> error "collective fixture participant is absent"
+
+collectiveNodeOccurrence :: RawNodeId -> OccurrenceId
+collectiveNodeOccurrence identifier =
+  case [ occurrence
+       | (index, node) <- zip [(1 :: Int) ..] collectiveInspectionNodes
+       , testRawNodeIdentifier node == identifier
+       , let occurrence = indexedOccurrence "node" index
+       ] of
+    occurrence:_ -> occurrence
+    [] -> error "collective fixture participant is absent"
 
 collectiveInspectionGraph :: RawGraph
 collectiveInspectionGraph =
@@ -2017,15 +2067,21 @@ collectiveInspectionFormulations =
 collectiveInspectionClaimId :: ClaimId
 collectiveInspectionClaimId = ClaimId "inspection-collective"
 
-assertedCollectiveClaim :: RawCollectiveStrategyRealization
-assertedCollectiveClaim =
+collectiveInspectionProposition :: RawCollectiveStrategyRealization
+collectiveInspectionProposition =
   RawCollectiveStrategyRealization
     { rawRealizationId = collectiveInspectionClaimId
     , rawContributors = [collectiveContributorOneId, collectiveContributorTwoId]
     , rawTarget = completeStrategyId
     , rawCollectiveFitEvidence = collectiveInspectionFitRef
-    , rawCommitment = Asserted
     }
+
+assertedCollectiveClaim :: Claim RawCollectiveStrategyRealization
+assertedCollectiveClaim = assertedClaim collectiveInspectionProposition
+
+candidateCollectiveInspectionClaim :: Claim RawCollectiveStrategyRealization
+candidateCollectiveInspectionClaim =
+  candidateClaim collectiveInspectionProposition
 
 collectiveInspectionFit :: RawCollectiveFitEvidence
 collectiveInspectionFit =
@@ -2070,6 +2126,9 @@ contributorId prefix suffix =
 
 collectiveClaimOccurrence :: OccurrenceId
 collectiveClaimOccurrence = testOccurrence "collective-claim"
+
+duplicateCollectiveClaimOccurrence :: OccurrenceId
+duplicateCollectiveClaimOccurrence = testOccurrence "collective-claim-duplicate"
 
 collectiveSegmentOccurrence :: OccurrenceId
 collectiveSegmentOccurrence = testOccurrence "collective-segment"

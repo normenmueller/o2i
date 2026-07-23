@@ -36,7 +36,7 @@ data CollectiveObservation = CollectiveObservation
   , observedOutgoing :: [AMXElement]
   , observedContributors :: [AMXElement]
   , observedTargets :: [AMXElement]
-  , observedRawClaim :: Maybe RawCollectiveStrategyRealization
+  , observedRawClaim :: Maybe (Claim RawCollectiveStrategyRealization)
   , observedDefects :: [Located SourcePosition AMXProfileDefect]
   }
 
@@ -121,7 +121,7 @@ rawClaim ::
   -> [AMXElement]
   -> [AMXElement]
   -> AMXElement
-  -> Maybe RawCollectiveStrategyRealization
+  -> Maybe (Claim RawCollectiveStrategyRealization)
 rawClaim identifier contributors targets junction = do
   claimIdentifier <- identifier
   contributorIds <- traverse (fmap RawNodeId . elementId) contributors
@@ -130,13 +130,14 @@ rawClaim identifier contributors targets junction = do
   commitment <- collectiveCommitment junction
   fitReference <- singlePropertyValue collectiveFitEvidenceKey junction
   pure
-    RawCollectiveStrategyRealization
-      { rawRealizationId = ClaimId claimIdentifier
-      , rawContributors = contributorIds
-      , rawTarget = targetId
-      , rawCollectiveFitEvidence = CollectiveFitEvidenceRef fitReference
-      , rawCommitment = commitment
-      }
+    (claimWithCommitment
+       commitment
+       RawCollectiveStrategyRealization
+         { rawRealizationId = ClaimId claimIdentifier
+         , rawContributors = contributorIds
+         , rawTarget = targetId
+         , rawCollectiveFitEvidence = CollectiveFitEvidenceRef fitReference
+         })
 
 metadataDefects ::
      Environment -> AMXElement -> [Located SourcePosition AMXProfileDefect]
