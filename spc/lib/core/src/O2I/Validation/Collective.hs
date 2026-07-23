@@ -17,6 +17,9 @@ module O2I.Validation.Collective
   , CollectiveStrategyRealization
   , CandidateCollectiveStrategyRealization
   , CollectiveStrategyRealizationAssessment
+  , ValidatedCollectiveStrategyRealizations
+  , assessCollectiveStrategyRealizations
+  , collectiveStrategyRealizationErrors
   , validateCollectiveStrategyRealizations
   , collectiveStrategyRealizations
   , candidateCollectiveStrategyRealizations
@@ -177,11 +180,20 @@ data CandidateCollectiveStrategyRealization =
     (Claim RawCollectiveStrategyRealization)
     [CollectiveStrategyRealizationIssue]
 
--- | Opaque result containing validated assertions and excluded candidates.
+-- | Opaque total assessment of every supplied collective claim.
+--
+-- Fatal errors, valid per-claim Asserted evaluations, and structurally valid
+-- Candidate assessments coexist in source order. Aggregate witnesses are
+-- available only through 'validateCollectiveStrategyRealizations'.
 data CollectiveStrategyRealizationAssessment =
   CollectiveStrategyRealizationAssessment
-    [CollectiveStrategyRealization]
+    [CollectiveStrategyRealizationError]
+    [SemanticEvaluation]
     [CandidateCollectiveStrategyRealization]
+
+-- | Opaque aggregate of collective witnesses admitted as one valid set.
+newtype ValidatedCollectiveStrategyRealizations =
+  ValidatedCollectiveStrategyRealizations [CollectiveStrategyRealization]
 
 data StructurallyValidCollective =
   StructurallyValidCollective
@@ -195,26 +207,21 @@ data SemanticEvaluation =
     [CollectiveStrategyRealizationIssue]
     [(ContextRef 'Strategy, Maybe (NonEmpty MacroEvidenceWitness))]
 
--- | Validate collective claims against one exact semantic model.
+-- | Assess every collective claim against one exact semantic model.
 --
--- Structural defects fail for either commitment. Asserted semantic issues are
--- accumulated as errors. Candidate semantic issues are retained for
--- diagnostics, while Candidate claims never construct validated witnesses.
-validateCollectiveStrategyRealizations ::
+-- Structural defects and Asserted semantic deficiencies accumulate as fatal
+-- errors. Independent structurally valid Candidates remain observable with
+-- their semantic issues. Candidates never construct validated witnesses.
+assessCollectiveStrategyRealizations ::
      SemanticallyValidModel
   -> [RawCollectiveFitEvidence]
   -> [Claim RawCollectiveStrategyRealization]
-  -> Validation
-       (NonEmpty CollectiveStrategyRealizationError)
-       CollectiveStrategyRealizationAssessment
-validateCollectiveStrategyRealizations semantic fitEvidence claims =
-  case NonEmpty.nonEmpty errors of
-    Just failures -> Failure failures
-    Nothing ->
-      Success
-        (CollectiveStrategyRealizationAssessment
-           (mapMaybe assertedWitness evaluations)
-           (mapMaybe candidateAssessment evaluations))
+  -> CollectiveStrategyRealizationAssessment
+assessCollectiveStrategyRealizations semantic fitEvidence claims =
+  CollectiveStrategyRealizationAssessment
+    errors
+    evaluations
+    (mapMaybe candidateAssessment evaluations)
   where
     evidence = buildMacroEvidenceContext semantic
     identityErrors =
@@ -235,22 +242,51 @@ validateCollectiveStrategyRealizations semantic fitEvidence claims =
         ++ structuralErrors
         ++ concatMap evaluationErrors evaluations
 
+-- | Enumerate every fatal error without discarding independent Candidates.
+collectiveStrategyRealizationErrors ::
+     CollectiveStrategyRealizationAssessment
+  -> [CollectiveStrategyRealizationError]
+collectiveStrategyRealizationErrors (CollectiveStrategyRealizationAssessment errors _ _) =
+  errors
+
+-- | Validate one total assessment as an indivisible aggregate.
+--
+-- A fatal error prevents all aggregate witness projection. Candidate
+-- assessments remain diagnostic-only and cannot construct witnesses.
+validateCollectiveStrategyRealizations ::
+     CollectiveStrategyRealizationAssessment
+  -> Validation
+       (NonEmpty CollectiveStrategyRealizationError)
+       ValidatedCollectiveStrategyRealizations
+validateCollectiveStrategyRealizations assessment =
+  case NonEmpty.nonEmpty (collectiveStrategyRealizationErrors assessment) of
+    Just failures -> Failure failures
+    Nothing ->
+      Success
+        (ValidatedCollectiveStrategyRealizations
+           (mapMaybe assertedWitness (assessedEvaluations assessment)))
+
+assessedEvaluations ::
+     CollectiveStrategyRealizationAssessment -> [SemanticEvaluation]
+assessedEvaluations (CollectiveStrategyRealizationAssessment _ evaluations _) =
+  evaluations
+
 -- | Enumerate validated Asserted collective realizations in source order.
 collectiveStrategyRealizations ::
-     CollectiveStrategyRealizationAssessment -> [CollectiveStrategyRealization]
-collectiveStrategyRealizations (CollectiveStrategyRealizationAssessment realizations _) =
+     ValidatedCollectiveStrategyRealizations -> [CollectiveStrategyRealization]
+collectiveStrategyRealizations (ValidatedCollectiveStrategyRealizations realizations) =
   realizations
 
 -- | Enumerate excluded Candidate assessments in source order.
 candidateCollectiveStrategyRealizations ::
      CollectiveStrategyRealizationAssessment
   -> [CandidateCollectiveStrategyRealization]
-candidateCollectiveStrategyRealizations (CollectiveStrategyRealizationAssessment _ candidates) =
+candidateCollectiveStrategyRealizations (CollectiveStrategyRealizationAssessment _ _ candidates) =
   candidates
 
 -- | Find one validated collective realization by its unique claim identity.
 lookupCollectiveStrategyRealization ::
-     CollectiveStrategyRealizationAssessment
+     ValidatedCollectiveStrategyRealizations
   -> ClaimId
   -> Maybe CollectiveStrategyRealization
 lookupCollectiveStrategyRealization assessment identifier =
@@ -260,7 +296,7 @@ lookupCollectiveStrategyRealization assessment identifier =
 
 -- | Find validated collective realizations targeting one Strategy.
 collectiveRealizationsForTarget ::
-     CollectiveStrategyRealizationAssessment
+     ValidatedCollectiveStrategyRealizations
   -> ContextRef 'Strategy
   -> [CollectiveStrategyRealization]
 collectiveRealizationsForTarget assessment target =

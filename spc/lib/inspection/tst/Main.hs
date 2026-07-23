@@ -185,6 +185,9 @@ tests =
         "asserted collective semantic defects fail Semantics"
         assertedCollectiveFailureInspectionTest
     , testCase
+        "fatal collective errors retain independent Candidate warnings"
+        fatalCollectiveRetainsCandidateInspectionTest
+    , testCase
         "different existential profile types remain isolated"
         existentialAdapterTest
     , testCase "report JSON is stable and parseable" reportJsonTest
@@ -1407,9 +1410,12 @@ duplicateCandidateCollectiveInspectionTest = do
                (CollectiveFitEvidenceBundle [collectiveInspectionFit]))))
   reportMaturity report @?= Just Draft
   semanticsState report @?= StageFailed
-  diagnosticCodes report @?= ["o2i.semantics.collective.claim-id-duplicate"]
+  diagnosticCodes report
+    @?= [ "o2i.claim.collective-candidate-excluded"
+        , "o2i.semantics.collective.claim-id-duplicate"
+        ]
   map diagnosticSeverity (diagnosticsList (reportDiagnostics report))
-    @?= [ErrorSeverity]
+    @?= [WarningSeverity, ErrorSeverity]
 
 assertedCollectiveFailureInspectionTest :: Assertion
 assertedCollectiveFailureInspectionTest = do
@@ -1419,6 +1425,51 @@ assertedCollectiveFailureInspectionTest = do
   reportMaturity report @?= Just Draft
   semanticsState report @?= StageFailed
   diagnosticCodes report @?= ["o2i.semantics.collective.fit-evidence-not-found"]
+
+fatalCollectiveRetainsCandidateInspectionTest :: Assertion
+fatalCollectiveRetainsCandidateInspectionTest = do
+  let assertedReference = CollectiveFitEvidenceRef "missing-asserted-fit"
+      candidateReference = CollectiveFitEvidenceRef "missing-candidate-fit"
+      invalidAsserted =
+        assertedClaim
+          collectiveInspectionProposition
+            { rawRealizationId = ClaimId "invalid-asserted"
+            , rawCollectiveFitEvidence = assertedReference
+            }
+      diagnosticCandidate =
+        candidateClaim
+          collectiveInspectionProposition
+            { rawRealizationId = ClaimId "diagnostic-candidate"
+            , rawCollectiveFitEvidence = candidateReference
+            }
+      candidateOccurrence = testOccurrence "independent-candidate"
+      facts =
+        collectiveInspectionFacts invalidAsserted
+          ++ [ CollectiveTemplate
+                 candidateOccurrence
+                 diagnosticCandidate
+                 [ collectiveNodeOccurrence collectiveContributorOneId
+                 , collectiveNodeOccurrence collectiveContributorTwoId
+                 ]
+                 (collectiveNodeOccurrence completeStrategyId)
+             , SeedTemplate completePresentation candidateOccurrence
+             ]
+  report <- completedReport (runCollectiveInspectionWithFacts facts Absent)
+  reportMaturity report @?= Just Draft
+  semanticsState report @?= StageFailed
+  diagnosticCodes report
+    @?= [ "o2i.claim.collective-candidate-excluded"
+        , "o2i.semantics.collective.fit-evidence-not-found"
+        , "o2i.semantics.collective.fit-evidence-not-found"
+        ]
+  map diagnosticSeverity (diagnosticsList (reportDiagnostics report))
+    @?= [WarningSeverity, WarningSeverity, ErrorSeverity]
+  case reportSemanticAssessment report of
+    Nothing -> assertFailure "missing semantic assessment"
+    Just assessment ->
+      assertBool
+        "fatal collective assessment exposed aggregate witnesses"
+        (null (semanticCollectiveStrategyRealizations assessment))
 
 existentialAdapterTest :: Assertion
 existentialAdapterTest = do

@@ -34,6 +34,7 @@ module O2I.Validation
   , CollectiveStrategyRealization
   , CandidateCollectiveStrategyRealization
   , CollectiveStrategyRealizationAssessment
+  , ValidatedCollectiveStrategyRealizations
   , RawNeedQualificationProposal(..)
   , NeedQualificationSourceReference
   , NeedQualificationCandidate
@@ -139,6 +140,8 @@ module O2I.Validation
   , assessmentCandidatePropositions
   , contextElaboration
   , modelMaturity
+  , assessCollectiveStrategyRealizations
+  , collectiveStrategyRealizationErrors
   , validateCollectiveStrategyRealizations
   , collectiveStrategyRealizations
   , candidateCollectiveStrategyRealizations

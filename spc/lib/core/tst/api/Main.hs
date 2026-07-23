@@ -90,6 +90,7 @@ $(assertAbstractTypes
     , "Validation.CollectiveStrategyRealization"
     , "Validation.CandidateCollectiveStrategyRealization"
     , "Validation.CollectiveStrategyRealizationAssessment"
+    , "Validation.ValidatedCollectiveStrategyRealizations"
     , "Validation.NeedQualificationSourceReference"
     , "Validation.NeedQualificationCandidate"
     , "Validation.SemanticallyValidModel"
@@ -113,6 +114,8 @@ $(assertOrdinaryFunctions
     , 'Validation.assessmentCandidatePropositions
     , 'Validation.contextElaboration
     , 'Validation.modelMaturity
+    , 'Validation.assessCollectiveStrategyRealizations
+    , 'Validation.collectiveStrategyRealizationErrors
     , 'Validation.validateCollectiveStrategyRealizations
     , 'Validation.collectiveStrategyRealizations
     , 'Validation.candidateCollectiveStrategyRealizations
@@ -199,6 +202,7 @@ $(assertAbstractTypes
     , "O2I.CollectiveStrategyRealization"
     , "O2I.CandidateCollectiveStrategyRealization"
     , "O2I.CollectiveStrategyRealizationAssessment"
+    , "O2I.ValidatedCollectiveStrategyRealizations"
     , "O2I.NeedQualificationSourceReference"
     , "O2I.NeedQualificationCandidate"
     , "O2I.SemanticallyValidModel"
@@ -224,6 +228,8 @@ $(assertOrdinaryFunctions
     , 'O2I.assessmentCandidatePropositions
     , 'O2I.contextElaboration
     , 'O2I.modelMaturity
+    , 'O2I.assessCollectiveStrategyRealizations
+    , 'O2I.collectiveStrategyRealizationErrors
     , 'O2I.validateCollectiveStrategyRealizations
     , 'O2I.collectiveStrategyRealizations
     , 'O2I.candidateCollectiveStrategyRealizations

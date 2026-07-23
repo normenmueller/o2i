@@ -55,8 +55,8 @@ import Data.Maybe (catMaybes)
 import Data.Text (Text)
 import O2I
   ( CollectiveStrategyRealization
-  , CollectiveStrategyRealizationAssessment
   , Maturity(..)
+  , ValidatedCollectiveStrategyRealizations
   , collectiveStrategyRealizations
   )
 import O2I.Inspection.Adapter
@@ -184,7 +184,7 @@ data InspectionRequestInfo = InspectionRequestInfo
 data InspectionSemanticAssessment =
   InspectionSemanticAssessment
     Maturity
-    (Maybe CollectiveStrategyRealizationAssessment)
+    (Maybe ValidatedCollectiveStrategyRealizations)
 
 -- | State-indexed inspection report. Constructors are private to Inspection.
 data InspectionReport

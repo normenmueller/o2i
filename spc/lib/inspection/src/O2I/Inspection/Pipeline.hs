@@ -135,8 +135,8 @@ data CollectiveInspection = CollectiveInspection
   { inspectedCollectiveDiagnostics :: [Diagnostic]
   , inspectedCollectiveFatal :: Bool
   , inspectedCollectiveCandidates :: Bool
-  , inspectedCollectiveAssessment :: Maybe
-      CollectiveStrategyRealizationAssessment
+  , inspectedCollectiveValidated :: Maybe
+      ValidatedCollectiveStrategyRealizations
   }
 
 -- | Opaque binding of one traceable model to its exact readiness source.
@@ -512,7 +512,7 @@ inspectSemantics request binding viewResolution profile inputs closed =
                     semanticAssessment =
                       InspectionSemanticAssessment
                         maturity
-                        (inspectedCollectiveAssessment collective)
+                        (inspectedCollectiveValidated collective)
                     diagnostics = inspectedCollectiveDiagnostics collective
                  in if inspectedCollectiveFatal collective
                       then InspectionCompleted
@@ -590,7 +590,7 @@ inspectCollectiveSemantics closed sources witness semantic =
     { inspectedCollectiveDiagnostics = diagnostics
     , inspectedCollectiveFatal = not (null errors)
     , inspectedCollectiveCandidates = not (null candidates)
-    , inspectedCollectiveAssessment = assessment
+    , inspectedCollectiveValidated = validated
     }
   where
     importedClaims = importedCollectiveClaims (structurallyClosedImport closed)
@@ -600,17 +600,14 @@ inspectCollectiveSemantics closed sources witness semantic =
         []
         (collectiveFitEvidenceInput . sourcedValue)
         (witnessCollectiveFitInput witness)
-    validation =
-      validateCollectiveStrategyRealizations semantic fitEvidence claims
-    errors =
-      case validation of
-        Failure failures -> NonEmpty.toList failures
-        Success _ -> []
     assessment =
-      case validation of
+      assessCollectiveStrategyRealizations semantic fitEvidence claims
+    errors = collectiveStrategyRealizationErrors assessment
+    validated =
+      case validateCollectiveStrategyRealizations assessment of
         Failure _ -> Nothing
         Success result -> Just result
-    candidates = maybe [] candidateCollectiveStrategyRealizations assessment
+    candidates = candidateCollectiveStrategyRealizations assessment
     diagnostics =
       map
         (withSources . collectiveDiagnostic collectiveRealizationErrorSpec)
