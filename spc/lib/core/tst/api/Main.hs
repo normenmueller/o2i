@@ -69,6 +69,7 @@ $(assertAbstractTypes
 $(assertOrdinaryFunctions
     [ 'Graph.buildMacroFactIndex
     , 'Graph.macroClaims
+    , 'Graph.macroClaimsFor
     , 'Graph.macroDependencyEdge
     , 'Graph.macroScopeDependencies
     , 'Graph.graphNodes

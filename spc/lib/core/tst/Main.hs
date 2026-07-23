@@ -341,6 +341,27 @@ macroRuleTests =
     , testCase "kind-mismatched context endpoints do not form a claim"
         $ null (macroClaims kindMismatchedMacroIndex)
             @? "unexpected macro claim"
+    , testCase "claim buckets preserve duplicate occurrences and source order" $ do
+        let index =
+              buildMacroFactIndex
+                macroTestNodes
+                [(7 :: Int, macroTestClaim), (3, macroTestClaim)]
+            claims =
+              macroClaimsFor
+                index
+                macroEthosId
+                (FixedRelation GuidesMissionCode)
+                macroMissionId
+        map fst claims @?= [7, 3]
+    , testCase "claim keys resist endpoint and context-kind collisions" $ do
+        length (macroClaims collisionMacroIndex) @?= 1
+        length
+          (macroClaimsFor
+             collisionMacroIndex
+             macroEthosId
+             (FixedRelation GuidesMissionCode)
+             macroMissionId)
+          @?= 1
     , testCase "conservative discovery returns persisted premise occurrences"
         $ withOnlyMacroClaim baseMacroIndex
         $ \claim ->
@@ -415,6 +436,16 @@ kindMismatchedMacroIndex =
   buildMacroFactIndex
     [ (1, RawContextNode macroEthosId Ethos)
     , (2, RawContextNode macroMissionId Vision)
+    ]
+    [(1, macroTestClaim)]
+
+collisionMacroIndex :: MacroFactIndex Int Int
+collisionMacroIndex =
+  buildMacroFactIndex
+    [ (1, RawContextNode macroEthosId Ethos)
+    , (2, RawContextNode macroEthosId Vision)
+    , (3, RawContextNode macroMissionId Mission)
+    , (4, RawContextNode macroMissionId Need)
     ]
     [(1, macroTestClaim)]
 

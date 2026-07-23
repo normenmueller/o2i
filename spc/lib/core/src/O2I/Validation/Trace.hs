@@ -52,13 +52,12 @@ import qualified Data.Text.Lazy as LazyText
 import qualified Data.Text.Lazy.Builder as TextBuilder
 import qualified Data.Text.Lazy.Builder.Int as TextBuilder
 import Data.Validation (Validation(..))
-import O2I.Graph.Macro
 import O2I.Graph.Raw
 import O2I.Graph.Typed
 import O2I.Language.Element
-import O2I.Language.Macro
 import O2I.Language.Relation
 import O2I.Validation.Semantics
+import O2I.Validation.Trace.Evidence
 
 -- * Effect trace
 data EffectTraceKey = EffectTraceKey
@@ -181,6 +180,7 @@ validateTraceability semantic =
         Nothing -> Failure (NonEmpty.singleton NoIntervention)
   where
     graph = modelGraph semantic
+    evidence = buildMacroEvidenceContext semantic
     interventions = contextNodesOf graph Intervention
     indexedTraces =
       Map.fromList
@@ -199,7 +199,7 @@ validateTraceability semantic =
           | need <- needs
           , not (any (matchesInterventionNeed intervention need) traces)
           ]
-    errors = macroEvidenceErrors semantic ++ interventionErrors
+    errors = macroEvidenceErrors evidence ++ interventionErrors
 
 matchesInterventionNeed :: RawNodeId -> RawNodeId -> EffectTrace -> Bool
 matchesInterventionNeed intervention need trace =
@@ -539,221 +539,12 @@ hasAnchor = hasEdge
 nameOf :: Relation from to -> RelationName
 nameOf = relationName . relationSpec
 
-macroEvidenceErrors :: SemanticallyValidModel -> [TraceabilityError]
-macroEvidenceErrors semantic =
+macroEvidenceErrors :: MacroEvidenceContext -> [TraceabilityError]
+macroEvidenceErrors evidence =
   [ MissingMacroEvidence
     (rawEdgeFrom conclusion)
     (rawEdgeRelation conclusion)
     (rawEdgeTo conclusion)
-  | (conclusion, claim) <- macroClaims (semanticMacroFactIndex semantic)
-  , null (macroEvidenceWitnesses semantic claim)
+  | (conclusion, claim) <- macroEvidenceClaims evidence
+  , null (macroEvidenceWitnessesIn evidence claim)
   ]
-
--- | Opaque exact substantiation of one macrorelation through persisted edges.
-newtype MacroEvidenceWitness = MacroEvidenceWitness
-  { validatedWitnessPremises :: NonEmpty.NonEmpty RawEdge
-  } deriving (Eq, Show)
-
--- | Interpret the canonical macro rule exactly against one semantic model.
---
--- Strategy-role constraints are resolved only from validated formulations.
--- Repeated premise selectors bind the same graph node, so compound rules such
--- as @Strategy --frames--> Measure@ cannot combine unrelated dimensions.
-macroEvidenceWitnesses ::
-     SemanticallyValidModel -> MacroClaim RawNodeId -> [MacroEvidenceWitness]
-macroEvidenceWitnesses semantic claim
-  | claimOccursIn graph claim = concatMap witnessesForAlternative alternatives
-  | otherwise = []
-  where
-    graph = modelGraph semantic
-    alternatives = NonEmpty.toList (ruleAlternatives (claimEvidenceRule claim))
-    witnessesForAlternative (PremiseAlternative premises) =
-      [ MacroEvidenceWitness (fmap matchedPremiseEdge matches)
-      | matches <-
-          sequenceA (fmap (exactPremiseMatches semantic claim) premises)
-      , consistentBindings
-          (concatMap matchedPremiseBindings (NonEmpty.toList matches))
-      ]
-
--- | Select exact witnesses for one registered context macrorelation claim.
-macroEvidenceWitnessesFor ::
-     SemanticallyValidModel
-  -> RawNodeId
-  -> RelationCode
-  -> RawNodeId
-  -> [MacroEvidenceWitness]
-macroEvidenceWitnessesFor semantic source conclusion target =
-  concat
-    [ macroEvidenceWitnesses semantic claim
-    | (_, claim) <- macroClaims (semanticMacroFactIndex semantic)
-    , claimContextIdentifier ClaimSource claim == source
-    , macroClaimConclusion claim == conclusion
-    , claimContextIdentifier ClaimTarget claim == target
-    ]
-
--- | Enumerate the non-empty persisted premise set of an exact witness.
-witnessPremises :: MacroEvidenceWitness -> NonEmpty.NonEmpty RawEdge
-witnessPremises = validatedWitnessPremises
-
-data MatchedPremise = MatchedPremise
-  { matchedPremiseEdge :: RawEdge
-  , matchedPremiseBindings :: [(MacroNodeSelector, RawNodeId)]
-  }
-
-exactPremiseMatches ::
-     SemanticallyValidModel
-  -> MacroClaim RawNodeId
-  -> MacroPremise
-  -> [MatchedPremise]
-exactPremiseMatches semantic claim premise =
-  [ MatchedPremise
-    (rawEdgeFromSome edge)
-    [ (premiseSource premise, someEdgeFrom edge)
-    , (premiseTarget premise, someEdgeTo edge)
-    ]
-  | edge@(SomeEdge typedEdge) <- graphEdges graph
-  , relationPatternMatchesTyped
-      (premiseRelation premise)
-      (relationCode (relationSpec (edgeRelation typedEdge)))
-  , someEdgeFrom edge
-      `elem` exactSelectorCandidates semantic claim (premiseSource premise)
-  , someEdgeTo edge
-      `elem` exactSelectorCandidates semantic claim (premiseTarget premise)
-  ]
-  where
-    graph = modelGraph semantic
-
-exactSelectorCandidates ::
-     SemanticallyValidModel
-  -> MacroClaim RawNodeId
-  -> MacroNodeSelector
-  -> [RawNodeId]
-exactSelectorCandidates semantic claim selector =
-  case selector of
-    ClaimContext side -> [claimContextIdentifier side claim]
-    OwnedPrimitive side primitive requiredRole ->
-      case requiredRole of
-        Nothing -> primitiveCandidates
-        Just role ->
-          filter
-            (`elem` strategyRoleReferences semantic owner role)
-            primitiveCandidates
-      where owner = claimContextIdentifier side claim
-            primitiveCandidates = primitiveNodesIn graph owner primitive
-    OwnedPerformanceDimension side roleCode ->
-      [ someNodeId node
-      | node <- graphNodes graph
-      , someNodeOwner node == Just owner
-      , someNodeKind node
-          == StructuringNodeKind ownerContext PerformanceDimension
-      , roleMatches ownerContext roleCode
-      ]
-      where owner = claimContextIdentifier side claim
-            ownerContext = claimContextValue side claim
-    ConstituentAnchor side ->
-      constitutingAnchorNodes graph (claimContextIdentifier side claim)
-  where
-    graph = modelGraph semantic
-
-roleMatches :: Context -> PerformanceDimensionRoleCode -> Bool
-roleMatches context code =
-  case lookupPerformanceDimensionRole context of
-    Just role -> performanceDimensionRoleCodeOf role == code
-    Nothing -> False
-
-strategyRoleReferences ::
-     SemanticallyValidModel -> RawNodeId -> StrategyPrimitiveRole -> [RawNodeId]
-strategyRoleReferences semantic strategy role =
-  case Map.lookup strategy (strategyFormulations semantic) of
-    Nothing -> []
-    Just formulation ->
-      let raw = strategyFormulationData formulation
-       in case role of
-            DiagnosisRole -> [rawFormulationDiagnosis raw]
-            IntentRole -> [rawFormulationIntent raw]
-            GuidingPolicyRole -> [rawFormulationGuidingPolicy raw]
-            CoherentActionRole -> NonEmpty.toList (rawFormulationActions raw)
-            StrategicKeyResultRole ->
-              NonEmpty.toList (rawFormulationKeyResults raw)
-
-claimOccursIn :: WellFormedGraph -> MacroClaim node -> Bool
-claimOccursIn graph claim = any matches (graphEdges graph)
-  where
-    matches (SomeEdge edge) =
-      unNodeId (edgeFrom edge) == claimContextIdentifier ClaimSource claim
-        && relationCode (relationSpec (edgeRelation edge))
-             == macroClaimConclusion claim
-        && unNodeId (edgeTo edge) == claimContextIdentifier ClaimTarget claim
-
-claimEvidenceRule :: MacroClaim node -> MacroEvidenceRule
-claimEvidenceRule (RegisteredMacroClaim _ relation _) =
-  registeredMacroRule relation
-
-claimContextIdentifier :: ClaimSide -> MacroClaim node -> RawNodeId
-claimContextIdentifier side (RegisteredMacroClaim source _ target) =
-  case side of
-    ClaimSource -> identifier source
-    ClaimTarget -> identifier target
-  where
-    identifier (MacroContextRef _ rawIdentifier _) = rawIdentifier
-
-claimContextValue :: ClaimSide -> MacroClaim node -> Context
-claimContextValue side (RegisteredMacroClaim source _ target) =
-  case side of
-    ClaimSource -> value source
-    ClaimTarget -> value target
-  where
-    value (MacroContextRef _ _ context) = contextValue context
-
-relationPatternMatchesTyped :: MacroRelationPattern -> RelationCode -> Bool
-relationPatternMatchesTyped pattern' code =
-  case pattern' of
-    ExactRelation expected -> code == expected
-    AnchorRelationFamilyPattern expected ->
-      case code of
-        AnchorRelation actual _ -> actual == expected
-        _ -> False
-
-consistentBindings :: [(MacroNodeSelector, RawNodeId)] -> Bool
-consistentBindings = go Map.empty
-  where
-    go _ [] = True
-    go bindings ((selector, identifier):rest) =
-      case Map.lookup selector bindings of
-        Nothing -> go (Map.insert selector identifier bindings) rest
-        Just existing -> existing == identifier && go bindings rest
-
-semanticMacroFactIndex ::
-     SemanticallyValidModel -> MacroFactIndex RawNodeId RawEdge
-semanticMacroFactIndex semantic =
-  buildMacroFactIndex
-    [(someNodeId node, rawNodeFromSome node) | node <- graphNodes graph]
-    [(raw, raw) | edge <- graphEdges graph, let raw = rawEdgeFromSome edge]
-  where
-    graph = modelGraph semantic
-
-rawNodeFromSome :: SomeNode -> RawNode
-rawNodeFromSome (SomeNode node) =
-  case node of
-    ContextNode identifier context ->
-      RawContextNode (unNodeId identifier) (contextValue context)
-    PrimitiveNode identifier owner _ primitive _ ->
-      RawPrimitiveNode
-        (unNodeId identifier)
-        (unNodeId owner)
-        (primitiveValue primitive)
-    PerformanceDimensionNode identifier owner _ ->
-      RawStructuringNode
-        (unNodeId identifier)
-        (unNodeId owner)
-        PerformanceDimension
-    AnchorNode identifier anchor ->
-      RawAnchorNode (unNodeId identifier) (anchorValue anchor)
-
-rawEdgeFromSome :: SomeEdge -> RawEdge
-rawEdgeFromSome edge =
-  RawEdge
-    { rawEdgeFrom = someEdgeFrom edge
-    , rawEdgeRelation = someEdgeRelation edge
-    , rawEdgeTo = someEdgeTo edge
-    }

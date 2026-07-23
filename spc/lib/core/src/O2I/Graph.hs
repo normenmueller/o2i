@@ -10,6 +10,7 @@ module O2I.Graph
   , MacroDependency
   , macroDependencyEdge
   , macroClaims
+  , macroClaimsFor
   , macroScopeDependencies
   , SomeNode
   , SomeEdge

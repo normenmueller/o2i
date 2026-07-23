@@ -45,7 +45,7 @@ import O2I.Language.Claim
 import O2I.Language.Element
 import O2I.Language.Relation
 import O2I.Validation.Semantics
-import O2I.Validation.Trace
+import O2I.Validation.Trace.Evidence
 
 -- | Stable occurrence identity of one collective claim.
 newtype ClaimId = ClaimId
@@ -216,6 +216,7 @@ validateCollectiveStrategyRealizations semantic fitEvidence claims =
            (mapMaybe assertedWitness evaluations)
            (mapMaybe candidateAssessment evaluations))
   where
+    evidence = buildMacroEvidenceContext semantic
     identityErrors =
       [ CollectiveStructuralError
         (DuplicateCollectiveRealizationClaimId identifier)
@@ -227,7 +228,8 @@ validateCollectiveStrategyRealizations semantic fitEvidence claims =
     structuralErrors =
       concat [NonEmpty.toList failures | Failure failures <- structuralResults]
     structuralClaims = [structural | Success structural <- structuralResults]
-    evaluations = map (evaluateCollective semantic fitEvidence) structuralClaims
+    evaluations =
+      map (evaluateCollective semantic evidence fitEvidence) structuralClaims
     errors =
       identityErrors
         ++ structuralErrors
@@ -378,10 +380,11 @@ participantErrors graph claim role participant =
 
 evaluateCollective ::
      SemanticallyValidModel
+  -> MacroEvidenceContext
   -> [RawCollectiveFitEvidence]
   -> StructurallyValidCollective
   -> SemanticEvaluation
-evaluateCollective semantic fitEvidence structural =
+evaluateCollective semantic evidence fitEvidence structural =
   SemanticEvaluation structural issues contributionEvidence
   where
     claim = claimedProposition (structurallyValidClaim structural)
@@ -390,8 +393,8 @@ evaluateCollective semantic fitEvidence structural =
     contributionEvidence =
       [ ( mkContextRef contributor
         , NonEmpty.nonEmpty
-            (macroEvidenceWitnessesFor
-               semantic
+            (macroEvidenceWitnessesForIn
+               evidence
                contributor
                (relationCode (relationSpec contributesToStrategy))
                target))
