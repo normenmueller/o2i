@@ -433,7 +433,7 @@ inspectSemantics request binding viewResolution profile inputs closed =
            binding
            viewResolution
            profile
-           (resolvedScopeFor closed)
+           (structurallyClosedScope closed)
            []
            Nothing
            StagePassed
@@ -470,7 +470,7 @@ inspectSemantics request binding viewResolution profile inputs closed =
                          binding
                          viewResolution
                          profile
-                         (resolvedScopeFor closed)
+                         (structurallyClosedScope closed)
                          sources
                          (Just
                             (InspectionSemanticAssessment
@@ -491,7 +491,7 @@ inspectSemantics request binding viewResolution profile inputs closed =
                          binding
                          viewResolution
                          profile
-                         (resolvedScopeFor closed)
+                         (structurallyClosedScope closed)
                          sources
                          (Just
                             (InspectionSemanticAssessment
@@ -522,7 +522,7 @@ inspectSemantics request binding viewResolution profile inputs closed =
                                 binding
                                 viewResolution
                                 profile
-                                (resolvedScopeFor closed)
+                                (structurallyClosedScope closed)
                                 sources
                                 (Just semanticAssessment)
                                 StagePassed
@@ -538,7 +538,7 @@ inspectSemantics request binding viewResolution profile inputs closed =
                                        binding
                                        viewResolution
                                        profile
-                                       (resolvedScopeFor closed)
+                                       (structurallyClosedScope closed)
                                        sources
                                        (Just semanticAssessment)
                                        StagePassed
@@ -567,7 +567,7 @@ inspectSemantics request binding viewResolution profile inputs closed =
                      binding
                      viewResolution
                      profile
-                     (resolvedScopeFor closed)
+                     (structurallyClosedScope closed)
                      sources
                      (Just
                         (InspectionSemanticAssessment
@@ -676,7 +676,12 @@ inspectCollectiveSemantics closed sources witness semantic =
     withSources = diagnosticWithSupplementalSources sources
 
 duplicates :: Ord value => [value] -> [value]
-duplicates = map head . filter ((> 1) . length) . group . sort
+duplicates = foldr collect [] . group . sort
+  where
+    collect values rest =
+      case values of
+        first:_:_ -> first : rest
+        _ -> rest
 
 inspectTraceability ::
      InspectionRequestInfo
@@ -704,7 +709,7 @@ inspectTraceability request binding viewResolution profile inputs closed sources
                binding
                viewResolution
                profile
-               resolvedScope
+               (structurallyClosedScope closed)
                sources
                (Just semanticAssessment)
                StagePassed
@@ -724,8 +729,6 @@ inspectTraceability request binding viewResolution profile inputs closed sources
         sources
         semanticAssessment
         traceable
-  where
-    resolvedScope = resolvedScopeFor closed
 
 inspectReadiness ::
      InspectionRequestInfo
@@ -747,7 +750,7 @@ inspectReadiness request binding viewResolution profile inputs closed sources se
            binding
            viewResolution
            profile
-           resolvedScope
+           (structurallyClosedScope closed)
            sources
            (Just semanticAssessment)
            StagePassed
@@ -774,7 +777,7 @@ inspectReadiness request binding viewResolution profile inputs closed sources se
                        binding
                        viewResolution
                        profile
-                       resolvedScope
+                       (structurallyClosedScope closed)
                        usedSources
                        (Just semanticAssessment)
                        StagePassed
@@ -794,8 +797,6 @@ inspectReadiness request binding viewResolution profile inputs closed sources se
                 usedSources
                 semanticAssessment
                 ready
-  where
-    resolvedScope = resolvedScopeFor closed
 
 inspectEvidence ::
      InspectionRequestInfo
@@ -817,7 +818,7 @@ inspectEvidence request binding viewResolution profile inputs closed sources sem
            binding
            viewResolution
            profile
-           resolvedScope
+           (structurallyClosedScope closed)
            sources
            (Just semanticAssessment)
            StagePassed
@@ -844,7 +845,7 @@ inspectEvidence request binding viewResolution profile inputs closed sources sem
                        binding
                        viewResolution
                        profile
-                       resolvedScope
+                       (structurallyClosedScope closed)
                        usedSources
                        (Just semanticAssessment)
                        StagePassed
@@ -860,7 +861,7 @@ inspectEvidence request binding viewResolution profile inputs closed sources sem
                    binding
                    viewResolution
                    profile
-                   resolvedScope
+                   (structurallyClosedScope closed)
                    usedSources
                    (Just semanticAssessment)
                    StagePassed
@@ -869,8 +870,6 @@ inspectEvidence request binding viewResolution profile inputs closed sources sem
                    StagePassed
                    StagePassed
                    [])
-  where
-    resolvedScope = resolvedScopeFor closed
 
 decodeFailureReport ::
      InspectionRequestInfo
@@ -950,12 +949,12 @@ structureFailureReport ::
   -> NonEmpty StructuralError
   -> InspectionReport
 structureFailureReport request binding viewResolution profile scope imported defects =
-  let normalized =
-        normalizeNonEmptyDiagnostics
-          (fmap
-             (coreDiagnostic StructureStage imported structuralDefectSpec)
-             defects)
-      diagnostics = forgetNonEmptyDiagnostics normalized
+  let diagnostics =
+        normalizeDiagnostics
+          (closedScopeDiagnostics scope
+             ++ map
+                  (coreDiagnostic StructureStage imported structuralDefectSpec)
+                  (NonEmpty.toList defects))
    in PipelineReport
         request
         binding
@@ -978,7 +977,7 @@ pipelineReport ::
   -> ResolvedNativeBinding
   -> ResolvedViewResolution
   -> ResolvedO2IProfile
-  -> ResolvedScope
+  -> SemanticallyClosedScope
   -> [SupplementalSource]
   -> Maybe InspectionSemanticAssessment
   -> StageState
@@ -989,13 +988,14 @@ pipelineReport ::
   -> [Diagnostic]
   -> InspectionReport
 pipelineReport request binding viewResolution profile scope sources assessment structure semantics trace readiness evidence diagnostics =
-  let artifact = normalizeDiagnostics diagnostics
+  let artifact =
+        normalizeDiagnostics (closedScopeDiagnostics scope ++ diagnostics)
    in PipelineReport
         request
         binding
         viewResolution
         profile
-        scope
+        (resolvedScopeForScope scope)
         sources
         assessment
         (pipelineStageReports
@@ -1006,9 +1006,6 @@ pipelineReport request binding viewResolution profile scope sources assessment s
            evidence
            artifact)
         artifact
-
-resolvedScopeFor :: StructurallyClosedModel -> ResolvedScope
-resolvedScopeFor = resolvedScopeForScope . structurallyClosedScope
 
 resolvedScopeForScope :: SemanticallyClosedScope -> ResolvedScope
 resolvedScopeForScope scope =

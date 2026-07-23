@@ -268,6 +268,7 @@ data InclusionReason
   | SituationDependency
   | NeedDependency
   | MacroPremise
+  | CollectiveRealizationSegment
   | CollectiveRealizationParticipant
   deriving (Bounded, Enum, Eq, Ord, Show)
 

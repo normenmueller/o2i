@@ -122,6 +122,7 @@ data PersistedDependencyReason
   | PersistedPerformanceDimensionMembership
   | PersistedSituationDependency
   | PersistedNeedDependency
+  | PersistedCollectiveRealizationSegment
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 -- | Format-neutral persisted facts consumed by semantic scope closure.
@@ -206,6 +207,7 @@ persistedInclusionReason reason =
     PersistedPerformanceDimensionMembership -> PerformanceDimensionMembership
     PersistedSituationDependency -> SituationDependency
     PersistedNeedDependency -> NeedDependency
+    PersistedCollectiveRealizationSegment -> CollectiveRealizationSegment
 
 -- | Total normalized output of one adapter-owned profile projection.
 data ProfileProjection location defect = ProfileProjection

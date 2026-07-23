@@ -10,6 +10,7 @@ import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.Text as Text
 import O2I
 import O2I.Adapter.AMX.Internal.Defect
+import qualified O2I.Adapter.AMX.Internal.Defect as Defect
 import O2I.Adapter.AMX.Internal.Registry
 import O2I.Adapter.AMX.Test.Support
 import O2I.Inspection
@@ -46,7 +47,7 @@ defectCatalogTest = do
   let tags = [minBound .. maxBound]
       specs = map amxDefectTagSpec tags
       codes = map (diagnosticCodeText . specCode) specs
-  length tags @?= 38
+  length tags @?= 58
   length codes @?= length (stableUnique codes)
   assertBool
     "Decode catalog codes must retain their namespace"
@@ -146,6 +147,29 @@ profileDefects =
   , MissingOwnership "node"
   , DuplicateOwnership "node" ("a" :| ["b"])
   , OwnershipOnOwnerlessKind "node"
+  , MissingCollectiveClaimId
+  , AmbiguousCollectiveClaimId "claim" 2
+  , InvalidCollectiveJunctionRepresentation "claim" "OrJunction"
+  , MissingCollectiveCommitment "claim"
+  , DuplicateCollectiveCommitment "claim" ("candidate" :| ["asserted"])
+  , InvalidCollectiveCommitment "claim" "tentative"
+  , MissingCollectiveFitEvidenceReference "claim"
+  , DuplicateCollectiveFitEvidenceReference "claim" ("fit-a" :| ["fit-b"])
+  , Defect.EmptyCollectiveFitEvidenceReference "claim"
+  , InvalidCollectiveSegmentRepresentation
+      "claim"
+      "segment"
+      "InfluenceRelationship"
+  , InvalidCollectiveSegmentName "claim" "segment" "jointly-realizes"
+  , CollectiveSegmentMetadata "claim" "segment" "o2i.role"
+  , CollectiveJunctionChain "claim" "segment"
+  , CollectiveEndpointUnresolved "claim" "segment" "contributor" Nothing
+  , CollectiveEndpointAmbiguous "claim" "segment" "target" 2
+  , CollectiveContributorCardinality "claim" 1
+  , CollectiveTargetCardinality "claim" 0
+  , Defect.DuplicateCollectiveContributor "claim" "strategy"
+  , Defect.CollectiveContributorIsTarget "claim" "strategy"
+  , PartialCollectiveView "claim" 1 2
   ]
 
 sampleLocation :: SourcePosition

@@ -18,6 +18,7 @@ import Data.Sequence (Seq((:<|)), (|>))
 import qualified Data.Set as Set
 import Data.Set (Set)
 import O2I
+import O2I.Adapter.AMX.Internal.Profile.Collective
 import O2I.Adapter.AMX.Internal.Profile.Metadata
 import O2I.Adapter.AMX.Internal.Profile.Model
 import O2I.Adapter.AMX.Internal.Registry
@@ -150,6 +151,7 @@ semanticRelationshipElements environment closure =
   [ relationship
   | relationship <- environmentRelationships environment
   , not (isOwnershipRelationship relationship)
+  , relationship `notElem` collectiveSegmentElements environment
   , let occurrence = relationshipOccurrence relationship
   , Set.member occurrence (closureRelationships closure)
       || not (null (exactSignatures environment relationship))

@@ -362,6 +362,7 @@ inclusionReasonText reason =
     SituationDependency -> "situation-dependency"
     NeedDependency -> "need-dependency"
     MacroPremise -> "macro-premise"
+    CollectiveRealizationSegment -> "collective-realization-segment"
     CollectiveRealizationParticipant -> "collective-realization-participant"
 
 adapterText :: AdapterDescriptor -> Text

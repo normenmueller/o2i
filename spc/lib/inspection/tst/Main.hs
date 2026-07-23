@@ -40,6 +40,7 @@ data TestProfileFact =
 data TestProfileDefect
   = TestRootProfileDefect
   | TestReachedProfileDefect
+  | TestInformationalProfileFinding
   deriving (Eq, Show)
 
 data AlternateFact =
@@ -127,6 +128,9 @@ tests =
     , testCase "root profile failure stops before closure" rootProfileTest
     , testCase "reached profile defects fail Profile" reachedDefectTest
     , testCase "unreached profile defects are excluded" unreachedDefectTest
+    , testCase
+        "reached informational Profile findings survive successful closure"
+        informationalProfileFindingTest
     , testCase "closure retains repeated presentations" repeatedPresentationTest
     , testCase
         "closure includes core-derived macro premise relations"
@@ -838,6 +842,33 @@ unreachedDefectTest = do
     ("o2i.test.profile.reached" `notElem` diagnosticCodes report)
   assertResolvedScopeSummary 1 3 report
 
+informationalProfileFindingTest :: Assertion
+informationalProfileFindingTest = do
+  report <-
+    completedReport
+      (runAdapter
+         (testAdapterWithDefects
+            DecodeSucceeds
+            ViewSucceeds
+            RootSucceeds
+            missionFacts
+            [(missionOccurrence, TestInformationalProfileFinding)]))
+  assertResolvedScopeSummary 1 3 report
+  assertBool
+    "reached informational finding must be retained"
+    ("o2i.test.profile.information" `elem` diagnosticCodes report)
+  case [ diagnostic
+       | diagnostic <- diagnosticsList (reportDiagnostics report)
+       , diagnosticCodeText (diagnosticCode diagnostic)
+           == "o2i.test.profile.information"
+       ] of
+    [diagnostic] -> diagnosticSeverity diagnostic @?= InfoSeverity
+    diagnostics ->
+      assertFailure
+        ("expected one informational Profile finding: " <> show diagnostics)
+  map reportedState (take 4 (stageReportsList (reportStageReports report)))
+    @?= [StagePassed, StagePassed, StagePassed, StagePassed]
+
 repeatedPresentationTest :: Assertion
 repeatedPresentationTest = do
   report <-
@@ -1092,13 +1123,16 @@ validCollectiveInspectionTest = do
         @?= [collectiveInspectionClaimId]
   assertBool
     "collective participant closure reason was not retained"
-    (CollectiveRealizationParticipant
-       `elem` concatMap
-                (NonEmpty.toList . provenanceReasons)
-                (maybe
-                   []
-                   (NonEmpty.toList . closedScopeProvenanceOccurrences)
-                   (reportClosedScopeProvenance report)))
+    (CollectiveRealizationParticipant `elem` collectiveReasons report)
+  assertBool
+    "collective segment closure reason was not retained"
+    (CollectiveRealizationSegment `elem` collectiveReasons report)
+
+collectiveReasons :: InspectionReport -> [InclusionReason]
+collectiveReasons =
+  concatMap (NonEmpty.toList . provenanceReasons)
+    . maybe [] (NonEmpty.toList . closedScopeProvenanceOccurrences)
+    . reportClosedScopeProvenance
 
 candidateCollectiveInspectionTest :: Assertion
 candidateCollectiveInspectionTest = do
@@ -1875,6 +1909,15 @@ collectiveInspectionFacts claim =
            ]
            (nodeOccurrence completeStrategyId)
        , SeedTemplate completePresentation collectiveClaimOccurrence
+       , OccurrenceTemplate collectiveSegmentOccurrence
+       , DependencyTemplate
+           collectiveClaimOccurrence
+           collectiveSegmentOccurrence
+           PersistedCollectiveRealizationSegment
+       , DependencyTemplate
+           collectiveSegmentOccurrence
+           collectiveClaimOccurrence
+           PersistedCollectiveRealizationSegment
        ]
   where
     nodeOccurrence identifier =
@@ -2027,6 +2070,9 @@ contributorId prefix suffix =
 
 collectiveClaimOccurrence :: OccurrenceId
 collectiveClaimOccurrence = testOccurrence "collective-claim"
+
+collectiveSegmentOccurrence :: OccurrenceId
+collectiveSegmentOccurrence = testOccurrence "collective-segment"
 
 testRawNodeIdentifier :: RawNode -> RawNodeId
 testRawNodeIdentifier node =
@@ -2309,6 +2355,21 @@ testAdapter ::
   -> [OccurrenceId]
   -> Adapter
 testAdapter decodeMode viewMode rootMode templates deferred =
+  testAdapterWithDefects
+    decodeMode
+    viewMode
+    rootMode
+    templates
+    [(occurrence, TestReachedProfileDefect) | occurrence <- deferred]
+
+testAdapterWithDefects ::
+     DecodeMode
+  -> ViewMode
+  -> RootMode
+  -> [FactTemplate]
+  -> [(OccurrenceId, TestProfileDefect)]
+  -> Adapter
+testAdapterWithDefects decodeMode viewMode rootMode templates deferred =
   Adapter
     testDescriptor
     decode
@@ -2360,7 +2421,7 @@ testAdapter decodeMode viewMode rootMode templates deferred =
         , projectedFacts =
             instantiateFacts (locatedAt (snapshotFact snapshot)) templates
         , projectedDefects =
-            map (reachedDefect (locatedAt (snapshotFact snapshot))) deferred
+            map (reachedFinding (locatedAt (snapshotFact snapshot))) deferred
         }
     observe position _ = profileSnapshot (Located position TestProfileFact)
 
@@ -2402,14 +2463,14 @@ instantiateFacts location = map instantiate
             matches
             reason
 
-reachedDefect ::
+reachedFinding ::
      SourcePosition
-  -> OccurrenceId
+  -> (OccurrenceId, TestProfileDefect)
   -> DeferredProfileDefect SourcePosition TestProfileDefect
-reachedDefect location occurrence =
+reachedFinding location (occurrence, finding) =
   DeferredProfileDefect
     { defectApplicability = ReachedProfileDefect (occurrence :| [])
-    , deferredDefect = Located location TestReachedProfileDefect
+    , deferredDefect = Located location finding
     }
 
 missionFacts :: [FactTemplate]
@@ -2643,6 +2704,14 @@ testProfileSpec defect =
   case defect of
     TestRootProfileDefect -> testSpec "o2i.test.profile.root"
     TestReachedProfileDefect -> testSpec "o2i.test.profile.reached"
+    TestInformationalProfileFinding ->
+      diagnosticSpec
+        (o2iDiagnosticCode "test.profile.information")
+        InfoSeverity
+        ModelFinding
+        "Test information."
+        []
+        Map.empty
 
 testSpec :: Text -> DiagnosticSpec
 testSpec code =

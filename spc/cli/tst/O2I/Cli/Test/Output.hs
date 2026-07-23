@@ -34,6 +34,9 @@ tests =
     , testCase
         "adapter and diagnostic scalars are terminal-safe"
         hostileInspection
+    , testCase
+        "collective partial-View human output is deterministic"
+        collectivePartialViewOutput
     , testCase "SourceLocation scalars are terminal-safe" hostileLocation
     , testCase "human output contains no ANSI escape" ansiFree
     , testCase "closed output handle is normalized" closedHandle
@@ -80,6 +83,90 @@ hostileInspection = do
   assertTerminalSafe human
   assertTerminalSafe diagnostics
   assertPrefixed diagnostics
+
+collectivePartialViewOutput :: Assertion
+collectivePartialViewOutput = do
+  report <- collectivePartialViewReport
+  let firstReport = renderHumanReport report
+      secondReport = renderHumanReport report
+      firstDiagnostics = renderHumanDiagnostics DebugVerbosity report
+      secondDiagnostics = renderHumanDiagnostics DebugVerbosity report
+  firstReport @?= secondReport
+  firstDiagnostics @?= secondDiagnostics
+  assertContains
+    (LazyByteString.toStrict firstReport)
+    "collective-realization-segment"
+  assertContains
+    (LazyByteString.toStrict firstDiagnostics)
+    "shown-contributors=0"
+  assertContains
+    (LazyByteString.toStrict firstDiagnostics)
+    "total-contributors=2"
+
+collectivePartialViewReport :: IO InspectionReport
+collectivePartialViewReport =
+  case inspectSourceDocument
+         amxAdapter
+         (ViewByName "Partial")
+         emptyInputs
+         (sourceDocumentFromBytes
+            "collective.archimate"
+            FileSource
+            (TextEncoding.encodeUtf8 collectivePartialViewModel)) of
+    InspectionCompleted report -> pure report
+    InspectionCommandFailed failure ->
+      fail ("unexpected command failure: " <> show failure)
+
+collectivePartialViewModel :: Text
+collectivePartialViewModel =
+  Text.concat
+    [ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+    , "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" "
+    , "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
+    , "version=\"5.0.0\"><folder>"
+    , strategy "contributor-a"
+    , strategy "contributor-b"
+    , strategy "target"
+    , "<element xsi:type=\"a:Junction\" id=\"claim\" name=\"claim\">"
+    , propertyText "o2i.kind" "Claim"
+    , propertyText "o2i.type" "CollectiveStrategyRealization"
+    , propertyText "o2i.commitment" "asserted"
+    , propertyText "o2i.collective-fit-evidence" "fit-claim"
+    , "</element>"
+    , realization "incoming-a" "contributor-a" "claim"
+    , realization "incoming-b" "contributor-b" "claim"
+    , realization "outgoing" "claim" "target"
+    , "<element xsi:type=\"a:ArchimateDiagramModel\" id=\"partial\" "
+    , "name=\"Partial\"><child xsi:type=\"a:DiagramObject\" "
+    , "id=\"claim-object\" archimateElement=\"claim\"/></element>"
+    , "</folder>"
+    , propertyText "o2i.profile" "0.2"
+    , "</a:model>"
+    ]
+  where
+    strategy identifier =
+      Text.concat
+        [ "<element xsi:type=\"a:Grouping\" id=\""
+        , identifier
+        , "\" name=\""
+        , identifier
+        , "\">"
+        , propertyText "o2i.kind" "Context"
+        , propertyText "o2i.type" "Strategy"
+        , "</element>"
+        ]
+    realization identifier source target =
+      Text.concat
+        [ "<element xsi:type=\"a:RealizationRelationship\" id=\""
+        , identifier
+        , "\" name=\"realizes\" source=\""
+        , source
+        , "\" target=\""
+        , target
+        , "\"/>"
+        ]
+    propertyText key value =
+      "<property key=\"" <> key <> "\" value=\"" <> value <> "\"/>"
 
 hostileLocation :: Assertion
 hostileLocation = do

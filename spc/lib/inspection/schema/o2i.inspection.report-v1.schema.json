@@ -519,6 +519,7 @@
         "situation-dependency",
         "need-dependency",
         "macro-premise",
+        "collective-realization-segment",
         "collective-realization-participant"
       ]
     },

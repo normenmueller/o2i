@@ -13,6 +13,7 @@ import qualified Data.Text as Text
 import O2I (assertedClaim)
 import O2I.Adapter.AMX.Internal.Defect
 import O2I.Adapter.AMX.Internal.Profile.Closure
+import O2I.Adapter.AMX.Internal.Profile.Collective
 import O2I.Adapter.AMX.Internal.Profile.Metadata
 import O2I.Adapter.AMX.Internal.Profile.Model
 import O2I.Adapter.AMX.Internal.Registry
@@ -36,7 +37,11 @@ projectSnapshot document selected =
   ProfileProjection
     { projectedRoot = rootProjection
     , projectedFacts = profileFacts environment closure
-    , projectedDefects = rootDeferred ++ nodeDeferred ++ relationDeferred
+    , projectedDefects =
+        rootDeferred
+          ++ nodeDeferred
+          ++ relationDeferred
+          ++ collectiveDefects environment
     }
   where
     environment = buildEnvironment document selected
@@ -47,6 +52,7 @@ projectSnapshot document selected =
         (candidateDefects environment)
         [ element
         | element <- environmentNodes environment
+        , not (isCollectiveClaimCandidate element)
         , Set.member (nodeOccurrence element) (closureCandidates closure)
         ]
     relationDeferred =
@@ -59,6 +65,7 @@ profileFacts ::
 profileFacts environment closure =
   nodeFacts
     ++ relationshipFacts
+    ++ collectiveFacts environment
     ++ presentationFacts
     ++ ownershipDependencies
     ++ hiddenDependencies
@@ -66,7 +73,9 @@ profileFacts environment closure =
     nodeFacts =
       map
         (projectNodeOccurrence environment closure)
-        (environmentNodes environment)
+        (filter
+           (not . isCollectiveClaimCandidate)
+           (environmentNodes environment))
     semanticRelationships = semanticRelationshipElements environment closure
     retainedRelationships =
       stableUniqueElements
@@ -208,6 +217,8 @@ projectPresentations environment closure =
        in if Set.member target (closureRelationships closure)
                || connectionRelationship connection
                     `elem` semanticRelationshipElements environment closure
+               || connectionRelationship connection
+                    `elem` collectiveSegmentElements environment
             then [ indexOccurrence
                      source
                      (amxElementLocation (connectionElement connection))

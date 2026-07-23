@@ -75,6 +75,7 @@ data SemanticallyClosedScope = SemanticallyClosedScope
   , closedScopeFacts :: [IndexedProfileFact SourceLocation]
   , closedScopeOccurrences :: Set OccurrenceId
   , closedScopeProvenance :: ClosedScopeProvenance
+  , closedScopeDiagnostics :: [Diagnostic]
   }
 
 -- | Total stable diagnostic projection for every Inspection scope defect.
@@ -132,6 +133,7 @@ closeScope (ProfileIndex profileSpecification view projection) =
           , closedScopeFacts = facts
           , closedScopeOccurrences = reached
           , closedScopeProvenance = mkClosedScopeProvenance entries
+          , closedScopeDiagnostics = profileFindings
           }
     (Nothing, Nothing) ->
       ScopeRejected
@@ -182,14 +184,18 @@ closeScope (ProfileIndex profileSpecification view projection) =
       [ InspectionScopeIssue (Located (resolvedViewLocation view) EmptyO2IScope)
       | Set.null reached
       ]
-    profileIssues =
-      [ ProfileIssue
-        (diagnosticFromLocated
-           ProfileStage
-           profileSpecification
-           (deferredDefect deferred))
+    profileFindings =
+      [ diagnosticFromLocated
+        ProfileStage
+        profileSpecification
+        (deferredDefect deferred)
       | deferred <- resolvedDeferredDefects projection
       , reachedDeferred reached deferred
+      ]
+    profileIssues =
+      [ ProfileIssue diagnostic
+      | diagnostic <- profileFindings
+      , diagnosticSeverity diagnostic == ErrorSeverity
       ]
     provenanceIssues =
       concatMap

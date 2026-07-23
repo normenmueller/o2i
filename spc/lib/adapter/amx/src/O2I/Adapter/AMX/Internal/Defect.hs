@@ -71,6 +71,26 @@ data AMXProfileDefect
   | MissingOwnership Text
   | DuplicateOwnership Text (NonEmpty Text)
   | OwnershipOnOwnerlessKind Text
+  | MissingCollectiveClaimId
+  | AmbiguousCollectiveClaimId Text Int
+  | InvalidCollectiveJunctionRepresentation Text Text
+  | MissingCollectiveCommitment Text
+  | DuplicateCollectiveCommitment Text (NonEmpty Text)
+  | InvalidCollectiveCommitment Text Text
+  | MissingCollectiveFitEvidenceReference Text
+  | DuplicateCollectiveFitEvidenceReference Text (NonEmpty Text)
+  | EmptyCollectiveFitEvidenceReference Text
+  | InvalidCollectiveSegmentRepresentation Text Text Text
+  | InvalidCollectiveSegmentName Text Text Text
+  | CollectiveSegmentMetadata Text Text Text
+  | CollectiveJunctionChain Text Text
+  | CollectiveEndpointUnresolved Text Text Text (Maybe Text)
+  | CollectiveEndpointAmbiguous Text Text Text Int
+  | CollectiveContributorCardinality Text Int
+  | CollectiveTargetCardinality Text Int
+  | DuplicateCollectiveContributor Text Text
+  | CollectiveContributorIsTarget Text Text
+  | PartialCollectiveView Text Int Int
   deriving (Eq, Show)
 
 -- | Stable finite catalog identity across all AMX defects.
@@ -113,6 +133,26 @@ data AMXDefectTag
   | MissingOwnershipTag
   | DuplicateOwnershipTag
   | OwnershipOnOwnerlessKindTag
+  | MissingCollectiveClaimIdTag
+  | AmbiguousCollectiveClaimIdTag
+  | InvalidCollectiveJunctionRepresentationTag
+  | MissingCollectiveCommitmentTag
+  | DuplicateCollectiveCommitmentTag
+  | InvalidCollectiveCommitmentTag
+  | MissingCollectiveFitEvidenceReferenceTag
+  | DuplicateCollectiveFitEvidenceReferenceTag
+  | EmptyCollectiveFitEvidenceReferenceTag
+  | InvalidCollectiveSegmentRepresentationTag
+  | InvalidCollectiveSegmentNameTag
+  | CollectiveSegmentMetadataTag
+  | CollectiveJunctionChainTag
+  | CollectiveEndpointUnresolvedTag
+  | CollectiveEndpointAmbiguousTag
+  | CollectiveContributorCardinalityTag
+  | CollectiveTargetCardinalityTag
+  | DuplicateCollectiveContributorTag
+  | CollectiveContributorIsTargetTag
+  | PartialCollectiveViewTag
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 amxDecodeDefectTag :: AMXDecodeDefect -> AMXDefectTag
@@ -168,6 +208,31 @@ amxProfileDefectTag defect =
     MissingOwnership _ -> MissingOwnershipTag
     DuplicateOwnership _ _ -> DuplicateOwnershipTag
     OwnershipOnOwnerlessKind _ -> OwnershipOnOwnerlessKindTag
+    MissingCollectiveClaimId -> MissingCollectiveClaimIdTag
+    AmbiguousCollectiveClaimId _ _ -> AmbiguousCollectiveClaimIdTag
+    InvalidCollectiveJunctionRepresentation _ _ ->
+      InvalidCollectiveJunctionRepresentationTag
+    MissingCollectiveCommitment _ -> MissingCollectiveCommitmentTag
+    DuplicateCollectiveCommitment _ _ -> DuplicateCollectiveCommitmentTag
+    InvalidCollectiveCommitment _ _ -> InvalidCollectiveCommitmentTag
+    MissingCollectiveFitEvidenceReference _ ->
+      MissingCollectiveFitEvidenceReferenceTag
+    DuplicateCollectiveFitEvidenceReference _ _ ->
+      DuplicateCollectiveFitEvidenceReferenceTag
+    EmptyCollectiveFitEvidenceReference _ ->
+      EmptyCollectiveFitEvidenceReferenceTag
+    InvalidCollectiveSegmentRepresentation _ _ _ ->
+      InvalidCollectiveSegmentRepresentationTag
+    InvalidCollectiveSegmentName _ _ _ -> InvalidCollectiveSegmentNameTag
+    CollectiveSegmentMetadata _ _ _ -> CollectiveSegmentMetadataTag
+    CollectiveJunctionChain _ _ -> CollectiveJunctionChainTag
+    CollectiveEndpointUnresolved _ _ _ _ -> CollectiveEndpointUnresolvedTag
+    CollectiveEndpointAmbiguous _ _ _ _ -> CollectiveEndpointAmbiguousTag
+    CollectiveContributorCardinality _ _ -> CollectiveContributorCardinalityTag
+    CollectiveTargetCardinality _ _ -> CollectiveTargetCardinalityTag
+    DuplicateCollectiveContributor _ _ -> DuplicateCollectiveContributorTag
+    CollectiveContributorIsTarget _ _ -> CollectiveContributorIsTargetTag
+    PartialCollectiveView _ _ _ -> PartialCollectiveViewTag
 
 -- | Stable code and generic message for every catalog entry.
 amxDefectTagSpec :: AMXDefectTag -> DiagnosticSpec
@@ -317,6 +382,86 @@ amxDefectTagSpec tag =
       model
         "amx.profile.ownership-forbidden"
         "An O2I Context or SituationAnchor has a forbidden contextualization composition."
+    MissingCollectiveClaimIdTag ->
+      model
+        "amx.profile.collective.id-missing"
+        "A collective Strategy-realization Junction has no stable element ID."
+    AmbiguousCollectiveClaimIdTag ->
+      model
+        "amx.profile.collective.id-ambiguous"
+        "A collective Strategy-realization Junction ID is not globally unique."
+    InvalidCollectiveJunctionRepresentationTag ->
+      model
+        "amx.profile.collective.junction-invalid"
+        "A collective Strategy-realization claim is not an ArchiMate AND Junction."
+    MissingCollectiveCommitmentTag ->
+      model
+        "amx.profile.collective.commitment-missing"
+        "A collective Strategy-realization Junction has no o2i.commitment."
+    DuplicateCollectiveCommitmentTag ->
+      model
+        "amx.profile.collective.commitment-duplicate"
+        "A collective Strategy-realization Junction has multiple o2i.commitment values."
+    InvalidCollectiveCommitmentTag ->
+      model
+        "amx.profile.collective.commitment-invalid"
+        "A collective Strategy-realization Junction has an invalid o2i.commitment."
+    MissingCollectiveFitEvidenceReferenceTag ->
+      model
+        "amx.profile.collective.fit-reference-missing"
+        "A collective Strategy-realization Junction has no collective-Fit evidence reference."
+    DuplicateCollectiveFitEvidenceReferenceTag ->
+      model
+        "amx.profile.collective.fit-reference-duplicate"
+        "A collective Strategy-realization Junction has multiple collective-Fit evidence references."
+    EmptyCollectiveFitEvidenceReferenceTag ->
+      model
+        "amx.profile.collective.fit-reference-empty"
+        "A collective Strategy-realization Junction has an empty collective-Fit evidence reference."
+    InvalidCollectiveSegmentRepresentationTag ->
+      model
+        "amx.profile.collective.segment-representation"
+        "A collective Strategy-realization segment is not an ArchiMate Realization relationship."
+    InvalidCollectiveSegmentNameTag ->
+      model
+        "amx.profile.collective.segment-name"
+        "A collective Strategy-realization segment is not named exactly realizes."
+    CollectiveSegmentMetadataTag ->
+      model
+        "amx.profile.collective.segment-metadata"
+        "A collective Strategy-realization segment carries forbidden O2I metadata."
+    CollectiveJunctionChainTag ->
+      model
+        "amx.profile.collective.junction-chain"
+        "A collective Strategy-realization segment connects to another Junction."
+    CollectiveEndpointUnresolvedTag ->
+      model
+        "amx.profile.collective.endpoint-unresolved"
+        "A collective Strategy-realization segment endpoint does not resolve."
+    CollectiveEndpointAmbiguousTag ->
+      model
+        "amx.profile.collective.endpoint-ambiguous"
+        "A collective Strategy-realization segment endpoint is ambiguous."
+    CollectiveContributorCardinalityTag ->
+      model
+        "amx.profile.collective.contributors"
+        "A collective Strategy-realization claim requires at least two distinct contributors."
+    CollectiveTargetCardinalityTag ->
+      model
+        "amx.profile.collective.target"
+        "A collective Strategy-realization claim requires exactly one target."
+    DuplicateCollectiveContributorTag ->
+      model
+        "amx.profile.collective.contributor-duplicate"
+        "A contributor occurs more than once in a collective Strategy-realization claim."
+    CollectiveContributorIsTargetTag ->
+      model
+        "amx.profile.collective.self-participation"
+        "A collective Strategy-realization contributor is also its target."
+    PartialCollectiveViewTag ->
+      information
+        "amx.profile.collective.view-partial"
+        "The selected View shows only part of a complete collective Strategy-realization claim."
 
 amxDecodeDefectSpec :: AMXDecodeDefect -> DiagnosticSpec
 amxDecodeDefectSpec defect =
@@ -339,6 +484,16 @@ model code message =
   diagnosticSpec
     (o2iDiagnosticCode code)
     ErrorSeverity
+    ModelFinding
+    message
+    []
+    Map.empty
+
+information :: Text -> Text -> DiagnosticSpec
+information code message =
+  diagnosticSpec
+    (o2iDiagnosticCode code)
+    InfoSeverity
     ModelFinding
     message
     []
@@ -448,6 +603,75 @@ profileSubjects defect =
     DuplicateOwnership identifier owners ->
       subject "node" identifier : map (subject "owner") (nonEmptyList owners)
     OwnershipOnOwnerlessKind identifier -> [subject "node" identifier]
+    MissingCollectiveClaimId -> []
+    AmbiguousCollectiveClaimId identifier count ->
+      [ subject "collective-claim" identifier
+      , subject "occurrence-count" (Text.pack (show count))
+      ]
+    InvalidCollectiveJunctionRepresentation identifier actual ->
+      [ subject "collective-claim" identifier
+      , subject "actual-representation" actual
+      ]
+    MissingCollectiveCommitment identifier ->
+      [subject "collective-claim" identifier]
+    DuplicateCollectiveCommitment identifier values ->
+      subject "collective-claim" identifier
+        : map (subject "commitment") (nonEmptyList values)
+    InvalidCollectiveCommitment identifier value ->
+      [subject "collective-claim" identifier, subject "commitment" value]
+    MissingCollectiveFitEvidenceReference identifier ->
+      [subject "collective-claim" identifier]
+    DuplicateCollectiveFitEvidenceReference identifier values ->
+      subject "collective-claim" identifier
+        : map (subject "collective-fit-evidence") (nonEmptyList values)
+    EmptyCollectiveFitEvidenceReference identifier ->
+      [subject "collective-claim" identifier]
+    InvalidCollectiveSegmentRepresentation claim segment actual ->
+      [ subject "collective-claim" claim
+      , subject "segment" segment
+      , subject "actual-representation" actual
+      ]
+    InvalidCollectiveSegmentName claim segment actual ->
+      [ subject "collective-claim" claim
+      , subject "segment" segment
+      , subject "actual-name" actual
+      ]
+    CollectiveSegmentMetadata claim segment key ->
+      [ subject "collective-claim" claim
+      , subject "segment" segment
+      , subject "metadata-key" key
+      ]
+    CollectiveJunctionChain claim segment ->
+      [subject "collective-claim" claim, subject "segment" segment]
+    CollectiveEndpointUnresolved claim segment role reference ->
+      [ subject "collective-claim" claim
+      , subject "segment" segment
+      , subject "role" role
+      , subject "reference" (maybe "<missing>" id reference)
+      ]
+    CollectiveEndpointAmbiguous claim segment role count ->
+      [ subject "collective-claim" claim
+      , subject "segment" segment
+      , subject "role" role
+      , subject "match-count" (Text.pack (show count))
+      ]
+    CollectiveContributorCardinality claim count ->
+      [ subject "collective-claim" claim
+      , subject "contributor-count" (Text.pack (show count))
+      ]
+    CollectiveTargetCardinality claim count ->
+      [ subject "collective-claim" claim
+      , subject "target-count" (Text.pack (show count))
+      ]
+    DuplicateCollectiveContributor claim contributor ->
+      [subject "collective-claim" claim, subject "contributor" contributor]
+    CollectiveContributorIsTarget claim contributor ->
+      [subject "collective-claim" claim, subject "participant" contributor]
+    PartialCollectiveView claim shown total ->
+      [ subject "collective-claim" claim
+      , subject "shown-contributors" (Text.pack (show shown))
+      , subject "total-contributors" (Text.pack (show total))
+      ]
 
 subject :: Text -> Text -> DiagnosticSubject
 subject = DiagnosticSubject
