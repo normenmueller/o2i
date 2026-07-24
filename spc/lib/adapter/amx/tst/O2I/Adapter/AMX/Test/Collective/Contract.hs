@@ -9,6 +9,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified Data.Text as Text
 import O2I
+import O2I.Adapter.AMX
 import O2I.Adapter.AMX.Internal.Profile.Collective
 import O2I.Adapter.AMX.Internal.Profile.Collective.Index
 import O2I.Adapter.AMX.Internal.Profile.Model
@@ -32,41 +33,51 @@ collectiveContractTests =
         "projects a valid Candidate with its explicit commitment"
         candidateProjectionTest
     , testCase
-        "collective Claim kind metadata is mandatory"
+        "Candidate participant diagnostics retain roles and stable source order"
+        (candidateParticipantTest
+           [ ("contributor", "contributor-a")
+           , ("contributor", "contributor-b")
+           , ("target", "target")
+           ]
+           candidateCollectiveMultipleCandidateParticipantsModel)
+    , testCase
+        "Asserted collective rejects a Candidate contributor with provenance"
+        (assertedParticipantTest assertedCollectiveCandidateContributorModel)
+    , testCase
+        "Asserted collective rejects a Candidate target with provenance"
+        (assertedParticipantTest assertedCollectiveCandidateTargetModel)
+    , testCase
+        "structured proposition kind metadata is mandatory"
         (rejects missingClaimKindModel ["o2i.amx.profile.kind-missing"])
     , testCase
-        "collective Claim type metadata is mandatory"
+        "structured proposition type metadata is mandatory"
         (rejects missingClaimTypeModel ["o2i.amx.profile.type-missing"])
     , testCase
-        "collective Claim kind metadata is exact"
+        "structured proposition kind metadata is exact"
         (rejects invalidClaimKindModel ["o2i.amx.profile.kind-unknown"])
     , testCase
-        "collective Claim type metadata is exact"
+        "structured proposition type metadata is exact"
         (rejects invalidClaimTypeModel ["o2i.amx.profile.type-invalid"])
     , testCase
-        "collective Claim kind metadata is single-valued"
+        "structured proposition kind metadata is single-valued"
         (rejects duplicateClaimKindModel ["o2i.amx.profile.kind-duplicate"])
     , testCase
-        "collective Claim type metadata is single-valued"
+        "structured proposition type metadata is single-valued"
         (rejects duplicateClaimTypeModel ["o2i.amx.profile.type-duplicate"])
     , testCase
-        "collective Claims reject unsupported O2I metadata"
+        "structured propositions reject unsupported O2I metadata"
         (rejects unsupportedClaimMetadataModel ["o2i.amx.profile.metadata-key"])
     , testCase
         "collective commitment is mandatory"
-        (rejects
-           missingCommitmentModel
-           ["o2i.amx.profile.collective.commitment-missing"])
+        (rejects missingCommitmentModel ["o2i.amx.profile.commitment-missing"])
     , testCase
         "collective commitment values are closed"
-        (rejects
-           invalidCommitmentModel
-           ["o2i.amx.profile.collective.commitment-invalid"])
+        (rejects invalidCommitmentModel ["o2i.amx.profile.commitment-invalid"])
     , testCase
         "collective commitment is single-valued"
         (rejects
            duplicateCommitmentModel
-           ["o2i.amx.profile.collective.commitment-duplicate"])
+           ["o2i.amx.profile.commitment-duplicate"])
     , testCase
         "collective Fit evidence reference is mandatory"
         (rejects
@@ -179,6 +190,81 @@ candidateProjectionTest = do
   environment <- environmentFor "Partial" candidateModel
   collectiveRawClaims (buildCollectiveIndex environment)
     @?= [expectedClaim Candidate]
+
+candidateParticipantTest :: [(Text, Text)] -> Text -> Assertion
+candidateParticipantTest expected input = do
+  report <- inspectCommitmentModel input
+  let codes = diagnosticCodes report
+  assertBool
+    "Candidate participant was misclassified as unknown"
+    ("o2i.semantics.collective.participant-unknown" `notElem` codes)
+  assertBool
+    "Candidate collective exclusion was not diagnosed"
+    ("o2i.claim.collective-candidate-excluded" `elem` codes)
+  assertBool
+    "Candidate participant exclusion was not diagnosed"
+    ("o2i.claim.candidate-excluded" `elem` codes)
+  case filter
+         isCandidateParticipantIssue
+         (diagnosticsList (reportDiagnostics report)) of
+    diagnostics -> do
+      map diagnosticSubjects diagnostics @?= map expectedSubjects expected
+      map diagnosticSeverity diagnostics
+        @?= replicate (length expected) WarningSeverity
+      map diagnosticStage diagnostics
+        @?= replicate (length expected) SemanticsStage
+      assertBool
+        "Candidate participant diagnostics lost claim and participant provenance"
+        (all ((>= 2) . length . diagnosticLocations) diagnostics)
+  where
+    isCandidateParticipantIssue diagnostic =
+      diagnosticCodeText (diagnosticCode diagnostic)
+        == "o2i.semantics.collective.candidate-participant-semantics-unavailable"
+    expectedSubjects (role, participant) =
+      [ DiagnosticSubject "collective-claim" "claim"
+      , DiagnosticSubject "participant-role" role
+      , DiagnosticSubject "node" participant
+      ]
+
+assertedParticipantTest :: Text -> Assertion
+assertedParticipantTest input = do
+  report <- inspectCommitmentModel input
+  case filter isCandidateDependency (diagnosticsList (reportDiagnostics report)) of
+    [diagnostic] -> do
+      diagnosticSeverity diagnostic @?= ErrorSeverity
+      diagnosticStage diagnostic @?= SemanticsStage
+      assertBool
+        "Candidate dependency lost claim and participant provenance"
+        (length (diagnosticLocations diagnostic) >= 2)
+    diagnostics ->
+      assertFailure
+        ("expected one asserted Candidate dependency diagnostic: "
+           <> show diagnostics)
+  where
+    isCandidateDependency diagnostic =
+      diagnosticCodeText (diagnosticCode diagnostic)
+        == "o2i.semantics.collective.asserted-depends-on-candidate"
+
+inspectCommitmentModel :: Text -> IO InspectionReport
+inspectCommitmentModel input =
+  case inspectSourceDocument
+         amxAdapter
+         (ViewByName "Scope")
+         commitmentInputs
+         (source input) of
+    InspectionCompleted report -> pure report
+    InspectionCommandFailed commandError ->
+      assertFailure ("unexpected command error: " <> show commandError)
+
+commitmentInputs :: InspectionInputs
+commitmentInputs =
+  noInputs
+    { strategyInput =
+        Supplied
+          (sourcedFromDocument
+             (source "empty Strategy formulation input")
+             (StrategyFormulationBundle []))
+    }
 
 duplicateClaimIdTest :: Assertion
 duplicateClaimIdTest = do

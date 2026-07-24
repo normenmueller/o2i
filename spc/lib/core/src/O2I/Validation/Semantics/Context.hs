@@ -116,7 +116,8 @@ data CandidateContextProposition
 -- | Closed result state of Context-content assessment.
 data ContextAssessmentStatus
   = ContextRejected (NonEmpty ModelInvariantError)
-  | ContextPending (NonEmpty CandidateContextProposition)
+  | ContextPending ContextSemantics (NonEmpty CandidateContextProposition)
+    -- ^ Asserted Context semantics exists, while Candidates remain excluded.
   | ContextAccepted ContextSemantics
 
 -- * Semantic validation diagnostics
@@ -213,8 +214,10 @@ data ContextSemantics = ContextSemantics
 -- | Opaque result of assessing asserted and candidate Context propositions.
 --
 -- The assessment retains diagnostics and partial Context elaboration without
--- weakening 'ContextSemantics'. Context semantics is exposed only when no
--- Context candidate remains and every asserted Context invariant has passed.
+-- weakening 'ContextSemantics'. Context semantics is available once every
+-- Asserted Context invariant has passed. Remaining Candidates stay excluded
+-- from it; they keep only the enclosing states @ContextPending@ and
+-- @SemanticsPending@.
 data ContextAssessment = ContextAssessment
   { assessedContextErrors :: [ModelInvariantError]
   , assessedContextCandidates :: [CandidateContextProposition]
@@ -274,8 +277,8 @@ validateContextSemantics graph rawFormulations =
 --
 -- Candidate graph and Strategy-content propositions are retained as unresolved
 -- findings and excluded from validation. Asserted propositions are validated
--- exactly as by 'validateContextSemantics'. A successful Context artifact is
--- available only when no candidate proposition remains.
+-- exactly as by 'validateContextSemantics'. Their Context semantics remains
+-- available to dependent assessments while the complete model stays pending.
 assessContextSemantics ::
      StructuralAssessment -> [Claim RawStrategyFormulation] -> ContextAssessment
 assessContextSemantics structure formulationClaims =
@@ -310,7 +313,7 @@ assessContextSemantics structure formulationClaims =
         Failure failures -> ContextRejected failures
         Success model ->
           case NonEmpty.nonEmpty candidates of
-            Just pending -> ContextPending pending
+            Just pending -> ContextPending model pending
             Nothing -> ContextAccepted model
     elaborations =
       Map.fromList
@@ -322,14 +325,15 @@ assessContextSemantics structure formulationClaims =
 contextAssessmentStatus :: ContextAssessment -> ContextAssessmentStatus
 contextAssessmentStatus = assessedContextStatus
 
--- | Read the exact Context semantics, if every asserted claim validated and no
--- Candidate remains.
+-- | Read Context semantics established exclusively from Asserted propositions.
+--
+-- Pending Candidates remain excluded from this artifact.
 assessedContextSemantics :: ContextAssessment -> Maybe ContextSemantics
 assessedContextSemantics assessment =
   case assessedContextStatus assessment of
     ContextAccepted semantics -> Just semantics
     ContextRejected _ -> Nothing
-    ContextPending _ -> Nothing
+    ContextPending semantics _ -> Just semantics
 
 -- | Read every failed Context invariant over asserted propositions.
 contextAssessmentInvariantErrors :: ContextAssessment -> [ModelInvariantError]

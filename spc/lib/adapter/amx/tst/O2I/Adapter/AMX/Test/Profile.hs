@@ -146,7 +146,10 @@ obligatedMetadataTest :: Assertion
 obligatedMetadataTest = do
   report <- inspectText (ViewByName "Scope") obligatedModel
   diagnosticCodes report
-    @?= ["o2i.amx.profile.kind-missing", "o2i.amx.profile.type-missing"]
+    @?= [ "o2i.amx.profile.commitment-missing"
+        , "o2i.amx.profile.kind-missing"
+        , "o2i.amx.profile.type-missing"
+        ]
 
 metadataKeyTest :: Assertion
 metadataKeyTest = do
@@ -156,6 +159,7 @@ metadataKeyTest = do
       (validContextModelWithNodeProperties
          [ property "o2i.kind" "Context"
          , property "o2i.type" "Mission"
+         , property "o2i.commitment" "asserted"
          , property "o2i.owner" "invented"
          ])
   diagnosticCodes report @?= ["o2i.amx.profile.metadata-key"]
@@ -165,7 +169,8 @@ missingKindTest = do
   report <-
     inspectText
       (ViewByName "Scope")
-      (validContextModelWithNodeProperties [property "o2i.type" "Mission"])
+      (validContextModelWithNodeProperties
+         [property "o2i.type" "Mission", property "o2i.commitment" "asserted"])
   diagnosticCodes report @?= ["o2i.amx.profile.kind-missing"]
 
 malformedKindPropertyTest :: Assertion
@@ -174,7 +179,10 @@ malformedKindPropertyTest = do
     inspectText
       (ViewByName "Scope")
       (validContextModelWithNodeProperties
-         ["<property key=\"o2i.kind\"/>", property "o2i.type" "Mission"])
+         [ "<property key=\"o2i.kind\"/>"
+         , property "o2i.type" "Mission"
+         , property "o2i.commitment" "asserted"
+         ])
   diagnosticCodes report @?= ["o2i.amx.profile.kind-unknown"]
 
 unknownKindTest :: Assertion
@@ -183,7 +191,10 @@ unknownKindTest = do
     inspectText
       (ViewByName "Scope")
       (validContextModelWithNodeProperties
-         [property "o2i.kind" "Unknown", property "o2i.type" "Mission"])
+         [ property "o2i.kind" "Unknown"
+         , property "o2i.type" "Mission"
+         , property "o2i.commitment" "asserted"
+         ])
   diagnosticCodes report @?= ["o2i.amx.profile.kind-unknown"]
 
 missingTypeTest :: Assertion
@@ -191,7 +202,8 @@ missingTypeTest = do
   report <-
     inspectText
       (ViewByName "Scope")
-      (validContextModelWithNodeProperties [property "o2i.kind" "Context"])
+      (validContextModelWithNodeProperties
+         [property "o2i.kind" "Context", property "o2i.commitment" "asserted"])
   diagnosticCodes report @?= ["o2i.amx.profile.type-missing"]
 
 invalidTypeTest :: Assertion
@@ -200,7 +212,10 @@ invalidTypeTest = do
     inspectText
       (ViewByName "Scope")
       (validContextModelWithNodeProperties
-         [property "o2i.kind" "Context", property "o2i.type" "Driver"])
+         [ property "o2i.kind" "Context"
+         , property "o2i.type" "Driver"
+         , property "o2i.commitment" "asserted"
+         ])
   diagnosticCodes report @?= ["o2i.amx.profile.type-invalid"]
 
 duplicateMetadataTest :: Assertion
@@ -213,6 +228,7 @@ duplicateMetadataTest = do
          , property "o2i.kind" "Context"
          , property "o2i.type" "Mission"
          , property "o2i.type" "Mission"
+         , property "o2i.commitment" "asserted"
          ])
   diagnosticCodes report
     @?= ["o2i.amx.profile.kind-duplicate", "o2i.amx.profile.type-duplicate"]

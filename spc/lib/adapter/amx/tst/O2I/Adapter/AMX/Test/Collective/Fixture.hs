@@ -71,7 +71,7 @@ outgoing =
 
 segmentElement :: Segment -> Text
 segmentElement (Segment identifier segmentType name sourceId targetId) =
-  relationship identifier segmentType name sourceId targetId False
+  syntaxRelationship identifier segmentType name sourceId targetId False
 
 segmentElementWithMetadata :: Segment -> Text -> Text
 segmentElementWithMetadata (Segment identifier segmentType name sourceId targetId) segmentMetadata =
@@ -90,8 +90,18 @@ segmentElementWithMetadata (Segment identifier segmentType name sourceId targetI
     <> "</element>"
 
 strategyElement :: Text -> Text
-strategyElement identifier =
-  grouping identifier identifier (Text.concat (metadata "Context" "Strategy"))
+strategyElement = strategyElementWithCommitment "asserted"
+
+strategyElementWithCommitment :: Text -> Text -> Text
+strategyElementWithCommitment commitment identifier =
+  grouping
+    identifier
+    identifier
+    (Text.concat
+       [ property "o2i.kind" "Context"
+       , property "o2i.type" "Strategy"
+       , property "o2i.commitment" commitment
+       ])
 
 missionElement :: Text -> Text
 missionElement identifier =
@@ -113,7 +123,7 @@ junctionElement identifier junctionType properties =
 collectiveMetadata :: Text -> Text
 collectiveMetadata commitment =
   Text.concat
-    [ property "o2i.kind" "Claim"
+    [ property "o2i.kind" "StructuredProposition"
     , property "o2i.type" "CollectiveStrategyRealization"
     , property "o2i.commitment" commitment
     , property "o2i.collective-fit-evidence" "fit-claim"

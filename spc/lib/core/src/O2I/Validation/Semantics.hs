@@ -50,7 +50,7 @@ import O2I.Language.Claim
 import O2I.Language.Element
 import O2I.Validation.Collective
 import O2I.Validation.Semantics.Context
-import O2I.Validation.Structure (StructuralAssessment, structuralGraph)
+import O2I.Validation.Structure (StructuralAssessment)
 
 -- * Complete model assessment state
 -- | Derived semantic maturity of one complete assessed model boundary.
@@ -146,9 +146,7 @@ assessModelSemantics structure inputs =
         contextCandidate
         (contextAssessmentCandidatePropositions contextAssessment)
     collectiveStructure =
-      assessCollectiveClaimStructure
-        (structuralGraph structure)
-        (modelCollectiveClaims inputs)
+      assessCollectiveClaimStructure structure (modelCollectiveClaims inputs)
     blockedCollective =
       blockedCollectiveStrategyRealizationAssessment collectiveStructure
     (collectiveAssessment, collectiveValidation, candidates, status) =
@@ -163,23 +161,26 @@ assessModelSemantics structure inputs =
                  (map
                     CollectiveSemanticError
                     (collectiveStrategyRealizationErrors blockedCollective))))
-        ContextPending pendingContexts ->
-          let pending =
+        ContextPending context pendingContexts ->
+          let assessment =
+                assessCollectiveStrategyRealizations
+                  context
+                  (modelCollectiveFitEvidence inputs)
+                  collectiveStructure
+              pending =
                 appendNonEmpty
                   (fmap contextCandidate pendingContexts)
-                  (collectiveCandidates blockedCollective)
+                  (collectiveCandidates assessment)
               pendingCandidates = NonEmpty.toList pending
-              collectiveErrors =
-                collectiveStrategyRealizationErrors blockedCollective
-           in case NonEmpty.nonEmpty collectiveErrors of
-                Just errors ->
-                  ( blockedCollective
+           in case validateCollectiveStrategyRealizations assessment of
+                Failure errors ->
+                  ( assessment
                   , Nothing
                   , pendingCandidates
                   , SemanticsRejected (fmap CollectiveSemanticError errors))
-                Nothing ->
-                  ( blockedCollective
-                  , Nothing
+                Success validated ->
+                  ( assessment
+                  , Just validated
                   , pendingCandidates
                   , SemanticsPending pending)
         ContextAccepted context ->

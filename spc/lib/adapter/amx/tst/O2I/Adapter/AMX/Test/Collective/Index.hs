@@ -125,7 +125,7 @@ claimBundle number =
     identifier = claimId number
     metadata' =
       Text.concat
-        [ property "o2i.kind" "Claim"
+        [ property "o2i.kind" "StructuredProposition"
         , property "o2i.type" "CollectiveStrategyRealization"
         , property "o2i.commitment" "asserted"
         , property

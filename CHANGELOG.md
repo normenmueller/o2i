@@ -19,12 +19,14 @@
 - Added deterministic, View-scoped inspection of native Archi models through
   format-neutral libraries, the AMX adapter, and the thin `o2i` CLI with human
   and JSON reports.
-- Added explicit Claim commitment, derived Context elaboration, one complete
-  Core-derived model maturity, and n-ary collective Strategy realization with
-  exact contributor evidence, target coverage, structured collective Fit,
-  order-independent target Trade-offs, retained blocked Candidate diagnostics,
-  native AMX Junction projection, and provenance-preserving partial-View
-  closure.
+- Added exactly one explicit Candidate or Asserted Commitment per persisted
+  proposition, commitment-aware dependency validation and Candidate exclusion,
+  derived Context elaboration, one complete Core-derived model maturity, and
+  n-ary collective Strategy realization as a StructuredProposition with exact
+  contributor evidence, target coverage, structured collective Fit,
+  order-independent target Trade-offs, retained role- and
+  participant-specific Candidate diagnostics, native AMX Junction projection,
+  and provenance-preserving partial-View closure.
 
 ### Added
 

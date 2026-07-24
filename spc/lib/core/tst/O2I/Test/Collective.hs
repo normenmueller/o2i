@@ -29,6 +29,21 @@ collectiveTests =
         "valid Candidate is diagnosed separately and constructs no witness"
         validCandidateTest
     , testCase
+        "Candidate collective resolves a Candidate contributor diagnostically"
+        candidateCollectiveCandidateContributorTest
+    , testCase
+        "Candidate collective resolves a Candidate target diagnostically"
+        candidateCollectiveCandidateTargetTest
+    , testCase
+        "Candidate participant diagnostics retain role and stable order"
+        candidateCollectiveMultipleCandidateParticipantsTest
+    , testCase
+        "Asserted collective rejects a Candidate contributor precisely"
+        assertedCollectiveCandidateContributorTest
+    , testCase
+        "Asserted collective rejects a Candidate target precisely"
+        assertedCollectiveCandidateTargetTest
+    , testCase
         "Candidate semantic deficiencies are retained without a witness"
         candidateIssueTest
     , testCase
@@ -72,8 +87,8 @@ collectiveTests =
         "Context errors retain blocked collective Candidate diagnostics"
         contextErrorRetainsBlockedCandidateTest
     , testCase
-        "Context Candidates retain blocked collective Candidate diagnostics"
-        contextCandidateRetainsBlockedCandidateTest
+        "Context Candidates preserve available collective Candidate semantics"
+        contextCandidatePreservesCollectiveSemanticsTest
     ]
 
 tradeOffSetTests :: TestTree
@@ -267,6 +282,103 @@ validCandidateTest =
       candidates ->
         assertFailure
           ("expected one Candidate assessment, got " ++ show (length candidates))
+
+candidateCollectiveCandidateContributorTest :: Assertion
+candidateCollectiveCandidateContributorTest =
+  assertCandidateParticipant
+    [ CandidateParticipantSemanticsUnavailable
+        CollectiveContributor
+        candidateStrategyId
+    ]
+    collectiveProposition
+      {rawContributors = [candidateStrategyId, contributorTwoId]}
+
+candidateCollectiveCandidateTargetTest :: Assertion
+candidateCollectiveCandidateTargetTest =
+  assertCandidateParticipant
+    [ CandidateParticipantSemanticsUnavailable
+        CollectiveTarget
+        candidateStrategyId
+    ]
+    collectiveProposition {rawTarget = candidateStrategyId}
+
+candidateCollectiveMultipleCandidateParticipantsTest :: Assertion
+candidateCollectiveMultipleCandidateParticipantsTest =
+  assertCandidateParticipant
+    [ CandidateParticipantSemanticsUnavailable
+        CollectiveContributor
+        candidateStrategyId
+    , CandidateParticipantSemanticsUnavailable
+        CollectiveContributor
+        secondCandidateStrategyId
+    , CandidateParticipantSemanticsUnavailable
+        CollectiveTarget
+        candidateTargetStrategyId
+    ]
+    collectiveProposition
+      { rawContributors = [candidateStrategyId, secondCandidateStrategyId]
+      , rawTarget = candidateTargetStrategyId
+      }
+
+assertedCollectiveCandidateContributorTest :: Assertion
+assertedCollectiveCandidateContributorTest =
+  assertAssertedParticipantDependency
+    CollectiveContributor
+    collectiveProposition
+      {rawContributors = [candidateStrategyId, contributorTwoId]}
+
+assertedCollectiveCandidateTargetTest :: Assertion
+assertedCollectiveCandidateTargetTest =
+  assertAssertedParticipantDependency
+    CollectiveTarget
+    collectiveProposition {rawTarget = candidateStrategyId}
+
+assertCandidateParticipant ::
+     [CollectiveStrategyRealizationIssue]
+  -> RawCollectiveStrategyRealization
+  -> Assertion
+assertCandidateParticipant expectedIssues proposition = do
+  let claim = candidateClaim proposition
+      assessment = assessCollectiveClaimModel [claim]
+  assessmentCollectiveErrors assessment @?= []
+  case modelAssessmentStatus assessment of
+    SemanticsPending _ -> pure ()
+    _ -> assertFailure "Candidate participant did not keep semantics pending"
+  case assessmentValidatedCollectiveStrategyRealizations assessment of
+    Nothing -> pure ()
+    Just validated ->
+      assertBool
+        "Candidate participant constructed a collective witness"
+        (null (collectiveStrategyRealizations validated))
+  case assessmentCandidateCollectiveStrategyRealizations assessment of
+    [candidate] -> do
+      candidateCollectiveClaim candidate @?= claim
+      candidateCollectiveIssues candidate @?= expectedIssues
+    candidates ->
+      assertFailure
+        ("expected one Candidate assessment, got " ++ show (length candidates))
+
+assertAssertedParticipantDependency ::
+     CollectiveParticipantRole -> RawCollectiveStrategyRealization -> Assertion
+assertAssertedParticipantDependency role proposition = do
+  let assessment = assessCollectiveClaimModel [assertedClaim proposition]
+      expected =
+        CollectiveStructuralError
+          (AssertedCollectiveDependsOnCandidate
+             collectiveClaimId
+             role
+             candidateStrategyId)
+  assessmentCollectiveErrors assessment @?= [expected]
+  case modelAssessmentStatus assessment of
+    SemanticsRejected errors ->
+      assertBool
+        "precise Candidate dependency was absent from semantic rejection"
+        (CollectiveSemanticError expected `elem` NonEmpty.toList errors)
+    _ -> assertFailure "Asserted Candidate dependency did not reject semantics"
+  case assessmentValidatedCollectiveStrategyRealizations assessment of
+    Nothing -> pure ()
+    Just _ ->
+      assertFailure "Asserted Candidate dependency exposed collective witnesses"
 
 candidateIssueTest :: Assertion
 candidateIssueTest =
@@ -672,8 +784,8 @@ contextErrorRetainsBlockedCandidateTest = do
     @?= [CandidateCollectiveRealization collectiveClaimId]
   assertBlockedCollectiveCandidate assessment
 
-contextCandidateRetainsBlockedCandidateTest :: Assertion
-contextCandidateRetainsBlockedCandidateTest =
+contextCandidatePreservesCollectiveSemanticsTest :: Assertion
+contextCandidatePreservesCollectiveSemanticsTest =
   case validateClaimStructure claimGraph of
     StructureAccepted structure -> do
       let assessment =
@@ -697,7 +809,14 @@ contextCandidateRetainsBlockedCandidateTest =
                 , CandidateCollectiveRealization collectiveClaimId
                 ]
         _ -> assertFailure "Context Candidates did not keep semantics pending"
-      assertBlockedCollectiveCandidate assessment
+      case assessmentCandidateCollectiveStrategyRealizations assessment of
+        [candidate] -> do
+          candidateCollectiveClaim candidate @?= candidateCollective
+          candidateCollectiveIssues candidate @?= []
+        candidates ->
+          assertFailure
+            ("expected one evaluated collective Candidate, got "
+               ++ show (length candidates))
     StructureModelRejected errors ->
       assertFailure ("collective Candidate fixture failed: " ++ show errors)
     StructureInternalFailure internal ->
@@ -784,6 +903,24 @@ assessCollectiveModelWith formulations raw fitEvidence claims =
     StructureInternalFailure internal ->
       error ("collective fixture internal failure: " ++ show internal)
 
+assessCollectiveClaimModel ::
+     [Claim RawCollectiveStrategyRealization] -> ModelAssessment
+assessCollectiveClaimModel claims =
+  case validateClaimStructure candidateParticipantClaimGraph of
+    StructureAccepted structure ->
+      assessModelSemantics
+        structure
+        ModelSemanticsInput
+          { modelStrategyClaims = map assertedClaim collectiveFormulations
+          , modelCollectiveClaims = claims
+          , modelCollectiveFitEvidence = [completeFit]
+          }
+    StructureModelRejected errors ->
+      error ("Candidate participant fixture failed: " ++ show errors)
+    StructureInternalFailure internal ->
+      error
+        ("Candidate participant fixture failed internally: " ++ show internal)
+
 contributionPremiseRelations :: CollectiveStrategyRealization -> [RelationName]
 contributionPremiseRelations realization =
   [ rawEdgeRelation premise
@@ -812,6 +949,29 @@ assertedCollective = assertedClaim collectiveProposition
 
 candidateCollective :: Claim RawCollectiveStrategyRealization
 candidateCollective = candidateClaim collectiveProposition
+
+candidateStrategyId :: RawNodeId
+candidateStrategyId = RawNodeId "candidate-collective-participant"
+
+secondCandidateStrategyId :: RawNodeId
+secondCandidateStrategyId = RawNodeId "second-candidate-collective-participant"
+
+candidateTargetStrategyId :: RawNodeId
+candidateTargetStrategyId = RawNodeId "candidate-collective-target"
+
+candidateParticipantClaimGraph :: RawClaimGraph
+candidateParticipantClaimGraph =
+  RawClaimGraph
+    { rawNodeClaims =
+        map assertedClaim (rawNodes completeCollectiveGraph)
+          ++ map
+               (candidateClaim . (`RawContextNode` Strategy))
+               [ candidateStrategyId
+               , secondCandidateStrategyId
+               , candidateTargetStrategyId
+               ]
+    , rawEdgeClaims = map assertedClaim (rawEdges completeCollectiveGraph)
+    }
 
 completeFit :: RawCollectiveFitEvidence
 completeFit =

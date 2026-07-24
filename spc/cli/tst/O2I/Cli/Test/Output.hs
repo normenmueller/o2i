@@ -37,6 +37,12 @@ tests =
     , testCase
         "collective partial-View human output is deterministic"
         collectivePartialViewOutput
+    , testCase
+        "asserted collective Candidate dependency renders stably"
+        collectiveCandidateDependencyOutput
+    , testCase
+        "Candidate collective participant issue renders stably"
+        collectiveCandidateParticipantOutput
     , testCase "SourceLocation scalars are terminal-safe" hostileLocation
     , testCase "human output contains no ANSI escape" ansiFree
     , testCase "closed output handle is normalized" closedHandle
@@ -103,6 +109,32 @@ collectivePartialViewOutput = do
     (LazyByteString.toStrict firstDiagnostics)
     "total-contributors=2"
 
+collectiveCandidateDependencyOutput :: Assertion
+collectiveCandidateDependencyOutput = do
+  report <- collectiveCandidateDependencyReport
+  let diagnostics =
+        LazyByteString.toStrict (renderHumanDiagnostics DebugVerbosity report)
+  assertContains
+    diagnostics
+    "[o2i|error] o2i.semantics.collective.asserted-depends-on-candidate"
+  assertContains
+    diagnostics
+    "An asserted collective claim depends on a Candidate Strategy participant."
+  assertPrefixed diagnostics
+
+collectiveCandidateParticipantOutput :: Assertion
+collectiveCandidateParticipantOutput = do
+  report <- collectiveCandidateParticipantReport
+  let diagnostics =
+        LazyByteString.toStrict (renderHumanDiagnostics DebugVerbosity report)
+  assertContains
+    diagnostics
+    "[o2i|warn] o2i.semantics.collective.candidate-participant-semantics-unavailable"
+  assertContains
+    diagnostics
+    "A Candidate Strategy participant is unavailable to validated collective semantics."
+  assertPrefixed diagnostics
+
 collectivePartialViewReport :: IO InspectionReport
 collectivePartialViewReport =
   case inspectSourceDocument
@@ -117,34 +149,75 @@ collectivePartialViewReport =
     InspectionCommandFailed failure ->
       fail ("unexpected command failure: " <> show failure)
 
+collectiveCandidateDependencyReport :: IO InspectionReport
+collectiveCandidateDependencyReport =
+  case inspectSourceDocument
+         amxAdapter
+         (ViewByName "Scope")
+         semanticInputs
+         (sourceDocumentFromBytes
+            "collective-candidate.archimate"
+            FileSource
+            (TextEncoding.encodeUtf8 collectiveCandidateDependencyModel)) of
+    InspectionCompleted report -> pure report
+    InspectionCommandFailed failure ->
+      fail ("unexpected command failure: " <> show failure)
+
+collectiveCandidateParticipantReport :: IO InspectionReport
+collectiveCandidateParticipantReport =
+  case inspectSourceDocument
+         amxAdapter
+         (ViewByName "Scope")
+         semanticInputs
+         (sourceDocumentFromBytes
+            "collective-candidate-participant.archimate"
+            FileSource
+            (TextEncoding.encodeUtf8 collectiveCandidateParticipantModel)) of
+    InspectionCompleted report -> pure report
+    InspectionCommandFailed failure ->
+      fail ("unexpected command failure: " <> show failure)
+
 collectivePartialViewModel :: Text
 collectivePartialViewModel =
+  collectiveOutputModel "asserted" "asserted" "asserted" "asserted" "Partial"
+
+collectiveCandidateDependencyModel :: Text
+collectiveCandidateDependencyModel =
+  collectiveOutputModel "candidate" "asserted" "asserted" "asserted" "Scope"
+
+collectiveCandidateParticipantModel :: Text
+collectiveCandidateParticipantModel =
+  collectiveOutputModel "candidate" "candidate" "candidate" "candidate" "Scope"
+
+collectiveOutputModel :: Text -> Text -> Text -> Text -> Text -> Text
+collectiveOutputModel contributorACommitment contributorBCommitment targetCommitment claimCommitment viewName =
   Text.concat
     [ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
     , "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" "
     , "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
     , "version=\"5.0.0\"><folder>"
-    , strategy "contributor-a"
-    , strategy "contributor-b"
-    , strategy "target"
+    , strategy contributorACommitment "contributor-a"
+    , strategy contributorBCommitment "contributor-b"
+    , strategy targetCommitment "target"
     , "<element xsi:type=\"a:Junction\" id=\"claim\" name=\"claim\">"
-    , propertyText "o2i.kind" "Claim"
+    , propertyText "o2i.kind" "StructuredProposition"
     , propertyText "o2i.type" "CollectiveStrategyRealization"
-    , propertyText "o2i.commitment" "asserted"
+    , propertyText "o2i.commitment" claimCommitment
     , propertyText "o2i.collective-fit-evidence" "fit-claim"
     , "</element>"
     , realization "incoming-a" "contributor-a" "claim"
     , realization "incoming-b" "contributor-b" "claim"
     , realization "outgoing" "claim" "target"
-    , "<element xsi:type=\"a:ArchimateDiagramModel\" id=\"partial\" "
-    , "name=\"Partial\"><child xsi:type=\"a:DiagramObject\" "
+    , "<element xsi:type=\"a:ArchimateDiagramModel\" id=\"scope\" name=\""
+    , viewName
+    , "\"><child xsi:type=\"a:DiagramObject\" "
     , "id=\"claim-object\" archimateElement=\"claim\"/></element>"
     , "</folder>"
     , propertyText "o2i.profile" "0.2"
     , "</a:model>"
     ]
   where
-    strategy identifier =
+    strategy commitment identifier =
       Text.concat
         [ "<element xsi:type=\"a:Grouping\" id=\""
         , identifier
@@ -153,6 +226,7 @@ collectivePartialViewModel =
         , "\">"
         , propertyText "o2i.kind" "Context"
         , propertyText "o2i.type" "Strategy"
+        , propertyText "o2i.commitment" commitment
         , "</element>"
         ]
     realization identifier source target =
@@ -264,6 +338,19 @@ emptyInputs =
     , collectiveFitInput = Absent
     , readinessInput = Absent
     , evidenceInput = Absent
+    }
+
+semanticInputs :: InspectionInputs
+semanticInputs =
+  emptyInputs
+    { strategyInput =
+        Supplied
+          (sourcedFromDocument
+             (sourceDocumentFromBytes
+                "strategy-input"
+                FileSource
+                "empty Strategy formulation input")
+             (StrategyFormulationBundle []))
     }
 
 adversarialText :: Text

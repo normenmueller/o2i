@@ -176,6 +176,9 @@ tests =
         "collective Candidate semantic issues remain warnings"
         candidateCollectiveIssueInspectionTest
     , testCase
+        "Candidate participant issue identifies claim, role, and participant"
+        candidateParticipantIssueSpecTest
+    , testCase
         "malformed collective Candidate fails Semantics"
         malformedCandidateCollectiveInspectionTest
     , testCase
@@ -1375,6 +1378,27 @@ candidateCollectiveIssueInspectionTest = do
         ]
   map diagnosticSeverity (diagnosticsList (reportDiagnostics report))
     @?= [WarningSeverity, WarningSeverity]
+
+candidateParticipantIssueSpecTest :: Assertion
+candidateParticipantIssueSpecTest = do
+  let specification =
+        candidateCollectiveRealizationIssueSpec
+          collectiveInspectionClaimId
+          (CandidateParticipantSemanticsUnavailable
+             CollectiveContributor
+             collectiveContributorOneId)
+  diagnosticCodeText (specCode specification)
+    @?= "o2i.semantics.collective.candidate-participant-semantics-unavailable"
+  specSeverity specification @?= WarningSeverity
+  specMessage specification
+    @?= "A Candidate Strategy participant is unavailable to validated collective semantics."
+  specSubjects specification
+    @?= [ DiagnosticSubject
+            "collective-claim"
+            (claimIdText collectiveInspectionClaimId)
+        , DiagnosticSubject "participant-role" "contributor"
+        , DiagnosticSubject "node" (rawNodeIdText collectiveContributorOneId)
+        ]
 
 malformedCandidateCollectiveInspectionTest :: Assertion
 malformedCandidateCollectiveInspectionTest = do

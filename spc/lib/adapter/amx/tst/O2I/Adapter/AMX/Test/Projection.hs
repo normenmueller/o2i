@@ -47,7 +47,7 @@ defectCatalogTest = do
   let tags = [minBound .. maxBound]
       specs = map amxDefectTagSpec tags
       codes = map (diagnosticCodeText . specCode) specs
-  length tags @?= 58
+  length tags @?= 59
   length codes @?= length (stableUnique codes)
   assertBool
     "Decode catalog codes must retain their namespace"
@@ -147,12 +147,13 @@ profileDefects =
   , MissingOwnership "node"
   , DuplicateOwnership "node" ("a" :| ["b"])
   , OwnershipOnOwnerlessKind "node"
+  , MissingCommitment "claim"
+  , DuplicateCommitment "claim" ("candidate" :| ["asserted"])
+  , InvalidCommitment "claim" "tentative"
+  , ForbiddenCommitment "ownership" "contextualization"
   , MissingCollectiveClaimId
   , AmbiguousCollectiveClaimId "claim" 2
   , InvalidCollectiveJunctionRepresentation "claim" "OrJunction"
-  , MissingCollectiveCommitment "claim"
-  , DuplicateCollectiveCommitment "claim" ("candidate" :| ["asserted"])
-  , InvalidCollectiveCommitment "claim" "tentative"
   , MissingCollectiveFitEvidenceReference "claim"
   , DuplicateCollectiveFitEvidenceReference "claim" ("fit-a" :| ["fit-b"])
   , Defect.EmptyCollectiveFitEvidenceReference "claim"

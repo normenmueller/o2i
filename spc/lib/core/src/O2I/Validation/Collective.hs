@@ -37,6 +37,7 @@ module O2I.Validation.Collective
   , candidateCollectiveIssues
   ) where
 
+import Data.Either (partitionEithers)
 import Data.List (group, sort)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.List.NonEmpty (NonEmpty((:|)))
@@ -46,13 +47,13 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Validation (Validation(..))
 import O2I.Graph.Raw
-import O2I.Graph.Typed
 import O2I.Language.Claim
 import O2I.Language.Element
 import O2I.Language.Relation
 import O2I.Validation.Collective.Fit
 import O2I.Validation.Collective.Types
 import O2I.Validation.Semantics.Context
+import O2I.Validation.Structure.Internal
 import O2I.Validation.Trace.Evidence
 
 -- * Collective Strategy realization input
@@ -71,17 +72,12 @@ data RawCollectiveStrategyRealization = RawCollectiveStrategyRealization
   , rawCollectiveFitEvidence :: CollectiveFitEvidenceRef
   } deriving (Eq, Show)
 
--- | Participant position used by precise typing diagnostics.
-data CollectiveParticipantRole
-  = CollectiveContributor
-  | CollectiveTarget
-  deriving (Eq, Ord, Show)
-
 -- * Collective Strategy realization validation vocabulary
 -- | Fatal structural defect of a collective proposition.
 --
--- Structural validity is independent of commitment: Candidate and Asserted
--- claims must satisfy the same identity, topology, and participant contracts.
+-- Candidate and Asserted claims satisfy the same identity, topology, and
+-- participant typing contracts. An Asserted claim additionally requires every
+-- participant declaration to be Asserted.
 data CollectiveStrategyRealizationStructuralError
   = EmptyCollectiveRealizationClaimId
   | DuplicateCollectiveRealizationClaimId ClaimId
@@ -95,6 +91,11 @@ data CollectiveStrategyRealizationStructuralError
       CollectiveParticipantRole
       RawNodeId
       NodeKindValue
+  | AssertedCollectiveDependsOnCandidate
+      ClaimId
+      CollectiveParticipantRole
+      RawNodeId
+    -- ^ An Asserted collective claim references a Candidate Strategy.
   deriving (Eq, Show)
 
 -- | Fatal structural defect or Asserted semantic deficiency.
@@ -130,7 +131,8 @@ data CandidateCollectiveStrategyRealization =
 --
 -- Structurally valid claims remain available for semantic evaluation or
 -- blocked Candidate diagnostics. No contribution, coverage, or Fit obligation
--- is evaluated at this stage.
+-- is evaluated at this stage. Candidate claims may retain Candidate or Asserted
+-- Strategy participants without constructing semantic references.
 data CollectiveClaimStructureAssessment =
   CollectiveClaimStructureAssessment
     [CollectiveStrategyRealizationError]
@@ -154,26 +156,34 @@ newtype ValidatedCollectiveStrategyRealizations =
 data StructurallyValidCollective =
   StructurallyValidCollective
     (Claim RawCollectiveStrategyRealization)
-    (AtLeastTwo (ContextRef 'Strategy))
-    (ContextRef 'Strategy)
+    (AtLeastTwo StructuralStrategyParticipant)
+    StructuralStrategyParticipant
+
+-- | Structurally accepted Strategy declaration with retained commitment.
+--
+-- This assessment-only representation is not a semantic witness. It can be
+-- lifted to a 'ContextRef' only when its commitment is Asserted.
+data StructuralStrategyParticipant =
+  StructuralStrategyParticipant RawNodeId Commitment
 
 data SemanticEvaluation =
   SemanticEvaluation
     StructurallyValidCollective
     [CollectiveStrategyRealizationIssue]
-    [(ContextRef 'Strategy, Maybe (NonEmpty MacroEvidenceWitness))]
+    [(StructuralStrategyParticipant, Maybe (NonEmpty MacroEvidenceWitness))]
 
 -- * Collective Strategy realization assessment
 -- | Capture every collective claim against the structurally valid graph.
 --
 -- Identity, topology, and participant typing are independent of Context
 -- semantic completeness and therefore remain diagnosable when Context
--- semantics is unavailable.
+-- semantics is unavailable. Resolution uses the private commitment-aware
+-- structural declaration index rather than the Asserted-only graph.
 assessCollectiveClaimStructure ::
-     WellFormedGraph
+     StructuralAssessment
   -> [Claim RawCollectiveStrategyRealization]
   -> CollectiveClaimStructureAssessment
-assessCollectiveClaimStructure graph claims =
+assessCollectiveClaimStructure structure claims =
   CollectiveClaimStructureAssessment errors structuralClaims
   where
     identityErrors =
@@ -182,7 +192,7 @@ assessCollectiveClaimStructure graph claims =
       | identifier <-
           duplicates (map (rawRealizationId . claimedProposition) claims)
       ]
-    structuralResults = map (validateCollectiveStructure graph) claims
+    structuralResults = map (validateCollectiveStructure structure) claims
     structuralErrors =
       concat [NonEmpty.toList failures | Failure failures <- structuralResults]
     structuralClaims = [structural | Success structural <- structuralResults]
@@ -331,25 +341,22 @@ candidateCollectiveIssues (CandidateCollectiveStrategyRealization _ issues) =
   issues
 
 validateCollectiveStructure ::
-     WellFormedGraph
+     StructuralAssessment
   -> Claim RawCollectiveStrategyRealization
   -> Validation
        (NonEmpty CollectiveStrategyRealizationError)
        StructurallyValidCollective
-validateCollectiveStructure graph claim =
+validateCollectiveStructure structure claim =
   case NonEmpty.nonEmpty errors of
     Just failures -> Failure (fmap CollectiveStructuralError failures)
     Nothing ->
-      case distinctContributors of
-        first:second:rest ->
+      case (resolvedContributors, targetResult) of
+        (first:second:rest, Right resolvedTarget) ->
           Success
             (StructurallyValidCollective
                claim
-               (AtLeastTwo
-                  (mkContextRef first)
-                  (mkContextRef second)
-                  (map mkContextRef rest))
-               (mkContextRef target))
+               (AtLeastTwo first second rest)
+               resolvedTarget)
         _ ->
           Failure
             (CollectiveStructuralError (TooFewCollectiveContributors identifier)
@@ -360,6 +367,26 @@ validateCollectiveStructure graph claim =
     contributors = rawContributors proposition
     distinctContributors = stableDistinct contributors
     target = rawTarget proposition
+    (contributorErrors, resolvedContributors) =
+      partitionEithers
+        (map
+           (resolveCollectiveParticipant
+              structure
+              (claimCommitment claim)
+              identifier
+              CollectiveContributor)
+           distinctContributors)
+    targetResult =
+      resolveCollectiveParticipant
+        structure
+        (claimCommitment claim)
+        identifier
+        CollectiveTarget
+        target
+    targetErrors =
+      case targetResult of
+        Left failure -> [failure]
+        Right _ -> []
     errors =
       [EmptyCollectiveRealizationClaimId | blankClaimId identifier]
         ++ [ EmptyCollectiveFitEvidenceReference identifier
@@ -374,29 +401,36 @@ validateCollectiveStructure graph claim =
         ++ [ CollectiveContributorIsTarget identifier target
            | target `elem` distinctContributors
            ]
-        ++ concatMap
-             (participantErrors graph identifier CollectiveContributor)
-             distinctContributors
-        ++ participantErrors graph identifier CollectiveTarget target
+        ++ contributorErrors
+        ++ targetErrors
 
-participantErrors ::
-     WellFormedGraph
+resolveCollectiveParticipant ::
+     StructuralAssessment
+  -> Commitment
   -> ClaimId
   -> CollectiveParticipantRole
   -> RawNodeId
-  -> [CollectiveStrategyRealizationStructuralError]
-participantErrors graph claim role participant =
-  case lookupNode graph participant of
-    Nothing -> [UnknownCollectiveParticipant claim role participant]
-    Just node
-      | someNodeKind node == ContextNodeKind Strategy -> []
+  -> Either
+       CollectiveStrategyRealizationStructuralError
+       StructuralStrategyParticipant
+resolveCollectiveParticipant structure collectiveCommitment claim role participant =
+  case lookupStructuralNodeDeclaration structure participant of
+    Nothing -> Left (UnknownCollectiveParticipant claim role participant)
+    Just declaration
+      | structuralNodeDeclarationKind declaration /= ContextNodeKind Strategy ->
+        Left
+          (NonStrategyCollectiveParticipant
+             claim
+             role
+             participant
+             (structuralNodeDeclarationKind declaration))
+      | collectiveCommitment == Asserted
+      , participantCommitment == Candidate ->
+        Left (AssertedCollectiveDependsOnCandidate claim role participant)
       | otherwise ->
-        [ NonStrategyCollectiveParticipant
-            claim
-            role
-            participant
-            (someNodeKind node)
-        ]
+        Right (StructuralStrategyParticipant participant participantCommitment)
+      where participantCommitment =
+              structuralNodeDeclarationCommitment declaration
 
 evaluateCollective ::
      ContextSemantics
@@ -405,24 +439,28 @@ evaluateCollective ::
   -> StructurallyValidCollective
   -> SemanticEvaluation
 evaluateCollective semantic evidence fitIndex structural =
-  SemanticEvaluation structural issues contributionEvidence
+  case candidateParticipantIssues structural of
+    [] -> SemanticEvaluation structural issues contributionEvidence
+    candidateIssues -> SemanticEvaluation structural candidateIssues []
   where
     claim = claimedProposition (structurallyValidClaim structural)
     contributors = structurallyValidContributorIds structural
-    target = contextRefId (structurallyValidTarget structural)
+    target = structurallyValidTargetId structural
     contributionEvidence =
-      [ ( mkContextRef contributor
+      [ ( contributor
         , NonEmpty.nonEmpty
             (macroEvidenceWitnessesForIn
                evidence
-               contributor
+               (structuralParticipantId contributor)
                (relationCode (relationSpec contributesToStrategy))
                target))
-      | contributor <- contributors
+      | contributor <- structurallyValidContributorList structural
       ]
     contributionIssues =
-      [ MissingContributorContribution contributor target
-      | (contributor, (_, Nothing)) <- zip contributors contributionEvidence
+      [ MissingContributorContribution
+        (structuralParticipantId contributor)
+        target
+      | (contributor, Nothing) <- contributionEvidence
       ]
     witnessPremiseEdges =
       concat
@@ -467,20 +505,27 @@ assertedWitness :: SemanticEvaluation -> Maybe CollectiveStrategyRealization
 assertedWitness (SemanticEvaluation structural issues evidence)
   | claimCommitment claim == Asserted
   , null issues
+  , Just contributors <-
+      traverseAtLeastTwo
+        liftAssertedStrategyParticipant
+        (structurallyValidContributors structural)
+  , Just target <-
+      liftAssertedStrategyParticipant (structurallyValidTarget structural)
   , Just validatedEvidence <- traverse requireEvidence evidence =
     Just
       (CollectiveStrategyRealization
          (rawRealizationId proposition)
-         (structurallyValidContributors structural)
-         (structurallyValidTarget structural)
+         contributors
+         target
          (rawCollectiveFitEvidence proposition)
          validatedEvidence)
   | otherwise = Nothing
   where
     claim = structurallyValidClaim structural
     proposition = claimedProposition claim
-    requireEvidence (contributor, Just witnesses) =
-      Just (contributor, witnesses)
+    requireEvidence (participant, Just witnesses) = do
+      contributor <- liftAssertedStrategyParticipant participant
+      pure (contributor, witnesses)
     requireEvidence (_, Nothing) = Nothing
 
 candidateAssessment ::
@@ -536,19 +581,73 @@ structurallyValidClaim ::
 structurallyValidClaim (StructurallyValidCollective claim _ _) = claim
 
 structurallyValidContributors ::
-     StructurallyValidCollective -> AtLeastTwo (ContextRef 'Strategy)
+     StructurallyValidCollective -> AtLeastTwo StructuralStrategyParticipant
 structurallyValidContributors (StructurallyValidCollective _ contributors _) =
   contributors
 
 structurallyValidContributorIds :: StructurallyValidCollective -> [RawNodeId]
 structurallyValidContributorIds =
-  map contextRefId
-    . NonEmpty.toList
-    . atLeastTwoToNonEmpty
-    . structurallyValidContributors
+  map structuralParticipantId . structurallyValidContributorList
 
-structurallyValidTarget :: StructurallyValidCollective -> ContextRef 'Strategy
+structurallyValidContributorList ::
+     StructurallyValidCollective -> [StructuralStrategyParticipant]
+structurallyValidContributorList =
+  NonEmpty.toList . atLeastTwoToNonEmpty . structurallyValidContributors
+
+structurallyValidTarget ::
+     StructurallyValidCollective -> StructuralStrategyParticipant
 structurallyValidTarget (StructurallyValidCollective _ _ target) = target
+
+structurallyValidTargetId :: StructurallyValidCollective -> RawNodeId
+structurallyValidTargetId = structuralParticipantId . structurallyValidTarget
+
+structuralParticipantId :: StructuralStrategyParticipant -> RawNodeId
+structuralParticipantId (StructuralStrategyParticipant identifier _) =
+  identifier
+
+structuralParticipantCommitment :: StructuralStrategyParticipant -> Commitment
+structuralParticipantCommitment (StructuralStrategyParticipant _ commitment) =
+  commitment
+
+-- | Report every Candidate participant in contributor order, then the target.
+--
+-- Context semantics exists on this path, but Candidate Strategy declarations
+-- cannot supply the validated Context references required by a witness.
+candidateParticipantIssues ::
+     StructurallyValidCollective -> [CollectiveStrategyRealizationIssue]
+candidateParticipantIssues structural =
+  mapMaybe candidateIssue contributors ++ mapMaybe candidateIssue [target]
+  where
+    contributors =
+      map
+        (\participant -> (CollectiveContributor, participant))
+        (structurallyValidContributorList structural)
+    target = (CollectiveTarget, structurallyValidTarget structural)
+    candidateIssue (role, participant)
+      | structuralParticipantCommitment participant == Candidate =
+        Just
+          (CandidateParticipantSemanticsUnavailable
+             role
+             (structuralParticipantId participant))
+      | otherwise = Nothing
+
+-- | Lift one assessed Strategy participant into asserted semantics.
+--
+-- Candidate declarations have no 'ContextRef' representation by construction.
+liftAssertedStrategyParticipant ::
+     StructuralStrategyParticipant -> Maybe (ContextRef 'Strategy)
+liftAssertedStrategyParticipant participant
+  | structuralParticipantCommitment participant == Asserted =
+    Just (mkContextRef (structuralParticipantId participant))
+  | otherwise = Nothing
+
+traverseAtLeastTwo ::
+     (left -> Maybe right) -> AtLeastTwo left -> Maybe (AtLeastTwo right)
+traverseAtLeastTwo transform (AtLeastTwo first second rest) =
+  AtLeastTwo
+    <$> transform first
+    <*> transform second
+    <*> traverse transform rest
 
 atLeastTwoToNonEmpty :: AtLeastTwo value -> NonEmpty value
 atLeastTwoToNonEmpty (AtLeastTwo first second rest) = first :| (second : rest)

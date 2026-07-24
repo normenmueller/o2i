@@ -10,13 +10,15 @@ import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import qualified Data.Text as Text
-import O2I (assertedClaim)
+import O2I (claimWithCommitment)
 import O2I.Adapter.AMX.Internal.Defect
 import O2I.Adapter.AMX.Internal.Profile.Closure
 import O2I.Adapter.AMX.Internal.Profile.Collective
 import O2I.Adapter.AMX.Internal.Profile.Collective.Index
+import O2I.Adapter.AMX.Internal.Profile.Commitment
 import O2I.Adapter.AMX.Internal.Profile.Metadata
 import O2I.Adapter.AMX.Internal.Profile.Model
+import O2I.Adapter.AMX.Internal.Profile.Property
 import O2I.Adapter.AMX.Internal.Registry
 import O2I.Adapter.AMX.Internal.Types
 import O2I.Inspection.Profile
@@ -42,6 +44,7 @@ projectSnapshot document selected =
     , projectedDefects =
         rootDeferred
           ++ nodeDeferred
+          ++ ownershipDeferred
           ++ relationDeferred
           ++ collectiveDefects environment collectiveIndex
     }
@@ -62,6 +65,13 @@ projectSnapshot document selected =
         ]
     relationDeferred =
       concatMap (relationshipDefects environment) semanticRelationships
+    ownershipDeferred =
+      concatMap
+        (\relationship ->
+           map
+             (deferRelationship (relationshipOccurrence relationship))
+             (forbiddenCommitmentDefects "contextualization" relationship))
+        (environmentOwnerships environment)
 
 profileFacts ::
      Environment
@@ -115,14 +125,18 @@ projectNodeOccurrence ::
   -> IndexedProfileFact SourcePosition
 projectNodeOccurrence environment closure element
   | Set.member occurrence (closureCandidates closure) =
-    case rawNode environment element of
-      Just node
+    case (rawNode environment element, resolvedCommitment commitment) of
+      (Just node, Just explicitCommitment)
         | representationCompatible element (nodeKind environment element) ->
-          indexNode occurrence (assertedClaim node) (amxElementLocation element)
+          indexNode
+            occurrence
+            (claimWithCommitment explicitCommitment node)
+            (amxElementLocation element)
       _ -> indexOccurrence occurrence (amxElementLocation element)
   | otherwise = indexOccurrence occurrence (amxElementLocation element)
   where
     occurrence = nodeOccurrence element
+    commitment = decodeCommitment element
 
 projectRelationshipOccurrence ::
      Environment
@@ -137,12 +151,14 @@ projectRelationshipOccurrence environment closure relationship =
       case if isOwnershipRelationship relationship
              then Nothing
              else projectedRawEdge environment closure relationship of
-        Just edge ->
-          indexEdge
-            occurrence
-            (assertedClaim edge)
-            (amxElementLocation relationship)
-        Nothing -> indexOccurrence occurrence (amxElementLocation relationship)
+        Just edge
+          | Just commitment <-
+              resolvedCommitment (decodeCommitment relationship) ->
+            indexEdge
+              occurrence
+              (claimWithCommitment commitment edge)
+              (amxElementLocation relationship)
+        _ -> indexOccurrence occurrence (amxElementLocation relationship)
     endpointReferences =
       [ relationshipReference environment relationship role reason
       | role <- [SourceEndpoint, TargetEndpoint]
@@ -277,27 +293,39 @@ relationshipDefects ::
   -> AMXElement
   -> [DeferredProfileDefect SourcePosition AMXProfileDefect]
 relationshipDefects environment relationship =
-  case resolvedSignatures environment relationship of
-    [] -> []
-    signatures ->
-      case actualRelationshipRepresentation relationship of
-        Just actual
-          | any ((== actual) . signatureRepresentation) signatures -> []
-        actual ->
-          [ deferRelationship
-              (relationshipOccurrence relationship)
-              (Located
-                 (amxElementLocation relationship)
-                 (IncompatibleRelationshipRepresentation
-                    (displayId relationship)
-                    (Text.intercalate
-                       "|"
-                       (nub
-                          (map
-                             (representationText . signatureRepresentation)
-                             signatures)))
-                    (maybe "<unresolved>" representationText actual)))
-          ]
+  map
+    (deferRelationship (relationshipOccurrence relationship))
+    (commitmentResolutionDefects (decodeCommitment relationship)
+       ++ unsupportedMetadataDefects
+       ++ representationDefects)
+  where
+    unsupportedMetadataDefects =
+      [ Located
+        (propertyLocation key property)
+        (UnsupportedO2IMetadataKey (displayId relationship) key)
+      | (property, key, _) <- o2iProperties relationship
+      , key /= "o2i.commitment"
+      ]
+    representationDefects =
+      case resolvedSignatures environment relationship of
+        [] -> []
+        signatures ->
+          case actualRelationshipRepresentation relationship of
+            Just actual
+              | any ((== actual) . signatureRepresentation) signatures -> []
+            actual ->
+              [ Located
+                  (amxElementLocation relationship)
+                  (IncompatibleRelationshipRepresentation
+                     (displayId relationship)
+                     (Text.intercalate
+                        "|"
+                        (nub
+                           (map
+                              (representationText . signatureRepresentation)
+                              signatures)))
+                     (maybe "<unresolved>" representationText actual))
+              ]
 
 deferRelationship ::
      OccurrenceId

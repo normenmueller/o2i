@@ -8,9 +8,9 @@ override this snapshot.
 - Observed at: 2026-07-24 CEST.
 - Mode: `ACTIVE`.
 - Branch/upstream: `trunk` / `origin/trunk`; inspect Git for the current delta.
-- Active objective: close the explicit Commitment and proposition-carrier
-  contract in Core, Inspection, and the AMX adapter before synchronizing the
-  normative ArchiMate syntax Views and publication artifacts.
+- Active objective: synchronize the accepted explicit Commitment and
+  proposition-carrier contract with the normative ArchiMate syntax Views,
+  extractor contracts, and snapshots.
 - The user controls every push.
 
 # Approved Baseline
@@ -53,19 +53,26 @@ override this snapshot.
 
 # Current Worktree
 
-- Current plan node: `o2i:commitment-closure`. The explicit Commitment,
+- `o2i:commitment-closure` is accepted. The explicit Commitment,
   proposition-carrier, and `StructuredProposition` target contract is approved.
-  The external Haskell co-author has completed its implementation package.
-  Cabal checks, `-Werror` build, HIndent, Haddock, and all package-local tests
-  pass. The independent read-only Haskell/formalization review rejected the
-  package with one High finding: collective participant resolution loses
-  Candidate commitment information at the `WellFormedGraph` boundary. Package
-  2 must preserve a commitment-aware structural node index, retain Candidate
-  collectives with resolved Candidate participants, reject Asserted collectives
-  through a precise Candidate-dependency defect, and cover the complete
-  contributor/target matrix. Exact design, scores, and sequence are in
-  `pln.md`. Model and publication synchronization remain deliberately paused
-  until this gate closes.
+  The first independent review exposed one High finding at the
+  `WellFormedGraph` boundary. Package 2 now retains a private commitment-aware
+  structural node index, preserves Candidate collective participants without
+  semantic witnesses, rejects Asserted dependencies on Candidate participants
+  precisely, and covers the contributor/target matrix. Cabal checks,
+  `-Werror` build, Core, Inspection, CLI, API contracts, 146 of 147 AMX tests,
+  HIndent, and 100% public Haddock pass. The sole AMX failure is the deliberately
+  unsynchronized repository model assigned to `o2i:syntax-sync`. The first
+  closure review confirms the former High finding as closed but identifies one
+  Medium conflation between unavailable Context semantics and a Candidate
+  participant without an Asserted witness. Its disjoint, role- and
+  participant-aware issue is implemented and locally verified. The final
+  independent closure review reports no findings and scores Fachlichkeit,
+  Metamodell, Typtheorie/Formalisierung, Haskell design, tests,
+  documentation/Haddock, formal value/proportionality, and
+  Core/Inspection/AMX/CLI consistency each 10.0/10.0. Current plan node is
+  `o2i:syntax-sync`; publication synchronization remains paused until the model
+  gate closes.
 - The model and extractor enforce the direct root property `o2i.profile=0.2`;
   the extractor has 28 passing contract tests.
 - The format-neutral Inspection library, native AMX adapter, and thin CLI are
@@ -124,12 +131,11 @@ override this snapshot.
 
 # Next Work
 
-1. Implement package 2 for commitment-aware collective participant resolution
-   with the external Haskell co-author, run complete Haskell and AMX
-   verification, and repeat independent review until every required dimension
-   scores 10.0/10.0.
-2. Synchronize syntax Views, extractor presets, tests, snapshots, article, WTF,
-   README, Haddock, model documentation, and changelog.
+1. Guide the user through explicit Commitment and
+   `StructuredProposition` metadata in the syntax Views, then synchronize
+   extractor presets, tests, and snapshots.
+2. Synchronize article, WTF, repository README, `spc/README.md`, Haddock, model
+   documentation, and changelog.
 3. Run the complete cross-artifact gate and return to the exact
    `dbf:db-ia` re-entry point recorded in `pln.md`.
 4. Afterwards continue the DB Fv instance, then review `wtf.md` at Vision and

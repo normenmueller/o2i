@@ -51,6 +51,7 @@ library
     O2I.Validation.Semantics.Context,
     O2I.Validation.Semantics.Context.TradeOffSet,
     O2I.Validation.Structure,
+    O2I.Validation.Structure.Internal,
     O2I.Validation.Trace,
     O2I.Validation.Trace.Evidence
   build-depends:

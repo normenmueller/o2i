@@ -22,6 +22,12 @@ data Commitment
 
 -- | One proposition paired with its explicit commitment.
 --
+-- @Claim Candidate (Objective \@ Vision)@ denotes one proposed proposition:
+-- the wrapper is 'Claim', 'Candidate' is its commitment, and the complete
+-- contextualized Objective is its indivisible proposition. Persisted notation
+-- may use several syntax constituents to encode that proposition, but carries
+-- exactly one commitment at its designated proposition carrier.
+--
 -- The constructor is private so commitment can only be observed through the
 -- total projections and can never be changed by record update.
 data Claim proposition =

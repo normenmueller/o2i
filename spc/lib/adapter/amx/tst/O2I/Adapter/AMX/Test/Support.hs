@@ -372,6 +372,33 @@ element elementTypeName identifier name properties =
 
 relationship :: Text -> Text -> Text -> Text -> Text -> Bool -> Text
 relationship identifier relationType name sourceId targetId directed =
+  relationshipWithCommitment
+    "asserted"
+    identifier
+    relationType
+    name
+    sourceId
+    targetId
+    directed
+
+relationshipWithCommitment ::
+     Text -> Text -> Text -> Text -> Text -> Text -> Bool -> Text
+relationshipWithCommitment commitment identifier relationType name sourceId targetId directed =
+  relationshipWithProperties
+    (property "o2i.commitment" commitment)
+    identifier
+    relationType
+    name
+    sourceId
+    targetId
+    directed
+
+syntaxRelationship :: Text -> Text -> Text -> Text -> Text -> Bool -> Text
+syntaxRelationship = relationshipWithProperties ""
+
+relationshipWithProperties ::
+     Text -> Text -> Text -> Text -> Text -> Text -> Bool -> Text
+relationshipWithProperties properties identifier relationType name sourceId targetId directed =
   "<element xsi:type=\"a:"
     <> relationType
     <> "\" id=\""
@@ -384,13 +411,17 @@ relationship identifier relationType name sourceId targetId directed =
     <> targetId
     <> "\""
     <> if directed
-         then " directed=\"true\"/>"
-         else "/>"
+         then close " directed=\"true\""
+         else close ""
+  where
+    close attributes
+      | Text.null properties = attributes <> "/>"
+      | otherwise = attributes <> ">" <> properties <> "</element>"
 
 -- | Persist one native contextualization and thereby its Context Ownership.
 contextualization :: Text -> Text -> Text -> Text
 contextualization identifier contextId elementId =
-  relationship
+  syntaxRelationship
     identifier
     "CompositionRelationship"
     "contextualizes"
@@ -450,7 +481,10 @@ profileProperty = property "o2i.profile" "0.2"
 
 metadata :: Text -> Text -> [Text]
 metadata kind nodeType =
-  [property "o2i.kind" kind, property "o2i.type" nodeType]
+  [ property "o2i.kind" kind
+  , property "o2i.type" nodeType
+  , property "o2i.commitment" "asserted"
+  ]
 
 contextMetadata :: [Text]
 contextMetadata = metadata "Context" "Mission"

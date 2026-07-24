@@ -4,6 +4,7 @@ module O2I.Validation.Collective.Types
   , RawMutualCoherenceEvidence(..)
   , RawContributorCompatibilityEvidence(..)
   , RawCollectiveFitEvidence(..)
+  , CollectiveParticipantRole(..)
   , CollectiveFitDimension(..)
   , CollectiveStrategyRealizationIssue(..)
   ) where
@@ -51,6 +52,12 @@ data CollectiveFitDimension
   | ViableInteractionFit
   deriving (Eq, Ord, Show)
 
+-- | Participant position used by precise collective diagnostics.
+data CollectiveParticipantRole
+  = CollectiveContributor
+  | CollectiveTarget
+  deriving (Eq, Ord, Show)
+
 -- | Semantic diagnostic state of one structurally valid collective claim.
 --
 -- A blocked evaluation records unavailable Context semantics; every other
@@ -58,6 +65,8 @@ data CollectiveFitDimension
 data CollectiveStrategyRealizationIssue
   = CollectiveSemanticEvaluationBlocked
     -- ^ Context semantics is unavailable; no semantic claim was evaluated.
+  | CandidateParticipantSemanticsUnavailable CollectiveParticipantRole RawNodeId
+    -- ^ A Candidate Strategy participant has no validated Context semantics.
   | CollectiveFitEvidenceNotFound CollectiveFitEvidenceRef
   | CollectiveFitEvidenceAmbiguous CollectiveFitEvidenceRef
   | MissingContributorContribution RawNodeId RawNodeId

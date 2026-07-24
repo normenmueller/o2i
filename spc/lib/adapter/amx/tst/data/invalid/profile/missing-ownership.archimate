@@ -4,6 +4,7 @@
     <element xsi:type="archimate:Driver" id="driver">
       <property key="o2i.kind" value="Primitive"/>
       <property key="o2i.type" value="Driver"/>
+      <property key="o2i.commitment" value="asserted"/>
     </element>
     <element xsi:type="archimate:ArchimateDiagramModel" id="view" name="Scope">
       <child xsi:type="archimate:DiagramObject" id="object" archimateElement="driver"/>

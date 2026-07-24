@@ -29,6 +29,7 @@ import O2I.Language.Claim
 import O2I.Language.Element
 import O2I.Language.Interpretation
 import O2I.Language.Relation
+import O2I.Validation.Structure.Internal
 
 -- | Structural violations detected while validating a 'RawGraph'.
 data StructuralError
@@ -75,25 +76,17 @@ data StructureResult
   | StructureInternalFailure StructureInternalError
     -- ^ An implementation invariant failed after successful model validation.
 
--- | Opaque structural result separating asserted semantics from candidates.
---
--- The graph contains only asserted propositions. Retained candidates have
--- passed the same applicable identity, ownership, interpretation, relation,
--- endpoint-kind, and membership-owner checks but remain outside that graph.
-data StructuralAssessment =
-  StructuralAssessment WellFormedGraph [CandidateGraphProposition]
-
 newtype StructurallyAdmissibleRawGraph =
   StructurallyAdmissibleRawGraph RawClaimGraph
 
 -- | Read the exact asserted graph established by structural validation.
 structuralGraph :: StructuralAssessment -> WellFormedGraph
-structuralGraph (StructuralAssessment graph _) = graph
+structuralGraph = structuralAssessmentGraph
 
 -- | Read structurally admissible candidates excluded from the asserted graph.
 structuralCandidatePropositions ::
      StructuralAssessment -> [CandidateGraphProposition]
-structuralCandidatePropositions (StructuralAssessment _ candidates) = candidates
+structuralCandidatePropositions = structuralAssessmentCandidates
 
 -- * Structural validation
 -- | Validate unchecked input as an opaque structurally typed graph.
@@ -291,6 +284,7 @@ typeStructure ::
      StructurallyAdmissibleRawGraph
   -> Either StructureInternalError StructuralAssessment
 typeStructure (StructurallyAdmissibleRawGraph raw) = do
+  declarationIndex <- buildStructuralNodeIndex raw
   contexts <- traverse buildContext contextNodes
   let contextMap = Map.fromList [(someNodeRawId node, node) | node <- contexts]
   children <- traverse (buildChild contextMap) childNodes
@@ -298,7 +292,10 @@ typeStructure (StructurallyAdmissibleRawGraph raw) = do
         Map.fromList [(someNodeRawId node, node) | node <- contexts ++ children]
   edges <- traverse (buildEdge nodes) assertedEdges
   pure
-    (StructuralAssessment (mkWellFormedGraph nodes edges) candidatePropositions)
+    (mkStructuralAssessment
+       (mkWellFormedGraph nodes edges)
+       candidatePropositions
+       declarationIndex)
   where
     assertedNodes = assertedValues (rawNodeClaims raw)
     assertedEdges = assertedValues (rawEdgeClaims raw)
@@ -307,6 +304,23 @@ typeStructure (StructurallyAdmissibleRawGraph raw) = do
     candidatePropositions =
       map CandidateNodeProposition (candidateValues (rawNodeClaims raw))
         ++ map CandidateEdgeProposition (candidateValues (rawEdgeClaims raw))
+
+buildStructuralNodeIndex ::
+     RawClaimGraph -> Either StructureInternalError StructuralNodeIndex
+buildStructuralNodeIndex raw =
+  mkStructuralNodeIndex <$> traverse declaration nodeClaims
+  where
+    nodeClaims = rawNodeClaims raw
+    kinds = rawNodeKinds raw
+    declaration claim =
+      case Map.lookup identifier kinds of
+        Just kind ->
+          Right
+            ( identifier
+            , mkStructuralNodeDeclaration (claimCommitment claim) kind)
+        Nothing -> Left (ChildTypingInvariant identifier)
+      where
+        identifier = rawNodeId (claimedProposition claim)
 
 buildContext :: RawNode -> Either StructureInternalError SomeNode
 buildContext (RawContextNode identifier context) =

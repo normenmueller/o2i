@@ -8,6 +8,7 @@
     <element xsi:type="archimate:Principle" name="Integrity :: Principle" id="id-d7c54b15cb1e407eaa770b6769fad6ee">
       <property key="o2i.kind" value="Primitive"/>
       <property key="o2i.type" value="Principle"/>
+      <property key="o2i.commitment" value="asserted"/>
     </element>
   </folder>
   <folder name="Implementation &amp; Migration" id="id-6417db9d628548fd80e7c19a1acfc761" type="implementation_migration"/>
@@ -15,6 +16,7 @@
     <element xsi:type="archimate:Grouping" name="Ethos :: O2I Context" id="id-14b8dcb25f204fe0903e308d7a38f438">
       <property key="o2i.kind" value="Context"/>
       <property key="o2i.type" value="Ethos"/>
+      <property key="o2i.commitment" value="asserted"/>
     </element>
   </folder>
   <folder name="Relations" id="id-98a439ec9bed40749d5298d3bf39f0a7" type="relations">

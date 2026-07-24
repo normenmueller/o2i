@@ -3,6 +3,7 @@ module Main
   ) where
 
 import O2I.Adapter.AMX.Test.Collective
+import O2I.Adapter.AMX.Test.Commitment
 import O2I.Adapter.AMX.Test.Decode
 import O2I.Adapter.AMX.Test.Fixture
 import O2I.Adapter.AMX.Test.Profile
@@ -18,6 +19,7 @@ main =
        [ decodeTests
        , viewTests
        , profileTests
+       , commitmentTests
        , collectiveTests
        , projectionTests
        , fixtureTests

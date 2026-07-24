@@ -71,12 +71,13 @@ data AMXProfileDefect
   | MissingOwnership Text
   | DuplicateOwnership Text (NonEmpty Text)
   | OwnershipOnOwnerlessKind Text
+  | MissingCommitment Text
+  | DuplicateCommitment Text (NonEmpty Text)
+  | InvalidCommitment Text Text
+  | ForbiddenCommitment Text Text
   | MissingCollectiveClaimId
   | AmbiguousCollectiveClaimId Text Int
   | InvalidCollectiveJunctionRepresentation Text Text
-  | MissingCollectiveCommitment Text
-  | DuplicateCollectiveCommitment Text (NonEmpty Text)
-  | InvalidCollectiveCommitment Text Text
   | MissingCollectiveFitEvidenceReference Text
   | DuplicateCollectiveFitEvidenceReference Text (NonEmpty Text)
   | EmptyCollectiveFitEvidenceReference Text
@@ -133,12 +134,13 @@ data AMXDefectTag
   | MissingOwnershipTag
   | DuplicateOwnershipTag
   | OwnershipOnOwnerlessKindTag
+  | MissingCommitmentTag
+  | DuplicateCommitmentTag
+  | InvalidCommitmentTag
+  | ForbiddenCommitmentTag
   | MissingCollectiveClaimIdTag
   | AmbiguousCollectiveClaimIdTag
   | InvalidCollectiveJunctionRepresentationTag
-  | MissingCollectiveCommitmentTag
-  | DuplicateCollectiveCommitmentTag
-  | InvalidCollectiveCommitmentTag
   | MissingCollectiveFitEvidenceReferenceTag
   | DuplicateCollectiveFitEvidenceReferenceTag
   | EmptyCollectiveFitEvidenceReferenceTag
@@ -208,13 +210,14 @@ amxProfileDefectTag defect =
     MissingOwnership _ -> MissingOwnershipTag
     DuplicateOwnership _ _ -> DuplicateOwnershipTag
     OwnershipOnOwnerlessKind _ -> OwnershipOnOwnerlessKindTag
+    MissingCommitment _ -> MissingCommitmentTag
+    DuplicateCommitment _ _ -> DuplicateCommitmentTag
+    InvalidCommitment _ _ -> InvalidCommitmentTag
+    ForbiddenCommitment _ _ -> ForbiddenCommitmentTag
     MissingCollectiveClaimId -> MissingCollectiveClaimIdTag
     AmbiguousCollectiveClaimId _ _ -> AmbiguousCollectiveClaimIdTag
     InvalidCollectiveJunctionRepresentation _ _ ->
       InvalidCollectiveJunctionRepresentationTag
-    MissingCollectiveCommitment _ -> MissingCollectiveCommitmentTag
-    DuplicateCollectiveCommitment _ _ -> DuplicateCollectiveCommitmentTag
-    InvalidCollectiveCommitment _ _ -> InvalidCollectiveCommitmentTag
     MissingCollectiveFitEvidenceReference _ ->
       MissingCollectiveFitEvidenceReferenceTag
     DuplicateCollectiveFitEvidenceReference _ _ ->
@@ -382,6 +385,22 @@ amxDefectTagSpec tag =
       model
         "amx.profile.ownership-forbidden"
         "An O2I Context or SituationAnchor has a forbidden contextualization composition."
+    MissingCommitmentTag ->
+      model
+        "amx.profile.commitment-missing"
+        "An O2I proposition carrier has no direct o2i.commitment property."
+    DuplicateCommitmentTag ->
+      model
+        "amx.profile.commitment-duplicate"
+        "An O2I proposition carrier has more than one direct o2i.commitment property."
+    InvalidCommitmentTag ->
+      model
+        "amx.profile.commitment-invalid"
+        "An O2I proposition carrier declares an invalid o2i.commitment value."
+    ForbiddenCommitmentTag ->
+      model
+        "amx.profile.commitment-forbidden"
+        "A non-propositional O2I syntax constituent carries forbidden commitment metadata."
     MissingCollectiveClaimIdTag ->
       model
         "amx.profile.collective.id-missing"
@@ -394,18 +413,6 @@ amxDefectTagSpec tag =
       model
         "amx.profile.collective.junction-invalid"
         "A collective Strategy-realization claim is not an ArchiMate AND Junction."
-    MissingCollectiveCommitmentTag ->
-      model
-        "amx.profile.collective.commitment-missing"
-        "A collective Strategy-realization Junction has no o2i.commitment."
-    DuplicateCollectiveCommitmentTag ->
-      model
-        "amx.profile.collective.commitment-duplicate"
-        "A collective Strategy-realization Junction has multiple o2i.commitment values."
-    InvalidCollectiveCommitmentTag ->
-      model
-        "amx.profile.collective.commitment-invalid"
-        "A collective Strategy-realization Junction has an invalid o2i.commitment."
     MissingCollectiveFitEvidenceReferenceTag ->
       model
         "amx.profile.collective.fit-reference-missing"
@@ -603,6 +610,16 @@ profileSubjects defect =
     DuplicateOwnership identifier owners ->
       subject "node" identifier : map (subject "owner") (nonEmptyList owners)
     OwnershipOnOwnerlessKind identifier -> [subject "node" identifier]
+    MissingCommitment identifier -> [subject "proposition-carrier" identifier]
+    DuplicateCommitment identifier values ->
+      subject "proposition-carrier" identifier
+        : map (subject "commitment") (nonEmptyList values)
+    InvalidCommitment identifier value ->
+      [subject "proposition-carrier" identifier, subject "commitment" value]
+    ForbiddenCommitment identifier syntaxRole ->
+      [ subject "syntax-constituent" identifier
+      , subject "syntax-role" syntaxRole
+      ]
     MissingCollectiveClaimId -> []
     AmbiguousCollectiveClaimId identifier count ->
       [ subject "collective-claim" identifier
@@ -612,13 +629,6 @@ profileSubjects defect =
       [ subject "collective-claim" identifier
       , subject "actual-representation" actual
       ]
-    MissingCollectiveCommitment identifier ->
-      [subject "collective-claim" identifier]
-    DuplicateCollectiveCommitment identifier values ->
-      subject "collective-claim" identifier
-        : map (subject "commitment") (nonEmptyList values)
-    InvalidCollectiveCommitment identifier value ->
-      [subject "collective-claim" identifier, subject "commitment" value]
     MissingCollectiveFitEvidenceReference identifier ->
       [subject "collective-claim" identifier]
     DuplicateCollectiveFitEvidenceReference identifier values ->

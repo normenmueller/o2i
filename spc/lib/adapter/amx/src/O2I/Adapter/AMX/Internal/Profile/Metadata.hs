@@ -18,7 +18,9 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import O2I
 import O2I.Adapter.AMX.Internal.Defect
+import O2I.Adapter.AMX.Internal.Profile.Commitment
 import O2I.Adapter.AMX.Internal.Profile.Model
+import O2I.Adapter.AMX.Internal.Profile.Property
 import O2I.Adapter.AMX.Internal.Registry
 import O2I.Adapter.AMX.Internal.Types
 import O2I.Adapter.AMX.Internal.XML (archiNamespace)
@@ -75,10 +77,14 @@ candidateDefects environment element =
 
 metadataDefects :: AMXElement -> [Located SourcePosition AMXProfileDefect]
 metadataDefects element =
-  unsupported ++ kindDefects ++ typeDefects ++ compatibilityDefects
+  unsupported
+    ++ kindDefects
+    ++ typeDefects
+    ++ compatibilityDefects
+    ++ commitmentResolutionDefects (decodeCommitment element)
   where
     identifier = displayId element
-    o2iProperties =
+    observedO2IProperties =
       [ (property, key, propertyValue property)
       | property <- elementDirectProperties element
       , let key = propertyKey property
@@ -88,11 +94,13 @@ metadataDefects element =
       [ Located
         (propertyLocation key property)
         (UnsupportedO2IMetadataKey identifier key)
-      | (property, key, _) <- o2iProperties
-      , key `notElem` ["o2i.kind", "o2i.type"]
+      | (property, key, _) <- observedO2IProperties
+      , key `notElem` ["o2i.kind", "o2i.type", "o2i.commitment"]
       ]
-    kindProperties = filter (\(_, key, _) -> key == "o2i.kind") o2iProperties
-    typeProperties = filter (\(_, key, _) -> key == "o2i.type") o2iProperties
+    kindProperties =
+      filter (\(_, key, _) -> key == "o2i.kind") observedO2IProperties
+    typeProperties =
+      filter (\(_, key, _) -> key == "o2i.type") observedO2IProperties
     kindDefects =
       case kindProperties of
         [] -> [Located (amxElementLocation element) (MissingO2IKind identifier)]
@@ -341,37 +349,7 @@ hasDirectO2IMetadata =
   any (Text.isPrefixOf "o2i." . propertyKey) . elementDirectProperties
 
 singleMetadataValue :: Text -> AMXElement -> Maybe Text
-singleMetadataValue key element =
-  singleValue (map (propertyValue . fst) (directProperties key element))
-
-directProperties :: Text -> AMXElement -> [(AMXElement, Text)]
-directProperties key element =
-  [ (property, propertyValue property)
-  | property <- elementDirectProperties element
-  , propertyKey property == key
-  ]
-
-propertyKey :: AMXElement -> Text
-propertyKey = maybe "" id . elementAttribute (expandedQName Nothing 'k' "ey")
-
-propertyValue :: AMXElement -> Text
-propertyValue =
-  maybe "" id . elementAttribute (expandedQName Nothing 'v' "alue")
-
-propertyLocation :: Text -> AMXElement -> SourcePosition
-propertyLocation key property =
-  sourcePosition
-    (positionPath location)
-    (PropertyTarget key)
-    (positionSpan location)
-  where
-    location = amxElementLocation property
-
-singleValue :: [value] -> Maybe value
-singleValue values =
-  case values of
-    [value] -> Just value
-    _ -> Nothing
+singleMetadataValue key element = singlePropertyValue key element
 
 firstOfTriple :: (first, second, third) -> first
 firstOfTriple (value, _, _) = value

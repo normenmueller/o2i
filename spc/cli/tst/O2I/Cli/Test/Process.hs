@@ -114,10 +114,10 @@ fileStdinEquivalence = do
   jsonField "stages" fileResult @?= jsonField "stages" stdinResult
   assertContains
     (processStdout fileResult)
-    "\"sha256\":\"6adc62d01690e46fc7158df3d200b1064839a1f2a024dacce7a6aba911be8926\""
+    "\"sha256\":\"cdaf6158c7b76630b3900921c442bba5ae6c9d82f510feaaf3641ba07c62e0e5\""
   assertContains
     (processStdout stdinResult)
-    "\"sha256\":\"6adc62d01690e46fc7158df3d200b1064839a1f2a024dacce7a6aba911be8926\""
+    "\"sha256\":\"cdaf6158c7b76630b3900921c442bba5ae6c9d82f510feaaf3641ba07c62e0e5\""
 
 chunkDeterminism :: Assertion
 chunkDeterminism = do

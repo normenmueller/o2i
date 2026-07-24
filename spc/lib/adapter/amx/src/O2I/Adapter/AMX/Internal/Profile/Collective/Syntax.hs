@@ -19,7 +19,9 @@ import O2I.Adapter.AMX.Internal.Defect hiding
   , EmptyCollectiveFitEvidenceReference
   )
 import qualified O2I.Adapter.AMX.Internal.Defect as Defect
+import O2I.Adapter.AMX.Internal.Profile.Commitment
 import O2I.Adapter.AMX.Internal.Profile.Model
+import O2I.Adapter.AMX.Internal.Profile.Property
 import O2I.Adapter.AMX.Internal.Registry
 import O2I.Adapter.AMX.Internal.Types
 import O2I.Adapter.AMX.Internal.XML (archiNamespace)
@@ -40,13 +42,14 @@ data CollectiveObservation = CollectiveObservation
   , observedDefects :: [Located SourcePosition AMXProfileDefect]
   }
 
--- | A Junction or explicit Claim declaration enters collective candidacy only
--- through direct O2I metadata. Unannotated visual Junctions remain nonsemantic.
+-- | A Junction or explicit structured proposition enters collective candidacy
+-- only through direct O2I metadata. Unannotated Junctions remain nonsemantic.
 isCollectiveClaimCandidate :: AMXElement -> Bool
 isCollectiveClaimCandidate element =
   hasO2IMetadata element
     && (isJunction element
-          || singlePropertyValue "o2i.kind" element == Just "Claim"
+          || singlePropertyValue "o2i.kind" element
+               == Just "StructuredProposition"
           || singlePropertyValue "o2i.type" element
                == Just "CollectiveStrategyRealization")
 
@@ -129,7 +132,7 @@ rawClaim identifier contributors targets junction = do
   contributorIds <- traverse (fmap RawNodeId . elementId) contributors
   [target] <- pure targets
   targetId <- RawNodeId <$> elementId target
-  commitment <- collectiveCommitment junction
+  commitment <- resolvedCommitment (decodeCommitment junction)
   fitReference <- singlePropertyValue collectiveFitEvidenceKey junction
   pure
     (claimWithCommitment
@@ -149,7 +152,7 @@ metadataDefects environment junction =
     ++ representationDefects
     ++ exactValueDefects
          "o2i.kind"
-         "Claim"
+         "StructuredProposition"
          MissingO2IKind
          DuplicateO2IKind
          (\claimId actual -> UnknownO2IKind claimId actual)
@@ -159,9 +162,10 @@ metadataDefects environment junction =
          "CollectiveStrategyRealization"
          MissingO2IType
          DuplicateO2IType
-         (\claimId actual -> InvalidO2ITypeForKind claimId "Claim" actual)
+         (\claimId actual ->
+            InvalidO2ITypeForKind claimId "StructuredProposition" actual)
          junction
-    ++ commitmentDefects junction
+    ++ commitmentResolutionDefects (decodeCommitment junction)
     ++ fitReferenceDefects junction
   where
     identifier = displayId junction
@@ -226,29 +230,6 @@ exactValueDefects key expected missing duplicate invalid element =
   where
     identifier = displayId element
 
-commitmentDefects :: AMXElement -> [Located SourcePosition AMXProfileDefect]
-commitmentDefects element =
-  case directProperties "o2i.commitment" element of
-    [] ->
-      [ Located
-          (amxElementLocation element)
-          (MissingCollectiveCommitment identifier)
-      ]
-    [(property, value)]
-      | value `elem` ["candidate", "asserted"] -> []
-      | otherwise ->
-        [ Located
-            (propertyLocation "o2i.commitment" property)
-            (InvalidCollectiveCommitment identifier value)
-        ]
-    first:rest ->
-      [ Located
-          (propertyLocation "o2i.commitment" (fst first))
-          (DuplicateCollectiveCommitment identifier (snd first :| map snd rest))
-      ]
-  where
-    identifier = displayId element
-
 fitReferenceDefects :: AMXElement -> [Located SourcePosition AMXProfileDefect]
 fitReferenceDefects element =
   case directProperties collectiveFitEvidenceKey element of
@@ -281,7 +262,11 @@ segmentDefects ::
   -> AMXElement
   -> [Located SourcePosition AMXProfileDefect]
 segmentDefects environment claim junction segment =
-  representationDefects ++ nameDefects ++ segmentMetadataDefects ++ chainDefects
+  representationDefects
+    ++ nameDefects
+    ++ forbiddenCommitmentDefects "collective-realization-segment" segment
+    ++ segmentMetadataDefects
+    ++ chainDefects
   where
     segmentId = displayId segment
     expected = ArchiRelationshipRepresentation "RealizationRelationship" False
@@ -306,6 +291,7 @@ segmentDefects environment claim junction segment =
         (propertyLocation key property)
         (CollectiveSegmentMetadata claim segmentId key)
       | (property, key, _) <- o2iProperties segment
+      , key /= "o2i.commitment"
       ]
     chainDefects =
       [ Located
@@ -400,13 +386,6 @@ duplicateContributorDefects claim = go Set.empty
               : go seen rest
           | otherwise -> go (Set.insert contributor seen) rest
 
-collectiveCommitment :: AMXElement -> Maybe Commitment
-collectiveCommitment element =
-  case singlePropertyValue "o2i.commitment" element of
-    Just "candidate" -> Just Candidate
-    Just "asserted" -> Just Asserted
-    _ -> Nothing
-
 isJunction :: AMXElement -> Bool
 isJunction = hasArchiType "Junction"
 
@@ -438,45 +417,7 @@ elementRepresentationText element =
              (elementAttribute (expandedQName Nothing 't' "ype") element)
 
 hasO2IMetadata :: AMXElement -> Bool
-hasO2IMetadata =
-  any (Text.isPrefixOf "o2i." . propertyKey) . elementDirectProperties
-
-o2iProperties :: AMXElement -> [(AMXElement, Text, Text)]
-o2iProperties element =
-  [ (property, key, propertyValue property)
-  | property <- elementDirectProperties element
-  , let key = propertyKey property
-  , "o2i." `Text.isPrefixOf` key
-  ]
-
-directProperties :: Text -> AMXElement -> [(AMXElement, Text)]
-directProperties key element =
-  [ (property, value)
-  | (property, observedKey, value) <- o2iProperties element
-  , observedKey == key
-  ]
-
-singlePropertyValue :: Text -> AMXElement -> Maybe Text
-singlePropertyValue key element =
-  case directProperties key element of
-    [(_, value)] -> Just value
-    _ -> Nothing
-
-propertyKey :: AMXElement -> Text
-propertyKey = maybe "" id . elementAttribute (expandedQName Nothing 'k' "ey")
-
-propertyValue :: AMXElement -> Text
-propertyValue =
-  maybe "" id . elementAttribute (expandedQName Nothing 'v' "alue")
-
-propertyLocation :: Text -> AMXElement -> SourcePosition
-propertyLocation key property =
-  sourcePosition
-    (positionPath location)
-    (PropertyTarget key)
-    (positionSpan location)
-  where
-    location = amxElementLocation property
+hasO2IMetadata = not . null . o2iProperties
 
 mapMaybeResult :: [ParticipantResolution] -> [AMXElement]
 mapMaybeResult =

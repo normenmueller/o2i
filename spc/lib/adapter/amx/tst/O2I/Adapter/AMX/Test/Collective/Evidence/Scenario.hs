@@ -369,7 +369,7 @@ isolationElements =
          "unselected-claim"
          "AndJunction"
          (Text.concat
-            [ property "o2i.kind" "Claim"
+            [ property "o2i.kind" "StructuredProposition"
             , property "o2i.type" "CollectiveStrategyRealization"
             , property "o2i.commitment" "asserted"
             , property "o2i.collective-fit-evidence" "unselected-fit"

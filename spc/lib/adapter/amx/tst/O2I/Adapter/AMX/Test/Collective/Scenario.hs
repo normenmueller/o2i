@@ -37,6 +37,46 @@ candidateModel =
     standardSegments
     [partialView]
 
+candidateCollectiveMultipleCandidateParticipantsModel, assertedCollectiveCandidateContributorModel, assertedCollectiveCandidateTargetModel ::
+     Text
+candidateCollectiveMultipleCandidateParticipantsModel =
+  commitmentMatrixModel "candidate" allCandidateParticipants
+
+assertedCollectiveCandidateContributorModel =
+  commitmentMatrixModel "asserted" candidateContributorParticipants
+
+assertedCollectiveCandidateTargetModel =
+  commitmentMatrixModel "asserted" candidateTargetParticipants
+
+commitmentMatrixModel :: Text -> [Text] -> Text
+commitmentMatrixModel collectiveCommitment participants =
+  collectiveModel
+    "AndJunction"
+    collectiveCommitment
+    participants
+    standardSegments
+    [scopeView]
+
+candidateContributorParticipants :: [Text]
+candidateContributorParticipants =
+  [ strategyElementWithCommitment "candidate" "contributor-a"
+  , strategyElement "contributor-b"
+  , strategyElement "target"
+  ]
+
+candidateTargetParticipants :: [Text]
+candidateTargetParticipants =
+  [ strategyElement "contributor-a"
+  , strategyElement "contributor-b"
+  , strategyElementWithCommitment "candidate" "target"
+  ]
+
+allCandidateParticipants :: [Text]
+allCandidateParticipants =
+  map
+    (strategyElementWithCommitment "candidate")
+    ["contributor-a", "contributor-b", "target"]
+
 missingClaimKindModel, missingClaimTypeModel, missingCommitmentModel :: Text
 missingClaimKindModel =
   scopedCollectiveWithMetadata
@@ -49,7 +89,7 @@ missingClaimKindModel =
 missingClaimTypeModel =
   scopedCollectiveWithMetadata
     (Text.concat
-       [ property "o2i.kind" "Claim"
+       [ property "o2i.kind" "StructuredProposition"
        , property "o2i.commitment" "asserted"
        , property "o2i.collective-fit-evidence" "fit-claim"
        ])
@@ -57,7 +97,7 @@ missingClaimTypeModel =
 missingCommitmentModel =
   scopedCollectiveWithMetadata
     (Text.concat
-       [ property "o2i.kind" "Claim"
+       [ property "o2i.kind" "StructuredProposition"
        , property "o2i.type" "CollectiveStrategyRealization"
        , property "o2i.collective-fit-evidence" "fit-claim"
        ])
@@ -75,7 +115,7 @@ invalidClaimKindModel =
 invalidClaimTypeModel =
   scopedCollectiveWithMetadata
     (Text.concat
-       [ property "o2i.kind" "Claim"
+       [ property "o2i.kind" "StructuredProposition"
        , property "o2i.type" "Collective"
        , property "o2i.commitment" "asserted"
        , property "o2i.collective-fit-evidence" "fit-claim"
@@ -84,7 +124,7 @@ invalidClaimTypeModel =
 duplicateClaimKindModel, duplicateClaimTypeModel :: Text
 duplicateClaimKindModel =
   scopedCollectiveWithMetadata
-    (collectiveClaimMetadata <> property "o2i.kind" "Claim")
+    (collectiveClaimMetadata <> property "o2i.kind" "StructuredProposition")
 
 duplicateClaimTypeModel =
   scopedCollectiveWithMetadata
@@ -101,7 +141,7 @@ invalidCommitmentModel, duplicateCommitmentModel, missingFitReferenceModel ::
 invalidCommitmentModel =
   scopedCollectiveWithMetadata
     (Text.concat
-       [ property "o2i.kind" "Claim"
+       [ property "o2i.kind" "StructuredProposition"
        , property "o2i.type" "CollectiveStrategyRealization"
        , property "o2i.commitment" "tentative"
        , property "o2i.collective-fit-evidence" "fit-claim"
@@ -114,7 +154,7 @@ duplicateCommitmentModel =
 missingFitReferenceModel =
   scopedCollectiveWithMetadata
     (Text.concat
-       [ property "o2i.kind" "Claim"
+       [ property "o2i.kind" "StructuredProposition"
        , property "o2i.type" "CollectiveStrategyRealization"
        , property "o2i.commitment" "asserted"
        ])
@@ -123,7 +163,7 @@ emptyFitReferenceModel, duplicateFitReferenceModel :: Text
 emptyFitReferenceModel =
   scopedCollectiveWithMetadata
     (Text.concat
-       [ property "o2i.kind" "Claim"
+       [ property "o2i.kind" "StructuredProposition"
        , property "o2i.type" "CollectiveStrategyRealization"
        , property "o2i.commitment" "asserted"
        , property "o2i.collective-fit-evidence" " "

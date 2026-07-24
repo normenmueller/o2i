@@ -725,6 +725,14 @@ collectiveRealizationStructuralErrorSpec defect =
         , nodeSubject participant
         , nodeKindSubject "node-kind" kind
         ]
+    AssertedCollectiveDependsOnCandidate identifier role participant ->
+      collective
+        "asserted-depends-on-candidate"
+        "An asserted collective claim depends on a Candidate Strategy participant."
+        [ claimSubject identifier
+        , collectiveRoleSubject role
+        , nodeSubject participant
+        ]
   where
     collective suffix message subjects =
       coreSpec ("o2i.semantics.collective." <> suffix) message subjects
@@ -756,6 +764,13 @@ collectiveRealizationIssueSpec severity issue =
        (issueSpec "evaluation-blocked" [])
          { specMessage =
              "Collective Candidate semantic evaluation is blocked until Context semantics is available."
+         }
+     CandidateParticipantSemanticsUnavailable role participant ->
+       (issueSpec
+          "candidate-participant-semantics-unavailable"
+          [collectiveRoleSubject role, nodeSubject participant])
+         { specMessage =
+             "A Candidate Strategy participant is unavailable to validated collective semantics."
          }
      CollectiveFitEvidenceNotFound reference ->
        issueSpec "fit-evidence-not-found" [fitSubject reference]
