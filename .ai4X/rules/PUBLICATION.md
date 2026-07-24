@@ -1,0 +1,39 @@
+# Scope
+
+Load for `o2i.md`, README, WTF, acknowledgements, figures, rendering, or release
+text.
+
+# Prose
+
+- Write target-state first-publication prose. State what O2I defines.
+- Exclude migration, retrospective process, workaround, compatibility, and
+  defensive prose unless a conceptual boundary requires explicit contrast.
+- Keep the White Paper concise and non-textbook-like. Preserve flow between
+  paragraphs, figures, and listings.
+- Every fachlich material term has a source anchor or explicit authors'
+  derivation at the correct semantic level.
+- Use established definition callouts and reference every figure and listing
+  from the prose.
+- Use German umlauts. Otherwise default to ASCII in PDF-relevant Markdown;
+  use ASCII `->` or LaTeX `$\to$`, not Unicode arrows.
+
+# Artifact Boundaries
+
+- `o2i.md` owns normative fachliche and metamodel prose.
+- `wtf.md` is concise, informal, and non-normative.
+- `spc/README.md` is technical and never a competing fachliche source.
+- TikZ sources live in `acc/`; generated PNGs live in `img/`.
+- ArchiMate exports and model documentation remain synchronized with the
+  article and formalization.
+
+# Verification
+
+```text
+./utl/verify.sh paper
+./toPDF.sh
+pandoc o2i.md --filter pandoc-include -t markdown
+git diff --check
+```
+
+Inspect rendered pages, figure legibility, listing length, references, page
+breaks, and absence of unsupported Unicode before acceptance.

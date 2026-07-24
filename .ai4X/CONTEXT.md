@@ -1,208 +1,117 @@
 # Purpose
 
-Durable project understanding for agentic AI agents working on O2I. Operating
-rules belong in `BEHAVIOR.md`; volatile handoff state belongs in `STATE.md`.
+Durable understanding required for work in the O2I repository. Operating rules
+belong in `.ai4X/BEHAVIOR.md`; volatile handoff belongs in
+`.ai4X/STATE.md`.
 
 # Project
 
-O2I is a generic framework for effect architectures. It explains how
-orientation, formation, situating, operationalization, and effect are grounded,
-modeled, traced, and evidenced. The metamodel is the formal core of the
-framework.
+O2I is a generic framework for effect architectures. It makes oriented effect
+understandable and evidencable through terminology, a metamodel, concrete
+notation, and a machine-checkable Haskell formalization.
 
-O2I remains independent of concrete organizational instances. Instances may
-test and apply O2I but never define its generic semantics.
+O2I remains independent of organizational instances. Instances test and apply
+the Framework but never define its generic semantics.
 
 # Central Thesis
 
-- O2I context macrorelations require justification through relations between
-  contextualized O2I Primitives.
 - Contexts provide meaning; Primitives carry modeled content.
-- The effect graph emerges from contextualized Primitives and their relations.
-- Example: `Key Result @ Strategy --translates-into--> Objective @ Need` can
-  substantiate `Strategy --qualifies--> Need`.
-- O2I therefore defines a checkable effect graph rather than only a terminology
+- Relations between contextualized Primitives justify Context
+  macrorelations.
+- Example:
+  `Key Result @ Strategy --translates-into--> Objective @ Need` can substantiate
+  `Strategy --qualifies--> Need`.
+- O2I therefore defines a checkable effect graph, not only a terminology
   catalog.
-
-# Qualification And Application Boundary
-
-- Need qualification is an independent, pre-intervention capability. It asks
-  which Strategy qualifies a situated Need and requires neither Intervention
-  nor Measure.
-- O2I may support agentic AI in proposing qualification evidence, but never
-  requires it. Cognitive assessment may be human or AI-assisted; authorized
-  fachliche acceptance remains distinct from deterministic specification
-  validation, and O2I remains fully valid without AI.
-- A Need qualification proposal references an existing candidate Strategy and
-  a situated Need, proposes one Strategy-Key-Result-to-Need-Objective relation,
-  and provides rationale plus a source reference. Validate it after complete
-  Need situating and before persisting `translates-into` and `qualifies`.
-  Specification validation establishes only formal admissibility; authorized
-  fachliche acceptance precedes persistence and renewed model validation.
-- An evidence design may accompany an organizational submission but remains a
-  separate later gate. It prepares actionability and evidence readiness and
-  never determines the Need's strategic relevance.
-- Evidence readiness is a generic O2I capability for validating an effect
-  trace before an Intervention starts.
-- O2I does not define Strategic Fit Evaluation, strategic topic complexes,
-  instance-specific scores or statuses, or PerformanceDimension-bound fit
-  semantics.
-- External evaluations may query O2I effect traces to determine which
-  Strategies connect to an Intervention. Domains are optional instance-level
-  filters, never a prerequisite of generic O2I semantics.
 
 # Semantic Baseline
 
-- O2I separates Terminology, Semantics, and Syntax.
-- Contexts: `Ethos`, `Mission`, `Vision`, `Strategy`, `Need`, `Situation`,
+- Fachliche domains: Orientierung, Formierung, Situierung,
+  Operationalisierung, and Wirkung.
+- Contexts: `Ethos`, `Mission`, `Vision`, `Strategy`, `Situation`, `Need`,
   `Intervention`, and `Measure`.
 - Primitives: `Principle`, `Driver`, `Objective`, `Key Result`, `KPI`, and
   `Action`.
-- In the ArchiMate syntax, every Primitive and Structuring element is
-  contextualized by exactly one O2I Context through
-  `Context --composition[contextualizes]--> contextualized element`. A Context
-  may contextualize only Primitives and Structuring elements whose
-  Interpretation or role is admissible for that Context. Visual nesting
-  presents but never replaces this explicit contextualization. Import maps it
-  to the technical Haskell owner field, not to a fachliche `RawEdge`.
-- ArchiMate model metadata uses `o2i.kind` for `Context`, `Primitive`,
-  `Structuring`, `SituationAnchor`, or `StructuredProposition` and `o2i.type`
-  for the corresponding O2I constructor. It never duplicates owner, Context,
-  role, interpretation, or membership semantics; contextualization derives
-  exclusively from Composition.
-- Situation anchors are independent nodes and are not contextualized by a
-  Context. Their assignment to one or more Situations is expressed exclusively
-  by typed `is-constituted-by` relations.
-- Every Situation has at least one constituting Situation anchor; every Need is
-  globally situated; every Strategy has exactly one complete, coherent
-  formulation.
-- `PerformanceDimension` is one closed structuring type with exactly two roles:
-  a Strategy success dimension contains Strategy Key Results; a Measure
-  measurement dimension contains Measure KPIs. CSF is a fachliche reading of
-  the first role. A role constrains admissible member types and membership but
-  never interprets its member Primitives; their meaning remains defined by
-  their own `Primitive @ Context`. Other groupings are not O2I
-  PerformanceDimensions.
-- A PerformanceDimension and every contained member Primitive share the same
-  concrete owner Context instance.
-- `KPIDefinition`, `Unit`, `ValueDomain`, `Level`, `Delta`, `Observation`,
-  `EvidencePlan`, `EffectCriterion`, `TargetCriterion`, and
-  `FollowUpObservation` form the evidence layer; they are neither Contexts nor
-  Primitives.
-- Each KPI used by an effect trace has exactly one validated stable definition.
-  Measurement levels and absolute changes are distinct types; the definition
-  supplies their shared unit and the admissible domain of levels.
-- Effect and target attainment are assessed independently.
-- O2I validates evidence consistency and plausible attribution, not
-  methodological causality.
-- The validation pipeline is
+- `PerformanceDimension` is the closed structuring type for Strategy success
+  dimensions and Measure measurement dimensions.
+- Situation anchors are independent nodes. Typed `is-constituted-by`
+  relations assign them to Situations.
+- Every Situation has a constituting anchor, every Need is globally situated,
+  and every Strategy has one complete coherent formulation.
+- Need qualification is pre-intervention. Formal proposal validation,
+  authorized fachliche acceptance, persistence, and renewed model validation
+  remain distinct.
+- A complete effect trace precedes evidence readiness. Effect and target
+  attainment are assessed independently.
+- O2I supports evidence consistency and plausible attribution, not causal
+  proof.
+- Validation stages:
   `RawGraph -> WellFormedGraph -> SemanticallyValidModel -> TraceableEffectModel -> EvidenceReadyModel -> EvidenceAssessedModel`.
-- `RawGraph` represents unchecked node-edge data; `WellFormedGraph` establishes
-  local graph admissibility; model stages add global fachliche invariants,
-  effect traces, ex-ante evidence readiness, and ex-post evidence assessments.
-- `O2I Semantics - Context` and `O2I Semantics - Primitives` are normative
-  semantic visualizations of the O2I context and primitive models.
-- `O2I Semantics - Situation` is the normative semantic visualization of the
-  Situation anchor category, its admissible forms, and Situation constitution.
-- Semantic Views define admissible O2I types, relations, and semantic minimum
-  obligations. Concrete-syntax Views map those approved semantics to ArchiMate
-  and never introduce independent fachliche semantics.
-- `O2I Syntax - Context`, `O2I Syntax - Primitives`, and
-  `O2I Syntax - Situation` are unannotated mapping Views. Their objects define
-  ArchiMate element and relationship mappings at the metamodel level; they are
-  neither persisted O2I graph propositions nor inspectable O2I model
-  instances.
-- `O2I Syntax - Contextualization` and
-  `O2I Syntax - Collective Strategy Realization` are executable Candidate
-  conformance Views. Their proposition carriers persist direct O2I metadata
-  and exactly one `o2i.commitment`; mandatory
-  `composition[contextualizes]` and collective `realizes` syntax segments
-  carry no independent Commitment.
-- Mapping and conformance Views use distinct persisted elements. Reusing one
-  element across these levels would make a mapping legend part of an O2I graph
-  proposition through its direct metadata.
-- Every binary Context macrorelation maps to a directed ArchiMate Association;
-  its O2I name, direction, and typed endpoints define the syntax signature.
-  Contextualization maps to Composition. Collective Strategy realization maps
-  to homogeneous Realization segments through one AND Junction.
-- `O2I Situation Anchoring` is the normative semantic visualization of the
-  parameterized Situation-anchor relation families.
-- The concrete ArchiMate 4 syntax maps each Situation-anchor form to its native
-  or explicitly specialized element and applies one parameterized relation
-  mapping; no duplicate 24-edge syntax view is required.
-- Their semantics is defined by O2I and does not derive from ArchiMate.
-- Together, the mapping and conformance `O2I Syntax - *` Views form the
-  concrete ArchiMate realization of O2I contexts, contextualized Primitives,
-  PerformanceDimensions, Situation anchors, structured propositions, and
-  their mapped relations. ArchiMate `Grouping` and `Junction` are notation
-  carriers and introduce no O2I semantics.
+
+# Proposition And Syntax Baseline
+
+- Every persisted O2I proposition carries exactly one explicit
+  `Commitment`: `Candidate` or `Asserted`.
+- Candidates remain diagnostic and never satisfy semantic obligations.
+  Asserted propositions may depend only on Asserted propositions.
+- `Elaboration` is derived per Context; `Maturity` is derived for the complete
+  model boundary.
+- Primitives and PerformanceDimensions are contextualized exclusively through
+  `Context --composition[contextualizes]--> element`. Visual nesting has no
+  contextualization semantics.
+- `o2i.kind` identifies `Context`, `Primitive`, `Structuring`,
+  `SituationAnchor`, or `StructuredProposition`; `o2i.type` identifies the
+  corresponding O2I constructor.
+- Mapping Views are unannotated notation specifications and are not O2I graph
+  propositions:
+  `O2I Syntax - Context`, `O2I Syntax - Primitives`, and
+  `O2I Syntax - Situation`.
+- Conformance Views use distinct Candidate carriers:
+  `O2I Syntax - Contextualization` and
+  `O2I Syntax - Collective Strategy Realization`.
+- A `CollectiveStrategyRealization` uses at least two contributor Strategies,
+  one distinct target Strategy, homogeneous `realizes` segments through one
+  AND Junction, and collective Fit evidence. The Junction is the sole
+  Commitment carrier.
+- ArchiMate Groupings and Junctions are notation carriers and introduce no O2I
+  semantics.
+
+# Tool Architecture
+
+```text
+AMX
+ -> Haskell AMX adapter: Decode, View scope, profile, projection
+ -> notation-independent O2I graph
+ -> Core/Inspection: structure, semantics, trace, readiness, evidence
+ -> CLI: report rendering
+```
+
+The Python extractor is separate: it supports development and review of O2I
+repository Views and snapshots. It never validates O2I instances.
 
 # Repository Map
 
-- `o2i.md`: White Paper and fachliche reference text.
-- `README.md`: canonical shared Purpose and USP snippets included by the White
-  Paper.
-- `wtf.md`: informal, non-normative entry guide linked to the White Paper.
-- `mdl/o2i.archimate`: ArchiMate model.
-- `mdl/o2i-*.md`: generated read-only review snapshots.
-- `img/`: White Paper and model exports.
-- `acc/`: reproducible TikZ sources for White Paper figures.
-- `spc/README.md`: non-normative technical codebase and usage documentation.
-- `spc/lib/core/`: normative typed Haskell core library.
-- `spc/lib/inspection/`: format-neutral model inspection and reporting.
-- `spc/lib/adapter/amx/`: native Archi Model XML adapter.
-- `spc/cli/`: thin `o2i` command-line client.
-- `spc/Makefile`: reproducible local CLI installation and uninstallation.
-- `spc/lib/core/tst/`: executable validation tests.
-- `toPDF.sh`: reproducible TikZ and PDF build entry point.
-- `utl/verify.sh`: canonical staged, non-mutating repository verification;
-  local full verification runs all stages, while GitHub Actions runs the same
-  model, Haskell, and White Paper stages in parallel.
-- `utl/extract-archimate-view.py`: deterministic ArchiMate snapshot extractor
-  and repository-contract checker. Generic O2I profile validation belongs
-  exclusively to the Haskell AMX adapter.
+- `o2i.md`: White Paper and normative fachliche/metamodel text.
+- `README.md`: canonical Purpose and USP snippets.
+- `wtf.md`: informal non-normative entry guide.
+- `mdl/o2i.archimate`: semantic and concrete-syntax Views.
+- `mdl/o2i-*.md`: generated review snapshots.
+- `img/`, `acc/`, `toPDF.sh`: publication figures and rendering.
+- `spc/lib/core/`: normative Haskell formalization.
+- `spc/lib/inspection/`: format-neutral inspection pipeline.
+- `spc/lib/adapter/amx/`: native AMX profile and projection.
+- `spc/cli/`: thin `o2i` CLI.
+- `utl/extract-archimate-view.py`: repository View/snapshot checker.
+- `utl/verify.sh`: canonical staged verification.
 
-# Model Inspection
+# Stable Boundaries
 
-- Use `o2i inspect MODEL (--view NAME | --view-id ID)` to validate exactly one
-  O2I View from a native Archi model.
-- Use standard input and `--json` for deterministic agentic processing:
-  `cat mdl/my.archimate | o2i inspect - --view "My view" --json`.
-- The CLI is only a rendering and composition boundary. Inspection semantics,
-  staged validation, provenance, and reports remain in the libraries.
-
-# Haskell Architecture
-
-- The Haskell specification is the normative machine-checkable formalization
-  of the technology-independent O2I metamodel, not an independent fachliche
-  layer.
-- Terminology defines fachliche concepts and boundaries; the metamodel defines
-  elements, relations, and invariants; the Haskell specification enforces those
-  invariants mechanically.
-- Formal precision must expose and resolve semantic ambiguity but must never
-  invent fachliche semantics that cannot be justified by the White Paper and
-  metamodel.
-- GADTs, modules, and opaque validation stages are Haskell design decisions;
-  they do not introduce additional O2I fachliche semantics.
-- `O2I.Language`: public semantic language facade.
-- `O2I.Graph`: public facade for concrete effect graphs.
-- `O2I.Validation`: public facade for staged validation.
-- `O2I`: curated aggregate facade.
-- The library distinguishes static relation typing from runtime validation of
-  concrete graph-wide invariants.
-- Validated identifiers, canonical interpretation and relation metadata,
-  graph-wide validation stages, traces, KPI definitions, and assessments are
-  opaque. Clients obtain them only through canonical registries, lookup, or
-  validation and may project, but never construct or rewrite, their contents.
-- Haskell excerpts in `o2i.md` are included directly from
-  `spc/lib/core/src/` via `pandoc-include`.
-
-# Document Architecture
-
-- The White Paper progresses through Einleitung, Fundament, Terminologie,
-  Metamodell, Illustration, Fazit, and acknowledgements.
-- The Semantik section is organized by Kontexte, Primitives,
-  Wohlgeformtheitsregeln, and Interpretationen.
-- Kontexte and Primitives each distinguish Elemente and Relationen.
-- Syntax maps `Objective` to ArchiMate `Goal`, `Key Result` to `Outcome`, `KPI`
-  to `Assessment`, and `Action` to `Course of Action`.
+- The Haskell formalization enforces the metamodel; it introduces no
+  independent fachliche semantics.
+- Static types prevent type-level invalidity. Runtime validation checks
+  identity- and graph-wide invariants. Tests provide executable evidence that
+  both classes of contract are enforced.
+- Semantic Views visualize the metamodel. Syntax Views define the concrete
+  ArchiMate mapping. Neither ArchiMate nor Python defines O2I semantics.
+- Agentic AI may propose fachliche links; authorized humans decide their
+  acceptance; deterministic validation checks formal admissibility.
