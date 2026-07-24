@@ -16,8 +16,11 @@ module O2I.Validation.Collective
   , CollectiveStrategyRealizationError(..)
   , CollectiveStrategyRealization
   , CandidateCollectiveStrategyRealization
+  , CollectiveClaimStructureAssessment
   , CollectiveStrategyRealizationAssessment
   , ValidatedCollectiveStrategyRealizations
+  , assessCollectiveClaimStructure
+  , blockedCollectiveStrategyRealizationAssessment
   , assessCollectiveStrategyRealizations
   , collectiveStrategyRealizationErrors
   , validateCollectiveStrategyRealizations
@@ -123,6 +126,16 @@ data CandidateCollectiveStrategyRealization =
     (Claim RawCollectiveStrategyRealization)
     [CollectiveStrategyRealizationIssue]
 
+-- | Opaque context-independent structural assessment of collective claims.
+--
+-- Structurally valid claims remain available for semantic evaluation or
+-- blocked Candidate diagnostics. No contribution, coverage, or Fit obligation
+-- is evaluated at this stage.
+data CollectiveClaimStructureAssessment =
+  CollectiveClaimStructureAssessment
+    [CollectiveStrategyRealizationError]
+    [StructurallyValidCollective]
+
 -- | Opaque total assessment of every supplied collective claim.
 --
 -- Fatal errors, valid per-claim Asserted evaluations, and structurally valid
@@ -151,7 +164,47 @@ data SemanticEvaluation =
     [(ContextRef 'Strategy, Maybe (NonEmpty MacroEvidenceWitness))]
 
 -- * Collective Strategy realization assessment
--- | Assess every collective claim against one exact semantic model.
+-- | Capture every collective claim against the structurally valid graph.
+--
+-- Identity, topology, and participant typing are independent of Context
+-- semantic completeness and therefore remain diagnosable when Context
+-- semantics is unavailable.
+assessCollectiveClaimStructure ::
+     WellFormedGraph
+  -> [Claim RawCollectiveStrategyRealization]
+  -> CollectiveClaimStructureAssessment
+assessCollectiveClaimStructure graph claims =
+  CollectiveClaimStructureAssessment errors structuralClaims
+  where
+    identityErrors =
+      [ CollectiveStructuralError
+        (DuplicateCollectiveRealizationClaimId identifier)
+      | identifier <-
+          duplicates (map (rawRealizationId . claimedProposition) claims)
+      ]
+    structuralResults = map (validateCollectiveStructure graph) claims
+    structuralErrors =
+      concat [NonEmpty.toList failures | Failure failures <- structuralResults]
+    structuralClaims = [structural | Success structural <- structuralResults]
+    errors = identityErrors ++ structuralErrors
+
+-- | Retain structurally valid Candidates when Context semantics blocks their
+-- semantic assessment.
+--
+-- Structurally valid Asserted claims remain unevaluated and construct no
+-- witness. Structural defects remain fatal and available through the ordinary
+-- collective-error accessor.
+blockedCollectiveStrategyRealizationAssessment ::
+     CollectiveClaimStructureAssessment
+  -> CollectiveStrategyRealizationAssessment
+blockedCollectiveStrategyRealizationAssessment (CollectiveClaimStructureAssessment errors structuralClaims) =
+  CollectiveStrategyRealizationAssessment
+    errors
+    []
+    (mapMaybe blockedCandidateAssessment structuralClaims)
+
+-- | Assess structurally captured collective claims against one exact semantic
+-- model.
 --
 -- Structural defects and Asserted semantic deficiencies accumulate as fatal
 -- errors. Independent structurally valid Candidates remain observable with
@@ -159,33 +212,19 @@ data SemanticEvaluation =
 assessCollectiveStrategyRealizations ::
      ContextSemantics
   -> [RawCollectiveFitEvidence]
-  -> [Claim RawCollectiveStrategyRealization]
+  -> CollectiveClaimStructureAssessment
   -> CollectiveStrategyRealizationAssessment
-assessCollectiveStrategyRealizations semantic fitEvidence claims =
+assessCollectiveStrategyRealizations semantic fitEvidence (CollectiveClaimStructureAssessment structuralErrors structuralClaims) =
   CollectiveStrategyRealizationAssessment
     errors
     evaluations
     (mapMaybe candidateAssessment evaluations)
   where
     evidence = buildMacroEvidenceContext semantic
-    identityErrors =
-      [ CollectiveStructuralError
-        (DuplicateCollectiveRealizationClaimId identifier)
-      | identifier <-
-          duplicates (map (rawRealizationId . claimedProposition) claims)
-      ]
-    structuralValidation = validateCollectiveStructure (contextGraph semantic)
-    structuralResults = map structuralValidation claims
-    structuralErrors =
-      concat [NonEmpty.toList failures | Failure failures <- structuralResults]
-    structuralClaims = [structural | Success structural <- structuralResults]
     fitIndex = buildCollectiveFitIndex fitEvidence
     evaluations =
       map (evaluateCollective semantic evidence fitIndex) structuralClaims
-    errors =
-      identityErrors
-        ++ structuralErrors
-        ++ concatMap evaluationErrors evaluations
+    errors = structuralErrors ++ concatMap evaluationErrors evaluations
 
 -- | Enumerate every fatal error without discarding independent Candidates.
 collectiveStrategyRealizationErrors ::
@@ -449,6 +488,18 @@ candidateAssessment ::
 candidateAssessment (SemanticEvaluation structural issues _)
   | claimCommitment claim == Candidate =
     Just (CandidateCollectiveStrategyRealization claim issues)
+  | otherwise = Nothing
+  where
+    claim = structurallyValidClaim structural
+
+blockedCandidateAssessment ::
+     StructurallyValidCollective -> Maybe CandidateCollectiveStrategyRealization
+blockedCandidateAssessment structural
+  | claimCommitment claim == Candidate =
+    Just
+      (CandidateCollectiveStrategyRealization
+         claim
+         [CollectiveSemanticEvaluationBlocked])
   | otherwise = Nothing
   where
     claim = structurallyValidClaim structural

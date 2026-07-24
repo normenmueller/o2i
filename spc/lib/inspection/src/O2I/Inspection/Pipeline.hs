@@ -1167,9 +1167,9 @@ inputSourceLabel source =
 structureInternalDetail :: StructureInternalError -> Text
 structureInternalDetail internal =
   case internal of
-    ContextElaborationInvariant identifier ->
-      "context-elaboration-invariant:" <> rawNodeIdText identifier
-    ChildElaborationInvariant identifier ->
-      "child-elaboration-invariant:" <> rawNodeIdText identifier
-    EdgeElaborationInvariant edge ->
-      "edge-elaboration-invariant:" <> rawEdgeSubjectIdentifier edge
+    ContextTypingInvariant identifier ->
+      "context-typing-invariant:" <> rawNodeIdText identifier
+    ChildTypingInvariant identifier ->
+      "child-typing-invariant:" <> rawNodeIdText identifier
+    EdgeTypingInvariant edge ->
+      "edge-typing-invariant:" <> rawEdgeSubjectIdentifier edge

@@ -188,6 +188,9 @@ tests =
         "fatal collective errors retain independent Candidate warnings"
         fatalCollectiveRetainsCandidateInspectionTest
     , testCase
+        "Context errors retain blocked collective Candidate warnings"
+        contextErrorRetainsBlockedCollectiveCandidateInspectionTest
+    , testCase
         "different existential profile types remain isolated"
         existentialAdapterTest
     , testCase "report JSON is stable and parseable" reportJsonTest
@@ -1470,6 +1473,46 @@ fatalCollectiveRetainsCandidateInspectionTest = do
       assertBool
         "fatal collective assessment exposed aggregate witnesses"
         (null (semanticCollectiveStrategyRealizations assessment))
+
+contextErrorRetainsBlockedCollectiveCandidateInspectionTest :: Assertion
+contextErrorRetainsBlockedCollectiveCandidateInspectionTest = do
+  report <-
+    completedReport
+      (runAdapterWithInputs
+         (testAdapter
+            DecodeSucceeds
+            ViewSucceeds
+            RootSucceeds
+            (collectiveInspectionFacts candidateCollectiveInspectionClaim)
+            [])
+         noInputs
+           { strategyInput =
+               Supplied
+                 (sourcedFromDocument
+                    strategySourceDocument
+                    (StrategyFormulationBundle []))
+           , collectiveFitInput =
+               Supplied
+                 (sourcedFromDocument
+                    collectiveFitSourceDocument
+                    (CollectiveFitEvidenceBundle [collectiveInspectionFit]))
+           })
+  reportResult report @?= InspectionFailed
+  semanticsState report @?= StageFailed
+  let codes = diagnosticCodes report
+  assertBool
+    "collective Candidate exclusion warning is absent"
+    ("o2i.claim.collective-candidate-excluded" `elem` codes)
+  assertBool
+    "blocked collective Candidate diagnostic is absent"
+    ("o2i.semantics.collective.evaluation-blocked" `elem` codes)
+  assertBool
+    "fatal Context diagnostic is absent"
+    ("o2i.semantics.formulation-missing" `elem` codes)
+  case reportSemanticAssessment report of
+    Nothing -> assertFailure "missing blocked Candidate semantic assessment"
+    Just assessment ->
+      length (semanticCollectiveStrategyRealizations assessment) @?= 0
 
 existentialAdapterTest :: Assertion
 existentialAdapterTest = do

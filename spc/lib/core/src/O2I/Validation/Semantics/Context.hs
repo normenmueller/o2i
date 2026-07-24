@@ -101,6 +101,7 @@ data Elaboration
     -- ^ Mandatory asserted content passes semantic validation in this boundary.
   deriving (Bounded, Enum, Eq, Ord, Show)
 
+-- * Context candidate assessment
 -- | Candidate proposition retained by Context assessment and excluded from
 -- Context semantics.
 data CandidateContextProposition

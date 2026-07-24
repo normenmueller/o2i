@@ -73,7 +73,7 @@
           "additionalProperties": false,
           "required": ["code", "classification", "message", "data"],
           "properties": {
-            "code": {"const": "o2i.internal.structure-elaboration"},
+            "code": {"const": "o2i.internal.structure-typing"},
             "classification": {"const": "internal"},
             "message": {"type": "string"},
             "data": {"$ref": "#/$defs/internalData"}

@@ -25,10 +25,11 @@ o2i-cli        -> o2i-inspection + o2i-amx
 The curated public facades are `O2I`, `O2I.Language`, `O2I.Graph`,
 `O2I.Validation`, `O2I.Inspection`, and `O2I.Adapter.AMX`.
 
-The Core distinguishes `Candidate` and `Asserted` claims, derives
-Context-level `Elaboration` and model-level `Maturity`, and validates
-collective Strategy realization as an opaque n-ary witness separate from
-binary Strategy contribution.
+The Core assesses `Candidate` and `Asserted` claims across one complete
+semantic boundary, derives Context-level `Elaboration` and model-level
+`Maturity` exactly once, and includes validated collective Strategy
+realizations in `SemanticallyValidModel`. Binary Strategy contribution remains
+a separate proposition.
 
 ## Build
 

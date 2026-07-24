@@ -37,7 +37,7 @@ O2I dient dazu, *orientierte Wirkung* durch relationale Modellierung nachvollzie
 
 Die Haskell-Spezifikation unter [`spc/lib/core`](./spc/lib/core/) formalisiert das O2I-Metamodell normativ und maschinenprüfbar. Ihre öffentliche API gliedert sich in `O2I.Language` für den semantischen Formvorrat, `O2I.Graph` für konkrete Graphen und `O2I.Validation` für gestufte Prüfungen. `O2I` bildet die kuratierte Gesamtfassade.
 
-Claims unterscheiden vorgeschlagene von behaupteten Modellaussagen. Die Validierung leitet daraus Kontextelaboration und Modellreife ab und prüft kollektive Strategierealisierung als n-äre Aussage getrennt von binären Strategiebeiträgen.
+Claims unterscheiden vorgeschlagene von behaupteten Modellaussagen. Eine vollständige Core-Prüfung leitet daraus Kontextelaboration und Modellreife ab; ein `SemanticallyValidModel` umfasst dabei auch validierte kollektive Strategierealisierungen. Binäre Strategiebeiträge bleiben davon getrennte Aussagen.
 
 Die Library überführt einen ungeprüften O2I-Graphen durch aufeinander aufbauende Validierungsstufen in ein evidenzbewertetes Wirkungsmodell:
 

@@ -1,7 +1,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeOperators #-}
 
--- | Structural elaboration from unchecked to typed O2I graphs.
+-- | Structural validation from unchecked to typed O2I graphs.
 --
 -- Structural validation proves identifier, ownership, interpretation, and
 -- relation-endpoint integrity without asserting semantic completeness.
@@ -30,7 +30,7 @@ import O2I.Language.Element
 import O2I.Language.Interpretation
 import O2I.Language.Relation
 
--- | Structural violations detected while elaborating a 'RawGraph'.
+-- | Structural violations detected while validating a 'RawGraph'.
 data StructuralError
   = DuplicateNodeId RawNodeId
     -- ^ More than one node declares the same identifier.
@@ -58,20 +58,20 @@ data StructuralError
 
 -- | Internal failures after a graph has passed every structural model check.
 data StructureInternalError
-  = ContextElaborationInvariant RawNodeId
-    -- ^ A checked Context declaration could not be elaborated.
-  | ChildElaborationInvariant RawNodeId
-    -- ^ A checked Primitive, structuring element, or anchor could not be elaborated.
-  | EdgeElaborationInvariant RawEdge
-    -- ^ A checked relation could not be elaborated.
+  = ContextTypingInvariant RawNodeId
+    -- ^ A checked Context declaration could not be typed.
+  | ChildTypingInvariant RawNodeId
+    -- ^ A checked Primitive, structuring element, or anchor could not be typed.
+  | EdgeTypingInvariant RawEdge
+    -- ^ A checked relation could not be typed.
   deriving (Eq, Show)
 
--- | Total outcome of structural model validation and elaboration.
+-- | Total outcome of structural model validation and typing.
 data StructureResult
   = StructureModelRejected (NonEmpty.NonEmpty StructuralError)
     -- ^ The model violates one or more independently accumulated rules.
   | StructureAccepted StructuralAssessment
-    -- ^ Every proposition is structurally valid and assertions are elaborated.
+    -- ^ Every proposition is structurally valid and assertions are typed.
   | StructureInternalFailure StructureInternalError
     -- ^ An implementation invariant failed after successful model validation.
 
@@ -96,7 +96,7 @@ structuralCandidatePropositions ::
 structuralCandidatePropositions (StructuralAssessment _ candidates) = candidates
 
 -- * Structural validation
--- | Elaborate unchecked input into an opaque structurally typed graph.
+-- | Validate unchecked input as an opaque structurally typed graph.
 --
 -- Independent errors accumulate. Success guarantees unique IDs and edges,
 -- valid ownership and interpretations, known relations, typed endpoints, and
@@ -109,7 +109,7 @@ validateStructure raw =
       , rawEdgeClaims = map assertedClaim (rawEdges raw)
       }
 
--- | Elaborate explicit node and relation claims into the asserted typed graph.
+-- | Validate explicit node and relation claims as the asserted typed graph.
 --
 -- Every proposition is structurally inspected. Candidate propositions may
 -- depend on asserted or candidate declarations. Asserted propositions may
@@ -120,7 +120,7 @@ validateClaimStructure raw =
   case collectStructuralErrors raw of
     Failure failures -> StructureModelRejected failures
     Success admissible ->
-      case elaborateStructure admissible of
+      case typeStructure admissible of
         Left internal -> StructureInternalFailure internal
         Right assessment -> StructureAccepted assessment
 
@@ -287,10 +287,10 @@ performanceDimensionMembershipOwnerErrors edge declarations (Just fromKind) (Jus
         _ -> Nothing
 performanceDimensionMembershipOwnerErrors _ _ _ _ _ = []
 
-elaborateStructure ::
+typeStructure ::
      StructurallyAdmissibleRawGraph
   -> Either StructureInternalError StructuralAssessment
-elaborateStructure (StructurallyAdmissibleRawGraph raw) = do
+typeStructure (StructurallyAdmissibleRawGraph raw) = do
   contexts <- traverse buildContext contextNodes
   let contextMap = Map.fromList [(someNodeRawId node, node) | node <- contexts]
   children <- traverse (buildChild contextMap) childNodes
@@ -313,14 +313,14 @@ buildContext (RawContextNode identifier context) =
   case someSContext context of
     SomeSContext witness ->
       Right (SomeNode (ContextNode (mkNodeId identifier) witness))
-buildContext node = Left (ContextElaborationInvariant (rawNodeId node))
+buildContext node = Left (ContextTypingInvariant (rawNodeId node))
 
 buildChild ::
      Map RawNodeId SomeNode -> RawNode -> Either StructureInternalError SomeNode
 buildChild contexts node =
   case buildChildMaybe contexts node of
     Just child -> Right child
-    Nothing -> Left (ChildElaborationInvariant (rawNodeId node))
+    Nothing -> Left (ChildTypingInvariant (rawNodeId node))
 
 buildChildMaybe :: Map RawNodeId SomeNode -> RawNode -> Maybe SomeNode
 buildChildMaybe contexts (RawPrimitiveNode identifier owner primitive) = do
@@ -361,7 +361,7 @@ buildEdge ::
 buildEdge nodes raw =
   case buildEdgeMaybe nodes raw of
     Just result -> Right result
-    Nothing -> Left (EdgeElaborationInvariant raw)
+    Nothing -> Left (EdgeTypingInvariant raw)
 
 buildEdgeMaybe :: Map RawNodeId SomeNode -> RawEdge -> Maybe SomeEdge
 buildEdgeMaybe nodes raw = do

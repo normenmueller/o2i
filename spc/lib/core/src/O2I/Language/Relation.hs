@@ -965,7 +965,7 @@ allRelations = map reifyRelation allRelationCodes
 
 -- | Resolve all relations serialized under a runtime name.
 --
--- Structural elaboration selects the candidate whose typed endpoints match the
+-- Structural typing selects the candidate whose typed endpoints match the
 -- concrete edge. Registry identity uniqueness prevents duplicate witnesses.
 lookupRelations :: RelationName -> [SomeRelation]
 lookupRelations name = filter ((== name) . relationNameOf) allRelations

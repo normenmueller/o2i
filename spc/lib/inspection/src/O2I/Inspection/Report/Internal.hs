@@ -839,9 +839,9 @@ commandErrorValue commandError =
         ["source" .= source]
     StructureInternalCommandError detail ->
       commandValue
-        "o2i.internal.structure-elaboration"
+        "o2i.internal.structure-typing"
         InternalError
-        "Structural elaboration failed after model checks passed."
+        "Structural typing failed after model checks passed."
         ["detail" .= detail]
 
 commandValue :: Text -> CommandErrorClassification -> Text -> [Pair] -> Value

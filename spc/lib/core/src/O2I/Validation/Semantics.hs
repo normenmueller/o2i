@@ -40,7 +40,7 @@ module O2I.Validation.Semantics
   ) where
 
 import qualified Data.List.NonEmpty as NonEmpty
-import Data.List.NonEmpty (NonEmpty)
+import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
 import Data.Validation (Validation(..))
@@ -50,8 +50,9 @@ import O2I.Language.Claim
 import O2I.Language.Element
 import O2I.Validation.Collective
 import O2I.Validation.Semantics.Context
-import O2I.Validation.Structure (StructuralAssessment)
+import O2I.Validation.Structure (StructuralAssessment, structuralGraph)
 
+-- * Complete model assessment state
 -- | Derived semantic maturity of one complete assessed model boundary.
 data Maturity
   = Skeleton
@@ -62,6 +63,7 @@ data Maturity
     -- ^ The complete semantic boundary is valid and contains no Candidate.
   deriving (Bounded, Enum, Eq, Ord, Show)
 
+-- * Complete semantic input
 -- | Complete raw input to one normative semantic assessment.
 data ModelSemanticsInput = ModelSemanticsInput
   { modelStrategyClaims :: [Claim RawStrategyFormulation]
@@ -103,7 +105,7 @@ data ModelAssessmentStatus
 -- | Opaque result of assessing the complete model-semantic boundary.
 data ModelAssessment = ModelAssessment
   { assessedContext :: ContextAssessment
-  , assessedCollective :: Maybe CollectiveStrategyRealizationAssessment
+  , assessedCollective :: CollectiveStrategyRealizationAssessment
   , assessedCollectiveValidation :: Maybe
       ValidatedCollectiveStrategyRealizations
   , assessedCandidates :: [CandidateModelProposition]
@@ -117,6 +119,7 @@ data SemanticallyValidModel =
     ContextSemantics
     ValidatedCollectiveStrategyRealizations
 
+-- * Complete semantic validation interface
 -- | Assess all semantic claims within one exact structural boundary.
 --
 -- Fatal errors dominate pending Candidates without discarding Candidate
@@ -124,6 +127,7 @@ data SemanticallyValidModel =
 -- has established its required graph and Strategy-formulation invariants.
 assessModelSemantics ::
      StructuralAssessment -> ModelSemanticsInput -> ModelAssessment
+-- * Complete semantic validation implementation
 assessModelSemantics structure inputs =
   ModelAssessment
     { assessedContext = contextAssessment
@@ -141,44 +145,65 @@ assessModelSemantics structure inputs =
       map
         contextCandidate
         (contextAssessmentCandidatePropositions contextAssessment)
+    collectiveStructure =
+      assessCollectiveClaimStructure
+        (structuralGraph structure)
+        (modelCollectiveClaims inputs)
+    blockedCollective =
+      blockedCollectiveStrategyRealizationAssessment collectiveStructure
     (collectiveAssessment, collectiveValidation, candidates, status) =
       case contextAssessmentStatus contextAssessment of
         ContextRejected errors ->
-          ( Nothing
+          ( blockedCollective
           , Nothing
-          , contextCandidates
-          , SemanticsRejected (fmap ContextSemanticError errors))
+          , contextCandidates ++ collectiveCandidates blockedCollective
+          , SemanticsRejected
+              (appendNonEmpty
+                 (fmap ContextSemanticError errors)
+                 (map
+                    CollectiveSemanticError
+                    (collectiveStrategyRealizationErrors blockedCollective))))
         ContextPending pendingContexts ->
-          let pending = fmap contextCandidate pendingContexts
-           in ( Nothing
-              , Nothing
-              , NonEmpty.toList pending
-              , SemanticsPending pending)
+          let pending =
+                appendNonEmpty
+                  (fmap contextCandidate pendingContexts)
+                  (collectiveCandidates blockedCollective)
+              pendingCandidates = NonEmpty.toList pending
+              collectiveErrors =
+                collectiveStrategyRealizationErrors blockedCollective
+           in case NonEmpty.nonEmpty collectiveErrors of
+                Just errors ->
+                  ( blockedCollective
+                  , Nothing
+                  , pendingCandidates
+                  , SemanticsRejected (fmap CollectiveSemanticError errors))
+                Nothing ->
+                  ( blockedCollective
+                  , Nothing
+                  , pendingCandidates
+                  , SemanticsPending pending)
         ContextAccepted context ->
           let assessment =
                 assessCollectiveStrategyRealizations
                   context
                   (modelCollectiveFitEvidence inputs)
-                  (modelCollectiveClaims inputs)
-              collectiveCandidates =
-                map
-                  collectiveCandidate
-                  (candidateCollectiveStrategyRealizations assessment)
+                  collectiveStructure
+              pendingCandidates = collectiveCandidates assessment
            in case validateCollectiveStrategyRealizations assessment of
                 Failure errors ->
-                  ( Just assessment
+                  ( assessment
                   , Nothing
-                  , collectiveCandidates
+                  , pendingCandidates
                   , SemanticsRejected (fmap CollectiveSemanticError errors))
                 Success validated ->
-                  case NonEmpty.nonEmpty collectiveCandidates of
+                  case NonEmpty.nonEmpty pendingCandidates of
                     Just pending ->
-                      ( Just assessment
+                      ( assessment
                       , Just validated
-                      , collectiveCandidates
+                      , pendingCandidates
                       , SemanticsPending pending)
                     Nothing ->
-                      ( Just assessment
+                      ( assessment
                       , Just validated
                       , []
                       , SemanticsAccepted
@@ -204,7 +229,7 @@ assessmentInvariantErrors = contextAssessmentInvariantErrors . assessedContext
 assessmentCollectiveErrors ::
      ModelAssessment -> [CollectiveStrategyRealizationError]
 assessmentCollectiveErrors =
-  maybe [] collectiveStrategyRealizationErrors . assessedCollective
+  collectiveStrategyRealizationErrors . assessedCollective
 
 -- | Read every Candidate excluded from validated model semantics.
 assessmentCandidatePropositions ::
@@ -215,7 +240,7 @@ assessmentCandidatePropositions = assessedCandidates
 assessmentCandidateCollectiveStrategyRealizations ::
      ModelAssessment -> [CandidateCollectiveStrategyRealization]
 assessmentCandidateCollectiveStrategyRealizations =
-  maybe [] candidateCollectiveStrategyRealizations . assessedCollective
+  candidateCollectiveStrategyRealizations . assessedCollective
 
 -- | Read validated collective realizations available within this assessment.
 --
@@ -294,3 +319,11 @@ collectiveCandidate =
     . rawRealizationId
     . claimedProposition
     . candidateCollectiveClaim
+
+collectiveCandidates ::
+     CollectiveStrategyRealizationAssessment -> [CandidateModelProposition]
+collectiveCandidates =
+  map collectiveCandidate . candidateCollectiveStrategyRealizations
+
+appendNonEmpty :: NonEmpty value -> [value] -> NonEmpty value
+appendNonEmpty (first :| rest) suffix = first :| (rest ++ suffix)

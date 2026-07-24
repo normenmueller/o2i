@@ -51,9 +51,14 @@ data CollectiveFitDimension
   | ViableInteractionFit
   deriving (Eq, Ord, Show)
 
--- | Semantic deficiency of one structurally valid collective claim.
+-- | Semantic diagnostic state of one structurally valid collective claim.
+--
+-- A blocked evaluation records unavailable Context semantics; every other
+-- constructor records a deficiency found by completed semantic evaluation.
 data CollectiveStrategyRealizationIssue
-  = CollectiveFitEvidenceNotFound CollectiveFitEvidenceRef
+  = CollectiveSemanticEvaluationBlocked
+    -- ^ Context semantics is unavailable; no semantic claim was evaluated.
+  | CollectiveFitEvidenceNotFound CollectiveFitEvidenceRef
   | CollectiveFitEvidenceAmbiguous CollectiveFitEvidenceRef
   | MissingContributorContribution RawNodeId RawNodeId
   | UncoveredTargetKeyResult RawNodeId

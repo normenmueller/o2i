@@ -307,6 +307,8 @@ Trade-offs folgen aus Positionierung: Wer eine unterscheidbare Position einnimmt
 
 Trade-offs sind keine konkreten Maßnahmen. Sie begrenzen kohärente Handlungsfestlegungen, indem sie festlegen, welche Entscheidungen, Aktivitäten oder Ressourcenbindungen nicht zur Strategie passen.
 
+Die Trade-offs einer Strategie bilden eine ungeordnete Menge fachlicher Ausschlüsse. Reihenfolge und Mehrfachnennung tragen keine zusätzliche Semantik; inhaltlich verschiedene Ausschlüsse bleiben unterscheidbar.
+
 #### Kohärente Handlungsfestlegungen
 
 > [!definition]
@@ -343,7 +345,9 @@ Fit validiert damit nicht einzelne Bestandteile isoliert, sondern das Zusammensp
 ### Strategiebeitrag und kollektive Strategierealisierung
 
 > [!definition]
-> Ein **Strategiebeitrag** bezeichnet einen fachlich begründeten Beitrag einer Strategie zu einer anderen Strategie. Er wird in O2I als binäre Relation `Strategy --contributes-to--> Strategy` modelliert und durch zulässige Primitive-Relationen zwischen beiden Strategien belegt.
+> Ein **Strategiebeitrag**[^strategy-contribution] bezeichnet einen fachlich begründeten Beitrag einer Strategie zu einer anderen Strategie. Er wird in O2I als binäre Relation `Strategy --contributes-to--> Strategy` modelliert und durch zulässige Primitive-Relationen zwischen beiden Strategien belegt.
+>
+> [^strategy-contribution]: *Autorenableitung in Anlehnung an Rumelt (2011) und Porter (1996)*: O2I formalisiert den einzeln begründeten Beitrag zwischen Strategien als eigenständige Relation, ohne daraus vollständige Realisierung oder Fit abzuleiten.
 
 Ein Strategiebeitrag behauptet weder vollständige Realisierung noch kollektiven Fit. Eine Strategie kann zu mehreren Strategien beitragen; umgekehrt kann eine Strategie Beiträge mehrerer Strategien erhalten. Jede Relation bleibt eine eigenständige Aussage mit eigener Begründung.
 
@@ -795,11 +799,13 @@ Eine Relationsinstanz verbindet konkrete Kontext-, Primitive-, Strukturierungs- 
 #### Claims
 
 > [!definition]
-> Ein **Claim** bezeichnet eine atomare, notationunabhängige Modellaussage. Er trägt genau ein `Commitment`: `Candidate` kennzeichnet eine formal prüfbare, semantisch noch nicht behauptete Aussage; `Asserted` kennzeichnet eine als semantisch gültig behauptete Aussage.
+> Ein **Claim**[^claim] bezeichnet eine notationunabhängige Proposition mit genau einem unteilbaren `Commitment`. Die Proposition kann elementar, strukturiert oder n-är sein. `Candidate` kennzeichnet eine formal prüfbare, semantisch noch nicht behauptete Proposition; `Asserted` kennzeichnet eine als semantisch gültig behauptete Proposition.
+>
+> [^claim]: *Autorenableitung*: O2I verwendet Claim als formalen Träger des Aussageanspruchs einer modellierten Proposition. Claim ist damit eine metamodelleigene Begründungsstruktur und kein fachliches Modellelement.
 
 Claims erfassen unter anderem Elementdeklarationen, Kontextualisierungen, Relationsinstanzen, Strategy-Formulierungen und kollektive Strategierealisierungen. Ein Claim ist kein zusätzliches O2I-Modellelement und kein Knoten des Wirkungsgraphen. Er qualifiziert den Aussageanspruch einer modellierten Proposition.
 
-@Lst:o2i-claim-commitment zeigt den geschlossenen Aussagenstatus. Ein `Candidate` bleibt prüf- und diagnostizierbar, geht jedoch nicht in validierte O2I-Semantik, Abfragen, Wirkungstraces oder Evidenzbewertungen ein. Ein `Asserted` muss sämtliche anwendbaren Typ-, Abhängigkeits-, Evidenz- und Vollständigkeitspflichten erfüllen.
+@Lst:o2i-claim-commitment zeigt den geschlossenen Aussagenstatus. Ein `Candidate` bleibt über Diagnosezugriffe prüfbar, geht jedoch nicht in validierte O2I-Semantik, fachliche Modellabfragen, Wirkungstraces oder Evidenzbewertungen ein. Ein `Asserted` muss sämtliche anwendbaren Typ-, Abhängigkeits-, Evidenz- und Vollständigkeitspflichten erfüllen.
 
 ```{#lst:o2i-claim-commitment .haskell caption="O2I Claim-Commitment"}
 !include`snippetStart="-- * Claim commitment", snippetEnd="-- * Claim construction and access"` spc/lib/core/src/O2I/Language/Claim.hs
@@ -861,10 +867,10 @@ Die Abbildung fokussiert die Nachweisfolge ab dem semantisch gültigen Modell. D
 !include`snippetStart="-- * Structural validation", snippetEnd="nodeErrors ::"` spc/lib/core/src/O2I/Validation/Structure.hs
 ```
 
-@Lst:o2i-semantic-validation zeigt die zweite Validierungsstufe für semantische Gültigkeit.
+@Lst:o2i-semantic-validation zeigt den einzigen Eintrittspunkt in die zweite Validierungsstufe. Er prüft Kontext- und Strategy-Semantik sowie kollektive Strategierealisierungen als eine vollständige semantische Modellgrenze.
 
 ```{#lst:o2i-semantic-validation .haskell caption="O2I Semantikvalidierung"}
-!include`snippetStart="-- * Semantic validation", snippetEnd="-- * Validated model access"` spc/lib/core/src/O2I/Validation/Semantics.hs
+!include`snippetStart="-- * Complete semantic validation interface", snippetEnd="-- * Complete semantic validation implementation"` spc/lib/core/src/O2I/Validation/Semantics.hs
 ```
 
 @Lst:o2i-effect-trace zeigt die dritte Validierungsstufe für relational nachvollziehbare Wirkung.
@@ -889,10 +895,14 @@ Die Abbildung fokussiert die Nachweisfolge ab dem semantisch gültigen Modell. D
 
 `Commitment`, `Elaboration` und `Maturity` bezeichnen drei verschiedene Ebenen. `Commitment` ist der explizite Aussageanspruch eines einzelnen Claims. `Elaboration` ist der abgeleitete Zustand des verpflichtenden Inhalts einer konkreten Kontextinstanz. `Maturity` ist der abgeleitete Zustand der gesamten geprüften Modellgrenze. Keiner dieser Werte ist ein frei gesetztes fachliches O2I-Element.
 
-@Lst:o2i-semantic-assessment-state zeigt die beiden abgeleiteten Statusmengen.
+@Lst:o2i-context-elaboration und @lst:o2i-model-maturity zeigen die beiden abgeleiteten Statusmengen.
 
-```{#lst:o2i-semantic-assessment-state .haskell caption="O2I Kontextelaboration und Modellreife"}
-!include`snippetStart="-- * Semantic assessment state", snippetEnd="-- * Semantic validation diagnostics"` spc/lib/core/src/O2I/Validation/Semantics.hs
+```{#lst:o2i-context-elaboration .haskell caption="O2I Kontextelaboration"}
+!include`snippetStart="-- * Semantic assessment state", snippetEnd="-- * Context candidate assessment"` spc/lib/core/src/O2I/Validation/Semantics/Context.hs
+```
+
+```{#lst:o2i-model-maturity .haskell caption="O2I Modellreife"}
+!include`snippetStart="-- * Complete model assessment state", snippetEnd="-- * Complete semantic input"` spc/lib/core/src/O2I/Validation/Semantics.hs
 ```
 
 Für eine behauptete Kontextinstanz gilt `Elaborated` genau dann, wenn ihr vollständiger verpflichtender Inhalt durch gültige `Asserted`-Claims innerhalb der geprüften Modellgrenze vorliegt. Andernfalls ist sie `Referenced`. Ein `Candidate` erfüllt keine verpflichtende Proposition und keine Abhängigkeit. Zusätzliche Candidates setzen einen unabhängig vollständig belegten Kontext jedoch nicht auf `Referenced` zurück.
@@ -935,7 +945,7 @@ Existenzielle Relationsevidenz muss von zusätzlichen eigenen Primitives oder St
 Jede Strategy-Instanz besitzt genau eine vollständige Formulierung. Sie umfasst Geltungsbereich, strategische Verankerung, abgeleitete Leitplanken, Diagnose, strategische Absicht, Guiding Policy, Positionierung, Trade-offs, kohärente Handlungsfestlegungen, strategische Erfolgsbezüge und Fit-Begründung. Jeder strategische Erfolgsbezug wird durch ein `Key Result @ Strategy` modelliert. Sämtliche Textfelder müssen nichtleer sein; Action- und Key-Result-Referenzen müssen innerhalb ihrer Rolle eindeutig sein. @Lst:o2i-strategy-formulation zeigt die strukturierte Repräsentation dieser Bestandteile.
 
 ```{#lst:o2i-strategy-formulation .haskell caption="O2I Strategy-Formulierung"}
-!include`snippetStart="-- * Strategy formulation input", snippetEnd="-- | A Strategy formulation"` spc/lib/core/src/O2I/Validation/Semantics.hs
+!include`snippetStart="-- * Strategy formulation input", snippetEnd="-- | A Strategy formulation"` spc/lib/core/src/O2I/Validation/Semantics/Context.hs
 ```
 
 Die Formulierung muss ihre Primitive-Rollen derselben Strategy-Instanz zuordnen und relational kohärent sein: Der Diagnosis-Driver begründet das Intent-Objective, die Guiding Policy führt jede gelistete Action, jede gelistete Action trägt zu mindestens einem gelisteten Key Result bei und jedes gelistete Key Result substantiiert das Intent-Objective.
@@ -966,9 +976,15 @@ Eine kollektive Strategierealisierung ist semantisch gültig, wenn:
 5. die Vereinigungsmenge dieser Beitragsevidenz sämtliche Actions und Key Results der validierten Ziel-Strategy-Formulierung abdeckt;
 6. strukturierte Fit-Evidenz paarweise Kohärenz, Guiding-Policy-Kompatibilität, Trade-off-Kompatibilität und tragfähige Interaktion belegt.
 
+Die strukturelle Zulässigkeit verlangt zusätzlich eine nichtleere, global eindeutige Claim-ID, eine nichtleere Referenz auf genau ein Fit-Evidenzbündel, bekannte und eindeutig gebundene Strategy-Teilnehmer sowie eine eindeutige Zielbindung. Die Beitragsevidenz wird für jeden Beitragenden separat als zulässige `contributes-to`-Makroevidenz an genau diese Ziel-Strategy gebunden. Ihre Vereinigungsmenge muss die vollständigen Actions und Key Results der validierten Ziel-Strategy-Formulierung abdecken.
+
+Das referenzierte Fit-Evidenzbündel muss denselben Teilnehmerkreis und dasselbe Ziel binden. Für jedes ungeordnete Teilnehmerpaar liegt genau eine nichtleere Kohärenzbegründung vor; für jeden Beitragenden genau eine nichtleere Begründung seiner Kompatibilität mit Guiding Policy und Trade-offs. Die gebundene Guiding Policy und die gebundenen Trade-offs entsprechen der validierten Ziel-Strategy-Formulierung. Mindestens eine nichtleere Aussage begründet die tragfähige Interaktion der Beiträge.
+
+Die Spezifikation prüft Existenz, Eindeutigkeit, Typisierung, Bindung, Abdeckung und Vollständigkeit dieser Aussagen. Sie beweist nicht die fachliche Wahrheit ihrer Begründungstexte. Mit `Asserted` wird deren fachlich autorisierte Gültigkeit behauptet; ein `Candidate` bleibt als Vorschlag diagnostizierbar und von validierter Semantik ausgeschlossen.
+
 Beitragsevidenz und kollektiver Fit sind unabhängige Pflichten. Organisatorische Zugehörigkeit, gemeinsame Ausrichtung oder bloße Widerspruchsfreiheit begründen keine kollektive Realisierung. Eine direkte binäre `Strategy --realizes--> Strategy`-Relation ist deshalb kein zulässiger O2I-Relationstyp.
 
-Die Prüfung setzt ein `SemanticallyValidModel` voraus und erzeugt keinen zusätzlichen Zustand der allgemeinen Validierungskette. Ein strukturell gültiger `Candidate` bleibt mit seinen fachlichen Defiziten diagnostizierbar, erzeugt jedoch keinen Realisierungszeugen. Ein `Asserted` muss sämtliche Pflichten erfüllen. Erst ein fehlerfreies Gesamtassessment stellt die validierten kollektiven Realisierungen als opake Zeugen und Abfragen bereit.
+Die globale Semantikprüfung bewertet Kontext- und Strategy-Semantik sowie kollektive Claims als eine vollständige Modellgrenze. Ein strukturell gültiger `Candidate` bleibt mit seinen fachlichen Defiziten diagnostizierbar, erzeugt jedoch keinen Realisierungszeugen. Steht die erforderliche Kontextsemantik nicht zur Verfügung, bleibt er ausdrücklich als semantisch noch nicht bewertbar gekennzeichnet. Ein `Asserted` muss sämtliche Pflichten erfüllen. Erst wenn keine fatalen Fehler und keine Candidates verbleiben, entsteht ein `SemanticallyValidModel`, das die validierten kollektiven Realisierungen als opake Zeugen und Abfragen einschließt. `Maturity` wird ausschließlich aus diesem vollständigen Core-Assessment abgeleitet.
 
 ### Wirkungsrelevanz
 
@@ -1048,7 +1064,7 @@ Die Syntaxexemplare sind keine fachlichen Modellinstanzen.
 
 ![O2I ArchiMate-Syntax](<img/O2I Syntax.png>){#fig:o2i-syntax-view width=85%}
 
-### Claim-Abbildung
+### Kollektive Claim-Abbildung
 
 Die konkrete ArchiMate-Syntax einer kollektiven Strategierealisierung verwendet eine AND-Junction als Repräsentation des n-ären Claims. Diese Junction trägt genau folgende O2I-Metadaten:
 

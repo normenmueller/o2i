@@ -743,7 +743,7 @@ performanceDimensionRoleTests =
 structureTests :: TestTree
 structureTests =
   testGroup
-    "structural elaboration"
+    "structural validation"
     [ testCase "empty graph is structurally well-formed"
         $ assertStructureAccepted (validateStructure emptyGraph)
     , testCase "complete reference graph is structurally well-formed"

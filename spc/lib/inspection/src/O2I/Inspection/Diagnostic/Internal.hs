@@ -752,6 +752,11 @@ collectiveRealizationIssueSpec ::
      DiagnosticSeverity -> CollectiveStrategyRealizationIssue -> DiagnosticSpec
 collectiveRealizationIssueSpec severity issue =
   (case issue of
+     CollectiveSemanticEvaluationBlocked ->
+       (issueSpec "evaluation-blocked" [])
+         { specMessage =
+             "Collective Candidate semantic evaluation is blocked until Context semantics is available."
+         }
      CollectiveFitEvidenceNotFound reference ->
        issueSpec "fit-evidence-not-found" [fitSubject reference]
      CollectiveFitEvidenceAmbiguous reference ->

@@ -89,7 +89,7 @@ Strategie ist kein Wunschzettel. Sie beschreibt das strategische Wie: die begrü
 
 Eine vollständige Strategie verbindet `Driver`, `Objective`, `Principle`, mindestens eine `Action` und mindestens ein `Key Result` in ihren festgelegten Strategy-Rollen. Diagnose begründet Absicht, Guiding Policy leitet Handlungsfestlegungen, diese tragen zu Erfolgsbezügen bei und Erfolgsbezüge substantiieren die Absicht. Die Fit-Begründung weist die Kohärenz des Gesamtzusammenhangs nach.
 
-Spezifikation: [`validateModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs)
+Spezifikation: [`assessModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs)
 
 Weiterlesen: [Strategie](./o2i.md#strategie)
 
@@ -112,9 +112,9 @@ Ein binärer Strategiebeitrag sagt nur, dass eine Strategie zu einer anderen bei
 
 **Prüfung**
 
-`assessCollectiveStrategyRealizations` erhält Candidate-Diagnosen und sämtliche fatalen Fehler. `validateCollectiveStrategyRealizations` liefert nur für ein insgesamt fehlerfreies Assessment opake Realisierungszeugen. Eine direkte binäre `Strategy --realizes--> Strategy`-Relation ist unzulässig; `directs` und `contributes-to` behalten ihre jeweils eigene Bedeutung.
+`assessModelSemantics` prüft Kontext- und Strategy-Semantik sowie sämtliche kollektiven Claims als eine vollständige Modellgrenze. Candidates bleiben diagnostizierbar; ohne gültige Kontextsemantik wird ihre fachliche Bewertung ausdrücklich als blockiert ausgewiesen. Fatal fehlerhafte Claims verhindern die Annahme, und nur ein insgesamt angenommenes Assessment erzeugt ein `SemanticallyValidModel` mit opaken Realisierungszeugen. Eine direkte binäre `Strategy --realizes--> Strategy`-Relation ist unzulässig; `directs` und `contributes-to` behalten ihre jeweils eigene Bedeutung.
 
-Spezifikation: [`assessCollectiveStrategyRealizations`](./spc/lib/core/src/O2I/Validation/Collective.hs), [`validateCollectiveStrategyRealizations`](./spc/lib/core/src/O2I/Validation/Collective.hs)
+Spezifikation: [`assessModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs), [`validatedCollectiveStrategyRealizations`](./spc/lib/core/src/O2I/Validation/Semantics.hs)
 
 Weiterlesen: [Strategiebeitrag und kollektive Strategierealisierung](./o2i.md#strategiebeitrag-und-kollektive-strategierealisierung), [Kollektive Strategierealisierung im Metamodell](./o2i.md#kollektive-strategierealisierung)
 
@@ -127,7 +127,7 @@ O2I trennt drei Ebenen: `Commitment` kennzeichnet den Aussageanspruch eines Clai
 
 **Mindestinhalt**
 
-- atomare Claims mit eindeutigem Aussageanspruch,
+- Claims mit genau einem eindeutigen Aussageanspruch,
 - vollständige verpflichtende Inhalte für jeden zu elaborierenden Kontext,
 - alle Abhängigkeiten und Evidenzen der `Asserted`-Claims,
 - keine manuell gesetzten Werte für `Elaboration` oder `Maturity`.
@@ -158,7 +158,7 @@ Situation ist das fachliche Wo eines Bedarfs: der konkrete Arbeits-, Leistungs- 
 
 Der Situationsanker muss nach seiner Business-Architecture-Semantik modelliert sein und den fachlichen Bezugsraum bestimmen. Eine technische Lösung oder Maßnahme ist kein Situationsanker.
 
-Spezifikation: [`validateModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs)
+Spezifikation: [`assessModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs)
 
 Weiterlesen: [Situation](./o2i.md#situation)
 
@@ -179,9 +179,9 @@ Bedarf ist das fachliche Was: eine situationsbezogene Anforderung an Veränderun
 
 **Prüfung**
 
-`validateModelSemantics` prüft die vollständige Situierung. Eine Lösung, Maßnahme oder technische Anforderung ersetzt weder Need-Driver noch Need-Objective.
+`assessModelSemantics` prüft die vollständige Situierung. Eine Lösung, Maßnahme oder technische Anforderung ersetzt weder Need-Driver noch Need-Objective.
 
-Spezifikation: [`validateModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs)
+Spezifikation: [`assessModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs)
 
 Weiterlesen: [Bedarf](./o2i.md#bedarf)
 
@@ -248,9 +248,9 @@ Intervention ist das operative Wie: eine gezielte Einwirkung auf eine Situation,
 
 **Prüfung**
 
-`validateModelSemantics` prüft als lokale semantische Mindestgültigkeit mindestens eine eigene Action, ein eigenes Key Result und einen Contribution-Zusammenhang zwischen solchen Elementen. `validateTraceability` prüft anschließend, ob die Intervention in einem vollständigen Wirkungstrace denselben wirkungsrelevanten Bedarf und Situationsanker mit richtender Strategie und zielbezogener Messung verbindet. `validateEvidenceReadinessAt` prüft davon getrennt den zugehörigen Nachweisentwurf vor Interventionsbeginn.
+`assessModelSemantics` prüft als lokale semantische Mindestgültigkeit mindestens eine eigene Action, ein eigenes Key Result und einen Contribution-Zusammenhang zwischen solchen Elementen. `validateTraceability` prüft anschließend, ob die Intervention in einem vollständigen Wirkungstrace denselben wirkungsrelevanten Bedarf und Situationsanker mit richtender Strategie und zielbezogener Messung verbindet. `validateEvidenceReadinessAt` prüft davon getrennt den zugehörigen Nachweisentwurf vor Interventionsbeginn.
 
-Spezifikation: [`validateModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs), [`validateTraceability`](./spc/lib/core/src/O2I/Validation/Trace.hs), [`validateEvidenceReadinessAt`](./spc/lib/core/src/O2I/Validation/Readiness.hs)
+Spezifikation: [`assessModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs), [`validateTraceability`](./spc/lib/core/src/O2I/Validation/Trace.hs), [`validateEvidenceReadinessAt`](./spc/lib/core/src/O2I/Validation/Readiness.hs)
 
 Weiterlesen: [Intervention](./o2i.md#intervention)
 
@@ -274,9 +274,9 @@ Messung ist das fachliche Woran: der Rahmen, in dem relevante Zustände und Ver�
 
 **Prüfung**
 
-`validateModelSemantics` prüft als lokale semantische Mindestgültigkeit mindestens eine eigene Messdimension, einen eigenen KPI und deren Membership-Zusammenhang. `validateTraceability` prüft anschließend die Rahmung durch Strategie, den Zielbezug durch Intervention und ob ein KPI denselben Situationsanker beobachtet, den die Intervention verändert. `validateEvidenceReadinessAt` prüft davon getrennt die stabile KPI-Definition und den zugehörigen Nachweisentwurf vor Interventionsbeginn.
+`assessModelSemantics` prüft als lokale semantische Mindestgültigkeit mindestens eine eigene Messdimension, einen eigenen KPI und deren Membership-Zusammenhang. `validateTraceability` prüft anschließend die Rahmung durch Strategie, den Zielbezug durch Intervention und ob ein KPI denselben Situationsanker beobachtet, den die Intervention verändert. `validateEvidenceReadinessAt` prüft davon getrennt die stabile KPI-Definition und den zugehörigen Nachweisentwurf vor Interventionsbeginn.
 
-Spezifikation: [`validateModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs), [`validateTraceability`](./spc/lib/core/src/O2I/Validation/Trace.hs), [`validateEvidenceReadinessAt`](./spc/lib/core/src/O2I/Validation/Readiness.hs)
+Spezifikation: [`assessModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs), [`validateTraceability`](./spc/lib/core/src/O2I/Validation/Trace.hs), [`validateEvidenceReadinessAt`](./spc/lib/core/src/O2I/Validation/Readiness.hs)
 
 Weiterlesen: [Messung](./o2i.md#messung)
 

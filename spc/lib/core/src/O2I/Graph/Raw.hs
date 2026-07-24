@@ -1,7 +1,7 @@
 -- | Unchecked graph input expressed in the O2I semantic language.
 --
 -- Raw graphs retain runtime identifiers and values. Structural validation
--- elaborates them into the typed graph representation.
+-- types them into the validated graph representation.
 module O2I.Graph.Raw
   ( RawNode(..)
   , RawEdge(..)
@@ -33,7 +33,7 @@ data RawEdge = RawEdge
   , rawEdgeTo :: RawNodeId -- ^ Declared target node identifier.
   } deriving (Eq, Ord, Show)
 
--- | Structurally admissible candidate retained but not graph-elaborated.
+-- | Structurally admissible candidate retained but not graph-typed.
 data CandidateGraphProposition
   = CandidateNodeProposition RawNode
     -- ^ Proposed node declaration excluded from the typed graph.

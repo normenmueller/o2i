@@ -68,6 +68,12 @@ collectiveTests =
     , testCase
         "fatal Asserted errors retain independent Candidate diagnostics"
         fatalErrorRetainsCandidateTest
+    , testCase
+        "Context errors retain blocked collective Candidate diagnostics"
+        contextErrorRetainsBlockedCandidateTest
+    , testCase
+        "Context Candidates retain blocked collective Candidate diagnostics"
+        contextCandidateRetainsBlockedCandidateTest
     ]
 
 tradeOffSetTests :: TestTree
@@ -646,6 +652,77 @@ fatalErrorRetainsCandidateTest =
       Nothing -> pure ()
       Just _ ->
         assertFailure "fatal collective assessment exposed aggregate witnesses"
+
+contextErrorRetainsBlockedCandidateTest :: Assertion
+contextErrorRetainsBlockedCandidateTest = do
+  let assessment =
+        assessCollectiveModelWith
+          []
+          completeCollectiveGraph
+          [completeFit]
+          [candidateCollective]
+  assertBool
+    "expected fatal Context errors"
+    (not (null (assessmentInvariantErrors assessment)))
+  case modelAssessmentStatus assessment of
+    SemanticsRejected _ -> pure ()
+    _ -> assertFailure "Context errors did not reject model semantics"
+  assessmentCollectiveErrors assessment @?= []
+  assessmentCandidatePropositions assessment
+    @?= [CandidateCollectiveRealization collectiveClaimId]
+  assertBlockedCollectiveCandidate assessment
+
+contextCandidateRetainsBlockedCandidateTest :: Assertion
+contextCandidateRetainsBlockedCandidateTest =
+  case validateClaimStructure claimGraph of
+    StructureAccepted structure -> do
+      let assessment =
+            assessModelSemantics
+              structure
+              ModelSemanticsInput
+                { modelStrategyClaims = map assertedClaim collectiveFormulations
+                , modelCollectiveClaims = [candidateCollective]
+                , modelCollectiveFitEvidence = [completeFit]
+                }
+      assessmentInvariantErrors assessment @?= []
+      assessmentCollectiveErrors assessment @?= []
+      assessmentCandidatePropositions assessment
+        @?= [ CandidateModelNode candidateContext
+            , CandidateCollectiveRealization collectiveClaimId
+            ]
+      case modelAssessmentStatus assessment of
+        SemanticsPending pending ->
+          NonEmpty.toList pending
+            @?= [ CandidateModelNode candidateContext
+                , CandidateCollectiveRealization collectiveClaimId
+                ]
+        _ -> assertFailure "Context Candidates did not keep semantics pending"
+      assertBlockedCollectiveCandidate assessment
+    StructureModelRejected errors ->
+      assertFailure ("collective Candidate fixture failed: " ++ show errors)
+    StructureInternalFailure internal ->
+      assertFailure
+        ("collective Candidate fixture failed internally: " ++ show internal)
+  where
+    candidateContext =
+      RawContextNode (RawNodeId "candidate-unrelated-strategy") Strategy
+    claimGraph =
+      RawClaimGraph
+        (map assertedClaim (rawNodes completeCollectiveGraph)
+           ++ [candidateClaim candidateContext])
+        (map assertedClaim (rawEdges completeCollectiveGraph))
+
+assertBlockedCollectiveCandidate :: ModelAssessment -> Assertion
+assertBlockedCollectiveCandidate assessment =
+  case assessmentCandidateCollectiveStrategyRealizations assessment of
+    [candidate] -> do
+      candidateCollectiveClaim candidate @?= candidateCollective
+      candidateCollectiveIssues candidate
+        @?= [CollectiveSemanticEvaluationBlocked]
+    candidates ->
+      assertFailure
+        ("expected one blocked collective Candidate, got "
+           ++ show (length candidates))
 
 validateCollectiveStrategyRealizations ::
      RawGraph
