@@ -91,18 +91,29 @@ the canonical repository memory.
 - Treat `O2I Semantics - Context`, `O2I Semantics - Primitives`, and
   `O2I Semantics - Situation` as normative semantic Views. Treat the
   `O2I Syntax - *` Views as their complete concrete ArchiMate realization.
-  Keep these Views, the article, the Haskell library, and the tests
-  semantically synchronized.
+  Distinguish unannotated mapping Views from executable Candidate conformance
+  Views: mapping objects define notation at the metamodel level and are never
+  O2I graph propositions; conformance exemplars persist `o2i.kind`, `o2i.type`,
+  and exactly one `o2i.commitment`. Never turn a syntax legend into a model
+  instance merely to make it inspectable. Keep these Views, the article, the
+  Haskell library, and the tests semantically synchronized.
+- Treat the Haskell AMX adapter as the sole generic validator of the O2I
+  ArchiMate profile. The Python extractor owns deterministic repository
+  contracts for required Views, labels, documentation, displayed topology,
+  and review snapshots; it must not duplicate generic O2I profile,
+  Commitment, or semantic validation.
 - Keep ArchiMate element and relation documentation semantically synchronized
   with the article and Haskell specification. Use concise target-state
   definitions and source anchors; remove alternatives, former names, and
   editorial history.
 - After every change to `mdl/o2i.archimate`, regenerate and inspect all review
   snapshots with `python3 -B utl/extract-archimate-view.py --preset all`, then
-  validate model invariants and snapshot consistency with
+  validate repository contracts and snapshot consistency with
   `python3 -B utl/extract-archimate-view.py --preset all --check`, and run the
   extractor contract tests with
-  `python3 -B -m unittest discover -s utl -p 'test_*.py'`.
+  `python3 -B -m unittest discover -s utl -p 'test_*.py'`. Validate every
+  executable O2I conformance or instance View separately through `o2i inspect`;
+  mapping-only Views are snapshot-checked and are not treated as O2I graphs.
 - Use relation syntax `Subject --relation--> Object` unless explicitly changed.
 - Do not assume every organizational unit has a Strategy.
 - Every definition in `o2i.md` uses the established `[!definition]` callout and

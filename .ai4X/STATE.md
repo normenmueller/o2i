@@ -31,10 +31,10 @@ override this snapshot.
   technical owner field.
 - Native AMX `version="5.0.0"` and O2I profile `o2i.profile="0.2"` are distinct.
 - `O2I Semantics - Context`, `O2I Semantics - Primitives`, and `O2I Semantics -
-  Situation` are normative semantic Views. Concrete syntax is separated into
-  responsibility-aligned Context, Contextualization, Collective Strategy
-  Realization, Primitives, and Situation Views; their Commitment metadata and
-  extractor contracts remain to be synchronized.
+  Situation` are normative semantic Views. Concrete syntax separates
+  unannotated Context, Primitive, and Situation mapping Views from executable
+  Candidate Contextualization and Collective Strategy Realization conformance
+  Views.
 - The semantic Layered Cake remains outside concrete-syntax inspection until
   its explicit backlog conversion.
 
@@ -54,27 +54,30 @@ override this snapshot.
 # Current Worktree
 
 - `o2i:commitment-closure` is accepted. The explicit Commitment,
-  proposition-carrier, and `StructuredProposition` target contract is approved.
-  The first independent review exposed one High finding at the
-  `WellFormedGraph` boundary. Package 2 now retains a private commitment-aware
-  structural node index, preserves Candidate collective participants without
-  semantic witnesses, rejects Asserted dependencies on Candidate participants
-  precisely, and covers the contributor/target matrix. Cabal checks,
-  `-Werror` build, Core, Inspection, CLI, API contracts, 146 of 147 AMX tests,
-  HIndent, and 100% public Haddock pass. The sole AMX failure is the deliberately
-  unsynchronized repository model assigned to `o2i:syntax-sync`. The first
-  closure review confirms the former High finding as closed but identifies one
-  Medium conflation between unavailable Context semantics and a Candidate
-  participant without an Asserted witness. Its disjoint, role- and
-  participant-aware issue is implemented and locally verified. The final
-  independent closure review reports no findings and scores Fachlichkeit,
-  Metamodell, Typtheorie/Formalisierung, Haskell design, tests,
-  documentation/Haddock, formal value/proportionality, and
-  Core/Inspection/AMX/CLI consistency each 10.0/10.0. Current plan node is
-  `o2i:syntax-sync`; publication synchronization remains paused until the model
-  gate closes.
-- The model and extractor enforce the direct root property `o2i.profile=0.2`;
-  the extractor has 28 passing contract tests.
+  proposition-carrier, and `StructuredProposition` target contract is approved;
+  its independently accepted Haskell package is commit `81e5c2c`.
+- `O2I Syntax - Collective Strategy Realization` is a complete Candidate
+  conformance exemplar: three Candidate Strategy Contexts, one Candidate
+  `CollectiveStrategyRealization` carried by an AND Junction, three
+  commitment-free `realizes` segments, and a Fit evidence reference. The
+  Haskell inspector passes Decode, ViewScope, Profile, and Structure and emits
+  only intended Candidate-exclusion warnings.
+- The former Haskell-dispatch High finding is fully closed:
+  only exactly one direct `o2i.type=CollectiveStrategyRealization` activates
+  collective parsing; missing, duplicate, unknown, and future types remain in
+  generic profile validation with provenance. The formatting closure passes
+  HIndent and `git diff --check`; the bounded independent recheck reports no
+  findings and scores all eight dispatcher dimensions 10.0/10.0. The separate
+  open High finding remains the Python extractor's duplication of generic
+  profile semantics that belong exclusively to Haskell.
+- A separate metamodel review rejects the former view-wide Commitment plan.
+  Mapping Views remain unannotated notation specifications. Executable
+  conformance Views use distinct Candidate proposition carriers. Publication
+  synchronization remains paused until this syntax gate closes.
+- All eight `O2I Syntax - Context` mapping elements now have no direct O2I
+  metadata. Their documentation still describes the removed properties, and
+  Mission and Strategy remain shared with the Contextualization View; both
+  points are explicit pending model steps in `pln.md`.
 - The format-neutral Inspection library, native AMX adapter, and thin CLI are
   implemented with opaque staged artifacts, exact View selection, source
   provenance, stable diagnostics, and deterministic human or JSON reports.
@@ -131,14 +134,19 @@ override this snapshot.
 
 # Next Work
 
-1. Guide the user through explicit Commitment and
-   `StructuredProposition` metadata in the syntax Views, then synchronize
-   extractor presets, tests, and snapshots.
-2. Synchronize article, WTF, repository README, `spc/README.md`, Haddock, model
+1. Reduce the Python extractor to deterministic repository and snapshot
+   contracts; validate generic O2I profile semantics only through Haskell.
+2. Guide the user through the mapping/conformance View split and verify every
+   model change through snapshots and the appropriate Haskell inspector gates.
+3. Synchronize article, WTF, repository README, `spc/README.md`, Haddock, model
    documentation, and changelog.
-3. Run the complete cross-artifact gate and return to the exact
+4. Correct the TikZ evidence sequence so that
+   `validateNeedQualificationProposal` labels the formal proposal check and
+   `qualifyingStrategies` remains a query over the accepted modeled
+   qualification.
+5. Run the complete cross-artifact gate and return to the exact
    `dbf:db-ia` re-entry point recorded in `pln.md`.
-4. Afterwards continue the DB Fv instance, then review `wtf.md` at Vision and
+6. Afterwards continue the DB Fv instance, then review `wtf.md` at Vision and
    `o2i.md` collaboratively top-down.
 
 # Release Note Draft

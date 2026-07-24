@@ -61,7 +61,9 @@ buildCollectiveIndex environment =
     observations =
       map
         (observeCollective environment adjacency)
-        (filter isCollectiveClaimCandidate (environmentNodes environment))
+        (filter
+           isCollectiveStrategyRealizationDeclaration
+           (environmentNodes environment))
 
 -- | Collective observations in persisted Junction declaration order.
 collectiveObservations :: CollectiveIndex -> [CollectiveObservation]

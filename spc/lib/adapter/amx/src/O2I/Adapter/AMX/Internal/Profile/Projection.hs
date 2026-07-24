@@ -60,7 +60,7 @@ projectSnapshot document selected =
         (candidateDefects environment)
         [ element
         | element <- environmentNodes environment
-        , not (isCollectiveClaimCandidate element)
+        , not (isCollectiveStrategyRealizationDeclaration element)
         , Set.member (nodeOccurrence element) (closureCandidates closure)
         ]
     relationDeferred =
@@ -91,7 +91,7 @@ profileFacts environment collectiveIndex closure semanticRelationships =
       map
         (projectNodeOccurrence environment closure)
         (filter
-           (not . isCollectiveClaimCandidate)
+           (not . isCollectiveStrategyRealizationDeclaration)
            (environmentNodes environment))
     retainedRelationships =
       stableUniqueElements

@@ -91,7 +91,6 @@ missingClaimTypeModel =
     (Text.concat
        [ property "o2i.kind" "StructuredProposition"
        , property "o2i.commitment" "asserted"
-       , property "o2i.collective-fit-evidence" "fit-claim"
        ])
 
 missingCommitmentModel =
@@ -116,9 +115,8 @@ invalidClaimTypeModel =
   scopedCollectiveWithMetadata
     (Text.concat
        [ property "o2i.kind" "StructuredProposition"
-       , property "o2i.type" "Collective"
+       , property "o2i.type" "FutureStructuredProposition"
        , property "o2i.commitment" "asserted"
-       , property "o2i.collective-fit-evidence" "fit-claim"
        ])
 
 duplicateClaimKindModel, duplicateClaimTypeModel :: Text
@@ -128,8 +126,12 @@ duplicateClaimKindModel =
 
 duplicateClaimTypeModel =
   scopedCollectiveWithMetadata
-    (collectiveClaimMetadata
-       <> property "o2i.type" "CollectiveStrategyRealization")
+    (Text.concat
+       [ property "o2i.kind" "StructuredProposition"
+       , property "o2i.type" "CollectiveStrategyRealization"
+       , property "o2i.type" "CollectiveStrategyRealization"
+       , property "o2i.commitment" "asserted"
+       ])
 
 unsupportedClaimMetadataModel :: Text
 unsupportedClaimMetadataModel =

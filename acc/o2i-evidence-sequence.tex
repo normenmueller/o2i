@@ -44,14 +44,15 @@
   AUSGANGSPUNKT \quad \texttt{SemanticallyValidModel}
 };
 
-\node[state, below=1.55cm of visible] (relevant) {
+\node[state, below=1.92cm of visible] (relevant) {
   \textbf{Wirkungsrelevanter Bedarf}\\[-1pt]
   {\footnotesize\color{omuted}situativ sichtbar und strategisch qualifiziert}
 };
 
 \draw[flow] (visible) -- node[gate] {
-  {\color{omuted}Bedarfsqualifikation}\\[-1pt]
-  \texttt{qualifyingStrategies}
+  {\color{omuted}Qualifikationsvorlage formal prüfen;}\\[-1pt]
+  {\color{omuted}fachlich annehmen und Relationen modellieren}\\[-1pt]
+  \texttt{validateNeedQualificationProposal}
 } (relevant);
 
 \node[state, below=1.72cm of relevant] (traceable) {

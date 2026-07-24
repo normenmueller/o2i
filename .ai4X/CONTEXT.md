@@ -66,10 +66,10 @@ test and apply O2I but never define its generic semantics.
   presents but never replaces this explicit contextualization. Import maps it
   to the technical Haskell owner field, not to a fachliche `RawEdge`.
 - ArchiMate model metadata uses `o2i.kind` for `Context`, `Primitive`,
-  `Structuring`, or `SituationAnchor` and `o2i.type` for the corresponding O2I
-  constructor. It never duplicates owner, Context, role, interpretation, or
-  membership semantics; contextualization derives exclusively from
-  Composition.
+  `Structuring`, `SituationAnchor`, or `StructuredProposition` and `o2i.type`
+  for the corresponding O2I constructor. It never duplicates owner, Context,
+  role, interpretation, or membership semantics; contextualization derives
+  exclusively from Composition.
 - Situation anchors are independent nodes and are not contextualized by a
   Context. Their assignment to one or more Situations is expressed exclusively
   by typed `is-constituted-by` relations.
@@ -104,16 +104,38 @@ test and apply O2I but never define its generic semantics.
   semantic visualizations of the O2I context and primitive models.
 - `O2I Semantics - Situation` is the normative semantic visualization of the
   Situation anchor category, its admissible forms, and Situation constitution.
+- Semantic Views define admissible O2I types, relations, and semantic minimum
+  obligations. Concrete-syntax Views map those approved semantics to ArchiMate
+  and never introduce independent fachliche semantics.
+- `O2I Syntax - Context`, `O2I Syntax - Primitives`, and
+  `O2I Syntax - Situation` are unannotated mapping Views. Their objects define
+  ArchiMate element and relationship mappings at the metamodel level; they are
+  neither persisted O2I graph propositions nor inspectable O2I model
+  instances.
+- `O2I Syntax - Contextualization` and
+  `O2I Syntax - Collective Strategy Realization` are executable Candidate
+  conformance Views. Their proposition carriers persist direct O2I metadata
+  and exactly one `o2i.commitment`; mandatory
+  `composition[contextualizes]` and collective `realizes` syntax segments
+  carry no independent Commitment.
+- Mapping and conformance Views use distinct persisted elements. Reusing one
+  element across these levels would make a mapping legend part of an O2I graph
+  proposition through its direct metadata.
+- Every binary Context macrorelation maps to a directed ArchiMate Association;
+  its O2I name, direction, and typed endpoints define the syntax signature.
+  Contextualization maps to Composition. Collective Strategy realization maps
+  to homogeneous Realization segments through one AND Junction.
 - `O2I Situation Anchoring` is the normative semantic visualization of the
   parameterized Situation-anchor relation families.
 - The concrete ArchiMate 4 syntax maps each Situation-anchor form to its native
   or explicitly specialized element and applies one parameterized relation
   mapping; no duplicate 24-edge syntax view is required.
 - Their semantics is defined by O2I and does not derive from ArchiMate.
-- The `O2I Syntax - *` Views form the concrete ArchiMate realization of O2I
-  contexts, contextualized Primitives, PerformanceDimensions, Situation
-  anchors, and their mapped relations. ArchiMate `Grouping` realizes Context
-  and PerformanceDimension notation but introduces no O2I semantics.
+- Together, the mapping and conformance `O2I Syntax - *` Views form the
+  concrete ArchiMate realization of O2I contexts, contextualized Primitives,
+  PerformanceDimensions, Situation anchors, structured propositions, and
+  their mapped relations. ArchiMate `Grouping` and `Junction` are notation
+  carriers and introduce no O2I semantics.
 
 # Repository Map
 
@@ -137,7 +159,8 @@ test and apply O2I but never define its generic semantics.
   local full verification runs all stages, while GitHub Actions runs the same
   model, Haskell, and White Paper stages in parallel.
 - `utl/extract-archimate-view.py`: deterministic ArchiMate snapshot extractor
-  and model-contract validator.
+  and repository-contract checker. Generic O2I profile validation belongs
+  exclusively to the Haskell AMX adapter.
 
 # Model Inspection
 

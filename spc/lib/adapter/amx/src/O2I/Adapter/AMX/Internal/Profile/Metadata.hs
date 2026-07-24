@@ -34,6 +34,7 @@ data MetadataKind
   | PrimitiveMetadata
   | StructuringMetadata
   | SituationAnchorMetadata
+  | StructuredPropositionMetadata
   deriving (Eq, Show)
 
 -- | Resolve one unique direct @o2i.kind@ value.
@@ -59,6 +60,8 @@ candidateDefects environment element =
         Just StructuringMetadata -> ownedDefects element ownerships
         Just ContextMetadata -> ownerlessDefects element ownerships
         Just SituationAnchorMetadata -> ownerlessDefects element ownerships
+        Just StructuredPropositionMetadata ->
+          ownerlessDefects element ownerships
         Nothing -> []
     representationDefects =
       case nodeKind environment element of
@@ -241,6 +244,7 @@ metadataKindFromText value =
     "Primitive" -> Just PrimitiveMetadata
     "Structuring" -> Just StructuringMetadata
     "SituationAnchor" -> Just SituationAnchorMetadata
+    "StructuredProposition" -> Just StructuredPropositionMetadata
     _ -> Nothing
 
 declaredType :: Text -> Text -> Maybe DeclaredType

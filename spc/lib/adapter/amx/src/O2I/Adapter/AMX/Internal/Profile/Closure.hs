@@ -100,6 +100,7 @@ ownershipEligible environment closure relationship =
              Just PrimitiveMetadata -> endpointIs TargetEndpoint element
              Just StructuringMetadata -> endpointIs TargetEndpoint element
              Just SituationAnchorMetadata -> endpointIs TargetEndpoint element
+             Just StructuredPropositionMetadata -> False
              Nothing -> True
     endpointIs role element =
       elementAttribute (endpointQName role) relationship == elementId element

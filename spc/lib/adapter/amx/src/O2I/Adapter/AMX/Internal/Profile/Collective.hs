@@ -5,7 +5,7 @@ module O2I.Adapter.AMX.Internal.Profile.Collective
   ( collectiveFacts
   , collectiveDefects
   , collectiveRawClaims
-  , isCollectiveClaimCandidate
+  , isCollectiveStrategyRealizationDeclaration
   ) where
 
 import Data.List.NonEmpty (NonEmpty((:|)))

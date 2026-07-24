@@ -50,20 +50,26 @@ collectiveContractTests =
         "structured proposition kind metadata is mandatory"
         (rejects missingClaimKindModel ["o2i.amx.profile.kind-missing"])
     , testCase
-        "structured proposition type metadata is mandatory"
-        (rejects missingClaimTypeModel ["o2i.amx.profile.type-missing"])
+        "missing structured proposition type remains generic"
+        (genericTypeFallbackTest
+           missingClaimTypeModel
+           ["o2i.amx.profile.type-missing"])
     , testCase
         "structured proposition kind metadata is exact"
         (rejects invalidClaimKindModel ["o2i.amx.profile.kind-unknown"])
     , testCase
-        "structured proposition type metadata is exact"
-        (rejects invalidClaimTypeModel ["o2i.amx.profile.type-invalid"])
+        "future structured proposition type remains generic"
+        (genericTypeFallbackTest
+           invalidClaimTypeModel
+           ["o2i.amx.profile.type-invalid"])
     , testCase
         "structured proposition kind metadata is single-valued"
         (rejects duplicateClaimKindModel ["o2i.amx.profile.kind-duplicate"])
     , testCase
-        "structured proposition type metadata is single-valued"
-        (rejects duplicateClaimTypeModel ["o2i.amx.profile.type-duplicate"])
+        "duplicate structured proposition type remains generic"
+        (genericTypeFallbackTest
+           duplicateClaimTypeModel
+           ["o2i.amx.profile.type-duplicate"])
     , testCase
         "structured propositions reject unsupported O2I metadata"
         (rejects unsupportedClaimMetadataModel ["o2i.amx.profile.metadata-key"])
@@ -525,6 +531,26 @@ reportDeterminismTest = do
   first <- inspectText (ViewByName "Partial") assertedModel
   second <- inspectText (ViewByName "Partial") assertedModel
   renderInspectionReportJSON first @?= renderInspectionReportJSON second
+
+genericTypeFallbackTest :: Text -> [Text] -> Assertion
+genericTypeFallbackTest input expectedCodes = do
+  environment <- environmentFor "Scope" input
+  assertBool
+    "generic structured proposition entered collective dispatch"
+    (null (collectiveObservations (buildCollectiveIndex environment)))
+  report <- inspectText (ViewByName "Scope") input
+  diagnosticCodes report @?= expectedCodes
+  assertBool
+    "generic type metadata was misclassified as a collective defect"
+    (all
+       (not . Text.isPrefixOf "o2i.amx.profile.collective.")
+       (diagnosticCodes report))
+  assertBool
+    "every generic Profile defect must retain source provenance"
+    (all
+       (not . null . diagnosticLocations)
+       (diagnosticsList (reportDiagnostics report)))
+  stageState ProfileStage report @?= StageFailed
 
 rejects :: Text -> [Text] -> Assertion
 rejects input expectedCodes = do

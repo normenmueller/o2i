@@ -4,7 +4,7 @@
 module O2I.Adapter.AMX.Internal.Profile.Collective.Syntax
   ( CollectiveObservation(..)
   , observeCollective
-  , isCollectiveClaimCandidate
+  , isCollectiveStrategyRealizationDeclaration
   ) where
 
 import Data.List.NonEmpty (NonEmpty((:|)))
@@ -42,16 +42,16 @@ data CollectiveObservation = CollectiveObservation
   , observedDefects :: [Located SourcePosition AMXProfileDefect]
   }
 
--- | A Junction or explicit structured proposition enters collective candidacy
--- only through direct O2I metadata. Unannotated Junctions remain nonsemantic.
-isCollectiveClaimCandidate :: AMXElement -> Bool
-isCollectiveClaimCandidate element =
-  hasO2IMetadata element
-    && (isJunction element
-          || singlePropertyValue "o2i.kind" element
-               == Just "StructuredProposition"
-          || singlePropertyValue "o2i.type" element
-               == Just "CollectiveStrategyRealization")
+-- | Dispatch exactly one directly declared collective proposition type.
+--
+-- Missing, duplicate, and unknown type metadata remains visible to the
+-- generic profile contract. Representation and remaining collective metadata
+-- are validated only after this unambiguous dispatch decision.
+isCollectiveStrategyRealizationDeclaration :: AMXElement -> Bool
+isCollectiveStrategyRealizationDeclaration element =
+  case directProperties "o2i.type" element of
+    [(_, "CollectiveStrategyRealization")] -> True
+    _ -> False
 
 observeCollective ::
      Environment
@@ -415,9 +415,6 @@ elementRepresentationText element =
              ""
              (":" <>)
              (elementAttribute (expandedQName Nothing 't' "ype") element)
-
-hasO2IMetadata :: AMXElement -> Bool
-hasO2IMetadata = not . null . o2iProperties
 
 mapMaybeResult :: [ParticipantResolution] -> [AMXElement]
 mapMaybeResult =
