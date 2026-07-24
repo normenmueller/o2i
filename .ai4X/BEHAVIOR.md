@@ -130,6 +130,30 @@ publication claim derived from them.
 - Review must combine fachliche fidelity, metamodel quality, type-theoretic
   strength, idiomatic Haskell, formal value, tests, and consistency across
   article, model, snapshots, specification, and tests.
+- Substantive framework reviews must include two independent perspectives:
+  a metamodel/formal-methods/type-theory/Haskell expert and a strategy expert.
+  One reviewer may cover both only when both areas of expertise are explicit;
+  otherwise use separate reviewers and reconcile their findings.
+- The strategy review must assess source grounding, explicit identification of
+  authors' derivations, fachliche logic, internal consistency, practical
+  applicability, and the overall value and limitations of O2I.
+- The formalization review must assess whether the Haskell design is logical,
+  idiomatic, elegant, comprehensible, documented, modular, total, and
+  proportionate to the formal guarantees it provides. It must explicitly test
+  whether the specification adds genuine machine-checkable value or introduces
+  unjustified complexity.
+- The cross-artifact review must verify that terminology, metamodel semantics,
+  normative ArchiMate syntax, Haskell specification, tests, README, WTF, and
+  publication express one coherent system. Every concept required by the
+  formalization, including measurement, evidence, effect, target attainment,
+  and traceability, must be introduced at the appropriate fachliche level.
+- Review terminology completeness explicitly. Every fachlich material concept
+  exposed or sharpened by the metamodel or Haskell specification must be
+  defined in the Terminology chapter with a source anchor or explicit authors'
+  derivation. Purely formal or implementation-specific concepts remain in the
+  metamodel or specification sections, but must be defined there and must not
+  appear as unexplained fachliche vocabulary. Findings must distinguish a
+  missing term from a term placed at the wrong semantic level.
 - Every substantive review must consider whether observed instance friction
   reveals a generic O2I design defect or improvement opportunity; conformance
   to the current revision alone is not sufficient evidence of design quality.
@@ -137,8 +161,14 @@ publication claim derived from them.
   findings by clean design or implementation, never by workaround, migration,
   compatibility layer, or retrospective prose.
 - Final review reports Blocker, High, Medium, and Low findings and separate
-  numeric assessments for Fachlichkeit, Metamodell, Typtheorie, Haskell, tests,
-  and formal value.
+  numeric assessments for Fachlichkeit, source grounding/authors' derivation,
+  Metamodell, Typtheorie/formalization, Haskell design, tests,
+  terminology/documentation, cross-artifact consistency, formal value and
+  proportionality, and practical applicability.
+- The final assessment records the independent strategist's, independent
+  formalization reviewer's, external co-author's, and primary agent's concise
+  judgments of O2I's value, coherence, and practicability. Co-author and primary
+  agent judgments provide perspective but never replace independent approval.
 - Always report every dimension score explicitly as review evidence. Use the
   aggregate label `10/10` only when every required dimension independently
   scores `10.0/10.0`; an average or rounded aggregate never qualifies.

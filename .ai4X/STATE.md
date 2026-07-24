@@ -8,9 +8,9 @@ override this snapshot.
 - Observed at: 2026-07-24 CEST.
 - Mode: `ACTIVE`.
 - Branch/upstream: `trunk` / `origin/trunk`; inspect Git for the current delta.
-- Active objective: synchronize the normative ArchiMate syntax Views with the
-  approved collective Strategy-realization semantics before resuming the DB Fv
-  instance review.
+- Active objective: close the explicit Commitment and proposition-carrier
+  contract in Core, Inspection, and the AMX adapter before synchronizing the
+  normative ArchiMate syntax Views and publication artifacts.
 - The user controls every push.
 
 # Approved Baseline
@@ -31,9 +31,10 @@ override this snapshot.
   technical owner field.
 - Native AMX `version="5.0.0"` and O2I profile `o2i.profile="0.2"` are distinct.
 - `O2I Semantics - Context`, `O2I Semantics - Primitives`, and `O2I Semantics -
-  Situation` are normative semantic Views. The current aggregate concrete
-  syntax content is provisionally carried by `O2I Syntax - Primitives` pending
-  its approved three-View split.
+  Situation` are normative semantic Views. Concrete syntax is separated into
+  responsibility-aligned Context, Contextualization, Collective Strategy
+  Realization, Primitives, and Situation Views; their Commitment metadata and
+  extractor contracts remain to be synchronized.
 - The semantic Layered Cake remains outside concrete-syntax inspection until
   its explicit backlog conversion.
 
@@ -52,6 +53,19 @@ override this snapshot.
 
 # Current Worktree
 
+- Current plan node: `o2i:commitment-closure`. The explicit Commitment,
+  proposition-carrier, and `StructuredProposition` target contract is approved.
+  The external Haskell co-author has completed its implementation package.
+  Cabal checks, `-Werror` build, HIndent, Haddock, and all package-local tests
+  pass. The independent read-only Haskell/formalization review rejected the
+  package with one High finding: collective participant resolution loses
+  Candidate commitment information at the `WellFormedGraph` boundary. Package
+  2 must preserve a commitment-aware structural node index, retain Candidate
+  collectives with resolved Candidate participants, reject Asserted collectives
+  through a precise Candidate-dependency defect, and cover the complete
+  contributor/target matrix. Exact design, scores, and sequence are in
+  `pln.md`. Model and publication synchronization remain deliberately paused
+  until this gate closes.
 - The model and extractor enforce the direct root property `o2i.profile=0.2`;
   the extractor has 28 passing contract tests.
 - The format-neutral Inspection library, native AMX adapter, and thin CLI are
@@ -110,11 +124,16 @@ override this snapshot.
 
 # Next Work
 
-1. Synchronize the three syntax Views, extractor presets, tests, snapshots,
-   article, WTF, README, Haddock, model documentation, and changelog; obtain the
-   complete cross-artifact review.
-2. Afterwards resume the DB Fv instance, then continue `wtf.md` at Vision and
-   review `o2i.md` collaboratively top-down.
+1. Implement package 2 for commitment-aware collective participant resolution
+   with the external Haskell co-author, run complete Haskell and AMX
+   verification, and repeat independent review until every required dimension
+   scores 10.0/10.0.
+2. Synchronize syntax Views, extractor presets, tests, snapshots, article, WTF,
+   README, Haddock, model documentation, and changelog.
+3. Run the complete cross-artifact gate and return to the exact
+   `dbf:db-ia` re-entry point recorded in `pln.md`.
+4. Afterwards continue the DB Fv instance, then review `wtf.md` at Vision and
+   `o2i.md` collaboratively top-down.
 
 # Release Note Draft
 
