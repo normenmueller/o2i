@@ -113,7 +113,10 @@ module O2I
   , StrategyFormulation
   , Elaboration(..)
   , Maturity(..)
+  , ModelSemanticsInput(..)
   , CandidateModelProposition(..)
+  , ModelSemanticError(..)
+  , ModelAssessmentStatus(..)
   , ModelAssessment
   , ClaimId(..)
   , CollectiveFitEvidenceRef(..)
@@ -128,7 +131,6 @@ module O2I
   , CollectiveStrategyRealizationError(..)
   , CollectiveStrategyRealization
   , CandidateCollectiveStrategyRealization
-  , CollectiveStrategyRealizationAssessment
   , ValidatedCollectiveStrategyRealizations
   , RawNeedQualificationProposal(..)
   , NeedQualificationSourceReference
@@ -234,18 +236,17 @@ module O2I
   , validateClaimStructure
   , structuralGraph
   , structuralCandidatePropositions
-  , validateModelSemantics
   , assessModelSemantics
+  , modelAssessmentStatus
   , assessedSemanticModel
   , assessmentInvariantErrors
+  , assessmentCollectiveErrors
   , assessmentCandidatePropositions
+  , assessmentCandidateCollectiveStrategyRealizations
+  , assessmentValidatedCollectiveStrategyRealizations
   , contextElaboration
   , modelMaturity
-  , assessCollectiveStrategyRealizations
-  , collectiveStrategyRealizationErrors
-  , validateCollectiveStrategyRealizations
   , collectiveStrategyRealizations
-  , candidateCollectiveStrategyRealizations
   , lookupCollectiveStrategyRealization
   , collectiveRealizationsForTarget
   , collectiveRealizationId
@@ -255,6 +256,7 @@ module O2I
   , collectiveContributionEvidence
   , candidateCollectiveClaim
   , candidateCollectiveIssues
+  , validatedCollectiveStrategyRealizations
   , validateTraceability
   , validateEvidenceReadinessAt
   , assessEffectEvidenceAt

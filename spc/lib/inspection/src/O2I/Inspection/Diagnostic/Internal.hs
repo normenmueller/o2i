@@ -489,19 +489,23 @@ structuralDefectSpec defect =
 -- | Warning emitted for a candidate proposition excluded from semantics.
 candidatePropositionSpec :: CandidateModelProposition -> DiagnosticSpec
 candidatePropositionSpec proposition =
-  DiagnosticSpec
-    { specCode = DiagnosticCode "o2i.claim.candidate-excluded"
-    , specSeverity = WarningSeverity
-    , specDisposition = ModelFinding
-    , specMessage =
-        "A candidate proposition is excluded from validated semantics."
-    , specSubjects =
-        case proposition of
-          CandidateModelNode node -> [nodeSubject (rawNodeIdentifier node)]
-          CandidateModelEdge edge -> [edgeSubject edge]
-          CandidateStrategyFormulation strategy -> [nodeSubject strategy]
-    , specData = Map.empty
-    }
+  case proposition of
+    CandidateCollectiveRealization identifier ->
+      candidateCollectiveRealizationSpec identifier
+    _ ->
+      DiagnosticSpec
+        { specCode = DiagnosticCode "o2i.claim.candidate-excluded"
+        , specSeverity = WarningSeverity
+        , specDisposition = ModelFinding
+        , specMessage =
+            "A candidate proposition is excluded from validated semantics."
+        , specSubjects =
+            case proposition of
+              CandidateModelNode node -> [nodeSubject (rawNodeIdentifier node)]
+              CandidateModelEdge edge -> [edgeSubject edge]
+              CandidateStrategyFormulation strategy -> [nodeSubject strategy]
+        , specData = Map.empty
+        }
 
 -- | Total diagnostic mapping for every global semantic invariant defect.
 semanticDefectSpec :: ModelInvariantError -> DiagnosticSpec

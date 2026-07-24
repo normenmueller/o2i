@@ -26,7 +26,7 @@ import O2I.Graph.Typed
 import O2I.Language.Element
 import O2I.Language.Macro
 import O2I.Language.Relation
-import O2I.Validation.Semantics
+import O2I.Validation.Semantics.Context
 
 -- | Opaque exact substantiation of one macrorelation through persisted edges.
 newtype MacroEvidenceWitness = MacroEvidenceWitness
@@ -37,12 +37,12 @@ newtype MacroEvidenceWitness = MacroEvidenceWitness
 --
 -- Construct once at an operation boundary and reuse for every claim lookup.
 data MacroEvidenceContext = MacroEvidenceContext
-  { macroEvidenceSemanticModel :: SemanticallyValidModel
+  { macroEvidenceSemanticModel :: ContextSemantics
   , macroEvidenceFacts :: MacroFactIndex RawNodeId RawEdge
   }
 
 -- | Build the exact macro-evidence lookup context for one semantic model.
-buildMacroEvidenceContext :: SemanticallyValidModel -> MacroEvidenceContext
+buildMacroEvidenceContext :: ContextSemantics -> MacroEvidenceContext
 buildMacroEvidenceContext semantic =
   MacroEvidenceContext
     semantic
@@ -50,7 +50,7 @@ buildMacroEvidenceContext semantic =
        [(someNodeId node, rawNodeFromSome node) | node <- graphNodes graph]
        [(raw, raw) | edge <- graphEdges graph, let raw = rawEdgeFromSome edge])
   where
-    graph = modelGraph semantic
+    graph = contextGraph semantic
 
 -- | Enumerate the persisted typed macrorelation claims in source order.
 macroEvidenceClaims :: MacroEvidenceContext -> [(RawEdge, MacroClaim RawNodeId)]
@@ -62,7 +62,7 @@ macroEvidenceClaims = macroClaims . macroEvidenceFacts
 -- Repeated premise selectors bind the same graph node, so compound rules such
 -- as @Strategy --frames--> Measure@ cannot combine unrelated dimensions.
 macroEvidenceWitnesses ::
-     SemanticallyValidModel -> MacroClaim RawNodeId -> [MacroEvidenceWitness]
+     ContextSemantics -> MacroClaim RawNodeId -> [MacroEvidenceWitness]
 macroEvidenceWitnesses semantic =
   macroEvidenceWitnessesIn (buildMacroEvidenceContext semantic)
 
@@ -85,7 +85,7 @@ macroEvidenceWitnessesIn evidence claim
 
 -- | Select exact witnesses for one registered context macrorelation claim.
 macroEvidenceWitnessesFor ::
-     SemanticallyValidModel
+     ContextSemantics
   -> RawNodeId
   -> RelationCode
   -> RawNodeId
@@ -184,12 +184,9 @@ roleMatches context code =
     Nothing -> False
 
 strategyRoleReferences ::
-     SemanticallyValidModel
-  -> RawNodeId
-  -> StrategyPrimitiveRole
-  -> Set.Set RawNodeId
+     ContextSemantics -> RawNodeId -> StrategyPrimitiveRole -> Set.Set RawNodeId
 strategyRoleReferences semantic strategy role =
-  case Map.lookup strategy (strategyFormulations semantic) of
+  case Map.lookup strategy (contextStrategyFormulations semantic) of
     Nothing -> Set.empty
     Just formulation ->
       let raw = strategyFormulationData formulation

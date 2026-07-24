@@ -79,10 +79,30 @@ validateSemanticRaw raw formulations =
   case validateStructure raw of
     StructureModelRejected errors ->
       error ("test fixture has structural errors: " ++ show errors)
-    StructureAccepted assessment ->
-      validateModelSemantics (structuralGraph assessment) formulations
+    StructureAccepted structure ->
+      let assessment =
+            assessSemantics structure (map assertedClaim formulations)
+       in case modelAssessmentStatus assessment of
+            SemanticsRejected _ ->
+              case NonEmpty.nonEmpty (assessmentInvariantErrors assessment) of
+                Just errors -> Failure errors
+                Nothing -> error "test fixture failed outside Context semantics"
+            SemanticsPending _ ->
+              error "asserted test fixture produced pending semantics"
+            SemanticsAccepted model -> Success model
     StructureInternalFailure internal ->
       error ("test fixture triggered internal failure: " ++ show internal)
+
+assessSemantics ::
+     StructuralAssessment -> [Claim RawStrategyFormulation] -> ModelAssessment
+assessSemantics structure formulations =
+  assessModelSemantics
+    structure
+    ModelSemanticsInput
+      { modelStrategyClaims = formulations
+      , modelCollectiveClaims = []
+      , modelCollectiveFitEvidence = []
+      }
 
 assertSemanticErrors :: RawGraph -> [ModelInvariantError] -> Assertion
 assertSemanticErrors raw expected =

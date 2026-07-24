@@ -55,9 +55,31 @@ import Data.Validation (Validation(..))
 import O2I.Graph.Raw
 import O2I.Graph.Typed
 import O2I.Language.Element
+import O2I.Language.Macro (MacroClaim)
 import O2I.Language.Relation
 import O2I.Validation.Semantics
-import O2I.Validation.Trace.Evidence
+import O2I.Validation.Trace.Evidence hiding
+  ( macroEvidenceWitnesses
+  , macroEvidenceWitnessesFor
+  )
+import qualified O2I.Validation.Trace.Evidence as Evidence
+
+-- | Interpret the canonical macro rule against one completely validated
+-- semantic model.
+macroEvidenceWitnesses ::
+     SemanticallyValidModel -> MacroClaim RawNodeId -> [MacroEvidenceWitness]
+macroEvidenceWitnesses semantic =
+  Evidence.macroEvidenceWitnesses (modelContextSemantics semantic)
+
+-- | Select exact witnesses for one registered Context macrorelation claim.
+macroEvidenceWitnessesFor ::
+     SemanticallyValidModel
+  -> RawNodeId
+  -> RelationCode
+  -> RawNodeId
+  -> [MacroEvidenceWitness]
+macroEvidenceWitnessesFor semantic =
+  Evidence.macroEvidenceWitnessesFor (modelContextSemantics semantic)
 
 -- * Effect trace
 data EffectTraceKey = EffectTraceKey
@@ -180,7 +202,7 @@ validateTraceability semantic =
         Nothing -> Failure (NonEmpty.singleton NoIntervention)
   where
     graph = modelGraph semantic
-    evidence = buildMacroEvidenceContext semantic
+    evidence = buildMacroEvidenceContext (modelContextSemantics semantic)
     interventions = contextNodesOf graph Intervention
     indexedTraces =
       Map.fromList

@@ -1915,12 +1915,21 @@ completeTraceableModelFor :: RawGraph -> IO TraceableEffectModel
 completeTraceableModelFor graphInput =
   case validateStructure graphInput of
     StructureAccepted assessment ->
-      case validateModelSemantics
-             (structuralGraph assessment)
-             [completeStrategyFormulation] of
-        Failure defects ->
+      case modelAssessmentStatus
+             (assessModelSemantics
+                assessment
+                ModelSemanticsInput
+                  { modelStrategyClaims =
+                      [assertedClaim completeStrategyFormulation]
+                  , modelCollectiveClaims = []
+                  , modelCollectiveFitEvidence = []
+                  }) of
+        SemanticsRejected defects ->
           assertFailure ("complete Semantics fixture failed: " <> show defects)
-        Success semantic ->
+        SemanticsPending candidates ->
+          assertFailure
+            ("complete Semantics fixture remained pending: " <> show candidates)
+        SemanticsAccepted semantic ->
           case validateTraceability semantic of
             Failure defects ->
               assertFailure

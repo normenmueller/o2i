@@ -7,8 +7,7 @@ module O2I.Test.Collective
   ) where
 
 import qualified Data.List.NonEmpty as NonEmpty
-import O2I hiding (validateCollectiveStrategyRealizations)
-import qualified O2I as O2I
+import O2I
 import O2I.Test.Support
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
@@ -120,21 +119,18 @@ directRealizesInadmissibleTest = do
 
 validCandidateTest :: Assertion
 validCandidateTest =
-  withCollectiveSemanticModel completeCollectiveGraph $ \semantic -> do
+  withCollectiveSemanticModel completeCollectiveGraph $ \raw -> do
     let assessment =
-          assessCollectiveStrategyRealizations
-            semantic
-            [completeFit]
-            [candidateCollective]
-    collectiveStrategyRealizationErrors assessment @?= []
-    case O2I.validateCollectiveStrategyRealizations assessment of
-      Failure errors ->
-        assertFailure ("unexpected Candidate errors: " ++ show errors)
-      Success validated ->
+          assessCollectiveModel raw [completeFit] [candidateCollective]
+    assessmentCollectiveErrors assessment @?= []
+    case assessmentValidatedCollectiveStrategyRealizations assessment of
+      Nothing ->
+        assertFailure "Candidate assessment lost validated Asserted set"
+      Just validated ->
         assertBool
           "Candidate validation constructed a collective witness"
           (null (collectiveStrategyRealizations validated))
-    case candidateCollectiveStrategyRealizations assessment of
+    case assessmentCandidateCollectiveStrategyRealizations assessment of
       [candidate] -> do
         candidateCollectiveClaim candidate @?= candidateCollective
         candidateCollectiveIssues candidate @?= []
@@ -144,21 +140,18 @@ validCandidateTest =
 
 candidateIssueTest :: Assertion
 candidateIssueTest =
-  withCollectiveSemanticModel missingSecondContributionGraph $ \semantic -> do
+  withCollectiveSemanticModel missingSecondContributionGraph $ \raw -> do
     let assessment =
-          assessCollectiveStrategyRealizations
-            semantic
-            [completeFit]
-            [candidateCollective]
-    collectiveStrategyRealizationErrors assessment @?= []
-    case O2I.validateCollectiveStrategyRealizations assessment of
-      Failure errors ->
-        assertFailure ("unexpected Candidate errors: " ++ show errors)
-      Success validated ->
+          assessCollectiveModel raw [completeFit] [candidateCollective]
+    assessmentCollectiveErrors assessment @?= []
+    case assessmentValidatedCollectiveStrategyRealizations assessment of
+      Nothing ->
+        assertFailure "Candidate assessment lost validated Asserted set"
+      Just validated ->
         assertBool
           "invalid Candidate validation constructed a collective witness"
           (null (collectiveStrategyRealizations validated))
-    case candidateCollectiveStrategyRealizations assessment of
+    case assessmentCandidateCollectiveStrategyRealizations assessment of
       [candidate] ->
         candidateCollectiveIssues candidate
           @?= [ MissingContributorContribution contributorTwoId strategyId
@@ -493,7 +486,7 @@ independentErrorAccumulationTest =
 
 fatalErrorRetainsCandidateTest :: Assertion
 fatalErrorRetainsCandidateTest =
-  withCollectiveSemanticModel completeCollectiveGraph $ \semantic -> do
+  withCollectiveSemanticModel completeCollectiveGraph $ \raw -> do
     let assertedReference = CollectiveFitEvidenceRef "missing-asserted-fit"
         candidateReference = CollectiveFitEvidenceRef "missing-candidate-fit"
         invalidAsserted =
@@ -509,17 +502,14 @@ fatalErrorRetainsCandidateTest =
               , rawCollectiveFitEvidence = candidateReference
               }
         assessment =
-          assessCollectiveStrategyRealizations
-            semantic
-            []
-            [invalidAsserted, diagnosticCandidate]
+          assessCollectiveModel raw [] [invalidAsserted, diagnosticCandidate]
         expectedErrors =
           [ AssertedCollectiveIssue
               (ClaimId "invalid-asserted")
               (CollectiveFitEvidenceNotFound assertedReference)
           ]
-    collectiveStrategyRealizationErrors assessment @?= expectedErrors
-    case candidateCollectiveStrategyRealizations assessment of
+    assessmentCollectiveErrors assessment @?= expectedErrors
+    case assessmentCandidateCollectiveStrategyRealizations assessment of
       [candidate] -> do
         candidateCollectiveClaim candidate @?= diagnosticCandidate
         candidateCollectiveIssues candidate
@@ -528,21 +518,28 @@ fatalErrorRetainsCandidateTest =
         assertFailure
           ("expected one retained Candidate assessment, got "
              ++ show (length candidates))
-    case O2I.validateCollectiveStrategyRealizations assessment of
-      Failure errors -> NonEmpty.toList errors @?= expectedErrors
-      Success _ ->
+    case assessmentValidatedCollectiveStrategyRealizations assessment of
+      Nothing -> pure ()
+      Just _ ->
         assertFailure "fatal collective assessment exposed aggregate witnesses"
 
 validateCollectiveStrategyRealizations ::
-     SemanticallyValidModel
+     RawGraph
   -> [RawCollectiveFitEvidence]
   -> [Claim RawCollectiveStrategyRealization]
   -> Validation
        (NonEmpty.NonEmpty CollectiveStrategyRealizationError)
        ValidatedCollectiveStrategyRealizations
-validateCollectiveStrategyRealizations semantic fitEvidence claims =
-  O2I.validateCollectiveStrategyRealizations
-    (assessCollectiveStrategyRealizations semantic fitEvidence claims)
+validateCollectiveStrategyRealizations raw fitEvidence claims =
+  let assessment = assessCollectiveModel raw fitEvidence claims
+   in case NonEmpty.nonEmpty (assessmentCollectiveErrors assessment) of
+        Just errors -> Failure errors
+        Nothing ->
+          case assessmentValidatedCollectiveStrategyRealizations assessment of
+            Just validated -> Success validated
+            Nothing ->
+              error
+                "collective test fixture did not reach collective assessment"
 
 assertCollectiveErrors ::
      [CollectiveStrategyRealizationError]
@@ -555,21 +552,28 @@ assertCollectiveErrors expected result =
     Failure errors -> NonEmpty.toList errors @?= expected
     Success _ -> assertFailure "invalid collective claim was accepted"
 
-withCollectiveSemanticModel ::
-     RawGraph -> (SemanticallyValidModel -> Assertion) -> Assertion
-withCollectiveSemanticModel raw action =
+withCollectiveSemanticModel :: RawGraph -> (RawGraph -> Assertion) -> Assertion
+withCollectiveSemanticModel raw action = action raw
+
+assessCollectiveModel ::
+     RawGraph
+  -> [RawCollectiveFitEvidence]
+  -> [Claim RawCollectiveStrategyRealization]
+  -> ModelAssessment
+assessCollectiveModel raw fitEvidence claims =
   case validateStructure raw of
-    StructureModelRejected errors ->
-      assertFailure ("collective fixture structural errors: " ++ show errors)
-    StructureInternalFailure internal ->
-      assertFailure ("collective fixture internal failure: " ++ show internal)
     StructureAccepted structure ->
-      case validateModelSemantics
-             (structuralGraph structure)
-             collectiveFormulations of
-        Failure errors ->
-          assertFailure ("collective fixture semantic errors: " ++ show errors)
-        Success semantic -> action semantic
+      assessModelSemantics
+        structure
+        ModelSemanticsInput
+          { modelStrategyClaims = map assertedClaim collectiveFormulations
+          , modelCollectiveClaims = claims
+          , modelCollectiveFitEvidence = fitEvidence
+          }
+    StructureModelRejected errors ->
+      error ("collective fixture structural errors: " ++ show errors)
+    StructureInternalFailure internal ->
+      error ("collective fixture internal failure: " ++ show internal)
 
 contributionPremiseRelations :: CollectiveStrategyRealization -> [RelationName]
 contributionPremiseRelations realization =

@@ -48,6 +48,7 @@ library
     O2I.Validation.Qualification,
     O2I.Validation.Readiness,
     O2I.Validation.Semantics,
+    O2I.Validation.Semantics.Context,
     O2I.Validation.Structure,
     O2I.Validation.Trace,
     O2I.Validation.Trace.Evidence

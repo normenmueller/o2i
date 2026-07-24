@@ -131,14 +131,6 @@ data SemanticsWitness = SemanticsWitness
   , witnessCollectiveFitInput :: Maybe (Sourced CollectiveFitEvidenceBundle)
   }
 
-data CollectiveInspection = CollectiveInspection
-  { inspectedCollectiveDiagnostics :: [Diagnostic]
-  , inspectedCollectiveFatal :: Bool
-  , inspectedCollectiveCandidates :: Bool
-  , inspectedCollectiveValidated :: Maybe
-      ValidatedCollectiveStrategyRealizations
-  }
-
 -- | Opaque binding of one traceable model to its exact readiness source.
 data ReadinessWitness = ReadinessWitness
   { witnessTraceableModel :: TraceableEffectModel
@@ -187,10 +179,23 @@ validateScopedSemantics :: SemanticsWitness -> ModelAssessment
 validateScopedSemantics witness =
   assessModelSemantics
     (structurallyClosedStructure (witnessClosedModel witness))
-    (maybe
-       []
-       (strategyFormulationsInput . sourcedValue)
-       (witnessStrategyInput witness))
+    ModelSemanticsInput
+      { modelStrategyClaims =
+          maybe
+            []
+            (strategyFormulationsInput . sourcedValue)
+            (witnessStrategyInput witness)
+      , modelCollectiveClaims =
+          map
+            importedCollectiveClaim
+            (importedCollectiveClaims
+               (structurallyClosedImport (witnessClosedModel witness)))
+      , modelCollectiveFitEvidence =
+          maybe
+            []
+            (collectiveFitEvidenceInput . sourcedValue)
+            (witnessCollectiveFitInput witness)
+      }
 
 -- | Prepare readiness only when one complete sourced bundle is supplied.
 prepareReadiness ::
@@ -451,188 +456,98 @@ inspectSemantics request binding viewResolution profile inputs closed =
                      (structurallyClosedImport closed)
                      candidatePropositionSpec)
               (assessmentCandidatePropositions assessment)
+              ++ concatMap
+                   (collectiveCandidateIssueDiagnostics sources closed)
+                   (assessmentCandidateCollectiveStrategyRealizations assessment)
+          semanticAssessment assessment =
+            InspectionSemanticAssessment assessment
        in case validateScopedSemantics witness of
-            assessment
-              | Just defects <-
-                  NonEmpty.nonEmpty (assessmentInvariantErrors assessment) ->
-                let diagnostics =
-                      coreDiagnosticsWithSources
-                        SemanticsStage
-                        sources
-                        closed
-                        semanticDefectSpec
-                        defects
-                        ++ candidateDiagnostics assessment
-                 in InspectionCompleted
-                      (pipelineReport
-                         request
-                         binding
-                         viewResolution
-                         profile
-                         (structurallyClosedScope closed)
-                         sources
-                         (Just
-                            (InspectionSemanticAssessment
-                               (modelMaturity assessment)
-                               Nothing))
-                         StagePassed
-                         StageFailed
-                         (StageNotRun (BlockedByFailure SemanticsStage))
-                         (StageNotRun (BlockedByFailure SemanticsStage))
-                         (StageNotRun (BlockedByFailure SemanticsStage))
-                         diagnostics)
-              | candidates <- assessmentCandidatePropositions assessment
-              , not (null candidates) ->
-                let diagnostics = candidateDiagnostics assessment
-                 in InspectionCompleted
-                      (pipelineReport
-                         request
-                         binding
-                         viewResolution
-                         profile
-                         (structurallyClosedScope closed)
-                         sources
-                         (Just
-                            (InspectionSemanticAssessment
-                               (modelMaturity assessment)
-                               Nothing))
-                         StagePassed
-                         StageUnavailable
-                         (StageNotRun (BlockedByUnavailable SemanticsStage))
-                         (StageNotRun (BlockedByUnavailable SemanticsStage))
-                         (StageNotRun (BlockedByUnavailable SemanticsStage))
-                         diagnostics)
-              | Just semantic <- assessedSemanticModel assessment ->
-                let collective =
-                      inspectCollectiveSemantics closed sources witness semantic
-                    maturity
-                      | inspectedCollectiveFatal collective = Draft
-                      | inspectedCollectiveCandidates collective = Draft
-                      | otherwise = SemanticallyValid
-                    semanticAssessment =
-                      InspectionSemanticAssessment
-                        maturity
-                        (inspectedCollectiveValidated collective)
-                    diagnostics = inspectedCollectiveDiagnostics collective
-                 in if inspectedCollectiveFatal collective
-                      then InspectionCompleted
-                             (pipelineReport
-                                request
-                                binding
-                                viewResolution
-                                profile
-                                (structurallyClosedScope closed)
-                                sources
-                                (Just semanticAssessment)
-                                StagePassed
-                                StageFailed
-                                (StageNotRun (BlockedByFailure SemanticsStage))
-                                (StageNotRun (BlockedByFailure SemanticsStage))
-                                (StageNotRun (BlockedByFailure SemanticsStage))
-                                diagnostics)
-                      else if inspectedCollectiveCandidates collective
-                             then InspectionCompleted
-                                    (pipelineReport
-                                       request
-                                       binding
-                                       viewResolution
-                                       profile
-                                       (structurallyClosedScope closed)
-                                       sources
-                                       (Just semanticAssessment)
-                                       StagePassed
-                                       StageUnavailable
-                                       (StageNotRun
-                                          (BlockedByUnavailable SemanticsStage))
-                                       (StageNotRun
-                                          (BlockedByUnavailable SemanticsStage))
-                                       (StageNotRun
-                                          (BlockedByUnavailable SemanticsStage))
-                                       diagnostics)
-                             else inspectTraceability
-                                    request
-                                    binding
-                                    viewResolution
-                                    profile
-                                    inputs
-                                    closed
-                                    sources
-                                    semanticAssessment
-                                    semantic
-              | otherwise ->
-                InspectionCompleted
-                  (pipelineReport
-                     request
-                     binding
-                     viewResolution
-                     profile
-                     (structurallyClosedScope closed)
-                     sources
-                     (Just
-                        (InspectionSemanticAssessment
-                           (modelMaturity assessment)
-                           Nothing))
-                     StagePassed
-                     StageUnavailable
-                     (StageNotRun (BlockedByUnavailable SemanticsStage))
-                     (StageNotRun (BlockedByUnavailable SemanticsStage))
-                     (StageNotRun (BlockedByUnavailable SemanticsStage))
-                     [])
+            assessment ->
+              case modelAssessmentStatus assessment of
+                SemanticsRejected _ ->
+                  let contextDiagnostics =
+                        maybe
+                          []
+                          (coreDiagnosticsWithSources
+                             SemanticsStage
+                             sources
+                             closed
+                             semanticDefectSpec)
+                          (NonEmpty.nonEmpty
+                             (assessmentInvariantErrors assessment))
+                      collectiveDiagnostics =
+                        map
+                          (diagnosticWithSupplementalSources sources
+                             . coreDiagnostic
+                                 SemanticsStage
+                                 (structurallyClosedImport closed)
+                                 collectiveRealizationErrorSpec)
+                          (assessmentCollectiveErrors assessment)
+                      diagnostics =
+                        contextDiagnostics
+                          ++ collectiveDiagnostics
+                          ++ candidateDiagnostics assessment
+                   in InspectionCompleted
+                        (pipelineReport
+                           request
+                           binding
+                           viewResolution
+                           profile
+                           (structurallyClosedScope closed)
+                           sources
+                           (Just (semanticAssessment assessment))
+                           StagePassed
+                           StageFailed
+                           (StageNotRun (BlockedByFailure SemanticsStage))
+                           (StageNotRun (BlockedByFailure SemanticsStage))
+                           (StageNotRun (BlockedByFailure SemanticsStage))
+                           diagnostics)
+                SemanticsPending _ ->
+                  InspectionCompleted
+                    (pipelineReport
+                       request
+                       binding
+                       viewResolution
+                       profile
+                       (structurallyClosedScope closed)
+                       sources
+                       (Just (semanticAssessment assessment))
+                       StagePassed
+                       StageUnavailable
+                       (StageNotRun (BlockedByUnavailable SemanticsStage))
+                       (StageNotRun (BlockedByUnavailable SemanticsStage))
+                       (StageNotRun (BlockedByUnavailable SemanticsStage))
+                       (candidateDiagnostics assessment))
+                SemanticsAccepted semantic ->
+                  inspectTraceability
+                    request
+                    binding
+                    viewResolution
+                    profile
+                    inputs
+                    closed
+                    sources
+                    (semanticAssessment assessment)
+                    semantic
 
-inspectCollectiveSemantics ::
-     StructurallyClosedModel
-  -> [SupplementalSource]
-  -> SemanticsWitness
-  -> SemanticallyValidModel
-  -> CollectiveInspection
-inspectCollectiveSemantics closed sources witness semantic =
-  CollectiveInspection
-    { inspectedCollectiveDiagnostics = diagnostics
-    , inspectedCollectiveFatal = not (null errors)
-    , inspectedCollectiveCandidates = not (null candidates)
-    , inspectedCollectiveValidated = validated
-    }
+collectiveCandidateIssueDiagnostics ::
+     [SupplementalSource]
+  -> StructurallyClosedModel
+  -> CandidateCollectiveStrategyRealization
+  -> [Diagnostic]
+collectiveCandidateIssueDiagnostics sources closed candidate =
+  [ diagnosticWithSupplementalSources
+    sources
+    (coreDiagnostic
+       SemanticsStage
+       (structurallyClosedImport closed)
+       (candidateCollectiveRealizationIssueSpec identifier)
+       issue)
+  | issue <- candidateCollectiveIssues candidate
+  ]
   where
-    importedClaims = importedCollectiveClaims (structurallyClosedImport closed)
-    claims = map importedCollectiveClaim importedClaims
-    fitEvidence =
-      maybe
-        []
-        (collectiveFitEvidenceInput . sourcedValue)
-        (witnessCollectiveFitInput witness)
-    assessment =
-      assessCollectiveStrategyRealizations semantic fitEvidence claims
-    errors = collectiveStrategyRealizationErrors assessment
-    validated =
-      case validateCollectiveStrategyRealizations assessment of
-        Failure _ -> Nothing
-        Success result -> Just result
-    candidates = candidateCollectiveStrategyRealizations assessment
-    diagnostics =
-      map
-        (withSources . collectiveDiagnostic collectiveRealizationErrorSpec)
-        errors
-        ++ concatMap candidateDiagnostics candidates
-    candidateDiagnostics candidate =
-      withSources
-        (collectiveDiagnostic id (candidateCollectiveRealizationSpec identifier))
-        : [ withSources
-            (collectiveDiagnostic
-               id
-               (candidateCollectiveRealizationIssueSpec identifier issue))
-          | issue <- candidateCollectiveIssues candidate
-          ]
-      where
-        identifier =
-          rawRealizationId
-            (claimedProposition (candidateCollectiveClaim candidate))
-    collectiveDiagnostic specification defect =
-      coreDiagnostic
-        SemanticsStage
-        (structurallyClosedImport closed)
-        specification
-        defect
-    withSources = diagnosticWithSupplementalSources sources
+    identifier =
+      rawRealizationId (claimedProposition (candidateCollectiveClaim candidate))
 
 inspectTraceability ::
      InspectionRequestInfo

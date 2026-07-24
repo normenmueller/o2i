@@ -58,7 +58,7 @@ claimStateTests =
                 (null (graphEdges graph))
               structuralCandidatePropositions structure
                 @?= [CandidateNodeProposition strategyNode]
-              let assessment = assessModelSemantics structure []
+              let assessment = assessSemantics structure []
               contextElaboration assessment strategyId @?= Nothing
               modelMaturity assessment @?= Skeleton
               assertNoSemanticModel assessment
@@ -130,7 +130,7 @@ claimStateTests =
         $ \structure -> do
             let graph = structuralGraph structure
                 assessment =
-                  assessModelSemantics
+                  assessSemantics
                     structure
                     [assertedClaim sampleStrategyFormulation]
             modelMaturity assessment @?= Draft
@@ -148,7 +148,7 @@ claimStateTests =
     , testCase "missing asserted content yields a referenced Skeleton"
         $ withStructural (RawGraph [strategyNode] [])
         $ \structure -> do
-            let assessment = assessModelSemantics structure []
+            let assessment = assessSemantics structure []
             modelMaturity assessment @?= Skeleton
             contextElaboration assessment strategyId @?= Just Referenced
             assertNoSemanticModel assessment
@@ -156,7 +156,7 @@ claimStateTests =
         $ withStructural sampleGraph
         $ \structure -> do
             let assessment =
-                  assessModelSemantics
+                  assessSemantics
                     structure
                     [candidateClaim sampleStrategyFormulation]
             contextElaboration assessment strategyId @?= Just Referenced
@@ -170,7 +170,7 @@ claimStateTests =
     , testCase "candidate content does not satisfy an asserted minimum"
         $ withClaimStructure candidateEthosContentGraph
         $ \structure -> do
-            let assessment = assessModelSemantics structure []
+            let assessment = assessSemantics structure []
             assessmentInvariantErrors assessment
               @?= [EthosWithoutPrinciple ethosId]
             contextElaboration assessment ethosId @?= Just Referenced
@@ -180,7 +180,7 @@ claimStateTests =
     , testCase "candidate does not hide asserted defects"
         $ withClaimStructure candidateExtendedSampleGraph
         $ \structure -> do
-            let assessment = assessModelSemantics structure []
+            let assessment = assessSemantics structure []
             assessmentInvariantErrors assessment
               @?= [StrategyWithoutFormulation strategyId]
             contextElaboration assessment strategyId @?= Just Referenced
@@ -188,7 +188,7 @@ claimStateTests =
         $ withStructural sampleGraph
         $ \structure -> do
             let assessment =
-                  assessModelSemantics
+                  assessSemantics
                     structure
                     [assertedClaim sampleStrategyFormulation]
             modelMaturity assessment @?= SemanticallyValid
@@ -927,21 +927,19 @@ semanticTests =
   testGroup
     "model semantics"
     [ testCase "complete reference model is semantically valid"
-        $ withWellFormed sampleGraph
-        $ \graph ->
-            assertSuccess
-              (validateModelSemantics graph [sampleStrategyFormulation])
+        $ withSemanticallyValid
+            sampleGraph
+            [sampleStrategyFormulation]
+            (const (pure ()))
     , testCase "an Ethos with one owned Principle is complete"
-        $ withWellFormed minimalEthosGraph
-        $ \graph -> assertSuccess (validateModelSemantics graph [])
+        $ withSemanticallyValid minimalEthosGraph [] (const (pure ()))
     , testCase "an empty Ethos is rejected at Semantics"
         $ assertSemanticErrorsWith
             (RawGraph [RawContextNode ethosId Ethos] [])
             []
             [EthosWithoutPrinciple ethosId]
     , testCase "primitive evidence completes Orientation without macro edges"
-        $ withWellFormed completeOrientationGraph
-        $ \graph -> assertSuccess (validateModelSemantics graph [])
+        $ withSemanticallyValid completeOrientationGraph [] (const (pure ()))
     , testCase "an empty Mission is rejected without an evidence cascade"
         $ assertSemanticErrorsWith
             minimalEthosGraph
@@ -981,8 +979,7 @@ semanticTests =
             , VisionWithoutEthosGuidance visionId
             ]
     , testCase "Vision evidence may use different representative Objectives"
-        $ withWellFormed splitVisionEvidenceGraph
-        $ \graph -> assertSuccess (validateModelSemantics graph [])
+        $ withSemanticallyValid splitVisionEvidenceGraph [] (const (pure ()))
     , QC.testProperty
         "additional owned orientation Primitives need no all-to-all evidence"
         $ QC.forAll (QC.chooseInt (0, 20))
@@ -993,21 +990,21 @@ semanticTests =
             not
               (semanticsAccepts (withoutEdge required completeOrientationGraph))
     , testCase "constituted Situation without surfaced Need is valid"
-        $ withWellFormed
+        $ withSemanticallyValid
             (RawGraph
                [ RawContextNode situationId Situation
                , RawAnchorNode situationAnchorId BusinessCapability
                ]
                [anchorEdge situationId constitutedByAnchor situationAnchorId])
-        $ \graph -> assertSuccess (validateModelSemantics graph [])
+            []
+            (const (pure ()))
     , testCase "Situation without constituting anchor is rejected"
         $ assertSemanticErrorsWith
             (RawGraph [RawContextNode situationId Situation] [])
             []
             [SituationWithoutConstitutingAnchor situationId]
     , testCase "model without Strategy requires no formulation"
-        $ withWellFormed emptyGraph
-        $ \graph -> assertSuccess (validateModelSemantics graph [])
+        $ withSemanticallyValid emptyGraph [] (const (pure ()))
     , testCase "every Strategy requires exactly one formulation"
         $ assertSemanticErrorsWith
             sampleGraph
@@ -1031,11 +1028,10 @@ semanticTests =
                 strategyObjectiveId
             ]
     , testCase "Strategy orientation needs no explicit Context macro edge"
-        $ withWellFormed
+        $ withSemanticallyValid
             (withoutEdge (edge visionId orientsStrategy strategyId) sampleGraph)
-        $ \graph ->
-            assertSuccess
-              (validateModelSemantics graph [sampleStrategyFormulation])
+            [sampleStrategyFormulation]
+            (const (pure ()))
     , QC.testProperty
         "additional Vision Objectives need no Strategy orientation edge"
         $ QC.forAll (QC.chooseInt (0, 20))
@@ -1199,8 +1195,7 @@ semanticTests =
                 strategyObjectiveId
             ]
     , testCase "an internally complete Intervention is semantically valid"
-        $ withWellFormed minimalInterventionGraph
-        $ \graph -> assertSuccess (validateModelSemantics graph [])
+        $ withSemanticallyValid minimalInterventionGraph [] (const (pure ()))
     , testCase "an empty Intervention reports both missing constituents"
         $ assertSemanticErrorsWith
             (RawGraph [RawContextNode interventionId Intervention] [])
@@ -1239,8 +1234,10 @@ semanticTests =
         $ QC.forAll (QC.chooseInt (0, 20))
         $ semanticsAccepts . interventionGraphWithExtras
     , testCase "an internally complete Measure is semantically valid"
-        $ withWellFormed measureMeasurementPerformanceDimensionGraph
-        $ \graph -> assertSuccess (validateModelSemantics graph [])
+        $ withSemanticallyValid
+            measureMeasurementPerformanceDimensionGraph
+            []
+            (const (pure ()))
     , testCase "an empty Measure reports both missing constituents"
         $ assertSemanticErrorsWith
             (RawGraph [RawContextNode measureId Measure] [])
@@ -1279,8 +1276,7 @@ semanticTests =
         $ QC.forAll (QC.chooseInt (0, 20))
         $ semanticsAccepts . measureGraphWithExtras
     , testCase "a minimally situated Need is semantically valid"
-        $ withWellFormed minimalNeedGraph
-        $ \graph -> assertSuccess (validateModelSemantics graph [])
+        $ withSemanticallyValid minimalNeedGraph [] (const (pure ()))
     , testCase "every Need Driver requires a constituting anchor"
         $ assertSemanticErrorsWith
             minimalNeedGraph
@@ -1345,10 +1341,10 @@ semanticTests =
               }
             [UngroundedNeedObjective needId needObjectiveId]
     , testCase "situated unqualified need is semantically valid"
-        $ withWellFormed unqualifiedNeedGraph
-        $ \graph ->
-            assertSuccess
-              (validateModelSemantics graph [sampleStrategyFormulation])
+        $ withSemanticallyValid
+            unqualifiedNeedGraph
+            [sampleStrategyFormulation]
+            (const (pure ()))
     ]
 
 minimalEthosGraph :: RawGraph
@@ -1568,13 +1564,9 @@ semanticsAccepts raw = semanticsAcceptsWith raw []
 
 semanticsAcceptsWith :: RawGraph -> [RawStrategyFormulation] -> Bool
 semanticsAcceptsWith raw formulations =
-  case validateStructure raw of
-    StructureAccepted assessment ->
-      case validateModelSemantics (structuralGraph assessment) formulations of
-        Success _ -> True
-        Failure _ -> False
-    StructureModelRejected _ -> False
-    StructureInternalFailure _ -> False
+  case validateSemanticRaw raw formulations of
+    Success _ -> True
+    Failure _ -> False
 
 traceTests :: TestTree
 traceTests =

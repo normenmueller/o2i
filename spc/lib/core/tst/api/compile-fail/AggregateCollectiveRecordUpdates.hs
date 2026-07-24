@@ -14,12 +14,3 @@ rewriteCandidateCollectiveStrategyRealization ::
 rewriteCandidateCollectiveStrategyRealization candidate =
   candidate
     {O2I.candidateCollectiveClaim = O2I.candidateCollectiveClaim candidate}
-
-rewriteCollectiveStrategyRealizationAssessment ::
-     O2I.CollectiveStrategyRealizationAssessment
-  -> O2I.CollectiveStrategyRealizationAssessment
-rewriteCollectiveStrategyRealizationAssessment assessment =
-  assessment
-    { O2I.collectiveStrategyRealizations =
-        O2I.collectiveStrategyRealizations assessment
-    }

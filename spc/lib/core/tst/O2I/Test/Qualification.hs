@@ -78,23 +78,14 @@ needQualificationTests =
                                      (needQualificationCandidateNeed candidate))
                               : rawEdges minimalQualificationGraph
                         }
-                case validateStructure acceptedGraph of
-                  StructureModelRejected errors ->
-                    assertFailure ("structural errors: " ++ show errors)
-                  StructureAccepted assessment ->
-                    case validateModelSemantics
-                           (structuralGraph assessment)
-                           [sampleStrategyFormulation] of
-                      Failure errors ->
-                        assertFailure ("semantic errors: " ++ show errors)
-                      Success acceptedModel ->
-                        qualifyingStrategies
-                          acceptedModel
-                          (needQualificationCandidateNeed candidate)
-                          @?= [needQualificationCandidateStrategy candidate]
-                  StructureInternalFailure internal ->
-                    assertFailure
-                      ("internal structural failure: " ++ show internal)
+                withSemanticallyValid
+                  acceptedGraph
+                  [sampleStrategyFormulation]
+                  (\acceptedModel ->
+                     qualifyingStrategies
+                       acceptedModel
+                       (needQualificationCandidateNeed candidate)
+                       @?= [needQualificationCandidateStrategy candidate])
     , testCase "proposal source reference must not be blank"
         $ withSemanticallyValid
             minimalQualificationGraph

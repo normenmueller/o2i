@@ -56,8 +56,10 @@ import Data.Text (Text)
 import O2I
   ( CollectiveStrategyRealization
   , Maturity(..)
-  , ValidatedCollectiveStrategyRealizations
+  , ModelAssessment
+  , assessmentValidatedCollectiveStrategyRealizations
   , collectiveStrategyRealizations
+  , modelMaturity
   )
 import O2I.Inspection.Adapter
 import O2I.Inspection.Cardinality
@@ -180,11 +182,9 @@ data InspectionRequestInfo = InspectionRequestInfo
   , requestedViewSelector :: ViewSelector
   } deriving (Eq, Show)
 
--- | Semantic result for the complete inspected claim boundary.
-data InspectionSemanticAssessment =
-  InspectionSemanticAssessment
-    Maturity
-    (Maybe ValidatedCollectiveStrategyRealizations)
+-- | Semantic result projected directly from the normative Core assessment.
+newtype InspectionSemanticAssessment =
+  InspectionSemanticAssessment ModelAssessment
 
 -- | State-indexed inspection report. Constructors are private to Inspection.
 data InspectionReport
@@ -337,11 +337,15 @@ reportMaturityText = fmap maturityText . reportMaturity
 -- | Enumerate retained validated collective realizations.
 semanticCollectiveStrategyRealizations ::
      InspectionSemanticAssessment -> [CollectiveStrategyRealization]
-semanticCollectiveStrategyRealizations (InspectionSemanticAssessment _ assessment) =
-  maybe [] collectiveStrategyRealizations assessment
+semanticCollectiveStrategyRealizations (InspectionSemanticAssessment assessment) =
+  maybe
+    []
+    collectiveStrategyRealizations
+    (assessmentValidatedCollectiveStrategyRealizations assessment)
 
 semanticAssessmentMaturity :: InspectionSemanticAssessment -> Maturity
-semanticAssessmentMaturity (InspectionSemanticAssessment maturity _) = maturity
+semanticAssessmentMaturity (InspectionSemanticAssessment assessment) =
+  modelMaturity assessment
 
 -- | Read the exact eight stage reports.
 reportStageReports :: InspectionReport -> StageReports

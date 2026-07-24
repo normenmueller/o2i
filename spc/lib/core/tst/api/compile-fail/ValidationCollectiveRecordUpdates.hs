@@ -19,12 +19,3 @@ rewriteCandidateCollectiveStrategyRealization candidate =
     { Validation.candidateCollectiveClaim =
         Validation.candidateCollectiveClaim candidate
     }
-
-rewriteCollectiveStrategyRealizationAssessment ::
-     Validation.CollectiveStrategyRealizationAssessment
-  -> Validation.CollectiveStrategyRealizationAssessment
-rewriteCollectiveStrategyRealizationAssessment assessment =
-  assessment
-    { Validation.collectiveStrategyRealizations =
-        Validation.collectiveStrategyRealizations assessment
-    }

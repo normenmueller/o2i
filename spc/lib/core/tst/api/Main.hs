@@ -89,7 +89,6 @@ $(assertAbstractTypes
     , "Validation.StrategyFormulation"
     , "Validation.CollectiveStrategyRealization"
     , "Validation.CandidateCollectiveStrategyRealization"
-    , "Validation.CollectiveStrategyRealizationAssessment"
     , "Validation.ValidatedCollectiveStrategyRealizations"
     , "Validation.NeedQualificationSourceReference"
     , "Validation.NeedQualificationCandidate"
@@ -107,18 +106,18 @@ $(assertAbstractTypes
 
 $(assertOrdinaryFunctions
     [ 'Validation.assessModelSemantics
+    , 'Validation.modelAssessmentStatus
     , 'Validation.structuralGraph
     , 'Validation.structuralCandidatePropositions
     , 'Validation.assessedSemanticModel
     , 'Validation.assessmentInvariantErrors
+    , 'Validation.assessmentCollectiveErrors
     , 'Validation.assessmentCandidatePropositions
+    , 'Validation.assessmentCandidateCollectiveStrategyRealizations
+    , 'Validation.assessmentValidatedCollectiveStrategyRealizations
     , 'Validation.contextElaboration
     , 'Validation.modelMaturity
-    , 'Validation.assessCollectiveStrategyRealizations
-    , 'Validation.collectiveStrategyRealizationErrors
-    , 'Validation.validateCollectiveStrategyRealizations
     , 'Validation.collectiveStrategyRealizations
-    , 'Validation.candidateCollectiveStrategyRealizations
     , 'Validation.lookupCollectiveStrategyRealization
     , 'Validation.collectiveRealizationsForTarget
     , 'Validation.collectiveRealizationId
@@ -128,6 +127,7 @@ $(assertOrdinaryFunctions
     , 'Validation.collectiveContributionEvidence
     , 'Validation.candidateCollectiveClaim
     , 'Validation.candidateCollectiveIssues
+    , 'Validation.validatedCollectiveStrategyRealizations
     , 'Validation.macroEvidenceWitnesses
     , 'Validation.witnessPremises
     , 'Validation.strategyFormulations
@@ -201,7 +201,6 @@ $(assertAbstractTypes
     , "O2I.StrategyFormulation"
     , "O2I.CollectiveStrategyRealization"
     , "O2I.CandidateCollectiveStrategyRealization"
-    , "O2I.CollectiveStrategyRealizationAssessment"
     , "O2I.ValidatedCollectiveStrategyRealizations"
     , "O2I.NeedQualificationSourceReference"
     , "O2I.NeedQualificationCandidate"
@@ -224,15 +223,16 @@ $(assertOrdinaryFunctions
     , 'O2I.claimCommitment
     , 'O2I.claimedProposition
     , 'O2I.assessedSemanticModel
+    , 'O2I.modelAssessmentStatus
     , 'O2I.assessmentInvariantErrors
+    , 'O2I.assessmentCollectiveErrors
     , 'O2I.assessmentCandidatePropositions
+    , 'O2I.assessmentCandidateCollectiveStrategyRealizations
+    , 'O2I.assessmentValidatedCollectiveStrategyRealizations
     , 'O2I.contextElaboration
     , 'O2I.modelMaturity
-    , 'O2I.assessCollectiveStrategyRealizations
-    , 'O2I.collectiveStrategyRealizationErrors
-    , 'O2I.validateCollectiveStrategyRealizations
     , 'O2I.collectiveStrategyRealizations
-    , 'O2I.candidateCollectiveStrategyRealizations
+    , 'O2I.validatedCollectiveStrategyRealizations
     , 'O2I.lookupCollectiveStrategyRealization
     , 'O2I.collectiveRealizationsForTarget
     , 'O2I.collectiveRealizationId
@@ -533,12 +533,14 @@ data ValidatedValues =
 
 validatedValues :: Either String ValidatedValues
 validatedValues = do
-  graph <-
+  structure <-
     checkedStructure "structural validation" (validateStructure assessmentGraph)
+  let graph = structuralGraph structure
   model <-
-    checked
+    checkedSemantics
       "semantic validation"
-      (validateModelSemantics graph [assessmentStrategyFormulation])
+      structure
+      [assessmentStrategyFormulation]
   traceable <- checked "trace validation" (validateTraceability model)
   let trace = NonEmpty.head (effectTraces traceable)
       baselineObservation =
@@ -625,9 +627,9 @@ checked :: Show error => String -> Validation error value -> Either String value
 checked _ (Success value) = Right value
 checked stage (Failure errors) = Left (stage ++ " failed: " ++ show errors)
 
-checkedStructure :: String -> StructureResult -> Either String WellFormedGraph
-checkedStructure _ (StructureAccepted assessment) =
-  Right (structuralGraph assessment)
+checkedStructure ::
+     String -> StructureResult -> Either String StructuralAssessment
+checkedStructure _ (StructureAccepted assessment) = Right assessment
 checkedStructure stage (StructureModelRejected errors) =
   Left (stage ++ " failed: " ++ show errors)
 checkedStructure stage (StructureInternalFailure internal) =
@@ -635,7 +637,7 @@ checkedStructure stage (StructureInternalFailure internal) =
 
 needQualificationCandidateValue :: Either String NeedQualificationCandidate
 needQualificationCandidateValue = do
-  graph <-
+  structure <-
     checkedStructure
       "qualification graph validation"
       (validateStructure
@@ -651,9 +653,10 @@ needQualificationCandidateValue = do
                  (rawEdges assessmentGraph)
            })
   model <-
-    checked
+    checkedSemantics
       "qualification semantic validation"
-      (validateModelSemantics graph [assessmentStrategyFormulation])
+      structure
+      [assessmentStrategyFormulation]
   checked
     "Need qualification proposal validation"
     (validateNeedQualificationProposal
@@ -666,6 +669,26 @@ needQualificationCandidateValue = do
          , rawNeedQualificationRationale = "documented strategic translation"
          , rawNeedQualificationSourceReference = "  strategy/kr-1  "
          })
+
+checkedSemantics ::
+     String
+  -> StructuralAssessment
+  -> [RawStrategyFormulation]
+  -> Either String SemanticallyValidModel
+checkedSemantics stage structure formulations =
+  let assessment =
+        assessModelSemantics
+          structure
+          ModelSemanticsInput
+            { modelStrategyClaims = map assertedClaim formulations
+            , modelCollectiveClaims = []
+            , modelCollectiveFitEvidence = []
+            }
+   in case modelAssessmentStatus assessment of
+        SemanticsRejected errors -> Left (stage ++ " failed: " ++ show errors)
+        SemanticsPending candidates ->
+          Left (stage ++ " remained pending: " ++ show candidates)
+        SemanticsAccepted model -> Right model
 
 assessmentGraph :: RawGraph
 assessmentGraph = RawGraph assessmentNodes assessmentEdges

@@ -15,8 +15,3 @@ forgedCandidateCollectiveStrategyRealization ::
      O2I.CandidateCollectiveStrategyRealization
 forgedCandidateCollectiveStrategyRealization =
   O2I.CandidateCollectiveStrategyRealization undefined undefined
-
-forgedCollectiveStrategyRealizationAssessment ::
-     O2I.CollectiveStrategyRealizationAssessment
-forgedCollectiveStrategyRealizationAssessment =
-  O2I.CollectiveStrategyRealizationAssessment undefined undefined

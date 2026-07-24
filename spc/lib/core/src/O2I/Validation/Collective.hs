@@ -49,7 +49,7 @@ import O2I.Language.Element
 import O2I.Language.Relation
 import O2I.Validation.Collective.Fit
 import O2I.Validation.Collective.Types
-import O2I.Validation.Semantics
+import O2I.Validation.Semantics.Context
 import O2I.Validation.Trace.Evidence
 
 -- * Collective Strategy realization input
@@ -157,7 +157,7 @@ data SemanticEvaluation =
 -- errors. Independent structurally valid Candidates remain observable with
 -- their semantic issues. Candidates never construct validated witnesses.
 assessCollectiveStrategyRealizations ::
-     SemanticallyValidModel
+     ContextSemantics
   -> [RawCollectiveFitEvidence]
   -> [Claim RawCollectiveStrategyRealization]
   -> CollectiveStrategyRealizationAssessment
@@ -174,7 +174,7 @@ assessCollectiveStrategyRealizations semantic fitEvidence claims =
       | identifier <-
           duplicates (map (rawRealizationId . claimedProposition) claims)
       ]
-    structuralValidation = validateCollectiveStructure (modelGraph semantic)
+    structuralValidation = validateCollectiveStructure (contextGraph semantic)
     structuralResults = map structuralValidation claims
     structuralErrors =
       concat [NonEmpty.toList failures | Failure failures <- structuralResults]
@@ -360,7 +360,7 @@ participantErrors graph claim role participant =
         ]
 
 evaluateCollective ::
-     SemanticallyValidModel
+     ContextSemantics
   -> MacroEvidenceContext
   -> CollectiveFitIndex
   -> StructurallyValidCollective
@@ -404,9 +404,9 @@ evaluateCollective semantic evidence fitIndex structural =
     issues = contributionIssues ++ coverageIssues ++ fitIssues
 
 collectiveFitTargetExpectation ::
-     SemanticallyValidModel -> RawNodeId -> CollectiveFitTargetExpectation
+     ContextSemantics -> RawNodeId -> CollectiveFitTargetExpectation
 collectiveFitTargetExpectation semantic target =
-  case Map.lookup target (strategyFormulations semantic) of
+  case Map.lookup target (contextStrategyFormulations semantic) of
     Nothing -> MissingCollectiveFitTarget
     Just formulation ->
       ExpectedCollectiveFitTarget
@@ -454,12 +454,12 @@ candidateAssessment (SemanticEvaluation structural issues _)
     claim = structurallyValidClaim structural
 
 targetCoverageIssues ::
-     SemanticallyValidModel
+     ContextSemantics
   -> RawNodeId
   -> [RawEdge]
   -> [CollectiveStrategyRealizationIssue]
 targetCoverageIssues semantic target premises =
-  case Map.lookup target (strategyFormulations semantic) of
+  case Map.lookup target (contextStrategyFormulations semantic) of
     Nothing -> [MissingTargetStrategyFormulation target]
     Just formulation ->
       [ UncoveredTargetKeyResult keyResult

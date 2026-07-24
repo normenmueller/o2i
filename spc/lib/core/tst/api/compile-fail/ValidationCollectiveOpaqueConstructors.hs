@@ -15,8 +15,3 @@ forgedCandidateCollectiveStrategyRealization ::
      Validation.CandidateCollectiveStrategyRealization
 forgedCandidateCollectiveStrategyRealization =
   Validation.CandidateCollectiveStrategyRealization undefined undefined
-
-forgedCollectiveStrategyRealizationAssessment ::
-     Validation.CollectiveStrategyRealizationAssessment
-forgedCollectiveStrategyRealizationAssessment =
-  Validation.CollectiveStrategyRealizationAssessment undefined undefined
