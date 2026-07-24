@@ -1,6 +1,6 @@
-# O2I Syntax
+# O2I Syntax - Primitives
 
-> Generated review snapshot of `O2I Syntax` from `mdl/o2i.archimate`.
+> Generated review snapshot of `O2I Syntax - Primitives` from `mdl/o2i.archimate`.
 > Review artifact only; source of truth remains the O2I metamodel.
 
 ## View Contract

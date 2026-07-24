@@ -5,11 +5,12 @@ override this snapshot.
 
 # Snapshot
 
-- Observed at: 2026-07-19 CEST.
-- Mode: `READY`.
+- Observed at: 2026-07-24 CEST.
+- Mode: `ACTIVE`.
 - Branch/upstream: `trunk` / `origin/trunk`; inspect Git for the current delta.
-- Active objective: preserve the approved Framework architecture and canonical
-  repository verification contract, then resume the DB Fv instance review.
+- Active objective: synchronize the normative ArchiMate syntax Views with the
+  approved collective Strategy-realization semantics before resuming the DB Fv
+  instance review.
 - The user controls every push.
 
 # Approved Baseline
@@ -29,8 +30,10 @@ override this snapshot.
   semantics. The Haskell graph represents this assignment through its
   technical owner field.
 - Native AMX `version="5.0.0"` and O2I profile `o2i.profile="0.2"` are distinct.
-- `O2I Context`, `O2I Primitives`, and `O2I Situation` are normative semantic
-  views; `O2I Syntax` is their concrete ArchiMate realization.
+- `O2I Semantics - Context`, `O2I Semantics - Primitives`, and `O2I Semantics -
+  Situation` are normative semantic Views. The current aggregate concrete
+  syntax content is provisionally carried by `O2I Syntax - Primitives` pending
+  its approved three-View split.
 - The semantic Layered Cake remains outside concrete-syntax inspection until
   its explicit backlog conversion.
 
@@ -49,9 +52,8 @@ override this snapshot.
 
 # Current Worktree
 
-- The O2I model uses the direct root property `o2i.profile=0.2`.
-- The extractor enforces that profile, rejects the legacy `version=0.2`
-  property, and has 28 passing contract tests.
+- The model and extractor enforce the direct root property `o2i.profile=0.2`;
+  the extractor has 28 passing contract tests.
 - The format-neutral Inspection library, native AMX adapter, and thin CLI are
   implemented with opaque staged artifacts, exact View selection, source
   provenance, stable diagnostics, and deterministic human or JSON reports.
@@ -72,6 +74,14 @@ override this snapshot.
   co-author updated the AMX adapter and tests, and an independent closure review
   found no findings. Fachlichkeit, Metamodell, Typtheorie, Haskell design,
   tests, formal value, and cross-artifact consistency each score 10.0/10.0.
+- Collective Strategy realization formalizes explicit Claims, derived
+  Elaboration and Maturity, opaque n-ary realization, exact contribution
+  evidence, target coverage, contributor-bound Fit, native AMX projection,
+  partial-View closure, and occurrence-preserving indexes.
+- The independent point-5 closure review reports no findings and scores
+  Fachlichkeit, Metamodell, Typtheorie, Haskell design, tests, formal value,
+  terminology/documentation, cross-artifact consistency, and agentic-AI
+  fitness each 10.0/10.0. The Haskell and paper verification stages pass.
 - The Framework architecture visualization distinguishes the fachliche,
   metamodel, executable-formalization, and instance levels; locates the
   evidence layer inside metamodel semantics; and separates foundation,
@@ -100,11 +110,11 @@ override this snapshot.
 
 # Next Work
 
-1. Resume DB Fv at `Entbürokratisierte Freiräume :: O2I Principle`, complete
-   Ethos/Mission/Vision.
-2. Continue the collaborative `wtf.md` review with the user at Vision.
-3. Review `o2i.md` collaboratively with the user, top-down and paragraph by
-   paragraph.
+1. Synchronize the three syntax Views, extractor presets, tests, snapshots,
+   article, WTF, README, Haddock, model documentation, and changelog; obtain the
+   complete cross-artifact review.
+2. Afterwards resume the DB Fv instance, then continue `wtf.md` at Vision and
+   review `o2i.md` collaboratively top-down.
 
 # Release Note Draft
 

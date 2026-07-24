@@ -24,7 +24,7 @@ fixtureTests =
   testGroup
     "fixtures and integration"
     [ testCase
-        "repository O2I Syntax is structurally inspectable"
+        "repository O2I Syntax - Primitives is structurally inspectable"
         integrationTest
     , testCase
         "invalid fixtures retain declared stage ownership"
@@ -47,7 +47,7 @@ integrationTest = do
   bytes <-
     ByteString.readFile
       (".." </> ".." </> ".." </> ".." </> "mdl" </> "o2i.archimate")
-  report <- inspectBytes (ViewByName "O2I Syntax") bytes
+  report <- inspectBytes (ViewByName "O2I Syntax - Primitives") bytes
   take 5 (map reportedState (stageReportsList (reportStageReports report)))
     @?= [StagePassed, StagePassed, StagePassed, StagePassed, StageUnavailable]
   reportResult report @?= InspectionPartial

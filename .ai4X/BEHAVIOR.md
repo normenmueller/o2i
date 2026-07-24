@@ -77,16 +77,22 @@ the canonical repository memory.
   representation exposes a contradiction, redesign the owning semantic core
   first and then synchronize all dependent representations; never patch an
   isolated symptom.
+- Treat O2I as an actively designed pre-publication Framework, not as a frozen
+  constraint on its instances. Use awkward, ambiguous, unnecessarily complex,
+  or missing semantics exposed by a concrete instance as evidence for a fresh
+  generic design review in O2I. Change O2I when the generic design improves;
+  never preserve a weaker Framework merely to avoid revisiting its artifacts.
 - Apply form follows function strictly. Do not preserve an obsolete abstraction,
   relation, module, view, or wording for continuity when a simpler fresh design
   is more logical, modular, robust, and precise.
 - Keep O2I generic and independent of any concrete instance.
 - Keep Terminology, Semantics, and Syntax separate.
 - Treat ArchiMate as notation, never as the source of O2I semantics.
-- Treat `O2I Context` and `O2I Primitives` as normative semantic views of the
-  O2I context and primitive models. Treat `O2I Syntax` as their complete
-  concrete ArchiMate realization. Keep these views, the article, the Haskell
-  library, and the tests semantically synchronized.
+- Treat `O2I Semantics - Context`, `O2I Semantics - Primitives`, and
+  `O2I Semantics - Situation` as normative semantic Views. Treat the
+  `O2I Syntax - *` Views as their complete concrete ArchiMate realization.
+  Keep these Views, the article, the Haskell library, and the tests
+  semantically synchronized.
 - Keep ArchiMate element and relation documentation semantically synchronized
   with the article and Haskell specification. Use concise target-state
   definitions and source anchors; remove alternatives, former names, and
@@ -124,6 +130,9 @@ publication claim derived from them.
 - Review must combine fachliche fidelity, metamodel quality, type-theoretic
   strength, idiomatic Haskell, formal value, tests, and consistency across
   article, model, snapshots, specification, and tests.
+- Every substantive review must consider whether observed instance friction
+  reveals a generic O2I design defect or improvement opportunity; conformance
+  to the current revision alone is not sufficient evidence of design quality.
 - Every finding states severity and one concrete target-state proposal. Resolve
   findings by clean design or implementation, never by workaround, migration,
   compatibility layer, or retrospective prose.

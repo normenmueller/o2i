@@ -85,6 +85,9 @@
   context-level relation evidence and empirical evidence stages.
 - Distinguished binary Strategy contribution from collective Strategy
   realization and excluded direct binary `realizes` claims from O2I semantics.
+- Distinguished normative `O2I Semantics - *` Views from their concrete
+  `O2I Syntax - *` ArchiMate realizations through explicit View names and
+  synchronized extractor contracts.
 - Made contextualization by Context instances explicit and machine-readable in the ArchiMate
   syntax through one `composition[contextualizes]` per Primitive and
   Structuring element, mapped to the technical Haskell owner field rather than

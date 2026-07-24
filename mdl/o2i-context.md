@@ -1,6 +1,6 @@
-# O2I Context
+# O2I Semantics - Context
 
-> Generated review snapshot of `O2I Context` from `mdl/o2i.archimate`.
+> Generated review snapshot of `O2I Semantics - Context` from `mdl/o2i.archimate`.
 > Review artifact only; source of truth remains the O2I metamodel.
 
 ## Nodes

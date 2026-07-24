@@ -1,6 +1,6 @@
-# O2I Situation
+# O2I Semantics - Situation
 
-> Generated review snapshot of `O2I Situation` from `mdl/o2i.archimate`.
+> Generated review snapshot of `O2I Semantics - Situation` from `mdl/o2i.archimate`.
 > Review artifact only; source of truth remains the O2I metamodel.
 
 ## Nodes

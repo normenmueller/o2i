@@ -100,20 +100,20 @@ test and apply O2I but never define its generic semantics.
 - `RawGraph` represents unchecked node-edge data; `WellFormedGraph` establishes
   local graph admissibility; model stages add global fachliche invariants,
   effect traces, ex-ante evidence readiness, and ex-post evidence assessments.
-- `O2I Context` and `O2I Primitives` are normative semantic visualizations of
-  the O2I context and primitive models.
-- `O2I Situation` is the normative semantic visualization of the Situation
-  anchor category, its admissible forms, and Situation constitution.
+- `O2I Semantics - Context` and `O2I Semantics - Primitives` are normative
+  semantic visualizations of the O2I context and primitive models.
+- `O2I Semantics - Situation` is the normative semantic visualization of the
+  Situation anchor category, its admissible forms, and Situation constitution.
 - `O2I Situation Anchoring` is the normative semantic visualization of the
   parameterized Situation-anchor relation families.
 - The concrete ArchiMate 4 syntax maps each Situation-anchor form to its native
   or explicitly specialized element and applies one parameterized relation
   mapping; no duplicate 24-edge syntax view is required.
 - Their semantics is defined by O2I and does not derive from ArchiMate.
-- `O2I Syntax` is the concrete ArchiMate realization of O2I contexts,
-  contextualized Primitives, PerformanceDimensions, Situation anchors, and
-  their mapped relations. ArchiMate `Grouping` realizes Context and
-  PerformanceDimension notation but introduces no O2I semantics.
+- The `O2I Syntax - *` Views form the concrete ArchiMate realization of O2I
+  contexts, contextualized Primitives, PerformanceDimensions, Situation
+  anchors, and their mapped relations. ArchiMate `Grouping` realizes Context
+  and PerformanceDimension notation but introduces no O2I semantics.
 
 # Repository Map
 

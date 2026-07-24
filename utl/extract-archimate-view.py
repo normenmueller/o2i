@@ -18,15 +18,24 @@ PRESETS = {
         "O2I Strategy Constituents",
         Path("mdl/o2i-strategy-constituents.md"),
     ),
-    "situation": ("O2I Situation", Path("mdl/o2i-situation.md")),
+    "situation": (
+        "O2I Semantics - Situation",
+        Path("mdl/o2i-situation.md"),
+    ),
     "situation-anchoring": (
         "O2I Situation Anchoring",
         Path("mdl/o2i-situation-anchoring.md"),
     ),
     "orientation": ("O2I Orientierung", Path("mdl/o2i-orientation.md")),
-    "context": ("O2I Context", Path("mdl/o2i-context.md")),
-    "primitives": ("O2I Primitives", Path("mdl/o2i-primitives.md")),
-    "syntax": ("O2I Syntax", Path("mdl/o2i-syntax.md")),
+    "context": ("O2I Semantics - Context", Path("mdl/o2i-context.md")),
+    "primitives": (
+        "O2I Semantics - Primitives",
+        Path("mdl/o2i-primitives.md"),
+    ),
+    "syntax": (
+        "O2I Syntax - Primitives",
+        Path("mdl/o2i-syntax.md"),
+    ),
     "layered-cake": ("O2I Layered Cake", Path("mdl/o2i-layered-cake.md")),
 }
 
@@ -179,7 +188,7 @@ def contract_edge(
 
 
 RELATION_CONTRACTS = {
-    "O2I Context": frozenset(
+    "O2I Semantics - Context": frozenset(
         {
             contract_edge("Ethos", "guides", "Mission"),
             contract_edge("Ethos", "guides", "Vision"),
@@ -197,7 +206,7 @@ RELATION_CONTRACTS = {
             contract_edge("Vision", "orients", "Strategy"),
         }
     ),
-    "O2I Primitives": frozenset(
+    "O2I Semantics - Primitives": frozenset(
         {
             contract_edge("Action", "contributes-to", "Action"),
             contract_edge("Action", "contributes-to", "Key Result"),
@@ -228,7 +237,7 @@ RELATION_CONTRACTS = {
             contract_edge("Principle", "guides", "Principle"),
         }
     ),
-    "O2I Situation": frozenset(
+    "O2I Semantics - Situation": frozenset(
         {
             contract_edge(
                 anchor,
@@ -353,7 +362,7 @@ RELATION_CONTRACTS = {
             ),
         }
     ),
-    "O2I Syntax": frozenset(
+    "O2I Syntax - Primitives": frozenset(
         {
             contract_edge(
                 "O2I Context (Mission)",
@@ -1092,7 +1101,7 @@ def validate_model(root: ET.Element) -> list[str]:
                     + format_contract_edge(duplicate)
                 )
 
-        if view_name == "O2I Syntax":
+        if view_name == "O2I Syntax - Primitives":
             visible_nodes = {
                 elements[element_id]
                 for element_id in object_targets.values()
@@ -1102,7 +1111,7 @@ def validate_model(root: ET.Element) -> list[str]:
             for required in sorted(REQUIRED_SYNTAX_NODES):
                 if required not in visible_nodes:
                     errors.append(
-                        "O2I Syntax is missing node "
+                        f"{view_name} is missing node "
                         f"{required[0]} ({required[1]})"
                     )
 

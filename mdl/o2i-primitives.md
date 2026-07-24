@@ -1,6 +1,6 @@
-# O2I Primitives
+# O2I Semantics - Primitives
 
-> Generated review snapshot of `O2I Primitives` from `mdl/o2i.archimate`.
+> Generated review snapshot of `O2I Semantics - Primitives` from `mdl/o2i.archimate`.
 > Review artifact only; source of truth remains the O2I metamodel.
 
 ## View Contract

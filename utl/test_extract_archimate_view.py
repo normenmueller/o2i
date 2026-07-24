@@ -405,7 +405,8 @@ class RelationshipEndpointContractTest(unittest.TestCase):
                 errors = EXTRACTOR.validate_model(root)
 
                 self.assertIn(
-                    f"O2I Syntax is missing node {expected[0]} ({expected[1]})",
+                    "O2I Syntax - Primitives is missing node "
+                    f"{expected[0]} ({expected[1]})",
                     errors,
                 )
 
@@ -443,7 +444,7 @@ class RelationshipEndpointContractTest(unittest.TestCase):
 
     def test_syntax_placement_only_documentation_is_rejected(self) -> None:
         root = copy.deepcopy(self.root)
-        view = EXTRACTOR.find_view(root, "O2I Syntax")
+        view = EXTRACTOR.find_view(root, "O2I Syntax - Primitives")
         documentation = view.find("documentation")
         self.assertIsNotNone(documentation)
         documentation.text = (
@@ -540,7 +541,7 @@ class RelationshipEndpointContractTest(unittest.TestCase):
     def _substantiates_fixture(self):
         root = copy.deepcopy(self.root)
         elements, relations = EXTRACTOR.collect_model(root)
-        view = EXTRACTOR.find_view(root, "O2I Primitives")
+        view = EXTRACTOR.find_view(root, "O2I Semantics - Primitives")
         object_targets, _, connections, _, _ = EXTRACTOR.collect_view(view)
 
         for source_object, relation_id, target_object in connections:
@@ -566,7 +567,7 @@ class RelationshipEndpointContractTest(unittest.TestCase):
         expected: tuple[str, str],
     ) -> None:
         elements, _ = EXTRACTOR.collect_model(root)
-        view = EXTRACTOR.find_view(root, "O2I Syntax")
+        view = EXTRACTOR.find_view(root, "O2I Syntax - Primitives")
 
         for parent in view.iter():
             for child in list(parent):
@@ -751,7 +752,7 @@ class RelationshipEndpointContractTest(unittest.TestCase):
     def _substantiates_connection_fixture(self):
         root = copy.deepcopy(self.root)
         _, relations = EXTRACTOR.collect_model(root)
-        view = EXTRACTOR.find_view(root, "O2I Primitives")
+        view = EXTRACTOR.find_view(root, "O2I Semantics - Primitives")
 
         for connection in view.iter("sourceConnection"):
             relation_id = connection.get("archimateRelationship")

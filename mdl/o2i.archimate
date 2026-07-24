@@ -481,7 +481,7 @@ Source: O2I syntax mapping based on The Open Group (2026).</documentation>
   </folder>
   <folder name="Views" id="id-c4a47547d89649babef754e47e83c429" type="diagrams">
     <folder name="Syntax" id="id-6fd9ede1a32043c0bdec21b826afd949">
-      <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Syntax" id="id-84c801b279144e3483efe50d7ea95e4f">
+      <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Syntax - Primitives" id="id-84c801b279144e3483efe50d7ea95e4f">
         <child xsi:type="archimate:DiagramObject" id="id-79f9317ee4f7445e8e08498453e76cfa" targetConnections="id-9261b5ef5cc74482b8b06fb7c6beb07a" textPosition="1" archimateElement="id-55135f187b6d4f8a9929f3988537ea74">
           <bounds x="731" y="177" width="120" height="49"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-30dbbe611d074db8a205e080a8d5d082" lineWidth="2" source="id-79f9317ee4f7445e8e08498453e76cfa" target="id-e0f4484c9806440da7ab4d0693c6da57" archimateRelationship="id-79e28b9c3ba649588d3e57785f3d08f4"/>
@@ -606,8 +606,8 @@ O2I Situation Anchor syntax:
 -  O2I RegulatoryConstraint -> ArchiMate Requirement</documentation>
       </element>
     </folder>
-    <folder name="Semantic" id="id-70adea7d838a4547917f4253d5c53221">
-      <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Context" id="id-983e40824ddb495c8632d2d60ac057f7">
+    <folder name="Semantics" id="id-70adea7d838a4547917f4253d5c53221">
+      <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Semantics - Context" id="id-983e40824ddb495c8632d2d60ac057f7">
         <child xsi:type="archimate:DiagramObject" id="id-0ae3dc1596e943f09201d2ac3273de07" targetConnections="id-26c8d12c865442d49a4cfa230be5ab49" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-209098a723f84d0787eab3cfed0e3db0">
           <bounds x="912" y="240" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
@@ -719,7 +719,7 @@ O2I Situation Anchor syntax:
           <feature name="lineStyle" value="1"/>
         </child>
       </element>
-      <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Primitives" id="id-1c50a84021054e3a93fb84536c28c7f5">
+      <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Semantics - Primitives" id="id-1c50a84021054e3a93fb84536c28c7f5">
         <child xsi:type="archimate:DiagramObject" id="id-9aa8ae36972c4b81aab7ede708887c85" targetConnections="id-06b1e4b0957d40ec9e81f5ee9bc25b28" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-dee340198eb64cc48b52f8b42cb0c070">
           <bounds x="372" y="48" width="109" height="56"/>
           <feature name="deriveElementLineColor" value="false"/>
@@ -874,7 +874,7 @@ The view intentionally abstracts from concrete Primitive and Structuring instanc
           </child>
         </child>
       </element>
-      <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Situation" id="id-89a01cc61d914152b250393e720bc6e2">
+      <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Semantics - Situation" id="id-89a01cc61d914152b250393e720bc6e2">
         <child xsi:type="archimate:DiagramObject" id="id-7faa52476e1a401697613ccfade3d34f" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-95420d4e66164023b79676213a6147e2">
           <bounds x="372" y="120" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
@@ -1014,8 +1014,6 @@ The view intentionally abstracts from concrete Primitive and Structuring instanc
           <sourceConnection xsi:type="archimate:Connection" id="id-ffcc7f808a6e42899d7e8d3cf413c9b8" source="id-c2322df2db3646c09dfbe2a1203f2b23" target="id-92a608076ad14f1db692e84c35bb9d61" archimateRelationship="id-e797ab0de3cd49b6ba10e126e877cd87"/>
         </child>
       </element>
-    </folder>
-    <folder name="Domain" id="id-5ec5eba6f4c742df970937bb09ed0d6e">
       <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Orientierung" id="id-24bae562e9b04322b5ee975160de0624">
         <child xsi:type="archimate:DiagramObject" id="id-10d2ccd44a0d4390af95055a035da747" targetConnections="id-ee786d8c69bc4581b745b81be6acca4c" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-209098a723f84d0787eab3cfed0e3db0">
           <bounds x="192" y="240" width="181" height="73"/>
