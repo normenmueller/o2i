@@ -6,11 +6,14 @@ module O2I.Test.Collective
   ( collectiveTests
   ) where
 
+import Data.List (permutations)
 import qualified Data.List.NonEmpty as NonEmpty
+import Data.Text (Text)
 import O2I
 import O2I.Test.Support
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
+import qualified Test.Tasty.QuickCheck as QC
 
 collectiveTests :: TestTree
 collectiveTests =
@@ -37,6 +40,7 @@ collectiveTests =
     , testCase
         "collective Fit obligations accumulate independently"
         collectiveFitTest
+    , tradeOffSetTests
     , testCase
         "target compatibility evidence is bound to every contributor"
         contributorCompatibilityTest
@@ -65,6 +69,126 @@ collectiveTests =
         "fatal Asserted errors retain independent Candidate diagnostics"
         fatalErrorRetainsCandidateTest
     ]
+
+tradeOffSetTests :: TestTree
+tradeOffSetTests =
+  testGroup
+    "validated Trade-off set semantics"
+    [ QC.testProperty
+        "Fit-evidence permutations do not change Fit"
+        fitPermutationInvariantProperty
+    , QC.testProperty
+        "formulation permutations do not change Fit"
+        formulationPermutationInvariantProperty
+    , QC.testProperty
+        "repeated Fit occurrences do not change Fit"
+        duplicateOccurrenceInvariantProperty
+    , testCase
+        "repeated formulation occurrences do not change Fit"
+        duplicateFormulationOccurrenceTest
+    , testCase "surrounding whitespace does not change Fit" whitespaceTest
+    , testCase "missing Trade-offs do not match" missingTradeOffTest
+    , testCase "additional Trade-offs do not match" additionalTradeOffTest
+    , testCase "empty and blank Trade-offs do not match" emptyTradeOffTest
+    , testCase
+        "different Trade-off content does not match"
+        differingTradeOffTest
+    ]
+
+fitPermutationInvariantProperty :: QC.Property
+fitPermutationInvariantProperty =
+  QC.forAll (QC.elements (permutations tradeOffValues)) $ \values ->
+    tradeOffIssues targetTradeOffs values QC.=== []
+
+formulationPermutationInvariantProperty :: QC.Property
+formulationPermutationInvariantProperty =
+  QC.forAll (QC.elements targetTradeOffPermutations) $ \values ->
+    tradeOffIssues values tradeOffValues QC.=== []
+
+duplicateOccurrenceInvariantProperty :: QC.Positive Int -> QC.Property
+duplicateOccurrenceInvariantProperty (QC.Positive rawMultiplicity) =
+  let multiplicity = 1 + rawMultiplicity `mod` 20
+      values = concatMap (replicate multiplicity) tradeOffValues
+   in tradeOffIssues targetTradeOffs values QC.=== []
+
+duplicateFormulationOccurrenceTest :: Assertion
+duplicateFormulationOccurrenceTest =
+  tradeOffIssues
+    ("avoid opaque decisions"
+       NonEmpty.:| [ "avoid opaque decisions"
+                   , "preserve human accountability"
+                   , "reject unsupported channels"
+                   ])
+    tradeOffValues
+    @?= []
+
+whitespaceTest :: Assertion
+whitespaceTest =
+  tradeOffIssues
+    ("  avoid opaque decisions "
+       NonEmpty.:| [ "preserve human accountability\n"
+                   , "\treject unsupported channels"
+                   ])
+    [ "  avoid opaque decisions "
+    , "\tpreserve human accountability\n"
+    , "reject unsupported channels  "
+    ]
+    @?= []
+
+missingTradeOffTest :: Assertion
+missingTradeOffTest =
+  tradeOffIssues
+    targetTradeOffs
+    ["avoid opaque decisions", "preserve human accountability"]
+    @?= [tradeOffMismatch]
+
+additionalTradeOffTest :: Assertion
+additionalTradeOffTest =
+  tradeOffIssues
+    targetTradeOffs
+    (tradeOffValues ++ ["avoid unreviewed automation"])
+    @?= [tradeOffMismatch]
+
+emptyTradeOffTest :: Assertion
+emptyTradeOffTest = do
+  tradeOffIssues targetTradeOffs [] @?= [tradeOffMismatch]
+  tradeOffIssues targetTradeOffs [" "] @?= [tradeOffMismatch]
+
+differingTradeOffTest :: Assertion
+differingTradeOffTest =
+  tradeOffIssues
+    targetTradeOffs
+    [ "avoid opaque decisions"
+    , "preserve human accountability"
+    , "accept unsupported channels"
+    ]
+    @?= [tradeOffMismatch]
+
+tradeOffIssues ::
+     NonEmpty.NonEmpty Text -> [Text] -> [CollectiveStrategyRealizationError]
+tradeOffIssues formulationTradeOffs fitTradeOffs =
+  assessmentCollectiveErrors
+    (assessCollectiveModelWith
+       (collectiveFormulationsWithTradeOffs formulationTradeOffs)
+       completeCollectiveGraph
+       [completeFit {rawFitTargetTradeOffs = fitTradeOffs}]
+       [assertedCollective])
+
+tradeOffMismatch :: CollectiveStrategyRealizationError
+tradeOffMismatch =
+  AssertedCollectiveIssue collectiveClaimId CollectiveFitTradeOffsMismatch
+
+targetTradeOffs :: NonEmpty.NonEmpty Text
+targetTradeOffs =
+  "avoid opaque decisions"
+    NonEmpty.:| ["preserve human accountability", "reject unsupported channels"]
+
+tradeOffValues :: [Text]
+tradeOffValues = NonEmpty.toList targetTradeOffs
+
+targetTradeOffPermutations :: [NonEmpty.NonEmpty Text]
+targetTradeOffPermutations =
+  [value NonEmpty.:| values | value:values <- permutations tradeOffValues]
 
 validCollectiveTest :: Assertion
 validCollectiveTest =
@@ -560,13 +684,21 @@ assessCollectiveModel ::
   -> [RawCollectiveFitEvidence]
   -> [Claim RawCollectiveStrategyRealization]
   -> ModelAssessment
-assessCollectiveModel raw fitEvidence claims =
+assessCollectiveModel = assessCollectiveModelWith collectiveFormulations
+
+assessCollectiveModelWith ::
+     [RawStrategyFormulation]
+  -> RawGraph
+  -> [RawCollectiveFitEvidence]
+  -> [Claim RawCollectiveStrategyRealization]
+  -> ModelAssessment
+assessCollectiveModelWith formulations raw fitEvidence claims =
   case validateStructure raw of
     StructureAccepted structure ->
       assessModelSemantics
         structure
         ModelSemanticsInput
-          { modelStrategyClaims = map assertedClaim collectiveFormulations
+          { modelStrategyClaims = map assertedClaim formulations
           , modelCollectiveClaims = claims
           , modelCollectiveFitEvidence = fitEvidence
           }
@@ -744,6 +876,14 @@ contributorTwoTargetKeyResultEdge =
 collectiveFormulations :: [RawStrategyFormulation]
 collectiveFormulations =
   [ sampleStrategyFormulation
+  , contributorFormulation contributorOneIds
+  , contributorFormulation contributorTwoIds
+  ]
+
+collectiveFormulationsWithTradeOffs ::
+     NonEmpty.NonEmpty Text -> [RawStrategyFormulation]
+collectiveFormulationsWithTradeOffs tradeOffs =
+  [ sampleStrategyFormulation {rawFormulationTradeOffs = tradeOffs}
   , contributorFormulation contributorOneIds
   , contributorFormulation contributorTwoIds
   ]

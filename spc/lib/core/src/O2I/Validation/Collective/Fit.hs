@@ -30,6 +30,7 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import O2I.Language.Element (RawNodeId)
 import O2I.Validation.Collective.Types
+import O2I.Validation.Semantics.Context.TradeOffSet
 
 type CoherencePair = (RawNodeId, RawNodeId)
 
@@ -64,7 +65,7 @@ newtype CollectiveFitIndex = CollectiveFitIndex
 -- | Validated target-Strategy expectations available to Fit assessment.
 data CollectiveFitTargetExpectation
   = MissingCollectiveFitTarget
-  | ExpectedCollectiveFitTarget RawNodeId [Text]
+  | ExpectedCollectiveFitTarget RawNodeId TradeOffSet
 
 -- | Total private result of one exact Fit-reference assessment.
 data CollectiveFitAssessment =
@@ -243,7 +244,7 @@ targetExpectationIssues target expectation fit =
       | rawFitTargetGuidingPolicy fit /= guidingPolicy
       ]
         ++ [ CollectiveFitTradeOffsMismatch
-           | rawFitTargetTradeOffs fit /= tradeOffs
+           | not (matchesRawTradeOffs (rawFitTargetTradeOffs fit) tradeOffs)
            ]
 
 compatibilityIssues ::

@@ -411,7 +411,7 @@ collectiveFitTargetExpectation semantic target =
     Just formulation ->
       ExpectedCollectiveFitTarget
         (rawFormulationGuidingPolicy raw)
-        (NonEmpty.toList (rawFormulationTradeOffs raw))
+        (strategyFormulationTradeOffs formulation)
       where raw = strategyFormulationData formulation
 
 evaluationErrors :: SemanticEvaluation -> [CollectiveStrategyRealizationError]

@@ -2,10 +2,13 @@
 
 module Main where
 
+import Data.List.NonEmpty (NonEmpty((:|)))
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import O2I.Language.Element
 import O2I.Validation.Collective.Fit
 import O2I.Validation.Collective.Types
+import O2I.Validation.Semantics.Context.TradeOffSet
 import Test.Tasty
 import Test.Tasty.HUnit
 import qualified Test.Tasty.QuickCheck as QC
@@ -162,7 +165,7 @@ completeFit reference contributors =
         | (left, right) <- unorderedPairs contributors
         ]
     , rawFitTargetGuidingPolicy = targetPolicyId
-    , rawFitTargetTradeOffs = targetTradeOffs
+    , rawFitTargetTradeOffs = NonEmpty.toList targetTradeOffInput
     , rawContributorCompatibilityEvidence =
         [ RawContributorCompatibilityEvidence
           contributor
@@ -206,5 +209,8 @@ targetId = RawNodeId "target"
 
 targetPolicyId = RawNodeId "target-policy"
 
-targetTradeOffs :: [Text.Text]
-targetTradeOffs = ["Target trade-off"]
+targetTradeOffs :: TradeOffSet
+targetTradeOffs = validatedTradeOffSet targetTradeOffInput
+
+targetTradeOffInput :: NonEmpty Text.Text
+targetTradeOffInput = "Target trade-off" :| []

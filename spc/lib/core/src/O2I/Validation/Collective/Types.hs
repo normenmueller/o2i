@@ -38,6 +38,7 @@ data RawCollectiveFitEvidence = RawCollectiveFitEvidence
   , rawMutualCoherenceEvidence :: [RawMutualCoherenceEvidence]
   , rawFitTargetGuidingPolicy :: RawNodeId
   , rawFitTargetTradeOffs :: [Text]
+    -- ^ Source-near target exclusions; order and repetition are not semantic.
   , rawContributorCompatibilityEvidence :: [RawContributorCompatibilityEvidence]
   , rawViableInteractionEvidence :: [Text]
   } deriving (Eq, Show)

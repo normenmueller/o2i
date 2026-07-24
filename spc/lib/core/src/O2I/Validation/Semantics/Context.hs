@@ -11,6 +11,7 @@ module O2I.Validation.Semantics.Context
   ( StrategyAnchoring(..)
   , RawStrategyFormulation(..)
   , StrategyFormulation
+  , TradeOffSet
   , Elaboration(..)
   , CandidateContextProposition(..)
   , ContextAssessmentStatus(..)
@@ -30,6 +31,7 @@ module O2I.Validation.Semantics.Context
   , contextGraph
   , contextStrategyFormulations
   , strategyFormulationData
+  , strategyFormulationTradeOffs
   , lookupContextSemanticsRef
   , qualifyingStrategiesInContext
   ) where
@@ -48,6 +50,7 @@ import O2I.Language.Claim
 import O2I.Language.Element
 import O2I.Language.Macro (StrategyPrimitiveRole(..))
 import O2I.Language.Relation
+import O2I.Validation.Semantics.Context.TradeOffSet
 import O2I.Validation.Structure
   ( StructuralAssessment
   , structuralCandidatePropositions
@@ -82,9 +85,11 @@ data RawStrategyFormulation = RawStrategyFormulation
   } deriving (Eq, Show)
 
 -- | A Strategy formulation whose completeness and coherence are established.
-newtype StrategyFormulation = StrategyFormulation
+data StrategyFormulation = StrategyFormulation
   { validatedStrategyFormulation :: RawStrategyFormulation
     -- ^ Source formulation whose invariants have been established.
+  , validatedStrategyTradeOffs :: TradeOffSet
+    -- ^ Normalized unordered semantics of the explicit exclusions.
   } deriving (Eq, Show)
 
 -- * Semantic assessment state
@@ -246,7 +251,10 @@ validateContextSemantics graph rawFormulations =
           , contextSemanticsStrategies =
               Map.fromList
                 [ ( rawFormulationStrategy formulation
-                  , StrategyFormulation formulation)
+                  , StrategyFormulation
+                      formulation
+                      (validatedTradeOffSet
+                         (rawFormulationTradeOffs formulation)))
                 | formulation <- rawFormulations
                 ]
           }
@@ -404,6 +412,10 @@ contextStrategyFormulations = contextSemanticsStrategies
 -- | Access the validated source data of one Strategy formulation.
 strategyFormulationData :: StrategyFormulation -> RawStrategyFormulation
 strategyFormulationData = validatedStrategyFormulation
+
+-- | Access the normalized unordered Trade-offs of a validated formulation.
+strategyFormulationTradeOffs :: StrategyFormulation -> TradeOffSet
+strategyFormulationTradeOffs = validatedStrategyTradeOffs
 
 -- | Resolve a raw identifier as a typed Context in a semantic model.
 lookupContextSemanticsRef ::

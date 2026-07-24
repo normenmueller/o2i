@@ -49,6 +49,7 @@ library
     O2I.Validation.Readiness,
     O2I.Validation.Semantics,
     O2I.Validation.Semantics.Context,
+    O2I.Validation.Semantics.Context.TradeOffSet,
     O2I.Validation.Structure,
     O2I.Validation.Trace,
     O2I.Validation.Trace.Evidence
@@ -130,7 +131,8 @@ test-suite o2i-collective-fit-internal-test
   other-modules:
     O2I.Language.Element,
     O2I.Validation.Collective.Fit,
-    O2I.Validation.Collective.Types
+    O2I.Validation.Collective.Types,
+    O2I.Validation.Semantics.Context.TradeOffSet
   build-depends:
     base >=4.18 && <4.19,
     containers >=0.6 && <0.7,
