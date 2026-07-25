@@ -8,14 +8,18 @@
       "coauthors": [
         "external-governance-coauthor"
       ],
-      "state": "reviewing",
+      "state": "done",
       "proposal": ".ai4X/governance/changes/o2i-0001/proposal.md",
       "plan": ".ai4X/governance/changes/o2i-0001/plan.md",
       "admission_reviews": [
         ".ai4X/governance/changes/o2i-0001/reviews/admission-strategy.json",
         ".ai4X/governance/changes/o2i-0001/reviews/admission-formalization.json"
       ],
-      "final_reviews": [],
+      "final_reviews": [
+        ".ai4X/governance/changes/o2i-0001/reviews/final-strategy.json",
+        ".ai4X/governance/changes/o2i-0001/reviews/final-formalization.json",
+        ".ai4X/governance/changes/o2i-0001/reviews/final-agentic-ai.json"
+      ],
       "derived_from": [],
       "depends_on": []
     }

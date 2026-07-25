@@ -1,14 +1,12 @@
 # Handoff
 
 - Observed: 2026-07-25 CEST
-- Work status: `ACTIVE`
-- Execution authorization: `APPROVED`
-- Authorization scope: implement and independently review the repository-local
-  O2I change-governance package only; no extractor, syntax, model, publication,
-  or push work.
-- Current gate: `NONE`
-- Gate status: `NOT_REQUIRED`
-- Current node: `o2i:change-governance:correction`
+- Work status: `PAUSED`
+- Execution authorization: `REQUIRED`
+- Authorization scope: no further O2I implementation is authorized.
+- Current gate: `o2i-0001-finalreview.5`
+- Gate status: `ACCEPTED`
+- Current node: `o2i:change-governance:complete`
 
 # Objective
 
@@ -29,15 +27,27 @@ review process for future O2I Framework changes.
 
 # Verification
 
-Strategy and Agentic-AI accept candidate `c7cdbb9` at 10.0 in every
-dimension. Formalization requires Git-less historical scopes to remain
-structural after later legitimate file deletion. The separate
-`o2i:syntax-sync` AMX fixture failure remains the local return point.
+Strategy, formalization, and Agentic-AI Finalreviews accept candidate
+`1b53461cdde4950010122f2ccd5c192c48ac71c5` without findings and with
+10.0 in every required dimension. Thirteen focused governance tests and the
+staged governance check pass. The separate `o2i:syntax-sync` AMX fixture
+failure remains the local return point.
+
+# Gate Record
+
+- Gate attempt ID: `o2i-0001-finalreview.5`
+- Scope: the implementation surfaces declared by O2I-0001, excluding runtime
+  handoff, mutable register, and Finalreview evidence.
+- Git revision: `1b53461cdde4950010122f2ccd5c192c48ac71c5`
+- Mandatory checks: independent strategy, formalization, and Agentic-AI
+  Finalreviews.
+- Finding status: `CLOSED`
+- Result: `ACCEPTED`
 
 # Next Action
 
-Close the single Git-less portability finding, verify one final candidate, and
-obtain the plan-required confirmations.
+When authorized, resume the Python extractor authority package before
+user-guided `o2i:syntax-sync`.
 
 # Local Return Point
 
