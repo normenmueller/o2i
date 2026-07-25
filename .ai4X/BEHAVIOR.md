@@ -9,17 +9,19 @@ repository.
 2. Detect whether the checkout is a Git worktree. Only then run
    `git status --short --branch --untracked-files=all`; otherwise record Git
    metadata as unavailable and continue from the repository files.
-3. Identify the task class and read only its required Rules:
+3. Identify the task class and read only its required contracts:
 
-| Task class | Required Rule |
+| Task class | Required Contract |
 | --- | --- |
-| Haskell design or implementation | `.ai4X/rules/HASKELL_AUTHORING.md` |
-| Haskell or formalization review | `.ai4X/rules/HASKELL_REVIEW.md` |
-| ArchiMate, metamodel, or syntax work | `.ai4X/rules/MODELING.md` |
-| White Paper, README, WTF, or rendering | `.ai4X/rules/PUBLICATION.md` |
-| Strategy design or strategy review | `.ai4X/rules/STRATEGY_REVIEW.md` |
+| Haskell design or implementation | `.ai4X/operations/haskell-authoring.md` |
+| Haskell or formalization review | `.ai4X/operations/haskell-review.md` |
+| ArchiMate, metamodel, or syntax work | `.ai4X/operations/modeling.md` |
+| White Paper, README, WTF, or rendering | `.ai4X/operations/publication.md` |
+| Strategy design or strategy review | `.ai4X/operations/strategy-review.md` |
+| Normative O2I change proposal or implementation | `.ai4X/governance/README.md` |
 
-Read multiple Rules when a task crosses classes. Do not load unrelated Rules.
+Read multiple contracts when a task crosses classes. Do not load unrelated
+contracts.
 
 # Expert Role
 
@@ -45,6 +47,7 @@ resolved in the owning source before synchronization.
 | Concrete ArchiMate mapping | `mdl/o2i.archimate` syntax Views and documentation | Syntax text, AMX adapter |
 | Machine-checkable formalization | `spc/lib/core/` | Inspection, adapters, CLI |
 | AMX profile validation and projection | `spc/lib/adapter/amx/` | CLI reports |
+| Change admission, state, dependencies, and reviews | `.ai4X/governance/` | Agent Memory routing, generated projections |
 | Verification evidence | tests and generated snapshots | no semantic ownership |
 
 Tests provide executable verification evidence for contracts; they never
@@ -68,28 +71,13 @@ recorded checks. `COMPLETE` requires every mandatory gate to be `ACCEPTED`.
 Every active gate record in `STATE.md` contains exactly:
 
 - gate attempt ID and scope;
-- exact subject digest and Git carrier revision when available;
+- exact Git revision when available;
 - mandatory checks;
 - finding status: `OPEN | CLOSED`;
-- result: `PENDING | ACCEPTED | REJECTED`;
-- stable repository-local evidence locator.
+- result: `PENDING | ACCEPTED | REJECTED`.
 
-`.ai4X/MEMORY_SUBJECT` is the canonical, sorted scope of an Agent Memory
-review. From the repository root, `python3 .ai4X/subject-digest.py` computes its
-deterministic SHA-256 identity. `STATE.md` and `.ai4X/evidence/` are attestation
-artifacts outside that subject.
-
-A review evaluates the immutable subject. Its attestation is necessarily
-recorded afterward and identifies that subject exactly. An attestation-only
-update to `STATE.md` and the referenced evidence does not alter the subject.
-Any later change within the declared subject scope invalidates acceptance.
-
-Gate closure is terminal. After independent acceptance, update only the
-attestation artifacts and mechanically verify that the subject digest is
-unchanged, all gate and carrier references are exact, and no subject file
-changed. This attestation-only closure does not trigger another review. A new
-review attempt is required only for a subject change or a finding that requires
-subject correction.
+A review identifies its immutable subject by exact Git revision and declared
+file scope. Any later change within that scope requires a new review.
 
 # Universal Design Rules
 
@@ -110,7 +98,10 @@ subject correction.
 
 # Workflow
 
-- Inspect before editing; use `rg` and repository tooling.
+- Immediately before each manual edit, read the target range freshly. Apply one
+  narrow patch to one file, then reread the changed range and its diff before
+  the next edit.
+- Use `rg` and repository tooling for inspection.
 - Update `CHANGELOG.md` for release-relevant changes.
 - Verify the narrow scope before broad gates.
 - Required external reviews are independent and read-only. Every finding has a

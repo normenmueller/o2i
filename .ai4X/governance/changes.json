@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "changes": [
+    {
+      "id": "o2i-0001",
+      "title": "Lean Change Governance",
+      "author": "normenmueller",
+      "coauthors": [
+        "external-governance-coauthor"
+      ],
+      "state": "implementing",
+      "proposal": ".ai4X/governance/changes/o2i-0001/proposal.md",
+      "plan": ".ai4X/governance/changes/o2i-0001/plan.md",
+      "admission_reviews": [
+        ".ai4X/governance/changes/o2i-0001/reviews/admission-strategy.json",
+        ".ai4X/governance/changes/o2i-0001/reviews/admission-formalization.json"
+      ],
+      "final_reviews": [],
+      "derived_from": [],
+      "depends_on": []
+    }
+  ]
+}

@@ -30,6 +30,8 @@
 
 ### Added
 
+- Added lean, agentic-first admission, dependency, and independent-review
+  governance for normative O2I Framework changes.
 - Added a strictly technical `spc/README.md` for the Haskell package
   architecture, build, verification, installation, and CLI usage without
   introducing a competing source of O2I subject-matter semantics.

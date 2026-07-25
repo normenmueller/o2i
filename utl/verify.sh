@@ -7,15 +7,15 @@ work=$(mktemp -d "${TMPDIR:-/tmp}/o2i-verify.XXXXXX")
 trap 'rm -rf "$work"' EXIT HUP INT TERM
 
 if [ "$#" -gt 1 ]; then
-  printf 'Usage: %s [all|model|haskell|paper]\n' "$0" >&2
+  printf 'Usage: %s [all|governance|model|haskell|paper]\n' "$0" >&2
   exit 2
 fi
 
 stage=${1:-all}
 case "$stage" in
-  all | model | haskell | paper) ;;
+  all | governance | model | haskell | paper) ;;
   *)
-    printf 'Usage: %s [all|model|haskell|paper]\n' "$0" >&2
+    printf 'Usage: %s [all|governance|model|haskell|paper]\n' "$0" >&2
     exit 2
     ;;
 esac
@@ -36,6 +36,7 @@ cd "$root"
 git_worktree=false
 git_clean=false
 source_revision=
+diff_base=
 if command -v git >/dev/null 2>&1 && \
   git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   git_worktree=true
@@ -60,6 +61,19 @@ if command -v git >/dev/null 2>&1 && \
 else
   info "Git metadata unavailable; skipping worktree-only diff checks."
 fi
+
+verify_governance() {
+  require python3
+
+  info "Checking O2I change governance."
+  python3 -B -m unittest discover \
+    -s utl -p 'test_change_governance.py'
+  if [ -n "$diff_base" ]; then
+    python3 -B utl/change-governance.py validate --base "$diff_base"
+  else
+    python3 -B utl/change-governance.py validate
+  fi
+}
 
 verify_model() {
   require python3
@@ -205,10 +219,12 @@ verify_paper() {
 }
 
 case "$stage" in
+  governance) verify_governance ;;
   model) verify_model ;;
   haskell) verify_haskell ;;
   paper) verify_paper ;;
   all)
+    verify_governance
     verify_model
     verify_haskell
     verify_paper

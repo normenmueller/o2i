@@ -103,6 +103,9 @@ repository Views and snapshots. It never validates O2I instances.
 - `spc/lib/inspection/`: format-neutral inspection pipeline.
 - `spc/lib/adapter/amx/`: native AMX profile and projection.
 - `spc/cli/`: thin `o2i` CLI.
+- `.ai4X/operations/`: task-specific execution and quality contracts.
+- `.ai4X/governance/`: agentic-first authority for Framework-change admission,
+  plans, dependencies, and independent reviews; no fachliche semantics.
 - `utl/extract-archimate-view.py`: repository View/snapshot checker.
 - `utl/verify.sh`: canonical staged verification.
 
