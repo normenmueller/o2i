@@ -77,7 +77,8 @@ Every active gate record in `STATE.md` contains exactly:
 - result: `PENDING | ACCEPTED | REJECTED`.
 
 A review identifies its immutable subject by exact Git revision and declared
-file scope. Any later change within that scope requires a new review.
+file scope. Any later change within that scope requires a new review for the
+later change without invalidating accepted historical evidence.
 `.ai4X/STATE.md` is volatile runtime handoff and never belongs to an immutable
 implementation review scope.
 

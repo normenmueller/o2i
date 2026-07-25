@@ -25,6 +25,8 @@ PLAN_REQUIRED = {"implementing", "reviewing", "done"}
 NO_PLAN = {"proposed", "rejected"}
 NO_FINAL = {"proposed", "admitted", "implementing", "rejected"}
 VOLATILE_SCOPE = PurePosixPath(".ai4X/STATE.md")
+REGISTER_SCOPE = PurePosixPath(REGISTER)
+CHANGES_SCOPE = PurePosixPath(".ai4X/governance/changes")
 STATES = {
     "proposed",
     "admitted",
@@ -132,6 +134,14 @@ def _identities(value: object, label: str, errors: list[str]) -> tuple[str, ...]
     return values
 
 
+def _schema_version(
+    data: Mapping[str, Any], label: str, errors: list[str]
+) -> None:
+    value = data.get("schema_version")
+    if type(value) is not int or value != SCHEMA_VERSION:
+        errors.append(f"{label}.schema_version: must be integer {SCHEMA_VERSION}")
+
+
 def parse_register(
     data: Mapping[str, Any], source: str = REGISTER
 ) -> tuple[dict[str, Change], list[str]]:
@@ -141,8 +151,7 @@ def parse_register(
     unknown = sorted(set(data) - {"schema_version", "changes"})
     if unknown:
         errors.append(f"{source}: unknown fields: {', '.join(unknown)}")
-    if data.get("schema_version") != SCHEMA_VERSION:
-        errors.append(f"{source}: schema_version must be {SCHEMA_VERSION}")
+    _schema_version(data, source, errors)
     entries = data.get("changes")
     if not isinstance(entries, list):
         return {}, [*errors, f"{source}: changes must be an array"]
@@ -240,13 +249,25 @@ def _json_file(
     if path is None:
         return None
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        value = json.loads(
+            path.read_text(encoding="utf-8"),
+            object_pairs_hook=_unique_object,
+        )
+    except (UnicodeDecodeError, ValueError) as exc:
         errors.append(f"{label}: invalid JSON: {exc}")
         return None
     if not isinstance(value, dict):
         errors.append(f"{label}: must contain a JSON object")
         return None
+    return value
+
+
+def _unique_object(pairs: Sequence[tuple[str, Any]]) -> dict[str, Any]:
+    value: dict[str, Any] = {}
+    for key, item in pairs:
+        if key in value:
+            raise ValueError(f"duplicate key {key!r}")
+        value[key] = item
     return value
 
 
@@ -260,14 +281,17 @@ def _field(
 
 def _findings(
     data: Mapping[str, Any], label: str, errors: list[str]
-) -> tuple[object, ...]:
+) -> tuple[str, ...]:
     if "findings" not in data:
         return ()
     value = data["findings"]
     if not isinstance(value, list):
         errors.append(f"{label}.findings: must be an array")
         return ()
-    return tuple(value)
+    return tuple(
+        _identity(item, f"{label}.findings[{index}]", errors)
+        for index, item in enumerate(value)
+    )
 
 
 def _section(
@@ -320,8 +344,8 @@ def _validate_admission(
         reviewer = _field(data, "reviewer", label, errors)
         capability = _field(data, "capability", label, errors)
         verdict = _field(data, "verdict", label, errors)
+        _schema_version(data, label, errors)
         expected = {
-            "schema_version": SCHEMA_VERSION,
             "proposal": change.id,
             "phase": "admission",
             "proposal_path": change.proposal,
@@ -373,8 +397,10 @@ def _git(root: Path, *arguments: str) -> Optional[subprocess.CompletedProcess[st
 
 
 def _git_metadata(root: Path) -> bool:
-    result = _git(root, "rev-parse", "--git-dir")
-    return result is not None and result.returncode == 0
+    result = _git(root, "rev-parse", "--show-toplevel")
+    if result is None or result.returncode != 0 or not result.stdout.strip():
+        return False
+    return Path(result.stdout.strip()).resolve() == root.resolve()
 
 
 def _git_revision_exists(root: Path, revision: str) -> bool:
@@ -386,7 +412,8 @@ def _scope(
     root: Path,
     value: object,
     revision: str,
-    git_revision: bool,
+    has_git: bool,
+    revision_exists: bool,
     label: str,
     errors: list[str],
 ) -> tuple[str, ...]:
@@ -401,41 +428,57 @@ def _scope(
                 "repository-relative paths"
             )
             continue
-        if path == VOLATILE_SCOPE or path in VOLATILE_SCOPE.parents:
+        excluded = _closure_mutable_scope(path)
+        if excluded:
             errors.append(
-                f"{label}.reviewed_scope: must exclude {VOLATILE_SCOPE}"
+                f"{label}.reviewed_scope: must exclude {excluded} "
+                f"and its ancestors: {reference}"
             )
             continue
-        current = root.joinpath(*path.parts)
-        if not current.exists():
+        if has_git:
+            if not revision_exists:
+                continue
+            exists = _git(root, "cat-file", "-e", f"{revision}:{reference}")
+            if exists is None or exists.returncode != 0:
+                errors.append(
+                    f"{label}.reviewed_scope: path does not exist at "
+                    f"reviewed_revision: {reference}"
+                )
+            continue
+        if not root.joinpath(*path.parts).exists():
             errors.append(
                 f"{label}.reviewed_scope: current path does not exist: {reference}"
             )
-            continue
-        if not git_revision:
-            continue
-        exists = _git(root, "cat-file", "-e", f"{revision}:{reference}")
-        if exists is None or exists.returncode != 0:
-            errors.append(
-                f"{label}.reviewed_scope: path does not exist at "
-                f"reviewed_revision: {reference}"
-            )
-            continue
-        difference = _git(root, "diff", "--quiet", revision, "--", reference)
-        untracked = _git(
-            root, "ls-files", "--others", "--exclude-standard", "--", reference
-        )
-        if (
-            difference is None
-            or difference.returncode != 0
-            or untracked is None
-            or bool(untracked.stdout.strip())
-        ):
-            errors.append(
-                f"{label}.reviewed_scope: current content/tree differs from "
-                f"reviewed_revision: {reference}"
-            )
     return scope
+
+
+def _closure_mutable_scope(path: PurePosixPath) -> Optional[str]:
+    for protected in (VOLATILE_SCOPE, REGISTER_SCOPE):
+        if path == protected or path in protected.parents:
+            return str(protected)
+    if path == CHANGES_SCOPE or path in CHANGES_SCOPE.parents:
+        return "Finalreview evidence"
+    try:
+        relative = path.relative_to(CHANGES_SCOPE)
+    except ValueError:
+        return None
+    parts = relative.parts
+    if len(parts) == 1 and ID_PATTERN.fullmatch(parts[0]):
+        return "Finalreview evidence"
+    if (
+        len(parts) == 2
+        and ID_PATTERN.fullmatch(parts[0])
+        and parts[1] == "reviews"
+    ):
+        return "Finalreview evidence"
+    if (
+        len(parts) == 3
+        and ID_PATTERN.fullmatch(parts[0])
+        and parts[1] == "reviews"
+        and FINAL_REVIEW_PATTERN.fullmatch(parts[2])
+    ):
+        return "Finalreview evidence"
+    return None
 
 
 def _scores(
@@ -489,8 +532,8 @@ def _validate_finals(
         capability = _field(data, "capability", label, errors)
         revision = _field(data, "reviewed_revision", label, errors)
         verdict = _field(data, "verdict", label, errors)
+        _schema_version(data, label, errors)
         expected = {
-            "schema_version": SCHEMA_VERSION,
             "change": change.id,
             "phase": "final",
         }
@@ -509,7 +552,8 @@ def _validate_finals(
             root,
             data.get("reviewed_scope"),
             revision,
-            has_git and revision_exists,
+            has_git,
+            revision_exists,
             label,
             errors,
         )

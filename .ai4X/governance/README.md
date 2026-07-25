@@ -92,8 +92,10 @@ individual edit. Required reviewer capabilities follow the admitted plan and
 therefore remain proportionate to the change.
 
 All required reviews for `done` refer to the same revision and declare their
-reviewed scope. The scope excludes volatile runtime handoff such as
-`.ai4X/STATE.md`. Acceptance requires no finding and 10.0 in every reported
+reviewed scope. The scope excludes runtime handoff, the mutable register, and
+Finalreview evidence. Accepted reviews remain durable evidence for their exact
+revision; later changes require their own review without invalidating earlier
+acceptance. Acceptance requires no finding and 10.0 in every reported
 dimension. Git carries implementation history; the governance validator checks
 the current register and its referenced evidence rather than reconstructing a
 workflow from commits.

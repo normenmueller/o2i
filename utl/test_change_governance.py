@@ -223,6 +223,27 @@ class ChangeGovernanceTests(unittest.TestCase):
             repo.done()
             self.assertEqual([], governance.validate_repository(repo.root))
 
+    def test_json_rejects_boolean_versions_and_duplicate_keys(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory))
+            repo.write_json(
+                governance.REGISTER,
+                {"schema_version": True, "changes": [repo.entry()]},
+            )
+            self.assert_error(
+                governance.validate_repository(repo.root),
+                "schema_version: must be integer 1",
+            )
+
+            repo.write(
+                governance.REGISTER,
+                '{"schema_version":1,"schema_version":1,"changes":[]}\n',
+            )
+            self.assert_error(
+                governance.validate_repository(repo.root),
+                "duplicate key 'schema_version'",
+            )
+
     def test_register_schema_state_and_paths(self) -> None:
         cases = (
             ({"id": "change-1"}, "must match o2i-NNNN"),
@@ -298,6 +319,16 @@ class ChangeGovernanceTests(unittest.TestCase):
                     {**repo.read_json(repo.admission[0]), "extra": True},
                 ),
                 "unknown fields: extra",
+            ),
+            (
+                lambda repo: repo.write_json(
+                    repo.admission[0],
+                    {
+                        **repo.read_json(repo.admission[0]),
+                        "schema_version": True,
+                    },
+                ),
+                "schema_version: must be integer 1",
             ),
             (
                 lambda repo: repo.write_json(
@@ -497,9 +528,9 @@ class ChangeGovernanceTests(unittest.TestCase):
             (
                 lambda repo, refs: repo.write_json(
                     refs[0],
-                    {**repo.read_json(refs[0]), "schema_version": 2},
+                    {**repo.read_json(refs[0]), "schema_version": True},
                 ),
-                "schema_version: must be 1",
+                "schema_version: must be integer 1",
             ),
             (
                 lambda repo, refs: repo.write_json(
@@ -545,6 +576,48 @@ class ChangeGovernanceTests(unittest.TestCase):
                     },
                 ),
                 "must exclude .ai4X/STATE.md",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {
+                        **repo.read_json(refs[0]),
+                        "reviewed_scope": [
+                            ".ai4X/governance/changes.json"
+                        ],
+                    },
+                ),
+                "must exclude .ai4X/governance/changes.json",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {
+                        **repo.read_json(refs[0]),
+                        "reviewed_scope": [CHANGE_ROOT],
+                    },
+                ),
+                "must exclude Finalreview evidence",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {
+                        **repo.read_json(refs[0]),
+                        "reviewed_scope": [refs[0]],
+                    },
+                ),
+                "must exclude Finalreview evidence",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {
+                        **repo.read_json(refs[0]),
+                        "reviewed_scope": [".ai4X"],
+                    },
+                ),
+                "and its ancestors",
             ),
             (
                 lambda repo, refs: repo.write_json(
@@ -650,12 +723,17 @@ class ChangeGovernanceTests(unittest.TestCase):
                 "must exactly cover plan capabilities",
             )
 
-        errors: list[str] = []
-        self.assertEqual(
-            (),
-            governance._findings({"findings": "invalid"}, "review", errors),
-        )
-        self.assertEqual(["review.findings: must be an array"], errors)
+        for findings, message in (
+            ("invalid", "must be an array"),
+            ([""], "must not be empty"),
+            ([" padded "], "must be trimmed and single-line"),
+            (["line\nbreak"], "must be trimmed and single-line"),
+            ([1], "must be a string"),
+        ):
+            with self.subTest(findings=findings):
+                errors: list[str] = []
+                governance._findings({"findings": findings}, "review", errors)
+                self.assert_error(errors, message)
 
     def test_git_revision_existence_is_checked_only_with_metadata(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -705,7 +783,19 @@ class ChangeGovernanceTests(unittest.TestCase):
                     governance.validate_repository(repo.root), message
                 )
 
-    def test_reviewed_scope_binds_git_content_and_is_git_optional(self) -> None:
+    def test_reviewed_scope_is_durable_and_git_is_repository_local(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory))
+            reviews = [
+                repo.final(
+                    capability,
+                    scope=[repo.admission[0]],
+                )
+                for capability in CAPABILITIES
+            ]
+            repo.register(repo.entry(state="done", final_reviews=reviews))
+            self.assertEqual([], governance.validate_repository(repo.root))
+
         with tempfile.TemporaryDirectory() as directory:
             repo = Repository(Path(directory))
             repo.write("surface/item.txt", "reviewed\n")
@@ -719,10 +809,10 @@ class ChangeGovernanceTests(unittest.TestCase):
             repo.register(repo.entry(state="done", final_reviews=reviews))
             self.assertEqual([], governance.validate_repository(repo.root))
             repo.write("surface/item.txt", "changed\n")
-            self.assert_error(
-                governance.validate_repository(repo.root),
-                "current content/tree differs from reviewed_revision",
-            )
+            self.assertEqual([], governance.validate_repository(repo.root))
+            (repo.root / "surface/item.txt").unlink()
+            (repo.root / "surface").rmdir()
+            self.assertEqual([], governance.validate_repository(repo.root))
 
         with tempfile.TemporaryDirectory() as directory:
             repo = Repository(Path(directory))
@@ -738,6 +828,15 @@ class ChangeGovernanceTests(unittest.TestCase):
             self.assert_error(
                 governance.validate_repository(repo.root),
                 "path does not exist at reviewed_revision",
+            )
+
+        with tempfile.TemporaryDirectory() as directory:
+            parent = Path(directory)
+            Repository(parent / "nested").done()
+            subprocess.run(["git", "init", "-q"], cwd=parent, check=True)
+            self.assertEqual(
+                [],
+                governance.validate_repository(parent / "nested"),
             )
 
         with tempfile.TemporaryDirectory() as directory:

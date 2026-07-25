@@ -29,16 +29,16 @@ review process for future O2I Framework changes.
 
 # Verification
 
-Admission reviews are accepted. The second Finalreview confirms the lean
-snapshot design and requires only revision-bound scopes, coherent
-state/evidence combinations, closed review files, and portable Git detection.
-The separate `o2i:syntax-sync` AMX fixture failure remains the local return
-point.
+The strategy Finalreview accepts candidate `3fcd241` at 10.0 in every
+dimension. Formalization and Agentic-AI reviews require closed JSON values,
+durable revision-bound evidence, closure-mutable scope exclusion, and
+repository-local Git detection. The separate `o2i:syntax-sync` AMX fixture
+failure remains the local return point.
 
 # Next Action
 
-Close the grouped snapshot findings, verify one coherent candidate, and submit
-that candidate once to the plan-required reviewers.
+Close the final bounded review findings, verify one new coherent candidate,
+and submit that candidate once to the plan-required reviewers.
 
 # Local Return Point
 
