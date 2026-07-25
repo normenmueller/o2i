@@ -6,9 +6,9 @@
 - Authorization scope: implement and independently review the repository-local
   O2I change-governance package only; no extractor, syntax, model, publication,
   or push work.
-- Current gate: `NONE`
-- Gate status: `NOT_REQUIRED`
-- Current node: `o2i:change-governance:correction`
+- Current gate: `o2i-0001-finalreview.2`
+- Gate status: `PENDING`
+- Current node: `o2i:change-governance:finalreview`
 
 # Objective
 
@@ -29,16 +29,24 @@ review process for future O2I Framework changes.
 
 # Verification
 
-Admission reviews are accepted. The first Finalreview of revision `16141ab`
-rejected multi-commit transition validation, immutable lifecycle boundaries,
-and revision-bound review evidence. Governance, model, and paper stages pass;
-the separate `o2i:syntax-sync` AMX fixture failure remains the local return
-point.
+Admission reviews are accepted. Governance is reduced to current-snapshot
+validation; nine focused test groups, current-register validation, model, and
+paper stages pass. The separate `o2i:syntax-sync` AMX fixture failure remains
+the local return point.
+
+# Gate Record
+
+- Gate attempt ID: `o2i-0001-finalreview.2`
+- Scope: the committed HEAD carrying this record and the admitted plan.
+- Git revision: the committed HEAD carrying this record.
+- Mandatory checks: independent strategy, formalization, and Agentic-AI
+  Finalreviews.
+- Finding status: `OPEN`
+- Result: `PENDING`
 
 # Next Action
 
-Close the three grouped Finalreview findings with the external Governance
-Co-Author, rerun focused and staged checks, and create a new review revision.
+Obtain the three independent Finalreviews required by the admitted plan.
 
 # Local Return Point
 
