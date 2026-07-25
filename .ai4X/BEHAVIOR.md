@@ -68,12 +68,17 @@ recorded checks. `COMPLETE` requires every mandatory gate to be `ACCEPTED`.
 Every active gate record in `STATE.md` contains exactly:
 
 - gate ID and scope;
-- reviewed Git revision, or an immutable content digest when Git is
+- immutable subject Git revision, or a content digest when Git is
   unavailable;
 - mandatory checks;
 - finding status: `OPEN | CLOSED`;
 - result: `PENDING | ACCEPTED | REJECTED`;
 - stable repository-local evidence locator.
+
+A review evaluates the immutable subject. Its attestation is necessarily
+recorded afterward and identifies that subject exactly. An attestation-only
+update to `STATE.md` and the referenced evidence does not alter the subject.
+Any later change within the declared subject scope invalidates acceptance.
 
 # Universal Design Rules
 

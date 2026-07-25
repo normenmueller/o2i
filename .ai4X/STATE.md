@@ -1,87 +1,67 @@
 # Handoff
 
-- Observed: 2026-07-24 CEST
+- Observed: 2026-07-25 CEST
 - Work status: `ACTIVE`
 - Execution authorization: `APPROVED`
-- Authorization scope: redesign and independently review O2I `.ai4X`; close
-  the Python extractor authority package; continue `o2i:syntax-sync` without
-  directly editing `mdl/o2i.archimate`; no push.
+- Authorization scope: close and independently review the O2I Agent Memory
+  gate only; no extractor, model, publication, or push.
 - Current gate: `o2i:memory-review`
 - Gate status: `REJECTED`
-- Current node: `o2i:memory-redesign`
+- Current node: `o2i:memory-review`
 
 # Objective
 
-Make O2I repository memory compact, repository-autark, progressively loaded,
-and operationally explicit. Then close the repository-only Python extractor
-contract and resume manual mapping/conformance View synchronization.
+Establish compact, repository-autark, progressively loaded Agent Memory with
+functional relative Codex and Copilot facades and a reproducible review gate.
 
-# Accepted Baseline
+# Subject Scope
 
-- Commit `3a27cac` establishes the mapping/conformance View split and exact
-  Haskell structured-proposition dispatch.
-- Commit `ecf32cd` aligns the model-state derivation arrow.
-- Exact Haskell dispatch is independently accepted under its bounded review
-  matrix. The later complete O2I gate revalidates the current review matrix.
-- Python is only an O2I repository authoring/review tool.
-- The Haskell toolchain formalizes O2I and validates concrete models and
-  instances; the AMX adapter alone validates the concrete ArchiMate profile.
+- `.ai4X/BEHAVIOR.md`
+- `.ai4X/CONTEXT.md`
+- `.ai4X/rules/`
+- `AGENTS.md`
+- `.github/agents/o2i.agent.md`
 
-# Open Findings
+`STATE.md` and `.ai4X/evidence/MEMORY_REVIEW.md` record the gate attestation and
+do not alter the reviewed subject.
 
-Memory review:
+# Repository Facts
 
-- Git-worktree capability must be optional in an archive checkout.
-- Copilot requires a valid agent profile rather than a symlink to
-  `BEHAVIOR.md`.
-- Progressive loading and gate evidence require final closure.
-
-Extractor review:
-
-- Preserve every displayed diagram occurrence and diagnose unresolved
-  references deterministically.
-- Make preset and ad-hoc CLI modes exclusive and safe before writing.
-- Close required preset/View uniqueness independently of `PRESETS`.
-- Strengthen metamorphic tests proving profile metadata and hidden profile
-  topology remain outside Python authority.
-- Update CLI help from model invariants to repository View contracts.
+- Build-provenance support is committed and binds the CLI to one exact source
+  revision.
+- `utl/extract-archimate-view.py` and
+  `utl/test_extract_archimate_view.py` contain unrelated uncommitted work that
+  must be preserved.
+- The user controls pushes.
 
 # Verification
 
-- Committed extractor baseline: `REJECTED`. In an isolated archive, repository
-  preset checks fail and the extractor test suite reports 27 errors in 28
-  tests. Uncommitted worktree corrections are not accepted verification
-  evidence.
-- Committed Memory baseline: repository-local paths and routed Rules resolve,
-  but Git-optional startup, Copilot profile validity, and progressive-loading
-  findings remain open.
+Subject `f2cb56f3d648e60268220c639793a8f7d98b616b` passes isolated archive
+bootstrap, relative facade, Rule-routing, dependency, exact
+`o2i --build-revision`, and Git-optional startup checks.
+
+The independent review rejected that subject because the cross-scope gate
+evidence and handoff states were not yet reproducibly closed.
 
 # Gate Record
 
 - Gate ID: `o2i:memory-review`
-- Scope: repository-autark bootstrap and Agentic-AI fitness.
-- Reviewed revision: `PENDING`
+- Scope: paths listed under `Subject Scope`.
+- Subject revision: `f2cb56f3d648e60268220c639793a8f7d98b616b`
 - Mandatory checks: archive bootstrap, Codex facade, Copilot profile, local
-  Rule routing, dependency scan, progressive-loading review, and gate-contract
-  review.
+  Rule routing, dependency scan, progressive loading, authority, gate/handoff
+  closure, and operational commands.
 - Finding status: `OPEN`
 - Result: `REJECTED`
-- Evidence locator: `.ai4X/STATE.md`
+- Evidence locator: `.ai4X/evidence/MEMORY_REVIEW.md`
 
-# Next Actions
+# Next Action
 
-1. Close the Memory findings and repeat independent review until every
-   required dimension is 10.0/10.0.
-2. Give extractor findings to an external co-author in small packages; repeat
-   independent review until accepted.
-3. Resume user-guided model work at `O2I Syntax - Context`: update stale
-   mapping documentation, then create distinct Candidate carriers for
-   `O2I Syntax - Contextualization`.
+Commit the corrected subject, verify its isolated archive, and repeat an
+independent review until all ten dimensions are 10.0/10.0.
 
 # Local Return Point
 
-After the extractor gate closes, continue `o2i:syntax-sync` with the user.
-`O2I Syntax - Situation` remains an intentionally empty mapping View awaiting
-manual construction. Publication synchronization and the complete O2I gate
-follow only after all mapping and conformance Views pass their respective
-repository or Haskell checks.
+After gate acceptance, resume the Python extractor authority package before
+user-guided `o2i:syntax-sync`. `O2I Syntax - Situation` remains an intentionally
+empty mapping View awaiting manual construction.
