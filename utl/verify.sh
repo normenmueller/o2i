@@ -33,21 +33,32 @@ require() {
 
 cd "$root"
 
-require git
-
-info "Checking repository diff."
-git diff --check HEAD --
-diff_base=${O2I_DIFF_BASE:-}
-if [ -z "$diff_base" ] || \
-  ! git cat-file -e "$diff_base^{commit}" 2>/dev/null; then
-  if git cat-file -e 'HEAD^{commit}^' 2>/dev/null; then
-    diff_base=HEAD^
-  else
-    diff_base=
+git_worktree=false
+git_clean=false
+source_revision=
+if command -v git >/dev/null 2>&1 && \
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  git_worktree=true
+  source_revision=$(git rev-parse --verify HEAD)
+  if [ -z "$(git status --porcelain --untracked-files=all)" ]; then
+    git_clean=true
   fi
-fi
-if [ -n "$diff_base" ]; then
-  git diff --check "${diff_base}..HEAD" --
+  info "Checking repository diff."
+  git diff --check HEAD --
+  diff_base=${O2I_DIFF_BASE:-}
+  if [ -z "$diff_base" ] || \
+    ! git cat-file -e "$diff_base^{commit}" 2>/dev/null; then
+    if git cat-file -e 'HEAD^{commit}^' 2>/dev/null; then
+      diff_base=HEAD^
+    else
+      diff_base=
+    fi
+  fi
+  if [ -n "$diff_base" ]; then
+    git diff --check "${diff_base}..HEAD" --
+  fi
+else
+  info "Git metadata unavailable; skipping worktree-only diff checks."
 fi
 
 verify_model() {
@@ -79,6 +90,7 @@ verify_haskell() {
   info "Checking package licenses and metadata."
   ./utl/check-package-licenses.sh
   for package in \
+    spc/lib/build-provenance \
     spc/lib/core \
     spc/lib/inspection \
     spc/lib/adapter/amx \
@@ -102,6 +114,42 @@ verify_haskell() {
     --build-log="$build_log" \
     --test-log="$test_log" \
     --ghc-options=-Werror
+
+  executable=$(
+    cabal --config-file="$cabal_config" -v0 --project-dir=spc \
+      list-bin o2i-cli:exe:o2i --builddir="$build"
+  )
+  if [ "$git_worktree" = true ] && [ "$git_clean" = true ]; then
+    info "Checking the Git-bound executable revision."
+    actual_revision=$("$executable" --build-revision)
+    if [ "$actual_revision" != "$source_revision" ]; then
+      printf '[o2i|error] Executable revision does not match Git HEAD.\n' >&2
+      exit 1
+    fi
+  elif [ "$git_worktree" = false ]; then
+    if [ -z "${O2I_BUILD_REVISION:-}" ]; then
+      printf '%s\n' \
+        '[o2i|error] O2I_BUILD_REVISION is required without Git metadata.' >&2
+      exit 1
+    fi
+    info "Checking the explicitly bound executable revision."
+    actual_revision=$("$executable" --build-revision)
+    expected_revision=$(
+      printf '%s' "$O2I_BUILD_REVISION" | tr '[:upper:]' '[:lower:]'
+    )
+    if [ "$actual_revision" != "$expected_revision" ]; then
+      printf '%s\n' \
+        '[o2i|error] Executable revision does not match build input.' >&2
+      exit 1
+    fi
+  else
+    info "Checking that a dirty worktree cannot claim a bound revision."
+    if "$executable" --build-revision >/dev/null 2>&1; then
+      printf '%s\n' \
+        '[o2i|error] Dirty worktree produced a revision-bound executable.' >&2
+      exit 1
+    fi
+  fi
 
   info "Checking external Haskell API contracts."
   python3 -B -m unittest discover \

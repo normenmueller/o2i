@@ -5,6 +5,8 @@ module O2I.Cli.Output
   ( OutputStream(..)
   , OutputFailure(..)
   , emitInspectionReport
+  , emitBuildRevision
+  , emitBuildRevisionError
   , emitCommandError
   , emitParserText
   , reportOutputFailure
@@ -24,6 +26,7 @@ import qualified Data.Text as Text
 import qualified Data.Text.Encoding as TextEncoding
 import qualified Data.Text.Lazy.Builder as Builder
 import qualified Data.Text.Lazy.Encoding as LazyTextEncoding
+import O2I.BuildProvenance (BuildRevisionIssue(..))
 import O2I.Cli.Options
 import O2I.Cli.TerminalText (terminalSafeText)
 import O2I.Inspection
@@ -57,6 +60,20 @@ emitInspectionReport mode verbosity report = do
       case mode of
         HumanOutput -> renderHumanReport report
         JsonOutput -> renderInspectionReportJSON report <> "\n"
+
+-- | Write one machine-readable commit identifier to standard output.
+emitBuildRevision :: Text -> IO (Either OutputFailure ())
+emitBuildRevision revision =
+  writeStream StandardOutput stdout (encodeText (revision <> "\n"))
+
+-- | Report why this executable is not bound to one source revision.
+emitBuildRevisionError :: BuildRevisionIssue -> IO (Either OutputFailure ())
+emitBuildRevisionError issue =
+  writeStream
+    StandardError
+    stderr
+    (encodeBuilder
+       (prefixedLine "error" ("Build revision unavailable: " <> issueText issue)))
 
 -- | Write one pre-report command error according to the selected output mode.
 emitCommandError :: OutputMode -> CommandError -> IO (Either OutputFailure ())
@@ -231,6 +248,14 @@ prefixedLine level message = line ("[o2i|" <> level <> "] " <> message)
 
 ensureLineEnding :: Text -> Text
 ensureLineEnding value = Text.stripEnd value <> "\n"
+
+issueText :: BuildRevisionIssue -> Text
+issueText issue =
+  case issue of
+    RevisionNotProvided ->
+      "O2I_BUILD_REVISION was not provided and Git metadata is unavailable."
+    DirtySourceTree -> "the source worktree contains uncommitted changes."
+    InvalidGeneratedProvenance -> "the embedded build provenance is invalid."
 
 resultText :: InspectionResult -> Text
 resultText result =

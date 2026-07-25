@@ -1,4 +1,5 @@
 packages:
+  lib/build-provenance
   lib/core
   lib/inspection
   lib/adapter/amx

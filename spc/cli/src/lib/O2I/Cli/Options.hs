@@ -17,10 +17,13 @@ import Data.Version (showVersion)
 import Options.Applicative
 import qualified Paths_o2i_cli as Package
 
--- | One supported top-level command.
-newtype CliOptions = InspectCommand
-  { inspectCommandOptions :: InspectOptions
-  } deriving (Eq, Show)
+-- | One supported top-level operation.
+data CliOptions
+  = InspectCommand
+      { inspectCommandOptions :: InspectOptions
+      }
+  | BuildRevisionCommand
+  deriving (Eq, Show)
 
 -- | Complete invocation data for one model inspection.
 data InspectOptions = InspectOptions
@@ -53,7 +56,7 @@ data Verbosity
 cliParserInfo :: ParserInfo CliOptions
 cliParserInfo =
   info
-    (cliParser <**> helper <**> versionOption)
+    (operationParser <**> helper <**> versionOption)
     (fullDesc
        <> progDesc "Inspect an O2I model in one exact Archi View."
        <> header "O2I - From orientation to impact, © 2026 nemron")
@@ -62,14 +65,23 @@ cliParserInfo =
 parseCliOptions :: [String] -> ParserResult CliOptions
 parseCliOptions = execParserPure defaultPrefs cliParserInfo
 
-cliParser :: Parser CliOptions
-cliParser =
+operationParser :: Parser CliOptions
+operationParser = buildRevisionParser <|> commandParser
+
+commandParser :: Parser CliOptions
+commandParser =
   hsubparser
     (command
        "inspect"
        (info
           (InspectCommand <$> inspectParser)
           (progDesc "Inspect one View of a native Archi model.")))
+
+buildRevisionParser :: Parser CliOptions
+buildRevisionParser =
+  flag'
+    BuildRevisionCommand
+    (long "build-revision" <> help "Write the bound source commit SHA.")
 
 inspectParser :: Parser InspectOptions
 inspectParser =

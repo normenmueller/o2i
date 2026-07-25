@@ -45,6 +45,7 @@ tests =
         "JSON output"
         (baseArguments <> ["--json"])
         ((== JsonOutput) . inspectOutputMode . inspectCommandOptions)
+    , accepted "build revision" ["--build-revision"] BuildRevisionCommand
     , rejected "missing command" []
     , rejected "missing selector" ["inspect", "model.archimate"]
     , rejected
