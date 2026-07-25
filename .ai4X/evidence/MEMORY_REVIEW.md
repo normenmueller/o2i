@@ -3,7 +3,7 @@
 - Gate attempt ID: `o2i:memory-review/2026-07-25.4`
 - Subject digest:
   `cc5ce3f72f1f68dd1ffbb095c8582ce6e7e2c42208f452c9d76676dbe9f4fb6f`
-- Carrier revision: `3c81fee40be2086f4591b91887831955cc0af2d21`
+- Carrier revision: `3c81fee40be2086f4591b91887831955cc0af2d2`
 - Reviewer role: independent Agentic-AI Memory reviewer
 - Finding status: `CLOSED`
 - Result: `PENDING`
