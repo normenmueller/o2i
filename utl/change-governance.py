@@ -445,10 +445,6 @@ def _scope(
                     f"reviewed_revision: {reference}"
                 )
             continue
-        if not root.joinpath(*path.parts).exists():
-            errors.append(
-                f"{label}.reviewed_scope: current path does not exist: {reference}"
-            )
     return scope
 
 

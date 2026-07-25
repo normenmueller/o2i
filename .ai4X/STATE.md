@@ -29,16 +29,15 @@ review process for future O2I Framework changes.
 
 # Verification
 
-The strategy Finalreview accepts candidate `3fcd241` at 10.0 in every
-dimension. Formalization and Agentic-AI reviews require closed JSON values,
-durable revision-bound evidence, closure-mutable scope exclusion, and
-repository-local Git detection. The separate `o2i:syntax-sync` AMX fixture
-failure remains the local return point.
+Strategy and Agentic-AI accept candidate `c7cdbb9` at 10.0 in every
+dimension. Formalization requires Git-less historical scopes to remain
+structural after later legitimate file deletion. The separate
+`o2i:syntax-sync` AMX fixture failure remains the local return point.
 
 # Next Action
 
-Close the final bounded review findings, verify one new coherent candidate,
-and submit that candidate once to the plan-required reviewers.
+Close the single Git-less portability finding, verify one final candidate, and
+obtain the plan-required confirmations.
 
 # Local Return Point
 

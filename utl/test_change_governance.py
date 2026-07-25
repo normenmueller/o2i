@@ -622,13 +622,6 @@ class ChangeGovernanceTests(unittest.TestCase):
             (
                 lambda repo, refs: repo.write_json(
                     refs[0],
-                    {**repo.read_json(refs[0]), "reviewed_scope": ["missing"]},
-                ),
-                "current path does not exist",
-            ),
-            (
-                lambda repo, refs: repo.write_json(
-                    refs[0],
                     {**repo.read_json(refs[0]), "reviewed_scope": ["../outside"]},
                 ),
                 "canonical repository-relative paths",
@@ -813,6 +806,12 @@ class ChangeGovernanceTests(unittest.TestCase):
             (repo.root / "surface/item.txt").unlink()
             (repo.root / "surface").rmdir()
             self.assertEqual([], governance.validate_repository(repo.root))
+            with mock.patch.object(
+                governance.subprocess,
+                "run",
+                side_effect=FileNotFoundError,
+            ):
+                self.assertEqual([], governance.validate_repository(repo.root))
 
         with tempfile.TemporaryDirectory() as directory:
             repo = Repository(Path(directory))
