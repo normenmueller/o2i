@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the lean O2I change-governance validator."""
+"""Tests for the current-snapshot O2I governance validator."""
 
 from __future__ import annotations
 
@@ -15,11 +15,7 @@ from typing import Any, Optional
 
 ROOT = Path(__file__).resolve().parents[1]
 CHANGE_ROOT = ".ai4X/governance/changes/o2i-0001"
-DEFAULT_REVIEWS = (
-    ("strategy", None, "accepted"),
-    ("formalization", None, "accepted"),
-    ("agentic AI", None, "accepted"),
-)
+CAPABILITIES = ("strategy", "formalization", "agentic AI")
 SPEC = importlib.util.spec_from_file_location(
     "change_governance", Path(__file__).with_name("change-governance.py")
 )
@@ -30,31 +26,19 @@ sys.modules[SPEC.name] = governance
 SPEC.loader.exec_module(governance)
 
 
-def run(root: Path, *arguments: str) -> str:
-    result = subprocess.run(
-        arguments, cwd=root, check=True, capture_output=True, text=True
-    )
-    return result.stdout.strip()
-
-
 class Repository:
-    """Minimal valid governance repository."""
+    """Small Git-optional governance fixture."""
 
     def __init__(self, root: Path) -> None:
         self.root = root
-        self.write(f"{CHANGE_ROOT}/proposal.md", "# Proposal\n\nGeneric benefit.\n")
-        self.write(
-            f"{CHANGE_ROOT}/plan.md",
-            "# Plan\n\n"
-            "## Required Finalreview Capabilities\n\n"
-            "- strategy;\n"
-            "- formalization;\n"
-            "- agentic AI.\n",
-        )
+        self.proposal = f"{CHANGE_ROOT}/proposal.md"
+        self.plan = f"{CHANGE_ROOT}/plan.md"
         self.admission = [
             f"{CHANGE_ROOT}/reviews/admission-strategy.json",
             f"{CHANGE_ROOT}/reviews/admission-formalization.json",
         ]
+        self.write(self.proposal, "# Proposal\n\nGeneric benefit.\n")
+        self.write_plan()
         self.write_admission(0, "strategy-reviewer", "strategy")
         self.write_admission(1, "formalization-reviewer", "formalization")
 
@@ -66,10 +50,26 @@ class Repository:
     def write_json(self, reference: str, value: object) -> None:
         self.write(reference, json.dumps(value, indent=2, sort_keys=True) + "\n")
 
+    def read_json(self, reference: str) -> dict[str, Any]:
+        return json.loads((self.root / reference).read_text(encoding="utf-8"))
+
+    def write_plan(
+        self,
+        surfaces: tuple[str, ...] = ("governance",),
+        capabilities: tuple[str, ...] = CAPABILITIES,
+    ) -> None:
+        bullets = lambda values: "".join(f"- {value};\n" for value in values)
+        self.write(
+            self.plan,
+            "# Plan\n\n"
+            "## Affected Surfaces\n\n"
+            f"{bullets(surfaces)}\n"
+            "## Required Finalreview Capabilities\n\n"
+            f"{bullets(capabilities)}",
+        )
+
     def digest(self) -> str:
-        return hashlib.sha256(
-            (self.root / CHANGE_ROOT / "proposal.md").read_bytes()
-        ).hexdigest()
+        return hashlib.sha256((self.root / self.proposal).read_bytes()).hexdigest()
 
     def write_admission(
         self,
@@ -77,6 +77,7 @@ class Repository:
         reviewer: str,
         capability: str,
         digest: Optional[str] = None,
+        verdict: str = "accepted",
     ) -> None:
         self.write_json(
             self.admission[index],
@@ -86,87 +87,71 @@ class Repository:
                 "phase": "admission",
                 "reviewer": reviewer,
                 "capability": capability,
-                "proposal_path": f"{CHANGE_ROOT}/proposal.md",
+                "proposal_path": self.proposal,
                 "proposal_sha256": digest or self.digest(),
-                "verdict": "accepted",
-                "findings": [],
+                "verdict": verdict,
+                "findings": [] if verdict == "accepted" else ["finding"],
             },
         )
 
     def entry(self, **changes: Any) -> dict[str, Any]:
-        result = {
+        entry = {
             "id": "o2i-0001",
             "title": "Lean Governance",
             "author": "author",
             "coauthors": ["coauthor"],
             "state": "implementing",
-            "proposal": f"{CHANGE_ROOT}/proposal.md",
-            "plan": f"{CHANGE_ROOT}/plan.md",
+            "proposal": self.proposal,
+            "plan": self.plan,
             "admission_reviews": self.admission,
             "final_reviews": [],
             "derived_from": [],
             "depends_on": [],
         }
-        result.update(changes)
-        return result
+        entry.update(changes)
+        return entry
 
     def register(self, *entries: dict[str, Any]) -> None:
         self.write_json(
-            ".ai4X/governance/changes.json",
+            governance.REGISTER,
             {"schema_version": 1, "changes": list(entries)},
         )
-
-    def init_git(self) -> None:
-        run(self.root, "git", "init", "-q")
-        run(self.root, "git", "config", "user.name", "O2I Test")
-        run(self.root, "git", "config", "user.email", "o2i@example.invalid")
-
-    def commit(self, message: str) -> str:
-        run(self.root, "git", "add", "-A")
-        run(self.root, "git", "commit", "-qm", message)
-        return run(self.root, "git", "rev-parse", "HEAD")
 
     def final(
         self,
         capability: str,
-        revision: str,
         reviewer: Optional[str] = None,
+        revision: str = "a" * 40,
         verdict: str = "accepted",
     ) -> str:
-        slug = capability.lower().replace(" ", "-")
-        reference = f"{CHANGE_ROOT}/reviews/final-{slug}.json"
+        reference = (
+            f"{CHANGE_ROOT}/reviews/final-"
+            f"{capability.lower().replace(' ', '-')}.json"
+        )
         self.write_json(
             reference,
             {
-                "reviewer": reviewer or slug + "-reviewer",
+                "schema_version": 1,
+                "change": "o2i-0001",
+                "phase": "final",
+                "reviewer": reviewer or capability.lower() + "-reviewer",
                 "capability": capability,
                 "reviewed_revision": revision,
+                "reviewed_scope": ["generic O2I governance"],
                 "verdict": verdict,
+                "scores": {"quality": 10.0},
                 "findings": [] if verdict == "accepted" else ["finding"],
             },
         )
         return reference
 
-    def done(
-        self,
-        reviews: tuple[tuple[str, Optional[str], str], ...] = DEFAULT_REVIEWS,
-        revision_override: Optional[str] = None,
-    ) -> str:
-        self.register(self.entry(state="reviewing"))
-        self.init_git()
-        revision = self.commit("review subject")
-        references = [
-            self.final(
-                capability,
-                revision_override or revision,
-                reviewer=reviewer,
-                verdict=verdict,
-            )
-            for capability, reviewer, verdict in reviews
-        ]
-        self.register(self.entry(state="done", final_reviews=references))
-        self.commit("attest reviews")
-        return revision
+    def done(self) -> list[str]:
+        reviews = [self.final(capability) for capability in CAPABILITIES]
+        self.register(self.entry(state="done", final_reviews=reviews))
+        return reviews
+
+    def init_git(self) -> None:
+        subprocess.run(["git", "init", "-q"], cwd=self.root, check=True)
 
 
 def change(
@@ -191,182 +176,298 @@ def change(
 
 
 class ChangeGovernanceTests(unittest.TestCase):
-    def test_current_repository_is_valid(self) -> None:
+    def assert_error(self, errors: list[str], message: str) -> None:
+        self.assertTrue(
+            any(message in error for error in errors),
+            f"{message!r} not found in {errors!r}",
+        )
+
+    def test_current_repository_and_gitless_done_snapshot_are_valid(self) -> None:
         self.assertEqual([], governance.validate_repository(ROOT))
-
-    def test_admission_digest_and_roles(self) -> None:
-        for case in ("digest", "role"):
-            with self.subTest(case=case), tempfile.TemporaryDirectory() as directory:
-                repo = Repository(Path(directory))
-                if case == "digest":
-                    repo.write_admission(0, "strategy-reviewer", "strategy", "0" * 64)
-                else:
-                    repo.write_admission(0, "author", "strategy")
-                repo.register(repo.entry())
-                errors = governance.validate_repository(repo.root)
-                expected = (
-                    "proposal_sha256" if case == "digest" else "reviewer collides"
-                )
-                self.assertTrue(any(expected in error for error in errors))
-
-    def test_ids_states_artifacts_and_base_transition(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             repo = Repository(Path(directory))
-            repo.register(repo.entry(id="change-1"))
-            self.assertTrue(
-                any(
-                    "must match o2i-NNNN" in error
-                    for error in governance.validate_repository(repo.root)
-                )
-            )
-            repo.register(repo.entry(state="unknown"))
-            self.assertTrue(
-                any(
-                    "unknown state" in error
-                    for error in governance.validate_repository(repo.root)
-                )
-            )
-            repo.register(repo.entry(proposal=".ai4X/governance/proposal.md"))
-            self.assertTrue(
-                any(
-                    "proposal must be" in error
-                    for error in governance.validate_repository(repo.root)
-                )
-            )
-            repo.register(repo.entry(state="implementing", plan=""))
-            self.assertTrue(
-                any(
-                    "has no plan" in error
-                    for error in governance.validate_repository(repo.root)
-                )
-            )
-            repo.register(
-                repo.entry(state="proposed", plan="", admission_reviews=[])
-            )
-            repo.init_git()
-            base = repo.commit("proposed")
-            repo.register(repo.entry(state="implementing"))
-            self.assertTrue(
-                any(
-                    "invalid transition" in error
-                    for error in governance.validate_repository(repo.root, base)
-                )
-            )
+            repo.done()
+            self.assertEqual([], governance.validate_repository(repo.root))
 
-    def test_graph_contracts(self) -> None:
-        cases = {
-            "unknown": {
-                "o2i-0001": change("o2i-0001", depends_on=("o2i-9999",))
-            },
-            "self": {
-                "o2i-0001": change("o2i-0001", derived_from=("o2i-0001",))
-            },
-            "lineage cycle": {
-                "o2i-0001": change("o2i-0001", derived_from=("o2i-0002",)),
-                "o2i-0002": change("o2i-0002", derived_from=("o2i-0001",)),
-            },
-            "dependency cycle": {
-                "o2i-0001": change("o2i-0001", depends_on=("o2i-0002",)),
-                "o2i-0002": change("o2i-0002", depends_on=("o2i-0001",)),
-            },
-            "open dependency": {
-                "o2i-0001": change(
-                    "o2i-0001", "done", depends_on=("o2i-0002",)
-                ),
-                "o2i-0002": change("o2i-0002", "implementing"),
-            },
-        }
-        expected = ("unknown id", "self-edge", "cycle", "cycle", "open dependency")
-        for (name, graph), message in zip(cases.items(), expected):
-            with self.subTest(case=name):
-                self.assertTrue(
-                    any(message in error for error in governance.validate_graphs(graph))
+    def test_register_schema_state_and_paths(self) -> None:
+        cases = (
+            ({"id": "change-1"}, "must match o2i-NNNN"),
+            ({"state": "unknown"}, "unknown state"),
+            ({"proposal": "proposal.md"}, "proposal must be"),
+            ({"plan": ""}, "active change requires a plan"),
+            (
+                {
+                    "final_reviews": [
+                        f"{CHANGE_ROOT}/reviews/nested/final-review.json"
+                    ]
+                },
+                "invalid Finalreview path",
+            ),
+        )
+        for changes, message in cases:
+            with self.subTest(message=message), tempfile.TemporaryDirectory() as path:
+                repo = Repository(Path(path))
+                repo.register(repo.entry(**changes))
+                self.assert_error(
+                    governance.validate_repository(repo.root), message
                 )
 
-    def test_finalreview_capability_verdict_revision_and_roles(self) -> None:
-        cases = {
-            "capability": (
-                (
-                    ("strategy", None, "accepted"),
-                    ("formalization", None, "accepted"),
-                    ("other", None, "accepted"),
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory))
+            entry = repo.entry()
+            del entry["title"]
+            repo.register(entry)
+            self.assert_error(
+                governance.validate_repository(repo.root), "missing fields: title"
+            )
+
+    def test_referenced_artifacts_must_be_regular_files(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory))
+            target = repo.root / "proposal-target.md"
+            target.write_text("# Target\n", encoding="utf-8")
+            (repo.root / repo.proposal).unlink()
+            (repo.root / repo.proposal).symlink_to(target)
+            repo.register(repo.entry())
+            self.assert_error(
+                governance.validate_repository(repo.root),
+                "symlinks are not allowed",
+            )
+
+    def test_admission_digest_capabilities_and_roles(self) -> None:
+        cases = (
+            (
+                lambda repo: repo.write_admission(
+                    0, "strategy-reviewer", "strategy", "0" * 64
                 ),
-                None,
-                "agentic AI",
+                "proposal_sha256",
             ),
-            "verdict": (
-                (
-                    ("strategy", None, "accepted"),
-                    ("formalization", None, "rejected"),
-                    ("agentic AI", None, "accepted"),
-                ),
-                None,
-                "formalization",
-            ),
-            "revision": (DEFAULT_REVIEWS, "0" * 40, "exact Git"),
-            "author collision": (
-                (
-                    ("strategy", "author", "accepted"),
-                    ("formalization", None, "accepted"),
-                    ("agentic AI", None, "accepted"),
-                ),
-                None,
+            (
+                lambda repo: repo.write_admission(0, "author", "strategy"),
                 "reviewer collides",
             ),
-            "reviewer collision": (
-                (
-                    ("strategy", "same-reviewer", "accepted"),
-                    ("formalization", "same-reviewer", "accepted"),
-                    ("agentic AI", None, "accepted"),
+            (
+                lambda repo: repo.write_admission(
+                    1, "strategy-reviewer", "formalization"
                 ),
-                None,
-                "reviewers must be distinct",
+                "Admission reviewers must be distinct",
             ),
-        }
-        for name, (reviews, revision, message) in cases.items():
-            with self.subTest(case=name), tempfile.TemporaryDirectory() as directory:
-                repo = Repository(Path(directory))
-                repo.done(reviews, revision)
-                errors = governance.validate_repository(repo.root)
-                self.assertTrue(any(message in error for error in errors))
-
-    def test_finalreview_scope_is_transition_bound(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            repo = Repository(Path(directory))
-            repo.register(repo.entry(state="reviewing"))
-            repo.init_git()
-            revision = repo.commit("review subject")
-            references = [
-                repo.final(capability, revision)
-                for capability, _, _ in DEFAULT_REVIEWS
-            ]
-            repo.write("unrelated.txt", "committed unrelated work\n")
-            repo.register(repo.entry(state="done", final_reviews=references))
-            repo.commit("invalid attestation scope")
-            errors = governance.validate_repository(repo.root, revision)
-            self.assertTrue(
-                any(
-                    "files changed after reviewed revision" in error
-                    for error in errors
+            (
+                lambda repo: repo.write_admission(1, "reviewer", "other"),
+                "capability: invalid",
+            ),
+        )
+        for mutate, message in cases:
+            with self.subTest(message=message), tempfile.TemporaryDirectory() as path:
+                repo = Repository(Path(path))
+                mutate(repo)
+                repo.register(repo.entry())
+                self.assert_error(
+                    governance.validate_repository(repo.root), message
                 )
-            )
+
+    def test_active_plan_declares_surfaces_and_review_capabilities(self) -> None:
+        cases = (
+            ((), CAPABILITIES, "Affected Surfaces"),
+            (("governance",), (), "Required Finalreview Capabilities"),
+        )
+        for surfaces, capabilities, message in cases:
+            with self.subTest(message=message), tempfile.TemporaryDirectory() as path:
+                repo = Repository(Path(path))
+                repo.write_plan(surfaces, capabilities)
+                repo.register(repo.entry())
+                self.assert_error(
+                    governance.validate_repository(repo.root), message
+                )
+
+    def test_lineage_and_dependencies_are_separate_dags(self) -> None:
+        cases = (
+            (
+                {"o2i-0001": change("o2i-0001", depends_on=("o2i-9999",))},
+                "unknown id",
+            ),
+            (
+                {"o2i-0001": change("o2i-0001", derived_from=("o2i-0001",))},
+                "self-edge",
+            ),
+            (
+                {
+                    "o2i-0001": change("o2i-0001", derived_from=("o2i-0002",)),
+                    "o2i-0002": change("o2i-0002", derived_from=("o2i-0001",)),
+                },
+                "derived_from: cycle",
+            ),
+            (
+                {
+                    "o2i-0001": change("o2i-0001", depends_on=("o2i-0002",)),
+                    "o2i-0002": change("o2i-0002", depends_on=("o2i-0001",)),
+                },
+                "depends_on: cycle",
+            ),
+            (
+                {
+                    "o2i-0001": change(
+                        "o2i-0001", "done", depends_on=("o2i-0002",)
+                    ),
+                    "o2i-0002": change("o2i-0002", "implementing"),
+                },
+                "open dependency",
+            ),
+        )
+        for graph, message in cases:
+            with self.subTest(message=message):
+                self.assert_error(governance.validate_graphs(graph), message)
+
+    def test_done_finalreview_contract(self) -> None:
+        cases = (
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {**repo.read_json(refs[0]), "schema_version": 2},
+                ),
+                "schema_version: must be 1",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {**repo.read_json(refs[0]), "change": "o2i-9999"},
+                ),
+                "change: must be 'o2i-0001'",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {**repo.read_json(refs[0]), "phase": "admission"},
+                ),
+                "phase: must be 'final'",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {**repo.read_json(refs[0]), "reviewed_revision": "abc"},
+                ),
+                "must be a full Git SHA",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {**repo.read_json(refs[0]), "reviewed_scope": []},
+                ),
+                "reviewed_scope: must not be empty",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {**repo.read_json(refs[0]), "reviewed_scope": ["/absolute"]},
+                ),
+                "canonical repository-relative paths",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {**repo.read_json(refs[0]), "reviewed_scope": ["../outside"]},
+                ),
+                "canonical repository-relative paths",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {**repo.read_json(refs[0]), "scores": {}},
+                ),
+                "scores: must be a nonempty object",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {**repo.read_json(refs[0]), "scores": {"quality": 9.9}},
+                ),
+                "done requires 10.0",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {**repo.read_json(refs[0]), "findings": ["finding"]},
+                ),
+                "accepted review must have no findings",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {**repo.read_json(refs[0]), "reviewer": "author"},
+                ),
+                "reviewer collides",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[1],
+                    {
+                        **repo.read_json(refs[1]),
+                        "reviewer": repo.read_json(refs[0])["reviewer"],
+                    },
+                ),
+                "Finalreview reviewers must be distinct",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {**repo.read_json(refs[0]), "capability": "other"},
+                ),
+                "not required by plan",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {
+                        **repo.read_json(refs[0]),
+                        "verdict": "rejected",
+                        "findings": ["finding"],
+                    },
+                ),
+                "done requires accepted Finalreviews",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[1],
+                    {**repo.read_json(refs[1]), "reviewed_revision": "b" * 40},
+                ),
+                "must bind one reviewed_revision",
+            ),
+        )
+        for mutate, message in cases:
+            with self.subTest(message=message), tempfile.TemporaryDirectory() as path:
+                repo = Repository(Path(path))
+                references = repo.done()
+                mutate(repo, references)
+                self.assert_error(
+                    governance.validate_repository(repo.root), message
+                )
 
         with tempfile.TemporaryDirectory() as directory:
             repo = Repository(Path(directory))
-            revision = repo.done()
-            repo.write("unrelated.txt", "uncommitted user work\n")
-            self.assertEqual(
-                [], governance.validate_repository(repo.root, revision)
+            references = repo.done()
+            entry = repo.entry(state="done", final_reviews=references[:-1])
+            repo.register(entry)
+            self.assert_error(
+                governance.validate_repository(repo.root),
+                "must exactly cover plan capabilities",
             )
 
-            (repo.root / "unrelated.txt").unlink()
-            done_revision = run(repo.root, "git", "rev-parse", "HEAD")
-            repo.write("later.txt", "regular later work\n")
-            repo.commit("later repository work")
+        errors: list[str] = []
+        self.assertEqual(
+            (),
+            governance._findings({"findings": "invalid"}, "review", errors),
+        )
+        self.assertEqual(["review.findings: must be an array"], errors)
+
+    def test_git_revision_existence_is_checked_only_with_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory))
+            repo.done()
             self.assertEqual([], governance.validate_repository(repo.root))
-            self.assertEqual(
-                [],
-                governance.validate_repository(repo.root, done_revision),
+            repo.init_git()
+            self.assert_error(
+                governance.validate_repository(repo.root),
+                "Git commit does not exist",
             )
 
     def test_projections_are_deterministic(self) -> None:

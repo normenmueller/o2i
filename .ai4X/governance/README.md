@@ -33,9 +33,10 @@ proposal.
 - Backlog and Mermaid output are generated projections, never additional
   authorities.
 
-Proposal and plan files remain immutable while their bound reviews are used.
-Changing a reviewed proposal requires a new proposal. Changing an implementation
-after Finalreview requires another Finalreview of the new revision.
+A proposal may be corrected while it remains `proposed`; its Admission reviews
+must then be renewed for the new digest. From `admitted` onward, proposal and
+Admission reviews remain fixed. Changing an implementation after Finalreview
+requires another Finalreview of the new revision.
 
 ## Lifecycle
 
@@ -48,10 +49,7 @@ reviewing    -> implementing | done | withdrawn
 
 `done`, `rejected`, and `withdrawn` are terminal. A failed Finalreview returns
 the change to `implementing`; it does not create a workaround or an automatic
-review loop.
-
-The initial `o2i-0001` register bootstrap is the only change allowed to start
-in `implementing`. Every later change starts in `proposed`.
+review loop. Every new change starts in `proposed`.
 
 ## Admission
 
@@ -88,12 +86,11 @@ The implementation plan declares the required Finalreview capabilities.
 Each accepted Finalreview identifies one exact Git revision. A reviewer is
 distinct from the change author and co-authors.
 
-All required reviews for `done` refer to the same revision. The transition
-from `reviewing` to `done` checks that committed history between this revision
-and the attestation commit changes only the referenced Finalreview files and
-`.ai4X/governance/changes.json`. Unrelated worktree changes are outside this
-one-time closure check; later repository work does not reopen a completed
-change.
+All required reviews for `done` refer to the same revision and declare their
+reviewed scope. Acceptance requires no finding and 10.0 in every reported
+dimension. Git carries implementation history; the governance validator checks
+the current register and its referenced evidence rather than reconstructing a
+workflow from commits.
 
 ## Tool
 
@@ -101,11 +98,11 @@ The validator uses only the Python 3.9 standard library and is deterministic:
 
 ```sh
 python3 utl/change-governance.py validate
-python3 utl/change-governance.py validate --base <git-revision>
 python3 utl/change-governance.py backlog
 python3 utl/change-governance.py graph
 ```
 
-`--base` additionally checks state transitions and newly registered changes
-against an earlier repository revision. The validator checks records and
-evidence; expert judgment remains with the declared reviewers.
+The validator checks current records, dependencies, and evidence. With Git
+metadata it also checks referenced revisions; without Git it retains structural
+validation. Historical process discipline remains visible in Git and is judged
+by the declared reviewers.

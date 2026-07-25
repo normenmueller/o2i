@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate and project the lean O2I change-governance register."""
+"""Validate and project the current O2I change-governance snapshot."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import re
+import stat
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -15,12 +16,12 @@ from typing import Any, Mapping, Optional, Sequence
 
 REGISTER = ".ai4X/governance/changes.json"
 SCHEMA_VERSION = 1
-BOOTSTRAP_ID = "o2i-0001"
 ID_PATTERN = re.compile(r"^o2i-[0-9]{4}$")
-REVISION_PATTERN = re.compile(r"^[0-9a-f]{40,64}$")
+REVISION_PATTERN = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
+FINAL_REVIEW_PATTERN = re.compile(r"^final-[a-z0-9][a-z0-9-]*\.json$")
 REQUIRED_ADMISSION = {"strategy", "formalization"}
-FINAL_CAPABILITIES_HEADING = "## Required Finalreview Capabilities"
-
+ADMISSION_REQUIRED = {"admitted", "implementing", "reviewing", "done"}
+PLAN_REQUIRED = {"implementing", "reviewing", "done"}
 STATES = {
     "proposed",
     "admitted",
@@ -30,18 +31,7 @@ STATES = {
     "rejected",
     "withdrawn",
 }
-ADMITTED = {"admitted", "implementing", "reviewing", "done"}
-PLANNED = {"implementing", "reviewing", "done"}
-TRANSITIONS = {
-    "proposed": {"admitted", "rejected", "withdrawn"},
-    "admitted": {"implementing", "withdrawn"},
-    "implementing": {"reviewing", "withdrawn"},
-    "reviewing": {"implementing", "done", "withdrawn"},
-    "done": set(),
-    "rejected": set(),
-    "withdrawn": set(),
-}
-CHANGE_FIELDS = (
+CHANGE_FIELDS = {
     "id",
     "title",
     "author",
@@ -53,7 +43,7 @@ CHANGE_FIELDS = (
     "final_reviews",
     "derived_from",
     "depends_on",
-)
+}
 
 
 @dataclass(frozen=True)
@@ -73,32 +63,32 @@ class Change:
     depends_on: tuple[str, ...]
 
 
-def _text(value: object, field: str, errors: list[str], empty: bool = False) -> str:
+def _text(value: object, label: str, errors: list[str], empty: bool = False) -> str:
     if not isinstance(value, str):
-        errors.append(f"{field}: must be a string")
+        errors.append(f"{label}: must be a string")
         return ""
     if not empty and not value.strip():
-        errors.append(f"{field}: must not be empty")
+        errors.append(f"{label}: must not be empty")
     return value
 
 
-def _texts(value: object, field: str, errors: list[str]) -> tuple[str, ...]:
+def _texts(value: object, label: str, errors: list[str]) -> tuple[str, ...]:
     if not isinstance(value, list):
-        errors.append(f"{field}: must be an array of strings")
+        errors.append(f"{label}: must be an array of strings")
         return ()
-    result = tuple(
-        _text(item, f"{field}[{index}]", errors)
+    values = tuple(
+        _text(item, f"{label}[{index}]", errors)
         for index, item in enumerate(value)
     )
-    if len(result) != len(set(result)):
-        errors.append(f"{field}: must not contain duplicates")
-    return result
+    if len(values) != len(set(values)):
+        errors.append(f"{label}: must not contain duplicates")
+    return values
 
 
 def parse_register(
     data: Mapping[str, Any], source: str = REGISTER
 ) -> tuple[dict[str, Change], list[str]]:
-    """Parse the canonical register with deterministic diagnostics."""
+    """Parse the register with deterministic diagnostics."""
 
     errors: list[str] = []
     unknown = sorted(set(data) - {"schema_version", "changes"})
@@ -106,20 +96,18 @@ def parse_register(
         errors.append(f"{source}: unknown fields: {', '.join(unknown)}")
     if data.get("schema_version") != SCHEMA_VERSION:
         errors.append(f"{source}: schema_version must be {SCHEMA_VERSION}")
-
     entries = data.get("changes")
     if not isinstance(entries, list):
-        return {}, [*errors, f"{source}: changes must be an array of tables"]
+        return {}, [*errors, f"{source}: changes must be an array"]
 
     changes: dict[str, Change] = {}
-    expected = set(CHANGE_FIELDS)
     for index, raw in enumerate(entries):
         label = f"{source}:changes[{index}]"
         if not isinstance(raw, dict):
-            errors.append(f"{label}: must be a table")
+            errors.append(f"{label}: must be an object")
             continue
-        missing = sorted(expected - set(raw))
-        extra = sorted(set(raw) - expected)
+        missing = sorted(CHANGE_FIELDS - set(raw))
+        extra = sorted(set(raw) - CHANGE_FIELDS)
         if missing:
             errors.append(f"{label}: missing fields: {', '.join(missing)}")
         if extra:
@@ -164,25 +152,7 @@ def parse_register(
     return changes, errors
 
 
-def _json(
-    path: Path, label: str, errors: list[str]
-) -> Optional[Mapping[str, Any]]:
-    try:
-        with path.open(encoding="utf-8") as handle:
-            value = json.load(handle)
-    except FileNotFoundError:
-        errors.append(f"{label}: file does not exist")
-        return None
-    except json.JSONDecodeError as exc:
-        errors.append(f"{label}: invalid JSON: {exc}")
-        return None
-    if not isinstance(value, dict):
-        errors.append(f"{label}: must contain a JSON object")
-        return None
-    return value
-
-
-def _file(
+def _artifact(
     root: Path, reference: str, label: str, errors: list[str]
 ) -> Optional[Path]:
     path = PurePosixPath(reference)
@@ -194,25 +164,52 @@ def _file(
     ):
         errors.append(f"{label}: must be a canonical repository-relative path")
         return None
-    candidate = root.joinpath(*path.parts)
+
+    candidate = root
+    for part in path.parts:
+        candidate /= part
+        if candidate.is_symlink():
+            errors.append(f"{label}: symlinks are not allowed: {reference}")
+            return None
+    try:
+        mode = candidate.stat().st_mode
+    except FileNotFoundError:
+        errors.append(f"{label}: file does not exist: {reference}")
+        return None
+    if not stat.S_ISREG(mode):
+        errors.append(f"{label}: must be a regular file: {reference}")
+        return None
     try:
         candidate.resolve().relative_to(root.resolve())
     except ValueError:
         errors.append(f"{label}: path escapes repository")
         return None
-    if not candidate.is_file():
-        errors.append(f"{label}: {reference!r} does not exist")
-        return None
     return candidate
 
 
-def _review_field(
-    data: Mapping[str, Any], field: str, label: str, errors: list[str]
+def _json_file(
+    path: Optional[Path], label: str, errors: list[str]
+) -> Optional[Mapping[str, Any]]:
+    if path is None:
+        return None
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        errors.append(f"{label}: invalid JSON: {exc}")
+        return None
+    if not isinstance(value, dict):
+        errors.append(f"{label}: must contain a JSON object")
+        return None
+    return value
+
+
+def _field(
+    data: Mapping[str, Any], name: str, label: str, errors: list[str]
 ) -> str:
-    if field not in data:
-        errors.append(f"{label}: missing field {field!r}")
+    if name not in data:
+        errors.append(f"{label}: missing field {name!r}")
         return ""
-    return _text(data[field], f"{label}.{field}", errors)
+    return _text(data[name], f"{label}.{name}", errors)
 
 
 def _findings(
@@ -225,25 +222,49 @@ def _findings(
     return tuple(value)
 
 
+def _section(
+    plan: Path, heading: str, label: str, errors: list[str]
+) -> tuple[str, ...]:
+    try:
+        lines = plan.read_text(encoding="utf-8").splitlines()
+    except UnicodeDecodeError:
+        errors.append(f"{label}: plan must be UTF-8")
+        return ()
+    try:
+        start = lines.index(f"## {heading}") + 1
+    except ValueError:
+        errors.append(f"{label}: missing section {heading!r}")
+        return ()
+    items: list[str] = []
+    for line in lines[start:]:
+        if line.startswith("## "):
+            break
+        if line.strip().startswith("- "):
+            item = line.strip()[2:].rstrip(";.").strip()
+            if item:
+                items.append(item)
+    if not items:
+        errors.append(f"{label}: section {heading!r} must not be empty")
+    if len(items) != len(set(items)):
+        errors.append(f"{label}: section {heading!r} contains duplicates")
+    return tuple(items)
+
+
 def _validate_admission(
     root: Path, change: Change, proposal: Path, errors: list[str]
 ) -> None:
     digest = hashlib.sha256(proposal.read_bytes()).hexdigest()
-    protected_roles = {change.author, *change.coauthors}
-    reviewers: list[str] = []
+    protected = {change.author, *change.coauthors}
     accepted: list[str] = []
-
+    reviewers: list[str] = []
     for reference in change.admission_reviews:
         label = f"{change.id}:Admission:{reference}"
-        path = _file(root, reference, label, errors)
-        data = _json(path, label, errors) if path else None
+        data = _json_file(_artifact(root, reference, label, errors), label, errors)
         if data is None:
             continue
-        reviewer = _review_field(data, "reviewer", label, errors)
-        capability = _review_field(data, "capability", label, errors)
-        verdict = _review_field(data, "verdict", label, errors)
-        findings = _findings(data, label, errors)
-
+        reviewer = _field(data, "reviewer", label, errors)
+        capability = _field(data, "capability", label, errors)
+        verdict = _field(data, "verdict", label, errors)
         expected = {
             "schema_version": SCHEMA_VERSION,
             "proposal": change.id,
@@ -254,13 +275,14 @@ def _validate_admission(
         for field, value in expected.items():
             if data.get(field) != value:
                 errors.append(f"{label}.{field}: must be {value!r}")
+        findings = _findings(data, label, errors)
         if capability not in REQUIRED_ADMISSION:
             errors.append(f"{label}.capability: invalid {capability!r}")
         if verdict not in {"accepted", "rejected"}:
             errors.append(f"{label}.verdict: invalid {verdict!r}")
         if verdict == "accepted" and findings:
             errors.append(f"{label}: accepted review must have no findings")
-        if reviewer in protected_roles:
+        if reviewer in protected:
             errors.append(f"{label}: reviewer collides with author or co-author")
         reviewers.append(reviewer)
         if verdict == "accepted":
@@ -268,7 +290,7 @@ def _validate_admission(
 
     if len(reviewers) != len(set(reviewers)):
         errors.append(f"{change.id}: Admission reviewers must be distinct")
-    if change.state in ADMITTED:
+    if change.state in ADMISSION_REQUIRED:
         if len(change.admission_reviews) != 2:
             errors.append(f"{change.id}: needs exactly two Admission reviews")
         if sorted(accepted) != sorted(REQUIRED_ADMISSION):
@@ -277,111 +299,126 @@ def _validate_admission(
             )
 
 
-def _required_capabilities(plan: Path, label: str, errors: list[str]) -> set[str]:
-    lines = plan.read_text(encoding="utf-8").splitlines()
-    try:
-        start = lines.index(FINAL_CAPABILITIES_HEADING) + 1
-    except ValueError:
-        errors.append(f"{label}: missing {FINAL_CAPABILITIES_HEADING!r}")
-        return set()
-    capabilities: list[str] = []
-    for line in lines[start:]:
-        if line.startswith("## "):
-            break
-        if line.strip().startswith("- "):
-            capabilities.append(line.strip()[2:].rstrip(";.").strip())
-    if not capabilities:
-        errors.append(f"{label}: declares no Finalreview capabilities")
-    if len(capabilities) != len(set(capabilities)):
-        errors.append(f"{label}: declares duplicate Finalreview capabilities")
-    return set(capabilities)
-
-
-def _git(root: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        ["git", *arguments],
-        cwd=root,
-        check=False,
-        capture_output=True,
-        text=True,
+def _git_metadata(root: Path) -> bool:
+    return (
+        subprocess.run(
+            ["git", "rev-parse", "--git-dir"],
+            cwd=root,
+            check=False,
+            capture_output=True,
+        ).returncode
+        == 0
     )
 
 
-def _exact_revision(root: Path, revision: str) -> bool:
-    if not REVISION_PATTERN.fullmatch(revision):
-        return False
-    result = _git(root, "rev-parse", "--verify", f"{revision}^{{commit}}")
-    return result.returncode == 0 and result.stdout.strip().lower() == revision.lower()
+def _git_revision_exists(root: Path, revision: str) -> bool:
+    return (
+        subprocess.run(
+            ["git", "cat-file", "-e", f"{revision}^{{commit}}"],
+            cwd=root,
+            check=False,
+            capture_output=True,
+        ).returncode
+        == 0
+    )
 
 
-def _validate_final(
-    root: Path, change: Change, plan: Path, errors: list[str]
-) -> Optional[str]:
-    required = _required_capabilities(plan, f"{change.id}:plan", errors)
-    protected_roles = {change.author, *change.coauthors}
-    accepted: dict[str, list[tuple[str, str]]] = {}
+def _scope(value: object, label: str, errors: list[str]) -> tuple[str, ...]:
+    scope = _texts(value, f"{label}.reviewed_scope", errors)
+    if not scope:
+        errors.append(f"{label}.reviewed_scope: must not be empty")
+    for reference in scope:
+        path = PurePosixPath(reference)
+        if path.is_absolute() or ".." in path.parts or str(path) != reference:
+            errors.append(
+                f"{label}.reviewed_scope: must contain canonical "
+                "repository-relative paths"
+            )
+    return scope
 
+
+def _scores(
+    value: object, label: str, done: bool, errors: list[str]
+) -> Mapping[str, float]:
+    if not isinstance(value, dict) or not value:
+        errors.append(f"{label}.scores: must be a nonempty object")
+        return {}
+    scores: dict[str, float] = {}
+    for dimension, score in value.items():
+        if not isinstance(dimension, str) or not dimension.strip():
+            errors.append(f"{label}.scores: dimensions must be nonempty strings")
+            continue
+        if isinstance(score, bool) or not isinstance(score, (int, float)):
+            errors.append(f"{label}.scores.{dimension}: must be numeric")
+            continue
+        scores[dimension] = float(score)
+        if done and float(score) != 10.0:
+            errors.append(f"{label}.scores.{dimension}: done requires 10.0")
+    return scores
+
+
+def _validate_finals(
+    root: Path,
+    change: Change,
+    required: set[str],
+    errors: list[str],
+) -> None:
+    protected = {change.author, *change.coauthors}
+    reviewers: list[str] = []
+    accepted_capabilities: list[str] = []
+    accepted_revisions: list[str] = []
+    has_git = _git_metadata(root)
     for reference in change.final_reviews:
         label = f"{change.id}:Finalreview:{reference}"
-        path = _file(root, reference, label, errors)
-        data = _json(path, label, errors) if path else None
+        data = _json_file(_artifact(root, reference, label, errors), label, errors)
         if data is None:
             continue
-        reviewer = _review_field(data, "reviewer", label, errors)
-        capability = _review_field(data, "capability", label, errors)
-        revision = _review_field(data, "reviewed_revision", label, errors)
-        verdict = _review_field(data, "verdict", label, errors)
+        reviewer = _field(data, "reviewer", label, errors)
+        capability = _field(data, "capability", label, errors)
+        revision = _field(data, "reviewed_revision", label, errors)
+        verdict = _field(data, "verdict", label, errors)
+        expected = {
+            "schema_version": SCHEMA_VERSION,
+            "change": change.id,
+            "phase": "final",
+        }
+        for field, value in expected.items():
+            if data.get(field) != value:
+                errors.append(f"{label}.{field}: must be {value!r}")
+        _scope(data.get("reviewed_scope"), label, errors)
+        _scores(data.get("scores"), label, change.state == "done", errors)
         findings = _findings(data, label, errors)
-
-        if reviewer in protected_roles:
+        if not REVISION_PATTERN.fullmatch(revision):
+            errors.append(f"{label}.reviewed_revision: must be a full Git SHA")
+        elif has_git and not _git_revision_exists(root, revision):
+            errors.append(f"{label}.reviewed_revision: Git commit does not exist")
+        if reviewer in protected:
             errors.append(f"{label}: reviewer collides with author or co-author")
         if verdict not in {"accepted", "rejected"}:
             errors.append(f"{label}.verdict: invalid {verdict!r}")
-        if not _exact_revision(root, revision):
-            errors.append(f"{label}: reviewed_revision is not an exact Git revision")
         if verdict == "accepted" and findings:
             errors.append(f"{label}: accepted review must have no findings")
+        if capability not in required:
+            errors.append(f"{label}.capability: not required by plan")
+        if change.state == "done" and verdict != "accepted":
+            errors.append(f"{label}: done requires accepted Finalreviews")
+        reviewers.append(reviewer)
         if verdict == "accepted":
-            accepted.setdefault(capability, []).append((reviewer, revision.lower()))
+            accepted_capabilities.append(capability)
+            if REVISION_PATTERN.fullmatch(revision):
+                accepted_revisions.append(revision)
 
-    if change.state != "done":
-        return None
-
-    selected: list[tuple[str, str]] = []
-    for capability in sorted(required):
-        reviews = accepted.get(capability, [])
-        if len(reviews) != 1:
-            errors.append(
-                f"{change.id}: needs exactly one accepted {capability!r} Finalreview"
-            )
-        else:
-            selected.append(reviews[0])
-    reviewers = [reviewer for reviewer, _ in selected]
     if len(reviewers) != len(set(reviewers)):
-        errors.append(f"{change.id}: required Finalreview reviewers must be distinct")
-    revisions = {revision for _, revision in selected}
-    if len(revisions) != 1:
-        errors.append(f"{change.id}: accepted Finalreviews must bind one revision")
-        return None
-
-    return next(iter(revisions))
-
-
-def _validate_final_scope(
-    root: Path, change: Change, revision: str, errors: list[str]
-) -> None:
-    result = _git(root, "diff", "--name-only", f"{revision}..HEAD", "--")
-    if result.returncode != 0:
-        errors.append(f"{change.id}: cannot verify Finalreview scope")
-        return
-    allowed = {REGISTER, *change.final_reviews}
-    changed = {line for line in result.stdout.splitlines() if line}
-    unexpected = sorted(changed - allowed)
-    if unexpected:
-        errors.append(
-            f"{change.id}: files changed after reviewed revision: "
-            + ", ".join(unexpected)
-        )
+        errors.append(f"{change.id}: Finalreview reviewers must be distinct")
+    if change.state == "done":
+        if sorted(accepted_capabilities) != sorted(required):
+            errors.append(
+                f"{change.id}: Finalreviews must exactly cover plan capabilities"
+            )
+        if len(set(accepted_revisions)) != 1:
+            errors.append(
+                f"{change.id}: accepted Finalreviews must bind one reviewed_revision"
+            )
 
 
 def _cycle(
@@ -391,22 +428,22 @@ def _cycle(
     visited: set[str] = set()
     path: list[str] = []
 
-    def visit(node: str) -> Optional[tuple[str, ...]]:
-        if node in visiting:
-            start = path.index(node)
-            return (*path[start:], node)
-        if node in visited:
+    def visit(change_id: str) -> Optional[tuple[str, ...]]:
+        if change_id in visiting:
+            start = path.index(change_id)
+            return (*path[start:], change_id)
+        if change_id in visited:
             return None
-        visiting.add(node)
-        path.append(node)
-        for target in sorted(getattr(changes[node], relation)):
+        visiting.add(change_id)
+        path.append(change_id)
+        for target in sorted(getattr(changes[change_id], relation)):
             if target in changes:
                 found = visit(target)
                 if found:
                     return found
         path.pop()
-        visiting.remove(node)
-        visited.add(node)
+        visiting.remove(change_id)
+        visited.add(change_id)
         return None
 
     for change_id in sorted(changes):
@@ -417,7 +454,7 @@ def _cycle(
 
 
 def validate_graphs(changes: Mapping[str, Change]) -> list[str]:
-    """Validate lineage and dependency as separate DAGs."""
+    """Validate lineage and dependencies as separate DAGs."""
 
     errors: list[str] = []
     for change_id in sorted(changes):
@@ -442,77 +479,26 @@ def validate_graphs(changes: Mapping[str, Change]) -> list[str]:
     return errors
 
 
-def validate_transition(
-    previous: Mapping[str, Change],
-    current: Mapping[str, Change],
-    bootstrap: bool = False,
-) -> list[str]:
-    """Validate one transition without a second history store."""
-
-    if bootstrap:
-        if (
-            set(current) == {BOOTSTRAP_ID}
-            and current[BOOTSTRAP_ID].state == "implementing"
-        ):
-            return []
-        return [f"bootstrap: only {BOOTSTRAP_ID!r} may start in 'implementing'"]
-
-    errors = [
-        f"{change_id}: registered change must not be removed"
-        for change_id in sorted(set(previous) - set(current))
-    ]
-    for change_id in sorted(set(current) - set(previous)):
-        if current[change_id].state != "proposed":
-            errors.append(f"{change_id}: new change must start in 'proposed'")
-    for change_id in sorted(set(previous) & set(current)):
-        old, new = previous[change_id].state, current[change_id].state
-        if old != new and new not in TRANSITIONS.get(old, set()):
-            errors.append(f"{change_id}: invalid transition {old!r} -> {new!r}")
-    return errors
-
-
-def _register_at(
-    root: Path, revision: str, errors: list[str]
-) -> tuple[dict[str, Change], bool]:
-    if _git(root, "rev-parse", "--verify", f"{revision}^{{commit}}").returncode:
-        errors.append(f"--base: unknown Git revision {revision!r}")
-        return {}, False
-    if _git(root, "cat-file", "-e", f"{revision}:{REGISTER}").returncode:
-        return {}, True
-    result = _git(root, "show", f"{revision}:{REGISTER}")
-    try:
-        data = json.loads(result.stdout)
-    except json.JSONDecodeError as exc:
-        errors.append(f"--base: invalid prior register: {exc}")
-        return {}, False
-    if not isinstance(data, dict):
-        errors.append("--base: prior register must contain a JSON object")
-        return {}, False
-    changes, found = parse_register(data, f"{revision}:{REGISTER}")
-    errors.extend(found)
-    return changes, False
-
-
-def inspect_repository(
-    root: Path, base_revision: Optional[str] = None
-) -> tuple[dict[str, Change], list[str]]:
-    """Load and validate one repository governance state."""
+def inspect_repository(root: Path) -> tuple[dict[str, Change], list[str]]:
+    """Load and validate the current repository snapshot."""
 
     root = root.resolve()
     errors: list[str] = []
-    data = _json(root / REGISTER, REGISTER, errors)
+    register = _artifact(root, REGISTER, REGISTER, errors)
+    data = _json_file(register, REGISTER, errors)
     if data is None:
         return {}, errors
     changes, found = parse_register(data)
     errors.extend(found)
-    final_revisions: dict[str, str] = {}
 
     for change in (changes[key] for key in sorted(changes)):
         base = f".ai4X/governance/changes/{change.id}"
-        if change.proposal != f"{base}/proposal.md":
-            errors.append(f"{change.id}: proposal must be {base}/proposal.md")
-        if change.plan and change.plan != f"{base}/plan.md":
-            errors.append(f"{change.id}: plan must be {base}/plan.md")
+        proposal_ref = f"{base}/proposal.md"
+        plan_ref = f"{base}/plan.md"
+        if change.proposal != proposal_ref:
+            errors.append(f"{change.id}: proposal must be {proposal_ref}")
+        if change.plan and change.plan != plan_ref:
+            errors.append(f"{change.id}: plan must be {plan_ref}")
         allowed_admission = {
             f"{base}/reviews/admission-strategy.json",
             f"{base}/reviews/admission-formalization.json",
@@ -521,60 +507,53 @@ def inspect_repository(
             if reference not in allowed_admission:
                 errors.append(f"{change.id}: invalid Admission review path {reference!r}")
         for reference in change.final_reviews:
-            if not (
-                reference.startswith(f"{base}/reviews/final-")
-                and reference.endswith(".json")
+            path = PurePosixPath(reference)
+            if (
+                path.parent != PurePosixPath(base) / "reviews"
+                or not FINAL_REVIEW_PATTERN.fullmatch(path.name)
             ):
                 errors.append(f"{change.id}: invalid Finalreview path {reference!r}")
 
-        proposal = _file(root, change.proposal, f"{change.id}.proposal", errors)
+        proposal = _artifact(root, change.proposal, f"{change.id}.proposal", errors)
         if proposal and change.admission_reviews:
             _validate_admission(root, change, proposal, errors)
-        elif change.state in ADMITTED:
+        elif change.state in ADMISSION_REQUIRED:
             errors.append(f"{change.id}: admitted change has no Admission reviews")
 
         plan = (
-            _file(root, change.plan, f"{change.id}.plan", errors)
+            _artifact(root, change.plan, f"{change.id}.plan", errors)
             if change.plan
             else None
         )
-        if change.state in PLANNED and plan is None:
-            errors.append(f"{change.id}: implementing change has no plan")
-        if change.final_reviews and plan:
-            revision = _validate_final(root, change, plan, errors)
-            if revision:
-                final_revisions[change.id] = revision
-        elif change.final_reviews:
-            errors.append(f"{change.id}: Finalreviews require a valid plan")
+        if change.state in PLAN_REQUIRED and plan is None:
+            errors.append(f"{change.id}: active change requires a plan")
+        required: set[str] = set()
+        if plan:
+            _section(plan, "Affected Surfaces", f"{change.id}:plan", errors)
+            required = set(
+                _section(
+                    plan,
+                    "Required Finalreview Capabilities",
+                    f"{change.id}:plan",
+                    errors,
+                )
+            )
+        if change.final_reviews:
+            if plan:
+                _validate_finals(root, change, required, errors)
+            else:
+                errors.append(f"{change.id}: Finalreviews require a valid plan")
         elif change.state == "done":
             errors.append(f"{change.id}: done change has no Finalreviews")
 
     errors.extend(validate_graphs(changes))
-    if base_revision:
-        previous, bootstrap = _register_at(root, base_revision, errors)
-        if not any(error.startswith("--base:") for error in errors):
-            errors.extend(validate_transition(previous, changes, bootstrap))
-            for change_id in sorted(set(previous) & set(changes)):
-                if (
-                    previous[change_id].state == "reviewing"
-                    and changes[change_id].state == "done"
-                    and change_id in final_revisions
-                ):
-                    _validate_final_scope(
-                        root,
-                        changes[change_id],
-                        final_revisions[change_id],
-                        errors,
-                    )
     return changes, sorted(set(errors))
 
 
-def validate_repository(
-    root: Path, base_revision: Optional[str] = None
-) -> list[str]:
-    """Return deterministic validation errors."""
+def validate_repository(root: Path) -> list[str]:
+    """Return deterministic current-snapshot validation errors."""
 
-    return inspect_repository(root, base_revision)[1]
+    return inspect_repository(root)[1]
 
 
 def render_backlog(changes: Mapping[str, Change]) -> str:
@@ -588,8 +567,8 @@ def render_backlog(changes: Mapping[str, Change]) -> str:
     ]
     for change_id in sorted(changes):
         change = changes[change_id]
-        dependencies = ", ".join(change.depends_on) or "-"
         title = change.title.replace("|", "\\|")
+        dependencies = ", ".join(change.depends_on) or "-"
         lines.append(
             f"| {change.id} | {change.state} | {title} | {dependencies} |"
         )
@@ -622,10 +601,7 @@ def _parser() -> argparse.ArgumentParser:
         description="Validate and project O2I change governance."
     )
     commands = parser.add_subparsers(dest="command", required=True)
-    validate = commands.add_parser("validate")
-    validate.add_argument("--root", type=Path, default=Path.cwd())
-    validate.add_argument("--base")
-    for name in ("backlog", "graph"):
+    for name in ("validate", "backlog", "graph"):
         command = commands.add_parser(name)
         command.add_argument("--root", type=Path, default=Path.cwd())
     return parser
@@ -633,7 +609,7 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(arguments: Optional[Sequence[str]] = None) -> int:
     options = _parser().parse_args(arguments)
-    changes, errors = inspect_repository(options.root, getattr(options, "base", None))
+    changes, errors = inspect_repository(options.root)
     if errors:
         for error in errors:
             print(f"[o2i|error] {error}", file=sys.stderr)

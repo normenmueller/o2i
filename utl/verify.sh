@@ -68,11 +68,7 @@ verify_governance() {
   info "Checking O2I change governance."
   python3 -B -m unittest discover \
     -s utl -p 'test_change_governance.py'
-  if [ -n "$diff_base" ]; then
-    python3 -B utl/change-governance.py validate --base "$diff_base"
-  else
-    python3 -B utl/change-governance.py validate
-  fi
+  python3 -B utl/change-governance.py validate
 }
 
 verify_model() {
