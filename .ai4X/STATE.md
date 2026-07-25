@@ -8,7 +8,7 @@
   or push work.
 - Current gate: `o2i-0001-finalreview`
 - Gate status: `PENDING`
-- Current node: `o2i:change-governance:implementation`
+- Current node: `o2i:change-governance:finalreview`
 
 # Objective
 
@@ -29,9 +29,10 @@ review process for future O2I Framework changes.
 
 # Verification
 
-Admission reviews are accepted. Governance unit tests and current-register
-validation pass. Staged repository verification and independent Finalreviews
-remain pending.
+Admission reviews are accepted. Governance, model, and paper stages pass.
+Repository-wide verification reaches the known `o2i:syntax-sync` AMX fixture
+failure; it is outside this change scope and is the recorded local return
+point. Independent Finalreviews remain pending.
 
 # Gate Record
 
@@ -45,8 +46,8 @@ remain pending.
 
 # Next Action
 
-Complete staged verification, commit the review subject, and obtain the three
-independent Finalreviews required by the admitted plan.
+Commit the immutable review subject and obtain the three independent
+Finalreviews required by the admitted plan.
 
 # Local Return Point
 
