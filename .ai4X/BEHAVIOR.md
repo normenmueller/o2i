@@ -67,13 +67,17 @@ recorded checks. `COMPLETE` requires every mandatory gate to be `ACCEPTED`.
 
 Every active gate record in `STATE.md` contains exactly:
 
-- gate ID and scope;
-- immutable subject Git revision, or a content digest when Git is
-  unavailable;
+- gate attempt ID and scope;
+- exact subject digest and Git carrier revision when available;
 - mandatory checks;
 - finding status: `OPEN | CLOSED`;
 - result: `PENDING | ACCEPTED | REJECTED`;
 - stable repository-local evidence locator.
+
+`.ai4X/MEMORY_SUBJECT` is the canonical, sorted scope of an Agent Memory
+review. From the repository root, `python3 .ai4X/subject-digest.py` computes its
+deterministic SHA-256 identity. `STATE.md` and `.ai4X/evidence/` are attestation
+artifacts outside that subject.
 
 A review evaluates the immutable subject. Its attestation is necessarily
 recorded afterward and identifies that subject exactly. An attestation-only

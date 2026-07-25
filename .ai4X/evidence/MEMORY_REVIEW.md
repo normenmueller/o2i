@@ -1,36 +1,32 @@
 # Agent Memory Review
 
-- Review date: 2026-07-25 CEST
-- Subject revision: `f2cb56f3d648e60268220c639793a8f7d98b616b`
-- Scope: O2I Core Memory, routed Rules, Codex facade, and Copilot profile
+- Gate attempt ID: `o2i:memory-review/2026-07-25.3`
+- Subject digest:
+  `21121fdfbbdf2837b0b35dc44f8046c1ec7a729d3312e5433de9676d5b838bf3`
+- Carrier revision: `PENDING`
 - Reviewer role: independent Agentic-AI Memory reviewer
-- Result: `REJECTED`
+- Finding status: `CLOSED`
+- Result: `PENDING`
 
-# Checks
+# Mandatory Checks
 
-Isolated archive bootstrap, Codex facade, Copilot profile, Rule routing,
-dependency scan, progressive loading, authority, gate and handoff closure, and
-operational commands.
+Isolated archive bootstrap, subject-digest equality, Codex facade, Copilot
+profile, Rule routing, dependency scan, progressive loading, authority,
+gate/handoff closure, and operational commands.
 
-# Findings
-
-- The gate lacked an immutable subject revision and independent stable evidence.
-- The handoff retained stale bootstrap findings and authorized later extractor
-  and syntax work before Memory-gate acceptance.
-
-# Cross-Scope Scores
+# Scores
 
 | Dimension | Score |
 | --- | ---: |
-| Discoverability and bootstrap | 9.0 |
-| Repository autonomy and portability | 8.5 |
-| Progressive disclosure and cognitive load | 8.5 |
-| Authority and non-duplication | 8.0 |
-| Operational execution and gate contract | 6.5 |
-| Codex and Copilot facades | 10.0 |
-| Handoff and resumability | 7.0 |
-| Precision and agentic actionability | 8.0 |
-| Safety and change control | 8.5 |
-| Overall Agentic-AI fitness | 8.0 |
+| Discoverability and bootstrap | PENDING |
+| Repository autonomy and portability | PENDING |
+| Progressive disclosure and cognitive load | PENDING |
+| Authority and non-duplication | PENDING |
+| Operational execution and gate contract | PENDING |
+| Codex and Copilot facades | PENDING |
+| Handoff and resumability | PENDING |
+| Precision and agentic actionability | PENDING |
+| Safety and change control | PENDING |
+| Overall Agentic-AI fitness | PENDING |
 
 Acceptance requires no finding and 10.0 in all ten dimensions.
