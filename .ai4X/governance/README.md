@@ -86,8 +86,14 @@ The implementation plan declares the required Finalreview capabilities.
 Each accepted Finalreview identifies one exact Git revision. A reviewer is
 distinct from the change author and co-authors.
 
+Implementation edits and finding corrections are accumulated into one coherent
+review candidate. Independent Finalreviews assess that candidate, not each
+individual edit. Required reviewer capabilities follow the admitted plan and
+therefore remain proportionate to the change.
+
 All required reviews for `done` refer to the same revision and declare their
-reviewed scope. Acceptance requires no finding and 10.0 in every reported
+reviewed scope. The scope excludes volatile runtime handoff such as
+`.ai4X/STATE.md`. Acceptance requires no finding and 10.0 in every reported
 dimension. Git carries implementation history; the governance validator checks
 the current register and its referenced evidence rather than reconstructing a
 workflow from commits.

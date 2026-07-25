@@ -78,6 +78,8 @@ Every active gate record in `STATE.md` contains exactly:
 
 A review identifies its immutable subject by exact Git revision and declared
 file scope. Any later change within that scope requires a new review.
+`.ai4X/STATE.md` is volatile runtime handoff and never belongs to an immutable
+implementation review scope.
 
 # Universal Design Rules
 

@@ -12,6 +12,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from typing import Any, Optional
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 CHANGE_ROOT = ".ai4X/governance/changes/o2i-0001"
@@ -90,6 +91,7 @@ class Repository:
                 "proposal_path": self.proposal,
                 "proposal_sha256": digest or self.digest(),
                 "verdict": verdict,
+                "scores": {"quality": 10.0},
                 "findings": [] if verdict == "accepted" else ["finding"],
             },
         )
@@ -123,6 +125,9 @@ class Repository:
         reviewer: Optional[str] = None,
         revision: str = "a" * 40,
         verdict: str = "accepted",
+        scope: Optional[list[str]] = None,
+        scores: Optional[dict[str, float]] = None,
+        findings: Optional[list[str]] = None,
     ) -> str:
         reference = (
             f"{CHANGE_ROOT}/reviews/final-"
@@ -137,10 +142,14 @@ class Repository:
                 "reviewer": reviewer or capability.lower() + "-reviewer",
                 "capability": capability,
                 "reviewed_revision": revision,
-                "reviewed_scope": ["generic O2I governance"],
+                "reviewed_scope": scope if scope is not None else [self.proposal],
                 "verdict": verdict,
-                "scores": {"quality": 10.0},
-                "findings": [] if verdict == "accepted" else ["finding"],
+                "scores": scores if scores is not None else {"quality": 10.0},
+                "findings": (
+                    findings
+                    if findings is not None
+                    else ([] if verdict == "accepted" else ["finding"])
+                ),
             },
         )
         return reference
@@ -152,6 +161,31 @@ class Repository:
 
     def init_git(self) -> None:
         subprocess.run(["git", "init", "-q"], cwd=self.root, check=True)
+        subprocess.run(
+            ["git", "config", "user.name", "O2I Test"],
+            cwd=self.root,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.email", "o2i@example.invalid"],
+            cwd=self.root,
+            check=True,
+        )
+
+    def commit(self, message: str) -> str:
+        subprocess.run(["git", "add", "-A"], cwd=self.root, check=True)
+        subprocess.run(
+            ["git", "commit", "-qm", message],
+            cwd=self.root,
+            check=True,
+        )
+        return subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=self.root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
 
 
 def change(
@@ -193,6 +227,8 @@ class ChangeGovernanceTests(unittest.TestCase):
         cases = (
             ({"id": "change-1"}, "must match o2i-NNNN"),
             ({"state": "unknown"}, "unknown state"),
+            ({"title": " padded "}, "must be trimmed and single-line"),
+            ({"author": "author\nother"}, "must be trimmed and single-line"),
             ({"proposal": "proposal.md"}, "proposal must be"),
             ({"plan": ""}, "active change requires a plan"),
             (
@@ -256,6 +292,47 @@ class ChangeGovernanceTests(unittest.TestCase):
                 lambda repo: repo.write_admission(1, "reviewer", "other"),
                 "capability: invalid",
             ),
+            (
+                lambda repo: repo.write_json(
+                    repo.admission[0],
+                    {**repo.read_json(repo.admission[0]), "extra": True},
+                ),
+                "unknown fields: extra",
+            ),
+            (
+                lambda repo: repo.write_json(
+                    repo.admission[0],
+                    {
+                        key: value
+                        for key, value in repo.read_json(
+                            repo.admission[0]
+                        ).items()
+                        if key != "scores"
+                    },
+                ),
+                "missing fields: scores",
+            ),
+            (
+                lambda repo: repo.write_json(
+                    repo.admission[0],
+                    {
+                        **repo.read_json(repo.admission[0]),
+                        "scores": {"quality": 9.0},
+                    },
+                ),
+                "accepted review requires 10.0",
+            ),
+            (
+                lambda repo: repo.write_json(
+                    repo.admission[0],
+                    {
+                        **repo.read_json(repo.admission[0]),
+                        "verdict": "rejected",
+                        "findings": [],
+                    },
+                ),
+                "rejected review must have findings",
+            ),
         )
         for mutate, message in cases:
             with self.subTest(message=message), tempfile.TemporaryDirectory() as path:
@@ -278,6 +355,96 @@ class ChangeGovernanceTests(unittest.TestCase):
                 repo.register(repo.entry())
                 self.assert_error(
                     governance.validate_repository(repo.root), message
+                )
+
+    def test_state_artifact_coherence(self) -> None:
+        for state in (
+            "proposed",
+            "admitted",
+            "implementing",
+            "reviewing",
+            "done",
+            "rejected",
+            "withdrawn",
+        ):
+            with self.subTest(valid=state), tempfile.TemporaryDirectory() as path:
+                repo = Repository(Path(path))
+                if state == "done":
+                    repo.done()
+                elif state == "rejected":
+                    repo.write_admission(
+                        0, "strategy-reviewer", "strategy", verdict="rejected"
+                    )
+                    repo.register(
+                        repo.entry(
+                            state=state,
+                            plan="",
+                            admission_reviews=[repo.admission[0]],
+                        )
+                    )
+                elif state == "withdrawn":
+                    review = repo.final("strategy")
+                    repo.register(
+                        repo.entry(state=state, final_reviews=[review])
+                    )
+                else:
+                    plan = "" if state in {"proposed", "admitted"} else repo.plan
+                    repo.register(repo.entry(state=state, plan=plan))
+                self.assertEqual([], governance.validate_repository(repo.root))
+
+        cases = (
+            ("proposed", {}, "must not have a plan"),
+            (
+                "proposed",
+                {"plan": "", "final_reviews": ["invalid.json"]},
+                "must not have Finalreviews",
+            ),
+            (
+                "admitted",
+                {"final_reviews": ["invalid.json"]},
+                "must not have Finalreviews",
+            ),
+            (
+                "implementing",
+                {"final_reviews": ["invalid.json"]},
+                "must not have Finalreviews",
+            ),
+            (
+                "rejected",
+                {"plan": ""},
+                "needs a rejected Admission",
+            ),
+        )
+        for state, changes, message in cases:
+            with self.subTest(invalid=state, message=message), tempfile.TemporaryDirectory() as path:
+                repo = Repository(Path(path))
+                repo.register(repo.entry(state=state, **changes))
+                self.assert_error(
+                    governance.validate_repository(repo.root), message
+                )
+
+        for artifact in ("plan", "Finalreviews"):
+            with self.subTest(rejected=artifact), tempfile.TemporaryDirectory() as path:
+                repo = Repository(Path(path))
+                repo.write_admission(
+                    0, "strategy-reviewer", "strategy", verdict="rejected"
+                )
+                changes = {
+                    "state": "rejected",
+                    "admission_reviews": [repo.admission[0]],
+                }
+                if artifact == "Finalreviews":
+                    changes.update(
+                        plan="",
+                        final_reviews=[
+                            repo.final("strategy", verdict="rejected")
+                        ],
+                    )
+                repo.register(repo.entry(**changes))
+                article = "a " if artifact == "plan" else ""
+                self.assert_error(
+                    governance.validate_repository(repo.root),
+                    f"rejected change must not have {article}{artifact}",
                 )
 
     def test_lineage_and_dependencies_are_separate_dags(self) -> None:
@@ -323,6 +490,13 @@ class ChangeGovernanceTests(unittest.TestCase):
             (
                 lambda repo, refs: repo.write_json(
                     refs[0],
+                    {**repo.read_json(refs[0]), "extra": True},
+                ),
+                "unknown fields: extra",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
                     {**repo.read_json(refs[0]), "schema_version": 2},
                 ),
                 "schema_version: must be 1",
@@ -365,6 +539,23 @@ class ChangeGovernanceTests(unittest.TestCase):
             (
                 lambda repo, refs: repo.write_json(
                     refs[0],
+                    {
+                        **repo.read_json(refs[0]),
+                        "reviewed_scope": [".ai4X/STATE.md"],
+                    },
+                ),
+                "must exclude .ai4X/STATE.md",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {**repo.read_json(refs[0]), "reviewed_scope": ["missing"]},
+                ),
+                "current path does not exist",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
                     {**repo.read_json(refs[0]), "reviewed_scope": ["../outside"]},
                 ),
                 "canonical repository-relative paths",
@@ -381,7 +572,7 @@ class ChangeGovernanceTests(unittest.TestCase):
                     refs[0],
                     {**repo.read_json(refs[0]), "scores": {"quality": 9.9}},
                 ),
-                "done requires 10.0",
+                "accepted review requires 10.0",
             ),
             (
                 lambda repo, refs: repo.write_json(
@@ -396,6 +587,13 @@ class ChangeGovernanceTests(unittest.TestCase):
                     {**repo.read_json(refs[0]), "reviewer": "author"},
                 ),
                 "reviewer collides",
+            ),
+            (
+                lambda repo, refs: repo.write_json(
+                    refs[0],
+                    {**repo.read_json(refs[0]), "reviewer": " reviewer "},
+                ),
+                "must be trimmed and single-line",
             ),
             (
                 lambda repo, refs: repo.write_json(
@@ -470,6 +668,88 @@ class ChangeGovernanceTests(unittest.TestCase):
                 "Git commit does not exist",
             )
 
+    def test_review_scores_and_rejected_findings_apply_before_done(self) -> None:
+        cases = (
+            (
+                "accepted",
+                {"quality": 9.0},
+                [],
+                "accepted review requires 10.0",
+            ),
+            (
+                "rejected",
+                {"quality": 11.0},
+                ["finding"],
+                "must be within 0..10",
+            ),
+            (
+                "rejected",
+                {"quality": 5.0},
+                [],
+                "rejected review must have findings",
+            ),
+        )
+        for verdict, scores, findings, message in cases:
+            with self.subTest(message=message), tempfile.TemporaryDirectory() as path:
+                repo = Repository(Path(path))
+                review = repo.final(
+                    "strategy",
+                    verdict=verdict,
+                    scores=scores,
+                    findings=findings,
+                )
+                repo.register(
+                    repo.entry(state="reviewing", final_reviews=[review])
+                )
+                self.assert_error(
+                    governance.validate_repository(repo.root), message
+                )
+
+    def test_reviewed_scope_binds_git_content_and_is_git_optional(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory))
+            repo.write("surface/item.txt", "reviewed\n")
+            repo.register(repo.entry(state="reviewing"))
+            repo.init_git()
+            revision = repo.commit("review subject")
+            reviews = [
+                repo.final(capability, revision=revision, scope=["surface"])
+                for capability in CAPABILITIES
+            ]
+            repo.register(repo.entry(state="done", final_reviews=reviews))
+            self.assertEqual([], governance.validate_repository(repo.root))
+            repo.write("surface/item.txt", "changed\n")
+            self.assert_error(
+                governance.validate_repository(repo.root),
+                "current content/tree differs from reviewed_revision",
+            )
+
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory))
+            repo.register(repo.entry(state="reviewing"))
+            repo.init_git()
+            revision = repo.commit("review subject")
+            repo.write("later.txt", "not reviewed\n")
+            reviews = [
+                repo.final(capability, revision=revision, scope=["later.txt"])
+                for capability in CAPABILITIES
+            ]
+            repo.register(repo.entry(state="done", final_reviews=reviews))
+            self.assert_error(
+                governance.validate_repository(repo.root),
+                "path does not exist at reviewed_revision",
+            )
+
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory))
+            repo.done()
+            with mock.patch.object(
+                governance.subprocess,
+                "run",
+                side_effect=FileNotFoundError,
+            ):
+                self.assertEqual([], governance.validate_repository(repo.root))
+
     def test_projections_are_deterministic(self) -> None:
         changes = {
             "o2i-0002": change(
@@ -481,11 +761,22 @@ class ChangeGovernanceTests(unittest.TestCase):
         }
         backlog = governance.render_backlog(changes)
         graph = governance.render_graph(changes)
-        self.assertEqual(backlog, governance.render_backlog(changes))
-        self.assertEqual(graph, governance.render_graph(changes))
-        self.assertLess(backlog.index("o2i-0001"), backlog.index("o2i-0002"))
-        self.assertIn("change_o2i_0001 -->|derived| change_o2i_0002", graph)
-        self.assertIn("change_o2i_0001 -->|required by| change_o2i_0002", graph)
+        self.assertEqual(
+            "# O2I Change Backlog\n\n"
+            "| ID | State | Title | Depends on |\n"
+            "| --- | --- | --- | --- |\n"
+            "| o2i-0001 | proposed | o2i-0001 | - |\n"
+            "| o2i-0002 | proposed | o2i-0002 | o2i-0001 |\n",
+            backlog,
+        )
+        self.assertEqual(
+            "flowchart LR\n"
+            '  change_o2i_0001["o2i-0001: o2i-0001 [proposed]"]\n'
+            '  change_o2i_0002["o2i-0002: o2i-0002 [proposed]"]\n'
+            "  change_o2i_0001 -->|derived| change_o2i_0002\n"
+            "  change_o2i_0001 -->|required by| change_o2i_0002\n",
+            graph,
+        )
 
 
 if __name__ == "__main__":
