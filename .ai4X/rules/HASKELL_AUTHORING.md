@@ -26,6 +26,7 @@ adapters, or Haddock.
 
 # Package Boundaries
 
+- `o2i-build-provenance`: technical build-revision identity; no O2I semantics.
 - `o2i-core`: language, graph, validation, trace, and evidence semantics.
 - `o2i-inspection`: format-neutral staged inspection and reports.
 - `o2i-amx`: Decode, View scope, concrete AMX profile, provenance, projection.
@@ -64,8 +65,10 @@ each package directory: cabal check
 repository root:
   rg --files spc -g '*.hs' | xargs hindent --line-length 80 --validate
 ./utl/check-package-licenses.sh
-git diff --check
 ```
+
+In a Git worktree, additionally run `git diff --check`. In an archive or source
+tree without Git metadata, omit only that check and record it as unavailable.
 
 Tests must cover laws, positive paths, every diagnostic branch, provenance,
 determinism, and public API boundaries. Tests provide verification evidence for

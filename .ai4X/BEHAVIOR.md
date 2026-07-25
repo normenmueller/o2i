@@ -6,7 +6,9 @@ repository.
 # Startup
 
 1. Read `.ai4X/CONTEXT.md` and `.ai4X/STATE.md`.
-2. Run `git status --short --branch --untracked-files=all`.
+2. Detect whether the checkout is a Git worktree. Only then run
+   `git status --short --branch --untracked-files=all`; otherwise record Git
+   metadata as unavailable and continue from the repository files.
 3. Identify the task class and read only its required Rules:
 
 | Task class | Required Rule |
@@ -48,23 +50,6 @@ resolved in the owning source before synchronization.
 Tests provide executable verification evidence for contracts; they never
 prove, own, or define O2I semantics.
 
-# Tool Boundary
-
-- The Python extractor is a repository-internal authoring and review tool for
-  developing O2I itself. It checks named Views, labels, documentation,
-  displayed relation signatures, and deterministic snapshots.
-- The complete Haskell specification and toolchain provide the
-  machine-checkable formalization of O2I and validation of concrete O2I models
-  and instances.
-- The Haskell AMX adapter owns Decode, View selection, concrete O2I ArchiMate
-  profile validation, provenance, and projection into the notation-independent
-  O2I graph.
-- Core and Inspection own notation-independent structure, semantics,
-  traceability, readiness, and evidence assessment.
-- The CLI owns arguments, composition, and rendering, never fachliche logic.
-- The Python extractor must never validate O2I profile metadata, Commitment,
-  admissibility, ownership, or O2I graph semantics.
-
 # Execution Contract
 
 `.ai4X/STATE.md` uses four independent fields:
@@ -79,6 +64,16 @@ Continue autonomously only when work is `ACTIVE` and authorization is
 acceptance, not permission to implement. `REJECTED` returns work to correction;
 `PENDING` awaits review; `ACCEPTED` requires no unresolved finding and all
 recorded checks. `COMPLETE` requires every mandatory gate to be `ACCEPTED`.
+
+Every active gate record in `STATE.md` contains exactly:
+
+- gate ID and scope;
+- reviewed Git revision, or an immutable content digest when Git is
+  unavailable;
+- mandatory checks;
+- finding status: `OPEN | CLOSED`;
+- result: `PENDING | ACCEPTED | REJECTED`;
+- stable repository-local evidence locator.
 
 # Universal Design Rules
 
@@ -110,6 +105,8 @@ recorded checks. `COMPLETE` requires every mandatory gate to be `ACCEPTED`.
 - Keep `.ai4X/STATE.md` below 90 lines. Remove completed detail once its result and
   commit are durable.
 - Commit messages are lowercase English without type prefixes.
+- Run Git-only checks such as `git diff --check` only when Git worktree
+  metadata is available. Their absence never blocks repository-file bootstrap.
 
 # Safety
 

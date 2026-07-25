@@ -98,6 +98,8 @@ repository Views and snapshots. It never validates O2I instances.
 - `mdl/o2i-*.md`: generated review snapshots.
 - `img/`, `acc/`, `toPDF.sh`: publication figures and rendering.
 - `spc/lib/core/`: normative Haskell formalization.
+- `spc/lib/build-provenance/`: technical source-revision identity for build
+  artifacts; no fachliche semantics.
 - `spc/lib/inspection/`: format-neutral inspection pipeline.
 - `spc/lib/adapter/amx/`: native AMX profile and projection.
 - `spc/cli/`: thin `o2i` CLI.

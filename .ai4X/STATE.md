@@ -7,7 +7,7 @@
   the Python extractor authority package; continue `o2i:syntax-sync` without
   directly editing `mdl/o2i.archimate`; no push.
 - Current gate: `o2i:memory-review`
-- Gate status: `PENDING`
+- Gate status: `REJECTED`
 - Current node: `o2i:memory-redesign`
 
 # Objective
@@ -15,13 +15,6 @@
 Make O2I repository memory compact, repository-autark, progressively loaded,
 and operationally explicit. Then close the repository-only Python extractor
 contract and resume manual mapping/conformance View synchronization.
-
-# Dirty Scope
-
-- `.ai4X/`: compact core and task-specific Rules.
-- `utl/extract-archimate-view.py`, `utl/test_extract_archimate_view.py`:
-  extractor authority reduction with open review findings.
-- Branch `trunk` is ahead of `origin/trunk`; the user controls pushes.
 
 # Accepted Baseline
 
@@ -38,7 +31,10 @@ contract and resume manual mapping/conformance View synchronization.
 
 Memory review:
 
-- Independent final review of the current committed Memory revision is pending.
+- Git-worktree capability must be optional in an archive checkout.
+- Copilot requires a valid agent profile rather than a symlink to
+  `BEHAVIOR.md`.
+- Progressive loading and gate evidence require final closure.
 
 Extractor review:
 
@@ -52,17 +48,30 @@ Extractor review:
 
 # Verification
 
-- Extractor: 19 focused tests pass; all presets and snapshots are drift-free;
-  isolated `py_compile` and `git diff --check` pass.
-- Independent extractor gate: `REJECTED` with two High, two Medium, and one Low
-  finding; no generic O2I profile duplication remains.
-- Memory archive gate: committed isolated checkout, both relative facades, all
-  routed Rules, and repository-autark dependency scan pass.
+- Committed extractor baseline: `REJECTED`. In an isolated archive, repository
+  preset checks fail and the extractor test suite reports 27 errors in 28
+  tests. Uncommitted worktree corrections are not accepted verification
+  evidence.
+- Committed Memory baseline: repository-local paths and routed Rules resolve,
+  but Git-optional startup, Copilot profile validity, and progressive-loading
+  findings remain open.
+
+# Gate Record
+
+- Gate ID: `o2i:memory-review`
+- Scope: repository-autark bootstrap and Agentic-AI fitness.
+- Reviewed revision: `PENDING`
+- Mandatory checks: archive bootstrap, Codex facade, Copilot profile, local
+  Rule routing, dependency scan, progressive-loading review, and gate-contract
+  review.
+- Finding status: `OPEN`
+- Result: `REJECTED`
+- Evidence locator: `.ai4X/STATE.md`
 
 # Next Actions
 
-1. Repeat independent AI-memory review until every required dimension is
-   10.0/10.0; commit the accepted gate state without pushing.
+1. Close the Memory findings and repeat independent review until every
+   required dimension is 10.0/10.0.
 2. Give extractor findings to an external co-author in small packages; repeat
    independent review until accepted.
 3. Resume user-guided model work at `O2I Syntax - Context`: update stale

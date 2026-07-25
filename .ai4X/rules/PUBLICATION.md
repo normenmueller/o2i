@@ -32,8 +32,10 @@ text.
 ./utl/verify.sh paper
 ./toPDF.sh
 pandoc o2i.md --filter pandoc-include -t markdown
-git diff --check
 ```
 
 Inspect rendered pages, figure legibility, listing length, references, page
 breaks, and absence of unsupported Unicode before acceptance.
+
+In a Git worktree, additionally run `git diff --check`. In an archive or source
+tree without Git metadata, omit only that check and record it as unavailable.
