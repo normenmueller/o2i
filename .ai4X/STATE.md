@@ -5,7 +5,7 @@
 - Execution authorization: `APPROVED`
 - Authorization scope: close and independently review the O2I Agent Memory
   gate only; no extractor, model, publication, or push.
-- Current gate: `o2i:memory-review/2026-07-25.3`
+- Current gate: `o2i:memory-review/2026-07-25.4`
 - Gate status: `PENDING`
 - Current node: `o2i:memory-review`
 
@@ -18,8 +18,8 @@ functional relative Codex and Copilot facades and a reproducible review gate.
 
 - Manifest: `.ai4X/MEMORY_SUBJECT`
 - Digest:
-  `21121fdfbbdf2837b0b35dc44f8046c1ec7a729d3312e5433de9676d5b838bf3`
-- Carrier revision: `601c92745bbec0933d0d7f97955bbf92ea1148dc`
+  `cc5ce3f72f1f68dd1ffbb095c8582ce6e7e2c42208f452c9d76676dbe9f4fb6f`
+- Carrier revision: `3c81fee40be2086f4591b91887831955cc0af2d21`
 
 `STATE.md` and `.ai4X/evidence/MEMORY_REVIEW.md` are attestation artifacts
 outside the subject.
@@ -41,11 +41,11 @@ after its carrier commit is available.
 
 # Gate Record
 
-- Gate attempt ID: `o2i:memory-review/2026-07-25.3`
+- Gate attempt ID: `o2i:memory-review/2026-07-25.4`
 - Scope: `.ai4X/MEMORY_SUBJECT`
 - Subject digest:
-  `21121fdfbbdf2837b0b35dc44f8046c1ec7a729d3312e5433de9676d5b838bf3`
-- Carrier revision: `601c92745bbec0933d0d7f97955bbf92ea1148dc`
+  `cc5ce3f72f1f68dd1ffbb095c8582ce6e7e2c42208f452c9d76676dbe9f4fb6f`
+- Carrier revision: `3c81fee40be2086f4591b91887831955cc0af2d21`
 - Mandatory checks: archive bootstrap, Codex facade, Copilot profile, local
   Rule routing, dependency scan, progressive loading, authority, gate/handoff
   closure, and operational commands.
