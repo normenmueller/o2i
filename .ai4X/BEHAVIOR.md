@@ -84,6 +84,13 @@ recorded afterward and identifies that subject exactly. An attestation-only
 update to `STATE.md` and the referenced evidence does not alter the subject.
 Any later change within the declared subject scope invalidates acceptance.
 
+Gate closure is terminal. After independent acceptance, update only the
+attestation artifacts and mechanically verify that the subject digest is
+unchanged, all gate and carrier references are exact, and no subject file
+changed. This attestation-only closure does not trigger another review. A new
+review attempt is required only for a subject change or a finding that requires
+subject correction.
+
 # Universal Design Rules
 
 - O2I remains generic and independent of every concrete instance.
