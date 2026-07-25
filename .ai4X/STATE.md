@@ -19,7 +19,7 @@ functional relative Codex and Copilot facades and a reproducible review gate.
 - Manifest: `.ai4X/MEMORY_SUBJECT`
 - Digest:
   `21121fdfbbdf2837b0b35dc44f8046c1ec7a729d3312e5433de9676d5b838bf3`
-- Carrier revision: `PENDING`
+- Carrier revision: `601c92745bbec0933d0d7f97955bbf92ea1148dc`
 
 `STATE.md` and `.ai4X/evidence/MEMORY_REVIEW.md` are attestation artifacts
 outside the subject.
@@ -45,7 +45,7 @@ after its carrier commit is available.
 - Scope: `.ai4X/MEMORY_SUBJECT`
 - Subject digest:
   `21121fdfbbdf2837b0b35dc44f8046c1ec7a729d3312e5433de9676d5b838bf3`
-- Carrier revision: `PENDING`
+- Carrier revision: `601c92745bbec0933d0d7f97955bbf92ea1148dc`
 - Mandatory checks: archive bootstrap, Codex facade, Copilot profile, local
   Rule routing, dependency scan, progressive loading, authority, gate/handoff
   closure, and operational commands.
@@ -55,8 +55,7 @@ after its carrier commit is available.
 
 # Next Action
 
-Commit the subject, record its carrier revision in the attestation, verify the
-isolated archive, and obtain an independent 10.0/10.0 review.
+Verify the isolated carrier archive and obtain an independent 10.0/10.0 review.
 
 # Local Return Point
 
