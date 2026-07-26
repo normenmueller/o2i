@@ -1,17 +1,18 @@
 # Handoff
 
-- Observed: 2026-07-25 CEST
-- Work status: `PAUSED`
-- Execution authorization: `REQUIRED`
-- Authorization scope: no further O2I implementation is authorized.
-- Current gate: `o2i-0001-finalreview.5`
-- Gate status: `ACCEPTED`
-- Current node: `o2i:change-governance:complete`
+- Observed: 2026-07-26 CEST
+- Work status: `ACTIVE`
+- Execution authorization: `APPROVED`
+- Authorization scope: complete and independently review the Python extractor
+  authority package; no model, Haskell, publication, or push work.
+- Current gate: `NONE`
+- Gate status: `NOT_REQUIRED`
+- Current node: `o2i:syntax-sync:extractor`
 
 # Objective
 
-Establish a lean, repository-native admission, dependency, implementation, and
-review process for future O2I Framework changes.
+Close the repository-extractor occurrence, CLI-mode, preset, and metamorphic
+test findings without changing O2I semantics.
 
 # Repository Facts
 
@@ -19,38 +20,27 @@ review process for future O2I Framework changes.
   revision.
 - `.ai4X/operations/` contains task-specific execution and quality contracts;
   `.ai4X/governance/` governs normative Framework changes.
-- Worktree observation from local Git on 2026-07-25:
-  `utl/extract-archimate-view.py` and
-  `utl/test_extract_archimate_view.py` contain unrelated changes. Without Git
-  metadata this observation is `UNAVAILABLE`, not an archive fact.
+- `utl/extract-archimate-view.py` and
+  `utl/test_extract_archimate_view.py` contain the active extractor package.
+- The package is repository-development tooling and introduces no normative
+  O2I semantics; no change proposal is required.
 - The user controls pushes.
 
 # Verification
 
-Strategy, formalization, and Agentic-AI Finalreviews accept candidate
-`1b53461cdde4950010122f2ccd5c192c48ac71c5` without findings and with
-10.0 in every required dimension. Thirteen focused governance tests and the
-staged governance check pass. The separate `o2i:syntax-sync` AMX fixture
-failure remains the local return point.
-
-# Gate Record
-
-- Gate attempt ID: `o2i-0001-finalreview.5`
-- Scope: the implementation surfaces declared by O2I-0001, excluding runtime
-  handoff, mutable register, and Finalreview evidence.
-- Git revision: `1b53461cdde4950010122f2ccd5c192c48ac71c5`
-- Mandatory checks: independent strategy, formalization, and Agentic-AI
-  Finalreviews.
-- Finding status: `CLOSED`
-- Result: `ACCEPTED`
+- Nineteen focused extractor tests pass.
+- All twelve preset and snapshot checks pass from arbitrary working
+  directories.
+- `./utl/verify.sh model`, Python compilation, and `git diff --check` pass.
+- Independent acceptance review remains pending.
 
 # Next Action
 
-When authorized, resume the Python extractor authority package before
-user-guided `o2i:syntax-sync`.
+Obtain an independent review of the coherent extractor candidate and close
+only verified residual findings.
 
 # Local Return Point
 
-After accepted governance reviews, resume the Python extractor authority
-package before user-guided `o2i:syntax-sync`. `O2I Syntax - Situation` remains
-an intentionally empty mapping View awaiting manual construction.
+After accepted extractor review, resume user-guided syntax synchronization.
+`O2I Syntax - Situation` remains an intentionally empty mapping View awaiting
+manual construction.

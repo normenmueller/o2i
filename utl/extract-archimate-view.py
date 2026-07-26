@@ -12,156 +12,154 @@ from pathlib import Path
 
 
 XSI_TYPE = "{http://www.w3.org/2001/XMLSchema-instance}type"
+REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_MODEL = REPOSITORY_ROOT / "mdl" / "o2i.archimate"
 
 PRESETS = {
     "strategy-constituents": (
         "O2I Strategy Constituents",
         Path("mdl/o2i-strategy-constituents.md"),
     ),
-    "situation": (
+    "semantics-situation": (
         "O2I Semantics - Situation",
-        Path("mdl/o2i-situation.md"),
+        Path("mdl/o2i-semantics-situation.md"),
     ),
     "situation-anchoring": (
         "O2I Situation Anchoring",
         Path("mdl/o2i-situation-anchoring.md"),
     ),
     "orientation": ("O2I Orientierung", Path("mdl/o2i-orientation.md")),
-    "context": ("O2I Semantics - Context", Path("mdl/o2i-context.md")),
-    "primitives": (
-        "O2I Semantics - Primitives",
-        Path("mdl/o2i-primitives.md"),
+    "semantics-context": (
+        "O2I Semantics - Context",
+        Path("mdl/o2i-semantics-context.md"),
     ),
-    "syntax": (
+    "semantics-primitives": (
+        "O2I Semantics - Primitives",
+        Path("mdl/o2i-semantics-primitives.md"),
+    ),
+    "syntax-context": (
+        "O2I Syntax - Context",
+        Path("mdl/o2i-syntax-context.md"),
+    ),
+    "syntax-contextualization": (
+        "O2I Syntax - Contextualization",
+        Path("mdl/o2i-syntax-contextualization.md"),
+    ),
+    "syntax-collective-strategy-realization": (
+        "O2I Syntax - Collective Strategy Realization",
+        Path("mdl/o2i-syntax-collective-strategy-realization.md"),
+    ),
+    "syntax-primitives": (
         "O2I Syntax - Primitives",
-        Path("mdl/o2i-syntax.md"),
+        Path("mdl/o2i-syntax-primitives.md"),
+    ),
+    "syntax-situation": (
+        "O2I Syntax - Situation",
+        Path("mdl/o2i-syntax-situation.md"),
     ),
     "layered-cake": ("O2I Layered Cake", Path("mdl/o2i-layered-cake.md")),
 }
 
 REQUIRED_SYNTAX_NODES = {
-    ("Assessment", "Assessment"),
-    ("Course of Action", "CourseOfAction"),
-    ("Driver", "Driver"),
-    ("Driver @ Mission", "Driver"),
-    ("Goal", "Goal"),
-    ("O2I Context (Mission)", "Grouping"),
-    ("O2I Context (Strategy)", "Grouping"),
-    ("Outcome", "Outcome"),
-    ("Performance Dimension", "Grouping"),
-    ("Performance Dimension @ Strategy", "Grouping"),
-    ("Principle", "Principle"),
+    ("O2I Action", "CourseOfAction"),
+    ("O2I Driver", "Driver"),
+    ("O2I KPI", "Assessment"),
+    ("O2I Key Result", "Outcome"),
+    ("O2I Objective", "Goal"),
+    ("O2I Performance Dimension", "Grouping"),
+    ("O2I Principle", "Principle"),
 }
 
-REQUIRED_SYNTAX_DOCUMENTATION = (
-    "Defines the concrete ArchiMate realization of O2I Contexts, "
-    "contextualized Primitives, PerformanceDimensions, Situation anchors, "
-    "and their relation mappings.",
-    "Every O2I Context and PerformanceDimension is represented by an "
-    "ArchiMate Grouping.",
-    "ArchiMate Groupings introduce no O2I semantics.",
-    "Every concrete Primitive and PerformanceDimension instance is "
+REQUIRED_CONTEXTUALIZATION_NODES = {
+    ("<Name> :: O2I Driver", "Driver"),
+    ("<Name> :: O2I Mission", "Grouping"),
+    ("<Name> :: O2I Performance Dimension", "Grouping"),
+    ("<Name> :: O2I Strategy", "Grouping"),
+}
+
+REQUIRED_COLLECTIVE_REALIZATION_NODES = {
+    ("<Contributor Strategy 1> :: O2I Strategy", "Grouping"),
+    ("<Contributor Strategy 2> :: O2I Strategy", "Grouping"),
+    ("<Name> :: O2I Collective Strategy Realization", "Junction"),
+    ("<Target Strategy> :: O2I Strategy", "Grouping"),
+}
+
+REQUIRED_PRIMITIVE_SYNTAX_DOCUMENTATION = (
+    "Defines the concrete ArchiMate element and relationship mappings for "
+    "O2I Primitives and PerformanceDimensions.",
+    "unannotated type-mapping exemplars",
+    "O2I Principle -> ArchiMate Principle",
+    "O2I Driver -> ArchiMate Driver",
+    "O2I Objective -> ArchiMate Goal",
+    "O2I Key Result -> ArchiMate Outcome",
+    "O2I KPI -> ArchiMate Assessment",
+    "O2I Action -> ArchiMate Course of Action",
+    "O2I Performance Dimension -> ArchiMate Grouping",
+    "The O2I relation name, direction, endpoint types, and ArchiMate "
+    "relationship type jointly form each relationship syntax signature.",
+    "Concrete admissibility remains context-sensitive",
+    "O2I Syntax - Contextualization",
+)
+
+REQUIRED_CONTEXTUALIZATION_DOCUMENTATION = (
+    "Defines the concrete ArchiMate syntax for contextualizing O2I Primitives "
+    "and PerformanceDimensions by typed O2I Context instances.",
     "contextualized by exactly one Context through "
     "composition[contextualizes]",
-    "The Interpretation registry admits Primitive @ Context;",
-    "the role registry admits PerformanceDimension @ Context and constrains "
-    "its member Primitive type and membership relation without interpreting "
-    "the members.",
+    "Contexts and PerformanceDimensions are represented by ArchiMate "
+    "Groupings; the Groupings introduce no O2I semantics.",
     "Visual nesting presents but never replaces explicit contextualization.",
-    "Primitive @ Context and PerformanceDimension @ Context are the textual "
-    "O2I notations.",
-    "The bounded contextualization examples are syntax exemplars, not fachliche "
-    "instances.",
-    "Situation anchors are independent nodes and are not contextualized by a "
-    "Context.",
-    "O2I BusinessCapability -> ArchiMate Capability",
-    "O2I BusinessProcess -> ArchiMate Process",
-    "O2I BusinessObject -> ArchiMate Business Object",
-    "O2I BusinessRole -> ArchiMate Role",
-    "O2I ValueStream -> ArchiMate Value Stream",
-    "O2I RegulatoryConstraint -> ArchiMate Requirement",
+    "The Interpretation registry admits Primitive @ Context.",
+    "The role registry admits PerformanceDimension @ Context",
+    "derived textual readings, not persisted element names",
+    "typed syntax exemplars, not fachliche model instances",
 )
 
-O2I_KIND_PROPERTY = "o2i.kind"
-O2I_TYPE_PROPERTY = "o2i.type"
-O2I_PROFILE_PROPERTY = "o2i.profile"
-O2I_PROFILE_VERSION = "0.2"
-O2I_TYPES_BY_KIND = {
-    "Context": frozenset(
-        {
-            "Ethos",
-            "Mission",
-            "Vision",
-            "Strategy",
-            "Situation",
-            "Need",
-            "Intervention",
-            "Measure",
-        }
-    ),
-    "Primitive": frozenset(
-        {"Principle", "Driver", "Objective", "KeyResult", "KPI", "Action"}
-    ),
-    "Structuring": frozenset({"PerformanceDimension"}),
-    "SituationAnchor": frozenset(
-        {
-            "BusinessCapability",
-            "BusinessProcess",
-            "BusinessObject",
-            "BusinessRole",
-            "ValueStream",
-            "RegulatoryConstraint",
-        }
-    ),
-}
-O2I_CONTEXTUALIZED_KINDS = frozenset({"Primitive", "Structuring"})
-FORBIDDEN_O2I_METADATA_PROPERTIES = frozenset(
-    {
-        "o2i.context",
-        "o2i.owner",
-        "o2i.role",
-        "o2i.interpretation",
-        "o2i.member",
-    }
+REQUIRED_COLLECTIVE_REALIZATION_DOCUMENTATION = (
+    "Defines the concrete ArchiMate syntax for one O2I "
+    "CollectiveStrategyRealization.",
+    "At least two distinct contributor Strategy Contexts",
+    "Exactly one outgoing realizes segment",
+    "Segment direction and topology determine contributor and target roles.",
+    "The Junction carries the complete structured proposition",
+    "The realizes segments are mandatory syntax components",
+    "Candidate syntax exemplars, not fachliche model instances",
 )
 
-REQUIRED_SYNTAX_EXEMPLAR_METADATA = {
-    ("Driver @ Mission", "Driver"): {
-        O2I_KIND_PROPERTY: "Primitive",
-        O2I_TYPE_PROPERTY: "Driver",
-    },
-    ("O2I Context (Mission)", "Grouping"): {
-        O2I_KIND_PROPERTY: "Context",
-        O2I_TYPE_PROPERTY: "Mission",
-    },
-    ("O2I Context (Strategy)", "Grouping"): {
-        O2I_KIND_PROPERTY: "Context",
-        O2I_TYPE_PROPERTY: "Strategy",
-    },
-    ("Performance Dimension @ Strategy", "Grouping"): {
-        O2I_KIND_PROPERTY: "Structuring",
-        O2I_TYPE_PROPERTY: "PerformanceDimension",
-    },
+REQUIRED_COLLECTIVE_REALIZATION_ELEMENT_DOCUMENTATION = (
+    "Represents one structured n-ary O2I proposition",
+    "ArchiMate AND Junction is its concrete syntax carrier",
+    "at least two distinct contributor Strategies",
+    "exactly one distinct target Strategy",
+    "roles follow exclusively from the direction and topology",
+    "segments carry no independent Commitment",
+    "o2i.collective-fit-evidence references the structured evidence",
+)
+
+REQUIRED_NODES_BY_VIEW = {
+    "O2I Syntax - Primitives": REQUIRED_SYNTAX_NODES,
+    "O2I Syntax - Contextualization": REQUIRED_CONTEXTUALIZATION_NODES,
+    (
+        "O2I Syntax - Collective Strategy Realization"
+    ): REQUIRED_COLLECTIVE_REALIZATION_NODES,
 }
 
-REQUIRED_SITUATION_ANCHOR_METADATA = {
-    (anchor, "Grouping"): {
-        O2I_KIND_PROPERTY: "SituationAnchor",
-        O2I_TYPE_PROPERTY: anchor_type,
-    }
-    for anchor, anchor_type in (
-        ("Business Capability", "BusinessCapability"),
-        ("Business Object", "BusinessObject"),
-        ("Business Process", "BusinessProcess"),
-        ("Business Role", "BusinessRole"),
-        ("Regulatory Constraint", "RegulatoryConstraint"),
-        ("Value Stream", "ValueStream"),
-    )
+REQUIRED_VIEW_DOCUMENTATION = {
+    "O2I Syntax - Primitives": REQUIRED_PRIMITIVE_SYNTAX_DOCUMENTATION,
+    (
+        "O2I Syntax - Contextualization"
+    ): REQUIRED_CONTEXTUALIZATION_DOCUMENTATION,
+    (
+        "O2I Syntax - Collective Strategy Realization"
+    ): REQUIRED_COLLECTIVE_REALIZATION_DOCUMENTATION,
 }
 
-REQUIRED_O2I_ELEMENT_METADATA = {
-    **REQUIRED_SYNTAX_EXEMPLAR_METADATA,
-    **REQUIRED_SITUATION_ANCHOR_METADATA,
+REQUIRED_ELEMENT_DOCUMENTATION = {
+    (
+        "O2I Syntax - Collective Strategy Realization",
+        "<Name> :: O2I Collective Strategy Realization",
+        "Junction",
+    ): REQUIRED_COLLECTIVE_REALIZATION_ELEMENT_DOCUMENTATION,
 }
 
 
@@ -187,6 +185,21 @@ def contract_edge(
     )
 
 
+def syntax_context_edge(
+    source: str,
+    relation: str,
+    target: str,
+) -> tuple[str, str, str, str, bool, str, str]:
+    """Declare one binary O2I Context relation in the ArchiMate syntax."""
+    return contract_edge(
+        f"<Name> :: O2I {source}",
+        relation,
+        f"<Name> :: O2I {target}",
+        relation_type="AssociationRelationship",
+        directed=True,
+    )
+
+
 RELATION_CONTRACTS = {
     "O2I Semantics - Context": frozenset(
         {
@@ -204,6 +217,32 @@ RELATION_CONTRACTS = {
             contract_edge("Strategy", "frames", "Measure"),
             contract_edge("Strategy", "qualifies", "Need"),
             contract_edge("Vision", "orients", "Strategy"),
+        }
+    ),
+    "O2I Syntax - Context": frozenset(
+        {
+            syntax_context_edge("Ethos", "guides", "Mission"),
+            syntax_context_edge("Ethos", "guides", "Vision"),
+            syntax_context_edge("Intervention", "addresses", "Need"),
+            syntax_context_edge("Intervention", "changes", "Situation"),
+            syntax_context_edge(
+                "Intervention",
+                "sets-target-for",
+                "Measure",
+            ),
+            syntax_context_edge("Measure", "measures", "Situation"),
+            syntax_context_edge("Mission", "grounds", "Vision"),
+            syntax_context_edge("Situation", "surfaces", "Need"),
+            syntax_context_edge(
+                "Strategy",
+                "contributes-to",
+                "Strategy",
+            ),
+            syntax_context_edge("Strategy", "directs", "Intervention"),
+            syntax_context_edge("Strategy", "directs", "Strategy"),
+            syntax_context_edge("Strategy", "frames", "Measure"),
+            syntax_context_edge("Strategy", "qualifies", "Need"),
+            syntax_context_edge("Vision", "orients", "Strategy"),
         }
     ),
     "O2I Semantics - Primitives": frozenset(
@@ -365,144 +404,173 @@ RELATION_CONTRACTS = {
     "O2I Syntax - Primitives": frozenset(
         {
             contract_edge(
-                "O2I Context (Mission)",
-                "contextualizes",
-                "Driver @ Mission",
-                relation_type="CompositionRelationship",
-                target_type="Driver",
-            ),
-            contract_edge(
-                "O2I Context (Strategy)",
-                "contextualizes",
-                "Performance Dimension @ Strategy",
-                relation_type="CompositionRelationship",
-            ),
-            contract_edge(
-                "Course of Action",
+                "O2I Action",
                 "contributes-to",
-                "Course of Action",
+                "O2I Action",
                 source_type="CourseOfAction",
                 relation_type="AssociationRelationship",
                 directed=True,
                 target_type="CourseOfAction",
             ),
             contract_edge(
-                "Course of Action",
+                "O2I Action",
                 "contributes-to",
-                "Outcome",
+                "O2I Key Result",
                 source_type="CourseOfAction",
                 relation_type="RealizationRelationship",
                 target_type="Outcome",
             ),
             contract_edge(
-                "Course of Action",
+                "O2I Action",
                 "guides",
-                "Course of Action",
+                "O2I Action",
                 source_type="CourseOfAction",
                 relation_type="AssociationRelationship",
                 directed=True,
                 target_type="CourseOfAction",
             ),
             contract_edge(
-                "Driver",
+                "O2I Driver",
                 "grounds",
-                "Goal",
+                "O2I Objective",
                 source_type="Driver",
                 target_type="Goal",
             ),
             contract_edge(
-                "Driver",
+                "O2I Driver",
                 "indicates",
-                "Performance Dimension",
+                "O2I Performance Dimension",
                 source_type="Driver",
             ),
             contract_edge(
-                "Goal",
+                "O2I Objective",
                 "orients",
-                "Goal",
+                "O2I Objective",
                 source_type="Goal",
                 target_type="Goal",
             ),
             contract_edge(
-                "Outcome",
+                "O2I Key Result",
                 "contributes-to",
-                "Outcome",
+                "O2I Key Result",
                 source_type="Outcome",
                 target_type="Outcome",
             ),
             contract_edge(
-                "Outcome",
+                "O2I Key Result",
                 "determines",
-                "Performance Dimension",
+                "O2I Performance Dimension",
                 source_type="Outcome",
             ),
             contract_edge(
-                "Outcome",
+                "O2I Key Result",
                 "sets-target-for",
-                "Assessment",
+                "O2I KPI",
                 source_type="Outcome",
                 relation_type="AssociationRelationship",
                 directed=True,
                 target_type="Assessment",
             ),
             contract_edge(
-                "Outcome",
+                "O2I Key Result",
                 "substantiates",
-                "Goal",
+                "O2I Objective",
                 source_type="Outcome",
                 relation_type="RealizationRelationship",
                 target_type="Goal",
             ),
             contract_edge(
-                "Outcome",
+                "O2I Key Result",
                 "translates-into",
-                "Goal",
+                "O2I Objective",
                 source_type="Outcome",
                 target_type="Goal",
             ),
             contract_edge(
-                "Performance Dimension",
+                "O2I Performance Dimension",
                 "contains",
-                "Assessment",
+                "O2I KPI",
                 relation_type="AggregationRelationship",
                 target_type="Assessment",
             ),
             contract_edge(
-                "Performance Dimension",
+                "O2I Performance Dimension",
                 "contains",
-                "Outcome",
+                "O2I Key Result",
                 relation_type="AggregationRelationship",
                 target_type="Outcome",
             ),
             contract_edge(
-                "Principle",
+                "O2I Principle",
                 "guides",
-                "Course of Action",
+                "O2I Action",
                 source_type="Principle",
                 relation_type="AssociationRelationship",
                 directed=True,
                 target_type="CourseOfAction",
             ),
             contract_edge(
-                "Principle",
+                "O2I Principle",
                 "guides",
-                "Driver",
+                "O2I Driver",
                 source_type="Principle",
                 target_type="Driver",
             ),
             contract_edge(
-                "Principle",
+                "O2I Principle",
                 "guides",
-                "Goal",
+                "O2I Objective",
                 source_type="Principle",
                 target_type="Goal",
             ),
             contract_edge(
-                "Principle",
+                "O2I Principle",
                 "guides",
-                "Principle",
+                "O2I Principle",
                 source_type="Principle",
                 target_type="Principle",
+            ),
+        }
+    ),
+    "O2I Syntax - Contextualization": frozenset(
+        {
+            contract_edge(
+                "<Name> :: O2I Mission",
+                "contextualizes",
+                "<Name> :: O2I Driver",
+                relation_type="CompositionRelationship",
+                target_type="Driver",
+            ),
+            contract_edge(
+                "<Name> :: O2I Strategy",
+                "contextualizes",
+                "<Name> :: O2I Performance Dimension",
+                relation_type="CompositionRelationship",
+            ),
+        }
+    ),
+    "O2I Syntax - Collective Strategy Realization": frozenset(
+        {
+            contract_edge(
+                "<Contributor Strategy 1> :: O2I Strategy",
+                "realizes",
+                "<Name> :: O2I Collective Strategy Realization",
+                relation_type="RealizationRelationship",
+                target_type="Junction",
+            ),
+            contract_edge(
+                "<Contributor Strategy 2> :: O2I Strategy",
+                "realizes",
+                "<Name> :: O2I Collective Strategy Realization",
+                relation_type="RealizationRelationship",
+                target_type="Junction",
+            ),
+            contract_edge(
+                "<Name> :: O2I Collective Strategy Realization",
+                "realizes",
+                "<Target Strategy> :: O2I Strategy",
+                source_type="Junction",
+                relation_type="RealizationRelationship",
             ),
         }
     ),
@@ -542,243 +610,12 @@ def collect_model(root: ET.Element):
     return elements, relations
 
 
-def model_elements(root: ET.Element) -> dict[str, ET.Element]:
-    return {
-        element_id: element
-        for element in root.iter("element")
-        if (element_id := element.get("id"))
-        and not xtype(element).endswith("Relationship")
-        and xtype(element) != "ArchimateDiagramModel"
-    }
-
-
-def property_values(element: ET.Element, key: str) -> list[str]:
-    return [
-        prop.get("value", "")
-        for prop in element.findall("property")
-        if prop.get("key") == key
-    ]
-
-
-def element_label(element: ET.Element) -> str:
-    return (
-        f"{element.get('name', '')} ({xtype(element)}, "
-        f"{element.get('id', '?')})"
-    )
-
-
-def required_o2i_metadata_errors(root: ET.Element) -> list[str]:
-    candidates = list(model_elements(root).values())
-    errors: list[str] = []
-
-    for identity, required in REQUIRED_O2I_ELEMENT_METADATA.items():
-        name, element_type = identity
-        matches = [
-            element
-            for element in candidates
-            if element.get("name", "") == name
-            and xtype(element) == element_type
-        ]
-        if len(matches) != 1:
-            errors.append(
-                "expected exactly one metadata-bearing O2I element "
-                f"{name} ({element_type}); found {len(matches)}"
-            )
-            continue
-
-        element = matches[0]
-        for key, expected in required.items():
-            values = property_values(element, key)
-            if values != [expected]:
-                errors.append(
-                    f"{element_label(element)} must declare exactly one "
-                    f"{key}={expected!r}; found {values!r}"
-                )
-
-    return errors
-
-
-def collect_o2i_metadata(
-    root: ET.Element,
-) -> tuple[dict[str, tuple[str, str]], list[str]]:
-    metadata: dict[str, tuple[str, str]] = {}
-    errors: list[str] = []
-
-    for element_id, element in model_elements(root).items():
-        o2i_properties = [
-            prop
-            for prop in element.findall("property")
-            if prop.get("key", "").startswith("o2i.")
-        ]
-        if not o2i_properties:
-            continue
-
-        for prop in o2i_properties:
-            key = prop.get("key", "")
-            if key in FORBIDDEN_O2I_METADATA_PROPERTIES:
-                errors.append(
-                    f"{element_label(element)} must not declare forbidden "
-                    f"O2I metadata property {key!r}"
-                )
-            elif key not in {O2I_KIND_PROPERTY, O2I_TYPE_PROPERTY}:
-                errors.append(
-                    f"{element_label(element)} declares unsupported O2I "
-                    f"metadata property {key!r}"
-                )
-
-        kind_values = property_values(element, O2I_KIND_PROPERTY)
-        type_values = property_values(element, O2I_TYPE_PROPERTY)
-
-        if len(kind_values) != 1:
-            errors.append(
-                f"{element_label(element)} must declare exactly one "
-                f"{O2I_KIND_PROPERTY}; found {kind_values!r}"
-            )
-            continue
-
-        kind = kind_values[0]
-        if kind not in O2I_TYPES_BY_KIND:
-            errors.append(
-                f"{element_label(element)} has invalid {O2I_KIND_PROPERTY} "
-                f"value {kind!r}"
-            )
-            continue
-
-        if len(type_values) != 1:
-            errors.append(
-                f"{element_label(element)} must declare exactly one "
-                f"{O2I_TYPE_PROPERTY}; found {type_values!r}"
-            )
-            continue
-
-        element_type = type_values[0]
-        if element_type not in O2I_TYPES_BY_KIND[kind]:
-            errors.append(
-                f"{element_label(element)} has invalid "
-                f"{O2I_TYPE_PROPERTY} value {element_type!r} for "
-                f"{O2I_KIND_PROPERTY}={kind!r}"
-            )
-            continue
-
-        metadata[element_id] = (kind, element_type)
-
-    return metadata, errors
-
-
-def validate_o2i_contextualization(
-    root: ET.Element,
-    relations: dict[
-        str,
-        tuple[str, str, str | None, str | None, bool],
-    ],
-) -> list[str]:
-    """Validate generic O2I metadata and structure, not registry semantics."""
-    model_nodes = model_elements(root)
-    metadata, errors = collect_o2i_metadata(root)
-
-    for error in required_o2i_metadata_errors(root):
-        if error not in errors:
-            errors.append(error)
-
-    contextualization_relations = [
-        (relation_id, source, target)
-        for relation_id, (
-            relation_name,
-            relation_type,
-            source,
-            target,
-            _,
-        ) in relations.items()
-        if relation_name == "contextualizes"
-        and relation_type == "CompositionRelationship"
-    ]
-    incoming: dict[str, list[tuple[str, str | None]]] = {}
-    for relation_id, source, target in contextualization_relations:
-        if target is not None:
-            incoming.setdefault(target, []).append((relation_id, source))
-
-        source_metadata = metadata.get(source or "")
-        target_metadata = metadata.get(target or "")
-        if source_metadata is None and target_metadata is None:
-            continue
-
-        if source_metadata is None or source_metadata[0] != "Context":
-            errors.append(
-                f"contextualization relation {relation_id!r} must start at an element "
-                f"with {O2I_KIND_PROPERTY}='Context'"
-            )
-        if (
-            target_metadata is None
-            or target_metadata[0] not in O2I_CONTEXTUALIZED_KINDS
-        ):
-            errors.append(
-                f"contextualization relation {relation_id!r} must end at an element "
-                "with o2i.kind='Primitive' or o2i.kind='Structuring'"
-            )
-
-    for element_id, (kind, _) in metadata.items():
-        contextualizations = incoming.get(element_id, [])
-        label = element_label(model_nodes[element_id])
-        if (
-            kind in O2I_CONTEXTUALIZED_KINDS
-            and len(contextualizations) != 1
-        ):
-            errors.append(
-                f"{label} has {len(contextualizations)} model-wide "
-                "CompositionRelationship[contextualizes] contextualizations; "
-                "expected exactly one"
-            )
-        if kind in {"Context", "SituationAnchor"} and contextualizations:
-            relation_ids = [
-                relation_id for relation_id, _ in contextualizations
-            ]
-            errors.append(
-                f"{label} must not be contextualized but has model-wide "
-                "CompositionRelationship[contextualizes] contextualizations "
-                f"{relation_ids!r}"
-            )
-
-    for relation_id, (
-        relation_name,
-        relation_type,
-        source,
-        target,
-        _,
-    ) in relations.items():
-        if relation_name != "contains" or relation_type != "AggregationRelationship":
-            continue
-        if metadata.get(source or "") != (
-            "Structuring",
-            "PerformanceDimension",
-        ):
-            continue
-
-        target_metadata = metadata.get(target or "")
-        if target_metadata is None or target_metadata[0] != "Primitive":
-            errors.append(
-                f"PerformanceDimension membership {relation_id!r} must end "
-                "at an element with o2i.kind='Primitive'"
-            )
-            continue
-
-        dimension_owners = incoming.get(source or "", [])
-        member_owners = incoming.get(target or "", [])
-        if len(dimension_owners) == 1 and len(member_owners) == 1:
-            dimension_owner = dimension_owners[0][1]
-            member_owner = member_owners[0][1]
-            if dimension_owner != member_owner:
-                errors.append(
-                    f"PerformanceDimension membership {relation_id!r} "
-                    "crosses contextualizing Context element IDs: "
-                    f"{dimension_owner!r} != {member_owner!r}"
-                )
-
-    return errors
-
-
 def find_view(root: ET.Element, view_name: str) -> ET.Element:
     for element in root.iter("element"):
-        if xtype(element) == "ArchimateDiagramModel" and element.get("name") == view_name:
+        if (
+            xtype(element) == "ArchimateDiagramModel"
+            and element.get("name") == view_name
+        ):
             return element
     raise SystemExit(f"view not found: {view_name}")
 
@@ -852,18 +689,16 @@ def render(
     view_name: str,
     include_meaning: bool,
 ) -> str:
-    context_by_element: dict[str, str] = {}
-    for object_id, element_id in object_targets.items():
-        context_by_element.setdefault(
+    visible_occurrences = [
+        (
+            object_id,
             element_id,
             top_container(object_id, object_targets, object_parents, elements),
         )
-
-    visible_elements = {
-        element_id
-        for element_id in object_targets.values()
+        for object_id, element_id in object_targets.items()
         if include_meaning or elements.get(element_id, ("", ""))[1] != "Meaning"
-    }
+    ]
+    visible_objects = {object_id for object_id, _, _ in visible_occurrences}
 
     lines: list[str] = [
         f"# {view_name}",
@@ -883,23 +718,30 @@ def render(
 
     lines.extend(["## Nodes", ""])
 
-    for element_id in sorted(
-        visible_elements,
-        key=lambda item: (context_by_element.get(item, ""), elements.get(item, ("", ""))[0]),
+    for _, element_id, context in sorted(
+        visible_occurrences,
+        key=lambda occurrence: (
+            occurrence[2],
+            elements.get(occurrence[1], ("", ""))[0],
+            elements.get(occurrence[1], ("", ""))[1],
+            occurrence[0],
+        ),
     ):
         name, element_type = elements[element_id]
-        context = context_by_element.get(element_id, "")
         lines.append(f"- [{context}] `{name}` ({element_type})")
 
     lines.extend(["", "## Relations", ""])
 
     rendered_relations = []
     for source_object, relation_id, target_object in connections:
+        if (
+            source_object not in visible_objects
+            or target_object not in visible_objects
+        ):
+            continue
         source = object_targets.get(source_object or "")
         target = object_targets.get(target_object or "")
         if relation_id is None or source is None or target is None:
-            continue
-        if source not in visible_elements or target not in visible_elements:
             continue
         relation_name, relation_type, _, _, directed = relations.get(
             relation_id,
@@ -922,6 +764,9 @@ def render(
             f"({relation_description})"
         )
 
+    if not rendered_relations and lines[-1] == "":
+        lines.pop()
+
     return "\n".join(lines) + "\n"
 
 
@@ -933,7 +778,9 @@ def rendered_view(
 ) -> str:
     elements, relations = collect_model(root)
     view = find_view(root, view_name)
-    object_targets, object_parents, connections, notes, documentation = collect_view(view)
+    object_targets, object_parents, connections, notes, documentation = (
+        collect_view(view)
+    )
     return render(
         elements,
         relations,
@@ -949,39 +796,25 @@ def rendered_view(
 
 
 def validate_model(root: ET.Element) -> list[str]:
+    """Validate repository View contracts without validating O2I semantics."""
     elements, relations = collect_model(root)
     errors: list[str] = []
+    expected_views = {view_name for view_name, _ in PRESETS.values()}
+    actual_views = {
+        element.get("name", "")
+        for element in root.iter("element")
+        if xtype(element) == "ArchimateDiagramModel"
+    }
 
-    profile_versions = [
-        prop.get("value", "")
-        for prop in root.findall("property")
-        if prop.get("key") == O2I_PROFILE_PROPERTY
-    ]
-    if profile_versions != [O2I_PROFILE_VERSION]:
-        errors.append(
-            "expected exactly one canonical O2I profile 0.2; found: "
-            + repr(profile_versions)
-        )
-
-    legacy_profile_versions = [
-        prop.get("value", "")
-        for prop in root.findall("property")
-        if prop.get("key") == "version"
-    ]
-    if legacy_profile_versions:
-        errors.append(
-            "generic model property 'version' is not an O2I profile alias; "
-            "found: "
-            + repr(legacy_profile_versions)
-        )
-
-    errors.extend(validate_o2i_contextualization(root, relations))
+    for view_name in sorted(expected_views - actual_views):
+        errors.append(f"missing required view: {view_name}")
+    for view_name in sorted(actual_views - expected_views):
+        errors.append(f"unregistered repository view: {view_name}")
 
     for view_name, _ in PRESETS.values():
         try:
             view = find_view(root, view_name)
         except SystemExit:
-            errors.append(f"missing required view: {view_name}")
             continue
 
         object_targets, _, connections, notes, documentation = collect_view(view)
@@ -1058,10 +891,6 @@ def validate_model(root: ET.Element) -> list[str]:
                     f"{view_name} connection target {target!r} does not match "
                     f"relationship {relation_id!r} target {relation_target!r}"
                 )
-            if relation_type == "AssociationRelationship" and not directed:
-                errors.append(
-                    f"{view_name} uses undirected association: {relation_name}"
-                )
             if source_type == "Meaning" or target_type == "Meaning":
                 continue
             relation_signatures.append(
@@ -1101,25 +930,80 @@ def validate_model(root: ET.Element) -> list[str]:
                     + format_contract_edge(duplicate)
                 )
 
-        if view_name == "O2I Syntax - Primitives":
+        required_nodes = REQUIRED_NODES_BY_VIEW.get(view_name, frozenset())
+        if required_nodes:
             visible_nodes = {
                 elements[element_id]
                 for element_id in object_targets.values()
                 if element_id in elements
                 and elements[element_id][1] != "Meaning"
             }
-            for required in sorted(REQUIRED_SYNTAX_NODES):
+            for required in sorted(required_nodes):
                 if required not in visible_nodes:
                     errors.append(
                         f"{view_name} is missing node "
                         f"{required[0]} ({required[1]})"
                     )
 
-            for fragment in REQUIRED_SYNTAX_DOCUMENTATION:
-                if fragment not in documentation:
-                    errors.append(
-                        "O2I Syntax documentation is missing: " + fragment
-                    )
+        for fragment in REQUIRED_VIEW_DOCUMENTATION.get(view_name, ()):
+            if fragment not in documentation:
+                errors.append(
+                    f"{view_name} documentation is missing: {fragment}"
+                )
+
+        errors.extend(
+            required_element_documentation_errors(
+                root,
+                view_name,
+                object_targets,
+            )
+        )
+
+    return errors
+
+
+def required_element_documentation_errors(
+    root: ET.Element,
+    view_name: str,
+    object_targets: dict[str, str],
+) -> list[str]:
+    """Check documentation selected as part of a repository View contract."""
+    by_id = {
+        element_id: element
+        for element in root.iter("element")
+        if (element_id := element.get("id"))
+    }
+    visible = [
+        by_id[element_id]
+        for element_id in object_targets.values()
+        if element_id in by_id
+    ]
+    errors: list[str] = []
+
+    for (contract_view, name, element_type), fragments in (
+        REQUIRED_ELEMENT_DOCUMENTATION.items()
+    ):
+        if contract_view != view_name:
+            continue
+        matches = [
+            element
+            for element in visible
+            if element.get("name", "") == name
+            and xtype(element) == element_type
+        ]
+        if len(matches) != 1:
+            errors.append(
+                f"{view_name} expected exactly one documented element "
+                f"{name} ({element_type}); found {len(matches)}"
+            )
+            continue
+        documentation = (matches[0].findtext("documentation") or "").strip()
+        for fragment in fragments:
+            if fragment not in documentation:
+                errors.append(
+                    f"{view_name} element {name} ({element_type}) "
+                    f"documentation is missing: {fragment}"
+                )
 
     return errors
 
@@ -1154,20 +1038,40 @@ def snapshot_diff(output_path: Path, expected: str) -> list[str]:
     return [f"snapshot drift: {output_path}\n{diff}"]
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser()
+def snapshot_contract_errors() -> list[str]:
+    expected = {
+        (REPOSITORY_ROOT / output_path).resolve()
+        for _, output_path in PRESETS.values()
+    }
+    actual = {
+        path.resolve()
+        for path in (REPOSITORY_ROOT / "mdl").glob("o2i-*.md")
+    }
+    errors = []
+    for path in sorted(expected - actual):
+        errors.append(f"missing registered snapshot: {path}")
+    for path in sorted(actual - expected):
+        errors.append(f"unregistered repository snapshot: {path}")
+    return errors
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Extract repository review snapshots from O2I ArchiMate views."
+    )
     parser.add_argument(
         "--model",
         type=Path,
-        default=Path("mdl/o2i.archimate"),
+        default=DEFAULT_MODEL,
         help="Path to the ArchiMate model.",
     )
-    parser.add_argument(
+    selection = parser.add_mutually_exclusive_group(required=True)
+    selection.add_argument(
         "--preset",
         choices=[*PRESETS.keys(), "all"],
         help="Named O2I view preset to extract.",
     )
-    parser.add_argument(
+    selection.add_argument(
         "--view",
         default=None,
         help="ArchiMate view name to extract.",
@@ -1188,52 +1092,103 @@ def main() -> None:
         action="store_true",
         help="Validate model invariants and fail on snapshot drift.",
     )
-    args = parser.parse_args()
+    return parser
 
-    root = ET.parse(args.model).getroot()
-    errors = validate_model(root) if args.check else []
+
+def parse_args(
+    argv: list[str] | None = None,
+) -> tuple[argparse.ArgumentParser, argparse.Namespace]:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if args.preset is not None:
+        if args.output is not None:
+            parser.error("--output is only valid with --view")
+        if args.include_meaning:
+            parser.error("--include-meaning is only valid with --view")
+    elif args.output is None:
+        parser.error("--view requires --output")
+    return parser, args
+
+
+def display_path(path: Path) -> Path:
+    resolved = path.resolve()
+    try:
+        return resolved.relative_to(REPOSITORY_ROOT)
+    except ValueError:
+        return path
+
+
+def run(args: argparse.Namespace) -> list[str]:
+    try:
+        root = ET.parse(args.model).getroot()
+    except (ET.ParseError, OSError) as error:
+        return [f"cannot read model {args.model}: {error}"]
+
+    errors = (
+        [*validate_model(root), *snapshot_contract_errors()]
+        if args.check
+        else []
+    )
 
     if args.preset == "all":
         for view_name, output_path in PRESETS.values():
-            content = rendered_view(
-                root,
-                args.model,
-                view_name,
-                args.include_meaning,
-            )
+            output_path = REPOSITORY_ROOT / output_path
+            try:
+                content = rendered_view(
+                    root,
+                    display_path(args.model),
+                    view_name,
+                    False,
+                )
+            except SystemExit as error:
+                errors.append(str(error))
+                continue
             if args.check:
                 errors.extend(snapshot_diff(output_path, content))
             else:
-                output_path.write_text(content, encoding="utf-8")
-        if errors:
-            print("\n\n".join(errors), file=sys.stderr)
-            raise SystemExit(1)
-        return
+                try:
+                    output_path.write_text(content, encoding="utf-8")
+                except OSError as error:
+                    errors.append(f"cannot write snapshot {output_path}: {error}")
+        return errors
 
     if args.preset:
         view_name, output_path = PRESETS[args.preset]
+        output_path = REPOSITORY_ROOT / output_path
+        include_meaning = False
     else:
-        view_name = args.view or PRESETS["layered-cake"][0]
-        output_path = args.output or PRESETS["layered-cake"][1]
-
-    if args.view:
         view_name = args.view
-    if args.output:
         output_path = args.output
+        include_meaning = args.include_meaning
 
-    content = rendered_view(
-        root,
-        args.model,
-        view_name,
-        args.include_meaning,
-    )
+    try:
+        content = rendered_view(
+            root,
+            display_path(args.model),
+            view_name,
+            include_meaning,
+        )
+    except SystemExit as error:
+        errors.append(str(error))
+        return errors
     if args.check:
         errors.extend(snapshot_diff(output_path, content))
     else:
-        output_path.write_text(content, encoding="utf-8")
+        try:
+            output_path.write_text(content, encoding="utf-8")
+        except OSError as error:
+            errors.append(f"cannot write snapshot {output_path}: {error}")
+    return errors
 
+
+def main(argv: list[str] | None = None) -> None:
+    _, args = parse_args(argv)
+    errors = run(args)
     if errors:
-        print("\n\n".join(errors), file=sys.stderr)
+        print(
+            "\n\n".join(f"[o2i|error] {error}" for error in errors),
+            file=sys.stderr,
+        )
         raise SystemExit(1)
 
 

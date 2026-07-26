@@ -1,10 +1,15 @@
-"""Negative contract tests for the O2I ArchiMate model validator."""
+"""Repository-contract tests for the O2I ArchiMate snapshot extractor."""
 
 from __future__ import annotations
 
 import copy
+from contextlib import redirect_stderr
 import importlib.util
+import io
 from pathlib import Path
+import subprocess
+import sys
+import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 
@@ -12,6 +17,20 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "utl" / "extract-archimate-view.py"
 MODEL = ROOT / "mdl" / "o2i.archimate"
+EXPECTED_PRESET_KEYS = {
+    "strategy-constituents",
+    "semantics-situation",
+    "situation-anchoring",
+    "orientation",
+    "semantics-context",
+    "semantics-primitives",
+    "syntax-context",
+    "syntax-contextualization",
+    "syntax-collective-strategy-realization",
+    "syntax-primitives",
+    "syntax-situation",
+    "layered-cake",
+}
 
 SPEC = importlib.util.spec_from_file_location("extract_archimate_view", SCRIPT)
 if SPEC is None or SPEC.loader is None:
@@ -20,563 +39,532 @@ EXTRACTOR = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(EXTRACTOR)
 
 
-class RelationshipEndpointContractTest(unittest.TestCase):
-    """Validate view contracts and model-wide O2I syntax structure."""
+class RepositoryViewContractTest(unittest.TestCase):
+    """Validate deterministic repository Views without duplicating semantics."""
 
     def setUp(self) -> None:
         self.root = ET.parse(MODEL).getroot()
 
-    def test_repository_model_is_valid(self) -> None:
+    def test_repository_model_satisfies_view_contracts(self) -> None:
         self.assertEqual([], EXTRACTOR.validate_model(self.root))
 
-    def test_o2i_profile_is_required_as_a_direct_model_property(self) -> None:
+    def test_all_presets_are_named_and_target_distinct_snapshots(self) -> None:
+        view_names = [view for view, _ in EXTRACTOR.PRESETS.values()]
+        snapshots = [snapshot for _, snapshot in EXTRACTOR.PRESETS.values()]
+        model_views = {
+            element.get("name", "")
+            for element in self.root.iter("element")
+            if EXTRACTOR.xtype(element) == "ArchimateDiagramModel"
+        }
+        repository_snapshots = {
+            path.relative_to(ROOT)
+            for path in (ROOT / "mdl").glob("o2i-*.md")
+        }
+
+        self.assertEqual(EXPECTED_PRESET_KEYS, set(EXTRACTOR.PRESETS))
+        self.assertEqual(len(view_names), len(set(view_names)))
+        self.assertEqual(len(snapshots), len(set(snapshots)))
+        self.assertEqual(model_views, set(view_names))
+        self.assertEqual(
+            repository_snapshots,
+            set(snapshots),
+        )
+
+    def test_missing_required_view_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
-        profile = self._direct_model_property(
+        view = EXTRACTOR.find_view(root, "O2I Syntax - Context")
+        self._remove_element(root, view)
+
+        errors = EXTRACTOR.validate_model(root)
+
+        self.assertIn(
+            "missing required view: O2I Syntax - Context",
+            errors,
+        )
+
+    def test_required_node_is_view_scoped(self) -> None:
+        root = copy.deepcopy(self.root)
+        self._remove_view_node(
             root,
-            EXTRACTOR.O2I_PROFILE_PROPERTY,
+            "O2I Syntax - Primitives",
+            "O2I Principle",
+            "Principle",
         )
-        root.remove(profile)
 
         errors = EXTRACTOR.validate_model(root)
 
         self.assertIn(
-            "expected exactly one canonical O2I profile 0.2; found: []",
+            "O2I Syntax - Primitives is missing node "
+            "O2I Principle (Principle)",
             errors,
         )
 
-    def test_duplicate_o2i_profiles_are_rejected(self) -> None:
+    def test_required_view_documentation_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
-        ET.SubElement(
+        view = EXTRACTOR.find_view(root, "O2I Syntax - Contextualization")
+        documentation = view.find("documentation")
+        self.assertIsNotNone(documentation)
+        documentation.text = "Defines an incomplete repository View."
+
+        errors = EXTRACTOR.validate_model(root)
+
+        self.assertTrue(
+            any(
+                "O2I Syntax - Contextualization documentation is missing:"
+                in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_required_element_documentation_is_reported(self) -> None:
+        root = copy.deepcopy(self.root)
+        proposition = self._model_element(
             root,
-            "property",
-            {
-                "key": EXTRACTOR.O2I_PROFILE_PROPERTY,
-                "value": EXTRACTOR.O2I_PROFILE_VERSION,
-            },
+            "<Name> :: O2I Collective Strategy Realization",
+            "Junction",
         )
+        documentation = proposition.find("documentation")
+        self.assertIsNotNone(documentation)
+        documentation.text = "Incomplete."
 
         errors = EXTRACTOR.validate_model(root)
 
-        self.assertIn(
-            "expected exactly one canonical O2I profile 0.2; found: "
-            "['0.2', '0.2']",
+        self.assertTrue(
+            any(
+                "O2I Syntax - Collective Strategy Realization element "
+                "<Name> :: O2I Collective Strategy Realization (Junction) "
+                "documentation is missing:"
+                in error
+                for error in errors
+            ),
             errors,
         )
 
-    def test_unsupported_o2i_profile_is_rejected(self) -> None:
+    def test_missing_contracted_relation_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
-        profile = self._direct_model_property(
+        view = EXTRACTOR.find_view(
             root,
-            EXTRACTOR.O2I_PROFILE_PROPERTY,
+            "O2I Syntax - Collective Strategy Realization",
         )
-        profile.set("value", "0.1")
+        connection = next(view.iter("sourceConnection"))
+        self._remove_element(view, connection)
 
         errors = EXTRACTOR.validate_model(root)
 
-        self.assertIn(
-            "expected exactly one canonical O2I profile 0.2; found: ['0.1']",
+        self.assertTrue(
+            any(
+                "O2I Syntax - Collective Strategy Realization is missing "
+                "contracted relation:"
+                in error
+                for error in errors
+            ),
             errors,
         )
 
-    def test_generic_version_property_is_not_an_o2i_profile_alias(self) -> None:
+    def test_duplicate_displayed_relation_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
-        ET.SubElement(root, "property", {"key": "version", "value": "0.2"})
+        view = EXTRACTOR.find_view(root, "O2I Semantics - Primitives")
+        connection = self._connection(root, view, "substantiates")
+        parent = self._parent_of(view, connection)
+        parent.append(copy.deepcopy(connection))
 
         errors = EXTRACTOR.validate_model(root)
 
-        self.assertIn(
-            "generic model property 'version' is not an O2I profile alias; "
-            "found: ['0.2']",
+        self.assertTrue(
+            any(
+                "O2I Semantics - Primitives duplicates contracted relation:"
+                in error
+                for error in errors
+            ),
             errors,
         )
 
-    def test_required_o2i_metadata_is_enforced(self) -> None:
-        for identity, required in EXTRACTOR.REQUIRED_O2I_ELEMENT_METADATA.items():
-            for key, expected in required.items():
-                with self.subTest(element=identity, property=key):
-                    root = copy.deepcopy(self.root)
-                    element = self._model_element(root, *identity)
-                    prop = next(
-                        candidate
-                        for candidate in element.findall("property")
-                        if candidate.get("key") == key
-                    )
-                    element.remove(prop)
-
-                    errors = EXTRACTOR.validate_model(root)
-
-                    self.assertIn(
-                        f"{EXTRACTOR.element_label(element)} must declare "
-                        f"exactly one {key}={expected!r}; found []",
-                        errors,
-                    )
-
-    def test_syntax_exemplar_metadata_pairs_are_exact(self) -> None:
+    def test_relationship_type_drift_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
-        driver = self._model_element(root, "Driver @ Mission", "Driver")
-        primitive_type = next(
-            prop
-            for prop in driver.findall("property")
-            if prop.get("key") == EXTRACTOR.O2I_TYPE_PROPERTY
+        view = EXTRACTOR.find_view(root, "O2I Semantics - Primitives")
+        connection = self._connection(root, view, "substantiates")
+        relationship = self._relationship_for(root, connection)
+        relationship.set(
+            EXTRACTOR.XSI_TYPE,
+            "archimate:AssociationRelationship",
         )
-        primitive_type.set("value", "KPI")
+        relationship.set("directed", "true")
 
         errors = EXTRACTOR.validate_model(root)
 
-        self.assertIn(
-            f"{EXTRACTOR.element_label(driver)} must declare exactly one "
-            "o2i.type='Driver'; found ['KPI']",
+        self.assertTrue(
+            any(
+                "O2I Semantics - Primitives is missing contracted relation:"
+                in error
+                for error in errors
+            ),
+            errors,
+        )
+        self.assertTrue(
+            any(
+                "O2I Semantics - Primitives has uncontracted relation:"
+                in error
+                for error in errors
+            ),
             errors,
         )
 
-    def test_forbidden_owner_and_semantic_metadata_is_rejected(self) -> None:
-        for key in EXTRACTOR.FORBIDDEN_O2I_METADATA_PROPERTIES:
-            with self.subTest(property=key):
+    def test_connection_reference_defects_are_reported(self) -> None:
+        mutations = (
+            (
+                "source",
+                None,
+                "connection has no source reference",
+            ),
+            (
+                "source",
+                "missing-source-object",
+                "connection has unresolved source reference",
+            ),
+            (
+                "archimateRelationship",
+                None,
+                "connection has no relationship reference",
+            ),
+            (
+                "archimateRelationship",
+                "missing-relationship",
+                "connection has unresolved relationship reference",
+            ),
+            (
+                "target",
+                None,
+                "connection has no target reference",
+            ),
+            (
+                "target",
+                "missing-target-object",
+                "connection has unresolved target reference",
+            ),
+        )
+
+        for attribute, value, expected in mutations:
+            with self.subTest(attribute=attribute, value=value):
                 root = copy.deepcopy(self.root)
-                driver = self._model_element(root, "Driver @ Mission", "Driver")
-                ET.SubElement(
-                    driver,
-                    "property",
-                    {"key": key, "value": "forbidden"},
-                )
-
-                errors = EXTRACTOR.validate_model(root)
-
-                self.assertIn(
-                    f"{EXTRACTOR.element_label(driver)} must not declare "
-                    f"forbidden O2I metadata property {key!r}",
-                    errors,
-                )
-
-    def test_kind_rejects_a_type_from_another_closed_universe(self) -> None:
-        root = copy.deepcopy(self.root)
-        anchor = self._model_element(root, "Business Capability", "Grouping")
-        anchor_type = next(
-            prop
-            for prop in anchor.findall("property")
-            if prop.get("key") == EXTRACTOR.O2I_TYPE_PROPERTY
-        )
-        anchor_type.set("value", "Driver")
-
-        errors = EXTRACTOR.validate_model(root)
-
-        self.assertIn(
-            f"{EXTRACTOR.element_label(anchor)} has invalid o2i.type value "
-            "'Driver' for o2i.kind='SituationAnchor'",
-            errors,
-        )
-
-    def test_performance_dimension_is_a_structuring_type_not_a_kind(self) -> None:
-        root = copy.deepcopy(self.root)
-        dimension = self._model_element(
-            root,
-            "Performance Dimension @ Strategy",
-            "Grouping",
-        )
-        kind = next(
-            prop
-            for prop in dimension.findall("property")
-            if prop.get("key") == EXTRACTOR.O2I_KIND_PROPERTY
-        )
-        kind.set("value", "PerformanceDimension")
-
-        errors = EXTRACTOR.validate_model(root)
-
-        self.assertIn(
-            f"{EXTRACTOR.element_label(dimension)} has invalid o2i.kind "
-            "value 'PerformanceDimension'",
-            errors,
-        )
-
-    def test_hidden_duplicate_contextualization_is_rejected_model_wide(
-        self,
-    ) -> None:
-        root = copy.deepcopy(self.root)
-        owner = self._append_context_element(
-            root,
-            "hidden-mission-context",
-            "Hidden Mission Context",
-            "Mission",
-        )
-        target = self._model_element(root, "Driver @ Mission", "Driver")
-        self._append_contextualization_relationship(
-            root,
-            "hidden-duplicate-owner",
-            owner,
-            target,
-        )
-
-        errors = EXTRACTOR.validate_model(root)
-
-        self.assertIn(
-            f"{EXTRACTOR.element_label(target)} has 2 model-wide "
-            "CompositionRelationship[contextualizes] contextualizations; "
-            "expected exactly one",
-            errors,
-        )
-
-    def test_hidden_anchor_contextualization_is_rejected_model_wide(
-        self,
-    ) -> None:
-        root = copy.deepcopy(self.root)
-        owner = self._model_element(root, "O2I Context (Strategy)", "Grouping")
-        anchor = self._model_element(root, "Business Capability", "Grouping")
-        relation_id = "hidden-anchor-owner"
-        self._append_contextualization_relationship(
-            root,
-            relation_id,
-            owner,
-            anchor,
-        )
-
-        errors = EXTRACTOR.validate_model(root)
-
-        self.assertIn(
-            f"{EXTRACTOR.element_label(anchor)} must not be contextualized "
-            "but has model-wide CompositionRelationship[contextualizes] "
-            "contextualizations "
-            f"[{relation_id!r}]",
-            errors,
-        )
-        self.assertIn(
-            f"contextualization relation {relation_id!r} must end at an "
-            "element with "
-            "o2i.kind='Primitive' or o2i.kind='Structuring'",
-            errors,
-        )
-
-    def test_hidden_context_contextualization_is_rejected_model_wide(
-        self,
-    ) -> None:
-        root = copy.deepcopy(self.root)
-        owner = self._model_element(root, "O2I Context (Mission)", "Grouping")
-        target = self._model_element(root, "O2I Context (Strategy)", "Grouping")
-        relation_id = "hidden-context-owner"
-        self._append_contextualization_relationship(
-            root,
-            relation_id,
-            owner,
-            target,
-        )
-
-        errors = EXTRACTOR.validate_model(root)
-
-        self.assertIn(
-            f"{EXTRACTOR.element_label(target)} must not be contextualized "
-            "but has model-wide CompositionRelationship[contextualizes] "
-            "contextualizations "
-            f"[{relation_id!r}]",
-            errors,
-        )
-
-    def test_missing_primitive_contextualization_is_rejected_model_wide(
-        self,
-    ) -> None:
-        root = copy.deepcopy(self.root)
-        primitive = self._append_o2i_element(
-            root,
-            "ownerless-primitive",
-            "Ownerless Objective",
-            "Primitive",
-            "Objective",
-        )
-
-        errors = EXTRACTOR.validate_model(root)
-
-        self.assertIn(
-            f"{EXTRACTOR.element_label(primitive)} has 0 model-wide "
-            "CompositionRelationship[contextualizes] contextualizations; "
-            "expected exactly one",
-            errors,
-        )
-
-    def test_missing_structuring_contextualization_is_rejected_model_wide(
-        self,
-    ) -> None:
-        root = copy.deepcopy(self.root)
-        structuring = self._append_o2i_element(
-            root,
-            "ownerless-performance-dimension",
-            "Ownerless PerformanceDimension",
-            "Structuring",
-            "PerformanceDimension",
-        )
-
-        errors = EXTRACTOR.validate_model(root)
-
-        self.assertIn(
-            f"{EXTRACTOR.element_label(structuring)} has 0 model-wide "
-            "CompositionRelationship[contextualizes] contextualizations; "
-            "expected exactly one",
-            errors,
-        )
-
-    def test_performance_dimension_membership_requires_same_owner_id(self) -> None:
-        root = copy.deepcopy(self.root)
-        foreign_owner = self._append_context_element(
-            root,
-            "foreign-strategy",
-            "Foreign Strategy Context",
-            "Strategy",
-        )
-        member = self._append_o2i_element(
-            root,
-            "foreign-key-result",
-            "Foreign Key Result",
-            "Primitive",
-            "KeyResult",
-        )
-        self._append_contextualization_relationship(
-            root,
-            "foreign-key-result-owner",
-            foreign_owner,
-            member,
-        )
-        dimension = self._model_element(
-            root,
-            "Performance Dimension @ Strategy",
-            "Grouping",
-        )
-        relation_id = "cross-owner-membership"
-        self._append_membership_relationship(
-            root,
-            relation_id,
-            dimension,
-            member,
-        )
-
-        errors = EXTRACTOR.validate_model(root)
-
-        self.assertIn(
-            f"PerformanceDimension membership {relation_id!r} crosses "
-            "contextualizing Context element IDs: "
-            "'id-9eb65bc4e62e42e9ad5375725305340c' != "
-            "'foreign-strategy'",
-            errors,
-        )
-
-    def test_generic_structure_does_not_replicate_registry_admissibility(
-        self,
-    ) -> None:
-        root = copy.deepcopy(self.root)
-        mission = self._model_element(root, "O2I Context (Mission)", "Grouping")
-        kpi = self._append_o2i_element(
-            root,
-            "mission-kpi",
-            "KPI contextualized by Mission",
-            "Primitive",
-            "KPI",
-        )
-        dimension = self._append_o2i_element(
-            root,
-            "mission-performance-dimension",
-            "PerformanceDimension contextualized by Mission",
-            "Structuring",
-            "PerformanceDimension",
-        )
-        self._append_contextualization_relationship(
-            root,
-            "mission-kpi-owner",
-            mission,
-            kpi,
-        )
-        self._append_contextualization_relationship(
-            root,
-            "mission-dimension-owner",
-            mission,
-            dimension,
-        )
-
-        self.assertEqual([], EXTRACTOR.validate_model(root))
-
-    def test_syntax_contextualization_exemplar_nodes_are_required(self) -> None:
-        required = (
-            ("Driver @ Mission", "Driver"),
-            ("O2I Context (Mission)", "Grouping"),
-            ("O2I Context (Strategy)", "Grouping"),
-            ("Performance Dimension @ Strategy", "Grouping"),
-        )
-
-        for expected in required:
-            with self.subTest(node=expected):
-                root = copy.deepcopy(self.root)
-                self._remove_syntax_node(root, expected)
-
-                errors = EXTRACTOR.validate_model(root)
-
-                self.assertIn(
-                    "O2I Syntax - Primitives is missing node "
-                    f"{expected[0]} ({expected[1]})",
-                    errors,
-                )
-
-    def test_syntax_contextualization_edges_require_composition(self) -> None:
-        contextualization_edges = (
-            ("O2I Context (Mission)", "Driver @ Mission"),
-            ("O2I Context (Strategy)", "Performance Dimension @ Strategy"),
-        )
-
-        for source, target in contextualization_edges:
-            with self.subTest(source=source, target=target):
-                root = copy.deepcopy(self.root)
-                relationship = self._contextualization_relationship(
+                view = EXTRACTOR.find_view(
                     root,
-                    source,
-                    target,
+                    "O2I Semantics - Primitives",
                 )
-                relationship.set(
-                    EXTRACTOR.XSI_TYPE,
-                    "archimate:AssignmentRelationship",
-                )
+                connection = self._connection(root, view, "substantiates")
+                if value is None:
+                    connection.attrib.pop(attribute)
+                else:
+                    connection.set(attribute, value)
 
                 errors = EXTRACTOR.validate_model(root)
 
                 self.assertTrue(
-                    any(
-                        "missing contracted relation" in error
-                        and source in error
-                        and target in error
-                        and "CompositionRelationship" in error
-                        for error in errors
-                    ),
+                    any(expected in error for error in errors),
                     errors,
                 )
 
-    def test_syntax_placement_only_documentation_is_rejected(self) -> None:
+    def test_connection_endpoint_drift_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
-        view = EXTRACTOR.find_view(root, "O2I Syntax - Primitives")
-        documentation = view.find("documentation")
-        self.assertIsNotNone(documentation)
-        documentation.text = (
-            "Every O2I Context is represented by an ArchiMate Grouping. "
-            "An O2I Primitive is contextualized by placement inside its "
-            "contextualizing Context Grouping."
-        )
-
-        errors = EXTRACTOR.validate_model(root)
-
-        self.assertTrue(
-            any(
-                "documentation is missing: Defines the concrete ArchiMate "
-                "realization" in error
-                for error in errors
-            ),
-            errors,
-        )
-        self.assertTrue(
-            any(
-                "documentation is missing: Visual nesting presents but never "
-                "replaces explicit contextualization." in error
-                for error in errors
-            ),
-            errors,
-        )
-
-    def test_relationship_source_mismatch_is_rejected(self) -> None:
-        root, relationship, source, target = self._substantiates_fixture()
-        relationship.set("source", target)
-
-        errors = EXTRACTOR.validate_model(root)
-
-        self.assertTrue(
-            any("connection source" in error for error in errors),
-            errors,
-        )
-        self.assertNotEqual(source, relationship.get("source"))
-
-    def test_relationship_target_mismatch_is_rejected(self) -> None:
-        root, relationship, source, target = self._substantiates_fixture()
-        relationship.set("target", source)
-
-        errors = EXTRACTOR.validate_model(root)
-
-        self.assertTrue(
-            any("connection target" in error for error in errors),
-            errors,
-        )
-        self.assertNotEqual(target, relationship.get("target"))
-
-    def test_missing_relationship_reference_is_rejected(self) -> None:
-        self._assert_connection_reference_error(
-            "archimateRelationship",
-            None,
-            "no relationship reference",
-        )
-
-    def test_unresolved_relationship_reference_is_rejected(self) -> None:
-        self._assert_connection_reference_error(
-            "archimateRelationship",
-            "unknown-relationship",
-            "unresolved relationship reference",
-        )
-
-    def test_missing_source_reference_is_rejected(self) -> None:
-        self._assert_connection_reference_error(
-            "source",
-            None,
-            "no source reference",
-        )
-
-    def test_unresolved_source_reference_is_rejected(self) -> None:
-        self._assert_connection_reference_error(
-            "source",
-            "unknown-source",
-            "unresolved source reference",
-        )
-
-    def test_missing_target_reference_is_rejected(self) -> None:
-        self._assert_connection_reference_error(
-            "target",
-            None,
-            "no target reference",
-        )
-
-    def test_unresolved_target_reference_is_rejected(self) -> None:
-        self._assert_connection_reference_error(
-            "target",
-            "unknown-target",
-            "unresolved target reference",
-        )
-
-    def _substantiates_fixture(self):
-        root = copy.deepcopy(self.root)
-        elements, relations = EXTRACTOR.collect_model(root)
         view = EXTRACTOR.find_view(root, "O2I Semantics - Primitives")
-        object_targets, _, connections, _, _ = EXTRACTOR.collect_view(view)
+        connection = self._connection(root, view, "substantiates")
+        relationship = self._relationship_for(root, connection)
+        relationship.set("source", relationship.get("target", ""))
 
-        for source_object, relation_id, target_object in connections:
-            relation_name, _, _, _, _ = relations[relation_id]
-            if relation_name == "substantiates":
-                source = object_targets[source_object]
-                target = object_targets[target_object]
-                relationship = next(
-                    element
-                    for element in root.iter("element")
-                    if element.get("id") == relation_id
-                )
-                self.assertIn(source, elements)
-                self.assertIn(target, elements)
-                self.assertNotEqual(source, target)
-                return root, relationship, source, target
+        errors = EXTRACTOR.validate_model(root)
 
-        self.fail("The O2I Primitives view has no substantiates relationship")
+        self.assertTrue(
+            any(
+                "connection source" in error
+                and "does not match relationship" in error
+                for error in errors
+            ),
+            errors,
+        )
 
-    def _remove_syntax_node(
+    def test_profile_metadata_is_outside_extractor_authority(self) -> None:
+        baseline_validation = EXTRACTOR.validate_model(self.root)
+        baseline_snapshot = self._snapshot(
+            self.root,
+            "O2I Syntax - Collective Strategy Realization",
+        )
+        root = copy.deepcopy(self.root)
+        proposition = self._model_element(
+            root,
+            "<Name> :: O2I Collective Strategy Realization",
+            "Junction",
+        )
+        for prop in proposition.findall("property"):
+            key = prop.get("key")
+            if key == "o2i.kind":
+                prop.set("value", "InvalidKind")
+            elif key == "o2i.type":
+                prop.set("value", "UnknownStructuredProposition")
+            elif key == "o2i.commitment":
+                prop.set("value", "tentative")
+        ET.SubElement(
+            proposition,
+            "property",
+            {"key": "o2i.owner", "value": "invalid-owner"},
+        )
+
+        self.assertEqual(baseline_validation, EXTRACTOR.validate_model(root))
+        self.assertEqual(
+            baseline_snapshot,
+            self._snapshot(
+                root,
+                "O2I Syntax - Collective Strategy Realization",
+            ),
+        )
+
+    def test_hidden_profile_topology_is_outside_extractor_authority(self) -> None:
+        baseline_validation = EXTRACTOR.validate_model(self.root)
+        baseline_snapshot = self._snapshot(
+            self.root,
+            "O2I Syntax - Contextualization",
+        )
+        root = copy.deepcopy(self.root)
+        relations_folder = next(
+            folder
+            for folder in root.iter("folder")
+            if folder.get("type") == "relations"
+        )
+        source = self._model_element(
+            root,
+            "<Name> :: O2I Mission",
+            "Grouping",
+        )
+        target = self._model_element(
+            root,
+            "<Name> :: O2I Driver",
+            "Driver",
+        )
+        ET.SubElement(
+            relations_folder,
+            "element",
+            {
+                EXTRACTOR.XSI_TYPE: "archimate:CompositionRelationship",
+                "id": "hidden-contextualization",
+                "name": "contextualizes",
+                "source": source.get("id", ""),
+                "target": target.get("id", ""),
+            },
+        )
+
+        self.assertEqual(baseline_validation, EXTRACTOR.validate_model(root))
+        self.assertEqual(
+            baseline_snapshot,
+            self._snapshot(root, "O2I Syntax - Contextualization"),
+        )
+
+    def test_irrelevant_model_order_and_content_do_not_affect_snapshot(
+        self,
+    ) -> None:
+        view_name = "O2I Semantics - Context"
+        baseline_validation = EXTRACTOR.validate_model(self.root)
+        baseline_snapshot = self._snapshot(self.root, view_name)
+        root = copy.deepcopy(self.root)
+        elements_folder = next(
+            folder
+            for folder in root.iter("folder")
+            if folder.get("type") == "other"
+        )
+        ET.SubElement(
+            elements_folder,
+            "element",
+            {
+                EXTRACTOR.XSI_TYPE: "archimate:Meaning",
+                "id": "irrelevant-hidden-meaning",
+                "name": "Irrelevant hidden meaning",
+            },
+        )
+        elements_folder[:] = reversed(list(elements_folder))
+
+        self.assertEqual(baseline_validation, EXTRACTOR.validate_model(root))
+        self.assertEqual(baseline_snapshot, self._snapshot(root, view_name))
+
+    def test_snapshot_preserves_each_displayed_element_occurrence(self) -> None:
+        root = copy.deepcopy(self.root)
+        view = EXTRACTOR.find_view(root, "O2I Semantics - Context")
+        elements, _ = EXTRACTOR.collect_model(root)
+        object_targets, _, _, _, _ = EXTRACTOR.collect_view(view)
+        ethos_id = next(
+            element_id
+            for element_id, value in elements.items()
+            if value == ("Ethos", "Grouping")
+        )
+        mission_id = next(
+            element_id
+            for element_id, value in elements.items()
+            if value == ("Mission", "Grouping")
+        )
+        ethos_occurrence = self._view_occurrence(
+            view,
+            object_targets,
+            ethos_id,
+        )
+        mission_occurrence = self._view_occurrence(
+            view,
+            object_targets,
+            mission_id,
+        )
+        duplicate = copy.deepcopy(ethos_occurrence)
+        duplicate.set("id", "duplicate-ethos-occurrence")
+        for connection in list(duplicate.findall("sourceConnection")):
+            duplicate.remove(connection)
+        mission_occurrence.append(duplicate)
+
+        snapshot = self._snapshot(root, "O2I Semantics - Context")
+
+        self.assertIn("- [Ethos] `Ethos` (Grouping)", snapshot)
+        self.assertIn("- [Mission] `Ethos` (Grouping)", snapshot)
+
+    def test_cli_rejects_ambiguous_or_incomplete_selection(self) -> None:
+        invalid_arguments = (
+            ["--preset", "all", "--view", "ignored"],
+            ["--preset", "all", "--output", "ignored.md"],
+            ["--preset", "syntax-context", "--include-meaning"],
+            ["--view", "O2I Semantics - Context"],
+            ["--output", "ignored.md"],
+            [],
+        )
+
+        for arguments in invalid_arguments:
+            with self.subTest(arguments=arguments):
+                stderr = io.StringIO()
+                with redirect_stderr(stderr), self.assertRaises(SystemExit) as caught:
+                    EXTRACTOR.parse_args(arguments)
+                self.assertEqual(2, caught.exception.code)
+
+    def test_cli_check_is_independent_of_current_working_directory(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--preset",
+                    "all",
+                    "--check",
+                ],
+                cwd=directory,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+        self.assertEqual(0, completed.returncode, completed.stderr)
+
+    def test_cli_reports_invalid_xml_without_traceback(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            model = Path(directory) / "invalid.archimate"
+            output = Path(directory) / "snapshot.md"
+            model.write_text("<model>", encoding="utf-8")
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--model",
+                    str(model),
+                    "--view",
+                    "Any View",
+                    "--output",
+                    str(output),
+                    "--check",
+                ],
+                cwd=directory,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+        self.assertEqual(1, completed.returncode)
+        self.assertIn("[o2i|error] cannot read model", completed.stderr)
+        self.assertNotIn("Traceback", completed.stderr)
+        self.assertFalse(output.exists())
+
+    def test_snapshot_comparison_is_exact_and_deterministic(self) -> None:
+        content = EXTRACTOR.rendered_view(
+            self.root,
+            MODEL,
+            "O2I Semantics - Context",
+            False,
+        )
+        repeated = EXTRACTOR.rendered_view(
+            self.root,
+            MODEL,
+            "O2I Semantics - Context",
+            False,
+        )
+        self.assertEqual(content, repeated)
+
+        with tempfile.TemporaryDirectory() as directory:
+            snapshot = Path(directory) / "snapshot.md"
+            snapshot.write_text(content, encoding="utf-8")
+            self.assertEqual([], EXTRACTOR.snapshot_diff(snapshot, content))
+
+            snapshot.write_text("drift\n", encoding="utf-8")
+            errors = EXTRACTOR.snapshot_diff(snapshot, content)
+            self.assertEqual(1, len(errors))
+            self.assertIn("snapshot drift:", errors[0])
+
+    def _connection(
         self,
         root: ET.Element,
-        expected: tuple[str, str],
-    ) -> None:
-        elements, _ = EXTRACTOR.collect_model(root)
-        view = EXTRACTOR.find_view(root, "O2I Syntax - Primitives")
+        view: ET.Element,
+        relation_name: str,
+    ) -> ET.Element:
+        _, relations = EXTRACTOR.collect_model(root)
+        matches = [
+            connection
+            for connection in view.iter("sourceConnection")
+            if (
+                relation_id := connection.get("archimateRelationship")
+            ) in relations
+            and relations[relation_id][0] == relation_name
+        ]
+        self.assertEqual(1, len(matches), relation_name)
+        return matches[0]
 
-        for parent in view.iter():
-            for child in list(parent):
-                element_id = child.get("archimateElement")
-                if element_id is not None and elements.get(element_id) == expected:
-                    parent.remove(child)
-                    return
+    def _snapshot(self, root: ET.Element, view_name: str) -> str:
+        return EXTRACTOR.rendered_view(
+            root,
+            Path("mdl/o2i.archimate"),
+            view_name,
+            False,
+        )
 
-        self.fail(f"The O2I Syntax view has no {expected[0]} ({expected[1]})")
+    def _view_occurrence(
+        self,
+        view: ET.Element,
+        object_targets: dict[str, str],
+        element_id: str,
+    ) -> ET.Element:
+        object_ids = {
+            object_id
+            for object_id, target in object_targets.items()
+            if target == element_id
+        }
+        matches = [
+            occurrence
+            for occurrence in view.iter("child")
+            if occurrence.get("id") in object_ids
+        ]
+        self.assertEqual(1, len(matches), element_id)
+        return matches[0]
+
+    def _relationship_for(
+        self,
+        root: ET.Element,
+        connection: ET.Element,
+    ) -> ET.Element:
+        relation_id = connection.get("archimateRelationship")
+        matches = [
+            element
+            for element in root.iter("element")
+            if element.get("id") == relation_id
+        ]
+        self.assertEqual(1, len(matches), relation_id)
+        return matches[0]
 
     def _model_element(
         self,
@@ -586,183 +574,50 @@ class RelationshipEndpointContractTest(unittest.TestCase):
     ) -> ET.Element:
         matches = [
             element
-            for element in EXTRACTOR.model_elements(root).values()
+            for element in root.iter("element")
             if element.get("name", "") == name
             and EXTRACTOR.xtype(element) == element_type
         ]
-        self.assertEqual(
-            1,
-            len(matches),
-            f"expected one {name} ({element_type})",
-        )
+        self.assertEqual(1, len(matches), (name, element_type))
         return matches[0]
 
-    def _append_contextualization_relationship(
+    def _remove_view_node(
         self,
         root: ET.Element,
-        relation_id: str,
-        source: ET.Element,
-        target: ET.Element,
-    ) -> None:
-        relations_folder = next(
-            folder
-            for folder in root.iter("folder")
-            if folder.get("type") == "relations"
-        )
-        ET.SubElement(
-            relations_folder,
-            "element",
-            {
-                EXTRACTOR.XSI_TYPE: "archimate:CompositionRelationship",
-                "name": "contextualizes",
-                "id": relation_id,
-                "source": source.get("id", ""),
-                "target": target.get("id", ""),
-            },
-        )
-
-    def _append_membership_relationship(
-        self,
-        root: ET.Element,
-        relation_id: str,
-        source: ET.Element,
-        target: ET.Element,
-    ) -> None:
-        relations_folder = next(
-            folder
-            for folder in root.iter("folder")
-            if folder.get("type") == "relations"
-        )
-        ET.SubElement(
-            relations_folder,
-            "element",
-            {
-                EXTRACTOR.XSI_TYPE: "archimate:AggregationRelationship",
-                "name": "contains",
-                "id": relation_id,
-                "source": source.get("id", ""),
-                "target": target.get("id", ""),
-            },
-        )
-
-    def _append_context_element(
-        self,
-        root: ET.Element,
-        element_id: str,
+        view_name: str,
         name: str,
-        context: str,
-    ) -> ET.Element:
-        return self._append_o2i_element(
-            root,
-            element_id,
-            name,
-            "Context",
-            context,
-        )
-
-    def _append_o2i_element(
-        self,
-        root: ET.Element,
-        element_id: str,
-        name: str,
-        kind: str,
         element_type: str,
-    ) -> ET.Element:
-        syntax_folder = next(
-            folder
-            for folder in root.iter("folder")
-            if folder.get("name") == "Syntax"
-            and folder.get("type") is None
-        )
-        element = ET.SubElement(
-            syntax_folder,
-            "element",
-            {
-                EXTRACTOR.XSI_TYPE: "archimate:Grouping",
-                "name": name,
-                "id": element_id,
-            },
-        )
-        ET.SubElement(
-            element,
-            "property",
-            {"key": EXTRACTOR.O2I_KIND_PROPERTY, "value": kind},
-        )
-        ET.SubElement(
-            element,
-            "property",
-            {"key": EXTRACTOR.O2I_TYPE_PROPERTY, "value": element_type},
-        )
-        return element
-
-    def _contextualization_relationship(
-        self,
-        root: ET.Element,
-        source_name: str,
-        target_name: str,
-    ) -> ET.Element:
-        elements, _ = EXTRACTOR.collect_model(root)
-
-        for element in root.iter("element"):
-            source = element.get("source")
-            target = element.get("target")
-            if source is None or target is None:
-                continue
-            if (
-                elements.get(source, (None, None))[0] == source_name
-                and elements.get(target, (None, None))[0] == target_name
-                and element.get("name") == "contextualizes"
-            ):
-                return element
-
-        self.fail(
-            "The O2I Syntax view has no contextualization relationship from "
-            f"{source_name} to {target_name}"
-        )
-
-    def _assert_connection_reference_error(
-        self,
-        attribute: str,
-        value: str | None,
-        expected: str,
     ) -> None:
-        root, connection = self._substantiates_connection_fixture()
-        if value is None:
-            connection.attrib.pop(attribute)
-        else:
-            connection.set(attribute, value)
+        elements, _ = EXTRACTOR.collect_model(root)
+        view = EXTRACTOR.find_view(root, view_name)
 
-        errors = EXTRACTOR.validate_model(root)
+        for parent in view.iter():
+            for child in list(parent):
+                target = child.get("archimateElement")
+                if target is not None and elements.get(target) == (
+                    name,
+                    element_type,
+                ):
+                    parent.remove(child)
+                    return
+        self.fail(f"{view_name} has no node {name} ({element_type})")
 
-        self.assertTrue(any(expected in error for error in errors), errors)
-
-    def _direct_model_property(
+    def _parent_of(
         self,
         root: ET.Element,
-        key: str,
+        target: ET.Element,
     ) -> ET.Element:
-        matches = [
-            prop
-            for prop in root.findall("property")
-            if prop.get("key") == key
-        ]
-        self.assertEqual(1, len(matches), matches)
-        return matches[0]
+        for parent in root.iter():
+            if target in list(parent):
+                return parent
+        self.fail(f"cannot find parent of {target.tag}")
 
-    def _substantiates_connection_fixture(self):
-        root = copy.deepcopy(self.root)
-        _, relations = EXTRACTOR.collect_model(root)
-        view = EXTRACTOR.find_view(root, "O2I Semantics - Primitives")
-
-        for connection in view.iter("sourceConnection"):
-            relation_id = connection.get("archimateRelationship")
-            if relation_id is None:
-                continue
-            relation_name, _, _, _, _ = relations[relation_id]
-            if relation_name == "substantiates":
-                return root, connection
-
-        self.fail("The O2I Primitives view has no substantiates connection")
+    def _remove_element(
+        self,
+        root: ET.Element,
+        target: ET.Element,
+    ) -> None:
+        self._parent_of(root, target).remove(target)
 
 
 if __name__ == "__main__":
