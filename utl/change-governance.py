@@ -49,6 +49,7 @@ CHANGE_FIELDS = {
     "derived_from",
     "depends_on",
 }
+OPTIONAL_CHANGE_FIELDS = {"plan"}
 ADMISSION_FIELDS = {
     "schema_version",
     "proposal",
@@ -85,7 +86,7 @@ class Change:
     coauthors: tuple[str, ...]
     state: str
     proposal: str
-    plan: str
+    plan: Optional[str]
     admission_reviews: tuple[str, ...]
     final_reviews: tuple[str, ...]
     derived_from: tuple[str, ...]
@@ -162,7 +163,7 @@ def parse_register(
         if not isinstance(raw, dict):
             errors.append(f"{label}: must be an object")
             continue
-        missing = sorted(CHANGE_FIELDS - set(raw))
+        missing = sorted(CHANGE_FIELDS - OPTIONAL_CHANGE_FIELDS - set(raw))
         extra = sorted(set(raw) - CHANGE_FIELDS)
         if missing:
             errors.append(f"{label}: missing fields: {', '.join(missing)}")
@@ -191,7 +192,11 @@ def parse_register(
             coauthors=coauthors,
             state=state,
             proposal=_text(raw["proposal"], f"{label}.proposal", errors),
-            plan=_text(raw["plan"], f"{label}.plan", errors, empty=True),
+            plan=(
+                _text(raw["plan"], f"{label}.plan", errors)
+                if "plan" in raw
+                else None
+            ),
             admission_reviews=_texts(
                 raw["admission_reviews"], f"{label}.admission_reviews", errors
             ),

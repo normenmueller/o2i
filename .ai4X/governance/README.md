@@ -38,6 +38,10 @@ must then be renewed for the new digest. From `admitted` onward, proposal and
 Admission reviews remain fixed. Changing an implementation after Finalreview
 requires another Finalreview of the new revision.
 
+A register entry omits `plan` before an implementation plan exists and contains
+the repository-relative `plan.md` path from `implementing` onward. Empty
+strings, `null`, and sentinel values are invalid.
+
 ## Lifecycle
 
 ```text

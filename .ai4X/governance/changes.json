@@ -22,6 +22,24 @@
       ],
       "derived_from": [],
       "depends_on": []
+    },
+    {
+      "id": "o2i-0002",
+      "title": "Lean ArchiMate Syntax Mapping",
+      "author": "normenmueller",
+      "coauthors": [
+        "external-syntax-coauthor"
+      ],
+      "state": "implementing",
+      "proposal": ".ai4X/governance/changes/o2i-0002/proposal.md",
+      "plan": ".ai4X/governance/changes/o2i-0002/plan.md",
+      "admission_reviews": [
+        ".ai4X/governance/changes/o2i-0002/reviews/admission-strategy.json",
+        ".ai4X/governance/changes/o2i-0002/reviews/admission-formalization.json"
+      ],
+      "final_reviews": [],
+      "derived_from": [],
+      "depends_on": []
     }
   ]
 }

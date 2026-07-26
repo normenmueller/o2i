@@ -5,5 +5,6 @@
 
 ## Nodes
 
+- [O2I Business Capability] `O2I Business Capability` (Capability)
 
 ## Relations

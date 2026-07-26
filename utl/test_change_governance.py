@@ -201,7 +201,7 @@ def change(
         (),
         state,
         f".ai4X/governance/changes/{change_id}/proposal.md",
-        "",
+        None,
         (),
         (),
         derived_from,
@@ -251,7 +251,8 @@ class ChangeGovernanceTests(unittest.TestCase):
             ({"title": " padded "}, "must be trimmed and single-line"),
             ({"author": "author\nother"}, "must be trimmed and single-line"),
             ({"proposal": "proposal.md"}, "proposal must be"),
-            ({"plan": ""}, "active change requires a plan"),
+            ({"plan": None}, "must be a string"),
+            ({"plan": ""}, "must not be empty"),
             (
                 {
                     "final_reviews": [
@@ -268,6 +269,16 @@ class ChangeGovernanceTests(unittest.TestCase):
                 self.assert_error(
                     governance.validate_repository(repo.root), message
                 )
+
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory))
+            entry = repo.entry()
+            del entry["plan"]
+            repo.register(entry)
+            self.assert_error(
+                governance.validate_repository(repo.root),
+                "active change requires a plan",
+            )
 
         with tempfile.TemporaryDirectory() as directory:
             repo = Repository(Path(directory))
@@ -406,28 +417,29 @@ class ChangeGovernanceTests(unittest.TestCase):
                     repo.write_admission(
                         0, "strategy-reviewer", "strategy", verdict="rejected"
                     )
-                    repo.register(
-                        repo.entry(
-                            state=state,
-                            plan="",
-                            admission_reviews=[repo.admission[0]],
-                        )
+                    entry = repo.entry(
+                        state=state,
+                        admission_reviews=[repo.admission[0]],
                     )
+                    del entry["plan"]
+                    repo.register(entry)
                 elif state == "withdrawn":
                     review = repo.final("strategy")
                     repo.register(
                         repo.entry(state=state, final_reviews=[review])
                     )
                 else:
-                    plan = "" if state in {"proposed", "admitted"} else repo.plan
-                    repo.register(repo.entry(state=state, plan=plan))
+                    entry = repo.entry(state=state)
+                    if state in {"proposed", "admitted"}:
+                        del entry["plan"]
+                    repo.register(entry)
                 self.assertEqual([], governance.validate_repository(repo.root))
 
         cases = (
             ("proposed", {}, "must not have a plan"),
             (
                 "proposed",
-                {"plan": "", "final_reviews": ["invalid.json"]},
+                {"final_reviews": ["invalid.json"]},
                 "must not have Finalreviews",
             ),
             (
@@ -442,7 +454,7 @@ class ChangeGovernanceTests(unittest.TestCase):
             ),
             (
                 "rejected",
-                {"plan": ""},
+                {},
                 "needs a rejected Admission",
             ),
         )
@@ -466,12 +478,14 @@ class ChangeGovernanceTests(unittest.TestCase):
                 }
                 if artifact == "Finalreviews":
                     changes.update(
-                        plan="",
                         final_reviews=[
                             repo.final("strategy", verdict="rejected")
                         ],
                     )
-                repo.register(repo.entry(**changes))
+                entry = repo.entry(**changes)
+                if artifact == "Finalreviews":
+                    del entry["plan"]
+                repo.register(entry)
                 article = "a " if artifact == "plan" else ""
                 self.assert_error(
                     governance.validate_repository(repo.root),

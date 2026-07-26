@@ -23,16 +23,20 @@ Source: O2I syntax mapping based on The Open Group (2026).
 
 ## Nodes
 
+- [ArchiMate Principle] `ArchiMate Principle` (Principle)
 - [O2I Action] `O2I Action` (CourseOfAction)
 - [O2I Driver] `O2I Driver` (Driver)
 - [O2I KPI] `O2I KPI` (Assessment)
 - [O2I Key Result] `O2I Key Result` (Outcome)
 - [O2I Objective] `O2I Objective` (Goal)
 - [O2I Performance Dimension] `O2I Performance Dimension` (Grouping)
-- [O2I Principle] `O2I Principle` (Principle)
 
 ## Relations
 
+- `ArchiMate Principle` --guides--> `ArchiMate Principle` (InfluenceRelationship)
+- `ArchiMate Principle` --guides--> `O2I Action` (AssociationRelationship, directed)
+- `ArchiMate Principle` --guides--> `O2I Driver` (InfluenceRelationship)
+- `ArchiMate Principle` --guides--> `O2I Objective` (InfluenceRelationship)
 - `O2I Action` --contributes-to--> `O2I Action` (AssociationRelationship, directed)
 - `O2I Action` --contributes-to--> `O2I Key Result` (RealizationRelationship)
 - `O2I Action` --guides--> `O2I Action` (AssociationRelationship, directed)
@@ -46,7 +50,3 @@ Source: O2I syntax mapping based on The Open Group (2026).
 - `O2I Objective` --orients--> `O2I Objective` (InfluenceRelationship)
 - `O2I Performance Dimension` --contains--> `O2I KPI` (AggregationRelationship)
 - `O2I Performance Dimension` --contains--> `O2I Key Result` (AggregationRelationship)
-- `O2I Principle` --guides--> `O2I Action` (AssociationRelationship, directed)
-- `O2I Principle` --guides--> `O2I Driver` (InfluenceRelationship)
-- `O2I Principle` --guides--> `O2I Objective` (InfluenceRelationship)
-- `O2I Principle` --guides--> `O2I Principle` (InfluenceRelationship)
