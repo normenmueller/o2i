@@ -82,6 +82,20 @@ class RepositoryViewContractTest(unittest.TestCase):
             errors,
         )
 
+    def test_duplicate_required_view_is_reported(self) -> None:
+        root = copy.deepcopy(self.root)
+        view = EXTRACTOR.find_view(root, "O2I Syntax - Context")
+        duplicate = copy.deepcopy(view)
+        duplicate.set("id", "duplicate-syntax-context-view")
+        self._parent_of(root, view).append(duplicate)
+
+        errors = EXTRACTOR.validate_model(root)
+
+        self.assertIn(
+            "duplicate repository view: O2I Syntax - Context (2 occurrences)",
+            errors,
+        )
+
     def test_required_node_is_view_scoped(self) -> None:
         root = copy.deepcopy(self.root)
         self._remove_view_node(
@@ -481,6 +495,28 @@ class RepositoryViewContractTest(unittest.TestCase):
         self.assertIn("[o2i|error] cannot read model", completed.stderr)
         self.assertNotIn("Traceback", completed.stderr)
         self.assertFalse(output.exists())
+
+    def test_cli_reports_snapshot_read_error_without_traceback(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(SCRIPT),
+                    "--view",
+                    "O2I Semantics - Context",
+                    "--output",
+                    directory,
+                    "--check",
+                ],
+                cwd=ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+
+        self.assertEqual(1, completed.returncode)
+        self.assertIn("[o2i|error] cannot read snapshot", completed.stderr)
+        self.assertNotIn("Traceback", completed.stderr)
 
     def test_snapshot_comparison_is_exact_and_deterministic(self) -> None:
         content = EXTRACTOR.rendered_view(

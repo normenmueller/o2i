@@ -800,14 +800,21 @@ def validate_model(root: ET.Element) -> list[str]:
     elements, relations = collect_model(root)
     errors: list[str] = []
     expected_views = {view_name for view_name, _ in PRESETS.values()}
-    actual_views = {
+    view_counts = Counter(
         element.get("name", "")
         for element in root.iter("element")
         if xtype(element) == "ArchimateDiagramModel"
-    }
+    )
+    actual_views = set(view_counts)
 
     for view_name in sorted(expected_views - actual_views):
         errors.append(f"missing required view: {view_name}")
+    for view_name in sorted(expected_views):
+        if view_counts[view_name] > 1:
+            errors.append(
+                f"duplicate repository view: {view_name} "
+                f"({view_counts[view_name]} occurrences)"
+            )
     for view_name in sorted(actual_views - expected_views):
         errors.append(f"unregistered repository view: {view_name}")
 
@@ -1023,7 +1030,10 @@ def snapshot_diff(output_path: Path, expected: str) -> list[str]:
     if not output_path.exists():
         return [f"missing snapshot: {output_path}"]
 
-    actual = output_path.read_text(encoding="utf-8")
+    try:
+        actual = output_path.read_text(encoding="utf-8")
+    except OSError as error:
+        return [f"cannot read snapshot {output_path}: {error}"]
     if actual == expected:
         return []
 
