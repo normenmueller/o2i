@@ -7,6 +7,7 @@ module O2I.Adapter.AMX.Test.Commitment
 
 import Data.Text (Text)
 import qualified Data.Text as Text
+import O2I (FixedRelationCode(..), RelationCode(..))
 import O2I.Adapter.AMX.Test.Collective.Fixture
 import O2I.Adapter.AMX.Test.Support
 import O2I.Inspection
@@ -265,14 +266,12 @@ relationshipCarrierModel commitment =
   model
     (grouping "ethos" "Ethos" (Text.concat ethosMetadata)
        <> grouping "mission" "Mission" (Text.concat contextMetadata)
-       <> relationshipWithProperties
+       <> o2iRelationshipWithProperties
             (Text.concat commitment)
-            "guides"
-            "InfluenceRelationship"
+            (FixedRelation GuidesMissionCode)
             "guides"
             "ethos"
             "mission"
-            False
        <> connectedView "guides" "ethos" "mission")
     [profileProperty]
 
@@ -296,14 +295,12 @@ relationDependencyModel relationCommitment =
        "Ethos"
        (carrierMetadata "Context" "Ethos" candidateProperties)
        <> grouping "mission" "Mission" (Text.concat contextMetadata)
-       <> relationshipWithCommitment
+       <> o2iRelationshipWithCommitment
             relationCommitment
-            "guides"
-            "InfluenceRelationship"
+            (FixedRelation GuidesMissionCode)
             "guides"
             "ethos"
             "mission"
-            False
        <> connectedView "guides" "ethos" "mission")
     [profileProperty]
 

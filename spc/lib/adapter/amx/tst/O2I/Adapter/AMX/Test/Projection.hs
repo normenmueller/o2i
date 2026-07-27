@@ -11,8 +11,8 @@ import qualified Data.Text as Text
 import O2I
 import O2I.Adapter.AMX.Internal.Defect
 import qualified O2I.Adapter.AMX.Internal.Defect as Defect
-import O2I.Adapter.AMX.Internal.Registry
 import O2I.Adapter.AMX.Test.Support
+import O2I.ArchiMate.Profile
 import O2I.Inspection
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
@@ -182,10 +182,12 @@ sampleLocation =
 
 registryCoverageTest :: Assertion
 registryCoverageTest = do
-  map signatureCode relationSignatures @?= map relationCodeOf allRelations
+  map relationMappingCode relationMappings @?= map relationCodeOf allRelations
   assertBool
     "every signature must retain the Core semantic name"
-    (all (not . Text.null . relationNameText . signatureName) relationSignatures)
+    (all
+       (not . Text.null . relationNameText . relationMappingName)
+       relationMappings)
 
 projectionBoundaryTest :: Assertion
 projectionBoundaryTest = do

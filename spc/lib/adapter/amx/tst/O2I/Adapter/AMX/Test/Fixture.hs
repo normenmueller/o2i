@@ -15,7 +15,6 @@ import O2I.Adapter.AMX.Internal.XML
 import O2I.Adapter.AMX.Test.Support
 import O2I.Inspection
 import System.Directory (doesFileExist)
-import System.FilePath ((</>))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 
@@ -23,9 +22,7 @@ fixtureTests :: TestTree
 fixtureTests =
   testGroup
     "fixtures and integration"
-    [ testCase
-        "repository O2I Syntax - Primitives is structurally inspectable"
-        integrationTest
+    [ testCase "mapping-only Views remain non-executable" mappingOnlyViewTest
     , testCase
         "invalid fixtures retain declared stage ownership"
         fixtureContractTest
@@ -39,19 +36,23 @@ fixtureTests =
     , testCase
         "the Archi-saved Ethos reference projects and passes Semantics"
         ethosReferenceTest
-    , testCase "package license equals canonical license" licenseTest
     ]
 
-integrationTest :: Assertion
-integrationTest = do
-  bytes <-
-    ByteString.readFile
-      (".." </> ".." </> ".." </> ".." </> "mdl" </> "o2i.archimate")
-  report <- inspectBytes (ViewByName "O2I Syntax - Primitives") bytes
-  take 5 (map reportedState (stageReportsList (reportStageReports report)))
-    @?= [StagePassed, StagePassed, StagePassed, StagePassed, StageUnavailable]
-  reportResult report @?= InspectionPartial
-  reportExitCode report @?= 3
+mappingOnlyViewTest :: Assertion
+mappingOnlyViewTest = do
+  report <- inspectText (ViewByName "Mapping") mappingOnlyModel
+  take 3 (map reportedState (stageReportsList (reportStageReports report)))
+    @?= [StagePassed, StagePassed, StageFailed]
+  diagnosticCodes report @?= ["o2i.inspection.scope.empty"]
+  reportResult report @?= InspectionFailed
+  reportExitCode report @?= 1
+
+mappingOnlyModel :: Text
+mappingOnlyModel =
+  model
+    (grouping "mapping" "Mapping" ""
+       <> view "view" "Mapping" (diagramObject "object" "mapping"))
+    [profileProperty]
 
 fixtureContractTest :: Assertion
 fixtureContractTest = do
@@ -230,9 +231,3 @@ expectedReferencePaths =
   , "valid/evidence/measure.archimate"
   , "valid/full/effect-trace.archimate"
   ]
-
-licenseTest :: Assertion
-licenseTest = do
-  canonical <- ByteString.readFile (".." </> ".." </> ".." </> "LICENSE")
-  local <- ByteString.readFile "LICENSE"
-  local @?= canonical

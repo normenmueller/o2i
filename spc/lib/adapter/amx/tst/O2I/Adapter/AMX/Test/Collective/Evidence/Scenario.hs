@@ -9,6 +9,7 @@ import qualified Data.Text as Text
 import O2I
 import O2I.Adapter.AMX.Test.Collective.Fixture
 import O2I.Adapter.AMX.Test.Support
+import O2I.ArchiMate.Profile
 import O2I.Inspection
 
 collectiveInputs :: InspectionInputs
@@ -193,56 +194,48 @@ baselineRelations =
 
 orientationRelations :: [RelationFixture]
 orientationRelations =
-  [ relation
+  [ contractRelation
+      (FixedRelation GuidesEthosPrincipleToMissionDriverCode)
       "ethos-mission"
-      "InfluenceRelationship"
-      "guides"
       "ethos-principle"
       "mission-driver"
-  , relation
+  , contractRelation
+      (FixedRelation GroundsMissionDriverToVisionObjectiveCode)
       "mission-vision"
-      "InfluenceRelationship"
-      "grounds"
       "mission-driver"
       "vision-objective"
-  , relation
+  , contractRelation
+      (FixedRelation GuidesEthosPrincipleToVisionObjectiveCode)
       "ethos-vision"
-      "InfluenceRelationship"
-      "guides"
       "ethos-principle"
       "vision-objective"
   ]
 
 strategyRelations :: (Text, Text) -> [RelationFixture]
 strategyRelations (prefix, _strategy) =
-  [ relation
+  [ contractRelation
+      (FixedRelation OrientsVisionObjectiveToStrategyObjectiveCode)
       (prefix <> "-orientation")
-      "InfluenceRelationship"
-      "orients"
       "vision-objective"
       (textId (primitiveId prefix "objective"))
-  , relation
+  , contractRelation
+      (FixedRelation GroundsStrategyDriverToObjectiveCode)
       (prefix <> "-grounds")
-      "InfluenceRelationship"
-      "grounds"
       (textId (primitiveId prefix "driver"))
       (textId (primitiveId prefix "objective"))
-  , relation
+  , contractRelation
+      (FixedRelation SubstantiatesStrategyKeyResultObjectiveCode)
       (prefix <> "-substantiates")
-      "RealizationRelationship"
-      "substantiates"
       (textId (primitiveId prefix "key-result"))
       (textId (primitiveId prefix "objective"))
-  , directedRelation
+  , contractRelation
+      (FixedRelation GuidesStrategyPrincipleToActionCode)
       (prefix <> "-guides")
-      "AssociationRelationship"
-      "guides"
       (textId (primitiveId prefix "principle"))
       (textId (primitiveId prefix "action"))
-  , relation
+  , contractRelation
+      (FixedRelation ContributesStrategyActionToKeyResultCode)
       (prefix <> "-action-result")
-      "RealizationRelationship"
-      "contributes-to"
       (textId (primitiveId prefix "action"))
       (textId (primitiveId prefix "key-result"))
   ]
@@ -252,44 +245,49 @@ hiddenContributionRelations = [macroA, macroB, premiseA, premiseB]
 
 macroA, macroB, premiseA, premiseB :: RelationFixture
 macroA =
-  relation
+  contractRelation
+    (FixedRelation ContributesToStrategyCode)
     "macro-a"
-    "InfluenceRelationship"
-    "contributes-to"
     "contributor-a"
     "target"
 
 macroB =
-  relation
+  contractRelation
+    (FixedRelation ContributesToStrategyCode)
     "macro-b"
-    "InfluenceRelationship"
-    "contributes-to"
     "contributor-b"
     "target"
 
 premiseA =
-  relation
+  contractRelation
+    (FixedRelation ContributesStrategyKeyResultToKeyResultCode)
     "premise-a"
-    "InfluenceRelationship"
-    "contributes-to"
     (textId (primitiveId "a" "key-result"))
     (textId (primitiveId "target" "key-result"))
 
 premiseB =
-  directedRelation
+  contractRelation
+    (FixedRelation ContributesStrategyActionToActionCode)
     "premise-b"
-    "AssociationRelationship"
-    "contributes-to"
     (textId (primitiveId "b" "action"))
     (textId (primitiveId "target" "action"))
+
+contractRelation :: RelationCode -> Text -> Text -> Text -> RelationFixture
+contractRelation code identifier sourceId targetId =
+  RelationFixture
+    { relationIdentifier = identifier
+    , relationRepresentation = relationshipTypeName representation
+    , relationLabel = expectedRelationshipLabel code
+    , relationSource = sourceId
+    , relationTarget = targetId
+    , relationDirected = relationshipDirected representation
+    }
+  where
+    representation = expectedRelationshipRepresentation code
 
 relation :: Text -> Text -> Text -> Text -> Text -> RelationFixture
 relation identifier representation label sourceId targetId =
   RelationFixture identifier representation label sourceId targetId False
-
-directedRelation :: Text -> Text -> Text -> Text -> Text -> RelationFixture
-directedRelation identifier representation label sourceId targetId =
-  RelationFixture identifier representation label sourceId targetId True
 
 relationElement :: RelationFixture -> Text
 relationElement relationFixture =
@@ -352,17 +350,15 @@ isolationElements =
     <> outcome "unrelated-key-result" (primitiveProperties "KeyResult")
     <> contextualization "unrelated-owner" "unrelated" "unrelated-key-result"
     <> relationElement
-         (relation
+         (contractRelation
+            (FixedRelation ContributesToStrategyCode)
             "unrelated-macro"
-            "InfluenceRelationship"
-            "contributes-to"
             "unrelated"
             "target")
     <> relationElement
-         (relation
+         (contractRelation
+            (FixedRelation ContributesStrategyKeyResultToKeyResultCode)
             "unrelated-premise"
-            "InfluenceRelationship"
-            "contributes-to"
             "unrelated-key-result"
             (textId (primitiveId "target" "key-result")))
     <> junctionElement

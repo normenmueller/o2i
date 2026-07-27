@@ -2,6 +2,7 @@ packages:
   lib/build-provenance
   lib/core
   lib/inspection
+  contract
   lib/adapter/amx
   cli
 

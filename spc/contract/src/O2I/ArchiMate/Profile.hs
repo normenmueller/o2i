@@ -1,0 +1,79 @@
+-- | Executable projection of the authoritative ArchiMate profile contract.
+--
+-- The API exposes closed contract observations while keeping every contract
+-- constructor private. Adapters consume this projection without parsing JSON
+-- or maintaining notation mappings of their own.
+module O2I.ArchiMate.Profile
+  ( ArchiMateProfileContract
+  , MetadataContract
+  , MetadataKind(..)
+  , CarrierType(..)
+  , CarrierMapping
+  , Requirement
+  , Cardinality
+  , ArchiMateRelationshipRepresentation
+  , ArchiMateRelationMapping
+  , ContextualizationContract
+  , CollectiveContract
+  , CollectiveCarrierContract
+  , CollectiveSegmentContract
+  , CollectiveContributorsContract
+  , CollectiveTargetContract
+  , profileContract
+  , profileVersionText
+  , contractProfileVersion
+  , contractMetadata
+  , contractContextualization
+  , contractCollectiveRealization
+  , modelProfileKey
+  , carrierKindKey
+  , carrierTypeKey
+  , carrierCommitmentKey
+  , relationCommitmentKey
+  , metadataKindText
+  , metadataKindFromText
+  , carrierTypeFromText
+  , carrierTypeForNodeKind
+  , carrierMappingElement
+  , carrierMappingOwnership
+  , carrierMappingFor
+  , relationMappings
+  , relationMappingCode
+  , relationMappingName
+  , relationMappingLabel
+  , relationMappingSource
+  , relationMappingTarget
+  , relationMappingRepresentation
+  , expectedRelationshipLabel
+  , expectedRelationshipRepresentation
+  , relationshipRepresentation
+  , relationshipTypeName
+  , relationshipDirected
+  , relationshipRepresentationText
+  , contextualizationRepresentation
+  , contextualizationLabel
+  , collectiveCarrier
+  , collectiveSegments
+  , collectiveContributors
+  , collectiveTarget
+  , collectiveJunctionChains
+  , collectiveCarrierKind
+  , collectiveCarrierType
+  , collectiveCarrierElement
+  , collectiveJunctionType
+  , collectiveCommitmentKey
+  , collectiveFitEvidenceKey
+  , collectiveSegmentRepresentation
+  , collectiveSegmentLabel
+  , collectiveSegmentMetadata
+  , collectiveContributorCardinality
+  , collectiveContributorsDistinct
+  , collectiveTargetCardinality
+  , collectiveTargetDistinctFromContributors
+  , requirementIsRequired
+  , requirementIsForbidden
+  , cardinalityAccepts
+  , commitmentFromText
+  ) where
+
+import O2I.ArchiMate.Profile.Internal

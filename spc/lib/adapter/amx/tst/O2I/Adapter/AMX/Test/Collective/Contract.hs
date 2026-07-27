@@ -414,10 +414,10 @@ duplicateContributorTest = do
 selfParticipationTest :: Assertion
 selfParticipationTest = do
   report <- inspectText (ViewByName "Scope") selfParticipationModel
+  let observedCodes = diagnosticCodes report
   assertBool
-    "self-participation defect must be present"
-    ("o2i.amx.profile.collective.self-participation"
-       `elem` diagnosticCodes report)
+    ("self-participation defect must be present: " <> show observedCodes)
+    ("o2i.amx.profile.collective.self-participation" `elem` observedCodes)
 
 unknownParticipantTest :: Assertion
 unknownParticipantTest = do

@@ -24,23 +24,17 @@ import O2I.Adapter.AMX.Internal.Profile.Property
 import O2I.Adapter.AMX.Internal.Registry
 import O2I.Adapter.AMX.Internal.Types
 import O2I.Adapter.AMX.Internal.XML (archiNamespace)
+import O2I.ArchiMate.Profile
 import O2I.Inspection.Cardinality
 import O2I.Inspection.Profile
 import O2I.Inspection.Provenance
 
--- | Concrete O2I metadata category before type refinement.
-data MetadataKind
-  = ContextMetadata
-  | PrimitiveMetadata
-  | StructuringMetadata
-  | SituationAnchorMetadata
-  | StructuredPropositionMetadata
-  deriving (Eq, Show)
-
 -- | Resolve one unique direct @o2i.kind@ value.
 metadataKind :: AMXElement -> Maybe MetadataKind
 metadataKind element =
-  singleMetadataValue "o2i.kind" element >>= metadataKindFromText
+  singleMetadataValue kindKey element >>= metadataKindFromText
+  where
+    kindKey = carrierKindKey (contractMetadata profileContract)
 
 -- | Project metadata and Context Ownership violations for one candidate.
 candidateDefects ::
@@ -52,17 +46,17 @@ candidateDefects environment element =
     ++ representationDefects
   where
     occurrence = nodeOccurrence element
-    kind = metadataKind element
     ownerships = incomingOwnerships environment element
     ownershipDefects =
-      case kind of
-        Just PrimitiveMetadata -> ownedDefects element ownerships
-        Just StructuringMetadata -> ownedDefects element ownerships
-        Just ContextMetadata -> ownerlessDefects element ownerships
-        Just SituationAnchorMetadata -> ownerlessDefects element ownerships
-        Just StructuredPropositionMetadata ->
-          ownerlessDefects element ownerships
+      case fmap
+             (carrierMappingOwnership . carrierMappingFor)
+             (declaredCarrierOf element) of
+        Just requirement
+          | requirementIsRequired requirement -> ownedDefects element ownerships
+          | requirementIsForbidden requirement ->
+            ownerlessDefects element ownerships
         Nothing -> []
+        Just _ -> []
     representationDefects =
       case nodeKind environment element of
         Just resolvedKind
@@ -86,6 +80,11 @@ metadataDefects element =
     ++ compatibilityDefects
     ++ commitmentResolutionDefects (decodeCommitment element)
   where
+    metadata = contractMetadata profileContract
+    kindKey = carrierKindKey metadata
+    typeKey = carrierTypeKey metadata
+    commitmentKey = carrierCommitmentKey metadata
+    allowedKeys = [kindKey, typeKey, commitmentKey]
     identifier = displayId element
     observedO2IProperties =
       [ (property, key, propertyValue property)
@@ -98,25 +97,25 @@ metadataDefects element =
         (propertyLocation key property)
         (UnsupportedO2IMetadataKey identifier key)
       | (property, key, _) <- observedO2IProperties
-      , key `notElem` ["o2i.kind", "o2i.type", "o2i.commitment"]
+      , key `notElem` allowedKeys
       ]
     kindProperties =
-      filter (\(_, key, _) -> key == "o2i.kind") observedO2IProperties
+      filter (\(_, key, _) -> key == kindKey) observedO2IProperties
     typeProperties =
-      filter (\(_, key, _) -> key == "o2i.type") observedO2IProperties
+      filter (\(_, key, _) -> key == typeKey) observedO2IProperties
     kindDefects =
       case kindProperties of
         [] -> [Located (amxElementLocation element) (MissingO2IKind identifier)]
         [(property, _, value)]
           | metadataKind element == Nothing ->
             [ Located
-                (propertyLocation "o2i.kind" property)
+                (propertyLocation kindKey property)
                 (UnknownO2IKind identifier value)
             ]
         [_] -> []
         first:second:rest ->
           [ Located
-              (propertyLocation "o2i.kind" (firstOfTriple first))
+              (propertyLocation kindKey (firstOfTriple first))
               (DuplicateO2IKind
                  identifier
                  (third first :| map third (second : rest)))
@@ -127,7 +126,7 @@ metadataDefects element =
         [_] -> []
         first:second:rest ->
           [ Located
-              (propertyLocation "o2i.type" (firstOfTriple first))
+              (propertyLocation typeKey (firstOfTriple first))
               (DuplicateO2IType
                  identifier
                  (third first :| map third (second : rest)))
@@ -136,9 +135,9 @@ metadataDefects element =
       case (kindProperties, typeProperties) of
         ([(_, _, kindValue)], [(typeProperty, _, typeValue)])
           | metadataKindFromText kindValue /= Nothing
-              && declaredType kindValue typeValue == Nothing ->
+              && declaredCarrier kindValue typeValue == Nothing ->
             [ Located
-                (propertyLocation "o2i.type" typeProperty)
+                (propertyLocation typeKey typeProperty)
                 (InvalidO2ITypeForKind identifier kindValue typeValue)
             ]
         _ -> []
@@ -185,37 +184,34 @@ deferCandidate occurrence defect =
 rawNode :: Environment -> AMXElement -> Maybe RawNode
 rawNode environment element = do
   identifier <- RawNodeId <$> elementId element
-  kindValue <- singleMetadataValue "o2i.kind" element
-  typeValue <- singleMetadataValue "o2i.type" element
-  case declaredType kindValue typeValue of
-    Just (ContextType context) -> Just (RawContextNode identifier context)
-    Just (PrimitiveType primitive) -> do
+  case declaredCarrierOf element of
+    Just (ContextCarrier context) -> Just (RawContextNode identifier context)
+    Just (PrimitiveCarrier primitive) -> do
       owner <- uniqueOwnership environment element
       ownerId <-
         RawNodeId <$> elementAttribute (expandedQName Nothing 's' "ource") owner
       Just (RawPrimitiveNode identifier ownerId primitive)
-    Just (StructuringType structuring) -> do
+    Just (StructuringCarrier structuring) -> do
       owner <- uniqueOwnership environment element
       ownerId <-
         RawNodeId <$> elementAttribute (expandedQName Nothing 's' "ource") owner
       Just (RawStructuringNode identifier ownerId structuring)
-    Just (AnchorType anchor) -> Just (RawAnchorNode identifier anchor)
+    Just (SituationAnchorCarrier anchor) ->
+      Just (RawAnchorNode identifier anchor)
     Nothing -> Nothing
 
 -- | Resolve the format-neutral node kind used by relation signatures.
 nodeKind :: Environment -> AMXElement -> Maybe NodeKindValue
 nodeKind environment element = do
-  kindValue <- singleMetadataValue "o2i.kind" element
-  typeValue <- singleMetadataValue "o2i.type" element
-  case declaredType kindValue typeValue of
-    Just (ContextType context) -> Just (ContextNodeKind context)
-    Just (PrimitiveType primitive) -> do
+  case declaredCarrierOf element of
+    Just (ContextCarrier context) -> Just (ContextNodeKind context)
+    Just (PrimitiveCarrier primitive) -> do
       context <- ownerContext environment element
       Just (PrimitiveNodeKind context primitive)
-    Just (StructuringType structuring) -> do
+    Just (StructuringCarrier structuring) -> do
       context <- ownerContext environment element
       Just (StructuringNodeKind context structuring)
-    Just (AnchorType anchor) -> Just (AnchorNodeKind anchor)
+    Just (SituationAnchorCarrier anchor) -> Just (AnchorNodeKind anchor)
     Nothing -> Nothing
 
 ownerContext :: Environment -> AMXElement -> Maybe Context
@@ -224,57 +220,24 @@ ownerContext environment element = do
   source <- elementAttribute (expandedQName Nothing 's' "ource") ownership
   [owner] <-
     pure (Map.findWithDefault [] source (environmentNodeIndex environment))
-  kindValue <- singleMetadataValue "o2i.kind" owner
-  typeValue <- singleMetadataValue "o2i.type" owner
-  case declaredType kindValue typeValue of
-    Just (ContextType context) -> Just context
+  case declaredCarrierOf owner of
+    Just (ContextCarrier context) -> Just context
     _ -> Nothing
 
-data DeclaredType
-  = ContextType Context
-  | PrimitiveType Primitive
-  | StructuringType Structuring
-  | AnchorType SituationAnchor
-  deriving (Eq, Show)
+declaredCarrierOf :: AMXElement -> Maybe CarrierType
+declaredCarrierOf element = do
+  kindValue <- singleMetadataValue kindKey element
+  typeValue <- singleMetadataValue typeKey element
+  declaredCarrier kindValue typeValue
+  where
+    metadata = contractMetadata profileContract
+    kindKey = carrierKindKey metadata
+    typeKey = carrierTypeKey metadata
 
-metadataKindFromText :: Text -> Maybe MetadataKind
-metadataKindFromText value =
-  case value of
-    "Context" -> Just ContextMetadata
-    "Primitive" -> Just PrimitiveMetadata
-    "Structuring" -> Just StructuringMetadata
-    "SituationAnchor" -> Just SituationAnchorMetadata
-    "StructuredProposition" -> Just StructuredPropositionMetadata
-    _ -> Nothing
-
-declaredType :: Text -> Text -> Maybe DeclaredType
-declaredType kind value =
-  case (kind, value) of
-    ("Context", "Ethos") -> Just (ContextType Ethos)
-    ("Context", "Mission") -> Just (ContextType Mission)
-    ("Context", "Vision") -> Just (ContextType Vision)
-    ("Context", "Strategy") -> Just (ContextType Strategy)
-    ("Context", "Situation") -> Just (ContextType Situation)
-    ("Context", "Need") -> Just (ContextType Need)
-    ("Context", "Intervention") -> Just (ContextType Intervention)
-    ("Context", "Measure") -> Just (ContextType Measure)
-    ("Primitive", "Principle") -> Just (PrimitiveType Principle)
-    ("Primitive", "Driver") -> Just (PrimitiveType Driver)
-    ("Primitive", "Objective") -> Just (PrimitiveType Objective)
-    ("Primitive", "KeyResult") -> Just (PrimitiveType KeyResult)
-    ("Primitive", "KPI") -> Just (PrimitiveType KPI)
-    ("Primitive", "Action") -> Just (PrimitiveType Action)
-    ("Structuring", "PerformanceDimension") ->
-      Just (StructuringType PerformanceDimension)
-    ("SituationAnchor", "BusinessCapability") ->
-      Just (AnchorType BusinessCapability)
-    ("SituationAnchor", "BusinessProcess") -> Just (AnchorType BusinessProcess)
-    ("SituationAnchor", "BusinessObject") -> Just (AnchorType BusinessObject)
-    ("SituationAnchor", "BusinessRole") -> Just (AnchorType BusinessRole)
-    ("SituationAnchor", "ValueStream") -> Just (AnchorType ValueStream)
-    ("SituationAnchor", "RegulatoryConstraint") ->
-      Just (AnchorType RegulatoryConstraint)
-    _ -> Nothing
+declaredCarrier :: Text -> Text -> Maybe CarrierType
+declaredCarrier kindValue typeValue = do
+  kind <- metadataKindFromText kindValue
+  carrierTypeFromText kind typeValue
 
 -- | Check exact ArchiMate element representation for a resolved O2I kind.
 representationCompatible :: AMXElement -> Maybe NodeKindValue -> Bool
@@ -300,7 +263,11 @@ projectRootProfile ::
 projectRootProfile document = (root, legacyDefects)
   where
     model = amxDocumentRoot document
-    profileProperties = directProperties "o2i.profile" model
+    metadata = contractMetadata profileContract
+    profileKey = modelProfileKey metadata
+    expectedVersion =
+      profileVersionText (contractProfileVersion profileContract)
+    profileProperties = directProperties profileKey model
     profileValues = map (propertyValue . fst) profileProperties
     observed =
       case profileValues of
@@ -311,23 +278,23 @@ projectRootProfile document = (root, legacyDefects)
       case profileProperties of
         [] -> [Located (amxElementLocation model) MissingO2IProfile]
         [(property, _)]
-          | propertyValue property == "0.2" -> []
+          | propertyValue property == expectedVersion -> []
           | otherwise ->
             [ Located
-                (propertyLocation "o2i.profile" property)
+                (propertyLocation profileKey property)
                 (UnsupportedO2IProfile (propertyValue property))
             ]
         first:rest ->
           [ Located
-              (propertyLocation "o2i.profile" (fst first))
+              (propertyLocation profileKey (fst first))
               (DuplicateO2IProfile
                  (propertyValue (fst first) :| map (propertyValue . fst) rest))
           ]
             ++ [ Located
-                 (propertyLocation "o2i.profile" property)
+                 (propertyLocation profileKey property)
                  (UnsupportedO2IProfile (propertyValue property))
                | (property, _) <- first : rest
-               , propertyValue property /= "0.2"
+               , propertyValue property /= expectedVersion
                ]
     root =
       case nonEmpty rootDefects of
@@ -335,7 +302,7 @@ projectRootProfile document = (root, legacyDefects)
         Nothing ->
           RootProjectable
             observed
-            (resolveProfileVersion (o2iProfileVersionLiteral ('0' :| ".2")))
+            (resolveProfileVersion (contractProfileVersion profileContract))
     legacyDefects =
       [ DeferredProfileDefect
         { defectApplicability = GlobalProfileDefect

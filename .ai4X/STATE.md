@@ -31,6 +31,13 @@ publication.
 - The strict declarative contract contains 14 carrier mappings, 60 relation
   mappings, and two structured patterns. Its deterministic readable projection
   is current.
+- The typed contract projection belongs in the dedicated
+  `o2i-archimate-profile` package so its JSON equality test remains valid in an
+  independent Cabal source archive. `o2i-amx` consumes that package and owns
+  only adapter execution.
+- The self-contained profile package is implemented. Its opaque public facade
+  exposes contract observations without constructors, and its packaged JSON
+  equality test prevents drift from the declarative authority.
 - Change `o2i-0003` proposes `spc/contract/archimate-profile.json` as the exact
   concrete-mapping authority. The White Paper includes a generated readable
   projection; the reference model visualizes it; Haskell and repository checks
@@ -48,6 +55,12 @@ publication.
 
 - `python3 utl/change-governance.py validate`: passed after Admission and
   implementation-plan registration.
+- Contract parser and renderer tests: 19 passed.
+- Full Haskell tests with `-Werror`: Core 292, Inspection 48, profile contract
+  1, AMX 146 plus API, and CLI 65 plus API passed.
+- Profile package and AMX source archives are self-contained; Cabal check,
+  HIndent, Haddock, license equality, governance validation, and diff integrity
+  passed.
 
 # Gate
 
@@ -61,9 +74,9 @@ publication.
 
 # Next Action
 
-Add a complete Haskell AMX-registry equality test and contract-based repository
-View checks with the external formalization/Haskell co-author. Correct context
-macrorelations to their admitted directed Association representation.
+Replace duplicated Python mapping registries with contract-based repository
+View checks. Python remains repository-development tooling; it does not
+validate O2I instances.
 
 # Local Return Point
 

@@ -22,6 +22,7 @@ import O2I.Adapter.AMX.Internal.Profile.Metadata
 import O2I.Adapter.AMX.Internal.Profile.Model
 import O2I.Adapter.AMX.Internal.Registry
 import O2I.Adapter.AMX.Internal.Types
+import O2I.ArchiMate.Profile
 import O2I.Inspection.Provenance
 
 -- | Finite least fixed point of persisted candidate and relationship facts.
@@ -85,7 +86,7 @@ relationshipEligible environment closure relationship
         isPresented =
           Set.member occurrence (environmentPresentedRelations environment)
      in (isPresented && (not (null signatures) || endpointsAreCandidates))
-          || any (isHiddenDependencyRelation . signatureCode) signatures
+          || any (isHiddenDependencyRelation . relationMappingCode) signatures
   where
     occurrence = relationshipOccurrence relationship
 
@@ -106,13 +107,13 @@ ownershipEligible environment closure relationship =
       elementAttribute (endpointQName role) relationship == elementId element
 
 possibleSignatures ::
-     Environment -> CandidateClosure -> AMXElement -> [AMXRelationSignature]
+     Environment -> CandidateClosure -> AMXElement -> [ArchiMateRelationMapping]
 possibleSignatures environment closure relationship =
   [ signature
-  | signature <- relationSignatures
-  , signatureAMXLabel signature == elementName relationship
-  , endpointCompatible sourceKinds (signatureFrom signature)
-  , endpointCompatible targetKinds (signatureTo signature)
+  | signature <- relationMappings
+  , relationMappingLabel signature == elementName relationship
+  , endpointCompatible sourceKinds (relationMappingSource signature)
+  , endpointCompatible targetKinds (relationMappingTarget signature)
   , not (null sourceKinds && null targetKinds)
   ]
   where
@@ -156,7 +157,7 @@ projectedRawEdge environment closure relationship = do
           [nodeOccurrence source, nodeOccurrence target]
       semanticName =
         case resolved of
-          signature:_ -> Just (signatureName signature)
+          signature:_ -> Just (relationMappingName signature)
           []
             | endpointsAreCandidates ->
               Just (RelationName (elementName relationship))
@@ -167,7 +168,8 @@ projectedRawEdge environment closure relationship = do
           signatures ->
             maybe
               False
-              (\actual -> any ((== actual) . signatureRepresentation) signatures)
+              (\actual ->
+                 any ((== actual) . relationMappingRepresentation) signatures)
               (actualRelationshipRepresentation relationship)
   name <- semanticName
   if representationIsValid
@@ -175,7 +177,7 @@ projectedRawEdge environment closure relationship = do
     else Nothing
 
 -- | Resolve all exact core signatures for one persisted relationship.
-exactSignatures :: Environment -> AMXElement -> [AMXRelationSignature]
+exactSignatures :: Environment -> AMXElement -> [ArchiMateRelationMapping]
 exactSignatures environment relationship = do
   source <-
     maybeToList (uniqueEndpointElement environment SourceEndpoint relationship)
@@ -183,14 +185,14 @@ exactSignatures environment relationship = do
     maybeToList (uniqueEndpointElement environment TargetEndpoint relationship)
   sourceKind <- maybeToList (nodeKind environment source)
   targetKind <- maybeToList (nodeKind environment target)
-  signature <- relationSignatures
-  guard (signatureAMXLabel signature == elementName relationship)
-  guard (signatureFrom signature == sourceKind)
-  guard (signatureTo signature == targetKind)
+  signature <- relationMappings
+  guard (relationMappingLabel signature == elementName relationship)
+  guard (relationMappingSource signature == sourceKind)
+  guard (relationMappingTarget signature == targetKind)
   pure signature
 
 -- | Resolve exact or uniquely implied endpoint-invalid signatures.
-resolvedSignatures :: Environment -> AMXElement -> [AMXRelationSignature]
+resolvedSignatures :: Environment -> AMXElement -> [ArchiMateRelationMapping]
 resolvedSignatures environment relationship =
   case exactSignatures environment relationship of
     [] -> uniquelyResolvedPartial
@@ -204,10 +206,10 @@ resolvedSignatures environment relationship =
         >>= nodeKind environment
     partial =
       [ signature
-      | signature <- relationSignatures
-      , signatureAMXLabel signature == elementName relationship
-      , endpointMatches sourceKind (signatureFrom signature)
-          || endpointMatches targetKind (signatureTo signature)
+      | signature <- relationMappings
+      , relationMappingLabel signature == elementName relationship
+      , endpointMatches sourceKind (relationMappingSource signature)
+          || endpointMatches targetKind (relationMappingTarget signature)
       ]
     uniquelyResolvedPartial =
       case partial of

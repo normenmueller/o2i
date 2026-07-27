@@ -12,7 +12,7 @@ import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as Text
-import O2I
+import O2I hiding (collectiveContributors, collectiveTarget)
 import O2I.Adapter.AMX.Internal.Defect hiding
   ( CollectiveContributorIsTarget
   , DuplicateCollectiveContributor
@@ -25,11 +25,8 @@ import O2I.Adapter.AMX.Internal.Profile.Property
 import O2I.Adapter.AMX.Internal.Registry
 import O2I.Adapter.AMX.Internal.Types
 import O2I.Adapter.AMX.Internal.XML (archiNamespace)
+import O2I.ArchiMate.Profile
 import O2I.Inspection.Provenance
-
--- | Stable metadata key linking a Junction claim to supplemental Fit evidence.
-collectiveFitEvidenceKey :: Text
-collectiveFitEvidenceKey = "o2i.collective-fit-evidence"
 
 data CollectiveObservation = CollectiveObservation
   { observedJunction :: AMXElement
@@ -49,9 +46,12 @@ data CollectiveObservation = CollectiveObservation
 -- are validated only after this unambiguous dispatch decision.
 isCollectiveStrategyRealizationDeclaration :: AMXElement -> Bool
 isCollectiveStrategyRealizationDeclaration element =
-  case directProperties "o2i.type" element of
-    [(_, "CollectiveStrategyRealization")] -> True
+  case directProperties typeKey element of
+    [(_, value)] -> value == collectiveCarrierType carrier
     _ -> False
+  where
+    typeKey = carrierTypeKey (contractMetadata profileContract)
+    carrier = collectiveCarrier (contractCollectiveRealization profileContract)
 
 observeCollective ::
      Environment
@@ -106,20 +106,34 @@ observeCollective environment relationshipAdjacency junction =
              (CollectiveContributorCardinality
                 claimName
                 (length (stableUnique contributorIds)))
-           | length (stableUnique contributorIds) < 2
+           | not
+               (cardinalityAccepts
+                  (collectiveContributorCardinality contributorsContract)
+                  (length (stableUnique contributorIds)))
            ]
         ++ [ Located
              (amxElementLocation junction)
              (CollectiveTargetCardinality claimName (length outgoing))
-           | length outgoing /= 1
+           | not
+               (cardinalityAccepts
+                  (collectiveTargetCardinality targetContract)
+                  (length outgoing))
            ]
-        ++ duplicateContributorDefects claimName contributorResults
+        ++ (if requirementIsRequired
+                 (collectiveContributorsDistinct contributorsContract)
+              then duplicateContributorDefects claimName contributorResults
+              else [])
         ++ [ Located
              (amxElementLocation junction)
              (Defect.CollectiveContributorIsTarget claimName participant)
            | participant <- stableUnique contributorIds
            , participant `elem` targetIds
+           , requirementIsRequired
+               (collectiveTargetDistinctFromContributors targetContract)
            ]
+    collective = contractCollectiveRealization profileContract
+    contributorsContract = collectiveContributors collective
+    targetContract = collectiveTarget collective
 
 rawClaim ::
      Maybe Text
@@ -133,7 +147,7 @@ rawClaim identifier contributors targets junction = do
   [target] <- pure targets
   targetId <- RawNodeId <$> elementId target
   commitment <- resolvedCommitment (decodeCommitment junction)
-  fitReference <- singlePropertyValue collectiveFitEvidenceKey junction
+  fitReference <- singlePropertyValue fitEvidenceKey junction
   pure
     (claimWithCommitment
        commitment
@@ -143,6 +157,10 @@ rawClaim identifier contributors targets junction = do
          , rawTarget = targetId
          , rawCollectiveFitEvidence = CollectiveFitEvidenceRef fitReference
          })
+  where
+    fitEvidenceKey =
+      collectiveFitEvidenceKey
+        (collectiveCarrier (contractCollectiveRealization profileContract))
 
 metadataDefects ::
      Environment -> AMXElement -> [Located SourcePosition AMXProfileDefect]
@@ -151,27 +169,36 @@ metadataDefects environment junction =
     ++ identifierDefects
     ++ representationDefects
     ++ exactValueDefects
-         "o2i.kind"
-         "StructuredProposition"
+         kindKey
+         (metadataKindText (collectiveCarrierKind carrier))
          MissingO2IKind
          DuplicateO2IKind
          (\claimId actual -> UnknownO2IKind claimId actual)
          junction
     ++ exactValueDefects
-         "o2i.type"
-         "CollectiveStrategyRealization"
+         typeKey
+         (collectiveCarrierType carrier)
          MissingO2IType
          DuplicateO2IType
          (\claimId actual ->
-            InvalidO2ITypeForKind claimId "StructuredProposition" actual)
+            InvalidO2ITypeForKind
+              claimId
+              (metadataKindText (collectiveCarrierKind carrier))
+              actual)
          junction
     ++ commitmentResolutionDefects (decodeCommitment junction)
     ++ fitReferenceDefects junction
   where
+    metadata = contractMetadata profileContract
+    collective = contractCollectiveRealization profileContract
+    carrier = collectiveCarrier collective
+    kindKey = carrierKindKey metadata
+    typeKey = carrierTypeKey metadata
+    commitmentKey = collectiveCommitmentKey carrier
+    fitEvidenceKey = collectiveFitEvidenceKey carrier
     identifier = displayId junction
     properties = o2iProperties junction
-    allowedKeys =
-      ["o2i.kind", "o2i.type", "o2i.commitment", collectiveFitEvidenceKey]
+    allowedKeys = [kindKey, typeKey, commitmentKey, fitEvidenceKey]
     unsupported =
       [ Located
         (propertyLocation key property)
@@ -204,7 +231,7 @@ metadataDefects environment junction =
         (InvalidCollectiveJunctionRepresentation
            identifier
            (elementRepresentationText junction))
-      | not (isAndJunction junction)
+      | not (isCollectiveCarrier carrier junction)
       ]
 
 exactValueDefects ::
@@ -232,7 +259,7 @@ exactValueDefects key expected missing duplicate invalid element =
 
 fitReferenceDefects :: AMXElement -> [Located SourcePosition AMXProfileDefect]
 fitReferenceDefects element =
-  case directProperties collectiveFitEvidenceKey element of
+  case directProperties fitEvidenceKey element of
     [] ->
       [ Located
           (amxElementLocation element)
@@ -241,19 +268,22 @@ fitReferenceDefects element =
     [(property, value)]
       | Text.null (Text.strip value) ->
         [ Located
-            (propertyLocation collectiveFitEvidenceKey property)
+            (propertyLocation fitEvidenceKey property)
             (Defect.EmptyCollectiveFitEvidenceReference identifier)
         ]
       | otherwise -> []
     first:rest ->
       [ Located
-          (propertyLocation collectiveFitEvidenceKey (fst first))
+          (propertyLocation fitEvidenceKey (fst first))
           (DuplicateCollectiveFitEvidenceReference
              identifier
              (snd first :| map snd rest))
       ]
   where
     identifier = displayId element
+    fitEvidenceKey =
+      collectiveFitEvidenceKey
+        (collectiveCarrier (contractCollectiveRealization profileContract))
 
 segmentDefects ::
      Environment
@@ -269,7 +299,9 @@ segmentDefects environment claim junction segment =
     ++ chainDefects
   where
     segmentId = displayId segment
-    expected = ArchiRelationshipRepresentation "RealizationRelationship" False
+    collective = contractCollectiveRealization profileContract
+    segmentContract = collectiveSegments collective
+    expected = collectiveSegmentRepresentation segmentContract
     actual = actualRelationshipRepresentation segment
     representationDefects =
       [ Located
@@ -284,14 +316,15 @@ segmentDefects environment claim junction segment =
       [ Located
         (amxElementLocation segment)
         (InvalidCollectiveSegmentName claim segmentId (elementName segment))
-      | elementName segment /= "realizes"
+      | elementName segment /= collectiveSegmentLabel segmentContract
       ]
     segmentMetadataDefects =
       [ Located
         (propertyLocation key property)
         (CollectiveSegmentMetadata claim segmentId key)
       | (property, key, _) <- o2iProperties segment
-      , key /= "o2i.commitment"
+      , key /= relationCommitmentKey (contractMetadata profileContract)
+      , requirementIsForbidden (collectiveSegmentMetadata segmentContract)
       ]
     chainDefects =
       [ Located
@@ -300,6 +333,7 @@ segmentDefects environment claim junction segment =
       | any
           (\endpoint -> endpoint /= junction && isJunction endpoint)
           (endpointCandidates segment)
+      , requirementIsForbidden (collectiveJunctionChains collective)
       ]
     endpointCandidates relationship =
       stableUniqueElements
@@ -387,12 +421,23 @@ duplicateContributorDefects claim = go Set.empty
           | otherwise -> go (Set.insert contributor seen) rest
 
 isJunction :: AMXElement -> Bool
-isJunction = hasArchiType "Junction"
+isJunction =
+  hasArchiType
+    (collectiveCarrierElement
+       (collectiveCarrier (contractCollectiveRealization profileContract)))
 
-isAndJunction :: AMXElement -> Bool
-isAndJunction element =
-  isJunction element
-    && elementAttribute (expandedQName Nothing 't' "ype") element == Nothing
+isCollectiveCarrier :: CollectiveCarrierContract -> AMXElement -> Bool
+isCollectiveCarrier carrier element =
+  hasArchiType (collectiveCarrierElement carrier) element
+    && junctionTypeMatches
+         (collectiveJunctionType carrier)
+         (elementAttribute (expandedQName Nothing 't' "ype") element)
+
+junctionTypeMatches :: Text -> Maybe Text -> Bool
+junctionTypeMatches expected actual =
+  case expected of
+    "and" -> actual == Nothing
+    _ -> actual == Just expected
 
 hasArchiType :: Text -> AMXElement -> Bool
 hasArchiType localName element =

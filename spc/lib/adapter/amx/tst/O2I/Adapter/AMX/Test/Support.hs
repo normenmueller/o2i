@@ -8,10 +8,12 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as TextEncoding
+import O2I (FixedRelationCode(..), RelationCode(..))
 import O2I.Adapter.AMX
 import O2I.Adapter.AMX.Internal.Defect
 import O2I.Adapter.AMX.Internal.Types (AMXDocument)
 import O2I.Adapter.AMX.Internal.XML
+import O2I.ArchiMate.Profile
 import O2I.Inspection
 import System.FilePath ((</>))
 import Test.Tasty.HUnit (assertFailure)
@@ -125,11 +127,11 @@ wrongRelationshipModel =
        <> grouping "need" "Need" (Text.concat (metadata "Context" "Need"))
        <> relationship
             "qualifies"
-            "AssociationRelationship"
+            "InfluenceRelationship"
             "qualifies"
             "strategy"
             "need"
-            True
+            False
        <> connectedView "qualifies" "strategy" "need")
     [profileProperty]
 
@@ -261,13 +263,11 @@ invalidEndpointModel =
   model
     (grouping "ethos" "Ethos" (Text.concat ethosMetadata)
        <> grouping "vision" "Vision" (Text.concat visionMetadata)
-       <> relationship
-            "grounds"
-            "InfluenceRelationship"
+       <> o2iRelationship
+            (FixedRelation GroundsVisionCode)
             "grounds"
             "ethos"
             "vision"
-            False
        <> connectedView "grounds" "ethos" "vision")
     [profileProperty]
 
@@ -276,13 +276,11 @@ connectionModel relationReference sourceReference targetReference =
   model
     (grouping "left" "Left" (Text.concat contextMetadata)
        <> grouping "right" "Right" (Text.concat (metadata "Context" "Vision"))
-       <> relationship
+       <> o2iRelationship
+            (FixedRelation GroundsVisionCode)
             "relation"
-            "InfluenceRelationship"
-            "grounds"
             "left"
             "right"
-            False
        <> view
             "view"
             "Scope"
@@ -300,13 +298,11 @@ connectionModelWithRelationship relationReference persistedSource persistedTarge
   model
     (grouping "left" "Left" (Text.concat contextMetadata)
        <> grouping "right" "Right" (Text.concat (metadata "Context" "Vision"))
-       <> relationship
+       <> o2iRelationship
+            (FixedRelation GroundsVisionCode)
             "relation"
-            "InfluenceRelationship"
-            "grounds"
             persistedSource
             persistedTarget
-            False
        <> view
             "view"
             "Scope"
@@ -417,6 +413,29 @@ relationshipWithProperties properties identifier relationType name sourceId targ
     close attributes
       | Text.null properties = attributes <> "/>"
       | otherwise = attributes <> ">" <> properties <> "</element>"
+
+o2iRelationship :: RelationCode -> Text -> Text -> Text -> Text
+o2iRelationship =
+  o2iRelationshipWithProperties (property "o2i.commitment" "asserted")
+
+o2iRelationshipWithCommitment ::
+     Text -> RelationCode -> Text -> Text -> Text -> Text
+o2iRelationshipWithCommitment commitment =
+  o2iRelationshipWithProperties (property "o2i.commitment" commitment)
+
+o2iRelationshipWithProperties ::
+     Text -> RelationCode -> Text -> Text -> Text -> Text
+o2iRelationshipWithProperties properties code identifier sourceId targetId =
+  relationshipWithProperties
+    properties
+    identifier
+    (relationshipTypeName representation)
+    (expectedRelationshipLabel code)
+    sourceId
+    targetId
+    (relationshipDirected representation)
+  where
+    representation = expectedRelationshipRepresentation code
 
 -- | Persist one native contextualization and thereby its Context Ownership.
 contextualization :: Text -> Text -> Text -> Text

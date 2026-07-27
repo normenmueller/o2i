@@ -21,6 +21,7 @@ import O2I.Adapter.AMX.Internal.Profile.Model
 import O2I.Adapter.AMX.Internal.Profile.Property
 import O2I.Adapter.AMX.Internal.Registry
 import O2I.Adapter.AMX.Internal.Types
+import O2I.ArchiMate.Profile
 import O2I.Inspection.Profile
 import O2I.Inspection.Provenance
 
@@ -167,7 +168,8 @@ projectRelationshipOccurrence environment closure relationship =
       if isOwnershipRelationship relationship
         then PersistedContextOwnership
         else case resolvedSignatures environment relationship of
-               signature:_ -> relationDependencyReason (signatureCode signature)
+               signature:_ ->
+                 relationDependencyReason (relationMappingCode signature)
                [] -> PersistedRelationshipEndpoint
 
 relationshipReference ::
@@ -280,11 +282,11 @@ hiddenRelationshipDependencies ::
 hiddenRelationshipDependencies environment closure relationship =
   case exactSignatures environment relationship of
     signature:_
-      | isHiddenDependencyRelation (signatureCode signature) ->
+      | isHiddenDependencyRelation (relationMappingCode signature) ->
         relationshipBackDependencies
           environment
           closure
-          (relationDependencyReason (signatureCode signature))
+          (relationDependencyReason (relationMappingCode signature))
           relationship
     _ -> []
 
@@ -304,7 +306,7 @@ relationshipDefects environment relationship =
         (propertyLocation key property)
         (UnsupportedO2IMetadataKey (displayId relationship) key)
       | (property, key, _) <- o2iProperties relationship
-      , key /= "o2i.commitment"
+      , key /= relationCommitmentKey (contractMetadata profileContract)
       ]
     representationDefects =
       case resolvedSignatures environment relationship of
@@ -312,7 +314,8 @@ relationshipDefects environment relationship =
         signatures ->
           case actualRelationshipRepresentation relationship of
             Just actual
-              | any ((== actual) . signatureRepresentation) signatures -> []
+              | any ((== actual) . relationMappingRepresentation) signatures ->
+                []
             actual ->
               [ Located
                   (amxElementLocation relationship)
@@ -322,7 +325,8 @@ relationshipDefects environment relationship =
                         "|"
                         (nub
                            (map
-                              (representationText . signatureRepresentation)
+                              (representationText
+                                 . relationMappingRepresentation)
                               signatures)))
                      (maybe "<unresolved>" representationText actual))
               ]

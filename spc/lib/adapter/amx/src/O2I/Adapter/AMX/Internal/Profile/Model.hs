@@ -27,6 +27,7 @@ import Data.Set (Set)
 import Data.Text (Text)
 import O2I.Adapter.AMX.Internal.Registry
 import O2I.Adapter.AMX.Internal.Types
+import O2I.ArchiMate.Profile
 import O2I.Inspection.Provenance
 
 -- | Native declaration indexes for one decoded document and selected View.
@@ -85,13 +86,11 @@ uniqueOwnership environment element =
 -- | Recognize the sole native contextualization notation.
 isOwnershipRelationship :: AMXElement -> Bool
 isOwnershipRelationship relationship =
-  elementName relationship == "contextualizes"
+  elementName relationship == contextualizationLabel pattern
     && actualRelationshipRepresentation relationship
-         == Just
-              ArchiRelationshipRepresentation
-                { relationshipTypeName = "CompositionRelationship"
-                , relationshipDirected = False
-                }
+         == Just (contextualizationRepresentation pattern)
+  where
+    pattern = contractContextualization profileContract
 
 -- | Resolve all declaration occurrences referenced by one endpoint token.
 endpointElements :: Environment -> EndpointRole -> AMXElement -> [AMXElement]
