@@ -94,7 +94,9 @@ repository Views and snapshots. It never validates O2I instances.
 - `o2i.md`: White Paper and normative fachliche/metamodel text.
 - `README.md`: canonical Purpose and USP snippets.
 - `wtf.md`: informal non-normative entry guide.
-- `mdl/o2i.archimate`: semantic and concrete-syntax Views.
+- `spc/contract/archimate-profile.json`: exact declarative ArchiMate profile
+  mapping.
+- `mdl/o2i.archimate`: semantic and concrete-syntax reference Views.
 - `mdl/o2i-*.md`: generated review snapshots.
 - `img/`, `acc/`, `toPDF.sh`: publication figures and rendering.
 - `spc/lib/core/`: normative Haskell formalization.
@@ -116,7 +118,8 @@ repository Views and snapshots. It never validates O2I instances.
 - Static types prevent type-level invalidity. Runtime validation checks
   identity- and graph-wide invariants. Tests provide executable evidence that
   both classes of contract are enforced.
-- Semantic Views visualize the metamodel. Syntax Views define the concrete
-  ArchiMate mapping. Neither ArchiMate nor Python defines O2I semantics.
+- Semantic Views visualize the metamodel. Syntax Views visualize the
+  declarative ArchiMate profile contract. Neither ArchiMate nor Python defines
+  O2I semantics.
 - Agentic AI may propose fachliche links; authorized humans decide their
   acceptance; deterministic validation checks formal admissibility.

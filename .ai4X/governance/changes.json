@@ -39,6 +39,28 @@
       ],
       "final_reviews": [],
       "derived_from": [],
+      "depends_on": [
+        "o2i-0003"
+      ]
+    },
+    {
+      "id": "o2i-0003",
+      "title": "Declarative ArchiMate Profile Contract",
+      "author": "normenmueller",
+      "coauthors": [
+        "external-profile-contract-coauthor"
+      ],
+      "state": "implementing",
+      "proposal": ".ai4X/governance/changes/o2i-0003/proposal.md",
+      "plan": ".ai4X/governance/changes/o2i-0003/plan.md",
+      "admission_reviews": [
+        ".ai4X/governance/changes/o2i-0003/reviews/admission-strategy.json",
+        ".ai4X/governance/changes/o2i-0003/reviews/admission-formalization.json"
+      ],
+      "final_reviews": [],
+      "derived_from": [
+        "o2i-0002"
+      ],
       "depends_on": []
     }
   ]

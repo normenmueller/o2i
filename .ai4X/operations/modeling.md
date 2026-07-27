@@ -6,8 +6,9 @@ instance-conformance work.
 # Semantic And Syntax Discipline
 
 - Treat ArchiMate as notation, never as the source of O2I semantics.
-- Semantic Views visualize the metamodel. Syntax Views define its concrete
-  ArchiMate mapping and introduce no independent fachliche semantics.
+- Semantic Views visualize the metamodel. Syntax Views visualize the concrete
+  mapping defined by `spc/contract/archimate-profile.json` and introduce no
+  independent fachliche semantics.
 - Semantic Views render O2I metamodel elements as plain boxes with solid
   outlines. This is a readability convention only and carries no formal
   semantics.
@@ -23,10 +24,10 @@ instance-conformance work.
 - Syntax Views map semantic types, relation families, metadata, and structured
   patterns to ArchiMate notation. They never repeat a complete semantic graph
   merely to illustrate the mapping.
-- `O2I Syntax` is the single normative mapping View. Focused Context,
-  Primitives, and Situation syntax Views are presentation-only excerpts that
-  reuse the exact persisted mapping elements and relationships and introduce no
-  independent contract.
+- `O2I Syntax` is the complete reference visualization of the declarative
+  profile contract. Focused Context, Primitives, and Situation syntax Views are
+  presentation-only excerpts that reuse the exact persisted mapping elements
+  and relationships and introduce no independent contract.
 - Keep carrier mappings, relation mappings, and non-trivial syntax patterns
   explicit:
   - carrier mappings define which ArchiMate element represents an O2I type;
@@ -61,9 +62,10 @@ instance-conformance work.
 - Contextualization is only
   `Context --composition[contextualizes]--> element`; visual nesting is
   presentational.
-- Mapping-only Views are repository snapshot contracts, not O2I graphs.
-- Only `O2I Syntax` is a normative mapping contract. Presentation excerpts are
-  checked as identity-preserving projections of that View.
+- Mapping-only Views are checked reference visualizations, not O2I graphs.
+- `spc/contract/archimate-profile.json` is the exact mapping authority.
+  `O2I Syntax` must completely visualize it; presentation excerpts are checked
+  as identity-preserving projections of that View.
 - Executable conformance and instance Views require Haskell `o2i inspect`.
 
 # Model Editing

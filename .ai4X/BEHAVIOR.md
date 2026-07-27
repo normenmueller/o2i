@@ -44,7 +44,7 @@ resolved in the owning source before synchronization.
 | Purpose and USP snippets | `README.md` | White Paper includes |
 | Fachliche definitions and authors' derivations | `o2i.md` Terminology | WTF, model documentation |
 | Metamodel types, relations, and invariants | `o2i.md` Metamodel | semantic Views, Haskell |
-| Concrete ArchiMate mapping | `mdl/o2i.archimate` syntax Views and documentation | Syntax text, AMX adapter |
+| Exact concrete ArchiMate mapping | `spc/contract/archimate-profile.json` | White Paper projection, syntax Views, AMX adapter |
 | Machine-checkable formalization | `spc/lib/core/` | Inspection, adapters, CLI |
 | AMX profile validation and projection | `spc/lib/adapter/amx/` | CLI reports |
 | Change admission, state, dependencies, and reviews | `.ai4X/governance/` | Agent Memory routing, generated projections |

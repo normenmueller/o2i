@@ -25,6 +25,13 @@ text.
 - TikZ sources live in `acc/`; generated PNGs live in `img/`.
 - ArchiMate exports and model documentation remain synchronized with the
   article and formalization.
+- The White Paper concrete-syntax section explains every normative mapping
+  class projected from `spc/contract/archimate-profile.json`: carriers,
+  metadata, relationship representations, context-sensitive signatures, and
+  structured patterns. The generated fragment remains readable publication
+  prose; it never exposes raw JSON structure.
+- `O2I Syntax` visualizes that contract. It is not an independent normative
+  source.
 
 # Verification
 

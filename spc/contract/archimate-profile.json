@@ -1,0 +1,759 @@
+{
+  "schema": "o2i.archimate-profile/v1",
+  "profileVersion": "0.2",
+  "metadata": {
+    "modelRoot": {
+      "profileKey": "o2i.profile",
+      "cardinality": "exactly-one",
+      "additionalO2IProperties": "forbidden"
+    },
+    "typedCarrier": {
+      "kindKey": "o2i.kind",
+      "typeKey": "o2i.type",
+      "commitmentKey": "o2i.commitment",
+      "commitmentValues": [
+        "candidate",
+        "asserted"
+      ],
+      "cardinality": "exactly-one-each",
+      "additionalO2IProperties": "forbidden"
+    },
+    "semanticRelation": {
+      "commitmentKey": "o2i.commitment",
+      "commitmentValues": [
+        "candidate",
+        "asserted"
+      ],
+      "cardinality": "exactly-one",
+      "additionalO2IProperties": "forbidden"
+    }
+  },
+  "carrierMappings": [
+    {
+      "id": "context",
+      "o2iKind": "Context",
+      "o2iTypes": [
+        "Ethos",
+        "Mission",
+        "Vision",
+        "Strategy",
+        "Situation",
+        "Need",
+        "Intervention",
+        "Measure"
+      ],
+      "archimateElement": "Grouping",
+      "contextOwnership": "forbidden"
+    },
+    {
+      "id": "primitive.principle",
+      "o2iKind": "Primitive",
+      "o2iTypes": [
+        "Principle"
+      ],
+      "archimateElement": "Principle",
+      "contextOwnership": "required"
+    },
+    {
+      "id": "primitive.driver",
+      "o2iKind": "Primitive",
+      "o2iTypes": [
+        "Driver"
+      ],
+      "archimateElement": "Driver",
+      "contextOwnership": "required"
+    },
+    {
+      "id": "primitive.objective",
+      "o2iKind": "Primitive",
+      "o2iTypes": [
+        "Objective"
+      ],
+      "archimateElement": "Goal",
+      "contextOwnership": "required"
+    },
+    {
+      "id": "primitive.key-result",
+      "o2iKind": "Primitive",
+      "o2iTypes": [
+        "KeyResult"
+      ],
+      "archimateElement": "Outcome",
+      "contextOwnership": "required"
+    },
+    {
+      "id": "primitive.kpi",
+      "o2iKind": "Primitive",
+      "o2iTypes": [
+        "KPI"
+      ],
+      "archimateElement": "Assessment",
+      "contextOwnership": "required"
+    },
+    {
+      "id": "primitive.action",
+      "o2iKind": "Primitive",
+      "o2iTypes": [
+        "Action"
+      ],
+      "archimateElement": "CourseOfAction",
+      "contextOwnership": "required"
+    },
+    {
+      "id": "structuring.performance-dimension",
+      "o2iKind": "Structuring",
+      "o2iTypes": [
+        "PerformanceDimension"
+      ],
+      "archimateElement": "Grouping",
+      "contextOwnership": "required"
+    },
+    {
+      "id": "situation-anchor.business-capability",
+      "o2iKind": "SituationAnchor",
+      "o2iTypes": [
+        "BusinessCapability"
+      ],
+      "archimateElement": "Capability",
+      "contextOwnership": "forbidden"
+    },
+    {
+      "id": "situation-anchor.business-process",
+      "o2iKind": "SituationAnchor",
+      "o2iTypes": [
+        "BusinessProcess"
+      ],
+      "archimateElement": "BusinessProcess",
+      "contextOwnership": "forbidden"
+    },
+    {
+      "id": "situation-anchor.business-object",
+      "o2iKind": "SituationAnchor",
+      "o2iTypes": [
+        "BusinessObject"
+      ],
+      "archimateElement": "BusinessObject",
+      "contextOwnership": "forbidden"
+    },
+    {
+      "id": "situation-anchor.business-role",
+      "o2iKind": "SituationAnchor",
+      "o2iTypes": [
+        "BusinessRole"
+      ],
+      "archimateElement": "BusinessRole",
+      "contextOwnership": "forbidden"
+    },
+    {
+      "id": "situation-anchor.value-stream",
+      "o2iKind": "SituationAnchor",
+      "o2iTypes": [
+        "ValueStream"
+      ],
+      "archimateElement": "ValueStream",
+      "contextOwnership": "forbidden"
+    },
+    {
+      "id": "situation-anchor.regulatory-constraint",
+      "o2iKind": "SituationAnchor",
+      "o2iTypes": [
+        "RegulatoryConstraint"
+      ],
+      "archimateElement": "Requirement",
+      "contextOwnership": "forbidden"
+    }
+  ],
+  "relationMappings": [
+    {
+      "id": "ethos-guides-mission",
+      "relationName": "ethos-guides-mission",
+      "source": "context.ethos",
+      "target": "context.mission",
+      "label": "guides",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "mission-grounds-vision",
+      "relationName": "mission-grounds-vision",
+      "source": "context.mission",
+      "target": "context.vision",
+      "label": "grounds",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "ethos-guides-vision",
+      "relationName": "ethos-guides-vision",
+      "source": "context.ethos",
+      "target": "context.vision",
+      "label": "guides",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "vision-orients-strategy",
+      "relationName": "vision-orients-strategy",
+      "source": "context.vision",
+      "target": "context.strategy",
+      "label": "orients",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "strategy-directs-strategy",
+      "relationName": "strategy-directs-strategy",
+      "source": "context.strategy",
+      "target": "context.strategy",
+      "label": "directs",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "strategy-contributes-to-strategy",
+      "relationName": "strategy-contributes-to-strategy",
+      "source": "context.strategy",
+      "target": "context.strategy",
+      "label": "contributes-to",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "strategy-qualifies-need",
+      "relationName": "strategy-qualifies-need",
+      "source": "context.strategy",
+      "target": "context.need",
+      "label": "qualifies",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "situation-surfaces-need",
+      "relationName": "situation-surfaces-need",
+      "source": "context.situation",
+      "target": "context.need",
+      "label": "surfaces",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "intervention-addresses-need",
+      "relationName": "intervention-addresses-need",
+      "source": "context.intervention",
+      "target": "context.need",
+      "label": "addresses",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "strategy-directs-intervention",
+      "relationName": "strategy-directs-intervention",
+      "source": "context.strategy",
+      "target": "context.intervention",
+      "label": "directs",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "intervention-changes-situation",
+      "relationName": "intervention-changes-situation",
+      "source": "context.intervention",
+      "target": "context.situation",
+      "label": "changes",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "intervention-sets-target-for-measure",
+      "relationName": "intervention-sets-target-for-measure",
+      "source": "context.intervention",
+      "target": "context.measure",
+      "label": "sets-target-for",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "measure-measures-situation",
+      "relationName": "measure-measures-situation",
+      "source": "context.measure",
+      "target": "context.situation",
+      "label": "measures",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "strategy-frames-measure",
+      "relationName": "strategy-frames-measure",
+      "source": "context.strategy",
+      "target": "context.measure",
+      "label": "frames",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "ethos-principle-guides-mission-driver",
+      "relationName": "ethos-principle-guides-mission-driver",
+      "source": "primitive.ethos.principle",
+      "target": "primitive.mission.driver",
+      "label": "guides",
+      "archimateRelationship": "InfluenceRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "ethos-principle-guides-vision-objective",
+      "relationName": "ethos-principle-guides-vision-objective",
+      "source": "primitive.ethos.principle",
+      "target": "primitive.vision.objective",
+      "label": "guides",
+      "archimateRelationship": "InfluenceRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "mission-driver-grounds-vision-objective",
+      "relationName": "mission-driver-grounds-vision-objective",
+      "source": "primitive.mission.driver",
+      "target": "primitive.vision.objective",
+      "label": "grounds",
+      "archimateRelationship": "InfluenceRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "vision-objective-orients-strategy-objective",
+      "relationName": "vision-objective-orients-strategy-objective",
+      "source": "primitive.vision.objective",
+      "target": "primitive.strategy.objective",
+      "label": "orients",
+      "archimateRelationship": "InfluenceRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "strategy-driver-grounds-strategy-objective",
+      "relationName": "strategy-driver-grounds-strategy-objective",
+      "source": "primitive.strategy.driver",
+      "target": "primitive.strategy.objective",
+      "label": "grounds",
+      "archimateRelationship": "InfluenceRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "strategy-key-result-substantiates-strategy-objective",
+      "relationName": "strategy-key-result-substantiates-strategy-objective",
+      "source": "primitive.strategy.key-result",
+      "target": "primitive.strategy.objective",
+      "label": "substantiates",
+      "archimateRelationship": "RealizationRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "strategy-principle-guides-strategy-action",
+      "relationName": "strategy-principle-guides-strategy-action",
+      "source": "primitive.strategy.principle",
+      "target": "primitive.strategy.action",
+      "label": "guides",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "strategy-action-contributes-to-strategy-key-result",
+      "relationName": "strategy-action-contributes-to-strategy-key-result",
+      "source": "primitive.strategy.action",
+      "target": "primitive.strategy.key-result",
+      "label": "contributes-to",
+      "archimateRelationship": "RealizationRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "strategy-principle-guides-strategy-principle",
+      "relationName": "strategy-principle-guides-strategy-principle",
+      "source": "primitive.strategy.principle",
+      "target": "primitive.strategy.principle",
+      "label": "guides",
+      "archimateRelationship": "InfluenceRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "strategy-key-result-contributes-to-strategy-key-result",
+      "relationName": "strategy-key-result-contributes-to-strategy-key-result",
+      "source": "primitive.strategy.key-result",
+      "target": "primitive.strategy.key-result",
+      "label": "contributes-to",
+      "archimateRelationship": "InfluenceRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "strategy-action-contributes-to-strategy-action",
+      "relationName": "strategy-action-contributes-to-strategy-action",
+      "source": "primitive.strategy.action",
+      "target": "primitive.strategy.action",
+      "label": "contributes-to",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "strategy-key-result-translates-into-need-objective",
+      "relationName": "strategy-key-result-translates-into-need-objective",
+      "source": "primitive.strategy.key-result",
+      "target": "primitive.need.objective",
+      "label": "translates-into",
+      "archimateRelationship": "InfluenceRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "need-driver-grounds-need-objective",
+      "relationName": "need-driver-grounds-need-objective",
+      "source": "primitive.need.driver",
+      "target": "primitive.need.objective",
+      "label": "grounds",
+      "archimateRelationship": "InfluenceRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "strategy-driver-indicates-measure-performance-dimension",
+      "relationName": "strategy-driver-indicates-measure-performance-dimension",
+      "source": "primitive.strategy.driver",
+      "target": "structuring.measure.performance-dimension",
+      "label": "indicates",
+      "archimateRelationship": "InfluenceRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "strategy-key-result-determines-measure-performance-dimension",
+      "relationName": "strategy-key-result-determines-measure-performance-dimension",
+      "source": "primitive.strategy.key-result",
+      "target": "structuring.measure.performance-dimension",
+      "label": "determines",
+      "archimateRelationship": "InfluenceRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "strategy-action-guides-intervention-action",
+      "relationName": "strategy-action-guides-intervention-action",
+      "source": "primitive.strategy.action",
+      "target": "primitive.intervention.action",
+      "label": "guides",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "intervention-action-contributes-to-intervention-key-result",
+      "relationName": "intervention-action-contributes-to-intervention-key-result",
+      "source": "primitive.intervention.action",
+      "target": "primitive.intervention.key-result",
+      "label": "contributes-to",
+      "archimateRelationship": "RealizationRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "intervention-key-result-substantiates-need-objective",
+      "relationName": "intervention-key-result-substantiates-need-objective",
+      "source": "primitive.intervention.key-result",
+      "target": "primitive.need.objective",
+      "label": "substantiates",
+      "archimateRelationship": "RealizationRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "intervention-key-result-contributes-to-strategy-key-result",
+      "relationName": "intervention-key-result-contributes-to-strategy-key-result",
+      "source": "primitive.intervention.key-result",
+      "target": "primitive.strategy.key-result",
+      "label": "contributes-to",
+      "archimateRelationship": "InfluenceRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "intervention-key-result-sets-target-for-measure-kpi",
+      "relationName": "intervention-key-result-sets-target-for-measure-kpi",
+      "source": "primitive.intervention.key-result",
+      "target": "primitive.measure.kpi",
+      "label": "sets-target-for",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "strategy-performance-dimension-contains-strategy-key-result",
+      "relationName": "strategy-performance-dimension-contains-strategy-key-result",
+      "source": "structuring.strategy.performance-dimension",
+      "target": "primitive.strategy.key-result",
+      "label": "contains",
+      "archimateRelationship": "AggregationRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "measure-performance-dimension-contains-measure-kpi",
+      "relationName": "measure-performance-dimension-contains-measure-kpi",
+      "source": "structuring.measure.performance-dimension",
+      "target": "primitive.measure.kpi",
+      "label": "contains",
+      "archimateRelationship": "AggregationRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "situation-is-constituted-by-anchor.business-capability",
+      "relationName": "situation-is-constituted-by-anchor",
+      "source": "context.situation",
+      "target": "situation-anchor.business-capability",
+      "label": "is-constituted-by",
+      "archimateRelationship": "AggregationRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "situation-is-constituted-by-anchor.business-process",
+      "relationName": "situation-is-constituted-by-anchor",
+      "source": "context.situation",
+      "target": "situation-anchor.business-process",
+      "label": "is-constituted-by",
+      "archimateRelationship": "AggregationRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "situation-is-constituted-by-anchor.business-object",
+      "relationName": "situation-is-constituted-by-anchor",
+      "source": "context.situation",
+      "target": "situation-anchor.business-object",
+      "label": "is-constituted-by",
+      "archimateRelationship": "AggregationRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "situation-is-constituted-by-anchor.business-role",
+      "relationName": "situation-is-constituted-by-anchor",
+      "source": "context.situation",
+      "target": "situation-anchor.business-role",
+      "label": "is-constituted-by",
+      "archimateRelationship": "AggregationRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "situation-is-constituted-by-anchor.value-stream",
+      "relationName": "situation-is-constituted-by-anchor",
+      "source": "context.situation",
+      "target": "situation-anchor.value-stream",
+      "label": "is-constituted-by",
+      "archimateRelationship": "AggregationRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "situation-is-constituted-by-anchor.regulatory-constraint",
+      "relationName": "situation-is-constituted-by-anchor",
+      "source": "context.situation",
+      "target": "situation-anchor.regulatory-constraint",
+      "label": "is-constituted-by",
+      "archimateRelationship": "AggregationRelationship",
+      "associationDirected": false
+    },
+    {
+      "id": "situation-anchor-anchors-need-driver.business-capability",
+      "relationName": "situation-anchor-anchors-need-driver",
+      "source": "situation-anchor.business-capability",
+      "target": "primitive.need.driver",
+      "label": "anchors",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "situation-anchor-anchors-need-driver.business-process",
+      "relationName": "situation-anchor-anchors-need-driver",
+      "source": "situation-anchor.business-process",
+      "target": "primitive.need.driver",
+      "label": "anchors",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "situation-anchor-anchors-need-driver.business-object",
+      "relationName": "situation-anchor-anchors-need-driver",
+      "source": "situation-anchor.business-object",
+      "target": "primitive.need.driver",
+      "label": "anchors",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "situation-anchor-anchors-need-driver.business-role",
+      "relationName": "situation-anchor-anchors-need-driver",
+      "source": "situation-anchor.business-role",
+      "target": "primitive.need.driver",
+      "label": "anchors",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "situation-anchor-anchors-need-driver.value-stream",
+      "relationName": "situation-anchor-anchors-need-driver",
+      "source": "situation-anchor.value-stream",
+      "target": "primitive.need.driver",
+      "label": "anchors",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "situation-anchor-anchors-need-driver.regulatory-constraint",
+      "relationName": "situation-anchor-anchors-need-driver",
+      "source": "situation-anchor.regulatory-constraint",
+      "target": "primitive.need.driver",
+      "label": "anchors",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "intervention-action-changes-situation-anchor.business-capability",
+      "relationName": "intervention-action-changes-situation-anchor",
+      "source": "primitive.intervention.action",
+      "target": "situation-anchor.business-capability",
+      "label": "changes",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "intervention-action-changes-situation-anchor.business-process",
+      "relationName": "intervention-action-changes-situation-anchor",
+      "source": "primitive.intervention.action",
+      "target": "situation-anchor.business-process",
+      "label": "changes",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "intervention-action-changes-situation-anchor.business-object",
+      "relationName": "intervention-action-changes-situation-anchor",
+      "source": "primitive.intervention.action",
+      "target": "situation-anchor.business-object",
+      "label": "changes",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "intervention-action-changes-situation-anchor.business-role",
+      "relationName": "intervention-action-changes-situation-anchor",
+      "source": "primitive.intervention.action",
+      "target": "situation-anchor.business-role",
+      "label": "changes",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "intervention-action-changes-situation-anchor.value-stream",
+      "relationName": "intervention-action-changes-situation-anchor",
+      "source": "primitive.intervention.action",
+      "target": "situation-anchor.value-stream",
+      "label": "changes",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "intervention-action-changes-situation-anchor.regulatory-constraint",
+      "relationName": "intervention-action-changes-situation-anchor",
+      "source": "primitive.intervention.action",
+      "target": "situation-anchor.regulatory-constraint",
+      "label": "changes",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "measure-kpi-measures-situation-anchor.business-capability",
+      "relationName": "measure-kpi-measures-situation-anchor",
+      "source": "primitive.measure.kpi",
+      "target": "situation-anchor.business-capability",
+      "label": "measures",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "measure-kpi-measures-situation-anchor.business-process",
+      "relationName": "measure-kpi-measures-situation-anchor",
+      "source": "primitive.measure.kpi",
+      "target": "situation-anchor.business-process",
+      "label": "measures",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "measure-kpi-measures-situation-anchor.business-object",
+      "relationName": "measure-kpi-measures-situation-anchor",
+      "source": "primitive.measure.kpi",
+      "target": "situation-anchor.business-object",
+      "label": "measures",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "measure-kpi-measures-situation-anchor.business-role",
+      "relationName": "measure-kpi-measures-situation-anchor",
+      "source": "primitive.measure.kpi",
+      "target": "situation-anchor.business-role",
+      "label": "measures",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "measure-kpi-measures-situation-anchor.value-stream",
+      "relationName": "measure-kpi-measures-situation-anchor",
+      "source": "primitive.measure.kpi",
+      "target": "situation-anchor.value-stream",
+      "label": "measures",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    },
+    {
+      "id": "measure-kpi-measures-situation-anchor.regulatory-constraint",
+      "relationName": "measure-kpi-measures-situation-anchor",
+      "source": "primitive.measure.kpi",
+      "target": "situation-anchor.regulatory-constraint",
+      "label": "measures",
+      "archimateRelationship": "AssociationRelationship",
+      "associationDirected": true
+    }
+  ],
+  "patternMappings": [
+    {
+      "id": "contextualization",
+      "archimateRelationship": "CompositionRelationship",
+      "label": "contextualizes",
+      "associationDirected": false,
+      "sourceKind": "Context",
+      "targetKinds": [
+        "Primitive",
+        "Structuring"
+      ],
+      "targetIncomingCardinality": "exactly-one",
+      "o2iMetadata": "forbidden",
+      "projection": "context-ownership"
+    },
+    {
+      "id": "collective-strategy-realization",
+      "carrier": {
+        "o2iKind": "StructuredProposition",
+        "o2iType": "CollectiveStrategyRealization",
+        "archimateElement": "Junction",
+        "junctionType": "and",
+        "commitmentKey": "o2i.commitment",
+        "commitmentValues": [
+          "candidate",
+          "asserted"
+        ],
+        "fitEvidenceKey": "o2i.collective-fit-evidence",
+        "fitEvidenceCardinality": "exactly-one-non-empty",
+        "additionalO2IProperties": "forbidden"
+      },
+      "segments": {
+        "archimateRelationship": "RealizationRelationship",
+        "label": "realizes",
+        "associationDirected": false,
+        "o2iMetadata": "forbidden"
+      },
+      "contributors": {
+        "endpoint": "context.strategy",
+        "cardinality": "at-least-two",
+        "distinct": "required"
+      },
+      "target": {
+        "endpoint": "context.strategy",
+        "cardinality": "exactly-one",
+        "distinctFromContributors": "required"
+      },
+      "junctionChains": "forbidden",
+      "projection": "structured-proposition"
+    }
+  ]
+}
