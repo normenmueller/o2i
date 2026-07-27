@@ -145,18 +145,18 @@ Weiterlesen: [Claims](./o2i.md#claims), [Modellzustand](./o2i.md#modellzustand)
 > [!NOTE]
 > **Situation** = *Wo* genau in der fachlichen Realität zeigt sich ein Bedarf?
 
-Situation ist das fachliche Wo eines Bedarfs: der konkrete Arbeits-, Leistungs- oder Umfeldzusammenhang, in dem Veränderungsbedarf sichtbar wird. Business-Architecture-Artefakte wie Business Capability, Business Process, Business Object, Business Role, Value Stream oder Regulatory Constraint verankern diesen Zusammenhang. Technologie und Lösung gehören hier noch nicht hinein.
+Situation ist das fachliche Wo eines Bedarfs: der konkrete Arbeits-, Leistungs- oder Umfeldzusammenhang, in dem Veränderungsbedarf sichtbar wird. Eine Business Capability, ein Business Process, ein Business Object oder ein Value Stream verankert diesen Zusammenhang als operativen Wirkungsgegenstand. Technologie und Lösung gehören hier noch nicht hinein.
 
 **Mindestinhalt**
 
 - ein fachlich benannter Situationskontext,
 - mindestens ein konkreter Situationsanker,
-- dessen Typ als Business Capability, Business Process, Business Object, Business Role, Value Stream oder Regulatory Constraint,
+- dessen Typ als Business Capability, Business Process, Business Object oder Value Stream,
 - die Relation, durch die der Anker die Situation konstituiert.
 
 **Prüfung**
 
-Der Situationsanker muss nach seiner Business-Architecture-Semantik modelliert sein und den fachlichen Bezugsraum bestimmen. Eine technische Lösung oder Maßnahme ist kein Situationsanker.
+Der Situationsanker muss nach seiner Business-Architecture-Semantik modelliert sein und denselben operativen Wirkungsgegenstand für Bedarf, Veränderung und Messung bestimmen. Eine technische Lösung, Maßnahme, Business Role oder regulatorische Randbedingung ist kein Situationsanker.
 
 Spezifikation: [`assessModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs)
 

@@ -1,7 +1,13 @@
 # O2I Semantics - Context
 
 > Generated review snapshot of `O2I Semantics - Context` from `mdl/o2i.archimate`.
-> Review artifact only; source of truth remains the O2I metamodel.
+> Review artifact only; semantic authority remains the O2I metamodel.
+
+## View Contract
+
+Visualizes the closed O2I Context type and its admissible macrorelation families.
+
+This View is a checked semantic projection of the metamodel defined in o2i.md; it contains neither concrete Context instances nor an ArchiMate syntax contract.
 
 ## Nodes
 

@@ -12,6 +12,7 @@ documents only the technical codebase and its use.
 | `o2i-build-provenance` | Revision-closed source identity for build artifacts |
 | `o2i-core` | Typed O2I language, effect graphs, and staged validation |
 | `o2i-inspection` | Format-neutral staged inspection, provenance, and reports |
+| `o2i-archimate-profile` | Typed projection of the exact declarative ArchiMate profile contract |
 | `o2i-amx` | Native Archi Model XML decoding and O2I profile projection |
 | `o2i-cli` | Thin command-line composition and report rendering |
 
@@ -19,13 +20,15 @@ The dependency direction is:
 
 ```text
 o2i-build-provenance -> base
-o2i-inspection -> o2i-core
-o2i-amx        -> o2i-inspection + o2i-core
-o2i-cli        -> o2i-build-provenance + o2i-inspection + o2i-amx
+o2i-inspection        -> o2i-core
+o2i-archimate-profile -> o2i-core
+o2i-amx               -> o2i-archimate-profile + o2i-inspection + o2i-core
+o2i-cli               -> o2i-build-provenance + o2i-inspection + o2i-amx
 ```
 
 The curated public facades are `O2I`, `O2I.Language`, `O2I.Graph`,
-`O2I.Validation`, `O2I.Inspection`, and `O2I.Adapter.AMX`.
+`O2I.Validation`, `O2I.Inspection`, `O2I.ArchiMate.Profile`, and
+`O2I.Adapter.AMX`.
 
 The Core assesses `Candidate` and `Asserted` claims across one complete
 semantic boundary, derives Context-level `Elaboration` and model-level
@@ -66,6 +69,7 @@ Package metadata is checked separately:
 (cd lib/core && cabal check)
 (cd lib/build-provenance && cabal check)
 (cd lib/inspection && cabal check)
+(cd ctr/archimate && cabal check)
 (cd lib/adapter/amx && cabal check)
 (cd cli && cabal check)
 ```

@@ -136,30 +136,12 @@
       "contextOwnership": "forbidden"
     },
     {
-      "id": "situation-anchor.business-role",
-      "o2iKind": "SituationAnchor",
-      "o2iTypes": [
-        "BusinessRole"
-      ],
-      "archimateElement": "BusinessRole",
-      "contextOwnership": "forbidden"
-    },
-    {
       "id": "situation-anchor.value-stream",
       "o2iKind": "SituationAnchor",
       "o2iTypes": [
         "ValueStream"
       ],
       "archimateElement": "ValueStream",
-      "contextOwnership": "forbidden"
-    },
-    {
-      "id": "situation-anchor.regulatory-constraint",
-      "o2iKind": "SituationAnchor",
-      "o2iTypes": [
-        "RegulatoryConstraint"
-      ],
-      "archimateElement": "Requirement",
       "contextOwnership": "forbidden"
     }
   ],
@@ -516,28 +498,10 @@
       "associationDirected": false
     },
     {
-      "id": "situation-is-constituted-by-anchor.business-role",
-      "relationName": "situation-is-constituted-by-anchor",
-      "source": "context.situation",
-      "target": "situation-anchor.business-role",
-      "label": "is-constituted-by",
-      "archimateRelationship": "AggregationRelationship",
-      "associationDirected": false
-    },
-    {
       "id": "situation-is-constituted-by-anchor.value-stream",
       "relationName": "situation-is-constituted-by-anchor",
       "source": "context.situation",
       "target": "situation-anchor.value-stream",
-      "label": "is-constituted-by",
-      "archimateRelationship": "AggregationRelationship",
-      "associationDirected": false
-    },
-    {
-      "id": "situation-is-constituted-by-anchor.regulatory-constraint",
-      "relationName": "situation-is-constituted-by-anchor",
-      "source": "context.situation",
-      "target": "situation-anchor.regulatory-constraint",
       "label": "is-constituted-by",
       "archimateRelationship": "AggregationRelationship",
       "associationDirected": false
@@ -570,27 +534,9 @@
       "associationDirected": true
     },
     {
-      "id": "situation-anchor-anchors-need-driver.business-role",
-      "relationName": "situation-anchor-anchors-need-driver",
-      "source": "situation-anchor.business-role",
-      "target": "primitive.need.driver",
-      "label": "anchors",
-      "archimateRelationship": "AssociationRelationship",
-      "associationDirected": true
-    },
-    {
       "id": "situation-anchor-anchors-need-driver.value-stream",
       "relationName": "situation-anchor-anchors-need-driver",
       "source": "situation-anchor.value-stream",
-      "target": "primitive.need.driver",
-      "label": "anchors",
-      "archimateRelationship": "AssociationRelationship",
-      "associationDirected": true
-    },
-    {
-      "id": "situation-anchor-anchors-need-driver.regulatory-constraint",
-      "relationName": "situation-anchor-anchors-need-driver",
-      "source": "situation-anchor.regulatory-constraint",
       "target": "primitive.need.driver",
       "label": "anchors",
       "archimateRelationship": "AssociationRelationship",
@@ -624,28 +570,10 @@
       "associationDirected": true
     },
     {
-      "id": "intervention-action-changes-situation-anchor.business-role",
-      "relationName": "intervention-action-changes-situation-anchor",
-      "source": "primitive.intervention.action",
-      "target": "situation-anchor.business-role",
-      "label": "changes",
-      "archimateRelationship": "AssociationRelationship",
-      "associationDirected": true
-    },
-    {
       "id": "intervention-action-changes-situation-anchor.value-stream",
       "relationName": "intervention-action-changes-situation-anchor",
       "source": "primitive.intervention.action",
       "target": "situation-anchor.value-stream",
-      "label": "changes",
-      "archimateRelationship": "AssociationRelationship",
-      "associationDirected": true
-    },
-    {
-      "id": "intervention-action-changes-situation-anchor.regulatory-constraint",
-      "relationName": "intervention-action-changes-situation-anchor",
-      "source": "primitive.intervention.action",
-      "target": "situation-anchor.regulatory-constraint",
       "label": "changes",
       "archimateRelationship": "AssociationRelationship",
       "associationDirected": true
@@ -678,28 +606,10 @@
       "associationDirected": true
     },
     {
-      "id": "measure-kpi-measures-situation-anchor.business-role",
-      "relationName": "measure-kpi-measures-situation-anchor",
-      "source": "primitive.measure.kpi",
-      "target": "situation-anchor.business-role",
-      "label": "measures",
-      "archimateRelationship": "AssociationRelationship",
-      "associationDirected": true
-    },
-    {
       "id": "measure-kpi-measures-situation-anchor.value-stream",
       "relationName": "measure-kpi-measures-situation-anchor",
       "source": "primitive.measure.kpi",
       "target": "situation-anchor.value-stream",
-      "label": "measures",
-      "archimateRelationship": "AssociationRelationship",
-      "associationDirected": true
-    },
-    {
-      "id": "measure-kpi-measures-situation-anchor.regulatory-constraint",
-      "relationName": "measure-kpi-measures-situation-anchor",
-      "source": "primitive.measure.kpi",
-      "target": "situation-anchor.regulatory-constraint",
       "label": "measures",
       "archimateRelationship": "AssociationRelationship",
       "associationDirected": true

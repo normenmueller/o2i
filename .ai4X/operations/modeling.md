@@ -7,7 +7,7 @@ instance-conformance work.
 
 - Treat ArchiMate as notation, never as the source of O2I semantics.
 - Semantic Views visualize the metamodel. Syntax Views visualize the concrete
-  mapping defined by `spc/contract/archimate-profile.json` and introduce no
+  mapping defined by `spc/ctr/archimate/profile.json` and introduce no
   independent fachliche semantics.
 - Semantic Views render O2I metamodel elements as plain boxes with solid
   outlines. This is a readability convention only and carries no formal
@@ -25,9 +25,9 @@ instance-conformance work.
   patterns to ArchiMate notation. They never repeat a complete semantic graph
   merely to illustrate the mapping.
 - `O2I Syntax` is the complete reference visualization of the declarative
-  profile contract. Focused Context, Primitives, and Situation syntax Views are
-  presentation-only excerpts that reuse the exact persisted mapping elements
-  and relationships and introduce no independent contract.
+  profile contract. Add a focused presentation excerpt only when a concrete
+  publication need requires it; such an excerpt reuses the exact persisted
+  mapping elements and relationships and introduces no independent contract.
 - Keep carrier mappings, relation mappings, and non-trivial syntax patterns
   explicit:
   - carrier mappings define which ArchiMate element represents an O2I type;
@@ -48,8 +48,8 @@ instance-conformance work.
   closed Context registry.
 - A closed type with heterogeneous representations maps each constructor
   separately. `Situation Anchor` therefore remains the abstract family while
-  Business Capability, Business Process, Business Object, Business Role,
-  Value Stream, and Regulatory Constraint map individually.
+  Business Capability, Business Process, Business Object, and Value Stream map
+  individually.
 - Keep unannotated mapping Views distinct from executable Candidate conformance
   Views. Never reuse one persisted element across those levels.
 - Mapping Views represent types only. Their semantic sources use canonical
@@ -63,10 +63,23 @@ instance-conformance work.
   `Context --composition[contextualizes]--> element`; visual nesting is
   presentational.
 - Mapping-only Views are checked reference visualizations, not O2I graphs.
-- `spc/contract/archimate-profile.json` is the exact mapping authority.
-  `O2I Syntax` must completely visualize it; presentation excerpts are checked
-  as identity-preserving projections of that View.
+- `spc/ctr/archimate/profile.json` is the exact mapping authority.
+  `O2I Syntax` must completely visualize it.
 - Executable conformance and instance Views require Haskell `o2i inspect`.
+
+# Model Documentation
+
+- Keep model documentation minimal and subordinate to its owning authority.
+- Semantic metatypes carry one concise definition and a reference to the
+  corresponding White Paper section; they never duplicate literature anchors
+  or complete fachliche definitions.
+- Mapping exemplars carry no independent fachliche documentation.
+- Every View states only its purpose, authority boundary, and reading.
+  Conformance Views may additionally identify their exact profile-contract
+  reference.
+- Illustrative elements and relations may carry one concise reading.
+- Never copy complete registries, profile mappings, source apparatus, or
+  publication prose into the model.
 
 # Model Editing
 
@@ -82,14 +95,17 @@ instance-conformance work.
 
 # Tool Responsibilities
 
-- Python checks only named repository Views, labels, documentation, displayed
-  relation signatures, and snapshots.
+- The Python model-hygiene audit checks only repository structure: identifiers,
+  references, model usage, custom folders, and View documentation.
+- The Python extractor checks only named repository Views, labels,
+  documentation, displayed relation signatures, and snapshots.
 - AMX validates concrete O2I profile metadata and projects selected Views.
 - Core/Inspection validates notation-independent O2I structure and semantics.
 
 # Commands
 
 ```text
+python3 -B utl/audit-archimate-model.py
 python3 -B utl/extract-archimate-view.py --preset all
 python3 -B utl/extract-archimate-view.py --preset all --check
 python3 -B -m unittest discover -s utl -p 'test_*.py'

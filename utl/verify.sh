@@ -74,8 +74,11 @@ verify_governance() {
 verify_model() {
   require python3
 
-  info "Checking ArchiMate model contracts and extractor tests."
+  info "Checking ArchiMate model hygiene, View contracts, and tests."
+  python3 -B utl/audit-archimate-model.py
   python3 -B utl/extract-archimate-view.py --preset all --check
+  python3 -B -m unittest discover \
+    -s utl -p 'test_*archimate_model.py'
   python3 -B -m unittest discover \
     -s utl -p 'test_extract_archimate_view.py'
 }
@@ -103,6 +106,7 @@ verify_haskell() {
     spc/lib/build-provenance \
     spc/lib/core \
     spc/lib/inspection \
+    spc/ctr/archimate \
     spc/lib/adapter/amx \
     spc/cli; do
     (cd "$package" && cabal --config-file="$cabal_config" -v0 check)
@@ -188,6 +192,8 @@ verify_paper() {
 
   info "Checking the expanded White Paper source."
   pandoc o2i.md --filter pandoc-include -t markdown >/dev/null
+  python3 -B -m unittest discover \
+    -s utl -p 'test_check_paper_assets.py'
 
   paper="$work/paper"
   mkdir -p "$paper/spc/lib/core"
@@ -205,6 +211,13 @@ verify_paper() {
       exit 1
     fi
   done
+
+  info "Checking White Paper image resources."
+  (cd "$paper" && pandoc o2i.md --filter pandoc-include -t json) \
+    >"$work/paper.json"
+  python3 -B utl/check-paper-assets.py \
+    --root "$paper" \
+    "$work/paper.json"
 
   info "Building the White Paper in an isolated paper workspace."
   (cd "$paper" && md2pdf -o "$work/o2i.pdf" -- o2i.md)

@@ -1,7 +1,13 @@
 # O2I Strategy Constituents
 
 > Generated review snapshot of `O2I Strategy Constituents` from `mdl/o2i.archimate`.
-> Review artifact only; source of truth remains the O2I metamodel.
+> Review artifact only; semantic authority remains the O2I metamodel.
+
+## View Contract
+
+Illustrates the constituent structure and coherence relations of a complete O2I Strategy formulation.
+
+This View explains the Strategy reading defined in o2i.md. Its constituents are neither additional O2I Contexts nor Primitives, and the View introduces no independent semantic contract.
 
 ## Nodes
 

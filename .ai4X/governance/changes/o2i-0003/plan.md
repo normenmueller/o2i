@@ -22,7 +22,7 @@ Co-Author: `external-profile-contract-coauthor`
 
 ## Design Contract
 
-`spc/contract/archimate-profile.json` is the finite, declarative authority for
+`spc/ctr/archimate/profile.json` is the finite, declarative authority for
 exact concrete ArchiMate mappings. It contains only carrier mappings, metadata
 placement, context-sensitive relationship representations, and structured
 pattern representations.

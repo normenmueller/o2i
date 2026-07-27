@@ -94,7 +94,7 @@ repository Views and snapshots. It never validates O2I instances.
 - `o2i.md`: White Paper and normative fachliche/metamodel text.
 - `README.md`: canonical Purpose and USP snippets.
 - `wtf.md`: informal non-normative entry guide.
-- `spc/contract/archimate-profile.json`: exact declarative ArchiMate profile
+- `spc/ctr/archimate/profile.json`: exact declarative ArchiMate profile
   mapping.
 - `mdl/o2i.archimate`: semantic and concrete-syntax reference Views.
 - `mdl/o2i-*.md`: generated review snapshots.

@@ -72,7 +72,7 @@ import O2I.Inspection.Profile
   , profileVersionText
   )
 
--- | Complete compile-time AMX implementation of the profile contract.
+-- | Complete compile-time projection of the ArchiMate profile contract.
 data ArchiMateProfileContract = ArchiMateProfileContract
   { contractSchema :: Text
     -- ^ Stable schema identifier of the declarative contract.
@@ -167,7 +167,7 @@ data ArchiMateRelationshipRepresentation = ArchiMateRelationshipRepresentation
     -- ^ Whether an Association is explicitly directed.
   } deriving (Eq, Ord, Show)
 
--- | One core relation enriched with its exact AMX representation.
+-- | One core relation enriched with its exact ArchiMate representation.
 data ArchiMateRelationMapping = ArchiMateRelationMapping
   { relationMappingId :: Text
     -- ^ Stable identifier of this concrete mapping.
@@ -275,7 +275,7 @@ data CollectiveTargetContract = CollectiveTargetContract
     -- ^ Whether the target must differ from every contributor.
   } deriving (Eq, Show)
 
--- | Complete AMX profile implementation in contract order.
+-- | Complete typed profile projection in contract order.
 profileContract :: ArchiMateProfileContract
 profileContract =
   ArchiMateProfileContract
@@ -448,9 +448,7 @@ anchorTypeText anchor =
     BusinessCapability -> "BusinessCapability"
     BusinessProcess -> "BusinessProcess"
     BusinessObject -> "BusinessObject"
-    BusinessRole -> "BusinessRole"
     ValueStream -> "ValueStream"
-    RegulatoryConstraint -> "RegulatoryConstraint"
 
 primitiveRepresentation :: Primitive -> Text
 primitiveRepresentation primitive =
@@ -468,9 +466,7 @@ anchorRepresentation anchor =
     BusinessCapability -> "Capability"
     BusinessProcess -> "BusinessProcess"
     BusinessObject -> "BusinessObject"
-    BusinessRole -> "BusinessRole"
     ValueStream -> "ValueStream"
-    RegulatoryConstraint -> "Requirement"
 
 -- | All concrete relation mappings in core-registry order.
 relationMappings :: [ArchiMateRelationMapping]
@@ -553,7 +549,7 @@ expectedRelationshipRepresentation ::
      RelationCode -> ArchiMateRelationshipRepresentation
 expectedRelationshipRepresentation = snd . relationContract
 
--- | Exact persisted AMX label for one semantic relation code.
+-- | Exact persisted ArchiMate label for one semantic relation code.
 expectedRelationshipLabel :: RelationCode -> Text
 expectedRelationshipLabel = fst . relationContract
 
@@ -610,9 +606,7 @@ anchorToken anchor =
     BusinessCapability -> "business-capability"
     BusinessProcess -> "business-process"
     BusinessObject -> "business-object"
-    BusinessRole -> "business-role"
     ValueStream -> "value-stream"
-    RegulatoryConstraint -> "regulatory-constraint"
 
 influence :: ArchiMateRelationshipRepresentation
 influence = ArchiMateRelationshipRepresentation "InfluenceRelationship" False

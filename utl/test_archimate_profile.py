@@ -17,7 +17,7 @@ from archimate_profile import (  # noqa: E402
 )
 
 
-CONTRACT_PATH = ROOT / "spc" / "contract" / "archimate-profile.json"
+CONTRACT_PATH = ROOT / "spc" / "ctr" / "archimate" / "profile.json"
 
 
 class ArchimateProfileContractTest(unittest.TestCase):

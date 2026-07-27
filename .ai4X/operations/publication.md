@@ -10,6 +10,9 @@ text.
   defensive prose unless a conceptual boundary requires explicit contrast.
 - Keep the White Paper concise and non-textbook-like. Preserve flow between
   paragraphs, figures, and listings.
+- Use code listings only for focused explanatory excerpts. Prefer at most half
+  a page and enforce a hard maximum of one page per listing; split or replace
+  longer code with a precise repository reference.
 - Every fachlich material term has a source anchor or explicit authors'
   derivation at the correct semantic level.
 - Use established definition callouts and reference every figure and listing
@@ -26,7 +29,7 @@ text.
 - ArchiMate exports and model documentation remain synchronized with the
   article and formalization.
 - The White Paper concrete-syntax section explains every normative mapping
-  class projected from `spc/contract/archimate-profile.json`: carriers,
+  class projected from `spc/ctr/archimate/profile.json`: carriers,
   metadata, relationship representations, context-sensitive signatures, and
   structured patterns. The generated fragment remains readable publication
   prose; it never exposes raw JSON structure.
@@ -42,7 +45,9 @@ pandoc o2i.md --filter pandoc-include -t markdown
 ```
 
 Inspect rendered pages, figure legibility, listing length, references, page
-breaks, and absence of unsupported Unicode before acceptance.
+breaks, and absence of unsupported Unicode before acceptance. Every local
+image reference must resolve to a current nonempty asset; Pandoc replacement
+with alternative text is a failed publication build.
 
 In a Git worktree, additionally run `git diff --check`. In an archive or source
 tree without Git metadata, omit only that check and record it as unavailable.

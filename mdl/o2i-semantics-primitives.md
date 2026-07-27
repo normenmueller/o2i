@@ -1,13 +1,13 @@
 # O2I Semantics - Primitives
 
 > Generated review snapshot of `O2I Semantics - Primitives` from `mdl/o2i.archimate`.
-> Review artifact only; source of truth remains the O2I metamodel.
+> Review artifact only; semantic authority remains the O2I metamodel.
 
 ## View Contract
 
-Defines the normative type-level view of O2I Primitives, PerformanceDimension, and admissible relation families.
+Visualizes the O2I Primitive, PerformanceDimension, and relation-family metatypes.
 
-The view intentionally abstracts from concrete Primitive and Structuring instances and from the Context instances that contextualize them. It does not assert that every displayed relation is admissible for every Context. Concrete contextualization and context-sensitive admissibility are defined by Instantiation, the Interpretation registry, the PerformanceDimension role registry, and the typed Relation registry. Their concrete ArchiMate realization is defined in O2I Syntax.
+Concrete contextualization and context-sensitive admissibility remain defined by the metamodel in o2i.md. This View is a checked semantic projection, not a normative source.
 
 ## Nodes
 

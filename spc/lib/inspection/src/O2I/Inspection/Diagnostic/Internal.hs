@@ -1130,9 +1130,7 @@ situationAnchorText anchor =
     BusinessCapability -> "business-capability"
     BusinessProcess -> "business-process"
     BusinessObject -> "business-object"
-    BusinessRole -> "business-role"
     ValueStream -> "value-stream"
-    RegulatoryConstraint -> "regulatory-constraint"
 
 strategyTextFieldSubject :: Text -> StrategyTextField -> DiagnosticSubject
 strategyTextFieldSubject kind field =

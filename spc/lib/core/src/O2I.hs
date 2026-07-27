@@ -63,6 +63,7 @@ module O2I
   , RelationName(..)
   , relationNameFor
   , relationNameOf
+  , anchorRelationFamilyName
   , relationCodeOf
   , relationIdentity
   , guidesMission

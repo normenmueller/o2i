@@ -44,6 +44,7 @@ module O2I.Language
   , relationSemanticsOf
   , relationNameOf
   , relationNameFor
+  , anchorRelationFamilyName
   , relationIdentity
   , guidesMission
   , groundsVision

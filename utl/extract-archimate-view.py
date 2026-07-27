@@ -6,14 +6,28 @@ from __future__ import annotations
 import argparse
 from collections import Counter
 import difflib
+import re
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
+
+from archimate_profile import (
+    ArchimateProfileContract,
+    FrozenObject,
+    ProfileContractError,
+    load_profile_contract,
+)
 
 
 XSI_TYPE = "{http://www.w3.org/2001/XMLSchema-instance}type"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MODEL = REPOSITORY_ROOT / "mdl" / "o2i.archimate"
+PROFILE_CONTRACT = (
+    REPOSITORY_ROOT / "spc" / "ctr" / "archimate" / "profile.json"
+)
+SYNTAX_VIEW = "O2I Syntax"
+MAPS_TO = "maps-to"
+GENERIC_RELATION_NAME = "<O2I relation name>"
 
 PRESETS = {
     "strategy-constituents": (
@@ -37,9 +51,9 @@ PRESETS = {
         "O2I Semantics - Primitives",
         Path("mdl/o2i-semantics-primitives.md"),
     ),
-    "syntax-context": (
-        "O2I Syntax - Context",
-        Path("mdl/o2i-syntax-context.md"),
+    "syntax": (
+        SYNTAX_VIEW,
+        Path("mdl/o2i-syntax.md"),
     ),
     "syntax-contextualization": (
         "O2I Syntax - Contextualization",
@@ -49,103 +63,36 @@ PRESETS = {
         "O2I Syntax - Collective Strategy Realization",
         Path("mdl/o2i-syntax-collective-strategy-realization.md"),
     ),
-    "syntax-primitives": (
-        "O2I Syntax - Primitives",
-        Path("mdl/o2i-syntax-primitives.md"),
-    ),
-    "syntax-situation": (
-        "O2I Syntax - Situation",
-        Path("mdl/o2i-syntax-situation.md"),
-    ),
     "layered-cake": ("O2I Layered Cake", Path("mdl/o2i-layered-cake.md")),
 }
 
-REQUIRED_SYNTAX_NODES = {
-    ("O2I Action", "CourseOfAction"),
-    ("O2I Driver", "Driver"),
-    ("O2I KPI", "Assessment"),
-    ("O2I Key Result", "Outcome"),
-    ("O2I Objective", "Goal"),
-    ("O2I Performance Dimension", "Grouping"),
-    ("O2I Principle", "Principle"),
-}
-
-REQUIRED_CONTEXTUALIZATION_NODES = {
-    ("<Name> :: O2I Driver", "Driver"),
-    ("<Name> :: O2I Mission", "Grouping"),
-    ("<Name> :: O2I Performance Dimension", "Grouping"),
-    ("<Name> :: O2I Strategy", "Grouping"),
-}
-
-REQUIRED_COLLECTIVE_REALIZATION_NODES = {
-    ("<Contributor Strategy 1> :: O2I Strategy", "Grouping"),
-    ("<Contributor Strategy 2> :: O2I Strategy", "Grouping"),
-    ("<Name> :: O2I Collective Strategy Realization", "Junction"),
-    ("<Target Strategy> :: O2I Strategy", "Grouping"),
-}
-
-REQUIRED_PRIMITIVE_SYNTAX_DOCUMENTATION = (
-    "Defines the concrete ArchiMate element and relationship mappings for "
-    "O2I Primitives and PerformanceDimensions.",
-    "unannotated type-mapping exemplars",
-    "O2I Principle -> ArchiMate Principle",
-    "O2I Driver -> ArchiMate Driver",
-    "O2I Objective -> ArchiMate Goal",
-    "O2I Key Result -> ArchiMate Outcome",
-    "O2I KPI -> ArchiMate Assessment",
-    "O2I Action -> ArchiMate Course of Action",
-    "O2I Performance Dimension -> ArchiMate Grouping",
-    "The O2I relation name, direction, endpoint types, and ArchiMate "
-    "relationship type jointly form each relationship syntax signature.",
-    "Concrete admissibility remains context-sensitive",
-    "O2I Syntax - Contextualization",
-)
-
 REQUIRED_CONTEXTUALIZATION_DOCUMENTATION = (
-    "Defines the concrete ArchiMate syntax for contextualizing O2I Primitives "
-    "and PerformanceDimensions by typed O2I Context instances.",
-    "contextualized by exactly one Context through "
+    "Visualizes the executable ArchiMate conformance pattern for "
+    "contextualizing O2I Primitives and PerformanceDimensions.",
     "composition[contextualizes]",
-    "Contexts and PerformanceDimensions are represented by ArchiMate "
-    "Groupings; the Groupings introduce no O2I semantics.",
-    "Visual nesting presents but never replaces explicit contextualization.",
-    "The Interpretation registry admits Primitive @ Context.",
-    "The role registry admits PerformanceDimension @ Context",
-    "derived textual readings, not persisted element names",
-    "typed syntax exemplars, not fachliche model instances",
-)
-
-REQUIRED_COLLECTIVE_REALIZATION_DOCUMENTATION = (
-    "Defines the concrete ArchiMate syntax for one O2I "
-    "CollectiveStrategyRealization.",
-    "At least two distinct contributor Strategy Contexts",
-    "Exactly one outgoing realizes segment",
-    "Segment direction and topology determine contributor and target roles.",
-    "The Junction carries the complete structured proposition",
-    "The realizes segments are mandatory syntax components",
+    "visual nesting has no contextualization semantics",
+    "spc/ctr/archimate/profile.json",
     "Candidate syntax exemplars, not fachliche model instances",
 )
 
-REQUIRED_COLLECTIVE_REALIZATION_ELEMENT_DOCUMENTATION = (
-    "Represents one structured n-ary O2I proposition",
-    "ArchiMate AND Junction is its concrete syntax carrier",
-    "at least two distinct contributor Strategies",
-    "exactly one distinct target Strategy",
-    "roles follow exclusively from the direction and topology",
-    "segments carry no independent Commitment",
-    "o2i.collective-fit-evidence references the structured evidence",
+REQUIRED_COLLECTIVE_REALIZATION_DOCUMENTATION = (
+    "Visualizes the executable ArchiMate conformance pattern for one O2I "
+    "CollectiveStrategyRealization.",
+    "realizes segments and one AND Junction",
+    "StructuredProposition carrier",
+    "spc/ctr/archimate/profile.json",
+    "syntax exemplars, not fachliche model instances",
 )
 
-REQUIRED_NODES_BY_VIEW = {
-    "O2I Syntax - Primitives": REQUIRED_SYNTAX_NODES,
-    "O2I Syntax - Contextualization": REQUIRED_CONTEXTUALIZATION_NODES,
-    (
-        "O2I Syntax - Collective Strategy Realization"
-    ): REQUIRED_COLLECTIVE_REALIZATION_NODES,
-}
+REQUIRED_COLLECTIVE_REALIZATION_ELEMENT_DOCUMENTATION = (
+    "Candidate ArchiMate AND Junction carrier",
+    "CollectiveStrategyRealization StructuredProposition",
+    "roles follow from realizes topology",
+    "spc/ctr/archimate/profile.json",
+    "syntax exemplar is not a fachliche model instance",
+)
 
 REQUIRED_VIEW_DOCUMENTATION = {
-    "O2I Syntax - Primitives": REQUIRED_PRIMITIVE_SYNTAX_DOCUMENTATION,
     (
         "O2I Syntax - Contextualization"
     ): REQUIRED_CONTEXTUALIZATION_DOCUMENTATION,
@@ -185,21 +132,6 @@ def contract_edge(
     )
 
 
-def syntax_context_edge(
-    source: str,
-    relation: str,
-    target: str,
-) -> tuple[str, str, str, str, bool, str, str]:
-    """Declare one binary O2I Context relation in the ArchiMate syntax."""
-    return contract_edge(
-        f"<Name> :: O2I {source}",
-        relation,
-        f"<Name> :: O2I {target}",
-        relation_type="AssociationRelationship",
-        directed=True,
-    )
-
-
 RELATION_CONTRACTS = {
     "O2I Semantics - Context": frozenset(
         {
@@ -217,32 +149,6 @@ RELATION_CONTRACTS = {
             contract_edge("Strategy", "frames", "Measure"),
             contract_edge("Strategy", "qualifies", "Need"),
             contract_edge("Vision", "orients", "Strategy"),
-        }
-    ),
-    "O2I Syntax - Context": frozenset(
-        {
-            syntax_context_edge("Ethos", "guides", "Mission"),
-            syntax_context_edge("Ethos", "guides", "Vision"),
-            syntax_context_edge("Intervention", "addresses", "Need"),
-            syntax_context_edge("Intervention", "changes", "Situation"),
-            syntax_context_edge(
-                "Intervention",
-                "sets-target-for",
-                "Measure",
-            ),
-            syntax_context_edge("Measure", "measures", "Situation"),
-            syntax_context_edge("Mission", "grounds", "Vision"),
-            syntax_context_edge("Situation", "surfaces", "Need"),
-            syntax_context_edge(
-                "Strategy",
-                "contributes-to",
-                "Strategy",
-            ),
-            syntax_context_edge("Strategy", "directs", "Intervention"),
-            syntax_context_edge("Strategy", "directs", "Strategy"),
-            syntax_context_edge("Strategy", "frames", "Measure"),
-            syntax_context_edge("Strategy", "qualifies", "Need"),
-            syntax_context_edge("Vision", "orients", "Strategy"),
         }
     ),
     "O2I Semantics - Primitives": frozenset(
@@ -288,8 +194,6 @@ RELATION_CONTRACTS = {
                 "Business Capability",
                 "Business Object",
                 "Business Process",
-                "Business Role",
-                "Regulatory Constraint",
                 "Value Stream",
             )
         }
@@ -401,180 +305,305 @@ RELATION_CONTRACTS = {
             ),
         }
     ),
-    "O2I Syntax - Primitives": frozenset(
-        {
-            contract_edge(
-                "O2I Action",
-                "contributes-to",
-                "O2I Action",
-                source_type="CourseOfAction",
-                relation_type="AssociationRelationship",
-                directed=True,
-                target_type="CourseOfAction",
-            ),
-            contract_edge(
-                "O2I Action",
-                "contributes-to",
-                "O2I Key Result",
-                source_type="CourseOfAction",
-                relation_type="RealizationRelationship",
-                target_type="Outcome",
-            ),
-            contract_edge(
-                "O2I Action",
-                "guides",
-                "O2I Action",
-                source_type="CourseOfAction",
-                relation_type="AssociationRelationship",
-                directed=True,
-                target_type="CourseOfAction",
-            ),
-            contract_edge(
-                "O2I Driver",
-                "grounds",
-                "O2I Objective",
-                source_type="Driver",
-                target_type="Goal",
-            ),
-            contract_edge(
-                "O2I Driver",
-                "indicates",
-                "O2I Performance Dimension",
-                source_type="Driver",
-            ),
-            contract_edge(
-                "O2I Objective",
-                "orients",
-                "O2I Objective",
-                source_type="Goal",
-                target_type="Goal",
-            ),
-            contract_edge(
-                "O2I Key Result",
-                "contributes-to",
-                "O2I Key Result",
-                source_type="Outcome",
-                target_type="Outcome",
-            ),
-            contract_edge(
-                "O2I Key Result",
-                "determines",
-                "O2I Performance Dimension",
-                source_type="Outcome",
-            ),
-            contract_edge(
-                "O2I Key Result",
-                "sets-target-for",
-                "O2I KPI",
-                source_type="Outcome",
-                relation_type="AssociationRelationship",
-                directed=True,
-                target_type="Assessment",
-            ),
-            contract_edge(
-                "O2I Key Result",
-                "substantiates",
-                "O2I Objective",
-                source_type="Outcome",
-                relation_type="RealizationRelationship",
-                target_type="Goal",
-            ),
-            contract_edge(
-                "O2I Key Result",
-                "translates-into",
-                "O2I Objective",
-                source_type="Outcome",
-                target_type="Goal",
-            ),
-            contract_edge(
-                "O2I Performance Dimension",
-                "contains",
-                "O2I KPI",
-                relation_type="AggregationRelationship",
-                target_type="Assessment",
-            ),
-            contract_edge(
-                "O2I Performance Dimension",
-                "contains",
-                "O2I Key Result",
-                relation_type="AggregationRelationship",
-                target_type="Outcome",
-            ),
-            contract_edge(
-                "O2I Principle",
-                "guides",
-                "O2I Action",
-                source_type="Principle",
-                relation_type="AssociationRelationship",
-                directed=True,
-                target_type="CourseOfAction",
-            ),
-            contract_edge(
-                "O2I Principle",
-                "guides",
-                "O2I Driver",
-                source_type="Principle",
-                target_type="Driver",
-            ),
-            contract_edge(
-                "O2I Principle",
-                "guides",
-                "O2I Objective",
-                source_type="Principle",
-                target_type="Goal",
-            ),
-            contract_edge(
-                "O2I Principle",
-                "guides",
-                "O2I Principle",
-                source_type="Principle",
-                target_type="Principle",
-            ),
-        }
-    ),
-    "O2I Syntax - Contextualization": frozenset(
-        {
-            contract_edge(
-                "<Name> :: O2I Mission",
-                "contextualizes",
-                "<Name> :: O2I Driver",
-                relation_type="CompositionRelationship",
-                target_type="Driver",
-            ),
-            contract_edge(
-                "<Name> :: O2I Strategy",
-                "contextualizes",
-                "<Name> :: O2I Performance Dimension",
-                relation_type="CompositionRelationship",
-            ),
-        }
-    ),
-    "O2I Syntax - Collective Strategy Realization": frozenset(
-        {
-            contract_edge(
-                "<Contributor Strategy 1> :: O2I Strategy",
-                "realizes",
-                "<Name> :: O2I Collective Strategy Realization",
-                relation_type="RealizationRelationship",
-                target_type="Junction",
-            ),
-            contract_edge(
-                "<Contributor Strategy 2> :: O2I Strategy",
-                "realizes",
-                "<Name> :: O2I Collective Strategy Realization",
-                relation_type="RealizationRelationship",
-                target_type="Junction",
-            ),
-            contract_edge(
-                "<Name> :: O2I Collective Strategy Realization",
-                "realizes",
-                "<Target Strategy> :: O2I Strategy",
-                source_type="Junction",
-                relation_type="RealizationRelationship",
-            ),
-        }
-    ),
 }
+
+
+def profile_pattern(
+    contract: ArchimateProfileContract,
+    identifier: str,
+) -> FrozenObject:
+    """Resolve one unique structured pattern from the profile authority."""
+    matches = [
+        pattern
+        for pattern in contract.pattern_mappings
+        if pattern["id"] == identifier
+    ]
+    if len(matches) != 1:
+        raise ProfileContractError(
+            f"profile contract requires exactly one {identifier!r} pattern"
+        )
+    return matches[0]
+
+
+def words(identifier: str) -> str:
+    """Render one closed contract identifier as a repository View label."""
+    value = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", identifier)
+    return value.replace("Course Of Action", "Course of Action")
+
+
+def kebab(identifier: str) -> str:
+    """Normalize one CamelCase contract type for endpoint comparison."""
+    return re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "-", identifier).lower()
+
+
+def carrier_mapping_edges(
+    contract: ArchimateProfileContract,
+) -> frozenset[tuple[str, str, str, str, bool, str, str]]:
+    """Project carrier facts into the repository's mapping-only notation."""
+    edges = set()
+    for mapping in contract.carrier_mappings:
+        source_types = (
+            ("Context",)
+            if mapping["id"] == "context"
+            else tuple(words(value) for value in mapping["o2iTypes"])
+        )
+        archimate_element = mapping["archimateElement"]
+        for source in source_types:
+            edges.add(
+                contract_edge(
+                    source,
+                    MAPS_TO,
+                    f"ArchiMate {words(archimate_element)}",
+                    relation_type="AssociationRelationship",
+                    directed=True,
+                    target_type=archimate_element,
+                )
+            )
+    return frozenset(edges)
+
+
+def endpoint_archimate_element(
+    contract: ArchimateProfileContract,
+    endpoint: str,
+) -> str:
+    """Resolve one notation-independent endpoint to its carrier mapping."""
+    endpoint_kind = endpoint.split(".", 1)[0]
+    kind = {
+        "context": "Context",
+        "primitive": "Primitive",
+        "structuring": "Structuring",
+        "situation-anchor": "SituationAnchor",
+    }.get(endpoint_kind)
+    if kind is None:
+        raise ProfileContractError(
+            f"profile relation has unsupported endpoint: {endpoint!r}"
+        )
+
+    endpoint_type = endpoint.rsplit(".", 1)[-1]
+    return carrier_archimate_element(contract, kind, endpoint_type)
+
+
+def carrier_archimate_element(
+    contract: ArchimateProfileContract,
+    kind: str,
+    o2i_type: str,
+) -> str:
+    """Resolve one O2I constructor to its unique ArchiMate carrier."""
+    matches = [
+        mapping["archimateElement"]
+        for mapping in contract.carrier_mappings
+        if mapping["o2iKind"] == kind
+        and (
+            kind == "Context"
+            or any(
+                kebab(candidate) == kebab(o2i_type)
+                for candidate in mapping["o2iTypes"]
+            )
+        )
+    ]
+    if len(matches) != 1:
+        raise ProfileContractError(
+            "profile constructor has no unique carrier mapping: "
+            f"{kind}.{o2i_type}"
+        )
+    return matches[0]
+
+
+def relation_mapping_edges(
+    contract: ArchimateProfileContract,
+) -> frozenset[tuple[str, str, str, str, bool, str, str]]:
+    """Project exact relation representations as generic View exemplars."""
+    return frozenset(
+        contract_edge(
+            f"ArchiMate {words(source)}",
+            GENERIC_RELATION_NAME,
+            f"ArchiMate {words(target)}",
+            source_type=source,
+            relation_type=mapping["archimateRelationship"],
+            directed=mapping["associationDirected"],
+            target_type=target,
+        )
+        for mapping in contract.relation_mappings
+        for source in (
+            endpoint_archimate_element(contract, mapping["source"]),
+        )
+        for target in (
+            endpoint_archimate_element(contract, mapping["target"]),
+        )
+    )
+
+
+def syntax_mapping_edges(
+    contract: ArchimateProfileContract,
+) -> frozenset[tuple[str, str, str, str, bool, str, str]]:
+    """Return every mapping statement admissible in the master Syntax View."""
+    return carrier_mapping_edges(contract) | relation_mapping_edges(contract)
+
+
+def canonical_mapping_edge(
+    edge: tuple[str, str, str, str, bool, str, str],
+) -> tuple[str, str, str, str, bool, str, str]:
+    """Validate and remove roles from one generic relation exemplar."""
+    (
+        source,
+        source_type,
+        relation,
+        relation_type,
+        directed,
+        target,
+        target_type,
+    ) = edge
+    if relation == GENERIC_RELATION_NAME:
+        source_suffix = " (source)"
+        target_suffix = " (target)"
+        if source.endswith(target_suffix):
+            raise ProfileContractError(
+                "generic relation mapping source uses the target role: "
+                f"{source!r}"
+            )
+        if target.endswith(source_suffix):
+            raise ProfileContractError(
+                "generic relation mapping target uses the source role: "
+                f"{target!r}"
+            )
+        source = source.removesuffix(source_suffix)
+        target = target.removesuffix(target_suffix)
+    elif any(
+        re.search(r" \((?:source|target)\)$", endpoint)
+        for endpoint in (source, target)
+    ):
+        raise ProfileContractError(
+            "endpoint roles are reserved for generic relation mappings"
+        )
+
+    return (
+        source,
+        source_type,
+        relation,
+        relation_type,
+        directed,
+        target,
+        target_type,
+    )
+
+
+def syntax_pattern_contracts(
+    contract: ArchimateProfileContract,
+) -> dict[str, frozenset[tuple[str, str, str, str, bool, str, str]]]:
+    """Project exact binary syntax exemplars into repository Views."""
+    contextualization = profile_pattern(contract, "contextualization")
+    context_carrier = carrier_archimate_element(
+        contract,
+        contextualization["sourceKind"],
+        "Mission",
+    )
+    driver_carrier = carrier_archimate_element(
+        contract,
+        "Primitive",
+        "Driver",
+    )
+    dimension_carrier = carrier_archimate_element(
+        contract,
+        "Structuring",
+        "PerformanceDimension",
+    )
+    return {
+        "O2I Syntax - Contextualization": frozenset(
+            {
+                contract_edge(
+                    "<Name> :: O2I Mission",
+                    contextualization["label"],
+                    "<Name> :: O2I Driver",
+                    source_type=context_carrier,
+                    relation_type=contextualization[
+                        "archimateRelationship"
+                    ],
+                    directed=contextualization["associationDirected"],
+                    target_type=driver_carrier,
+                ),
+                contract_edge(
+                    "<Name> :: O2I Strategy",
+                    contextualization["label"],
+                    "<Name> :: O2I Performance Dimension",
+                    source_type=context_carrier,
+                    relation_type=contextualization[
+                        "archimateRelationship"
+                    ],
+                    directed=contextualization["associationDirected"],
+                    target_type=dimension_carrier,
+                ),
+            }
+        ),
+    }
+
+
+def syntax_pattern_nodes(
+    contract: ArchimateProfileContract,
+) -> dict[str, frozenset[tuple[str, str]]]:
+    """Derive the carrier types of repository pattern exemplars."""
+    contextualization = profile_pattern(contract, "contextualization")
+    collective = profile_pattern(
+        contract,
+        "collective-strategy-realization",
+    )
+    context_carrier = carrier_archimate_element(
+        contract,
+        contextualization["sourceKind"],
+        "Mission",
+    )
+    return {
+        "O2I Syntax - Contextualization": frozenset(
+            {
+                (
+                    "<Name> :: O2I Driver",
+                    carrier_archimate_element(
+                        contract,
+                        "Primitive",
+                        "Driver",
+                    ),
+                ),
+                ("<Name> :: O2I Mission", context_carrier),
+                (
+                    "<Name> :: O2I Performance Dimension",
+                    carrier_archimate_element(
+                        contract,
+                        "Structuring",
+                        "PerformanceDimension",
+                    ),
+                ),
+                ("<Name> :: O2I Strategy", context_carrier),
+            }
+        ),
+        "O2I Syntax - Collective Strategy Realization": frozenset(
+            {
+                (
+                    "<Contributor Strategy 1> :: O2I Strategy",
+                    endpoint_archimate_element(
+                        contract,
+                        collective["contributors"]["endpoint"],
+                    ),
+                ),
+                (
+                    "<Contributor Strategy 2> :: O2I Strategy",
+                    endpoint_archimate_element(
+                        contract,
+                        collective["contributors"]["endpoint"],
+                    ),
+                ),
+                (
+                    "<Name> :: O2I Collective Strategy Realization",
+                    collective["carrier"]["archimateElement"],
+                ),
+                (
+                    "<Target Strategy> :: O2I Strategy",
+                    endpoint_archimate_element(
+                        contract,
+                        collective["target"]["endpoint"],
+                    ),
+                ),
+            }
+        ),
+    }
 
 
 def xtype(element: ET.Element) -> str:
@@ -659,6 +688,234 @@ def collect_view(view: ET.Element):
     return object_targets, object_parents, connections, notes, documentation
 
 
+def visible_element_ids(
+    object_targets: dict[str, str],
+    elements: dict[str, tuple[str, str]],
+) -> frozenset[str]:
+    """Return persisted non-annotation elements displayed by one View."""
+    return frozenset(
+        element_id
+        for element_id in object_targets.values()
+        if element_id in elements and elements[element_id][1] != "Meaning"
+    )
+
+
+def collective_pattern_errors(
+    root: ET.Element,
+    contract: ArchimateProfileContract,
+    view_name: str,
+    object_targets: dict[str, str],
+    relation_records: list[
+        tuple[str, str, str, str, str, bool, str, str, str]
+    ],
+    elements: dict[str, tuple[str, str]],
+) -> list[str]:
+    """Validate one displayed collective realization against its pattern."""
+    collective = profile_pattern(
+        contract,
+        "collective-strategy-realization",
+    )
+    carrier = collective["carrier"]
+    segments = collective["segments"]
+    carrier_type = carrier["archimateElement"]
+    contributor_type = endpoint_archimate_element(
+        contract,
+        collective["contributors"]["endpoint"],
+    )
+    target_type = endpoint_archimate_element(
+        contract,
+        collective["target"]["endpoint"],
+    )
+    visible = visible_element_ids(object_targets, elements)
+    carrier_ids = {
+        element_id
+        for element_id in visible
+        if elements[element_id][1] == carrier_type
+    }
+    errors: list[str] = []
+    if len(carrier_ids) != 1:
+        return [
+            f"{view_name} requires exactly one {carrier_type} carrier; "
+            f"found {len(carrier_ids)}"
+        ]
+
+    carrier_id = next(iter(carrier_ids))
+    model_elements = {
+        element.get("id"): element
+        for element in root.iter("element")
+        if element.get("id")
+    }
+    carrier_element = model_elements[carrier_id]
+    expected_junction = carrier["junctionType"]
+    actual_junction = carrier_element.get("type")
+    if not (
+        expected_junction == "and" and actual_junction is None
+    ) and actual_junction != expected_junction:
+        errors.append(
+            f"{view_name} carrier is not the contracted "
+            f"{expected_junction.upper()} Junction"
+        )
+
+    contributor_ids: list[str] = []
+    target_ids: list[str] = []
+    participating_ids = {carrier_id}
+    expected_relation = (
+        segments["label"],
+        segments["archimateRelationship"],
+        segments["associationDirected"],
+    )
+    for (
+        source_id,
+        source_name,
+        source_type,
+        relation_name,
+        relation_type,
+        directed,
+        target_id,
+        target_name,
+        target_element_type,
+    ) in relation_records:
+        actual_relation = (relation_name, relation_type, directed)
+        if target_id == carrier_id and source_id != carrier_id:
+            participating_ids.add(source_id)
+            contributor_ids.append(source_id)
+            if source_type != contributor_type:
+                errors.append(
+                    f"{view_name} contributor {source_name} uses "
+                    f"{source_type}; expected {contributor_type}"
+                )
+            if actual_relation != expected_relation:
+                errors.append(
+                    f"{view_name} contributor segment is not contracted: "
+                    f"{source_name} --{relation_name}--> "
+                    f"{elements[carrier_id][0]}"
+                )
+        elif source_id == carrier_id and target_id != carrier_id:
+            participating_ids.add(target_id)
+            target_ids.append(target_id)
+            if target_element_type != target_type:
+                errors.append(
+                    f"{view_name} target {target_name} uses "
+                    f"{target_element_type}; expected {target_type}"
+                )
+            if actual_relation != expected_relation:
+                errors.append(
+                    f"{view_name} target segment is not contracted: "
+                    f"{elements[carrier_id][0]} --{relation_name}--> "
+                    f"{target_name}"
+                )
+        else:
+            errors.append(
+                f"{view_name} relation does not participate in the "
+                "collective realization carrier topology: "
+                f"{source_name} --{relation_name}--> {target_name}"
+            )
+
+    if collective["contributors"]["cardinality"] != "at-least-two":
+        raise ProfileContractError(
+            "unsupported contributor cardinality in profile contract"
+        )
+    if len(set(contributor_ids)) < 2:
+        errors.append(
+            f"{view_name} requires at least two distinct contributors; "
+            f"found {len(set(contributor_ids))}"
+        )
+    if (
+        collective["contributors"]["distinct"] == "required"
+        and len(contributor_ids) != len(set(contributor_ids))
+    ):
+        errors.append(f"{view_name} repeats a contributor")
+
+    if collective["target"]["cardinality"] != "exactly-one":
+        raise ProfileContractError(
+            "unsupported target cardinality in profile contract"
+        )
+    if len(target_ids) != 1:
+        errors.append(
+            f"{view_name} requires exactly one target; "
+            f"found {len(target_ids)}"
+        )
+    if (
+        collective["target"]["distinctFromContributors"] == "required"
+        and set(target_ids) & set(contributor_ids)
+    ):
+        errors.append(f"{view_name} target also participates as contributor")
+
+    for element_id in sorted(visible - participating_ids):
+        name, element_type = elements[element_id]
+        errors.append(
+            f"{view_name} contains unrelated node {name} ({element_type})"
+        )
+    return errors
+
+
+def contextualization_pattern_errors(
+    contract: ArchimateProfileContract,
+    view_name: str,
+    relation_records: list[
+        tuple[str, str, str, str, str, bool, str, str, str]
+    ],
+) -> list[str]:
+    """Validate displayed contextualization carriers and target cardinality."""
+    contextualization = profile_pattern(contract, "contextualization")
+    source_types = {
+        mapping["archimateElement"]
+        for mapping in contract.carrier_mappings
+        if mapping["o2iKind"] == contextualization["sourceKind"]
+    }
+    target_types = {
+        mapping["archimateElement"]
+        for mapping in contract.carrier_mappings
+        if mapping["o2iKind"] in contextualization["targetKinds"]
+    }
+    expected_relation = (
+        contextualization["label"],
+        contextualization["archimateRelationship"],
+        contextualization["associationDirected"],
+    )
+    incoming = Counter(record[6] for record in relation_records)
+    errors: list[str] = []
+
+    for (
+        _,
+        source_name,
+        source_type,
+        relation_name,
+        relation_type,
+        directed,
+        _,
+        target_name,
+        target_type,
+    ) in relation_records:
+        if source_type not in source_types:
+            errors.append(
+                f"{view_name} source {source_name} uses {source_type}; "
+                f"expected one of {sorted(source_types)}"
+            )
+        if target_type not in target_types:
+            errors.append(
+                f"{view_name} target {target_name} uses {target_type}; "
+                f"expected one of {sorted(target_types)}"
+            )
+        if (relation_name, relation_type, directed) != expected_relation:
+            errors.append(
+                f"{view_name} has an uncontracted contextualization: "
+                f"{source_name} --{relation_name}--> {target_name}"
+            )
+
+    if contextualization["targetIncomingCardinality"] != "exactly-one":
+        raise ProfileContractError(
+            "unsupported contextualization cardinality in profile contract"
+        )
+    for target_id, count in sorted(incoming.items()):
+        if count != 1:
+            errors.append(
+                f"{view_name} target {target_id!r} requires exactly one "
+                f"incoming contextualization; found {count}"
+            )
+    return errors
+
+
 def top_container(
     object_id: str,
     object_targets: dict[str, str],
@@ -704,7 +961,13 @@ def render(
         f"# {view_name}",
         "",
         f"> Generated review snapshot of `{view_name}` from `{source_path}`.",
-        "> Review artifact only; source of truth remains the O2I metamodel.",
+        (
+            "> Review artifact only; exact syntax mapping authority is "
+            "`spc/ctr/archimate/profile.json`."
+            if view_name.startswith("O2I Syntax")
+            else "> Review artifact only; semantic authority remains the "
+            "O2I metamodel."
+        ),
         "",
     ]
 
@@ -797,6 +1060,14 @@ def rendered_view(
 
 def validate_model(root: ET.Element) -> list[str]:
     """Validate repository View contracts without validating O2I semantics."""
+    try:
+        profile_contract = load_profile_contract(PROFILE_CONTRACT)
+        pattern_contracts = syntax_pattern_contracts(profile_contract)
+        pattern_nodes = syntax_pattern_nodes(profile_contract)
+        admissible_mappings = syntax_mapping_edges(profile_contract)
+    except (OSError, ProfileContractError) as error:
+        return [f"cannot read ArchiMate profile contract: {error}"]
+
     elements, relations = collect_model(root)
     errors: list[str] = []
     expected_views = {view_name for view_name, _ in PRESETS.values()}
@@ -827,6 +1098,7 @@ def validate_model(root: ET.Element) -> list[str]:
         object_targets, _, connections, notes, documentation = collect_view(view)
 
         relation_signatures = []
+        relation_records = []
         for source_object, relation_id, target_object in connections:
             invalid_reference = False
             if source_object is None:
@@ -911,8 +1183,76 @@ def validate_model(root: ET.Element) -> list[str]:
                     target_type,
                 )
             )
+            relation_records.append(
+                (
+                    source,
+                    source_name,
+                    source_type,
+                    relation_name,
+                    relation_type,
+                    directed,
+                    target,
+                    target_name,
+                    target_type,
+                )
+            )
 
-        expected_relations = RELATION_CONTRACTS.get(view_name)
+        expected_relations = RELATION_CONTRACTS.get(
+            view_name,
+            pattern_contracts.get(view_name),
+        )
+        if view_name == SYNTAX_VIEW:
+            canonical_relations = []
+            for signature in relation_signatures:
+                try:
+                    canonical_relations.append(
+                        canonical_mapping_edge(signature)
+                    )
+                except ProfileContractError as error:
+                    errors.append(
+                        f"{view_name} has invalid mapping endpoint roles: "
+                        f"{error}"
+                    )
+            actual_relations = frozenset(canonical_relations)
+            for unexpected in sorted(
+                actual_relations - admissible_mappings
+            ):
+                errors.append(
+                    f"{view_name} has contract-inconsistent mapping: "
+                    + format_contract_edge(unexpected)
+                )
+            duplicates = [
+                signature
+                for signature, count in Counter(canonical_relations).items()
+                if count > 1
+            ]
+            for duplicate in sorted(duplicates):
+                errors.append(
+                    f"{view_name} duplicates contracted mapping: "
+                    + format_contract_edge(duplicate)
+                )
+            expected_relations = None
+
+        if view_name == "O2I Syntax - Contextualization":
+            errors.extend(
+                contextualization_pattern_errors(
+                    profile_contract,
+                    view_name,
+                    relation_records,
+                )
+            )
+        if view_name == "O2I Syntax - Collective Strategy Realization":
+            errors.extend(
+                collective_pattern_errors(
+                    root,
+                    profile_contract,
+                    view_name,
+                    object_targets,
+                    relation_records,
+                    elements,
+                )
+            )
+
         if expected_relations is not None:
             actual_relations = frozenset(relation_signatures)
             for missing in sorted(expected_relations - actual_relations):
@@ -937,7 +1277,7 @@ def validate_model(root: ET.Element) -> list[str]:
                     + format_contract_edge(duplicate)
                 )
 
-        required_nodes = REQUIRED_NODES_BY_VIEW.get(view_name, frozenset())
+        required_nodes = pattern_nodes.get(view_name, frozenset())
         if required_nodes:
             visible_nodes = {
                 elements[element_id]

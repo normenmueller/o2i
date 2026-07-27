@@ -49,7 +49,10 @@
   `o2i --build-revision` contract for deterministic validator handoffs.
 - Added one staged, non-mutating repository verification contract with
   hermetic external-client API compile contracts, focused local execution,
-  parallel cached GitHub Actions jobs, and a README status badge.
+  complete local-image validation, parallel cached GitHub Actions jobs, and a
+  README status badge.
+- Added one exact declarative ArchiMate profile contract with a typed Haskell
+  projection, generated publication text, and checked reference visualization.
 - Added `validateNeedQualificationProposal` as an opaque pre-persistence check
   for structurally and relationally admissible Need-qualification candidates
   with explicit rationale and source reference, distinct from subject-matter
@@ -62,7 +65,8 @@
 - Added a framework-architecture visualization that distinguishes O2I's four
   architectural levels and locates the evidence layer within metamodel
   semantics.
-- Added deterministic ArchiMate model-contract, relationship-endpoint, and snapshot-drift verification.
+- Added deterministic ArchiMate model-hygiene, View-contract,
+  relationship-endpoint, documentation, and snapshot-drift verification.
 
 ### Changed
 
@@ -78,6 +82,9 @@
   gates without requiring agentic AI.
 - Aligned Situation semantics by requiring every Situation to have at least one
   constituting Situation anchor.
+- Reduced Situation anchors to the minimal closed set of Business Capability,
+  Business Process, Business Object, and Value Stream, with one uniform
+  constitution, anchoring, change, and measurement contract.
 - Defined the exact minimum content and relational evidence contract for all
   eight Context types, including existential and universal obligations.
 - Made the public adapter and diagnostic boundary schema-safe by construction
@@ -106,7 +113,7 @@
   `composition[contextualizes]`, validated technical Ownership model-wide, and
   required every PerformanceDimension member to share its concrete owner
   Context instance.
-- Separated `O2I Situation` as the anchor type model from `O2I Situation Anchoring` as the relation model connecting situated Need, Intervention, and Measure semantics, with a parameterized ArchiMate 4 syntax mapping for every anchor form.
+- Separated `O2I Situation` as the anchor type model from `O2I Situation Anchoring` as the relation model connecting situated Need, Intervention, and Measure semantics, with a parameterized ArchiMate syntax mapping for every admitted anchor form.
 - Clarified the Haskell specification as the normative machine-checkable formalization of the technology-independent O2I metamodel.
 - Introduced the mandatory strategic success reference as the terminology counterpart of `Key Result @ Strategy`.
 - Mapped every identifier in the Strategy Constituents view explicitly to its

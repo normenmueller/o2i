@@ -310,8 +310,8 @@ minimalQualificationGraph =
         substantiatesStrategyKeyResultObjective
         strategyObjectiveId
     , edge situationId surfacesNeed needId
-    , anchorEdge situationId constitutedByAnchor situationAnchorId
-    , anchorEdge situationAnchorId anchorsNeedDriver needDriverId
+    , anchorEdge situationId ConstitutedByAnchorFamily situationAnchorId
+    , anchorEdge situationAnchorId AnchorsNeedDriverFamily needDriverId
     , edge needDriverId groundsNeedDriverToObjective needObjectiveId
     ]
 
@@ -349,7 +349,7 @@ twoNeedQualificationGraph =
         edge situationId surfacesNeed additionalNeedId
           : anchorEdge
               situationAnchorId
-              anchorsNeedDriver
+              AnchorsNeedDriverFamily
               additionalNeedDriverId
           : edge
               additionalNeedDriverId

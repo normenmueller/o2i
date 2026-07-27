@@ -52,6 +52,7 @@ $(assertOrdinaryFunctions
     , 'Language.relationSemanticsOf
     , 'Language.relationNameOf
     , 'Language.relationNameFor
+    , 'Language.anchorRelationFamilyName
     , 'Language.relationIdentity
     , 'Language.reifyRelation
     , 'Language.macroEvidenceRuleConclusion
@@ -259,6 +260,7 @@ $(assertOrdinaryFunctions
     , 'O2I.interpretationIdentity
     , 'O2I.relationNameFor
     , 'O2I.relationNameOf
+    , 'O2I.anchorRelationFamilyName
     , 'O2I.relationCodeOf
     , 'O2I.relationIdentity
     , 'O2I.graphNodes
@@ -368,6 +370,20 @@ main = do
     "complete relation registry"
     (map Language.relationCodeOf Language.allRelations
        == Language.allRelationCodes)
+  assert
+    "closed SituationAnchor set"
+    (([minBound .. maxBound] :: [SituationAnchor])
+       == [BusinessCapability, BusinessProcess, BusinessObject, ValueStream])
+  assert
+    "closed anchor relation-family names"
+    (map
+       Language.anchorRelationFamilyName
+       ([minBound .. maxBound] :: [AnchorRelationFamily])
+       == [ RelationName "situation-is-constituted-by-anchor"
+          , RelationName "situation-anchor-anchors-need-driver"
+          , RelationName "intervention-action-changes-situation-anchor"
+          , RelationName "measure-kpi-measures-situation-anchor"
+          ])
   assert
     "relation reification roundtrip"
     (map
@@ -759,8 +775,8 @@ assessmentEdges =
       translatesStrategyKeyResultToNeedObjective
       needObjectiveId
   , edge needDriverId groundsNeedDriverToObjective needObjectiveId
-  , edge situationId (constitutedByAnchor SBusinessCapability) situationAnchorId
-  , edge situationAnchorId (anchorsNeedDriver SBusinessCapability) needDriverId
+  , anchorEdge situationId ConstitutedByAnchorFamily situationAnchorId
+  , anchorEdge situationAnchorId AnchorsNeedDriverFamily needDriverId
   , edge
       strategyActionId
       guidesStrategyActionToInterventionAction
@@ -790,15 +806,15 @@ assessmentEdges =
       (containsPerformanceDimension MeasureMeasurementDimension)
       measureKPIId
   , edge interventionKeyResultId setsTargetForMeasureKPI measureKPIId
-  , edge
-      interventionActionId
-      (changesAnchor SBusinessCapability)
-      situationAnchorId
-  , edge measureKPIId (measuresAnchor SBusinessCapability) situationAnchorId
+  , anchorEdge interventionActionId ChangesAnchorFamily situationAnchorId
+  , anchorEdge measureKPIId MeasuresAnchorFamily situationAnchorId
   ]
 
 edge :: RawNodeId -> Relation from to -> RawNodeId -> RawEdge
 edge from relation to = RawEdge from (relationNameFor relation) to
+
+anchorEdge :: RawNodeId -> AnchorRelationFamily -> RawNodeId -> RawEdge
+anchorEdge from family to = RawEdge from (anchorRelationFamilyName family) to
 
 assessmentStrategyFormulation :: RawStrategyFormulation
 assessmentStrategyFormulation =

@@ -1,17 +1,13 @@
 # O2I Syntax - Collective Strategy Realization
 
 > Generated review snapshot of `O2I Syntax - Collective Strategy Realization` from `mdl/o2i.archimate`.
-> Review artifact only; source of truth remains the O2I metamodel.
+> Review artifact only; exact syntax mapping authority is `spc/ctr/archimate/profile.json`.
 
 ## View Contract
 
-Defines the concrete ArchiMate syntax for one O2I CollectiveStrategyRealization.
+Visualizes the executable ArchiMate conformance pattern for one O2I CollectiveStrategyRealization.
 
-At least two distinct contributor Strategy Contexts connect through incoming realizes segments to one typed ArchiMate AND Junction. Exactly one outgoing realizes segment connects the Junction to one distinct target Strategy Context. Segment direction and topology determine contributor and target roles.
-
-The Junction carries the complete structured proposition, its Commitment, and the collective Fit evidence reference. The realizes segments are mandatory syntax components and carry no independent Commitment. The shown elements are Candidate syntax exemplars, not fachliche model instances.
-
-Source: O2I syntax mapping based on The Open Group (2026).
+Candidate Strategy carriers connect through realizes segments and one AND Junction serving as the StructuredProposition carrier. Exact cardinality, topology, metadata, and collective Fit-evidence contracts are defined by spc/ctr/archimate/profile.json. The displayed carriers are syntax exemplars, not fachliche model instances.
 
 ## Nodes
 

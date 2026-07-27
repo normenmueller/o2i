@@ -483,16 +483,16 @@ traceCandidates semantic = do
     (hasAnchor
        graph
        anchor
-       (nameOf (anchorsNeedDriver SBusinessCapability))
+       (anchorRelationFamilyName AnchorsNeedDriverFamily)
        needDriver)
   require
     (hasAnchor
        graph
        interventionAction
-       (nameOf (changesAnchor SBusinessCapability))
+       (anchorRelationFamilyName ChangesAnchorFamily)
        anchor)
   require
-    (hasAnchor graph kpi (nameOf (measuresAnchor SBusinessCapability)) anchor)
+    (hasAnchor graph kpi (anchorRelationFamilyName MeasuresAnchorFamily) anchor)
   let key =
         EffectTraceKey
           { keyVision = vision

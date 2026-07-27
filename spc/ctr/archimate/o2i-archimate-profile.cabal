@@ -14,9 +14,9 @@ author: Normen Mueller
 maintainer: normen.mueller@gmail.com
 build-type: Simple
 data-files:
-  archimate-profile.json
+  profile.json
 extra-source-files:
-  archimate-profile.md
+  profile.md
 
 flag werror
   description: Treat compiler warnings as errors during development.

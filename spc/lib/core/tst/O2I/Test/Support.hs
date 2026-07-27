@@ -553,7 +553,10 @@ sharedKpiSecondPathEdges =
       (duplicateId needDriverId)
       groundsNeedDriverToObjective
       (duplicateId needObjectiveId)
-  , anchorEdge situationAnchorId anchorsNeedDriver (duplicateId needDriverId)
+  , anchorEdge
+      situationAnchorId
+      AnchorsNeedDriverFamily
+      (duplicateId needDriverId)
   , edge
       strategyActionId
       guidesStrategyActionToInterventionAction
@@ -576,7 +579,7 @@ sharedKpiSecondPathEdges =
       measureKpiId
   , anchorEdge
       (duplicateId interventionActionId)
-      changesAnchor
+      ChangesAnchorFamily
       situationAnchorId
   ]
 
@@ -607,10 +610,13 @@ secondPathEdges =
       (duplicateId needDriverId)
       groundsNeedDriverToObjective
       (duplicateId needObjectiveId)
-  , anchorEdge situationId constitutedByAnchor (duplicateId situationAnchorId)
+  , anchorEdge
+      situationId
+      ConstitutedByAnchorFamily
+      (duplicateId situationAnchorId)
   , anchorEdge
       (duplicateId situationAnchorId)
-      anchorsNeedDriver
+      AnchorsNeedDriverFamily
       (duplicateId needDriverId)
   , edge
       strategyActionId
@@ -646,11 +652,11 @@ secondPathEdges =
       (duplicateId measureKpiId)
   , anchorEdge
       (duplicateId interventionActionId)
-      changesAnchor
+      ChangesAnchorFamily
       (duplicateId situationAnchorId)
   , anchorEdge
       (duplicateId measureKpiId)
-      measuresAnchor
+      MeasuresAnchorFamily
       (duplicateId situationAnchorId)
   ]
 
@@ -938,8 +944,8 @@ sampleEdges =
       translatesStrategyKeyResultToNeedObjective
       needObjectiveId
   , edge needDriverId groundsNeedDriverToObjective needObjectiveId
-  , anchorEdge situationId constitutedByAnchor situationAnchorId
-  , anchorEdge situationAnchorId anchorsNeedDriver needDriverId
+  , anchorEdge situationId ConstitutedByAnchorFamily situationAnchorId
+  , anchorEdge situationAnchorId AnchorsNeedDriverFamily needDriverId
   , edge
       strategyActionId
       guidesStrategyActionToInterventionAction
@@ -969,8 +975,8 @@ sampleEdges =
       (containsPerformanceDimension MeasureMeasurementDimension)
       measureKpiId
   , edge interventionKeyResultId setsTargetForMeasureKPI measureKpiId
-  , anchorEdge interventionActionId changesAnchor situationAnchorId
-  , anchorEdge measureKpiId measuresAnchor situationAnchorId
+  , anchorEdge interventionActionId ChangesAnchorFamily situationAnchorId
+  , anchorEdge measureKpiId MeasuresAnchorFamily situationAnchorId
   , edge ethosPrincipleId guidesEthosPrincipleToMissionDriver missionDriverId
   , edge missionDriverId groundsMissionDriverToVisionObjective visionObjectiveId
   , edge
@@ -982,12 +988,8 @@ sampleEdges =
 edge :: RawNodeId -> Relation from to -> RawNodeId -> RawEdge
 edge from relation to = RawEdge from (relationNameFor relation) to
 
-anchorEdge ::
-     RawNodeId
-  -> (SSituationAnchor 'BusinessCapability -> Relation from to)
-  -> RawNodeId
-  -> RawEdge
-anchorEdge from relation to = edge from (relation SBusinessCapability) to
+anchorEdge :: RawNodeId -> AnchorRelationFamily -> RawNodeId -> RawEdge
+anchorEdge from family to = RawEdge from (anchorRelationFamilyName family) to
 
 multiplyInvalidGraph :: RawGraph
 multiplyInvalidGraph =
@@ -1037,7 +1039,7 @@ additionalUntracedNeedGraph =
           : edge situationId surfacesNeed additionalNeedId
           : anchorEdge
               situationAnchorId
-              anchorsNeedDriver
+              AnchorsNeedDriverFamily
               additionalNeedDriverId
           : edge
               additionalNeedDriverId

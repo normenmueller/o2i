@@ -1,7 +1,13 @@
 # O2I Layered Cake
 
 > Generated review snapshot of `O2I Layered Cake` from `mdl/o2i.archimate`.
-> Review artifact only; source of truth remains the O2I metamodel.
+> Review artifact only; semantic authority remains the O2I metamodel.
+
+## View Contract
+
+Illustrates one fictitious end-to-end O2I effect graph across all eight Contexts, including Primitive justification, Situation anchoring, Intervention, and Measure.
+
+This View is a non-normative model instance used to explain the metamodel defined in o2i.md.
 
 ## Nodes
 

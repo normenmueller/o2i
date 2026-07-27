@@ -17,6 +17,7 @@ import xml.etree.ElementTree as ET
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "utl" / "extract-archimate-view.py"
 MODEL = ROOT / "mdl" / "o2i.archimate"
+sys.path.insert(0, str(ROOT / "utl"))
 EXPECTED_PRESET_KEYS = {
     "strategy-constituents",
     "semantics-situation",
@@ -24,11 +25,9 @@ EXPECTED_PRESET_KEYS = {
     "orientation",
     "semantics-context",
     "semantics-primitives",
-    "syntax-context",
+    "syntax",
     "syntax-contextualization",
     "syntax-collective-strategy-realization",
-    "syntax-primitives",
-    "syntax-situation",
     "layered-cake",
 }
 
@@ -72,27 +71,27 @@ class RepositoryViewContractTest(unittest.TestCase):
 
     def test_missing_required_view_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
-        view = EXTRACTOR.find_view(root, "O2I Syntax - Context")
+        view = EXTRACTOR.find_view(root, "O2I Syntax")
         self._remove_element(root, view)
 
         errors = EXTRACTOR.validate_model(root)
 
         self.assertIn(
-            "missing required view: O2I Syntax - Context",
+            "missing required view: O2I Syntax",
             errors,
         )
 
     def test_duplicate_required_view_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
-        view = EXTRACTOR.find_view(root, "O2I Syntax - Context")
+        view = EXTRACTOR.find_view(root, "O2I Syntax")
         duplicate = copy.deepcopy(view)
-        duplicate.set("id", "duplicate-syntax-context-view")
+        duplicate.set("id", "duplicate-syntax-view")
         self._parent_of(root, view).append(duplicate)
 
         errors = EXTRACTOR.validate_model(root)
 
         self.assertIn(
-            "duplicate repository view: O2I Syntax - Context (2 occurrences)",
+            "duplicate repository view: O2I Syntax (2 occurrences)",
             errors,
         )
 
@@ -100,16 +99,16 @@ class RepositoryViewContractTest(unittest.TestCase):
         root = copy.deepcopy(self.root)
         self._remove_view_node(
             root,
-            "O2I Syntax - Primitives",
-            "O2I Principle",
-            "Principle",
+            "O2I Syntax - Contextualization",
+            "<Name> :: O2I Mission",
+            "Grouping",
         )
 
         errors = EXTRACTOR.validate_model(root)
 
         self.assertIn(
-            "O2I Syntax - Primitives is missing node "
-            "O2I Principle (Principle)",
+            "O2I Syntax - Contextualization is missing node "
+            "<Name> :: O2I Mission (Grouping)",
             errors,
         )
 
@@ -155,7 +154,7 @@ class RepositoryViewContractTest(unittest.TestCase):
             errors,
         )
 
-    def test_missing_contracted_relation_is_reported(self) -> None:
+    def test_missing_collective_contributor_segment_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
         view = EXTRACTOR.find_view(
             root,
@@ -168,8 +167,8 @@ class RepositoryViewContractTest(unittest.TestCase):
 
         self.assertTrue(
             any(
-                "O2I Syntax - Collective Strategy Realization is missing "
-                "contracted relation:"
+                "O2I Syntax - Collective Strategy Realization requires at "
+                "least two distinct contributors; found 1"
                 in error
                 for error in errors
             ),
@@ -219,6 +218,80 @@ class RepositoryViewContractTest(unittest.TestCase):
             any(
                 "O2I Semantics - Primitives has uncontracted relation:"
                 in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_syntax_carrier_mapping_drift_is_reported(self) -> None:
+        root = copy.deepcopy(self.root)
+        carrier = self._model_element(
+            root,
+            "ArchiMate Principle",
+            "Principle",
+        )
+        carrier.set(EXTRACTOR.XSI_TYPE, "archimate:Goal")
+
+        errors = EXTRACTOR.validate_model(root)
+
+        self.assertTrue(
+            any(
+                "O2I Syntax has contract-inconsistent mapping:"
+                in error
+                and "Principle (Grouping) --maps-to" in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_syntax_relation_mapping_drift_is_reported(self) -> None:
+        root = copy.deepcopy(self.root)
+        view = EXTRACTOR.find_view(root, "O2I Syntax")
+        connection = self._mapping_connection(
+            root,
+            view,
+            "ArchiMate Driver",
+            EXTRACTOR.GENERIC_RELATION_NAME,
+            "ArchiMate Goal",
+        )
+        relationship = self._relationship_for(root, connection)
+        relationship.set(
+            EXTRACTOR.XSI_TYPE,
+            "archimate:RealizationRelationship",
+        )
+
+        errors = EXTRACTOR.validate_model(root)
+
+        self.assertTrue(
+            any(
+                "O2I Syntax has contract-inconsistent mapping:"
+                in error
+                and "ArchiMate Driver" in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_unexpected_syntax_mapping_is_reported(self) -> None:
+        root = copy.deepcopy(self.root)
+        view = EXTRACTOR.find_view(root, "O2I Syntax")
+        connection = self._mapping_connection(
+            root,
+            view,
+            "Principle",
+            EXTRACTOR.MAPS_TO,
+            "ArchiMate Principle",
+        )
+        relationship = self._relationship_for(root, connection)
+        relationship.set("name", "unexpected-mapping")
+
+        errors = EXTRACTOR.validate_model(root)
+
+        self.assertTrue(
+            any(
+                "O2I Syntax has contract-inconsistent mapping:"
+                in error
+                and "unexpected-mapping" in error
                 for error in errors
             ),
             errors,
@@ -437,7 +510,7 @@ class RepositoryViewContractTest(unittest.TestCase):
         invalid_arguments = (
             ["--preset", "all", "--view", "ignored"],
             ["--preset", "all", "--output", "ignored.md"],
-            ["--preset", "syntax-context", "--include-meaning"],
+            ["--preset", "syntax", "--include-meaning"],
             ["--view", "O2I Semantics - Context"],
             ["--output", "ignored.md"],
             [],
@@ -559,6 +632,55 @@ class RepositoryViewContractTest(unittest.TestCase):
             and relations[relation_id][0] == relation_name
         ]
         self.assertEqual(1, len(matches), relation_name)
+        return matches[0]
+
+    def _mapping_connection(
+        self,
+        root: ET.Element,
+        view: ET.Element,
+        source_name: str,
+        relation_name: str,
+        target_name: str,
+    ) -> ET.Element:
+        elements, relations = EXTRACTOR.collect_model(root)
+        object_targets, _, connections, _, _ = EXTRACTOR.collect_view(view)
+        matches = []
+        for source_object, relation_id, target_object in connections:
+            if (
+                source_object not in object_targets
+                or target_object not in object_targets
+                or relation_id not in relations
+            ):
+                continue
+            source = elements.get(
+                object_targets[source_object],
+                ("", ""),
+            )[0]
+            target = elements.get(
+                object_targets[target_object],
+                ("", ""),
+            )[0]
+            relation = relations[relation_id][0]
+            if (source, relation, target) == (
+                source_name,
+                relation_name,
+                target_name,
+            ):
+                matches.append(
+                    next(
+                        connection
+                        for connection in view.iter("sourceConnection")
+                        if connection.get("archimateRelationship")
+                        == relation_id
+                        and connection.get("source") == source_object
+                        and connection.get("target") == target_object
+                    )
+                )
+        self.assertEqual(
+            1,
+            len(matches),
+            (source_name, relation_name, target_name),
+        )
         return matches[0]
 
     def _snapshot(self, root: ET.Element, view_name: str) -> str:

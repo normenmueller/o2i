@@ -1,15 +1,19 @@
 # O2I Semantics - Situation
 
 > Generated review snapshot of `O2I Semantics - Situation` from `mdl/o2i.archimate`.
-> Review artifact only; source of truth remains the O2I metamodel.
+> Review artifact only; semantic authority remains the O2I metamodel.
+
+## View Contract
+
+Visualizes the closed O2I SituationAnchor type, its four constructors, and the constitution of Situation.
+
+This View is a checked semantic projection of the metamodel defined in o2i.md; it contains neither concrete SituationAnchor instances nor an ArchiMate syntax contract.
 
 ## Nodes
 
 - [Business Capability] `Business Capability` (Grouping)
 - [Business Object] `Business Object` (Grouping)
 - [Business Process] `Business Process` (Grouping)
-- [Business Role] `Business Role` (Grouping)
-- [Regulatory Constraint] `Regulatory Constraint` (Grouping)
 - [Situation] `Situation` (Grouping)
 - [Situation Anchor] `Situation Anchor` (Grouping)
 - [Value Stream] `Value Stream` (Grouping)
@@ -19,7 +23,5 @@
 - `Business Capability` --kind-of--> `Situation Anchor` (SpecializationRelationship)
 - `Business Object` --kind-of--> `Situation Anchor` (SpecializationRelationship)
 - `Business Process` --kind-of--> `Situation Anchor` (SpecializationRelationship)
-- `Business Role` --kind-of--> `Situation Anchor` (SpecializationRelationship)
-- `Regulatory Constraint` --kind-of--> `Situation Anchor` (SpecializationRelationship)
 - `Situation` --is-constituted-by--> `Situation Anchor` (AggregationRelationship)
 - `Value Stream` --kind-of--> `Situation Anchor` (SpecializationRelationship)

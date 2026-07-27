@@ -25,7 +25,7 @@ contractTests =
 
 contractEqualityTest :: Assertion
 contractEqualityTest = do
-  contractPath <- getDataFileName "archimate-profile.json"
+  contractPath <- getDataFileName "profile.json"
   bytes <- ByteString.readFile contractPath
   authoritative <-
     case eitherDecodeStrict' bytes of
@@ -33,8 +33,8 @@ contractEqualityTest = do
         assertFailure
           ("cannot decode authoritative ArchiMate profile: " <> failure)
       Right value -> pure value
-  length (contractCarrierMappings profileContract) @?= 14
-  length (contractRelationMappings profileContract) @?= 60
+  length (contractCarrierMappings profileContract) @?= 12
+  length (contractRelationMappings profileContract) @?= 52
   profileContractValue profileContract @?= authoritative
 
 profileContractValue :: ArchiMateProfileContract -> Value

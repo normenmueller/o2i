@@ -28,6 +28,7 @@ module O2I.Language.Relation
   , relationSemanticsOf
   , relationNameOf
   , relationNameFor
+  , anchorRelationFamilyName
   , relationIdentity
   , guidesMission
   , groundsVision
@@ -176,6 +177,17 @@ newtype RelationName = RelationName
   { relationNameText :: Text -- ^ Machine-readable relation identifier.
   } deriving (Eq, Ord, Show)
 
+-- | Return the one serialized relation name shared by an anchor family.
+anchorRelationFamilyName :: AnchorRelationFamily -> RelationName
+anchorRelationFamilyName ConstitutedByAnchorFamily =
+  RelationName "situation-is-constituted-by-anchor"
+anchorRelationFamilyName AnchorsNeedDriverFamily =
+  RelationName "situation-anchor-anchors-need-driver"
+anchorRelationFamilyName ChangesAnchorFamily =
+  RelationName "intervention-action-changes-situation-anchor"
+anchorRelationFamilyName MeasuresAnchorFamily =
+  RelationName "measure-kpi-measures-situation-anchor"
+
 -- | Authoritative metadata and endpoint witnesses for a typed relation.
 data RelationSpec from to =
   RelationSpec
@@ -316,17 +328,16 @@ anchorRelation ::
      AnchorRelationFamily
   -> SSituationAnchor anchor
   -> Text
-  -> Text
   -> RelationSemantics
   -> SNodeKind from
   -> SNodeKind to
   -> Relation from to
-anchorRelation family anchor name label semantics from to =
+anchorRelation family anchor label semantics from to =
   Relation
     (RelationSpec
        (AnchorRelation family (anchorValue anchor))
        semantics
-       (RelationName name)
+       (anchorRelationFamilyName family)
        label
        from
        to)
@@ -501,7 +512,6 @@ constitutedByAnchor anchor =
   anchorRelation
     ConstitutedByAnchorFamily
     anchor
-    "situation-is-constituted-by-anchor"
     "is-constituted-by"
     EvidenceRelation
     (SContextKind SSituation)
@@ -712,7 +722,6 @@ anchorsNeedDriver anchor =
   anchorRelation
     AnchorsNeedDriverFamily
     anchor
-    "situation-anchor-anchors-need-driver"
     "anchors"
     EvidenceRelation
     (SAnchorKind anchor)
@@ -847,7 +856,6 @@ changesAnchor anchor =
   anchorRelation
     ChangesAnchorFamily
     anchor
-    "intervention-action-changes-situation-anchor"
     "changes"
     EvidenceRelation
     (SPrimitiveKind SIntervention SAction)
@@ -861,7 +869,6 @@ measuresAnchor anchor =
   anchorRelation
     MeasuresAnchorFamily
     anchor
-    "measure-kpi-measures-situation-anchor"
     "measures"
     EvidenceRelation
     (SPrimitiveKind SMeasure SKPI)

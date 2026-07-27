@@ -880,11 +880,11 @@ structureTests =
                    ]
                    [ anchorEdge
                        situationId
-                       constitutedByAnchor
+                       ConstitutedByAnchorFamily
                        situationAnchorId
                    , anchorEdge
                        secondSituationId
-                       constitutedByAnchor
+                       ConstitutedByAnchorFamily
                        situationAnchorId
                    ]) $ \graph -> do
                 case lookupNode graph situationAnchorId of
@@ -995,7 +995,11 @@ semanticTests =
                [ RawContextNode situationId Situation
                , RawAnchorNode situationAnchorId BusinessCapability
                ]
-               [anchorEdge situationId constitutedByAnchor situationAnchorId])
+               [ anchorEdge
+                   situationId
+                   ConstitutedByAnchorFamily
+                   situationAnchorId
+               ])
             []
             (const (pure ()))
     , testCase "Situation without constituting anchor is rejected"
@@ -1323,7 +1327,7 @@ semanticTests =
                   filter
                     (/= anchorEdge
                           situationAnchorId
-                          anchorsNeedDriver
+                          AnchorsNeedDriverFamily
                           needDriverId)
                     (rawEdges sampleGraph)
               }
@@ -1475,9 +1479,9 @@ minimalNeedGraph =
     , RawPrimitiveNode needDriverId needId Driver
     , RawPrimitiveNode needObjectiveId needId Objective
     ]
-    [ anchorEdge situationId constitutedByAnchor situationAnchorId
+    [ anchorEdge situationId ConstitutedByAnchorFamily situationAnchorId
     , edge situationId surfacesNeed needId
-    , anchorEdge situationAnchorId anchorsNeedDriver needDriverId
+    , anchorEdge situationAnchorId AnchorsNeedDriverFamily needDriverId
     , edge needDriverId groundsNeedDriverToObjective needObjectiveId
     ]
 
@@ -1809,13 +1813,15 @@ missingEdgeExpectation candidate
          [StrategyActionWithoutKeyResult strategyId strategyActionId])
   | candidate == edge needDriverId groundsNeedDriverToObjective needObjectiveId =
     Just (SemanticExpectation [UngroundedNeedObjective needId needObjectiveId])
-  | candidate == anchorEdge situationId constitutedByAnchor situationAnchorId =
+  | candidate
+      == anchorEdge situationId ConstitutedByAnchorFamily situationAnchorId =
     Just
       (SemanticExpectation
          [ SituationWithoutConstitutingAnchor situationId
          , UnanchoredNeedDriver needId needDriverId
          ])
-  | candidate == anchorEdge situationAnchorId anchorsNeedDriver needDriverId =
+  | candidate
+      == anchorEdge situationAnchorId AnchorsNeedDriverFamily needDriverId =
     unanchoredNeedDriver
   | candidate
       == edge
@@ -1888,9 +1894,10 @@ missingMacroEvidence candidate
   | candidate
       == edge interventionKeyResultId setsTargetForMeasureKPI measureKpiId =
     macro interventionId setsTargetForMeasure measureId
-  | candidate == anchorEdge interventionActionId changesAnchor situationAnchorId =
+  | candidate
+      == anchorEdge interventionActionId ChangesAnchorFamily situationAnchorId =
     macro interventionId changesSituation situationId
-  | candidate == anchorEdge measureKpiId measuresAnchor situationAnchorId =
+  | candidate == anchorEdge measureKpiId MeasuresAnchorFamily situationAnchorId =
     macro measureId measuresSituation situationId
   | otherwise = Nothing
   where
@@ -2729,6 +2736,24 @@ registryTests =
     , testCase
         "every performance-dimension role member has its own interpretation"
         $ mapM_ assertRoleMemberInterpretation allPerformanceDimensionRoles
+    , testCase "SituationAnchor is the exact admitted closed set"
+        $ ([minBound .. maxBound] :: [SituationAnchor])
+            @?= [ BusinessCapability
+                , BusinessProcess
+                , BusinessObject
+                , ValueStream
+                ]
+    , testCase "anchor relation-family names are stable and exhaustive"
+        $ map anchorRelationFamilyName anchorRelationFamilies
+            @?= [ RelationName "situation-is-constituted-by-anchor"
+                , RelationName "situation-anchor-anchors-need-driver"
+                , RelationName "intervention-action-changes-situation-anchor"
+                , RelationName "measure-kpi-measures-situation-anchor"
+                ]
+    , testCase "every anchor relation name derives from its family"
+        $ assertBool
+            "anchor relation name drift"
+            anchorRelationNamesDeriveFromFamilies
     , QC.testProperty "relation lookup round-trips"
         $ QC.forAll (QC.elements allRelations) relationRoundTrips
     , testCase "relation registry identities are unique"
@@ -2779,6 +2804,18 @@ relationRegistryIsUnique :: Bool
 relationRegistryIsUnique = identities == nub identities
   where
     identities = map relationIdentity allRelations
+
+anchorRelationFamilies :: [AnchorRelationFamily]
+anchorRelationFamilies = [minBound .. maxBound]
+
+anchorRelationNamesDeriveFromFamilies :: Bool
+anchorRelationNamesDeriveFromFamilies =
+  and
+    [ relationNameOf (Language.reifyRelation (AnchorRelation family anchor))
+      == anchorRelationFamilyName family
+    | family <- anchorRelationFamilies
+    , anchor <- [minBound .. maxBound]
+    ]
 
 relationCodes :: [RelationCode]
 relationCodes = nub (map relationCodeOf allRelations)

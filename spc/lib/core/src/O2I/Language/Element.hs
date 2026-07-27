@@ -153,14 +153,12 @@ newtype PerformanceDimensionRoleName = PerformanceDimensionRoleName
   } deriving (Eq, Ord, Show)
 
 -- ** Situation anchors
--- | Business-architecture forms that can constitute a Situation.
+-- | Operational effect subjects that can constitute a Situation.
 data SituationAnchor
-  = BusinessCapability -- ^ Ability the business possesses or requires.
-  | BusinessProcess -- ^ Structured business behavior.
-  | BusinessObject -- ^ Business-relevant information or concept.
-  | BusinessRole -- ^ Organizational responsibility or participation.
-  | ValueStream -- ^ End-to-end progression that creates value.
-  | RegulatoryConstraint -- ^ Externally imposed business constraint.
+  = BusinessCapability -- ^ Business-performance subject.
+  | BusinessProcess -- ^ Business-behavior subject.
+  | BusinessObject -- ^ Business-information subject.
+  | ValueStream -- ^ End-to-end value-flow subject.
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 -- ** Node kinds
@@ -324,12 +322,8 @@ data SSituationAnchor (anchor :: SituationAnchor) where
     -- ^ Witness 'BusinessProcess'.
   SBusinessObject :: SSituationAnchor 'BusinessObject
     -- ^ Witness 'BusinessObject'.
-  SBusinessRole :: SSituationAnchor 'BusinessRole
-    -- ^ Witness 'BusinessRole'.
   SValueStream :: SSituationAnchor 'ValueStream
     -- ^ Witness 'ValueStream'.
-  SRegulatoryConstraint :: SSituationAnchor 'RegulatoryConstraint
-    -- ^ Witness 'RegulatoryConstraint'.
 
 deriving instance Show (SSituationAnchor anchor)
 
@@ -391,9 +385,7 @@ anchorValue :: SSituationAnchor anchor -> SituationAnchor
 anchorValue SBusinessCapability = BusinessCapability
 anchorValue SBusinessProcess = BusinessProcess
 anchorValue SBusinessObject = BusinessObject
-anchorValue SBusinessRole = BusinessRole
 anchorValue SValueStream = ValueStream
-anchorValue SRegulatoryConstraint = RegulatoryConstraint
 
 -- | Erase a node-kind singleton while retaining its complete classification.
 nodeKindValue :: SNodeKind kind -> NodeKindValue
@@ -439,9 +431,7 @@ someSAnchor :: SituationAnchor -> SomeSAnchor
 someSAnchor BusinessCapability = SomeSAnchor SBusinessCapability
 someSAnchor BusinessProcess = SomeSAnchor SBusinessProcess
 someSAnchor BusinessObject = SomeSAnchor SBusinessObject
-someSAnchor BusinessRole = SomeSAnchor SBusinessRole
 someSAnchor ValueStream = SomeSAnchor SValueStream
-someSAnchor RegulatoryConstraint = SomeSAnchor SRegulatoryConstraint
 
 -- | Decide equality of two node-kind witnesses and return type equality proof.
 eqSNodeKind :: SNodeKind left -> SNodeKind right -> Maybe (left :~: right)
@@ -488,7 +478,5 @@ eqSAnchor ::
 eqSAnchor SBusinessCapability SBusinessCapability = Just Refl
 eqSAnchor SBusinessProcess SBusinessProcess = Just Refl
 eqSAnchor SBusinessObject SBusinessObject = Just Refl
-eqSAnchor SBusinessRole SBusinessRole = Just Refl
 eqSAnchor SValueStream SValueStream = Just Refl
-eqSAnchor SRegulatoryConstraint SRegulatoryConstraint = Just Refl
 eqSAnchor _ _ = Nothing

@@ -5,7 +5,7 @@
 | Statement class | Authority | Dependent representations |
 | --- | --- | --- |
 | Fachliche meaning and metamodel semantics | `o2i.md` | semantic Views, WTF, Haddock |
-| Exact ArchiMate profile mapping | `spc/contract/archimate-profile.json` | White Paper projection, syntax Views, AMX registry |
+| Exact ArchiMate profile mapping | `spc/ctr/archimate/profile.json` | White Paper projection, syntax Views, notation adapters |
 | Notation-independent formalization | `spc/lib/core/` | Inspection, adapters, CLI |
 | AMX profile execution | `spc/lib/adapter/amx/` | inspection reports |
 | Reference visualization | `mdl/o2i.archimate` | snapshots and PNG exports |
@@ -13,10 +13,10 @@
 ## Closed Mapping Scope
 
 - one model-root profile contract;
-- 14 carrier mappings: Context family, six Primitives, one structuring type,
-  and six SituationAnchor types;
-- 60 context-sensitive relation mappings: 34 fixed relations, two
-  PerformanceDimension memberships, and four anchor families for six anchor
+- 12 carrier mappings: Context family, six Primitives, one structuring type,
+  and four SituationAnchor types;
+- 52 context-sensitive relation mappings: 34 fixed relations, two
+  PerformanceDimension memberships, and four anchor families for four anchor
   types;
 - contextualization as one non-semantic ownership pattern;
 - collective Strategy realization as one structured proposition pattern.

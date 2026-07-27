@@ -82,6 +82,7 @@ o2i/
 |- spc/
 |  |- Makefile
 |  |- README.md
+|  |- ctr/archimate/
 |  |- lib/
 |  |  |- core/
 |  |  |- inspection/
@@ -99,6 +100,7 @@ o2i/
 - `mdl/`: ArchiMate-Modell
 - `img/`: Abbildungen für White Paper und Modellkommunikation
 - [`spc/README.md`](./spc/README.md): technische Architektur, Build und Nutzung der Haskell-Codebasis
+- `spc/ctr/archimate/`: exakter deklarativer ArchiMate-Profilvertrag und seine typisierte Projektion
 - `spc/lib/core/`: normative Haskell-Library, deren Codeauszüge im White Paper eingebunden werden
 - `spc/lib/inspection/`: formatneutrale Inspection-Pipeline und Berichtsmodell
 - `spc/lib/adapter/amx/`: Adapter für native Archi Model XML-Dateien

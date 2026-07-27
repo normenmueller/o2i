@@ -104,6 +104,21 @@ dimension. Git carries implementation history; the governance validator checks
 the current register and its referenced evidence rather than reconstructing a
 workflow from commits.
 
+## Closure
+
+Change workspaces are temporary execution artifacts, not a second project
+history. After a change is accepted:
+
+1. Derive one concise user-facing `CHANGELOG.md` entry from its outcome.
+2. Derive the implementation commit body from its problem, target design,
+   material scope, and verification; do not copy the complete change files.
+3. Keep the change registered while any open change references it.
+4. Remove its register entry and complete `o2i-NNNN/` directory after all such
+   references are closed.
+
+The Git history remains the sole historical authority for removed proposals,
+plans, and review evidence.
+
 ## Tool
 
 The validator uses only the Python 3.9 standard library and is deterministic:

@@ -562,9 +562,11 @@ needErrors graph = concatMap errorsForNeed (contextNodesOf graph Need)
                  drivers)
           ]
         anchorsDriver anchor driver =
-          any
-            (\relation -> hasEdge graph anchor relation driver)
-            anchorNeedDriverRelationNames
+          hasEdge
+            graph
+            anchor
+            (anchorRelationFamilyName AnchorsNeedDriverFamily)
+            driver
 
 surfacingSituations :: WellFormedGraph -> RawNodeId -> [RawNodeId]
 surfacingSituations graph need =
@@ -819,16 +821,6 @@ validPrimitiveReference graph strategy primitive reference =
 hasRelation ::
      WellFormedGraph -> RawNodeId -> Relation from to -> RawNodeId -> Bool
 hasRelation graph from relation = hasEdge graph from (relationNameFor relation)
-
-anchorNeedDriverRelationNames :: [RelationName]
-anchorNeedDriverRelationNames =
-  [ relationNameFor (anchorsNeedDriver SBusinessCapability)
-  , relationNameFor (anchorsNeedDriver SBusinessProcess)
-  , relationNameFor (anchorsNeedDriver SBusinessObject)
-  , relationNameFor (anchorsNeedDriver SBusinessRole)
-  , relationNameFor (anchorsNeedDriver SValueStream)
-  , relationNameFor (anchorsNeedDriver SRegulatoryConstraint)
-  ]
 
 duplicates :: Ord value => [value] -> [value]
 duplicates values = [first | first:_:_ <- group (sort values)]

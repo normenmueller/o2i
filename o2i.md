@@ -383,15 +383,15 @@ In O2I begründen kritische Erfolgsfaktoren, welche Primitive-Verbindungen zwisc
 ### Situation
 
 > [!definition]
-> Eine **Situation** (en.: *situation*; meta: `Situation`)[^situation] bezeichnet einen fachlich beschriebenen Arbeits-, Leistungs- oder Umfeldzusammenhang, in dem Bedarfe sichtbar, begründbar und später überprüfbar werden. O2I versteht `Situation` als abstrakten fachlichen Interpretationskontext: Konkrete Business-Architecture-Artefakte wie Business Capability, Business Process, Business Object, Business Role, Value Stream oder Regulatory Constraint konstituieren eine Situation als Situationsanker, wenn an ihnen Bedarfe sichtbar werden.
+> Eine **Situation** (en.: *situation*; meta: `Situation`)[^situation] bezeichnet einen fachlich beschriebenen Arbeits-, Leistungs- oder Umfeldzusammenhang, in dem Bedarfe sichtbar, begründbar und später überprüfbar werden. O2I versteht `Situation` als abstrakten fachlichen Interpretationskontext: Eine Business Capability, ein Business Process, ein Business Object oder ein Value Stream konstituiert eine Situation als Situationsanker, wenn das Artefakt den operativen Wirkungsgegenstand bezeichnet, an dem ein Bedarf sichtbar wird, eine Intervention eine Zustandsveränderung bewirkt und eine Messung diese Veränderung beobachtet.
 >
 > > [!tldr] Situation = \textsc{Wo} genau in der fachlichen Realität zeigt sich ein Bedarf?
 >
 > [^situation]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996), Doerr (2018), Parmenter (2020) und The Open Group (2025, 2026)*: Situation wird hier als O2I-spezifischer Brückenbegriff eingeführt, um strategische Auswahl mit fachlich beschriebener Arbeitsrealität, Operationalisierung und Messbarkeit zu verbinden. TOGAF und ArchiMate sind geeignete Strukturierungs- und Notationsgrundlagen für solche Business-Architecture-Artefakte, aber nicht Quelle der O2I-Semantik.
 
-![O2I Situation](<img/O2I Situation.png>){#fig:o2i-situation-view}
+![O2I Situation](<img/O2I Semantics - Situation.png>){#fig:o2i-situation-view}
 
-@Fig:o2i-situation-view zeigt `SituationAnchor` als abstrakte Metamodellkategorie und Business Capability, Business Process, Business Object, Business Role, Value Stream sowie Regulatory Constraint als deren zulässige Spezialisierungen. Eine Situation wird durch mindestens einen solchen Anker konstituiert. Die Sicht modelliert keine vollständige Business Architecture; Relationen zwischen konkreten Business-Architecture-Artefakten folgen der jeweiligen ArchiMate- bzw. TOGAF-Modellierung.
+@Fig:o2i-situation-view zeigt `SituationAnchor` als abstrakte Metamodellkategorie und Business Capability, Business Process, Business Object sowie Value Stream als deren zulässige Spezialisierungen. Eine Situation wird durch mindestens einen solchen Anker konstituiert. Die Sicht modelliert keine vollständige Business Architecture; Relationen zwischen konkreten Business-Architecture-Artefakten folgen der jeweiligen ArchiMate- bzw. TOGAF-Modellierung.
 
 ![O2I Situationsverankerung](<img/O2I Situation Anchoring.png>){#fig:o2i-situation-anchoring-view}
 
@@ -408,7 +408,7 @@ Eine Situation muss somit fachlich, nicht technisch, beschrieben werden. Sie bes
 >
 > [^need]: *Autorenableitung in Anlehnung an Rumelt (2011), Porter (1996), Doerr (2018) und Parmenter (2020)*: Bedarf wird hier als O2I-spezifischer Brückenbegriff zwischen Formierung und Operationalisierung eingeführt. Rumelt und Porter stützen die Ableitung aus strategischer Logik; Doerr und Parmenter stützen die anschließende Operationalisierung und Messbarmachung.
 
-Ein Bedarf in O2I ist eine *situationsbezogene Anforderung an Veränderung* und folglich nur zulässig, wenn die erforderliche Veränderung an mindestens einem Situationsanker einer konkreten Situation sichtbar wird, etwa an einer Business Capability, einem Business Process, einem Business Object, einer Business Role, einem Value Stream oder einem Regulatory Constraint. Die Makrorelation `Situation --surfaces--> Need` macht diesen Bezug explizit. Ohne diesen Situationsbezug bleibt der Bedarf eine unqualifizierte Aussage über gewünschten Wandel, aber kein O2I-Bedarf.
+Ein Bedarf in O2I ist eine *situationsbezogene Anforderung an Veränderung* und folglich nur zulässig, wenn die erforderliche Veränderung an mindestens einem Situationsanker einer konkreten Situation sichtbar wird, also an einer Business Capability, einem Business Process, einem Business Object oder einem Value Stream. Die Makrorelation `Situation --surfaces--> Need` macht diesen Bezug explizit. Ohne diesen Situationsbezug bleibt der Bedarf eine unqualifizierte Aussage über gewünschten Wandel, aber kein O2I-Bedarf.
 
 Ein Bedarf ist keine Lösung, keine Maßnahme, kein Projekt und keine Anforderungsspezifikation. Diese können seine spätere Bearbeitung konkretisieren, dürfen ihn aber nicht ersetzen. Ein Bedarf bleibt auf der Ebene des benötigten fachlichen Ergebnisses.
 
@@ -651,7 +651,7 @@ O2I-Typen beschreiben die abstrakten Arten von Modellelementen. Sie enthalten no
 
 @Fig:o2i-context-view zeigt das Kontextmodell des O2I-Metamodells: O2I-Kontexte und ihre Relationen.
 
-![O2I Kontextmodell](<img/O2I Context.png>){#fig:o2i-context-view}
+![O2I Kontextmodell](<img/O2I Semantics - Context.png>){#fig:o2i-context-view}
 
 Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen. Sie ersetzt die terminologischen Definitionen nicht, sondern zeigt, welche Kontextrelationen auf Metamodellebene zulässig sind.
 
@@ -684,7 +684,7 @@ Diese typisierte Spezifikation verhindert, dass beliebige Kontextrelationen als 
 
 @Fig:o2i-primitives-view zeigt das O2I Primitives-Modell des O2I-Metamodells.
 
-![O2I Primitives-Modell](<img/O2I Primitives.png>){#fig:o2i-primitives-view width=75%}
+![O2I Primitives-Modell](<img/O2I Semantics - Primitives.png>){#fig:o2i-primitives-view width=75%}
 
 Die Darstellung ist als semantische Übersicht des abstrakten Formvorrats zu lesen. Sie ersetzt weder die Interpretation der Primitives in Kontexten noch die typisierte Spezifikation, sondern zeigt, welche Primitives, Strukturierungstypen und Primitive-Relationen auf Metamodellebene vorkommen. Sie abstrahiert von konkreten Primitive- und Strukturierungsinstanzen sowie deren kontextualisierenden Kontextinstanzen; diese werden durch Instanziierung, Interpretation und Rollenregistry bestimmt. Die konkrete Zulässigkeit einer Relation ergibt sich erst aus ihren kontextualisierten Endpunkten in der typisierten Spezifikation; beispielsweise ist `sets-target-for` in O2I als `KeyResult @ Intervention -> KPI @ Measure` typisiert.
 
@@ -740,15 +740,17 @@ Die Haskell-Spezifikation typisiert jede Performance-Dimension durch einen `Perf
 #### Situationsanker
 
 > [!definition]
-> Ein **Situationsanker**[^o2i-situation-anchor] bezeichnet ein konkretes Business-Architecture-Artefakt, das eine `Situation` fachlich konstituiert und an dem Bedarfe sichtbar, Interventionen wirksam und Messungen beobachtbar werden. Er ist weder O2I-Kontext noch O2I-Primitive.
+> Ein **Situationsanker**[^o2i-situation-anchor] bezeichnet ein konkretes Business-Architecture-Artefakt, das eine `Situation` fachlich konstituiert und den operativen Leistungs-, Verhaltens-, Informations- oder Wertflussgegenstand bestimmt, an dem Bedarfe sichtbar, Interventionen wirksam und Messungen beobachtbar werden. Er ist weder O2I-Kontext noch O2I-Primitive.
 >
-> [^o2i-situation-anchor]: *Autorenableitung in Anlehnung an The Open Group (2025, 2026)*: O2I verwendet Business-Architecture-Artefakte als fachliche Anker für Situierung, Intervention und Messung.
+> [^o2i-situation-anchor]: *Autorenableitung in Anlehnung an The Open Group (2025, 2026)*: O2I verwendet Business-Architecture-Artefakte als fachliche Anker für Situierung, Intervention und Messung. Business Capability, Business Process, Business Object und Value Stream bilden den minimal nachgewiesenen geschlossenen O2I-Kern; sie stellen keine durch TOGAF oder ArchiMate vorgegebene vollständige Menge dar.
 
 @Lst:o2i-situation-anchor-types zeigt das zulässige Inventar dieser Anker.
 
 ```{#lst:o2i-situation-anchor-types .haskell caption="O2I Situationsanker"}
 !include`snippetStart="-- ** Situation anchors", snippetEnd="-- ** Node kinds"` spc/lib/core/src/O2I/Language/Element.hs
 ```
+
+Für jeden zulässigen Ankertyp beziehen sich `is-constituted-by`, `anchors`, `changes` und `measures` unmittelbar auf denselben operativen Wirkungsgegenstand. Eine Business Role ordnet Verantwortung oder Verhalten einem Akteur zu; ein Regulatory Constraint beschreibt eine äußere Randbedingung. Beide können mit dem betroffenen Architekturartefakt verbunden sein, sind jedoch keine O2I-Situationsanker. Ein außerhalb des geschlossenen Inventars liegender Wirkungsgegenstand darf nicht durch einen lediglich formal passenden Ersatzanker vertreten werden.
 
 ### Instanziierung
 
@@ -1121,14 +1123,10 @@ Situationsanker werden durch die jeweils semantisch entsprechenden ArchiMate-Bus
 
 ```text
 O2I BusinessCapability -> ArchiMate Capability
-O2I BusinessProcess -> ArchiMate Process
+O2I BusinessProcess -> ArchiMate Business Process
 O2I BusinessObject -> ArchiMate Business Object
-O2I BusinessRole -> ArchiMate Role
 O2I ValueStream -> ArchiMate Value Stream
-O2I RegulatoryConstraint -> ArchiMate Requirement
 ```
-
-`Process` und `Role` werden dabei fachlich als Business Process bzw. Business Role spezialisiert; `Requirement` wird als Regulatory Constraint spezialisiert. Die fachlichen O2I-Ankertypen bleiben dadurch von den generischen ArchiMate-4-Elementtypen unterscheidbar.
 
 Situationsanker werden nicht durch eine Kontextinstanz kontextualisiert. Die folgende `is-constituted-by`-Relation ist ihre alleinige semantische Zuordnung zu einer Situation.
 

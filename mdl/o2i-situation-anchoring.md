@@ -1,7 +1,13 @@
 # O2I Situation Anchoring
 
 > Generated review snapshot of `O2I Situation Anchoring` from `mdl/o2i.archimate`.
-> Review artifact only; source of truth remains the O2I metamodel.
+> Review artifact only; semantic authority remains the O2I metamodel.
+
+## View Contract
+
+Illustrates how one SituationAnchor preserves the same operational effect subject across Situation constitution, Need anchoring, Intervention change, and Measure observation.
+
+This View is an explanatory semantic projection of the metamodel defined in o2i.md, not an independent semantic contract.
 
 ## Nodes
 
