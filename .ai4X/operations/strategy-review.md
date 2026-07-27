@@ -26,6 +26,8 @@ The reviewer is read-only and must assess:
 - fachliche soundness and strategic coherence;
 - source grounding and explicit authors' derivations;
 - terminology completeness and correct semantic placement;
+- whether Terminology remains independently fachlich understandable and every
+  metamodel or specification refinement stays at its proper abstraction level;
 - Need qualification, measurement, effect, evidence, target attainment,
   traceability, and plausible attribution;
 - practical applicability, limitations, and governance implications;

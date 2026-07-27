@@ -58,6 +58,16 @@ class RenderArchimateProfileTest(unittest.TestCase):
         self.assertNotIn("(./profile.json)", self.rendered)
         self.assertNotIn('"carrierMappings":', self.rendered)
         self.assertNotIn("```json", self.rendered)
+        self.assertNotIn(r"\|", self.rendered)
+        self.assertNotIn("| --- | --- |", self.rendered)
+        self.assertIn(
+            "`Context --contextualizes--> {Primitive, Structuring}`",
+            self.rendered,
+        )
+        self.assertIn(
+            "`o2i.commitment = {candidate, asserted}`",
+            self.rendered,
+        )
 
     def test_committed_fragment_is_current(self) -> None:
         self.assertEqual(

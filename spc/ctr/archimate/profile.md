@@ -7,7 +7,7 @@ Der [maschinenlesbare Vertrag](spc/ctr/archimate/profile.json) bestimmt die folg
 ##### Profilmetadaten {#o2i-profile-metadata .unnumbered}
 
 | Vertrag | Wert |
-| --- | --- |
+| ------------------ | ---------------------------------------------------------- |
 | Schema | `o2i.archimate-profile/v1` |
 | Profilversion | `0.2` |
 | Modellwurzel | `o2i.profile`; Kardinalität `genau eins`; weitere O2I-Properties `unzulässig` |
@@ -19,7 +19,7 @@ Der [maschinenlesbare Vertrag](spc/ctr/archimate/profile.json) bestimmt die folg
 Die Syntaxträgerabbildung legt fest, welches ArchiMate-Element einen typisierten O2I-Inhalt darstellen kann.
 
 | O2I-Kind | Persistierter o2i.type | ArchiMate-Element | Kontextbezug |
-| --- | --- | --- | --- |
+| ------------- | --------------------------- | ------------------- | ----------------- |
 | `Context` | `Ethos`, `Mission`, `Vision`, `Strategy`, `Situation`, `Need`, `Intervention`, `Measure` | `Grouping` | `unzulässig` |
 | `Primitive` | `Principle` | `Principle` | `erforderlich` |
 | `Primitive` | `Driver` | `Driver` | `erforderlich` |
@@ -36,7 +36,7 @@ Die Syntaxträgerabbildung legt fest, welches ArchiMate-Element einen typisierte
 ##### Kontextrelationen {#o2i-profile-context-relations .unnumbered}
 
 | O2I-Signatur | ArchiMate-Repräsentation |
-| --- | --- |
+| ----------------------------------------------- | ----------------------------- |
 | `Ethos --guides--> Mission` | `AssociationRelationship (gerichtet)` |
 | `Mission --grounds--> Vision` | `AssociationRelationship (gerichtet)` |
 | `Ethos --guides--> Vision` | `AssociationRelationship (gerichtet)` |
@@ -55,7 +55,7 @@ Die Syntaxträgerabbildung legt fest, welches ArchiMate-Element einen typisierte
 ##### Primitive und strukturierende Relationen {#o2i-profile-primitive-relations .unnumbered}
 
 | O2I-Signatur | ArchiMate-Repräsentation |
-| --- | --- |
+| ----------------------------------------------- | ----------------------------- |
 | `Principle @ Ethos --guides--> Driver @ Mission` | `InfluenceRelationship` |
 | `Principle @ Ethos --guides--> Objective @ Vision` | `InfluenceRelationship` |
 | `Driver @ Mission --grounds--> Objective @ Vision` | `InfluenceRelationship` |
@@ -84,7 +84,7 @@ Die Syntaxträgerabbildung legt fest, welches ArchiMate-Element einen typisierte
 Die zulässigen Ankerformen verwenden ihre fachlich entsprechenden ArchiMate-Business-Architecture-Elemente.
 
 | O2I-Ankerform | ArchiMate-Element |
-| --- | --- |
+| -------------------------------------- | -------------------------------------- |
 | `Business Capability` | `Capability` |
 | `Business Process` | `BusinessProcess` |
 | `Business Object` | `BusinessObject` |
@@ -93,7 +93,7 @@ Die zulässigen Ankerformen verwenden ihre fachlich entsprechenden ArchiMate-Bus
 Die vier parametrisierten Relationsfamilien gelten jeweils vollständig für alle zulässigen Ankerformen.
 
 | O2I-Familiensignatur | ArchiMate-Repräsentation |
-| --- | --- |
+| ----------------------------------------------- | ----------------------------- |
 | `Situation --is-constituted-by--> Situation Anchor` | `AggregationRelationship` |
 | `Situation Anchor --anchors--> Driver @ Need` | `AssociationRelationship (gerichtet)` |
 | `Action @ Intervention --changes--> Situation Anchor` | `AssociationRelationship (gerichtet)` |
@@ -104,8 +104,8 @@ Die vier parametrisierten Relationsfamilien gelten jeweils vollständig für all
 Kontextualisierung ordnet Primitive und strukturierende Elemente genau einem konkreten O2I-Kontext zu.
 
 | Aspekt | Vertrag |
-| --- | --- |
-| O2I-Signatur | `Context --contextualizes--> Primitive \| Structuring` |
+| ------------------------ | ---------------------------------------------------- |
+| O2I-Signatur | `Context --contextualizes--> {Primitive, Structuring}` |
 | ArchiMate-Repräsentation | `CompositionRelationship` |
 | Eingehende Kardinalität am Inhalt | `genau eins` |
 | Relationsmetadaten | `unzulässig` |
@@ -116,10 +116,10 @@ Kontextualisierung ordnet Primitive und strukturierende Elemente genau einem kon
 Die kollektive Strategierealisierung bildet einen n-ären O2I-Claim auf eine ArchiMate-Junction und ihre Segmente ab.
 
 | Aspekt | Vertrag |
-| --- | --- |
+| ------------------------ | ---------------------------------------------------- |
 | O2I-Signatur | `Strategy [n] --realizes--> Collective Strategy Realization --realizes--> Strategy` |
 | Syntaxträger | `Structured Proposition / Collective Strategy Realization -> Junction (AND-Junction)` |
-| Commitment | `o2i.commitment = candidate \| asserted` |
+| Commitment | `o2i.commitment = {candidate, asserted}` |
 | Beitragsevidenz | `o2i.collective-fit-evidence (genau ein nicht leerer Wert)` |
 | Segmente | `RealizationRelationship; Metadaten unzulässig` |
 | Beitragende | `mindestens zwei; untereinander verschieden: erforderlich` |

@@ -158,10 +158,10 @@ needQualificationSourceReferenceText (NeedQualificationSourceReference reference
 --
 -- A successful candidate enters this follow-up process:
 --
--- 1. Authorized subject-matter reviewers assess the rationale and source for
---    domain legitimacy.
+-- 1. Subject-matter acceptance authorized by the instance governance assesses
+--    the rationale and source.
 -- 2. Rejection leaves the graph unchanged.
--- 3. Acceptance models both
+-- 3. Acceptance models both relations as Asserted propositions:
 --    @Key Result \@ Strategy --translates-into--> Objective \@ Need@ and
 --    @Strategy --qualifies--> Need@.
 -- 4. The resulting graph is validated again as an O2I model.

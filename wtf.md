@@ -199,7 +199,7 @@ Weiterlesen: [Bedarf](./o2i.md#bedarf)
 
 **Prüfung**
 
-Agentic AI kann die Verbindung vorschlagen und begründen. Nach vollständiger Situierung des Bedarfs und vor der Modellierung von `translates-into` und `qualifies` prüft die O2I-Spezifikation ihre formale Zulässigkeit. Formale Fehler führen zu keinem Kandidaten und zu keiner Graphänderung. Einen positiven `NeedQualificationCandidate` prüfen fachlich legitimierte Personen.
+Agentic AI kann die Verbindung vorschlagen und begründen. Nach vollständiger Situierung des Bedarfs und vor der Modellierung von `translates-into` und `qualifies` prüft die O2I-Spezifikation ihre formale Zulässigkeit. Formale Fehler führen zu keinem Kandidaten und zu keiner Graphänderung. Ein positiver `NeedQualificationCandidate` benötigt eine nach der jeweiligen Instanzgovernance legitimierte fachliche Annahme.
 
 Spezifikation: [`validateNeedQualificationProposal`](./spc/lib/core/src/O2I/Validation/Qualification.hs)
 
@@ -215,11 +215,11 @@ Weiterlesen: [Bedarfsqualifikation](./o2i.md#bedarfsqualifikation), [Evidenzbere
 
 - ein `SemanticallyValidModel`, das Kandidatenstrategie und vollständig situierten Bedarf enthält,
 - eine vollständige Qualifikationsvorlage für diese beiden Kontexte,
-- eine fachlich legitimierte Entscheidungsbefugnis.
+- eine nach der jeweiligen Instanzgovernance legitimierte fachliche Annahme.
 
 **Ablauf**
 
-Die Situation macht einen Bedarf sichtbar; die Strategie macht ihn relevant. `validateNeedQualificationProposal` prüft zunächst die formale Zulässigkeit der vorgeschlagenen Primitive-Verbindung. Fachlich legitimierte Personen bewerten anschließend Begründung und Quelle. Bei Annahme werden `Key Result @ Strategy --translates-into--> Objective @ Need` und `Strategy --qualifies--> Need` modelliert und das Modell erneut validiert.
+Die Situation macht einen Bedarf sichtbar; die Strategie macht ihn relevant. `validateNeedQualificationProposal` prüft zunächst die formale Zulässigkeit der vorgeschlagenen Primitive-Verbindung. Die Instanzgovernance verantwortet die fachliche Legitimation; O2I definiert weder Entscheidungsbefugnisse noch einen Freigabeworkflow. Bei Annahme werden `Key Result @ Strategy --translates-into--> Objective @ Need` und `Strategy --qualifies--> Need` als `Asserted` modelliert und das Modell erneut validiert.
 
 **Ergebnis**
 

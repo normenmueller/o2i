@@ -446,10 +446,13 @@ wirkungsrelevanter Bedarf
 
 : Ein Bedarf ist sichtbar und strategisch relevant.
 
-Ein Bedarf ist strategisch relevant qualifiziert, wenn seine Veränderungsanforderung durch eine nachvollziehbare Relation zu Strategieinhalten begründet ist.
+Ein Bedarf ist strategisch relevant qualifiziert, wenn seine Bedeutung für
+eine Strategie nachvollziehbar begründet und fachlich bestätigt ist. Die
+Qualifikation priorisiert den Bedarf nicht und gibt keine Intervention zur
+Umsetzung frei.
 
 > [!addendum]
-> Terminologisch erfolgt diese Begründung über kontextualisierte O2I-Primitives, ohne an dieser Stelle den Formalismus des Metamodells vollständig auszubreiten. Beispiel: `Key Result @ Strategy --translates-into--> Objective @ Need`. Damit ist `Strategy --qualifies--> Need` in O2I keine freie Behauptung, sondern eine als Autorenableitung eingeführte Makrorelation.
+> O2I drückt die fachliche Bestätigung durch `Strategy --qualifies--> Need` aus. Ihre nachvollziehbare Begründung entsteht durch Beziehungen zwischen Strategie- und Bedarfsinhalten, beispielsweise `Key Result @ Strategy --translates-into--> Objective @ Need`.
 
 > [!definition]
 > Eine **Qualifikationsvorlage** (en.: *need qualification proposal*)[^need-qualification-proposal] bezeichnet die vollständige Vorlage eines situierten Bedarfs zur Prüfung gegen eine bestehende Kandidatenstrategie. Sie referenziert den Bedarf und die Strategie, benennt ein `Key Result @ Strategy` und ein `Objective @ Need` als vorgeschlagene Primitive-Verbindung und enthält dafür eine fachliche Begründung mit Quellenbezug.
@@ -461,7 +464,7 @@ Die Qualifikationsprüfung folgt einer klaren Arbeitsteilung:
 1. Der Einreicher legt einen vollständig situierten Bedarf vor und referenziert die bestehende Strategie, an der er sich ausgerichtet hat. Die Strategie selbst ist Bestandteil des O2I-Modells und wird nicht mit der Vorlage eingereicht.
 2. Eine fachliche Analyse schlägt die Primitive-Verbindung samt Begründung und Quellenbezug vor. Agentic AI kann diese Analyse unterstützen; O2I setzt ihren Einsatz nicht voraus und behandelt ihren Vorschlag nicht als Entscheidung.
 3. Nach vollständiger Situierung des Bedarfs und vor der Modellierung von `translates-into` und `qualifies` prüft die O2I-Spezifikation mit `validateNeedQualificationProposal` deterministisch Situierung, Typen, Kontextualisierung, Strategy-Rollen, die formale Zulässigkeit der vorgeschlagenen Verbindung sowie das Vorliegen einer nichtleeren Begründung und Quellenreferenz. Ein Fehlerergebnis erzeugt keinen Kandidaten und keine fachliche Annahmeentscheidung; die Prüfung lässt den Graphen unverändert.
-4. Ein positives Ergebnis ist ein formal zulässiger `NeedQualificationCandidate`, noch keine akzeptierte Qualifikation. Fachlich legitimierte Personen prüfen Begründung und Quelle. Eine Ablehnung lässt den Graphen unverändert.
+4. Ein positives Ergebnis ist ein formal zulässiger `NeedQualificationCandidate`, noch keine akzeptierte Qualifikation. Eine nach der jeweiligen Instanzgovernance legitimierte Annahme bewertet Begründung und Quelle; O2I definiert weder Entscheidungsbefugnisse noch einen Freigabeworkflow. Eine Ablehnung lässt den Graphen unverändert.
 5. Bei Annahme werden `Key Result @ Strategy --translates-into--> Objective @ Need` und `Strategy --qualifies--> Need` modelliert und das Modell erneut validiert. Erst wenn `qualifyingStrategies` danach die Strategie als qualifizierend liefert, ist der situierte Bedarf wirkungsrelevant.
 
 Die Qualifikationsvorlage bleibt vom späteren Nachweisentwurf getrennt. Dieser entscheidet nicht über die strategische Relevanz des Bedarfs, sondern bereitet dessen Handlungs- und Nachweisfähigkeit vor.
@@ -815,6 +818,12 @@ Claims erfassen unter anderem Elementdeklarationen, Kontextualisierungen, Relati
 
 `NeedQualificationCandidate` bezeichnet davon unabhängig das opake positive Ergebnis der formalen Prüfung einer Qualifikationsvorlage. Es ist kein `Candidate`-Commitment und behauptet noch keine persistierte `Strategy --qualifies--> Need`-Relation.
 
+`Asserted` setzt eine fachlich legitimierte Behauptung voraus. O2I modelliert
+weder die zuständige Person oder Rolle noch deren Berechtigung oder
+Freigabeworkflow; diese Verantwortung liegt bei der jeweiligen
+Instanzgovernance. Die O2I-Validierung prüft den ausdrücklich persistierten
+Commitment- und Evidenzzustand.
+
 ### Interpretation
 
 Interpretation legt fest, welche Bedeutung ein O2I-Primitive in einem O2I-Kontext erhält. Dadurch wird derselbe abstrakte Primitive-Typ in unterschiedlichen Kontexten fachlich unterschiedlich lesbar.
@@ -839,7 +848,18 @@ Im Metamodell werden kohärente strategische Handlungsfestlegungen als `Action @
 
 Kontextrelationen sind fachliche Makrorelationen. Sie machen sichtbar, wie O2I-Kontexte zueinander stehen, etwa `Strategy --qualifies--> Need`, `Intervention --addresses--> Need` oder `Measure --measures--> Situation`.
 
-Eine Kontextrelation ist nicht automatisch hinreichend begründet. O2I unterscheidet deshalb zwischen zulässiger Makrorelation und validierter Makrorelation.
+Jede Kontextrelation ist ein ausdrücklich persistierter Claim. Primitive- oder
+Syntaxrelationen erzeugen ihn nicht. Eine Kontextrelation ist validiert, wenn
+sie `Asserted` ist und ihre erforderliche fachliche Evidenz durch zulässige
+`Asserted`-Primitive-Relationen vorliegt.
+
+Für `Strategy --qualifies--> Need` verlangt dieser Vertrag eine semantisch
+gültige Strategie, einen situierten Bedarf und mindestens eine zulässige
+Primitive-Begründung zwischen beiden Kontexten. `Asserted` setzt dabei eine
+fachlich legitimierte Annahme voraus. O2I modelliert weder die zuständige
+Person oder Rolle noch deren Berechtigung oder Freigabeworkflow; die
+Instanzgovernance verantwortet diese Legitimation. Die Qualifikation
+priorisiert den Bedarf nicht und gibt keine Intervention zur Umsetzung frei.
 
 #### Primitive-Relationen
 
@@ -1017,10 +1037,6 @@ Wirkungsevidenz bewertet ein evidenzbereites Wirkungsmodell zu einem expliziten 
 Die Evidenzebene besteht insbesondere aus `KPIDefinition`, `ValueDomain`, `Level`, `Delta`, `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion`, `PlannedInterventionStart`, `ActualInterventionStart` und `FollowUpObservation`. Diese Typen sind weder O2I-Kontexte noch O2I-Primitives. Sie definieren, planen und bewerten die empirische Evidenz eines relational vollständigen Wirkungstraces.
 
 Ihre Einordnung als Teil der Metamodellsemantik zeigt @Fig:o2i-framework-architecture.
-
-### Abgeleitete Makrorelationen
-
-Makrorelationen dürfen abgeleitet sein. Eine abgeleitete Makrorelation fasst mehrere Primitive-Relationen oder Syntaxrelationen zu einer fachlichen O2I-Relation zusammen. Entscheidend ist, dass die Ableitung explizit und prüfbar bleibt.
 
 ## Syntax
 

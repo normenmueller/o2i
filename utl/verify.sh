@@ -191,7 +191,8 @@ verify_haskell() {
 
 verify_paper() {
   for command in \
-    md2pdf pandoc pandoc-crossref pandoc-include pdflatex pdftoppm python3; do
+    md2pdf pandoc pandoc-crossref pandoc-include pdflatex pdfinfo pdftoppm \
+    pdftotext python3; do
     require "$command"
   done
 
@@ -199,6 +200,8 @@ verify_paper() {
   pandoc o2i.md --filter pandoc-include -t markdown >/dev/null
   python3 -B -m unittest discover \
     -s utl -p 'test_check_paper_assets.py'
+  python3 -B -m unittest discover \
+    -s utl -p 'test_check_pdf_freshness.py'
 
   paper="$work/paper"
   mkdir -p "$paper/spc/lib/core" "$paper/spc/ctr/archimate"
@@ -240,6 +243,7 @@ verify_paper() {
     printf '[o2i|error] White Paper build produced no PDF.\n' >&2
     exit 1
   fi
+  python3 -B utl/check-pdf-freshness.py o2i.pdf "$work/o2i.pdf"
 }
 
 case "$stage" in

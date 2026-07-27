@@ -80,6 +80,11 @@
 - Clarified formal validation of need qualification proposals, authorized
   subject-matter acceptance, and subsequent evidence readiness as distinct
   gates without requiring agentic AI.
+- Defined every Context macrorelation as an explicitly persisted Claim whose
+  validity requires its asserted Primitive evidence without being inferred
+  from that evidence.
+- Made canonical publication verification reject a stale versioned White Paper
+  through a metadata-independent PDF comparison.
 - Aligned Situation semantics by requiring every Situation to have at least one
   constituting Situation anchor.
 - Reduced Situation anchors to the minimal closed set of Business Capability,

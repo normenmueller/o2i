@@ -10,6 +10,11 @@ text.
   defensive prose unless a conceptual boundary requires explicit contrast.
 - Keep the White Paper concise and non-textbook-like. Preserve flow between
   paragraphs, figures, and listings.
+- Keep Terminology self-contained and fachlich readable. It defines what a
+  term means and where its conceptual boundary lies without requiring prior
+  knowledge of metamodel Claims, syntax metadata, Haskell types, or validation
+  stages. Metamodel and specification sharpen these definitions; never push
+  their implementation vocabulary back into the terminology level.
 - Use code listings only for focused explanatory excerpts. Prefer at most half
   a page and enforce a hard maximum of one page per listing; split or replace
   longer code with a precise repository reference.

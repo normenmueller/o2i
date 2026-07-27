@@ -192,7 +192,7 @@ def _render_metadata(contract: ArchimateProfileContract) -> List[str]:
             "{#o2i-profile-metadata .unnumbered}"
         ),
         "",
-        *_table(("Vertrag", "Wert"), rows),
+        *_table(("Vertrag", "Wert"), rows, widths=(18, 58)),
         "",
     ]
 
@@ -229,6 +229,7 @@ def _render_carriers(
                 "Kontextbezug",
             ),
             rows,
+            widths=(13, 27, 19, 17),
         ),
         "",
     ]
@@ -254,6 +255,7 @@ def _render_relations(
         *_table(
             ("O2I-Signatur", "ArchiMate-Repräsentation"),
             rows,
+            widths=(47, 29),
         ),
         "",
     ]
@@ -299,6 +301,7 @@ def _render_anchor_contract(
         *_table(
             ("O2I-Ankerform", "ArchiMate-Element"),
             carrier_rows,
+            widths=(38, 38),
         ),
         "",
         (
@@ -312,6 +315,7 @@ def _render_anchor_contract(
                 "ArchiMate-Repräsentation",
             ),
             family_rows,
+            widths=(47, 29),
         ),
         "",
     ]
@@ -324,7 +328,7 @@ def _render_contextualization(
         raise ProfileRenderError(
             "contextualization is required for publication"
         )
-    targets = " | ".join(pattern["targetKinds"])
+    targets = "{" + ", ".join(pattern["targetKinds"]) + "}"
     signature = (
         f"{pattern['sourceKind']} --{pattern['label']}--> {targets}"
     )
@@ -355,7 +359,7 @@ def _render_contextualization(
             "Elemente genau einem konkreten O2I-Kontext zu."
         ),
         "",
-        *_table(("Aspekt", "Vertrag"), rows),
+        *_table(("Aspekt", "Vertrag"), rows, widths=(24, 52)),
         "",
     ]
 
@@ -394,7 +398,7 @@ def _render_collective(
             "Commitment",
             _code(
                 f"{carrier['commitmentKey']} = "
-                f"{' | '.join(carrier['commitmentValues'])}"
+                f"{{{', '.join(carrier['commitmentValues'])}}}"
             ),
         ),
         (
@@ -444,7 +448,7 @@ def _render_collective(
             "O2I-Claim auf eine ArchiMate-Junction und ihre Segmente ab."
         ),
         "",
-        *_table(("Aspekt", "Vertrag"), rows),
+        *_table(("Aspekt", "Vertrag"), rows, widths=(24, 52)),
         "",
     ]
 
@@ -682,10 +686,21 @@ def _contract_summary(
 def _table(
     headers: Sequence[str],
     rows: Iterable[Sequence[str]],
+    *,
+    widths: Optional[Sequence[int]] = None,
 ) -> List[str]:
+    if widths is None:
+        separators = tuple("---" for _ in headers)
+    else:
+        if len(widths) != len(headers) or any(width < 3 for width in widths):
+            raise ProfileRenderError(
+                "table widths must provide one width of at least three "
+                "characters per header"
+            )
+        separators = tuple("-" * width for width in widths)
     result = [
         "| " + " | ".join(headers) + " |",
-        "| " + " | ".join("---" for _ in headers) + " |",
+        "| " + " | ".join(separators) + " |",
     ]
     result.extend("| " + " | ".join(row) + " |" for row in rows)
     return result

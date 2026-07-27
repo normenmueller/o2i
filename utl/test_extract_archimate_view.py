@@ -320,6 +320,68 @@ class RepositoryViewContractTest(unittest.TestCase):
             errors,
         )
 
+    def test_each_syntax_relation_family_is_required(self) -> None:
+        families = self._relation_mapping_families()
+        self.assertEqual(9, len(families))
+
+        for family, admissible in sorted(families.items()):
+            with self.subTest(family=EXTRACTOR.format_mapping_family(family)):
+                root = copy.deepcopy(self.root)
+                view = EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_VIEW)
+                _, connection = self._displayed_family_mapping(
+                    root,
+                    view,
+                    admissible,
+                )
+                self._remove_element(view, connection)
+
+                errors = EXTRACTOR.validate_model(root)
+
+                self.assertIn(
+                    f"{EXTRACTOR.SYNTAX_VIEW} is missing "
+                    "relation-mapping family: "
+                    + EXTRACTOR.format_mapping_family(family),
+                    errors,
+                )
+
+    def test_each_syntax_relation_family_rejects_duplicate_representation(
+        self,
+    ) -> None:
+        families = self._relation_mapping_families()
+        self.assertEqual(9, len(families))
+
+        for family, admissible in sorted(families.items()):
+            with self.subTest(family=EXTRACTOR.format_mapping_family(family)):
+                root = copy.deepcopy(self.root)
+                view = EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_VIEW)
+                displayed, _ = self._displayed_family_mapping(
+                    root,
+                    view,
+                    admissible,
+                )
+                alternatives = admissible - {displayed}
+                alternative = min(alternatives) if alternatives else displayed
+                self._append_syntax_mapping(root, view, alternative)
+
+                errors = EXTRACTOR.validate_model(root)
+
+                if alternatives:
+                    expected = (
+                        f"{EXTRACTOR.SYNTAX_VIEW} duplicates "
+                        "relation-mapping family: "
+                        + EXTRACTOR.format_mapping_family(family)
+                    )
+                else:
+                    expected = (
+                        f"{EXTRACTOR.SYNTAX_VIEW} duplicates "
+                        "contracted mapping: "
+                        + EXTRACTOR.format_contract_edge(displayed)
+                    )
+                self.assertIn(
+                    expected,
+                    errors,
+                )
+
     def test_connection_reference_defects_are_reported(self) -> None:
         mutations = (
             (
@@ -497,7 +559,7 @@ class RepositoryViewContractTest(unittest.TestCase):
         root = copy.deepcopy(self.root)
         view = EXTRACTOR.find_view(root, "O2I Semantics - Context")
         elements, _ = EXTRACTOR.collect_model(root)
-        object_targets, _, _, _, _ = EXTRACTOR.collect_view(view)
+        object_targets, _, _, _, _, _ = EXTRACTOR.collect_view(view)
         ethos_id = next(
             element_id
             for element_id, value in elements.items()
@@ -528,6 +590,19 @@ class RepositoryViewContractTest(unittest.TestCase):
 
         self.assertIn("- [Ethos] `Ethos` (Grouping)", snapshot)
         self.assertIn("- [Mission] `Ethos` (Grouping)", snapshot)
+
+    def test_snapshot_uses_view_specific_labels(self) -> None:
+        snapshot = self._snapshot(self.root, "O2I Situation Anchoring")
+
+        self.assertIn("- [Driver] `Driver @ Need` (Grouping)", snapshot)
+        self.assertIn(
+            "`Action @ Intervention` --changes--> `Situation Anchor`",
+            snapshot,
+        )
+        self.assertIn(
+            "`KPI @ Measure` --measures--> `Situation Anchor`",
+            snapshot,
+        )
 
     def test_visual_group_is_transparent_for_snapshot_context(self) -> None:
         self.assertEqual(
@@ -680,7 +755,7 @@ class RepositoryViewContractTest(unittest.TestCase):
         target_name: str,
     ) -> ET.Element:
         elements, relations = EXTRACTOR.collect_model(root)
-        object_targets, _, connections, _, _ = EXTRACTOR.collect_view(view)
+        object_targets, _, _, connections, _, _ = EXTRACTOR.collect_view(view)
         matches = []
         for source_object, relation_id, target_object in connections:
             if (
@@ -726,6 +801,135 @@ class RepositoryViewContractTest(unittest.TestCase):
             Path("mdl/o2i.archimate"),
             view_name,
             False,
+        )
+
+    def _relation_mapping_families(
+        self,
+    ) -> dict[
+        tuple[str, str, str, bool],
+        frozenset[tuple[str, str, str, str, bool, str, str]],
+    ]:
+        contract = EXTRACTOR.load_profile_contract(
+            EXTRACTOR.PROFILE_CONTRACT,
+        )
+        return EXTRACTOR.relation_mapping_families(contract)
+
+    def _displayed_family_mapping(
+        self,
+        root: ET.Element,
+        view: ET.Element,
+        admissible: frozenset[
+            tuple[str, str, str, str, bool, str, str]
+        ],
+    ) -> tuple[
+        tuple[str, str, str, str, bool, str, str],
+        ET.Element,
+    ]:
+        elements, relations = EXTRACTOR.collect_model(root)
+        object_targets, _, _, _, _, _ = EXTRACTOR.collect_view(view)
+        matches = []
+        for connection in view.iter("sourceConnection"):
+            source_object = connection.get("source")
+            target_object = connection.get("target")
+            relation_id = connection.get("archimateRelationship")
+            if (
+                source_object not in object_targets
+                or target_object not in object_targets
+                or relation_id not in relations
+            ):
+                continue
+            source_name, source_type = elements[object_targets[source_object]]
+            target_name, target_type = elements[object_targets[target_object]]
+            relation_name, relation_type, _, _, directed = relations[relation_id]
+            mapping = EXTRACTOR.canonical_mapping_edge(
+                (
+                    source_name,
+                    source_type,
+                    relation_name,
+                    relation_type,
+                    directed,
+                    target_name,
+                    target_type,
+                )
+            )
+            if mapping in admissible:
+                matches.append((mapping, connection))
+        self.assertEqual(1, len(matches), admissible)
+        return matches[0]
+
+    def _append_syntax_mapping(
+        self,
+        root: ET.Element,
+        view: ET.Element,
+        mapping: tuple[str, str, str, str, bool, str, str],
+    ) -> None:
+        (
+            source_name,
+            source_type,
+            relation_name,
+            relation_type,
+            directed,
+            target_name,
+            target_type,
+        ) = mapping
+        elements, _ = EXTRACTOR.collect_model(root)
+        object_targets, _, _, _, _, _ = EXTRACTOR.collect_view(view)
+
+        def occurrence(
+            name: str,
+            element_type: str,
+        ) -> tuple[str, str, ET.Element]:
+            matches = [
+                (
+                    object_id,
+                    element_id,
+                    next(
+                        child
+                        for child in view.iter()
+                        if child.get("id") == object_id
+                    ),
+                )
+                for object_id, element_id in object_targets.items()
+                if elements.get(element_id) == (name, element_type)
+            ]
+            self.assertTrue(matches, (name, element_type))
+            return min(matches, key=lambda match: match[0])
+
+        source_object, source_element, source_occurrence = occurrence(
+            source_name,
+            source_type,
+        )
+        target_object, target_element, _ = occurrence(
+            target_name,
+            target_type,
+        )
+        suffix = f"family-duplicate-{len(list(view.iter('sourceConnection')))}"
+        relation_id = f"{suffix}-relationship"
+        relations_folder = next(
+            folder
+            for folder in root.iter("folder")
+            if folder.get("type") == "relations"
+        )
+        attributes = {
+            EXTRACTOR.XSI_TYPE: f"archimate:{relation_type}",
+            "id": relation_id,
+            "name": relation_name,
+            "source": source_element,
+            "target": target_element,
+        }
+        if relation_type == "AssociationRelationship":
+            attributes["directed"] = str(directed).lower()
+        ET.SubElement(relations_folder, "element", attributes)
+        ET.SubElement(
+            source_occurrence,
+            "sourceConnection",
+            {
+                EXTRACTOR.XSI_TYPE: "archimate:Connection",
+                "id": f"{suffix}-connection",
+                "source": source_object,
+                "target": target_object,
+                "archimateRelationship": relation_id,
+            },
         )
 
     def _view_occurrence(

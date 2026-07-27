@@ -94,6 +94,36 @@ stable unless a missing term is demonstrated; Metamodel and syntax text are
 synchronized precisely, long inventories are generated, and explanatory
 detail is placed in a short box only when required for comprehension.
 
+Revision `a149d9b793e91353be085f956ecae306e8243ef1` is rejected. Its coherent
+correction candidate closes these six findings:
+
+1. Define every Context macrorelation as an explicitly persisted Claim whose
+   existence is never inferred from Primitive or syntax relations. Supporting
+   asserted Primitive relations establish its fachliche evidence and
+   validity.
+2. Define a valid `Strategy --qualifies--> Need` Claim as content-grounded,
+   formally admissible, and fachlich legitimized, but neither prioritized nor
+   approved for implementation. O2I defines the meaning and formal
+   preconditions of `Asserted`; instance governance determines who may
+   authorize the transition and remains outside the O2I graph and validator.
+3. Regenerate the versioned PDF and make canonical paper verification reject
+   a stale PDF through metadata-independent semantic comparison.
+4. Give generated profile tables stable wrapping dimensions and render formal
+   alternatives without visible Markdown escaping.
+5. Add table-driven missing- and duplicate-family regressions for every
+   semantic relation-mapping family in `O2I Syntax`.
+6. Guide the user through legible, crossing-free layouts for the semantic
+   Situation and Situation Anchoring Views; then regenerate their snapshots
+   and publication figures.
+
+Correction status:
+
+- findings 1, 2, 5, and 6 are closed in the working tree;
+- findings 3 and 4 are implemented and await the canonical publication render
+  and complete verification;
+- the gate remains rejected until one coherent revision passes every required
+  check and independent Finalreview.
+
 ## Required Checks
 
 - Core formatting, build, tests, API tests, and Haddock;

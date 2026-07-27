@@ -218,9 +218,6 @@ RELATION_CONTRACTS = {
                 relation_type="AssociationRelationship",
                 directed=True,
             ),
-            contract_edge("Intervention", "addresses", "Need"),
-            contract_edge("Intervention", "changes", "Situation"),
-            contract_edge("Intervention", "sets-target-for", "Measure"),
             contract_edge(
                 "KPI",
                 "measures",
@@ -228,14 +225,12 @@ RELATION_CONTRACTS = {
                 relation_type="AssociationRelationship",
                 directed=True,
             ),
-            contract_edge("Measure", "measures", "Situation"),
             contract_edge(
                 "Situation",
                 "is-constituted-by",
                 "Situation Anchor",
                 relation_type="AggregationRelationship",
             ),
-            contract_edge("Situation", "surfaces", "Need"),
             contract_edge(
                 "Situation Anchor",
                 "anchors",
@@ -722,6 +717,7 @@ def find_view(root: ET.Element, view_name: str) -> ET.Element:
 def collect_view(view: ET.Element):
     object_targets: dict[str, str] = {}
     object_parents: dict[str, str | None] = {}
+    object_labels: dict[str, str] = {}
     notes: list[str] = []
 
     def walk(node: ET.Element, parent: str | None) -> None:
@@ -731,6 +727,16 @@ def collect_view(view: ET.Element):
             target = node.get("archimateElement")
             if target:
                 object_targets[node_id] = target
+                label = next(
+                    (
+                        feature.get("value", "")
+                        for feature in node.findall("feature")
+                        if feature.get("name") == "labelExpression"
+                    ),
+                    "",
+                )
+                if label:
+                    object_labels[node_id] = " ".join(label.split())
             if xtype(node) == "Note":
                 content = (node.findtext("content") or "").strip()
                 if content:
@@ -755,7 +761,14 @@ def collect_view(view: ET.Element):
         )
 
     documentation = (view.findtext("documentation") or "").strip()
-    return object_targets, object_parents, connections, notes, documentation
+    return (
+        object_targets,
+        object_parents,
+        object_labels,
+        connections,
+        notes,
+        documentation,
+    )
 
 
 def visible_element_ids(
@@ -1012,6 +1025,7 @@ def render(
     ],
     object_targets: dict[str, str],
     object_parents: dict[str, str | None],
+    object_labels: dict[str, str],
     connections: list[tuple[str | None, str | None, str | None]],
     notes: list[str],
     documentation: str,
@@ -1054,17 +1068,22 @@ def render(
 
     lines.extend(["## Nodes", ""])
 
-    for _, element_id, context in sorted(
+    for object_id, element_id, context in sorted(
         visible_occurrences,
         key=lambda occurrence: (
             occurrence[2],
+            object_labels.get(
+                occurrence[0],
+                elements.get(occurrence[1], ("", ""))[0],
+            ),
             elements.get(occurrence[1], ("", ""))[0],
             elements.get(occurrence[1], ("", ""))[1],
             occurrence[0],
         ),
     ):
         name, element_type = elements[element_id]
-        lines.append(f"- [{context}] `{name}` ({element_type})")
+        display_name = object_labels.get(object_id, name)
+        lines.append(f"- [{context}] `{display_name}` ({element_type})")
 
     lines.extend(["", "## Relations", ""])
 
@@ -1083,8 +1102,14 @@ def render(
             relation_id,
             ("?", "?", None, None, False),
         )
-        source_name = elements.get(source, ("?", ""))[0]
-        target_name = elements.get(target, ("?", ""))[0]
+        source_name = object_labels.get(
+            source_object or "",
+            elements.get(source, ("?", ""))[0],
+        )
+        target_name = object_labels.get(
+            target_object or "",
+            elements.get(target, ("?", ""))[0],
+        )
         rendered_relations.append(
             (source_name, relation_name, target_name, relation_type, directed)
         )
@@ -1114,14 +1139,20 @@ def rendered_view(
 ) -> str:
     elements, relations = collect_model(root)
     view = find_view(root, view_name)
-    object_targets, object_parents, connections, notes, documentation = (
-        collect_view(view)
-    )
+    (
+        object_targets,
+        object_parents,
+        object_labels,
+        connections,
+        notes,
+        documentation,
+    ) = collect_view(view)
     return render(
         elements,
         relations,
         object_targets,
         object_parents,
+        object_labels,
         connections,
         notes,
         documentation,
@@ -1171,7 +1202,14 @@ def validate_model(root: ET.Element) -> list[str]:
         except SystemExit:
             continue
 
-        object_targets, _, connections, notes, documentation = collect_view(view)
+        (
+            object_targets,
+            _,
+            _,
+            connections,
+            notes,
+            documentation,
+        ) = collect_view(view)
 
         relation_signatures = []
         relation_records = []

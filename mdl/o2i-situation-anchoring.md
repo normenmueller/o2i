@@ -5,29 +5,21 @@
 
 ## View Contract
 
-Illustrates how one SituationAnchor preserves the same operational effect subject across Situation constitution, Need anchoring, Intervention change, and Measure observation.
+Illustrates how one Situation Anchor binds Situation, Driver @ Need, Action @ Intervention, and KPI @ Measure to the same operational subject.
 
 This View is an explanatory semantic projection of the metamodel defined in o2i.md, not an independent semantic contract.
 
 ## Nodes
 
-- [Intervention] `Action` (Grouping)
-- [Intervention] `Intervention` (Grouping)
-- [Measure] `KPI` (Grouping)
-- [Measure] `Measure` (Grouping)
-- [Need] `Driver` (Grouping)
-- [Need] `Need` (Grouping)
+- [Action] `Action @ Intervention` (Grouping)
+- [Driver] `Driver @ Need` (Grouping)
+- [KPI] `KPI @ Measure` (Grouping)
 - [Situation] `Situation` (Grouping)
 - [Situation Anchor] `Situation Anchor` (Grouping)
 
 ## Relations
 
-- `Action` --changes--> `Situation Anchor` (AssociationRelationship, directed)
-- `Intervention` --addresses--> `Need` (InfluenceRelationship)
-- `Intervention` --changes--> `Situation` (InfluenceRelationship)
-- `Intervention` --sets-target-for--> `Measure` (InfluenceRelationship)
-- `KPI` --measures--> `Situation Anchor` (AssociationRelationship, directed)
-- `Measure` --measures--> `Situation` (InfluenceRelationship)
+- `Action @ Intervention` --changes--> `Situation Anchor` (AssociationRelationship, directed)
+- `KPI @ Measure` --measures--> `Situation Anchor` (AssociationRelationship, directed)
 - `Situation` --is-constituted-by--> `Situation Anchor` (AggregationRelationship)
-- `Situation` --surfaces--> `Need` (InfluenceRelationship)
-- `Situation Anchor` --anchors--> `Driver` (AssociationRelationship, directed)
+- `Situation Anchor` --anchors--> `Driver @ Need` (AssociationRelationship, directed)
