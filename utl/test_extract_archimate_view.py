@@ -297,6 +297,29 @@ class RepositoryViewContractTest(unittest.TestCase):
             errors,
         )
 
+    def test_missing_syntax_mapping_is_reported(self) -> None:
+        root = copy.deepcopy(self.root)
+        view = EXTRACTOR.find_view(root, "O2I Syntax")
+        connection = self._mapping_connection(
+            root,
+            view,
+            "Principle",
+            EXTRACTOR.MAPS_TO,
+            "ArchiMate Principle",
+        )
+        self._remove_element(self._parent_of(view, connection), connection)
+
+        errors = EXTRACTOR.validate_model(root)
+
+        self.assertTrue(
+            any(
+                "O2I Syntax is missing contracted mapping:" in error
+                and "Principle (Grouping) --maps-to" in error
+                for error in errors
+            ),
+            errors,
+        )
+
     def test_connection_reference_defects_are_reported(self) -> None:
         mutations = (
             (
@@ -505,6 +528,20 @@ class RepositoryViewContractTest(unittest.TestCase):
 
         self.assertIn("- [Ethos] `Ethos` (Grouping)", snapshot)
         self.assertIn("- [Mission] `Ethos` (Grouping)", snapshot)
+
+    def test_visual_group_is_transparent_for_snapshot_context(self) -> None:
+        self.assertEqual(
+            "ArchiMate Capability",
+            EXTRACTOR.top_container(
+                "capability-occurrence",
+                {"capability-occurrence": "capability"},
+                {
+                    "capability-occurrence": "visual-group",
+                    "visual-group": None,
+                },
+                {"capability": ("ArchiMate Capability", "Capability")},
+            ),
+        )
 
     def test_cli_rejects_ambiguous_or_incomplete_selection(self) -> None:
         invalid_arguments = (

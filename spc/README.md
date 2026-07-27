@@ -21,10 +21,13 @@ The dependency direction is:
 ```text
 o2i-build-provenance -> base
 o2i-inspection        -> o2i-core
-o2i-archimate-profile -> o2i-core
+o2i-archimate-profile -> o2i-core + o2i-inspection
 o2i-amx               -> o2i-archimate-profile + o2i-inspection + o2i-core
 o2i-cli               -> o2i-build-provenance + o2i-inspection + o2i-amx
 ```
+
+Inspection supplies the shared validated profile-version contract used by the
+typed ArchiMate profile projection.
 
 The curated public facades are `O2I`, `O2I.Language`, `O2I.Graph`,
 `O2I.Validation`, `O2I.Inspection`, `O2I.ArchiMate.Profile`, and

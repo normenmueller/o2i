@@ -6,8 +6,8 @@
 - Authorization scope: evaluate and, on Admission, implement `o2i-0004`; do
   not edit the ArchiMate model directly or push.
 - Current gate: `o2i-0004-finalreview`
-- Gate status: `PENDING`
-- Current node: `o2i:situation-anchor-gate`
+- Gate status: `REJECTED`
+- Current node: `o2i:situation-anchor-review-correction`
 
 # Objective
 
@@ -51,22 +51,42 @@ the complete anchor relation family before finalizing the ArchiMate profile.
   and 24 View-/snapshot-contract tests for the exact model digest above.
 - Every registered View passes its repository contract and all generated
   snapshots are current.
-- Exact-candidate `./utl/verify.sh all` passed. Finalreviews remain pending.
+- Exact-candidate `./utl/verify.sh all` passed.
+- The strategy/publication Finalreview rejected revision `d7d550e` with two
+  high and two medium consistency findings.
+- The formalization/Haskell Finalreview rejected the same revision with one
+  medium View-completeness finding. Fachlichkeit, Metamodel, Typtheory,
+  Haskell design, and formal value each scored 10.0.
+- Three independent findings are closed locally: persisted
+  `StructuredProposition`, canonical profile parser/renderer/freshness checks,
+  and the complete profile-package dependency documentation.
+- External design closure accepts one deterministic semantic-family projection
+  from `profile.json`; Haskell requires no change. `O2I Syntax` contains the
+  complete projection, including all four Situation-anchor relation families.
+  The visual exemplar group is transparent to extraction, all 26 Extractor
+  tests pass, model hygiene is valid, and every View snapshot is synchronized.
+- The generated ArchiMate profile is included as the sole exact White Paper
+  syntax inventory. Context Associations and their Primitive justification are
+  distinguished explicitly; isolated paper verification rejects unresolved
+  includes and passes without duplicate section labels.
+- Complete repository verification passes for the coherent correction
+  candidate. The versioned White Paper renders its Syntax View and generated
+  profile inventory legibly on dedicated wide-layout pages.
 
 # Gate
 
 - Attempt: `o2i-0004-finalreview`
-- Subject: implementation scope declared by
-  `.ai4X/governance/changes/o2i-0004/plan.md`.
+- Subject: revision `d7d550e38b2fef1ac1720192c353a6f6e416b590` and implementation
+  scope declared by `.ai4X/governance/changes/o2i-0004/plan.md`.
 - Mandatory checks: Core, profile, AMX, View, publication, and repository
   verification.
-- Finding status: `CLOSED`
-- Result: `PENDING`
+- Finding status: `OPEN`
+- Result: `REJECTED`
 
 # Next Action
 
-Establish one implementation revision and obtain the independent strategy,
-formalization, Haskell, and publication Finalreviews.
+Create one coherent correction revision and submit that exact revision to
+independent Finalreview.
 
 # Local Return Point
 

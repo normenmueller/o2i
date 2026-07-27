@@ -1030,52 +1030,75 @@ Evidenztypen wie `KPIDefinition`, `ValueDomain`, `Level`, `Delta`, `Observation`
 
 ### ArchiMate-Profil
 
-@Fig:o2i-syntax-view verdichtet das ArchiMate-Profil mit seinen Element- und Relationsabbildungen sowie der Syntax für Kontextualisierung.
+Der maschinenlesbare Profilvertrag in
+`spc/ctr/archimate/profile.json` ist die exakte Quelle der konkreten
+ArchiMate-Syntax. Die daraus generierte Profilbeschreibung führt sämtliche
+Syntaxträgerabbildungen, Relationsabbildungen, Metadaten und Kardinalitäten auf.
 
-Jeder O2I-Kontext wird als ArchiMate `Grouping` dargestellt. Das Grouping
-kontextualisiert jedes ihm zugeordnete Primitive und Strukturierungselement
-über eine gerichtete ArchiMate `Composition` mit dem Label `contextualizes`:
+@Fig:o2i-syntax-view verdichtet diesen Vertrag als Familienprojektion: Sie
+zeigt jede Syntaxträgerabbildung und jede Relationsfamilie repräsentativ, ohne alle
+typgleichen Endpunktkombinationen zu wiederholen. Bei den
+Situationsankerrelationen steht die ArchiMate `Capability` stellvertretend für
+die vier separat abgebildeten ArchiMate-Ankerformen `Capability`, `BusinessProcess`,
+`BusinessObject` und `ValueStream`.
 
-```text
-O2I Context --composition[contextualizes]--> contextualized element
-```
-
-Jedes Primitive und jedes Strukturierungselement wird durch genau eine solche
-Kontextinstanz kontextualisiert. Ein Kontext kontextualisiert ausschließlich Primitive und
-Strukturierungselemente, deren Interpretation beziehungsweise Rolle für diesen
-Kontext im Metamodell zulässig ist. Die visuelle Platzierung innerhalb des
-Groupings stellt diese explizite Kontextualisierung dar, ersetzt sie aber nicht.
-`Primitive @ Context` beziehungsweise `PerformanceDimension @ Context` sind
-die textuelle O2I-Notation der jeweiligen kontextualisierten Instanz. Das
-ArchiMate `Grouping` ist ausschließlich ihre konkrete Darstellungsform.
-Bei der Überführung in die Haskell-Spezifikation wird die Composition auf das
-technische Owner-Feld des Knotens abgebildet und nicht als fachliche `RawEdge`
-interpretiert. Die O2I-Primitives selbst werden durch wenige
-ArchiMate-Basisformen dargestellt.
-
-Der in @Fig:o2i-syntax-view abgegrenzte Bereich `Kontextualisierungs-Syntax Beispiele`
-zeigt die beiden Zulässigkeitsmechanismen. `Driver @ Mission` veranschaulicht
-Primitive-Kontextualisierung: `Mission` lässt `Driver` über die Interpretationsregistry
-eindeutig zu. `PerformanceDimension @ Strategy` veranschaulicht
-Strukturierungskontextualisierung: Die
-Rollenregistry ordnet der Performance-Dimension im Kontext `Strategy`
-die Rolle `StrategySuccessDimension` zu und lässt damit ausschließlich
-`Key Result @ Strategy` als Mitgliedstyp zu. Sie interpretiert diese Mitglieder
-nicht; deren Bedeutung folgt weiterhin aus ihrem eigenen `Primitive @ Context`.
-Die Syntaxexemplare sind keine fachlichen Modellinstanzen.
+\clearpage
+\newgeometry{left=1cm,right=1cm,top=1cm,bottom=1cm}
 
 ![O2I ArchiMate-Syntax](<img/O2I Syntax.png>){#fig:o2i-syntax-view width=85%}
 
-### Kollektive Claim-Abbildung
+\clearpage
+
+!include spc/ctr/archimate/profile.md
+
+\clearpage
+\restoregeometry
+
+Die Syntaxträgerabbildung bestimmt die konkrete ArchiMate-Form; die Bedeutung
+eines Primitives folgt weiterhin aus seiner O2I-Interpretation im konkreten Kontext.
+So trägt ein ArchiMate `Goal` ein O2I-`Objective`, ein `Outcome` ein
+`Key Result` und ein `Assessment` einen `KPI`. Messwerte und Beobachtungen
+gehören zur Evidenzebene und werden nicht durch das `Assessment` selbst
+repräsentiert.
+
+### Kontextualisierung
+
+Jeder O2I-Kontext wird als ArchiMate `Grouping` dargestellt. Eine gerichtete
+ArchiMate `Composition` mit dem Label `contextualizes` ordnet jedes Primitive
+und jedes Strukturierungselement genau einer zulässigen Kontextinstanz zu. Die
+visuelle Platzierung innerhalb des Groupings ersetzt diese explizite
+Kontextualisierung nicht. Bei der Überführung in die formale Spezifikation wird
+die Composition auf die technische Eigentümerreferenz des Knotens abgebildet
+und nicht als fachliche `RawEdge` interpretiert.
+
+### Semantische Begründung
+
+Eine Kontext-Makrorelation und ihre Primitive-Begründung sind zwei
+unterschiedliche, gemeinsam erforderliche Aussagen. Die Makrorelation wird als
+gerichtete ArchiMate `Association` zwischen den typisierten Kontext-Syntaxträgern
+persistiert. Zulässige Relationen zwischen ihren kontextualisierten Primitives
+begründen diese Aussage fachlich; sie ersetzen weder die Makrorelation noch
+werden sie durch diese ersetzt.
+
+Beispielsweise besteht eine belastbare Bedarfsqualifikation aus der
+persistierten Makrorelation
+`Strategy --qualifies--> Need` und einer zulässigen Begründung wie
+`Key Result @ Strategy --translates-into--> Objective @ Need`.
+
+### Kollektive Strategierealisierung
 
 Die konkrete ArchiMate-Syntax einer kollektiven Strategierealisierung verwendet eine AND-Junction als Repräsentation des n-ären Claims. Diese Junction trägt genau folgende O2I-Metadaten:
 
 ```text
-o2i.kind = Claim
+o2i.kind = StructuredProposition
 o2i.type = CollectiveStrategyRealization
 o2i.commitment = candidate | asserted
 o2i.collective-fit-evidence = <nichtleere Referenz>
 ```
+
+`StructuredProposition` kennzeichnet den persistierten Syntaxträger; `Claim`
+bleibt der notationunabhängige formale Wrapper aus Proposition und
+`Commitment`.
 
 Mindestens zwei eingehende und genau eine ausgehende ArchiMate `Realization` verbinden die beitragenden Strategy-Kontexte über die Junction mit der Ziel-Strategy. Jedes Segment trägt exakt das Label `realizes` und keine eigenen O2I-Metadaten. Beitrags- und Zielrolle folgen ausschließlich aus Richtung und Topologie.
 
@@ -1087,130 +1110,17 @@ Eine ausgewählte ArchiMate-View bildet den Ausgangspunkt einer Inspection, nich
 
 Eine View darf nur einen Teil der Beitragenden darstellen. Für einen global vollständigen Claim wird dies als Information mit sichtbarer und gesamter Anzahl ausgewiesen. Ein global unvollständiger `Candidate` bleibt dagegen unvollständig, auch wenn die ausgewählte View vollständig erscheint. Unabhängige Defekte außerhalb des geschlossenen Scopes gehören nicht zum Ergebnis dieser Inspection.
 
-### Primitives-Abbildung
-
-Die folgende Zuordnung zeigt, wie O2I-Primitives durch ArchiMate-Basisformen dargestellt werden:
-
-```text
-O2I-Primitive Principle -> ArchiMate Principle -> normative Orientierung
-O2I-Primitive Driver -> ArchiMate Driver -> begründender, spannungserzeugender oder bedarfsanzeigender Faktor
-O2I-Primitive Objective -> ArchiMate Goal -> qualitatives Ziel
-O2I-Primitive Key Result -> ArchiMate Outcome -> quantitative Evidenzgröße oder Zielwert
-O2I-Primitive KPI -> ArchiMate Assessment -> stabile Messdefinition
-O2I-Primitive Action -> ArchiMate Course of Action -> Wegentscheidung, Handlungslogik oder Intervention
-```
-
-Ein ArchiMate `Goal` stellt in O2I das O2I-Primitive `Objective` dar. Seine Bedeutung hängt vom O2I-Kontext ab: Im Kontext `Vision` beschreibt es einen orientierenden Zukunftszustand; im Kontext `Need` beschreibt es ein benötigtes fachliches Ergebnis.
-
-Ein ArchiMate `Outcome` stellt in O2I das O2I-Primitive `Key Result` als quantitatives, überprüfbares Ergebnis oder als Zielwert dar. Im Kontext `Strategy` repräsentiert es einen strategischen Erfolgsbezug; im Kontext `Intervention` einen überprüfbaren Ziel- oder Ergebnisbezug. Es beschreibt, welches Ergebnis Beitrag oder Zielerreichung belegt, nicht wie dieses Ergebnis erreicht wird.
-
-Ein ArchiMate `Assessment` stellt in O2I das O2I-Primitive `KPI` als stabile Messdefinition dar. Beobachtungen und Messwerte gehören zur Evidenzebene und werden nicht durch das `Assessment` selbst repräsentiert.
-
-### Strukturierungsabbildung
-
-Eine O2I-Performance-Dimension wird als ArchiMate `Grouping` innerhalb ihrer
-kontextualisierenden Kontextinstanz dargestellt und durch deren
-`composition[contextualizes]` kontextualisiert. Das `Grouping` bildet ausschließlich die O2I-Performance-Dimension
-ab und führt keine eigene Semantik ein. Die O2I-Rollenregistry bestimmt Rolle,
-zulässigen Mitgliedstyp und Mitgliedschaftsrelation: Eine strategische
-Erfolgsdimension in `Strategy` enthält `Key Result`-Primitives; eine
-Messdimension in `Measure` enthält `KPI`-Primitives. Diese Kontextualisierung
-ist von der Aggregation `contains` zu ihren Mitgliedern zu unterscheiden.
-
-### Situationsanker-Abbildung
-
-Situationsanker werden durch die jeweils semantisch entsprechenden ArchiMate-Business-Architecture-Elemente dargestellt:
-
-```text
-O2I BusinessCapability -> ArchiMate Capability
-O2I BusinessProcess -> ArchiMate Business Process
-O2I BusinessObject -> ArchiMate Business Object
-O2I ValueStream -> ArchiMate Value Stream
-```
-
-Situationsanker werden nicht durch eine Kontextinstanz kontextualisiert. Die folgende `is-constituted-by`-Relation ist ihre alleinige semantische Zuordnung zu einer Situation.
-
-Für jede zulässige Ankerform `A` gilt dieselbe parametrisierte Relationsabbildung:
-
-```text
-Situation --aggregation[is-constituted-by]--> A
-A --association[anchors]--> Driver im Kontext Need
-Course of Action im Kontext Intervention --association[changes]--> A
-Assessment im Kontext Measure --association[measures]--> A
-```
-
-Die drei `association`-Relationen sind gerichtet. Die konkrete ArchiMate-Semantik des jeweiligen Business-Architecture-Elements bleibt dabei erhalten.
-
-### Relationsabbildung
-
-O2I-Relationen werden in ArchiMate durch zulässige ArchiMate-Relationen zwischen konkreten Elementen dargestellt. Dabei sind Primitive-Begründungen und Kontext-Makrorelationen zu unterscheiden.
-
-Primitive-Relationen werden zwischen ArchiMate-Elementen abgebildet, die O2I-Primitives darstellen:
-
-```text
-Principle im Kontext Ethos --influence[guides]--> Driver im Kontext Mission
-Principle im Kontext Ethos --influence[guides]--> Goal im Kontext Vision
-Driver im Kontext Mission --influence[grounds]--> Goal im Kontext Vision
-Principle im Kontext Strategy --association[guides]--> Course of Action im Kontext Strategy
-Outcome im Kontext Strategy --influence[translates-into]--> Goal im Kontext Need
-Outcome im Kontext Strategy --realization[substantiates]--> Goal im Kontext Strategy
-Driver im Kontext Strategy --influence[indicates]--> Grouping im Kontext Measure
-Outcome im Kontext Strategy --influence[determines]--> Grouping im Kontext Measure
-Grouping im Kontext Strategy --aggregation[contains]--> Outcome im Kontext Strategy
-Grouping im Kontext Measure --aggregation[contains]--> Assessment im Kontext Measure
-Outcome im Kontext Intervention --association[sets-target-for]--> Assessment im Kontext Measure
-```
-
-Kontext-Makrorelationen sind dokumentierte O2I-Relationen. In ArchiMate werden sie nicht als primäre ArchiMate-Semantik verstanden, sondern durch Relationen zwischen kontextualisierten Elementen, durch beschriftete Dokumentationskanten zwischen Kontextbereichen oder durch explizit dokumentierte Ableitungen dargestellt:
-
-```text
-Ethos --guides--> Mission
-Ethos --guides--> Vision
-Mission --grounds--> Vision
-Vision --orients--> Strategy
-Strategy --directs--> Strategy
-Strategy --contributes-to--> Strategy
-Strategy --qualifies--> Need
-Strategy --directs--> Intervention
-Strategy --frames--> Measure
-Situation --surfaces--> Need
-Intervention --addresses--> Need
-Intervention --changes--> Situation
-Intervention --sets-target-for--> Measure
-Measure --measures--> Situation
-```
-
-Die O2I-Relation `Vision --orients--> Strategy` kann in ArchiMate als `Influence`-Relation von einem `Goal` im Kontext `Vision` zu einem `Course of Action` im Kontext `Strategy` abgebildet werden. Fachlich bedeutet sie: Eine Vision gibt einer Strategie Richtung; die Strategie bleibt die Wegentscheidung, die diese Richtung unter gegebenen Bedingungen verfolgt.
-
-### Abgeleitete Relationen
-
-Eine O2I-Makrorelation darf aus mehreren ArchiMate-Elementen und -Relationen abgeleitet werden. Entscheidend ist, dass die fachlich wirksame Relation zwischen den enthaltenen Elementen nachvollziehbar bleibt.
-
-Beispiel:
-
-```text
-O2I: Strategy --qualifies--> Need
-```
-
-kann syntaktisch begründet werden als:
-
-```text
-O2I-Kontext Strategy contextualizes Outcome
-O2I-Kontext Need contextualizes Goal
-Outcome im Kontext Strategy --influence[translates-into]--> Goal im Kontext Need
-```
-
-Die äußeren O2I-Kästen sind damit O2I-Kontexte; die fachlich wirksame Begründung liegt zwischen den kontextualisierten Primitives.
-
 ### Modellierungsregeln
 
 - ArchiMate ist Syntax; O2I ist Semantik.
-- O2I-Kontexte werden als strukturierte Modellbereiche über O2I-Primitives modelliert.
-- Ein ArchiMate `Goal` stellt in O2I ein `Objective` dar; ein ArchiMate `Outcome` stellt ein `Key Result` dar; ein ArchiMate `Assessment` stellt einen `KPI` dar.
-- O2I-Makrorelationen dürfen aus mehreren Primitive-Relationen oder Syntaxrelationen abgeleitet werden.
-- Aggregations- oder Kompositionskanten zwischen O2I-Kontexten ersetzen keine fachliche Relation zwischen den enthaltenen Primitives.
-- `Situation` wird nicht auf ein einzelnes ArchiMate-Motivationselement reduziert, sondern durch konkrete fachliche Architekturartefakte instanziiert.
-- Wenn eine O2I-Relation nicht mit einer zulässigen ArchiMate-Relation ausdrückbar ist, muss sie als abgeleitete Relation dokumentiert werden.
+- `spc/ctr/archimate/profile.json` bestimmt die exakte konkrete Syntax.
+- Kontextualisierung ist explizit; visuelle Verschachtelung genügt nicht.
+- Kontext-Makrorelation und Primitive-Begründung bleiben getrennt und
+  gemeinsam prüfbar.
+- Situationsanker behalten die Semantik ihrer konkreten
+  Business-Architecture-Elemente.
+- Evidenztypen werden durch die formale Spezifikation an Wirkungstraces
+  gebunden und gehören nicht zum ArchiMate-Profil.
 
 # Illustration
 

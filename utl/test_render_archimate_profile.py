@@ -117,12 +117,30 @@ class RenderArchimateProfileTest(unittest.TestCase):
 
     def test_every_mapping_has_exactly_one_publication_category(self) -> None:
         headings = (
-            "##### Trägerabbildungen",
-            "##### Kontextrelationen",
-            "##### Primitive und strukturierende Relationen",
-            "##### Situationsanker",
-            "##### Kontextualisierung",
-            "##### Kollektive Strategierealisierung",
+            (
+                "##### Syntaxträgerabbildungen "
+                "{#o2i-profile-carriers .unnumbered}"
+            ),
+            (
+                "##### Kontextrelationen "
+                "{#o2i-profile-context-relations .unnumbered}"
+            ),
+            (
+                "##### Primitive und strukturierende Relationen "
+                "{#o2i-profile-primitive-relations .unnumbered}"
+            ),
+            (
+                "##### Situationsanker "
+                "{#o2i-profile-situation-anchors .unnumbered}"
+            ),
+            (
+                "##### Kontextualisierung "
+                "{#o2i-profile-contextualization .unnumbered}"
+            ),
+            (
+                "##### Kollektive Strategierealisierung "
+                "{#o2i-profile-collective-strategy-realization .unnumbered}"
+            ),
         )
         for heading in headings:
             self.assertEqual(1, self.rendered.count(heading))

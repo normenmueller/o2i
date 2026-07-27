@@ -63,6 +63,37 @@ publication projection express the same four-constructor contract.
 9. Obtain independent Finalreviews for one exact implementation revision and
    accept only without findings and with 10.0 in every required dimension.
 
+## Finalreview Correction
+
+Revision `d7d550e38b2fef1ac1720192c353a6f6e416b590` is rejected. One coherent
+correction candidate closes these five findings:
+
+1. Use `StructuredProposition` consistently as the persisted
+   `o2i.kind`; retain `Claim` only as the notation-independent formal wrapper.
+2. Establish the generated profile projection as the sole exact syntax
+   inventory in the White Paper. Keep concise explanatory prose separate and
+   distinguish persisted Context Associations from the Primitive relations
+   that justify their semantics.
+3. Add profile parser tests, renderer tests, and generated-fragment freshness
+   checking to canonical model verification.
+4. Document the actual `o2i-archimate-profile` dependency on both `o2i-core`
+   and `o2i-inspection`.
+5. Define the exact, non-redundant projection represented by the `O2I Syntax`
+   master View, enforce equality between expected and actual mappings, and add
+   a negative test for a missing required mapping.
+
+Before implementation, the formalization co-author reviews the View projection
+design. The design must preserve the exact declarative profile as authority
+without turning the White Paper or reference View into duplicated,
+hand-maintained inventories. Any resulting model change is performed manually
+by the user under small-step guidance. Haskell Core changes are outside this
+correction unless the design review proves a formal semantic change necessary.
+
+Publication correction keeps target-state prose compact. Terminology remains
+stable unless a missing term is demonstrated; Metamodel and syntax text are
+synchronized precisely, long inventories are generated, and explanatory
+detail is placed in a short box only when required for comprehension.
+
 ## Required Checks
 
 - Core formatting, build, tests, API tests, and Haddock;

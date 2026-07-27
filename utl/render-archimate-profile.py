@@ -79,7 +79,10 @@ def render_contract(contract: ArchimateProfileContract) -> str:
             "spc/ctr/archimate/profile.json. Do not edit. -->"
         ),
         "",
-        "#### ArchiMate-Profilvertrag",
+        (
+            "#### ArchiMate-Profilvertrag "
+            "{#o2i-profile-contract .unnumbered}"
+        ),
         "",
         (
             "Der [maschinenlesbare Vertrag]"
@@ -93,6 +96,7 @@ def render_contract(contract: ArchimateProfileContract) -> str:
     lines.extend(
         _render_relations(
             "Kontextrelationen",
+            "o2i-profile-context-relations",
             context_relations,
             endpoint_names,
         )
@@ -100,6 +104,7 @@ def render_contract(contract: ArchimateProfileContract) -> str:
     lines.extend(
         _render_relations(
             "Primitive und strukturierende Relationen",
+            "o2i-profile-primitive-relations",
             evidence_relations,
             endpoint_names,
         )
@@ -159,7 +164,7 @@ def _render_metadata(contract: ArchimateProfileContract) -> List[str]:
             ),
         ),
         (
-            "Typisierter Träger",
+            "Typisierter Syntaxträger",
             _contract_summary(
                 (
                     carrier["kindKey"],
@@ -182,7 +187,10 @@ def _render_metadata(contract: ArchimateProfileContract) -> List[str]:
         ),
     ]
     return [
-        "##### Profilmetadaten",
+        (
+            "##### Profilmetadaten "
+            "{#o2i-profile-metadata .unnumbered}"
+        ),
         "",
         *_table(("Vertrag", "Wert"), rows),
         "",
@@ -203,10 +211,13 @@ def _render_carriers(
             )
         )
     return [
-        "##### Trägerabbildungen",
+        (
+            "##### Syntaxträgerabbildungen "
+            "{#o2i-profile-carriers .unnumbered}"
+        ),
         "",
         (
-            "Die Trägerabbildung legt fest, welches ArchiMate-Element "
+            "Die Syntaxträgerabbildung legt fest, welches ArchiMate-Element "
             "einen typisierten O2I-Inhalt darstellen kann."
         ),
         "",
@@ -225,6 +236,7 @@ def _render_carriers(
 
 def _render_relations(
     heading: str,
+    heading_id: str,
     relations: Sequence[FrozenObject],
     endpoint_names: Dict[str, str],
 ) -> List[str]:
@@ -237,7 +249,7 @@ def _render_relations(
             )
         )
     return [
-        f"##### {heading}",
+        f"##### {heading} {{#{heading_id} .unnumbered}}",
         "",
         *_table(
             ("O2I-Signatur", "ArchiMate-Repräsentation"),
@@ -273,7 +285,10 @@ def _render_anchor_contract(
         for family in families
     ]
     return [
-        "##### Situationsanker",
+        (
+            "##### Situationsanker "
+            "{#o2i-profile-situation-anchors .unnumbered}"
+        ),
         "",
         (
             "Die zulässigen Ankerformen verwenden ihre fachlich "
@@ -330,7 +345,10 @@ def _render_contextualization(
         ("Projektion", _code(_german(pattern["projection"]))),
     ]
     return [
-        "##### Kontextualisierung",
+        (
+            "##### Kontextualisierung "
+            "{#o2i-profile-contextualization .unnumbered}"
+        ),
         "",
         (
             "Kontextualisierung ordnet Primitive und strukturierende "
@@ -364,7 +382,7 @@ def _render_collective(
     rows = [
         ("O2I-Signatur", _code(signature)),
         (
-            "Träger",
+            "Syntaxträger",
             _code(
                 f"{_display_name(carrier['o2iKind'])} / "
                 f"{_display_name(carrier['o2iType'])} -> "
@@ -416,7 +434,10 @@ def _render_collective(
         ("Projektion", _code(_german(pattern["projection"]))),
     ]
     return [
-        "##### Kollektive Strategierealisierung",
+        (
+            "##### Kollektive Strategierealisierung "
+            "{#o2i-profile-collective-strategy-realization .unnumbered}"
+        ),
         "",
         (
             "Die kollektive Strategierealisierung bildet einen n-ären "

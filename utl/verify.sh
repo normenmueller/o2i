@@ -78,6 +78,11 @@ verify_model() {
   python3 -B utl/audit-archimate-model.py
   python3 -B utl/extract-archimate-view.py --preset all --check
   python3 -B -m unittest discover \
+    -s utl -p 'test_archimate_profile.py'
+  python3 -B -m unittest discover \
+    -s utl -p 'test_render_archimate_profile.py'
+  python3 -B utl/render-archimate-profile.py --check
+  python3 -B -m unittest discover \
     -s utl -p 'test_*archimate_model.py'
   python3 -B -m unittest discover \
     -s utl -p 'test_extract_archimate_view.py'
@@ -196,10 +201,11 @@ verify_paper() {
     -s utl -p 'test_check_paper_assets.py'
 
   paper="$work/paper"
-  mkdir -p "$paper/spc/lib/core"
+  mkdir -p "$paper/spc/lib/core" "$paper/spc/ctr/archimate"
   cp o2i.md README.md ACKNOWLEDGEMENTS.md "$paper/"
   cp -R acc img "$paper/"
   cp -R spc/lib/core/src "$paper/spc/lib/core/"
+  cp spc/ctr/archimate/profile.md "$paper/spc/ctr/archimate/"
 
   info "Rendering TikZ figures in an isolated paper workspace."
   ./utl/render-paper-figures.sh "$paper"
@@ -213,8 +219,17 @@ verify_paper() {
   done
 
   info "Checking White Paper image resources."
-  (cd "$paper" && pandoc o2i.md --filter pandoc-include -t json) \
-    >"$work/paper.json"
+  if ! (cd "$paper" && pandoc o2i.md --filter pandoc-include -t json) \
+    >"$work/paper.json" 2>"$work/pandoc-include.log"; then
+    cat "$work/pandoc-include.log" >&2
+    exit 1
+  fi
+  cat "$work/pandoc-include.log"
+  if grep -Fq "[WARNING] Included file not found:" \
+    "$work/pandoc-include.log"; then
+    printf '[o2i|error] White Paper contains an unresolved include.\n' >&2
+    exit 1
+  fi
   python3 -B utl/check-paper-assets.py \
     --root "$paper" \
     "$work/paper.json"
