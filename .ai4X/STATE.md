@@ -4,7 +4,8 @@
 - Work status: `ACTIVE`
 - Execution authorization: `APPROVED`
 - Authorization scope: review and close `o2i-0004`; do not edit the ArchiMate
-  model directly or push.
+  model directly or push. This includes the approved removal of premature
+  build-revision provenance before the final review candidate.
 - Current gate: `o2i-0004-finalreview-7`
 - Gate status: `REJECTED`
 - Current node: `o2i:situation-anchor-gate`
@@ -32,37 +33,24 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 
 # Verification
 
-- Exact revision `287909f0ad6158c818bdadb4e21b05520f0fac83` passes one
-  uninterrupted clean `./utl/verify.sh all`.
-- The revision includes 297 public Core tests, six private trace-search work
-  regressions, 146 AMX tests, 65 CLI tests, complete Haddock and HIndent, model
-  hygiene and View checks, 17 publication-binding tests, and an isolated
-  65-page White Paper build.
-- The generated profile inventory uses two semantically bounded relation
-  tables and keeps each heading with its table without a fixed page break.
-- The correction completes each primitive spine before the Situation join.
-  Its strengthened `0, 10, 20, 40` regression preserves one identical trace
-  and proves linear traversal work.
-- The correction builds one Situation-to-anchor index per
-  `(Intervention, Need, Measure)` before Strategy enumeration. Three
-  adversarial families prove affine-linear work.
-- One renderer contract now governs local version verification, immutable CI
-  acquisition, and manifest v2. The regenerated PDF remains 65 pages.
-- Strategy, formalization, and publication Finalreviews accept exact revision
-  `287909f0ad6158c818bdadb4e21b05520f0fac83` without findings and with 10.0
-  in every dimension.
-- The pure Haskell Finalreview rejects one target-Measure fan-out: each target
-  Measure repeats pair-wide Situation and Strategy scans, producing quadratic
-  work under linear Measure fan-out.
-- The dirty correction replaces every broad repeated intersection with one
-  relation-driven candidate set and constant membership guards. Eleven
-  private regressions cover target Measure/Situation, addressed Need/Measure,
-  Strategy Action, Need Objective, and Anchor fan-out.
-- The private test contract is split into a small runner, contracts, shared
-  fixtures, and scenario builders. Canonical `./utl/verify.sh haskell` passes.
-- One uninterrupted `./utl/verify.sh all` passes the complete dirty
-  correction worktree, including the isolated 65-page White Paper build with
-  `md2pdf 0.2.4`.
+- Exact committed revision
+  `58073d8500747ce31314f179e700ff14aed2cfd7` passes one uninterrupted clean
+  `./utl/verify.sh all`; its pure Haskell review identified the remaining
+  target-Measure fan-out.
+- The correction replaces broad repeated intersections with relation-driven
+  candidate sets and constant membership guards. Eleven private regressions
+  cover every material fan-out axis, preserve deterministic traces, and prove
+  affine-linear work.
+- Private trace-search tests are split into contracts, shared fixtures, and
+  scenario builders without changing the public API.
+- Build-revision provenance has no current product consumer beyond the CLI
+  option itself. O2I does not distribute binaries or bind inspection reports
+  normatively to an executable revision, so the package and CLI surface are
+  removed before Finalreview.
+- One uninterrupted `./utl/verify.sh all` passes the simplified worktree,
+  including governance, model, 297 Core tests, 11 private trace-search tests,
+  146 AMX tests, 63 CLI tests, API contracts, Haddock, HIndent, publication,
+  and the isolated 65-page White Paper build with `md2pdf 0.2.4`.
 
 # Gate
 
@@ -77,9 +65,9 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 
 # Next Action
 
-Commit one coherent correction, verify that exact clean revision, and repeat
-the four capability-distinct Finalreviews required by the current gate
-contract.
+Run complete repository verification, commit and verify the exact clean
+revision, and repeat the four capability-distinct Finalreviews required by the
+current gate contract.
 
 # Local Return Point
 

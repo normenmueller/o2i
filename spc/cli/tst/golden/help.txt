@@ -1,11 +1,10 @@
 O2I - From orientation to impact, © 2026 nemron
 
-Usage: o2i (--build-revision | COMMAND) [--version]
+Usage: o2i COMMAND [--version]
 
   Inspect an O2I model in one exact Archi View.
 
 Available options:
-  --build-revision         Write the bound source commit SHA.
   -h,--help                Show this help text
   --version                Show the O2I version.
 

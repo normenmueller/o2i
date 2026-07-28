@@ -10,7 +10,6 @@ O2I_INSTALL_PATH := $(DESTDIR)$(PREFIX)/bin/o2i
 
 install:
 	$(CABAL) build $(O2I_COMPONENT)
-	"$$($(CABAL) list-bin $(O2I_COMPONENT))" --build-revision >/dev/null
 	$(INSTALL) -d "$(dir $(O2I_INSTALL_PATH))"
 	$(INSTALL) -m 0755 "$$($(CABAL) list-bin $(O2I_COMPONENT))" \
 		"$(O2I_INSTALL_PATH)"

@@ -14,7 +14,6 @@ import Data.Char (ord)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as TextEncoding
-import O2I.BuildProvenance
 import O2I.Cli.Test.Support
 import System.Directory (getTemporaryDirectory, removeFile)
 import System.Exit (ExitCode(..))
@@ -29,7 +28,6 @@ tests =
     [ testCase "top-level help" topLevelHelp
     , testCase "inspect help" inspectHelp
     , testCase "version" version
-    , testCase "build revision" buildRevision
     , testCase "exact-name selection" exactNameSelection
     , testCase "stable-ID selection" stableIdentifierSelection
     , testCase "stdin source identity" stdinIdentity
@@ -86,22 +84,6 @@ version = do
   processExitCode result @?= ExitSuccess
   processStdout result @?= "o2i 0.2.0.0\n"
   processStderr result @?= ByteString.empty
-
-buildRevision :: Assertion
-buildRevision = do
-  result <- runO2I ["--build-revision"] ByteString.empty
-  case buildRevisionStatus of
-    RevisionBound _ revision -> do
-      processExitCode result @?= ExitSuccess
-      processStdout result
-        @?= TextEncoding.encodeUtf8 (buildRevisionText revision <> "\n")
-      processStderr result @?= ByteString.empty
-    RevisionUnbound _ -> do
-      processExitCode result @?= ExitFailure 2
-      processStdout result @?= ByteString.empty
-      assertContains
-        (processStderr result)
-        "[o2i|error] Build revision unavailable:"
 
 exactNameSelection :: Assertion
 exactNameSelection = do

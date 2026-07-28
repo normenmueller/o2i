@@ -1,5 +1,4 @@
 packages:
-  lib/build-provenance
   lib/core
   lib/inspection
   ctr/archimate

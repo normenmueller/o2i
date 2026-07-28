@@ -9,7 +9,6 @@ documents only the technical codebase and its use.
 
 | Package | Responsibility |
 | --- | --- |
-| `o2i-build-provenance` | Revision-closed source identity for build artifacts |
 | `o2i-core` | Typed O2I language, effect graphs, and staged validation |
 | `o2i-inspection` | Format-neutral staged inspection, provenance, and reports |
 | `o2i-archimate-profile` | Typed projection of the exact declarative ArchiMate profile contract |
@@ -19,11 +18,10 @@ documents only the technical codebase and its use.
 The dependency direction is:
 
 ```text
-o2i-build-provenance -> base
 o2i-inspection        -> o2i-core
 o2i-archimate-profile -> o2i-core + o2i-inspection
 o2i-amx               -> o2i-archimate-profile + o2i-inspection + o2i-core
-o2i-cli               -> o2i-build-provenance + o2i-inspection + o2i-amx
+o2i-cli               -> o2i-inspection + o2i-amx
 ```
 
 Inspection supplies the shared validated profile-version contract used by the
@@ -70,7 +68,6 @@ Package metadata is checked separately:
 
 ```sh
 (cd lib/core && cabal check)
-(cd lib/build-provenance && cabal check)
 (cd lib/inspection && cabal check)
 (cd ctr/archimate && cabal check)
 (cd lib/adapter/amx && cabal check)
@@ -110,28 +107,3 @@ independent defects outside the closed scope.
 
 The CLI contains no validation semantics. It delegates inspection to the
 libraries and renders their result.
-
-## Build Revision
-
-Every revision-bound `o2i` executable carries one complete, normalized Git
-commit identifier. A clean Git checkout supplies its current `HEAD`
-automatically:
-
-```sh
-o2i --build-revision
-```
-
-The command writes only the commit SHA and exits successfully when the
-executable is revision-bound. It exits with a command error when the source
-worktree was dirty or no revision was available. `o2i --version` remains the
-package-version interface.
-
-An exported source tree without `.git` supplies the source revision explicitly:
-
-```sh
-O2I_BUILD_REVISION=<commit-sha> cabal build all
-```
-
-The setup hook validates the supplied SHA. In a Git checkout it additionally
-requires a clean worktree and equality with `HEAD`. `make install` refuses to
-install an executable whose source revision is not bound.

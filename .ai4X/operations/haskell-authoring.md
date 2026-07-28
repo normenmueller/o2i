@@ -26,9 +26,10 @@ adapters, or Haddock.
 
 # Package Boundaries
 
-- `o2i-build-provenance`: technical build-revision identity; no O2I semantics.
 - `o2i-core`: language, graph, validation, trace, and evidence semantics.
 - `o2i-inspection`: format-neutral staged inspection and reports.
+- `o2i-archimate-profile`: typed projection of the declarative ArchiMate
+  profile contract.
 - `o2i-amx`: Decode, View scope, concrete AMX profile, provenance, projection.
 - `o2i-cli`: arguments, composition, and rendering.
 

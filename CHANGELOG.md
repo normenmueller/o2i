@@ -45,8 +45,6 @@
 - Added reproducible `make install` and `make uninstall` targets for the local
   `o2i` CLI and documented file- and standard-input inspection for human and
   agentic use.
-- Added revision-closed build provenance and the machine-readable
-  `o2i --build-revision` contract for deterministic validator handoffs.
 - Added one staged, non-mutating repository verification contract with
   hermetic external-client API compile contracts, focused local execution,
   complete local-image validation, parallel cached GitHub Actions jobs, and a
