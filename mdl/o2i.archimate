@@ -955,14 +955,14 @@ This View is a presentation excerpt of the Context metamodel defined in o2i.md, 
     <folder name="Semantics" id="id-70adea7d838a4547917f4253d5c53221">
       <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Semantics - Context" id="id-983e40824ddb495c8632d2d60ac057f7">
         <child xsi:type="archimate:DiagramObject" id="id-0ae3dc1596e943f09201d2ac3273de07" targetConnections="id-26c8d12c865442d49a4cfa230be5ab49" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-209098a723f84d0787eab3cfed0e3db0">
-          <bounds x="912" y="180" width="181" height="73"/>
+          <bounds x="864" y="180" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-499e55e882744f0299dacc0e17e361de" source="id-0ae3dc1596e943f09201d2ac3273de07" target="id-46e2f76416894f9db96f3e1a20707049" archimateRelationship="id-76fdb740fff743c5a118d7b977a1e72e"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-9a75df3a1eaf4a00a98314cdc914d168" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-cf054314f7e944cea52ff8ec082377f8">
-          <bounds x="780" y="60" width="181" height="73"/>
+          <bounds x="732" y="60" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
@@ -970,14 +970,14 @@ This View is a presentation excerpt of the Context metamodel defined in o2i.md, 
           <sourceConnection xsi:type="archimate:Connection" id="id-26c8d12c865442d49a4cfa230be5ab49" source="id-9a75df3a1eaf4a00a98314cdc914d168" target="id-0ae3dc1596e943f09201d2ac3273de07" archimateRelationship="id-bb43d55e900449e1b0ff3e0e8eec1f05"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-46e2f76416894f9db96f3e1a20707049" targetConnections="id-a8591410ecb54d8183dd4ea90d0d170f id-499e55e882744f0299dacc0e17e361de" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-63a27d11822d4ef4b45e65b0e7231fc4">
-          <bounds x="780" y="300" width="181" height="73"/>
+          <bounds x="732" y="300" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-c300ff926cc24246b4071b6211da9c12" source="id-46e2f76416894f9db96f3e1a20707049" target="id-02377c97ec79421394d78a97248c326d" archimateRelationship="id-9acf0334482342e294ddf4be5096d66a"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-02377c97ec79421394d78a97248c326d" targetConnections="id-70ff07d6681740d98600c8f353435231 id-c300ff926cc24246b4071b6211da9c12 id-4006607fd5444c109cb57d3113e6c1fa" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-fc76733c15ce4d0fa08e1156adfa9879">
-          <bounds x="780" y="444" width="181" height="73"/>
+          <bounds x="732" y="444" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
@@ -1000,33 +1000,33 @@ This View is a presentation excerpt of the Context metamodel defined in o2i.md, 
           </sourceConnection>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-95389530307142d3be854fb04eee548e" fillColor="#ffffff" textPosition="1" archimateElement="id-c9c995beb0e645a3a2ca7c4afc3e6e2c" type="1">
-          <bounds x="912" y="48" width="96" height="36"/>
+          <bounds x="864" y="48" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-8eb6095914334c2aa646a4de87606913" fillColor="#ffffff" textPosition="1" archimateElement="id-33a10d15dd4f40d3b963608b26edd48d" type="1">
-          <bounds x="1032" y="168" width="96" height="36"/>
+          <bounds x="984" y="168" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-ae2c6f9ff4ff4b2a91217189e0898b50" fillColor="#ffffff" textPosition="1" archimateElement="id-88ed849a9a7e4bd1a02ba7993d34d59d" type="1">
-          <bounds x="912" y="432" width="96" height="36"/>
+          <bounds x="864" y="432" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-c1dd5227f3464b248c42e7745bddd9d6" targetConnections="id-7f48c31ab0084116bff3b1cf7b31a435 id-08cade0d83dd4f25949b98c4dc73899a id-69c37b9faa06444fa6bdb3497779b56b" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-643791bdae8f4829a2151d7b658d84f1">
-          <bounds x="456" y="300" width="181" height="73"/>
+          <bounds x="408" y="300" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-dd4a9db3496f43edba27793f9530cca8" fillColor="#ffffff" textPosition="1" archimateElement="id-ab44c37a5e4e44279f345e1b4b8a8904" type="1">
-          <bounds x="420" y="288" width="96" height="36"/>
+          <bounds x="372" y="288" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-1769327a938e4af3a78297407b66c28a" targetConnections="id-f2b78b4839bc4f0b8b38e0f80794cf0a id-6194108890f64b929caba5acac75faf1" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-95420d4e66164023b79676213a6147e2">
-          <bounds x="132" y="444" width="181" height="73"/>
+          <bounds x="84" y="444" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
@@ -1035,12 +1035,12 @@ This View is a presentation excerpt of the Context metamodel defined in o2i.md, 
           </sourceConnection>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-9c6a1db7232146198d881053444a0bf0" fillColor="#ffffff" textPosition="1" archimateElement="id-0645e26eee7b4bf49df671f415323fb1" type="1">
-          <bounds x="924" y="288" width="96" height="36"/>
+          <bounds x="876" y="288" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-7a4ce686d266451cbf8919079441912e" targetConnections="id-2550a2e83a3f4efebc149054c65b7656" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-52230b6fa09b477fa7b7187f9bc03376">
-          <bounds x="456" y="444" width="181" height="73"/>
+          <bounds x="408" y="444" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
@@ -1049,7 +1049,7 @@ This View is a presentation excerpt of the Context metamodel defined in o2i.md, 
           <sourceConnection xsi:type="archimate:Connection" id="id-69c37b9faa06444fa6bdb3497779b56b" source="id-7a4ce686d266451cbf8919079441912e" target="id-c1dd5227f3464b248c42e7745bddd9d6" archimateRelationship="id-930fd47be9404fc39840eab6224b373a"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-fdd9362671ff4ce1931be3546a689070" targetConnections="id-8fc250e1dd17420ab56e93364a9ebefc id-b70c92baed5347d9bf82e817cf27d177" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-a1eb98d8dd174918bb2a8adc88f87295">
-          <bounds x="456" y="588" width="181" height="73"/>
+          <bounds x="408" y="588" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
@@ -1058,17 +1058,17 @@ This View is a presentation excerpt of the Context metamodel defined in o2i.md, 
           </sourceConnection>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-0c614d411fac4e9b864dc7f072dcecfa" fillColor="#ffffff" textPosition="1" archimateElement="id-88ed849a9a7e4bd1a02ba7993d34d59d" type="1">
-          <bounds x="420" y="432" width="96" height="36"/>
+          <bounds x="372" y="432" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-e2097d7356fc430d89ff2df255b56710" fillColor="#ffffff" textPosition="1" archimateElement="id-d743fa428bab471e9850ad3113aacb3c" type="1">
-          <bounds x="108" y="432" width="96" height="36"/>
+          <bounds x="60" y="432" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-95d7caa1f64545aba3d020e8d91a18fb" fillColor="#ffffff" textPosition="1" archimateElement="id-44e7b1aa0cb64e36bf8c6664b0f05eb0" type="1">
-          <bounds x="420" y="576" width="96" height="36"/>
+          <bounds x="372" y="576" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>

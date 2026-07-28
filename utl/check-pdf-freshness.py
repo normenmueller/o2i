@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Seal and verify the versioned White Paper against its exact sources."""
+"""Verify White Paper source binding and structural render consistency."""
 
 from __future__ import annotations
 
@@ -257,7 +257,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     try:
         if arguments.command == "seal":
             write_manifest(arguments.root, arguments.pdf, arguments.manifest)
-            print("[o2i|info] Versioned White Paper source binding is current.")
+            print("[o2i|info] White Paper source binding is current.")
             return 0
         errors = freshness_errors(
             arguments.root,
@@ -271,11 +271,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if errors:
         for error in errors:
             print(
-                f"[o2i|error] Versioned White Paper is stale: {error}.",
+                f"[o2i|error] White Paper source binding is invalid: {error}.",
                 file=sys.stderr,
             )
         return 1
-    print("[o2i|info] Versioned White Paper is current.")
+    print(
+        "[o2i|info] White Paper source binding and structural render "
+        "are current."
+    )
     return 0
 
 

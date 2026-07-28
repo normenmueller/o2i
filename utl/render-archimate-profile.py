@@ -60,7 +60,8 @@ def render_contract(contract: ArchimateProfileContract) -> str:
         endpoint_names,
     )
     context_relations = []
-    evidence_relations = []
+    orientation_relations = []
+    operational_relations = []
     for relation in contract.relation_mappings:
         identifier = relation["id"]
         if identifier in anchor_relation_ids:
@@ -70,8 +71,10 @@ def render_contract(contract: ArchimateProfileContract) -> str:
             and relation["target"].startswith("context.")
         ):
             context_relations.append(relation)
+        elif _is_operational_relation(relation):
+            operational_relations.append(relation)
         else:
-            evidence_relations.append(relation)
+            orientation_relations.append(relation)
 
     lines = [
         (
@@ -102,10 +105,9 @@ def render_contract(contract: ArchimateProfileContract) -> str:
         )
     )
     lines.extend(
-        _render_relations(
-            "Primitive und strukturierende Relationen",
-            "o2i-profile-primitive-relations",
-            evidence_relations,
+        _render_primitive_relations(
+            orientation_relations,
+            operational_relations,
             endpoint_names,
         )
     )
@@ -259,6 +261,70 @@ def _render_relations(
         ),
         "",
     ]
+
+
+def _render_primitive_relations(
+    orientation_relations: Sequence[FrozenObject],
+    operational_relations: Sequence[FrozenObject],
+    endpoint_names: Dict[str, str],
+) -> List[str]:
+    return [
+        (
+            "##### Primitive und strukturierende Relationen "
+            "{#o2i-profile-primitive-relations .unnumbered}"
+        ),
+        "",
+        "\\Needspace{10\\baselineskip}",
+        "",
+        (
+            "###### Orientierung und Strategieformierung "
+            "{#o2i-profile-orientation-relations .unnumbered}"
+        ),
+        "",
+        *_relation_table(orientation_relations, endpoint_names),
+        "",
+        "\\Needspace{10\\baselineskip}",
+        "",
+        (
+            "###### Bedarfsqualifikation, Intervention, Messung und "
+            "Strukturierung "
+            "{#o2i-profile-operational-relations .unnumbered}"
+        ),
+        "",
+        *_relation_table(operational_relations, endpoint_names),
+        "",
+    ]
+
+
+def _relation_table(
+    relations: Sequence[FrozenObject],
+    endpoint_names: Dict[str, str],
+) -> List[str]:
+    rows = [
+        (
+            _code(_signature(relation, endpoint_names)),
+            _code(_representation(relation)),
+        )
+        for relation in relations
+    ]
+    return _table(
+        ("O2I-Signatur", "ArchiMate-Repräsentation"),
+        rows,
+        widths=(47, 29),
+    )
+
+
+def _is_operational_relation(relation: FrozenObject) -> bool:
+    operational_prefixes = (
+        "primitive.need.",
+        "primitive.intervention.",
+        "primitive.measure.",
+        "structuring.",
+    )
+    return any(
+        endpoint.startswith(operational_prefixes)
+        for endpoint in (relation["source"], relation["target"])
+    )
 
 
 def _render_anchor_contract(

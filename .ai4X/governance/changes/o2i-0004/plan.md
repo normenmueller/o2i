@@ -171,10 +171,10 @@ The next correction closes three material findings:
 2. Replace the removed `matchesInterventionNeed` publication end marker with a
    stable explicit Haskell snippet boundary. The White Paper shows only the
    public traceability entry point and remains within one page.
-3. Make visual PDF freshness platform-stable without weakening detection of
-   stale diagrams or layout. The implementation must remain proportionate to a
-   versioned bleeding-edge PDF and must not require an unpinned byte-exact
-   renderer contract.
+3. Bind the versioned PDF to its exact publication sources and compare page
+   and text structure against an isolated fresh build. The contract remains
+   proportionate to a bleeding-edge PDF and requires no byte- or pixel-exact
+   output from an unpinned renderer stack.
 
 Correction implementation status:
 
@@ -189,6 +189,10 @@ Correction implementation status:
   verification separately compares page structure and normalized text;
 - the source-bound contract detects stale visual and layout inputs without
   assuming byte-identical output from unpinned platform toolchains;
+- the generated relation inventory uses separate, semantically bounded tables
+  for Strategy formation and subsequent Need qualification and
+  operationalization; conditional layout space keeps each heading with its
+  table without a fixed page break;
 - `./utl/verify.sh all` passes the complete correction worktree.
 
 The repository handoff records the exact candidate revision and completed

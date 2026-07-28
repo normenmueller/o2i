@@ -155,6 +155,23 @@ class RenderArchimateProfileTest(unittest.TestCase):
         for heading in headings:
             self.assertEqual(1, self.rendered.count(heading))
 
+        self.assertEqual(
+            1,
+            self.rendered.count(
+                "###### Orientierung und Strategieformierung "
+                "{#o2i-profile-orientation-relations .unnumbered}"
+            ),
+        )
+        self.assertEqual(2, self.rendered.count("\\Needspace{10\\baselineskip}"))
+        self.assertEqual(
+            1,
+            self.rendered.count(
+                "###### Bedarfsqualifikation, Intervention, Messung und "
+                "Strukturierung "
+                "{#o2i-profile-operational-relations .unnumbered}"
+            ),
+        )
+
         for carrier in self.contract.carrier_mappings:
             row = "| " + " | ".join(
                 (
@@ -194,6 +211,62 @@ class RenderArchimateProfileTest(unittest.TestCase):
 
         self.assertNotIn("Mapping-ID", self.rendered)
         self.assertNotIn("ID-Muster", self.rendered)
+
+    def test_primitive_relation_split_is_semantic_and_complete(self) -> None:
+        patterns = RENDERER._patterns_by_id(self.contract)
+        endpoint_names = RENDERER._endpoint_names(
+            self.contract.carrier_mappings,
+            patterns["contextualization"],
+        )
+        anchor_ids = {
+            carrier["id"]
+            for carrier in self.contract.carrier_mappings
+            if carrier["o2iKind"] == "SituationAnchor"
+        }
+        primitive_relations = [
+            relation
+            for relation in self.contract.relation_mappings
+            if not (
+                relation["source"].startswith("context.")
+                and relation["target"].startswith("context.")
+            )
+            and not {
+                relation["source"],
+                relation["target"],
+            }.intersection(anchor_ids)
+        ]
+        orientation = [
+            relation
+            for relation in primitive_relations
+            if not RENDERER._is_operational_relation(relation)
+        ]
+        operational = [
+            relation
+            for relation in primitive_relations
+            if RENDERER._is_operational_relation(relation)
+        ]
+
+        self.assertTrue(orientation)
+        self.assertTrue(operational)
+        self.assertEqual(
+            len(primitive_relations),
+            len(orientation) + len(operational),
+        )
+        for relation in orientation:
+            self.assertNotIn("primitive.intervention.", relation["source"])
+            self.assertNotIn("primitive.intervention.", relation["target"])
+            self.assertNotIn("primitive.measure.", relation["source"])
+            self.assertNotIn("primitive.measure.", relation["target"])
+            self.assertNotIn("primitive.need.", relation["source"])
+            self.assertNotIn("primitive.need.", relation["target"])
+            self.assertNotIn("structuring.", relation["source"])
+            self.assertNotIn("structuring.", relation["target"])
+        for relation in primitive_relations:
+            signature = RENDERER._signature(relation, endpoint_names)
+            self.assertEqual(
+                1,
+                self.rendered.count(RENDERER._code(signature)),
+            )
 
     def test_anchor_expansion_is_complete_and_compressed(self) -> None:
         patterns = RENDERER._patterns_by_id(self.contract)

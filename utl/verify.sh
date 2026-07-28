@@ -238,7 +238,7 @@ verify_paper() {
     "$work/paper.json"
 
   info "Building the White Paper in an isolated paper workspace."
-  (cd "$paper" && md2pdf -o "$work/o2i.pdf" -- o2i.md)
+  (cd "$paper" && md2pdf -o "$work/o2i.pdf" -- o2i.md -H acc/o2i.icl)
   if [ ! -s "$work/o2i.pdf" ]; then
     printf '[o2i|error] White Paper build produced no PDF.\n' >&2
     exit 1

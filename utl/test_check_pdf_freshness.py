@@ -1,4 +1,4 @@
-"""Focused tests for versioned White Paper source and render freshness."""
+"""Focused tests for White Paper source binding and render consistency."""
 
 from __future__ import annotations
 

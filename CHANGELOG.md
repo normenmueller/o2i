@@ -83,8 +83,10 @@
 - Defined every Context macrorelation as an explicitly persisted Claim whose
   validity requires its asserted Primitive evidence without being inferred
   from that evidence.
-- Made canonical publication verification reject stale text, layout sources,
-  and visual assets through a source-bound PDF manifest and an isolated build.
+- Made canonical publication verification bind the versioned PDF to its exact
+  sources and compare page and text structure against an isolated fresh build.
+- Split the generated ArchiMate relation inventory at the semantic transition
+  from Strategy formation to Need qualification and operationalization.
 - Reduced validation listings to their documented public interfaces and kept
   implementation details in the referenced Haskell sources.
 - Aligned Situation semantics by requiring every Situation to have at least one

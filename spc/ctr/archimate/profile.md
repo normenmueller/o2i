@@ -54,6 +54,10 @@ Die Syntaxträgerabbildung legt fest, welches ArchiMate-Element einen typisierte
 
 ##### Primitive und strukturierende Relationen {#o2i-profile-primitive-relations .unnumbered}
 
+\Needspace{10\baselineskip}
+
+###### Orientierung und Strategieformierung {#o2i-profile-orientation-relations .unnumbered}
+
 | O2I-Signatur | ArchiMate-Repräsentation |
 | ----------------------------------------------- | ----------------------------- |
 | `Principle @ Ethos --guides--> Driver @ Mission` | `InfluenceRelationship` |
@@ -67,6 +71,13 @@ Die Syntaxträgerabbildung legt fest, welches ArchiMate-Element einen typisierte
 | `Principle @ Strategy --guides--> Principle @ Strategy` | `InfluenceRelationship` |
 | `Key Result @ Strategy --contributes-to--> Key Result @ Strategy` | `InfluenceRelationship` |
 | `Action @ Strategy --contributes-to--> Action @ Strategy` | `AssociationRelationship (gerichtet)` |
+
+\Needspace{10\baselineskip}
+
+###### Bedarfsqualifikation, Intervention, Messung und Strukturierung {#o2i-profile-operational-relations .unnumbered}
+
+| O2I-Signatur | ArchiMate-Repräsentation |
+| ----------------------------------------------- | ----------------------------- |
 | `Key Result @ Strategy --translates-into--> Objective @ Need` | `InfluenceRelationship` |
 | `Driver @ Need --grounds--> Objective @ Need` | `InfluenceRelationship` |
 | `Driver @ Strategy --indicates--> Performance Dimension @ Measure` | `InfluenceRelationship` |
