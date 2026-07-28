@@ -3,9 +3,9 @@
 - Observed: 2026-07-28 CEST
 - Work status: `ACTIVE`
 - Execution authorization: `APPROVED`
-- Authorization scope: correct and review `o2i-0004`; do not edit the
-  ArchiMate model directly or push.
-- Current gate: `o2i-0004-finalreview-4`
+- Authorization scope: review and close `o2i-0004`; do not edit the ArchiMate
+  model directly or push.
+- Current gate: `o2i-0004-finalreview-5`
 - Gate status: `REJECTED`
 - Current node: `o2i:situation-anchor-review-correction`
 
@@ -23,52 +23,36 @@ the complete anchor relation family before finalizing the ArchiMate profile.
   `is-constituted-by`, `anchors`, `changes`, and `measures`.
 - `BusinessRole` and `RegulatoryConstraint` remain ordinary Enterprise
   Architecture artifacts outside the Situation-anchor type.
-- The reference model contains the complete four-constructor contract and ten
-  registered Views. Whole-model hygiene and generated snapshots are current.
 - The exact ArchiMate profile authority is
   `spc/ctr/archimate/profile.json`; Haskell and the generated White Paper
   inventory project it.
+- The versioned White Paper is bound to its exact publication sources and
+  compared structurally and textually with an isolated fresh build.
 - The user controls ArchiMate edits and pushes.
 
 # Verification
 
-- Exact revision `65b6c8549fcf84a7fb139adb0dfe0cd7301a3f85` passes
-  `./utl/verify.sh all`.
-- The independent strategy Finalreview accepts that revision with 10.0 in
-  every dimension and no finding.
-- The formalization and publication Finalreviews reject it with four open
-  correction subjects: output-sensitive effect-trace derivation, deterministic
-  visual PDF freshness, current syntax-View routing in Agent Memory, and
-  balanced generated-profile pagination.
-- Every earlier semantic, profile, View, and relation-family finding remains
-  closed.
-- One coherent correction candidate replaces Cartesian trace enumeration with
-  an indexed reachable traversal, compares deterministic page rasters, routes
-  Agent Memory to the current syntax Views, and balances the generated profile
-  inventory.
-- `./utl/verify.sh all` passes the complete correction worktree, including 297
-  public Core tests, three private trace-search work regressions, complete
-  Haddock and HIndent checks, and the isolated White Paper build.
-- Exact revision `bd949e4af16a1bff6fbe20c1e6cb6aca98bae2bb` passes one
-  uninterrupted clean `./utl/verify.sh all`, including Git-bound executable
-  provenance.
-- Its independent Finalreviews keep the gate rejected with three material
-  correction subjects: reachable dead-end fan-out in trace derivation, one
-  broken White Paper snippet boundary, and pixel-exact PDF comparison without
-  a version-fixed publication toolchain.
-- The next coherent correction is implemented: a Measure-led multiway join
-  removes the measured reachable cross product; five validation listings show
-  only documented public interfaces; and a source-bound PDF manifest replaces
-  cross-platform pixel identity while retaining isolated page and text checks.
-- `./utl/verify.sh all` passes the complete correction worktree, including 297
-  public Core tests, four private trace-search work regressions, 11 publication
-  freshness tests, full Haddock and HIndent, and the isolated 65-page White
-  Paper build.
+- Exact revision `546d43dac71b8c0b8f324fa7b8fa2fb1cc3f0136` passes one
+  uninterrupted clean `./utl/verify.sh all`.
+- The revision includes 297 public Core tests, four private trace-search work
+  regressions, 146 AMX tests, 65 CLI tests, complete Haddock and HIndent, model
+  hygiene and View checks, 11 publication-binding tests, and an isolated
+  65-page White Paper build.
+- The generated profile inventory uses two semantically bounded relation
+  tables and keeps each heading with its table without a fixed page break.
+- Strategy, formalization, and publication Finalreviews accept the revision
+  without findings and with 10.0 in every dimension.
+- The independent Haskell Finalreview rejects the revision: fully
+  Measure-compatible but later-incomplete Strategy/Situation branches still
+  form a quadratic product under constant output.
+- The correction completes each primitive spine before the Situation join.
+  Its strengthened `0, 10, 20, 40` regression preserves one identical trace
+  and proves linear traversal work; focused public and private Core tests pass.
 
 # Gate
 
-- Attempt: `o2i-0004-finalreview-4`
-- Subject: revision `bd949e4af16a1bff6fbe20c1e6cb6aca98bae2bb` and the
+- Attempt: `o2i-0004-finalreview-5`
+- Subject: revision `546d43dac71b8c0b8f324fa7b8fa2fb1cc3f0136` and the
   implementation scope declared by
   `.ai4X/governance/changes/o2i-0004/plan.md`.
 - Mandatory checks: strategy, formalization, Haskell, publication, profile,
@@ -78,13 +62,12 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 
 # Next Action
 
-Commit the coherent correction, verify its exact clean revision, and repeat
-independent exact-revision Finalreview until every required dimension is 10.0
-without findings.
+Run canonical verification, commit one coherent candidate, and repeat four
+capability-distinct exact-revision Finalreviews.
 
 # Local Return Point
 
 After the accepted `o2i-0004` gate, rename the repository-governance entry
 point to `.ai4X/governance/CONTRACT.md`. Then audit `o2i-0003` against the
-accepted revision, close already satisfied scope, and execute only demonstrated
-residual work.
+accepted revision, close already satisfied scope, and stop before substantive
+profile-contract implementation for user review.

@@ -89,6 +89,7 @@ Both relations form separate directed acyclic graphs. A change cannot become
 The implementation plan declares the required Finalreview capabilities.
 Each accepted Finalreview identifies one exact Git revision. A reviewer is
 distinct from the change author and co-authors.
+One reviewer satisfies exactly one required Finalreview capability per gate.
 
 Implementation edits and finding corrections are accumulated into one coherent
 review candidate. Independent Finalreviews assess that candidate, not each

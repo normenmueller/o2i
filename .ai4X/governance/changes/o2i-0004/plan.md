@@ -198,6 +198,30 @@ Correction implementation status:
 The repository handoff records the exact candidate revision and completed
 clean verification before the next Finalreview.
 
+Revision `546d43dac71b8c0b8f324fa7b8fa2fb1cc3f0136` is rejected by the
+independent Haskell Finalreview. Strategy, formalization, and publication
+reviews accept it without findings and with 10.0 in every dimension. The
+remaining correction closes one finding:
+
+1. Derive a complete Strategy/Need/Intervention/Measure primitive spine before
+   joining its changed/measured Situation anchor to constituted Situations.
+   Eliminate the pre-validation `compatibleSituations × strategyVisions`
+   product and strengthen the `0, 10, 20, 40` regression with
+   Measure-compatible, role-complete branches that fail only at later
+   effect-path joins. Output identity and ordering remain unchanged while
+   traversal work grows linearly.
+
+Correction implementation status:
+
+- trace derivation completes the Strategy/Need/Intervention/Measure primitive
+  spine before joining its changed, measured, and Need-grounding anchor to
+  constituted Situations;
+- the strengthened `0, 10, 20, 40` regression preserves one identical trace
+  while every traversal-work component grows linearly;
+- focused public and private Core tests pass;
+- the exact candidate revision, complete verification, and four independent
+  Finalreviews remain pending.
+
 ## Required Checks
 
 - Core formatting, build, tests, API tests, and Haddock;

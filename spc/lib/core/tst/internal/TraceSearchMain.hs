@@ -81,6 +81,7 @@ reachableDeadEndFanOutTest = do
       workForty = traversalVector (traceTraversalWork (searchWork forty))
       tenFanOutWork = zipWith (-) workTen workZero
   map traceIdentityConstituents [ten, twenty, forty] @?= replicate 3 identity
+  map searchPaths [ten, twenty, forty] @?= replicate 3 (searchPaths zero)
   map (length . searchPaths) [zero, ten, twenty, forty] @?= replicate 4 1
   zipWith (-) workTwenty workTen @?= tenFanOutWork
   zipWith (-) workForty workTwenty @?= map (* 2) tenFanOutWork
@@ -171,7 +172,7 @@ searchGraphWithFanOut pathCount unreachableCount fanOut orderEdges =
           (fixedEdges
              ++ concatMap pathEdges [1 .. pathCount]
              ++ deadEndEdges fanOut)))
-    strategyRoles
+    (strategyRolesWithDeadEnds fanOut)
 
 mkGraph :: [SomeNode] -> [SomeEdge] -> WellFormedGraph
 mkGraph nodes =
@@ -337,9 +338,34 @@ deadEndNodes :: Int -> [SomeNode]
 deadEndNodes count =
   concatMap
     (\ordinal ->
-       [ contextNode (deadEndId ordinal "strategy") SStrategy
-       , contextNode (deadEndId ordinal "situation") SSituation
-       ])
+       let strategy = deadEndId ordinal "strategy"
+        in [ contextNode strategy SStrategy
+           , contextNode (deadEndId ordinal "situation") SSituation
+           , primitiveNode
+               (deadEndId ordinal "strategy-driver")
+               strategy
+               SStrategy
+               SDriver
+               DriverInStrategy
+           , primitiveNode
+               (deadEndId ordinal "strategy-objective")
+               strategy
+               SStrategy
+               SObjective
+               ObjectiveInStrategy
+           , primitiveNode
+               (deadEndId ordinal "strategy-key-result")
+               strategy
+               SStrategy
+               SKeyResult
+               KeyResultInStrategy
+           , primitiveNode
+               (deadEndId ordinal "strategy-action")
+               strategy
+               SStrategy
+               SAction
+               ActionInStrategy
+           ])
     [1 .. count]
 
 deadEndEdges :: Int -> [SomeEdge]
@@ -348,10 +374,43 @@ deadEndEdges count =
     (\ordinal ->
        let strategy = deadEndId ordinal "strategy"
            situation = deadEndId ordinal "situation"
-        in [ typedEdge interventionId changesSituation situation
-           , typedEdge situation surfacesNeed needId
+           driver = deadEndId ordinal "strategy-driver"
+           objective = deadEndId ordinal "strategy-objective"
+           keyResult = deadEndId ordinal "strategy-key-result"
+           action = deadEndId ordinal "strategy-action"
+        in [ typedEdge visionId orientsStrategy strategy
            , typedEdge strategy qualifiesNeed needId
            , typedEdge strategy directsIntervention interventionId
+           , typedEdge strategy framesMeasure measureId
+           , typedEdge interventionId changesSituation situation
+           , typedEdge situation surfacesNeed needId
+           , typedEdge measureId measuresSituation situation
+           , typedEdge
+               visionObjectiveId
+               orientsVisionObjectiveToStrategyObjective
+               objective
+           , typedEdge driver groundsStrategyDriverToObjective objective
+           , typedEdge
+               keyResult
+               substantiatesStrategyKeyResultObjective
+               objective
+           , typedEdge action contributesStrategyActionToKeyResult keyResult
+           , typedEdge
+               keyResult
+               translatesStrategyKeyResultToNeedObjective
+               (pathId 1 "need-objective")
+           , typedEdge
+               action
+               guidesStrategyActionToInterventionAction
+               (pathId 1 "intervention-action")
+           , typedEdge
+               (pathId 1 "intervention-key-result")
+               contributesInterventionKeyResultToStrategyKeyResult
+               keyResult
+           , typedEdge
+               driver
+               indicatesMeasurePerformanceDimension
+               (pathId 1 "measure-dimension")
            ])
     [1 .. count]
 
@@ -365,6 +424,21 @@ strategyRoles =
       , traceRoleKeyResults = [strategyKeyResultId]
       , traceRoleActions = [strategyActionId]
       }
+
+strategyRolesWithDeadEnds :: Int -> Map.Map RawNodeId TraceStrategyRoles
+strategyRolesWithDeadEnds count =
+  Map.union
+    strategyRoles
+    (Map.fromList
+       [ ( deadEndId ordinal "strategy"
+         , TraceStrategyRoles
+             { traceRoleDriver = deadEndId ordinal "strategy-driver"
+             , traceRoleObjective = deadEndId ordinal "strategy-objective"
+             , traceRoleKeyResults = [deadEndId ordinal "strategy-key-result"]
+             , traceRoleActions = [deadEndId ordinal "strategy-action"]
+             })
+       | ordinal <- [1 .. count]
+       ])
 
 contextNode :: RawNodeId -> SContext context -> SomeNode
 contextNode identifier context =
