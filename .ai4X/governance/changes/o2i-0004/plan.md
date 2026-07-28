@@ -255,6 +255,38 @@ Correction implementation status:
 - the regenerated White Paper remains 65 pages with the profile inventory on
   pages 56 and 57.
 
+Revision `287909f0ad6158c818bdadb4e21b05520f0fac83` is rejected by the
+independent pure Haskell Finalreview. Strategy, formalization, and publication
+reviews accept it without findings and with 10.0 in every dimension. The
+remaining correction closes one finding:
+
+1. Drive Situation and Strategy candidate enumeration from each current target
+   Measure instead of repeating pair-wide scans for every Measure. Intersect
+   Measure-specific adjacency with `changesSituation`, `surfacesNeed`,
+   `qualifiesNeed`, and `directsIntervention`; preserve ascending-set order,
+   trace identity, and the public API. Add an adversarial `0, 10, 20, 40`
+   target-Measure/live-Situation regression proving affine-linear growth for
+   every traversal-work component.
+
+Correction implementation status:
+
+- qualifying Strategies drive target Measures for each addressed
+  Intervention/Need pair; Strategies are grouped by Measure before
+  Measure-specific Situation indexing;
+- every remaining Strategy Action, Need Objective, KPI, and Anchor join uses
+  one relation-driven candidate bucket and constant ownership or edge guards;
+- eleven private regressions prove affine-linear traversal work across all
+  demonstrated fan-out dimensions while preserving trace identity and
+  deterministic order;
+- the expanded private test contract is separated into runner, contracts,
+  shared typed fixtures, and adversarial scenario builders;
+- public Core tests, API contracts, HIndent, Werror, Haddock, and the complete
+  canonical Haskell verification stage pass;
+- one uninterrupted complete repository verification passes the dirty
+  correction worktree, including isolated publication rendering;
+- one coherent candidate commit, exact clean-revision verification, and four
+  independent Finalreviews remain pending.
+
 ## Required Checks
 
 - Core formatting, build, tests, API tests, and Haddock;

@@ -5,9 +5,9 @@
 - Execution authorization: `APPROVED`
 - Authorization scope: review and close `o2i-0004`; do not edit the ArchiMate
   model directly or push.
-- Current gate: `o2i-0004-finalreview-6`
+- Current gate: `o2i-0004-finalreview-7`
 - Gate status: `REJECTED`
-- Current node: `o2i:situation-anchor-review-correction`
+- Current node: `o2i:situation-anchor-gate`
 
 # Objective
 
@@ -32,32 +32,42 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 
 # Verification
 
-- Exact revision `18499622b393bcee11bc007bfecb97f5283e6d9b` passes one
+- Exact revision `287909f0ad6158c818bdadb4e21b05520f0fac83` passes one
   uninterrupted clean `./utl/verify.sh all`.
-- The revision includes 297 public Core tests, four private trace-search work
+- The revision includes 297 public Core tests, six private trace-search work
   regressions, 146 AMX tests, 65 CLI tests, complete Haddock and HIndent, model
-  hygiene and View checks, 11 publication-binding tests, and an isolated
+  hygiene and View checks, 17 publication-binding tests, and an isolated
   65-page White Paper build.
 - The generated profile inventory uses two semantically bounded relation
   tables and keeps each heading with its table without a fixed page break.
 - The correction completes each primitive spine before the Situation join.
   Its strengthened `0, 10, 20, 40` regression preserves one identical trace
   and proves linear traversal work.
-- The strategy Finalreview accepts the revision without findings and with 10.0
-  in every dimension.
-- Formalization and Haskell Finalreviews reject a remaining repeated final
-  anchor-to-Situation join. The publication Finalreview rejects a stale CI
-  renderer pin; the actual 65-page v0.2.4 PDF has no layout finding.
 - The correction builds one Situation-to-anchor index per
   `(Intervention, Need, Measure)` before Strategy enumeration. Three
   adversarial families prove affine-linear work.
 - One renderer contract now governs local version verification, immutable CI
   acquisition, and manifest v2. The regenerated PDF remains 65 pages.
+- Strategy, formalization, and publication Finalreviews accept exact revision
+  `287909f0ad6158c818bdadb4e21b05520f0fac83` without findings and with 10.0
+  in every dimension.
+- The pure Haskell Finalreview rejects one target-Measure fan-out: each target
+  Measure repeats pair-wide Situation and Strategy scans, producing quadratic
+  work under linear Measure fan-out.
+- The dirty correction replaces every broad repeated intersection with one
+  relation-driven candidate set and constant membership guards. Eleven
+  private regressions cover target Measure/Situation, addressed Need/Measure,
+  Strategy Action, Need Objective, and Anchor fan-out.
+- The private test contract is split into a small runner, contracts, shared
+  fixtures, and scenario builders. Canonical `./utl/verify.sh haskell` passes.
+- One uninterrupted `./utl/verify.sh all` passes the complete dirty
+  correction worktree, including the isolated 65-page White Paper build with
+  `md2pdf 0.2.4`.
 
 # Gate
 
-- Attempt: `o2i-0004-finalreview-6`
-- Subject: revision `18499622b393bcee11bc007bfecb97f5283e6d9b` and the
+- Attempt: `o2i-0004-finalreview-7`
+- Subject: revision `287909f0ad6158c818bdadb4e21b05520f0fac83` and the
   implementation scope declared by
   `.ai4X/governance/changes/o2i-0004/plan.md`.
 - Mandatory checks: strategy, formalization, Haskell, publication, profile,
@@ -67,12 +77,14 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 
 # Next Action
 
-Run complete verification, commit one coherent correction, and repeat four
-capability-distinct exact-revision Finalreviews.
+Commit one coherent correction, verify that exact clean revision, and repeat
+the four capability-distinct Finalreviews required by the current gate
+contract.
 
 # Local Return Point
 
-After the accepted `o2i-0004` gate, rename the repository-governance entry
-point to `.ai4X/governance/CONTRACT.md`. Then audit `o2i-0003` against the
-accepted revision, close already satisfied scope, and stop before substantive
-profile-contract implementation for user review.
+After the accepted `o2i-0004` gate, establish the approved GitHub
+Issue/Fork-/Return coordination model. Then finalize the repository-governance
+entry point, audit `o2i-0003` against the accepted revision, close already
+satisfied scope, and stop before substantive profile-contract implementation
+for user review.

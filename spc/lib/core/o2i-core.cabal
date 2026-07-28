@@ -162,7 +162,10 @@ test-suite o2i-trace-search-internal-test
     O2I.Language.Element,
     O2I.Language.Interpretation,
     O2I.Language.Relation,
-    O2I.Validation.Trace.Search
+    O2I.Validation.Trace.Search,
+    O2I.Validation.Trace.Search.Test.Contracts,
+    O2I.Validation.Trace.Search.Test.Fixture,
+    O2I.Validation.Trace.Search.Test.Scenarios
   build-depends:
     base >=4.18 && <4.19,
     containers >=0.6 && <0.7,

@@ -86,9 +86,12 @@
 - Made canonical publication verification bind the versioned PDF to its exact
   sources and renderer release, install one immutable renderer revision in CI,
   and compare page and text structure against an isolated fresh build.
-- Made effect-trace derivation output-sensitive by indexing macrocompatible
-  Situations once per addressed Need, Intervention, and Measure and joining
-  complete Primitive spines through their shared Situation anchor.
+- Made effect-trace derivation output-sensitive through one private graph
+  index and deterministic relation-driven joins from addressed
+  Intervention/Need pairs through qualifying Strategy/Measure contexts,
+  complete Primitive spines, Measure-specific Situations, and their shared
+  Situation anchor; adversarial regressions cover every material fan-out
+  dimension.
 - Split the generated ArchiMate relation inventory at the semantic transition
   from Strategy formation to Need qualification and operationalization.
 - Reduced validation listings to their documented public interfaces and kept
@@ -132,8 +135,6 @@
 - Mapped every identifier in the Strategy Constituents view explicitly to its
   corresponding terminology term.
 - Reworked the Haskell specification under `spc/` into a Library-first Cabal project with typed graphs, an explicit graph/model validation boundary, total relation registries, opaque validated identities, canonical metadata and staged results, closed PerformanceDimension roles, stable KPI definitions with validated units and value domains, distinct measurement levels and deltas, five-stage validation of structure, semantics, traceability, ex-ante evidence readiness, and ex-post evidence assessment, canonical planned and actual Intervention timing, absolute and relative effect criteria, fully typed effect traces, focused qualification and trace queries, separate effect and target assessment, and executable API contracts.
-- Made effect-trace derivation output-sensitive through one private graph index
-  and deterministic traversal over reachable trace evidence.
 
 ## [0.1] - 2026-07-02
 
