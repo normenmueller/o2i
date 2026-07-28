@@ -121,6 +121,7 @@ jobs:
             xz-utils
 
           mkdir -p "$HOME/.local/bin"
+          export PATH="$HOME/.local/bin:$PATH"
 
           curl --fail --location --retry 3 \
             --output "$RUNNER_TEMP/pandoc.tar.gz" \
@@ -146,14 +147,20 @@ jobs:
             "$HOME/.local/bin/pandoc-crossref"
 
           pipx install pandoc-include==1.4.4
+          md2pdf_revision=$(
+            python3 -B utl/check-pdf-freshness.py contract \
+              --root . \
+              --field acquisition-revision
+          )
           git clone \
             --filter=blob:none \
             --no-checkout \
             https://github.com/normenmueller/md2pdf.git \
             "$RUNNER_TEMP/md2pdf"
           git -C "$RUNNER_TEMP/md2pdf" checkout \
-            8e820351113c60f7b6a55cb5d4fcf0bfe5f9faef
+            "$md2pdf_revision"
           make -C "$RUNNER_TEMP/md2pdf" PREFIX="$HOME/.local" install
+          python3 -B utl/check-pdf-freshness.py renderer --root .
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Verify White Paper

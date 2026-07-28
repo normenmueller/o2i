@@ -84,7 +84,11 @@
   validity requires its asserted Primitive evidence without being inferred
   from that evidence.
 - Made canonical publication verification bind the versioned PDF to its exact
-  sources and compare page and text structure against an isolated fresh build.
+  sources and renderer release, install one immutable renderer revision in CI,
+  and compare page and text structure against an isolated fresh build.
+- Made effect-trace derivation output-sensitive by indexing macrocompatible
+  Situations once per addressed Need, Intervention, and Measure and joining
+  complete Primitive spines through their shared Situation anchor.
 - Split the generated ArchiMate relation inventory at the semantic transition
   from Strategy formation to Need qualification and operationalization.
 - Reduced validation listings to their documented public interfaces and kept

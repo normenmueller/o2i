@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from contextlib import redirect_stderr, redirect_stdout
 import importlib.util
+import io
 import json
 from pathlib import Path
 import subprocess
@@ -21,8 +23,54 @@ CHECKER = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = CHECKER
 SPEC.loader.exec_module(CHECKER)
 
+RENDERER_CONTRACT = {
+    "acquisition_revision": "0" * 40,
+    "schema": CHECKER.RENDERER_CONTRACT_SCHEMA,
+    "tool": "md2pdf",
+    "version": "1.2.3",
+}
+MANIFEST_RENDERER = {"tool": "md2pdf", "version": "1.2.3"}
+
 
 class PdfFreshnessTest(unittest.TestCase):
+    def test_installed_renderer_version_is_parsed(self) -> None:
+        completed = subprocess.CompletedProcess(
+            args=[],
+            returncode=0,
+            stdout="md2pdf, v1.2.3, (C) 2026 nemron\n",
+            stderr="",
+        )
+        with patch.object(CHECKER.subprocess, "run", return_value=completed):
+            self.assertEqual("1.2.3", CHECKER.installed_renderer_version())
+
+    def test_renderer_rejects_mismatched_installed_version(self) -> None:
+        with (
+            patch.object(
+                CHECKER,
+                "read_renderer_contract",
+                return_value=RENDERER_CONTRACT,
+            ),
+            patch.object(
+                CHECKER,
+                "installed_renderer_version",
+                return_value="1.2.2",
+            ),
+        ):
+            self.assertEqual(
+                [
+                    "installed md2pdf version 1.2.2 differs from required 1.2.3",
+                ],
+                CHECKER.renderer_version_errors(Path(".")),
+            )
+
+    def test_renderer_contract_schema_is_closed(self) -> None:
+        payload = dict(RENDERER_CONTRACT, unexpected="value")
+        with self.assertRaisesRegex(
+            CHECKER.PdfFreshnessError,
+            "invalid shape",
+        ):
+            CHECKER._validated_renderer_contract(payload, "renderer contract")
+
     def test_text_normalization_ignores_layout_whitespace(self) -> None:
         completed = subprocess.CompletedProcess(
             args=[],
@@ -116,8 +164,29 @@ class PdfFreshnessTest(unittest.TestCase):
             pdf = root / "o2i.pdf"
             manifest = root / "o2i.pdf.manifest.json"
             CHECKER.write_manifest(root, pdf, manifest)
+            payload = CHECKER.read_manifest(manifest)
+            self.assertEqual(MANIFEST_RENDERER, payload["renderer"])
             self.assertEqual(
                 [],
+                CHECKER.source_binding_errors(root, pdf, manifest),
+            )
+
+    def test_manifest_rejects_renderer_identity_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._publication_root(Path(directory))
+            pdf = root / "o2i.pdf"
+            manifest = root / "o2i.pdf.manifest.json"
+            CHECKER.write_manifest(root, pdf, manifest)
+            contract = dict(RENDERER_CONTRACT, version="1.2.4")
+            (root / CHECKER.RENDERER_CONTRACT).write_text(
+                json.dumps(contract, indent=2, sort_keys=True) + "\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                [
+                    "publication source fingerprint differs",
+                    "publication renderer identity differs",
+                ],
                 CHECKER.source_binding_errors(root, pdf, manifest),
             )
 
@@ -146,6 +215,7 @@ class PdfFreshnessTest(unittest.TestCase):
                         "schema": CHECKER.MANIFEST_SCHEMA,
                         "source_sha256": "0" * 64,
                         "pdf_sha256": "1" * 64,
+                        "renderer": MANIFEST_RENDERER,
                         "unexpected": "value",
                     }
                 ),
@@ -158,7 +228,10 @@ class PdfFreshnessTest(unittest.TestCase):
                 CHECKER.read_manifest(manifest)
 
     def test_main_accepts_matching_publication(self) -> None:
-        with patch.object(CHECKER, "freshness_errors", return_value=[]):
+        with (
+            patch.object(CHECKER, "renderer_version_errors", return_value=[]),
+            patch.object(CHECKER, "freshness_errors", return_value=[]),
+        ):
             self.assertEqual(
                 0,
                 CHECKER.main(
@@ -175,6 +248,48 @@ class PdfFreshnessTest(unittest.TestCase):
                     ]
                 ),
             )
+
+    def test_main_rejects_mismatched_renderer(self) -> None:
+        errors = io.StringIO()
+        with (
+            patch.object(
+                CHECKER,
+                "renderer_version_errors",
+                return_value=[
+                    "installed md2pdf version 1.2.2 differs from required 1.2.3",
+                ],
+            ),
+            redirect_stderr(errors),
+        ):
+            self.assertEqual(
+                1,
+                CHECKER.main(["renderer", "--root", "."]),
+            )
+        self.assertIn("Publication renderer is invalid", errors.getvalue())
+
+    def test_main_prints_acquisition_revision_for_ci(self) -> None:
+        output = io.StringIO()
+        with (
+            patch.object(
+                CHECKER,
+                "read_renderer_contract",
+                return_value=RENDERER_CONTRACT,
+            ),
+            redirect_stdout(output),
+        ):
+            self.assertEqual(
+                0,
+                CHECKER.main(
+                    [
+                        "contract",
+                        "--root",
+                        ".",
+                        "--field",
+                        "acquisition-revision",
+                    ]
+                ),
+            )
+        self.assertEqual("0" * 40 + "\n", output.getvalue())
 
     def _publication_root(self, root: Path) -> Path:
         (root / "img").mkdir()
@@ -196,6 +311,10 @@ class PdfFreshnessTest(unittest.TestCase):
         (root / "acc" / "figure.tex").write_text(
             "\\begin{tikzpicture}\\end{tikzpicture}\n",
             encoding="ascii",
+        )
+        (root / CHECKER.RENDERER_CONTRACT).write_text(
+            json.dumps(RENDERER_CONTRACT, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
         )
         (root / "toPDF.sh").write_text("#!/bin/sh\n", encoding="ascii")
         (root / "utl" / "render-archimate-profile.py").write_text(

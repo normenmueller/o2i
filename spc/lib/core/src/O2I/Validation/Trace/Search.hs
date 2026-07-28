@@ -426,32 +426,41 @@ pathsForAddressedPair ::
   -> (RawNodeId, RawNodeId)
   -> Search TracePath
 pathsForAddressedPair index strategies (intervention, need) =
-  bindSearch (contextSpinesForAddressedPair index intervention need) $ \contexts ->
-    bindSearch (strategyRolesSearch strategies (traceContextStrategy contexts)) $ \roles ->
-      bindSearch (primitiveSpines index contexts roles) $ \spine ->
-        bindSearch (anchorsForSpine index spine) $ \(anchor, anchorKind) ->
-          mapSearch
-            (makeTracePath spine anchor anchorKind)
-            (situationsForAnchor index spine anchor)
+  bindSearch (measureContextsForAddressedPair index intervention need) $ \measureContexts ->
+    bindSearch (situationsByAnchorSearch index measureContexts) $ \situationsByAnchor ->
+      bindSearch (strategyContextsForMeasure index measureContexts) $ \contexts ->
+        bindSearch
+          (strategyRolesSearch strategies (traceContextStrategy contexts)) $ \roles ->
+          bindSearch (primitiveSpines index contexts roles) $ \spine ->
+            bindSearch (anchorsForSpine index spine) $ \(anchor, anchorKind) ->
+              mapSearch
+                (makeTracePath spine anchor anchorKind)
+                (situationsForAnchor situationsByAnchor anchor)
 
--- | Establish Strategy and target-Measure contexts before primitive joins.
-contextSpinesForAddressedPair ::
-     TraceSearchIndex -> RawNodeId -> RawNodeId -> Search TraceContexts
-contextSpinesForAddressedPair index intervention need =
-  bindSearch targetMeasures $ \measure ->
-    bindSearch (compatibleStrategies measure) $ \strategy ->
-      mapSearch
-        (makeContexts measure strategy)
-        (incomingSearch index orientsStrategyName strategy)
+-- | Establish the addressed Need, Intervention, and one target Measure.
+measureContextsForAddressedPair ::
+     TraceSearchIndex -> RawNodeId -> RawNodeId -> Search TraceMeasureContexts
+measureContextsForAddressedPair index intervention need =
+  mapSearch
+    (TraceMeasureContexts intervention need)
+    (outgoingSearch index setsTargetForMeasureName intervention)
+
+-- | Extend one Measure spine with compatible Strategy and Vision contexts.
+strategyContextsForMeasure ::
+     TraceSearchIndex -> TraceMeasureContexts -> Search TraceContexts
+strategyContextsForMeasure index measureContexts =
+  bindSearch compatibleStrategies $ \strategy ->
+    mapSearch
+      (makeContexts strategy)
+      (incomingSearch index orientsStrategyName strategy)
   where
-    targetMeasures = outgoingSearch index setsTargetForMeasureName intervention
-    compatibleStrategies measure =
+    compatibleStrategies =
       intersectionSearch
         [ incomingSearch index qualifiesNeedName need
         , incomingSearch index directsInterventionName intervention
         , incomingSearch index framesMeasureName measure
         ]
-    makeContexts measure strategy vision =
+    makeContexts strategy vision =
       TraceContexts
         { traceContextVision = vision
         , traceContextStrategy = strategy
@@ -459,6 +468,15 @@ contextSpinesForAddressedPair index intervention need =
         , traceContextIntervention = intervention
         , traceContextMeasure = measure
         }
+    intervention = traceMeasureIntervention measureContexts
+    need = traceMeasureNeed measureContexts
+    measure = traceMeasureMeasure measureContexts
+
+data TraceMeasureContexts = TraceMeasureContexts
+  { traceMeasureIntervention :: RawNodeId
+  , traceMeasureNeed :: RawNodeId
+  , traceMeasureMeasure :: RawNodeId
+  }
 
 data TraceContexts = TraceContexts
   { traceContextVision :: RawNodeId
@@ -670,21 +688,49 @@ anchorsForSpine index spine =
             (traceSpineNeedDriver spine)
         ]
 
--- | Enumerate only Situations constituted by the completed spine anchor.
-situationsForAnchor ::
-     TraceSearchIndex -> TraceSpine -> RawNodeId -> Search RawNodeId
-situationsForAnchor index spine anchor =
-  intersectionSearch
-    [ outgoingSearch index changesSituationName intervention
-    , incomingSearch index surfacesNeedName need
-    , outgoingSearch index measuresSituationName measure
-    , incomingSearch index constitutedByAnchorName anchor
-    ]
+-- | Index macrocompatible Situations once by their persisted anchor.
+situationsByAnchorSearch ::
+     TraceSearchIndex
+  -> TraceMeasureContexts
+  -> Search (Map RawNodeId (Set RawNodeId))
+situationsByAnchorSearch index measureContexts =
+  Search
+    { searchValues = [situationsByAnchor | not (Map.null situationsByAnchor)]
+    , searchWorkOf =
+        searchWorkOf compatibleSituations
+          <> foldMap (searchWorkOf . snd) anchoredSituations
+          <> mempty {tracePathExtensions = length associations}
+    }
   where
-    contexts = traceSpineContexts spine
-    intervention = traceContextIntervention contexts
-    need = traceContextNeed contexts
-    measure = traceContextMeasure contexts
+    compatibleSituations =
+      intersectionSearch
+        [ outgoingSearch index changesSituationName intervention
+        , incomingSearch index surfacesNeedName need
+        , outgoingSearch index measuresSituationName measure
+        ]
+    anchoredSituations =
+      [ (situation, outgoingSearch index constitutedByAnchorName situation)
+      | situation <- searchValues compatibleSituations
+      ]
+    associations =
+      [ (anchor, situation)
+      | (situation, anchors) <- anchoredSituations
+      , anchor <- searchValues anchors
+      ]
+    situationsByAnchor =
+      foldl'
+        (\grouped (anchor, situation) -> insertSet anchor situation grouped)
+        Map.empty
+        associations
+    intervention = traceMeasureIntervention measureContexts
+    need = traceMeasureNeed measureContexts
+    measure = traceMeasureMeasure measureContexts
+
+-- | Read only macrocompatible Situations persisted for one completed anchor.
+situationsForAnchor ::
+     Map RawNodeId (Set RawNodeId) -> RawNodeId -> Search RawNodeId
+situationsForAnchor situationsByAnchor anchor =
+  edgeBucketSearch (Map.findWithDefault Set.empty anchor situationsByAnchor)
 
 makeTracePath ::
      TraceSpine -> RawNodeId -> SituationAnchor -> RawNodeId -> TracePath

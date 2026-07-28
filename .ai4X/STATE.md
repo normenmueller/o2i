@@ -5,7 +5,7 @@
 - Execution authorization: `APPROVED`
 - Authorization scope: review and close `o2i-0004`; do not edit the ArchiMate
   model directly or push.
-- Current gate: `o2i-0004-finalreview-5`
+- Current gate: `o2i-0004-finalreview-6`
 - Gate status: `REJECTED`
 - Current node: `o2i:situation-anchor-review-correction`
 
@@ -32,7 +32,7 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 
 # Verification
 
-- Exact revision `546d43dac71b8c0b8f324fa7b8fa2fb1cc3f0136` passes one
+- Exact revision `18499622b393bcee11bc007bfecb97f5283e6d9b` passes one
   uninterrupted clean `./utl/verify.sh all`.
 - The revision includes 297 public Core tests, four private trace-search work
   regressions, 146 AMX tests, 65 CLI tests, complete Haddock and HIndent, model
@@ -40,19 +40,24 @@ the complete anchor relation family before finalizing the ArchiMate profile.
   65-page White Paper build.
 - The generated profile inventory uses two semantically bounded relation
   tables and keeps each heading with its table without a fixed page break.
-- Strategy, formalization, and publication Finalreviews accept the revision
-  without findings and with 10.0 in every dimension.
-- The independent Haskell Finalreview rejects the revision: fully
-  Measure-compatible but later-incomplete Strategy/Situation branches still
-  form a quadratic product under constant output.
 - The correction completes each primitive spine before the Situation join.
   Its strengthened `0, 10, 20, 40` regression preserves one identical trace
-  and proves linear traversal work; focused public and private Core tests pass.
+  and proves linear traversal work.
+- The strategy Finalreview accepts the revision without findings and with 10.0
+  in every dimension.
+- Formalization and Haskell Finalreviews reject a remaining repeated final
+  anchor-to-Situation join. The publication Finalreview rejects a stale CI
+  renderer pin; the actual 65-page v0.2.4 PDF has no layout finding.
+- The correction builds one Situation-to-anchor index per
+  `(Intervention, Need, Measure)` before Strategy enumeration. Three
+  adversarial families prove affine-linear work.
+- One renderer contract now governs local version verification, immutable CI
+  acquisition, and manifest v2. The regenerated PDF remains 65 pages.
 
 # Gate
 
-- Attempt: `o2i-0004-finalreview-5`
-- Subject: revision `546d43dac71b8c0b8f324fa7b8fa2fb1cc3f0136` and the
+- Attempt: `o2i-0004-finalreview-6`
+- Subject: revision `18499622b393bcee11bc007bfecb97f5283e6d9b` and the
   implementation scope declared by
   `.ai4X/governance/changes/o2i-0004/plan.md`.
 - Mandatory checks: strategy, formalization, Haskell, publication, profile,
@@ -62,7 +67,7 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 
 # Next Action
 
-Run canonical verification, commit one coherent candidate, and repeat four
+Run complete verification, commit one coherent correction, and repeat four
 capability-distinct exact-revision Finalreviews.
 
 # Local Return Point

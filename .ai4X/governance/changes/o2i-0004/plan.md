@@ -222,6 +222,39 @@ Correction implementation status:
 - the exact candidate revision, complete verification, and four independent
   Finalreviews remain pending.
 
+Revision `18499622b393bcee11bc007bfecb97f5283e6d9b` is rejected. Its exact
+clean repository verification passes, and the independent strategy
+Finalreview accepts it without findings and with 10.0 in every dimension. The
+next coherent correction closes two findings:
+
+1. Compute macrocompatible Situations once per
+   `(Intervention, Need, Measure)`, index them by their constituted Situation
+   anchor, and look up each complete Primitive spine by anchor. Add adversarial
+   `0, 10, 20, 40` regressions for complete mismatched spines,
+   otherwise-complete unconstituted anchors, and multiple compatible
+   Strategies with multiple Situations. Exact trace identity and ordering
+   remain unchanged while every traversal-work component grows linearly with
+   constant or linear output.
+2. Define one repository-owned `md2pdf v0.2.4` toolchain identity. Local paper
+   builds verify that identity, CI installs the same immutable revision, and
+   the publication manifest binds the renderer identity together with exact
+   sources and PDF bytes.
+
+Correction implementation status:
+
+- trace derivation builds one Situation-to-anchor index before compatible
+  Strategy and Vision enumeration and performs one deterministic anchor lookup
+  per complete Primitive spine;
+- all three adversarial `0, 10, 20, 40` regressions prove affine-linear work
+  with exact output identity and ordering;
+- `acc/md2pdf.json` is the single release and CI-acquisition contract; local
+  builds verify version `0.2.4`, CI installs its immutable revision, and
+  manifest v2 binds the locally verifiable renderer identity;
+- focused Haskell, publication-contract, Python 3.9, shell-syntax, HIndent,
+  Werror, and diff checks pass;
+- the regenerated White Paper remains 65 pages with the profile inventory on
+  pages 56 and 57.
+
 ## Required Checks
 
 - Core formatting, build, tests, API tests, and Haddock;

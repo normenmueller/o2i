@@ -97,7 +97,7 @@ o2i/
 - [`wtf.md`](./wtf.md): kurzer, bewusst direkter Einstieg in zentrale O2I-Fragen
 - [`o2i.md`](./o2i.md): aktives White Paper und fachlicher Referenztext
 - [`o2i.pdf`](./o2i.pdf): bleeding-edge PDF-Fassung des aktiven White Papers
-- `o2i.pdf.manifest.json`: exakte Quellenbindung des PDF
+- `o2i.pdf.manifest.json`: exakte Quellen- und Rendererbindung des PDF
 - `acc/`: reproduzierbare TikZ-Quellen der White-Paper-Abbildungen
 - `mdl/`: ArchiMate-Modell
 - `img/`: Abbildungen für White Paper und Modellkommunikation
@@ -115,7 +115,8 @@ o2i/
 Das PDF und die TikZ-basierten Abbildungen werden mit `toPDF.sh` erzeugt. Das
 Skript rendert zunächst alle Abbildungen aus `acc/` nach `img/`, ruft
 anschließend [`md2pdf`](https://github.com/normenmueller/md2pdf) auf und
-versiegelt die Quellenbindung des PDF in `o2i.pdf.manifest.json`:
+versiegelt die Quellen- und Rendererbindung des PDF in
+`o2i.pdf.manifest.json`:
 
 ```sh
 ./toPDF.sh
@@ -130,9 +131,10 @@ Der lokale Prüfvertrag entspricht dem GitHub-Workflow und verändert keine getr
 ```
 
 Für fokussierte Prüfungen stehen `model`, `haskell` und `paper` zur Verfügung.
-Die Paper-Prüfung verifiziert zusätzlich die Quellenbindung sowie Seiten- und
-Textstruktur eines frischen Builds. GitHub Actions führt dieselben Stufen
-parallel aus.
+Die Paper-Prüfung verifiziert zusätzlich die festgelegte `md2pdf`-Version, die
+Quellenbindung sowie Seiten- und Textstruktur eines frischen Builds. GitHub
+Actions führt dieselben Stufen parallel mit der zentral festgelegten
+Rendererrevision aus.
 
 ## License
 

@@ -5,6 +5,7 @@
 -- | Private regression tests for output-sensitive effect-trace traversal.
 module Main where
 
+import Data.List (sort)
 import qualified Data.Map.Strict as Map
 import qualified Data.Text as Text
 import O2I.Graph.Typed
@@ -26,8 +27,14 @@ tests =
         "all unreachable context kinds preserve trace identities and traversal"
         unreachableContextsTest
     , testCase
-        "reachable dead-end fan-out preserves identities with linear work"
-        reachableDeadEndFanOutTest
+        "complete mismatched spines preserve one trace with linear work"
+        mismatchedSpineFanOutTest
+    , testCase
+        "unconstituted anchors and live Situations grow linearly"
+        unconstitutedAnchorFanOutTest
+    , testCase
+        "Strategy and Situation fan-out preserves one trace with linear work"
+        strategySituationFanOutTest
     , testCase
         "relevant path growth has constant incremental work"
         linearRelevantPathGrowthTest
@@ -68,26 +75,73 @@ unreachableContextsTest = do
   traceIndexedEdgeOccurrences (traceIndexBuildWork thousandWork)
     @?= traceIndexedEdgeOccurrences (traceIndexBuildWork baselineWork)
 
-reachableDeadEndFanOutTest :: Assertion
-reachableDeadEndFanOutTest = do
-  let zero = searchGraphWithDeadEnds 0
-      ten = searchGraphWithDeadEnds 10
-      twenty = searchGraphWithDeadEnds 20
-      forty = searchGraphWithDeadEnds 40
+mismatchedSpineFanOutTest :: Assertion
+mismatchedSpineFanOutTest = do
+  let zero = searchGraphWithMismatchedSpines 0
+      ten = searchGraphWithMismatchedSpines 10
+      twenty = searchGraphWithMismatchedSpines 20
+      forty = searchGraphWithMismatchedSpines 40
       identity = traceIdentityConstituents zero
       workZero = traversalVector (traceTraversalWork (searchWork zero))
       workTen = traversalVector (traceTraversalWork (searchWork ten))
       workTwenty = traversalVector (traceTraversalWork (searchWork twenty))
       workForty = traversalVector (traceTraversalWork (searchWork forty))
-      tenFanOutWork = zipWith (-) workTen workZero
   map traceIdentityConstituents [ten, twenty, forty] @?= replicate 3 identity
   map searchPaths [ten, twenty, forty] @?= replicate 3 (searchPaths zero)
   map (length . searchPaths) [zero, ten, twenty, forty] @?= replicate 4 1
+  assertLinearTraversal workZero workTen workTwenty workForty
+
+unconstitutedAnchorFanOutTest :: Assertion
+unconstitutedAnchorFanOutTest = do
+  let zero = searchGraphWithUnconstitutedAnchors 0
+      ten = searchGraphWithUnconstitutedAnchors 10
+      twenty = searchGraphWithUnconstitutedAnchors 20
+      forty = searchGraphWithUnconstitutedAnchors 40
+      workZero = traversalVector (traceTraversalWork (searchWork zero))
+      workTen = traversalVector (traceTraversalWork (searchWork ten))
+      workTwenty = traversalVector (traceTraversalWork (searchWork twenty))
+      workForty = traversalVector (traceTraversalWork (searchWork forty))
+  map (length . searchPaths) [zero, ten, twenty, forty] @?= [1, 11, 21, 41]
+  map (map pathSituation . searchPaths) [zero, ten, twenty, forty]
+    @?= map expectedLiveSituations [0, 10, 20, 40]
+  assertBool
+    "an unconstituted anchor produced an effect trace"
+    (all
+       ((== pathId 1 "situation-anchor") . pathSituationAnchor)
+       (concatMap searchPaths [zero, ten, twenty, forty]))
+  assertLinearTraversal workZero workTen workTwenty workForty
+
+strategySituationFanOutTest :: Assertion
+strategySituationFanOutTest = do
+  let zero = searchGraphWithStrategySituationFanOut 0
+      ten = searchGraphWithStrategySituationFanOut 10
+      twenty = searchGraphWithStrategySituationFanOut 20
+      forty = searchGraphWithStrategySituationFanOut 40
+      identity = traceIdentityConstituents zero
+      workZero = traversalVector (traceTraversalWork (searchWork zero))
+      workTen = traversalVector (traceTraversalWork (searchWork ten))
+      workTwenty = traversalVector (traceTraversalWork (searchWork twenty))
+      workForty = traversalVector (traceTraversalWork (searchWork forty))
+  map traceIdentityConstituents [ten, twenty, forty] @?= replicate 3 identity
+  map searchPaths [ten, twenty, forty] @?= replicate 3 (searchPaths zero)
+  map (length . searchPaths) [zero, ten, twenty, forty] @?= replicate 4 1
+  assertLinearTraversal workZero workTen workTwenty workForty
+
+assertLinearTraversal :: [Int] -> [Int] -> [Int] -> [Int] -> Assertion
+assertLinearTraversal workZero workTen workTwenty workForty = do
+  let tenFanOutWork = zipWith (-) workTen workZero
   zipWith (-) workTwenty workTen @?= tenFanOutWork
   zipWith (-) workForty workTwenty @?= map (* 2) tenFanOutWork
   assertBool
-    "reachable dead-end facts did not register traversal work"
-    (sum tenFanOutWork > 0)
+    "at least one traversal-work component decreased"
+    (all (>= 0) tenFanOutWork)
+  assertBool
+    "adversarial facts did not register traversal work"
+    (any (> 0) tenFanOutWork)
+
+expectedLiveSituations :: Int -> [RawNodeId]
+expectedLiveSituations count =
+  sort (situationId : [liveSituationId ordinal | ordinal <- [1 .. count]])
 
 traceIdentityConstituents :: TraceSearchResult -> [[RawNodeId]]
 traceIdentityConstituents = map pathIdentity . searchPaths
@@ -154,25 +208,45 @@ traversalVector work =
 
 searchGraph :: Int -> Int -> ([SomeEdge] -> [SomeEdge]) -> TraceSearchResult
 searchGraph pathCount unreachableCount orderEdges =
-  searchGraphWithFanOut pathCount unreachableCount 0 orderEdges
-
-searchGraphWithDeadEnds :: Int -> TraceSearchResult
-searchGraphWithDeadEnds fanOut = searchGraphWithFanOut 1 0 fanOut id
-
-searchGraphWithFanOut ::
-     Int -> Int -> Int -> ([SomeEdge] -> [SomeEdge]) -> TraceSearchResult
-searchGraphWithFanOut pathCount unreachableCount fanOut orderEdges =
   deriveTracePaths
     (mkGraph
        (fixedNodes
           ++ concatMap pathNodes [1 .. pathCount]
-          ++ unreachableNodes unreachableCount
-          ++ deadEndNodes fanOut)
-       (orderEdges
-          (fixedEdges
-             ++ concatMap pathEdges [1 .. pathCount]
-             ++ deadEndEdges fanOut)))
-    (strategyRolesWithDeadEnds fanOut)
+          ++ unreachableNodes unreachableCount)
+       (orderEdges (fixedEdges ++ concatMap pathEdges [1 .. pathCount])))
+    strategyRoles
+
+searchGraphWithMismatchedSpines :: Int -> TraceSearchResult
+searchGraphWithMismatchedSpines fanOut =
+  searchGraphWithAdditions
+    (concatMap mismatchedSpineNodes [1 .. fanOut])
+    (concatMap mismatchedSpineEdges [1 .. fanOut])
+
+searchGraphWithUnconstitutedAnchors :: Int -> TraceSearchResult
+searchGraphWithUnconstitutedAnchors fanOut =
+  searchGraphWithAdditions
+    (concatMap unconstitutedAnchorNodes [1 .. fanOut])
+    (concatMap unconstitutedAnchorEdges [1 .. fanOut])
+
+searchGraphWithStrategySituationFanOut :: Int -> TraceSearchResult
+searchGraphWithStrategySituationFanOut fanOut =
+  deriveTracePaths
+    (mkGraph
+       (fixedNodes
+          ++ pathNodes 1
+          ++ concatMap strategySituationNodes [1 .. fanOut])
+       (fixedEdges
+          ++ pathEdges 1
+          ++ concatMap strategySituationEdges [1 .. fanOut]))
+    (strategyRolesWithFanOut fanOut)
+
+searchGraphWithAdditions :: [SomeNode] -> [SomeEdge] -> TraceSearchResult
+searchGraphWithAdditions nodes edges =
+  deriveTracePaths
+    (mkGraph
+       (fixedNodes ++ pathNodes 1 ++ nodes)
+       (fixedEdges ++ pathEdges 1 ++ edges))
+    strategyRoles
 
 mkGraph :: [SomeNode] -> [SomeEdge] -> WellFormedGraph
 mkGraph nodes =
@@ -238,7 +312,21 @@ fixedEdges =
   ]
 
 pathNodes :: Int -> [SomeNode]
-pathNodes ordinal =
+pathNodes ordinal = spineNodes (pathId ordinal)
+
+pathEdges :: Int -> [SomeEdge]
+pathEdges ordinal =
+  spineEdges identify
+    ++ [ typedEdge
+           situationId
+           (constitutedByAnchor SBusinessCapability)
+           (identify "situation-anchor")
+       ]
+  where
+    identify = pathId ordinal
+
+spineNodes :: (Text.Text -> RawNodeId) -> [SomeNode]
+spineNodes identify =
   [ primitiveNode needDriver needId SNeed SDriver DriverInNeed
   , primitiveNode needObjective needId SNeed SObjective ObjectiveInNeed
   , primitiveNode
@@ -258,23 +346,31 @@ pathNodes ordinal =
   , anchorNode situationAnchor
   ]
   where
-    needDriver = pathId ordinal "need-driver"
-    needObjective = pathId ordinal "need-objective"
-    interventionAction = pathId ordinal "intervention-action"
-    interventionKeyResult = pathId ordinal "intervention-key-result"
-    dimension = pathId ordinal "measure-dimension"
-    measureKpi = pathId ordinal "measure-kpi"
-    situationAnchor = pathId ordinal "situation-anchor"
+    needDriver = identify "need-driver"
+    needObjective = identify "need-objective"
+    interventionAction = identify "intervention-action"
+    interventionKeyResult = identify "intervention-key-result"
+    dimension = identify "measure-dimension"
+    measureKpi = identify "measure-kpi"
+    situationAnchor = identify "situation-anchor"
 
-pathEdges :: Int -> [SomeEdge]
-pathEdges ordinal =
+spineEdges :: (Text.Text -> RawNodeId) -> [SomeEdge]
+spineEdges = spineEdgesFor strategyDriverId strategyKeyResultId strategyActionId
+
+spineEdgesFor ::
+     RawNodeId
+  -> RawNodeId
+  -> RawNodeId
+  -> (Text.Text -> RawNodeId)
+  -> [SomeEdge]
+spineEdgesFor strategyDriver strategyKeyResult strategyAction identify =
   [ typedEdge
-      strategyKeyResultId
+      strategyKeyResult
       translatesStrategyKeyResultToNeedObjective
       needObjective
   , typedEdge needDriver groundsNeedDriverToObjective needObjective
   , typedEdge
-      strategyActionId
+      strategyAction
       guidesStrategyActionToInterventionAction
       interventionAction
   , typedEdge
@@ -288,21 +384,14 @@ pathEdges ordinal =
   , typedEdge
       interventionKeyResult
       contributesInterventionKeyResultToStrategyKeyResult
-      strategyKeyResultId
-  , typedEdge strategyDriverId indicatesMeasurePerformanceDimension dimension
-  , typedEdge
-      strategyKeyResultId
-      determinesMeasurePerformanceDimension
-      dimension
+      strategyKeyResult
+  , typedEdge strategyDriver indicatesMeasurePerformanceDimension dimension
+  , typedEdge strategyKeyResult determinesMeasurePerformanceDimension dimension
   , typedEdge
       dimension
       (containsPerformanceDimension MeasureMeasurementDimension)
       measureKpi
   , typedEdge interventionKeyResult setsTargetForMeasureKPI measureKpi
-  , typedEdge
-      situationId
-      (constitutedByAnchor SBusinessCapability)
-      situationAnchor
   , typedEdge situationAnchor (anchorsNeedDriver SBusinessCapability) needDriver
   , typedEdge
       interventionAction
@@ -311,13 +400,13 @@ pathEdges ordinal =
   , typedEdge measureKpi (measuresAnchor SBusinessCapability) situationAnchor
   ]
   where
-    needDriver = pathId ordinal "need-driver"
-    needObjective = pathId ordinal "need-objective"
-    interventionAction = pathId ordinal "intervention-action"
-    interventionKeyResult = pathId ordinal "intervention-key-result"
-    dimension = pathId ordinal "measure-dimension"
-    measureKpi = pathId ordinal "measure-kpi"
-    situationAnchor = pathId ordinal "situation-anchor"
+    needDriver = identify "need-driver"
+    needObjective = identify "need-objective"
+    interventionAction = identify "intervention-action"
+    interventionKeyResult = identify "intervention-key-result"
+    dimension = identify "measure-dimension"
+    measureKpi = identify "measure-kpi"
+    situationAnchor = identify "situation-anchor"
 
 unreachableNodes :: Int -> [SomeNode]
 unreachableNodes count =
@@ -334,85 +423,140 @@ unreachableNodes count =
        ])
     [1 .. count]
 
-deadEndNodes :: Int -> [SomeNode]
-deadEndNodes count =
-  concatMap
-    (\ordinal ->
-       let strategy = deadEndId ordinal "strategy"
-        in [ contextNode strategy SStrategy
-           , contextNode (deadEndId ordinal "situation") SSituation
-           , primitiveNode
-               (deadEndId ordinal "strategy-driver")
-               strategy
-               SStrategy
-               SDriver
-               DriverInStrategy
-           , primitiveNode
-               (deadEndId ordinal "strategy-objective")
-               strategy
-               SStrategy
-               SObjective
-               ObjectiveInStrategy
-           , primitiveNode
-               (deadEndId ordinal "strategy-key-result")
-               strategy
-               SStrategy
-               SKeyResult
-               KeyResultInStrategy
-           , primitiveNode
-               (deadEndId ordinal "strategy-action")
-               strategy
-               SStrategy
-               SAction
-               ActionInStrategy
-           ])
-    [1 .. count]
+mismatchedSpineNodes :: Int -> [SomeNode]
+mismatchedSpineNodes ordinal =
+  spineNodes identify
+    ++ [contextNode situation SSituation, anchorNode constitutingAnchor]
+  where
+    identify = mismatchedId ordinal
+    situation = identify "situation"
+    constitutingAnchor = identify "constituting-anchor"
 
-deadEndEdges :: Int -> [SomeEdge]
-deadEndEdges count =
-  concatMap
-    (\ordinal ->
-       let strategy = deadEndId ordinal "strategy"
-           situation = deadEndId ordinal "situation"
-           driver = deadEndId ordinal "strategy-driver"
-           objective = deadEndId ordinal "strategy-objective"
-           keyResult = deadEndId ordinal "strategy-key-result"
-           action = deadEndId ordinal "strategy-action"
-        in [ typedEdge visionId orientsStrategy strategy
-           , typedEdge strategy qualifiesNeed needId
-           , typedEdge strategy directsIntervention interventionId
-           , typedEdge strategy framesMeasure measureId
-           , typedEdge interventionId changesSituation situation
-           , typedEdge situation surfacesNeed needId
-           , typedEdge measureId measuresSituation situation
-           , typedEdge
-               visionObjectiveId
-               orientsVisionObjectiveToStrategyObjective
-               objective
-           , typedEdge driver groundsStrategyDriverToObjective objective
-           , typedEdge
-               keyResult
-               substantiatesStrategyKeyResultObjective
-               objective
-           , typedEdge action contributesStrategyActionToKeyResult keyResult
-           , typedEdge
-               keyResult
-               translatesStrategyKeyResultToNeedObjective
-               (pathId 1 "need-objective")
-           , typedEdge
-               action
-               guidesStrategyActionToInterventionAction
-               (pathId 1 "intervention-action")
-           , typedEdge
-               (pathId 1 "intervention-key-result")
-               contributesInterventionKeyResultToStrategyKeyResult
-               keyResult
-           , typedEdge
-               driver
-               indicatesMeasurePerformanceDimension
-               (pathId 1 "measure-dimension")
-           ])
-    [1 .. count]
+mismatchedSpineEdges :: Int -> [SomeEdge]
+mismatchedSpineEdges ordinal =
+  spineEdges identify
+    ++ macroSituationEdges situation
+    ++ [ typedEdge
+           situation
+           (constitutedByAnchor SBusinessCapability)
+           constitutingAnchor
+       ]
+  where
+    identify = mismatchedId ordinal
+    situation = identify "situation"
+    constitutingAnchor = identify "constituting-anchor"
+
+unconstitutedAnchorNodes :: Int -> [SomeNode]
+unconstitutedAnchorNodes ordinal =
+  spineNodes (unconstitutedId ordinal)
+    ++ [contextNode (liveSituationId ordinal) SSituation]
+
+unconstitutedAnchorEdges :: Int -> [SomeEdge]
+unconstitutedAnchorEdges ordinal =
+  spineEdges (unconstitutedId ordinal)
+    ++ macroSituationEdges situation
+    ++ [ typedEdge
+           situation
+           (constitutedByAnchor SBusinessCapability)
+           (pathId 1 "situation-anchor")
+       ]
+  where
+    situation = liveSituationId ordinal
+
+strategySituationNodes :: Int -> [SomeNode]
+strategySituationNodes ordinal =
+  [ contextNode vision SVision
+  , contextNode strategy SStrategy
+  , primitiveNode visionObjective vision SVision SObjective ObjectiveInVision
+  , primitiveNode driver strategy SStrategy SDriver DriverInStrategy
+  , primitiveNode
+      strategyObjective
+      strategy
+      SStrategy
+      SObjective
+      ObjectiveInStrategy
+  , primitiveNode
+      strategyKeyResult
+      strategy
+      SStrategy
+      SKeyResult
+      KeyResultInStrategy
+  , primitiveNode strategyAction strategy SStrategy SAction ActionInStrategy
+  , contextNode situation SSituation
+  , anchorNode constitutingAnchor
+  ]
+  where
+    identify = strategySituationId ordinal
+    vision = identify "vision"
+    strategy = identify "strategy"
+    visionObjective = identify "vision-objective"
+    driver = identify "strategy-driver"
+    strategyObjective = identify "strategy-objective"
+    strategyKeyResult = identify "strategy-key-result"
+    strategyAction = identify "strategy-action"
+    situation = identify "situation"
+    constitutingAnchor = identify "constituting-anchor"
+
+strategySituationEdges :: Int -> [SomeEdge]
+strategySituationEdges ordinal =
+  [ typedEdge vision orientsStrategy strategy
+  , typedEdge strategy qualifiesNeed needId
+  , typedEdge strategy directsIntervention interventionId
+  , typedEdge strategy framesMeasure measureId
+  , typedEdge
+      visionObjective
+      orientsVisionObjectiveToStrategyObjective
+      strategyObjective
+  , typedEdge driver groundsStrategyDriverToObjective strategyObjective
+  , typedEdge
+      strategyKeyResult
+      substantiatesStrategyKeyResultObjective
+      strategyObjective
+  , typedEdge
+      strategyAction
+      contributesStrategyActionToKeyResult
+      strategyKeyResult
+  , typedEdge
+      strategyKeyResult
+      translatesStrategyKeyResultToNeedObjective
+      (pathId 1 "need-objective")
+  , typedEdge
+      strategyAction
+      guidesStrategyActionToInterventionAction
+      (pathId 1 "intervention-action")
+  , typedEdge
+      (pathId 1 "intervention-key-result")
+      contributesInterventionKeyResultToStrategyKeyResult
+      strategyKeyResult
+  , typedEdge
+      driver
+      indicatesMeasurePerformanceDimension
+      (pathId 1 "measure-dimension")
+  ]
+    ++ macroSituationEdges situation
+    ++ [ typedEdge
+           situation
+           (constitutedByAnchor SBusinessCapability)
+           constitutingAnchor
+       ]
+  where
+    identify = strategySituationId ordinal
+    vision = identify "vision"
+    strategy = identify "strategy"
+    visionObjective = identify "vision-objective"
+    driver = identify "strategy-driver"
+    strategyObjective = identify "strategy-objective"
+    strategyKeyResult = identify "strategy-key-result"
+    strategyAction = identify "strategy-action"
+    situation = identify "situation"
+    constitutingAnchor = identify "constituting-anchor"
+
+macroSituationEdges :: RawNodeId -> [SomeEdge]
+macroSituationEdges situation =
+  [ typedEdge interventionId changesSituation situation
+  , typedEdge situation surfacesNeed needId
+  , typedEdge measureId measuresSituation situation
+  ]
 
 strategyRoles :: Map.Map RawNodeId TraceStrategyRoles
 strategyRoles =
@@ -425,17 +569,20 @@ strategyRoles =
       , traceRoleActions = [strategyActionId]
       }
 
-strategyRolesWithDeadEnds :: Int -> Map.Map RawNodeId TraceStrategyRoles
-strategyRolesWithDeadEnds count =
+strategyRolesWithFanOut :: Int -> Map.Map RawNodeId TraceStrategyRoles
+strategyRolesWithFanOut count =
   Map.union
     strategyRoles
     (Map.fromList
-       [ ( deadEndId ordinal "strategy"
+       [ ( strategySituationId ordinal "strategy"
          , TraceStrategyRoles
-             { traceRoleDriver = deadEndId ordinal "strategy-driver"
-             , traceRoleObjective = deadEndId ordinal "strategy-objective"
-             , traceRoleKeyResults = [deadEndId ordinal "strategy-key-result"]
-             , traceRoleActions = [deadEndId ordinal "strategy-action"]
+             { traceRoleDriver = strategySituationId ordinal "strategy-driver"
+             , traceRoleObjective =
+                 strategySituationId ordinal "strategy-objective"
+             , traceRoleKeyResults =
+                 [strategySituationId ordinal "strategy-key-result"]
+             , traceRoleActions =
+                 [strategySituationId ordinal "strategy-action"]
              })
        | ordinal <- [1 .. count]
        ])
@@ -484,9 +631,21 @@ unreachableId :: Int -> Text.Text -> RawNodeId
 unreachableId ordinal suffix =
   RawNodeId ("unreachable-" <> Text.pack (show ordinal) <> "-" <> suffix)
 
-deadEndId :: Int -> Text.Text -> RawNodeId
-deadEndId ordinal suffix =
-  RawNodeId ("dead-end-" <> Text.pack (show ordinal) <> "-" <> suffix)
+mismatchedId :: Int -> Text.Text -> RawNodeId
+mismatchedId ordinal suffix =
+  RawNodeId ("mismatched-" <> Text.pack (show ordinal) <> "-" <> suffix)
+
+unconstitutedId :: Int -> Text.Text -> RawNodeId
+unconstitutedId ordinal suffix =
+  RawNodeId ("unconstituted-" <> Text.pack (show ordinal) <> "-" <> suffix)
+
+liveSituationId :: Int -> RawNodeId
+liveSituationId ordinal =
+  RawNodeId ("live-situation-" <> Text.pack (show ordinal))
+
+strategySituationId :: Int -> Text.Text -> RawNodeId
+strategySituationId ordinal suffix =
+  RawNodeId ("strategy-situation-" <> Text.pack (show ordinal) <> "-" <> suffix)
 
 visionId, strategyId, needId, interventionId, measureId, situationId ::
      RawNodeId
