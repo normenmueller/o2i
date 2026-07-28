@@ -351,6 +351,24 @@ bindSearch searched next =
     branches = map next (searchValues searched)
     outputs = concatMap searchValues branches
 
+selectiveEdgeIntersectionSearch ::
+     Ord value => Set value -> Set value -> Search value
+selectiveEdgeIntersectionSearch left right =
+  Search
+    { searchValues =
+        filter (`Set.member` guardValues) (Set.toAscList candidates)
+    , searchWorkOf =
+        mempty
+          { traceEdgeBucketProbes = 2
+          , traceEdgeOccurrences = Set.size candidates
+          , traceEdgeMembershipProbes = Set.size candidates
+          }
+    }
+  where
+    (candidates, guardValues)
+      | Set.size left <= Set.size right = (left, right)
+      | otherwise = (right, left)
+
 selectiveThreeWayEdgeIntersectionSearch ::
      Ord value => Set value -> Set value -> Set value -> Search value
 selectiveThreeWayEdgeIntersectionSearch first second third =
@@ -446,6 +464,13 @@ edgeBucketSearch values =
           {traceEdgeBucketProbes = 1, traceEdgeOccurrences = Set.size values}
     }
 
+edgeMembershipSearch :: Ord value => Set value -> value -> Search ()
+edgeMembershipSearch values value =
+  Search
+    { searchValues = [() | Set.member value values]
+    , searchWorkOf = mempty {traceEdgeMembershipProbes = 1}
+    }
+
 relationSearch ::
      TraceSearchIndex -> RelationName -> Search (RawNodeId, RawNodeId)
 relationSearch index relation =
@@ -483,15 +508,17 @@ pathsForAddressedPair index strategies (intervention, need) =
   bindSearch (measureStrategiesForAddressedPair index intervention need) $ \measureStrategies ->
     bindSearch
       (situationsByAnchorSearch index (traceMeasureContexts measureStrategies)) $ \situationsByAnchor ->
-      bindSearch (nodeBucketSearch (traceMeasureStrategies measureStrategies)) $ \strategy ->
-        bindSearch (strategyRolesSearch strategies strategy) $ \roles ->
-          expandVisionLinks
-            (traceCoresForStrategyMeasure
-               index
-               situationsByAnchor
-               (contextsForStrategyMeasure measureStrategies strategy)
-               roles)
-            (visionLinksForStrategy index strategy roles)
+      bindSearch (measureKeyResultPairsSearch index measureStrategies) $ \pairsByStrategy ->
+        bindSearch (nodeBucketSearch (traceMeasureStrategies measureStrategies)) $ \strategy ->
+          bindSearch (strategyRolesSearch strategies strategy) $ \roles ->
+            expandVisionLinks
+              (traceCoresForStrategyMeasure
+                 index
+                 situationsByAnchor
+                 (contextsForStrategyMeasure measureStrategies strategy)
+                 roles
+                 (Map.findWithDefault Set.empty strategy pairsByStrategy))
+              (visionLinksForStrategy index strategy roles)
 
 -- | Group target Measures by Strategies that qualify one addressed Need.
 measureStrategiesForAddressedPair ::
@@ -521,6 +548,51 @@ measureStrategiesForAddressedPair index intervention need =
         mapSearch
           (const strategy)
           (edgeGuard index directsInterventionName strategy intervention)
+
+-- | Join Measure-bound Intervention KRs to their owning Strategy once.
+measureKeyResultPairsSearch ::
+     TraceSearchIndex
+  -> TraceMeasureStrategies
+  -> Search (Map RawNodeId (Set (RawNodeId, RawNodeId)))
+measureKeyResultPairsSearch index measureStrategies =
+  Search
+    { searchValues = [pairsByStrategy]
+    , searchWorkOf = searchWorkOf strategyPairs
+    }
+  where
+    strategyPairs =
+      bindSearch measureTargetKeyResults $ \interventionKeyResult ->
+        bindSearch
+          (outgoingSearch
+             index
+             contributesInterventionKeyResultName
+             interventionKeyResult) $ \strategyKeyResult ->
+          mapSearch
+            (\strategy -> (strategy, (interventionKeyResult, strategyKeyResult)))
+            (strategyOwnerSearch strategyKeyResult)
+    measureTargetKeyResults =
+      edgeBucketSearch
+        (Map.findWithDefault
+           Set.empty
+           ( traceMeasureStrategiesMeasure measureStrategies
+           , traceMeasureStrategiesIntervention measureStrategies)
+           (indexedMeasureTargetKeyResults index))
+    strategyOwnerSearch strategyKeyResult =
+      Search
+        { searchValues =
+            [ strategy
+            | Just (strategy, KeyResult) <-
+                [Map.lookup strategyKeyResult (indexedPrimitiveOwnership index)]
+            , Set.member strategy (traceMeasureStrategies measureStrategies)
+            ]
+        , searchWorkOf = mempty {traceNodeMembershipProbes = 2}
+        }
+    pairsByStrategy =
+      foldl'
+        (\grouped (strategy, pair) ->
+           Map.insertWith Set.union strategy (Set.singleton pair) grouped)
+        Map.empty
+        (searchValues strategyPairs)
 
 contextsForStrategyMeasure ::
      TraceMeasureStrategies -> RawNodeId -> TraceContexts
@@ -587,186 +659,229 @@ data VisionLink = VisionLink
   , visionLinkObjective :: RawNodeId
   }
 
--- | Derive one complete primitive spine before any Situation enumeration.
-primitiveSpines ::
+data AnchoredTraceSpine = AnchoredTraceSpine
+  { anchoredTraceSpine :: TraceSpine
+  , anchoredTraceAnchor :: RawNodeId
+  , anchoredTraceAnchorKind :: SituationAnchor
+  }
+
+-- | Derive one Measure-bound spine from its Intervention Key Result.
+anchoredPrimitiveSpines ::
      TraceSearchIndex
   -> TraceContexts
   -> TraceStrategyRoleIndex
-  -> Search TraceSpine
-primitiveSpines index contexts roles =
-  bindSearch strategyBase $ \(strategyKeyResult, strategyAction) ->
-    bindSearch (needPaths index contexts strategyKeyResult) $ \(needDriver, needObjective) ->
+  -> Set (RawNodeId, RawNodeId)
+  -> Search AnchoredTraceSpine
+anchoredPrimitiveSpines index contexts roles keyResultPairs =
+  bindSearch strategyFoundation $ \() ->
+    bindSearch (edgeBucketSearch keyResultPairs) $ \(interventionKeyResult, strategyKeyResult) ->
       bindSearch
-        (interventionPaths
-           index
-           contexts
-           strategyKeyResult
-           strategyAction
-           needObjective) $ \(interventionAction, interventionKeyResult) ->
-        mapSearch
-          (makeTraceSpine
-             strategyKeyResult
-             strategyAction
-             needDriver
-             needObjective
-             interventionAction
-             interventionKeyResult)
-          (measurePaths
+        (nodeMembershipSearch
+           (Set.member strategyKeyResult (indexedRoleKeyResults roles))) $ \() ->
+        bindSearch
+          (edgeGuard
              index
-             contexts
-             roles
+             substantiatesStrategyObjectiveName
              strategyKeyResult
-             interventionKeyResult)
-  where
-    strategyBase =
-      bindSearch
-        (edgeGuard
-           index
-           groundsStrategyObjectiveName
-           (indexedRoleDriver roles)
-           (indexedRoleObjective roles)) $ \() ->
-        bindSearch (nodeBucketSearch (indexedRoleKeyResults roles)) $ \keyResult ->
+             (indexedRoleObjective roles)) $ \() ->
           bindSearch
-            (edgeGuard
+            (interventionActionsForKeyResult
                index
-               substantiatesStrategyObjectiveName
-               keyResult
-               (indexedRoleObjective roles)) $ \() ->
+               contexts
+               interventionKeyResult) $ \interventionAction ->
             bindSearch
-              (incomingSearch index contributesStrategyActionName keyResult) $ \action ->
-              mapSearch
-                (const (keyResult, action))
-                (nodeMembershipSearch
-                   (Set.member action (indexedRoleActions roles)))
-    makeTraceSpine strategyKeyResult strategyAction needDriver needObjective interventionAction interventionKeyResult (dimension, kpi) =
-      TraceSpine
-        { traceSpineContexts = contexts
-        , traceSpineRoles = roles
-        , traceSpineStrategyKeyResult = strategyKeyResult
-        , traceSpineStrategyAction = strategyAction
-        , traceSpineNeedDriver = needDriver
-        , traceSpineNeedObjective = needObjective
-        , traceSpineInterventionAction = interventionAction
-        , traceSpineInterventionKeyResult = interventionKeyResult
-        , traceSpineMeasureDimension = dimension
-        , traceSpineMeasureKPI = kpi
+              (strategyActionsForSpine
+                 index
+                 roles
+                 strategyKeyResult
+                 interventionAction) $ \strategyAction ->
+              bindSearch
+                (anchoredMeasureNeedPaths
+                   index
+                   contexts
+                   roles
+                   strategyKeyResult
+                   interventionKeyResult
+                   interventionAction) $ \(dimension, kpi, needDriver, needObjective, anchor, anchorKind) ->
+                Search
+                  { searchValues =
+                      [ makeAnchoredSpine
+                          strategyKeyResult
+                          strategyAction
+                          needDriver
+                          needObjective
+                          interventionAction
+                          interventionKeyResult
+                          dimension
+                          kpi
+                          anchor
+                          anchorKind
+                      ]
+                  , searchWorkOf = mempty
+                  }
+  where
+    strategyFoundation =
+      edgeGuard
+        index
+        groundsStrategyObjectiveName
+        (indexedRoleDriver roles)
+        (indexedRoleObjective roles)
+    makeAnchoredSpine strategyKeyResult strategyAction needDriver needObjective interventionAction interventionKeyResult dimension kpi anchor anchorKind =
+      AnchoredTraceSpine
+        { anchoredTraceSpine =
+            TraceSpine
+              { traceSpineContexts = contexts
+              , traceSpineRoles = roles
+              , traceSpineStrategyKeyResult = strategyKeyResult
+              , traceSpineStrategyAction = strategyAction
+              , traceSpineNeedDriver = needDriver
+              , traceSpineNeedObjective = needObjective
+              , traceSpineInterventionAction = interventionAction
+              , traceSpineInterventionKeyResult = interventionKeyResult
+              , traceSpineMeasureDimension = dimension
+              , traceSpineMeasureKPI = kpi
+              }
+        , anchoredTraceAnchor = anchor
+        , anchoredTraceAnchorKind = anchorKind
         }
 
-needPaths ::
-     TraceSearchIndex
-  -> TraceContexts
-  -> RawNodeId
-  -> Search (RawNodeId, RawNodeId)
-needPaths index contexts strategyKeyResult =
-  bindSearch needObjectives $ \needObjective ->
-    bindSearch (incomingSearch index groundsNeedObjectiveName needObjective) $ \needDriver ->
-      mapSearch
-        (const (needDriver, needObjective))
-        (primitiveGuard index (traceContextNeed contexts) Driver needDriver)
-  where
-    needObjectives =
-      bindSearch
-        (outgoingSearch index translatesNeedObjectiveName strategyKeyResult) $ \needObjective ->
-        mapSearch
-          (const needObjective)
-          (primitiveGuard
-             index
-             (traceContextNeed contexts)
-             Objective
-             needObjective)
+interventionActionsForKeyResult ::
+     TraceSearchIndex -> TraceContexts -> RawNodeId -> Search RawNodeId
+interventionActionsForKeyResult index contexts interventionKeyResult =
+  bindSearch
+    (incomingSearch
+       index
+       contributesInterventionActionName
+       interventionKeyResult) $ \interventionAction ->
+    mapSearch
+      (const interventionAction)
+      (primitiveGuard
+         index
+         (traceContextIntervention contexts)
+         Action
+         interventionAction)
 
-interventionPaths ::
+strategyActionsForSpine ::
      TraceSearchIndex
-  -> TraceContexts
+  -> TraceStrategyRoleIndex
   -> RawNodeId
   -> RawNodeId
-  -> RawNodeId
-  -> Search (RawNodeId, RawNodeId)
-interventionPaths index contexts strategyKeyResult strategyAction needObjective =
-  bindSearch interventionKeyResults $ \keyResult ->
-    bindSearch
-      (incomingSearch index contributesInterventionActionName keyResult) $ \action ->
-      bindSearch
-        (primitiveGuard index (traceContextIntervention contexts) Action action) $ \() ->
-        mapSearch
-          (const (action, keyResult))
-          (edgeGuard index guidesInterventionActionName strategyAction action)
-  where
-    interventionKeyResults =
-      selectiveThreeWayEdgeIntersectionSearch
-        (Map.findWithDefault
-           Set.empty
-           (contributesInterventionKeyResultName, strategyKeyResult)
-           (indexedIncoming index))
-        (Map.findWithDefault
-           Set.empty
-           (substantiatesNeedObjectiveName, needObjective)
-           (indexedIncoming index))
-        (Map.findWithDefault
-           Set.empty
-           (traceContextMeasure contexts, traceContextIntervention contexts)
-           (indexedMeasureTargetKeyResults index))
+  -> Search RawNodeId
+strategyActionsForSpine index roles strategyKeyResult interventionAction =
+  bindSearch
+    (selectiveEdgeIntersectionSearch
+       (Map.findWithDefault
+          Set.empty
+          (contributesStrategyActionName, strategyKeyResult)
+          (indexedIncoming index))
+       (Map.findWithDefault
+          Set.empty
+          (guidesInterventionActionName, interventionAction)
+          (indexedIncoming index))) $ \strategyAction ->
+    mapSearch
+      (const strategyAction)
+      (nodeMembershipSearch
+         (Set.member strategyAction (indexedRoleActions roles)))
 
-measurePaths ::
+-- | Join Measure, anchored Need, and Objective facts without cross products.
+anchoredMeasureNeedPaths ::
      TraceSearchIndex
   -> TraceContexts
   -> TraceStrategyRoleIndex
   -> RawNodeId
   -> RawNodeId
-  -> Search (RawNodeId, RawNodeId)
-measurePaths index contexts roles strategyKeyResult interventionKeyResult =
-  bindSearch measureKPIs $ \kpi ->
-    bindSearch (incomingSearch index containsMeasureKPIName kpi) $ \dimension ->
-      bindSearch
-        (structuringGuard
-           index
-           (traceContextMeasure contexts)
-           PerformanceDimension
-           dimension) $ \() ->
-        bindSearch
-          (edgeGuard
-             index
-             indicatesMeasureDimensionName
-             (indexedRoleDriver roles)
-             dimension) $ \() ->
-          mapSearch
-            (const (dimension, kpi))
-            (edgeGuard
-               index
-               determinesMeasureDimensionName
-               strategyKeyResult
-               dimension)
+  -> RawNodeId
+  -> Search
+       (RawNodeId, RawNodeId, RawNodeId, RawNodeId, RawNodeId, SituationAnchor)
+anchoredMeasureNeedPaths index contexts roles strategyKeyResult interventionKeyResult interventionAction =
+  bindSearch changedAnchorsSearch $ \changedAnchorSet ->
+    bindSearch (edgeBucketSearch targetedKPIs) $ \kpi ->
+      bindSearch (outgoingSearch index measuresAnchorName kpi) $ \anchor ->
+        bindSearch (edgeMembershipSearch changedAnchorSet anchor) $ \() ->
+          bindSearch (anchorKindSearch index anchor) $ \anchorKind ->
+            bindSearch (incomingSearch index containsMeasureKPIName kpi) $ \dimension ->
+              bindSearch
+                (structuringGuard
+                   index
+                   (traceContextMeasure contexts)
+                   PerformanceDimension
+                   dimension) $ \() ->
+                bindSearch
+                  (edgeGuard
+                     index
+                     indicatesMeasureDimensionName
+                     (indexedRoleDriver roles)
+                     dimension) $ \() ->
+                  bindSearch
+                    (edgeGuard
+                       index
+                       determinesMeasureDimensionName
+                       strategyKeyResult
+                       dimension) $ \() ->
+                    bindSearch
+                      (outgoingSearch index anchorsNeedDriverName anchor) $ \needDriver ->
+                      bindSearch
+                        (primitiveGuard
+                           index
+                           (traceContextNeed contexts)
+                           Driver
+                           needDriver) $ \() ->
+                        mapSearch
+                          (\needObjective ->
+                             ( dimension
+                             , kpi
+                             , needDriver
+                             , needObjective
+                             , anchor
+                             , anchorKind))
+                          (needObjectivesForSpine
+                             index
+                             contexts
+                             needDriver
+                             strategyKeyResult
+                             interventionKeyResult)
   where
-    measureKPIs =
-      edgeBucketSearch
-        (Map.findWithDefault
-           Set.empty
-           (traceContextMeasure contexts, interventionKeyResult)
-           (indexedMeasureTargetKPIs index))
+    changedAnchorsSearch =
+      Search
+        { searchValues = [indexedChangedAnchors]
+        , searchWorkOf = mempty {traceEdgeBucketProbes = 1}
+        }
+    indexedChangedAnchors =
+      Map.findWithDefault
+        Set.empty
+        (changesAnchorName, interventionAction)
+        (indexedOutgoing index)
+    targetedKPIs =
+      Map.findWithDefault
+        Set.empty
+        (traceContextMeasure contexts, interventionKeyResult)
+        (indexedMeasureTargetKPIs index)
 
--- | Join the changed, measured, and Need-grounding anchor of one spine.
-anchorsForSpine ::
-     TraceSearchIndex -> TraceSpine -> Search (RawNodeId, SituationAnchor)
-anchorsForSpine index spine =
-  bindSearch anchors $ \anchor ->
-    mapSearch ((,) anchor) (anchorKindSearch index anchor)
-  where
-    anchors =
-      bindSearch
-        (outgoingSearch index measuresAnchorName (traceSpineMeasureKPI spine)) $ \anchor ->
-        bindSearch
-          (edgeGuard
-             index
-             changesAnchorName
-             (traceSpineInterventionAction spine)
-             anchor) $ \() ->
-          mapSearch
-            (const anchor)
-            (edgeGuard
-               index
-               anchorsNeedDriverName
-               anchor
-               (traceSpineNeedDriver spine))
+needObjectivesForSpine ::
+     TraceSearchIndex
+  -> TraceContexts
+  -> RawNodeId
+  -> RawNodeId
+  -> RawNodeId
+  -> Search RawNodeId
+needObjectivesForSpine index contexts needDriver strategyKeyResult interventionKeyResult =
+  bindSearch
+    (selectiveThreeWayEdgeIntersectionSearch
+       (Map.findWithDefault
+          Set.empty
+          (groundsNeedObjectiveName, needDriver)
+          (indexedOutgoing index))
+       (Map.findWithDefault
+          Set.empty
+          (translatesNeedObjectiveName, strategyKeyResult)
+          (indexedOutgoing index))
+       (Map.findWithDefault
+          Set.empty
+          (substantiatesNeedObjectiveName, interventionKeyResult)
+          (indexedOutgoing index))) $ \needObjective ->
+    mapSearch
+      (const needObjective)
+      (primitiveGuard index (traceContextNeed contexts) Objective needObjective)
 
 -- | Index macrocompatible Situations once by their persisted anchor.
 situationsByAnchorSearch ::
@@ -818,13 +933,18 @@ traceCoresForStrategyMeasure ::
   -> Map RawNodeId (Set RawNodeId)
   -> TraceContexts
   -> TraceStrategyRoleIndex
+  -> Set (RawNodeId, RawNodeId)
   -> Search TraceCore
-traceCoresForStrategyMeasure index situationsByAnchor contexts roles =
-  bindSearch (primitiveSpines index contexts roles) $ \spine ->
-    bindSearch (anchorsForSpine index spine) $ \(anchor, anchorKind) ->
-      mapSearch
-        (TraceCore spine anchor anchorKind)
-        (situationsForAnchor situationsByAnchor anchor)
+traceCoresForStrategyMeasure index situationsByAnchor contexts roles keyResultPairs =
+  bindSearch (anchoredPrimitiveSpines index contexts roles keyResultPairs) $ \anchoredSpine ->
+    mapSearch
+      (TraceCore
+         (anchoredTraceSpine anchoredSpine)
+         (anchoredTraceAnchor anchoredSpine)
+         (anchoredTraceAnchorKind anchoredSpine))
+      (situationsForAnchor
+         situationsByAnchor
+         (anchoredTraceAnchor anchoredSpine))
 
 -- | Read compatible Vision links in Vision-then-Objective identifier order.
 visionLinksForStrategy ::

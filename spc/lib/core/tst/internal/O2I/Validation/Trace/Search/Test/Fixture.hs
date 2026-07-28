@@ -106,7 +106,9 @@ convergentKeyResultRoles count =
       , traceRoleKeyResults =
           strategyKeyResultId
             : [convergentStrategyKeyResultId ordinal | ordinal <- [1 .. count]]
-      , traceRoleActions = [strategyActionId]
+      , traceRoleActions =
+          strategyActionId
+            : [convergentStrategyActionId ordinal | ordinal <- [1 .. count]]
       }
 
 contextNode :: RawNodeId -> SContext context -> SomeNode
@@ -204,6 +206,14 @@ convergentStrategyKeyResultId ordinal =
 convergentInterventionKeyResultId :: Int -> RawNodeId
 convergentInterventionKeyResultId ordinal =
   RawNodeId ("convergent-intervention-key-result-" <> Text.pack (show ordinal))
+
+convergentStrategyActionId :: Int -> RawNodeId
+convergentStrategyActionId ordinal =
+  RawNodeId ("convergent-strategy-action-" <> Text.pack (show ordinal))
+
+convergentNeedObjectiveId :: Int -> RawNodeId
+convergentNeedObjectiveId ordinal =
+  RawNodeId ("convergent-need-objective-" <> Text.pack (show ordinal))
 
 threeWayRejectionId :: Text.Text -> RawNodeId
 threeWayRejectionId suffix = RawNodeId ("three-way-rejection-" <> suffix)

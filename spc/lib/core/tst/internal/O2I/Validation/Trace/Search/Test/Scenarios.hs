@@ -257,6 +257,8 @@ convergentKeyResultNodes ordinal =
       SStrategy
       SKeyResult
       KeyResultInStrategy
+  , primitiveNode strategyAction strategyId SStrategy SAction ActionInStrategy
+  , primitiveNode needObjective needId SNeed SObjective ObjectiveInNeed
   , primitiveNode
       interventionKeyResult
       interventionId
@@ -266,6 +268,8 @@ convergentKeyResultNodes ordinal =
   ]
   where
     strategyKeyResult = convergentStrategyKeyResultId ordinal
+    strategyAction = convergentStrategyActionId ordinal
+    needObjective = convergentNeedObjectiveId ordinal
     interventionKeyResult = convergentInterventionKeyResultId ordinal
 
 convergentKeyResultEdges :: Int -> [SomeEdge]
@@ -275,13 +279,21 @@ convergentKeyResultEdges ordinal =
       substantiatesStrategyKeyResultObjective
       strategyObjectiveId
   , typedEdge
-      strategyActionId
+      strategyAction
       contributesStrategyActionToKeyResult
       strategyKeyResult
   , typedEdge
+      strategyAction
+      guidesStrategyActionToInterventionAction
+      (pathId 1 "intervention-action")
+  , typedEdge
       strategyKeyResult
       translatesStrategyKeyResultToNeedObjective
-      (pathId 1 "need-objective")
+      needObjective
+  , typedEdge
+      (pathId 1 "need-driver")
+      groundsNeedDriverToObjective
+      needObjective
   , typedEdge
       strategyKeyResult
       determinesMeasurePerformanceDimension
@@ -293,7 +305,7 @@ convergentKeyResultEdges ordinal =
   , typedEdge
       interventionKeyResult
       substantiatesInterventionKeyResultNeedObjective
-      (pathId 1 "need-objective")
+      needObjective
   , typedEdge
       interventionKeyResult
       contributesInterventionKeyResultToStrategyKeyResult
@@ -305,51 +317,46 @@ convergentKeyResultEdges ordinal =
   ]
   where
     strategyKeyResult = convergentStrategyKeyResultId ordinal
+    strategyAction = convergentStrategyActionId ordinal
+    needObjective = convergentNeedObjectiveId ordinal
     interventionKeyResult = convergentInterventionKeyResultId ordinal
 
 threeWayRejectionNodes :: [SomeNode]
 threeWayRejectionNodes =
-  [ primitiveNode
-      threeWayCandidateId
-      interventionId
-      SIntervention
-      SKeyResult
-      KeyResultInIntervention
-  , primitiveNode
-      threeWayFillerId
-      interventionId
-      SIntervention
-      SKeyResult
-      KeyResultInIntervention
+  [ primitiveNode threeWayCandidateId needId SNeed SObjective ObjectiveInNeed
+  , primitiveNode threeWayFillerId needId SNeed SObjective ObjectiveInNeed
   ]
 
 firstThreeWayGuardRejectionEdges :: [SomeEdge]
 firstThreeWayGuardRejectionEdges =
   [ typedEdge
+      (pathId 1 "need-driver")
+      groundsNeedDriverToObjective
       threeWayCandidateId
-      contributesInterventionKeyResultToStrategyKeyResult
+  , typedEdge
       strategyKeyResultId
-  , typedEdge
-      threeWayCandidateId
-      setsTargetForMeasureKPI
-      (pathId 1 "measure-kpi")
-  , typedEdge
+      translatesStrategyKeyResultToNeedObjective
       threeWayFillerId
+  , typedEdge
+      (pathId 1 "intervention-key-result")
       substantiatesInterventionKeyResultNeedObjective
-      (pathId 1 "need-objective")
+      threeWayCandidateId
   ]
 
 secondThreeWayGuardRejectionEdges :: [SomeEdge]
 secondThreeWayGuardRejectionEdges =
   [ typedEdge
+      (pathId 1 "need-driver")
+      groundsNeedDriverToObjective
       threeWayCandidateId
-      contributesInterventionKeyResultToStrategyKeyResult
-      strategyKeyResultId
   , typedEdge
+      strategyKeyResultId
+      translatesStrategyKeyResultToNeedObjective
       threeWayCandidateId
+  , typedEdge
+      (pathId 1 "intervention-key-result")
       substantiatesInterventionKeyResultNeedObjective
-      (pathId 1 "need-objective")
-  , typedEdge threeWayFillerId setsTargetForMeasureKPI (pathId 1 "measure-kpi")
+      threeWayFillerId
   ]
 
 threeWayCandidateId, threeWayFillerId :: RawNodeId

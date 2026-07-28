@@ -343,6 +343,33 @@ Correction implementation status:
 - focused Haskell verification and one uninterrupted complete repository
   verification pass the correction worktree.
 
+Revision `eebd36fb8cf2361cf2454af613b716f0075f6534` passes exact clean
+repository verification. Its formalization Finalreview accepts every
+dimension with 10.0; its Haskell Finalreview identifies one remaining
+output-sensitivity defect:
+
+1. `primitiveSpines` must start from each Intervention Key Result as the
+   relational join node. Pairwise Strategy Actions, Need Objectives, Strategy
+   Key Results, and Intervention Key Results must yield `1, 11, 21, 41`
+   complete traces with affine work rather than quadratic intermediate paths.
+
+The correction preserves semantics, trace identity, ordering, and public API.
+It changes only the private join order and its adversarial proof.
+
+Correction implementation status:
+
+- every complete Primitive spine starts from one Measure-bound Intervention
+  Key Result and reaches its Strategy Key Result, Intervention Action, Strategy
+  Action, KPI, anchor, Need Driver, and Need Objective through indexed
+  relation-selective joins;
+- paired Strategy Actions, Need Objectives, Strategy Key Results, and
+  Intervention Key Results produce `1, 11, 21, 41` exact traces with affine
+  traversal and index-build work for fan-out `0, 10, 20, 40`;
+- a separate graph contract proves exact short-circuit membership-probe
+  accounting;
+- the complete Haskell stage and one uninterrupted repository verification
+  pass the correction worktree.
+
 ## Required Checks
 
 - Core formatting, build, tests, API tests, and Haddock;

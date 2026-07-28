@@ -6,7 +6,7 @@
 - Authorization scope: review and close `o2i-0004`; do not edit the ArchiMate
   model directly or push. This includes the approved removal of premature
   build-revision provenance before the final review candidate.
-- Current gate: `o2i-0004-finalreview-9`
+- Current gate: `o2i-0004-finalreview-10`
 - Gate status: `REJECTED`
 - Current node: `o2i:situation-anchor-gate`
 
@@ -36,28 +36,34 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 - Exact clean revision
   `859c29de725e7150bc58f59ef15fe8ae8bcc485f` passes one uninterrupted
   `./utl/verify.sh all`.
-- The current correction derives complete Situation-attached `TraceCore`
-  values before Vision expansion and intersects convergent Intervention Key
-  Results through contribution, substantiation, and Measure-target indices.
-- Adversarial Vision and convergent-Key-Result contracts produce
+- The current correction derives each complete Primitive spine from its
+  Measure-bound Intervention Key Result through relation-selective joins before
+  Situation and Vision expansion.
+- Adversarial paired Action, Objective, and Key-Result contracts produce
   `1, 11, 21, 41` complete traces for fan-out `0, 10, 20, 40`, preserve exact
-  identities and input-order determinism, and prove affine traversal work.
+  identities and input-order determinism, and prove affine traversal and index
+  work. A separate graph contract verifies exact short-circuit probe counting.
 - Focused verification passes 297 public Core tests, 14 private trace-search
-  tests, the public API contract, HIndent, Cabal, and diff checks.
+  tests, all Haskell packages, the public API contract, Haddock, HIndent, Cabal,
+  and diff checks.
 - One uninterrupted `./utl/verify.sh all` passes the complete correction
   worktree, including governance, model, all Haskell packages, API contracts,
   Haddock, HIndent, and the isolated White Paper build with `md2pdf 0.2.4`.
 - Exact clean revision
   `b5baa3cf45a54d2f295539dfa30cb8b7c870d80c` passes one uninterrupted
   `./utl/verify.sh all`.
+- Exact clean revision
+  `eebd36fb8cf2361cf2454af613b716f0075f6534` passes one uninterrupted
+  `./utl/verify.sh all` after the strengthened two-dimensional KR regression
+  and exact short-circuit work accounting.
 - The strategy and publication scopes are byte-identical to their accepted
   scopes at `859c29de725e7150bc58f59ef15fe8ae8bcc485f`; only formalization and
   Haskell require new Finalreviews.
 
 # Gate
 
-- Attempt: `o2i-0004-finalreview-9`
-- Subject: revision `b5baa3cf45a54d2f295539dfa30cb8b7c870d80c` and the
+- Attempt: `o2i-0004-finalreview-10`
+- Subject: revision `eebd36fb8cf2361cf2454af613b716f0075f6534` and the
   implementation scope declared by
   `.ai4X/governance/changes/o2i-0004/plan.md`.
 - Mandatory checks: strategy, formalization, Haskell, publication, profile,
@@ -67,8 +73,8 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 
 # Next Action
 
-Commit one exact candidate, verify that clean revision, and obtain new
-formalization and Haskell reviews.
+Commit one exact candidate, reverify its clean revision, and obtain new
+independent formalization and Haskell reviews.
 
 # Local Return Point
 

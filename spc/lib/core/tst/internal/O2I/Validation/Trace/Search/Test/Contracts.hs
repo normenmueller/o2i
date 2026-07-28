@@ -48,7 +48,7 @@ tests =
         "Vision fan-out expands only complete trace cores"
         visionFanOutTest
     , testCase
-        "convergent Key Result fan-out uses the selective three-way join"
+        "Intervention Key Results drive complete convergent primitive spines"
         convergentKeyResultFanOutTest
     , testCase
         "three-way work counts only evaluated short-circuit probes"
@@ -313,15 +313,34 @@ expectedVisionFanOutIdentities count =
 expectedConvergentKeyResultIdentities :: Int -> [[RawNodeId]]
 expectedConvergentKeyResultIdentities count =
   map
-    (\(strategyKeyResult, interventionKeyResult) ->
-       take 5 expectedBasePathIdentity
-         ++ strategyKeyResult
-         : take 6 (drop 6 expectedBasePathIdentity)
-         ++ interventionKeyResult
-         : drop 13 expectedBasePathIdentity)
+    (\(strategyKeyResult, strategyAction, needObjective, interventionKeyResult) ->
+       [ visionId
+       , visionObjectiveId
+       , strategyId
+       , strategyDriverId
+       , strategyObjectiveId
+       , strategyKeyResult
+       , strategyAction
+       , needId
+       , pathId 1 "need-driver"
+       , needObjective
+       , interventionId
+       , pathId 1 "intervention-action"
+       , interventionKeyResult
+       , measureId
+       , pathId 1 "measure-dimension"
+       , pathId 1 "measure-kpi"
+       , situationId
+       , pathId 1 "situation-anchor"
+       ])
     (sort
-       ((strategyKeyResultId, pathId 1 "intervention-key-result")
+       (( strategyKeyResultId
+        , strategyActionId
+        , pathId 1 "need-objective"
+        , pathId 1 "intervention-key-result")
           : [ ( convergentStrategyKeyResultId ordinal
+              , convergentStrategyActionId ordinal
+              , convergentNeedObjectiveId ordinal
               , convergentInterventionKeyResultId ordinal)
             | ordinal <- [1 .. count]
             ]))
