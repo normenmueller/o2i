@@ -6,7 +6,7 @@
 - Authorization scope: review and close `o2i-0004`; do not edit the ArchiMate
   model directly or push. This includes the approved removal of premature
   build-revision provenance before the final review candidate.
-- Current gate: `o2i-0004-finalreview-7`
+- Current gate: `o2i-0004-finalreview-8`
 - Gate status: `REJECTED`
 - Current node: `o2i:situation-anchor-gate`
 
@@ -33,29 +33,25 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 
 # Verification
 
-- Exact committed revision
-  `58073d8500747ce31314f179e700ff14aed2cfd7` passes one uninterrupted clean
-  `./utl/verify.sh all`; its pure Haskell review identified the remaining
-  target-Measure fan-out.
-- The correction replaces broad repeated intersections with relation-driven
-  candidate sets and constant membership guards. Eleven private regressions
-  cover every material fan-out axis, preserve deterministic traces, and prove
-  affine-linear work.
-- Private trace-search tests are split into contracts, shared fixtures, and
-  scenario builders without changing the public API.
-- Build-revision provenance has no current product consumer beyond the CLI
-  option itself. O2I does not distribute binaries or bind inspection reports
-  normatively to an executable revision, so the package and CLI surface are
-  removed before Finalreview.
-- One uninterrupted `./utl/verify.sh all` passes the simplified worktree,
-  including governance, model, 297 Core tests, 11 private trace-search tests,
-  146 AMX tests, 63 CLI tests, API contracts, Haddock, HIndent, publication,
-  and the isolated 65-page White Paper build with `md2pdf 0.2.4`.
+- Exact clean revision
+  `859c29de725e7150bc58f59ef15fe8ae8bcc485f` passes one uninterrupted
+  `./utl/verify.sh all`.
+- The current correction derives complete Situation-attached `TraceCore`
+  values before Vision expansion and intersects convergent Intervention Key
+  Results through contribution, substantiation, and Measure-target indices.
+- Adversarial Vision and convergent-Key-Result contracts produce
+  `1, 11, 21, 41` complete traces for fan-out `0, 10, 20, 40`, preserve exact
+  identities and input-order determinism, and prove affine traversal work.
+- Focused verification passes 297 public Core tests, 13 private trace-search
+  tests, the public API contract, Werror, HIndent, and diff checks.
+- One uninterrupted `./utl/verify.sh all` passes the complete correction
+  worktree, including governance, model, all Haskell packages, API contracts,
+  Haddock, HIndent, and the isolated White Paper build with `md2pdf 0.2.4`.
 
 # Gate
 
-- Attempt: `o2i-0004-finalreview-7`
-- Subject: revision `287909f0ad6158c818bdadb4e21b05520f0fac83` and the
+- Attempt: `o2i-0004-finalreview-8`
+- Subject: revision `859c29de725e7150bc58f59ef15fe8ae8bcc485f` and the
   implementation scope declared by
   `.ai4X/governance/changes/o2i-0004/plan.md`.
 - Mandatory checks: strategy, formalization, Haskell, publication, profile,
@@ -65,14 +61,15 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 
 # Next Action
 
-Run complete repository verification, commit and verify the exact clean
-revision, and repeat the four capability-distinct Finalreviews required by the
-current gate contract.
+Run complete repository verification, commit one coherent candidate, and
+verify its exact clean revision. Carry strategy and publication evidence
+forward only across byte-identical scopes; obtain complete new formalization
+and Haskell reviews.
 
 # Local Return Point
 
-After the accepted `o2i-0004` gate, establish the approved GitHub
-Issue/Fork-/Return coordination model. Then finalize the repository-governance
-entry point, audit `o2i-0003` against the accepted revision, close already
-satisfied scope, and stop before substantive profile-contract implementation
-for user review.
+After the accepted `o2i-0004` gate, stop and consult the user before
+`workspace:issue-coordination`. After renewed approval, establish the GitHub
+Issue/Fork-/Return coordination model, finalize the repository-governance entry
+point, audit `o2i-0003` against the accepted revision, close already satisfied
+scope, and stop before substantive profile-contract implementation.

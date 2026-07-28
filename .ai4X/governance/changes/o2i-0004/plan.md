@@ -287,6 +287,34 @@ Correction implementation status:
 - one coherent candidate commit, exact clean-revision verification, and four
   independent Finalreviews remain pending.
 
+Revision `859c29de725e7150bc58f59ef15fe8ae8bcc485f` is rejected by the
+independent formalization and pure Haskell Finalreviews. Its strategy and
+publication scopes are accepted without findings and with 10.0 in every
+dimension. The correction closes two performance findings without changing
+public semantics or API:
+
+1. Derive complete Situation-attached `TraceCore` values before expanding
+   compatible Vision links. Preserve Vision-then-Objective ordering and add a
+   `0, 10, 20, 40` regression with complete traces and later-dead-ending
+   Primitive spines.
+2. Select convergent Intervention Key Results through one smallest-set
+   three-way intersection over contribution, Need substantiation, and Measure
+   targeting. Add a `0, 10, 20, 40` regression with `1, 11, 21, 41` complete
+   traces.
+
+Correction implementation status:
+
+- both joins are output-sensitive and preserve public trace identities,
+  deterministic ordering, and the public API;
+- both adversarial contracts prove affine traversal work and input-order
+  invariance;
+- focused public Core, private trace-search, API, Werror, HIndent, and diff
+  checks pass;
+- complete verification, one exact candidate revision, and independent
+  formalization and Haskell Finalreviews remain pending;
+- accepted strategy and publication evidence is carried forward only when its
+  declared scope is byte-identical at the new revision.
+
 ## Required Checks
 
 - Core formatting, build, tests, API tests, and Haddock;

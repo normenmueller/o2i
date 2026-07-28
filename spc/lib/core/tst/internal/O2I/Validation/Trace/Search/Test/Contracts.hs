@@ -45,6 +45,12 @@ tests =
         "spine-specific Anchor relation fan-out grows linearly"
         anchorRelationFanOutTest
     , testCase
+        "Vision fan-out expands only complete trace cores"
+        visionFanOutTest
+    , testCase
+        "convergent Key Result fan-out uses the selective three-way join"
+        convergentKeyResultFanOutTest
+    , testCase
         "relevant path growth has constant incremental work"
         linearRelevantPathGrowthTest
     , testCase
@@ -221,17 +227,105 @@ anchorRelationFanOutTest = do
       assertLinearTraversal workZero workTen workTwenty workForty
     _ -> assertFailure "Anchor relation work-vector arity changed"
 
+visionFanOutTest :: Assertion
+visionFanOutTest = do
+  let counts = [0, 10, 20, 40]
+      normal = map (`searchGraphWithVisionFanOut` id) counts
+      reversed = map (`searchGraphWithVisionFanOut` reverse) counts
+      workVectors =
+        map (traversalVector . traceTraversalWork . searchWork) normal
+  map searchPaths reversed @?= map searchPaths normal
+  map searchWork reversed @?= map searchWork normal
+  map (length . searchPaths) normal @?= [1, 11, 21, 41]
+  map traceIdentityConstituents normal
+    @?= map expectedVisionFanOutIdentities counts
+  case workVectors of
+    [workZero, workTen, workTwenty, workForty] ->
+      assertLinearTraversal workZero workTen workTwenty workForty
+    _ -> assertFailure "Vision fan-out work-vector arity changed"
+
+convergentKeyResultFanOutTest :: Assertion
+convergentKeyResultFanOutTest = do
+  let counts = [0, 10, 20, 40]
+      normal = map (`searchGraphWithConvergentKeyResults` id) counts
+      reversed = map (`searchGraphWithConvergentKeyResults` reverse) counts
+      workVectors =
+        map (traversalVector . traceTraversalWork . searchWork) normal
+      buildVectors =
+        map (indexBuildVector . traceIndexBuildWork . searchWork) normal
+  map searchPaths reversed @?= map searchPaths normal
+  map searchWork reversed @?= map searchWork normal
+  map traceIdentityConstituents normal
+    @?= map expectedConvergentKeyResultIdentities counts
+  map (length . searchPaths) normal @?= [1, 11, 21, 41]
+  case workVectors of
+    [workZero, workTen, workTwenty, workForty] ->
+      assertLinearTraversal workZero workTen workTwenty workForty
+    _ -> assertFailure "convergent Key Result work-vector arity changed"
+  case buildVectors of
+    [workZero, workTen, workTwenty, workForty] ->
+      assertLinearTraversal workZero workTen workTwenty workForty
+    _ -> assertFailure "convergent Key Result build-vector arity changed"
+
 assertLinearTraversal :: [Int] -> [Int] -> [Int] -> [Int] -> Assertion
 assertLinearTraversal workZero workTen workTwenty workForty = do
+  assertAffineTraversal workZero workTen workTwenty workForty
+  let tenFanOutWork = zipWith (-) workTen workZero
+  assertBool "adversarial facts did not register work" (any (> 0) tenFanOutWork)
+
+assertAffineTraversal :: [Int] -> [Int] -> [Int] -> [Int] -> Assertion
+assertAffineTraversal workZero workTen workTwenty workForty = do
   let tenFanOutWork = zipWith (-) workTen workZero
   zipWith (-) workTwenty workTen @?= tenFanOutWork
   zipWith (-) workForty workTwenty @?= map (* 2) tenFanOutWork
   assertBool
     "at least one traversal-work component decreased"
     (all (>= 0) tenFanOutWork)
-  assertBool
-    "adversarial facts did not register traversal work"
-    (any (> 0) tenFanOutWork)
+
+expectedVisionFanOutIdentities :: Int -> [[RawNodeId]]
+expectedVisionFanOutIdentities count =
+  map
+    (\(vision, objective) ->
+       vision : objective : drop 2 expectedBasePathIdentity)
+    (sort
+       ((visionId, visionObjectiveId)
+          : [ ( visionFanOutId ordinal "vision"
+              , visionFanOutId ordinal "vision-objective")
+            | ordinal <- [1 .. count]
+            ]))
+
+expectedConvergentKeyResultIdentities :: Int -> [[RawNodeId]]
+expectedConvergentKeyResultIdentities count =
+  map
+    (\keyResult ->
+       take 12 expectedBasePathIdentity
+         ++ keyResult
+         : drop 13 expectedBasePathIdentity)
+    (sort
+       (pathId 1 "intervention-key-result"
+          : [convergentKeyResultId ordinal | ordinal <- [1 .. count]]))
+
+expectedBasePathIdentity :: [RawNodeId]
+expectedBasePathIdentity =
+  [ visionId
+  , visionObjectiveId
+  , strategyId
+  , strategyDriverId
+  , strategyObjectiveId
+  , strategyKeyResultId
+  , strategyActionId
+  , needId
+  , pathId 1 "need-driver"
+  , pathId 1 "need-objective"
+  , interventionId
+  , pathId 1 "intervention-action"
+  , pathId 1 "intervention-key-result"
+  , measureId
+  , pathId 1 "measure-dimension"
+  , pathId 1 "measure-kpi"
+  , situationId
+  , pathId 1 "situation-anchor"
+  ]
 
 expectedLiveSituations :: Int -> [RawNodeId]
 expectedLiveSituations count =
@@ -361,3 +455,7 @@ traversalVector work =
   , tracePathExtensions work
   , tracePathsEmitted work
   ]
+
+indexBuildVector :: TraceIndexBuildWork -> [Int]
+indexBuildVector work =
+  [traceIndexedNodeOccurrences work, traceIndexedEdgeOccurrences work]

@@ -180,6 +180,14 @@ anchorRelationFanOutId ordinal suffix =
   RawNodeId
     ("anchor-relation-fan-out-" <> Text.pack (show ordinal) <> "-" <> suffix)
 
+visionFanOutId :: Int -> Text.Text -> RawNodeId
+visionFanOutId ordinal suffix =
+  RawNodeId ("vision-fan-out-" <> Text.pack (show ordinal) <> "-" <> suffix)
+
+convergentKeyResultId :: Int -> RawNodeId
+convergentKeyResultId ordinal =
+  RawNodeId ("convergent-key-result-" <> Text.pack (show ordinal))
+
 needMeasureVisionId, needMeasureInterventionId :: RawNodeId
 needMeasureVisionId = RawNodeId "need-measure-vision"
 

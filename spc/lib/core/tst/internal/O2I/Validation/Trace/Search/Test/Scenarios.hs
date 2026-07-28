@@ -101,6 +101,34 @@ searchGraphWithAnchorRelationFanOut fanOut =
           ++ concatMap anchorRelationFanOutEdges [1 .. fanOut]))
     strategyRoles
 
+searchGraphWithVisionFanOut ::
+     Int -> ([SomeEdge] -> [SomeEdge]) -> TraceSearchResult
+searchGraphWithVisionFanOut fanOut orderEdges =
+  deriveTracePaths
+    (mkGraph
+       (fixedNodes
+          ++ pathNodes 1
+          ++ concatMap visionFanOutNodes [1 .. fanOut]
+          ++ concatMap mismatchedSpineNodes [1 .. fanOut])
+       (orderEdges
+          (fixedEdges
+             ++ pathEdges 1
+             ++ concatMap visionFanOutEdges [1 .. fanOut]
+             ++ concatMap mismatchedSpineEdges [1 .. fanOut])))
+    strategyRoles
+
+searchGraphWithConvergentKeyResults ::
+     Int -> ([SomeEdge] -> [SomeEdge]) -> TraceSearchResult
+searchGraphWithConvergentKeyResults fanOut orderEdges =
+  deriveTracePaths
+    (mkGraph
+       (fixedNodes ++ pathNodes 1 ++ map convergentKeyResultNode [1 .. fanOut])
+       (orderEdges
+          (fixedEdges
+             ++ pathEdges 1
+             ++ concatMap convergentKeyResultEdges [1 .. fanOut])))
+    strategyRoles
+
 searchGraphWithAdditions :: [SomeNode] -> [SomeEdge] -> TraceSearchResult
 searchGraphWithAdditions nodes edges =
   deriveTracePaths
@@ -185,6 +213,55 @@ pathEdges ordinal =
        ]
   where
     identify = pathId ordinal
+
+visionFanOutNodes :: Int -> [SomeNode]
+visionFanOutNodes ordinal =
+  [ contextNode vision SVision
+  , primitiveNode objective vision SVision SObjective ObjectiveInVision
+  ]
+  where
+    vision = visionFanOutId ordinal "vision"
+    objective = visionFanOutId ordinal "vision-objective"
+
+visionFanOutEdges :: Int -> [SomeEdge]
+visionFanOutEdges ordinal =
+  [ typedEdge vision orientsStrategy strategyId
+  , typedEdge
+      objective
+      orientsVisionObjectiveToStrategyObjective
+      strategyObjectiveId
+  ]
+  where
+    vision = visionFanOutId ordinal "vision"
+    objective = visionFanOutId ordinal "vision-objective"
+
+convergentKeyResultNode :: Int -> SomeNode
+convergentKeyResultNode ordinal =
+  primitiveNode
+    (convergentKeyResultId ordinal)
+    interventionId
+    SIntervention
+    SKeyResult
+    KeyResultInIntervention
+
+convergentKeyResultEdges :: Int -> [SomeEdge]
+convergentKeyResultEdges ordinal =
+  [ typedEdge
+      (pathId 1 "intervention-action")
+      contributesInterventionActionToKeyResult
+      keyResult
+  , typedEdge
+      keyResult
+      substantiatesInterventionKeyResultNeedObjective
+      (pathId 1 "need-objective")
+  , typedEdge
+      keyResult
+      contributesInterventionKeyResultToStrategyKeyResult
+      strategyKeyResultId
+  , typedEdge keyResult setsTargetForMeasureKPI (pathId 1 "measure-kpi")
+  ]
+  where
+    keyResult = convergentKeyResultId ordinal
 
 strategyActionFanOutNodes :: Int -> [SomeNode]
 strategyActionFanOutNodes ordinal =
