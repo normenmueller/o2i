@@ -159,6 +159,41 @@ The gate remains rejected until the coherent correction is committed, its exact
 clean revision passes every required check, and independent Finalreview accepts
 every required dimension with 10.0 and no findings.
 
+Revision `bd949e4af16a1bff6fbe20c1e6cb6aca98bae2bb` is rejected. Its exact
+clean repository verification passes, and all prior semantic, profile,
+Situation-View, Agent-Memory, and profile-pagination findings remain closed.
+The next correction closes three material findings:
+
+1. Replace the remaining Strategy-by-Situation cross product under reachable
+   dead-end fan-out with a Measure-led multiway join per addressed
+   Intervention/Need pair. Add a linear-work adversarial regression while
+   preserving trace identities, ordering, and the public API.
+2. Replace the removed `matchesInterventionNeed` publication end marker with a
+   stable explicit Haskell snippet boundary. The White Paper shows only the
+   public traceability entry point and remains within one page.
+3. Make visual PDF freshness platform-stable without weakening detection of
+   stale diagrams or layout. The implementation must remain proportionate to a
+   versioned bleeding-edge PDF and must not require an unpinned byte-exact
+   renderer contract.
+
+Correction implementation status:
+
+- trace derivation starts from the target Measure and intersects compatible
+  Situations and Strategies before extending a path;
+- the adversarial `0, 10, 20, 40` reachable-fan-out regression proves linear
+  traversal work with one unchanged trace identity;
+- all five staged validation listings show only their documented public
+  interfaces and occupy no more than one page each;
+- `o2i.pdf.manifest.json` binds the exact PDF bytes to all publication inputs,
+  including included Haskell sources, images, and TikZ sources; isolated
+  verification separately compares page structure and normalized text;
+- the source-bound contract detects stale visual and layout inputs without
+  assuming byte-identical output from unpinned platform toolchains;
+- `./utl/verify.sh all` passes the complete correction worktree.
+
+The repository handoff records the exact candidate revision and completed
+clean verification before the next Finalreview.
+
 ## Required Checks
 
 - Core formatting, build, tests, API tests, and Haddock;

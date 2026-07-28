@@ -138,7 +138,7 @@ data EvidenceError
     -- ^ The follow-up observation has blank provenance.
   deriving (Eq, Show)
 
--- * Evidence validation
+-- * Evidence validation interface
 -- | Assess canonical actual timing and follow-ups at an explicit time.
 --
 -- Every evidence-ready Intervention requires one actual start and every trace
@@ -154,6 +154,7 @@ assessEffectEvidenceAt ::
   -> [ActualInterventionStart]
   -> [FollowUpObservation]
   -> Validation (NonEmpty.NonEmpty EvidenceError) EvidenceAssessedModel
+-- * Evidence validation implementation
 assessEffectEvidenceAt assessedAt ready starts followUps =
   case NonEmpty.nonEmpty errors of
     Just failures -> Failure failures

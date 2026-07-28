@@ -1,8 +1,9 @@
-"""Focused tests for versioned White Paper freshness checks."""
+"""Focused tests for versioned White Paper source and render freshness."""
 
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 import subprocess
 import sys
@@ -59,7 +60,7 @@ class PdfFreshnessTest(unittest.TestCase):
         with patch.object(CHECKER.subprocess, "run", return_value=completed):
             self.assertEqual(73, CHECKER.pdf_page_count(Path("paper.pdf")))
 
-    def test_freshness_reports_page_and_text_drift(self) -> None:
+    def test_render_comparison_reports_page_and_text_drift(self) -> None:
         with (
             patch.object(CHECKER, "pdf_page_count", side_effect=(72, 73)),
             patch.object(
@@ -67,7 +68,6 @@ class PdfFreshnessTest(unittest.TestCase):
                 "normalized_pdf_text",
                 side_effect=("old", "new"),
             ),
-            patch.object(CHECKER, "pdf_page_raster_digests") as rasters,
         ):
             self.assertEqual(
                 [
@@ -75,132 +75,139 @@ class PdfFreshnessTest(unittest.TestCase):
                     "normalized publication text differs at token 1: "
                     "versioned 'old', rendered 'new'",
                 ],
-                CHECKER.freshness_errors(
-                    Path("versioned.pdf"),
-                    Path("rendered.pdf"),
-                ),
-            )
-            rasters.assert_not_called()
-
-    def test_freshness_reports_visual_only_drift(self) -> None:
-        with (
-            patch.object(CHECKER, "pdf_page_count", side_effect=(2, 2)),
-            patch.object(
-                CHECKER,
-                "normalized_pdf_text",
-                side_effect=("same text", "same text"),
-            ),
-            patch.object(
-                CHECKER,
-                "pdf_page_raster_digests",
-                side_effect=(
-                    ((1, "same"), (2, "old")),
-                    ((1, "same"), (2, "new")),
-                ),
-            ),
-        ):
-            self.assertEqual(
-                ["visual content differs on pages: 2"],
-                CHECKER.freshness_errors(
+                CHECKER.rendered_publication_errors(
                     Path("versioned.pdf"),
                     Path("rendered.pdf"),
                 ),
             )
 
-    def test_real_pdfs_detect_visual_only_drift(self) -> None:
+    def test_source_digest_detects_visual_asset_drift(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            versioned = self._render_test_pdf(root, "versioned", "2cm")
-            rendered = self._render_test_pdf(root, "rendered", "3cm")
+            root = self._publication_root(Path(directory))
+            figure = root / "img" / "figure.png"
+            before = CHECKER.publication_source_digest(root)
+            figure.write_bytes(b"new pixels")
+            after = CHECKER.publication_source_digest(root)
+            self.assertNotEqual(before, after)
 
+    def test_source_digest_detects_layout_source_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._publication_root(Path(directory))
+            before = CHECKER.publication_source_digest(root)
+            article = root / "o2i.md"
+            article.write_text(
+                article.read_text(encoding="utf-8") + "\n\\clearpage\n",
+                encoding="utf-8",
+            )
+            after = CHECKER.publication_source_digest(root)
+            self.assertNotEqual(before, after)
+
+    def test_source_digest_detects_included_snippet_drift(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._publication_root(Path(directory))
+            before = CHECKER.publication_source_digest(root)
+            (root / "snippet.hs").write_text("answer = 43\n", encoding="ascii")
+            after = CHECKER.publication_source_digest(root)
+            self.assertNotEqual(before, after)
+
+    def test_manifest_binds_current_sources_and_pdf(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._publication_root(Path(directory))
+            pdf = root / "o2i.pdf"
+            manifest = root / "o2i.pdf.manifest.json"
+            CHECKER.write_manifest(root, pdf, manifest)
             self.assertEqual(
-                ["visual content differs on pages: 1"],
-                CHECKER.freshness_errors(versioned, rendered),
+                [],
+                CHECKER.source_binding_errors(root, pdf, manifest),
             )
 
-    def test_page_rasters_are_sorted_numerically(self) -> None:
-        def render(command, **_):
-            prefix = Path(command[-1])
-            prefix.with_name("page-2.ppm").write_bytes(b"P6\n2 1\n255\nbbb")
-            prefix.with_name("page-1.ppm").write_bytes(b"P6\n1 1\n255\naaa")
-            return subprocess.CompletedProcess(command, 0, "", "")
-
-        with patch.object(CHECKER.subprocess, "run", side_effect=render):
-            digests = CHECKER.pdf_page_raster_digests(
-                Path("paper.pdf"),
-                2,
+    def test_manifest_rejects_stale_sources_and_pdf(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._publication_root(Path(directory))
+            pdf = root / "o2i.pdf"
+            manifest = root / "o2i.pdf.manifest.json"
+            CHECKER.write_manifest(root, pdf, manifest)
+            (root / "img" / "figure.png").write_bytes(b"changed")
+            pdf.write_bytes(b"changed pdf")
+            self.assertEqual(
+                [
+                    "publication source fingerprint differs",
+                    "versioned PDF digest differs from its publication manifest",
+                ],
+                CHECKER.source_binding_errors(root, pdf, manifest),
             )
 
-        self.assertEqual((1, 2), tuple(page for page, _ in digests))
-
-    def test_missing_page_raster_is_rejected(self) -> None:
-        def render(command, **_):
-            prefix = Path(command[-1])
-            prefix.with_name("page-1.ppm").write_bytes(b"P6\n1 1\n255\naaa")
-            return subprocess.CompletedProcess(command, 0, "", "")
-
-        with (
-            patch.object(CHECKER.subprocess, "run", side_effect=render),
-            self.assertRaisesRegex(
+    def test_manifest_schema_is_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            manifest = Path(directory) / "manifest.json"
+            manifest.write_text(
+                json.dumps(
+                    {
+                        "schema": CHECKER.MANIFEST_SCHEMA,
+                        "source_sha256": "0" * 64,
+                        "pdf_sha256": "1" * 64,
+                        "unexpected": "value",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
                 CHECKER.PdfFreshnessError,
-                "expected \\(1, 2\\), found \\(1,\\)",
-            ),
-        ):
-            CHECKER.pdf_page_raster_digests(Path("paper.pdf"), 2)
+                "invalid shape",
+            ):
+                CHECKER.read_manifest(manifest)
 
-    def test_rasterizer_failure_is_reported(self) -> None:
-        completed = subprocess.CompletedProcess(
-            args=[],
-            returncode=1,
-            stdout="",
-            stderr="render failed",
-        )
-        with (
-            patch.object(CHECKER.subprocess, "run", return_value=completed),
-            self.assertRaisesRegex(
-                CHECKER.PdfFreshnessError,
-                "cannot rasterize paper.pdf: render failed",
-            ),
-        ):
-            CHECKER.pdf_page_raster_digests(Path("paper.pdf"), 1)
-
-    def test_main_accepts_matching_publications(self) -> None:
+    def test_main_accepts_matching_publication(self) -> None:
         with patch.object(CHECKER, "freshness_errors", return_value=[]):
             self.assertEqual(
                 0,
-                CHECKER.main(["versioned.pdf", "rendered.pdf"]),
+                CHECKER.main(
+                    [
+                        "check",
+                        "--root",
+                        ".",
+                        "--versioned",
+                        "o2i.pdf",
+                        "--rendered",
+                        "rendered.pdf",
+                        "--manifest",
+                        "o2i.pdf.manifest.json",
+                    ]
+                ),
             )
 
-    def _render_test_pdf(
-        self,
-        directory: Path,
-        name: str,
-        width: str,
-    ) -> Path:
-        source = directory / f"{name}.tex"
-        source.write_text(
-            "\\documentclass{article}\n"
-            "\\pagestyle{empty}\n"
-            "\\begin{document}\n"
-            "Same text.\\par\\vspace{1cm}\n"
-            f"\\rule{{{width}}}{{1cm}}\n"
-            "\\end{document}\n",
+    def _publication_root(self, root: Path) -> Path:
+        (root / "img").mkdir()
+        (root / "acc").mkdir()
+        (root / "utl").mkdir()
+        (root / "o2i.md").write_text(
+            "# O2I\n\n"
+            "!include snippet.hs\n\n"
+            "![Figure](img/figure.png)\n",
+            encoding="utf-8",
+        )
+        (root / "README.md").write_text("# O2I\n", encoding="utf-8")
+        (root / "ACKNOWLEDGEMENTS.md").write_text(
+            "# Acknowledgements\n",
+            encoding="utf-8",
+        )
+        (root / "snippet.hs").write_text("answer = 42\n", encoding="ascii")
+        (root / "img" / "figure.png").write_bytes(b"pixels")
+        (root / "acc" / "figure.tex").write_text(
+            "\\begin{tikzpicture}\\end{tikzpicture}\n",
             encoding="ascii",
         )
-        completed = subprocess.run(
-            [
-                "pdflatex",
-                "-interaction=batchmode",
-                "-halt-on-error",
-                source.name,
-            ],
-            cwd=directory,
-            check=False,
-            capture_output=True,
-            text=True,
+        (root / "toPDF.sh").write_text("#!/bin/sh\n", encoding="ascii")
+        (root / "utl" / "render-archimate-profile.py").write_text(
+            "# generated profile\n",
+            encoding="ascii",
         )
-        self.assertEqual(0, completed.returncode, completed.stdout)
-        return directory / f"{name}.pdf"
+        (root / "utl" / "render-paper-figures.sh").write_text(
+            "#!/bin/sh\n",
+            encoding="ascii",
+        )
+        (root / "o2i.pdf").write_bytes(b"pdf")
+        return root
 
 
 if __name__ == "__main__":

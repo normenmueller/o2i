@@ -442,41 +442,50 @@ pathsForAddressedPair ::
   -> (RawNodeId, RawNodeId)
   -> Search TracePath
 pathsForAddressedPair index strategies (intervention, need) =
-  bindSearch macroContexts $ \contexts ->
-    bindSearch
-      (strategyRolesSearch strategies (macroStrategy contexts))
-      (primitivePaths index contexts)
+  bindSearch targetMeasures $ \measure ->
+    bindSearch (contextsForTargetMeasure index intervention need measure) $ \contexts ->
+      bindSearch
+        (strategyRolesSearch strategies (macroStrategy contexts))
+        (primitivePaths index contexts)
   where
-    situations =
+    targetMeasures = outgoingSearch index setsTargetForMeasureName intervention
+
+-- | Join only Situations and Strategies connected through one target Measure.
+contextsForTargetMeasure ::
+     TraceSearchIndex
+  -> RawNodeId
+  -> RawNodeId
+  -> RawNodeId
+  -> Search MacroContexts
+contextsForTargetMeasure index intervention need measure =
+  mapSearch makeContexts (crossSearch compatibleSituations strategyVisions)
+  where
+    compatibleSituations =
       intersectionSearch
         [ outgoingSearch index changesSituationName intervention
         , incomingSearch index surfacesNeedName need
+        , outgoingSearch index measuresSituationName measure
         ]
-    qualifyingStrategies =
+    compatibleStrategies =
       intersectionSearch
         [ incomingSearch index qualifiesNeedName need
         , incomingSearch index directsInterventionName intervention
+        , incomingSearch index framesMeasureName measure
         ]
-    situationStrategies = crossSearch situations qualifyingStrategies
-    macroContexts =
-      bindSearch situationStrategies $ \(situation, strategy) ->
+    strategyVisions =
+      bindSearch compatibleStrategies $ \strategy ->
         mapSearch
-          (\(measure, vision) ->
-             MacroContexts
-               { macroVision = vision
-               , macroStrategy = strategy
-               , macroNeed = need
-               , macroIntervention = intervention
-               , macroMeasure = measure
-               , macroSituation = situation
-               })
-          (crossSearch
-             (intersectionSearch
-                [ outgoingSearch index setsTargetForMeasureName intervention
-                , outgoingSearch index framesMeasureName strategy
-                , incomingSearch index measuresSituationName situation
-                ])
-             (incomingSearch index orientsStrategyName strategy))
+          ((,) strategy)
+          (incomingSearch index orientsStrategyName strategy)
+    makeContexts (situation, (strategy, vision)) =
+      MacroContexts
+        { macroVision = vision
+        , macroStrategy = strategy
+        , macroNeed = need
+        , macroIntervention = intervention
+        , macroMeasure = measure
+        , macroSituation = situation
+        }
 
 data MacroContexts = MacroContexts
   { macroVision :: RawNodeId

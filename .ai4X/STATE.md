@@ -5,7 +5,7 @@
 - Execution authorization: `APPROVED`
 - Authorization scope: correct and review `o2i-0004`; do not edit the
   ArchiMate model directly or push.
-- Current gate: `o2i-0004-finalreview-3`
+- Current gate: `o2i-0004-finalreview-4`
 - Gate status: `REJECTED`
 - Current node: `o2i:situation-anchor-review-correction`
 
@@ -49,11 +49,26 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 - `./utl/verify.sh all` passes the complete correction worktree, including 297
   public Core tests, three private trace-search work regressions, complete
   Haddock and HIndent checks, and the isolated White Paper build.
+- Exact revision `bd949e4af16a1bff6fbe20c1e6cb6aca98bae2bb` passes one
+  uninterrupted clean `./utl/verify.sh all`, including Git-bound executable
+  provenance.
+- Its independent Finalreviews keep the gate rejected with three material
+  correction subjects: reachable dead-end fan-out in trace derivation, one
+  broken White Paper snippet boundary, and pixel-exact PDF comparison without
+  a version-fixed publication toolchain.
+- The next coherent correction is implemented: a Measure-led multiway join
+  removes the measured reachable cross product; five validation listings show
+  only documented public interfaces; and a source-bound PDF manifest replaces
+  cross-platform pixel identity while retaining isolated page and text checks.
+- `./utl/verify.sh all` passes the complete correction worktree, including 297
+  public Core tests, four private trace-search work regressions, 11 publication
+  freshness tests, full Haddock and HIndent, and the isolated 65-page White
+  Paper build.
 
 # Gate
 
-- Attempt: `o2i-0004-finalreview-3`
-- Subject: revision `65b6c8549fcf84a7fb139adb0dfe0cd7301a3f85` and the
+- Attempt: `o2i-0004-finalreview-4`
+- Subject: revision `bd949e4af16a1bff6fbe20c1e6cb6aca98bae2bb` and the
   implementation scope declared by
   `.ai4X/governance/changes/o2i-0004/plan.md`.
 - Mandatory checks: strategy, formalization, Haskell, publication, profile,
@@ -63,9 +78,9 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 
 # Next Action
 
-Commit the coherent correction candidate, verify the exact clean revision, and
-repeat independent Finalreview until every required dimension is 10.0 without
-findings.
+Commit the coherent correction, verify its exact clean revision, and repeat
+independent exact-revision Finalreview until every required dimension is 10.0
+without findings.
 
 # Local Return Point
 

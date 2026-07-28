@@ -1,21 +1,32 @@
 #!/usr/bin/env python3
-"""Compare a versioned PDF with one freshly rendered publication."""
+"""Seal and verify the versioned White Paper against its exact sources."""
 
 from __future__ import annotations
 
 import argparse
 from hashlib import sha256
+import json
 from pathlib import Path
 import re
 import subprocess
 import sys
-import tempfile
 import unicodedata
-from typing import Optional, Sequence
+from typing import Iterable, Optional, Sequence
+
+
+MANIFEST_SCHEMA = "o2i.paper-freshness/v1"
+STATIC_INPUTS = (
+    "o2i.md",
+    "README.md",
+    "ACKNOWLEDGEMENTS.md",
+    "toPDF.sh",
+    "utl/render-archimate-profile.py",
+    "utl/render-paper-figures.sh",
+)
 
 
 class PdfFreshnessError(ValueError):
-    """A PDF cannot be inspected or differs from the current publication."""
+    """A publication cannot be inspected or is not bound to current sources."""
 
 
 def normalized_pdf_text(path: Path) -> str:
@@ -50,47 +61,121 @@ def pdf_page_count(path: Path) -> int:
     return int(match.group(1))
 
 
-def pdf_page_raster_digests(
-    path: Path,
-    expected_pages: int,
-) -> tuple[tuple[int, str], ...]:
-    """Return deterministic per-page digests of a fixed-resolution rendering."""
-    with tempfile.TemporaryDirectory(prefix="o2i-pdf-raster.") as directory:
-        prefix = Path(directory) / "page"
-        completed = subprocess.run(
-            [
-                "pdftoppm",
-                "-q",
-                "-r",
-                "96",
-                str(path),
-                str(prefix),
-            ],
-            check=False,
-            capture_output=True,
-            text=True,
-        )
-        if completed.returncode != 0:
-            detail = completed.stderr.strip() or "pdftoppm failed"
-            raise PdfFreshnessError(f"cannot rasterize {path}: {detail}")
+def file_digest(path: Path) -> str:
+    """Return one SHA-256 digest without interpreting file contents."""
+    return sha256(path.read_bytes()).hexdigest()
 
-        numbered_pages = []
-        for page_path in Path(directory).glob("page-*.ppm"):
-            match = re.fullmatch(r"page-([0-9]+)\.ppm", page_path.name)
-            if match is not None:
-                numbered_pages.append((int(match.group(1)), page_path))
-        numbered_pages.sort(key=lambda item: item[0])
-        actual_pages = tuple(page for page, _ in numbered_pages)
-        required_pages = tuple(range(1, expected_pages + 1))
-        if actual_pages != required_pages:
-            raise PdfFreshnessError(
-                f"cannot read complete page raster sequence from {path}: "
-                f"expected {required_pages}, found {actual_pages}"
-            )
-        return tuple(
-            (page, sha256(page_path.read_bytes()).hexdigest())
-            for page, page_path in numbered_pages
+
+def publication_inputs(root: Path) -> tuple[Path, ...]:
+    """Return the closed, deterministic source set of the White Paper."""
+    resolved_root = root.resolve()
+    relative_inputs = {Path(name) for name in STATIC_INPUTS}
+    article = resolved_root / "o2i.md"
+    if not article.is_file():
+        raise PdfFreshnessError(f"missing publication source: {article}")
+    source = article.read_text(encoding="utf-8")
+
+    for match in re.finditer(r"(?m)^!include(?:`[^`]*`)?\s+(.+?)\s*$", source):
+        relative_inputs.add(Path(match.group(1)))
+    for match in re.finditer(
+        r"!\[[^\]]*\]\((?:<([^>]+)>|([^\s)]+))\)",
+        source,
+    ):
+        relative_inputs.add(Path(match.group(1) or match.group(2)))
+    for match in re.finditer(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}", source):
+        relative_inputs.add(Path(match.group(1)))
+
+    acc = resolved_root / "acc"
+    if acc.is_dir():
+        relative_inputs.update(
+            path.relative_to(resolved_root)
+            for path in acc.rglob("*")
+            if path.is_file() and path.name != ".DS_Store"
         )
+
+    inputs = []
+    for relative in sorted(relative_inputs, key=lambda path: path.as_posix()):
+        candidate = (resolved_root / relative).resolve()
+        try:
+            candidate.relative_to(resolved_root)
+        except ValueError as error:
+            raise PdfFreshnessError(
+                f"publication source escapes repository: {relative}"
+            ) from error
+        if not candidate.is_file() or candidate.stat().st_size == 0:
+            raise PdfFreshnessError(f"missing publication source: {relative}")
+        inputs.append(candidate)
+    return tuple(inputs)
+
+
+def publication_source_digest(root: Path) -> str:
+    """Hash exact source paths and bytes with collision-free length framing."""
+    resolved_root = root.resolve()
+    digest = sha256()
+    for path in publication_inputs(resolved_root):
+        relative = path.relative_to(resolved_root).as_posix().encode("utf-8")
+        content = path.read_bytes()
+        for value in (relative, content):
+            digest.update(str(len(value)).encode("ascii"))
+            digest.update(b":")
+            digest.update(value)
+    return digest.hexdigest()
+
+
+def publication_manifest(root: Path, pdf: Path) -> dict[str, str]:
+    """Construct the exact source and PDF binding for one publication."""
+    return {
+        "pdf_sha256": file_digest(pdf),
+        "schema": MANIFEST_SCHEMA,
+        "source_sha256": publication_source_digest(root),
+    }
+
+
+def write_manifest(root: Path, pdf: Path, manifest: Path) -> None:
+    """Write one canonical publication binding."""
+    payload = publication_manifest(root, pdf)
+    manifest.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+
+def read_manifest(path: Path) -> dict[str, str]:
+    """Read and validate the closed publication-manifest schema."""
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise PdfFreshnessError(f"cannot read publication manifest: {error}") from error
+    if not isinstance(payload, dict) or set(payload) != {
+        "pdf_sha256",
+        "schema",
+        "source_sha256",
+    }:
+        raise PdfFreshnessError("publication manifest has an invalid shape")
+    if payload.get("schema") != MANIFEST_SCHEMA:
+        raise PdfFreshnessError("publication manifest has an unsupported schema")
+    for name in ("pdf_sha256", "source_sha256"):
+        value = payload.get(name)
+        if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{64}", value) is None:
+            raise PdfFreshnessError(f"publication manifest has invalid {name}")
+    return payload
+
+
+def source_binding_errors(
+    root: Path,
+    versioned: Path,
+    manifest: Path,
+) -> list[str]:
+    """Return stale-source or PDF-integrity diagnostics."""
+    payload = read_manifest(manifest)
+    errors = []
+    current_source = publication_source_digest(root)
+    if payload["source_sha256"] != current_source:
+        errors.append("publication source fingerprint differs")
+    current_pdf = file_digest(versioned)
+    if payload["pdf_sha256"] != current_pdf:
+        errors.append("versioned PDF digest differs from its publication manifest")
+    return errors
 
 
 def _first_text_difference(versioned: str, rendered: str) -> str:
@@ -118,8 +203,8 @@ def _first_text_difference(versioned: str, rendered: str) -> str:
     )
 
 
-def freshness_errors(versioned: Path, rendered: Path) -> list[str]:
-    """Return semantic and visual differences between two PDFs."""
+def rendered_publication_errors(versioned: Path, rendered: Path) -> list[str]:
+    """Return platform-stable structural and textual render differences."""
     errors = []
     versioned_pages = pdf_page_count(versioned)
     rendered_pages = pdf_page_count(rendered)
@@ -132,43 +217,54 @@ def freshness_errors(versioned: Path, rendered: Path) -> list[str]:
     rendered_text = normalized_pdf_text(rendered)
     if versioned_text != rendered_text:
         errors.append(_first_text_difference(versioned_text, rendered_text))
-    if versioned_pages == rendered_pages:
-        versioned_rasters = pdf_page_raster_digests(
-            versioned,
-            versioned_pages,
-        )
-        rendered_rasters = pdf_page_raster_digests(
-            rendered,
-            rendered_pages,
-        )
-        changed_pages = [
-            page
-            for (page, versioned_digest), (_, rendered_digest) in zip(
-                versioned_rasters,
-                rendered_rasters,
-            )
-            if versioned_digest != rendered_digest
-        ]
-        if changed_pages:
-            pages = ", ".join(str(page) for page in changed_pages)
-            errors.append(f"visual content differs on pages: {pages}")
     return errors
+
+
+def freshness_errors(
+    root: Path,
+    versioned: Path,
+    rendered: Path,
+    manifest: Path,
+) -> list[str]:
+    """Return source-binding and fresh-render differences."""
+    return source_binding_errors(root, versioned, manifest) + (
+        rendered_publication_errors(versioned, rendered)
+    )
 
 
 def _arguments(argv: Optional[Sequence[str]]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Check whether a versioned PDF matches a fresh render.",
+        description="Seal or verify the versioned O2I White Paper.",
     )
-    parser.add_argument("versioned", type=Path)
-    parser.add_argument("rendered", type=Path)
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    seal = subparsers.add_parser("seal")
+    seal.add_argument("--root", type=Path, required=True)
+    seal.add_argument("--pdf", type=Path, required=True)
+    seal.add_argument("--manifest", type=Path, required=True)
+
+    check = subparsers.add_parser("check")
+    check.add_argument("--root", type=Path, required=True)
+    check.add_argument("--versioned", type=Path, required=True)
+    check.add_argument("--rendered", type=Path, required=True)
+    check.add_argument("--manifest", type=Path, required=True)
     return parser.parse_args(argv)
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
-    """Run the PDF freshness check."""
+    """Seal or verify the versioned White Paper."""
     arguments = _arguments(argv)
     try:
-        errors = freshness_errors(arguments.versioned, arguments.rendered)
+        if arguments.command == "seal":
+            write_manifest(arguments.root, arguments.pdf, arguments.manifest)
+            print("[o2i|info] Versioned White Paper source binding is current.")
+            return 0
+        errors = freshness_errors(
+            arguments.root,
+            arguments.versioned,
+            arguments.rendered,
+            arguments.manifest,
+        )
     except (OSError, PdfFreshnessError) as error:
         print(f"[o2i|error] {error}", file=sys.stderr)
         return 1

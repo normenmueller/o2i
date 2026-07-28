@@ -83,8 +83,10 @@
 - Defined every Context macrorelation as an explicitly persisted Claim whose
   validity requires its asserted Primitive evidence without being inferred
   from that evidence.
-- Made canonical publication verification reject textual and visual drift in
-  the versioned White Paper through a metadata-independent PDF comparison.
+- Made canonical publication verification reject stale text, layout sources,
+  and visual assets through a source-bound PDF manifest and an isolated build.
+- Reduced validation listings to their documented public interfaces and kept
+  implementation details in the referenced Haskell sources.
 - Aligned Situation semantics by requiring every Situation to have at least one
   constituting Situation anchor.
 - Reduced Situation anchors to the minimal closed set of Business Capability,

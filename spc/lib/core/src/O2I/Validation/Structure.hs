@@ -88,13 +88,14 @@ structuralCandidatePropositions ::
      StructuralAssessment -> [CandidateGraphProposition]
 structuralCandidatePropositions = structuralAssessmentCandidates
 
--- * Structural validation
+-- * Structural validation interface
 -- | Validate unchecked input as an opaque structurally typed graph.
 --
 -- Independent errors accumulate. Success guarantees unique IDs and edges,
 -- valid ownership and interpretations, known relations, typed endpoints, and
 -- one shared owner Context instance for each PerformanceDimension membership.
 validateStructure :: RawGraph -> StructureResult
+-- * Structural validation implementation
 validateStructure raw =
   validateClaimStructure
     RawClaimGraph

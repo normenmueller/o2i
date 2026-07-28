@@ -7,4 +7,8 @@ cd "$root"
 
 python3 -B ./utl/render-archimate-profile.py
 ./utl/render-paper-figures.sh
-exec md2pdf -- o2i.md
+md2pdf -- o2i.md
+python3 -B ./utl/check-pdf-freshness.py seal \
+  --root . \
+  --pdf o2i.pdf \
+  --manifest o2i.pdf.manifest.json

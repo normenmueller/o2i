@@ -274,7 +274,7 @@ data EvidenceReadinessError
     -- ^ The baseline observation has blank provenance.
   deriving (Eq, Show)
 
--- * Readiness validation
+-- * Readiness validation interface
 -- | Validate KPI definitions, canonical timing, and one plan per effect trace.
 --
 -- Plan establishment and baseline observation may equal the explicit check
@@ -290,6 +290,7 @@ validateEvidenceReadinessAt ::
   -> [PlannedInterventionStart]
   -> [EvidencePlan]
   -> Validation (NonEmpty.NonEmpty EvidenceReadinessError) EvidenceReadyModel
+-- * Readiness validation implementation
 validateEvidenceReadinessAt checkedAt model rawDefinitions starts plans =
   case NonEmpty.nonEmpty errors of
     Just failures -> Failure failures

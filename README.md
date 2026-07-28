@@ -91,11 +91,13 @@ o2i/
 |- wtf.md
 |- o2i.md
 |- o2i.pdf
+`- o2i.pdf.manifest.json
 ```
 
 - [`wtf.md`](./wtf.md): kurzer, bewusst direkter Einstieg in zentrale O2I-Fragen
 - [`o2i.md`](./o2i.md): aktives White Paper und fachlicher Referenztext
 - [`o2i.pdf`](./o2i.pdf): bleeding-edge PDF-Fassung des aktiven White Papers
+- `o2i.pdf.manifest.json`: exakte Bindung des PDF an seine Publikationsquellen
 - `acc/`: reproduzierbare TikZ-Quellen der White-Paper-Abbildungen
 - `mdl/`: ArchiMate-Modell
 - `img/`: Abbildungen für White Paper und Modellkommunikation
@@ -110,7 +112,10 @@ o2i/
 
 ## Build
 
-Das PDF und die TikZ-basierten Abbildungen werden reproduzierbar mit `toPDF.sh` erzeugt. Das Skript rendert zunächst alle Abbildungen aus `acc/` nach `img/` und ruft anschließend [`md2pdf`](https://github.com/normenmueller/md2pdf) auf:
+Das PDF und die TikZ-basierten Abbildungen werden mit `toPDF.sh` erzeugt. Das
+Skript rendert zunächst alle Abbildungen aus `acc/` nach `img/`, ruft
+anschließend [`md2pdf`](https://github.com/normenmueller/md2pdf) auf und bindet
+das PDF durch `o2i.pdf.manifest.json` an seine exakten Publikationsquellen:
 
 ```sh
 ./toPDF.sh

@@ -886,7 +886,7 @@ Die Abbildung fokussiert die Nachweisfolge ab dem semantisch gültigen Modell. D
 @Lst:o2i-validation zeigt die strukturelle Validierung eines `RawGraph` zu einem opaken `WellFormedGraph`.
 
 ```{#lst:o2i-validation .haskell caption="O2I Strukturvalidierung"}
-!include`snippetStart="-- * Structural validation", snippetEnd="nodeErrors ::"` spc/lib/core/src/O2I/Validation/Structure.hs
+!include`snippetStart="-- * Structural validation interface", snippetEnd="-- * Structural validation implementation"` spc/lib/core/src/O2I/Validation/Structure.hs
 ```
 
 @Lst:o2i-semantic-validation zeigt den einzigen Eintrittspunkt in die zweite Validierungsstufe. Er prüft Kontext- und Strategy-Semantik sowie kollektive Strategierealisierungen als eine vollständige semantische Modellgrenze.
@@ -898,19 +898,19 @@ Die Abbildung fokussiert die Nachweisfolge ab dem semantisch gültigen Modell. D
 @Lst:o2i-effect-trace zeigt die dritte Validierungsstufe für relational nachvollziehbare Wirkung.
 
 ```{#lst:o2i-effect-trace .haskell caption="O2I Wirkungstrace"}
-!include`snippetStart="-- * Traceability validation", snippetEnd="matchesInterventionNeed ::"` spc/lib/core/src/O2I/Validation/Trace.hs
+!include`snippetStart="-- * Traceability validation interface", snippetEnd="-- * Traceability validation implementation"` spc/lib/core/src/O2I/Validation/Trace.hs
 ```
 
 @Lst:o2i-readiness-validation zeigt die vierte Validierungsstufe für ex-ante Evidenzbereitschaft.
 
 ```{#lst:o2i-readiness-validation .haskell caption="O2I Evidenzbereitschaft"}
-!include`snippetStart="-- * Readiness validation", snippetEnd="plansByTrace ::"` spc/lib/core/src/O2I/Validation/Readiness.hs
+!include`snippetStart="-- * Readiness validation interface", snippetEnd="-- * Readiness validation implementation"` spc/lib/core/src/O2I/Validation/Readiness.hs
 ```
 
 @Lst:o2i-evidence-validation zeigt die fünfte Validierungsstufe für empirische Wirkungsevidenz.
 
 ```{#lst:o2i-evidence-validation .haskell caption="O2I Evidenzvalidierung"}
-!include`snippetStart="-- * Evidence validation", snippetEnd="followUpsByTrace ::"` spc/lib/core/src/O2I/Validation/Evidence.hs
+!include`snippetStart="-- * Evidence validation interface", snippetEnd="-- * Evidence validation implementation"` spc/lib/core/src/O2I/Validation/Evidence.hs
 ```
 
 ### Modellzustand

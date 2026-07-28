@@ -26,6 +26,9 @@ tests =
         "all unreachable context kinds preserve trace identities and traversal"
         unreachableContextsTest
     , testCase
+        "reachable dead-end fan-out preserves identities with linear work"
+        reachableDeadEndFanOutTest
+    , testCase
         "relevant path growth has constant incremental work"
         linearRelevantPathGrowthTest
     , testCase
@@ -64,6 +67,26 @@ unreachableContextsTest = do
     @?= traceIndexedEdgeOccurrences (traceIndexBuildWork baselineWork)
   traceIndexedEdgeOccurrences (traceIndexBuildWork thousandWork)
     @?= traceIndexedEdgeOccurrences (traceIndexBuildWork baselineWork)
+
+reachableDeadEndFanOutTest :: Assertion
+reachableDeadEndFanOutTest = do
+  let zero = searchGraphWithDeadEnds 0
+      ten = searchGraphWithDeadEnds 10
+      twenty = searchGraphWithDeadEnds 20
+      forty = searchGraphWithDeadEnds 40
+      identity = traceIdentityConstituents zero
+      workZero = traversalVector (traceTraversalWork (searchWork zero))
+      workTen = traversalVector (traceTraversalWork (searchWork ten))
+      workTwenty = traversalVector (traceTraversalWork (searchWork twenty))
+      workForty = traversalVector (traceTraversalWork (searchWork forty))
+      tenFanOutWork = zipWith (-) workTen workZero
+  map traceIdentityConstituents [ten, twenty, forty] @?= replicate 3 identity
+  map (length . searchPaths) [zero, ten, twenty, forty] @?= replicate 4 1
+  zipWith (-) workTwenty workTen @?= tenFanOutWork
+  zipWith (-) workForty workTwenty @?= map (* 2) tenFanOutWork
+  assertBool
+    "reachable dead-end facts did not register traversal work"
+    (sum tenFanOutWork > 0)
 
 traceIdentityConstituents :: TraceSearchResult -> [[RawNodeId]]
 traceIdentityConstituents = map pathIdentity . searchPaths
@@ -130,12 +153,24 @@ traversalVector work =
 
 searchGraph :: Int -> Int -> ([SomeEdge] -> [SomeEdge]) -> TraceSearchResult
 searchGraph pathCount unreachableCount orderEdges =
+  searchGraphWithFanOut pathCount unreachableCount 0 orderEdges
+
+searchGraphWithDeadEnds :: Int -> TraceSearchResult
+searchGraphWithDeadEnds fanOut = searchGraphWithFanOut 1 0 fanOut id
+
+searchGraphWithFanOut ::
+     Int -> Int -> Int -> ([SomeEdge] -> [SomeEdge]) -> TraceSearchResult
+searchGraphWithFanOut pathCount unreachableCount fanOut orderEdges =
   deriveTracePaths
     (mkGraph
        (fixedNodes
           ++ concatMap pathNodes [1 .. pathCount]
-          ++ unreachableNodes unreachableCount)
-       (orderEdges (fixedEdges ++ concatMap pathEdges [1 .. pathCount])))
+          ++ unreachableNodes unreachableCount
+          ++ deadEndNodes fanOut)
+       (orderEdges
+          (fixedEdges
+             ++ concatMap pathEdges [1 .. pathCount]
+             ++ deadEndEdges fanOut)))
     strategyRoles
 
 mkGraph :: [SomeNode] -> [SomeEdge] -> WellFormedGraph
@@ -298,6 +333,28 @@ unreachableNodes count =
        ])
     [1 .. count]
 
+deadEndNodes :: Int -> [SomeNode]
+deadEndNodes count =
+  concatMap
+    (\ordinal ->
+       [ contextNode (deadEndId ordinal "strategy") SStrategy
+       , contextNode (deadEndId ordinal "situation") SSituation
+       ])
+    [1 .. count]
+
+deadEndEdges :: Int -> [SomeEdge]
+deadEndEdges count =
+  concatMap
+    (\ordinal ->
+       let strategy = deadEndId ordinal "strategy"
+           situation = deadEndId ordinal "situation"
+        in [ typedEdge interventionId changesSituation situation
+           , typedEdge situation surfacesNeed needId
+           , typedEdge strategy qualifiesNeed needId
+           , typedEdge strategy directsIntervention interventionId
+           ])
+    [1 .. count]
+
 strategyRoles :: Map.Map RawNodeId TraceStrategyRoles
 strategyRoles =
   Map.singleton
@@ -352,6 +409,10 @@ pathId ordinal suffix =
 unreachableId :: Int -> Text.Text -> RawNodeId
 unreachableId ordinal suffix =
   RawNodeId ("unreachable-" <> Text.pack (show ordinal) <> "-" <> suffix)
+
+deadEndId :: Int -> Text.Text -> RawNodeId
+deadEndId ordinal suffix =
+  RawNodeId ("dead-end-" <> Text.pack (show ordinal) <> "-" <> suffix)
 
 visionId, strategyId, needId, interventionId, measureId, situationId ::
      RawNodeId

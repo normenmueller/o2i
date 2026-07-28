@@ -243,7 +243,11 @@ verify_paper() {
     printf '[o2i|error] White Paper build produced no PDF.\n' >&2
     exit 1
   fi
-  python3 -B utl/check-pdf-freshness.py o2i.pdf "$work/o2i.pdf"
+  python3 -B utl/check-pdf-freshness.py check \
+    --root . \
+    --versioned o2i.pdf \
+    --rendered "$work/o2i.pdf" \
+    --manifest o2i.pdf.manifest.json
 }
 
 case "$stage" in
