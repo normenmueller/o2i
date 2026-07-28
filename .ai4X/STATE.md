@@ -6,7 +6,7 @@
 - Authorization scope: review and close `o2i-0004`; do not edit the ArchiMate
   model directly or push. This includes the approved removal of premature
   build-revision provenance before the final review candidate.
-- Current gate: `o2i-0004-finalreview-8`
+- Current gate: `o2i-0004-finalreview-9`
 - Gate status: `REJECTED`
 - Current node: `o2i:situation-anchor-gate`
 
@@ -42,16 +42,22 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 - Adversarial Vision and convergent-Key-Result contracts produce
   `1, 11, 21, 41` complete traces for fan-out `0, 10, 20, 40`, preserve exact
   identities and input-order determinism, and prove affine traversal work.
-- Focused verification passes 297 public Core tests, 13 private trace-search
-  tests, the public API contract, Werror, HIndent, and diff checks.
+- Focused verification passes 297 public Core tests, 14 private trace-search
+  tests, the public API contract, HIndent, Cabal, and diff checks.
 - One uninterrupted `./utl/verify.sh all` passes the complete correction
   worktree, including governance, model, all Haskell packages, API contracts,
   Haddock, HIndent, and the isolated White Paper build with `md2pdf 0.2.4`.
+- Exact clean revision
+  `b5baa3cf45a54d2f295539dfa30cb8b7c870d80c` passes one uninterrupted
+  `./utl/verify.sh all`.
+- The strategy and publication scopes are byte-identical to their accepted
+  scopes at `859c29de725e7150bc58f59ef15fe8ae8bcc485f`; only formalization and
+  Haskell require new Finalreviews.
 
 # Gate
 
-- Attempt: `o2i-0004-finalreview-8`
-- Subject: revision `859c29de725e7150bc58f59ef15fe8ae8bcc485f` and the
+- Attempt: `o2i-0004-finalreview-9`
+- Subject: revision `b5baa3cf45a54d2f295539dfa30cb8b7c870d80c` and the
   implementation scope declared by
   `.ai4X/governance/changes/o2i-0004/plan.md`.
 - Mandatory checks: strategy, formalization, Haskell, publication, profile,
@@ -61,10 +67,8 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 
 # Next Action
 
-Run complete repository verification, commit one coherent candidate, and
-verify its exact clean revision. Carry strategy and publication evidence
-forward only across byte-identical scopes; obtain complete new formalization
-and Haskell reviews.
+Commit one exact candidate, verify that clean revision, and obtain new
+formalization and Haskell reviews.
 
 # Local Return Point
 

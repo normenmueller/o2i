@@ -122,12 +122,26 @@ searchGraphWithConvergentKeyResults ::
 searchGraphWithConvergentKeyResults fanOut orderEdges =
   deriveTracePaths
     (mkGraph
-       (fixedNodes ++ pathNodes 1 ++ map convergentKeyResultNode [1 .. fanOut])
+       (fixedNodes
+          ++ pathNodes 1
+          ++ concatMap convergentKeyResultNodes [1 .. fanOut])
        (orderEdges
           (fixedEdges
              ++ pathEdges 1
              ++ concatMap convergentKeyResultEdges [1 .. fanOut])))
-    strategyRoles
+    (convergentKeyResultRoles fanOut)
+
+searchGraphWithFirstThreeWayGuardRejection :: TraceSearchResult
+searchGraphWithFirstThreeWayGuardRejection =
+  searchGraphWithAdditions
+    threeWayRejectionNodes
+    firstThreeWayGuardRejectionEdges
+
+searchGraphWithSecondThreeWayGuardRejection :: TraceSearchResult
+searchGraphWithSecondThreeWayGuardRejection =
+  searchGraphWithAdditions
+    threeWayRejectionNodes
+    secondThreeWayGuardRejectionEdges
 
 searchGraphWithAdditions :: [SomeNode] -> [SomeEdge] -> TraceSearchResult
 searchGraphWithAdditions nodes edges =
@@ -235,33 +249,113 @@ visionFanOutEdges ordinal =
     vision = visionFanOutId ordinal "vision"
     objective = visionFanOutId ordinal "vision-objective"
 
-convergentKeyResultNode :: Int -> SomeNode
-convergentKeyResultNode ordinal =
-  primitiveNode
-    (convergentKeyResultId ordinal)
-    interventionId
-    SIntervention
-    SKeyResult
-    KeyResultInIntervention
+convergentKeyResultNodes :: Int -> [SomeNode]
+convergentKeyResultNodes ordinal =
+  [ primitiveNode
+      strategyKeyResult
+      strategyId
+      SStrategy
+      SKeyResult
+      KeyResultInStrategy
+  , primitiveNode
+      interventionKeyResult
+      interventionId
+      SIntervention
+      SKeyResult
+      KeyResultInIntervention
+  ]
+  where
+    strategyKeyResult = convergentStrategyKeyResultId ordinal
+    interventionKeyResult = convergentInterventionKeyResultId ordinal
 
 convergentKeyResultEdges :: Int -> [SomeEdge]
 convergentKeyResultEdges ordinal =
   [ typedEdge
+      strategyKeyResult
+      substantiatesStrategyKeyResultObjective
+      strategyObjectiveId
+  , typedEdge
+      strategyActionId
+      contributesStrategyActionToKeyResult
+      strategyKeyResult
+  , typedEdge
+      strategyKeyResult
+      translatesStrategyKeyResultToNeedObjective
+      (pathId 1 "need-objective")
+  , typedEdge
+      strategyKeyResult
+      determinesMeasurePerformanceDimension
+      (pathId 1 "measure-dimension")
+  , typedEdge
       (pathId 1 "intervention-action")
       contributesInterventionActionToKeyResult
-      keyResult
+      interventionKeyResult
   , typedEdge
-      keyResult
+      interventionKeyResult
       substantiatesInterventionKeyResultNeedObjective
       (pathId 1 "need-objective")
   , typedEdge
-      keyResult
+      interventionKeyResult
       contributesInterventionKeyResultToStrategyKeyResult
-      strategyKeyResultId
-  , typedEdge keyResult setsTargetForMeasureKPI (pathId 1 "measure-kpi")
+      strategyKeyResult
+  , typedEdge
+      interventionKeyResult
+      setsTargetForMeasureKPI
+      (pathId 1 "measure-kpi")
   ]
   where
-    keyResult = convergentKeyResultId ordinal
+    strategyKeyResult = convergentStrategyKeyResultId ordinal
+    interventionKeyResult = convergentInterventionKeyResultId ordinal
+
+threeWayRejectionNodes :: [SomeNode]
+threeWayRejectionNodes =
+  [ primitiveNode
+      threeWayCandidateId
+      interventionId
+      SIntervention
+      SKeyResult
+      KeyResultInIntervention
+  , primitiveNode
+      threeWayFillerId
+      interventionId
+      SIntervention
+      SKeyResult
+      KeyResultInIntervention
+  ]
+
+firstThreeWayGuardRejectionEdges :: [SomeEdge]
+firstThreeWayGuardRejectionEdges =
+  [ typedEdge
+      threeWayCandidateId
+      contributesInterventionKeyResultToStrategyKeyResult
+      strategyKeyResultId
+  , typedEdge
+      threeWayCandidateId
+      setsTargetForMeasureKPI
+      (pathId 1 "measure-kpi")
+  , typedEdge
+      threeWayFillerId
+      substantiatesInterventionKeyResultNeedObjective
+      (pathId 1 "need-objective")
+  ]
+
+secondThreeWayGuardRejectionEdges :: [SomeEdge]
+secondThreeWayGuardRejectionEdges =
+  [ typedEdge
+      threeWayCandidateId
+      contributesInterventionKeyResultToStrategyKeyResult
+      strategyKeyResultId
+  , typedEdge
+      threeWayCandidateId
+      substantiatesInterventionKeyResultNeedObjective
+      (pathId 1 "need-objective")
+  , typedEdge threeWayFillerId setsTargetForMeasureKPI (pathId 1 "measure-kpi")
+  ]
+
+threeWayCandidateId, threeWayFillerId :: RawNodeId
+threeWayCandidateId = threeWayRejectionId "candidate"
+
+threeWayFillerId = threeWayRejectionId "filler"
 
 strategyActionFanOutNodes :: Int -> [SomeNode]
 strategyActionFanOutNodes ordinal =

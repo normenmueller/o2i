@@ -315,6 +315,34 @@ Correction implementation status:
 - accepted strategy and publication evidence is carried forward only when its
   declared scope is byte-identical at the new revision.
 
+Revision `b5baa3cf45a54d2f295539dfa30cb8b7c870d80c` passes exact clean
+repository verification and preserves the accepted strategy and publication
+scopes byte-identically. Its Haskell Finalreview rejects two verification
+defects:
+
+1. The convergent-Key-Result regression must vary both Strategy and
+   Intervention Key Results, share Need and Measure endpoints, pair the two
+   families through contribution, and retain `1, 11, 21, 41` traces with
+   affine work. Varying only Intervention Key Results does not reproduce the
+   former two-dimensional join.
+2. Selective-intersection work metrics must count the membership probes
+   actually evaluated. The implementation either evaluates both guards
+   strictly and counts two probes or records short-circuit evaluation exactly.
+
+The correction changes neither O2I semantics nor public API. It strengthens
+the adversarial proof and makes its measurement contract truthful.
+
+Correction implementation status:
+
+- the regression varies `n+1` Strategy and Intervention Key Results with one
+  pairwise contribution per valid trace and proves `1, 11, 21, 41` outputs;
+- the selective join records exactly one or two membership probes according
+  to actual short-circuit evaluation and keeps its `Int` accumulator strict;
+- all traversal and index-build vectors grow affinely and preserve exact
+  identities and input-order determinism;
+- focused Haskell verification and one uninterrupted complete repository
+  verification pass the correction worktree.
+
 ## Required Checks
 
 - Core formatting, build, tests, API tests, and Haddock;

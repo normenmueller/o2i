@@ -96,6 +96,19 @@ needObjectiveFanOutRoles count =
       , traceRoleActions = [strategyActionId]
       }
 
+convergentKeyResultRoles :: Int -> Map.Map RawNodeId TraceStrategyRoles
+convergentKeyResultRoles count =
+  Map.singleton
+    strategyId
+    TraceStrategyRoles
+      { traceRoleDriver = strategyDriverId
+      , traceRoleObjective = strategyObjectiveId
+      , traceRoleKeyResults =
+          strategyKeyResultId
+            : [convergentStrategyKeyResultId ordinal | ordinal <- [1 .. count]]
+      , traceRoleActions = [strategyActionId]
+      }
+
 contextNode :: RawNodeId -> SContext context -> SomeNode
 contextNode identifier context =
   SomeNode (ContextNode (mkNodeId identifier) context)
@@ -184,9 +197,16 @@ visionFanOutId :: Int -> Text.Text -> RawNodeId
 visionFanOutId ordinal suffix =
   RawNodeId ("vision-fan-out-" <> Text.pack (show ordinal) <> "-" <> suffix)
 
-convergentKeyResultId :: Int -> RawNodeId
-convergentKeyResultId ordinal =
-  RawNodeId ("convergent-key-result-" <> Text.pack (show ordinal))
+convergentStrategyKeyResultId :: Int -> RawNodeId
+convergentStrategyKeyResultId ordinal =
+  RawNodeId ("convergent-strategy-key-result-" <> Text.pack (show ordinal))
+
+convergentInterventionKeyResultId :: Int -> RawNodeId
+convergentInterventionKeyResultId ordinal =
+  RawNodeId ("convergent-intervention-key-result-" <> Text.pack (show ordinal))
+
+threeWayRejectionId :: Text.Text -> RawNodeId
+threeWayRejectionId suffix = RawNodeId ("three-way-rejection-" <> suffix)
 
 needMeasureVisionId, needMeasureInterventionId :: RawNodeId
 needMeasureVisionId = RawNodeId "need-measure-vision"

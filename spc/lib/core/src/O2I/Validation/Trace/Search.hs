@@ -1,3 +1,5 @@
+{-# LANGUAGE BangPatterns #-}
+
 -- | Cabal-private, output-sensitive effect-trace search.
 --
 -- One immutable index is built for one validation call and discarded with the
@@ -353,19 +355,27 @@ selectiveThreeWayEdgeIntersectionSearch ::
      Ord value => Set value -> Set value -> Set value -> Search value
 selectiveThreeWayEdgeIntersectionSearch first second third =
   Search
-    { searchValues =
-        filter
-          (\candidate ->
-             Set.member candidate firstGuard && Set.member candidate secondGuard)
-          (Set.toAscList candidates)
+    { searchValues = reverse acceptedDescending
     , searchWorkOf =
         mempty
           { traceEdgeBucketProbes = 3
           , traceEdgeOccurrences = Set.size candidates
-          , traceEdgeMembershipProbes = 2 * Set.size candidates
+          , traceEdgeMembershipProbes = membershipProbes
           }
     }
   where
+    (acceptedDescending, membershipProbes) =
+      foldl' evaluateCandidate ([], 0) (Set.toAscList candidates)
+    evaluateCandidate (accepted, probes) candidate
+      | not (Set.member candidate firstGuard) =
+        let !nextProbes = probes + 1
+         in (accepted, nextProbes)
+      | Set.member candidate secondGuard =
+        let !nextProbes = probes + 2
+         in (candidate : accepted, nextProbes)
+      | otherwise =
+        let !nextProbes = probes + 2
+         in (accepted, nextProbes)
     (candidates, firstGuard, secondGuard)
       | Set.size first <= Set.size second && Set.size first <= Set.size third =
         (first, second, third)

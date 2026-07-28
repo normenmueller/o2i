@@ -51,6 +51,9 @@ tests =
         "convergent Key Result fan-out uses the selective three-way join"
         convergentKeyResultFanOutTest
     , testCase
+        "three-way work counts only evaluated short-circuit probes"
+        threeWayShortCircuitWorkTest
+    , testCase
         "relevant path growth has constant incremental work"
         linearRelevantPathGrowthTest
     , testCase
@@ -267,6 +270,19 @@ convergentKeyResultFanOutTest = do
       assertLinearTraversal workZero workTen workTwenty workForty
     _ -> assertFailure "convergent Key Result build-vector arity changed"
 
+threeWayShortCircuitWorkTest :: Assertion
+threeWayShortCircuitWorkTest = do
+  let firstGuardRejected = searchGraphWithFirstThreeWayGuardRejection
+      secondGuardRejected = searchGraphWithSecondThreeWayGuardRejection
+      firstWork = traceTraversalWork (searchWork firstGuardRejected)
+      secondWork = traceTraversalWork (searchWork secondGuardRejected)
+  searchPaths firstGuardRejected @?= searchPaths secondGuardRejected
+  traceIndexBuildWork (searchWork firstGuardRejected)
+    @?= traceIndexBuildWork (searchWork secondGuardRejected)
+  secondWork
+    @?= firstWork
+          {traceEdgeMembershipProbes = traceEdgeMembershipProbes firstWork + 1}
+
 assertLinearTraversal :: [Int] -> [Int] -> [Int] -> [Int] -> Assertion
 assertLinearTraversal workZero workTen workTwenty workForty = do
   assertAffineTraversal workZero workTen workTwenty workForty
@@ -297,13 +313,18 @@ expectedVisionFanOutIdentities count =
 expectedConvergentKeyResultIdentities :: Int -> [[RawNodeId]]
 expectedConvergentKeyResultIdentities count =
   map
-    (\keyResult ->
-       take 12 expectedBasePathIdentity
-         ++ keyResult
+    (\(strategyKeyResult, interventionKeyResult) ->
+       take 5 expectedBasePathIdentity
+         ++ strategyKeyResult
+         : take 6 (drop 6 expectedBasePathIdentity)
+         ++ interventionKeyResult
          : drop 13 expectedBasePathIdentity)
     (sort
-       (pathId 1 "intervention-key-result"
-          : [convergentKeyResultId ordinal | ordinal <- [1 .. count]]))
+       ((strategyKeyResultId, pathId 1 "intervention-key-result")
+          : [ ( convergentStrategyKeyResultId ordinal
+              , convergentInterventionKeyResultId ordinal)
+            | ordinal <- [1 .. count]
+            ]))
 
 expectedBasePathIdentity :: [RawNodeId]
 expectedBasePathIdentity =
