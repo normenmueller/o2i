@@ -62,13 +62,12 @@ the Framework but never define its generic semantics.
 - `o2i.kind` identifies `Context`, `Primitive`, `Structuring`,
   `SituationAnchor`, or `StructuredProposition`; `o2i.type` identifies the
   corresponding O2I constructor.
-- Mapping Views are unannotated notation specifications and are not O2I graph
-  propositions:
-  `O2I Syntax - Context`, `O2I Syntax - Primitives`, and
-  `O2I Syntax - Situation`.
-- Conformance Views use distinct Candidate carriers:
-  `O2I Syntax - Contextualization` and
-  `O2I Syntax - Collective Strategy Realization`.
+- `O2I Syntax` is the complete unannotated mapping View of the declarative
+  ArchiMate profile. It specifies notation and is not an O2I graph.
+- `O2I Syntax - Contextualization` and
+  `O2I Syntax - Collective Strategy Realization` are executable Candidate
+  conformance Views. They are inspected through the AMX adapter and Core,
+  not treated as mapping authorities.
 - A `CollectiveStrategyRealization` uses at least two contributor Strategies,
   one distinct target Strategy, homogeneous `realizes` segments through one
   AND Junction, and collective Fit evidence. The Junction is the sole

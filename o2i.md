@@ -1065,9 +1065,12 @@ die vier separat abgebildeten ArchiMate-Ankerformen `Capability`, `BusinessProce
 
 \clearpage
 
+\begingroup
+\footnotesize
+
 !include spc/ctr/archimate/profile.md
 
-\clearpage
+\endgroup
 \restoregeometry
 
 Die Syntaxträgerabbildung bestimmt die konkrete ArchiMate-Form; die Bedeutung

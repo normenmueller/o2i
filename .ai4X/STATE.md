@@ -1,11 +1,11 @@
 # Handoff
 
-- Observed: 2026-07-27 CEST
+- Observed: 2026-07-28 CEST
 - Work status: `ACTIVE`
 - Execution authorization: `APPROVED`
 - Authorization scope: correct and review `o2i-0004`; do not edit the
   ArchiMate model directly or push.
-- Current gate: `o2i-0004-finalreview-2`
+- Current gate: `o2i-0004-finalreview-3`
 - Gate status: `REJECTED`
 - Current node: `o2i:situation-anchor-review-correction`
 
@@ -32,25 +32,28 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 
 # Verification
 
-- Exact revision `a149d9b793e91353be085f956ecae306e8243ef1` passed
+- Exact revision `65b6c8549fcf84a7fb139adb0dfe0cd7301a3f85` passes
   `./utl/verify.sh all`.
-- Three independent Finalreviews rejected that revision.
-- Macro-Claim and qualification boundaries, complete relation-family
-  regressions, and both Situation View layouts are closed in the working tree.
-- The Situation Anchoring View now isolates one shared operational subject
-  across `Driver @ Need`, `Action @ Intervention`, and `KPI @ Measure`; its
-  review snapshot preserves those view-specific labels.
-- PDF freshness and generated profile-table corrections are implemented and
-  await the canonical publication render and complete verification.
-- A tooling co-author added table-driven missing- and duplicate-family
-  regressions for all nine relation-mapping families; all 29 focused Extractor
-  tests pass.
-- No Haskell Core design finding is open.
+- The independent strategy Finalreview accepts that revision with 10.0 in
+  every dimension and no finding.
+- The formalization and publication Finalreviews reject it with four open
+  correction subjects: output-sensitive effect-trace derivation, deterministic
+  visual PDF freshness, current syntax-View routing in Agent Memory, and
+  balanced generated-profile pagination.
+- Every earlier semantic, profile, View, and relation-family finding remains
+  closed.
+- One coherent correction candidate replaces Cartesian trace enumeration with
+  an indexed reachable traversal, compares deterministic page rasters, routes
+  Agent Memory to the current syntax Views, and balances the generated profile
+  inventory.
+- `./utl/verify.sh all` passes the complete correction worktree, including 297
+  public Core tests, three private trace-search work regressions, complete
+  Haddock and HIndent checks, and the isolated White Paper build.
 
 # Gate
 
-- Attempt: `o2i-0004-finalreview-2`
-- Subject: revision `a149d9b793e91353be085f956ecae306e8243ef1` and the
+- Attempt: `o2i-0004-finalreview-3`
+- Subject: revision `65b6c8549fcf84a7fb139adb0dfe0cd7301a3f85` and the
   implementation scope declared by
   `.ai4X/governance/changes/o2i-0004/plan.md`.
 - Mandatory checks: strategy, formalization, Haskell, publication, profile,
@@ -60,9 +63,9 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 
 # Next Action
 
-Render every dependent publication artifact, run exact full verification, and
-repeat independent Finalreview for one coherent revision until every required
-dimension is 10.0 without findings.
+Commit the coherent correction candidate, verify the exact clean revision, and
+repeat independent Finalreview until every required dimension is 10.0 without
+findings.
 
 # Local Return Point
 

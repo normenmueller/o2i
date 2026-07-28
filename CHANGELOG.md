@@ -83,8 +83,8 @@
 - Defined every Context macrorelation as an explicitly persisted Claim whose
   validity requires its asserted Primitive evidence without being inferred
   from that evidence.
-- Made canonical publication verification reject a stale versioned White Paper
-  through a metadata-independent PDF comparison.
+- Made canonical publication verification reject textual and visual drift in
+  the versioned White Paper through a metadata-independent PDF comparison.
 - Aligned Situation semantics by requiring every Situation to have at least one
   constituting Situation anchor.
 - Reduced Situation anchors to the minimal closed set of Business Capability,
@@ -124,6 +124,8 @@
 - Mapped every identifier in the Strategy Constituents view explicitly to its
   corresponding terminology term.
 - Reworked the Haskell specification under `spc/` into a Library-first Cabal project with typed graphs, an explicit graph/model validation boundary, total relation registries, opaque validated identities, canonical metadata and staged results, closed PerformanceDimension roles, stable KPI definitions with validated units and value domains, distinct measurement levels and deltas, five-stage validation of structure, semantics, traceability, ex-ante evidence readiness, and ex-post evidence assessment, canonical planned and actual Intervention timing, absolute and relative effect criteria, fully typed effect traces, focused qualification and trace queries, separate effect and target assessment, and executable API contracts.
+- Made effect-trace derivation output-sensitive through one private graph index
+  and deterministic traversal over reachable trace evidence.
 
 ## [0.1] - 2026-07-02
 

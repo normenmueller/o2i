@@ -1656,6 +1656,26 @@ traceTests =
                    map traceIdentifier (NonEmpty.toList (effectTraces model))
              length identifiers @?= 2
              length (nub identifiers) @?= 2
+     , testCase "unreachable contexts preserve exact trace identifiers"
+         $ withTraceIdentifiers sampleGraph
+         $ \expectedIdentifiers ->
+             withTraceIdentifiers
+               (graphWithUnreachableVisions 100)
+               (\hundred ->
+                  withTraceIdentifiers
+                    (graphWithUnreachableVisions 1000)
+                    (\thousand -> do
+                       hundred @?= expectedIdentifiers
+                       thousand @?= expectedIdentifiers))
+     , testCase "input order preserves exact trace identifiers"
+         $ withTraceIdentifiers twoPathGraph
+         $ \expectedIdentifiers ->
+             withTraceIdentifiers
+               twoPathGraph
+                 { rawNodes = reverse (rawNodes twoPathGraph)
+                 , rawEdges = reverse (rawEdges twoPathGraph)
+                 }
+               (\reordered -> reordered @?= expectedIdentifiers)
      , testCase "unlisted Strategy primitives cannot substantiate a trace"
          $ withTraceable unlistedStrategyPathGraph
          $ \model ->
@@ -1707,6 +1727,54 @@ traceTests =
               $ QC.forAll (QC.elements [minBound .. maxBound])
               $ \anchor -> traceabilitySucceeds (graphWithAnchor anchor)
           ])
+
+withTraceIdentifiers :: RawGraph -> ([Text.Text] -> Assertion) -> Assertion
+withTraceIdentifiers raw action =
+  withTraceable
+    raw
+    (action
+       . map (effectTraceIdText . traceIdentifier)
+       . NonEmpty.toList
+       . effectTraces)
+
+graphWithUnreachableVisions :: Int -> RawGraph
+graphWithUnreachableVisions visionCount =
+  sampleGraph
+    { rawNodes = addedNodes ++ rawNodes sampleGraph
+    , rawEdges = addedEdges ++ rawEdges sampleGraph
+    }
+  where
+    addedNodes =
+      concatMap
+        (\ordinal ->
+           let vision = unreachableVisionId ordinal
+               objective = unreachableVisionObjectiveId ordinal
+            in [ RawContextNode vision Vision
+               , RawPrimitiveNode objective vision Objective
+               ])
+        [1 .. visionCount]
+    addedEdges =
+      concatMap
+        (\ordinal ->
+           let objective = unreachableVisionObjectiveId ordinal
+            in [ edge
+                   missionDriverId
+                   groundsMissionDriverToVisionObjective
+                   objective
+               , edge
+                   ethosPrincipleId
+                   guidesEthosPrincipleToVisionObjective
+                   objective
+               ])
+        [1 .. visionCount]
+
+unreachableVisionId :: Int -> RawNodeId
+unreachableVisionId ordinal =
+  RawNodeId ("unreachable-vision-" <> Text.pack (show ordinal))
+
+unreachableVisionObjectiveId :: Int -> RawNodeId
+unreachableVisionObjectiveId ordinal =
+  RawNodeId ("unreachable-vision-objective-" <> Text.pack (show ordinal))
 
 data MissingEdgeExpectation
   = SemanticExpectation [ModelInvariantError]

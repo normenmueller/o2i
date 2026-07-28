@@ -118,11 +118,46 @@ correction candidate closes these six findings:
 
 Correction status:
 
-- findings 1, 2, 5, and 6 are closed in the working tree;
-- findings 3 and 4 are implemented and await the canonical publication render
-  and complete verification;
-- the gate remains rejected until one coherent revision passes every required
-  check and independent Finalreview.
+- all six findings are closed by revision
+  `65b6c8549fcf84a7fb139adb0dfe0cd7301a3f85`;
+- canonical complete verification passes that exact revision;
+- the strategy Finalreview accepts it with 10.0 in every dimension;
+- the formalization and publication Finalreviews reject it with four new
+  correction subjects: output-sensitive effect-trace derivation, deterministic
+  visual PDF freshness, current syntax-View routing in Agent Memory, and
+  balanced generated-profile pagination.
+
+The next correction preserves every accepted semantic result. It changes no
+public O2I meaning or public Haskell API:
+
+1. Replace Cartesian effect-trace enumeration and repeated linear edge lookup
+   with deterministic internal graph indices and traversal of reachable facts.
+   Add work-metric regressions proving invariance under unrelated Contexts.
+2. Compare fixed-resolution deterministic page rasters in addition to page
+   count and word-boundary-preserving normalized text. Add a visual-only drift
+   regression.
+3. Route Agent Memory to `O2I Syntax` as the complete mapping View and to the
+   two separate executable conformance Views.
+4. Balance the generated profile inventory without manual one-off page breaks
+   or duplicated publication content.
+
+Correction implementation status:
+
+- the private trace search builds one graph index and traverses only reachable
+  trace evidence; public trace identity and ordering remain unchanged;
+- deterministic work regressions cover unrelated Contexts, relevant path
+  growth, and input-order invariance;
+- publication freshness compares page count, word-boundary-preserving text,
+  and fixed-resolution page rasters, including a visual-only regression;
+- Agent Memory names the complete mapping View and both executable conformance
+  Views precisely;
+- the generated profile inventory is locally compact, remains generated from
+  the single contract, and contains no manual page split;
+- `./utl/verify.sh all` passes the complete correction worktree.
+
+The gate remains rejected until the coherent correction is committed, its exact
+clean revision passes every required check, and independent Finalreview accepts
+every required dimension with 10.0 and no findings.
 
 ## Required Checks
 

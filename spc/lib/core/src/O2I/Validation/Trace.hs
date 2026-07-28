@@ -53,7 +53,6 @@ import qualified Data.Text.Lazy.Builder as TextBuilder
 import qualified Data.Text.Lazy.Builder.Int as TextBuilder
 import Data.Validation (Validation(..))
 import O2I.Graph.Raw
-import O2I.Graph.Typed
 import O2I.Language.Element
 import O2I.Language.Macro (MacroClaim)
 import O2I.Language.Relation
@@ -63,6 +62,7 @@ import O2I.Validation.Trace.Evidence hiding
   , macroEvidenceWitnessesFor
   )
 import qualified O2I.Validation.Trace.Evidence as Evidence
+import O2I.Validation.Trace.Search
 
 -- | Interpret the canonical macro rule against one completely validated
 -- semantic model.
@@ -203,30 +203,32 @@ validateTraceability semantic =
   where
     graph = modelGraph semantic
     evidence = buildMacroEvidenceContext (modelContextSemantics semantic)
-    interventions = contextNodesOf graph Intervention
+    searched =
+      deriveTracePaths
+        graph
+        (Map.map
+           (traceStrategyRoles . strategyFormulationData)
+           (strategyFormulations semantic))
+    interventions = searchInterventions searched
     indexedTraces =
       Map.fromList
-        [(traceIdentifier trace, trace) | trace <- traceCandidates semantic]
+        [ (traceIdentifier trace, trace)
+        | path <- searchPaths searched
+        , let trace = effectTraceFromPath path
+        ]
     traces = Map.elems indexedTraces
-    addressed intervention =
-      outgoingContextTargets graph intervention (nameOf addressesNeed)
     interventionErrors
       | null interventions = [NoIntervention]
       | otherwise = concatMap errorsForIntervention interventions
     errorsForIntervention intervention =
-      case addressed intervention of
+      case searchAddressedNeeds searched intervention of
         [] -> [InterventionWithoutNeed intervention]
         needs ->
           [ MissingEffectTrace intervention need
           | need <- needs
-          , not (any (matchesInterventionNeed intervention need) traces)
+          , not (searchCovers searched intervention need)
           ]
     errors = macroEvidenceErrors evidence ++ interventionErrors
-
-matchesInterventionNeed :: RawNodeId -> RawNodeId -> EffectTrace -> Bool
-matchesInterventionNeed intervention need trace =
-  effectTraceIntervention trace == mkContextRef intervention
-    && effectTraceNeed trace == mkContextRef need
 
 -- | Enumerate all distinct validated effect traces.
 effectTraces :: TraceableEffectModel -> NonEmpty.NonEmpty EffectTrace
@@ -366,200 +368,67 @@ situationAnchorRefId (SomeSituationAnchorRef identifier _) = unNodeId identifier
 situationAnchorRefKind :: SomeSituationAnchorRef -> SituationAnchor
 situationAnchorRefKind (SomeSituationAnchorRef _ anchor) = anchorValue anchor
 
-traceCandidates :: SemanticallyValidModel -> [EffectTrace]
-traceCandidates semantic = do
-  vision <- contextNodesOf graph Vision
-  strategy <- contextNodesOf graph Strategy
-  formulation <-
-    case Map.lookup strategy (strategyFormulations semantic) of
-      Just validated -> [strategyFormulationData validated]
-      Nothing -> []
-  need <- contextNodesOf graph Need
-  intervention <- contextNodesOf graph Intervention
-  measure <- contextNodesOf graph Measure
-  situation <- contextNodesOf graph Situation
-  require (has graph vision orientsStrategy strategy)
-  require (has graph strategy qualifiesNeed need)
-  require (has graph situation surfacesNeed need)
-  require (has graph strategy directsIntervention intervention)
-  require (has graph intervention addressesNeed need)
-  require (has graph intervention changesSituation situation)
-  require (has graph strategy framesMeasure measure)
-  require (has graph intervention setsTargetForMeasure measure)
-  require (has graph measure measuresSituation situation)
-  visionObjective <- primitiveNodesIn graph vision Objective
-  strategyObjective <- [rawFormulationIntent formulation]
-  require
-    (has
-       graph
-       visionObjective
-       orientsVisionObjectiveToStrategyObjective
-       strategyObjective)
-  strategyDriver <- [rawFormulationDiagnosis formulation]
-  require
-    $ has
-        graph
-        strategyDriver
-        groundsStrategyDriverToObjective
-        strategyObjective
-  strategyKeyResult <- NonEmpty.toList (rawFormulationKeyResults formulation)
-  require
-    (has
-       graph
-       strategyKeyResult
-       substantiatesStrategyKeyResultObjective
-       strategyObjective)
-  strategyAction <- NonEmpty.toList (rawFormulationActions formulation)
-  require
-    (has
-       graph
-       strategyAction
-       contributesStrategyActionToKeyResult
-       strategyKeyResult)
-  needDriver <- primitiveNodesIn graph need Driver
-  needObjective <- primitiveNodesIn graph need Objective
-  require (has graph needDriver groundsNeedDriverToObjective needObjective)
-  require
-    (has
-       graph
-       strategyKeyResult
-       translatesStrategyKeyResultToNeedObjective
-       needObjective)
-  interventionAction <- primitiveNodesIn graph intervention Action
-  require
-    (has
-       graph
-       strategyAction
-       guidesStrategyActionToInterventionAction
-       interventionAction)
-  interventionKeyResult <- primitiveNodesIn graph intervention KeyResult
-  require
-    (has
-       graph
-       interventionAction
-       contributesInterventionActionToKeyResult
-       interventionKeyResult)
-  require
-    (has
-       graph
-       interventionKeyResult
-       substantiatesInterventionKeyResultNeedObjective
-       needObjective)
-  require
-    (has
-       graph
-       interventionKeyResult
-       contributesInterventionKeyResultToStrategyKeyResult
-       strategyKeyResult)
-  performanceDimensionReference <-
-    performanceDimensionNodesIn
-      graph
-      (mkContextRef measure)
-      MeasureMeasurementDimension
-  let performanceDimension = unNodeId performanceDimensionReference
-  require
-    (has
-       graph
-       strategyDriver
-       indicatesMeasurePerformanceDimension
-       performanceDimension)
-  require
-    (has
-       graph
-       strategyKeyResult
-       determinesMeasurePerformanceDimension
-       performanceDimension)
-  kpi <- primitiveNodesIn graph measure KPI
-  require
-    (has
-       graph
-       performanceDimension
-       (containsPerformanceDimension MeasureMeasurementDimension)
-       kpi)
-  require (has graph interventionKeyResult setsTargetForMeasureKPI kpi)
-  anchorReference <- situationAnchorReferencesIn graph situation
-  let anchor = situationAnchorRefId anchorReference
-  require
-    (hasAnchor
-       graph
-       anchor
-       (anchorRelationFamilyName AnchorsNeedDriverFamily)
-       needDriver)
-  require
-    (hasAnchor
-       graph
-       interventionAction
-       (anchorRelationFamilyName ChangesAnchorFamily)
-       anchor)
-  require
-    (hasAnchor graph kpi (anchorRelationFamilyName MeasuresAnchorFamily) anchor)
-  let key =
-        EffectTraceKey
-          { keyVision = vision
-          , keyVisionObjective = visionObjective
-          , keyStrategy = strategy
-          , keyStrategyDriver = strategyDriver
-          , keyStrategyObjective = strategyObjective
-          , keyStrategyKeyResult = strategyKeyResult
-          , keyStrategyAction = strategyAction
-          , keyNeed = need
-          , keyNeedDriver = needDriver
-          , keyNeedObjective = needObjective
-          , keyIntervention = intervention
-          , keyInterventionAction = interventionAction
-          , keyInterventionKeyResult = interventionKeyResult
-          , keyMeasure = measure
-          , keyMeasurePerformanceDimension = performanceDimension
-          , keyMeasureKPI = kpi
-          , keySituation = situation
-          , keySituationAnchor = anchor
-          }
-  pure
-    EffectTrace
-      { effectTraceIdentifier = EffectTraceId key
-      , effectTraceVision = mkContextRef vision
-      , effectTraceVisionObjective = mkNodeId visionObjective
-      , effectTraceStrategy = mkContextRef strategy
-      , effectTraceStrategyDriver = mkNodeId strategyDriver
-      , effectTraceStrategyObjective = mkNodeId strategyObjective
-      , effectTraceStrategyKeyResult = mkNodeId strategyKeyResult
-      , effectTraceStrategyAction = mkNodeId strategyAction
-      , effectTraceNeed = mkContextRef need
-      , effectTraceNeedDriver = mkNodeId needDriver
-      , effectTraceNeedObjective = mkNodeId needObjective
-      , effectTraceIntervention = mkContextRef intervention
-      , effectTraceInterventionAction = mkNodeId interventionAction
-      , effectTraceInterventionKeyResult = mkNodeId interventionKeyResult
-      , effectTraceMeasure = mkContextRef measure
-      , effectTraceMeasurePerformanceDimension = performanceDimensionReference
-      , effectTraceKPI = mkNodeId kpi
-      , effectTraceSituation = mkContextRef situation
-      , effectTraceSituationAnchor = anchorReference
-      }
+traceStrategyRoles :: RawStrategyFormulation -> TraceStrategyRoles
+traceStrategyRoles formulation =
+  TraceStrategyRoles
+    { traceRoleDriver = rawFormulationDiagnosis formulation
+    , traceRoleObjective = rawFormulationIntent formulation
+    , traceRoleKeyResults =
+        NonEmpty.toList (rawFormulationKeyResults formulation)
+    , traceRoleActions = NonEmpty.toList (rawFormulationActions formulation)
+    }
+
+effectTraceFromPath :: TracePath -> EffectTrace
+effectTraceFromPath path =
+  EffectTrace
+    { effectTraceIdentifier = EffectTraceId key
+    , effectTraceVision = mkContextRef (pathVision path)
+    , effectTraceVisionObjective = mkNodeId (pathVisionObjective path)
+    , effectTraceStrategy = mkContextRef (pathStrategy path)
+    , effectTraceStrategyDriver = mkNodeId (pathStrategyDriver path)
+    , effectTraceStrategyObjective = mkNodeId (pathStrategyObjective path)
+    , effectTraceStrategyKeyResult = mkNodeId (pathStrategyKeyResult path)
+    , effectTraceStrategyAction = mkNodeId (pathStrategyAction path)
+    , effectTraceNeed = mkContextRef (pathNeed path)
+    , effectTraceNeedDriver = mkNodeId (pathNeedDriver path)
+    , effectTraceNeedObjective = mkNodeId (pathNeedObjective path)
+    , effectTraceIntervention = mkContextRef (pathIntervention path)
+    , effectTraceInterventionAction = mkNodeId (pathInterventionAction path)
+    , effectTraceInterventionKeyResult =
+        mkNodeId (pathInterventionKeyResult path)
+    , effectTraceMeasure = mkContextRef (pathMeasure path)
+    , effectTraceMeasurePerformanceDimension =
+        mkNodeId (pathMeasurePerformanceDimension path)
+    , effectTraceKPI = mkNodeId (pathMeasureKPI path)
+    , effectTraceSituation = mkContextRef (pathSituation path)
+    , effectTraceSituationAnchor = anchorReference
+    }
   where
-    graph = modelGraph semantic
-
-require :: Bool -> [()]
-require True = [()]
-require False = []
-
-situationAnchorReferencesIn ::
-     WellFormedGraph -> RawNodeId -> [SomeSituationAnchorRef]
-situationAnchorReferencesIn graph situation =
-  [ SomeSituationAnchorRef identifier anchor
-  | rawIdentifier <- constitutingAnchorNodes graph situation
-  , Just (SomeNode (AnchorNode identifier anchor)) <-
-      [lookupNode graph rawIdentifier]
-  ]
-
-has :: WellFormedGraph -> RawNodeId -> Relation from to -> RawNodeId -> Bool
-has graph from relation to = hasEdge graph from (nameOf relation) to
-
-hasAnchor :: WellFormedGraph -> RawNodeId -> RelationName -> RawNodeId -> Bool
-hasAnchor = hasEdge
-
-nameOf :: Relation from to -> RelationName
-nameOf = relationName . relationSpec
+    key =
+      EffectTraceKey
+        { keyVision = pathVision path
+        , keyVisionObjective = pathVisionObjective path
+        , keyStrategy = pathStrategy path
+        , keyStrategyDriver = pathStrategyDriver path
+        , keyStrategyObjective = pathStrategyObjective path
+        , keyStrategyKeyResult = pathStrategyKeyResult path
+        , keyStrategyAction = pathStrategyAction path
+        , keyNeed = pathNeed path
+        , keyNeedDriver = pathNeedDriver path
+        , keyNeedObjective = pathNeedObjective path
+        , keyIntervention = pathIntervention path
+        , keyInterventionAction = pathInterventionAction path
+        , keyInterventionKeyResult = pathInterventionKeyResult path
+        , keyMeasure = pathMeasure path
+        , keyMeasurePerformanceDimension = pathMeasurePerformanceDimension path
+        , keyMeasureKPI = pathMeasureKPI path
+        , keySituation = pathSituation path
+        , keySituationAnchor = pathSituationAnchor path
+        }
+    anchorReference =
+      case someSAnchor (pathSituationAnchorKind path) of
+        SomeSAnchor anchor ->
+          SomeSituationAnchorRef (mkNodeId (pathSituationAnchor path)) anchor
 
 macroEvidenceErrors :: MacroEvidenceContext -> [TraceabilityError]
 macroEvidenceErrors evidence =

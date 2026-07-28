@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import argparse
+from hashlib import sha256
 from pathlib import Path
 import re
 import subprocess
 import sys
+import tempfile
 import unicodedata
 from typing import Optional, Sequence
 
@@ -17,7 +19,7 @@ class PdfFreshnessError(ValueError):
 
 
 def normalized_pdf_text(path: Path) -> str:
-    """Return metadata-independent PDF text with layout whitespace removed."""
+    """Return metadata-independent PDF text with normalized word boundaries."""
     completed = subprocess.run(
         ["pdftotext", "-enc", "UTF-8", "-nopgbrk", str(path), "-"],
         check=False,
@@ -28,7 +30,7 @@ def normalized_pdf_text(path: Path) -> str:
         detail = completed.stderr.strip() or "pdftotext failed"
         raise PdfFreshnessError(f"cannot extract {path}: {detail}")
     normalized = unicodedata.normalize("NFKC", completed.stdout)
-    return "".join(normalized.split())
+    return " ".join(normalized.split())
 
 
 def pdf_page_count(path: Path) -> int:
@@ -48,8 +50,76 @@ def pdf_page_count(path: Path) -> int:
     return int(match.group(1))
 
 
+def pdf_page_raster_digests(
+    path: Path,
+    expected_pages: int,
+) -> tuple[tuple[int, str], ...]:
+    """Return deterministic per-page digests of a fixed-resolution rendering."""
+    with tempfile.TemporaryDirectory(prefix="o2i-pdf-raster.") as directory:
+        prefix = Path(directory) / "page"
+        completed = subprocess.run(
+            [
+                "pdftoppm",
+                "-q",
+                "-r",
+                "96",
+                str(path),
+                str(prefix),
+            ],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if completed.returncode != 0:
+            detail = completed.stderr.strip() or "pdftoppm failed"
+            raise PdfFreshnessError(f"cannot rasterize {path}: {detail}")
+
+        numbered_pages = []
+        for page_path in Path(directory).glob("page-*.ppm"):
+            match = re.fullmatch(r"page-([0-9]+)\.ppm", page_path.name)
+            if match is not None:
+                numbered_pages.append((int(match.group(1)), page_path))
+        numbered_pages.sort(key=lambda item: item[0])
+        actual_pages = tuple(page for page, _ in numbered_pages)
+        required_pages = tuple(range(1, expected_pages + 1))
+        if actual_pages != required_pages:
+            raise PdfFreshnessError(
+                f"cannot read complete page raster sequence from {path}: "
+                f"expected {required_pages}, found {actual_pages}"
+            )
+        return tuple(
+            (page, sha256(page_path.read_bytes()).hexdigest())
+            for page, page_path in numbered_pages
+        )
+
+
+def _first_text_difference(versioned: str, rendered: str) -> str:
+    """Describe the first differing normalized text token."""
+    versioned_tokens = versioned.split()
+    rendered_tokens = rendered.split()
+    shared = min(len(versioned_tokens), len(rendered_tokens))
+    index = next(
+        (
+            position
+            for position in range(shared)
+            if versioned_tokens[position] != rendered_tokens[position]
+        ),
+        shared,
+    )
+    versioned_token = (
+        versioned_tokens[index] if index < len(versioned_tokens) else "<end>"
+    )
+    rendered_token = (
+        rendered_tokens[index] if index < len(rendered_tokens) else "<end>"
+    )
+    return (
+        f"normalized publication text differs at token {index + 1}: "
+        f"versioned {versioned_token!r}, rendered {rendered_token!r}"
+    )
+
+
 def freshness_errors(versioned: Path, rendered: Path) -> list[str]:
-    """Return semantic publication differences between two PDFs."""
+    """Return semantic and visual differences between two PDFs."""
     errors = []
     versioned_pages = pdf_page_count(versioned)
     rendered_pages = pdf_page_count(rendered)
@@ -58,8 +128,30 @@ def freshness_errors(versioned: Path, rendered: Path) -> list[str]:
             f"page count differs: versioned {versioned_pages}, "
             f"rendered {rendered_pages}"
         )
-    if normalized_pdf_text(versioned) != normalized_pdf_text(rendered):
-        errors.append("normalized publication text differs")
+    versioned_text = normalized_pdf_text(versioned)
+    rendered_text = normalized_pdf_text(rendered)
+    if versioned_text != rendered_text:
+        errors.append(_first_text_difference(versioned_text, rendered_text))
+    if versioned_pages == rendered_pages:
+        versioned_rasters = pdf_page_raster_digests(
+            versioned,
+            versioned_pages,
+        )
+        rendered_rasters = pdf_page_raster_digests(
+            rendered,
+            rendered_pages,
+        )
+        changed_pages = [
+            page
+            for (page, versioned_digest), (_, rendered_digest) in zip(
+                versioned_rasters,
+                rendered_rasters,
+            )
+            if versioned_digest != rendered_digest
+        ]
+        if changed_pages:
+            pages = ", ".join(str(page) for page in changed_pages)
+            errors.append(f"visual content differs on pages: {pages}")
     return errors
 
 
