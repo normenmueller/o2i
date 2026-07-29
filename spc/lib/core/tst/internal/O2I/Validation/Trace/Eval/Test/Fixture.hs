@@ -2,13 +2,16 @@
 
 -- | Semantically valid fixtures for private effect-trace evaluation.
 module O2I.Validation.Trace.Eval.Test.Fixture
-  ( emptyEvaluation
+  ( TraceScenario(..)
+  , validateTraceScenario
+  , evaluateTraceScenario
+  , baselineScenario
+  , emptyEvaluation
   , baselineEvaluation
   , extraInterventionEvaluation
   , additionalProcessAnchorEvaluation
   , allAnchorKindsEvaluation
   , processAnchorFanOutEvaluation
-  , permutedBaselineEvaluation
   , interventionId
   , needId
   , extraInterventionId
@@ -16,25 +19,62 @@ module O2I.Validation.Trace.Eval.Test.Fixture
 
 import Data.Text (Text)
 import qualified Data.Text as Text
+import Data.Validation (Validation(..))
 import O2I.Graph.Raw
 import O2I.Language.Element
 import O2I.Language.Relation
 import O2I.Validation.MacroEvidence.Prepare
 import O2I.Validation.MacroEvidence.Test.Fixture
   ( ScenarioShape(Sparse)
+  , registryFormulations
   , registryGraph
   , scenarioSemantic
-  , validateRegistryGraph
-  , validateRegistryScenario
   )
-import O2I.Validation.Semantics.Context (ContextSemantics)
+import O2I.Validation.Semantics.Context
+  ( ContextSemantics
+  , RawStrategyFormulation
+  , validateContextSemantics
+  )
+import O2I.Validation.Structure
+  ( StructureResult(..)
+  , structuralGraph
+  , validateStructure
+  )
 import O2I.Validation.Trace.Eval
+
+-- | Raw graph and formulations admitted together at the semantic boundary.
+data TraceScenario = TraceScenario
+  { traceScenarioGraph :: RawGraph
+  , traceScenarioFormulations :: [RawStrategyFormulation]
+  }
+
+-- | Validate one test scenario through the production semantic boundary.
+validateTraceScenario :: TraceScenario -> Either String ContextSemantics
+validateTraceScenario scenario =
+  case validateStructure (traceScenarioGraph scenario) of
+    StructureModelRejected errors -> Left ("structural errors: " ++ show errors)
+    StructureInternalFailure internal ->
+      Left ("internal structural failure: " ++ show internal)
+    StructureAccepted assessment ->
+      case validateContextSemantics
+             (structuralGraph assessment)
+             (traceScenarioFormulations scenario) of
+        Failure errors -> Left ("semantic errors: " ++ show errors)
+        Success semantics -> Right semantics
+
+-- | Prepare shared evidence once and evaluate one validated scenario.
+evaluateTraceScenario :: TraceScenario -> Either String TraceEvaluationResult
+evaluateTraceScenario =
+  fmap (evaluateEffectTraces . prepareMacroEvidence) . validateTraceScenario
+
+baselineScenario :: TraceScenario
+baselineScenario = TraceScenario registryGraph registryFormulations
 
 emptyEvaluation :: Either String TraceEvaluationResult
 emptyEvaluation = evaluateSemantic (scenarioSemantic Sparse 0)
 
 baselineEvaluation :: Either String TraceEvaluationResult
-baselineEvaluation = evaluateSemantic validateRegistryScenario
+baselineEvaluation = evaluateTraceScenario baselineScenario
 
 extraInterventionEvaluation :: Either String TraceEvaluationResult
 extraInterventionEvaluation =
@@ -78,16 +118,9 @@ processAnchorFanOutEvaluation count =
        [(BusinessProcess, ordinal) | ordinal <- [1 .. count]]
        registryGraph)
 
-permutedBaselineEvaluation :: Either String TraceEvaluationResult
-permutedBaselineEvaluation =
-  evaluateGraph
-    registryGraph
-      { rawNodes = reverse (rawNodes registryGraph)
-      , rawEdges = reverse (rawEdges registryGraph)
-      }
-
 evaluateGraph :: RawGraph -> Either String TraceEvaluationResult
-evaluateGraph = evaluateSemantic . validateRegistryGraph
+evaluateGraph graph =
+  evaluateTraceScenario (TraceScenario graph registryFormulations)
 
 evaluateSemantic ::
      Either String ContextSemantics -> Either String TraceEvaluationResult

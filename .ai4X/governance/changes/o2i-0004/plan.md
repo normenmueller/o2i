@@ -831,6 +831,26 @@ finding and 10.0 in every required dimension. `Trace.Search` can now be
 replaced by Eval-owned oracle and multi-axis contracts and then removed without
 a compatibility module.
 
+Package 5a establishes replacement evidence before deletion. It ports every
+material semantic and multi-axis contract to the Eval-owned private suite and
+adds an independent naive trace oracle that does not consume Trace rules,
+plans, or evaluator code. Production modules and the existing Search component
+remain unchanged. Package 5b removes Search only after Package 5a passes
+focused verification and bounded independent review.
+
+The first Package 5a review rejects three test-only gaps. Its correction uses a
+semantically admitted family of unconstituted anchors, applies one canonical
+permutation to a multi-result scenario, and compares typed coverage exactly
+with an independent Oracle including false addressed pairs. Production and
+Search remain byte-identical throughout this correction.
+
+The corrected Package 5a passes 22/22 focused Eval contracts, every Core suite,
+compile/import contracts, Cabal check, HIndent, and diff checks. Its renewed
+independent Haskell review reports no finding and 10.0 in every required
+dimension. The Eval-owned semantic oracle and multi-axis contracts are accepted
+as the verification authority required before Package 5b removes
+`Trace.Search` and its private test suite without a compatibility module.
+
 ## Required Checks
 
 - Core formatting, build, tests, API tests, and Haddock;

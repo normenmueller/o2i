@@ -291,6 +291,8 @@ test-suite o2i-trace-eval-internal-test
     O2I.Validation.Trace.Eval,
     O2I.Validation.Trace.Eval.Test.Contracts,
     O2I.Validation.Trace.Eval.Test.Fixture,
+    O2I.Validation.Trace.Eval.Test.Oracle,
+    O2I.Validation.Trace.Eval.Test.Scenarios,
     O2I.Validation.Trace.Rule,
     O2I.Validation.Trace.Types
   build-depends:

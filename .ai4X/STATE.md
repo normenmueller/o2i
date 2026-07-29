@@ -72,9 +72,14 @@ complete Core, compile, import, Cabal, HIndent, and diff checks. Work accounting
 includes Intervention enumeration and incremental typed coverage construction;
 the public `Show EffectTrace` representation is locked. The renewed independent
 review reports no finding and 10.0 in every dimension. Replace the remaining
-private `Trace.Search` component with Eval-owned semantic-oracle and multi-axis
-contracts, preserve the public facade and diagnostics, and remove Search
-without a compatibility module.
+private `Trace.Search` verification ownership with Eval-owned semantic-oracle
+and multi-axis contracts. The corrected package covers semantically admitted
+unconstituted anchors, meaningful multi-result permutation, and exact
+oracle-owned coverage including false addressed pairs. It passes 22/22 focused
+tests, every Core suite, compile/import, Cabal, HIndent, and diff checks; its
+renewed independent Haskell review reports no finding and 10.0 in every
+dimension. Remove `Trace.Search` and its private test suite without a
+compatibility module, then verify the remaining Eval-owned authority.
 
 # Local Return Point
 
