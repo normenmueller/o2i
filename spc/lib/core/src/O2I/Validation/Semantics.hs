@@ -32,6 +32,7 @@ module O2I.Validation.Semantics
   , modelMaturity
   , modelGraph
   , modelContextSemantics
+  , modelPreparedMacroEvidence
   , strategyFormulations
   , strategyFormulationData
   , validatedCollectiveStrategyRealizations
@@ -49,6 +50,7 @@ import O2I.Graph.Typed
 import O2I.Language.Claim
 import O2I.Language.Element
 import O2I.Validation.Collective
+import O2I.Validation.MacroEvidence
 import O2I.Validation.Semantics.Context
 import O2I.Validation.Structure (StructuralAssessment)
 
@@ -117,6 +119,7 @@ data ModelAssessment = ModelAssessment
 data SemanticallyValidModel =
   SemanticallyValidModel
     ContextSemantics
+    PreparedMacroEvidence
     ValidatedCollectiveStrategyRealizations
 
 -- * Complete semantic validation interface
@@ -162,11 +165,11 @@ assessModelSemantics structure inputs =
                     CollectiveSemanticError
                     (collectiveStrategyRealizationErrors blockedCollective))))
         ContextPending context pendingContexts ->
-          let assessment =
-                assessCollectiveStrategyRealizations
-                  context
-                  (modelCollectiveFitEvidence inputs)
+          let (_, assessment) =
+                assessCollectiveWithPreparedMacroEvidence
+                  inputs
                   collectiveStructure
+                  context
               pending =
                 appendNonEmpty
                   (fmap contextCandidate pendingContexts)
@@ -184,11 +187,11 @@ assessModelSemantics structure inputs =
                   , pendingCandidates
                   , SemanticsPending pending)
         ContextAccepted context ->
-          let assessment =
-                assessCollectiveStrategyRealizations
-                  context
-                  (modelCollectiveFitEvidence inputs)
+          let (prepared, assessment) =
+                assessCollectiveWithPreparedMacroEvidence
+                  inputs
                   collectiveStructure
+                  context
               pendingCandidates = collectiveCandidates assessment
            in case validateCollectiveStrategyRealizations assessment of
                 Failure errors ->
@@ -208,7 +211,23 @@ assessModelSemantics structure inputs =
                       , Just validated
                       , []
                       , SemanticsAccepted
-                          (SemanticallyValidModel context validated))
+                          (SemanticallyValidModel context prepared validated))
+
+assessCollectiveWithPreparedMacroEvidence ::
+     ModelSemanticsInput
+  -> CollectiveClaimStructureAssessment
+  -> ContextSemantics
+  -> (PreparedMacroEvidence, CollectiveStrategyRealizationAssessment)
+assessCollectiveWithPreparedMacroEvidence inputs structure context =
+  (prepared, assessment)
+  where
+    prepared = prepareMacroEvidence context
+    assessment =
+      assessCollectiveStrategyRealizations
+        context
+        (collectiveMacroEvidenceFor prepared)
+        (modelCollectiveFitEvidence inputs)
+        structure
 
 -- | Read the closed result state derived by the normative Core.
 modelAssessmentStatus :: ModelAssessment -> ModelAssessmentStatus
@@ -261,22 +280,26 @@ modelMaturity = assessedMaturity
 
 -- | Access the structurally valid graph underlying complete semantics.
 modelGraph :: SemanticallyValidModel -> WellFormedGraph
-modelGraph (SemanticallyValidModel context _) = contextGraph context
+modelGraph (SemanticallyValidModel context _ _) = contextGraph context
 
 -- | Project Context semantics for internal downstream validation.
 modelContextSemantics :: SemanticallyValidModel -> ContextSemantics
-modelContextSemantics (SemanticallyValidModel context _) = context
+modelContextSemantics (SemanticallyValidModel context _ _) = context
+
+-- | Reuse the exact macro evidence prepared before Collective assessment.
+modelPreparedMacroEvidence :: SemanticallyValidModel -> PreparedMacroEvidence
+modelPreparedMacroEvidence (SemanticallyValidModel _ prepared _) = prepared
 
 -- | Access complete Strategy formulations indexed by Strategy Context.
 strategyFormulations ::
      SemanticallyValidModel -> Map RawNodeId StrategyFormulation
-strategyFormulations (SemanticallyValidModel context _) =
+strategyFormulations (SemanticallyValidModel context _ _) =
   contextStrategyFormulations context
 
 -- | Access validated collective Strategy realizations.
 validatedCollectiveStrategyRealizations ::
      SemanticallyValidModel -> ValidatedCollectiveStrategyRealizations
-validatedCollectiveStrategyRealizations (SemanticallyValidModel _ collective) =
+validatedCollectiveStrategyRealizations (SemanticallyValidModel _ _ collective) =
   collective
 
 -- | Resolve a raw identifier as a typed Context in a semantic model.
@@ -285,13 +308,13 @@ lookupSemanticContextRef ::
   -> SContext context
   -> RawNodeId
   -> Maybe (ContextRef context)
-lookupSemanticContextRef (SemanticallyValidModel context _) =
+lookupSemanticContextRef (SemanticallyValidModel context _ _) =
   lookupContextSemanticsRef context
 
 -- | Find Strategies that qualify one situated Need.
 qualifyingStrategies ::
      SemanticallyValidModel -> ContextRef 'Need -> [ContextRef 'Strategy]
-qualifyingStrategies (SemanticallyValidModel context _) =
+qualifyingStrategies (SemanticallyValidModel context _ _) =
   qualifyingStrategiesInContext context
 
 deriveMaturity :: Map RawNodeId Elaboration -> ModelAssessmentStatus -> Maturity

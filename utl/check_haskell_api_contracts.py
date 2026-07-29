@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Check the public Haskell API from an external client boundary."""
+"""Check public API and private type-safety compile contracts."""
 
 from __future__ import annotations
 
@@ -17,6 +17,21 @@ from typing import Iterable
 
 
 ERROR_CODE = re.compile(r"GHC-\d+")
+IMPORT_MODULE = re.compile(
+    r"^[ \t]*import\b"
+    r"(?:(?:[ \t\r\n]+)|(?:safe\b)|(?:qualified\b))*"
+    r"(?P<module>[A-Z][A-Za-z0-9_']*"
+    r"(?:\.[A-Z][A-Za-z0-9_']*)*)",
+    re.MULTILINE,
+)
+RELATIONAL_INTERNAL_MODULE = "O2I.Validation.Relational.Internal"
+RELATIONAL_INTERNAL_IMPORTERS = frozenset(
+    {
+        "O2I/Validation/Relational/Eval.hs",
+        "O2I/Validation/Relational/Index.hs",
+        "O2I/Validation/Relational/Types.hs",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -30,6 +45,12 @@ class PackageContract:
     package: str
     compile_pass: str
     compile_failures: tuple[CompileFailure, ...]
+
+
+@dataclass(frozen=True)
+class PrivateCompileFailure:
+    source: str
+    diagnostics: tuple[tuple[str, int], ...]
 
 
 CONTRACTS = (
@@ -113,6 +134,69 @@ CONTRACTS = (
     ),
 )
 
+PRIVATE_COMPILE_FAILURES = (
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "MacroEvidenceEndpointMismatch.hs",
+        (("GHC-83865", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "MacroEvidenceProjectionMismatch.hs",
+        (("GHC-83865", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "RelationalEndpointVariableMismatch.hs",
+        (("GHC-83865", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "RelationalTypedProjectionMismatch.hs",
+        (("GHC-83865", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "RelationalCrossScopeVariable.hs",
+        (("GHC-25897", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "RelationalDisconnectedPlan.hs",
+        (("GHC-31891", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "RelationalProjectionTokenMismatch.hs",
+        (("GHC-83865", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "RelationalProjectionScopeMismatch.hs",
+        (("GHC-83865", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "RelationalProjectionEndpointMismatch.hs",
+        (("GHC-83865", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "RelationalMatchedConstructionOutsideExecutor.hs",
+        (("GHC-88464", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "RelationalProjectionApplicationOutsideExecutor.hs",
+        (("GHC-88464", 1),),
+    ),
+)
+
+PRIVATE_COMPILE_PASSES = (
+    "spc/lib/core/tst/internal/compile-pass/MacroVocabulary.hs",
+    "spc/lib/core/tst/internal/compile-pass/RelationalPlan.hs",
+)
+
 
 def parse_diagnostics(output: str) -> list[dict[str, object]]:
     diagnostics = []
@@ -178,6 +262,34 @@ def compiler_command(
     ]
 
 
+def private_compiler_command(
+    project_dir: Path,
+    build_dir: Path,
+    source: Path,
+    source_dir: Path,
+    output_dir: Path,
+) -> list[str]:
+    return [
+        "cabal",
+        "-v0",
+        f"--project-dir={project_dir}",
+        f"--builddir={build_dir}",
+        "exec",
+        "--",
+        "ghc",
+        "-v0",
+        "-fno-code",
+        "-fforce-recomp",
+        "-fmax-errors=1000",
+        "-ddump-json",
+        f"-i{source_dir}",
+        f"-odir={output_dir}",
+        f"-hidir={output_dir}",
+        f"-stubdir={output_dir}",
+        str(source),
+    ]
+
+
 def compile_source(
     root: Path,
     project_dir: Path,
@@ -203,8 +315,119 @@ def compile_source(
         )
 
 
+def compile_private_source(
+    root: Path,
+    project_dir: Path,
+    build_dir: Path,
+    source_name: str,
+) -> subprocess.CompletedProcess[str]:
+    source = (root / source_name).resolve()
+    source_dir = (root / "spc/lib/core/src").resolve()
+    with tempfile.TemporaryDirectory(
+        prefix="o2i-private-contract."
+    ) as temporary:
+        command = private_compiler_command(
+            project_dir,
+            build_dir,
+            source,
+            source_dir,
+            Path(temporary),
+        )
+        return subprocess.run(
+            command,
+            cwd=root,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+
 def combined_output(result: subprocess.CompletedProcess[str]) -> str:
     return result.stdout + result.stderr
+
+
+def haskell_code(source: str) -> str:
+    """Blank comments and strings while retaining token positions and lines."""
+    result = []
+    index = 0
+    block_depth = 0
+    in_line_comment = False
+    in_string = False
+    escaped = False
+    while index < len(source):
+        current = source[index]
+        following = source[index + 1] if index + 1 < len(source) else ""
+        if in_line_comment:
+            if current == "\n":
+                in_line_comment = False
+                result.append(current)
+            else:
+                result.append(" ")
+        elif block_depth:
+            if current == "{" and following == "-":
+                block_depth += 1
+                result.extend((" ", " "))
+                index += 1
+            elif current == "-" and following == "}":
+                block_depth -= 1
+                result.extend((" ", " "))
+                index += 1
+            else:
+                result.append("\n" if current == "\n" else " ")
+        elif in_string:
+            if current == "\n":
+                in_string = False
+                escaped = False
+                result.append(current)
+            elif current == '"' and not escaped:
+                in_string = False
+                result.append(" ")
+            else:
+                escaped = current == "\\" and not escaped
+                if current != "\\":
+                    escaped = False
+                result.append(" ")
+        elif current == "-" and following == "-":
+            in_line_comment = True
+            result.extend((" ", " "))
+            index += 1
+        elif current == "{" and following == "-":
+            block_depth = 1
+            result.extend((" ", " "))
+            index += 1
+        elif current == '"':
+            in_string = True
+            escaped = False
+            result.append(" ")
+        else:
+            result.append(current)
+        index += 1
+    return "".join(result)
+
+
+def imported_modules(source: str) -> tuple[str, ...]:
+    """Read module names from ordinary and qualified import declarations."""
+    code = haskell_code(source)
+    return tuple(
+        declaration.group("module")
+        for declaration in IMPORT_MODULE.finditer(code)
+    )
+
+
+def check_relational_internal_import_boundary(root: Path) -> None:
+    source_root = root / "spc/lib/core/src"
+    violations = []
+    for source in sorted(source_root.rglob("*.hs")):
+        relative = source.relative_to(source_root).as_posix()
+        if relative in RELATIONAL_INTERNAL_IMPORTERS:
+            continue
+        if RELATIONAL_INTERNAL_MODULE in imported_modules(source.read_text()):
+            violations.append(relative)
+    if violations:
+        raise RuntimeError(
+            "executor-internal relational imports outside the trusted boundary: "
+            + ", ".join(violations)
+        )
 
 
 def check_compile_pass(
@@ -237,12 +460,53 @@ def check_compile_failure(
     result = compile_source(
         root, project_dir, build_dir, package, failure.source
     )
+    assert_compile_failure(
+        root, failure.source, failure.diagnostics, result
+    )
+
+
+def check_private_compile_failure(
+    root: Path,
+    project_dir: Path,
+    build_dir: Path,
+    failure: PrivateCompileFailure,
+) -> None:
+    result = compile_private_source(
+        root, project_dir, build_dir, failure.source
+    )
+    assert_compile_failure(
+        root, failure.source, failure.diagnostics, result
+    )
+
+
+def check_private_compile_pass(
+    root: Path,
+    project_dir: Path,
+    build_dir: Path,
+    source_name: str,
+) -> None:
+    result = compile_private_source(
+        root, project_dir, build_dir, source_name
+    )
+    if result.returncode != 0:
+        raise RuntimeError(
+            f"{source_name} private control failed:\n"
+            + combined_output(result)
+        )
+
+
+def assert_compile_failure(
+    root: Path,
+    source_name: str,
+    expected_diagnostics: tuple[tuple[str, int], ...],
+    result: subprocess.CompletedProcess[str],
+) -> None:
     output = combined_output(result)
     if result.returncode == 0:
-        raise RuntimeError(f"{failure.source} unexpectedly compiled")
+        raise RuntimeError(f"{source_name} unexpectedly compiled")
 
     diagnostics = parse_diagnostics(output)
-    source = (root / failure.source).resolve()
+    source = (root / source_name).resolve()
     foreign = [
         diagnostic
         for diagnostic in diagnostics
@@ -250,16 +514,16 @@ def check_compile_failure(
     ]
     if foreign:
         raise RuntimeError(
-            f"{failure.source} produced non-local diagnostics:\n{output}"
+            f"{source_name} produced non-local diagnostics:\n{output}"
         )
 
     actual = Counter(
         code for diagnostic in diagnostics if (code := error_code(diagnostic))
     )
-    expected = Counter(dict(failure.diagnostics))
+    expected = Counter(dict(expected_diagnostics))
     if actual != expected:
         raise RuntimeError(
-            f"{failure.source} diagnostics differ: expected {expected}, "
+            f"{source_name} diagnostics differ: expected {expected}, "
             f"found {actual}\n{output}"
         )
 
@@ -267,6 +531,7 @@ def check_compile_failure(
 def check_contracts(
     root: Path, project_dir: Path, build_dir: Path
 ) -> None:
+    check_relational_internal_import_boundary(root)
     for contract in CONTRACTS:
         check_compile_pass(root, project_dir, build_dir, contract)
         for failure in contract.compile_failures:
@@ -277,11 +542,25 @@ def check_contracts(
                 contract.package,
                 failure,
             )
+    for failure in PRIVATE_COMPILE_FAILURES:
+        check_private_compile_failure(
+            root,
+            project_dir,
+            build_dir,
+            failure,
+        )
+    for source_name in PRIVATE_COMPILE_PASSES:
+        check_private_compile_pass(
+            root,
+            project_dir,
+            build_dir,
+            source_name,
+        )
 
 
 def parse_args(arguments: Iterable[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Check external Haskell API compile contracts."
+        description="Check public and private Haskell compile contracts."
     )
     parser.add_argument("--project-dir", required=True, type=Path)
     parser.add_argument("--builddir", required=True, type=Path)
@@ -300,7 +579,7 @@ def main(arguments: Iterable[str] | None = None) -> int:
     except (OSError, RuntimeError, ValueError) as error:
         print(f"[o2i|error] {error}", file=sys.stderr)
         return 1
-    print("[o2i|info] External Haskell API contracts passed.")
+    print("[o2i|info] Haskell compile contracts passed.")
     return 0
 
 

@@ -39,7 +39,6 @@ import O2I.Graph.Raw
 import O2I.Language.Element
 import O2I.Language.Macro
 import O2I.Language.Relation hiding (MacroRelation)
-import qualified O2I.Language.Relation as Relation
 
 data MacroClaimKey =
   MacroClaimKey RawNodeId RelationCode RawNodeId
@@ -140,38 +139,12 @@ macroClaimLookupWork ::
 macroClaimLookupWork index source conclusion target =
   lookupWork (claimLookup index source conclusion target)
 
-data SomeMacroRelation where
-  SomeMacroRelation :: MacroRelation from to -> SomeMacroRelation
-
-registeredMacroRelations :: RelationName -> [SomeMacroRelation]
-registeredMacroRelations name =
-  concatMap reifyMacroRelation (lookupRelations name)
-
-reifyMacroRelation :: SomeRelation -> [SomeMacroRelation]
-reifyMacroRelation (SomeRelation relation) =
-  case ( relationFrom spec
-       , relationTo spec
-       , relationSemantics spec
-       , lookupMacroEvidenceRule (relationCode spec)) of
-    (SContextKind from, SContextKind to, Relation.MacroRelation _, Just rule) ->
-      [ SomeMacroRelation
-          MacroRelation
-            { registeredMacroCode = relationCode spec
-            , registeredMacroRule = rule
-            , registeredMacroFrom = from
-            , registeredMacroTo = to
-            }
-      ]
-    _ -> []
-  where
-    spec = relationSpec relation
-
 claimsForEdge ::
      FactIndex node edge
   -> OccurrenceFact edge RawEdge
   -> [(edge, MacroClaim node)]
 claimsForEdge facts edgeFact =
-  concatMap claimsForRelation (registeredMacroRelations (rawEdgeRelation edge))
+  concatMap claimsForRelation (macroRelationsForName (rawEdgeRelation edge))
   where
     edge = factValue edgeFact
     claimsForRelation (SomeMacroRelation relation) =
@@ -299,11 +272,16 @@ selectorLookup ::
 selectorLookup index claim selector =
   case selector of
     ClaimContext side -> IndexedLookup [claimContextId side claim] mempty
-    OwnedPrimitive side primitive _ ->
+    OwnedPrimitive side primitive ->
       ownedPrimitiveIdentifiers
         (indexedFacts index)
         (claimContextId side claim)
         primitive
+    StrategyRolePrimitive side primitiveRole ->
+      ownedPrimitiveIdentifiers
+        (indexedFacts index)
+        (claimContextId side claim)
+        (strategyRolePrimitive primitiveRole)
     OwnedPerformanceDimension side _ ->
       ownedStructuringIdentifiers
         (indexedFacts index)
@@ -314,8 +292,17 @@ selectorLookup index claim selector =
         (indexedFacts index)
         (claimContextId side claim)
 
+strategyRolePrimitive :: StrategyPrimitiveRole -> Primitive
+strategyRolePrimitive role =
+  case role of
+    DiagnosisRole -> Driver
+    IntentRole -> Objective
+    GuidingPolicyRole -> Principle
+    CoherentActionRole -> Action
+    StrategicKeyResultRole -> KeyResult
+
 claimRule :: MacroClaim node -> MacroEvidenceRule
-claimRule (RegisteredMacroClaim _ relation _) = registeredMacroRule relation
+claimRule (RegisteredMacroClaim _ relation _) = MacroEvidenceRule relation
 
 claimContextId :: ClaimSide -> MacroClaim node -> RawNodeId
 claimContextId side (RegisteredMacroClaim source _ target) =

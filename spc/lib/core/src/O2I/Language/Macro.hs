@@ -2,65 +2,81 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 
--- | Canonical evidence rules for O2I context macrorelations.
+-- | Canonical closed vocabulary of O2I context macrorelations.
 --
--- This module is the sole semantic registry for macrorelation premises. The
--- graph interpreter uses the rules conservatively for scope discovery, while
--- trace validation interprets the same rules exactly. Notation adapters do not
--- define or extend this registry.
+-- The endpoint-indexed 'MacroRelation' GADT is the sole registry authority.
+-- Total functions derive relation metadata, evidence alternatives, typed
+-- claims, conservative discovery rules, and executable relational plans.
 module O2I.Language.Macro
   ( StrategyPrimitiveRole(..)
+  , TypedStrategyRole(..)
+  , typedStrategyRoleCode
   , MacroContextRef(..)
   , MacroRelation(..)
+  , SomeMacroRelation(..)
   , MacroClaim(..)
   , ClaimSide(..)
   , MacroNodeSelector(..)
   , MacroRelationPattern(..)
   , MacroPremise(..)
   , PremiseAlternative(..)
+  , TypedMacroSelector(..)
+  , TypedMacroPremise(..)
+  , AlternativeShape(..)
+  , typedAlternativePremises
+  , conservativeAlternative
+  , instantiateAlternative
+  , TypedMacroEvidenceRule(..)
   , MacroEvidenceRule(..)
   , macroEvidenceRules
+  , allMacroRelations
+  , macroRelationsForName
   , macroEvidenceRuleConclusion
   , macroClaimConclusion
+  , lookupMacroRelation
   , lookupMacroEvidenceRule
+  , registeredMacroCode
+  , registeredMacroRule
+  , registeredMacroFrom
+  , registeredMacroTo
+  , ruleAlternatives
+  , eraseTypedSelector
+  , typedSelectorKind
   ) where
 
 import Data.List (find)
 import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.List.NonEmpty as NonEmpty
 import O2I.Language.Element
-import O2I.Language.Relation
-
--- | Primitive roles required by a complete Strategy formulation.
---
--- The conservative scope interpreter deliberately ignores these role
--- refinements and retains every persisted primitive of the required type. The
--- exact interpreter accepts only references selected by the validated Strategy
--- formulation.
-data StrategyPrimitiveRole
-  = DiagnosisRole -- ^ Driver expressing the decisive challenge.
-  | IntentRole -- ^ Objective expressing the intended contribution.
-  | GuidingPolicyRole -- ^ Principle expressing the chosen approach.
-  | CoherentActionRole -- ^ Action expressing a strategic commitment.
-  | StrategicKeyResultRole -- ^ Key Result expressing strategic evidence.
-  deriving (Eq, Ord, Show)
+import O2I.Language.Macro.Alternative
+import O2I.Language.Relation hiding (MacroRelation)
 
 -- | One occurrence of a Context whose type is retained at the type level.
 data MacroContextRef node (context :: Context) =
   MacroContextRef node RawNodeId (SContext context)
 
--- | A registered context macrorelation with statically aligned endpoints.
-data MacroRelation (from :: Context) (to :: Context) = MacroRelation
-  { registeredMacroCode :: RelationCode
-  , registeredMacroRule :: MacroEvidenceRule
-  , registeredMacroFrom :: SContext from
-  , registeredMacroTo :: SContext to
-  }
+-- | Closed endpoint-indexed context macrorelation vocabulary.
+data MacroRelation (from :: Context) (to :: Context) where
+  GuidesMissionMacro :: MacroRelation 'Ethos 'Mission
+  GroundsVisionMacro :: MacroRelation 'Mission 'Vision
+  GuidesVisionMacro :: MacroRelation 'Ethos 'Vision
+  OrientsStrategyMacro :: MacroRelation 'Vision 'Strategy
+  DirectsStrategyMacro :: MacroRelation 'Strategy 'Strategy
+  ContributesToStrategyMacro :: MacroRelation 'Strategy 'Strategy
+  QualifiesNeedMacro :: MacroRelation 'Strategy 'Need
+  SurfacesNeedMacro :: MacroRelation 'Situation 'Need
+  AddressesNeedMacro :: MacroRelation 'Intervention 'Need
+  DirectsInterventionMacro :: MacroRelation 'Strategy 'Intervention
+  ChangesSituationMacro :: MacroRelation 'Intervention 'Situation
+  SetsTargetForMeasureMacro :: MacroRelation 'Intervention 'Measure
+  MeasuresSituationMacro :: MacroRelation 'Measure 'Situation
+  FramesMeasureMacro :: MacroRelation 'Strategy 'Measure
+
+-- | Existential package used only to enumerate the closed vocabulary.
+data SomeMacroRelation where
+  SomeMacroRelation :: MacroRelation from to -> SomeMacroRelation
 
 -- | Kind-consistent occurrence-level claim of one registered macrorelation.
---
--- Values are reified only from raw context occurrences and a relation in the
--- canonical O2I registry. The constructor remains internal to the core.
 data MacroClaim node where
   RegisteredMacroClaim
     :: MacroContextRef node from
@@ -68,237 +84,281 @@ data MacroClaim node where
     -> MacroContextRef node to
     -> MacroClaim node
 
--- | Select one endpoint Context of a macrorelation claim.
-data ClaimSide
-  = ClaimSource
-  | ClaimTarget
-  deriving (Eq, Ord, Show)
+-- | Canonical endpoint-typed rule projected from one closed relation.
+data TypedMacroEvidenceRule (from :: Context) (to :: Context) = TypedMacroEvidenceRule
+  { typedRuleConclusion :: Relation ('ContextKind from) ('ContextKind to)
+  , typedRuleAlternatives :: NonEmpty (AlternativeShape from to)
+  }
 
--- | A bound node position in one declarative premise pattern.
---
--- Repeated selectors denote the same node in an exact witness. A Strategy role
--- refines exact matching but never narrows conservative scope discovery.
-data MacroNodeSelector
-  = ClaimContext ClaimSide
-  | OwnedPrimitive ClaimSide Primitive (Maybe StrategyPrimitiveRole)
-  | OwnedPerformanceDimension ClaimSide PerformanceDimensionRoleCode
-  | ConstituentAnchor ClaimSide
-  deriving (Eq, Ord, Show)
+-- | Opaque existential public projection of one endpoint-typed rule.
+data MacroEvidenceRule where
+  MacroEvidenceRule :: MacroRelation from to -> MacroEvidenceRule
 
--- | A registered relation required by one premise.
-data MacroRelationPattern
-  = ExactRelation RelationCode
-  | AnchorRelationFamilyPattern AnchorRelationFamily
-  deriving (Eq, Ord, Show)
+instance Eq MacroEvidenceRule where
+  left == right =
+    macroEvidenceRuleConclusion left == macroEvidenceRuleConclusion right
+      && ruleAlternatives left == ruleAlternatives right
 
--- | One directed relation pattern between two bound node positions.
-data MacroPremise = MacroPremise
-  { premiseSource :: MacroNodeSelector
-  , premiseRelation :: MacroRelationPattern
-  , premiseTarget :: MacroNodeSelector
-  } deriving (Eq, Ord, Show)
+instance Ord MacroEvidenceRule where
+  compare left right =
+    compare
+      (macroEvidenceRuleConclusion left, ruleAlternatives left)
+      (macroEvidenceRuleConclusion right, ruleAlternatives right)
 
--- | One complete alternative that can substantiate a macrorelation.
-newtype PremiseAlternative = PremiseAlternative
-  { alternativePremises :: NonEmpty MacroPremise
-  } deriving (Eq, Ord, Show)
+instance Show MacroEvidenceRule where
+  show rule =
+    "MacroEvidenceRule "
+      ++ show (macroEvidenceRuleConclusion rule)
+      ++ " "
+      ++ show (ruleAlternatives rule)
 
--- | Canonical finite evidence rule for one registered context macrorelation.
-data MacroEvidenceRule = MacroEvidenceRule
-  { ruleConclusion :: RelationCode
-  , ruleAlternatives :: NonEmpty PremiseAlternative
-  } deriving (Eq, Ord, Show)
+-- | Enumerate every constructor of the closed vocabulary exactly once.
+allMacroRelations :: NonEmpty SomeMacroRelation
+allMacroRelations =
+  SomeMacroRelation GuidesMissionMacro
+    :| [ SomeMacroRelation GroundsVisionMacro
+       , SomeMacroRelation GuidesVisionMacro
+       , SomeMacroRelation OrientsStrategyMacro
+       , SomeMacroRelation DirectsStrategyMacro
+       , SomeMacroRelation ContributesToStrategyMacro
+       , SomeMacroRelation QualifiesNeedMacro
+       , SomeMacroRelation SurfacesNeedMacro
+       , SomeMacroRelation AddressesNeedMacro
+       , SomeMacroRelation DirectsInterventionMacro
+       , SomeMacroRelation ChangesSituationMacro
+       , SomeMacroRelation SetsTargetForMeasureMacro
+       , SomeMacroRelation MeasuresSituationMacro
+       , SomeMacroRelation FramesMeasureMacro
+       ]
 
--- | Project the registered macrorelation concluded by a rule.
+-- | Complete public rule projection in stable relation order.
+macroEvidenceRules :: NonEmpty MacroEvidenceRule
+macroEvidenceRules = fmap project allMacroRelations
+  where
+    project (SomeMacroRelation relation) = MacroEvidenceRule relation
+
+-- | Select registered relations sharing one persisted relation name.
+macroRelationsForName :: RelationName -> [SomeMacroRelation]
+macroRelationsForName name =
+  [ candidate
+  | candidate@(SomeMacroRelation relation) <- NonEmpty.toList allMacroRelations
+  , relationNameFor (macroRelationConclusion relation) == name
+  ]
+
+-- | Resolve one stable relation code to its typed closed constructor.
+lookupMacroRelation :: RelationCode -> Maybe SomeMacroRelation
+lookupMacroRelation code = find matches (NonEmpty.toList allMacroRelations)
+  where
+    matches (SomeMacroRelation relation) = registeredMacroCode relation == code
+
+-- | Resolve the unique public rule projection for a relation code.
+lookupMacroEvidenceRule :: RelationCode -> Maybe MacroEvidenceRule
+lookupMacroEvidenceRule code = do
+  SomeMacroRelation relation <- lookupMacroRelation code
+  pure (MacroEvidenceRule relation)
+
+-- | Project the stable code of one typed macrorelation.
+registeredMacroCode :: MacroRelation from to -> RelationCode
+registeredMacroCode = relationCode . relationSpec . macroRelationConclusion
+
+-- | Project the complete typed rule from the closed vocabulary.
+registeredMacroRule :: MacroRelation from to -> TypedMacroEvidenceRule from to
+registeredMacroRule relation =
+  TypedMacroEvidenceRule
+    { typedRuleConclusion = macroRelationConclusion relation
+    , typedRuleAlternatives = macroRelationAlternatives relation
+    }
+
+-- | Project the source Context witness.
+registeredMacroFrom :: MacroRelation from to -> SContext from
+registeredMacroFrom relation =
+  case relationFrom (relationSpec (macroRelationConclusion relation)) of
+    SContextKind context -> context
+
+-- | Project the target Context witness.
+registeredMacroTo :: MacroRelation from to -> SContext to
+registeredMacroTo relation =
+  case relationTo (relationSpec (macroRelationConclusion relation)) of
+    SContextKind context -> context
+
+-- | Project the registered macrorelation represented by a public rule.
 macroEvidenceRuleConclusion :: MacroEvidenceRule -> RelationCode
-macroEvidenceRuleConclusion = ruleConclusion
+macroEvidenceRuleConclusion (MacroEvidenceRule relation) =
+  registeredMacroCode relation
 
 -- | Project the registered macrorelation represented by a typed claim.
 macroClaimConclusion :: MacroClaim node -> RelationCode
 macroClaimConclusion (RegisteredMacroClaim _ relation _) =
   registeredMacroCode relation
 
--- | Resolve the unique canonical rule for a relation code.
-lookupMacroEvidenceRule :: RelationCode -> Maybe MacroEvidenceRule
-lookupMacroEvidenceRule code =
-  find
-    ((== code) . macroEvidenceRuleConclusion)
-    (NonEmpty.toList macroEvidenceRules)
+-- | Derive conservative raw premises from the same closed alternatives.
+ruleAlternatives :: MacroEvidenceRule -> NonEmpty PremiseAlternative
+ruleAlternatives (MacroEvidenceRule relation) =
+  fmap conservativeAlternative (macroRelationAlternatives relation)
 
--- | Complete registry containing exactly one rule per O2I macrorelation.
-macroEvidenceRules :: NonEmpty MacroEvidenceRule
-macroEvidenceRules =
-  rule
-    GuidesMissionCode
-    (premise
-       ethosPrinciple
-       GuidesEthosPrincipleToMissionDriverCode
-       missionDriver
-       :| [])
-    :| [ rule
-           GroundsVisionCode
-           (premise
-              sourceMissionDriver
-              GroundsMissionDriverToVisionObjectiveCode
-              visionObjective
-              :| [])
-       , rule
-           GuidesVisionCode
-           (premise
-              ethosPrinciple
-              GuidesEthosPrincipleToVisionObjectiveCode
-              visionObjective
-              :| [])
-       , rule
-           OrientsStrategyCode
-           (premise
-              sourceVisionObjective
-              OrientsVisionObjectiveToStrategyObjectiveCode
-              strategyIntent
-              :| [])
-       , rule
-           DirectsStrategyCode
-           (premise
-              sourceStrategyPolicy
-              GuidesStrategyPrincipleToPrincipleCode
-              targetStrategyPolicy
-              :| [])
-       , alternativesRule
-           ContributesToStrategyCode
-           ((premise
-               sourceStrategyKeyResult
-               ContributesStrategyKeyResultToKeyResultCode
-               targetStrategyKeyResult
-               :| [])
-              :| [ premise
-                     sourceStrategyAction
-                     ContributesStrategyActionToActionCode
-                     targetStrategyAction
-                     :| []
-                 ])
-       , rule
-           QualifiesNeedCode
-           (premise
-              sourceStrategyKeyResult
-              TranslatesStrategyKeyResultToNeedObjectiveCode
-              needObjective
-              :| [])
-       , rule
-           SurfacesNeedCode
-           (anchorPremise
-              (ClaimContext ClaimSource)
-              ConstitutedByAnchorFamily
-              (ConstituentAnchor ClaimSource)
-              :| [ anchorPremise
-                     (ConstituentAnchor ClaimSource)
-                     AnchorsNeedDriverFamily
-                     needDriver
-                 ])
-       , rule
-           AddressesNeedCode
-           (premise
-              interventionKeyResult
-              SubstantiatesInterventionKeyResultNeedObjectiveCode
-              needObjective
-              :| [])
-       , rule
-           DirectsInterventionCode
-           (premise
-              sourceStrategyAction
-              GuidesStrategyActionToInterventionActionCode
-              targetInterventionAction
-              :| [])
-       , rule
-           ChangesSituationCode
-           (anchorPremise
-              (ClaimContext ClaimTarget)
-              ConstitutedByAnchorFamily
-              (ConstituentAnchor ClaimTarget)
-              :| [ anchorPremise
-                     sourceInterventionAction
-                     ChangesAnchorFamily
-                     (ConstituentAnchor ClaimTarget)
-                 ])
-       , rule
-           SetsTargetForMeasureCode
-           (premise interventionKeyResult SetsTargetForMeasureKPICode measureKPI
-              :| [])
-       , rule
-           MeasuresSituationCode
-           (anchorPremise
-              (ClaimContext ClaimTarget)
-              ConstitutedByAnchorFamily
-              (ConstituentAnchor ClaimTarget)
-              :| [ anchorPremise
-                     sourceMeasureKPI
-                     MeasuresAnchorFamily
-                     (ConstituentAnchor ClaimTarget)
-                 ])
-       , rule
-           FramesMeasureCode
-           (premise
-              sourceStrategyDiagnosis
-              IndicatesMeasurePerformanceDimensionCode
-              measureDimension
-              :| [ premise
-                     sourceStrategyKeyResult
-                     DeterminesMeasurePerformanceDimensionCode
-                     measureDimension
-                 , MacroPremise
-                     measureDimension
-                     (ExactRelation
-                        (PerformanceDimensionMembership
-                           MeasureMeasurementDimensionCode))
-                     measureKPI
-                 ])
-       ]
+macroRelationConclusion ::
+     MacroRelation from to -> Relation ('ContextKind from) ('ContextKind to)
+macroRelationConclusion relation =
+  case relation of
+    GuidesMissionMacro -> guidesMission
+    GroundsVisionMacro -> groundsVision
+    GuidesVisionMacro -> guidesVision
+    OrientsStrategyMacro -> orientsStrategy
+    DirectsStrategyMacro -> directsStrategy
+    ContributesToStrategyMacro -> contributesToStrategy
+    QualifiesNeedMacro -> qualifiesNeed
+    SurfacesNeedMacro -> surfacesNeed
+    AddressesNeedMacro -> addressesNeed
+    DirectsInterventionMacro -> directsIntervention
+    ChangesSituationMacro -> changesSituation
+    SetsTargetForMeasureMacro -> setsTargetForMeasure
+    MeasuresSituationMacro -> measuresSituation
+    FramesMeasureMacro -> framesMeasure
+
+macroRelationAlternatives ::
+     MacroRelation from to -> NonEmpty (AlternativeShape from to)
+macroRelationAlternatives relation =
+  case relation of
+    GuidesMissionMacro ->
+      one
+        (Single
+           (sourcePrimitive SEthos SPrinciple)
+           guidesEthosPrincipleToMissionDriver
+           (targetPrimitive SMission SDriver))
+    GroundsVisionMacro ->
+      one
+        (Single
+           (sourcePrimitive SMission SDriver)
+           groundsMissionDriverToVisionObjective
+           (targetPrimitive SVision SObjective))
+    GuidesVisionMacro ->
+      one
+        (Single
+           (sourcePrimitive SEthos SPrinciple)
+           guidesEthosPrincipleToVisionObjective
+           (targetPrimitive SVision SObjective))
+    OrientsStrategyMacro ->
+      one
+        (Single
+           (sourcePrimitive SVision SObjective)
+           orientsVisionObjectiveToStrategyObjective
+           (targetStrategy StrategyIntentRole))
+    DirectsStrategyMacro ->
+      one
+        (Single
+           (sourceStrategy StrategyGuidingPolicyRole)
+           guidesStrategyPrincipleToPrinciple
+           (targetStrategy StrategyGuidingPolicyRole))
+    ContributesToStrategyMacro ->
+      Single
+        (sourceStrategy StrategyKeyResultRole)
+        contributesStrategyKeyResultToKeyResult
+        (targetStrategy StrategyKeyResultRole)
+        :| [ Single
+               (sourceStrategy StrategyCoherentActionRole)
+               contributesStrategyActionToAction
+               (targetStrategy StrategyCoherentActionRole)
+           ]
+    QualifiesNeedMacro ->
+      one
+        (Single
+           (sourceStrategy StrategyKeyResultRole)
+           translatesStrategyKeyResultToNeedObjective
+           (targetPrimitive SNeed SObjective))
+    SurfacesNeedMacro -> fmap surfaceAlternative allTypedAnchors
+    AddressesNeedMacro ->
+      one
+        (Single
+           (sourcePrimitive SIntervention SKeyResult)
+           substantiatesInterventionKeyResultNeedObjective
+           (targetPrimitive SNeed SObjective))
+    DirectsInterventionMacro ->
+      one
+        (Single
+           (sourceStrategy StrategyCoherentActionRole)
+           guidesStrategyActionToInterventionAction
+           (targetPrimitive SIntervention SAction))
+    ChangesSituationMacro -> fmap changeAlternative allTypedAnchors
+    SetsTargetForMeasureMacro ->
+      one
+        (Single
+           (sourcePrimitive SIntervention SKeyResult)
+           setsTargetForMeasureKPI
+           (targetPrimitive SMeasure SKPI))
+    MeasuresSituationMacro -> fmap measureAlternative allTypedAnchors
+    FramesMeasureMacro -> one frameMeasureAlternative
   where
-    ethosPrinciple = owned ClaimSource Principle Nothing
-    missionDriver = owned ClaimTarget Driver Nothing
-    sourceMissionDriver = owned ClaimSource Driver Nothing
-    visionObjective = owned ClaimTarget Objective Nothing
-    sourceVisionObjective = owned ClaimSource Objective Nothing
-    strategyIntent = owned ClaimTarget Objective (Just IntentRole)
-    sourceStrategyPolicy = owned ClaimSource Principle (Just GuidingPolicyRole)
-    targetStrategyPolicy = owned ClaimTarget Principle (Just GuidingPolicyRole)
-    sourceStrategyKeyResult =
-      owned ClaimSource KeyResult (Just StrategicKeyResultRole)
-    targetStrategyKeyResult =
-      owned ClaimTarget KeyResult (Just StrategicKeyResultRole)
-    sourceStrategyAction = owned ClaimSource Action (Just CoherentActionRole)
-    targetStrategyAction = owned ClaimTarget Action (Just CoherentActionRole)
-    sourceStrategyDiagnosis = owned ClaimSource Driver (Just DiagnosisRole)
-    needDriver = owned ClaimTarget Driver Nothing
-    needObjective = owned ClaimTarget Objective Nothing
-    sourceInterventionAction = owned ClaimSource Action Nothing
-    targetInterventionAction = owned ClaimTarget Action Nothing
-    interventionKeyResult = owned ClaimSource KeyResult Nothing
-    measureKPI = owned ClaimTarget KPI Nothing
-    sourceMeasureKPI = owned ClaimSource KPI Nothing
-    measureDimension =
-      OwnedPerformanceDimension ClaimTarget MeasureMeasurementDimensionCode
+    one alternative = alternative :| []
 
-rule :: FixedRelationCode -> NonEmpty MacroPremise -> MacroEvidenceRule
-rule code premises = alternativesRule code (premises :| [])
+sourcePrimitive ::
+     SContext from
+  -> SPrimitive primitive
+  -> TypedMacroSelector from to ('PrimitiveKind from primitive)
+sourcePrimitive = SourcePrimitiveSelector
 
-alternativesRule ::
-     FixedRelationCode -> NonEmpty (NonEmpty MacroPremise) -> MacroEvidenceRule
-alternativesRule code premiseLists =
-  MacroEvidenceRule (FixedRelation code) (fmap PremiseAlternative premiseLists)
+targetPrimitive ::
+     SContext to
+  -> SPrimitive primitive
+  -> TypedMacroSelector from to ('PrimitiveKind to primitive)
+targetPrimitive = TargetPrimitiveSelector
 
-premise ::
-     MacroNodeSelector -> FixedRelationCode -> MacroNodeSelector -> MacroPremise
-premise source code target =
-  MacroPremise source (ExactRelation (FixedRelation code)) target
+sourceStrategy ::
+     TypedStrategyRole primitive
+  -> TypedMacroSelector 'Strategy to ('PrimitiveKind 'Strategy primitive)
+sourceStrategy = SourceStrategyRoleSelector
 
-anchorPremise ::
-     MacroNodeSelector
-  -> AnchorRelationFamily
-  -> MacroNodeSelector
-  -> MacroPremise
-anchorPremise source family target =
-  MacroPremise source (AnchorRelationFamilyPattern family) target
+targetStrategy ::
+     TypedStrategyRole primitive
+  -> TypedMacroSelector from 'Strategy ('PrimitiveKind 'Strategy primitive)
+targetStrategy = TargetStrategyRoleSelector
 
-owned ::
-     ClaimSide -> Primitive -> Maybe StrategyPrimitiveRole -> MacroNodeSelector
-owned = OwnedPrimitive
+targetDimension ::
+     PerformanceDimensionRole to member
+  -> TypedMacroSelector from to ('StructuringKind to 'PerformanceDimension)
+targetDimension = TargetPerformanceDimensionSelector
+
+allTypedAnchors :: NonEmpty SomeSAnchor
+allTypedAnchors =
+  SomeSAnchor SBusinessCapability
+    :| [ SomeSAnchor SBusinessProcess
+       , SomeSAnchor SBusinessObject
+       , SomeSAnchor SValueStream
+       ]
+
+surfaceAlternative :: SomeSAnchor -> AlternativeShape 'Situation 'Need
+surfaceAlternative (SomeSAnchor anchor) =
+  ForwardChain
+    (SourceContextSelector SSituation)
+    (constitutedByAnchor anchor)
+    (SourceSituationAnchorSelector anchor)
+    (anchorsNeedDriver anchor)
+    (targetPrimitive SNeed SDriver)
+
+changeAlternative :: SomeSAnchor -> AlternativeShape 'Intervention 'Situation
+changeAlternative (SomeSAnchor anchor) =
+  TargetJoin
+    (TargetContextSelector SSituation)
+    (constitutedByAnchor anchor)
+    (TargetSituationAnchorSelector anchor)
+    (sourcePrimitive SIntervention SAction)
+    (changesAnchor anchor)
+
+measureAlternative :: SomeSAnchor -> AlternativeShape 'Measure 'Situation
+measureAlternative (SomeSAnchor anchor) =
+  TargetJoin
+    (TargetContextSelector SSituation)
+    (constitutedByAnchor anchor)
+    (TargetSituationAnchorSelector anchor)
+    (sourcePrimitive SMeasure SKPI)
+    (measuresAnchor anchor)
+
+frameMeasureAlternative :: AlternativeShape 'Strategy 'Measure
+frameMeasureAlternative =
+  JoinedChainWithTail
+    (sourceStrategy StrategyDiagnosisRole)
+    indicatesMeasurePerformanceDimension
+    (targetDimension MeasureMeasurementDimension)
+    (sourceStrategy StrategyKeyResultRole)
+    determinesMeasurePerformanceDimension
+    (containsPerformanceDimension MeasureMeasurementDimension)
+    (targetPrimitive SMeasure SKPI)

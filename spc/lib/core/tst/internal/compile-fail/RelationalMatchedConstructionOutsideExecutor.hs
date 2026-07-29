@@ -1,0 +1,5 @@
+module RelationalMatchedConstructionOutsideExecutor where
+
+import O2I.Validation.Relational.Types
+
+invalidMatchedConstruction = emptyMatchedPremises

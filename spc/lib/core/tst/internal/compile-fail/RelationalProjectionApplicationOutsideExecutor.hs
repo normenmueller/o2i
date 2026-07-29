@@ -1,0 +1,5 @@
+module RelationalProjectionApplicationOutsideExecutor where
+
+import O2I.Validation.Relational.Types
+
+invalidProjectionApplication = applyProjection

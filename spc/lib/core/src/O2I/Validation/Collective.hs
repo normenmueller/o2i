@@ -52,9 +52,9 @@ import O2I.Language.Element
 import O2I.Language.Relation
 import O2I.Validation.Collective.Fit
 import O2I.Validation.Collective.Types
+import O2I.Validation.MacroEvidence.Types
 import O2I.Validation.Semantics.Context
 import O2I.Validation.Structure.Internal
-import O2I.Validation.Trace.Evidence
 
 -- * Collective Strategy realization input
 -- | Stable occurrence identity of one collective claim.
@@ -221,16 +221,16 @@ blockedCollectiveStrategyRealizationAssessment (CollectiveClaimStructureAssessme
 -- their semantic issues. Candidates never construct validated witnesses.
 assessCollectiveStrategyRealizations ::
      ContextSemantics
+  -> CollectiveMacroEvidence
   -> [RawCollectiveFitEvidence]
   -> CollectiveClaimStructureAssessment
   -> CollectiveStrategyRealizationAssessment
-assessCollectiveStrategyRealizations semantic fitEvidence (CollectiveClaimStructureAssessment structuralErrors structuralClaims) =
+assessCollectiveStrategyRealizations semantic evidence fitEvidence (CollectiveClaimStructureAssessment structuralErrors structuralClaims) =
   CollectiveStrategyRealizationAssessment
     errors
     evaluations
     (mapMaybe candidateAssessment evaluations)
   where
-    evidence = buildMacroEvidenceContext semantic
     fitIndex = buildCollectiveFitIndex fitEvidence
     evaluations =
       map (evaluateCollective semantic evidence fitIndex) structuralClaims
@@ -434,7 +434,7 @@ resolveCollectiveParticipant structure collectiveCommitment claim role participa
 
 evaluateCollective ::
      ContextSemantics
-  -> MacroEvidenceContext
+  -> CollectiveMacroEvidence
   -> CollectiveFitIndex
   -> StructurallyValidCollective
   -> SemanticEvaluation
@@ -449,10 +449,9 @@ evaluateCollective semantic evidence fitIndex structural =
     contributionEvidence =
       [ ( contributor
         , NonEmpty.nonEmpty
-            (macroEvidenceWitnessesForIn
+            (collectiveContributionWitnesses
                evidence
                (structuralParticipantId contributor)
-               (relationCode (relationSpec contributesToStrategy))
                target))
       | contributor <- structurallyValidContributorList structural
       ]
@@ -465,7 +464,7 @@ evaluateCollective semantic evidence fitIndex structural =
     witnessPremiseEdges =
       concat
         [ concatMap
-          (NonEmpty.toList . witnessPremises)
+          (NonEmpty.toList . validatedWitnessPremises)
           (NonEmpty.toList witnesses)
         | (_, Just witnesses) <- contributionEvidence
         ]

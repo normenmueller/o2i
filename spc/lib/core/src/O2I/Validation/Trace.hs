@@ -56,12 +56,9 @@ import O2I.Graph.Raw
 import O2I.Language.Element
 import O2I.Language.Macro (MacroClaim)
 import O2I.Language.Relation
+import O2I.Validation.MacroEvidence
+import qualified O2I.Validation.MacroEvidence as Evidence
 import O2I.Validation.Semantics
-import O2I.Validation.Trace.Evidence hiding
-  ( macroEvidenceWitnesses
-  , macroEvidenceWitnessesFor
-  )
-import qualified O2I.Validation.Trace.Evidence as Evidence
 import O2I.Validation.Trace.Search
 
 -- | Interpret the canonical macro rule against one completely validated
@@ -69,7 +66,7 @@ import O2I.Validation.Trace.Search
 macroEvidenceWitnesses ::
      SemanticallyValidModel -> MacroClaim RawNodeId -> [MacroEvidenceWitness]
 macroEvidenceWitnesses semantic =
-  Evidence.macroEvidenceWitnesses (modelContextSemantics semantic)
+  Evidence.macroEvidenceWitnessesIn (modelPreparedMacroEvidence semantic)
 
 -- | Select exact witnesses for one registered Context macrorelation claim.
 macroEvidenceWitnessesFor ::
@@ -79,7 +76,7 @@ macroEvidenceWitnessesFor ::
   -> RawNodeId
   -> [MacroEvidenceWitness]
 macroEvidenceWitnessesFor semantic =
-  Evidence.macroEvidenceWitnessesFor (modelContextSemantics semantic)
+  Evidence.macroEvidenceWitnessesForIn (modelPreparedMacroEvidence semantic)
 
 -- * Effect trace
 data EffectTraceKey = EffectTraceKey
@@ -203,7 +200,7 @@ validateTraceability semantic =
         Nothing -> Failure (NonEmpty.singleton NoIntervention)
   where
     graph = modelGraph semantic
-    evidence = buildMacroEvidenceContext (modelContextSemantics semantic)
+    evidence = modelPreparedMacroEvidence semantic
     searched =
       deriveTracePaths
         graph
@@ -431,12 +428,12 @@ effectTraceFromPath path =
         SomeSAnchor anchor ->
           SomeSituationAnchorRef (mkNodeId (pathSituationAnchor path)) anchor
 
-macroEvidenceErrors :: MacroEvidenceContext -> [TraceabilityError]
+macroEvidenceErrors :: PreparedMacroEvidence -> [TraceabilityError]
 macroEvidenceErrors evidence =
   [ MissingMacroEvidence
     (rawEdgeFrom conclusion)
     (rawEdgeRelation conclusion)
     (rawEdgeTo conclusion)
   | (conclusion, claim) <- macroEvidenceClaims evidence
-  , null (macroEvidenceWitnessesIn evidence claim)
+  , not (macroEvidenceExistsIn evidence claim)
   ]

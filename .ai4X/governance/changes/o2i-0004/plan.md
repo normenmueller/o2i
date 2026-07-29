@@ -370,6 +370,328 @@ Correction implementation status:
 - the complete Haskell stage and one uninterrupted repository verification
   pass the correction worktree.
 
+Revision `0f9bce63645adc9ca2628a17213b154d3e9bd0a0` passes exact clean
+repository verification. Its independent Haskell Finalreview rejects the
+complete TraceSearch architecture:
+
+1. A shared Intervention Key Result with independently varying Strategy Key
+   Results and Intervention Actions permits a quadratic intermediate trace
+   spine despite linear facts and output.
+2. Macro-evidence premise enumeration can materialize a cubic Cartesian
+   product before shared bindings reject inconsistent tuples.
+3. The current work metric and one-axis fan-out contracts do not measure or
+   expose these paths.
+
+Further local join patches are excluded. The target design is one Cabal-private
+typed relational rule evaluator shared by macro-evidence and effect-trace
+validation. It provides indexed variable-aware joins, distinct existence and
+witness-enumeration modes, typed result rows, truthful executor work, canonical
+ordering, and independent multi-axis reference contracts.
+
+The evaluator supports only closed O2I proof obligations. Public APIs remain
+fachlich named and expose no free query language. Database behavior, arbitrary
+analytics, parsing, persistence, optimization, and graph export remain outside
+this correction. The evaluator executes metamodel-owned rules and never becomes
+a second source of O2I semantics.
+
+The approved relational implementation contract is:
+
+1. `O2I.Validation.Relational.Types`, `.Index`, and `.Eval` form one
+   Cabal-private mechanism. Domain-specific rule plans remain in the
+   macro-evidence and effect-trace modules.
+2. `Plan scope row` is constructed only through `rootAtom`, `extendForward`,
+   `extendBackward`, `constrainExisting`, and `finish`. Every extension connects
+   a fresh typed variable to the already bound prefix; disconnected subplans
+   and independent sibling products are unrepresentable.
+3. Rank-2 scoping prevents variables, solutions, and projections from different
+   plans being mixed. Scope machinery remains entirely private: domain-rule
+   authors require no proxy, visible type application, existential unpacking,
+   manual variable key, or general builder type class.
+4. Relation endpoint types drive local inference. `Projection scope row` is
+   built only from total typed field combinators over hidden matched
+   occurrences; arbitrary partial projection functions are excluded.
+5. The macro-evidence registry is endpoint-typed and constructs valid plans
+   directly. Anchor families expand internally to their four typed relation
+   variants. The registry remains the sole semantic authority and the evaluator
+   contains no O2I relation names.
+6. Evaluation uses variable-at-a-time indexed set intersection. Every new value
+   comes from the smallest addressed candidate domain and is intersected with
+   every currently evaluable constraint before a binding is extended.
+7. The graph index stores sorted unique node domains separately from exact edge
+   occurrence lists. Edge occurrences expand only after a complete node binding
+   exists. Duplicate persisted evidence therefore remains distinguishable,
+   while fachliche trace deduplication occurs only during typed projection.
+8. `runExists` short-circuits without constructing rows or witnesses.
+   `runEnumerate` returns all witnesses in canonical order. Both modes satisfy
+   `runExists rule == not (null (runEnumerate rule))`.
+9. Canonical macro order is alternative order followed by the edge-occurrence
+   ordinal vector in declared premise order. Canonical trace order is the
+   documented `EffectTraceKey` order and is independent of input order.
+10. Work accounting records actual domain and bucket probes, candidate-domain
+   comparisons, visited domain values, membership probes, binding extensions,
+   occurrence reads, complete bindings, canonical insertions, and emitted
+   results. Map and Set operations retain their documented logarithmic runtime
+   cost.
+11. Multi-axis `0, 10, 20, 40` contracts cover sparse, skewed, dense,
+   dead-ending, unrelated, and output-heavy macro and trace graphs. A small
+   test-only naive evaluator ranges over the complete registry and serves as
+   semantic oracle. Compile-pass examples demonstrate representative readable
+   rules; compile-fail contracts reject cross-scope variables, endpoint
+   mismatches, disconnected plans, and ill-typed projections.
+12. `Search.hs` is replaced by focused rule, execution, and projection modules;
+    it is not cosmetically split. The existing conservative pre-semantic macro
+    scope index remains separate because it operates on raw occurrence-bearing
+    facts before a `WellFormedGraph` exists.
+
+The accepted macro-integration lifecycle is:
+
+```text
+ContextAssessment
+  -> ContextSemantics
+  -> prepareMacroEvidence
+  -> PreparedMacroEvidence
+  -> assessCollectiveStrategyRealizations
+  -> SemanticallyValidModel
+```
+
+`prepareMacroEvidence :: ContextSemantics -> PreparedMacroEvidence` is total and
+runs exactly once per semantic assessment. Rejected Context assessment never
+prepares evidence. Pending assessment may prepare evidence and assess
+Collective claims but cannot produce a `SemanticallyValidModel`. Accepted
+assessment produces that model only after Collective assessment succeeds.
+`PreparedMacroEvidence` contains the exact Context semantics, fact and
+relational indices, typed Strategy-role domains, compiled macro registry, and
+truthful preparation work. The same immutable value is reused by Collective,
+Trace, and every later semantic stage.
+
+`TypedStrategyRole primitive` replaces optional untyped role recovery.
+Constructive rule definitions make endpoint, scope, connectedness, and
+projection defects compile-time failures; preparation remains total.
+Collective validation remains independent of the evidence module at the domain
+boundary: orchestration supplies the prepared context and Collective consumes
+only its narrow typed evidence interface.
+
+Richer public trace diagnostics remain outside this correction because they
+change the fachliche API. No generic graph dependency is added: the existing
+`containers` indices directly implement the typed lookup and intersection
+contract required by O2I.
+
+## Relational Redesign Finalreview
+
+The relational redesign receives independent, capability-distinct
+formalization and Haskell Finalreviews after its complete implementation. The
+reviewers assess the design itself, not only regression results, and request
+clarification whenever O2I purpose or a fachliche invariant is uncertain.
+
+The review must determine whether:
+
+- the mechanism is purpose-fit for O2I's closed, metamodel-owned proof
+  obligations without becoming a database, public query language, analytics
+  engine, or speculative general framework;
+- typed variables, relations, projections, existential bindings, opacity, and
+  runtime validation place every guarantee at the strongest proportionate
+  boundary;
+- semantic ownership remains in the domain registries and rule plans while the
+  evaluator stays relation-generic and Cabal-private;
+- module and package boundaries are coherent, minimal, idiomatic, documented,
+  maintainable, and extensible for foreseeable O2I proof obligations;
+- foreseeable new O2I proof obligations can be added through typed
+  domain-owned rules and projections without modifying the relational
+  evaluator; any later evaluator redesign requires a separately demonstrated
+  new class of requirement;
+- public APIs remain fachlich named, total, deterministic, and unchanged unless
+  an independently justified semantic requirement demands otherwise;
+- definition failures, validation failures, and public diagnostics are
+  complete, precise, deterministic, provenance-preserving, and handled at the
+  correct boundary;
+- the executor avoids hidden Cartesian intermediates, reports truthful work,
+  and demonstrates appropriate asymptotic behavior under sparse, skewed, dense,
+  dead-ending, unrelated, and output-heavy multi-axis inputs;
+- tests cover laws, semantic equivalence, invalid definitions, static
+  rejections, every diagnostic branch, witness identity and ordering,
+  short-circuiting, input permutations, and performance contracts;
+- every advanced Haskell construct and every abstraction earns its complexity,
+  with no workaround, compatibility layer, decorative type machinery, unsafe
+  coercion, or premature type-class generalization.
+
+Acceptance requires no unresolved finding and 10.0 in every required review
+dimension. Findings receive one fresh target-state solution and are closed
+before the exact revision is accepted.
+
+## Macro-evidence implementation evidence
+
+- the constructive relational suite passes 59/59 contracts;
+- the macro-evidence suite passes 38/38 contracts across the declared
+  `0, 10, 20, 40` shape matrix;
+- an independent list-based oracle agrees with the production evaluator for
+  every registered macrorelation;
+- representative private rules compile, while cross-scope variables,
+  disconnected plans, endpoint mismatches, and ill-typed projections fail
+  compilation;
+- the complete Core suite and every internal Core suite pass with `-Werror`.
+
+## Rejected macro-evidence implementation
+
+Independent formalization and Haskell reviews reject this implementation
+candidate despite its green regression suite. Its successor must:
+
+- retain exact persisted occurrence identity inside opaque macro witnesses
+  while keeping the public RawEdge projection;
+- store immutable typed domains once and return them without raw-ID recasting
+  or per-claim reconstruction;
+- replace erased projected-premise lists with scope-local typed occurrence
+  handles and total domain-row projections;
+- derive relation identity, endpoints, conservative premises, executable rules,
+  enumeration, and lookup from one exhaustive typed macrorelation vocabulary;
+- measure actual preparation and canonicalization operations without nominal
+  counters;
+- place shared pre-trace macro evidence directly under `O2I.Validation`.
+
+The constructive connected-plan evaluator, rank-2 scope, one-time semantic
+lifecycle, public API, and fachliche semantics remain valid constraints. This
+is a type-boundary redesign, not a compatibility patch.
+
+## Proposed macro-evidence type boundary
+
+1. Every relational premise receives a generative token in addition to its
+   rank-2 plan scope and endpoint kinds. A type-level `Snoc` shape records the
+   exact declaration order of those premise tokens.
+2. `Plan`, the complete premise sequence, the evaluator-only matched sequence,
+   and `Projection` carry the same shape. Projection consumes that sequence
+   structurally. It performs no key lookup, has no `Maybe` or impossible branch,
+   and cannot exchange two premises with equal endpoint kinds.
+3. Only the evaluator constructs `MatchedPremise` values. Domain rule
+   definitions receive typed matched occurrences through total projection
+   combinators tied to the exact generative premise handles.
+4. One closed `AlternativeShape` GADT stores each constructively connected
+   macro-rule alternative exactly once. Total interpreters derive both its
+   conservative raw premises and its executable typed plan. The current closed
+   shapes are single relation, forward chain, target join, and joined
+   chain-with-tail.
+5. One exhaustive endpoint-indexed `MacroRelation` GADT contains the fourteen
+   O2I macrorelations. Total functions derive conclusion relation, code,
+   endpoint witnesses, alternatives, lookup, enumeration, public
+   `MacroEvidenceRule` projection, and raw claim reification. The public facade
+   remains unchanged.
+6. A private `DMap DomainAddress Domain` stores cached owner, Strategy-role,
+   Performance-Dimension, and anchor domains. Lawful private `GEq` and
+   `GCompare` instances retain the kind index; lookup with
+   `DomainAddress kind` can return only `Domain kind`, while absence yields
+   `emptyDomain`. Kind mismatch is unrepresentable. Claim compilation never
+   recasts raw identifiers or rebuilds shared domains.
+7. `MacroEvidenceWitness` stores opaque `(occurrence ordinal, RawEdge)` premise
+   occurrences. Public `witnessPremises` remains the total RawEdge projection;
+   equality and internal identity retain occurrence ordinals.
+8. Canonical rows are inserted into an ordered `Map` per registry alternative
+   and emitted by ascending occurrence vector. Work records actual cache,
+   registry, and canonical-map operations; no nominal counter remains.
+9. Shared preparation and execution live in
+   `O2I.Validation.MacroEvidence.{Types,Prepare,Eval}`. Collective, Semantics,
+   and Trace consume narrow interfaces over the same opaque prepared value.
+10. Compile-fail contracts reject cross-scope, cross-token, endpoint,
+    disconnected-plan, and projection-order mismatches. Runtime contracts cover
+    complete-registry oracle equivalence, duplicate occurrence identity,
+    canonical order, cache reuse, preparation scaling, query scaling, and
+    existence short-circuiting.
+
+### Generative projection implementation review
+
+The first implementation candidate preserves the accepted shared Snoc shape,
+generative premise identity, and total structural projection. Its focused
+relational, macro-evidence, private compile, and complete Core contracts pass.
+The independent Haskell implementation review rejects the candidate until:
+
+- matched-row construction, projection application, plan decomposition, and
+  occurrence construction are available only through the relational executor
+  internals; the author facade excludes them and an import contract prevents
+  `O2I.Language.Macro` from importing the executor surface;
+- separate negative compile contracts isolate equal-endpoint token order,
+  endpoint shape under one scope and token, and matched-row opacity; and
+- projected premises are accumulated and materialized in declaration order in
+  linear time per emitted row.
+
+The corrected implementation closes all three findings through a safe author
+facade, an executor-internal kernel guarded by a lexically complete import
+contract, orthogonal negative compile contracts, and linear difference-list
+materialization. Relational `59/59`, macro-evidence `38/38`, public semantic
+`297/297`, all Core suites, eight import-checker tests, and all compile/import
+contracts pass. The renewed independent Haskell implementation review reports
+no finding and scores Typtheorie/Formalisierung, Haskell design, totality,
+ergonomics/clarity, tests/contracts, robustness/extensibility, performance, and
+proportionality at 10.0 each.
+
+### Closed vocabulary implementation review
+
+The first closed-vocabulary implementation makes `AlternativeShape` the one
+rule representation and derives conservative and executable semantics through
+total interpreters. Its complete Core, registry-oracle, import, and compile
+contracts pass. The independent Haskell review rejects two remaining API-design
+defects:
+
+- `MacroRelationIndex` repeats the fourteen-relation inventory without making
+  completeness constructive; direct `SomeMacroRelation` enumeration must
+  replace it while the independent completeness test remains;
+- the unused `lookupTypedMacroEvidenceRule` surface must be removed because
+  executable compilation already receives the exact typed relation through its
+  `MacroClaim`.
+
+No semantic or public API change is required. The correction removes both
+surfaces and repeats the focused review.
+
+The correction removes both surfaces. The direct existential enumeration is
+checked for exact equality and duplicate freedom against the general
+macrorelation registry. The renewed independent Haskell review reports no
+finding and scores Typtheorie/Formalisierung, Haskell design, totality,
+ergonomics/clarity, tests/contracts, robustness/extensibility, performance, and
+proportionality at 10.0 each.
+
+### Typed domain-cache implementation review
+
+The private `DMap DomainAddress Domain` cache retains complete `NodeKind`
+indices for owned Primitives, Strategy roles, Performance Dimensions, and
+Situation Anchors. Lawful total `GEq` and `GCompare` instances make kind
+mismatch unrepresentable; a missing address yields `emptyDomain`. The cache is
+built once and reused by every claim. Its focused contracts pass, and the
+independent Haskell review reports no finding and 10.0 in all eight dimensions.
+
+### Occurrence and work implementation review
+
+The first occurrence-aware implementation retains exact edge occurrences and
+uses stable ordered collision buckets per alternative. Its focused and complete
+Core contracts pass. The independent Haskell review rejects two boundaries:
+
+- public `Eq` and `Show` must remain projections of `NonEmpty RawEdge`, while a
+  private operation compares exact occurrence identity;
+- preparation work must be accumulated at actual DMap lookups and insertions,
+  registry insertions, and plan instantiations. Nominal formulae and duplicate
+  counters are excluded.
+
+The correction preserves public witness equality and rendering over
+`NonEmpty RawEdge` while a private comparator retains exact occurrence
+identity. Canonical rows use ordered collision buckets and never drop distinct
+rows with the same ordinal vector. One strict private operation accumulator
+records actual DMap lookups and insertions, Claim reads, registry insertions,
+and plan instantiations at their execution sites; selector-derived formulae and
+duplicate nominal counters are absent. A fixed baseline and independent
+domain-member and Claim deltas verify the contract without reconstructing the
+rule vocabulary. The focused 70-contract macro-evidence suite, every Core
+suite, HIndent, and compile/import contracts pass. Its bounded independent
+Haskell review accepts the Witness and canonicalization contracts but rejects
+two remaining lazy work boundaries:
+
+- an updated Domain must be forced before its DMap lookup and insertion are
+  counted; and
+- a `CompiledPlan` must be forced before its plan instantiation is counted.
+
+The correction uses private strict preparation-result boundaries and adds a
+focused strictness contract. Scattered `seq` patches, deep evaluation, unsafe
+instrumentation, and public test hooks remain excluded.
+
+The focused suite passes 71/71 contracts. The renewed independent Haskell
+review reports no finding and scores every required dimension at 10.0. It
+accepts both strict preparation boundaries and confirms both original
+occurrence-and-work findings as closed.
+
 ## Required Checks
 
 - Core formatting, build, tests, API tests, and Haddock;

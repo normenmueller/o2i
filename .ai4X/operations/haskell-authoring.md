@@ -7,8 +7,14 @@ adapters, or Haddock.
 
 - Treat Haskell as the normative machine-checkable formalization of the O2I
   metamodel, never as an independent fachliche source.
-- Optimize for semantic force, totality, idiomatic clarity, a small public API,
-  and proportionate complexity.
+- Optimize simultaneously for semantic force, totality, idiomatic elegance,
+  local clarity, a small public API, and proportionate complexity. A formally
+  strong design that is unnecessarily difficult to explain or use is not
+  acceptable.
+- Keep type design, module boundaries, package architecture, and semantic
+  ownership coherent and explicit. Signatures and Haddock must make the
+  intended use and guarantee boundary understandable without reading the whole
+  implementation.
 - Use GADTs, DataKinds, phantom types, existential packaging, or opaque
   validated artifacts only when they prevent invalid states, express a law, or
   protect a package boundary.
@@ -22,6 +28,16 @@ adapters, or Haddock.
   functions.
 - Separate static type guarantees from identity- and graph-dependent runtime
   validation.
+- Make expected domain failures explicit, total, deterministic, and
+  provenance-preserving. Internal definition defects must never be reported as
+  missing fachliche evidence or ordinary validation failure.
+- Design nontrivial graph and rule evaluation around addressed indices and
+  truthful work contracts. Exclude hidden Cartesian intermediates and support
+  asymptotic claims with adversarial multi-axis tests.
+- Extend stable mechanisms through fachlich owned rules and projections.
+  Redesign a shared evaluator only for a separately demonstrated new class of
+  requirement; never add a workaround, compatibility layer, unsafe mechanism,
+  or speculative abstraction.
 - Keep the CLI thin. Reusable logic belongs in libraries.
 
 # Package Boundaries
