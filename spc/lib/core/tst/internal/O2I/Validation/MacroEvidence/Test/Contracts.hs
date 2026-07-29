@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 -- | Private macro-evidence semantic, ordering, and work contracts.
 module O2I.Validation.MacroEvidence.Test.Contracts
   ( macroEvidenceTests
@@ -15,12 +17,13 @@ import O2I.Language.Macro
 import O2I.Language.Relation
 import O2I.Validation.MacroEvidence
 import O2I.Validation.MacroEvidence.Eval (canonicalizeMacroOccurrences)
+import qualified O2I.Validation.MacroEvidence.Prepare as Prepare
 import O2I.Validation.MacroEvidence.Test.Fixture
 import O2I.Validation.MacroEvidence.Test.Oracle
 import qualified O2I.Validation.MacroEvidence.Types as Internal
 import O2I.Validation.Relational.Eval
 import O2I.Validation.Relational.Index
-import O2I.Validation.Relational.Types (Domain)
+import O2I.Validation.Relational.Types (Domain, domainToAscList)
 import O2I.Validation.Semantics.Context
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -286,7 +289,13 @@ domainCacheContracts :: TestTree
 domainCacheContracts =
   testGroup
     "kind-indexed domain cache"
-    [ testCase "serves every addressable kind family"
+    [ testCase
+        "returns exact domains for every prepared address family"
+        exactPreparedDomains
+    , testCase
+        "isolates owner identity and indexed kind"
+        preparedDomainIsolation
+    , testCase "serves every addressable kind family"
         $ case validateRegistryScenario of
             Left message -> assertFailure message
             Right semantic -> do
@@ -329,6 +338,161 @@ domainCacheContracts =
               preparationStrategyFormulationsRead work
                 @?= length registryFormulations
     ]
+
+exactPreparedDomains :: Assertion
+exactPreparedDomains =
+  withAllDomainEvidence $ \prepared -> do
+    assertDomain
+      [ethosPrincipleId]
+      (Prepare.preparedOwnedPrimitiveDomain
+         prepared
+         (mkNodeId ethosId)
+         SEthos
+         SPrinciple)
+    assertDomain
+      [strategyDriverId]
+      (Prepare.preparedStrategyRoleDomain
+         prepared
+         (mkNodeId strategyId)
+         StrategyDiagnosisRole)
+    assertDomain
+      [strategyObjectiveId]
+      (Prepare.preparedStrategyRoleDomain
+         prepared
+         (mkNodeId strategyId)
+         StrategyIntentRole)
+    assertDomain
+      [strategyPrincipleId]
+      (Prepare.preparedStrategyRoleDomain
+         prepared
+         (mkNodeId strategyId)
+         StrategyGuidingPolicyRole)
+    assertDomain
+      [strategyActionId]
+      (Prepare.preparedStrategyRoleDomain
+         prepared
+         (mkNodeId strategyId)
+         StrategyCoherentActionRole)
+    assertDomain
+      [strategyKeyResultId]
+      (Prepare.preparedStrategyRoleDomain
+         prepared
+         (mkNodeId strategyId)
+         StrategyKeyResultRole)
+    assertDomain
+      [strategyDimensionId]
+      (Prepare.preparedPerformanceDimensionDomain
+         prepared
+         (mkNodeId strategyId)
+         StrategySuccessDimension)
+    assertDomain
+      [measureDimensionId]
+      (Prepare.preparedPerformanceDimensionDomain
+         prepared
+         (mkNodeId measureId)
+         MeasureMeasurementDimension)
+    assertDomain
+      [situationAnchorId]
+      (Prepare.preparedSituationAnchorDomain
+         prepared
+         (mkNodeId situationId)
+         SBusinessCapability)
+
+preparedDomainIsolation :: Assertion
+preparedDomainIsolation =
+  withRegistryEvidence $ \prepared -> do
+    assertDomain
+      [strategyDriverId]
+      (Prepare.preparedOwnedPrimitiveDomain
+         prepared
+         (mkNodeId strategyId)
+         SStrategy
+         SDriver)
+    assertDomain
+      [strategyObjectiveId]
+      (Prepare.preparedOwnedPrimitiveDomain
+         prepared
+         (mkNodeId strategyId)
+         SStrategy
+         SObjective)
+    assertDomain
+      [secondStrategyDriverId]
+      (Prepare.preparedOwnedPrimitiveDomain
+         prepared
+         (mkNodeId secondStrategyId)
+         SStrategy
+         SDriver)
+    assertDomain
+      []
+      (Prepare.preparedOwnedPrimitiveDomain
+         prepared
+         (mkNodeId (RawNodeId "missing-strategy"))
+         SStrategy
+         SDriver)
+    assertDomain
+      []
+      (Prepare.preparedStrategyRoleDomain
+         prepared
+         (mkNodeId (RawNodeId "missing-strategy"))
+         StrategyDiagnosisRole)
+    assertDomain
+      []
+      (Prepare.preparedPerformanceDimensionDomain
+         prepared
+         (mkNodeId (RawNodeId "missing-measure"))
+         MeasureMeasurementDimension)
+    assertDomain
+      []
+      (Prepare.preparedSituationAnchorDomain
+         prepared
+         (mkNodeId situationId)
+         SBusinessProcess)
+    assertDomain
+      []
+      (Prepare.preparedSituationAnchorDomain
+         prepared
+         (mkNodeId situationId)
+         SBusinessObject)
+    assertDomain
+      []
+      (Prepare.preparedSituationAnchorDomain
+         prepared
+         (mkNodeId situationId)
+         SValueStream)
+    assertDomain
+      []
+      (Prepare.preparedSituationAnchorDomain
+         prepared
+         (mkNodeId (RawNodeId "missing-situation"))
+         SBusinessCapability)
+
+withRegistryEvidence :: (PreparedMacroEvidence -> Assertion) -> Assertion
+withRegistryEvidence assertion =
+  case validateRegistryScenario of
+    Left message -> assertFailure message
+    Right semantic -> assertion (prepareMacroEvidence semantic)
+
+withAllDomainEvidence :: (PreparedMacroEvidence -> Assertion) -> Assertion
+withAllDomainEvidence assertion =
+  case validateRegistryGraph graph of
+    Left message -> assertFailure message
+    Right semantic -> assertion (prepareMacroEvidence semantic)
+  where
+    graph =
+      registryGraph
+        { rawNodes =
+            RawStructuringNode
+              strategyDimensionId
+              strategyId
+              PerformanceDimension
+              : rawNodes registryGraph
+        }
+
+strategyDimensionId :: RawNodeId
+strategyDimensionId = RawNodeId "strategy-dimension"
+
+assertDomain :: [RawNodeId] -> Domain kind -> Assertion
+assertDomain expected = (@?= expected) . map unNodeId . domainToAscList
 
 assertHasEvidence :: PreparedMacroEvidence -> RelationCode -> Assertion
 assertHasEvidence prepared expected =

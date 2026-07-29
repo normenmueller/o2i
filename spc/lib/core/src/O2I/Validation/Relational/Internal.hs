@@ -45,9 +45,17 @@ module O2I.Validation.Relational.Internal
   , projectedPremiseRelationCode
   , projectedPremiseRelationName
   , projectedPremiseRawTo
+  , ProjectedOccurrence
+  , projectedOccurrenceFrom
+  , projectedOccurrenceTo
+  , projectedOccurrenceOrdinal
+  , projectedOccurrenceEdge
+  , ProjectionMode(..)
   , Projection
   , projectPremise
   , appendProjectedPremise
+  , projectOccurrence
+  , appendOccurrence
   , MatchedPremise
   , MatchedPremises
   , emptyMatchedPremises
@@ -277,6 +285,34 @@ projectedPremiseRawTo :: ProjectedPremise -> RawNodeId
 projectedPremiseRawTo (ProjectedPremise (MatchedPremise _ occurrence)) =
   unNodeId (edgeTo (occurrenceEdge occurrence))
 
+-- | Endpoint-typed view of one evaluator-selected persisted occurrence.
+--
+-- The constructor remains private to this executor kernel. Rule authors can
+-- inspect only the statically typed endpoints, exact edge, and canonical
+-- ordinal through total projections.
+newtype ProjectedOccurrence from to =
+  ProjectedOccurrence (EdgeOccurrence from to)
+
+-- | Read the statically typed source identifier.
+projectedOccurrenceFrom :: ProjectedOccurrence from to -> NodeId from
+projectedOccurrenceFrom (ProjectedOccurrence occurrence) =
+  edgeFrom (occurrenceEdge occurrence)
+
+-- | Read the statically typed target identifier.
+projectedOccurrenceTo :: ProjectedOccurrence from to -> NodeId to
+projectedOccurrenceTo (ProjectedOccurrence occurrence) =
+  edgeTo (occurrenceEdge occurrence)
+
+-- | Read the canonical persisted-occurrence ordinal.
+projectedOccurrenceOrdinal :: ProjectedOccurrence from to -> Int
+projectedOccurrenceOrdinal (ProjectedOccurrence occurrence) =
+  occurrenceOrdinal occurrence
+
+-- | Read the exact endpoint-typed edge.
+projectedOccurrenceEdge :: ProjectedOccurrence from to -> Edge from to
+projectedOccurrenceEdge (ProjectedOccurrence occurrence) =
+  occurrenceEdge occurrence
+
 -- | Non-empty difference-list builder materialized once per result row.
 data NonEmptyBuilder value =
   NonEmptyBuilder value ([value] -> [value])
@@ -299,46 +335,100 @@ data ProjectionPath (scope :: Type) (shape :: PremiseShape) where
     :: ProjectionPath scope shape
     -> ProjectionPath scope ('SnocPremise shape token from to)
 
--- | Total typed row projection over one exact premise shape.
---
--- 'ProjectionPath' consumes matched premises only when every token and
--- endpoint matches its declaration-order shape. Projection builds one
--- non-empty difference list in O(p) per result and materializes it once.
-type role Projection nominal nominal representational
+-- | Closed projection representations understood by the private executor.
+data ProjectionMode
+  = ErasedPremiseProjection
+  | EndpointOccurrenceProjection
 
-data Projection (scope :: Type) (shape :: PremiseShape) (row :: Type) =
-  Projection
-    (ProjectionPath scope shape)
-    (NonEmptyBuilder ProjectedPremise -> row)
+-- | Total typed row projection over one exact premise shape and mode.
+--
+-- The mode makes erased and endpoint-typed authoring paths disjoint. Both
+-- consume matched premises structurally only when every token and endpoint
+-- matches its declaration-order shape. Erased projection builds one non-empty
+-- difference list in O(p). Endpoint projection applies one row-constructor
+-- argument per premise in O(p), without positional decoding.
+type role Projection nominal nominal nominal representational
+
+data Projection (mode :: ProjectionMode) (scope :: Type) (shape :: PremiseShape) (row :: Type) where
+  PremiseProjection
+    :: ProjectionPath scope shape
+    -> (NonEmptyBuilder ProjectedPremise -> row)
+    -> Projection 'ErasedPremiseProjection scope shape row
+  TypedOccurrenceProjection
+    :: (MatchedPremises scope shape -> row)
+    -> Projection 'EndpointOccurrenceProjection scope shape row
 
 -- | Project the first declared premise.
 projectPremise ::
      Premise (PremiseKey scope token) from to
   -> Projection
+       'ErasedPremiseProjection
        scope
        ('SnocPremise 'EmptyPremises token from to)
        (NonEmpty ProjectedPremise)
-projectPremise _ = Projection ProjectionFirst materializeBuilder
+projectPremise _ = PremiseProjection ProjectionFirst materializeBuilder
 
 -- | Append the next declared premise to a complete occurrence projection.
 --
 -- Passing another premise, reordering handles, or mixing plan scopes changes
 -- the projection shape and is rejected when the plan is finished.
 appendProjectedPremise ::
-     Projection scope shape (NonEmpty ProjectedPremise)
+     Projection 'ErasedPremiseProjection scope shape (NonEmpty ProjectedPremise)
   -> Premise (PremiseKey scope token) from to
   -> Projection
+       'ErasedPremiseProjection
        scope
        ('SnocPremise shape token from to)
        (NonEmpty ProjectedPremise)
-appendProjectedPremise (Projection path render) _ =
-  Projection (ProjectionNext path) render
+appendProjectedPremise (PremiseProjection path render) _ =
+  PremiseProjection (ProjectionNext path) render
+
+-- | Start an endpoint-typed row projection at the first declared premise.
+--
+-- The premise handle fixes the first shape token and endpoint kinds. The row
+-- constructor receives only the corresponding typed occurrence.
+projectOccurrence ::
+     Premise (PremiseKey scope token) from to
+  -> (ProjectedOccurrence from to -> row)
+  -> Projection
+       'EndpointOccurrenceProjection
+       scope
+       ('SnocPremise 'EmptyPremises token from to)
+       row
+projectOccurrence _ render =
+  TypedOccurrenceProjection $ \(MatchedPremiseSnoc MatchedPremiseNil matched) ->
+    case matched of
+      MatchedPremise _ occurrence -> render (ProjectedOccurrence occurrence)
+
+-- | Consume the next declared endpoint-typed occurrence.
+--
+-- The projection can advance only with the exact next premise from the same
+-- plan scope. Reordering equal-endpoint premises still changes the generative
+-- token sequence and is rejected by 'finish'.
+appendOccurrence ::
+     Projection
+       'EndpointOccurrenceProjection
+       scope
+       shape
+       (ProjectedOccurrence from to -> row)
+  -> Premise (PremiseKey scope token) from to
+  -> Projection
+       'EndpointOccurrenceProjection
+       scope
+       ('SnocPremise shape token from to)
+       row
+appendOccurrence (TypedOccurrenceProjection render) _ =
+  TypedOccurrenceProjection $ \(MatchedPremiseSnoc initial final) ->
+    case final of
+      MatchedPremise _ occurrence ->
+        render initial (ProjectedOccurrence occurrence)
 
 -- | Apply a total projection to an exactly matching occurrence row.
 applyProjection ::
-     Projection scope shape row -> MatchedPremises scope shape -> row
-applyProjection (Projection path render) matched =
+     Projection mode scope shape row -> MatchedPremises scope shape -> row
+applyProjection (PremiseProjection path render) matched =
   render (projectMatchedPremises path matched)
+applyProjection (TypedOccurrenceProjection render) matched = render matched
 
 projectMatchedPremises ::
      ProjectionPath scope shape
@@ -401,14 +491,14 @@ data Plan (scope :: Type) (shape :: PremiseShape) row where
                                                                        to)
                                                                     row)
     -> Plan scope shape row
-  FinishedPlan :: Projection scope shape row -> Plan scope shape row
+  FinishedPlan :: Projection mode scope shape row -> Plan scope shape row
 
 -- | Opaque, connected, projection-complete executable plan.
 data CompiledPlan row where
   CompiledPlan
     :: NonEmpty (SomeBound scope)
     -> Premises scope shape
-    -> Projection scope shape row
+    -> Projection mode scope shape row
     -> CompiledPlan row
 
 -- | Start a plan with one typed relation atom and fresh scope and token.
@@ -505,7 +595,7 @@ constrainExisting ::
 constrainExisting = ConstrainExistingPlan
 
 -- | Complete one connected plan with an exactly shaped total row projection.
-finish :: Projection scope shape row -> Plan scope shape row
+finish :: Projection mode scope shape row -> Plan scope shape row
 finish = FinishedPlan
 
 closePlan ::
@@ -548,10 +638,13 @@ closePlan bounds premises nextBound nextPremise plan =
 -- | Consume an opaque plan without allowing scope or shape to escape.
 withCompiledPlan ::
      CompiledPlan row
-  -> (forall scope shape. NonEmpty (SomeBound scope) -> Premises scope shape -> Projection
-                                                                                  scope
-                                                                                  shape
-                                                                                  row -> result)
+  -> (forall mode scope shape. NonEmpty (SomeBound scope) -> Premises
+                                                               scope
+                                                               shape -> Projection
+                                                                          mode
+                                                                          scope
+                                                                          shape
+                                                                          row -> result)
   -> result
 withCompiledPlan (CompiledPlan bounds premises projection) consume =
   consume bounds premises projection

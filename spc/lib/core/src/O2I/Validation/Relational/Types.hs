@@ -22,9 +22,16 @@ module O2I.Validation.Relational.Types
   , projectedPremiseRelationCode
   , projectedPremiseRelationName
   , projectedPremiseRawTo
+  , ProjectedOccurrence
+  , projectedOccurrenceFrom
+  , projectedOccurrenceTo
+  , projectedOccurrenceOrdinal
+  , projectedOccurrenceEdge
   , Projection
   , projectPremise
   , appendProjectedPremise
+  , projectOccurrence
+  , appendOccurrence
   , Plan
   , CompiledPlan
   , rootAtom

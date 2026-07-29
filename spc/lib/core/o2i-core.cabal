@@ -64,6 +64,8 @@ library
     O2I.Validation.Structure,
     O2I.Validation.Structure.Internal,
     O2I.Validation.Trace,
+    O2I.Validation.Trace.Rule,
+    O2I.Validation.Trace.Types,
     O2I.Validation.Trace.Search
   build-depends:
     base >=4.18 && <4.19,

@@ -13,6 +13,7 @@ data SecondToken
 
 invalidTokenSwap ::
      Projection
+       mode
        Scope
        ('SnocPremise
           ('SnocPremise
@@ -25,6 +26,7 @@ invalidTokenSwap ::
           ('PrimitiveKind 'Strategy 'Action))
        row
   -> Projection
+       mode
        Scope
        ('SnocPremise
           ('SnocPremise

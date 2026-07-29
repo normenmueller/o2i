@@ -22,6 +22,12 @@ tests =
     "constructive evaluator contracts"
     [ testCase "accounts for index construction exactly" exactIndexBuildWork
     , testCase "joins three connected axes without pair products" multiAxisJoin
+    , testCase
+        "projects endpoint-typed occurrences in declaration order"
+        endpointTypedProjection
+    , testCase
+        "retains duplicate endpoint-typed occurrences by ordinal"
+        typedDistinctOccurrences
     , testCase "rejects inconsistent siblings before occurrences" deadEndJoin
     , testCase "retains distinct exact edge occurrences" distinctOccurrences
     , testCase "emits declaration-ordered canonical rows" canonicalOrder
@@ -70,6 +76,35 @@ multiAxisJoin = do
   workResultsEmitted work @?= 4
   where
     relationOf (_, relation, _, _) = relation
+
+endpointTypedProjection :: IO ()
+endpointTypedProjection = do
+  let index = buildRelationalIndex matchingGraph
+      Evaluation erasedRows _ = runEnumerate index (trianglePlan index)
+      Evaluation typedRows work =
+        runEnumerate index (triangleOccurrencePlan index)
+  length typedRows @?= 4
+  map typedTriangleStrategy typedRows @?= replicate 4 (nodeIdFor "s")
+  map typedTriangleIntervention typedRows @?= map nodeIdFor interventionNames
+  map typedTriangleNeed typedRows @?= map nodeIdFor needNames
+  map typedTriangleOccurrences typedRows @?= map rowSignature erasedRows
+  workResultsEmitted work @?= 4
+
+typedDistinctOccurrences :: IO ()
+typedDistinctOccurrences = do
+  let index = buildRelationalIndex duplicateGraph
+      Evaluation erasedRows _ = runEnumerate index (qualificationPlan index)
+      Evaluation typedRows work =
+        runEnumerate index (qualificationOccurrencePlan index)
+      expectedRows = concatMap rowSignature erasedRows
+      ordinals = map fourth typedRows
+  typedRows @?= expectedRows
+  length typedRows @?= 2
+  length (nub ordinals) @?= 2
+  workExactOccurrenceReads work @?= 2
+  workResultsEmitted work @?= 2
+  where
+    fourth (_, _, _, ordinal) = ordinal
 
 deadEndJoin :: IO ()
 deadEndJoin = do

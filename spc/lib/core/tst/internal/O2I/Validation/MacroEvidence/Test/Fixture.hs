@@ -14,8 +14,20 @@ module O2I.Validation.MacroEvidence.Test.Fixture
   , validateRegistryGraph
   , validateRegistryScenario
   , frameClaim
+  , ethosId
+  , ethosPrincipleId
   , strategyId
+  , strategyDriverId
+  , strategyObjectiveId
+  , strategyPrincipleId
+  , strategyActionId
+  , strategyKeyResultId
   , measureId
+  , measureDimensionId
+  , situationId
+  , situationAnchorId
+  , secondStrategyId
+  , secondStrategyDriverId
   ) where
 
 import qualified Data.List.NonEmpty as NonEmpty

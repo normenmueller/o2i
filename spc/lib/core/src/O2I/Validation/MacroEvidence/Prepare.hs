@@ -16,6 +16,10 @@ module O2I.Validation.MacroEvidence.Prepare
   , preparedContextSemantics
   , preparedMacroFacts
   , preparedRelationalIndex
+  , preparedOwnedPrimitiveDomain
+  , preparedStrategyRoleDomain
+  , preparedPerformanceDimensionDomain
+  , preparedSituationAnchorDomain
   , preparedMacroClaims
   , preparedClaimAlternatives
   , preparedMacroWork
@@ -225,6 +229,47 @@ preparedMacroFacts = storedMacroFacts
 preparedRelationalIndex :: PreparedMacroEvidence -> RelationalIndex
 preparedRelationalIndex = storedRelationalIndex
 
+-- | Resolve one exact owner-, Context-, and Primitive-indexed domain.
+preparedOwnedPrimitiveDomain ::
+     PreparedMacroEvidence
+  -> NodeId ('ContextKind context)
+  -> SContext context
+  -> SPrimitive primitive
+  -> Domain ('PrimitiveKind context primitive)
+preparedOwnedPrimitiveDomain prepared owner context primitive =
+  lookupPreparedDomain
+    prepared
+    (OwnedAddress (unNodeId owner) context primitive)
+
+-- | Resolve one exact Strategy formulation-role domain.
+preparedStrategyRoleDomain ::
+     PreparedMacroEvidence
+  -> NodeId ('ContextKind 'Strategy)
+  -> TypedStrategyRole primitive
+  -> Domain ('PrimitiveKind 'Strategy primitive)
+preparedStrategyRoleDomain prepared strategy role =
+  lookupPreparedDomain prepared (StrategyRoleAddress (unNodeId strategy) role)
+
+-- | Resolve one exact PerformanceDimension role domain.
+preparedPerformanceDimensionDomain ::
+     PreparedMacroEvidence
+  -> NodeId ('ContextKind context)
+  -> PerformanceDimensionRole context member
+  -> Domain ('StructuringKind context 'PerformanceDimension)
+preparedPerformanceDimensionDomain prepared owner role =
+  lookupPreparedDomain
+    prepared
+    (PerformanceDimensionAddress (unNodeId owner) role)
+
+-- | Resolve one exact Situation constituent-anchor domain.
+preparedSituationAnchorDomain ::
+     PreparedMacroEvidence
+  -> NodeId ('ContextKind 'Situation)
+  -> SSituationAnchor anchor
+  -> Domain ('AnchorKind anchor)
+preparedSituationAnchorDomain prepared situation anchor =
+  lookupPreparedDomain prepared (AnchorAddress (unNodeId situation) anchor)
+
 -- | Enumerate persisted typed macro claims in canonical graph order.
 preparedMacroClaims ::
      PreparedMacroEvidence -> [(RawEdge, MacroClaim RawNodeId)]
@@ -364,6 +409,15 @@ addressedDomain (MacroDomainIndex domains) address =
       case DMap.lookup address domains of
         Nothing -> emptyDomain
         Just existing -> existing
+
+lookupPreparedDomain ::
+     PreparedMacroEvidence -> DomainAddress kind -> Domain kind
+lookupPreparedDomain prepared address =
+  case DMap.lookup address domains of
+    Nothing -> emptyDomain
+    Just existing -> existing
+  where
+    MacroDomainIndex domains = _storedMacroDomains prepared
 
 prepareFacts :: [SomeNode] -> [SomeEdge] -> FactPreparation
 prepareFacts nodes edges =

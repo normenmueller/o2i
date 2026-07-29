@@ -13,6 +13,7 @@ data Token
 
 invalidScope ::
      Projection
+       mode
        LocalScope
        ('SnocPremise
           'EmptyPremises
@@ -21,6 +22,7 @@ invalidScope ::
           ('ContextKind 'Need))
        row
   -> Projection
+       mode
        ForeignScope
        ('SnocPremise
           'EmptyPremises

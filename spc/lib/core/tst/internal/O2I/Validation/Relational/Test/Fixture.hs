@@ -1,9 +1,13 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE GADTs #-}
 
 -- | Compact typed fixtures for private constructive evaluator contracts.
 module O2I.Validation.Relational.Test.Fixture
   ( qualificationPlan
+  , qualificationOccurrencePlan
   , trianglePlan
+  , TypedTriangleRow(..)
+  , triangleOccurrencePlan
   , rowSignature
   , graphFrom
   , contextNode
@@ -22,6 +26,15 @@ import O2I.Language.Relation
 import O2I.Validation.Relational.Index
 import O2I.Validation.Relational.Types
 
+data TypedTriangleRow = TypedTriangleRow
+  { typedTriangleStrategy :: NodeId ('ContextKind 'Strategy)
+  , typedTriangleIntervention :: NodeId ('ContextKind 'Intervention)
+  , typedTriangleNeed :: NodeId ('ContextKind 'Need)
+  , typedTriangleOccurrences :: [(RawNodeId, RelationCode, RawNodeId, Int)]
+  } deriving (Eq, Show)
+
+type OccurrenceSignature = (RawNodeId, RelationCode, RawNodeId, Int)
+
 qualificationPlan :: RelationalIndex -> CompiledPlan (NonEmpty ProjectedPremise)
 qualificationPlan index =
   rootAtom
@@ -29,6 +42,16 @@ qualificationPlan index =
     qualifiesNeed
     (nodeDomainFor (SContextKind SNeed) index)
     (\_ _ premise -> finish (projectPremise premise))
+
+qualificationOccurrencePlan ::
+     RelationalIndex -> CompiledPlan OccurrenceSignature
+qualificationOccurrencePlan index =
+  rootAtom
+    (nodeDomainFor (SContextKind SStrategy) index)
+    qualifiesNeed
+    (nodeDomainFor (SContextKind SNeed) index)
+    (\_ _ premise ->
+       finish (projectOccurrence premise (occurrenceSignature . occurrenceView)))
 
 trianglePlan :: RelationalIndex -> CompiledPlan (NonEmpty ProjectedPremise)
 trianglePlan index =
@@ -54,8 +77,62 @@ trianglePlan index =
                          addressesPremise)
                       qualifiesPremise))))
 
-rowSignature ::
-     NonEmpty ProjectedPremise -> [(RawNodeId, RelationCode, RawNodeId, Int)]
+triangleOccurrencePlan :: RelationalIndex -> CompiledPlan TypedTriangleRow
+triangleOccurrencePlan index =
+  rootAtom
+    (nodeDomainFor (SContextKind SStrategy) index)
+    directsIntervention
+    (nodeDomainFor (SContextKind SIntervention) index)
+    (\strategy intervention directsPremise ->
+       extendForward
+         intervention
+         addressesNeed
+         (nodeDomainFor (SContextKind SNeed) index)
+         (\need addressesPremise ->
+            constrainExisting
+              strategy
+              qualifiesNeed
+              need
+              (\qualifiesPremise ->
+                 finish
+                   (appendOccurrence
+                      (appendOccurrence
+                         (projectOccurrence
+                            directsPremise
+                            (\directs addresses qualifies ->
+                               TypedTriangleRow
+                                 { typedTriangleStrategy =
+                                     projectedOccurrenceFrom directs
+                                 , typedTriangleIntervention =
+                                     projectedOccurrenceTo directs
+                                 , typedTriangleNeed =
+                                     projectedOccurrenceTo addresses
+                                 , typedTriangleOccurrences =
+                                     map
+                                       occurrenceSignature
+                                       [ occurrenceView directs
+                                       , occurrenceView addresses
+                                       , occurrenceView qualifies
+                                       ]
+                                 }))
+                         addressesPremise)
+                      qualifiesPremise))))
+
+data OccurrenceView where
+  OccurrenceView :: ProjectedOccurrence from to -> OccurrenceView
+
+occurrenceView :: ProjectedOccurrence from to -> OccurrenceView
+occurrenceView = OccurrenceView
+
+occurrenceSignature :: OccurrenceView -> OccurrenceSignature
+occurrenceSignature (OccurrenceView occurrence) =
+  ( unNodeId (projectedOccurrenceFrom occurrence)
+  , relationCode
+      (relationSpec (edgeRelation (projectedOccurrenceEdge occurrence)))
+  , unNodeId (projectedOccurrenceTo occurrence)
+  , projectedOccurrenceOrdinal occurrence)
+
+rowSignature :: NonEmpty ProjectedPremise -> [OccurrenceSignature]
 rowSignature =
   map
     (\premise ->

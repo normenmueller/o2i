@@ -11,6 +11,7 @@ data Token
 
 invalidEndpointShape ::
      Projection
+       mode
        Scope
        ('SnocPremise
           'EmptyPremises
@@ -19,6 +20,7 @@ invalidEndpointShape ::
           ('ContextKind 'Need))
        row
   -> Projection
+       mode
        Scope
        ('SnocPremise
           'EmptyPremises

@@ -692,6 +692,124 @@ review reports no finding and scores every required dimension at 10.0. It
 accepts both strict preparation boundaries and confirms both original
 occurrence-and-work findings as closed.
 
+### Macro-evidence module-ownership review
+
+Shared preparation and execution reside under
+`O2I.Validation.MacroEvidence.{Types,Prepare,Eval}`. Semantics prepares one
+immutable value; Collective consumes its narrow typed evidence interface and
+Trace reuses the accepted model's prepared value. The former Trace-owned
+evidence hierarchy and all references to it are absent. Focused and complete
+Core verification, compile/import contracts, HIndent, and Cabal check pass.
+The bounded independent Haskell review reports no finding and scores every
+required dimension at 10.0.
+
+### Typed effect-trace rule package
+
+The current package replaces the private list-bind
+`O2I.Validation.Trace.Search` architecture with focused domain-owned rule,
+projection, and execution modules over the accepted private relational
+mechanism. It preserves the public trace API, `EffectTraceKey` identity,
+canonical order, diagnostics, and O2I semantics. The existing fourteen
+adversarial trace contracts remain required and gain a small complete semantic
+oracle plus independent multi-axis performance contracts. `Search.hs` is
+removed without a compatibility module. Design receives bounded external
+review before implementation; the completed package receives a distinct
+bounded independent Haskell review.
+
+The accepted design uses three closed responsibilities:
+
+1. `AddressedNeedRule` derives diagnostic obligations independently of trace
+   completeness.
+2. `EffectTraceContextRule` derives one connected Vision, Strategy, Need,
+   Intervention, Measure, and Situation Skeleton from the nine required
+   Context relations.
+3. `EffectTraceConstituentRule anchor` derives one complete owner-specific
+   Primitive, Strategy-role, Performance-Dimension, and anchor proof for one
+   Skeleton. The four anchor constructors remain static GADT alternatives.
+
+Every one of the eighteen trace constituents is an endpoint of a required
+premise. The relational facade therefore gains one opaque endpoint-indexed
+`ProjectedOccurrence from to` and a total shape-, token-, order-, and
+endpoint-preserving projection fold. It exposes typed endpoints, ordinal, and
+edge but never bindings, matched rows, constructors, or positional lists. A
+separate binding projection is excluded unless a future admitted closed O2I
+obligation genuinely projects a value that is not a premise endpoint.
+
+Independent Co-Author and formalization reviews accept this decomposition as
+formally correct, purpose-fit, and performance-safe. They reject monolithic
+model-wide rules, independently joined constituent fragments, Raw-ID casts,
+positional decoding, generic dependent-query combinators, and untyped anchor
+families.
+
+The endpoint-typed occurrence projection implementation passes Relational
+60/60, MacroEvidence 71/71, Core `-Werror` build, every compile/import
+contract, HIndent, and `git diff --check`. Its bounded independent Haskell
+review determines whether this new private authoring boundary is accepted
+before any Trace module consumes it.
+
+The first bounded review rejects two defects:
+
+- erased-premise and endpoint-typed projections share one unindexed sum, which
+  leaves cross-mode composition and one dead representation branch possible;
+- runtime coverage does not compare complete typed occurrence signatures or
+  prove that duplicate edge ordinals survive the typed projection.
+
+The correction indexes `Projection` by one closed mode consumed existentially
+by `finish` and execution. Each authoring family inhabits only its own mode,
+mixed branches disappear constructively, and a compile-fail contract rejects
+cross-mode composition. Runtime contracts compare complete source, relation,
+target, and ordinal signatures and retain distinct duplicate occurrences.
+
+The correction passes Relational 61/61, MacroEvidence 71/71, Core `-Werror`,
+all compile/import contracts, HIndent, and `git diff --check`. The renewed
+bounded independent Haskell review reports no finding and scores every
+required dimension at 10.0. The endpoint-typed occurrence projection is
+accepted for use by the Effect-Trace rules.
+
+Four total Cabal-private accessors expose only exact typed domains from the
+shared `PreparedMacroEvidence`: owner/Context/Primitive, Strategy formulation
+role, Performance-Dimension role, and Situation/anchor kind. Missing exact
+addresses yield `emptyDomain`; `MacroDomainIndex`, `DomainAddress`, DMap, raw
+casts, and preparation-work internals remain hidden. Focused contracts cover
+all role and anchor alternatives, missing addresses, and distinct owner
+identities. MacroEvidence 73/73, Relational 61/61, every Core suite with
+`-Werror`, compile/import contracts, HIndent, and `git diff --check` pass. The
+bounded independent Haskell review reports no finding and scores every
+required dimension at 10.0.
+
+The following bounded package defines internal typed Trace result records and
+the three accepted declarative rules without switching the public evaluator:
+`AddressedNeedRule`, `EffectTraceContextRule`, and the four static
+`EffectTraceConstituentRule` anchor alternatives. Execution integration,
+diagnostics, oracle replacement, performance matrices, and deletion of
+`Trace.Search` remain separate subsequent packages.
+
+The package compiles each rule through the accepted constructive relational
+facade. Every projected Context or constituent identifier comes from one
+endpoint-typed required-premise occurrence. Four orthogonal negative compile
+contracts reject cross-scope variables, endpoint mismatch, occurrence-order
+mismatch, and anchor mismatch; one readable positive contract instantiates all
+four static anchor alternatives. Complete Core tests with `-Werror`,
+compile/import contracts, HIndent, and `git diff --check` pass. A bounded
+independent Haskell/formalization review first rejects one local readability
+finding. The correction replaces numbered projection stages with semantically
+named cumulative proof stages and renders the typed occurrence callback
+vertically without splitting the connected proof. The renewed review reports
+no finding and scores every required dimension at 10.0.
+
+The accepted execution-integration design adds private `Trace.Eval` and moves
+the Trace representation behind total typed construction in `Trace.Types`;
+`Trace.hs` continues to reexport the unchanged public API. Evaluation reuses
+one prepared relational index, derives addressed Needs independently, derives
+Context skeletons once, and executes only nonempty static anchor alternatives
+per skeleton. Exact `EffectTraceId` canonicalization preserves public
+deduplication and `Map.elems` order. Coverage derives only from canonical
+traces; diagnostics remain `MissingMacroEvidence` first, followed by
+Intervention diagnostics in ascending identifier order. Work records only
+actual relational evaluation, canonicalization, anchor-domain inspection, and
+executed constituent plans. `Trace.Search` is deleted only after semantic,
+diagnostic, oracle, and multi-axis contracts pass.
+
 ## Required Checks
 
 - Core formatting, build, tests, API tests, and Haddock;

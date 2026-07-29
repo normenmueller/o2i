@@ -202,7 +202,7 @@ existsCandidates index premises rest bound guards (value:values) bindings =
 enumerateVariables ::
      RelationalIndex
   -> Premises scope shape
-  -> Projection scope shape row
+  -> Projection mode scope shape row
   -> [SomeBound scope]
   -> Bindings scope
   -> (Builder row, EvaluationWork)
@@ -231,7 +231,7 @@ enumerateVariables index premises projection (SomeBound bound:rest) bindings =
 enumerateCandidates ::
      RelationalIndex
   -> Premises scope shape
-  -> Projection scope shape row
+  -> Projection mode scope shape row
   -> [SomeBound scope]
   -> Bound scope kind
   -> [Domain kind]
@@ -373,7 +373,7 @@ data OccurrenceDomains scope shape where
 enumerateOccurrences ::
      RelationalIndex
   -> Premises scope shape
-  -> Projection scope shape row
+  -> Projection mode scope shape row
   -> Bindings scope
   -> (Builder row, EvaluationWork)
 enumerateOccurrences index premises projection bindings =

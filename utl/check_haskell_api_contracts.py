@@ -182,6 +182,11 @@ PRIVATE_COMPILE_FAILURES = (
     ),
     PrivateCompileFailure(
         "spc/lib/core/tst/internal/compile-fail/"
+        "RelationalProjectionModeMismatch.hs",
+        (("GHC-83865", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
         "RelationalMatchedConstructionOutsideExecutor.hs",
         (("GHC-88464", 1),),
     ),
@@ -190,11 +195,49 @@ PRIVATE_COMPILE_FAILURES = (
         "RelationalProjectionApplicationOutsideExecutor.hs",
         (("GHC-88464", 1),),
     ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "RelationalOccurrenceEndpointMismatch.hs",
+        (("GHC-83865", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "RelationalOccurrenceOrderMismatch.hs",
+        (("GHC-25897", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "RelationalOccurrenceConstructionOutsideExecutor.hs",
+        (("GHC-31891", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "TraceRuleCrossScope.hs",
+        (("GHC-25897", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "TraceRuleEndpointMismatch.hs",
+        (("GHC-83865", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "TraceRuleOccurrenceOrder.hs",
+        (("GHC-25897", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "TraceRuleAnchorMismatch.hs",
+        (("GHC-83865", 1),),
+    ),
 )
 
 PRIVATE_COMPILE_PASSES = (
     "spc/lib/core/tst/internal/compile-pass/MacroVocabulary.hs",
+    "spc/lib/core/tst/internal/compile-pass/"
+    "RelationalOccurrenceProjection.hs",
     "spc/lib/core/tst/internal/compile-pass/RelationalPlan.hs",
+    "spc/lib/core/tst/internal/compile-pass/TraceRules.hs",
 )
 
 
