@@ -1590,6 +1590,11 @@ traceTests =
              effectTraceIdText
                (traceIdentifier (NonEmpty.head (effectTraces model)))
                @?= "19;19:o2i-effect-trace-v16:vision16:vision-objective8:strategy15:strategy-driver18:strategy-objective19:strategy-key-result15:strategy-action4:need11:need-driver14:need-objective12:intervention19:intervention-action23:intervention-key-result7:measure29:measure-performance-dimension11:measure-kpi9:situation16:situation-anchor"
+     , testCase "effect-trace public Show representation is stable"
+         $ withTraceable sampleGraph
+         $ \model ->
+             show (NonEmpty.head (effectTraces model))
+               @?= expectedEffectTraceShow
      , testCase "effect traces expose every typed proof-path constituent"
          $ withTraceable sampleGraph
          $ \model ->
@@ -1727,6 +1732,56 @@ traceTests =
               $ QC.forAll (QC.elements [minBound .. maxBound])
               $ \anchor -> traceabilitySucceeds (graphWithAnchor anchor)
           ])
+
+expectedEffectTraceShow :: String
+expectedEffectTraceShow =
+  concat
+    [ "EffectTrace {effectTraceIdentifier = EffectTraceId (EffectTraceKey "
+    , "{keyVision = RawNodeId {rawNodeIdText = \"vision\"}, "
+    , "keyVisionObjective = RawNodeId {rawNodeIdText = \"vision-objective\"}, "
+    , "keyStrategy = RawNodeId {rawNodeIdText = \"strategy\"}, "
+    , "keyStrategyDriver = RawNodeId {rawNodeIdText = \"strategy-driver\"}, "
+    , "keyStrategyObjective = RawNodeId {rawNodeIdText = "
+    , "\"strategy-objective\"}, keyStrategyKeyResult = RawNodeId "
+    , "{rawNodeIdText = \"strategy-key-result\"}, keyStrategyAction = "
+    , "RawNodeId {rawNodeIdText = \"strategy-action\"}, keyNeed = RawNodeId "
+    , "{rawNodeIdText = \"need\"}, keyNeedDriver = RawNodeId {rawNodeIdText = "
+    , "\"need-driver\"}, keyNeedObjective = RawNodeId {rawNodeIdText = "
+    , "\"need-objective\"}, keyIntervention = RawNodeId {rawNodeIdText = "
+    , "\"intervention\"}, keyInterventionAction = RawNodeId {rawNodeIdText = "
+    , "\"intervention-action\"}, keyInterventionKeyResult = RawNodeId "
+    , "{rawNodeIdText = \"intervention-key-result\"}, keyMeasure = RawNodeId "
+    , "{rawNodeIdText = \"measure\"}, keyMeasurePerformanceDimension = "
+    , "RawNodeId {rawNodeIdText = \"measure-performance-dimension\"}, "
+    , "keyMeasureKPI = RawNodeId {rawNodeIdText = \"measure-kpi\"}, "
+    , "keySituation = RawNodeId {rawNodeIdText = \"situation\"}, "
+    , "keySituationAnchor = RawNodeId {rawNodeIdText = "
+    , "\"situation-anchor\"}}), effectTraceVision = ContextRef (RawNodeId "
+    , "{rawNodeIdText = \"vision\"}), effectTraceVisionObjective = NodeId "
+    , "(RawNodeId {rawNodeIdText = \"vision-objective\"}), "
+    , "effectTraceStrategy = ContextRef (RawNodeId {rawNodeIdText = "
+    , "\"strategy\"}), effectTraceStrategyDriver = NodeId (RawNodeId "
+    , "{rawNodeIdText = \"strategy-driver\"}), effectTraceStrategyObjective = "
+    , "NodeId (RawNodeId {rawNodeIdText = \"strategy-objective\"}), "
+    , "effectTraceStrategyKeyResult = NodeId (RawNodeId {rawNodeIdText = "
+    , "\"strategy-key-result\"}), effectTraceStrategyAction = NodeId "
+    , "(RawNodeId {rawNodeIdText = \"strategy-action\"}), effectTraceNeed = "
+    , "ContextRef (RawNodeId {rawNodeIdText = \"need\"}), "
+    , "effectTraceNeedDriver = NodeId (RawNodeId {rawNodeIdText = "
+    , "\"need-driver\"}), effectTraceNeedObjective = NodeId (RawNodeId "
+    , "{rawNodeIdText = \"need-objective\"}), effectTraceIntervention = "
+    , "ContextRef (RawNodeId {rawNodeIdText = \"intervention\"}), "
+    , "effectTraceInterventionAction = NodeId (RawNodeId {rawNodeIdText = "
+    , "\"intervention-action\"}), effectTraceInterventionKeyResult = NodeId "
+    , "(RawNodeId {rawNodeIdText = \"intervention-key-result\"}), "
+    , "effectTraceMeasure = ContextRef (RawNodeId {rawNodeIdText = "
+    , "\"measure\"}), effectTraceMeasurePerformanceDimension = NodeId "
+    , "(RawNodeId {rawNodeIdText = \"measure-performance-dimension\"}), "
+    , "effectTraceKPI = NodeId (RawNodeId {rawNodeIdText = \"measure-kpi\"}), "
+    , "effectTraceSituation = ContextRef (RawNodeId {rawNodeIdText = "
+    , "\"situation\"}), effectTraceSituationAnchor = (RawNodeId "
+    , "{rawNodeIdText = \"situation-anchor\"},BusinessCapability)}"
+    ]
 
 withTraceIdentifiers :: RawGraph -> ([Text.Text] -> Assertion) -> Assertion
 withTraceIdentifiers raw action =

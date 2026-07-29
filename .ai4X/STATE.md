@@ -67,35 +67,14 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 
 # Next Action
 
-Replace the private list-bind `O2I.Validation.Trace.Search` architecture with
-focused domain-owned effect-trace rules, typed projections, and execution over
-the accepted private relational mechanism. Preserve the public trace API,
-identity, canonical order, diagnostics, and O2I semantics; extend semantic
-oracle and multi-axis performance contracts before bounded Haskell review.
-Implement and verify the independently designed total endpoint-typed
-occurrence projection first. Independent Co-Author and formalization reviews
-accept a Context-Skeleton rule followed by one owner-specific complete
-constituent rule per Skeleton and anchor kind. Every trace field is projected
-from a typed required-premise occurrence; no binding projection is needed.
-The corrected projection passes Relational 61/61, MacroEvidence 71/71, Core,
-compile/import, and formatting checks; its renewed independent review reports
-no finding and 10.0 in every dimension. Four total Cabal-private typed
-accessors now expose only exact prepared domains for owned Primitives, Strategy
-roles, Performance Dimensions, and Situation anchors; missing addresses yield
-an empty typed domain while cache internals remain hidden. All seven Core
-suites pass with `-Werror`, including MacroEvidence 73/73, Relational 61/61,
-and the public suite 297/297. Their bounded independent review reports no
-finding and 10.0 in every dimension. The Co-Author now implements the separate
-Trace Types and declarative rule package. That package now compiles the
-independent addressed-Need rule, connected nine-relation Context rule, and four
-static-anchor alternatives of the connected eighteen-relation constituent
-rule. Complete Core, compile/import, HIndent, and diff checks pass; its bounded
-independent Haskell/formalization review reports no finding and 10.0 in every
-dimension. The accepted integration design moves the public Trace
-representation behind private typed construction, executes addressed-Need
-diagnostics independently, skips empty anchor domains, canonicalizes exact
-public trace identity, and preserves diagnostic order. Implement `Trace.Eval`
-and replace `Trace.Search` next.
+The typed `Trace.Eval` integration and private verification package pass
+complete Core, compile, import, Cabal, HIndent, and diff checks. Work accounting
+includes Intervention enumeration and incremental typed coverage construction;
+the public `Show EffectTrace` representation is locked. The renewed independent
+review reports no finding and 10.0 in every dimension. Replace the remaining
+private `Trace.Search` component with Eval-owned semantic-oracle and multi-axis
+contracts, preserve the public facade and diagnostics, and remove Search
+without a compatibility module.
 
 # Local Return Point
 

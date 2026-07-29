@@ -810,6 +810,27 @@ actual relational evaluation, canonicalization, anchor-domain inspection, and
 executed constituent plans. `Trace.Search` is deleted only after semantic,
 diagnostic, oracle, and multi-axis contracts pass.
 
+Execution integration is split into two bounded packages. Package 4a changes
+only private Trace representation, `Trace.Eval`, the unchanged public facade,
+and Cabal registration. Package 4b then adds the private Eval runner, fixtures,
+contracts, and compile/import checks. This keeps production architecture and
+verification architecture independently reviewable before the old Search
+module is removed.
+
+The bounded Package 4a review accepts its typed execution architecture but
+rejects two closure gaps. Package 4b completes the operation-bound work
+contract by counting Intervention enumeration and incremental typed coverage
+construction, tests every work component directly, and locks the unchanged
+public `Show EffectTrace` representation. `Trace.Search` remains untouched
+until this corrected Eval boundary passes renewed independent review.
+
+The corrected Eval boundary passes 8/8 private evaluator contracts, 298/298
+public Core contracts, complete Core and compile/import verification, Cabal
+check, HIndent, and diff checks. Its renewed independent review reports no
+finding and 10.0 in every required dimension. `Trace.Search` can now be
+replaced by Eval-owned oracle and multi-axis contracts and then removed without
+a compatibility module.
+
 ## Required Checks
 
 - Core formatting, build, tests, API tests, and Haddock;

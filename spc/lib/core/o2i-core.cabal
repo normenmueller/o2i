@@ -64,6 +64,7 @@ library
     O2I.Validation.Structure,
     O2I.Validation.Structure.Internal,
     O2I.Validation.Trace,
+    O2I.Validation.Trace.Eval,
     O2I.Validation.Trace.Rule,
     O2I.Validation.Trace.Types,
     O2I.Validation.Trace.Search
@@ -239,6 +240,59 @@ test-suite o2i-macro-evidence-internal-test
     O2I.Validation.Semantics.Context.TradeOffSet,
     O2I.Validation.Structure,
     O2I.Validation.Structure.Internal
+  build-depends:
+    base >=4.18 && <4.19,
+    containers >=0.6 && <0.7,
+    dependent-map >=0.4.0 && <0.5,
+    dependent-sum >=0.7.1 && <0.8,
+    tasty >=1.4 && <1.6,
+    tasty-hunit >=0.10 && <0.11,
+    text >=2.0 && <2.1,
+    validation >=1.1 && <1.2
+  hs-source-dirs:
+    tst/internal,
+    src
+
+-- This component compiles the private typed effect-trace evaluator directly.
+-- It verifies semantic results and operation-bound work without exporting
+-- instrumentation from the public validation API.
+test-suite o2i-trace-eval-internal-test
+  import:
+    warnings,
+    language
+  type:
+    exitcode-stdio-1.0
+  main-is:
+    TraceEvalMain.hs
+  other-modules:
+    O2I.Graph.Macro,
+    O2I.Graph.Macro.Index,
+    O2I.Graph.Raw,
+    O2I.Graph.Typed,
+    O2I.Language.Claim,
+    O2I.Language.Element,
+    O2I.Language.Interpretation,
+    O2I.Language.Macro,
+    O2I.Language.Macro.Alternative,
+    O2I.Language.Relation,
+    O2I.Validation.MacroEvidence,
+    O2I.Validation.MacroEvidence.Eval,
+    O2I.Validation.MacroEvidence.Prepare,
+    O2I.Validation.MacroEvidence.Test.Fixture,
+    O2I.Validation.MacroEvidence.Types,
+    O2I.Validation.Relational.Eval,
+    O2I.Validation.Relational.Index,
+    O2I.Validation.Relational.Internal,
+    O2I.Validation.Relational.Types,
+    O2I.Validation.Semantics.Context,
+    O2I.Validation.Semantics.Context.TradeOffSet,
+    O2I.Validation.Structure,
+    O2I.Validation.Structure.Internal,
+    O2I.Validation.Trace.Eval,
+    O2I.Validation.Trace.Eval.Test.Contracts,
+    O2I.Validation.Trace.Eval.Test.Fixture,
+    O2I.Validation.Trace.Rule,
+    O2I.Validation.Trace.Types
   build-depends:
     base >=4.18 && <4.19,
     containers >=0.6 && <0.7,
