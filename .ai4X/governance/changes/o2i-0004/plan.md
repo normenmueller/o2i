@@ -851,6 +851,13 @@ dimension. The Eval-owned semantic oracle and multi-axis contracts are accepted
 as the verification authority required before Package 5b removes
 `Trace.Search` and its private test suite without a compatibility module.
 
+Package 5b removes `Trace.Search`, its private runner and its three private test
+modules, and only their Cabal registrations. No compatibility module remains.
+Every Core suite, compile/import contract, Cabal check, Haddock, HIndent, and
+diff check passes. The bounded independent Haskell review confirms that all
+fourteen material Search axes remain owned by Package 5a, reports no finding,
+and scores every required dimension at 10.0.
+
 ## Required Checks
 
 - Core formatting, build, tests, API tests, and Haddock;

@@ -66,8 +66,7 @@ library
     O2I.Validation.Trace,
     O2I.Validation.Trace.Eval,
     O2I.Validation.Trace.Rule,
-    O2I.Validation.Trace.Types,
-    O2I.Validation.Trace.Search
+    O2I.Validation.Trace.Types
   build-depends:
     base >=4.18 && <4.19,
     containers >=0.6 && <0.7,
@@ -304,35 +303,6 @@ test-suite o2i-trace-eval-internal-test
     tasty-hunit >=0.10 && <0.11,
     text >=2.0 && <2.1,
     validation >=1.1 && <1.2
-  hs-source-dirs:
-    tst/internal,
-    src
-
--- This component compiles the private effect-trace search directly. It keeps
--- deterministic build and traversal work accounting outside the public API.
-test-suite o2i-trace-search-internal-test
-  import:
-    warnings,
-    language
-  type:
-    exitcode-stdio-1.0
-  main-is:
-    TraceSearchMain.hs
-  other-modules:
-    O2I.Graph.Typed,
-    O2I.Language.Element,
-    O2I.Language.Interpretation,
-    O2I.Language.Relation,
-    O2I.Validation.Trace.Search,
-    O2I.Validation.Trace.Search.Test.Contracts,
-    O2I.Validation.Trace.Search.Test.Fixture,
-    O2I.Validation.Trace.Search.Test.Scenarios
-  build-depends:
-    base >=4.18 && <4.19,
-    containers >=0.6 && <0.7,
-    tasty >=1.4 && <1.6,
-    tasty-hunit >=0.10 && <0.11,
-    text >=2.0 && <2.1
   hs-source-dirs:
     tst/internal,
     src

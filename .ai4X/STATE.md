@@ -78,8 +78,11 @@ unconstituted anchors, meaningful multi-result permutation, and exact
 oracle-owned coverage including false addressed pairs. It passes 22/22 focused
 tests, every Core suite, compile/import, Cabal, HIndent, and diff checks; its
 renewed independent Haskell review reports no finding and 10.0 in every
-dimension. Remove `Trace.Search` and its private test suite without a
-compatibility module, then verify the remaining Eval-owned authority.
+dimension. `Trace.Search` and its private test suite are removed without a
+compatibility module. The bounded deletion review reports no finding and 10.0
+in every dimension. Run the complete multi-axis and repository verification on
+the sole remaining Eval-owned authority before establishing the exact
+Finalreview candidate.
 
 # Local Return Point
 
