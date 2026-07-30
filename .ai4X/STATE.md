@@ -1,32 +1,19 @@
 # Handoff
 
 - Observed: 2026-07-30 CEST
-- Work status: `ACTIVE`
-- Execution authorization: `APPROVED`
-- Authorization scope: implement and verify Issue `#8` only. Add conservative
-  path-sensitive CI selection without changing verification commands, O2I
-  semantics, formalization, notation, APIs, or publication content. Do not
-  push.
-- Current Issue: `#8`
-- Current gate: `path-sensitive-ci-2`
-- Gate status: `PENDING`
-- Current node: `path-sensitive-ci`
+- Work status: `PAUSED`
+- Execution authorization: `REQUIRED`
+- Authorization scope: no implementation. Await explicit PO direction for
+  readiness refinement and later activation of the next Issue.
+- Current Issue: `NONE`
+- Current gate: `NONE`
+- Gate status: `NOT_REQUIRED`
+- Current node: `paused-handoff`
 
 # Objective
 
-Run expensive remote verification jobs only for relevant changes while every
-uncertain classification deterministically triggers the complete suite.
-
-# Current Gate
-
-- Attempt: `path-sensitive-ci-2`
-- Subject: the exact repository `HEAD` containing this record, limited to CI
-  classification, workflow wiring, tests, documentation, and runtime handoff.
-- Mandatory checks: representative path matrix, stable required-check names,
-  conservative fallback, unchanged local full verification, full local and
-  remote verification, repository autonomy, and diff hygiene.
-- Finding status: `CLOSED`
-- Result: `PENDING`
+Maintain a gate-free repository handoff until the PO explicitly activates the
+next `Ready` Issue.
 
 # Repository Facts
 
@@ -37,10 +24,12 @@ uncertain classification deterministically triggers the complete suite.
   succeeds and Project status is `Done`.
 - The remote `blocked:external` label is deleted. Native Issue dependencies
   and explicit external-dependency records remain the dependency contract.
-- Issue `#8` is open with Project status `In review` after explicit PO
-  activation.
-- Candidate revision `a785e42` was rejected with three bounded findings. The
-  current candidate closes its handoff, documentation, and PR-range test gaps.
+- Issue `#8` is accepted and closed at revision
+  `5cd3852f08b0025ed80edf30ced7a37abb61cf12`; independent Finalreview reports
+  no findings and 10.0 in all nine required dimensions, remote run
+  `30584590860` succeeds, and Project status is `Done`.
+- Issue `#14` is the next PO-selected Backlog item for readiness refinement.
+- Issue `#7` remains `Ready` after Issue `#14`; Issue `#15` remains Backlog.
 - Issue `#4` is open with Project status `Backlog` and remains inactive.
 - The user controls ArchiMate edits and pushes.
 
@@ -48,28 +37,20 @@ uncertain classification deterministically triggers the complete suite.
 
 - `NONE`
 
-# Risks
-
-- A false negative could skip a required verification job.
-- Required check names and branch-protection behavior must remain stable.
-
 # Verification
 
-- Baseline handoff revision `d1529e5` is available on `origin/trunk`.
 - The path-classification suite passes all 12 representative tests, including
   a divergent Pull Request history.
 - `git diff --check` and the workspace O2I boundary check pass.
 - `./utl/verify.sh all` passes the complete Governance, model, Haskell,
   Haddock, formatting, and White Paper contract.
-- Issue `#8` still requires independent Finalreview and remote full
-  verification to remain green.
+- Remote run `30584590860` passes all four full verification jobs.
 
 # Next Action
 
-Obtain the risk-proportionate independent Finalreview of `HEAD`. After the
-user pushes the accepted revision, verify the complete remote workflow.
+Await explicit PO direction to refine Issue `#14` from `Backlog` toward
+`Ready`. Do not implement it before explicit PO activation.
 
 # Local Return Point
 
-After Issue `#8` is accepted and closed, return to a gate-free paused handoff
-before Issue `#7` activation.
+Start no Issue from this paused handoff without explicit PO authorization.
