@@ -6,7 +6,7 @@
 - Authorization scope: Issue `#14`; reduce the root README exactly through the
   accepted relocation proposal without semantic or informational loss.
 - Current Issue: `#14`
-- Current gate: `readme-reduction-1`
+- Current gate: `readme-reduction-2`
 - Gate status: `PENDING`
 - Current node: `readme-reduction`
 
@@ -28,34 +28,28 @@ moving technical and contributor detail to its single owning document.
   `5cd3852f08b0025ed80edf30ced7a37abb61cf12`; independent Finalreview reports
   no findings and 10.0 in all nine required dimensions, remote run
   `30584590860` succeeds, and Project status is `Done`.
-- Issue `#14` is open with Project status `In progress`; the PO explicitly
+- Issue `#14` is open with Project status `In review`; the PO explicitly
   accepted its complete README proposal and authorized implementation.
+- Finalreview attempt 1 rejected revision `ce3aaed` with two closed
+  documentation-state findings and no semantic finding.
 - Issue `#7` remains `Ready` after Issue `#14`; Issue `#15` remains Backlog.
 - Issue `#4` is open with Project status `Backlog` and remains inactive.
 - The user controls ArchiMate edits and pushes.
 
 # Dirty Scope
 
-- `README.md`
-- `CONTRIBUTING.md`
-- `o2i.pdf`
-- `o2i.pdf.manifest.json`
-- `spc/README.md`
-- `.ai4X/BEHAVIOR.md`
-- `.ai4X/operations/publication.md`
-- `.ai4X/STATE.md`
+- `NONE`
 
 # Verification
 
 - `README.md` matches the PO-accepted Issue proposal byte for byte.
 - The independent relocation audit's four findings are closed.
 - `./utl/verify.sh all`, `git diff --check`, and the workspace O2I boundary
-  check pass for the current working tree.
+  check pass after both Finalreview-attempt-1 corrections.
 
 # Next Action
 
-Commit the exact candidate and submit that immutable revision to an
-independent, risk-proportionate Finalreview.
+Await the independent Finalreview of the exact repository `HEAD`.
 
 # Local Return Point
 
@@ -63,8 +57,11 @@ After Issue `#14` closes, return to a gate-free handoff before Issue `#7`.
 
 # Current Gate
 
-- Attempt: `readme-reduction-1`
+- Attempt: `readme-reduction-2`
 - Subject: the exact repository `HEAD` containing this record.
+- Review scope: `README.md`, `CONTRIBUTING.md`, `spc/README.md`, `o2i.pdf`,
+  `o2i.pdf.manifest.json`, `.ai4X/BEHAVIOR.md`,
+  `.ai4X/operations/publication.md`, and `.ai4X/STATE.md`.
 - Mandatory checks: complete repository verification and independent
   documentation-ownership and lossless-relocation Finalreview.
 - Finding status: `OPEN`

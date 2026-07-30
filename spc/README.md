@@ -51,9 +51,9 @@ RawGraph -> WellFormedGraph -> SemanticallyValidModel -> TraceableEffectModel ->
 
 `Graph` denotes the node-edge representation. `RawGraph` is unchecked;
 `WellFormedGraph` satisfies local structural contracts. From
-`SemanticallyValidModel` onward, `Model` denotes the fachlich enriched unit.
-The subsequent stages add global semantic invariants, effect traces, ex-ante
-evidence plans, and ex-post evidence assessments.
+`SemanticallyValidModel` onward, `Model` denotes the subject-matter-enriched
+unit. The subsequent stages add global semantic invariants, effect traces,
+ex-ante evidence plans, and ex-post evidence assessments.
 
 ## Layout
 
