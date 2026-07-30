@@ -1,0 +1,77 @@
+name: Framework change
+description: Propose a normative change to O2I.
+title: ""
+labels:
+  - framework-change
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for terminology, metamodel, syntax, formalization,
+        validation, or public API changes.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What generic O2I problem exists, and who is affected?
+    validations:
+      required: true
+  - type: textarea
+    id: benefit
+    attributes:
+      label: Generic benefit and O2I fit
+      description: What improves for O2I users, and why does this belong in generic O2I?
+    validations:
+      required: true
+  - type: textarea
+    id: target
+    attributes:
+      label: Target state
+      description: Describe the fresh coherent target design.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and non-goals
+      description: State the intended boundary and what remains outside it.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: What observable conditions establish completion?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Which credible alternatives were considered, and why are they insufficient?
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risks
+      description: Which semantic, technical, or usability risks must the design control?
+    validations:
+      required: true
+  - type: textarea
+    id: participants
+    attributes:
+      label: Participants and lineage
+      description: Name coauthors and non-blocking source Issues; the Issue author is the change author.
+      placeholder: |
+        Coauthors: none
+        Derived from: none
+    validations:
+      required: true
+  - type: textarea
+    id: reviews
+    attributes:
+      label: Required review capabilities
+      description: Which independent capabilities are required by the actual risk?
+    validations:
+      required: true

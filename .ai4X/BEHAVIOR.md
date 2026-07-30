@@ -47,7 +47,7 @@ resolved in the owning source before synchronization.
 | Exact concrete ArchiMate mapping | `spc/ctr/archimate/profile.json` | White Paper projection, syntax Views, notation adapters |
 | Machine-checkable formalization | `spc/lib/core/` | Inspection, adapters, CLI |
 | AMX profile validation and projection | `spc/lib/adapter/amx/` | CLI reports |
-| Change admission, state, dependencies, and reviews | `.ai4X/governance/` | Agent Memory routing, generated projections |
+| Change admission, state, dependencies, and reviews | GitHub Issues | Project scheduling, Agent Memory handoff |
 | Verification evidence | tests and generated snapshots | no semantic ownership |
 
 Tests provide executable verification evidence for contracts; they never
@@ -112,6 +112,11 @@ implementation review scope.
 - Keep `.ai4X/STATE.md` repository-autark and limited to the current handoff. It must
   contain objective, current node, dirty scope, risks, verification, next
   action, and local return point without depending on a workspace plan.
+- Treat the GitHub Project as a scheduling projection only. Never infer Issue
+  validity, admission, dependencies, review evidence, or closure from its
+  status.
+- When GitHub is unavailable, continue only an already activated local handoff.
+  Never infer or mutate remote work state offline.
 - Keep `.ai4X/STATE.md` below 90 lines. Remove completed detail once its result and
   commit are durable.
 - Commit messages are lowercase English without type prefixes.

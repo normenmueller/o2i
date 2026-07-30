@@ -1,0 +1,41 @@
+name: Maintenance
+description: Report or propose a semantics-preserving repository change.
+title: ""
+labels:
+  - maintenance
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What concrete repository, tooling, documentation, test, or CI problem exists?
+    validations:
+      required: true
+  - type: textarea
+    id: target
+    attributes:
+      label: Target state
+      description: What should be true after the change?
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and non-goals
+      description: What is included, and what is deliberately excluded?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How is the change verified?
+    validations:
+      required: true
+  - type: checkboxes
+    id: semantics
+    attributes:
+      label: Semantic boundary
+      options:
+        - label: This change does not alter O2I semantics or a public API contract.
+          required: true

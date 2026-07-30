@@ -3,73 +3,69 @@
 - Observed: 2026-07-30 CEST
 - Work status: `ACTIVE`
 - Execution authorization: `APPROVED`
-- Authorization scope: review and close `o2i-0004`; do not edit the ArchiMate
-  model directly or push. This includes the approved removal of premature
-  build-revision provenance before the final review candidate.
-- Current gate: `o2i-0004-finalreview-13`
-- Gate status: `ACCEPTED`
-- Current node: `workspace:issue-coordination`
+- Authorization scope: correct, verify, independently review, and locally
+  commit the approved GitHub-authority cutover. Retain legacy evidence
+  unchanged. Do not change fachliche artifacts, delete governance evidence,
+  touch another repository, or push.
+- Current Issue: `#2`
+- Current gate: `issue-coordination-cutover-2`
+- Gate status: `PENDING`
+- Current node: `issue-coordination`
 
 # Objective
 
-Establish one lean closed Situation-anchor set whose constructors all satisfy
-the complete anchor relation family before finalizing the ArchiMate profile.
+Activate the losslessly reconciled GitHub-native work authority in one
+administrative revision without deleting migration evidence.
+
+# Current Gate
+
+- Attempt: `issue-coordination-cutover-2`
+- Subject: the exact repository `HEAD` containing this record, limited to the
+  administrative cutover scope declared by Issue `#2`.
+- Mandatory checks: complete repository verification, remote migration
+  reconciliation, authority-boundary audit, and independent administrative
+  Finalreview.
+- Finding status: `OPEN`
+- Result: `PENDING`
 
 # Repository Facts
 
-- `o2i-0003` is paused because its profile contract depends directly on
-  `o2i-0004`.
-- The closed anchor set is `BusinessCapability | BusinessProcess |
-  BusinessObject | ValueStream`; every constructor supports
-  `is-constituted-by`, `anchors`, `changes`, and `measures`.
-- `BusinessRole` and `RegulatoryConstraint` remain ordinary Enterprise
-  Architecture artifacts outside the Situation-anchor type.
-- The exact ArchiMate profile authority is
-  `spc/ctr/archimate/profile.json`; Haskell and the generated White Paper
-  inventory project it.
-- The versioned White Paper is bound to its exact publication sources and
-  compared structurally and textually with an isolated fresh build.
+- GitHub Issues own change state, dependencies, plans, and review evidence from
+  the cutover revision onward. Project `O2I` is only the PO scheduling view.
+- Project View `Main`, the exact three-label set, Issues `#1` through `#5`,
+  migrated comments, native dependencies, and Project statuses are verified.
+- Legacy register files and validator code remain immutable migration evidence
+  until a separately approved cleanup.
 - The user controls ArchiMate edits and pushes.
+
+# Dirty Scope
+
+- Cutover corrections are limited to `.ai4X/`, `CONTRIBUTING.md`, Issue forms,
+  and governance verification.
+- `compare-v0.1-current.md` is unrelated, intentionally untracked, and must
+  remain untouched.
+
+# Risks
+
+- GitHub authority activates only when the accepted cutover revision reaches
+  `trunk`; mixed authority is invalid.
+- Live GitHub state is never required for deterministic repository
+  verification or an already activated offline handoff.
 
 # Verification
 
-- Candidate `1a300b389ff04956a527b57defce503c21332f94` passes uninterrupted
-  complete verification in the main and an isolated detached worktree.
-- Strategy, pure Haskell, and publication Finalreviews accept that revision
-  without findings and with 10.0 in every required dimension.
-- Formalization rejects it because asserted macrorelation evidence is checked
-  at Traceability instead of Semantics and the independent macro Oracle
-  truncates multi-member Strategy Action and Key Result domains.
-- The corrected semantic-stage validation, complete multi-member Oracle,
-  canonical diagnostics, module ownership, and documentation pass one
-  uninterrupted `./utl/verify.sh all`.
-- Bounded Haskell and formalization reviews accept the complete correction
-  without findings and with 10.0 in every required dimension.
-- Exact candidate revision
-  `7623d1c2726a977f255f00ef65b6980159d02f83` passes one uninterrupted
-  complete verification in the main worktree and one in an isolated detached
-  worktree.
-
-# Gate
-
-- Attempt: `o2i-0004-finalreview-13`
-- Subject: revision `7623d1c2726a977f255f00ef65b6980159d02f83` and the
-  implementation scope declared by
-  `.ai4X/governance/changes/o2i-0004/plan.md`.
-- Mandatory checks: strategy, formalization, Haskell, publication, profile,
-  AMX, View, and repository verification.
-- Finding status: `CLOSED`
-- Result: `ACCEPTED`
+- Migration reconciliation is `ACCEPTED`; there are no non-transfer decisions.
+- Revision `2da057ef88f01fa595aef3c8ec92fa6ee77914e3` passed
+  `./utl/verify.sh all` but its administrative Finalreview rejected three
+  contract findings now under correction.
 
 # Next Action
 
-Stop before `workspace:issue-coordination` and consult the user. Do not begin
-the GitHub Issue/Fork-/Return coordination migration without renewed approval.
+Verify and commit the corrections, obtain one independent exact-revision
+Finalreview, bind Issue `#2` to the accepted SHA, and stop without pushing.
 
 # Local Return Point
 
-After the accepted `o2i-0004` gate, stop and consult the user before
-`workspace:issue-coordination`. After renewed approval, establish the GitHub
-Issue/Fork-/Return coordination model, finalize the repository-governance entry
-point, audit `o2i-0003` against the accepted revision, close already satisfied
-scope, and stop before substantive profile-contract implementation.
+After the user pushes the accepted cutover revision and remote verification is
+green, close Issue `#2` and resume Issue `#4` with a residual-scope audit
+against accepted revision `7623d1c2726a977f255f00ef65b6980159d02f83`.
