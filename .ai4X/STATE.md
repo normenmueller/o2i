@@ -1,6 +1,6 @@
 # Handoff
 
-- Observed: 2026-07-29 CEST
+- Observed: 2026-07-30 CEST
 - Work status: `ACTIVE`
 - Execution authorization: `APPROVED`
 - Authorization scope: review and close `o2i-0004`; do not edit the ArchiMate
@@ -80,9 +80,14 @@ tests, every Core suite, compile/import, Cabal, HIndent, and diff checks; its
 renewed independent Haskell review reports no finding and 10.0 in every
 dimension. `Trace.Search` and its private test suite are removed without a
 compatibility module. The bounded deletion review reports no finding and 10.0
-in every dimension. Run the complete multi-axis and repository verification on
-the sole remaining Eval-owned authority before establishing the exact
-Finalreview candidate.
+in every dimension. The complete multi-axis Core, API, Haddock, profile, AMX,
+View, and publication-source verification is green on the sole remaining
+Eval-owned authority. Exact formalization and pure Haskell Finalreviews accept
+revision `d36ece6` without findings and with 10.0 in every dimension. The
+versioned PDF and manifest are synchronized with the current 69-page isolated
+render. One uninterrupted `./utl/verify.sh all` passes the complete worktree.
+Create one exact candidate revision, verify it in isolation, and bind the four
+required Finalreview capabilities to that revision before accepting the gate.
 
 # Local Return Point
 
