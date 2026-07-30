@@ -17,13 +17,6 @@ Vor Abschluss einer Änderung prüft `./utl/verify.sh` den vollständigen Reposi
 
 O2I ist ein generisches Framework für Wirkungsarchitekturen: Es beschreibt, wie Orientierung, Formierung, Situierung, Operationalisierung und Wirkung fachlich begründet, modelliert und dadurch nachvollzogen werden können. Das O2I-Metamodell bildet den formalen Kern des Frameworks.
 
-## Einstieg
-
-- **Projektplanung:** [O2I Project](https://github.com/users/normenmueller/projects/4) und [`CONTRIBUTING.md`](./CONTRIBUTING.md)
-- **White Paper:** [`o2i.pdf`](./o2i.pdf) als bleeding-edge PDF-Fassung und [`o2i.md`](./o2i.md) als fachlicher Referenztext
-- **Direkteinstieg:** [`wtf.md`](./wtf.md) beantwortet zentrale O2I-Fragen kurz und bewusst direkt
-- **Spezifikation und CLI:** [`spc/README.md`](./spc/README.md) beschreibt Architektur, Build, Installation und Nutzung
-
 ## Purpose
 
 <!-- O2I PURPOSE START -->
@@ -39,6 +32,13 @@ O2I dient dazu, *orientierte Wirkung* durch relationale Modellierung nachvollzie
 - Bedarfe werden erst wirkungsrelevant, wenn sie situativ sichtbar und strategisch qualifiziert sind.
 - Wirkung wird nicht behauptet, sondern über Intervention, Messung und Graph-Nachvollziehbarkeit begründet.
 <!-- O2I USP END -->
+
+## Start
+
+- **Projektplanung:** [O2I Project](https://github.com/users/normenmueller/projects/4) und [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+- **White Paper:** [`o2i.pdf`](./o2i.pdf) als bleeding-edge PDF-Fassung und [`o2i.md`](./o2i.md) als fachlicher Referenztext
+- **Direkteinstieg:** [`wtf.md`](./wtf.md) beantwortet zentrale O2I-Fragen kurz und bewusst direkt
+- **Spezifikation und CLI:** [`spc/README.md`](./spc/README.md) beschreibt Architektur, Build, Installation und Nutzung
 
 ## License
 
