@@ -54,6 +54,15 @@ Das GitHub Project `O2I` ist die Planungssicht des Product Owners:
 - `In review`: eine exakte Kandidatenrevision wird geprüft;
 - `Done`: das Issue ist geschlossen.
 
+Der `Backlog` nimmt eine hinreichend verständliche Idee mit Problem und grobem
+Ziel bewusst niederschwellig auf. Er bedeutet weder vollständige
+Nutzenbewertung noch Design, Admission oder Implementierungsfreigabe.
+
+`Ready` ist das Freigabegate für die Umsetzung: Nutzen, Scope, Risiken,
+Abhängigkeiten und Akzeptanzkriterien sind tragfähig. Framework Changes
+benötigen zusätzlich die vollständige fachliche und formale Admission;
+Maintenance nur eine risikogerechte Prüfung.
+
 Ein erforderlicher Blocker innerhalb des O2I-Issue-Graphen wird ausschließlich
 als native Issue Dependency modelliert. `blocked:external` gilt nur für eine
 erforderliche Abhängigkeit außerhalb dieses Graphen, etwa eine

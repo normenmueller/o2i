@@ -97,6 +97,15 @@ Project statuses are:
 
 `Backlog | Ready | In progress | Paused | In review | Done`
 
+`Backlog` records a sufficiently understandable idea, problem, and rough target.
+It requires neither complete benefit evaluation nor design, Admission, or
+implementation authorization.
+
+`Ready` is the implementation-readiness gate. Benefit, scope, risks,
+dependencies, and acceptance criteria must be viable. A Framework change also
+requires complete Strategy and formalization Admission; Maintenance requires
+only risk-proportionate readiness.
+
 Issue open/closed state is authoritative. Project `Done` follows Issue closure.
 Rejected work is closed as not planned.
 
