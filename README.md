@@ -130,11 +130,12 @@ Der lokale Prüfvertrag entspricht dem GitHub-Workflow und verändert keine getr
 ./utl/verify.sh
 ```
 
-Für fokussierte Prüfungen stehen `model`, `haskell` und `paper` zur Verfügung.
-Die Paper-Prüfung verifiziert zusätzlich die festgelegte `md2pdf`-Version, die
-Quellenbindung sowie Seiten- und Textstruktur eines frischen Builds. GitHub
-Actions führt dieselben Stufen parallel mit der zentral festgelegten
-Rendererrevision aus.
+Für fokussierte Prüfungen stehen `governance`, `model`, `haskell` und `paper`
+zur Verfügung. Die Paper-Prüfung verifiziert zusätzlich die festgelegte
+`md2pdf`-Version, die Quellenbindung sowie Seiten- und Textstruktur eines
+frischen Builds. GitHub Actions hält alle vier Prüfstatus sichtbar und führt
+nur die von einer konservativen Pfadklassifikation betroffenen Stufen aus;
+unklare Änderungen erzwingen die vollständige Prüfung.
 
 ## License
 

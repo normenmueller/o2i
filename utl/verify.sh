@@ -60,6 +60,8 @@ verify_governance() {
   info "Checking O2I change governance."
   python3 -B -m unittest discover \
     -s utl -p 'test_github_governance.py'
+  python3 -B -m unittest discover \
+    -s utl -p 'test_verification_scope.py'
 }
 
 verify_model() {

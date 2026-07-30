@@ -116,5 +116,36 @@ Der vollständige lokale Repository-Vertrag lautet:
 Fokussierte Prüfungen sind während der Entwicklung zulässig; vor Annahme eines
 Kandidaten ist der vollständige Vertrag maßgebend.
 
+GitHub Actions hält alle vier Prüfstatus sichtbar, führt auf Basis einer
+konservativen Pfadklassifikation jedoch nur betroffene Stufen aus. Unklare
+Änderungen und manuelle Workflow-Aufrufe erzwingen stets die vollständige
+Prüfung.
+
+Bei jedem Lauf bestimmt `utl/verification_scope.py` aus dem Git-Diff, welche
+Stufen betroffen sind. Die primäre Zuordnung lautet:
+
+| Änderung | Ausgeführte Stufen |
+| --- | --- |
+| `.ai4X/` oder Governance-Werkzeuge | Governance |
+| `mdl/` oder Modellwerkzeuge | Modellverträge |
+| `spc/` | Haskell-Spezifikation |
+| White-Paper-Quellen oder Rendering | White Paper |
+| gemeinsam genutzte, unbekannte oder nicht eindeutig bestimmbare Pfade | alle Stufen |
+
+Gekoppelte Verträge ergänzen diese Primärzuordnung: fachbezogene
+`.ai4X/operations/` aktivieren zusätzlich ihre jeweilige Stufe,
+`spc/lib/core/src/` zusätzlich das White Paper und
+`spc/ctr/archimate/` zusätzlich Modellverträge und White Paper. Die
+vollständige ausführbare Matrix liegt ausschließlich im Selektor und seiner
+Vertragssuite.
+
+Jeder der vier GitHub-Checks bleibt dabei vorhanden. Eine nicht betroffene
+Stufe endet mit einem expliziten erfolgreichen Skip; eine betroffene Stufe
+führt unverändert den entsprechenden lokalen `verify.sh`-Vertrag aus. Bei
+manuellen Aufrufen, erzwungenen Pushes sowie fehlender oder ungültiger
+Diff-Basis gilt stets der vollständige Vertrag. Dadurch bleiben
+Branch-Protection und Fehlerverhalten stabil, während unnötige Installationen
+und Builds entfallen.
+
 Agentische Ausführung folgt zusätzlich dem hostneutralen Vertrag unter
 [`.ai4X/`](./.ai4X/).

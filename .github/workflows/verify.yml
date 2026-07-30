@@ -8,6 +8,12 @@ on:
 permissions:
   contents: read
 
+env:
+  O2I_DIFF_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+  O2I_DIFF_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+  O2I_EVENT_NAME: ${{ github.event_name }}
+  O2I_FORCE_FULL: ${{ github.event.forced || false }}
+
 concurrency:
   group: verify-${{ github.ref }}
   cancel-in-progress: true
@@ -25,15 +31,28 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Select verification scope
+        id: scope
+        run: |
+          python3 -B utl/verification_scope.py \
+            --event "$O2I_EVENT_NAME" \
+            --base "$O2I_DIFF_BASE" \
+            --head "$O2I_DIFF_HEAD" \
+            --forced "$O2I_FORCE_FULL" \
+            --format github >> "$GITHUB_OUTPUT"
+
       - name: Verify change governance
+        if: steps.scope.outputs.governance == 'true'
         run: ./utl/verify.sh governance
+
+      - name: Report skipped governance verification
+        if: steps.scope.outputs.governance != 'true'
+        run: echo "[o2i|info] Governance verification is not selected."
 
   model:
     name: Model contracts
     runs-on: ubuntu-24.04
     timeout-minutes: 10
-    env:
-      O2I_DIFF_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
 
     steps:
       - name: Check out repository
@@ -42,8 +61,23 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Select verification scope
+        id: scope
+        run: |
+          python3 -B utl/verification_scope.py \
+            --event "$O2I_EVENT_NAME" \
+            --base "$O2I_DIFF_BASE" \
+            --head "$O2I_DIFF_HEAD" \
+            --forced "$O2I_FORCE_FULL" \
+            --format github >> "$GITHUB_OUTPUT"
+
       - name: Verify model contracts
+        if: steps.scope.outputs.model == 'true'
         run: ./utl/verify.sh model
+
+      - name: Report skipped model verification
+        if: steps.scope.outputs.model != 'true'
+        run: echo "[o2i|info] Model verification is not selected."
 
   haskell:
     name: Haskell specification
@@ -58,15 +92,28 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          fetch-depth: 0
           persist-credentials: false
 
+      - name: Select verification scope
+        id: scope
+        run: |
+          python3 -B utl/verification_scope.py \
+            --event "$O2I_EVENT_NAME" \
+            --base "$O2I_DIFF_BASE" \
+            --head "$O2I_DIFF_HEAD" \
+            --forced "$O2I_FORCE_FULL" \
+            --format github >> "$GITHUB_OUTPUT"
+
       - name: Set up Haskell
+        if: steps.scope.outputs.haskell == 'true'
         uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.11.0
         with:
           ghc-version: ${{ env.GHC_VERSION }}
           cabal-version: ${{ env.CABAL_VERSION }}
 
       - name: Restore Haskell dependencies and tools
+        if: steps.scope.outputs.haskell == 'true'
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
@@ -78,6 +125,7 @@ jobs:
             haskell-dependencies-${{ runner.os }}-ghc-${{ env.GHC_VERSION }}-cabal-${{ env.CABAL_VERSION }}-hindent-${{ env.HINDENT_VERSION }}-
 
       - name: Install Haskell verification tools
+        if: steps.scope.outputs.haskell == 'true'
         run: |
           mkdir -p "$HOME/.local/bin"
           export PATH="$HOME/.local/bin:$PATH"
@@ -89,7 +137,12 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Verify Haskell specification
+        if: steps.scope.outputs.haskell == 'true'
         run: ./utl/verify.sh haskell
+
+      - name: Report skipped Haskell verification
+        if: steps.scope.outputs.haskell != 'true'
+        run: echo "[o2i|info] Haskell verification is not selected."
 
   paper:
     name: White Paper
@@ -100,10 +153,22 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          fetch-depth: 0
           lfs: true
           persist-credentials: false
 
+      - name: Select verification scope
+        id: scope
+        run: |
+          python3 -B utl/verification_scope.py \
+            --event "$O2I_EVENT_NAME" \
+            --base "$O2I_DIFF_BASE" \
+            --head "$O2I_DIFF_HEAD" \
+            --forced "$O2I_FORCE_FULL" \
+            --format github >> "$GITHUB_OUTPUT"
+
       - name: Install White Paper dependencies
+        if: steps.scope.outputs.paper == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends \
@@ -164,4 +229,9 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Verify White Paper
+        if: steps.scope.outputs.paper == 'true'
         run: ./utl/verify.sh paper
+
+      - name: Report skipped White Paper verification
+        if: steps.scope.outputs.paper != 'true'
+        run: echo "[o2i|info] White Paper verification is not selected."
