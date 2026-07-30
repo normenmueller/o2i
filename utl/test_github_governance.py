@@ -85,6 +85,79 @@ def manifest_entries() -> dict[str, str]:
     return entries
 
 
+def handoff_contract_violations(content: str) -> list[str]:
+    """Return violations of the active or paused handoff contract."""
+    violations: list[str] = []
+    fields: dict[str, str] = {}
+    for name in (
+        "Work status",
+        "Execution authorization",
+        "Current Issue",
+        "Current gate",
+        "Gate status",
+    ):
+        matches = re.findall(rf"(?m)^- {re.escape(name)}: `([^`]+)`$", content)
+        if len(matches) != 1:
+            violations.append(f"{name} must occur exactly once")
+            continue
+        fields[name] = matches[0]
+
+    if len(fields) != 5:
+        return violations
+
+    gate_sections = content.count("# Current Gate\n")
+    if fields["Current gate"] == "NONE":
+        if fields["Work status"] != "PAUSED":
+            violations.append("a gate-free handoff must be PAUSED")
+        if fields["Execution authorization"] != "REQUIRED":
+            violations.append("a gate-free handoff must require authorization")
+        if fields["Current Issue"] != "NONE":
+            violations.append("a gate-free handoff must have no current Issue")
+        if fields["Gate status"] != "NOT_REQUIRED":
+            violations.append("a gate-free handoff must not require a gate")
+        if gate_sections != 0:
+            violations.append("a gate-free handoff must omit Current Gate")
+        return violations
+
+    if fields["Current Issue"] == "NONE":
+        violations.append("an active gate must identify its Issue")
+    if fields["Gate status"] == "NOT_REQUIRED":
+        violations.append("an active gate must require a gate result")
+    if gate_sections != 1:
+        violations.append("an active gate must have one Current Gate section")
+        return violations
+
+    gate = content.split("# Current Gate\n", 1)[1].split("\n# ", 1)[0]
+    for name in (
+        "Attempt",
+        "Subject",
+        "Mandatory checks",
+        "Finding status",
+        "Result",
+    ):
+        if gate.count(f"- {name}:") != 1:
+            violations.append(f"Current Gate must contain one {name}")
+    if "exact repository `HEAD` containing this record" not in gate:
+        violations.append("an active gate must bind the exact repository HEAD")
+
+    gate_values: dict[str, str] = {}
+    for name in ("Attempt", "Finding status", "Result"):
+        matches = re.findall(rf"(?m)^- {re.escape(name)}: `([^`]+)`$", gate)
+        if len(matches) == 1:
+            gate_values[name] = matches[0]
+    if len(gate_values) == 3:
+        if fields["Current gate"] != gate_values["Attempt"]:
+            violations.append("Current gate must match Attempt")
+        if fields["Gate status"] != gate_values["Result"]:
+            violations.append("Gate status must match Result")
+        if (
+            gate_values["Result"] == "ACCEPTED"
+            and gate_values["Finding status"] != "CLOSED"
+        ):
+            violations.append("an accepted gate must have closed findings")
+    return violations
+
+
 class GitHubGovernanceContractTests(unittest.TestCase):
     """Keep human, agent, intake, and migration contracts aligned."""
 
@@ -199,20 +272,78 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         self.assertNotIn("test_*governance.py", verification)
         self.assertNotIn("change-governance.py validate", verification)
 
-    def test_active_handoff_has_one_complete_gate_record(self) -> None:
+    def test_repository_handoff_matches_execution_contract(self) -> None:
         content = read(STATE)
         self.assertLess(len(content.splitlines()), 90)
-        gate = content.split("# Current Gate\n", 1)[1].split("\n# ", 1)[0]
-        for field in (
-            "Attempt",
-            "Subject",
-            "Mandatory checks",
-            "Finding status",
-            "Result",
-        ):
-            with self.subTest(field=field):
-                self.assertEqual(1, gate.count(f"- {field}:"))
-        self.assertIn("exact repository `HEAD` containing this record", gate)
+        self.assertEqual([], handoff_contract_violations(content))
+
+    def test_active_handoff_requires_one_complete_gate(self) -> None:
+        content = """\
+# Handoff
+
+- Work status: `ACTIVE`
+- Execution authorization: `APPROVED`
+- Current Issue: `#10`
+- Current gate: `closed-handoff-contract-1`
+- Gate status: `PENDING`
+
+# Current Gate
+
+- Attempt: `closed-handoff-contract-1`
+- Subject: the exact repository `HEAD` containing this record.
+- Mandatory checks: governance verification.
+- Finding status: `OPEN`
+- Result: `PENDING`
+"""
+        self.assertEqual([], handoff_contract_violations(content))
+        cases = (
+            (
+                "gate identity",
+                content.replace(
+                    "- Current gate: `closed-handoff-contract-1`",
+                    "- Current gate: `different-gate`",
+                ),
+                "Current gate must match Attempt",
+            ),
+            (
+                "gate result",
+                content.replace(
+                    "- Gate status: `PENDING`",
+                    "- Gate status: `REJECTED`",
+                ),
+                "Gate status must match Result",
+            ),
+            (
+                "accepted finding",
+                content.replace(
+                    "- Gate status: `PENDING`",
+                    "- Gate status: `ACCEPTED`",
+                ).replace(
+                    "- Result: `PENDING`",
+                    "- Result: `ACCEPTED`",
+                ),
+                "an accepted gate must have closed findings",
+            ),
+        )
+        for name, malformed, expected in cases:
+            with self.subTest(name=name):
+                self.assertIn(expected, handoff_contract_violations(malformed))
+
+    def test_paused_handoff_requires_no_current_gate(self) -> None:
+        content = """\
+# Handoff
+
+- Work status: `PAUSED`
+- Execution authorization: `REQUIRED`
+- Current Issue: `NONE`
+- Current gate: `NONE`
+- Gate status: `NOT_REQUIRED`
+
+# Repository Facts
+
+- The accepted revision remains recorded here.
+"""
+        self.assertEqual([], handoff_contract_violations(content))
 
     def test_baseline_manifest_matches_immutable_revision(self) -> None:
         migration = read(MIGRATION)

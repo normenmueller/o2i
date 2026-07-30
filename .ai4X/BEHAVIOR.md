@@ -76,6 +76,11 @@ Every active gate record in `STATE.md` contains exactly:
 - finding status: `OPEN | CLOSED`;
 - result: `PENDING | ACCEPTED | REJECTED`.
 
+A paused handoff without an active Issue uses `Current gate: NONE` and
+`Gate status: NOT_REQUIRED` and contains no `Current Gate` section. Accepted
+revisions remain repository facts; recording their closure never creates a
+new gate.
+
 A review identifies its immutable subject by exact Git revision and declared
 file scope. Any later change within that scope requires a new review for the
 later change without invalidating accepted historical evidence.
