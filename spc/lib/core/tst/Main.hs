@@ -931,6 +931,50 @@ semanticTests =
             sampleGraph
             [sampleStrategyFormulation]
             (const (pure ()))
+    , testCase "asserted macrorelation requires Primitive evidence"
+        $ assertModelSemanticErrorsWith
+            macroWithoutEvidenceGraph
+            [sampleStrategyFormulation]
+            [ MacroEvidenceSemanticError
+                (MissingMacroEvidence
+                   (edge secondMissionId groundsVision visionId))
+            ]
+    , testCase "unsupported macrorelations accumulate deterministically"
+        $ mapM_
+            (\(graph, formulations) ->
+               assertModelSemanticErrorsWith
+                 graph
+                 formulations
+                 [ MacroEvidenceSemanticError
+                     (MissingMacroEvidence
+                        (edge secondMissionId groundsVision visionId))
+                 , MacroEvidenceSemanticError
+                     (MissingMacroEvidence
+                        (edge thirdMissionId groundsVision visionId))
+                 ])
+            [ (macroWithoutTwoEvidenceGraph, [sampleStrategyFormulation])
+            , ( RawGraph
+                  (reverse (rawNodes macroWithoutTwoEvidenceGraph))
+                  (reverse (rawEdges macroWithoutTwoEvidenceGraph))
+              , reverse [sampleStrategyFormulation])
+            ]
+    , testCase "candidate macrorelation creates no evidence obligation"
+        $ withClaimStructure candidateMacroWithoutEvidenceGraph
+        $ \structure -> do
+            let assessment =
+                  assessSemantics
+                    structure
+                    [assertedClaim sampleStrategyFormulation]
+                candidate = edge secondMissionId groundsVision visionId
+            case modelAssessmentStatus assessment of
+              SemanticsPending propositions ->
+                NonEmpty.toList propositions @?= [CandidateModelEdge candidate]
+              SemanticsRejected errors ->
+                assertFailure
+                  ("candidate macrorelation rejected semantics: " ++ show errors)
+              SemanticsAccepted _ ->
+                assertFailure "candidate macrorelation entered valid semantics"
+            assertNoSemanticModel assessment
     , testCase "an Ethos with one owned Principle is complete"
         $ withSemanticallyValid minimalEthosGraph [] (const (pure ()))
     , testCase "an empty Ethos is rejected at Semantics"
@@ -1642,18 +1686,6 @@ traceTests =
              assertTraceabilityErrors
                [MissingEffectTrace interventionId additionalNeedId]
                (validateTraceability model)
-     , testCase "every macrorelation requires primitive evidence"
-         $ withSemanticallyValid
-             macroWithoutEvidenceGraph
-             [sampleStrategyFormulation]
-         $ \model ->
-             assertTraceabilityErrors
-               [ MissingMacroEvidence
-                   secondMissionId
-                   (relationNameFor groundsVision)
-                   visionId
-               ]
-               (validateTraceability model)
      , testCase "parallel primitive paths produce distinct traces"
          $ withTraceable twoPathGraph
          $ \model -> do
@@ -1693,31 +1725,26 @@ traceTests =
          unlistedQualifiesGraph
          (edge strategyId qualifiesNeed needId)
          [sampleStrategyFormulation]
-         [MissingEffectTrace interventionId needId]
      , unlistedStrategyMacroTest
          "unlisted Action cannot substantiate directs Intervention"
          unlistedDirectsInterventionGraph
          (edge strategyId directsIntervention interventionId)
          [sampleStrategyFormulation]
-         [MissingEffectTrace interventionId needId]
      , unlistedStrategyMacroTest
          "unlisted diagnosis and Key Result cannot substantiate frames"
          unlistedFramesGraph
          (edge strategyId framesMeasure measureId)
          [sampleStrategyFormulation]
-         [MissingEffectTrace interventionId needId]
      , unlistedStrategyMacroTest
          "unlisted policies cannot substantiate directs Strategy"
          unlistedDirectsStrategyGraph
          (edge strategyId directsStrategy secondStrategyId)
          [sampleStrategyFormulation, secondStrategyFormulation]
-         []
      , unlistedStrategyMacroTest
          "unlisted Actions and Key Results cannot substantiate contributes"
          unlistedContributesStrategyGraph
          (edge strategyId contributesToStrategy secondStrategyId)
          [sampleStrategyFormulation, secondStrategyFormulation]
-         []
      ]
        ++ map missingEdgeTest (rawEdges sampleGraph)
        ++ [ QC.testProperty "removing any effect-path edge is rejected"
@@ -1833,6 +1860,7 @@ unreachableVisionObjectiveId ordinal =
 
 data MissingEdgeExpectation
   = SemanticExpectation [ModelInvariantError]
+  | ModelSemanticExpectation [ModelSemanticError]
   | TraceExpectation [TraceabilityError]
 
 missingEdgeTest :: RawEdge -> TestTree
@@ -1841,29 +1869,21 @@ missingEdgeTest missingEdge =
     let raw = withoutEdge missingEdge sampleGraph
     case missingEdgeExpectation missingEdge of
       Just (SemanticExpectation expected) -> assertSemanticErrors raw expected
+      Just (ModelSemanticExpectation expected) ->
+        assertModelSemanticErrorsWith raw [sampleStrategyFormulation] expected
       Just (TraceExpectation expected) ->
         withSemanticallyValid raw [sampleStrategyFormulation] $ \model ->
           assertTraceabilityErrors expected (validateTraceability model)
       Nothing -> assertFailure "missing exact edge-error expectation"
 
 unlistedStrategyMacroTest ::
-     TestName
-  -> RawGraph
-  -> RawEdge
-  -> [RawStrategyFormulation]
-  -> [TraceabilityError]
-  -> TestTree
-unlistedStrategyMacroTest name raw macro formulations additionalErrors =
+     TestName -> RawGraph -> RawEdge -> [RawStrategyFormulation] -> TestTree
+unlistedStrategyMacroTest name raw macro formulations =
   testCase name
-    $ withSemanticallyValid raw formulations
-    $ \model ->
-        assertTraceabilityErrors
-          (MissingMacroEvidence
-             (rawEdgeFrom macro)
-             (rawEdgeRelation macro)
-             (rawEdgeTo macro)
-             : additionalErrors)
-          (validateTraceability model)
+    $ assertModelSemanticErrorsWith
+        raw
+        formulations
+        [MacroEvidenceSemanticError (MissingMacroEvidence macro)]
 
 missingEdgeExpectation :: RawEdge -> Maybe MissingEdgeExpectation
 missingEdgeExpectation candidate
@@ -1964,9 +1984,9 @@ missingEdgeExpectation candidate
     Just (TraceExpectation [InterventionWithoutNeed interventionId])
   | Just (from, relation, to) <- missingMacroEvidence candidate =
     Just
-      (TraceExpectation
-         [ MissingMacroEvidence from relation to
-         , MissingEffectTrace interventionId needId
+      (ModelSemanticExpectation
+         [ MacroEvidenceSemanticError
+             (MissingMacroEvidence (RawEdge from relation to))
          ])
   | candidate `elem` traceOnlyEdges =
     Just (TraceExpectation [MissingEffectTrace interventionId needId])

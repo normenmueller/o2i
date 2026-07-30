@@ -7,6 +7,7 @@ module O2I.Validation.MacroEvidence.Types
   , CollectiveMacroEvidence
   , collectiveMacroEvidence
   , collectiveContributionWitnesses
+  , MacroEvidenceError(..)
   , MacroPreparationWork(..)
   , MacroEvidenceWork(..)
   ) where
@@ -16,6 +17,11 @@ import O2I.Graph.Raw
 import O2I.Language.Element (RawNodeId)
 import O2I.Validation.Relational.Eval
 import O2I.Validation.Relational.Index
+
+-- | Missing Primitive substantiation for one asserted Context relation.
+newtype MacroEvidenceError =
+  MissingMacroEvidence RawEdge
+  deriving (Eq, Show)
 
 -- | One exact persisted premise occurrence retained by a macro witness.
 data MacroPremiseOccurrence = MacroPremiseOccurrence

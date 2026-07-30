@@ -464,28 +464,14 @@ inspectSemantics request binding viewResolution profile inputs closed =
        in case validateScopedSemantics witness of
             assessment ->
               case modelAssessmentStatus assessment of
-                SemanticsRejected _ ->
-                  let contextDiagnostics =
-                        maybe
-                          []
-                          (coreDiagnosticsWithSources
-                             SemanticsStage
-                             sources
-                             closed
-                             semanticDefectSpec)
-                          (NonEmpty.nonEmpty
-                             (assessmentInvariantErrors assessment))
-                      collectiveDiagnostics =
-                        map
-                          (diagnosticWithSupplementalSources sources
-                             . coreDiagnostic
-                                 SemanticsStage
-                                 (structurallyClosedImport closed)
-                                 collectiveRealizationErrorSpec)
-                          (assessmentCollectiveErrors assessment)
-                      diagnostics =
-                        contextDiagnostics
-                          ++ collectiveDiagnostics
+                SemanticsRejected errors ->
+                  let diagnostics =
+                        coreDiagnosticsWithSources
+                          SemanticsStage
+                          sources
+                          closed
+                          modelSemanticErrorSpec
+                          errors
                           ++ candidateDiagnostics assessment
                    in InspectionCompleted
                         (pipelineReport

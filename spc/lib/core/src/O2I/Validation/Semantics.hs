@@ -2,9 +2,9 @@
 
 -- | Complete semantic assessment of one O2I model boundary.
 --
--- Context content and collective Strategy realization are assessed as one
--- normative unit. Model maturity is derived exactly once from this complete
--- boundary.
+-- Context content, asserted macrorelation evidence, and collective Strategy
+-- realization are assessed as one normative unit. Model maturity is derived
+-- exactly once from this complete boundary.
 module O2I.Validation.Semantics
   ( StrategyAnchoring(..)
   , RawStrategyFormulation(..)
@@ -20,6 +20,9 @@ module O2I.Validation.Semantics
   , StrategyPrimitiveRole(..)
   , ModelInvariantError(..)
   , SemanticallyValidModel
+  , MacroEvidenceWitness
+  , macroEvidenceWitnesses
+  , witnessPremises
   , assessModelSemantics
   , modelAssessmentStatus
   , assessedSemanticModel
@@ -49,8 +52,10 @@ import O2I.Graph.Raw (RawEdge, RawNode)
 import O2I.Graph.Typed
 import O2I.Language.Claim
 import O2I.Language.Element
+import O2I.Language.Macro (MacroClaim)
 import O2I.Validation.Collective
 import O2I.Validation.MacroEvidence
+import qualified O2I.Validation.MacroEvidence as Evidence
 import O2I.Validation.Semantics.Context
 import O2I.Validation.Structure (StructuralAssessment)
 
@@ -92,6 +97,7 @@ data CandidateModelProposition
 -- | Fatal semantic defect from one part of the complete assessment boundary.
 data ModelSemanticError
   = ContextSemanticError ModelInvariantError
+  | MacroEvidenceSemanticError MacroEvidenceError
   | CollectiveSemanticError CollectiveStrategyRealizationError
   deriving (Eq, Show)
 
@@ -115,7 +121,8 @@ data ModelAssessment = ModelAssessment
   , assessedMaturity :: Maturity
   }
 
--- | Opaque model whose complete Context and collective semantics are valid.
+-- | Opaque model whose Context invariants, asserted macrorelation evidence,
+-- and collective Strategy-realization semantics are valid.
 data SemanticallyValidModel =
   SemanticallyValidModel
     ContextSemantics
@@ -126,8 +133,9 @@ data SemanticallyValidModel =
 -- | Assess all semantic claims within one exact structural boundary.
 --
 -- Fatal errors dominate pending Candidates without discarding Candidate
--- diagnostics. Collective semantics is assessed only after Context semantics
--- has established its required graph and Strategy-formulation invariants.
+-- diagnostics. Macrorelation evidence and collective semantics are assessed
+-- only after Context semantics has established the required graph and
+-- Strategy-formulation invariants.
 assessModelSemantics ::
      StructuralAssessment -> ModelSemanticsInput -> ModelAssessment
 -- * Complete semantic validation implementation
@@ -165,23 +173,25 @@ assessModelSemantics structure inputs =
                     CollectiveSemanticError
                     (collectiveStrategyRealizationErrors blockedCollective))))
         ContextPending context pendingContexts ->
-          let (_, assessment) =
+          let (prepared, assessment) =
                 assessCollectiveWithPreparedMacroEvidence
                   inputs
                   collectiveStructure
                   context
+              (validatedCollective, semanticValidation) =
+                validateSemanticBoundary prepared assessment
               pending =
                 appendNonEmpty
                   (fmap contextCandidate pendingContexts)
                   (collectiveCandidates assessment)
               pendingCandidates = NonEmpty.toList pending
-           in case validateCollectiveStrategyRealizations assessment of
+           in case semanticValidation of
                 Failure errors ->
                   ( assessment
-                  , Nothing
+                  , validatedCollective
                   , pendingCandidates
-                  , SemanticsRejected (fmap CollectiveSemanticError errors))
-                Success validated ->
+                  , SemanticsRejected errors)
+                Success (_, validated) ->
                   ( assessment
                   , Just validated
                   , pendingCandidates
@@ -192,14 +202,16 @@ assessModelSemantics structure inputs =
                   inputs
                   collectiveStructure
                   context
+              (validatedCollective, semanticValidation) =
+                validateSemanticBoundary prepared assessment
               pendingCandidates = collectiveCandidates assessment
-           in case validateCollectiveStrategyRealizations assessment of
+           in case semanticValidation of
                 Failure errors ->
                   ( assessment
-                  , Nothing
+                  , validatedCollective
                   , pendingCandidates
-                  , SemanticsRejected (fmap CollectiveSemanticError errors))
-                Success validated ->
+                  , SemanticsRejected errors)
+                Success (validatedPrepared, validated) ->
                   case NonEmpty.nonEmpty pendingCandidates of
                     Just pending ->
                       ( assessment
@@ -211,7 +223,10 @@ assessModelSemantics structure inputs =
                       , Just validated
                       , []
                       , SemanticsAccepted
-                          (SemanticallyValidModel context prepared validated))
+                          (SemanticallyValidModel
+                             context
+                             validatedPrepared
+                             validated))
 
 assessCollectiveWithPreparedMacroEvidence ::
      ModelSemanticsInput
@@ -228,6 +243,30 @@ assessCollectiveWithPreparedMacroEvidence inputs structure context =
         (collectiveMacroEvidenceFor prepared)
         (modelCollectiveFitEvidence inputs)
         structure
+
+validateSemanticBoundary ::
+     PreparedMacroEvidence
+  -> CollectiveStrategyRealizationAssessment
+  -> ( Maybe ValidatedCollectiveStrategyRealizations
+     , Validation
+         (NonEmpty ModelSemanticError)
+         (PreparedMacroEvidence, ValidatedCollectiveStrategyRealizations))
+validateSemanticBoundary prepared assessment =
+  (validatedCollective, (,) <$> macroValidation <*> collectiveValidation)
+  where
+    macroValidation =
+      case validatePreparedMacroEvidence prepared of
+        Failure errors -> Failure (fmap MacroEvidenceSemanticError errors)
+        Success validated -> Success validated
+    rawCollectiveValidation = validateCollectiveStrategyRealizations assessment
+    collectiveValidation =
+      case rawCollectiveValidation of
+        Failure errors -> Failure (fmap CollectiveSemanticError errors)
+        Success validated -> Success validated
+    validatedCollective =
+      case rawCollectiveValidation of
+        Failure _ -> Nothing
+        Success validated -> Just validated
 
 -- | Read the closed result state derived by the normative Core.
 modelAssessmentStatus :: ModelAssessment -> ModelAssessmentStatus
@@ -286,9 +325,15 @@ modelGraph (SemanticallyValidModel context _ _) = contextGraph context
 modelContextSemantics :: SemanticallyValidModel -> ContextSemantics
 modelContextSemantics (SemanticallyValidModel context _ _) = context
 
--- | Reuse the exact macro evidence prepared before Collective assessment.
+-- | Reuse the exact validated macro evidence of this semantic model.
 modelPreparedMacroEvidence :: SemanticallyValidModel -> PreparedMacroEvidence
 modelPreparedMacroEvidence (SemanticallyValidModel _ prepared _) = prepared
+
+-- | Interpret one canonical macro rule against validated model evidence.
+macroEvidenceWitnesses ::
+     SemanticallyValidModel -> MacroClaim RawNodeId -> [MacroEvidenceWitness]
+macroEvidenceWitnesses semantic =
+  Evidence.macroEvidenceWitnessesIn (modelPreparedMacroEvidence semantic)
 
 -- | Access complete Strategy formulations indexed by Strategy Context.
 strategyFormulations ::

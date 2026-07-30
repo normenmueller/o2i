@@ -6,7 +6,7 @@
 - Authorization scope: review and close `o2i-0004`; do not edit the ArchiMate
   model directly or push. This includes the approved removal of premature
   build-revision provenance before the final review candidate.
-- Current gate: `o2i-0004-finalreview-11`
+- Current gate: `o2i-0004-finalreview-12`
 - Gate status: `REJECTED`
 - Current node: `o2i:situation-anchor-gate`
 
@@ -33,31 +33,23 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 
 # Verification
 
-- Exact clean revision
-  `0f9bce63645adc9ca2628a17213b154d3e9bd0a0` passes one uninterrupted
-  `./utl/verify.sh all`; its Haskell Finalreview rejects the former
-  list-bind TraceSearch and macro-evidence architecture.
-- Independent design reviews accept one private typed relational mechanism,
-  constructive prefix-connected plans, total typed projections, and one
-  immutable `PreparedMacroEvidence` prepared before Collective assessment.
-- The generative executor boundary, closed fourteen-relation vocabulary, and
-  typed domain cache are independently accepted at 10.0 throughout.
-- Occurrence-aware witnesses, ordered collision-safe canonicalization, and
-  operation-bound work pass 71 focused contracts, every Core suite, HIndent,
-  and compile/import contracts. Their renewed independent Haskell review
-  reports no finding and 10.0 in every dimension.
-- `O2I.Validation.MacroEvidence.{Types,Prepare,Eval}` owns the shared
-  preparation boundary. Semantics prepares one immutable value; Collective and
-  Trace consume it through narrow interfaces. Its bounded independent Haskell
-  review reports no finding and 10.0 in every dimension.
-- The strategy and publication scopes are byte-identical to their accepted
-  scopes at `859c29de725e7150bc58f59ef15fe8ae8bcc485f`; only formalization and
-  Haskell require new Finalreviews.
+- Candidate `1a300b389ff04956a527b57defce503c21332f94` passes uninterrupted
+  complete verification in the main and an isolated detached worktree.
+- Strategy, pure Haskell, and publication Finalreviews accept that revision
+  without findings and with 10.0 in every required dimension.
+- Formalization rejects it because asserted macrorelation evidence is checked
+  at Traceability instead of Semantics and the independent macro Oracle
+  truncates multi-member Strategy Action and Key Result domains.
+- The corrected semantic-stage validation, complete multi-member Oracle,
+  canonical diagnostics, module ownership, and documentation pass one
+  uninterrupted `./utl/verify.sh all`.
+- Bounded Haskell and formalization reviews accept the complete correction
+  without findings and with 10.0 in every required dimension.
 
 # Gate
 
-- Attempt: `o2i-0004-finalreview-11`
-- Subject: revision `0f9bce63645adc9ca2628a17213b154d3e9bd0a0` and the
+- Attempt: `o2i-0004-finalreview-12`
+- Subject: revision `1a300b389ff04956a527b57defce503c21332f94` and the
   implementation scope declared by
   `.ai4X/governance/changes/o2i-0004/plan.md`.
 - Mandatory checks: strategy, formalization, Haskell, publication, profile,
@@ -67,37 +59,8 @@ the complete anchor relation family before finalizing the ArchiMate profile.
 
 # Next Action
 
-The typed `Trace.Eval` integration and private verification package pass
-complete Core, compile, import, Cabal, HIndent, and diff checks. Work accounting
-includes Intervention enumeration and incremental typed coverage construction;
-the public `Show EffectTrace` representation is locked. The renewed independent
-review reports no finding and 10.0 in every dimension. Replace the remaining
-private `Trace.Search` verification ownership with Eval-owned semantic-oracle
-and multi-axis contracts. The corrected package covers semantically admitted
-unconstituted anchors, meaningful multi-result permutation, and exact
-oracle-owned coverage including false addressed pairs. It passes 22/22 focused
-tests, every Core suite, compile/import, Cabal, HIndent, and diff checks; its
-renewed independent Haskell review reports no finding and 10.0 in every
-dimension. `Trace.Search` and its private test suite are removed without a
-compatibility module. The bounded deletion review reports no finding and 10.0
-in every dimension. The complete multi-axis Core, API, Haddock, profile, AMX,
-View, and publication-source verification is green on the sole remaining
-Eval-owned authority. Exact formalization and pure Haskell Finalreviews accept
-revision `d36ece6` without findings and with 10.0 in every dimension. The
-versioned PDF and manifest are synchronized with the current 69-page isolated
-render. One uninterrupted `./utl/verify.sh all` passes the complete worktree.
-Candidate revision `621aad9` passes isolated complete verification and its
-formalization and Haskell scopes are accepted at 10.0 throughout. Strategy
-Finalreview rejects the reduced `0,2,4,8` trace fan-out matrix against the
-required `0,10,20,40` contract. Publication Finalreview rejects the missing
-Traceability snippet markers because Listing 14 expands to five pages. The
-correction restores the complete matrix with Oracle-derived expectations and
-consolidates duplicate anchor fan-out authority. Exact ordered snippet markers
-and 28 positive and negative source-contract tests constrain Listing 14 to one
-page in the synchronized 65-page PDF. The bounded Haskell correction review is
-accepted at 10.0 throughout. One uninterrupted `./utl/verify.sh all` passes;
-seal the exact candidate commit, verify it in isolation, and renew all four
-revision-bound Finalreviews.
+Commit one exact candidate, verify it in isolation, and renew the required
+exact-revision Finalreviews.
 
 # Local Return Point
 

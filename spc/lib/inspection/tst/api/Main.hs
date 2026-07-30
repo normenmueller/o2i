@@ -184,12 +184,13 @@ $(assertExactArgumentConstructors
         ])
     , ( 'Diagnostic.collectiveRealizationErrorSpec
       , ["CollectiveStructuralError", "AssertedCollectiveIssue"])
-    , ( 'Diagnostic.traceabilityDefectSpec
-      , [ "NoIntervention"
-        , "InterventionWithoutNeed"
-        , "MissingMacroEvidence"
-        , "MissingEffectTrace"
+    , ( 'Diagnostic.modelSemanticErrorSpec
+      , [ "ContextSemanticError"
+        , "MacroEvidenceSemanticError"
+        , "CollectiveSemanticError"
         ])
+    , ( 'Diagnostic.traceabilityDefectSpec
+      , ["NoIntervention", "InterventionWithoutNeed", "MissingEffectTrace"])
     , ( 'Diagnostic.readinessDefectSpec
       , [ "UnknownKPIDefinition"
         , "DuplicateKPIDefinition"

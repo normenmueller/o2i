@@ -116,6 +116,7 @@ module O2I
   , Maturity(..)
   , ModelSemanticsInput(..)
   , CandidateModelProposition(..)
+  , MacroEvidenceError(..)
   , ModelSemanticError(..)
   , ModelAssessmentStatus(..)
   , ModelAssessment

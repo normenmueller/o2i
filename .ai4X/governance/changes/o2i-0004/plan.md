@@ -892,6 +892,43 @@ Traceability caption, Haddock, and signature on one page. One uninterrupted
 complete repository verification passes; the exact candidate commit, isolated
 verification, and exact-revision Finalreviews remain pending.
 
+Candidate revision `1a300b389ff04956a527b57defce503c21332f94` passes isolated
+complete verification. Strategy, pure Haskell, and publication Finalreviews
+accept it without findings and with 10.0 in every required dimension. The
+formalization Finalreview rejects two cross-artifact defects:
+
+1. Validate every asserted macrorelation against the prepared Primitive
+   evidence while constructing `SemanticallyValidModel`. Traceability derives
+   complete traces and checks Intervention/Need coverage; it does not own
+   general macrorelation validity.
+2. Make the independent macro-evidence Oracle enumerate every Action and Key
+   Result in each Strategy formulation. Multi-member contracts cover
+   `contributes-to`, `qualifies`, `directs`, and `frames`.
+
+The correction preserves the fachliche semantics and the documented
+validation-stage semantics. The public error vocabulary places missing
+asserted macrorelation evidence under `ModelSemanticError` instead of
+`TraceabilityError`; validated aggregate types and their construction
+boundaries remain unchanged.
+
+Implementation status:
+
+- asserted macrorelation evidence is validated within the complete Semantics
+  boundary before `SemanticallyValidModel` can be constructed;
+- Traceability owns only complete trace derivation and Intervention/Need
+  coverage;
+- the independent Oracle enumerates every Strategy Action and Key Result;
+- exact multi-member contracts cover `contributes-to`, `qualifies`, `directs`,
+  and `frames`, including permutation invariance;
+- emitted macro-evidence errors and Inspection diagnostics are canonical under
+  node, edge, formulation, and Strategy-role permutations while prepared
+  occurrences retain source order;
+- bounded Haskell and formalization reviews accept the correction without
+  findings and at 10.0 in every required dimension;
+- one uninterrupted complete repository verification passes;
+- the exact candidate commit, isolated verification, and exact-revision
+  Finalreviews remain pending.
+
 ## Required Checks
 
 - Core formatting, build, tests, API tests, and Haddock;

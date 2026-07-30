@@ -10,10 +10,6 @@ module O2I.Validation.Trace
   , SomeSituationAnchorRef
   , TraceableEffectModel
   , TraceabilityError(..)
-  , MacroEvidenceWitness
-  , macroEvidenceWitnesses
-  , macroEvidenceWitnessesFor
-  , witnessPremises
   , validateTraceability
   , effectTraces
   , lookupEffectTrace
@@ -45,32 +41,10 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
 import Data.Validation (Validation(..))
-import O2I.Graph.Raw
 import O2I.Language.Element
-import O2I.Language.Macro (MacroClaim)
-import O2I.Language.Relation
-import O2I.Validation.MacroEvidence
-import qualified O2I.Validation.MacroEvidence as Evidence
 import O2I.Validation.Semantics
 import O2I.Validation.Trace.Eval
 import O2I.Validation.Trace.Types
-
--- | Interpret the canonical macro rule against one completely validated
--- semantic model.
-macroEvidenceWitnesses ::
-     SemanticallyValidModel -> MacroClaim RawNodeId -> [MacroEvidenceWitness]
-macroEvidenceWitnesses semantic =
-  Evidence.macroEvidenceWitnessesIn (modelPreparedMacroEvidence semantic)
-
--- | Select exact witnesses for one registered Context macrorelation claim.
-macroEvidenceWitnessesFor ::
-     SemanticallyValidModel
-  -> RawNodeId
-  -> RelationCode
-  -> RawNodeId
-  -> [MacroEvidenceWitness]
-macroEvidenceWitnessesFor semantic =
-  Evidence.macroEvidenceWitnessesForIn (modelPreparedMacroEvidence semantic)
 
 -- | Opaque semantic model with at least one complete effect trace and full
 -- trace coverage for every Need addressed by every Intervention.
@@ -86,8 +60,6 @@ data TraceabilityError
     -- ^ The model contains no Intervention from which a trace can be derived.
   | InterventionWithoutNeed RawNodeId
     -- ^ An Intervention addresses no Need.
-  | MissingMacroEvidence RawNodeId RelationName RawNodeId
-    -- ^ A context macrorelation lacks its required primitive evidence.
   | MissingEffectTrace RawNodeId RawNodeId
     -- ^ An Intervention/Need pair has no complete relational effect path.
   deriving (Eq, Show)
@@ -95,8 +67,9 @@ data TraceabilityError
 -- * Traceability validation interface
 -- | Derive complete relational effect traces.
 --
--- Complete paths cover every addressed Need, and primitive evidence supports
--- every macrorelation; observations and causal attribution remain outside.
+-- Complete paths cover every addressed Need. Semantically valid models
+-- already guarantee macrorelation evidence; observations and causal
+-- attribution remain outside.
 validateTraceability ::
      SemanticallyValidModel
   -> Validation (NonEmpty.NonEmpty TraceabilityError) TraceableEffectModel
@@ -137,7 +110,7 @@ validateTraceability semantic =
                    , addressedNeedNeed = need
                    })
           ]
-    errors = macroEvidenceErrors evidence ++ interventionErrors
+    errors = interventionErrors
 
 -- | Enumerate all distinct validated effect traces.
 effectTraces :: TraceableEffectModel -> NonEmpty.NonEmpty EffectTrace
@@ -146,13 +119,3 @@ effectTraces = validatedTraces
 -- | Resolve a trace identifier within its validated traceable model.
 lookupEffectTrace :: TraceableEffectModel -> EffectTraceId -> Maybe EffectTrace
 lookupEffectTrace model identifier = Map.lookup identifier (traceIndex model)
-
-macroEvidenceErrors :: PreparedMacroEvidence -> [TraceabilityError]
-macroEvidenceErrors evidence =
-  [ MissingMacroEvidence
-    (rawEdgeFrom conclusion)
-    (rawEdgeRelation conclusion)
-    (rawEdgeTo conclusion)
-  | (conclusion, claim) <- macroEvidenceClaims evidence
-  , not (macroEvidenceExistsIn evidence claim)
-  ]

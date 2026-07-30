@@ -40,6 +40,7 @@ module O2I.Inspection.Diagnostic
   , rawEdgeSubjectIdentifier
   , structuralDefectSpec
   , candidatePropositionSpec
+  , modelSemanticErrorSpec
   , semanticDefectSpec
   , collectiveRealizationErrorSpec
   , candidateCollectiveRealizationIssueSpec
@@ -71,6 +72,7 @@ import O2I.Inspection.Diagnostic.Internal
   , diagnosticsList
   , evidenceDefectSpec
   , mkDiagnosticCode
+  , modelSemanticErrorSpec
   , o2iDiagnosticCode
   , rawEdgeSubjectIdentifier
   , readinessDefectSpec

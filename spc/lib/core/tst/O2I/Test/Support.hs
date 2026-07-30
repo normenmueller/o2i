@@ -74,7 +74,7 @@ withSemanticallyValid raw formulations action =
 validateSemanticRaw ::
      RawGraph
   -> [RawStrategyFormulation]
-  -> Validation (NonEmpty.NonEmpty ModelInvariantError) SemanticallyValidModel
+  -> Validation (NonEmpty.NonEmpty ModelSemanticError) SemanticallyValidModel
 validateSemanticRaw raw formulations =
   case validateStructure raw of
     StructureModelRejected errors ->
@@ -83,10 +83,7 @@ validateSemanticRaw raw formulations =
       let assessment =
             assessSemantics structure (map assertedClaim formulations)
        in case modelAssessmentStatus assessment of
-            SemanticsRejected _ ->
-              case NonEmpty.nonEmpty (assessmentInvariantErrors assessment) of
-                Just errors -> Failure errors
-                Nothing -> error "test fixture failed outside Context semantics"
+            SemanticsRejected errors -> Failure errors
             SemanticsPending _ ->
               error "asserted test fixture produced pending semantics"
             SemanticsAccepted model -> Success model
@@ -111,6 +108,14 @@ assertSemanticErrors raw expected =
 assertSemanticErrorsWith ::
      RawGraph -> [RawStrategyFormulation] -> [ModelInvariantError] -> Assertion
 assertSemanticErrorsWith raw formulations expected =
+  case validateSemanticRaw raw formulations of
+    Failure errors ->
+      NonEmpty.toList errors @?= map ContextSemanticError expected
+    Success _ -> assertFailure "semantically invalid model was accepted"
+
+assertModelSemanticErrorsWith ::
+     RawGraph -> [RawStrategyFormulation] -> [ModelSemanticError] -> Assertion
+assertModelSemanticErrorsWith raw formulations expected =
   case validateSemanticRaw raw formulations of
     Failure errors -> NonEmpty.toList errors @?= expected
     Success _ -> assertFailure "semantically invalid model was accepted"
@@ -1068,6 +1073,34 @@ macroWithoutEvidenceGraph =
           : rawEdges sampleGraph
     }
 
+candidateMacroWithoutEvidenceGraph :: RawClaimGraph
+candidateMacroWithoutEvidenceGraph =
+  RawClaimGraph
+    (map assertedClaim (rawNodes macroWithoutEvidenceGraph))
+    [ if relation == unsupported
+      then candidateClaim relation
+      else assertedClaim relation
+    | relation <- rawEdges macroWithoutEvidenceGraph
+    ]
+  where
+    unsupported = edge secondMissionId groundsVision visionId
+
+macroWithoutTwoEvidenceGraph :: RawGraph
+macroWithoutTwoEvidenceGraph =
+  macroWithoutEvidenceGraph
+    { rawNodes =
+        RawContextNode thirdMissionId Mission
+          : RawPrimitiveNode thirdMissionDriverId thirdMissionId Driver
+          : rawNodes macroWithoutEvidenceGraph
+    , rawEdges =
+        edge thirdMissionId groundsVision visionId
+          : edge
+              ethosPrincipleId
+              guidesEthosPrincipleToMissionDriver
+              thirdMissionDriverId
+          : rawEdges macroWithoutEvidenceGraph
+    }
+
 planForTrace :: EffectTrace -> EvidencePlan
 planForTrace trace =
   EvidencePlan
@@ -1209,6 +1242,11 @@ secondMissionId, secondMissionDriverId :: RawNodeId
 secondMissionId = RawNodeId "second-mission"
 
 secondMissionDriverId = RawNodeId "second-mission-driver"
+
+thirdMissionId, thirdMissionDriverId :: RawNodeId
+thirdMissionId = RawNodeId "third-mission"
+
+thirdMissionDriverId = RawNodeId "third-mission-driver"
 
 additionalNeedId, interventionId :: RawNodeId
 additionalNeedId = RawNodeId "additional-need"

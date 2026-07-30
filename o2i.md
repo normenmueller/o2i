@@ -889,7 +889,7 @@ Die Abbildung fokussiert die Nachweisfolge ab dem semantisch gültigen Modell. D
 !include`snippetStart="-- * Structural validation interface", snippetEnd="-- * Structural validation implementation"` spc/lib/core/src/O2I/Validation/Structure.hs
 ```
 
-@Lst:o2i-semantic-validation zeigt den einzigen Eintrittspunkt in die zweite Validierungsstufe. Er prüft Kontext- und Strategy-Semantik sowie kollektive Strategierealisierungen als eine vollständige semantische Modellgrenze.
+@Lst:o2i-semantic-validation zeigt den einzigen Eintrittspunkt in die zweite Validierungsstufe. Er prüft Kontext- und Strategy-Semantik, die Primitive-Evidenz behaupteter Kontext-Makrorelationen sowie kollektive Strategierealisierungen als eine vollständige semantische Modellgrenze.
 
 ```{#lst:o2i-semantic-validation .haskell caption="O2I Semantikvalidierung"}
 !include`snippetStart="-- * Complete semantic validation interface", snippetEnd="-- * Complete semantic validation implementation"` spc/lib/core/src/O2I/Validation/Semantics.hs

@@ -195,13 +195,15 @@ needQualificationTests =
                    { rawNeedQualificationNeedObjective =
                        additionalNeedObjectiveId
                    })
-    , testCase "initial proposal rejects a modeled macrorelation"
-        $ withSemanticallyValid
-            needQualificationMacroOnlyGraph
-            [sampleStrategyFormulation]
+    , testCase "initial proposal rejects an accepted qualification"
+        $ withSemanticallyValid sampleGraph [sampleStrategyFormulation]
         $ \model ->
             assertNeedQualificationErrors
-              [NeedQualificationRelationAlreadyModeled strategyId needId]
+              [ NeedQualificationRelationAlreadyModeled strategyId needId
+              , NeedQualificationTranslationAlreadyModeled
+                  strategyKeyResultId
+                  needObjectiveId
+              ]
               (validateNeedQualificationProposal
                  model
                  sampleNeedQualificationProposal)
@@ -229,20 +231,20 @@ needQualificationTests =
         $ \model ->
             withSemanticContextRef model SNeed needId $ \need ->
               qualifyingStrategies model need @?= []
-    , testCase "qualifies without translates evidence does not qualify"
-        $ withSemanticallyValid
+    , testCase "qualifies without translates evidence rejects Semantics"
+        $ assertModelSemanticErrorsWith
             qualifiesWithoutTranslationGraph
             [sampleStrategyFormulation]
-        $ \model ->
-            withSemanticContextRef model SNeed needId $ \need ->
-              qualifyingStrategies model need @?= []
-    , testCase "unlisted strategic Key Result does not qualify"
-        $ withSemanticallyValid
+            [ MacroEvidenceSemanticError
+                (MissingMacroEvidence (edge strategyId qualifiesNeed needId))
+            ]
+    , testCase "unlisted strategic Key Result rejects Semantics"
+        $ assertModelSemanticErrorsWith
             unlistedQualifiesGraph
             [sampleStrategyFormulation]
-        $ \model ->
-            withSemanticContextRef model SNeed needId $ \need ->
-              qualifyingStrategies model need @?= []
+            [ MacroEvidenceSemanticError
+                (MissingMacroEvidence (edge strategyId qualifiesNeed needId))
+            ]
     , testCase "multiple Strategies can qualify the same Need"
         $ withSemanticallyValid
             multiplyQualifyingGraph
@@ -314,14 +316,6 @@ minimalQualificationGraph =
     , anchorEdge situationAnchorId AnchorsNeedDriverFamily needDriverId
     , edge needDriverId groundsNeedDriverToObjective needObjectiveId
     ]
-
-needQualificationMacroOnlyGraph :: RawGraph
-needQualificationMacroOnlyGraph =
-  minimalQualificationGraph
-    { rawEdges =
-        edge strategyId qualifiesNeed needId
-          : rawEdges minimalQualificationGraph
-    }
 
 needQualificationEvidenceOnlyGraph :: RawGraph
 needQualificationEvidenceOnlyGraph =

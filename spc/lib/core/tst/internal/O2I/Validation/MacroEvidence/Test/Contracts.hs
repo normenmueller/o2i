@@ -10,6 +10,7 @@ import Data.List (isInfixOf, nub, sort)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Monoid (Sum(..))
 import qualified Data.Text as Text
+import Data.Validation (Validation(..))
 import O2I.Graph.Macro (buildMacroFactIndex)
 import O2I.Graph.Raw
 import O2I.Language.Element
@@ -38,6 +39,7 @@ macroEvidenceTests =
     , preparationWorkContracts
     , resolverStrictnessContract
     , completeRegistryOracleContract
+    , multiRoleRegistryContracts
     , scenarioMatrix
     , affineWorkContracts
     , permutationContracts
@@ -368,13 +370,13 @@ exactPreparedDomains =
          (mkNodeId strategyId)
          StrategyGuidingPolicyRole)
     assertDomain
-      [strategyActionId]
+      [strategyActionId, strategyActionAdditionalId]
       (Prepare.preparedStrategyRoleDomain
          prepared
          (mkNodeId strategyId)
          StrategyCoherentActionRole)
     assertDomain
-      [strategyKeyResultId]
+      [strategyKeyResultId, strategyKeyResultAdditionalId]
       (Prepare.preparedStrategyRoleDomain
          prepared
          (mkNodeId strategyId)
@@ -533,6 +535,249 @@ completeRegistryOracleContract =
            (NonEmpty.toList . witnessPremises)
            (macroEvidenceWitnessesIn prepared claim))
         @?= sort (naiveMacroWitnesses index registryFormulations claim)
+
+multiRoleRegistryContracts :: TestTree
+multiRoleRegistryContracts =
+  testGroup
+    "complete multi-member Strategy roles"
+    [ testCase "enumerates every affected macro witness"
+        $ withRegistryEvidence assertMultiRoleWitnesses
+    , testCase "canonicalizes graph, formulation, and member order"
+        $ case ( validateRegistryScenario
+               , validateRegistryInput reversedGraph reversedFormulations) of
+            (Left message, _) -> assertFailure message
+            (_, Left message) -> assertFailure message
+            (Right baseline, Right reordered) ->
+              sort (registryWitnessProjection (prepareMacroEvidence reordered))
+                @?= sort
+                      (registryWitnessProjection (prepareMacroEvidence baseline))
+    , testCase "canonicalizes validation errors across input order"
+        $ case ( validateRegistryInput invalidGraph registryFormulations
+               , validateRegistryInput reversedInvalidGraph reversedFormulations) of
+            (Left message, _) -> assertFailure message
+            (_, Left message) -> assertFailure message
+            (Right baseline, Right reordered) -> do
+              macroErrors baseline @?= expectedErrors
+              macroErrors reordered @?= expectedErrors
+    ]
+  where
+    reversedGraph =
+      registryGraph
+        { rawNodes = reverse (rawNodes registryGraph)
+        , rawEdges = reverse (rawEdges registryGraph)
+        }
+    reversedFormulations =
+      reverse
+        [ formulation
+          { rawFormulationActions =
+              NonEmpty.reverse (rawFormulationActions formulation)
+          , rawFormulationKeyResults =
+              NonEmpty.reverse (rawFormulationKeyResults formulation)
+          }
+        | formulation <- registryFormulations
+        ]
+    invalidGraph =
+      registryGraph
+        { rawEdges =
+            filter
+              (`notElem` invalidatedRegistryEvidence)
+              (rawEdges registryGraph)
+        }
+    reversedInvalidGraph =
+      RawGraph
+        { rawNodes = reverse (rawNodes invalidGraph)
+        , rawEdges = reverse (rawEdges invalidGraph)
+        }
+    expectedErrors =
+      map
+        MissingMacroEvidence
+        (sort
+           [ fixtureEdge strategyId contributesToStrategy secondStrategyId
+           , fixtureEdge strategyId directsIntervention interventionId
+           , fixtureEdge strategyId framesMeasure measureId
+           , fixtureEdge strategyId qualifiesNeed needId
+           ])
+    macroErrors semantic =
+      case validatePreparedMacroEvidence (prepareMacroEvidence semantic) of
+        Failure errors -> NonEmpty.toList errors
+        Success _ -> error "invalid registry evidence was accepted"
+
+invalidatedRegistryEvidence :: [RawEdge]
+invalidatedRegistryEvidence =
+  [ fixtureEdge
+      strategyKeyResultId
+      contributesStrategyKeyResultToKeyResult
+      secondStrategyKeyResultId
+  , fixtureEdge
+      strategyKeyResultAdditionalId
+      contributesStrategyKeyResultToKeyResult
+      secondStrategyKeyResultAdditionalId
+  , fixtureEdge
+      strategyActionId
+      contributesStrategyActionToAction
+      secondStrategyActionId
+  , fixtureEdge
+      strategyActionAdditionalId
+      contributesStrategyActionToAction
+      secondStrategyActionAdditionalId
+  , fixtureEdge
+      strategyKeyResultId
+      translatesStrategyKeyResultToNeedObjective
+      needObjectiveId
+  , fixtureEdge
+      strategyKeyResultAdditionalId
+      translatesStrategyKeyResultToNeedObjective
+      needObjectiveId
+  , fixtureEdge
+      strategyActionId
+      guidesStrategyActionToInterventionAction
+      interventionActionId
+  , fixtureEdge
+      strategyActionAdditionalId
+      guidesStrategyActionToInterventionAction
+      interventionActionId
+  , fixtureEdge
+      strategyDriverId
+      indicatesMeasurePerformanceDimension
+      measureDimensionId
+  , fixtureEdge
+      strategyKeyResultId
+      determinesMeasurePerformanceDimension
+      measureDimensionId
+  , fixtureEdge
+      strategyKeyResultAdditionalId
+      determinesMeasurePerformanceDimension
+      measureDimensionId
+  ]
+
+assertMultiRoleWitnesses :: PreparedMacroEvidence -> Assertion
+assertMultiRoleWitnesses prepared = do
+  assertRegistryWitnesses
+    prepared
+    strategyId
+    contributesToStrategy
+    secondStrategyId
+    [ [ fixtureEdge
+          strategyKeyResultId
+          contributesStrategyKeyResultToKeyResult
+          secondStrategyKeyResultId
+      ]
+    , [ fixtureEdge
+          strategyKeyResultAdditionalId
+          contributesStrategyKeyResultToKeyResult
+          secondStrategyKeyResultAdditionalId
+      ]
+    , [ fixtureEdge
+          strategyActionId
+          contributesStrategyActionToAction
+          secondStrategyActionId
+      ]
+    , [ fixtureEdge
+          strategyActionAdditionalId
+          contributesStrategyActionToAction
+          secondStrategyActionAdditionalId
+      ]
+    ]
+  assertRegistryWitnesses
+    prepared
+    strategyId
+    qualifiesNeed
+    needId
+    [ [ fixtureEdge
+          strategyKeyResultId
+          translatesStrategyKeyResultToNeedObjective
+          needObjectiveId
+      ]
+    , [ fixtureEdge
+          strategyKeyResultAdditionalId
+          translatesStrategyKeyResultToNeedObjective
+          needObjectiveId
+      ]
+    ]
+  assertRegistryWitnesses
+    prepared
+    strategyId
+    directsIntervention
+    interventionId
+    [ [ fixtureEdge
+          strategyActionId
+          guidesStrategyActionToInterventionAction
+          interventionActionId
+      ]
+    , [ fixtureEdge
+          strategyActionAdditionalId
+          guidesStrategyActionToInterventionAction
+          interventionActionId
+      ]
+    ]
+  assertRegistryWitnesses
+    prepared
+    strategyId
+    framesMeasure
+    measureId
+    [ [ fixtureEdge
+          strategyDriverId
+          indicatesMeasurePerformanceDimension
+          measureDimensionId
+      , fixtureEdge
+          strategyKeyResultId
+          determinesMeasurePerformanceDimension
+          measureDimensionId
+      , fixtureEdge
+          measureDimensionId
+          (containsPerformanceDimension MeasureMeasurementDimension)
+          measureKPIId
+      ]
+    , [ fixtureEdge
+          strategyDriverId
+          indicatesMeasurePerformanceDimension
+          measureDimensionId
+      , fixtureEdge
+          strategyKeyResultAdditionalId
+          determinesMeasurePerformanceDimension
+          measureDimensionId
+      , fixtureEdge
+          measureDimensionId
+          (containsPerformanceDimension MeasureMeasurementDimension)
+          measureKPIId
+      ]
+    ]
+
+assertRegistryWitnesses ::
+     PreparedMacroEvidence
+  -> RawNodeId
+  -> Relation from to
+  -> RawNodeId
+  -> [[RawEdge]]
+  -> Assertion
+assertRegistryWitnesses prepared source relation target expected =
+  case [ claim
+       | (conclusion, claim) <- macroEvidenceClaims prepared
+       , conclusion == fixtureEdge source relation target
+       ] of
+    [claim] ->
+      sort
+        (map
+           (NonEmpty.toList . witnessPremises)
+           (macroEvidenceWitnessesIn prepared claim))
+        @?= sort expected
+    claims ->
+      assertFailure
+        ("expected one registered macro claim, got " ++ show (length claims))
+
+registryWitnessProjection :: PreparedMacroEvidence -> [(RawEdge, [[RawEdge]])]
+registryWitnessProjection prepared =
+  [ ( conclusion
+    , sort
+        (map
+           (NonEmpty.toList . witnessPremises)
+           (macroEvidenceWitnessesIn prepared claim)))
+  | (conclusion, claim) <- macroEvidenceClaims prepared
+  ]
+
+fixtureEdge :: RawNodeId -> Relation from to -> RawNodeId -> RawEdge
+fixtureEdge source relation target =
+  RawEdge source (relationNameFor relation) target
 
 rawNodeIdentifier :: RawNode -> RawNodeId
 rawNodeIdentifier node =

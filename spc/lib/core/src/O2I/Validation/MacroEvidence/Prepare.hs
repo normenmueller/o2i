@@ -270,7 +270,7 @@ preparedSituationAnchorDomain ::
 preparedSituationAnchorDomain prepared situation anchor =
   lookupPreparedDomain prepared (AnchorAddress (unNodeId situation) anchor)
 
--- | Enumerate persisted typed macro claims in canonical graph order.
+-- | Enumerate persisted typed macro claims in source-occurrence order.
 preparedMacroClaims ::
      PreparedMacroEvidence -> [(RawEdge, MacroClaim RawNodeId)]
 preparedMacroClaims = macroClaims . storedMacroFacts

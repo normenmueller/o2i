@@ -155,6 +155,12 @@ tests =
         "explicit graph Candidates survive import and remain excluded"
         candidateGraphClaimsInspectionTest
     , testCase
+        "missing asserted macro evidence fails Semantics with provenance"
+        missingMacroEvidenceInspectionTest
+    , testCase
+        "macro-evidence diagnostics are invariant under imported order"
+        macroEvidenceDiagnosticOrderTest
+    , testCase
         "valid asserted collective claim is retained by Semantics"
         validCollectiveInspectionTest
     , testCase
@@ -467,16 +473,27 @@ closedCoreDefectMappingTest = do
     , "o2i.semantics.strategy-coherence-missing"
     ]
   assertClosedMapping
+    SemanticsStage
+    modelSemanticErrorSpec
+    [ ContextSemanticError (EthosWithoutPrinciple node)
+    , MacroEvidenceSemanticError
+        (MissingMacroEvidence (RawEdge node relation other))
+    , CollectiveSemanticError
+        (CollectiveStructuralError EmptyCollectiveRealizationClaimId)
+    ]
+    [ "o2i.semantics.ethos-principle-missing"
+    , "o2i.semantics.macro-evidence-missing"
+    , "o2i.semantics.collective.claim-id-empty"
+    ]
+  assertClosedMapping
     TraceabilityStage
     traceabilityDefectSpec
     [ NoIntervention
     , InterventionWithoutNeed node
-    , MissingMacroEvidence node relation other
     , MissingEffectTrace node other
     ]
     [ "o2i.traceability.intervention-missing"
     , "o2i.traceability.intervention-need-missing"
-    , "o2i.traceability.macro-evidence-missing"
     , "o2i.traceability.effect-trace-missing"
     ]
   assertClosedMapping
@@ -1125,6 +1142,160 @@ candidateGraphClaimsInspectionTest = do
   semanticsState report @?= StageUnavailable
   diagnosticCodes report
     @?= ["o2i.claim.candidate-excluded", "o2i.claim.candidate-excluded"]
+
+missingMacroEvidenceInspectionTest :: Assertion
+missingMacroEvidenceInspectionTest = do
+  report <-
+    completedReport
+      (runAdapterWithInputs
+         (testAdapter
+            DecodeSucceeds
+            ViewSucceeds
+            RootSucceeds
+            (graphFacts graphWithoutFrameEvidence)
+            [])
+         inputs)
+  reportResult report @?= InspectionFailed
+  map reportedState (take 6 (stageReportsList (reportStageReports report)))
+    @?= [ StagePassed
+        , StagePassed
+        , StagePassed
+        , StagePassed
+        , StageFailed
+        , StageNotRun (BlockedByFailure SemanticsStage)
+        ]
+  case diagnosticsList (reportDiagnostics report) of
+    [diagnostic] -> do
+      diagnosticCodeText (diagnosticCode diagnostic)
+        @?= "o2i.semantics.macro-evidence-missing"
+      diagnosticStage diagnostic @?= SemanticsStage
+      diagnosticSubjects diagnostic
+        @?= [ DiagnosticSubject
+                "edge"
+                (rawEdgeSubjectIdentifier singleFrameEdge)
+            ]
+      diagnosticLocations diagnostic @?= [testLocation]
+      map supplementalTuple (diagnosticSupplementalSources diagnostic)
+        @?= [ ( StrategySupplement
+              , sourceDocumentIdentity strategySourceDocument)
+            ]
+    diagnostics ->
+      assertFailure
+        ("expected one macro-evidence diagnostic, got "
+           <> show (length diagnostics))
+  where
+    singleFrameEdge =
+      completeEdge completeStrategyId framesMeasure completeMeasureId
+    singleFramePremises =
+      [ completeEdge
+          completeStrategyDriverId
+          indicatesMeasurePerformanceDimension
+          completeMeasureDimensionId
+      , completeEdge
+          completeStrategyKeyResultId
+          determinesMeasurePerformanceDimension
+          completeMeasureDimensionId
+      ]
+    graphWithoutFrameEvidence =
+      completeRawGraph
+        { rawEdges =
+            filter (`notElem` singleFramePremises) (rawEdges completeRawGraph)
+        }
+    inputs =
+      noInputs
+        { strategyInput =
+            Supplied
+              (sourcedFromDocument
+                 strategySourceDocument
+                 (StrategyFormulationBundle
+                    [assertedClaim completeStrategyFormulation]))
+        }
+
+macroEvidenceDiagnosticOrderTest :: Assertion
+macroEvidenceDiagnosticOrderTest = do
+  baselineReport <-
+    macroEvidenceReport
+      graphWithoutMacroEvidence
+      [assertedClaim completeStrategyFormulation]
+  reordered <-
+    macroEvidenceReport
+      RawGraph
+        { rawNodes = reverse (rawNodes graphWithoutMacroEvidence)
+        , rawEdges = reverse (rawEdges graphWithoutMacroEvidence)
+        }
+      (reverse [assertedClaim completeStrategyFormulation])
+  map diagnosticObservation (diagnosticsList (reportDiagnostics baselineReport))
+    @?= expected
+  map diagnosticObservation (diagnosticsList (reportDiagnostics reordered))
+    @?= expected
+  where
+    expected =
+      [ ( "o2i.semantics.macro-evidence-missing"
+        , SemanticsStage
+        , [DiagnosticSubject "edge" (rawEdgeSubjectIdentifier conclusion)]
+        , [testLocation]
+        , [(StrategySupplement, sourceDocumentIdentity strategySourceDocument)])
+      | conclusion <- sort [canonicalFrameEdge, qualificationEdge]
+      ]
+    diagnosticObservation diagnostic =
+      ( diagnosticCodeText (diagnosticCode diagnostic)
+      , diagnosticStage diagnostic
+      , diagnosticSubjects diagnostic
+      , diagnosticLocations diagnostic
+      , map supplementalTuple (diagnosticSupplementalSources diagnostic))
+
+macroEvidenceReport ::
+     RawGraph -> [Claim RawStrategyFormulation] -> IO InspectionReport
+macroEvidenceReport graph formulations =
+  completedReport
+    (runAdapterWithInputs
+       (testAdapter
+          DecodeSucceeds
+          ViewSucceeds
+          RootSucceeds
+          (graphFacts graph)
+          [])
+       noInputs
+         { strategyInput =
+             Supplied
+               (sourcedFromDocument
+                  strategySourceDocument
+                  (StrategyFormulationBundle formulations))
+         })
+
+graphWithoutMacroEvidence :: RawGraph
+graphWithoutMacroEvidence =
+  completeRawGraph
+    { rawEdges =
+        filter
+          (`notElem` (framePremises ++ [qualificationPremise]))
+          (rawEdges completeRawGraph)
+    }
+
+canonicalFrameEdge, qualificationEdge :: RawEdge
+canonicalFrameEdge =
+  completeEdge completeStrategyId framesMeasure completeMeasureId
+
+qualificationEdge = completeEdge completeStrategyId qualifiesNeed completeNeedId
+
+framePremises :: [RawEdge]
+framePremises =
+  [ completeEdge
+      completeStrategyDriverId
+      indicatesMeasurePerformanceDimension
+      completeMeasureDimensionId
+  , completeEdge
+      completeStrategyKeyResultId
+      determinesMeasurePerformanceDimension
+      completeMeasureDimensionId
+  ]
+
+qualificationPremise :: RawEdge
+qualificationPremise =
+  completeEdge
+    completeStrategyKeyResultId
+    translatesStrategyKeyResultToNeedObjective
+    completeNeedObjectiveId
 
 validCollectiveInspectionTest :: Assertion
 validCollectiveInspectionTest = do

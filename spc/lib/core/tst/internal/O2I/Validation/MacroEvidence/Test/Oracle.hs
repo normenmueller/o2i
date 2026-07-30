@@ -91,10 +91,11 @@ naiveMacroWitnesses index formulations claim =
               StrategyRolePrimitive side role -> strategyRoleValues side role
               _ -> macroSelectorCandidates index claim selector))
     strategyRoleValues side role =
-      [ roleValue role formulation
+      [ identifier
       | strategy <- macroSelectorCandidates index claim (ClaimContext side)
       , formulation <- formulations
       , rawFormulationStrategy formulation == strategy
+      , identifier <- roleValues role formulation
       ]
 
 bindSelector ::
@@ -109,12 +110,12 @@ bindSelector selector identifier bindings =
       | existing == identifier -> Just bindings
       | otherwise -> Nothing
 
-roleValue :: StrategyPrimitiveRole -> RawStrategyFormulation -> RawNodeId
-roleValue role formulation =
+roleValues :: StrategyPrimitiveRole -> RawStrategyFormulation -> [RawNodeId]
+roleValues role formulation =
   case role of
-    DiagnosisRole -> rawFormulationDiagnosis formulation
-    IntentRole -> rawFormulationIntent formulation
-    GuidingPolicyRole -> rawFormulationGuidingPolicy formulation
-    CoherentActionRole -> NonEmpty.head (rawFormulationActions formulation)
+    DiagnosisRole -> [rawFormulationDiagnosis formulation]
+    IntentRole -> [rawFormulationIntent formulation]
+    GuidingPolicyRole -> [rawFormulationGuidingPolicy formulation]
+    CoherentActionRole -> NonEmpty.toList (rawFormulationActions formulation)
     StrategicKeyResultRole ->
-      NonEmpty.head (rawFormulationKeyResults formulation)
+      NonEmpty.toList (rawFormulationKeyResults formulation)

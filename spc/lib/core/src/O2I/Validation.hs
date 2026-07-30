@@ -20,6 +20,7 @@ module O2I.Validation
   , Maturity(..)
   , ModelSemanticsInput(..)
   , CandidateModelProposition(..)
+  , MacroEvidenceError(..)
   , ModelSemanticError(..)
   , ModelAssessmentStatus(..)
   , ModelAssessment
@@ -165,6 +166,7 @@ import Data.List.NonEmpty (NonEmpty)
 import Data.Validation (Validation(..))
 import O2I.Validation.Collective
 import O2I.Validation.Evidence
+import O2I.Validation.MacroEvidence (MacroEvidenceError(..))
 import O2I.Validation.Qualification
 import O2I.Validation.Readiness
 import O2I.Validation.Semantics

@@ -5,9 +5,11 @@
 module O2I.Validation.MacroEvidence
   ( MacroEvidenceWitness
   , PreparedMacroEvidence
+  , MacroEvidenceError(..)
   , MacroPreparationWork(..)
   , MacroEvidenceWork(..)
   , prepareMacroEvidence
+  , validatePreparedMacroEvidence
   , preparedContextSemantics
   , macroEvidencePreparationWork
   , macroEvidenceIndexBuildWork
@@ -22,7 +24,9 @@ module O2I.Validation.MacroEvidence
   , witnessPremises
   ) where
 
+import Data.List (sort)
 import qualified Data.List.NonEmpty as NonEmpty
+import Data.Validation (Validation(..))
 import O2I.Graph.Macro
 import O2I.Graph.Raw
 import O2I.Language.Element
@@ -32,6 +36,27 @@ import O2I.Validation.MacroEvidence.Prepare
 import O2I.Validation.MacroEvidence.Types
 import O2I.Validation.Relational.Index
 
+-- | Validate every asserted Context relation.
+--
+-- Missing conclusions are returned in canonical 'RawEdge' order; prepared
+-- claims and their occurrences retain persisted source order.
+validatePreparedMacroEvidence ::
+     PreparedMacroEvidence
+  -> Validation (NonEmpty.NonEmpty MacroEvidenceError) PreparedMacroEvidence
+validatePreparedMacroEvidence prepared =
+  case NonEmpty.nonEmpty errors of
+    Nothing -> Success prepared
+    Just failures -> Failure failures
+  where
+    errors =
+      map
+        MissingMacroEvidence
+        (sort
+           [ conclusion
+           | (conclusion, claim) <- macroEvidenceClaims prepared
+           , not (macroEvidenceExistsIn prepared claim)
+           ])
+
 -- | Read the exact one-time preparation work.
 macroEvidencePreparationWork :: PreparedMacroEvidence -> MacroPreparationWork
 macroEvidencePreparationWork = preparedMacroWork
@@ -40,7 +65,7 @@ macroEvidencePreparationWork = preparedMacroWork
 macroEvidenceIndexBuildWork :: PreparedMacroEvidence -> IndexBuildWork
 macroEvidenceIndexBuildWork = indexBuildWork . preparedRelationalIndex
 
--- | Enumerate persisted typed macrorelation claims in canonical graph order.
+-- | Enumerate persisted typed macrorelation claims in source order.
 macroEvidenceClaims ::
      PreparedMacroEvidence -> [(RawEdge, MacroClaim RawNodeId)]
 macroEvidenceClaims = preparedMacroClaims

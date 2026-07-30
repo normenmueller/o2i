@@ -33,9 +33,10 @@ The curated public facades are `O2I`, `O2I.Language`, `O2I.Graph`,
 
 The Core assesses `Candidate` and `Asserted` claims across one complete
 semantic boundary, derives Context-level `Elaboration` and model-level
-`Maturity` exactly once, and includes validated collective Strategy
-realizations in `SemanticallyValidModel`. Binary Strategy contribution remains
-a separate proposition.
+`Maturity` exactly once, validates the Primitive evidence of every asserted
+Context macrorelation, and includes validated collective Strategy realizations
+in `SemanticallyValidModel`. Binary Strategy contribution remains a separate
+proposition.
 
 ## Build
 

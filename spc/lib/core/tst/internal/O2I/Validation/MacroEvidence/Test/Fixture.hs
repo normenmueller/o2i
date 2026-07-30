@@ -11,6 +11,7 @@ module O2I.Validation.MacroEvidence.Test.Fixture
   , registryGraph
   , registryGraphWithoutCollectiveClaim
   , registryFormulations
+  , validateRegistryInput
   , validateRegistryGraph
   , validateRegistryScenario
   , frameClaim
@@ -21,13 +22,24 @@ module O2I.Validation.MacroEvidence.Test.Fixture
   , strategyObjectiveId
   , strategyPrincipleId
   , strategyActionId
+  , strategyActionAdditionalId
   , strategyKeyResultId
+  , strategyKeyResultAdditionalId
   , measureId
   , measureDimensionId
+  , measureKPIId
+  , needId
+  , needObjectiveId
   , situationId
   , situationAnchorId
+  , interventionId
+  , interventionActionId
   , secondStrategyId
   , secondStrategyDriverId
+  , secondStrategyActionId
+  , secondStrategyActionAdditionalId
+  , secondStrategyKeyResultId
+  , secondStrategyKeyResultAdditionalId
   ) where
 
 import qualified Data.List.NonEmpty as NonEmpty
@@ -125,11 +137,16 @@ registryGraphWithoutCollectiveClaim =
 
 -- | Exact Strategy formulations used by the complete-registry oracle.
 registryFormulations :: [RawStrategyFormulation]
-registryFormulations = [baseFormulation, secondStrategyFormulation]
+registryFormulations = [registryBaseFormulation, secondStrategyFormulation]
 
 -- | Validate a registry-shaped graph with both complete Strategy formulations.
 validateRegistryGraph :: RawGraph -> Either String ContextSemantics
-validateRegistryGraph graph = validateGraph graph registryFormulations
+validateRegistryGraph graph = validateRegistryInput graph registryFormulations
+
+-- | Validate one registry-shaped graph and exact formulation input.
+validateRegistryInput ::
+     RawGraph -> [RawStrategyFormulation] -> Either String ContextSemantics
+validateRegistryInput = validateGraph
 
 -- | Validate the complete-registry oracle fixture.
 validateRegistryScenario :: Either String ContextSemantics
@@ -240,11 +257,18 @@ registryNodes =
   , RawPrimitiveNode needObjectiveId needId Objective
   , RawPrimitiveNode interventionActionId interventionId Action
   , RawPrimitiveNode interventionKeyResultId interventionId KeyResult
+  , RawPrimitiveNode strategyActionAdditionalId strategyId Action
+  , RawPrimitiveNode strategyKeyResultAdditionalId strategyId KeyResult
   , RawPrimitiveNode secondStrategyDriverId secondStrategyId Driver
   , RawPrimitiveNode secondStrategyObjectiveId secondStrategyId Objective
   , RawPrimitiveNode secondStrategyPrincipleId secondStrategyId Principle
   , RawPrimitiveNode secondStrategyActionId secondStrategyId Action
+  , RawPrimitiveNode secondStrategyActionAdditionalId secondStrategyId Action
   , RawPrimitiveNode secondStrategyKeyResultId secondStrategyId KeyResult
+  , RawPrimitiveNode
+      secondStrategyKeyResultAdditionalId
+      secondStrategyId
+      KeyResult
   , RawAnchorNode situationAnchorId BusinessCapability
   ]
 
@@ -269,6 +293,22 @@ registryEdges =
       orientsVisionObjectiveToStrategyObjective
       secondStrategyObjectiveId
   , edge
+      strategyPrincipleId
+      guidesStrategyPrincipleToAction
+      strategyActionAdditionalId
+  , edge
+      strategyActionAdditionalId
+      contributesStrategyActionToKeyResult
+      strategyKeyResultAdditionalId
+  , edge
+      strategyKeyResultAdditionalId
+      substantiatesStrategyKeyResultObjective
+      strategyObjectiveId
+  , edge
+      strategyKeyResultAdditionalId
+      determinesMeasurePerformanceDimension
+      measureDimensionId
+  , edge
       secondStrategyDriverId
       groundsStrategyDriverToObjective
       secondStrategyObjectiveId
@@ -277,11 +317,23 @@ registryEdges =
       guidesStrategyPrincipleToAction
       secondStrategyActionId
   , edge
+      secondStrategyPrincipleId
+      guidesStrategyPrincipleToAction
+      secondStrategyActionAdditionalId
+  , edge
       secondStrategyActionId
       contributesStrategyActionToKeyResult
       secondStrategyKeyResultId
   , edge
+      secondStrategyActionAdditionalId
+      contributesStrategyActionToKeyResult
+      secondStrategyKeyResultAdditionalId
+  , edge
       secondStrategyKeyResultId
+      substantiatesStrategyKeyResultObjective
+      secondStrategyObjectiveId
+  , edge
+      secondStrategyKeyResultAdditionalId
       substantiatesStrategyKeyResultObjective
       secondStrategyObjectiveId
   , edge
@@ -293,11 +345,23 @@ registryEdges =
       contributesStrategyKeyResultToKeyResult
       secondStrategyKeyResultId
   , edge
+      strategyKeyResultAdditionalId
+      contributesStrategyKeyResultToKeyResult
+      secondStrategyKeyResultAdditionalId
+  , edge
       strategyActionId
       contributesStrategyActionToAction
       secondStrategyActionId
   , edge
+      strategyActionAdditionalId
+      contributesStrategyActionToAction
+      secondStrategyActionAdditionalId
+  , edge
       strategyKeyResultId
+      translatesStrategyKeyResultToNeedObjective
+      needObjectiveId
+  , edge
+      strategyKeyResultAdditionalId
       translatesStrategyKeyResultToNeedObjective
       needObjectiveId
   , edge needDriverId groundsNeedDriverToObjective needObjectiveId
@@ -305,6 +369,10 @@ registryEdges =
   , anchorEdge situationAnchorId AnchorsNeedDriverFamily needDriverId
   , edge
       strategyActionId
+      guidesStrategyActionToInterventionAction
+      interventionActionId
+  , edge
+      strategyActionAdditionalId
       guidesStrategyActionToInterventionAction
       interventionActionId
   , edge
@@ -331,8 +399,20 @@ secondStrategyFormulation =
     , rawFormulationDiagnosis = secondStrategyDriverId
     , rawFormulationIntent = secondStrategyObjectiveId
     , rawFormulationGuidingPolicy = secondStrategyPrincipleId
-    , rawFormulationActions = secondStrategyActionId NonEmpty.:| []
-    , rawFormulationKeyResults = secondStrategyKeyResultId NonEmpty.:| []
+    , rawFormulationActions =
+        secondStrategyActionId NonEmpty.:| [secondStrategyActionAdditionalId]
+    , rawFormulationKeyResults =
+        secondStrategyKeyResultId
+          NonEmpty.:| [secondStrategyKeyResultAdditionalId]
+    }
+
+registryBaseFormulation :: RawStrategyFormulation
+registryBaseFormulation =
+  baseFormulation
+    { rawFormulationActions =
+        strategyActionId NonEmpty.:| [strategyActionAdditionalId]
+    , rawFormulationKeyResults =
+        strategyKeyResultId NonEmpty.:| [strategyKeyResultAdditionalId]
     }
 
 addedNodes :: ScenarioShape -> Int -> [RawNode]
@@ -532,10 +612,15 @@ strategyObjectiveId = RawNodeId "strategy-objective"
 
 strategyPrincipleId = RawNodeId "strategy-principle"
 
-strategyActionId, strategyKeyResultId :: RawNodeId
+strategyActionId, strategyActionAdditionalId, strategyKeyResultId, strategyKeyResultAdditionalId ::
+     RawNodeId
 strategyActionId = RawNodeId "strategy-action"
 
+strategyActionAdditionalId = RawNodeId "strategy-action-additional"
+
 strategyKeyResultId = RawNodeId "strategy-key-result-0"
+
+strategyKeyResultAdditionalId = RawNodeId "strategy-key-result-additional"
 
 measureDimensionId, measureKPIId :: RawNodeId
 measureDimensionId = RawNodeId "measure-dimension-0"
@@ -566,12 +651,19 @@ secondStrategyDriverId = RawNodeId "strategy-second-driver"
 
 secondStrategyObjectiveId = RawNodeId "strategy-second-objective"
 
-secondStrategyPrincipleId, secondStrategyActionId :: RawNodeId
+secondStrategyPrincipleId, secondStrategyActionId, secondStrategyActionAdditionalId ::
+     RawNodeId
 secondStrategyPrincipleId = RawNodeId "strategy-second-principle"
 
 secondStrategyActionId = RawNodeId "strategy-second-action"
 
-secondStrategyKeyResultId, situationAnchorId :: RawNodeId
+secondStrategyActionAdditionalId = RawNodeId "strategy-second-action-additional"
+
+secondStrategyKeyResultId, secondStrategyKeyResultAdditionalId, situationAnchorId ::
+     RawNodeId
 secondStrategyKeyResultId = RawNodeId "strategy-second-key-result"
+
+secondStrategyKeyResultAdditionalId =
+  RawNodeId "strategy-second-key-result-additional"
 
 situationAnchorId = RawNodeId "situation-anchor"

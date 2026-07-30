@@ -30,6 +30,7 @@ module O2I.Inspection.Diagnostic.Internal
   , rawEdgeSubjectIdentifier
   , structuralDefectSpec
   , candidatePropositionSpec
+  , modelSemanticErrorSpec
   , semanticDefectSpec
   , collectiveRealizationErrorSpec
   , candidateCollectiveRealizationIssueSpec
@@ -667,6 +668,19 @@ semanticDefectSpec defect =
   where
     semantic = coreSpec
 
+-- | Total diagnostic mapping for the complete semantic boundary.
+modelSemanticErrorSpec :: ModelSemanticError -> DiagnosticSpec
+modelSemanticErrorSpec defect =
+  case defect of
+    ContextSemanticError invariant -> semanticDefectSpec invariant
+    MacroEvidenceSemanticError (MissingMacroEvidence edge) ->
+      coreSpec
+        "o2i.semantics.macro-evidence-missing"
+        "An asserted Context relation lacks its required Primitive evidence."
+        [edgeSubject edge]
+    CollectiveSemanticError collective ->
+      collectiveRealizationErrorSpec collective
+
 -- | Total diagnostic mapping for collective realization failures.
 collectiveRealizationErrorSpec ::
      CollectiveStrategyRealizationError -> DiagnosticSpec
@@ -871,11 +885,6 @@ traceabilityDefectSpec defect =
         "o2i.traceability.intervention-need-missing"
         "An Intervention addresses no Need."
         [nodeSubject intervention]
-    MissingMacroEvidence from relation to ->
-      trace
-        "o2i.traceability.macro-evidence-missing"
-        "A context relation lacks its required Primitive evidence."
-        [nodeSubject from, relationSubject relation, nodeSubject to]
     MissingEffectTrace intervention need ->
       trace
         "o2i.traceability.effect-trace-missing"

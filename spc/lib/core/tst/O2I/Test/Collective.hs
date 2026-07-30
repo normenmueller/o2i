@@ -50,6 +50,9 @@ collectiveTests =
         "Asserted contributor evidence deficiencies are errors"
         assertedContributionErrorTest
     , testCase
+        "macro and collective semantic errors accumulate"
+        macroAndCollectiveErrorAccumulationTest
+    , testCase
         "collective coverage is separate from individual contribution"
         collectiveCoverageTest
     , testCase
@@ -418,6 +421,34 @@ assertedContributionErrorTest =
          semantic
          [completeFit]
          [assertedCollective])
+
+macroAndCollectiveErrorAccumulationTest :: Assertion
+macroAndCollectiveErrorAccumulationTest =
+  case modelAssessmentStatus assessment of
+    SemanticsRejected errors ->
+      NonEmpty.toList errors
+        @?= [ MacroEvidenceSemanticError
+                (MissingMacroEvidence
+                   (edge contributorTwoId contributesToStrategy strategyId))
+            , CollectiveSemanticError
+                (AssertedCollectiveIssue
+                   collectiveClaimId
+                   (MissingContributorContribution contributorTwoId strategyId))
+            , CollectiveSemanticError
+                (AssertedCollectiveIssue
+                   collectiveClaimId
+                   (UncoveredTargetAction strategyActionId))
+            ]
+    SemanticsPending _ ->
+      assertFailure "invalid asserted evidence remained pending"
+    SemanticsAccepted _ ->
+      assertFailure "independent semantic defects were accepted"
+  where
+    assessment =
+      assessCollectiveModel
+        missingSecondContributionGraph
+        [completeFit]
+        [assertedCollective]
 
 collectiveCoverageTest :: Assertion
 collectiveCoverageTest =
