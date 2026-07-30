@@ -1,39 +1,33 @@
 # Handoff
 
 - Observed: 2026-07-31 CEST
-- Work status: `ACTIVE`
-- Execution authorization: `APPROVED`
-- Authorization scope: Issue `#14`; reduce the root README exactly through the
-  accepted relocation proposal without semantic or informational loss.
-- Current Issue: `#14`
-- Current gate: `readme-reduction-2`
-- Gate status: `PENDING`
-- Current node: `readme-reduction`
+- Work status: `PAUSED`
+- Execution authorization: `REQUIRED`
+- Authorization scope: `NONE`
+- Current Issue: `NONE`
+- Current gate: `NONE`
+- Gate status: `NOT_REQUIRED`
+- Current node: `paused-handoff`
 
 # Objective
 
-Keep the root README focused on positioning and central entry paths while
-moving technical and contributor detail to its single owning document.
+Maintain a gate-free repository handoff until the PO explicitly activates the
+next `Ready` Issue.
 
 # Repository Facts
 
 - GitHub Issues own change state, dependencies, plans, and review evidence.
   Project `O2I` is only the PO scheduling view.
-- Issue `#11` is accepted and closed at revision
-  `1400c4442b5f7b209cf67699ef4cd7e3c45f2437`; remote run `30576959153`
-  succeeds and Project status is `Done`.
-- The remote `blocked:external` label is deleted. Native Issue dependencies
-  and explicit external-dependency records remain the dependency contract.
-- Issue `#8` is accepted and closed at revision
-  `5cd3852f08b0025ed80edf30ced7a37abb61cf12`; independent Finalreview reports
-  no findings and 10.0 in all nine required dimensions, remote run
-  `30584590860` succeeds, and Project status is `Done`.
-- Issue `#14` is open with Project status `In review`; the PO explicitly
-  accepted its complete README proposal and authorized implementation.
-- Finalreview attempt 1 rejected revision `ce3aaed` with two closed
-  documentation-state findings and no semantic finding.
-- Issue `#7` remains `Ready` after Issue `#14`; Issue `#15` remains Backlog.
-- Issue `#4` is open with Project status `Backlog` and remains inactive.
+- Issue `#14` is accepted and closed with Project status `Done`.
+- Its independently reviewed subject is
+  `89920e94311dc1b718ec984b89354d2ad4a390b1`; the review reports no findings
+  and 10.0 in every required dimension.
+- Remote run `30588333141` succeeds for that exact subject.
+- Editorial follow-up `a69cf98` only reorders one unchanged README section and
+  renames its heading to `Start`. The targeted Paper gate and
+  `git diff --check` pass; normalized PDF text is unchanged.
+- Issue `#7` remains `Ready`. Issues `#15`, `#12`, and `#1` remain Backlog.
+- Issue `#4` remains inactive.
 - The user controls ArchiMate edits and pushes.
 
 # Dirty Scope
@@ -42,27 +36,17 @@ moving technical and contributor detail to its single owning document.
 
 # Verification
 
-- `README.md` matches the PO-accepted Issue proposal byte for byte.
-- The independent relocation audit's four findings are closed.
-- `./utl/verify.sh all`, `git diff --check`, and the workspace O2I boundary
-  check pass after both Finalreview-attempt-1 corrections.
+- `./utl/verify.sh all` passes for accepted revision `89920e9`.
+- Remote run `30588333141` succeeds for accepted revision `89920e9`.
+- `./utl/verify.sh paper` and `git diff --check` pass after editorial follow-up
+  `a69cf98`.
+- The workspace O2I boundary check passes.
 
 # Next Action
 
-Await the independent Finalreview of the exact repository `HEAD`.
+Await explicit PO activation of Issue `#7`. Do not infer authorization from
+its `Ready` status.
 
 # Local Return Point
 
-After Issue `#14` closes, return to a gate-free handoff before Issue `#7`.
-
-# Current Gate
-
-- Attempt: `readme-reduction-2`
-- Subject: the exact repository `HEAD` containing this record.
-- Review scope: `README.md`, `CONTRIBUTING.md`, `spc/README.md`, `o2i.pdf`,
-  `o2i.pdf.manifest.json`, `.ai4X/BEHAVIOR.md`,
-  `.ai4X/operations/publication.md`, and `.ai4X/STATE.md`.
-- Mandatory checks: complete repository verification and independent
-  documentation-ownership and lossless-relocation Finalreview.
-- Finding status: `OPEN`
-- Result: `PENDING`
+Issue `#7` after explicit PO activation.
