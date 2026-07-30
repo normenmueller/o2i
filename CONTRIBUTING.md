@@ -48,8 +48,9 @@ Bei unklarer Einordnung gilt die strengere Einordnung als Framework Change.
 Das GitHub Project `O2I` ist die Planungssicht des Product Owners:
 
 - `Backlog`: erfasst, aber noch nicht ausführungsbereit;
-- `Ready`: aufgenommen, hinreichend geklärt und ausführungsbereit;
-- `In progress`: aktive Umsetzung;
+- `Ready`: hinreichend geklärt und entscheidungsreif, aber noch nicht zur
+  Umsetzung freigegeben;
+- `In progress`: durch den Product Owner freigegebene aktive Umsetzung;
 - `Paused`: bewusst ausgesetzt; Grund und Rückkehrbedingung stehen im Issue;
 - `In review`: eine exakte Kandidatenrevision wird geprüft;
 - `Done`: das Issue ist geschlossen.
@@ -57,11 +58,18 @@ Das GitHub Project `O2I` ist die Planungssicht des Product Owners:
 Der `Backlog` nimmt eine hinreichend verständliche Idee mit Problem und grobem
 Ziel bewusst niederschwellig auf. Er bedeutet weder vollständige
 Nutzenbewertung noch Design, Admission oder Implementierungsfreigabe.
+Agenten unterstützen die Reifung, indem sie Nutzen, Scope, Risiken,
+Abhängigkeiten und Akzeptanzkriterien schärfen, fehlende
+Entscheidungsgrundlagen ausweisen und den Übergang zu `Ready` empfehlen. Diese
+Vorbereitung ist noch keine Umsetzung.
 
-`Ready` ist das Freigabegate für die Umsetzung: Nutzen, Scope, Risiken,
-Abhängigkeiten und Akzeptanzkriterien sind tragfähig. Framework Changes
-benötigen zusätzlich die vollständige fachliche und formale Admission;
-Maintenance nur eine risikogerechte Prüfung.
+`Ready` kennzeichnet die Entscheidungsreife für eine Umsetzung: Nutzen, Scope,
+Risiken, Abhängigkeiten und Akzeptanzkriterien sind tragfähig. Framework
+Changes benötigen zusätzlich die vollständige fachliche und formale Admission;
+Maintenance nur eine risikogerechte Prüfung. `Ready` erteilt noch keine
+Ausführungsfreigabe. Ausschließlich der Product Owner setzt ein Issue auf
+`In progress`; Agenten führen diesen Übergang nicht selbstständig aus und
+leiten ihn auch nicht aus dem Issue-Zustand ab.
 
 Ein erforderlicher Blocker innerhalb des O2I-Issue-Graphen wird ausschließlich
 als native Issue Dependency modelliert. `blocked:external` gilt nur für eine

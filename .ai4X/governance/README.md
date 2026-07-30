@@ -55,7 +55,7 @@ new impact classification.
 An agent implements an Issue only when:
 
 - the Issue is open;
-- Project status is `Ready` or `In progress`;
+- Project status is `In progress`;
 - required Admission is accepted;
 - `.ai4X/STATE.md` identifies the Issue and authorized scope;
 - no unresolved dependency blocks the next action.
@@ -99,12 +99,17 @@ Project statuses are:
 
 `Backlog` records a sufficiently understandable idea, problem, and rough target.
 It requires neither complete benefit evaluation nor design, Admission, or
-implementation authorization.
+implementation authorization. Agents support refinement from `Backlog` by
+clarifying benefit, scope, risks, dependencies, and acceptance criteria,
+identifying missing readiness evidence, and recommending the transition to
+`Ready`. This preparation is not implementation.
 
-`Ready` is the implementation-readiness gate. Benefit, scope, risks,
-dependencies, and acceptance criteria must be viable. A Framework change also
-requires complete Strategy and formalization Admission; Maintenance requires
-only risk-proportionate readiness.
+`Ready` records that an Issue is decision-ready for implementation. Benefit,
+scope, risks, dependencies, and acceptance criteria must be viable. A
+Framework change also requires complete Strategy and formalization Admission;
+Maintenance requires only risk-proportionate readiness. `Ready` grants no
+execution authorization. Only the Product Owner transitions an Issue from
+`Ready` to `In progress`; agents neither perform nor infer this transition.
 
 Issue open/closed state is authoritative. Project `Done` follows Issue closure.
 Rejected work is closed as not planned.
