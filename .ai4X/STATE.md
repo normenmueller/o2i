@@ -1,19 +1,19 @@
 # Handoff
 
-- Observed: 2026-07-30 CEST
-- Work status: `PAUSED`
-- Execution authorization: `REQUIRED`
-- Authorization scope: no implementation. Await explicit PO direction for
-  readiness refinement and later activation of the next Issue.
-- Current Issue: `NONE`
-- Current gate: `NONE`
-- Gate status: `NOT_REQUIRED`
-- Current node: `paused-handoff`
+- Observed: 2026-07-31 CEST
+- Work status: `ACTIVE`
+- Execution authorization: `APPROVED`
+- Authorization scope: Issue `#14`; reduce the root README exactly through the
+  accepted relocation proposal without semantic or informational loss.
+- Current Issue: `#14`
+- Current gate: `readme-reduction-1`
+- Gate status: `PENDING`
+- Current node: `readme-reduction`
 
 # Objective
 
-Maintain a gate-free repository handoff until the PO explicitly activates the
-next `Ready` Issue.
+Keep the root README focused on positioning and central entry paths while
+moving technical and contributor detail to its single owning document.
 
 # Repository Facts
 
@@ -28,29 +28,44 @@ next `Ready` Issue.
   `5cd3852f08b0025ed80edf30ced7a37abb61cf12`; independent Finalreview reports
   no findings and 10.0 in all nine required dimensions, remote run
   `30584590860` succeeds, and Project status is `Done`.
-- Issue `#14` is the next PO-selected Backlog item for readiness refinement.
+- Issue `#14` is open with Project status `In progress`; the PO explicitly
+  accepted its complete README proposal and authorized implementation.
 - Issue `#7` remains `Ready` after Issue `#14`; Issue `#15` remains Backlog.
 - Issue `#4` is open with Project status `Backlog` and remains inactive.
 - The user controls ArchiMate edits and pushes.
 
 # Dirty Scope
 
-- `NONE`
+- `README.md`
+- `CONTRIBUTING.md`
+- `o2i.pdf`
+- `o2i.pdf.manifest.json`
+- `spc/README.md`
+- `.ai4X/BEHAVIOR.md`
+- `.ai4X/operations/publication.md`
+- `.ai4X/STATE.md`
 
 # Verification
 
-- The path-classification suite passes all 12 representative tests, including
-  a divergent Pull Request history.
-- `git diff --check` and the workspace O2I boundary check pass.
-- `./utl/verify.sh all` passes the complete Governance, model, Haskell,
-  Haddock, formatting, and White Paper contract.
-- Remote run `30584590860` passes all four full verification jobs.
+- `README.md` matches the PO-accepted Issue proposal byte for byte.
+- The independent relocation audit's four findings are closed.
+- `./utl/verify.sh all`, `git diff --check`, and the workspace O2I boundary
+  check pass for the current working tree.
 
 # Next Action
 
-Await explicit PO direction to refine Issue `#14` from `Backlog` toward
-`Ready`. Do not implement it before explicit PO activation.
+Commit the exact candidate and submit that immutable revision to an
+independent, risk-proportionate Finalreview.
 
 # Local Return Point
 
-Start no Issue from this paused handoff without explicit PO authorization.
+After Issue `#14` closes, return to a gate-free handoff before Issue `#7`.
+
+# Current Gate
+
+- Attempt: `readme-reduction-1`
+- Subject: the exact repository `HEAD` containing this record.
+- Mandatory checks: complete repository verification and independent
+  documentation-ownership and lossless-relocation Finalreview.
+- Finding status: `OPEN`
+- Result: `PENDING`

@@ -31,6 +31,8 @@ contracts.
 - Communicate concisely, directly, and evidence-grounded. Challenge ambiguity
   and propose one concrete better target design.
 - Use German when the user writes German and preserve German umlauts.
+- Write `README.md`, `CONTRIBUTING.md`, `o2i.md`, and `wtf.md` in German.
+  Write `.ai4X`, GitHub Issues, code, Haddock, and `spc/README.md` in English.
 - Discuss semantic questions before editing. Implement after explicit approval.
 - Distinguish evidence, inference, authors' derivation, and unknowns.
 

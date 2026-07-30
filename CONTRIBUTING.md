@@ -78,6 +78,36 @@ nächster Prüfbedingung ausdrücklich im betroffenen Issue dokumentiert; ein
 eigenes Label ist dafür nicht reserviert. Ein Blocker allein setzt ein Issue
 nicht auf `Paused`.
 
+## Repository-Struktur
+
+| Pfad | Verantwortung |
+| --- | --- |
+| `o2i.md` | aktives White Paper und fachlicher Referenztext |
+| `o2i.pdf` | bleeding-edge PDF-Fassung des White Papers |
+| `o2i.pdf.manifest.json` | exakte Quellen- und Rendererbindung des PDF |
+| `wtf.md` | kurzer, bewusst direkter und nicht normativer Einstieg |
+| `acc/` | reproduzierbare TikZ-Quellen der White-Paper-Abbildungen |
+| `img/` | gerenderte Abbildungen für White Paper und Modellkommunikation |
+| `mdl/` | ArchiMate-Modell, Views und Review-Snapshots |
+| `spc/` | Haskell-Spezifikation, Profilvertrag, Inspection und CLI |
+| `utl/` | deterministische Repository-, Modell- und Publikationsprüfungen |
+
+Die technische Architektur, Paketstruktur, Installation und Nutzung der
+Haskell-Codebasis beschreibt [`spc/README.md`](./spc/README.md).
+
+## White-Paper-Build
+
+Das White Paper und alle TikZ-basierten Abbildungen werden reproduzierbar
+erzeugt:
+
+```sh
+./toPDF.sh
+```
+
+Das Skript rendert zunächst die Quellen aus `acc/` nach `img/`, ruft
+anschließend [`md2pdf`](https://github.com/normenmueller/md2pdf) auf und
+versiegelt die Quellen- und Rendererbindung in `o2i.pdf.manifest.json`.
+
 ## Umsetzung
 
 - Änderungen bleiben im Scope des Issues.
@@ -107,14 +137,18 @@ Akzeptanzevidenz.
 
 ## Verifikation
 
-Der vollständige lokale Repository-Vertrag lautet:
+Der vollständige lokale Repository-Vertrag verändert keine getrackten
+Arbeitsartefakte und lautet:
 
 ```sh
 ./utl/verify.sh
 ```
 
-Fokussierte Prüfungen sind während der Entwicklung zulässig; vor Annahme eines
-Kandidaten ist der vollständige Vertrag maßgebend.
+Fokussierte Prüfungen mit `governance`, `model`, `haskell` oder `paper` sind
+während der Entwicklung zulässig; vor Annahme eines Kandidaten ist der
+vollständige Vertrag maßgebend. Die Paper-Stufe prüft zusätzlich die
+festgelegte `md2pdf`-Version, Quellenbindung sowie Seiten- und Textstruktur
+eines frischen Builds.
 
 GitHub Actions hält alle vier Prüfstatus sichtbar, führt auf Basis einer
 konservativen Pfadklassifikation jedoch nur betroffene Stufen aus. Unklare

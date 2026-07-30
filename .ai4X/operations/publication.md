@@ -29,7 +29,11 @@ text.
 
 - `o2i.md` owns normative fachliche and metamodel prose.
 - `wtf.md` is concise, informal, and non-normative.
-- `spc/README.md` is technical and never a competing fachliche source.
+- `README.md` owns the concise project entry, Purpose, USP, and central links.
+- `spc/README.md` owns technical architecture, the validation model, build,
+  installation, and CLI use; it never competes with fachliche sources.
+- `CONTRIBUTING.md` owns contribution workflow, repository navigation,
+  White-Paper build, and verification guidance.
 - TikZ sources live in `acc/`; generated PNGs live in `img/`.
 - ArchiMate exports and model documentation remain synchronized with the
   article and formalization.

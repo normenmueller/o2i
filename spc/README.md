@@ -27,9 +27,13 @@ o2i-cli               -> o2i-inspection + o2i-amx
 Inspection supplies the shared validated profile-version contract used by the
 typed ArchiMate profile projection.
 
-The curated public facades are `O2I`, `O2I.Language`, `O2I.Graph`,
-`O2I.Validation`, `O2I.Inspection`, `O2I.ArchiMate.Profile`, and
-`O2I.Adapter.AMX`.
+The curated public facades are `O2I.Language` for the semantic vocabulary,
+`O2I.Graph` for concrete graphs, `O2I.Validation` for staged validation,
+`O2I.Inspection` for complete inspections, `O2I.ArchiMate.Profile` for the
+typed profile contract, and `O2I.Adapter.AMX` for native AMX input. `O2I`
+provides the curated Core facade.
+
+## Validation Model
 
 The Core assesses `Candidate` and `Asserted` claims across one complete
 semantic boundary, derives Context-level `Elaboration` and model-level
@@ -37,6 +41,41 @@ semantic boundary, derives Context-level `Elaboration` and model-level
 Context macrorelation, and includes validated collective Strategy realizations
 in `SemanticallyValidModel`. Binary Strategy contribution remains a separate
 proposition.
+
+The staged public API transforms an unchecked O2I graph into an
+evidence-assessed effect model:
+
+```text
+RawGraph -> WellFormedGraph -> SemanticallyValidModel -> TraceableEffectModel -> EvidenceReadyModel -> EvidenceAssessedModel
+```
+
+`Graph` denotes the node-edge representation. `RawGraph` is unchecked;
+`WellFormedGraph` satisfies local structural contracts. From
+`SemanticallyValidModel` onward, `Model` denotes the fachlich enriched unit.
+The subsequent stages add global semantic invariants, effect traces, ex-ante
+evidence plans, and ex-post evidence assessments.
+
+## Layout
+
+```text
+spc/
+|- Makefile
+|- ctr/archimate/
+|- lib/
+|  |- core/
+|  |- inspection/
+|  `- adapter/amx/
+`- cli/
+```
+
+Each Cabal package owns its source and test trees. `ctr/archimate/` contains the
+exact declarative ArchiMate profile contract and its typed projection.
+`lib/core/` implements the normative formalization, `lib/inspection/` composes
+format-neutral inspection and reporting, `lib/adapter/amx/` projects native
+Archi Model XML, and `cli/` remains a thin client. The root `Makefile` provides
+reproducible local installation and removal. Focused Core excerpts are included
+in the White Paper; the complete source remains authoritative for the
+machine-checkable formalization.
 
 ## Build
 
@@ -95,11 +134,13 @@ The CLI uses exactly one View of a native Archi model as the inspection seed:
 o2i inspect MODEL (--view NAME | --view-id ID) [--verbose | --debug] [--json]
 ```
 
-It accepts a file or standard input. JSON output is deterministic and suited to
-automation and agentic processing:
+It accepts a file or standard input. From the repository root, both forms are
+available; JSON output is deterministic and suited to automation and agentic
+processing:
 
 ```sh
-cat ../mdl/my.archimate | o2i inspect - --view "My view" --json
+o2i inspect mdl/my.archimate --view "My view"
+cat mdl/my.archimate | o2i inspect - --view "My view" --json
 ```
 
 Inspection closes only the exact persisted O2I dependencies reached from that
