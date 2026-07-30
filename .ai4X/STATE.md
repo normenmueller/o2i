@@ -1,12 +1,12 @@
 # Handoff
 
 - Observed: 2026-07-30 CEST
-- Work status: `ACTIVE`
-- Execution authorization: `APPROVED`
-- Authorization scope: correct, verify, independently review, and locally
-  commit the approved GitHub-authority cutover. Retain legacy evidence
-  unchanged. Do not change fachliche artifacts, delete governance evidence,
-  touch another repository, or push.
+- Work status: `PAUSED`
+- Execution authorization: `REQUIRED`
+- Authorization scope: no further agent execution until the user pushes the
+  accepted cutover revision. Retain legacy evidence unchanged. Do not change
+  fachliche artifacts, delete governance evidence, touch another repository,
+  or push.
 - Current Issue: `#2`
 - Current gate: `issue-coordination-cutover-2`
 - Gate status: `PENDING`
@@ -21,11 +21,12 @@ administrative revision without deleting migration evidence.
 
 - Attempt: `issue-coordination-cutover-2`
 - Subject: the exact repository `HEAD` containing this record, limited to the
-  administrative cutover scope declared by Issue `#2`.
+  activation handoff for accepted cutover revision
+  `2713f986557eea257293a93becac90e108ce547c`.
 - Mandatory checks: complete repository verification, remote migration
   reconciliation, authority-boundary audit, and independent administrative
   Finalreview.
-- Finding status: `OPEN`
+- Finding status: `CLOSED`
 - Result: `PENDING`
 
 # Repository Facts
@@ -40,8 +41,7 @@ administrative revision without deleting migration evidence.
 
 # Dirty Scope
 
-- Cutover corrections are limited to `.ai4X/`, `CONTRIBUTING.md`, Issue forms,
-  and governance verification.
+- Only this volatile handoff update follows the accepted cutover revision.
 - `compare-v0.1-current.md` is unrelated, intentionally untracked, and must
   remain untouched.
 
@@ -55,14 +55,17 @@ administrative revision without deleting migration evidence.
 # Verification
 
 - Migration reconciliation is `ACCEPTED`; there are no non-transfer decisions.
-- Revision `2da057ef88f01fa595aef3c8ec92fa6ee77914e3` passed
-  `./utl/verify.sh all` but its administrative Finalreview rejected three
-  contract findings now under correction.
+- Revision `2713f986557eea257293a93becac90e108ce547c` passes
+  `./utl/verify.sh all`.
+- Its independent administrative Finalreview reports no findings and 10.0 in
+  every required dimension.
+- Issue `#2` comment `5130905798` binds the accepted revision and records that
+  activation awaits the PO push.
 
 # Next Action
 
-Verify and commit the corrections, obtain one independent exact-revision
-Finalreview, bind Issue `#2` to the accepted SHA, and stop without pushing.
+The user pushes the accepted revision. After remote verification is green,
+close Issue `#2`, set Project status `Done`, and resume Issue `#4`.
 
 # Local Return Point
 
