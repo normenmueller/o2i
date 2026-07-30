@@ -865,6 +865,33 @@ until one exact candidate revision containing the synchronized 69-page PDF and
 manifest passes isolated repository verification and all four required
 Finalreviews bind that same revision.
 
+Candidate revision `621aad9e3f8643f90bbdb47695b335065cde067c` passes one
+isolated uninterrupted repository verification. Formalization and Haskell
+accept its unchanged scopes at 10.0 throughout. Strategy and publication
+Finalreviews reject two bounded closure defects:
+
+1. Restore every trace-specific fan-out family from the reduced `0,2,4,8`
+   matrix to the required `0,10,20,40` matrix. Derive output expectations from
+   scenario sizes while preserving the independent oracle, exact coverage,
+   deterministic order, and per-component affine-work contracts.
+2. Add unique Traceability snippet boundaries around only the public
+   `validateTraceability` Haddock and signature. Canonical paper verification
+   rejects every referenced marker that is missing, duplicated, or out of
+   order. Regenerate and reseal the PDF and confirm that the listing occupies
+   no more than one page.
+
+This correction changes no O2I semantics or public Haskell API.
+
+The corrected Eval contract uses one Oracle-owned anchor fan-out family and
+the central `0,10,20,40` matrix throughout. It passes 21/21 focused contracts;
+its bounded independent Haskell review reports no finding and 10.0 in every
+required dimension. Publication source verification rejects unpaired,
+malformed, missing, duplicated, and reversed snippet boundaries through 28
+focused contracts. The synchronized 65-page render contains the complete
+Traceability caption, Haddock, and signature on one page. One uninterrupted
+complete repository verification passes; the exact candidate commit, isolated
+verification, and exact-revision Finalreviews remain pending.
+
 ## Required Checks
 
 - Core formatting, build, tests, API tests, and Haddock;

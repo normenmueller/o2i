@@ -86,8 +86,18 @@ Eval-owned authority. Exact formalization and pure Haskell Finalreviews accept
 revision `d36ece6` without findings and with 10.0 in every dimension. The
 versioned PDF and manifest are synchronized with the current 69-page isolated
 render. One uninterrupted `./utl/verify.sh all` passes the complete worktree.
-Create one exact candidate revision, verify it in isolation, and bind the four
-required Finalreview capabilities to that revision before accepting the gate.
+Candidate revision `621aad9` passes isolated complete verification and its
+formalization and Haskell scopes are accepted at 10.0 throughout. Strategy
+Finalreview rejects the reduced `0,2,4,8` trace fan-out matrix against the
+required `0,10,20,40` contract. Publication Finalreview rejects the missing
+Traceability snippet markers because Listing 14 expands to five pages. The
+correction restores the complete matrix with Oracle-derived expectations and
+consolidates duplicate anchor fan-out authority. Exact ordered snippet markers
+and 28 positive and negative source-contract tests constrain Listing 14 to one
+page in the synchronized 65-page PDF. The bounded Haskell correction review is
+accepted at 10.0 throughout. One uninterrupted `./utl/verify.sh all` passes;
+seal the exact candidate commit, verify it in isolation, and renew all four
+revision-bound Finalreviews.
 
 # Local Return Point
 

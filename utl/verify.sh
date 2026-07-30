@@ -151,6 +151,9 @@ verify_paper() {
     require "$command"
   done
 
+  info "Checking White Paper source contracts."
+  python3 -B utl/check-pdf-freshness.py sources --root .
+
   info "Checking the expanded White Paper source."
   pandoc o2i.md --filter pandoc-include -t markdown >/dev/null
   python3 -B -m unittest discover \

@@ -158,6 +158,162 @@ class PdfFreshnessTest(unittest.TestCase):
             after = CHECKER.publication_source_digest(root)
             self.assertNotEqual(before, after)
 
+    def test_snippet_contract_accepts_unique_ordered_markers(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._snippet_root(
+                Path(directory),
+                'snippetStart="-- start", snippetEnd="-- end"',
+                "-- start\nanswer = 42\n-- end\n",
+            )
+            self.assertIn(
+                (root / "snippet.hs").resolve(),
+                CHECKER.publication_inputs(root),
+            )
+
+    def test_snippet_contract_rejects_missing_start_marker(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._snippet_root(
+                Path(directory),
+                'snippetStart="-- start", snippetEnd="-- end"',
+                "answer = 42\n-- end\n",
+            )
+            with self.assertRaisesRegex(
+                CHECKER.PdfFreshnessError,
+                "snippetStart marker 0 times",
+            ):
+                CHECKER.publication_inputs(root)
+
+    def test_snippet_contract_rejects_missing_end_marker(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._snippet_root(
+                Path(directory),
+                'snippetStart="-- start", snippetEnd="-- end"',
+                "-- start\nanswer = 42\n",
+            )
+            with self.assertRaisesRegex(
+                CHECKER.PdfFreshnessError,
+                "snippetEnd marker 0 times",
+            ):
+                CHECKER.publication_inputs(root)
+
+    def test_snippet_contract_rejects_duplicate_start_marker(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._snippet_root(
+                Path(directory),
+                'snippetStart="-- start", snippetEnd="-- end"',
+                "-- start\nanswer = 42\n-- start\n-- end\n",
+            )
+            with self.assertRaisesRegex(
+                CHECKER.PdfFreshnessError,
+                "snippetStart marker 2 times",
+            ):
+                CHECKER.publication_inputs(root)
+
+    def test_snippet_contract_rejects_duplicate_end_marker(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._snippet_root(
+                Path(directory),
+                'snippetStart="-- start", snippetEnd="-- end"',
+                "-- start\n-- end\nanswer = 42\n-- end\n",
+            )
+            with self.assertRaisesRegex(
+                CHECKER.PdfFreshnessError,
+                "snippetEnd marker 2 times",
+            ):
+                CHECKER.publication_inputs(root)
+
+    def test_snippet_contract_rejects_reversed_markers(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._snippet_root(
+                Path(directory),
+                'snippetStart="-- start", snippetEnd="-- end"',
+                "-- end\nanswer = 42\n-- start\n",
+            )
+            with self.assertRaisesRegex(
+                CHECKER.PdfFreshnessError,
+                "places snippetStart after snippetEnd",
+            ):
+                CHECKER.publication_inputs(root)
+
+    def test_snippet_contract_rejects_unpaired_options(self) -> None:
+        for options in ('snippetStart="-- start"', 'snippetEnd="-- end"'):
+            with self.subTest(options=options):
+                with tempfile.TemporaryDirectory() as directory:
+                    root = self._snippet_root(
+                        Path(directory),
+                        options,
+                        "-- start\nanswer = 42\n-- end\n",
+                    )
+                    with self.assertRaisesRegex(
+                        CHECKER.PdfFreshnessError,
+                        "must declare snippetStart and snippetEnd together",
+                    ):
+                        CHECKER.publication_inputs(root)
+
+    def test_snippet_contract_rejects_duplicate_options(self) -> None:
+        options = (
+            'snippetStart="-- start", snippetStart="-- start", '
+            'snippetEnd="-- end"',
+            'snippetStart="-- start", snippetEnd="-- end", '
+            'snippetEnd="-- end"',
+        )
+        for duplicate in options:
+            with self.subTest(options=duplicate):
+                with tempfile.TemporaryDirectory() as directory:
+                    root = self._snippet_root(
+                        Path(directory),
+                        duplicate,
+                        "-- start\nanswer = 42\n-- end\n",
+                    )
+                    with self.assertRaisesRegex(
+                        CHECKER.PdfFreshnessError,
+                        "invalid or duplicate",
+                    ):
+                        CHECKER.publication_inputs(root)
+
+    def test_snippet_contract_rejects_invalid_options(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._snippet_root(
+                Path(directory),
+                'snippetStart=--start, snippetEnd="-- end"',
+                "-- start\nanswer = 42\n-- end\n",
+            )
+            with self.assertRaisesRegex(
+                CHECKER.PdfFreshnessError,
+                "invalid or duplicate snippetStart option",
+            ):
+                CHECKER.publication_inputs(root)
+
+    def test_main_accepts_valid_source_contracts(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._snippet_root(
+                Path(directory),
+                'snippetStart="-- start", snippetEnd="-- end"',
+                "-- start\nanswer = 42\n-- end\n",
+            )
+            output = io.StringIO()
+            with redirect_stdout(output):
+                self.assertEqual(
+                    0,
+                    CHECKER.main(["sources", "--root", str(root)]),
+                )
+            self.assertIn("source contracts are current", output.getvalue())
+
+    def test_main_rejects_invalid_source_contracts(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._snippet_root(
+                Path(directory),
+                'snippetStart="-- start", snippetEnd="-- end"',
+                "answer = 42\n-- end\n",
+            )
+            errors = io.StringIO()
+            with redirect_stderr(errors):
+                self.assertEqual(
+                    1,
+                    CHECKER.main(["sources", "--root", str(root)]),
+                )
+            self.assertIn("snippetStart marker 0 times", errors.getvalue())
+
     def test_manifest_binds_current_sources_and_pdf(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = self._publication_root(Path(directory))
@@ -327,6 +483,15 @@ class PdfFreshnessTest(unittest.TestCase):
         )
         (root / "o2i.pdf").write_bytes(b"pdf")
         return root
+
+    def _snippet_root(self, root: Path, options: str, source: str) -> Path:
+        publication = self._publication_root(root)
+        (publication / "o2i.md").write_text(
+            f"# O2I\n\n!include`{options}` snippet.hs\n",
+            encoding="utf-8",
+        )
+        (publication / "snippet.hs").write_text(source, encoding="utf-8")
+        return publication
 
 
 if __name__ == "__main__":

@@ -65,9 +65,6 @@ tests =
     , testCase
         "Need Objective alternatives grow traces affinely"
         needObjectiveFanOutTest
-    , testCase
-        "anchor relation alternatives grow traces affinely"
-        anchorRelationFanOutTest
     , testCase "Vision alternatives grow traces affinely" visionFanOutTest
     , testCase
         "convergent Key Results grow traces affinely"
@@ -142,7 +139,7 @@ addressedCoverageTest =
 
 inputOrderTest :: Assertion
 inputOrderTest = do
-  let scenario = addressedNeedMeasureScenario 8
+  let scenario = addressedNeedMeasureScenario 40
   baseline <- requireScenario scenario
   permuted <- requireScenario (permuteScenario scenario)
   traceEvaluationInterventions permuted
@@ -154,14 +151,12 @@ inputOrderTest = do
   traceEvaluationWork permuted @?= traceEvaluationWork baseline
 
 anchorFanOutWorkTest :: Assertion
-anchorFanOutWorkTest =
-  withEvaluations (map processAnchorFanOutEvaluation [10, 20, 30, 40]) $ \results -> do
-    map (length . traceEvaluationTraces) results @?= [11, 21, 31, 41]
-    case map (traceWorkVector . traceEvaluationWork) results of
-      [ten, twenty, thirty, forty] -> do
-        zipWith (-) twenty ten @?= zipWith (-) thirty twenty
-        zipWith (-) thirty twenty @?= zipWith (-) forty thirty
-      _ -> assertFailure "anchor fan-out fixture arity changed"
+anchorFanOutWorkTest = do
+  results <- evaluateFamily anchorFanOutScenario
+  assertOracleFamily anchorFanOutScenario results
+  map (length . traceEvaluationTraces) results
+    @?= oracleTraceCounts anchorFanOutScenario
+  assertAffinePositiveWork results
 
 semanticOracleMatrixTest :: Assertion
 semanticOracleMatrixTest =
@@ -186,25 +181,30 @@ unreachableContextsTest :: Assertion
 unreachableContextsTest = do
   results <- evaluateFamily unreachableContextsScenario
   assertOracleFamily unreachableContextsScenario results
-  map (length . traceEvaluationTraces) results @?= replicate 4 1
-  map (length . traceEvaluationInterventions) results @?= [1, 3, 5, 9]
+  map (length . traceEvaluationTraces) results
+    @?= oracleTraceCounts unreachableContextsScenario
+  map (length . traceEvaluationInterventions) results
+    @?= oracleInterventionCounts unreachableContextsScenario
   assertAffineWork results
 
 mismatchedSpinesTest :: Assertion
 mismatchedSpinesTest = do
   results <- evaluateFamily mismatchedSpinesScenario
   assertOracleFamily mismatchedSpinesScenario results
-  map (length . traceEvaluationTraces) results @?= replicate 4 1
-  map addressedPairCount results @?= [1, 3, 5, 9]
+  map (length . traceEvaluationTraces) results
+    @?= oracleTraceCounts mismatchedSpinesScenario
+  map addressedPairCount results
+    @?= oracleAddressedPairCounts mismatchedSpinesScenario
   map (length . filter (not . snd) . coverageObservations) results
-    @?= [0, 2, 4, 8]
+    @?= oracleUncoveredPairCounts mismatchedSpinesScenario
   assertAffineWork results
 
 unconstitutedAnchorFanOutTest :: Assertion
 unconstitutedAnchorFanOutTest = do
   results <- evaluateFamily unconstitutedAnchorFanOutScenario
   assertOracleFamily unconstitutedAnchorFanOutScenario results
-  map (length . traceEvaluationTraces) results @?= replicate 4 1
+  map (length . traceEvaluationTraces) results
+    @?= oracleTraceCounts unconstitutedAnchorFanOutScenario
   sequence_
     [ Set.intersection
       (Set.fromList (unconstitutedAnchorIds size))
@@ -221,26 +221,30 @@ strategySituationFanOutTest :: Assertion
 strategySituationFanOutTest = do
   results <- evaluateFamily strategySituationFanOutScenario
   assertOracleFamily strategySituationFanOutScenario results
-  map (length . traceEvaluationTraces) results @?= replicate 4 1
+  map (length . traceEvaluationTraces) results
+    @?= oracleTraceCounts strategySituationFanOutScenario
   case results of
     first:_ ->
       map traceEvaluationWork results
-        @?= replicate 4 (traceEvaluationWork first)
+        @?= replicate (length scenarioSizes) (traceEvaluationWork first)
     [] -> assertFailure "scenario family arity changed"
 
 targetMeasureSituationFanOutTest :: Assertion
 targetMeasureSituationFanOutTest = do
   results <- evaluateFamily targetMeasureSituationScenario
   assertOracleFamily targetMeasureSituationScenario results
-  map (length . traceEvaluationTraces) results @?= [1, 3, 5, 9]
+  map (length . traceEvaluationTraces) results
+    @?= oracleTraceCounts targetMeasureSituationScenario
   assertAffineWork results
 
 addressedNeedMeasureFanOutTest :: Assertion
 addressedNeedMeasureFanOutTest = do
   results <- evaluateFamily addressedNeedMeasureScenario
   assertOracleFamily addressedNeedMeasureScenario results
-  map (length . traceEvaluationTraces) results @?= [1, 3, 5, 9]
-  map addressedPairCount results @?= [1, 3, 5, 9]
+  map (length . traceEvaluationTraces) results
+    @?= oracleTraceCounts addressedNeedMeasureScenario
+  map addressedPairCount results
+    @?= oracleAddressedPairCounts addressedNeedMeasureScenario
   mapM_ assertAddressedOrder results
   assertAffineWork results
 
@@ -249,13 +253,6 @@ strategyActionFanOutTest = assertTraceFanOut strategyActionFanOutScenario
 
 needObjectiveFanOutTest :: Assertion
 needObjectiveFanOutTest = assertTraceFanOut needObjectiveFanOutScenario
-
-anchorRelationFanOutTest :: Assertion
-anchorRelationFanOutTest = do
-  results <- evaluateFamily anchorFanOutScenario
-  assertOracleFamily anchorFanOutScenario results
-  map (length . traceEvaluationTraces) results @?= [1, 3, 5, 9]
-  assertAffinePositiveWork results
 
 visionFanOutTest :: Assertion
 visionFanOutTest = assertTraceFanOut visionFanOutScenario
@@ -280,17 +277,53 @@ relevantPathGrowthTest :: Assertion
 relevantPathGrowthTest = do
   results <- evaluateFamily addressedNeedMeasureScenario
   assertAffineWork results
-  map (length . traceEvaluationTraces) results @?= [1, 3, 5, 9]
+  map (length . traceEvaluationTraces) results
+    @?= oracleTraceCounts addressedNeedMeasureScenario
 
 assertTraceFanOut :: (Int -> TraceScenario) -> Assertion
 assertTraceFanOut scenarioFor = do
   results <- evaluateFamily scenarioFor
   assertOracleFamily scenarioFor results
-  map (length . traceEvaluationTraces) results @?= [1, 3, 5, 9]
+  map (length . traceEvaluationTraces) results @?= oracleTraceCounts scenarioFor
   assertAffineWork results
 
 scenarioSizes :: [Int]
-scenarioSizes = [0, 2, 4, 8]
+scenarioSizes = [0, 10, 20, 40]
+
+oracleTraceCounts :: (Int -> TraceScenario) -> [Int]
+oracleTraceCounts scenarioFor =
+  [ length
+    (oracleTraces
+       (traceScenarioGraph scenario)
+       (traceScenarioFormulations scenario))
+  | size <- scenarioSizes
+  , let scenario = scenarioFor size
+  ]
+
+oracleInterventionCounts :: (Int -> TraceScenario) -> [Int]
+oracleInterventionCounts scenarioFor =
+  [ length (oracleInterventions (traceScenarioGraph (scenarioFor size)))
+  | size <- scenarioSizes
+  ]
+
+oracleAddressedPairCounts :: (Int -> TraceScenario) -> [Int]
+oracleAddressedPairCounts scenarioFor =
+  [ length (oracleAddressedNeeds (traceScenarioGraph (scenarioFor size)))
+  | size <- scenarioSizes
+  ]
+
+oracleUncoveredPairCounts :: (Int -> TraceScenario) -> [Int]
+oracleUncoveredPairCounts scenarioFor =
+  [ Set.size (Set.difference addressed covered)
+  | size <- scenarioSizes
+  , let scenario = scenarioFor size
+        graph = traceScenarioGraph scenario
+        addressed = Set.fromList (oracleAddressedNeeds graph)
+        covered =
+          Set.fromList
+            (oracleCoveredPairs
+               (oracleTraces graph (traceScenarioFormulations scenario)))
+  ]
 
 evaluateFamily :: (Int -> TraceScenario) -> IO [TraceEvaluationResult]
 evaluateFamily scenarioFor =
@@ -406,10 +439,10 @@ assertAddressedOrder result =
 assertAffineWork :: [TraceEvaluationResult] -> Assertion
 assertAffineWork results =
   case map (traceWorkVector . traceEvaluationWork) results of
-    [zero, two, four, eight] -> do
-      let firstDelta = zipWith (-) two zero
-      zipWith (-) four two @?= firstDelta
-      zipWith (-) eight four @?= map (* 2) firstDelta
+    [zero, ten, twenty, forty] -> do
+      let firstDelta = zipWith (-) ten zero
+      zipWith (-) twenty ten @?= firstDelta
+      zipWith (-) forty twenty @?= map (* 2) firstDelta
       assertBool "scenario axis registered no work" (any (> 0) firstDelta)
       assertBool "a work component decreased" (all (>= 0) firstDelta)
     _ -> assertFailure "scenario family arity changed"
@@ -417,19 +450,19 @@ assertAffineWork results =
 assertAffineWorkAllowZero :: [TraceEvaluationResult] -> Assertion
 assertAffineWorkAllowZero results =
   case map (traceWorkVector . traceEvaluationWork) results of
-    [zero, two, four, eight] -> do
-      let firstDelta = zipWith (-) two zero
-      zipWith (-) four two @?= firstDelta
-      zipWith (-) eight four @?= map (* 2) firstDelta
+    [zero, ten, twenty, forty] -> do
+      let firstDelta = zipWith (-) ten zero
+      zipWith (-) twenty ten @?= firstDelta
+      zipWith (-) forty twenty @?= map (* 2) firstDelta
       assertBool "a work component decreased" (all (>= 0) firstDelta)
     _ -> assertFailure "scenario family arity changed"
 
 assertAffinePositiveWork :: [TraceEvaluationResult] -> Assertion
 assertAffinePositiveWork results =
   case map (traceWorkVector . traceEvaluationWork) results of
-    [_, two, four, eight] -> do
-      let firstDelta = zipWith (-) four two
-      zipWith (-) eight four @?= map (* 2) firstDelta
+    [_, ten, twenty, forty] -> do
+      let firstDelta = zipWith (-) twenty ten
+      zipWith (-) forty twenty @?= map (* 2) firstDelta
       assertBool "scenario axis registered no work" (any (> 0) firstDelta)
       assertBool "a work component decreased" (all (>= 0) firstDelta)
     _ -> assertFailure "scenario family arity changed"
@@ -445,15 +478,6 @@ withEvaluation candidate action =
   case candidate of
     Left message -> assertFailure message
     Right result -> action result
-
-withEvaluations ::
-     [Either String TraceEvaluationResult]
-  -> ([TraceEvaluationResult] -> Assertion)
-  -> Assertion
-withEvaluations candidates action =
-  case sequence candidates of
-    Left message -> assertFailure message
-    Right results -> action results
 
 traceWorkVector :: TraceEvaluationWork -> [Int]
 traceWorkVector work =

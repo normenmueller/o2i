@@ -92,15 +92,15 @@ data TraceabilityError
     -- ^ An Intervention/Need pair has no complete relational effect path.
   deriving (Eq, Show)
 
--- | Derive and validate relational effect traces from a semantic model.
+-- * Traceability validation interface
+-- | Derive complete relational effect traces.
 --
--- This stage relies on established Situation, Need, and Strategy invariants.
--- It requires primitive evidence for every macrorelation and a complete path
--- for every addressed Need. It does not assess observations or causal
--- attribution.
+-- Complete paths cover every addressed Need, and primitive evidence supports
+-- every macrorelation; observations and causal attribution remain outside.
 validateTraceability ::
      SemanticallyValidModel
   -> Validation (NonEmpty.NonEmpty TraceabilityError) TraceableEffectModel
+-- * Traceability validation implementation
 validateTraceability semantic =
   case NonEmpty.nonEmpty errors of
     Just failures -> Failure failures

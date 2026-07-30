@@ -25,6 +25,9 @@ STATIC_INPUTS = (
     "utl/render-archimate-profile.py",
     "utl/render-paper-figures.sh",
 )
+INCLUDE_PATTERN = re.compile(
+    r"(?m)^!include(?:`(?P<options>[^`]*)`)?\s+(?P<path>.+?)\s*$"
+)
 
 
 class PdfFreshnessError(ValueError):
@@ -157,6 +160,66 @@ def file_digest(path: Path) -> str:
     return sha256(path.read_bytes()).hexdigest()
 
 
+def _publication_source(root: Path, relative: Path) -> Path:
+    """Resolve one nonempty publication source within the repository."""
+    candidate = (root / relative).resolve()
+    try:
+        candidate.relative_to(root)
+    except ValueError as error:
+        raise PdfFreshnessError(
+            f"publication source escapes repository: {relative}"
+        ) from error
+    if not candidate.is_file() or candidate.stat().st_size == 0:
+        raise PdfFreshnessError(f"missing publication source: {relative}")
+    return candidate
+
+
+def _snippet_markers(options: str, relative: Path) -> Optional[tuple[str, str]]:
+    """Return one complete snippet marker pair or reject an invalid contract."""
+    marker_names = ("snippetStart", "snippetEnd")
+    values = {
+        name: re.findall(rf"(?:^|,\s*){name}=\"([^\"]*)\"", options)
+        for name in marker_names
+    }
+    mentioned = {name: name in options for name in marker_names}
+    for name in marker_names:
+        if mentioned[name] and len(values[name]) != 1:
+            raise PdfFreshnessError(
+                f"{relative} has an invalid or duplicate {name} option"
+            )
+    if mentioned["snippetStart"] != mentioned["snippetEnd"]:
+        raise PdfFreshnessError(
+            f"{relative} must declare snippetStart and snippetEnd together"
+        )
+    if not mentioned["snippetStart"]:
+        return None
+    return values["snippetStart"][0], values["snippetEnd"][0]
+
+
+def _validate_snippet_contract(
+    source: Path,
+    relative: Path,
+    markers: tuple[str, str],
+) -> None:
+    """Require unique, ordered snippet markers in one included source."""
+    start, end = markers
+    content = source.read_text(encoding="utf-8")
+    start_count = content.count(start)
+    end_count = content.count(end)
+    if start_count != 1:
+        raise PdfFreshnessError(
+            f"{relative} contains snippetStart marker {start_count} times"
+        )
+    if end_count != 1:
+        raise PdfFreshnessError(
+            f"{relative} contains snippetEnd marker {end_count} times"
+        )
+    if content.index(start) >= content.index(end):
+        raise PdfFreshnessError(
+            f"{relative} places snippetStart after snippetEnd"
+        )
+
+
 def publication_inputs(root: Path) -> tuple[Path, ...]:
     """Return the closed, deterministic source set of the White Paper."""
     resolved_root = root.resolve()
@@ -166,8 +229,13 @@ def publication_inputs(root: Path) -> tuple[Path, ...]:
         raise PdfFreshnessError(f"missing publication source: {article}")
     source = article.read_text(encoding="utf-8")
 
-    for match in re.finditer(r"(?m)^!include(?:`[^`]*`)?\s+(.+?)\s*$", source):
-        relative_inputs.add(Path(match.group(1)))
+    for match in INCLUDE_PATTERN.finditer(source):
+        relative = Path(match.group("path"))
+        included = _publication_source(resolved_root, relative)
+        markers = _snippet_markers(match.group("options") or "", relative)
+        if markers is not None:
+            _validate_snippet_contract(included, relative, markers)
+        relative_inputs.add(relative)
     for match in re.finditer(
         r"!\[[^\]]*\]\((?:<([^>]+)>|([^\s)]+))\)",
         source,
@@ -186,16 +254,7 @@ def publication_inputs(root: Path) -> tuple[Path, ...]:
 
     inputs = []
     for relative in sorted(relative_inputs, key=lambda path: path.as_posix()):
-        candidate = (resolved_root / relative).resolve()
-        try:
-            candidate.relative_to(resolved_root)
-        except ValueError as error:
-            raise PdfFreshnessError(
-                f"publication source escapes repository: {relative}"
-            ) from error
-        if not candidate.is_file() or candidate.stat().st_size == 0:
-            raise PdfFreshnessError(f"missing publication source: {relative}")
-        inputs.append(candidate)
+        inputs.append(_publication_source(resolved_root, relative))
     return tuple(inputs)
 
 
@@ -345,6 +404,9 @@ def _arguments(argv: Optional[Sequence[str]]) -> argparse.Namespace:
     renderer = subparsers.add_parser("renderer")
     renderer.add_argument("--root", type=Path, required=True)
 
+    sources = subparsers.add_parser("sources")
+    sources.add_argument("--root", type=Path, required=True)
+
     seal = subparsers.add_parser("seal")
     seal.add_argument("--root", type=Path, required=True)
     seal.add_argument("--pdf", type=Path, required=True)
@@ -365,6 +427,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         if arguments.command == "contract":
             field = arguments.field.replace("-", "_")
             print(read_renderer_contract(arguments.root)[field])
+            return 0
+        if arguments.command == "sources":
+            publication_inputs(arguments.root)
+            print("[o2i|info] White Paper source contracts are current.")
             return 0
         renderer_errors = renderer_version_errors(arguments.root)
         if renderer_errors:
