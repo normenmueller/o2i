@@ -926,8 +926,12 @@ Implementation status:
 - bounded Haskell and formalization reviews accept the correction without
   findings and at 10.0 in every required dimension;
 - one uninterrupted complete repository verification passes;
-- the exact candidate commit, isolated verification, and exact-revision
-  Finalreviews remain pending.
+- exact revision `7623d1c2726a977f255f00ef65b6980159d02f83` passes complete
+  verification in the main and isolated detached worktrees;
+- independent strategy, formalization, Haskell, and publication Finalreviews
+  accept that exact revision without findings and with 10.0 in every required
+  dimension;
+- the change is accepted.
 
 ## Required Checks
 

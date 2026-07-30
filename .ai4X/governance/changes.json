@@ -50,14 +50,19 @@
       "coauthors": [
         "external-anchor-coauthor"
       ],
-      "state": "implementing",
+      "state": "done",
       "proposal": ".ai4X/governance/changes/o2i-0004/proposal.md",
       "plan": ".ai4X/governance/changes/o2i-0004/plan.md",
       "admission_reviews": [
         ".ai4X/governance/changes/o2i-0004/reviews/admission-strategy.json",
         ".ai4X/governance/changes/o2i-0004/reviews/admission-formalization.json"
       ],
-      "final_reviews": [],
+      "final_reviews": [
+        ".ai4X/governance/changes/o2i-0004/reviews/final-strategy.json",
+        ".ai4X/governance/changes/o2i-0004/reviews/final-formalization.json",
+        ".ai4X/governance/changes/o2i-0004/reviews/final-haskell.json",
+        ".ai4X/governance/changes/o2i-0004/reviews/final-publication.json"
+      ],
       "derived_from": [
         "o2i-0003"
       ],

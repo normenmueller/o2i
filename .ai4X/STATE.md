@@ -6,9 +6,9 @@
 - Authorization scope: review and close `o2i-0004`; do not edit the ArchiMate
   model directly or push. This includes the approved removal of premature
   build-revision provenance before the final review candidate.
-- Current gate: `o2i-0004-finalreview-12`
-- Gate status: `REJECTED`
-- Current node: `o2i:situation-anchor-gate`
+- Current gate: `o2i-0004-finalreview-13`
+- Gate status: `ACCEPTED`
+- Current node: `workspace:issue-coordination`
 
 # Objective
 
@@ -45,22 +45,26 @@ the complete anchor relation family before finalizing the ArchiMate profile.
   uninterrupted `./utl/verify.sh all`.
 - Bounded Haskell and formalization reviews accept the complete correction
   without findings and with 10.0 in every required dimension.
+- Exact candidate revision
+  `7623d1c2726a977f255f00ef65b6980159d02f83` passes one uninterrupted
+  complete verification in the main worktree and one in an isolated detached
+  worktree.
 
 # Gate
 
-- Attempt: `o2i-0004-finalreview-12`
-- Subject: revision `1a300b389ff04956a527b57defce503c21332f94` and the
+- Attempt: `o2i-0004-finalreview-13`
+- Subject: revision `7623d1c2726a977f255f00ef65b6980159d02f83` and the
   implementation scope declared by
   `.ai4X/governance/changes/o2i-0004/plan.md`.
 - Mandatory checks: strategy, formalization, Haskell, publication, profile,
   AMX, View, and repository verification.
-- Finding status: `OPEN`
-- Result: `REJECTED`
+- Finding status: `CLOSED`
+- Result: `ACCEPTED`
 
 # Next Action
 
-Commit one exact candidate, verify it in isolation, and renew the required
-exact-revision Finalreviews.
+Stop before `workspace:issue-coordination` and consult the user. Do not begin
+the GitHub Issue/Fork-/Return coordination migration without renewed approval.
 
 # Local Return Point
 
