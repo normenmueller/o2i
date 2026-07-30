@@ -62,8 +62,9 @@ An agent implements an Issue only when:
 
 `Paused` requires an explicit PO decision, reason, and return condition. A
 required blocker within the O2I Issue graph uses only a native Issue
-Dependency. `blocked:external` applies only to a required dependency outside
-that graph and records its source and next-check condition.
+Dependency. A required dependency outside that graph is recorded explicitly
+in the affected Issue with its source and next-check condition; no dedicated
+label is reserved for it.
 
 An idea discovered during implementation receives its own Issue before it
 changes admitted scope. Native dependencies record necessary sequencing;

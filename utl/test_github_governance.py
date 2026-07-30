@@ -200,19 +200,28 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         ):
             with self.subTest(status=status):
                 self.assertIn(f"`{status}`", content)
-        self.assertIn("blocked:external", content)
 
-    def test_external_blocker_boundary_is_explicit(self) -> None:
-        for path, boundary in (
-            (GOVERNANCE, "outside"),
-            (CONTRIBUTING, "außerhalb"),
+    def test_dependency_boundary_is_explicit_without_reserved_label(
+        self,
+    ) -> None:
+        for path, terms in (
+            (
+                GOVERNANCE,
+                ("outside", "affected Issue", "next-check condition"),
+            ),
+            (
+                CONTRIBUTING,
+                ("außerhalb", "betroffenen Issue", "nächster Prüfbedingung"),
+            ),
         ):
             with self.subTest(path=path):
                 content = read(path)
-                self.assertIn(boundary, content)
-                self.assertRegex(content.lower(), r"native issue\s+dependency")
-                self.assertIn("blocked:external", content)
-                self.assertIn("Paused", content)
+                normalized = " ".join(content.split())
+                self.assertRegex(normalized.lower(), r"native issue dependency")
+                for term in terms:
+                    self.assertIn(term, normalized)
+                self.assertIn("Paused", normalized)
+                self.assertNotIn("blocked:external", normalized)
 
     def test_framework_form_captures_admission_contract(self) -> None:
         self.assertRegex(

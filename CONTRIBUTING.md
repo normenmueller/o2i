@@ -72,10 +72,11 @@ Ausführungsfreigabe. Ausschließlich der Product Owner setzt ein Issue auf
 leiten ihn auch nicht aus dem Issue-Zustand ab.
 
 Ein erforderlicher Blocker innerhalb des O2I-Issue-Graphen wird ausschließlich
-als native Issue Dependency modelliert. `blocked:external` gilt nur für eine
-erforderliche Abhängigkeit außerhalb dieses Graphen, etwa eine
-Upstream-Entscheidung; Quelle und nächste Prüfbedingung stehen im Issue. Ein
-Blocker allein setzt ein Issue nicht auf `Paused`.
+als native Issue Dependency modelliert. Eine erforderliche Abhängigkeit
+außerhalb dieses Graphen, etwa eine Upstream-Entscheidung, wird mit Quelle und
+nächster Prüfbedingung ausdrücklich im betroffenen Issue dokumentiert; ein
+eigenes Label ist dafür nicht reserviert. Ein Blocker allein setzt ein Issue
+nicht auf `Paused`.
 
 ## Umsetzung
 
