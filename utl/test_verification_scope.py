@@ -27,6 +27,26 @@ def git(root: Path, *arguments: str) -> str:
     return result.stdout.strip()
 
 
+def repository_paths(root: Path) -> set[str]:
+    """Return the exact repository inventory with or without Git metadata."""
+    if (root / ".git").exists():
+        result = subprocess.run(
+            ["git", "-C", str(root), "ls-files", "-z"],
+            check=True,
+            capture_output=True,
+        )
+        return {
+            value.decode("utf-8")
+            for value in result.stdout.split(b"\0")
+            if value
+        }
+    return {
+        path.relative_to(root).as_posix()
+        for path in root.rglob("*")
+        if path.is_file()
+    }
+
+
 class VerificationPathMatrixTests(unittest.TestCase):
     """Keep stage ownership explicit and conservative."""
 
@@ -87,16 +107,7 @@ class VerificationPathMatrixTests(unittest.TestCase):
         self.assertEqual("repository-hygiene", selection.reason)
 
     def test_every_current_repository_path_is_known(self) -> None:
-        result = subprocess.run(
-            ["git", "-C", str(ROOT), "ls-files", "-z"],
-            check=True,
-            capture_output=True,
-        )
-        paths = {
-            value.decode("utf-8")
-            for value in result.stdout.split(b"\0")
-            if value
-        }
+        paths = repository_paths(ROOT)
         paths.update(
             {
                 "utl/verification_scope.py",
@@ -107,6 +118,17 @@ class VerificationPathMatrixTests(unittest.TestCase):
             path for path in paths if scope.stages_for_path(path) is None
         )
         self.assertEqual([], unknown)
+
+    def test_gitless_repository_inventory_uses_export_tree(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / ".ai4X").mkdir()
+            (root / ".ai4X/STATE.md").write_text("state\n", encoding="ascii")
+            (root / "README.md").write_text("readme\n", encoding="ascii")
+            self.assertEqual(
+                {".ai4X/STATE.md", "README.md"},
+                repository_paths(root),
+            )
 
 
 class VerificationDiffTests(unittest.TestCase):

@@ -49,7 +49,8 @@ resolved in the owning source before synchronization.
 | Exact concrete ArchiMate mapping | `spc/ctr/archimate/profile.json` | White Paper projection, syntax Views, notation adapters |
 | Machine-checkable formalization | `spc/lib/core/` | Inspection, adapters, CLI |
 | AMX profile validation and projection | `spc/lib/adapter/amx/` | CLI reports |
-| Change admission, state, dependencies, and reviews | GitHub Issues | Project scheduling, Agent Memory handoff |
+| Change contract, admission, dependencies, reviews, and open/closed state | GitHub Issues | Project workflow, Agent Memory handoff |
+| Workflow status and PO ordering | GitHub Project `O2I` | Issue contract, Agent Memory handoff |
 | Verification evidence | tests and generated snapshots | no semantic ownership |
 
 Tests provide executable verification evidence for contracts; they never
@@ -64,11 +65,21 @@ prove, own, or define O2I semantics.
 - `Current gate`: one stable gate identifier or `NONE`
 - `Gate status`: `NOT_REQUIRED | PENDING | ACCEPTED | REJECTED`
 
-Continue autonomously only when work is `ACTIVE` and authorization is
-`APPROVED`, and only within the recorded authorization scope. A gate controls
-acceptance, not permission to implement. `REJECTED` returns work to correction;
-`PENDING` awaits review; `ACCEPTED` requires no unresolved finding and all
-recorded checks. `COMPLETE` requires every mandatory gate to be `ACCEPTED`.
+Implement or correct autonomously only when work is `ACTIVE` and authorization
+is `APPROVED`, and only within the recorded authorization scope. `COMPLETE`
+permits only already-authorized publication and closure of the accepted exact
+revision. A gate controls acceptance, not permission to implement. `REJECTED`
+returns work to correction; `PENDING` awaits review; `ACCEPTED` requires no
+unresolved finding and all recorded checks.
+
+The valid handoff shapes are closed:
+
+| Work status | Authorization | Current Issue | Current gate | Gate status |
+| --- | --- | --- | --- | --- |
+| `ACTIVE` | `APPROVED` | one Issue | one gate | `PENDING | REJECTED` |
+| `PAUSED` | `REQUIRED` | one Issue or `NONE` | `NONE` | `NOT_REQUIRED` |
+| `BLOCKED` | `REQUIRED` | one Issue | `NONE` | `NOT_REQUIRED` |
+| `COMPLETE` | `APPROVED` | one Issue | one gate | `ACCEPTED` |
 
 Every active gate record in `STATE.md` contains exactly:
 
@@ -78,10 +89,9 @@ Every active gate record in `STATE.md` contains exactly:
 - finding status: `OPEN | CLOSED`;
 - result: `PENDING | ACCEPTED | REJECTED`.
 
-A paused handoff without an active Issue uses `Current gate: NONE` and
-`Gate status: NOT_REQUIRED` and contains no `Current Gate` section. Accepted
-revisions remain repository facts; recording their closure never creates a
-new gate.
+A gate-free handoff contains no `Current Gate` section. An active gate contains
+exactly one such section. Accepted revisions remain repository facts;
+recording their closure never creates a new gate.
 
 A review identifies its immutable subject by exact Git revision and declared
 file scope. Any later change within that scope requires a new review for the
@@ -122,9 +132,7 @@ implementation review scope.
 - Keep `.ai4X/STATE.md` repository-autark and limited to the current handoff. It must
   contain objective, current node, dirty scope, risks, verification, next
   action, and local return point without depending on a workspace plan.
-- Treat the GitHub Project as a scheduling projection only. Never infer Issue
-  validity, admission, dependencies, review evidence, or closure from its
-  status.
+- Treat GitHub Project Status as the authority for workflow state and its vertical order as PO scheduling authority. Never infer Issue validity, admission, dependencies, review evidence, or closure from Project state.
 - When GitHub is unavailable, continue only an already activated local handoff.
   Never infer or mutate remote work state offline.
 - Keep `.ai4X/STATE.md` below 90 lines. Remove completed detail once its result and

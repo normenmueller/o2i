@@ -4,10 +4,7 @@ Beiträge beginnen mit einem GitHub Issue. Das Issue beschreibt das Problem und
 den angestrebten Zustand; Pull Requests setzen ein ausreichend geklärtes Issue
 um.
 
-Das öffentliche GitHub Project
-[O2I](https://github.com/users/normenmueller/projects/4) dient dem Product
-Owner als Planungssicht. Issues bleiben für Arbeitszustand, Abhängigkeiten,
-Admission, Reviews und Abschluss maßgebend.
+Das öffentliche GitHub Project [O2I](https://github.com/users/normenmueller/projects/4) bildet Arbeitszustand und PO-Reihenfolge ab. Issues bleiben für Vertrag, Abhängigkeiten, Admission, Reviews sowie offenen oder geschlossenen Zustand maßgebend.
 
 ## Arten von Änderungen
 
@@ -29,10 +26,7 @@ Das Issue enthält:
 - Autor, Co-Autoren und nicht blockierende Herleitung;
 - erforderliche, risikogerechte Reviewfähigkeiten.
 
-Die Umsetzung beginnt erst nach fachlicher und formaler Admission. Ab dem
-ersten Admission Review bleibt der Proposal-Inhalt unverändert und ist über
-seinen SHA-256 gebunden. Der anschließend erstellte Implementierungsvertrag
-steht in einem separaten, ebenfalls digestgebundenen Issue-Kommentar.
+Die Umsetzung beginnt erst nach fachlicher und formaler Admission. Ab dem ersten Admission Review bleibt der Proposal-Inhalt unverändert und ist über seinen SHA-256 gebunden. Der anschließend erstellte Implementierungsvertrag steht in einem separaten, ebenfalls digestgebundenen Issue-Kommentar. Ein Digest ist der kleingeschriebene SHA-256 der vom GitHub API gelieferten UTF-8-Bytes ohne Normalisierung oder zusätzliches Zeilenende; bei Kommentaren gehört die Kommentar-ID zur Evidenz.
 
 ### Maintenance
 
@@ -49,11 +43,11 @@ Das GitHub Project `O2I` ist die Planungssicht des Product Owners:
 
 - `Backlog`: verständliche Idee, noch nicht aufbereitet;
 - `Refined`: vollständig konsolidiert und entscheidungsreif, aber noch nicht freigegeben;
-- `Ready`: durch den Product Owner ausdrücklich zur Umsetzung freigegeben;
+- `Ready`: offen, vollständig vorbereitet, ohne blockierende Voraussetzung und durch den Product Owner ausdrücklich zur Umsetzung freigegeben;
 - `In progress`: aus `Ready` aktivierte Umsetzung;
 - `Paused`: bewusst ausgesetzt; Grund und Rückkehrbedingung stehen im Issue;
 - `In review`: eine exakte Kandidatenrevision wird geprüft;
-- `Done`: akzeptiert, erforderlichenfalls remote verfügbar und geschlossen.
+- `Done`: akzeptiert, remote verfügbar, erforderlichenfalls remote verifiziert und geschlossen.
 
 Vor `Backlog -> Refined` lesen Agenten den vollständigen Issue-Body und sämtliche vorhandenen Kommentare. Sie führen die akzeptierten Inhalte zu einem eindeutigen Vertrag zusammen; widersprüchliche oder überholte Aussagen benötigen eine ausdrückliche Entscheidung des Product Owners. Diese Aufbereitung ist noch keine Umsetzung.
 
@@ -74,6 +68,8 @@ In progress -- Kandidat vollständig --> In review -- akzeptiert --> Done
 Vertikale Reihenfolge bedeutet Aufbereitungspriorität in `Backlog`, Entscheidungspriorität in `Refined` und autorisierte Abarbeitungsfolge in `Ready`. Die Reihenfolge aller anderen Spalten hat keine Workflow-Bedeutung.
 
 Echte Voraussetzungen innerhalb des O2I-Issue-Graphen werden ausschließlich als native Issue Dependencies modelliert. Eine erforderliche Abhängigkeit außerhalb dieses Graphen wird mit Quelle und nächster Prüfbedingung im betroffenen Issue dokumentiert. Project-Reihenfolge ersetzt keine Abhängigkeit; ein Blocker allein setzt ein Issue nicht auf `Paused`.
+
+Vor `In review` sind release-relevante Hinweise ergänzt und der vollständige Kandidat committed. Nach Annahme wird exakt diese Revision veröffentlicht und verifiziert. Findings führen zurück zu `In progress`; ein vom Product Owner verworfenes Vorhaben wird als `not planned` geschlossen und sein Project-Eintrag archiviert.
 
 ## Repository-Struktur
 

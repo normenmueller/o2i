@@ -48,7 +48,7 @@ def markdown_field_values(content: str, name: str) -> tuple[str, ...]:
 
 
 def handoff_contract_violations(content: str) -> list[str]:
-    """Return violations of the active or paused handoff contract."""
+    """Return violations of the closed repository handoff contract."""
     violations: list[str] = []
     fields: dict[str, str] = {}
     for name in (
@@ -67,26 +67,48 @@ def handoff_contract_violations(content: str) -> list[str]:
     if len(fields) != 5:
         return violations
 
+    vocabularies = {
+        "Work status": {"ACTIVE", "PAUSED", "BLOCKED", "COMPLETE"},
+        "Execution authorization": {"APPROVED", "REQUIRED"},
+        "Gate status": {"NOT_REQUIRED", "PENDING", "ACCEPTED", "REJECTED"},
+    }
+    for name, allowed in vocabularies.items():
+        if fields[name] not in allowed:
+            violations.append(f"{name} has an invalid value")
+    if violations:
+        return violations
+
     gate_sections = content.count("# Current Gate\n")
-    if fields["Current gate"] == "NONE":
-        if fields["Work status"] != "PAUSED":
-            violations.append("a gate-free handoff must be PAUSED")
+    work_status = fields["Work status"]
+    if work_status in {"PAUSED", "BLOCKED"}:
         if fields["Execution authorization"] != "REQUIRED":
-            violations.append("a gate-free handoff must require authorization")
-        if fields["Current Issue"] != "NONE":
-            violations.append("a gate-free handoff must have no current Issue")
+            violations.append(f"{work_status} work must require authorization")
+        if work_status == "BLOCKED" and fields["Current Issue"] == "NONE":
+            violations.append("BLOCKED work must identify its Issue")
+        if fields["Current gate"] != "NONE":
+            violations.append(f"{work_status} work must be gate-free")
         if fields["Gate status"] != "NOT_REQUIRED":
             violations.append("a gate-free handoff must not require a gate")
         if gate_sections != 0:
             violations.append("a gate-free handoff must omit Current Gate")
         return violations
 
+    if fields["Execution authorization"] != "APPROVED":
+        violations.append(f"{work_status} work must be approved")
     if fields["Current Issue"] == "NONE":
-        violations.append("an active gate must identify its Issue")
-    if fields["Gate status"] == "NOT_REQUIRED":
-        violations.append("an active gate must require a gate result")
+        violations.append(f"{work_status} work must identify its Issue")
+    if fields["Current gate"] == "NONE":
+        violations.append(f"{work_status} work must identify its gate")
+    allowed_gate_statuses = {
+        "ACTIVE": {"PENDING", "REJECTED"},
+        "COMPLETE": {"ACCEPTED"},
+    }
+    if fields["Gate status"] not in allowed_gate_statuses[work_status]:
+        violations.append(
+            f"{work_status} work has an incompatible gate status"
+        )
     if gate_sections != 1:
-        violations.append("an active gate must have one Current Gate section")
+        violations.append(f"{work_status} work must have one Current Gate section")
         return violations
 
     gate = content.split("# Current Gate\n", 1)[1].split("\n# ", 1)[0]
@@ -151,6 +173,16 @@ def handoff_contract_violations(content: str) -> list[str]:
             and scalar_values["Finding status"] != "CLOSED"
         ):
             violations.append("an accepted gate must have closed findings")
+        if (
+            scalar_values["Result"] in {"PENDING", "REJECTED"}
+            and scalar_values["Finding status"] != "OPEN"
+        ):
+            violations.append("a non-accepted gate must have open findings")
+        if (
+            scalar_values["Result"] in {"ACCEPTED", "REJECTED"}
+            and scalar_values.get("Candidate revision") == "PENDING"
+        ):
+            violations.append("a decided gate must bind one full Git revision")
     return violations
 
 
@@ -183,10 +215,25 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         for term in (
             "A GitHub Issue owns",
             "Native Issue Dependencies own",
-            "Product Owner scheduling",
-            "owns no admission",
+            "owns workflow status and Product Owner ordering",
+            "owns no contract, admission",
             "activated repository-local handoff",
             "deterministic and network-independent",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, content)
+
+    def test_review_candidate_and_evidence_contract_are_exact(self) -> None:
+        content = read(GOVERNANCE)
+        for term in (
+            "one committed exact candidate revision",
+            "accepted exact revision",
+            "No reviewed file changes",
+            "lowercase SHA-256",
+            "exact UTF-8 bytes returned by the GitHub API",
+            "without normalization or an added newline",
+            "comment database ID",
+            "Project item is archived",
         ):
             with self.subTest(term=term):
                 self.assertIn(term, content)
@@ -429,6 +476,70 @@ class GitHubGovernanceContractTests(unittest.TestCase):
 - The accepted revision remains recorded here.
 """
         self.assertEqual([], handoff_contract_violations(content))
+
+    def test_handoff_status_table_is_closed(self) -> None:
+        blocked = """\
+# Handoff
+
+- Work status: `BLOCKED`
+- Execution authorization: `REQUIRED`
+- Current Issue: `#10`
+- Current gate: `NONE`
+- Gate status: `NOT_REQUIRED`
+"""
+        complete = """\
+# Handoff
+
+- Work status: `COMPLETE`
+- Execution authorization: `APPROVED`
+- Current Issue: `#10`
+- Current gate: `finalreview-1`
+- Gate status: `ACCEPTED`
+
+# Current Gate
+
+- Attempt: `finalreview-1`
+- Candidate revision: `0123456789abcdef0123456789abcdef01234567`
+- Review scope: `src/Contract.hs`; mutable `.ai4X/STATE.md` is excluded.
+- Mandatory checks: governance verification.
+- Finding status: `CLOSED`
+- Result: `ACCEPTED`
+"""
+        for name, valid in (("blocked", blocked), ("complete", complete)):
+            with self.subTest(name=name):
+                self.assertEqual([], handoff_contract_violations(valid))
+
+        invalid_cases = (
+            (
+                "unknown work status",
+                blocked.replace("`BLOCKED`", "`INVALID`"),
+                "Work status has an invalid value",
+            ),
+            (
+                "active authorization required",
+                complete.replace("`COMPLETE`", "`ACTIVE`").replace(
+                    "`APPROVED`", "`REQUIRED`", 1
+                ).replace("`ACCEPTED`", "`PENDING`", 2).replace(
+                    "`CLOSED`", "`OPEN`"
+                ),
+                "ACTIVE work must be approved",
+            ),
+            (
+                "blocked gate",
+                complete.replace("`COMPLETE`", "`BLOCKED`").replace(
+                    "`APPROVED`", "`REQUIRED`", 1
+                ),
+                "BLOCKED work must be gate-free",
+            ),
+            (
+                "complete authorization required",
+                complete.replace("`APPROVED`", "`REQUIRED`", 1),
+                "COMPLETE work must be approved",
+            ),
+        )
+        for name, invalid, expected in invalid_cases:
+            with self.subTest(name=name):
+                self.assertIn(expected, handoff_contract_violations(invalid))
 
     def test_public_contract_is_repository_autonomous(self) -> None:
         absolute_posix_path = re.compile(
