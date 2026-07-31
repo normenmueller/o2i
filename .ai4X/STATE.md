@@ -7,9 +7,9 @@
   and retained-artifact adaptations approved in comments `5140326278` and
   `5140370738`.
 - Current Issue: `#7`
-- Current gate: `legacy-cleanup-correction-2`
+- Current gate: `legacy-cleanup-finalreview-3`
 - Gate status: `PENDING`
-- Current node: `legacy-governance-correction`
+- Current node: `legacy-governance-review`
 
 # Objective
 
@@ -37,17 +37,17 @@ repository-autonomous GitHub-native governance contract.
   implementation scope.
 - Finalreview attempt 1 rejects candidate `af08fbd` because the active gate
   couples immutable review identity to mutable handoff state.
-- Candidate `4dbe3a10da14a4f8dff8f3fd4bdd73ed9f6b528f` corrects both findings
-  and passes complete local verification.
 - Finalreview attempt 2 rejects that candidate because `Review scope` is not
   parsed independently from the other gate fields.
+- Candidate `0c91852d50679526a4cc62067134f624d18c0357` parses and validates
+  every gate field independently, closes that finding, and passes complete
+  local verification.
 - Issue `#4` remains inactive.
 - The user controls ArchiMate edits and pushes.
 
 # Dirty Scope
 
-- `.ai4X/STATE.md`
-- `utl/test_github_governance.py`
+- `NONE`
 
 # Verification
 
@@ -57,14 +57,14 @@ repository-autonomous GitHub-native governance contract.
   `a69cf98`.
 - `./utl/verify.sh governance` passes after activation of Issue `#7`.
 - `./utl/verify.sh all` passes for candidate
-  `4dbe3a10da14a4f8dff8f3fd4bdd73ed9f6b528f`.
+  `0c91852d50679526a4cc62067134f624d18c0357`.
 - No active repository text references the removed local migration evidence.
 - The workspace O2I boundary check passes.
 
 # Next Action
 
-Parse and validate the multiline `Review scope` independently, then verify a
-new exact candidate.
+Obtain one focused independent administrative-governance Finalreview of exact
+candidate `0c91852d50679526a4cc62067134f624d18c0357`.
 
 # Local Return Point
 
@@ -72,13 +72,13 @@ The paused cross-repository handoff after Issue `#7`.
 
 # Current Gate
 
-- Attempt: `legacy-cleanup-correction-2`
-- Candidate revision: `PENDING`
+- Attempt: `legacy-cleanup-finalreview-3`
+- Candidate revision: `0c91852d50679526a4cc62067134f624d18c0357`
 - Review scope: approved 23-file deletion set plus
   `.ai4X/governance/README.md`, `utl/test_github_governance.py`, and
   `utl/verification_scope.py`; mutable `.ai4X/STATE.md` is excluded.
 - Mandatory checks: focused independent administrative-governance Finalreview
   without findings and with 10.0 in every required dimension; remote
   verification of the accepted revision.
-- Finding status: `OPEN`
+- Finding status: `CLOSED`
 - Result: `PENDING`
