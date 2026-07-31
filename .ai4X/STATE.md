@@ -7,9 +7,9 @@
   and retained-artifact adaptations approved in comments `5140326278` and
   `5140370738`.
 - Current Issue: `#7`
-- Current gate: `legacy-cleanup-finalreview-2`
+- Current gate: `legacy-cleanup-correction-2`
 - Gate status: `PENDING`
-- Current node: `legacy-governance-review`
+- Current node: `legacy-governance-correction`
 
 # Objective
 
@@ -28,8 +28,8 @@ repository-autonomous GitHub-native governance contract.
 - Editorial follow-up `a69cf98` only reorders one unchanged README section and
   renames its heading to `Start`. The targeted Paper gate and
   `git diff --check` pass; normalized PDF text is unchanged.
-- Issue `#7` is activated after explicit PO approval. Issues `#15`, `#12`,
-  and `#1` remain Backlog.
+- Issue `#7` is activated after explicit PO approval. Issues `#16`, `#15`,
+  `#12`, and `#1` remain Backlog.
 - Issue `#7` comment `5140326278` records the exact 23-file deletion set,
   retained-artifact adaptations, durable evidence locations, and accepted
   inventory review.
@@ -39,12 +39,15 @@ repository-autonomous GitHub-native governance contract.
   couples immutable review identity to mutable handoff state.
 - Candidate `4dbe3a10da14a4f8dff8f3fd4bdd73ed9f6b528f` corrects both findings
   and passes complete local verification.
+- Finalreview attempt 2 rejects that candidate because `Review scope` is not
+  parsed independently from the other gate fields.
 - Issue `#4` remains inactive.
 - The user controls ArchiMate edits and pushes.
 
 # Dirty Scope
 
-- `NONE`
+- `.ai4X/STATE.md`
+- `utl/test_github_governance.py`
 
 # Verification
 
@@ -60,8 +63,8 @@ repository-autonomous GitHub-native governance contract.
 
 # Next Action
 
-Obtain one focused independent administrative-governance Finalreview of
-candidate `4dbe3a10da14a4f8dff8f3fd4bdd73ed9f6b528f`.
+Parse and validate the multiline `Review scope` independently, then verify a
+new exact candidate.
 
 # Local Return Point
 
@@ -69,8 +72,8 @@ The paused cross-repository handoff after Issue `#7`.
 
 # Current Gate
 
-- Attempt: `legacy-cleanup-finalreview-2`
-- Candidate revision: `4dbe3a10da14a4f8dff8f3fd4bdd73ed9f6b528f`
+- Attempt: `legacy-cleanup-correction-2`
+- Candidate revision: `PENDING`
 - Review scope: approved 23-file deletion set plus
   `.ai4X/governance/README.md`, `utl/test_github_governance.py`, and
   `utl/verification_scope.py`; mutable `.ai4X/STATE.md` is excluded.

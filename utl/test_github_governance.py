@@ -38,6 +38,15 @@ def issue_form_fields(path: Path) -> dict[str, bool]:
     return fields
 
 
+def markdown_field_values(content: str, name: str) -> tuple[str, ...]:
+    """Return normalized values of one Markdown bullet field."""
+    pattern = rf"(?m)^- {re.escape(name)}:[ \t]*(.*(?:\n  .*)*)$"
+    return tuple(
+        " ".join(line.strip() for line in block.splitlines()).strip()
+        for block in re.findall(pattern, content)
+    )
+
+
 def handoff_contract_violations(content: str) -> list[str]:
     """Return violations of the active or paused handoff contract."""
     violations: list[str] = []
@@ -81,40 +90,65 @@ def handoff_contract_violations(content: str) -> list[str]:
         return violations
 
     gate = content.split("# Current Gate\n", 1)[1].split("\n# ", 1)[0]
-    for name in (
-        "Attempt",
-        "Candidate revision",
-        "Review scope",
-        "Mandatory checks",
-        "Finding status",
-        "Result",
-    ):
-        if gate.count(f"- {name}:") != 1:
+    gate_fields = {
+        name: markdown_field_values(gate, name)
+        for name in (
+            "Attempt",
+            "Candidate revision",
+            "Review scope",
+            "Mandatory checks",
+            "Finding status",
+            "Result",
+        )
+    }
+    for name, values in gate_fields.items():
+        if len(values) != 1:
             violations.append(f"Current Gate must contain one {name}")
 
-    gate_values: dict[str, str] = {}
-    for name in ("Attempt", "Candidate revision", "Finding status", "Result"):
-        matches = re.findall(rf"(?m)^- {re.escape(name)}: `([^`]+)`$", gate)
-        if len(matches) == 1:
-            gate_values[name] = matches[0]
+    gate_values = {
+        name: values[0]
+        for name, values in gate_fields.items()
+        if len(values) == 1
+    }
     revision = gate_values.get("Candidate revision")
-    if revision is not None and revision != "PENDING":
-        if re.fullmatch(r"[0-9a-f]{40}", revision) is None:
+    if revision is not None and revision != "`PENDING`":
+        if re.fullmatch(r"`[0-9a-f]{40}`", revision) is None:
             violations.append(
                 "Candidate revision must be PENDING or one full Git revision"
             )
-    if ".ai4X/STATE.md" not in gate or "excluded" not in gate:
-        violations.append("Review scope must exclude mutable .ai4X/STATE.md")
+
+    scope = gate_values.get("Review scope")
+    if scope is not None:
+        subjects = tuple(re.findall(r"`([^`]+)`", scope))
+        immutable_subjects = tuple(
+            subject for subject in subjects if subject != ".ai4X/STATE.md"
+        )
+        if not immutable_subjects:
+            violations.append("Review scope must declare an immutable subject")
+        if ".ai4X/STATE.md" not in subjects or "excluded" not in scope.lower():
+            violations.append("Review scope must exclude mutable .ai4X/STATE.md")
+
+    scalar_fields = (
+        "Attempt",
+        "Candidate revision",
+        "Finding status",
+        "Result",
+    )
+    scalar_values: dict[str, str] = {}
+    for name in scalar_fields:
+        value = gate_values.get(name)
+        if value is not None and re.fullmatch(r"`([^`]+)`", value) is not None:
+            scalar_values[name] = value[1:-1]
 
     result_fields = ("Attempt", "Finding status", "Result")
-    if all(name in gate_values for name in result_fields):
-        if fields["Current gate"] != gate_values["Attempt"]:
+    if all(name in scalar_values for name in result_fields):
+        if fields["Current gate"] != scalar_values["Attempt"]:
             violations.append("Current gate must match Attempt")
-        if fields["Gate status"] != gate_values["Result"]:
+        if fields["Gate status"] != scalar_values["Result"]:
             violations.append("Gate status must match Result")
         if (
-            gate_values["Result"] == "ACCEPTED"
-            and gate_values["Finding status"] != "CLOSED"
+            scalar_values["Result"] == "ACCEPTED"
+            and scalar_values["Finding status"] != "CLOSED"
         ):
             violations.append("an accepted gate must have closed findings")
     return violations
@@ -235,12 +269,18 @@ class GitHubGovernanceContractTests(unittest.TestCase):
 
 - Attempt: `closed-handoff-contract-1`
 - Candidate revision: `0123456789abcdef0123456789abcdef01234567`
-- Review scope: declared immutable files; mutable `.ai4X/STATE.md` is excluded.
+- Review scope: `src/Contract.hs`;
+  mutable `.ai4X/STATE.md` is excluded.
 - Mandatory checks: governance verification.
 - Finding status: `OPEN`
 - Result: `PENDING`
 """
         self.assertEqual([], handoff_contract_violations(content))
+        pending = content.replace(
+            "`0123456789abcdef0123456789abcdef01234567`",
+            "`PENDING`",
+        )
+        self.assertEqual([], handoff_contract_violations(pending))
         cases = (
             (
                 "gate identity",
@@ -257,6 +297,36 @@ class GitHubGovernanceContractTests(unittest.TestCase):
                     "`01234567`",
                 ),
                 "Candidate revision must be PENDING or one full Git revision",
+            ),
+            (
+                "empty review scope",
+                content.replace(
+                    "- Review scope: `src/Contract.hs`;\n"
+                    "  mutable `.ai4X/STATE.md` is excluded.",
+                    "- Review scope:",
+                ),
+                "Review scope must declare an immutable subject",
+            ),
+            (
+                "exclusion-only review scope",
+                content.replace(
+                    "- Review scope: `src/Contract.hs`;\n"
+                    "  mutable `.ai4X/STATE.md` is excluded.",
+                    "- Review scope: mutable `.ai4X/STATE.md` is excluded.",
+                ),
+                "Review scope must declare an immutable subject",
+            ),
+            (
+                "misplaced state exclusion",
+                content.replace(
+                    "- Review scope: `src/Contract.hs`;\n"
+                    "  mutable `.ai4X/STATE.md` is excluded.\n"
+                    "- Mandatory checks: governance verification.",
+                    "- Review scope: `src/Contract.hs`.\n"
+                    "- Mandatory checks: governance verification; mutable "
+                    "`.ai4X/STATE.md` is excluded.",
+                ),
+                "Review scope must exclude mutable .ai4X/STATE.md",
             ),
             (
                 "gate result",
