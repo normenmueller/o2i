@@ -118,7 +118,8 @@ versiegelt die Quellen- und Rendererbindung in `o2i.pdf.manifest.json`.
 Framework Changes werden von den im Issue benannten unabhängigen Fähigkeiten
 geprüft. Ein Review bindet:
 
-- Proposal-Digest oder Plan-Kommentar samt Digest;
+- Issue-Body-Digest für Admission;
+- ID und Digest des Implementierungsvertrags-Kommentars für Finalreview;
 - vollständige Git-Revision und Scope beim Finalreview;
 - Reviewerfähigkeit und Verdict;
 - Findings und ausgeführte Prüfungen;

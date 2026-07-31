@@ -237,6 +237,14 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         ):
             with self.subTest(term=term):
                 self.assertIn(term, content)
+        human = read(CONTRIBUTING)
+        for term in (
+            "Issue-Body-Digest für Admission",
+            "ID und Digest des Implementierungsvertrags-Kommentars für "
+            "Finalreview",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, human)
 
     def test_human_status_vocabulary_is_complete(self) -> None:
         content = read(CONTRIBUTING)
