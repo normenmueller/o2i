@@ -234,6 +234,8 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "without normalization or an added newline",
             "comment database ID",
             "Project item is archived",
+            "exact Issue-body digest for Admission",
+            "implementation-contract comment ID and digest for Finalreview",
         ):
             with self.subTest(term=term):
                 self.assertIn(term, content)
