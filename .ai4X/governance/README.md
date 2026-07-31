@@ -135,12 +135,4 @@ Repository verification remains deterministic and network-independent:
 ./utl/verify.sh governance
 ```
 
-It checks the local execution, intake, and migration contracts, never live
-GitHub state. Remote reconciliation is an explicit migration or release
-operation.
-
-The retained `.ai4X/governance/changes.json`, change directories, legacy
-validator, and legacy tests are immutable migration evidence. They are not
-active work-state authorities and are not part of current governance
-verification. Their deletion requires a separate, explicitly approved cleanup
-after the cutover revision is available on `trunk`.
+It checks the local execution and intake contracts, never live GitHub state.

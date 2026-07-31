@@ -35,8 +35,6 @@ GOVERNANCE_PATHS = frozenset(
     {
         "AGENTS.md",
         "CONTRIBUTING.md",
-        "utl/change-governance.py",
-        "utl/test_change_governance.py",
         "utl/test_github_governance.py",
     }
 )
