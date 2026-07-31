@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-GOVERNANCE = ROOT / ".ai4X/governance/README.md"
+GOVERNANCE = ROOT / ".ai4X/governance/guidelines.md"
 STATE = ROOT / ".ai4X/STATE.md"
 CONTRIBUTING = ROOT / "CONTRIBUTING.md"
 FRAMEWORK_FORM = ROOT / ".github/ISSUE_TEMPLATE/framework-change.yml"
@@ -168,14 +168,24 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertTrue(path.is_file())
 
+    def test_non_core_ai4x_contract_names_are_lowercase(self) -> None:
+        for directory in ("governance", "operations", "rules"):
+            root = ROOT / ".ai4X" / directory
+            if not root.is_dir():
+                continue
+            for path in root.rglob("*"):
+                if path.is_file() and not path.name.startswith("."):
+                    with self.subTest(path=path):
+                        self.assertEqual(path.name, path.name.lower())
+
     def test_active_authority_split_is_explicit(self) -> None:
         content = read(GOVERNANCE)
         for term in (
             "A GitHub Issue owns",
             "Native Issue Dependencies own",
-            "PO scheduling",
+            "Product Owner scheduling",
             "owns no admission",
-            "only the activated local handoff",
+            "activated repository-local handoff",
             "deterministic and network-independent",
         ):
             with self.subTest(term=term):
@@ -185,6 +195,7 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         content = read(CONTRIBUTING)
         for status in (
             "Backlog",
+            "Refined",
             "Ready",
             "In progress",
             "Paused",
@@ -193,6 +204,55 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         ):
             with self.subTest(status=status):
                 self.assertIn(f"`{status}`", content)
+
+    def test_workflow_authority_and_transitions_are_explicit(self) -> None:
+        content = read(GOVERNANCE)
+        for term in (
+            "Backlog -> Refined",
+            "Refined -> Ready",
+            "Ready -> In progress",
+            "In progress -> In review",
+            "In review -> In progress",
+            "In review -> Done",
+            "In progress -> Paused",
+            "Paused -> Ready",
+            "Only the Product Owner moves",
+            "Agents control later transitions",
+            "Project order never creates a dependency",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, content)
+
+    def test_refinement_reads_body_and_comments(self) -> None:
+        content = read(GOVERNANCE)
+        for term in (
+            "complete Issue body",
+            "every existing comment",
+            "internally consistent contract",
+            "Product Owner decision",
+            "never silently mutate",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, content)
+
+    def test_delegated_remote_facts_use_primary_agent(self) -> None:
+        content = read(GOVERNANCE)
+        for term in (
+            "never query or mutate remote",
+            "primary agent",
+            "unmodified result",
+            "never inferred",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, content)
+
+    def test_human_guidance_contains_portable_workflow_diagram(self) -> None:
+        content = read(CONTRIBUTING)
+        self.assertIn("```text\n", content)
+        self.assertIn("Backlog -- Reifung --> Refined", content)
+        self.assertIn("Refined -- PO-Freigabe --> Ready", content)
+        self.assertIn("In progress -- Kandidat vollständig --> In review", content)
+        self.assertIn("Findings", content)
 
     def test_dependency_boundary_is_explicit_without_reserved_label(
         self,
@@ -210,7 +270,9 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             with self.subTest(path=path):
                 content = read(path)
                 normalized = " ".join(content.split())
-                self.assertRegex(normalized.lower(), r"native issue dependency")
+                self.assertRegex(
+                    normalized.lower(), r"native issue dependenc(?:y|ies)"
+                )
                 for term in terms:
                     self.assertIn(term, normalized)
                 self.assertIn("Paused", normalized)

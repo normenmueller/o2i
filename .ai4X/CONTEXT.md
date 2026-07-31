@@ -107,8 +107,7 @@ repository Views and snapshots. It never validates O2I instances.
   and independent reviews.
 - GitHub Project `O2I`: PO scheduling projection over Issues; no admission,
   dependency, review, or closure authority.
-- `.ai4X/governance/`: agent execution and evidence contract for the
-  GitHub-native workflow; no backlog, project history, or fachliche semantics.
+- `.ai4X/governance/guidelines.md`: normative agent-facing GitHub workflow and evidence contract; no backlog, project history, or fachliche semantics.
 - `utl/extract-archimate-view.py`: repository View/snapshot checker.
 - `utl/verify.sh`: canonical staged verification.
 

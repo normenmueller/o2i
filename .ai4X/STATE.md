@@ -1,18 +1,17 @@
 # Handoff
 
 - Observed: 2026-07-31 CEST
-- Work status: `PAUSED`
-- Execution authorization: `REQUIRED`
-- Authorization scope: `NONE`
-- Current Issue: `NONE`
-- Current gate: `NONE`
-- Gate status: `NOT_REQUIRED`
-- Current node: `paused-handoff`
+- Work status: `ACTIVE`
+- Execution authorization: `APPROVED`
+- Authorization scope: Issue `#12` bootstrap Maintenance bundle covering Issues `#12`, `#15`, `#16`, and `#17`; no O2I semantics, publication content, formalization, notation, or public API changes.
+- Current Issue: `#12`
+- Current gate: `maintenance-bundle-finalreview-1`
+- Gate status: `PENDING`
+- Current node: `maintenance-bundle`
 
 # Objective
 
-Preserve the accepted Issue `#7` closure and await explicit PO activation of
-the next O2I Issue.
+Implement the approved Maintenance bundle and establish the accepted `Backlog -> Refined -> Ready -> In progress -> In review -> Done` workflow.
 
 # Repository Facts
 
@@ -29,13 +28,15 @@ the next O2I Issue.
 - No active repository text references the removed migration evidence; no
   fachliche, public-documentation, model, Haskell/API, or semantic artifact
   changed.
-- Issues `#17`, `#16`, `#15`, `#12`, and `#1` remain non-activated Backlog
-  records. Issue `#4` remains inactive.
+- Issue `#12` has Project status `In progress` after explicit Product Owner activation and coordinates the bootstrap bundle.
+- Issues `#15`, `#16`, and `#17` have complete consolidated contracts and Project status `Refined`; Issue `#12` remains their bootstrap execution authority until the accepted cutover revision.
+- Issue `#1` remains a non-activated Backlog record. Issue `#4` remains inactive.
 - The user controls ArchiMate edits and pushes.
 
 # Dirty Scope
 
-- `NONE`
+- `.ai4X/BEHAVIOR.md` contains the pre-existing Markdown source-line rule.
+- Issue `#12` adds only `.ai4X` governance, `CONTRIBUTING.md`, and focused governance tests.
 
 # Verification
 
@@ -45,11 +46,19 @@ the next O2I Issue.
 - Remote run `30625784058` succeeds for handoff revision `c20eabe`.
 - The workspace O2I public-repository boundary check passes.
 
+# Current Gate
+
+- Attempt: `maintenance-bundle-finalreview-1`
+- Candidate revision: `PENDING`
+- Review scope: `.ai4X/BEHAVIOR.md`, `.ai4X/CONTEXT.md`, `.ai4X/governance/`, `CONTRIBUTING.md`, and `utl/test_github_governance.py`; mutable `.ai4X/STATE.md` is excluded.
+- Mandatory checks: governance verification, public-boundary verification, and independent agentic-workflow/governance Finalreview.
+- Finding status: `OPEN`
+- Result: `PENDING`
+
 # Next Action
 
-Await explicit PO activation of the next O2I Issue. Cross-repository
-Maintenance continues only through its owning repository handoff.
+Complete the O2I workflow cutover, verify one coherent candidate, and submit its exact revision to independent Finalreview.
 
 # Local Return Point
 
-The paused cross-repository handoff after accepted Issue `#7`.
+After the accepted O2I bundle, project its useful generic workflow pattern into the separately authorized repository-local Maintenance Issues, then return to inactive Issue `#4`.

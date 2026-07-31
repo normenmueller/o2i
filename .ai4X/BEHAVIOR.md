@@ -18,7 +18,7 @@ repository.
 | ArchiMate, metamodel, or syntax work | `.ai4X/operations/modeling.md` |
 | White Paper, README, WTF, or rendering | `.ai4X/operations/publication.md` |
 | Strategy design or strategy review | `.ai4X/operations/strategy-review.md` |
-| Normative O2I change proposal or implementation | `.ai4X/governance/README.md` |
+| Normative O2I change, Issue, Project, or workflow administration | `.ai4X/governance/guidelines.md` |
 
 Read multiple contracts when a task crosses classes. Do not load unrelated
 contracts.
@@ -108,10 +108,13 @@ implementation review scope.
 
 # Workflow
 
+- Write Markdown prose as one source line per paragraph. Use line breaks only for new paragraphs, list items, tables, code blocks, and notation that requires them.
 - Immediately before each manual edit, read the target range freshly. Apply one
   narrow patch to one file, then reread the changed range and its diff before
   the next edit.
 - Use `rg` and repository tooling for inspection.
+- Read the complete Issue body and every existing comment before moving `Backlog -> Refined`; consolidate one explicit contract. Only the Product Owner moves `Refined -> Ready`. Agents control later transitions within the authorized scope according to `.ai4X/governance/guidelines.md`.
+- Delegated agents and independent reviewers never query or mutate remote work state. They request every material remote fact from the primary agent, which returns the unmodified query result or reports it unavailable without inference.
 - Update `CHANGELOG.md` for release-relevant changes.
 - Verify the narrow scope before broad gates.
 - Required external reviews are independent and read-only. Every finding has a

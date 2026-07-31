@@ -47,36 +47,33 @@ Bei unklarer Einordnung gilt die strengere Einordnung als Framework Change.
 
 Das GitHub Project `O2I` ist die Planungssicht des Product Owners:
 
-- `Backlog`: erfasst, aber noch nicht ausführungsbereit;
-- `Ready`: hinreichend geklärt und entscheidungsreif, aber noch nicht zur
-  Umsetzung freigegeben;
-- `In progress`: durch den Product Owner freigegebene aktive Umsetzung;
+- `Backlog`: verständliche Idee, noch nicht aufbereitet;
+- `Refined`: vollständig konsolidiert und entscheidungsreif, aber noch nicht freigegeben;
+- `Ready`: durch den Product Owner ausdrücklich zur Umsetzung freigegeben;
+- `In progress`: aus `Ready` aktivierte Umsetzung;
 - `Paused`: bewusst ausgesetzt; Grund und Rückkehrbedingung stehen im Issue;
 - `In review`: eine exakte Kandidatenrevision wird geprüft;
-- `Done`: das Issue ist geschlossen.
+- `Done`: akzeptiert, erforderlichenfalls remote verfügbar und geschlossen.
 
-Der `Backlog` nimmt eine hinreichend verständliche Idee mit Problem und grobem
-Ziel bewusst niederschwellig auf. Er bedeutet weder vollständige
-Nutzenbewertung noch Design, Admission oder Implementierungsfreigabe.
-Agenten unterstützen die Reifung, indem sie Nutzen, Scope, Risiken,
-Abhängigkeiten und Akzeptanzkriterien schärfen, fehlende
-Entscheidungsgrundlagen ausweisen und den Übergang zu `Ready` empfehlen. Diese
-Vorbereitung ist noch keine Umsetzung.
+Vor `Backlog -> Refined` lesen Agenten den vollständigen Issue-Body und sämtliche vorhandenen Kommentare. Sie führen die akzeptierten Inhalte zu einem eindeutigen Vertrag zusammen; widersprüchliche oder überholte Aussagen benötigen eine ausdrückliche Entscheidung des Product Owners. Diese Aufbereitung ist noch keine Umsetzung.
 
-`Ready` kennzeichnet die Entscheidungsreife für eine Umsetzung: Nutzen, Scope,
-Risiken, Abhängigkeiten und Akzeptanzkriterien sind tragfähig. Framework
-Changes benötigen zusätzlich die vollständige fachliche und formale Admission;
-Maintenance nur eine risikogerechte Prüfung. `Ready` erteilt noch keine
-Ausführungsfreigabe. Ausschließlich der Product Owner setzt ein Issue auf
-`In progress`; Agenten führen diesen Übergang nicht selbstständig aus und
-leiten ihn auch nicht aus dem Issue-Zustand ab.
+Ausschließlich der Product Owner verschiebt `Refined -> Ready` und erteilt damit die Ausführungsfreigabe. Ab `Ready` steuern Agenten Aktivierung, Review, Korrekturen und Abschluss innerhalb des freigegebenen Vertrags. Die Reihenfolge in `Ready` bestimmt die Abarbeitungsfolge, sofern der Product Owner keine andere Reihenfolge oder Parallelisierung freigibt.
 
-Ein erforderlicher Blocker innerhalb des O2I-Issue-Graphen wird ausschließlich
-als native Issue Dependency modelliert. Eine erforderliche Abhängigkeit
-außerhalb dieses Graphen, etwa eine Upstream-Entscheidung, wird mit Quelle und
-nächster Prüfbedingung ausdrücklich im betroffenen Issue dokumentiert; ein
-eigenes Label ist dafür nicht reserviert. Ein Blocker allein setzt ein Issue
-nicht auf `Paused`.
+```text
+Backlog -- Reifung --> Refined -- PO-Freigabe --> Ready -- Aktivierung --> In progress
+                                                       ^                       |
+                                                       |                       +-- Pause --> Paused
+                                                       |                                      |
+                                                       +-- Rückkehrbedingung erfüllt ----------+
+
+In progress -- Kandidat vollständig --> In review -- akzeptiert --> Done
+    ^                                      |
+    +--------------- Findings -------------+
+```
+
+Vertikale Reihenfolge bedeutet Aufbereitungspriorität in `Backlog`, Entscheidungspriorität in `Refined` und autorisierte Abarbeitungsfolge in `Ready`. Die Reihenfolge aller anderen Spalten hat keine Workflow-Bedeutung.
+
+Echte Voraussetzungen innerhalb des O2I-Issue-Graphen werden ausschließlich als native Issue Dependencies modelliert. Eine erforderliche Abhängigkeit außerhalb dieses Graphen wird mit Quelle und nächster Prüfbedingung im betroffenen Issue dokumentiert. Project-Reihenfolge ersetzt keine Abhängigkeit; ein Blocker allein setzt ein Issue nicht auf `Paused`.
 
 ## Repository-Struktur
 
