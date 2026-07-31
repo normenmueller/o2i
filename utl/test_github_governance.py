@@ -83,22 +83,31 @@ def handoff_contract_violations(content: str) -> list[str]:
     gate = content.split("# Current Gate\n", 1)[1].split("\n# ", 1)[0]
     for name in (
         "Attempt",
-        "Subject",
+        "Candidate revision",
+        "Review scope",
         "Mandatory checks",
         "Finding status",
         "Result",
     ):
         if gate.count(f"- {name}:") != 1:
             violations.append(f"Current Gate must contain one {name}")
-    if "exact repository `HEAD` containing this record" not in gate:
-        violations.append("an active gate must bind the exact repository HEAD")
 
     gate_values: dict[str, str] = {}
-    for name in ("Attempt", "Finding status", "Result"):
+    for name in ("Attempt", "Candidate revision", "Finding status", "Result"):
         matches = re.findall(rf"(?m)^- {re.escape(name)}: `([^`]+)`$", gate)
         if len(matches) == 1:
             gate_values[name] = matches[0]
-    if len(gate_values) == 3:
+    revision = gate_values.get("Candidate revision")
+    if revision is not None and revision != "PENDING":
+        if re.fullmatch(r"[0-9a-f]{40}", revision) is None:
+            violations.append(
+                "Candidate revision must be PENDING or one full Git revision"
+            )
+    if ".ai4X/STATE.md" not in gate or "excluded" not in gate:
+        violations.append("Review scope must exclude mutable .ai4X/STATE.md")
+
+    result_fields = ("Attempt", "Finding status", "Result")
+    if all(name in gate_values for name in result_fields):
         if fields["Current gate"] != gate_values["Attempt"]:
             violations.append("Current gate must match Attempt")
         if fields["Gate status"] != gate_values["Result"]:
@@ -225,7 +234,8 @@ class GitHubGovernanceContractTests(unittest.TestCase):
 # Current Gate
 
 - Attempt: `closed-handoff-contract-1`
-- Subject: the exact repository `HEAD` containing this record.
+- Candidate revision: `0123456789abcdef0123456789abcdef01234567`
+- Review scope: declared immutable files; mutable `.ai4X/STATE.md` is excluded.
 - Mandatory checks: governance verification.
 - Finding status: `OPEN`
 - Result: `PENDING`
@@ -239,6 +249,14 @@ class GitHubGovernanceContractTests(unittest.TestCase):
                     "- Current gate: `different-gate`",
                 ),
                 "Current gate must match Attempt",
+            ),
+            (
+                "candidate revision",
+                content.replace(
+                    "`0123456789abcdef0123456789abcdef01234567`",
+                    "`01234567`",
+                ),
+                "Candidate revision must be PENDING or one full Git revision",
             ),
             (
                 "gate result",

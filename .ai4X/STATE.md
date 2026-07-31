@@ -7,9 +7,9 @@
   and retained-artifact adaptations approved in comments `5140326278` and
   `5140370738`.
 - Current Issue: `#7`
-- Current gate: `legacy-cleanup-finalreview-1`
+- Current gate: `legacy-cleanup-correction-1`
 - Gate status: `PENDING`
-- Current node: `legacy-governance-review`
+- Current node: `legacy-governance-correction`
 
 # Objective
 
@@ -35,16 +35,15 @@ repository-autonomous GitHub-native governance contract.
   inventory review.
 - Issue `#7` comment `5140370738` records explicit PO approval of that exact
   implementation scope.
+- Finalreview attempt 1 rejects candidate `af08fbd` because the active gate
+  couples immutable review identity to mutable handoff state.
 - Issue `#4` remains inactive.
 - The user controls ArchiMate edits and pushes.
 
 # Dirty Scope
 
-- Exact 23-file deletion set in Issue `#7` comment `5140326278`
-- `.ai4X/governance/README.md`
 - `.ai4X/STATE.md`
 - `utl/test_github_governance.py`
-- `utl/verification_scope.py`
 
 # Verification
 
@@ -59,8 +58,8 @@ repository-autonomous GitHub-native governance contract.
 
 # Next Action
 
-Commit the exact candidate and obtain one focused independent
-administrative-governance Finalreview.
+Correct the active gate contract, verify the new candidate, and obtain one
+focused independent administrative-governance Finalreview.
 
 # Local Return Point
 
@@ -68,11 +67,11 @@ The paused cross-repository handoff after Issue `#7`.
 
 # Current Gate
 
-- Attempt: `legacy-cleanup-finalreview-1`
-- Subject: the exact repository `HEAD` containing this record; approved
-  inventory comment `5140326278`; PO approval comment `5140370738`.
-- Review scope: approved deletions, retained governance contract, active
-  static governance tests, verification-scope registry, and runtime handoff.
+- Attempt: `legacy-cleanup-correction-1`
+- Candidate revision: `PENDING`
+- Review scope: approved 23-file deletion set plus
+  `.ai4X/governance/README.md`, `utl/test_github_governance.py`, and
+  `utl/verification_scope.py`; mutable `.ai4X/STATE.md` is excluded.
 - Mandatory checks: focused independent administrative-governance Finalreview
   without findings and with 10.0 in every required dimension; remote
   verification of the accepted revision.
