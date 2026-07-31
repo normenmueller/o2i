@@ -7,9 +7,9 @@
   and retained-artifact adaptations approved in comments `5140326278` and
   `5140370738`.
 - Current Issue: `#7`
-- Current gate: `legacy-cleanup-correction-1`
+- Current gate: `legacy-cleanup-finalreview-2`
 - Gate status: `PENDING`
-- Current node: `legacy-governance-correction`
+- Current node: `legacy-governance-review`
 
 # Objective
 
@@ -37,13 +37,14 @@ repository-autonomous GitHub-native governance contract.
   implementation scope.
 - Finalreview attempt 1 rejects candidate `af08fbd` because the active gate
   couples immutable review identity to mutable handoff state.
+- Candidate `4dbe3a10da14a4f8dff8f3fd4bdd73ed9f6b528f` corrects both findings
+  and passes complete local verification.
 - Issue `#4` remains inactive.
 - The user controls ArchiMate edits and pushes.
 
 # Dirty Scope
 
-- `.ai4X/STATE.md`
-- `utl/test_github_governance.py`
+- `NONE`
 
 # Verification
 
@@ -52,14 +53,15 @@ repository-autonomous GitHub-native governance contract.
 - `./utl/verify.sh paper` and `git diff --check` pass after editorial follow-up
   `a69cf98`.
 - `./utl/verify.sh governance` passes after activation of Issue `#7`.
-- `./utl/verify.sh all` passes for the exact approved cleanup candidate.
+- `./utl/verify.sh all` passes for candidate
+  `4dbe3a10da14a4f8dff8f3fd4bdd73ed9f6b528f`.
 - No active repository text references the removed local migration evidence.
 - The workspace O2I boundary check passes.
 
 # Next Action
 
-Correct the active gate contract, verify the new candidate, and obtain one
-focused independent administrative-governance Finalreview.
+Obtain one focused independent administrative-governance Finalreview of
+candidate `4dbe3a10da14a4f8dff8f3fd4bdd73ed9f6b528f`.
 
 # Local Return Point
 
@@ -67,8 +69,8 @@ The paused cross-repository handoff after Issue `#7`.
 
 # Current Gate
 
-- Attempt: `legacy-cleanup-correction-1`
-- Candidate revision: `PENDING`
+- Attempt: `legacy-cleanup-finalreview-2`
+- Candidate revision: `4dbe3a10da14a4f8dff8f3fd4bdd73ed9f6b528f`
 - Review scope: approved 23-file deletion set plus
   `.ai4X/governance/README.md`, `utl/test_github_governance.py`, and
   `utl/verification_scope.py`; mutable `.ai4X/STATE.md` is excluded.
