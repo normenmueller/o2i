@@ -7,9 +7,9 @@
   and retained-artifact adaptations approved in comments `5140326278` and
   `5140370738`.
 - Current Issue: `#7`
-- Current gate: `legacy-cleanup-finalreview-3`
+- Current gate: `legacy-cleanup-remote-verification`
 - Gate status: `PENDING`
-- Current node: `legacy-governance-review`
+- Current node: `legacy-governance-remote-verification`
 
 # Objective
 
@@ -42,6 +42,8 @@ repository-autonomous GitHub-native governance contract.
 - Candidate `0c91852d50679526a4cc62067134f624d18c0357` parses and validates
   every gate field independently, closes that finding, and passes complete
   local verification.
+- Finalreview attempt 3 accepts that exact candidate without findings and with
+  10.0 in every required dimension.
 - Issue `#4` remains inactive.
 - The user controls ArchiMate edits and pushes.
 
@@ -63,8 +65,8 @@ repository-autonomous GitHub-native governance contract.
 
 # Next Action
 
-Obtain one focused independent administrative-governance Finalreview of exact
-candidate `0c91852d50679526a4cc62067134f624d18c0357`.
+Await the PO-controlled push, then verify the remote run for the accepted
+candidate and close Issue `#7` when it is green.
 
 # Local Return Point
 
@@ -72,13 +74,13 @@ The paused cross-repository handoff after Issue `#7`.
 
 # Current Gate
 
-- Attempt: `legacy-cleanup-finalreview-3`
+- Attempt: `legacy-cleanup-remote-verification`
 - Candidate revision: `0c91852d50679526a4cc62067134f624d18c0357`
 - Review scope: approved 23-file deletion set plus
   `.ai4X/governance/README.md`, `utl/test_github_governance.py`, and
   `utl/verification_scope.py`; mutable `.ai4X/STATE.md` is excluded.
-- Mandatory checks: focused independent administrative-governance Finalreview
-  without findings and with 10.0 in every required dimension; remote
-  verification of the accepted revision.
+- Mandatory checks: remote verification of the accepted revision; focused
+  independent administrative-governance Finalreview is accepted without
+  findings and with 10.0 in every required dimension.
 - Finding status: `CLOSED`
 - Result: `PENDING`
