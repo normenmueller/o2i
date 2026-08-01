@@ -234,6 +234,26 @@ reason=path-matrix""",
 class VerificationWorkflowTests(unittest.TestCase):
     """Keep all required checks visible while heavy work is conditional."""
 
+    def test_remote_triggers_are_pull_request_manual_and_release_only(self) -> None:
+        content = WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn(
+            """\
+on:
+  push:
+    tags:
+      - 'o2i-v*'
+  pull_request:
+  workflow_dispatch:
+""",
+            content,
+        )
+        self.assertIn(
+            "O2I_FORCE_FULL: ${{ startsWith(github.ref, "
+            "'refs/tags/o2i-v') }}",
+            content,
+        )
+        self.assertNotIn("github.event.forced", content)
+
     def test_workflow_preserves_names_and_uses_each_scope_output(self) -> None:
         content = WORKFLOW.read_text(encoding="utf-8")
         cases = (

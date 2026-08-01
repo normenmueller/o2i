@@ -107,10 +107,12 @@ Git and the Issue retain history. No local change archive is created. A rejected
 
 ## Verification
 
-Repository verification remains deterministic and network-independent:
+Repository verification remains deterministic and network-independent. Before every commit, run every verification stage selected for the changed paths by the canonical path matrix; if classification is unknown or spans a shared contract, run the complete suite. Before every release tag, run the complete suite locally:
 
 ```sh
-./utl/verify.sh governance
+./utl/verify.sh
 ```
 
-It checks the local execution and intake contracts, never live GitHub state.
+Direct branch pushes do not trigger GitHub Actions. Remote verification runs only for Pull Requests, manual dispatches, and release tags matching `o2i-v*`. Pull Requests use conservative path-sensitive selection; manual dispatches and release tags always run the complete suite. A release is not accepted until its remote verification succeeds.
+
+Do not use `[skip ci]` as a routine workflow mechanism. The repository trigger policy, not commit-message decoration, owns whether remote verification runs.
