@@ -92,6 +92,10 @@ Das White Paper und alle TikZ-basierten Abbildungen werden reproduzierbar erzeug
 
 Das Skript rendert zunächst die Quellen aus `acc/` nach `img/`, ruft anschließend [`md2pdf`](https://github.com/normenmueller/md2pdf) auf und versiegelt die Quellen- und Rendererbindung in `o2i.pdf.manifest.json`.
 
+## Attribution
+
+Agentisch erstellte Commits führen den transparenten Machine User [`gertrud-ai4x`](https://github.com/gertrud-ai4x) als Autorin und den verantwortlichen Menschen als Committer. Agentische Issue-Kommentare und Board-Übergänge ab `Ready` erfolgen über diesen Account; PO-Freigaben, Releases und andere verantwortliche Entscheidungen bleiben dem Product Owner zugeordnet. Der Machine User kann unabhängige Review-Evidenz veröffentlichen, ersetzt oder imitiert jedoch keinen Reviewer.
+
 ## Umsetzung
 
 - Änderungen bleiben im Scope des Issues.

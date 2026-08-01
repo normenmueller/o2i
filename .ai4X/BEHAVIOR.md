@@ -18,7 +18,7 @@ repository.
 | ArchiMate, metamodel, or syntax work | `.ai4X/operations/modeling.md` |
 | White Paper, README, WTF, or rendering | `.ai4X/operations/publication.md` |
 | Strategy design or strategy review | `.ai4X/operations/strategy-review.md` |
-| Normative O2I change, Issue, Project, or workflow administration | `.ai4X/governance/guidelines.md` |
+| Git commit, remote write, normative O2I change, Issue, Project, or workflow administration | `.ai4X/governance/guidelines.md` |
 
 Read multiple contracts when a task crosses classes. Do not load unrelated
 contracts.

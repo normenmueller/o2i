@@ -89,6 +89,17 @@ Read GitHub Issue and comment bodies through the connected GitHub application an
 
 When GitHub is unavailable, agents continue only an already activated local handoff. They never infer, create, transition, or close remote work offline.
 
+## Attribution And Accountability
+
+- `gertrud-ai4x` is the transparent O2I machine user for agentic work.
+- Agent-produced commits use `Gertrud ai4X <311782161+gertrud-ai4x@users.noreply.github.com>` as author and preserve the configured accountable human as committer. Never rewrite existing commits merely to add this attribution.
+- A commit that changes `.ai4X/` is an authority commit: keep it separate from implementation changes and use the configured Product Owner identity as both author and committer. The machine user never authors its own operating authority.
+- The primary agent may create an authority commit locally but never pushes it. Before a Product Owner push, report every outgoing commit and its scope. The Product Owner's own push accepts and publishes those authority commits; no separate pre-commit confirmation is required.
+- Agent-originated Issue comments and agent-controlled Project transitions from `Ready` onward use the machine user. If its separate authentication is unavailable, do not impersonate it through the Product Owner account.
+- Product Owner authorization, `Refined -> Ready`, release authorization, and other accountable decisions remain actions of the Product Owner.
+- The machine user may publish evidence produced by an independent reviewer but never becomes or impersonates that reviewer; the evidence identifies the actual independent capability and exact subject.
+- Store machine-user credentials only in host credential storage, never in the repository or Agent Memory.
+
 ## Review And Closure
 
 Every accepted review comment records:
