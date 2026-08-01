@@ -175,7 +175,7 @@ Die Terminologie beschreibt eine *teleologische Wirkungslogik*: von Orientierung
 >
 > [^principles]: *Autorenableitung in Anlehnung an Collins und Porras (1996), Schein (2010), Bourne, Jenkins und Parry (2019), Rumelt (2011) und Porter (1996)*: Leitprinzipien werden hier als normative Grundsätze verstanden, die Handlungsoptionen begrenzen, Prioritäten prägen und Entscheidungen konsistent machen.
 
-Ethos begrenzt, welche Arten von Zielen, Strategien und Handlungen für einen Akteur überhaupt legitim sind. Es ist damit kein Zielbild und keine Strategie, sondern der normative Maßstab, an dem spätere Wegentscheidungen konsistent ausgerichtet werden.
+Ethos begrenzt, welche Arten von Zielen, Strategien und Handlungen für einen Akteur überhaupt legitim sind. Es ist damit kein Zielbild und keine Strategie, sondern der normative Maßstab, an dem spätere Wegentscheidungen konsistent ausgerichtet werden. Dieser Maßstab wirkt bewusst oder unbewusst; O2I macht ihn explizit, damit seine Prägung späterer Wegentscheidungen nachvollziehbar und prüfbar wird.
 
 ### Mission
 
