@@ -16,12 +16,12 @@
 - Independent Finalreview reports no findings and 10.0 in every required dimension.
 - Remote Verify run `30689816445` succeeds for governance, model contracts, Haskell specification, and White Paper.
 - Issue `#1` remains a non-activated Backlog record.
-- Issue `#4` remains inactive and requires a new explicit Product Owner activation after the pending discussion.
+- Issue `#4` is open with Project status `Paused`. Its current pause handoff records the interruption, return condition, and return point; implementation remains unauthorized until a new explicit Product Owner decision.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-Discuss the Product Owner's open points. Do not activate or modify Issue `#4` before an explicit Product Owner decision.
+Continue the Product Owner discussion. Do not activate or implement Issue `#4` before an explicit Product Owner decision.
 
 # Local Return Point
 
