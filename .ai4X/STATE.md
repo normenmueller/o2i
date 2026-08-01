@@ -7,7 +7,7 @@
 - Current Issue: `NONE`
 - Current gate: `NONE`
 - Gate status: `NOT_REQUIRED`
-- Current node: `paused-profile-contract-handoff`
+- Current node: `refined-profile-contract-handoff`
 
 # Repository Facts
 
@@ -16,13 +16,13 @@
 - Independent Finalreview reports no findings and 10.0 in every required dimension.
 - Remote Verify run `30689816445` succeeds for governance, model contracts, Haskell specification, and White Paper.
 - Issue `#1` remains a non-activated Backlog record.
-- Issue `#4` is open with Project status `Paused`. Its current pause handoff records the interruption, return condition, and return point; implementation remains unauthorized until a new explicit Product Owner decision.
+- Issue `#4` is open with Project status `Refined`. Its complete body and all eight existing comments were assessed; the body now consolidates the current authority, model-scoped profile, View-scoped inspection boundary, residual acceptance cases, and risk-proportionate review capabilities. Implementation remains unauthorized.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-Await an explicit Product Owner decision. Do not activate or implement Issue `#4` before that decision.
+Obtain digest-bound Strategy and Formalization Admission for the refined Issue body, then publish one authoritative implementation contract. Only the Product Owner may authorize implementation through `Refined -> Ready`.
 
 # Local Return Point
 
-Issue `#4` and its profile-contract scope are the next return point after that decision.
+Issue `#4` and its refined profile-contract scope remain the next return point.
