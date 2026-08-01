@@ -35,6 +35,8 @@ Backlog -> Refined -> Ready -> In progress -> In review -> Done
 - `Done` is accepted, remotely available, successfully verified when remote verification is required, and closed.
 - `Paused` is a side state for an actual interruption with one explicit reason and return condition.
 
+Backlog intake is deliberately lightweight. When the Product Owner presents an idea for Backlog intake, the primary agent briefly evaluates O2I fit, expected benefit, possible duplicates, change classification, and suitable labels; asks only questions that materially affect capture; and records a suitable idea directly in `Backlog` without design, Admission, or implementation authority.
+
 Agents may mature `Backlog -> Refined`. They first read the complete Issue body and every existing comment, resolve compatible material into the body, and obtain an explicit Product Owner decision for conflicts or superseded instructions. This refinement is not implementation.
 
 Only the Product Owner moves `Refined -> Ready`. That transition is the execution authorization. Agents neither perform nor infer it.

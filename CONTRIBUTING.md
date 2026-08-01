@@ -4,6 +4,8 @@ Beiträge beginnen mit einem GitHub Issue. Das Issue beschreibt das Problem und 
 
 Das öffentliche GitHub Project [O2I](https://github.com/users/normenmueller/projects/4) bildet Arbeitszustand und PO-Reihenfolge ab. Issues bleiben für Vertrag, Abhängigkeiten, Admission, Reviews sowie offenen oder geschlossenen Zustand maßgebend.
 
+Für die Aufnahme ins Backlog genügt eine verständliche Idee mit Problem und grobem Ziel. Ein Agent bewertet kurz O2I-Passung, erwarteten Nutzen, mögliche Dopplungen, Änderungsklasse und Labels und erfasst einen geeigneten Vorschlag ohne Design- oder Umsetzungsfreigabe.
+
 ## Arten von Änderungen
 
 ### Framework Change
