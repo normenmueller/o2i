@@ -109,6 +109,10 @@
   policy for key, cardinality, version, and additional O2I properties, while
   keeping selected-View semantic closure exclusively in Inspection and proving
   mixed-model and independently inspectable multi-View scopes.
+- Closed external record-update forging for abstract typed-profile contracts
+  through private internal fields, ordinary public accessors, and
+  external-client compile contracts for hidden data constructors, record
+  updates, and the hidden implementation module.
 - Made all human CLI reports and process diagnostics terminal-safe by centrally
   encoding source-derived control characters without changing JSON reports.
 - Clarified the semantic boundary between structural graph stages and

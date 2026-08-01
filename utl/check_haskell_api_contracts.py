@@ -132,6 +132,42 @@ CONTRACTS = (
             ),
         ),
     ),
+    PackageContract(
+        "o2i-archimate-profile",
+        "spc/ctr/archimate/tst/api/compile-pass/PublicApi.hs",
+        (
+            CompileFailure(
+                "spc/ctr/archimate/tst/api/compile-fail/"
+                "OpaqueConstructors.hs",
+                (("GHC-31891", 11),),
+            ),
+            CompileFailure(
+                "spc/ctr/archimate/tst/api/compile-fail/"
+                "OpaqueVocabularyConstructors.hs",
+                (("GHC-76037", 6),),
+            ),
+            CompileFailure(
+                "spc/ctr/archimate/tst/api/compile-fail/"
+                "ContractRecordUpdates.hs",
+                (("GHC-47535", 13),),
+            ),
+            CompileFailure(
+                "spc/ctr/archimate/tst/api/compile-fail/"
+                "MappingRecordUpdates.hs",
+                (("GHC-47535", 10),),
+            ),
+            CompileFailure(
+                "spc/ctr/archimate/tst/api/compile-fail/"
+                "CollectiveRecordUpdates.hs",
+                (("GHC-47535", 18),),
+            ),
+            CompileFailure(
+                "spc/ctr/archimate/tst/api/compile-fail/"
+                "HiddenInternalModule.hs",
+                (),
+            ),
+        ),
+    ),
 )
 
 PRIVATE_COMPILE_FAILURES = (

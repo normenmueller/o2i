@@ -5,39 +5,102 @@
 -- The JSON contract is authoritative. This module is the closed executable
 -- projection checked for complete equality with that contract.
 module O2I.ArchiMate.Profile.Internal
-  ( ArchiMateProfileContract(..)
-  , MetadataContract(..)
+  ( ArchiMateProfileContract
+  , MetadataContract
   , MetadataKind(..)
   , CarrierType(..)
-  , CarrierMapping(..)
-  , Requirement(..)
-  , Cardinality(..)
-  , ArchiMateRelationshipRepresentation(..)
-  , ArchiMateRelationMapping(..)
-  , ContextualizationContract(..)
-  , CollectiveContract(..)
-  , CollectiveCarrierContract(..)
-  , CollectiveSegmentContract(..)
-  , CollectiveContributorsContract(..)
-  , CollectiveTargetContract(..)
+  , CarrierMapping
+  , Requirement
+  , Cardinality
+  , ArchiMateRelationshipRepresentation
+  , ArchiMateRelationMapping
+  , ContextualizationContract
+  , CollectiveContract
+  , CollectiveCarrierContract
+  , CollectiveSegmentContract
+  , CollectiveContributorsContract
+  , CollectiveTargetContract
   , profileContract
   , profileVersionText
+  , contractSchema
+  , contractProfileVersion
+  , contractMetadata
+  , contractCarrierMappings
+  , contractRelationMappings
+  , contractContextualization
+  , contractCollectiveRealization
+  , modelProfileKey
+  , modelProfileCardinality
+  , modelAdditionalO2IProperties
+  , carrierKindKey
+  , carrierTypeKey
+  , carrierCommitmentKey
+  , carrierCommitmentValues
+  , carrierMetadataCardinality
+  , carrierAdditionalO2IProperties
+  , relationCommitmentKey
+  , relationCommitmentValues
+  , relationMetadataCardinality
+  , relationAdditionalO2IProperties
   , metadataKindText
   , metadataKindFromText
   , carrierTypeText
   , carrierTypeFromText
   , carrierTypeForNodeKind
+  , carrierMappingId
   , carrierMappingKind
   , carrierMappingTypes
   , carrierMappingElement
   , carrierMappingOwnership
   , carrierMappingFor
   , relationMappings
+  , relationMappingId
+  , relationMappingCode
+  , relationMappingName
+  , relationMappingLabel
+  , relationMappingSource
+  , relationMappingTarget
+  , relationMappingRepresentation
   , nodeKindIdentifier
   , expectedRelationshipLabel
   , expectedRelationshipRepresentation
   , relationshipRepresentation
+  , relationshipTypeName
+  , relationshipDirected
   , relationshipRepresentationText
+  , contextualizationId
+  , contextualizationRepresentation
+  , contextualizationLabel
+  , contextualizationSourceKind
+  , contextualizationTargetKinds
+  , contextualizationIncomingCardinality
+  , contextualizationMetadata
+  , contextualizationProjection
+  , collectiveId
+  , collectiveCarrier
+  , collectiveSegments
+  , collectiveContributors
+  , collectiveTarget
+  , collectiveJunctionChains
+  , collectiveProjection
+  , collectiveCarrierKind
+  , collectiveCarrierType
+  , collectiveCarrierElement
+  , collectiveJunctionType
+  , collectiveCommitmentKey
+  , collectiveCommitmentValues
+  , collectiveFitEvidenceKey
+  , collectiveFitEvidenceCardinality
+  , collectiveAdditionalO2IProperties
+  , collectiveSegmentRepresentation
+  , collectiveSegmentLabel
+  , collectiveSegmentMetadata
+  , collectiveContributorEndpoint
+  , collectiveContributorCardinality
+  , collectiveContributorsDistinct
+  , collectiveTargetEndpoint
+  , collectiveTargetCardinality
+  , collectiveTargetDistinctFromContributors
   , requirementText
   , requirementIsRequired
   , requirementIsForbidden
@@ -74,49 +137,49 @@ import O2I.Inspection.Profile
 
 -- | Complete compile-time projection of the ArchiMate profile contract.
 data ArchiMateProfileContract = ArchiMateProfileContract
-  { contractSchema :: Text
+  { contractSchemaValue :: Text
     -- ^ Stable schema identifier of the declarative contract.
-  , contractProfileVersion :: O2IProfileVersion
+  , contractProfileVersionValue :: O2IProfileVersion
     -- ^ Exact O2I profile version implemented by this projection.
-  , contractMetadata :: MetadataContract
+  , contractMetadataValue :: MetadataContract
     -- ^ Persisted metadata placement and cardinality contract.
-  , contractCarrierMappings :: [CarrierMapping]
+  , contractCarrierMappingsValue :: [CarrierMapping]
     -- ^ Carrier mappings in authoritative order.
-  , contractRelationMappings :: [ArchiMateRelationMapping]
+  , contractRelationMappingsValue :: [ArchiMateRelationMapping]
     -- ^ Relation mappings in authoritative core-registry order.
-  , contractContextualization :: ContextualizationContract
+  , contractContextualizationValue :: ContextualizationContract
     -- ^ Exact contextualization syntax.
-  , contractCollectiveRealization :: CollectiveContract
+  , contractCollectiveRealizationValue :: CollectiveContract
     -- ^ Exact collective Strategy-realization syntax.
   } deriving (Eq, Show)
 
 -- | Exact persisted metadata keys, cardinalities, and closed values.
 data MetadataContract = MetadataContract
-  { modelProfileKey :: Text
+  { modelProfileKeyValue :: Text
     -- ^ Root property selecting the O2I profile.
-  , modelProfileCardinality :: Cardinality
+  , modelProfileCardinalityValue :: Cardinality
     -- ^ Required root-property cardinality.
-  , modelAdditionalO2IProperties :: Requirement
+  , modelAdditionalO2IPropertiesValue :: Requirement
     -- ^ Policy for additional root-level O2I properties.
-  , carrierKindKey :: Text
+  , carrierKindKeyValue :: Text
     -- ^ Property identifying the O2I carrier kind.
-  , carrierTypeKey :: Text
+  , carrierTypeKeyValue :: Text
     -- ^ Property identifying the O2I carrier type.
-  , carrierCommitmentKey :: Text
+  , carrierCommitmentKeyValue :: Text
     -- ^ Property carrying proposition commitment on typed carriers.
-  , carrierCommitmentValues :: NonEmpty Commitment
+  , carrierCommitmentValuesValue :: NonEmpty Commitment
     -- ^ Closed carrier commitment vocabulary.
-  , carrierMetadataCardinality :: Cardinality
+  , carrierMetadataCardinalityValue :: Cardinality
     -- ^ Cardinality of required carrier metadata properties.
-  , carrierAdditionalO2IProperties :: Requirement
+  , carrierAdditionalO2IPropertiesValue :: Requirement
     -- ^ Policy for additional carrier-level O2I properties.
-  , relationCommitmentKey :: Text
+  , relationCommitmentKeyValue :: Text
     -- ^ Property carrying proposition commitment on semantic relations.
-  , relationCommitmentValues :: NonEmpty Commitment
+  , relationCommitmentValuesValue :: NonEmpty Commitment
     -- ^ Closed semantic-relation commitment vocabulary.
-  , relationMetadataCardinality :: Cardinality
+  , relationMetadataCardinalityValue :: Cardinality
     -- ^ Required relation commitment cardinality.
-  , relationAdditionalO2IProperties :: Requirement
+  , relationAdditionalO2IPropertiesValue :: Requirement
     -- ^ Policy for additional relation-level O2I properties.
   } deriving (Eq, Show)
 
@@ -139,10 +202,10 @@ data CarrierType
 
 -- | One exact carrier mapping in canonical contract order.
 data CarrierMapping = CarrierMapping
-  { carrierMappingId :: Text
+  { carrierMappingIdValue :: Text
   , carrierMappingTypesValue :: NonEmpty CarrierType
-  , carrierMappingArchiElement :: Text
-  , carrierMappingContextOwnership :: Requirement
+  , carrierMappingArchiElementValue :: Text
+  , carrierMappingContextOwnershipValue :: Requirement
   } deriving (Eq, Show)
 
 -- | Closed contract requirement vocabulary.
@@ -161,149 +224,383 @@ data Cardinality
 
 -- | Exact native relationship kind and Association direction flag.
 data ArchiMateRelationshipRepresentation = ArchiMateRelationshipRepresentation
-  { relationshipTypeName :: Text
+  { relationshipTypeNameValue :: Text
     -- ^ Exact ArchiMate relationship metaclass name.
-  , relationshipDirected :: Bool
+  , relationshipDirectedValue :: Bool
     -- ^ Whether an Association is explicitly directed.
   } deriving (Eq, Ord, Show)
 
 -- | One core relation enriched with its exact ArchiMate representation.
 data ArchiMateRelationMapping = ArchiMateRelationMapping
-  { relationMappingId :: Text
+  { relationMappingIdValue :: Text
     -- ^ Stable identifier of this concrete mapping.
-  , relationMappingCode :: RelationCode
+  , relationMappingCodeValue :: RelationCode
     -- ^ Notation-independent relation code.
-  , relationMappingName :: RelationName
+  , relationMappingNameValue :: RelationName
     -- ^ Persisted O2I relation name.
-  , relationMappingLabel :: Text
+  , relationMappingLabelValue :: Text
     -- ^ Exact ArchiMate relationship label.
-  , relationMappingSource :: NodeKindValue
+  , relationMappingSourceValue :: NodeKindValue
     -- ^ Required source endpoint kind.
-  , relationMappingTarget :: NodeKindValue
+  , relationMappingTargetValue :: NodeKindValue
     -- ^ Required target endpoint kind.
-  , relationMappingRepresentation :: ArchiMateRelationshipRepresentation
+  , relationMappingRepresentationValue :: ArchiMateRelationshipRepresentation
     -- ^ Required ArchiMate relationship representation.
   } deriving (Eq, Show)
 
 -- | Exact native contextualization pattern.
 data ContextualizationContract = ContextualizationContract
-  { contextualizationId :: Text
+  { contextualizationIdValue :: Text
     -- ^ Stable structured-pattern identifier.
-  , contextualizationRepresentation :: ArchiMateRelationshipRepresentation
+  , contextualizationRepresentationValue :: ArchiMateRelationshipRepresentation
     -- ^ Required relationship representation.
-  , contextualizationLabel :: Text
+  , contextualizationLabelValue :: Text
     -- ^ Exact contextualization label.
-  , contextualizationSourceKind :: MetadataKind
+  , contextualizationSourceKindValue :: MetadataKind
     -- ^ Required source carrier kind.
-  , contextualizationTargetKinds :: NonEmpty MetadataKind
+  , contextualizationTargetKindsValue :: NonEmpty MetadataKind
     -- ^ Allowed target carrier kinds.
-  , contextualizationIncomingCardinality :: Cardinality
+  , contextualizationIncomingCardinalityValue :: Cardinality
     -- ^ Required incoming contextualization cardinality.
-  , contextualizationMetadata :: Requirement
+  , contextualizationMetadataValue :: Requirement
     -- ^ Policy for metadata on the relationship carrier.
-  , contextualizationProjection :: Text
+  , contextualizationProjectionValue :: Text
     -- ^ Stable projection role.
   } deriving (Eq, Show)
 
 -- | Exact native collective Strategy-realization pattern.
 data CollectiveContract = CollectiveContract
-  { collectiveId :: Text
+  { collectiveIdValue :: Text
     -- ^ Stable structured-pattern identifier.
-  , collectiveCarrier :: CollectiveCarrierContract
+  , collectiveCarrierValue :: CollectiveCarrierContract
     -- ^ Junction-carrier contract.
-  , collectiveSegments :: CollectiveSegmentContract
+  , collectiveSegmentsValue :: CollectiveSegmentContract
     -- ^ Incoming and outgoing segment contract.
-  , collectiveContributors :: CollectiveContributorsContract
+  , collectiveContributorsValue :: CollectiveContributorsContract
     -- ^ Contributor endpoint contract.
-  , collectiveTarget :: CollectiveTargetContract
+  , collectiveTargetValue :: CollectiveTargetContract
     -- ^ Target endpoint contract.
-  , collectiveJunctionChains :: Requirement
+  , collectiveJunctionChainsValue :: Requirement
     -- ^ Policy for Junction-to-Junction chains.
-  , collectiveProjection :: Text
+  , collectiveProjectionValue :: Text
     -- ^ Stable projection role.
   } deriving (Eq, Show)
 
 -- | Carrier portion of the collective realization contract.
 data CollectiveCarrierContract = CollectiveCarrierContract
-  { collectiveCarrierKind :: MetadataKind
+  { collectiveCarrierKindValue :: MetadataKind
     -- ^ Required O2I carrier kind.
-  , collectiveCarrierType :: Text
+  , collectiveCarrierTypeValue :: Text
     -- ^ Required O2I carrier type.
-  , collectiveCarrierElement :: Text
+  , collectiveCarrierElementValue :: Text
     -- ^ Required ArchiMate element metaclass.
-  , collectiveJunctionType :: Text
+  , collectiveJunctionTypeValue :: Text
     -- ^ Required ArchiMate Junction type.
-  , collectiveCommitmentKey :: Text
+  , collectiveCommitmentKeyValue :: Text
     -- ^ Property carrying the collective proposition commitment.
-  , collectiveCommitmentValues :: NonEmpty Commitment
+  , collectiveCommitmentValuesValue :: NonEmpty Commitment
     -- ^ Closed collective commitment vocabulary.
-  , collectiveFitEvidenceKey :: Text
+  , collectiveFitEvidenceKeyValue :: Text
     -- ^ Property referencing collective Fit evidence.
-  , collectiveFitEvidenceCardinality :: Cardinality
+  , collectiveFitEvidenceCardinalityValue :: Cardinality
     -- ^ Required collective Fit evidence cardinality.
-  , collectiveAdditionalO2IProperties :: Requirement
+  , collectiveAdditionalO2IPropertiesValue :: Requirement
     -- ^ Policy for additional carrier-level O2I properties.
   } deriving (Eq, Show)
 
 -- | Segment portion of the collective realization contract.
 data CollectiveSegmentContract = CollectiveSegmentContract
-  { collectiveSegmentRepresentation :: ArchiMateRelationshipRepresentation
+  { collectiveSegmentRepresentationValue :: ArchiMateRelationshipRepresentation
     -- ^ Required segment relationship representation.
-  , collectiveSegmentLabel :: Text
+  , collectiveSegmentLabelValue :: Text
     -- ^ Exact segment label.
-  , collectiveSegmentMetadata :: Requirement
+  , collectiveSegmentMetadataValue :: Requirement
     -- ^ Policy for O2I metadata on segments.
   } deriving (Eq, Show)
 
 -- | Contributor portion of the collective realization contract.
 data CollectiveContributorsContract = CollectiveContributorsContract
-  { collectiveContributorEndpoint :: NodeKindValue
+  { collectiveContributorEndpointValue :: NodeKindValue
     -- ^ Required contributor endpoint kind.
-  , collectiveContributorCardinality :: Cardinality
+  , collectiveContributorCardinalityValue :: Cardinality
     -- ^ Required number of contributors.
-  , collectiveContributorsDistinct :: Requirement
+  , collectiveContributorsDistinctValue :: Requirement
     -- ^ Whether contributors must be distinct.
   } deriving (Eq, Show)
 
 -- | Target portion of the collective realization contract.
 data CollectiveTargetContract = CollectiveTargetContract
-  { collectiveTargetEndpoint :: NodeKindValue
+  { collectiveTargetEndpointValue :: NodeKindValue
     -- ^ Required target endpoint kind.
-  , collectiveTargetCardinality :: Cardinality
+  , collectiveTargetCardinalityValue :: Cardinality
     -- ^ Required number of targets.
-  , collectiveTargetDistinctFromContributors :: Requirement
+  , collectiveTargetDistinctFromContributorsValue :: Requirement
     -- ^ Whether the target must differ from every contributor.
   } deriving (Eq, Show)
+
+contractSchema :: ArchiMateProfileContract -> Text
+contractSchema = contractSchemaValue
+
+-- | Exact O2I profile version implemented by this contract.
+contractProfileVersion :: ArchiMateProfileContract -> O2IProfileVersion
+contractProfileVersion = contractProfileVersionValue
+
+-- | Persisted metadata contract.
+contractMetadata :: ArchiMateProfileContract -> MetadataContract
+contractMetadata = contractMetadataValue
+
+contractCarrierMappings :: ArchiMateProfileContract -> [CarrierMapping]
+contractCarrierMappings = contractCarrierMappingsValue
+
+contractRelationMappings ::
+     ArchiMateProfileContract -> [ArchiMateRelationMapping]
+contractRelationMappings = contractRelationMappingsValue
+
+-- | Concrete contextualization pattern.
+contractContextualization ::
+     ArchiMateProfileContract -> ContextualizationContract
+contractContextualization = contractContextualizationValue
+
+-- | Concrete collective Strategy-realization pattern.
+contractCollectiveRealization :: ArchiMateProfileContract -> CollectiveContract
+contractCollectiveRealization = contractCollectiveRealizationValue
+
+-- | Root property selecting the O2I profile.
+modelProfileKey :: MetadataContract -> Text
+modelProfileKey = modelProfileKeyValue
+
+-- | Required profile-property cardinality at model root.
+modelProfileCardinality :: MetadataContract -> Cardinality
+modelProfileCardinality = modelProfileCardinalityValue
+
+-- | Policy for additional root-level O2I properties.
+modelAdditionalO2IProperties :: MetadataContract -> Requirement
+modelAdditionalO2IProperties = modelAdditionalO2IPropertiesValue
+
+-- | Property identifying a carrier's O2I kind.
+carrierKindKey :: MetadataContract -> Text
+carrierKindKey = carrierKindKeyValue
+
+-- | Property identifying a carrier's O2I type.
+carrierTypeKey :: MetadataContract -> Text
+carrierTypeKey = carrierTypeKeyValue
+
+-- | Property carrying commitment on a typed carrier.
+carrierCommitmentKey :: MetadataContract -> Text
+carrierCommitmentKey = carrierCommitmentKeyValue
+
+carrierCommitmentValues :: MetadataContract -> NonEmpty Commitment
+carrierCommitmentValues = carrierCommitmentValuesValue
+
+carrierMetadataCardinality :: MetadataContract -> Cardinality
+carrierMetadataCardinality = carrierMetadataCardinalityValue
+
+carrierAdditionalO2IProperties :: MetadataContract -> Requirement
+carrierAdditionalO2IProperties = carrierAdditionalO2IPropertiesValue
+
+-- | Property carrying commitment on a semantic relation.
+relationCommitmentKey :: MetadataContract -> Text
+relationCommitmentKey = relationCommitmentKeyValue
+
+relationCommitmentValues :: MetadataContract -> NonEmpty Commitment
+relationCommitmentValues = relationCommitmentValuesValue
+
+relationMetadataCardinality :: MetadataContract -> Cardinality
+relationMetadataCardinality = relationMetadataCardinalityValue
+
+relationAdditionalO2IProperties :: MetadataContract -> Requirement
+relationAdditionalO2IProperties = relationAdditionalO2IPropertiesValue
+
+-- | Exact ArchiMate relationship metaclass name.
+relationshipTypeName :: ArchiMateRelationshipRepresentation -> Text
+relationshipTypeName = relationshipTypeNameValue
+
+-- | Whether an ArchiMate Association is explicitly directed.
+relationshipDirected :: ArchiMateRelationshipRepresentation -> Bool
+relationshipDirected = relationshipDirectedValue
+
+relationMappingId :: ArchiMateRelationMapping -> Text
+relationMappingId = relationMappingIdValue
+
+-- | Notation-independent relation code of a concrete mapping.
+relationMappingCode :: ArchiMateRelationMapping -> RelationCode
+relationMappingCode = relationMappingCodeValue
+
+-- | Persisted O2I relation name of a concrete mapping.
+relationMappingName :: ArchiMateRelationMapping -> RelationName
+relationMappingName = relationMappingNameValue
+
+-- | Exact ArchiMate label of a concrete relation mapping.
+relationMappingLabel :: ArchiMateRelationMapping -> Text
+relationMappingLabel = relationMappingLabelValue
+
+-- | Required source endpoint kind of a concrete relation mapping.
+relationMappingSource :: ArchiMateRelationMapping -> NodeKindValue
+relationMappingSource = relationMappingSourceValue
+
+-- | Required target endpoint kind of a concrete relation mapping.
+relationMappingTarget :: ArchiMateRelationMapping -> NodeKindValue
+relationMappingTarget = relationMappingTargetValue
+
+-- | Required ArchiMate representation of a concrete relation mapping.
+relationMappingRepresentation ::
+     ArchiMateRelationMapping -> ArchiMateRelationshipRepresentation
+relationMappingRepresentation = relationMappingRepresentationValue
+
+contextualizationId :: ContextualizationContract -> Text
+contextualizationId = contextualizationIdValue
+
+-- | ArchiMate representation of contextualization.
+contextualizationRepresentation ::
+     ContextualizationContract -> ArchiMateRelationshipRepresentation
+contextualizationRepresentation = contextualizationRepresentationValue
+
+-- | Exact relationship label of contextualization.
+contextualizationLabel :: ContextualizationContract -> Text
+contextualizationLabel = contextualizationLabelValue
+
+contextualizationSourceKind :: ContextualizationContract -> MetadataKind
+contextualizationSourceKind = contextualizationSourceKindValue
+
+contextualizationTargetKinds ::
+     ContextualizationContract -> NonEmpty MetadataKind
+contextualizationTargetKinds = contextualizationTargetKindsValue
+
+contextualizationIncomingCardinality :: ContextualizationContract -> Cardinality
+contextualizationIncomingCardinality = contextualizationIncomingCardinalityValue
+
+contextualizationMetadata :: ContextualizationContract -> Requirement
+contextualizationMetadata = contextualizationMetadataValue
+
+contextualizationProjection :: ContextualizationContract -> Text
+contextualizationProjection = contextualizationProjectionValue
+
+collectiveId :: CollectiveContract -> Text
+collectiveId = collectiveIdValue
+
+-- | Junction-carrier portion of collective Strategy realization.
+collectiveCarrier :: CollectiveContract -> CollectiveCarrierContract
+collectiveCarrier = collectiveCarrierValue
+
+-- | Segment portion of collective Strategy realization.
+collectiveSegments :: CollectiveContract -> CollectiveSegmentContract
+collectiveSegments = collectiveSegmentsValue
+
+-- | Contributor portion of collective Strategy realization.
+collectiveContributors :: CollectiveContract -> CollectiveContributorsContract
+collectiveContributors = collectiveContributorsValue
+
+-- | Target portion of collective Strategy realization.
+collectiveTarget :: CollectiveContract -> CollectiveTargetContract
+collectiveTarget = collectiveTargetValue
+
+-- | Policy for Junction-to-Junction chains.
+collectiveJunctionChains :: CollectiveContract -> Requirement
+collectiveJunctionChains = collectiveJunctionChainsValue
+
+collectiveProjection :: CollectiveContract -> Text
+collectiveProjection = collectiveProjectionValue
+
+-- | Required O2I kind of the collective Junction carrier.
+collectiveCarrierKind :: CollectiveCarrierContract -> MetadataKind
+collectiveCarrierKind = collectiveCarrierKindValue
+
+-- | Required O2I type of the collective Junction carrier.
+collectiveCarrierType :: CollectiveCarrierContract -> Text
+collectiveCarrierType = collectiveCarrierTypeValue
+
+-- | Required ArchiMate element type of the collective carrier.
+collectiveCarrierElement :: CollectiveCarrierContract -> Text
+collectiveCarrierElement = collectiveCarrierElementValue
+
+-- | Required native ArchiMate Junction type.
+collectiveJunctionType :: CollectiveCarrierContract -> Text
+collectiveJunctionType = collectiveJunctionTypeValue
+
+-- | Property carrying commitment on the collective proposition.
+collectiveCommitmentKey :: CollectiveCarrierContract -> Text
+collectiveCommitmentKey = collectiveCommitmentKeyValue
+
+collectiveCommitmentValues :: CollectiveCarrierContract -> NonEmpty Commitment
+collectiveCommitmentValues = collectiveCommitmentValuesValue
+
+-- | Property referencing collective Fit evidence.
+collectiveFitEvidenceKey :: CollectiveCarrierContract -> Text
+collectiveFitEvidenceKey = collectiveFitEvidenceKeyValue
+
+collectiveFitEvidenceCardinality :: CollectiveCarrierContract -> Cardinality
+collectiveFitEvidenceCardinality = collectiveFitEvidenceCardinalityValue
+
+collectiveAdditionalO2IProperties :: CollectiveCarrierContract -> Requirement
+collectiveAdditionalO2IProperties = collectiveAdditionalO2IPropertiesValue
+
+-- | ArchiMate representation required for collective segments.
+collectiveSegmentRepresentation ::
+     CollectiveSegmentContract -> ArchiMateRelationshipRepresentation
+collectiveSegmentRepresentation = collectiveSegmentRepresentationValue
+
+-- | Exact relationship label required for collective segments.
+collectiveSegmentLabel :: CollectiveSegmentContract -> Text
+collectiveSegmentLabel = collectiveSegmentLabelValue
+
+-- | Policy for O2I metadata on collective segments.
+collectiveSegmentMetadata :: CollectiveSegmentContract -> Requirement
+collectiveSegmentMetadata = collectiveSegmentMetadataValue
+
+collectiveContributorEndpoint :: CollectiveContributorsContract -> NodeKindValue
+collectiveContributorEndpoint = collectiveContributorEndpointValue
+
+-- | Required number of distinct contributor Strategies.
+collectiveContributorCardinality ::
+     CollectiveContributorsContract -> Cardinality
+collectiveContributorCardinality = collectiveContributorCardinalityValue
+
+-- | Whether contributor Strategies must be distinct.
+collectiveContributorsDistinct :: CollectiveContributorsContract -> Requirement
+collectiveContributorsDistinct = collectiveContributorsDistinctValue
+
+collectiveTargetEndpoint :: CollectiveTargetContract -> NodeKindValue
+collectiveTargetEndpoint = collectiveTargetEndpointValue
+
+-- | Required number of target Strategies.
+collectiveTargetCardinality :: CollectiveTargetContract -> Cardinality
+collectiveTargetCardinality = collectiveTargetCardinalityValue
+
+-- | Whether the target must differ from every contributor.
+collectiveTargetDistinctFromContributors ::
+     CollectiveTargetContract -> Requirement
+collectiveTargetDistinctFromContributors =
+  collectiveTargetDistinctFromContributorsValue
 
 -- | Complete typed profile projection in contract order.
 profileContract :: ArchiMateProfileContract
 profileContract =
   ArchiMateProfileContract
-    { contractSchema = "o2i.archimate-profile/v1"
-    , contractProfileVersion = o2iProfileVersionLiteral ('0' :| ".2")
-    , contractMetadata = metadataContract
-    , contractCarrierMappings = carrierMappings
-    , contractRelationMappings = relationMappings
-    , contractContextualization = contextualizationContract
-    , contractCollectiveRealization = collectiveContract
+    { contractSchemaValue = "o2i.archimate-profile/v1"
+    , contractProfileVersionValue = o2iProfileVersionLiteral ('0' :| ".2")
+    , contractMetadataValue = metadataContract
+    , contractCarrierMappingsValue = carrierMappings
+    , contractRelationMappingsValue = relationMappings
+    , contractContextualizationValue = contextualizationContract
+    , contractCollectiveRealizationValue = collectiveContract
     }
 
 metadataContract :: MetadataContract
 metadataContract =
   MetadataContract
-    { modelProfileKey = "o2i.profile"
-    , modelProfileCardinality = ExactlyOne
-    , modelAdditionalO2IProperties = Forbidden
-    , carrierKindKey = "o2i.kind"
-    , carrierTypeKey = "o2i.type"
-    , carrierCommitmentKey = "o2i.commitment"
-    , carrierCommitmentValues = Candidate :| [Asserted]
-    , carrierMetadataCardinality = ExactlyOneEach
-    , carrierAdditionalO2IProperties = Forbidden
-    , relationCommitmentKey = "o2i.commitment"
-    , relationCommitmentValues = Candidate :| [Asserted]
-    , relationMetadataCardinality = ExactlyOne
-    , relationAdditionalO2IProperties = Forbidden
+    { modelProfileKeyValue = "o2i.profile"
+    , modelProfileCardinalityValue = ExactlyOne
+    , modelAdditionalO2IPropertiesValue = Forbidden
+    , carrierKindKeyValue = "o2i.kind"
+    , carrierTypeKeyValue = "o2i.type"
+    , carrierCommitmentKeyValue = "o2i.commitment"
+    , carrierCommitmentValuesValue = Candidate :| [Asserted]
+    , carrierMetadataCardinalityValue = ExactlyOneEach
+    , carrierAdditionalO2IPropertiesValue = Forbidden
+    , relationCommitmentKeyValue = "o2i.commitment"
+    , relationCommitmentValuesValue = Candidate :| [Asserted]
+    , relationMetadataCardinalityValue = ExactlyOne
+    , relationAdditionalO2IPropertiesValue = Forbidden
     }
 
 carrierMappings :: [CarrierMapping]
@@ -316,11 +613,11 @@ carrierMappings =
 contextMapping :: CarrierMapping
 contextMapping =
   CarrierMapping
-    { carrierMappingId = "context"
+    { carrierMappingIdValue = "context"
     , carrierMappingTypesValue =
         fmap ContextCarrier (Ethos :| [Mission .. maxBound])
-    , carrierMappingArchiElement = "Grouping"
-    , carrierMappingContextOwnership = Forbidden
+    , carrierMappingArchiElementValue = "Grouping"
+    , carrierMappingContextOwnershipValue = Forbidden
     }
 
 -- | Return the exact mapping for one semantic carrier type.
@@ -330,25 +627,28 @@ carrierMappingFor carrier =
     ContextCarrier _ -> contextMapping
     PrimitiveCarrier primitive ->
       CarrierMapping
-        { carrierMappingId = "primitive." <> primitiveToken primitive
+        { carrierMappingIdValue = "primitive." <> primitiveToken primitive
         , carrierMappingTypesValue = PrimitiveCarrier primitive :| []
-        , carrierMappingArchiElement = primitiveRepresentation primitive
-        , carrierMappingContextOwnership = Required
+        , carrierMappingArchiElementValue = primitiveRepresentation primitive
+        , carrierMappingContextOwnershipValue = Required
         }
     StructuringCarrier structuring ->
       CarrierMapping
-        { carrierMappingId = "structuring." <> structuringToken structuring
+        { carrierMappingIdValue = "structuring." <> structuringToken structuring
         , carrierMappingTypesValue = StructuringCarrier structuring :| []
-        , carrierMappingArchiElement = "Grouping"
-        , carrierMappingContextOwnership = Required
+        , carrierMappingArchiElementValue = "Grouping"
+        , carrierMappingContextOwnershipValue = Required
         }
     SituationAnchorCarrier anchor ->
       CarrierMapping
-        { carrierMappingId = "situation-anchor." <> anchorToken anchor
+        { carrierMappingIdValue = "situation-anchor." <> anchorToken anchor
         , carrierMappingTypesValue = SituationAnchorCarrier anchor :| []
-        , carrierMappingArchiElement = anchorRepresentation anchor
-        , carrierMappingContextOwnership = Forbidden
+        , carrierMappingArchiElementValue = anchorRepresentation anchor
+        , carrierMappingContextOwnershipValue = Forbidden
         }
+
+carrierMappingId :: CarrierMapping -> Text
+carrierMappingId = carrierMappingIdValue
 
 carrierMappingKind :: CarrierMapping -> MetadataKind
 carrierMappingKind = carrierTypeKind . NonEmpty.head . carrierMappingTypesValue
@@ -358,11 +658,11 @@ carrierMappingTypes = carrierMappingTypesValue
 
 -- | Required ArchiMate element metaclass for one carrier mapping.
 carrierMappingElement :: CarrierMapping -> Text
-carrierMappingElement = carrierMappingArchiElement
+carrierMappingElement = carrierMappingArchiElementValue
 
 -- | Contextualization requirement of one carrier mapping.
 carrierMappingOwnership :: CarrierMapping -> Requirement
-carrierMappingOwnership = carrierMappingContextOwnership
+carrierMappingOwnership = carrierMappingContextOwnershipValue
 
 -- | Render one persisted @o2i.kind@ value.
 metadataKindText :: MetadataKind -> Text
@@ -475,13 +775,13 @@ relationMappings = map relationMapping allRelations
 relationMapping :: SomeRelation -> ArchiMateRelationMapping
 relationMapping relation =
   ArchiMateRelationMapping
-    { relationMappingId = mappingIdentifier code name
-    , relationMappingCode = code
-    , relationMappingName = name
-    , relationMappingLabel = label
-    , relationMappingSource = from
-    , relationMappingTarget = to
-    , relationMappingRepresentation = representation
+    { relationMappingIdValue = mappingIdentifier code name
+    , relationMappingCodeValue = code
+    , relationMappingNameValue = name
+    , relationMappingLabelValue = label
+    , relationMappingSourceValue = from
+    , relationMappingTargetValue = to
+    , relationMappingRepresentationValue = representation
     }
   where
     code = relationCodeOf relation
@@ -634,52 +934,53 @@ relationshipRepresentation = ArchiMateRelationshipRepresentation
 contextualizationContract :: ContextualizationContract
 contextualizationContract =
   ContextualizationContract
-    { contextualizationId = "contextualization"
-    , contextualizationRepresentation = composition
-    , contextualizationLabel = "contextualizes"
-    , contextualizationSourceKind = ContextMetadata
-    , contextualizationTargetKinds = PrimitiveMetadata :| [StructuringMetadata]
-    , contextualizationIncomingCardinality = ExactlyOne
-    , contextualizationMetadata = Forbidden
-    , contextualizationProjection = "context-ownership"
+    { contextualizationIdValue = "contextualization"
+    , contextualizationRepresentationValue = composition
+    , contextualizationLabelValue = "contextualizes"
+    , contextualizationSourceKindValue = ContextMetadata
+    , contextualizationTargetKindsValue =
+        PrimitiveMetadata :| [StructuringMetadata]
+    , contextualizationIncomingCardinalityValue = ExactlyOne
+    , contextualizationMetadataValue = Forbidden
+    , contextualizationProjectionValue = "context-ownership"
     }
 
 collectiveContract :: CollectiveContract
 collectiveContract =
   CollectiveContract
-    { collectiveId = "collective-strategy-realization"
-    , collectiveCarrier =
+    { collectiveIdValue = "collective-strategy-realization"
+    , collectiveCarrierValue =
         CollectiveCarrierContract
-          { collectiveCarrierKind = StructuredPropositionMetadata
-          , collectiveCarrierType = "CollectiveStrategyRealization"
-          , collectiveCarrierElement = "Junction"
-          , collectiveJunctionType = "and"
-          , collectiveCommitmentKey = "o2i.commitment"
-          , collectiveCommitmentValues = Candidate :| [Asserted]
-          , collectiveFitEvidenceKey = "o2i.collective-fit-evidence"
-          , collectiveFitEvidenceCardinality = ExactlyOneNonEmpty
-          , collectiveAdditionalO2IProperties = Forbidden
+          { collectiveCarrierKindValue = StructuredPropositionMetadata
+          , collectiveCarrierTypeValue = "CollectiveStrategyRealization"
+          , collectiveCarrierElementValue = "Junction"
+          , collectiveJunctionTypeValue = "and"
+          , collectiveCommitmentKeyValue = "o2i.commitment"
+          , collectiveCommitmentValuesValue = Candidate :| [Asserted]
+          , collectiveFitEvidenceKeyValue = "o2i.collective-fit-evidence"
+          , collectiveFitEvidenceCardinalityValue = ExactlyOneNonEmpty
+          , collectiveAdditionalO2IPropertiesValue = Forbidden
           }
-    , collectiveSegments =
+    , collectiveSegmentsValue =
         CollectiveSegmentContract
-          { collectiveSegmentRepresentation = realization
-          , collectiveSegmentLabel = "realizes"
-          , collectiveSegmentMetadata = Forbidden
+          { collectiveSegmentRepresentationValue = realization
+          , collectiveSegmentLabelValue = "realizes"
+          , collectiveSegmentMetadataValue = Forbidden
           }
-    , collectiveContributors =
+    , collectiveContributorsValue =
         CollectiveContributorsContract
-          { collectiveContributorEndpoint = ContextNodeKind Strategy
-          , collectiveContributorCardinality = AtLeastTwo
-          , collectiveContributorsDistinct = Required
+          { collectiveContributorEndpointValue = ContextNodeKind Strategy
+          , collectiveContributorCardinalityValue = AtLeastTwo
+          , collectiveContributorsDistinctValue = Required
           }
-    , collectiveTarget =
+    , collectiveTargetValue =
         CollectiveTargetContract
-          { collectiveTargetEndpoint = ContextNodeKind Strategy
-          , collectiveTargetCardinality = ExactlyOne
-          , collectiveTargetDistinctFromContributors = Required
+          { collectiveTargetEndpointValue = ContextNodeKind Strategy
+          , collectiveTargetCardinalityValue = ExactlyOne
+          , collectiveTargetDistinctFromContributorsValue = Required
           }
-    , collectiveJunctionChains = Forbidden
-    , collectiveProjection = "structured-proposition"
+    , collectiveJunctionChainsValue = Forbidden
+    , collectiveProjectionValue = "structured-proposition"
     }
 
 -- | Render one relationship representation for deterministic diagnostics.
