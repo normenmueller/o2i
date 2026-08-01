@@ -98,9 +98,6 @@ fixtureContractTest = do
       , ( "invalid/profile/duplicate-profile.archimate"
         , ViewByName "Scope"
         , "o2i.amx.profile.duplicate")
-      , ( "invalid/profile/legacy-version-property.archimate"
-        , ViewByName "Scope"
-        , "o2i.amx.profile.legacy-version-property")
       , ( "invalid/profile/missing-kind.archimate"
         , ViewByName "Scope"
         , "o2i.amx.profile.kind-missing")

@@ -151,12 +151,6 @@
       "code": "o2i.amx.profile.duplicate"
     },
     {
-      "path": "invalid/profile/legacy-version-property.archimate",
-      "origin": "hand-minimized negative fixture",
-      "stage": "profile",
-      "code": "o2i.amx.profile.legacy-version-property"
-    },
-    {
       "path": "invalid/profile/missing-kind.archimate",
       "origin": "hand-minimized negative fixture",
       "stage": "profile",

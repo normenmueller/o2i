@@ -59,7 +59,6 @@ data AMXProfileDefect
   | DuplicateO2IProfile (NonEmpty Text)
   | UnsupportedO2IProfile Text
   | UnsupportedO2IRootProperty Text
-  | LegacyRootVersionProperty Text
   | UnsupportedO2IMetadataKey Text Text
   | MissingO2IKind Text
   | DuplicateO2IKind Text (NonEmpty Text)
@@ -123,7 +122,6 @@ data AMXDefectTag
   | DuplicateO2IProfileTag
   | UnsupportedO2IProfileTag
   | UnsupportedO2IRootPropertyTag
-  | LegacyRootVersionPropertyTag
   | UnsupportedO2IMetadataKeyTag
   | MissingO2IKindTag
   | DuplicateO2IKindTag
@@ -198,7 +196,6 @@ amxProfileDefectTag defect =
     DuplicateO2IProfile _ -> DuplicateO2IProfileTag
     UnsupportedO2IProfile _ -> UnsupportedO2IProfileTag
     UnsupportedO2IRootProperty _ -> UnsupportedO2IRootPropertyTag
-    LegacyRootVersionProperty _ -> LegacyRootVersionPropertyTag
     UnsupportedO2IMetadataKey _ _ -> UnsupportedO2IMetadataKeyTag
     MissingO2IKind _ -> MissingO2IKindTag
     DuplicateO2IKind _ _ -> DuplicateO2IKindTag
@@ -340,10 +337,6 @@ amxDefectTagSpec tag =
       model
         "amx.profile.root-property"
         "The model root declares an additional direct O2I property."
-    LegacyRootVersionPropertyTag ->
-      model
-        "amx.profile.legacy-version-property"
-        "The direct root property version is not an O2I profile alias."
     UnsupportedO2IMetadataKeyTag ->
       model
         "amx.profile.metadata-key"
@@ -591,7 +584,6 @@ profileSubjects defect =
     DuplicateO2IProfile values -> map (subject "profile") (nonEmptyList values)
     UnsupportedO2IProfile version -> [subject "profile" version]
     UnsupportedO2IRootProperty key -> [subject "metadata-key" key]
-    LegacyRootVersionProperty version -> [subject "legacy-version" version]
     UnsupportedO2IMetadataKey identifier key ->
       [subject "node" identifier, subject "metadata-key" key]
     MissingO2IKind identifier -> [subject "node" identifier]

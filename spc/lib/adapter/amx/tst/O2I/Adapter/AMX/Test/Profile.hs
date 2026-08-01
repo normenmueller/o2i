@@ -30,7 +30,7 @@ profileTests =
     , testCase
         "rejects every additional direct root O2I property"
         additionalRootPropertyTest
-    , testCase "rejects legacy root version independently" legacyProfileTest
+    , testCase "ignores non-O2I root properties" nonO2IRootPropertyTest
     , testCase "names and layout never establish candidacy" noCandidateTest
     , testCase
         "contextualization obligates an endpoint without metadata"
@@ -163,14 +163,16 @@ additionalRootPropertyTest = do
         , [DiagnosticSubject "metadata-key" "o2i.version"]
         ]
 
-legacyProfileTest :: Assertion
-legacyProfileTest = do
+nonO2IRootPropertyTest :: Assertion
+nonO2IRootPropertyTest = do
   report <-
     inspectText
       (ViewByName "Scope")
-      (validContextModelWith [property "version" "0.2"])
-  diagnosticCodes report
-    @?= ["o2i.amx.profile.legacy-version-property", "o2i.amx.profile.missing"]
+      (validContextModelWith [profileProperty, property "version" "external"])
+  case reportProfileResolution report of
+    ProfileResolvedResolution _ -> pure ()
+    resolution ->
+      assertFailure ("expected resolved profile: " <> show resolution)
 
 noCandidateTest :: Assertion
 noCandidateTest = do

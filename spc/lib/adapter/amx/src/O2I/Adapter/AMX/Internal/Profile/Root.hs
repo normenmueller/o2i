@@ -17,10 +17,8 @@ import O2I.Inspection.Provenance
 
 -- | Execute the complete typed policy for direct model-root O2I metadata.
 projectRootProfile ::
-     AMXDocument
-  -> ( RootProjection SourcePosition AMXProfileDefect
-     , [DeferredProfileDefect SourcePosition AMXProfileDefect])
-projectRootProfile document = (root, legacyDefects)
+     AMXDocument -> RootProjection SourcePosition AMXProfileDefect
+projectRootProfile document = root
   where
     model = amxDocumentRoot document
     metadata = contractMetadata profileContract
@@ -48,16 +46,6 @@ projectRootProfile document = (root, legacyDefects)
           RootProjectable
             observed
             (resolveProfileVersion (contractProfileVersion profileContract))
-    legacyDefects =
-      [ DeferredProfileDefect
-        { defectApplicability = GlobalProfileDefect
-        , deferredDefect =
-            Located
-              (propertyLocation "version" property)
-              (LegacyRootVersionProperty (propertyValue property))
-        }
-      | (property, _) <- directProperties "version" model
-      ]
 
 observedProfile :: [Text] -> ObservedO2IProfile
 observedProfile values =

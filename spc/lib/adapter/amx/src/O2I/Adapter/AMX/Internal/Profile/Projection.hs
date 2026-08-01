@@ -44,8 +44,7 @@ projectSnapshot document selected =
     , projectedFacts =
         profileFacts environment collectiveIndex closure semanticRelationships
     , projectedDefects =
-        rootDeferred
-          ++ nodeDeferred
+        nodeDeferred
           ++ ownershipDeferred
           ++ relationDeferred
           ++ collectiveDefects environment collectiveIndex
@@ -56,7 +55,7 @@ projectSnapshot document selected =
     closure = candidateClosure environment collectiveIndex
     semanticRelationships =
       semanticRelationshipElements environment collectiveIndex closure
-    (rootProjection, rootDeferred) = projectRootProfile document
+    rootProjection = projectRootProfile document
     nodeDeferred =
       concatMap
         (candidateDefects environment)
