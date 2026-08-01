@@ -7,7 +7,7 @@
 - Current Issue: `NONE`
 - Current gate: `NONE`
 - Gate status: `NOT_REQUIRED`
-- Current node: `pre-profile-contract-discussion`
+- Current node: `paused-profile-contract-handoff`
 
 # Repository Facts
 
@@ -21,8 +21,8 @@
 
 # Next Action
 
-Continue the Product Owner discussion. Do not activate or implement Issue `#4` before an explicit Product Owner decision.
+Await an explicit Product Owner decision. Do not activate or implement Issue `#4` before that decision.
 
 # Local Return Point
 
-After that decision, return to inactive Issue `#4` and its profile-contract scope.
+Issue `#4` and its profile-contract scope are the next return point after that decision.
