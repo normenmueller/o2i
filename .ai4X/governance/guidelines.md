@@ -85,6 +85,8 @@ Delegated agents and independent reviewers never query or mutate remote Issue, P
 
 The primary agent performs the authoritative query and returns the unmodified result, including absence or failure. Unavailable facts remain unavailable and are never inferred. Delegated work remains read-only with respect to remote work state.
 
+Read GitHub Issue and comment bodies through the connected GitHub application and compute required SHA-256 digests directly over its exact UTF-8 result in the orchestration process. Do not introduce a repository utility, temporary file, `gh api` pipeline, or Python subprocess for a connector-covered read. Use `gh` only when the connector lacks the required capability.
+
 When GitHub is unavailable, agents continue only an already activated local handoff. They never infer, create, transition, or close remote work offline.
 
 ## Review And Closure

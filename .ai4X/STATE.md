@@ -7,7 +7,7 @@
 - Current Issue: `NONE`
 - Current gate: `NONE`
 - Gate status: `NOT_REQUIRED`
-- Current node: `refined-profile-contract-handoff`
+- Current node: `admitted-profile-contract-handoff`
 
 # Repository Facts
 
@@ -16,13 +16,16 @@
 - Independent Finalreview reports no findings and 10.0 in every required dimension.
 - Remote Verify run `30689816445` succeeds for governance, model contracts, Haskell specification, and White Paper.
 - Issue `#1` remains a non-activated Backlog record.
-- Issue `#4` is open with Project status `Refined`. Its complete body and all eight existing comments were assessed; the body now consolidates the current authority, model-scoped profile, View-scoped inspection boundary, residual acceptance cases, and risk-proportionate review capabilities. Implementation remains unauthorized.
+- Issue `#4` is open with Project status `Refined`. Its exact body digest is `6593d8f7844c46357d7afa20bdd6ffe866829cb763064e851d0a7d35fbdfae4e`.
+- Independent Strategy and Formalization Admission comments `5151329407` and `5151329467` accept that exact body without findings and with 10.0 in every required dimension.
+- Authoritative implementation-contract comment `5151331108` has exact body digest `405107e9001229fa2a5b590e1450ae1909c5f71e050447b128a5fbcc434cd0b1`.
+- Implementation remains unauthorized until the Product Owner moves Issue `#4` from `Refined` to `Ready`.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-Obtain digest-bound Strategy and Formalization Admission for the refined Issue body, then publish one authoritative implementation contract. Only the Product Owner may authorize implementation through `Refined -> Ready`.
+Await the Product Owner's `Refined -> Ready` authorization. After that transition, validate the unchanged Ready contract and move it to `In progress` before implementation.
 
 # Local Return Point
 
-Issue `#4` and its refined profile-contract scope remain the next return point.
+Issue `#4` and its admitted, implementation-contract-bound profile scope remain the next return point.
