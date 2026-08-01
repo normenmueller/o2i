@@ -26,6 +26,8 @@ module O2I.ArchiMate.Profile
   , contractContextualization
   , contractCollectiveRealization
   , modelProfileKey
+  , modelProfileCardinality
+  , modelAdditionalO2IProperties
   , carrierKindKey
   , carrierTypeKey
   , carrierCommitmentKey

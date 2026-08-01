@@ -24,10 +24,4 @@ stable View IDs, and expected projection have been independently recorded.
 
 ## Executable Catalogue
 
-The package test suite covers Decode safety and binding, exact View selection,
-View-reference integrity, root and reached-only profile defects, candidacy,
-metadata, notation, contextualization, Context Ownership, membership, relation
-projection, layout
-non-semantics, repeated occurrence provenance, deterministic reporting, closed
-defect and relation catalogs, API opacity, package licensing, and repository
-integration through the existing Inspection stages.
+The package test suite covers Decode safety and binding, independently selected View scopes, View-reference integrity, the complete typed model-root policy, reached-only profile defects, candidacy, metadata, notation, contextualization, Context Ownership, membership, relation projection, layout non-semantics, repeated occurrence provenance, deterministic reporting, closed defect and relation catalogs, API opacity, package licensing, and repository integration through the existing Inspection stages.

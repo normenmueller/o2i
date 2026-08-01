@@ -7,6 +7,7 @@ module O2I.Adapter.AMX.Test.View
 
 import qualified Data.ByteString as ByteString
 import qualified Data.Text as Text
+import Numeric.Natural (Natural)
 import O2I.Adapter.AMX.Test.Support
 import O2I.Inspection
 import Test.Tasty (TestTree, testGroup)
@@ -37,6 +38,12 @@ viewTests =
     , testCase
         "defects in an unselected View do not leak"
         unselectedViewDefectTest
+    , testCase
+        "a selected O2I View excludes unrelated native content"
+        mixedModelScopeTest
+    , testCase
+        "O2I Views share one root profile and close independently"
+        independentO2IViewsTest
     , testCase
         "repeated View presentations retain occurrence identity"
         repeatedPresentationTest
@@ -227,6 +234,61 @@ unselectedViewDefectTest = do
   take 4 (map reportedState (stageReportsList (reportStageReports report)))
     @?= replicate 4 StagePassed
 
+mixedModelScopeTest :: Assertion
+mixedModelScopeTest = do
+  report <- inspectText (ViewByName "O2I") mixedModel
+  viewResolutionId report @?= Just "o2i-view"
+  assertSemanticallyPassedScope 2 5 report
+  where
+    mixedModel =
+      model
+        (grouping "ethos" "Ethos" (Text.concat ethosMetadata)
+           <> principle "principle" principleMetadata
+           <> contextualization "ownership" "ethos" "principle"
+           <> element "BusinessActor" "actor" "Unrelated actor" ""
+           <> view
+                "o2i-view"
+                "O2I"
+                (diagramObject "ethos-object" "ethos"
+                   <> diagramObject "principle-object" "principle")
+           <> view "native-view" "Native" (diagramObject "actor-object" "actor"))
+        [profileProperty]
+
+independentO2IViewsTest :: Assertion
+independentO2IViewsTest = do
+  first <- inspectText (ViewByName "First") multipleO2IViewsModel
+  second <- inspectText (ViewByName "Second") multipleO2IViewsModel
+  viewResolutionId first @?= Just "first-view"
+  viewResolutionId second @?= Just "second-view"
+  assertSemanticallyPassedScope 2 5 first
+  assertSemanticallyPassedScope 2 5 second
+  where
+    multipleO2IViewsModel =
+      model
+        (grouping "first-ethos" "First Ethos" (Text.concat ethosMetadata)
+           <> principle "first-principle" principleMetadata
+           <> contextualization
+                "first-ownership"
+                "first-ethos"
+                "first-principle"
+           <> grouping "second-ethos" "Second Ethos" (Text.concat ethosMetadata)
+           <> principle "second-principle" principleMetadata
+           <> contextualization
+                "second-ownership"
+                "second-ethos"
+                "second-principle"
+           <> view
+                "first-view"
+                "First"
+                (diagramObject "first-ethos-object" "first-ethos"
+                   <> diagramObject "first-principle-object" "first-principle")
+           <> view
+                "second-view"
+                "Second"
+                (diagramObject "second-ethos-object" "second-ethos"
+                   <> diagramObject "second-principle-object" "second-principle"))
+        [profileProperty]
+
 repeatedPresentationTest :: Assertion
 repeatedPresentationTest = do
   report <-
@@ -245,4 +307,17 @@ repeatedPresentationTest = do
       resolvedScopeSummary scope
         @?= ClosedScopeSummary
               {directOccurrenceCount = 2, closedOccurrenceCount = 3}
+    resolution -> assertFailure ("unexpected scope state: " <> show resolution)
+
+assertSemanticallyPassedScope ::
+     Natural -> Natural -> InspectionReport -> Assertion
+assertSemanticallyPassedScope direct closed report = do
+  diagnosticCodes report @?= ["o2i.traceability.intervention-missing"]
+  take 5 (map reportedState (stageReportsList (reportStageReports report)))
+    @?= replicate 5 StagePassed
+  case reportScopeResolution report of
+    ScopeResolved scope ->
+      resolvedScopeSummary scope
+        @?= ClosedScopeSummary
+              {directOccurrenceCount = direct, closedOccurrenceCount = closed}
     resolution -> assertFailure ("unexpected scope state: " <> show resolution)

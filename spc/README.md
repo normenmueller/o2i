@@ -33,6 +33,12 @@ The curated public facades are `O2I.Language` for the semantic vocabulary,
 typed profile contract, and `O2I.Adapter.AMX` for native AMX input. `O2I`
 provides the curated Core facade.
 
+## Profile And View Scope
+
+`ctr/archimate/profile.json` owns the exact ArchiMate mapping and direct model-root metadata policy. Its typed projection exposes that closed contract; the AMX adapter executes it. An inspectable model therefore declares exactly one supported direct `o2i.profile` value and no other direct model-root `o2i.*` property.
+
+The model-scoped profile does not make the complete model an O2I inspection scope. AMX resolves the requested View and projects its seed plus persisted O2I facts, references, and dependencies. Inspection alone interprets that seed and computes the format-neutral least-fixed-point semantic closure. Multiple O2I Views can therefore share one compatible model profile and remain independently inspectable, while unrelated content and unselected Views remain outside each closed result.
+
 ## Validation Model
 
 The Core assesses `Candidate` and `Asserted` claims across one complete

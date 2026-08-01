@@ -105,6 +105,10 @@
   through validated opaque machine values, Inspection-owned stages and
   identities, a deliberately reachable Inspection facade, and external-client
   API contracts.
+- Made AMX model-root resolution execute the complete typed ArchiMate profile
+  policy for key, cardinality, version, and additional O2I properties, while
+  keeping selected-View semantic closure exclusively in Inspection and proving
+  mixed-model and independently inspectable multi-View scopes.
 - Made all human CLI reports and process diagnostics terminal-safe by centrally
   encoding source-derived control characters without changing JSON reports.
 - Clarified the semantic boundary between structural graph stages and

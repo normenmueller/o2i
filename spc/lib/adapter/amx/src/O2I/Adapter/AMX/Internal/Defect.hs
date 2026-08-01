@@ -58,6 +58,7 @@ data AMXProfileDefect
   = MissingO2IProfile
   | DuplicateO2IProfile (NonEmpty Text)
   | UnsupportedO2IProfile Text
+  | UnsupportedO2IRootProperty Text
   | LegacyRootVersionProperty Text
   | UnsupportedO2IMetadataKey Text Text
   | MissingO2IKind Text
@@ -121,6 +122,7 @@ data AMXDefectTag
   | MissingO2IProfileTag
   | DuplicateO2IProfileTag
   | UnsupportedO2IProfileTag
+  | UnsupportedO2IRootPropertyTag
   | LegacyRootVersionPropertyTag
   | UnsupportedO2IMetadataKeyTag
   | MissingO2IKindTag
@@ -195,6 +197,7 @@ amxProfileDefectTag defect =
     MissingO2IProfile -> MissingO2IProfileTag
     DuplicateO2IProfile _ -> DuplicateO2IProfileTag
     UnsupportedO2IProfile _ -> UnsupportedO2IProfileTag
+    UnsupportedO2IRootProperty _ -> UnsupportedO2IRootPropertyTag
     LegacyRootVersionProperty _ -> LegacyRootVersionPropertyTag
     UnsupportedO2IMetadataKey _ _ -> UnsupportedO2IMetadataKeyTag
     MissingO2IKind _ -> MissingO2IKindTag
@@ -333,6 +336,10 @@ amxDefectTagSpec tag =
         "The direct root property o2i.profile occurs more than once."
     UnsupportedO2IProfileTag ->
       model "amx.profile.unsupported" "The O2I profile version is unsupported."
+    UnsupportedO2IRootPropertyTag ->
+      model
+        "amx.profile.root-property"
+        "The model root declares an additional direct O2I property."
     LegacyRootVersionPropertyTag ->
       model
         "amx.profile.legacy-version-property"
@@ -583,6 +590,7 @@ profileSubjects defect =
     MissingO2IProfile -> []
     DuplicateO2IProfile values -> map (subject "profile") (nonEmptyList values)
     UnsupportedO2IProfile version -> [subject "profile" version]
+    UnsupportedO2IRootProperty key -> [subject "metadata-key" key]
     LegacyRootVersionProperty version -> [subject "legacy-version" version]
     UnsupportedO2IMetadataKey identifier key ->
       [subject "node" identifier, subject "metadata-key" key]

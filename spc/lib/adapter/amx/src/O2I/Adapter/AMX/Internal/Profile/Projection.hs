@@ -19,6 +19,7 @@ import O2I.Adapter.AMX.Internal.Profile.Commitment
 import O2I.Adapter.AMX.Internal.Profile.Metadata
 import O2I.Adapter.AMX.Internal.Profile.Model
 import O2I.Adapter.AMX.Internal.Profile.Property
+import O2I.Adapter.AMX.Internal.Profile.Root
 import O2I.Adapter.AMX.Internal.Registry
 import O2I.Adapter.AMX.Internal.Types
 import O2I.ArchiMate.Profile

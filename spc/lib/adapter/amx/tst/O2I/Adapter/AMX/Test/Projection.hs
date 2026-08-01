@@ -47,7 +47,7 @@ defectCatalogTest = do
   let tags = [minBound .. maxBound]
       specs = map amxDefectTagSpec tags
       codes = map (diagnosticCodeText . specCode) specs
-  length tags @?= 59
+  length tags @?= 60
   length codes @?= length (stableUnique codes)
   assertBool
     "Decode catalog codes must retain their namespace"
@@ -131,6 +131,7 @@ profileDefects =
   [ MissingO2IProfile
   , DuplicateO2IProfile ("0.2" :| ["0.2"])
   , UnsupportedO2IProfile "0.3"
+  , UnsupportedO2IRootProperty "o2i.extra"
   , LegacyRootVersionProperty "0.2"
   , UnsupportedO2IMetadataKey "node" "o2i.extra"
   , MissingO2IKind "node"

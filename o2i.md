@@ -1051,6 +1051,8 @@ Der maschinenlesbare Profilvertrag in
 ArchiMate-Syntax. Die daraus generierte Profilbeschreibung führt sämtliche
 Syntaxträgerabbildungen, Relationsabbildungen, Metadaten und Kardinalitäten auf.
 
+Ein inspizierbares ArchiMate-Modell deklariert die verwendete Profilversion genau einmal durch die direkte Modelleigenschaft `o2i.profile`. Die Deklaration gilt für das Modell, weil mehrere Views dieselben Elemente und Relationen projizieren können. Sie macht jedoch weder sämtliche Modellinhalte noch jede View zu einem O2I-Gegenstand.
+
 @Fig:o2i-syntax-view verdichtet diesen Vertrag als Familienprojektion: Sie
 zeigt jede Syntaxträgerabbildung und jede Relationsfamilie repräsentativ, ohne alle
 typgleichen Endpunktkombinationen zu wiederholen. Bei den
@@ -1125,7 +1127,9 @@ Die Junction-Segmente sind konkrete Syntax und erzeugen keine binären O2I-`real
 
 ### View-Scope
 
-Eine ausgewählte ArchiMate-View bildet den Ausgangspunkt einer Inspection, nicht ihre semantische Grenze. Sobald sie einen Bestandteil einer persistierten kollektiven Strategierealisierung zeigt, schließt die AMX-Projektion die vollständige Junction, sämtliche Segmente, Beitragenden, das Ziel und die persistierte Beitragsevidenz aus dem Modell ein. Jede Ergänzung bewahrt ihre Herkunft; die Closure erzeugt oder errät keine Aussage.
+Eine ausgewählte ArchiMate-View bildet den Ausgangspunkt einer Inspection, nicht ihre semantische Grenze. Der AMX-Adapter löst diese View auf und projiziert ihre Präsentationen sowie die persistierten O2I-Fakten, Referenzen und Abhängigkeiten. Erst die notationunabhängige Inspection bildet daraus den kleinsten semantisch geschlossenen Scope. Mehrere O2I-Views desselben Modells können dadurch unter derselben Profilversion unabhängig geprüft werden; nicht erreichte Modellinhalte bleiben außerhalb des Ergebnisses.
+
+Enthält der ausgewählte Ausgangspunkt einen Bestandteil einer persistierten kollektiven Strategierealisierung, führen deren projizierte Abhängigkeiten in dieser Closure zur vollständigen Junction, zu sämtlichen Segmenten und Beitragenden, zum Ziel und zur persistierten Beitragsevidenz. Jede Ergänzung bewahrt ihre Herkunft; die Closure erzeugt oder errät keine Aussage.
 
 Eine View darf nur einen Teil der Beitragenden darstellen. Für einen global vollständigen Claim wird dies als Information mit sichtbarer und gesamter Anzahl ausgewiesen. Ein global unvollständiger `Candidate` bleibt dagegen unvollständig, auch wenn die ausgewählte View vollständig erscheint. Unabhängige Defekte außerhalb des geschlossenen Scopes gehören nicht zum Ergebnis dieser Inspection.
 

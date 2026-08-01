@@ -9,7 +9,6 @@ module O2I.Adapter.AMX.Internal.Profile.Metadata
   , nodeKind
   , representationCompatible
   , candidateDefects
-  , projectRootProfile
   ) where
 
 import Data.List.NonEmpty (NonEmpty((:|)))
@@ -25,7 +24,6 @@ import O2I.Adapter.AMX.Internal.Registry
 import O2I.Adapter.AMX.Internal.Types
 import O2I.Adapter.AMX.Internal.XML (archiNamespace)
 import O2I.ArchiMate.Profile
-import O2I.Inspection.Cardinality
 import O2I.Inspection.Profile
 import O2I.Inspection.Provenance
 
@@ -255,65 +253,6 @@ actualElementRepresentation element =
     Just name ->
       "{" <> maybe "" id (qNameNamespace name) <> "}" <> qNameLocalName name
 
--- | Resolve the exact direct root profile and independent legacy defects.
-projectRootProfile ::
-     AMXDocument
-  -> ( RootProjection SourcePosition AMXProfileDefect
-     , [DeferredProfileDefect SourcePosition AMXProfileDefect])
-projectRootProfile document = (root, legacyDefects)
-  where
-    model = amxDocumentRoot document
-    metadata = contractMetadata profileContract
-    profileKey = modelProfileKey metadata
-    expectedVersion =
-      profileVersionText (contractProfileVersion profileContract)
-    profileProperties = directProperties profileKey model
-    profileValues = map (propertyValue . fst) profileProperties
-    observed =
-      case profileValues of
-        [] -> NoO2IProfile
-        [value] -> OneO2IProfile value
-        first:second:rest -> MultipleO2IProfiles (atLeastTwo first second rest)
-    rootDefects =
-      case profileProperties of
-        [] -> [Located (amxElementLocation model) MissingO2IProfile]
-        [(property, _)]
-          | propertyValue property == expectedVersion -> []
-          | otherwise ->
-            [ Located
-                (propertyLocation profileKey property)
-                (UnsupportedO2IProfile (propertyValue property))
-            ]
-        first:rest ->
-          [ Located
-              (propertyLocation profileKey (fst first))
-              (DuplicateO2IProfile
-                 (propertyValue (fst first) :| map (propertyValue . fst) rest))
-          ]
-            ++ [ Located
-                 (propertyLocation profileKey property)
-                 (UnsupportedO2IProfile (propertyValue property))
-               | (property, _) <- first : rest
-               , propertyValue property /= expectedVersion
-               ]
-    root =
-      case nonEmpty rootDefects of
-        Just defects -> RootUnprojectable observed defects
-        Nothing ->
-          RootProjectable
-            observed
-            (resolveProfileVersion (contractProfileVersion profileContract))
-    legacyDefects =
-      [ DeferredProfileDefect
-        { defectApplicability = GlobalProfileDefect
-        , deferredDefect =
-            Located
-              (propertyLocation "version" property)
-              (LegacyRootVersionProperty (propertyValue property))
-        }
-      | (property, _) <- directProperties "version" model
-      ]
-
 -- | Whether a declaration explicitly enters O2I candidacy.
 hasDirectO2IMetadata :: AMXElement -> Bool
 hasDirectO2IMetadata =
@@ -327,9 +266,3 @@ firstOfTriple (value, _, _) = value
 
 third :: (first, second, third) -> third
 third (_, _, value) = value
-
-nonEmpty :: [value] -> Maybe (NonEmpty value)
-nonEmpty values =
-  case values of
-    [] -> Nothing
-    first:rest -> Just (first :| rest)

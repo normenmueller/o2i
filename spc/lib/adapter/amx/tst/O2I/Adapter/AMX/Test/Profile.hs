@@ -16,13 +16,20 @@ profileTests :: TestTree
 profileTests =
   testGroup
     "profile"
-    [ testCase "requires one direct root profile" missingProfileTest
+    [ testCase "accepts the exact direct root profile" exactRootProfileTest
+    , testCase "requires one direct root profile" missingProfileTest
     , testCase "ignores nested profile properties" nestedProfileTest
     , testCase
         "ignores foreign-namespaced profile properties"
         foreignProfilePropertyTest
     , testCase "rejects duplicate root profiles" duplicateProfileTest
+    , testCase
+        "rejects conflicting duplicate root profiles"
+        conflictingDuplicateProfileTest
     , testCase "rejects unsupported root profile" unsupportedProfileTest
+    , testCase
+        "rejects every additional direct root O2I property"
+        additionalRootPropertyTest
     , testCase "rejects legacy root version independently" legacyProfileTest
     , testCase "names and layout never establish candidacy" noCandidateTest
     , testCase
@@ -64,6 +71,14 @@ profileTests =
         "unreached profile defects outside the selected scope do not leak"
         unreachedProfileDefectTest
     ]
+
+exactRootProfileTest :: Assertion
+exactRootProfileTest = do
+  report <- inspectText (ViewByName "Scope") validContextModel
+  case reportProfileResolution report of
+    ProfileResolvedResolution _ -> pure ()
+    resolution ->
+      assertFailure ("expected resolved profile: " <> show resolution)
 
 missingProfileTest :: Assertion
 missingProfileTest = do
@@ -114,6 +129,15 @@ duplicateProfileTest = do
       assertFailure
         ("expected rejected profile resolution: " <> show resolution)
 
+conflictingDuplicateProfileTest :: Assertion
+conflictingDuplicateProfileTest = do
+  report <-
+    inspectText
+      (ViewByName "Scope")
+      (validContextModelWith [profileProperty, property "o2i.profile" "0.3"])
+  diagnosticCodes report
+    @?= ["o2i.amx.profile.duplicate", "o2i.amx.profile.unsupported"]
+
 unsupportedProfileTest :: Assertion
 unsupportedProfileTest = do
   report <-
@@ -121,6 +145,23 @@ unsupportedProfileTest = do
       (ViewByName "Scope")
       (validContextModelWith [property "o2i.profile" "0.3"])
   diagnosticCodes report @?= ["o2i.amx.profile.unsupported"]
+
+additionalRootPropertyTest :: Assertion
+additionalRootPropertyTest = do
+  report <-
+    inspectText
+      (ViewByName "Scope")
+      (validContextModelWith
+         [ profileProperty
+         , property "o2i.owner" "invented"
+         , property "o2i.version" "0.2"
+         ])
+  diagnosticCodes report
+    @?= ["o2i.amx.profile.root-property", "o2i.amx.profile.root-property"]
+  map diagnosticSubjects (diagnosticsList (reportDiagnostics report))
+    @?= [ [DiagnosticSubject "metadata-key" "o2i.owner"]
+        , [DiagnosticSubject "metadata-key" "o2i.version"]
+        ]
 
 legacyProfileTest :: Assertion
 legacyProfileTest = do

@@ -1,9 +1,9 @@
 {
-  "pdf_sha256": "91e6bfa1039f6799dc2bed994107b3db7c09f594c144543f1e396bbf6396057d",
+  "pdf_sha256": "a1c5f2d034ff60b7536ca486b7ffdb9fc5b7839f61ca2284dcb1a0e2e928a2c2",
   "renderer": {
     "tool": "md2pdf",
     "version": "0.2.4"
   },
   "schema": "o2i.paper-freshness/v2",
-  "source_sha256": "0f3ed143f02425253cb28d06fd098a11b9df06aff203fc9bcb7ccf8774f11ff9"
+  "source_sha256": "491a6bf4b73a25777c7b2708fba53fb01418ddcb14c4f3cbb8604884e4611fc4"
 }
