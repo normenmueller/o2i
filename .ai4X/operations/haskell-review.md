@@ -12,6 +12,9 @@ tests, adapters, or the complete machine-checkable O2I chain.
   implementing agent's rationale.
 - Review one bounded package at a time. Re-review every finding after closure.
 - Do not accept a change when a required reviewer is unavailable.
+- Inspect baseline diffs separately and invoke canonical verification entry
+  points directly. Do not prefix verification commands with temporary
+  environment assignments merely to select a diff base.
 
 # Required Questions
 
