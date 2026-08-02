@@ -332,6 +332,45 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             with self.subTest(surface="human", term=term):
                 self.assertIn(term, human)
 
+    def test_batch_children_reference_the_authoritative_contract(self) -> None:
+        agent = markdown_section(read(GOVERNANCE), "Implementation Batches")
+        human = markdown_section(read(CONTRIBUTING), "Status")
+        for term in (
+            "For Maintenance, the parent Issue body is the implementation contract",
+            "For a Framework Change, the separate implementation-contract comment "
+            "remains authoritative",
+            "the fixed notice that the child makes one authorized implementation "
+            "batch visible",
+            "leaves the parent authoritative",
+        ):
+            with self.subTest(surface="agent", term=term):
+                self.assertIn(term, agent)
+        for term in (
+            "Bei Maintenance ist der Parent-Body der Implementierungsvertrag",
+            "bei Framework Changes bleibt der separate "
+            "Implementierungsvertragskommentar autoritativ",
+            "die feste Notiz, dass das Sub-Issue genau einen autorisierten Batch "
+            "sichtbar macht",
+            "der Parent autoritativ bleibt",
+        ):
+            with self.subTest(surface="human", term=term):
+                self.assertIn(term, human)
+
+    def test_batch_children_use_native_assignment_metadata(self) -> None:
+        agent = markdown_section(read(GOVERNANCE), "Implementation Batches")
+        human = markdown_section(read(CONTRIBUTING), "Status")
+        self.assertIn(
+            "Assignment uses only native GitHub assignee metadata and is never "
+            "copied into the body",
+            agent,
+        )
+        self.assertIn(
+            "Zuweisung wird ausschließlich in nativen GitHub-Assignee-Metadaten "
+            "geführt",
+            human,
+        )
+        self.assertNotIn("current assignee", agent)
+
     def test_batch_children_bound_lifecycle_comments(self) -> None:
         agent = markdown_section(read(GOVERNANCE), "Implementation Batches")
         human = markdown_section(read(CONTRIBUTING), "Status")
