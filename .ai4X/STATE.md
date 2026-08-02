@@ -1,13 +1,22 @@
 # Handoff
 
 - Observed: 2026-08-02 CEST
-- Work status: `PAUSED`
-- Execution authorization: `REQUIRED`
-- Authorization scope: `NONE`
-- Current Issue: `NONE`
-- Current gate: `NONE`
-- Gate status: `NOT_REQUIRED`
-- Current node: `paused-handoff`
+- Work status: `ACTIVE`
+- Execution authorization: `APPROVED`
+- Authorization scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py` within Issue `#22`.
+- Current Issue: `#22`
+- Current gate: `issue-22-maintenance-finalreview-1`
+- Gate status: `PENDING`
+- Current node: `issue-22-implementation`
+
+# Current Gate
+
+- Attempt: `issue-22-maintenance-finalreview-1`
+- Candidate revision: `PENDING`
+- Review scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py`; mutable `.ai4X/STATE.md` is excluded.
+- Mandatory checks: focused and complete governance verification, generic-content boundary check, and independent Agentic-AI and lean-governance Finalreviews.
+- Finding status: `OPEN`
+- Result: `PENDING`
 
 # Repository Facts
 
@@ -38,12 +47,13 @@
 - Issue `#23` candidate revision `124c427b19359c5457d4232adb6ff0032a3e264f` passes complete local verification and the generic-content boundary check.
 - Agentic-AI-governance Finalreview comment `5158247369` and Lean/proportionality Finalreview comment `5158248245` accept that exact candidate without findings and score every selected dimension 10.0.
 - Closure comment `5158268177` records remote availability and completion; Issue `#23` is closed and its Project status is `Done`.
+- Issue `#22` is Product Owner-authorized and has Project status `In progress`; its current body is the implementation authority.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-Await explicit Product Owner authorization of Refined Issue `#22`.
+Implement the minimal batch Sub-Issue contract, synchronize its human-facing projection and deterministic tests, and prepare one exact Maintenance candidate for independent Finalreview.
 
 # Local Return Point
 
-After Issue `#23` closes, continue with Refined Issue `#22` only after Product Owner authorization; then continue with Refined Issue `#13` only after Product Owner authorization before returning to paused Issue `#3` through the recorded workspace roadmap.
+After Issue `#22` closes, continue with Refined Issue `#13` only after Product Owner authorization before returning to paused Issue `#3`.
