@@ -64,6 +64,18 @@ Vertical order means refinement priority in `Backlog`, Product Owner decision pr
 
 Later comments never silently mutate a Refined, Ready, or active contract. Amend the explicit contract and return it to the required state, or record a new Issue. Findings within admitted scope remain correction work.
 
+## Implementation Batches
+
+When the authorized implementation contract names implementation batches, activation of the parent as `In progress` creates exactly one direct GitHub Sub-Issue for every named batch before that batch begins. An authorized contract amendment that adds a batch creates its Sub-Issue before the new batch begins. Work without an explicit batch-based implementation contract creates no Sub-Issues; ownership, blockers, handoffs, size, and duration introduce no additional trigger.
+
+Each batch Sub-Issue contains only the parent and implementation-contract link, batch identifier and title, concise deliverable, inherited batch completion conditions, current assignee when known, and implementation or verification evidence on completion. It states that it makes one authorized implementation batch visible, adds no scope or authorization, and leaves the parent authoritative.
+
+Batch Sub-Issues remain outside the O2I Project and have no independent authorization, Admission, dependency, workflow, review, acceptance, or closure authority. They never copy parent-wide contracts or evidence, never nest, and never substitute for native Issue Dependencies.
+
+Close a batch Sub-Issue when its contracted deliverable and completion conditions are satisfied. A blocked or paused batch records its reason and return condition without automatically changing the parent. The parent enters `In review` only after every required batch Sub-Issue is closed; a review correction reopens the affected batch when the correction belongs to it.
+
+Work discovered outside the authorized parent contract stops and follows ordinary refinement and Product Owner authorization or receives a separate Backlog Issue. A batch Sub-Issue never absorbs new scope.
+
 ## Dependencies
 
 Model every genuine O2I prerequisite with a native Issue Dependency. Project order never creates a dependency. Duplicated prose, labels, and non-blocking lineage links never substitute for one.
