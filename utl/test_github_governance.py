@@ -339,6 +339,9 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "For Maintenance, the parent Issue body is the implementation contract",
             "For a Framework Change, the separate implementation-contract comment "
             "remains authoritative",
+            "body contains only the parent Issue link, the Framework Change "
+            "implementation-contract comment link when applicable, concise "
+            "deliverable, inherited batch completion conditions, and the fixed notice",
             "the fixed notice that the child makes one authorized implementation "
             "batch visible",
             "leaves the parent authoritative",
@@ -349,6 +352,9 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "Bei Maintenance ist der Parent-Body der Implementierungsvertrag",
             "bei Framework Changes bleibt der separate "
             "Implementierungsvertragskommentar autoritativ",
+            "Body jedes Sub-Issues enthält nur den Parent-Link, gegebenenfalls den "
+            "Link auf diesen Vertragskommentar, Liefergegenstand und übernommene "
+            "Abschlussbedingungen des Batches sowie die feste Notiz",
             "die feste Notiz, dass das Sub-Issue genau einen autorisierten Batch "
             "sichtbar macht",
             "der Parent autoritativ bleibt",
@@ -356,19 +362,29 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             with self.subTest(surface="human", term=term):
                 self.assertIn(term, human)
 
-    def test_batch_children_use_native_assignment_metadata(self) -> None:
+    def test_batch_children_use_native_title_and_assignment_metadata(self) -> None:
         agent = markdown_section(read(GOVERNANCE), "Implementation Batches")
         human = markdown_section(read(CONTRIBUTING), "Status")
         self.assertIn(
-            "Assignment uses only native GitHub assignee metadata and is never "
+            "batch identifier and batch name use only the native GitHub Issue title",
+            agent,
+        )
+        self.assertIn(
+            "assignment uses only native GitHub assignee metadata and is never "
             "copied into the body",
             agent,
+        )
+        self.assertIn(
+            "Batch-ID und Batchname werden ausschließlich im nativen "
+            "GitHub-Issue-Titel",
+            human,
         )
         self.assertIn(
             "Zuweisung wird ausschließlich in nativen GitHub-Assignee-Metadaten "
             "geführt",
             human,
         )
+        self.assertNotIn("batch identifier and title", agent)
         self.assertNotIn("current assignee", agent)
 
     def test_batch_children_bound_lifecycle_comments(self) -> None:
