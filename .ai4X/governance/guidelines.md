@@ -27,8 +27,6 @@ Before acceptance, every exact Maintenance candidate revision receives at least 
 
 Each Finalreview binds the exact revision and scope and records findings, checks, and scores for its selected quality dimensions. Any finding rejects that exact candidate and requires review of a corrected revision. Acceptance requires no finding and 10.0 in every selected dimension.
 
-Reviewers assess critically, neutrally, objectively, and independently. Review is never an acceptance default: reject the candidate when a substantiated objection, improvement, or materially better alternative exists under the applicable criteria of leanness, clarity, elegance, robustness, modularity, and usefulness.
-
 Suspected terminology, metamodel-semantic, normative-syntax, formalization, validation-behavior, or public-API impact triggers reclassification assessment as `framework-change`; Maintenance review never substitutes for Framework Admission.
 
 ## Refinement And Authorization
@@ -105,6 +103,7 @@ When GitHub is unavailable, agents continue only an already activated local hand
 
 - `gertrud-ai4x` is the transparent O2I machine user for agentic work.
 - Agent-produced commits use `Gertrud ai4X <311782161+gertrud-ai4x@users.noreply.github.com>` as author and preserve the configured accountable human as committer. Never rewrite existing commits merely to add this attribution.
+- Issue-scoped commits include `Refs #N` in the commit body. Use `Closes #N` only when the commit actually completes the Issue; never rewrite existing history merely to add a reference.
 - Add `gertrud-ai4x` as an assignee when the primary agent takes material responsibility for refining, coordinating, or implementing an Issue. Advisory-only participation creates no assignment.
 - A commit that changes `.ai4X/` is an authority commit: keep it separate from implementation changes and use the configured Product Owner identity as both author and committer. The machine user never authors its own operating authority.
 - The primary agent may create an authority commit locally but never pushes it. Before a Product Owner push, report every outgoing commit and its scope. The Product Owner's own push accepts and publishes those authority commits; no separate pre-commit confirmation is required.
@@ -122,6 +121,8 @@ Every accepted review comment records:
 - verdict, findings, checks, and every required dimension score.
 
 Framework-change evidence additionally records the exact Issue-body digest for Admission and the implementation-contract comment ID and digest for Finalreview. Maintenance Finalreview evidence instead records the selected capability and concise risk rationale; it requires neither an Admission digest nor an implementation-contract comment.
+
+Reviewers assess critically, neutrally, objectively, and independently. Review is never an acceptance default: reject the candidate when a substantiated objection, improvement, or materially better alternative exists under the applicable criteria of leanness, clarity, elegance, robustness, modularity, and usefulness.
 
 For Framework Changes, one reviewer satisfies one capability per gate. Maintenance follows the minimum independent-review contract above. Finalreviews bind the same candidate revision. Acceptance requires no finding and 10.0 in every required dimension.
 
