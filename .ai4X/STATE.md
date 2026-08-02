@@ -1,13 +1,13 @@
 # Handoff
 
 - Observed: 2026-08-02 CEST
-- Work status: `ACTIVE`
+- Work status: `COMPLETE`
 - Execution authorization: `APPROVED`
 - Authorization scope: Issue `#23`: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and deterministic governance tests
 - Current Issue: `#23`
 - Current gate: `issue-23-finalreview-2`
-- Gate status: `PENDING`
-- Current node: `issue-23-finalreview`
+- Gate status: `ACCEPTED`
+- Current node: `issue-23-publication`
 
 # Repository Facts
 
@@ -35,11 +35,13 @@
 - Publication Finalreview comment `5152439004` accepts candidate 3 without findings and scores every required dimension 10.0.
 - Candidate 3 and authority handoff `b1b40c0c1abfd23c680c85e81c4a1702f5676071` are remotely available on `origin/trunk`.
 - Closure comment `5152456934` records remote availability and completion; Issue `#4` is closed and its Project status is `Done`.
+- Issue `#23` candidate revision `124c427b19359c5457d4232adb6ff0032a3e264f` passes complete local verification and the generic-content boundary check.
+- Agentic-AI-governance Finalreview comment `5158247369` and Lean/proportionality Finalreview comment `5158248245` accept that exact candidate without findings and score every selected dimension 10.0.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-Obtain independent Agentic-AI-governance and Lean/proportionality Finalreviews for exact candidate revision `124c427b19359c5457d4232adb6ff0032a3e264f`.
+Publish the accepted Issue `#23` candidate and this authority handoff, then verify remote availability, close the Issue, and set Project status `Done`.
 
 # Current Gate
 
@@ -49,8 +51,8 @@ Obtain independent Agentic-AI-governance and Lean/proportionality Finalreviews f
 - Review scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py`; mutable `.ai4X/STATE.md` is excluded.
 - Mandatory checks: focused governance tests, complete local verification, generic-content boundary check
 - Review capabilities: Agentic-AI governance and Lean/proportionality
-- Finding status: `OPEN`
-- Result: `PENDING`
+- Finding status: `CLOSED`
+- Result: `ACCEPTED`
 
 # Local Return Point
 
