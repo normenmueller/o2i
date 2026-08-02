@@ -1,22 +1,13 @@
 # Handoff
 
 - Observed: 2026-08-02 CEST
-- Work status: `COMPLETE`
-- Execution authorization: `APPROVED`
-- Authorization scope: Issue `#13`: semantics-preserving responsibility-based restructuring of `utl/`, including every affected path, reference, test, documentation link, and verification selector.
-- Current Issue: `#13`
-- Current gate: `issue-13-maintenance-finalreview-1`
-- Gate status: `ACCEPTED`
-- Current node: `issue-13-publication`
-
-# Current Gate
-
-- Attempt: `issue-13-maintenance-finalreview-1`
-- Candidate revision: `7714a5f815284f18bede9cd3f77c1a4b9bda302a`
-- Review scope: Issue `#13` implementation and documentation scope; mutable `.ai4X/STATE.md` is excluded.
-- Mandatory checks: every focused stage, complete local verification, generic-content boundary check, and independent repository-tooling Finalreview.
-- Finding status: `CLOSED`
-- Result: `ACCEPTED`
+- Work status: `PAUSED`
+- Execution authorization: `REQUIRED`
+- Authorization scope: `NONE`
+- Current Issue: `NONE`
+- Current gate: `NONE`
+- Gate status: `NOT_REQUIRED`
+- Current node: `paused-handoff`
 
 # Repository Facts
 
@@ -26,15 +17,15 @@
 - Closure comment `5158943307` records verification, remote availability, and completion.
 - Issues `#4`, `#12`, `#15`, `#16`, `#17`, `#22`, and `#23` are closed with Project status `Done`.
 - Issue `#1` remains a non-activated Backlog record.
-- Issue `#13` is Product Owner-authorized with Project status `In review`; its complete body is the implementation authority and contains no implementation batches.
-- Candidate revision `7714a5f815284f18bede9cd3f77c1a4b9bda302a` passes every focused stage, complete local verification, `git diff --check`, and the generic-content boundary check.
-- Independent repository-tooling Finalreview comment `5159290601` reports no findings and scores every selected dimension 10.0.
+- Issue `#13` is closed with Project status `Done`; accepted candidate `7714a5f815284f18bede9cd3f77c1a4b9bda302a` and handoff `9890cef95f7070eaee26e5411a649428509fc5f8` are remotely available.
+- Finalreview comment `5159290601` reports no findings and scores every selected dimension 10.0; closure comment `5159319662` records publication and completion.
+- Issue `#24` is `Refined` and has no implementation authorization.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-The Product Owner pushes all local Issue `#13` commits. After remote availability is verified, publish closure evidence, close the Issue, and set Project status `Done` without changing reviewed files.
+Await explicit Product Owner activation of the next `Ready` Issue. Do not infer authorization from `Refined`, `Paused`, or roadmap order.
 
 # Local Return Point
 
-After Issue `#13` closes, continue with paused Issue `#3` only after Product Owner authorization.
+Paused Issue `#3` remains a return point and may resume only after explicit Product Owner authorization.
