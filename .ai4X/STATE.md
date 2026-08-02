@@ -1,13 +1,13 @@
 # Handoff
 
-- Observed: 2026-08-01 CEST
-- Work status: `PAUSED`
-- Execution authorization: `REQUIRED`
-- Authorization scope: `NONE`
-- Current Issue: `#3`
-- Current gate: `NONE`
-- Gate status: `NOT_REQUIRED`
-- Current node: `paused-handoff`
+- Observed: 2026-08-02 CEST
+- Work status: `ACTIVE`
+- Execution authorization: `APPROVED`
+- Authorization scope: Issue `#23`: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and deterministic governance tests
+- Current Issue: `#23`
+- Current gate: `issue-23-finalreview-1`
+- Gate status: `PENDING`
+- Current node: `issue-23-implementation`
 
 # Repository Facts
 
@@ -39,8 +39,19 @@
 
 # Next Action
 
-Wait for explicit Product Owner resumption of paused Issue `#3`. Do not infer activation from Issue `#4` closure.
+Implement the risk-proportionate Maintenance review-selection contract from Issue `#23`, synchronize its human-facing projection and deterministic structural tests, verify the exact candidate, and obtain the risk-selected Finalreviews.
+
+# Current Gate
+
+- Attempt: `issue-23-finalreview-1`
+- Scope: Issue `#23` authorization scope
+- Candidate revision: `PENDING`
+- Review scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py`; mutable `.ai4X/STATE.md` is excluded.
+- Mandatory checks: focused governance tests, complete local verification, generic-content boundary check
+- Review capabilities: Agentic-AI operability, Governance consistency, Lean/proportionality, Verification quality, Publication usability
+- Finding status: `OPEN`
+- Result: `PENDING`
 
 # Local Return Point
 
-Resume Issue `#3` only after the Product Owner explicitly restores it to the authorized execution flow.
+After Issue `#23` closes, continue with Refined Issue `#22` only after Product Owner authorization; after Issue `#22`, return to paused Issue `#3` through the recorded workspace roadmap.
