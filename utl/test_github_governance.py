@@ -380,11 +380,6 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "Any finding rejects that exact candidate",
             "Acceptance requires no finding",
             "10.0 in every selected dimension",
-            "Reviewers assess critically, neutrally, objectively, and "
-            "independently",
-            "Review is never an acceptance default",
-            "leanness, clarity, elegance, robustness, modularity, and "
-            "usefulness",
             "Maintenance review never substitutes for Framework Admission",
             "Maintenance Finalreview evidence instead records the selected "
             "capability and concise risk rationale",
@@ -401,13 +396,30 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "feste Reviewer-Matrix, -Anzahl oder Auswahlmechanik gibt es nicht",
             "Jedes Finding verwirft den exakten Kandidaten",
             "Die Annahme erfordert kein Finding und 10,0",
-            "Reviewer bewerten kritisch, neutral, objektiv und unabhängig",
-            "Ein Review ist keine Annahmeautomatik",
             "Maintenance-Finalreviews benötigen keinen Admission-Digest",
         ):
             with self.subTest(term=term):
                 self.assertIn(term, human)
         self.assertNotIn("| Trigger ID |", agent)
+
+    def test_all_reviews_are_critical_and_independent(self) -> None:
+        agent = read(GOVERNANCE)
+        human = read(CONTRIBUTING)
+        for term in (
+            "Reviewers assess critically, neutrally, objectively, and "
+            "independently",
+            "Review is never an acceptance default",
+            "leanness, clarity, elegance, robustness, modularity, and "
+            "usefulness",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, agent)
+        for term in (
+            "Reviewer bewerten kritisch, neutral, objektiv und unabhängig",
+            "Ein Review ist keine Annahmeautomatik",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, human)
 
     def test_agentic_responsibility_requires_assignment(self) -> None:
         agent = read(GOVERNANCE)
@@ -416,6 +428,14 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         self.assertIn("Advisory-only participation creates no assignment", agent)
         self.assertIn("Gertrud wird einem Issue zugewiesen", human)
         self.assertIn("reine Advisory-Beteiligung genügt nicht", human)
+
+    def test_issue_scoped_commits_reference_without_premature_closure(self) -> None:
+        agent = read(GOVERNANCE)
+        human = read(CONTRIBUTING)
+        self.assertIn("Issue-scoped commits include `Refs #N`", agent)
+        self.assertIn("Use `Closes #N` only when", agent)
+        self.assertIn("Issue-bezogene Commits führen `Refs #N`", human)
+        self.assertIn("`Closes #N` bleibt dem tatsächlich abschließenden", human)
 
     def test_blank_issues_are_disabled(self) -> None:
         self.assertEqual("blank_issues_enabled: false\n", read(FORM_CONFIG))

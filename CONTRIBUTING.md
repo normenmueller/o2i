@@ -36,8 +36,6 @@ Maintenance benötigt weder Framework Admission noch Admission-Digest. Ein Advis
 
 Der Finalreview bindet Revision und Scope und dokumentiert Auswahlbegründung, Findings, Prüfungen und Bewertungen. Jedes Finding verwirft den exakten Kandidaten und verlangt den Review einer korrigierten Revision. Die Annahme erfordert kein Finding und 10,0 in jeder ausgewählten Dimension. Ein möglicher Einfluss auf O2I-Semantik, normative Syntax, Formalisierung, Validierungsverhalten oder öffentliche APIs verlangt stattdessen die erneute Einordnung als Framework Change.
 
-Reviewer bewerten kritisch, neutral, objektiv und unabhängig. Ein Review ist keine Annahmeautomatik: Begründete Einwände, Verbesserungen oder materiell bessere Alternativen hinsichtlich Leanheit, Klarheit, Eleganz, Robustheit, Modularität oder Nutzen führen zur Ablehnung des Kandidaten.
-
 ## Status
 
 Das GitHub Project `O2I` ist die Planungssicht des Product Owners:
@@ -109,6 +107,7 @@ Agentisch erstellte Commits führen den transparenten Machine User [`gertrud-ai4
 - Veröffentlichungstexte beschreiben ausschließlich den frischen SOLL-Zustand.
 - Normative O2I-Designs verwenden keine Workarounds, Kompatibilitätsschichten oder Migrationskonstrukte; ein unpassender Kern wird kohärent neu entworfen.
 - Commit Messages sind kleingeschriebenes Englisch ohne Typpräfix.
+- Issue-bezogene Commits führen `Refs #N` im Commit-Body; `Closes #N` bleibt dem tatsächlich abschließenden Commit vorbehalten.
 - Pull Requests referenzieren ihr Issue und benennen ausgeführte Prüfungen.
 
 ## Review
@@ -123,6 +122,8 @@ Framework Changes werden von den im Issue benannten unabhängigen Fähigkeiten g
 - Bewertung jeder erforderlichen Qualitätsdimension.
 
 Maintenance-Finalreviews benötigen keinen Admission-Digest und keinen separaten Implementierungsvertrags-Kommentar. Sie binden die vollständige Revision und den Scope und dokumentieren die ausgewählte Reviewerfähigkeit, die knappe Risikobegründung, Findings, Prüfungen und Bewertungen.
+
+Reviewer bewerten kritisch, neutral, objektiv und unabhängig. Ein Review ist keine Annahmeautomatik: Begründete Einwände, Verbesserungen oder materiell bessere Alternativen hinsichtlich Leanheit, Klarheit, Eleganz, Robustheit, Modularität oder Nutzen führen zur Ablehnung des Kandidaten.
 
 Akzeptierte Reviewkommentare werden nicht editiert. Korrekturen erfolgen als neuer Kommentar. Ein geänderter Reviewkommentar ist keine gültige Akzeptanzevidenz.
 
