@@ -32,6 +32,10 @@ Maintenance umfasst Fehlerkorrekturen und Änderungen an Darstellung, Tooling, T
 
 Bei unklarer Einordnung gilt die strengere Einordnung als Framework Change.
 
+Ein Advisory Review ist optional und niemals Freigabe oder Gate-Evidenz. Jeder exakte Maintenance-Kandidat erhält vor seiner Annahme mindestens einen unabhängigen externen Finalreviewer, dessen Fähigkeit zum tatsächlichen Änderungsrisiko passt. Ein weiterer Reviewer kommt nur für ein materiell anderes Risiko hinzu, das der bereits ausgewählte Reviewer nicht glaubwürdig beurteilen kann; eine feste Reviewer-Matrix oder -Anzahl gibt es nicht.
+
+Der Finalreview bindet Revision und Scope und dokumentiert Auswahlbegründung, Findings, Prüfungen und Bewertungen. Offene Findings oder eine Bewertung unter 10,0 in einer ausgewählten Dimension verhindern die Annahme. Ein möglicher Einfluss auf O2I-Semantik, normative Syntax, Formalisierung, Validierungsverhalten oder öffentliche APIs verlangt stattdessen die erneute Einordnung als Framework Change.
+
 ## Status
 
 Das GitHub Project `O2I` ist die Planungssicht des Product Owners:
@@ -94,7 +98,7 @@ Das Skript rendert zunächst die Quellen aus `acc/` nach `img/`, ruft anschließ
 
 ## Attribution
 
-Agentisch erstellte Commits führen den transparenten Machine User [`gertrud-ai4x`](https://github.com/gertrud-ai4x) als Autorin und den verantwortlichen Menschen als Committer. Agentische Issue-Kommentare und Board-Übergänge ab `Ready` erfolgen über diesen Account; PO-Freigaben, Releases und andere verantwortliche Entscheidungen bleiben dem Product Owner zugeordnet. Der Machine User kann unabhängige Review-Evidenz veröffentlichen, ersetzt oder imitiert jedoch keinen Reviewer.
+Agentisch erstellte Commits führen den transparenten Machine User [`gertrud-ai4x`](https://github.com/gertrud-ai4x) als Autorin und den verantwortlichen Menschen als Committer. Gertrud wird einem Issue zugewiesen, sobald sie materielle Verantwortung für dessen Refinement, Koordination oder Umsetzung übernimmt; reine Advisory-Beteiligung genügt nicht. Agentische Issue-Kommentare und Board-Übergänge ab `Ready` erfolgen über diesen Account; PO-Freigaben, Releases und andere verantwortliche Entscheidungen bleiben dem Product Owner zugeordnet. Der Machine User kann unabhängige Review-Evidenz veröffentlichen, ersetzt oder imitiert jedoch keinen Reviewer.
 
 ## Umsetzung
 

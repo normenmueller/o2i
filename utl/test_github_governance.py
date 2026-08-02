@@ -366,6 +366,38 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         self.assertTrue(all(fields.values()))
         self.assertIn("does not alter O2I semantics", content)
 
+    def test_maintenance_review_is_independent_and_proportionate(self) -> None:
+        agent = read(GOVERNANCE)
+        human = read(CONTRIBUTING)
+        for term in (
+            "every exact Maintenance candidate revision receives at least one "
+            "independent Finalreview",
+            "Add another reviewer only when a materially distinct risk",
+            "Do not impose a fixed capability table, reviewer bundle, reviewer "
+            "count, or automated selection mechanism",
+            "10.0 in every selected dimension",
+            "Maintenance review never substitutes for Framework Admission",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, agent)
+        for term in (
+            "mindestens einen unabhängigen externen Finalreviewer",
+            "nur für ein materiell anderes Risiko",
+            "feste Reviewer-Matrix oder -Anzahl gibt es nicht",
+            "unter 10,0 in einer ausgewählten Dimension verhindern die Annahme",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, human)
+        self.assertNotIn("| Trigger ID |", agent)
+
+    def test_agentic_responsibility_requires_assignment(self) -> None:
+        agent = read(GOVERNANCE)
+        human = read(CONTRIBUTING)
+        self.assertIn("Add `gertrud-ai4x` as an assignee", agent)
+        self.assertIn("Advisory-only participation creates no assignment", agent)
+        self.assertIn("Gertrud wird einem Issue zugewiesen", human)
+        self.assertIn("reine Advisory-Beteiligung genügt nicht", human)
+
     def test_blank_issues_are_disabled(self) -> None:
         self.assertEqual("blank_issues_enabled: false\n", read(FORM_CONFIG))
 
