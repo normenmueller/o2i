@@ -106,7 +106,7 @@ repository Views and snapshots. It never validates O2I instances.
 - GitHub Issues: authority for change contracts, admission, dependencies, independent reviews, and open or closed state.
 - GitHub Project `O2I`: workflow-status and PO-ordering authority; no contract, admission, dependency, review, or closure authority.
 - `.ai4X/governance/guidelines.md`: normative agent-facing GitHub workflow and evidence contract; no backlog, project history, or fachliche semantics.
-- `utl/extract-archimate-view.py`: repository View/snapshot checker.
+- `utl/model/extract-archimate-view.py`: repository View/snapshot checker.
 - `utl/verify.sh`: canonical staged verification.
 
 # Stable Boundaries

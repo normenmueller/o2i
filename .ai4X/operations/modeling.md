@@ -105,9 +105,9 @@ instance-conformance work.
 # Commands
 
 ```text
-python3 -B utl/audit-archimate-model.py
-python3 -B utl/extract-archimate-view.py --preset all
-python3 -B utl/extract-archimate-view.py --preset all --check
-python3 -B -m unittest discover -s utl -p 'test_*.py'
+python3 -B utl/model/audit-archimate-model.py
+python3 -B utl/model/extract-archimate-view.py --preset all
+python3 -B utl/model/extract-archimate-view.py --preset all --check
+python3 -B -m unittest discover -s utl/model -p 'test_*.py'
 cabal --project-dir=spc run o2i -- inspect MODEL --view "VIEW"
 ```

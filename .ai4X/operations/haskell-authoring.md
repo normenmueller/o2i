@@ -81,7 +81,7 @@ spc/: cabal haddock all
 each package directory: cabal check
 repository root:
   rg --files spc -g '*.hs' | xargs hindent --line-length 80 --validate
-./utl/check-package-licenses.sh
+./utl/haskell/check-package-licenses.sh
 ```
 
 In a Git worktree, additionally run `git diff --check`. In an archive or source
