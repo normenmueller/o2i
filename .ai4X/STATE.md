@@ -6,8 +6,8 @@
 - Authorization scope: Issue `#24`: complete path-based licensing of every tracked O2I path using only unmodified CC BY 4.0 and Apache-2.0 texts, a concise human-facing map, and established REUSE/SPDX metadata and validation.
 - Current Issue: `#24`
 - Current gate: `issue-24-maintenance-finalreview-2`
-- Gate status: `PENDING`
-- Current node: `issue-24-maintenance-finalreview-2`
+- Gate status: `REJECTED`
+- Current node: `issue-24-correction-2`
 
 # Current Gate
 
@@ -16,7 +16,7 @@
 - Review scope: Issue `#24` implementation and documentation scope; mutable `.ai4X/STATE.md` is excluded.
 - Mandatory checks: exhaustive tracked-path license coverage, official legal-text integrity, `reuse lint`, package-license checks, complete local verification, generic-content boundary check, and independent licensing-and-repository-publication Finalreview.
 - Finding status: `OPEN`
-- Result: `PENDING`
+- Result: `REJECTED`
 
 # Repository Facts
 
@@ -32,11 +32,12 @@
 - Candidate `621d9517cf8e366e54693b1c731ac0f6a4859f2a` passed the complete local repository verification contract and the workspace generic-content boundary check.
 - Independent licensing-and-repository-publication Finalreview comment `5159607539` rejects candidate `621d9517cf8e366e54693b1c731ac0f6a4859f2a`: overlapping path assignments are not detected, and `REUSE.toml` itself is not explicitly assigned.
 - Corrected candidate `ce49ea3f01409b154e2d08209628a33b263a59a8` explicitly assigns `REUSE.toml`, rejects missing, overlapping, and competing embedded assignments, and passes the complete local repository verification contract.
+- Independent licensing-and-repository-publication Finalreview comment `5159931388` rejects candidate `ce49ea3f01409b154e2d08209628a33b263a59a8`: the path contract does not yet enforce the closed license set `Apache-2.0 | CC-BY-4.0`.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-Obtain one independent licensing-and-repository-publication Finalreview of exact candidate `ce49ea3f01409b154e2d08209628a33b263a59a8`, focused on finding closure and proportionality.
+Enforce the closed license set from the already parsed `REUSE.toml`, add one unsupported-license negative test, and preserve `REUSE.toml` as the sole assignment authority.
 
 # Local Return Point
 
