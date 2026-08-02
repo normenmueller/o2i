@@ -7,12 +7,12 @@
 - Current Issue: `#22`
 - Current gate: `issue-22-maintenance-finalreview-1`
 - Gate status: `PENDING`
-- Current node: `issue-22-implementation`
+- Current node: `issue-22-finalreview`
 
 # Current Gate
 
 - Attempt: `issue-22-maintenance-finalreview-1`
-- Candidate revision: `PENDING`
+- Candidate revision: `fb1058f107e2d0ef8f034229c90b909b26a24487`
 - Review scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py`; mutable `.ai4X/STATE.md` is excluded.
 - Mandatory checks: focused and complete governance verification, generic-content boundary check, and independent Agentic-AI and lean-governance Finalreviews.
 - Finding status: `OPEN`
@@ -48,11 +48,12 @@
 - Agentic-AI-governance Finalreview comment `5158247369` and Lean/proportionality Finalreview comment `5158248245` accept that exact candidate without findings and score every selected dimension 10.0.
 - Closure comment `5158268177` records remote availability and completion; Issue `#23` is closed and its Project status is `Done`.
 - Issue `#22` is Product Owner-authorized and has Project status `In progress`; its current body is the implementation authority.
+- Issue `#22` candidate revision `fb1058f107e2d0ef8f034229c90b909b26a24487` passes focused governance verification, `git diff --check`, and the generic-content boundary check.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-Implement the minimal batch Sub-Issue contract, synchronize its human-facing projection and deterministic tests, and prepare one exact Maintenance candidate for independent Finalreview.
+Obtain independent Agentic-AI and lean-governance Finalreviews for the exact Issue `#22` candidate revision.
 
 # Local Return Point
 
