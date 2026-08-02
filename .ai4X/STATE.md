@@ -6,8 +6,8 @@
 - Authorization scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py` within Issue `#22`.
 - Current Issue: `#22`
 - Current gate: `issue-22-maintenance-finalreview-1`
-- Gate status: `PENDING`
-- Current node: `issue-22-finalreview`
+- Gate status: `REJECTED`
+- Current node: `issue-22-correction`
 
 # Current Gate
 
@@ -16,7 +16,7 @@
 - Review scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py`; mutable `.ai4X/STATE.md` is excluded.
 - Mandatory checks: focused and complete governance verification, generic-content boundary check, and independent Agentic-AI and lean-governance Finalreviews.
 - Finding status: `OPEN`
-- Result: `PENDING`
+- Result: `REJECTED`
 
 # Repository Facts
 
@@ -49,11 +49,12 @@
 - Closure comment `5158268177` records remote availability and completion; Issue `#23` is closed and its Project status is `Done`.
 - Issue `#22` is Product Owner-authorized and has Project status `In progress`; its current body is the implementation authority.
 - Issue `#22` candidate revision `fb1058f107e2d0ef8f034229c90b909b26a24487` passes focused governance verification, `git diff --check`, and the generic-content boundary check.
+- Finalreview attempt 1 rejects that candidate because child closure authority and permitted lifecycle comments are internally ambiguous; one lean-governance review reports no finding.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-Obtain independent Agentic-AI and lean-governance Finalreviews for the exact Issue `#22` candidate revision.
+Clarify child-owned open/closed state without Parent authority and admit blocker/return-condition lifecycle comments without adding workflow machinery.
 
 # Local Return Point
 
