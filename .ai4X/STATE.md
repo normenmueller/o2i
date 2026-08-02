@@ -5,18 +5,18 @@
 - Execution authorization: `APPROVED`
 - Authorization scope: Issue `#24`: complete path-based licensing of every tracked O2I path using only unmodified CC BY 4.0 and Apache-2.0 texts, a concise human-facing map, and established REUSE/SPDX metadata and validation.
 - Current Issue: `#24`
-- Current gate: `issue-24-maintenance-finalreview-2`
-- Gate status: `REJECTED`
-- Current node: `issue-24-correction-2`
+- Current gate: `issue-24-maintenance-finalreview-3`
+- Gate status: `PENDING`
+- Current node: `issue-24-maintenance-finalreview-3`
 
 # Current Gate
 
-- Attempt: `issue-24-maintenance-finalreview-2`
-- Candidate revision: `ce49ea3f01409b154e2d08209628a33b263a59a8`
+- Attempt: `issue-24-maintenance-finalreview-3`
+- Candidate revision: `4ac239e25ec522f4c4b23e92f3f9c94ce6bfb821`
 - Review scope: Issue `#24` implementation and documentation scope; mutable `.ai4X/STATE.md` is excluded.
 - Mandatory checks: exhaustive tracked-path license coverage, official legal-text integrity, `reuse lint`, package-license checks, complete local verification, generic-content boundary check, and independent licensing-and-repository-publication Finalreview.
 - Finding status: `OPEN`
-- Result: `REJECTED`
+- Result: `PENDING`
 
 # Repository Facts
 
@@ -33,11 +33,12 @@
 - Independent licensing-and-repository-publication Finalreview comment `5159607539` rejects candidate `621d9517cf8e366e54693b1c731ac0f6a4859f2a`: overlapping path assignments are not detected, and `REUSE.toml` itself is not explicitly assigned.
 - Corrected candidate `ce49ea3f01409b154e2d08209628a33b263a59a8` explicitly assigns `REUSE.toml`, rejects missing, overlapping, and competing embedded assignments, and passes the complete local repository verification contract.
 - Independent licensing-and-repository-publication Finalreview comment `5159931388` rejects candidate `ce49ea3f01409b154e2d08209628a33b263a59a8`: the path contract does not yet enforce the closed license set `Apache-2.0 | CC-BY-4.0`.
+- Corrected candidate `4ac239e25ec522f4c4b23e92f3f9c94ce6bfb821` enforces exactly one permitted license identifier per annotation and the complete closed license set; ten focused tests and the complete repository verification contract pass.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-Enforce the closed license set from the already parsed `REUSE.toml`, add one unsupported-license negative test, and preserve `REUSE.toml` as the sole assignment authority.
+Obtain one independent licensing-and-repository-publication Finalreview of exact candidate `4ac239e25ec522f4c4b23e92f3f9c94ce6bfb821`, focused on complete finding closure and proportionality.
 
 # Local Return Point
 
