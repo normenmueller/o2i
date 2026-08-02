@@ -6,7 +6,7 @@
 - Authorization scope: Issue `#24`: complete path-based licensing of every tracked O2I path using only unmodified CC BY 4.0 and Apache-2.0 texts, a concise human-facing map, and established REUSE/SPDX metadata and validation.
 - Current Issue: `#24`
 - Current gate: `issue-24-maintenance-finalreview-1`
-- Gate status: `CORRECTING`
+- Gate status: `REJECTED`
 - Current node: `issue-24-correction-1`
 
 # Current Gate
