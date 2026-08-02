@@ -1,13 +1,22 @@
 # Handoff
 
 - Observed: 2026-08-02 CEST
-- Work status: `PAUSED`
-- Execution authorization: `REQUIRED`
-- Authorization scope: `NONE`
-- Current Issue: `NONE`
-- Current gate: `NONE`
-- Gate status: `NOT_REQUIRED`
-- Current node: `paused-handoff`
+- Work status: `ACTIVE`
+- Execution authorization: `APPROVED`
+- Authorization scope: Issue `#24`: complete path-based licensing of every tracked O2I path using only unmodified CC BY 4.0 and Apache-2.0 texts, a concise human-facing map, and established REUSE/SPDX metadata and validation.
+- Current Issue: `#24`
+- Current gate: `issue-24-maintenance-finalreview-1`
+- Gate status: `PENDING`
+- Current node: `issue-24-implementation`
+
+# Current Gate
+
+- Attempt: `issue-24-maintenance-finalreview-1`
+- Candidate revision: `PENDING`
+- Review scope: Issue `#24` implementation and documentation scope; mutable `.ai4X/STATE.md` is excluded.
+- Mandatory checks: exhaustive tracked-path license coverage, official legal-text integrity, `reuse lint`, package-license checks, complete local verification, generic-content boundary check, and independent licensing-and-repository-publication Finalreview.
+- Finding status: `OPEN`
+- Result: `PENDING`
 
 # Repository Facts
 
@@ -19,12 +28,12 @@
 - Issue `#1` remains a non-activated Backlog record.
 - Issue `#13` is closed with Project status `Done`; accepted candidate `7714a5f815284f18bede9cd3f77c1a4b9bda302a` and handoff `9890cef95f7070eaee26e5411a649428509fc5f8` are remotely available.
 - Finalreview comment `5159290601` reports no findings and scores every selected dimension 10.0; closure comment `5159319662` records publication and completion.
-- Issue `#24` is `Refined` and has no implementation authorization.
+- Issue `#24` is Product Owner-authorized with Project status `In progress`; its complete body is the implementation authority and contains no named implementation batches.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-Await explicit Product Owner activation of the next `Ready` Issue. Do not infer authorization from `Refined`, `Paused`, or roadmap order.
+Inventory every tracked path and distribution boundary, then implement one exhaustive CC-BY-4.0/Apache-2.0 assignment without custom terms, ambiguous defaults, or unnecessary copies.
 
 # Local Return Point
 
