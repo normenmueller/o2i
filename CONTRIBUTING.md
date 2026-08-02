@@ -36,6 +36,8 @@ Maintenance benötigt weder Framework Admission noch Admission-Digest. Ein Advis
 
 Der Finalreview bindet Revision und Scope und dokumentiert Auswahlbegründung, Findings, Prüfungen und Bewertungen. Jedes Finding verwirft den exakten Kandidaten und verlangt den Review einer korrigierten Revision. Die Annahme erfordert kein Finding und 10,0 in jeder ausgewählten Dimension. Ein möglicher Einfluss auf O2I-Semantik, normative Syntax, Formalisierung, Validierungsverhalten oder öffentliche APIs verlangt stattdessen die erneute Einordnung als Framework Change.
 
+Reviewer bewerten kritisch, neutral, objektiv und unabhängig. Ein Review ist keine Annahmeautomatik: Begründete Einwände, Verbesserungen oder materiell bessere Alternativen hinsichtlich Leanheit, Klarheit, Eleganz, Robustheit, Modularität oder Nutzen führen zur Ablehnung des Kandidaten.
+
 ## Status
 
 Das GitHub Project `O2I` ist die Planungssicht des Product Owners:

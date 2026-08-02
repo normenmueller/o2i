@@ -380,6 +380,11 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "Any finding rejects that exact candidate",
             "Acceptance requires no finding",
             "10.0 in every selected dimension",
+            "Reviewers assess critically, neutrally, objectively, and "
+            "independently",
+            "Review is never an acceptance default",
+            "leanness, clarity, elegance, robustness, modularity, and "
+            "usefulness",
             "Maintenance review never substitutes for Framework Admission",
             "Maintenance Finalreview evidence instead records the selected "
             "capability and concise risk rationale",
@@ -396,6 +401,8 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "feste Reviewer-Matrix, -Anzahl oder Auswahlmechanik gibt es nicht",
             "Jedes Finding verwirft den exakten Kandidaten",
             "Die Annahme erfordert kein Finding und 10,0",
+            "Reviewer bewerten kritisch, neutral, objektiv und unabhängig",
+            "Ein Review ist keine Annahmeautomatik",
             "Maintenance-Finalreviews benötigen keinen Admission-Digest",
         ):
             with self.subTest(term=term):
