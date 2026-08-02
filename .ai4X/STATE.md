@@ -1,68 +1,29 @@
 # Handoff
 
 - Observed: 2026-08-02 CEST
-- Work status: `COMPLETE`
-- Execution authorization: `APPROVED`
-- Authorization scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py` within Issue `#22`.
-- Current Issue: `#22`
-- Current gate: `issue-22-maintenance-finalreview-4`
-- Gate status: `ACCEPTED`
-- Current node: `issue-22-publication`
-
-# Current Gate
-
-- Attempt: `issue-22-maintenance-finalreview-4`
-- Candidate revision: `a717bcda33d0184f2f10fd2dbd549e357a3410d4`
-- Review scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py`; mutable `.ai4X/STATE.md` is excluded.
-- Mandatory checks: focused and complete governance verification, generic-content boundary check, and independent Agentic-AI and lean-governance Finalreviews.
-- Finding status: `CLOSED`
-- Result: `ACCEPTED`
+- Work status: `PAUSED`
+- Execution authorization: `REQUIRED`
+- Authorization scope: `NONE`
+- Current Issue: `NONE`
+- Current gate: `NONE`
+- Gate status: `NOT_REQUIRED`
+- Current node: `paused-handoff`
 
 # Repository Facts
 
-- Issues `#12`, `#15`, `#16`, and `#17` are closed with Project status `Done`.
-- Their exact accepted implementation revision is `5725c1e46077d5c5642f9b4e022764d1d5f37437`.
-- Independent Finalreview reports no findings and 10.0 in every required dimension.
-- Remote Verify run `30689816445` succeeds for governance, model contracts, Haskell specification, and White Paper.
+- Issue `#22` is closed with Project status `Done`.
+- Its accepted implementation revision is `a717bcda33d0184f2f10fd2dbd549e357a3410d4`; accepted handoff `0845fc613e93ce9607eb4c1d90dab2120367c543` is remotely available on `origin/trunk`.
+- Agentic-AI-governance Finalreview comment `5158692545` and Lean-governance Finalreview comment `5158693450` report no findings and score every selected dimension 10.0.
+- Closure comment `5158943307` records verification, remote availability, and completion.
+- Issues `#4`, `#12`, `#15`, `#16`, `#17`, `#22`, and `#23` are closed with Project status `Done`.
 - Issue `#1` remains a non-activated Backlog record.
-- Issue `#4` is closed with Project status `Done`. Its exact body digest is `6593d8f7844c46357d7afa20bdd6ffe866829cb763064e851d0a7d35fbdfae4e`.
-- Independent Strategy and Formalization Admission comments `5151329407` and `5151329467` accept that exact body without findings and with 10.0 in every required dimension.
-- Authoritative implementation-contract comment `5151331108` has exact body digest `405107e9001229fa2a5b590e1450ae1909c5f71e050447b128a5fbcc434cd0b1`.
-- Work-activation comment `5151354727` records the Product Owner authorization and baseline revision `963fb5f623838a19b58f18cb47fef7e7c8ad5bff`.
-- Focused profile, AMX, and Inspection verification passes after completing the model-root profile policy and selected-View scope contract.
-- Candidate revision `c9083bbd192443b8b95ba7a7853c80ec8f4218ac` passes complete local verification and the generic-content boundary check.
-- Formalization Finalreview attempt 1 rejects that candidate because a legacy non-O2I root `version` policy competes with the authoritative profile contract; Haskell and Publication reported no findings for the exact rejected revision.
-- Candidate revision `a98214c8f60ae552799846f037735c35d0c761a3` removes that competing policy completely, accepts unrelated native root properties, and passes complete local verification plus the generic-content boundary check.
-- Formalization and Publication Finalreviews accept candidate 2 without findings and with 10.0 in every dimension.
-- Haskell Finalreview attempt 2 rejects candidate 2 because exported internal record selectors permit external record updates that forge otherwise abstract typed-profile values.
-- Candidate revision `36723756c06b3807ab42a8d2fb16d009447ebce2` closes that abstraction boundary through private internal fields, ordinary public accessors, and external-client compile contracts.
-- Complete and focused verification, Haddock, formatting, Cabal checks, and the generic-content boundary check pass for candidate 3 content.
-- Independent implementation audit preceded the Finalreview and reported no finding and 10.0 in every reviewed dimension.
-- Issue comment `5152176314` binds the candidate and verification evidence.
-- Formalization Finalreview comment `5152438907` accepts candidate 3 without findings and scores every required dimension 10.0.
-- Haskell Finalreview comment `5152438965` accepts candidate 3 without findings and scores every required dimension 10.0.
-- Publication Finalreview comment `5152439004` accepts candidate 3 without findings and scores every required dimension 10.0.
-- Candidate 3 and authority handoff `b1b40c0c1abfd23c680c85e81c4a1702f5676071` are remotely available on `origin/trunk`.
-- Closure comment `5152456934` records remote availability and completion; Issue `#4` is closed and its Project status is `Done`.
-- Issue `#23` candidate revision `124c427b19359c5457d4232adb6ff0032a3e264f` passes complete local verification and the generic-content boundary check.
-- Agentic-AI-governance Finalreview comment `5158247369` and Lean/proportionality Finalreview comment `5158248245` accept that exact candidate without findings and score every selected dimension 10.0.
-- Closure comment `5158268177` records remote availability and completion; Issue `#23` is closed and its Project status is `Done`.
-- Issue `#22` is Product Owner-authorized and has Project status `In review`; its current body is the implementation authority.
-- Issue `#22` candidate revision `fb1058f107e2d0ef8f034229c90b909b26a24487` passes focused governance verification, `git diff --check`, and the generic-content boundary check.
-- Finalreview attempt 1 rejects that candidate because child closure authority and permitted lifecycle comments are internally ambiguous; one lean-governance review reports no finding.
-- Candidate revision `842c95a928ebba198277e163ad8903b2ff73e7f1` closes both findings by separating child-owned open or closed state from Parent acceptance authority and by bounding lifecycle comments; focused governance verification, `git diff --check`, and the generic-content boundary check pass.
-- Finalreview attempt 2 rejects that candidate because its body allowlist omits the mandatory authority notice, Maintenance has no separate implementation-contract comment, and assignee duplication can drift from native metadata.
-- The Product Owner authorizes the narrow contract clarification; the active Issue body now distinguishes Maintenance from Framework Change authority, includes the fixed notice in the body allowlist, and assigns ownership only through native GitHub metadata.
-- Candidate revision `5fed19f153a687953e552fbf2bf25f090b848133` synchronizes that contract across governance, its human projection, and 30 deterministic tests; focused governance verification, `git diff --check`, and the generic-content boundary check pass.
-- Finalreview attempt 3 rejects that candidate because batch identifier and batch name are inconsistently duplicated between the native Issue title and the body allowlists; both reviewers report the same finding and confirm all earlier findings closed.
-- Candidate revision `a717bcda33d0184f2f10fd2dbd549e357a3410d4` moves batch identifier and batch name exclusively to the native Issue title, aligns both body allowlists, and passes 30 focused governance tests, 14 supporting tests, `git diff --check`, and the generic-content boundary check.
-- Agentic-AI-governance Finalreview comment `5158692545` and Lean-governance Finalreview comment `5158693450` accept candidate 4 without findings and score every selected dimension 10.0.
+- Issue `#13` remains `Refined` and has no execution authorization.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-The Product Owner pushes the local Issue `#22` commits; then verify remote availability, publish closure evidence, close the Issue, and confirm Project status `Done`.
+Await explicit Product Owner authorization of Refined Issue `#13`.
 
 # Local Return Point
 
-After Issue `#22` closes, continue with Refined Issue `#13` only after Product Owner authorization before returning to paused Issue `#3`.
+After Issue `#13` closes, continue with paused Issue `#3` only after Product Owner authorization.
