@@ -217,7 +217,6 @@ tests =
         supplementalSourceRetentionTest
     , testCase "command-error JSON is parseable" commandJsonTest
     , testCase "checked-in schemas are valid JSON" schemaJsonTest
-    , testCase "package license equals canonical license" licenseTest
     ]
 
 sourceIdentityTest :: Assertion
@@ -2044,12 +2043,6 @@ schemaJsonTest =
       case Aeson.eitherDecode bytes :: Either String Aeson.Value of
         Left message -> assertFailure (name <> ": " <> message)
         Right _ -> pure ()
-
-licenseTest :: Assertion
-licenseTest = do
-  canonical <- ByteString.readFile (".." </> ".." </> "LICENSE")
-  local <- ByteString.readFile "LICENSE"
-  local @?= canonical
 
 testSource :: SourceDocument
 testSource = sourceDocumentFromBytes "model.archimate" FileSource "abc"

@@ -1,0 +1,37 @@
+version = 1
+
+[[annotations]]
+path = [
+  ".ai4X/**",
+  ".github/ISSUE_TEMPLATE/**",
+  ".github/agents/**",
+  "ACKNOWLEDGEMENTS.md",
+  "AGENTS.md",
+  "CHANGELOG.md",
+  "CONTRIBUTING.md",
+  "LICENSING.md",
+  "README.md",
+  "acc/**",
+  "img/**",
+  "mdl/**",
+  "o2i.md",
+  "o2i.pdf",
+  "wtf.md",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 nemron <https://github.com/normenmueller>"
+SPDX-License-Identifier = "CC-BY-4.0"
+
+[[annotations]]
+path = [
+  ".gitattributes",
+  ".github/workflows/**",
+  ".gitignore",
+  "o2i.pdf.manifest.json",
+  "spc/**",
+  "toPDF.sh",
+  "utl/**",
+]
+precedence = "override"
+SPDX-FileCopyrightText = "2026 nemron <https://github.com/normenmueller>"
+SPDX-License-Identifier = "Apache-2.0"

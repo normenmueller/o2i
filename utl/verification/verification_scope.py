@@ -12,7 +12,7 @@ import subprocess
 from typing import Iterable, Sequence
 
 
-STAGES = ("governance", "model", "haskell", "paper")
+STAGES = ("licensing", "governance", "model", "haskell", "paper")
 ALL_STAGES = frozenset(STAGES)
 REVISION = re.compile(r"[0-9a-f]{40}")
 
@@ -28,7 +28,8 @@ NEUTRAL_PATHS = frozenset(
     {
         ".gitignore",
         "CHANGELOG.md",
-        "LICENSE",
+        "LICENSING.md",
+        "REUSE.toml",
     }
 )
 GOVERNANCE_PATHS = frozenset(
@@ -36,6 +37,11 @@ GOVERNANCE_PATHS = frozenset(
         "AGENTS.md",
         "CONTRIBUTING.md",
         "utl/governance/test_github_governance.py",
+    }
+)
+LICENSING_PATHS = frozenset(
+    {
+        "utl/licensing/check-license-texts.sh",
     }
 )
 MODEL_PATHS = frozenset(
@@ -146,9 +152,12 @@ def stages_for_path(path: str) -> frozenset[str] | None:
 
     if path in NEUTRAL_PATHS:
         known = True
+    if _under(path, "LICENSES") or path in LICENSING_PATHS:
+        known = True
 
     if not known:
         return None
+    stages.add("licensing")
     return frozenset(stages)
 
 
@@ -164,12 +173,6 @@ def classify_paths(paths: Iterable[str]) -> Selection:
         if stages is None:
             return Selection(ALL_STAGES, "full", "unknown-path")
         selected.update(stages)
-    if not selected:
-        return Selection(
-            frozenset({"governance"}),
-            "selective",
-            "repository-hygiene",
-        )
     return Selection(frozenset(selected), "selective", "path-matrix")
 
 

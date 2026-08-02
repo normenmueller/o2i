@@ -21,6 +21,46 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  licensing:
+    name: Repository licensing
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      REUSE_VERSION: 6.2.0
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Select verification scope
+        id: scope
+        run: |
+          python3 -B utl/verification/verification_scope.py \
+            --event "$O2I_EVENT_NAME" \
+            --base "$O2I_DIFF_BASE" \
+            --head "$O2I_DIFF_HEAD" \
+            --forced "$O2I_FORCE_FULL" \
+            --format github >> "$GITHUB_OUTPUT"
+
+      - name: Install licensing verification tools
+        if: steps.scope.outputs.licensing == 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends pipx
+          pipx install "reuse[charset-normalizer]==$REUSE_VERSION"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Verify repository licensing
+        if: steps.scope.outputs.licensing == 'true'
+        run: ./utl/verify.sh licensing
+
+      - name: Report skipped licensing verification
+        if: steps.scope.outputs.licensing != 'true'
+        run: echo "[o2i|info] Repository licensing verification is not selected."
+
   governance:
     name: Change governance
     runs-on: ubuntu-24.04

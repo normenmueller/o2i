@@ -139,7 +139,7 @@ Der vollständige lokale Repository-Vertrag verändert keine getrackten Arbeitsa
 ./utl/verify.sh
 ```
 
-Fokussierte Prüfungen mit `governance`, `model`, `haskell` oder `paper` sind während der Entwicklung vorgesehen. Vor jedem Commit müssen mindestens alle von der Pfadmatrix betroffenen Stufen lokal erfolgreich sein; bei unbekannter oder gemeinsam genutzter Vertragsfläche gilt der vollständige Vertrag. Vor jedem Release-Tag ist `./utl/verify.sh` vollständig auszuführen. Die Paper-Stufe prüft zusätzlich die festgelegte `md2pdf`-Version, Quellenbindung sowie Seiten- und Textstruktur eines frischen Builds.
+Fokussierte Prüfungen mit `licensing`, `governance`, `model`, `haskell` oder `paper` sind während der Entwicklung vorgesehen. Die Lizenzstufe setzt den offiziellen REUSE-Validator 6.2.0 voraus; er kann mit `pipx install "reuse[charset-normalizer]==6.2.0"` installiert werden. Sie prüft jeden getrackten Pfad und ist deshalb bei jeder Änderung aktiv. Vor jedem Commit müssen mindestens alle von der Pfadmatrix betroffenen Stufen lokal erfolgreich sein; bei unbekannter oder gemeinsam genutzter Vertragsfläche gilt der vollständige Vertrag. Vor jedem Release-Tag ist `./utl/verify.sh` vollständig auszuführen. Die Paper-Stufe prüft zusätzlich die festgelegte `md2pdf`-Version, Quellenbindung sowie Seiten- und Textstruktur eines frischen Builds.
 
 Direkte Branch-Pushes lösen keine GitHub Actions aus. Remote-Verifikation läuft ausschließlich für Pull Requests, manuelle Workflow-Aufrufe und Release-Tags mit dem Muster `o2i-v*`.
 
@@ -147,6 +147,7 @@ Bei jedem Lauf bestimmt `utl/verification/verification_scope.py` aus dem Git-Dif
 
 | Änderung | Ausgeführte Stufen |
 | --- | --- |
+| jeder getrackte Pfad | Repository-Lizenzierung |
 | `.ai4X/` oder Governance-Werkzeuge | Governance |
 | `mdl/` oder Modellwerkzeuge | Modellverträge |
 | `spc/` | Haskell-Spezifikation |
@@ -155,7 +156,7 @@ Bei jedem Lauf bestimmt `utl/verification/verification_scope.py` aus dem Git-Dif
 
 Gekoppelte Verträge ergänzen diese Primärzuordnung: fachbezogene `.ai4X/operations/` aktivieren zusätzlich ihre jeweilige Stufe, `spc/lib/core/src/` zusätzlich das White Paper und `spc/ctr/archimate/` zusätzlich Modellverträge und White Paper. Die vollständige ausführbare Matrix liegt ausschließlich im Selektor und seiner Vertragssuite.
 
-Bei Pull Requests bleiben alle vier GitHub-Checks sichtbar. Eine nicht betroffene Stufe endet mit einem expliziten erfolgreichen Skip; eine betroffene Stufe führt unverändert den entsprechenden lokalen `verify.sh`-Vertrag aus. Manuelle Aufrufe und Release-Tags erzwingen stets den vollständigen Vertrag. Ein Release gilt erst nach erfolgreicher Remote-Verifikation als akzeptiert.
+Bei Pull Requests bleiben alle fünf GitHub-Checks sichtbar. Eine nicht betroffene Stufe endet mit einem expliziten erfolgreichen Skip; eine betroffene Stufe führt unverändert den entsprechenden lokalen `verify.sh`-Vertrag aus. Manuelle Aufrufe und Release-Tags erzwingen stets den vollständigen Vertrag. Ein Release gilt erst nach erfolgreicher Remote-Verifikation als akzeptiert.
 
 `[skip ci]` ist kein regulärer Workflowmechanismus. Die repository-seitige Triggerregel entscheidet über Remote-Verifikation und hält Commit-Messages frei von wiederkehrender CI-Steuerung.
 

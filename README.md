@@ -42,8 +42,6 @@ O2I dient dazu, *orientierte Wirkung* durch relationale Modellierung nachvollzie
 
 ## License
 
-The O2I white paper, diagrams, and models are licensed under [CC BY 4.0](./LICENSE).
-
-The Haskell code under [`spc/`](./spc/) is licensed under [Apache-2.0](./spc/LICENSE).
+O2I verwendet pfadabhängig [CC BY 4.0 und Apache-2.0](./LICENSING.md). Die Lizenzübersicht und `REUSE.toml` weisen jedem getrackten Inhalt genau eine Lizenz zu.
 
 © 2026 [nemron](https://github.com/normenmueller)

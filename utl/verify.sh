@@ -7,15 +7,15 @@ work=$(mktemp -d "${TMPDIR:-/tmp}/o2i-verify.XXXXXX")
 trap 'rm -rf "$work"' EXIT HUP INT TERM
 
 if [ "$#" -gt 1 ]; then
-  printf 'Usage: %s [all|governance|model|haskell|paper]\n' "$0" >&2
+  printf 'Usage: %s [all|licensing|governance|model|haskell|paper]\n' "$0" >&2
   exit 2
 fi
 
 stage=${1:-all}
 case "$stage" in
-  all | governance | model | haskell | paper) ;;
+  all | licensing | governance | model | haskell | paper) ;;
   *)
-    printf 'Usage: %s [all|governance|model|haskell|paper]\n' "$0" >&2
+    printf 'Usage: %s [all|licensing|governance|model|haskell|paper]\n' "$0" >&2
     exit 2
     ;;
 esac
@@ -53,6 +53,26 @@ if command -v git >/dev/null 2>&1 && \
 else
   info "Git metadata unavailable; skipping worktree-only diff checks."
 fi
+
+verify_licensing() {
+  require reuse
+
+  info "Checking canonical license-text integrity."
+  ./utl/licensing/check-license-texts.sh
+
+  actual_version=$(reuse --version | sed -n '1s/^reuse, version //p')
+  if [ "$actual_version" != "6.2.0" ]; then
+    printf '[o2i|error] REUSE 6.2.0 is required; found %s.\n' \
+      "${actual_version:-unknown}" >&2
+    exit 1
+  fi
+
+  info "Checking exhaustive repository licensing with REUSE 3.3."
+  reuse --no-multiprocessing lint
+
+  info "Checking package-local Apache-2.0 license copies."
+  ./utl/haskell/check-package-licenses.sh
+}
 
 verify_governance() {
   require python3
@@ -98,8 +118,7 @@ verify_haskell() {
   printf '\nlogs-dir: %s\n' "$cabal_logs" >>"$cabal_config"
   export CABAL_CONFIG="$cabal_config"
 
-  info "Checking package licenses and metadata."
-  ./utl/haskell/check-package-licenses.sh
+  info "Checking package metadata."
   for package in \
     spc/lib/core \
     spc/lib/inspection \
@@ -210,11 +229,13 @@ verify_paper() {
 }
 
 case "$stage" in
+  licensing) verify_licensing ;;
   governance) verify_governance ;;
   model) verify_model ;;
   haskell) verify_haskell ;;
   paper) verify_paper ;;
   all)
+    verify_licensing
     verify_governance
     verify_model
     verify_haskell

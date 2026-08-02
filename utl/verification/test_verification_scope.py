@@ -35,11 +35,12 @@ def repository_paths(root: Path) -> set[str]:
             check=True,
             capture_output=True,
         )
-        return {
+        paths = {
             value.decode("utf-8")
             for value in result.stdout.split(b"\0")
             if value
         }
+        return {path for path in paths if (root / path).is_file()}
     return {
         path.relative_to(root).as_posix()
         for path in root.rglob("*")
@@ -52,29 +53,51 @@ class VerificationPathMatrixTests(unittest.TestCase):
 
     def test_representative_path_matrix(self) -> None:
         cases = {
-            ".ai4X/STATE.md": {"governance"},
+            ".ai4X/STATE.md": {"licensing", "governance"},
             ".ai4X/operations/haskell-authoring.md": {
+                "licensing",
                 "governance",
                 "haskell",
             },
-            ".ai4X/operations/modeling.md": {"governance", "model"},
+            ".ai4X/operations/modeling.md": {
+                "licensing",
+                "governance",
+                "model",
+            },
             ".ai4X/operations/publication.md": {
+                "licensing",
                 "governance",
                 "paper",
             },
             ".github/workflows/verify.yml": set(scope.STAGES),
-            "mdl/o2i.archimate": {"model"},
-            "spc/lib/adapter/amx/src/O2I/Adapter/AMX.hs": {"haskell"},
-            "spc/lib/core/src/O2I/Graph.hs": {"haskell", "paper"},
+            "mdl/o2i.archimate": {"licensing", "model"},
+            "spc/lib/adapter/amx/src/O2I/Adapter/AMX.hs": {
+                "licensing",
+                "haskell",
+            },
+            "spc/lib/core/src/O2I/Graph.hs": {
+                "licensing",
+                "haskell",
+                "paper",
+            },
             "spc/ctr/archimate/profile.json": {
+                "licensing",
                 "model",
                 "haskell",
                 "paper",
             },
-            "README.md": {"paper"},
-            "wtf.md": {"paper"},
-            "CHANGELOG.md": set(),
-            "utl/model/render-archimate-profile.py": {"model", "paper"},
+            "README.md": {"licensing", "paper"},
+            "wtf.md": {"licensing", "paper"},
+            "CHANGELOG.md": {"licensing"},
+            "LICENSING.md": {"licensing"},
+            "REUSE.toml": {"licensing"},
+            "LICENSES/Apache-2.0.txt": {"licensing"},
+            "utl/licensing/check-license-texts.sh": {"licensing"},
+            "utl/model/render-archimate-profile.py": {
+                "licensing",
+                "model",
+                "paper",
+            },
         }
         for path, expected in cases.items():
             with self.subTest(path=path):
@@ -86,7 +109,7 @@ class VerificationPathMatrixTests(unittest.TestCase):
         )
         self.assertEqual("selective", selection.mode)
         self.assertEqual(
-            {"governance", "model", "paper"},
+            {"licensing", "governance", "model", "paper"},
             set(selection.stages),
         )
 
@@ -101,10 +124,10 @@ class VerificationPathMatrixTests(unittest.TestCase):
         self.assertEqual("full", selection.mode)
         self.assertEqual("empty-change-set", selection.reason)
 
-    def test_neutral_change_keeps_repository_hygiene(self) -> None:
+    def test_neutral_change_keeps_licensing_verification(self) -> None:
         selection = scope.classify_paths(("CHANGELOG.md",))
-        self.assertEqual({"governance"}, set(selection.stages))
-        self.assertEqual("repository-hygiene", selection.reason)
+        self.assertEqual({"licensing"}, set(selection.stages))
+        self.assertEqual("path-matrix", selection.reason)
 
     def test_every_current_repository_path_is_known(self) -> None:
         paths = repository_paths(ROOT)
@@ -178,15 +201,18 @@ class VerificationDiffTests(unittest.TestCase):
             git(root, "commit", "--quiet", "-m", "base")
             base = git(root, "rev-parse", "HEAD")
 
-            git(root, "mv", "spc/source.hs", "LICENSE")
+            git(root, "mv", "spc/source.hs", "LICENSING.md")
             git(root, "commit", "--quiet", "-m", "rename")
             head = git(root, "rev-parse", "HEAD")
 
             paths = scope.changed_paths(root, "push", base, head)
             self.assertIsNotNone(paths)
-            self.assertEqual({"spc/source.hs", "LICENSE"}, set(paths or ()))
+            self.assertEqual(
+                {"spc/source.hs", "LICENSING.md"},
+                set(paths or ()),
+            )
             selection = scope.classify_paths(paths or ())
-            self.assertEqual({"haskell"}, set(selection.stages))
+            self.assertEqual({"licensing", "haskell"}, set(selection.stages))
 
     def test_pull_request_uses_only_changes_since_merge_base(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -215,12 +241,13 @@ class VerificationDiffTests(unittest.TestCase):
             paths = scope.changed_paths(root, "pull_request", base, head)
             self.assertEqual(("spc/source.hs",), paths)
             selection = scope.classify_paths(paths or ())
-            self.assertEqual({"haskell"}, set(selection.stages))
+            self.assertEqual({"licensing", "haskell"}, set(selection.stages))
 
     def test_github_output_is_complete_and_stable(self) -> None:
         selection = scope.classify_paths((".ai4X/STATE.md",))
         self.assertEqual(
             """\
+licensing=true
 governance=true
 model=false
 haskell=false
@@ -257,6 +284,7 @@ on:
     def test_workflow_preserves_names_and_uses_each_scope_output(self) -> None:
         content = WORKFLOW.read_text(encoding="utf-8")
         cases = (
+            ("Repository licensing", "licensing"),
             ("Change governance", "governance"),
             ("Model contracts", "model"),
             ("Haskell specification", "haskell"),
@@ -267,6 +295,8 @@ on:
                 self.assertIn(f"name: {name}", content)
                 self.assertIn(f"steps.scope.outputs.{stage}", content)
         selected_steps = (
+            ("Install licensing verification tools", "licensing"),
+            ("Verify repository licensing", "licensing"),
             ("Verify change governance", "governance"),
             ("Verify model contracts", "model"),
             ("Set up Haskell", "haskell"),
@@ -288,10 +318,10 @@ on:
                     content,
                 )
         self.assertEqual(
-            4,
+            5,
             content.count("python3 -B utl/verification/verification_scope.py"),
         )
-        self.assertEqual(4, content.count("fetch-depth: 0"))
+        self.assertEqual(5, content.count("fetch-depth: 0"))
         self.assertNotIn("\n    paths:", content)
         self.assertIn("workflow_dispatch:", content)
         actions = re.findall(r"(?m)^\s+uses: ([^@\s]+)@([^\s]+)", content)

@@ -155,3 +155,7 @@ independent defects outside the closed scope.
 
 The CLI contains no validation semantics. It delegates inspection to the
 libraries and renders their result.
+
+## License
+
+The Haskell specification and tooling are licensed under Apache-2.0. The repository-wide path assignment and canonical legal text are defined by the root [licensing map](../LICENSING.md); every separately distributable Cabal package includes an identical local copy of that text.
