@@ -1,13 +1,13 @@
 # Handoff
 
 - Observed: 2026-08-02 CEST
-- Work status: `ACTIVE`
+- Work status: `COMPLETE`
 - Execution authorization: `APPROVED`
 - Authorization scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py` within Issue `#22`.
 - Current Issue: `#22`
 - Current gate: `issue-22-maintenance-finalreview-4`
-- Gate status: `PENDING`
-- Current node: `issue-22-finalreview`
+- Gate status: `ACCEPTED`
+- Current node: `issue-22-publication`
 
 # Current Gate
 
@@ -15,8 +15,8 @@
 - Candidate revision: `a717bcda33d0184f2f10fd2dbd549e357a3410d4`
 - Review scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py`; mutable `.ai4X/STATE.md` is excluded.
 - Mandatory checks: focused and complete governance verification, generic-content boundary check, and independent Agentic-AI and lean-governance Finalreviews.
-- Finding status: `OPEN`
-- Result: `PENDING`
+- Finding status: `CLOSED`
+- Result: `ACCEPTED`
 
 # Repository Facts
 
@@ -47,7 +47,7 @@
 - Issue `#23` candidate revision `124c427b19359c5457d4232adb6ff0032a3e264f` passes complete local verification and the generic-content boundary check.
 - Agentic-AI-governance Finalreview comment `5158247369` and Lean/proportionality Finalreview comment `5158248245` accept that exact candidate without findings and score every selected dimension 10.0.
 - Closure comment `5158268177` records remote availability and completion; Issue `#23` is closed and its Project status is `Done`.
-- Issue `#22` is Product Owner-authorized and has Project status `In progress`; its current body is the implementation authority.
+- Issue `#22` is Product Owner-authorized and has Project status `In review`; its current body is the implementation authority.
 - Issue `#22` candidate revision `fb1058f107e2d0ef8f034229c90b909b26a24487` passes focused governance verification, `git diff --check`, and the generic-content boundary check.
 - Finalreview attempt 1 rejects that candidate because child closure authority and permitted lifecycle comments are internally ambiguous; one lean-governance review reports no finding.
 - Candidate revision `842c95a928ebba198277e163ad8903b2ff73e7f1` closes both findings by separating child-owned open or closed state from Parent acceptance authority and by bounding lifecycle comments; focused governance verification, `git diff --check`, and the generic-content boundary check pass.
@@ -56,11 +56,12 @@
 - Candidate revision `5fed19f153a687953e552fbf2bf25f090b848133` synchronizes that contract across governance, its human projection, and 30 deterministic tests; focused governance verification, `git diff --check`, and the generic-content boundary check pass.
 - Finalreview attempt 3 rejects that candidate because batch identifier and batch name are inconsistently duplicated between the native Issue title and the body allowlists; both reviewers report the same finding and confirm all earlier findings closed.
 - Candidate revision `a717bcda33d0184f2f10fd2dbd549e357a3410d4` moves batch identifier and batch name exclusively to the native Issue title, aligns both body allowlists, and passes 30 focused governance tests, 14 supporting tests, `git diff --check`, and the generic-content boundary check.
+- Agentic-AI-governance Finalreview comment `5158692545` and Lean-governance Finalreview comment `5158693450` accept candidate 4 without findings and score every selected dimension 10.0.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-Obtain independent Agentic-AI and lean-governance Finalreviews for the exact Issue `#22` candidate revision.
+The Product Owner pushes the local Issue `#22` commits; then verify remote availability, publish closure evidence, close the Issue, and confirm Project status `Done`.
 
 # Local Return Point
 
