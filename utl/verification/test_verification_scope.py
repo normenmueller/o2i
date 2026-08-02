@@ -93,6 +93,8 @@ class VerificationPathMatrixTests(unittest.TestCase):
             "REUSE.toml": {"licensing"},
             "LICENSES/Apache-2.0.txt": {"licensing"},
             "utl/licensing/check-license-texts.sh": {"licensing"},
+            "utl/licensing/check_license_assignments.py": {"licensing"},
+            "utl/licensing/test_license_assignments.py": {"licensing"},
             "utl/model/render-archimate-profile.py": {
                 "licensing",
                 "model",

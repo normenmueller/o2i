@@ -32,7 +32,8 @@
 
 - Added an exhaustive human- and machine-readable mixed-license map with
   canonical CC-BY-4.0 and Apache-2.0 texts, REUSE 3.3 metadata, and a dedicated
-  deterministic licensing verification stage.
+  deterministic licensing verification stage that rejects missing, overlapping,
+  and competing embedded assignments.
 - Added lean, agentic-first admission, dependency, and independent-review
   governance for normative O2I Framework changes.
 - Added a strictly technical `spc/README.md` for the Haskell package

@@ -42,6 +42,8 @@ GOVERNANCE_PATHS = frozenset(
 LICENSING_PATHS = frozenset(
     {
         "utl/licensing/check-license-texts.sh",
+        "utl/licensing/check_license_assignments.py",
+        "utl/licensing/test_license_assignments.py",
     }
 )
 MODEL_PATHS = frozenset(

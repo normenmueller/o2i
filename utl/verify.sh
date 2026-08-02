@@ -57,6 +57,13 @@ fi
 verify_licensing() {
   require reuse
 
+  reuse_entry=$(command -v reuse)
+  reuse_python=$(sed -n '1s/^#!\([^[:space:]]*\).*$/\1/p' "$reuse_entry")
+  if [ -z "$reuse_python" ] || [ ! -x "$reuse_python" ]; then
+    printf '[o2i|error] Cannot resolve the Python runtime of REUSE 6.2.0.\n' >&2
+    exit 1
+  fi
+
   info "Checking canonical license-text integrity."
   ./utl/licensing/check-license-texts.sh
 
@@ -66,6 +73,13 @@ verify_licensing() {
       "${actual_version:-unknown}" >&2
     exit 1
   fi
+
+  info "Testing the repository licensing-assignment contract."
+  "$reuse_python" -E -B -m unittest discover \
+    -s utl/licensing -p 'test_license_assignments.py'
+
+  info "Checking exactly one path-based license assignment per file."
+  "$reuse_python" -E -B utl/licensing/check_license_assignments.py
 
   info "Checking exhaustive repository licensing with REUSE 3.3."
   reuse --no-multiprocessing lint

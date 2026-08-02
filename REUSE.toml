@@ -27,6 +27,7 @@ path = [
   ".gitattributes",
   ".github/workflows/**",
   ".gitignore",
+  "REUSE.toml",
   "o2i.pdf.manifest.json",
   "spc/**",
   "toPDF.sh",
