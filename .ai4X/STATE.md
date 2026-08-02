@@ -6,8 +6,8 @@
 - Authorization scope: Issue `#23`: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and deterministic governance tests
 - Current Issue: `#23`
 - Current gate: `issue-23-finalreview-1`
-- Gate status: `PENDING`
-- Current node: `issue-23-finalreview`
+- Gate status: `REJECTED`
+- Current node: `issue-23-correction`
 
 # Repository Facts
 
@@ -39,7 +39,7 @@
 
 # Next Action
 
-Obtain independent Agentic-AI-governance and Lean/proportionality Finalreviews for exact candidate revision `c3d63f222f2623d344a96f2bafe03d68a17474c1`.
+Close the independent Finalreview findings for exact candidate revision `c3d63f222f2623d344a96f2bafe03d68a17474c1`: define Maintenance-specific evidence without Admission, require no findings, and prohibit any reviewer-selection mechanism.
 
 # Current Gate
 
@@ -50,7 +50,7 @@ Obtain independent Agentic-AI-governance and Lean/proportionality Finalreviews f
 - Mandatory checks: focused governance tests, complete local verification, generic-content boundary check
 - Review capabilities: Agentic-AI governance and Lean/proportionality
 - Finding status: `OPEN`
-- Result: `PENDING`
+- Result: `REJECTED`
 
 # Local Return Point
 

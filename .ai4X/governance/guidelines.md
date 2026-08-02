@@ -21,11 +21,11 @@ Use `maintenance` for semantics-preserving tooling, presentation, tests, CI, age
 
 ## Maintenance Review
 
-Advisory review is optional and never grants implementation authority or produces gate evidence.
+Maintenance has no Framework Admission requirement or Admission digest. Advisory review is optional and never grants implementation authority or produces gate evidence.
 
-Before acceptance, every exact Maintenance candidate revision receives at least one independent Finalreview by an external reviewer whose capability matches the actual impact and risk of the change. Record the selected capability and one concise risk rationale. Add another reviewer only when a materially distinct risk cannot be credibly assessed by the selected reviewer. Do not impose a fixed capability table, reviewer bundle, reviewer count, or automated selection mechanism.
+Before acceptance, every exact Maintenance candidate revision receives at least one independent Finalreview by an external reviewer whose capability matches the actual impact and risk of the change. Record the selected capability and one concise risk rationale. Add another reviewer only when a materially distinct risk cannot be credibly assessed by the selected reviewer. Do not impose a fixed capability table, reviewer bundle, reviewer count, or reviewer-selection mechanism.
 
-Each Finalreview binds the exact revision and scope and records findings, checks, and scores for its selected quality dimensions. Acceptance requires no open finding and 10.0 in every selected dimension.
+Each Finalreview binds the exact revision and scope and records findings, checks, and scores for its selected quality dimensions. Any finding rejects that exact candidate and requires review of a corrected revision. Acceptance requires no finding and 10.0 in every selected dimension.
 
 Suspected terminology, metamodel-semantic, normative-syntax, formalization, validation-behavior, or public-API impact triggers reclassification assessment as `framework-change`; Maintenance review never substitutes for Framework Admission.
 
@@ -116,10 +116,10 @@ When GitHub is unavailable, agents continue only an already activated local hand
 Every accepted review comment records:
 
 - phase and reviewer capability;
-- exact Issue-body digest for Admission;
-- implementation-contract comment ID and digest for Finalreview;
 - full candidate revision and reviewed scope for Finalreview;
 - verdict, findings, checks, and every required dimension score.
+
+Framework-change evidence additionally records the exact Issue-body digest for Admission and the implementation-contract comment ID and digest for Finalreview. Maintenance Finalreview evidence instead records the selected capability and concise risk rationale; it requires neither an Admission digest nor an implementation-contract comment.
 
 For Framework Changes, one reviewer satisfies one capability per gate. Maintenance follows the minimum independent-review contract above. Finalreviews bind the same candidate revision. Acceptance requires no finding and 10.0 in every required dimension.
 
