@@ -370,21 +370,33 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         agent = read(GOVERNANCE)
         human = read(CONTRIBUTING)
         for term in (
+            "Maintenance has no Framework Admission requirement or Admission "
+            "digest",
             "every exact Maintenance candidate revision receives at least one "
             "independent Finalreview",
             "Add another reviewer only when a materially distinct risk",
             "Do not impose a fixed capability table, reviewer bundle, reviewer "
-            "count, or automated selection mechanism",
+            "count, or reviewer-selection mechanism",
+            "Any finding rejects that exact candidate",
+            "Acceptance requires no finding",
             "10.0 in every selected dimension",
             "Maintenance review never substitutes for Framework Admission",
+            "Maintenance Finalreview evidence instead records the selected "
+            "capability and concise risk rationale",
+            "requires neither an Admission digest nor an implementation-contract "
+            "comment",
         ):
             with self.subTest(term=term):
                 self.assertIn(term, agent)
         for term in (
+            "Maintenance benötigt weder Framework Admission noch "
+            "Admission-Digest",
             "mindestens einen unabhängigen externen Finalreviewer",
             "nur für ein materiell anderes Risiko",
-            "feste Reviewer-Matrix oder -Anzahl gibt es nicht",
-            "unter 10,0 in einer ausgewählten Dimension verhindern die Annahme",
+            "feste Reviewer-Matrix, -Anzahl oder Auswahlmechanik gibt es nicht",
+            "Jedes Finding verwirft den exakten Kandidaten",
+            "Die Annahme erfordert kein Finding und 10,0",
+            "Maintenance-Finalreviews benötigen keinen Admission-Digest",
         ):
             with self.subTest(term=term):
                 self.assertIn(term, human)

@@ -32,9 +32,9 @@ Maintenance umfasst Fehlerkorrekturen und Änderungen an Darstellung, Tooling, T
 
 Bei unklarer Einordnung gilt die strengere Einordnung als Framework Change.
 
-Ein Advisory Review ist optional und niemals Freigabe oder Gate-Evidenz. Jeder exakte Maintenance-Kandidat erhält vor seiner Annahme mindestens einen unabhängigen externen Finalreviewer, dessen Fähigkeit zum tatsächlichen Änderungsrisiko passt. Ein weiterer Reviewer kommt nur für ein materiell anderes Risiko hinzu, das der bereits ausgewählte Reviewer nicht glaubwürdig beurteilen kann; eine feste Reviewer-Matrix oder -Anzahl gibt es nicht.
+Maintenance benötigt weder Framework Admission noch Admission-Digest. Ein Advisory Review ist optional und niemals Freigabe oder Gate-Evidenz. Jeder exakte Maintenance-Kandidat erhält vor seiner Annahme mindestens einen unabhängigen externen Finalreviewer, dessen Fähigkeit zum tatsächlichen Änderungsrisiko passt. Ein weiterer Reviewer kommt nur für ein materiell anderes Risiko hinzu, das der bereits ausgewählte Reviewer nicht glaubwürdig beurteilen kann; eine feste Reviewer-Matrix, -Anzahl oder Auswahlmechanik gibt es nicht.
 
-Der Finalreview bindet Revision und Scope und dokumentiert Auswahlbegründung, Findings, Prüfungen und Bewertungen. Offene Findings oder eine Bewertung unter 10,0 in einer ausgewählten Dimension verhindern die Annahme. Ein möglicher Einfluss auf O2I-Semantik, normative Syntax, Formalisierung, Validierungsverhalten oder öffentliche APIs verlangt stattdessen die erneute Einordnung als Framework Change.
+Der Finalreview bindet Revision und Scope und dokumentiert Auswahlbegründung, Findings, Prüfungen und Bewertungen. Jedes Finding verwirft den exakten Kandidaten und verlangt den Review einer korrigierten Revision. Die Annahme erfordert kein Finding und 10,0 in jeder ausgewählten Dimension. Ein möglicher Einfluss auf O2I-Semantik, normative Syntax, Formalisierung, Validierungsverhalten oder öffentliche APIs verlangt stattdessen die erneute Einordnung als Framework Change.
 
 ## Status
 
@@ -119,6 +119,8 @@ Framework Changes werden von den im Issue benannten unabhängigen Fähigkeiten g
 - Reviewerfähigkeit und Verdict;
 - Findings und ausgeführte Prüfungen;
 - Bewertung jeder erforderlichen Qualitätsdimension.
+
+Maintenance-Finalreviews benötigen keinen Admission-Digest und keinen separaten Implementierungsvertrags-Kommentar. Sie binden die vollständige Revision und den Scope und dokumentieren die ausgewählte Reviewerfähigkeit, die knappe Risikobegründung, Findings, Prüfungen und Bewertungen.
 
 Akzeptierte Reviewkommentare werden nicht editiert. Korrekturen erfolgen als neuer Kommentar. Ein geänderter Reviewkommentar ist keine gültige Akzeptanzevidenz.
 
