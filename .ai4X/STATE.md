@@ -5,18 +5,18 @@
 - Execution authorization: `APPROVED`
 - Authorization scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py` within Issue `#22`.
 - Current Issue: `#22`
-- Current gate: `issue-22-maintenance-finalreview-1`
-- Gate status: `REJECTED`
-- Current node: `issue-22-correction`
+- Current gate: `issue-22-maintenance-finalreview-2`
+- Gate status: `PENDING`
+- Current node: `issue-22-finalreview`
 
 # Current Gate
 
-- Attempt: `issue-22-maintenance-finalreview-1`
-- Candidate revision: `fb1058f107e2d0ef8f034229c90b909b26a24487`
+- Attempt: `issue-22-maintenance-finalreview-2`
+- Candidate revision: `842c95a928ebba198277e163ad8903b2ff73e7f1`
 - Review scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py`; mutable `.ai4X/STATE.md` is excluded.
 - Mandatory checks: focused and complete governance verification, generic-content boundary check, and independent Agentic-AI and lean-governance Finalreviews.
 - Finding status: `OPEN`
-- Result: `REJECTED`
+- Result: `PENDING`
 
 # Repository Facts
 
@@ -50,11 +50,12 @@
 - Issue `#22` is Product Owner-authorized and has Project status `In progress`; its current body is the implementation authority.
 - Issue `#22` candidate revision `fb1058f107e2d0ef8f034229c90b909b26a24487` passes focused governance verification, `git diff --check`, and the generic-content boundary check.
 - Finalreview attempt 1 rejects that candidate because child closure authority and permitted lifecycle comments are internally ambiguous; one lean-governance review reports no finding.
+- Candidate revision `842c95a928ebba198277e163ad8903b2ff73e7f1` closes both findings by separating child-owned open or closed state from Parent acceptance authority and by bounding lifecycle comments; focused governance verification, `git diff --check`, and the generic-content boundary check pass.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-Clarify child-owned open/closed state without Parent authority and admit blocker/return-condition lifecycle comments without adding workflow machinery.
+Obtain independent Agentic-AI and lean-governance Finalreviews for the exact Issue `#22` candidate revision.
 
 # Local Return Point
 
