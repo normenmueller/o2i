@@ -6,8 +6,8 @@
 - Authorization scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py` within Issue `#22`.
 - Current Issue: `#22`
 - Current gate: `issue-22-maintenance-finalreview-2`
-- Gate status: `PENDING`
-- Current node: `issue-22-finalreview`
+- Gate status: `REJECTED`
+- Current node: `issue-22-contract-clarification`
 
 # Current Gate
 
@@ -16,7 +16,7 @@
 - Review scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py`; mutable `.ai4X/STATE.md` is excluded.
 - Mandatory checks: focused and complete governance verification, generic-content boundary check, and independent Agentic-AI and lean-governance Finalreviews.
 - Finding status: `OPEN`
-- Result: `PENDING`
+- Result: `REJECTED`
 
 # Repository Facts
 
@@ -51,11 +51,12 @@
 - Issue `#22` candidate revision `fb1058f107e2d0ef8f034229c90b909b26a24487` passes focused governance verification, `git diff --check`, and the generic-content boundary check.
 - Finalreview attempt 1 rejects that candidate because child closure authority and permitted lifecycle comments are internally ambiguous; one lean-governance review reports no finding.
 - Candidate revision `842c95a928ebba198277e163ad8903b2ff73e7f1` closes both findings by separating child-owned open or closed state from Parent acceptance authority and by bounding lifecycle comments; focused governance verification, `git diff --check`, and the generic-content boundary check pass.
+- Finalreview attempt 2 rejects that candidate because its body allowlist omits the mandatory authority notice, Maintenance has no separate implementation-contract comment, and assignee duplication can drift from native metadata.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-Obtain independent Agentic-AI and lean-governance Finalreviews for the exact Issue `#22` candidate revision.
+Obtain the Product Owner decision on the narrow contract clarification before changing the active Issue body and implementation.
 
 # Local Return Point
 
