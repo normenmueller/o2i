@@ -6,8 +6,8 @@
 - Authorization scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py` within Issue `#22`.
 - Current Issue: `#22`
 - Current gate: `issue-22-maintenance-finalreview-3`
-- Gate status: `PENDING`
-- Current node: `issue-22-finalreview`
+- Gate status: `REJECTED`
+- Current node: `issue-22-correction`
 
 # Current Gate
 
@@ -16,7 +16,7 @@
 - Review scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py`; mutable `.ai4X/STATE.md` is excluded.
 - Mandatory checks: focused and complete governance verification, generic-content boundary check, and independent Agentic-AI and lean-governance Finalreviews.
 - Finding status: `OPEN`
-- Result: `PENDING`
+- Result: `REJECTED`
 
 # Repository Facts
 
@@ -54,11 +54,12 @@
 - Finalreview attempt 2 rejects that candidate because its body allowlist omits the mandatory authority notice, Maintenance has no separate implementation-contract comment, and assignee duplication can drift from native metadata.
 - The Product Owner authorizes the narrow contract clarification; the active Issue body now distinguishes Maintenance from Framework Change authority, includes the fixed notice in the body allowlist, and assigns ownership only through native GitHub metadata.
 - Candidate revision `5fed19f153a687953e552fbf2bf25f090b848133` synchronizes that contract across governance, its human projection, and 30 deterministic tests; focused governance verification, `git diff --check`, and the generic-content boundary check pass.
+- Finalreview attempt 3 rejects that candidate because batch identifier and batch name are inconsistently duplicated between the native Issue title and the body allowlists; both reviewers report the same finding and confirm all earlier findings closed.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-Obtain independent Agentic-AI and lean-governance Finalreviews for the exact Issue `#22` candidate revision.
+Move batch identifier and batch name exclusively to the native GitHub Issue title, synchronize both body allowlists, and add a deterministic test.
 
 # Local Return Point
 
