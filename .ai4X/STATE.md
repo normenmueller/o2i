@@ -5,18 +5,18 @@
 - Execution authorization: `APPROVED`
 - Authorization scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py` within Issue `#22`.
 - Current Issue: `#22`
-- Current gate: `issue-22-maintenance-finalreview-3`
-- Gate status: `REJECTED`
-- Current node: `issue-22-correction`
+- Current gate: `issue-22-maintenance-finalreview-4`
+- Gate status: `PENDING`
+- Current node: `issue-22-finalreview`
 
 # Current Gate
 
-- Attempt: `issue-22-maintenance-finalreview-3`
-- Candidate revision: `5fed19f153a687953e552fbf2bf25f090b848133`
+- Attempt: `issue-22-maintenance-finalreview-4`
+- Candidate revision: `a717bcda33d0184f2f10fd2dbd549e357a3410d4`
 - Review scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py`; mutable `.ai4X/STATE.md` is excluded.
 - Mandatory checks: focused and complete governance verification, generic-content boundary check, and independent Agentic-AI and lean-governance Finalreviews.
 - Finding status: `OPEN`
-- Result: `REJECTED`
+- Result: `PENDING`
 
 # Repository Facts
 
@@ -55,11 +55,12 @@
 - The Product Owner authorizes the narrow contract clarification; the active Issue body now distinguishes Maintenance from Framework Change authority, includes the fixed notice in the body allowlist, and assigns ownership only through native GitHub metadata.
 - Candidate revision `5fed19f153a687953e552fbf2bf25f090b848133` synchronizes that contract across governance, its human projection, and 30 deterministic tests; focused governance verification, `git diff --check`, and the generic-content boundary check pass.
 - Finalreview attempt 3 rejects that candidate because batch identifier and batch name are inconsistently duplicated between the native Issue title and the body allowlists; both reviewers report the same finding and confirm all earlier findings closed.
+- Candidate revision `a717bcda33d0184f2f10fd2dbd549e357a3410d4` moves batch identifier and batch name exclusively to the native Issue title, aligns both body allowlists, and passes 30 focused governance tests, 14 supporting tests, `git diff --check`, and the generic-content boundary check.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-Move batch identifier and batch name exclusively to the native GitHub Issue title, synchronize both body allowlists, and add a deterministic test.
+Obtain independent Agentic-AI and lean-governance Finalreviews for the exact Issue `#22` candidate revision.
 
 # Local Return Point
 
