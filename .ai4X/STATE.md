@@ -39,7 +39,7 @@
 
 # Next Action
 
-Implement the risk-proportionate Maintenance review-selection contract from Issue `#23`, synchronize its human-facing projection and deterministic structural tests, verify the exact candidate, and obtain the risk-selected Finalreviews.
+Implement the lean risk-proportionate Maintenance review contract from Issue `#23`, synchronize its human-facing projection and focused structural tests, verify the exact candidate, and obtain independent Agentic-AI-governance and Lean/proportionality Finalreviews.
 
 # Current Gate
 
@@ -48,7 +48,7 @@ Implement the risk-proportionate Maintenance review-selection contract from Issu
 - Candidate revision: `PENDING`
 - Review scope: `.ai4X/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/test_github_governance.py`; mutable `.ai4X/STATE.md` is excluded.
 - Mandatory checks: focused governance tests, complete local verification, generic-content boundary check
-- Review capabilities: Agentic-AI operability, Governance consistency, Lean/proportionality, Verification quality, Publication usability
+- Review capabilities: Agentic-AI governance and Lean/proportionality
 - Finding status: `OPEN`
 - Result: `PENDING`
 

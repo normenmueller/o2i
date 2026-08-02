@@ -19,6 +19,16 @@ Use `framework-change` when work affects terminology, metamodel semantics, norma
 
 Use `maintenance` for semantics-preserving tooling, presentation, tests, CI, agent memory, workflow, or repository administration. Review depth follows demonstrated risk. If classification is uncertain, use `framework-change`.
 
+## Maintenance Review
+
+Advisory review is optional and never grants implementation authority or produces gate evidence.
+
+Before acceptance, every exact Maintenance candidate revision receives at least one independent Finalreview by an external reviewer whose capability matches the actual impact and risk of the change. Record the selected capability and one concise risk rationale. Add another reviewer only when a materially distinct risk cannot be credibly assessed by the selected reviewer. Do not impose a fixed capability table, reviewer bundle, reviewer count, or automated selection mechanism.
+
+Each Finalreview binds the exact revision and scope and records findings, checks, and scores for its selected quality dimensions. Acceptance requires no open finding and 10.0 in every selected dimension.
+
+Suspected terminology, metamodel-semantic, normative-syntax, formalization, validation-behavior, or public-API impact triggers reclassification assessment as `framework-change`; Maintenance review never substitutes for Framework Admission.
+
 ## Refinement And Authorization
 
 The linear workflow is:
@@ -31,7 +41,7 @@ Backlog -> Refined -> Ready -> In progress -> In review -> Done
 - `Refined` contains one viable, internally consistent contract whose complete Issue body and existing comments have been assessed and consolidated.
 - `Ready` is an open Issue explicitly authorized by the Product Owner, complete for its applicable Admission and implementation contract, within the recorded local authorization scope, free of any prerequisite blocking its next action, and queued for execution.
 - `In progress` is authorized work actively implemented by an agent.
-- `In review` binds an exact candidate revision to its mandatory verification and independent review gate.
+- `In review` binds an exact candidate revision to mandatory verification and risk-selected independent review.
 - `Done` is accepted, remotely available, successfully verified when remote verification is required, and closed.
 - `Paused` is a side state for an actual interruption with one explicit reason and return condition.
 
@@ -93,6 +103,7 @@ When GitHub is unavailable, agents continue only an already activated local hand
 
 - `gertrud-ai4x` is the transparent O2I machine user for agentic work.
 - Agent-produced commits use `Gertrud ai4X <311782161+gertrud-ai4x@users.noreply.github.com>` as author and preserve the configured accountable human as committer. Never rewrite existing commits merely to add this attribution.
+- Add `gertrud-ai4x` as an assignee when the primary agent takes material responsibility for refining, coordinating, or implementing an Issue. Advisory-only participation creates no assignment.
 - A commit that changes `.ai4X/` is an authority commit: keep it separate from implementation changes and use the configured Product Owner identity as both author and committer. The machine user never authors its own operating authority.
 - The primary agent may create an authority commit locally but never pushes it. Before a Product Owner push, report every outgoing commit and its scope. The Product Owner's own push accepts and publishes those authority commits; no separate pre-commit confirmation is required.
 - Agent-originated Issue comments and agent-controlled Project transitions from `Ready` onward use the machine user. If its separate authentication is unavailable, do not impersonate it through the Product Owner account.
@@ -110,7 +121,7 @@ Every accepted review comment records:
 - full candidate revision and reviewed scope for Finalreview;
 - verdict, findings, checks, and every required dimension score.
 
-One reviewer satisfies one capability per gate. Finalreviews bind the same candidate revision. Acceptance requires no finding and 10.0 in every required dimension.
+For Framework Changes, one reviewer satisfies one capability per gate. Maintenance follows the minimum independent-review contract above. Finalreviews bind the same candidate revision. Acceptance requires no finding and 10.0 in every required dimension.
 
 Accepted comments are append-only. Editing invalidates the evidence; corrections use a new comment. Review capabilities follow actual impact, and semantics-preserving Maintenance does not activate every specialist by default.
 
