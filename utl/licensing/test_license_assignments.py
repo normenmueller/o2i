@@ -86,6 +86,28 @@ class LicenseAssignmentTests(unittest.TestCase):
             )
         )
 
+    def test_rejects_an_unsupported_license_identifier(self) -> None:
+        config = VALID_CONFIG.replace("CC-BY-4.0", "MIT")
+        root, paths = self.fixture(config)
+        violations = validate_repository(root, paths)
+        self.assertTrue(
+            any(
+                "closed license set" in item and "MIT" in item
+                for item in violations
+            )
+        )
+
+    def test_rejects_multiple_identifiers_in_one_annotation(self) -> None:
+        config = VALID_CONFIG.replace(
+            'SPDX-License-Identifier = "Apache-2.0"',
+            'SPDX-License-Identifier = ["Apache-2.0", "CC-BY-4.0"]',
+        )
+        root, paths = self.fixture(config)
+        violations = validate_repository(root, paths)
+        self.assertTrue(
+            any("exactly one permitted license" in item for item in violations)
+        )
+
     def test_rejects_competing_embedded_spdx_license(self) -> None:
         root, paths = self.fixture()
         marker = "SPDX-License-" + "Identifier: Apache-2.0\n"

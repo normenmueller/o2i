@@ -15,6 +15,7 @@ SPDX_MARKERS = (
     b"SPDX-File" + b"CopyrightText:",
     b"SPDX-License-" + b"Identifier:",
 )
+ALLOWED_LICENSE_IDENTIFIERS = frozenset({"Apache-2.0", "CC-BY-4.0"})
 
 
 def repository_paths(root: Path) -> tuple[str, ...]:
@@ -76,6 +77,27 @@ def validate_repository(
     config = ReuseTOML.from_file(root / "REUSE.toml")
     patterns = assignment_patterns(config)
     violations: list[str] = []
+
+    for index, annotation in enumerate(config.annotations, start=1):
+        identifiers = sorted(str(item) for item in annotation.spdx_expressions)
+        if len(identifiers) != 1 or identifiers[0] not in ALLOWED_LICENSE_IDENTIFIERS:
+            rendered = ", ".join(identifiers) or "none"
+            violations.append(
+                f"annotation {index} must contain exactly one permitted license "
+                f"identifier; found: {rendered}"
+            )
+
+    configured_identifiers = frozenset(
+        str(expression)
+        for annotation in config.annotations
+        for expression in annotation.spdx_expressions
+    )
+    if configured_identifiers != ALLOWED_LICENSE_IDENTIFIERS:
+        expected = ", ".join(sorted(ALLOWED_LICENSE_IDENTIFIERS))
+        actual = ", ".join(sorted(configured_identifiers)) or "none"
+        violations.append(
+            f"expected closed license set {{{expected}}}; found: {actual}"
+        )
 
     nested_configs = sorted(
         path for path in inventory if path.endswith("/REUSE.toml")
