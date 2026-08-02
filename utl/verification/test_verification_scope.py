@@ -12,7 +12,7 @@ import unittest
 import verification_scope as scope
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 WORKFLOW = ROOT / ".github/workflows/verify.yml"
 
 
@@ -74,7 +74,7 @@ class VerificationPathMatrixTests(unittest.TestCase):
             "README.md": {"paper"},
             "wtf.md": {"paper"},
             "CHANGELOG.md": set(),
-            "utl/render-archimate-profile.py": {"model", "paper"},
+            "utl/model/render-archimate-profile.py": {"model", "paper"},
         }
         for path, expected in cases.items():
             with self.subTest(path=path):
@@ -110,8 +110,8 @@ class VerificationPathMatrixTests(unittest.TestCase):
         paths = repository_paths(ROOT)
         paths.update(
             {
-                "utl/verification_scope.py",
-                "utl/test_verification_scope.py",
+                "utl/verification/verification_scope.py",
+                "utl/verification/test_verification_scope.py",
             }
         )
         unknown = sorted(
@@ -289,7 +289,7 @@ on:
                 )
         self.assertEqual(
             4,
-            content.count("python3 -B utl/verification_scope.py"),
+            content.count("python3 -B utl/verification/verification_scope.py"),
         )
         self.assertEqual(4, content.count("fetch-depth: 0"))
         self.assertNotIn("\n    paths:", content)

@@ -648,7 +648,7 @@ def parse_args(arguments: Iterable[str]) -> argparse.Namespace:
 
 def main(arguments: Iterable[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if arguments is None else arguments)
-    root = Path(__file__).resolve().parents[1]
+    root = Path(__file__).resolve().parents[2]
     try:
         check_contracts(
             root,

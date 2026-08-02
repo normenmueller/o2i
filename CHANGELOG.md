@@ -68,6 +68,9 @@
 
 ### Changed
 
+- Structured deterministic repository utilities by responsibility under
+  `utl/{verification,governance,model,haskell,paper}` while preserving
+  `./utl/verify.sh` as the canonical staged entry point.
 - Declared the O2I publication as the O2I Framework White Paper without
   changing its title.
 - Shortened the paper title to "Von Orientierung zur Wirkung".

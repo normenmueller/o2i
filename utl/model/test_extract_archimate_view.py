@@ -14,10 +14,10 @@ import unittest
 import xml.etree.ElementTree as ET
 
 
-ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "utl" / "extract-archimate-view.py"
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / "utl" / "model" / "extract-archimate-view.py"
 MODEL = ROOT / "mdl" / "o2i.archimate"
-sys.path.insert(0, str(ROOT / "utl"))
+sys.path.insert(0, str(ROOT / "utl" / "model"))
 EXPECTED_PRESET_KEYS = {
     "strategy-constituents",
     "semantics-situation",

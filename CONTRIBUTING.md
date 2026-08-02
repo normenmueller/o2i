@@ -143,7 +143,7 @@ Fokussierte Prüfungen mit `governance`, `model`, `haskell` oder `paper` sind w�
 
 Direkte Branch-Pushes lösen keine GitHub Actions aus. Remote-Verifikation läuft ausschließlich für Pull Requests, manuelle Workflow-Aufrufe und Release-Tags mit dem Muster `o2i-v*`.
 
-Bei jedem Lauf bestimmt `utl/verification_scope.py` aus dem Git-Diff, welche Stufen betroffen sind. Die primäre Zuordnung lautet:
+Bei jedem Lauf bestimmt `utl/verification/verification_scope.py` aus dem Git-Diff, welche Stufen betroffen sind. Die primäre Zuordnung lautet:
 
 | Änderung | Ausgeführte Stufen |
 | --- | --- |

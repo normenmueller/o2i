@@ -7,7 +7,7 @@ if [ "$#" -gt 1 ]; then
   exit 2
 fi
 
-root=${1:-$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)}
+root=${1:-$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)}
 build=$(mktemp -d)
 trap 'rm -rf "$build"' EXIT HUP INT TERM
 

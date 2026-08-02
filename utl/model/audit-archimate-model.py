@@ -11,7 +11,7 @@ import xml.etree.ElementTree as ET
 
 
 XSI_TYPE = "{http://www.w3.org/2001/XMLSchema-instance}type"
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MODEL = ROOT / "mdl" / "o2i.archimate"
 REFERENCE_ATTRIBUTES = frozenset(
     {

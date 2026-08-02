@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 specification_root="$repository_root/spc"
 
 while IFS= read -r cabal_file; do

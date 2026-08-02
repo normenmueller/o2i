@@ -7,7 +7,7 @@ import re
 import unittest
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 GOVERNANCE = ROOT / ".ai4X/governance/guidelines.md"
 STATE = ROOT / ".ai4X/STATE.md"
 CONTRIBUTING = ROOT / "CONTRIBUTING.md"

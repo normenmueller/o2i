@@ -22,8 +22,8 @@ STATIC_INPUTS = (
     "README.md",
     "ACKNOWLEDGEMENTS.md",
     "toPDF.sh",
-    "utl/render-archimate-profile.py",
-    "utl/render-paper-figures.sh",
+    "utl/model/render-archimate-profile.py",
+    "utl/paper/render-paper-figures.sh",
 )
 INCLUDE_PATTERN = re.compile(
     r"(?m)^!include(?:`(?P<options>[^`]*)`)?\s+(?P<path>.+?)\s*$"

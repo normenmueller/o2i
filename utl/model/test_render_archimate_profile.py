@@ -10,8 +10,8 @@ import tempfile
 import unittest
 
 
-ROOT = Path(__file__).resolve().parents[1]
-UTILITY = ROOT / "utl"
+ROOT = Path(__file__).resolve().parents[2]
+UTILITY = ROOT / "utl" / "model"
 CONTRACT_PATH = ROOT / "spc" / "ctr" / "archimate" / "profile.json"
 FRAGMENT_PATH = ROOT / "spc" / "ctr" / "archimate" / "profile.md"
 sys.path.insert(0, str(UTILITY))

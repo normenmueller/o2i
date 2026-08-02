@@ -14,8 +14,8 @@ import unittest
 from unittest.mock import patch
 
 
-ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "utl" / "check-pdf-freshness.py"
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / "utl" / "paper" / "check-pdf-freshness.py"
 SPEC = importlib.util.spec_from_file_location("check_pdf_freshness", SCRIPT)
 if SPEC is None or SPEC.loader is None:
     raise RuntimeError(f"cannot load {SCRIPT}")
@@ -450,7 +450,8 @@ class PdfFreshnessTest(unittest.TestCase):
     def _publication_root(self, root: Path) -> Path:
         (root / "img").mkdir()
         (root / "acc").mkdir()
-        (root / "utl").mkdir()
+        (root / "utl" / "model").mkdir(parents=True)
+        (root / "utl" / "paper").mkdir()
         (root / "o2i.md").write_text(
             "# O2I\n\n"
             "!include snippet.hs\n\n"
@@ -473,11 +474,11 @@ class PdfFreshnessTest(unittest.TestCase):
             encoding="utf-8",
         )
         (root / "toPDF.sh").write_text("#!/bin/sh\n", encoding="ascii")
-        (root / "utl" / "render-archimate-profile.py").write_text(
+        (root / "utl" / "model" / "render-archimate-profile.py").write_text(
             "# generated profile\n",
             encoding="ascii",
         )
-        (root / "utl" / "render-paper-figures.sh").write_text(
+        (root / "utl" / "paper" / "render-paper-figures.sh").write_text(
             "#!/bin/sh\n",
             encoding="ascii",
         )

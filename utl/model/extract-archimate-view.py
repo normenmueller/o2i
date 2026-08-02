@@ -20,7 +20,7 @@ from archimate_profile import (
 
 
 XSI_TYPE = "{http://www.w3.org/2001/XMLSchema-instance}type"
-REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MODEL = REPOSITORY_ROOT / "mdl" / "o2i.archimate"
 PROFILE_CONTRACT = (
     REPOSITORY_ROOT / "spc" / "ctr" / "archimate" / "profile.json"

@@ -59,26 +59,26 @@ verify_governance() {
 
   info "Checking O2I change governance."
   python3 -B -m unittest discover \
-    -s utl -p 'test_github_governance.py'
+    -s utl/governance -p 'test_github_governance.py'
   python3 -B -m unittest discover \
-    -s utl -p 'test_verification_scope.py'
+    -s utl/verification -p 'test_verification_scope.py'
 }
 
 verify_model() {
   require python3
 
   info "Checking ArchiMate model hygiene, View contracts, and tests."
-  python3 -B utl/audit-archimate-model.py
-  python3 -B utl/extract-archimate-view.py --preset all --check
+  python3 -B utl/model/audit-archimate-model.py
+  python3 -B utl/model/extract-archimate-view.py --preset all --check
   python3 -B -m unittest discover \
-    -s utl -p 'test_archimate_profile.py'
+    -s utl/model -p 'test_archimate_profile.py'
   python3 -B -m unittest discover \
-    -s utl -p 'test_render_archimate_profile.py'
-  python3 -B utl/render-archimate-profile.py --check
+    -s utl/model -p 'test_render_archimate_profile.py'
+  python3 -B utl/model/render-archimate-profile.py --check
   python3 -B -m unittest discover \
-    -s utl -p 'test_*archimate_model.py'
+    -s utl/model -p 'test_*archimate_model.py'
   python3 -B -m unittest discover \
-    -s utl -p 'test_extract_archimate_view.py'
+    -s utl/model -p 'test_extract_archimate_view.py'
 }
 
 verify_haskell() {
@@ -99,7 +99,7 @@ verify_haskell() {
   export CABAL_CONFIG="$cabal_config"
 
   info "Checking package licenses and metadata."
-  ./utl/check-package-licenses.sh
+  ./utl/haskell/check-package-licenses.sh
   for package in \
     spc/lib/core \
     spc/lib/inspection \
@@ -128,8 +128,8 @@ verify_haskell() {
 
   info "Checking external Haskell API contracts."
   python3 -B -m unittest discover \
-    -s utl -p 'test_check_haskell_api_contracts.py'
-  python3 -B utl/check_haskell_api_contracts.py \
+    -s utl/haskell -p 'test_check_haskell_api_contracts.py'
+  python3 -B utl/haskell/check_haskell_api_contracts.py \
     --project-dir "$root/spc" \
     --builddir "$build"
 
@@ -153,14 +153,14 @@ verify_paper() {
   done
 
   info "Checking White Paper source contracts."
-  python3 -B utl/check-pdf-freshness.py sources --root .
+  python3 -B utl/paper/check-pdf-freshness.py sources --root .
 
   info "Checking the expanded White Paper source."
   pandoc o2i.md --filter pandoc-include -t markdown >/dev/null
   python3 -B -m unittest discover \
-    -s utl -p 'test_check_paper_assets.py'
+    -s utl/paper -p 'test_check_paper_assets.py'
   python3 -B -m unittest discover \
-    -s utl -p 'test_check_pdf_freshness.py'
+    -s utl/paper -p 'test_check_pdf_freshness.py'
 
   paper="$work/paper"
   mkdir -p "$paper/spc/lib/core" "$paper/spc/ctr/archimate"
@@ -170,7 +170,7 @@ verify_paper() {
   cp spc/ctr/archimate/profile.md "$paper/spc/ctr/archimate/"
 
   info "Rendering TikZ figures in an isolated paper workspace."
-  ./utl/render-paper-figures.sh "$paper"
+  ./utl/paper/render-paper-figures.sh "$paper"
   for figure in \
     "O2I Nachweisfolge.png" \
     "O2I Frameworkarchitektur.png"; do
@@ -192,7 +192,7 @@ verify_paper() {
     printf '[o2i|error] White Paper contains an unresolved include.\n' >&2
     exit 1
   fi
-  python3 -B utl/check-paper-assets.py \
+  python3 -B utl/paper/check-paper-assets.py \
     --root "$paper" \
     "$work/paper.json"
 
@@ -202,7 +202,7 @@ verify_paper() {
     printf '[o2i|error] White Paper build produced no PDF.\n' >&2
     exit 1
   fi
-  python3 -B utl/check-pdf-freshness.py check \
+  python3 -B utl/paper/check-pdf-freshness.py check \
     --root . \
     --versioned o2i.pdf \
     --rendered "$work/o2i.pdf" \

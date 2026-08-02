@@ -19,8 +19,8 @@ REVISION = re.compile(r"[0-9a-f]{40}")
 FULL_PATHS = frozenset(
     {
         ".gitattributes",
-        "utl/verification_scope.py",
-        "utl/test_verification_scope.py",
+        "utl/verification/verification_scope.py",
+        "utl/verification/test_verification_scope.py",
         "utl/verify.sh",
     }
 )
@@ -35,26 +35,26 @@ GOVERNANCE_PATHS = frozenset(
     {
         "AGENTS.md",
         "CONTRIBUTING.md",
-        "utl/test_github_governance.py",
+        "utl/governance/test_github_governance.py",
     }
 )
 MODEL_PATHS = frozenset(
     {
-        "utl/archimate_profile.py",
-        "utl/audit-archimate-model.py",
-        "utl/extract-archimate-view.py",
-        "utl/render-archimate-profile.py",
-        "utl/test_archimate_profile.py",
-        "utl/test_audit_archimate_model.py",
-        "utl/test_extract_archimate_view.py",
-        "utl/test_render_archimate_profile.py",
+        "utl/model/archimate_profile.py",
+        "utl/model/audit-archimate-model.py",
+        "utl/model/extract-archimate-view.py",
+        "utl/model/render-archimate-profile.py",
+        "utl/model/test_archimate_profile.py",
+        "utl/model/test_audit_archimate_model.py",
+        "utl/model/test_extract_archimate_view.py",
+        "utl/model/test_render_archimate_profile.py",
     }
 )
 HASKELL_PATHS = frozenset(
     {
-        "utl/check-package-licenses.sh",
-        "utl/check_haskell_api_contracts.py",
-        "utl/test_check_haskell_api_contracts.py",
+        "utl/haskell/check-package-licenses.sh",
+        "utl/haskell/check_haskell_api_contracts.py",
+        "utl/haskell/test_check_haskell_api_contracts.py",
     }
 )
 PAPER_PATHS = frozenset(
@@ -65,12 +65,12 @@ PAPER_PATHS = frozenset(
         "o2i.pdf",
         "o2i.pdf.manifest.json",
         "toPDF.sh",
-        "utl/check-paper-assets.py",
-        "utl/check-pdf-freshness.py",
-        "utl/render-archimate-profile.py",
-        "utl/render-paper-figures.sh",
-        "utl/test_check_paper_assets.py",
-        "utl/test_check_pdf_freshness.py",
+        "utl/paper/check-paper-assets.py",
+        "utl/paper/check-pdf-freshness.py",
+        "utl/model/render-archimate-profile.py",
+        "utl/paper/render-paper-figures.sh",
+        "utl/paper/test_check_paper_assets.py",
+        "utl/paper/test_check_pdf_freshness.py",
         "wtf.md",
     }
 )

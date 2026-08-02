@@ -10,8 +10,8 @@ import unittest
 import xml.etree.ElementTree as ET
 
 
-ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "utl" / "audit-archimate-model.py"
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / "utl" / "model" / "audit-archimate-model.py"
 MODEL = ROOT / "mdl" / "o2i.archimate"
 SPEC = importlib.util.spec_from_file_location("audit_archimate_model", SCRIPT)
 if SPEC is None or SPEC.loader is None:
