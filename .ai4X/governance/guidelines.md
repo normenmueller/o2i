@@ -27,6 +27,8 @@ Before acceptance, every exact Maintenance candidate revision receives at least 
 
 Each Finalreview binds the exact revision and scope and records findings, checks, and scores for its selected quality dimensions. Any finding rejects that exact candidate and requires review of a corrected revision. Acceptance requires no finding and 10.0 in every selected dimension.
 
+Reviewers assess critically, neutrally, objectively, and independently. Review is never an acceptance default: reject the candidate when a substantiated objection, improvement, or materially better alternative exists under the applicable criteria of leanness, clarity, elegance, robustness, modularity, and usefulness.
+
 Suspected terminology, metamodel-semantic, normative-syntax, formalization, validation-behavior, or public-API impact triggers reclassification assessment as `framework-change`; Maintenance review never substitutes for Framework Admission.
 
 ## Refinement And Authorization
