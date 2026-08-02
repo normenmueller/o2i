@@ -315,15 +315,37 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         for term in (
             "leaves the parent authoritative",
             "remain outside the O2I Project",
-            "no independent authorization, Admission, dependency, workflow, "
-            "review, acceptance, or closure authority",
+            "no independent authorization, Admission, dependency, Project "
+            "workflow, review, or acceptance authority over the parent",
+            "Each child owns its own open or closed state",
+            "neither accepts nor closes the parent",
         ):
             with self.subTest(surface="agent", term=term):
                 self.assertIn(term, agent)
         for term in (
             "bleibt außerhalb des O2I Projects",
             "keine eigene Freigabe-, Scope-, Abhängigkeits-, Review- oder "
-            "Abschlussautorität",
+            "Annahmeautorität über den Parent",
+            "eigenen Open/Closed-Zustand",
+            "bewirkt weder Annahme noch Schließung des Parents",
+        ):
+            with self.subTest(surface="human", term=term):
+                self.assertIn(term, human)
+
+    def test_batch_children_bound_lifecycle_comments(self) -> None:
+        agent = markdown_section(read(GOVERNANCE), "Implementation Batches")
+        human = markdown_section(read(CONTRIBUTING), "Status")
+        for term in (
+            "Lifecycle comments may record only a blocker or pause reason",
+            "its return condition",
+            "implementation or verification evidence",
+        ):
+            with self.subTest(surface="agent", term=term):
+                self.assertIn(term, agent)
+        for term in (
+            "Lifecycle-Kommentare dürfen nur einen Blocker- oder Pausengrund",
+            "dessen Rückkehrbedingung",
+            "Implementierungs- oder Verifikationsevidenz",
         ):
             with self.subTest(surface="human", term=term):
                 self.assertIn(term, human)
