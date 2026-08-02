@@ -1,13 +1,22 @@
 # Handoff
 
 - Observed: 2026-08-02 CEST
-- Work status: `PAUSED`
-- Execution authorization: `REQUIRED`
-- Authorization scope: `NONE`
-- Current Issue: `NONE`
-- Current gate: `NONE`
-- Gate status: `NOT_REQUIRED`
-- Current node: `paused-handoff`
+- Work status: `ACTIVE`
+- Execution authorization: `APPROVED`
+- Authorization scope: Issue `#13`: semantics-preserving responsibility-based restructuring of `utl/`, including every affected path, reference, test, documentation link, and verification selector.
+- Current Issue: `#13`
+- Current gate: `issue-13-maintenance-finalreview-1`
+- Gate status: `PENDING`
+- Current node: `issue-13-implementation`
+
+# Current Gate
+
+- Attempt: `issue-13-maintenance-finalreview-1`
+- Candidate revision: `PENDING`
+- Review scope: Issue `#13` implementation and documentation scope; mutable `.ai4X/STATE.md` is excluded.
+- Mandatory checks: every focused stage, complete local verification, generic-content boundary check, and independent repository-tooling Finalreview.
+- Finding status: `OPEN`
+- Result: `PENDING`
 
 # Repository Facts
 
@@ -17,12 +26,12 @@
 - Closure comment `5158943307` records verification, remote availability, and completion.
 - Issues `#4`, `#12`, `#15`, `#16`, `#17`, `#22`, and `#23` are closed with Project status `Done`.
 - Issue `#1` remains a non-activated Backlog record.
-- Issue `#13` remains `Refined` and has no execution authorization.
+- Issue `#13` is Product Owner-authorized with Project status `In progress`; its complete body is the implementation authority and contains no implementation batches.
 - The user controls ArchiMate edits and pushes.
 
 # Next Action
 
-Await explicit Product Owner authorization of Refined Issue `#13`.
+Inventory every tracked utility and repository reference, derive the fresh responsibility mapping, and execute the coherent path migration without wrappers or duplicated tools.
 
 # Local Return Point
 
