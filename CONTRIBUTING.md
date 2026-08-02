@@ -68,6 +68,10 @@ Vertikale Reihenfolge bedeutet Aufbereitungspriorität in `Backlog`, Entscheidun
 
 Echte Voraussetzungen innerhalb des O2I-Issue-Graphen werden ausschließlich als native Issue Dependencies modelliert. Eine erforderliche Abhängigkeit außerhalb dieses Graphen wird mit Quelle und nächster Prüfbedingung im betroffenen Issue dokumentiert. Project-Reihenfolge ersetzt keine Abhängigkeit; ein Blocker allein setzt ein Issue nicht auf `Paused`.
 
+Benannte Umsetzungsbatches werden nach Aktivierung des Parent Issues durch genau je ein direktes GitHub Sub-Issue sichtbar gemacht. Ohne einen ausdrücklich batchbasierten Implementierungsvertrag entstehen keine Sub-Issues. Jedes Sub-Issue verweist auf Parent und Vertrag, beschreibt nur Liefergegenstand und übernommene Abschlussbedingungen des Batches und bleibt außerhalb des O2I Projects; es besitzt keine eigene Freigabe-, Scope-, Abhängigkeits-, Review- oder Abschlussautorität. Weitere Ebenen sind ausgeschlossen, und die Hierarchie ersetzt keine native Issue Dependency.
+
+Ein Batch Sub-Issue wird nach Erfüllung seiner Bedingungen geschlossen. Der Parent darf erst nach Schließung aller erforderlichen Batch Sub-Issues in `In review` wechseln. Neue Inhalte werden niemals in ein Sub-Issue aufgenommen, sondern durchlaufen den regulären Refinement- und Freigabeweg.
+
 Vor `In review` sind release-relevante Hinweise ergänzt und der vollständige Kandidat committed. Nach Annahme wird exakt diese Revision veröffentlicht und verifiziert. Findings führen zurück zu `In progress`; ein vom Product Owner verworfenes Vorhaben wird als `not planned` geschlossen und sein Project-Eintrag archiviert.
 
 ## Repository-Struktur

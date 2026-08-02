@@ -47,6 +47,15 @@ def markdown_field_values(content: str, name: str) -> tuple[str, ...]:
     )
 
 
+def markdown_section(content: str, heading: str) -> str:
+    """Return one level-two Markdown section without its heading."""
+    pattern = rf"(?ms)^## {re.escape(heading)}\n\n(.*?)(?=^## |\Z)"
+    match = re.search(pattern, content)
+    if match is None:
+        raise AssertionError(f"missing Markdown section: {heading}")
+    return " ".join(match.group(1).split())
+
+
 def handoff_contract_violations(content: str) -> list[str]:
     """Return violations of the closed repository handoff contract."""
     violations: list[str] = []
@@ -279,6 +288,70 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         ):
             with self.subTest(term=term):
                 self.assertIn(term, content)
+
+    def test_implementation_batches_have_one_explicit_trigger(self) -> None:
+        agent = markdown_section(read(GOVERNANCE), "Implementation Batches")
+        human = markdown_section(read(CONTRIBUTING), "Status")
+        for term in (
+            "authorized implementation contract names implementation batches",
+            "exactly one direct GitHub Sub-Issue for every named batch",
+            "before that batch begins",
+            "without an explicit batch-based implementation contract creates "
+            "no Sub-Issues",
+        ):
+            with self.subTest(surface="agent", term=term):
+                self.assertIn(term, agent)
+        for term in (
+            "genau je ein direktes GitHub Sub-Issue",
+            "Ohne einen ausdrücklich batchbasierten Implementierungsvertrag "
+            "entstehen keine Sub-Issues",
+        ):
+            with self.subTest(surface="human", term=term):
+                self.assertIn(term, human)
+
+    def test_batch_children_have_no_independent_authority(self) -> None:
+        agent = markdown_section(read(GOVERNANCE), "Implementation Batches")
+        human = markdown_section(read(CONTRIBUTING), "Status")
+        for term in (
+            "leaves the parent authoritative",
+            "remain outside the O2I Project",
+            "no independent authorization, Admission, dependency, workflow, "
+            "review, acceptance, or closure authority",
+        ):
+            with self.subTest(surface="agent", term=term):
+                self.assertIn(term, agent)
+        for term in (
+            "bleibt außerhalb des O2I Projects",
+            "keine eigene Freigabe-, Scope-, Abhängigkeits-, Review- oder "
+            "Abschlussautorität",
+        ):
+            with self.subTest(surface="human", term=term):
+                self.assertIn(term, human)
+
+    def test_parent_review_requires_closed_batch_children(self) -> None:
+        agent = markdown_section(read(GOVERNANCE), "Implementation Batches")
+        human = markdown_section(read(CONTRIBUTING), "Status")
+        self.assertIn(
+            "The parent enters `In review` only after every required batch "
+            "Sub-Issue is closed",
+            agent,
+        )
+        self.assertIn(
+            "Der Parent darf erst nach Schließung aller erforderlichen Batch "
+            "Sub-Issues in `In review` wechseln",
+            human,
+        )
+
+    def test_batch_children_neither_nest_nor_absorb_scope(self) -> None:
+        agent = markdown_section(read(GOVERNANCE), "Implementation Batches")
+        human = markdown_section(read(CONTRIBUTING), "Status")
+        self.assertIn("never nest", agent)
+        self.assertIn("never absorbs new scope", agent)
+        self.assertIn("Weitere Ebenen sind ausgeschlossen", human)
+        self.assertIn(
+            "Neue Inhalte werden niemals in ein Sub-Issue aufgenommen",
+            human,
+        )
 
     def test_refinement_reads_body_and_comments(self) -> None:
         content = read(GOVERNANCE)
