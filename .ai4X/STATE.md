@@ -6,7 +6,7 @@
 - Current Issue: `#3`
 - Current gate: `issue-3-finalreview`
 - Gate status: `PENDING`
-- Current node: `issue-3-batch-4`
+- Current node: `issue-3-batch-5`
 
 # Current Gate
 
@@ -26,14 +26,15 @@
 - Batch 1 Sub-Issue `#25` is closed; implementation revision `2784ab984f82347c24e70e26a408c6231360eed1` and authority revision `ec0e8d494a3b9dd958d41a23860e5a523fb4d39d` satisfy its focused exit gate without changing profile facts.
 - Batch 2 Sub-Issue `#26` is closed; evidence comment `5165069799` records the finite audit classification: three bounded Archi corrections, six required PNG exports, one agent-owned effective-label check, and no new Framework or profile concern.
 - Batch 3 Sub-Issue `#27` is closed; implementation revision `9d0d0a73ecf2f4260991cadc6031ef3ea1fe5a22` records the admitted model corrections, regenerated snapshot, and six inspected PNG exports. Evidence comment `5166580794` records all focused checks as passing without Framework-semantic or profile-fact changes.
+- Batch 4 Sub-Issue `#28` is closed; implementation revision `18a73466b8d26a20fd9166bbc0e50499920e4993` adds the View-scoped effective-label drift check, 62 passing model tests, and a freshly sealed bleeding-edge PDF. Evidence comments `5166797561` and `5166801455` record the checks, accepted Co-Author review, and corrected exact revision.
 - Issue `#4`, the accepted declarative ArchiMate profile prerequisite, is closed.
 - Activation baseline `f5aaccbaa0e12b26626d77f74804ad3b9c360a34` is remotely available on `origin/trunk`.
 - The Product Owner controls ArchiMate model edits and pushes.
 
 # Next Action
 
-Execute Issue `#3` Batch 4 within Sub-Issue `#28`: add the finite effective displayed-connection-label contract and its regression tests, then synchronize only artifacts and references required by the accepted Issue contract.
+Execute Issue `#3` Batch 5 within Sub-Issue `#29`: run complete local verification, both executable View inspections, the workspace boundary check, and the clean-diff audit against one exact candidate revision.
 
 # Local Return Point
 
-Issue `#3`, Batch 4: inspect the extractor's displayed connection-label derivation and its existing relation-signature tests before defining the narrow correction.
+Issue `#3`, Batch 5: commit this handoff separately, confirm an intentional clean tree, and run `./utl/verify.sh all` without changing the candidate scope.
