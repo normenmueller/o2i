@@ -249,6 +249,32 @@ class ExecutableViewContractTest(unittest.TestCase):
         self.assertLessEqual(len(excerpt), CHECKER.DIAGNOSTIC_EXCERPT_LIMIT)
         self.assertNotIn("\n", excerpt)
 
+    def test_deep_json_is_reported_without_recursion_exception(self) -> None:
+        completed = subprocess.CompletedProcess(
+            args=["o2i"],
+            returncode=3,
+            stdout=("[" * 10000 + "]" * 10000).encode("utf-8"),
+            stderr=b"depth\nlimit",
+        )
+        with mock.patch.object(
+            CHECKER.subprocess,
+            "run",
+            return_value=completed,
+        ):
+            errors = CHECKER.inspect_view(
+                Path("o2i"),
+                Path("model.archimate"),
+                "O2I Syntax - Contextualization",
+            )
+
+        self.assertEqual(
+            [
+                "JSON report exceeds supported nesting depth; "
+                "stderr: depth\\u000alimit"
+            ],
+            errors,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

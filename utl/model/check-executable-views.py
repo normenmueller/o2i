@@ -206,6 +206,12 @@ def diagnostic_excerpt(value: str) -> str:
     return "".join(tokens)
 
 
+def diagnostic_suffix(stderr: str) -> str:
+    """Return the optional bounded stderr suffix for one checker error."""
+    detail = diagnostic_excerpt(stderr)
+    return f"; stderr: {detail}" if detail else ""
+
+
 def inspect_view(o2i: Path, model: Path, view_name: str) -> list[str]:
     """Run one public CLI inspection and validate its complete JSON result."""
     try:
@@ -236,10 +242,15 @@ def inspect_view(o2i: Path, model: Path, view_name: str) -> list[str]:
         return decoding_errors
     try:
         report = json.loads(stdout)
+    except RecursionError:
+        return [
+            "JSON report exceeds supported nesting depth"
+            f"{diagnostic_suffix(stderr)}"
+        ]
     except json.JSONDecodeError as error:
-        detail = diagnostic_excerpt(stderr)
-        suffix = f"; stderr: {detail}" if detail else ""
-        return [f"invalid JSON report: {error}{suffix}"]
+        return [
+            f"invalid JSON report: {error}{diagnostic_suffix(stderr)}"
+        ]
     return validate_report(view_name, result.returncode, report)
 
 
