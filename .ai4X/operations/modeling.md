@@ -12,9 +12,10 @@ instance-conformance work.
 - Semantic Views render O2I metamodel elements as plain boxes with solid
   outlines. This is a readability convention only and carries no formal
   semantics.
-- Audit Semantic Views as complete metamodel projections: verify View purpose,
-  elements, relations, directions, labels, completeness, and visual
-  representation. A naming audit alone is insufficient.
+- Audit every Semantic View as a purpose-bounded metamodel visualization:
+  verify its purpose, elements, relations, directions, labels, consistency
+  within scope, and visual representation. No single View must project the
+  complete metamodel; a naming audit alone is insufficient.
 - Semantic metatype and type labels use their canonical unprefixed names, such
   as `Context`, `Principle`, and `Situation Anchor`. The View already supplies
   the O2I namespace.
