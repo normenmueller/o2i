@@ -5,9 +5,9 @@
 
 ## View Contract
 
-Illustrates one fictitious end-to-end O2I effect graph across all eight Contexts, including Primitive justification, Situation anchoring, Intervention, and Measure.
+Illustrates one fictitious end-to-end O2I effect chain across all eight Contexts, including Primitive justification, Situation anchoring, Intervention, and Measure.
 
-This View is a non-normative model instance used to explain the metamodel defined in o2i.md.
+This View is a non-executable illustrative overview used to explain the metamodel defined in o2i.md. It is neither an O2I profile instance nor conformance evidence.
 
 ## Nodes
 

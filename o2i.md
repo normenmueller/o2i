@@ -1147,7 +1147,7 @@ Eine View darf nur einen Teil der Beitragenden darstellen. Für einen global vol
 
 # Illustration
 
-Der O2I Layered Cake ist eine beispielhafte Referenzsicht auf einen zusammenhängenden O2I-Wirkungsgraphen. Die Sicht zeigt, wie O2I-Kontexte mit Primitives befüllt und Makrorelationen durch Primitive-Relationen begründet werden.
+Der O2I Layered Cake ist eine illustrative Übersicht eines fiktiven, durchgängigen O2I-Wirkungszusammenhangs. Die Sicht zeigt, wie O2I-Kontexte mit Primitives befüllt und Makrorelationen durch Primitive-Relationen begründet werden. Sie ist weder eine ausführbare O2I-Profilinstanz noch ein Konformitätsnachweis.
 
 \clearpage
 \newgeometry{margin=8mm}

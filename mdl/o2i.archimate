@@ -892,9 +892,9 @@ Contributor and target roles follow from realizes topology. Exact cardinality, C
             </child>
           </child>
         </child>
-        <documentation>Illustrates one fictitious end-to-end O2I effect graph across all eight Contexts, including Primitive justification, Situation anchoring, Intervention, and Measure.
+        <documentation>Illustrates one fictitious end-to-end O2I effect chain across all eight Contexts, including Primitive justification, Situation anchoring, Intervention, and Measure.
 
-This View is a non-normative model instance used to explain the metamodel defined in o2i.md.</documentation>
+This View is a non-executable illustrative overview used to explain the metamodel defined in o2i.md. It is neither an O2I profile instance nor conformance evidence.</documentation>
       </element>
       <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Orientierung" id="id-24bae562e9b04322b5ee975160de0624">
         <child xsi:type="archimate:DiagramObject" id="id-10d2ccd44a0d4390af95055a035da747" targetConnections="id-ee786d8c69bc4581b745b81be6acca4c" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-209098a723f84d0787eab3cfed0e3db0">
