@@ -64,6 +64,9 @@ instance-conformance work.
   `Context --composition[contextualizes]--> element`; visual nesting is
   presentational.
 - Mapping-only Views are checked reference visualizations, not O2I graphs.
+- Illustrative Views explain a conceptual reading without claiming executable
+  profile or conformance status. `O2I Layered Cake` is such a non-executable
+  overview; its repository contract is checked without `o2i inspect`.
 - `spc/ctr/archimate/profile.json` is the exact mapping authority.
   `O2I Syntax` must completely visualize it.
 - Executable conformance and instance Views require Haskell `o2i inspect`.
@@ -111,4 +114,5 @@ python3 -B utl/model/extract-archimate-view.py --preset all
 python3 -B utl/model/extract-archimate-view.py --preset all --check
 python3 -B -m unittest discover -s utl/model -p 'test_*.py'
 cabal --project-dir=spc run o2i -- inspect MODEL --view "VIEW"
+python3 -B utl/model/check-executable-views.py --o2i O2I_BINARY
 ```

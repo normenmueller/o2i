@@ -5,7 +5,7 @@
 - Execution authorization: `APPROVED`
 - Current Issue: `#3`
 - Current gate: `issue-3-finalreview`
-- Gate status: `CORRECTION`
+- Gate status: `REJECTED`
 - Current node: `issue-3-batch-6-correction`
 
 # Current Gate
@@ -29,14 +29,15 @@
 - Batch 4 Sub-Issue `#28` is closed; implementation revision `18a73466b8d26a20fd9166bbc0e50499920e4993` adds the View-scoped effective-label drift check, 62 passing model tests, and a freshly sealed bleeding-edge PDF. Evidence comments `5166797561` and `5166801455` record the checks, accepted Co-Author review, and corrected exact revision.
 - Batch 5 Sub-Issue `#29` is closed; candidate revision `20f903d38f205ac301b6d7a4c6098a3d43ac7602` passes complete local verification, both executable View inspections, the workspace generic-boundary check, and the clean-tree audit. Its closing evidence is recorded on the Sub-Issue.
 - Batch 6 Finalreview attempt 1 rejected candidate revision `20f903d38f205ac301b6d7a4c6098a3d43ac7602`. Strategy and formalization accepted with no findings and all scores at 10.0. Haskell found one High executable-classification inconsistency for `O2I Layered Cake`; agentic-AI review found one Medium automation-contract gap and one Low diagnostic-actionability gap. The Project status is `In progress`; Sub-Issue `#30` records the exact review evidence.
+- The accepted correction design classifies `O2I Layered Cake` as a non-executable illustrative overview and keeps executable Candidate acceptance separate. The uncommitted correction enforces that exclusive classification, exact and total CLI-report acceptance, actionable label diagnostics, finite CLI execution, and explicit model/Haskell gate ownership. Focused tests and the model, Haskell, paper, and licensing gates pass; read-only Co-Author re-review reports no findings and 10.0 in every dimension.
 - Issue `#4`, the accepted declarative ArchiMate profile prerequisite, is closed.
 - Activation baseline `f5aaccbaa0e12b26626d77f74804ad3b9c360a34` is remotely available on `origin/trunk`.
 - The Product Owner controls ArchiMate model edits and pushes.
 
 # Next Action
 
-Resolve Batch 6 attempt-1 findings within Sub-Issue `#30`: first obtain the Co-Author's clean classification design for `O2I Layered Cake`, then implement the accepted target state, the automation-safe Pattern-View predicate, and actionable label-drift diagnostics before producing a new exact candidate.
+Commit the accepted correction with authority and implementation attribution separated, then run complete verification and produce one new exact candidate for Finalreview attempt 2.
 
 # Local Return Point
 
-Issue `#3`, Batch 6 correction: await the read-only Co-Author recommendation, select one fresh target design, and do not begin another Finalreview until all three findings are closed and the complete gate passes on one new revision.
+Issue `#3`, Batch 6 correction: accept only a finding-free Co-Author review, complete all gates on one committed revision, and do not begin Finalreview attempt 2 before that exact candidate is clean.
