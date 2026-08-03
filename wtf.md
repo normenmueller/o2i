@@ -118,28 +118,6 @@ Spezifikation: [`assessModelSemantics`](./spc/lib/core/src/O2I/Validation/Semant
 
 Weiterlesen: [Strategiebeitrag und kollektive Strategierealisierung](./o2i.md#strategiebeitrag-und-kollektive-strategierealisierung), [Kollektive Strategierealisierung im Metamodell](./o2i.md#kollektive-strategierealisierung)
 
-## WTF "Modellzustand"?
-
-> [!NOTE]
-> **Modellzustand** = *Welche Aussagen gelten bereits, welche Kontexte sind elaboriert und wie reif ist das Gesamtmodell?*
-
-O2I trennt drei Ebenen: `Commitment` kennzeichnet den Aussageanspruch eines Claims als `Candidate` oder `Asserted`. `Elaboration` beschreibt abgeleitet den verpflichtenden Inhalt einer Kontextinstanz als `Referenced` oder `Elaborated`. `Maturity` beschreibt abgeleitet die geprüfte Modellgrenze als `Skeleton`, `Draft` oder `SemanticallyValid`.
-
-**Mindestinhalt**
-
-- Claims mit genau einem eindeutigen Aussageanspruch,
-- vollständige verpflichtende Inhalte für jeden zu elaborierenden Kontext,
-- alle Abhängigkeiten und Evidenzen der `Asserted`-Claims,
-- keine manuell gesetzten Werte für `Elaboration` oder `Maturity`.
-
-**Prüfung**
-
-Candidates bleiben diagnostizierbar, erfüllen jedoch keine semantische Pflicht. Ein Kontext ist nur durch vollständige gültige `Asserted`-Inhalte elaboriert. Das Modell ist `SemanticallyValid`, wenn keine Candidates verbleiben und die globale Semantikprüfung erfolgreich ist; andernfalls ist es abhängig von der Kontextelaboration `Draft` oder `Skeleton`.
-
-Spezifikation: [`Commitment`](./spc/lib/core/src/O2I/Language/Claim.hs), [`assessModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs)
-
-Weiterlesen: [Claims](./o2i.md#claims), [Modellzustand](./o2i.md#modellzustand)
-
 ## WTF "Situation"?
 
 > [!NOTE]
@@ -156,7 +134,7 @@ Situation ist das fachliche Wo eines Bedarfs: der konkrete Arbeits-, Leistungs- 
 
 **Prüfung**
 
-Der Situationsanker muss nach seiner Business-Architecture-Semantik modelliert sein und denselben operativen Wirkungsgegenstand für Bedarf, Veränderung und Messung bestimmen. Eine technische Lösung, Maßnahme, Business Role oder regulatorische Randbedingung ist kein Situationsanker.
+Der Situationsanker muss seiner Business-Architecture-Semantik entsprechend modelliert sein. Bedarf, Intervention und Messung müssen sich auf genau diesen konkreten Anker beziehen: Dort wird der Bedarf sichtbar, dort verändert die Intervention den Zustand und dort misst der KPI die Veränderung. Eine technische Lösung, Maßnahme, Business Role oder regulatorische Randbedingung ist kein Situationsanker.
 
 Spezifikation: [`assessModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs)
 
@@ -330,3 +308,25 @@ Das `EvidenceAssessedModel` enthält getrennte Aussagen über positive Wirkungse
 Spezifikation: [`validateTraceability`](./spc/lib/core/src/O2I/Validation/Trace.hs) -> [`validateEvidenceReadinessAt`](./spc/lib/core/src/O2I/Validation/Readiness.hs) -> [`assessEffectEvidenceAt`](./spc/lib/core/src/O2I/Validation/Evidence.hs)
 
 Weiterlesen: [Nachweislogik](./o2i.md#nachweislogik), [Wirkungstrace](./o2i.md#wirkungstrace), [Wirkungsevidenz](./o2i.md#wirkungsevidenz), [Plausible Attribution](./o2i.md#plausible-attribution)
+
+## WTF "Modellzustand"?
+
+> [!NOTE]
+> **Modellzustand** = *Welche Aussagen gelten bereits, welche Kontexte sind elaboriert und wie reif ist das Gesamtmodell?*
+
+O2I trennt drei Ebenen: `Commitment` kennzeichnet den Aussageanspruch eines Claims als `Candidate` oder `Asserted`. `Elaboration` beschreibt abgeleitet den verpflichtenden Inhalt einer Kontextinstanz als `Referenced` oder `Elaborated`. `Maturity` beschreibt abgeleitet die geprüfte Modellgrenze als `Skeleton`, `Draft` oder `SemanticallyValid`.
+
+**Mindestinhalt**
+
+- Claims mit genau einem eindeutigen Aussageanspruch,
+- vollständige verpflichtende Inhalte für jeden zu elaborierenden Kontext,
+- alle Abhängigkeiten und Evidenzen der `Asserted`-Claims,
+- keine manuell gesetzten Werte für `Elaboration` oder `Maturity`.
+
+**Prüfung**
+
+Candidates bleiben diagnostizierbar, erfüllen jedoch keine semantische Pflicht. Ein Kontext ist nur durch vollständige gültige `Asserted`-Inhalte elaboriert. Das Modell ist `SemanticallyValid`, wenn keine Candidates verbleiben und die globale Semantikprüfung erfolgreich ist; andernfalls ist es abhängig von der Kontextelaboration `Draft` oder `Skeleton`.
+
+Spezifikation: [`Commitment`](./spc/lib/core/src/O2I/Language/Claim.hs), [`assessModelSemantics`](./spc/lib/core/src/O2I/Validation/Semantics.hs)
+
+Weiterlesen: [Claims](./o2i.md#claims), [Modellzustand](./o2i.md#modellzustand)
