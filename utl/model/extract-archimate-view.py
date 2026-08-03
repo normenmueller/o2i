@@ -102,6 +102,15 @@ REQUIRED_COLLECTIVE_REALIZATION_ELEMENT_DOCUMENTATION = (
     "syntax exemplar is not a fachliche model instance",
 )
 
+EXPECTED_LAYERED_CAKE_DOCUMENTATION = (
+    "Illustrates one fictitious end-to-end O2I effect chain across all eight "
+    "Contexts, including Primitive justification, Situation anchoring, "
+    "Intervention, and Measure.\n\n"
+    "This View is a non-executable illustrative overview used to explain the "
+    "metamodel defined in o2i.md. It is neither an O2I profile instance nor "
+    "conformance evidence."
+)
+
 REQUIRED_VIEW_DOCUMENTATION = {
     (
         "O2I Syntax - Contextualization"
@@ -804,6 +813,7 @@ def normalized_label_expression(element: ET.Element) -> str | None:
 
 def syntax_connection_label_errors(
     view: ET.Element,
+    elements: dict[str, tuple[str, str]],
     relations: dict[
         str,
         tuple[str, str, str | None, str | None, bool],
@@ -811,6 +821,7 @@ def syntax_connection_label_errors(
 ) -> list[str]:
     """Reject View labels that obscure the Syntax mapping relation name."""
     errors = []
+    object_targets, _, object_labels, _, _, _ = collect_view(view)
     for connection in view.iter("sourceConnection"):
         displayed_label = normalized_label_expression(connection)
         if displayed_label is None:
@@ -820,13 +831,27 @@ def syntax_connection_label_errors(
         if relation_id not in relations:
             continue
 
+        source_object = connection.get("source")
+        target_object = connection.get("target")
+        source_element = object_targets.get(source_object or "")
+        target_element = object_targets.get(target_object or "")
+        if source_element not in elements or target_element not in elements:
+            continue
+
         relationship_label = " ".join(relations[relation_id][0].split())
         if displayed_label != relationship_label:
+            source_name, source_type = elements[source_element]
+            target_name, target_type = elements[target_element]
+            source_label = object_labels.get(source_object or "", source_name)
+            target_label = object_labels.get(target_object or "", target_name)
             errors.append(
                 f"{SYNTAX_VIEW} connection {connection.get('id')!r} "
-                f"labelExpression normalizes to {displayed_label!r}, but "
+                f"from {source_label!r} ({source_type}) to "
+                f"{target_label!r} ({target_type}) labelExpression "
+                f"normalizes to {displayed_label!r}, but "
                 f"referenced relationship {relation_id!r} is named "
-                f"{relationship_label!r}"
+                f"{relationship_label!r}; remove labelExpression or set it "
+                f"to {relationship_label!r}"
             )
     return errors
 
@@ -1272,7 +1297,9 @@ def validate_model(root: ET.Element) -> list[str]:
         ) = collect_view(view)
 
         if view_name == SYNTAX_VIEW:
-            errors.extend(syntax_connection_label_errors(view, relations))
+            errors.extend(
+                syntax_connection_label_errors(view, elements, relations)
+            )
 
         relation_signatures = []
         relation_records = []
@@ -1509,6 +1536,19 @@ def validate_model(root: ET.Element) -> list[str]:
                         f"{view_name} is missing node "
                         f"{required[0]} ({required[1]})"
                     )
+
+        normalized_documentation = "\n".join(
+            line.rstrip() for line in documentation.splitlines()
+        ).strip()
+        if (
+            view_name == "O2I Layered Cake"
+            and normalized_documentation
+            != EXPECTED_LAYERED_CAKE_DOCUMENTATION
+        ):
+            errors.append(
+                "O2I Layered Cake documentation does not match its canonical "
+                "non-executable illustrative classification"
+            )
 
         for fragment in REQUIRED_VIEW_DOCUMENTATION.get(view_name, ()):
             if fragment not in documentation:

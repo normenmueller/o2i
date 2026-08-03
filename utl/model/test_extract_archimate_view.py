@@ -130,6 +130,44 @@ class RepositoryViewContractTest(unittest.TestCase):
             errors,
         )
 
+    def test_layered_cake_cannot_claim_profile_instance_status(self) -> None:
+        root = copy.deepcopy(self.root)
+        view = EXTRACTOR.find_view(root, "O2I Layered Cake")
+        documentation = view.find("documentation")
+        self.assertIsNotNone(documentation)
+        documentation.text = (
+            "Illustrates a fictitious graph as an O2I profile instance."
+        )
+
+        errors = EXTRACTOR.validate_model(root)
+
+        self.assertTrue(
+            any(
+                "O2I Layered Cake documentation does not match its canonical "
+                "non-executable illustrative classification" in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_layered_cake_rejects_a_contradictory_classification(self) -> None:
+        root = copy.deepcopy(self.root)
+        view = EXTRACTOR.find_view(root, "O2I Layered Cake")
+        documentation = view.find("documentation")
+        self.assertIsNotNone(documentation)
+        documentation.text = (
+            EXTRACTOR.EXPECTED_LAYERED_CAKE_DOCUMENTATION
+            + "\n\nThis View is an executable O2I profile instance."
+        )
+
+        errors = EXTRACTOR.validate_model(root)
+
+        self.assertIn(
+            "O2I Layered Cake documentation does not match its canonical "
+            "non-executable illustrative classification",
+            errors,
+        )
+
     def test_required_element_documentation_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
         proposition = self._model_element(
@@ -308,6 +346,16 @@ class RepositoryViewContractTest(unittest.TestCase):
 
                 errors = EXTRACTOR.validate_model(root)
 
+                relation_id = connection.get("archimateRelationship")
+                expected = (
+                    f"O2I Syntax connection {connection.get('id')!r} "
+                    "from 'Principle' (Grouping) to "
+                    "'ArchiMate Principle' (Principle) labelExpression "
+                    f"normalizes to {expression!r}, but referenced "
+                    f"relationship {relation_id!r} is named 'maps-to'; "
+                    "remove labelExpression or set it to 'maps-to'"
+                )
+
                 self.assertEqual(
                     1,
                     sum(
@@ -316,6 +364,7 @@ class RepositoryViewContractTest(unittest.TestCase):
                     ),
                     errors,
                 )
+                self.assertIn(expected, errors)
                 self.assertTrue(
                     any(
                         f"labelExpression normalizes to {expression!r}"
@@ -357,6 +406,39 @@ class RepositoryViewContractTest(unittest.TestCase):
         self.assertTrue(
             any(
                 "unresolved relationship reference" in error
+                for error in errors
+            ),
+            errors,
+        )
+        self.assertFalse(
+            any("labelExpression normalizes to" in error for error in errors),
+            errors,
+        )
+
+    def test_unresolved_endpoint_owns_connection_label_defect(self) -> None:
+        root = copy.deepcopy(self.root)
+        view = EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_VIEW)
+        connection = self._mapping_connection(
+            root,
+            view,
+            "Principle",
+            EXTRACTOR.MAPS_TO,
+            "ArchiMate Principle",
+        )
+        source_id = connection.get("source")
+        source = next(
+            child
+            for child in view.iter("child")
+            if child.get("id") == source_id
+        )
+        source.set("archimateElement", "missing-element")
+        self._set_connection_label_expression(connection, "visual override")
+
+        errors = EXTRACTOR.validate_model(root)
+
+        self.assertTrue(
+            any(
+                "refers to unknown model element 'missing-element'" in error
                 for error in errors
             ),
             errors,

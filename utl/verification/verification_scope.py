@@ -48,18 +48,22 @@ LICENSING_PATHS = frozenset(
 )
 MODEL_PATHS = frozenset(
     {
+        "utl/model/check-executable-views.py",
         "utl/model/archimate_profile.py",
         "utl/model/audit-archimate-model.py",
         "utl/model/extract-archimate-view.py",
         "utl/model/render-archimate-profile.py",
         "utl/model/test_archimate_profile.py",
         "utl/model/test_audit_archimate_model.py",
+        "utl/model/test_check_executable_views.py",
         "utl/model/test_extract_archimate_view.py",
         "utl/model/test_render_archimate_profile.py",
     }
 )
 HASKELL_PATHS = frozenset(
     {
+        "utl/model/check-executable-views.py",
+        "utl/model/test_check_executable_views.py",
         "utl/haskell/check-package-licenses.sh",
         "utl/haskell/check_haskell_api_contracts.py",
         "utl/haskell/test_check_haskell_api_contracts.py",

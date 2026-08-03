@@ -153,6 +153,20 @@ Inspection closes only the exact persisted O2I dependencies reached from that
 seed and retains their provenance. It neither invents relations nor reports
 independent defects outside the closed scope.
 
+The process exit status is stable: `0` means `passed`, `1` means a failed model
+inspection, `2` means an invocation, input-I/O, or internal command error, and
+`3` means `partial`. Automation must inspect the JSON result and stage states;
+exit `3` alone never establishes an acceptable Candidate View.
+
+The repository's two executable Candidate Pattern Views have one stricter,
+automation-safe acceptance command. It requires the exact expected partial
+stage states and diagnostic multisets and exits `0` only when both contracts
+hold:
+
+```sh
+python3 -B utl/model/check-executable-views.py --o2i "$(cabal --project-dir=spc list-bin o2i)"
+```
+
 The CLI contains no validation semantics. It delegates inspection to the
 libraries and renders their result.
 

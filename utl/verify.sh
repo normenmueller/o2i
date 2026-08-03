@@ -113,6 +113,8 @@ verify_model() {
     -s utl/model -p 'test_*archimate_model.py'
   python3 -B -m unittest discover \
     -s utl/model -p 'test_extract_archimate_view.py'
+  python3 -B -m unittest discover \
+    -s utl/model -p 'test_check_executable_views.py'
 }
 
 verify_haskell() {
@@ -158,6 +160,15 @@ verify_haskell() {
     --build-log="$build_log" \
     --test-log="$test_log" \
     --ghc-options=-Werror
+
+  info "Checking executable Candidate View acceptance."
+  python3 -B -m unittest discover \
+    -s utl/model -p 'test_check_executable_views.py'
+  o2i_bin=$(cabal --config-file="$cabal_config" -v0 --project-dir=spc \
+    list-bin o2i --builddir="$build")
+  python3 -B utl/model/check-executable-views.py \
+    --o2i "$o2i_bin" \
+    --model mdl/o2i.archimate
 
   info "Checking external Haskell API contracts."
   python3 -B -m unittest discover \

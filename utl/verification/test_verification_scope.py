@@ -100,6 +100,16 @@ class VerificationPathMatrixTests(unittest.TestCase):
                 "model",
                 "paper",
             },
+            "utl/model/check-executable-views.py": {
+                "licensing",
+                "model",
+                "haskell",
+            },
+            "utl/model/test_check_executable_views.py": {
+                "licensing",
+                "model",
+                "haskell",
+            },
         }
         for path, expected in cases.items():
             with self.subTest(path=path):
