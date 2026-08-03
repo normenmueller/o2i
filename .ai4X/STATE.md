@@ -1,12 +1,12 @@
 # Handoff
 
 - Observed: 2026-08-03 CEST
-- Work status: `ACTIVE`
+- Work status: `COMPLETE`
 - Execution authorization: `APPROVED`
 - Current Issue: `#3`
 - Current gate: `issue-3-finalreview-4`
-- Gate status: `PENDING`
-- Current node: `issue-3-batch-6-finalreview-4`
+- Gate status: `ACCEPTED`
+- Current node: `issue-3-accepted-awaiting-remote-publication`
 
 # Current Gate
 
@@ -14,8 +14,8 @@
 - Candidate revision: `8ea99562fe478ea41070738536aad6f0cc823bb6`
 - Review scope: Issue `#3` implementation scope; mutable `.ai4X/STATE.md` is excluded.
 - Mandatory checks: contract, model, Haskell, publication, licensing, repository, and workspace generic-boundary verification; independent strategy, formalization, Haskell, agentic-AI, and conditionally publication Finalreviews.
-- Finding status: `OPEN`
-- Result: `PENDING`
+- Finding status: `CLOSED`
+- Result: `ACCEPTED`
 
 # Repository Facts
 
@@ -34,14 +34,15 @@
 - Candidate revision `82c289921c59175c53dff6db4cfc0641e27343d4` routes model-source changes through both model and Haskell gates while retaining live AMX/Core inspection exclusively in Haskell. Candidate-checker process output is explicitly decoded as UTF-8 and malformed-JSON stderr is control-safe, single-line, and bounded. Focused Co-Author review reports no findings and 10.0 in every dimension; complete local verification and the workspace generic-boundary check pass.
 - Batch 6 Finalreview attempt 3 rejected candidate revision `82c289921c59175c53dff6db4cfc0641e27343d4`. Strategy, formalization, and Haskell accepted with no findings and all scores at 10.0. Agentic-AI review confirmed both attempt-2 corrections but found one Medium totality gap: deeply nested valid JSON can raise an uncaught `RecursionError` instead of a deterministic repository diagnostic.
 - Candidate revision `8ea99562fe478ea41070738536aad6f0cc823bb6` converts JSON decoder-depth failure into one fixed diagnostic and applies the existing control-safe, single-line, bounded stderr contract. An exact deeply nested valid-JSON regression test passes. Focused Co-Author review reports no findings and 10.0 in every dimension; complete local verification and the workspace generic-boundary check pass.
+- Finalreview attempt 4 accepts exact candidate revision `8ea99562fe478ea41070738536aad6f0cc823bb6` with no findings and 10.0 in every required agentic-AI dimension. Together with the still-valid attempt-3 strategy, formalization, and Haskell acceptances and the attempt-2 publication acceptance, every required Finalreview capability has accepted the exact applicable scope. Sub-Issue `#30` contains the append-only review evidence; Issue `#3` remains open and in Project status `In review` until the accepted local revisions are remotely available.
 - Issue `#4`, the accepted declarative ArchiMate profile prerequisite, is closed.
 - Activation baseline `f5aaccbaa0e12b26626d77f74804ad3b9c360a34` is remotely available on `origin/trunk`.
 - The Product Owner controls ArchiMate model edits and pushes.
 
 # Next Action
 
-Run the remaining independent agentic-AI Finalreview for exact candidate revision `8ea99562fe478ea41070738536aad6f0cc823bb6`; accept only no findings and 10.0 in every required dimension.
+Product Owner reviews and pushes the accepted local revision sequence. After remote availability and any required remote verification are confirmed, close Sub-Issue `#30`, close Issue `#3`, and allow Project automation to move it from `In review` to `Done`.
 
 # Local Return Point
 
-Issue `#3`, Batch 6 Finalreview attempt 4: keep candidate scope immutable, record the remaining review on Sub-Issue `#30`, and return any finding to correction.
+Issue `#3` is locally accepted at candidate revision `8ea99562fe478ea41070738536aad6f0cc823bb6`; preserve the exact revision sequence until Product Owner push and remote closure.
