@@ -70,7 +70,7 @@ class VerificationPathMatrixTests(unittest.TestCase):
                 "paper",
             },
             ".github/workflows/verify.yml": set(scope.STAGES),
-            "mdl/o2i.archimate": {"licensing", "model"},
+            "mdl/o2i.archimate": {"licensing", "model", "haskell"},
             "spc/lib/adapter/amx/src/O2I/Adapter/AMX.hs": {
                 "licensing",
                 "haskell",
@@ -121,7 +121,16 @@ class VerificationPathMatrixTests(unittest.TestCase):
         )
         self.assertEqual("selective", selection.mode)
         self.assertEqual(
-            {"licensing", "governance", "model", "paper"},
+            {"licensing", "governance", "model", "haskell", "paper"},
+            set(selection.stages),
+        )
+
+    def test_model_source_selects_executable_candidate_gate(self) -> None:
+        selection = scope.classify_paths(("mdl/o2i.archimate",))
+
+        self.assertEqual("selective", selection.mode)
+        self.assertEqual(
+            {"licensing", "model", "haskell"},
             set(selection.stages),
         )
 

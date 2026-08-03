@@ -198,6 +198,57 @@ class ExecutableViewContractTest(unittest.TestCase):
             errors,
         )
 
+    def test_invalid_cli_encoding_is_reported_without_exception(self) -> None:
+        completed = subprocess.CompletedProcess(
+            args=["o2i"],
+            returncode=3,
+            stdout=b"\xff",
+            stderr=b"\xfe",
+        )
+        with mock.patch.object(
+            CHECKER.subprocess,
+            "run",
+            return_value=completed,
+        ):
+            errors = CHECKER.inspect_view(
+                Path("o2i"),
+                Path("model.archimate"),
+                "O2I Syntax - Contextualization",
+            )
+
+        self.assertEqual(
+            [
+                "CLI stdout is not valid UTF-8 at byte 0",
+                "CLI stderr is not valid UTF-8 at byte 0",
+            ],
+            errors,
+        )
+
+    def test_malformed_json_diagnostic_is_sanitized_and_bounded(self) -> None:
+        completed = subprocess.CompletedProcess(
+            args=["o2i"],
+            returncode=3,
+            stdout=b"not JSON",
+            stderr=("first\n\x1b[31m" + "x" * 1000).encode("utf-8"),
+        )
+        with mock.patch.object(
+            CHECKER.subprocess,
+            "run",
+            return_value=completed,
+        ):
+            errors = CHECKER.inspect_view(
+                Path("o2i"),
+                Path("model.archimate"),
+                "O2I Syntax - Contextualization",
+            )
+
+        self.assertEqual(1, len(errors))
+        self.assertIn("stderr: first\\u000a\\u001b[31m", errors[0])
+        self.assertTrue(errors[0].endswith("...[truncated]"), errors[0])
+        excerpt = errors[0].split("; stderr: ", maxsplit=1)[1]
+        self.assertLessEqual(len(excerpt), CHECKER.DIAGNOSTIC_EXCERPT_LIMIT)
+        self.assertNotIn("\n", excerpt)
+
 
 if __name__ == "__main__":
     unittest.main()

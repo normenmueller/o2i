@@ -15,6 +15,7 @@ from typing import Any
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MODEL = REPOSITORY_ROOT / "mdl" / "o2i.archimate"
 CLI_TIMEOUT_SECONDS = 30
+DIAGNOSTIC_EXCERPT_LIMIT = 240
 EXPECTED_SCHEMA = "o2i.inspection.report/v1"
 
 EXPECTED_DIAGNOSTICS = {
@@ -168,6 +169,43 @@ def validate_report(
     return errors
 
 
+def decode_cli_output(
+    stream: str,
+    value: bytes,
+) -> tuple[str, list[str]]:
+    """Decode one CLI stream or return one deterministic contract error."""
+    try:
+        return value.decode("utf-8"), []
+    except UnicodeDecodeError as error:
+        return "", [
+            f"CLI {stream} is not valid UTF-8 at byte {error.start}"
+        ]
+
+
+def diagnostic_excerpt(value: str) -> str:
+    """Return one bounded, single-line, control-free diagnostic excerpt."""
+    tokens = []
+    length = 0
+    truncated = False
+    marker = "...[truncated]"
+    for character in value.strip():
+        token = (
+            character
+            if character.isprintable()
+            else f"\\u{ord(character):04x}"
+        )
+        if length + len(token) > DIAGNOSTIC_EXCERPT_LIMIT:
+            truncated = True
+            break
+        tokens.append(token)
+        length += len(token)
+    if truncated:
+        while tokens and length + len(marker) > DIAGNOSTIC_EXCERPT_LIMIT:
+            length -= len(tokens.pop())
+        tokens.append(marker)
+    return "".join(tokens)
+
+
 def inspect_view(o2i: Path, model: Path, view_name: str) -> list[str]:
     """Run one public CLI inspection and validate its complete JSON result."""
     try:
@@ -182,7 +220,6 @@ def inspect_view(o2i: Path, model: Path, view_name: str) -> list[str]:
             ],
             check=False,
             capture_output=True,
-            text=True,
             timeout=CLI_TIMEOUT_SECONDS,
         )
     except subprocess.TimeoutExpired:
@@ -192,10 +229,15 @@ def inspect_view(o2i: Path, model: Path, view_name: str) -> list[str]:
         ]
     except OSError as error:
         return [f"cannot execute O2I CLI: {error}"]
+    stdout, stdout_errors = decode_cli_output("stdout", result.stdout)
+    stderr, stderr_errors = decode_cli_output("stderr", result.stderr)
+    decoding_errors = stdout_errors + stderr_errors
+    if decoding_errors:
+        return decoding_errors
     try:
-        report = json.loads(result.stdout)
+        report = json.loads(stdout)
     except json.JSONDecodeError as error:
-        detail = result.stderr.strip()
+        detail = diagnostic_excerpt(stderr)
         suffix = f"; stderr: {detail}" if detail else ""
         return [f"invalid JSON report: {error}{suffix}"]
     return validate_report(view_name, result.returncode, report)

@@ -62,6 +62,7 @@ MODEL_PATHS = frozenset(
 )
 HASKELL_PATHS = frozenset(
     {
+        "mdl/o2i.archimate",
         "utl/model/check-executable-views.py",
         "utl/model/test_check_executable_views.py",
         "utl/haskell/check-package-licenses.sh",
