@@ -272,6 +272,100 @@ class RepositoryViewContractTest(unittest.TestCase):
             errors,
         )
 
+    def test_matching_syntax_connection_label_expression_is_accepted(
+        self,
+    ) -> None:
+        for expression in ("maps-to", "  maps-to\n"):
+            with self.subTest(expression=expression):
+                root = copy.deepcopy(self.root)
+                view = EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_VIEW)
+                connection = self._mapping_connection(
+                    root,
+                    view,
+                    "Principle",
+                    EXTRACTOR.MAPS_TO,
+                    "ArchiMate Principle",
+                )
+                self._set_connection_label_expression(connection, expression)
+
+                self.assertEqual([], EXTRACTOR.validate_model(root))
+
+    def test_divergent_syntax_connection_label_expression_is_reported(
+        self,
+    ) -> None:
+        for expression in ("<O2I rel>", ""):
+            with self.subTest(expression=expression):
+                root = copy.deepcopy(self.root)
+                view = EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_VIEW)
+                connection = self._mapping_connection(
+                    root,
+                    view,
+                    "Principle",
+                    EXTRACTOR.MAPS_TO,
+                    "ArchiMate Principle",
+                )
+                self._set_connection_label_expression(connection, expression)
+
+                errors = EXTRACTOR.validate_model(root)
+
+                self.assertEqual(
+                    1,
+                    sum(
+                        "labelExpression normalizes to" in error
+                        for error in errors
+                    ),
+                    errors,
+                )
+                self.assertTrue(
+                    any(
+                        f"labelExpression normalizes to {expression!r}"
+                        in error
+                        and "is named 'maps-to'" in error
+                        for error in errors
+                    ),
+                    errors,
+                )
+
+    def test_connection_label_contract_is_syntax_view_scoped(self) -> None:
+        root = copy.deepcopy(self.root)
+        view = EXTRACTOR.find_view(root, "O2I Semantics - Primitives")
+        connection = self._connection(root, view, "substantiates")
+        self._set_connection_label_expression(connection, "visual override")
+
+        errors = EXTRACTOR.validate_model(root)
+
+        self.assertFalse(
+            any("labelExpression normalizes to" in error for error in errors),
+            errors,
+        )
+
+    def test_unresolved_relationship_owns_connection_label_defect(self) -> None:
+        root = copy.deepcopy(self.root)
+        view = EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_VIEW)
+        connection = self._mapping_connection(
+            root,
+            view,
+            "Principle",
+            EXTRACTOR.MAPS_TO,
+            "ArchiMate Principle",
+        )
+        connection.set("archimateRelationship", "missing-relationship")
+        self._set_connection_label_expression(connection, "visual override")
+
+        errors = EXTRACTOR.validate_model(root)
+
+        self.assertTrue(
+            any(
+                "unresolved relationship reference" in error
+                for error in errors
+            ),
+            errors,
+        )
+        self.assertFalse(
+            any("labelExpression normalizes to" in error for error in errors),
+            errors,
+        )
+
     def test_unexpected_syntax_mapping_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
         view = EXTRACTOR.find_view(root, "O2I Syntax")
@@ -1056,6 +1150,17 @@ class RepositoryViewContractTest(unittest.TestCase):
         ]
         self.assertEqual(1, len(matches), relation_id)
         return matches[0]
+
+    def _set_connection_label_expression(
+        self,
+        connection: ET.Element,
+        value: str,
+    ) -> None:
+        ET.SubElement(
+            connection,
+            "feature",
+            {"name": "labelExpression", "value": value},
+        )
 
     def _model_element(
         self,

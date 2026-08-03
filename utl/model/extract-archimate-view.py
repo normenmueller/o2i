@@ -789,6 +789,48 @@ def collect_view(view: ET.Element):
     )
 
 
+def normalized_label_expression(element: ET.Element) -> str | None:
+    """Return one normalized explicit Archi View label, if present."""
+    expression = next(
+        (
+            feature.get("value", "")
+            for feature in element.findall("feature")
+            if feature.get("name") == "labelExpression"
+        ),
+        None,
+    )
+    return None if expression is None else " ".join(expression.split())
+
+
+def syntax_connection_label_errors(
+    view: ET.Element,
+    relations: dict[
+        str,
+        tuple[str, str, str | None, str | None, bool],
+    ],
+) -> list[str]:
+    """Reject View labels that obscure the Syntax mapping relation name."""
+    errors = []
+    for connection in view.iter("sourceConnection"):
+        displayed_label = normalized_label_expression(connection)
+        if displayed_label is None:
+            continue
+
+        relation_id = connection.get("archimateRelationship")
+        if relation_id not in relations:
+            continue
+
+        relationship_label = " ".join(relations[relation_id][0].split())
+        if displayed_label != relationship_label:
+            errors.append(
+                f"{SYNTAX_VIEW} connection {connection.get('id')!r} "
+                f"labelExpression normalizes to {displayed_label!r}, but "
+                f"referenced relationship {relation_id!r} is named "
+                f"{relationship_label!r}"
+            )
+    return errors
+
+
 def visible_element_ids(
     object_targets: dict[str, str],
     elements: dict[str, tuple[str, str]],
@@ -1228,6 +1270,9 @@ def validate_model(root: ET.Element) -> list[str]:
             notes,
             documentation,
         ) = collect_view(view)
+
+        if view_name == SYNTAX_VIEW:
+            errors.extend(syntax_connection_label_errors(view, relations))
 
         relation_signatures = []
         relation_records = []
