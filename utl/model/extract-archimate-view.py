@@ -31,6 +31,13 @@ GENERIC_RELATION_NAME = "<O2I relation name>"
 CONTEXT_RELATION_FAMILY = "Context"
 CONTENT_RELATION_FAMILY = "Primitive/Structuring"
 ANCHOR_RELATION_FAMILY = "Situation Anchor"
+ENDPOINT_KIND_TO_O2I_KIND = {
+    "context": "Context",
+    "primitive": "Primitive",
+    "structuring": "Structuring",
+    "situation-anchor": "SituationAnchor",
+}
+CONTENT_ENDPOINT_KINDS = frozenset({"primitive", "structuring"})
 
 PRESETS = {
     "strategy-constituents": (
@@ -366,12 +373,7 @@ def endpoint_archimate_element(
 ) -> str:
     """Resolve one notation-independent endpoint to its carrier mapping."""
     endpoint_kind = endpoint.split(".", 1)[0]
-    kind = {
-        "context": "Context",
-        "primitive": "Primitive",
-        "structuring": "Structuring",
-        "situation-anchor": "SituationAnchor",
-    }.get(endpoint_kind)
+    kind = ENDPOINT_KIND_TO_O2I_KIND.get(endpoint_kind)
     if kind is None:
         raise ProfileContractError(
             f"profile relation has unsupported endpoint: {endpoint!r}"
@@ -437,32 +439,26 @@ def relation_mapping_families(
     tuple[str, str, str, bool],
     frozenset[tuple[str, str, str, str, bool, str, str]],
 ]:
-    """Group exact relation mappings into deterministic semantic families."""
+    """Group exact mappings into deterministic representation families."""
     grouped: dict[
         tuple[str, str, str, bool],
         set[tuple[str, str, str, str, bool, str, str]],
     ] = {}
     for mapping in contract.relation_mappings:
-        endpoint_kinds = {
-            endpoint.split(".", 1)[0]
-            for endpoint in (mapping["source"], mapping["target"])
-        }
-        if "situation-anchor" in endpoint_kinds:
-            semantic_family = ANCHOR_RELATION_FAMILY
-        elif endpoint_kinds == {"context"}:
-            semantic_family = CONTEXT_RELATION_FAMILY
-        else:
-            semantic_family = CONTENT_RELATION_FAMILY
-        relation_family = (
+        endpoint_domain = relation_mapping_domain(
+            mapping["source"],
+            mapping["target"],
+        )
+        relation_label = (
             mapping["label"]
-            if semantic_family == ANCHOR_RELATION_FAMILY
+            if endpoint_domain == ANCHOR_RELATION_FAMILY
             else GENERIC_RELATION_NAME
         )
         source = endpoint_archimate_element(contract, mapping["source"])
         target = endpoint_archimate_element(contract, mapping["target"])
         family = (
-            semantic_family,
-            relation_family,
+            endpoint_domain,
+            relation_label,
             mapping["archimateRelationship"],
             mapping["associationDirected"],
         )
@@ -483,9 +479,31 @@ def relation_mapping_families(
     }
 
 
+def relation_mapping_domain(source: str, target: str) -> str:
+    """Classify one declared endpoint pair into the closed View domain."""
+    endpoint_kinds = tuple(
+        endpoint.split(".", 1)[0] for endpoint in (source, target)
+    )
+    if any(kind not in ENDPOINT_KIND_TO_O2I_KIND for kind in endpoint_kinds):
+        raise ProfileContractError(
+            "profile relation has unsupported endpoint-domain combination: "
+            f"{source} -> {target}"
+        )
+    if "situation-anchor" in endpoint_kinds:
+        return ANCHOR_RELATION_FAMILY
+    if endpoint_kinds == ("context", "context"):
+        return CONTEXT_RELATION_FAMILY
+    if all(kind in CONTENT_ENDPOINT_KINDS for kind in endpoint_kinds):
+        return CONTENT_RELATION_FAMILY
+    raise ProfileContractError(
+        "profile relation has unsupported endpoint-domain combination: "
+        f"{source} -> {target}"
+    )
+
+
 def format_mapping_family(family: tuple[str, str, str, bool]) -> str:
-    """Render one semantic mapping-family obligation."""
-    semantic_family, relation, relationship, directed = family
+    """Render one relation-representation family obligation."""
+    endpoint_domain, relation, relationship, directed = family
     direction = ", directed" if directed else ""
     relation_label = (
         f" --{relation}-->"
@@ -493,7 +511,7 @@ def format_mapping_family(family: tuple[str, str, str, bool]) -> str:
         else ""
     )
     return (
-        f"{semantic_family}{relation_label} "
+        f"{endpoint_domain}{relation_label} "
         f"[{relationship}{direction}]"
     )
 

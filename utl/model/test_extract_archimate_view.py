@@ -320,9 +320,101 @@ class RepositoryViewContractTest(unittest.TestCase):
             errors,
         )
 
+    def test_relation_mapping_domain_is_a_total_closed_partition(self) -> None:
+        context = EXTRACTOR.CONTEXT_RELATION_FAMILY
+        content = EXTRACTOR.CONTENT_RELATION_FAMILY
+        anchor = EXTRACTOR.ANCHOR_RELATION_FAMILY
+        cases = {
+            ("context", "context"): context,
+            ("context", "primitive"): None,
+            ("context", "structuring"): None,
+            ("context", "situation-anchor"): anchor,
+            ("primitive", "context"): None,
+            ("primitive", "primitive"): content,
+            ("primitive", "structuring"): content,
+            ("primitive", "situation-anchor"): anchor,
+            ("structuring", "context"): None,
+            ("structuring", "primitive"): content,
+            ("structuring", "structuring"): content,
+            ("structuring", "situation-anchor"): anchor,
+            ("situation-anchor", "context"): anchor,
+            ("situation-anchor", "primitive"): anchor,
+            ("situation-anchor", "structuring"): anchor,
+            ("situation-anchor", "situation-anchor"): anchor,
+        }
+
+        self.assertEqual(
+            len(EXTRACTOR.ENDPOINT_KIND_TO_O2I_KIND) ** 2,
+            len(cases),
+        )
+        for (source_kind, target_kind), expected in cases.items():
+            source = f"{source_kind}.source"
+            target = f"{target_kind}.target"
+            with self.subTest(source=source, target=target):
+                if expected is None:
+                    with self.assertRaisesRegex(
+                        EXTRACTOR.ProfileContractError,
+                        "unsupported endpoint-domain combination",
+                    ):
+                        EXTRACTOR.relation_mapping_domain(source, target)
+                else:
+                    self.assertEqual(
+                        expected,
+                        EXTRACTOR.relation_mapping_domain(source, target),
+                    )
+
+    def test_relation_mapping_domain_rejects_unknown_endpoint_kind(self) -> None:
+        with self.assertRaisesRegex(
+            EXTRACTOR.ProfileContractError,
+            "unsupported endpoint-domain combination",
+        ):
+            EXTRACTOR.relation_mapping_domain(
+                "unknown.value",
+                "situation-anchor.business-object",
+            )
+
     def test_each_syntax_relation_family_is_required(self) -> None:
         families = self._relation_mapping_families()
-        self.assertEqual(9, len(families))
+        generic = EXTRACTOR.GENERIC_RELATION_NAME
+        self.assertEqual(
+            {
+                (
+                    EXTRACTOR.CONTEXT_RELATION_FAMILY,
+                    generic,
+                    "AssociationRelationship",
+                    True,
+                ),
+                *{
+                    (
+                        EXTRACTOR.CONTENT_RELATION_FAMILY,
+                        generic,
+                        relationship,
+                        directed,
+                    )
+                    for relationship, directed in (
+                        ("AggregationRelationship", False),
+                        ("AssociationRelationship", True),
+                        ("InfluenceRelationship", False),
+                        ("RealizationRelationship", False),
+                    )
+                },
+                *{
+                    (
+                        EXTRACTOR.ANCHOR_RELATION_FAMILY,
+                        label,
+                        relationship,
+                        directed,
+                    )
+                    for label, relationship, directed in (
+                        ("anchors", "AssociationRelationship", True),
+                        ("changes", "AssociationRelationship", True),
+                        ("is-constituted-by", "AggregationRelationship", False),
+                        ("measures", "AssociationRelationship", True),
+                    )
+                },
+            },
+            set(families),
+        )
 
         for family, admissible in sorted(families.items()):
             with self.subTest(family=EXTRACTOR.format_mapping_family(family)):
