@@ -20,6 +20,8 @@ repository.
 | Strategy design or strategy review | `.ai4X/operations/strategy-review.md` |
 | Git commit, remote write, normative O2I change, Issue, Project, or workflow administration | `.ai4X/governance/guidelines.md` |
 
+Every independent review additionally reads `.ai4X/governance/guidelines.md` for the cross-cutting dimension inventory. Applicable Operations contracts remain additive.
+
 Read multiple contracts when a task crosses classes. Do not load unrelated
 contracts.
 

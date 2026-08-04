@@ -124,6 +124,21 @@ When GitHub is unavailable, agents continue only an already activated local hand
 - The machine user may publish evidence produced by an independent reviewer but never becomes or impersonates that reviewer; the evidence identifies the actual independent capability and exact subject.
 - Store machine-user credentials only in host credential storage, never in the repository or Agent Memory.
 
+## Cross-Cutting Review Dimensions
+
+Every review considers this cross-cutting dimension inventory:
+
+- authority consistency;
+- agentic-AI suitability;
+- human usability;
+- clarity;
+- lean proportionality;
+- repository autonomy;
+- workflow determinism; and
+- verification evidence.
+
+Score every dimension materially affected by the reviewed scope and its risks. Reviews of `.ai4X`, governance, or repository workflow require all eight dimensions. Applicable Operations contracts add their mandatory specialist dimensions. A reviewer may add risk-specific dimensions but never omit a materially affected or otherwise mandatory dimension.
+
 ## Review And Closure
 
 Every accepted review comment records:
