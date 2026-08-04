@@ -1171,7 +1171,7 @@ This View is a checked semantic projection of the metamodel defined in o2i.md; i
 
 Concrete contextualization and context-sensitive admissibility remain defined by the metamodel in o2i.md. This View is a checked semantic projection, not a normative source.</documentation>
       </element>
-      <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Situation Anchoring" id="id-7e4365b02a58418cb38f4ea25e0aa5dc">
+      <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Semantics - Situation Anchoring" id="id-7e4365b02a58418cb38f4ea25e0aa5dc">
         <child xsi:type="archimate:DiagramObject" id="id-81110f41c9744559bccc4f600f9e06c2" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-95420d4e66164023b79676213a6147e2">
           <bounds x="252" y="60" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
@@ -1265,7 +1265,7 @@ This View is an explanatory semantic projection of the metamodel defined in o2i.
 
 This View is a checked semantic projection of the metamodel defined in o2i.md; it contains neither concrete SituationAnchor instances nor an ArchiMate syntax contract.</documentation>
       </element>
-      <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Strategy Constituents" id="id-c7990370c7ab4a668bdd4ec7fdb8a3ed">
+      <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Semantics - Strategy Constituents" id="id-c7990370c7ab4a668bdd4ec7fdb8a3ed">
         <child xsi:type="archimate:DiagramObject" id="id-3a5b93b3ad064e47a704f005c8e0b028" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-c746985283b74d8ea73daf99c6694a18">
           <bounds x="342" y="57" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>

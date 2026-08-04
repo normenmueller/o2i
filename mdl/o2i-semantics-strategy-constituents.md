@@ -1,6 +1,6 @@
-# O2I Strategy Constituents
+# O2I Semantics - Strategy Constituents
 
-> Generated review snapshot of `O2I Strategy Constituents` from `mdl/o2i.archimate`.
+> Generated review snapshot of `O2I Semantics - Strategy Constituents` from `mdl/o2i.archimate`.
 > Review artifact only; semantic authority remains the O2I metamodel.
 
 ## View Contract

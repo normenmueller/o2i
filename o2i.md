@@ -221,7 +221,7 @@ Als Artefakt muss eine Strategie ihre Bestandteile dokumentieren. Eine explizit 
 
 O2I modelliert Strategie dabei nicht als bloße Absichtserklärung. Strategische Handlungsfestlegungen sind durch Rumelts Konzept kohärenter Handlungen, Porters Aktivitätssysteme und Mintzbergs Verständnis von Strategie als Handlungsmuster begründbar. Ergänzend macht O2I eine Wegentscheidung prüfbar, indem sie mit nachvollziehbaren Erfolgsbezügen verbunden wird; diese Lesart ist eine Autorenableitung in Anlehnung an Doerr.
 
-![O2I Strategiebestandteile](<img/O2I Strategy Constituents.png>){#fig:o2i-strategy-constituents-view}
+![O2I Strategiebestandteile](<img/O2I Semantics - Strategy Constituents.png>){#fig:o2i-strategy-constituents-view}
 
 @Fig:o2i-strategy-constituents-view zeigt O2I Strategiebestandteile und ihre fachlichen Beziehungen. Diese Bestandteile sind keine O2I-Kontexte und keine O2I-Primitives; sie beschreiben die innere fachliche Struktur einer explizit formulierten Strategie.
 
@@ -393,7 +393,7 @@ In O2I begründen kritische Erfolgsfaktoren, welche Primitive-Verbindungen zwisc
 
 @Fig:o2i-situation-view zeigt `SituationAnchor` als abstrakte Metamodellkategorie und Business Capability, Business Process, Business Object sowie Value Stream als deren zulässige Spezialisierungen. Eine Situation wird durch mindestens einen solchen Anker konstituiert. Die Sicht modelliert keine vollständige Business Architecture; Relationen zwischen konkreten Business-Architecture-Artefakten folgen der jeweiligen ArchiMate- bzw. TOGAF-Modellierung.
 
-![O2I Situationsverankerung](<img/O2I Situation Anchoring.png>){#fig:o2i-situation-anchoring-view}
+![O2I Situationsverankerung](<img/O2I Semantics - Situation Anchoring.png>){#fig:o2i-situation-anchoring-view}
 
 @Fig:o2i-situation-anchoring-view beantwortet darauf aufbauend die Frage: Wie verbindet ein Situationsanker Situation, Bedarf, Intervention und Messung fachlich? Derselbe Anker verortet einen `Driver @ Need`, wird durch eine `Action @ Intervention` verändert und durch einen `KPI @ Measure` beobachtet. Dadurch bleibt der Situationsbezug über Bedarf, Intervention und Messung hinweg relational nachvollziehbar.
 

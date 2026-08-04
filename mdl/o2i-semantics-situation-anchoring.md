@@ -1,6 +1,6 @@
-# O2I Situation Anchoring
+# O2I Semantics - Situation Anchoring
 
-> Generated review snapshot of `O2I Situation Anchoring` from `mdl/o2i.archimate`.
+> Generated review snapshot of `O2I Semantics - Situation Anchoring` from `mdl/o2i.archimate`.
 > Review artifact only; semantic authority remains the O2I metamodel.
 
 ## View Contract

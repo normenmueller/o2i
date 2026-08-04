@@ -142,10 +142,10 @@
   `composition[contextualizes]`, validated technical Ownership model-wide, and
   required every PerformanceDimension member to share its concrete owner
   Context instance.
-- Separated `O2I Situation` as the anchor type model from `O2I Situation Anchoring` as the relation model connecting situated Need, Intervention, and Measure semantics, with a parameterized ArchiMate syntax mapping for every admitted anchor form.
+- Separated `O2I Semantics - Situation` as the anchor type model from `O2I Semantics - Situation Anchoring` as the relation model connecting situated Need, Intervention, and Measure semantics, with a parameterized ArchiMate syntax mapping for every admitted anchor form.
 - Clarified the Haskell specification as the normative machine-checkable formalization of the technology-independent O2I metamodel.
 - Introduced the mandatory strategic success reference as the terminology counterpart of `Key Result @ Strategy`.
-- Mapped every identifier in the Strategy Constituents view explicitly to its
+- Mapped every identifier in the `O2I Semantics - Strategy Constituents` View explicitly to its
   corresponding terminology term.
 - Reworked the Haskell specification under `spc/` into a Library-first Cabal project with typed graphs, an explicit graph/model validation boundary, total relation registries, opaque validated identities, canonical metadata and staged results, closed PerformanceDimension roles, stable KPI definitions with validated units and value domains, distinct measurement levels and deltas, five-stage validation of structure, semantics, traceability, ex-ante evidence readiness, and ex-post evidence assessment, canonical planned and actual Intervention timing, absolute and relative effect criteria, fully typed effect traces, focused qualification and trace queries, separate effect and target assessment, and executable API contracts.
 

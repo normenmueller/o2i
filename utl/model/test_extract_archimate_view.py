@@ -860,7 +860,10 @@ class RepositoryViewContractTest(unittest.TestCase):
         self.assertIn("- [Mission] `Ethos` (Grouping)", snapshot)
 
     def test_snapshot_uses_view_specific_labels(self) -> None:
-        snapshot = self._snapshot(self.root, "O2I Situation Anchoring")
+        snapshot = self._snapshot(
+            self.root,
+            "O2I Semantics - Situation Anchoring",
+        )
 
         self.assertIn("- [Driver] `Driver @ Need` (Grouping)", snapshot)
         self.assertIn(

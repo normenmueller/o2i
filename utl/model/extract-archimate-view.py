@@ -41,16 +41,16 @@ CONTENT_ENDPOINT_KINDS = frozenset({"primitive", "structuring"})
 
 PRESETS = {
     "strategy-constituents": (
-        "O2I Strategy Constituents",
-        Path("mdl/o2i-strategy-constituents.md"),
+        "O2I Semantics - Strategy Constituents",
+        Path("mdl/o2i-semantics-strategy-constituents.md"),
     ),
     "semantics-situation": (
         "O2I Semantics - Situation",
         Path("mdl/o2i-semantics-situation.md"),
     ),
     "situation-anchoring": (
-        "O2I Situation Anchoring",
-        Path("mdl/o2i-situation-anchoring.md"),
+        "O2I Semantics - Situation Anchoring",
+        Path("mdl/o2i-semantics-situation-anchoring.md"),
     ),
     "orientation": ("O2I Orientierung", Path("mdl/o2i-orientation.md")),
     "semantics-context": (
@@ -225,7 +225,7 @@ RELATION_CONTRACTS = {
             )
         }
     ),
-    "O2I Situation Anchoring": frozenset(
+    "O2I Semantics - Situation Anchoring": frozenset(
         {
             contract_edge(
                 "Action",
@@ -256,7 +256,7 @@ RELATION_CONTRACTS = {
             ),
         }
     ),
-    "O2I Strategy Constituents": frozenset(
+    "O2I Semantics - Strategy Constituents": frozenset(
         {
             contract_edge(
                 "Strategy#Anchoring",
