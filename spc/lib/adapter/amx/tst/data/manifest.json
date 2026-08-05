@@ -4,7 +4,7 @@
     "name": "Archi",
     "version": "5.9.0",
     "nativeVersion": "5.0.0",
-    "o2iProfile": "0.2"
+    "o2iProfile": "0.3"
   },
   "valid": [
     {
@@ -32,7 +32,7 @@
       "path": "valid/orientation/ethos.archimate",
       "origin": "saved by the user with Archi 5.9.0",
       "producerVersion": "5.9.0",
-      "sha256": "c0cff4c8a65c911b90bb287c89919da1b764bf6b0dc017fc3bf3e5a6db4f3fba",
+      "sha256": "ebf0d537557f68c54ff5327b1039b7f93bf0976d42cdf2c4a9fbbfc58aca3170",
       "rootQName": "{http://www.archimatetool.com/archimate}model",
       "nativeVersion": "5.0.0",
       "modelId": "id-fdeb02e8264f47299b4a570691c82ca6",
@@ -42,7 +42,7 @@
           "id": "id-fad6c1265c8c4623ab29335326eb23f2"
         }
       ],
-      "o2iProfile": "0.2",
+      "o2iProfile": "0.3",
       "contract": "through-semantics",
       "expected": {
         "nodes": [

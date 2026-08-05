@@ -25,7 +25,11 @@ DEFAULT_MODEL = REPOSITORY_ROOT / "mdl" / "o2i.archimate"
 PROFILE_CONTRACT = (
     REPOSITORY_ROOT / "spc" / "ctr" / "archimate" / "profile.json"
 )
-SYNTAX_VIEW = "O2I Syntax"
+SYNTAX_CARRIERS_VIEW = "O2I Syntax - Carriers"
+SYNTAX_RELATIONS_VIEW = "O2I Syntax - Relations"
+SYNTAX_MAPPING_VIEWS = frozenset(
+    {SYNTAX_CARRIERS_VIEW, SYNTAX_RELATIONS_VIEW}
+)
 MAPS_TO = "maps-to"
 GENERIC_RELATION_NAME = "<O2I relation name>"
 CONTEXT_RELATION_FAMILY = "Context"
@@ -61,9 +65,13 @@ PRESETS = {
         "O2I Semantics - Primitives",
         Path("mdl/o2i-semantics-primitives.md"),
     ),
-    "syntax": (
-        SYNTAX_VIEW,
-        Path("mdl/o2i-syntax.md"),
+    "syntax-carriers": (
+        SYNTAX_CARRIERS_VIEW,
+        Path("mdl/o2i-syntax-carriers.md"),
+    ),
+    "syntax-relations": (
+        SYNTAX_RELATIONS_VIEW,
+        Path("mdl/o2i-syntax-relations.md"),
     ),
     "syntax-contextualization": (
         "O2I Syntax - Contextualization",
@@ -83,6 +91,23 @@ REQUIRED_CONTEXTUALIZATION_DOCUMENTATION = (
     "visual nesting has no contextualization semantics",
     "spc/ctr/archimate/profile.json",
     "Candidate syntax exemplars, not fachliche model instances",
+)
+
+REQUIRED_CARRIER_MAPPING_DOCUMENTATION = (
+    "Visualizes the carrier mappings of the concrete ArchiMate profile",
+    "Each maps-to association maps an O2I type or closed type family",
+    "unannotated mapping specifications",
+    "not executable O2I graph propositions or fachliche model instances",
+)
+
+REQUIRED_RELATION_MAPPING_DOCUMENTATION = (
+    "Visualizes the relation-representation families of the concrete "
+    "ArchiMate profile",
+    "Each <O2I relation name> placeholder represents one or more "
+    "endpoint-compatible O2I relations",
+    "not concrete model relations or executable O2I graph propositions",
+    "Exact endpoint-sensitive assignments remain defined by the profile "
+    "contract",
 )
 
 REQUIRED_COLLECTIVE_REALIZATION_DOCUMENTATION = (
@@ -112,6 +137,8 @@ EXPECTED_LAYERED_CAKE_DOCUMENTATION = (
 )
 
 REQUIRED_VIEW_DOCUMENTATION = {
+    SYNTAX_CARRIERS_VIEW: REQUIRED_CARRIER_MAPPING_DOCUMENTATION,
+    SYNTAX_RELATIONS_VIEW: REQUIRED_RELATION_MAPPING_DOCUMENTATION,
     (
         "O2I Syntax - Contextualization"
     ): REQUIRED_CONTEXTUALIZATION_DOCUMENTATION,
@@ -525,13 +552,6 @@ def format_mapping_family(family: tuple[str, str, str, bool]) -> str:
     )
 
 
-def syntax_mapping_edges(
-    contract: ArchimateProfileContract,
-) -> frozenset[tuple[str, str, str, str, bool, str, str]]:
-    """Return every exact mapping usable by one family exemplar."""
-    return carrier_mapping_edges(contract) | relation_mapping_edges(contract)
-
-
 def canonical_mapping_edge(
     edge: tuple[str, str, str, str, bool, str, str],
 ) -> tuple[str, str, str, str, bool, str, str]:
@@ -812,6 +832,7 @@ def normalized_label_expression(element: ET.Element) -> str | None:
 
 
 def syntax_connection_label_errors(
+    view_name: str,
     view: ET.Element,
     elements: dict[str, tuple[str, str]],
     relations: dict[
@@ -845,7 +866,7 @@ def syntax_connection_label_errors(
             source_label = object_labels.get(source_object or "", source_name)
             target_label = object_labels.get(target_object or "", target_name)
             errors.append(
-                f"{SYNTAX_VIEW} connection {connection.get('id')!r} "
+                f"{view_name} connection {connection.get('id')!r} "
                 f"from {source_label!r} ({source_type}) to "
                 f"{target_label!r} ({target_type}) labelExpression "
                 f"normalizes to {displayed_label!r}, but "
@@ -1256,7 +1277,7 @@ def validate_model(root: ET.Element) -> list[str]:
         expected_carrier_mappings = carrier_mapping_edges(profile_contract)
         relation_families = relation_mapping_families(profile_contract)
         expected_relation_families = frozenset(relation_families)
-        admissible_mappings = syntax_mapping_edges(profile_contract)
+        admissible_relation_mappings = relation_mapping_edges(profile_contract)
     except (OSError, ProfileContractError) as error:
         return [f"cannot read ArchiMate profile contract: {error}"]
 
@@ -1296,9 +1317,14 @@ def validate_model(root: ET.Element) -> list[str]:
             documentation,
         ) = collect_view(view)
 
-        if view_name == SYNTAX_VIEW:
+        if view_name in SYNTAX_MAPPING_VIEWS:
             errors.extend(
-                syntax_connection_label_errors(view, elements, relations)
+                syntax_connection_label_errors(
+                    view_name,
+                    view,
+                    elements,
+                    relations,
+                )
             )
 
         relation_signatures = []
@@ -1405,7 +1431,7 @@ def validate_model(root: ET.Element) -> list[str]:
             view_name,
             pattern_contracts.get(view_name),
         )
-        if view_name == SYNTAX_VIEW:
+        if view_name in SYNTAX_MAPPING_VIEWS:
             canonical_relations = []
             for signature in relation_signatures:
                 try:
@@ -1418,18 +1444,45 @@ def validate_model(root: ET.Element) -> list[str]:
                         f"{error}"
                     )
             actual_relations = frozenset(canonical_relations)
-            actual_carrier_mappings = frozenset(
-                relation
-                for relation in actual_relations
-                if relation[2] == MAPS_TO
-            )
-            for missing in sorted(
-                expected_carrier_mappings - actual_carrier_mappings
-            ):
-                errors.append(
-                    f"{view_name} is missing contracted mapping: "
-                    + format_contract_edge(missing)
-                )
+            if view_name == SYNTAX_CARRIERS_VIEW:
+                for missing in sorted(
+                    expected_carrier_mappings - actual_relations
+                ):
+                    errors.append(
+                        f"{view_name} is missing contracted mapping: "
+                        + format_contract_edge(missing)
+                    )
+                admissible_mappings = expected_carrier_mappings
+            else:
+                represented_families: dict[
+                    tuple[str, str, str, bool],
+                    set[tuple[str, str, str, str, bool, str, str]],
+                ] = {}
+                for relation in actual_relations:
+                    matching_families = [
+                        family
+                        for family, mappings in relation_families.items()
+                        if relation in mappings
+                    ]
+                    for family in matching_families:
+                        represented_families.setdefault(family, set()).add(
+                            relation
+                        )
+                for missing in sorted(
+                    expected_relation_families
+                    - frozenset(represented_families)
+                ):
+                    errors.append(
+                        f"{view_name} is missing relation-mapping family: "
+                        + format_mapping_family(missing)
+                    )
+                for family, mappings in sorted(represented_families.items()):
+                    if len(mappings) > 1:
+                        errors.append(
+                            f"{view_name} duplicates relation-mapping family: "
+                            + format_mapping_family(family)
+                        )
+                admissible_mappings = admissible_relation_mappings
             for unexpected in sorted(
                 actual_relations - admissible_mappings
             ):
@@ -1437,35 +1490,6 @@ def validate_model(root: ET.Element) -> list[str]:
                     f"{view_name} has contract-inconsistent mapping: "
                     + format_contract_edge(unexpected)
                 )
-            represented_families: dict[
-                tuple[str, str, str, bool],
-                set[tuple[str, str, str, str, bool, str, str]],
-            ] = {}
-            for relation in actual_relations:
-                if relation[2] != GENERIC_RELATION_NAME:
-                    continue
-                matching_families = [
-                    family
-                    for family, mappings in relation_families.items()
-                    if relation in mappings
-                ]
-                for family in matching_families:
-                    represented_families.setdefault(family, set()).add(
-                        relation
-                    )
-            for missing in sorted(
-                expected_relation_families - frozenset(represented_families)
-            ):
-                errors.append(
-                    f"{view_name} is missing relation-mapping family: "
-                    + format_mapping_family(missing)
-                )
-            for family, mappings in sorted(represented_families.items()):
-                if len(mappings) > 1:
-                    errors.append(
-                        f"{view_name} duplicates relation-mapping family: "
-                        + format_mapping_family(family)
-                    )
             duplicates = [
                 signature
                 for signature, count in Counter(canonical_relations).items()

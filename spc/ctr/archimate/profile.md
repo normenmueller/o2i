@@ -8,11 +8,24 @@ Der [maschinenlesbare Vertrag](spc/ctr/archimate/profile.json) bestimmt die folg
 
 | Vertrag | Wert |
 | ------------------ | ---------------------------------------------------------- |
-| Schema | `o2i.archimate-profile/v1` |
-| Profilversion | `0.2` |
+| Schema | `o2i.archimate-profile/v2` |
+| Profilversion | `0.3` |
 | Modellwurzel | `o2i.profile`; Kardinalität `genau eins`; weitere O2I-Properties `unzulässig` |
 | Typisierter Syntaxträger | `o2i.kind`, `o2i.type`, `o2i.commitment` = `candidate`, `asserted`; Kardinalität `jeweils genau eins`; weitere O2I-Properties `unzulässig` |
 | Semantische Relation | `o2i.commitment` = `candidate`, `asserted`; Kardinalität `genau eins`; weitere O2I-Properties `unzulässig` |
+
+##### Anwendbarkeitsprovenienz {#o2i-profile-applicability-provenance .unnumbered}
+
+Die konkrete Relationsabbildung stützt sich auf die ArchiMate-3.2-Beziehungsmatrix. O2I bindet nur die tatsächlich verwendete Entscheidung revisionsgenau ein und kopiert die Matrix nicht.
+
+| Vertrag | Wert |
+| ------------------------ | ---------------------------------------------------- |
+| ArchiMate-Standard | `3.2` |
+| Implementierungsnachweis | [archimatetool/archi@b5bd0038922ab68b26eb78c97ff7efc2ff0bba82:com.archimatetool.model/model/relationships.xml](https://github.com/archimatetool/archi/blob/b5bd0038922ab68b26eb78c97ff7efc2ff0bba82/com.archimatetool.model/model/relationships.xml) |
+
+| Profilabbildung | Matrixkoordinate | Symbolinterpretation |
+| -------------------------------------- | -------------------- | ------------------------ |
+| `strategy-directs-strategy` | `Grouping -> Grouping` | `n -> InfluenceRelationship` |
 
 ##### Syntaxträgerabbildungen {#o2i-profile-carriers .unnumbered}
 
@@ -41,7 +54,7 @@ Die Syntaxträgerabbildung legt fest, welches ArchiMate-Element einen typisierte
 | `Mission --grounds--> Vision` | `AssociationRelationship (gerichtet)` |
 | `Ethos --guides--> Vision` | `AssociationRelationship (gerichtet)` |
 | `Vision --orients--> Strategy` | `AssociationRelationship (gerichtet)` |
-| `Strategy --directs--> Strategy` | `AssociationRelationship (gerichtet)` |
+| `Strategy --directs--> Strategy` | `InfluenceRelationship` |
 | `Strategy --contributes-to--> Strategy` | `AssociationRelationship (gerichtet)` |
 | `Strategy --qualifies--> Need` | `AssociationRelationship (gerichtet)` |
 | `Situation --surfaces--> Need` | `AssociationRelationship (gerichtet)` |

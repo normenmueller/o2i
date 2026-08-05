@@ -213,7 +213,7 @@ collectiveOutputModel contributorACommitment contributorBCommitment targetCommit
     , "\"><child xsi:type=\"a:DiagramObject\" "
     , "id=\"claim-object\" archimateElement=\"claim\"/></element>"
     , "</folder>"
-    , propertyText "o2i.profile" "0.2"
+    , propertyText "o2i.profile" "0.3"
     , "</a:model>"
     ]
   where

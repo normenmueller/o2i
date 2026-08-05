@@ -4,9 +4,31 @@ import qualified O2I.ArchiMate.Profile as Profile
 
 profileContractObservations contract =
   ( Profile.contractProfileVersion contract
+  , Profile.contractApplicabilityProvenance contract
   , Profile.contractMetadata contract
   , Profile.contractContextualization contract
   , Profile.contractCollectiveRealization contract)
+
+applicabilityProvenanceObservations provenance =
+  ( Profile.applicabilityArchiMateStandardVersion provenance
+  , Profile.applicabilityMatrixImplementation provenance
+  , Profile.applicabilitySymbolInterpretations provenance
+  , Profile.applicabilityDecisions provenance)
+
+matrixImplementationObservations implementation =
+  ( Profile.matrixImplementationRepositoryUri implementation
+  , Profile.matrixImplementationRepositoryRelativePath implementation
+  , Profile.matrixImplementationRevision implementation)
+
+symbolInterpretationObservations interpretation =
+  ( Profile.symbolInterpretationSymbol interpretation
+  , Profile.symbolInterpretationRelationship interpretation)
+
+applicabilityDecisionObservations decision =
+  ( Profile.applicabilityDecisionRelationMappingId decision
+  , Profile.applicabilityDecisionSourceElement decision
+  , Profile.applicabilityDecisionTargetElement decision
+  , Profile.applicabilityDecisionMatrixSymbol decision)
 
 metadataObservations metadata =
   ( Profile.modelProfileKey metadata

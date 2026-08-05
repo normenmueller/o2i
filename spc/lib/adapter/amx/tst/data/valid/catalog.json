@@ -6,17 +6,17 @@
     "version": "5.9.0",
     "nativeRootQName": "{http://www.archimatetool.com/archimate}model",
     "nativeVersion": "5.0.0",
-    "o2iProfile": "0.2"
+    "o2iProfile": "0.3"
   },
   "admission": {
     "smallestNativeValid": "Decode passes; no O2I profile, View, or O2I declaration is required.",
-    "smallestInspectable": "One exact selected View directly presents at least one O2I occurrence under one direct root o2i.profile=0.2 property.",
+    "smallestInspectable": "One exact selected View directly presents at least one O2I occurrence under one direct root o2i.profile=0.3 property.",
     "emptySelectedView": "View resolution passes and Profile reports o2i.inspection.scope.empty.",
     "requiredManifestEvidence": [
       "actual save by Archi 5.9.0",
       "byte-exact SHA-256",
       "native version 5.0.0",
-      "direct root O2I profile 0.2 where inspectable",
+      "direct root O2I profile 0.3 where inspectable",
       "stable selected View ID and exact name where inspectable",
       "expected projected node, edge, occurrence, and provenance identities"
     ]
@@ -44,13 +44,13 @@
       "contract": "Smallest inspectable O2I View: one Ethos context contextualizes one Principle; Profile, Structure, and Semantics pass.",
       "inspection": "through-semantics",
       "producerVersion": "Archi 5.9.0",
-      "sha256": "c0cff4c8a65c911b90bb287c89919da1b764bf6b0dc017fc3bf3e5a6db4f3fba",
+      "sha256": "ebf0d537557f68c54ff5327b1039b7f93bf0976d42cdf2c4a9fbbfc58aca3170",
       "modelId": "id-fdeb02e8264f47299b4a570691c82ca6",
       "selectedView": {
         "name": "O2I Reference - Ethos",
         "id": "id-fad6c1265c8c4623ab29335326eb23f2"
       },
-      "o2iProfile": "0.2",
+      "o2iProfile": "0.3",
       "expectedProjection": {
         "nodes": [
           {

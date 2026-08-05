@@ -41,8 +41,12 @@ class ArchimateProfileContractTest(unittest.TestCase):
         payload = self.payload()
         contract = load_profile_contract(CONTRACT_PATH)
 
-        self.assertEqual("o2i.archimate-profile/v1", contract.schema)
+        self.assertEqual("o2i.archimate-profile/v2", contract.schema)
         self.assertEqual(payload["profileVersion"], contract.profile_version)
+        self.assertEqual(
+            payload["applicabilityProvenance"]["archimateStandardVersion"],
+            contract.applicability_provenance["archimateStandardVersion"],
+        )
         self.assertEqual(
             len(payload["carrierMappings"]),
             len(contract.carrier_mappings),
@@ -59,6 +63,16 @@ class ArchimateProfileContractTest(unittest.TestCase):
             payload["carrierMappings"][0]["id"],
             contract.carrier_mappings[0]["id"],
         )
+        directs = next(
+            relation
+            for relation in contract.relation_mappings
+            if relation["id"] == "strategy-directs-strategy"
+        )
+        self.assertEqual(
+            "InfluenceRelationship",
+            directs["archimateRelationship"],
+        )
+        self.assertFalse(directs["associationDirected"])
         with self.assertRaises(FrozenInstanceError):
             contract.profile_version = "other"
 
@@ -119,10 +133,10 @@ class ArchimateProfileContractTest(unittest.TestCase):
 
     def test_rejects_duplicate_json_key(self) -> None:
         duplicate = self.source.replace(
-            '"schema": "o2i.archimate-profile/v1",',
+            '"schema": "o2i.archimate-profile/v2",',
             (
-                '"schema": "o2i.archimate-profile/v1",\n'
-                '  "schema": "o2i.archimate-profile/v1",'
+                '"schema": "o2i.archimate-profile/v2",\n'
+                '  "schema": "o2i.archimate-profile/v2",'
             ),
             1,
         )
@@ -236,6 +250,127 @@ class ArchimateProfileContractTest(unittest.TestCase):
         ):
             self.decode(payload)
 
+    def test_rejects_missing_or_malformed_applicability_provenance(
+        self,
+    ) -> None:
+        missing = self.payload()
+        del missing["applicabilityProvenance"]
+        with self.assertRaisesRegex(
+            ProfileContractError,
+            "missing applicabilityProvenance",
+        ):
+            self.decode(missing)
+
+        wrong_standard = self.payload()
+        wrong_standard["applicabilityProvenance"][
+            "archimateStandardVersion"
+        ] = "3.1"
+        with self.assertRaisesRegex(
+            ProfileContractError,
+            "unsupported value",
+        ):
+            self.decode(wrong_standard)
+
+        wrong_revision = self.payload()
+        wrong_revision["applicabilityProvenance"][
+            "matrixImplementation"
+        ]["revision"] = "B5BD0038"
+        with self.assertRaisesRegex(
+            ProfileContractError,
+            "full lowercase 40-hex revision",
+        ):
+            self.decode(wrong_revision)
+
+        wrong_uri = self.payload()
+        wrong_uri["applicabilityProvenance"][
+            "matrixImplementation"
+        ]["repositoryUri"] = "github.com/archimatetool/archi"
+        with self.assertRaisesRegex(
+            ProfileContractError,
+            "absolute HTTPS repository URI",
+        ):
+            self.decode(wrong_uri)
+
+    def test_rejects_nonportable_matrix_path(self) -> None:
+        for path in ("../relationships.xml", "/relationships.xml"):
+            with self.subTest(path=path):
+                payload = self.payload()
+                payload["applicabilityProvenance"][
+                    "matrixImplementation"
+                ]["repositoryRelativePath"] = path
+                with self.assertRaisesRegex(
+                    ProfileContractError,
+                    "portable repository-relative path",
+                ):
+                    self.decode(payload)
+
+    def test_rejects_unknown_or_duplicate_applicability_decision(
+        self,
+    ) -> None:
+        unknown = self.payload()
+        unknown["applicabilityProvenance"]["decisions"][0][
+            "relationMappingId"
+        ] = "unknown-mapping"
+        with self.assertRaisesRegex(
+            ProfileContractError,
+            "not internally declared",
+        ):
+            self.decode(unknown)
+
+        duplicate = self.payload()
+        decision = duplicate["applicabilityProvenance"]["decisions"][0]
+        duplicate["applicabilityProvenance"]["decisions"].append(
+            dict(decision)
+        )
+        with self.assertRaisesRegex(ProfileContractError, "duplicates"):
+            self.decode(duplicate)
+
+    def test_rejects_coordinate_or_symbol_mismatch(self) -> None:
+        wrong_coordinate = self.payload()
+        wrong_coordinate["applicabilityProvenance"]["decisions"][0][
+            "sourceElement"
+        ] = "Goal"
+        with self.assertRaisesRegex(
+            ProfileContractError,
+            "carrier coordinates must resolve to Grouping -> Grouping",
+        ):
+            self.decode(wrong_coordinate)
+
+        wrong_symbol = self.payload()
+        wrong_symbol["applicabilityProvenance"][
+            "symbolInterpretations"
+        ][0]["archimateRelationship"] = "AssociationRelationship"
+        with self.assertRaisesRegex(
+            ProfileContractError,
+            "matrixSymbol must resolve to InfluenceRelationship",
+        ):
+            self.decode(wrong_symbol)
+
+        unknown_symbol = self.payload()
+        unknown_symbol["applicabilityProvenance"]["decisions"][0][
+            "matrixSymbol"
+        ] = "x"
+        with self.assertRaisesRegex(
+            ProfileContractError,
+            "not internally declared",
+        ):
+            self.decode(unknown_symbol)
+
+        unused_symbol = self.payload()
+        unused_symbol["applicabilityProvenance"][
+            "symbolInterpretations"
+        ].append(
+            {
+                "symbol": "o",
+                "archimateRelationship": "AssociationRelationship",
+            }
+        )
+        with self.assertRaisesRegex(
+            ProfileContractError,
+            "must contain only used symbols",
+        ):
+            self.decode(unused_symbol)
+
     def test_rejects_wrong_json_types_and_empty_values(self) -> None:
         wrong_type = self.payload()
         wrong_type["relationMappings"][0]["associationDirected"] = "true"
@@ -249,7 +384,7 @@ class ArchimateProfileContractTest(unittest.TestCase):
 
     def test_rejects_nonstandard_json_constant(self) -> None:
         invalid = self.source.replace(
-            '"profileVersion": "0.2"',
+            '"profileVersion": "0.3"',
             '"profileVersion": NaN',
         )
 

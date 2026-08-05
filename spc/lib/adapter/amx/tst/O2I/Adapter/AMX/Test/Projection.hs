@@ -129,8 +129,8 @@ viewDefects =
 profileDefects :: [AMXProfileDefect]
 profileDefects =
   [ MissingO2IProfile
-  , DuplicateO2IProfile ("0.2" :| ["0.2"])
-  , UnsupportedO2IProfile "0.3"
+  , DuplicateO2IProfile ("0.3" :| ["0.3"])
+  , UnsupportedO2IProfile "0.2"
   , UnsupportedO2IRootProperty "o2i.extra"
   , UnsupportedO2IMetadataKey "node" "o2i.extra"
   , MissingO2IKind "node"

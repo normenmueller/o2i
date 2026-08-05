@@ -5,6 +5,10 @@
 -- or maintaining notation mappings of their own.
 module O2I.ArchiMate.Profile
   ( ArchiMateProfileContract
+  , ApplicabilityProvenance
+  , MatrixImplementation
+  , SymbolInterpretation
+  , ApplicabilityDecision
   , MetadataContract
   , MetadataKind(..)
   , CarrierType(..)
@@ -22,6 +26,20 @@ module O2I.ArchiMate.Profile
   , profileContract
   , profileVersionText
   , contractProfileVersion
+  , contractApplicabilityProvenance
+  , applicabilityArchiMateStandardVersion
+  , applicabilityMatrixImplementation
+  , applicabilitySymbolInterpretations
+  , applicabilityDecisions
+  , matrixImplementationRepositoryUri
+  , matrixImplementationRepositoryRelativePath
+  , matrixImplementationRevision
+  , symbolInterpretationSymbol
+  , symbolInterpretationRelationship
+  , applicabilityDecisionRelationMappingId
+  , applicabilityDecisionSourceElement
+  , applicabilityDecisionTargetElement
+  , applicabilityDecisionMatrixSymbol
   , contractMetadata
   , contractContextualization
   , contractCollectiveRealization

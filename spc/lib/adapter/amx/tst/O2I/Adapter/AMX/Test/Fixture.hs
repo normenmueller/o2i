@@ -177,7 +177,7 @@ nativeReferenceSha256 =
 
 ethosReferenceSha256 :: Text
 ethosReferenceSha256 =
-  "c0cff4c8a65c911b90bb287c89919da1b764bf6b0dc017fc3bf3e5a6db4f3fba"
+  "ebf0d537557f68c54ff5327b1039b7f93bf0976d42cdf2c4a9fbbfc58aca3170"
 
 nativeReferenceTest :: Assertion
 nativeReferenceTest = do

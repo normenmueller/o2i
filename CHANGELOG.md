@@ -72,6 +72,10 @@
 
 ### Changed
 
+- Mapped `Strategy --directs--> Strategy` to ArchiMate `Influence`, retained
+  directed `Association` for `Strategy --directs--> Intervention`, bound the
+  endpoint-sensitive profile to explicit ArchiMate provenance, and split its
+  checked reference visualization into carrier and relation-family Views.
 - Structured deterministic repository utilities by responsibility under
   `utl/{verification,governance,model,haskell,paper}` while preserving
   `./utl/verify.sh` as the canonical staged entry point.

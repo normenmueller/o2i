@@ -6,6 +6,10 @@
 -- projection checked for complete equality with that contract.
 module O2I.ArchiMate.Profile.Internal
   ( ArchiMateProfileContract
+  , ApplicabilityProvenance
+  , MatrixImplementation
+  , SymbolInterpretation
+  , ApplicabilityDecision
   , MetadataContract
   , MetadataKind(..)
   , CarrierType(..)
@@ -24,6 +28,21 @@ module O2I.ArchiMate.Profile.Internal
   , profileVersionText
   , contractSchema
   , contractProfileVersion
+  , contractApplicabilityProvenance
+  , applicabilityArchiMateStandardVersion
+  , applicabilityMatrixImplementation
+  , applicabilitySymbolInterpretations
+  , applicabilityDecisions
+  , matrixImplementationRepositoryUri
+  , matrixImplementationRepositoryRelativePath
+  , matrixImplementationRevision
+  , symbolInterpretationSymbol
+  , symbolInterpretationRelationship
+  , applicabilityDecisionRelationMapping
+  , applicabilityDecisionRelationMappingId
+  , applicabilityDecisionSourceElement
+  , applicabilityDecisionTargetElement
+  , applicabilityDecisionMatrixSymbol
   , contractMetadata
   , contractCarrierMappings
   , contractRelationMappings
@@ -134,6 +153,7 @@ import O2I.Inspection.Profile
   , o2iProfileVersionLiteral
   , profileVersionText
   )
+import O2I.Language (reifyRelation)
 
 -- | Complete compile-time projection of the ArchiMate profile contract.
 data ArchiMateProfileContract = ArchiMateProfileContract
@@ -141,6 +161,8 @@ data ArchiMateProfileContract = ArchiMateProfileContract
     -- ^ Stable schema identifier of the declarative contract.
   , contractProfileVersionValue :: O2IProfileVersion
     -- ^ Exact O2I profile version implemented by this projection.
+  , contractApplicabilityProvenanceValue :: ApplicabilityProvenance
+    -- ^ Reproducible source evidence for ArchiMate applicability decisions.
   , contractMetadataValue :: MetadataContract
     -- ^ Persisted metadata placement and cardinality contract.
   , contractCarrierMappingsValue :: [CarrierMapping]
@@ -151,6 +173,37 @@ data ArchiMateProfileContract = ArchiMateProfileContract
     -- ^ Exact contextualization syntax.
   , contractCollectiveRealizationValue :: CollectiveContract
     -- ^ Exact collective Strategy-realization syntax.
+  } deriving (Eq, Show)
+
+-- | Closed provenance for the ArchiMate applicability evidence used here.
+data ApplicabilityProvenance = ApplicabilityProvenance
+  { applicabilityArchiMateStandardVersionValue :: Text
+    -- ^ ArchiMate standard version interpreted by the profile.
+  , applicabilityMatrixImplementationValue :: MatrixImplementation
+    -- ^ Exact implementation source of the admitted relationship matrix.
+  , applicabilitySymbolInterpretationsValue :: NonEmpty SymbolInterpretation
+    -- ^ Closed interpretation of matrix symbols used by decisions.
+  , applicabilityDecisionsValue :: NonEmpty ApplicabilityDecision
+    -- ^ Profile mappings justified through exact matrix coordinates.
+  } deriving (Eq, Show)
+
+-- | Exact repository source of one admitted relationship-matrix implementation.
+data MatrixImplementation = MatrixImplementation
+  { matrixImplementationRepositoryUriValue :: Text
+  , matrixImplementationRepositoryRelativePathValue :: Text
+  , matrixImplementationRevisionValue :: Text
+  } deriving (Eq, Show)
+
+-- | One matrix symbol and its exact ArchiMate relationship interpretation.
+data SymbolInterpretation = SymbolInterpretation
+  { symbolInterpretationSymbolValue :: Text
+  , symbolInterpretationRelationshipValue :: ArchiMateRelationshipRepresentation
+  } deriving (Eq, Show)
+
+-- | One applicability decision tied to typed profile mapping values.
+data ApplicabilityDecision = ApplicabilityDecision
+  { applicabilityDecisionRelationMappingValue :: ArchiMateRelationMapping
+  , applicabilityDecisionSymbolInterpretationValue :: SymbolInterpretation
   } deriving (Eq, Show)
 
 -- | Exact persisted metadata keys, cardinalities, and closed values.
@@ -344,6 +397,85 @@ contractSchema = contractSchemaValue
 -- | Exact O2I profile version implemented by this contract.
 contractProfileVersion :: ArchiMateProfileContract -> O2IProfileVersion
 contractProfileVersion = contractProfileVersionValue
+
+-- | Reproducible evidence supporting ArchiMate applicability decisions.
+contractApplicabilityProvenance ::
+     ArchiMateProfileContract -> ApplicabilityProvenance
+contractApplicabilityProvenance = contractApplicabilityProvenanceValue
+
+-- | ArchiMate standard version interpreted by the profile.
+applicabilityArchiMateStandardVersion :: ApplicabilityProvenance -> Text
+applicabilityArchiMateStandardVersion =
+  applicabilityArchiMateStandardVersionValue
+
+-- | Exact relationship-matrix implementation used as applicability evidence.
+applicabilityMatrixImplementation ::
+     ApplicabilityProvenance -> MatrixImplementation
+applicabilityMatrixImplementation = applicabilityMatrixImplementationValue
+
+-- | Closed matrix-symbol interpretations used by applicability decisions.
+applicabilitySymbolInterpretations ::
+     ApplicabilityProvenance -> NonEmpty SymbolInterpretation
+applicabilitySymbolInterpretations = applicabilitySymbolInterpretationsValue
+
+-- | Profile mappings justified by exact relationship-matrix coordinates.
+applicabilityDecisions ::
+     ApplicabilityProvenance -> NonEmpty ApplicabilityDecision
+applicabilityDecisions = applicabilityDecisionsValue
+
+-- | Repository URI of the admitted matrix implementation.
+matrixImplementationRepositoryUri :: MatrixImplementation -> Text
+matrixImplementationRepositoryUri = matrixImplementationRepositoryUriValue
+
+-- | Repository-relative path of the admitted matrix implementation.
+matrixImplementationRepositoryRelativePath :: MatrixImplementation -> Text
+matrixImplementationRepositoryRelativePath =
+  matrixImplementationRepositoryRelativePathValue
+
+-- | Exact 40-hex source revision of the admitted matrix implementation.
+matrixImplementationRevision :: MatrixImplementation -> Text
+matrixImplementationRevision = matrixImplementationRevisionValue
+
+-- | Exact symbol used by an admitted relationship-matrix coordinate.
+symbolInterpretationSymbol :: SymbolInterpretation -> Text
+symbolInterpretationSymbol = symbolInterpretationSymbolValue
+
+-- | ArchiMate relationship represented by one matrix symbol.
+symbolInterpretationRelationship ::
+     SymbolInterpretation -> ArchiMateRelationshipRepresentation
+symbolInterpretationRelationship = symbolInterpretationRelationshipValue
+
+applicabilityDecisionRelationMapping ::
+     ApplicabilityDecision -> ArchiMateRelationMapping
+applicabilityDecisionRelationMapping = applicabilityDecisionRelationMappingValue
+
+-- | Stable profile-mapping identifier justified by this decision.
+applicabilityDecisionRelationMappingId :: ApplicabilityDecision -> Text
+applicabilityDecisionRelationMappingId =
+  relationMappingId . applicabilityDecisionRelationMapping
+
+-- | Source matrix coordinate derived from the mapping's typed source carrier.
+applicabilityDecisionSourceElement :: ApplicabilityDecision -> Text
+applicabilityDecisionSourceElement =
+  carrierElementForNodeKind
+    . relationMappingSource
+    . applicabilityDecisionRelationMapping
+
+-- | Target matrix coordinate derived from the mapping's typed target carrier.
+applicabilityDecisionTargetElement :: ApplicabilityDecision -> Text
+applicabilityDecisionTargetElement =
+  carrierElementForNodeKind
+    . relationMappingTarget
+    . applicabilityDecisionRelationMapping
+
+-- | Matrix symbol referenced by this decision.
+applicabilityDecisionMatrixSymbol :: ApplicabilityDecision -> Text
+applicabilityDecisionMatrixSymbol =
+  symbolInterpretationSymbol . applicabilityDecisionSymbolInterpretationValue
+
+carrierElementForNodeKind :: NodeKindValue -> Text
+carrierElementForNodeKind =
+  carrierMappingElement . carrierMappingFor . carrierTypeForNodeKind
 
 -- | Persisted metadata contract.
 contractMetadata :: ArchiMateProfileContract -> MetadataContract
@@ -576,13 +708,45 @@ collectiveTargetDistinctFromContributors =
 profileContract :: ArchiMateProfileContract
 profileContract =
   ArchiMateProfileContract
-    { contractSchemaValue = "o2i.archimate-profile/v1"
-    , contractProfileVersionValue = o2iProfileVersionLiteral ('0' :| ".2")
+    { contractSchemaValue = "o2i.archimate-profile/v2"
+    , contractProfileVersionValue = o2iProfileVersionLiteral ('0' :| ".3")
+    , contractApplicabilityProvenanceValue = applicabilityProvenance
     , contractMetadataValue = metadataContract
     , contractCarrierMappingsValue = carrierMappings
     , contractRelationMappingsValue = relationMappings
     , contractContextualizationValue = contextualizationContract
     , contractCollectiveRealizationValue = collectiveContract
+    }
+
+applicabilityProvenance :: ApplicabilityProvenance
+applicabilityProvenance =
+  ApplicabilityProvenance
+    { applicabilityArchiMateStandardVersionValue = "3.2"
+    , applicabilityMatrixImplementationValue = matrixImplementation
+    , applicabilitySymbolInterpretationsValue = influenceSymbol :| []
+    , applicabilityDecisionsValue = directsStrategyDecision :| []
+    }
+
+matrixImplementation :: MatrixImplementation
+matrixImplementation =
+  MatrixImplementation
+    { matrixImplementationRepositoryUriValue =
+        "https://github.com/archimatetool/archi"
+    , matrixImplementationRepositoryRelativePathValue =
+        "com.archimatetool.model/model/relationships.xml"
+    , matrixImplementationRevisionValue =
+        "b5bd0038922ab68b26eb78c97ff7efc2ff0bba82"
+    }
+
+influenceSymbol :: SymbolInterpretation
+influenceSymbol = SymbolInterpretation "n" influence
+
+directsStrategyDecision :: ApplicabilityDecision
+directsStrategyDecision =
+  ApplicabilityDecision
+    { applicabilityDecisionRelationMappingValue =
+        relationMapping (reifyRelation (FixedRelation DirectsStrategyCode))
+    , applicabilityDecisionSymbolInterpretationValue = influenceSymbol
     }
 
 metadataContract :: MetadataContract
@@ -808,7 +972,7 @@ fixedRelationContract code =
     GroundsVisionCode -> ("grounds", association)
     GuidesVisionCode -> ("guides", association)
     OrientsStrategyCode -> ("orients", association)
-    DirectsStrategyCode -> ("directs", association)
+    DirectsStrategyCode -> ("directs", influence)
     ContributesToStrategyCode -> ("contributes-to", association)
     QualifiesNeedCode -> ("qualifies", association)
     SurfacesNeedCode -> ("surfaces", association)

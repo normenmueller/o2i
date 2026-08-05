@@ -1,6 +1,28 @@
 {
-  "schema": "o2i.archimate-profile/v1",
-  "profileVersion": "0.2",
+  "schema": "o2i.archimate-profile/v2",
+  "profileVersion": "0.3",
+  "applicabilityProvenance": {
+    "archimateStandardVersion": "3.2",
+    "matrixImplementation": {
+      "repositoryUri": "https://github.com/archimatetool/archi",
+      "repositoryRelativePath": "com.archimatetool.model/model/relationships.xml",
+      "revision": "b5bd0038922ab68b26eb78c97ff7efc2ff0bba82"
+    },
+    "symbolInterpretations": [
+      {
+        "symbol": "n",
+        "archimateRelationship": "InfluenceRelationship"
+      }
+    ],
+    "decisions": [
+      {
+        "relationMappingId": "strategy-directs-strategy",
+        "sourceElement": "Grouping",
+        "targetElement": "Grouping",
+        "matrixSymbol": "n"
+      }
+    ]
+  },
   "metadata": {
     "modelRoot": {
       "profileKey": "o2i.profile",
@@ -188,8 +210,8 @@
       "source": "context.strategy",
       "target": "context.strategy",
       "label": "directs",
-      "archimateRelationship": "AssociationRelationship",
-      "associationDirected": true
+      "archimateRelationship": "InfluenceRelationship",
+      "associationDirected": false
     },
     {
       "id": "strategy-contributes-to-strategy",

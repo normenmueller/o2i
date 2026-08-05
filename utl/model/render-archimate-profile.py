@@ -95,6 +95,7 @@ def render_contract(contract: ArchimateProfileContract) -> str:
         "",
     ]
     lines.extend(_render_metadata(contract))
+    lines.extend(_render_applicability_provenance(contract))
     lines.extend(_render_carriers(contract.carrier_mappings))
     lines.extend(
         _render_relations(
@@ -195,6 +196,77 @@ def _render_metadata(contract: ArchimateProfileContract) -> List[str]:
         ),
         "",
         *_table(("Vertrag", "Wert"), rows, widths=(18, 58)),
+        "",
+    ]
+
+
+def _render_applicability_provenance(
+    contract: ArchimateProfileContract,
+) -> List[str]:
+    provenance = contract.applicability_provenance
+    source = provenance["matrixImplementation"]
+    revision = source["revision"]
+    source_url = (
+        f"{source['repositoryUri']}/blob/{revision}/"
+        f"{source['repositoryRelativePath']}"
+    )
+    symbols = {
+        entry["symbol"]: entry["archimateRelationship"]
+        for entry in provenance["symbolInterpretations"]
+    }
+    decisions = []
+    for decision in provenance["decisions"]:
+        decisions.append(
+            (
+                _code(decision["relationMappingId"]),
+                _code(
+                    f"{decision['sourceElement']} -> "
+                    f"{decision['targetElement']}"
+                ),
+                _code(
+                    f"{decision['matrixSymbol']} -> "
+                    f"{symbols[decision['matrixSymbol']]}"
+                ),
+            )
+        )
+    source_label = (
+        f"archimatetool/archi@{revision}:"
+        f"{source['repositoryRelativePath']}"
+    )
+    return [
+        (
+            "##### Anwendbarkeitsprovenienz "
+            "{#o2i-profile-applicability-provenance .unnumbered}"
+        ),
+        "",
+        (
+            "Die konkrete Relationsabbildung stützt sich auf die "
+            "ArchiMate-3.2-Beziehungsmatrix. O2I bindet nur die tatsächlich "
+            "verwendete Entscheidung revisionsgenau ein und kopiert die "
+            "Matrix nicht."
+        ),
+        "",
+        *_table(
+            ("Vertrag", "Wert"),
+            (
+                (
+                    "ArchiMate-Standard",
+                    _code(provenance["archimateStandardVersion"]),
+                ),
+                ("Implementierungsnachweis", f"[{source_label}]({source_url})"),
+            ),
+            widths=(24, 52),
+        ),
+        "",
+        *_table(
+            (
+                "Profilabbildung",
+                "Matrixkoordinate",
+                "Symbolinterpretation",
+            ),
+            decisions,
+            widths=(38, 20, 24),
+        ),
         "",
     ]
 

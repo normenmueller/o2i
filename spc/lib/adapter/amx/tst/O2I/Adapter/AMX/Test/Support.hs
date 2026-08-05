@@ -135,6 +135,42 @@ wrongRelationshipModel =
        <> connectedView "qualifies" "strategy" "need")
     [profileProperty]
 
+directsStrategyModel :: Text -> Bool -> Text
+directsStrategyModel relationType directed =
+  model
+    (grouping "source-strategy" "Source Strategy" (Text.concat strategyMetadata)
+       <> grouping
+            "target-strategy"
+            "Target Strategy"
+            (Text.concat strategyMetadata)
+       <> relationship
+            "directs"
+            relationType
+            "directs"
+            "source-strategy"
+            "target-strategy"
+            directed
+       <> connectedView "directs" "source-strategy" "target-strategy")
+    [profileProperty]
+
+directsInterventionModel :: Text -> Bool -> Text
+directsInterventionModel relationType directed =
+  model
+    (grouping "strategy" "Strategy" (Text.concat strategyMetadata)
+       <> grouping
+            "intervention"
+            "Intervention"
+            (Text.concat (metadata "Context" "Intervention"))
+       <> relationship
+            "directs"
+            relationType
+            "directs"
+            "strategy"
+            "intervention"
+            directed
+       <> connectedView "directs" "strategy" "intervention")
+    [profileProperty]
+
 invalidInterpretationModel :: Text
 invalidInterpretationModel =
   model
@@ -496,7 +532,7 @@ property key value =
   "<property key=\"" <> key <> "\" value=\"" <> value <> "\"/>"
 
 profileProperty :: Text
-profileProperty = property "o2i.profile" "0.2"
+profileProperty = property "o2i.profile" "0.3"
 
 metadata :: Text -> Text -> [Text]
 metadata kind nodeType =

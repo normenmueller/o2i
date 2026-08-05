@@ -7,9 +7,10 @@ import json
 from pathlib import Path
 import re
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from urllib.parse import urlsplit
 
 
-SUPPORTED_SCHEMA = "o2i.archimate-profile/v1"
+SUPPORTED_SCHEMA = "o2i.archimate-profile/v2"
 
 ARCHIMATE_ELEMENTS = frozenset(
     {
@@ -28,8 +29,21 @@ ARCHIMATE_RELATIONSHIPS = frozenset(
 JUNCTION_TYPES = frozenset({"and", "or"})
 
 ROOT_FIELDS = (
-    "schema", "profileVersion", "metadata", "carrierMappings",
-    "relationMappings", "patternMappings",
+    "schema", "profileVersion", "applicabilityProvenance", "metadata",
+    "carrierMappings", "relationMappings", "patternMappings",
+)
+APPLICABILITY_PROVENANCE_FIELDS = (
+    "archimateStandardVersion", "matrixImplementation",
+    "symbolInterpretations", "decisions",
+)
+MATRIX_IMPLEMENTATION_FIELDS = (
+    "repositoryUri", "repositoryRelativePath", "revision",
+)
+SYMBOL_INTERPRETATION_FIELDS = (
+    "symbol", "archimateRelationship",
+)
+APPLICABILITY_DECISION_FIELDS = (
+    "relationMappingId", "sourceElement", "targetElement", "matrixSymbol",
 )
 MODEL_ROOT_FIELDS = ("profileKey", "cardinality", "additionalO2IProperties")
 TYPED_CARRIER_FIELDS = (
@@ -71,6 +85,7 @@ COLLECTIVE_TARGET_FIELDS = (
 
 IDENTIFIER = re.compile(r"^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$")
 PROPERTY_KEY = re.compile(r"^o2i\.[a-z][a-z0-9.-]*$")
+REVISION = re.compile(r"^[0-9a-f]{40}$")
 
 
 class ProfileContractError(ValueError):
@@ -96,6 +111,7 @@ class ArchimateProfileContract:
 
     schema: str
     profile_version: str
+    applicability_provenance: FrozenObject
     metadata: FrozenObject
     carrier_mappings: Tuple[FrozenObject, ...]
     relation_mappings: Tuple[FrozenObject, ...]
@@ -114,6 +130,7 @@ class _Carrier:
     identifier: str
     kind: str
     types: Tuple[str, ...]
+    archimate_element: str
 
 
 @dataclass(frozen=True)
@@ -152,13 +169,25 @@ def decode_profile_contract(source: str) -> ArchimateProfileContract:
         metadata,
         carriers,
     )
-    endpoints = _declared_endpoints(carriers, contextualization)
-    _validate_relations(root["relationMappings"], endpoints)
+    endpoint_elements = _declared_endpoint_elements(
+        carriers,
+        contextualization,
+    )
+    endpoints = frozenset(endpoint_elements)
+    relations = _validate_relations(root["relationMappings"], endpoints)
     _validate_pattern_endpoints(patterns, endpoints)
+    _validate_applicability_provenance(
+        root["applicabilityProvenance"],
+        relations,
+        endpoint_elements,
+    )
 
     return ArchimateProfileContract(
         schema=schema,
         profile_version=profile_version,
+        applicability_provenance=_freeze(
+            root["applicabilityProvenance"]
+        ),
         metadata=_freeze(root["metadata"]),
         carrier_mappings=_freeze_records(root["carrierMappings"]),
         relation_mappings=_freeze_records(root["relationMappings"]),
@@ -254,7 +283,7 @@ def _validate_carriers(value: Any) -> Tuple[_Carrier, ...]:
         identifier = _identifier(entry["id"], f"{path}.id")
         kind = _text(entry["o2iKind"], f"{path}.o2iKind")
         types = _texts(entry["o2iTypes"], f"{path}.o2iTypes")
-        _enum(
+        archimate_element = _enum(
             entry["archimateElement"],
             ARCHIMATE_ELEMENTS,
             f"{path}.archimateElement",
@@ -267,13 +296,19 @@ def _validate_carriers(value: Any) -> Tuple[_Carrier, ...]:
                 (kind, o2i_type),
                 f"{path}.o2iTypes",
             )
-        carriers.append(_Carrier(identifier, kind, types))
+        carriers.append(
+            _Carrier(identifier, kind, types, archimate_element)
+        )
     return tuple(carriers)
 
 
-def _validate_relations(value: Any, endpoints: frozenset) -> None:
+def _validate_relations(
+    value: Any,
+    endpoints: frozenset,
+) -> Dict[str, Dict[str, Any]]:
     entries = _array(value, "$.relationMappings")
     identifiers = set()
+    relations = {}
     for index, value in enumerate(entries):
         path = f"$.relationMappings[{index}]"
         entry = _record(value, RELATION_FIELDS, path)
@@ -286,6 +321,8 @@ def _validate_relations(value: Any, endpoints: frozenset) -> None:
         _reference(target, endpoints, f"{path}.target")
         _identifier(entry["label"], f"{path}.label")
         _validate_relationship(entry, path)
+        relations[identifier] = entry
+    return relations
 
 
 def _validate_patterns(
@@ -446,12 +483,15 @@ def _validate_collective(
     _identifier(entry["projection"], f"{path}.projection")
 
 
-def _declared_endpoints(
+def _declared_endpoint_elements(
     carriers: Tuple[_Carrier, ...],
     contextualization: Optional[_Contextualization],
-) -> frozenset:
+) -> Dict[str, str]:
     if contextualization is None:
-        return frozenset(carrier.identifier for carrier in carriers)
+        return {
+            carrier.identifier: carrier.archimate_element
+            for carrier in carriers
+        }
 
     context_tokens = tuple(
         _type_token(o2i_type)
@@ -459,7 +499,7 @@ def _declared_endpoints(
         if carrier.kind == contextualization.source_kind
         for o2i_type in carrier.types
     )
-    endpoints = set()
+    endpoints = {}
     for carrier in carriers:
         if carrier.kind == contextualization.source_kind:
             generated = (
@@ -478,8 +518,122 @@ def _declared_endpoints(
         else:
             generated = iter((carrier.identifier,))
         for endpoint in generated:
-            _add_unique(endpoints, endpoint, "$.carrierMappings")
-    return frozenset(endpoints)
+            if endpoint in endpoints:
+                raise ProfileContractError(
+                    f"$.carrierMappings duplicates {endpoint}"
+                )
+            endpoints[endpoint] = carrier.archimate_element
+    return endpoints
+
+
+def _validate_applicability_provenance(
+    value: Any,
+    relations: Dict[str, Dict[str, Any]],
+    endpoint_elements: Dict[str, str],
+) -> None:
+    path = "$.applicabilityProvenance"
+    provenance = _record(value, APPLICABILITY_PROVENANCE_FIELDS, path)
+    _exact_text(
+        provenance["archimateStandardVersion"],
+        "3.2",
+        f"{path}.archimateStandardVersion",
+    )
+
+    source_path = f"{path}.matrixImplementation"
+    source = _record(
+        provenance["matrixImplementation"],
+        MATRIX_IMPLEMENTATION_FIELDS,
+        source_path,
+    )
+    _repository_uri(source["repositoryUri"], f"{source_path}.repositoryUri")
+    _repository_relative_path(
+        source["repositoryRelativePath"],
+        f"{source_path}.repositoryRelativePath",
+    )
+    _revision(source["revision"], f"{source_path}.revision")
+
+    symbols = {}
+    symbol_values = _array(
+        provenance["symbolInterpretations"],
+        f"{path}.symbolInterpretations",
+    )
+    for index, value in enumerate(symbol_values):
+        symbol_path = f"{path}.symbolInterpretations[{index}]"
+        entry = _record(value, SYMBOL_INTERPRETATION_FIELDS, symbol_path)
+        symbol = _identifier(entry["symbol"], f"{symbol_path}.symbol")
+        relationship = _enum(
+            entry["archimateRelationship"],
+            ARCHIMATE_RELATIONSHIPS,
+            f"{symbol_path}.archimateRelationship",
+        )
+        if symbol in symbols:
+            raise ProfileContractError(
+                f"{symbol_path}.symbol duplicates {symbol}"
+            )
+        symbols[symbol] = relationship
+    if not symbols:
+        raise ProfileContractError(
+            f"{path}.symbolInterpretations must be nonempty"
+        )
+
+    decisions = _array(provenance["decisions"], f"{path}.decisions")
+    if not decisions:
+        raise ProfileContractError(f"{path}.decisions must be nonempty")
+    referenced_mappings = set()
+    referenced_symbols = set()
+    for index, value in enumerate(decisions):
+        decision_path = f"{path}.decisions[{index}]"
+        decision = _record(
+            value,
+            APPLICABILITY_DECISION_FIELDS,
+            decision_path,
+        )
+        mapping_id = _identifier(
+            decision["relationMappingId"],
+            f"{decision_path}.relationMappingId",
+        )
+        _reference(mapping_id, relations, f"{decision_path}.relationMappingId")
+        _add_unique(
+            referenced_mappings,
+            mapping_id,
+            f"{decision_path}.relationMappingId",
+        )
+        relation = relations[mapping_id]
+        source_element = _enum(
+            decision["sourceElement"],
+            ARCHIMATE_ELEMENTS,
+            f"{decision_path}.sourceElement",
+        )
+        target_element = _enum(
+            decision["targetElement"],
+            ARCHIMATE_ELEMENTS,
+            f"{decision_path}.targetElement",
+        )
+        symbol = _identifier(
+            decision["matrixSymbol"],
+            f"{decision_path}.matrixSymbol",
+        )
+        _reference(symbol, symbols, f"{decision_path}.matrixSymbol")
+        referenced_symbols.add(symbol)
+        expected_source = endpoint_elements[relation["source"]]
+        expected_target = endpoint_elements[relation["target"]]
+        if (source_element, target_element) != (
+            expected_source,
+            expected_target,
+        ):
+            raise ProfileContractError(
+                f"{decision_path} carrier coordinates must resolve to "
+                f"{expected_source} -> {expected_target}"
+            )
+        relationship = relation["archimateRelationship"]
+        if symbols[symbol] != relationship:
+            raise ProfileContractError(
+                f"{decision_path}.matrixSymbol must resolve to {relationship}"
+            )
+    if referenced_symbols != set(symbols):
+        raise ProfileContractError(
+            f"{path}.symbolInterpretations must contain only used symbols"
+        )
 
 
 def _validate_pattern_endpoints(
@@ -624,6 +778,45 @@ def _property_key(value: Any, path: str) -> str:
     result = _text(value, path)
     if not PROPERTY_KEY.fullmatch(result):
         raise ProfileContractError(f"{path} must be an O2I property key")
+    return result
+
+
+def _repository_uri(value: Any, path: str) -> str:
+    result = _text(value, path)
+    uri = urlsplit(result)
+    if (
+        uri.scheme != "https"
+        or not uri.netloc
+        or not uri.path
+        or uri.query
+        or uri.fragment
+    ):
+        raise ProfileContractError(
+            f"{path} must be an absolute HTTPS repository URI"
+        )
+    return result
+
+
+def _repository_relative_path(value: Any, path: str) -> str:
+    result = _text(value, path)
+    segments = result.split("/")
+    if (
+        result.startswith("/")
+        or "\\" in result
+        or any(segment in {"", ".", ".."} for segment in segments)
+    ):
+        raise ProfileContractError(
+            f"{path} must be a portable repository-relative path"
+        )
+    return result
+
+
+def _revision(value: Any, path: str) -> str:
+    result = _text(value, path)
+    if not REVISION.fullmatch(result):
+        raise ProfileContractError(
+            f"{path} must be a full lowercase 40-hex revision"
+        )
     return result
 
 

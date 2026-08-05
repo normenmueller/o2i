@@ -68,6 +68,33 @@ class RenderArchimateProfileTest(unittest.TestCase):
             "`o2i.commitment = {candidate, asserted}`",
             self.rendered,
         )
+        self.assertIn(
+            "`Strategy --directs--> Strategy`",
+            self.rendered,
+        )
+        self.assertIn(
+            "`Grouping -> Grouping`",
+            self.rendered,
+        )
+        self.assertIn(
+            "`n -> InfluenceRelationship`",
+            self.rendered,
+        )
+
+    def test_renders_only_used_revision_bound_applicability_evidence(
+        self,
+    ) -> None:
+        provenance = self.contract.applicability_provenance
+        self.assertEqual(1, len(provenance["symbolInterpretations"]))
+        self.assertEqual(1, len(provenance["decisions"]))
+        self.assertIn(
+            "archimatetool/archi@"
+            "b5bd0038922ab68b26eb78c97ff7efc2ff0bba82:",
+            self.rendered,
+        )
+        self.assertNotIn("relationships-keys.xml", self.rendered)
+        self.assertNotIn('"symbolInterpretations"', self.rendered)
+        self.assertNotIn('"decisions"', self.rendered)
 
     def test_committed_fragment_is_current(self) -> None:
         self.assertEqual(
@@ -127,6 +154,10 @@ class RenderArchimateProfileTest(unittest.TestCase):
 
     def test_every_mapping_has_exactly_one_publication_category(self) -> None:
         headings = (
+            (
+                "##### Anwendbarkeitsprovenienz "
+                "{#o2i-profile-applicability-provenance .unnumbered}"
+            ),
             (
                 "##### Syntaxträgerabbildungen "
                 "{#o2i-profile-carriers .unnumbered}"
@@ -191,6 +222,12 @@ class RenderArchimateProfileTest(unittest.TestCase):
             if carrier["o2iKind"] == "SituationAnchor"
         }
         anchor_families = set()
+        decision_ids = {
+            decision["relationMappingId"]
+            for decision in self.contract.applicability_provenance[
+                "decisions"
+            ]
+        }
         for relation in self.contract.relation_mappings:
             if {
                 relation["source"],
@@ -206,7 +243,11 @@ class RenderArchimateProfileTest(unittest.TestCase):
                     1,
                     self.rendered.count(RENDERER._code(signature)),
                 )
-            self.assertNotIn(f"`{relation['id']}`", self.rendered)
+            expected_id_count = 1 if relation["id"] in decision_ids else 0
+            self.assertEqual(
+                expected_id_count,
+                self.rendered.count(f"`{relation['id']}`"),
+            )
         self.assertEqual(4, len(anchor_families))
 
         self.assertNotIn("Mapping-ID", self.rendered)

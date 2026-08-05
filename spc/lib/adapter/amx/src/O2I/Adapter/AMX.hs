@@ -13,7 +13,7 @@ import O2I.Adapter.AMX.Internal.XML
 import O2I.Inspection.Adapter
 
 -- | Safe, deterministic adapter for native Archi Model XML version 5.0.0 and
--- O2I profile 0.2.
+-- O2I profile 0.3.
 amxAdapter :: Adapter
 amxAdapter =
   Adapter

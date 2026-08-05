@@ -8,7 +8,7 @@ It may contain no O2I profile, View, or model declarations because Decode
 establishes only the native binding.
 
 The smallest inspectable O2I scope additionally has exactly one selected View,
-one direct root `o2i.profile="0.2"` property, and at least one directly
+one direct root `o2i.profile="0.3"` property, and at least one directly
 presented O2I candidate or admitted O2I relationship occurrence. An empty View
 passes View resolution but fails Profile with `o2i.inspection.scope.empty`.
 It can never produce an accidentally successful inspection without O2I content.

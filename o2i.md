@@ -1046,24 +1046,20 @@ Evidenztypen wie `KPIDefinition`, `ValueDomain`, `Level`, `Delta`, `Observation`
 
 ### ArchiMate-Profil
 
-Der maschinenlesbare Profilvertrag in
-`spc/ctr/archimate/profile.json` ist die exakte Quelle der konkreten
-ArchiMate-Syntax. Die daraus generierte Profilbeschreibung führt sämtliche
-Syntaxträgerabbildungen, Relationsabbildungen, Metadaten und Kardinalitäten auf.
+Der maschinenlesbare Profilvertrag in `spc/ctr/archimate/profile.json` ist die exakte Quelle der konkreten ArchiMate-Syntax. Die daraus generierte Profilbeschreibung führt sämtliche Syntaxträgerabbildungen, Relationsabbildungen, Metadaten und Kardinalitäten auf.
 
 Ein inspizierbares ArchiMate-Modell deklariert die verwendete Profilversion genau einmal durch die direkte Modelleigenschaft `o2i.profile`. Die Deklaration gilt für das Modell, weil mehrere Views dieselben Elemente und Relationen projizieren können. Sie macht jedoch weder sämtliche Modellinhalte noch jede View zu einem O2I-Gegenstand.
 
-@Fig:o2i-syntax-view verdichtet diesen Vertrag als Familienprojektion: Sie
-zeigt jede Syntaxträgerabbildung und jede Relationsfamilie repräsentativ, ohne alle
-typgleichen Endpunktkombinationen zu wiederholen. Bei den
-Situationsankerrelationen steht die ArchiMate `Capability` stellvertretend für
-die vier separat abgebildeten ArchiMate-Ankerformen `Capability`, `BusinessProcess`,
-`BusinessObject` und `ValueStream`.
+Zwei komplementäre Mapping-Sichten verdichten diesen Vertrag. @Fig:o2i-syntax-carriers-view zeigt jede Syntaxträgerabbildung. @Fig:o2i-syntax-relations-view zeigt jede Relationsfamilie repräsentativ, ohne alle typgleichen Endpunktkombinationen zu wiederholen. Die Platzhalter stehen dabei für die endpunktkompatiblen O2I-Relationen mit demselben ArchiMate-Relationstyp und derselben Richtung; die exakte Zuordnung bleibt Bestandteil des Profilvertrags. Bei den Situationsankerrelationen steht die ArchiMate `Capability` stellvertretend für die vier separat abgebildeten ArchiMate-Ankerformen `Capability`, `BusinessProcess`, `BusinessObject` und `ValueStream`.
 
 \clearpage
 \newgeometry{left=1cm,right=1cm,top=1cm,bottom=1cm}
 
-![O2I ArchiMate-Syntax](<img/O2I Syntax.png>){#fig:o2i-syntax-view width=85%}
+![O2I ArchiMate-Syntaxträger](<img/O2I Syntax - Carriers.png>){#fig:o2i-syntax-carriers-view width=90%}
+
+\clearpage
+
+![O2I ArchiMate-Relationsrepräsentationen](<img/O2I Syntax - Relations.png>){#fig:o2i-syntax-relations-view width=95%}
 
 \clearpage
 
@@ -1094,12 +1090,7 @@ und nicht als fachliche `RawEdge` interpretiert.
 
 ### Semantische Begründung
 
-Eine Kontext-Makrorelation und ihre Primitive-Begründung sind zwei
-unterschiedliche, gemeinsam erforderliche Aussagen. Die Makrorelation wird als
-gerichtete ArchiMate `Association` zwischen den typisierten Kontext-Syntaxträgern
-persistiert. Zulässige Relationen zwischen ihren kontextualisierten Primitives
-begründen diese Aussage fachlich; sie ersetzen weder die Makrorelation noch
-werden sie durch diese ersetzt.
+Eine Kontext-Makrorelation und ihre Primitive-Begründung sind zwei unterschiedliche, gemeinsam erforderliche Aussagen. Der Profilvertrag bestimmt die ArchiMate-Repräsentation der Makrorelation endpunktsensitiv: `Strategy --directs--> Strategy` wird als ArchiMate `Influence`, `Strategy --directs--> Intervention` als gerichtete ArchiMate `Association` persistiert. Zulässige Relationen zwischen den kontextualisierten Primitives begründen die Makrorelation fachlich; sie ersetzen weder die Makrorelation noch werden sie durch diese ersetzt.
 
 Beispielsweise besteht eine belastbare Bedarfsqualifikation aus der
 persistierten Makrorelation

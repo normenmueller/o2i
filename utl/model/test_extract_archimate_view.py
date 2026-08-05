@@ -25,7 +25,8 @@ EXPECTED_PRESET_KEYS = {
     "orientation",
     "semantics-context",
     "semantics-primitives",
-    "syntax",
+    "syntax-carriers",
+    "syntax-relations",
     "syntax-contextualization",
     "syntax-collective-strategy-realization",
     "layered-cake",
@@ -71,19 +72,19 @@ class RepositoryViewContractTest(unittest.TestCase):
 
     def test_missing_required_view_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
-        view = EXTRACTOR.find_view(root, "O2I Syntax")
+        view = EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_CARRIERS_VIEW)
         self._remove_element(root, view)
 
         errors = EXTRACTOR.validate_model(root)
 
         self.assertIn(
-            "missing required view: O2I Syntax",
+            "missing required view: O2I Syntax - Carriers",
             errors,
         )
 
     def test_duplicate_required_view_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
-        view = EXTRACTOR.find_view(root, "O2I Syntax")
+        view = EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_RELATIONS_VIEW)
         duplicate = copy.deepcopy(view)
         duplicate.set("id", "duplicate-syntax-view")
         self._parent_of(root, view).append(duplicate)
@@ -91,7 +92,7 @@ class RepositoryViewContractTest(unittest.TestCase):
         errors = EXTRACTOR.validate_model(root)
 
         self.assertIn(
-            "duplicate repository view: O2I Syntax (2 occurrences)",
+            "duplicate repository view: O2I Syntax - Relations (2 occurrences)",
             errors,
         )
 
@@ -274,7 +275,7 @@ class RepositoryViewContractTest(unittest.TestCase):
 
         self.assertTrue(
             any(
-                "O2I Syntax has contract-inconsistent mapping:"
+                "O2I Syntax - Carriers has contract-inconsistent mapping:"
                 in error
                 and "Principle (Grouping) --maps-to" in error
                 for error in errors
@@ -284,7 +285,7 @@ class RepositoryViewContractTest(unittest.TestCase):
 
     def test_syntax_relation_mapping_drift_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
-        view = EXTRACTOR.find_view(root, "O2I Syntax")
+        view = EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_RELATIONS_VIEW)
         connection = self._mapping_connection(
             root,
             view,
@@ -302,7 +303,7 @@ class RepositoryViewContractTest(unittest.TestCase):
 
         self.assertTrue(
             any(
-                "O2I Syntax has contract-inconsistent mapping:"
+                "O2I Syntax - Relations has contract-inconsistent mapping:"
                 in error
                 and "ArchiMate Driver" in error
                 for error in errors
@@ -316,7 +317,10 @@ class RepositoryViewContractTest(unittest.TestCase):
         for expression in ("maps-to", "  maps-to\n"):
             with self.subTest(expression=expression):
                 root = copy.deepcopy(self.root)
-                view = EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_VIEW)
+                view = EXTRACTOR.find_view(
+                    root,
+                    EXTRACTOR.SYNTAX_CARRIERS_VIEW,
+                )
                 connection = self._mapping_connection(
                     root,
                     view,
@@ -334,7 +338,10 @@ class RepositoryViewContractTest(unittest.TestCase):
         for expression in ("<O2I rel>", ""):
             with self.subTest(expression=expression):
                 root = copy.deepcopy(self.root)
-                view = EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_VIEW)
+                view = EXTRACTOR.find_view(
+                    root,
+                    EXTRACTOR.SYNTAX_CARRIERS_VIEW,
+                )
                 connection = self._mapping_connection(
                     root,
                     view,
@@ -348,7 +355,8 @@ class RepositoryViewContractTest(unittest.TestCase):
 
                 relation_id = connection.get("archimateRelationship")
                 expected = (
-                    f"O2I Syntax connection {connection.get('id')!r} "
+                    "O2I Syntax - Carriers connection "
+                    f"{connection.get('id')!r} "
                     "from 'Principle' (Grouping) to "
                     "'ArchiMate Principle' (Principle) labelExpression "
                     f"normalizes to {expression!r}, but referenced "
@@ -390,7 +398,10 @@ class RepositoryViewContractTest(unittest.TestCase):
 
     def test_unresolved_relationship_owns_connection_label_defect(self) -> None:
         root = copy.deepcopy(self.root)
-        view = EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_VIEW)
+        view = EXTRACTOR.find_view(
+            root,
+            EXTRACTOR.SYNTAX_CARRIERS_VIEW,
+        )
         connection = self._mapping_connection(
             root,
             view,
@@ -417,7 +428,10 @@ class RepositoryViewContractTest(unittest.TestCase):
 
     def test_unresolved_endpoint_owns_connection_label_defect(self) -> None:
         root = copy.deepcopy(self.root)
-        view = EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_VIEW)
+        view = EXTRACTOR.find_view(
+            root,
+            EXTRACTOR.SYNTAX_CARRIERS_VIEW,
+        )
         connection = self._mapping_connection(
             root,
             view,
@@ -450,7 +464,7 @@ class RepositoryViewContractTest(unittest.TestCase):
 
     def test_unexpected_syntax_mapping_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
-        view = EXTRACTOR.find_view(root, "O2I Syntax")
+        view = EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_CARRIERS_VIEW)
         connection = self._mapping_connection(
             root,
             view,
@@ -465,7 +479,7 @@ class RepositoryViewContractTest(unittest.TestCase):
 
         self.assertTrue(
             any(
-                "O2I Syntax has contract-inconsistent mapping:"
+                "O2I Syntax - Carriers has contract-inconsistent mapping:"
                 in error
                 and "unexpected-mapping" in error
                 for error in errors
@@ -475,7 +489,7 @@ class RepositoryViewContractTest(unittest.TestCase):
 
     def test_missing_syntax_mapping_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
-        view = EXTRACTOR.find_view(root, "O2I Syntax")
+        view = EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_CARRIERS_VIEW)
         connection = self._mapping_connection(
             root,
             view,
@@ -489,7 +503,7 @@ class RepositoryViewContractTest(unittest.TestCase):
 
         self.assertTrue(
             any(
-                "O2I Syntax is missing contracted mapping:" in error
+                "O2I Syntax - Carriers is missing contracted mapping:" in error
                 and "Principle (Grouping) --maps-to" in error
                 for error in errors
             ),
@@ -560,6 +574,12 @@ class RepositoryViewContractTest(unittest.TestCase):
                     "AssociationRelationship",
                     True,
                 ),
+                (
+                    EXTRACTOR.CONTEXT_RELATION_FAMILY,
+                    generic,
+                    "InfluenceRelationship",
+                    False,
+                ),
                 *{
                     (
                         EXTRACTOR.CONTENT_RELATION_FAMILY,
@@ -595,7 +615,10 @@ class RepositoryViewContractTest(unittest.TestCase):
         for family, admissible in sorted(families.items()):
             with self.subTest(family=EXTRACTOR.format_mapping_family(family)):
                 root = copy.deepcopy(self.root)
-                view = EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_VIEW)
+                view = EXTRACTOR.find_view(
+                    root,
+                    EXTRACTOR.SYNTAX_RELATIONS_VIEW,
+                )
                 _, connection = self._displayed_family_mapping(
                     root,
                     view,
@@ -606,7 +629,7 @@ class RepositoryViewContractTest(unittest.TestCase):
                 errors = EXTRACTOR.validate_model(root)
 
                 self.assertIn(
-                    f"{EXTRACTOR.SYNTAX_VIEW} is missing "
+                    f"{EXTRACTOR.SYNTAX_RELATIONS_VIEW} is missing "
                     "relation-mapping family: "
                     + EXTRACTOR.format_mapping_family(family),
                     errors,
@@ -616,18 +639,33 @@ class RepositoryViewContractTest(unittest.TestCase):
         self,
     ) -> None:
         families = self._relation_mapping_families()
-        self.assertEqual(9, len(families))
+        self.assertEqual(10, len(families))
 
         for family, admissible in sorted(families.items()):
             with self.subTest(family=EXTRACTOR.format_mapping_family(family)):
                 root = copy.deepcopy(self.root)
-                view = EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_VIEW)
+                view = EXTRACTOR.find_view(
+                    root,
+                    EXTRACTOR.SYNTAX_RELATIONS_VIEW,
+                )
                 displayed, _ = self._displayed_family_mapping(
                     root,
                     view,
                     admissible,
                 )
-                alternatives = admissible - {displayed}
+                elements, _ = EXTRACTOR.collect_model(root)
+                object_targets, _, _, _, _, _ = EXTRACTOR.collect_view(view)
+                visible_endpoints = {
+                    elements[element_id]
+                    for element_id in object_targets.values()
+                    if element_id in elements
+                }
+                alternatives = {
+                    mapping
+                    for mapping in admissible - {displayed}
+                    if (mapping[0], mapping[1]) in visible_endpoints
+                    and (mapping[5], mapping[6]) in visible_endpoints
+                }
                 alternative = min(alternatives) if alternatives else displayed
                 self._append_syntax_mapping(root, view, alternative)
 
@@ -635,13 +673,13 @@ class RepositoryViewContractTest(unittest.TestCase):
 
                 if alternatives:
                     expected = (
-                        f"{EXTRACTOR.SYNTAX_VIEW} duplicates "
+                        f"{EXTRACTOR.SYNTAX_RELATIONS_VIEW} duplicates "
                         "relation-mapping family: "
                         + EXTRACTOR.format_mapping_family(family)
                     )
                 else:
                     expected = (
-                        f"{EXTRACTOR.SYNTAX_VIEW} duplicates "
+                        f"{EXTRACTOR.SYNTAX_RELATIONS_VIEW} duplicates "
                         "contracted mapping: "
                         + EXTRACTOR.format_contract_edge(displayed)
                     )
@@ -893,7 +931,7 @@ class RepositoryViewContractTest(unittest.TestCase):
         invalid_arguments = (
             ["--preset", "all", "--view", "ignored"],
             ["--preset", "all", "--output", "ignored.md"],
-            ["--preset", "syntax", "--include-meaning"],
+            ["--preset", "syntax-carriers", "--include-meaning"],
             ["--view", "O2I Semantics - Context"],
             ["--output", "ignored.md"],
             [],

@@ -8,7 +8,14 @@ module O2I.ArchiMate.Profile.Test.Contract
 import Data.Aeson (Value, (.=), eitherDecodeStrict', object)
 import qualified Data.ByteString as ByteString
 import qualified Data.List.NonEmpty as NonEmpty
-import O2I (RelationName(..))
+import qualified Data.Text as Text
+import O2I
+  ( Context(..)
+  , FixedRelationCode(..)
+  , NodeKindValue(..)
+  , RelationCode(..)
+  , RelationName(..)
+  )
 import O2I.ArchiMate.Profile.Internal
 import Paths_o2i_archimate_profile (getDataFileName)
 import Test.Tasty (TestTree, testGroup)
@@ -21,6 +28,15 @@ contractTests =
     [ testCase
         "Haskell projection equals the authoritative JSON contract"
         contractEqualityTest
+    , testCase
+        "applicability provenance exposes the admitted exact source"
+        applicabilityProvenanceTest
+    , testCase
+        "applicability decision derives typed mapping and carrier coordinates"
+        applicabilityDecisionTest
+    , testCase
+        "only Strategy directs Strategy uses Influence"
+        endpointSensitiveDirectsTest
     ]
 
 contractEqualityTest :: Assertion
@@ -37,11 +53,96 @@ contractEqualityTest = do
   length (contractRelationMappings profileContract) @?= 52
   profileContractValue profileContract @?= authoritative
 
+applicabilityProvenanceTest :: Assertion
+applicabilityProvenanceTest = do
+  contractSchema profileContract @?= "o2i.archimate-profile/v2"
+  profileVersionText (contractProfileVersion profileContract) @?= "0.3"
+  let provenance = contractApplicabilityProvenance profileContract
+      implementation = applicabilityMatrixImplementation provenance
+      symbols = NonEmpty.toList (applicabilitySymbolInterpretations provenance)
+      decisions = NonEmpty.toList (applicabilityDecisions provenance)
+      revision = matrixImplementationRevision implementation
+      relativePath = matrixImplementationRepositoryRelativePath implementation
+  applicabilityArchiMateStandardVersion provenance @?= "3.2"
+  matrixImplementationRepositoryUri implementation
+    @?= "https://github.com/archimatetool/archi"
+  relativePath @?= "com.archimatetool.model/model/relationships.xml"
+  revision @?= "b5bd0038922ab68b26eb78c97ff7efc2ff0bba82"
+  assertBool
+    "matrix path must be repository-relative"
+    (isRelativePath relativePath)
+  Text.length revision @?= 40
+  assertBool
+    "matrix revision must be lowercase ASCII hex"
+    (Text.all isHex revision)
+  length symbols @?= 1
+  length decisions @?= 1
+
+applicabilityDecisionTest :: Assertion
+applicabilityDecisionTest = do
+  let provenance = contractApplicabilityProvenance profileContract
+      symbol = NonEmpty.head (applicabilitySymbolInterpretations provenance)
+      decision = NonEmpty.head (applicabilityDecisions provenance)
+      mapping = applicabilityDecisionRelationMapping decision
+  symbolInterpretationSymbol symbol @?= "n"
+  relationshipTypeName (symbolInterpretationRelationship symbol)
+    @?= "InfluenceRelationship"
+  applicabilityDecisionRelationMappingId decision
+    @?= "strategy-directs-strategy"
+  applicabilityDecisionSourceElement decision @?= "Grouping"
+  applicabilityDecisionTargetElement decision @?= "Grouping"
+  applicabilityDecisionMatrixSymbol decision @?= "n"
+  mapping `elem` contractRelationMappings profileContract @?= True
+  relationMappingCode mapping @?= FixedRelation DirectsStrategyCode
+  relationMappingSource mapping @?= ContextNodeKind Strategy
+  relationMappingTarget mapping @?= ContextNodeKind Strategy
+  relationMappingRepresentation mapping
+    @?= symbolInterpretationRelationship symbol
+
+endpointSensitiveDirectsTest :: Assertion
+endpointSensitiveDirectsTest = do
+  assertRepresentation DirectsStrategyCode "InfluenceRelationship" False
+  assertRepresentation ContributesToStrategyCode "AssociationRelationship" True
+  assertRepresentation DirectsInterventionCode "AssociationRelationship" True
+
+assertRepresentation :: FixedRelationCode -> Text.Text -> Bool -> Assertion
+assertRepresentation fixed expectedType expectedDirected =
+  case filter hasCode (contractRelationMappings profileContract) of
+    [mapping] -> do
+      let representation = relationMappingRepresentation mapping
+      relationshipTypeName representation @?= expectedType
+      relationshipDirected representation @?= expectedDirected
+    mappings ->
+      assertFailure
+        ("expected exactly one mapping for "
+           <> show fixed
+           <> ", found "
+           <> show (length mappings))
+  where
+    hasCode mapping = relationMappingCode mapping == FixedRelation fixed
+
+isRelativePath :: Text.Text -> Bool
+isRelativePath path =
+  not (Text.null path)
+    && not (Text.isPrefixOf "/" path)
+    && all validSegment (Text.splitOn "/" path)
+  where
+    validSegment segment =
+      not (Text.null segment) && segment /= "." && segment /= ".."
+
+isHex :: Char -> Bool
+isHex character =
+  ('0' <= character && character <= '9')
+    || ('a' <= character && character <= 'f')
+
 profileContractValue :: ArchiMateProfileContract -> Value
 profileContractValue contract =
   object
     [ "schema" .= contractSchema contract
     , "profileVersion" .= profileVersionText (contractProfileVersion contract)
+    , "applicabilityProvenance"
+        .= applicabilityProvenanceValue
+             (contractApplicabilityProvenance contract)
     , "metadata" .= metadataValue (contractMetadata contract)
     , "carrierMappings" .= map carrierValue (contractCarrierMappings contract)
     , "relationMappings"
@@ -50,6 +151,51 @@ profileContractValue contract =
         .= [ contextualizationValue (contractContextualization contract)
            , collectiveValue (contractCollectiveRealization contract)
            ]
+    ]
+
+applicabilityProvenanceValue :: ApplicabilityProvenance -> Value
+applicabilityProvenanceValue provenance =
+  object
+    [ "archimateStandardVersion"
+        .= applicabilityArchiMateStandardVersion provenance
+    , "matrixImplementation"
+        .= matrixImplementationValue
+             (applicabilityMatrixImplementation provenance)
+    , "symbolInterpretations"
+        .= map
+             symbolInterpretationValue
+             (NonEmpty.toList (applicabilitySymbolInterpretations provenance))
+    , "decisions"
+        .= map
+             applicabilityDecisionValue
+             (NonEmpty.toList (applicabilityDecisions provenance))
+    ]
+
+matrixImplementationValue :: MatrixImplementation -> Value
+matrixImplementationValue implementation =
+  object
+    [ "repositoryUri" .= matrixImplementationRepositoryUri implementation
+    , "repositoryRelativePath"
+        .= matrixImplementationRepositoryRelativePath implementation
+    , "revision" .= matrixImplementationRevision implementation
+    ]
+
+symbolInterpretationValue :: SymbolInterpretation -> Value
+symbolInterpretationValue interpretation =
+  object
+    [ "symbol" .= symbolInterpretationSymbol interpretation
+    , "archimateRelationship"
+        .= relationshipTypeName
+             (symbolInterpretationRelationship interpretation)
+    ]
+
+applicabilityDecisionValue :: ApplicabilityDecision -> Value
+applicabilityDecisionValue decision =
+  object
+    [ "relationMappingId" .= applicabilityDecisionRelationMappingId decision
+    , "sourceElement" .= applicabilityDecisionSourceElement decision
+    , "targetElement" .= applicabilityDecisionTargetElement decision
+    , "matrixSymbol" .= applicabilityDecisionMatrixSymbol decision
     ]
 
 metadataValue :: MetadataContract -> Value

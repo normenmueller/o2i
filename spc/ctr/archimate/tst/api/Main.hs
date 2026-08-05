@@ -10,6 +10,10 @@ import qualified O2I.ArchiMate.Profile as Profile
 
 $(assertAbstractTypes
     [ "Profile.ArchiMateProfileContract"
+    , "Profile.ApplicabilityProvenance"
+    , "Profile.MatrixImplementation"
+    , "Profile.SymbolInterpretation"
+    , "Profile.ApplicabilityDecision"
     , "Profile.MetadataContract"
     , "Profile.CarrierMapping"
     , "Profile.Requirement"
@@ -26,6 +30,20 @@ $(assertAbstractTypes
 
 $(assertOrdinaryFunctions
     [ 'Profile.contractProfileVersion
+    , 'Profile.contractApplicabilityProvenance
+    , 'Profile.applicabilityArchiMateStandardVersion
+    , 'Profile.applicabilityMatrixImplementation
+    , 'Profile.applicabilitySymbolInterpretations
+    , 'Profile.applicabilityDecisions
+    , 'Profile.matrixImplementationRepositoryUri
+    , 'Profile.matrixImplementationRepositoryRelativePath
+    , 'Profile.matrixImplementationRevision
+    , 'Profile.symbolInterpretationSymbol
+    , 'Profile.symbolInterpretationRelationship
+    , 'Profile.applicabilityDecisionRelationMappingId
+    , 'Profile.applicabilityDecisionSourceElement
+    , 'Profile.applicabilityDecisionTargetElement
+    , 'Profile.applicabilityDecisionMatrixSymbol
     , 'Profile.contractMetadata
     , 'Profile.contractContextualization
     , 'Profile.contractCollectiveRealization

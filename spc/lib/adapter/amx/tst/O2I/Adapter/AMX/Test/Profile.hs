@@ -16,7 +16,7 @@ profileTests :: TestTree
 profileTests =
   testGroup
     "profile"
-    [ testCase "accepts the exact direct root profile" exactRootProfileTest
+    [ testCase "accepts exact root profile 0.3" exactRootProfileTest
     , testCase "requires one direct root profile" missingProfileTest
     , testCase "ignores nested profile properties" nestedProfileTest
     , testCase
@@ -60,6 +60,18 @@ profileTests =
     , testCase
         "rejects an incompatible relation representation"
         relationshipRepresentationTest
+    , testCase
+        "accepts Influence for Strategy directs Strategy"
+        directsStrategyInfluenceTest
+    , testCase
+        "accepts directed Association for Strategy directs Intervention"
+        directsInterventionAssociationTest
+    , testCase
+        "rejects directed Association for Strategy directs Strategy"
+        directsStrategyAssociationTest
+    , testCase
+        "rejects Influence for Strategy directs Intervention"
+        directsInterventionInfluenceTest
     , testCase "projects unknown relations to Structure" unknownRelationTest
     , testCase
         "projects uniquely identified invalid endpoints to Structure"
@@ -106,7 +118,7 @@ foreignProfilePropertyTest = do
       (ViewByName "Scope")
       (validContextModelWith
          [ "<x:property xmlns:x=\"urn:foreign\" "
-             <> "key=\"o2i.profile\" value=\"0.2\"/>"
+             <> "key=\"o2i.profile\" value=\"0.3\"/>"
          ])
   diagnosticCodes report @?= ["o2i.amx.profile.missing"]
 
@@ -121,7 +133,7 @@ duplicateProfileTest = do
     ProfileRejectedResolution rejected ->
       case rejectedProfileObservation rejected of
         MultipleO2IProfiles versions ->
-          atLeastTwoToList versions @?= ["0.2", "0.2"]
+          atLeastTwoToList versions @?= ["0.3", "0.3"]
         observation ->
           assertFailure
             ("expected multiple profile values: " <> show observation)
@@ -134,7 +146,7 @@ conflictingDuplicateProfileTest = do
   report <-
     inspectText
       (ViewByName "Scope")
-      (validContextModelWith [profileProperty, property "o2i.profile" "0.3"])
+      (validContextModelWith [profileProperty, property "o2i.profile" "0.2"])
   diagnosticCodes report
     @?= ["o2i.amx.profile.duplicate", "o2i.amx.profile.unsupported"]
 
@@ -143,7 +155,7 @@ unsupportedProfileTest = do
   report <-
     inspectText
       (ViewByName "Scope")
-      (validContextModelWith [property "o2i.profile" "0.3"])
+      (validContextModelWith [property "o2i.profile" "0.2"])
   diagnosticCodes report @?= ["o2i.amx.profile.unsupported"]
 
 additionalRootPropertyTest :: Assertion
@@ -340,6 +352,62 @@ relationshipRepresentationTest :: Assertion
 relationshipRepresentationTest = do
   report <- inspectText (ViewByName "Scope") wrongRelationshipModel
   diagnosticCodes report @?= ["o2i.amx.profile.relation-representation"]
+
+directsStrategyInfluenceTest :: Assertion
+directsStrategyInfluenceTest = do
+  report <-
+    inspectText
+      (ViewByName "Scope")
+      (directsStrategyModel "InfluenceRelationship" False)
+  take 4 (map reportedState (stageReportsList (reportStageReports report)))
+    @?= replicate 4 StagePassed
+
+directsInterventionAssociationTest :: Assertion
+directsInterventionAssociationTest = do
+  report <-
+    inspectText
+      (ViewByName "Scope")
+      (directsInterventionModel "AssociationRelationship" True)
+  take 4 (map reportedState (stageReportsList (reportStageReports report)))
+    @?= replicate 4 StagePassed
+
+directsStrategyAssociationTest :: Assertion
+directsStrategyAssociationTest = do
+  report <-
+    inspectText
+      (ViewByName "Scope")
+      (directsStrategyModel "AssociationRelationship" True)
+  assertRelationshipRepresentation
+    "InfluenceRelationship"
+    "AssociationRelationship:directed"
+    report
+
+directsInterventionInfluenceTest :: Assertion
+directsInterventionInfluenceTest = do
+  report <-
+    inspectText
+      (ViewByName "Scope")
+      (directsInterventionModel "InfluenceRelationship" False)
+  assertRelationshipRepresentation
+    "AssociationRelationship:directed"
+    "InfluenceRelationship"
+    report
+
+assertRelationshipRepresentation ::
+     Text.Text -> Text.Text -> InspectionReport -> Assertion
+assertRelationshipRepresentation expected actual report = do
+  diagnosticCodes report @?= ["o2i.amx.profile.relation-representation"]
+  case diagnosticsList (reportDiagnostics report) of
+    [diagnostic] ->
+      diagnosticSubjects diagnostic
+        @?= [ DiagnosticSubject "relationship" "directs"
+            , DiagnosticSubject "expected-representation" expected
+            , DiagnosticSubject "actual-representation" actual
+            ]
+    diagnostics ->
+      assertFailure
+        ("expected one relation-representation diagnostic, found "
+           <> show (length diagnostics))
 
 unknownRelationTest :: Assertion
 unknownRelationTest = do

@@ -10,5 +10,5 @@
       <child xsi:type="archimate:DiagramObject" id="strategy-object" archimateElement="strategy"/>
     </element>
   </folder>
-  <property key="o2i.profile" value="0.2"/>
+  <property key="o2i.profile" value="0.3"/>
 </archimate:model>

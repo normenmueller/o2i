@@ -34,14 +34,14 @@ class PaperAssetTest(unittest.TestCase):
     def test_existing_nonempty_local_image_passes(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            image = root / "img" / "O2I Syntax.png"
+            image = root / "img" / "diagram with space.png"
             image.parent.mkdir()
             image.write_bytes(b"png")
 
             self.assertEqual(
                 [],
                 CHECKER.validate_assets(
-                    document_with("img/O2I%20Syntax.png"),
+                    document_with("img/diagram%20with%20space.png"),
                     root,
                 ),
             )
