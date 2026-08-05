@@ -3,7 +3,9 @@
 -- Language defines admissible O2I meaning, Graph represents concrete model
 -- instances, and Validation establishes progressively stronger guarantees.
 module O2I
-  ( Commitment(..)
+  ( module O2I.Validation.Collective.Contribution
+  , module O2I.Validation.Collective.Registry
+  , Commitment(..)
   , Claim
   , claimWithCommitment
   , candidateClaim
@@ -121,6 +123,9 @@ module O2I
   , ModelAssessmentStatus(..)
   , ModelAssessment
   , ClaimId(..)
+  , PropositionFamily(..)
+  , allPropositionFamilies
+  , ParticipantCompleteness(..)
   , CollectiveFitEvidenceRef(..)
   , RawMutualCoherenceEvidence(..)
   , RawContributorCompatibilityEvidence(..)
@@ -243,9 +248,14 @@ module O2I
   , assessedSemanticModel
   , assessmentInvariantErrors
   , assessmentCollectiveErrors
+  , assessmentCollectiveContributionErrors
+  , assessmentCollectiveContributionPreparationWork
+  , assessmentCollectiveContributionWork
   , assessmentCandidatePropositions
   , assessmentCandidateCollectiveStrategyRealizations
   , assessmentValidatedCollectiveStrategyRealizations
+  , assessmentCandidateCollectiveStrategyContributions
+  , assessmentValidatedCollectiveStrategyContributions
   , contextElaboration
   , modelMaturity
   , collectiveStrategyRealizations
@@ -259,6 +269,7 @@ module O2I
   , candidateCollectiveClaim
   , candidateCollectiveIssues
   , validatedCollectiveStrategyRealizations
+  , validatedCollectiveStrategyContributions
   , validateTraceability
   , validateEvidenceReadinessAt
   , assessEffectEvidenceAt
@@ -267,3 +278,5 @@ module O2I
 import O2I.Graph
 import O2I.Language
 import O2I.Validation
+import O2I.Validation.Collective.Contribution
+import O2I.Validation.Collective.Registry

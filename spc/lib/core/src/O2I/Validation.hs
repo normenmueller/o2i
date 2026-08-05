@@ -7,7 +7,9 @@
 -- 'SemanticallyValidModel'; it creates no model stage and remains outside that
 -- pipeline.
 module O2I.Validation
-  ( Validation(..)
+  ( module O2I.Validation.Collective.Contribution
+  , module O2I.Validation.Collective.Registry
+  , Validation(..)
   , Check
   , StructuralError(..)
   , StructureInternalError(..)
@@ -25,6 +27,9 @@ module O2I.Validation
   , ModelAssessmentStatus(..)
   , ModelAssessment
   , ClaimId(..)
+  , PropositionFamily(..)
+  , allPropositionFamilies
+  , ParticipantCompleteness(..)
   , CollectiveFitEvidenceRef(..)
   , RawMutualCoherenceEvidence(..)
   , RawContributorCompatibilityEvidence(..)
@@ -141,9 +146,14 @@ module O2I.Validation
   , assessedSemanticModel
   , assessmentInvariantErrors
   , assessmentCollectiveErrors
+  , assessmentCollectiveContributionErrors
+  , assessmentCollectiveContributionPreparationWork
+  , assessmentCollectiveContributionWork
   , assessmentCandidatePropositions
   , assessmentCandidateCollectiveStrategyRealizations
   , assessmentValidatedCollectiveStrategyRealizations
+  , assessmentCandidateCollectiveStrategyContributions
+  , assessmentValidatedCollectiveStrategyContributions
   , contextElaboration
   , modelMaturity
   , collectiveStrategyRealizations
@@ -157,6 +167,7 @@ module O2I.Validation
   , candidateCollectiveClaim
   , candidateCollectiveIssues
   , validatedCollectiveStrategyRealizations
+  , validatedCollectiveStrategyContributions
   , validateTraceability
   , validateEvidenceReadinessAt
   , assessEffectEvidenceAt
@@ -165,6 +176,8 @@ module O2I.Validation
 import Data.List.NonEmpty (NonEmpty)
 import Data.Validation (Validation(..))
 import O2I.Validation.Collective
+import O2I.Validation.Collective.Contribution
+import O2I.Validation.Collective.Registry
 import O2I.Validation.Evidence
 import O2I.Validation.MacroEvidence (MacroEvidenceError(..))
 import O2I.Validation.Qualification

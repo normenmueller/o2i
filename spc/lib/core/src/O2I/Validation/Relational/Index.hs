@@ -15,6 +15,8 @@ module O2I.Validation.Relational.Index
   , premisePredecessors
   , premiseLoopDomain
   , exactPremiseOccurrences
+  , exactRelationOccurrences
+  , exactRelationOccurrenceOrdinals
   ) where
 
 import Data.List (sortOn)
@@ -323,19 +325,46 @@ exactPremiseOccurrences premise from to index =
     Just projection ->
       Map.findWithDefault [] (from, to) (projectionOccurrences projection)
 
+-- | Return exact persisted occurrences for one typed relation and endpoint.
+--
+-- Unlike the premise-oriented projection, this lookup is intended for
+-- validators whose family contract already fixes the relation type.
+exactRelationOccurrences ::
+     Relation from to
+  -> NodeId from
+  -> NodeId to
+  -> RelationalIndex
+  -> [EdgeOccurrence from to]
+exactRelationOccurrences relation from to index =
+  case relationProjectionFor relation index of
+    Nothing -> []
+    Just projection ->
+      Map.findWithDefault [] (from, to) (projectionOccurrences projection)
+
+-- | Return canonical identities for exact occurrences of one typed relation.
+exactRelationOccurrenceOrdinals ::
+     Relation from to -> NodeId from -> NodeId to -> RelationalIndex -> [Int]
+exactRelationOccurrenceOrdinals relation from to =
+  map occurrenceOrdinal . exactRelationOccurrences relation from to
+
 projectionFor ::
      Premise scope from to
   -> RelationalIndex
   -> Maybe (RelationProjection from to)
 projectionFor premise index =
+  relationProjectionFor (premiseRelation premise) index
+
+relationProjectionFor ::
+     Relation from to -> RelationalIndex -> Maybe (RelationProjection from to)
+relationProjectionFor relation index =
   search
     (Map.findWithDefault
        []
-       (projectionKey (premiseRelation premise))
+       (projectionKey relation)
        (indexedRelationProjections index))
   where
     search [] = Nothing
     search (SomeRelationProjection projection:rest) =
-      case matchProjection (premiseRelation premise) projection of
+      case matchProjection relation projection of
         Just Refl -> Just projection
         Nothing -> search rest

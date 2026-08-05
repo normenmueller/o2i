@@ -91,6 +91,10 @@ $(assertAbstractTypes
     , "Validation.CollectiveStrategyRealization"
     , "Validation.CandidateCollectiveStrategyRealization"
     , "Validation.ValidatedCollectiveStrategyRealizations"
+    , "Validation.ValidatedContributionGraph"
+    , "Validation.CollectiveStrategyContribution"
+    , "Validation.CandidateCollectiveStrategyContribution"
+    , "Validation.ValidatedCollectiveStrategyContributions"
     , "Validation.NeedQualificationSourceReference"
     , "Validation.NeedQualificationCandidate"
     , "Validation.SemanticallyValidModel"
@@ -116,6 +120,10 @@ $(assertOrdinaryFunctions
     , 'Validation.assessmentCandidatePropositions
     , 'Validation.assessmentCandidateCollectiveStrategyRealizations
     , 'Validation.assessmentValidatedCollectiveStrategyRealizations
+    , 'Validation.assessmentCandidateCollectiveStrategyContributions
+    , 'Validation.assessmentValidatedCollectiveStrategyContributions
+    , 'Validation.assessmentCollectiveContributionPreparationWork
+    , 'Validation.assessmentCollectiveContributionWork
     , 'Validation.contextElaboration
     , 'Validation.modelMaturity
     , 'Validation.collectiveStrategyRealizations
@@ -128,6 +136,18 @@ $(assertOrdinaryFunctions
     , 'Validation.collectiveContributionEvidence
     , 'Validation.candidateCollectiveClaim
     , 'Validation.candidateCollectiveIssues
+    , 'Validation.collectiveStrategyContributions
+    , 'Validation.collectiveContributionId
+    , 'Validation.collectiveContributionParticipants
+    , 'Validation.collectiveContributionTarget
+    , 'Validation.collectiveContributionEvidenceReference
+    , 'Validation.collectiveContributionRationales
+    , 'Validation.collectiveContributionPrimitiveGraph
+    , 'Validation.contributionGraphMode
+    , 'Validation.contributionGraphNodes
+    , 'Validation.contributionGraphOccurrences
+    , 'Validation.candidateCollectiveContributionClaim
+    , 'Validation.candidateCollectiveContributionIssues
     , 'Validation.validatedCollectiveStrategyRealizations
     , 'Validation.macroEvidenceWitnesses
     , 'Validation.witnessPremises
@@ -203,6 +223,10 @@ $(assertAbstractTypes
     , "O2I.CollectiveStrategyRealization"
     , "O2I.CandidateCollectiveStrategyRealization"
     , "O2I.ValidatedCollectiveStrategyRealizations"
+    , "O2I.ValidatedContributionGraph"
+    , "O2I.CollectiveStrategyContribution"
+    , "O2I.CandidateCollectiveStrategyContribution"
+    , "O2I.ValidatedCollectiveStrategyContributions"
     , "O2I.NeedQualificationSourceReference"
     , "O2I.NeedQualificationCandidate"
     , "O2I.SemanticallyValidModel"
@@ -230,6 +254,10 @@ $(assertOrdinaryFunctions
     , 'O2I.assessmentCandidatePropositions
     , 'O2I.assessmentCandidateCollectiveStrategyRealizations
     , 'O2I.assessmentValidatedCollectiveStrategyRealizations
+    , 'O2I.assessmentCandidateCollectiveStrategyContributions
+    , 'O2I.assessmentValidatedCollectiveStrategyContributions
+    , 'O2I.assessmentCollectiveContributionPreparationWork
+    , 'O2I.assessmentCollectiveContributionWork
     , 'O2I.contextElaboration
     , 'O2I.modelMaturity
     , 'O2I.collectiveStrategyRealizations
@@ -243,6 +271,18 @@ $(assertOrdinaryFunctions
     , 'O2I.collectiveContributionEvidence
     , 'O2I.candidateCollectiveClaim
     , 'O2I.candidateCollectiveIssues
+    , 'O2I.collectiveStrategyContributions
+    , 'O2I.collectiveContributionId
+    , 'O2I.collectiveContributionParticipants
+    , 'O2I.collectiveContributionTarget
+    , 'O2I.collectiveContributionEvidenceReference
+    , 'O2I.collectiveContributionRationales
+    , 'O2I.collectiveContributionPrimitiveGraph
+    , 'O2I.contributionGraphMode
+    , 'O2I.contributionGraphNodes
+    , 'O2I.contributionGraphOccurrences
+    , 'O2I.candidateCollectiveContributionClaim
+    , 'O2I.candidateCollectiveContributionIssues
     , 'O2I.assessModelSemantics
     , 'O2I.structuralGraph
     , 'O2I.structuralCandidatePropositions
@@ -698,7 +738,7 @@ checkedSemantics stage structure formulations =
           ModelSemanticsInput
             { modelStrategyClaims = map assertedClaim formulations
             , modelCollectiveClaims = []
-            , modelCollectiveFitEvidence = []
+            , modelCollectiveEvidence = []
             }
    in case modelAssessmentStatus assessment of
         SemanticsRejected errors -> Left (stage ++ " failed: " ++ show errors)

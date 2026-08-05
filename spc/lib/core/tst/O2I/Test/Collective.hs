@@ -9,6 +9,7 @@ module O2I.Test.Collective
 import Data.List (permutations)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
+import qualified Data.Text as Text
 import O2I
 import O2I.Test.Support
 import Test.Tasty (TestTree, testGroup)
@@ -90,8 +91,66 @@ collectiveTests =
         "Context errors retain blocked collective Candidate diagnostics"
         contextErrorRetainsBlockedCandidateTest
     , testCase
+        "Context errors retain blocked contribution Candidate diagnostics"
+        contextErrorRetainsBlockedContributionCandidateTest
+    , testCase
+        "Context errors retain contribution structural diagnostics"
+        contextErrorRetainsContributionStructureTest
+    , testCase
         "Context Candidates preserve available collective Candidate semantics"
         contextCandidatePreservesCollectiveSemanticsTest
+    , collectiveContributionTests
+    ]
+
+collectiveContributionTests :: TestTree
+collectiveContributionTests =
+  testGroup
+    "collective Strategy contribution"
+    [ testCase
+        "open Candidate requires rationale but no Primitive graph"
+        openContributionCandidateTest
+    , testCase
+        "closed Candidate may omit its Primitive graph"
+        closedContributionCandidateTest
+    , testCase
+        "closed Asserted contribution constructs one homogeneous witness"
+        assertedContributionWitnessTest
+    , testCase
+        "Asserted contribution rejects Open participant completeness"
+        assertedOpenContributionTest
+    , testCase
+        "supplied Candidate graph is fully diagnosed and never witnessed"
+        candidateMixedContributionGraphTest
+    , testCase
+        "Candidate requires a non-empty provenance-bearing rationale"
+        candidateContributionRationaleTest
+    , testCase
+        "Asserted contribution requires a Primitive graph"
+        assertedContributionGraphRequiredTest
+    , testCase
+        "Candidate graph accumulates provenance and topology diagnostics"
+        candidateContributionTopologyTest
+    , testCase
+        "Action contribution graph is an independent closed mode"
+        assertedActionContributionWitnessTest
+    , testCase
+        "contribution evidence is exactly bound to its proposition"
+        contributionBindingTest
+    , testCase
+        "missing and ambiguous contribution evidence references are distinct"
+        contributionEvidenceReferenceTest
+    , testCase
+        "family claim identities are globally unique"
+        collectiveFamilyIdentityTest
+    , testCase
+        "contribution work is operation-bound and truthful"
+        contributionWorkTest
+    , testCase
+        "unrelated formulation size affects only one-time preparation"
+        contributionFormulationWorkTest
+    , QC.testProperty
+        "participant order does not change collective validity"
+        contributionParticipantOrderProperty
     ]
 
 tradeOffSetTests :: TestTree
@@ -118,6 +177,384 @@ tradeOffSetTests =
         "different Trade-off content does not match"
         differingTradeOffTest
     ]
+
+openContributionCandidateTest :: Assertion
+openContributionCandidateTest = do
+  let assessment =
+        assessContributionModel
+          coverageGapGraph
+          [contributionEvidence {rawContributionPrimitiveGraph = Nothing}]
+          [ candidateClaim
+              contributionProposition {rawContributionCompleteness = Open}
+          ]
+  assessmentCollectiveContributionErrors assessment @?= []
+  assessmentCandidatePropositions assessment
+    @?= [CandidateCollectiveContribution contributionClaimId]
+  case assessmentCandidateCollectiveStrategyContributions assessment of
+    [candidate] -> candidateCollectiveContributionIssues candidate @?= []
+    candidates ->
+      assertFailure
+        ("expected one contribution Candidate, got " ++ show (length candidates))
+  case assessmentValidatedCollectiveStrategyContributions assessment of
+    Nothing -> assertFailure "Candidate assessment lost its validated aggregate"
+    Just validated ->
+      assertBool
+        "Candidate constructed semantic contribution witness"
+        (null (collectiveStrategyContributions validated))
+
+closedContributionCandidateTest :: Assertion
+closedContributionCandidateTest = do
+  let assessment =
+        assessContributionModel
+          coverageGapGraph
+          [contributionEvidence {rawContributionPrimitiveGraph = Nothing}]
+          [candidateClaim contributionProposition]
+  assessmentCollectiveContributionErrors assessment @?= []
+  case assessmentCandidateCollectiveStrategyContributions assessment of
+    [candidate] -> candidateCollectiveContributionIssues candidate @?= []
+    _ -> assertFailure "closed contribution Candidate was not retained"
+
+assertedContributionWitnessTest :: Assertion
+assertedContributionWitnessTest = do
+  let assessment =
+        assessContributionModel
+          coverageGapGraph
+          [contributionEvidence]
+          [assertedClaim contributionProposition]
+  assessmentCollectiveContributionErrors assessment @?= []
+  case assessmentValidatedCollectiveStrategyContributions assessment of
+    Nothing -> assertFailure "valid contribution did not validate"
+    Just validated ->
+      case collectiveStrategyContributions validated of
+        [contribution] -> do
+          collectiveContributionId contribution @?= contributionClaimId
+          fmap contextRefId (collectiveContributionParticipants contribution)
+            @?= contributorOneId
+            NonEmpty.:| [contributorTwoId]
+          contextRefId (collectiveContributionTarget contribution)
+            @?= strategyId
+          collectiveContributionEvidenceReference contribution
+            @?= contributionEvidenceRef
+          let graph = collectiveContributionPrimitiveGraph contribution
+          contributionGraphMode graph @?= KeyResultContributionGraph
+          contributionGraphNodes graph
+            @?= contributorOneKeyResultId
+            NonEmpty.:| [contributorTwoKeyResultId, strategyKeyResultId]
+          fmap snd (contributionGraphOccurrences graph)
+            @?= contributorOneTargetKeyResultEdge
+            NonEmpty.:| [contributorTwoTargetKeyResultEdge]
+        contributions ->
+          assertFailure
+            ("expected one contribution witness, got "
+               ++ show (length contributions))
+
+assertedOpenContributionTest :: Assertion
+assertedOpenContributionTest = do
+  let proposition = contributionProposition {rawContributionCompleteness = Open}
+      assessment =
+        assessContributionModel
+          coverageGapGraph
+          [contributionEvidence]
+          [assertedClaim proposition]
+  assessmentCollectiveContributionErrors assessment
+    @?= [ CollectiveContributionStructuralError
+            (AssertedOpenCollectiveFanIn
+               CollectiveStrategyContributionFamily
+               contributionClaimId)
+        ]
+
+candidateMixedContributionGraphTest :: Assertion
+candidateMixedContributionGraphTest = do
+  let mixed =
+        contributionEvidence
+          { rawContributionPrimitiveGraph =
+              Just
+                (RawKeyResultContributionGraph
+                   contributionGraph
+                     { rawContributionGraphNodes =
+                         rawContributionGraphNodes contributionGraph
+                           ++ [contributorTwoActionId]
+                     , rawContributionGraphEdges =
+                         rawContributionGraphEdges contributionGraph
+                           ++ [contributorTwoTargetActionEdge]
+                     })
+          }
+      assessment =
+        assessContributionModel
+          completeCollectiveGraph
+          [mixed]
+          [candidateClaim contributionProposition]
+  assessmentCollectiveContributionErrors assessment @?= []
+  case assessmentCandidateCollectiveStrategyContributions assessment of
+    [candidate] -> do
+      let issues = candidateCollectiveContributionIssues candidate
+      assertBool
+        "mixed node kind was not diagnosed"
+        (InvalidContributionGraphNodeKind
+           KeyResultContributionGraph
+           contributorTwoActionId
+           `elem` issues)
+      assertBool
+        "mixed edge mode was not diagnosed"
+        (ContributionGraphEdgeModeMismatch
+           KeyResultContributionGraph
+           contributorTwoTargetActionEdge
+           `elem` issues)
+    _ -> assertFailure "diagnostic Candidate was not retained"
+
+candidateContributionRationaleTest :: Assertion
+candidateContributionRationaleTest = do
+  let evidence =
+        contributionEvidence
+          { rawJointContributionRationales = []
+          , rawContributionPrimitiveGraph = Nothing
+          }
+      assessment =
+        assessContributionModel
+          coverageGapGraph
+          [evidence]
+          [candidateClaim contributionProposition]
+  assessmentCollectiveContributionErrors assessment @?= []
+  case assessmentCandidateCollectiveStrategyContributions assessment of
+    [candidate] ->
+      candidateCollectiveContributionIssues candidate
+        @?= [MissingJointContributionRationale]
+    _ -> assertFailure "invalid rationale Candidate was not retained"
+
+assertedContributionGraphRequiredTest :: Assertion
+assertedContributionGraphRequiredTest = do
+  let evidence = contributionEvidence {rawContributionPrimitiveGraph = Nothing}
+      assessment =
+        assessContributionModel
+          coverageGapGraph
+          [evidence]
+          [assertedClaim contributionProposition]
+  assessmentCollectiveContributionErrors assessment
+    @?= [ AssertedCollectiveContributionIssue
+            contributionClaimId
+            AssertedCollectiveContributionMissingPrimitiveGraph
+        ]
+
+candidateContributionTopologyTest :: Assertion
+candidateContributionTopologyTest = do
+  let graph =
+        contributionGraph
+          { rawContributionGraphProvenance = "source://other-rationale"
+          , rawContributionGraphEdges = [contributorOneTargetKeyResultEdge]
+          }
+      evidence =
+        contributionEvidence
+          { rawContributionPrimitiveGraph =
+              Just (RawKeyResultContributionGraph graph)
+          }
+      assessment =
+        assessContributionModel
+          coverageGapGraph
+          [evidence]
+          [candidateClaim contributionProposition]
+  assessmentCollectiveContributionErrors assessment @?= []
+  case assessmentCandidateCollectiveStrategyContributions assessment of
+    [candidate] -> do
+      let issues = candidateCollectiveContributionIssues candidate
+      assertBool
+        "provenance mismatch was not diagnosed"
+        (ContributionGraphProvenanceMismatch contributionRationaleRef
+           `elem` issues)
+      assertBool
+        "disconnected graph was not diagnosed"
+        (DisconnectedContributionPrimitiveGraph `elem` issues)
+      assertBool
+        "missing participant reachability was not diagnosed"
+        (ContributionGraphParticipantCannotReachTarget contributorTwoId
+           `elem` issues)
+    _ -> assertFailure "invalid topology Candidate was not retained"
+
+assertedActionContributionWitnessTest :: Assertion
+assertedActionContributionWitnessTest = do
+  let assessment =
+        assessContributionModel
+          actionContributionRawGraph
+          [actionContributionEvidence]
+          [assertedClaim contributionProposition]
+  assessmentCollectiveContributionErrors assessment @?= []
+  case assessmentValidatedCollectiveStrategyContributions assessment of
+    Just validated ->
+      case collectiveStrategyContributions validated of
+        [contribution] ->
+          contributionGraphMode
+            (collectiveContributionPrimitiveGraph contribution)
+            @?= ActionContributionGraph
+        _ -> assertFailure "expected one Action contribution"
+    Nothing -> assertFailure "valid Action contribution did not validate"
+
+contributionBindingTest :: Assertion
+contributionBindingTest = do
+  let misbound =
+        contributionEvidence
+          { rawContributionEvidenceParticipants = [contributorOneId]
+          , rawContributionEvidenceTarget = contributorTwoId
+          }
+      assessment =
+        assessContributionModel
+          coverageGapGraph
+          [misbound]
+          [assertedClaim contributionProposition]
+      issues = assessmentCollectiveContributionErrors assessment
+  assertBool
+    "participant binding mismatch was not fatal"
+    (AssertedCollectiveContributionIssue
+       contributionClaimId
+       CollectiveContributionParticipantsMismatch
+       `elem` issues)
+  assertBool
+    "target binding mismatch was not fatal"
+    (AssertedCollectiveContributionIssue
+       contributionClaimId
+       (CollectiveContributionTargetMismatch strategyId contributorTwoId)
+       `elem` issues)
+
+contributionEvidenceReferenceTest :: Assertion
+contributionEvidenceReferenceTest = do
+  let claim = assertedClaim contributionProposition
+      missingAssessment = assessContributionModel coverageGapGraph [] [claim]
+      ambiguousAssessment =
+        assessContributionModel
+          coverageGapGraph
+          [contributionEvidence, contributionEvidence]
+          [claim]
+      expected issue =
+        [AssertedCollectiveContributionIssue contributionClaimId issue]
+  assessmentCollectiveContributionErrors missingAssessment
+    @?= expected
+          (CollectiveContributionEvidenceNotFound contributionEvidenceRef)
+  assessmentCollectiveContributionErrors ambiguousAssessment
+    @?= expected
+          (CollectiveContributionEvidenceAmbiguous contributionEvidenceRef)
+  case assessmentCollectiveContributionWork ambiguousAssessment of
+    Nothing -> assertFailure "ambiguous contribution work was not retained"
+    Just work -> do
+      contributionEvidenceBucketProbes work @?= 1
+      contributionEvidencePayloadReads work @?= 0
+
+collectiveFamilyIdentityTest :: Assertion
+collectiveFamilyIdentityTest = do
+  let contribution =
+        contributionProposition {rawContributionId = collectiveClaimId}
+      assessment =
+        assessMixedCollectiveModel
+          coverageGapGraph
+          [ CollectiveStrategyRealizationEvidence completeFit
+          , CollectiveStrategyContributionEvidence contributionEvidence
+          ]
+          [ CollectiveStrategyRealizationClaim assertedCollective
+          , CollectiveStrategyContributionClaim (candidateClaim contribution)
+          ]
+  case modelAssessmentStatus assessment of
+    SemanticsRejected errors ->
+      assertBool
+        "cross-family duplicate identity was not rejected"
+        (DuplicateCollectiveFanInClaimId collectiveClaimId
+           `elem` NonEmpty.toList errors)
+    _ -> assertFailure "cross-family duplicate identity was accepted"
+
+contributionWorkTest :: Assertion
+contributionWorkTest = do
+  let baseAssessment =
+        assessContributionModel
+          coverageGapGraph
+          [contributionEvidence]
+          [assertedClaim contributionProposition]
+      unrelated = map unrelatedContributionEvidence [1 .. 500]
+      adversarialAssessment =
+        assessContributionModel
+          coverageGapGraph
+          (contributionEvidence : unrelated)
+          [assertedClaim contributionProposition]
+  case assessmentCollectiveContributionPreparationWork adversarialAssessment of
+    Nothing -> assertFailure "contribution preparation work was not retained"
+    Just preparation -> do
+      contributionEvidenceBundlesRead preparation @?= 501
+      contributionEvidenceIndexInsertions preparation @?= 501
+      contributionStrategyFormulationsRead preparation @?= 3
+      contributionFormulationMemberInsertions preparation @?= 6
+  case ( assessmentCollectiveContributionWork baseAssessment
+       , assessmentCollectiveContributionWork adversarialAssessment) of
+    (Just baseWork, Just adversarialWork) -> do
+      adversarialWork @?= baseWork
+      assertContributionWork baseWork
+    _ -> assertFailure "contribution work was not retained"
+
+contributionFormulationWorkTest :: Assertion
+contributionFormulationWorkTest = do
+  let size = 200
+      baseAssessment =
+        assessContributionModel
+          coverageGapGraph
+          [contributionEvidence]
+          [assertedClaim contributionProposition]
+      adversarialAssessment =
+        assessContributionModelWith
+          (collectiveFormulations ++ [unrelatedContributionFormulation size])
+          (unrelatedContributionFormulationGraph size)
+          [contributionEvidence]
+          [assertedClaim contributionProposition]
+  case modelAssessmentStatus adversarialAssessment of
+    SemanticsRejected errors ->
+      assertFailure ("adversarial formulation errors: " ++ show errors)
+    _ -> pure ()
+  case assessmentCollectiveContributionPreparationWork adversarialAssessment of
+    Nothing -> assertFailure "contribution preparation work was not retained"
+    Just preparation -> do
+      contributionStrategyFormulationsRead preparation @?= 4
+      contributionFormulationMemberInsertions preparation @?= 408
+  assessmentCollectiveContributionWork adversarialAssessment
+    @?= assessmentCollectiveContributionWork baseAssessment
+
+assertContributionWork :: CollectiveContributionValidationWork -> Assertion
+assertContributionWork work = do
+  fanInClaimsRead (contributionStructuralWork work) @?= 1
+  fanInParticipantDeclarationLookups (contributionStructuralWork work) @?= 2
+  contributionEvidenceBucketProbes work @?= 1
+  contributionEvidencePayloadReads work @?= 1
+  contributionRationalesRead work @?= 1
+  contributionNodeLookups work @?= 3
+  contributionFormulationLookups work @?= 3
+  contributionEdgeOccurrenceLookups work @?= 2
+  assertBool
+    "linear traversals visited an impossible number of nodes"
+    (contributionTraversalNodeVisits work <= 6)
+
+contributionParticipantOrderProperty :: QC.Property
+contributionParticipantOrderProperty =
+  QC.forAll (QC.elements (permutations [contributorOneId, contributorTwoId])) $ \participants ->
+    let proposition =
+          contributionProposition {rawContributionParticipants = participants}
+        assessment =
+          assessContributionModel
+            coverageGapGraph
+            [contributionEvidence]
+            [assertedClaim proposition]
+     in case assessmentValidatedCollectiveStrategyContributions assessment of
+          Just validated ->
+            case collectiveStrategyContributions validated of
+              [contribution] ->
+                fmap
+                  contextRefId
+                  (collectiveContributionParticipants contribution)
+                  QC.=== NonEmpty.fromList participants
+              _ -> QC.counterexample "expected one contribution" False
+          Nothing ->
+            QC.counterexample
+              (show (assessmentCollectiveContributionErrors assessment))
+              False
+
+unrelatedContributionEvidence :: Int -> RawCollectiveContributionEvidence
+unrelatedContributionEvidence ordinal =
+  contributionEvidence
+    { rawContributionEvidenceRef =
+        CollectiveContributionEvidenceRef
+          ("unrelated-evidence-" <> Text.pack (show ordinal))
+    }
 
 fitPermutationInvariantProperty :: QC.Property
 fitPermutationInvariantProperty =
@@ -815,6 +1252,59 @@ contextErrorRetainsBlockedCandidateTest = do
     @?= [CandidateCollectiveRealization collectiveClaimId]
   assertBlockedCollectiveCandidate assessment
 
+contextErrorRetainsBlockedContributionCandidateTest :: Assertion
+contextErrorRetainsBlockedContributionCandidateTest = do
+  let assessment =
+        assessContextRejectedContribution
+          (candidateClaim contributionProposition)
+  assertBool
+    "expected fatal Context errors"
+    (not (null (assessmentInvariantErrors assessment)))
+  assessmentCollectiveContributionErrors assessment @?= []
+  assessmentCandidatePropositions assessment
+    @?= [CandidateCollectiveContribution contributionClaimId]
+  case assessmentCandidateCollectiveStrategyContributions assessment of
+    [candidate] ->
+      candidateCollectiveContributionIssues candidate
+        @?= [CollectiveContributionSemanticEvaluationBlocked]
+    candidates ->
+      assertFailure
+        ("expected one blocked contribution Candidate, got "
+           ++ show (length candidates))
+
+contextErrorRetainsContributionStructureTest :: Assertion
+contextErrorRetainsContributionStructureTest = do
+  let proposition =
+        contributionProposition
+          {rawContributionParticipants = [contributorOneId]}
+      assessment =
+        assessContextRejectedContribution (candidateClaim proposition)
+  assessmentCollectiveContributionErrors assessment
+    @?= [ CollectiveContributionStructuralError
+            (TooFewCollectiveFanInParticipants
+               CollectiveStrategyContributionFamily
+               contributionClaimId)
+        ]
+
+assessContextRejectedContribution ::
+     Claim RawCollectiveStrategyContribution -> ModelAssessment
+assessContextRejectedContribution claim =
+  case validateStructure completeCollectiveGraph of
+    StructureAccepted structure ->
+      assessModelSemantics
+        structure
+        ModelSemanticsInput
+          { modelStrategyClaims = []
+          , modelCollectiveClaims = [CollectiveStrategyContributionClaim claim]
+          , modelCollectiveEvidence =
+              [CollectiveStrategyContributionEvidence contributionEvidence]
+          }
+    StructureModelRejected errors ->
+      error ("blocked contribution fixture failed: " ++ show errors)
+    StructureInternalFailure internal ->
+      error
+        ("blocked contribution fixture failed internally: " ++ show internal)
+
 contextCandidatePreservesCollectiveSemanticsTest :: Assertion
 contextCandidatePreservesCollectiveSemanticsTest =
   case validateClaimStructure claimGraph of
@@ -824,8 +1314,10 @@ contextCandidatePreservesCollectiveSemanticsTest =
               structure
               ModelSemanticsInput
                 { modelStrategyClaims = map assertedClaim collectiveFormulations
-                , modelCollectiveClaims = [candidateCollective]
-                , modelCollectiveFitEvidence = [completeFit]
+                , modelCollectiveClaims =
+                    [CollectiveStrategyRealizationClaim candidateCollective]
+                , modelCollectiveEvidence =
+                    [CollectiveStrategyRealizationEvidence completeFit]
                 }
       assessmentInvariantErrors assessment @?= []
       assessmentCollectiveErrors assessment @?= []
@@ -926,8 +1418,10 @@ assessCollectiveModelWith formulations raw fitEvidence claims =
         structure
         ModelSemanticsInput
           { modelStrategyClaims = map assertedClaim formulations
-          , modelCollectiveClaims = claims
-          , modelCollectiveFitEvidence = fitEvidence
+          , modelCollectiveClaims =
+              map CollectiveStrategyRealizationClaim claims
+          , modelCollectiveEvidence =
+              map CollectiveStrategyRealizationEvidence fitEvidence
           }
     StructureModelRejected errors ->
       error ("collective fixture structural errors: " ++ show errors)
@@ -943,8 +1437,10 @@ assessCollectiveClaimModel claims =
         structure
         ModelSemanticsInput
           { modelStrategyClaims = map assertedClaim collectiveFormulations
-          , modelCollectiveClaims = claims
-          , modelCollectiveFitEvidence = [completeFit]
+          , modelCollectiveClaims =
+              map CollectiveStrategyRealizationClaim claims
+          , modelCollectiveEvidence =
+              [CollectiveStrategyRealizationEvidence completeFit]
           }
     StructureModelRejected errors ->
       error ("Candidate participant fixture failed: " ++ show errors)
@@ -972,6 +1468,7 @@ collectiveProposition =
     { rawRealizationId = collectiveClaimId
     , rawContributors = [contributorOneId, contributorTwoId]
     , rawTarget = strategyId
+    , rawRealizationCompleteness = Closed
     , rawCollectiveFitEvidence = fitEvidenceRef
     }
 
@@ -1134,6 +1631,10 @@ contributorTwoTargetActionEdge :: RawEdge
 contributorTwoTargetActionEdge =
   edge contributorTwoActionId contributesStrategyActionToAction strategyActionId
 
+contributorOneTargetActionEdge :: RawEdge
+contributorOneTargetActionEdge =
+  edge contributorOneActionId contributesStrategyActionToAction strategyActionId
+
 contributorTwoTargetKeyResultEdge :: RawEdge
 contributorTwoTargetKeyResultEdge =
   edge
@@ -1208,5 +1709,189 @@ contributorOneKeyResultId = contributorKeyResult contributorOneIds
 
 contributorTwoKeyResultId = contributorKeyResult contributorTwoIds
 
-contributorTwoActionId :: RawNodeId
+contributorOneActionId, contributorTwoActionId :: RawNodeId
+contributorOneActionId = contributorAction contributorOneIds
+
 contributorTwoActionId = contributorAction contributorTwoIds
+
+contributionClaimId :: ClaimId
+contributionClaimId = ClaimId "collective-contribution"
+
+contributionEvidenceRef :: CollectiveContributionEvidenceRef
+contributionEvidenceRef =
+  CollectiveContributionEvidenceRef "collective-contribution-evidence"
+
+contributionRationaleRef :: JointContributionRationaleRef
+contributionRationaleRef = JointContributionRationaleRef "joint-mechanism"
+
+contributionProposition :: RawCollectiveStrategyContribution
+contributionProposition =
+  RawCollectiveStrategyContribution
+    { rawContributionId = contributionClaimId
+    , rawContributionParticipants = [contributorOneId, contributorTwoId]
+    , rawContributionTarget = strategyId
+    , rawContributionCompleteness = Closed
+    , rawContributionEvidence = contributionEvidenceRef
+    }
+
+contributionRationale :: RawJointContributionRationale
+contributionRationale =
+  RawJointContributionRationale
+    { rawJointRationaleRef = contributionRationaleRef
+    , rawJointRationaleText =
+        "The participants create one contribution through coordinated interaction."
+    , rawJointRationaleProvenance = "source://joint-mechanism"
+    }
+
+contributionGraph :: RawBoundContributionGraph
+contributionGraph =
+  RawBoundContributionGraph
+    { rawContributionGraphClaim = contributionClaimId
+    , rawContributionGraphRationale = contributionRationaleRef
+    , rawContributionGraphProvenance = "source://joint-mechanism"
+    , rawContributionGraphNodes =
+        [ contributorOneKeyResultId
+        , contributorTwoKeyResultId
+        , strategyKeyResultId
+        ]
+    , rawContributionGraphEdges =
+        [contributorOneTargetKeyResultEdge, contributorTwoTargetKeyResultEdge]
+    }
+
+contributionEvidence :: RawCollectiveContributionEvidence
+contributionEvidence =
+  RawCollectiveContributionEvidence
+    { rawContributionEvidenceRef = contributionEvidenceRef
+    , rawContributionEvidenceClaim = contributionClaimId
+    , rawContributionEvidenceParticipants = [contributorOneId, contributorTwoId]
+    , rawContributionEvidenceTarget = strategyId
+    , rawJointContributionRationales = [contributionRationale]
+    , rawContributionPrimitiveGraph =
+        Just (RawKeyResultContributionGraph contributionGraph)
+    }
+
+actionContributionGraph :: RawBoundContributionGraph
+actionContributionGraph =
+  contributionGraph
+    { rawContributionGraphNodes =
+        [contributorOneActionId, contributorTwoActionId, strategyActionId]
+    , rawContributionGraphEdges =
+        [contributorOneTargetActionEdge, contributorTwoTargetActionEdge]
+    }
+
+actionContributionEvidence :: RawCollectiveContributionEvidence
+actionContributionEvidence =
+  contributionEvidence
+    { rawContributionPrimitiveGraph =
+        Just (RawActionContributionGraph actionContributionGraph)
+    }
+
+actionContributionRawGraph :: RawGraph
+actionContributionRawGraph =
+  completeCollectiveGraph
+    { rawEdges =
+        contributorOneTargetActionEdge : rawEdges completeCollectiveGraph
+    }
+
+assessContributionModel ::
+     RawGraph
+  -> [RawCollectiveContributionEvidence]
+  -> [Claim RawCollectiveStrategyContribution]
+  -> ModelAssessment
+assessContributionModel raw evidence claims =
+  assessContributionModelWith collectiveFormulations raw evidence claims
+
+assessContributionModelWith ::
+     [RawStrategyFormulation]
+  -> RawGraph
+  -> [RawCollectiveContributionEvidence]
+  -> [Claim RawCollectiveStrategyContribution]
+  -> ModelAssessment
+assessContributionModelWith formulations raw evidence claims =
+  assessMixedCollectiveModelWith
+    formulations
+    raw
+    (map CollectiveStrategyContributionEvidence evidence)
+    (map CollectiveStrategyContributionClaim claims)
+
+assessMixedCollectiveModel ::
+     RawGraph
+  -> [RawCollectiveFanInEvidence]
+  -> [RawCollectiveFanInClaim]
+  -> ModelAssessment
+assessMixedCollectiveModel raw evidence claims =
+  assessMixedCollectiveModelWith collectiveFormulations raw evidence claims
+
+assessMixedCollectiveModelWith ::
+     [RawStrategyFormulation]
+  -> RawGraph
+  -> [RawCollectiveFanInEvidence]
+  -> [RawCollectiveFanInClaim]
+  -> ModelAssessment
+assessMixedCollectiveModelWith formulations raw evidence claims =
+  case validateStructure raw of
+    StructureAccepted structure ->
+      assessModelSemantics
+        structure
+        ModelSemanticsInput
+          { modelStrategyClaims = map assertedClaim formulations
+          , modelCollectiveClaims = claims
+          , modelCollectiveEvidence = evidence
+          }
+    StructureModelRejected errors ->
+      error ("collective fixture structural errors: " ++ show errors)
+    StructureInternalFailure internal ->
+      error ("collective fixture internal failure: " ++ show internal)
+
+unrelatedContributionFormulationGraph :: Int -> RawGraph
+unrelatedContributionFormulationGraph size =
+  coverageGapGraph
+    { rawNodes =
+        RawContextNode secondStrategyId Strategy
+          : secondStrategyNodes
+          ++ concatMap unrelatedFormulationNodes [1 .. size]
+          ++ rawNodes coverageGapGraph
+    , rawEdges =
+        secondStrategyMinimumEdges
+          ++ concatMap unrelatedFormulationEdges [1 .. size]
+          ++ rawEdges coverageGapGraph
+    }
+
+unrelatedContributionFormulation :: Int -> RawStrategyFormulation
+unrelatedContributionFormulation size =
+  secondStrategyFormulation
+    { rawFormulationActions =
+        secondStrategyActionId NonEmpty.:| map unrelatedActionId [1 .. size]
+    , rawFormulationKeyResults =
+        secondStrategyKeyResultId
+          NonEmpty.:| map unrelatedKeyResultId [1 .. size]
+    }
+
+unrelatedFormulationNodes :: Int -> [RawNode]
+unrelatedFormulationNodes ordinal =
+  [ RawPrimitiveNode (unrelatedActionId ordinal) secondStrategyId Action
+  , RawPrimitiveNode (unrelatedKeyResultId ordinal) secondStrategyId KeyResult
+  ]
+
+unrelatedFormulationEdges :: Int -> [RawEdge]
+unrelatedFormulationEdges ordinal =
+  [ edge
+      secondStrategyPrincipleId
+      guidesStrategyPrincipleToAction
+      (unrelatedActionId ordinal)
+  , edge
+      (unrelatedActionId ordinal)
+      contributesStrategyActionToKeyResult
+      (unrelatedKeyResultId ordinal)
+  , edge
+      (unrelatedKeyResultId ordinal)
+      substantiatesStrategyKeyResultObjective
+      secondStrategyObjectiveId
+  ]
+
+unrelatedActionId, unrelatedKeyResultId :: Int -> RawNodeId
+unrelatedActionId ordinal =
+  RawNodeId ("unrelated-action-" <> Text.pack (show ordinal))
+
+unrelatedKeyResultId ordinal =
+  RawNodeId ("unrelated-key-result-" <> Text.pack (show ordinal))

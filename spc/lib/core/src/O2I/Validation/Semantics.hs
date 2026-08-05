@@ -28,9 +28,14 @@ module O2I.Validation.Semantics
   , assessedSemanticModel
   , assessmentInvariantErrors
   , assessmentCollectiveErrors
+  , assessmentCollectiveContributionErrors
+  , assessmentCollectiveContributionPreparationWork
+  , assessmentCollectiveContributionWork
   , assessmentCandidatePropositions
   , assessmentCandidateCollectiveStrategyRealizations
   , assessmentValidatedCollectiveStrategyRealizations
+  , assessmentCandidateCollectiveStrategyContributions
+  , assessmentValidatedCollectiveStrategyContributions
   , contextElaboration
   , modelMaturity
   , modelGraph
@@ -39,10 +44,12 @@ module O2I.Validation.Semantics
   , strategyFormulations
   , strategyFormulationData
   , validatedCollectiveStrategyRealizations
+  , validatedCollectiveStrategyContributions
   , lookupSemanticContextRef
   , qualifyingStrategies
   ) where
 
+import Data.List (group, sort)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.Map.Strict as Map
@@ -54,6 +61,23 @@ import O2I.Language.Claim
 import O2I.Language.Element
 import O2I.Language.Macro (MacroClaim)
 import O2I.Validation.Collective
+import O2I.Validation.Collective.Contribution
+import O2I.Validation.Collective.Contribution.Eval
+  ( CollectiveContributionClaimStructureAssessment
+  , CollectiveStrategyContributionAssessment
+  , assessCollectiveContributionClaimStructure
+  , assessCollectiveStrategyContributions
+  , blockedCollectiveStrategyContributionAssessment
+  , candidateCollectiveStrategyContributions
+  , collectiveStrategyContributionErrors
+  , contributionAssessmentPreparationWork
+  , contributionAssessmentWork
+  , validateCollectiveStrategyContributions
+  )
+import O2I.Validation.Collective.Contribution.Index
+  ( prepareCollectiveContribution
+  )
+import O2I.Validation.Collective.Registry
 import O2I.Validation.MacroEvidence
 import qualified O2I.Validation.MacroEvidence as Evidence
 import O2I.Validation.Semantics.Context
@@ -75,10 +99,10 @@ data Maturity
 data ModelSemanticsInput = ModelSemanticsInput
   { modelStrategyClaims :: [Claim RawStrategyFormulation]
     -- ^ Strategy content claims in source order.
-  , modelCollectiveClaims :: [Claim RawCollectiveStrategyRealization]
-    -- ^ Collective Strategy-realization claims in source order.
-  , modelCollectiveFitEvidence :: [RawCollectiveFitEvidence]
-    -- ^ Structured Fit evidence available to the collective claims.
+  , modelCollectiveClaims :: [RawCollectiveFanInClaim]
+    -- ^ Typed collective fan-in claims in source order.
+  , modelCollectiveEvidence :: [RawCollectiveFanInEvidence]
+    -- ^ Family-owned evidence bundles in source order.
   } deriving (Eq, Show)
 
 -- | Candidate proposition retained by complete model assessment and excluded
@@ -92,6 +116,8 @@ data CandidateModelProposition
     -- ^ Proposed Strategy content bundle.
   | CandidateCollectiveRealization ClaimId
     -- ^ Structurally admissible proposed collective Strategy realization.
+  | CandidateCollectiveContribution ClaimId
+    -- ^ Structurally admissible proposed collective Strategy contribution.
   deriving (Eq, Show)
 
 -- | Fatal semantic defect from one part of the complete assessment boundary.
@@ -99,6 +125,8 @@ data ModelSemanticError
   = ContextSemanticError ModelInvariantError
   | MacroEvidenceSemanticError MacroEvidenceError
   | CollectiveSemanticError CollectiveStrategyRealizationError
+  | CollectiveContributionSemanticError CollectiveStrategyContributionError
+  | DuplicateCollectiveFanInClaimId ClaimId
   deriving (Eq, Show)
 
 -- | Closed result state of one complete semantic assessment.
@@ -116,6 +144,9 @@ data ModelAssessment = ModelAssessment
   , assessedCollective :: CollectiveStrategyRealizationAssessment
   , assessedCollectiveValidation :: Maybe
       ValidatedCollectiveStrategyRealizations
+  , assessedContribution :: Maybe CollectiveStrategyContributionAssessment
+  , assessedContributionValidation :: Maybe
+      ValidatedCollectiveStrategyContributions
   , assessedCandidates :: [CandidateModelProposition]
   , assessedStatus :: ModelAssessmentStatus
   , assessedMaturity :: Maturity
@@ -128,6 +159,7 @@ data SemanticallyValidModel =
     ContextSemantics
     PreparedMacroEvidence
     ValidatedCollectiveStrategyRealizations
+    ValidatedCollectiveStrategyContributions
 
 -- * Complete semantic validation interface
 -- | Assess all semantic claims within one exact structural boundary.
@@ -144,6 +176,8 @@ assessModelSemantics structure inputs =
     { assessedContext = contextAssessment
     , assessedCollective = collectiveAssessment
     , assessedCollectiveValidation = collectiveValidation
+    , assessedContribution = contributionAssessment
+    , assessedContributionValidation = contributionValidation
     , assessedCandidates = candidates
     , assessedStatus = status
     , assessedMaturity = deriveMaturity elaborations status
@@ -157,43 +191,72 @@ assessModelSemantics structure inputs =
         contextCandidate
         (contextAssessmentCandidatePropositions contextAssessment)
     collectiveStructure =
-      assessCollectiveClaimStructure structure (modelCollectiveClaims inputs)
+      assessCollectiveClaimStructure structure realizationClaims
     blockedCollective =
       blockedCollectiveStrategyRealizationAssessment collectiveStructure
-    (collectiveAssessment, collectiveValidation, candidates, status) =
+    contributionStructure =
+      assessCollectiveContributionClaimStructure structure contributionClaims
+    blockedContribution =
+      blockedCollectiveStrategyContributionAssessment contributionStructure
+    (collectiveAssessment, collectiveValidation, contributionAssessment, contributionValidation, candidates, status) =
       case contextAssessmentStatus contextAssessment of
         ContextRejected errors ->
           ( blockedCollective
           , Nothing
-          , contextCandidates ++ collectiveCandidates blockedCollective
+          , Just blockedContribution
+          , Nothing
+          , contextCandidates
+              ++ collectiveCandidates blockedCollective
+              ++ contributionCandidates blockedContribution
           , SemanticsRejected
               (appendNonEmpty
                  (fmap ContextSemanticError errors)
-                 (map
-                    CollectiveSemanticError
-                    (collectiveStrategyRealizationErrors blockedCollective))))
+                 (map DuplicateCollectiveFanInClaimId duplicateFamilyIds
+                    ++ map
+                         CollectiveSemanticError
+                         (collectiveStrategyRealizationErrors blockedCollective)
+                    ++ map
+                         CollectiveContributionSemanticError
+                         (collectiveStrategyContributionErrors
+                            blockedContribution))))
         ContextPending context pendingContexts ->
           let (prepared, assessment) =
                 assessCollectiveWithPreparedMacroEvidence
                   inputs
                   collectiveStructure
                   context
-              (validatedCollective, semanticValidation) =
-                validateSemanticBoundary prepared assessment
+              contribution =
+                assessContributionWithPrepared
+                  structure
+                  inputs
+                  contributionStructure
+                  context
+                  prepared
+              (validatedCollective, validatedContribution, semanticValidation) =
+                validateSemanticBoundary
+                  duplicateFamilyIds
+                  prepared
+                  assessment
+                  contribution
               pending =
                 appendNonEmpty
                   (fmap contextCandidate pendingContexts)
-                  (collectiveCandidates assessment)
+                  (collectiveCandidates assessment
+                     ++ contributionCandidates contribution)
               pendingCandidates = NonEmpty.toList pending
            in case semanticValidation of
                 Failure errors ->
                   ( assessment
                   , validatedCollective
+                  , Just contribution
+                  , validatedContribution
                   , pendingCandidates
                   , SemanticsRejected errors)
-                Success (_, validated) ->
+                Success (_, validated, validatedContributions) ->
                   ( assessment
                   , Just validated
+                  , Just contribution
+                  , Just validatedContributions
                   , pendingCandidates
                   , SemanticsPending pending)
         ContextAccepted context ->
@@ -202,31 +265,62 @@ assessModelSemantics structure inputs =
                   inputs
                   collectiveStructure
                   context
-              (validatedCollective, semanticValidation) =
-                validateSemanticBoundary prepared assessment
-              pendingCandidates = collectiveCandidates assessment
+              contribution =
+                assessContributionWithPrepared
+                  structure
+                  inputs
+                  contributionStructure
+                  context
+                  prepared
+              (validatedCollective, validatedContribution, semanticValidation) =
+                validateSemanticBoundary
+                  duplicateFamilyIds
+                  prepared
+                  assessment
+                  contribution
+              pendingCandidates =
+                collectiveCandidates assessment
+                  ++ contributionCandidates contribution
            in case semanticValidation of
                 Failure errors ->
                   ( assessment
                   , validatedCollective
+                  , Just contribution
+                  , validatedContribution
                   , pendingCandidates
                   , SemanticsRejected errors)
-                Success (validatedPrepared, validated) ->
+                Success (validatedPrepared, validated, validatedContributions) ->
                   case NonEmpty.nonEmpty pendingCandidates of
                     Just pending ->
                       ( assessment
                       , Just validated
+                      , Just contribution
+                      , Just validatedContributions
                       , pendingCandidates
                       , SemanticsPending pending)
                     Nothing ->
                       ( assessment
                       , Just validated
+                      , Just contribution
+                      , Just validatedContributions
                       , []
                       , SemanticsAccepted
                           (SemanticallyValidModel
                              context
                              validatedPrepared
-                             validated))
+                             validated
+                             validatedContributions))
+    realizationClaims =
+      [ claim
+      | CollectiveStrategyRealizationClaim claim <- modelCollectiveClaims inputs
+      ]
+    contributionClaims =
+      [ claim
+      | CollectiveStrategyContributionClaim claim <-
+          modelCollectiveClaims inputs
+      ]
+    duplicateFamilyIds =
+      duplicates (map collectiveFanInClaimId (modelCollectiveClaims inputs))
 
 assessCollectiveWithPreparedMacroEvidence ::
      ModelSemanticsInput
@@ -241,19 +335,63 @@ assessCollectiveWithPreparedMacroEvidence inputs structure context =
       assessCollectiveStrategyRealizations
         context
         (collectiveMacroEvidenceFor prepared)
-        (modelCollectiveFitEvidence inputs)
+        [ evidence
+        | CollectiveStrategyRealizationEvidence evidence <-
+            modelCollectiveEvidence inputs
+        ]
         structure
 
+assessContributionWithPrepared ::
+     StructuralAssessment
+  -> ModelSemanticsInput
+  -> CollectiveContributionClaimStructureAssessment
+  -> ContextSemantics
+  -> PreparedMacroEvidence
+  -> CollectiveStrategyContributionAssessment
+assessContributionWithPrepared structural inputs contributionStructure context prepared =
+  assessCollectiveStrategyContributions
+    contributionPreparation
+    contributionStructure
+  where
+    contributionEvidence =
+      [ evidence
+      | CollectiveStrategyContributionEvidence evidence <-
+          modelCollectiveEvidence inputs
+      ]
+    contributionPreparation =
+      prepareCollectiveContribution
+        structural
+        context
+        prepared
+        contributionEvidence
+
 validateSemanticBoundary ::
-     PreparedMacroEvidence
+     [ClaimId]
+  -> PreparedMacroEvidence
   -> CollectiveStrategyRealizationAssessment
+  -> CollectiveStrategyContributionAssessment
   -> ( Maybe ValidatedCollectiveStrategyRealizations
+     , Maybe ValidatedCollectiveStrategyContributions
      , Validation
          (NonEmpty ModelSemanticError)
-         (PreparedMacroEvidence, ValidatedCollectiveStrategyRealizations))
-validateSemanticBoundary prepared assessment =
-  (validatedCollective, (,) <$> macroValidation <*> collectiveValidation)
+         ( PreparedMacroEvidence
+         , ValidatedCollectiveStrategyRealizations
+         , ValidatedCollectiveStrategyContributions))
+validateSemanticBoundary duplicateIds prepared assessment contribution =
+  (validatedCollective, validatedContribution, boundaryValidation)
   where
+    boundaryValidation =
+      (\_ validatedPrepared realizations contributions ->
+         (validatedPrepared, realizations, contributions))
+        <$> identityValidation
+        <*> macroValidation
+        <*> collectiveValidation
+        <*> contributionValidation
+    identityValidation =
+      case NonEmpty.nonEmpty duplicateIds of
+        Nothing -> Success ()
+        Just identifiers ->
+          Failure (fmap DuplicateCollectiveFanInClaimId identifiers)
     macroValidation =
       case validatePreparedMacroEvidence prepared of
         Failure errors -> Failure (fmap MacroEvidenceSemanticError errors)
@@ -263,8 +401,19 @@ validateSemanticBoundary prepared assessment =
       case rawCollectiveValidation of
         Failure errors -> Failure (fmap CollectiveSemanticError errors)
         Success validated -> Success validated
+    rawContributionValidation =
+      validateCollectiveStrategyContributions contribution
+    contributionValidation =
+      case rawContributionValidation of
+        Failure errors ->
+          Failure (fmap CollectiveContributionSemanticError errors)
+        Success validated -> Success validated
     validatedCollective =
       case rawCollectiveValidation of
+        Failure _ -> Nothing
+        Success validated -> Just validated
+    validatedContribution =
+      case rawContributionValidation of
         Failure _ -> Nothing
         Success validated -> Just validated
 
@@ -290,6 +439,27 @@ assessmentCollectiveErrors ::
 assessmentCollectiveErrors =
   collectiveStrategyRealizationErrors . assessedCollective
 
+-- | Read failed collective Strategy-contribution invariants.
+assessmentCollectiveContributionErrors ::
+     ModelAssessment -> [CollectiveStrategyContributionError]
+assessmentCollectiveContributionErrors assessment =
+  maybe
+    []
+    collectiveStrategyContributionErrors
+    (assessedContribution assessment)
+
+-- | Read exact one-time contribution index preparation work.
+assessmentCollectiveContributionPreparationWork ::
+     ModelAssessment -> Maybe CollectiveContributionPreparationWork
+assessmentCollectiveContributionPreparationWork =
+  fmap contributionAssessmentPreparationWork . assessedContribution
+
+-- | Read exact contribution-validation work when Context semantics existed.
+assessmentCollectiveContributionWork ::
+     ModelAssessment -> Maybe CollectiveContributionValidationWork
+assessmentCollectiveContributionWork =
+  fmap contributionAssessmentWork . assessedContribution
+
 -- | Read every Candidate excluded from validated model semantics.
 assessmentCandidatePropositions ::
      ModelAssessment -> [CandidateModelProposition]
@@ -309,6 +479,21 @@ assessmentValidatedCollectiveStrategyRealizations ::
      ModelAssessment -> Maybe ValidatedCollectiveStrategyRealizations
 assessmentValidatedCollectiveStrategyRealizations = assessedCollectiveValidation
 
+-- | Read detailed collective-contribution Candidates retained for diagnostics.
+assessmentCandidateCollectiveStrategyContributions ::
+     ModelAssessment -> [CandidateCollectiveStrategyContribution]
+assessmentCandidateCollectiveStrategyContributions assessment =
+  maybe
+    []
+    candidateCollectiveStrategyContributions
+    (assessedContribution assessment)
+
+-- | Read validated collective contributions available within this assessment.
+assessmentValidatedCollectiveStrategyContributions ::
+     ModelAssessment -> Maybe ValidatedCollectiveStrategyContributions
+assessmentValidatedCollectiveStrategyContributions =
+  assessedContributionValidation
+
 -- | Read one Context's elaboration from the complete assessment boundary.
 contextElaboration :: ModelAssessment -> RawNodeId -> Maybe Elaboration
 contextElaboration = contextAssessmentElaboration . assessedContext
@@ -319,15 +504,15 @@ modelMaturity = assessedMaturity
 
 -- | Access the structurally valid graph underlying complete semantics.
 modelGraph :: SemanticallyValidModel -> WellFormedGraph
-modelGraph (SemanticallyValidModel context _ _) = contextGraph context
+modelGraph (SemanticallyValidModel context _ _ _) = contextGraph context
 
 -- | Project Context semantics for internal downstream validation.
 modelContextSemantics :: SemanticallyValidModel -> ContextSemantics
-modelContextSemantics (SemanticallyValidModel context _ _) = context
+modelContextSemantics (SemanticallyValidModel context _ _ _) = context
 
 -- | Reuse the exact validated macro evidence of this semantic model.
 modelPreparedMacroEvidence :: SemanticallyValidModel -> PreparedMacroEvidence
-modelPreparedMacroEvidence (SemanticallyValidModel _ prepared _) = prepared
+modelPreparedMacroEvidence (SemanticallyValidModel _ prepared _ _) = prepared
 
 -- | Interpret one canonical macro rule against validated model evidence.
 macroEvidenceWitnesses ::
@@ -338,14 +523,20 @@ macroEvidenceWitnesses semantic =
 -- | Access complete Strategy formulations indexed by Strategy Context.
 strategyFormulations ::
      SemanticallyValidModel -> Map RawNodeId StrategyFormulation
-strategyFormulations (SemanticallyValidModel context _ _) =
+strategyFormulations (SemanticallyValidModel context _ _ _) =
   contextStrategyFormulations context
 
 -- | Access validated collective Strategy realizations.
 validatedCollectiveStrategyRealizations ::
      SemanticallyValidModel -> ValidatedCollectiveStrategyRealizations
-validatedCollectiveStrategyRealizations (SemanticallyValidModel _ _ collective) =
+validatedCollectiveStrategyRealizations (SemanticallyValidModel _ _ collective _) =
   collective
+
+-- | Access validated collective Strategy contributions.
+validatedCollectiveStrategyContributions ::
+     SemanticallyValidModel -> ValidatedCollectiveStrategyContributions
+validatedCollectiveStrategyContributions (SemanticallyValidModel _ _ _ contributions) =
+  contributions
 
 -- | Resolve a raw identifier as a typed Context in a semantic model.
 lookupSemanticContextRef ::
@@ -353,13 +544,13 @@ lookupSemanticContextRef ::
   -> SContext context
   -> RawNodeId
   -> Maybe (ContextRef context)
-lookupSemanticContextRef (SemanticallyValidModel context _ _) =
+lookupSemanticContextRef (SemanticallyValidModel context _ _ _) =
   lookupContextSemanticsRef context
 
 -- | Find Strategies that qualify one situated Need.
 qualifyingStrategies ::
      SemanticallyValidModel -> ContextRef 'Need -> [ContextRef 'Strategy]
-qualifyingStrategies (SemanticallyValidModel context _ _) =
+qualifyingStrategies (SemanticallyValidModel context _ _ _) =
   qualifyingStrategiesInContext context
 
 deriveMaturity :: Map RawNodeId Elaboration -> ModelAssessmentStatus -> Maturity
@@ -393,6 +584,22 @@ collectiveCandidates ::
      CollectiveStrategyRealizationAssessment -> [CandidateModelProposition]
 collectiveCandidates =
   map collectiveCandidate . candidateCollectiveStrategyRealizations
+
+contributionCandidate ::
+     CandidateCollectiveStrategyContribution -> CandidateModelProposition
+contributionCandidate =
+  CandidateCollectiveContribution
+    . rawContributionId
+    . claimedProposition
+    . candidateCollectiveContributionClaim
+
+contributionCandidates ::
+     CollectiveStrategyContributionAssessment -> [CandidateModelProposition]
+contributionCandidates =
+  map contributionCandidate . candidateCollectiveStrategyContributions
+
+duplicates :: Ord value => [value] -> [value]
+duplicates = map head . filter ((> 1) . length) . group . sort
 
 appendNonEmpty :: NonEmpty value -> [value] -> NonEmpty value
 appendNonEmpty (first :| rest) suffix = first :| (rest ++ suffix)

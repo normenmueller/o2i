@@ -1,6 +1,10 @@
--- | Shared vocabulary for collective Strategy realization and Fit assessment.
+-- | Shared vocabulary for typed collective Strategy fan-in propositions.
 module O2I.Validation.Collective.Types
-  ( CollectiveFitEvidenceRef(..)
+  ( ClaimId(..)
+  , PropositionFamily(..)
+  , allPropositionFamilies
+  , ParticipantCompleteness(..)
+  , CollectiveFitEvidenceRef(..)
   , RawMutualCoherenceEvidence(..)
   , RawContributorCompatibilityEvidence(..)
   , RawCollectiveFitEvidence(..)
@@ -11,6 +15,33 @@ module O2I.Validation.Collective.Types
 
 import Data.Text (Text)
 import O2I.Language.Element (RawNodeId)
+
+-- | Stable occurrence identity of one collective proposition.
+newtype ClaimId = ClaimId
+  { claimIdText :: Text
+  } deriving (Eq, Ord, Show)
+
+-- | Closed registry of admitted collective fan-in families.
+--
+-- A new constructor requires a family-owned evidence validator. The registry
+-- is deliberately not an open relation-name dispatch.
+data PropositionFamily
+  = CollectiveStrategyRealizationFamily
+  | CollectiveStrategyContributionFamily
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+-- | Enumerate the closed family registry in stable declaration order.
+allPropositionFamilies :: [PropositionFamily]
+allPropositionFamilies = [minBound .. maxBound]
+
+-- | Whether the persisted participant set is explicitly complete.
+--
+-- Completeness describes the participant set, not proposition commitment and
+-- not the subset displayed by a View.
+data ParticipantCompleteness
+  = Open
+  | Closed
+  deriving (Bounded, Enum, Eq, Ord, Show)
 
 -- | Stable reference to one structured collective-Fit evidence bundle.
 newtype CollectiveFitEvidenceRef = CollectiveFitEvidenceRef

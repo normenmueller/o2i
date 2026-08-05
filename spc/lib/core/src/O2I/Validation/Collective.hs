@@ -4,6 +4,9 @@
 -- | Notation-independent collective realization of one Strategy.
 module O2I.Validation.Collective
   ( ClaimId(..)
+  , PropositionFamily(..)
+  , allPropositionFamilies
+  , ParticipantCompleteness(..)
   , CollectiveFitEvidenceRef(..)
   , RawMutualCoherenceEvidence(..)
   , RawContributorCompatibilityEvidence(..)
@@ -37,30 +40,22 @@ module O2I.Validation.Collective
   , candidateCollectiveIssues
   ) where
 
-import Data.Either (partitionEithers)
 import Data.List (group, sort)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.Map.Strict as Map
 import Data.Maybe (mapMaybe)
-import Data.Text (Text)
-import qualified Data.Text as Text
 import Data.Validation (Validation(..))
 import O2I.Graph.Raw
 import O2I.Language.Claim
 import O2I.Language.Element
 import O2I.Language.Relation
+import qualified O2I.Validation.Collective.FanIn as FanIn
 import O2I.Validation.Collective.Fit
 import O2I.Validation.Collective.Types
 import O2I.Validation.MacroEvidence.Types
 import O2I.Validation.Semantics.Context
 import O2I.Validation.Structure.Internal
-
--- * Collective Strategy realization input
--- | Stable occurrence identity of one collective claim.
-newtype ClaimId = ClaimId
-  { claimIdText :: Text
-  } deriving (Eq, Ord, Show)
 
 -- | Unchecked collective Strategy-realization proposition.
 --
@@ -69,6 +64,7 @@ data RawCollectiveStrategyRealization = RawCollectiveStrategyRealization
   { rawRealizationId :: ClaimId
   , rawContributors :: [RawNodeId]
   , rawTarget :: RawNodeId
+  , rawRealizationCompleteness :: ParticipantCompleteness
   , rawCollectiveFitEvidence :: CollectiveFitEvidenceRef
   } deriving (Eq, Show)
 
@@ -96,6 +92,7 @@ data CollectiveStrategyRealizationStructuralError
       CollectiveParticipantRole
       RawNodeId
     -- ^ An Asserted collective claim references a Candidate Strategy.
+  | AssertedOpenCollectiveRealization ClaimId
   deriving (Eq, Show)
 
 -- | Fatal structural defect or Asserted semantic deficiency.
@@ -108,15 +105,11 @@ data CollectiveStrategyRealizationError
   | AssertedCollectiveIssue ClaimId CollectiveStrategyRealizationIssue
   deriving (Eq, Show)
 
--- | Internal representation with at least two values by construction.
-data AtLeastTwo value =
-  AtLeastTwo value value [value]
-
 -- | Opaque validated Asserted collective realization.
 data CollectiveStrategyRealization =
   CollectiveStrategyRealization
     ClaimId
-    (AtLeastTwo (ContextRef 'Strategy))
+    (NonEmpty (ContextRef 'Strategy))
     (ContextRef 'Strategy)
     CollectiveFitEvidenceRef
     [(ContextRef 'Strategy, NonEmpty MacroEvidenceWitness)]
@@ -156,21 +149,13 @@ newtype ValidatedCollectiveStrategyRealizations =
 data StructurallyValidCollective =
   StructurallyValidCollective
     (Claim RawCollectiveStrategyRealization)
-    (AtLeastTwo StructuralStrategyParticipant)
-    StructuralStrategyParticipant
-
--- | Structurally accepted Strategy declaration with retained commitment.
---
--- This assessment-only representation is not a semantic witness. It can be
--- lifted to a 'ContextRef' only when its commitment is Asserted.
-data StructuralStrategyParticipant =
-  StructuralStrategyParticipant RawNodeId Commitment
+    (FanIn.StructurallyValidCollectiveFanIn CollectiveFitEvidenceRef)
 
 data SemanticEvaluation =
   SemanticEvaluation
     StructurallyValidCollective
     [CollectiveStrategyRealizationIssue]
-    [(StructuralStrategyParticipant, Maybe (NonEmpty MacroEvidenceWitness))]
+    [(RawNodeId, Maybe (NonEmpty MacroEvidenceWitness))]
 
 -- * Collective Strategy realization assessment
 -- | Capture every collective claim against the structurally valid graph.
@@ -307,7 +292,7 @@ collectiveRealizationId (CollectiveStrategyRealization identifier _ _ _ _) =
 collectiveContributors ::
      CollectiveStrategyRealization -> NonEmpty (ContextRef 'Strategy)
 collectiveContributors (CollectiveStrategyRealization _ contributors _ _ _) =
-  atLeastTwoToNonEmpty contributors
+  contributors
 
 -- | Read the one target Strategy, distinct from every contributor.
 collectiveTarget :: CollectiveStrategyRealization -> ContextRef 'Strategy
@@ -347,90 +332,60 @@ validateCollectiveStructure ::
        (NonEmpty CollectiveStrategyRealizationError)
        StructurallyValidCollective
 validateCollectiveStructure structure claim =
-  case NonEmpty.nonEmpty errors of
-    Just failures -> Failure (fmap CollectiveStructuralError failures)
-    Nothing ->
-      case (resolvedContributors, targetResult) of
-        (first:second:rest, Right resolvedTarget) ->
-          Success
-            (StructurallyValidCollective
-               claim
-               (AtLeastTwo first second rest)
-               resolvedTarget)
-        _ ->
-          Failure
-            (CollectiveStructuralError (TooFewCollectiveContributors identifier)
-               :| [])
+  case (NonEmpty.nonEmpty errors, validated) of
+    (Just failures, _) -> Failure (fmap CollectiveStructuralError failures)
+    (Nothing, Just structural) ->
+      Success (StructurallyValidCollective claim structural)
+    (Nothing, Nothing) ->
+      Failure
+        (CollectiveStructuralError (TooFewCollectiveContributors identifier)
+           :| [])
   where
     proposition = claimedProposition claim
     identifier = rawRealizationId proposition
-    contributors = rawContributors proposition
-    distinctContributors = stableDistinct contributors
-    target = rawTarget proposition
-    (contributorErrors, resolvedContributors) =
-      partitionEithers
-        (map
-           (resolveCollectiveParticipant
-              structure
-              (claimCommitment claim)
-              identifier
-              CollectiveContributor)
-           distinctContributors)
-    targetResult =
-      resolveCollectiveParticipant
+    rawFanIn =
+      FanIn.RawCollectiveFanIn
+        { FanIn.rawFanInId = identifier
+        , FanIn.rawFanInParticipants = rawContributors proposition
+        , FanIn.rawFanInTarget = rawTarget proposition
+        , FanIn.rawFanInCompleteness = rawRealizationCompleteness proposition
+        , FanIn.rawFanInEvidence = rawCollectiveFitEvidence proposition
+        , FanIn.rawFanInEvidenceReferenceText =
+            collectiveFitEvidenceRefText (rawCollectiveFitEvidence proposition)
+        }
+    (fanInErrors, validated, _) =
+      FanIn.assessCollectiveFanInStructure
         structure
-        (claimCommitment claim)
-        identifier
-        CollectiveTarget
-        target
-    targetErrors =
-      case targetResult of
-        Left failure -> [failure]
-        Right _ -> []
-    errors =
-      [EmptyCollectiveRealizationClaimId | blankClaimId identifier]
-        ++ [ EmptyCollectiveFitEvidenceReference identifier
-           | blankFitReference (rawCollectiveFitEvidence proposition)
-           ]
-        ++ [ TooFewCollectiveContributors identifier
-           | length distinctContributors < 2
-           ]
-        ++ [ DuplicateCollectiveContributor identifier contributor
-           | contributor <- duplicates contributors
-           ]
-        ++ [ CollectiveContributorIsTarget identifier target
-           | target `elem` distinctContributors
-           ]
-        ++ contributorErrors
-        ++ targetErrors
+        CollectiveStrategyRealizationFamily
+        fanInClaim
+    errors = map realizationStructuralError fanInErrors
+    fanInClaim =
+      case claimCommitment claim of
+        Candidate -> candidateClaim rawFanIn
+        Asserted -> assertedClaim rawFanIn
 
-resolveCollectiveParticipant ::
-     StructuralAssessment
-  -> Commitment
-  -> ClaimId
-  -> CollectiveParticipantRole
-  -> RawNodeId
-  -> Either
-       CollectiveStrategyRealizationStructuralError
-       StructuralStrategyParticipant
-resolveCollectiveParticipant structure collectiveCommitment claim role participant =
-  case lookupStructuralNodeDeclaration structure participant of
-    Nothing -> Left (UnknownCollectiveParticipant claim role participant)
-    Just declaration
-      | structuralNodeDeclarationKind declaration /= ContextNodeKind Strategy ->
-        Left
-          (NonStrategyCollectiveParticipant
-             claim
-             role
-             participant
-             (structuralNodeDeclarationKind declaration))
-      | collectiveCommitment == Asserted
-      , participantCommitment == Candidate ->
-        Left (AssertedCollectiveDependsOnCandidate claim role participant)
-      | otherwise ->
-        Right (StructuralStrategyParticipant participant participantCommitment)
-      where participantCommitment =
-              structuralNodeDeclarationCommitment declaration
+realizationStructuralError ::
+     FanIn.CollectiveFanInStructuralError
+  -> CollectiveStrategyRealizationStructuralError
+realizationStructuralError failure =
+  case failure of
+    FanIn.EmptyCollectiveFanInClaimId _ -> EmptyCollectiveRealizationClaimId
+    FanIn.EmptyCollectiveFanInEvidenceReference _ identifier ->
+      EmptyCollectiveFitEvidenceReference identifier
+    FanIn.TooFewCollectiveFanInParticipants _ identifier ->
+      TooFewCollectiveContributors identifier
+    FanIn.DuplicateCollectiveFanInParticipant _ identifier participant ->
+      DuplicateCollectiveContributor identifier participant
+    FanIn.CollectiveFanInParticipantIsTarget _ identifier target ->
+      CollectiveContributorIsTarget identifier target
+    FanIn.UnknownCollectiveFanInParticipant _ identifier role participant ->
+      UnknownCollectiveParticipant identifier role participant
+    FanIn.NonStrategyCollectiveFanInParticipant _ identifier role participant kind ->
+      NonStrategyCollectiveParticipant identifier role participant kind
+    FanIn.AssertedCollectiveFanInDependsOnCandidate _ identifier role participant ->
+      AssertedCollectiveDependsOnCandidate identifier role participant
+    FanIn.AssertedOpenCollectiveFanIn _ identifier ->
+      AssertedOpenCollectiveRealization identifier
 
 evaluateCollective ::
      ContextSemantics
@@ -449,16 +404,11 @@ evaluateCollective semantic evidence fitIndex structural =
     contributionEvidence =
       [ ( contributor
         , NonEmpty.nonEmpty
-            (collectiveContributionWitnesses
-               evidence
-               (structuralParticipantId contributor)
-               target))
+            (collectiveContributionWitnesses evidence contributor target))
       | contributor <- structurallyValidContributorList structural
       ]
     contributionIssues =
-      [ MissingContributorContribution
-        (structuralParticipantId contributor)
-        target
+      [ MissingContributorContribution contributor target
       | (contributor, Nothing) <- contributionEvidence
       ]
     witnessPremiseEdges =
@@ -504,27 +454,22 @@ assertedWitness :: SemanticEvaluation -> Maybe CollectiveStrategyRealization
 assertedWitness (SemanticEvaluation structural issues evidence)
   | claimCommitment claim == Asserted
   , null issues
-  , Just contributors <-
-      traverseAtLeastTwo
-        liftAssertedStrategyParticipant
-        (structurallyValidContributors structural)
-  , Just target <-
-      liftAssertedStrategyParticipant (structurallyValidTarget structural)
+  , Just asserted <- FanIn.liftAssertedClosedFanIn fanIn
   , Just validatedEvidence <- traverse requireEvidence evidence =
     Just
       (CollectiveStrategyRealization
          (rawRealizationId proposition)
-         contributors
-         target
+         (FanIn.assertedFanInParticipants asserted)
+         (FanIn.assertedFanInTarget asserted)
          (rawCollectiveFitEvidence proposition)
          validatedEvidence)
   | otherwise = Nothing
   where
     claim = structurallyValidClaim structural
     proposition = claimedProposition claim
-    requireEvidence (participant, Just witnesses) = do
-      contributor <- liftAssertedStrategyParticipant participant
-      pure (contributor, witnesses)
+    fanIn = structurallyValidFanIn structural
+    requireEvidence (participant, Just witnesses) =
+      pure (mkContextRef participant, witnesses)
     requireEvidence (_, Nothing) = Nothing
 
 candidateAssessment ::
@@ -577,36 +522,23 @@ coveredBy relation target =
 
 structurallyValidClaim ::
      StructurallyValidCollective -> Claim RawCollectiveStrategyRealization
-structurallyValidClaim (StructurallyValidCollective claim _ _) = claim
+structurallyValidClaim (StructurallyValidCollective claim _) = claim
 
-structurallyValidContributors ::
-     StructurallyValidCollective -> AtLeastTwo StructuralStrategyParticipant
-structurallyValidContributors (StructurallyValidCollective _ contributors _) =
-  contributors
+structurallyValidFanIn ::
+     StructurallyValidCollective
+  -> FanIn.StructurallyValidCollectiveFanIn CollectiveFitEvidenceRef
+structurallyValidFanIn (StructurallyValidCollective _ fanIn) = fanIn
 
 structurallyValidContributorIds :: StructurallyValidCollective -> [RawNodeId]
-structurallyValidContributorIds =
-  map structuralParticipantId . structurallyValidContributorList
+structurallyValidContributorIds = structurallyValidContributorList
 
-structurallyValidContributorList ::
-     StructurallyValidCollective -> [StructuralStrategyParticipant]
+structurallyValidContributorList :: StructurallyValidCollective -> [RawNodeId]
 structurallyValidContributorList =
-  NonEmpty.toList . atLeastTwoToNonEmpty . structurallyValidContributors
-
-structurallyValidTarget ::
-     StructurallyValidCollective -> StructuralStrategyParticipant
-structurallyValidTarget (StructurallyValidCollective _ _ target) = target
+  NonEmpty.toList . FanIn.validatedFanInParticipantIds . structurallyValidFanIn
 
 structurallyValidTargetId :: StructurallyValidCollective -> RawNodeId
-structurallyValidTargetId = structuralParticipantId . structurallyValidTarget
-
-structuralParticipantId :: StructuralStrategyParticipant -> RawNodeId
-structuralParticipantId (StructuralStrategyParticipant identifier _) =
-  identifier
-
-structuralParticipantCommitment :: StructuralStrategyParticipant -> Commitment
-structuralParticipantCommitment (StructuralStrategyParticipant _ commitment) =
-  commitment
+structurallyValidTargetId =
+  FanIn.validatedFanInTargetId . structurallyValidFanIn
 
 -- | Report every Candidate participant in contributor order, then the target.
 --
@@ -615,57 +547,13 @@ structuralParticipantCommitment (StructuralStrategyParticipant _ commitment) =
 candidateParticipantIssues ::
      StructurallyValidCollective -> [CollectiveStrategyRealizationIssue]
 candidateParticipantIssues structural =
-  mapMaybe candidateIssue contributors ++ mapMaybe candidateIssue [target]
-  where
-    contributors =
-      map
-        (\participant -> (CollectiveContributor, participant))
-        (structurallyValidContributorList structural)
-    target = (CollectiveTarget, structurallyValidTarget structural)
-    candidateIssue (role, participant)
-      | structuralParticipantCommitment participant == Candidate =
-        Just
-          (CandidateParticipantSemanticsUnavailable
-             role
-             (structuralParticipantId participant))
-      | otherwise = Nothing
-
--- | Lift one assessed Strategy participant into asserted semantics.
---
--- Candidate declarations have no 'ContextRef' representation by construction.
-liftAssertedStrategyParticipant ::
-     StructuralStrategyParticipant -> Maybe (ContextRef 'Strategy)
-liftAssertedStrategyParticipant participant
-  | structuralParticipantCommitment participant == Asserted =
-    Just (mkContextRef (structuralParticipantId participant))
-  | otherwise = Nothing
-
-traverseAtLeastTwo ::
-     (left -> Maybe right) -> AtLeastTwo left -> Maybe (AtLeastTwo right)
-traverseAtLeastTwo transform (AtLeastTwo first second rest) =
-  AtLeastTwo
-    <$> transform first
-    <*> transform second
-    <*> traverse transform rest
-
-atLeastTwoToNonEmpty :: AtLeastTwo value -> NonEmpty value
-atLeastTwoToNonEmpty (AtLeastTwo first second rest) = first :| (second : rest)
+  [ CandidateParticipantSemanticsUnavailable role identifier
+  | (role, identifier) <-
+      FanIn.candidateParticipantIssues (structurallyValidFanIn structural)
+  ]
 
 duplicates :: Ord value => [value] -> [value]
 duplicates = map head . filter ((> 1) . length) . group . sort
-
-stableDistinct :: Eq value => [value] -> [value]
-stableDistinct = foldl add []
-  where
-    add values value
-      | value `elem` values = values
-      | otherwise = values ++ [value]
-
-blankClaimId :: ClaimId -> Bool
-blankClaimId = Text.null . Text.strip . claimIdText
-
-blankFitReference :: CollectiveFitEvidenceRef -> Bool
-blankFitReference = Text.null . Text.strip . collectiveFitEvidenceRefText
 
 findFirst :: (value -> Bool) -> [value] -> Maybe value
 findFirst _ [] = Nothing

@@ -98,7 +98,7 @@ assessSemantics structure formulations =
     ModelSemanticsInput
       { modelStrategyClaims = formulations
       , modelCollectiveClaims = []
-      , modelCollectiveFitEvidence = []
+      , modelCollectiveEvidence = []
       }
 
 assertSemanticErrors :: RawGraph -> [ModelInvariantError] -> Assertion
