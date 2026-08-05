@@ -34,11 +34,11 @@ Suspected terminology, metamodel-semantic, normative-syntax, formalization, vali
 The linear workflow is:
 
 ```text
-Backlog -> Refined -> Ready -> In progress -> In review -> Done
+Backlog -> Refinement -> Ready -> In progress -> In review -> Done
 ```
 
 - `Backlog` captures an understandable idea, problem, and rough target without design, admission, or implementation authority.
-- `Refined` contains one viable, internally consistent contract whose complete Issue body and existing comments have been assessed and consolidated.
+- `Refinement` is the active preparation stage in which the complete Issue body and existing comments are assessed and consolidated into one viable, internally consistent contract; applicable Admission and implementation planning are completed before Product Owner authorization.
 - `Ready` is an open Issue explicitly authorized by the Product Owner, complete for its applicable Admission and implementation contract, within the recorded local authorization scope, free of any prerequisite blocking its next action, and queued for execution.
 - `In progress` is authorized work actively implemented by an agent.
 - `In review` binds an exact candidate revision to mandatory verification and risk-selected independent review.
@@ -47,9 +47,9 @@ Backlog -> Refined -> Ready -> In progress -> In review -> Done
 
 Backlog intake is deliberately lightweight. When the Product Owner presents an idea for Backlog intake, the primary agent briefly evaluates O2I fit, expected benefit, possible duplicates, change classification, and suitable labels; asks only questions that materially affect capture; and records a suitable idea directly in `Backlog` without design, Admission, or implementation authority.
 
-Agents may mature `Backlog -> Refined`. They first read the complete Issue body and every existing comment, resolve compatible material into the body, and obtain an explicit Product Owner decision for conflicts or superseded instructions. This refinement is not implementation.
+Agents move `Backlog -> Refinement` when material preparation begins. They read the complete Issue body and every existing comment, resolve compatible material into the body, and obtain an explicit Product Owner decision for conflicts or superseded instructions. Refinement is not implementation.
 
-Only the Product Owner moves `Refined -> Ready`. That transition is the execution authorization. Agents neither perform nor infer it.
+Only the Product Owner moves `Refinement -> Ready`. That transition confirms completed refinement and grants execution authorization. Agents neither perform nor infer it.
 
 Agents control later transitions within the authorized contract:
 
@@ -60,9 +60,9 @@ Agents control later transitions within the authorized contract:
 - `In progress -> Paused` records the actual interruption and one return condition.
 - `Paused -> Ready` requires that condition and every genuine blocker to be resolved. Existing authorization remains valid only for unchanged scope; a material scope change returns through refinement and Product Owner authorization.
 
-Vertical order means refinement priority in `Backlog`, Product Owner decision priority in `Refined`, and authorized execution order in `Ready`. Order in every other Project column has no workflow meaning. After completing authorized work, agents continue with the next Ready Issue or pause when none exists.
+Vertical order means intake priority in `Backlog`, refinement and Product Owner decision priority in `Refinement`, and authorized execution order in `Ready`. Order in every other Project column has no workflow meaning. After completing authorized work, agents continue with the next Ready Issue or pause when none exists.
 
-Later comments never silently mutate a Refined, Ready, or active contract. Amend the explicit contract and return it to the required state, or record a new Issue. Findings within admitted scope remain correction work.
+Later comments never silently mutate the contract. During `Refinement`, consolidate them into the Issue body before `Ready`; after authorization, a material scope change returns through `Refinement` and Product Owner authorization or receives a new Issue. Findings within admitted scope remain correction work.
 
 ## Implementation Batches
 
@@ -120,7 +120,7 @@ When GitHub is unavailable, agents continue only an already activated local hand
 - A commit that changes `.ai4X/` is an authority commit: keep it separate from implementation changes and use the configured Product Owner identity as both author and committer. The machine user never authors its own operating authority.
 - The primary agent may create an authority commit locally but never pushes it. Before a Product Owner push, report every outgoing commit and its scope. The Product Owner's own push accepts and publishes those authority commits; no separate pre-commit confirmation is required.
 - Agent-originated Issue comments and agent-controlled Project transitions from `Ready` onward use the machine user. If its separate authentication is unavailable, do not impersonate it through the Product Owner account.
-- Product Owner authorization, `Refined -> Ready`, release authorization, and other accountable decisions remain actions of the Product Owner.
+- Product Owner authorization, `Refinement -> Ready`, release authorization, and other accountable decisions remain actions of the Product Owner.
 - The machine user may publish evidence produced by an independent reviewer but never becomes or impersonates that reviewer; the evidence identifies the actual independent capability and exact subject.
 - Store machine-user credentials only in host credential storage, never in the repository or Agent Memory.
 

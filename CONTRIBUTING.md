@@ -41,30 +41,30 @@ Der Finalreview bindet Revision und Scope und dokumentiert Auswahlbegründung, F
 Das GitHub Project `O2I` ist die Planungssicht des Product Owners:
 
 - `Backlog`: verständliche Idee, noch nicht aufbereitet;
-- `Refined`: vollständig konsolidiert und entscheidungsreif, aber noch nicht freigegeben;
+- `Refinement`: aktive Aufbereitung zu einem konsistenten, entscheidungsreifen Vertrag; noch keine Umsetzung oder Freigabe;
 - `Ready`: offen, vollständig vorbereitet, ohne blockierende Voraussetzung und durch den Product Owner ausdrücklich zur Umsetzung freigegeben;
 - `In progress`: aus `Ready` aktivierte Umsetzung;
 - `Paused`: bewusst ausgesetzt; Grund und Rückkehrbedingung stehen im Issue;
 - `In review`: eine exakte Kandidatenrevision wird geprüft;
 - `Done`: akzeptiert, remote verfügbar, erforderlichenfalls remote verifiziert und geschlossen.
 
-Vor `Backlog -> Refined` lesen Agenten den vollständigen Issue-Body und sämtliche vorhandenen Kommentare. Sie führen die akzeptierten Inhalte zu einem eindeutigen Vertrag zusammen; widersprüchliche oder überholte Aussagen benötigen eine ausdrückliche Entscheidung des Product Owners. Diese Aufbereitung ist noch keine Umsetzung.
+Mit `Backlog -> Refinement` beginnt die materielle Aufbereitung. Agenten lesen den vollständigen Issue-Body und sämtliche vorhandenen Kommentare und führen die akzeptierten Inhalte zu einem eindeutigen Vertrag zusammen; widersprüchliche oder überholte Aussagen benötigen eine ausdrückliche Entscheidung des Product Owners. Diese Aufbereitung ist noch keine Umsetzung.
 
-Ausschließlich der Product Owner verschiebt `Refined -> Ready` und erteilt damit die Ausführungsfreigabe. Ab `Ready` steuern Agenten Aktivierung, Review, Korrekturen und Abschluss innerhalb des freigegebenen Vertrags. Die Reihenfolge in `Ready` bestimmt die Abarbeitungsfolge, sofern der Product Owner keine andere Reihenfolge oder Parallelisierung freigibt.
+Ausschließlich der Product Owner verschiebt `Refinement -> Ready`; damit bestätigt er den Abschluss des Refinements und erteilt die Ausführungsfreigabe. Ab `Ready` steuern Agenten Aktivierung, Review, Korrekturen und Abschluss innerhalb des freigegebenen Vertrags. Die Reihenfolge in `Ready` bestimmt die Abarbeitungsfolge, sofern der Product Owner keine andere Reihenfolge oder Parallelisierung freigibt.
 
 ```text
-Backlog -- Reifung --> Refined -- PO-Freigabe --> Ready -- Aktivierung --> In progress
-                                                       ^                       |
-                                                       |                       +-- Pause --> Paused
-                                                       |                                       |
-                                                       +-- Rückkehrbedingung erfüllt ----------+
+Backlog -- Beginn --> Refinement -- PO-Freigabe --> Ready -- Aktivierung --> In progress
+                                                        ^                       |
+                                                        |                       +-- Pause --> Paused
+                                                        |                                       |
+                                                        +-- Rückkehrbedingung erfüllt ----------+
 
 In progress -- Kandidat vollständig --> In review -- akzeptiert --> Done
     ^                                      |
     +--------------- Findings -------------+
 ```
 
-Vertikale Reihenfolge bedeutet Aufbereitungspriorität in `Backlog`, Entscheidungspriorität in `Refined` und autorisierte Abarbeitungsfolge in `Ready`. Die Reihenfolge aller anderen Spalten hat keine Workflow-Bedeutung.
+Vertikale Reihenfolge bedeutet Aufnahmepriorität in `Backlog`, Aufbereitungs- und Entscheidungspriorität in `Refinement` und autorisierte Abarbeitungsfolge in `Ready`. Die Reihenfolge aller anderen Spalten hat keine Workflow-Bedeutung.
 
 Echte Voraussetzungen innerhalb des O2I-Issue-Graphen werden ausschließlich als native Issue Dependencies modelliert. Eine erforderliche Abhängigkeit außerhalb dieses Graphen wird mit Quelle und nächster Prüfbedingung im betroffenen Issue dokumentiert. Project-Reihenfolge ersetzt keine Abhängigkeit; ein Blocker allein setzt ein Issue nicht auf `Paused`.
 

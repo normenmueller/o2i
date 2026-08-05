@@ -125,7 +125,7 @@ implementation review scope.
   narrow patch to one file, then reread the changed range and its diff before
   the next edit.
 - Use `rg` and repository tooling for inspection.
-- Read the complete Issue body and every existing comment before moving `Backlog -> Refined`; consolidate one explicit contract. Only the Product Owner moves `Refined -> Ready`. Agents control later transitions within the authorized scope according to `.ai4X/governance/guidelines.md`.
+- Move `Backlog -> Refinement` when material preparation begins; read the complete Issue body and every existing comment and consolidate one explicit contract. Only the Product Owner moves `Refinement -> Ready`. Agents control later transitions within the authorized scope according to `.ai4X/governance/guidelines.md`.
 - Delegated agents and independent reviewers never query or mutate remote work state. They request every material remote fact from the primary agent, which returns the unmodified query result or reports it unavailable without inference.
 - Update `CHANGELOG.md` for release-relevant changes.
 - Verify the narrow scope before broad gates.

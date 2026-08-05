@@ -71,6 +71,12 @@ instance-conformance work.
   `O2I Syntax` must completely visualize it.
 - Executable conformance and instance Views require Haskell `o2i inspect`.
 
+# ArchiMate Applicability Review
+
+- Decide element and relationship applicability from the ArchiMate 3.2 relationship matrix, not from diagram appearance or a relationship definition in isolation. An exact Archi implementation matrix may provide reproducible supporting evidence when its version and symbol mapping are identified.
+- Require an independent TOGAF/ArchiMate reviewer when a material decision disputes or changes an ArchiMate carrier, endpoint applicability, relationship type, derived relationship, or concrete profile mapping. Routine model maintenance does not activate this reviewer.
+- Review ArchiMate validity, O2I semantic fidelity, profile consistency, and validator consequences as separate conclusions.
+
 # Model Documentation
 
 - Keep model documentation minimal and subordinate to its owning authority.

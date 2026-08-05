@@ -261,7 +261,7 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         content = read(CONTRIBUTING)
         for status in (
             "Backlog",
-            "Refined",
+            "Refinement",
             "Ready",
             "In progress",
             "Paused",
@@ -274,8 +274,8 @@ class GitHubGovernanceContractTests(unittest.TestCase):
     def test_workflow_authority_and_transitions_are_explicit(self) -> None:
         content = read(GOVERNANCE)
         for term in (
-            "Backlog -> Refined",
-            "Refined -> Ready",
+            "Backlog -> Refinement",
+            "Refinement -> Ready",
             "Ready -> In progress",
             "In progress -> In review",
             "In review -> In progress",
@@ -456,8 +456,8 @@ class GitHubGovernanceContractTests(unittest.TestCase):
     def test_human_guidance_contains_portable_workflow_diagram(self) -> None:
         content = read(CONTRIBUTING)
         self.assertIn("```text\n", content)
-        self.assertIn("Backlog -- Reifung --> Refined", content)
-        self.assertIn("Refined -- PO-Freigabe --> Ready", content)
+        self.assertIn("Backlog -- Beginn --> Refinement", content)
+        self.assertIn("Refinement -- PO-Freigabe --> Ready", content)
         self.assertIn("In progress -- Kandidat vollständig --> In review", content)
         self.assertIn("Findings", content)
 
