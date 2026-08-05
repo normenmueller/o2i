@@ -88,8 +88,26 @@ class RenderArchimateProfileTest(unittest.TestCase):
         self.assertEqual(1, len(provenance["symbolInterpretations"]))
         self.assertEqual(1, len(provenance["decisions"]))
         self.assertIn(
-            "archimatetool/archi@"
-            "b5bd0038922ab68b26eb78c97ff7efc2ff0bba82:",
+            "**ArchiMate-Standard:** `3.2`; "
+            "**Repository:** [archimatetool/archi]"
+            "(https://github.com/archimatetool/archi);",
+            self.rendered,
+        )
+        self.assertIn(
+            "**Revision:** "
+            "`b5bd0038922ab68b26eb78c97ff7efc2ff0bba82`;",
+            self.rendered,
+        )
+        self.assertIn(
+            "**Matrixpfad:** [relationships.xml]"
+            "(https://github.com/archimatetool/archi/blob/"
+            "b5bd0038922ab68b26eb78c97ff7efc2ff0bba82/"
+            "com.archimatetool.model/model/relationships.xml) "
+            "(`com.archimatetool.model/model/relationships.xml`).",
+            self.rendered,
+        )
+        self.assertNotIn(
+            "[archimatetool/archi@",
             self.rendered,
         )
         self.assertNotIn("relationships-keys.xml", self.rendered)

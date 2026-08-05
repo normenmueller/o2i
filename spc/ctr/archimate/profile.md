@@ -18,10 +18,7 @@ Der [maschinenlesbare Vertrag](spc/ctr/archimate/profile.json) bestimmt die folg
 
 Die konkrete Relationsabbildung stützt sich auf die ArchiMate-3.2-Beziehungsmatrix. O2I bindet nur die tatsächlich verwendete Entscheidung revisionsgenau ein und kopiert die Matrix nicht.
 
-| Vertrag | Wert |
-| ------------------------ | ---------------------------------------------------- |
-| ArchiMate-Standard | `3.2` |
-| Implementierungsnachweis | [archimatetool/archi@b5bd0038922ab68b26eb78c97ff7efc2ff0bba82:com.archimatetool.model/model/relationships.xml](https://github.com/archimatetool/archi/blob/b5bd0038922ab68b26eb78c97ff7efc2ff0bba82/com.archimatetool.model/model/relationships.xml) |
+**ArchiMate-Standard:** `3.2`; **Repository:** [archimatetool/archi](https://github.com/archimatetool/archi); **Revision:** `b5bd0038922ab68b26eb78c97ff7efc2ff0bba82`; **Matrixpfad:** [relationships.xml](https://github.com/archimatetool/archi/blob/b5bd0038922ab68b26eb78c97ff7efc2ff0bba82/com.archimatetool.model/model/relationships.xml) (`com.archimatetool.model/model/relationships.xml`).
 
 | Profilabbildung | Matrixkoordinate | Symbolinterpretation |
 | -------------------------------------- | -------------------- | ------------------------ |

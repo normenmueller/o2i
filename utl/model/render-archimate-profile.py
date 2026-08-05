@@ -229,10 +229,10 @@ def _render_applicability_provenance(
                 ),
             )
         )
-    source_label = (
-        f"archimatetool/archi@{revision}:"
-        f"{source['repositoryRelativePath']}"
+    repository_label = "/".join(
+        source["repositoryUri"].rstrip("/").split("/")[-2:]
     )
+    matrix_label = source["repositoryRelativePath"].rsplit("/", 1)[-1]
     return [
         (
             "##### Anwendbarkeitsprovenienz "
@@ -246,16 +246,15 @@ def _render_applicability_provenance(
             "Matrix nicht."
         ),
         "",
-        *_table(
-            ("Vertrag", "Wert"),
-            (
-                (
-                    "ArchiMate-Standard",
-                    _code(provenance["archimateStandardVersion"]),
-                ),
-                ("Implementierungsnachweis", f"[{source_label}]({source_url})"),
-            ),
-            widths=(24, 52),
+        (
+            "**ArchiMate-Standard:** "
+            f"{_code(provenance['archimateStandardVersion'])}; "
+            "**Repository:** "
+            f"[{repository_label}]({source['repositoryUri']}); "
+            f"**Revision:** {_code(revision)}; "
+            "**Matrixpfad:** "
+            f"[{matrix_label}]({source_url}) "
+            f"({_code(source['repositoryRelativePath'])})."
         ),
         "",
         *_table(

@@ -1064,7 +1064,7 @@ Zwei komplementäre Mapping-Sichten verdichten diesen Vertrag. @Fig:o2i-syntax-c
 \clearpage
 
 \begingroup
-\footnotesize
+\scriptsize
 
 !include spc/ctr/archimate/profile.md
 
