@@ -18,7 +18,7 @@
 
 # Next Action
 
-Implement the authoritative profile, provenance, typed projection, and endpoint-sensitive verification before the Product Owner's guided Archi model edit.
+Complete publication synchronization, full verification, and independent Finalreviews for the implemented profile contract and the Product Owner's saved Archi model Views.
 
 # Current Gate
 
@@ -31,4 +31,4 @@ Implement the authoritative profile, provenance, typed projection, and endpoint-
 
 # Local Return Point
 
-Resume Issue `#33` at the profile-contract implementation; never edit `mdl/o2i.archimate` directly.
+Resume Issue `#33` at publication synchronization and candidate verification; never edit `mdl/o2i.archimate` directly.

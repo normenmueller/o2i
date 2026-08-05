@@ -62,8 +62,9 @@ the Framework but never define its generic semantics.
 - `o2i.kind` identifies `Context`, `Primitive`, `Structuring`,
   `SituationAnchor`, or `StructuredProposition`; `o2i.type` identifies the
   corresponding O2I constructor.
-- `O2I Syntax` is the complete unannotated mapping View of the declarative
-  ArchiMate profile. It specifies notation and is not an O2I graph.
+- `O2I Syntax - Carriers` and `O2I Syntax - Relations` jointly form the
+  complete unannotated mapping visualization of the declarative ArchiMate
+  profile. They specify notation and are not O2I graphs.
 - `O2I Syntax - Contextualization` and
   `O2I Syntax - Collective Strategy Realization` are executable Candidate
   conformance Views. They are inspected through the AMX adapter and Core,

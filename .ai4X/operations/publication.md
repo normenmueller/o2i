@@ -42,8 +42,8 @@ text.
   metadata, relationship representations, context-sensitive signatures, and
   structured patterns. The generated fragment remains readable publication
   prose; it never exposes raw JSON structure.
-- `O2I Syntax` visualizes that contract. It is not an independent normative
-  source.
+- `O2I Syntax - Carriers` and `O2I Syntax - Relations` jointly visualize that
+  contract. They are not independent normative sources.
 
 # Verification
 
