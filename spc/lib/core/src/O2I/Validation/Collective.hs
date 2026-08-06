@@ -40,7 +40,6 @@ module O2I.Validation.Collective
   , candidateCollectiveIssues
   ) where
 
-import Data.List (group, sort)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.Map.Strict as Map
@@ -76,7 +75,6 @@ data RawCollectiveStrategyRealization = RawCollectiveStrategyRealization
 -- participant declaration to be Asserted.
 data CollectiveStrategyRealizationStructuralError
   = EmptyCollectiveRealizationClaimId
-  | DuplicateCollectiveRealizationClaimId ClaimId
   | EmptyCollectiveFitEvidenceReference ClaimId
   | TooFewCollectiveContributors ClaimId
   | DuplicateCollectiveContributor ClaimId RawNodeId
@@ -169,19 +167,12 @@ assessCollectiveClaimStructure ::
   -> [Claim RawCollectiveStrategyRealization]
   -> CollectiveClaimStructureAssessment
 assessCollectiveClaimStructure structure claims =
-  CollectiveClaimStructureAssessment errors structuralClaims
+  CollectiveClaimStructureAssessment structuralErrors structuralClaims
   where
-    identityErrors =
-      [ CollectiveStructuralError
-        (DuplicateCollectiveRealizationClaimId identifier)
-      | identifier <-
-          duplicates (map (rawRealizationId . claimedProposition) claims)
-      ]
     structuralResults = map (validateCollectiveStructure structure) claims
     structuralErrors =
       concat [NonEmpty.toList failures | Failure failures <- structuralResults]
     structuralClaims = [structural | Success structural <- structuralResults]
-    errors = identityErrors ++ structuralErrors
 
 -- | Retain structurally valid Candidates when Context semantics blocks their
 -- semantic assessment.
@@ -551,9 +542,6 @@ candidateParticipantIssues structural =
   | (role, identifier) <-
       FanIn.candidateParticipantIssues (structurallyValidFanIn structural)
   ]
-
-duplicates :: Ord value => [value] -> [value]
-duplicates = map head . filter ((> 1) . length) . group . sort
 
 findFirst :: (value -> Bool) -> [value] -> Maybe value
 findFirst _ [] = Nothing

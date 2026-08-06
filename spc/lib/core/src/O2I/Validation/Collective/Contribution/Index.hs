@@ -66,51 +66,49 @@ prepareCollectiveContribution ::
      StructuralAssessment
   -> ContextSemantics
   -> PreparedMacroEvidence
+  -> Set RawEdge
   -> [RawCollectiveContributionEvidence]
   -> PreparedCollectiveContribution
-prepareCollectiveContribution structure semantic macro evidence =
+prepareCollectiveContribution structure semantic macro candidateEdges evidence =
   PreparedCollectiveContribution
     { storedContributionStructure = structure
     , storedContributionRelations = preparedRelationalIndex macro
     , storedCandidateEdges = candidateEdges
     , storedContributionKeyResults = keyResults
     , storedContributionActions = actions
-    , storedContributionEvidence = foldl' insertEvidence Map.empty evidence
+    , storedContributionEvidence = evidenceIndex
     , storedContributionPreparationWork =
         CollectiveContributionPreparationWork
-          { contributionCandidateOccurrencesRead = length candidates
-          , contributionCandidateIndexInsertions = Set.size candidateEdges
-          , contributionEvidenceBundlesRead = length evidence
-          , contributionEvidenceIndexInsertions = length evidence
-          , contributionStrategyFormulationsRead = length formulations
+          { contributionEvidenceBundlesRead = evidenceReads
+          , contributionEvidenceIndexInsertions = evidenceInsertions
+          , contributionStrategyFormulationsRead = formulationReads
           , contributionFormulationMemberInsertions = formulationMembers
           }
     }
   where
-    candidates =
-      [ edge
-      | CandidateEdgeProposition edge <-
-          structuralAssessmentCandidates structure
-      ]
-    candidateEdges = Set.fromList candidates
     formulations = Map.toList (contextStrategyFormulations semantic)
-    (keyResults, actions, formulationMembers) =
-      foldl' insertFormulation (Map.empty, Map.empty, 0) formulations
-    insertFormulation (keyResultIndex, actionIndex, membersRead) (strategy, formulation) =
+    (keyResults, actions, formulationReads, formulationMembers) =
+      foldl' insertFormulation (Map.empty, Map.empty, 0, 0) formulations
+    insertFormulation (keyResultIndex, actionIndex, sourceReads, membersRead) (strategy, formulation) =
       ( Map.insert strategy keyResultSet keyResultIndex
       , Map.insert strategy actionSet actionIndex
+      , sourceReads + 1
       , membersRead + Set.size keyResultSet + Set.size actionSet)
       where
         raw = strategyFormulationData formulation
         keyResultSet =
           Set.fromList (NonEmpty.toList (rawFormulationKeyResults raw))
         actionSet = Set.fromList (NonEmpty.toList (rawFormulationActions raw))
-    insertEvidence index value =
-      Map.insertWith
-        combineEvidence
-        (rawContributionEvidenceRef value)
-        (UniqueContributionEvidenceBucket value)
-        index
+    (evidenceIndex, evidenceReads, evidenceInsertions) =
+      foldl' insertEvidence (Map.empty, 0, 0) evidence
+    insertEvidence (index, sourceReads, insertions) value =
+      ( Map.insertWith
+          combineEvidence
+          (rawContributionEvidenceRef value)
+          (UniqueContributionEvidenceBucket value)
+          index
+      , sourceReads + 1
+      , insertions + 1)
     combineEvidence _new _existing = AmbiguousContributionEvidenceBucket
 
 preparedContributionStructure ::

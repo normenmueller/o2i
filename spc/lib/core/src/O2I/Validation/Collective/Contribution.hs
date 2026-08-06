@@ -32,6 +32,8 @@ module O2I.Validation.Collective.Contribution
   , contributionGraphMode
   , contributionGraphNodes
   , contributionGraphOccurrences
+  , contributionGraphRationaleReference
+  , contributionGraphProvenance
   , candidateCollectiveContributionClaim
   , candidateCollectiveContributionIssues
   ) where

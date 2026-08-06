@@ -117,6 +117,7 @@ $(assertOrdinaryFunctions
     , 'Validation.assessedSemanticModel
     , 'Validation.assessmentInvariantErrors
     , 'Validation.assessmentCollectiveErrors
+    , 'Validation.assessmentCollectiveRegistryPreparationWork
     , 'Validation.assessmentCandidatePropositions
     , 'Validation.assessmentCandidateCollectiveStrategyRealizations
     , 'Validation.assessmentValidatedCollectiveStrategyRealizations
@@ -146,6 +147,8 @@ $(assertOrdinaryFunctions
     , 'Validation.contributionGraphMode
     , 'Validation.contributionGraphNodes
     , 'Validation.contributionGraphOccurrences
+    , 'Validation.contributionGraphRationaleReference
+    , 'Validation.contributionGraphProvenance
     , 'Validation.candidateCollectiveContributionClaim
     , 'Validation.candidateCollectiveContributionIssues
     , 'Validation.validatedCollectiveStrategyRealizations
@@ -251,6 +254,7 @@ $(assertOrdinaryFunctions
     , 'O2I.modelAssessmentStatus
     , 'O2I.assessmentInvariantErrors
     , 'O2I.assessmentCollectiveErrors
+    , 'O2I.assessmentCollectiveRegistryPreparationWork
     , 'O2I.assessmentCandidatePropositions
     , 'O2I.assessmentCandidateCollectiveStrategyRealizations
     , 'O2I.assessmentValidatedCollectiveStrategyRealizations
@@ -281,6 +285,8 @@ $(assertOrdinaryFunctions
     , 'O2I.contributionGraphMode
     , 'O2I.contributionGraphNodes
     , 'O2I.contributionGraphOccurrences
+    , 'O2I.contributionGraphRationaleReference
+    , 'O2I.contributionGraphProvenance
     , 'O2I.candidateCollectiveContributionClaim
     , 'O2I.candidateCollectiveContributionIssues
     , 'O2I.assessModelSemantics

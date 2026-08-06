@@ -249,6 +249,7 @@ module O2I
   , assessmentInvariantErrors
   , assessmentCollectiveErrors
   , assessmentCollectiveContributionErrors
+  , assessmentCollectiveRegistryPreparationWork
   , assessmentCollectiveContributionPreparationWork
   , assessmentCollectiveContributionWork
   , assessmentCandidatePropositions

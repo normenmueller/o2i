@@ -52,6 +52,7 @@ library
     O2I.Validation.Collective.FanIn,
     O2I.Validation.Collective.Fit,
     O2I.Validation.Collective.Registry,
+    O2I.Validation.Collective.Registry.Internal,
     O2I.Validation.Collective.Types,
     O2I.Validation.Evidence,
     O2I.Validation.MacroEvidence,

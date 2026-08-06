@@ -126,7 +126,6 @@ data CollectiveStrategyContributionIssue
 -- | Fatal structural defect or Asserted semantic deficiency.
 data CollectiveStrategyContributionError
   = CollectiveContributionStructuralError CollectiveFanInStructuralError
-  | DuplicateCollectiveContributionClaimId ClaimId
   | AssertedCollectiveContributionIssue
       ClaimId
       CollectiveStrategyContributionIssue
@@ -134,9 +133,7 @@ data CollectiveStrategyContributionError
 
 -- | Exact one-time preparation work for contribution validation.
 data CollectiveContributionPreparationWork = CollectiveContributionPreparationWork
-  { contributionCandidateOccurrencesRead :: !Int
-  , contributionCandidateIndexInsertions :: !Int
-  , contributionEvidenceBundlesRead :: !Int
+  { contributionEvidenceBundlesRead :: !Int
   , contributionEvidenceIndexInsertions :: !Int
   , contributionStrategyFormulationsRead :: !Int
   , contributionFormulationMemberInsertions :: !Int
@@ -145,13 +142,7 @@ data CollectiveContributionPreparationWork = CollectiveContributionPreparationWo
 instance Semigroup CollectiveContributionPreparationWork where
   left <> right =
     CollectiveContributionPreparationWork
-      { contributionCandidateOccurrencesRead =
-          contributionCandidateOccurrencesRead left
-            + contributionCandidateOccurrencesRead right
-      , contributionCandidateIndexInsertions =
-          contributionCandidateIndexInsertions left
-            + contributionCandidateIndexInsertions right
-      , contributionEvidenceBundlesRead =
+      { contributionEvidenceBundlesRead =
           contributionEvidenceBundlesRead left
             + contributionEvidenceBundlesRead right
       , contributionEvidenceIndexInsertions =
@@ -166,7 +157,7 @@ instance Semigroup CollectiveContributionPreparationWork where
       }
 
 instance Monoid CollectiveContributionPreparationWork where
-  mempty = CollectiveContributionPreparationWork 0 0 0 0 0 0
+  mempty = CollectiveContributionPreparationWork 0 0 0 0
 
 -- | Exact proposition-local work performed by contribution validation.
 data CollectiveContributionValidationWork = CollectiveContributionValidationWork

@@ -143,6 +143,24 @@ collectiveContributionTests =
         "family claim identities are globally unique"
         collectiveFamilyIdentityTest
     , testCase
+        "registry preserves interleaved Candidate source order"
+        collectiveRegistryCandidateOrderTest
+    , testCase
+        "registry Candidate routing is occurrence-exact"
+        collectiveRegistryCandidateOccurrenceTest
+    , testCase
+        "registry work accounts for every routed source"
+        collectiveRegistryRoutingWorkTest
+    , testCase
+        "registry identity work accounts for repeated claim probes"
+        collectiveRegistryIdentityWorkTest
+    , testCase
+        "registry Candidate work counts nodes and edges truthfully"
+        collectiveRegistryCandidateWorkTest
+    , testCase
+        "contribution provenance binding is exact and observable"
+        contributionProvenanceBindingTest
+    , testCase
         "contribution work is operation-bound and truthful"
         contributionWorkTest
     , testCase
@@ -189,7 +207,10 @@ openContributionCandidateTest = do
           ]
   assessmentCollectiveContributionErrors assessment @?= []
   assessmentCandidatePropositions assessment
-    @?= [CandidateCollectiveContribution contributionClaimId]
+    @?= [ CandidateCollectiveProposition
+            CollectiveStrategyContributionFamily
+            contributionClaimId
+        ]
   case assessmentCandidateCollectiveStrategyContributions assessment of
     [candidate] -> candidateCollectiveContributionIssues candidate @?= []
     candidates ->
@@ -243,6 +264,8 @@ assertedContributionWitnessTest = do
           fmap snd (contributionGraphOccurrences graph)
             @?= contributorOneTargetKeyResultEdge
             NonEmpty.:| [contributorTwoTargetKeyResultEdge]
+          contributionGraphRationaleReference graph @?= contributionRationaleRef
+          contributionGraphProvenance graph @?= "source://joint-mechanism"
         contributions ->
           assertFailure
             ("expected one contribution witness, got "
@@ -450,12 +473,184 @@ collectiveFamilyIdentityTest = do
           , CollectiveStrategyContributionClaim (candidateClaim contribution)
           ]
   case modelAssessmentStatus assessment of
-    SemanticsRejected errors ->
-      assertBool
-        "cross-family duplicate identity was not rejected"
-        (DuplicateCollectiveFanInClaimId collectiveClaimId
-           `elem` NonEmpty.toList errors)
+    SemanticsRejected errors -> do
+      let identityErrors =
+            filter isCollectiveIdentityError (NonEmpty.toList errors)
+      identityErrors
+        @?= [ CollectiveSemanticError
+                (DuplicateCollectiveFanInClaimId collectiveClaimId)
+            ]
     _ -> assertFailure "cross-family duplicate identity was accepted"
+  assessmentCandidatePropositions assessment
+    @?= [ CandidateCollectiveProposition
+            CollectiveStrategyContributionFamily
+            collectiveClaimId
+        ]
+
+isCollectiveIdentityError :: ModelSemanticError -> Bool
+isCollectiveIdentityError semanticError =
+  case semanticError of
+    CollectiveSemanticError (DuplicateCollectiveFanInClaimId _) -> True
+    _ -> False
+
+collectiveRegistryCandidateOrderTest :: Assertion
+collectiveRegistryCandidateOrderTest = do
+  let assessment =
+        assessMixedCollectiveModel
+          coverageGapGraph
+          [ CollectiveStrategyContributionEvidence contributionEvidence
+          , CollectiveStrategyRealizationEvidence completeFit
+          ]
+          [ CollectiveStrategyContributionClaim
+              (candidateClaim contributionProposition)
+          , CollectiveStrategyRealizationClaim candidateCollective
+          ]
+  assessmentCandidatePropositions assessment
+    @?= [ CandidateCollectiveProposition
+            CollectiveStrategyContributionFamily
+            contributionClaimId
+        , CandidateCollectiveProposition
+            CollectiveStrategyRealizationFamily
+            collectiveClaimId
+        ]
+
+collectiveRegistryCandidateOccurrenceTest :: Assertion
+collectiveRegistryCandidateOccurrenceTest = do
+  let duplicateCommitmentAssessment =
+        assessCollectiveModel
+          completeCollectiveGraph
+          [completeFit]
+          [assertedCollective, candidateCollective]
+      malformed =
+        candidateClaim
+          (collectiveProposition {rawContributors = [contributorOneId]})
+      interleavedAssessment =
+        assessMixedCollectiveModel
+          coverageGapGraph
+          [ CollectiveStrategyRealizationEvidence completeFit
+          , CollectiveStrategyContributionEvidence contributionEvidence
+          ]
+          [ CollectiveStrategyRealizationClaim malformed
+          , CollectiveStrategyContributionClaim
+              (candidateClaim contributionProposition)
+          , CollectiveStrategyRealizationClaim candidateCollective
+          ]
+  assessmentCandidatePropositions duplicateCommitmentAssessment
+    @?= [ CandidateCollectiveProposition
+            CollectiveStrategyRealizationFamily
+            collectiveClaimId
+        ]
+  assessmentCandidatePropositions interleavedAssessment
+    @?= [ CandidateCollectiveProposition
+            CollectiveStrategyContributionFamily
+            contributionClaimId
+        , CandidateCollectiveProposition
+            CollectiveStrategyRealizationFamily
+            collectiveClaimId
+        ]
+
+collectiveRegistryRoutingWorkTest :: Assertion
+collectiveRegistryRoutingWorkTest = do
+  let unrelatedContributions = map unrelatedContributionEvidence [1 .. 500]
+      unrelatedFits = map unrelatedFitEvidence [1 .. 500]
+      assessment =
+        assessMixedCollectiveModel
+          coverageGapGraph
+          (CollectiveStrategyContributionEvidence contributionEvidence
+             : map CollectiveStrategyContributionEvidence unrelatedContributions
+             ++ map CollectiveStrategyRealizationEvidence unrelatedFits)
+          [ CollectiveStrategyContributionClaim
+              (assertedClaim contributionProposition)
+          ]
+      work = assessmentCollectiveRegistryPreparationWork assessment
+  registryClaimSourceReads work @?= 1
+  registryClaimIdentityProbes work @?= 1
+  registryEvidenceSourceReads work @?= 1001
+  registryFitEvidenceInsertions work @?= 500
+  registryContributionEvidenceInsertions work @?= 501
+  registryStructuralCandidateSourceReads work @?= 0
+  registryCandidateEdgeInsertions work @?= 0
+
+collectiveRegistryIdentityWorkTest :: Assertion
+collectiveRegistryIdentityWorkTest = do
+  let size = 500
+      assessment =
+        assessCollectiveModel
+          completeCollectiveGraph
+          [completeFit]
+          (replicate size candidateCollective)
+      work = assessmentCollectiveRegistryPreparationWork assessment
+  registryClaimSourceReads work @?= size
+  registryClaimIdentityProbes work @?= 2 * size - 1
+
+collectiveRegistryCandidateWorkTest :: Assertion
+collectiveRegistryCandidateWorkTest = do
+  let size = 500
+      nodeAssessment = assessContributionClaimModel size False
+      edgeAssessment = assessContributionClaimModel size True
+      nodeWork = assessmentCollectiveRegistryPreparationWork nodeAssessment
+      edgeWork = assessmentCollectiveRegistryPreparationWork edgeAssessment
+      baseAssessment =
+        assessContributionModel
+          coverageGapGraph
+          [contributionEvidence]
+          [assertedClaim contributionProposition]
+  registryStructuralCandidateSourceReads nodeWork @?= size
+  registryCandidateEdgeInsertions nodeWork @?= 0
+  registryStructuralCandidateSourceReads edgeWork @?= 2 * size
+  registryCandidateEdgeInsertions edgeWork @?= size
+  assessmentCollectiveContributionWork nodeAssessment
+    @?= assessmentCollectiveContributionWork baseAssessment
+  assessmentCollectiveContributionWork edgeAssessment
+    @?= assessmentCollectiveContributionWork baseAssessment
+
+contributionProvenanceBindingTest :: Assertion
+contributionProvenanceBindingTest = do
+  let exactProvenance = "  source://joint-mechanism  "
+      rationale =
+        contributionRationale {rawJointRationaleProvenance = exactProvenance}
+      exactGraph =
+        contributionGraph {rawContributionGraphProvenance = exactProvenance}
+      exactEvidence =
+        contributionEvidence
+          { rawJointContributionRationales = [rationale]
+          , rawContributionPrimitiveGraph =
+              Just (RawKeyResultContributionGraph exactGraph)
+          }
+      mismatchEvidence =
+        exactEvidence
+          { rawContributionPrimitiveGraph =
+              Just
+                (RawKeyResultContributionGraph
+                   exactGraph
+                     { rawContributionGraphProvenance =
+                         Text.strip exactProvenance
+                     })
+          }
+      exactAssessment =
+        assessContributionModel
+          coverageGapGraph
+          [exactEvidence]
+          [assertedClaim contributionProposition]
+      mismatchAssessment =
+        assessContributionModel
+          coverageGapGraph
+          [mismatchEvidence]
+          [assertedClaim contributionProposition]
+  case assessmentValidatedCollectiveStrategyContributions exactAssessment of
+    Just validated ->
+      case collectiveStrategyContributions validated of
+        [contribution] ->
+          contributionGraphProvenance
+            (collectiveContributionPrimitiveGraph contribution)
+            @?= exactProvenance
+        _ -> assertFailure "exact provenance did not produce one contribution"
+    Nothing -> assertFailure "exact provenance did not validate"
+  assessmentCollectiveContributionErrors mismatchAssessment
+    @?= [ AssertedCollectiveContributionIssue
+            contributionClaimId
+            (ContributionGraphProvenanceMismatch contributionRationaleRef)
+        ]
 
 contributionWorkTest :: Assertion
 contributionWorkTest = do
@@ -554,6 +749,13 @@ unrelatedContributionEvidence ordinal =
     { rawContributionEvidenceRef =
         CollectiveContributionEvidenceRef
           ("unrelated-evidence-" <> Text.pack (show ordinal))
+    }
+
+unrelatedFitEvidence :: Int -> RawCollectiveFitEvidence
+unrelatedFitEvidence ordinal =
+  completeFit
+    { rawFitEvidenceRef =
+        CollectiveFitEvidenceRef ("unrelated-fit-" <> Text.pack (show ordinal))
     }
 
 fitPermutationInvariantProperty :: QC.Property
@@ -813,7 +1015,8 @@ assertAssertedParticipantDependency role proposition = do
     SemanticsRejected errors ->
       assertBool
         "precise Candidate dependency was absent from semantic rejection"
-        (CollectiveSemanticError expected `elem` NonEmpty.toList errors)
+        (CollectiveSemanticError (CollectiveRegistryRealizationError expected)
+           `elem` NonEmpty.toList errors)
     _ -> assertFailure "Asserted Candidate dependency did not reject semantics"
   case assessmentValidatedCollectiveStrategyRealizations assessment of
     Nothing -> pure ()
@@ -868,13 +1071,17 @@ macroAndCollectiveErrorAccumulationTest =
                 (MissingMacroEvidence
                    (edge contributorTwoId contributesToStrategy strategyId))
             , CollectiveSemanticError
-                (AssertedCollectiveIssue
-                   collectiveClaimId
-                   (MissingContributorContribution contributorTwoId strategyId))
+                (CollectiveRegistryRealizationError
+                   (AssertedCollectiveIssue
+                      collectiveClaimId
+                      (MissingContributorContribution
+                         contributorTwoId
+                         strategyId)))
             , CollectiveSemanticError
-                (AssertedCollectiveIssue
-                   collectiveClaimId
-                   (UncoveredTargetAction strategyActionId))
+                (CollectiveRegistryRealizationError
+                   (AssertedCollectiveIssue
+                      collectiveClaimId
+                      (UncoveredTargetAction strategyActionId)))
             ]
     SemanticsPending _ ->
       assertFailure "invalid asserted evidence remained pending"
@@ -1127,20 +1334,23 @@ targetTypingTest =
 
 claimIdentityTest :: Assertion
 claimIdentityTest =
-  withCollectiveSemanticModel completeCollectiveGraph $ \semantic ->
-    mapM_
-      (assertDuplicateIdentity semantic)
-      [ [candidateCollective, candidateCollective]
-      , [candidateCollective, assertedCollective]
-      , [assertedCollective, assertedCollective]
-      ]
+  mapM_
+    assertDuplicateIdentity
+    [ [candidateCollective, candidateCollective]
+    , [candidateCollective, candidateCollective, candidateCollective]
+    , [candidateCollective, assertedCollective]
+    , [assertedCollective, assertedCollective]
+    ]
   where
-    assertDuplicateIdentity semantic claims =
-      assertCollectiveErrors
-        [ CollectiveStructuralError
-            (DuplicateCollectiveRealizationClaimId collectiveClaimId)
-        ]
-        (validateCollectiveStrategyRealizations semantic [completeFit] claims)
+    assertDuplicateIdentity claims =
+      case modelAssessmentStatus
+             (assessCollectiveModel completeCollectiveGraph [completeFit] claims) of
+        SemanticsRejected errors ->
+          NonEmpty.toList errors
+            @?= [ CollectiveSemanticError
+                    (DuplicateCollectiveFanInClaimId collectiveClaimId)
+                ]
+        _ -> assertFailure "duplicate collective identity was accepted"
 
 blankIdentityTest :: Assertion
 blankIdentityTest =
@@ -1249,7 +1459,10 @@ contextErrorRetainsBlockedCandidateTest = do
     _ -> assertFailure "Context errors did not reject model semantics"
   assessmentCollectiveErrors assessment @?= []
   assessmentCandidatePropositions assessment
-    @?= [CandidateCollectiveRealization collectiveClaimId]
+    @?= [ CandidateCollectiveProposition
+            CollectiveStrategyRealizationFamily
+            collectiveClaimId
+        ]
   assertBlockedCollectiveCandidate assessment
 
 contextErrorRetainsBlockedContributionCandidateTest :: Assertion
@@ -1262,7 +1475,10 @@ contextErrorRetainsBlockedContributionCandidateTest = do
     (not (null (assessmentInvariantErrors assessment)))
   assessmentCollectiveContributionErrors assessment @?= []
   assessmentCandidatePropositions assessment
-    @?= [CandidateCollectiveContribution contributionClaimId]
+    @?= [ CandidateCollectiveProposition
+            CollectiveStrategyContributionFamily
+            contributionClaimId
+        ]
   case assessmentCandidateCollectiveStrategyContributions assessment of
     [candidate] ->
       candidateCollectiveContributionIssues candidate
@@ -1271,6 +1487,8 @@ contextErrorRetainsBlockedContributionCandidateTest = do
       assertFailure
         ("expected one blocked contribution Candidate, got "
            ++ show (length candidates))
+  assessmentCollectiveContributionPreparationWork assessment @?= Nothing
+  assessmentCollectiveContributionWork assessment @?= Nothing
 
 contextErrorRetainsContributionStructureTest :: Assertion
 contextErrorRetainsContributionStructureTest = do
@@ -1323,13 +1541,17 @@ contextCandidatePreservesCollectiveSemanticsTest =
       assessmentCollectiveErrors assessment @?= []
       assessmentCandidatePropositions assessment
         @?= [ CandidateModelNode candidateContext
-            , CandidateCollectiveRealization collectiveClaimId
+            , CandidateCollectiveProposition
+                CollectiveStrategyRealizationFamily
+                collectiveClaimId
             ]
       case modelAssessmentStatus assessment of
         SemanticsPending pending ->
           NonEmpty.toList pending
             @?= [ CandidateModelNode candidateContext
-                , CandidateCollectiveRealization collectiveClaimId
+                , CandidateCollectiveProposition
+                    CollectiveStrategyRealizationFamily
+                    collectiveClaimId
                 ]
         _ -> assertFailure "Context Candidates did not keep semantics pending"
       case assessmentCandidateCollectiveStrategyRealizations assessment of
@@ -1813,6 +2035,57 @@ assessContributionModelWith formulations raw evidence claims =
     raw
     (map CollectiveStrategyContributionEvidence evidence)
     (map CollectiveStrategyContributionClaim claims)
+
+assessContributionClaimModel :: Int -> Bool -> ModelAssessment
+assessContributionClaimModel size includeEdges =
+  assessContributionClaimModelWithCandidates candidateNodes candidateEdges
+  where
+    candidateNodes = map candidateNoiseNode [1 .. size]
+    candidateEdges
+      | includeEdges = map candidateNoiseEdge [1 .. size]
+      | otherwise = []
+
+assessContributionClaimModelWithCandidates ::
+     [RawNode] -> [RawEdge] -> ModelAssessment
+assessContributionClaimModelWithCandidates candidateNodes candidateEdges =
+  case validateClaimStructure raw of
+    StructureAccepted structure ->
+      assessModelSemantics
+        structure
+        ModelSemanticsInput
+          { modelStrategyClaims = map assertedClaim collectiveFormulations
+          , modelCollectiveClaims =
+              [ CollectiveStrategyContributionClaim
+                  (assertedClaim contributionProposition)
+              ]
+          , modelCollectiveEvidence =
+              [CollectiveStrategyContributionEvidence contributionEvidence]
+          }
+    StructureModelRejected errors ->
+      error ("registry Candidate fixture failed: " ++ show errors)
+    StructureInternalFailure internal ->
+      error ("registry Candidate fixture failed internally: " ++ show internal)
+  where
+    raw =
+      RawClaimGraph
+        { rawNodeClaims =
+            map assertedClaim (rawNodes coverageGapGraph)
+              ++ map candidateClaim candidateNodes
+        , rawEdgeClaims =
+            map assertedClaim (rawEdges coverageGapGraph)
+              ++ map candidateClaim candidateEdges
+        }
+
+candidateNoiseNode :: Int -> RawNode
+candidateNoiseNode ordinal = RawContextNode (candidateNoiseId ordinal) Strategy
+
+candidateNoiseEdge :: Int -> RawEdge
+candidateNoiseEdge ordinal =
+  edge (candidateNoiseId ordinal) contributesToStrategy strategyId
+
+candidateNoiseId :: Int -> RawNodeId
+candidateNoiseId ordinal =
+  RawNodeId ("registry-candidate-" <> Text.pack (show ordinal))
 
 assessMixedCollectiveModel ::
      RawGraph

@@ -27,6 +27,8 @@ module O2I.Validation.Collective.Contribution.Eval
   , contributionGraphMode
   , contributionGraphNodes
   , contributionGraphOccurrences
+  , contributionGraphRationaleReference
+  , contributionGraphProvenance
   , candidateCollectiveContributionClaim
   , candidateCollectiveContributionIssues
   ) where
@@ -120,15 +122,10 @@ assessCollectiveContributionClaimStructure ::
   -> CollectiveContributionClaimStructureAssessment
 assessCollectiveContributionClaimStructure structure claims =
   CollectiveContributionClaimStructureAssessment
-    (identityErrors ++ structuralErrors)
+    structuralErrors
     structural
     (mconcat structuralWork)
   where
-    identityErrors =
-      [ DuplicateCollectiveContributionClaimId identifier
-      | identifier <-
-          duplicates (map (rawContributionId . claimedProposition) claims)
-      ]
     structuralResults = map (assessStructure structure) claims
     structuralErrors = concatMap firstOfThree structuralResults
     structural = mapMaybe secondOfThree structuralResults
@@ -275,6 +272,21 @@ contributionGraphOccurrences graph =
   case graph of
     ValidatedKeyResultContributionGraph _ occurrences _ _ -> occurrences
     ValidatedActionContributionGraph _ occurrences _ _ -> occurrences
+
+-- | Read the exact joint-rationale identity bound into this witness.
+contributionGraphRationaleReference ::
+     ValidatedContributionGraph -> JointContributionRationaleRef
+contributionGraphRationaleReference graph =
+  case graph of
+    ValidatedKeyResultContributionGraph _ _ rationale _ -> rationale
+    ValidatedActionContributionGraph _ _ rationale _ -> rationale
+
+-- | Read the exact, unnormalized provenance bound into this witness.
+contributionGraphProvenance :: ValidatedContributionGraph -> Text.Text
+contributionGraphProvenance graph =
+  case graph of
+    ValidatedKeyResultContributionGraph _ _ _ provenance -> provenance
+    ValidatedActionContributionGraph _ _ _ provenance -> provenance
 
 -- | Read the original Candidate claim.
 candidateCollectiveContributionClaim ::
@@ -465,8 +477,8 @@ validateGraph prepared structural rationales rawGraph = (issues, witness, work)
         ++ [ ContributionGraphProvenanceMismatch
              (rawContributionGraphRationale graph)
            | Just selected <- [rationale]
-           , normalized (rawContributionGraphProvenance graph)
-               /= normalized (rawJointRationaleProvenance selected)
+           , rawContributionGraphProvenance graph
+               /= rawJointRationaleProvenance selected
            ]
         ++ [EmptyContributionPrimitiveGraph | null nodes || null edges]
         ++ map DuplicateContributionGraphNode duplicateNodes
@@ -752,9 +764,6 @@ duplicates = map head . filter ((> 1) . length) . group . sort
 blankRationaleReference :: JointContributionRationaleRef -> Bool
 blankRationaleReference =
   Text.null . Text.strip . jointContributionRationaleRefText
-
-normalized :: Text.Text -> Text.Text
-normalized = Text.strip
 
 firstOfThree :: (first, second, third) -> first
 firstOfThree (first, _, _) = first

@@ -147,6 +147,7 @@ module O2I.Validation
   , assessmentInvariantErrors
   , assessmentCollectiveErrors
   , assessmentCollectiveContributionErrors
+  , assessmentCollectiveRegistryPreparationWork
   , assessmentCollectiveContributionPreparationWork
   , assessmentCollectiveContributionWork
   , assessmentCandidatePropositions
