@@ -74,6 +74,8 @@ Batch Sub-Issues remain outside the O2I Project and have no independent authoriz
 
 Close a batch Sub-Issue when its contracted deliverable and completion conditions are satisfied. A blocked or paused batch records its reason and return condition without automatically changing the parent. The parent enters `In review` only after every required batch Sub-Issue is closed; a review correction reopens the affected batch when the correction belongs to it.
 
+Implementation commits reference their active batch with `Refs #N`. After the exact batch candidate is accepted, the final authority or handoff commit uses `Closes #N` only when that commit completes every batch condition and is intended for the default branch; the Product Owner push then publishes and closes the batch atomically. If an accepted batch was already published without the closing keyword, close it manually after recording evidence. Never rewrite existing history merely to add `Closes #N`.
+
 Work discovered outside the authorized parent contract stops and follows ordinary refinement and Product Owner authorization or receives a separate Backlog Issue. A batch Sub-Issue never absorbs new scope.
 
 ## Dependencies
