@@ -1,13 +1,13 @@
 # Handoff
 
 - Observed: 2026-08-06 CEST
-- Work status: `COMPLETE`
-- Execution authorization: `APPROVED`
-- Authorization scope: Issue `#34`, implementation-contract comment `5194242480`, Batch 1 only
+- Work status: `PAUSED`
+- Execution authorization: `REQUIRED`
+- Authorization scope: `NONE`
 - Current Issue: `#34`
-- Current gate: `issue-34-batch-1-attempt-3`
-- Gate status: `ACCEPTED`
-- Current node: `issue-34-batch-1`
+- Current gate: `NONE`
+- Gate status: `NOT_REQUIRED`
+- Current node: `issue-34-batch-2-activation`
 
 # Repository Facts
 
@@ -15,25 +15,14 @@
 - Issue `#31` is closed with Project status `Done`. Accepted candidate `aa95f43c9f77e0faaccb365d55684792e00af0ae` and handoff revision `5c0df4939ad568dbe3d8dc372f3de1a49f871fb0` are remotely available. Finalreview evidence is recorded in Issue comment `5175823669`.
 - Issue `#33` is closed with Project status `Done`. Admission attempt 1 for body SHA-256 `4877d8f05bbf32fbfd13b7e7d2552edbca1d9f9cdec93887c2dc768eda82c746` was rejected and is recorded in comments `5189859589`, `5189859595`, and `5189859586`. Admission attempt 2 accepted body SHA-256 `987bc594f5a102c3165575091d46edd162e4499112919ba3f4fc1eb70e7ef77c` without findings and with 10.0 in every required dimension; evidence is recorded in comments `5189907109`, `5189925503`, and `5189956691`. The Product Owner authorized implementation contract comment `5190061817`, SHA-256 `4e24150a6692a97b77aadffad4025348559a3292342493efc5e0c479216a3bf2`. Implementation attempt 1 at `59467bf8d3be47d91d285378ddd12c1275c3bf15` found one publication defect. Attempt 2 accepted candidate `13ccf3bf9a652d42cb9c39608f2337301c7d36d0` without findings and with 10.0 in every required dimension after complete local verification; evidence is recorded in comment `5191404334`. Publication handoff `e1be27cadf8726d9a40976c867d2e029ee7b597e` is remotely available. Issue `#32` was superseded before Admission and closed as not planned.
 - Issue `#34` is open with Project status `In progress`. Admission attempt 5 accepts body SHA-256 `67e50041ce87e01d0dd9b4e6d9f2db6719bbfa2ed871cd9593efd04359f1cffe` without findings and with 10.0 in every required dimension; evidence is recorded in comments `5194229082`, `5194229322`, and `5194229529`. The Product Owner authorized implementation-contract comment `5194242480`, SHA-256 `fa27b9ccd7f9168ee906a704e768628c43000c80be6fd55b0167650d106e16e9`.
-- Direct Batch Sub-Issues `#35`, `#36`, `#37`, and `#38` respectively own Core, profile/inspection, Views/reference models, and publication synchronization. Batch `#35` is locally accepted and awaits remote availability before closure; later batches remain inactive.
-- Batch `#35` attempt 1 candidate `f36647d65a60eaad1ea5403aa0f0dfdac47a19ca` was rejected for registry routing, work-accounting, provenance, and claim-identity findings.
-- Batch `#35` attempt 2 candidate `2068d389027d65f5242d78088605a832732624c8` closes the attempt 1 findings, but its exact-revision Finalreview rejects one remaining high-severity API-closure defect: a fatal global registry error can coexist with family-level validated witness projection. The target state makes `ValidatedCollectiveRegistry` the sole aggregate source and proves that every fatal registry error suppresses both family projections while a finding-free Candidate still permits independent Asserted aggregates. The repository-wide Haskell gate reaches the scheduled Batch `#36` Inspection exhaustiveness work and is not a Batch `#35` completion condition.
-- Batch `#35` attempt 3 candidate `ca2e53e902918f9b597792cdfbc76135fa216679` removes independently stored family witnesses and redundant errors from `EvaluatedCollectiveRegistry`; the one global `Validation` result is now the sole source of errors and aggregate projections. Regression tests prove projection closure for global identity defects and family-local fatal defects while preserving independent Asserted aggregates for a finding-free Candidate. All 326 Core tests with warnings as errors, Core Haddock at 100% public coverage, formatting, package metadata, API compile contracts, API checker tests, package licenses, and the public-repository boundary pass locally. Independent Formalization/Haskell Finalreview accepts the exact candidate without findings and with 10.0 in every required and applicable cross-cutting dimension.
+- Direct Batch Sub-Issues `#35`, `#36`, `#37`, and `#38` respectively own Core, profile/inspection, Views/reference models, and publication synchronization. Batch `#35` is closed as completed; later batches remain inactive.
+- Batch `#35` candidate `ca2e53e902918f9b597792cdfbc76135fa216679` is accepted and remotely available through handoff `e8228b061d973b3ca81f131187b56e5c05420a1c`. Formalization/Haskell Finalreview and closure evidence are recorded in Issue comment `5203926588`; there are no findings and every required dimension scores 10.0.
 - The Product Owner controls Issue activation, ArchiMate model edits, and pushes.
 
 # Next Action
 
-The Product Owner makes the accepted exact Batch `#35` revision and its authority commits remotely available. Then record the accepted Finalreview evidence and close Sub-Issue `#35` without activating Batch `#36`.
+Wait for explicit Product Owner activation of Batch `#36`. Do not begin profile, adapter, Inspection, CLI, or fixture work before that decision.
 
 # Local Return Point
 
 Release dependent external instance work only after Issue `#34` is accepted, implemented, reviewed, and one exact O2I revision is remotely available.
-
-# Current Gate
-
-- Attempt: `issue-34-batch-1-attempt-3`
-- Candidate revision: `ca2e53e902918f9b597792cdfbc76135fa216679`
-- Review scope: `spc/lib/core/`; mutable `.ai4X/STATE.md` is excluded.
-- Mandatory checks: Core package checks, complete Core tests with warnings as errors, Core Haddock, formatting, and independent Formalization/Haskell batch review
-- Finding status: `CLOSED`
-- Result: `ACCEPTED`
