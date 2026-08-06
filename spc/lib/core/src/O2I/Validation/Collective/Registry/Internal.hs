@@ -128,9 +128,6 @@ data EvaluatedCollectiveRegistry =
   EvaluatedCollectiveRegistry
     CollectiveStrategyRealizationAssessment
     CollectiveStrategyContributionAssessment
-    (Maybe ValidatedCollectiveStrategyRealizations)
-    (Maybe ValidatedCollectiveStrategyContributions)
-    [CollectiveRegistryError]
     [CollectiveRegistryCandidate]
     (Validation (NonEmpty CollectiveRegistryError) ValidatedCollectiveRegistry)
     CollectiveRegistryPreparationWork
@@ -270,9 +267,6 @@ assessCollectiveRegistry context macro prepared =
   EvaluatedCollectiveRegistry
     realizationAssessment
     contributionAssessment
-    realizationValidation
-    contributionValidation
-    errors
     candidates
     validation
     preparationWork
@@ -298,8 +292,6 @@ assessCollectiveRegistry context macro prepared =
       validateCollectiveStrategyRealizations realizationAssessment
     rawContributionValidation =
       validateCollectiveStrategyContributions contributionAssessment
-    realizationValidation = validationResult rawRealizationValidation
-    contributionValidation = validationResult rawContributionValidation
     validation =
       (\_ realizations contributions ->
          ValidatedCollectiveRegistry realizations contributions)
@@ -317,10 +309,6 @@ assessCollectiveRegistry context macro prepared =
           Failure
             (DuplicateCollectiveFanInClaimId first
                :| map DuplicateCollectiveFanInClaimId rest)
-    errors =
-      case validation of
-        Failure failures -> nonEmptyToList failures
-        Success _ -> []
     candidates =
       registryCandidatesInSourceOrder
         claimOrder
@@ -418,45 +406,51 @@ validateCollectiveRegistry = evaluatedRegistryValidation
 
 evaluatedRegistryRealizationAssessment ::
      EvaluatedCollectiveRegistry -> CollectiveStrategyRealizationAssessment
-evaluatedRegistryRealizationAssessment (EvaluatedCollectiveRegistry assessment _ _ _ _ _ _ _) =
+evaluatedRegistryRealizationAssessment (EvaluatedCollectiveRegistry assessment _ _ _ _) =
   assessment
 
 evaluatedRegistryContributionAssessment ::
      EvaluatedCollectiveRegistry -> CollectiveStrategyContributionAssessment
-evaluatedRegistryContributionAssessment (EvaluatedCollectiveRegistry _ assessment _ _ _ _ _ _) =
+evaluatedRegistryContributionAssessment (EvaluatedCollectiveRegistry _ assessment _ _ _) =
   assessment
 
 evaluatedRegistryValidatedRealizations ::
      EvaluatedCollectiveRegistry
   -> Maybe ValidatedCollectiveStrategyRealizations
-evaluatedRegistryValidatedRealizations (EvaluatedCollectiveRegistry _ _ validated _ _ _ _ _) =
-  validated
+evaluatedRegistryValidatedRealizations evaluated =
+  case evaluatedRegistryValidation evaluated of
+    Failure _ -> Nothing
+    Success validated -> Just (validatedRegistryRealizations validated)
 
 evaluatedRegistryValidatedContributions ::
      EvaluatedCollectiveRegistry
   -> Maybe ValidatedCollectiveStrategyContributions
-evaluatedRegistryValidatedContributions (EvaluatedCollectiveRegistry _ _ _ validated _ _ _ _) =
-  validated
+evaluatedRegistryValidatedContributions evaluated =
+  case evaluatedRegistryValidation evaluated of
+    Failure _ -> Nothing
+    Success validated -> Just (validatedRegistryContributions validated)
 
 evaluatedRegistryErrors ::
      EvaluatedCollectiveRegistry -> [CollectiveRegistryError]
-evaluatedRegistryErrors (EvaluatedCollectiveRegistry _ _ _ _ errors _ _ _) =
-  errors
+evaluatedRegistryErrors evaluated =
+  case evaluatedRegistryValidation evaluated of
+    Failure failures -> nonEmptyToList failures
+    Success _ -> []
 
 evaluatedRegistryCandidates ::
      EvaluatedCollectiveRegistry -> [CollectiveRegistryCandidate]
-evaluatedRegistryCandidates (EvaluatedCollectiveRegistry _ _ _ _ _ candidates _ _) =
+evaluatedRegistryCandidates (EvaluatedCollectiveRegistry _ _ candidates _ _) =
   candidates
 
 evaluatedRegistryValidation ::
      EvaluatedCollectiveRegistry
   -> Validation (NonEmpty CollectiveRegistryError) ValidatedCollectiveRegistry
-evaluatedRegistryValidation (EvaluatedCollectiveRegistry _ _ _ _ _ _ validation _) =
+evaluatedRegistryValidation (EvaluatedCollectiveRegistry _ _ _ validation _) =
   validation
 
 evaluatedRegistryPreparationWork ::
      EvaluatedCollectiveRegistry -> CollectiveRegistryPreparationWork
-evaluatedRegistryPreparationWork (EvaluatedCollectiveRegistry _ _ _ _ _ _ _ work) =
+evaluatedRegistryPreparationWork (EvaluatedCollectiveRegistry _ _ _ _ work) =
   work
 
 validatedRegistryRealizations ::
@@ -619,12 +613,6 @@ candidateClaimOrdinals claims candidates = go 0 claims candidates Set.empty
           remainingCandidates
           (Set.insert ordinal ordinals)
       | otherwise = go (ordinal + 1) remainingClaims pending ordinals
-
-validationResult :: Validation errors value -> Maybe value
-validationResult validation =
-  case validation of
-    Failure _ -> Nothing
-    Success value -> Just value
 
 mapValidation ::
      (sourceError -> targetError)

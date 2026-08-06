@@ -143,6 +143,12 @@ collectiveContributionTests =
         "family claim identities are globally unique"
         collectiveFamilyIdentityTest
     , testCase
+        "finding-free Candidate preserves independent Asserted aggregates"
+        collectiveRegistryCandidatePreservesAssertedTest
+    , testCase
+        "fatal family error suppresses every aggregate projection"
+        collectiveRegistryFatalErrorSuppressesAggregatesTest
+    , testCase
         "registry preserves interleaved Candidate source order"
         collectiveRegistryCandidateOrderTest
     , testCase
@@ -486,6 +492,64 @@ collectiveFamilyIdentityTest = do
             CollectiveStrategyContributionFamily
             collectiveClaimId
         ]
+  case assessmentValidatedCollectiveStrategyRealizations assessment of
+    Nothing -> pure ()
+    Just _ -> assertFailure "global rejection exposed realization witnesses"
+  case assessmentValidatedCollectiveStrategyContributions assessment of
+    Nothing -> pure ()
+    Just _ -> assertFailure "global rejection exposed contribution witnesses"
+
+collectiveRegistryCandidatePreservesAssertedTest :: Assertion
+collectiveRegistryCandidatePreservesAssertedTest = do
+  let assessment =
+        assessMixedCollectiveModel
+          completeMixedCollectiveGraph
+          [ CollectiveStrategyRealizationEvidence completeFit
+          , CollectiveStrategyContributionEvidence contributionEvidence
+          ]
+          [ CollectiveStrategyRealizationClaim assertedCollective
+          , CollectiveStrategyContributionClaim
+              (candidateClaim contributionProposition)
+          ]
+  case modelAssessmentStatus assessment of
+    SemanticsPending _ -> pure ()
+    _ -> assertFailure "finding-free Candidate did not keep semantics pending"
+  case assessmentValidatedCollectiveStrategyRealizations assessment of
+    Nothing -> assertFailure "Candidate suppressed independent realization"
+    Just validated ->
+      fmap collectiveRealizationId (collectiveStrategyRealizations validated)
+        @?= [collectiveClaimId]
+  case assessmentValidatedCollectiveStrategyContributions assessment of
+    Nothing -> assertFailure "Candidate suppressed validated contribution set"
+    Just validated ->
+      assertBool
+        "Candidate constructed a contribution witness"
+        (null (collectiveStrategyContributions validated))
+
+collectiveRegistryFatalErrorSuppressesAggregatesTest :: Assertion
+collectiveRegistryFatalErrorSuppressesAggregatesTest = do
+  let invalidRealization =
+        assertedClaim (collectiveProposition {rawTarget = missingId})
+      assessment =
+        assessMixedCollectiveModel
+          completeMixedCollectiveGraph
+          [ CollectiveStrategyRealizationEvidence completeFit
+          , CollectiveStrategyContributionEvidence contributionEvidence
+          ]
+          [ CollectiveStrategyRealizationClaim invalidRealization
+          , CollectiveStrategyContributionClaim
+              (assertedClaim contributionProposition)
+          ]
+  case modelAssessmentStatus assessment of
+    SemanticsRejected _ -> pure ()
+    _ -> assertFailure "fatal family error did not reject model semantics"
+  assessmentCollectiveContributionErrors assessment @?= []
+  case assessmentValidatedCollectiveStrategyRealizations assessment of
+    Nothing -> pure ()
+    Just _ -> assertFailure "fatal family error exposed realization witnesses"
+  case assessmentValidatedCollectiveStrategyContributions assessment of
+    Nothing -> pure ()
+    Just _ -> assertFailure "fatal family error exposed contribution witnesses"
 
 isCollectiveIdentityError :: ModelSemanticError -> Bool
 isCollectiveIdentityError semanticError =
@@ -1780,6 +1844,11 @@ coverageGapGraph =
         contributorTwoTargetKeyResultEdge
           : rawEdges missingSecondContributionGraph
     }
+
+completeMixedCollectiveGraph :: RawGraph
+completeMixedCollectiveGraph =
+  coverageGapGraph
+    {rawEdges = contributorTwoTargetActionEdge : rawEdges coverageGapGraph}
 
 contributorNodes :: [RawNode]
 contributorNodes = contributorOneNodes ++ contributorTwoNodes
