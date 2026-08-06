@@ -6,7 +6,7 @@
 - Authorization scope: Issue `#34`, implementation-contract comment `5194242480`, Batch 1 only
 - Current Issue: `#34`
 - Current gate: `issue-34-batch-1-attempt-2`
-- Gate status: `PENDING`
+- Gate status: `REJECTED`
 - Current node: `issue-34-batch-1`
 
 # Repository Facts
@@ -17,12 +17,12 @@
 - Issue `#34` is open with Project status `In progress`. Admission attempt 5 accepts body SHA-256 `67e50041ce87e01d0dd9b4e6d9f2db6719bbfa2ed871cd9593efd04359f1cffe` without findings and with 10.0 in every required dimension; evidence is recorded in comments `5194229082`, `5194229322`, and `5194229529`. The Product Owner authorized implementation-contract comment `5194242480`, SHA-256 `fa27b9ccd7f9168ee906a704e768628c43000c80be6fd55b0167650d106e16e9`.
 - Direct Batch Sub-Issues `#35`, `#36`, `#37`, and `#38` respectively own Core, profile/inspection, Views/reference models, and publication synchronization. Batch `#35` is active; later batches remain inactive.
 - Batch `#35` attempt 1 candidate `f36647d65a60eaad1ea5403aa0f0dfdac47a19ca` was rejected for registry routing, work-accounting, provenance, and claim-identity findings.
-- Batch `#35` attempt 2 candidate `2068d389027d65f5242d78088605a832732624c8` closes those findings through a closed registry state, occurrence-exact Candidate routing, truthful work metrics, exact observable provenance binding, and one global claim-identity diagnostic owner. Core package checks, all Core tests with warnings as errors, 100% public Haddock coverage, formatting, API compile contracts, package licenses, and the public-repository boundary pass locally. Exact-revision Finalreview is pending. The repository-wide Haskell gate reaches the scheduled Batch `#36` Inspection exhaustiveness work and is not a Batch `#35` completion condition.
+- Batch `#35` attempt 2 candidate `2068d389027d65f5242d78088605a832732624c8` closes the attempt 1 findings, but its exact-revision Finalreview rejects one remaining high-severity API-closure defect: a fatal global registry error can coexist with family-level validated witness projection. The target state makes `ValidatedCollectiveRegistry` the sole aggregate source and proves that every fatal registry error suppresses both family projections while a finding-free Candidate still permits independent Asserted aggregates. The repository-wide Haskell gate reaches the scheduled Batch `#36` Inspection exhaustiveness work and is not a Batch `#35` completion condition.
 - The Product Owner controls Issue activation, ArchiMate model edits, and pushes.
 
 # Next Action
 
-Obtain the independent Formalization/Haskell Finalreview for exact Batch `#35` candidate `2068d389027d65f5242d78088605a832732624c8`; correct any finding before batch closure.
+Correct the rejected Batch `#35` projection contract so only a globally validated registry exposes family aggregates; verify the fatal-error and finding-free Candidate cases before exact-revision re-review.
 
 # Local Return Point
 
@@ -35,4 +35,4 @@ Release dependent external instance work only after Issue `#34` is accepted, imp
 - Review scope: `spc/lib/core/`; mutable `.ai4X/STATE.md` is excluded.
 - Mandatory checks: Core package checks, complete Core tests with warnings as errors, Core Haddock, formatting, and independent Formalization/Haskell batch review
 - Finding status: `OPEN`
-- Result: `PENDING`
+- Result: `REJECTED`
