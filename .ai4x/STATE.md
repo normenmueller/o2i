@@ -13,7 +13,7 @@
 
 - Attempt: `issue-34-batch-2-attempt-1`
 - Candidate revision: `PENDING`
-- Review scope: `spc/ctr/archimate/`, `spc/lib/adapter/amx/`, `spc/lib/inspection/`, `spc/cli/`, and their focused tests and fixtures; mutable `.ai4X/STATE.md` is excluded.
+- Review scope: `spc/ctr/archimate/`, `spc/lib/adapter/amx/`, `spc/lib/inspection/`, `spc/cli/`, and their focused tests and fixtures; mutable `.ai4x/STATE.md` is excluded.
 - Mandatory checks: generated profile consistency; AMX and Inspection test suites; CLI rendering tests; deterministic diagnostic and provenance ordering; `./utl/verify.sh haskell`; repository boundary check.
 - Finding status: `OPEN`
 - Result: `PENDING`

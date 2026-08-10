@@ -148,16 +148,16 @@ Bei jedem Lauf bestimmt `utl/verification/verification_scope.py` aus dem Git-Dif
 | Änderung | Ausgeführte Stufen |
 | --- | --- |
 | jeder getrackte Pfad | Repository-Lizenzierung |
-| `.ai4X/` oder Governance-Werkzeuge | Governance |
+| `.ai4x/` oder Governance-Werkzeuge | Governance |
 | `mdl/` oder Modellwerkzeuge | Modellverträge |
 | `spc/` | Haskell-Spezifikation |
 | White-Paper-Quellen oder Rendering | White Paper |
 | gemeinsam genutzte, unbekannte oder nicht eindeutig bestimmbare Pfade | alle Stufen |
 
-Gekoppelte Verträge ergänzen diese Primärzuordnung: fachbezogene `.ai4X/operations/` aktivieren zusätzlich ihre jeweilige Stufe, `spc/lib/core/src/` zusätzlich das White Paper und `spc/ctr/archimate/` zusätzlich Modellverträge und White Paper. Die vollständige ausführbare Matrix liegt ausschließlich im Selektor und seiner Vertragssuite.
+Gekoppelte Verträge ergänzen diese Primärzuordnung: fachbezogene `.ai4x/operations/` aktivieren zusätzlich ihre jeweilige Stufe, `spc/lib/core/src/` zusätzlich das White Paper und `spc/ctr/archimate/` zusätzlich Modellverträge und White Paper. Die vollständige ausführbare Matrix liegt ausschließlich im Selektor und seiner Vertragssuite.
 
 Bei Pull Requests bleiben alle fünf GitHub-Checks sichtbar. Eine nicht betroffene Stufe endet mit einem expliziten erfolgreichen Skip; eine betroffene Stufe führt unverändert den entsprechenden lokalen `verify.sh`-Vertrag aus. Manuelle Aufrufe und Release-Tags erzwingen stets den vollständigen Vertrag. Ein Release gilt erst nach erfolgreicher Remote-Verifikation als akzeptiert.
 
 `[skip ci]` ist kein regulärer Workflowmechanismus. Die repository-seitige Triggerregel entscheidet über Remote-Verifikation und hält Commit-Messages frei von wiederkehrender CI-Steuerung.
 
-Agentische Ausführung folgt zusätzlich dem hostneutralen Vertrag unter [`.ai4X/`](./.ai4X/).
+Agentische Ausführung folgt zusätzlich dem hostneutralen Vertrag unter [`.ai4x/`](./.ai4x/).

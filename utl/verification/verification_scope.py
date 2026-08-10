@@ -89,12 +89,12 @@ PAPER_PATHS = frozenset(
 )
 HASKELL_OPERATION_PATHS = frozenset(
     {
-        ".ai4X/operations/haskell-authoring.md",
-        ".ai4X/operations/haskell-review.md",
+        ".ai4x/operations/haskell-authoring.md",
+        ".ai4x/operations/haskell-review.md",
     }
 )
-MODEL_OPERATION_PATHS = frozenset({".ai4X/operations/modeling.md"})
-PAPER_OPERATION_PATHS = frozenset({".ai4X/operations/publication.md"})
+MODEL_OPERATION_PATHS = frozenset({".ai4x/operations/modeling.md"})
+PAPER_OPERATION_PATHS = frozenset({".ai4x/operations/publication.md"})
 
 
 @dataclass(frozen=True)
@@ -120,7 +120,7 @@ def stages_for_path(path: str) -> frozenset[str] | None:
     known = False
 
     if (
-        _under(path, ".ai4X")
+        _under(path, ".ai4x")
         or _under(path, ".github/ISSUE_TEMPLATE")
         or _under(path, ".github/agents")
         or path in GOVERNANCE_PATHS

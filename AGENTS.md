@@ -1,1 +1,1 @@
-.ai4X/BEHAVIOR.md
+.ai4x/BEHAVIOR.md

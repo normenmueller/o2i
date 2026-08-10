@@ -1,8 +1,8 @@
 # Purpose
 
 Durable understanding required for work in the O2I repository. Operating rules
-belong in `.ai4X/BEHAVIOR.md`; volatile handoff belongs in
-`.ai4X/STATE.md`.
+belong in `.ai4x/BEHAVIOR.md`; volatile handoff belongs in
+`.ai4x/STATE.md`.
 
 # Project
 
@@ -103,10 +103,10 @@ repository Views and snapshots. It never validates O2I instances.
 - `spc/lib/inspection/`: format-neutral inspection pipeline.
 - `spc/lib/adapter/amx/`: native AMX profile and projection.
 - `spc/cli/`: thin `o2i` CLI.
-- `.ai4X/operations/`: task-specific execution and quality contracts.
+- `.ai4x/operations/`: task-specific execution and quality contracts.
 - GitHub Issues: authority for change contracts, admission, dependencies, independent reviews, and open or closed state.
 - GitHub Project `O2I`: workflow-status and PO-ordering authority; no contract, admission, dependency, review, or closure authority.
-- `.ai4X/governance/guidelines.md`: normative agent-facing GitHub workflow and evidence contract; no backlog, project history, or fachliche semantics.
+- `.ai4x/governance/guidelines.md`: normative agent-facing GitHub workflow and evidence contract; no backlog, project history, or fachliche semantics.
 - `utl/model/extract-archimate-view.py`: repository View/snapshot checker.
 - `utl/verify.sh`: canonical staged verification.
 

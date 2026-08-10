@@ -5,7 +5,7 @@ repository.
 
 # Startup
 
-1. Read `.ai4X/CONTEXT.md` and `.ai4X/STATE.md`.
+1. Read `.ai4x/CONTEXT.md` and `.ai4x/STATE.md`.
 2. Detect whether the checkout is a Git worktree. Only then run
    `git status --short --branch --untracked-files=all`; otherwise record Git
    metadata as unavailable and continue from the repository files.
@@ -13,14 +13,14 @@ repository.
 
 | Task class | Required Contract |
 | --- | --- |
-| Haskell design or implementation | `.ai4X/operations/haskell-authoring.md` |
-| Haskell or formalization review | `.ai4X/operations/haskell-review.md` |
-| ArchiMate, metamodel, or syntax work | `.ai4X/operations/modeling.md` |
-| White Paper, README, WTF, or rendering | `.ai4X/operations/publication.md` |
-| Strategy design or strategy review | `.ai4X/operations/strategy-review.md` |
-| Git commit, remote write, normative O2I change, Issue, Project, or workflow administration | `.ai4X/governance/guidelines.md` |
+| Haskell design or implementation | `.ai4x/operations/haskell-authoring.md` |
+| Haskell or formalization review | `.ai4x/operations/haskell-review.md` |
+| ArchiMate, metamodel, or syntax work | `.ai4x/operations/modeling.md` |
+| White Paper, README, WTF, or rendering | `.ai4x/operations/publication.md` |
+| Strategy design or strategy review | `.ai4x/operations/strategy-review.md` |
+| Git commit, remote write, normative O2I change, Issue, Project, or workflow administration | `.ai4x/governance/guidelines.md` |
 
-Every independent review additionally reads `.ai4X/governance/guidelines.md` for the cross-cutting dimension inventory. Applicable Operations contracts remain additive.
+Every independent review additionally reads `.ai4x/governance/guidelines.md` for the cross-cutting dimension inventory. Applicable Operations contracts remain additive.
 
 Read multiple contracts when a task crosses classes. Do not load unrelated
 contracts.
@@ -34,7 +34,7 @@ contracts.
   and propose one concrete better target design.
 - Use German when the user writes German and preserve German umlauts.
 - Write `README.md`, `CONTRIBUTING.md`, `o2i.md`, and `wtf.md` in German.
-  Write `.ai4X`, GitHub Issues, code, Haddock, and `spc/README.md` in English.
+  Write `.ai4x`, GitHub Issues, code, Haddock, and `spc/README.md` in English.
 - Discuss semantic questions before editing. Implement after explicit approval.
 - Distinguish evidence, inference, authors' derivation, and unknowns.
 
@@ -60,7 +60,7 @@ prove, own, or define O2I semantics.
 
 # Execution Contract
 
-`.ai4X/STATE.md` uses four independent fields:
+`.ai4x/STATE.md` uses four independent fields:
 
 - `Work status`: `ACTIVE | PAUSED | BLOCKED | COMPLETE`
 - `Execution authorization`: `APPROVED | REQUIRED`
@@ -98,7 +98,7 @@ recording their closure never creates a new gate.
 A review identifies its immutable subject by exact Git revision and declared
 file scope. Any later change within that scope requires a new review for the
 later change without invalidating accepted historical evidence.
-`.ai4X/STATE.md` is volatile runtime handoff and never belongs to an immutable
+`.ai4x/STATE.md` is volatile runtime handoff and never belongs to an immutable
 implementation review scope.
 
 # Universal Design Rules
@@ -125,20 +125,20 @@ implementation review scope.
   narrow patch to one file, then reread the changed range and its diff before
   the next edit.
 - Use `rg` and repository tooling for inspection.
-- Move `Backlog -> Refinement` when material preparation begins; read the complete Issue body and every existing comment and consolidate one explicit contract. Only the Product Owner moves `Refinement -> Ready`. Agents control later transitions within the authorized scope according to `.ai4X/governance/guidelines.md`.
+- Move `Backlog -> Refinement` when material preparation begins; read the complete Issue body and every existing comment and consolidate one explicit contract. Only the Product Owner moves `Refinement -> Ready`. Agents control later transitions within the authorized scope according to `.ai4x/governance/guidelines.md`.
 - Delegated agents and independent reviewers never query or mutate remote work state. They request every material remote fact from the primary agent, which returns the unmodified query result or reports it unavailable without inference.
 - Delegated agents never start commands that require host or sandbox approval. They report the exact command to the primary agent, which executes it in the main thread. Never leave a delegated thread waiting on an approval prompt.
 - Update `CHANGELOG.md` for release-relevant changes.
 - Verify the narrow scope before broad gates.
 - Required external reviews are independent and read-only. Every finding has a
   severity and one target-state solution; repeat until accepted.
-- Keep `.ai4X/STATE.md` repository-autark and limited to the current handoff. It must
+- Keep `.ai4x/STATE.md` repository-autark and limited to the current handoff. It must
   contain objective, current node, dirty scope, risks, verification, next
   action, and local return point without depending on a workspace plan.
 - Treat GitHub Project Status as the authority for workflow state and its vertical order as PO scheduling authority. Never infer Issue validity, admission, dependencies, review evidence, or closure from Project state.
 - When GitHub is unavailable, continue only an already activated local handoff.
   Never infer or mutate remote work state offline.
-- Keep `.ai4X/STATE.md` below 90 lines. Remove completed detail once its result and
+- Keep `.ai4x/STATE.md` below 90 lines. Remove completed detail once its result and
   commit are durable.
 - Commit messages are lowercase English without type prefixes.
 - Run Git-only checks such as `git diff --check` only when Git worktree
@@ -152,5 +152,5 @@ implementation review scope.
 - Never revert user changes or use destructive Git commands without explicit
   instruction.
 - Do not store secrets, credentials, private data, or agent/session IDs in
-  `.ai4X`.
+  `.ai4x`.
 - Mark material uncertainty as `UNKNOWN`, `INFERRED`, or `UNVERIFIED`.

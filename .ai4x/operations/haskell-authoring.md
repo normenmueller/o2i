@@ -60,7 +60,7 @@ adapters, or Haddock.
   independently verifiable result.
 - Each handoff records target contract, owned paths, changed paths, checks,
   unresolved findings, and whether commit permission exists. Record its current
-  package and gate in `.ai4X/STATE.md`.
+  package and gate in `.ai4x/STATE.md`.
 - Preserve concurrent work. Do not permit commits or model edits unless the
   assignment explicitly authorizes them.
 

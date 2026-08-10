@@ -8,8 +8,8 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-GOVERNANCE = ROOT / ".ai4X/governance/guidelines.md"
-STATE = ROOT / ".ai4X/STATE.md"
+GOVERNANCE = ROOT / ".ai4x/governance/guidelines.md"
+STATE = ROOT / ".ai4x/STATE.md"
 CONTRIBUTING = ROOT / "CONTRIBUTING.md"
 FRAMEWORK_FORM = ROOT / ".github/ISSUE_TEMPLATE/framework-change.yml"
 MAINTENANCE_FORM = ROOT / ".github/ISSUE_TEMPLATE/maintenance.yml"
@@ -152,12 +152,12 @@ def handoff_contract_violations(content: str) -> list[str]:
     if scope is not None:
         subjects = tuple(re.findall(r"`([^`]+)`", scope))
         immutable_subjects = tuple(
-            subject for subject in subjects if subject != ".ai4X/STATE.md"
+            subject for subject in subjects if subject != ".ai4x/STATE.md"
         )
         if not immutable_subjects:
             violations.append("Review scope must declare an immutable subject")
-        if ".ai4X/STATE.md" not in subjects or "excluded" not in scope.lower():
-            violations.append("Review scope must exclude mutable .ai4X/STATE.md")
+        if ".ai4x/STATE.md" not in subjects or "excluded" not in scope.lower():
+            violations.append("Review scope must exclude mutable .ai4x/STATE.md")
 
     scalar_fields = (
         "Attempt",
@@ -211,7 +211,7 @@ class GitHubGovernanceContractTests(unittest.TestCase):
 
     def test_non_core_ai4x_contract_names_are_lowercase(self) -> None:
         for directory in ("governance", "operations", "rules"):
-            root = ROOT / ".ai4X" / directory
+            root = ROOT / ".ai4x" / directory
             if not root.is_dir():
                 continue
             for path in root.rglob("*"):
@@ -610,7 +610,7 @@ class GitHubGovernanceContractTests(unittest.TestCase):
 - Attempt: `closed-handoff-contract-1`
 - Candidate revision: `0123456789abcdef0123456789abcdef01234567`
 - Review scope: `src/Contract.hs`;
-  mutable `.ai4X/STATE.md` is excluded.
+  mutable `.ai4x/STATE.md` is excluded.
 - Mandatory checks: governance verification.
 - Finding status: `OPEN`
 - Result: `PENDING`
@@ -642,7 +642,7 @@ class GitHubGovernanceContractTests(unittest.TestCase):
                 "empty review scope",
                 content.replace(
                     "- Review scope: `src/Contract.hs`;\n"
-                    "  mutable `.ai4X/STATE.md` is excluded.",
+                    "  mutable `.ai4x/STATE.md` is excluded.",
                     "- Review scope:",
                 ),
                 "Review scope must declare an immutable subject",
@@ -651,8 +651,8 @@ class GitHubGovernanceContractTests(unittest.TestCase):
                 "exclusion-only review scope",
                 content.replace(
                     "- Review scope: `src/Contract.hs`;\n"
-                    "  mutable `.ai4X/STATE.md` is excluded.",
-                    "- Review scope: mutable `.ai4X/STATE.md` is excluded.",
+                    "  mutable `.ai4x/STATE.md` is excluded.",
+                    "- Review scope: mutable `.ai4x/STATE.md` is excluded.",
                 ),
                 "Review scope must declare an immutable subject",
             ),
@@ -660,13 +660,13 @@ class GitHubGovernanceContractTests(unittest.TestCase):
                 "misplaced state exclusion",
                 content.replace(
                     "- Review scope: `src/Contract.hs`;\n"
-                    "  mutable `.ai4X/STATE.md` is excluded.\n"
+                    "  mutable `.ai4x/STATE.md` is excluded.\n"
                     "- Mandatory checks: governance verification.",
                     "- Review scope: `src/Contract.hs`.\n"
                     "- Mandatory checks: governance verification; mutable "
-                    "`.ai4X/STATE.md` is excluded.",
+                    "`.ai4x/STATE.md` is excluded.",
                 ),
-                "Review scope must exclude mutable .ai4X/STATE.md",
+                "Review scope must exclude mutable .ai4x/STATE.md",
             ),
             (
                 "gate result",
@@ -731,7 +731,7 @@ class GitHubGovernanceContractTests(unittest.TestCase):
 
 - Attempt: `finalreview-1`
 - Candidate revision: `0123456789abcdef0123456789abcdef01234567`
-- Review scope: `src/Contract.hs`; mutable `.ai4X/STATE.md` is excluded.
+- Review scope: `src/Contract.hs`; mutable `.ai4x/STATE.md` is excluded.
 - Mandatory checks: governance verification.
 - Finding status: `CLOSED`
 - Result: `ACCEPTED`

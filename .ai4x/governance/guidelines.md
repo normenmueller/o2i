@@ -7,11 +7,11 @@ O2I uses a lean, agentic-first rule for change: think before writing. This contr
 - A GitHub Issue owns its problem, target, scope, acceptance criteria, dependencies, admission, implementation contract, review evidence, and open or closed state.
 - Native Issue Dependencies own genuine prerequisite relations.
 - The public GitHub Project [O2I](https://github.com/users/normenmueller/projects/4) owns workflow status and Product Owner ordering. It owns no contract, admission, dependency, review, or closure fact.
-- `.ai4X/STATE.md` holds only the activated repository-local handoff. It is neither backlog nor history.
+- `.ai4x/STATE.md` holds only the activated repository-local handoff. It is neither backlog nor history.
 - Git commits and CI own implementation and verification artifacts.
 - `CONTRIBUTING.md` is the concise human-facing projection of this contract.
 
-Do not duplicate Project workflow state or Project history in `.ai4X`.
+Do not duplicate Project workflow state or Project history in `.ai4x`.
 
 ## Change Classification
 
@@ -119,7 +119,7 @@ When GitHub is unavailable, agents continue only an already activated local hand
 - Agent-produced commits use `Gertrud ai4X <311782161+gertrud-ai4x@users.noreply.github.com>` as author and preserve the configured accountable human as committer. Never rewrite existing commits merely to add this attribution.
 - Issue-scoped commits include `Refs #N` in the commit body. Use `Closes #N` only when the commit actually completes the Issue; never rewrite existing history merely to add a reference.
 - Add `gertrud-ai4x` as an assignee when the primary agent takes material responsibility for refining, coordinating, or implementing an Issue. Advisory-only participation creates no assignment.
-- A commit that changes `.ai4X/` is an authority commit: keep it separate from implementation changes and use the configured Product Owner identity as both author and committer. The machine user never authors its own operating authority.
+- A commit that changes `.ai4x/` is an authority commit: keep it separate from implementation changes and use the configured Product Owner identity as both author and committer. The machine user never authors its own operating authority.
 - The primary agent may create an authority commit locally but never pushes it. Before a Product Owner push, report every outgoing commit and its scope. The Product Owner's own push accepts and publishes those authority commits; no separate pre-commit confirmation is required.
 - Agent-originated Issue comments and agent-controlled Project transitions from `Ready` onward use the machine user. If its separate authentication is unavailable, do not impersonate it through the Product Owner account.
 - Product Owner authorization, `Refinement -> Ready`, release authorization, and other accountable decisions remain actions of the Product Owner.
@@ -139,7 +139,7 @@ Every review considers this cross-cutting dimension inventory:
 - workflow determinism; and
 - verification evidence.
 
-Score every dimension materially affected by the reviewed scope and its risks. Reviews of `.ai4X`, governance, or repository workflow require all eight dimensions. Applicable Operations contracts add their mandatory specialist dimensions. A reviewer may add risk-specific dimensions but never omit a materially affected or otherwise mandatory dimension.
+Score every dimension materially affected by the reviewed scope and its risks. Reviews of `.ai4x`, governance, or repository workflow require all eight dimensions. Applicable Operations contracts add their mandatory specialist dimensions. A reviewer may add risk-specific dimensions but never omit a materially affected or otherwise mandatory dimension.
 
 ## Review And Closure
 

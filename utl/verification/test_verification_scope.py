@@ -53,18 +53,18 @@ class VerificationPathMatrixTests(unittest.TestCase):
 
     def test_representative_path_matrix(self) -> None:
         cases = {
-            ".ai4X/STATE.md": {"licensing", "governance"},
-            ".ai4X/operations/haskell-authoring.md": {
+            ".ai4x/STATE.md": {"licensing", "governance"},
+            ".ai4x/operations/haskell-authoring.md": {
                 "licensing",
                 "governance",
                 "haskell",
             },
-            ".ai4X/operations/modeling.md": {
+            ".ai4x/operations/modeling.md": {
                 "licensing",
                 "governance",
                 "model",
             },
-            ".ai4X/operations/publication.md": {
+            ".ai4x/operations/publication.md": {
                 "licensing",
                 "governance",
                 "paper",
@@ -117,7 +117,7 @@ class VerificationPathMatrixTests(unittest.TestCase):
 
     def test_multiple_paths_form_one_union(self) -> None:
         selection = scope.classify_paths(
-            (".ai4X/STATE.md", "mdl/o2i.archimate", "README.md")
+            (".ai4x/STATE.md", "mdl/o2i.archimate", "README.md")
         )
         self.assertEqual("selective", selection.mode)
         self.assertEqual(
@@ -166,11 +166,11 @@ class VerificationPathMatrixTests(unittest.TestCase):
     def test_gitless_repository_inventory_uses_export_tree(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / ".ai4X").mkdir()
-            (root / ".ai4X/STATE.md").write_text("state\n", encoding="ascii")
+            (root / ".ai4x").mkdir()
+            (root / ".ai4x/STATE.md").write_text("state\n", encoding="ascii")
             (root / "README.md").write_text("readme\n", encoding="ascii")
             self.assertEqual(
-                {".ai4X/STATE.md", "README.md"},
+                {".ai4x/STATE.md", "README.md"},
                 repository_paths(root),
             )
 
@@ -265,7 +265,7 @@ class VerificationDiffTests(unittest.TestCase):
             self.assertEqual({"licensing", "haskell"}, set(selection.stages))
 
     def test_github_output_is_complete_and_stable(self) -> None:
-        selection = scope.classify_paths((".ai4X/STATE.md",))
+        selection = scope.classify_paths((".ai4x/STATE.md",))
         self.assertEqual(
             """\
 licensing=true

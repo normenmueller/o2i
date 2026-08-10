@@ -5,9 +5,9 @@
 <details>
 <summary><strong>Agentic AI Support:</strong> Hier weiterlesen.</summary>
 
-Die hostneutrale Agent-Memory liegt unter [`.ai4X/`](./.ai4X/). Versionierte Host-Fassaden wie [`AGENTS.md`](./AGENTS.md) und [`.github/agents/o2i.agent.md`](./.github/agents/o2i.agent.md) verweisen auf diesen kanonischen Vertrag. [ai4X](https://github.com/normenmueller/ai4X) unterstützt die Materialisierung und Verwaltung solcher laufzeitspezifischen Integrationen.
+Die hostneutrale Agent-Memory liegt unter [`.ai4x/`](./.ai4x/). Versionierte Host-Fassaden wie [`AGENTS.md`](./AGENTS.md) und [`.github/agents/o2i.agent.md`](./.github/agents/o2i.agent.md) verweisen auf diesen kanonischen Vertrag. [ai4X](https://github.com/normenmueller/ai4X) unterstützt die Materialisierung und Verwaltung solcher laufzeitspezifischen Integrationen.
 
-Empfohlene Lesereihenfolge: [`.ai4X/BEHAVIOR.md`](./.ai4X/BEHAVIOR.md) → [`.ai4X/CONTEXT.md`](./.ai4X/CONTEXT.md) → [`.ai4X/STATE.md`](./.ai4X/STATE.md) → [`o2i.md`](./o2i.md). Für Formalisierung und Validierung folgt [`spc/`](./spc/), für Modell und konkrete Syntax [`mdl/`](./mdl/).
+Empfohlene Lesereihenfolge: [`.ai4x/BEHAVIOR.md`](./.ai4x/BEHAVIOR.md) → [`.ai4x/CONTEXT.md`](./.ai4x/CONTEXT.md) → [`.ai4x/STATE.md`](./.ai4x/STATE.md) → [`o2i.md`](./o2i.md). Für Formalisierung und Validierung folgt [`spc/`](./spc/), für Modell und konkrete Syntax [`mdl/`](./mdl/).
 
 Für die maschinenlesbare Prüfung von O2I-Modellen dient das Kommando [`o2i`](./spc/README.md#inspect); Agenten sollten dessen deterministische JSON-Ausgabe verwenden.
 
