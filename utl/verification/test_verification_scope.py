@@ -86,6 +86,7 @@ class VerificationPathMatrixTests(unittest.TestCase):
                 "haskell",
                 "paper",
             },
+            "utl/haskell/check_cabal_plan.py": {"licensing", "haskell"},
             "README.md": {"licensing", "paper"},
             "wtf.md": {"licensing", "paper"},
             "CHANGELOG.md": {"licensing"},
