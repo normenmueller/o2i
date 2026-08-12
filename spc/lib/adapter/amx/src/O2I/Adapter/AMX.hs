@@ -1,26 +1,23 @@
-{-# LANGUAGE OverloadedStrings #-}
-
--- | Native Archi Model XML adapter for the O2I inspection pipeline.
+-- | Native Archi Model XML adapter for the O2I operation pipeline.
 module O2I.Adapter.AMX
-  ( amxAdapter
+  ( AMXAdapterDefect
+  , foldAMXAdapterDefect
+  , amxAdapter
   ) where
 
-import Data.List.NonEmpty (NonEmpty((:|)))
-import O2I.Adapter.AMX.Internal.Defect
-import O2I.Adapter.AMX.Internal.Profile
-import O2I.Adapter.AMX.Internal.View
-import O2I.Adapter.AMX.Internal.XML
-import O2I.Inspection.Adapter
+import Data.List.NonEmpty (NonEmpty)
+import qualified O2I.Adapter.AMX.Internal.Contract as Contract
+import O2I.Operation.Adapter (Adapter)
 
--- | Safe, deterministic adapter for native Archi Model XML version 5.0.0 and
--- O2I profile 0.3.
-amxAdapter :: Adapter
-amxAdapter =
-  Adapter
-    (adapterDescriptor ('a' :| "mx") ('A' :| "rchi Model XML") ('0' :| ".2"))
-    decodeAMX
-    amxDecodeDefectSpec
-    resolveAMXView
-    amxViewDefectSpec
-    amxProfileContract
-    observeAMXProfile
+-- | Opaque closed failure emitted only while compiling the static AMX
+-- adapter contract.
+type AMXAdapterDefect = Contract.AMXAdapterDefect
+
+-- | Consume the four closed AMX construction-defect categories.
+foldAMXAdapterDefect ::
+     result -> result -> result -> result -> AMXAdapterDefect -> result
+foldAMXAdapterDefect = Contract.foldAMXAdapterDefect
+
+-- | Compile the closed native AMX contract independently of model input.
+amxAdapter :: Either (NonEmpty AMXAdapterDefect) Adapter
+amxAdapter = Contract.compileAMXAdapter

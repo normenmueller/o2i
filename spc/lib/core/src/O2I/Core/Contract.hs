@@ -1,0 +1,59 @@
+-- | Opaque access to the compiled O2I Core semantic contract.
+--
+-- The companion JSON remains the sole declarative authority. This module
+-- exposes only its invariant-preserving, build-time-compiled projection.
+module O2I.Core.Contract
+  ( CoreContractWitness
+  , coreContractWitness
+  , CoreContractIdentity
+  , coreContractIdentity
+  , coreContractIdentityText
+  , CoreContractVersion
+  , coreContractVersion
+  , coreContractVersionText
+  , CoreContractSha256
+  , coreContractSha256
+  , coreContractSha256Text
+  , CoreContractShapeSha256
+  , coreContractShapeSha256
+  , coreContractShapeSha256Text
+  , CoreRuleId
+  , coreRuleIds
+  , coreRuleIdText
+  , CoreCarrierCategory
+  , coreCarrierCategories
+  , coreCarrierCategoryText
+  , lookupCoreCarrierCategory
+  , CoreO2IType
+  , coreO2ITypes
+  , coreO2ITypeText
+  , lookupCoreO2IType
+  , CoreRelationToken
+  , coreRelationTokens
+  , coreRelationTokenText
+  , lookupCoreRelationToken
+  , CoreQualifiedEndpointId
+  , coreQualifiedEndpointIds
+  , coreQualifiedEndpointIdText
+  , lookupCoreQualifiedEndpointId
+  , CoreStructuredPropositionFamilyId
+  , coreStructuredPropositionFamilyIds
+  , coreStructuredPropositionFamilyIdText
+  , lookupCoreStructuredPropositionFamilyId
+  , CoreStructuredPropositionRoleId
+  , coreStructuredPropositionRoleIds
+  , coreStructuredPropositionRoleIdText
+  , lookupCoreStructuredPropositionRoleId
+  , CoreQualificationProposalRoleId
+  , coreQualificationProposalRoleIds
+  , coreQualificationProposalRoleIdText
+  , lookupCoreQualificationProposalRoleId
+  , CoreParticipantCompleteness
+  , coreParticipantCompletenessValues
+  , coreParticipantCompletenessIdText
+  , coreParticipantCompletenessToken
+  , lookupCoreParticipantCompletenessId
+  , lookupCoreParticipantCompletenessToken
+  ) where
+
+import O2I.Core.Contract.Internal

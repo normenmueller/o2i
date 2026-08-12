@@ -28,7 +28,7 @@ module O2I.Graph.Macro.Index
   , constituentAnchorIdentifiers
   ) where
 
-import Data.List (foldl', sortOn)
+import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
 import qualified Data.Set as Set
@@ -317,7 +317,7 @@ nodeBucketIdentifiers facts =
 stableBuckets :: Ord key => (value -> key) -> [value] -> Map key [value]
 stableBuckets keyOf =
   Map.map reverse
-    . foldl'
+    . List.foldl'
         (\buckets value -> Map.insertWith (++) (keyOf value) [value] buckets)
         Map.empty
 
@@ -325,7 +325,7 @@ stableBucketsMaybe ::
      Ord key => (value -> Maybe key) -> [value] -> Map key [value]
 stableBucketsMaybe keyOf =
   Map.map reverse
-    . foldl'
+    . List.foldl'
         (\buckets value ->
            case keyOf value of
              Nothing -> buckets
@@ -386,7 +386,9 @@ buildConstituentAnchors ::
   -> Map (RelationCode, RawNodeId) (OccurrenceBucket edge RawEdge)
   -> Map RawNodeId [RawNodeId]
 buildConstituentAnchors nodeFacts edgesByCodeTarget =
-  Map.map (map third . sortOn firstTwo) (stableBuckets fstValue occurrences)
+  Map.map
+    (map third . List.sortOn firstTwo)
+    (stableBuckets fstValue occurrences)
   where
     anchorFacts =
       [ (factOrdinal fact, identifier, anchor)

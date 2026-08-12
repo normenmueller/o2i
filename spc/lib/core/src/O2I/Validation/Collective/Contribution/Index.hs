@@ -15,7 +15,6 @@ module O2I.Validation.Collective.Contribution.Index
   , collectiveContributionPreparationWork
   ) where
 
-import Data.List (foldl')
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)

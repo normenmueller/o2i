@@ -434,7 +434,10 @@ rawKind owners (RawStructuringNode _ owner structuring) =
 rawKind _ (RawAnchorNode _ anchor) = Just (AnchorNodeKind anchor)
 
 duplicates :: Ord value => [value] -> [value]
-duplicates = map head . filter ((> 1) . length) . group . sort
+duplicates = foldr duplicate [] . group . sort
+  where
+    duplicate (value:_:_) rest = value : rest
+    duplicate _ rest = rest
 
 assertedValues :: [Claim value] -> [value]
 assertedValues claims =

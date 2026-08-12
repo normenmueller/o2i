@@ -1,99 +1,24 @@
--- | Executable projection of the authoritative ArchiMate profile contract.
+-- | Identity of the one compiled O2I ArchiMate Profile.
 --
--- The API exposes closed contract observations while keeping every contract
--- constructor private. Adapters consume this projection without parsing JSON
--- or maintaining notation mappings of their own.
+-- Import the capability modules @Draft@, @Notation@, @Resolution@, @Closure@,
+-- @Mapping@ and @Projection@ for executable operations.
 module O2I.ArchiMate.Profile
-  ( ArchiMateProfileContract
-  , ApplicabilityProvenance
-  , MatrixImplementation
-  , SymbolInterpretation
-  , ApplicabilityDecision
-  , MetadataContract
-  , MetadataKind(..)
-  , CarrierType(..)
-  , CarrierMapping
-  , Requirement
-  , Cardinality
-  , ArchiMateRelationshipRepresentation
-  , ArchiMateRelationMapping
-  , ContextualizationContract
-  , CollectiveContract
-  , CollectiveCarrierContract
-  , CollectiveSegmentContract
-  , CollectiveContributorsContract
-  , CollectiveTargetContract
-  , profileContract
-  , profileVersionText
-  , contractProfileVersion
-  , contractApplicabilityProvenance
-  , applicabilityArchiMateStandardVersion
-  , applicabilityMatrixImplementation
-  , applicabilitySymbolInterpretations
-  , applicabilityDecisions
-  , matrixImplementationRepositoryUri
-  , matrixImplementationRepositoryRelativePath
-  , matrixImplementationRevision
-  , symbolInterpretationSymbol
-  , symbolInterpretationRelationship
-  , applicabilityDecisionRelationMappingId
-  , applicabilityDecisionSourceElement
-  , applicabilityDecisionTargetElement
-  , applicabilityDecisionMatrixSymbol
-  , contractMetadata
-  , contractContextualization
-  , contractCollectiveRealization
-  , modelProfileKey
-  , modelProfileCardinality
-  , modelAdditionalO2IProperties
-  , carrierKindKey
-  , carrierTypeKey
-  , carrierCommitmentKey
-  , relationCommitmentKey
-  , metadataKindText
-  , metadataKindFromText
-  , carrierTypeFromText
-  , carrierTypeForNodeKind
-  , carrierMappingElement
-  , carrierMappingOwnership
-  , carrierMappingFor
-  , relationMappings
-  , relationMappingCode
-  , relationMappingName
-  , relationMappingLabel
-  , relationMappingSource
-  , relationMappingTarget
-  , relationMappingRepresentation
-  , expectedRelationshipLabel
-  , expectedRelationshipRepresentation
-  , relationshipRepresentation
-  , relationshipTypeName
-  , relationshipDirected
-  , relationshipRepresentationText
-  , contextualizationRepresentation
-  , contextualizationLabel
-  , collectiveCarrier
-  , collectiveSegments
-  , collectiveContributors
-  , collectiveTarget
-  , collectiveJunctionChains
-  , collectiveCarrierKind
-  , collectiveCarrierType
-  , collectiveCarrierElement
-  , collectiveJunctionType
-  , collectiveCommitmentKey
-  , collectiveFitEvidenceKey
-  , collectiveSegmentRepresentation
-  , collectiveSegmentLabel
-  , collectiveSegmentMetadata
-  , collectiveContributorCardinality
-  , collectiveContributorsDistinct
-  , collectiveTargetCardinality
-  , collectiveTargetDistinctFromContributors
-  , requirementIsRequired
-  , requirementIsForbidden
-  , cardinalityAccepts
-  , commitmentFromText
+  ( ProfileDescriptor
+  , compiledProfileInventory
+  , profileDescriptorIdentity
+  , profileDescriptorToken
+  , profileDescriptorReference
+  , profileDescriptorVersion
+  , profileDescriptorNotation
+  , profileDescriptorAdapterIds
+  , profileDescriptorContractDigest
   ) where
 
-import O2I.ArchiMate.Profile.Internal
+import O2I.ArchiMate.Profile.Resolution
+
+-- | The complete inventory of compiled Profile descriptors.
+--
+-- The inventory identifies the notation contract available to adapters; it
+-- does not add independent O2I semantics.
+compiledProfileInventory :: [ProfileDescriptor]
+compiledProfileInventory = [compiledProfileDescriptor]

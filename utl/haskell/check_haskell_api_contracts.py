@@ -43,7 +43,7 @@ class CompileFailure:
 @dataclass(frozen=True)
 class PackageContract:
     package: str
-    compile_pass: str
+    compile_passes: tuple[str, ...]
     compile_failures: tuple[CompileFailure, ...]
 
 
@@ -56,59 +56,112 @@ class PrivateCompileFailure:
 CONTRACTS = (
     PackageContract(
         "o2i-core",
-        "spc/lib/core/tst/api/compile-pass/PublicApi.hs",
+        (
+            "spc/lib/core/tst/api/compile-pass/PublicApi.hs",
+            "spc/lib/core/tst/api/compile-pass/IdentityPublicApi.hs",
+            "spc/lib/core/tst/api/compile-pass/"
+            "CoreGraphObservationPublicApi.hs",
+            "spc/lib/core/tst/api/compile-pass/"
+            "CoreRuleCatalogPublicApi.hs",
+            "spc/lib/core/tst/api/compile-pass/StructurePublicApi.hs",
+        ),
         (
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "AggregateOpaqueConstructors.hs",
-                (("GHC-31891", 25),),
+                (("GHC-01928", 25),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "CoreContractOpaqueConstructors.hs",
+                (("GHC-01928", 14),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "IdentityOpaqueConstructors.hs",
+                (("GHC-01928", 7),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "IdentityInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "CoreGraphObservationOpaqueConstructors.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "CoreGraphObservationInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "CoreRuleCatalogOpaqueConstructors.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "CoreRuleCatalogInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "StructureOpaqueConstructors.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "StructureInternalModule.hs",
+                (("GHC-87110", 1),),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/AggregateRecordUpdates.hs",
-                (("GHC-47535", 25),),
+                (("GHC-22385", 1),),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "GraphOpaqueConstructors.hs",
-                (("GHC-31891", 5),),
+                (("GHC-01928", 5),),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/GraphRecordUpdates.hs",
-                (("GHC-47535", 3),),
+                (("GHC-22385", 1),),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "LanguageOpaqueConstructors.hs",
-                (("GHC-31891", 9),),
+                (("GHC-01928", 9),),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/LanguageOpaquePatterns.hs",
-                (("GHC-76037", 1),),
+                (("GHC-01928", 1),),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/LanguageRecordUpdates.hs",
-                (("GHC-47535", 12),),
+                (("GHC-22385", 1),),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "ValidationOpaqueConstructors.hs",
-                (("GHC-31891", 13),),
+                (("GHC-01928", 13),),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "ValidationRecordUpdates.hs",
-                (("GHC-47535", 20),),
+                (("GHC-22385", 1),),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "ValidationCollectiveParallelCommitment.hs",
-                (("GHC-76037", 1),),
+                (("GHC-22385", 1),),
             ),
         ),
     ),
     PackageContract(
         "o2i-inspection",
-        "spc/lib/inspection/tst/api/compile-pass/PublicApi.hs",
+        ("spc/lib/inspection/tst/api/compile-pass/PublicApi.hs",),
         (
             CompileFailure(
                 "spc/lib/inspection/tst/api/compile-fail/"
@@ -128,49 +181,192 @@ CONTRACTS = (
             CompileFailure(
                 "spc/lib/inspection/tst/api/compile-fail/"
                 "OpaqueConstructors.hs",
-                (("GHC-31891", 21), ("GHC-47535", 12)),
+                (("GHC-22385", 1),),
             ),
         ),
     ),
     PackageContract(
         "o2i-archimate-profile",
-        "spc/ctr/archimate/tst/api/compile-pass/PublicApi.hs",
+        ("spc/ctr/archimate/tst/api/compile-pass/PublicApi.hs",),
         (
             CompileFailure(
                 "spc/ctr/archimate/tst/api/compile-fail/"
-                "OpaqueConstructors.hs",
-                (("GHC-31891", 11),),
+                "DraftOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
             ),
             CompileFailure(
                 "spc/ctr/archimate/tst/api/compile-fail/"
-                "OpaqueVocabularyConstructors.hs",
-                (("GHC-76037", 6),),
+                "ResolutionOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
             ),
             CompileFailure(
                 "spc/ctr/archimate/tst/api/compile-fail/"
-                "ContractRecordUpdates.hs",
-                (("GHC-47535", 13),),
+                "ClosureOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
             ),
             CompileFailure(
                 "spc/ctr/archimate/tst/api/compile-fail/"
-                "MappingRecordUpdates.hs",
-                (("GHC-47535", 10),),
+                "ProjectionOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
             ),
             CompileFailure(
                 "spc/ctr/archimate/tst/api/compile-fail/"
-                "CollectiveRecordUpdates.hs",
-                (("GHC-47535", 18),),
+                "DraftIdentityRoleMismatch.hs",
+                (("GHC-83865", 1),),
+            ),
+            CompileFailure(
+                "spc/ctr/archimate/tst/api/compile-fail/"
+                "ProfileDescriptorRecordUpdate.hs",
+                (("GHC-22385", 1),),
             ),
             CompileFailure(
                 "spc/ctr/archimate/tst/api/compile-fail/"
                 "HiddenInternalModule.hs",
-                (),
+                (("GHC-87110", 1),),
+            ),
+        ),
+    ),
+    PackageContract(
+        "o2i-operation",
+        ("spc/lib/operation/tst/api/compile-pass/PublicApi.hs",),
+        (
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/HiddenInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/OpaqueConstructors.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "AdapterContractOpaqueConstructors.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "AdapterWrongStageDiagnostic.hs",
+                (("GHC-83865", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "AdapterRuleScopeEscape.hs",
+                (("GHC-83865", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "AdapterRuleCrossScope.hs",
+                (("GHC-25897", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "AdapterExecutionOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "ProfileHiddenInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "ProfileOpaqueConstructors.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "EncodingHiddenInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "EncodingOpaqueConstructors.hs",
+                (("GHC-61948", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "AdapterInventoryDocumentOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "ProfileInventoryDocumentOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "RuleInventoryDocumentOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "RuleExplanationDocumentOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "ViewDiscoveryDocumentOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "DiscoveryProfileHiddenInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "DiscoveryRuleHiddenInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "DiscoveryViewHiddenInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "SchemaGeneratedHiddenModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "MachineDocumentTypeSeparation.hs",
+                (("GHC-83865", 5),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "SchemaHiddenInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "SchemaOpaqueConstructors.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "ViewHiddenInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "ViewOpaqueConstructors.hs",
+                (("GHC-88464", 1),),
             ),
         ),
     ),
 )
 
 PRIVATE_COMPILE_FAILURES = (
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/"
+        "GraphCarrierModelIdentityInjection.hs",
+        (("GHC-83865", 1),),
+    ),
+    PrivateCompileFailure(
+        "spc/lib/core/tst/internal/compile-fail/IdentityCrossScope.hs",
+        (("GHC-25897", 1),),
+    ),
     PrivateCompileFailure(
         "spc/lib/core/tst/internal/compile-fail/"
         "MacroEvidenceEndpointMismatch.hs",
@@ -199,7 +395,7 @@ PRIVATE_COMPILE_FAILURES = (
     PrivateCompileFailure(
         "spc/lib/core/tst/internal/compile-fail/"
         "RelationalDisconnectedPlan.hs",
-        (("GHC-31891", 1),),
+        (("GHC-01928", 1),),
     ),
     PrivateCompileFailure(
         "spc/lib/core/tst/internal/compile-fail/"
@@ -244,7 +440,7 @@ PRIVATE_COMPILE_FAILURES = (
     PrivateCompileFailure(
         "spc/lib/core/tst/internal/compile-fail/"
         "RelationalOccurrenceConstructionOutsideExecutor.hs",
-        (("GHC-31891", 1),),
+        (("GHC-01928", 1),),
     ),
     PrivateCompileFailure(
         "spc/lib/core/tst/internal/compile-fail/"
@@ -286,12 +482,19 @@ def parse_diagnostics(output: str) -> list[dict[str, object]]:
             value = json.loads(line)
         except json.JSONDecodeError as error:
             raise ValueError(f"invalid GHC JSON diagnostic: {line}") from error
-        if isinstance(value, dict) and "messageClass" in value:
+        if isinstance(value, dict) and (
+            "messageClass" in value or "severity" in value
+        ):
             diagnostics.append(value)
     return diagnostics
 
 
 def error_code(diagnostic: dict[str, object]) -> str | None:
+    severity = diagnostic.get("severity")
+    code = diagnostic.get("code")
+    if severity == "Error" and isinstance(code, int):
+        return f"GHC-{code:05d}"
+
     message_class = diagnostic.get("messageClass")
     if not isinstance(message_class, str) or "SevError" not in message_class:
         return None
@@ -314,24 +517,28 @@ def diagnostic_file(
 
 def compiler_command(
     project_dir: Path,
+    project_file: str | None,
     build_dir: Path,
     package: str,
     source: Path,
     output_dir: Path,
 ) -> list[str]:
-    return [
+    command = [
         "cabal",
         "-v0",
         f"--project-dir={project_dir}",
-        f"--builddir={build_dir}",
-        "exec",
+    ]
+    if project_file is not None:
+        command.append(f"--project-file={project_file}")
+    return command + [
+        f"--builddir={build_dir}", "exec",
         "--",
         "ghc",
         "-v0",
         "-fno-code",
         "-fforce-recomp",
         "-fmax-errors=1000",
-        "-ddump-json",
+        "-fdiagnostics-as-json",
         f"-odir={output_dir}",
         f"-hidir={output_dir}",
         f"-stubdir={output_dir}",
@@ -343,24 +550,28 @@ def compiler_command(
 
 def private_compiler_command(
     project_dir: Path,
+    project_file: str | None,
     build_dir: Path,
     source: Path,
     source_dir: Path,
     output_dir: Path,
 ) -> list[str]:
-    return [
+    command = [
         "cabal",
         "-v0",
         f"--project-dir={project_dir}",
-        f"--builddir={build_dir}",
-        "exec",
+    ]
+    if project_file is not None:
+        command.append(f"--project-file={project_file}")
+    return command + [
+        f"--builddir={build_dir}", "exec",
         "--",
         "ghc",
         "-v0",
         "-fno-code",
         "-fforce-recomp",
         "-fmax-errors=1000",
-        "-ddump-json",
+        "-fdiagnostics-as-json",
         f"-i{source_dir}",
         f"-odir={output_dir}",
         f"-hidir={output_dir}",
@@ -372,6 +583,7 @@ def private_compiler_command(
 def compile_source(
     root: Path,
     project_dir: Path,
+    project_file: str | None,
     build_dir: Path,
     package: str,
     source_name: str,
@@ -380,6 +592,7 @@ def compile_source(
     with tempfile.TemporaryDirectory(prefix="o2i-api-contract.") as temporary:
         command = compiler_command(
             project_dir,
+            project_file,
             build_dir,
             package,
             source,
@@ -397,6 +610,7 @@ def compile_source(
 def compile_private_source(
     root: Path,
     project_dir: Path,
+    project_file: str | None,
     build_dir: Path,
     source_name: str,
 ) -> subprocess.CompletedProcess[str]:
@@ -407,6 +621,7 @@ def compile_private_source(
     ) as temporary:
         command = private_compiler_command(
             project_dir,
+            project_file,
             build_dir,
             source,
             source_dir,
@@ -512,32 +727,36 @@ def check_relational_internal_import_boundary(root: Path) -> None:
 def check_compile_pass(
     root: Path,
     project_dir: Path,
+    project_file: str | None,
     build_dir: Path,
     contract: PackageContract,
 ) -> None:
-    result = compile_source(
-        root,
-        project_dir,
-        build_dir,
-        contract.package,
-        contract.compile_pass,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(
-            f"{contract.package} external client control failed:\n"
-            + combined_output(result)
+    for source_name in contract.compile_passes:
+        result = compile_source(
+            root,
+            project_dir,
+            project_file,
+            build_dir,
+            contract.package,
+            source_name,
         )
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"{source_name} external client control failed:\n"
+                + combined_output(result)
+            )
 
 
 def check_compile_failure(
     root: Path,
     project_dir: Path,
+    project_file: str | None,
     build_dir: Path,
     package: str,
     failure: CompileFailure,
 ) -> None:
     result = compile_source(
-        root, project_dir, build_dir, package, failure.source
+        root, project_dir, project_file, build_dir, package, failure.source
     )
     assert_compile_failure(
         root, failure.source, failure.diagnostics, result
@@ -547,11 +766,12 @@ def check_compile_failure(
 def check_private_compile_failure(
     root: Path,
     project_dir: Path,
+    project_file: str | None,
     build_dir: Path,
     failure: PrivateCompileFailure,
 ) -> None:
     result = compile_private_source(
-        root, project_dir, build_dir, failure.source
+        root, project_dir, project_file, build_dir, failure.source
     )
     assert_compile_failure(
         root, failure.source, failure.diagnostics, result
@@ -561,11 +781,12 @@ def check_private_compile_failure(
 def check_private_compile_pass(
     root: Path,
     project_dir: Path,
+    project_file: str | None,
     build_dir: Path,
     source_name: str,
 ) -> None:
     result = compile_private_source(
-        root, project_dir, build_dir, source_name
+        root, project_dir, project_file, build_dir, source_name
     )
     if result.returncode != 0:
         raise RuntimeError(
@@ -608,33 +829,58 @@ def assert_compile_failure(
 
 
 def check_contracts(
-    root: Path, project_dir: Path, build_dir: Path
+    root: Path,
+    project_dir: Path,
+    build_dir: Path,
+    packages: frozenset[str] | None = None,
+    project_file: str | None = None,
 ) -> None:
-    check_relational_internal_import_boundary(root)
-    for contract in CONTRACTS:
-        check_compile_pass(root, project_dir, build_dir, contract)
+    selected = tuple(
+        contract
+        for contract in CONTRACTS
+        if packages is None or contract.package in packages
+    )
+    if packages is not None:
+        known = {contract.package for contract in CONTRACTS}
+        unknown = packages - known
+        if unknown:
+            raise ValueError(
+                "unknown API-contract packages: " + ", ".join(sorted(unknown))
+            )
+
+    core_selected = packages is None or "o2i-core" in packages
+    if core_selected:
+        check_relational_internal_import_boundary(root)
+    for contract in selected:
+        check_compile_pass(
+            root, project_dir, project_file, build_dir, contract
+        )
         for failure in contract.compile_failures:
             check_compile_failure(
                 root,
                 project_dir,
+                project_file,
                 build_dir,
                 contract.package,
                 failure,
             )
-    for failure in PRIVATE_COMPILE_FAILURES:
-        check_private_compile_failure(
-            root,
-            project_dir,
-            build_dir,
-            failure,
-        )
-    for source_name in PRIVATE_COMPILE_PASSES:
-        check_private_compile_pass(
-            root,
-            project_dir,
-            build_dir,
-            source_name,
-        )
+    if core_selected:
+        for failure in PRIVATE_COMPILE_FAILURES:
+            check_private_compile_failure(
+                root,
+                project_dir,
+                project_file,
+                build_dir,
+                failure,
+            )
+        for source_name in PRIVATE_COMPILE_PASSES:
+            check_private_compile_pass(
+                root,
+                project_dir,
+                project_file,
+                build_dir,
+                source_name,
+            )
 
 
 def parse_args(arguments: Iterable[str]) -> argparse.Namespace:
@@ -643,6 +889,16 @@ def parse_args(arguments: Iterable[str]) -> argparse.Namespace:
     )
     parser.add_argument("--project-dir", required=True, type=Path)
     parser.add_argument("--builddir", required=True, type=Path)
+    parser.add_argument(
+        "--project-file",
+        help="Cabal project file name relative to --project-dir.",
+    )
+    parser.add_argument(
+        "--package",
+        action="append",
+        dest="packages",
+        help="Limit checks to one package; repeat for multiple packages.",
+    )
     return parser.parse_args(arguments)
 
 
@@ -654,6 +910,8 @@ def main(arguments: Iterable[str] | None = None) -> int:
             root,
             args.project_dir.resolve(),
             args.builddir.resolve(),
+            frozenset(args.packages) if args.packages else None,
+            args.project_file,
         )
     except (OSError, RuntimeError, ValueError) as error:
         print(f"[o2i|error] {error}", file=sys.stderr)

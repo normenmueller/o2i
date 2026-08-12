@@ -1,7 +1,7 @@
 cabal-version: 3.0
 
 name: o2i-archimate-profile
-version: 0.2.0.0
+version: 0.3.0.0
 synopsis: Executable ArchiMate profile contract for O2I.
 category: Formal Methods, Modelling
 description:
@@ -16,7 +16,8 @@ build-type: Simple
 data-files:
   profile.json
 extra-source-files:
-  profile.md,
+  contract/compile.py,
+  contract/test_compile.py,
   tst/api/compile-pass/*.hs,
   tst/api/compile-fail/*.hs
 
@@ -41,14 +42,33 @@ library
     warnings,
     language
   exposed-modules:
-    O2I.ArchiMate.Profile
+    O2I.ArchiMate.Profile,
+    O2I.ArchiMate.Profile.Closure,
+    O2I.ArchiMate.Profile.Draft,
+    O2I.ArchiMate.Profile.Mapping,
+    O2I.ArchiMate.Profile.Notation,
+    O2I.ArchiMate.Profile.Projection,
+    O2I.ArchiMate.Profile.Resolution,
+    O2I.ArchiMate.Profile.Rule.Catalog,
+    O2I.ArchiMate.Profile.Rule.Explanation
   other-modules:
-    O2I.ArchiMate.Profile.Internal
+    O2I.ArchiMate.Profile.Internal.Closure,
+    O2I.ArchiMate.Profile.Internal.Draft,
+    O2I.ArchiMate.Profile.Internal.Generated,
+    O2I.ArchiMate.Profile.Internal.Index,
+    O2I.ArchiMate.Profile.Internal.Mapping,
+    O2I.ArchiMate.Profile.Internal.Notation,
+    O2I.ArchiMate.Profile.Internal.Projection,
+    O2I.ArchiMate.Profile.Internal.Resolution,
+    O2I.ArchiMate.Profile.Rule.Internal.Catalog,
+    O2I.ArchiMate.Profile.Rule.Internal.Definition,
+    O2I.ArchiMate.Profile.Rule.Internal.Explanation
   build-depends:
-    base >=4.18 && <4.19,
+    base >=4.20 && <4.21,
+    containers >=0.7 && <0.8,
     o2i-core ==0.2.0.0,
-    o2i-inspection ==0.2.0.0,
-    text >=2.0 && <2.1
+    text >=2.1 && <2.2,
+    unicode-transforms ==0.4.0.1
   hs-source-dirs:
     src
 
@@ -59,21 +79,62 @@ test-suite o2i-archimate-profile-test
   type: exitcode-stdio-1.0
   main-is: Main.hs
   other-modules:
-    O2I.ArchiMate.Profile.Internal,
     O2I.ArchiMate.Profile.Test.Contract,
+    O2I.ArchiMate.Profile.Test.Fixture,
     Paths_o2i_archimate_profile
   autogen-modules:
     Paths_o2i_archimate_profile
   build-depends:
-    aeson >=2.2 && <2.3,
-    base >=4.18 && <4.19,
-    bytestring >=0.11 && <0.12,
+    base >=4.20 && <4.21,
+    o2i-archimate-profile,
     o2i-core ==0.2.0.0,
-    o2i-inspection ==0.2.0.0,
     tasty >=1.4 && <1.6,
     tasty-hunit >=0.10 && <0.11,
-    text >=2.0 && <2.1
+    text >=2.1 && <2.2
+  hs-source-dirs: tst
+
+test-suite o2i-archimate-profile-internal-test
+  import:
+    warnings,
+    language
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules:
+    O2I.ArchiMate.Profile,
+    O2I.ArchiMate.Profile.Closure,
+    O2I.ArchiMate.Profile.Draft,
+    O2I.ArchiMate.Profile.Mapping,
+    O2I.ArchiMate.Profile.Notation,
+    O2I.ArchiMate.Profile.Projection,
+    O2I.ArchiMate.Profile.Resolution,
+    O2I.ArchiMate.Profile.Rule.Catalog,
+    O2I.ArchiMate.Profile.Rule.Explanation,
+    O2I.ArchiMate.Profile.Internal.Closure,
+    O2I.ArchiMate.Profile.Internal.ClosureWorkTest,
+    O2I.ArchiMate.Profile.Internal.Draft,
+    O2I.ArchiMate.Profile.Internal.Fixture,
+    O2I.ArchiMate.Profile.Internal.Generated,
+    O2I.ArchiMate.Profile.Internal.Index,
+    O2I.ArchiMate.Profile.Internal.InventoryTest,
+    O2I.ArchiMate.Profile.Internal.Mapping,
+    O2I.ArchiMate.Profile.Internal.Notation,
+    O2I.ArchiMate.Profile.Internal.Projection,
+    O2I.ArchiMate.Profile.Internal.Resolution,
+    O2I.ArchiMate.Profile.Rule.CatalogTest,
+    O2I.ArchiMate.Profile.Rule.Internal.Catalog,
+    O2I.ArchiMate.Profile.Rule.Internal.Definition,
+    O2I.ArchiMate.Profile.Rule.Internal.Explanation,
+    O2I.ArchiMate.Profile.Test.Fixture
+  build-depends:
+    base >=4.20 && <4.21,
+    containers >=0.7 && <0.8,
+    o2i-core ==0.2.0.0,
+    tasty >=1.4 && <1.6,
+    tasty-hunit >=0.10 && <0.11,
+    text >=2.1 && <2.2,
+    unicode-transforms ==0.4.0.1
   hs-source-dirs:
+    tst/internal,
     tst,
     src
 
@@ -86,9 +147,9 @@ test-suite o2i-archimate-profile-api-test
   other-modules:
     ApiContractTH
   build-depends:
-    base >=4.18 && <4.19,
+    base >=4.20 && <4.21,
     o2i-archimate-profile,
-    template-haskell >=2.20 && <2.21
+    template-haskell >=2.22 && <2.23
   hs-source-dirs:
     tst/api
 

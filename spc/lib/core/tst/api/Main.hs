@@ -12,10 +12,244 @@ import ApiContractTH (assertAbstractTypes, assertOrdinaryFunctions)
 import Control.Monad (unless)
 import qualified Data.List.NonEmpty as NonEmpty
 import O2I
+import qualified O2I.Core.Contract as Contract
+import qualified O2I.Core.Identity as Identity
+import qualified O2I.Core.Rule.Catalog as RuleCatalog
 import qualified O2I.Graph as Graph
 import O2I.Language
 import qualified O2I.Language as Language
+import qualified O2I.Semantics as Semantics
+import qualified O2I.Semantics.Input as SemanticInput
+import qualified O2I.Structure as Structure
 import qualified O2I.Validation as Validation
+
+$(assertAbstractTypes
+    [ "Contract.CoreContractWitness"
+    , "Contract.CoreContractIdentity"
+    , "Contract.CoreContractVersion"
+    , "Contract.CoreContractSha256"
+    , "Contract.CoreContractShapeSha256"
+    , "Contract.CoreRuleId"
+    , "Contract.CoreCarrierCategory"
+    , "Contract.CoreO2IType"
+    , "Contract.CoreRelationToken"
+    , "Contract.CoreQualifiedEndpointId"
+    , "Contract.CoreStructuredPropositionFamilyId"
+    , "Contract.CoreStructuredPropositionRoleId"
+    , "Contract.CoreQualificationProposalRoleId"
+    , "Contract.CoreParticipantCompleteness"
+    ])
+
+$(assertOrdinaryFunctions
+    [ 'Contract.coreContractIdentityText
+    , 'Contract.coreContractVersionText
+    , 'Contract.coreContractSha256Text
+    , 'Contract.coreContractShapeSha256Text
+    , 'Contract.coreRuleIdText
+    , 'Contract.coreCarrierCategoryText
+    , 'Contract.lookupCoreCarrierCategory
+    , 'Contract.coreO2ITypeText
+    , 'Contract.lookupCoreO2IType
+    , 'Contract.coreRelationTokenText
+    , 'Contract.lookupCoreRelationToken
+    , 'Contract.coreQualifiedEndpointIdText
+    , 'Contract.lookupCoreQualifiedEndpointId
+    , 'Contract.coreStructuredPropositionFamilyIdText
+    , 'Contract.lookupCoreStructuredPropositionFamilyId
+    , 'Contract.coreStructuredPropositionRoleIdText
+    , 'Contract.lookupCoreStructuredPropositionRoleId
+    , 'Contract.coreQualificationProposalRoleIdText
+    , 'Contract.lookupCoreQualificationProposalRoleId
+    , 'Contract.coreParticipantCompletenessIdText
+    , 'Contract.coreParticipantCompletenessToken
+    , 'Contract.lookupCoreParticipantCompletenessId
+    , 'Contract.lookupCoreParticipantCompletenessToken
+    ])
+
+$(assertAbstractTypes
+    [ "RuleCatalog.CoreRuleAuthority"
+    , "RuleCatalog.CoreRuleStage"
+    , "RuleCatalog.CoreRule"
+    , "RuleCatalog.CoreRuleCatalog"
+    ])
+
+$(assertOrdinaryFunctions
+    [ 'RuleCatalog.coreRuleCatalogContract
+    , 'RuleCatalog.coreRuleCatalogEntries
+    , 'RuleCatalog.coreRuleCatalogSize
+    , 'RuleCatalog.coreRuleAuthority
+    , 'RuleCatalog.coreRuleAuthorityText
+    , 'RuleCatalog.foldCoreRuleAuthority
+    , 'RuleCatalog.coreRuleIdentity
+    , 'RuleCatalog.coreRuleStage
+    , 'RuleCatalog.capabilityInputRuleStage
+    , 'RuleCatalog.qualificationRuleStage
+    , 'RuleCatalog.readinessAndAssessmentRuleStage
+    , 'RuleCatalog.semanticsRuleStage
+    , 'RuleCatalog.structureRuleStage
+    , 'RuleCatalog.traceRuleStage
+    , 'RuleCatalog.coreRuleStageText
+    , 'RuleCatalog.foldCoreRuleStage
+    , 'RuleCatalog.coreRuleExpectation
+    , 'RuleCatalog.coreRuleMeaning
+    , 'RuleCatalog.coreRuleAction
+    , 'RuleCatalog.coreRulesForStage
+    , 'RuleCatalog.lookupCoreRule
+    ])
+
+$(assertAbstractTypes
+    [ "SemanticInput.SupplementalInputOrdinal"
+    , "SemanticInput.SupplementalInput"
+    , "SemanticInput.SupplementalInputSet"
+    , "SemanticInput.SupplementalBinding"
+    , "SemanticInput.BoundSupplementalInputs"
+    , "SemanticInput.SupplementalInputDefect"
+    ])
+
+$(assertOrdinaryFunctions
+    [ 'SemanticInput.supplementalInputOrdinal
+    , 'SemanticInput.supplementalInputOrdinalValue
+    , 'SemanticInput.decodeSupplementalInput
+    , 'SemanticInput.assessSupplementalInputSet
+    , 'SemanticInput.bindSupplementalInputs
+    , 'SemanticInput.supplementalBindingInputs
+    , 'SemanticInput.supplementalBindingDefects
+    , 'SemanticInput.supplementalInputDefectKind
+    , 'SemanticInput.supplementalInputDefectEvidence
+    , 'SemanticInput.supplementalInputDefectRule
+    ])
+
+$(assertAbstractTypes
+    [ "Semantics.SemanticAssessment"
+    , "Semantics.SemanticDefect"
+    , "Semantics.SemanticEvidence"
+    , "Semantics.SituatedNeedAssessment"
+    , "Semantics.StrategyFormulationAssessment"
+    , "Semantics.CollectiveStrategyRealizationAssessment"
+    , "Semantics.SemanticallyValidModel"
+    , "Semantics.GloballySituatedNeed"
+    , "Semantics.QualificationEligibleStrategy"
+    , "Semantics.ValidatedCollectiveStrategyRealization"
+    , "Semantics.CollectiveStrategyRealizationComponents"
+    , "Semantics.MacroSupportAssessment"
+    , "Semantics.ParticipantPrimitiveSupportAssessment"
+    ])
+
+$(assertOrdinaryFunctions
+    [ 'Semantics.assessSemantics
+    , 'Semantics.semanticDisposition
+    , 'Semantics.semanticDefects
+    , 'Semantics.semanticCandidateOccurrences
+    , 'Semantics.acceptedSemanticModel
+    , 'Semantics.semanticDefectRule
+    , 'Semantics.semanticDefectEvidence
+    , 'Semantics.semanticDefectWitnesses
+    , 'Semantics.semanticEvidenceKind
+    , 'Semantics.semanticEvidenceModelIdentities
+    , 'Semantics.semanticEvidenceOccurrenceIdentities
+    , 'Semantics.situatedNeedAssessments
+    , 'Semantics.strategyFormulationAssessments
+    , 'Semantics.collectiveStrategyRealizationAssessments
+    , 'Semantics.situatedNeedDisposition
+    , 'Semantics.strategyFormulationDisposition
+    , 'Semantics.collectiveStrategyRealizationDisposition
+    , 'Semantics.situatedNeedSubject
+    , 'Semantics.strategyFormulationSubject
+    , 'Semantics.strategyFormulationUnavailableReason
+    , 'Semantics.collectiveStrategyRealizationSubject
+    , 'Semantics.semanticallyValidSituatedNeeds
+    , 'Semantics.semanticallyValidStrategies
+    , 'Semantics.semanticallyValidCollectiveRealizations
+    , 'Semantics.globallySituatedNeedIdentity
+    , 'Semantics.globallySituatedNeedWitnesses
+    , 'Semantics.qualificationEligibleStrategyIdentity
+    , 'Semantics.qualificationEligibleStrategyWitnesses
+    , 'Semantics.validatedCollectiveStrategyRealizationIdentity
+    , 'Semantics.validatedCollectiveStrategyRealizationWitnesses
+    , 'Semantics.collectiveStrategyRealizationComponents
+    , 'Semantics.collectiveCompletenessDisposition
+    , 'Semantics.collectiveFitDisposition
+    , 'Semantics.collectiveFitUnavailableReasons
+    , 'Semantics.collectiveFitBlockingStrategies
+    , 'Semantics.collectiveCoverageDisposition
+    , 'Semantics.collectiveCoverageBlockingStrategies
+    , 'Semantics.collectiveMacroSupportAssessments
+    , 'Semantics.macroSupportParticipant
+    , 'Semantics.macroSupportDisposition
+    , 'Semantics.macroSupportWitnesses
+    , 'Semantics.collectivePrimitiveSupportAssessments
+    , 'Semantics.primitiveSupportParticipant
+    , 'Semantics.primitiveSupportDisposition
+    , 'Semantics.primitiveSupportUnavailableReasons
+    , 'Semantics.primitiveSupportBlockingStrategies
+    , 'Semantics.primitiveSupportWitnesses
+    ])
+
+$(assertAbstractTypes
+    [ "Identity.ModelIdentity"
+    , "Identity.OccurrenceIdentity"
+    , "Identity.ModelOccurrence"
+    , "Identity.ModelIdentityIndex"
+    , "Identity.IdentityIndexDefect"
+    , "Identity.SelectedViewScope"
+    , "Identity.SelectedViewScopeDefect"
+    ])
+
+$(assertOrdinaryFunctions
+    [ 'Identity.modelIdentity
+    , 'Identity.modelIdentityText
+    , 'Identity.occurrenceIdentity
+    , 'Identity.occurrenceIdentityText
+    , 'Identity.modelOccurrence
+    , 'Identity.modelOccurrenceIdentity
+    , 'Identity.modelOccurrenceModelIdentity
+    , 'Identity.identityIndexDefectOccurrence
+    , 'Identity.identityIndexDefectModelIdentities
+    , 'Identity.buildModelIdentityIndex
+    , 'Identity.selectedViewScopeDefectKind
+    , 'Identity.selectedViewScopeDefectOccurrence
+    , 'Identity.selectedViewScopeDefectCardinality
+    , 'Identity.withSelectedViewScope
+    ])
+
+$(assertAbstractTypes
+    [ "Structure.CarrierProjection"
+    , "Structure.RelationProjection"
+    , "Structure.ContextualizationProjection"
+    , "Structure.StructuredPropositionProjection"
+    , "Structure.StructuredIncidenceProjection"
+    , "Structure.StructureProjection"
+    , "Structure.StructureDefect"
+    , "Structure.StructuredIncidenceObservation"
+    , "Structure.StructuredPropositionObservation"
+    , "Structure.WellFormedGraph"
+    ])
+
+$(assertOrdinaryFunctions
+    [ 'Structure.carrierProjection
+    , 'Structure.relationProjection
+    , 'Structure.contextualizationProjection
+    , 'Structure.structuredPropositionProjection
+    , 'Structure.structuredIncidenceProjection
+    , 'Structure.structureProjection
+    , 'Structure.structureDefectRule
+    , 'Structure.structureDefectSubject
+    , 'Structure.structureDefectRelatedOccurrences
+    , 'Structure.structuredIncidenceOccurrence
+    , 'Structure.structuredIncidenceRole
+    , 'Structure.structuredIncidenceEndpoint
+    , 'Structure.structuredPropositionOccurrence
+    , 'Structure.structuredPropositionModelIdentity
+    , 'Structure.structuredPropositionFamily
+    , 'Structure.structuredPropositionCompleteness
+    , 'Structure.structuredPropositionCommitment
+    , 'Structure.structuredPropositionIncidences
+    , 'Structure.wellFormedCarriers
+    , 'Structure.wellFormedContextualizations
+    , 'Structure.wellFormedRelations
+    , 'Structure.wellFormedStructuredPropositions
+    , 'Structure.assessStructure
+    ])
 
 $(assertAbstractTypes
     [ "Language.Claim"
@@ -373,6 +607,69 @@ $(assertOrdinaryFunctions
 -- | Run positive external-client API use.
 main :: IO ()
 main = do
+  assert
+    "compiled Core contract identity"
+    (Contract.coreContractIdentityText Contract.coreContractIdentity
+       == "o2i.core-semantics")
+  assert
+    "compiled Core contract version"
+    (Contract.coreContractVersionText Contract.coreContractVersion == "0.3.0")
+  assert
+    "compiled Core contract exact-byte digest"
+    (Contract.coreContractSha256Text Contract.coreContractSha256
+       == "0654111b900ff1c19b241a4fdfec10694d61a88471981e9df6bcb58b27785f01")
+  assert
+    "compiled Core contract shape digest"
+    (Contract.coreContractShapeSha256Text Contract.coreContractShapeSha256
+       == "fbb21f3db5bda60724b8a1448fd7bd302050f4d1e21be2873cd040f84fd3f2e4")
+  assert
+    "compiled Core rule catalog"
+    (NonEmpty.length Contract.coreRuleIds == 181)
+  assert
+    "compiled Core relation-token catalog"
+    (NonEmpty.length Contract.coreRelationTokens == 19)
+  assert
+    "compiled Core qualified-endpoint catalog"
+    (NonEmpty.length Contract.coreQualifiedEndpointIds == 27)
+  assert
+    "compiled Core structured-proposition-family catalog"
+    (NonEmpty.length Contract.coreStructuredPropositionFamilyIds == 1)
+  assert
+    "compiled Core structured-proposition-role catalog"
+    (NonEmpty.length Contract.coreStructuredPropositionRoleIds == 2)
+  assert
+    "compiled Core qualification-proposal-role catalog"
+    (NonEmpty.length Contract.coreQualificationProposalRoleIds == 4)
+  assert
+    "exact public Core companion lookups"
+    (and
+       [ fmap
+           Contract.coreQualifiedEndpointIdText
+           (Contract.lookupCoreQualifiedEndpointId "context.strategy")
+           == Just "context.strategy"
+       , fmap
+           Contract.coreRelationTokenText
+           (Contract.lookupCoreRelationToken "directs")
+           == Just "directs"
+       , fmap
+           Contract.coreStructuredPropositionFamilyIdText
+           (Contract.lookupCoreStructuredPropositionFamilyId
+              "collective-strategy-realization")
+           == Just "collective-strategy-realization"
+       , fmap
+           Contract.coreStructuredPropositionRoleIdText
+           (Contract.lookupCoreStructuredPropositionRoleId
+              "collective-strategy-realization.role.target")
+           == Just "collective-strategy-realization.role.target"
+       , fmap
+           Contract.coreQualificationProposalRoleIdText
+           (Contract.lookupCoreQualificationProposalRoleId
+              "need-qualification-proposal.role.objective")
+           == Just "need-qualification-proposal.role.objective"
+       ])
+  assert
+    "compiled Core witness is available"
+    (Contract.coreContractWitness == Contract.coreContractWitness)
   let compatibilityEvidence =
         RawContributorCompatibilityEvidence
           strategyId

@@ -35,7 +35,6 @@ module O2I.Validation.Collective.Registry.Internal
   , validatedRegistryContributions
   ) where
 
-import Data.List (foldl')
 import Data.List.NonEmpty (NonEmpty((:|)))
 import Data.Maybe (mapMaybe)
 import qualified Data.Set as Set

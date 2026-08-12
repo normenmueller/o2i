@@ -1,0 +1,4438 @@
+{
+  "companionFormatContract": {
+    "decoder": "exhaustive-closed-object-and-tagged-variant-decoder",
+    "rejects": [
+      "missing-member",
+      "unknown-member",
+      "duplicate-member",
+      "wrong-JSON-kind",
+      "invalid-discriminator",
+      "invalid-enum"
+    ],
+    "shapeDigestAlgorithm": "sha256-of-canonical-JSON-pointer-kind-and-exact-object-member-manifest-excluding-this-shapeSha256-member",
+    "shapeSha256": "fbb21f3db5bda60724b8a1448fd7bd302050f4d1e21be2873cd040f84fd3f2e4"
+  },
+  "schema": "o2i.core-semantics/target-v46",
+  "coreIdentity": {
+    "identity": "o2i.core-semantics",
+    "version": "0.3.0"
+  },
+  "qualifiedEndpointDerivation": {
+    "catalogUniqueness": "carrierCategory-o2iType-optional-contextType",
+    "contextualizedCategories": [
+      "Primitive",
+      "Structuring"
+    ],
+    "directCategories": [
+      "Context",
+      "SituationAnchor"
+    ],
+    "input": "profile-projected-carrier-category-o2i-type-and-resolved-contextualization-observations",
+    "directResolution": "Context-and-SituationAnchor-match-carrierCategory-and-o2iType-without-contextType",
+    "contextualizedResolution": "Primitive-and-Structuring-first-resolve-exactly-one-owner-under-contextualizationSemantics-then-match-carrierCategory-o2iType-and-owner-o2iType-as-contextType",
+    "invalidContextualizationDisposition": "emit-only-the-atomic-contextualization-defects-and-do-not-attempt-catalog-membership-for-that-endpoint",
+    "multipleMatches": "core-contract-compilation-failure",
+    "noMatch": "one-core-defect",
+    "resolution": "exactly-one-qualifiedEndpointCatalog-row-under-category-specific-resolution",
+    "ruleId": "core.qualified-endpoint.catalog-membership"
+  },
+  "qualifiedEndpointCatalog": [
+    {
+      "id": "context.ethos",
+      "o2iType": "Ethos",
+      "carrierCategory": "Context"
+    },
+    {
+      "id": "context.intervention",
+      "o2iType": "Intervention",
+      "carrierCategory": "Context"
+    },
+    {
+      "id": "context.measure",
+      "o2iType": "Measure",
+      "carrierCategory": "Context"
+    },
+    {
+      "id": "context.mission",
+      "o2iType": "Mission",
+      "carrierCategory": "Context"
+    },
+    {
+      "id": "context.need",
+      "o2iType": "Need",
+      "carrierCategory": "Context"
+    },
+    {
+      "id": "context.situation",
+      "o2iType": "Situation",
+      "carrierCategory": "Context"
+    },
+    {
+      "id": "context.strategy",
+      "o2iType": "Strategy",
+      "carrierCategory": "Context"
+    },
+    {
+      "id": "context.vision",
+      "o2iType": "Vision",
+      "carrierCategory": "Context"
+    },
+    {
+      "id": "primitive.ethos.principle",
+      "contextType": "Ethos",
+      "o2iType": "Principle",
+      "carrierCategory": "Primitive"
+    },
+    {
+      "id": "primitive.intervention.action",
+      "contextType": "Intervention",
+      "o2iType": "Action",
+      "carrierCategory": "Primitive"
+    },
+    {
+      "id": "primitive.intervention.key-result",
+      "contextType": "Intervention",
+      "o2iType": "KeyResult",
+      "carrierCategory": "Primitive"
+    },
+    {
+      "id": "primitive.measure.kpi",
+      "contextType": "Measure",
+      "o2iType": "KPI",
+      "carrierCategory": "Primitive"
+    },
+    {
+      "id": "primitive.mission.driver",
+      "contextType": "Mission",
+      "o2iType": "Driver",
+      "carrierCategory": "Primitive"
+    },
+    {
+      "id": "primitive.need.driver",
+      "contextType": "Need",
+      "o2iType": "Driver",
+      "carrierCategory": "Primitive"
+    },
+    {
+      "id": "primitive.need.objective",
+      "contextType": "Need",
+      "o2iType": "Objective",
+      "carrierCategory": "Primitive"
+    },
+    {
+      "id": "primitive.strategy.action",
+      "contextType": "Strategy",
+      "o2iType": "Action",
+      "carrierCategory": "Primitive"
+    },
+    {
+      "id": "primitive.strategy.driver",
+      "contextType": "Strategy",
+      "o2iType": "Driver",
+      "carrierCategory": "Primitive"
+    },
+    {
+      "id": "primitive.strategy.key-result",
+      "contextType": "Strategy",
+      "o2iType": "KeyResult",
+      "carrierCategory": "Primitive"
+    },
+    {
+      "id": "primitive.strategy.objective",
+      "contextType": "Strategy",
+      "o2iType": "Objective",
+      "carrierCategory": "Primitive"
+    },
+    {
+      "id": "primitive.strategy.principle",
+      "contextType": "Strategy",
+      "o2iType": "Principle",
+      "carrierCategory": "Primitive"
+    },
+    {
+      "id": "primitive.vision.objective",
+      "contextType": "Vision",
+      "o2iType": "Objective",
+      "carrierCategory": "Primitive"
+    },
+    {
+      "id": "situation-anchor.business-capability",
+      "o2iType": "BusinessCapability",
+      "carrierCategory": "SituationAnchor"
+    },
+    {
+      "id": "situation-anchor.business-object",
+      "o2iType": "BusinessObject",
+      "carrierCategory": "SituationAnchor"
+    },
+    {
+      "id": "situation-anchor.business-process",
+      "o2iType": "BusinessProcess",
+      "carrierCategory": "SituationAnchor"
+    },
+    {
+      "id": "situation-anchor.value-stream",
+      "o2iType": "ValueStream",
+      "carrierCategory": "SituationAnchor"
+    },
+    {
+      "id": "structuring.measure.performance-dimension",
+      "contextType": "Measure",
+      "o2iType": "PerformanceDimension",
+      "carrierCategory": "Structuring"
+    },
+    {
+      "id": "structuring.strategy.performance-dimension",
+      "contextType": "Strategy",
+      "o2iType": "PerformanceDimension",
+      "carrierCategory": "Structuring"
+    }
+  ],
+  "relationTokenCatalog": [
+    "addresses",
+    "anchors",
+    "changes",
+    "contains",
+    "contributes-to",
+    "determines",
+    "directs",
+    "frames",
+    "grounds",
+    "guides",
+    "indicates",
+    "is-constituted-by",
+    "measures",
+    "orients",
+    "qualifies",
+    "sets-target-for",
+    "substantiates",
+    "surfaces",
+    "translates-into"
+  ],
+  "semanticRelationResolution": {
+    "catalogUniqueness": "relationToken-source-qualified-endpoint-target-qualified-endpoint",
+    "input": "profile-projected-relation-token-and-resolved-endpoint-occurrences",
+    "multipleMatches": "core-contract-compilation-failure",
+    "noMatch": "one-core-defect",
+    "resolution": "exactly-one-relationSemantics-row-matching-relationToken-source-and-target",
+    "ruleId": "core.semantic-relation.compatibility"
+  },
+  "relationSemantics": [
+    {
+      "id": "ethos-guides-mission",
+      "source": "context.ethos",
+      "target": "context.mission",
+      "relationToken": "guides"
+    },
+    {
+      "id": "mission-grounds-vision",
+      "source": "context.mission",
+      "target": "context.vision",
+      "relationToken": "grounds"
+    },
+    {
+      "id": "ethos-guides-vision",
+      "source": "context.ethos",
+      "target": "context.vision",
+      "relationToken": "guides"
+    },
+    {
+      "id": "vision-orients-strategy",
+      "source": "context.vision",
+      "target": "context.strategy",
+      "relationToken": "orients"
+    },
+    {
+      "id": "strategy-directs-strategy",
+      "source": "context.strategy",
+      "target": "context.strategy",
+      "relationToken": "directs"
+    },
+    {
+      "id": "strategy-contributes-to-strategy",
+      "source": "context.strategy",
+      "target": "context.strategy",
+      "relationToken": "contributes-to"
+    },
+    {
+      "id": "strategy-qualifies-need",
+      "source": "context.strategy",
+      "target": "context.need",
+      "relationToken": "qualifies"
+    },
+    {
+      "id": "situation-surfaces-need",
+      "source": "context.situation",
+      "target": "context.need",
+      "relationToken": "surfaces"
+    },
+    {
+      "id": "intervention-addresses-need",
+      "source": "context.intervention",
+      "target": "context.need",
+      "relationToken": "addresses"
+    },
+    {
+      "id": "strategy-directs-intervention",
+      "source": "context.strategy",
+      "target": "context.intervention",
+      "relationToken": "directs"
+    },
+    {
+      "id": "intervention-changes-situation",
+      "source": "context.intervention",
+      "target": "context.situation",
+      "relationToken": "changes"
+    },
+    {
+      "id": "intervention-sets-target-for-measure",
+      "source": "context.intervention",
+      "target": "context.measure",
+      "relationToken": "sets-target-for"
+    },
+    {
+      "id": "measure-measures-situation",
+      "source": "context.measure",
+      "target": "context.situation",
+      "relationToken": "measures"
+    },
+    {
+      "id": "strategy-frames-measure",
+      "source": "context.strategy",
+      "target": "context.measure",
+      "relationToken": "frames"
+    },
+    {
+      "id": "ethos-principle-guides-mission-driver",
+      "source": "primitive.ethos.principle",
+      "target": "primitive.mission.driver",
+      "relationToken": "guides"
+    },
+    {
+      "id": "ethos-principle-guides-vision-objective",
+      "source": "primitive.ethos.principle",
+      "target": "primitive.vision.objective",
+      "relationToken": "guides"
+    },
+    {
+      "id": "mission-driver-grounds-vision-objective",
+      "source": "primitive.mission.driver",
+      "target": "primitive.vision.objective",
+      "relationToken": "grounds"
+    },
+    {
+      "id": "vision-objective-orients-strategy-objective",
+      "source": "primitive.vision.objective",
+      "target": "primitive.strategy.objective",
+      "relationToken": "orients"
+    },
+    {
+      "id": "strategy-driver-grounds-strategy-objective",
+      "source": "primitive.strategy.driver",
+      "target": "primitive.strategy.objective",
+      "relationToken": "grounds"
+    },
+    {
+      "id": "strategy-key-result-substantiates-strategy-objective",
+      "source": "primitive.strategy.key-result",
+      "target": "primitive.strategy.objective",
+      "relationToken": "substantiates"
+    },
+    {
+      "id": "strategy-principle-guides-strategy-action",
+      "source": "primitive.strategy.principle",
+      "target": "primitive.strategy.action",
+      "relationToken": "guides"
+    },
+    {
+      "id": "strategy-action-contributes-to-strategy-key-result",
+      "source": "primitive.strategy.action",
+      "target": "primitive.strategy.key-result",
+      "relationToken": "contributes-to"
+    },
+    {
+      "id": "strategy-principle-guides-strategy-principle",
+      "source": "primitive.strategy.principle",
+      "target": "primitive.strategy.principle",
+      "relationToken": "guides"
+    },
+    {
+      "id": "strategy-key-result-contributes-to-strategy-key-result",
+      "source": "primitive.strategy.key-result",
+      "target": "primitive.strategy.key-result",
+      "relationToken": "contributes-to"
+    },
+    {
+      "id": "strategy-action-contributes-to-strategy-action",
+      "source": "primitive.strategy.action",
+      "target": "primitive.strategy.action",
+      "relationToken": "contributes-to"
+    },
+    {
+      "id": "strategy-key-result-translates-into-need-objective",
+      "source": "primitive.strategy.key-result",
+      "target": "primitive.need.objective",
+      "relationToken": "translates-into"
+    },
+    {
+      "id": "need-driver-grounds-need-objective",
+      "source": "primitive.need.driver",
+      "target": "primitive.need.objective",
+      "relationToken": "grounds"
+    },
+    {
+      "id": "strategy-driver-indicates-measure-performance-dimension",
+      "source": "primitive.strategy.driver",
+      "target": "structuring.measure.performance-dimension",
+      "relationToken": "indicates"
+    },
+    {
+      "id": "strategy-key-result-determines-measure-performance-dimension",
+      "source": "primitive.strategy.key-result",
+      "target": "structuring.measure.performance-dimension",
+      "relationToken": "determines"
+    },
+    {
+      "id": "strategy-action-guides-intervention-action",
+      "source": "primitive.strategy.action",
+      "target": "primitive.intervention.action",
+      "relationToken": "guides"
+    },
+    {
+      "id": "intervention-action-contributes-to-intervention-key-result",
+      "source": "primitive.intervention.action",
+      "target": "primitive.intervention.key-result",
+      "relationToken": "contributes-to"
+    },
+    {
+      "id": "intervention-key-result-substantiates-need-objective",
+      "source": "primitive.intervention.key-result",
+      "target": "primitive.need.objective",
+      "relationToken": "substantiates"
+    },
+    {
+      "id": "intervention-key-result-contributes-to-strategy-key-result",
+      "source": "primitive.intervention.key-result",
+      "target": "primitive.strategy.key-result",
+      "relationToken": "contributes-to"
+    },
+    {
+      "id": "intervention-key-result-sets-target-for-measure-kpi",
+      "source": "primitive.intervention.key-result",
+      "target": "primitive.measure.kpi",
+      "relationToken": "sets-target-for"
+    },
+    {
+      "id": "strategy-performance-dimension-contains-strategy-key-result",
+      "source": "structuring.strategy.performance-dimension",
+      "target": "primitive.strategy.key-result",
+      "relationToken": "contains"
+    },
+    {
+      "id": "measure-performance-dimension-contains-measure-kpi",
+      "source": "structuring.measure.performance-dimension",
+      "target": "primitive.measure.kpi",
+      "relationToken": "contains"
+    },
+    {
+      "id": "situation-is-constituted-by-anchor.business-capability",
+      "source": "context.situation",
+      "target": "situation-anchor.business-capability",
+      "relationToken": "is-constituted-by"
+    },
+    {
+      "id": "situation-is-constituted-by-anchor.business-process",
+      "source": "context.situation",
+      "target": "situation-anchor.business-process",
+      "relationToken": "is-constituted-by"
+    },
+    {
+      "id": "situation-is-constituted-by-anchor.business-object",
+      "source": "context.situation",
+      "target": "situation-anchor.business-object",
+      "relationToken": "is-constituted-by"
+    },
+    {
+      "id": "situation-is-constituted-by-anchor.value-stream",
+      "source": "context.situation",
+      "target": "situation-anchor.value-stream",
+      "relationToken": "is-constituted-by"
+    },
+    {
+      "id": "situation-anchor-anchors-need-driver.business-capability",
+      "source": "situation-anchor.business-capability",
+      "target": "primitive.need.driver",
+      "relationToken": "anchors"
+    },
+    {
+      "id": "situation-anchor-anchors-need-driver.business-process",
+      "source": "situation-anchor.business-process",
+      "target": "primitive.need.driver",
+      "relationToken": "anchors"
+    },
+    {
+      "id": "situation-anchor-anchors-need-driver.business-object",
+      "source": "situation-anchor.business-object",
+      "target": "primitive.need.driver",
+      "relationToken": "anchors"
+    },
+    {
+      "id": "situation-anchor-anchors-need-driver.value-stream",
+      "source": "situation-anchor.value-stream",
+      "target": "primitive.need.driver",
+      "relationToken": "anchors"
+    },
+    {
+      "id": "intervention-action-changes-situation-anchor.business-capability",
+      "source": "primitive.intervention.action",
+      "target": "situation-anchor.business-capability",
+      "relationToken": "changes"
+    },
+    {
+      "id": "intervention-action-changes-situation-anchor.business-process",
+      "source": "primitive.intervention.action",
+      "target": "situation-anchor.business-process",
+      "relationToken": "changes"
+    },
+    {
+      "id": "intervention-action-changes-situation-anchor.business-object",
+      "source": "primitive.intervention.action",
+      "target": "situation-anchor.business-object",
+      "relationToken": "changes"
+    },
+    {
+      "id": "intervention-action-changes-situation-anchor.value-stream",
+      "source": "primitive.intervention.action",
+      "target": "situation-anchor.value-stream",
+      "relationToken": "changes"
+    },
+    {
+      "id": "measure-kpi-measures-situation-anchor.business-capability",
+      "source": "primitive.measure.kpi",
+      "target": "situation-anchor.business-capability",
+      "relationToken": "measures"
+    },
+    {
+      "id": "measure-kpi-measures-situation-anchor.business-process",
+      "source": "primitive.measure.kpi",
+      "target": "situation-anchor.business-process",
+      "relationToken": "measures"
+    },
+    {
+      "id": "measure-kpi-measures-situation-anchor.business-object",
+      "source": "primitive.measure.kpi",
+      "target": "situation-anchor.business-object",
+      "relationToken": "measures"
+    },
+    {
+      "id": "measure-kpi-measures-situation-anchor.value-stream",
+      "source": "primitive.measure.kpi",
+      "target": "situation-anchor.value-stream",
+      "relationToken": "measures"
+    }
+  ],
+  "contextualizationSemantics": {
+    "relation": "contextualizes",
+    "sourceCategory": "Context",
+    "targetCategories": [
+      "Primitive",
+      "Structuring"
+    ],
+    "ownerSelection": "all-structurally-valid-candidate-or-asserted-contextualization-observations",
+    "targetOwnerCardinality": "exactly-one",
+    "qualifiedEndpointParticipation": "candidate-or-asserted-owner-may-qualify-a-diagnostic-endpoint",
+    "assertedDependency": "every-asserted-proposition-using-a-contextualized-endpoint-requires-that-endpoints-unique-contextualization-to-be-asserted",
+    "ruleIds": {
+      "sourceCategory": "core.contextualization.source-category",
+      "targetCategory": "core.contextualization.target-category",
+      "targetOwnerCardinality": "core.contextualization.target-owner-cardinality",
+      "assertedDependency": "core.contextualization.asserted-dependency"
+    }
+  },
+  "proofSupportContract": {
+    "requiredCommitment": "asserted",
+    "candidateDisposition": "retained-for-diagnostics-never-counted-as-proof-support",
+    "GloballySituatedNeed": {
+      "requiredObservations": [
+        "subject-Need",
+        "each-counted-Driver-and-Objective",
+        "each-contextualization-establishing-their-Need-ownership",
+        "each-counted-surfacing-Situation-and-situation-surfaces-need-relation",
+        "each-counted-Situation-Anchor-and-situation-is-constituted-by-anchor-relation",
+        "each-counted-anchor-anchors-driver-relation",
+        "each-counted-driver-grounds-objective-relation"
+      ]
+    },
+    "QualificationEligibleStrategy": {
+      "requiredObservations": [
+        "subject-Strategy",
+        "diagnosis-intent-guidingPolicy-and-each-listed-Action-and-KeyResult",
+        "each-contextualization-establishing-their-Strategy-ownership",
+        "each-Vision-Objective-and-orients-relation-used-by-visionOrientation",
+        "each-grounds-guides-contributes-to-and-substantiates-relation-used-by-the-formulation"
+      ]
+    },
+    "evidenceKeySchemas": {
+      "AssertedDependencyKey": [
+        "propositionOccurrence",
+        "endpointOccurrence",
+        "contextualizationOccurrence"
+      ],
+      "NeedKey": [
+        "need"
+      ],
+      "NeedMemberKey": [
+        "need",
+        "member"
+      ],
+      "StrategyKey": [
+        "strategy"
+      ],
+      "StrategyMemberKey": [
+        "strategy",
+        "member"
+      ]
+    },
+    "evidenceKeyByRule": {
+      "core.contextualization.asserted-dependency": "AssertedDependencyKey",
+      "core.situated-need.driver-cardinality": "NeedKey",
+      "core.situated-need.objective-cardinality": "NeedKey",
+      "core.situated-need.surfacing-situation-cardinality": "NeedKey",
+      "core.situated-need.surfacing-situation-anchoring": "NeedMemberKey",
+      "core.situated-need.driver-anchoring": "NeedMemberKey",
+      "core.situated-need.objective-grounding": "NeedMemberKey",
+      "core.strategy-formulation.diagnosis": "StrategyKey",
+      "core.strategy-formulation.intent": "StrategyKey",
+      "core.strategy-formulation.guiding-policy": "StrategyKey",
+      "core.strategy-formulation.actions": "StrategyKey",
+      "core.strategy-formulation.key-results": "StrategyKey",
+      "core.strategy-formulation.vision-orientation": "StrategyKey",
+      "core.strategy-formulation.diagnosis-grounding": "StrategyKey",
+      "core.strategy-formulation.guiding-policy-actions": "StrategyMemberKey",
+      "core.strategy-formulation.action-contributions": "StrategyMemberKey",
+      "core.strategy-formulation.key-result-substantiation": "StrategyMemberKey"
+    },
+    "defectIdentity": "rule-id-and-the-exact-evidence-key-schema-bound-by-evidenceKeyByRule"
+  },
+  "strategyFormulationSemantics": {
+    "inputAuthority": "supplementalInputSchema-plus-decoder-canonicalization-and-supplemental-input-binding",
+    "inputProperties": {
+      "strategyBinding": "supplementalInputContract-subject-key-and-identity-binding",
+      "scope": "supplementalInputSchema.StrategyFormulationInput.scope",
+      "anchoringPeriod": "supplementalInputSchema.StrategyFormulationInput.anchoring.period",
+      "anchoringResponsibilityScope": "supplementalInputSchema.StrategyFormulationInput.anchoring.responsibilityScope",
+      "anchoringDecisionLevel": "supplementalInputSchema.StrategyFormulationInput.anchoring.decisionLevel",
+      "anchoringResponsibilities": "supplementalInputSchema.StrategyFormulationInput.anchoring.responsibilities",
+      "anchoringDecisionPaths": "supplementalInputSchema.StrategyFormulationInput.anchoring.decisionPaths",
+      "anchoringImplementationLogic": "supplementalInputSchema.StrategyFormulationInput.anchoring.implementationLogic",
+      "derivedGuardrails": "supplementalInputSchema.StrategyFormulationInput.derivedGuardrails",
+      "positioning": "supplementalInputSchema.StrategyFormulationInput.positioning",
+      "tradeOffs": "supplementalInputSchema.StrategyFormulationInput.tradeOffs",
+      "fitRationale": "supplementalInputSchema.StrategyFormulationInput.fitRationale"
+    },
+    "semanticObligations": {
+      "diagnosis": "exactly-one-primitive.strategy.driver-owned-by-strategy",
+      "intent": "exactly-one-primitive.strategy.objective-owned-by-strategy",
+      "guidingPolicy": "exactly-one-primitive.strategy.principle-owned-by-strategy",
+      "actions": "one-or-more-distinct-primitive.strategy.action-owned-by-strategy",
+      "keyResults": "one-or-more-distinct-primitive.strategy.key-result-owned-by-strategy",
+      "visionOrientation": "at-least-one-primitive.vision.objective-orients-the-intent",
+      "diagnosisGrounding": "the-diagnosis-grounds-the-intent",
+      "guidingPolicyActions": "the-guiding-policy-guides-every-listed-action",
+      "actionContributions": "every-listed-action-contributes-to-at-least-one-listed-key-result",
+      "keyResultSubstantiation": "every-listed-key-result-substantiates-the-intent"
+    },
+    "derivedProof": "QualificationEligibleStrategy-only-after-complete-available-assessment",
+    "ruleIds": {
+      "diagnosis": "core.strategy-formulation.diagnosis",
+      "intent": "core.strategy-formulation.intent",
+      "guidingPolicy": "core.strategy-formulation.guiding-policy",
+      "actions": "core.strategy-formulation.actions",
+      "keyResults": "core.strategy-formulation.key-results",
+      "visionOrientation": "core.strategy-formulation.vision-orientation",
+      "diagnosisGrounding": "core.strategy-formulation.diagnosis-grounding",
+      "guidingPolicyActions": "core.strategy-formulation.guiding-policy-actions",
+      "actionContributions": "core.strategy-formulation.action-contributions",
+      "keyResultSubstantiation": "core.strategy-formulation.key-result-substantiation"
+    },
+    "supplementalInputBinding": {
+      "input": "supplementalInputContract",
+      "payloadType": "StrategyFormulationInput",
+      "subjectKey": "strategy",
+      "cardinality": "zero-or-one-per-model-strategy",
+      "requiredFor": "complete-Strategy-semantic-assessment",
+      "absentDisposition": "StrategyFormulationAssessmentUnavailable-not-model-defect"
+    },
+    "inputSchemaRef": "#supplementalInputSchema/$defs/StrategyFormulationInput"
+  },
+  "structuredPropositionSemantics": {
+    "identity": "one-nonempty-model-wide-unique-claim-identity",
+    "commitment": "exactly-one-candidate-or-asserted",
+    "family": "exactly-one-admitted-structuredPropositionFamilies.id",
+    "incidence": "zero-or-more-preserved-role-labelled-endpoint-occurrences-before-family-validation",
+    "atomicity": "identity-family-commitment-and-complete-role-incidence-form-one-indivisible-proposition",
+    "ruleIds": {
+      "identity": "core.structured-proposition.identity",
+      "commitment": "core.structured-proposition.commitment",
+      "family": "core.structured-proposition.family",
+      "incidence": "core.structured-proposition.incidence"
+    }
+  },
+  "structuredPropositionFamilies": [
+    {
+      "id": "collective-strategy-realization",
+      "propositionType": "CollectiveStrategyRealization",
+      "composition": "conjunctive",
+      "participant": {
+        "roleId": "collective-strategy-realization.role.participant",
+        "target": "context.strategy",
+        "cardinality": "at-least-two",
+        "uniqueness": "distinct"
+      },
+      "target": {
+        "roleId": "collective-strategy-realization.role.target",
+        "target": "context.strategy",
+        "cardinality": "exactly-one",
+        "distinctFromParticipants": true
+      },
+      "participantCompleteness": {
+        "values": [
+          {
+            "id": "collective-strategy-realization.participant-completeness.open",
+            "token": "open"
+          },
+          {
+            "id": "collective-strategy-realization.participant-completeness.closed",
+            "token": "closed"
+          }
+        ],
+        "cardinality": "exactly-one"
+      },
+      "commitmentSensitivity": "asserted-requires-closed-participant-completeness",
+      "assertedCollectiveCoverage": {
+        "requiredFormulations": "participant-set-union-singleton-target",
+        "requiredTargets": "set-of-all-actions-and-key-results-of-the-valid-target-strategy-formulation",
+        "coveredTargets": "set-of-target-formulation-members-reached-by-valid-asserted-primitive-witnesses",
+        "condition": "requiredTargets-is-subset-of-coveredTargets",
+        "prerequisiteUnavailable": "one-non-defect-result-with-canonically-ordered-blocking-Strategies"
+      },
+      "assertedCollectiveFit": {
+        "assessmentBoundary": "validate-existence-shape-subject-binding-and-completeness-not-fachliche-truth-or-organizational-authorization",
+        "requiredFormulations": "participant-set-union-singleton-target",
+        "predicates": {
+          "participants": "set-input-participants-equals-exact-Claim-participant-set",
+          "target": "input-target-equals-exact-Claim-target",
+          "targetGuidingPolicy": "input-targetGuidingPolicy-equals-valid-target-formulation-guidingPolicy",
+          "targetTradeOffs": "set-input-targetTradeOffs-equals-set-valid-target-formulation-tradeOffs",
+          "pairwiseCoherence": "multiset-of-canonical-unordered-distinct-participant-pairs-equals-every-two-element-subset-of-the-participant-set-exactly-once",
+          "participantCompatibility": "multiset-of-participant-keys-equals-every-participant-exactly-once"
+        },
+        "unavailableReasons": [
+          "missing-input",
+          "strategy-formulation-unavailable",
+          "strategy-formulation-invalid"
+        ],
+        "unavailableDisposition": "one-non-defect-result-per-Claim-with-canonically-ordered-blocking-Strategies",
+        "supplementalInputBinding": {
+          "input": "supplementalInputContract",
+          "payloadType": "CollectiveFitInput",
+          "subjectKey": "claim",
+          "cardinality": "zero-or-one-per-structured-proposition",
+          "requiredFor": "Asserted-collective-Fit-semantic-assessment",
+          "absentDisposition": "CollectiveFitAssessmentUnavailable-not-model-defect"
+        },
+        "inputSchemaRef": "#supplementalInputSchema/$defs/CollectiveFitInput"
+      },
+      "ruleIds": {
+        "participantType": "core.collective-strategy-realization.participant-type",
+        "participantCardinality": "core.collective-strategy-realization.participant-cardinality",
+        "participantUniqueness": "core.collective-strategy-realization.participant-uniqueness",
+        "targetType": "core.collective-strategy-realization.target-type",
+        "targetCardinality": "core.collective-strategy-realization.target-cardinality",
+        "targetDistinctness": "core.collective-strategy-realization.target-distinctness",
+        "assertedCompleteness": "core.collective-strategy-realization.asserted-completeness",
+        "fitParticipantBinding": "core.collective-strategy-realization.fit-participant-binding",
+        "fitTargetBinding": "core.collective-strategy-realization.fit-target-binding",
+        "fitTargetGuidingPolicy": "core.collective-strategy-realization.fit-target-guiding-policy",
+        "fitTargetTradeOffs": "core.collective-strategy-realization.fit-target-trade-offs",
+        "fitPairwiseCoherence": "core.collective-strategy-realization.fit-pairwise-coherence",
+        "fitParticipantCompatibility": "core.collective-strategy-realization.fit-participant-compatibility",
+        "assertedCollectiveCoverage": "core.collective-strategy-realization.asserted-collective-coverage",
+        "assertedMacroSupport": "core.collective-strategy-realization.asserted-macro-support",
+        "assertedParticipantPrimitiveSupport": "core.collective-strategy-realization.asserted-participant-primitive-support"
+      },
+      "evidenceKeySchemas": {
+        "FitClaimKey": [
+          "claim"
+        ],
+        "ParticipantClaimKey": [
+          "claim",
+          "participant"
+        ]
+      },
+      "evidenceKeyByRule": {
+        "core.collective-strategy-realization.asserted-completeness": "FitClaimKey",
+        "core.collective-strategy-realization.fit-participant-binding": "FitClaimKey",
+        "core.collective-strategy-realization.fit-target-binding": "FitClaimKey",
+        "core.collective-strategy-realization.fit-target-guiding-policy": "FitClaimKey",
+        "core.collective-strategy-realization.fit-target-trade-offs": "FitClaimKey",
+        "core.collective-strategy-realization.fit-pairwise-coherence": "FitClaimKey",
+        "core.collective-strategy-realization.fit-participant-compatibility": "FitClaimKey",
+        "core.collective-strategy-realization.asserted-collective-coverage": "FitClaimKey",
+        "core.collective-strategy-realization.asserted-macro-support": "ParticipantClaimKey",
+        "core.collective-strategy-realization.asserted-participant-primitive-support": "ParticipantClaimKey"
+      },
+      "assertedMacroSupport": {
+        "ruleKey": [
+          "claim",
+          "participant"
+        ],
+        "semanticRelationId": "strategy-contributes-to-strategy",
+        "source": "the-key-participant-strategy",
+        "target": "the-family-target-strategy",
+        "commitment": "asserted",
+        "satisfied": "at-least-one-valid-macro-relation-occurrence",
+        "violated": "no-valid-macro-relation-occurrence",
+        "unavailable": "never"
+      },
+      "assertedParticipantPrimitiveSupport": {
+        "ruleKey": [
+          "claim",
+          "participant"
+        ],
+        "requiredFormulations": [
+          "the-key-participant-strategy-formulation",
+          "the-family-target-strategy-formulation"
+        ],
+        "primitiveSupportAlternatives": [
+          {
+            "semanticRelationId": "strategy-action-contributes-to-strategy-action",
+            "source": "one-action-in-the-key-participant-formulation",
+            "target": "one-action-in-the-target-formulation",
+            "commitment": "asserted"
+          },
+          {
+            "semanticRelationId": "strategy-key-result-contributes-to-strategy-key-result",
+            "source": "one-key-result-in-the-key-participant-formulation",
+            "target": "one-key-result-in-the-target-formulation",
+            "commitment": "asserted"
+          }
+        ],
+        "resultAlgebra": {
+          "ParticipantPrimitiveSupportSatisfied": {
+            "fields": [
+              "claim",
+              "participant",
+              "witnessOccurrences"
+            ],
+            "witnessCardinality": "one-or-more-canonically-ordered-distinct-occurrences"
+          },
+          "ParticipantPrimitiveSupportViolated": {
+            "fields": [
+              "claim",
+              "participant"
+            ],
+            "condition": "both-required-formulations-are-valid-and-no-valid-primitive-support-occurrence-exists"
+          },
+          "ParticipantPrimitiveSupportUnavailable": {
+            "fields": [
+              "claim",
+              "participant",
+              "reasons",
+              "blockingStrategies"
+            ],
+            "reasonCardinality": "one-or-more-distinct-reasons-in-declared-precedence"
+          }
+        },
+        "unavailableReasons": [
+          "participant-strategy-formulation-unavailable",
+          "participant-strategy-formulation-invalid",
+          "target-strategy-formulation-unavailable",
+          "target-strategy-formulation-invalid"
+        ],
+        "unavailableSuppression": "any-unavailable-reason-suppresses-only-this-participant-primitive-support-rule-and-never-satisfies-it"
+      }
+    }
+  ],
+  "situatedNeedSemantics": {
+    "subject": "context.need",
+    "driverCardinality": "at-least-one-owned-primitive.need.driver",
+    "objectiveCardinality": "at-least-one-owned-primitive.need.objective",
+    "surfacingSituationCardinality": "at-least-one-context.situation-related-by-situation-surfaces-need",
+    "surfacingSituationAnchoring": "every-surfacing-Situation-has-at-least-one-is-constituted-by-Situation-Anchor",
+    "driverAnchoring": "every-owned-Need-Driver-is-anchored-by-at-least-one-anchor-constituting-a-surfacing-Situation",
+    "objectiveGrounding": "every-owned-Need-Objective-is-grounded-by-at-least-one-Driver-owned-by-the-same-Need",
+    "derivedProof": "GloballySituatedNeed",
+    "ruleIds": {
+      "driverCardinality": "core.situated-need.driver-cardinality",
+      "objectiveCardinality": "core.situated-need.objective-cardinality",
+      "surfacingSituationCardinality": "core.situated-need.surfacing-situation-cardinality",
+      "surfacingSituationAnchoring": "core.situated-need.surfacing-situation-anchoring",
+      "driverAnchoring": "core.situated-need.driver-anchoring",
+      "objectiveGrounding": "core.situated-need.objective-grounding"
+    }
+  },
+  "qualificationProposalSemantics": {
+    "id": "need-qualification-proposal",
+    "proposalType": "NeedQualificationProposal",
+    "evaluationInput": "one-semantically-assessed-model-distinct-selected-need-and-strategy-sets-and-zero-or-more-resolved-proposals",
+    "effectGraphMembership": "forbidden",
+    "rationale": "exactly-one-nonempty-normalized-documentation",
+    "sources": "one-or-more-normalized-source-identities",
+    "roles": {
+      "key-result": {
+        "id": "need-qualification-proposal.role.key-result",
+        "target": "primitive.strategy.key-result",
+        "cardinality": "exactly-one",
+        "ruleIds": {
+          "cardinality": "core.qualification.proposal.role.key-result.cardinality",
+          "target": "core.qualification.proposal.role.key-result.target"
+        }
+      },
+      "need": {
+        "id": "need-qualification-proposal.role.need",
+        "target": "context.need",
+        "cardinality": "exactly-one",
+        "ruleIds": {
+          "cardinality": "core.qualification.proposal.role.need.cardinality",
+          "target": "core.qualification.proposal.role.need.target"
+        }
+      },
+      "objective": {
+        "id": "need-qualification-proposal.role.objective",
+        "target": "primitive.need.objective",
+        "cardinality": "exactly-one",
+        "ruleIds": {
+          "cardinality": "core.qualification.proposal.role.objective.cardinality",
+          "target": "core.qualification.proposal.role.objective.target"
+        }
+      },
+      "strategy": {
+        "id": "need-qualification-proposal.role.strategy",
+        "target": "context.strategy",
+        "cardinality": "exactly-one",
+        "ruleIds": {
+          "cardinality": "core.qualification.proposal.role.strategy.cardinality",
+          "target": "core.qualification.proposal.role.strategy.target"
+        }
+      }
+    },
+    "routingContract": {
+      "selectedNeedSet": "distinct-resolved-selected-need-record-identities",
+      "selectedStrategySet": "distinct-resolved-selected-strategy-record-identities",
+      "pairCarrier": "canonical-cartesian-product-selected-need-set-by-selected-strategy-set",
+      "roleOrder": [
+        "need",
+        "strategy",
+        "key-result",
+        "objective"
+      ],
+      "routeKeyRoles": [
+        "need",
+        "strategy"
+      ],
+      "pipeline": [
+        "partition-each-proposals-preserved-role-observations-by-the-closed-roleOrder",
+        "assess-only-routeRoleOrder-cardinality-and-target-rules-to-derive-the-route-key",
+        "emit-one-unrouted-proposal-result-with-only-route-role-defects-when-a-complete-route-cannot-be-derived",
+        "classify-each-complete-route-as-requested-or-out-of-request-scope",
+        "exclude-each-complete-out-of-request-route-before-any-non-route-or-pair-dependent-assessment-without-a-diagnostic",
+        "insert-each-requested-proposal-into-exactly-one-requested-pair-bucket",
+        "assess-all-role-and-pair-dependent-rules-only-for-proposals-in-their-unique-requested-bucket",
+        "emit-exactly-one-pair-outcome-by-pairOutcomePrecedence"
+      ],
+      "routingValue": "exists-iff-the-role-has-exactly-one-reference-of-the-required-qualified-endpoint-type",
+      "selectedMembershipAssessment": "once-per-complete-route-to-classify-request-scope-never-once-per-pair",
+      "bucketInsertion": "exactly-one-requested-need-strategy-bucket-iff-both-routing-values-exist-and-the-pair-belongs-to-the-explicit-request",
+      "unroutableDisposition": "exactly-one-unrouted-proposal-result-only-when-need-or-strategy-route-role-defects-prevent-one-complete-route-and-request-scope-therefore-cannot-be-decided;non-route-roles-are-not-assessed",
+      "pairOutcomePrecedence": [
+        {
+          "outcome": "invalid-selected-subject",
+          "predicate": "selected-need-or-selected-strategy-lacks-its-required-semantic-proof"
+        },
+        {
+          "outcome": "missing-proposal",
+          "predicate": "both-selected-subjects-are-valid-and-the-pair-bucket-is-empty"
+        },
+        {
+          "outcome": "proposals",
+          "predicate": "both-selected-subjects-are-valid-and-the-pair-bucket-is-nonempty"
+        }
+      ],
+      "pairOutcomeExhaustiveness": "exactly-one-precedence-entry-matches-every-pair",
+      "pairOrder": "need-canonical-order-then-strategy-canonical-order",
+      "proposalOrder": "stable-proposal-identity",
+      "evidenceKeySchemas": {
+        "ProposalKey": [
+          "proposal"
+        ],
+        "ProposalRoleKey": [
+          "proposal",
+          "role"
+        ],
+        "ProposalRoleTargetKey": [
+          "proposal",
+          "role",
+          "targetOccurrence"
+        ],
+        "SelectedNeedKey": [
+          "need"
+        ],
+        "SelectedStrategyKey": [
+          "strategy"
+        ],
+        "PairKey": [
+          "need",
+          "strategy"
+        ],
+        "ProposalRelationKey": [
+          "proposal",
+          "semanticRelationId"
+        ]
+      },
+      "evidenceKeyByRule": {
+        "core.qualification.proposal.effect-graph-membership": "ProposalKey",
+        "core.qualification.proposal.rationale": "ProposalKey",
+        "core.qualification.proposal.sources": "ProposalKey",
+        "core.qualification.proposal.role.key-result.cardinality": "ProposalRoleKey",
+        "core.qualification.proposal.role.key-result.target": "ProposalRoleTargetKey",
+        "core.qualification.proposal.role.need.cardinality": "ProposalRoleKey",
+        "core.qualification.proposal.role.need.target": "ProposalRoleTargetKey",
+        "core.qualification.proposal.role.objective.cardinality": "ProposalRoleKey",
+        "core.qualification.proposal.role.objective.target": "ProposalRoleTargetKey",
+        "core.qualification.proposal.role.strategy.cardinality": "ProposalRoleKey",
+        "core.qualification.proposal.role.strategy.target": "ProposalRoleTargetKey",
+        "core.qualification.proposal.selected-need": "SelectedNeedKey",
+        "core.qualification.proposal.selected-strategy": "SelectedStrategyKey",
+        "core.qualification.pair.proposal-presence": "PairKey",
+        "core.qualification.proposal.need-eligibility": "SelectedNeedKey",
+        "core.qualification.proposal.strategy-eligibility": "SelectedStrategyKey",
+        "core.qualification.proposal.listed-key-result": "ProposalRoleTargetKey",
+        "core.qualification.proposal.key-result-context": "ProposalRoleTargetKey",
+        "core.qualification.proposal.objective-context": "ProposalRoleTargetKey",
+        "core.qualification.proposal.existing-primitive-support": "ProposalRelationKey",
+        "core.qualification.proposal.existing-macro-qualification": "ProposalRelationKey"
+      },
+      "defectIdentity": "rule-id-and-the-exact-evidence-key-schema-bound-by-evidenceKeyByRule",
+      "outOfRequestScopeDisposition": "a-proposal-with-one-complete-route-outside-the-requested-pair-set-is-excluded-before-non-route-assessment-without-a-diagnostic-and-is-neither-invalid-nor-unrouted",
+      "routeRoleOrder": [
+        "need",
+        "strategy"
+      ],
+      "nonRouteRoleOrder": [
+        "key-result",
+        "objective"
+      ],
+      "routingDecisionTable": [
+        {
+          "routeRoles": "invalid",
+          "requestMembership": "undecidable",
+          "nonRouteAssessment": "not-run",
+          "disposition": "one-unrouted-result-with-route-role-defects"
+        },
+        {
+          "routeRoles": "valid",
+          "requestMembership": "out-of-request",
+          "nonRouteAssessment": "not-run",
+          "disposition": "excluded-without-diagnostic-or-pair-effect"
+        },
+        {
+          "routeRoles": "valid",
+          "requestMembership": "requested",
+          "nonRouteAssessment": "run-all-proposal-rules-once",
+          "disposition": "inserted-into-exactly-one-requested-pair-bucket"
+        }
+      ]
+    },
+    "subjectEligibility": {
+      "need": "selected-need-has-one-GloballySituatedNeed-proof-from-the-same-semantic-model",
+      "strategy": "selected-strategy-has-one-QualificationEligibleStrategy-proof-from-the-same-semantic-model",
+      "keyResult": "selected-key-result-occurs-in-selected-strategy-formulation"
+    },
+    "contextualCoherence": {
+      "keyResult": "contextualized-by-selected-strategy",
+      "objective": "contextualized-by-selected-need"
+    },
+    "proposedRelations": {
+      "primitiveSupport": {
+        "relationToken": "translates-into",
+        "sourceRole": "need-qualification-proposal.role.key-result",
+        "targetRole": "need-qualification-proposal.role.objective",
+        "commitmentAfterAuthorizedAcceptance": "asserted"
+      },
+      "macroQualification": {
+        "relationToken": "qualifies",
+        "sourceRole": "need-qualification-proposal.role.strategy",
+        "targetRole": "need-qualification-proposal.role.need",
+        "commitmentAfterAuthorizedAcceptance": "asserted"
+      },
+      "existingRelationDisposition": "candidate-or-asserted-instance-of-either-proposed-relation-is-a-formal-admissibility-defect"
+    },
+    "decisionBoundary": "formal-admissibility-only-no-strategic-acceptance-priority-or-model-modification",
+    "ruleIds": {
+      "effectGraphMembership": "core.qualification.proposal.effect-graph-membership",
+      "rationale": "core.qualification.proposal.rationale",
+      "sources": "core.qualification.proposal.sources",
+      "selectedNeed": "core.qualification.proposal.selected-need",
+      "selectedStrategy": "core.qualification.proposal.selected-strategy",
+      "pairProposalPresence": "core.qualification.pair.proposal-presence",
+      "needEligibility": "core.qualification.proposal.need-eligibility",
+      "strategyEligibility": "core.qualification.proposal.strategy-eligibility",
+      "listedKeyResult": "core.qualification.proposal.listed-key-result",
+      "keyResultContext": "core.qualification.proposal.key-result-context",
+      "objectiveContext": "core.qualification.proposal.objective-context",
+      "existingPrimitiveSupport": "core.qualification.proposal.existing-primitive-support",
+      "existingMacroQualification": "core.qualification.proposal.existing-macro-qualification"
+    },
+    "workContract": {
+      "observableRequirement": "deterministic-results-proportional-to-selected-subjects-resolved-proposals-and-the-required-requested-pair-output",
+      "forbidden": [
+        "materializing-unrequested-Need-by-Strategy-pairs",
+        "repeated-full-model-scans-per-requested-pair",
+        "a-public-query-or-general-relation-evaluator"
+      ],
+      "implementationBoundary": "exact-data-structures-algorithms-counters-and-asymptotic-variables-belong-to-the-later-Issue-34-implementation-contract"
+    }
+  },
+  "ruleIdentityContract": {
+    "embeddedRule": "exact-ruleId",
+    "globalUniqueness": "required",
+    "canonicalOrdering": "inventory-array-order-then-derivedInventoryGroups-order-and-object-member-order",
+    "additionalRuleIdPaths": "forbidden-except-the-exact-derivedInventoryGroups-paths",
+    "evidenceKindCatalog": [
+      "qualified-endpoint-observation",
+      "semantic-relation-observation",
+      "contextualization-observation",
+      "contextualization-set-observation",
+      "asserted-proposition-and-contextualization-observation",
+      "strategy-formulation-input-observation",
+      "strategy-formulation-and-model-observation",
+      "structured-proposition-observation",
+      "asserted-structured-proposition-observation",
+      "asserted-structured-proposition-and-binary-support-observation",
+      "collective-coverage-observation",
+      "collective-fit-input-observation",
+      "qualification-proposal-observation",
+      "qualification-role-slot-observation",
+      "qualification-role-target-observation",
+      "qualification-selection-membership-observation",
+      "qualification-pair-observation",
+      "selected-need-semantic-assessment",
+      "selected-strategy-semantic-assessment",
+      "situated-need-observation",
+      "strategy-formulation-and-key-result-observation",
+      "qualification-role-and-contextualization-observation",
+      "qualification-proposal-and-semantic-relation-index",
+      "supplemental-input-defect-observation",
+      "trace-observation",
+      "evidence-input-defect-observation",
+      "readiness-observation",
+      "assessment-observation"
+    ],
+    "unknownEvidenceKindDisposition": "core-contract-compilation-failure",
+    "derivedInventoryGroups": [
+      {
+        "path": "/supplementalInputContract/ruleIds",
+        "evidenceKind": "supplemental-input-defect-observation"
+      },
+      {
+        "path": "/traceSemantics/ruleIds",
+        "evidenceKind": "trace-observation"
+      },
+      {
+        "path": "/evidenceReadinessSemantics/ruleIds",
+        "evidenceKind": "readiness-observation"
+      },
+      {
+        "path": "/evidenceAssessmentSemantics/ruleIds",
+        "evidenceKind": "assessment-observation"
+      },
+      {
+        "path": "/evidenceInputDecoderContract/ruleIds",
+        "evidenceKind": "evidence-input-defect-observation"
+      }
+    ],
+    "derivedInventoryClosure": "each-path-resolves-to-one-closed-object-whose-string-valued-members-are-all-and-only-atomic-rule-IDs-and-every-rule-ID-is-globally-unique",
+    "inventory": [
+      {
+        "path": "/qualifiedEndpointDerivation/ruleId",
+        "evidenceKind": "qualified-endpoint-observation"
+      },
+      {
+        "path": "/semanticRelationResolution/ruleId",
+        "evidenceKind": "semantic-relation-observation"
+      },
+      {
+        "path": "/contextualizationSemantics/ruleIds/sourceCategory",
+        "evidenceKind": "contextualization-observation"
+      },
+      {
+        "path": "/contextualizationSemantics/ruleIds/targetCategory",
+        "evidenceKind": "contextualization-observation"
+      },
+      {
+        "path": "/contextualizationSemantics/ruleIds/targetOwnerCardinality",
+        "evidenceKind": "contextualization-set-observation"
+      },
+      {
+        "path": "/contextualizationSemantics/ruleIds/assertedDependency",
+        "evidenceKind": "asserted-proposition-and-contextualization-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/diagnosis",
+        "evidenceKind": "strategy-formulation-and-model-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/intent",
+        "evidenceKind": "strategy-formulation-and-model-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/guidingPolicy",
+        "evidenceKind": "strategy-formulation-and-model-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/actions",
+        "evidenceKind": "strategy-formulation-and-model-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/keyResults",
+        "evidenceKind": "strategy-formulation-and-model-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/visionOrientation",
+        "evidenceKind": "strategy-formulation-and-model-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/diagnosisGrounding",
+        "evidenceKind": "strategy-formulation-and-model-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/guidingPolicyActions",
+        "evidenceKind": "strategy-formulation-and-model-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/actionContributions",
+        "evidenceKind": "strategy-formulation-and-model-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/keyResultSubstantiation",
+        "evidenceKind": "strategy-formulation-and-model-observation"
+      },
+      {
+        "path": "/structuredPropositionSemantics/ruleIds/identity",
+        "evidenceKind": "structured-proposition-observation"
+      },
+      {
+        "path": "/structuredPropositionSemantics/ruleIds/commitment",
+        "evidenceKind": "structured-proposition-observation"
+      },
+      {
+        "path": "/structuredPropositionSemantics/ruleIds/family",
+        "evidenceKind": "structured-proposition-observation"
+      },
+      {
+        "path": "/structuredPropositionSemantics/ruleIds/incidence",
+        "evidenceKind": "structured-proposition-observation"
+      },
+      {
+        "path": "/structuredPropositionFamilies/0/ruleIds/participantType",
+        "evidenceKind": "structured-proposition-observation"
+      },
+      {
+        "path": "/structuredPropositionFamilies/0/ruleIds/participantCardinality",
+        "evidenceKind": "structured-proposition-observation"
+      },
+      {
+        "path": "/structuredPropositionFamilies/0/ruleIds/participantUniqueness",
+        "evidenceKind": "structured-proposition-observation"
+      },
+      {
+        "path": "/structuredPropositionFamilies/0/ruleIds/targetType",
+        "evidenceKind": "structured-proposition-observation"
+      },
+      {
+        "path": "/structuredPropositionFamilies/0/ruleIds/targetCardinality",
+        "evidenceKind": "structured-proposition-observation"
+      },
+      {
+        "path": "/structuredPropositionFamilies/0/ruleIds/targetDistinctness",
+        "evidenceKind": "structured-proposition-observation"
+      },
+      {
+        "path": "/structuredPropositionFamilies/0/ruleIds/assertedCompleteness",
+        "evidenceKind": "asserted-structured-proposition-observation"
+      },
+      {
+        "path": "/structuredPropositionFamilies/0/ruleIds/fitParticipantBinding",
+        "evidenceKind": "collective-fit-input-observation"
+      },
+      {
+        "path": "/structuredPropositionFamilies/0/ruleIds/fitTargetBinding",
+        "evidenceKind": "collective-fit-input-observation"
+      },
+      {
+        "path": "/structuredPropositionFamilies/0/ruleIds/fitTargetGuidingPolicy",
+        "evidenceKind": "collective-fit-input-observation"
+      },
+      {
+        "path": "/structuredPropositionFamilies/0/ruleIds/fitTargetTradeOffs",
+        "evidenceKind": "collective-fit-input-observation"
+      },
+      {
+        "path": "/structuredPropositionFamilies/0/ruleIds/fitPairwiseCoherence",
+        "evidenceKind": "collective-fit-input-observation"
+      },
+      {
+        "path": "/structuredPropositionFamilies/0/ruleIds/fitParticipantCompatibility",
+        "evidenceKind": "collective-fit-input-observation"
+      },
+      {
+        "path": "/structuredPropositionFamilies/0/ruleIds/assertedCollectiveCoverage",
+        "evidenceKind": "collective-coverage-observation"
+      },
+      {
+        "path": "/structuredPropositionFamilies/0/ruleIds/assertedMacroSupport",
+        "evidenceKind": "asserted-structured-proposition-and-binary-support-observation"
+      },
+      {
+        "path": "/structuredPropositionFamilies/0/ruleIds/assertedParticipantPrimitiveSupport",
+        "evidenceKind": "asserted-structured-proposition-and-binary-support-observation"
+      },
+      {
+        "path": "/situatedNeedSemantics/ruleIds/driverCardinality",
+        "evidenceKind": "situated-need-observation"
+      },
+      {
+        "path": "/situatedNeedSemantics/ruleIds/objectiveCardinality",
+        "evidenceKind": "situated-need-observation"
+      },
+      {
+        "path": "/situatedNeedSemantics/ruleIds/surfacingSituationCardinality",
+        "evidenceKind": "situated-need-observation"
+      },
+      {
+        "path": "/situatedNeedSemantics/ruleIds/surfacingSituationAnchoring",
+        "evidenceKind": "situated-need-observation"
+      },
+      {
+        "path": "/situatedNeedSemantics/ruleIds/driverAnchoring",
+        "evidenceKind": "situated-need-observation"
+      },
+      {
+        "path": "/situatedNeedSemantics/ruleIds/objectiveGrounding",
+        "evidenceKind": "situated-need-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/roles/key-result/ruleIds/cardinality",
+        "evidenceKind": "qualification-role-slot-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/roles/key-result/ruleIds/target",
+        "evidenceKind": "qualification-role-target-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/roles/need/ruleIds/cardinality",
+        "evidenceKind": "qualification-role-slot-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/roles/need/ruleIds/target",
+        "evidenceKind": "qualification-role-target-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/roles/objective/ruleIds/cardinality",
+        "evidenceKind": "qualification-role-slot-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/roles/objective/ruleIds/target",
+        "evidenceKind": "qualification-role-target-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/roles/strategy/ruleIds/cardinality",
+        "evidenceKind": "qualification-role-slot-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/roles/strategy/ruleIds/target",
+        "evidenceKind": "qualification-role-target-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/ruleIds/effectGraphMembership",
+        "evidenceKind": "qualification-proposal-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/ruleIds/rationale",
+        "evidenceKind": "qualification-proposal-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/ruleIds/sources",
+        "evidenceKind": "qualification-proposal-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/ruleIds/selectedNeed",
+        "evidenceKind": "qualification-selection-membership-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/ruleIds/selectedStrategy",
+        "evidenceKind": "qualification-selection-membership-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/ruleIds/pairProposalPresence",
+        "evidenceKind": "qualification-pair-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/ruleIds/needEligibility",
+        "evidenceKind": "selected-need-semantic-assessment"
+      },
+      {
+        "path": "/qualificationProposalSemantics/ruleIds/strategyEligibility",
+        "evidenceKind": "selected-strategy-semantic-assessment"
+      },
+      {
+        "path": "/qualificationProposalSemantics/ruleIds/listedKeyResult",
+        "evidenceKind": "strategy-formulation-and-key-result-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/ruleIds/keyResultContext",
+        "evidenceKind": "qualification-role-and-contextualization-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/ruleIds/objectiveContext",
+        "evidenceKind": "qualification-role-and-contextualization-observation"
+      },
+      {
+        "path": "/qualificationProposalSemantics/ruleIds/existingPrimitiveSupport",
+        "evidenceKind": "qualification-proposal-and-semantic-relation-index"
+      },
+      {
+        "path": "/qualificationProposalSemantics/ruleIds/existingMacroQualification",
+        "evidenceKind": "qualification-proposal-and-semantic-relation-index"
+      }
+    ],
+    "completeRuleInventory": [
+      "core.assessment.actual-start.cardinality",
+      "core.assessment.actual-start.chronology",
+      "core.assessment.anchor.identity",
+      "core.assessment.chronology.observation",
+      "core.assessment.coverage.trace-observation",
+      "core.assessment.effect-criterion.apply",
+      "core.assessment.identity.observation",
+      "core.assessment.identity.observation-uniqueness",
+      "core.assessment.kpi.identity",
+      "core.assessment.limitations.required",
+      "core.assessment.readiness.reconstructed-proof",
+      "core.assessment.source.nonempty",
+      "core.assessment.target-criterion.apply",
+      "core.assessment.trace.identity",
+      "core.assessment.value-domain.observation",
+      "core.collective-strategy-realization.asserted-collective-coverage",
+      "core.collective-strategy-realization.asserted-completeness",
+      "core.collective-strategy-realization.asserted-macro-support",
+      "core.collective-strategy-realization.asserted-participant-primitive-support",
+      "core.collective-strategy-realization.fit-pairwise-coherence",
+      "core.collective-strategy-realization.fit-participant-binding",
+      "core.collective-strategy-realization.fit-participant-compatibility",
+      "core.collective-strategy-realization.fit-target-binding",
+      "core.collective-strategy-realization.fit-target-guiding-policy",
+      "core.collective-strategy-realization.fit-target-trade-offs",
+      "core.collective-strategy-realization.participant-cardinality",
+      "core.collective-strategy-realization.participant-type",
+      "core.collective-strategy-realization.participant-uniqueness",
+      "core.collective-strategy-realization.target-cardinality",
+      "core.collective-strategy-realization.target-distinctness",
+      "core.collective-strategy-realization.target-type",
+      "core.contextualization.asserted-dependency",
+      "core.contextualization.source-category",
+      "core.contextualization.target-category",
+      "core.contextualization.target-owner-cardinality",
+      "core.evidence-input.decode.array-cardinality",
+      "core.evidence-input.decode.array-distinctness",
+      "core.evidence-input.decode.discriminator",
+      "core.evidence-input.decode.duplicate-object-member",
+      "core.evidence-input.decode.json-syntax",
+      "core.evidence-input.decode.model-identity.nul",
+      "core.evidence-input.decode.model-identity.unicode-scalar",
+      "core.evidence-input.decode.normalization-collision",
+      "core.evidence-input.decode.required-member",
+      "core.evidence-input.decode.scalar-grammar",
+      "core.evidence-input.decode.top-level-object",
+      "core.evidence-input.decode.unknown-member",
+      "core.evidence-input.decode.utf8",
+      "core.evidence-input.decode.value-kind",
+      "core.evidence-input.identity.ambiguous",
+      "core.evidence-input.identity.out-of-selected-view",
+      "core.evidence-input.identity.unknown",
+      "core.evidence-input.identity.wrong-type",
+      "core.qualification.pair.proposal-presence",
+      "core.qualification.proposal.effect-graph-membership",
+      "core.qualification.proposal.existing-macro-qualification",
+      "core.qualification.proposal.existing-primitive-support",
+      "core.qualification.proposal.key-result-context",
+      "core.qualification.proposal.listed-key-result",
+      "core.qualification.proposal.need-eligibility",
+      "core.qualification.proposal.objective-context",
+      "core.qualification.proposal.rationale",
+      "core.qualification.proposal.role.key-result.cardinality",
+      "core.qualification.proposal.role.key-result.target",
+      "core.qualification.proposal.role.need.cardinality",
+      "core.qualification.proposal.role.need.target",
+      "core.qualification.proposal.role.objective.cardinality",
+      "core.qualification.proposal.role.objective.target",
+      "core.qualification.proposal.role.strategy.cardinality",
+      "core.qualification.proposal.role.strategy.target",
+      "core.qualification.proposal.selected-need",
+      "core.qualification.proposal.selected-strategy",
+      "core.qualification.proposal.sources",
+      "core.qualification.proposal.strategy-eligibility",
+      "core.qualified-endpoint.catalog-membership",
+      "core.readiness.baseline.chronology",
+      "core.readiness.baseline.identity",
+      "core.readiness.baseline.value-domain",
+      "core.readiness.effect-criterion.kind",
+      "core.readiness.effect-criterion.value-domain",
+      "core.readiness.evidence-plan.cardinality",
+      "core.readiness.evidence-plan.chronology",
+      "core.readiness.evidence-plan.source",
+      "core.readiness.kpi-definition.cardinality",
+      "core.readiness.kpi-definition.interpretation",
+      "core.readiness.kpi-definition.measurement-method",
+      "core.readiness.kpi-definition.unit",
+      "core.readiness.kpi-definition.value-domain",
+      "core.readiness.planned-start.cardinality",
+      "core.readiness.target-criterion.due",
+      "core.readiness.target-criterion.kind",
+      "core.readiness.target-criterion.value-domain",
+      "core.semantic-relation.compatibility",
+      "core.situated-need.driver-anchoring",
+      "core.situated-need.driver-cardinality",
+      "core.situated-need.objective-cardinality",
+      "core.situated-need.objective-grounding",
+      "core.situated-need.surfacing-situation-anchoring",
+      "core.situated-need.surfacing-situation-cardinality",
+      "core.strategy-formulation.action-contributions",
+      "core.strategy-formulation.actions",
+      "core.strategy-formulation.diagnosis",
+      "core.strategy-formulation.diagnosis-grounding",
+      "core.strategy-formulation.guiding-policy",
+      "core.strategy-formulation.guiding-policy-actions",
+      "core.strategy-formulation.intent",
+      "core.strategy-formulation.key-result-substantiation",
+      "core.strategy-formulation.key-results",
+      "core.strategy-formulation.vision-orientation",
+      "core.structured-proposition.commitment",
+      "core.structured-proposition.family",
+      "core.structured-proposition.identity",
+      "core.structured-proposition.incidence",
+      "core.supplemental.decode.duplicate-member",
+      "core.supplemental.decode.json-syntax",
+      "core.supplemental.decode.utf8",
+      "core.supplemental.identity.ambiguous",
+      "core.supplemental.identity.out-of-selected-view",
+      "core.supplemental.identity.unknown",
+      "core.supplemental.identity.wrong-type",
+      "core.supplemental.schema.admitted-type",
+      "core.supplemental.schema.array-cardinality",
+      "core.supplemental.schema.array-distinctness",
+      "core.supplemental.schema.model-identity.nul",
+      "core.supplemental.schema.model-identity.unicode-scalar",
+      "core.supplemental.schema.required-member",
+      "core.supplemental.schema.scalar-grammar",
+      "core.supplemental.schema.top-level-object",
+      "core.supplemental.schema.type-member",
+      "core.supplemental.schema.unknown-member",
+      "core.supplemental.schema.value-kind",
+      "core.supplemental.subject.cardinality",
+      "core.trace.ownership.intervention-action-at-intervention",
+      "core.trace.ownership.intervention-key-result-at-intervention",
+      "core.trace.ownership.measure-kpi-at-measure",
+      "core.trace.ownership.measure-performance-dimension-at-measure",
+      "core.trace.ownership.need-driver-at-need",
+      "core.trace.ownership.need-objective-at-need",
+      "core.trace.ownership.strategy-action-at-strategy",
+      "core.trace.ownership.strategy-driver-at-strategy",
+      "core.trace.ownership.strategy-key-result-at-strategy",
+      "core.trace.ownership.strategy-objective-at-strategy",
+      "core.trace.ownership.vision-objective-at-vision",
+      "core.trace.promotion.strategy-action-membership",
+      "core.trace.promotion.strategy-diagnosis",
+      "core.trace.promotion.strategy-identity",
+      "core.trace.promotion.strategy-intent",
+      "core.trace.promotion.strategy-key-result-membership",
+      "core.trace.promotion.strategy-model-identity",
+      "core.trace.promotion.strategy-proof",
+      "core.trace.root.asserted-presence",
+      "core.trace.slot.intervention-action-changes-same-situation-anchor",
+      "core.trace.slot.intervention-action-contributes-to-intervention-key-result",
+      "core.trace.slot.intervention-addresses-need",
+      "core.trace.slot.intervention-changes-situation",
+      "core.trace.slot.intervention-key-result-contributes-to-strategy-key-result",
+      "core.trace.slot.intervention-key-result-sets-target-for-measure-kpi",
+      "core.trace.slot.intervention-key-result-substantiates-need-objective",
+      "core.trace.slot.intervention-sets-target-for-measure",
+      "core.trace.slot.measure-kpi-measures-situation-anchor",
+      "core.trace.slot.measure-measures-situation",
+      "core.trace.slot.measure-performance-dimension-contains-measure-kpi",
+      "core.trace.slot.need-driver-grounds-need-objective",
+      "core.trace.slot.situation-anchor-anchors-need-driver",
+      "core.trace.slot.situation-is-constituted-by-same-situation-anchor",
+      "core.trace.slot.situation-surfaces-need",
+      "core.trace.slot.strategy-action-contributes-to-strategy-key-result",
+      "core.trace.slot.strategy-action-guides-intervention-action",
+      "core.trace.slot.strategy-directs-intervention",
+      "core.trace.slot.strategy-driver-grounds-strategy-objective",
+      "core.trace.slot.strategy-driver-indicates-measure-performance-dimension",
+      "core.trace.slot.strategy-frames-measure",
+      "core.trace.slot.strategy-key-result-determines-measure-performance-dimension",
+      "core.trace.slot.strategy-key-result-substantiates-strategy-objective",
+      "core.trace.slot.strategy-key-result-translates-into-need-objective",
+      "core.trace.slot.strategy-qualifies-need",
+      "core.trace.slot.vision-objective-orients-strategy-objective",
+      "core.trace.slot.vision-orients-strategy",
+      "core.trace.supplied.graph-identity",
+      "core.trace.supplied.ownership-slot",
+      "core.trace.supplied.relation-slot"
+    ],
+    "completeRuleInventoryDerivation": {
+      "authority": "derived-compiled-projection-not-a-second-rule-authority",
+      "sources": [
+        "inventory",
+        "derivedInventoryGroups"
+      ],
+      "ordering": "UTF8-bytewise-ruleId",
+      "cardinality": 181,
+      "bijection": "exactly-one-complete-inventory-entry-per-emit-capable-rule-and-no-other-entry"
+    }
+  },
+  "supplementalInputContract": {
+    "scope": "one-operation-local-closed-fachliche-input-set",
+    "payloadDiscriminator": "type",
+    "payloadTypes": [
+      "StrategyFormulationInput",
+      "CollectiveFitInput"
+    ],
+    "subjectKeyByPayloadType": {
+      "StrategyFormulationInput": "strategy",
+      "CollectiveFitInput": "claim"
+    },
+    "subjectBinding": "payload-embedded-model-identity",
+    "subjectUniqueness": "at-most-one-input-of-each-payload-type-per-subject",
+    "encoding": "UTF-8-JSON",
+    "duplicateObjectMembers": "forbidden",
+    "unknownObjectMembers": "forbidden",
+    "phaseOrder": [
+      "utf8",
+      "json-syntax",
+      "duplicate-object-members",
+      "payload-discriminator",
+      "schema-and-canonicalization",
+      "subject-uniqueness",
+      "identity-resolution",
+      "dependent-semantics"
+    ],
+    "phaseSuppression": "a-failed-phase-suppresses-all-later-phases-for-that-input",
+    "schemaSuppression": "wrong-value-kind-suppresses-grammar-cardinality-and-distinctness-for-that-value",
+    "identitySuppression": "an-unresolved-identity-suppresses-only-semantic-rules-declaring-that-site-as-a-prerequisite",
+    "inputFailures": [
+      "invalid-utf8",
+      "invalid-json-syntax",
+      "duplicate-object-member",
+      "missing-or-invalid-payload-discriminator",
+      "malformed-input",
+      "duplicate-subject-input",
+      "unknown-model-identity",
+      "ambiguous-model-identity",
+      "wrong-model-identity-type",
+      "model-identity-out-of-selected-view"
+    ],
+    "ruleIds": {
+      "utf8": "core.supplemental.decode.utf8",
+      "jsonSyntax": "core.supplemental.decode.json-syntax",
+      "duplicateMember": "core.supplemental.decode.duplicate-member",
+      "topLevelObject": "core.supplemental.schema.top-level-object",
+      "typeMember": "core.supplemental.schema.type-member",
+      "admittedType": "core.supplemental.schema.admitted-type",
+      "requiredMember": "core.supplemental.schema.required-member",
+      "unknownMember": "core.supplemental.schema.unknown-member",
+      "valueKind": "core.supplemental.schema.value-kind",
+      "scalarGrammar": "core.supplemental.schema.scalar-grammar",
+      "arrayCardinality": "core.supplemental.schema.array-cardinality",
+      "arrayDistinctness": "core.supplemental.schema.array-distinctness",
+      "subjectCardinality": "core.supplemental.subject.cardinality",
+      "identityUnknown": "core.supplemental.identity.unknown",
+      "identityAmbiguous": "core.supplemental.identity.ambiguous",
+      "identityWrongType": "core.supplemental.identity.wrong-type",
+      "identityOutOfSelectedView": "core.supplemental.identity.out-of-selected-view",
+      "modelIdentityUnicodeScalar": "core.supplemental.schema.model-identity.unicode-scalar",
+      "modelIdentityNul": "core.supplemental.schema.model-identity.nul"
+    },
+    "evidenceKeySchemas": {
+      "InputKey": [
+        "inputOrdinal"
+      ],
+      "MemberKey": [
+        "inputOrdinal",
+        "jsonPointer"
+      ],
+      "SchemaKey": [
+        "inputOrdinal",
+        "instancePointer",
+        "schemaPointer"
+      ],
+      "SubjectKey": [
+        "payloadType",
+        "subjectIdentity"
+      ],
+      "IdentityKey": [
+        "inputOrdinal",
+        "instancePointer",
+        "identity"
+      ]
+    },
+    "defectIdentity": "rule-id-and-the-exact-rule-bound-evidence-key",
+    "transportOwnership": "Operation-acquires-bytes-and-source-provenance-Core-total-decoder-parses-and-canonicalizes-Operation-projects-the-typed-outcome",
+    "modelMetadata": "forbidden",
+    "implicitFetch": "forbidden",
+    "persistence": "forbidden",
+    "history": "forbidden",
+    "querySurface": "forbidden",
+    "decoderOwner": "Core",
+    "decoderInput": "exact-source-bytes-plus-operation-assigned-input-ordinal",
+    "decoderOutcome": "one-closed-decoded-payload-or-nonempty-ordered-Core-input-defects",
+    "setValidation": {
+      "input": "all-individually-decoded-and-canonicalized-supplemental-payloads",
+      "identity": [
+        "payloadType",
+        "subjectIdentity"
+      ],
+      "duplicateOutcome": {
+        "kind": "SupplementalInputSetInvalid",
+        "defect": "one-core.supplemental.subject.cardinality-defect-per-duplicate-identity",
+        "evidence": [
+          "payloadType",
+          "subjectIdentity",
+          "inputOrdinals"
+        ],
+        "ordering": "payloadType-then-subjectIdentity-then-inputOrdinal"
+      },
+      "operationDisposition": {
+        "decode-schema-canonicalization-or-subject-uniqueness": "command-error-supplemental-input-invalid-exit-2",
+        "accepted-set-identity-binding-unavailable": "prepared-subject-unavailable-exit-3"
+      }
+    }
+  },
+  "supplementalInputCanonicalization": {
+    "modelIdentity": {
+      "jsonType": "string",
+      "normalization": "none-exact-admitted-Unicode-scalar-value-sequence-excluding-U+0000",
+      "emptyInput": "malformed-input",
+      "whitespaceTrimming": "none",
+      "caseFolding": "none",
+      "replacement": "forbidden",
+      "contractRef": "modelIdentityContract"
+    },
+    "fachlicheText": {
+      "jsonType": "string",
+      "lineEndingNormalization": "CRLF-and-CR-to-LF",
+      "forbiddenControls": "C0-except-TAB-and-LF-and-all-U+007F-through-U+009F",
+      "normalization": "Unicode-NFC-then-trim-leading-and-trailing-TAB-LF-and-SPACE",
+      "emptyAfterNormalization": "malformed-input"
+    },
+    "setComparison": "after-member-canonicalization",
+    "orderedSequenceComparison": "after-member-canonicalization-with-order-preserved",
+    "schemaInput": "canonicalized-values"
+  },
+  "selectedViewDependencyContract": {
+    "scope": "final-graph-membership-of-the-selected-View",
+    "scopeMutation": "forbidden",
+    "identityIndex": "canonical-model-wide-identity-index",
+    "sites": {
+      "StrategyFormulationInput": {
+        "/strategy": "context.strategy",
+        "/diagnosis": "primitive.strategy.driver",
+        "/intent": "primitive.strategy.objective",
+        "/guidingPolicy": "primitive.strategy.principle",
+        "/actions/*": "primitive.strategy.action",
+        "/keyResults/*": "primitive.strategy.key-result"
+      },
+      "CollectiveFitInput": {
+        "/claim": "structured-family:collective-strategy-realization",
+        "/participants/*": "context.strategy",
+        "/target": "context.strategy",
+        "/targetGuidingPolicy": "primitive.strategy.principle",
+        "/pairwiseCoherence/*/participantA": "context.strategy",
+        "/pairwiseCoherence/*/participantB": "context.strategy",
+        "/participantCompatibility/*/participant": "context.strategy"
+      }
+    },
+    "outcomePrecedence": [
+      "unknown-model-identity",
+      "ambiguous-model-identity",
+      "model-identity-out-of-selected-view",
+      "wrong-model-identity-type",
+      "resolved"
+    ],
+    "scopeExpansion": "forbidden-this-is-closed-identity-site-resolution-not-graph-closure",
+    "decoderAndResolverOwner": "Core",
+    "operationBoundary": "Operation-supplies-exact-input-bytes-source-provenance-and-the-opaque-selected-model-index-invokes-the-Core-decoder-and-resolver-and-projects-its-closed-outcome-without-parsing-or-resolving-fachliche-identities"
+  },
+  "supplementalInputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/normenmueller/o2i/schema/supplemental-input-target-v46.json",
+    "oneOf": [
+      {
+        "$ref": "#/$defs/StrategyFormulationInput"
+      },
+      {
+        "$ref": "#/$defs/CollectiveFitInput"
+      }
+    ],
+    "$defs": {
+      "ModelIdentity": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[^\\u0000\\uD800-\\uDFFF]+$"
+      },
+      "FachlicheText": {
+        "type": "string",
+        "minLength": 1
+      },
+      "NonEmptyOrderedText": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "$ref": "#/$defs/FachlicheText"
+        }
+      },
+      "NonEmptyDistinctTextSet": {
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": {
+          "$ref": "#/$defs/FachlicheText"
+        }
+      },
+      "NonEmptyDistinctIdentitySet": {
+        "type": "array",
+        "minItems": 1,
+        "uniqueItems": true,
+        "items": {
+          "$ref": "#/$defs/ModelIdentity"
+        }
+      },
+      "StrategyAnchoring": {
+        "type": "object",
+        "required": [
+          "period",
+          "responsibilityScope",
+          "decisionLevel",
+          "responsibilities",
+          "decisionPaths",
+          "implementationLogic"
+        ],
+        "properties": {
+          "period": {
+            "$ref": "#/$defs/FachlicheText"
+          },
+          "responsibilityScope": {
+            "$ref": "#/$defs/FachlicheText"
+          },
+          "decisionLevel": {
+            "$ref": "#/$defs/FachlicheText"
+          },
+          "responsibilities": {
+            "$ref": "#/$defs/NonEmptyOrderedText"
+          },
+          "decisionPaths": {
+            "$ref": "#/$defs/NonEmptyOrderedText"
+          },
+          "implementationLogic": {
+            "$ref": "#/$defs/FachlicheText"
+          }
+        },
+        "additionalProperties": false
+      },
+      "StrategyFormulationInput": {
+        "type": "object",
+        "required": [
+          "type",
+          "strategy",
+          "scope",
+          "anchoring",
+          "derivedGuardrails",
+          "diagnosis",
+          "intent",
+          "guidingPolicy",
+          "positioning",
+          "tradeOffs",
+          "actions",
+          "keyResults",
+          "fitRationale"
+        ],
+        "properties": {
+          "type": {
+            "const": "StrategyFormulationInput"
+          },
+          "strategy": {
+            "$ref": "#/$defs/ModelIdentity"
+          },
+          "scope": {
+            "$ref": "#/$defs/NonEmptyOrderedText"
+          },
+          "anchoring": {
+            "$ref": "#/$defs/StrategyAnchoring"
+          },
+          "derivedGuardrails": {
+            "$ref": "#/$defs/NonEmptyOrderedText"
+          },
+          "diagnosis": {
+            "$ref": "#/$defs/ModelIdentity"
+          },
+          "intent": {
+            "$ref": "#/$defs/ModelIdentity"
+          },
+          "guidingPolicy": {
+            "$ref": "#/$defs/ModelIdentity"
+          },
+          "positioning": {
+            "$ref": "#/$defs/NonEmptyOrderedText"
+          },
+          "tradeOffs": {
+            "$ref": "#/$defs/NonEmptyDistinctTextSet"
+          },
+          "actions": {
+            "$ref": "#/$defs/NonEmptyDistinctIdentitySet"
+          },
+          "keyResults": {
+            "$ref": "#/$defs/NonEmptyDistinctIdentitySet"
+          },
+          "fitRationale": {
+            "$ref": "#/$defs/NonEmptyOrderedText"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PairwiseCoherence": {
+        "type": "object",
+        "required": [
+          "participantA",
+          "participantB",
+          "rationale"
+        ],
+        "properties": {
+          "participantA": {
+            "$ref": "#/$defs/ModelIdentity"
+          },
+          "participantB": {
+            "$ref": "#/$defs/ModelIdentity"
+          },
+          "rationale": {
+            "$ref": "#/$defs/FachlicheText"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ParticipantCompatibility": {
+        "type": "object",
+        "required": [
+          "participant",
+          "guidingPolicyRationale",
+          "tradeOffRationale"
+        ],
+        "properties": {
+          "participant": {
+            "$ref": "#/$defs/ModelIdentity"
+          },
+          "guidingPolicyRationale": {
+            "$ref": "#/$defs/FachlicheText"
+          },
+          "tradeOffRationale": {
+            "$ref": "#/$defs/FachlicheText"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CollectiveFitInput": {
+        "type": "object",
+        "required": [
+          "type",
+          "claim",
+          "participants",
+          "target",
+          "targetGuidingPolicy",
+          "targetTradeOffs",
+          "pairwiseCoherence",
+          "participantCompatibility",
+          "contributionInteraction"
+        ],
+        "properties": {
+          "type": {
+            "const": "CollectiveFitInput"
+          },
+          "claim": {
+            "$ref": "#/$defs/ModelIdentity"
+          },
+          "participants": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/NonEmptyDistinctIdentitySet"
+              },
+              {
+                "minItems": 2
+              }
+            ]
+          },
+          "target": {
+            "$ref": "#/$defs/ModelIdentity"
+          },
+          "targetGuidingPolicy": {
+            "$ref": "#/$defs/ModelIdentity"
+          },
+          "targetTradeOffs": {
+            "$ref": "#/$defs/NonEmptyDistinctTextSet"
+          },
+          "pairwiseCoherence": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/PairwiseCoherence"
+            }
+          },
+          "participantCompatibility": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "$ref": "#/$defs/ParticipantCompatibility"
+            }
+          },
+          "contributionInteraction": {
+            "$ref": "#/$defs/NonEmptyOrderedText"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "traceSemantics": {
+    "subject": "one-model-internal-SemanticallyValidModel-graph-identity-independent-of-optional-supplemental-assessments-and-one-distinct-asserted-intervention-need-root-tuple",
+    "requiredCommitment": "asserted",
+    "candidateDisposition": "candidate-only-support-is-a-gap-and-never-satisfies-a-slot",
+    "variableCatalog": [
+      {
+        "id": "vision",
+        "qualifiedType": "context.vision"
+      },
+      {
+        "id": "strategy",
+        "qualifiedType": "context.strategy"
+      },
+      {
+        "id": "need",
+        "qualifiedType": "context.need"
+      },
+      {
+        "id": "intervention",
+        "qualifiedType": "context.intervention"
+      },
+      {
+        "id": "measure",
+        "qualifiedType": "context.measure"
+      },
+      {
+        "id": "situation",
+        "qualifiedType": "context.situation"
+      },
+      {
+        "id": "visionObjective",
+        "qualifiedType": "primitive.vision.objective"
+      },
+      {
+        "id": "strategyDriver",
+        "qualifiedType": "primitive.strategy.driver"
+      },
+      {
+        "id": "strategyObjective",
+        "qualifiedType": "primitive.strategy.objective"
+      },
+      {
+        "id": "strategyAction",
+        "qualifiedType": "primitive.strategy.action"
+      },
+      {
+        "id": "strategyKeyResult",
+        "qualifiedType": "primitive.strategy.key-result"
+      },
+      {
+        "id": "needDriver",
+        "qualifiedType": "primitive.need.driver"
+      },
+      {
+        "id": "needObjective",
+        "qualifiedType": "primitive.need.objective"
+      },
+      {
+        "id": "interventionAction",
+        "qualifiedType": "primitive.intervention.action"
+      },
+      {
+        "id": "interventionKeyResult",
+        "qualifiedType": "primitive.intervention.key-result"
+      },
+      {
+        "id": "measurePerformanceDimension",
+        "qualifiedType": "structuring.measure.performance-dimension"
+      },
+      {
+        "id": "measureKpi",
+        "qualifiedType": "primitive.measure.kpi"
+      },
+      {
+        "id": "situationAnchor",
+        "qualifiedType": "situation-anchor.{anchorKind}"
+      }
+    ],
+    "anchorKinds": [
+      "business-capability",
+      "business-object",
+      "business-process",
+      "value-stream"
+    ],
+    "rootSlot": "intervention-addresses-need",
+    "rootAlgebra": {
+      "identity": [
+        "intervention",
+        "need"
+      ],
+      "deduplication": "group-all-asserted-root-relation-occurrences-by-identical-endpoint-tuple-before-trace-evaluation",
+      "support": "one-nonempty-canonically-ordered-set-of-all-matching-root-relation-occurrences-per-distinct-tuple"
+    },
+    "relationSlots": [
+      {
+        "id": "intervention-addresses-need",
+        "sourceVariable": "intervention",
+        "targetVariable": "need",
+        "semanticRelationIds": [
+          "intervention-addresses-need"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.intervention-addresses-need"
+      },
+      {
+        "id": "strategy-qualifies-need",
+        "sourceVariable": "strategy",
+        "targetVariable": "need",
+        "semanticRelationIds": [
+          "strategy-qualifies-need"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.strategy-qualifies-need"
+      },
+      {
+        "id": "strategy-directs-intervention",
+        "sourceVariable": "strategy",
+        "targetVariable": "intervention",
+        "semanticRelationIds": [
+          "strategy-directs-intervention"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.strategy-directs-intervention"
+      },
+      {
+        "id": "vision-orients-strategy",
+        "sourceVariable": "vision",
+        "targetVariable": "strategy",
+        "semanticRelationIds": [
+          "vision-orients-strategy"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.vision-orients-strategy"
+      },
+      {
+        "id": "strategy-frames-measure",
+        "sourceVariable": "strategy",
+        "targetVariable": "measure",
+        "semanticRelationIds": [
+          "strategy-frames-measure"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.strategy-frames-measure"
+      },
+      {
+        "id": "intervention-sets-target-for-measure",
+        "sourceVariable": "intervention",
+        "targetVariable": "measure",
+        "semanticRelationIds": [
+          "intervention-sets-target-for-measure"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.intervention-sets-target-for-measure"
+      },
+      {
+        "id": "intervention-changes-situation",
+        "sourceVariable": "intervention",
+        "targetVariable": "situation",
+        "semanticRelationIds": [
+          "intervention-changes-situation"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.intervention-changes-situation"
+      },
+      {
+        "id": "measure-measures-situation",
+        "sourceVariable": "measure",
+        "targetVariable": "situation",
+        "semanticRelationIds": [
+          "measure-measures-situation"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.measure-measures-situation"
+      },
+      {
+        "id": "situation-surfaces-need",
+        "sourceVariable": "situation",
+        "targetVariable": "need",
+        "semanticRelationIds": [
+          "situation-surfaces-need"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.situation-surfaces-need"
+      },
+      {
+        "id": "need-driver-grounds-need-objective",
+        "sourceVariable": "needDriver",
+        "targetVariable": "needObjective",
+        "semanticRelationIds": [
+          "need-driver-grounds-need-objective"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.need-driver-grounds-need-objective"
+      },
+      {
+        "id": "strategy-key-result-translates-into-need-objective",
+        "sourceVariable": "strategyKeyResult",
+        "targetVariable": "needObjective",
+        "semanticRelationIds": [
+          "strategy-key-result-translates-into-need-objective"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.strategy-key-result-translates-into-need-objective"
+      },
+      {
+        "id": "strategy-driver-grounds-strategy-objective",
+        "sourceVariable": "strategyDriver",
+        "targetVariable": "strategyObjective",
+        "semanticRelationIds": [
+          "strategy-driver-grounds-strategy-objective"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.strategy-driver-grounds-strategy-objective"
+      },
+      {
+        "id": "vision-objective-orients-strategy-objective",
+        "sourceVariable": "visionObjective",
+        "targetVariable": "strategyObjective",
+        "semanticRelationIds": [
+          "vision-objective-orients-strategy-objective"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.vision-objective-orients-strategy-objective"
+      },
+      {
+        "id": "strategy-key-result-substantiates-strategy-objective",
+        "sourceVariable": "strategyKeyResult",
+        "targetVariable": "strategyObjective",
+        "semanticRelationIds": [
+          "strategy-key-result-substantiates-strategy-objective"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.strategy-key-result-substantiates-strategy-objective"
+      },
+      {
+        "id": "strategy-action-contributes-to-strategy-key-result",
+        "sourceVariable": "strategyAction",
+        "targetVariable": "strategyKeyResult",
+        "semanticRelationIds": [
+          "strategy-action-contributes-to-strategy-key-result"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.strategy-action-contributes-to-strategy-key-result"
+      },
+      {
+        "id": "strategy-action-guides-intervention-action",
+        "sourceVariable": "strategyAction",
+        "targetVariable": "interventionAction",
+        "semanticRelationIds": [
+          "strategy-action-guides-intervention-action"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.strategy-action-guides-intervention-action"
+      },
+      {
+        "id": "intervention-action-contributes-to-intervention-key-result",
+        "sourceVariable": "interventionAction",
+        "targetVariable": "interventionKeyResult",
+        "semanticRelationIds": [
+          "intervention-action-contributes-to-intervention-key-result"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.intervention-action-contributes-to-intervention-key-result"
+      },
+      {
+        "id": "intervention-key-result-contributes-to-strategy-key-result",
+        "sourceVariable": "interventionKeyResult",
+        "targetVariable": "strategyKeyResult",
+        "semanticRelationIds": [
+          "intervention-key-result-contributes-to-strategy-key-result"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.intervention-key-result-contributes-to-strategy-key-result"
+      },
+      {
+        "id": "intervention-key-result-substantiates-need-objective",
+        "sourceVariable": "interventionKeyResult",
+        "targetVariable": "needObjective",
+        "semanticRelationIds": [
+          "intervention-key-result-substantiates-need-objective"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.intervention-key-result-substantiates-need-objective"
+      },
+      {
+        "id": "strategy-driver-indicates-measure-performance-dimension",
+        "sourceVariable": "strategyDriver",
+        "targetVariable": "measurePerformanceDimension",
+        "semanticRelationIds": [
+          "strategy-driver-indicates-measure-performance-dimension"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.strategy-driver-indicates-measure-performance-dimension"
+      },
+      {
+        "id": "strategy-key-result-determines-measure-performance-dimension",
+        "sourceVariable": "strategyKeyResult",
+        "targetVariable": "measurePerformanceDimension",
+        "semanticRelationIds": [
+          "strategy-key-result-determines-measure-performance-dimension"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.strategy-key-result-determines-measure-performance-dimension"
+      },
+      {
+        "id": "measure-performance-dimension-contains-measure-kpi",
+        "sourceVariable": "measurePerformanceDimension",
+        "targetVariable": "measureKpi",
+        "semanticRelationIds": [
+          "measure-performance-dimension-contains-measure-kpi"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.measure-performance-dimension-contains-measure-kpi"
+      },
+      {
+        "id": "intervention-key-result-sets-target-for-measure-kpi",
+        "sourceVariable": "interventionKeyResult",
+        "targetVariable": "measureKpi",
+        "semanticRelationIds": [
+          "intervention-key-result-sets-target-for-measure-kpi"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.intervention-key-result-sets-target-for-measure-kpi"
+      },
+      {
+        "id": "measure-kpi-measures-situation-anchor",
+        "sourceVariable": "measureKpi",
+        "targetVariable": "situationAnchor",
+        "semanticRelationIds": [
+          "measure-kpi-measures-situation-anchor.business-capability",
+          "measure-kpi-measures-situation-anchor.business-object",
+          "measure-kpi-measures-situation-anchor.business-process",
+          "measure-kpi-measures-situation-anchor.value-stream"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.measure-kpi-measures-situation-anchor"
+      },
+      {
+        "id": "intervention-action-changes-same-situation-anchor",
+        "sourceVariable": "interventionAction",
+        "targetVariable": "situationAnchor",
+        "semanticRelationIds": [
+          "intervention-action-changes-situation-anchor.business-capability",
+          "intervention-action-changes-situation-anchor.business-object",
+          "intervention-action-changes-situation-anchor.business-process",
+          "intervention-action-changes-situation-anchor.value-stream"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.intervention-action-changes-same-situation-anchor"
+      },
+      {
+        "id": "situation-anchor-anchors-need-driver",
+        "sourceVariable": "situationAnchor",
+        "targetVariable": "needDriver",
+        "semanticRelationIds": [
+          "situation-anchor-anchors-need-driver.business-capability",
+          "situation-anchor-anchors-need-driver.business-object",
+          "situation-anchor-anchors-need-driver.business-process",
+          "situation-anchor-anchors-need-driver.value-stream"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.situation-anchor-anchors-need-driver"
+      },
+      {
+        "id": "situation-is-constituted-by-same-situation-anchor",
+        "sourceVariable": "situation",
+        "targetVariable": "situationAnchor",
+        "semanticRelationIds": [
+          "situation-is-constituted-by-anchor.business-capability",
+          "situation-is-constituted-by-anchor.business-object",
+          "situation-is-constituted-by-anchor.business-process",
+          "situation-is-constituted-by-anchor.value-stream"
+        ],
+        "commitment": "asserted",
+        "endpointBinding": "exact-source-and-target-variable-identities",
+        "ruleRef": "core.trace.slot.situation-is-constituted-by-same-situation-anchor"
+      }
+    ],
+    "ownershipSlots": [
+      {
+        "id": "vision-objective-at-vision",
+        "memberVariable": "visionObjective",
+        "contextVariable": "vision",
+        "relationToken": "contextualizes",
+        "commitment": "asserted",
+        "endpointBinding": "exact-context-source-and-member-target-variable-identities",
+        "ruleRef": "core.trace.ownership.vision-objective-at-vision"
+      },
+      {
+        "id": "strategy-driver-at-strategy",
+        "memberVariable": "strategyDriver",
+        "contextVariable": "strategy",
+        "relationToken": "contextualizes",
+        "commitment": "asserted",
+        "endpointBinding": "exact-context-source-and-member-target-variable-identities",
+        "ruleRef": "core.trace.ownership.strategy-driver-at-strategy"
+      },
+      {
+        "id": "strategy-objective-at-strategy",
+        "memberVariable": "strategyObjective",
+        "contextVariable": "strategy",
+        "relationToken": "contextualizes",
+        "commitment": "asserted",
+        "endpointBinding": "exact-context-source-and-member-target-variable-identities",
+        "ruleRef": "core.trace.ownership.strategy-objective-at-strategy"
+      },
+      {
+        "id": "strategy-action-at-strategy",
+        "memberVariable": "strategyAction",
+        "contextVariable": "strategy",
+        "relationToken": "contextualizes",
+        "commitment": "asserted",
+        "endpointBinding": "exact-context-source-and-member-target-variable-identities",
+        "ruleRef": "core.trace.ownership.strategy-action-at-strategy"
+      },
+      {
+        "id": "strategy-key-result-at-strategy",
+        "memberVariable": "strategyKeyResult",
+        "contextVariable": "strategy",
+        "relationToken": "contextualizes",
+        "commitment": "asserted",
+        "endpointBinding": "exact-context-source-and-member-target-variable-identities",
+        "ruleRef": "core.trace.ownership.strategy-key-result-at-strategy"
+      },
+      {
+        "id": "need-driver-at-need",
+        "memberVariable": "needDriver",
+        "contextVariable": "need",
+        "relationToken": "contextualizes",
+        "commitment": "asserted",
+        "endpointBinding": "exact-context-source-and-member-target-variable-identities",
+        "ruleRef": "core.trace.ownership.need-driver-at-need"
+      },
+      {
+        "id": "need-objective-at-need",
+        "memberVariable": "needObjective",
+        "contextVariable": "need",
+        "relationToken": "contextualizes",
+        "commitment": "asserted",
+        "endpointBinding": "exact-context-source-and-member-target-variable-identities",
+        "ruleRef": "core.trace.ownership.need-objective-at-need"
+      },
+      {
+        "id": "intervention-action-at-intervention",
+        "memberVariable": "interventionAction",
+        "contextVariable": "intervention",
+        "relationToken": "contextualizes",
+        "commitment": "asserted",
+        "endpointBinding": "exact-context-source-and-member-target-variable-identities",
+        "ruleRef": "core.trace.ownership.intervention-action-at-intervention"
+      },
+      {
+        "id": "intervention-key-result-at-intervention",
+        "memberVariable": "interventionKeyResult",
+        "contextVariable": "intervention",
+        "relationToken": "contextualizes",
+        "commitment": "asserted",
+        "endpointBinding": "exact-context-source-and-member-target-variable-identities",
+        "ruleRef": "core.trace.ownership.intervention-key-result-at-intervention"
+      },
+      {
+        "id": "measure-performance-dimension-at-measure",
+        "memberVariable": "measurePerformanceDimension",
+        "contextVariable": "measure",
+        "relationToken": "contextualizes",
+        "commitment": "asserted",
+        "endpointBinding": "exact-context-source-and-member-target-variable-identities",
+        "ruleRef": "core.trace.ownership.measure-performance-dimension-at-measure"
+      },
+      {
+        "id": "measure-kpi-at-measure",
+        "memberVariable": "measureKpi",
+        "contextVariable": "measure",
+        "relationToken": "contextualizes",
+        "commitment": "asserted",
+        "endpointBinding": "exact-context-source-and-member-target-variable-identities",
+        "ruleRef": "core.trace.ownership.measure-kpi-at-measure"
+      }
+    ],
+    "traceIdentity": {
+      "fields": [
+        "graphIdentity",
+        "vision",
+        "strategy",
+        "need",
+        "intervention",
+        "measure",
+        "situation",
+        "visionObjective",
+        "strategyDriver",
+        "strategyObjective",
+        "strategyAction",
+        "strategyKeyResult",
+        "needDriver",
+        "needObjective",
+        "interventionAction",
+        "interventionKeyResult",
+        "measurePerformanceDimension",
+        "measureKpi",
+        "situationAnchor"
+      ],
+      "relationOccurrenceIdentityExcluded": true,
+      "ordering": "materialize-and-serialize-bindings-strictly-in-fields-order-using-canonical-ModelIdentity-order-for-values-and-use-the-same-total-order-for-lexicographic-complete-witness-selection"
+    },
+    "suppliedTraceValidation": {
+      "owner": "Core",
+      "purpose": "validate-one-caller-supplied-complete-TraceIdentity-directly-against-the-fixed-grammar-and-current-selected-View-graph",
+      "input": [
+        "SemanticIndex",
+        "TraceIdentity"
+      ],
+      "identityResolutionPrecondition": "every-model-identity-is-decoded-resolved-qualified-and-bound-to-the-current-selected-View-before-slot-validation",
+      "graphMismatchSuppression": "a-graph-identity-mismatch-suppresses-all-slot-lookups",
+      "slotContract": {
+        "count": 38,
+        "relationSlots": 27,
+        "ownershipSlots": 11,
+        "order": "relationSlots-array-order-then-ownershipSlots-array-order",
+        "lookupsPerSlot": [
+          "asserted-support",
+          "candidate-support"
+        ],
+        "endpointBinding": "the-exact-source-and-target-identities-from-the-supplied-TraceIdentity",
+        "success": "one-nonempty-Asserted-support-set-for-every-slot",
+        "missingDisposition": "missing-support",
+        "candidateDisposition": "candidate-only-support",
+        "accumulation": "all-unsupported-slots-without-short-circuit"
+      },
+      "resultAlgebra": {
+        "SuppliedTraceUnavailable": {
+          "fields": [
+            "traceIdentity",
+            "reasons"
+          ],
+          "reasonCardinality": "one-or-more-in-declared-precedence"
+        },
+        "SuppliedCompleteTrace": {
+          "fields": [
+            "traceIdentity",
+            "relationSupport",
+            "ownershipSupport"
+          ],
+          "construction": "opaque-Core-constructor-only"
+        }
+      },
+      "reasonAlgebra": {
+        "TraceGraphIdentityMismatch": [
+          "expectedGraphIdentity",
+          "observedGraphIdentity"
+        ],
+        "ExactSlotUnsupported": [
+          "slotKind",
+          "slotId",
+          "boundEndpoints",
+          "disposition"
+        ]
+      },
+      "diagnosticTraceIndependence": "does-not-consume-CompleteWitness-and-does-not-enumerate-or-select-an-alternative-witness",
+      "promotionInput": "SuppliedCompleteTrace",
+      "unavailableDisposition": "prepared-subject-unavailable-exit-3"
+    },
+    "completeWitness": {
+      "variableBindings": "exactly-one-model-identity-for-every-variableCatalog-id-materialized-in-traceIdentity.fields-order-after-graphIdentity",
+      "relationSupport": "one-nonempty-canonically-ordered-set-of-relation-occurrences-per-relationSlot-id",
+      "ownershipSupport": "one-nonempty-canonically-ordered-set-of-contextualization-occurrences-per-ownershipSlot-id",
+      "representation": "one-canonical-exact-variable-assignment-plus-per-slot-support-sets-never-a-product-of-support-alternatives"
+    },
+    "partialTrace": {
+      "rootBinding": "one-distinct-intervention-need-endpoint-tuple-plus-its-complete-factorized-root-support-set",
+      "variableDomains": "one-exact-variableProjection-per-variableCatalog-id-in-variableCatalog-order-or-empty-for-every-variable-on-GlobalConsistencyObstruction",
+      "relationSupport": "one-canonically-ordered-possibly-empty-set-of-relation-occurrences-per-relationSlot-id",
+      "ownershipSupport": "one-canonically-ordered-possibly-empty-set-of-contextualization-occurrences-per-ownershipSlot-id",
+      "construction": "root-anchored-relational-evaluation-only-never-invents-an-endpoint-or-binding"
+    },
+    "boundEndpointTuple": [
+      "sourceVariable",
+      "sourceIdentity",
+      "targetVariable",
+      "targetIdentity"
+    ],
+    "constructionFailure": "existing-structural-or-semantic-defect-never-converted-to-trace-gap",
+    "resultAlgebra": {
+      "NoAssertedRoot": {
+        "scope": "graph-level",
+        "fields": [
+          "graphIdentity",
+          "disposition"
+        ],
+        "disposition": "no-asserted-root"
+      },
+      "RootTrace": {
+        "scope": "one-canonical-asserted-root",
+        "fields": [
+          "graphIdentity",
+          "rootBinding",
+          "traceResult"
+        ],
+        "traceResult": {
+          "CompleteWitness": "every-variable-is-exactly-bound-and-every-static-relation-and-ownership-slot-has-nonempty-asserted-support",
+          "PartialTrace": "root-bound-partial-domains-and-support-with-one-or-more-ordered-local-gaps-or-global-consistency-obstructions"
+        }
+      }
+    },
+    "resultPrecedence": "if-no-asserted-root-return-exactly-one-NoAssertedRoot-otherwise-per-canonical-root-return-obstruction-only-PartialTrace-iff-the-nonempty-retained-network-has-no-satisfying-assignment-local-gap-PartialTrace-iff-it-is-consistent-and-at-least-one-slot-is-missing-and-CompleteWitness-iff-it-is-consistent-and-no-slot-is-missing",
+    "gapDispositions": [
+      "missing-support",
+      "candidate-only-support",
+      "globally-inconsistent-support"
+    ],
+    "gapAlgebra": {
+      "BoundSlotGap": {
+        "precondition": "the-retained-network-under-the-fixed-rootBinding-is-consistent-and-every-missing-slot-endpoint-relationalEvaluation.variableProjection-is-an-established-singleton",
+        "fields": [
+          "graphIdentity",
+          "rootBinding",
+          "slotKind",
+          "slotId",
+          "boundEndpointTuple",
+          "disposition"
+        ]
+      },
+      "UnboundSlotGap": {
+        "precondition": "the-retained-network-under-the-fixed-rootBinding-is-consistent-and-at-least-one-missing-slot-endpoint-relationalEvaluation.variableProjection-is-empty-or-has-more-than-one-member",
+        "fields": [
+          "graphIdentity",
+          "rootBinding",
+          "slotKind",
+          "slotId",
+          "establishedVariableBindings",
+          "unresolvedVariableIds",
+          "disposition"
+        ],
+        "identityConstraint": "contains-only-established-bindings-and-never-an-invented-endpoint-identity"
+      },
+      "GlobalConsistencyObstruction": {
+        "precondition": "at-least-one-Asserted-slot-is-retained-and-no-total-assignment-satisfies-all-retained-slots",
+        "fields": [
+          "graphIdentity",
+          "rootBinding",
+          "obstructionScopeSlots",
+          "disposition"
+        ],
+        "selection": "exactly-one-obstruction-per-inconsistent-root",
+        "scope": "the-complete-nonempty-canonically-ordered-set-of-retained-slot-kind-and-slot-id-pairs-conservative-and-never-claimed-minimal",
+        "identityConstraint": "contains-only-fixed-slot-identities-and-never-an-invented-model-identity"
+      }
+    },
+    "promotionToTraceableEffectModel": {
+      "diagnosticTraceDependency": "forbidden-readiness-and-assessment-use-direct-suppliedTraceValidation",
+      "subject": "one-SuppliedCompleteTrace-and-one-QualificationEligibleStrategy-proof-from-the-identical-nominal-selected-View-and-SemanticallyValidModel-subject",
+      "graphIdentity": "identical-to-the-SemanticallyValidModel-and-QualificationEligibleStrategy-proof-graph-identity-by-opaque-Core-construction",
+      "successConditions": {
+        "strategy": "traced-strategy-equals-the-proof-strategy",
+        "diagnosis": "traced-strategyDriver-equals-the-proof-formulation-diagnosis",
+        "intent": "traced-strategyObjective-equals-the-proof-formulation-intent",
+        "action": "traced-strategyAction-is-a-member-of-the-proof-formulation-actions-set",
+        "keyResult": "traced-strategyKeyResult-is-a-member-of-the-proof-formulation-keyResults-set"
+      },
+      "resultAlgebra": {
+        "PromotionUnavailable": {
+          "fields": [
+            "graphIdentity",
+            "traceIdentity",
+            "reasons"
+          ],
+          "reasonCardinality": "one-or-more-distinct-reasons-in-declared-precedence"
+        },
+        "PromotedTraceableEffectModel": {
+          "fields": [
+            "graphIdentity",
+            "traceIdentity",
+            "strategyProofIdentity"
+          ],
+          "construction": "opaque-Core-constructor-only-after-all-successConditions"
+        }
+      },
+      "unavailableReasonPrecedence": [
+        "strategy-assessment-unavailable",
+        "strategy-assessment-invalid",
+        "strategy-proof-model-mismatch",
+        "strategy-identity-mismatch",
+        "diagnosis-mismatch",
+        "intent-mismatch",
+        "action-not-in-formulation",
+        "key-result-not-in-formulation"
+      ],
+      "suppression": "strategy-assessment-unavailable-strategy-assessment-invalid-strategy-proof-model-mismatch-and-strategy-identity-mismatch-each-suppress-all-later-reasons-in-that-precedence-otherwise-independent-diagnosis-intent-action-and-key-result-mismatches-accumulate-in-declared-order"
+    },
+    "ordering": {
+      "roots": [
+        "intervention",
+        "need"
+      ],
+      "slots": "relationSlots-array-order-then-ownershipSlots-array-order",
+      "supportOccurrences": "canonical-model-occurrence-order",
+      "gaps": [
+        "root",
+        "slot-kind-rank",
+        "slot-array-position",
+        "gap-variant-rank",
+        "established-binding-or-bound-endpoint-tuple",
+        "unresolved-variable-ids",
+        "disposition"
+      ]
+    },
+    "ruleIds": {
+      "rootAssertedPresence": "core.trace.root.asserted-presence",
+      "visionOrientsStrategy": "core.trace.slot.vision-orients-strategy",
+      "strategyQualifiesNeed": "core.trace.slot.strategy-qualifies-need",
+      "strategyDirectsIntervention": "core.trace.slot.strategy-directs-intervention",
+      "strategyFramesMeasure": "core.trace.slot.strategy-frames-measure",
+      "interventionAddressesNeed": "core.trace.slot.intervention-addresses-need",
+      "interventionSetsTargetForMeasure": "core.trace.slot.intervention-sets-target-for-measure",
+      "interventionChangesSituation": "core.trace.slot.intervention-changes-situation",
+      "measureMeasuresSituation": "core.trace.slot.measure-measures-situation",
+      "situationSurfacesNeed": "core.trace.slot.situation-surfaces-need",
+      "visionObjectiveOrientsStrategyObjective": "core.trace.slot.vision-objective-orients-strategy-objective",
+      "strategyDriverGroundsStrategyObjective": "core.trace.slot.strategy-driver-grounds-strategy-objective",
+      "strategyKeyResultSubstantiatesStrategyObjective": "core.trace.slot.strategy-key-result-substantiates-strategy-objective",
+      "strategyActionContributesToStrategyKeyResult": "core.trace.slot.strategy-action-contributes-to-strategy-key-result",
+      "strategyKeyResultTranslatesIntoNeedObjective": "core.trace.slot.strategy-key-result-translates-into-need-objective",
+      "needDriverGroundsNeedObjective": "core.trace.slot.need-driver-grounds-need-objective",
+      "strategyActionGuidesInterventionAction": "core.trace.slot.strategy-action-guides-intervention-action",
+      "interventionActionContributesToInterventionKeyResult": "core.trace.slot.intervention-action-contributes-to-intervention-key-result",
+      "interventionKeyResultContributesToStrategyKeyResult": "core.trace.slot.intervention-key-result-contributes-to-strategy-key-result",
+      "interventionKeyResultSubstantiatesNeedObjective": "core.trace.slot.intervention-key-result-substantiates-need-objective",
+      "strategyDriverIndicatesMeasurePerformanceDimension": "core.trace.slot.strategy-driver-indicates-measure-performance-dimension",
+      "strategyKeyResultDeterminesMeasurePerformanceDimension": "core.trace.slot.strategy-key-result-determines-measure-performance-dimension",
+      "measurePerformanceDimensionContainsMeasureKpi": "core.trace.slot.measure-performance-dimension-contains-measure-kpi",
+      "interventionKeyResultSetsTargetForMeasureKpi": "core.trace.slot.intervention-key-result-sets-target-for-measure-kpi",
+      "measureKpiMeasuresSituationAnchor": "core.trace.slot.measure-kpi-measures-situation-anchor",
+      "interventionActionChangesSameSituationAnchor": "core.trace.slot.intervention-action-changes-same-situation-anchor",
+      "situationAnchorAnchorsNeedDriver": "core.trace.slot.situation-anchor-anchors-need-driver",
+      "situationIsConstitutedBySameSituationAnchor": "core.trace.slot.situation-is-constituted-by-same-situation-anchor",
+      "promotionStrategyDiagnosis": "core.trace.promotion.strategy-diagnosis",
+      "promotionStrategyIntent": "core.trace.promotion.strategy-intent",
+      "promotionStrategyAction": "core.trace.promotion.strategy-action-membership",
+      "promotionStrategyKeyResult": "core.trace.promotion.strategy-key-result-membership",
+      "ownershipVisionObjective": "core.trace.ownership.vision-objective-at-vision",
+      "ownershipStrategyDriver": "core.trace.ownership.strategy-driver-at-strategy",
+      "ownershipStrategyObjective": "core.trace.ownership.strategy-objective-at-strategy",
+      "ownershipStrategyAction": "core.trace.ownership.strategy-action-at-strategy",
+      "ownershipStrategyKeyResult": "core.trace.ownership.strategy-key-result-at-strategy",
+      "ownershipNeedDriver": "core.trace.ownership.need-driver-at-need",
+      "ownershipNeedObjective": "core.trace.ownership.need-objective-at-need",
+      "ownershipInterventionAction": "core.trace.ownership.intervention-action-at-intervention",
+      "ownershipInterventionKeyResult": "core.trace.ownership.intervention-key-result-at-intervention",
+      "ownershipMeasurePerformanceDimension": "core.trace.ownership.measure-performance-dimension-at-measure",
+      "ownershipMeasureKpi": "core.trace.ownership.measure-kpi-at-measure",
+      "promotionStrategyProof": "core.trace.promotion.strategy-proof",
+      "promotionStrategyModelIdentity": "core.trace.promotion.strategy-model-identity",
+      "promotionStrategyIdentity": "core.trace.promotion.strategy-identity",
+      "suppliedTraceGraphIdentity": "core.trace.supplied.graph-identity",
+      "suppliedTraceRelationSlot": "core.trace.supplied.relation-slot",
+      "suppliedTraceOwnershipSlot": "core.trace.supplied.ownership-slot"
+    },
+    "evidenceKeySchemas": {
+      "TraceSubjectKey": [
+        "graphIdentity"
+      ],
+      "TraceRootKey": [
+        "intervention",
+        "need"
+      ],
+      "TraceSlotKey": [
+        "intervention",
+        "need",
+        "slot",
+        "boundEndpoints"
+      ],
+      "TraceWitnessKey": [
+        "traceIdentityTuple"
+      ],
+      "TracePromotionKey": [
+        "traceIdentityTuple",
+        "formulationIdentity"
+      ],
+      "SuppliedTraceKey": [
+        "graphIdentity",
+        "traceIdentity"
+      ],
+      "SuppliedTraceSlotKey": [
+        "graphIdentity",
+        "traceIdentity",
+        "slotKind",
+        "slotId",
+        "boundEndpoints"
+      ]
+    },
+    "defectIdentity": "rule-id-and-rule-bound-evidence-key",
+    "nonGoals": [
+      "recursive-traversal",
+      "selector-language",
+      "query-api",
+      "cartesian-witness-enumeration"
+    ],
+    "relationalEvaluation": {
+      "rootBinding": "bind-one-distinct-Asserted-intervention-addresses-need-root-tuple",
+      "retainedNetwork": "for-that-root-retain-every-fixed-slot-with-root-compatible-Asserted-support-and-treat-every-unsupported-slot-as-missing",
+      "consistency": "consistent-iff-at-least-one-total-assignment-over-the-variables-mentioned-by-retained-slots-satisfies-every-retained-slot;an-empty-retained-network-is-consistent",
+      "variableProjection": "for-the-fixed-rootBinding-the-exact-canonical-set-of-each-variables-values-across-all-assignments-that-satisfy-every-retained-slot;variables-not-mentioned-by-retained-slots-use-their-complete-selected-View-qualified-domain-and-the-fixed-root-variables-remain-bound-to-the-rootBinding-values",
+      "missingSlotClassification": "for-each-missing-slot-read-each-endpoint-variable-only-from-relationalEvaluation.variableProjection-under-the-fixed-rootBinding;BoundSlotGap-iff-every-such-projection-is-singleton-otherwise-UnboundSlotGap",
+      "candidateDisposition": "candidate-only-support-iff-one-base-domain-valid-Candidate-tuple-for-the-missing-slot-extends-at-least-one-satisfying-assignment-under-the-same-fixed-rootBinding",
+      "completeWitness": "when-no-slot-is-missing-select-the-lexicographically-first-satisfying-assignment-by-TraceIdentity-field-order-and-canonical-ModelIdentity-order-without-exposing-or-enumerating-witness-alternatives",
+      "implementationBoundary": "Core-may-use-any-total-domain-specific-indexed-algorithm-that-preserves-these-results-avoids-materializing-the-full-variable-Cartesian-product-and-exposes-no-general-query-machinery"
+    },
+    "operationDisposition": {
+      "positive": "at-least-one-Asserted-root-exists-and-every-canonically-emitted-RootTrace-is-CompleteWitness",
+      "negative": "NoAssertedRoot-or-at-least-one-canonically-emitted-RootTrace-is-PartialTrace",
+      "exhaustiveness": "exactly-one-of-positive-or-negative-for-every-trace-result",
+      "operationExit": {
+        "positive": 0,
+        "negative": 1
+      }
+    }
+  },
+  "evidenceReadinessSemantics": {
+    "subject": "one-PromotedTraceableEffectModel-and-one-BoundReadinessInput-for-the-identical-graphIdentity-and-TraceIdentity",
+    "inputSchemaRef": "#evidenceInputSchema/$defs/ReadinessInput",
+    "decoderOwner": "Core",
+    "inputIdentitySites": {
+      "kpiDefinition": "kpi",
+      "plannedStart": "intervention",
+      "evidencePlan": "trace.graphIdentity-and-trace.bindings"
+    },
+    "canonicalScalarRules": {
+      "text": "Unicode-NFC-with-no-leading-or-trailing-whitespace-and-at-least-one-non-whitespace-code-point",
+      "decimal": "base-10-no-sign-plus-no-exponent-no-leading-zero-no-trailing-fractional-zero-and-zero-is-exactly-0",
+      "timestamp": "syntactically-valid-Gregorian-UTC-instant-in-YYYY-MM-DDThh:mm:ss[.fraction]Z-with-leap-second-forbidden",
+      "timestampComparison": "chronological-UTC-instant-order-after-total-calendar-validation"
+    },
+    "domainBinding": {
+      "quantitative": "value-kind-quantitative-and-unit-exactly-equals-KPI-domain-unit",
+      "ordinal": "value-kind-ordinal-and-scaleId-equals-KPI-domain-scaleId-and-level-occurs-exactly-once-in-orderedLevels",
+      "categorical": "value-kind-categorical-and-value-occurs-in-admittedValues"
+    },
+    "cardinality": {
+      "kpiDefinition": "exactly-one-and-kpi-equals-the-bound-TraceIdentity-measureKpi",
+      "plannedStart": "exactly-one-and-intervention-equals-the-bound-TraceIdentity-intervention",
+      "evidencePlan": "exactly-one-and-trace-is-the-exact-current-complete-TraceIdentity"
+    },
+    "chronology": "planEstablishedAt<=baseline.observedAt<=readinessCheckedAt<plannedStartAt<targetDueAt",
+    "criterionCompatibility": {
+      "quantitative": "effect-kind-is-quantitative-absolute-or-quantitative-relative-and-target-kind-is-quantitative-threshold-with-exact-unit",
+      "ordinal": "effect-kind-is-ordinal-steps-and-target-kind-is-ordinal-threshold-with-exact-scaleId-and-known-targetLevel",
+      "categorical": "effect-kind-is-categorical-transition-and-target-kind-is-categorical-membership-and-all-accepted-values-are-admitted"
+    },
+    "traceValidation": "completed-before-readiness-by-traceSemantics.suppliedTraceValidation-and-promotionToTraceableEffectModel",
+    "incompleteTraceDisposition": "an-unavailable-SuppliedCompleteTrace-or-PromotedTraceableEffectModel-is-subject-unavailable-before-readiness-input-assessment-and-never-NotReady",
+    "outcomes": [
+      "Ready-with-opaque-EvidenceReadyProof",
+      "NotReady-with-nonempty-ordered-defects"
+    ],
+    "proofConstruction": "opaque-proof-contains-the-PromotedTraceableEffectModel-and-canonical-ReadinessInput-and-is-constructible-only-inside-Core",
+    "suppression": "rules-requiring-a-unique-or-domain-valid-record-run-only-after-that-prerequisite-succeeds",
+    "ruleIds": {
+      "kpiDefinitionCardinality": "core.readiness.kpi-definition.cardinality",
+      "kpiDefinitionUnit": "core.readiness.kpi-definition.unit",
+      "kpiDefinitionValueDomain": "core.readiness.kpi-definition.value-domain",
+      "kpiDefinitionMeasurementMethod": "core.readiness.kpi-definition.measurement-method",
+      "kpiDefinitionInterpretation": "core.readiness.kpi-definition.interpretation",
+      "plannedStartCardinality": "core.readiness.planned-start.cardinality",
+      "evidencePlanCardinality": "core.readiness.evidence-plan.cardinality",
+      "evidencePlanSource": "core.readiness.evidence-plan.source",
+      "evidencePlanChronology": "core.readiness.evidence-plan.chronology",
+      "baselineIdentity": "core.readiness.baseline.identity",
+      "baselineValueDomain": "core.readiness.baseline.value-domain",
+      "baselineChronology": "core.readiness.baseline.chronology",
+      "effectCriterionKind": "core.readiness.effect-criterion.kind",
+      "effectCriterionValueDomain": "core.readiness.effect-criterion.value-domain",
+      "targetCriterionKind": "core.readiness.target-criterion.kind",
+      "targetCriterionValueDomain": "core.readiness.target-criterion.value-domain",
+      "targetCriterionDue": "core.readiness.target-criterion.due"
+    },
+    "evidenceKeySchemas": {
+      "ReadinessSubjectKey": [
+        "graphIdentity",
+        "traceIdentity"
+      ],
+      "KPIDefinitionSlotKey": [
+        "kpi"
+      ],
+      "PlannedStartSlotKey": [
+        "intervention"
+      ],
+      "EvidencePlanSlotKey": [
+        "traceIdentity"
+      ]
+    },
+    "evidenceKeyByRule": {
+      "kpiDefinitionCardinality": "KPIDefinitionSlotKey",
+      "kpiDefinitionUnit": "KPIDefinitionSlotKey",
+      "kpiDefinitionValueDomain": "KPIDefinitionSlotKey",
+      "kpiDefinitionMeasurementMethod": "KPIDefinitionSlotKey",
+      "kpiDefinitionInterpretation": "KPIDefinitionSlotKey",
+      "plannedStartCardinality": "PlannedStartSlotKey",
+      "evidencePlanCardinality": "EvidencePlanSlotKey",
+      "evidencePlanSource": "EvidencePlanSlotKey",
+      "evidencePlanChronology": "EvidencePlanSlotKey",
+      "baselineIdentity": "EvidencePlanSlotKey",
+      "baselineValueDomain": "EvidencePlanSlotKey",
+      "baselineChronology": "EvidencePlanSlotKey",
+      "effectCriterionKind": "EvidencePlanSlotKey",
+      "effectCriterionValueDomain": "EvidencePlanSlotKey",
+      "targetCriterionKind": "EvidencePlanSlotKey",
+      "targetCriterionValueDomain": "EvidencePlanSlotKey",
+      "targetCriterionDue": "EvidencePlanSlotKey"
+    },
+    "defectIdentity": "rule-id-and-rule-bound-evidence-key",
+    "inputBoundary": "consumes-only-BoundReadinessInput; decoded-domain-or-chronology-defects-produce-NotReady-primary-negative-result-exit-1",
+    "operationDisposition": {
+      "Ready": "completed-positive-exit-0",
+      "NotReady": "primary-negative-report-exit-1",
+      "subject-unavailable-before-domain-assessment": "prepared-subject-unavailable-exit-3"
+    },
+    "prerequisiteReconstruction": [
+      "validate-current-selected-View-semantics",
+      "validate-the-caller-supplied-TraceIdentity-as-SuppliedCompleteTrace",
+      "reconstruct-QualificationEligibleStrategy-for-the-traced-Strategy",
+      "construct-PromotedTraceableEffectModel",
+      "evaluate-the-BoundReadinessInput"
+    ]
+  },
+  "evidenceAssessmentSemantics": {
+    "subject": "one-AssessmentBundleInput-reconstructed-against-one-current-selected-View-subject",
+    "inputSchemaRef": "#evidenceInputSchema/$defs/AssessmentBundleInput",
+    "decoderOwner": "Core",
+    "prerequisiteReconstruction": [
+      "validate-current-selected-View-semantics",
+      "validate-the-caller-supplied-TraceIdentity-as-SuppliedCompleteTrace",
+      "reconstruct-QualificationEligibleStrategy-for-the-traced-Strategy",
+      "construct-PromotedTraceableEffectModel",
+      "decode-and-validate-embedded-ReadinessInput",
+      "construct-opaque-EvidenceReadyProof-in-the-same-invocation",
+      "evaluate-one-actual-start-and-the-observations"
+    ],
+    "persistedProofInput": "forbidden",
+    "diagnosticTraceDependency": "forbidden",
+    "operationBoundary": "Operation-acquires-bytes-and-source-provenance-and-invokes-Core-decoders-without-parsing-fachliche-payloads",
+    "collectionRules": [
+      "the-bound-TraceIdentity-has-at-least-one-submitted-observation",
+      "TraceIdentity-and-observedAt-is-unique",
+      "the-one-actualStart-intervention-equals-the-bound-TraceIdentity-intervention",
+      "readinessCheckedAt<actualStartAt<=assessedAt"
+    ],
+    "collectionFailure": "AssessmentInputInvalid-with-nonempty-ordered-defects-and-item-evaluation-suppressed",
+    "itemRules": [
+      "exact-TraceIdentity",
+      "value-fits-the-bound-KPI-domain",
+      "nonempty-canonical-source",
+      "actualStartAt<observedAt<=assessedAt"
+    ],
+    "effectFormula": {
+      "quantitative-absolute": "directionAdjustedDelta=(observed-baseline)-when-increase-or-(baseline-observed)-when-decrease; Satisfied-iff-directionAdjustedDelta>=minimumDirectionAdjustedDelta",
+      "quantitative-relative": "if-baseline=0-then-NotAssessableZeroBaseline-else-directionAdjustedRatio=directionAdjustedDelta/abs(baseline); Satisfied-iff-directionAdjustedRatio>=minimumDirectionAdjustedRatio; negative-baselines-use-abs-baseline",
+      "ordinal-steps": "directionAdjustedSteps=observedRank-baselineRank-when-increase-or-baselineRank-observedRank-when-decrease; Satisfied-iff-directionAdjustedSteps>=minimumDirectionAdjustedSteps",
+      "categorical-transition": "Satisfied-iff-observed-value-differs-from-baseline-and-occurs-in-acceptedValues"
+    },
+    "targetFormula": {
+      "quantitative-threshold": "apply-at-least-at-most-or-exact-decimal-equality-after-exact-unit-binding",
+      "ordinal-threshold": "apply-at-least-rank-at-most-rank-or-equal-rank-on-the-bound-orderedLevels",
+      "categorical-membership": "Satisfied-iff-observed-value-occurs-in-acceptedValues",
+      "dueDisposition": "a-satisfied-target-is-ByDue-iff-observedAt<=targetDueAt-otherwise-AfterDue"
+    },
+    "itemOrder": [
+      "TraceIdentity",
+      "observedAt"
+    ],
+    "itemOutcomes": {
+      "InvalidObservation": "nonempty-item-defects",
+      "AssessedObservation": {
+        "effect": [
+          "Satisfied",
+          "NotSatisfied",
+          "NotAssessableZeroBaseline"
+        ],
+        "target": [
+          "TargetSatisfiedInObservationByDue",
+          "TargetSatisfiedInObservationAfterDue",
+          "TargetNotSatisfiedInObservation"
+        ],
+        "limitations": [
+          "causality-not-established",
+          "first-target-attainment-time-not-established"
+        ]
+      }
+    },
+    "criteriaSource": "bound-ex-ante-EvidencePlan-only",
+    "aggregation": "forbidden",
+    "proofPromotion": "opaque-EvidenceAssessedProof-only-when-the-one-bound-trace-is-covered-and-every-submitted-observation-is-valid-independent-of-effect-or-target-satisfaction",
+    "ruleIds": {
+      "coverage": "core.assessment.coverage.trace-observation",
+      "actualStartCardinality": "core.assessment.actual-start.cardinality",
+      "actualStartChronology": "core.assessment.actual-start.chronology",
+      "observationIdentity": "core.assessment.identity.observation",
+      "observationUniqueness": "core.assessment.identity.observation-uniqueness",
+      "traceIdentity": "core.assessment.trace.identity",
+      "kpiIdentity": "core.assessment.kpi.identity",
+      "anchorIdentity": "core.assessment.anchor.identity",
+      "valueDomain": "core.assessment.value-domain.observation",
+      "source": "core.assessment.source.nonempty",
+      "observationChronology": "core.assessment.chronology.observation",
+      "effectCriterion": "core.assessment.effect-criterion.apply",
+      "targetCriterion": "core.assessment.target-criterion.apply",
+      "limitations": "core.assessment.limitations.required",
+      "reconstructedReadyProof": "core.assessment.readiness.reconstructed-proof"
+    },
+    "evidenceKeySchemas": {
+      "AssessmentSubjectKey": [
+        "graphIdentity",
+        "traceIdentity"
+      ],
+      "ActualStartKey": [
+        "intervention"
+      ],
+      "ObservationSetKey": [
+        "graphIdentity",
+        "traceIdentity"
+      ],
+      "ObservationKey": [
+        "traceIdentity",
+        "observedAt"
+      ]
+    },
+    "evidenceKeyByRule": {
+      "coverage": "AssessmentSubjectKey",
+      "reconstructedReadyProof": "AssessmentSubjectKey",
+      "actualStartCardinality": "ActualStartKey",
+      "actualStartChronology": "ActualStartKey",
+      "observationIdentity": "ObservationKey",
+      "observationUniqueness": "ObservationSetKey",
+      "traceIdentity": "ObservationKey",
+      "kpiIdentity": "ObservationKey",
+      "anchorIdentity": "ObservationKey",
+      "valueDomain": "ObservationKey",
+      "source": "ObservationKey",
+      "observationChronology": "ObservationKey",
+      "effectCriterion": "ObservationKey",
+      "targetCriterion": "ObservationKey",
+      "limitations": "ObservationKey"
+    },
+    "defectIdentity": "rule-id-and-rule-bound-evidence-key",
+    "nonGoals": [
+      "persistence",
+      "causal-inference",
+      "first-attainment-inference",
+      "organizational-verdict"
+    ],
+    "inputBoundary": "consumes-only-BoundAssessmentBundleInput",
+    "operationDisposition": {
+      "AssessmentInputInvalid-or-any-InvalidObservation": "primary-negative-report-exit-1",
+      "all-observations-valid-regardless-of-effect-or-target-satisfaction": "completed-nonaggregating-assessment-sequence-exit-0",
+      "subject-unavailable-before-domain-assessment": "prepared-subject-unavailable-exit-3"
+    }
+  },
+  "supplementalAssessmentAvailability": {
+    "independentValidation": "notation-profile-structure-and-input-independent-semantic-rules-run-without-supplemental-input",
+    "unavailableIsNotDefect": true,
+    "strategyFormulation": "one-unavailable-result-per-Strategy-whose-complete-semantic-assessment-requires-absent-input",
+    "collectiveFit": "one-unavailable-result-per-Asserted-collective-family-whose-Fit-assessment-requires-absent-input",
+    "providedInput": "shape-and-subject-binding-are-assessed-deterministically-before-dependent-semantic-rules",
+    "crossCapabilityEffect": "none"
+  },
+  "evidenceInputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/normenmueller/o2i/schema/evidence-input-target-v46.json",
+    "oneOf": [
+      {
+        "$ref": "#/$defs/ReadinessInput"
+      },
+      {
+        "$ref": "#/$defs/AssessmentBundleInput"
+      }
+    ],
+    "$defs": {
+      "ModelIdentity": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[^\\u0000\\uD800-\\uDFFF]+$"
+      },
+      "CanonicalText": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^\\S(?:[\\s\\S]*\\S)?$"
+      },
+      "CanonicalDecimal": {
+        "type": "string",
+        "pattern": "^(?:0|-?(?:[1-9][0-9]*)(?:\\.[0-9]*[1-9])?|-?0\\.[0-9]*[1-9])$"
+      },
+      "PositiveDecimal": {
+        "type": "string",
+        "pattern": "^(?:(?:[1-9][0-9]*)(?:\\.[0-9]*[1-9])?|0\\.[0-9]*[1-9])$"
+      },
+      "UtcTimestamp": {
+        "type": "string",
+        "pattern": "^[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12][0-9]|3[01])T(?:[01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](?:\\.[0-9]+)?Z$"
+      },
+      "Unit": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^\\S(?:[\\s\\S]*\\S)?$"
+      },
+      "TraceIdentity": {
+        "type": "object",
+        "required": [
+          "graphIdentity",
+          "bindings"
+        ],
+        "properties": {
+          "graphIdentity": {
+            "$ref": "#/$defs/ModelIdentity"
+          },
+          "bindings": {
+            "type": "object",
+            "required": [
+              "vision",
+              "strategy",
+              "need",
+              "intervention",
+              "measure",
+              "situation",
+              "visionObjective",
+              "strategyDriver",
+              "strategyObjective",
+              "strategyAction",
+              "strategyKeyResult",
+              "needDriver",
+              "needObjective",
+              "interventionAction",
+              "interventionKeyResult",
+              "measurePerformanceDimension",
+              "measureKpi",
+              "situationAnchor"
+            ],
+            "properties": {
+              "vision": {
+                "$ref": "#/$defs/ModelIdentity"
+              },
+              "strategy": {
+                "$ref": "#/$defs/ModelIdentity"
+              },
+              "need": {
+                "$ref": "#/$defs/ModelIdentity"
+              },
+              "intervention": {
+                "$ref": "#/$defs/ModelIdentity"
+              },
+              "measure": {
+                "$ref": "#/$defs/ModelIdentity"
+              },
+              "situation": {
+                "$ref": "#/$defs/ModelIdentity"
+              },
+              "visionObjective": {
+                "$ref": "#/$defs/ModelIdentity"
+              },
+              "strategyDriver": {
+                "$ref": "#/$defs/ModelIdentity"
+              },
+              "strategyObjective": {
+                "$ref": "#/$defs/ModelIdentity"
+              },
+              "strategyAction": {
+                "$ref": "#/$defs/ModelIdentity"
+              },
+              "strategyKeyResult": {
+                "$ref": "#/$defs/ModelIdentity"
+              },
+              "needDriver": {
+                "$ref": "#/$defs/ModelIdentity"
+              },
+              "needObjective": {
+                "$ref": "#/$defs/ModelIdentity"
+              },
+              "interventionAction": {
+                "$ref": "#/$defs/ModelIdentity"
+              },
+              "interventionKeyResult": {
+                "$ref": "#/$defs/ModelIdentity"
+              },
+              "measurePerformanceDimension": {
+                "$ref": "#/$defs/ModelIdentity"
+              },
+              "measureKpi": {
+                "$ref": "#/$defs/ModelIdentity"
+              },
+              "situationAnchor": {
+                "$ref": "#/$defs/ModelIdentity"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "ValueDomain": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "unit",
+              "effectDirection"
+            ],
+            "properties": {
+              "kind": {
+                "const": "quantitative"
+              },
+              "unit": {
+                "$ref": "#/$defs/Unit"
+              },
+              "effectDirection": {
+                "enum": [
+                  "increase",
+                  "decrease"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "scaleId",
+              "orderedLevels",
+              "effectDirection"
+            ],
+            "properties": {
+              "kind": {
+                "const": "ordinal"
+              },
+              "scaleId": {
+                "$ref": "#/$defs/CanonicalText"
+              },
+              "orderedLevels": {
+                "type": "array",
+                "minItems": 2,
+                "uniqueItems": true,
+                "items": {
+                  "$ref": "#/$defs/CanonicalText"
+                }
+              },
+              "effectDirection": {
+                "enum": [
+                  "increase",
+                  "decrease"
+                ]
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "admittedValues"
+            ],
+            "properties": {
+              "kind": {
+                "const": "categorical"
+              },
+              "admittedValues": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "$ref": "#/$defs/CanonicalText"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "DomainValue": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "value",
+              "unit"
+            ],
+            "properties": {
+              "kind": {
+                "const": "quantitative"
+              },
+              "value": {
+                "$ref": "#/$defs/CanonicalDecimal"
+              },
+              "unit": {
+                "$ref": "#/$defs/Unit"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "scaleId",
+              "level"
+            ],
+            "properties": {
+              "kind": {
+                "const": "ordinal"
+              },
+              "scaleId": {
+                "$ref": "#/$defs/CanonicalText"
+              },
+              "level": {
+                "$ref": "#/$defs/CanonicalText"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "value"
+            ],
+            "properties": {
+              "kind": {
+                "const": "categorical"
+              },
+              "value": {
+                "$ref": "#/$defs/CanonicalText"
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "KPIDefinition": {
+        "type": "object",
+        "required": [
+          "kpi",
+          "domain",
+          "measurementMethod",
+          "interpretation"
+        ],
+        "properties": {
+          "kpi": {
+            "$ref": "#/$defs/ModelIdentity"
+          },
+          "domain": {
+            "$ref": "#/$defs/ValueDomain"
+          },
+          "measurementMethod": {
+            "$ref": "#/$defs/CanonicalText"
+          },
+          "interpretation": {
+            "$ref": "#/$defs/CanonicalText"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PlannedInterventionStart": {
+        "type": "object",
+        "required": [
+          "intervention",
+          "plannedStartAt"
+        ],
+        "properties": {
+          "intervention": {
+            "$ref": "#/$defs/ModelIdentity"
+          },
+          "plannedStartAt": {
+            "$ref": "#/$defs/UtcTimestamp"
+          }
+        },
+        "additionalProperties": false
+      },
+      "BaselineObservation": {
+        "type": "object",
+        "required": [
+          "observedAt",
+          "source",
+          "value"
+        ],
+        "properties": {
+          "observedAt": {
+            "$ref": "#/$defs/UtcTimestamp"
+          },
+          "source": {
+            "$ref": "#/$defs/CanonicalText"
+          },
+          "value": {
+            "$ref": "#/$defs/DomainValue"
+          }
+        },
+        "additionalProperties": false
+      },
+      "EffectCriterion": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "minimumDirectionAdjustedDelta"
+            ],
+            "properties": {
+              "kind": {
+                "const": "quantitative-absolute"
+              },
+              "minimumDirectionAdjustedDelta": {
+                "$ref": "#/$defs/PositiveDecimal"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "minimumDirectionAdjustedRatio"
+            ],
+            "properties": {
+              "kind": {
+                "const": "quantitative-relative"
+              },
+              "minimumDirectionAdjustedRatio": {
+                "$ref": "#/$defs/PositiveDecimal"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "minimumDirectionAdjustedSteps"
+            ],
+            "properties": {
+              "kind": {
+                "const": "ordinal-steps"
+              },
+              "minimumDirectionAdjustedSteps": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "acceptedValues"
+            ],
+            "properties": {
+              "kind": {
+                "const": "categorical-transition"
+              },
+              "acceptedValues": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "$ref": "#/$defs/CanonicalText"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "TargetCriterion": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "comparison",
+              "target",
+              "unit"
+            ],
+            "properties": {
+              "kind": {
+                "const": "quantitative-threshold"
+              },
+              "comparison": {
+                "enum": [
+                  "at-least",
+                  "at-most",
+                  "equal"
+                ]
+              },
+              "target": {
+                "$ref": "#/$defs/CanonicalDecimal"
+              },
+              "unit": {
+                "$ref": "#/$defs/Unit"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "comparison",
+              "scaleId",
+              "targetLevel"
+            ],
+            "properties": {
+              "kind": {
+                "const": "ordinal-threshold"
+              },
+              "comparison": {
+                "enum": [
+                  "at-least-rank",
+                  "at-most-rank",
+                  "equal-rank"
+                ]
+              },
+              "scaleId": {
+                "$ref": "#/$defs/CanonicalText"
+              },
+              "targetLevel": {
+                "$ref": "#/$defs/CanonicalText"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "kind",
+              "acceptedValues"
+            ],
+            "properties": {
+              "kind": {
+                "const": "categorical-membership"
+              },
+              "acceptedValues": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "$ref": "#/$defs/CanonicalText"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "EvidencePlan": {
+        "type": "object",
+        "required": [
+          "trace",
+          "baseline",
+          "effectCriterion",
+          "targetCriterion",
+          "targetDueAt",
+          "source",
+          "planEstablishedAt"
+        ],
+        "properties": {
+          "trace": {
+            "$ref": "#/$defs/TraceIdentity"
+          },
+          "baseline": {
+            "$ref": "#/$defs/BaselineObservation"
+          },
+          "effectCriterion": {
+            "$ref": "#/$defs/EffectCriterion"
+          },
+          "targetCriterion": {
+            "$ref": "#/$defs/TargetCriterion"
+          },
+          "targetDueAt": {
+            "$ref": "#/$defs/UtcTimestamp"
+          },
+          "source": {
+            "$ref": "#/$defs/CanonicalText"
+          },
+          "planEstablishedAt": {
+            "$ref": "#/$defs/UtcTimestamp"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReadinessInput": {
+        "type": "object",
+        "required": [
+          "type",
+          "readinessCheckedAt",
+          "kpiDefinition",
+          "plannedStart",
+          "evidencePlan"
+        ],
+        "properties": {
+          "type": {
+            "const": "ReadinessInput"
+          },
+          "readinessCheckedAt": {
+            "$ref": "#/$defs/UtcTimestamp"
+          },
+          "kpiDefinition": {
+            "$ref": "#/$defs/KPIDefinition"
+          },
+          "plannedStart": {
+            "$ref": "#/$defs/PlannedInterventionStart"
+          },
+          "evidencePlan": {
+            "$ref": "#/$defs/EvidencePlan"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ActualInterventionStart": {
+        "type": "object",
+        "required": [
+          "intervention",
+          "actualStartAt"
+        ],
+        "properties": {
+          "intervention": {
+            "$ref": "#/$defs/ModelIdentity"
+          },
+          "actualStartAt": {
+            "$ref": "#/$defs/UtcTimestamp"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Observation": {
+        "type": "object",
+        "required": [
+          "trace",
+          "observedAt",
+          "source",
+          "value"
+        ],
+        "properties": {
+          "trace": {
+            "$ref": "#/$defs/TraceIdentity"
+          },
+          "observedAt": {
+            "$ref": "#/$defs/UtcTimestamp"
+          },
+          "source": {
+            "$ref": "#/$defs/CanonicalText"
+          },
+          "value": {
+            "$ref": "#/$defs/DomainValue"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AssessmentBundleInput": {
+        "type": "object",
+        "required": [
+          "type",
+          "readiness",
+          "assessedAt",
+          "actualStart",
+          "observations"
+        ],
+        "properties": {
+          "type": {
+            "const": "AssessmentBundleInput"
+          },
+          "readiness": {
+            "$ref": "#/$defs/ReadinessInput"
+          },
+          "assessedAt": {
+            "$ref": "#/$defs/UtcTimestamp"
+          },
+          "actualStart": {
+            "$ref": "#/$defs/ActualInterventionStart"
+          },
+          "observations": {
+            "type": "array",
+            "minItems": 0,
+            "items": {
+              "$ref": "#/$defs/Observation"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "evidenceInputDecoderContract": {
+    "owner": "Core",
+    "operationBoundary": "Operation-acquires-exact-bytes-source-provenance-and-input-ordinal-invokes-Core-and-projects-the-typed-outcome-without-parsing-fachliche-content",
+    "input": "exact-source-bytes-plus-operation-assigned-input-ordinal",
+    "phaseOrder": [
+      "utf8",
+      "json-syntax",
+      "duplicate-object-members",
+      "top-level-discriminator",
+      "schema-and-canonicalization",
+      "identity-resolution"
+    ],
+    "rootAlgebra": [
+      "ReadinessInput",
+      "AssessmentBundleInput"
+    ],
+    "objectPolicy": "closed-objects-reject-duplicate-and-unknown-members-at-every-depth",
+    "canonicalization": "canonicalize-every-scalar-and-array-member-before-schema-validation-distinctness-and-canonical-array-order",
+    "canonicalizationManifest": {
+      "objectMemberNames": "exact-schema-code-point-sequence-with-no-normalization-alias-or-case-folding",
+      "scalarSchemas": {
+        "ModelIdentity": "nonempty-exact-admitted-Unicode-scalar-value-sequence-excluding-U+0000-with-no-normalization-trimming-replacement-or-case-folding",
+        "CanonicalText": "Unicode-NFC-with-ECMA-262-leading-or-trailing-WhiteSpace-or-LineTerminator-forbidden-internal-CR-LF-CRLF-U+2028-and-U+2029-preserved-and-at-least-one-non-whitespace-code-point",
+        "Unit": "case-sensitive-Unicode-NFC-with-ECMA-262-leading-or-trailing-WhiteSpace-or-LineTerminator-forbidden-internal-CR-LF-CRLF-U+2028-and-U+2029-preserved-and-at-least-one-non-whitespace-code-point",
+        "CanonicalDecimal": "validate-the-closed-base-10-grammar-and-preserve-the-already-canonical-lexeme",
+        "PositiveDecimal": "validate-the-closed-positive-base-10-grammar-and-preserve-the-already-canonical-lexeme",
+        "UtcTimestamp": "validate-the-total-Gregorian-UTC-instant-remove-trailing-fractional-zeroes-and-omit-a-zero-fraction",
+        "schemaLiteral": "every-const-or-enum-string-is-an-exact-case-sensitive-ASCII-token-and-is-never-normalized",
+        "integer": "accept-only-a-JSON-integer-and-preserve-its-mathematical-value"
+      },
+      "scalarSites": {
+        "type=AssessmentBundleInput&kind=categorical-membership:/readiness/evidencePlan/targetCriterion/acceptedValues/*": "CanonicalText",
+        "type=AssessmentBundleInput&kind=categorical-membership:/readiness/evidencePlan/targetCriterion/kind": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=categorical-transition:/readiness/evidencePlan/effectCriterion/acceptedValues/*": "CanonicalText",
+        "type=AssessmentBundleInput&kind=categorical-transition:/readiness/evidencePlan/effectCriterion/kind": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=categorical:/observations/*/value/kind": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=categorical:/observations/*/value/value": "CanonicalText",
+        "type=AssessmentBundleInput&kind=categorical:/readiness/evidencePlan/baseline/value/kind": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=categorical:/readiness/evidencePlan/baseline/value/value": "CanonicalText",
+        "type=AssessmentBundleInput&kind=categorical:/readiness/kpiDefinition/domain/admittedValues/*": "CanonicalText",
+        "type=AssessmentBundleInput&kind=categorical:/readiness/kpiDefinition/domain/kind": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=ordinal-steps:/readiness/evidencePlan/effectCriterion/kind": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=ordinal-steps:/readiness/evidencePlan/effectCriterion/minimumDirectionAdjustedSteps": "integer",
+        "type=AssessmentBundleInput&kind=ordinal-threshold:/readiness/evidencePlan/targetCriterion/comparison": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=ordinal-threshold:/readiness/evidencePlan/targetCriterion/kind": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=ordinal-threshold:/readiness/evidencePlan/targetCriterion/scaleId": "CanonicalText",
+        "type=AssessmentBundleInput&kind=ordinal-threshold:/readiness/evidencePlan/targetCriterion/targetLevel": "CanonicalText",
+        "type=AssessmentBundleInput&kind=ordinal:/observations/*/value/kind": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=ordinal:/observations/*/value/level": "CanonicalText",
+        "type=AssessmentBundleInput&kind=ordinal:/observations/*/value/scaleId": "CanonicalText",
+        "type=AssessmentBundleInput&kind=ordinal:/readiness/evidencePlan/baseline/value/kind": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=ordinal:/readiness/evidencePlan/baseline/value/level": "CanonicalText",
+        "type=AssessmentBundleInput&kind=ordinal:/readiness/evidencePlan/baseline/value/scaleId": "CanonicalText",
+        "type=AssessmentBundleInput&kind=ordinal:/readiness/kpiDefinition/domain/effectDirection": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=ordinal:/readiness/kpiDefinition/domain/kind": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=ordinal:/readiness/kpiDefinition/domain/orderedLevels/*": "CanonicalText",
+        "type=AssessmentBundleInput&kind=ordinal:/readiness/kpiDefinition/domain/scaleId": "CanonicalText",
+        "type=AssessmentBundleInput&kind=quantitative-absolute:/readiness/evidencePlan/effectCriterion/kind": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=quantitative-absolute:/readiness/evidencePlan/effectCriterion/minimumDirectionAdjustedDelta": "PositiveDecimal",
+        "type=AssessmentBundleInput&kind=quantitative-relative:/readiness/evidencePlan/effectCriterion/kind": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=quantitative-relative:/readiness/evidencePlan/effectCriterion/minimumDirectionAdjustedRatio": "PositiveDecimal",
+        "type=AssessmentBundleInput&kind=quantitative-threshold:/readiness/evidencePlan/targetCriterion/comparison": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=quantitative-threshold:/readiness/evidencePlan/targetCriterion/kind": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=quantitative-threshold:/readiness/evidencePlan/targetCriterion/target": "CanonicalDecimal",
+        "type=AssessmentBundleInput&kind=quantitative-threshold:/readiness/evidencePlan/targetCriterion/unit": "Unit",
+        "type=AssessmentBundleInput&kind=quantitative:/observations/*/value/kind": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=quantitative:/observations/*/value/unit": "Unit",
+        "type=AssessmentBundleInput&kind=quantitative:/observations/*/value/value": "CanonicalDecimal",
+        "type=AssessmentBundleInput&kind=quantitative:/readiness/evidencePlan/baseline/value/kind": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=quantitative:/readiness/evidencePlan/baseline/value/unit": "Unit",
+        "type=AssessmentBundleInput&kind=quantitative:/readiness/evidencePlan/baseline/value/value": "CanonicalDecimal",
+        "type=AssessmentBundleInput&kind=quantitative:/readiness/kpiDefinition/domain/effectDirection": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=quantitative:/readiness/kpiDefinition/domain/kind": "schemaLiteral",
+        "type=AssessmentBundleInput&kind=quantitative:/readiness/kpiDefinition/domain/unit": "Unit",
+        "type=AssessmentBundleInput:/actualStart/actualStartAt": "UtcTimestamp",
+        "type=AssessmentBundleInput:/actualStart/intervention": "ModelIdentity",
+        "type=AssessmentBundleInput:/assessedAt": "UtcTimestamp",
+        "type=AssessmentBundleInput:/observations/*/observedAt": "UtcTimestamp",
+        "type=AssessmentBundleInput:/observations/*/source": "CanonicalText",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/intervention": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/interventionAction": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/interventionKeyResult": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/measure": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/measureKpi": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/measurePerformanceDimension": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/need": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/needDriver": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/needObjective": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/situation": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/situationAnchor": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/strategy": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/strategyAction": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/strategyDriver": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/strategyKeyResult": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/strategyObjective": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/vision": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/bindings/visionObjective": "ModelIdentity",
+        "type=AssessmentBundleInput:/observations/*/trace/graphIdentity": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/baseline/observedAt": "UtcTimestamp",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/baseline/source": "CanonicalText",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/planEstablishedAt": "UtcTimestamp",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/source": "CanonicalText",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/targetDueAt": "UtcTimestamp",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/intervention": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/interventionAction": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/interventionKeyResult": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/measure": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/measureKpi": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/measurePerformanceDimension": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/need": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/needDriver": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/needObjective": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/situation": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/situationAnchor": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/strategy": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/strategyAction": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/strategyDriver": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/strategyKeyResult": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/strategyObjective": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/vision": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/bindings/visionObjective": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/evidencePlan/trace/graphIdentity": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/kpiDefinition/interpretation": "CanonicalText",
+        "type=AssessmentBundleInput:/readiness/kpiDefinition/kpi": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/kpiDefinition/measurementMethod": "CanonicalText",
+        "type=AssessmentBundleInput:/readiness/plannedStart/intervention": "ModelIdentity",
+        "type=AssessmentBundleInput:/readiness/plannedStart/plannedStartAt": "UtcTimestamp",
+        "type=AssessmentBundleInput:/readiness/readinessCheckedAt": "UtcTimestamp",
+        "type=AssessmentBundleInput:/readiness/type": "schemaLiteral",
+        "type=AssessmentBundleInput:/type": "schemaLiteral",
+        "type=ReadinessInput&kind=categorical-membership:/evidencePlan/targetCriterion/acceptedValues/*": "CanonicalText",
+        "type=ReadinessInput&kind=categorical-membership:/evidencePlan/targetCriterion/kind": "schemaLiteral",
+        "type=ReadinessInput&kind=categorical-transition:/evidencePlan/effectCriterion/acceptedValues/*": "CanonicalText",
+        "type=ReadinessInput&kind=categorical-transition:/evidencePlan/effectCriterion/kind": "schemaLiteral",
+        "type=ReadinessInput&kind=categorical:/evidencePlan/baseline/value/kind": "schemaLiteral",
+        "type=ReadinessInput&kind=categorical:/evidencePlan/baseline/value/value": "CanonicalText",
+        "type=ReadinessInput&kind=categorical:/kpiDefinition/domain/admittedValues/*": "CanonicalText",
+        "type=ReadinessInput&kind=categorical:/kpiDefinition/domain/kind": "schemaLiteral",
+        "type=ReadinessInput&kind=ordinal-steps:/evidencePlan/effectCriterion/kind": "schemaLiteral",
+        "type=ReadinessInput&kind=ordinal-steps:/evidencePlan/effectCriterion/minimumDirectionAdjustedSteps": "integer",
+        "type=ReadinessInput&kind=ordinal-threshold:/evidencePlan/targetCriterion/comparison": "schemaLiteral",
+        "type=ReadinessInput&kind=ordinal-threshold:/evidencePlan/targetCriterion/kind": "schemaLiteral",
+        "type=ReadinessInput&kind=ordinal-threshold:/evidencePlan/targetCriterion/scaleId": "CanonicalText",
+        "type=ReadinessInput&kind=ordinal-threshold:/evidencePlan/targetCriterion/targetLevel": "CanonicalText",
+        "type=ReadinessInput&kind=ordinal:/evidencePlan/baseline/value/kind": "schemaLiteral",
+        "type=ReadinessInput&kind=ordinal:/evidencePlan/baseline/value/level": "CanonicalText",
+        "type=ReadinessInput&kind=ordinal:/evidencePlan/baseline/value/scaleId": "CanonicalText",
+        "type=ReadinessInput&kind=ordinal:/kpiDefinition/domain/effectDirection": "schemaLiteral",
+        "type=ReadinessInput&kind=ordinal:/kpiDefinition/domain/kind": "schemaLiteral",
+        "type=ReadinessInput&kind=ordinal:/kpiDefinition/domain/orderedLevels/*": "CanonicalText",
+        "type=ReadinessInput&kind=ordinal:/kpiDefinition/domain/scaleId": "CanonicalText",
+        "type=ReadinessInput&kind=quantitative-absolute:/evidencePlan/effectCriterion/kind": "schemaLiteral",
+        "type=ReadinessInput&kind=quantitative-absolute:/evidencePlan/effectCriterion/minimumDirectionAdjustedDelta": "PositiveDecimal",
+        "type=ReadinessInput&kind=quantitative-relative:/evidencePlan/effectCriterion/kind": "schemaLiteral",
+        "type=ReadinessInput&kind=quantitative-relative:/evidencePlan/effectCriterion/minimumDirectionAdjustedRatio": "PositiveDecimal",
+        "type=ReadinessInput&kind=quantitative-threshold:/evidencePlan/targetCriterion/comparison": "schemaLiteral",
+        "type=ReadinessInput&kind=quantitative-threshold:/evidencePlan/targetCriterion/kind": "schemaLiteral",
+        "type=ReadinessInput&kind=quantitative-threshold:/evidencePlan/targetCriterion/target": "CanonicalDecimal",
+        "type=ReadinessInput&kind=quantitative-threshold:/evidencePlan/targetCriterion/unit": "Unit",
+        "type=ReadinessInput&kind=quantitative:/evidencePlan/baseline/value/kind": "schemaLiteral",
+        "type=ReadinessInput&kind=quantitative:/evidencePlan/baseline/value/unit": "Unit",
+        "type=ReadinessInput&kind=quantitative:/evidencePlan/baseline/value/value": "CanonicalDecimal",
+        "type=ReadinessInput&kind=quantitative:/kpiDefinition/domain/effectDirection": "schemaLiteral",
+        "type=ReadinessInput&kind=quantitative:/kpiDefinition/domain/kind": "schemaLiteral",
+        "type=ReadinessInput&kind=quantitative:/kpiDefinition/domain/unit": "Unit",
+        "type=ReadinessInput:/evidencePlan/baseline/observedAt": "UtcTimestamp",
+        "type=ReadinessInput:/evidencePlan/baseline/source": "CanonicalText",
+        "type=ReadinessInput:/evidencePlan/planEstablishedAt": "UtcTimestamp",
+        "type=ReadinessInput:/evidencePlan/source": "CanonicalText",
+        "type=ReadinessInput:/evidencePlan/targetDueAt": "UtcTimestamp",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/intervention": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/interventionAction": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/interventionKeyResult": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/measure": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/measureKpi": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/measurePerformanceDimension": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/need": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/needDriver": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/needObjective": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/situation": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/situationAnchor": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/strategy": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/strategyAction": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/strategyDriver": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/strategyKeyResult": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/strategyObjective": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/vision": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/bindings/visionObjective": "ModelIdentity",
+        "type=ReadinessInput:/evidencePlan/trace/graphIdentity": "ModelIdentity",
+        "type=ReadinessInput:/kpiDefinition/interpretation": "CanonicalText",
+        "type=ReadinessInput:/kpiDefinition/kpi": "ModelIdentity",
+        "type=ReadinessInput:/kpiDefinition/measurementMethod": "CanonicalText",
+        "type=ReadinessInput:/plannedStart/intervention": "ModelIdentity",
+        "type=ReadinessInput:/plannedStart/plannedStartAt": "UtcTimestamp",
+        "type=ReadinessInput:/readinessCheckedAt": "UtcTimestamp",
+        "type=ReadinessInput:/type": "schemaLiteral"
+      },
+      "arraySites": {
+        "ValueDomain.ordinal.orderedLevels": "canonicalize-members-reject-post-canonicalization-duplicates-and-preserve-author-order",
+        "ValueDomain.categorical.admittedValues": "canonicalize-members-reject-post-canonicalization-duplicates-and-sort-by-canonical-code-point-order",
+        "EffectCriterion.categorical-transition.acceptedValues": "canonicalize-members-reject-post-canonicalization-duplicates-and-sort-by-canonical-code-point-order",
+        "TargetCriterion.categorical-membership.acceptedValues": "canonicalize-members-reject-post-canonicalization-duplicates-and-sort-by-canonical-code-point-order",
+        "AssessmentBundleInput.observations": "canonicalize-items-preserve-duplicates-and-sort-by-TraceIdentity-then-observedAt-with-stable-source-order-for-equal-keys"
+      },
+      "normalizationCollision": {
+        "default": "two-distinct-input-members-that-canonicalize-to-one-value-produce-one-normalization-collision-defect-at-the-array-site",
+        "exceptions": {
+          "AssessmentBundleInput.observations": "preserve-post-canonicalization-collisions-as-distinct-observation-occurrences-for-evidenceAssessmentSemantics.collectionRules"
+        }
+      },
+      "completeness": "every-input-string-in-the-closed-schema-is-covered-by-exactly-one-scalar-schema-or-schemaLiteral-and-every-input-array-is-listed-exactly-once"
+    },
+    "identitySites": {
+      "ReadinessInput": {
+        "/kpiDefinition/kpi": "primitive.measure.kpi",
+        "/plannedStart/intervention": "context.intervention",
+        "/evidencePlan/trace/graphIdentity": "current-selected-View-graphIdentity",
+        "/evidencePlan/trace/bindings": {
+          "vision": "context.vision",
+          "strategy": "context.strategy",
+          "need": "context.need",
+          "intervention": "context.intervention",
+          "measure": "context.measure",
+          "situation": "context.situation",
+          "visionObjective": "primitive.vision.objective",
+          "strategyDriver": "primitive.strategy.driver",
+          "strategyObjective": "primitive.strategy.objective",
+          "strategyAction": "primitive.strategy.action",
+          "strategyKeyResult": "primitive.strategy.key-result",
+          "needDriver": "primitive.need.driver",
+          "needObjective": "primitive.need.objective",
+          "interventionAction": "primitive.intervention.action",
+          "interventionKeyResult": "primitive.intervention.key-result",
+          "measurePerformanceDimension": "structuring.measure.performance-dimension",
+          "measureKpi": "primitive.measure.kpi",
+          "situationAnchor": "situation-anchor.{anchorKind}"
+        }
+      },
+      "AssessmentBundleInput": {
+        "/readiness": "all-ReadinessInput-identity-sites-with-the-/readiness-prefix",
+        "/actualStart/intervention": "context.intervention",
+        "/observations/*/trace/graphIdentity": "current-selected-View-graphIdentity",
+        "/observations/*/trace/bindings": {
+          "vision": "context.vision",
+          "strategy": "context.strategy",
+          "need": "context.need",
+          "intervention": "context.intervention",
+          "measure": "context.measure",
+          "situation": "context.situation",
+          "visionObjective": "primitive.vision.objective",
+          "strategyDriver": "primitive.strategy.driver",
+          "strategyObjective": "primitive.strategy.objective",
+          "strategyAction": "primitive.strategy.action",
+          "strategyKeyResult": "primitive.strategy.key-result",
+          "needDriver": "primitive.need.driver",
+          "needObjective": "primitive.need.objective",
+          "interventionAction": "primitive.intervention.action",
+          "interventionKeyResult": "primitive.intervention.key-result",
+          "measurePerformanceDimension": "structuring.measure.performance-dimension",
+          "measureKpi": "primitive.measure.kpi",
+          "situationAnchor": "situation-anchor.{anchorKind}"
+        }
+      }
+    },
+    "anchorBinding": "situationAnchor-resolves-to-exactly-one-of-situation-anchor.business-capability-situation-anchor.business-process-situation-anchor.business-object-or-situation-anchor.value-stream",
+    "identityResolutionPrecedence": [
+      "unknown",
+      "ambiguous",
+      "out-of-selected-view",
+      "wrong-qualified-type",
+      "resolved"
+    ],
+    "suppression": "one-failed-phase-suppresses-every-later-phase-for-that-input-and-one-invalid-identity-site-suppresses-only-dependent-semantic-rules-after-all-independent-sites-are-reported",
+    "ordering": "input-ordinal-then-phase-rank-then-canonical-JSON-pointer-then-rule-id-then-canonical-evidence-key",
+    "outcomes": {
+      "EvidenceInputMalformed": "nonempty-ordered-defects-from-utf8-through-schema-and-canonicalization",
+      "EvidenceInputSubjectUnavailable": "nonempty-ordered-identity-binding-unavailability-after-successful-decode",
+      "BoundReadinessInput": "decoded-canonical-input-with-every-identity-site-resolved",
+      "BoundAssessmentBundleInput": "decoded-canonical-input-with-every-identity-site-resolved"
+    },
+    "ruleIds": {
+      "utf8": "core.evidence-input.decode.utf8",
+      "jsonSyntax": "core.evidence-input.decode.json-syntax",
+      "duplicateMember": "core.evidence-input.decode.duplicate-object-member",
+      "topLevelObject": "core.evidence-input.decode.top-level-object",
+      "discriminator": "core.evidence-input.decode.discriminator",
+      "requiredMember": "core.evidence-input.decode.required-member",
+      "unknownMember": "core.evidence-input.decode.unknown-member",
+      "valueKind": "core.evidence-input.decode.value-kind",
+      "scalarGrammar": "core.evidence-input.decode.scalar-grammar",
+      "arrayCardinality": "core.evidence-input.decode.array-cardinality",
+      "arrayDistinctness": "core.evidence-input.decode.array-distinctness",
+      "normalizationCollision": "core.evidence-input.decode.normalization-collision",
+      "modelIdentityUnicodeScalar": "core.evidence-input.decode.model-identity.unicode-scalar",
+      "identityUnknown": "core.evidence-input.identity.unknown",
+      "identityAmbiguous": "core.evidence-input.identity.ambiguous",
+      "identityWrongType": "core.evidence-input.identity.wrong-type",
+      "identityOutOfSelectedView": "core.evidence-input.identity.out-of-selected-view",
+      "modelIdentityNul": "core.evidence-input.decode.model-identity.nul"
+    },
+    "evidenceKeySchemas": {
+      "InputKey": [
+        "inputOrdinal"
+      ],
+      "MemberKey": [
+        "inputOrdinal",
+        "jsonPointer",
+        "memberName"
+      ],
+      "SchemaKey": [
+        "inputOrdinal",
+        "jsonPointer",
+        "expectedSchema",
+        "observedKindOrLexeme"
+      ],
+      "ModelIdentityScalarKey": [
+        "inputOrdinal",
+        "jsonPointer",
+        "zeroBasedIndex",
+        "codePoint"
+      ],
+      "IdentityKey": [
+        "inputOrdinal",
+        "jsonPointer",
+        "modelIdentity",
+        "expectedQualifiedType"
+      ]
+    },
+    "evidenceKeyByRule": {
+      "utf8": "InputKey",
+      "jsonSyntax": "InputKey",
+      "duplicateMember": "MemberKey",
+      "topLevelObject": "SchemaKey",
+      "discriminator": "SchemaKey",
+      "requiredMember": "MemberKey",
+      "unknownMember": "MemberKey",
+      "valueKind": "SchemaKey",
+      "scalarGrammar": "SchemaKey",
+      "arrayCardinality": "SchemaKey",
+      "arrayDistinctness": "SchemaKey",
+      "normalizationCollision": "SchemaKey",
+      "modelIdentityUnicodeScalar": "ModelIdentityScalarKey",
+      "identityUnknown": "IdentityKey",
+      "identityAmbiguous": "IdentityKey",
+      "identityWrongType": "IdentityKey",
+      "identityOutOfSelectedView": "IdentityKey",
+      "modelIdentityNul": "ModelIdentityScalarKey"
+    },
+    "defectIdentity": "rule-id-and-rule-bound-evidence-key",
+    "operationDisposition": {
+      "EvidenceInputMalformed": "command-error-evidence-input-invalid-exit-2",
+      "EvidenceInputSubjectUnavailable": "prepared-subject-unavailable-exit-3",
+      "BoundReadinessInput": "continue-to-readiness-domain-assessment",
+      "BoundAssessmentBundleInput": "continue-to-assessment-domain-and-collection-assessment"
+    }
+  },
+  "modelIdentityContract": {
+    "owner": "Core",
+    "representation": "opaque-nonempty-sequence-of-admitted-Unicode-scalar-values",
+    "scalarValueDomain": [
+      "U+0001..U+D7FF",
+      "U+E000..U+10FFFF"
+    ],
+    "normalization": "none",
+    "whitespaceTrimming": "none",
+    "caseFolding": "none",
+    "equality": "exact-scalar-sequence-equality",
+    "ordering": "lexicographic-by-scalar-value",
+    "replacement": "forbidden",
+    "resultAlgebra": {
+      "ModelIdentityAccepted": [
+        "value"
+      ],
+      "ModelIdentityRejected": [
+        "failures"
+      ]
+    },
+    "failureAlgebra": {
+      "empty-sequence": [
+        "site"
+      ],
+      "surrogate-code-point": [
+        "site",
+        "zeroBasedIndex",
+        "codePoint"
+      ],
+      "nul-code-point": [
+        "site",
+        "zeroBasedIndex"
+      ]
+    },
+    "appliesTo": [
+      "canonical-model-identities-and-references",
+      "profile-projected-carrier-relation-and-Claim-identities",
+      "supplemental-input-model-identity-sites",
+      "readiness-and-assessment-model-identity-sites",
+      "operation-selector-model-identity-sites",
+      "future-graph-exchange-model-identity-sites"
+    ],
+    "jsonEscapeDecoding": "one-valid-high-low-surrogate-pair-decodes-to-one-supplementary-scalar; lone-reversed-or-malformed-surrogates-and-U+0000-produce-the-enclosing-decoder-owned-model-identity-failure",
+    "fachlicheTextExcluded": true
+  },
+  "futureGraphExchangeBoundary": {
+    "status": "semantic-boundary-only-exact-codec-and-command-deferred-to-o2i-issue-21",
+    "purpose": "minimum-versioned-notation-independent-lossless-projection-of-one-selected-View-O2I-graph",
+    "requiredSemanticContent": {
+      "graph": [
+        "identity",
+        "selectedViewScope"
+      ],
+      "carriers": [
+        "identity",
+        "qualifiedType",
+        "commitment"
+      ],
+      "contextualizations": [
+        "occurrenceIdentity",
+        "contextIdentity",
+        "elementIdentity",
+        "commitment"
+      ],
+      "relations": [
+        "occurrenceIdentity",
+        "relationToken",
+        "sourceIdentity",
+        "targetIdentity",
+        "commitment"
+      ],
+      "structuredPropositions": {
+        "commonEnvelope": [
+          "claimIdentity",
+          "family",
+          "commitment"
+        ],
+        "incidenceRecord": [
+          "occurrenceIdentity",
+          "roleId",
+          "endpointIdentity"
+        ],
+        "incidenceConstraints": [
+          "preserve-every-incidence-record-with-multiplicity-and-canonical-ordering",
+          "roleId-belongs-to-the-admitted-family-closed-role-catalog",
+          "endpointIdentity-resolves-to-one-preserved-carrier"
+        ],
+        "familyPayload": {
+          "discriminator": "family",
+          "closedPerAdmittedFamily": true,
+          "collective-strategy-realization": {
+            "participantCompleteness": {
+              "cardinality": "exactly-one",
+              "representation": "exact-stable-valueId",
+              "valueIdCatalogRef": "#/structuredPropositionFamilies/0/participantCompleteness/values/*/id"
+            }
+          }
+        }
+      },
+      "contractProvenance": [
+        "coreContractSchema",
+        "coreContractDigest"
+      ]
+    },
+    "losslessness": [
+      "preserve-Candidate-and-Asserted-separately",
+      "preserve-occurrence-multiplicity",
+      "preserve-all-model-and-occurrence-identities",
+      "preserve-selected-View-scope",
+      "preserve-Core-contract-version-and-digest",
+      "preserve-structured-incidence-occurrence-role-endpoint-tuples-exactly"
+    ],
+    "excluded": [
+      "qualification-work-items",
+      "supplemental-payloads",
+      "evidence-inputs-and-assessment-results",
+      "notation-and-profile-carrier-paths",
+      "operation-source-provenance",
+      "persistence-identifiers",
+      "pagination-and-query-expressions"
+    ],
+    "futureAcceptance": [
+      "semantic-round-trip-preserves-the-required-content-exactly",
+      "canonical-ordering-is-independent-of-input-order",
+      "structured-incidence-round-trip-covers-repeated-roles-multiple-participants-and-multiplicity"
+    ],
+    "nonGoals": [
+      "database",
+      "query-engine",
+      "persistence",
+      "Cypher-generation"
+    ]
+  },
+  "ruleExplanationContract": {
+    "status": "materialized-in-compiled-core-rule-catalog",
+    "normativeFields": [
+      "ruleId",
+      "authority",
+      "stage",
+      "expectation"
+    ],
+    "normativeDerivation": {
+      "ruleId": "exact-rule-set-entry",
+      "authority": "Core",
+      "stage": "total-projection-from-the-closed-stagePartition",
+      "expectation": "total-projection-from-the-compiled-typed-rule-constructor"
+    },
+    "stagePartition": {
+      "capability-input": [
+        "core.evidence-input.decode.array-cardinality",
+        "core.evidence-input.decode.array-distinctness",
+        "core.evidence-input.decode.discriminator",
+        "core.evidence-input.decode.duplicate-object-member",
+        "core.evidence-input.decode.json-syntax",
+        "core.evidence-input.decode.model-identity.nul",
+        "core.evidence-input.decode.model-identity.unicode-scalar",
+        "core.evidence-input.decode.normalization-collision",
+        "core.evidence-input.decode.required-member",
+        "core.evidence-input.decode.scalar-grammar",
+        "core.evidence-input.decode.top-level-object",
+        "core.evidence-input.decode.unknown-member",
+        "core.evidence-input.decode.utf8",
+        "core.evidence-input.decode.value-kind",
+        "core.evidence-input.identity.ambiguous",
+        "core.evidence-input.identity.out-of-selected-view",
+        "core.evidence-input.identity.unknown",
+        "core.evidence-input.identity.wrong-type",
+        "core.supplemental.decode.duplicate-member",
+        "core.supplemental.decode.json-syntax",
+        "core.supplemental.decode.utf8",
+        "core.supplemental.identity.ambiguous",
+        "core.supplemental.identity.out-of-selected-view",
+        "core.supplemental.identity.unknown",
+        "core.supplemental.identity.wrong-type",
+        "core.supplemental.schema.admitted-type",
+        "core.supplemental.schema.array-cardinality",
+        "core.supplemental.schema.array-distinctness",
+        "core.supplemental.schema.model-identity.nul",
+        "core.supplemental.schema.model-identity.unicode-scalar",
+        "core.supplemental.schema.required-member",
+        "core.supplemental.schema.scalar-grammar",
+        "core.supplemental.schema.top-level-object",
+        "core.supplemental.schema.type-member",
+        "core.supplemental.schema.unknown-member",
+        "core.supplemental.schema.value-kind",
+        "core.supplemental.subject.cardinality"
+      ],
+      "qualification": [
+        "core.qualification.pair.proposal-presence",
+        "core.qualification.proposal.effect-graph-membership",
+        "core.qualification.proposal.existing-macro-qualification",
+        "core.qualification.proposal.existing-primitive-support",
+        "core.qualification.proposal.key-result-context",
+        "core.qualification.proposal.listed-key-result",
+        "core.qualification.proposal.need-eligibility",
+        "core.qualification.proposal.objective-context",
+        "core.qualification.proposal.rationale",
+        "core.qualification.proposal.role.key-result.cardinality",
+        "core.qualification.proposal.role.key-result.target",
+        "core.qualification.proposal.role.need.cardinality",
+        "core.qualification.proposal.role.need.target",
+        "core.qualification.proposal.role.objective.cardinality",
+        "core.qualification.proposal.role.objective.target",
+        "core.qualification.proposal.role.strategy.cardinality",
+        "core.qualification.proposal.role.strategy.target",
+        "core.qualification.proposal.selected-need",
+        "core.qualification.proposal.selected-strategy",
+        "core.qualification.proposal.sources",
+        "core.qualification.proposal.strategy-eligibility"
+      ],
+      "readiness-and-assessment": [
+        "core.assessment.actual-start.cardinality",
+        "core.assessment.actual-start.chronology",
+        "core.assessment.anchor.identity",
+        "core.assessment.chronology.observation",
+        "core.assessment.coverage.trace-observation",
+        "core.assessment.effect-criterion.apply",
+        "core.assessment.identity.observation",
+        "core.assessment.identity.observation-uniqueness",
+        "core.assessment.kpi.identity",
+        "core.assessment.limitations.required",
+        "core.assessment.readiness.reconstructed-proof",
+        "core.assessment.source.nonempty",
+        "core.assessment.target-criterion.apply",
+        "core.assessment.trace.identity",
+        "core.assessment.value-domain.observation",
+        "core.readiness.baseline.chronology",
+        "core.readiness.baseline.identity",
+        "core.readiness.baseline.value-domain",
+        "core.readiness.effect-criterion.kind",
+        "core.readiness.effect-criterion.value-domain",
+        "core.readiness.evidence-plan.cardinality",
+        "core.readiness.evidence-plan.chronology",
+        "core.readiness.evidence-plan.source",
+        "core.readiness.kpi-definition.cardinality",
+        "core.readiness.kpi-definition.interpretation",
+        "core.readiness.kpi-definition.measurement-method",
+        "core.readiness.kpi-definition.unit",
+        "core.readiness.kpi-definition.value-domain",
+        "core.readiness.planned-start.cardinality",
+        "core.readiness.target-criterion.due",
+        "core.readiness.target-criterion.kind",
+        "core.readiness.target-criterion.value-domain"
+      ],
+      "semantics": [
+        "core.collective-strategy-realization.asserted-collective-coverage",
+        "core.collective-strategy-realization.asserted-completeness",
+        "core.collective-strategy-realization.asserted-macro-support",
+        "core.collective-strategy-realization.asserted-participant-primitive-support",
+        "core.collective-strategy-realization.fit-pairwise-coherence",
+        "core.collective-strategy-realization.fit-participant-binding",
+        "core.collective-strategy-realization.fit-participant-compatibility",
+        "core.collective-strategy-realization.fit-target-binding",
+        "core.collective-strategy-realization.fit-target-guiding-policy",
+        "core.collective-strategy-realization.fit-target-trade-offs",
+        "core.contextualization.asserted-dependency",
+        "core.situated-need.driver-anchoring",
+        "core.situated-need.driver-cardinality",
+        "core.situated-need.objective-cardinality",
+        "core.situated-need.objective-grounding",
+        "core.situated-need.surfacing-situation-anchoring",
+        "core.situated-need.surfacing-situation-cardinality",
+        "core.strategy-formulation.action-contributions",
+        "core.strategy-formulation.actions",
+        "core.strategy-formulation.diagnosis",
+        "core.strategy-formulation.diagnosis-grounding",
+        "core.strategy-formulation.guiding-policy",
+        "core.strategy-formulation.guiding-policy-actions",
+        "core.strategy-formulation.intent",
+        "core.strategy-formulation.key-result-substantiation",
+        "core.strategy-formulation.key-results",
+        "core.strategy-formulation.vision-orientation"
+      ],
+      "structure": [
+        "core.collective-strategy-realization.participant-cardinality",
+        "core.collective-strategy-realization.participant-type",
+        "core.collective-strategy-realization.participant-uniqueness",
+        "core.collective-strategy-realization.target-cardinality",
+        "core.collective-strategy-realization.target-distinctness",
+        "core.collective-strategy-realization.target-type",
+        "core.contextualization.source-category",
+        "core.contextualization.target-category",
+        "core.contextualization.target-owner-cardinality",
+        "core.qualified-endpoint.catalog-membership",
+        "core.semantic-relation.compatibility",
+        "core.structured-proposition.commitment",
+        "core.structured-proposition.family",
+        "core.structured-proposition.identity",
+        "core.structured-proposition.incidence"
+      ],
+      "trace": [
+        "core.trace.ownership.intervention-action-at-intervention",
+        "core.trace.ownership.intervention-key-result-at-intervention",
+        "core.trace.ownership.measure-kpi-at-measure",
+        "core.trace.ownership.measure-performance-dimension-at-measure",
+        "core.trace.ownership.need-driver-at-need",
+        "core.trace.ownership.need-objective-at-need",
+        "core.trace.ownership.strategy-action-at-strategy",
+        "core.trace.ownership.strategy-driver-at-strategy",
+        "core.trace.ownership.strategy-key-result-at-strategy",
+        "core.trace.ownership.strategy-objective-at-strategy",
+        "core.trace.ownership.vision-objective-at-vision",
+        "core.trace.promotion.strategy-action-membership",
+        "core.trace.promotion.strategy-diagnosis",
+        "core.trace.promotion.strategy-identity",
+        "core.trace.promotion.strategy-intent",
+        "core.trace.promotion.strategy-key-result-membership",
+        "core.trace.promotion.strategy-model-identity",
+        "core.trace.promotion.strategy-proof",
+        "core.trace.root.asserted-presence",
+        "core.trace.slot.intervention-action-changes-same-situation-anchor",
+        "core.trace.slot.intervention-action-contributes-to-intervention-key-result",
+        "core.trace.slot.intervention-addresses-need",
+        "core.trace.slot.intervention-changes-situation",
+        "core.trace.slot.intervention-key-result-contributes-to-strategy-key-result",
+        "core.trace.slot.intervention-key-result-sets-target-for-measure-kpi",
+        "core.trace.slot.intervention-key-result-substantiates-need-objective",
+        "core.trace.slot.intervention-sets-target-for-measure",
+        "core.trace.slot.measure-kpi-measures-situation-anchor",
+        "core.trace.slot.measure-measures-situation",
+        "core.trace.slot.measure-performance-dimension-contains-measure-kpi",
+        "core.trace.slot.need-driver-grounds-need-objective",
+        "core.trace.slot.situation-anchor-anchors-need-driver",
+        "core.trace.slot.situation-is-constituted-by-same-situation-anchor",
+        "core.trace.slot.situation-surfaces-need",
+        "core.trace.slot.strategy-action-contributes-to-strategy-key-result",
+        "core.trace.slot.strategy-action-guides-intervention-action",
+        "core.trace.slot.strategy-directs-intervention",
+        "core.trace.slot.strategy-driver-grounds-strategy-objective",
+        "core.trace.slot.strategy-driver-indicates-measure-performance-dimension",
+        "core.trace.slot.strategy-frames-measure",
+        "core.trace.slot.strategy-key-result-determines-measure-performance-dimension",
+        "core.trace.slot.strategy-key-result-substantiates-strategy-objective",
+        "core.trace.slot.strategy-key-result-translates-into-need-objective",
+        "core.trace.slot.strategy-qualifies-need",
+        "core.trace.slot.vision-objective-orients-strategy-objective",
+        "core.trace.slot.vision-orients-strategy",
+        "core.trace.supplied.graph-identity",
+        "core.trace.supplied.ownership-slot",
+        "core.trace.supplied.relation-slot"
+      ]
+    },
+    "presentationFields": [
+      "meaning",
+      "action"
+    ],
+    "presentationOwnership": "nonempty-implementation-documentation-authored-with-the-corresponding-closed-rule-constructor-and-not-a-semantic-authority",
+    "runtimeRegistry": "forbidden",
+    "networkAccess": "forbidden",
+    "modelAccess": "forbidden",
+    "ruleSet": "ruleIdentityContract.completeRuleInventory",
+    "completionGate": "stagePartition-is-an-exact-disjoint-partition-of-the-complete-rule-inventory-and-the-compiled-catalog-is-in-exact-bijection-with-that-inventory-and-every-entry-has-all-normative-and-nonempty-presentation-fields",
+    "lookup": "exact-ruleId-in-the-compiled-complete-catalog"
+  }
+}

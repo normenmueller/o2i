@@ -21,7 +21,7 @@ module O2I.Validation.Collective.Fit
   , collectiveFitAssessmentWork
   ) where
 
-import Data.List (foldl')
+import qualified Data.List as List
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
 import qualified Data.Set as Set
@@ -323,7 +323,7 @@ stableBuckets ::
      Ord key => (value -> key) -> [value] -> Map key (OccurrenceBucket value)
 stableBuckets keyOf =
   Map.map (occurrenceBucket . reverse)
-    . foldl'
+    . List.foldl'
         (\buckets value -> Map.insertWith (++) (keyOf value) [value] buckets)
         Map.empty
 

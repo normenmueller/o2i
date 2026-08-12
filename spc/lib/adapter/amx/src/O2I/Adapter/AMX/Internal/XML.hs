@@ -1,115 +1,146 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Safe native AMX XML decoding with stable source paths.
+-- | Safe recognition and source-path-preserving AMX XML decoding.
 module O2I.Adapter.AMX.Internal.XML
-  ( decodeAMX
-  , decodeAMXWithLimits
+  ( decodeNative
+  , decodeNativeWithLimits
+  , hasNativeAMXSignal
   , archiNamespace
-  , expectedRootQName
+  , xsiNamespace
+  , expectedRootName
   ) where
 
 import qualified Data.ByteString as ByteString
-import Data.List.NonEmpty (NonEmpty((:|)))
+import Data.List (sortOn)
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
 import Data.Maybe (mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as TextEncoding
+import qualified Data.Text.Encoding.Error as TextEncodingError
 import qualified Data.Text.Lazy as LazyText
-import O2I.Adapter.AMX.Internal.Defect
 import O2I.Adapter.AMX.Internal.Types
+import O2I.Adapter.AMX.Internal.XML.Lexical (normalizeXmlAttributeWhitespace)
 import O2I.Adapter.AMX.Internal.XML.Scan
-import O2I.Inspection.Adapter
-import O2I.Inspection.Input
-import O2I.Inspection.Provenance
 import qualified Text.XML as XML
 import qualified Text.XML.Stream.Parse as XMLParse
 
-archiNamespace :: Text
+archiNamespace, xsiNamespace :: Text
 archiNamespace = "http://www.archimatetool.com/archimate"
 
-expectedRootQName :: ExpandedQName
-expectedRootQName = expandedQName (Just archiNamespace) 'm' "odel"
-
-nativeVersionAttribute :: ExpandedQName
-nativeVersionAttribute = expandedQName Nothing 'v' "ersion"
+xsiNamespace = "http://www.w3.org/2001/XMLSchema-instance"
 
 xmlnsNamespace :: Text
 xmlnsNamespace = "http://www.w3.org/2000/xmlns/"
 
--- | Decode exact source bytes into source-relative positions without DTD,
--- entity, resolver, or network use.
-decodeAMX ::
-     SourceDocument -> DecodeAttempt SourcePosition AMXDecodeDefect AMXDocument
-decodeAMX = decodeAMXWithLimits defaultDecodeLimits
+expectedRootName, versionName :: NativeName
+expectedRootName = NativeName (Just archiNamespace) "model"
 
--- | Decode with an explicit internal resource contract.
-decodeAMXWithLimits ::
+versionName = NativeName Nothing "version"
+
+decodeNative ::
+     ByteString.ByteString -> Either NativeFailure NativeClassification
+decodeNative = decodeNativeWithLimits defaultDecodeLimits
+
+decodeNativeWithLimits ::
      DecodeLimits
-  -> SourceDocument
-  -> DecodeAttempt SourcePosition AMXDecodeDefect AMXDocument
-decodeAMXWithLimits limits source =
-  case enforceInputByteLimit limits sourceBytes of
-    Left defect -> unavailable EncodingNotObserved defect
-    Right () -> decodeWithinByteLimit
-  where
-    sourceBytes = sourceDocumentBytes source
-    decodeWithinByteLimit =
-      case stripSupportedBom sourceBytes of
-        Left encoding -> unsupportedBom encoding
-        Right bytes ->
-          case TextEncoding.decodeUtf8' bytes of
-            Left _ -> unavailable EncodingNotObserved InvalidUtf8
-            Right decoded ->
-              let observation = encodingObservation decoded
-               in case declaredEncoding observation of
-                    Just encoding
-                      | not (isUtf8Name encoding) ->
-                        unavailable
-                          observation
-                          (UnsupportedXmlEncoding encoding)
-                    _ ->
-                      case scanXmlText limits decoded of
-                        Left defect -> unavailable observation defect
-                        Right () -> parseNativeDocument observation decoded
+  -> ByteString.ByteString
+  -> Either NativeFailure NativeClassification
+decodeNativeWithLimits limits source = do
+  enforceInputByteLimit limits source
+  bytes <- stripUtf8Bom source
+  decoded <-
+    either (const (Left InvalidUtf8)) Right (TextEncoding.decodeUtf8' bytes)
+  declaredEncoding <- scanXmlText limits decoded
+  case declaredEncoding of
+    Just encodingName
+      | Text.toCaseFold encodingName /= "utf-8" ->
+        Left (UnsupportedEncoding encodingName)
+    _ -> pure ()
+  document <-
+    either
+      (const (Left MalformedXml))
+      Right
+      (XML.parseText
+         parserSettings
+         (LazyText.fromStrict (normalizeXmlAttributeWhitespace decoded)))
+  root <- annotateRoot (XML.documentRoot document)
+  let native = NativeDocument root
+      versions = map nativeAttributeValue (lookupAttribute versionName root)
+  pure
+    (if nativeElementName root /= expectedRootName
+       then NativeFormatMismatch
+              (NativeRootMismatch (nativeElementName root))
+              native
+       else case versions of
+              ["5.0.0"] -> NativeFormatMatch native
+              [] -> NativeFormatMismatch NativeVersionMissing native
+              version:_ ->
+                NativeFormatMismatch (NativeVersionUnsupported version) native)
 
-stripSupportedBom :: ByteString.ByteString -> Either Text ByteString.ByteString
-stripSupportedBom bytes
-  | ByteString.pack [0, 0, 254, 255] `ByteString.isPrefixOf` bytes =
-    Left "UTF-32BE"
-  | ByteString.pack [255, 254, 0, 0] `ByteString.isPrefixOf` bytes =
-    Left "UTF-32LE"
-  | ByteString.pack [254, 255] `ByteString.isPrefixOf` bytes = Left "UTF-16BE"
-  | ByteString.pack [255, 254] `ByteString.isPrefixOf` bytes = Left "UTF-16LE"
-  | ByteString.pack [239, 187, 191] `ByteString.isPrefixOf` bytes =
+-- | Detect a bounded native AMX root signal without claiming arbitrary
+-- malformed or non-XML input for this adapter.
+hasNativeAMXSignal :: ByteString.ByteString -> Bool
+hasNativeAMXSignal source = rootClaimsExpectedName prefix
+  where
+    signalLimit = maximumInputBytes defaultDecodeLimits
+    prefix = decodeSignalPrefix (ByteString.take signalLimit source)
+
+decodeSignalPrefix :: ByteString.ByteString -> Text
+decodeSignalPrefix bytes
+  | ByteString.isPrefixOf (ByteString.pack [0, 0, 254, 255]) bytes =
+    TextEncoding.decodeUtf32BEWith signalDecodeError (ByteString.drop 4 bytes)
+  | ByteString.isPrefixOf (ByteString.pack [255, 254, 0, 0]) bytes =
+    TextEncoding.decodeUtf32LEWith signalDecodeError (ByteString.drop 4 bytes)
+  | ByteString.isPrefixOf (ByteString.pack [254, 255]) bytes =
+    TextEncoding.decodeUtf16BEWith signalDecodeError (ByteString.drop 2 bytes)
+  | ByteString.isPrefixOf (ByteString.pack [255, 254]) bytes =
+    TextEncoding.decodeUtf16LEWith signalDecodeError (ByteString.drop 2 bytes)
+  | ByteString.isPrefixOf (ByteString.pack [0, 0, 0, 60]) bytes =
+    TextEncoding.decodeUtf32BEWith signalDecodeError bytes
+  | ByteString.isPrefixOf (ByteString.pack [60, 0, 0, 0]) bytes =
+    TextEncoding.decodeUtf32LEWith signalDecodeError bytes
+  | ByteString.isPrefixOf (ByteString.pack [0, 60]) bytes =
+    TextEncoding.decodeUtf16BEWith signalDecodeError bytes
+  | ByteString.isPrefixOf (ByteString.pack [60, 0]) bytes =
+    TextEncoding.decodeUtf16LEWith signalDecodeError bytes
+  | ByteString.isPrefixOf (ByteString.pack [239, 187, 191]) bytes =
+    decodeUtf8Prefix (ByteString.drop 3 bytes)
+  | otherwise = decodeUtf8Prefix bytes
+
+decodeUtf8Prefix :: ByteString.ByteString -> Text
+decodeUtf8Prefix = TextEncoding.decodeUtf8With signalDecodeError
+
+signalDecodeError :: TextEncodingError.OnDecodeError
+signalDecodeError _ _ = Just '\0'
+
+rootClaimsExpectedName :: Text -> Bool
+rootClaimsExpectedName = hasExpandedRootSignal (Just archiNamespace) "model"
+
+stripUtf8Bom ::
+     ByteString.ByteString -> Either NativeFailure ByteString.ByteString
+stripUtf8Bom bytes
+  | ByteString.isPrefixOf (ByteString.pack [0, 0, 254, 255]) bytes =
+    Left (UnsupportedEncoding "UTF-32BE")
+  | ByteString.isPrefixOf (ByteString.pack [255, 254, 0, 0]) bytes =
+    Left (UnsupportedEncoding "UTF-32LE")
+  | ByteString.isPrefixOf (ByteString.pack [254, 255]) bytes =
+    Left (UnsupportedEncoding "UTF-16BE")
+  | ByteString.isPrefixOf (ByteString.pack [255, 254]) bytes =
+    Left (UnsupportedEncoding "UTF-16LE")
+  | ByteString.isPrefixOf (ByteString.pack [0, 0, 0, 60]) bytes =
+    Left (UnsupportedEncoding "UTF-32BE")
+  | ByteString.isPrefixOf (ByteString.pack [60, 0, 0, 0]) bytes =
+    Left (UnsupportedEncoding "UTF-32LE")
+  | ByteString.isPrefixOf (ByteString.pack [0, 60]) bytes =
+    Left (UnsupportedEncoding "UTF-16BE")
+  | ByteString.isPrefixOf (ByteString.pack [60, 0]) bytes =
+    Left (UnsupportedEncoding "UTF-16LE")
+  | ByteString.isPrefixOf (ByteString.pack [239, 187, 191]) bytes =
     Right (ByteString.drop 3 bytes)
   | otherwise = Right bytes
-
-unsupportedBom :: Text -> DecodeAttempt SourcePosition AMXDecodeDefect document
-unsupportedBom encoding =
-  unavailable EncodingNotObserved (UnsupportedXmlEncoding encoding)
-
-unavailable ::
-     EncodingObservation SourcePosition
-  -> AMXDecodeDefect
-  -> DecodeAttempt SourcePosition AMXDecodeDefect document
-unavailable observation defect =
-  DecodeUnavailable
-    (DecodeUnavailableObservation observation)
-    (Located documentLocation defect :| [])
-
-parseNativeDocument ::
-     EncodingObservation SourcePosition
-  -> Text
-  -> DecodeAttempt SourcePosition AMXDecodeDefect AMXDocument
-parseNativeDocument observation decoded =
-  case XML.parseText parserSettings (LazyText.fromStrict decoded) of
-    Left _ -> unavailable observation MalformedXml
-    Right parsed ->
-      case annotateDocument parsed of
-        Left defect -> unavailable observation defect
-        Right annotated -> bindNativeDocument annotated
 
 parserSettings :: XML.ParseSettings
 parserSettings =
@@ -118,131 +149,104 @@ parserSettings =
     , XMLParse.psIgnoreInternalEntityDeclarations = True
     }
 
-bindNativeDocument ::
-     AMXElement -> DecodeAttempt SourcePosition AMXDecodeDefect AMXDocument
-bindNativeDocument root =
-  case defects of
-    [] ->
-      DecodePassed
-        ResolvedNativeBinding
-          { nativeRootQName = amxElementQName root
-          , nativeVersion = nativeVersionLiteral ('5' :| ".0.0")
-          }
-        AMXDocument
-          { amxDocumentRoot = root
-          , amxDocumentElements =
-              filter
-                ((== expandedQName Nothing 'e' "lement") . amxElementQName)
-                (elementDescendants root)
-          }
-    first:rest ->
-      DecodeRejected
-        RejectedNativeBinding
-          { rejectedEncoding = Utf8Binding
-          , rejectedRootQName =
-              Located (amxElementLocation root) (amxElementQName root)
-          , rejectedNativeVersion =
-              fmap
-                (Located (elementAttributeLocation nativeVersionAttribute root))
-                observedVersion
-          }
-        (first :| rest)
-  where
-    observedVersion = elementAttribute nativeVersionAttribute root
-    rootDefects =
-      [ Located
-        (amxElementLocation root)
-        (UnexpectedRootQName (amxElementQName root))
-      | amxElementQName root /= expectedRootQName
-      ]
-    versionDefects =
-      case observedVersion of
-        Nothing -> [Located (amxElementLocation root) MissingNativeVersion]
-        Just "5.0.0" -> []
-        Just version ->
-          [ Located
-              (elementAttributeLocation nativeVersionAttribute root)
-              (UnsupportedNativeVersion version)
-          ]
-    defects = rootDefects ++ versionDefects
-
-annotateDocument :: XML.Document -> Either AMXDecodeDefect AMXElement
-annotateDocument document = do
-  rootName <- expandedName (XML.elementName root)
-  annotateElement (firstPathStep rootName :| []) Map.empty root
-  where
-    root = XML.documentRoot document
+annotateRoot :: XML.Element -> Either NativeFailure NativeElement
+annotateRoot root = do
+  name <- expandedName (XML.elementName root)
+  annotateElement [NativePathStep name 1] Map.empty root
 
 annotateElement ::
-     NonEmpty PathStep
+     NativePath
   -> Map Text Text
   -> XML.Element
-  -> Either AMXDecodeDefect AMXElement
+  -> Either NativeFailure NativeElement
 annotateElement path inherited element = do
   name <- expandedName (XML.elementName element)
-  attributes <- fmap Map.fromList (traverse annotateAttribute visibleAttributes)
-  annotatedChildren <- annotateChildren path namespaces childElements
+  let namespaceMap =
+        Map.union
+          (Map.fromList
+             (mapMaybe
+                namespaceBinding
+                (Map.toList (XML.elementAttributes element))))
+          inherited
+      visible =
+        [ (attributeName, value)
+        | (attributeName, value) <- Map.toList (XML.elementAttributes element)
+        , not (isNamespaceDeclaration attributeName)
+        ]
+  attributes <-
+    fmap
+      (sortOn nativeAttributeName)
+      (traverse (annotateAttribute path) visible)
+  content <- annotateContent path namespaceMap (XML.elementNodes element)
   pure
-    AMXElement
-      { amxElementQName = name
-      , amxElementAttributes = attributes
-      , amxElementChildren = annotatedChildren
-      , amxElementLocation = sourcePosition path ElementTarget Nothing
-      , amxElementNamespaces = namespaces
+    NativeElement
+      { nativeElementName = name
+      , nativeElementAttributes = attributes
+      , nativeElementContent = content
+      , nativeElementNamespaces = namespaceMap
+      , nativeElementPath = path
       }
-  where
-    visibleAttributes =
-      [ attribute
-      | attribute@(name, _) <- Map.toList (XML.elementAttributes element)
-      , not (isNamespaceDeclaration name)
-      ]
-    annotateAttribute (name, value) = do
-      expanded <- expandedName name
-      pure (expanded, value)
-    namespaces =
-      Map.union
-        (Map.fromList
-           (mapMaybe
-              namespaceBinding
-              (Map.toList (XML.elementAttributes element))))
-        inherited
-    childElements = [child | XML.NodeElement child <- XML.elementNodes element]
 
-annotateChildren ::
-     NonEmpty PathStep
+annotateAttribute ::
+     NativePath -> (XML.Name, Text) -> Either NativeFailure NativeAttribute
+annotateAttribute parent (name, value) = do
+  expanded <- expandedName name
+  pure
+    NativeAttribute
+      { nativeAttributeName = expanded
+      , nativeAttributeValue = value
+      , nativeAttributePath = parent <> [NativePathStep expanded 1]
+      }
+
+annotateContent ::
+     NativePath
   -> Map Text Text
-  -> [XML.Element]
-  -> Either AMXDecodeDefect [AMXElement]
-annotateChildren parentPath namespaces = go Map.empty
+  -> [XML.Node]
+  -> Either NativeFailure [NativeContent]
+annotateContent parent namespaces nodes =
+  fmap snd (mapAccumLM annotate Map.empty nodes)
   where
-    go _ [] = Right []
-    go counts (child:rest) = do
-      name <- expandedName (XML.elementName child)
-      let preceding = Map.findWithDefault 0 name counts
-          nextCounts = Map.insert name (preceding + 1) counts
-      annotated <-
-        annotateElement
-          (appendPath parentPath (pathStepAfter name preceding))
-          namespaces
-          child
-      remaining <- go nextCounts rest
-      pure (annotated : remaining)
+    annotate counts node =
+      case node of
+        XML.NodeElement child -> do
+          name <- expandedName (XML.elementName child)
+          let ordinal = Map.findWithDefault 0 name counts + 1
+              next = Map.insert name ordinal counts
+          observed <-
+            annotateElement
+              (parent <> [NativePathStep name ordinal])
+              namespaces
+              child
+          pure (next, Just (NativeElementContent observed))
+        XML.NodeContent text -> pure (counts, Just (NativeText text))
+        XML.NodeComment _ -> pure (counts, Nothing)
+        XML.NodeInstruction _ -> pure (counts, Nothing)
 
-appendPath :: NonEmpty value -> value -> NonEmpty value
-appendPath (first :| rest) value = first :| (rest ++ [value])
+mapAccumLM ::
+     (state -> input -> Either failure (state, Maybe output))
+  -> state
+  -> [input]
+  -> Either failure (state, [output])
+mapAccumLM step initial = go initial []
+  where
+    go !state outputs [] = Right (state, reverse outputs)
+    go !state outputs (value:rest) = do
+      (next, output) <- step state value
+      let collected = maybe outputs (: outputs) output
+      collected `seq` go next collected rest
 
-expandedName :: XML.Name -> Either AMXDecodeDefect ExpandedQName
-expandedName name =
-  case mkExpandedQName (XML.nameNamespace name) (XML.nameLocalName name) of
-    Left EmptyQNameLocalName -> Left MalformedXml
-    Right expanded -> Right expanded
+expandedName :: XML.Name -> Either NativeFailure NativeName
+expandedName name
+  | Text.null (XML.nameLocalName name) = Left MalformedXml
+  | otherwise =
+    Right (NativeName (XML.nameNamespace name) (XML.nameLocalName name))
 
 isNamespaceDeclaration :: XML.Name -> Bool
 isNamespaceDeclaration name =
   XML.nameNamespace name == Just xmlnsNamespace
     || XML.namePrefix name == Just "xmlns"
     || (XML.namePrefix name == Nothing && XML.nameLocalName name == "xmlns")
-    || "xmlns:" `Text.isPrefixOf` XML.nameLocalName name
+    || Text.isPrefixOf "xmlns:" (XML.nameLocalName name)
 
 namespaceBinding :: (XML.Name, Text) -> Maybe (Text, Text)
 namespaceBinding (name, value)
@@ -258,76 +262,3 @@ namespaceBinding (name, value)
   | Just prefix <- Text.stripPrefix "xmlns:" (XML.nameLocalName name) =
     Just (prefix, value)
   | otherwise = Nothing
-
-encodingObservation :: Text -> EncodingObservation SourcePosition
-encodingObservation decoded =
-  case xmlDeclarationEncoding decoded of
-    Nothing -> EncodingDefaultedToUtf8
-    Just encoding ->
-      EncodingDeclared
-        (Located
-           (sourcePosition
-              (positionPath documentLocation)
-              (AttributeTarget (expandedQName Nothing 'e' "ncoding"))
-              Nothing)
-           encoding)
-
-declaredEncoding :: EncodingObservation SourcePosition -> Maybe Text
-declaredEncoding observation =
-  case observation of
-    EncodingDeclared located -> Just (locatedValue located)
-    EncodingNotObserved -> Nothing
-    EncodingDefaultedToUtf8 -> Nothing
-
-xmlDeclarationEncoding :: Text -> Maybe Text
-xmlDeclarationEncoding text
-  | Just declaration <- Text.stripPrefix "<?xml" text =
-    attributeValue "encoding" (Text.takeWhile (/= '>') declaration)
-  | otherwise = Nothing
-
-attributeValue :: Text -> Text -> Maybe Text
-attributeValue key = search . Text.dropWhile isXmlSpace
-  where
-    search remaining =
-      let (name, afterName) = Text.span isXmlNameCharacter remaining
-          afterSpace = Text.dropWhile isXmlSpace afterName
-       in if Text.null name
-            then Nothing
-            else case Text.uncons afterSpace of
-                   Just ('=', afterEquals) -> do
-                     (value, afterValue) <-
-                       quotedValue (Text.dropWhile isXmlSpace afterEquals)
-                     if name == key
-                       then Just value
-                       else search (Text.dropWhile isXmlSpace afterValue)
-                   _ -> Nothing
-
-quotedValue :: Text -> Maybe (Text, Text)
-quotedValue input = do
-  (quote, value) <- Text.uncons input
-  if quote == '\'' || quote == '"'
-    then do
-      let (literal, closing) = Text.break (== quote) value
-      (_, remaining) <- Text.uncons closing
-      pure (literal, remaining)
-    else Nothing
-
-isXmlNameCharacter :: Char -> Bool
-isXmlNameCharacter character =
-  character `elem` ['a' .. 'z']
-    || character `elem` ['A' .. 'Z']
-    || character `elem` ['0' .. '9']
-    || character `elem` ['_', '-', '.', ':']
-
-isXmlSpace :: Char -> Bool
-isXmlSpace character = character `elem` [' ', '\t', '\r', '\n']
-
-isUtf8Name :: Text -> Bool
-isUtf8Name = (== "utf-8") . Text.toCaseFold
-
-documentLocation :: SourcePosition
-documentLocation =
-  sourcePosition
-    (firstPathStep (expandedQName Nothing 'd' "ocument") :| [])
-    ElementTarget
-    Nothing

@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "o2i.discovery.profile-inventory/v1",
+  "title": "Compiled Profile inventory",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/profileInventory"
+    },
+    {
+      "$ref": "#/$defs/profileInvalid"
+    }
+  ],
+  "$defs": {
+    "profileRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "token",
+        "reference",
+        "version",
+        "notation",
+        "adapterIds",
+        "contractDigest"
+      ],
+      "properties": {
+        "identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "token": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "adapterIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "contractDigest": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "profileDefect": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "profileReference"
+          ],
+          "properties": {
+            "code": {
+              "const": "missing-adapter-id"
+            },
+            "profileReference": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "profileReference",
+            "adapterId"
+          ],
+          "properties": {
+            "code": {
+              "const": "duplicate-adapter-id"
+            },
+            "profileReference": {
+              "type": "string",
+              "minLength": 1
+            },
+            "adapterId": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "profileInventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "kind",
+        "authority",
+        "profiles"
+      ],
+      "properties": {
+        "schema": {
+          "const": "o2i.discovery.profile-inventory/v1"
+        },
+        "kind": {
+          "const": "profile-inventory"
+        },
+        "authority": {
+          "const": "Operation"
+        },
+        "profiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/profileRow"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "profileInvalid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "kind",
+        "authority",
+        "diagnostics"
+      ],
+      "properties": {
+        "schema": {
+          "const": "o2i.discovery.profile-inventory/v1"
+        },
+        "kind": {
+          "const": "profile-static-definition-invalid"
+        },
+        "authority": {
+          "const": "Operation"
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/profileDefect"
+          },
+          "minItems": 1
+        }
+      }
+    }
+  }
+}

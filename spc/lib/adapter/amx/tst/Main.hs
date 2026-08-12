@@ -2,25 +2,13 @@ module Main
   ( main
   ) where
 
-import O2I.Adapter.AMX.Test.Collective
-import O2I.Adapter.AMX.Test.Commitment
-import O2I.Adapter.AMX.Test.Decode
+import O2I.Adapter.AMX.Test.Contract
+import O2I.Adapter.AMX.Test.Draft
 import O2I.Adapter.AMX.Test.Fixture
-import O2I.Adapter.AMX.Test.Profile
-import O2I.Adapter.AMX.Test.Projection
-import O2I.Adapter.AMX.Test.View
+import O2I.Adapter.AMX.Test.XML
 import Test.Tasty (defaultMain, testGroup)
 
 main :: IO ()
 main =
   defaultMain
-    (testGroup
-       "o2i-amx"
-       [ decodeTests
-       , viewTests
-       , profileTests
-       , commitmentTests
-       , collectiveTests
-       , projectionTests
-       , fixtureTests
-       ])
+    (testGroup "o2i-amx" [contractTests, draftTests, fixtureTests, xmlTests])

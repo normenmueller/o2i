@@ -1,191 +1,82 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveGeneric #-}
 
--- | Internal source-preserving AMX representation.
-module O2I.Adapter.AMX.Internal.Types
-  ( AMXDocument(..)
-  , AMXElement(..)
-  , AMXSelectedView(..)
-  , AMXPresentation(..)
-  , AMXConnectionPresentation(..)
-  , AMXProfileFact(..)
-  , AMXOccurrenceKind(..)
-  , EndpointRole(..)
-  , endpointQName
-  , elementAttribute
-  , elementAttributeLocation
-  , elementChildrenNamed
-  , elementDescendants
-  , elementDirectProperties
-  , elementId
-  , elementName
-  , elementOccurrence
-  , elementType
-  , isRelationshipElement
-  , isViewElement
-  ) where
+-- | Source-preserving native AMX observations before Draft projection.
+module O2I.Adapter.AMX.Internal.Types where
 
-import Data.List.NonEmpty (NonEmpty((:|)))
 import Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
 import Data.Text (Text)
-import qualified Data.Text as Text
-import O2I.Inspection.Provenance
+import GHC.Generics (Generic)
 
--- | XML element annotated with a stable expanded-QName path.
-data AMXElement = AMXElement
-  { amxElementQName :: ExpandedQName
-  , amxElementAttributes :: Map ExpandedQName Text
-  , amxElementChildren :: [AMXElement]
-  , amxElementLocation :: SourcePosition
-  , amxElementNamespaces :: Map Text Text
-  } deriving (Eq, Show)
+-- | Expanded XML name. Prefix spelling is deliberately absent.
+data NativeName = NativeName
+  { nativeNameNamespace :: !(Maybe Text)
+  , nativeNameLocal :: !Text
+  } deriving (Eq, Generic, Ord, Show)
 
--- | Successfully decoded native AMX document.
-data AMXDocument = AMXDocument
-  { amxDocumentRoot :: AMXElement
-  , amxDocumentElements :: [AMXElement]
-  } deriving (Eq, Show)
+-- | One path step and its one-based equal-name sibling ordinal.
+data NativePathStep = NativePathStep
+  { nativePathStepName :: !NativeName
+  , nativePathStepOrdinal :: !Int
+  } deriving (Eq, Generic, Ord, Show)
 
--- | One validated object presentation in the selected View.
-data AMXPresentation = AMXPresentation
-  { presentationElement :: AMXElement
-  , presentationTarget :: AMXElement
-  } deriving (Eq, Show)
+type NativePath = [NativePathStep]
 
--- | One validated relationship presentation in the selected View.
-data AMXConnectionPresentation = AMXConnectionPresentation
-  { connectionElement :: AMXElement
-  , connectionRelationship :: AMXElement
-  , connectionSourcePresentation :: AMXPresentation
-  , connectionTargetPresentation :: AMXPresentation
-  } deriving (Eq, Show)
+-- | One decoded native attribute.
+data NativeAttribute = NativeAttribute
+  { nativeAttributeName :: !NativeName
+  , nativeAttributeValue :: !Text
+  , nativeAttributePath :: !NativePath
+  } deriving (Eq, Generic, Ord, Show)
 
--- | Selected View after exact reference and endpoint validation.
-data AMXSelectedView = AMXSelectedView
-  { selectedViewElement :: AMXElement
-  , selectedPresentations :: [AMXPresentation]
-  , selectedConnections :: [AMXConnectionPresentation]
-  } deriving (Eq, Show)
+-- | Native child content after XML decoding.
+data NativeContent
+  = NativeText !Text
+  | NativeElementContent !NativeElement
+  deriving (Eq, Generic, Show)
 
--- | Complete adapter-owned observation supplied to profile projection.
-data AMXProfileFact =
-  AMXProfileFact AMXDocument AMXSelectedView
-  deriving (Eq, Show)
+-- | One native element with expanded names, namespace context, and path.
+data NativeElement = NativeElement
+  { nativeElementName :: !NativeName
+  , nativeElementAttributes :: ![NativeAttribute]
+  , nativeElementContent :: ![NativeContent]
+  , nativeElementNamespaces :: !(Map Text Text)
+  , nativeElementPath :: !NativePath
+  } deriving (Eq, Generic, Show)
 
--- | Closed AMX occurrence vocabulary, distinct from persisted model IDs and
--- human presentation labels.
-data AMXOccurrenceKind
-  = XmlOccurrence
-  | NodeOccurrence
-  | RelationshipOccurrence
-  | PresentationOccurrence
-  | ConnectionOccurrence
-  | ViewObjectOccurrence
-  | RelationshipSourceReferenceOccurrence
-  | RelationshipTargetReferenceOccurrence
-  deriving (Bounded, Enum, Eq, Ord, Show)
+newtype NativeDocument = NativeDocument
+  { nativeDocumentRoot :: NativeElement
+  } deriving (Eq, Generic, Show)
 
--- | Closed native relationship endpoint vocabulary.
-data EndpointRole
-  = SourceEndpoint
-  | TargetEndpoint
-  deriving (Bounded, Enum, Eq, Ord, Show)
+-- | Closed native decoding failure vocabulary.
+data NativeFailure
+  = InputLimitExceeded !Int !Int
+  | XmlDepthLimitExceeded !Int !Int
+  | XmlElementLimitExceeded !Int !Int
+  | XmlAttributeLimitExceeded !Int !Int
+  | XmlTextLimitExceeded !Int !Int
+  | InvalidUtf8
+  | UnsupportedEncoding !Text
+  | UnsupportedXmlFacility
+  | ForbiddenXmlScalar !Int
+  | MalformedXml
+  deriving (Eq, Generic, Ord, Show)
 
-endpointQName :: EndpointRole -> ExpandedQName
-endpointQName role =
-  case role of
-    SourceEndpoint -> expandedQName Nothing 's' "ource"
-    TargetEndpoint -> expandedQName Nothing 't' "arget"
+data NativeClassification
+  = NativeFormatMatch !NativeDocument
+  | NativeFormatMismatch !NativeMismatch !NativeDocument
+  deriving (Eq, Generic, Show)
 
-elementAttribute :: ExpandedQName -> AMXElement -> Maybe Text
-elementAttribute name = Map.lookup name . amxElementAttributes
+-- | Exact reason why decoded XML does not satisfy the native AMX contract.
+data NativeMismatch
+  = NativeRootMismatch !NativeName
+  | NativeVersionMissing
+  | NativeVersionUnsupported !Text
+  deriving (Eq, Generic, Ord, Show)
 
-elementAttributeLocation :: ExpandedQName -> AMXElement -> SourcePosition
-elementAttributeLocation name element =
-  sourcePosition
-    (positionPath (amxElementLocation element))
-    (AttributeTarget name)
-    (positionSpan (amxElementLocation element))
+lookupAttribute :: NativeName -> NativeElement -> [NativeAttribute]
+lookupAttribute name =
+  filter ((== name) . nativeAttributeName) . nativeElementAttributes
 
-elementChildrenNamed :: ExpandedQName -> AMXElement -> [AMXElement]
-elementChildrenNamed name =
-  filter ((== name) . amxElementQName) . amxElementChildren
-
-elementDescendants :: AMXElement -> [AMXElement]
-elementDescendants element =
-  concatMap
-    (\child -> child : elementDescendants child)
-    (amxElementChildren element)
-
-elementDirectProperties :: AMXElement -> [AMXElement]
-elementDirectProperties =
-  elementChildrenNamed (expandedQName Nothing 'p' "roperty")
-
-elementId :: AMXElement -> Maybe Text
-elementId = elementAttribute (expandedQName Nothing 'i' "d")
-
-elementName :: AMXElement -> Text
-elementName = maybe "" id . elementAttribute (expandedQName Nothing 'n' "ame")
-
-elementOccurrence :: AMXOccurrenceKind -> AMXElement -> OccurrenceId
-elementOccurrence kind element =
-  occurrenceId
-    (occurrenceKindLiteral (kindLiteral kind))
-    (positionPath (amxElementLocation element))
-
-elementType :: AMXElement -> Maybe ExpandedQName
-elementType element = do
-  value <-
-    elementAttribute
-      (expandedQName
-         (Just "http://www.w3.org/2001/XMLSchema-instance")
-         't'
-         "ype")
-      element
-  resolveQNameValue element value
-
-isRelationshipElement :: AMXElement -> Bool
-isRelationshipElement element =
-  maybe
-    False
-    (Text.isSuffixOf "Relationship" . qNameLocalName)
-    (elementType element)
-
-isViewElement :: AMXElement -> Bool
-isViewElement element =
-  elementType element
-    == Just
-         (expandedQName
-            (Just "http://www.archimatetool.com/archimate")
-            'A'
-            "rchimateDiagramModel")
-
-resolveQNameValue :: AMXElement -> Text -> Maybe ExpandedQName
-resolveQNameValue element value =
-  case Text.breakOn ":" value of
-    (prefix, suffix)
-      | Text.null suffix ->
-        either
-          (const Nothing)
-          Just
-          (mkExpandedQName (Map.lookup "" (amxElementNamespaces element)) prefix)
-      | otherwise -> do
-        namespace <- Map.lookup prefix (amxElementNamespaces element)
-        either
-          (const Nothing)
-          Just
-          (mkExpandedQName (Just namespace) (Text.drop 1 suffix))
-
-kindLiteral :: AMXOccurrenceKind -> NonEmpty Char
-kindLiteral kind =
-  case kind of
-    XmlOccurrence -> 'x' :| "ml"
-    NodeOccurrence -> 'n' :| "ode"
-    RelationshipOccurrence -> 'r' :| "elationship"
-    PresentationOccurrence -> 'p' :| "resentation"
-    ConnectionOccurrence -> 'c' :| "onnection"
-    ViewObjectOccurrence -> 'v' :| "iew-object"
-    RelationshipSourceReferenceOccurrence ->
-      'r' :| "elationship-source-reference"
-    RelationshipTargetReferenceOccurrence ->
-      'r' :| "elationship-target-reference"
+childElements :: NativeElement -> [NativeElement]
+childElements element =
+  [child | NativeElementContent child <- nativeElementContent element]

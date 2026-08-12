@@ -1,0 +1,12 @@
+packages:
+  lib/core
+  ctr/archimate
+  lib/operation
+  lib/adapter/amx
+
+index-state: 2026-08-07T18:07:13Z
+
+tests: True
+
+constraints:
+  QuickCheck >=2.16 && <2.18

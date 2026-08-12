@@ -7,7 +7,6 @@ module O2I.Validation.MacroEvidence.Eval
   , canonicalizeMacroOccurrences
   ) where
 
-import Data.List (foldl')
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.Map.Strict as Map

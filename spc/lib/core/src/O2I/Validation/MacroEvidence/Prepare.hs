@@ -28,7 +28,6 @@ module O2I.Validation.MacroEvidence.Prepare
 import qualified Data.Dependent.Map as DMap
 import Data.Dependent.Map (DMap)
 import Data.GADT.Compare
-import Data.List (foldl')
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.Map.Strict as Map

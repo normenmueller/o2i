@@ -14,7 +14,6 @@ module O2I.Validation.Trace.Eval
   , traceEvaluationWork
   ) where
 
-import Data.List (foldl')
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
 import qualified Data.Set as Set

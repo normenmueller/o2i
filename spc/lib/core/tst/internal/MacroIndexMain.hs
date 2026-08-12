@@ -2,6 +2,7 @@
 
 module Main where
 
+import qualified Data.List as List
 import qualified Data.Text as Text
 import O2I.Graph.Macro
 import O2I.Graph.Raw
@@ -189,21 +190,28 @@ denseMacroIndex sourceCount targetCount sourceDecoys targetDecoys =
              [3000 ..]
              externalTargetIds
     edges =
-      [ (1, macroTestClaim)
-      , (91, densePremise (last sourceIds) (last targetIds))
-      , (17, densePremise (head sourceIds) (head targetIds))
-      , (44, densePremise (head sourceIds) (head targetIds))
-      ]
-        ++ zipWith
-             (\occurrence target ->
-                (occurrence, densePremise (head sourceIds) target))
-             [4000 ..]
-             externalTargetIds
-        ++ zipWith
-             (\occurrence source ->
-                (occurrence, densePremise source (head targetIds)))
-             [5000 ..]
-             externalSourceIds
+      (1, macroTestClaim)
+        : case (sourceIds, targetIds) of
+            (sourceFirst:sourceRest, targetFirst:targetRest) ->
+              let sourceLast =
+                    List.foldl' (\_ current -> current) sourceFirst sourceRest
+                  targetLast =
+                    List.foldl' (\_ current -> current) targetFirst targetRest
+               in [ (91, densePremise sourceLast targetLast)
+                  , (17, densePremise sourceFirst targetFirst)
+                  , (44, densePremise sourceFirst targetFirst)
+                  ]
+                    ++ zipWith
+                         (\occurrence target ->
+                            (occurrence, densePremise sourceFirst target))
+                         [4000 ..]
+                         externalTargetIds
+                    ++ zipWith
+                         (\occurrence source ->
+                            (occurrence, densePremise source targetFirst))
+                         [5000 ..]
+                         externalSourceIds
+            _ -> []
 
 densePremise :: RawNodeId -> RawNodeId -> RawEdge
 densePremise source target =

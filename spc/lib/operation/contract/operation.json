@@ -1,0 +1,134 @@
+{
+  "schema": "o2i.operation-contract/1",
+  "contract": {
+    "identity": "o2i.operation",
+    "version": "0.3.0",
+    "authority": "Operation"
+  },
+  "machineDocuments": [
+    {
+      "name": "adapterInventory",
+      "identity": "o2i.discovery.adapter-inventory",
+      "version": 1,
+      "variants": [
+        "adapter-inventory"
+      ]
+    },
+    {
+      "name": "profileInventory",
+      "identity": "o2i.discovery.profile-inventory",
+      "version": 1,
+      "variants": [
+        "profile-inventory",
+        "profile-static-definition-invalid"
+      ]
+    },
+    {
+      "name": "ruleInventory",
+      "identity": "o2i.discovery.rule-inventory",
+      "version": 1,
+      "variants": [
+        "rule-inventory",
+        "rule-static-definition-invalid"
+      ]
+    },
+    {
+      "name": "ruleExplanation",
+      "identity": "o2i.discovery.rule-explanation",
+      "version": 1,
+      "variants": [
+        "rule-explanation-found",
+        "rule-explanation-not-found"
+      ]
+    },
+    {
+      "name": "viewDiscovery",
+      "identity": "o2i.discovery.view",
+      "version": 1,
+      "variants": [
+        "views-discovered",
+        "view-acquisition-failed",
+        "view-adapter-selection-failed",
+        "view-adapter-decode-failed"
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "constructor": "ProfileAdapterId",
+      "id": "bootstrap.profile-adapter.adapter-id",
+      "stage": "preparation",
+      "expectation": "The selected adapter identifier is admitted by the resolved compiled Profile.",
+      "meaning": "A Profile explicitly declares which compiled adapters may project its notation.",
+      "action": "Select an admitted adapter or update the compiled Profile contract."
+    },
+    {
+      "constructor": "ProfileAdapterNotation",
+      "id": "bootstrap.profile-adapter.notation",
+      "stage": "preparation",
+      "expectation": "The selected adapter notation exactly equals the resolved compiled Profile notation.",
+      "meaning": "Adapter and Profile must describe the same notation family before projection.",
+      "action": "Select a matching adapter and Profile pair."
+    },
+    {
+      "constructor": "ProfileInventoryIdentityTokenUniqueness",
+      "id": "bootstrap.profile-inventory.identity-token-uniqueness",
+      "stage": "preparation",
+      "expectation": "Every compiled Profile has a unique identity and token pair in the static inventory.",
+      "meaning": "A Profile reference must resolve to at most one immutable compiled descriptor.",
+      "action": "Remove the duplicate compiled Profile identity or token."
+    },
+    {
+      "constructor": "ProfileReferenceGrammar",
+      "id": "bootstrap.profile-reference.grammar",
+      "stage": "preparation",
+      "expectation": "The model Profile reference conforms to the canonical identity-at-token grammar.",
+      "meaning": "Canonical syntax makes Profile selection exact and deterministic.",
+      "action": "Write the reference as the exact compiled Profile identity followed by @ and its token."
+    },
+    {
+      "constructor": "ProfileReferenceMissing",
+      "id": "bootstrap.profile-reference.missing",
+      "stage": "preparation",
+      "expectation": "The model root declares exactly one O2I Profile reference.",
+      "meaning": "Operation cannot select a Profile without an explicit model-level reference.",
+      "action": "Add one o2i.profile property to the model root."
+    },
+    {
+      "constructor": "ProfileReferencePropertyMultiplicity",
+      "id": "bootstrap.profile-reference.property-multiplicity",
+      "stage": "preparation",
+      "expectation": "The model root contains exactly one o2i.profile property occurrence.",
+      "meaning": "Multiple Profile properties make the model-level selection ambiguous.",
+      "action": "Retain one authoritative o2i.profile property occurrence."
+    },
+    {
+      "constructor": "ProfileReferenceUnknown",
+      "id": "bootstrap.profile-reference.unknown",
+      "stage": "preparation",
+      "expectation": "The model Profile reference exactly identifies one descriptor in the compiled inventory.",
+      "meaning": "Only compiled Profiles can supply executable mapping and validation contracts.",
+      "action": "Use an exact reference reported by the profiles discovery command."
+    },
+    {
+      "constructor": "ProfileReferenceValueKind",
+      "id": "bootstrap.profile-reference.value-kind",
+      "stage": "preparation",
+      "expectation": "The o2i.profile property contains one textual scalar value.",
+      "meaning": "Profile resolution consumes one canonical textual reference rather than structured or numeric data.",
+      "action": "Replace the property value with one textual Profile reference."
+    },
+    {
+      "constructor": "ProfileReferenceValueMultiplicity",
+      "id": "bootstrap.profile-reference.value-multiplicity",
+      "stage": "preparation",
+      "expectation": "The o2i.profile property contains exactly one value occurrence.",
+      "meaning": "Multiple values would request more than one Profile for the same model.",
+      "action": "Retain one authoritative Profile reference value."
+    }
+  ],
+  "profileConformance": {
+    "companion": "../../ctr/archimate/profile.json",
+    "pointer": "/ruleIdentityContract/operationBootstrapRuleInventory"
+  }
+}

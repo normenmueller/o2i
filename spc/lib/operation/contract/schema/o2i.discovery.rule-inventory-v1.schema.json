@@ -1,0 +1,310 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "o2i.discovery.rule-inventory/v1",
+  "title": "Authority-local rule inventory",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/ruleInventory"
+    },
+    {
+      "$ref": "#/$defs/ruleInvalid"
+    }
+  ],
+  "$defs": {
+    "digestContractBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "version",
+        "digest"
+      ],
+      "properties": {
+        "identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "undigestedContractBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "version",
+        "digest"
+      ],
+      "properties": {
+        "identity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "digest": {
+          "type": "null"
+        }
+      }
+    },
+    "ruleAuthority": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "label",
+            "subject",
+            "contract"
+          ],
+          "properties": {
+            "kind": {
+              "const": "operation"
+            },
+            "label": {
+              "const": "Operation"
+            },
+            "subject": {
+              "type": "null"
+            },
+            "contract": {
+              "$ref": "#/$defs/digestContractBinding"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "label",
+            "subject",
+            "contract"
+          ],
+          "properties": {
+            "kind": {
+              "const": "core"
+            },
+            "label": {
+              "const": "Core"
+            },
+            "subject": {
+              "type": "null"
+            },
+            "contract": {
+              "$ref": "#/$defs/digestContractBinding"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "label",
+            "subject",
+            "contract"
+          ],
+          "properties": {
+            "kind": {
+              "const": "profile"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            },
+            "subject": {
+              "type": "string",
+              "minLength": 1
+            },
+            "contract": {
+              "$ref": "#/$defs/digestContractBinding"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "label",
+            "subject",
+            "contract"
+          ],
+          "properties": {
+            "kind": {
+              "const": "adapter"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1
+            },
+            "subject": {
+              "type": "string",
+              "minLength": 1
+            },
+            "contract": {
+              "$ref": "#/$defs/undigestedContractBinding"
+            }
+          }
+        }
+      ]
+    },
+    "ruleRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "stage",
+        "expectation",
+        "meaning",
+        "action"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stage": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expectation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "meaning": {
+          "type": "string",
+          "minLength": 1
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "ruleDefect": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "expectedReference",
+            "actualReference",
+            "expectedDigest",
+            "actualDigest"
+          ],
+          "properties": {
+            "code": {
+              "const": "profile-catalog-mismatch"
+            },
+            "expectedReference": {
+              "type": "string",
+              "minLength": 1
+            },
+            "actualReference": {
+              "type": "string",
+              "minLength": 1
+            },
+            "expectedDigest": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "actualDigest": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "code",
+            "authority",
+            "ruleId"
+          ],
+          "properties": {
+            "code": {
+              "const": "duplicate-rule-id"
+            },
+            "authority": {
+              "type": "string",
+              "minLength": 1
+            },
+            "ruleId": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "ruleInventory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "kind",
+        "authority",
+        "rules"
+      ],
+      "properties": {
+        "schema": {
+          "const": "o2i.discovery.rule-inventory/v1"
+        },
+        "kind": {
+          "const": "rule-inventory"
+        },
+        "authority": {
+          "$ref": "#/$defs/ruleAuthority"
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ruleRow"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "ruleInvalid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "kind",
+        "diagnostics"
+      ],
+      "properties": {
+        "schema": {
+          "const": "o2i.discovery.rule-inventory/v1"
+        },
+        "kind": {
+          "const": "rule-static-definition-invalid"
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ruleDefect"
+          },
+          "minItems": 1
+        }
+      }
+    }
+  }
+}

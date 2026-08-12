@@ -1,0 +1,3 @@
+module DiscoveryProfileHiddenInternalModule where
+
+import O2I.Operation.Discovery.Profile.Internal

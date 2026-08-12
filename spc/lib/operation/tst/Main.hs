@@ -1,0 +1,40 @@
+module Main
+  ( main
+  ) where
+
+import qualified O2I.Operation.Test.Acquisition as Acquisition
+import qualified O2I.Operation.Test.Adapter as Adapter
+import qualified O2I.Operation.Test.Diagnostic as Diagnostic
+import qualified O2I.Operation.Test.Discovery as Discovery
+import qualified O2I.Operation.Test.DiscoveryMachine as DiscoveryMachine
+import qualified O2I.Operation.Test.Encoding as Encoding
+import qualified O2I.Operation.Test.Failure as Failure
+import qualified O2I.Operation.Test.Preparation as Preparation
+import qualified O2I.Operation.Test.Profile as Profile
+import qualified O2I.Operation.Test.Provenance as Provenance
+import qualified O2I.Operation.Test.Request as Request
+import qualified O2I.Operation.Test.RuleCatalog as RuleCatalog
+import qualified O2I.Operation.Test.Schema as Schema
+import qualified O2I.Operation.Test.View as View
+import Test.Tasty (defaultMain, testGroup)
+
+main :: IO ()
+main =
+  defaultMain
+    (testGroup
+       "operation"
+       [ Acquisition.tests
+       , Adapter.tests
+       , Discovery.tests
+       , DiscoveryMachine.tests
+       , Diagnostic.tests
+       , Encoding.tests
+       , Failure.tests
+       , Preparation.tests
+       , Profile.tests
+       , Provenance.tests
+       , Request.tests
+       , RuleCatalog.tests
+       , Schema.tests
+       , View.tests
+       ])

@@ -33,7 +33,7 @@ module O2I.Validation.Collective.Contribution.Eval
   , candidateCollectiveContributionIssues
   ) where
 
-import Data.List (foldl', group, sort)
+import Data.List (group, sort)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.Map.Strict as Map
@@ -759,7 +759,10 @@ noDuplicates :: Ord value => [value] -> Bool
 noDuplicates values = Set.size (Set.fromList values) == length values
 
 duplicates :: Ord value => [value] -> [value]
-duplicates = map head . filter ((> 1) . length) . group . sort
+duplicates = foldr duplicate [] . group . sort
+  where
+    duplicate (value:_:_) rest = value : rest
+    duplicate _ rest = rest
 
 blankRationaleReference :: JointContributionRationaleRef -> Bool
 blankRationaleReference =

@@ -5,20 +5,30 @@ module Main
   ) where
 
 import ApiContractTH
+import Data.List.NonEmpty (NonEmpty)
 import O2I.Adapter.AMX
-import O2I.Inspection.Adapter (Adapter)
+import O2I.Operation.Adapter (Adapter)
 
 $(assertFacade
-    [ "AMXDocument"
-    , "AMXSelectedView"
-    , "AMXProfileFact"
-    , "AMXDecodeDefect"
-    , "AMXViewDefect"
-    , "AMXProfileDefect"
+    [ "NativeDocument"
+    , "NativeElement"
+    , "NativeFailure"
+    , "AdapterRuleDefinition"
+    , "AMXIdentifierDefect"
+    , "AMXDescriptorDefect"
+    , "AMXRuleDefinitionDefect"
+    , "AMXCompilationDefect"
     ])
 
-main :: IO ()
-main = adapterType amxAdapter
+$(assertNoInstances ''AMXAdapterDefect [''Eq, ''Show])
 
-adapterType :: Adapter -> IO ()
+main :: IO ()
+main = adapterType amxAdapter >> defectFoldType foldAMXAdapterDefect
+
+adapterType :: Either (NonEmpty AMXAdapterDefect) Adapter -> IO ()
 adapterType _ = pure ()
+
+defectFoldType ::
+     (result -> result -> result -> result -> AMXAdapterDefect -> result)
+  -> IO ()
+defectFoldType _ = pure ()

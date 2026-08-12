@@ -1,0 +1,909 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "o2i.discovery.view/v1",
+  "title": "Profile-neutral View discovery",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/viewsDiscovered"
+    },
+    {
+      "$ref": "#/$defs/acquisitionFailed"
+    },
+    {
+      "$ref": "#/$defs/selectionFailed"
+    },
+    {
+      "$ref": "#/$defs/decodeFailed"
+    }
+  ],
+  "$defs": {
+    "adapterDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "version",
+        "notation"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "notation": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "recognitionAdapterRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "stage",
+        "expectation",
+        "meaning",
+        "action"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stage": {
+          "const": "recognition"
+        },
+        "expectation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "meaning": {
+          "type": "string",
+          "minLength": 1
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "decodeAdapterRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "stage",
+        "expectation",
+        "meaning",
+        "action"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stage": {
+          "const": "decode"
+        },
+        "expectation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "meaning": {
+          "type": "string",
+          "minLength": 1
+        },
+        "action": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "adapterOccurrence": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "offset"
+          ],
+          "properties": {
+            "kind": {
+              "const": "byte-offset"
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "line",
+            "column"
+          ],
+          "properties": {
+            "kind": {
+              "const": "line-column"
+            },
+            "line": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "column": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "steps"
+          ],
+          "properties": {
+            "kind": {
+              "const": "path"
+            },
+            "steps": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            }
+          }
+        }
+      ]
+    },
+    "recognitionAdapterDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule",
+        "occurrences"
+      ],
+      "properties": {
+        "rule": {
+          "$ref": "#/$defs/recognitionAdapterRule"
+        },
+        "occurrences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/adapterOccurrence"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "decodeAdapterDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rule",
+        "occurrences"
+      ],
+      "properties": {
+        "rule": {
+          "$ref": "#/$defs/decodeAdapterRule"
+        },
+        "occurrences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/adapterOccurrence"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "sourceIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "ordinal",
+        "reference",
+        "sha256"
+      ],
+      "properties": {
+        "role": {
+          "const": "model"
+        },
+        "ordinal": {
+          "const": 0
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "nativeName": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "localName"
+      ],
+      "properties": {
+        "namespace": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "localName": {
+          "type": "string"
+        }
+      }
+    },
+    "sourcePosition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "line",
+        "column",
+        "offset"
+      ],
+      "properties": {
+        "line": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "offset": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "sourceLocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "span"
+      ],
+      "properties": {
+        "path": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "ordinal"
+            ],
+            "properties": {
+              "name": {
+                "$ref": "#/$defs/nativeName"
+              },
+              "ordinal": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          "minItems": 1
+        },
+        "span": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "start",
+                "end"
+              ],
+              "properties": {
+                "start": {
+                  "$ref": "#/$defs/sourcePosition"
+                },
+                "end": {
+                  "$ref": "#/$defs/sourcePosition"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "draftScalar": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "location"
+      ],
+      "properties": {
+        "value": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "text"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "boolean"
+                },
+                "value": {
+                  "type": "boolean"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "number"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "native-name"
+                },
+                "value": {
+                  "$ref": "#/$defs/nativeName"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "nativeKind",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "other"
+                },
+                "nativeKind": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        },
+        "location": {
+          "$ref": "#/$defs/sourceLocation"
+        }
+      }
+    },
+    "identityInvalidReason": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "observedKind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "non-text"
+            },
+            "observedKind": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "empty"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "u0000"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "surrogate"
+            }
+          }
+        }
+      ]
+    },
+    "identityOutcome": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "missing"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "values"
+          ],
+          "properties": {
+            "kind": {
+              "const": "multiple"
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/draftScalar"
+              },
+              "minItems": 2
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value",
+            "reason"
+          ],
+          "properties": {
+            "kind": {
+              "const": "invalid"
+            },
+            "value": {
+              "$ref": "#/$defs/draftScalar"
+            },
+            "reason": {
+              "$ref": "#/$defs/identityInvalidReason"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value",
+            "identity"
+          ],
+          "properties": {
+            "kind": {
+              "const": "resolved"
+            },
+            "value": {
+              "$ref": "#/$defs/draftScalar"
+            },
+            "identity": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "viewNameField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "values",
+        "location"
+      ],
+      "properties": {
+        "kind": {
+          "const": "name"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/draftScalar"
+          }
+        },
+        "location": {
+          "$ref": "#/$defs/sourceLocation"
+        }
+      }
+    },
+    "viewDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "occurrence",
+        "identity",
+        "nameFields",
+        "location"
+      ],
+      "properties": {
+        "occurrence": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "ordinal"
+          ],
+          "properties": {
+            "kind": {
+              "const": "record"
+            },
+            "ordinal": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "identity": {
+          "$ref": "#/$defs/identityOutcome"
+        },
+        "nameFields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/viewNameField"
+          }
+        },
+        "location": {
+          "$ref": "#/$defs/sourceLocation"
+        }
+      }
+    },
+    "selectionFailure": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "adapterId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown-adapter"
+            },
+            "adapterId": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "failures"
+          ],
+          "properties": {
+            "kind": {
+              "const": "recognition-failed"
+            },
+            "failures": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "adapter",
+                  "diagnostics"
+                ],
+                "properties": {
+                  "adapter": {
+                    "$ref": "#/$defs/adapterDescriptor"
+                  },
+                  "diagnostics": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/recognitionAdapterDiagnostic"
+                    },
+                    "minItems": 1
+                  }
+                }
+              },
+              "minItems": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "no-match"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "adapters"
+          ],
+          "properties": {
+            "kind": {
+              "const": "multiple-matches"
+            },
+            "adapters": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/adapterDescriptor"
+              },
+              "minItems": 2
+            }
+          }
+        }
+      ]
+    },
+    "viewsDiscovered": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "kind",
+        "source",
+        "adapter",
+        "authorities",
+        "views"
+      ],
+      "properties": {
+        "schema": {
+          "const": "o2i.discovery.view/v1"
+        },
+        "kind": {
+          "const": "views-discovered"
+        },
+        "source": {
+          "$ref": "#/$defs/sourceIdentity"
+        },
+        "adapter": {
+          "$ref": "#/$defs/adapterDescriptor"
+        },
+        "authorities": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "operation"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "adapterId"
+              ],
+              "properties": {
+                "kind": {
+                  "const": "adapter"
+                },
+                "adapterId": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          ],
+          "items": false
+        },
+        "views": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/viewDescriptor"
+          }
+        }
+      }
+    },
+    "acquisitionFailed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "kind",
+        "failure"
+      ],
+      "properties": {
+        "schema": {
+          "const": "o2i.discovery.view/v1"
+        },
+        "kind": {
+          "const": "view-acquisition-failed"
+        },
+        "failure": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "sourceKind",
+            "sourceReference",
+            "message"
+          ],
+          "properties": {
+            "sourceKind": {
+              "enum": [
+                "file",
+                "stdin"
+              ]
+            },
+            "sourceReference": {
+              "type": "string",
+              "minLength": 1
+            },
+            "message": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "selectionFailed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "kind",
+        "source",
+        "failure"
+      ],
+      "properties": {
+        "schema": {
+          "const": "o2i.discovery.view/v1"
+        },
+        "kind": {
+          "const": "view-adapter-selection-failed"
+        },
+        "source": {
+          "$ref": "#/$defs/sourceIdentity"
+        },
+        "failure": {
+          "$ref": "#/$defs/selectionFailure"
+        }
+      }
+    },
+    "decodeFailed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "kind",
+        "source",
+        "adapter",
+        "diagnostics"
+      ],
+      "properties": {
+        "schema": {
+          "const": "o2i.discovery.view/v1"
+        },
+        "kind": {
+          "const": "view-adapter-decode-failed"
+        },
+        "source": {
+          "$ref": "#/$defs/sourceIdentity"
+        },
+        "adapter": {
+          "$ref": "#/$defs/adapterDescriptor"
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/decodeAdapterDiagnostic"
+          },
+          "minItems": 1
+        }
+      }
+    }
+  }
+}

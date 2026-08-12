@@ -1,230 +1,360 @@
+{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Fixture ownership, reference contracts, license, and repository integration.
 module O2I.Adapter.AMX.Test.Fixture
   ( fixtureTests
   ) where
 
-import qualified Data.Aeson as Aeson
-import Data.Aeson ((.:), (.:?))
+import qualified Crypto.Hash.SHA256 as SHA256
+import Data.Aeson (FromJSON, eitherDecodeStrict')
 import qualified Data.ByteString as ByteString
-import qualified Data.ByteString.Lazy as LazyByteString
+import Data.List (sort)
 import Data.Text (Text)
+import qualified Data.Text as Text
+import qualified Data.Text.Encoding as Text
+import GHC.Generics (Generic)
+import Numeric (showHex)
+import O2I.Adapter.AMX.Internal.Draft (projectNativeDocument)
 import O2I.Adapter.AMX.Internal.Types
-import O2I.Adapter.AMX.Internal.XML
-import O2I.Adapter.AMX.Test.Support
-import O2I.Inspection
-import System.Directory (doesFileExist)
-import Test.Tasty (TestTree, testGroup)
+import O2I.Adapter.AMX.Internal.XML (decodeNative)
+import qualified O2I.ArchiMate.Profile.Draft as Draft
+import Paths_o2i_amx (getDataFileName)
+import System.Directory (doesDirectoryExist, listDirectory)
+import System.FilePath ((</>), takeExtension)
+import Test.Tasty (TestTree)
 import Test.Tasty.HUnit
 
 fixtureTests :: TestTree
 fixtureTests =
-  testGroup
-    "fixtures and integration"
-    [ testCase "mapping-only Views remain non-executable" mappingOnlyViewTest
-    , testCase
-        "invalid fixtures retain declared stage ownership"
-        fixtureContractTest
-    , testCase "fixture manifest is valid JSON" manifestTest
-    , testCase
-        "valid references have truthful admission state"
-        validReferenceContractTest
-    , testCase
-        "the Archi-saved minimal reference is decode-only"
-        nativeReferenceTest
-    , testCase
-        "the Archi-saved Ethos reference projects and passes Semantics"
-        ethosReferenceTest
+  testCase
+    "binds every native fixture and expected classification"
+    fixtureManifestTest
+
+data FixtureManifest = FixtureManifest
+  { schema :: !Text
+  , nativeContract :: !Text
+  , adapterId :: !Text
+  , producerOracle :: !ProducerOracle
+  , valid :: ![Fixture]
+  , invalid :: ![Fixture]
+  } deriving (Generic, Show)
+
+instance FromJSON FixtureManifest
+
+data ProducerOracle = ProducerOracle
+  { name :: !Text
+  , version :: !Text
+  , nativeVersion :: !Text
+  } deriving (Generic, Show)
+
+instance FromJSON ProducerOracle
+
+data Fixture = Fixture
+  { path :: !FilePath
+  , origin :: !Text
+  , sha256 :: !Text
+  , expected :: !Text
+  , draftSha256 :: !(Maybe Text)
+  } deriving (Generic, Show)
+
+instance FromJSON Fixture
+
+fixtureManifestTest :: Assertion
+fixtureManifestTest = do
+  manifestBytes <- readDataFile "tst/data/manifest.json"
+  manifest <-
+    either
+      (\failure -> assertFailure failure >> fail "unreachable")
+      pure
+      (eitherDecodeStrict' manifestBytes)
+  schema manifest @?= "o2i.amx.fixtures/v2"
+  nativeContract manifest @?= "amx-native-xml/5.0.0-v1"
+  adapterId manifest @?= "amx"
+  let oracle = producerOracle manifest
+  (name oracle, version oracle, nativeVersion oracle)
+    @?= ("Archi", "5.9.0", "5.0.0")
+  map origin (valid manifest)
+    @?= [ "saved by the user with Archi 5.9.0"
+        , "saved by the user with Archi 5.9.0"
+        ]
+  fixturePaths <- discoverFixtures "tst/data"
+  sort (map path (valid manifest <> invalid manifest)) @?= fixturePaths
+  mapM_ verifyFixture (valid manifest <> invalid manifest)
+
+verifyFixture :: Fixture -> Assertion
+verifyFixture fixture = do
+  bytes <- readDataFile (path fixture)
+  assertBool
+    "fixture origin must be explicit"
+    (not (Text.null (origin fixture)))
+  digest bytes @?= sha256 fixture
+  case (decodeNative bytes, expected fixture, draftSha256 fixture) of
+    (Right (NativeFormatMatch document), "match", Just expectedDraftDigest) ->
+      draftDigest (projectNativeDocument document) @?= expectedDraftDigest
+    (Right (NativeFormatMismatch mismatch _), expectedMismatch, Nothing)
+      | expectedMismatch == mismatchName mismatch -> pure ()
+    (Left failure, expectedFailure, Nothing)
+      | expectedFailure == failureName failure -> pure ()
+    (outcome, expectedClassification, expectedDraftDigest) ->
+      assertFailure
+        ("fixture contract mismatch: expected "
+           <> Text.unpack expectedClassification
+           <> " with Draft digest "
+           <> show expectedDraftDigest
+           <> ", received "
+           <> classification outcome)
+
+failureName :: NativeFailure -> Text
+failureName failure =
+  case failure of
+    InputLimitExceeded _ _ -> "input-limit-exceeded"
+    XmlDepthLimitExceeded _ _ -> "xml-depth-limit-exceeded"
+    XmlElementLimitExceeded _ _ -> "xml-element-limit-exceeded"
+    XmlAttributeLimitExceeded _ _ -> "xml-attribute-limit-exceeded"
+    XmlTextLimitExceeded _ _ -> "xml-text-limit-exceeded"
+    InvalidUtf8 -> "invalid-utf8"
+    UnsupportedEncoding _ -> "unsupported-encoding"
+    UnsupportedXmlFacility -> "unsupported-xml-facility"
+    ForbiddenXmlScalar _ -> "forbidden-xml-scalar"
+    MalformedXml -> "malformed-xml"
+
+mismatchName :: NativeMismatch -> Text
+mismatchName mismatch =
+  case mismatch of
+    NativeRootMismatch nativeName ->
+      "root-qname-mismatch:"
+        <> maybe
+             ""
+             (\namespace -> "{" <> namespace <> "}")
+             (nativeNameNamespace nativeName)
+        <> nativeNameLocal nativeName
+    NativeVersionMissing -> "native-version-missing"
+    NativeVersionUnsupported value -> "native-version-unsupported:" <> value
+
+readDataFile :: FilePath -> IO ByteString.ByteString
+readDataFile relative = getDataFileName relative >>= ByteString.readFile
+
+digest :: ByteString.ByteString -> Text
+digest = Text.pack . concatMap byteHex . ByteString.unpack . SHA256.hash
+  where
+    byteHex byte =
+      case showHex byte "" of
+        [digit] -> ['0', digit]
+        digits -> digits
+
+classification :: Either failure NativeClassification -> String
+classification outcome =
+  case outcome of
+    Left _ -> "native-failure"
+    Right (NativeFormatMatch _) -> "match"
+    Right (NativeFormatMismatch mismatch _) ->
+      Text.unpack (mismatchName mismatch)
+
+discoverFixtures :: FilePath -> IO [FilePath]
+discoverFixtures root = sort <$> visit root
+  where
+    visit relative = do
+      absolute <- getDataFileName relative
+      entries <- sort <$> listDirectory absolute
+      concat <$> mapM (entry relative) entries
+    entry parent entryName = do
+      let relative = parent </> entryName
+      absolute <- getDataFileName relative
+      directory <- doesDirectoryExist absolute
+      if directory
+        then visit relative
+        else pure [relative | takeExtension relative == ".archimate"]
+
+draftDigest :: Draft.ProfileDraft -> Text
+draftDigest = digest . Text.encodeUtf8 . renderSnapshot . profileSnapshot
+
+data Snapshot
+  = Atom !Text
+  | Sequence ![Snapshot]
+
+renderSnapshot :: Snapshot -> Text
+renderSnapshot snapshot =
+  case snapshot of
+    Atom value -> "a" <> decimal (Text.length value) <> ":" <> value
+    Sequence values ->
+      "s" <> decimal (length values) <> ":" <> foldMap renderSnapshot values
+
+profileSnapshot :: Draft.ProfileDraft -> Snapshot
+profileSnapshot profile =
+  Sequence
+    [Atom "profile-draft-v1", recordSnapshot (Draft.profileDraftRoot profile)]
+
+recordSnapshot :: Draft.DraftRecord recordRole -> Snapshot
+recordSnapshot record =
+  Sequence
+    [ Atom "record"
+    , Atom (recordFamilyName (Draft.draftRecordFamily record))
+    , identitySnapshot (Draft.draftRecordIdentity record)
+    , locationSnapshot (Draft.draftRecordLocation record)
+    , Sequence (map memberSnapshot (Draft.draftRecordMembers record))
     ]
 
-mappingOnlyViewTest :: Assertion
-mappingOnlyViewTest = do
-  report <- inspectText (ViewByName "Mapping") mappingOnlyModel
-  take 3 (map reportedState (stageReportsList (reportStageReports report)))
-    @?= [StagePassed, StagePassed, StageFailed]
-  diagnosticCodes report @?= ["o2i.inspection.scope.empty"]
-  reportResult report @?= InspectionFailed
-  reportExitCode report @?= 1
+identitySnapshot :: Draft.DraftIdentity recordRole -> Snapshot
+identitySnapshot = Draft.foldDraftIdentity (Sequence . map scalarSnapshot)
 
-mappingOnlyModel :: Text
-mappingOnlyModel =
-  model
-    (grouping "mapping" "Mapping" ""
-       <> view "view" "Mapping" (diagramObject "object" "mapping"))
-    [profileProperty]
+memberSnapshot :: Draft.DraftMember recordRole -> Snapshot
+memberSnapshot =
+  Draft.foldDraftMember
+    fieldSnapshot
+    propertySnapshot
+    referenceSnapshot
+    recordSnapshot
+    opaqueSnapshot
 
-fixtureContractTest :: Assertion
-fixtureContractTest = do
-  mapM_ assertDecodeFixture decodeFixtures
-  mapM_ assertInspectionFixture inspectionFixtures
-  where
-    assertDecodeFixture (path, expected) = do
-      bytes <- ByteString.readFile (fixture path)
-      assertBool path (expected `elem` decodeCodes (sourceBytes bytes))
-    assertInspectionFixture (path, selector, expected) = do
-      bytes <- ByteString.readFile (fixture path)
-      report <- inspectBytes selector bytes
-      assertBool path (expected `elem` diagnosticCodes report)
-    decodeFixtures =
-      [ ("invalid/decode/empty.archimate", "o2i.amx.decode.xml-malformed")
-      , ("invalid/decode/malformed.archimate", "o2i.amx.decode.xml-malformed")
-      , ("invalid/decode/unsafe-doctype.archimate", "o2i.amx.decode.xml-unsafe")
-      , ("invalid/decode/wrong-root.archimate", "o2i.amx.decode.root-qname")
-      , ( "invalid/decode/missing-native-version.archimate"
-        , "o2i.amx.decode.native-version-missing")
-      , ( "invalid/decode/unsupported-native-version.archimate"
-        , "o2i.amx.decode.native-version-unsupported")
-      ]
-    inspectionFixtures =
-      [ ( "invalid/view/duplicate-view-name.archimate"
-        , ViewByName "Scope"
-        , "o2i.amx.view.name-ambiguous")
-      , ( "invalid/view/duplicate-view-id.archimate"
-        , ViewById "view"
-        , "o2i.amx.view.id-ambiguous")
-      , ( "invalid/view/unresolved-object.archimate"
-        , ViewByName "Scope"
-        , "o2i.amx.view.object-unresolved")
-      , ( "invalid/view/empty-view.archimate"
-        , ViewByName "Scope"
-        , "o2i.inspection.scope.empty")
-      , ( "invalid/profile/missing-profile.archimate"
-        , ViewByName "Scope"
-        , "o2i.amx.profile.missing")
-      , ( "invalid/profile/unsupported-profile.archimate"
-        , ViewByName "Scope"
-        , "o2i.amx.profile.unsupported")
-      , ( "invalid/profile/duplicate-profile.archimate"
-        , ViewByName "Scope"
-        , "o2i.amx.profile.duplicate")
-      , ( "invalid/profile/missing-kind.archimate"
-        , ViewByName "Scope"
-        , "o2i.amx.profile.kind-missing")
-      , ( "invalid/profile/wrong-element-representation.archimate"
-        , ViewByName "Scope"
-        , "o2i.amx.profile.element-representation")
-      , ( "invalid/profile/missing-ownership.archimate"
-        , ViewByName "Scope"
-        , "o2i.amx.profile.ownership-missing")
-      ]
+fieldSnapshot ::
+     Draft.DraftFieldValue
+  -> [Draft.DraftScalar]
+  -> Draft.DraftLocation
+  -> Snapshot
+fieldSnapshot field values location =
+  Sequence
+    [ Atom "field"
+    , Atom (fieldName field)
+    , Sequence (map scalarSnapshot values)
+    , locationSnapshot location
+    ]
 
-manifestTest :: Assertion
-manifestTest = do
-  bytes <- LazyByteString.readFile (fixture "manifest.json")
-  case Aeson.eitherDecode bytes :: Either String Aeson.Value of
-    Left message -> assertFailure message
-    Right _ -> pure ()
+propertySnapshot :: Draft.DraftProperty recordRole -> Snapshot
+propertySnapshot property =
+  Sequence
+    [ Atom "property"
+    , propertyKeySnapshot (Draft.draftPropertyKey property)
+    , Sequence (map scalarSnapshot (Draft.draftPropertyValues property))
+    , locationSnapshot (Draft.draftPropertyLocation property)
+    , Sequence (map opaqueSnapshot (Draft.draftPropertyOpaqueEvidence property))
+    ]
 
-data ReferenceEntry = ReferenceEntry
-  { referencePath :: FilePath
-  , referenceClass :: Text
-  , referenceStatus :: Text
-  , referenceSha256 :: Maybe Text
-  } deriving (Eq, Show)
+propertyKeySnapshot :: Draft.DraftPropertyKey recordRole -> Snapshot
+propertyKeySnapshot =
+  Draft.foldDraftPropertyKey
+    (\values -> Sequence [Atom "direct", Sequence (map scalarSnapshot values)])
+    (\reference -> Sequence [Atom "definition", referenceSnapshot reference])
 
-instance Aeson.FromJSON ReferenceEntry where
-  parseJSON =
-    Aeson.withObject "valid reference" $ \value ->
-      ReferenceEntry
-        <$> value .: "path"
-        <*> value .: "class"
-        <*> value .: "status"
-        <*> value .:? "sha256"
+referenceSnapshot :: Draft.DraftReference ownerRole targetRole -> Snapshot
+referenceSnapshot reference =
+  Sequence
+    [ Atom "reference"
+    , Atom (referenceFieldName (Draft.draftReferenceField reference))
+    , Atom (recordFamilyName (Draft.draftReferenceExpectedFamily reference))
+    , identitySnapshot (Draft.draftReferenceIdentity reference)
+    , locationSnapshot (Draft.draftReferenceLocation reference)
+    ]
 
-newtype ValidReferenceCatalog =
-  ValidReferenceCatalog [ReferenceEntry]
-  deriving (Eq, Show)
+opaqueSnapshot :: Draft.DraftOpaqueEvidence -> Snapshot
+opaqueSnapshot evidence =
+  Sequence
+    [ Atom "opaque"
+    , Atom
+        (Draft.foldDraftOpaquePosition
+           "attribute"
+           "child"
+           (Draft.draftOpaquePosition evidence))
+    , nativeNameSnapshot (Draft.draftOpaqueName evidence)
+    , Sequence (map scalarSnapshot (Draft.draftOpaqueScalars evidence))
+    , locationSnapshot (Draft.draftOpaqueLocation evidence)
+    ]
 
-instance Aeson.FromJSON ValidReferenceCatalog where
-  parseJSON =
-    Aeson.withObject "valid reference catalog" $ \value ->
-      ValidReferenceCatalog <$> value .: "references"
+scalarSnapshot :: Draft.DraftScalar -> Snapshot
+scalarSnapshot scalar =
+  Sequence
+    [ Draft.foldDraftScalarValue
+        (\value -> Sequence [Atom "text", Atom value])
+        (\value -> Sequence [Atom "boolean", Atom (boolean value)])
+        (\value -> Sequence [Atom "number", Atom value])
+        (\value -> Sequence [Atom "native-name", nativeNameSnapshot value])
+        (\kind value -> Sequence [Atom "other", Atom kind, Atom value])
+        scalar
+    , locationSnapshot (Draft.draftScalarLocation scalar)
+    ]
 
-validReferenceContractTest :: Assertion
-validReferenceContractTest = do
-  bytes <- LazyByteString.readFile (fixture "valid/catalog.json")
-  case Aeson.eitherDecode bytes of
-    Left message -> assertFailure message
-    Right (ValidReferenceCatalog entries) -> do
-      map referencePath entries @?= expectedReferencePaths
-      map referenceClass entries @?= "focused-adapter"
-        : replicate 8 "semantic-reference"
-      map referenceStatus entries @?= replicate 2 "admitted-archi-saved"
-        ++ replicate 7 "pending-external-archi-save"
-      map referenceSha256 entries
-        @?= [Just nativeReferenceSha256, Just ethosReferenceSha256]
-        ++ replicate 7 Nothing
-      assertReferencePresence entries
+nativeNameSnapshot :: Draft.DraftNativeName -> Snapshot
+nativeNameSnapshot nativeName =
+  Sequence
+    [ maybe
+        (Sequence [])
+        (Sequence . pure . Atom)
+        (Draft.draftNativeNamespace nativeName)
+    , Atom (Draft.draftNativeLocalName nativeName)
+    ]
 
-assertReferencePresence :: [ReferenceEntry] -> Assertion
-assertReferencePresence = mapM_ assertEntry
-  where
-    assertEntry entry = do
-      present <- doesFileExist (fixture (referencePath entry))
-      case referenceStatus entry of
-        "admitted-archi-saved" ->
-          assertBool "an admitted reference must exist" present
-        "pending-external-archi-save" ->
-          assertBool
-            "a pending reference must carry no unverified integrity claim"
-            (referenceSha256 entry == Nothing)
-        status -> assertFailure ("unexpected reference status: " <> show status)
+locationSnapshot :: Draft.DraftLocation -> Snapshot
+locationSnapshot location =
+  Sequence
+    [ sourcePathSnapshot (Draft.draftLocationPath location)
+    , maybe (Sequence []) sourceSpanSnapshot (Draft.draftLocationSpan location)
+    ]
 
-nativeReferenceSha256 :: Text
-nativeReferenceSha256 =
-  "359b5309a7c66ab3e090ec29f0c5ef135c361825ae0cc7797b5560ae80acff01"
+sourcePathSnapshot :: Draft.DraftSourcePath -> Snapshot
+sourcePathSnapshot =
+  Draft.foldDraftSourcePath
+    (\first rest -> Sequence (map pathStepSnapshot (first : rest)))
 
-ethosReferenceSha256 :: Text
-ethosReferenceSha256 =
-  "ebf0d537557f68c54ff5327b1039b7f93bf0976d42cdf2c4a9fbbfc58aca3170"
+pathStepSnapshot :: Draft.DraftPathStep -> Snapshot
+pathStepSnapshot step =
+  Sequence
+    [ nativeNameSnapshot (Draft.draftPathStepName step)
+    , Atom (decimal (Draft.draftPathStepOrdinal step))
+    ]
 
-nativeReferenceTest :: Assertion
-nativeReferenceTest = do
-  bytes <- ByteString.readFile (fixture "valid/native/minimal.archimate")
-  let document =
-        sourceDocumentFromBytes
-          "valid/native/minimal.archimate"
-          FileSource
-          bytes
-  sourceHashText (sourceSha256 (sourceDocumentIdentity document))
-    @?= nativeReferenceSha256
-  case decodeSource document of
-    DecodePassed binding decoded -> do
-      nativeRootQName binding @?= expectedRootQName
-      nativeVersionText (nativeVersion binding) @?= "5.0.0"
-      elementAttribute (expandedQName Nothing 'i' "d") (amxDocumentRoot decoded)
-        @?= Just "id-38b61e2f53db4787b817eebd3632eb7f"
-    DecodeRejected _ _ -> assertFailure "native reference was rejected"
-    DecodeUnavailable _ _ -> assertFailure "native reference was unavailable"
-  report <- inspectBytes (ViewByName "Default View") bytes
-  viewResolutionId report @?= Just "id-e88788554b2449deb90b0f5676c4ce01"
-  diagnosticCodes report @?= ["o2i.amx.profile.missing"]
+sourceSpanSnapshot :: Draft.DraftSourceSpan -> Snapshot
+sourceSpanSnapshot spanValue =
+  Sequence
+    [ sourcePositionSnapshot (Draft.draftSpanStart spanValue)
+    , sourcePositionSnapshot (Draft.draftSpanEnd spanValue)
+    ]
 
-ethosReferenceTest :: Assertion
-ethosReferenceTest = do
-  bytes <- ByteString.readFile (fixture "valid/orientation/ethos.archimate")
-  let document = sourceBytes bytes
-      selector = ViewByName "O2I Reference - Ethos"
-  sourceHashText (sourceSha256 (sourceDocumentIdentity document))
-    @?= ethosReferenceSha256
-  report <- inspectBytes selector bytes
-  requestSourceIdentity (reportRequestInfo report)
-    @?= sourceDocumentIdentity document
-  viewResolutionId report @?= Just "id-fad6c1265c8c4623ab29335326eb23f2"
-  take 5 (map reportedState (stageReportsList (reportStageReports report)))
-    @?= replicate 5 StagePassed
-  diagnosticCodes report @?= ["o2i.traceability.intervention-missing"]
+sourcePositionSnapshot :: Draft.DraftSourcePosition -> Snapshot
+sourcePositionSnapshot position =
+  Sequence
+    [ Atom (decimal (Draft.draftSourceLine position))
+    , Atom (decimal (Draft.draftSourceColumn position))
+    , maybe
+        (Sequence [])
+        (Sequence . pure . Atom . decimal)
+        (Draft.draftSourceOffset position)
+    ]
 
-expectedReferencePaths :: [FilePath]
-expectedReferencePaths =
-  [ "valid/native/minimal.archimate"
-  , "valid/orientation/ethos.archimate"
-  , "valid/orientation/mission.archimate"
-  , "valid/orientation/vision.archimate"
-  , "valid/formation/strategy.archimate"
-  , "valid/situation/need.archimate"
-  , "valid/operationalization/intervention.archimate"
-  , "valid/evidence/measure.archimate"
-  , "valid/full/effect-trace.archimate"
-  ]
+recordFamilyName :: Draft.DraftRecordFamilyValue -> Text
+recordFamilyName =
+  Draft.foldDraftRecordFamilyValue
+    "model-root"
+    "property-definition"
+    "element"
+    "relationship"
+    "view"
+    "view-node"
+    "view-connection"
+
+fieldName :: Draft.DraftFieldValue -> Text
+fieldName =
+  Draft.foldDraftFieldValue
+    "type"
+    "name"
+    "documentation"
+    "directed"
+    "influence-strength"
+
+referenceFieldName :: Draft.DraftReferenceFieldValue -> Text
+referenceFieldName =
+  Draft.foldDraftReferenceFieldValue
+    "property-definition"
+    "relationship-source"
+    "relationship-target"
+    "view-node-element"
+    "view-connection-relationship"
+    "view-connection-source"
+    "view-connection-target"
+
+boolean :: Bool -> Text
+boolean value =
+  if value
+    then "true"
+    else "false"
+
+decimal :: Show value => value -> Text
+decimal = Text.pack . show

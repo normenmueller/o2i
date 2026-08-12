@@ -13,6 +13,9 @@ author: Normen Mueller
 maintainer: normen.mueller@gmail.com
 build-type: Simple
 extra-source-files:
+  contract/compile.py
+  contract/test_compile.py
+  semantics.json
   tst/api/compile-pass/*.hs
   tst/api/compile-fail/*.hs
   tst/internal/compile-pass/*.hs
@@ -30,10 +33,48 @@ library
     language
   exposed-modules:
     O2I,
+    O2I.Core.Contract,
+    O2I.Core.Graph.Observation,
+    O2I.Core.Identity,
+    O2I.Core.Rule.Catalog,
+    O2I.Semantics,
+    O2I.Semantics.Input,
+    O2I.Structure,
     O2I.Graph,
     O2I.Language,
     O2I.Validation
   other-modules:
+    O2I.Core.Contract.Generated,
+    O2I.Core.Contract.Internal,
+    O2I.Core.Graph.Commitment,
+    O2I.Core.Graph.Observation.Index,
+    O2I.Core.Graph.Observation.Internal,
+    O2I.Core.Identity.Internal,
+    O2I.Core.Rule.Catalog.Definition,
+    O2I.Core.Rule.Catalog.Definition.CapabilityInput,
+    O2I.Core.Rule.Catalog.Definition.Qualification,
+    O2I.Core.Rule.Catalog.Definition.ReadinessAndAssessment,
+    O2I.Core.Rule.Catalog.Definition.Semantics,
+    O2I.Core.Rule.Catalog.Definition.Structure,
+    O2I.Core.Rule.Catalog.Definition.Trace,
+    O2I.Core.Rule.Catalog.Internal,
+    O2I.Input.Internal.Binding,
+    O2I.Input.Internal.Decode,
+    O2I.Input.Internal.Json,
+    O2I.Input.Internal.Set,
+    O2I.Input.Internal.Text,
+    O2I.Input.Internal.Types,
+    O2I.Semantics.Contextualization,
+    O2I.Semantics.Eval,
+    O2I.Semantics.Index,
+    O2I.Semantics.Family.CollectiveStrategyRealization,
+    O2I.Semantics.Internal,
+    O2I.Semantics.SituatedNeed,
+    O2I.Semantics.Strategy,
+    O2I.Semantics.Vocabulary,
+    O2I.Structure.Index,
+    O2I.Structure.Internal,
+    O2I.Structure.Proposition,
     O2I.Graph.Macro,
     O2I.Graph.Macro.Index,
     O2I.Graph.Raw,
@@ -75,12 +116,15 @@ library
     O2I.Validation.Trace.Rule,
     O2I.Validation.Trace.Types
   build-depends:
-    base >=4.18 && <4.19,
-    containers >=0.6 && <0.7,
+    aeson >=2.2.5 && <2.3,
+    base >=4.20 && <4.21,
+    bytestring >=0.12 && <0.13,
+    containers >=0.7 && <0.8,
     dependent-map >=0.4.0 && <0.5,
     dependent-sum >=0.7.1 && <0.8,
-    text >=2.0 && <2.1,
+    text >=2.1 && <2.2,
     time >=1.12 && <1.13,
+    unicode-transforms ==0.4.0.1,
     validation >=1.1 && <1.2
   hs-source-dirs:
     src
@@ -98,17 +142,299 @@ test-suite o2i-test
     O2I.Test.Qualification,
     O2I.Test.Support
   build-depends:
-    base >=4.18 && <4.19,
+    base >=4.20 && <4.21,
     o2i-core,
     tasty >=1.4 && <1.6,
     tasty-hunit >=0.10 && <0.11,
     tasty-quickcheck >=0.10 && <0.12,
     QuickCheck >=2.16 && <2.18,
-    text >=2.0 && <2.1,
+    text >=2.1 && <2.2,
     time >=1.12 && <1.13,
     validation >=1.1 && <1.2
   hs-source-dirs:
     tst
+
+-- This component compiles the profile-neutral identity boundary directly. It
+-- verifies exact identity decoding, deterministic indexing, and nominal
+-- selected-View scope without exporting internal resolution machinery.
+test-suite o2i-identity-internal-test
+  import:
+    warnings,
+    language
+  type:
+    exitcode-stdio-1.0
+  main-is:
+    IdentityMain.hs
+  other-modules:
+    O2I.Core.Contract,
+    O2I.Core.Contract.Generated,
+    O2I.Core.Contract.Internal,
+    O2I.Core.Graph.Commitment,
+    O2I.Core.Graph.Observation,
+    O2I.Core.Graph.Observation.Internal,
+    O2I.Core.Identity,
+    O2I.Core.Identity.Internal
+  build-depends:
+    base >=4.20 && <4.21,
+    containers >=0.7 && <0.8,
+    tasty >=1.4 && <1.6,
+    tasty-hunit >=0.10 && <0.11,
+    text >=2.1 && <2.2
+  hs-source-dirs:
+    tst/internal,
+    src
+
+-- This component proves that public semantic companion values are exact,
+-- opaque wrappers over the generated closed catalogs.
+test-suite o2i-contract-internal-test
+  import:
+    warnings,
+    language
+  type:
+    exitcode-stdio-1.0
+  main-is:
+    O2I/Core/ContractTest.hs
+  other-modules:
+    O2I.Core.Contract,
+    O2I.Core.Contract.Generated,
+    O2I.Core.Contract.Internal
+  build-depends:
+    base >=4.20 && <4.21,
+    tasty >=1.4 && <1.6,
+    tasty-hunit >=0.10 && <0.11,
+    text >=2.1 && <2.2
+  hs-source-dirs:
+    tst/internal,
+    src
+
+-- This component verifies scope-bound, deterministic graph observations
+-- without exposing their construction boundary to package consumers.
+test-suite o2i-graph-observation-internal-test
+  import:
+    warnings,
+    language
+  type:
+    exitcode-stdio-1.0
+  main-is:
+    O2I/Core/Graph/ObservationTest.hs
+  other-modules:
+    O2I.Core.Contract,
+    O2I.Core.Contract.Generated,
+    O2I.Core.Contract.Internal,
+    O2I.Core.Graph.Commitment,
+    O2I.Core.Graph.Observation,
+    O2I.Core.Graph.Observation.Index,
+    O2I.Core.Graph.Observation.Internal,
+    O2I.Core.Identity,
+    O2I.Core.Identity.Internal
+  build-depends:
+    base >=4.20 && <4.21,
+    containers >=0.7 && <0.8,
+    tasty >=1.4 && <1.6,
+    tasty-hunit >=0.10 && <0.11,
+    text >=2.1 && <2.2
+  hs-source-dirs:
+    tst/internal,
+    src
+
+-- This component proves that the compiled rule catalog and its closed stage
+-- partition are exact projections of the Core companion.
+test-suite o2i-rule-catalog-internal-test
+  import:
+    warnings,
+    language
+  type:
+    exitcode-stdio-1.0
+  main-is:
+    O2I/Core/Rule/CatalogTest.hs
+  other-modules:
+    O2I.Core.Contract,
+    O2I.Core.Contract.Generated,
+    O2I.Core.Contract.Internal,
+    O2I.Core.Rule.Catalog,
+    O2I.Core.Rule.Catalog.Definition,
+    O2I.Core.Rule.Catalog.Definition.CapabilityInput,
+    O2I.Core.Rule.Catalog.Definition.Qualification,
+    O2I.Core.Rule.Catalog.Definition.ReadinessAndAssessment,
+    O2I.Core.Rule.Catalog.Definition.Semantics,
+    O2I.Core.Rule.Catalog.Definition.Structure,
+    O2I.Core.Rule.Catalog.Definition.Trace,
+    O2I.Core.Rule.Catalog.Internal
+  build-depends:
+    base >=4.20 && <4.21,
+    containers >=0.7 && <0.8,
+    tasty >=1.4 && <1.6,
+    tasty-hunit >=0.10 && <0.11,
+    text >=2.1 && <2.2
+  hs-source-dirs:
+    tst/internal,
+    src
+
+-- This component verifies the opaque selected-View Structure boundary,
+-- complete structural diagnostics, and canonical projection order without
+-- exporting indexes, constructors, or graph-query operations.
+test-suite o2i-structure-internal-test
+  import:
+    warnings,
+    language
+  type:
+    exitcode-stdio-1.0
+  main-is:
+    O2I/StructureTest.hs
+  other-modules:
+    O2I.Core.Contract,
+    O2I.Core.Contract.Generated,
+    O2I.Core.Contract.Internal,
+    O2I.Core.Graph.Commitment,
+    O2I.Core.Graph.Observation,
+    O2I.Core.Graph.Observation.Internal,
+    O2I.Core.Identity,
+    O2I.Core.Identity.Internal,
+    O2I.Structure,
+    O2I.Structure.Index,
+    O2I.Structure.Internal,
+    O2I.Structure.Proposition
+  build-depends:
+    base >=4.20 && <4.21,
+    containers >=0.7 && <0.8,
+    tasty >=1.4 && <1.6,
+    tasty-hunit >=0.10 && <0.11,
+    text >=2.1 && <2.2
+  hs-source-dirs:
+    tst/internal,
+    src
+
+-- This component verifies the closed supplemental-input boundary from exact
+-- transport decoding through canonical payload and set assessment.
+test-suite o2i-input-internal-test
+  import:
+    warnings,
+    language
+  type:
+    exitcode-stdio-1.0
+  main-is:
+    O2I/InputTest.hs
+  other-modules:
+    O2I.Core.Contract,
+    O2I.Core.Contract.Generated,
+    O2I.Core.Contract.Internal,
+    O2I.Core.Graph.Commitment,
+    O2I.Core.Graph.Observation,
+    O2I.Core.Graph.Observation.Internal,
+    O2I.Core.Identity,
+    O2I.Core.Identity.Internal,
+    O2I.Input.Internal.Binding,
+    O2I.Input.Internal.Decode,
+    O2I.Input.Internal.Json,
+    O2I.Input.Internal.Set,
+    O2I.Input.Internal.Text,
+    O2I.Input.Internal.Types,
+    O2I.Structure,
+    O2I.Structure.Index,
+    O2I.Structure.Internal,
+    O2I.Structure.Proposition
+  build-depends:
+    aeson >=2.2.5 && <2.3,
+    base >=4.20 && <4.21,
+    bytestring >=0.12 && <0.13,
+    containers >=0.7 && <0.8,
+    tasty >=1.4 && <1.6,
+    tasty-hunit >=0.10 && <0.11,
+    text >=2.1 && <2.2,
+    unicode-transforms ==0.4.0.1
+  hs-source-dirs:
+    tst/internal,
+    src
+
+-- This component verifies exact model-identity binding for every supplemental
+-- input site without exposing graph lookup or bound-value constructors.
+test-suite o2i-input-binding-internal-test
+  import:
+    warnings,
+    language
+  type:
+    exitcode-stdio-1.0
+  main-is:
+    O2I/InputBindingTest.hs
+  other-modules:
+    O2I.Core.Contract,
+    O2I.Core.Contract.Generated,
+    O2I.Core.Contract.Internal,
+    O2I.Core.Graph.Commitment,
+    O2I.Core.Graph.Observation,
+    O2I.Core.Graph.Observation.Internal,
+    O2I.Core.Identity,
+    O2I.Core.Identity.Internal,
+    O2I.Input.Internal.Binding,
+    O2I.Input.Internal.Text,
+    O2I.Input.Internal.Types,
+    O2I.Structure,
+    O2I.Structure.Index,
+    O2I.Structure.Internal,
+    O2I.Structure.Proposition
+  build-depends:
+    base >=4.20 && <4.21,
+    containers >=0.7 && <0.8,
+    tasty >=1.4 && <1.6,
+    tasty-hunit >=0.10 && <0.11,
+    text >=2.1 && <2.2,
+    unicode-transforms ==0.4.0.1
+  hs-source-dirs:
+    tst/internal,
+    src
+
+-- This component verifies the fixed Core semantic families, aggregate
+-- precedence, opaque public projections, and deterministic evaluation.
+test-suite o2i-semantics-internal-test
+  import:
+    warnings,
+    language
+  type:
+    exitcode-stdio-1.0
+  main-is:
+    O2I/SemanticsTest.hs
+  other-modules:
+    O2I.Core.Contract,
+    O2I.Core.Contract.Generated,
+    O2I.Core.Contract.Internal,
+    O2I.Core.Graph.Commitment,
+    O2I.Core.Graph.Observation,
+    O2I.Core.Graph.Observation.Index,
+    O2I.Core.Graph.Observation.Internal,
+    O2I.Core.Identity,
+    O2I.Core.Identity.Internal,
+    O2I.Input.Internal.Binding,
+    O2I.Input.Internal.Decode,
+    O2I.Input.Internal.Json,
+    O2I.Input.Internal.Set,
+    O2I.Input.Internal.Text,
+    O2I.Input.Internal.Types,
+    O2I.Semantics,
+    O2I.Semantics.Contextualization,
+    O2I.Semantics.Eval,
+    O2I.Semantics.Family.CollectiveStrategyRealization,
+    O2I.Semantics.Index,
+    O2I.Semantics.Input,
+    O2I.Semantics.Internal,
+    O2I.Semantics.SituatedNeed,
+    O2I.Semantics.Strategy,
+    O2I.Semantics.Vocabulary,
+    O2I.Structure,
+    O2I.Structure.Index,
+    O2I.Structure.Internal,
+    O2I.Structure.Proposition
+  build-depends:
+    aeson >=2.2.5 && <2.3,
+    base >=4.20 && <4.21,
+    bytestring >=0.12 && <0.13,
+    containers >=0.7 && <0.8,
+    tasty >=1.4 && <1.6,
+    tasty-hunit >=0.10 && <0.11,
+    text >=2.1 && <2.2,
+    unicode-transforms ==0.4.0.1
+  hs-source-dirs:
+    tst/internal,
+    src
 
 -- This component compiles the private macro-index modules directly. It keeps
 -- deterministic lookup-work accounting testable without exporting
@@ -135,13 +461,13 @@ test-suite o2i-macro-index-internal-test
     O2I.Validation.Relational.Internal,
     O2I.Validation.Relational.Types
   build-depends:
-    base >=4.18 && <4.19,
-    containers >=0.6 && <0.7,
+    base >=4.20 && <4.21,
+    containers >=0.7 && <0.8,
     tasty >=1.4 && <1.6,
     tasty-hunit >=0.10 && <0.11,
     tasty-quickcheck >=0.10 && <0.12,
     QuickCheck >=2.16 && <2.18,
-    text >=2.0 && <2.1
+    text >=2.1 && <2.2
   hs-source-dirs:
     tst/internal,
     src
@@ -162,13 +488,13 @@ test-suite o2i-collective-fit-internal-test
     O2I.Validation.Collective.Types,
     O2I.Validation.Semantics.Context.TradeOffSet
   build-depends:
-    base >=4.18 && <4.19,
-    containers >=0.6 && <0.7,
+    base >=4.20 && <4.21,
+    containers >=0.7 && <0.8,
     tasty >=1.4 && <1.6,
     tasty-hunit >=0.10 && <0.11,
     tasty-quickcheck >=0.10 && <0.12,
     QuickCheck >=2.16 && <2.18,
-    text >=2.0 && <2.1
+    text >=2.1 && <2.2
   hs-source-dirs:
     tst/internal,
     src
@@ -198,13 +524,13 @@ test-suite o2i-relational-internal-test
     O2I.Validation.Relational.Test.Matrix,
     O2I.Validation.Relational.Types
   build-depends:
-    base >=4.18 && <4.19,
-    containers >=0.6 && <0.7,
+    base >=4.20 && <4.21,
+    containers >=0.7 && <0.8,
     QuickCheck >=2.16 && <2.18,
     tasty >=1.4 && <1.6,
     tasty-hunit >=0.10 && <0.11,
     tasty-quickcheck >=0.10 && <0.12,
-    text >=2.0 && <2.1
+    text >=2.1 && <2.2
   hs-source-dirs:
     tst/internal,
     src
@@ -247,13 +573,13 @@ test-suite o2i-macro-evidence-internal-test
     O2I.Validation.Structure,
     O2I.Validation.Structure.Internal
   build-depends:
-    base >=4.18 && <4.19,
-    containers >=0.6 && <0.7,
+    base >=4.20 && <4.21,
+    containers >=0.7 && <0.8,
     dependent-map >=0.4.0 && <0.5,
     dependent-sum >=0.7.1 && <0.8,
     tasty >=1.4 && <1.6,
     tasty-hunit >=0.10 && <0.11,
-    text >=2.0 && <2.1,
+    text >=2.1 && <2.2,
     validation >=1.1 && <1.2
   hs-source-dirs:
     tst/internal,
@@ -302,13 +628,13 @@ test-suite o2i-trace-eval-internal-test
     O2I.Validation.Trace.Rule,
     O2I.Validation.Trace.Types
   build-depends:
-    base >=4.18 && <4.19,
-    containers >=0.6 && <0.7,
+    base >=4.20 && <4.21,
+    containers >=0.7 && <0.8,
     dependent-map >=0.4.0 && <0.5,
     dependent-sum >=0.7.1 && <0.8,
     tasty >=1.4 && <1.6,
     tasty-hunit >=0.10 && <0.11,
-    text >=2.0 && <2.1,
+    text >=2.1 && <2.2,
     validation >=1.1 && <1.2
   hs-source-dirs:
     tst/internal,
@@ -325,9 +651,9 @@ test-suite o2i-language-api-test
   other-modules:
     ApiContractTH
   build-depends:
-    base >=4.18 && <4.19,
+    base >=4.20 && <4.21,
     o2i-core,
-    template-haskell >=2.20 && <2.21
+    template-haskell >=2.22 && <2.23
   hs-source-dirs:
     tst/api
 
