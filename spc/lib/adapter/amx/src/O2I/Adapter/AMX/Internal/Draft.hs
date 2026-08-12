@@ -387,9 +387,20 @@ booleanOrText attribute =
 typeAttribute :: NativeElement -> NativeAttribute -> Draft.DraftScalar
 typeAttribute element attribute =
   case resolveNativeName element (nativeAttributeValue attribute) of
-    Just name ->
-      Draft.draftNativeNameScalar (draftName name) (attributeLocation attribute)
-    Nothing -> textAttribute attribute
+    Just name
+      | nativeNameNamespace name == Just archiNamespace ->
+        Draft.draftTextScalar
+          (nativeNameLocal name)
+          (attributeLocation attribute)
+      | otherwise ->
+        Draft.draftNativeNameScalar
+          (draftName name)
+          (attributeLocation attribute)
+    Nothing ->
+      Draft.draftOtherScalar
+        "amx-unresolved-native-name"
+        (nativeAttributeValue attribute)
+        (attributeLocation attribute)
 
 resolveNativeName :: NativeElement -> Text -> Maybe NativeName
 resolveNativeName element lexical =

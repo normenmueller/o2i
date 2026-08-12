@@ -44,6 +44,15 @@ contractTests =
     , testCase
         "projects a native KPI carrier without qualification semantics"
         kpiCarrierProfileTest
+    , testCase
+        "rejects a foreign Assessment QName as a KPI carrier"
+        foreignAssessmentProfileTest
+    , testCase
+        "rejects a foreign Grouping QName as a Context carrier"
+        foreignGroupingProfileTest
+    , testCase
+        "rejects a foreign relationship QName as an O2I relation"
+        foreignRelationshipProfileTest
     , testCase "publishes the closed native rule inventory" inventoryTest
     , testCase "recognizes exact native AMX" recognitionTest
     , testCase "treats another XML root as no match" noMatchTest
@@ -195,6 +204,54 @@ kpiCarrierProfileTest = do
          "native KPI carrier mapping is missing"
          (Just "primitive.kpi" `elem` provenance)
        Projection.profileQualificationProposals projection @?= [])
+    (Projection.projectProfile closed)
+
+foreignAssessmentProfileTest :: Assertion
+foreignAssessmentProfileTest =
+  assertProfileRejected
+    "foreign Assessment"
+    (foreignTypeProfiledKpiModel
+       "e:Assessment"
+       "a:Grouping"
+       "a:CompositionRelationship")
+
+foreignGroupingProfileTest :: Assertion
+foreignGroupingProfileTest =
+  assertProfileRejected
+    "foreign Grouping"
+    (foreignTypeProfiledKpiModel
+       "a:Assessment"
+       "e:Grouping"
+       "a:CompositionRelationship")
+
+foreignRelationshipProfileTest :: Assertion
+foreignRelationshipProfileTest =
+  assertProfileRejected
+    "foreign relationship"
+    (foreignTypeProfiledKpiModel
+       "a:Assessment"
+       "a:Grouping"
+       "e:CompositionRelationship")
+
+assertProfileRejected :: String -> ByteString -> Assertion
+assertProfileRejected subject model = do
+  selected <- requireImplicitSelection model
+  draft <- requireDecodedDraft selected model
+  let document = Notation.buildCanonicalDocument draft
+      selectedView =
+        case Notation.viewInventory document of
+          [view] -> view
+          views ->
+            error
+              ("expected one "
+                 <> subject
+                 <> " View, got "
+                 <> show (length views))
+      closed = Closure.closeSelectedView selectedView
+  Projection.foldProfileProjectionAssessment
+    (const (assertFailure (subject <> " caused a contract failure")))
+    (const (pure ()))
+    (const (assertFailure (subject <> " was accepted as native ArchiMate")))
     (Projection.projectProfile closed)
 
 inventoryTest :: Assertion
@@ -667,6 +724,17 @@ profiledModel =
 
 profiledKpiModel =
   "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" id=\"model\" version=\"5.0.0\"><property key=\"o2i.profile\" value=\"o2i.archimate-profile@0.3\"/><folder id=\"motivation\" type=\"motivation\"><element xsi:type=\"a:Grouping\" id=\"measure\"><property key=\"o2i.type\" value=\"Measure\"/><property key=\"o2i.commitment\" value=\"asserted\"/></element><element xsi:type=\"a:Assessment\" id=\"kpi\"><property key=\"o2i.type\" value=\"KPI\"/><property key=\"o2i.commitment\" value=\"asserted\"/></element></folder><folder id=\"relations\" type=\"relations\"><element xsi:type=\"a:CompositionRelationship\" id=\"contextualizes\" name=\"contextualizes\" source=\"measure\" target=\"kpi\"><property key=\"o2i.commitment\" value=\"asserted\"/></element></folder><folder id=\"views\" type=\"diagrams\"><element xsi:type=\"a:ArchimateDiagramModel\" id=\"view\" name=\"KPI\"><child xsi:type=\"a:DiagramObject\" id=\"measure-node\" archimateElement=\"measure\"><sourceConnection xsi:type=\"a:Connection\" id=\"contextualizes-connection\" archimateRelationship=\"contextualizes\" source=\"measure-node\" target=\"kpi-node\"/></child><child xsi:type=\"a:DiagramObject\" id=\"kpi-node\" archimateElement=\"kpi\"/></element></folder></a:model>"
+
+foreignTypeProfiledKpiModel :: Text -> Text -> Text -> ByteString
+foreignTypeProfiledKpiModel kpiType measureType relationshipType =
+  TextEncoding.encodeUtf8
+    ("<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" xmlns:e=\"urn:extension\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" id=\"model\" version=\"5.0.0\"><property key=\"o2i.profile\" value=\"o2i.archimate-profile@0.3\"/><folder id=\"motivation\" type=\"motivation\"><element xsi:type=\""
+       <> measureType
+       <> "\" id=\"measure\"><property key=\"o2i.type\" value=\"Measure\"/><property key=\"o2i.commitment\" value=\"asserted\"/></element><element xsi:type=\""
+       <> kpiType
+       <> "\" id=\"kpi\"><property key=\"o2i.type\" value=\"KPI\"/><property key=\"o2i.commitment\" value=\"asserted\"/></element></folder><folder id=\"relations\" type=\"relations\"><element xsi:type=\""
+       <> relationshipType
+       <> "\" id=\"contextualizes\" name=\"contextualizes\" source=\"measure\" target=\"kpi\"><property key=\"o2i.commitment\" value=\"asserted\"/></element></folder><folder id=\"views\" type=\"diagrams\"><element xsi:type=\"a:ArchimateDiagramModel\" id=\"view\" name=\"Foreign type\"><child xsi:type=\"a:DiagramObject\" id=\"measure-node\" archimateElement=\"measure\"><sourceConnection xsi:type=\"a:Connection\" id=\"contextualizes-connection\" archimateRelationship=\"contextualizes\" source=\"measure-node\" target=\"kpi-node\"/></child><child xsi:type=\"a:DiagramObject\" id=\"kpi-node\" archimateElement=\"kpi\"/></element></folder></a:model>")
 
 unrelatedRepresentation = "{\"format\":\"another-adapter\"}"
 

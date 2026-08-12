@@ -312,7 +312,7 @@ class ProfileCompilerTest(unittest.TestCase):
 
     def test_defect_rule_evidence_bindings_are_exact_and_closed(self) -> None:
         bindings = compiler.derive_profile_defect_rule_bindings(self.companion)
-        self.assertEqual(len(bindings), 125)
+        self.assertEqual(len(bindings), 126)
         self.assertNotIn(
             "qualification.proposal.carrier.rationale-normalization",
             bindings,

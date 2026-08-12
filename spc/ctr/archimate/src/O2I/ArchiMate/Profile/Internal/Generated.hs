@@ -384,6 +384,8 @@ generatedRelationshipOccurrenceDefectRule ::
        (GeneratedProfileDefectRule
           'GeneratedProfileEvidenceRelationshipOccurrence)
 generatedRelationshipOccurrenceDefectRule ruleId
+  | ruleId == "graph.committed-relationship.archimate-applicability" =
+    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
   | ruleId == "graph.committed-relationship.mapping-selection" =
     Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
   | ruleId == "pattern.collective-strategy-realization.segments.directed" =
@@ -1720,7 +1722,7 @@ generatedProfileDescriptor =
     "0.3.0"
     "archimate-3.2"
     ["amx"]
-    "8be461eea73fee9f408fc830d7b85b4ebdf238a3f1521ecc58e56edfdccae7d2"
+    "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
 
 generatedProfileRuleIds :: [Text]
 generatedProfileRuleIds =
@@ -1765,6 +1767,7 @@ generatedProfileRuleIds =
   , "classification.qualification.activate.source-key"
   , "classification.shared.activate.type-key"
   , "classification.shared.activate.unknown-property"
+  , "graph.committed-relationship.archimate-applicability"
   , "graph.committed-relationship.mapping-selection"
   , "graph.context-owner"
   , "graph.contextualization"
@@ -1932,6 +1935,7 @@ generatedSelectedProfileRuleIds =
   , "classification.qualification.activate.source-key"
   , "classification.shared.activate.type-key"
   , "classification.shared.activate.unknown-property"
+  , "graph.committed-relationship.archimate-applicability"
   , "graph.committed-relationship.mapping-selection"
   , "graph.context-owner"
   , "graph.contextualization"

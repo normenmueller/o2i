@@ -782,6 +782,15 @@ projectSemanticRelationship projectionIndex relationship =
                       projectedSource
                       projectedTarget
                   ]
+              | otherwise ->
+                RelationshipResult
+                  [ relationshipIssue
+                      "graph.committed-relationship.archimate-applicability"
+                      occurrence
+                  ]
+                  []
+                  []
+                  []
             (_, _, sourceResult, targetResult) ->
               RelationshipResult
                 (resultErrors sourceResult

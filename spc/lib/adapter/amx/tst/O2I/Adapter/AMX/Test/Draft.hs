@@ -34,7 +34,7 @@ draftTests =
         namespaceTest
     , testCase "retains recognized scalar kinds and references" scalarTest
     , testCase
-        "retains unresolved xsi:type values as exact text"
+        "retains unresolved xsi:type values as opaque evidence"
         unresolvedTypeTest
     , testCase "ignores formatting whitespace as scalar content" whitespaceTest
     , testCase
@@ -113,17 +113,17 @@ scalarTest = do
   draft <- fixtureDraft "native-complete-draft"
   scalarKinds (recordInventory draft)
     @?= [ "text"
-        , "native-name"
         , "text"
         , "text"
-        , "native-name"
+        , "text"
+        , "text"
         , "text"
         , "boolean"
         , "text"
-        , "native-name"
         , "text"
-        , "native-name"
-        , "native-name"
+        , "text"
+        , "text"
+        , "text"
         ]
   referenceFields (recordInventory draft)
     @?= [ "source"
@@ -137,7 +137,8 @@ scalarTest = do
 unresolvedTypeTest :: Assertion
 unresolvedTypeTest = do
   draft <- fixtureDraft "native-malformed-occurrences"
-  scalarKinds (recordInventory draft) @?= ["text", "text", "text"]
+  scalarKinds (recordInventory draft)
+    @?= replicate 3 "other:amx-unresolved-native-name"
 
 whitespaceTest :: Assertion
 whitespaceTest = do

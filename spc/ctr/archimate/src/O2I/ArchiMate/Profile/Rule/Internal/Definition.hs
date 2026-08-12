@@ -27,6 +27,7 @@ compiledProfileRuleDefinitions =
   appendDefinitions
     classificationDefinitions
     (relationshipMappingSelectionDefinition
+       : relationshipEndpointApplicabilityDefinition
        : reservedPlacementDefinitions
        ++ fmap carrierDefinition generatedCarrierMappings
        ++ fmap relationDefinition generatedRelationMappings
@@ -88,6 +89,20 @@ relationshipMappingSelectionDefinition =
     (nonEmptyRuleText
        'A'
        "lign the relationship tuple with exactly one compiled relation or contextualization mapping.")
+
+relationshipEndpointApplicabilityDefinition :: RuleDefinition
+relationshipEndpointApplicabilityDefinition =
+  RuleDefinition
+    "graph.committed-relationship.archimate-applicability"
+    (nonEmptyRuleText
+       'A'
+       " committed graph relationship with a selected concrete syntax mapping must use an ArchiMate-admitted source and target element pair.")
+    (nonEmptyRuleText
+       'T'
+       "his Profile rule enforces concrete ArchiMate applicability without owning Core endpoint semantics.")
+    (nonEmptyRuleText
+       'U'
+       "se an admitted ArchiMate endpoint pair or another applicable concrete relationship mapping.")
 
 reservedPlacementDefinitions :: [RuleDefinition]
 reservedPlacementDefinitions =

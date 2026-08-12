@@ -309,7 +309,7 @@ fieldTypeValues record =
   | canonicalField <- canonicalRecordFieldsValue record
   , canonicalFieldValue canonicalField == TypeField
   , scalar <- canonicalFieldScalarsValue canonicalField
-  , draftScalarKindValue scalar `elem` [DraftText, DraftNativeNameValue]
+  , draftScalarKindValue scalar == DraftText
   ]
 
 fieldBooleanValues :: DraftFieldValue -> CanonicalRecord -> [Bool]
