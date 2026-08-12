@@ -112,6 +112,41 @@ semanticsDefinitions =
            "A complete Strategy formulation includes concrete coherent action choices."
            "List and contextualize at least one distinct Action under the Strategy."
        , define
+           "core.strategy-formulation.anchoring.decision-level"
+           "The Strategy formulation supplies one nonempty anchoring decision level."
+           "A complete formulation locates the Strategy at an explicit decision level."
+           "Supply the Strategy's anchoring decision level."
+       , define
+           "core.strategy-formulation.anchoring.decision-paths"
+           "The Strategy formulation supplies one or more distinct anchoring decision paths."
+           "A complete formulation states how decisions about the Strategy are made."
+           "Supply at least one distinct anchoring decision path."
+       , define
+           "core.strategy-formulation.anchoring.implementation-logic"
+           "The Strategy formulation supplies one nonempty anchoring implementation logic."
+           "A complete formulation states how strategic decisions reach implementation."
+           "Supply the Strategy's anchoring implementation logic."
+       , define
+           "core.strategy-formulation.anchoring.period"
+           "The Strategy formulation supplies one nonempty anchoring period."
+           "A complete formulation states the period in which the Strategy applies."
+           "Supply the Strategy's anchoring period."
+       , define
+           "core.strategy-formulation.anchoring.responsibilities"
+           "The Strategy formulation supplies one or more distinct anchoring responsibilities."
+           "A complete formulation makes its material responsibilities explicit."
+           "Supply at least one distinct anchoring responsibility."
+       , define
+           "core.strategy-formulation.anchoring.responsibility-scope"
+           "The Strategy formulation supplies one nonempty anchoring responsibility scope."
+           "A complete formulation states the organizational scope of responsibility."
+           "Supply the Strategy's anchoring responsibility scope."
+       , define
+           "core.strategy-formulation.derived-guardrails"
+           "The Strategy formulation supplies one or more distinct derived guardrails."
+           "A complete formulation makes the boundaries derived from its choices explicit."
+           "Supply at least one distinct derived guardrail."
+       , define
            "core.strategy-formulation.diagnosis"
            "Every Strategy owns exactly one diagnosis Driver."
            "A complete Strategy formulation has one unambiguous diagnosis."
@@ -121,6 +156,11 @@ semanticsDefinitions =
            "The Strategy diagnosis grounds the Strategy intent."
            "The chosen objective must follow from the diagnosed challenge."
            "Add the exact diagnosis-grounds-intent relation."
+       , define
+           "core.strategy-formulation.fit-rationale"
+           "The Strategy formulation supplies one or more distinct Fit rationales."
+           "A complete formulation explains why its choices fit the stated challenge."
+           "Supply at least one distinct Fit rationale."
        , define
            "core.strategy-formulation.guiding-policy"
            "Every Strategy owns exactly one guiding-policy Principle."
@@ -146,6 +186,26 @@ semanticsDefinitions =
            "Every Strategy owns one or more distinct listed Key Results."
            "A complete Strategy formulation makes intended results observable."
            "List and contextualize at least one distinct Key Result under the Strategy."
+       , define
+           "core.strategy-formulation.positioning"
+           "The Strategy formulation supplies one or more distinct positioning choices."
+           "A complete formulation states the position established by its coherent choices."
+           "Supply at least one distinct positioning choice."
+       , define
+           "core.strategy-formulation.scope"
+           "The Strategy formulation supplies one or more distinct scope statements."
+           "A complete formulation states the domain to which its choices apply."
+           "Supply at least one distinct scope statement."
+       , define
+           "core.strategy-formulation.strategy-binding"
+           "The supplemental Strategy identity equals the assessed model Strategy identity."
+           "A formulation can qualify only the exact Strategy to which it is bound."
+           "Bind the supplemental formulation to the assessed Strategy identity."
+       , define
+           "core.strategy-formulation.trade-offs"
+           "The Strategy formulation supplies one or more distinct trade-offs."
+           "A complete formulation makes the exclusions implied by its choices explicit."
+           "Supply at least one distinct trade-off."
        , define
            "core.strategy-formulation.vision-orientation"
            "At least one Vision Objective orients the Strategy intent."

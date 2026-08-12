@@ -6,6 +6,7 @@
 module O2I.Semantics.Internal
   ( SemanticRule
   , semanticRule
+  , semanticRuleIdentity
   , semanticRules
   , semanticRuleId
   , semanticRuleRank
@@ -13,6 +14,8 @@ module O2I.Semantics.Internal
   , SemanticEvidenceKey(..)
   , SemanticDefect
   , mkSemanticDefect
+  , mkAssertedDependencyDefect
+  , mkCollectiveCompletenessDefect
   , semanticDefectRule
   , semanticDefectEvidence
   , semanticDefectWitnesses
@@ -46,12 +49,16 @@ import O2I.Input.Internal.Types (CollectiveFitInput, StrategyFormulationInput)
 import O2I.Structure (WellFormedGraph)
 
 -- | Existential projection of one generated schema-indexed semantic rule.
-data SemanticRule where
-  SemanticRule :: Generated.GeneratedSemanticRule schema -> SemanticRule
+newtype SemanticRule =
+  SemanticRule Generated.GeneratedSemanticRuleIdentity
 
 -- | Existentially project one generated semantic rule.
 semanticRule :: Generated.GeneratedSemanticRule schema -> SemanticRule
-semanticRule = SemanticRule
+semanticRule = SemanticRule . Generated.generatedSemanticRuleIdentity
+
+-- | Project one generated semantic rule identity.
+semanticRuleIdentity :: Generated.GeneratedSemanticRuleIdentity -> SemanticRule
+semanticRuleIdentity = SemanticRule
 
 instance Eq SemanticRule where
   left == right = semanticRuleRank left == semanticRuleRank right
@@ -64,18 +71,17 @@ instance Show SemanticRule where
 
 -- | Complete canonical semantic rule inventory.
 semanticRules :: NonEmpty SemanticRule
-semanticRules = fromGenerated <$> Generated.generatedSemanticRules
-  where
-    fromGenerated (Generated.SomeGeneratedSemanticRule rule) = semanticRule rule
+semanticRules = SemanticRule <$> Generated.generatedSemanticRuleIdentities
 
 -- | Project the exact compiled-contract provenance of one semantic rule.
 semanticRuleId :: SemanticRule -> CoreRuleId
 semanticRuleId (SemanticRule rule) =
-  CoreRuleId (Generated.generatedSemanticRuleId rule)
+  CoreRuleId (Generated.generatedSemanticRuleIdentityText rule)
 
 -- | Rank one semantic rule by the exact compiled companion inventory.
 semanticRuleRank :: SemanticRule -> Int
-semanticRuleRank (SemanticRule rule) = Generated.generatedSemanticRuleRank rule
+semanticRuleRank (SemanticRule rule) =
+  Generated.generatedSemanticRuleIdentityRank rule
 
 -- | Exact rule-bound semantic evidence key.
 data SemanticEvidence
@@ -113,11 +119,6 @@ data SemanticEvidenceKey schema where
     :: !ModelIdentity
     -> !ModelIdentity
     -> SemanticEvidenceKey 'Generated.GeneratedParticipantClaimKeySchema
-  SemanticAssertedDependencyEvidenceKey
-    :: !OccurrenceIdentity
-    -> !OccurrenceIdentity
-    -> !OccurrenceIdentity
-    -> SemanticEvidenceKey 'Generated.GeneratedAssertedDependencyKeySchema
 
 -- | One deterministic defect whose rule and evidence schemas coincide.
 data SemanticDefect where
@@ -126,6 +127,13 @@ data SemanticDefect where
     -> !(SemanticEvidenceKey schema)
     -> ![OccurrenceIdentity]
     -> SemanticDefect
+  AssertedDependencyDefectInternal
+    :: !OccurrenceIdentity
+    -> !OccurrenceIdentity
+    -> !OccurrenceIdentity
+    -> SemanticDefect
+  CollectiveCompletenessDefectInternal
+    :: !ModelIdentity -> !OccurrenceIdentity -> SemanticDefect
 
 -- | Construct a defect only from a rule and evidence key of the same schema.
 mkSemanticDefect ::
@@ -135,18 +143,43 @@ mkSemanticDefect ::
   -> SemanticDefect
 mkSemanticDefect = SemanticDefectInternal
 
+-- | Construct the closed asserted-contextualization dependency defect.
+mkAssertedDependencyDefect ::
+     OccurrenceIdentity
+  -> OccurrenceIdentity
+  -> OccurrenceIdentity
+  -> SemanticDefect
+mkAssertedDependencyDefect = AssertedDependencyDefectInternal
+
+-- | Construct the closed collective-completeness defect.
+mkCollectiveCompletenessDefect ::
+     ModelIdentity -> OccurrenceIdentity -> SemanticDefect
+mkCollectiveCompletenessDefect = CollectiveCompletenessDefectInternal
+
 -- | Project the closed semantic rule carried by a defect.
 semanticDefectRule :: SemanticDefect -> SemanticRule
-semanticDefectRule (SemanticDefectInternal rule _ _) = SemanticRule rule
+semanticDefectRule (SemanticDefectInternal rule _ _) = semanticRule rule
+semanticDefectRule (AssertedDependencyDefectInternal _ _ _) =
+  semanticRuleIdentity Generated.ContextualizationAssertedDependencyRuleIdentity
+semanticDefectRule (CollectiveCompletenessDefectInternal _ _) =
+  semanticRuleIdentity Generated.CollectiveAssertedCompletenessRuleIdentity
 
 -- | Erase the private schema index for the stable public evidence projection.
 semanticDefectEvidence :: SemanticDefect -> SemanticEvidence
 semanticDefectEvidence (SemanticDefectInternal _ evidence _) =
   eraseSemanticEvidenceKey evidence
+semanticDefectEvidence (AssertedDependencyDefectInternal dependent endpoint context) =
+  SemanticAssertedDependencyKey dependent endpoint context
+semanticDefectEvidence (CollectiveCompletenessDefectInternal claim _) =
+  SemanticFitClaimKey claim
 
 -- | Project canonical witness occurrences.
 semanticDefectWitnesses :: SemanticDefect -> [OccurrenceIdentity]
 semanticDefectWitnesses (SemanticDefectInternal _ _ witnesses) = witnesses
+semanticDefectWitnesses (AssertedDependencyDefectInternal dependent endpoint context) =
+  [dependent, endpoint, context]
+semanticDefectWitnesses (CollectiveCompletenessDefectInternal _ occurrence) =
+  [occurrence]
 
 eraseSemanticEvidenceKey :: SemanticEvidenceKey schema -> SemanticEvidence
 eraseSemanticEvidenceKey evidence =
@@ -160,8 +193,6 @@ eraseSemanticEvidenceKey evidence =
     SemanticFitClaimEvidenceKey claim -> SemanticFitClaimKey claim
     SemanticParticipantClaimEvidenceKey claim participant ->
       SemanticParticipantClaimKey claim participant
-    SemanticAssertedDependencyEvidenceKey proposition endpoint context ->
-      SemanticAssertedDependencyKey proposition endpoint context
 
 instance Eq SemanticDefect where
   left == right = semanticDefectOrderKey left == semanticDefectOrderKey right

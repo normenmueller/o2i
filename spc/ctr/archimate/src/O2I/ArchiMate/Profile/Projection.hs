@@ -24,7 +24,11 @@ module O2I.ArchiMate.Profile.Projection
   , -- | Opaque successful notation-independent projection into Core material.
     ProfileProjection
   , profileStructureProjection
+  , profileMappingProvenance
   , profileQualificationProposals
+  , -- | Opaque provenance for one concrete Profile mapping.
+    ProfileMappingProvenance
+  , foldProfileMappingProvenance
   , -- | Opaque projected qualification proposal and its source evidence.
     QualificationProposal
   , qualificationProposalOccurrence
@@ -32,6 +36,14 @@ module O2I.ArchiMate.Profile.Projection
   , qualificationProposalRationale
   , qualificationProposalSources
   , qualificationProposalReferences
+  , -- | Opaque normalized rationale and its exact native source location.
+    QualificationRationale
+  , qualificationRationaleLocation
+  , qualificationRationaleValue
+  , -- | Opaque source occurrence retained by a qualification proposal.
+    QualificationSource
+  , qualificationSourceOccurrence
+  , qualificationSourceValue
   , -- | Opaque typed reference retained by a qualification proposal.
     QualificationReference
   , qualificationReferenceOccurrence
@@ -42,7 +54,7 @@ module O2I.ArchiMate.Profile.Projection
 import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
 import O2I.ArchiMate.Profile.Closure (ClosedView)
-import O2I.ArchiMate.Profile.Draft (DraftScalar)
+import O2I.ArchiMate.Profile.Draft (DraftLocation, DraftScalar)
 import O2I.ArchiMate.Profile.Internal.Generated
   ( GeneratedProfileEvidenceKind(..)
   , generatedProfileDefectRuleId
@@ -50,10 +62,13 @@ import O2I.ArchiMate.Profile.Internal.Generated
 import O2I.ArchiMate.Profile.Internal.Projection
   ( ProfileContractFailure
   , ProfileDefect
+  , ProfileMappingProvenance
   , ProfileProjection
   , ProfileProjectionAssessment
   , QualificationProposal
+  , QualificationRationale
   , QualificationReference
+  , QualificationSource
   )
 import qualified O2I.ArchiMate.Profile.Internal.Projection as Internal
 import O2I.ArchiMate.Profile.Notation (CanonicalOccurrence)
@@ -301,6 +316,24 @@ foldProfileProjectionAssessment contractFailure rejected accepted assessment =
 profileStructureProjection :: ProfileProjection -> StructureProjection
 profileStructureProjection = Internal.profileStructureProjectionValue
 
+-- | Canonically ordered concrete mapping provenance retained by the Profile.
+profileMappingProvenance :: ProfileProjection -> [ProfileMappingProvenance]
+profileMappingProvenance = Internal.profileMappingProvenanceValue
+
+-- | Consume carrier or relationship mapping provenance without exposing its
+-- representation.
+foldProfileMappingProvenance ::
+     (OccurrenceIdentity -> Text -> result)
+  -> (OccurrenceIdentity -> Text -> OccurrenceIdentity -> OccurrenceIdentity -> result)
+  -> ProfileMappingProvenance
+  -> result
+foldProfileMappingProvenance carrier relation provenance =
+  case provenance of
+    Internal.CarrierMappingProvenance occurrence mappingId ->
+      carrier occurrence mappingId
+    Internal.RelationMappingProvenance occurrence mappingId source target ->
+      relation occurrence mappingId source target
+
 -- | Qualification proposals retained separately from the structure graph.
 profileQualificationProposals :: ProfileProjection -> [QualificationProposal]
 profileQualificationProposals = Internal.profileQualificationProposalsValue
@@ -313,13 +346,30 @@ qualificationProposalOccurrence = Internal.qualificationProposalOccurrenceValue
 qualificationProposalIdentity :: QualificationProposal -> ModelIdentity
 qualificationProposalIdentity = Internal.qualificationProposalIdentityValue
 
--- | Optional fachliche rationale after canonical documentation normalization.
-qualificationProposalRationale :: QualificationProposal -> Maybe Text
+-- | Optional fachliche rationale retaining its exact native occurrence.
+qualificationProposalRationale ::
+     QualificationProposal -> Maybe QualificationRationale
 qualificationProposalRationale = Internal.qualificationProposalRationaleValue
 
--- | Canonically normalized source identities, deduplicated and ordered.
-qualificationProposalSources :: QualificationProposal -> [Text]
+-- | Exact native source location of the documentation occurrence.
+qualificationRationaleLocation :: QualificationRationale -> DraftLocation
+qualificationRationaleLocation = Internal.qualificationRationaleOccurrenceValue
+
+-- | Fachliche rationale after canonical documentation normalization.
+qualificationRationaleValue :: QualificationRationale -> Text
+qualificationRationaleValue = Internal.qualificationRationaleValueValue
+
+-- | Canonically ordered source occurrences without deduplication.
+qualificationProposalSources :: QualificationProposal -> [QualificationSource]
 qualificationProposalSources = Internal.qualificationProposalSourcesValue
+
+-- | Stable occurrence identity of one source property occurrence.
+qualificationSourceOccurrence :: QualificationSource -> OccurrenceIdentity
+qualificationSourceOccurrence = Internal.qualificationSourceOccurrenceValue
+
+-- | Canonically normalized source identity retained by that occurrence.
+qualificationSourceValue :: QualificationSource -> Text
+qualificationSourceValue = Internal.qualificationSourceValueValue
 
 -- | Typed proposal references in deterministic source order.
 qualificationProposalReferences ::

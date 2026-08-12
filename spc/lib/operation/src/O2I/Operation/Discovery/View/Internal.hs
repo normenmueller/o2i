@@ -17,11 +17,13 @@ import O2I.Operation.Adapter
   )
 import O2I.Operation.Provenance (SourceIdentity)
 
+-- | Closed authority that supplied a discovered View result.
 data ViewDiscoveryAuthority
   = OperationViewAuthority
   | AdapterViewAuthority !AdapterId
   deriving (Eq, Ord, Show)
 
+-- | Acquisition, adapter-selection, or adapter-decode discovery failure.
 data ViewDiscoveryFailure
   = ViewAcquisitionFailed !AcquisitionFailure
   | ViewAdapterSelectionFailed !SourceIdentity !AdapterSelectionError
@@ -30,6 +32,7 @@ data ViewDiscoveryFailure
       !AdapterDescriptor
       !(NonEmpty AdapterDiagnostic)
 
+-- | Complete source, adapter, canonical document, and View inventory.
 data ViewDiscoveryResult =
   ViewDiscoveryResult
     !SourceIdentity
@@ -37,6 +40,7 @@ data ViewDiscoveryResult =
     !CanonicalDocument
     ![ViewDescriptor]
 
+-- | Failure or complete successful profile-neutral View discovery.
 data ViewDiscovery
   = ViewDiscoveryFailed !ViewDiscoveryFailure
   | ViewsDiscovered !ViewDiscoveryResult

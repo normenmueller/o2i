@@ -4,7 +4,6 @@ module O2I.Semantics.Contextualization
   ) where
 
 import qualified Data.Set as Set
-import qualified O2I.Core.Contract.Generated as Generated
 import O2I.Core.Graph.Observation
   ( Commitment(..)
   , RelationObservation
@@ -19,8 +18,7 @@ import O2I.Core.Identity (OccurrenceIdentity)
 import O2I.Semantics.Index (SemanticIndex, contextualizationForMember)
 import O2I.Semantics.Internal
   ( SemanticDefect
-  , SemanticEvidenceKey(..)
-  , mkSemanticDefect
+  , mkAssertedDependencyDefect
   , sortSemanticDefects
   )
 import O2I.Structure
@@ -92,15 +90,9 @@ dependencyDefect semanticIndex dependent endpoint =
   case contextualizationForMember semanticIndex endpoint of
     Just contextualization
       | contextualizationCommitment contextualization == Candidate ->
-        [ mkSemanticDefect
-            Generated.ContextualizationAssertedDependencyRule
-            (SemanticAssertedDependencyEvidenceKey
-               dependent
-               endpoint
-               (contextualizationOccurrenceIdentity contextualization))
-            [ dependent
-            , endpoint
-            , contextualizationOccurrenceIdentity contextualization
-            ]
+        [ mkAssertedDependencyDefect
+            dependent
+            endpoint
+            (contextualizationOccurrenceIdentity contextualization)
         ]
     _ -> []

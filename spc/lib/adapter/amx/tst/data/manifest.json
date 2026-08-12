@@ -9,6 +9,7 @@
   },
   "valid": [
     {
+      "fixtureId": "native-minimal",
       "path": "tst/data/valid/native/minimal.archimate",
       "origin": "saved by the user with Archi 5.9.0",
       "sha256": "359b5309a7c66ab3e090ec29f0c5ef135c361825ae0cc7797b5560ae80acff01",
@@ -16,49 +17,219 @@
       "draftSha256": "c6519ced96d21b148caebdd8cc20370b262790fd4d72986671e835a0bd575f7b"
     },
     {
+      "fixtureId": "native-representative-ethos",
       "path": "tst/data/valid/orientation/ethos.archimate",
       "origin": "saved by the user with Archi 5.9.0",
       "sha256": "ebf0d537557f68c54ff5327b1039b7f93bf0976d42cdf2c4a9fbbfc58aca3170",
       "expected": "match",
       "draftSha256": "5e35bf93351afcbcabefb921f1f14f5a4ff7d6d49a5b69b0e8a43d001d826273"
+    },
+    {
+      "fixtureId": "native-complete-draft",
+      "path": "tst/data/valid/native/complete-draft.archimate",
+      "origin": "hand-minimized native positive",
+      "sha256": "c6148075e4c403f47ce2a4809dfc37bbc8af9916f79a495f096cdf82b7cda866",
+      "expected": "match",
+      "draftSha256": "c6d9678a4aa06e1c92772a98ef70dd7661d53d905ef048aae05dbf60e85fec83"
+    },
+    {
+      "fixtureId": "native-group-archimate-element-overlap",
+      "path": "tst/data/valid/native/group-archimate-element-overlap.archimate",
+      "origin": "hand-minimized native positive",
+      "sha256": "c7344155acaa24f11fef601e69ae89c2e951da966d7ba8afef6743b55dbbb3ef",
+      "expected": "match",
+      "draftSha256": "1cda196202d607e3bed71a06d85ff3a29c6c7ca5b06b8513989929a63a8017a0"
+    },
+    {
+      "fixtureId": "native-malformed-occurrences",
+      "path": "tst/data/valid/native/malformed-occurrences.archimate",
+      "origin": "hand-minimized native positive",
+      "sha256": "a3611ccdbc1df49cdf5a268c5ee71236fd1fe517df363458d9c1bed83f637695",
+      "expected": "match",
+      "draftSha256": "a43166e04591d8487d7814dd771b2eeae5ff84b52568a7eaf4808935d344142e"
+    },
+    {
+      "fixtureId": "native-extension-lookalike",
+      "path": "tst/data/valid/native/extension-lookalike.archimate",
+      "origin": "hand-minimized native positive",
+      "sha256": "d9a4ad2190ee6b35f204a2ae0c59e3bcdd5d596d37d2c79090109b97480e0c0f",
+      "expected": "match",
+      "draftSha256": "c894d9a63c05868dddad2c638c8c214dfc0741a2bb8b3d3f0515217a4fd90b33"
+    },
+    {
+      "fixtureId": "native-formatting-whitespace",
+      "path": "tst/data/valid/native/formatting-whitespace.archimate",
+      "origin": "hand-minimized native positive",
+      "sha256": "dc93475ee885e3af78f0d7d35d658b06b11803f81cc580460072489904fe014c",
+      "expected": "match",
+      "draftSha256": "263f1e717cc7bee36de099de145f1ee212844615128954238f8c51ed1a380d05"
+    },
+    {
+      "fixtureId": "native-significant-whitespace",
+      "path": "tst/data/valid/native/significant-whitespace.archimate",
+      "origin": "hand-minimized native positive",
+      "sha256": "5a9ae243a8dbf893f17daac547e1f3647ec3d40118b60f836cc41e68cc0303d9",
+      "expected": "match",
+      "draftSha256": "ed6b3f352d5bdc85f4c41f0f1750052f9c07c2652875bab72f20802c6022c10d"
+    },
+    {
+      "fixtureId": "native-prefix-order-a",
+      "path": "tst/data/valid/native/prefix-order-a.archimate",
+      "origin": "hand-minimized native positive",
+      "sha256": "7a870d1fda7542c5c569fb1633607427f64b45c824f72dd0fd76dfa2baff6226",
+      "expected": "match",
+      "draftSha256": "4a11e5de44d4fd4c1982a00eb89761610776c8fb36fa33cdc942a6175ac658de"
+    },
+    {
+      "fixtureId": "native-prefix-order-b",
+      "path": "tst/data/valid/native/prefix-order-b.archimate",
+      "origin": "hand-minimized native positive",
+      "sha256": "5351c2c714efdc3aa256131828bcbb8e660bc0d26fe8eca96fb216ea939bcfbf",
+      "expected": "match",
+      "draftSha256": "4a11e5de44d4fd4c1982a00eb89761610776c8fb36fa33cdc942a6175ac658de"
+    },
+    {
+      "fixtureId": "native-attribute-normalization",
+      "path": "tst/data/valid/native/attribute-normalization.archimate",
+      "origin": "hand-minimized native positive",
+      "sha256": "773d6999db7bed1a7e6be947335da2be03068ad62735c8ee224cb0a4a973c91b",
+      "expected": "match",
+      "draftSha256": "7a87ccd9390b4fcc29787df032e1b9889ee0d2ef71b4a548e6fc37311767cb13"
+    },
+    {
+      "fixtureId": "native-unknown-content",
+      "path": "tst/data/valid/native/unknown-content.archimate",
+      "origin": "hand-minimized native positive",
+      "sha256": "192e363cfc3fa92d4a565bf4839f390f959983edeef065061501bbd5f5f5b481",
+      "expected": "match",
+      "draftSha256": "83e39b4dd63ddf0753ebdb55a0d32779b703364029f5af3cbf9d9affcbfda84d"
+    },
+    {
+      "fixtureId": "native-mixed-content",
+      "path": "tst/data/valid/native/mixed-content.archimate",
+      "origin": "hand-minimized native positive",
+      "sha256": "2030609d7599fd00b44a79d6ed8436ae0773839a2c32cdfb2bc17edeaa45cde3",
+      "expected": "match",
+      "draftSha256": "adc2d04275dc55cf795bc3b4b8e4384bf3e89f7dfcba32896dd650cf703ba422"
+    },
+    {
+      "fixtureId": "native-fragmented-documentation",
+      "path": "tst/data/valid/native/fragmented-documentation.archimate",
+      "origin": "hand-minimized native positive",
+      "sha256": "34f4593f7e6b87d7045f60767212be1c03b9efed77360f688b13c57ec4f0f437",
+      "expected": "match",
+      "draftSha256": "83980e86b19e2bc04b32076a8642909946e5951642845581707f7027a1967028"
+    },
+    {
+      "fixtureId": "native-unknown-typed-view-child",
+      "path": "tst/data/valid/native/unknown-typed-view-child.archimate",
+      "origin": "hand-minimized native positive",
+      "sha256": "0704d0c3b5e63dd570efd918f980b62c3ab0d64e45470c592e0502dc3cf776fe",
+      "expected": "match",
+      "draftSha256": "d17ec00848ad17ad1f82ff57340f92846fd91f2d4926f0bae3002efe1d4d57f3"
+    },
+    {
+      "fixtureId": "native-order-duplicates",
+      "path": "tst/data/valid/native/order-duplicates.archimate",
+      "origin": "hand-minimized native positive",
+      "sha256": "a711d43e3c67868bd98b2fd4295c2dea0abffe51b1d07b20c8d162c670691014",
+      "expected": "match",
+      "draftSha256": "2448ab31b4f2d14e1ae58ffe2ef14411acd538a9a5dd3c7fe45b43fa91ed4d09"
+    },
+    {
+      "fixtureId": "native-influence-strength",
+      "path": "tst/data/valid/native/influence-strength.archimate",
+      "origin": "hand-minimized native positive",
+      "sha256": "db3f2465e1cd2a6a329a7d0dfbeecb1e97ed804f972e4192484591739091c4aa",
+      "expected": "match",
+      "draftSha256": "3da0dbc0c68d46e2e6fbbda53917f29e99b527e506fa0bdbb4ae62c9cc813eed"
+    },
+    {
+      "fixtureId": "native-association-strength",
+      "path": "tst/data/valid/native/association-strength.archimate",
+      "origin": "hand-minimized native positive",
+      "sha256": "f8ed94d9a59b63813cb9ed2e93265a5dfc7beabc6c77cea66b5d4e2253e52008",
+      "expected": "match",
+      "draftSha256": "591e3ffd2a28507f531ae6774da7f6073e4fa2e0a0e387fd11f029cb6d8a7c08"
     }
   ],
   "invalid": [
     {
+      "fixtureId": "decode-empty",
       "path": "tst/data/invalid/decode/empty.archimate",
       "origin": "hand-minimized native negative",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "expected": "malformed-xml"
     },
     {
+      "fixtureId": "decode-malformed-xml",
       "path": "tst/data/invalid/decode/malformed.archimate",
       "origin": "hand-minimized native negative",
       "sha256": "2ebbee476b821fa1dac343c74c184b865be25a537f092065ce010661f45a97da",
       "expected": "malformed-xml"
     },
     {
+      "fixtureId": "decode-dtd-internal-entity",
       "path": "tst/data/invalid/decode/unsafe-doctype.archimate",
       "origin": "hand-minimized native negative",
       "sha256": "ec58cf029467a88d572a361ee70ad5732de17d38829f4fc36b6087d774a78660",
       "expected": "unsupported-xml-facility"
     },
     {
+      "fixtureId": "decode-external-entity",
+      "path": "tst/data/invalid/decode/external-entity.archimate",
+      "origin": "hand-minimized native negative",
+      "sha256": "fdbc4c2077045d7bbac4f6d54f15f504f8a99c7a5251ac5753d645ee96c1274d",
+      "expected": "unsupported-xml-facility"
+    },
+    {
+      "fixtureId": "decode-wrong-root",
       "path": "tst/data/invalid/decode/wrong-root.archimate",
       "origin": "hand-minimized native negative",
       "sha256": "02b9a945a4165fde84b3dc3234ac0d722867381d273461b158d2125686209fd6",
       "expected": "root-qname-mismatch:{urn:not-archi}model"
     },
     {
+      "fixtureId": "decode-native-version-missing",
       "path": "tst/data/invalid/decode/missing-native-version.archimate",
       "origin": "hand-minimized native negative",
       "sha256": "3984706bd793a6d57d328178a94b2d2d513f6f5fa405f12533fd50ac469ac257",
       "expected": "native-version-missing"
     },
     {
+      "fixtureId": "decode-native-version-wrong",
       "path": "tst/data/invalid/decode/unsupported-native-version.archimate",
       "origin": "hand-minimized native negative",
       "sha256": "9d337b4952839693cb7eaa1544b3a37998d005aecd348a99bff2f2863b8e1298",
       "expected": "native-version-unsupported:4.0.0"
+    },
+    {
+      "fixtureId": "decode-native-version-namespaced",
+      "path": "tst/data/invalid/decode/namespaced-native-version.archimate",
+      "origin": "hand-minimized native negative",
+      "sha256": "a0c186bf6b560e3c7f80a0876674865f66a88c63456f688b2aee386aac30d565",
+      "expected": "native-version-missing"
+    },
+    {
+      "fixtureId": "decode-invalid-utf8",
+      "path": "tst/data/invalid/decode/invalid-utf8.archimate",
+      "origin": "hand-minimized native negative",
+      "sha256": "3fb35b5489e1210eef91ba4ee750db33b414d26b26a1fff473885d984f29e407",
+      "expected": "invalid-utf8"
+    },
+    {
+      "fixtureId": "decode-forbidden-xml-scalar",
+      "path": "tst/data/invalid/decode/forbidden-xml-scalar.archimate",
+      "origin": "hand-minimized native negative",
+      "sha256": "6d7b8a72f5576dbac340b4eaac05ff81da7bf25ffd07e2ecc2463bde2d845f32",
+      "expected": "forbidden-xml-scalar"
+    },
+    {
+      "fixtureId": "decode-unsupported-encoding",
+      "path": "tst/data/invalid/decode/unsupported-encoding.archimate",
+      "origin": "hand-minimized native negative",
+      "sha256": "14565b33d421c6cf3302258c79da1d6081495d6fb433f4b871c7f0e2896489bd",
+      "expected": "unsupported-encoding"
     }
   ]
 }

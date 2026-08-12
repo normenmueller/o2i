@@ -42,7 +42,11 @@ compileAMXAdapter = do
   descriptor <-
     first
       (fmap AMXDescriptorDefect)
-      (mkAdapterDescriptor identifier "Archi Model XML" "5.0.0-v1" "ArchiMate")
+      (mkAdapterDescriptor
+         identifier
+         "Archi Model XML"
+         "5.0.0-v1"
+         "archimate-3.2")
   recognitionRules <- nativeFailureRuleDefinitions "recognition"
   decodeRules <- nativeFailureRuleDefinitions "decode"
   rootRule <- rule rootRuleSpecification
@@ -76,17 +80,15 @@ recognize ::
   -> ByteString
   -> RecognitionResult scope
 recognize rules bytes =
-  if hasNativeAMXSignal bytes
-    then case decodeNative bytes of
-           Left failure ->
-             recognitionFailure
-               (recognitionDiagnostic
-                  (nativeFailureRule failure rules)
-                  singletonOccurrence
-                  :| [])
-           Right (NativeFormatMatch _) -> recognitionMatch
-           Right (NativeFormatMismatch _ _) -> noRecognitionMatch
-    else noRecognitionMatch
+  case decodeNative bytes of
+    Left failure ->
+      recognitionFailure
+        (recognitionDiagnostic
+           (nativeFailureRule failure rules)
+           singletonOccurrence
+           :| [])
+    Right (NativeFormatMatch _) -> recognitionMatch
+    Right (NativeFormatMismatch _ _) -> noRecognitionMatch
 
 decode ::
      NativeFailureRules (DecodeRule scope)

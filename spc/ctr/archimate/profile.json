@@ -10,7 +10,7 @@
       "invalid-enum"
     ],
     "shapeDigestAlgorithm": "sha256-of-canonical-JSON-pointer-kind-and-exact-object-member-manifest-excluding-this-shapeSha256-member",
-    "shapeSha256": "65e6f5d6c9cd1312e0b9f5b42cf86a9bffa3dba1e52b65415018bfcea1973560"
+    "shapeSha256": "029fea4eb74b23939687534ac71fd52fdb5065bb9e8bb1d168f45299b7e23838"
   },
   "applicabilityProvenance": {
     "archimateVersion": "3.2",
@@ -2628,7 +2628,7 @@
       "supplementalInputIsolation": "propertyMappings-contain-no-strategy-formulation-or-collective-fit-input-transport"
     },
     "schema": "o2i.core-semantics/target-v46",
-    "sha256": "0654111b900ff1c19b241a4fdfec10694d61a88471981e9df6bcb58b27785f01",
+    "sha256": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333",
     "subject": "exact-bytes",
     "version": "0.3.0"
   },
@@ -2792,7 +2792,7 @@
         "incidencePredicateValues": [
           "key-has-reserved-prefix-and-is-not-in-global-known-key-catalog",
           "not-applicable",
-          "relationship-source-references-qualification-proposal-carrier",
+          "relationship-is-directed-from-qualification-proposal-carrier-and-carries-the-role-key",
           "segment-is-incident-to-exactly-one-bound-family-junction-carrier",
           "source-or-target-reference-resolves-to-current-graph-member",
           "target-reference-resolves-to-current-contextualizable-graph-member-and-source-reference-resolves-to-context-carrier-candidate"
@@ -3074,7 +3074,7 @@
               "predicateMode": "endpoint-incidence",
               "predicateField": "resolved-relationship.source-and-target",
               "predicateSource": "qualificationProposalMapping.references",
-              "incidencePredicate": "relationship-source-references-qualification-proposal-carrier"
+              "incidencePredicate": "relationship-is-directed-from-qualification-proposal-carrier-and-carries-the-role-key"
             },
             "constructorId": "ActivateQualificationProposalIncidence",
             "produces": [
@@ -3226,6 +3226,7 @@
           "reference-resolves-exactly-once-as-the-proposal-referenced-endpoint",
           "reference-resolves-exactly-once-in-declared-endpoint-family",
           "source-references-trigger",
+          "source-references-trigger-and-relationship-carries-o2i.role",
           "source-references-trigger-and-target-is-an-exact-endpoint-already-referenced-by-the-same-proposal-and-relationship-matches-contextualization-pattern",
           "target-references-trigger",
           "target-references-trigger-and-relationship-carries-o2i.role",
@@ -3515,7 +3516,7 @@
           "traversalDirection": "inverse-reference",
           "referenceField": "relationship.source",
           "includedFamily": "relationship-record",
-          "incidencePredicate": "source-references-trigger"
+          "incidencePredicate": "source-references-trigger-and-relationship-carries-o2i.role"
         },
         "constructorId": "CloseQualificationRoleIncidenceBySource",
         "consumes": "qualification-proposal-carrier",
@@ -3880,14 +3881,14 @@
     }
   ],
   "profileIdentity": {
+    "archimateVersion": "3.2",
+    "identity": "o2i.archimate-profile",
+    "token": "0.3",
+    "version": "0.3.0",
     "adapterIds": [
       "amx"
     ],
-    "archimateVersion": "3.2",
-    "identity": "o2i.archimate-profile",
-    "notation": "archimate-3.2",
-    "token": "0.3",
-    "version": "0.3.0"
+    "notation": "archimate-3.2"
   },
   "ruleIdentityContract": {
     "classification": "exact-viewScopeContract.classification.{directActivationRules|incidenceActivationRules|relationshipMappingSelection|truthTable}.ruleId",
@@ -4034,7 +4035,6 @@
       "/qualificationProposalMapping/carrier/carrierCategory/ruleId",
       "/qualificationProposalMapping/carrier/commitment/ruleId",
       "/qualificationProposalMapping/carrier/o2iType/ruleId",
-      "/qualificationProposalMapping/carrier/rationaleProjection/validation/ruleId",
       "/qualificationProposalMapping/carrier/stableIdentity/ruleId",
       "/qualificationProposalMapping/carrier/stableIdentityScope/ruleId",
       "/qualificationProposalMapping/references/archimateRelationship/ruleId",
@@ -4189,7 +4189,6 @@
       "qualification.proposal.carrier.category",
       "qualification.proposal.carrier.commitment",
       "qualification.proposal.carrier.o2i-type",
-      "qualification.proposal.carrier.rationale-normalization",
       "qualification.proposal.carrier.stable-identity",
       "qualification.proposal.carrier.stable-identity-scope",
       "qualification.proposal.reference.commitment",
@@ -4247,7 +4246,7 @@
         "relationMappings-generated-attribute-rules"
       ],
       "ordering": "UTF8-bytewise-ruleId",
-      "cardinality": 160,
+      "cardinality": 159,
       "bijection": "exactly-one-complete-inventory-entry-per-emit-capable-rule-and-no-other-entry"
     },
     "operationBootstrapRuleInventory": [
@@ -4366,7 +4365,6 @@
       "qualification.proposal.carrier.category",
       "qualification.proposal.carrier.commitment",
       "qualification.proposal.carrier.o2i-type",
-      "qualification.proposal.carrier.rationale-normalization",
       "qualification.proposal.carrier.stable-identity",
       "qualification.proposal.carrier.stable-identity-scope",
       "qualification.proposal.reference.commitment",
@@ -4603,11 +4601,7 @@
       },
       "rationaleProjection": {
         "normalization": "normalizationContract.documentation",
-        "occurrenceProjection": "zero-or-one-preserved-documentation-occurrence",
-        "validation": {
-          "expected": "zero-or-one-normalized-documentation-occurrence",
-          "ruleId": "qualification.proposal.carrier.rationale-normalization"
-        }
+        "occurrenceProjection": "zero-or-one-preserved-documentation-occurrence"
       },
       "sourceProjection": {
         "occurrenceProjection": "zero-or-more-preserved-property-value-occurrences",
@@ -5264,7 +5258,6 @@
           "qualification.proposal.carrier.category",
           "qualification.proposal.carrier.commitment",
           "qualification.proposal.carrier.o2i-type",
-          "qualification.proposal.carrier.rationale-normalization",
           "qualification.proposal.carrier.stable-identity",
           "qualification.proposal.carrier.stable-identity-scope",
           "qualification.proposal.reference.commitment",

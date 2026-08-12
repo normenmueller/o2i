@@ -80,7 +80,7 @@ descriptorTest =
     Profile.profileDescriptorNotation descriptor @?= "archimate-3.2"
     Profile.profileDescriptorAdapterIds descriptor @?= ["amx"]
     Profile.profileDescriptorContractDigest descriptor
-      @?= "08c6e1930a6bac4151b72bd3b23f312df85b1dca4076509c705585c91ea9fe58"
+      @?= "8be461eea73fee9f408fc830d7b85b4ebdf238a3f1521ecc58e56edfdccae7d2"
 
 mappingTest :: TestTree
 mappingTest =
@@ -227,7 +227,7 @@ closureDeterminismTest =
   where
     provenancePrefix =
       "o2i.archimate-profile|"
-        <> "08c6e1930a6bac4151b72bd3b23f312df85b1dca4076509c705585c91ea9fe58|"
+        <> "8be461eea73fee9f408fc830d7b85b4ebdf238a3f1521ecc58e56edfdccae7d2|"
     activationSuffixes =
       [ "graph|classification.graph.activate.carrier|record:1|record:1|carrier:context"
       , "graph|classification.graph.activate.committed-element|record:1|record:1|reserved-placement:o2i.commitment"
@@ -272,6 +272,15 @@ closureAndProjectionTest =
       "closure provenance is missing"
       (not (null (Closure.closedClosureProvenance closed)))
     projected <- acceptedProjection closed
+    mappingProvenance projected
+      @?= [ ("carrier", "archimate:record:1", "context", Nothing, Nothing)
+          , ("carrier", "archimate:record:2", "context", Nothing, Nothing)
+          , ( "relation"
+            , "archimate:record:3"
+            , "relation-syntax:AssociationRelationship:true:qualifies"
+            , Just "archimate:record:1"
+            , Just "archimate:record:2")
+          ]
     Projection.profileQualificationProposals projected @?= []
     summary <- assessProjectedStructure closed projected
     summaryCarrierCount summary @?= 2
@@ -340,9 +349,12 @@ qualificationTest =
           ]
     modelIdentityText (Projection.qualificationProposalIdentity proposal)
       @?= "proposal"
-    Projection.qualificationProposalRationale proposal
-      @?= Just "A precise qualification rationale."
-    Projection.qualificationProposalSources proposal @?= ["source-document"]
+    qualificationRationale proposal
+      @?= Just
+            ( "proposal-documentation-field[1]"
+            , "A precise qualification rationale.")
+    qualificationSources proposal
+      @?= [("archimate:property:2", "source-document")]
     references
       @?= [ ("need-qualification-proposal.role.strategy", "strategy")
           , ("need-qualification-proposal.role.need", "need")
@@ -388,25 +400,64 @@ qualificationNormalizationTest =
         proposal <-
           acceptedQualificationProposal
             Fixture.qualificationNormalizedRationaleDraft
-        Projection.qualificationProposalRationale proposal
-          @?= Just "Caf\x00e9\nLine 2"
-    , rulePresentTest
-        "rejects multiple rationale occurrences"
-        Fixture.qualificationMultipleRationaleDraft
-        "Qualification"
-        "qualification.proposal.carrier.rationale-normalization"
-    , rulePresentTest
-        "rejects invalid rationale controls"
-        Fixture.qualificationInvalidRationaleDraft
-        "Qualification"
-        "qualification.proposal.carrier.rationale-normalization"
-    , testCase "normalizes, deduplicates, and sorts sources" $ do
+        qualificationRationale proposal
+          @?= Just ("proposal-documentation-field[1]", "Caf\x00e9\nLine 2")
+    , testCase "omits an ambiguous rationale" $ do
+        proposal <-
+          acceptedQualificationProposal
+            Fixture.qualificationMultipleRationaleDraft
+        Projection.qualificationProposalRationale proposal @?= Nothing
+    , testCase "omits an invalid rationale" $ do
+        proposal <-
+          acceptedQualificationProposal
+            Fixture.qualificationInvalidRationaleDraft
+        Projection.qualificationProposalRationale proposal @?= Nothing
+    , testCase "normalizes sources while preserving occurrences and order" $ do
         proposal <-
           acceptedQualificationProposal
             Fixture.qualificationNormalizedSourcesDraft
-        Projection.qualificationProposalSources proposal
-          @?= ["a-source", "z-source", "\x00e9-source"]
+        qualificationSources proposal
+          @?= [ ("archimate:property:2", "z-source")
+              , ("archimate:property:3", "a-source")
+              , ("archimate:property:4", "a-source")
+              , ("archimate:property:5", "\x00e9-source")
+              ]
     ]
+
+qualificationSources :: Projection.QualificationProposal -> [(Text, Text)]
+qualificationSources proposal =
+  [ ( occurrenceIdentityText (Projection.qualificationSourceOccurrence source)
+    , Projection.qualificationSourceValue source)
+  | source <- Projection.qualificationProposalSources proposal
+  ]
+
+qualificationRationale :: Projection.QualificationProposal -> Maybe (Text, Text)
+qualificationRationale proposal =
+  fmap
+    (\rationale ->
+       ( renderLocation (Projection.qualificationRationaleLocation rationale)
+       , Projection.qualificationRationaleValue rationale))
+    (Projection.qualificationProposalRationale proposal)
+
+mappingProvenance ::
+     Projection.ProfileProjection
+  -> [(Text, Text, Text, Maybe Text, Maybe Text)]
+mappingProvenance projection =
+  map
+    (Projection.foldProfileMappingProvenance
+       (\occurrence mappingId ->
+          ( "carrier"
+          , occurrenceIdentityText occurrence
+          , mappingId
+          , Nothing
+          , Nothing))
+       (\occurrence mappingId source target ->
+          ( "relation"
+          , occurrenceIdentityText occurrence
+          , mappingId
+          , Just (occurrenceIdentityText source)
+          , Just (occurrenceIdentityText target))))
+    (Projection.profileMappingProvenance projection)
 
 rulePresentTest :: String -> Draft.ProfileDraft -> Text -> Text -> TestTree
 rulePresentTest name draft view expected =
@@ -432,7 +483,9 @@ qualificationAdversarialTest =
     [ rejectionTest
         "requires an explicit role"
         Fixture.qualificationMissingRoleDraft
-        ["qualification.proposal.reference.role-property"]
+        [ "property:qualification-proposal-reference-association:o2i.role:property-cardinality"
+        , "qualification.proposal.reference.role-property"
+        ]
     , rejectionTest
         "rejects an unknown role"
         Fixture.qualificationWrongRoleDraft
@@ -574,7 +627,7 @@ unmarkedDisplayedElementTest =
   where
     stableConceptProvenance trigger =
       "o2i.archimate-profile|"
-        <> "08c6e1930a6bac4151b72bd3b23f312df85b1dca4076509c705585c91ea9fe58|"
+        <> "8be461eea73fee9f408fc830d7b85b4ebdf238a3f1521ecc58e56edfdccae7d2|"
         <> "graph|graph.stable-concept|"
         <> trigger
         <> "|record:1|"

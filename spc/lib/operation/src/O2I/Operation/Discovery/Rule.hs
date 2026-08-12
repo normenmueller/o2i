@@ -139,21 +139,27 @@ foldRuleAuthority operation core profile adapter authority =
     ProfileAuthority reference binding -> profile reference binding
     AdapterAuthority identifier binding -> adapter identifier binding
 
+-- | Authority and exact contract binding owning the discovered rule.
 discoveredRuleAuthority :: DiscoveredRule -> RuleAuthority
 discoveredRuleAuthority (DiscoveredRule authority _ _ _ _ _) = authority
 
+-- | Stable authority-local identity of the discovered rule.
 discoveredRuleIdentity :: DiscoveredRule -> Text
 discoveredRuleIdentity (DiscoveredRule _ identity _ _ _ _) = identity
 
+-- | Owner-defined processing stage of the discovered rule.
 discoveredRuleStage :: DiscoveredRule -> Text
 discoveredRuleStage (DiscoveredRule _ _ stage _ _ _) = stage
 
+-- | Normative expectation carried by the compiled rule.
 discoveredRuleExpectation :: DiscoveredRule -> Text
 discoveredRuleExpectation (DiscoveredRule _ _ _ expectation _ _) = expectation
 
+-- | Non-normative explanation of why the rule matters.
 discoveredRuleMeaning :: DiscoveredRule -> Text
 discoveredRuleMeaning (DiscoveredRule _ _ _ _ meaning _) = meaning
 
+-- | Non-normative corrective action associated with the rule.
 discoveredRuleAction :: DiscoveredRule -> Text
 discoveredRuleAction (DiscoveredRule _ _ _ _ _ action) = action
 

@@ -5,7 +5,6 @@
 module O2I.Adapter.AMX.Internal.XML
   ( decodeNative
   , decodeNativeWithLimits
-  , hasNativeAMXSignal
   , archiNamespace
   , xsiNamespace
   , expectedRootName
@@ -19,7 +18,6 @@ import Data.Maybe (mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as TextEncoding
-import qualified Data.Text.Encoding.Error as TextEncodingError
 import qualified Data.Text.Lazy as LazyText
 import O2I.Adapter.AMX.Internal.Types
 import O2I.Adapter.AMX.Internal.XML.Lexical (normalizeXmlAttributeWhitespace)
@@ -79,45 +77,6 @@ decodeNativeWithLimits limits source = do
               [] -> NativeFormatMismatch NativeVersionMissing native
               version:_ ->
                 NativeFormatMismatch (NativeVersionUnsupported version) native)
-
--- | Detect a bounded native AMX root signal without claiming arbitrary
--- malformed or non-XML input for this adapter.
-hasNativeAMXSignal :: ByteString.ByteString -> Bool
-hasNativeAMXSignal source = rootClaimsExpectedName prefix
-  where
-    signalLimit = maximumInputBytes defaultDecodeLimits
-    prefix = decodeSignalPrefix (ByteString.take signalLimit source)
-
-decodeSignalPrefix :: ByteString.ByteString -> Text
-decodeSignalPrefix bytes
-  | ByteString.isPrefixOf (ByteString.pack [0, 0, 254, 255]) bytes =
-    TextEncoding.decodeUtf32BEWith signalDecodeError (ByteString.drop 4 bytes)
-  | ByteString.isPrefixOf (ByteString.pack [255, 254, 0, 0]) bytes =
-    TextEncoding.decodeUtf32LEWith signalDecodeError (ByteString.drop 4 bytes)
-  | ByteString.isPrefixOf (ByteString.pack [254, 255]) bytes =
-    TextEncoding.decodeUtf16BEWith signalDecodeError (ByteString.drop 2 bytes)
-  | ByteString.isPrefixOf (ByteString.pack [255, 254]) bytes =
-    TextEncoding.decodeUtf16LEWith signalDecodeError (ByteString.drop 2 bytes)
-  | ByteString.isPrefixOf (ByteString.pack [0, 0, 0, 60]) bytes =
-    TextEncoding.decodeUtf32BEWith signalDecodeError bytes
-  | ByteString.isPrefixOf (ByteString.pack [60, 0, 0, 0]) bytes =
-    TextEncoding.decodeUtf32LEWith signalDecodeError bytes
-  | ByteString.isPrefixOf (ByteString.pack [0, 60]) bytes =
-    TextEncoding.decodeUtf16BEWith signalDecodeError bytes
-  | ByteString.isPrefixOf (ByteString.pack [60, 0]) bytes =
-    TextEncoding.decodeUtf16LEWith signalDecodeError bytes
-  | ByteString.isPrefixOf (ByteString.pack [239, 187, 191]) bytes =
-    decodeUtf8Prefix (ByteString.drop 3 bytes)
-  | otherwise = decodeUtf8Prefix bytes
-
-decodeUtf8Prefix :: ByteString.ByteString -> Text
-decodeUtf8Prefix = TextEncoding.decodeUtf8With signalDecodeError
-
-signalDecodeError :: TextEncodingError.OnDecodeError
-signalDecodeError _ _ = Just '\0'
-
-rootClaimsExpectedName :: Text -> Bool
-rootClaimsExpectedName = hasExpandedRootSignal (Just archiNamespace) "model"
 
 stripUtf8Bom ::
      ByteString.ByteString -> Either NativeFailure ByteString.ByteString

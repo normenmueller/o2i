@@ -8,53 +8,40 @@ import check_haskell_api_contracts as contracts
 
 
 class HaskellApiContractTest(unittest.TestCase):
-    def test_relational_internal_imports_are_executor_only(self):
-        declarations = (
-            "import O2I.Validation.Relational.Internal\n",
-            "import qualified O2I.Validation.Relational.Internal\n",
-            "import safe O2I.Validation.Relational.Internal\n",
-            'import "o2i-core" O2I.Validation.Relational.Internal\n',
-            'import qualified "o2i-core" '
-            "O2I.Validation.Relational.Internal as Internal\n",
-            "import O2I.Validation.Relational.Internal qualified\n",
-            "import\n  qualified\n  "
-            "O2I.Validation.Relational.Internal\n",
-            "import {-# SOURCE #-} safe qualified "
-            '"o2i-core" O2I.Validation.Relational.Internal\n',
-        )
-        for declaration in declarations:
-            with self.subTest(declaration=declaration):
-                with TemporaryDirectory() as temporary:
-                    root = Path(temporary)
-                    source = root / "spc/lib/core/src"
-                    evaluator = (
-                        source / "O2I/Validation/Relational/Eval.hs"
-                    )
-                    author = source / "O2I/Language/Macro.hs"
-                    evaluator.parent.mkdir(parents=True)
-                    author.parent.mkdir(parents=True)
-                    evaluator.write_text(declaration)
-                    author.write_text(declaration)
+    def test_core_inventory_requires_exact_sources_and_public_modules(self):
+        with TemporaryDirectory() as temporary:
+            package = Path(temporary)
+            for source_name in contracts.CORE_SOURCE_FILES:
+                source = package / source_name
+                source.parent.mkdir(parents=True, exist_ok=True)
+                source.write_text("module Fixture where\n")
+            modules = ",\n    ".join(sorted(contracts.CORE_EXPOSED_MODULES))
+            (package / "o2i-core.cabal").write_text(
+                "cabal-version: 3.0\n\nlibrary\n"
+                f"  exposed-modules:\n    {modules}\n"
+                "  hs-source-dirs: src\n"
+            )
 
-                    with self.assertRaisesRegex(
-                        RuntimeError,
-                        "O2I/Language/Macro.hs",
-                    ):
-                        contracts.check_relational_internal_import_boundary(
-                            root
-                        )
+            contracts.check_core_package_inventory(package)
 
-    def test_import_scanner_ignores_comments_and_package_strings(self):
-        source = """
--- import O2I.Validation.Relational.Internal
-{- import qualified O2I.Validation.Relational.Internal -}
-import "O2I.Validation.Relational.Internal" O2I.Language.Macro
-"""
+    def test_core_inventory_rejects_unexpected_source(self):
+        with TemporaryDirectory() as temporary:
+            package = Path(temporary)
+            for source_name in contracts.CORE_SOURCE_FILES:
+                source = package / source_name
+                source.parent.mkdir(parents=True, exist_ok=True)
+                source.write_text("module Fixture where\n")
+            extra = package / "src/O2I/Legacy.hs"
+            extra.parent.mkdir(parents=True, exist_ok=True)
+            extra.write_text("module O2I.Legacy where\n")
+            modules = ",\n    ".join(sorted(contracts.CORE_EXPOSED_MODULES))
+            (package / "o2i-core.cabal").write_text(
+                "cabal-version: 3.0\n\nlibrary\n"
+                f"  exposed-modules:\n    {modules}\n"
+            )
 
-        self.assertEqual(
-            contracts.imported_modules(source),
-            ("O2I.Language.Macro",),
-        )
+            with self.assertRaisesRegex(RuntimeError, "O2I/Legacy.hs"):
+                contracts.check_core_package_inventory(package)
 
     def test_compiler_command_uses_the_exact_project_and_build(self):
         project = Path("/tmp/o2i/spc")
@@ -111,20 +98,16 @@ import "O2I.Validation.Relational.Internal" O2I.Language.Macro
 
     @patch.object(contracts, "check_compile_pass")
     @patch.object(contracts, "check_compile_failure")
-    @patch.object(contracts, "check_relational_internal_import_boundary")
     def test_package_selection_limits_public_and_private_contracts(
-        self, check_boundary, check_compile_failure, check_compile_pass
+        self, check_compile_failure, check_compile_pass
     ):
-        with patch.object(contracts, "PRIVATE_COMPILE_FAILURES", ()), \
-             patch.object(contracts, "PRIVATE_COMPILE_PASSES", ()):
+        with patch.object(contracts, "PRIVATE_COMPILE_FAILURES", ()):
             contracts.check_contracts(
                 Path("/tmp/o2i"),
                 Path("/tmp/o2i/spc"),
                 Path("/tmp/o2i/build"),
                 frozenset({"o2i-archimate-profile"}),
             )
-
-        check_boundary.assert_not_called()
         self.assertGreater(check_compile_failure.call_count, 0)
         self.assertTrue(
             all(

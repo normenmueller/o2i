@@ -235,7 +235,8 @@ assertedContextualizationDependency =
     length defects @?= 1
     map (semanticRuleId . semanticDefectRule) defects
       @?= [ semanticRuleId
-              (semanticRule Generated.ContextualizationAssertedDependencyRule)
+              (semanticRuleIdentity
+                 Generated.ContextualizationAssertedDependencyRuleIdentity)
           ]
     map semanticDefectWitnesses defects
       @?= [ map
@@ -697,10 +698,6 @@ compiledRuleCatalog = do
 
 compiledEvidenceSchemas :: Assertion
 compiledEvidenceSchemas = do
-  Generated.generatedSemanticEvidenceSchemaFields
-    Generated.GeneratedAssertedDependencyKeyWitness
-    @?= ("propositionOccurrence"
-           NonEmpty.:| ["endpointOccurrence", "contextualizationOccurrence"])
   Generated.generatedSemanticEvidenceSchemaFields
     Generated.GeneratedFitClaimKeyWitness
     @?= ("claim" NonEmpty.:| [])

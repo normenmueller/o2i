@@ -10,7 +10,7 @@
       "invalid-enum"
     ],
     "shapeDigestAlgorithm": "sha256-of-canonical-JSON-pointer-kind-and-exact-object-member-manifest-excluding-this-shapeSha256-member",
-    "shapeSha256": "fbb21f3db5bda60724b8a1448fd7bd302050f4d1e21be2873cd040f84fd3f2e4"
+    "shapeSha256": "3e091e8bc0fd3a887da02f8591292c2a8ea7d64c7e83951183ab71fe4f5b1278"
   },
   "schema": "o2i.core-semantics/target-v46",
   "coreIdentity": {
@@ -573,11 +573,6 @@
       ]
     },
     "evidenceKeySchemas": {
-      "AssertedDependencyKey": [
-        "propositionOccurrence",
-        "endpointOccurrence",
-        "contextualizationOccurrence"
-      ],
       "NeedKey": [
         "need"
       ],
@@ -594,7 +589,6 @@
       ]
     },
     "evidenceKeyByRule": {
-      "core.contextualization.asserted-dependency": "AssertedDependencyKey",
       "core.situated-need.driver-cardinality": "NeedKey",
       "core.situated-need.objective-cardinality": "NeedKey",
       "core.situated-need.surfacing-situation-cardinality": "NeedKey",
@@ -615,9 +609,8 @@
     "defectIdentity": "rule-id-and-the-exact-evidence-key-schema-bound-by-evidenceKeyByRule"
   },
   "strategyFormulationSemantics": {
-    "inputAuthority": "supplementalInputSchema-plus-decoder-canonicalization-and-supplemental-input-binding",
-    "inputProperties": {
-      "strategyBinding": "supplementalInputContract-subject-key-and-identity-binding",
+    "semanticObligations": {
+      "strategyBinding": "input-strategy-equals-the-assessed-model-strategy",
       "scope": "supplementalInputSchema.StrategyFormulationInput.scope",
       "anchoringPeriod": "supplementalInputSchema.StrategyFormulationInput.anchoring.period",
       "anchoringResponsibilityScope": "supplementalInputSchema.StrategyFormulationInput.anchoring.responsibilityScope",
@@ -628,9 +621,7 @@
       "derivedGuardrails": "supplementalInputSchema.StrategyFormulationInput.derivedGuardrails",
       "positioning": "supplementalInputSchema.StrategyFormulationInput.positioning",
       "tradeOffs": "supplementalInputSchema.StrategyFormulationInput.tradeOffs",
-      "fitRationale": "supplementalInputSchema.StrategyFormulationInput.fitRationale"
-    },
-    "semanticObligations": {
+      "fitRationale": "supplementalInputSchema.StrategyFormulationInput.fitRationale",
       "diagnosis": "exactly-one-primitive.strategy.driver-owned-by-strategy",
       "intent": "exactly-one-primitive.strategy.objective-owned-by-strategy",
       "guidingPolicy": "exactly-one-primitive.strategy.principle-owned-by-strategy",
@@ -644,6 +635,18 @@
     },
     "derivedProof": "QualificationEligibleStrategy-only-after-complete-available-assessment",
     "ruleIds": {
+      "strategyBinding": "core.strategy-formulation.strategy-binding",
+      "scope": "core.strategy-formulation.scope",
+      "anchoringPeriod": "core.strategy-formulation.anchoring.period",
+      "anchoringResponsibilityScope": "core.strategy-formulation.anchoring.responsibility-scope",
+      "anchoringDecisionLevel": "core.strategy-formulation.anchoring.decision-level",
+      "anchoringResponsibilities": "core.strategy-formulation.anchoring.responsibilities",
+      "anchoringDecisionPaths": "core.strategy-formulation.anchoring.decision-paths",
+      "anchoringImplementationLogic": "core.strategy-formulation.anchoring.implementation-logic",
+      "derivedGuardrails": "core.strategy-formulation.derived-guardrails",
+      "positioning": "core.strategy-formulation.positioning",
+      "tradeOffs": "core.strategy-formulation.trade-offs",
+      "fitRationale": "core.strategy-formulation.fit-rationale",
       "diagnosis": "core.strategy-formulation.diagnosis",
       "intent": "core.strategy-formulation.intent",
       "guidingPolicy": "core.strategy-formulation.guiding-policy",
@@ -771,7 +774,6 @@
         ]
       },
       "evidenceKeyByRule": {
-        "core.collective-strategy-realization.asserted-completeness": "FitClaimKey",
         "core.collective-strategy-realization.fit-participant-binding": "FitClaimKey",
         "core.collective-strategy-realization.fit-target-binding": "FitClaimKey",
         "core.collective-strategy-realization.fit-target-guiding-policy": "FitClaimKey",
@@ -1179,6 +1181,54 @@
         "evidenceKind": "asserted-proposition-and-contextualization-observation"
       },
       {
+        "path": "/strategyFormulationSemantics/ruleIds/strategyBinding",
+        "evidenceKind": "strategy-formulation-and-model-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/scope",
+        "evidenceKind": "strategy-formulation-input-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/anchoringPeriod",
+        "evidenceKind": "strategy-formulation-input-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/anchoringResponsibilityScope",
+        "evidenceKind": "strategy-formulation-input-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/anchoringDecisionLevel",
+        "evidenceKind": "strategy-formulation-input-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/anchoringResponsibilities",
+        "evidenceKind": "strategy-formulation-input-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/anchoringDecisionPaths",
+        "evidenceKind": "strategy-formulation-input-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/anchoringImplementationLogic",
+        "evidenceKind": "strategy-formulation-input-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/derivedGuardrails",
+        "evidenceKind": "strategy-formulation-input-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/positioning",
+        "evidenceKind": "strategy-formulation-input-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/tradeOffs",
+        "evidenceKind": "strategy-formulation-input-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/fitRationale",
+        "evidenceKind": "strategy-formulation-input-observation"
+      },
+      {
         "path": "/strategyFormulationSemantics/ruleIds/diagnosis",
         "evidenceKind": "strategy-formulation-and-model-observation"
       },
@@ -1509,13 +1559,25 @@
       "core.situated-need.surfacing-situation-cardinality",
       "core.strategy-formulation.action-contributions",
       "core.strategy-formulation.actions",
+      "core.strategy-formulation.anchoring.decision-level",
+      "core.strategy-formulation.anchoring.decision-paths",
+      "core.strategy-formulation.anchoring.implementation-logic",
+      "core.strategy-formulation.anchoring.period",
+      "core.strategy-formulation.anchoring.responsibilities",
+      "core.strategy-formulation.anchoring.responsibility-scope",
+      "core.strategy-formulation.derived-guardrails",
       "core.strategy-formulation.diagnosis",
       "core.strategy-formulation.diagnosis-grounding",
+      "core.strategy-formulation.fit-rationale",
       "core.strategy-formulation.guiding-policy",
       "core.strategy-formulation.guiding-policy-actions",
       "core.strategy-formulation.intent",
       "core.strategy-formulation.key-result-substantiation",
       "core.strategy-formulation.key-results",
+      "core.strategy-formulation.positioning",
+      "core.strategy-formulation.scope",
+      "core.strategy-formulation.strategy-binding",
+      "core.strategy-formulation.trade-offs",
       "core.strategy-formulation.vision-orientation",
       "core.structured-proposition.commitment",
       "core.structured-proposition.family",
@@ -1597,7 +1659,7 @@
         "derivedInventoryGroups"
       ],
       "ordering": "UTF8-bytewise-ruleId",
-      "cardinality": 181,
+      "cardinality": 193,
       "bijection": "exactly-one-complete-inventory-entry-per-emit-capable-rule-and-no-other-entry"
     }
   },
@@ -4215,7 +4277,7 @@
     ]
   },
   "ruleExplanationContract": {
-    "status": "materialized-in-compiled-core-rule-catalog",
+    "status": "mandatory-implementation-gate-not-materialized-in-this-companion",
     "normativeFields": [
       "ruleId",
       "authority",
@@ -4345,13 +4407,25 @@
         "core.situated-need.surfacing-situation-cardinality",
         "core.strategy-formulation.action-contributions",
         "core.strategy-formulation.actions",
+        "core.strategy-formulation.anchoring.decision-level",
+        "core.strategy-formulation.anchoring.decision-paths",
+        "core.strategy-formulation.anchoring.implementation-logic",
+        "core.strategy-formulation.anchoring.period",
+        "core.strategy-formulation.anchoring.responsibilities",
+        "core.strategy-formulation.anchoring.responsibility-scope",
+        "core.strategy-formulation.derived-guardrails",
         "core.strategy-formulation.diagnosis",
         "core.strategy-formulation.diagnosis-grounding",
+        "core.strategy-formulation.fit-rationale",
         "core.strategy-formulation.guiding-policy",
         "core.strategy-formulation.guiding-policy-actions",
         "core.strategy-formulation.intent",
         "core.strategy-formulation.key-result-substantiation",
         "core.strategy-formulation.key-results",
+        "core.strategy-formulation.positioning",
+        "core.strategy-formulation.scope",
+        "core.strategy-formulation.strategy-binding",
+        "core.strategy-formulation.trade-offs",
         "core.strategy-formulation.vision-orientation"
       ],
       "structure": [

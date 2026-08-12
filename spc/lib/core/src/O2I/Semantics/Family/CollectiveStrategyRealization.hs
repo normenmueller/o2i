@@ -181,11 +181,9 @@ assessCompleteness proposition
     CollectiveCompletenessSatisfied
   | otherwise =
     CollectiveCompletenessViolated
-      (mkSemanticDefect
-         Generated.CollectiveAssertedCompletenessRule
-         (SemanticFitClaimEvidenceKey
-            (structuredPropositionModelIdentity proposition))
-         [structuredPropositionOccurrence proposition])
+      (mkCollectiveCompletenessDefect
+         (structuredPropositionModelIdentity proposition)
+         (structuredPropositionOccurrence proposition))
 
 assessFit ::
      SemanticIndex scope

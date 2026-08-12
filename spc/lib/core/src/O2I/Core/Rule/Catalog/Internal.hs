@@ -75,21 +75,27 @@ coreRuleAuthorityText CoreAuthority = "Core"
 foldCoreRuleAuthority :: result -> CoreRuleAuthority -> result
 foldCoreRuleAuthority core CoreAuthority = core
 
+-- | Stage containing rules for capability-owned supplemental inputs.
 capabilityInputRuleStage :: CoreRuleStage
 capabilityInputRuleStage = CapabilityInputStage
 
+-- | Stage containing qualification rules.
 qualificationRuleStage :: CoreRuleStage
 qualificationRuleStage = QualificationStage
 
+-- | Shared stage containing readiness and assessment rules.
 readinessAndAssessmentRuleStage :: CoreRuleStage
 readinessAndAssessmentRuleStage = ReadinessAndAssessmentStage
 
+-- | Stage containing semantic-validation rules.
 semanticsRuleStage :: CoreRuleStage
 semanticsRuleStage = SemanticsStage
 
+-- | Stage containing structural-validation rules.
 structureRuleStage :: CoreRuleStage
 structureRuleStage = StructureStage
 
+-- | Stage containing effect-trace rules.
 traceRuleStage :: CoreRuleStage
 traceRuleStage = TraceStage
 

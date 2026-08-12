@@ -17,11 +17,11 @@ contractVersion = "0.3.0"
 
 contractSha256 :: Text
 contractSha256 =
-  "0654111b900ff1c19b241a4fdfec10694d61a88471981e9df6bcb58b27785f01"
+  "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333"
 
 contractShapeSha256 :: Text
 contractShapeSha256 =
-  "fbb21f3db5bda60724b8a1448fd7bd302050f4d1e21be2873cd040f84fd3f2e4"
+  "3e091e8bc0fd3a887da02f8591292c2a8ea7d64c7e83951183ab71fe4f5b1278"
 
 data GeneratedCarrierCategory
   = GeneratedCarrierContext
@@ -1196,9 +1196,180 @@ generatedStructuredFamilyRows :: NonEmpty GeneratedStructuredFamilyRow
 generatedStructuredFamilyRows =
   generatedStructuredFamilyRow <$> generatedStructuredPropositionFamilies
 
+data GeneratedSemanticRuleIdentity
+  = CollectiveAssertedCollectiveCoverageRuleIdentity
+  | CollectiveAssertedCompletenessRuleIdentity
+  | CollectiveAssertedMacroSupportRuleIdentity
+  | CollectiveAssertedParticipantPrimitiveSupportRuleIdentity
+  | CollectiveFitPairwiseCoherenceRuleIdentity
+  | CollectiveFitParticipantBindingRuleIdentity
+  | CollectiveFitParticipantCompatibilityRuleIdentity
+  | CollectiveFitTargetBindingRuleIdentity
+  | CollectiveFitTargetGuidingPolicyRuleIdentity
+  | CollectiveFitTargetTradeOffsRuleIdentity
+  | ContextualizationAssertedDependencyRuleIdentity
+  | SituatedNeedDriverAnchoringRuleIdentity
+  | SituatedNeedDriverCardinalityRuleIdentity
+  | SituatedNeedObjectiveCardinalityRuleIdentity
+  | SituatedNeedObjectiveGroundingRuleIdentity
+  | SituatedNeedSurfacingSituationAnchoringRuleIdentity
+  | SituatedNeedSurfacingSituationCardinalityRuleIdentity
+  | StrategyFormulationActionContributionsRuleIdentity
+  | StrategyFormulationActionsRuleIdentity
+  | StrategyFormulationAnchoringDecisionLevelRuleIdentity
+  | StrategyFormulationAnchoringDecisionPathsRuleIdentity
+  | StrategyFormulationAnchoringImplementationLogicRuleIdentity
+  | StrategyFormulationAnchoringPeriodRuleIdentity
+  | StrategyFormulationAnchoringResponsibilitiesRuleIdentity
+  | StrategyFormulationAnchoringResponsibilityScopeRuleIdentity
+  | StrategyFormulationDerivedGuardrailsRuleIdentity
+  | StrategyFormulationDiagnosisRuleIdentity
+  | StrategyFormulationDiagnosisGroundingRuleIdentity
+  | StrategyFormulationFitRationaleRuleIdentity
+  | StrategyFormulationGuidingPolicyRuleIdentity
+  | StrategyFormulationGuidingPolicyActionsRuleIdentity
+  | StrategyFormulationIntentRuleIdentity
+  | StrategyFormulationKeyResultSubstantiationRuleIdentity
+  | StrategyFormulationKeyResultsRuleIdentity
+  | StrategyFormulationPositioningRuleIdentity
+  | StrategyFormulationScopeRuleIdentity
+  | StrategyFormulationStrategyBindingRuleIdentity
+  | StrategyFormulationTradeOffsRuleIdentity
+  | StrategyFormulationVisionOrientationRuleIdentity
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+generatedSemanticRuleIdentityText :: GeneratedSemanticRuleIdentity -> Text
+generatedSemanticRuleIdentityText value =
+  case value of
+    CollectiveAssertedCollectiveCoverageRuleIdentity ->
+      "core.collective-strategy-realization.asserted-collective-coverage"
+    CollectiveAssertedCompletenessRuleIdentity ->
+      "core.collective-strategy-realization.asserted-completeness"
+    CollectiveAssertedMacroSupportRuleIdentity ->
+      "core.collective-strategy-realization.asserted-macro-support"
+    CollectiveAssertedParticipantPrimitiveSupportRuleIdentity ->
+      "core.collective-strategy-realization.asserted-participant-primitive-support"
+    CollectiveFitPairwiseCoherenceRuleIdentity ->
+      "core.collective-strategy-realization.fit-pairwise-coherence"
+    CollectiveFitParticipantBindingRuleIdentity ->
+      "core.collective-strategy-realization.fit-participant-binding"
+    CollectiveFitParticipantCompatibilityRuleIdentity ->
+      "core.collective-strategy-realization.fit-participant-compatibility"
+    CollectiveFitTargetBindingRuleIdentity ->
+      "core.collective-strategy-realization.fit-target-binding"
+    CollectiveFitTargetGuidingPolicyRuleIdentity ->
+      "core.collective-strategy-realization.fit-target-guiding-policy"
+    CollectiveFitTargetTradeOffsRuleIdentity ->
+      "core.collective-strategy-realization.fit-target-trade-offs"
+    ContextualizationAssertedDependencyRuleIdentity ->
+      "core.contextualization.asserted-dependency"
+    SituatedNeedDriverAnchoringRuleIdentity ->
+      "core.situated-need.driver-anchoring"
+    SituatedNeedDriverCardinalityRuleIdentity ->
+      "core.situated-need.driver-cardinality"
+    SituatedNeedObjectiveCardinalityRuleIdentity ->
+      "core.situated-need.objective-cardinality"
+    SituatedNeedObjectiveGroundingRuleIdentity ->
+      "core.situated-need.objective-grounding"
+    SituatedNeedSurfacingSituationAnchoringRuleIdentity ->
+      "core.situated-need.surfacing-situation-anchoring"
+    SituatedNeedSurfacingSituationCardinalityRuleIdentity ->
+      "core.situated-need.surfacing-situation-cardinality"
+    StrategyFormulationActionContributionsRuleIdentity ->
+      "core.strategy-formulation.action-contributions"
+    StrategyFormulationActionsRuleIdentity ->
+      "core.strategy-formulation.actions"
+    StrategyFormulationAnchoringDecisionLevelRuleIdentity ->
+      "core.strategy-formulation.anchoring.decision-level"
+    StrategyFormulationAnchoringDecisionPathsRuleIdentity ->
+      "core.strategy-formulation.anchoring.decision-paths"
+    StrategyFormulationAnchoringImplementationLogicRuleIdentity ->
+      "core.strategy-formulation.anchoring.implementation-logic"
+    StrategyFormulationAnchoringPeriodRuleIdentity ->
+      "core.strategy-formulation.anchoring.period"
+    StrategyFormulationAnchoringResponsibilitiesRuleIdentity ->
+      "core.strategy-formulation.anchoring.responsibilities"
+    StrategyFormulationAnchoringResponsibilityScopeRuleIdentity ->
+      "core.strategy-formulation.anchoring.responsibility-scope"
+    StrategyFormulationDerivedGuardrailsRuleIdentity ->
+      "core.strategy-formulation.derived-guardrails"
+    StrategyFormulationDiagnosisRuleIdentity ->
+      "core.strategy-formulation.diagnosis"
+    StrategyFormulationDiagnosisGroundingRuleIdentity ->
+      "core.strategy-formulation.diagnosis-grounding"
+    StrategyFormulationFitRationaleRuleIdentity ->
+      "core.strategy-formulation.fit-rationale"
+    StrategyFormulationGuidingPolicyRuleIdentity ->
+      "core.strategy-formulation.guiding-policy"
+    StrategyFormulationGuidingPolicyActionsRuleIdentity ->
+      "core.strategy-formulation.guiding-policy-actions"
+    StrategyFormulationIntentRuleIdentity -> "core.strategy-formulation.intent"
+    StrategyFormulationKeyResultSubstantiationRuleIdentity ->
+      "core.strategy-formulation.key-result-substantiation"
+    StrategyFormulationKeyResultsRuleIdentity ->
+      "core.strategy-formulation.key-results"
+    StrategyFormulationPositioningRuleIdentity ->
+      "core.strategy-formulation.positioning"
+    StrategyFormulationScopeRuleIdentity -> "core.strategy-formulation.scope"
+    StrategyFormulationStrategyBindingRuleIdentity ->
+      "core.strategy-formulation.strategy-binding"
+    StrategyFormulationTradeOffsRuleIdentity ->
+      "core.strategy-formulation.trade-offs"
+    StrategyFormulationVisionOrientationRuleIdentity ->
+      "core.strategy-formulation.vision-orientation"
+
+generatedSemanticRuleIdentityRank :: GeneratedSemanticRuleIdentity -> Int
+generatedSemanticRuleIdentityRank = fromEnum
+
+generatedSemanticRuleIdentities :: NonEmpty GeneratedSemanticRuleIdentity
+generatedSemanticRuleIdentities =
+  CollectiveAssertedCollectiveCoverageRuleIdentity
+    :| [ CollectiveAssertedCompletenessRuleIdentity
+       , CollectiveAssertedMacroSupportRuleIdentity
+       , CollectiveAssertedParticipantPrimitiveSupportRuleIdentity
+       , CollectiveFitPairwiseCoherenceRuleIdentity
+       , CollectiveFitParticipantBindingRuleIdentity
+       , CollectiveFitParticipantCompatibilityRuleIdentity
+       , CollectiveFitTargetBindingRuleIdentity
+       , CollectiveFitTargetGuidingPolicyRuleIdentity
+       , CollectiveFitTargetTradeOffsRuleIdentity
+       , ContextualizationAssertedDependencyRuleIdentity
+       , SituatedNeedDriverAnchoringRuleIdentity
+       , SituatedNeedDriverCardinalityRuleIdentity
+       , SituatedNeedObjectiveCardinalityRuleIdentity
+       , SituatedNeedObjectiveGroundingRuleIdentity
+       , SituatedNeedSurfacingSituationAnchoringRuleIdentity
+       , SituatedNeedSurfacingSituationCardinalityRuleIdentity
+       , StrategyFormulationActionContributionsRuleIdentity
+       , StrategyFormulationActionsRuleIdentity
+       , StrategyFormulationAnchoringDecisionLevelRuleIdentity
+       , StrategyFormulationAnchoringDecisionPathsRuleIdentity
+       , StrategyFormulationAnchoringImplementationLogicRuleIdentity
+       , StrategyFormulationAnchoringPeriodRuleIdentity
+       , StrategyFormulationAnchoringResponsibilitiesRuleIdentity
+       , StrategyFormulationAnchoringResponsibilityScopeRuleIdentity
+       , StrategyFormulationDerivedGuardrailsRuleIdentity
+       , StrategyFormulationDiagnosisRuleIdentity
+       , StrategyFormulationDiagnosisGroundingRuleIdentity
+       , StrategyFormulationFitRationaleRuleIdentity
+       , StrategyFormulationGuidingPolicyRuleIdentity
+       , StrategyFormulationGuidingPolicyActionsRuleIdentity
+       , StrategyFormulationIntentRuleIdentity
+       , StrategyFormulationKeyResultSubstantiationRuleIdentity
+       , StrategyFormulationKeyResultsRuleIdentity
+       , StrategyFormulationPositioningRuleIdentity
+       , StrategyFormulationScopeRuleIdentity
+       , StrategyFormulationStrategyBindingRuleIdentity
+       , StrategyFormulationTradeOffsRuleIdentity
+       , StrategyFormulationVisionOrientationRuleIdentity
+       ]
+
+semanticsRuleIds :: NonEmpty Text
+semanticsRuleIds =
+  generatedSemanticRuleIdentityText <$> generatedSemanticRuleIdentities
+
 data GeneratedSemanticEvidenceSchema
-  = GeneratedAssertedDependencyKeySchema
-  | GeneratedFitClaimKeySchema
+  = GeneratedFitClaimKeySchema
   | GeneratedNeedKeySchema
   | GeneratedNeedMemberKeySchema
   | GeneratedParticipantClaimKeySchema
@@ -1207,9 +1378,6 @@ data GeneratedSemanticEvidenceSchema
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 data GeneratedSemanticEvidenceSchemaWitness (schema :: GeneratedSemanticEvidenceSchema) where
-  GeneratedAssertedDependencyKeyWitness
-    :: GeneratedSemanticEvidenceSchemaWitness
-         'GeneratedAssertedDependencyKeySchema
   GeneratedFitClaimKeyWitness
     :: GeneratedSemanticEvidenceSchemaWitness 'GeneratedFitClaimKeySchema
   GeneratedNeedKeyWitness
@@ -1228,7 +1396,6 @@ generatedSemanticEvidenceSchemaName ::
      GeneratedSemanticEvidenceSchemaWitness schema -> Text
 generatedSemanticEvidenceSchemaName witness =
   case witness of
-    GeneratedAssertedDependencyKeyWitness -> "AssertedDependencyKey"
     GeneratedFitClaimKeyWitness -> "FitClaimKey"
     GeneratedNeedKeyWitness -> "NeedKey"
     GeneratedNeedMemberKeyWitness -> "NeedMemberKey"
@@ -1240,9 +1407,6 @@ generatedSemanticEvidenceSchemaFields ::
      GeneratedSemanticEvidenceSchemaWitness schema -> NonEmpty Text
 generatedSemanticEvidenceSchemaFields witness =
   case witness of
-    GeneratedAssertedDependencyKeyWitness ->
-      "propositionOccurrence"
-        :| ["endpointOccurrence", "contextualizationOccurrence"]
     GeneratedFitClaimKeyWitness -> "claim" :| []
     GeneratedNeedKeyWitness -> "need" :| []
     GeneratedNeedMemberKeyWitness -> "need" :| ["member"]
@@ -1252,8 +1416,6 @@ generatedSemanticEvidenceSchemaFields witness =
 
 data GeneratedSemanticRule (schema :: GeneratedSemanticEvidenceSchema) where
   CollectiveAssertedCollectiveCoverageRule
-    :: GeneratedSemanticRule 'GeneratedFitClaimKeySchema
-  CollectiveAssertedCompletenessRule
     :: GeneratedSemanticRule 'GeneratedFitClaimKeySchema
   CollectiveAssertedMacroSupportRule
     :: GeneratedSemanticRule 'GeneratedParticipantClaimKeySchema
@@ -1271,8 +1433,6 @@ data GeneratedSemanticRule (schema :: GeneratedSemanticEvidenceSchema) where
     :: GeneratedSemanticRule 'GeneratedFitClaimKeySchema
   CollectiveFitTargetTradeOffsRule
     :: GeneratedSemanticRule 'GeneratedFitClaimKeySchema
-  ContextualizationAssertedDependencyRule
-    :: GeneratedSemanticRule 'GeneratedAssertedDependencyKeySchema
   SituatedNeedDriverAnchoringRule
     :: GeneratedSemanticRule 'GeneratedNeedMemberKeySchema
   SituatedNeedDriverCardinalityRule
@@ -1307,88 +1467,61 @@ data GeneratedSemanticRule (schema :: GeneratedSemanticEvidenceSchema) where
     :: GeneratedSemanticRule 'GeneratedStrategyKeySchema
 
 generatedSemanticRuleId :: GeneratedSemanticRule schema -> Text
-generatedSemanticRuleId rule =
+generatedSemanticRuleId =
+  generatedSemanticRuleIdentityText . generatedSemanticRuleIdentity
+
+generatedSemanticRuleIdentity ::
+     GeneratedSemanticRule schema -> GeneratedSemanticRuleIdentity
+generatedSemanticRuleIdentity rule =
   case rule of
     CollectiveAssertedCollectiveCoverageRule ->
-      "core.collective-strategy-realization.asserted-collective-coverage"
-    CollectiveAssertedCompletenessRule ->
-      "core.collective-strategy-realization.asserted-completeness"
+      CollectiveAssertedCollectiveCoverageRuleIdentity
     CollectiveAssertedMacroSupportRule ->
-      "core.collective-strategy-realization.asserted-macro-support"
+      CollectiveAssertedMacroSupportRuleIdentity
     CollectiveAssertedParticipantPrimitiveSupportRule ->
-      "core.collective-strategy-realization."
-        <> "asserted-participant-primitive-support"
+      CollectiveAssertedParticipantPrimitiveSupportRuleIdentity
     CollectiveFitPairwiseCoherenceRule ->
-      "core.collective-strategy-realization.fit-pairwise-coherence"
+      CollectiveFitPairwiseCoherenceRuleIdentity
     CollectiveFitParticipantBindingRule ->
-      "core.collective-strategy-realization.fit-participant-binding"
+      CollectiveFitParticipantBindingRuleIdentity
     CollectiveFitParticipantCompatibilityRule ->
-      "core.collective-strategy-realization.fit-participant-compatibility"
-    CollectiveFitTargetBindingRule ->
-      "core.collective-strategy-realization.fit-target-binding"
+      CollectiveFitParticipantCompatibilityRuleIdentity
+    CollectiveFitTargetBindingRule -> CollectiveFitTargetBindingRuleIdentity
     CollectiveFitTargetGuidingPolicyRule ->
-      "core.collective-strategy-realization.fit-target-guiding-policy"
-    CollectiveFitTargetTradeOffsRule ->
-      "core.collective-strategy-realization.fit-target-trade-offs"
-    ContextualizationAssertedDependencyRule ->
-      "core.contextualization.asserted-dependency"
-    SituatedNeedDriverAnchoringRule -> "core.situated-need.driver-anchoring"
-    SituatedNeedDriverCardinalityRule -> "core.situated-need.driver-cardinality"
+      CollectiveFitTargetGuidingPolicyRuleIdentity
+    CollectiveFitTargetTradeOffsRule -> CollectiveFitTargetTradeOffsRuleIdentity
+    SituatedNeedDriverAnchoringRule -> SituatedNeedDriverAnchoringRuleIdentity
+    SituatedNeedDriverCardinalityRule ->
+      SituatedNeedDriverCardinalityRuleIdentity
     SituatedNeedObjectiveCardinalityRule ->
-      "core.situated-need.objective-cardinality"
+      SituatedNeedObjectiveCardinalityRuleIdentity
     SituatedNeedObjectiveGroundingRule ->
-      "core.situated-need.objective-grounding"
+      SituatedNeedObjectiveGroundingRuleIdentity
     SituatedNeedSurfacingSituationAnchoringRule ->
-      "core.situated-need.surfacing-situation-anchoring"
+      SituatedNeedSurfacingSituationAnchoringRuleIdentity
     SituatedNeedSurfacingSituationCardinalityRule ->
-      "core.situated-need.surfacing-situation-cardinality"
+      SituatedNeedSurfacingSituationCardinalityRuleIdentity
     StrategyFormulationActionContributionsRule ->
-      "core.strategy-formulation.action-contributions"
-    StrategyFormulationActionsRule -> "core.strategy-formulation.actions"
-    StrategyFormulationDiagnosisRule -> "core.strategy-formulation.diagnosis"
+      StrategyFormulationActionContributionsRuleIdentity
+    StrategyFormulationActionsRule -> StrategyFormulationActionsRuleIdentity
+    StrategyFormulationDiagnosisRule -> StrategyFormulationDiagnosisRuleIdentity
     StrategyFormulationDiagnosisGroundingRule ->
-      "core.strategy-formulation.diagnosis-grounding"
+      StrategyFormulationDiagnosisGroundingRuleIdentity
     StrategyFormulationGuidingPolicyRule ->
-      "core.strategy-formulation.guiding-policy"
+      StrategyFormulationGuidingPolicyRuleIdentity
     StrategyFormulationGuidingPolicyActionsRule ->
-      "core.strategy-formulation.guiding-policy-actions"
-    StrategyFormulationIntentRule -> "core.strategy-formulation.intent"
+      StrategyFormulationGuidingPolicyActionsRuleIdentity
+    StrategyFormulationIntentRule -> StrategyFormulationIntentRuleIdentity
     StrategyFormulationKeyResultSubstantiationRule ->
-      "core.strategy-formulation.key-result-substantiation"
-    StrategyFormulationKeyResultsRule -> "core.strategy-formulation.key-results"
+      StrategyFormulationKeyResultSubstantiationRuleIdentity
+    StrategyFormulationKeyResultsRule ->
+      StrategyFormulationKeyResultsRuleIdentity
     StrategyFormulationVisionOrientationRule ->
-      "core.strategy-formulation.vision-orientation"
+      StrategyFormulationVisionOrientationRuleIdentity
 
 generatedSemanticRuleRank :: GeneratedSemanticRule schema -> Int
-generatedSemanticRuleRank rule =
-  case rule of
-    CollectiveAssertedCollectiveCoverageRule -> 0
-    CollectiveAssertedCompletenessRule -> 1
-    CollectiveAssertedMacroSupportRule -> 2
-    CollectiveAssertedParticipantPrimitiveSupportRule -> 3
-    CollectiveFitPairwiseCoherenceRule -> 4
-    CollectiveFitParticipantBindingRule -> 5
-    CollectiveFitParticipantCompatibilityRule -> 6
-    CollectiveFitTargetBindingRule -> 7
-    CollectiveFitTargetGuidingPolicyRule -> 8
-    CollectiveFitTargetTradeOffsRule -> 9
-    ContextualizationAssertedDependencyRule -> 10
-    SituatedNeedDriverAnchoringRule -> 11
-    SituatedNeedDriverCardinalityRule -> 12
-    SituatedNeedObjectiveCardinalityRule -> 13
-    SituatedNeedObjectiveGroundingRule -> 14
-    SituatedNeedSurfacingSituationAnchoringRule -> 15
-    SituatedNeedSurfacingSituationCardinalityRule -> 16
-    StrategyFormulationActionContributionsRule -> 17
-    StrategyFormulationActionsRule -> 18
-    StrategyFormulationDiagnosisRule -> 19
-    StrategyFormulationDiagnosisGroundingRule -> 20
-    StrategyFormulationGuidingPolicyRule -> 21
-    StrategyFormulationGuidingPolicyActionsRule -> 22
-    StrategyFormulationIntentRule -> 23
-    StrategyFormulationKeyResultSubstantiationRule -> 24
-    StrategyFormulationKeyResultsRule -> 25
-    StrategyFormulationVisionOrientationRule -> 26
+generatedSemanticRuleRank =
+  generatedSemanticRuleIdentityRank . generatedSemanticRuleIdentity
 
 generatedSemanticRuleEvidenceSchema ::
      GeneratedSemanticRule schema
@@ -1396,7 +1529,6 @@ generatedSemanticRuleEvidenceSchema ::
 generatedSemanticRuleEvidenceSchema rule =
   case rule of
     CollectiveAssertedCollectiveCoverageRule -> GeneratedFitClaimKeyWitness
-    CollectiveAssertedCompletenessRule -> GeneratedFitClaimKeyWitness
     CollectiveAssertedMacroSupportRule -> GeneratedParticipantClaimKeyWitness
     CollectiveAssertedParticipantPrimitiveSupportRule ->
       GeneratedParticipantClaimKeyWitness
@@ -1406,8 +1538,6 @@ generatedSemanticRuleEvidenceSchema rule =
     CollectiveFitTargetBindingRule -> GeneratedFitClaimKeyWitness
     CollectiveFitTargetGuidingPolicyRule -> GeneratedFitClaimKeyWitness
     CollectiveFitTargetTradeOffsRule -> GeneratedFitClaimKeyWitness
-    ContextualizationAssertedDependencyRule ->
-      GeneratedAssertedDependencyKeyWitness
     SituatedNeedDriverAnchoringRule -> GeneratedNeedMemberKeyWitness
     SituatedNeedDriverCardinalityRule -> GeneratedNeedKeyWitness
     SituatedNeedObjectiveCardinalityRule -> GeneratedNeedKeyWitness
@@ -1427,54 +1557,6 @@ generatedSemanticRuleEvidenceSchema rule =
       GeneratedStrategyMemberKeyWitness
     StrategyFormulationKeyResultsRule -> GeneratedStrategyKeyWitness
     StrategyFormulationVisionOrientationRule -> GeneratedStrategyKeyWitness
-
-data SomeGeneratedSemanticRule where
-  SomeGeneratedSemanticRule
-    :: GeneratedSemanticRule schema -> SomeGeneratedSemanticRule
-
-generatedSomeSemanticRuleId :: SomeGeneratedSemanticRule -> Text
-generatedSomeSemanticRuleId (SomeGeneratedSemanticRule rule) =
-  generatedSemanticRuleId rule
-
-generatedSomeSemanticRuleRank :: SomeGeneratedSemanticRule -> Int
-generatedSomeSemanticRuleRank (SomeGeneratedSemanticRule rule) =
-  generatedSemanticRuleRank rule
-
-generatedSemanticRules :: NonEmpty SomeGeneratedSemanticRule
-generatedSemanticRules =
-  SomeGeneratedSemanticRule CollectiveAssertedCollectiveCoverageRule
-    :| [ SomeGeneratedSemanticRule CollectiveAssertedCompletenessRule
-       , SomeGeneratedSemanticRule CollectiveAssertedMacroSupportRule
-       , SomeGeneratedSemanticRule
-           CollectiveAssertedParticipantPrimitiveSupportRule
-       , SomeGeneratedSemanticRule CollectiveFitPairwiseCoherenceRule
-       , SomeGeneratedSemanticRule CollectiveFitParticipantBindingRule
-       , SomeGeneratedSemanticRule CollectiveFitParticipantCompatibilityRule
-       , SomeGeneratedSemanticRule CollectiveFitTargetBindingRule
-       , SomeGeneratedSemanticRule CollectiveFitTargetGuidingPolicyRule
-       , SomeGeneratedSemanticRule CollectiveFitTargetTradeOffsRule
-       , SomeGeneratedSemanticRule ContextualizationAssertedDependencyRule
-       , SomeGeneratedSemanticRule SituatedNeedDriverAnchoringRule
-       , SomeGeneratedSemanticRule SituatedNeedDriverCardinalityRule
-       , SomeGeneratedSemanticRule SituatedNeedObjectiveCardinalityRule
-       , SomeGeneratedSemanticRule SituatedNeedObjectiveGroundingRule
-       , SomeGeneratedSemanticRule SituatedNeedSurfacingSituationAnchoringRule
-       , SomeGeneratedSemanticRule SituatedNeedSurfacingSituationCardinalityRule
-       , SomeGeneratedSemanticRule StrategyFormulationActionContributionsRule
-       , SomeGeneratedSemanticRule StrategyFormulationActionsRule
-       , SomeGeneratedSemanticRule StrategyFormulationDiagnosisRule
-       , SomeGeneratedSemanticRule StrategyFormulationDiagnosisGroundingRule
-       , SomeGeneratedSemanticRule StrategyFormulationGuidingPolicyRule
-       , SomeGeneratedSemanticRule StrategyFormulationGuidingPolicyActionsRule
-       , SomeGeneratedSemanticRule StrategyFormulationIntentRule
-       , SomeGeneratedSemanticRule
-           StrategyFormulationKeyResultSubstantiationRule
-       , SomeGeneratedSemanticRule StrategyFormulationKeyResultsRule
-       , SomeGeneratedSemanticRule StrategyFormulationVisionOrientationRule
-       ]
-
-semanticsRuleIds :: NonEmpty Text
-semanticsRuleIds = generatedSomeSemanticRuleId <$> generatedSemanticRules
 
 ruleIds :: NonEmpty Text
 ruleIds =
@@ -1579,13 +1661,25 @@ ruleIds =
        , "core.situated-need.surfacing-situation-cardinality"
        , "core.strategy-formulation.action-contributions"
        , "core.strategy-formulation.actions"
+       , "core.strategy-formulation.anchoring.decision-level"
+       , "core.strategy-formulation.anchoring.decision-paths"
+       , "core.strategy-formulation.anchoring.implementation-logic"
+       , "core.strategy-formulation.anchoring.period"
+       , "core.strategy-formulation.anchoring.responsibilities"
+       , "core.strategy-formulation.anchoring.responsibility-scope"
+       , "core.strategy-formulation.derived-guardrails"
        , "core.strategy-formulation.diagnosis"
        , "core.strategy-formulation.diagnosis-grounding"
+       , "core.strategy-formulation.fit-rationale"
        , "core.strategy-formulation.guiding-policy"
        , "core.strategy-formulation.guiding-policy-actions"
        , "core.strategy-formulation.intent"
        , "core.strategy-formulation.key-result-substantiation"
        , "core.strategy-formulation.key-results"
+       , "core.strategy-formulation.positioning"
+       , "core.strategy-formulation.scope"
+       , "core.strategy-formulation.strategy-binding"
+       , "core.strategy-formulation.trade-offs"
        , "core.strategy-formulation.vision-orientation"
        , "core.structured-proposition.commitment"
        , "core.structured-proposition.family"

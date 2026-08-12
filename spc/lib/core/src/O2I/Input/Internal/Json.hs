@@ -4,7 +4,7 @@
 -- | Duplicate-safe JSON decoding for Core-owned supplemental inputs.
 --
 -- This module deliberately separates UTF-8, JSON syntax, and duplicate-member
--- phases. Typed schema decoding may consume only 'DuplicateFreeJson'.
+-- phases. Typed schema decoding may consume only t'DuplicateFreeJson'.
 module O2I.Input.Internal.Json
   ( Utf8Failure(..)
   , Utf8Json

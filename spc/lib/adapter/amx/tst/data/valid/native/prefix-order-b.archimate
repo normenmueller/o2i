@@ -1,0 +1,1 @@
+<arch:model xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:arch="http://www.archimatetool.com/archimate" id="model" version="5.0.0"><folder id="folder" type="motivation"><element xsi:type="arch:Driver" id="driver" name="Driver"/></folder></arch:model>

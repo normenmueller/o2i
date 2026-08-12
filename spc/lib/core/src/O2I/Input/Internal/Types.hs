@@ -149,7 +149,9 @@ type role SupplementalBinding nominal
 
 -- | Complete identity-binding outcome for one selected-View graph.
 data SupplementalBinding scope = SupplementalBinding
+    -- | Inputs retained with identity-resolution state.
   { supplementalBindingInputs :: !(BoundSupplementalInputs scope)
+    -- | Deterministically ordered identity-binding defects.
   , supplementalBindingDefects :: ![SupplementalInputDefect]
   } deriving (Eq, Show)
 
@@ -208,7 +210,9 @@ data SupplementalInputEvidence
 
 -- | One deterministic supplemental-input defect.
 data SupplementalInputDefect = SupplementalInputDefect
+    -- | Closed failure classification selecting the owning Core rule.
   { supplementalInputDefectKind :: !SupplementalInputDefectKind
+    -- | Exact input, member, subject, or identity site that failed.
   , supplementalInputDefectEvidence :: !SupplementalInputEvidence
   } deriving (Eq, Ord, Show)
 

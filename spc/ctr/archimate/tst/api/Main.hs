@@ -83,7 +83,10 @@ $(assertAbstractTypes
     , "Projection.ProfileContractFailure"
     , "Projection.ProfileProjectionAssessment"
     , "Projection.ProfileProjection"
+    , "Projection.ProfileMappingProvenance"
     , "Projection.QualificationProposal"
+    , "Projection.QualificationRationale"
+    , "Projection.QualificationSource"
     , "Projection.QualificationReference"
     , "RuleCatalog.ProfileRuleCatalog"
     , "RuleExplanation.ProfileRuleId"
@@ -287,12 +290,18 @@ $(assertOrdinaryFunctions
     , 'Projection.projectProfile
     , 'Projection.foldProfileProjectionAssessment
     , 'Projection.profileStructureProjection
+    , 'Projection.profileMappingProvenance
+    , 'Projection.foldProfileMappingProvenance
     , 'Projection.profileQualificationProposals
     , 'Projection.qualificationProposalOccurrence
     , 'Projection.qualificationProposalIdentity
     , 'Projection.qualificationProposalRationale
+    , 'Projection.qualificationRationaleLocation
+    , 'Projection.qualificationRationaleValue
     , 'Projection.qualificationProposalSources
     , 'Projection.qualificationProposalReferences
+    , 'Projection.qualificationSourceOccurrence
+    , 'Projection.qualificationSourceValue
     , 'Projection.qualificationReferenceOccurrence
     , 'Projection.qualificationReferenceRole
     , 'Projection.qualificationReferenceTarget

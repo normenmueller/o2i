@@ -7,7 +7,6 @@ module O2I.Adapter.AMX.Internal.XML.Scan
   , defaultDecodeLimits
   , enforceInputByteLimit
   , scanXmlText
-  , hasExpandedRootSignal
   ) where
 
 import Control.Monad (foldM)
@@ -20,7 +19,6 @@ import Data.Set (Set)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import O2I.Adapter.AMX.Internal.Types
-import O2I.Adapter.AMX.Internal.XML.DTD (skipDoctypeDeclaration)
 import O2I.Adapter.AMX.Internal.XML.Lexical
 
 data DecodeLimits = DecodeLimits
@@ -69,22 +67,6 @@ scanXmlText limits input = do
   scanDocument limits initialState content
   pure encoding
 
--- | Recognize one exact expanded root name without claiming malformed input
--- that precedes the namespace binding establishing adapter ownership.
-hasExpandedRootSignal :: Maybe Text -> Text -> Text -> Bool
-hasExpandedRootSignal expectedNamespace expectedLocal input =
-  case firstRootStart input of
-    Nothing -> False
-    Just root ->
-      let (lexicalName, attributes) = takeName root
-       in validQName lexicalName
-            && qNameLocal lexicalName == expectedLocal
-            && probeAttributes
-                 lexicalName
-                 expectedNamespace
-                 initialProbeState
-                 attributes
-
 data ExpandedName =
   ExpandedName !(Maybe Text) !Text
   deriving (Eq, Ord)
@@ -92,14 +74,6 @@ data ExpandedName =
 data ElementFrame = ElementFrame
   { frameLexicalName :: !Text
   , frameNamespaces :: !(Map Text Text)
-  }
-
-data ProbeState = ProbeState
-  { probeLexicalNames :: !(Set Text)
-  , probeNamespaces :: !(Map Text Text)
-  , probeExpandedNames :: !(Set ExpandedName)
-  , probePendingNames :: !(Map Text (Set Text))
-  , probeOwnsRoot :: !Bool
   }
 
 data ScanState = ScanState
@@ -113,10 +87,6 @@ data ScanState = ScanState
 
 initialState :: ScanState
 initialState = ScanState [] 0 0 0 0 False
-
-initialProbeState :: ProbeState
-initialProbeState =
-  ProbeState Set.empty initialNamespaces Set.empty Map.empty False
 
 xmlNamespace, xmlnsNamespace :: Text
 xmlNamespace = "http://www.w3.org/XML/1998/namespace"
@@ -363,161 +333,6 @@ namespaceDeclarationPrefix name = Text.stripPrefix "xmlns:" name
 isNamespaceDeclarationName :: Text -> Bool
 isNamespaceDeclarationName =
   maybe False (const True) . namespaceDeclarationPrefix
-
-probeAttributes :: Text -> Maybe Text -> ProbeState -> Text -> Bool
-probeAttributes lexicalName expectedNamespace = go
-  where
-    expectedAttribute =
-      case fst (splitQName lexicalName) of
-        Nothing -> "xmlns"
-        Just prefix -> "xmlns:" <> prefix
-    go state input =
-      case Text.uncons input of
-        Just (separator, _)
-          | isXmlSpace separator ->
-            let remaining = Text.dropWhile isXmlSpace input
-             in case Text.uncons remaining of
-                  Just ('>', _) -> probeIsEstablished state
-                  _
-                    | Just _ <- Text.stripPrefix "/>" remaining ->
-                      probeIsEstablished state
-                    | otherwise ->
-                      let (name, afterName) = takeName remaining
-                       in if not (validQName name)
-                               || Set.member name (probeLexicalNames state)
-                            then False
-                            else case requireEquals
-                                        (Text.dropWhile isXmlSpace afterName) of
-                                   Left _ -> False
-                                   Right afterEquals ->
-                                     case quotedXmlValue afterEquals of
-                                       Nothing -> False
-                                       Just (rawValue, rest) ->
-                                         case normalizeXmlAttributeValue
-                                                rawValue of
-                                           Nothing -> False
-                                           Just value
-                                             | name == expectedAttribute ->
-                                               case namespaceDeclarationPrefix
-                                                      name of
-                                                 Nothing -> False
-                                                 Just prefix ->
-                                                   advanceNamespace
-                                                     state
-                                                     name
-                                                     prefix
-                                                     value
-                                                     (Just value
-                                                        == expectedNamespace)
-                                                     rest
-                                             | Just prefix <-
-                                                 namespaceDeclarationPrefix name ->
-                                               advanceNamespace
-                                                 state
-                                                 name
-                                                 prefix
-                                                 value
-                                                 False
-                                                 rest
-                                             | otherwise ->
-                                               advanceAttribute state name rest
-        _ -> False
-    advanceNamespace state name prefix value owns rest =
-      case validateNamespaceBinding prefix value of
-        Left _ -> False
-        Right () ->
-          case bindProbeNamespace prefix value state of
-            Nothing -> False
-            Just bound ->
-              continue
-                bound
-                  { probeLexicalNames =
-                      Set.insert name (probeLexicalNames bound)
-                  , probeOwnsRoot = probeOwnsRoot bound || owns
-                  }
-                rest
-    advanceAttribute state name rest =
-      case insertProbeAttribute name state of
-        Nothing -> False
-        Just observed ->
-          continue
-            observed
-              {probeLexicalNames = Set.insert name (probeLexicalNames observed)}
-            rest
-    continue state rest
-      | probeIsEstablished state = True
-      | otherwise = go state rest
-
-probeIsEstablished :: ProbeState -> Bool
-probeIsEstablished = probeOwnsRoot
-
-insertProbeAttribute :: Text -> ProbeState -> Maybe ProbeState
-insertProbeAttribute lexical state =
-  case splitQName lexical of
-    (Nothing, local) -> insertExpandedName (ExpandedName Nothing local) state
-    (Just prefix, local) ->
-      case Map.lookup prefix (probeNamespaces state) of
-        Just namespace ->
-          insertExpandedName (ExpandedName (Just namespace) local) state
-        Nothing ->
-          Just
-            state
-              { probePendingNames =
-                  Map.insertWith
-                    Set.union
-                    prefix
-                    (Set.singleton local)
-                    (probePendingNames state)
-              }
-
-bindProbeNamespace :: Text -> Text -> ProbeState -> Maybe ProbeState
-bindProbeNamespace prefix value state = do
-  let namespaces =
-        if Text.null value
-          then Map.delete prefix (probeNamespaces state)
-          else Map.insert prefix value (probeNamespaces state)
-      pending = Map.findWithDefault Set.empty prefix (probePendingNames state)
-      withoutPending =
-        state
-          { probeNamespaces = namespaces
-          , probePendingNames = Map.delete prefix (probePendingNames state)
-          }
-  foldM
-    (\current local ->
-       insertExpandedName (ExpandedName (Just value) local) current)
-    withoutPending
-    pending
-
-insertExpandedName :: ExpandedName -> ProbeState -> Maybe ProbeState
-insertExpandedName name state
-  | Set.member name (probeExpandedNames state) = Nothing
-  | otherwise =
-    Just state {probeExpandedNames = Set.insert name (probeExpandedNames state)}
-
-firstRootStart :: Text -> Maybe Text
-firstRootStart input
-  | Just afterPrefix <- Text.stripPrefix "<?xml" input
-  , Just (separator, _) <- Text.uncons afterPrefix
-  , isXmlSpace separator = snd <$> parseXmlDeclaration input >>= prolog True
-  | otherwise = prolog True input
-  where
-    prolog allowDoctype remaining = do
-      afterOpen <- Text.stripPrefix "<" (Text.dropWhile isXmlSpace remaining)
-      case () of
-        _
-          | Just rest <- Text.stripPrefix "!--" afterOpen ->
-            skipXmlComment rest >>= prolog allowDoctype
-          | Just rest <- Text.stripPrefix "?" afterOpen ->
-            skipXmlProcessingInstruction rest >>= prolog allowDoctype
-          | allowDoctype
-          , Just rest <- Text.stripPrefix "!DOCTYPE" afterOpen ->
-            skipDoctypeDeclaration rest >>= prolog False
-          | Just _ <- Text.stripPrefix "!" afterOpen -> Nothing
-          | Just _ <- Text.stripPrefix "/" afterOpen -> Nothing
-          | otherwise -> Just afterOpen
-
-qNameLocal :: Text -> Text
-qNameLocal = snd . splitQName
 
 splitQName :: Text -> (Maybe Text, Text)
 splitQName lexical =

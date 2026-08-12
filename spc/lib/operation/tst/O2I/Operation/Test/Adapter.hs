@@ -22,9 +22,17 @@ tests =
     "adapter"
     [ testCase "explicit selection bypasses recognition" explicitTest
     , testCase "implicit selection recognizes every adapter once" implicitTest
-    , testCase "recognition failure precedes matches" failurePrecedenceTest
+    , testCase
+        "one match ignores an unrelated recognition failure"
+        uniqueMatchPrecedenceTest
+    , testCase
+        "recognition failures are reported without a match"
+        recognitionFailureTest
     , testCase "no implicit match is explicit" noMatchTest
     , testCase "multiple implicit matches are explicit" multipleMatchTest
+    , testCase
+        "multiple matches remain ambiguous despite an unrelated failure"
+        multipleMatchWithFailureTest
     , testCase "selected decode is final" decodeTest
     , testCase
         "adapter compilation rejects an empty rule inventory"
@@ -63,9 +71,17 @@ implicitTest = do
   readIORef firstCalls >>= (@?= 1)
   readIORef secondCalls >>= (@?= 1)
 
-failurePrecedenceTest :: Assertion
-failurePrecedenceTest = do
+uniqueMatchPrecedenceTest :: Assertion
+uniqueMatchPrecedenceTest = do
   first <- staticAdapter "first" True
+  second <- recognitionFailureAdapter "second"
+  collection <- requireRight (compileAdapterCollection (first :| [second]))
+  selected <- requireSelected (selectAdapter collection Nothing bytes)
+  descriptorIdentifier (selectedAdapterDescriptor selected) @?= "first"
+
+recognitionFailureTest :: Assertion
+recognitionFailureTest = do
+  first <- staticAdapter "first" False
   second <- recognitionFailureAdapter "second"
   collection <- requireRight (compileAdapterCollection (first :| [second]))
   selectionFailureTag (selectAdapter collection Nothing bytes)
@@ -82,6 +98,16 @@ multipleMatchTest = do
   first <- staticAdapter "first" True
   second <- staticAdapter "second" True
   collection <- requireRight (compileAdapterCollection (second :| [first]))
+  selectionFailureTag (selectAdapter collection Nothing bytes)
+    @?= "multiple:first,second"
+
+multipleMatchWithFailureTest :: Assertion
+multipleMatchWithFailureTest = do
+  first <- staticAdapter "first" True
+  second <- staticAdapter "second" True
+  third <- recognitionFailureAdapter "third"
+  collection <-
+    requireRight (compileAdapterCollection (third :| [second, first]))
   selectionFailureTag (selectAdapter collection Nothing bytes)
     @?= "multiple:first,second"
 

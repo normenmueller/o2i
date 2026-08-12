@@ -17,16 +17,16 @@ COMPANION = PACKAGE_ROOT / "profile.json"
 DEFAULT_CORE_COMPANION = PACKAGE_ROOT.parents[1] / "lib/core/semantics.json"
 GENERATED = PACKAGE_ROOT / "src/O2I/ArchiMate/Profile/Internal/Generated.hs"
 EXPECTED_SHAPE_SHA256 = (
-    "65e6f5d6c9cd1312e0b9f5b42cf86a9bffa3dba1e52b65415018bfcea1973560"
+    "029fea4eb74b23939687534ac71fd52fdb5065bb9e8bb1d168f45299b7e23838"
 )
 EXPECTED_SHA256 = (
-    "08c6e1930a6bac4151b72bd3b23f312df85b1dca4076509c705585c91ea9fe58"
+    "8be461eea73fee9f408fc830d7b85b4ebdf238a3f1521ecc58e56edfdccae7d2"
 )
 EXPECTED_CORE_SHA256 = (
-    "0654111b900ff1c19b241a4fdfec10694d61a88471981e9df6bcb58b27785f01"
+    "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333"
 )
 EXPECTED_FIXED_POINT_SEMANTICS_SHA256 = (
-    "5527c63477b50117928b022f1ab031b766a936b2129d655b7870ebcf9033b892"
+    "2bb2381468d8ec09b54879cd28d03acd0ede0ac519ba57c242979e749e233cb2"
 )
 
 EXPECTED_PROFILE_EVIDENCE_KINDS = (
@@ -763,7 +763,6 @@ def derive_pattern_runtime_rules(
         ("qualification.carrier.category", "/qualificationProposalMapping/carrier/carrierCategory", proposal["carrier"]["carrierCategory"]),
         ("qualification.carrier.commitment", "/qualificationProposalMapping/carrier/commitment", proposal["carrier"]["commitment"]),
         ("qualification.carrier.o2i-type", "/qualificationProposalMapping/carrier/o2iType", proposal["carrier"]["o2iType"]),
-        ("qualification.carrier.rationale-normalization", "/qualificationProposalMapping/carrier/rationaleProjection/validation", proposal["carrier"]["rationaleProjection"]["validation"]),
         ("qualification.carrier.stable-identity", "/qualificationProposalMapping/carrier/stableIdentity", proposal["carrier"]["stableIdentity"]),
         ("qualification.carrier.stable-identity-scope", "/qualificationProposalMapping/carrier/stableIdentityScope", proposal["carrier"]["stableIdentityScope"]),
         ("qualification.reference.relationship-type", "/qualificationProposalMapping/references/archimateRelationship", proposal["references"]["archimateRelationship"]),
@@ -1948,7 +1947,6 @@ def render_generated(companion: dict[str, Any]) -> str:
     relations = companion["relationMappings"]
     properties = companion["propertyMappings"]
     carriers = companion["carrierMappings"]
-    applicability = companion["applicabilityProvenance"]["decisions"]
     classification = companion["viewScopeContract"]["classification"]
     activation = activation_rows(companion)
     closure = closure_rows(companion)
@@ -2089,74 +2087,6 @@ def render_generated(companion: dict[str, Any]) -> str:
         )
         for row in pattern_runtime_rules
     ]
-
-    applicability_values = []
-    for row in applicability:
-        subject = row["subject"]
-        kind = subject["kind"]
-        if kind == "core-relation-mapping-pair":
-            rendered_subject = (
-                "GeneratedCoreRelationMappingPair "
-                + hs_string(subject["relationMappingId"])
-                + " "
-                + hs_string(subject["coreRelationSemanticsId"])
-            )
-        elif kind == "contextualization-carrier-pair":
-            rendered_subject = (
-                "GeneratedContextualizationCarrierPair "
-                + hs_string(subject["sourceCarrierMappingId"])
-                + " "
-                + hs_string(subject["targetCarrierMappingId"])
-            )
-        elif kind == "structured-proposition-segment":
-            rendered_subject = (
-                "GeneratedStructuredPropositionSegment "
-                + hs_string(subject["propositionFamily"])
-                + " "
-                + hs_string(subject["direction"])
-            )
-        elif kind == "qualification-reference-role":
-            rendered_subject = (
-                "GeneratedQualificationReferenceRole "
-                + hs_string(subject["proposalMappingId"])
-                + " "
-                + hs_string(subject["role"])
-            )
-        elif kind == "property-owner-family":
-            rendered_subject = (
-                "GeneratedPropertyOwnerFamily "
-                + hs_string(subject["propertyMappingId"])
-                + " "
-                + hs_string(subject["ownerFamily"])
-            )
-        else:
-            rendered_subject = "GeneratedCarrierConstruct " + hs_string(subject["archimateConstruct"])
-        if "archimateRelationship" in row:
-            applicability_values.append(
-                "GeneratedRelationshipApplicability "
-                + f"({rendered_subject}) "
-                + " ".join(
-                    [
-                        hs_string(row["archimateRelationship"]),
-                        hs_bool(row["associationDirected"]),
-                        hs_string(row["sourceElement"]),
-                        hs_string(row["targetElement"]),
-                        hs_string(row["matrixSymbol"]),
-                        (
-                            "GeneratedApplicable"
-                            if row["outcome"] == "applicable"
-                            else "GeneratedInapplicable"
-                        ),
-                    ]
-                )
-            )
-        else:
-            applicability_values.append(
-                "GeneratedInterfaceApplicability "
-                + f"({rendered_subject}) "
-                + hs_string(row["requiredInterface"])
-                + " GeneratedApplicable"
-            )
 
     activation_values = []
     activation_projections = []
@@ -2458,9 +2388,6 @@ module O2I.ArchiMate.Profile.Internal.Generated
   , GeneratedPropertyConstraint(..)
   , GeneratedPropertyRuntimePlan(..)
   , GeneratedPatternRuntimeRule(..)
-  , GeneratedApplicabilitySubject(..)
-  , GeneratedApplicabilityOutcome(..)
-  , GeneratedApplicabilityDecision(..)
   , GeneratedBranch(..)
   , GeneratedBranchScope(..)
   , GeneratedActivationSubjectFamily(..)
@@ -2506,7 +2433,6 @@ module O2I.ArchiMate.Profile.Internal.Generated
   , generatedPropertyMappings
   , generatedPropertyRuntimePlans
   , generatedPatternRuntimeRules
-  , generatedApplicabilityDecisions
   , generatedActivationRules
   , generatedClosureRules
   ) where
@@ -2594,28 +2520,6 @@ data GeneratedPatternRuntimeRule = GeneratedPatternRuntimeRule
   , generatedPatternRuntimeRuleId :: !Text
   , generatedPatternRuntimeExpected :: !GeneratedRuntimeExpected
   }} deriving (Eq, Ord, Show)
-
-data GeneratedApplicabilitySubject
-  = GeneratedCoreRelationMappingPair !Text !Text
-  | GeneratedContextualizationCarrierPair !Text !Text
-  | GeneratedStructuredPropositionSegment !Text !Text
-  | GeneratedQualificationReferenceRole !Text !Text
-  | GeneratedPropertyOwnerFamily !Text !Text
-  | GeneratedCarrierConstruct !Text
-  deriving (Eq, Ord, Show)
-
-data GeneratedApplicabilityOutcome
-  = GeneratedApplicable
-  | GeneratedInapplicable
-  deriving (Eq, Ord, Show)
-
-data GeneratedApplicabilityDecision
-  = GeneratedRelationshipApplicability
-      !GeneratedApplicabilitySubject !Text !Bool !Text !Text !Text
-      !GeneratedApplicabilityOutcome
-  | GeneratedInterfaceApplicability
-      !GeneratedApplicabilitySubject !Text !GeneratedApplicabilityOutcome
-  deriving (Eq, Show)
 
 data GeneratedBranch
   = GeneratedGraphBranch
@@ -2803,9 +2707,6 @@ generatedPropertyRuntimePlans = {hs_list(property_runtime_values, 4)}
 
 generatedPatternRuntimeRules :: [GeneratedPatternRuntimeRule]
 generatedPatternRuntimeRules = {hs_list(pattern_runtime_values, 4)}
-
-generatedApplicabilityDecisions :: [GeneratedApplicabilityDecision]
-generatedApplicabilityDecisions = {hs_list(applicability_values, 4)}
 
 generatedActivationRules :: [GeneratedActivationRule]
 generatedActivationRules = {hs_list(activation_values, 4)}

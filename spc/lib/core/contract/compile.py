@@ -16,10 +16,10 @@ PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 COMPANION = PACKAGE_ROOT / "semantics.json"
 GENERATED = PACKAGE_ROOT / "src/O2I/Core/Contract/Generated.hs"
 EXPECTED_SHAPE_SHA256 = (
-    "fbb21f3db5bda60724b8a1448fd7bd302050f4d1e21be2873cd040f84fd3f2e4"
+    "3e091e8bc0fd3a887da02f8591292c2a8ea7d64c7e83951183ab71fe4f5b1278"
 )
 EXPECTED_SHA256 = (
-    "0654111b900ff1c19b241a4fdfec10694d61a88471981e9df6bcb58b27785f01"
+    "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333"
 )
 
 
@@ -271,11 +271,6 @@ def semantic_evidence_contract(
             raise ValueError(
                 f"semantic evidence-key mapping {rule}: unknown schema {schema}"
             )
-    require_exact(
-        sorted(mappings, key=lambda value: value.encode("utf-8")),
-        semantic_rules,
-        "complete semantic evidence-key mapping",
-    )
     unused_schemas = sorted(set(schemas).difference(mappings.values()))
     if unused_schemas:
         raise ValueError(
@@ -286,13 +281,17 @@ def semantic_evidence_contract(
         schema: schemas[schema]
         for schema in sorted(schemas, key=lambda value: value.encode("utf-8"))
     }
-    ordered_mappings = {rule: mappings[rule] for rule in semantic_rules}
+    ordered_mappings = {
+        rule: mappings[rule] for rule in semantic_rules if rule in mappings
+    }
     constructor_catalog(
         "Generated",
         list(ordered_schemas),
         "semantic evidence-key schema catalog",
     )
-    rule_constructors = [semantic_rule_constructor(rule) for rule in semantic_rules]
+    rule_constructors = [
+        semantic_rule_constructor(rule) for rule in ordered_mappings
+    ]
     if len(rule_constructors) != len(set(rule_constructors)):
         raise ValueError("semantic rule catalog: Haskell constructor collision")
     return ordered_schemas, ordered_mappings
@@ -378,7 +377,9 @@ def haskell_nonempty(name: str, type_name: str, values: list[str]) -> list[str]:
 
 
 def haskell_semantic_contract(
-    schemas: dict[str, list[str]], mappings: dict[str, str]
+    semantic_rules: list[str],
+    schemas: dict[str, list[str]],
+    mappings: dict[str, str],
 ) -> list[str]:
     schema_stems = constructor_catalog(
         "Generated", list(schemas), "semantic evidence-key schema catalog"
@@ -393,10 +394,15 @@ def haskell_semantic_contract(
         rule: semantic_rule_constructor(rule)
         for rule in mappings
     }
+    identity_constructors = {
+        rule: f"{semantic_rule_constructor(rule)}Identity"
+        for rule in semantic_rules
+    }
     if len(rule_constructors) != len(set(rule_constructors.values())):
         raise ValueError("semantic rule catalog: Haskell constructor collision")
     generated_constructors = (
-        list(schema_constructors.values())
+        list(identity_constructors.values())
+        + list(schema_constructors.values())
         + list(witness_constructors.values())
         + list(rule_constructors.values())
     )
@@ -404,8 +410,43 @@ def haskell_semantic_contract(
         raise ValueError("semantic contract: Haskell constructor collision")
 
     lines = haskell_data(
-        "GeneratedSemanticEvidenceSchema", list(schema_constructors.values())
+        "GeneratedSemanticRuleIdentity", list(identity_constructors.values())
     )
+    lines.extend(
+        haskell_text_projection(
+            "generatedSemanticRuleIdentityText",
+            "GeneratedSemanticRuleIdentity",
+            identity_constructors,
+        )
+    )
+    lines.extend(
+        [
+            "generatedSemanticRuleIdentityRank ::",
+            "     GeneratedSemanticRuleIdentity -> Int",
+            "generatedSemanticRuleIdentityRank = fromEnum",
+            "",
+        ]
+    )
+    lines.extend(
+        haskell_nonempty(
+            "generatedSemanticRuleIdentities",
+            "GeneratedSemanticRuleIdentity",
+            list(identity_constructors.values()),
+        )
+    )
+    lines.extend(
+        [
+            "semanticsRuleIds :: NonEmpty Text",
+            "semanticsRuleIds =",
+            "  generatedSemanticRuleIdentityText",
+            "    <$> generatedSemanticRuleIdentities",
+            "",
+        ]
+    )
+
+    lines.extend(haskell_data(
+        "GeneratedSemanticEvidenceSchema", list(schema_constructors.values())
+    ))
     lines.extend(
         [
             "data GeneratedSemanticEvidenceSchemaWitness",
@@ -479,44 +520,32 @@ def haskell_semantic_contract(
     lines.extend(
         [
             "generatedSemanticRuleId :: GeneratedSemanticRule schema -> Text",
-            "generatedSemanticRuleId rule =",
+            "generatedSemanticRuleId =",
+            "  generatedSemanticRuleIdentityText . generatedSemanticRuleIdentity",
+            "",
+            "generatedSemanticRuleIdentity ::",
+            "     GeneratedSemanticRule schema",
+            "  -> GeneratedSemanticRuleIdentity",
+            "generatedSemanticRuleIdentity rule =",
             "  case rule of",
         ]
     )
     for rule, constructor in rule_constructors.items():
-        literal = json.dumps(rule)
-        if len(f"    {constructor} -> {literal}") <= 80:
-            lines.append(f"    {constructor} -> {literal}")
-        elif len(f"      {literal}") <= 80:
-            lines.extend([f"    {constructor} ->", f"      {literal}"])
-        else:
-            split_at = rule.rfind(".", 0, 60) + 1
-            if split_at == 0:
-                raise ValueError(
-                    f"semantic rule {rule}: cannot wrap generated identifier"
-                )
-            lines.extend(
-                [
-                    f"    {constructor} ->",
-                    f"      {json.dumps(rule[:split_at])}",
-                    f"        <> {json.dumps(rule[split_at:])}",
-                ]
-            )
+        lines.extend(
+            [
+                f"    {constructor} ->",
+                f"      {identity_constructors[rule]}",
+            ]
+        )
     lines.append("")
 
     lines.extend(
         [
             "generatedSemanticRuleRank :: GeneratedSemanticRule schema -> Int",
-            "generatedSemanticRuleRank rule =",
-            "  case rule of",
+            "generatedSemanticRuleRank =",
+            "  generatedSemanticRuleIdentityRank . generatedSemanticRuleIdentity",
         ]
     )
-    for rank, constructor in enumerate(rule_constructors.values()):
-        branch = f"    {constructor} -> {rank}"
-        if len(branch) <= 80:
-            lines.append(branch)
-        else:
-            lines.extend([f"    {constructor} ->", f"      {rank}"])
     lines.append("")
 
     lines.extend(
@@ -537,49 +566,6 @@ def haskell_semantic_contract(
         )
     lines.append("")
 
-    lines.extend(
-        [
-            "data SomeGeneratedSemanticRule where",
-            "  SomeGeneratedSemanticRule ::",
-            "       GeneratedSemanticRule schema -> SomeGeneratedSemanticRule",
-            "",
-            "generatedSomeSemanticRuleId :: SomeGeneratedSemanticRule -> Text",
-            "generatedSomeSemanticRuleId (SomeGeneratedSemanticRule rule) =",
-            "  generatedSemanticRuleId rule",
-            "",
-            "generatedSomeSemanticRuleRank :: SomeGeneratedSemanticRule -> Int",
-            "generatedSomeSemanticRuleRank (SomeGeneratedSemanticRule rule) =",
-            "  generatedSemanticRuleRank rule",
-            "",
-        ]
-    )
-    head, *tail = rule_constructors.values()
-    lines.extend(
-        [
-            "generatedSemanticRules :: NonEmpty SomeGeneratedSemanticRule",
-            "generatedSemanticRules =",
-            "  SomeGeneratedSemanticRule",
-            f"    {head}",
-            "    :| [ SomeGeneratedSemanticRule",
-            f"           {tail[0]}",
-        ]
-    )
-    for constructor in tail[1:]:
-        lines.extend(
-            [
-                "       , SomeGeneratedSemanticRule",
-                f"           {constructor}",
-            ]
-        )
-    lines.extend(["       ]", ""])
-    lines.extend(
-        [
-            "semanticsRuleIds :: NonEmpty Text",
-            "semanticsRuleIds =",
-            "  generatedSomeSemanticRuleId <$> generatedSemanticRules",
-            "",
-        ]
-    )
     return lines
 
 
@@ -1254,7 +1240,11 @@ def compile_contract() -> str:
             "",
         ]
     )
-    lines.extend(haskell_semantic_contract(evidence_schemas, evidence_mappings))
+    lines.extend(
+        haskell_semantic_contract(
+            stages["semantics"], evidence_schemas, evidence_mappings
+        )
+    )
     lines.extend(nonempty("ruleIds", rules))
     lines.extend(nonempty("capabilityInputRuleIds", stages["capability-input"]))
     lines.extend(nonempty("qualificationRuleIds", stages["qualification"]))

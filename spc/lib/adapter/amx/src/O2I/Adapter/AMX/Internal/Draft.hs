@@ -336,7 +336,9 @@ viewTreeMembers owner content =
       | otherwise -> opaqueElementMembers element
 
 isViewNode :: NativeElement -> Bool
-isViewNode element = typeNameOf element == Just diagramObjectType
+isViewNode element =
+  typeNameOf element == Just diagramObjectType
+    || not (null (lookupAttribute archimateElementName element))
 
 isGroup :: NativeElement -> Bool
 isGroup element = typeNameOf element == Just groupType

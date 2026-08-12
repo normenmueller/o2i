@@ -11,10 +11,23 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified Data.Text.Encoding as TextEncoding
 import O2I.Adapter.AMX
-import O2I.Adapter.AMX.Internal.XML (hasNativeAMXSignal)
+import O2I.Adapter.AMX.Test.Fixture (fixtureBytes)
+import qualified O2I.ArchiMate.Profile as Profile
+import qualified O2I.ArchiMate.Profile.Draft as Draft
+import qualified O2I.ArchiMate.Profile.Notation as Notation
 import O2I.Operation.Adapter
-import O2I.Operation.Adapter.Authoring (compileAdapterCollection, mkAdapterId)
-import Paths_o2i_amx (getDataFileName)
+import O2I.Operation.Adapter.Authoring
+  ( adapterBehavior
+  , compileAdapter
+  , compileAdapterCollection
+  , mkAdapterDescriptor
+  , mkAdapterId
+  , mkAdapterRuleDefinition
+  , noRecognitionMatch
+  , recognitionMatch
+  , recognitionRule
+  )
+import O2I.Operation.Profile
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 
@@ -23,6 +36,9 @@ contractTests =
   testGroup
     "contract"
     [ testCase "compiles one immutable AMX adapter" compileTest
+    , testCase
+        "matches the real compiled ArchiMate Profile"
+        profileCompatibilityTest
     , testCase "publishes the closed native rule inventory" inventoryTest
     , testCase "recognizes exact native AMX" recognitionTest
     , testCase "treats another XML root as no match" noMatchTest
@@ -32,35 +48,36 @@ contractTests =
     , testCase
         "retains the native signal across malformed UTF-8"
         malformedUtf8RecognitionTest
-    , testCase
-        "respects the malformed-input ownership boundary"
-        malformedInputOwnershipBoundaryTest
+    , testCase "classifies every malformed input as failure" malformedInputTest
     , testCase
         "does not claim unrelated representations"
         unrelatedRepresentationTest
     , testCase
-        "does not veto another malformed XML representation"
+        "does not veto another adapter's non-XML representation"
+        unrelatedAdapterSelectionTest
+    , testCase
+        "rejects another malformed XML representation"
         unrelatedMalformedXmlTest
     , testCase
-        "resolves the exact root namespace without substring claims"
+        "rejects malformed input containing incidental namespace text"
         exactRootSignalTest
     , testCase
-        "does not claim a namespace collision at the root"
+        "rejects malformed namespace collisions at the root"
         namespaceCollisionTest
     , testCase
-        "does not claim lexically invalid root whitespace"
+        "rejects lexically invalid root whitespace"
         invalidRootWhitespaceTest
     , testCase
-        "does not claim malformed content before the native root"
+        "rejects malformed content before the native root"
         invalidRootPrefixTest
     , testCase
-        "does not claim an invalid attribute QName before the native binding"
+        "rejects an invalid attribute QName before the native binding"
         invalidAttributeQNameTest
     , testCase
-        "does not claim attributes without XML separators"
+        "rejects attributes without XML separators"
         missingAttributeSeparatorTest
     , testCase
-        "does not claim invalid pre-ownership XML lexemes"
+        "rejects invalid XML lexemes before the native root"
         invalidPreOwnershipLexemeTest
     , testCase
         "retains ownership after a proven native namespace binding"
@@ -72,7 +89,7 @@ contractTests =
         "retains ownership across legal DTD lexical states"
         internalSubsetLexicalStateTest
     , testCase
-        "does not claim an unrelated declaration before the native root"
+        "rejects an unrelated declaration before the native root"
         unrelatedDeclarationTest
     , testCase
         "recognizes exact native AMX after a long legal prolog"
@@ -104,7 +121,46 @@ compileTest = do
   map
     descriptorSnapshot
     (NonEmpty.toList (adapterCollectionContracts collection))
-    @?= [("amx", "Archi Model XML", "5.0.0-v1", "ArchiMate")]
+    @?= [("amx", "Archi Model XML", "5.0.0-v1", "archimate-3.2")]
+
+profileCompatibilityTest :: Assertion
+profileCompatibilityTest = do
+  selected <- requireImplicitSelection profiledModel
+  draft <- requireDecodedDraft selected profiledModel
+  inventory <-
+    foldProfileInventoryCompilation
+      (const
+         (assertFailure "real compiled Profile inventory was invalid"
+            >> fail "unreachable"))
+      pure
+      (compileProfileInventory Profile.compiledProfileInventory)
+  evidence <-
+    foldProfileMarkerEvidenceOutcome
+      (const
+         (assertFailure "real AMX Profile marker evidence was rejected"
+            >> fail "unreachable"))
+      pure
+      (prepareProfileMarkerEvidence
+         (Notation.assessMarkerEvidence (Notation.buildCanonicalDocument draft)))
+  resolved <-
+    foldProfileResolution
+      (\_ _ -> unresolved)
+      (\_ _ _ -> unresolved)
+      (\_ _ _ _ -> unresolved)
+      (\_ _ _ _ -> unresolved)
+      (\_ _ _ -> unresolved)
+      (\_ _ _ -> unresolved)
+      pure
+      (resolveProfile inventory evidence)
+  foldProfileCompatibility
+    (\_ _ _ _ -> assertFailure "real AMX adapter was not admitted")
+    (\_ _ _ _ _ -> assertFailure "real AMX notation did not match")
+    (\_ _ notation -> notation @?= "archimate-3.2")
+    (checkProfileCompatibility resolved selected)
+  where
+    unresolved =
+      assertFailure "real AMX Profile marker did not resolve"
+        >> fail "unreachable"
 
 inventoryTest :: Assertion
 inventoryTest = do
@@ -116,7 +172,8 @@ inventoryTest = do
 
 recognitionTest :: Assertion
 recognitionTest = do
-  selection <- implicitSelection validModel
+  fixture <- fixtureBytes "native-minimal"
+  selection <- implicitSelection fixture
   foldAdapterSelection
     (const (assertFailure "native AMX was not selected"))
     (const (pure ()))
@@ -124,19 +181,20 @@ recognitionTest = do
 
 noMatchTest :: Assertion
 noMatchTest = do
-  selection <- implicitSelection wrongRoot
-  foldAdapterSelection
-    (foldAdapterSelectionError
-       (const (assertFailure "unexpected explicit lookup failure"))
-       (const (assertFailure "format mismatch became recognition failure"))
-       (pure ())
-       (const (assertFailure "one adapter produced multiple matches")))
-    (const (assertFailure "wrong root matched AMX"))
-    selection
+  fixtures <-
+    mapM
+      fixtureBytes
+      [ "decode-wrong-root"
+      , "decode-native-version-wrong"
+      , "decode-native-version-missing"
+      , "decode-native-version-namespaced"
+      ]
+  mapM_ assertNoMatch fixtures
 
 recognitionFailureTest :: Assertion
 recognitionFailureTest = do
-  selection <- implicitSelection malformedAMX
+  fixture <- fixtureBytes "decode-malformed-xml"
+  selection <- implicitSelection fixture
   foldAdapterSelection
     (foldAdapterSelectionError
        (const (assertFailure "unexpected explicit lookup failure"))
@@ -150,7 +208,8 @@ recognitionFailureTest = do
 
 malformedUtf8RecognitionTest :: Assertion
 malformedUtf8RecognitionTest = do
-  selection <- implicitSelection malformedUtf8AMX
+  fixture <- fixtureBytes "decode-invalid-utf8"
+  selection <- implicitSelection fixture
   foldAdapterSelection
     (foldAdapterSelectionError
        (const (assertFailure "unexpected explicit lookup failure"))
@@ -160,54 +219,29 @@ malformedUtf8RecognitionTest = do
     (const (assertFailure "malformed native UTF-8 selected AMX"))
     selection
 
-malformedInputOwnershipBoundaryTest :: Assertion
-malformedInputOwnershipBoundaryTest = do
+malformedInputTest :: Assertion
+malformedInputTest =
   mapM_
-    assertNoMatch
+    assertRecognitionFailed
     [ "<a:model note=\""
         <> ByteString.singleton 0xFF
         <> "\" "
         <> ownershipBinding
         <> closeRoot
     , "<a:model note=\"\0\" " <> ownershipBinding <> closeRoot
-    ]
-  mapM_
-    assertRecognitionFailure
-    [ "<a:model " <> ownershipBinding <> " note=\"" <> ByteString.singleton 0xFF
+    , "<a:model " <> ownershipBinding <> " note=\"" <> ByteString.singleton 0xFF
     , "<a:model " <> ownershipBinding <> " note=\"\0"
     ]
   where
     ownershipBinding = "xmlns:a=\"http://www.archimatetool.com/archimate\""
     closeRoot = " version=\"5.0.0\"/>"
-    assertNoMatch input = do
-      assertBool
-        "malformed pre-ownership input retained a native signal"
-        (not (hasNativeAMXSignal input))
-      selection <- implicitSelection input
-      foldAdapterSelection
-        (foldAdapterSelectionError
-           (const (assertFailure "unexpected explicit lookup failure"))
-           (const (assertFailure "malformed pre-ownership input claimed AMX"))
-           (pure ())
-           (const (assertFailure "malformed input produced matches")))
-        (const (assertFailure "malformed pre-ownership input selected AMX"))
-        selection
-    assertRecognitionFailure input = do
-      assertBool
-        "malformed post-ownership input lost its native signal"
-        (hasNativeAMXSignal input)
-      selection <- implicitSelection input
-      foldAdapterSelection
-        (foldAdapterSelectionError
-           (const (assertFailure "unexpected explicit lookup failure"))
-           (const (pure ()))
-           (assertFailure "malformed native input became a clean no-match")
-           (const (assertFailure "malformed native input produced matches")))
-        (const (assertFailure "malformed native input selected AMX"))
-        selection
 
 explicitDecodeTest :: Assertion
 explicitDecodeTest = do
+  wrongRoot <- fixtureBytes "decode-wrong-root"
+  wrongVersion <- fixtureBytes "decode-native-version-wrong"
+  missingVersion <- fixtureBytes "decode-native-version-missing"
+  malformedAMX <- fixtureBytes "decode-malformed-xml"
   wrongRootDiagnostics <- explicitDiagnostics wrongRoot
   map diagnosticSnapshot (NonEmpty.toList wrongRootDiagnostics)
     @?= [("o2i.amx.decode.root-qname", ["{urn:not-archi}model[1]"])]
@@ -244,117 +278,61 @@ explicitDiagnostics bytes = do
     (adapterExecutionOutcome (runSelectedAdapter selected bytes))
 
 unrelatedRepresentationTest :: Assertion
-unrelatedRepresentationTest = do
-  selection <- implicitSelection "{\"format\":\"another-adapter\"}"
-  foldAdapterSelection
-    (foldAdapterSelectionError
-       (const (assertFailure "unexpected explicit lookup failure"))
-       (const (assertFailure "unrelated representation became AMX failure"))
-       (pure ())
-       (const (assertFailure "unrelated representation produced matches")))
-    (const (assertFailure "unrelated representation selected AMX"))
-    selection
+unrelatedRepresentationTest =
+  assertRecognitionFailed "{\"format\":\"another-adapter\"}"
+
+unrelatedAdapterSelectionTest :: Assertion
+unrelatedAdapterSelectionTest = do
+  amx <- requireAdapter
+  other <- requireUnrelatedAdapter
+  collection <- requireRight (compileAdapterCollection (amx :| [other]))
+  selected <-
+    foldAdapterSelection
+      (const
+         (assertFailure "unrelated adapter selection failed"
+            >> fail "unreachable"))
+      pure
+      (selectAdapter collection Nothing unrelatedRepresentation)
+  adapterIdText (adapterDescriptorId (selectedAdapterDescriptor selected))
+    @?= "another-adapter"
 
 unrelatedMalformedXmlTest :: Assertion
-unrelatedMalformedXmlTest = do
-  selection <- implicitSelection "<future"
-  foldAdapterSelection
-    (foldAdapterSelectionError
-       (const (assertFailure "unexpected explicit lookup failure"))
-       (const (assertFailure "another XML format became AMX failure"))
-       (pure ())
-       (const (assertFailure "another XML format produced matches")))
-    (const (assertFailure "another XML format selected AMX"))
-    selection
+unrelatedMalformedXmlTest = assertRecognitionFailed "<future"
 
 exactRootSignalTest :: Assertion
-exactRootSignalTest = do
-  selection <-
-    implicitSelection
-      "<future:model note=\"http://www.archimatetool.com/archimate\""
-  foldAdapterSelection
-    (foldAdapterSelectionError
-       (const (assertFailure "unexpected explicit lookup failure"))
-       (const (assertFailure "incidental namespace text claimed AMX"))
-       (pure ())
-       (const (assertFailure "incidental namespace text produced matches")))
-    (const (assertFailure "incidental namespace text selected AMX"))
-    selection
+exactRootSignalTest =
+  assertRecognitionFailed
+    "<future:model note=\"http://www.archimatetool.com/archimate\""
 
 namespaceCollisionTest :: Assertion
-namespaceCollisionTest = do
-  selection <-
-    implicitSelection
-      "<f:model xmlns:f=\"urn:future\" xmlns:a=\"http://www.archimatetool.com/archimate\""
-  foldAdapterSelection
-    (foldAdapterSelectionError
-       (const (assertFailure "unexpected explicit lookup failure"))
-       (const (assertFailure "foreign root namespace claimed AMX"))
-       (pure ())
-       (const (assertFailure "foreign root namespace produced matches")))
-    (const (assertFailure "foreign root namespace selected AMX"))
-    selection
+namespaceCollisionTest =
+  assertRecognitionFailed
+    "<f:model xmlns:f=\"urn:future\" xmlns:a=\"http://www.archimatetool.com/archimate\""
 
 invalidRootWhitespaceTest :: Assertion
-invalidRootWhitespaceTest = do
-  selection <-
-    implicitSelection
-      "< a:model xmlns:a=\"http://www.archimatetool.com/archimate\""
-  foldAdapterSelection
-    (foldAdapterSelectionError
-       (const (assertFailure "unexpected explicit lookup failure"))
-       (const (assertFailure "invalid root whitespace claimed AMX"))
-       (pure ())
-       (const (assertFailure "invalid root whitespace produced matches")))
-    (const (assertFailure "invalid root whitespace selected AMX"))
-    selection
+invalidRootWhitespaceTest =
+  assertRecognitionFailed
+    "< a:model xmlns:a=\"http://www.archimatetool.com/archimate\""
 
 invalidRootPrefixTest :: Assertion
-invalidRootPrefixTest = do
-  selection <-
-    implicitSelection
-      "broken<a:model xmlns:a=\"http://www.archimatetool.com/archimate\""
-  foldAdapterSelection
-    (foldAdapterSelectionError
-       (const (assertFailure "unexpected explicit lookup failure"))
-       (const (assertFailure "malformed root prefix claimed AMX"))
-       (pure ())
-       (const (assertFailure "malformed root prefix produced matches")))
-    (const (assertFailure "malformed root prefix selected AMX"))
-    selection
+invalidRootPrefixTest =
+  assertRecognitionFailed
+    "broken<a:model xmlns:a=\"http://www.archimatetool.com/archimate\""
 
 invalidAttributeQNameTest :: Assertion
-invalidAttributeQNameTest = do
-  selection <-
-    implicitSelection
-      "<a:model 1broken=\"value\" xmlns:a=\"http://www.archimatetool.com/archimate\""
-  foldAdapterSelection
-    (foldAdapterSelectionError
-       (const (assertFailure "unexpected explicit lookup failure"))
-       (const (assertFailure "invalid attribute QName claimed AMX"))
-       (pure ())
-       (const (assertFailure "invalid attribute QName produced matches")))
-    (const (assertFailure "invalid attribute QName selected AMX"))
-    selection
+invalidAttributeQNameTest =
+  assertRecognitionFailed
+    "<a:model 1broken=\"value\" xmlns:a=\"http://www.archimatetool.com/archimate\""
 
 missingAttributeSeparatorTest :: Assertion
-missingAttributeSeparatorTest = do
-  selection <-
-    implicitSelection
-      "<a:model note=\"x\"xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\"/>"
-  foldAdapterSelection
-    (foldAdapterSelectionError
-       (const (assertFailure "unexpected explicit lookup failure"))
-       (const (assertFailure "missing attribute separator claimed AMX"))
-       (pure ())
-       (const (assertFailure "missing attribute separator produced matches")))
-    (const (assertFailure "missing attribute separator selected AMX"))
-    selection
+missingAttributeSeparatorTest =
+  assertRecognitionFailed
+    "<a:model note=\"x\"xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\"/>"
 
 invalidPreOwnershipLexemeTest :: Assertion
 invalidPreOwnershipLexemeTest =
   mapM_
-    assertNoMatch
+    assertRecognitionFailed
     [ "<a:model xmlns:a=\"http://www.archi&#X6D;atetool.com/archimate\" version=\"5.0.0\"/>"
     , "<a:model xmlns:a=\"http://www.archi&# 109;atetool.com/archimate\" version=\"5.0.0\"/>"
     , "<!DOCTYPE ???><a:model xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\"/>"
@@ -365,45 +343,18 @@ invalidPreOwnershipLexemeTest =
     , "<a:model xmlns:xmlns=\"urn:forbidden\" xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\"/>"
     , "<a:model xmlns:x=\"urn:same\" xmlns:y=\"urn:same\" x:value=\"one\" y:value=\"two\" xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\"/>"
     ]
-  where
-    assertNoMatch input = do
-      assertBool
-        ("invalid input retained a native signal: " <> show input)
-        (not (hasNativeAMXSignal input))
-      selection <- implicitSelection input
-      foldAdapterSelection
-        (foldAdapterSelectionError
-           (const (assertFailure "unexpected explicit lookup failure"))
-           (const (assertFailure "invalid input claimed AMX"))
-           (pure ())
-           (const (assertFailure "invalid input produced matches")))
-        (const (assertFailure "invalid input selected AMX"))
-        selection
 
 provenOwnershipTest :: Assertion
-provenOwnershipTest = do
+provenOwnershipTest =
   mapM_
-    assertRecognitionFailure
+    assertRecognitionFailed
     [ "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" broken="
     , "<a:model x:value=\"pending\" xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\"/>"
     ]
-  where
-    assertRecognitionFailure input = do
-      selection <- implicitSelection input
-      foldAdapterSelection
-        (foldAdapterSelectionError
-           (const (assertFailure "unexpected explicit lookup failure"))
-           (const (pure ()))
-           (assertFailure "proven native ownership became a clean no-match")
-           (const (assertFailure "malformed native root produced matches")))
-        (const (assertFailure "malformed native root selected AMX"))
-        selection
 
 internalSubsetRecognitionTest :: Assertion
 internalSubsetRecognitionTest = do
-  fixture <-
-    ByteString.readFile
-      =<< getDataFileName "tst/data/invalid/decode/unsafe-doctype.archimate"
+  fixture <- fixtureBytes "decode-dtd-internal-entity"
   selection <- implicitSelection fixture
   foldAdapterSelection
     (foldAdapterSelectionError
@@ -437,18 +388,9 @@ internalSubsetLexicalStateTest =
         selection
 
 unrelatedDeclarationTest :: Assertion
-unrelatedDeclarationTest = do
-  selection <-
-    implicitSelection
-      "<!future><a:model xmlns:a=\"http://www.archimatetool.com/archimate\""
-  foldAdapterSelection
-    (foldAdapterSelectionError
-       (const (assertFailure "unexpected explicit lookup failure"))
-       (const (assertFailure "unrelated declaration claimed AMX"))
-       (pure ())
-       (const (assertFailure "unrelated declaration produced matches")))
-    (const (assertFailure "unrelated declaration selected AMX"))
-    selection
+unrelatedDeclarationTest =
+  assertRecognitionFailed
+    "<!future><a:model xmlns:a=\"http://www.archimatetool.com/archimate\""
 
 longPrologTest :: Assertion
 longPrologTest = do
@@ -462,11 +404,8 @@ longPrologTest = do
 
 unsupportedEncodingSignalTest :: Assertion
 unsupportedEncodingSignalTest = do
-  let utf16 =
-        "\255\254"
-          <> TextEncoding.encodeUtf16LE
-               "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\"/>"
-  selection <- implicitSelection utf16
+  fixture <- fixtureBytes "decode-unsupported-encoding"
+  selection <- implicitSelection fixture
   foldAdapterSelection
     (foldAdapterSelectionError
        (const (assertFailure "unexpected explicit lookup failure"))
@@ -514,12 +453,10 @@ namespaceEndOfLineRecognitionTest = do
         "<a:model x:value=\"one\" y:value=\"two\" xmlns:x=\"urn:\r\nsame\" xmlns:y=\"urn:\nsame\" xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\"/>"
       distinct =
         "<a:model x:value=\"one\" y:value=\"two\" xmlns:x=\"urn:\r\nsame\" xmlns:y=\"urn:  same\" xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\"/>"
-  assertBool
-    "CRLF and LF namespace aliases did not collapse before ownership"
-    (not (hasNativeAMXSignal duplicate))
-  assertBool
-    "CRLF and two-space namespace values did not remain distinct"
-    (hasNativeAMXSignal distinct)
+  assertRecognitionFailed duplicate
+  selected <- requireImplicitSelection distinct
+  selectedDescriptorSnapshot selected
+    @?= ("amx", "Archi Model XML", "5.0.0-v1", "archimate-3.2")
 
 largeOpeningTagTest :: Assertion
 largeOpeningTagTest = do
@@ -527,15 +464,8 @@ largeOpeningTagTest = do
         "<a:model note=\""
           <> ByteString.replicate (1024 * 1024) 120
           <> "\" xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\"/>"
-  assertBool
-    "large native opening tag lost its signal"
-    (hasNativeAMXSignal model)
-  selection <- implicitSelection model
-  foldAdapterSelection
-    (const
-       (assertFailure "native AMX with a large opening tag was not selected"))
-    (const (pure ()))
-    selection
+  _ <- requireImplicitSelection model
+  pure ()
 
 implicitSelection :: ByteString -> IO AdapterSelection
 implicitSelection bytes = do
@@ -543,12 +473,58 @@ implicitSelection bytes = do
   collection <- requireRight (compileAdapterCollection (adapter :| []))
   pure (selectAdapter collection Nothing bytes)
 
+requireImplicitSelection :: ByteString -> IO SelectedAdapter
+requireImplicitSelection bytes = do
+  selection <- implicitSelection bytes
+  foldAdapterSelection
+    (const (assertFailure "expected AMX to be selected" >> fail "unreachable"))
+    pure
+    selection
+
+requireDecodedDraft :: SelectedAdapter -> ByteString -> IO Draft.ProfileDraft
+requireDecodedDraft selected bytes =
+  foldDecodeOutcome
+    (const (assertFailure "expected AMX to decode" >> fail "unreachable"))
+    pure
+    (adapterExecutionOutcome (runSelectedAdapter selected bytes))
+
+assertNoMatch :: ByteString -> Assertion
+assertNoMatch bytes = do
+  selection <- implicitSelection bytes
+  foldAdapterSelection
+    (foldAdapterSelectionError
+       (const (assertFailure "unexpected explicit lookup failure"))
+       (const (assertFailure "format mismatch became recognition failure"))
+       (pure ())
+       (const (assertFailure "format mismatch produced multiple matches")))
+    (const (assertFailure "format mismatch selected AMX"))
+    selection
+
+assertRecognitionFailed :: ByteString -> Assertion
+assertRecognitionFailed bytes = do
+  selection <- implicitSelection bytes
+  foldAdapterSelection
+    (foldAdapterSelectionError
+       (const (assertFailure "unexpected explicit lookup failure"))
+       (const (pure ()))
+       (assertFailure "malformed input became a clean no-match")
+       (const (assertFailure "malformed input produced multiple matches")))
+    (const (assertFailure "malformed input selected AMX"))
+    selection
+
 descriptorSnapshot :: CompiledAdapterContract -> (Text, Text, Text, Text)
 descriptorSnapshot contract =
   foldAdapterDescriptor
     (\identifier name version notation ->
        (adapterIdText identifier, name, version, notation))
     (adapterContractDescriptor contract)
+
+selectedDescriptorSnapshot :: SelectedAdapter -> (Text, Text, Text, Text)
+selectedDescriptorSnapshot =
+  foldAdapterDescriptor
+    (\identifier name version notation ->
+       (adapterIdText identifier, name, version, notation))
+    . selectedAdapterDescriptor
 
 ruleSnapshot :: AdapterRule -> (Text, Text)
 ruleSnapshot rule =
@@ -616,27 +592,45 @@ requireAdapter =
       assertFailure "static AMX adapter failed to compile" >> fail "unreachable"
     Right adapter -> pure adapter
 
+requireUnrelatedAdapter :: IO Adapter
+requireUnrelatedAdapter = do
+  identifier <- requireRight (mkAdapterId "another-adapter")
+  descriptor <-
+    requireRight
+      (mkAdapterDescriptor identifier "Another adapter" "1" "another-notation")
+  definition <-
+    requireRight
+      (mkAdapterRuleDefinition
+         "another-adapter.recognition"
+         "Recognize the exact test representation."
+         "The representation belongs to the other adapter."
+         "Select the other adapter.")
+  requireRight
+    (compileAdapter
+       descriptor
+       ((\_ ->
+           adapterBehavior
+             (\input ->
+                if input == unrelatedRepresentation
+                  then recognitionMatch
+                  else noRecognitionMatch)
+             (const (error "decode is outside this selection test")))
+          <$> recognitionRule definition))
+
 requireRight :: Show failure => Either failure value -> IO value
 requireRight result =
   case result of
     Left failure -> assertFailure (show failure) >> fail "unreachable"
     Right value -> pure value
 
-validModel, wrongRoot, wrongVersion, missingVersion, malformedAMX :: ByteString
+validModel, profiledModel, unrelatedRepresentation :: ByteString
 validModel = TextEncoding.encodeUtf8 validModelText
+
+profiledModel =
+  "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" id=\"model\" version=\"5.0.0\"><property key=\"o2i.profile\" value=\"o2i.archimate-profile@0.3\"/></a:model>"
+
+unrelatedRepresentation = "{\"format\":\"another-adapter\"}"
 
 validModelText :: Text
 validModelText =
   "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\"/>"
-
-wrongRoot = "<model xmlns=\"urn:not-archi\" version=\"5.0.0\"/>"
-
-wrongVersion =
-  "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"4.0.0\"/>"
-
-missingVersion = "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\"/>"
-
-malformedAMX = "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\""
-
-malformedUtf8AMX :: ByteString
-malformedUtf8AMX = validModel <> "\255"

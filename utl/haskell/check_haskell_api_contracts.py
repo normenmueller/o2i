@@ -17,19 +17,57 @@ from typing import Iterable
 
 
 ERROR_CODE = re.compile(r"GHC-\d+")
-IMPORT_MODULE = re.compile(
-    r"^[ \t]*import\b"
-    r"(?:(?:[ \t\r\n]+)|(?:safe\b)|(?:qualified\b))*"
-    r"(?P<module>[A-Z][A-Za-z0-9_']*"
-    r"(?:\.[A-Z][A-Za-z0-9_']*)*)",
-    re.MULTILINE,
-)
-RELATIONAL_INTERNAL_MODULE = "O2I.Validation.Relational.Internal"
-RELATIONAL_INTERNAL_IMPORTERS = frozenset(
+CORE_EXPOSED_MODULES = frozenset(
     {
-        "O2I/Validation/Relational/Eval.hs",
-        "O2I/Validation/Relational/Index.hs",
-        "O2I/Validation/Relational/Types.hs",
+        "O2I.Core.Contract",
+        "O2I.Core.Graph.Observation",
+        "O2I.Core.Identity",
+        "O2I.Core.Rule.Catalog",
+        "O2I.Semantics",
+        "O2I.Semantics.Input",
+        "O2I.Structure",
+    }
+)
+CORE_SOURCE_FILES = frozenset(
+    {
+        "src/O2I/Core/Contract.hs",
+        "src/O2I/Core/Contract/Generated.hs",
+        "src/O2I/Core/Contract/Internal.hs",
+        "src/O2I/Core/Graph/Commitment.hs",
+        "src/O2I/Core/Graph/Observation.hs",
+        "src/O2I/Core/Graph/Observation/Index.hs",
+        "src/O2I/Core/Graph/Observation/Internal.hs",
+        "src/O2I/Core/Identity.hs",
+        "src/O2I/Core/Identity/Internal.hs",
+        "src/O2I/Core/Rule/Catalog.hs",
+        "src/O2I/Core/Rule/Catalog/Definition.hs",
+        "src/O2I/Core/Rule/Catalog/Definition/CapabilityInput.hs",
+        "src/O2I/Core/Rule/Catalog/Definition/Qualification.hs",
+        "src/O2I/Core/Rule/Catalog/Definition/ReadinessAndAssessment.hs",
+        "src/O2I/Core/Rule/Catalog/Definition/Semantics.hs",
+        "src/O2I/Core/Rule/Catalog/Definition/Structure.hs",
+        "src/O2I/Core/Rule/Catalog/Definition/Trace.hs",
+        "src/O2I/Core/Rule/Catalog/Internal.hs",
+        "src/O2I/Input/Internal/Binding.hs",
+        "src/O2I/Input/Internal/Decode.hs",
+        "src/O2I/Input/Internal/Json.hs",
+        "src/O2I/Input/Internal/Set.hs",
+        "src/O2I/Input/Internal/Text.hs",
+        "src/O2I/Input/Internal/Types.hs",
+        "src/O2I/Semantics.hs",
+        "src/O2I/Semantics/Contextualization.hs",
+        "src/O2I/Semantics/Eval.hs",
+        "src/O2I/Semantics/Family/CollectiveStrategyRealization.hs",
+        "src/O2I/Semantics/Index.hs",
+        "src/O2I/Semantics/Input.hs",
+        "src/O2I/Semantics/Internal.hs",
+        "src/O2I/Semantics/SituatedNeed.hs",
+        "src/O2I/Semantics/Strategy.hs",
+        "src/O2I/Semantics/Vocabulary.hs",
+        "src/O2I/Structure.hs",
+        "src/O2I/Structure/Index.hs",
+        "src/O2I/Structure/Internal.hs",
+        "src/O2I/Structure/Proposition.hs",
     }
 )
 
@@ -64,13 +102,9 @@ CONTRACTS = (
             "spc/lib/core/tst/api/compile-pass/"
             "CoreRuleCatalogPublicApi.hs",
             "spc/lib/core/tst/api/compile-pass/StructurePublicApi.hs",
+            "spc/lib/core/tst/api/compile-pass/SemanticsPublicApi.hs",
         ),
         (
-            CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
-                "AggregateOpaqueConstructors.hs",
-                (("GHC-01928", 25),),
-            ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "CoreContractOpaqueConstructors.hs",
@@ -117,45 +151,14 @@ CONTRACTS = (
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/AggregateRecordUpdates.hs",
-                (("GHC-22385", 1),),
+                "spc/lib/core/tst/api/compile-fail/"
+                "SemanticsOpaqueConstructors.hs",
+                (("GHC-01928", 2), ("GHC-88464", 1)),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
-                "GraphOpaqueConstructors.hs",
-                (("GHC-01928", 5),),
-            ),
-            CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/GraphRecordUpdates.hs",
-                (("GHC-22385", 1),),
-            ),
-            CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
-                "LanguageOpaqueConstructors.hs",
-                (("GHC-01928", 9),),
-            ),
-            CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/LanguageOpaquePatterns.hs",
-                (("GHC-01928", 1),),
-            ),
-            CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/LanguageRecordUpdates.hs",
-                (("GHC-22385", 1),),
-            ),
-            CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
-                "ValidationOpaqueConstructors.hs",
-                (("GHC-01928", 13),),
-            ),
-            CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
-                "ValidationRecordUpdates.hs",
-                (("GHC-22385", 1),),
-            ),
-            CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
-                "ValidationCollectiveParallelCommitment.hs",
-                (("GHC-22385", 1),),
+                "SemanticsInternalModule.hs",
+                (("GHC-87110", 1),),
             ),
         ),
     ),
@@ -256,6 +259,11 @@ CONTRACTS = (
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/"
                 "AdapterRuleCrossScope.hs",
+                (("GHC-25897", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "AdapterRuleCoercibleScope.hs",
                 (("GHC-25897", 1),),
             ),
             CompileFailure(
@@ -367,109 +375,6 @@ PRIVATE_COMPILE_FAILURES = (
         "spc/lib/core/tst/internal/compile-fail/IdentityCrossScope.hs",
         (("GHC-25897", 1),),
     ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "MacroEvidenceEndpointMismatch.hs",
-        (("GHC-83865", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "MacroEvidenceProjectionMismatch.hs",
-        (("GHC-83865", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "RelationalEndpointVariableMismatch.hs",
-        (("GHC-83865", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "RelationalTypedProjectionMismatch.hs",
-        (("GHC-83865", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "RelationalCrossScopeVariable.hs",
-        (("GHC-25897", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "RelationalDisconnectedPlan.hs",
-        (("GHC-01928", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "RelationalProjectionTokenMismatch.hs",
-        (("GHC-83865", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "RelationalProjectionScopeMismatch.hs",
-        (("GHC-83865", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "RelationalProjectionEndpointMismatch.hs",
-        (("GHC-83865", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "RelationalProjectionModeMismatch.hs",
-        (("GHC-83865", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "RelationalMatchedConstructionOutsideExecutor.hs",
-        (("GHC-88464", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "RelationalProjectionApplicationOutsideExecutor.hs",
-        (("GHC-88464", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "RelationalOccurrenceEndpointMismatch.hs",
-        (("GHC-83865", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "RelationalOccurrenceOrderMismatch.hs",
-        (("GHC-25897", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "RelationalOccurrenceConstructionOutsideExecutor.hs",
-        (("GHC-01928", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "TraceRuleCrossScope.hs",
-        (("GHC-25897", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "TraceRuleEndpointMismatch.hs",
-        (("GHC-83865", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "TraceRuleOccurrenceOrder.hs",
-        (("GHC-25897", 1),),
-    ),
-    PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
-        "TraceRuleAnchorMismatch.hs",
-        (("GHC-83865", 1),),
-    ),
-)
-
-PRIVATE_COMPILE_PASSES = (
-    "spc/lib/core/tst/internal/compile-pass/MacroVocabulary.hs",
-    "spc/lib/core/tst/internal/compile-pass/"
-    "RelationalOccurrenceProjection.hs",
-    "spc/lib/core/tst/internal/compile-pass/RelationalPlan.hs",
-    "spc/lib/core/tst/internal/compile-pass/TraceRules.hs",
 )
 
 
@@ -548,6 +453,63 @@ def compiler_command(
     ]
 
 
+def cabal_library_field(package: Path, field: str) -> frozenset[str]:
+    cabal_files = tuple(package.glob("*.cabal"))
+    if len(cabal_files) != 1:
+        raise RuntimeError(
+            f"expected exactly one Cabal file in {package}, "
+            f"found {len(cabal_files)}"
+        )
+    lines = cabal_files[0].read_text().splitlines()
+    in_library = False
+    collecting = False
+    values = []
+    for line in lines:
+        if line == "library":
+            in_library = True
+            continue
+        if in_library and line and not line[0].isspace():
+            break
+        if not in_library:
+            continue
+        if line.startswith(f"  {field}:"):
+            collecting = True
+            values.append(line.split(":", 1)[1])
+            continue
+        if collecting:
+            if line.startswith("    "):
+                values.append(line)
+                continue
+            break
+    if not values:
+        raise RuntimeError(f"missing library field {field} in {cabal_files[0]}")
+    return frozenset(
+        token
+        for value in values
+        for token in value.replace(",", " ").split()
+    )
+
+
+def check_core_package_inventory(package: Path) -> None:
+    actual_sources = frozenset(
+        source.relative_to(package).as_posix()
+        for source in (package / "src").rglob("*.hs")
+    )
+    if actual_sources != CORE_SOURCE_FILES:
+        missing = sorted(CORE_SOURCE_FILES - actual_sources)
+        unexpected = sorted(actual_sources - CORE_SOURCE_FILES)
+        raise RuntimeError(
+            "o2i-core source inventory differs: "
+            f"missing={missing}, unexpected={unexpected}"
+        )
+    exposed = cabal_library_field(package, "exposed-modules")
+    if exposed != CORE_EXPOSED_MODULES:
+        missing = sorted(CORE_EXPOSED_MODULES - exposed)
+        unexpected = sorted(exposed - CORE_EXPOSED_MODULES)
+        raise RuntimeError(
+            "o2i-core exposed-module inventory differs: "
+            f"missing={missing}, unexpected={unexpected}"
+        )
 def private_compiler_command(
     project_dir: Path,
     project_file: str | None,
@@ -640,90 +602,6 @@ def combined_output(result: subprocess.CompletedProcess[str]) -> str:
     return result.stdout + result.stderr
 
 
-def haskell_code(source: str) -> str:
-    """Blank comments and strings while retaining token positions and lines."""
-    result = []
-    index = 0
-    block_depth = 0
-    in_line_comment = False
-    in_string = False
-    escaped = False
-    while index < len(source):
-        current = source[index]
-        following = source[index + 1] if index + 1 < len(source) else ""
-        if in_line_comment:
-            if current == "\n":
-                in_line_comment = False
-                result.append(current)
-            else:
-                result.append(" ")
-        elif block_depth:
-            if current == "{" and following == "-":
-                block_depth += 1
-                result.extend((" ", " "))
-                index += 1
-            elif current == "-" and following == "}":
-                block_depth -= 1
-                result.extend((" ", " "))
-                index += 1
-            else:
-                result.append("\n" if current == "\n" else " ")
-        elif in_string:
-            if current == "\n":
-                in_string = False
-                escaped = False
-                result.append(current)
-            elif current == '"' and not escaped:
-                in_string = False
-                result.append(" ")
-            else:
-                escaped = current == "\\" and not escaped
-                if current != "\\":
-                    escaped = False
-                result.append(" ")
-        elif current == "-" and following == "-":
-            in_line_comment = True
-            result.extend((" ", " "))
-            index += 1
-        elif current == "{" and following == "-":
-            block_depth = 1
-            result.extend((" ", " "))
-            index += 1
-        elif current == '"':
-            in_string = True
-            escaped = False
-            result.append(" ")
-        else:
-            result.append(current)
-        index += 1
-    return "".join(result)
-
-
-def imported_modules(source: str) -> tuple[str, ...]:
-    """Read module names from ordinary and qualified import declarations."""
-    code = haskell_code(source)
-    return tuple(
-        declaration.group("module")
-        for declaration in IMPORT_MODULE.finditer(code)
-    )
-
-
-def check_relational_internal_import_boundary(root: Path) -> None:
-    source_root = root / "spc/lib/core/src"
-    violations = []
-    for source in sorted(source_root.rglob("*.hs")):
-        relative = source.relative_to(source_root).as_posix()
-        if relative in RELATIONAL_INTERNAL_IMPORTERS:
-            continue
-        if RELATIONAL_INTERNAL_MODULE in imported_modules(source.read_text()):
-            violations.append(relative)
-    if violations:
-        raise RuntimeError(
-            "executor-internal relational imports outside the trusted boundary: "
-            + ", ".join(violations)
-        )
-
-
 def check_compile_pass(
     root: Path,
     project_dir: Path,
@@ -776,23 +654,6 @@ def check_private_compile_failure(
     assert_compile_failure(
         root, failure.source, failure.diagnostics, result
     )
-
-
-def check_private_compile_pass(
-    root: Path,
-    project_dir: Path,
-    project_file: str | None,
-    build_dir: Path,
-    source_name: str,
-) -> None:
-    result = compile_private_source(
-        root, project_dir, project_file, build_dir, source_name
-    )
-    if result.returncode != 0:
-        raise RuntimeError(
-            f"{source_name} private control failed:\n"
-            + combined_output(result)
-        )
 
 
 def assert_compile_failure(
@@ -850,7 +711,7 @@ def check_contracts(
 
     core_selected = packages is None or "o2i-core" in packages
     if core_selected:
-        check_relational_internal_import_boundary(root)
+        check_core_package_inventory(root / "spc/lib/core")
     for contract in selected:
         check_compile_pass(
             root, project_dir, project_file, build_dir, contract
@@ -873,22 +734,14 @@ def check_contracts(
                 build_dir,
                 failure,
             )
-        for source_name in PRIVATE_COMPILE_PASSES:
-            check_private_compile_pass(
-                root,
-                project_dir,
-                project_file,
-                build_dir,
-                source_name,
-            )
 
 
 def parse_args(arguments: Iterable[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Check public and private Haskell compile contracts."
     )
-    parser.add_argument("--project-dir", required=True, type=Path)
-    parser.add_argument("--builddir", required=True, type=Path)
+    parser.add_argument("--project-dir", type=Path)
+    parser.add_argument("--builddir", type=Path)
     parser.add_argument(
         "--project-file",
         help="Cabal project file name relative to --project-dir.",
@@ -899,6 +752,11 @@ def parse_args(arguments: Iterable[str]) -> argparse.Namespace:
         dest="packages",
         help="Limit checks to one package; repeat for multiple packages.",
     )
+    parser.add_argument(
+        "--core-package-root",
+        type=Path,
+        help="Check only the exact o2i-core package inventory at this path.",
+    )
     return parser.parse_args(arguments)
 
 
@@ -906,6 +764,14 @@ def main(arguments: Iterable[str] | None = None) -> int:
     args = parse_args(sys.argv[1:] if arguments is None else arguments)
     root = Path(__file__).resolve().parents[2]
     try:
+        if args.core_package_root is not None:
+            check_core_package_inventory(args.core_package_root.resolve())
+            print("[o2i|info] o2i-core package inventory passed.")
+            return 0
+        if args.project_dir is None or args.builddir is None:
+            raise ValueError(
+                "--project-dir and --builddir are required for compile checks"
+            )
         check_contracts(
             root,
             args.project_dir.resolve(),

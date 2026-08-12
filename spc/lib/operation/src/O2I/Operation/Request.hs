@@ -35,18 +35,23 @@ import O2I.Operation.Provenance (SourceReference)
 import O2I.Operation.Request.Internal
 import O2I.Operation.View (ViewSelector)
 
+-- | Identity of the structural and semantic validation capability.
 validationCapability :: CapabilityIdentity
 validationCapability = ValidationCapability
 
+-- | Identity of the effect-trace capability.
 traceCapability :: CapabilityIdentity
 traceCapability = TraceCapability
 
+-- | Identity of the qualification capability.
 qualificationCapability :: CapabilityIdentity
 qualificationCapability = QualificationCapability
 
+-- | Identity of the evidence-readiness capability.
 readinessCapability :: CapabilityIdentity
 readinessCapability = ReadinessCapability
 
+-- | Identity of the evidence-assessment capability.
 assessmentCapability :: CapabilityIdentity
 assessmentCapability = AssessmentCapability
 
@@ -104,19 +109,24 @@ foldCapabilityInputReferences validate trace qualify readiness assess references
     ReadinessInputReferences primary values -> readiness primary values
     AssessmentInputReferences primary values -> assess primary values
 
+-- | Request validation for one View and ordered supplemental inputs.
 validationRequest :: ViewSelector -> [SourceReference] -> RequestedContract
 validationRequest = ValidationRequest
 
+-- | Request effect tracing for one View.
 traceRequest :: ViewSelector -> RequestedContract
 traceRequest = TraceRequest
 
+-- | Request qualification for one View and ordered supplemental inputs.
 qualificationRequest :: ViewSelector -> [SourceReference] -> RequestedContract
 qualificationRequest = QualificationRequest
 
+-- | Request readiness using one primary and ordered supplemental inputs.
 readinessRequest ::
      ViewSelector -> SourceReference -> [SourceReference] -> RequestedContract
 readinessRequest = ReadinessRequest
 
+-- | Request assessment using one primary and ordered supplemental inputs.
 assessmentRequest ::
      ViewSelector -> SourceReference -> [SourceReference] -> RequestedContract
 assessmentRequest = AssessmentRequest

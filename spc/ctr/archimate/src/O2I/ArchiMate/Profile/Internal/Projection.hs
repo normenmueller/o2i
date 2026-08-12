@@ -181,18 +181,41 @@ data QualificationReference = QualificationReference
   , qualificationReferenceTargetValue :: !OccurrenceIdentity
   } deriving (Eq, Ord, Show)
 
+-- | One source occurrence retained by a qualification proposal.
+data QualificationSource = QualificationSource
+  { qualificationSourceOccurrenceValue :: !OccurrenceIdentity
+  , qualificationSourceValueValue :: !Text
+  } deriving (Eq, Ord, Show)
+
+-- | One preserved documentation occurrence and its normalized rationale.
+data QualificationRationale = QualificationRationale
+  { qualificationRationaleOccurrenceValue :: !DraftLocation
+  , qualificationRationaleValueValue :: !Text
+  } deriving (Eq, Ord, Show)
+
 -- | One concrete qualification proposal retained outside Core Structure.
 data QualificationProposal = QualificationProposal
   { qualificationProposalOccurrenceValue :: !OccurrenceIdentity
   , qualificationProposalIdentityValue :: !ModelIdentity
-  , qualificationProposalRationaleValue :: !(Maybe Text)
-  , qualificationProposalSourcesValue :: ![Text]
+  , qualificationProposalRationaleValue :: !(Maybe QualificationRationale)
+  , qualificationProposalSourcesValue :: ![QualificationSource]
   , qualificationProposalReferencesValue :: ![QualificationReference]
   } deriving (Eq, Show)
+
+-- | One concrete Profile mapping retained independently of Core semantics.
+data ProfileMappingProvenance
+  = CarrierMappingProvenance !OccurrenceIdentity !Text
+  | RelationMappingProvenance
+      !OccurrenceIdentity
+      !Text
+      !OccurrenceIdentity
+      !OccurrenceIdentity
+  deriving (Eq, Ord, Show)
 
 -- | Accepted Core Structure plus retained qualification proposals.
 data ProfileProjection = ProfileProjection
   { profileStructureProjectionValue :: !StructureProjection
+  , profileMappingProvenanceValue :: ![ProfileMappingProvenance]
   , profileQualificationProposalsValue :: ![QualificationProposal]
   }
 
@@ -211,6 +234,7 @@ data RelationshipResult = RelationshipResult
   { relationshipIssues :: ![ProfileIssue]
   , relationshipRelations :: ![RelationProjection]
   , relationshipContextualizations :: ![ContextualizationProjection]
+  , relationshipMappingProvenance :: ![ProfileMappingProvenance]
   }
 
 data StructuredResult = StructuredResult
@@ -327,6 +351,10 @@ projectClosedProfile closed =
                     relations
                     propositions
                     incidences
+              , profileMappingProvenanceValue =
+                  sortOn
+                    mappingProvenanceOccurrence
+                    (carrierMappingProvenance ++ relationMappingProvenance)
               , profileQualificationProposalsValue = proposals
               }
   where
@@ -400,11 +428,15 @@ projectClosedProfile closed =
         , isQualificationCandidate projectionIndex record
         ]
     carrierIssues = concatMap projectionIssues carrierResults
-    carriers = concatMap projectionValues carrierResults
+    carrierProjections = concatMap projectionValues carrierResults
+    carriers = map fst carrierProjections
+    carrierMappingProvenance = map snd carrierProjections
     relationIssues = concatMap relationshipIssues relationshipResults
     relations = concatMap relationshipRelations relationshipResults
     contextualizations =
       concatMap relationshipContextualizations relationshipResults
+    relationMappingProvenance =
+      concatMap relationshipMappingProvenance relationshipResults
     structuredIssues' = concatMap structuredIssues structuredResults
     propositions = concatMap structuredPropositions structuredResults
     incidences = concatMap structuredIncidences structuredResults
@@ -492,7 +524,9 @@ relationshipsIn projectionIndex occurrences =
   mapMaybe (findRelationship projectionIndex) (Set.toAscList occurrences)
 
 projectCarrier ::
-     ProfileIndex -> RecordInfo -> ProjectionResult CarrierProjection
+     ProfileIndex
+  -> RecordInfo
+  -> ProjectionResult (CarrierProjection, ProfileMappingProvenance)
 projectCarrier projectionIndex record
   | recordInfoFamily record /= ElementFamily = ProjectionResult [] []
   | isJunction record = ProjectionResult [] []
@@ -513,7 +547,15 @@ projectCarrier projectionIndex record
               (Just category, Just coreType) ->
                 ProjectionResult
                   []
-                  [carrierProjection coreIdentity category coreType commitment]
+                  [ ( carrierProjection
+                        coreIdentity
+                        category
+                        coreType
+                        commitment
+                    , CarrierMappingProvenance
+                        coreIdentity
+                        (carrierMappingIdValue mapping))
+                  ]
               (categoryResult, coreTypeResult) ->
                 ProjectionResult
                   (missingCoreBinding
@@ -584,9 +626,11 @@ projectContextualization projectionIndex relationship =
                 projectedTarget
                 commitment
             ]
+            []
         (sourceResult, targetResult) ->
           RelationshipResult
             (resultErrors sourceResult ++ resultErrors targetResult)
+            []
             []
             []
     (metadataIssues, commitmentResult, endpointResult, occurrenceResult) ->
@@ -595,6 +639,7 @@ projectContextualization projectionIndex relationship =
            ++ resultErrors commitmentResult
            ++ resultErrors endpointResult
            ++ resultErrors occurrenceResult)
+        []
         []
         []
   where
@@ -666,12 +711,14 @@ projectSemanticRelationship projectionIndex relationship =
         ]
         []
         []
+        []
     Right [] ->
       RelationshipResult
         [ relationshipIssue
             "graph.committed-relationship.mapping-selection"
             occurrence
         ]
+        []
         []
         []
     Right [mapping] -> projectMappedRelationship mapping
@@ -681,6 +728,7 @@ projectSemanticRelationship projectionIndex relationship =
             "graph.committed-relationship.mapping-selection"
             occurrence
         ]
+        []
         []
         []
   where
@@ -711,9 +759,16 @@ projectSemanticRelationship projectionIndex relationship =
                     commitment
                 ]
                 []
+                [ RelationMappingProvenance
+                    projectedOccurrence
+                    (relationMappingIdValue mapping)
+                    projectedSource
+                    projectedTarget
+                ]
             (sourceResult, targetResult) ->
               RelationshipResult
                 (resultErrors sourceResult ++ resultErrors targetResult)
+                []
                 []
                 []
         (attributeIssues, commitmentResult, endpointResult, occurrenceResult, tokenResult) ->
@@ -731,6 +786,7 @@ projectSemanticRelationship projectionIndex relationship =
                              occurrence)
                       ]
                     Just _ -> [])
+            []
             []
             []
 
@@ -1080,7 +1136,7 @@ projectQualificationProposal projectionIndex qualification record =
     commitments = propertiesForKey projectionIndex occurrence "o2i.commitment"
     sourceResult = projectSources projectionIndex occurrence
     sourceIssues = projectionIssues sourceResult
-    sources = Set.toAscList (Set.fromList (projectionValues sourceResult))
+    sources = projectionValues sourceResult
     rationaleResult = assessQualificationRationale record
     references =
       [ relationship
@@ -1103,37 +1159,57 @@ projectQualificationProposal projectionIndex qualification record =
     projectReference relationship =
       projectQualificationReference projectionIndex occurrence relationship
 
-assessQualificationRationale :: RecordInfo -> Either [ProfileIssue] (Maybe Text)
+assessQualificationRationale ::
+     RecordInfo -> Either [ProfileIssue] (Maybe QualificationRationale)
 assessQualificationRationale record =
-  case patternTextExpectation
-         "qualification.carrier.rationale-normalization"
-         occurrence of
-    Left issues -> Left issues
-    Right (rule, "zero-or-one-normalized-documentation-occurrence") ->
-      case fieldScalars DocumentationField record of
-        [] -> Right Nothing
+  case filter
+         ((== DocumentationField) . canonicalFieldValue)
+         (recordInfoFields record) of
+    [] -> Right Nothing
+    [field] ->
+      case canonicalFieldScalarsValue field of
         [scalar]
           | draftScalarKindValue scalar == DraftText ->
-            case normalizeTextValue
-                   DocumentationNormalization
-                   (draftScalarTextValue scalar) of
-              Just rationale -> Right (Just rationale)
-              Nothing -> Left [proposalCarrierIssue rule occurrence]
-          | otherwise -> Left [proposalCarrierIssue rule occurrence]
-        _ -> Left [proposalCarrierIssue rule occurrence]
-    Right _ ->
-      invalidPatternRuntimeExpectation
-        "qualification.carrier.rationale-normalization"
-        occurrence
-  where
-    occurrence = recordInfoOccurrence record
+            Right
+              (QualificationRationale (canonicalFieldLocationValue field)
+                 <$> normalizeTextValue
+                       DocumentationNormalization
+                       (draftScalarTextValue scalar))
+          | otherwise -> Right Nothing
+        _ -> Right Nothing
+    _ -> Right Nothing
 
-projectSources :: ProfileIndex -> CanonicalOccurrence -> ProjectionResult Text
-projectSources projectionIndex =
-  assessTextProperty
-    projectionIndex
-    "property:qualification-proposal-assessment:o2i.source"
-    Just
+mappingProvenanceOccurrence :: ProfileMappingProvenance -> OccurrenceIdentity
+mappingProvenanceOccurrence provenance =
+  case provenance of
+    CarrierMappingProvenance occurrence _ -> occurrence
+    RelationMappingProvenance occurrence _ _ _ -> occurrence
+
+projectSources ::
+     ProfileIndex -> CanonicalOccurrence -> ProjectionResult QualificationSource
+projectSources projectionIndex owner =
+  case filter
+         ((== mappingId) . generatedPropertyRuntimeMappingId)
+         generatedPropertyRuntimePlans of
+    [plan] ->
+      case assessGeneratedProperty projectionIndex Just owner plan of
+        ProjectionResult issues values ->
+          foldMapProjection projectSource values `appendProjectionIssues` issues
+    _ ->
+      ProjectionResult
+        [ contractIssue
+            (MissingCoreContractBinding
+               ("generated-property-runtime-plan:" <> mappingId)
+               owner)
+        ]
+        []
+  where
+    mappingId = "property:qualification-proposal-assessment:o2i.source"
+    projectSource (occurrence, value) =
+      case coreOccurrence occurrence of
+        Right projectedOccurrence ->
+          ProjectionResult [] [QualificationSource projectedOccurrence value]
+        Left issues -> ProjectionResult issues []
 
 projectQualificationReference ::
      ProfileIndex
@@ -1141,38 +1217,38 @@ projectQualificationReference ::
   -> RelationshipInfo
   -> ProjectionResult QualificationReference
 projectQualificationReference projectionIndex proposal relationship =
-  case referenceIssues of
-    [] ->
-      case (relationshipInfoTarget relationship, coreOccurrence occurrence) of
-        (Just target, Right projectedOccurrence) ->
-          case ( qualificationRole projectionIndex occurrence
-               , coreOccurrence target) of
-            (Right projectedRole, Right projectedTarget) ->
-              ProjectionResult
-                []
-                [ QualificationReference
-                    projectedOccurrence
-                    projectedRole
-                    projectedTarget
-                ]
-            (roleResult, targetResult) ->
-              ProjectionResult
-                (resultErrors roleResult ++ resultErrors targetResult)
-                []
-        _ ->
-          ProjectionResult
+  case (allIssues, occurrenceResult, roleResult, targetResult) of
+    ([], Right projectedOccurrence, Right projectedRole, Right projectedTarget) ->
+      ProjectionResult
+        []
+        [ QualificationReference
+            projectedOccurrence
+            projectedRole
+            projectedTarget
+        ]
+    _ -> ProjectionResult allIssues []
+  where
+    record = relationshipInfoRecord relationship
+    occurrence = recordInfoOccurrence record
+    commitments = propertiesForKey projectionIndex occurrence "o2i.commitment"
+    occurrenceResult = coreOccurrence occurrence
+    roleResult = qualificationRole projectionIndex occurrence
+    targetResult =
+      case relationshipInfoTarget relationship of
+        Just target -> coreOccurrence target
+        Nothing ->
+          Left
             [ proposalReferenceIssue
                 "qualification.proposal.reference.direction"
                 occurrence
                 proposal
                 []
             ]
-            []
-    issues -> ProjectionResult issues []
-  where
-    record = relationshipInfoRecord relationship
-    occurrence = recordInfoOccurrence record
-    commitments = propertiesForKey projectionIndex occurrence "o2i.commitment"
+    allIssues =
+      referenceIssues
+        ++ resultErrors occurrenceResult
+        ++ resultErrors roleResult
+        ++ resultErrors targetResult
     referenceIssues =
       patternTextIssues
         "qualification.reference.role-property"
@@ -1342,7 +1418,9 @@ assessTextProperty projectionIndex mappingId domainProjection owner =
          ((== mappingId) . generatedPropertyRuntimeMappingId)
          generatedPropertyRuntimePlans of
     [plan] ->
-      assessGeneratedProperty projectionIndex domainProjection owner plan
+      mapProjectionValues
+        snd
+        (assessGeneratedProperty projectionIndex domainProjection owner plan)
     _ ->
       ProjectionResult
         [ contractIssue
@@ -1357,7 +1435,7 @@ assessGeneratedProperty ::
   -> (Text -> Maybe Text)
   -> CanonicalOccurrence
   -> GeneratedPropertyRuntimePlan
-  -> ProjectionResult Text
+  -> ProjectionResult (CanonicalOccurrence, Text)
 assessGeneratedProperty projectionIndex domainProjection owner plan =
   foldMapProjection assessOccurrence properties
     `appendProjectionIssues` propertyCardinalityIssues
@@ -1421,7 +1499,8 @@ assessGeneratedProperty projectionIndex domainProjection owner plan =
                       scalar
                   ]
                   []
-              Right (Just value) -> ProjectionResult [] [value]
+              Right (Just value) ->
+                ProjectionResult [] [(propertyInfoOccurrence property, value)]
 
 applyPropertyConstraint ::
      (Text -> Maybe Text)
@@ -1463,6 +1542,13 @@ appendProjectionIssues ::
      ProjectionResult value -> [ProfileIssue] -> ProjectionResult value
 appendProjectionIssues result issues =
   result {projectionIssues = issues ++ projectionIssues result}
+
+mapProjectionValues ::
+     (source -> target) -> ProjectionResult source -> ProjectionResult target
+mapProjectionValues project result =
+  ProjectionResult
+    (projectionIssues result)
+    (map project (projectionValues result))
 
 singleProjectionValue ::
      Text

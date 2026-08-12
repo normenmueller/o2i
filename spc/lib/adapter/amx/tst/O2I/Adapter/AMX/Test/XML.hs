@@ -12,6 +12,7 @@ import O2I.Adapter.AMX.Internal.Types
 import O2I.Adapter.AMX.Internal.XML
 import O2I.Adapter.AMX.Internal.XML.DTD (skipDoctypeDeclaration)
 import O2I.Adapter.AMX.Internal.XML.Scan
+import O2I.Adapter.AMX.Test.Fixture (fixtureBytes)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 
@@ -55,19 +56,18 @@ encodingTest :: Assertion
 encodingTest = do
   decodeNative (ByteString.pack [255, 254, 0, 0])
     @?= Left (UnsupportedEncoding "UTF-32LE")
-  decodeNative
-    "<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?><a:model xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\"/>"
-    @?= Left (UnsupportedEncoding "ISO-8859-1")
+  unsupported <- fixtureBytes "decode-unsupported-encoding"
+  decodeNative unsupported @?= Left (UnsupportedEncoding "ISO-8859-1")
   decodeNative
     "<?xml version=\"1.0\"encoding=\"ISO-8859-1\"?><a:model xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\"/>"
     @?= Left MalformedXml
 
 scalarTest :: Assertion
 scalarTest = do
-  decodeNative (ByteString.pack [0xC3, 0x28]) @?= Left InvalidUtf8
-  decodeNative
-    "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\">&#0;</a:model>"
-    @?= Left (ForbiddenXmlScalar 0)
+  invalidUtf8 <- fixtureBytes "decode-invalid-utf8"
+  forbiddenScalar <- fixtureBytes "decode-forbidden-xml-scalar"
+  decodeNative invalidUtf8 @?= Left InvalidUtf8
+  decodeNative forbiddenScalar @?= Left (ForbiddenXmlScalar 0)
 
 lexicalTest :: Assertion
 lexicalTest =
@@ -99,10 +99,9 @@ lexicalPassTest =
         <> "</a:model>"
 
 dtdTest :: Assertion
-dtdTest =
-  decodeNative
-    "<!DOCTYPE model><a:model xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\"/>"
-    @?= Left UnsupportedXmlFacility
+dtdTest = do
+  input <- fixtureBytes "decode-dtd-internal-entity"
+  decodeNative input @?= Left UnsupportedXmlFacility
 
 dtdGrammarTest :: Assertion
 dtdGrammarTest = do
@@ -147,10 +146,9 @@ dtdGrammarTest = do
     suffix = "<model/>"
 
 entityTest :: Assertion
-entityTest =
-  decodeNative
-    "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\">&custom;</a:model>"
-    @?= Left UnsupportedXmlFacility
+entityTest = do
+  input <- fixtureBytes "decode-external-entity"
+  decodeNative input @?= Left UnsupportedXmlFacility
 
 separatorTest :: Assertion
 separatorTest = do
@@ -319,6 +317,9 @@ pathTest =
 
 versionTest :: Assertion
 versionTest = do
+  missingVersion <- fixtureBytes "decode-native-version-missing"
+  namespacedVersion <- fixtureBytes "decode-native-version-namespaced"
+  wrongVersion <- fixtureBytes "decode-native-version-wrong"
   classify missingVersion @?= "no-match"
   classify duplicateVersion @?= "native-failure"
   classify namespacedVersion @?= "no-match"
@@ -339,15 +340,6 @@ textModel :: ByteString.ByteString
 textModel =
   "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\">x</a:model>"
 
-missingVersion, duplicateVersion, namespacedVersion, wrongVersion ::
-     ByteString.ByteString
-missingVersion = "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\"/>"
-
+duplicateVersion :: ByteString.ByteString
 duplicateVersion =
   "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"5.0.0\" version=\"5.0.0\"/>"
-
-namespacedVersion =
-  "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" a:version=\"5.0.0\"/>"
-
-wrongVersion =
-  "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" version=\"4.9.0\"/>"

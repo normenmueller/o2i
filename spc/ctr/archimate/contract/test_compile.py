@@ -264,8 +264,12 @@ class ProfileCompilerTest(unittest.TestCase):
 
     def test_pattern_runtime_rule_inventory_is_complete_and_typed(self) -> None:
         rules = compiler.derive_pattern_runtime_rules(self.companion)
-        self.assertEqual(len(rules), 30)
-        self.assertEqual(len({rule["subject"] for rule in rules}), 30)
+        self.assertEqual(len(rules), 29)
+        self.assertEqual(len({rule["subject"] for rule in rules}), 29)
+        self.assertNotIn(
+            "qualification.carrier.rationale-normalization",
+            {rule["subject"] for rule in rules},
+        )
         self.assertEqual(
             {rule["ruleId"] for rule in rules},
             {
@@ -291,7 +295,7 @@ class ProfileCompilerTest(unittest.TestCase):
                     re.MULTILINE,
                 )
             ),
-            30,
+            29,
         )
 
     def test_unrepresented_pattern_runtime_leaf_is_rejected(self) -> None:
@@ -308,7 +312,11 @@ class ProfileCompilerTest(unittest.TestCase):
 
     def test_defect_rule_evidence_bindings_are_exact_and_closed(self) -> None:
         bindings = compiler.derive_profile_defect_rule_bindings(self.companion)
-        self.assertEqual(len(bindings), 126)
+        self.assertEqual(len(bindings), 125)
+        self.assertNotIn(
+            "qualification.proposal.carrier.rationale-normalization",
+            bindings,
+        )
         self.assertEqual(
             set(bindings.values()), set(compiler.EXPECTED_PROFILE_EVIDENCE_KINDS)
         )
@@ -457,6 +465,11 @@ class ProfileCompilerTest(unittest.TestCase):
         rendered = compiler.render_generated(drifted)
         self.assertIn('"example-notation"', rendered)
         self.assertIn('"example-adapter"', rendered)
+
+    def test_applicability_matrix_is_not_generated_as_runtime_inventory(self) -> None:
+        rendered = compiler.render_generated(self.companion)
+        self.assertNotIn("GeneratedApplicabilityDecision", rendered)
+        self.assertNotIn("generatedApplicabilityDecisions", rendered)
 
     def test_descriptor_shape_and_value_kinds_are_closed(self) -> None:
         missing = copy.deepcopy(self.companion)

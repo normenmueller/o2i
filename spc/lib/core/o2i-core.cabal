@@ -18,7 +18,6 @@ extra-source-files:
   semantics.json
   tst/api/compile-pass/*.hs
   tst/api/compile-fail/*.hs
-  tst/internal/compile-pass/*.hs
   tst/internal/compile-fail/*.hs
 common warnings
   ghc-options:
@@ -32,17 +31,13 @@ library
     warnings,
     language
   exposed-modules:
-    O2I,
     O2I.Core.Contract,
     O2I.Core.Graph.Observation,
     O2I.Core.Identity,
     O2I.Core.Rule.Catalog,
     O2I.Semantics,
     O2I.Semantics.Input,
-    O2I.Structure,
-    O2I.Graph,
-    O2I.Language,
-    O2I.Validation
+    O2I.Structure
   other-modules:
     O2I.Core.Contract.Generated,
     O2I.Core.Contract.Internal,
@@ -74,85 +69,16 @@ library
     O2I.Semantics.Vocabulary,
     O2I.Structure.Index,
     O2I.Structure.Internal,
-    O2I.Structure.Proposition,
-    O2I.Graph.Macro,
-    O2I.Graph.Macro.Index,
-    O2I.Graph.Raw,
-    O2I.Graph.Typed,
-    O2I.Language.Claim,
-    O2I.Language.Element,
-    O2I.Language.Interpretation,
-    O2I.Language.Macro,
-    O2I.Language.Macro.Alternative,
-    O2I.Language.Relation,
-    O2I.Validation.Collective,
-    O2I.Validation.Collective.Contribution,
-    O2I.Validation.Collective.Contribution.Eval,
-    O2I.Validation.Collective.Contribution.Index,
-    O2I.Validation.Collective.Contribution.Types,
-    O2I.Validation.Collective.FanIn,
-    O2I.Validation.Collective.Fit,
-    O2I.Validation.Collective.Registry,
-    O2I.Validation.Collective.Registry.Internal,
-    O2I.Validation.Collective.Types,
-    O2I.Validation.Evidence,
-    O2I.Validation.MacroEvidence,
-    O2I.Validation.MacroEvidence.Eval,
-    O2I.Validation.MacroEvidence.Prepare,
-    O2I.Validation.MacroEvidence.Types,
-    O2I.Validation.Qualification,
-    O2I.Validation.Readiness,
-    O2I.Validation.Relational.Eval,
-    O2I.Validation.Relational.Index,
-    O2I.Validation.Relational.Internal,
-    O2I.Validation.Relational.Types,
-    O2I.Validation.Semantics,
-    O2I.Validation.Semantics.Context,
-    O2I.Validation.Semantics.Context.TradeOffSet,
-    O2I.Validation.Structure,
-    O2I.Validation.Structure.Internal,
-    O2I.Validation.Trace,
-    O2I.Validation.Trace.Eval,
-    O2I.Validation.Trace.Rule,
-    O2I.Validation.Trace.Types
+    O2I.Structure.Proposition
   build-depends:
     aeson >=2.2.5 && <2.3,
     base >=4.20 && <4.21,
     bytestring >=0.12 && <0.13,
     containers >=0.7 && <0.8,
-    dependent-map >=0.4.0 && <0.5,
-    dependent-sum >=0.7.1 && <0.8,
     text >=2.1 && <2.2,
-    time >=1.12 && <1.13,
-    unicode-transforms ==0.4.0.1,
-    validation >=1.1 && <1.2
+    unicode-transforms ==0.4.0.1
   hs-source-dirs:
     src
-
-test-suite o2i-test
-  import:
-    warnings,
-    language
-  type:
-    exitcode-stdio-1.0
-  main-is:
-    Main.hs
-  other-modules:
-    O2I.Test.Collective,
-    O2I.Test.Qualification,
-    O2I.Test.Support
-  build-depends:
-    base >=4.20 && <4.21,
-    o2i-core,
-    tasty >=1.4 && <1.6,
-    tasty-hunit >=0.10 && <0.11,
-    tasty-quickcheck >=0.10 && <0.12,
-    QuickCheck >=2.16 && <2.18,
-    text >=2.1 && <2.2,
-    time >=1.12 && <1.13,
-    validation >=1.1 && <1.2
-  hs-source-dirs:
-    tst
 
 -- This component compiles the profile-neutral identity boundary directly. It
 -- verifies exact identity decoding, deterministic indexing, and nominal
@@ -435,227 +361,6 @@ test-suite o2i-semantics-internal-test
   hs-source-dirs:
     tst/internal,
     src
-
--- This component compiles the private macro-index modules directly. It keeps
--- deterministic lookup-work accounting testable without exporting
--- instrumentation from the public library.
-test-suite o2i-macro-index-internal-test
-  import:
-    warnings,
-    language
-  type:
-    exitcode-stdio-1.0
-  main-is:
-    MacroIndexMain.hs
-  other-modules:
-    O2I.Graph.Macro,
-    O2I.Graph.Macro.Index,
-    O2I.Graph.Raw,
-    O2I.Graph.Typed,
-    O2I.Language.Claim,
-    O2I.Language.Element,
-    O2I.Language.Interpretation,
-    O2I.Language.Macro,
-    O2I.Language.Macro.Alternative,
-    O2I.Language.Relation,
-    O2I.Validation.Relational.Internal,
-    O2I.Validation.Relational.Types
-  build-depends:
-    base >=4.20 && <4.21,
-    containers >=0.7 && <0.8,
-    tasty >=1.4 && <1.6,
-    tasty-hunit >=0.10 && <0.11,
-    tasty-quickcheck >=0.10 && <0.12,
-    QuickCheck >=2.16 && <2.18,
-    text >=2.1 && <2.2
-  hs-source-dirs:
-    tst/internal,
-    src
-
--- This component compiles the private collective-Fit index directly. It keeps
--- deterministic lookup-work accounting outside the public validation API.
-test-suite o2i-collective-fit-internal-test
-  import:
-    warnings,
-    language
-  type:
-    exitcode-stdio-1.0
-  main-is:
-    CollectiveFitMain.hs
-  other-modules:
-    O2I.Language.Element,
-    O2I.Validation.Collective.Fit,
-    O2I.Validation.Collective.Types,
-    O2I.Validation.Semantics.Context.TradeOffSet
-  build-depends:
-    base >=4.20 && <4.21,
-    containers >=0.7 && <0.8,
-    tasty >=1.4 && <1.6,
-    tasty-hunit >=0.10 && <0.11,
-    tasty-quickcheck >=0.10 && <0.12,
-    QuickCheck >=2.16 && <2.18,
-    text >=2.1 && <2.2
-  hs-source-dirs:
-    tst/internal,
-    src
-
--- This component compiles the private typed relational evaluator directly.
--- It keeps executor contracts and truthful work accounting outside the
--- public validation API.
-test-suite o2i-relational-internal-test
-  import:
-    warnings,
-    language
-  type:
-    exitcode-stdio-1.0
-  main-is:
-    RelationalMain.hs
-  other-modules:
-    O2I.Graph.Typed,
-    O2I.Language.Element,
-    O2I.Language.Interpretation,
-    O2I.Language.Relation,
-    O2I.Validation.Relational.Eval,
-    O2I.Validation.Relational.Index,
-    O2I.Validation.Relational.Internal,
-    O2I.Validation.Relational.Test.Contracts,
-    O2I.Validation.Relational.Test.Fixture,
-    O2I.Validation.Relational.Test.Generated,
-    O2I.Validation.Relational.Test.Matrix,
-    O2I.Validation.Relational.Types
-  build-depends:
-    base >=4.20 && <4.21,
-    containers >=0.7 && <0.8,
-    QuickCheck >=2.16 && <2.18,
-    tasty >=1.4 && <1.6,
-    tasty-hunit >=0.10 && <0.11,
-    tasty-quickcheck >=0.10 && <0.12,
-    text >=2.1 && <2.2
-  hs-source-dirs:
-    tst/internal,
-    src
-
--- This component compiles the private endpoint-typed macro interpreter
--- directly. It verifies semantic equivalence, canonical witnesses, and exact
--- executor work without exporting instrumentation from the public library.
-test-suite o2i-macro-evidence-internal-test
-  import:
-    warnings,
-    language
-  type:
-    exitcode-stdio-1.0
-  main-is:
-    MacroEvidenceMain.hs
-  other-modules:
-    O2I.Graph.Macro,
-    O2I.Graph.Macro.Index,
-    O2I.Graph.Raw,
-    O2I.Graph.Typed,
-    O2I.Language.Claim,
-    O2I.Language.Element,
-    O2I.Language.Interpretation,
-    O2I.Language.Macro,
-    O2I.Language.Macro.Alternative,
-    O2I.Language.Relation,
-    O2I.Validation.MacroEvidence,
-    O2I.Validation.MacroEvidence.Eval,
-    O2I.Validation.MacroEvidence.Prepare,
-    O2I.Validation.MacroEvidence.Test.Contracts,
-    O2I.Validation.MacroEvidence.Test.Fixture,
-    O2I.Validation.MacroEvidence.Test.Oracle,
-    O2I.Validation.MacroEvidence.Types,
-    O2I.Validation.Relational.Eval,
-    O2I.Validation.Relational.Index,
-    O2I.Validation.Relational.Internal,
-    O2I.Validation.Relational.Types,
-    O2I.Validation.Semantics.Context,
-    O2I.Validation.Semantics.Context.TradeOffSet,
-    O2I.Validation.Structure,
-    O2I.Validation.Structure.Internal
-  build-depends:
-    base >=4.20 && <4.21,
-    containers >=0.7 && <0.8,
-    dependent-map >=0.4.0 && <0.5,
-    dependent-sum >=0.7.1 && <0.8,
-    tasty >=1.4 && <1.6,
-    tasty-hunit >=0.10 && <0.11,
-    text >=2.1 && <2.2,
-    validation >=1.1 && <1.2
-  hs-source-dirs:
-    tst/internal,
-    src
-
--- This component compiles the private typed effect-trace evaluator directly.
--- It verifies semantic results and operation-bound work without exporting
--- instrumentation from the public validation API.
-test-suite o2i-trace-eval-internal-test
-  import:
-    warnings,
-    language
-  type:
-    exitcode-stdio-1.0
-  main-is:
-    TraceEvalMain.hs
-  other-modules:
-    O2I.Graph.Macro,
-    O2I.Graph.Macro.Index,
-    O2I.Graph.Raw,
-    O2I.Graph.Typed,
-    O2I.Language.Claim,
-    O2I.Language.Element,
-    O2I.Language.Interpretation,
-    O2I.Language.Macro,
-    O2I.Language.Macro.Alternative,
-    O2I.Language.Relation,
-    O2I.Validation.MacroEvidence,
-    O2I.Validation.MacroEvidence.Eval,
-    O2I.Validation.MacroEvidence.Prepare,
-    O2I.Validation.MacroEvidence.Test.Fixture,
-    O2I.Validation.MacroEvidence.Types,
-    O2I.Validation.Relational.Eval,
-    O2I.Validation.Relational.Index,
-    O2I.Validation.Relational.Internal,
-    O2I.Validation.Relational.Types,
-    O2I.Validation.Semantics.Context,
-    O2I.Validation.Semantics.Context.TradeOffSet,
-    O2I.Validation.Structure,
-    O2I.Validation.Structure.Internal,
-    O2I.Validation.Trace.Eval,
-    O2I.Validation.Trace.Eval.Test.Contracts,
-    O2I.Validation.Trace.Eval.Test.Fixture,
-    O2I.Validation.Trace.Eval.Test.Oracle,
-    O2I.Validation.Trace.Eval.Test.Scenarios,
-    O2I.Validation.Trace.Rule,
-    O2I.Validation.Trace.Types
-  build-depends:
-    base >=4.20 && <4.21,
-    containers >=0.7 && <0.8,
-    dependent-map >=0.4.0 && <0.5,
-    dependent-sum >=0.7.1 && <0.8,
-    tasty >=1.4 && <1.6,
-    tasty-hunit >=0.10 && <0.11,
-    text >=2.1 && <2.2,
-    validation >=1.1 && <1.2
-  hs-source-dirs:
-    tst/internal,
-    src
-
-test-suite o2i-language-api-test
-  import:
-    warnings,
-    language
-  type:
-    exitcode-stdio-1.0
-  main-is:
-    Main.hs
-  other-modules:
-    ApiContractTH
-  build-depends:
-    base >=4.20 && <4.21,
-    o2i-core,
-    template-haskell >=2.22 && <2.23
-  hs-source-dirs:
-    tst/api
 
 source-repository head
   type: git

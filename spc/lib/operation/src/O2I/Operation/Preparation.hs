@@ -38,30 +38,39 @@ import Data.Text (Text)
 import O2I.Operation.Preparation.Internal
 import O2I.Operation.Request
 
+-- | Stage that acquires the primary model source.
 modelAcquisitionStage :: PreparationStage
 modelAcquisitionStage = ModelAcquisitionStage
 
+-- | Stage that acquires capability-owned supplemental inputs.
 capabilityInputAcquisitionStage :: PreparationStage
 capabilityInputAcquisitionStage = CapabilityInputAcquisitionStage
 
+-- | Stage that selects one adapter from the static collection.
 adapterSelectionStage :: PreparationStage
 adapterSelectionStage = AdapterSelectionStage
 
+-- | Stage that decodes the model with the selected adapter.
 adapterDecodeStage :: PreparationStage
 adapterDecodeStage = AdapterDecodeStage
 
+-- | Stage that builds the profile-neutral canonical document.
 canonicalizationStage :: PreparationStage
 canonicalizationStage = CanonicalizationStage
 
+-- | Stage that extracts exact Profile marker evidence.
 profileMarkerStage :: PreparationStage
 profileMarkerStage = ProfileMarkerStage
 
+-- | Stage that resolves marker evidence to one compiled Profile.
 profileResolutionStage :: PreparationStage
 profileResolutionStage = ProfileResolutionStage
 
+-- | Stage that checks the Profile against the selected adapter contract.
 profileCompatibilityStage :: PreparationStage
 profileCompatibilityStage = ProfileCompatibilityStage
 
+-- | Stage that selects one exact canonical View.
 viewSelectionStage :: PreparationStage
 viewSelectionStage = ViewSelectionStage
 
@@ -104,9 +113,11 @@ foldPreparationStage model inputs selection decode canonical marker profile comp
     ProfileCompatibilityStage -> compatibility
     ViewSelectionStage -> view
 
+-- | Mark a preparation stage as mandatory for the request.
 requiredPreparation :: PreparationRequirement
 requiredPreparation = RequiredPreparation
 
+-- | Mark a preparation stage as explicitly unnecessary for the request.
 omittedPreparation :: PreparationRequirement
 omittedPreparation = OmittedPreparation
 
@@ -118,12 +129,15 @@ foldPreparationRequirement required omitted requirement =
     RequiredPreparation -> required
     OmittedPreparation -> omitted
 
+-- | Project the stage represented by one preparation step.
 preparationStepStage :: PreparationStep -> PreparationStage
 preparationStepStage (PreparationStep stage _) = stage
 
+-- | Project whether one preparation step is required or omitted.
 preparationStepRequirement :: PreparationStep -> PreparationRequirement
 preparationStepRequirement (PreparationStep _ requirement) = requirement
 
+-- | Consume both immutable fields of one preparation step.
 foldPreparationStep ::
      (PreparationStage -> PreparationRequirement -> result)
   -> PreparationStep
@@ -155,12 +169,15 @@ preparationPlan request = PreparationPlan request steps
            ]
     inputReferences = capabilityInputReferences (requestedInputs request)
 
+-- | Project the immutable request that determined the plan.
 preparationPlanRequest :: PreparationPlan -> RequestedContract
 preparationPlanRequest (PreparationPlan request _) = request
 
+-- | Return every preparation step in execution order.
 preparationPlanSteps :: PreparationPlan -> NonEmpty PreparationStep
 preparationPlanSteps (PreparationPlan _ steps) = steps
 
+-- | Consume the request and ordered steps of one preparation plan.
 foldPreparationPlan ::
      (RequestedContract -> NonEmpty PreparationStep -> result)
   -> PreparationPlan

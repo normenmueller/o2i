@@ -2,13 +2,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module O2I.Adapter.AMX.Test.Fixture
-  ( fixtureTests
+  ( fixtureBytes
+  , fixtureTests
   ) where
 
 import qualified Crypto.Hash.SHA256 as SHA256
 import Data.Aeson (FromJSON, eitherDecodeStrict')
 import qualified Data.ByteString as ByteString
-import Data.List (sort)
+import Data.List (find, nub, sort)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
@@ -50,7 +51,8 @@ data ProducerOracle = ProducerOracle
 instance FromJSON ProducerOracle
 
 data Fixture = Fixture
-  { path :: !FilePath
+  { fixtureId :: !Text
+  , path :: !FilePath
   , origin :: !Text
   , sha256 :: !Text
   , expected :: !Text
@@ -61,33 +63,44 @@ instance FromJSON Fixture
 
 fixtureManifestTest :: Assertion
 fixtureManifestTest = do
-  manifestBytes <- readDataFile "tst/data/manifest.json"
-  manifest <-
-    either
-      (\failure -> assertFailure failure >> fail "unreachable")
-      pure
-      (eitherDecodeStrict' manifestBytes)
+  manifest <- loadManifest
   schema manifest @?= "o2i.amx.fixtures/v2"
   nativeContract manifest @?= "amx-native-xml/5.0.0-v1"
   adapterId manifest @?= "amx"
   let oracle = producerOracle manifest
   (name oracle, version oracle, nativeVersion oracle)
     @?= ("Archi", "5.9.0", "5.0.0")
-  map origin (valid manifest)
-    @?= [ "saved by the user with Archi 5.9.0"
-        , "saved by the user with Archi 5.9.0"
-        ]
+  let fixtures = valid manifest <> invalid manifest
+      identifiers = map fixtureId fixtures
+  sort identifiers @?= sort (nub identifiers)
   fixturePaths <- discoverFixtures "tst/data"
-  sort (map path (valid manifest <> invalid manifest)) @?= fixturePaths
-  mapM_ verifyFixture (valid manifest <> invalid manifest)
+  sort (map path fixtures) @?= fixturePaths
+  mapM_ verifyFixture fixtures
+
+fixtureBytes :: Text -> IO ByteString.ByteString
+fixtureBytes identifier = do
+  manifest <- loadManifest
+  case find ((== identifier) . fixtureId) (valid manifest <> invalid manifest) of
+    Nothing ->
+      assertFailure ("unknown manifest fixture: " <> Text.unpack identifier)
+        >> fail "unreachable"
+    Just fixture -> readFixtureBytes fixture
+
+loadManifest :: IO FixtureManifest
+loadManifest = do
+  manifestBytes <- readDataFile "tst/data/manifest.json"
+  either
+    (\failure -> assertFailure failure >> fail "unreachable")
+    pure
+    (eitherDecodeStrict' manifestBytes)
 
 verifyFixture :: Fixture -> Assertion
 verifyFixture fixture = do
-  bytes <- readDataFile (path fixture)
+  bytes <- readFixtureBytes fixture
+  assertBool "fixture ID must be explicit" (not (Text.null (fixtureId fixture)))
   assertBool
     "fixture origin must be explicit"
     (not (Text.null (origin fixture)))
-  digest bytes @?= sha256 fixture
   case (decodeNative bytes, expected fixture, draftSha256 fixture) of
     (Right (NativeFormatMatch document), "match", Just expectedDraftDigest) ->
       draftDigest (projectNativeDocument document) @?= expectedDraftDigest
@@ -103,6 +116,12 @@ verifyFixture fixture = do
            <> show expectedDraftDigest
            <> ", received "
            <> classification outcome)
+
+readFixtureBytes :: Fixture -> IO ByteString.ByteString
+readFixtureBytes fixture = do
+  bytes <- readDataFile (path fixture)
+  digest bytes @?= sha256 fixture
+  pure bytes
 
 failureName :: NativeFailure -> Text
 failureName failure =

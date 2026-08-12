@@ -68,12 +68,13 @@ class CoreContractCompilerTest(unittest.TestCase):
         self.assertIn("generatedSemanticRelationRows", first)
         self.assertIn("generatedStructuredFamilyRows", first)
         self.assertIn("data GeneratedSemanticEvidenceSchema", first)
+        self.assertIn("data GeneratedSemanticRuleIdentity", first)
         self.assertIn("data GeneratedSemanticRule", first)
+        self.assertIn("generatedSemanticRuleIdentities ::", first)
         self.assertIn("generatedSemanticEvidenceSchemaFields", first)
         self.assertIn("generatedSemanticRuleEvidenceSchema", first)
-        self.assertIn("generatedSemanticRules ::", first)
         self.assertEqual(
-            7,
+            6,
             len(
                 re.findall(
                     r"^  Generated\w+Witness\n"
@@ -84,7 +85,7 @@ class CoreContractCompilerTest(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            27,
+            25,
             len(
                 re.findall(
                     r"^  \w+Rule\n"
@@ -94,10 +95,21 @@ class CoreContractCompilerTest(unittest.TestCase):
                 )
             ),
         )
-        self.assertIn(
-            "semanticsRuleIds = "
-            "generatedSomeSemanticRuleId <$> generatedSemanticRules",
+        self.assertEqual(
+            39,
+            len(
+                re.findall(
+                    r"^  (?:=|\|) \w+RuleIdentity$",
+                    first,
+                    re.MULTILINE,
+                )
+            ),
+        )
+        self.assertRegex(
             first,
+            r"semanticsRuleIds =\n"
+            r"  generatedSemanticRuleIdentityText "
+            r"<\$> generatedSemanticRuleIdentities",
         )
 
     def test_duplicate_object_member_is_rejected(self):
@@ -193,19 +205,14 @@ class CoreContractCompilerTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "canonical Core rule stage trace"):
             COMPILER.rule_stage_partition(changed, rules)
 
-    def test_semantic_rule_inventory_has_one_evidence_key_mapping_per_rule(self):
+    def test_semantic_rule_inventory_distinguishes_identity_from_evidence_keys(self):
         rules = COMPILER.rule_inventory(self.companion)
         stages = COMPILER.rule_stage_partition(self.companion, rules)
         schemas, mappings = self.semantic_evidence_contract(self.companion)
-        self.assertEqual(181, len(rules))
-        self.assertEqual(27, len(stages["semantics"]))
+        self.assertEqual(193, len(rules))
+        self.assertEqual(39, len(stages["semantics"]))
         self.assertEqual(
             {
-                "AssertedDependencyKey": [
-                    "propositionOccurrence",
-                    "endpointOccurrence",
-                    "contextualizationOccurrence",
-                ],
                 "FitClaimKey": ["claim"],
                 "NeedKey": ["need"],
                 "NeedMemberKey": ["need", "member"],
@@ -215,20 +222,24 @@ class CoreContractCompilerTest(unittest.TestCase):
             },
             schemas,
         )
-        self.assertEqual(stages["semantics"], list(mappings))
+        self.assertEqual(25, len(mappings))
+        self.assertTrue(set(mappings).issubset(stages["semantics"]))
+        self.assertNotIn("core.contextualization.asserted-dependency", mappings)
+        self.assertNotIn(
+            "core.collective-strategy-realization.asserted-completeness",
+            mappings,
+        )
 
-    def test_missing_semantic_evidence_key_mapping_is_rejected(self):
+    def test_semantic_rule_without_evidence_key_mapping_is_admitted(self):
         changed = copy.deepcopy(self.companion)
         mappings = changed["proofSupportContract"]["evidenceKeyByRule"]
-        del mappings["core.contextualization.asserted-dependency"]
-        with self.assertRaisesRegex(
-            ValueError, "complete semantic evidence-key mapping"
-        ):
-            self.semantic_evidence_contract(changed)
+        del mappings["core.situated-need.driver-cardinality"]
+        _, compiled_mappings = self.semantic_evidence_contract(changed)
+        self.assertNotIn("core.situated-need.driver-cardinality", compiled_mappings)
 
     def test_duplicate_semantic_evidence_key_mapping_is_rejected(self):
         changed = copy.deepcopy(self.companion)
-        rule = "core.contextualization.asserted-dependency"
+        rule = "core.situated-need.driver-cardinality"
         changed["structuredPropositionFamilies"][0]["evidenceKeyByRule"][rule] = (
             "FitClaimKey"
         )
@@ -240,7 +251,7 @@ class CoreContractCompilerTest(unittest.TestCase):
     def test_unknown_semantic_evidence_key_schema_is_rejected(self):
         changed = copy.deepcopy(self.companion)
         mappings = changed["proofSupportContract"]["evidenceKeyByRule"]
-        mappings["core.contextualization.asserted-dependency"] = "UnknownKey"
+        mappings["core.situated-need.driver-cardinality"] = "UnknownKey"
         with self.assertRaisesRegex(ValueError, "unknown schema UnknownKey"):
             self.semantic_evidence_contract(changed)
 
@@ -248,7 +259,7 @@ class CoreContractCompilerTest(unittest.TestCase):
         changed = copy.deepcopy(self.companion)
         mappings = changed["proofSupportContract"]["evidenceKeyByRule"]
         mappings["core.structure.contextualization-cardinality"] = (
-            "AssertedDependencyKey"
+            "NeedKey"
         )
         with self.assertRaisesRegex(ValueError, "non-semantics rule"):
             self.semantic_evidence_contract(changed)
@@ -263,14 +274,14 @@ class CoreContractCompilerTest(unittest.TestCase):
     def test_empty_semantic_evidence_key_schema_is_rejected(self):
         changed = copy.deepcopy(self.companion)
         schemas = changed["proofSupportContract"]["evidenceKeySchemas"]
-        schemas["AssertedDependencyKey"] = []
+        schemas["NeedKey"] = []
         with self.assertRaisesRegex(ValueError, "expected a non-empty array"):
             self.semantic_evidence_contract(changed)
 
     def test_duplicate_semantic_evidence_key_field_is_rejected(self):
         changed = copy.deepcopy(self.companion)
         schemas = changed["proofSupportContract"]["evidenceKeySchemas"]
-        schemas["AssertedDependencyKey"][1] = "propositionOccurrence"
+        schemas["NeedMemberKey"][1] = "need"
         with self.assertRaisesRegex(ValueError, "duplicate member"):
             self.semantic_evidence_contract(changed)
 
@@ -316,40 +327,13 @@ class CoreContractCompilerTest(unittest.TestCase):
                 ["core.a b", "core.a-b"],
             )
 
-    def test_strategy_input_properties_are_not_semantic_rules(self):
+    def test_strategy_semantic_obligations_are_semantic_rules(self):
         strategy = self.companion["strategyFormulationSemantics"]
         self.assertEqual(
-            {
-                "anchoringDecisionLevel",
-                "anchoringDecisionPaths",
-                "anchoringImplementationLogic",
-                "anchoringPeriod",
-                "anchoringResponsibilities",
-                "anchoringResponsibilityScope",
-                "derivedGuardrails",
-                "fitRationale",
-                "positioning",
-                "scope",
-                "strategyBinding",
-                "tradeOffs",
-            },
-            set(strategy["inputProperties"]),
+            set(strategy["ruleIds"]),
+            set(strategy["semanticObligations"]),
         )
-        self.assertEqual(
-            {
-                "core.strategy-formulation.action-contributions",
-                "core.strategy-formulation.actions",
-                "core.strategy-formulation.diagnosis",
-                "core.strategy-formulation.diagnosis-grounding",
-                "core.strategy-formulation.guiding-policy",
-                "core.strategy-formulation.guiding-policy-actions",
-                "core.strategy-formulation.intent",
-                "core.strategy-formulation.key-result-substantiation",
-                "core.strategy-formulation.key-results",
-                "core.strategy-formulation.vision-orientation",
-            },
-            set(strategy["ruleIds"].values()),
-        )
+        self.assertEqual(22, len(strategy["ruleIds"]))
         semantic_rules = set(
             self.companion["ruleExplanationContract"]["stagePartition"][
                 "semantics"
@@ -369,7 +353,8 @@ class CoreContractCompilerTest(unittest.TestCase):
             "core.strategy-formulation.strategy-binding",
             "core.strategy-formulation.trade-offs",
         }
-        self.assertTrue(removed_rules.isdisjoint(semantic_rules))
+        self.assertTrue(removed_rules.issubset(semantic_rules))
+        self.assertTrue(set(strategy["ruleIds"].values()).issubset(semantic_rules))
 
     def test_unknown_semantic_relation_source_is_rejected(self):
         changed = copy.deepcopy(self.companion)

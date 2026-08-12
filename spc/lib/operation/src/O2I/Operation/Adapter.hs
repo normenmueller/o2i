@@ -320,7 +320,9 @@ foldAdapterSelection failed selected selection =
 -- Explicit selection performs one exact @O(log A)@ lookup and bypasses every
 -- recognizer. Implicit selection invokes every pure recognizer exactly once on
 -- the same immutable bytes in canonical adapter order and is @O(A + O)@ aside
--- from recognizer work, where @O@ is emitted diagnostic output.
+-- from recognizer work, where @O@ is emitted diagnostic output. Matches decide
+-- first: one match selects its adapter, multiple matches remain ambiguous, and
+-- recognition failures are reported only when no adapter matched.
 selectAdapter ::
      AdapterCollection -> Maybe AdapterId -> ByteString -> AdapterSelection
 selectAdapter collection requested bytes =
@@ -333,18 +335,17 @@ selectAdapter collection requested bytes =
         Nothing -> AdapterSelectionFailed (UnknownAdapter identifier)
         Just value -> AdapterSelected (SelectedAdapter value)
     implicit =
-      case NonEmpty.nonEmpty failures of
-        Just diagnostics ->
-          AdapterSelectionFailed (AdapterRecognitionFailed diagnostics)
-        Nothing ->
-          case matches of
-            [] -> AdapterSelectionFailed NoAdapterMatched
-            [value] -> AdapterSelected (SelectedAdapter value)
-            first:rest ->
-              AdapterSelectionFailed
-                (MultipleAdaptersMatched
-                   (adapterDescriptorValue first
-                      :| fmap adapterDescriptorValue rest))
+      case matches of
+        [] ->
+          case NonEmpty.nonEmpty failures of
+            Nothing -> AdapterSelectionFailed NoAdapterMatched
+            Just diagnostics ->
+              AdapterSelectionFailed (AdapterRecognitionFailed diagnostics)
+        [value] -> AdapterSelected (SelectedAdapter value)
+        first:rest ->
+          AdapterSelectionFailed
+            (MultipleAdaptersMatched
+               (adapterDescriptorValue first :| fmap adapterDescriptorValue rest))
     outcomes =
       [ (value, adapterRecognizeValue value bytes)
       | value <- NonEmpty.toList (adapterCollectionEntriesValue collection)

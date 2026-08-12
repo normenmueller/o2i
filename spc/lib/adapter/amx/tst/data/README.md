@@ -1,7 +1,7 @@
 # AMX Native Fixture Contract
 
-The fixture corpus is bound exclusively to the native `amx-native-xml/5.0.0-v1` decoder contract. It provides producer-origin positive models and purpose-built native negatives; it owns no O2I Profile or Core semantics.
+The fixture corpus is bound exclusively to the native `amx-native-xml/5.0.0-v1` decoder contract. It provides producer-origin models and purpose-built native positives and negatives; it owns no O2I Profile or Core semantics.
 
-`manifest.json` binds every tracked fixture by SHA-256 and expected native classification. Positive fixtures additionally bind the complete observation-relevant Profile Draft through a canonical test-only snapshot digest. Focused tests exercise individual Draft rules independently.
+`manifest.json` is the single fixture inventory. It assigns every case a stable ID and binds its bytes by SHA-256 and expected native classification. Positive fixtures additionally bind the complete observation-relevant Profile Draft through a canonical test-only snapshot digest. Focused tests load their inputs by manifest case ID.
 
-Files below `valid/` retain their recorded Archi producer provenance. Files below `invalid/` are deliberately minimized negative inputs and claim no producer provenance.
+Every file records its origin in the manifest. Producer-origin fixtures name the exact producer; hand-minimized fixtures make no producer claim.

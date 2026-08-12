@@ -59,22 +59,27 @@ import O2I.Operation.View
   , foldViewSelection
   )
 
+-- | Lift one source-acquisition failure into the command boundary.
 inputAcquisitionFailure :: AcquisitionFailure -> CommandFailure
 inputAcquisitionFailure = CommandInputAcquisitionFailure
 
+-- | Stable machine code for one command failure.
 commandFailureCode :: CommandFailure -> Text
 commandFailureCode (CommandInputAcquisitionFailure _) = "command.input-io"
 
+-- | Consume the acquisition cause of one command failure.
 foldCommandFailure :: (AcquisitionFailure -> result) -> CommandFailure -> result
 foldCommandFailure acquisition (CommandInputAcquisitionFailure failure) =
   acquisition failure
 
+-- | Project an adapter-selection failure, or 'Nothing' on success.
 adapterSelectionFailure :: AdapterSelection -> Maybe PreparationFailure
 adapterSelectionFailure =
   foldAdapterSelection
     (Just . AdapterSelectionPreparationFailure)
     (const Nothing)
 
+-- | Project an adapter-decode failure, or 'Nothing' on success.
 adapterDecodeFailure :: AdapterExecution -> Maybe PreparationFailure
 adapterDecodeFailure execution =
   foldAdapterExecution
@@ -85,12 +90,14 @@ adapterDecodeFailure execution =
          outcome)
     execution
 
+-- | Project missing or invalid marker evidence, or 'Nothing' on success.
 profileMarkerFailure :: ProfileMarkerEvidenceOutcome -> Maybe PreparationFailure
 profileMarkerFailure =
   foldProfileMarkerEvidenceOutcome
     (Just . ProfileMarkerPreparationFailure)
     (const Nothing)
 
+-- | Project a Profile-resolution failure, or 'Nothing' on success.
 profileResolutionFailure :: ProfileResolution -> Maybe PreparationFailure
 profileResolutionFailure outcome =
   foldProfileResolution
@@ -105,6 +112,7 @@ profileResolutionFailure outcome =
   where
     failed = Just (ProfileResolutionPreparationFailure outcome)
 
+-- | Project a Profile-compatibility failure, or 'Nothing' on success.
 profileCompatibilityFailure :: ProfileCompatibility -> Maybe PreparationFailure
 profileCompatibilityFailure outcome =
   foldProfileCompatibility
@@ -115,6 +123,7 @@ profileCompatibilityFailure outcome =
   where
     failed = Just (ProfileCompatibilityPreparationFailure outcome)
 
+-- | Project a View-selection failure, or 'Nothing' on success.
 viewSelectionFailure :: ViewSelection -> Maybe PreparationFailure
 viewSelectionFailure =
   foldViewSelection (Just . ViewSelectionPreparationFailure) (const Nothing)
@@ -146,6 +155,7 @@ preparationFailureCode failure =
   where
     ruleCode rule = operationRuleIdText (operationRuleIdentity rule)
 
+-- | Preparation stage at which the exact failure occurred.
 preparationFailureStage :: PreparationFailure -> PreparationStage
 preparationFailureStage failure =
   case failure of
@@ -156,6 +166,7 @@ preparationFailureStage failure =
     ProfileCompatibilityPreparationFailure _ -> profileCompatibilityStage
     ViewSelectionPreparationFailure _ -> viewSelectionStage
 
+-- | Consume every closed preparation-failure cause.
 foldPreparationFailure ::
      (AdapterSelectionError -> result)
   -> (AdapterDescriptor -> NonEmpty AdapterDiagnostic -> result)
@@ -175,18 +186,22 @@ foldPreparationFailure selection decode marker profile compatibility view failur
     ProfileCompatibilityPreparationFailure outcome -> compatibility outcome
     ViewSelectionPreparationFailure value -> view value
 
+-- | Lift one command failure into the common failure boundary.
 commandFailure :: CommandFailure -> CommonFailure
 commandFailure = CommonCommandFailure
 
+-- | Lift one preparation failure into the common failure boundary.
 preparationFailure :: PreparationFailure -> CommonFailure
 preparationFailure = CommonPreparationFailure
 
+-- | Stable machine code derived from the retained failure branch.
 commonFailureCode :: CommonFailure -> Text
 commonFailureCode failure =
   case failure of
     CommonCommandFailure value -> commandFailureCode value
     CommonPreparationFailure value -> preparationFailureCode value
 
+-- | Consume either common failure category.
 foldCommonFailure ::
      (CommandFailure -> result)
   -> (PreparationFailure -> result)

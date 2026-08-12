@@ -221,17 +221,42 @@ projectionParts ::
      Projection.ProfileProjection -> [Projection.QualificationProposal]
 projectionParts projection =
   Projection.profileStructureProjection projection
+    `seq` Projection.profileMappingProvenance projection
     `seq` Projection.profileQualificationProposals projection
+
+mappingProvenanceObservation :: Projection.ProfileMappingProvenance -> ()
+mappingProvenanceObservation =
+  Projection.foldProfileMappingProvenance
+    (\occurrence mappingId -> occurrence `seq` mappingId `seq` ())
+    (\occurrence mappingId source target ->
+       occurrence `seq` mappingId `seq` source `seq` target `seq` ())
 
 qualificationProposalObservation ::
      Projection.QualificationProposal
-  -> (Maybe Text, [Text], [Projection.QualificationReference])
+  -> ( Maybe (Draft.DraftLocation, Text)
+     , [Text]
+     , [Projection.QualificationReference])
 qualificationProposalObservation proposal =
   Projection.qualificationProposalOccurrence proposal
     `seq` Projection.qualificationProposalIdentity proposal
-    `seq` ( Projection.qualificationProposalRationale proposal
-          , Projection.qualificationProposalSources proposal
+    `seq` ( fmap
+              qualificationRationaleObservation
+              (Projection.qualificationProposalRationale proposal)
+          , map
+              qualificationSourceObservation
+              (Projection.qualificationProposalSources proposal)
           , Projection.qualificationProposalReferences proposal)
+
+qualificationRationaleObservation ::
+     Projection.QualificationRationale -> (Draft.DraftLocation, Text)
+qualificationRationaleObservation rationale =
+  ( Projection.qualificationRationaleLocation rationale
+  , Projection.qualificationRationaleValue rationale)
+
+qualificationSourceObservation :: Projection.QualificationSource -> Text
+qualificationSourceObservation source =
+  Projection.qualificationSourceOccurrence source
+    `seq` Projection.qualificationSourceValue source
 
 qualificationReferenceObservation :: Projection.QualificationReference -> ()
 qualificationReferenceObservation reference =

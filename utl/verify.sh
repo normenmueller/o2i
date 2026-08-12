@@ -257,7 +257,7 @@ verify_haskell() {
   python3 -B -m unittest discover \
     -s utl/haskell -p 'test_*.py'
   if [ "$scope" = foundation ]; then
-    python3 -B utl/haskell/check_haskell_api_contracts.py \
+  python3 -B utl/haskell/check_haskell_api_contracts.py \
       --project-dir "$root/spc" \
       --project-file "$project_file" \
       --builddir "$build" \
@@ -272,10 +272,22 @@ verify_haskell() {
 
   info "Building Haskell API documentation."
   if [ "$scope" = foundation ]; then
-    run_project_cabal haddock \
-      o2i-core o2i-archimate-profile o2i-operation o2i-amx \
-      --builddir="$build" \
-      --build-log="$build_log"
+    haddock_log="$logs/foundation-haddock.log"
+    if run_project_cabal haddock \
+        o2i-core o2i-archimate-profile o2i-operation o2i-amx \
+        --builddir="$build" \
+        --build-log="$build_log" >"$haddock_log" 2>&1; then
+      cat "$haddock_log"
+    else
+      cat "$haddock_log" >&2
+      exit 1
+    fi
+    if grep -Eq \
+      'Missing documentation for:|^Warning: .* (is ambiguous|is out of scope)\.|^Warning: .*could not find link destinations for:' \
+      "$haddock_log"; then
+      printf '[o2i|error] Foundation Haddock reported a documentation or link warning.\n' >&2
+      exit 1
+    fi
   else
     run_project_cabal haddock all \
       --builddir="$build" \
@@ -325,6 +337,10 @@ verify_haskell() {
   tar -tzf "$profile_archive" >"$profile_inventory"
   tar -tzf "$operation_archive" >"$operation_inventory"
   tar -tzf "$amx_archive" >"$amx_inventory"
+  core_root=$(sed -n '1s#/.*##p' "$core_inventory")
+  profile_root=$(sed -n '1s#/.*##p' "$profile_inventory")
+  operation_root=$(sed -n '1s#/.*##p' "$operation_inventory")
+  amx_root=$(sed -n '1s#/.*##p' "$amx_inventory")
   if ! grep -Eq '/profile\.json$' "$profile_inventory"; then
     printf '[o2i|error] ArchiMate Profile source archive lacks profile.json.\n' >&2
     exit 1
@@ -343,10 +359,6 @@ verify_haskell() {
 
   source_project="$source_dist/project"
   mkdir -p "$source_project"
-  core_root=$(sed -n '1s#/.*##p' "$core_inventory")
-  profile_root=$(sed -n '1s#/.*##p' "$profile_inventory")
-  operation_root=$(sed -n '1s#/.*##p' "$operation_inventory")
-  amx_root=$(sed -n '1s#/.*##p' "$amx_inventory")
   tar -xzf "$core_archive" -C "$source_project"
   tar -xzf "$profile_archive" -C "$source_project"
   tar -xzf "$operation_archive" -C "$source_project"
@@ -358,6 +370,8 @@ verify_haskell() {
     printf '[o2i|error] Cannot resolve unpacked Haskell source archives.\n' >&2
     exit 1
   fi
+  python3 -B utl/haskell/check_haskell_api_contracts.py \
+    --core-package-root "$source_project/$core_root"
   printf 'packages:\n  ./%s\n  ./%s\n  ./%s\n  ./%s\n\nindex-state: 2026-08-07T18:07:13Z\n' \
     "$core_root" "$profile_root" "$operation_root" "$amx_root" \
     >"$source_project/cabal.project"
