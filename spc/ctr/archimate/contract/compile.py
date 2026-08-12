@@ -1416,6 +1416,38 @@ def validate_applicability(companion: dict[str, Any], core: dict[str, Any]) -> N
     )
 
 
+def derive_relation_projection_plans(
+    companion: dict[str, Any],
+) -> list[tuple[str, str, str]]:
+    """Derive the positive executable relation boundary from applicability."""
+    outcomes: dict[tuple[str, str, str], set[str]] = {}
+    for decision in companion["applicabilityProvenance"]["decisions"]:
+        subject = decision["subject"]
+        if subject["kind"] != "core-relation-mapping-pair":
+            continue
+        key = (
+            subject["relationMappingId"],
+            decision["sourceElement"],
+            decision["targetElement"],
+        )
+        outcomes.setdefault(key, set()).add(decision["outcome"])
+
+    conflicting = sorted(
+        key for key, values in outcomes.items() if len(values) != 1
+    )
+    if conflicting:
+        raise ValueError(
+            "relation projection applicability outcomes conflict: "
+            f"{conflicting!r}"
+        )
+
+    return sorted(
+        key
+        for key, values in outcomes.items()
+        if values == {"applicable"}
+    )
+
+
 def validate_resolution(companion: dict[str, Any]) -> None:
     identity = companion["profileIdentity"]
     require_row_keys(
@@ -1913,6 +1945,7 @@ def validate_companion(
     derive_property_runtime_plans(companion)
     derive_pattern_runtime_rules(companion)
     derive_activation_static_source_rule_ids(companion)
+    derive_relation_projection_plans(companion)
     return core
 
 
@@ -1943,6 +1976,7 @@ def render_generated(companion: dict[str, Any]) -> str:
     activation_static_source_rule_ids = derive_activation_static_source_rule_ids(
         companion
     )
+    relation_projection_plans = derive_relation_projection_plans(companion)
     identity = companion["profileIdentity"]
     relations = companion["relationMappings"]
     properties = companion["propertyMappings"]
@@ -2029,6 +2063,12 @@ def render_generated(companion: dict[str, Any]) -> str:
                 ]
             )
         )
+
+    relation_projection_values = [
+        "GeneratedRelationProjectionPlan "
+        + " ".join(hs_string(value) for value in row)
+        for row in relation_projection_plans
+    ]
 
     property_values = [
         "GeneratedPropertyMapping "
@@ -2382,6 +2422,7 @@ module O2I.ArchiMate.Profile.Internal.Generated
   ( GeneratedProfileDescriptor(..)
   , GeneratedCarrierMapping(..)
   , GeneratedRelationMapping(..)
+  , GeneratedRelationProjectionPlan(..)
   , GeneratedPropertyMapping(..)
   , GeneratedCardinalityExpectation(..)
   , GeneratedRuntimeExpected(..)
@@ -2430,6 +2471,7 @@ module O2I.ArchiMate.Profile.Internal.Generated
   , generatedSelectedProfileRuleIds
   , generatedCarrierMappings
   , generatedRelationMappings
+  , generatedRelationProjectionPlans
   , generatedPropertyMappings
   , generatedPropertyRuntimePlans
   , generatedPatternRuntimeRules
@@ -2474,6 +2516,12 @@ data GeneratedRelationMapping = GeneratedRelationMapping
   , generatedRelationToken :: !Text
   , generatedRelationAttributeRule :: !(Maybe Text)
   }} deriving (Eq, Show)
+
+data GeneratedRelationProjectionPlan = GeneratedRelationProjectionPlan
+  {{ generatedRelationProjectionMappingId :: !Text
+  , generatedRelationProjectionSourceElement :: !Text
+  , generatedRelationProjectionTargetElement :: !Text
+  }} deriving (Eq, Ord, Show)
 
 data GeneratedPropertyMapping = GeneratedPropertyMapping
   {{ generatedPropertyMappingId :: !Text
@@ -2698,6 +2746,9 @@ generatedCarrierMappings = {hs_list(carrier_values, 4)}
 
 generatedRelationMappings :: [GeneratedRelationMapping]
 generatedRelationMappings = {hs_list(relation_values, 4)}
+
+generatedRelationProjectionPlans :: [GeneratedRelationProjectionPlan]
+generatedRelationProjectionPlans = {hs_list(relation_projection_values, 4)}
 
 generatedPropertyMappings :: [GeneratedPropertyMapping]
 generatedPropertyMappings = {hs_list(property_values, 4)}

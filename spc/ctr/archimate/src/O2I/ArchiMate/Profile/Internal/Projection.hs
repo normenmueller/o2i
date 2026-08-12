@@ -23,6 +23,7 @@ import O2I.ArchiMate.Profile.Internal.Closure
   , closedViewGraphOccurrencesValue
   , closedViewIndexValue
   , closedViewQualificationOccurrencesValue
+  , closedViewQualificationProposalOccurrencesValue
   , closedViewUniverseValue
   , displayedSubjectOccurrenceValue
   )
@@ -361,6 +362,8 @@ projectClosedProfile closed =
     projectionIndex = closedViewIndexValue closed
     graph = closedViewGraphOccurrencesValue closed
     qualification = closedViewQualificationOccurrencesValue closed
+    qualificationProposals =
+      closedViewQualificationProposalOccurrencesValue closed
     universe = closedViewUniverseValue closed
     scopeSeed =
       indexModelRoots projectionIndex
@@ -377,9 +380,13 @@ projectClosedProfile closed =
     graphRecords = recordsIn projectionIndex graph
     qualificationRecords = recordsIn projectionIndex qualification
     namespaceIssues =
-      reservedNamespaceIssues projectionIndex preActivationProperties
+      reservedNamespaceIssues
+        projectionIndex
+        qualificationProposals
+        preActivationProperties
         ++ reservedNamespaceIssues
              projectionIndex
+             qualificationProposals
              (universe `Set.difference` preActivationProperties)
     structuredRecords =
       [ record
@@ -403,7 +410,8 @@ projectClosedProfile closed =
         | relationships <- Map.elems structuredSegments
         , relationship <- relationships
         ]
-    carrierResults = map (projectCarrier projectionIndex) graphRecords
+    carrierResults =
+      map (projectCarrier projectionIndex qualificationProposals) graphRecords
     relationshipResults =
       map
         (projectRelationship projectionIndex)
@@ -425,7 +433,7 @@ projectClosedProfile closed =
         (projectQualificationProposal projectionIndex qualification)
         [ record
         | record <- qualificationRecords
-        , isQualificationCandidate projectionIndex record
+        , recordInfoOccurrence record `Set.member` qualificationProposals
         ]
     carrierIssues = concatMap projectionIssues carrierResults
     carrierProjections = concatMap projectionValues carrierResults
@@ -525,12 +533,14 @@ relationshipsIn projectionIndex occurrences =
 
 projectCarrier ::
      ProfileIndex
+  -> Set CanonicalOccurrence
   -> RecordInfo
   -> ProjectionResult (CarrierProjection, ProfileMappingProvenance)
-projectCarrier projectionIndex record
+projectCarrier projectionIndex qualificationProposals record
   | recordInfoFamily record /= ElementFamily = ProjectionResult [] []
   | isJunction record = ProjectionResult [] []
-  | isQualificationCandidate projectionIndex record = ProjectionResult [] []
+  | recordInfoOccurrence record `Set.member` qualificationProposals =
+    ProjectionResult [] []
   | otherwise =
     case ( typeResult
          , assessCommitment
@@ -747,27 +757,41 @@ projectSemanticRelationship projectionIndex relationship =
            , coreOccurrence occurrence
            , lookupCoreRelationToken (relationMappingTokenValue mapping)) of
         ([], Right commitment, Right (source, target), Right projectedOccurrence, Just token) ->
-          case (coreOccurrence source, coreOccurrence target) of
-            (Right projectedSource, Right projectedTarget) ->
+          case ( lookupRecord projectionIndex source
+               , lookupRecord projectionIndex target
+               , coreOccurrence source
+               , coreOccurrence target) of
+            (Just sourceRecord, Just targetRecord, Right projectedSource, Right projectedTarget)
+              | relationMappingApplies
+                  mapping
+                  (archiMateElement sourceRecord)
+                  (archiMateElement targetRecord) ->
+                RelationshipResult
+                  []
+                  [ relationProjection
+                      projectedOccurrence
+                      projectedSource
+                      token
+                      projectedTarget
+                      commitment
+                  ]
+                  []
+                  [ RelationMappingProvenance
+                      projectedOccurrence
+                      (relationMappingIdValue mapping)
+                      projectedSource
+                      projectedTarget
+                  ]
+            (_, _, sourceResult, targetResult) ->
               RelationshipResult
-                []
-                [ relationProjection
-                    projectedOccurrence
-                    projectedSource
-                    token
-                    projectedTarget
-                    commitment
-                ]
-                []
-                [ RelationMappingProvenance
-                    projectedOccurrence
-                    (relationMappingIdValue mapping)
-                    projectedSource
-                    projectedTarget
-                ]
-            (sourceResult, targetResult) ->
-              RelationshipResult
-                (resultErrors sourceResult ++ resultErrors targetResult)
+                (resultErrors sourceResult
+                   ++ resultErrors targetResult
+                   ++ [ relationshipIssue
+                        "graph.committed-relationship.mapping-selection"
+                        occurrence
+                      | null (resultErrors sourceResult)
+                          && null (resultErrors targetResult)
+                      ])
                 []
                 []
                 []
@@ -1319,31 +1343,12 @@ isStructuredCandidate projectionIndex record =
         (`elem` propertyTextValues projectionIndex occurrence "o2i.type")
         (patternExpectationValue PatternTextExpectation subject)
 
-isQualificationCandidate :: ProfileIndex -> RecordInfo -> Bool
-isQualificationCandidate projectionIndex record =
-  recordInfoFamily record == ElementFamily
-    && (hasExactType "qualification.carrier.o2i-type"
-          || hasProperty projectionIndex "o2i.source" occurrence
-          || (isExpectedAssessment
-                && hasProperty projectionIndex "o2i.type" occurrence))
-  where
-    occurrence = recordInfoOccurrence record
-    hasExactType subject =
-      maybe
-        False
-        (`elem` propertyTextValues projectionIndex occurrence "o2i.type")
-        (patternExpectationValue PatternTextExpectation subject)
-    isExpectedAssessment =
-      maybe
-        False
-        (== archiMateElement record)
-        (patternExpectationValue
-           PatternTextExpectation
-           "qualification.carrier.archimate-element")
-
 reservedNamespaceIssues ::
-     ProfileIndex -> Set CanonicalOccurrence -> [ProfileIssue]
-reservedNamespaceIssues projectionIndex universe =
+     ProfileIndex
+  -> Set CanonicalOccurrence
+  -> Set CanonicalOccurrence
+  -> [ProfileIssue]
+reservedNamespaceIssues projectionIndex qualificationProposals universe =
   concatMap
     assess
     (mapMaybe
@@ -1366,18 +1371,23 @@ reservedNamespaceIssues projectionIndex universe =
                (propertyInfoOwner property)
       | key <- propertyInfoKeys property
       , "o2i." `Text.isPrefixOf` key
-      , key `notElem` allowedReservedKeys projectionIndex property
+      , key
+          `notElem` allowedReservedKeys
+                      projectionIndex
+                      qualificationProposals
+                      property
       ]
 
-allowedReservedKeys :: ProfileIndex -> PropertyInfo -> [Text]
-allowedReservedKeys projectionIndex property =
+allowedReservedKeys ::
+     ProfileIndex -> Set CanonicalOccurrence -> PropertyInfo -> [Text]
+allowedReservedKeys projectionIndex qualificationProposals property =
   case Map.lookup (propertyInfoOwner property) (indexRecords projectionIndex) of
     Nothing -> []
     Just record ->
       case recordInfoFamily record of
         ModelRootFamily -> ["o2i.profile"]
         ElementFamily
-          | isQualificationCandidate projectionIndex record ->
+          | recordInfoOccurrence record `Set.member` qualificationProposals ->
             ["o2i.type", "o2i.source"]
           | isJunction record ->
             ["o2i.type", "o2i.commitment", "o2i.participant-completeness"]
@@ -1385,8 +1395,9 @@ allowedReservedKeys projectionIndex property =
         RelationshipFamily ->
           case findRelationship projectionIndex (recordInfoOccurrence record) of
             Just relationship
-              | isQualificationReferenceCandidate projectionIndex relationship ->
-                ["o2i.role"]
+              | isQualificationReferenceCandidate
+                  qualificationProposals
+                  relationship -> ["o2i.role"]
               | structuredSegmentMatch
                   (relationshipInfoKind relationship)
                   (relationshipInfoDirected relationship)
@@ -1400,12 +1411,13 @@ findRelationship ::
 findRelationship projectionIndex occurrence =
   Map.lookup occurrence (indexRelationships projectionIndex)
 
-isQualificationReferenceCandidate :: ProfileIndex -> RelationshipInfo -> Bool
-isQualificationReferenceCandidate projectionIndex relationship =
+isQualificationReferenceCandidate ::
+     Set CanonicalOccurrence -> RelationshipInfo -> Bool
+isQualificationReferenceCandidate qualificationProposals relationship =
   maybe
     False
-    (isQualificationCandidate projectionIndex)
-    (relationshipInfoSource relationship >>= lookupRecord projectionIndex)
+    (`Set.member` qualificationProposals)
+    (relationshipInfoSource relationship)
 
 assessTextProperty ::
      ProfileIndex

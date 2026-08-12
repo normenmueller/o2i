@@ -4,6 +4,8 @@
 module O2I.ArchiMate.Profile.Internal.Mapping where
 
 import Data.Char (ord)
+import Data.Set (Set)
+import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Text.Normalize (NormalizationMode(NFC), normalize)
@@ -54,6 +56,20 @@ relationInventory =
   | GeneratedRelationMapping identifier ruleId relationship directed label token _ <-
       generatedRelationMappings
   ]
+
+relationProjectionInventory :: Set (Text, Text, Text)
+relationProjectionInventory =
+  Set.fromList
+    [ (mappingId, sourceElement, targetElement)
+    | GeneratedRelationProjectionPlan mappingId sourceElement targetElement <-
+        generatedRelationProjectionPlans
+    ]
+
+relationMappingApplies :: RelationMapping -> Text -> Text -> Bool
+relationMappingApplies mapping sourceElement targetElement =
+  Set.member
+    (relationMappingIdValue mapping, sourceElement, targetElement)
+    relationProjectionInventory
 
 lookupPatternExpectation ::
      PatternExpectation value -> Text -> Maybe (Text, value)

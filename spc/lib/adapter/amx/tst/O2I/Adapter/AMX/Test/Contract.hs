@@ -13,8 +13,10 @@ import qualified Data.Text.Encoding as TextEncoding
 import O2I.Adapter.AMX
 import O2I.Adapter.AMX.Test.Fixture (fixtureBytes)
 import qualified O2I.ArchiMate.Profile as Profile
+import qualified O2I.ArchiMate.Profile.Closure as Closure
 import qualified O2I.ArchiMate.Profile.Draft as Draft
 import qualified O2I.ArchiMate.Profile.Notation as Notation
+import qualified O2I.ArchiMate.Profile.Projection as Projection
 import O2I.Operation.Adapter
 import O2I.Operation.Adapter.Authoring
   ( adapterBehavior
@@ -39,6 +41,9 @@ contractTests =
     , testCase
         "matches the real compiled ArchiMate Profile"
         profileCompatibilityTest
+    , testCase
+        "projects a native KPI carrier without qualification semantics"
+        kpiCarrierProfileTest
     , testCase "publishes the closed native rule inventory" inventoryTest
     , testCase "recognizes exact native AMX" recognitionTest
     , testCase "treats another XML root as no match" noMatchTest
@@ -161,6 +166,36 @@ profileCompatibilityTest = do
     unresolved =
       assertFailure "real AMX Profile marker did not resolve"
         >> fail "unreachable"
+
+kpiCarrierProfileTest :: Assertion
+kpiCarrierProfileTest = do
+  selected <- requireImplicitSelection profiledKpiModel
+  draft <- requireDecodedDraft selected profiledKpiModel
+  let document = Notation.buildCanonicalDocument draft
+      selectedView =
+        case Notation.viewInventory document of
+          [view] -> view
+          views -> error ("expected one KPI View, got " <> show (length views))
+      closed = Closure.closeSelectedView selectedView
+  Projection.foldProfileProjectionAssessment
+    (const (assertFailure "native KPI fixture caused a contract failure"))
+    (\defects ->
+       assertFailure
+         ("native KPI fixture was rejected: "
+            <> show
+                 (map Projection.profileDefectRuleId (NonEmpty.toList defects))))
+    (\projection -> do
+       let provenance =
+             map
+               (Projection.foldProfileMappingProvenance
+                  (\_ mappingId -> Just mappingId)
+                  (\_ _ _ _ -> Nothing))
+               (Projection.profileMappingProvenance projection)
+       assertBool
+         "native KPI carrier mapping is missing"
+         (Just "primitive.kpi" `elem` provenance)
+       Projection.profileQualificationProposals projection @?= [])
+    (Projection.projectProfile closed)
 
 inventoryTest :: Assertion
 inventoryTest = do
@@ -623,11 +658,15 @@ requireRight result =
     Left failure -> assertFailure (show failure) >> fail "unreachable"
     Right value -> pure value
 
-validModel, profiledModel, unrelatedRepresentation :: ByteString
+validModel, profiledModel, profiledKpiModel, unrelatedRepresentation ::
+     ByteString
 validModel = TextEncoding.encodeUtf8 validModelText
 
 profiledModel =
   "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" id=\"model\" version=\"5.0.0\"><property key=\"o2i.profile\" value=\"o2i.archimate-profile@0.3\"/></a:model>"
+
+profiledKpiModel =
+  "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" id=\"model\" version=\"5.0.0\"><property key=\"o2i.profile\" value=\"o2i.archimate-profile@0.3\"/><folder id=\"motivation\" type=\"motivation\"><element xsi:type=\"a:Grouping\" id=\"measure\"><property key=\"o2i.type\" value=\"Measure\"/><property key=\"o2i.commitment\" value=\"asserted\"/></element><element xsi:type=\"a:Assessment\" id=\"kpi\"><property key=\"o2i.type\" value=\"KPI\"/><property key=\"o2i.commitment\" value=\"asserted\"/></element></folder><folder id=\"relations\" type=\"relations\"><element xsi:type=\"a:CompositionRelationship\" id=\"contextualizes\" name=\"contextualizes\" source=\"measure\" target=\"kpi\"><property key=\"o2i.commitment\" value=\"asserted\"/></element></folder><folder id=\"views\" type=\"diagrams\"><element xsi:type=\"a:ArchimateDiagramModel\" id=\"view\" name=\"KPI\"><child xsi:type=\"a:DiagramObject\" id=\"measure-node\" archimateElement=\"measure\"><sourceConnection xsi:type=\"a:Connection\" id=\"contextualizes-connection\" archimateRelationship=\"contextualizes\" source=\"measure-node\" target=\"kpi-node\"/></child><child xsi:type=\"a:DiagramObject\" id=\"kpi-node\" archimateElement=\"kpi\"/></element></folder></a:model>"
 
 unrelatedRepresentation = "{\"format\":\"another-adapter\"}"
 

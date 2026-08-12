@@ -8,6 +8,7 @@ module O2I.ArchiMate.Profile.Internal.Generated
   ( GeneratedProfileDescriptor(..)
   , GeneratedCarrierMapping(..)
   , GeneratedRelationMapping(..)
+  , GeneratedRelationProjectionPlan(..)
   , GeneratedPropertyMapping(..)
   , GeneratedCardinalityExpectation(..)
   , GeneratedRuntimeExpected(..)
@@ -67,6 +68,7 @@ module O2I.ArchiMate.Profile.Internal.Generated
   , generatedSelectedProfileRuleIds
   , generatedCarrierMappings
   , generatedRelationMappings
+  , generatedRelationProjectionPlans
   , generatedPropertyMappings
   , generatedPropertyRuntimePlans
   , generatedPatternRuntimeRules
@@ -562,6 +564,12 @@ data GeneratedRelationMapping = GeneratedRelationMapping
   , generatedRelationToken :: !Text
   , generatedRelationAttributeRule :: !(Maybe Text)
   } deriving (Eq, Show)
+
+data GeneratedRelationProjectionPlan = GeneratedRelationProjectionPlan
+  { generatedRelationProjectionMappingId :: !Text
+  , generatedRelationProjectionSourceElement :: !Text
+  , generatedRelationProjectionTargetElement :: !Text
+  } deriving (Eq, Ord, Show)
 
 data GeneratedPropertyMapping = GeneratedPropertyMapping
   { generatedPropertyMappingId :: !Text
@@ -2338,6 +2346,246 @@ generatedRelationMappings =
       "substantiates"
       "substantiates"
       (Nothing)
+  ]
+
+generatedRelationProjectionPlans :: [GeneratedRelationProjectionPlan]
+generatedRelationProjectionPlans =
+  [ GeneratedRelationProjectionPlan
+      "relation-syntax:AggregationRelationship:false:contains"
+      "Grouping"
+      "Assessment"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AggregationRelationship:false:contains"
+      "Grouping"
+      "Outcome"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AggregationRelationship:false:is-constituted-by"
+      "Grouping"
+      "BusinessObject"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AggregationRelationship:false:is-constituted-by"
+      "Grouping"
+      "BusinessProcess"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AggregationRelationship:false:is-constituted-by"
+      "Grouping"
+      "Capability"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AggregationRelationship:false:is-constituted-by"
+      "Grouping"
+      "ValueStream"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:addresses"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:anchors"
+      "BusinessObject"
+      "Driver"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:anchors"
+      "BusinessProcess"
+      "Driver"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:anchors"
+      "Capability"
+      "Driver"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:anchors"
+      "ValueStream"
+      "Driver"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:changes"
+      "CourseOfAction"
+      "BusinessObject"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:changes"
+      "CourseOfAction"
+      "BusinessProcess"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:changes"
+      "CourseOfAction"
+      "Capability"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:changes"
+      "CourseOfAction"
+      "ValueStream"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:changes"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:contributes-to"
+      "CourseOfAction"
+      "CourseOfAction"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:contributes-to"
+      "CourseOfAction"
+      "Outcome"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:contributes-to"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:contributes-to"
+      "Outcome"
+      "Outcome"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:directs"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:frames"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:grounds"
+      "Driver"
+      "Goal"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:grounds"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:guides"
+      "CourseOfAction"
+      "CourseOfAction"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:guides"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:guides"
+      "Principle"
+      "CourseOfAction"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:guides"
+      "Principle"
+      "Driver"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:guides"
+      "Principle"
+      "Goal"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:guides"
+      "Principle"
+      "Principle"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:measures"
+      "Assessment"
+      "BusinessObject"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:measures"
+      "Assessment"
+      "BusinessProcess"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:measures"
+      "Assessment"
+      "Capability"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:measures"
+      "Assessment"
+      "ValueStream"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:measures"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:orients"
+      "Goal"
+      "Goal"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:orients"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:qualifies"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:sets-target-for"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:sets-target-for"
+      "Outcome"
+      "Assessment"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:AssociationRelationship:true:surfaces"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:InfluenceRelationship:false:contributes-to"
+      "CourseOfAction"
+      "Outcome"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:InfluenceRelationship:false:contributes-to"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:InfluenceRelationship:false:contributes-to"
+      "Outcome"
+      "Outcome"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:InfluenceRelationship:false:determines"
+      "Outcome"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:InfluenceRelationship:false:directs"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:InfluenceRelationship:false:grounds"
+      "Driver"
+      "Goal"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:InfluenceRelationship:false:grounds"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:InfluenceRelationship:false:guides"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:InfluenceRelationship:false:guides"
+      "Principle"
+      "Driver"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:InfluenceRelationship:false:guides"
+      "Principle"
+      "Goal"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:InfluenceRelationship:false:guides"
+      "Principle"
+      "Principle"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:InfluenceRelationship:false:indicates"
+      "Driver"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:InfluenceRelationship:false:orients"
+      "Goal"
+      "Goal"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:InfluenceRelationship:false:orients"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:InfluenceRelationship:false:translates-into"
+      "Outcome"
+      "Goal"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:RealizationRelationship:false:contributes-to"
+      "CourseOfAction"
+      "Outcome"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:RealizationRelationship:false:contributes-to"
+      "Grouping"
+      "Grouping"
+  , GeneratedRelationProjectionPlan
+      "relation-syntax:RealizationRelationship:false:substantiates"
+      "Outcome"
+      "Goal"
   ]
 
 generatedPropertyMappings :: [GeneratedPropertyMapping]

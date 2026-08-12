@@ -4,6 +4,8 @@
 module O2I.ArchiMate.Profile.Test.Fixture
   ( validDraft
   , validDraftPermuted
+  , validKpiDraft
+  , relationApplicabilityDraft
   , invalidCarrierDraft
   , unmarkedDisplayedDraft
   , malformedIdentityDraft
@@ -39,6 +41,54 @@ validDraft = graphDraft False "Strategy"
 
 validDraftPermuted :: Draft.ProfileDraft
 validDraftPermuted = graphDraft True "Strategy"
+
+validKpiDraft :: Draft.ProfileDraft
+validKpiDraft =
+  modelDraft
+    [ Draft.childRecordMember
+        (typedElement "measure" "Grouping" "Measure" "asserted")
+    , Draft.childRecordMember (typedElement "kpi" "Assessment" "KPI" "asserted")
+    , Draft.childRecordMember
+        (relationship
+           "contextualizes"
+           "CompositionRelationship"
+           False
+           "contextualizes"
+           "measure"
+           "kpi"
+           [property "contextualizes-commitment" "o2i.commitment" "asserted"])
+    , Draft.childRecordMember
+        (connectedView
+           "kpi-view"
+           "KPI"
+           ["measure", "kpi"]
+           [("contextualizes", "measure", "kpi")])
+    ]
+
+relationApplicabilityDraft ::
+     Text -> Bool -> Text -> Text -> Text -> Text -> Text -> Draft.ProfileDraft
+relationApplicabilityDraft relationshipType directed label sourceElement sourceType targetElement targetType =
+  modelDraft
+    [ Draft.childRecordMember
+        (typedElement "source" sourceElement sourceType "asserted")
+    , Draft.childRecordMember
+        (typedElement "target" targetElement targetType "asserted")
+    , Draft.childRecordMember
+        (relationship
+           "relation"
+           relationshipType
+           directed
+           label
+           "source"
+           "target"
+           [property "relation-commitment" "o2i.commitment" "asserted"])
+    , Draft.childRecordMember
+        (connectedView
+           "relation-view"
+           "Relation"
+           ["source", "target"]
+           [("relation", "source", "target")])
+    ]
 
 invalidCarrierDraft :: Draft.ProfileDraft
 invalidCarrierDraft = graphDraft False "Driver"

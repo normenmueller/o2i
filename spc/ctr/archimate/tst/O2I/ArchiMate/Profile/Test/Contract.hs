@@ -56,6 +56,8 @@ contractTests =
     , markerTest
     , closureDeterminismTest
     , closureAndProjectionTest
+    , validKpiCarrierTest
+    , relationApplicabilityTest
     , profileDefectTest
     , qualificationTest
     , candidateRecognitionTest
@@ -285,6 +287,138 @@ closureAndProjectionTest =
     summary <- assessProjectedStructure closed projected
     summaryCarrierCount summary @?= 2
     summaryRelationCount summary @?= 1
+
+validKpiCarrierTest :: TestTree
+validKpiCarrierTest =
+  testCase "projects a KPI carrier without qualification semantics" $ do
+    let closed = closedView Fixture.validKpiDraft "KPI"
+    projected <- acceptedProjection closed
+    mappingProvenance projected
+      @?= [ ("carrier", "archimate:record:1", "context", Nothing, Nothing)
+          , ("carrier", "archimate:record:2", "primitive.kpi", Nothing, Nothing)
+          ]
+    Projection.profileQualificationProposals projected @?= []
+    summary <- assessProjectedStructure closed projected
+    summaryCarrierCount summary @?= 2
+    summaryRelationCount summary @?= 0
+
+relationApplicabilityTest :: TestTree
+relationApplicabilityTest =
+  testGroup
+    "enforces the generated positive relation projection plan"
+    (map rejectedCase rejectedRelations <> map acceptedCase acceptedRelations)
+  where
+    rejectedCase (name, draft) =
+      rulePresentTest
+        ("rejects " <> name)
+        draft
+        "Relation"
+        "graph.committed-relationship.mapping-selection"
+    acceptedCase (name, draft) =
+      testCase ("accepts " <> name) $ do
+        let closed = closedView draft "Relation"
+        projected <- acceptedProjection closed
+        length
+          [ ()
+          | (kind, _, _, _, _) <- mappingProvenance projected
+          , kind == "relation"
+          ]
+          @?= 1
+    rejectedRelations =
+      [ relationCase
+          "Influence contributes-to Action -> Action"
+          "InfluenceRelationship"
+          False
+          "contributes-to"
+          "CourseOfAction"
+          "Action"
+          "CourseOfAction"
+          "Action"
+      , relationCase
+          "Influence guides Principle -> Action"
+          "InfluenceRelationship"
+          False
+          "guides"
+          "Principle"
+          "Principle"
+          "CourseOfAction"
+          "Action"
+      , relationCase
+          "Influence guides Action -> Action"
+          "InfluenceRelationship"
+          False
+          "guides"
+          "CourseOfAction"
+          "Action"
+          "CourseOfAction"
+          "Action"
+      , relationCase
+          "Realization contributes-to Key Result -> Key Result"
+          "RealizationRelationship"
+          False
+          "contributes-to"
+          "Outcome"
+          "KeyResult"
+          "Outcome"
+          "KeyResult"
+      , relationCase
+          "Realization contributes-to Action -> Action"
+          "RealizationRelationship"
+          False
+          "contributes-to"
+          "CourseOfAction"
+          "Action"
+          "CourseOfAction"
+          "Action"
+      ]
+    acceptedRelations =
+      [ relationCase
+          "Association contributes-to Action -> Action"
+          "AssociationRelationship"
+          True
+          "contributes-to"
+          "CourseOfAction"
+          "Action"
+          "CourseOfAction"
+          "Action"
+      , relationCase
+          "Association guides Principle -> Action"
+          "AssociationRelationship"
+          True
+          "guides"
+          "Principle"
+          "Principle"
+          "CourseOfAction"
+          "Action"
+      , relationCase
+          "Association guides Action -> Action"
+          "AssociationRelationship"
+          True
+          "guides"
+          "CourseOfAction"
+          "Action"
+          "CourseOfAction"
+          "Action"
+      , relationCase
+          "Association contributes-to Key Result -> Key Result"
+          "AssociationRelationship"
+          True
+          "contributes-to"
+          "Outcome"
+          "KeyResult"
+          "Outcome"
+          "KeyResult"
+      ]
+    relationCase name relationshipType directed label sourceElement sourceType targetElement targetType =
+      ( name
+      , Fixture.relationApplicabilityDraft
+          relationshipType
+          directed
+          label
+          sourceElement
+          sourceType
+          targetElement
+          targetType)
 
 profileDefectTest :: TestTree
 profileDefectTest =

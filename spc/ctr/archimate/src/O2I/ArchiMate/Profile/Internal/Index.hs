@@ -174,7 +174,7 @@ recordInformation record =
     , recordInfoIdentity = canonicalRecordIdentityValue record
     , recordInfoLocation = canonicalRecordLocationValue record
     , recordInfoFields = canonicalRecordFieldsValue record
-    , recordInfoTypeValues = fieldTextValues TypeField record
+    , recordInfoTypeValues = fieldTypeValues record
     , recordInfoNameValues = fieldTextValues NameField record
     , recordInfoDirectedValues = fieldBooleanValues DirectedField record
     }
@@ -301,6 +301,15 @@ fieldTextValues field record =
   , canonicalFieldValue canonicalField == field
   , scalar <- canonicalFieldScalarsValue canonicalField
   , draftScalarKindValue scalar == DraftText
+  ]
+
+fieldTypeValues :: CanonicalRecord -> [Text]
+fieldTypeValues record =
+  [ draftScalarTextValue scalar
+  | canonicalField <- canonicalRecordFieldsValue record
+  , canonicalFieldValue canonicalField == TypeField
+  , scalar <- canonicalFieldScalarsValue canonicalField
+  , draftScalarKindValue scalar `elem` [DraftText, DraftNativeNameValue]
   ]
 
 fieldBooleanValues :: DraftFieldValue -> CanonicalRecord -> [Bool]

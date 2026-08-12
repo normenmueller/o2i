@@ -85,6 +85,7 @@ data ClosedView = ClosedView
   , closedViewDisplayedOccurrencesValue :: ![DisplayedOccurrence]
   , closedViewGraphOccurrencesValue :: !(Set CanonicalOccurrence)
   , closedViewQualificationOccurrencesValue :: !(Set CanonicalOccurrence)
+  , closedViewQualificationProposalOccurrencesValue :: !(Set CanonicalOccurrence)
   , closedViewUniverseValue :: !(Set CanonicalOccurrence)
   , closedViewActivationProvenanceValue :: !(Set ActivationProvenance)
   , closedViewClosureProvenanceValue :: !(Set ClosureProvenance)
@@ -309,6 +310,8 @@ closeViewWithWork selected =
       , closedViewDisplayedOccurrencesValue = displayed
       , closedViewGraphOccurrencesValue = graphMembers final
       , closedViewQualificationOccurrencesValue = qualificationMembers final
+      , closedViewQualificationProposalOccurrencesValue =
+          qualificationProposals final
       , closedViewUniverseValue =
           seedSubjects
             `Set.union` graphMembers final
@@ -1580,6 +1583,14 @@ qualificationMembers state =
   Set.fromList
     [ occurrence
     | QualificationMember occurrence <-
+        Set.toAscList (productQualificationFacts state)
+    ]
+
+qualificationProposals :: ProductState -> Set CanonicalOccurrence
+qualificationProposals state =
+  Set.fromList
+    [ proposal
+    | QualificationProposalCarrier proposal <-
         Set.toAscList (productQualificationFacts state)
     ]
 

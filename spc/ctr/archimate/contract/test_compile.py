@@ -471,6 +471,50 @@ class ProfileCompilerTest(unittest.TestCase):
         self.assertNotIn("GeneratedApplicabilityDecision", rendered)
         self.assertNotIn("generatedApplicabilityDecisions", rendered)
 
+    def test_relation_projection_plan_contains_only_applicable_pairs(self) -> None:
+        decisions = [
+            row
+            for row in self.companion["applicabilityProvenance"]["decisions"]
+            if row["subject"]["kind"] == "core-relation-mapping-pair"
+        ]
+        plans = set(compiler.derive_relation_projection_plans(self.companion))
+        expected = {
+            (
+                row["subject"]["relationMappingId"],
+                row["sourceElement"],
+                row["targetElement"],
+            )
+            for row in decisions
+            if row["outcome"] == "applicable"
+        }
+        rejected_decisions = [
+            row for row in decisions if row["outcome"] == "inapplicable"
+        ]
+        rejected = {
+            (
+                row["subject"]["relationMappingId"],
+                row["sourceElement"],
+                row["targetElement"],
+            )
+            for row in rejected_decisions
+        }
+        self.assertEqual(expected, plans)
+        self.assertEqual(6, len(rejected_decisions))
+        for row in rejected_decisions:
+            self.assertNotIn(
+                (
+                    row["subject"]["relationMappingId"],
+                    row["sourceElement"],
+                    row["targetElement"],
+                ),
+                plans,
+            )
+        self.assertTrue(rejected.isdisjoint(plans))
+        self.assertTrue(
+            {mapping for mapping, _, _ in rejected}
+            <= {mapping for mapping, _, _ in plans}
+        )
+
     def test_descriptor_shape_and_value_kinds_are_closed(self) -> None:
         missing = copy.deepcopy(self.companion)
         del missing["profileIdentity"]["notation"]
