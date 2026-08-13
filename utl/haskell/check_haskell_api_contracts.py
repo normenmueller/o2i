@@ -209,6 +209,16 @@ CONTRACTS = (
             ),
             CompileFailure(
                 "spc/ctr/archimate/tst/api/compile-fail/"
+                "CrossDocumentView.hs",
+                (("GHC-25897", 1),),
+            ),
+            CompileFailure(
+                "spc/ctr/archimate/tst/api/compile-fail/"
+                "ProjectionWithoutConformance.hs",
+                (("GHC-83865", 1),),
+            ),
+            CompileFailure(
+                "spc/ctr/archimate/tst/api/compile-fail/"
                 "ProjectionOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
