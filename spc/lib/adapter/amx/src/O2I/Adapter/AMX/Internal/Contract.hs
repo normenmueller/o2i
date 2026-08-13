@@ -61,7 +61,10 @@ compileAMXAdapter = do
   decodeRules <- nativeFailureRuleDefinitions "decode"
   rootRule <- nativeRule rootRuleSpecification
   versionRule <- nativeRule versionRuleSpecification
-  notationRules <- traverse notationRule allArchiMateNotationIssueKinds
+  notationBindings <-
+    traverse
+      (\kind -> archiMateNotationRule kind <$> notationRule kind)
+      allArchiMateNotationIssueKinds
   first
     (fmap AMXCompilationDefect)
     (compileAdapter
@@ -72,10 +75,7 @@ compileAMXAdapter = do
                 (versionRule
                    : nativeFailureRulesToList recognitionRules
                        <> nativeFailureRulesToList decodeRules)
-                <> zipWith
-                     archiMateNotationRule
-                     (NonEmpty.toList allArchiMateNotationIssueKinds)
-                     (NonEmpty.toList notationRules)))
+                <> NonEmpty.toList notationBindings))
        (definition recognitionRules decodeRules rootRule versionRule))
 
 definition ::
