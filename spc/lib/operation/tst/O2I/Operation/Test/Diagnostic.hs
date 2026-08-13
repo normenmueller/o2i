@@ -139,15 +139,16 @@ sourceIdentity =
 
 canonicalOccurrence :: IO Notation.CanonicalOccurrence
 canonicalOccurrence =
-  case Notation.canonicalDocumentRecords document of
-    record:_ ->
-      pure
-        (Notation.foldCanonicalRecord (\occurrence _ _ _ _ -> occurrence) record)
-    [] ->
-      assertFailure "test model root did not produce a canonical record"
-        >> fail "unreachable"
-  where
-    document = Notation.buildCanonicalDocument testDraft
+  Notation.withCanonicalDocument testDraft $ \document ->
+    case Notation.canonicalDocumentRecords document of
+      record:_ ->
+        pure
+          (Notation.foldCanonicalRecord
+             (\occurrence _ _ _ _ -> occurrence)
+             record)
+      [] ->
+        assertFailure "test model root did not produce a canonical record"
+          >> fail "unreachable"
 
 testDraft :: Draft.ProfileDraft
 testDraft =
@@ -175,7 +176,7 @@ testAdapterRule =
   pure
     AdapterRule
       { adapterRuleIdValue = AdapterRuleId "native.invalid"
-      , adapterRuleStageValue = AdapterDecodeStage
+      , adapterRuleStageValue = AdapterPreparationStage
       , adapterRuleExpectationValue = "expectation"
       , adapterRuleMeaningValue = "meaning"
       , adapterRuleActionValue = "action"

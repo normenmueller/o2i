@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RoleAnnotations #-}
 
 module O2I.ArchiMate.Profile.Internal.Resolution where
 
@@ -15,6 +17,12 @@ data ProfileDescriptor = ProfileDescriptor
   , profileDescriptorContractDigestValue :: !Text
   } deriving (Eq, Ord, Show)
 
+-- | One immutable compiled Profile carrying a fresh nominal witness.
+newtype SelectedArchiMateProfile profile =
+  SelectedArchiMateProfile ProfileDescriptor
+
+type role SelectedArchiMateProfile nominal
+
 compiledDescriptor :: ProfileDescriptor
 compiledDescriptor =
   ProfileDescriptor
@@ -30,3 +38,15 @@ descriptorReference descriptor =
   profileDescriptorIdentityValue descriptor
     <> "@"
     <> profileDescriptorTokenValue descriptor
+
+withSelectedArchiMateProfileValue ::
+     ProfileDescriptor
+  -> (forall profile. SelectedArchiMateProfile profile -> result)
+  -> result
+withSelectedArchiMateProfileValue descriptor consume =
+  consume (SelectedArchiMateProfile descriptor)
+
+selectedArchiMateProfileDescriptorValue ::
+     SelectedArchiMateProfile profile -> ProfileDescriptor
+selectedArchiMateProfileDescriptorValue (SelectedArchiMateProfile descriptor) =
+  descriptor

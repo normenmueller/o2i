@@ -1,3 +1,5 @@
+{-# LANGUAGE ExistentialQuantification #-}
+
 -- | Private representation of common Operation failure boundaries.
 module O2I.Operation.Failure.Internal
   ( CommandFailure(..)
@@ -29,7 +31,8 @@ data PreparationFailure
   | ProfileMarkerPreparationFailure ![MarkerCandidate]
   | ProfileResolutionPreparationFailure !ProfileResolution
   | ProfileCompatibilityPreparationFailure !ProfileCompatibility
-  | ViewSelectionPreparationFailure !ViewSelectionFailure
+  | forall document. ViewSelectionPreparationFailure
+                       !(ViewSelectionFailure document)
 
 -- | Common process boundary without conflating command and model rejection.
 data CommonFailure

@@ -127,7 +127,7 @@ class OperationContractCompilerTest(unittest.TestCase):
         self.assertIn("source", schema["$defs"]["selectionFailed"]["required"])
         self.assertIn("source", schema["$defs"]["decodeFailed"]["required"])
 
-    def test_view_failure_diagnostics_are_stage_specific(self):
+    def test_view_failure_diagnostics_share_adapter_preparation_stage(self):
         schema = json.loads(
             COMPILER.render_schema(COMPILER.validate(PROFILE_COMPANION)[3][4])
         )
@@ -143,13 +143,13 @@ class OperationContractCompilerTest(unittest.TestCase):
             decode["properties"]["rule"]["$ref"],
         )
         self.assertEqual(
-            "recognition",
+            "preparation",
             definitions["recognitionAdapterRule"]["properties"]["stage"][
                 "const"
             ],
         )
         self.assertEqual(
-            "decode",
+            "preparation",
             definitions["decodeAdapterRule"]["properties"]["stage"]["const"],
         )
 

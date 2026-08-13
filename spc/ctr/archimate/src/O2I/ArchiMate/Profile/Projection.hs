@@ -19,7 +19,7 @@ module O2I.ArchiMate.Profile.Projection
   , foldProfileContractFailure
   , -- | Opaque total outcome of applying Profile projection.
     ProfileProjectionAssessment
-  , projectProfile
+  , assessSelectedView
   , foldProfileProjectionAssessment
   , -- | Opaque successful notation-independent projection into Core material.
     ProfileProjection
@@ -53,7 +53,6 @@ module O2I.ArchiMate.Profile.Projection
 
 import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
-import O2I.ArchiMate.Profile.Closure (ClosedView)
 import O2I.ArchiMate.Profile.Draft (DraftLocation, DraftScalar)
 import O2I.ArchiMate.Profile.Internal.Generated
   ( GeneratedProfileEvidenceKind(..)
@@ -71,7 +70,10 @@ import O2I.ArchiMate.Profile.Internal.Projection
   , QualificationSource
   )
 import qualified O2I.ArchiMate.Profile.Internal.Projection as Internal
-import O2I.ArchiMate.Profile.Notation (CanonicalOccurrence)
+import O2I.ArchiMate.Profile.Notation
+  ( CanonicalOccurrence
+  , NotationConformantUniverse
+  )
 import O2I.Core.Contract (CoreQualificationProposalRoleId)
 import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
 import O2I.Structure (StructureProjection)
@@ -291,13 +293,14 @@ foldProfileContractFailure unknown mismatch missing impossible failure =
     Internal.ImpossibleOccurrenceIdentity occurrence details ->
       impossible occurrence details
 
--- | Apply the compiled Profile contract to one closed selected View.
+-- | Apply the compiled Profile contract after exact Notation conformance.
 --
 -- The total result separates internal contract failure from model rejection
 -- and successful projection. Profile maps notation into Core material; it does
 -- not define additional fachliche semantics.
-projectProfile :: ClosedView -> ProfileProjectionAssessment
-projectProfile = Internal.projectClosedProfile
+assessSelectedView ::
+     NotationConformantUniverse profile document -> ProfileProjectionAssessment
+assessSelectedView = Internal.assessSelectedViewValue
 
 -- | Distinguish contract failure, model rejection, and exact projection.
 foldProfileProjectionAssessment ::

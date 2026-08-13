@@ -32,7 +32,7 @@ import O2I.ArchiMate.Profile.Draft (DraftLocation, DraftRecordFamilyValue)
 import O2I.ArchiMate.Profile.Notation
   ( CanonicalDocument
   , CanonicalOccurrence
-  , ViewDescriptor
+  , CanonicalView
   )
 import O2I.Core.Identity (ModelIdentity)
 import O2I.Operation.View.Internal
@@ -55,25 +55,28 @@ foldViewSelector name identity selector =
 
 -- | Canonical occurrence represented by one selection candidate.
 viewSelectionCandidateOccurrence ::
-     ViewSelectionCandidate -> CanonicalOccurrence
+     ViewSelectionCandidate document -> CanonicalOccurrence
 viewSelectionCandidateOccurrence = viewSelectionCandidateOccurrenceValue
 
 -- | Profile-neutral native family of one selection candidate.
-viewSelectionCandidateFamily :: ViewSelectionCandidate -> DraftRecordFamilyValue
+viewSelectionCandidateFamily ::
+     ViewSelectionCandidate document -> DraftRecordFamilyValue
 viewSelectionCandidateFamily = viewSelectionCandidateFamilyValue
 
 -- | Exact resolved native identity, when valid and present.
-viewSelectionCandidateIdentity :: ViewSelectionCandidate -> Maybe ModelIdentity
+viewSelectionCandidateIdentity ::
+     ViewSelectionCandidate document -> Maybe ModelIdentity
 viewSelectionCandidateIdentity = viewSelectionCandidateIdentityValue
 
 -- | Exact native location of one selection candidate.
-viewSelectionCandidateLocation :: ViewSelectionCandidate -> DraftLocation
+viewSelectionCandidateLocation ::
+     ViewSelectionCandidate document -> DraftLocation
 viewSelectionCandidateLocation = viewSelectionCandidateLocationValue
 
 -- | Consume all profile-neutral candidate evidence.
 foldViewSelectionCandidate ::
      (CanonicalOccurrence -> DraftRecordFamilyValue -> Maybe ModelIdentity -> DraftLocation -> result)
-  -> ViewSelectionCandidate
+  -> ViewSelectionCandidate document
   -> result
 foldViewSelectionCandidate consume candidate =
   consume
@@ -85,10 +88,10 @@ foldViewSelectionCandidate consume candidate =
 -- | Consume every closed View-selection failure.
 foldViewSelectionFailure ::
      (ViewSelector -> result)
-  -> (ViewSelector -> NonEmpty ViewDescriptor -> result)
-  -> (ViewSelector -> NonEmpty ViewSelectionCandidate -> result)
-  -> (ViewSelector -> ViewSelectionCandidate -> result)
-  -> ViewSelectionFailure
+  -> (ViewSelector -> NonEmpty (CanonicalView document) -> result)
+  -> (ViewSelector -> NonEmpty (ViewSelectionCandidate document) -> result)
+  -> (ViewSelector -> ViewSelectionCandidate document -> result)
+  -> ViewSelectionFailure document
   -> result
 foldViewSelectionFailure unknown ambiguousName ambiguousIdentity wrongFamily failure =
   case failure of
@@ -101,18 +104,19 @@ foldViewSelectionFailure unknown ambiguousName ambiguousIdentity wrongFamily fai
       wrongFamily selector candidate
 
 -- | Exact native View descriptor selected by Operation.
-selectedViewDescriptor :: SelectedView -> ViewDescriptor
+selectedViewDescriptor :: SelectedView document -> CanonicalView document
 selectedViewDescriptor (SelectedView descriptor) = descriptor
 
 -- | Consume one exact selected native View descriptor.
-foldSelectedView :: (ViewDescriptor -> result) -> SelectedView -> result
+foldSelectedView ::
+     (CanonicalView document -> result) -> SelectedView document -> result
 foldSelectedView consume (SelectedView descriptor) = consume descriptor
 
 -- | Consume failure or one exact selected View.
 foldViewSelection ::
-     (ViewSelectionFailure -> result)
-  -> (SelectedView -> result)
-  -> ViewSelection
+     (ViewSelectionFailure document -> result)
+  -> (SelectedView document -> result)
+  -> ViewSelection document
   -> result
 foldViewSelection failed selected outcome =
   case outcome of
@@ -126,5 +130,6 @@ foldViewSelection failed selected outcome =
 -- and resolves @N@ canonical records in @O(N log V)@.
 -- Cardinality is decided before family for identity selectors, exactly as
 -- required by the profile-neutral bootstrap contract.
-selectView :: CanonicalDocument -> ViewSelector -> ViewSelection
+selectView ::
+     CanonicalDocument document -> ViewSelector -> ViewSelection document
 selectView document selector = fst (selectViewWithWork document selector)

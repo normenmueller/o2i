@@ -4,6 +4,7 @@ module O2I.ArchiMate.Profile.Internal.InventoryTest
   ( inventoryTests
   ) where
 
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import Data.Text (Text)
@@ -13,6 +14,7 @@ import O2I.ArchiMate.Profile.Internal.Closure
   )
 import O2I.ArchiMate.Profile.Internal.Generated
 import O2I.ArchiMate.Profile.Internal.Notation
+import O2I.ArchiMate.Profile.Internal.Notation.Conformance
 import O2I.ArchiMate.Profile.Internal.Projection
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit ((@?=), assertBool, testCase)
@@ -49,6 +51,22 @@ inventoryTests =
           (closureRuleRank . generatedClosureProvenanceRuleId)
           generatedClosureRules
           @?= [0 .. length generatedClosureRules - 1]
+    , testCase "closes and partitions all 38 Notation issue kinds" $ do
+        NonEmpty.length allViewInventoryIssueKindsValue @?= 13
+        NonEmpty.length allProfileMarkerIssueKindsValue @?= 13
+        NonEmpty.length allSelectedUniverseIssueKindsValue @?= 12
+        NonEmpty.length allArchiMateNotationIssueKindsValue @?= 38
+        assertUnique
+          "Notation issue tokens"
+          (map
+             archiMateNotationIssueKindTokenValue
+             (NonEmpty.toList allArchiMateNotationIssueKindsValue))
+        fmap ViewInventoryNotationKind allViewInventoryIssueKindsValue
+          <> fmap ProfileMarkerNotationKind allProfileMarkerIssueKindsValue
+          <> fmap
+               SelectedUniverseNotationKind
+               allSelectedUniverseIssueKindsValue
+               @?= allArchiMateNotationIssueKindsValue
     ]
   where
     selectedRuleIds = Set.fromList generatedSelectedProfileRuleIds

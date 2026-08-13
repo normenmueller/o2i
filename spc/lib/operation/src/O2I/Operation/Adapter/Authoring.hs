@@ -10,8 +10,10 @@ module O2I.Operation.Adapter.Authoring
   , AdapterDefinitionDefect(..)
   , AdapterCompilationDefect(..)
   , AdapterCollectionDefect(..)
-  , type AdapterRuleDefinition
-  , type AdapterDefinition
+  , type AdapterRuleSpec
+  , type AdapterRuleBinding
+  , type AdapterRules
+  , type NativeAdapterRule
   , type RecognitionRule
   , type DecodeRule
   , type RecognitionDiagnostic
@@ -21,7 +23,11 @@ module O2I.Operation.Adapter.Authoring
   , type AdapterBehavior
   , mkAdapterId
   , mkAdapterDescriptor
-  , mkAdapterRuleDefinition
+  , mkAdapterRuleSpec
+  , adapterRuleSpecId
+  , nativeAdapterRule
+  , archiMateNotationRule
+  , lookupNativeAdapterRule
   , recognitionRule
   , decodeRule
   , nativeByteOffset
@@ -49,10 +55,15 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import Data.Maybe (mapMaybe)
 import Data.Ord (comparing)
+import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import O2I.ArchiMate.Profile.Draft (ProfileDraft)
+import O2I.ArchiMate.Profile.Notation
+  ( ArchiMateNotationIssueKind
+  , allArchiMateNotationIssueKinds
+  )
 import O2I.Operation.Adapter.Internal
 
 -- | Validate one stable adapter identifier.
@@ -83,27 +94,29 @@ mkAdapterDescriptor identifier name version notation =
         <> validateTextDefects AdapterVersionField version
         <> validateTextDefects AdapterNotationField notation
 
--- | Validate one stage-neutral native-rule definition.
+-- | Validate one inert static rule specification.
 --
--- The stage and owning adapter are assigned only inside one 'compileAdapter'
--- definition. A validated definition therefore carries no executable
--- authority by itself.
-mkAdapterRuleDefinition ::
+-- A specification carries no owner, executable predicate, or classification
+-- authority. Its binding determines whether it is adapter-native or names one
+-- Profile-owned notation issue kind.
+mkAdapterRuleSpec ::
      Text
+  -> AdapterRuleStage
   -> Text
   -> Text
   -> Text
-  -> Either (NonEmpty AdapterDefinitionDefect) AdapterRuleDefinition
-mkAdapterRuleDefinition identifier expectation meaning action =
+  -> Either (NonEmpty AdapterDefinitionDefect) AdapterRuleSpec
+mkAdapterRuleSpec identifier stage expectation meaning action =
   case NonEmpty.nonEmpty defects of
     Just failures -> Left failures
     Nothing ->
       Right
-        AdapterRuleDefinition
-          { adapterRuleDefinitionIdValue = AdapterRuleId identifier
-          , adapterRuleDefinitionExpectationValue = expectation
-          , adapterRuleDefinitionMeaningValue = meaning
-          , adapterRuleDefinitionActionValue = action
+        AdapterRuleSpec
+          { adapterRuleSpecIdValue = AdapterRuleId identifier
+          , adapterRuleSpecStageValue = stage
+          , adapterRuleSpecExpectationValue = expectation
+          , adapterRuleSpecMeaningValue = meaning
+          , adapterRuleSpecActionValue = action
           }
   where
     defects =
@@ -112,21 +125,41 @@ mkAdapterRuleDefinition identifier expectation meaning action =
         <> validateTextDefects AdapterRuleMeaningField meaning
         <> validateTextDefects AdapterRuleActionField action
 
--- | Declare one recognition-stage rule in the current adapter scope.
-recognitionRule ::
-     AdapterRuleDefinition -> AdapterDefinition scope (RecognitionRule scope)
-recognitionRule definition =
-  AdapterDefinition (rule :) (RecognitionRule (ScopedRule rule))
-  where
-    rule = materializeRule AdapterRecognitionStage definition
+-- | Stable identifier carried by one validated rule specification.
+adapterRuleSpecId :: AdapterRuleSpec -> AdapterRuleId
+adapterRuleSpecId = adapterRuleSpecIdValue
 
--- | Declare one decode-stage rule in the current adapter scope.
-decodeRule ::
-     AdapterRuleDefinition -> AdapterDefinition scope (DecodeRule scope)
-decodeRule definition =
-  AdapterDefinition (rule :) (DecodeRule (ScopedRule rule))
-  where
-    rule = materializeRule AdapterDecodeStage definition
+-- | Bind one preparation-stage rule owned natively by the adapter.
+nativeAdapterRule :: AdapterRuleSpec -> AdapterRuleBinding
+nativeAdapterRule = NativeAdapterRuleBinding
+
+-- | Bind one notation-stage rule to one Profile-owned closed issue kind.
+--
+-- The binding is a static catalog association only. Classification remains
+-- entirely within the ArchiMate Profile.
+archiMateNotationRule ::
+     ArchiMateNotationIssueKind -> AdapterRuleSpec -> AdapterRuleBinding
+archiMateNotationRule = ArchiMateNotationRuleBinding
+
+-- | Resolve one adapter-native rule by stable identity within this compile
+-- scope.
+lookupNativeAdapterRule ::
+     AdapterRules scope
+  -> AdapterRuleId
+  -> Either AdapterCompilationDefect (NativeAdapterRule scope)
+lookupNativeAdapterRule rules identifier =
+  maybe
+    (Left (UnknownNativeAdapterRule identifier))
+    Right
+    (Map.lookup identifier (adapterRulesNativeValue rules))
+
+-- | Restrict one scoped native rule to recognition diagnostics.
+recognitionRule :: NativeAdapterRule scope -> RecognitionRule scope
+recognitionRule = RecognitionRule
+
+-- | Restrict one scoped native rule to decode diagnostics.
+decodeRule :: NativeAdapterRule scope -> DecodeRule scope
+decodeRule = DecodeRule
 
 -- | Address one exact byte offset in the acquired native source.
 nativeByteOffset :: Natural -> NativeLocation
@@ -167,14 +200,14 @@ recognitionDiagnostic ::
      RecognitionRule scope
   -> NonEmpty AdapterOccurrence
   -> RecognitionDiagnostic scope
-recognitionDiagnostic (RecognitionRule (ScopedRule rule)) =
+recognitionDiagnostic (RecognitionRule (NativeAdapterRule rule)) =
   RecognitionDiagnostic . AdapterDiagnostic rule
 
 -- | Bind one decode-stage rule from this adapter definition to every exact
 -- native occurrence it detected.
 decodeDiagnostic ::
      DecodeRule scope -> NonEmpty AdapterOccurrence -> DecodeDiagnostic scope
-decodeDiagnostic (DecodeRule (ScopedRule rule)) =
+decodeDiagnostic (DecodeRule (NativeAdapterRule rule)) =
   DecodeDiagnostic . AdapterDiagnostic rule
 
 -- | Report that a recognizer found no evidence for its native format.
@@ -206,40 +239,74 @@ adapterBehavior ::
   -> AdapterBehavior scope
 adapterBehavior = AdapterBehavior
 
--- | Compile one static adapter from one closed, applicative definition.
+-- | Compile one static adapter from one closed binding inventory.
 --
--- The rank-2 scope prevents rule handles from escaping or crossing adapter
--- definitions. Separate recognition and decode handles make wrong-stage
--- diagnostics unrepresentable. Compilation derives the canonical inventory
--- and executable behavior from the same definition in @O(R log R)@.
+-- Compilation rejects incomplete or ambiguous Profile-kind bindings, duplicate
+-- rule identities, and owner-stage mismatches before the rank-2 implementation
+-- receives any scoped native witness. No runtime input can extend or alter the
+-- resulting catalog. Compilation is @O(R log R)@.
 compileAdapter ::
      AdapterDescriptor
-  -> (forall scope. AdapterDefinition scope (AdapterBehavior scope))
+  -> NonEmpty AdapterRuleBinding
+  -> (forall scope. AdapterRules scope -> Either
+                                            (NonEmpty AdapterCompilationDefect)
+                                            (AdapterBehavior scope))
   -> Either (NonEmpty AdapterCompilationDefect) Adapter
-compileAdapter descriptor definition =
+compileAdapter descriptor bindings defineBehavior =
   case NonEmpty.nonEmpty defects of
     Just failures -> Left failures
     Nothing ->
-      case NonEmpty.nonEmpty canonicalRules of
-        Nothing -> Left (EmptyAdapterRuleInventory NonEmpty.:| [])
-        Just rules ->
+      case defineBehavior scopedRules of
+        Left failures -> Left failures
+        Right behavior ->
           Right
             Adapter
               { adapterDescriptorValue = descriptor
-              , adapterRulesValue = rules
+              , adapterRulesValue = canonicalRules
+              , adapterNotationRulesValue = notationRules
               , adapterRecognizeValue =
                   eraseRecognition . adapterBehaviorRecognizeValue behavior
               , adapterDecodeValue =
                   eraseDecode . adapterBehaviorDecodeValue behavior
               }
   where
-    AdapterDefinition collectRules behavior = definition
-    suppliedRules = collectRules []
-    canonicalRules = sortBy (comparing adapterRuleIdValue) suppliedRules
+    suppliedBindings = NonEmpty.toList bindings
+    canonicalBindings = sortBy (comparing bindingRuleId) suppliedBindings
+    canonicalRules = fmap bindingRule bindingsSorted
+    bindingsSorted = NonEmpty.fromList canonicalBindings
+    nativeRules =
+      Map.fromList
+        [ (adapterRuleIdValue rule, NativeAdapterRule rule)
+        | NativeAdapterRuleBinding spec <- canonicalBindings
+        , let rule = materializeRule spec
+        ]
+    notationRules = Map.fromList (map materializeNotation notationBindings)
+    scopedRules = AdapterRules nativeRules notationRules
     defects =
       [ DuplicateAdapterRuleIdentifier identifier
-      | identifier <- duplicateKeys adapterRuleIdValue canonicalRules
+      | identifier <- duplicateKeys bindingRuleId canonicalBindings
       ]
+        <> [ AdapterRuleStageMismatch
+             (adapterRuleSpecIdValue spec)
+             (adapterRuleSpecStageValue spec)
+             expected
+           | binding <- canonicalBindings
+           , let spec = bindingRuleSpec binding
+           , let expected = bindingExpectedStage binding
+           , adapterRuleSpecStageValue spec /= expected
+           ]
+        <> [ DuplicateArchiMateNotationRule kind
+           | kind <- duplicateKeys fst notationBindings
+           ]
+        <> [ MissingArchiMateNotationRule kind
+           | kind <- NonEmpty.toList allArchiMateNotationIssueKinds
+           , Set.notMember kind suppliedNotationKinds
+           ]
+    notationBindings =
+      [ (kind, spec)
+      | ArchiMateNotationRuleBinding kind spec <- canonicalBindings
+      ]
+    suppliedNotationKinds = Set.fromList (map fst notationBindings)
 
 -- | Validate and canonically order one non-empty static adapter collection.
 --
@@ -300,16 +367,38 @@ duplicateKeys key =
     repeatedKey (first:_:_) = Just (key first)
     repeatedKey _ = Nothing
 
-materializeRule :: AdapterRuleStage -> AdapterRuleDefinition -> AdapterRule
-materializeRule stage definition =
+materializeRule :: AdapterRuleSpec -> AdapterRule
+materializeRule spec =
   AdapterRule
-    { adapterRuleIdValue = adapterRuleDefinitionIdValue definition
-    , adapterRuleStageValue = stage
-    , adapterRuleExpectationValue =
-        adapterRuleDefinitionExpectationValue definition
-    , adapterRuleMeaningValue = adapterRuleDefinitionMeaningValue definition
-    , adapterRuleActionValue = adapterRuleDefinitionActionValue definition
+    { adapterRuleIdValue = adapterRuleSpecIdValue spec
+    , adapterRuleStageValue = adapterRuleSpecStageValue spec
+    , adapterRuleExpectationValue = adapterRuleSpecExpectationValue spec
+    , adapterRuleMeaningValue = adapterRuleSpecMeaningValue spec
+    , adapterRuleActionValue = adapterRuleSpecActionValue spec
     }
+
+bindingRuleSpec :: AdapterRuleBinding -> AdapterRuleSpec
+bindingRuleSpec binding =
+  case binding of
+    NativeAdapterRuleBinding spec -> spec
+    ArchiMateNotationRuleBinding _ spec -> spec
+
+bindingRule :: AdapterRuleBinding -> AdapterRule
+bindingRule = materializeRule . bindingRuleSpec
+
+bindingRuleId :: AdapterRuleBinding -> AdapterRuleId
+bindingRuleId = adapterRuleSpecIdValue . bindingRuleSpec
+
+bindingExpectedStage :: AdapterRuleBinding -> AdapterRuleStage
+bindingExpectedStage binding =
+  case binding of
+    NativeAdapterRuleBinding _ -> AdapterPreparationStage
+    ArchiMateNotationRuleBinding {} -> AdapterNotationStage
+
+materializeNotation ::
+     (ArchiMateNotationIssueKind, AdapterRuleSpec)
+  -> (ArchiMateNotationIssueKind, AdapterRule)
+materializeNotation (kind, spec) = (kind, materializeRule spec)
 
 eraseRecognition :: RecognitionResult scope -> Recognition
 eraseRecognition result =

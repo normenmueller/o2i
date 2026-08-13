@@ -49,7 +49,7 @@ tests =
         "retain View source identity after acquisition"
         viewSourceProvenance
     , testCase
-        "reject wrong-stage View adapter diagnostics"
+        "accept preparation-stage diagnostics in both native branches"
         wrongStageViewDiagnostics
     , testCase "encode every nested View identity outcome" nestedViewIdentities
     , testCase "preserve empty native View lexemes" emptyNativeViewLexemes
@@ -215,130 +215,133 @@ ruleExplanation = do
   assertSchema "o2i.discovery.rule-explanation-v1.schema.json" missingEncoded
 
 viewDiscovery :: Assertion
-viewDiscovery = do
-  let acquisition =
-        ViewDiscoveryFailed
-          (ViewAcquisitionFailed
-             (AcquisitionFailure
-                (FileInput sourceReference "model.amx")
-                acquisitionError))
-      unknown =
-        ViewDiscoveryFailed
-          (ViewAdapterSelectionFailed
-             sourceIdentity
-             (UnknownAdapter (AdapterId "missing")))
-      recognition =
-        ViewDiscoveryFailed
-          (ViewAdapterSelectionFailed
-             sourceIdentity
-             (AdapterRecognitionFailed
-                ((adapterDescriptor, recognitionAdapterDiagnostic :| []) :| [])))
-      noMatch =
-        ViewDiscoveryFailed
-          (ViewAdapterSelectionFailed sourceIdentity NoAdapterMatched)
-      multiple =
-        ViewDiscoveryFailed
-          (ViewAdapterSelectionFailed
-             sourceIdentity
-             (MultipleAdaptersMatched
-                (adapterDescriptor :| [secondAdapterDescriptor])))
-      decode =
-        ViewDiscoveryFailed
-          (ViewAdapterDecodeFailed
-             sourceIdentity
-             adapterDescriptor
-             (adapterDiagnostic :| []))
-      succeeded =
-        ViewsDiscovered
-          (ViewDiscoveryResult
-             sourceIdentity
-             adapterDescriptor
-             emptyCanonicalDocument
-             [])
-  assertView
-    "view-acquisition-failed"
-    [ field
-        "failure"
-        (object
-           [ field "sourceKind" "\"file\""
-           , field "sourceReference" "\"model\""
-           , field "message" "\"user error (read failed)\""
-           ])
-    ]
-    acquisition
-  assertView
-    "view-adapter-selection-failed"
-    [ field "source" sourceIdentityBytes
-    , field
-        "failure"
-        (object
-           [field "kind" "\"unknown-adapter\"", field "adapterId" "\"missing\""])
-    ]
-    unknown
-  assertView
-    "view-adapter-selection-failed"
-    [ field "source" sourceIdentityBytes
-    , field
-        "failure"
-        (object
-           [ field "kind" "\"recognition-failed\""
-           , field
-               "failures"
-               (array
-                  [ object
-                      [ field
-                          "adapter"
-                          (adapterDescriptorBytes adapterDescriptor)
-                      , field
-                          "diagnostics"
-                          (array [recognitionAdapterDiagnosticBytes])
-                      ]
-                  ])
-           ])
-    ]
-    recognition
-  assertView
-    "view-adapter-selection-failed"
-    [ field "source" sourceIdentityBytes
-    , field "failure" (object [field "kind" "\"no-match\""])
-    ]
-    noMatch
-  assertView
-    "view-adapter-selection-failed"
-    [ field "source" sourceIdentityBytes
-    , field
-        "failure"
-        (object
-           [ field "kind" "\"multiple-matches\""
-           , field
-               "adapters"
-               (array
-                  [ adapterDescriptorBytes adapterDescriptor
-                  , adapterDescriptorBytes secondAdapterDescriptor
-                  ])
-           ])
-    ]
-    multiple
-  assertView
-    "view-adapter-decode-failed"
-    [ field "source" sourceIdentityBytes
-    , field "adapter" (adapterDescriptorBytes adapterDescriptor)
-    , field "diagnostics" (array [adapterDiagnosticBytes])
-    ]
-    decode
-  assertView
-    "views-discovered"
-    [ field "source" sourceIdentityBytes
-    , field "adapter" (adapterDescriptorBytes adapterDescriptor)
-    , field
-        "authorities"
-        (array
-           [ object [field "kind" "\"operation\""]
-           , object [field "kind" "\"adapter\"", field "adapterId" "\"amx\""]
-           ])
-    , field "views" "[]"
-    ]
-    succeeded
+viewDiscovery =
+  Notation.withCanonicalDocument emptyDraft $ \emptyCanonicalDocument -> do
+    let acquisition =
+          ViewDiscoveryFailed
+            (ViewAcquisitionFailed
+               (AcquisitionFailure
+                  (FileInput sourceReference "model.amx")
+                  acquisitionError))
+        unknown =
+          ViewDiscoveryFailed
+            (ViewAdapterSelectionFailed
+               sourceIdentity
+               (UnknownAdapter (AdapterId "missing")))
+        recognition =
+          ViewDiscoveryFailed
+            (ViewAdapterSelectionFailed
+               sourceIdentity
+               (AdapterRecognitionFailed
+                  ((adapterDescriptor, recognitionAdapterDiagnostic :| []) :| [])))
+        noMatch =
+          ViewDiscoveryFailed
+            (ViewAdapterSelectionFailed sourceIdentity NoAdapterMatched)
+        multiple =
+          ViewDiscoveryFailed
+            (ViewAdapterSelectionFailed
+               sourceIdentity
+               (MultipleAdaptersMatched
+                  (adapterDescriptor :| [secondAdapterDescriptor])))
+        decode =
+          ViewDiscoveryFailed
+            (ViewAdapterDecodeFailed
+               sourceIdentity
+               adapterDescriptor
+               (adapterDiagnostic :| []))
+        succeeded =
+          ViewsDiscovered
+            (ViewDiscoveryResult
+               sourceIdentity
+               adapterDescriptor
+               emptyCanonicalDocument
+               [])
+    assertView
+      "view-acquisition-failed"
+      [ field
+          "failure"
+          (object
+             [ field "sourceKind" "\"file\""
+             , field "sourceReference" "\"model\""
+             , field "message" "\"user error (read failed)\""
+             ])
+      ]
+      acquisition
+    assertView
+      "view-adapter-selection-failed"
+      [ field "source" sourceIdentityBytes
+      , field
+          "failure"
+          (object
+             [ field "kind" "\"unknown-adapter\""
+             , field "adapterId" "\"missing\""
+             ])
+      ]
+      unknown
+    assertView
+      "view-adapter-selection-failed"
+      [ field "source" sourceIdentityBytes
+      , field
+          "failure"
+          (object
+             [ field "kind" "\"recognition-failed\""
+             , field
+                 "failures"
+                 (array
+                    [ object
+                        [ field
+                            "adapter"
+                            (adapterDescriptorBytes adapterDescriptor)
+                        , field
+                            "diagnostics"
+                            (array [recognitionAdapterDiagnosticBytes])
+                        ]
+                    ])
+             ])
+      ]
+      recognition
+    assertView
+      "view-adapter-selection-failed"
+      [ field "source" sourceIdentityBytes
+      , field "failure" (object [field "kind" "\"no-match\""])
+      ]
+      noMatch
+    assertView
+      "view-adapter-selection-failed"
+      [ field "source" sourceIdentityBytes
+      , field
+          "failure"
+          (object
+             [ field "kind" "\"multiple-matches\""
+             , field
+                 "adapters"
+                 (array
+                    [ adapterDescriptorBytes adapterDescriptor
+                    , adapterDescriptorBytes secondAdapterDescriptor
+                    ])
+             ])
+      ]
+      multiple
+    assertView
+      "view-adapter-decode-failed"
+      [ field "source" sourceIdentityBytes
+      , field "adapter" (adapterDescriptorBytes adapterDescriptor)
+      , field "diagnostics" (array [adapterDiagnosticBytes])
+      ]
+      decode
+    assertView
+      "views-discovered"
+      [ field "source" sourceIdentityBytes
+      , field "adapter" (adapterDescriptorBytes adapterDescriptor)
+      , field
+          "authorities"
+          (array
+             [ object [field "kind" "\"operation\""]
+             , object [field "kind" "\"adapter\"", field "adapterId" "\"amx\""]
+             ])
+      , field "views" "[]"
+      ]
+      succeeded
 
 viewSourceProvenance :: Assertion
 viewSourceProvenance = do
@@ -376,65 +379,65 @@ wrongStageViewDiagnostics = do
                 sourceIdentity
                 adapterDescriptor
                 (recognitionAdapterDiagnostic :| [])))
-  assertSchemaRejected
+  assertSchema
     "o2i.discovery.view-v1.schema.json"
     (encodeViewDiscoveryDocument recognition)
-  assertSchemaRejected
+  assertSchema
     "o2i.discovery.view-v1.schema.json"
     (encodeViewDiscoveryDocument decode)
 
 nestedViewIdentities :: Assertion
-nestedViewIdentities = do
-  let canonical = Notation.buildCanonicalDocument identityDraft
-      document =
-        viewDiscoveryDocument
-          (ViewsDiscovered
-             (ViewDiscoveryResult
-                sourceIdentity
-                adapterDescriptor
-                canonical
-                (Notation.viewInventory canonical)))
-      encoded = encodeViewDiscoveryDocument document
-  assertSchema "o2i.discovery.view-v1.schema.json" encoded
-  mapM_
-    (assertContained encoded)
-    [ "\"identity\":{\"kind\":\"missing\"}"
-    , "\"identity\":{\"kind\":\"multiple\",\"values\":["
-    , "\"reason\":{\"kind\":\"non-text\",\"observedKind\":\"boolean\"}"
-    , "\"reason\":{\"kind\":\"empty\"}"
-    , "\"reason\":{\"kind\":\"u0000\"}"
-    , "\"identity\":{\"kind\":\"resolved\""
-    , "\"identity\":\"resolved\""
-    ]
-  length (Notation.viewInventory canonical) @?= 6
+nestedViewIdentities =
+  Notation.withCanonicalDocument identityDraft $ \canonical -> do
+    let document =
+          viewDiscoveryDocument
+            (ViewsDiscovered
+               (ViewDiscoveryResult
+                  sourceIdentity
+                  adapterDescriptor
+                  canonical
+                  (Notation.canonicalViews canonical)))
+        encoded = encodeViewDiscoveryDocument document
+    assertSchema "o2i.discovery.view-v1.schema.json" encoded
+    mapM_
+      (assertContained encoded)
+      [ "\"identity\":{\"kind\":\"missing\"}"
+      , "\"identity\":{\"kind\":\"multiple\",\"values\":["
+      , "\"reason\":{\"kind\":\"non-text\",\"observedKind\":\"boolean\"}"
+      , "\"reason\":{\"kind\":\"empty\"}"
+      , "\"reason\":{\"kind\":\"u0000\"}"
+      , "\"identity\":{\"kind\":\"resolved\""
+      , "\"identity\":\"resolved\""
+      ]
+    length (Notation.canonicalViews canonical) @?= 6
 
 emptyNativeViewLexemes :: Assertion
-emptyNativeViewLexemes = do
-  let canonical = Notation.buildCanonicalDocument emptyNativeLexemeDraft
-      document =
-        viewDiscoveryDocument
-          (ViewsDiscovered
-             (ViewDiscoveryResult
-                sourceIdentity
-                adapterDescriptor
-                canonical
-                (Notation.viewInventory canonical)))
-      encoded = encodeViewDiscoveryDocument document
-  assertSchema "o2i.discovery.view-v1.schema.json" encoded
-  mapM_
-    (assertContained encoded)
-    [ "\"localName\":\"\""
-    , "\"kind\":\"number\",\"value\":\"\""
-    , "\"nativeKind\":\"\""
-    , "\"observedKind\":\"\""
-    , "\"ordinal\":1"
-    ]
-  assertSchemaRejected
-    "o2i.discovery.view-v1.schema.json"
-    (replaceOnce
-       "\"name\":{\"namespace\":null,\"localName\":\"\"},\"ordinal\":1"
-       "\"name\":{\"namespace\":null,\"localName\":\"\"},\"ordinal\":0"
-       encoded)
+emptyNativeViewLexemes =
+  Notation.withCanonicalDocument emptyNativeLexemeDraft $ \canonical -> do
+    let document =
+          viewDiscoveryDocument
+            (ViewsDiscovered
+               (ViewDiscoveryResult
+                  sourceIdentity
+                  adapterDescriptor
+                  canonical
+                  (Notation.canonicalViews canonical)))
+        encoded = encodeViewDiscoveryDocument document
+    assertSchema "o2i.discovery.view-v1.schema.json" encoded
+    mapM_
+      (assertContained encoded)
+      [ "\"localName\":\"\""
+      , "\"kind\":\"number\",\"value\":\"\""
+      , "\"nativeKind\":\"\""
+      , "\"observedKind\":\"\""
+      , "\"ordinal\":1"
+      ]
+    assertSchemaRejected
+      "o2i.discovery.view-v1.schema.json"
+      (replaceOnce
+         "\"name\":{\"namespace\":null,\"localName\":\"\"},\"ordinal\":1"
+         "\"name\":{\"namespace\":null,\"localName\":\"\"},\"ordinal\":0"
+         encoded)
 
 replaceOnce :: ByteString -> ByteString -> ByteString -> ByteString
 replaceOnce expected replacement source =
@@ -620,7 +623,7 @@ adapterRule :: AdapterRule
 adapterRule =
   AdapterRule
     (AdapterRuleId "amx.decode")
-    AdapterDecodeStage
+    AdapterPreparationStage
     "decode"
     "retain evidence"
     "fix source"
@@ -629,7 +632,7 @@ recognitionAdapterRule :: AdapterRule
 recognitionAdapterRule =
   AdapterRule
     (AdapterRuleId "amx.recognition")
-    AdapterRecognitionStage
+    AdapterPreparationStage
     "recognize"
     "select adapter"
     "fix signature"
@@ -655,6 +658,7 @@ adapterCollection =
       Adapter
         adapterDescriptor
         (adapterRule :| [])
+        Map.empty
         (const RecognitionMatch)
         (const (DecodePassed emptyDraft))
 
@@ -679,7 +683,7 @@ adapterDiagnosticBytes =
         "rule"
         (object
            [ field "id" "\"amx.decode\""
-           , field "stage" "\"decode\""
+           , field "stage" "\"preparation\""
            , field "expectation" "\"decode\""
            , field "meaning" "\"retain evidence\""
            , field "action" "\"fix source\""
@@ -703,7 +707,7 @@ recognitionAdapterDiagnosticBytes =
         "rule"
         (object
            [ field "id" "\"amx.recognition\""
-           , field "stage" "\"recognition\""
+           , field "stage" "\"preparation\""
            , field "expectation" "\"recognize\""
            , field "meaning" "\"select adapter\""
            , field "action" "\"fix signature\""
@@ -739,9 +743,6 @@ emptyDraft =
        (Draft.draftIdentity [Draft.draftTextScalar "model" rootLocation])
        rootLocation
        [])
-
-emptyCanonicalDocument :: Notation.CanonicalDocument
-emptyCanonicalDocument = Notation.buildCanonicalDocument emptyDraft
 
 identityDraft :: Draft.ProfileDraft
 identityDraft =

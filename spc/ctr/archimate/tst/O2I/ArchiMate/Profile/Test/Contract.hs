@@ -1,3 +1,4 @@
+{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 -- | Executable contract for the compiled ArchiMate Profile boundary.
@@ -5,7 +6,7 @@ module O2I.ArchiMate.Profile.Test.Contract
   ( contractTests
   ) where
 
-import Data.List (sort)
+import Data.List (nub, sort)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified Data.Text as Text
@@ -15,6 +16,7 @@ import qualified O2I.ArchiMate.Profile.Draft as Draft
 import qualified O2I.ArchiMate.Profile.Mapping as Mapping
 import qualified O2I.ArchiMate.Profile.Notation as Notation
 import qualified O2I.ArchiMate.Profile.Projection as Projection
+import qualified O2I.ArchiMate.Profile.Resolution as Resolution
 import qualified O2I.ArchiMate.Profile.Test.Fixture as Fixture
 import qualified O2I.Core.Contract as CoreContract
 import O2I.Core.Graph.Observation (Commitment(..))
@@ -100,94 +102,63 @@ mappingTest =
 
 notationOutcomeTest :: TestTree
 notationOutcomeTest =
-  testCase "retains every identity and reference outcome exactly" $ do
-    let document = Notation.buildCanonicalDocument Fixture.notationOutcomeDraft
-        assessment = Notation.assessNotation document
-        identities =
-          sort
-            (map
-               (identityOutcome . Notation.identityObservationOutcome)
-               (Notation.notationIdentityObservations assessment))
-        references =
-          sort
-            (map
-               (referenceOutcome . Notation.canonicalReferenceOutcome)
-               (Notation.notationReferenceObservations assessment))
-    identities
-      @?= sort
-            [ "invalid:non-text-boolean"
-            , "invalid:empty"
-            , "invalid:u0000"
-            , "missing"
-            , "multiple:2"
-            , "resolved:duplicate-target"
-            , "resolved:duplicate-target"
-            , "resolved:model"
-            , "resolved:reference-ambiguous"
-            , "resolved:reference-invalid"
-            , "resolved:reference-missing"
-            , "resolved:reference-resolved"
-            , "resolved:reference-wrong-family"
-            , "resolved:resolved-target"
-            , "resolved:wrong-family-target"
-            , "resolved:\xfffd"
-            ]
-    references
-      @?= sort
-            [ "ambiguous:duplicate-target:element:2"
-            , "invalid:missing"
-            , "missing:absent-target"
-            , "resolved:resolved-target:element"
-            , "wrong-family:wrong-family-target:element:view:1"
-            ]
+  testCase "publishes one closed stable 38-kind Notation algebra" $ do
+    NonEmpty.length Notation.allArchiMateNotationIssueKinds @?= 38
+    length
+      (nub
+         (NonEmpty.toList
+            (fmap
+               Notation.archiMateNotationIssueKindToken
+               Notation.allArchiMateNotationIssueKinds)))
+      @?= 38
 
 retentionTest :: TestTree
 retentionTest =
   testCase "retains scalar, key, opaque, and location evidence exactly" $ do
-    let document = Notation.buildCanonicalDocument Fixture.retentionDraft
-        retained =
-          singleWhere
-            "retained property"
-            ((== [ "text:text"
-                 , "boolean:true"
-                 , "number:12.50"
-                 , "native-name:{urn:test}name"
-                 , "other:json:{\"a\":1}"
-                 ])
-               . map renderScalar
-               . Notation.canonicalPropertyValues)
-            (Notation.canonicalDocumentProperties document)
-    Notation.foldCanonicalPropertyKey
-      (const (assertFailure "definition-backed key became direct"))
-      (\reference ->
-         referenceOutcome (Notation.canonicalReferenceOutcome reference)
-           @?= "resolved:definition:property-definition")
-      retained
-    renderLocation (Notation.canonicalPropertyLocation retained)
-      @?= "{urn:test}property[3]/value[1]@10:1:101-12:20:202"
-    map renderOpaque (Notation.canonicalPropertyOpaqueEvidence retained)
-      @?= [ "attribute:{urn:test}flag:[text:opaque-attribute]:"
-              <> "{urn:test}opaque-attribute[3]/value[1]@10:3:101-10:19:202"
-          ]
-    sort (map renderOpaque (draftOpaqueInventory Fixture.retentionDraft))
-      @?= sort
-            [ "attribute:{urn:test}flag:[text:opaque-attribute]:"
+    Notation.withCanonicalDocument Fixture.retentionDraft $ \document -> do
+      let retained =
+            singleWhere
+              "retained property"
+              ((== [ "text:text"
+                   , "boolean:true"
+                   , "number:12.50"
+                   , "native-name:{urn:test}name"
+                   , "other:json:{\"a\":1}"
+                   ])
+                 . map renderScalar
+                 . Notation.canonicalPropertyValues)
+              (Notation.canonicalDocumentProperties document)
+      Notation.foldCanonicalPropertyKey
+        (const (assertFailure "definition-backed key became direct"))
+        (\reference ->
+           referenceOutcome (Notation.canonicalReferenceOutcome reference)
+             @?= "resolved:definition:property-definition")
+        retained
+      renderLocation (Notation.canonicalPropertyLocation retained)
+        @?= "{urn:test}property[3]/value[1]@10:1:101-12:20:202"
+      map renderOpaque (Notation.canonicalPropertyOpaqueEvidence retained)
+        @?= [ "attribute:{urn:test}flag:[text:opaque-attribute]:"
                 <> "{urn:test}opaque-attribute[3]/value[1]@10:3:101-10:19:202"
-            , "child:extension:[text:opaque-child]:"
-                <> "{urn:test}opaque-child[3]/value[1]@13:1:101-14:7:202"
             ]
+      sort (map renderOpaque (draftOpaqueInventory Fixture.retentionDraft))
+        @?= sort
+              [ "attribute:{urn:test}flag:[text:opaque-attribute]:"
+                  <> "{urn:test}opaque-attribute[3]/value[1]@10:3:101-10:19:202"
+              , "child:extension:[text:opaque-child]:"
+                  <> "{urn:test}opaque-child[3]/value[1]@13:1:101-14:7:202"
+              ]
 
 markerTest :: TestTree
 markerTest =
   testCase "retains one exact model-root Profile marker" $ do
-    let document = Notation.buildCanonicalDocument Fixture.validDraft
-        counts =
-          Notation.foldMarkerEvidenceAssessment
-            (\candidates -> Left (length candidates))
-            (\candidates properties ->
-               Right (length candidates, length properties))
-            (Notation.assessMarkerEvidence document)
-    counts @?= Right (1, 1)
+    Notation.withCanonicalDocument Fixture.validDraft $ \document -> do
+      let counts =
+            Notation.foldMarkerEvidenceAssessment
+              (\candidates -> Left (length candidates))
+              (\candidates properties ->
+                 Right (length candidates, length properties))
+              (Notation.assessMarkerEvidence document)
+      counts @?= Right (1, 1)
 
 closureDeterminismTest :: TestTree
 closureDeterminismTest =
@@ -253,26 +224,23 @@ closureDeterminismTest =
 closureAndProjectionTest :: TestTree
 closureAndProjectionTest =
   testCase "closes one View and projects one Core-valid effect graph" $ do
-    let document = Notation.buildCanonicalDocument Fixture.validDraft
-        selected = headTotal "View descriptor" (Notation.viewInventory document)
-        closed = Closure.closeSelectedView selected
-    length (Closure.closedDisplayedOccurrences closed) @?= 1
+    let closed = closedView Fixture.validDraft "Main"
+    length (closedDisplayedOccurrences closed) @?= 1
     assertBool
       "graph branch did not close beyond its displayed seed"
-      (length (Closure.closedGraphOccurrences closed) > 1)
+      (length (closedGraphOccurrences closed) > 1)
     assertBool
       "qualification validation branch is missing its shared typed seed"
-      (not (null (Closure.closedQualificationOccurrences closed)))
+      (not (null (closedQualificationOccurrences closed)))
     assertBool
       "graph and qualification closure were conflated"
-      (Closure.closedGraphOccurrences closed
-         /= Closure.closedQualificationOccurrences closed)
+      (closedGraphOccurrences closed /= closedQualificationOccurrences closed)
     assertBool
       "activation provenance is missing"
-      (not (null (Closure.closedActivationProvenance closed)))
+      (not (null (closedActivationProvenance closed)))
     assertBool
       "closure provenance is missing"
-      (not (null (Closure.closedClosureProvenance closed)))
+      (not (null (closedClosureProvenance closed)))
     projected <- acceptedProjection closed
     mappingProvenance projected
       @?= [ ("carrier", "archimate:record:1", "context", Nothing, Nothing)
@@ -704,12 +672,10 @@ branchIsolationTest =
     let qualification =
           closedView Fixture.branchIsolationDraft "Qualification only"
         collective = closedView Fixture.branchIsolationDraft "Collective only"
-    closureModelIdentities
-      (Closure.closedGraphOccurrences qualification)
-      qualification
+    closureModelIdentities (closedGraphOccurrences qualification) qualification
       @?= ["proposal"]
     closureModelIdentities
-      (Closure.closedQualificationOccurrences qualification)
+      (closedQualificationOccurrences qualification)
       qualification
       @?= sort
             [ "key-result"
@@ -723,12 +689,10 @@ branchIsolationTest =
             , "strategy"
             ]
     closureModelIdentities
-      (Closure.closedQualificationOccurrences collective)
+      (closedQualificationOccurrences collective)
       collective
       @?= ["claim"]
-    closureModelIdentities
-      (Closure.closedGraphOccurrences collective)
-      collective
+    closureModelIdentities (closedGraphOccurrences collective) collective
       @?= sort
             [ "claim"
             , "contributor-a"
@@ -753,17 +717,13 @@ branchIsolationTest =
 unmarkedDisplayedElementTest :: TestTree
 unmarkedDisplayedElementTest =
   testCase "includes repeated unmarked display only in the Graph branch" $ do
-    let document =
-          Notation.buildCanonicalDocument Fixture.unmarkedDisplayedDraft
-        selected = headTotal "View descriptor" (Notation.viewInventory document)
-        closed = Closure.closeSelectedView selected
-    length (Closure.closedDisplayedOccurrences closed) @?= 2
-    map renderOccurrence (Closure.closedGraphOccurrences closed)
-      @?= ["record:1"]
-    Closure.closedQualificationOccurrences closed @?= []
-    length (Closure.closedViewUniverse closed) @?= 2
-    Closure.closedActivationProvenance closed @?= []
-    map renderClosure (Closure.closedClosureProvenance closed)
+    let closed = closedView Fixture.unmarkedDisplayedDraft "Main"
+    length (closedDisplayedOccurrences closed) @?= 2
+    map renderOccurrence (closedGraphOccurrences closed) @?= ["record:1"]
+    closedQualificationOccurrences closed @?= []
+    length (closedViewUniverse closed) @?= 2
+    closedActivationProvenance closed @?= []
+    map renderClosure (closedClosureProvenance closed)
       @?= [ stableConceptProvenance "record:3"
           , stableConceptProvenance "record:4"
           ]
@@ -775,16 +735,20 @@ unmarkedDisplayedElementTest =
         <> trigger
         <> "|record:1|"
 
-acceptedProjection :: Closure.ClosedView -> IO Projection.ProfileProjection
-acceptedProjection closed =
-  Projection.foldProfileProjectionAssessment
-    (\failures ->
-       assertFailure
-         ("Profile/Core contract failed: " <> show (NonEmpty.length failures)))
-    (\defects ->
-       assertFailure ("Profile rejected: " <> show (NonEmpty.length defects)))
-    pure
-    (Projection.projectProfile closed)
+acceptedProjection :: ClosedView -> IO Projection.ProfileProjection
+acceptedProjection (ClosedView universe) =
+  Notation.foldStageResult
+    (\issues ->
+       assertFailure ("Notation rejected: " <> show (NonEmpty.length issues)))
+    (Projection.foldProfileProjectionAssessment
+       (\failures ->
+          assertFailure
+            ("Profile/Core contract failed: " <> show (NonEmpty.length failures)))
+       (\defects ->
+          assertFailure ("Profile rejected: " <> show (NonEmpty.length defects)))
+       pure
+       . Projection.assessSelectedView)
+    (Notation.notationConformance (Notation.assessArchiMateNotation universe))
 
 data StructureSummary = StructureSummary
   { summaryCarrierCount :: Int
@@ -801,7 +765,7 @@ data StructuredSummary = StructuredSummary
   } deriving (Eq, Show)
 
 assessProjectedStructure ::
-     Closure.ClosedView -> Projection.ProfileProjection -> IO StructureSummary
+     ClosedView -> Projection.ProfileProjection -> IO StructureSummary
 assessProjectedStructure closed projected =
   case buildModelIdentityIndex modelOccurrences of
     Left defects -> assertFailure ("identity index rejected: " <> show defects)
@@ -818,11 +782,8 @@ assessProjectedStructure closed projected =
       ]
     occurrenceModels =
       [ (projectedOccurrence occurrence, identifier)
-      | record <-
-          Notation.canonicalDocumentRecords
-            (Closure.closedCanonicalDocument closed)
-      , let (occurrence, outcome) = recordIdentity record
-      , occurrence `elem` Closure.closedGraphOccurrences closed
+      | (occurrence, outcome) <- canonicalRecordIdentities closed
+      , occurrence `elem` closedGraphOccurrences closed
       , identifier <- maybeToList (resolvedIdentity outcome)
       ]
     assess scope =
@@ -1047,21 +1008,28 @@ collectOpaqueRecord record =
 singleWhere :: String -> (value -> Bool) -> [value] -> value
 singleWhere subject predicate = headTotal subject . filter predicate
 
-closedView :: Draft.ProfileDraft -> Text -> Closure.ClosedView
-closedView draft name =
-  Closure.closeSelectedView
-    (singleWhere
-       ("View named " <> Text.unpack name)
-       ((== name) . viewName)
-       (Notation.viewInventory document))
-  where
-    document = Notation.buildCanonicalDocument draft
+data ClosedView =
+  forall profile document. ClosedView
+                             (Closure.ProfileAssessmentUniverse profile document)
 
-viewName :: Notation.ViewDescriptor -> Text
+closedView :: Draft.ProfileDraft -> Text -> ClosedView
+closedView draft name =
+  Resolution.withSelectedArchiMateProfile Resolution.compiledProfileDescriptor $ \profile ->
+    Notation.withCanonicalDocument draft $ \document ->
+      ClosedView
+        (Closure.deriveProfileAssessmentUniverse
+           profile
+           document
+           (singleWhere
+              ("View named " <> Text.unpack name)
+              ((== name) . viewName)
+              (Notation.canonicalViews document)))
+
+viewName :: Notation.CanonicalView document -> Text
 viewName descriptor =
   Text.concat
     [ Draft.draftScalarText scalar
-    | field <- Notation.viewDescriptorNameFields descriptor
+    | field <- Notation.canonicalViewNameFields descriptor
     , scalar <- Notation.canonicalFieldScalars field
     ]
 
@@ -1074,31 +1042,58 @@ data ClosureSnapshot = ClosureSnapshot
   , snapshotClosure :: [Text]
   } deriving (Eq, Show)
 
-closureSnapshot :: Closure.ClosedView -> ClosureSnapshot
+closedDisplayedOccurrences :: ClosedView -> [Closure.DisplayedOccurrence]
+closedDisplayedOccurrences (ClosedView universe) =
+  Closure.assessmentDisplayedOccurrences universe
+
+closedGraphOccurrences :: ClosedView -> [Notation.CanonicalOccurrence]
+closedGraphOccurrences (ClosedView universe) =
+  Closure.assessmentGraphOccurrences universe
+
+closedQualificationOccurrences :: ClosedView -> [Notation.CanonicalOccurrence]
+closedQualificationOccurrences (ClosedView universe) =
+  Closure.assessmentQualificationOccurrences universe
+
+closedViewUniverse :: ClosedView -> [Notation.CanonicalOccurrence]
+closedViewUniverse (ClosedView universe) = Closure.assessmentUniverse universe
+
+closedActivationProvenance :: ClosedView -> [Closure.ActivationProvenance]
+closedActivationProvenance (ClosedView universe) =
+  Closure.assessmentActivationProvenance universe
+
+closedClosureProvenance :: ClosedView -> [Closure.ClosureProvenance]
+closedClosureProvenance (ClosedView universe) =
+  Closure.assessmentClosureProvenance universe
+
+canonicalRecordIdentities ::
+     ClosedView -> [(Notation.CanonicalOccurrence, Notation.IdentityOutcome)]
+canonicalRecordIdentities (ClosedView universe) =
+  [ recordIdentity record
+  | record <-
+      Notation.canonicalDocumentRecords
+        (Closure.assessmentCanonicalDocument universe)
+  ]
+
+closureSnapshot :: ClosedView -> ClosureSnapshot
 closureSnapshot closed =
   ClosureSnapshot
     { snapshotDisplayed =
         [ renderOccurrence (Closure.displayedSubjectOccurrence displayed)
-        | displayed <- Closure.closedDisplayedOccurrences closed
+        | displayed <- closedDisplayedOccurrences closed
         ]
-    , snapshotGraph =
-        map renderOccurrence (Closure.closedGraphOccurrences closed)
+    , snapshotGraph = map renderOccurrence (closedGraphOccurrences closed)
     , snapshotQualification =
-        map renderOccurrence (Closure.closedQualificationOccurrences closed)
-    , snapshotUniverse =
-        map renderOccurrence (Closure.closedViewUniverse closed)
+        map renderOccurrence (closedQualificationOccurrences closed)
+    , snapshotUniverse = map renderOccurrence (closedViewUniverse closed)
     , snapshotActivation =
-        map renderActivation (Closure.closedActivationProvenance closed)
-    , snapshotClosure =
-        map renderClosure (Closure.closedClosureProvenance closed)
+        map renderActivation (closedActivationProvenance closed)
+    , snapshotClosure = map renderClosure (closedClosureProvenance closed)
     }
 
-closureSemanticSnapshot :: Closure.ClosedView -> ([Text], [Text], [Text])
+closureSemanticSnapshot :: ClosedView -> ([Text], [Text], [Text])
 closureSemanticSnapshot closed =
-  ( closureModelIdentities (Closure.closedGraphOccurrences closed) closed
-  , closureModelIdentities
-      (Closure.closedQualificationOccurrences closed)
-      closed
+  ( closureModelIdentities (closedGraphOccurrences closed) closed
+  , closureModelIdentities (closedQualificationOccurrences closed) closed
   , sort
       [ modelIdentityText identityValue
       | (_, identityValue) <- projectedIdentityInventory closed
@@ -1146,12 +1141,10 @@ closureBranch :: Closure.ClosureBranch -> Text
 closureBranch = Closure.foldClosureBranch "graph" "qualification"
 
 projectedIdentityInventory ::
-     Closure.ClosedView -> [(OccurrenceIdentity, ModelIdentity)]
+     ClosedView -> [(OccurrenceIdentity, ModelIdentity)]
 projectedIdentityInventory closed =
   [ (projectedOccurrence occurrence, identifier)
-  | record <-
-      Notation.canonicalDocumentRecords (Closure.closedCanonicalDocument closed)
-  , let (occurrence, outcome) = recordIdentity record
+  | (occurrence, outcome) <- canonicalRecordIdentities closed
   , identifier <- maybeToList (resolvedIdentity outcome)
   ]
 
@@ -1170,8 +1163,7 @@ targetModelIdentity identities occurrence =
            <> ", got "
            <> show values)
 
-closureModelIdentities ::
-     [Notation.CanonicalOccurrence] -> Closure.ClosedView -> [Text]
+closureModelIdentities :: [Notation.CanonicalOccurrence] -> ClosedView -> [Text]
 closureModelIdentities occurrences closed =
   sort
     [ modelIdentityText identifier
@@ -1180,27 +1172,28 @@ closureModelIdentities occurrences closed =
     ]
 
 canonicalIdentityInventory ::
-     Closure.ClosedView -> [(Notation.CanonicalOccurrence, ModelIdentity)]
+     ClosedView -> [(Notation.CanonicalOccurrence, ModelIdentity)]
 canonicalIdentityInventory closed =
   [ (occurrence, identifier)
-  | record <-
-      Notation.canonicalDocumentRecords (Closure.closedCanonicalDocument closed)
-  , let (occurrence, outcome) = recordIdentity record
+  | (occurrence, outcome) <- canonicalRecordIdentities closed
   , identifier <- maybeToList (resolvedIdentity outcome)
   ]
 
-projectionDefects :: Closure.ClosedView -> IO [Projection.ProfileDefect]
-projectionDefects closed =
-  Projection.foldProfileProjectionAssessment
-    (\failures ->
-       assertFailure
-         ("unexpected Profile/Core contract failures: "
-            <> show (NonEmpty.length failures)))
-    (pure . NonEmpty.toList)
-    (const (assertFailure "invalid Profile fixture unexpectedly projected"))
-    (Projection.projectProfile closed)
+projectionDefects :: ClosedView -> IO [Projection.ProfileDefect]
+projectionDefects (ClosedView universe) =
+  Notation.foldStageResult
+    (\issues -> assertFailure ("unexpected Notation defects: " <> show issues))
+    (Projection.foldProfileProjectionAssessment
+       (\failures ->
+          assertFailure
+            ("unexpected Profile/Core contract failures: "
+               <> show (NonEmpty.length failures)))
+       (pure . NonEmpty.toList)
+       (const (assertFailure "invalid Profile fixture unexpectedly projected"))
+       . Projection.assessSelectedView)
+    (Notation.notationConformance (Notation.assessArchiMateNotation universe))
 
-projectionDefectRules :: Closure.ClosedView -> IO [Text]
+projectionDefectRules :: ClosedView -> IO [Text]
 projectionDefectRules closed =
   map Projection.profileDefectRuleId <$> projectionDefects closed
 

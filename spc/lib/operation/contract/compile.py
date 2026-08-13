@@ -799,8 +799,8 @@ def view_discovery_schema(document: MachineDocument) -> dict[str, Any]:
     }
     definitions = {
         "adapterDescriptor": adapter_descriptor(),
-        "recognitionAdapterRule": adapter_rule("recognition"),
-        "decodeAdapterRule": adapter_rule("decode"),
+        "recognitionAdapterRule": adapter_rule("preparation"),
+        "decodeAdapterRule": adapter_rule("preparation"),
         "adapterOccurrence": adapter_occurrence(),
         "recognitionAdapterDiagnostic": adapter_diagnostic(
             "recognitionAdapterRule"

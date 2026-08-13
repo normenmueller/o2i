@@ -48,8 +48,10 @@ $(assertAbstractTypes
     , "Adapter.AdapterExecution"
     , "Adapter.AdapterSelectionError"
     , "Adapter.AdapterSelection"
-    , "AdapterAuthoring.AdapterRuleDefinition"
-    , "AdapterAuthoring.AdapterDefinition"
+    , "AdapterAuthoring.AdapterRuleSpec"
+    , "AdapterAuthoring.AdapterRuleBinding"
+    , "AdapterAuthoring.AdapterRules"
+    , "AdapterAuthoring.NativeAdapterRule"
     , "AdapterAuthoring.RecognitionRule"
     , "AdapterAuthoring.DecodeRule"
     , "AdapterAuthoring.RecognitionDiagnostic"
@@ -145,8 +147,8 @@ $(assertOrdinaryFunctions
     , 'Adapter.adapterDescriptorNotation
     , 'Adapter.foldAdapterDescriptor
     , 'Adapter.adapterRuleIdText
-    , 'Adapter.recognitionRuleStage
-    , 'Adapter.decodeRuleStage
+    , 'Adapter.preparationRuleStage
+    , 'Adapter.notationRuleStage
     , 'Adapter.adapterRuleStageText
     , 'Adapter.foldAdapterRuleStage
     , 'Adapter.adapterRuleId
@@ -160,6 +162,7 @@ $(assertOrdinaryFunctions
     , 'Adapter.lookupAdapterContract
     , 'Adapter.adapterContractDescriptor
     , 'Adapter.adapterContractRules
+    , 'Adapter.lookupArchiMateNotationRule
     , 'Adapter.foldAdapterContract
     , 'Adapter.selectedAdapterDescriptor
     , 'Adapter.selectedAdapterRules
@@ -173,7 +176,11 @@ $(assertOrdinaryFunctions
     , 'Adapter.selectAdapter
     , 'AdapterAuthoring.mkAdapterId
     , 'AdapterAuthoring.mkAdapterDescriptor
-    , 'AdapterAuthoring.mkAdapterRuleDefinition
+    , 'AdapterAuthoring.mkAdapterRuleSpec
+    , 'AdapterAuthoring.adapterRuleSpecId
+    , 'AdapterAuthoring.nativeAdapterRule
+    , 'AdapterAuthoring.archiMateNotationRule
+    , 'AdapterAuthoring.lookupNativeAdapterRule
     , 'AdapterAuthoring.recognitionRule
     , 'AdapterAuthoring.decodeRule
     , 'AdapterAuthoring.nativeByteOffset
@@ -256,8 +263,6 @@ $(assertOrdinaryFunctions
     , 'DiscoveryView.foldViewDiscoveryFailure
     , 'DiscoveryView.viewDiscoverySource
     , 'DiscoveryView.viewDiscoveryAdapter
-    , 'DiscoveryView.viewDiscoveryDocument
-    , 'DiscoveryView.viewDiscoveryViews
     , 'DiscoveryView.viewDiscoveryAuthorities
     , 'DiscoveryView.foldViewDiscoveryResult
     , 'DiscoveryView.foldViewDiscovery

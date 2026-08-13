@@ -113,7 +113,7 @@ viewDiscoveryMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "fb36eafa4190c9cb4e70510f206e6267c5d6df47343b9123ef9b1ab88e6696b4"
+                "6abe1d5235cc3eb476128b32dd2a5a6c331c9a2f20875473fbc983f8762790de"
           }
     , machineSchemaVariantsValue =
         viewsDiscoveredVariant

@@ -9,10 +9,9 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified O2I.ArchiMate.Profile.Draft as Draft
 import O2I.ArchiMate.Profile.Notation
-  ( CanonicalDocument
-  , buildCanonicalDocument
-  , canonicalOccurrenceOrdinal
-  , viewDescriptorOccurrence
+  ( canonicalOccurrenceOrdinal
+  , canonicalViewOccurrence
+  , withCanonicalDocument
   )
 import O2I.Core.Identity (ModelIdentity, modelIdentity)
 import O2I.Operation.View
@@ -38,57 +37,58 @@ tests =
     ]
 
 selectExactName :: IO ()
-selectExactName = do
-  ordinal <-
-    selectedOrdinal (selectView selectionDocument (viewByName "Primary"))
-  ordinal @?= 2
+selectExactName =
+  withCanonicalDocument selectionDraft $ \document -> do
+    ordinal <- selectedOrdinal (selectView document (viewByName "Primary"))
+    ordinal @?= 2
 
 selectExactIdentity :: IO ()
-selectExactIdentity = do
-  ordinal <-
-    selectedOrdinal
-      (selectView selectionDocument (viewByIdentity (identity "view-primary")))
-  ordinal @?= 2
+selectExactIdentity =
+  withCanonicalDocument selectionDraft $ \document -> do
+    ordinal <-
+      selectedOrdinal
+        (selectView document (viewByIdentity (identity "view-primary")))
+    ordinal @?= 2
 
 reportUnknown :: IO ()
-reportUnknown = do
-  failureTag (selectView selectionDocument (viewByName "Absent")) @?= Unknown
-  failureTag (selectView selectionDocument (viewByIdentity (identity "absent")))
-    @?= Unknown
+reportUnknown =
+  withCanonicalDocument selectionDraft $ \document -> do
+    failureTag (selectView document (viewByName "Absent")) @?= Unknown
+    failureTag (selectView document (viewByIdentity (identity "absent")))
+      @?= Unknown
 
 reportAmbiguousName :: IO ()
 reportAmbiguousName =
-  failureTag (selectView duplicateNameDocument (viewByName "Repeated"))
-    @?= AmbiguousName 2
+  withCanonicalDocument duplicateNameDraft $ \document ->
+    failureTag (selectView document (viewByName "Repeated")) @?= AmbiguousName 2
 
 reportAmbiguousIdentity :: IO ()
 reportAmbiguousIdentity =
-  failureTag
-    (selectView duplicateIdentityDocument (viewByIdentity (identity "shared")))
-    @?= AmbiguousIdentity 2
+  withCanonicalDocument duplicateIdentityDraft $ \document ->
+    failureTag (selectView document (viewByIdentity (identity "shared")))
+      @?= AmbiguousIdentity 2
 
 reportWrongFamily :: IO ()
 reportWrongFamily =
-  failureTag
-    (selectView selectionDocument (viewByIdentity (identity "element")))
-    @?= WrongFamily
+  withCanonicalDocument selectionDraft $ \document ->
+    failureTag (selectView document (viewByIdentity (identity "element")))
+      @?= WrongFamily
 
 indexIdentityCandidates :: IO ()
 indexIdentityCandidates = do
   let size = 400
-      document =
-        buildCanonicalDocument
-          (modelDraft
-             (fmap (element . indexed "element") [1 .. size]
-                <> fmap
-                     (\index ->
-                        view (indexed "view" index) (indexed "name" index))
-                     [1 .. size]))
-      selected = viewByIdentity (identity (indexed "view" size))
-      (outcome, work) = selectViewWithWork document selected
-  ordinal <- selectedOrdinal outcome
-  ordinal @?= toInteger (size * 2)
-  work @?= ViewSelectionWork size (size * 2 + 1) (size * 2 + 1)
+      draft =
+        modelDraft
+          (fmap (element . indexed "element") [1 .. size]
+             <> fmap
+                  (\index -> view (indexed "view" index) (indexed "name" index))
+                  [1 .. size])
+  withCanonicalDocument draft $ \document -> do
+    let selected = viewByIdentity (identity (indexed "view" size))
+        (outcome, work) = selectViewWithWork document selected
+    ordinal <- selectedOrdinal outcome
+    ordinal @?= toInteger (size * 2)
+    work @?= ViewSelectionWork size (size * 2 + 1) (size * 2 + 1)
 
 indexed :: Text -> Int -> Text
 indexed prefix index = prefix <> "-" <> Text.pack (show index)
@@ -101,7 +101,7 @@ data FailureTag
   | UnexpectedSelection
   deriving (Eq, Show)
 
-failureTag :: ViewSelection -> FailureTag
+failureTag :: ViewSelection document -> FailureTag
 failureTag =
   foldViewSelection
     (foldViewSelectionFailure
@@ -111,34 +111,31 @@ failureTag =
        (\_ _ -> WrongFamily))
     (const UnexpectedSelection)
 
-selectedOrdinal :: ViewSelection -> IO Integer
+selectedOrdinal :: ViewSelection document -> IO Integer
 selectedOrdinal =
   foldViewSelection
     (const (assertFailure "expected one selected View" >> fail "unreachable"))
     (pure
        . toInteger
        . canonicalOccurrenceOrdinal
-       . viewDescriptorOccurrence
+       . canonicalViewOccurrence
        . selectedViewDescriptor)
 
-selectionDocument :: CanonicalDocument
-selectionDocument =
-  buildCanonicalDocument
-    (modelDraft
-       [ element "element"
-       , view "view-primary" "Primary"
-       , view "view-secondary" "Secondary"
-       ])
+selectionDraft :: Draft.ProfileDraft
+selectionDraft =
+  modelDraft
+    [ element "element"
+    , view "view-primary" "Primary"
+    , view "view-secondary" "Secondary"
+    ]
 
-duplicateNameDocument :: CanonicalDocument
-duplicateNameDocument =
-  buildCanonicalDocument
-    (modelDraft [view "view-one" "Repeated", view "view-two" "Repeated"])
+duplicateNameDraft :: Draft.ProfileDraft
+duplicateNameDraft =
+  modelDraft [view "view-one" "Repeated", view "view-two" "Repeated"]
 
-duplicateIdentityDocument :: CanonicalDocument
-duplicateIdentityDocument =
-  buildCanonicalDocument
-    (modelDraft [element "shared", view "shared" "Only View"])
+duplicateIdentityDraft :: Draft.ProfileDraft
+duplicateIdentityDraft =
+  modelDraft [element "shared", view "shared" "Only View"]
 
 modelDraft :: [Draft.DraftMember Draft.ModelRootRole] -> Draft.ProfileDraft
 modelDraft members =

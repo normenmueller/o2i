@@ -27,6 +27,9 @@ import O2I.ArchiMate.Profile.Internal.Closure
   , closedViewUniverseValue
   , displayedSubjectOccurrenceValue
   )
+import O2I.ArchiMate.Profile.Internal.Closure.Witness
+  ( profileAssessmentUniverseValue
+  )
 import O2I.ArchiMate.Profile.Internal.Draft
 import O2I.ArchiMate.Profile.Internal.Generated
   ( GeneratedCardinalityExpectation(..)
@@ -56,6 +59,10 @@ import O2I.ArchiMate.Profile.Internal.Generated
 import O2I.ArchiMate.Profile.Internal.Index
 import O2I.ArchiMate.Profile.Internal.Mapping
 import O2I.ArchiMate.Profile.Internal.Notation
+import O2I.ArchiMate.Profile.Internal.Notation.Conformance
+  ( NotationConformantUniverse
+  , notationConformantUniverseValue
+  )
 import O2I.Core.Contract
   ( CoreQualificationProposalRoleId
   , CoreStructuredPropositionRoleId
@@ -461,6 +468,14 @@ projectClosedProfile closed =
     contractFailures = [failure | ProfileContractFailure failure <- allIssues]
     modelDefects =
       [profileDefect | ProfileModelDefect profileDefect <- allIssues]
+
+-- | Apply selected-Profile rules only after exact Notation conformance.
+assessSelectedViewValue ::
+     NotationConformantUniverse profile document -> ProfileProjectionAssessment
+assessSelectedViewValue =
+  projectClosedProfile
+    . profileAssessmentUniverseValue
+    . notationConformantUniverseValue
 
 issueOrder ::
      ProfileIssue

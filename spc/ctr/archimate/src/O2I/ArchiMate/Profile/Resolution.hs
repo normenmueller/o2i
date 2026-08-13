@@ -1,3 +1,5 @@
+{-# LANGUAGE RankNTypes #-}
+
 -- | Immutable descriptor material contributed by the compiled Profile.
 --
 -- Inventory validation, Profile resolution, adapter compatibility, and View
@@ -13,6 +15,9 @@ module O2I.ArchiMate.Profile.Resolution
   , profileDescriptorAdapterIds
   , profileDescriptorContractDigest
   , foldProfileDescriptor
+  , SelectedArchiMateProfile
+  , withSelectedArchiMateProfile
+  , selectedArchiMateProfileDescriptor
   ) where
 
 import Data.Text (Text)
@@ -63,3 +68,15 @@ foldProfileDescriptor consume descriptor =
     (profileDescriptorNotationValue descriptor)
     (profileDescriptorAdapterIdsValue descriptor)
     (profileDescriptorContractDigestValue descriptor)
+
+-- | Introduce one fresh nominal witness for the selected compiled Profile.
+withSelectedArchiMateProfile ::
+     ProfileDescriptor
+  -> (forall profile. SelectedArchiMateProfile profile -> result)
+  -> result
+withSelectedArchiMateProfile = withSelectedArchiMateProfileValue
+
+-- | Immutable descriptor carried by the selected-Profile witness.
+selectedArchiMateProfileDescriptor ::
+     SelectedArchiMateProfile profile -> ProfileDescriptor
+selectedArchiMateProfileDescriptor = selectedArchiMateProfileDescriptorValue

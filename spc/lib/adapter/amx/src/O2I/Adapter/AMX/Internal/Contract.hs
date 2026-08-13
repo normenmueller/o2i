@@ -16,7 +16,17 @@ import qualified Data.Text as Text
 import O2I.Adapter.AMX.Internal.Draft (projectNativeDocument)
 import O2I.Adapter.AMX.Internal.Types
 import O2I.Adapter.AMX.Internal.XML
-import O2I.Operation.Adapter (Adapter, AdapterOccurrence)
+import O2I.ArchiMate.Profile.Notation
+  ( ArchiMateNotationIssueKind
+  , allArchiMateNotationIssueKinds
+  , archiMateNotationIssueKindToken
+  )
+import O2I.Operation.Adapter
+  ( Adapter
+  , AdapterOccurrence
+  , notationRuleStage
+  , preparationRuleStage
+  )
 import O2I.Operation.Adapter.Authoring
 
 data AMXAdapterDefect
@@ -49,27 +59,43 @@ compileAMXAdapter = do
          "archimate-3.2")
   recognitionRules <- nativeFailureRuleDefinitions "recognition"
   decodeRules <- nativeFailureRuleDefinitions "decode"
-  rootRule <- rule rootRuleSpecification
-  versionRule <- rule versionRuleSpecification
+  rootRule <- nativeRule rootRuleSpecification
+  versionRule <- nativeRule versionRuleSpecification
+  notationRules <- traverse notationRule allArchiMateNotationIssueKinds
   first
     (fmap AMXCompilationDefect)
     (compileAdapter
        descriptor
+       (nativeAdapterRule rootRule
+          :| (map
+                nativeAdapterRule
+                (versionRule
+                   : nativeFailureRulesToList recognitionRules
+                       <> nativeFailureRulesToList decodeRules)
+                <> zipWith
+                     archiMateNotationRule
+                     (NonEmpty.toList allArchiMateNotationIssueKinds)
+                     (NonEmpty.toList notationRules)))
        (definition recognitionRules decodeRules rootRule versionRule))
 
 definition ::
-     NativeFailureRules AdapterRuleDefinition
-  -> NativeFailureRules AdapterRuleDefinition
-  -> AdapterRuleDefinition
-  -> AdapterRuleDefinition
-  -> AdapterDefinition scope (AdapterBehavior scope)
-definition recognitionDefinitions decodeDefinitions rootDefinition versionDefinition =
+     NativeFailureRules AdapterRuleSpec
+  -> NativeFailureRules AdapterRuleSpec
+  -> AdapterRuleSpec
+  -> AdapterRuleSpec
+  -> AdapterRules scope
+  -> Either (NonEmpty AdapterCompilationDefect) (AdapterBehavior scope)
+definition recognitionDefinitions decodeDefinitions rootDefinition versionDefinition rules =
   behavior
-    <$> declareNativeFailureRules recognitionRule recognitionDefinitions
-    <*> declareNativeFailureRules decodeRule decodeDefinitions
-    <*> decodeRule rootDefinition
-    <*> decodeRule versionDefinition
+    <$> resolveNativeFailureRules rules recognitionRule recognitionDefinitions
+    <*> resolveNativeFailureRules rules decodeRule decodeDefinitions
+    <*> resolve decodeRule rootDefinition
+    <*> resolve decodeRule versionDefinition
   where
+    resolve restrict spec =
+      first
+        pure
+        (restrict <$> lookupNativeAdapterRule rules (adapterRuleSpecId spec))
     behavior recognitionRules decodeRules rootRule versionRule =
       adapterBehavior
         (recognize recognitionRules)
@@ -168,22 +194,28 @@ data NativeFailureRules rule = NativeFailureRules
   , wellFormednessRule :: !rule
   }
 
-declareNativeFailureRules ::
-     (AdapterRuleDefinition -> AdapterDefinition scope rule)
-  -> NativeFailureRules AdapterRuleDefinition
-  -> AdapterDefinition scope (NativeFailureRules rule)
-declareNativeFailureRules declare definitions =
+resolveNativeFailureRules ::
+     AdapterRules scope
+  -> (NativeAdapterRule scope -> rule)
+  -> NativeFailureRules AdapterRuleSpec
+  -> Either (NonEmpty AdapterCompilationDefect) (NativeFailureRules rule)
+resolveNativeFailureRules rules restrict definitions =
   NativeFailureRules
-    <$> declare (inputLimitRule definitions)
-    <*> declare (depthLimitRule definitions)
-    <*> declare (elementLimitRule definitions)
-    <*> declare (attributeLimitRule definitions)
-    <*> declare (textLimitRule definitions)
-    <*> declare (utf8Rule definitions)
-    <*> declare (encodingRule definitions)
-    <*> declare (facilityRule definitions)
-    <*> declare (scalarRule definitions)
-    <*> declare (wellFormednessRule definitions)
+    <$> resolve (inputLimitRule definitions)
+    <*> resolve (depthLimitRule definitions)
+    <*> resolve (elementLimitRule definitions)
+    <*> resolve (attributeLimitRule definitions)
+    <*> resolve (textLimitRule definitions)
+    <*> resolve (utf8Rule definitions)
+    <*> resolve (encodingRule definitions)
+    <*> resolve (facilityRule definitions)
+    <*> resolve (scalarRule definitions)
+    <*> resolve (wellFormednessRule definitions)
+  where
+    resolve spec =
+      first
+        pure
+        (restrict <$> lookupNativeAdapterRule rules (adapterRuleSpecId spec))
 
 nativeFailureRule :: NativeFailure -> NativeFailureRules rule -> rule
 nativeFailureRule failure rules =
@@ -201,11 +233,9 @@ nativeFailureRule failure rules =
 
 nativeFailureRuleDefinitions ::
      Text
-  -> Either
-       (NonEmpty AMXAdapterDefect)
-       (NativeFailureRules AdapterRuleDefinition)
+  -> Either (NonEmpty AMXAdapterDefect) (NativeFailureRules AdapterRuleSpec)
 nativeFailureRuleDefinitions stage =
-  traverseNativeFailureRules rule (nativeFailureRuleSpecifications stage)
+  traverseNativeFailureRules nativeRule (nativeFailureRuleSpecifications stage)
 
 traverseNativeFailureRules ::
      Applicative effect
@@ -229,58 +259,58 @@ nativeFailureRuleSpecifications :: Text -> NativeFailureRules RuleSpecification
 nativeFailureRuleSpecifications stage =
   NativeFailureRules
     { inputLimitRule =
-        nativeRule
+        nativeSpec
           "input-byte-limit"
           "Input stays within the AMX byte limit."
           "Use an AMX document within the published byte limit."
     , depthLimitRule =
-        nativeRule
+        nativeSpec
           "xml-depth-limit"
           "XML nesting stays within the AMX depth limit."
           "Reduce XML nesting below the published depth limit."
     , elementLimitRule =
-        nativeRule
+        nativeSpec
           "xml-element-limit"
           "The XML element count stays within the AMX limit."
           "Use an AMX document within the published element limit."
     , attributeLimitRule =
-        nativeRule
+        nativeSpec
           "xml-attribute-limit"
           "The XML attribute count stays within the AMX limit."
           "Use an AMX document within the published attribute limit."
     , textLimitRule =
-        nativeRule
+        nativeSpec
           "xml-text-limit"
           "XML text stays within the AMX character limit."
           "Use an AMX document within the published text limit."
     , utf8Rule =
-        nativeRule
+        nativeSpec
           "utf8"
           "The input is valid UTF-8."
           "Encode the AMX document as valid UTF-8."
     , encodingRule =
-        nativeRule
+        nativeSpec
           "encoding"
           "The XML encoding is UTF-8."
           "Save the AMX document with UTF-8 encoding."
     , facilityRule =
-        nativeRule
+        nativeSpec
           "xml-facility"
           "XML uses only side-effect-free facilities supported by the AMX adapter."
           "Use well-formed XML whose DTD, when present, needs no entity expansion or external resolution."
     , scalarRule =
-        nativeRule
+        nativeSpec
           "xml-scalar"
           "XML contains only permitted XML 1.0 scalar values."
           "Remove characters forbidden by XML 1.0."
     , wellFormednessRule =
-        nativeRule
+        nativeSpec
           "xml-well-formedness"
           "The input is well-formed XML 1.0."
           "Correct the malformed XML structure."
     }
   where
-    nativeRule suffix expectation action =
+    nativeSpec suffix expectation action =
       ( "o2i.amx." <> stage <> "." <> suffix
       , expectation
       , nativeFailureMeaning stage
@@ -306,13 +336,46 @@ versionRuleSpecification =
   , "The adapter contract is bound to one exact native serialization version."
   , "Save the model with a supported Archi native format version.")
 
-rule ::
-     RuleSpecification
-  -> Either (NonEmpty AMXAdapterDefect) AdapterRuleDefinition
-rule (identifier, expectation, meaning, action) =
+nativeRule ::
+     RuleSpecification -> Either (NonEmpty AMXAdapterDefect) AdapterRuleSpec
+nativeRule (identifier, expectation, meaning, action) =
   first
     (fmap AMXRuleDefinitionDefect)
-    (mkAdapterRuleDefinition identifier expectation meaning action)
+    (mkAdapterRuleSpec
+       identifier
+       preparationRuleStage
+       expectation
+       meaning
+       action)
+
+notationRule ::
+     ArchiMateNotationIssueKind
+  -> Either (NonEmpty AMXAdapterDefect) AdapterRuleSpec
+notationRule kind =
+  first
+    (fmap AMXRuleDefinitionDefect)
+    (mkAdapterRuleSpec
+       ("o2i.amx.notation." <> archiMateNotationIssueKindToken kind)
+       notationRuleStage
+       ("The selected ArchiMate notation satisfies "
+          <> archiMateNotationIssueKindToken kind
+          <> ".")
+       "The ArchiMate Profile owns notation classification; the AMX adapter supplies only this static explanation binding."
+       "Correct the cited native AMX observations and assess the selected View again.")
+
+nativeFailureRulesToList :: NativeFailureRules rule -> [rule]
+nativeFailureRulesToList rules =
+  [ inputLimitRule rules
+  , depthLimitRule rules
+  , elementLimitRule rules
+  , attributeLimitRule rules
+  , textLimitRule rules
+  , utf8Rule rules
+  , encodingRule rules
+  , facilityRule rules
+  , scalarRule rules
+  , wellFormednessRule rules
+  ]
 
 versionName :: NativeName
 versionName = NativeName Nothing "version"

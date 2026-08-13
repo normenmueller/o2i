@@ -1,5 +1,6 @@
 {-# LANGUAGE ExplicitNamespaces #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 
 -- | Closed common command and preparation failures.
 --
@@ -124,7 +125,7 @@ profileCompatibilityFailure outcome =
     failed = Just (ProfileCompatibilityPreparationFailure outcome)
 
 -- | Project a View-selection failure, or 'Nothing' on success.
-viewSelectionFailure :: ViewSelection -> Maybe PreparationFailure
+viewSelectionFailure :: ViewSelection document -> Maybe PreparationFailure
 viewSelectionFailure =
   foldViewSelection (Just . ViewSelectionPreparationFailure) (const Nothing)
 
@@ -173,7 +174,7 @@ foldPreparationFailure ::
   -> ([MarkerCandidate] -> result)
   -> (ProfileResolution -> result)
   -> (ProfileCompatibility -> result)
-  -> (ViewSelectionFailure -> result)
+  -> (forall document. ViewSelectionFailure document -> result)
   -> PreparationFailure
   -> result
 foldPreparationFailure selection decode marker profile compatibility view failure =

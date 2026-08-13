@@ -4,8 +4,10 @@ module O2I.Adapter.AMX.Test.Contract
   ( contractTests
   ) where
 
+import Data.Bifunctor (first)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as ByteString
+import Data.List (sort)
 import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
@@ -17,18 +19,9 @@ import qualified O2I.ArchiMate.Profile.Closure as Closure
 import qualified O2I.ArchiMate.Profile.Draft as Draft
 import qualified O2I.ArchiMate.Profile.Notation as Notation
 import qualified O2I.ArchiMate.Profile.Projection as Projection
+import qualified O2I.ArchiMate.Profile.Resolution as Resolution
 import O2I.Operation.Adapter
 import O2I.Operation.Adapter.Authoring
-  ( adapterBehavior
-  , compileAdapter
-  , compileAdapterCollection
-  , mkAdapterDescriptor
-  , mkAdapterId
-  , mkAdapterRuleDefinition
-  , noRecognitionMatch
-  , recognitionMatch
-  , recognitionRule
-  )
 import O2I.Operation.Profile
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
@@ -149,13 +142,13 @@ profileCompatibilityTest = do
       pure
       (compileProfileInventory Profile.compiledProfileInventory)
   evidence <-
-    foldProfileMarkerEvidenceOutcome
-      (const
-         (assertFailure "real AMX Profile marker evidence was rejected"
-            >> fail "unreachable"))
-      pure
-      (prepareProfileMarkerEvidence
-         (Notation.assessMarkerEvidence (Notation.buildCanonicalDocument draft)))
+    Notation.withCanonicalDocument draft $ \document ->
+      foldProfileMarkerEvidenceOutcome
+        (const
+           (assertFailure "real AMX Profile marker evidence was rejected"
+              >> fail "unreachable"))
+        pure
+        (prepareProfileMarkerEvidence (Notation.assessMarkerEvidence document))
   resolved <-
     foldProfileResolution
       (\_ _ -> unresolved)
@@ -180,31 +173,27 @@ kpiCarrierProfileTest :: Assertion
 kpiCarrierProfileTest = do
   selected <- requireImplicitSelection profiledKpiModel
   draft <- requireDecodedDraft selected profiledKpiModel
-  let document = Notation.buildCanonicalDocument draft
-      selectedView =
-        case Notation.viewInventory document of
-          [view] -> view
-          views -> error ("expected one KPI View, got " <> show (length views))
-      closed = Closure.closeSelectedView selectedView
-  Projection.foldProfileProjectionAssessment
-    (const (assertFailure "native KPI fixture caused a contract failure"))
-    (\defects ->
-       assertFailure
-         ("native KPI fixture was rejected: "
-            <> show
-                 (map Projection.profileDefectRuleId (NonEmpty.toList defects))))
-    (\projection -> do
-       let provenance =
-             map
-               (Projection.foldProfileMappingProvenance
-                  (\_ mappingId -> Just mappingId)
-                  (\_ _ _ _ -> Nothing))
-               (Projection.profileMappingProvenance projection)
-       assertBool
-         "native KPI carrier mapping is missing"
-         (Just "primitive.kpi" `elem` provenance)
-       Projection.profileQualificationProposals projection @?= [])
-    (Projection.projectProfile closed)
+  withProjectionAssessment draft
+    $ Projection.foldProfileProjectionAssessment
+        (const (assertFailure "native KPI fixture caused a contract failure"))
+        (\defects ->
+           assertFailure
+             ("native KPI fixture was rejected: "
+                <> show
+                     (map
+                        Projection.profileDefectRuleId
+                        (NonEmpty.toList defects))))
+        (\projection -> do
+           let provenance =
+                 map
+                   (Projection.foldProfileMappingProvenance
+                      (\_ mappingId -> Just mappingId)
+                      (\_ _ _ _ -> Nothing))
+                   (Projection.profileMappingProvenance projection)
+           assertBool
+             "native KPI carrier mapping is missing"
+             (Just "primitive.kpi" `elem` provenance)
+           Projection.profileQualificationProposals projection @?= [])
 
 foreignAssessmentProfileTest :: Assertion
 foreignAssessmentProfileTest =
@@ -237,22 +226,35 @@ assertProfileRejected :: String -> ByteString -> Assertion
 assertProfileRejected subject model = do
   selected <- requireImplicitSelection model
   draft <- requireDecodedDraft selected model
-  let document = Notation.buildCanonicalDocument draft
-      selectedView =
-        case Notation.viewInventory document of
-          [view] -> view
-          views ->
-            error
-              ("expected one "
-                 <> subject
-                 <> " View, got "
-                 <> show (length views))
-      closed = Closure.closeSelectedView selectedView
-  Projection.foldProfileProjectionAssessment
-    (const (assertFailure (subject <> " caused a contract failure")))
-    (const (pure ()))
-    (const (assertFailure (subject <> " was accepted as native ArchiMate")))
-    (Projection.projectProfile closed)
+  withProjectionAssessment draft
+    $ Projection.foldProfileProjectionAssessment
+        (const (assertFailure (subject <> " caused a contract failure")))
+        (const (pure ()))
+        (const (assertFailure (subject <> " was accepted as native ArchiMate")))
+
+withProjectionAssessment ::
+     Draft.ProfileDraft
+  -> (Projection.ProfileProjectionAssessment -> IO result)
+  -> IO result
+withProjectionAssessment draft consume =
+  Resolution.withSelectedArchiMateProfile Resolution.compiledProfileDescriptor $ \profile ->
+    Notation.withCanonicalDocument draft $ \document ->
+      case Notation.canonicalViews document of
+        [view] ->
+          let universe =
+                Closure.deriveProfileAssessmentUniverse profile document view
+           in Notation.foldStageResult
+                (\issues ->
+                   assertFailure
+                     ("native fixture failed Notation: "
+                        <> show (NonEmpty.length issues))
+                     >> fail "unreachable")
+                (consume . Projection.assessSelectedView)
+                (Notation.notationConformance
+                   (Notation.assessArchiMateNotation universe))
+        views ->
+          assertFailure ("expected one View, got " <> show (length views))
+            >> fail "unreachable"
 
 inventoryTest :: Assertion
 inventoryTest = do
@@ -653,29 +655,36 @@ recognitionFailureSnapshot (descriptor, diagnostics) =
 
 expectedRuleInventory :: [(Text, Text)]
 expectedRuleInventory =
-  [ ("o2i.amx.decode.encoding", "decode")
-  , ("o2i.amx.decode.input-byte-limit", "decode")
-  , ("o2i.amx.decode.native-version", "decode")
-  , ("o2i.amx.decode.root-qname", "decode")
-  , ("o2i.amx.decode.utf8", "decode")
-  , ("o2i.amx.decode.xml-attribute-limit", "decode")
-  , ("o2i.amx.decode.xml-depth-limit", "decode")
-  , ("o2i.amx.decode.xml-element-limit", "decode")
-  , ("o2i.amx.decode.xml-facility", "decode")
-  , ("o2i.amx.decode.xml-scalar", "decode")
-  , ("o2i.amx.decode.xml-text-limit", "decode")
-  , ("o2i.amx.decode.xml-well-formedness", "decode")
-  , ("o2i.amx.recognition.encoding", "recognition")
-  , ("o2i.amx.recognition.input-byte-limit", "recognition")
-  , ("o2i.amx.recognition.utf8", "recognition")
-  , ("o2i.amx.recognition.xml-attribute-limit", "recognition")
-  , ("o2i.amx.recognition.xml-depth-limit", "recognition")
-  , ("o2i.amx.recognition.xml-element-limit", "recognition")
-  , ("o2i.amx.recognition.xml-facility", "recognition")
-  , ("o2i.amx.recognition.xml-scalar", "recognition")
-  , ("o2i.amx.recognition.xml-text-limit", "recognition")
-  , ("o2i.amx.recognition.xml-well-formedness", "recognition")
+  [ ("o2i.amx.decode.encoding", "preparation")
+  , ("o2i.amx.decode.input-byte-limit", "preparation")
+  , ("o2i.amx.decode.native-version", "preparation")
+  , ("o2i.amx.decode.root-qname", "preparation")
+  , ("o2i.amx.decode.utf8", "preparation")
+  , ("o2i.amx.decode.xml-attribute-limit", "preparation")
+  , ("o2i.amx.decode.xml-depth-limit", "preparation")
+  , ("o2i.amx.decode.xml-element-limit", "preparation")
+  , ("o2i.amx.decode.xml-facility", "preparation")
+  , ("o2i.amx.decode.xml-scalar", "preparation")
+  , ("o2i.amx.decode.xml-text-limit", "preparation")
+  , ("o2i.amx.decode.xml-well-formedness", "preparation")
   ]
+    <> sort
+         [ ( "o2i.amx.notation."
+               <> Notation.archiMateNotationIssueKindToken kind
+           , "notation")
+         | kind <- NonEmpty.toList Notation.allArchiMateNotationIssueKinds
+         ]
+    <> [ ("o2i.amx.recognition.encoding", "preparation")
+       , ("o2i.amx.recognition.input-byte-limit", "preparation")
+       , ("o2i.amx.recognition.utf8", "preparation")
+       , ("o2i.amx.recognition.xml-attribute-limit", "preparation")
+       , ("o2i.amx.recognition.xml-depth-limit", "preparation")
+       , ("o2i.amx.recognition.xml-element-limit", "preparation")
+       , ("o2i.amx.recognition.xml-facility", "preparation")
+       , ("o2i.amx.recognition.xml-scalar", "preparation")
+       , ("o2i.amx.recognition.xml-text-limit", "preparation")
+       , ("o2i.amx.recognition.xml-well-formedness", "preparation")
+       ]
 
 requireAdapter :: IO Adapter
 requireAdapter =
@@ -692,22 +701,44 @@ requireUnrelatedAdapter = do
       (mkAdapterDescriptor identifier "Another adapter" "1" "another-notation")
   definition <-
     requireRight
-      (mkAdapterRuleDefinition
+      (mkAdapterRuleSpec
          "another-adapter.recognition"
+         preparationRuleStage
          "Recognize the exact test representation."
          "The representation belongs to the other adapter."
          "Select the other adapter.")
+  notation <-
+    traverse
+      (\kind ->
+         archiMateNotationRule kind
+           <$> requireRight
+                 (mkAdapterRuleSpec
+                    ("another-adapter.notation."
+                       <> Notation.archiMateNotationIssueKindToken kind)
+                    notationRuleStage
+                    "expectation"
+                    "meaning"
+                    "action"))
+      (NonEmpty.toList Notation.allArchiMateNotationIssueKinds)
   requireRight
     (compileAdapter
        descriptor
-       ((\_ ->
-           adapterBehavior
-             (\input ->
-                if input == unrelatedRepresentation
-                  then recognitionMatch
-                  else noRecognitionMatch)
-             (const (error "decode is outside this selection test")))
-          <$> recognitionRule definition))
+       (nativeAdapterRule definition :| notation)
+       (\rules -> do
+          _ <-
+            first
+              pure
+              (recognitionRule
+                 <$> lookupNativeAdapterRule
+                       rules
+                       (adapterRuleSpecId definition))
+          pure
+            (adapterBehavior
+               (\input ->
+                  if input == unrelatedRepresentation
+                    then recognitionMatch
+                    else noRecognitionMatch)
+               (const (error "decode is outside this selection test")))))
 
 requireRight :: Show failure => Either failure value -> IO value
 requireRight result =

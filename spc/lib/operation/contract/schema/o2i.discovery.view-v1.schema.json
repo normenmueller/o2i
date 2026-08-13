@@ -61,7 +61,7 @@
           "minLength": 1
         },
         "stage": {
-          "const": "recognition"
+          "const": "preparation"
         },
         "expectation": {
           "type": "string",
@@ -93,7 +93,7 @@
           "minLength": 1
         },
         "stage": {
-          "const": "decode"
+          "const": "preparation"
         },
         "expectation": {
           "type": "string",

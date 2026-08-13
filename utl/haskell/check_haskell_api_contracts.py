@@ -254,7 +254,7 @@ CONTRACTS = (
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/"
                 "AdapterRuleScopeEscape.hs",
-                (("GHC-83865", 1),),
+                (("GHC-25897", 1),),
             ),
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/"

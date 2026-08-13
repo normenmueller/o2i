@@ -1,3 +1,5 @@
+{-# LANGUAGE ExistentialQuantification #-}
+
 -- | Internal closed data for profile-neutral View discovery.
 module O2I.Operation.Discovery.View.Internal
   ( ViewDiscoveryAuthority(..)
@@ -7,7 +9,7 @@ module O2I.Operation.Discovery.View.Internal
   ) where
 
 import Data.List.NonEmpty (NonEmpty)
-import O2I.ArchiMate.Profile.Notation (CanonicalDocument, ViewDescriptor)
+import O2I.ArchiMate.Profile.Notation (CanonicalDocument, CanonicalView)
 import O2I.Operation.Acquisition (AcquisitionFailure)
 import O2I.Operation.Adapter
   ( AdapterDescriptor
@@ -34,11 +36,11 @@ data ViewDiscoveryFailure
 
 -- | Complete source, adapter, canonical document, and View inventory.
 data ViewDiscoveryResult =
-  ViewDiscoveryResult
-    !SourceIdentity
-    !AdapterDescriptor
-    !CanonicalDocument
-    ![ViewDescriptor]
+  forall document. ViewDiscoveryResult
+                     !SourceIdentity
+                     !AdapterDescriptor
+                     !(CanonicalDocument document)
+                     ![CanonicalView document]
 
 -- | Failure or complete successful profile-neutral View discovery.
 data ViewDiscovery

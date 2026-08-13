@@ -16,15 +16,15 @@ import O2I.ArchiMate.Profile.Notation
   ( CanonicalDocument
   , CanonicalOccurrence
   , CanonicalRecord
+  , CanonicalView
   , IdentityOutcome
-  , ViewDescriptor
   , canonicalDocumentRecords
   , canonicalFieldScalars
+  , canonicalViewNameFields
+  , canonicalViewOccurrence
+  , canonicalViews
   , foldCanonicalRecord
   , foldIdentityOutcome
-  , viewDescriptorNameFields
-  , viewDescriptorOccurrence
-  , viewInventory
   )
 import O2I.Core.Identity (ModelIdentity, modelIdentityText)
 
@@ -35,31 +35,33 @@ data ViewSelector
   deriving (Eq, Ord, Show)
 
 -- | One profile-neutral occurrence retained as selector evidence.
-data ViewSelectionCandidate = ViewSelectionCandidate
+data ViewSelectionCandidate document = ViewSelectionCandidate
   { viewSelectionCandidateOccurrenceValue :: !CanonicalOccurrence
   , viewSelectionCandidateFamilyValue :: !DraftRecordFamilyValue
   , viewSelectionCandidateIdentityValue :: !(Maybe ModelIdentity)
   , viewSelectionCandidateLocationValue :: !DraftLocation
-  , viewSelectionCandidateDescriptorValue :: !(Maybe ViewDescriptor)
+  , viewSelectionCandidateDescriptorValue :: !(Maybe (CanonicalView document))
   }
 
 -- | Closed reason why one exact View selector cannot resolve.
-data ViewSelectionFailure
+data ViewSelectionFailure document
   = ViewSelectionUnknown !ViewSelector
-  | ViewNameSelectionAmbiguous !ViewSelector !(NonEmpty ViewDescriptor)
+  | ViewNameSelectionAmbiguous
+      !ViewSelector
+      !(NonEmpty (CanonicalView document))
   | ViewIdentitySelectionAmbiguous
       !ViewSelector
-      !(NonEmpty ViewSelectionCandidate)
-  | ViewSelectionWrongFamily !ViewSelector !ViewSelectionCandidate
+      !(NonEmpty (ViewSelectionCandidate document))
+  | ViewSelectionWrongFamily !ViewSelector !(ViewSelectionCandidate document)
 
 -- | Exact selected native View descriptor.
-newtype SelectedView =
-  SelectedView ViewDescriptor
+newtype SelectedView document =
+  SelectedView (CanonicalView document)
 
 -- | Total exact-View selection result.
-data ViewSelection
-  = ViewSelectionFailed !ViewSelectionFailure
-  | ViewSelected !SelectedView
+data ViewSelection document
+  = ViewSelectionFailed !(ViewSelectionFailure document)
+  | ViewSelected !(SelectedView document)
 
 -- | Deterministic private work evidence for identity-based View selection.
 data ViewSelectionWork = ViewSelectionWork
@@ -70,7 +72,9 @@ data ViewSelectionWork = ViewSelectionWork
 
 -- | Resolve one exact selector and retain deterministic index-work evidence.
 selectViewWithWork ::
-     CanonicalDocument -> ViewSelector -> (ViewSelection, ViewSelectionWork)
+     CanonicalDocument document
+  -> ViewSelector
+  -> (ViewSelection document, ViewSelectionWork)
 selectViewWithWork document selector =
   case selector of
     ViewNameSelector name -> (selectByName name, ViewSelectionWork 0 0 0)
@@ -94,10 +98,10 @@ selectViewWithWork document selector =
         first:rest ->
           ViewSelectionFailed
             (ViewIdentitySelectionAmbiguous selector (first :| rest))
-    descriptors = viewInventory document
+    descriptors = canonicalViews document
     descriptorIndex =
       Map.fromList
-        [ (viewDescriptorOccurrence descriptor, descriptor)
+        [ (canonicalViewOccurrence descriptor, descriptor)
         | descriptor <- descriptors
         ]
     records = canonicalDocumentRecords document
@@ -105,26 +109,26 @@ selectViewWithWork document selector =
     identityWork =
       ViewSelectionWork (length descriptors) (length records) (length records)
 
-descriptorHasName :: Text -> ViewDescriptor -> Bool
+descriptorHasName :: Text -> CanonicalView document -> Bool
 descriptorHasName expected descriptor =
   any
     (\scalar ->
        draftScalarKind scalar == draftTextKind
          && draftScalarText scalar == expected)
     [ scalar
-    | field <- viewDescriptorNameFields descriptor
+    | field <- canonicalViewNameFields descriptor
     , scalar <- canonicalFieldScalars field
     ]
 
-candidateHasIdentity :: ModelIdentity -> ViewSelectionCandidate -> Bool
+candidateHasIdentity :: ModelIdentity -> ViewSelectionCandidate document -> Bool
 candidateHasIdentity expected candidate =
   fmap modelIdentityText (viewSelectionCandidateIdentityValue candidate)
     == Just (modelIdentityText expected)
 
 recordCandidate ::
-     Map.Map CanonicalOccurrence ViewDescriptor
+     Map.Map CanonicalOccurrence (CanonicalView document)
   -> CanonicalRecord
-  -> ViewSelectionCandidate
+  -> ViewSelectionCandidate document
 recordCandidate descriptors record =
   foldCanonicalRecord
     (\occurrence family identity location _ ->

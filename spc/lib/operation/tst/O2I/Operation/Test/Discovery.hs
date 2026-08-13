@@ -28,6 +28,11 @@ import O2I.Operation.Profile
 import O2I.Operation.Provenance
 import O2I.Operation.Provenance.Internal (sourceIdentityFromBytes)
 import qualified O2I.Operation.Rule.Catalog as OperationCatalog
+import O2I.Operation.Test.AdapterSupport
+  ( compileCompleteAdapter
+  , nativeRuleSpec
+  , resolveNativeRule
+  )
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.HUnit
 
@@ -139,12 +144,14 @@ viewDiscovery = do
     @?= ["Operation", "Adapter:amx"]
   descriptorIdText (viewDiscoveryAdapter result) @?= "amx"
   viewDiscoverySource result @?= acquiredSourceIdentity acquired
-  map
-    (Notation.canonicalOccurrenceOrdinal . Notation.viewDescriptorOccurrence)
-    (viewDiscoveryViews result)
-    @?= [1, 2]
-  length (Notation.canonicalDocumentRecords (viewDiscoveryDocument result))
-    @?= 3
+  foldViewDiscoveryResult
+    (\_ _ document views -> do
+       map
+         (Notation.canonicalOccurrenceOrdinal . Notation.canonicalViewOccurrence)
+         views
+         @?= [1, 2]
+       length (Notation.canonicalDocumentRecords document) @?= 3)
+    result
 
 assertProfileRow :: ProfileDiscoveryRow -> Assertion
 assertProfileRow row = do
@@ -304,32 +311,18 @@ fixtureAdapter identifier matches draft = do
   descriptor <-
     requireRight
       (mkAdapterDescriptor descriptorIdentifier identifier "1.0" "archimate-3.2")
-  recognitionDefinition <-
-    requireRight
-      (mkAdapterRuleDefinition
-         (identifier <> ".recognition")
-         "Recognize the notation exactly once."
-         "Prevents ambiguous native format selection."
-         "Correct the native source signature.")
-  decodeDefinition <-
-    requireRight
-      (mkAdapterRuleDefinition
-         (identifier <> ".decode")
-         "Decode exactly once."
-         "Preserves native evidence."
-         "Correct the native source.")
-  requireRight
-    (compileAdapter
-       descriptor
-       ((\_ _ ->
-           adapterBehavior
-             (const
-                (if matches
-                   then recognitionMatch
-                   else noRecognitionMatch))
-             (const (decodedDraft draft)))
-          <$> recognitionRule recognitionDefinition
-          <*> decodeRule decodeDefinition))
+  recognitionDefinition <- nativeRuleSpec (identifier <> ".recognition")
+  decodeDefinition <- nativeRuleSpec (identifier <> ".decode")
+  compileCompleteAdapter descriptor [recognitionDefinition, decodeDefinition] $ \rules -> do
+    _ <- resolveNativeRule rules recognitionDefinition recognitionRule
+    _ <- resolveNativeRule rules decodeDefinition decodeRule
+    pure
+      (adapterBehavior
+         (const
+            (if matches
+               then recognitionMatch
+               else noRecognitionMatch))
+         (const (decodedDraft draft)))
 
 requireExplanation ::
      Either RuleExplanationRequestDefect RuleExplanation -> IO RuleExplanation

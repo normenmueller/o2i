@@ -144,14 +144,9 @@ draftExample =
        , Draft.childRecordMember viewExample
        ])
 
-canonicalDocument :: Notation.CanonicalDocument
-canonicalDocument = Notation.buildCanonicalDocument draftExample
-
-notationAssessment :: Notation.NotationAssessment
-notationAssessment = Notation.assessNotation canonicalDocument
-
-markerAssessment :: Notation.MarkerEvidenceAssessment
-markerAssessment = Notation.assessMarkerEvidence canonicalDocument
+withCanonicalExample ::
+     (forall document. Notation.CanonicalDocument document -> result) -> result
+withCanonicalExample = Notation.withCanonicalDocument draftExample
 
 markerEvidenceCounts :: Notation.MarkerEvidenceAssessment -> (Int, Int)
 markerEvidenceCounts =
@@ -159,13 +154,27 @@ markerEvidenceCounts =
     (\candidates -> (length candidates, 0))
     (\candidates properties -> (length candidates, length properties))
 
-closedViews :: [Closure.ClosedView]
-closedViews =
-  map Closure.closeSelectedView (Notation.viewInventory canonicalDocument)
+withAssessmentExample ::
+     (forall profile document. Closure.ProfileAssessmentUniverse
+                                 profile
+                                 document -> result)
+  -> result
+withAssessmentExample consume =
+  Resolution.withSelectedArchiMateProfile Resolution.compiledProfileDescriptor $ \profile ->
+    withCanonicalExample $ \document ->
+      case Notation.canonicalViews document of
+        [] -> error "public API compile fixture has no View"
+        view:_ ->
+          consume
+            (Closure.deriveProfileAssessmentUniverse profile document view)
 
-projectClosedView ::
-     Closure.ClosedView -> Projection.ProfileProjectionAssessment
-projectClosedView = Projection.projectProfile
+projectionOutcomeExample :: ProjectionOutcome
+projectionOutcomeExample =
+  withAssessmentExample $ \universe ->
+    Notation.foldStageResult
+      (const (error "public API compile fixture notation rejected"))
+      (projectionOutcome . Projection.assessSelectedView)
+      (Notation.notationConformance (Notation.assessArchiMateNotation universe))
 
 defectEvidenceOccurrences ::
      Projection.ProfileDefect -> (Text, [Notation.CanonicalOccurrence])

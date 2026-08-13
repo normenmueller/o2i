@@ -1,3 +1,5 @@
+{-# LANGUAGE RankNTypes #-}
+
 -- | Total profile-neutral ArchiMate canonicalization and assessment.
 --
 -- Canonical construction retains every Draft observation. Assessment reports
@@ -5,7 +7,7 @@
 module O2I.ArchiMate.Profile.Notation
   ( -- | Observation-complete canonical notation document.
     CanonicalDocument
-  , buildCanonicalDocument
+  , withCanonicalDocument
   , canonicalDocumentDraft
   , canonicalDocumentRecords
   , canonicalDocumentProperties
@@ -58,24 +60,13 @@ module O2I.ArchiMate.Profile.Notation
   , canonicalReferenceExpectedFamily
   , canonicalReferenceLocation
   , canonicalReferenceOutcome
-  , -- | Identity evidence tied to one canonical occurrence.
-    IdentityObservation
-  , identityObservationOccurrence
-  , identityObservationFamily
-  , identityObservationOutcome
-  , identityObservationLocation
-  , -- | Opaque profile-neutral assessment of native notation integrity.
-    NotationAssessment
-  , assessNotation
-  , notationIdentityObservations
-  , notationReferenceObservations
   , -- | Opaque inventory descriptor for one native View.
-    ViewDescriptor
-  , viewDescriptorOccurrence
-  , viewDescriptorIdentity
-  , viewDescriptorNameFields
-  , viewDescriptorLocation
-  , viewInventory
+    CanonicalView
+  , canonicalViews
+  , canonicalViewOccurrence
+  , canonicalViewIdentity
+  , canonicalViewNameFields
+  , canonicalViewLocation
   , -- | Total outcome of recognizing one Profile-marker key candidate.
     MarkerKeyOutcome
   , foldMarkerKeyOutcome
@@ -88,8 +79,41 @@ module O2I.ArchiMate.Profile.Notation
     MarkerEvidenceAssessment
   , assessMarkerEvidence
   , foldMarkerEvidenceAssessment
+  , -- | Closed complete Notation issue-kind algebra.
+    ArchiMateNotationIssueKind
+  , ViewInventoryIssueKind
+  , ProfileMarkerIssueKind
+  , SelectedUniverseIssueKind
+  , allArchiMateNotationIssueKinds
+  , allViewInventoryIssueKinds
+  , allProfileMarkerIssueKinds
+  , allSelectedUniverseIssueKinds
+  , foldArchiMateNotationIssueKind
+  , archiMateNotationIssueKindToken
+  , viewInventoryIssueKindToken
+  , profileMarkerIssueKindToken
+  , selectedUniverseIssueKindToken
+  , -- | Opaque Notation issue with non-empty exact native evidence.
+    ArchiMateNotationIssue
+  , ArchiMateNotationEvidence
+  , foldArchiMateNotationEvidence
+  , archiMateNotationIssueKind
+  , archiMateNotationIssueSubject
+  , archiMateNotationIssueEvidence
+  , assessCanonicalViewInventory
+  , profileMarkerNotationIssues
+  , -- | Opaque selected-universe assessment and conformance proof.
+    StageResult
+  , foldStageResult
+  , NotationResult
+  , NotationConformantUniverse
+  , assessArchiMateNotation
+  , notationIssues
+  , notationConformance
   ) where
 
+import Data.List.NonEmpty (NonEmpty)
+import Data.Text (Text)
 import Numeric.Natural (Natural)
 import O2I.ArchiMate.Profile.Draft
   ( DraftFieldValue
@@ -101,29 +125,55 @@ import O2I.ArchiMate.Profile.Draft
   , DraftValueKind
   , ProfileDraft
   )
-import O2I.ArchiMate.Profile.Internal.Notation hiding (buildCanonicalDocument)
-import qualified O2I.ArchiMate.Profile.Internal.Notation as Internal
+import O2I.ArchiMate.Profile.Internal.Closure.Witness
+  ( ProfileAssessmentUniverse
+  )
+import O2I.ArchiMate.Profile.Internal.Notation hiding
+  ( CanonicalDocument
+  , ViewDescriptor
+  , buildCanonicalDocument
+  )
+import O2I.ArchiMate.Profile.Internal.Notation.Conformance
+  ( ArchiMateNotationEvidence
+  , ArchiMateNotationIssue
+  , ArchiMateNotationIssueKind
+  , NotationConformantUniverse
+  , NotationResult
+  , ProfileMarkerIssueKind
+  , SelectedUniverseIssueKind
+  , StageResult
+  , ViewInventoryIssueKind
+  )
+import qualified O2I.ArchiMate.Profile.Internal.Notation.Conformance as Conformance
+import O2I.ArchiMate.Profile.Internal.Notation.Witness
 import O2I.Core.Identity (ModelIdentity)
 
--- | Build one canonical document without rejection or evidence loss.
-buildCanonicalDocument :: ProfileDraft -> CanonicalDocument
-buildCanonicalDocument = Internal.buildCanonicalDocument
+-- | Build one canonical document under a fresh source witness.
+withCanonicalDocument ::
+     ProfileDraft
+  -> (forall document. CanonicalDocument document -> result)
+  -> result
+withCanonicalDocument = withCanonicalDocumentValue
 
 -- | Original observation-complete Draft retained by the document.
-canonicalDocumentDraft :: CanonicalDocument -> ProfileDraft
-canonicalDocumentDraft = canonicalDocumentDraftValue
+canonicalDocumentDraft :: CanonicalDocument document -> ProfileDraft
+canonicalDocumentDraft = canonicalDocumentDraftValue . canonicalDocumentValue
 
 -- | Canonical record occurrences in deterministic source order.
-canonicalDocumentRecords :: CanonicalDocument -> [CanonicalRecord]
-canonicalDocumentRecords = canonicalDocumentRecordsValue
+canonicalDocumentRecords :: CanonicalDocument document -> [CanonicalRecord]
+canonicalDocumentRecords =
+  canonicalDocumentRecordsValue . canonicalDocumentValue
 
 -- | Canonical property occurrences in deterministic source order.
-canonicalDocumentProperties :: CanonicalDocument -> [CanonicalProperty]
-canonicalDocumentProperties = canonicalDocumentPropertiesValue
+canonicalDocumentProperties :: CanonicalDocument document -> [CanonicalProperty]
+canonicalDocumentProperties =
+  canonicalDocumentPropertiesValue . canonicalDocumentValue
 
 -- | Canonical reference occurrences in deterministic source order.
-canonicalDocumentReferences :: CanonicalDocument -> [CanonicalReference]
-canonicalDocumentReferences = canonicalDocumentReferencesValue
+canonicalDocumentReferences ::
+     CanonicalDocument document -> [CanonicalReference]
+canonicalDocumentReferences =
+  canonicalDocumentReferencesValue . canonicalDocumentValue
 
 -- | Consume every closed canonical occurrence kind.
 foldCanonicalOccurrenceKind ::
@@ -296,53 +346,25 @@ canonicalReferenceLocation = canonicalReferenceLocationValue
 canonicalReferenceOutcome :: CanonicalReference -> ReferenceOutcome
 canonicalReferenceOutcome = canonicalReferenceOutcomeValue
 
--- | Canonical occurrence whose native identity was assessed.
-identityObservationOccurrence :: IdentityObservation -> CanonicalOccurrence
-identityObservationOccurrence = identityObservationOccurrenceValue
-
--- | Native record family of the assessed identity occurrence.
-identityObservationFamily :: IdentityObservation -> DraftRecordFamilyValue
-identityObservationFamily = identityObservationFamilyValue
-
--- | Total identity outcome for the observed occurrence.
-identityObservationOutcome :: IdentityObservation -> IdentityOutcome
-identityObservationOutcome = identityObservationOutcomeValue
-
--- | Exact source location of the identity observation.
-identityObservationLocation :: IdentityObservation -> DraftLocation
-identityObservationLocation = identityObservationLocationValue
-
--- | Assess native identities and references without applying O2I Profile rules.
-assessNotation :: CanonicalDocument -> NotationAssessment
-assessNotation = assessNotationValue
-
--- | Complete identity evidence retained by the notation assessment.
-notationIdentityObservations :: NotationAssessment -> [IdentityObservation]
-notationIdentityObservations = notationIdentityObservationsValue
-
--- | Complete native-reference evidence retained by the assessment.
-notationReferenceObservations :: NotationAssessment -> [CanonicalReference]
-notationReferenceObservations = notationReferenceObservationsValue
+-- | Inventory every native View under its source-document witness.
+canonicalViews :: CanonicalDocument document -> [CanonicalView document]
+canonicalViews = canonicalViewsValue
 
 -- | Canonical occurrence of the represented native View.
-viewDescriptorOccurrence :: ViewDescriptor -> CanonicalOccurrence
-viewDescriptorOccurrence = viewDescriptorOccurrenceValue
+canonicalViewOccurrence :: CanonicalView document -> CanonicalOccurrence
+canonicalViewOccurrence = viewDescriptorOccurrenceValue . canonicalViewValue
 
 -- | Native identity outcome of the represented View.
-viewDescriptorIdentity :: ViewDescriptor -> IdentityOutcome
-viewDescriptorIdentity = viewDescriptorIdentityValue
+canonicalViewIdentity :: CanonicalView document -> IdentityOutcome
+canonicalViewIdentity = viewDescriptorIdentityValue . canonicalViewValue
 
 -- | All native name fields observed for the View.
-viewDescriptorNameFields :: ViewDescriptor -> [CanonicalField]
-viewDescriptorNameFields = viewDescriptorNameFieldsValue
+canonicalViewNameFields :: CanonicalView document -> [CanonicalField]
+canonicalViewNameFields = viewDescriptorNameFieldsValue . canonicalViewValue
 
 -- | Exact source location of the View record.
-viewDescriptorLocation :: ViewDescriptor -> DraftLocation
-viewDescriptorLocation = viewDescriptorLocationValue
-
--- | Inventory every native View independently of unrelated malformed records.
-viewInventory :: CanonicalDocument -> [ViewDescriptor]
-viewInventory = viewInventoryValue
+canonicalViewLocation :: CanonicalView document -> DraftLocation
+canonicalViewLocation = viewDescriptorLocationValue . canonicalViewValue
 
 -- | Consume every closed marker-key recognition outcome.
 foldMarkerKeyOutcome ::
@@ -376,8 +398,8 @@ markerCandidateKeyOutcome :: MarkerCandidate -> MarkerKeyOutcome
 markerCandidateKeyOutcome = markerCandidateKeyOutcomeValue
 
 -- | Assess all model-root key candidates in exact source order.
-assessMarkerEvidence :: CanonicalDocument -> MarkerEvidenceAssessment
-assessMarkerEvidence = assessMarkerEvidenceValue
+assessMarkerEvidence :: CanonicalDocument document -> MarkerEvidenceAssessment
+assessMarkerEvidence = assessMarkerEvidenceValue . canonicalDocumentValue
 
 -- | Consume rejected or accepted marker evidence without exposing constructors.
 foldMarkerEvidenceAssessment ::
@@ -390,3 +412,117 @@ foldMarkerEvidenceAssessment rejected accepted assessment =
     MarkerEvidenceRejected candidates -> rejected candidates
     MarkerEvidenceAccepted candidates properties ->
       accepted candidates properties
+
+-- | Canonical complete inventory of every externally reportable issue kind.
+allArchiMateNotationIssueKinds :: NonEmpty ArchiMateNotationIssueKind
+allArchiMateNotationIssueKinds = Conformance.allArchiMateNotationIssueKindsValue
+
+-- | Canonical closed View-inventory subset.
+allViewInventoryIssueKinds :: NonEmpty ViewInventoryIssueKind
+allViewInventoryIssueKinds = Conformance.allViewInventoryIssueKindsValue
+
+-- | Canonical closed Profile-marker subset.
+allProfileMarkerIssueKinds :: NonEmpty ProfileMarkerIssueKind
+allProfileMarkerIssueKinds = Conformance.allProfileMarkerIssueKindsValue
+
+-- | Canonical closed selected-universe subset.
+allSelectedUniverseIssueKinds :: NonEmpty SelectedUniverseIssueKind
+allSelectedUniverseIssueKinds = Conformance.allSelectedUniverseIssueKindsValue
+
+-- | Consume one of the three independently closed issue-kind families.
+foldArchiMateNotationIssueKind ::
+     (ViewInventoryIssueKind -> result)
+  -> (ProfileMarkerIssueKind -> result)
+  -> (SelectedUniverseIssueKind -> result)
+  -> ArchiMateNotationIssueKind
+  -> result
+foldArchiMateNotationIssueKind inventory marker universe kind =
+  case kind of
+    Conformance.ViewInventoryNotationKind value -> inventory value
+    Conformance.ProfileMarkerNotationKind value -> marker value
+    Conformance.SelectedUniverseNotationKind value -> universe value
+
+-- | Stable adapter-binding discriminator for one complete issue kind.
+archiMateNotationIssueKindToken :: ArchiMateNotationIssueKind -> Text
+archiMateNotationIssueKindToken =
+  Conformance.archiMateNotationIssueKindTokenValue
+
+-- | Stable discriminator for one View-inventory issue kind.
+viewInventoryIssueKindToken :: ViewInventoryIssueKind -> Text
+viewInventoryIssueKindToken = Conformance.viewInventoryIssueKindTokenValue
+
+-- | Stable discriminator for one Profile-marker issue kind.
+profileMarkerIssueKindToken :: ProfileMarkerIssueKind -> Text
+profileMarkerIssueKindToken = Conformance.profileMarkerIssueKindTokenValue
+
+-- | Stable discriminator for one selected-universe issue kind.
+selectedUniverseIssueKindToken :: SelectedUniverseIssueKind -> Text
+selectedUniverseIssueKindToken = Conformance.selectedUniverseIssueKindTokenValue
+
+-- | Consume exact occurrence, scalar-value, or reference evidence.
+foldArchiMateNotationEvidence ::
+     (DraftLocation -> result)
+  -> (DraftLocation -> DraftValueKind -> Text -> result)
+  -> (DraftLocation -> Text -> [DraftLocation] -> result)
+  -> ArchiMateNotationEvidence
+  -> result
+foldArchiMateNotationEvidence occurrence value reference evidence =
+  case evidence of
+    Conformance.NotationOccurrenceEvidence location -> occurrence location
+    Conformance.NotationValueEvidence location kind text ->
+      value location kind text
+    Conformance.NotationReferenceEvidence location text targets ->
+      reference location text targets
+
+-- | Closed kind of one Profile-classified Notation issue.
+archiMateNotationIssueKind ::
+     ArchiMateNotationIssue -> ArchiMateNotationIssueKind
+archiMateNotationIssueKind = Conformance.archiMateNotationIssueKindValue
+
+-- | Exact native subject location of one Notation issue.
+archiMateNotationIssueSubject :: ArchiMateNotationIssue -> DraftLocation
+archiMateNotationIssueSubject = Conformance.archiMateNotationIssueSubjectValue
+
+-- | Non-empty exact native evidence for one Notation issue.
+archiMateNotationIssueEvidence ::
+     ArchiMateNotationIssue -> NonEmpty ArchiMateNotationEvidence
+archiMateNotationIssueEvidence = Conformance.archiMateNotationIssueEvidenceValue
+
+-- | Assess only the model-global identity and View discovery boundary.
+assessCanonicalViewInventory ::
+     CanonicalDocument document -> [ArchiMateNotationIssue]
+assessCanonicalViewInventory = Conformance.assessCanonicalViewInventoryValue
+
+-- | Assess only profile-neutral model-root marker-key integrity.
+profileMarkerNotationIssues ::
+     CanonicalDocument document -> [ArchiMateNotationIssue]
+profileMarkerNotationIssues = Conformance.assessProfileMarkerIssuesValue
+
+-- | Consume rejection with non-empty issues or the accepted stage witness.
+foldStageResult ::
+     (NonEmpty issue -> result)
+  -> (accepted -> result)
+  -> StageResult issue accepted
+  -> result
+foldStageResult rejected accepted result =
+  case result of
+    Conformance.StageRejected issues -> rejected issues
+    Conformance.StageAccepted value -> accepted value
+
+-- | Assess profile-neutral identity and reference integrity once.
+assessArchiMateNotation ::
+     ProfileAssessmentUniverse profile document
+  -> NotationResult profile document
+assessArchiMateNotation = Conformance.assessArchiMateNotationValue
+
+-- | Canonically ordered complete issues for the exact selected universe.
+notationIssues :: NotationResult profile document -> [ArchiMateNotationIssue]
+notationIssues = Conformance.notationIssuesValue
+
+-- | Construct the opaque projection proof only for an issue-free universe.
+notationConformance ::
+     NotationResult profile document
+  -> StageResult
+       ArchiMateNotationIssue
+       (NotationConformantUniverse profile document)
+notationConformance = Conformance.notationConformanceValue

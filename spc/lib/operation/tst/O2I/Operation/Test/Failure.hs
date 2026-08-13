@@ -19,6 +19,11 @@ import O2I.Operation.Preparation
 import O2I.Operation.Profile.Internal
 import O2I.Operation.Provenance
 import O2I.Operation.Rule.Catalog
+import O2I.Operation.Test.AdapterSupport
+  ( compileCompleteAdapter
+  , nativeRuleSpec
+  , resolveNativeRule
+  )
 import O2I.Operation.View
 import O2I.Operation.View.Internal (ViewSelectionFailure(..))
 import Test.Tasty (TestTree, testGroup)
@@ -81,18 +86,16 @@ preparationBranches = do
 decodeBinding :: Assertion
 decodeBinding = do
   descriptor <- testDescriptor
-  definition <- testAdapterRuleDefinition
+  definition <- nativeRuleSpec "native.invalid"
   compiled <-
-    requireRight
-      (compileAdapter
-         descriptor
-         ((\rule ->
-             let first = decodeDiagnostic rule (unlocatedOccurrence :| [])
-                 second = decodeDiagnostic rule (unlocatedOccurrence :| [])
-              in adapterBehavior
-                   (const recognitionMatch)
-                   (const (decodeFailure (first :| [second]))))
-            <$> decodeRule definition))
+    compileCompleteAdapter descriptor [definition] $ \rules -> do
+      rule <- resolveNativeRule rules definition decodeRule
+      let firstDiagnostic = decodeDiagnostic rule (unlocatedOccurrence :| [])
+          secondDiagnostic = decodeDiagnostic rule (unlocatedOccurrence :| [])
+      pure
+        (adapterBehavior
+           (const recognitionMatch)
+           (const (decodeFailure (firstDiagnostic :| [secondDiagnostic]))))
   collection <- requireRight (compileAdapterCollection (compiled :| []))
   selected <- requireSelected (selectAdapter collection Nothing modelBytes)
   failure <-
@@ -143,11 +146,6 @@ testDescriptor :: IO AdapterDescriptor
 testDescriptor = do
   identifier <- requireRight (mkAdapterId "test")
   requireRight (mkAdapterDescriptor identifier "Test" "1" "test")
-
-testAdapterRuleDefinition :: IO AdapterRuleDefinition
-testAdapterRuleDefinition =
-  requireRight
-    (mkAdapterRuleDefinition "native.invalid" "expectation" "meaning" "action")
 
 modelBytes :: ByteString
 modelBytes = "model"

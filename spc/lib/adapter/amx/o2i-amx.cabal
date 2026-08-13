@@ -127,6 +127,7 @@ test-suite o2i-amx-integration-test
     base >=4.20 && <4.21,
     bytestring >=0.12 && <0.13,
     o2i-amx,
+    o2i-archimate-profile ==0.3.0.0,
     o2i-operation ==0.3.0.0
   hs-source-dirs:
     tst/integration

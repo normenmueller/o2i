@@ -49,21 +49,21 @@ import O2I.ArchiMate.Profile.Draft
 import O2I.ArchiMate.Profile.Notation
   ( CanonicalField
   , CanonicalOccurrence
+  , CanonicalView
   , IdentityInvalidReason
   , IdentityOutcome
-  , ViewDescriptor
   , canonicalFieldKind
   , canonicalFieldLocation
   , canonicalFieldScalars
   , canonicalOccurrenceKind
   , canonicalOccurrenceOrdinal
+  , canonicalViewIdentity
+  , canonicalViewLocation
+  , canonicalViewNameFields
+  , canonicalViewOccurrence
   , foldCanonicalOccurrenceKind
   , foldIdentityInvalidReason
   , foldIdentityOutcome
-  , viewDescriptorIdentity
-  , viewDescriptorLocation
-  , viewDescriptorNameFields
-  , viewDescriptorOccurrence
   )
 import O2I.Core.Identity (modelIdentityText)
 import O2I.Operation.Acquisition
@@ -310,22 +310,22 @@ viewDiscoveryAuthorityFragment =
          , requiredMember "adapterId" (textFragment (adapterIdText identifier))
          ])
 
-viewDescriptorFragment :: ViewDescriptor -> CanonicalFragment
+viewDescriptorFragment :: CanonicalView document -> CanonicalFragment
 viewDescriptorFragment descriptor =
   closedObjectFragment
     [ requiredMember
         "occurrence"
-        (canonicalOccurrenceFragment (viewDescriptorOccurrence descriptor))
+        (canonicalOccurrenceFragment (canonicalViewOccurrence descriptor))
     , requiredMember
         "identity"
-        (identityOutcomeFragment (viewDescriptorIdentity descriptor))
+        (identityOutcomeFragment (canonicalViewIdentity descriptor))
     , requiredMember
         "nameFields"
         (arrayFragment
-           (fmap canonicalFieldFragment (viewDescriptorNameFields descriptor)))
+           (fmap canonicalFieldFragment (canonicalViewNameFields descriptor)))
     , requiredMember
         "location"
-        (draftLocationFragment (viewDescriptorLocation descriptor))
+        (draftLocationFragment (canonicalViewLocation descriptor))
     ]
 
 adapterRuleFragment :: AdapterRule -> CanonicalFragment

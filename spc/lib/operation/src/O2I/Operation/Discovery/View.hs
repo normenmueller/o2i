@@ -1,5 +1,6 @@
 {-# LANGUAGE ExplicitNamespaces #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 
 -- | Profile-neutral View discovery through one selected notation adapter.
 --
@@ -15,8 +16,6 @@ module O2I.Operation.Discovery.View
   , type ViewDiscoveryResult
   , viewDiscoverySource
   , viewDiscoveryAdapter
-  , viewDiscoveryDocument
-  , viewDiscoveryViews
   , viewDiscoveryAuthorities
   , foldViewDiscoveryResult
   , type ViewDiscovery
@@ -29,9 +28,9 @@ import Data.List.NonEmpty (NonEmpty(..))
 import Data.Text (Text)
 import O2I.ArchiMate.Profile.Notation
   ( CanonicalDocument
-  , ViewDescriptor
-  , buildCanonicalDocument
-  , viewInventory
+  , CanonicalView
+  , canonicalViews
+  , withCanonicalDocument
   )
 import O2I.Operation.Acquisition
   ( AcquiredSource
@@ -100,14 +99,6 @@ viewDiscoverySource (ViewDiscoveryResult source _ _ _) = source
 viewDiscoveryAdapter :: ViewDiscoveryResult -> AdapterDescriptor
 viewDiscoveryAdapter (ViewDiscoveryResult _ descriptor _ _) = descriptor
 
--- | Profile-neutral canonical notation document.
-viewDiscoveryDocument :: ViewDiscoveryResult -> CanonicalDocument
-viewDiscoveryDocument (ViewDiscoveryResult _ _ document _) = document
-
--- | Native Views in deterministic canonical document order.
-viewDiscoveryViews :: ViewDiscoveryResult -> [ViewDescriptor]
-viewDiscoveryViews (ViewDiscoveryResult _ _ _ views) = views
-
 -- | Exact authority boundary: Operation plus the selected adapter only.
 viewDiscoveryAuthorities ::
      ViewDiscoveryResult -> NonEmpty ViewDiscoveryAuthority
@@ -119,7 +110,9 @@ viewDiscoveryAuthorities result =
 
 -- | Consume every successful profile-neutral discovery field.
 foldViewDiscoveryResult ::
-     (SourceIdentity -> AdapterDescriptor -> CanonicalDocument -> [ViewDescriptor] -> result)
+     (forall document. SourceIdentity -> AdapterDescriptor -> CanonicalDocument
+                                                                document -> [CanonicalView
+                                                                               document] -> result)
   -> ViewDiscoveryResult
   -> result
 foldViewDiscoveryResult consume (ViewDiscoveryResult source adapter document views) =
@@ -170,12 +163,12 @@ discoverAcquiredViews adapters requested acquired =
                     (acquiredSourceIdentity acquired)
                     descriptor)
              (\draft ->
-                let document = buildCanonicalDocument draft
-                 in ViewsDiscovered
-                      (ViewDiscoveryResult
-                         (acquiredSourceIdentity acquired)
-                         descriptor
-                         document
-                         (viewInventory document)))
+                withCanonicalDocument draft $ \document ->
+                  ViewsDiscovered
+                    (ViewDiscoveryResult
+                       (acquiredSourceIdentity acquired)
+                       descriptor
+                       document
+                       (canonicalViews document)))
              outcome)
         (runSelectedAdapter selected (acquiredSourceBytes acquired))

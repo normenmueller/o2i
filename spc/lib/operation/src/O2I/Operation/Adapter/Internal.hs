@@ -6,9 +6,11 @@ module O2I.Operation.Adapter.Internal where
 import Data.ByteString (ByteString)
 import Data.List.NonEmpty (NonEmpty)
 import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
 import Data.Text (Text)
 import Numeric.Natural (Natural)
 import O2I.ArchiMate.Profile.Draft (ProfileDraft)
+import O2I.ArchiMate.Profile.Notation (ArchiMateNotationIssueKind)
 
 -- | Validated stable identity of one notation adapter.
 newtype AdapterId =
@@ -30,8 +32,8 @@ newtype AdapterRuleId =
 
 -- | Closed execution stage owning one adapter rule.
 data AdapterRuleStage
-  = AdapterRecognitionStage
-  | AdapterDecodeStage
+  = AdapterPreparationStage
+  | AdapterNotationStage
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 -- | One compiled adapter-owned rule with discovery and explanation data.
@@ -43,28 +45,36 @@ data AdapterRule = AdapterRule
   , adapterRuleActionValue :: !Text
   } deriving (Eq, Ord, Show)
 
--- | Validated stage-neutral input for one compiled adapter rule.
-data AdapterRuleDefinition = AdapterRuleDefinition
-  { adapterRuleDefinitionIdValue :: !AdapterRuleId
-  , adapterRuleDefinitionExpectationValue :: !Text
-  , adapterRuleDefinitionMeaningValue :: !Text
-  , adapterRuleDefinitionActionValue :: !Text
+-- | Validated inert input for one compiled adapter rule.
+data AdapterRuleSpec = AdapterRuleSpec
+  { adapterRuleSpecIdValue :: !AdapterRuleId
+  , adapterRuleSpecStageValue :: !AdapterRuleStage
+  , adapterRuleSpecExpectationValue :: !Text
+  , adapterRuleSpecMeaningValue :: !Text
+  , adapterRuleSpecActionValue :: !Text
   } deriving (Eq, Ord, Show)
 
-newtype ScopedRule scope =
-  ScopedRule AdapterRule
+-- | Static association between one rule specification and its owner.
+data AdapterRuleBinding
+  = NativeAdapterRuleBinding !AdapterRuleSpec
+  | ArchiMateNotationRuleBinding !ArchiMateNotationIssueKind !AdapterRuleSpec
+  deriving (Eq, Ord, Show)
 
-type role ScopedRule nominal
+-- | Compiled preparation rule confined to one adapter implementation.
+newtype NativeAdapterRule scope =
+  NativeAdapterRule AdapterRule
+
+type role NativeAdapterRule nominal
 
 -- | Recognition-stage rule handle confined to one adapter definition.
 newtype RecognitionRule scope =
-  RecognitionRule (ScopedRule scope)
+  RecognitionRule (NativeAdapterRule scope)
 
 type role RecognitionRule nominal
 
 -- | Decode-stage rule handle confined to one adapter definition.
 newtype DecodeRule scope =
-  DecodeRule (ScopedRule scope)
+  DecodeRule (NativeAdapterRule scope)
 
 type role DecodeRule nominal
 
@@ -133,38 +143,19 @@ data AdapterBehavior scope = AdapterBehavior
 
 type role AdapterBehavior nominal
 
--- | Applicative authoring context collecting one scoped adapter contract.
-data AdapterDefinition scope value = AdapterDefinition
-  { adapterDefinitionRulesValue :: [AdapterRule] -> [AdapterRule]
-  , adapterDefinitionResultValue :: value
+-- | Scoped lookup catalog for adapter-native preparation rules.
+data AdapterRules scope = AdapterRules
+  { adapterRulesNativeValue :: !(Map AdapterRuleId (NativeAdapterRule scope))
+  , adapterRulesNotationValue :: !(Map ArchiMateNotationIssueKind AdapterRule)
   }
 
-type role AdapterDefinition nominal representational
-
-instance Functor (AdapterDefinition scope) where
-  fmap transform definition =
-    definition
-      { adapterDefinitionResultValue =
-          transform (adapterDefinitionResultValue definition)
-      }
-
-instance Applicative (AdapterDefinition scope) where
-  pure = AdapterDefinition id
-  functionDefinition <*> valueDefinition =
-    AdapterDefinition
-      { adapterDefinitionRulesValue =
-          adapterDefinitionRulesValue functionDefinition
-            . adapterDefinitionRulesValue valueDefinition
-      , adapterDefinitionResultValue =
-          adapterDefinitionResultValue
-            functionDefinition
-            (adapterDefinitionResultValue valueDefinition)
-      }
+type role AdapterRules nominal
 
 -- | Compiled static adapter with its executable native behavior.
 data Adapter = Adapter
   { adapterDescriptorValue :: !AdapterDescriptor
   , adapterRulesValue :: !(NonEmpty AdapterRule)
+  , adapterNotationRulesValue :: !(Map ArchiMateNotationIssueKind AdapterRule)
   , adapterRecognizeValue :: ByteString -> Recognition
   , adapterDecodeValue :: ByteString -> DecodeOutcome
   }
@@ -224,9 +215,18 @@ data AdapterDefinitionDefect
 
 -- | Invalid rule inventory rejected while compiling one adapter.
 data AdapterCompilationDefect
-  = EmptyAdapterRuleInventory
-  | DuplicateAdapterRuleIdentifier !AdapterRuleId
+  = DuplicateAdapterRuleIdentifier !AdapterRuleId
+  | MissingArchiMateNotationRule !ArchiMateNotationIssueKind
+  | DuplicateArchiMateNotationRule !ArchiMateNotationIssueKind
+  | AdapterRuleStageMismatch !AdapterRuleId !AdapterRuleStage !AdapterRuleStage
+  | UnknownNativeAdapterRule !AdapterRuleId
   deriving (Eq, Ord, Show)
+
+-- | Resolve one Profile-owned kind through the compiled static binding.
+lookupArchiMateNotationRuleValue ::
+     ArchiMateNotationIssueKind -> Adapter -> Maybe AdapterRule
+lookupArchiMateNotationRuleValue kind =
+  Map.lookup kind . adapterNotationRulesValue
 
 -- | Invalid duplicate identity rejected across compiled adapters.
 data AdapterCollectionDefect =

@@ -4,27 +4,41 @@ module Main
   ( main
   ) where
 
+import Data.Bifunctor (first)
 import Data.ByteString (ByteString)
 import Data.List.NonEmpty (NonEmpty((:|)))
+import qualified Data.List.NonEmpty as NonEmpty
 import O2I.Adapter.AMX (amxAdapter)
+import O2I.ArchiMate.Profile.Notation
+  ( ArchiMateNotationIssueKind
+  , allArchiMateNotationIssueKinds
+  , archiMateNotationIssueKindToken
+  )
 import O2I.Operation.Adapter
   ( Adapter
   , adapterDescriptorId
   , adapterIdText
   , foldAdapterSelection
+  , notationRuleStage
+  , preparationRuleStage
   , selectAdapter
   , selectedAdapterDescriptor
   )
 import O2I.Operation.Adapter.Authoring
-  ( adapterBehavior
+  ( AdapterRuleBinding
+  , adapterBehavior
+  , adapterRuleSpecId
+  , archiMateNotationRule
   , compileAdapter
   , compileAdapterCollection
   , decodeDiagnostic
   , decodeFailure
   , decodeRule
+  , lookupNativeAdapterRule
   , mkAdapterDescriptor
   , mkAdapterId
-  , mkAdapterRuleDefinition
+  , mkAdapterRuleSpec
+  , nativeAdapterRule
   , noRecognitionMatch
   , recognitionMatch
   , recognitionRule
@@ -60,34 +74,67 @@ unrelatedAdapter = do
   recognitionDefinition <-
     require
       "invalid recognition rule"
-      (mkAdapterRuleDefinition
+      (mkAdapterRuleSpec
          "another-adapter.recognition"
+         preparationRuleStage
          "Recognize the exact test representation."
          "The representation belongs to the other adapter."
          "Select the other adapter.")
   decodeDefinition <-
     require
       "invalid decode rule"
-      (mkAdapterRuleDefinition
+      (mkAdapterRuleSpec
          "another-adapter.decode"
+         preparationRuleStage
          "Decode is outside this selection regression."
          "The regression exercises adapter selection only."
          "Use a representation-specific decode test.")
+  notation <-
+    traverse notationBinding (NonEmpty.toList allArchiMateNotationIssueKinds)
   require
     "test adapter failed to compile"
     (compileAdapter
        descriptor
-       ((\_ decode ->
-           adapterBehavior
-             (\input ->
-                if input == unrelatedRepresentation
-                  then recognitionMatch
-                  else noRecognitionMatch)
-             (const
-                (decodeFailure
-                   (decodeDiagnostic decode (unlocatedOccurrence :| []) :| []))))
-          <$> recognitionRule recognitionDefinition
-          <*> decodeRule decodeDefinition))
+       (nativeAdapterRule recognitionDefinition
+          :| nativeAdapterRule decodeDefinition
+          : notation)
+       (\rules -> do
+          _ <-
+            first
+              pure
+              (recognitionRule
+                 <$> lookupNativeAdapterRule
+                       rules
+                       (adapterRuleSpecId recognitionDefinition))
+          decode <-
+            first
+              pure
+              (decodeRule
+                 <$> lookupNativeAdapterRule
+                       rules
+                       (adapterRuleSpecId decodeDefinition))
+          pure
+            (adapterBehavior
+               (\input ->
+                  if input == unrelatedRepresentation
+                    then recognitionMatch
+                    else noRecognitionMatch)
+               (const
+                  (decodeFailure
+                     (decodeDiagnostic decode (unlocatedOccurrence :| []) :| []))))))
+
+notationBinding :: ArchiMateNotationIssueKind -> IO AdapterRuleBinding
+notationBinding kind =
+  archiMateNotationRule kind
+    <$> require
+          "invalid notation rule"
+          (mkAdapterRuleSpec
+             ("another-adapter.notation."
+                <> archiMateNotationIssueKindToken kind)
+             notationRuleStage
+             "expectation"
+             "meaning"
+             "action")
 
 require :: String -> Either failure value -> IO value
 require message result =

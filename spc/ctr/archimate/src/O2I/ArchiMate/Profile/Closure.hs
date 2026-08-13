@@ -17,27 +17,30 @@ module O2I.ArchiMate.Profile.Closure
   , -- | Exact generated rule evidence that included one occurrence.
     ClosureProvenance
   , foldClosureProvenance
-  , -- | Opaque positive closure of one selected native View.
-    ClosedView
-  , closeSelectedView
-  , closedCanonicalDocument
-  , closedSelectedViewOccurrence
-  , closedDisplayedOccurrences
-  , closedGraphOccurrences
-  , closedQualificationOccurrences
-  , closedViewUniverse
-  , closedActivationProvenance
-  , closedClosureProvenance
+  , -- | Opaque selected-Profile and source-bound assessment universe.
+    ProfileAssessmentUniverse
+  , deriveProfileAssessmentUniverse
+  , assessmentCanonicalDocument
+  , assessmentSelectedViewOccurrence
+  , assessmentDisplayedOccurrences
+  , assessmentGraphOccurrences
+  , assessmentQualificationOccurrences
+  , assessmentUniverse
+  , assessmentActivationProvenance
+  , assessmentClosureProvenance
   ) where
 
 import qualified Data.Set as Set
 import Data.Text (Text)
 import O2I.ArchiMate.Profile.Internal.Closure
+import O2I.ArchiMate.Profile.Internal.Closure.Witness
+import qualified O2I.ArchiMate.Profile.Internal.Notation.Witness as Witness
 import O2I.ArchiMate.Profile.Notation
   ( CanonicalDocument
   , CanonicalOccurrence
-  , ViewDescriptor
+  , CanonicalView
   )
+import O2I.ArchiMate.Profile.Resolution (SelectedArchiMateProfile)
 
 -- | Canonical occurrence of the native View displaying the subject.
 displayedViewOccurrence :: DisplayedOccurrence -> CanonicalOccurrence
@@ -87,42 +90,71 @@ foldClosureProvenance consume provenance =
     (closureProvenanceIncludedValue provenance)
     (closureProvenanceContextValue provenance)
 
--- | Derive branch-separated Profile closure for one selected View.
+-- | Derive branch-separated positive closure for one selected Profile and View.
 --
 -- Closure is positive inventory material. Profile validation and Core
 -- semantics remain separate assessment capabilities.
-closeSelectedView :: ViewDescriptor -> ClosedView
-closeSelectedView = closeView
+deriveProfileAssessmentUniverse ::
+     SelectedArchiMateProfile profile
+  -> CanonicalDocument document
+  -> CanonicalView document
+  -> ProfileAssessmentUniverse profile document
+deriveProfileAssessmentUniverse = deriveProfileAssessmentUniverseValue
 
 -- | Canonical document from which the selected View was closed.
-closedCanonicalDocument :: ClosedView -> CanonicalDocument
-closedCanonicalDocument = closedViewDocumentValue
+assessmentCanonicalDocument ::
+     ProfileAssessmentUniverse profile document -> CanonicalDocument document
+assessmentCanonicalDocument =
+  Witness.CanonicalDocument
+    . closedViewDocumentValue
+    . profileAssessmentUniverseValue
 
 -- | Canonical occurrence of the selected native View.
-closedSelectedViewOccurrence :: ClosedView -> CanonicalOccurrence
-closedSelectedViewOccurrence = closedViewOccurrenceValue
+assessmentSelectedViewOccurrence ::
+     ProfileAssessmentUniverse profile document -> CanonicalOccurrence
+assessmentSelectedViewOccurrence =
+  closedViewOccurrenceValue . profileAssessmentUniverseValue
 
 -- | Exact displayed occurrences retained from the selected View.
-closedDisplayedOccurrences :: ClosedView -> [DisplayedOccurrence]
-closedDisplayedOccurrences = closedViewDisplayedOccurrencesValue
+assessmentDisplayedOccurrences ::
+     ProfileAssessmentUniverse profile document -> [DisplayedOccurrence]
+assessmentDisplayedOccurrences =
+  closedViewDisplayedOccurrencesValue . profileAssessmentUniverseValue
 
 -- | Deterministic graph-branch occurrence closure.
-closedGraphOccurrences :: ClosedView -> [CanonicalOccurrence]
-closedGraphOccurrences = Set.toAscList . closedViewGraphOccurrencesValue
+assessmentGraphOccurrences ::
+     ProfileAssessmentUniverse profile document -> [CanonicalOccurrence]
+assessmentGraphOccurrences =
+  Set.toAscList
+    . closedViewGraphOccurrencesValue
+    . profileAssessmentUniverseValue
 
 -- | Deterministic qualification-branch occurrence closure.
-closedQualificationOccurrences :: ClosedView -> [CanonicalOccurrence]
-closedQualificationOccurrences =
-  Set.toAscList . closedViewQualificationOccurrencesValue
+assessmentQualificationOccurrences ::
+     ProfileAssessmentUniverse profile document -> [CanonicalOccurrence]
+assessmentQualificationOccurrences =
+  Set.toAscList
+    . closedViewQualificationOccurrencesValue
+    . profileAssessmentUniverseValue
 
 -- | Complete deterministic occurrence universe of both closure branches.
-closedViewUniverse :: ClosedView -> [CanonicalOccurrence]
-closedViewUniverse = Set.toAscList . closedViewUniverseValue
+assessmentUniverse ::
+     ProfileAssessmentUniverse profile document -> [CanonicalOccurrence]
+assessmentUniverse =
+  Set.toAscList . closedViewUniverseValue . profileAssessmentUniverseValue
 
 -- | Deterministic activation provenance retained for both branches.
-closedActivationProvenance :: ClosedView -> [ActivationProvenance]
-closedActivationProvenance = Set.toAscList . closedViewActivationProvenanceValue
+assessmentActivationProvenance ::
+     ProfileAssessmentUniverse profile document -> [ActivationProvenance]
+assessmentActivationProvenance =
+  Set.toAscList
+    . closedViewActivationProvenanceValue
+    . profileAssessmentUniverseValue
 
 -- | Deterministic inclusion provenance retained for both branches.
-closedClosureProvenance :: ClosedView -> [ClosureProvenance]
-closedClosureProvenance = Set.toAscList . closedViewClosureProvenanceValue
+assessmentClosureProvenance ::
+     ProfileAssessmentUniverse profile document -> [ClosureProvenance]
+assessmentClosureProvenance =
+  Set.toAscList
+    . closedViewClosureProvenanceValue
+    . profileAssessmentUniverseValue

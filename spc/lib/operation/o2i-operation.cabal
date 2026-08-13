@@ -142,6 +142,7 @@ test-suite o2i-operation-test
     O2I.Operation.View.Internal,
     O2I.Operation.Test.Acquisition,
     O2I.Operation.Test.Adapter,
+    O2I.Operation.Test.AdapterSupport,
     O2I.Operation.Test.Discovery,
     O2I.Operation.Test.DiscoveryMachine,
     O2I.Operation.Test.Diagnostic,

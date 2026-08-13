@@ -22,15 +22,12 @@ import O2I.Operation.Adapter
   , selectAdapter
   )
 import O2I.Operation.Adapter.Authoring
-  ( AdapterRuleDefinition
-  , adapterBehavior
-  , compileAdapter
+  ( adapterBehavior
   , compileAdapterCollection
   , decodeRule
   , decodedDraft
   , mkAdapterDescriptor
   , mkAdapterId
-  , mkAdapterRuleDefinition
   , noRecognitionMatch
   )
 import O2I.Operation.Profile
@@ -38,6 +35,11 @@ import O2I.Operation.Rule.Catalog
   ( OperationRule
   , operationRuleIdText
   , operationRuleIdentity
+  )
+import O2I.Operation.Test.AdapterSupport
+  ( compileCompleteAdapter
+  , nativeRuleSpec
+  , resolveNativeRule
   )
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.HUnit ((@?=), assertFailure, testCase)
@@ -203,16 +205,17 @@ requireInventory descriptors =
 
 requireMarkerEvidence :: Draft.ProfileDraft -> IO ProfileMarkerEvidence
 requireMarkerEvidence draft =
-  case foldProfileMarkerEvidenceOutcome
-         (Left . length)
-         Right
-         (prepareProfileMarkerEvidence
-            (Notation.assessMarkerEvidence
-               (Notation.buildCanonicalDocument draft))) of
-    Left rejected ->
-      assertFailure ("expected accepted marker evidence, got " <> show rejected)
-        >> requireMarkerEvidence draft
-    Right evidence -> pure evidence
+  Notation.withCanonicalDocument draft $ \document ->
+    case foldProfileMarkerEvidenceOutcome
+           (Left . length)
+           Right
+           (prepareProfileMarkerEvidence
+              (Notation.assessMarkerEvidence document)) of
+      Left rejected ->
+        assertFailure
+          ("expected accepted marker evidence, got " <> show rejected)
+          >> requireMarkerEvidence draft
+      Right evidence -> pure evidence
 
 requireResolved :: ProfileInventory -> IO ResolvedProfile
 requireResolved inventory = do
@@ -241,16 +244,14 @@ requireSelectedAdapter identifier name notation =
       case mkAdapterDescriptor adapterIdentifier name "1" notation of
         Left _ -> assertFailure "invalid test adapter descriptor" >> retry
         Right descriptor -> do
-          definition <- requireAdapterRuleDefinition
+          definition <- nativeRuleSpec "test.rule"
           compiledAdapter <-
-            requireRight
-              (compileAdapter
-                 descriptor
-                 ((\_ ->
-                     adapterBehavior
-                       (const noRecognitionMatch)
-                       (const (decodedDraft (modelDraft []))))
-                    <$> decodeRule definition))
+            compileCompleteAdapter descriptor [definition] $ \rules -> do
+              _ <- resolveNativeRule rules definition decodeRule
+              pure
+                (adapterBehavior
+                   (const noRecognitionMatch)
+                   (const (decodedDraft (modelDraft []))))
           case compileAdapterCollection (compiledAdapter :| []) of
             Left _ -> assertFailure "invalid test adapter collection" >> retry
             Right collection ->
@@ -265,19 +266,6 @@ requireSelectedAdapter identifier name notation =
                 Right selected -> pure selected
   where
     retry = requireSelectedAdapter identifier name notation
-
-requireAdapterRuleDefinition :: IO AdapterRuleDefinition
-requireAdapterRuleDefinition =
-  case mkAdapterRuleDefinition "test.rule" "expectation" "meaning" "action" of
-    Left _ ->
-      assertFailure "invalid test adapter rule" >> requireAdapterRuleDefinition
-    Right definition -> pure definition
-
-requireRight :: Show failure => Either failure value -> IO value
-requireRight result =
-  case result of
-    Left failure -> assertFailure (show failure) >> fail "unreachable"
-    Right value -> pure value
 
 emptyBytes :: ByteString
 emptyBytes = ByteString.empty

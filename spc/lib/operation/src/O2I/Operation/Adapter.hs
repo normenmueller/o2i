@@ -14,8 +14,8 @@ module O2I.Operation.Adapter
   , type AdapterRuleId
   , adapterRuleIdText
   , type AdapterRuleStage
-  , recognitionRuleStage
-  , decodeRuleStage
+  , preparationRuleStage
+  , notationRuleStage
   , adapterRuleStageText
   , foldAdapterRuleStage
   , type AdapterRule
@@ -44,6 +44,7 @@ module O2I.Operation.Adapter
   , lookupAdapterContract
   , adapterContractDescriptor
   , adapterContractRules
+  , lookupArchiMateNotationRule
   , foldAdapterContract
   , type SelectedAdapter
   , selectedAdapterDescriptor
@@ -68,6 +69,7 @@ import qualified Data.Map.Strict as Map
 import Data.Text (Text)
 import Numeric.Natural (Natural)
 import O2I.ArchiMate.Profile.Draft (ProfileDraft)
+import O2I.ArchiMate.Profile.Notation (ArchiMateNotationIssueKind)
 import O2I.Operation.Adapter.Internal
 
 -- | Exact stable adapter identity.
@@ -106,27 +108,27 @@ foldAdapterDescriptor consume descriptor =
 adapterRuleIdText :: AdapterRuleId -> Text
 adapterRuleIdText (AdapterRuleId value) = value
 
--- | Recognition-stage rule for native format identification.
-recognitionRuleStage :: AdapterRuleStage
-recognitionRuleStage = AdapterRecognitionStage
+-- | Adapter-owned preparation rule for recognition or Draft construction.
+preparationRuleStage :: AdapterRuleStage
+preparationRuleStage = AdapterPreparationStage
 
--- | Decode-stage rule for lossless projection into a Profile-neutral Draft.
-decodeRuleStage :: AdapterRuleStage
-decodeRuleStage = AdapterDecodeStage
+-- | Static adapter binding for one Profile-owned notation issue kind.
+notationRuleStage :: AdapterRuleStage
+notationRuleStage = AdapterNotationStage
 
 -- | Stable machine-readable stage identity.
 adapterRuleStageText :: AdapterRuleStage -> Text
 adapterRuleStageText stage =
   case stage of
-    AdapterRecognitionStage -> "recognition"
-    AdapterDecodeStage -> "decode"
+    AdapterPreparationStage -> "preparation"
+    AdapterNotationStage -> "notation"
 
 -- | Consume either closed adapter rule stage.
 foldAdapterRuleStage :: result -> result -> AdapterRuleStage -> result
-foldAdapterRuleStage recognition decode stage =
+foldAdapterRuleStage preparation notation stage =
   case stage of
-    AdapterRecognitionStage -> recognition
-    AdapterDecodeStage -> decode
+    AdapterPreparationStage -> preparation
+    AdapterNotationStage -> notation
 
 -- | Identity of one adapter-owned native rule.
 adapterRuleId :: AdapterRule -> AdapterRuleId
@@ -242,6 +244,13 @@ adapterContractDescriptor (CompiledAdapterContract value) =
 -- | Complete canonical rule inventory bound to one compiled adapter contract.
 adapterContractRules :: CompiledAdapterContract -> NonEmpty AdapterRule
 adapterContractRules (CompiledAdapterContract value) = adapterRulesValue value
+
+-- | Resolve the static adapter explanation bound to one Profile-owned issue
+-- kind. Successful adapter compilation guarantees a result for every kind.
+lookupArchiMateNotationRule ::
+     ArchiMateNotationIssueKind -> CompiledAdapterContract -> Maybe AdapterRule
+lookupArchiMateNotationRule kind (CompiledAdapterContract value) =
+  lookupArchiMateNotationRuleValue kind value
 
 -- | Consume the complete non-executable contract projection.
 foldAdapterContract ::

@@ -63,18 +63,26 @@ $(assertAbstractTypes
     , "Notation.CanonicalTarget"
     , "Notation.ReferenceOutcome"
     , "Notation.CanonicalReference"
-    , "Notation.IdentityObservation"
-    , "Notation.NotationAssessment"
-    , "Notation.ViewDescriptor"
+    , "Notation.CanonicalView"
     , "Notation.MarkerKeyOutcome"
     , "Notation.MarkerCandidate"
     , "Notation.MarkerEvidenceAssessment"
+    , "Notation.ArchiMateNotationIssueKind"
+    , "Notation.ViewInventoryIssueKind"
+    , "Notation.ProfileMarkerIssueKind"
+    , "Notation.SelectedUniverseIssueKind"
+    , "Notation.ArchiMateNotationIssue"
+    , "Notation.ArchiMateNotationEvidence"
+    , "Notation.StageResult"
+    , "Notation.NotationResult"
+    , "Notation.NotationConformantUniverse"
     , "Resolution.ProfileDescriptor"
+    , "Resolution.SelectedArchiMateProfile"
     , "Closure.DisplayedOccurrence"
     , "Closure.ClosureBranch"
     , "Closure.ActivationProvenance"
     , "Closure.ClosureProvenance"
-    , "Closure.ClosedView"
+    , "Closure.ProfileAssessmentUniverse"
     , "Mapping.CarrierMapping"
     , "Mapping.RelationMapping"
     , "Projection.ProfileEvidenceKind"
@@ -195,7 +203,7 @@ $(assertOrdinaryFunctions
     , 'Draft.draftSourceSpan
     , 'Draft.draftSpanStart
     , 'Draft.draftSpanEnd
-    , 'Notation.buildCanonicalDocument
+    , 'Notation.withCanonicalDocument
     , 'Notation.canonicalDocumentDraft
     , 'Notation.canonicalDocumentRecords
     , 'Notation.canonicalDocumentProperties
@@ -228,24 +236,36 @@ $(assertOrdinaryFunctions
     , 'Notation.canonicalReferenceExpectedFamily
     , 'Notation.canonicalReferenceLocation
     , 'Notation.canonicalReferenceOutcome
-    , 'Notation.identityObservationOccurrence
-    , 'Notation.identityObservationFamily
-    , 'Notation.identityObservationOutcome
-    , 'Notation.identityObservationLocation
-    , 'Notation.assessNotation
-    , 'Notation.notationIdentityObservations
-    , 'Notation.notationReferenceObservations
-    , 'Notation.viewDescriptorOccurrence
-    , 'Notation.viewDescriptorIdentity
-    , 'Notation.viewDescriptorNameFields
-    , 'Notation.viewDescriptorLocation
-    , 'Notation.viewInventory
+    , 'Notation.canonicalViewOccurrence
+    , 'Notation.canonicalViewIdentity
+    , 'Notation.canonicalViewNameFields
+    , 'Notation.canonicalViewLocation
+    , 'Notation.canonicalViews
     , 'Notation.foldMarkerKeyOutcome
     , 'Notation.markerCandidateProperty
     , 'Notation.markerCandidateDefinitionFields
     , 'Notation.markerCandidateKeyOutcome
     , 'Notation.assessMarkerEvidence
     , 'Notation.foldMarkerEvidenceAssessment
+    , 'Notation.allArchiMateNotationIssueKinds
+    , 'Notation.allViewInventoryIssueKinds
+    , 'Notation.allProfileMarkerIssueKinds
+    , 'Notation.allSelectedUniverseIssueKinds
+    , 'Notation.foldArchiMateNotationIssueKind
+    , 'Notation.archiMateNotationIssueKindToken
+    , 'Notation.viewInventoryIssueKindToken
+    , 'Notation.profileMarkerIssueKindToken
+    , 'Notation.selectedUniverseIssueKindToken
+    , 'Notation.foldArchiMateNotationEvidence
+    , 'Notation.archiMateNotationIssueKind
+    , 'Notation.archiMateNotationIssueSubject
+    , 'Notation.archiMateNotationIssueEvidence
+    , 'Notation.assessCanonicalViewInventory
+    , 'Notation.profileMarkerNotationIssues
+    , 'Notation.foldStageResult
+    , 'Notation.assessArchiMateNotation
+    , 'Notation.notationIssues
+    , 'Notation.notationConformance
     , 'Resolution.compiledProfileDescriptor
     , 'Resolution.profileDescriptorIdentity
     , 'Resolution.profileDescriptorToken
@@ -255,20 +275,22 @@ $(assertOrdinaryFunctions
     , 'Resolution.profileDescriptorAdapterIds
     , 'Resolution.profileDescriptorContractDigest
     , 'Resolution.foldProfileDescriptor
+    , 'Resolution.withSelectedArchiMateProfile
+    , 'Resolution.selectedArchiMateProfileDescriptor
     , 'Closure.displayedViewOccurrence
     , 'Closure.displayedSubjectOccurrence
     , 'Closure.foldClosureBranch
     , 'Closure.foldActivationProvenance
     , 'Closure.foldClosureProvenance
-    , 'Closure.closeSelectedView
-    , 'Closure.closedCanonicalDocument
-    , 'Closure.closedSelectedViewOccurrence
-    , 'Closure.closedDisplayedOccurrences
-    , 'Closure.closedGraphOccurrences
-    , 'Closure.closedQualificationOccurrences
-    , 'Closure.closedViewUniverse
-    , 'Closure.closedActivationProvenance
-    , 'Closure.closedClosureProvenance
+    , 'Closure.deriveProfileAssessmentUniverse
+    , 'Closure.assessmentCanonicalDocument
+    , 'Closure.assessmentSelectedViewOccurrence
+    , 'Closure.assessmentDisplayedOccurrences
+    , 'Closure.assessmentGraphOccurrences
+    , 'Closure.assessmentQualificationOccurrences
+    , 'Closure.assessmentUniverse
+    , 'Closure.assessmentActivationProvenance
+    , 'Closure.assessmentClosureProvenance
     , 'Mapping.normalizeRelationshipLabel
     , 'Mapping.carrierMappings
     , 'Mapping.carrierMappingId
@@ -287,7 +309,7 @@ $(assertOrdinaryFunctions
     , 'Projection.profileDefectRuleId
     , 'Projection.foldProfileDefect
     , 'Projection.foldProfileContractFailure
-    , 'Projection.projectProfile
+    , 'Projection.assessSelectedView
     , 'Projection.foldProfileProjectionAssessment
     , 'Projection.profileStructureProjection
     , 'Projection.profileMappingProvenance
