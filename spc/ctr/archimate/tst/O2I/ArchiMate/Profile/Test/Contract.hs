@@ -54,6 +54,8 @@ contractTests =
     [ descriptorTest
     , mappingTest
     , notationOutcomeTest
+    , notationGlobalIdentityTest
+    , notationProofTest
     , retentionTest
     , markerTest
     , closureDeterminismTest
@@ -111,6 +113,65 @@ notationOutcomeTest =
                Notation.archiMateNotationIssueKindToken
                Notation.allArchiMateNotationIssueKinds)))
       @?= 38
+
+notationGlobalIdentityTest :: TestTree
+notationGlobalIdentityTest =
+  testGroup
+    "enforces model-global identity cardinality before record family"
+    [ testCase "rejects a model-root identity duplicated by an Element"
+        $ assertGlobalDuplicate
+            Fixture.modelRootCrossFamilyDuplicateDraft
+            "model-identity-duplicate"
+    , testCase "rejects a selected View identity duplicated by an Element"
+        $ assertGlobalDuplicate
+            Fixture.viewCrossFamilyDuplicateDraft
+            "view-identity-duplicate"
+    ]
+
+notationProofTest :: TestTree
+notationProofTest =
+  testCase "constructs the opaque proof only for an issue-free universe" $ do
+    case closedView Fixture.validDraft "Main" of
+      ClosedView universe -> do
+        let assessed = Notation.assessArchiMateNotation universe
+        Notation.notationIssues assessed @?= []
+        Notation.foldStageResult
+          (const (assertFailure "valid Notation unexpectedly rejected"))
+          (const (pure ()))
+          (Notation.notationConformance assessed)
+
+assertGlobalDuplicate :: Draft.ProfileDraft -> Text -> IO ()
+assertGlobalDuplicate draft expectedToken =
+  Notation.withCanonicalDocument draft $ \document -> do
+    let inventory = Notation.assessCanonicalViewInventory document
+        tokens =
+          map
+            (Notation.archiMateNotationIssueKindToken
+               . Notation.archiMateNotationIssueKind)
+            inventory
+    tokens @?= [expectedToken]
+    map (NonEmpty.length . Notation.archiMateNotationIssueEvidence) inventory
+      @?= [1]
+    let view =
+          singleWhere
+            "View named Main"
+            ((== "Main") . viewName)
+            (Notation.canonicalViews document)
+    Resolution.withSelectedArchiMateProfile Resolution.compiledProfileDescriptor $ \profile -> do
+      let assessed =
+            Notation.assessArchiMateNotation
+              (Closure.deriveProfileAssessmentUniverse profile document view)
+      assertBool
+        "global duplicate disappeared from complete Notation assessment"
+        (expectedToken
+           `elem` map
+                    (Notation.archiMateNotationIssueKindToken
+                       . Notation.archiMateNotationIssueKind)
+                    (Notation.notationIssues assessed))
+      Notation.foldStageResult
+        (const (pure ()))
+        (const (assertFailure "global duplicate produced a conformance proof"))
+        (Notation.notationConformance assessed)
 
 retentionTest :: TestTree
 retentionTest =

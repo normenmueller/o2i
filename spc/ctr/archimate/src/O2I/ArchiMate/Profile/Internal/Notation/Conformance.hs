@@ -199,8 +199,7 @@ assessCanonicalViewInventoryValue document =
       filter ((== ModelRootFamily) . Raw.canonicalRecordFamilyValue) records
     viewRecords =
       filter ((== ViewFamily) . Raw.canonicalRecordFamilyValue) records
-    modelDuplicates = duplicateIdentityLocations modelRecords
-    viewDuplicates = duplicateIdentityLocations viewRecords
+    globalDuplicates = duplicateIdentityLocations records
     identityIssues =
       concatMap
         (inventoryIdentityIssues
@@ -209,7 +208,7 @@ assessCanonicalViewInventoryValue document =
            ModelIdentityValueKindInvalid
            ModelIdentityGrammarInvalid
            ModelIdentityDuplicate
-           modelDuplicates)
+           globalDuplicates)
         modelRecords
         <> concatMap
              (inventoryIdentityIssues
@@ -218,7 +217,7 @@ assessCanonicalViewInventoryValue document =
                 ViewIdentityValueKindInvalid
                 ViewIdentityGrammarInvalid
                 ViewIdentityDuplicate
-                viewDuplicates)
+                globalDuplicates)
              viewRecords
     nameIssues = concatMap viewNameIssues viewRecords
 

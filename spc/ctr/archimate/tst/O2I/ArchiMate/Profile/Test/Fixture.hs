@@ -10,6 +10,8 @@ module O2I.ArchiMate.Profile.Test.Fixture
   , unmarkedDisplayedDraft
   , malformedIdentityDraft
   , notationOutcomeDraft
+  , modelRootCrossFamilyDuplicateDraft
+  , viewCrossFamilyDuplicateDraft
   , retentionDraft
   , qualificationDraft
   , qualificationMissingRoleDraft
@@ -207,6 +209,20 @@ notationOutcomeDraft =
     , Draft.childRecordMember
         (viewNode "reference-ambiguous" "duplicate-target")
     , Draft.childRecordMember (viewNode "reference-resolved" "resolved-target")
+    ]
+
+modelRootCrossFamilyDuplicateDraft :: Draft.ProfileDraft
+modelRootCrossFamilyDuplicateDraft =
+  modelDraft
+    [ Draft.childRecordMember (element "model" "Grouping" [])
+    , Draft.childRecordMember (simpleView "main-view" "Main" [])
+    ]
+
+viewCrossFamilyDuplicateDraft :: Draft.ProfileDraft
+viewCrossFamilyDuplicateDraft =
+  modelDraft
+    [ Draft.childRecordMember (element "main-view" "Grouping" [])
+    , Draft.childRecordMember (simpleView "main-view" "Main" [])
     ]
 
 retentionDraft :: Draft.ProfileDraft
