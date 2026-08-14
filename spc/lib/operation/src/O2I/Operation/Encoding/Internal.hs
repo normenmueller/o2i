@@ -21,6 +21,7 @@ module O2I.Operation.Encoding.Internal
   , optionalMember
   , machineResult
   , closedMachineResult
+  , closedOperationMachineResult
   ) where
 
 import qualified Data.ByteString as ByteString
@@ -35,6 +36,11 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
+import O2I.Operation.Machine (ToolDescriptor, foldToolDescriptor)
+import O2I.Operation.Machine.Internal
+  ( OperationIdentity
+  , operationIdentityValue
+  )
 import O2I.Operation.Schema
   ( MachineSchema
   , SchemaVariant
@@ -133,9 +139,10 @@ optionalMember name = maybe [] (pure . CanonicalMember name)
 
 -- | Close one capability result into deterministic UTF-8 JSON bytes.
 --
--- The generated Schema reference and exact result discriminator are always
--- the first two members. Capability encoders own every subsequent member and
--- its omission policy. The result variant must belong to the same generated
+-- The generated Schema reference and exact result discriminator are fixed
+-- members. Operation-envelope metadata is reserved for the corresponding
+-- closed encoder. Capability encoders own every subsequent member and its
+-- omission policy. The result variant must belong to the same generated
 -- Schema catalog.
 machineResult ::
      MachineSchema
@@ -169,7 +176,7 @@ machineResult schema variant members =
       ]
     reservedDefects =
       [ ReservedMachineMember name
-      | name <- ["schema", "kind"]
+      | name <- ["schema", "operation", "tool", "kind"]
       , any ((== name) . canonicalMemberName) members
       ]
 
@@ -192,6 +199,48 @@ closedMachineResult schema variant members =
         (textFragment (schemaAuthorityReference (machineSchemaAuthority schema)))
     kindMember =
       CanonicalMember "kind" (textFragment (schemaVariantText variant))
+
+-- | Close one authority-required Operation envelope in canonical member order.
+--
+-- Operation identity is package-internal and capability-fixed. The opaque tool
+-- descriptor is supplied only by the executable composition boundary. This
+-- shared primitive is the sole encoder of the four envelope members.
+closedOperationMachineResult ::
+     MachineSchema
+  -> OperationIdentity
+  -> ToolDescriptor
+  -> SchemaVariant
+  -> [CanonicalMember]
+  -> MachineResult
+closedOperationMachineResult schema operation tool variant members =
+  MachineResult
+    { machineResultSchemaValue = schema
+    , machineResultVariantValue = variant
+    , machineResultBytesValue =
+        strictBuilder
+          (objectBuilder
+             (schemaMember : operationMember : toolMember : kindMember : members))
+    }
+  where
+    schemaMember =
+      CanonicalMember
+        "schema"
+        (textFragment (schemaAuthorityReference (machineSchemaAuthority schema)))
+    operationMember =
+      CanonicalMember
+        "operation"
+        (textFragment (operationIdentityValue operation))
+    toolMember = CanonicalMember "tool" (toolDescriptorFragment tool)
+    kindMember =
+      CanonicalMember "kind" (textFragment (schemaVariantText variant))
+
+toolDescriptorFragment :: ToolDescriptor -> CanonicalFragment
+toolDescriptorFragment =
+  foldToolDescriptor $ \identity version ->
+    closedObjectFragment
+      [ requiredMember "identity" (textFragment identity)
+      , requiredMember "version" (textFragment version)
+      ]
 
 objectBuilder :: [CanonicalMember] -> Builder
 objectBuilder members =

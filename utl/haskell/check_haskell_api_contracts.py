@@ -303,6 +303,16 @@ CONTRACTS = (
             ),
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/"
+                "MachineHiddenInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "ToolDescriptorOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
                 "AdapterInventoryDocumentOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),

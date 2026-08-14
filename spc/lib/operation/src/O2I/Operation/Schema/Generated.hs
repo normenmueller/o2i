@@ -110,10 +110,10 @@ viewDiscoveryMachineSchema =
     { machineSchemaAuthorityValue =
         SchemaAuthority
           { schemaAuthorityIdentityValue = SchemaIdentity "o2i.discovery.view"
-          , schemaAuthorityVersionValue = SchemaVersion 1
+          , schemaAuthorityVersionValue = SchemaVersion 2
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "6abe1d5235cc3eb476128b32dd2a5a6c331c9a2f20875473fbc983f8762790de"
+                "596b82ae5bc9c900c5094e3dc82db2d3b26977686290cc5a17a7a5ee07ee4b87"
           }
     , machineSchemaVariantsValue =
         viewsDiscoveredVariant

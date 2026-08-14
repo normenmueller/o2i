@@ -9,6 +9,7 @@ import qualified O2I.Operation.Test.Discovery as Discovery
 import qualified O2I.Operation.Test.DiscoveryMachine as DiscoveryMachine
 import qualified O2I.Operation.Test.Encoding as Encoding
 import qualified O2I.Operation.Test.Failure as Failure
+import qualified O2I.Operation.Test.Machine as Machine
 import qualified O2I.Operation.Test.Preparation as Preparation
 import qualified O2I.Operation.Test.Profile as Profile
 import qualified O2I.Operation.Test.Provenance as Provenance
@@ -30,6 +31,7 @@ main =
        , Diagnostic.tests
        , Encoding.tests
        , Failure.tests
+       , Machine.tests
        , Preparation.tests
        , Profile.tests
        , Provenance.tests

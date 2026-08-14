@@ -32,8 +32,11 @@ import O2I.Operation.Encoding.Internal
   ( MachineResult(..)
   , arrayFragment
   , closedMachineResult
+  , closedOperationMachineResult
   , requiredMember
   )
+import O2I.Operation.Machine (ToolDescriptor)
+import O2I.Operation.Machine.Internal (viewsOperationIdentity)
 import O2I.Operation.Schema (MachineSchema, SchemaVariant)
 import qualified O2I.Operation.Schema.Generated as Generated
 
@@ -42,9 +45,11 @@ newtype ViewDiscoveryDocument =
   ViewDiscoveryDocument MachineResult
 
 -- | Project every profile-neutral discovery branch without retaining the
--- complete canonical notation document.
-viewDiscoveryDocument :: ViewDiscovery -> ViewDiscoveryDocument
-viewDiscoveryDocument = foldViewDiscovery failed succeeded
+-- complete canonical notation document. Composition metadata is explicit even
+-- when a pre-completion command failure does not emit an Operation envelope.
+viewDiscoveryDocument ::
+     ToolDescriptor -> ViewDiscovery -> ViewDiscoveryDocument
+viewDiscoveryDocument tool = foldViewDiscovery failed succeeded
   where
     failed =
       foldViewDiscoveryFailure
@@ -82,8 +87,10 @@ viewDiscoveryDocument = foldViewDiscovery failed succeeded
       foldViewDiscoveryResult
         (\source adapter _ views ->
            ViewDiscoveryDocument
-             (closedMachineResult
+             (closedOperationMachineResult
                 Generated.viewDiscoveryMachineSchema
+                viewsOperationIdentity
+                tool
                 Generated.viewsDiscoveredVariant
                 [ requiredMember "source" (sourceIdentityFragment source)
                 , requiredMember "adapter" (adapterDescriptorFragment adapter)

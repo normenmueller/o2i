@@ -181,6 +181,38 @@ class OperationContractCompilerTest(unittest.TestCase):
         ]
         self.assertEqual(1, path_step["properties"]["ordinal"]["minimum"])
 
+    def test_completed_views_alone_has_the_exact_operation_envelope(self):
+        document = COMPILER.validate(PROFILE_COMPANION)[3][4]
+        schema = json.loads(COMPILER.render_schema(document))
+        definitions = schema["$defs"]
+        self.assertEqual(2, document.version)
+        completed = definitions["viewsDiscovered"]
+        self.assertEqual(
+            ["schema", "operation", "tool", "kind", "source", "adapter", "authorities", "views"],
+            completed["required"],
+        )
+        self.assertEqual("views", completed["properties"]["operation"]["const"])
+        self.assertEqual(
+            "#/$defs/toolDescriptor", completed["properties"]["tool"]["$ref"]
+        )
+        for name in ("acquisitionFailed", "selectionFailed", "decodeFailed"):
+            properties = definitions[name]["properties"]
+            self.assertNotIn("operation", properties)
+            self.assertNotIn("tool", properties)
+
+    def test_tool_descriptor_schema_is_closed_and_nul_free(self):
+        schema = json.loads(
+            COMPILER.render_schema(COMPILER.validate(PROFILE_COMPANION)[3][4])
+        )
+        descriptor = schema["$defs"]["toolDescriptor"]
+        self.assertEqual(["identity", "version"], descriptor["required"])
+        self.assertIs(False, descriptor["additionalProperties"])
+        for field in ("identity", "version"):
+            self.assertEqual(
+                COMPILER.TOOL_TEXT_PATTERN,
+                descriptor["properties"][field]["pattern"],
+            )
+
     def test_explicit_profile_companion_controls_conformance(self):
         profile = json.loads(PROFILE_COMPANION.read_text(encoding="utf-8"))
         profile["ruleIdentityContract"][

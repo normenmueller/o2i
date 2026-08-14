@@ -27,6 +27,7 @@ import O2I.Operation.Discovery.Rule.Internal
 import O2I.Operation.Discovery.Rule.Inventory.Machine
 import O2I.Operation.Discovery.View.Internal
 import O2I.Operation.Discovery.View.Machine
+import O2I.Operation.Machine
 import O2I.Operation.Provenance.Internal
 import O2I.Operation.Schema
 import System.FilePath ((</>))
@@ -45,6 +46,9 @@ tests =
     , testCase
         "encode every View discovery and selection branch exactly"
         viewDiscovery
+    , testCase
+        "rejects missing, wrong, or ineligible View envelopes"
+        viewEnvelopeClosure
     , testCase
         "retain View source identity after acquisition"
         viewSourceProvenance
@@ -343,14 +347,67 @@ viewDiscovery =
       ]
       succeeded
 
+viewEnvelopeClosure :: Assertion
+viewEnvelopeClosure =
+  Notation.withCanonicalDocument emptyDraft $ \canonical -> do
+    let completed =
+          encodeViewDiscoveryDocument
+            (viewDiscoveryDocument
+               toolDescriptorFixture
+               (ViewsDiscovered
+                  (ViewDiscoveryResult
+                     sourceIdentity
+                     adapterDescriptor
+                     canonical
+                     [])))
+        failed =
+          encodeViewDiscoveryDocument
+            (viewDiscoveryDocument
+               toolDescriptorFixture
+               (ViewDiscoveryFailed
+                  (ViewAdapterSelectionFailed sourceIdentity NoAdapterMatched)))
+        schemaName = "o2i.discovery.view-v2.schema.json"
+    assertSchemaRejected
+      schemaName
+      (replaceOnce
+         "\"operation\":\"views\""
+         "\"operation\":\"validate\""
+         completed)
+    assertSchemaRejected
+      schemaName
+      (replaceOnce
+         ",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"}"
+         ""
+         completed)
+    assertSchemaRejected
+      schemaName
+      (replaceOnce "\"identity\":\"o2i\"" "\"identity\":\"\"" completed)
+    assertSchemaRejected
+      schemaName
+      (replaceOnce "\"identity\":\"o2i\"" "\"identity\":\"\\u0000\"" completed)
+    assertSchemaRejected
+      schemaName
+      (replaceOnce
+         "\"version\":\"0.3.0\""
+         "\"version\":\"0.3.0\",\"extra\":true"
+         completed)
+    assertSchemaRejected
+      schemaName
+      (replaceOnce
+         "\"kind\":\"view-adapter-selection-failed\""
+         "\"operation\":\"views\",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},\"kind\":\"view-adapter-selection-failed\""
+         failed)
+
 viewSourceProvenance :: Assertion
 viewSourceProvenance = do
   let selection =
         viewDiscoveryDocument
+          toolDescriptorFixture
           (ViewDiscoveryFailed
              (ViewAdapterSelectionFailed sourceIdentity NoAdapterMatched))
       decode =
         viewDiscoveryDocument
+          toolDescriptorFixture
           (ViewDiscoveryFailed
              (ViewAdapterDecodeFailed
                 sourceIdentity
@@ -367,6 +424,7 @@ wrongStageViewDiagnostics :: Assertion
 wrongStageViewDiagnostics = do
   let recognition =
         viewDiscoveryDocument
+          toolDescriptorFixture
           (ViewDiscoveryFailed
              (ViewAdapterSelectionFailed
                 sourceIdentity
@@ -374,16 +432,17 @@ wrongStageViewDiagnostics = do
                    ((adapterDescriptor, adapterDiagnostic :| []) :| []))))
       decode =
         viewDiscoveryDocument
+          toolDescriptorFixture
           (ViewDiscoveryFailed
              (ViewAdapterDecodeFailed
                 sourceIdentity
                 adapterDescriptor
                 (recognitionAdapterDiagnostic :| [])))
   assertSchema
-    "o2i.discovery.view-v1.schema.json"
+    "o2i.discovery.view-v2.schema.json"
     (encodeViewDiscoveryDocument recognition)
   assertSchema
-    "o2i.discovery.view-v1.schema.json"
+    "o2i.discovery.view-v2.schema.json"
     (encodeViewDiscoveryDocument decode)
 
 nestedViewIdentities :: Assertion
@@ -391,6 +450,7 @@ nestedViewIdentities =
   Notation.withCanonicalDocument identityDraft $ \canonical -> do
     let document =
           viewDiscoveryDocument
+            toolDescriptorFixture
             (ViewsDiscovered
                (ViewDiscoveryResult
                   sourceIdentity
@@ -398,7 +458,7 @@ nestedViewIdentities =
                   canonical
                   (Notation.canonicalViews canonical)))
         encoded = encodeViewDiscoveryDocument document
-    assertSchema "o2i.discovery.view-v1.schema.json" encoded
+    assertSchema "o2i.discovery.view-v2.schema.json" encoded
     mapM_
       (assertContained encoded)
       [ "\"identity\":{\"kind\":\"missing\"}"
@@ -416,6 +476,7 @@ emptyNativeViewLexemes =
   Notation.withCanonicalDocument emptyNativeLexemeDraft $ \canonical -> do
     let document =
           viewDiscoveryDocument
+            toolDescriptorFixture
             (ViewsDiscovered
                (ViewDiscoveryResult
                   sourceIdentity
@@ -423,7 +484,7 @@ emptyNativeViewLexemes =
                   canonical
                   (Notation.canonicalViews canonical)))
         encoded = encodeViewDiscoveryDocument document
-    assertSchema "o2i.discovery.view-v1.schema.json" encoded
+    assertSchema "o2i.discovery.view-v2.schema.json" encoded
     mapM_
       (assertContained encoded)
       [ "\"localName\":\"\""
@@ -433,7 +494,7 @@ emptyNativeViewLexemes =
       , "\"ordinal\":1"
       ]
     assertSchemaRejected
-      "o2i.discovery.view-v1.schema.json"
+      "o2i.discovery.view-v2.schema.json"
       (replaceOnce
          "\"name\":{\"namespace\":null,\"localName\":\"\"},\"ordinal\":1"
          "\"name\":{\"namespace\":null,\"localName\":\"\"},\"ordinal\":0"
@@ -474,15 +535,24 @@ canonicalEscaping = do
 
 assertView :: ByteString -> [ByteString] -> ViewDiscovery -> Assertion
 assertView expectedVariant members outcome = do
-  let document = viewDiscoveryDocument outcome
+  let document = viewDiscoveryDocument toolDescriptorFixture outcome
       encoded = encodeViewDiscoveryDocument document
+      envelope
+        | expectedVariant == "views-discovered" =
+          [ schema "o2i.discovery.view/v2"
+          , field "operation" "\"views\""
+          , field
+              "tool"
+              (object [field "identity" "\"o2i\"", field "version" "\"0.3.0\""])
+          , field "kind" (quoted expectedVariant)
+          ]
+        | otherwise =
+          [ schema "o2i.discovery.view/v2"
+          , field "kind" (quoted expectedVariant)
+          ]
   variant viewDiscoveryDocumentVariant document @?= expectedVariant
-  encoded
-    @?= object
-          (schema "o2i.discovery.view/v1"
-             : field "kind" (quoted expectedVariant)
-             : members)
-  assertSchema "o2i.discovery.view-v1.schema.json" encoded
+  encoded @?= object (envelope <> members)
+  assertSchema "o2i.discovery.view-v2.schema.json" encoded
 
 assertSchema :: FilePath -> ByteString -> Assertion
 assertSchema name encoded = do
@@ -714,6 +784,12 @@ recognitionAdapterDiagnosticBytes =
            ])
     , field "occurrences" (array ["null"])
     ]
+
+toolDescriptorFixture :: ToolDescriptor
+toolDescriptorFixture =
+  case mkToolDescriptor "o2i" "0.3.0" of
+    Left defects -> error (show defects)
+    Right descriptor -> descriptor
 
 sourceReference :: SourceReference
 sourceReference = SourceReference "model"

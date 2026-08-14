@@ -25,6 +25,7 @@ GENERATED = RULE_GENERATED
 
 SCHEMA_DRAFT = "https://json-schema.org/draft/2020-12/schema"
 SHA256_PATTERN = "^[0-9a-f]{64}$"
+TOOL_TEXT_PATTERN = "^[^\u0000]+$"
 TOKEN_PATTERN = "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
 IDENTITY_PATTERN = (
     "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*"
@@ -306,6 +307,31 @@ def variant(
     }
     properties.update(members)
     return object_schema(properties, required=required)
+
+
+def operation_variant(
+    document: MachineDocument,
+    operation: str,
+    kind: str,
+    members: dict[str, Any],
+) -> dict[str, Any]:
+    properties = {
+        "schema": {"const": document.reference},
+        "operation": {"const": operation},
+        "tool": reference("toolDescriptor"),
+        "kind": {"const": kind},
+    }
+    properties.update(members)
+    return object_schema(properties)
+
+
+def tool_descriptor() -> dict[str, Any]:
+    return object_schema(
+        {
+            "identity": text_schema(pattern=TOOL_TEXT_PATTERN),
+            "version": text_schema(pattern=TOOL_TEXT_PATTERN),
+        }
+    )
 
 
 def adapter_descriptor() -> dict[str, Any]:
@@ -798,6 +824,7 @@ def view_discovery_schema(document: MachineDocument) -> dict[str, Any]:
         ]
     }
     definitions = {
+        "toolDescriptor": tool_descriptor(),
         "adapterDescriptor": adapter_descriptor(),
         "recognitionAdapterRule": adapter_rule("preparation"),
         "decodeAdapterRule": adapter_rule("preparation"),
@@ -816,8 +843,9 @@ def view_discovery_schema(document: MachineDocument) -> dict[str, Any]:
         "viewNameField": view_name_field(),
         "viewDescriptor": view_descriptor(),
         "selectionFailure": selection_failure,
-        "viewsDiscovered": variant(
+        "viewsDiscovered": operation_variant(
             document,
+            "views",
             "views-discovered",
             {
                 "source": reference("sourceIdentity"),

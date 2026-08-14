@@ -79,6 +79,8 @@ invalidMembers = do
          schema
          variant
          [ requiredMember "schema" (textFragment "caller-owned")
+         , requiredMember "operation" (textFragment "caller-owned")
+         , requiredMember "tool" (textFragment "caller-owned")
          , requiredMember "kind" (textFragment "completed")
          , requiredMember "label" (textFragment "first")
          , requiredMember "label" (textFragment "second")
@@ -86,7 +88,12 @@ invalidMembers = do
     Right _ -> assertFailure "reserved or duplicate members were accepted"
     Left defects ->
       fmap defectTag (NonEmpty.toList defects)
-        @?= ["reserved:schema", "reserved:kind", "duplicate:label"]
+        @?= [ "reserved:schema"
+            , "reserved:operation"
+            , "reserved:tool"
+            , "reserved:kind"
+            , "duplicate:label"
+            ]
 
 nestedDuplicates :: IO ()
 nestedDuplicates =

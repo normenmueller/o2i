@@ -44,7 +44,7 @@
     {
       "name": "viewDiscovery",
       "identity": "o2i.discovery.view",
-      "version": 1,
+      "version": 2,
       "variants": [
         "views-discovered",
         "view-acquisition-failed",

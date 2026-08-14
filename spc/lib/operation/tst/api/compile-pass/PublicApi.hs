@@ -1,6 +1,7 @@
 module PublicApi where
 
 import Data.List.NonEmpty (NonEmpty)
+import Data.Text (Text)
 import O2I.Operation.Acquisition
 import O2I.Operation.Adapter
 import O2I.Operation.Adapter.Authoring
@@ -16,6 +17,7 @@ import O2I.Operation.Discovery.View
 import O2I.Operation.Discovery.View.Machine (ViewDiscoveryDocument)
 import qualified O2I.Operation.Discovery.View.Machine as ViewMachine
 import O2I.Operation.Failure
+import O2I.Operation.Machine
 import O2I.Operation.Preparation
 import O2I.Operation.Profile
 import O2I.Operation.Provenance
@@ -47,5 +49,12 @@ ruleDocument = ruleInventoryDocument
 explanationDocument :: RuleExplanation -> RuleExplanationDocument
 explanationDocument = ruleExplanationDocument
 
-viewDocument :: ViewDiscovery -> ViewDiscoveryDocument
+viewDocument :: ToolDescriptor -> ViewDiscovery -> ViewDiscoveryDocument
 viewDocument = ViewMachine.viewDiscoveryDocument
+
+compositionTool ::
+     Text -> Text -> Either (NonEmpty ToolDescriptorDefect) ToolDescriptor
+compositionTool = mkToolDescriptor
+
+consumeTool :: ToolDescriptor -> (Text, Text)
+consumeTool = foldToolDescriptor (,)

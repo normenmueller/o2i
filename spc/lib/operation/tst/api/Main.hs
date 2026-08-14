@@ -19,6 +19,7 @@ import qualified O2I.Operation.Discovery.Rule.Inventory.Machine as RuleInventory
 import qualified O2I.Operation.Discovery.View as DiscoveryView
 import qualified O2I.Operation.Discovery.View.Machine as ViewMachine
 import qualified O2I.Operation.Failure as Failure
+import qualified O2I.Operation.Machine as Machine
 import qualified O2I.Operation.Preparation as Preparation
 import qualified O2I.Operation.Profile as Profile
 import qualified O2I.Operation.Provenance as Provenance
@@ -90,6 +91,9 @@ $(assertAbstractTypes
     , "Failure.CommandFailure"
     , "Failure.PreparationFailure"
     , "Failure.CommonFailure"
+    , "Machine.ToolDescriptorField"
+    , "Machine.ToolDescriptorDefect"
+    , "Machine.ToolDescriptor"
     , "Preparation.PreparationStage"
     , "Preparation.PreparationRequirement"
     , "Preparation.PreparationStep"
@@ -311,6 +315,15 @@ $(assertOrdinaryFunctions
     , 'Failure.preparationFailure
     , 'Failure.commonFailureCode
     , 'Failure.foldCommonFailure
+    , 'Machine.toolIdentityField
+    , 'Machine.toolVersionField
+    , 'Machine.toolDescriptorFieldText
+    , 'Machine.foldToolDescriptorField
+    , 'Machine.foldToolDescriptorDefect
+    , 'Machine.mkToolDescriptor
+    , 'Machine.toolDescriptorIdentity
+    , 'Machine.toolDescriptorVersion
+    , 'Machine.foldToolDescriptor
     , 'Preparation.modelAcquisitionStage
     , 'Preparation.capabilityInputAcquisitionStage
     , 'Preparation.adapterSelectionStage
