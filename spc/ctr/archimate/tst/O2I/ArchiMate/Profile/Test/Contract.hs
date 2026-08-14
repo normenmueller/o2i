@@ -26,7 +26,6 @@ import O2I.Core.Identity
   , buildModelIdentityIndex
   , modelIdentityText
   , modelOccurrence
-  , occurrenceIdentity
   , occurrenceIdentityText
   , withSelectedViewScope
   )
@@ -944,19 +943,9 @@ resolvedIdentity =
 
 projectedOccurrence :: Notation.CanonicalOccurrence -> OccurrenceIdentity
 projectedOccurrence occurrence =
-  case occurrenceIdentity encoded of
+  case Projection.canonicalOccurrenceIdentity occurrence of
     Right identifier -> identifier
     Left defect -> error ("invalid projected occurrence: " <> show defect)
-  where
-    encoded =
-      "archimate:"
-        <> Notation.foldCanonicalOccurrenceKind
-             "record"
-             "property"
-             "reference"
-             (Notation.canonicalOccurrenceKind occurrence)
-        <> ":"
-        <> Text.pack (show (Notation.canonicalOccurrenceOrdinal occurrence))
 
 identityOutcome :: Notation.IdentityOutcome -> Text
 identityOutcome =
