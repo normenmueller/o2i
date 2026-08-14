@@ -13,9 +13,10 @@ import Data.Text (Text)
 import O2I.ArchiMate.Profile.Draft (DraftLocation)
 import O2I.ArchiMate.Profile.Notation (CanonicalOccurrence)
 import O2I.ArchiMate.Profile.Rule.Explanation (ProfileRuleExplanation)
-import O2I.Core.Identity (ModelIdentity)
+import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
 import O2I.Core.Rule.Catalog (CoreRule)
-import O2I.Operation.Adapter (AdapterDescriptor, AdapterOccurrence, AdapterRule)
+import O2I.Operation.Adapter (AdapterOccurrence)
+import O2I.Operation.Diagnostic.AdapterOwner.Internal (AdapterRuleWitness)
 import O2I.Operation.Provenance (SourceIdentity)
 import O2I.Operation.Rule.Catalog (OperationRule)
 
@@ -41,7 +42,7 @@ data DiagnosticDisposition
 -- | Closed typed provenance of one diagnostic rule.
 data DiagnosticProvenance
   = OperationDiagnosticProvenance !OperationRule
-  | AdapterDiagnosticProvenance !AdapterDescriptor !AdapterRule
+  | AdapterDiagnosticProvenance !AdapterRuleWitness
   | ProfileDiagnosticProvenance !ProfileRuleExplanation
   | CoreDiagnosticProvenance !CoreRule
   deriving (Eq, Ord, Show)
@@ -53,6 +54,7 @@ data DiagnosticOccurrence
   | DraftDiagnosticOccurrence !SourceIdentity !DraftLocation
   | CanonicalDiagnosticOccurrence !SourceIdentity !CanonicalOccurrence
   | SubjectDiagnosticOccurrence !SourceIdentity !ModelIdentity
+  | CoreDiagnosticOccurrence !SourceIdentity !OccurrenceIdentity
   deriving (Eq, Ord, Show)
 
 -- | One rule-owned diagnostic with a non-empty exact occurrence set.

@@ -44,7 +44,7 @@ class OperationContractCompilerTest(unittest.TestCase):
         first = COMPILER.render_outputs(PROFILE_COMPANION)
         second = COMPILER.render_outputs(PROFILE_COMPANION)
         self.assertEqual(first, second)
-        self.assertEqual(7, len(first))
+        self.assertEqual(8, len(first))
         self.assertIn(b"data GeneratedOperationRule", first[COMPILER.RULE_GENERATED])
         self.assertIn(
             b"adapterInventoryMachineSchema :: MachineSchema",
@@ -67,6 +67,9 @@ class OperationContractCompilerTest(unittest.TestCase):
     def test_schema_projection_closes_every_object_boundary(self):
         for document in COMPILER.validate(PROFILE_COMPANION)[3]:
             schema = json.loads(COMPILER.render_schema(document))
+            self.assert_closed_objects(schema)
+        for fragment in COMPILER.validate(PROFILE_COMPANION)[4]:
+            schema = json.loads(COMPILER.render_schema_fragment(fragment))
             self.assert_closed_objects(schema)
 
     def assert_closed_objects(self, value):
@@ -180,6 +183,53 @@ class OperationContractCompilerTest(unittest.TestCase):
             "items"
         ]
         self.assertEqual(1, path_step["properties"]["ordinal"]["minimum"])
+
+    def test_diagnostic_schema_closes_the_haskell_occurrence_algebra(self):
+        fragment = COMPILER.validate(PROFILE_COMPANION)[4][0]
+        schema = json.loads(COMPILER.render_schema_fragment(fragment))
+        self.assertEqual("o2i.operation.diagnostic/v1", fragment.reference)
+        self.assertEqual("#/$defs/diagnosticValue", schema["$ref"])
+        self.assertEqual(COMPILER.diagnostic_definitions(), schema["$defs"])
+        occurrences = schema["$defs"]["diagnosticOccurrence"]["oneOf"]
+        self.assertEqual(
+            ["source", "native", "draft", "canonical", "subject", "occurrence"],
+            [branch["properties"]["kind"]["const"] for branch in occurrences],
+        )
+        provenances = schema["$defs"]["diagnosticProvenance"]["oneOf"]
+        self.assertEqual(
+            ["operation", "adapter", "profile", "core"],
+            [branch["properties"]["owner"]["const"] for branch in provenances],
+        )
+        self.assertEqual(
+            [
+                ["owner", "ruleId"],
+                ["owner", "adapterId", "ruleId"],
+                ["owner", "profileReference", "ruleId"],
+                ["owner", "ruleId"],
+            ],
+            [branch["required"] for branch in provenances],
+        )
+        diagnostic = schema["$defs"]["diagnosticValue"]
+        self.assertEqual(
+            ["severity", "disposition", "provenance", "occurrences"],
+            diagnostic["required"],
+        )
+        for redundant in ("code", "ruleId", "authority", "stage"):
+            self.assertNotIn(redundant, diagnostic["properties"])
+        self.assertEqual(
+            ["debug", "info", "warning", "error"],
+            diagnostic["properties"]["severity"]["enum"],
+        )
+        self.assertEqual(
+            ["model-finding", "process-failure"],
+            diagnostic["properties"]["disposition"]["enum"],
+        )
+        self.assertEqual(
+            1,
+            schema["$defs"]["sourceLocation"]["properties"]["path"]["items"][
+                "properties"
+            ]["ordinal"]["minimum"],
+        )
 
     def test_completed_views_alone_has_the_exact_operation_envelope(self):
         document = COMPILER.validate(PROFILE_COMPANION)[3][4]

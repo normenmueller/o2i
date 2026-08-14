@@ -95,9 +95,6 @@ $(assertAbstractTypes
     , "Machine.ToolDescriptorDefect"
     , "Machine.ToolDescriptor"
     , "Preparation.PreparationStage"
-    , "Preparation.PreparationRequirement"
-    , "Preparation.PreparationStep"
-    , "Preparation.PreparationPlan"
     , "Profile.ProfileInventoryKey"
     , "Profile.ProfileInventoryDefect"
     , "Profile.ProfileInventoryCompilation"
@@ -324,8 +321,6 @@ $(assertOrdinaryFunctions
     , 'Machine.toolDescriptorIdentity
     , 'Machine.toolDescriptorVersion
     , 'Machine.foldToolDescriptor
-    , 'Preparation.modelAcquisitionStage
-    , 'Preparation.capabilityInputAcquisitionStage
     , 'Preparation.adapterSelectionStage
     , 'Preparation.adapterDecodeStage
     , 'Preparation.canonicalizationStage
@@ -335,16 +330,6 @@ $(assertOrdinaryFunctions
     , 'Preparation.viewSelectionStage
     , 'Preparation.preparationStageText
     , 'Preparation.foldPreparationStage
-    , 'Preparation.requiredPreparation
-    , 'Preparation.omittedPreparation
-    , 'Preparation.foldPreparationRequirement
-    , 'Preparation.preparationStepStage
-    , 'Preparation.preparationStepRequirement
-    , 'Preparation.foldPreparationStep
-    , 'Preparation.preparationPlan
-    , 'Preparation.preparationPlanRequest
-    , 'Preparation.preparationPlanSteps
-    , 'Preparation.foldPreparationPlan
     , 'Profile.foldProfileInventoryKey
     , 'Profile.foldProfileInventoryDefect
     , 'Profile.foldProfileInventoryCompilation

@@ -10,6 +10,7 @@ module O2I.Operation.Encoding.Internal
   , CanonicalMember
   , MachineResult(..)
   , MachineEncodingDefect(..)
+  , canonicalFragmentBytes
   , textFragment
   , naturalFragment
   , booleanFragment
@@ -74,6 +75,10 @@ data MachineEncodingDefect
   | ReservedMachineMember !Text
   | DuplicateMachineMember !Text
   deriving (Eq, Show)
+
+-- | Materialize one package-internal fragment for Schema conformance checks.
+canonicalFragmentBytes :: CanonicalFragment -> ByteString
+canonicalFragmentBytes = strictBuilder . canonicalFragmentBuilder
 
 -- | Encode one unrestricted domain text as a canonical JSON string.
 --

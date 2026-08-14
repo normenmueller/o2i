@@ -13,7 +13,6 @@ module O2I.Operation.Discovery.Adapter.Machine
 import Data.ByteString (ByteString)
 import qualified Data.List.NonEmpty as NonEmpty
 import O2I.Operation.Discovery.Adapter (AdapterDiscovery, foldAdapterDiscovery)
-import O2I.Operation.Discovery.Machine.Internal (adapterDescriptorFragment)
 import O2I.Operation.Encoding.Internal
   ( MachineResult(..)
   , arrayFragment
@@ -21,6 +20,7 @@ import O2I.Operation.Encoding.Internal
   , requiredMember
   , textFragment
   )
+import O2I.Operation.Machine.Fragment.Internal (adapterDescriptorFragment)
 import O2I.Operation.Schema (MachineSchema, SchemaVariant)
 import qualified O2I.Operation.Schema.Generated as Generated
 

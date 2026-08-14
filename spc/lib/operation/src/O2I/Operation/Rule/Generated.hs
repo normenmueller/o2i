@@ -14,7 +14,7 @@ operationContractVersion = "0.3.0"
 
 operationContractSha256 :: Text
 operationContractSha256 =
-  "941f3cc337350d1f6eaf0ff0b930c325e197f34480d770402aa5c07862761d3b"
+  "3046aeb097ea5802097a1d5625772201c7856681202293c6b89f4ca2f102015f"
 
 data GeneratedOperationRuleStage =
   GeneratedPreparationStage

@@ -52,6 +52,20 @@ class MachineDocument(NamedTuple):
         return SCHEMA_DIRECTORY / f"{self.identity}-v{self.version}.schema.json"
 
 
+class SchemaFragment(NamedTuple):
+    name: str
+    identity: str
+    version: int
+
+    @property
+    def reference(self) -> str:
+        return f"{self.identity}/v{self.version}"
+
+    @property
+    def schema_path(self) -> Path:
+        return SCHEMA_DIRECTORY / f"{self.identity}-v{self.version}.schema.json"
+
+
 EXPECTED_DOCUMENTS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("adapterInventory", ("adapter-inventory",)),
     (
@@ -77,6 +91,7 @@ EXPECTED_DOCUMENTS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ),
 )
 EXPECTED_VARIANTS = dict(EXPECTED_DOCUMENTS)
+EXPECTED_FRAGMENTS = ("diagnostic",)
 
 VARIANT_BINDINGS: dict[str, str] = {
     "adapter-inventory": "adapterInventoryVariant",
@@ -194,13 +209,57 @@ def validate_machine_documents(value: Any) -> list[MachineDocument]:
     return documents
 
 
+def validate_schema_fragments(value: Any) -> list[SchemaFragment]:
+    if not isinstance(value, list) or not value:
+        raise ValueError("schemaFragments: expected non-empty array")
+    fragments: list[SchemaFragment] = []
+    for index, raw in enumerate(value):
+        subject = f"schemaFragments[{index}]"
+        if not isinstance(raw, dict):
+            raise ValueError(f"{subject}: expected object")
+        require_keys(raw, {"name", "identity", "version"}, subject)
+        name = require_text(raw["name"], f"{subject}.name")
+        if name not in EXPECTED_FRAGMENTS:
+            raise ValueError(f"{subject}.name: unsupported Schema fragment")
+        identity = require_text(raw["identity"], f"{subject}.identity")
+        if not valid_identity(identity):
+            raise ValueError(f"{subject}.identity: invalid schema identity")
+        version = require_positive_integer(raw["version"], f"{subject}.version")
+        fragments.append(SchemaFragment(name, identity, version))
+    names = [fragment.name for fragment in fragments]
+    identities = [fragment.identity for fragment in fragments]
+    paths = [fragment.schema_path for fragment in fragments]
+    if len(names) != len(set(names)):
+        raise ValueError("duplicate Schema fragment name")
+    if len(identities) != len(set(identities)):
+        raise ValueError("duplicate Schema fragment identity")
+    if len(paths) != len(set(paths)):
+        raise ValueError("duplicate Schema fragment output path")
+    if tuple(names) != EXPECTED_FRAGMENTS:
+        raise ValueError("Schema fragments are not in canonical order")
+    return fragments
+
+
 def validate(
     profile_companion: Path = DEFAULT_PROFILE_COMPANION,
-) -> tuple[dict[str, str], list[dict[str, str]], str, list[MachineDocument]]:
+) -> tuple[
+    dict[str, str],
+    list[dict[str, str]],
+    str,
+    list[MachineDocument],
+    list[SchemaFragment],
+]:
     companion, payload = load_object(COMPANION)
     require_keys(
         companion,
-        {"schema", "contract", "machineDocuments", "rules", "profileConformance"},
+        {
+            "schema",
+            "contract",
+            "machineDocuments",
+            "schemaFragments",
+            "rules",
+            "profileConformance",
+        },
         "Operation companion",
     )
     if companion["schema"] != "o2i.operation-contract/1":
@@ -218,6 +277,7 @@ def validate(
         raise ValueError("Operation authority must be exact")
 
     documents = validate_machine_documents(companion["machineDocuments"])
+    fragments = validate_schema_fragments(companion["schemaFragments"])
 
     raw_rules = companion["rules"]
     if not isinstance(raw_rules, list) or not raw_rules:
@@ -259,7 +319,13 @@ def validate(
     if profile_rules != identifiers:
         raise ValueError("Operation rules differ from Profile conformance inventory")
 
-    return checked_contract, rules, hashlib.sha256(payload).hexdigest(), documents
+    return (
+        checked_contract,
+        rules,
+        hashlib.sha256(payload).hexdigest(),
+        documents,
+        fragments,
+    )
 
 
 def text_schema(*, pattern: str | None = None) -> dict[str, Any]:
@@ -418,7 +484,7 @@ def rule_row() -> dict[str, Any]:
     )
 
 
-def adapter_occurrence() -> dict[str, Any]:
+def adapter_occurrence(*, path_pattern: str | None = None) -> dict[str, Any]:
     return {
         "oneOf": [
             {"type": "null"},
@@ -438,7 +504,9 @@ def adapter_occurrence() -> dict[str, Any]:
             object_schema(
                 {
                     "kind": {"const": "path"},
-                    "steps": array_schema(text_schema(), minimum=1),
+                    "steps": array_schema(
+                        text_schema(pattern=path_pattern), minimum=1
+                    ),
                 }
             ),
         ]
@@ -477,6 +545,19 @@ def source_identity() -> dict[str, Any]:
     )
 
 
+def diagnostic_source_identity() -> dict[str, Any]:
+    return object_schema(
+        {
+            "role": {
+                "enum": ["model", "supplemental", "readiness", "assessment"]
+            },
+            "ordinal": {"type": "integer", "minimum": 0},
+            "reference": text_schema(pattern=TOOL_TEXT_PATTERN),
+            "sha256": text_schema(pattern=SHA256_PATTERN),
+        }
+    )
+
+
 def native_name() -> dict[str, Any]:
     return object_schema(
         {
@@ -496,11 +577,11 @@ def source_position() -> dict[str, Any]:
     )
 
 
-def source_location() -> dict[str, Any]:
+def source_location(*, path_ordinal_minimum: int = 1) -> dict[str, Any]:
     path_step = object_schema(
         {
             "name": reference("nativeName"),
-            "ordinal": {"type": "integer", "minimum": 1},
+            "ordinal": {"type": "integer", "minimum": path_ordinal_minimum},
         }
     )
     span = object_schema(
@@ -611,6 +692,106 @@ def view_descriptor() -> dict[str, Any]:
             "identity": reference("identityOutcome"),
             "nameFields": array_schema(reference("viewNameField")),
             "location": reference("sourceLocation"),
+        }
+    )
+
+
+def canonical_occurrence() -> dict[str, Any]:
+    return object_schema(
+        {
+            "kind": {"enum": ["record", "property", "reference"]},
+            "ordinal": {"type": "integer", "minimum": 0},
+        }
+    )
+
+
+def diagnostic_occurrence() -> dict[str, Any]:
+    source = reference("diagnosticSourceIdentity")
+    return {
+        "oneOf": [
+            object_schema({"kind": {"const": "source"}, "source": source}),
+            object_schema(
+                {
+                    "kind": {"const": "native"},
+                    "source": source,
+                    "location": reference("adapterOccurrence"),
+                }
+            ),
+            object_schema(
+                {
+                    "kind": {"const": "draft"},
+                    "source": source,
+                    "location": reference("sourceLocation"),
+                }
+            ),
+            object_schema(
+                {
+                    "kind": {"const": "canonical"},
+                    "source": source,
+                    "occurrence": reference("canonicalOccurrence"),
+                }
+            ),
+            object_schema(
+                {
+                    "kind": {"const": "subject"},
+                    "source": source,
+                    "identity": text_schema(pattern=TOOL_TEXT_PATTERN),
+                }
+            ),
+            object_schema(
+                {
+                    "kind": {"const": "occurrence"},
+                    "source": source,
+                    "identity": text_schema(pattern=TOOL_TEXT_PATTERN),
+                }
+            ),
+        ]
+    }
+
+
+def diagnostic_provenance() -> dict[str, Any]:
+    rule_identity = text_schema(pattern=TOOL_TEXT_PATTERN)
+    return {
+        "oneOf": [
+            object_schema(
+                {
+                    "owner": {"const": "operation"},
+                    "ruleId": rule_identity,
+                }
+            ),
+            object_schema(
+                {
+                    "owner": {"const": "adapter"},
+                    "adapterId": text_schema(pattern=TOOL_TEXT_PATTERN),
+                    "ruleId": rule_identity,
+                }
+            ),
+            object_schema(
+                {
+                    "owner": {"const": "profile"},
+                    "profileReference": text_schema(pattern=TOOL_TEXT_PATTERN),
+                    "ruleId": rule_identity,
+                }
+            ),
+            object_schema(
+                {
+                    "owner": {"const": "core"},
+                    "ruleId": rule_identity,
+                }
+            ),
+        ]
+    }
+
+
+def diagnostic_value() -> dict[str, Any]:
+    return object_schema(
+        {
+            "severity": {"enum": ["debug", "info", "warning", "error"]},
+            "disposition": {"enum": ["model-finding", "process-failure"]},
+            "provenance": reference("diagnosticProvenance"),
+            "occurrences": array_schema(
+                reference("diagnosticOccurrence"), minimum=1
+            ),
         }
     )
 
@@ -914,6 +1095,30 @@ def view_discovery_schema(document: MachineDocument) -> dict[str, Any]:
     )
 
 
+def diagnostic_definitions() -> dict[str, Any]:
+    """Single generator-owned definition set for every diagnostic consumer."""
+    return {
+        "adapterOccurrence": adapter_occurrence(path_pattern=TOOL_TEXT_PATTERN),
+        "diagnosticSourceIdentity": diagnostic_source_identity(),
+        "nativeName": native_name(),
+        "sourcePosition": source_position(),
+        "sourceLocation": source_location(),
+        "canonicalOccurrence": canonical_occurrence(),
+        "diagnosticOccurrence": diagnostic_occurrence(),
+        "diagnosticProvenance": diagnostic_provenance(),
+        "diagnosticValue": diagnostic_value(),
+    }
+
+
+def diagnostic_schema(fragment: SchemaFragment) -> dict[str, Any]:
+    return schema_fragment_document(
+        fragment,
+        "Common typed Operation diagnostic",
+        diagnostic_definitions(),
+        "diagnosticValue",
+    )
+
+
 def schema_document(
     document: MachineDocument,
     title: str,
@@ -937,6 +1142,25 @@ SCHEMA_BUILDERS: dict[str, Callable[[MachineDocument], dict[str, Any]]] = {
     "viewDiscovery": view_discovery_schema,
 }
 
+SCHEMA_FRAGMENT_BUILDERS: dict[
+    str, Callable[[SchemaFragment], dict[str, Any]]
+] = {"diagnostic": diagnostic_schema}
+
+
+def schema_fragment_document(
+    fragment: SchemaFragment,
+    title: str,
+    definitions: dict[str, Any],
+    root: str,
+) -> dict[str, Any]:
+    return {
+        "$schema": SCHEMA_DRAFT,
+        "$id": fragment.reference,
+        "title": title,
+        "$ref": f"#/$defs/{root}",
+        "$defs": definitions,
+    }
+
 
 def verify_closed_objects(value: Any, subject: str) -> None:
     if isinstance(value, dict):
@@ -949,9 +1173,59 @@ def verify_closed_objects(value: Any, subject: str) -> None:
             verify_closed_objects(nested, f"{subject}/{index}")
 
 
+def verify_referenced_definitions(value: dict[str, Any], subject: str) -> None:
+    definitions = value.get("$defs", {})
+    root = value.get("$ref")
+    if not isinstance(definitions, dict) or not isinstance(root, str):
+        raise ValueError(f"{subject}: invalid Schema fragment root")
+    pending = [root]
+    reachable: set[str] = set()
+    while pending:
+        current = pending.pop()
+        prefix = "#/$defs/"
+        if not current.startswith(prefix):
+            raise ValueError(f"{subject}: non-local Schema fragment reference")
+        name = current.removeprefix(prefix)
+        if name in reachable:
+            continue
+        if name not in definitions:
+            raise ValueError(f"{subject}: missing Schema definition {name}")
+        reachable.add(name)
+        pending.extend(local_references(definitions[name]))
+    unused = set(definitions) - reachable
+    if unused:
+        raise ValueError(
+            f"{subject}: unreferenced Schema definitions {sorted(unused)!r}"
+        )
+
+
+def local_references(value: Any) -> list[str]:
+    if isinstance(value, dict):
+        references = [value["$ref"]] if isinstance(value.get("$ref"), str) else []
+        return references + [
+            reference
+            for key, nested in value.items()
+            if key != "$ref"
+            for reference in local_references(nested)
+        ]
+    if isinstance(value, list):
+        return [reference for nested in value for reference in local_references(nested)]
+    return []
+
+
 def render_schema(document: MachineDocument) -> bytes:
     schema = SCHEMA_BUILDERS[document.name](document)
     verify_closed_objects(schema, document.name)
+    return (
+        json.dumps(schema, ensure_ascii=False, indent=2, separators=(",", ": "))
+        + "\n"
+    ).encode("utf-8")
+
+
+def render_schema_fragment(fragment: SchemaFragment) -> bytes:
+    schema = SCHEMA_FRAGMENT_BUILDERS[fragment.name](fragment)
+    verify_closed_objects(schema, fragment.name)
+    verify_referenced_definitions(schema, fragment.name)
     return (
         json.dumps(schema, ensure_ascii=False, indent=2, separators=(",", ": "))
         + "\n"
@@ -1122,14 +1396,23 @@ import O2I.Operation.Schema.Internal
 def render_outputs(
     profile_companion: Path = DEFAULT_PROFILE_COMPANION,
 ) -> dict[Path, bytes]:
-    contract, rules, digest, documents = validate(profile_companion)
+    contract, rules, digest, documents, fragments = validate(profile_companion)
     schemas = {document.name: render_schema(document) for document in documents}
+    fragment_schemas = {
+        fragment.name: render_schema_fragment(fragment) for fragment in fragments
+    }
     outputs: dict[Path, bytes] = {
         RULE_GENERATED: render_rules(contract, rules, digest).encode("utf-8"),
         SCHEMA_GENERATED: render_schema_module(documents, schemas).encode("utf-8"),
     }
     outputs.update(
         {document.schema_path: schemas[document.name] for document in documents}
+    )
+    outputs.update(
+        {
+            fragment.schema_path: fragment_schemas[fragment.name]
+            for fragment in fragments
+        }
     )
     return outputs
 

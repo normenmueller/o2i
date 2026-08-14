@@ -12,15 +12,7 @@ module O2I.Operation.Discovery.View.Machine
 
 import Data.ByteString (ByteString)
 import qualified Data.List.NonEmpty as NonEmpty
-import O2I.Operation.Discovery.Machine.Internal
-  ( acquisitionFailureFragment
-  , adapterDescriptorFragment
-  , adapterDiagnosticFragment
-  , adapterSelectionErrorFragment
-  , sourceIdentityFragment
-  , viewDescriptorFragment
-  , viewDiscoveryAuthorityFragment
-  )
+import O2I.Operation.Discovery.Machine.Internal (viewDiscoveryAuthorityFragment)
 import O2I.Operation.Discovery.View
   ( ViewDiscovery
   , foldViewDiscovery
@@ -36,6 +28,14 @@ import O2I.Operation.Encoding.Internal
   , requiredMember
   )
 import O2I.Operation.Machine (ToolDescriptor)
+import O2I.Operation.Machine.Fragment.Internal
+  ( acquisitionFailureFragment
+  , adapterDescriptorFragment
+  , adapterDiagnosticFragment
+  , adapterSelectionErrorFragment
+  , sourceIdentityFragment
+  , viewDescriptorFragment
+  )
 import O2I.Operation.Machine.Internal (viewsOperationIdentity)
 import O2I.Operation.Schema (MachineSchema, SchemaVariant)
 import qualified O2I.Operation.Schema.Generated as Generated

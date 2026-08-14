@@ -1,0 +1,486 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "o2i.operation.diagnostic/v1",
+  "title": "Common typed Operation diagnostic",
+  "$ref": "#/$defs/diagnosticValue",
+  "$defs": {
+    "adapterOccurrence": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "offset"
+          ],
+          "properties": {
+            "kind": {
+              "const": "byte-offset"
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "line",
+            "column"
+          ],
+          "properties": {
+            "kind": {
+              "const": "line-column"
+            },
+            "line": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "column": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "steps"
+          ],
+          "properties": {
+            "kind": {
+              "const": "path"
+            },
+            "steps": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^[^\u0000]+$"
+              },
+              "minItems": 1
+            }
+          }
+        }
+      ]
+    },
+    "diagnosticSourceIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "ordinal",
+        "reference",
+        "sha256"
+      ],
+      "properties": {
+        "role": {
+          "enum": [
+            "model",
+            "supplemental",
+            "readiness",
+            "assessment"
+          ]
+        },
+        "ordinal": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\u0000]+$"
+        },
+        "sha256": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "nativeName": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "localName"
+      ],
+      "properties": {
+        "namespace": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "localName": {
+          "type": "string"
+        }
+      }
+    },
+    "sourcePosition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "line",
+        "column",
+        "offset"
+      ],
+      "properties": {
+        "line": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "offset": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "sourceLocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "span"
+      ],
+      "properties": {
+        "path": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "ordinal"
+            ],
+            "properties": {
+              "name": {
+                "$ref": "#/$defs/nativeName"
+              },
+              "ordinal": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          "minItems": 1
+        },
+        "span": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "start",
+                "end"
+              ],
+              "properties": {
+                "start": {
+                  "$ref": "#/$defs/sourcePosition"
+                },
+                "end": {
+                  "$ref": "#/$defs/sourcePosition"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "canonicalOccurrence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "ordinal"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "record",
+            "property",
+            "reference"
+          ]
+        },
+        "ordinal": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "diagnosticOccurrence": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "source"
+          ],
+          "properties": {
+            "kind": {
+              "const": "source"
+            },
+            "source": {
+              "$ref": "#/$defs/diagnosticSourceIdentity"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "source",
+            "location"
+          ],
+          "properties": {
+            "kind": {
+              "const": "native"
+            },
+            "source": {
+              "$ref": "#/$defs/diagnosticSourceIdentity"
+            },
+            "location": {
+              "$ref": "#/$defs/adapterOccurrence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "source",
+            "location"
+          ],
+          "properties": {
+            "kind": {
+              "const": "draft"
+            },
+            "source": {
+              "$ref": "#/$defs/diagnosticSourceIdentity"
+            },
+            "location": {
+              "$ref": "#/$defs/sourceLocation"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "source",
+            "occurrence"
+          ],
+          "properties": {
+            "kind": {
+              "const": "canonical"
+            },
+            "source": {
+              "$ref": "#/$defs/diagnosticSourceIdentity"
+            },
+            "occurrence": {
+              "$ref": "#/$defs/canonicalOccurrence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "source",
+            "identity"
+          ],
+          "properties": {
+            "kind": {
+              "const": "subject"
+            },
+            "source": {
+              "$ref": "#/$defs/diagnosticSourceIdentity"
+            },
+            "identity": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^\u0000]+$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "source",
+            "identity"
+          ],
+          "properties": {
+            "kind": {
+              "const": "occurrence"
+            },
+            "source": {
+              "$ref": "#/$defs/diagnosticSourceIdentity"
+            },
+            "identity": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^\u0000]+$"
+            }
+          }
+        }
+      ]
+    },
+    "diagnosticProvenance": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "owner",
+            "ruleId"
+          ],
+          "properties": {
+            "owner": {
+              "const": "operation"
+            },
+            "ruleId": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^\u0000]+$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "owner",
+            "adapterId",
+            "ruleId"
+          ],
+          "properties": {
+            "owner": {
+              "const": "adapter"
+            },
+            "adapterId": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^\u0000]+$"
+            },
+            "ruleId": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^\u0000]+$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "owner",
+            "profileReference",
+            "ruleId"
+          ],
+          "properties": {
+            "owner": {
+              "const": "profile"
+            },
+            "profileReference": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^\u0000]+$"
+            },
+            "ruleId": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^\u0000]+$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "owner",
+            "ruleId"
+          ],
+          "properties": {
+            "owner": {
+              "const": "core"
+            },
+            "ruleId": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^\u0000]+$"
+            }
+          }
+        }
+      ]
+    },
+    "diagnosticValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "severity",
+        "disposition",
+        "provenance",
+        "occurrences"
+      ],
+      "properties": {
+        "severity": {
+          "enum": [
+            "debug",
+            "info",
+            "warning",
+            "error"
+          ]
+        },
+        "disposition": {
+          "enum": [
+            "model-finding",
+            "process-failure"
+          ]
+        },
+        "provenance": {
+          "$ref": "#/$defs/diagnosticProvenance"
+        },
+        "occurrences": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/diagnosticOccurrence"
+          },
+          "minItems": 1
+        }
+      }
+    }
+  }
+}

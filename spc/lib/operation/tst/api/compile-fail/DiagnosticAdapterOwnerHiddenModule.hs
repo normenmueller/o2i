@@ -1,0 +1,3 @@
+module DiagnosticAdapterOwnerHiddenModule where
+
+import O2I.Operation.Diagnostic.AdapterOwner.Internal

@@ -4,7 +4,7 @@
 -- | Common typed diagnostics without caller-extensible detail maps.
 --
 -- Stable codes, authorities, and stages are projected from their compiled
--- rule owners. Exact source, native, Draft, canonical, and subject
+-- rule owners. Exact source, native, Draft, canonical, subject, and Core
 -- occurrences remain distinct typed alternatives.
 module O2I.Operation.Diagnostic
   ( type DiagnosticCode
@@ -51,7 +51,7 @@ import O2I.ArchiMate.Profile.Rule.Explanation
   , profileRuleStageText
   )
 import O2I.Core.Contract (coreRuleIdText)
-import O2I.Core.Identity (ModelIdentity)
+import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
 import O2I.Core.Rule.Catalog
   ( CoreRule
   , coreRuleIdentity
@@ -69,6 +69,7 @@ import O2I.Operation.Adapter
   , adapterRuleStage
   , adapterRuleStageText
   )
+import O2I.Operation.Diagnostic.AdapterOwner.Internal (foldAdapterRuleWitness)
 import O2I.Operation.Diagnostic.Internal
 import O2I.Operation.Provenance (SourceIdentity)
 import O2I.Operation.Rule.Catalog
@@ -146,7 +147,10 @@ diagnosticProvenanceIdentity provenance =
   case provenance of
     OperationDiagnosticProvenance rule ->
       operationRuleIdText (operationRuleIdentity rule)
-    AdapterDiagnosticProvenance _ rule -> adapterRuleIdText (adapterRuleId rule)
+    AdapterDiagnosticProvenance witness ->
+      foldAdapterRuleWitness
+        (\_ rule -> adapterRuleIdText (adapterRuleId rule))
+        witness
     ProfileDiagnosticProvenance rule -> profileRuleIdText (profileRuleId rule)
     CoreDiagnosticProvenance rule -> coreRuleIdText (coreRuleIdentity rule)
 
@@ -155,8 +159,11 @@ diagnosticProvenanceAuthority :: DiagnosticProvenance -> Text
 diagnosticProvenanceAuthority provenance =
   case provenance of
     OperationDiagnosticProvenance _ -> "Operation"
-    AdapterDiagnosticProvenance descriptor _ ->
-      "Adapter:" <> adapterIdText (adapterDescriptorId descriptor)
+    AdapterDiagnosticProvenance witness ->
+      foldAdapterRuleWitness
+        (\descriptor _ ->
+           "Adapter:" <> adapterIdText (adapterDescriptorId descriptor))
+        witness
     ProfileDiagnosticProvenance rule ->
       "Profile:" <> profileRuleProfileReference rule
     CoreDiagnosticProvenance _ -> "Core"
@@ -167,8 +174,10 @@ diagnosticProvenanceStage provenance =
   case provenance of
     OperationDiagnosticProvenance rule ->
       operationRuleStageText (operationRuleStage rule)
-    AdapterDiagnosticProvenance _ rule ->
-      adapterRuleStageText (adapterRuleStage rule)
+    AdapterDiagnosticProvenance witness ->
+      foldAdapterRuleWitness
+        (\_ rule -> adapterRuleStageText (adapterRuleStage rule))
+        witness
     ProfileDiagnosticProvenance rule ->
       profileRuleStageText (profileRuleStage rule)
     CoreDiagnosticProvenance rule -> coreRuleStageText (coreRuleStage rule)
@@ -184,7 +193,8 @@ foldDiagnosticProvenance ::
 foldDiagnosticProvenance operation adapter profile core provenance =
   case provenance of
     OperationDiagnosticProvenance rule -> operation rule
-    AdapterDiagnosticProvenance descriptor rule -> adapter descriptor rule
+    AdapterDiagnosticProvenance witness ->
+      foldAdapterRuleWitness adapter witness
     ProfileDiagnosticProvenance rule -> profile rule
     CoreDiagnosticProvenance rule -> core rule
 
@@ -195,9 +205,10 @@ foldDiagnosticOccurrence ::
   -> (SourceIdentity -> DraftLocation -> result)
   -> (SourceIdentity -> CanonicalOccurrence -> result)
   -> (SourceIdentity -> ModelIdentity -> result)
+  -> (SourceIdentity -> OccurrenceIdentity -> result)
   -> DiagnosticOccurrence
   -> result
-foldDiagnosticOccurrence source native draft canonical subject occurrence =
+foldDiagnosticOccurrence source native draft canonical subject core occurrence =
   case occurrence of
     SourceDiagnosticOccurrence identity -> source identity
     AdapterDiagnosticOccurrence identity location -> native identity location
@@ -206,6 +217,8 @@ foldDiagnosticOccurrence source native draft canonical subject occurrence =
       canonical identity location
     SubjectDiagnosticOccurrence identity modelIdentity ->
       subject identity modelIdentity
+    CoreDiagnosticOccurrence identity occurrenceIdentity ->
+      core identity occurrenceIdentity
 
 -- | Derive the stable namespaced code from the exact owning rule.
 diagnosticCode :: Diagnostic -> DiagnosticCode
@@ -214,11 +227,14 @@ diagnosticCode (Diagnostic _ _ provenance _) =
     (case provenance of
        OperationDiagnosticProvenance rule ->
          "o2i.operation." <> operationRuleIdText (operationRuleIdentity rule)
-       AdapterDiagnosticProvenance descriptor rule ->
-         "o2i.adapter."
-           <> adapterIdText (adapterDescriptorId descriptor)
-           <> "."
-           <> adapterRuleIdText (adapterRuleId rule)
+       AdapterDiagnosticProvenance witness ->
+         foldAdapterRuleWitness
+           (\descriptor rule ->
+              "o2i.adapter."
+                <> adapterIdText (adapterDescriptorId descriptor)
+                <> "."
+                <> adapterRuleIdText (adapterRuleId rule))
+           witness
        ProfileDiagnosticProvenance rule ->
          "o2i.profile." <> profileRuleIdText (profileRuleId rule)
        CoreDiagnosticProvenance rule ->
