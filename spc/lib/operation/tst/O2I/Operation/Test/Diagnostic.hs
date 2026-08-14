@@ -66,6 +66,14 @@ tests =
     , testCase "encodes every severity exactly" severityEncoding
     , testCase "encodes every disposition exactly" dispositionEncoding
     , testCase "encodes every typed occurrence exactly" occurrenceEncoding
+    , testCase "encodes every source role exactly" sourceRoleEncoding
+    , testCase "encodes every Adapter location exactly" adapterLocationEncoding
+    , testCase
+        "encodes every canonical occurrence kind exactly"
+        canonicalKindEncoding
+    , testCase
+        "encodes every Draft locator alternative exactly"
+        draftLocationEncoding
     , testCase "rejects impossible provenance cross-forms" provenanceRejection
     ]
 
@@ -335,6 +343,88 @@ occurrenceEncoding = do
         ]
   assertOccurrenceEncodings occurrences expectedOccurrences
 
+sourceRoleEncoding :: Assertion
+sourceRoleEncoding =
+  mapM_
+    (\(role, encodedRole) -> do
+       identity <- sourceIdentityFor role "source"
+       let encodedSource = sourceBytesAs encodedRole identity
+       assertOccurrenceEncodings
+         [SourceDiagnosticOccurrence identity]
+         [object [field "kind" "\"source\"", field "source" encodedSource]])
+    [ (ModelRole, "model")
+    , (SupplementalRole, "supplemental")
+    , (ReadinessRole, "readiness")
+    , (AssessmentRole, "assessment")
+    ]
+
+adapterLocationEncoding :: Assertion
+adapterLocationEncoding = do
+  identity <- sourceIdentity
+  lineColumn <- requireRight (nativeLineColumn 2 3)
+  path <- requireRight (nativePath ("root" :| ["child"]))
+  let source = sourceBytes identity
+      cases =
+        [ (unlocatedOccurrence, "null")
+        , ( locatedOccurrence (nativeByteOffset 7)
+          , object [field "kind" "\"byte-offset\"", field "offset" "7"])
+        , ( locatedOccurrence lineColumn
+          , object
+              [ field "kind" "\"line-column\""
+              , field "line" "2"
+              , field "column" "3"
+              ])
+        , ( locatedOccurrence path
+          , object
+              [ field "kind" "\"path\""
+              , field "steps" (array ["\"root\"", "\"child\""])
+              ])
+        ]
+      occurrenceBytes location =
+        object
+          [ field "kind" "\"native\""
+          , field "source" source
+          , field "location" location
+          ]
+  assertOccurrenceEncodings
+    (fmap (AdapterDiagnosticOccurrence identity . fst) cases)
+    (fmap (occurrenceBytes . snd) cases)
+
+canonicalKindEncoding :: Assertion
+canonicalKindEncoding = do
+  identity <- sourceIdentity
+  occurrences <- canonicalOccurrenceAlternatives
+  let source = sourceBytes identity
+      occurrenceBytes kind =
+        object
+          [ field "kind" "\"canonical\""
+          , field "source" source
+          , field
+              "occurrence"
+              (object [field "kind" (quoted kind), field "ordinal" "0"])
+          ]
+  assertOccurrenceEncodings
+    (fmap (CanonicalDiagnosticOccurrence identity) occurrences)
+    (fmap occurrenceBytes ["record", "property", "reference"])
+
+draftLocationEncoding :: Assertion
+draftLocationEncoding = do
+  identity <- sourceIdentity
+  let cases =
+        [ (testLocation, testLocationBytes)
+        , (spannedTestLocation, spannedTestLocationBytes)
+        ]
+      source = sourceBytes identity
+      occurrenceBytes location =
+        object
+          [ field "kind" "\"draft\""
+          , field "source" source
+          , field "location" location
+          ]
+  assertOccurrenceEncodings
+    (fmap (DraftDiagnosticOccurrence identity . fst) cases)
+    (fmap (occurrenceBytes . snd) cases)
+
 provenanceRejection :: Assertion
 provenanceRejection = do
   occurrence <- sourceOccurrence
@@ -475,23 +565,59 @@ coreRule :: CoreRule
 coreRule = NonEmpty.head (coreRuleCatalogEntries coreRuleCatalog)
 
 sourceIdentity :: IO SourceIdentity
-sourceIdentity =
-  requireRight (mkSourceReference "model") >>= \reference ->
-    pure
-      (sourceIdentityFromBytes ModelRole (sourceOrdinal 0) reference modelBytes)
+sourceIdentity = sourceIdentityFor ModelRole "model"
+
+sourceIdentityFor :: SourceRole -> Text -> IO SourceIdentity
+sourceIdentityFor role referenceText =
+  requireRight (mkSourceReference referenceText) >>= \reference ->
+    pure (sourceIdentityFromBytes role (sourceOrdinal 0) reference modelBytes)
 
 canonicalOccurrence :: IO Notation.CanonicalOccurrence
-canonicalOccurrence =
-  Notation.withCanonicalDocument testDraft $ \document ->
-    case Notation.canonicalDocumentRecords document of
-      record:_ ->
+canonicalOccurrence = do
+  occurrences <- canonicalOccurrenceAlternatives
+  case occurrences of
+    record:_ -> pure record
+    [] ->
+      assertFailure "canonical occurrence matrix did not produce a record"
+        >> fail "unreachable"
+
+canonicalOccurrenceAlternatives :: IO [Notation.CanonicalOccurrence]
+canonicalOccurrenceAlternatives =
+  Notation.withCanonicalDocument canonicalMatrixDraft $ \document ->
+    case ( Notation.canonicalDocumentRecords document
+         , Notation.canonicalDocumentProperties document
+         , Notation.canonicalDocumentReferences document) of
+      ([record], [property], [reference]) ->
         pure
-          (Notation.foldCanonicalRecord
-             (\occurrence _ _ _ _ -> occurrence)
-             record)
-      [] ->
-        assertFailure "test model root did not produce a canonical record"
+          [ Notation.foldCanonicalRecord
+              (\occurrence _ _ _ _ -> occurrence)
+              record
+          , Notation.canonicalPropertyOccurrence property
+          , Notation.canonicalReferenceOccurrence reference
+          ]
+      _ ->
+        assertFailure "canonical occurrence matrix is not one-of-each"
           >> fail "unreachable"
+
+canonicalMatrixDraft :: Draft.ProfileDraft
+canonicalMatrixDraft =
+  Draft.profileDraft
+    (Draft.modelRootDraft
+       (Draft.draftIdentity [Draft.draftTextScalar "model" testLocation])
+       testLocation
+       [ Draft.propertyMember
+           (Draft.draftProperty
+              (Draft.directPropertyKey
+                 [Draft.draftTextScalar "key" testLocation])
+              [Draft.draftTextScalar "value" testLocation]
+              testLocation
+              [])
+       , Draft.referenceMember
+           (Draft.propertyDefinitionReference
+              (Draft.draftIdentity
+                 [Draft.draftTextScalar "definition" testLocation])
+              testLocation)
+       ])
 
 testDraft :: Draft.ProfileDraft
 testDraft =
@@ -508,6 +634,19 @@ testLocation =
        (Draft.draftPathStep (Draft.draftNativeName Nothing "model") 0)
        [])
     Nothing
+
+spannedTestLocation :: Draft.DraftLocation
+spannedTestLocation =
+  Draft.draftLocation
+    (Draft.draftSourcePath
+       (Draft.draftPathStep
+          (Draft.draftNativeName (Just "urn:test") "element")
+          2)
+       [])
+    (Just
+       (Draft.draftSourceSpan
+          (Draft.draftSourcePosition 1 2 Nothing)
+          (Draft.draftSourcePosition 3 4 (Just 12))))
 
 adapterWitnessFixture ::
      Text
@@ -592,9 +731,12 @@ modelBytes :: ByteString
 modelBytes = "model"
 
 sourceBytes :: SourceIdentity -> ByteString
-sourceBytes identity =
+sourceBytes = sourceBytesAs "model"
+
+sourceBytesAs :: ByteString -> SourceIdentity -> ByteString
+sourceBytesAs role identity =
   object
-    [ field "role" "\"model\""
+    [ field "role" (quoted role)
     , field "ordinal" "0"
     , field
         "reference"
@@ -619,6 +761,36 @@ testLocationBytes =
                ]
            ])
     , field "span" "null"
+    ]
+
+spannedTestLocationBytes :: ByteString
+spannedTestLocationBytes =
+  object
+    [ field
+        "path"
+        (array
+           [ object
+               [ field
+                   "name"
+                   (object
+                      [ field "namespace" "\"urn:test\""
+                      , field "localName" "\"element\""
+                      ])
+               , field "ordinal" "3"
+               ]
+           ])
+    , field
+        "span"
+        (object
+           [ field
+               "start"
+               (object
+                  [field "line" "1", field "column" "2", field "offset" "null"])
+           , field
+               "end"
+               (object
+                  [field "line" "3", field "column" "4", field "offset" "12"])
+           ])
     ]
 
 assertDiagnosticSchema :: Bool -> ByteString -> Assertion

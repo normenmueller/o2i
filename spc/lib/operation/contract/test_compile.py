@@ -8,7 +8,7 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 
 HERE = Path(__file__).resolve().parent
@@ -292,6 +292,30 @@ class OperationContractCompilerTest(unittest.TestCase):
             "machineDocuments"
         ][0]["identity"]
         self.assert_invalid(changed, "duplicate machine document identity")
+
+    def test_machine_document_and_fragment_reference_collision_is_rejected(self):
+        changed = copy.deepcopy(self.companion)
+        changed["schemaFragments"][0]["identity"] = changed[
+            "machineDocuments"
+        ][0]["identity"]
+        changed["schemaFragments"][0]["version"] = changed[
+            "machineDocuments"
+        ][0]["version"]
+        self.assert_invalid(changed, "duplicate generated schema reference")
+
+    def test_machine_document_and_fragment_output_path_collision_is_rejected(self):
+        document = COMPILER.validate_machine_documents(
+            self.companion["machineDocuments"]
+        )[0]
+        with patch.object(
+            COMPILER.SchemaFragment,
+            "schema_path",
+            new_callable=PropertyMock,
+            return_value=document.schema_path,
+        ):
+            self.assert_invalid(
+                self.companion, "duplicate generated schema output path"
+            )
 
     def test_duplicate_variant_is_rejected(self):
         changed = copy.deepcopy(self.companion)

@@ -240,6 +240,18 @@ def validate_schema_fragments(value: Any) -> list[SchemaFragment]:
     return fragments
 
 
+def validate_schema_output_ownership(
+    documents: list[MachineDocument], fragments: list[SchemaFragment]
+) -> None:
+    schemas = [*documents, *fragments]
+    references = [schema.reference for schema in schemas]
+    paths = [schema.schema_path for schema in schemas]
+    if len(references) != len(set(references)):
+        raise ValueError("duplicate generated schema reference")
+    if len(paths) != len(set(paths)):
+        raise ValueError("duplicate generated schema output path")
+
+
 def validate(
     profile_companion: Path = DEFAULT_PROFILE_COMPANION,
 ) -> tuple[
@@ -278,6 +290,7 @@ def validate(
 
     documents = validate_machine_documents(companion["machineDocuments"])
     fragments = validate_schema_fragments(companion["schemaFragments"])
+    validate_schema_output_ownership(documents, fragments)
 
     raw_rules = companion["rules"]
     if not isinstance(raw_rules, list) or not raw_rules:
@@ -577,11 +590,11 @@ def source_position() -> dict[str, Any]:
     )
 
 
-def source_location(*, path_ordinal_minimum: int = 1) -> dict[str, Any]:
+def source_location() -> dict[str, Any]:
     path_step = object_schema(
         {
             "name": reference("nativeName"),
-            "ordinal": {"type": "integer", "minimum": path_ordinal_minimum},
+            "ordinal": {"type": "integer", "minimum": 1},
         }
     )
     span = object_schema(
