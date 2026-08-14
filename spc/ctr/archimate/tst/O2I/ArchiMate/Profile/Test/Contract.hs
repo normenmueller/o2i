@@ -53,6 +53,7 @@ contractTests =
     "compiled ArchiMate Profile"
     [ descriptorTest
     , mappingTest
+    , occurrenceIdentityProjectionTest
     , notationOutcomeTest
     , notationGlobalIdentityTest
     , notationProofTest
@@ -101,6 +102,48 @@ mappingTest =
       @?= Left Mapping.RelationshipLabelEmpty
     Mapping.normalizeRelationshipLabel "direct\n"
       @?= Left (Mapping.RelationshipLabelContainsControl '\n')
+
+occurrenceIdentityProjectionTest :: TestTree
+occurrenceIdentityProjectionTest =
+  testCase "projects the complete canonical occurrence grammar into Core"
+    $ Notation.withCanonicalDocument Fixture.validDraft
+    $ \document -> do
+        traverse projectOccurrence (recordOccurrences document)
+          @?= Right
+                [ "archimate:record:0"
+                , "archimate:record:1"
+                , "archimate:record:2"
+                , "archimate:record:3"
+                , "archimate:record:4"
+                , "archimate:record:5"
+                ]
+        traverse
+          (projectOccurrence . Notation.canonicalPropertyOccurrence)
+          (Notation.canonicalDocumentProperties document)
+          @?= Right
+                [ "archimate:property:0"
+                , "archimate:property:1"
+                , "archimate:property:2"
+                , "archimate:property:3"
+                , "archimate:property:4"
+                , "archimate:property:5"
+                ]
+        traverse
+          (projectOccurrence . Notation.canonicalReferenceOccurrence)
+          (Notation.canonicalDocumentReferences document)
+          @?= Right
+                [ "archimate:reference:0"
+                , "archimate:reference:1"
+                , "archimate:reference:2"
+                ]
+  where
+    recordOccurrences document =
+      map
+        (Notation.foldCanonicalRecord (\occurrence _ _ _ _ -> occurrence))
+        (Notation.canonicalDocumentRecords document)
+    projectOccurrence occurrence =
+      occurrenceIdentityText
+        <$> Projection.canonicalOccurrenceIdentity occurrence
 
 notationOutcomeTest :: TestTree
 notationOutcomeTest =

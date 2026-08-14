@@ -19,6 +19,7 @@ module O2I.ArchiMate.Profile.Projection
   , foldProfileContractFailure
   , -- | Opaque total outcome of applying Profile projection.
     ProfileProjectionAssessment
+  , canonicalOccurrenceIdentity
   , assessSelectedView
   , foldProfileProjectionAssessment
   , -- | Opaque successful notation-independent projection into Core material.
@@ -75,7 +76,11 @@ import O2I.ArchiMate.Profile.Notation
   , NotationConformantUniverse
   )
 import O2I.Core.Contract (CoreQualificationProposalRoleId)
-import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
+import O2I.Core.Identity
+  ( ModelIdentity
+  , OccurrenceIdentity
+  , OccurrenceIdentityDefect
+  )
 import O2I.Structure (StructureProjection)
 
 -- | Closed public vocabulary for generated Profile evidence shapes.
@@ -292,6 +297,15 @@ foldProfileContractFailure unknown mismatch missing impossible failure =
       missing binding occurrence
     Internal.ImpossibleOccurrenceIdentity occurrence details ->
       impossible occurrence details
+
+-- | Project one canonical Profile occurrence into its normalized Core identity.
+--
+-- The result preserves the Core identity boundary as a total outcome. Profile
+-- owns the exact ArchiMate occurrence grammar; callers cannot configure or
+-- reproduce that grammar independently.
+canonicalOccurrenceIdentity ::
+     CanonicalOccurrence -> Either OccurrenceIdentityDefect OccurrenceIdentity
+canonicalOccurrenceIdentity = Internal.canonicalOccurrenceIdentityValue
 
 -- | Apply the compiled Profile contract after exact Notation conformance.
 --

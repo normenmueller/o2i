@@ -309,6 +309,7 @@ $(assertOrdinaryFunctions
     , 'Projection.profileDefectRuleId
     , 'Projection.foldProfileDefect
     , 'Projection.foldProfileContractFailure
+    , 'Projection.canonicalOccurrenceIdentity
     , 'Projection.assessSelectedView
     , 'Projection.foldProfileProjectionAssessment
     , 'Projection.profileStructureProjection

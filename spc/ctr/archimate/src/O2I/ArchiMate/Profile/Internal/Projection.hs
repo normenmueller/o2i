@@ -78,6 +78,7 @@ import O2I.Core.Graph.Observation (Commitment(..))
 import O2I.Core.Identity
   ( ModelIdentity
   , OccurrenceIdentity
+  , OccurrenceIdentityDefect
   , modelIdentity
   , occurrenceIdentity
   )
@@ -1701,7 +1702,7 @@ fieldTextValuesFromFields field fields =
 coreOccurrence ::
      CanonicalOccurrence -> Either [ProfileIssue] OccurrenceIdentity
 coreOccurrence occurrence =
-  case occurrenceIdentity encoded of
+  case canonicalOccurrenceIdentityValue occurrence of
     Right identity -> Right identity
     Left identityDefect ->
       Left
@@ -1710,12 +1711,15 @@ coreOccurrence occurrence =
                occurrence
                (Text.pack (show identityDefect)))
         ]
-  where
-    encoded =
-      "archimate:"
-        <> occurrenceKindToken (canonicalOccurrenceKindValue occurrence)
-        <> ":"
-        <> Text.pack (show (canonicalOccurrenceOrdinalValue occurrence))
+
+canonicalOccurrenceIdentityValue ::
+     CanonicalOccurrence -> Either OccurrenceIdentityDefect OccurrenceIdentity
+canonicalOccurrenceIdentityValue occurrence =
+  occurrenceIdentity
+    ("archimate:"
+       <> occurrenceKindToken (canonicalOccurrenceKindValue occurrence)
+       <> ":"
+       <> Text.pack (show (canonicalOccurrenceOrdinalValue occurrence)))
 
 occurrenceKindToken :: CanonicalOccurrenceKind -> Text
 occurrenceKindToken kind =
