@@ -1,7 +1,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- | Private representation of Operation-owned machine-envelope metadata.
-module O2I.Operation.Machine.Internal where
+module O2I.Operation.Machine.Internal
+  ( ToolDescriptorField(..)
+  , ToolDescriptorDefect(..)
+  , ToolDescriptor(..)
+  , OperationIdentity
+  , viewsOperationIdentity
+  , validateOperationIdentity
+  , operationIdentityValue
+  , operationIdentityInventory
+  ) where
 
 import Data.Text (Text)
 
@@ -23,15 +32,27 @@ data ToolDescriptor = ToolDescriptor
   , toolDescriptorVersionValue :: !Text
   } deriving (Eq, Ord, Show)
 
--- | Package-internal exact operation identity for one machine envelope.
-newtype OperationIdentity = OperationIdentity
-  { operationIdentityValue :: Text
-  } deriving (Eq, Ord, Show)
+-- | Closed package-internal operation identity for one machine envelope.
+data OperationIdentity
+  = ViewsOperationIdentity
+  | ValidateOperationIdentity
+  deriving (Bounded, Enum, Eq, Ord, Show)
 
 -- | Exact identity of the profile-neutral View discovery operation.
 viewsOperationIdentity :: OperationIdentity
-viewsOperationIdentity = OperationIdentity "views"
+viewsOperationIdentity = ViewsOperationIdentity
 
 -- | Exact identity of cumulative selected-View validation.
 validateOperationIdentity :: OperationIdentity
-validateOperationIdentity = OperationIdentity "validate"
+validateOperationIdentity = ValidateOperationIdentity
+
+-- | Project the exact stable machine token by total case distinction.
+operationIdentityValue :: OperationIdentity -> Text
+operationIdentityValue identity =
+  case identity of
+    ViewsOperationIdentity -> "views"
+    ValidateOperationIdentity -> "validate"
+
+-- | Exhaustive inventory tied mechanically to the closed constructors.
+operationIdentityInventory :: [OperationIdentity]
+operationIdentityInventory = [minBound .. maxBound]

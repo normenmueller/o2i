@@ -10,7 +10,12 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import O2I.Operation.Encoding.Internal
 import O2I.Operation.Machine
-import O2I.Operation.Machine.Internal (validateOperationIdentity)
+import O2I.Operation.Machine.Internal
+  ( operationIdentityInventory
+  , operationIdentityValue
+  , validateOperationIdentity
+  , viewsOperationIdentity
+  )
 import O2I.Operation.Schema (machineSchemaVariants)
 import O2I.Operation.Schema.Internal (defineMachineSchema)
 import Test.Tasty (TestTree, testGroup)
@@ -22,6 +27,7 @@ tests =
     "Operation machine envelope"
     [ testCase "validates exact composition metadata" validDescriptor
     , testCase "accumulates every unsafe descriptor field" invalidDescriptor
+    , testCase "closes the exact operation identity inventory" exactIdentities
     , testCase "encodes the sole common envelope order" exactEnvelope
     ]
 
@@ -43,6 +49,13 @@ invalidDescriptor = do
   defectTags (mkToolDescriptor "" "") @?= ["empty:identity", "empty:version"]
   defectTags (mkToolDescriptor "bad\NULidentity" "bad\NULversion")
     @?= ["nul:identity", "nul:version"]
+
+exactIdentities :: Assertion
+exactIdentities = do
+  operationIdentityInventory
+    @?= [viewsOperationIdentity, validateOperationIdentity]
+  fmap operationIdentityValue operationIdentityInventory
+    @?= ["views", "validate"]
 
 exactEnvelope :: Assertion
 exactEnvelope = do
