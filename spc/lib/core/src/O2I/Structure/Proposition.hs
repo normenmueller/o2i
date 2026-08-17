@@ -4,6 +4,7 @@ module O2I.Structure.Proposition
   ) where
 
 import Data.List (sort, sortOn)
+import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
 import qualified Data.Set as Set
@@ -61,10 +62,11 @@ assessStructuredPropositions scope carriers propositions incidences =
           Map.elems propositions
       ]
     identityDefects =
-      [ StructureDefect StructuredPropositionIdentityRule subject occurrences
+      [ StructuredPropositionIdentityDefect
+        (StructuredPropositionIdentityEvidence subject first second remaining)
       | (identifier, subject) <- Map.toAscList propositionSubjects
       , let occurrences = modelIdentityOccurrenceIdentities scope identifier
-      , length occurrences /= 1
+      , first:second:remaining <- [occurrences]
       ]
     propositionSubjects =
       Map.fromListWith
@@ -99,28 +101,24 @@ assessOne carriers (proposition, scoped) incidences =
       case coreStructuredPropositionFamilyKind family of
         CollectiveStrategyRealizationFamily ->
           endpointTypeDefects
-            CollectiveParticipantTypeRule
+            (\claim segment endpoint ->
+               CollectiveParticipantTypeDefect
+                 (CollectiveParticipantTypeEvidence claim segment endpoint))
             occurrence
             participantEndpoint
             carriers
             participantIncidences
-            ++ cardinalityDefect
-                 CollectiveParticipantCardinalityRule
-                 occurrence
-                 ((>= 2) (length participantOccurrences))
-                 participantOccurrences
+            ++ participantCardinalityDefect occurrence participantOccurrences
             ++ uniquenessDefect occurrence participantOccurrences
             ++ endpointTypeDefects
-                 CollectiveTargetTypeRule
+                 (\claim segment endpoint ->
+                    CollectiveTargetTypeDefect
+                      (CollectiveTargetTypeEvidence claim segment endpoint))
                  occurrence
                  targetEndpoint
                  carriers
                  targetIncidences
-            ++ cardinalityDefect
-                 CollectiveTargetCardinalityRule
-                 occurrence
-                 (length targetOccurrences == 1)
-                 targetOccurrences
+            ++ targetCardinalityDefect occurrence targetOccurrences
             ++ distinctnessDefect
                  occurrence
                  participantOccurrences
@@ -155,40 +153,65 @@ incidenceObservation (StructuredIncidenceProjection occurrence _ role endpoint) 
   StructuredIncidenceObservation occurrence role endpoint
 
 endpointTypeDefects ::
-     StructureRule
+     (OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> StructureDefect)
   -> OccurrenceIdentity
   -> CoreQualifiedEndpointId
   -> Map OccurrenceIdentity (CarrierObservation scope)
   -> [StructuredIncidenceProjection]
   -> [StructureDefect]
-endpointTypeDefects rule proposition expected carriers = foldr collect []
+endpointTypeDefects constructor proposition expected carriers = foldr collect []
   where
     collect (StructuredIncidenceProjection segment _ _ endpoint) defects =
       case Map.lookup endpoint carriers of
         Just carrier
           | carrierQualifiedEndpoint carrier /= expected ->
-            StructureDefect
-              rule
-              proposition
-              [segment, carrierOccurrenceIdentity carrier]
+            constructor proposition segment (carrierOccurrenceIdentity carrier)
               : defects
         _ -> defects
 
-cardinalityDefect ::
-     StructureRule
-  -> OccurrenceIdentity
-  -> Bool
-  -> [OccurrenceIdentity]
-  -> [StructureDefect]
-cardinalityDefect rule proposition satisfied related =
-  [StructureDefect rule proposition (sort related) | not satisfied]
+participantCardinalityDefect ::
+     OccurrenceIdentity -> [OccurrenceIdentity] -> [StructureDefect]
+participantCardinalityDefect proposition participants =
+  case sort participants of
+    [] ->
+      [ CollectiveParticipantCardinalityDefect
+          (CollectiveParticipantCardinalityEvidence proposition Nothing)
+      ]
+    [participant] ->
+      [ CollectiveParticipantCardinalityDefect
+          (CollectiveParticipantCardinalityEvidence
+             proposition
+             (Just participant))
+      ]
+    _ -> []
+
+targetCardinalityDefect ::
+     OccurrenceIdentity -> [OccurrenceIdentity] -> [StructureDefect]
+targetCardinalityDefect proposition targets =
+  case sort targets of
+    [] ->
+      [ CollectiveTargetCardinalityDefect
+          (CollectiveTargetCardinalityEvidence proposition NoStructureOccurrence)
+      ]
+    [_] -> []
+    first:second:remaining ->
+      [ CollectiveTargetCardinalityDefect
+          (CollectiveTargetCardinalityEvidence
+             proposition
+             (MultipleStructureOccurrences first second remaining))
+      ]
 
 uniquenessDefect ::
      OccurrenceIdentity -> [OccurrenceIdentity] -> [StructureDefect]
 uniquenessDefect proposition participants =
-  [ StructureDefect CollectiveParticipantUniquenessRule proposition duplicates
-  | not (null duplicates)
-  ]
+  case duplicates of
+    first:remaining ->
+      [ CollectiveParticipantUniquenessDefect
+          (CollectiveParticipantUniquenessEvidence
+             proposition
+             (first :| remaining))
+      ]
+    [] -> []
   where
     duplicates =
       Map.keys
@@ -204,9 +227,12 @@ distinctnessDefect ::
   -> [OccurrenceIdentity]
   -> [StructureDefect]
 distinctnessDefect proposition participants targets =
-  [ StructureDefect CollectiveTargetDistinctnessRule proposition overlaps
-  | not (null overlaps)
-  ]
+  case overlaps of
+    first:remaining ->
+      [ CollectiveTargetDistinctnessDefect
+          (CollectiveTargetDistinctnessEvidence proposition (first :| remaining))
+      ]
+    [] -> []
   where
     overlaps =
       Set.toAscList

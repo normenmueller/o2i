@@ -470,8 +470,8 @@ supplementalBindingIsolation =
     , (1, strategyInput "b")
     , (2, strategyInput "target")
     ] $ \graph binding -> do
-    map supplementalInputDefectKind (supplementalBindingDefects binding)
-      @?= [SupplementalIdentityUnknown]
+    map supplementalDefectIsUnknown (supplementalBindingDefects binding)
+      @?= [True]
     let semanticIndex =
           buildSemanticIndex graph (supplementalBindingInputs binding)
     case assessStrategyFormulations semanticIndex of
@@ -491,8 +491,8 @@ collectiveSiteLocalSuppression =
     completeModelOccurrences
     (completeProjection Forward True)
     (strategyInputs ++ [(3, collectiveInputWithUnresolvedPolicy)]) $ \graph binding -> do
-    map supplementalInputDefectKind (supplementalBindingDefects binding)
-      @?= [SupplementalIdentityUnknown]
+    map supplementalDefectIsUnknown (supplementalBindingDefects binding)
+      @?= [True]
     let semanticIndex =
           buildSemanticIndex graph (supplementalBindingInputs binding)
         strategies = assessStrategyFormulations semanticIndex
@@ -528,8 +528,8 @@ assertCollectiveBindingDefects input expectedRules =
     completeModelOccurrences
     (completeProjection Forward True)
     (strategyInputs ++ [(3, input)]) $ \graph binding -> do
-    map supplementalInputDefectKind (supplementalBindingDefects binding)
-      @?= [SupplementalIdentityUnknown]
+    map supplementalDefectIsUnknown (supplementalBindingDefects binding)
+      @?= [True]
     let semanticIndex =
           buildSemanticIndex graph (supplementalBindingInputs binding)
         strategies = assessStrategyFormulations semanticIndex
@@ -540,6 +540,32 @@ assertCollectiveBindingDefects input expectedRules =
       result ->
         assertFailure
           ("unexpected site-local collective result: " ++ show result)
+
+supplementalDefectIsUnknown :: SupplementalInputDefect -> Bool
+supplementalDefectIsUnknown = foldSupplementalInputDefect eliminator
+  where
+    eliminator =
+      SupplementalInputDefectEliminator
+        { eliminateSupplementalInvalidUtf8 = const False
+        , eliminateSupplementalInvalidJsonSyntax = const False
+        , eliminateSupplementalDuplicateObjectMember = const False
+        , eliminateSupplementalTopLevelObjectRequired = const False
+        , eliminateSupplementalTypeMemberInvalid = const False
+        , eliminateSupplementalPayloadTypeNotAdmitted = const False
+        , eliminateSupplementalRequiredMemberMissing = const False
+        , eliminateSupplementalUnknownMember = const False
+        , eliminateSupplementalValueKindInvalid = const False
+        , eliminateSupplementalScalarGrammarInvalid = const False
+        , eliminateSupplementalArrayCardinalityInvalid = const False
+        , eliminateSupplementalArrayDistinctnessInvalid = const False
+        , eliminateSupplementalSubjectCardinalityInvalid = const False
+        , eliminateSupplementalIdentityUnknown = const True
+        , eliminateSupplementalIdentityAmbiguous = const False
+        , eliminateSupplementalIdentityWrongType = const False
+        , eliminateSupplementalIdentityOutOfSelectedView = const False
+        , eliminateSupplementalModelIdentityUnicodeScalarInvalid = const False
+        , eliminateSupplementalModelIdentityContainsNul = const False
+        }
 
 collectiveWorkScalesByParticipant :: Assertion
 collectiveWorkScalesByParticipant = do

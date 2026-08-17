@@ -20,9 +20,50 @@ module O2I.Structure
   , StructureEndpointRole(..)
   , StructureInputDefect(..)
   , StructureDefect
-  , structureDefectRule
-  , structureDefectSubject
-  , structureDefectRelatedOccurrences
+  , StructureZeroOrMultipleOccurrences
+  , foldStructureZeroOrMultipleOccurrences
+  , QualifiedEndpointCatalogMembershipEvidence
+  , qualifiedEndpointCatalogMembershipSubject
+  , ContextualizationSourceCategoryEvidence
+  , contextualizationSourceCategorySegment
+  , contextualizationSourceCategoryOwner
+  , ContextualizationTargetCategoryEvidence
+  , contextualizationTargetCategorySegment
+  , contextualizationTargetCategoryMember
+  , ContextualizationTargetOwnerCardinalityEvidence
+  , contextualizationTargetOwnerCardinalityMember
+  , contextualizationTargetOwnerCardinalityOwners
+  , SemanticRelationCompatibilityEvidence
+  , semanticRelationCompatibilityRelation
+  , semanticRelationCompatibilitySource
+  , semanticRelationCompatibilityTarget
+  , StructuredPropositionIdentityEvidence
+  , structuredPropositionIdentitySubject
+  , structuredPropositionIdentityFirstOccurrence
+  , structuredPropositionIdentitySecondOccurrence
+  , structuredPropositionIdentityRemainingOccurrences
+  , CollectiveParticipantTypeEvidence
+  , collectiveParticipantTypeClaim
+  , collectiveParticipantTypeSegment
+  , collectiveParticipantTypeEndpoint
+  , CollectiveParticipantCardinalityEvidence
+  , collectiveParticipantCardinalityClaim
+  , collectiveParticipantCardinalitySoleEndpoint
+  , CollectiveParticipantUniquenessEvidence
+  , collectiveParticipantUniquenessClaim
+  , collectiveParticipantUniquenessDuplicateEndpoints
+  , CollectiveTargetTypeEvidence
+  , collectiveTargetTypeClaim
+  , collectiveTargetTypeSegment
+  , collectiveTargetTypeEndpoint
+  , CollectiveTargetCardinalityEvidence
+  , collectiveTargetCardinalityClaim
+  , collectiveTargetCardinalityEndpoints
+  , CollectiveTargetDistinctnessEvidence
+  , collectiveTargetDistinctnessClaim
+  , collectiveTargetDistinctnessOverlappingEndpoints
+  , StructureDefectEliminator(..)
+  , foldStructureDefect
   , StructureAssessment(..)
   , StructuredIncidenceObservation
   , structuredIncidenceOccurrence
@@ -43,12 +84,12 @@ module O2I.Structure
   , assessStructure
   ) where
 
+import Data.List.NonEmpty (NonEmpty)
 import O2I.Core.Contract
   ( CoreCarrierCategory
   , CoreO2IType
   , CoreParticipantCompleteness
   , CoreRelationToken
-  , CoreRuleId
   , CoreStructuredPropositionFamilyId
   , CoreStructuredPropositionRoleId
   )
@@ -60,7 +101,8 @@ import O2I.Core.Graph.Observation
   )
 import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
 import O2I.Structure.Index (assessStructure)
-import O2I.Structure.Internal
+import O2I.Structure.Internal hiding (foldStructureDefect)
+import qualified O2I.Structure.Internal as StructureInternal
 
 -- | Project one carrier into the notation-independent Structure boundary.
 carrierProjection ::
@@ -118,17 +160,188 @@ structureProjection ::
   -> StructureProjection
 structureProjection = StructureProjection
 
--- | Project the exact Core rule violated by a structural defect.
-structureDefectRule :: StructureDefect -> CoreRuleId
-structureDefectRule (StructureDefect rule _ _) = structureRuleId rule
+-- | Eliminate exact zero-or-at-least-two occurrence evidence.
+foldStructureZeroOrMultipleOccurrences ::
+     result
+  -> (OccurrenceIdentity -> OccurrenceIdentity -> [OccurrenceIdentity] -> result)
+  -> StructureZeroOrMultipleOccurrences
+  -> result
+foldStructureZeroOrMultipleOccurrences onZero onMultiple occurrences =
+  case occurrences of
+    NoStructureOccurrence -> onZero
+    MultipleStructureOccurrences first second remaining ->
+      onMultiple first second remaining
 
--- | Project the primary occurrence addressed by a structural defect.
-structureDefectSubject :: StructureDefect -> OccurrenceIdentity
-structureDefectSubject (StructureDefect _ subject _) = subject
+-- | Eliminate one closed structural defect through its exact named handler.
+foldStructureDefect ::
+     StructureDefectEliminator result -> StructureDefect -> result
+foldStructureDefect = StructureInternal.foldStructureDefect
 
--- | Project canonically ordered related occurrences.
-structureDefectRelatedOccurrences :: StructureDefect -> [OccurrenceIdentity]
-structureDefectRelatedOccurrences (StructureDefect _ _ related) = related
+-- | Project the carrier occurrence that could not be qualified.
+qualifiedEndpointCatalogMembershipSubject ::
+     QualifiedEndpointCatalogMembershipEvidence -> OccurrenceIdentity
+qualifiedEndpointCatalogMembershipSubject (QualifiedEndpointCatalogMembershipEvidence subject) =
+  subject
+
+-- | Project the contextualization segment whose owner is invalid.
+contextualizationSourceCategorySegment ::
+     ContextualizationSourceCategoryEvidence -> OccurrenceIdentity
+contextualizationSourceCategorySegment (ContextualizationSourceCategoryEvidence segment _) =
+  segment
+
+-- | Project the carrier occurrence used in the owner role.
+contextualizationSourceCategoryOwner ::
+     ContextualizationSourceCategoryEvidence -> OccurrenceIdentity
+contextualizationSourceCategoryOwner (ContextualizationSourceCategoryEvidence _ owner) =
+  owner
+
+-- | Project the contextualization segment whose member is invalid.
+contextualizationTargetCategorySegment ::
+     ContextualizationTargetCategoryEvidence -> OccurrenceIdentity
+contextualizationTargetCategorySegment (ContextualizationTargetCategoryEvidence segment _) =
+  segment
+
+-- | Project the carrier occurrence used in the member role.
+contextualizationTargetCategoryMember ::
+     ContextualizationTargetCategoryEvidence -> OccurrenceIdentity
+contextualizationTargetCategoryMember (ContextualizationTargetCategoryEvidence _ member) =
+  member
+
+-- | Project the Primitive or Structuring carrier requiring one owner.
+contextualizationTargetOwnerCardinalityMember ::
+     ContextualizationTargetOwnerCardinalityEvidence -> OccurrenceIdentity
+contextualizationTargetOwnerCardinalityMember (ContextualizationTargetOwnerCardinalityEvidence member _) =
+  member
+
+-- | Project constructive zero-or-at-least-two owner occurrences.
+contextualizationTargetOwnerCardinalityOwners ::
+     ContextualizationTargetOwnerCardinalityEvidence
+  -> StructureZeroOrMultipleOccurrences
+contextualizationTargetOwnerCardinalityOwners (ContextualizationTargetOwnerCardinalityEvidence _ owners) =
+  owners
+
+-- | Project the semantic relation occurrence being assessed.
+semanticRelationCompatibilityRelation ::
+     SemanticRelationCompatibilityEvidence -> OccurrenceIdentity
+semanticRelationCompatibilityRelation (SemanticRelationCompatibilityEvidence relation _ _) =
+  relation
+
+-- | Project the carrier occurrence in the source role.
+semanticRelationCompatibilitySource ::
+     SemanticRelationCompatibilityEvidence -> OccurrenceIdentity
+semanticRelationCompatibilitySource (SemanticRelationCompatibilityEvidence _ source _) =
+  source
+
+-- | Project the carrier occurrence in the target role.
+semanticRelationCompatibilityTarget ::
+     SemanticRelationCompatibilityEvidence -> OccurrenceIdentity
+semanticRelationCompatibilityTarget (SemanticRelationCompatibilityEvidence _ _ target) =
+  target
+
+-- | Project the proposition occurrence chosen as deterministic subject.
+structuredPropositionIdentitySubject ::
+     StructuredPropositionIdentityEvidence -> OccurrenceIdentity
+structuredPropositionIdentitySubject (StructuredPropositionIdentityEvidence subject _ _ _) =
+  subject
+
+-- | Project the first occurrence sharing the model identity.
+structuredPropositionIdentityFirstOccurrence ::
+     StructuredPropositionIdentityEvidence -> OccurrenceIdentity
+structuredPropositionIdentityFirstOccurrence (StructuredPropositionIdentityEvidence _ first _ _) =
+  first
+
+-- | Project the second occurrence proving multiplicity.
+structuredPropositionIdentitySecondOccurrence ::
+     StructuredPropositionIdentityEvidence -> OccurrenceIdentity
+structuredPropositionIdentitySecondOccurrence (StructuredPropositionIdentityEvidence _ _ second _) =
+  second
+
+-- | Project further occurrences sharing the model identity.
+structuredPropositionIdentityRemainingOccurrences ::
+     StructuredPropositionIdentityEvidence -> [OccurrenceIdentity]
+structuredPropositionIdentityRemainingOccurrences (StructuredPropositionIdentityEvidence _ _ _ remaining) =
+  remaining
+
+-- | Project the collective proposition occurrence.
+collectiveParticipantTypeClaim ::
+     CollectiveParticipantTypeEvidence -> OccurrenceIdentity
+collectiveParticipantTypeClaim (CollectiveParticipantTypeEvidence claim _ _) =
+  claim
+
+-- | Project the participant incidence segment.
+collectiveParticipantTypeSegment ::
+     CollectiveParticipantTypeEvidence -> OccurrenceIdentity
+collectiveParticipantTypeSegment (CollectiveParticipantTypeEvidence _ segment _) =
+  segment
+
+-- | Project the carrier occurrence in the participant endpoint role.
+collectiveParticipantTypeEndpoint ::
+     CollectiveParticipantTypeEvidence -> OccurrenceIdentity
+collectiveParticipantTypeEndpoint (CollectiveParticipantTypeEvidence _ _ endpoint) =
+  endpoint
+
+-- | Project the collective proposition occurrence.
+collectiveParticipantCardinalityClaim ::
+     CollectiveParticipantCardinalityEvidence -> OccurrenceIdentity
+collectiveParticipantCardinalityClaim (CollectiveParticipantCardinalityEvidence claim _) =
+  claim
+
+-- | Project the sole participant endpoint, if one exists.
+collectiveParticipantCardinalitySoleEndpoint ::
+     CollectiveParticipantCardinalityEvidence -> Maybe OccurrenceIdentity
+collectiveParticipantCardinalitySoleEndpoint (CollectiveParticipantCardinalityEvidence _ endpoint) =
+  endpoint
+
+-- | Project the collective proposition occurrence.
+collectiveParticipantUniquenessClaim ::
+     CollectiveParticipantUniquenessEvidence -> OccurrenceIdentity
+collectiveParticipantUniquenessClaim (CollectiveParticipantUniquenessEvidence claim _) =
+  claim
+
+-- | Project distinct participant endpoints occurring more than once.
+collectiveParticipantUniquenessDuplicateEndpoints ::
+     CollectiveParticipantUniquenessEvidence -> NonEmpty OccurrenceIdentity
+collectiveParticipantUniquenessDuplicateEndpoints (CollectiveParticipantUniquenessEvidence _ endpoints) =
+  endpoints
+
+-- | Project the collective proposition occurrence.
+collectiveTargetTypeClaim :: CollectiveTargetTypeEvidence -> OccurrenceIdentity
+collectiveTargetTypeClaim (CollectiveTargetTypeEvidence claim _ _) = claim
+
+-- | Project the target incidence segment.
+collectiveTargetTypeSegment ::
+     CollectiveTargetTypeEvidence -> OccurrenceIdentity
+collectiveTargetTypeSegment (CollectiveTargetTypeEvidence _ segment _) = segment
+
+-- | Project the carrier occurrence in the target endpoint role.
+collectiveTargetTypeEndpoint ::
+     CollectiveTargetTypeEvidence -> OccurrenceIdentity
+collectiveTargetTypeEndpoint (CollectiveTargetTypeEvidence _ _ endpoint) =
+  endpoint
+
+-- | Project the collective proposition occurrence.
+collectiveTargetCardinalityClaim ::
+     CollectiveTargetCardinalityEvidence -> OccurrenceIdentity
+collectiveTargetCardinalityClaim (CollectiveTargetCardinalityEvidence claim _) =
+  claim
+
+-- | Project constructive zero-or-at-least-two target endpoints.
+collectiveTargetCardinalityEndpoints ::
+     CollectiveTargetCardinalityEvidence -> StructureZeroOrMultipleOccurrences
+collectiveTargetCardinalityEndpoints (CollectiveTargetCardinalityEvidence _ endpoints) =
+  endpoints
+
+-- | Project the collective proposition occurrence.
+collectiveTargetDistinctnessClaim ::
+     CollectiveTargetDistinctnessEvidence -> OccurrenceIdentity
+collectiveTargetDistinctnessClaim (CollectiveTargetDistinctnessEvidence claim _) =
+  claim
+
+-- | Project endpoints occupying participant and target roles.
+collectiveTargetDistinctnessOverlappingEndpoints ::
+     CollectiveTargetDistinctnessEvidence -> NonEmpty OccurrenceIdentity
+collectiveTargetDistinctnessOverlappingEndpoints (CollectiveTargetDistinctnessEvidence _ endpoints) =
+  endpoints
 
 -- | Project the notation segment carrying an incidence.
 structuredIncidenceOccurrence ::

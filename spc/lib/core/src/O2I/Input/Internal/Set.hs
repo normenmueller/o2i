@@ -25,12 +25,14 @@ assessSupplementalInputSet inputs =
 
 duplicateSubjectDefects :: [SupplementalInput] -> [SupplementalInputDefect]
 duplicateSubjectDefects inputs =
-  [ SupplementalInputDefect
-    SupplementalSubjectCardinalityInvalid
-    (SupplementalSubjectKey payloadType subject orderedOrdinals)
+  [ SupplementalSubjectCardinalityInvalidDefect
+    payloadType
+    subject
+    first
+    (second :| remaining)
   | ((payloadType, subject), ordinals) <- Map.toAscList grouped
-  , let orderedOrdinals = NonEmpty.sort ordinals
-  , NonEmpty.length orderedOrdinals > 1
+  , let orderedOrdinals = NonEmpty.toList (NonEmpty.sort ordinals)
+  , first:second:remaining <- [orderedOrdinals]
   ]
   where
     grouped =

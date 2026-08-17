@@ -91,6 +91,13 @@ class PrivateCompileFailure:
     diagnostics: tuple[tuple[str, int], ...]
 
 
+@dataclass(frozen=True)
+class EvidenceRecordUpdate:
+    module: str
+    evidence_type: str
+    projection: str
+
+
 CONTRACTS = (
     PackageContract(
         "o2i-core",
@@ -102,6 +109,8 @@ CONTRACTS = (
             "spc/lib/core/tst/api/compile-pass/"
             "CoreRuleCatalogPublicApi.hs",
             "spc/lib/core/tst/api/compile-pass/StructurePublicApi.hs",
+            "spc/lib/core/tst/api/compile-pass/"
+            "SupplementalInputPublicApi.hs",
             "spc/lib/core/tst/api/compile-pass/SemanticsPublicApi.hs",
         ),
         (
@@ -143,12 +152,37 @@ CONTRACTS = (
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "StructureOpaqueConstructors.hs",
-                (("GHC-01928", 1),),
+                (("GHC-01928", 1), ("GHC-88464", 2)),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "StructureEvidenceConstruction.hs",
+                (("GHC-01928", 12),),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "StructureInternalModule.hs",
                 (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "StructureLegacyDefectConsumers.hs",
+                (("GHC-88464", 3),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "SupplementalInputOpaqueConstructors.hs",
+                (("GHC-88464", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "SupplementalInputEvidenceConstruction.hs",
+                (("GHC-01928", 19),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "SupplementalInputLegacyConsumers.hs",
+                (("GHC-88464", 3),),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
@@ -403,6 +437,165 @@ PRIVATE_COMPILE_FAILURES = (
 )
 
 
+EVIDENCE_RECORD_UPDATES = (
+    EvidenceRecordUpdate(
+        "O2I.Structure",
+        "QualifiedEndpointCatalogMembershipEvidence",
+        "qualifiedEndpointCatalogMembershipSubject",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Structure",
+        "ContextualizationSourceCategoryEvidence",
+        "contextualizationSourceCategorySegment",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Structure",
+        "ContextualizationTargetCategoryEvidence",
+        "contextualizationTargetCategorySegment",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Structure",
+        "ContextualizationTargetOwnerCardinalityEvidence",
+        "contextualizationTargetOwnerCardinalityMember",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Structure",
+        "SemanticRelationCompatibilityEvidence",
+        "semanticRelationCompatibilityRelation",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Structure",
+        "StructuredPropositionIdentityEvidence",
+        "structuredPropositionIdentitySubject",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Structure",
+        "CollectiveParticipantTypeEvidence",
+        "collectiveParticipantTypeClaim",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Structure",
+        "CollectiveParticipantCardinalityEvidence",
+        "collectiveParticipantCardinalityClaim",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Structure",
+        "CollectiveParticipantUniquenessEvidence",
+        "collectiveParticipantUniquenessClaim",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Structure",
+        "CollectiveTargetTypeEvidence",
+        "collectiveTargetTypeClaim",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Structure",
+        "CollectiveTargetCardinalityEvidence",
+        "collectiveTargetCardinalityClaim",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Structure",
+        "CollectiveTargetDistinctnessEvidence",
+        "collectiveTargetDistinctnessClaim",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalInvalidUtf8Evidence",
+        "supplementalInvalidUtf8InputOrdinal",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalInvalidJsonSyntaxEvidence",
+        "supplementalInvalidJsonSyntaxInputOrdinal",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalDuplicateObjectMemberEvidence",
+        "supplementalDuplicateObjectMemberInputOrdinal",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalTopLevelObjectRequiredEvidence",
+        "supplementalTopLevelObjectInputOrdinal",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalTypeMemberInvalidEvidence",
+        "supplementalTypeMemberInputOrdinal",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalPayloadTypeNotAdmittedEvidence",
+        "supplementalPayloadTypeNotAdmittedInputOrdinal",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalRequiredMemberMissingEvidence",
+        "supplementalRequiredMemberMissingInputOrdinal",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalUnknownMemberEvidence",
+        "supplementalUnknownMemberInputOrdinal",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalValueKindInvalidEvidence",
+        "supplementalValueKindInputOrdinal",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalScalarGrammarInvalidEvidence",
+        "supplementalScalarGrammarInputOrdinal",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalArrayCardinalityInvalidEvidence",
+        "supplementalArrayCardinalityInputOrdinal",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalArrayDistinctnessInvalidEvidence",
+        "supplementalArrayDistinctnessInputOrdinal",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalSubjectCardinalityInvalidEvidence",
+        "supplementalSubjectCardinalityPayloadType",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalIdentityUnknownEvidence",
+        "supplementalIdentityUnknownInputOrdinal",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalIdentityAmbiguousEvidence",
+        "supplementalIdentityAmbiguousInputOrdinal",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalIdentityWrongTypeEvidence",
+        "supplementalIdentityWrongTypeInputOrdinal",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalIdentityOutOfSelectedViewEvidence",
+        "supplementalIdentityOutOfViewInputOrdinal",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalModelIdentityUnicodeScalarInvalidEvidence",
+        "supplementalUnicodeScalarInputOrdinal",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Semantics.Input",
+        "SupplementalModelIdentityContainsNulEvidence",
+        "supplementalModelIdentityNulInputOrdinal",
+    ),
+)
+
+
 def parse_diagnostics(output: str) -> list[dict[str, object]]:
     diagnostics = []
     for line in output.splitlines():
@@ -594,6 +787,81 @@ def compile_source(
         )
 
 
+def check_evidence_record_update_inventory() -> None:
+    domain_counts = Counter(
+        contract.module for contract in EVIDENCE_RECORD_UPDATES
+    )
+    expected_domains = Counter(
+        {"O2I.Structure": 12, "O2I.Semantics.Input": 19}
+    )
+    identities = {
+        (contract.module, contract.evidence_type, contract.projection)
+        for contract in EVIDENCE_RECORD_UPDATES
+    }
+    if len(EVIDENCE_RECORD_UPDATES) != 31:
+        raise RuntimeError(
+            "Evidence record-update inventory must contain exactly 31 cases"
+        )
+    if domain_counts != expected_domains:
+        raise RuntimeError(
+            "Evidence record-update domains differ: "
+            f"expected {expected_domains}, found {domain_counts}"
+        )
+    if len(identities) != len(EVIDENCE_RECORD_UPDATES):
+        raise RuntimeError("Evidence record-update inventory contains duplicates")
+
+
+def check_evidence_record_updates(
+    root: Path,
+    project_dir: Path,
+    project_file: str | None,
+    build_dir: Path,
+) -> None:
+    check_evidence_record_update_inventory()
+    executed = 0
+    for ordinal, contract in enumerate(EVIDENCE_RECORD_UPDATES, start=1):
+        with tempfile.TemporaryDirectory(
+            prefix=f"o2i-evidence-update-{ordinal:02d}."
+        ) as temporary:
+            temporary_path = Path(temporary)
+            source = temporary_path / "EvidenceRecordUpdateCase.hs"
+            source.write_text(
+                "module EvidenceRecordUpdateCase where\n\n"
+                f"import {contract.module}\n\n"
+                f"forge :: {contract.evidence_type} "
+                f"-> {contract.evidence_type}\n"
+                "forge evidence =\n"
+                f"  evidence {{{contract.projection} = undefined}}\n"
+            )
+            result = subprocess.run(
+                compiler_command(
+                    project_dir,
+                    project_file,
+                    build_dir,
+                    "o2i-core",
+                    source,
+                    temporary_path,
+                ),
+                cwd=root,
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+            assert_compile_failure_at(
+                root,
+                source,
+                f"Evidence record update {ordinal:02d} "
+                f"({contract.evidence_type})",
+                (("GHC-22385", 1),),
+                result,
+            )
+            executed += 1
+    if executed != 31:
+        raise RuntimeError(
+            f"Evidence record-update execution count differs: {executed}"
+        )
+
+
 def compile_private_source(
     root: Path,
     project_dir: Path,
@@ -687,12 +955,25 @@ def assert_compile_failure(
     expected_diagnostics: tuple[tuple[str, int], ...],
     result: subprocess.CompletedProcess[str],
 ) -> None:
+    source = (root / source_name).resolve()
+    assert_compile_failure_at(
+        root, source, source_name, expected_diagnostics, result
+    )
+
+
+def assert_compile_failure_at(
+    root: Path,
+    source: Path,
+    display_name: str,
+    expected_diagnostics: tuple[tuple[str, int], ...],
+    result: subprocess.CompletedProcess[str],
+) -> None:
     output = combined_output(result)
     if result.returncode == 0:
-        raise RuntimeError(f"{source_name} unexpectedly compiled")
+        raise RuntimeError(f"{display_name} unexpectedly compiled")
 
     diagnostics = parse_diagnostics(output)
-    source = (root / source_name).resolve()
+    source = source.resolve()
     foreign = [
         diagnostic
         for diagnostic in diagnostics
@@ -700,7 +981,7 @@ def assert_compile_failure(
     ]
     if foreign:
         raise RuntimeError(
-            f"{source_name} produced non-local diagnostics:\n{output}"
+            f"{display_name} produced non-local diagnostics:\n{output}"
         )
 
     actual = Counter(
@@ -709,7 +990,7 @@ def assert_compile_failure(
     expected = Counter(dict(expected_diagnostics))
     if actual != expected:
         raise RuntimeError(
-            f"{source_name} diagnostics differ: expected {expected}, "
+            f"{display_name} diagnostics differ: expected {expected}, "
             f"found {actual}\n{output}"
         )
 
@@ -751,6 +1032,9 @@ def check_contracts(
                 failure,
             )
     if core_selected:
+        check_evidence_record_updates(
+            root, project_dir, project_file, build_dir
+        )
         for failure in PRIVATE_COMPILE_FAILURES:
             check_private_compile_failure(
                 root,

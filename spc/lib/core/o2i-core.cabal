@@ -71,7 +71,6 @@ library
     O2I.Structure.Internal,
     O2I.Structure.Proposition
   build-depends:
-    aeson >=2.2.5 && <2.3,
     base >=4.20 && <4.21,
     bytestring >=0.12 && <0.13,
     containers >=0.7 && <0.8,
@@ -350,7 +349,6 @@ test-suite o2i-semantics-internal-test
     O2I.Structure.Internal,
     O2I.Structure.Proposition
   build-depends:
-    aeson >=2.2.5 && <2.3,
     base >=4.20 && <4.21,
     bytestring >=0.12 && <0.13,
     containers >=0.7 && <0.8,

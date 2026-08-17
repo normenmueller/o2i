@@ -17,15 +17,90 @@ module O2I.Semantics.Input
   , bindSupplementalInputs
   , supplementalBindingInputs
   , supplementalBindingDefects
-  , SupplementalInputDefectKind(..)
-  , SupplementalInputEvidence(..)
+  , SupplementalUnicodeScalarOccurrence(..)
+  , SupplementalInvalidUtf8Evidence
+  , supplementalInvalidUtf8InputOrdinal
+  , SupplementalInvalidJsonSyntaxEvidence
+  , supplementalInvalidJsonSyntaxInputOrdinal
+  , SupplementalDuplicateObjectMemberEvidence
+  , supplementalDuplicateObjectMemberInputOrdinal
+  , supplementalDuplicateObjectMemberPointer
+  , SupplementalTopLevelObjectRequiredEvidence
+  , supplementalTopLevelObjectInputOrdinal
+  , supplementalTopLevelObjectInstancePointer
+  , supplementalTopLevelObjectExpectedSchema
+  , SupplementalTypeMemberInvalidEvidence
+  , supplementalTypeMemberInputOrdinal
+  , supplementalTypeMemberInstancePointer
+  , supplementalTypeMemberExpectedSchema
+  , SupplementalPayloadTypeNotAdmittedEvidence
+  , supplementalPayloadTypeNotAdmittedInputOrdinal
+  , supplementalPayloadTypeNotAdmittedInstancePointer
+  , supplementalPayloadTypeNotAdmittedExpectedSchema
+  , SupplementalRequiredMemberMissingEvidence
+  , supplementalRequiredMemberMissingInputOrdinal
+  , supplementalRequiredMemberMissingInstancePointer
+  , supplementalRequiredMemberMissingExpectedSchema
+  , SupplementalUnknownMemberEvidence
+  , supplementalUnknownMemberInputOrdinal
+  , supplementalUnknownMemberInstancePointer
+  , supplementalUnknownMemberExpectedSchema
+  , SupplementalValueKindInvalidEvidence
+  , supplementalValueKindInputOrdinal
+  , supplementalValueKindInstancePointer
+  , supplementalValueKindExpectedSchema
+  , SupplementalScalarGrammarInvalidEvidence
+  , supplementalScalarGrammarInputOrdinal
+  , supplementalScalarGrammarInstancePointer
+  , supplementalScalarGrammarExpectedSchema
+  , SupplementalArrayCardinalityInvalidEvidence
+  , supplementalArrayCardinalityInputOrdinal
+  , supplementalArrayCardinalityInstancePointer
+  , supplementalArrayCardinalityExpectedSchema
+  , SupplementalArrayDistinctnessInvalidEvidence
+  , supplementalArrayDistinctnessInputOrdinal
+  , supplementalArrayDistinctnessInstancePointer
+  , supplementalArrayDistinctnessExpectedSchema
+  , SupplementalSubjectCardinalityInvalidEvidence
+  , supplementalSubjectCardinalityPayloadType
+  , supplementalSubjectCardinalitySubject
+  , supplementalSubjectCardinalityFirstInputOrdinal
+  , supplementalSubjectCardinalityRemainingInputOrdinals
+  , SupplementalIdentityUnknownEvidence
+  , supplementalIdentityUnknownInputOrdinal
+  , supplementalIdentityUnknownInstancePointer
+  , supplementalIdentityUnknownModelIdentity
+  , SupplementalIdentityAmbiguousEvidence
+  , supplementalIdentityAmbiguousInputOrdinal
+  , supplementalIdentityAmbiguousInstancePointer
+  , supplementalIdentityAmbiguousModelIdentity
+  , SupplementalIdentityWrongTypeEvidence
+  , supplementalIdentityWrongTypeInputOrdinal
+  , supplementalIdentityWrongTypeInstancePointer
+  , supplementalIdentityWrongTypeModelIdentity
+  , SupplementalIdentityOutOfSelectedViewEvidence
+  , supplementalIdentityOutOfViewInputOrdinal
+  , supplementalIdentityOutOfViewInstancePointer
+  , supplementalIdentityOutOfViewModelIdentity
+  , SupplementalModelIdentityUnicodeScalarInvalidEvidence
+  , supplementalUnicodeScalarInputOrdinal
+  , supplementalUnicodeScalarInstancePointer
+  , supplementalUnicodeScalarExpectedSchema
+  , supplementalUnicodeScalarOccurrences
+  , SupplementalModelIdentityContainsNulEvidence
+  , supplementalModelIdentityNulInputOrdinal
+  , supplementalModelIdentityNulInstancePointer
+  , supplementalModelIdentityNulExpectedSchema
+  , supplementalModelIdentityNulIndexes
   , SupplementalInputDefect
-  , supplementalInputDefectKind
-  , supplementalInputDefectEvidence
-  , supplementalInputDefectRule
+  , SupplementalInputDefectEliminator(..)
+  , foldSupplementalInputDefect
   ) where
 
+import Data.List.NonEmpty (NonEmpty)
+import Data.Text (Text)
 import Numeric.Natural (Natural)
+import O2I.Core.Identity (ModelIdentity)
 import O2I.Input.Internal.Binding (bindSupplementalInputs)
 import O2I.Input.Internal.Decode (decodeSupplementalInput)
 import O2I.Input.Internal.Set (assessSupplementalInputSet)
@@ -34,3 +109,336 @@ import O2I.Input.Internal.Types
 -- | Construct one stable zero-based ordinal assigned by Operation.
 supplementalInputOrdinal :: Natural -> SupplementalInputOrdinal
 supplementalInputOrdinal = SupplementalInputOrdinal
+
+-- | Project the Operation-assigned ordinal of invalid UTF-8 input.
+supplementalInvalidUtf8InputOrdinal ::
+     SupplementalInvalidUtf8Evidence -> SupplementalInputOrdinal
+supplementalInvalidUtf8InputOrdinal (SupplementalInvalidUtf8Evidence ordinal) =
+  ordinal
+
+-- | Project the Operation-assigned ordinal of invalid JSON input.
+supplementalInvalidJsonSyntaxInputOrdinal ::
+     SupplementalInvalidJsonSyntaxEvidence -> SupplementalInputOrdinal
+supplementalInvalidJsonSyntaxInputOrdinal (SupplementalInvalidJsonSyntaxEvidence ordinal) =
+  ordinal
+
+-- | Project the input ordinal of a repeated object member.
+supplementalDuplicateObjectMemberInputOrdinal ::
+     SupplementalDuplicateObjectMemberEvidence -> SupplementalInputOrdinal
+supplementalDuplicateObjectMemberInputOrdinal (SupplementalDuplicateObjectMemberEvidence ordinal _) =
+  ordinal
+
+-- | Project the RFC 6901 pointer of a repeated object member.
+supplementalDuplicateObjectMemberPointer ::
+     SupplementalDuplicateObjectMemberEvidence -> Text
+supplementalDuplicateObjectMemberPointer (SupplementalDuplicateObjectMemberEvidence _ pointer) =
+  pointer
+
+-- | Project the input ordinal whose root is not an object.
+supplementalTopLevelObjectInputOrdinal ::
+     SupplementalTopLevelObjectRequiredEvidence -> SupplementalInputOrdinal
+supplementalTopLevelObjectInputOrdinal (SupplementalTopLevelObjectRequiredEvidence ordinal _ _) =
+  ordinal
+
+-- | Project the instance pointer whose root kind is invalid.
+supplementalTopLevelObjectInstancePointer ::
+     SupplementalTopLevelObjectRequiredEvidence -> Text
+supplementalTopLevelObjectInstancePointer (SupplementalTopLevelObjectRequiredEvidence _ pointer _) =
+  pointer
+
+-- | Project the schema pointer requiring a root object.
+supplementalTopLevelObjectExpectedSchema ::
+     SupplementalTopLevelObjectRequiredEvidence -> Text
+supplementalTopLevelObjectExpectedSchema (SupplementalTopLevelObjectRequiredEvidence _ _ schema) =
+  schema
+
+-- | Project the input ordinal whose discriminator member is invalid.
+supplementalTypeMemberInputOrdinal ::
+     SupplementalTypeMemberInvalidEvidence -> SupplementalInputOrdinal
+supplementalTypeMemberInputOrdinal (SupplementalTypeMemberInvalidEvidence ordinal _ _) =
+  ordinal
+
+-- | Project the invalid discriminator instance pointer.
+supplementalTypeMemberInstancePointer ::
+     SupplementalTypeMemberInvalidEvidence -> Text
+supplementalTypeMemberInstancePointer (SupplementalTypeMemberInvalidEvidence _ pointer _) =
+  pointer
+
+-- | Project the pre-selection union that owns discriminator-member validity.
+supplementalTypeMemberExpectedSchema ::
+     SupplementalTypeMemberInvalidEvidence -> Text
+supplementalTypeMemberExpectedSchema (SupplementalTypeMemberInvalidEvidence _ _ schema) =
+  schema
+
+-- | Project the input ordinal with an unadmitted payload type.
+supplementalPayloadTypeNotAdmittedInputOrdinal ::
+     SupplementalPayloadTypeNotAdmittedEvidence -> SupplementalInputOrdinal
+supplementalPayloadTypeNotAdmittedInputOrdinal (SupplementalPayloadTypeNotAdmittedEvidence ordinal _ _) =
+  ordinal
+
+-- | Project the unadmitted discriminator instance pointer.
+supplementalPayloadTypeNotAdmittedInstancePointer ::
+     SupplementalPayloadTypeNotAdmittedEvidence -> Text
+supplementalPayloadTypeNotAdmittedInstancePointer (SupplementalPayloadTypeNotAdmittedEvidence _ pointer _) =
+  pointer
+
+-- | Project the pre-selection union containing admitted payload alternatives.
+supplementalPayloadTypeNotAdmittedExpectedSchema ::
+     SupplementalPayloadTypeNotAdmittedEvidence -> Text
+supplementalPayloadTypeNotAdmittedExpectedSchema (SupplementalPayloadTypeNotAdmittedEvidence _ _ schema) =
+  schema
+
+-- | Project the input ordinal with a missing required member.
+supplementalRequiredMemberMissingInputOrdinal ::
+     SupplementalRequiredMemberMissingEvidence -> SupplementalInputOrdinal
+supplementalRequiredMemberMissingInputOrdinal (SupplementalRequiredMemberMissingEvidence ordinal _ _) =
+  ordinal
+
+-- | Project the instance pointer requiring an absent member.
+supplementalRequiredMemberMissingInstancePointer ::
+     SupplementalRequiredMemberMissingEvidence -> Text
+supplementalRequiredMemberMissingInstancePointer (SupplementalRequiredMemberMissingEvidence _ pointer _) =
+  pointer
+
+-- | Project the schema pointer naming the required member contract.
+supplementalRequiredMemberMissingExpectedSchema ::
+     SupplementalRequiredMemberMissingEvidence -> Text
+supplementalRequiredMemberMissingExpectedSchema (SupplementalRequiredMemberMissingEvidence _ _ schema) =
+  schema
+
+-- | Project the input ordinal containing an unknown member.
+supplementalUnknownMemberInputOrdinal ::
+     SupplementalUnknownMemberEvidence -> SupplementalInputOrdinal
+supplementalUnknownMemberInputOrdinal (SupplementalUnknownMemberEvidence ordinal _ _) =
+  ordinal
+
+-- | Project the instance pointer of an unknown member.
+supplementalUnknownMemberInstancePointer ::
+     SupplementalUnknownMemberEvidence -> Text
+supplementalUnknownMemberInstancePointer (SupplementalUnknownMemberEvidence _ pointer _) =
+  pointer
+
+-- | Project the schema pointer for the containing closed object.
+supplementalUnknownMemberExpectedSchema ::
+     SupplementalUnknownMemberEvidence -> Text
+supplementalUnknownMemberExpectedSchema (SupplementalUnknownMemberEvidence _ _ schema) =
+  schema
+
+-- | Project the input ordinal containing a value of the wrong JSON kind.
+supplementalValueKindInputOrdinal ::
+     SupplementalValueKindInvalidEvidence -> SupplementalInputOrdinal
+supplementalValueKindInputOrdinal (SupplementalValueKindInvalidEvidence ordinal _ _) =
+  ordinal
+
+-- | Project the instance pointer of the wrong-kind value.
+supplementalValueKindInstancePointer ::
+     SupplementalValueKindInvalidEvidence -> Text
+supplementalValueKindInstancePointer (SupplementalValueKindInvalidEvidence _ pointer _) =
+  pointer
+
+-- | Project the schema pointer defining the required JSON kind.
+supplementalValueKindExpectedSchema ::
+     SupplementalValueKindInvalidEvidence -> Text
+supplementalValueKindExpectedSchema (SupplementalValueKindInvalidEvidence _ _ schema) =
+  schema
+
+-- | Project the input ordinal containing a malformed scalar.
+supplementalScalarGrammarInputOrdinal ::
+     SupplementalScalarGrammarInvalidEvidence -> SupplementalInputOrdinal
+supplementalScalarGrammarInputOrdinal (SupplementalScalarGrammarInvalidEvidence ordinal _ _) =
+  ordinal
+
+-- | Project the instance pointer of the malformed scalar.
+supplementalScalarGrammarInstancePointer ::
+     SupplementalScalarGrammarInvalidEvidence -> Text
+supplementalScalarGrammarInstancePointer (SupplementalScalarGrammarInvalidEvidence _ pointer _) =
+  pointer
+
+-- | Project the schema pointer defining the scalar grammar.
+supplementalScalarGrammarExpectedSchema ::
+     SupplementalScalarGrammarInvalidEvidence -> Text
+supplementalScalarGrammarExpectedSchema (SupplementalScalarGrammarInvalidEvidence _ _ schema) =
+  schema
+
+-- | Project the input ordinal containing a wrong-cardinality array.
+supplementalArrayCardinalityInputOrdinal ::
+     SupplementalArrayCardinalityInvalidEvidence -> SupplementalInputOrdinal
+supplementalArrayCardinalityInputOrdinal (SupplementalArrayCardinalityInvalidEvidence ordinal _ _) =
+  ordinal
+
+-- | Project the instance pointer of the wrong-cardinality array.
+supplementalArrayCardinalityInstancePointer ::
+     SupplementalArrayCardinalityInvalidEvidence -> Text
+supplementalArrayCardinalityInstancePointer (SupplementalArrayCardinalityInvalidEvidence _ pointer _) =
+  pointer
+
+-- | Project the schema pointer defining required array cardinality.
+supplementalArrayCardinalityExpectedSchema ::
+     SupplementalArrayCardinalityInvalidEvidence -> Text
+supplementalArrayCardinalityExpectedSchema (SupplementalArrayCardinalityInvalidEvidence _ _ schema) =
+  schema
+
+-- | Project the input ordinal containing non-distinct array members.
+supplementalArrayDistinctnessInputOrdinal ::
+     SupplementalArrayDistinctnessInvalidEvidence -> SupplementalInputOrdinal
+supplementalArrayDistinctnessInputOrdinal (SupplementalArrayDistinctnessInvalidEvidence ordinal _ _) =
+  ordinal
+
+-- | Project the instance pointer of the non-distinct array.
+supplementalArrayDistinctnessInstancePointer ::
+     SupplementalArrayDistinctnessInvalidEvidence -> Text
+supplementalArrayDistinctnessInstancePointer (SupplementalArrayDistinctnessInvalidEvidence _ pointer _) =
+  pointer
+
+-- | Project the schema pointer defining array distinctness.
+supplementalArrayDistinctnessExpectedSchema ::
+     SupplementalArrayDistinctnessInvalidEvidence -> Text
+supplementalArrayDistinctnessExpectedSchema (SupplementalArrayDistinctnessInvalidEvidence _ _ schema) =
+  schema
+
+-- | Project the closed payload family whose subject repeats.
+supplementalSubjectCardinalityPayloadType ::
+     SupplementalSubjectCardinalityInvalidEvidence -> SupplementalPayloadType
+supplementalSubjectCardinalityPayloadType (SupplementalSubjectCardinalityInvalidEvidence payloadType _ _ _) =
+  payloadType
+
+-- | Project the repeated payload subject identity.
+supplementalSubjectCardinalitySubject ::
+     SupplementalSubjectCardinalityInvalidEvidence -> ModelIdentity
+supplementalSubjectCardinalitySubject (SupplementalSubjectCardinalityInvalidEvidence _ subject _ _) =
+  subject
+
+-- | Project the first input ordinal for the repeated subject.
+supplementalSubjectCardinalityFirstInputOrdinal ::
+     SupplementalSubjectCardinalityInvalidEvidence -> SupplementalInputOrdinal
+supplementalSubjectCardinalityFirstInputOrdinal (SupplementalSubjectCardinalityInvalidEvidence _ _ first _) =
+  first
+
+-- | Project the second and any later input ordinals.
+supplementalSubjectCardinalityRemainingInputOrdinals ::
+     SupplementalSubjectCardinalityInvalidEvidence
+  -> NonEmpty SupplementalInputOrdinal
+supplementalSubjectCardinalityRemainingInputOrdinals (SupplementalSubjectCardinalityInvalidEvidence _ _ _ remaining) =
+  remaining
+
+-- | Project the input ordinal of an unknown identity site.
+supplementalIdentityUnknownInputOrdinal ::
+     SupplementalIdentityUnknownEvidence -> SupplementalInputOrdinal
+supplementalIdentityUnknownInputOrdinal (SupplementalIdentityUnknownEvidence ordinal _ _) =
+  ordinal
+
+-- | Project the instance pointer of an unknown identity site.
+supplementalIdentityUnknownInstancePointer ::
+     SupplementalIdentityUnknownEvidence -> Text
+supplementalIdentityUnknownInstancePointer (SupplementalIdentityUnknownEvidence _ pointer _) =
+  pointer
+
+-- | Project the exact unknown model identity.
+supplementalIdentityUnknownModelIdentity ::
+     SupplementalIdentityUnknownEvidence -> ModelIdentity
+supplementalIdentityUnknownModelIdentity (SupplementalIdentityUnknownEvidence _ _ identity) =
+  identity
+
+-- | Project the input ordinal of an ambiguous identity site.
+supplementalIdentityAmbiguousInputOrdinal ::
+     SupplementalIdentityAmbiguousEvidence -> SupplementalInputOrdinal
+supplementalIdentityAmbiguousInputOrdinal (SupplementalIdentityAmbiguousEvidence ordinal _ _) =
+  ordinal
+
+-- | Project the instance pointer of an ambiguous identity site.
+supplementalIdentityAmbiguousInstancePointer ::
+     SupplementalIdentityAmbiguousEvidence -> Text
+supplementalIdentityAmbiguousInstancePointer (SupplementalIdentityAmbiguousEvidence _ pointer _) =
+  pointer
+
+-- | Project the exact ambiguous model identity.
+supplementalIdentityAmbiguousModelIdentity ::
+     SupplementalIdentityAmbiguousEvidence -> ModelIdentity
+supplementalIdentityAmbiguousModelIdentity (SupplementalIdentityAmbiguousEvidence _ _ identity) =
+  identity
+
+-- | Project the input ordinal of a wrong-type identity site.
+supplementalIdentityWrongTypeInputOrdinal ::
+     SupplementalIdentityWrongTypeEvidence -> SupplementalInputOrdinal
+supplementalIdentityWrongTypeInputOrdinal (SupplementalIdentityWrongTypeEvidence ordinal _ _) =
+  ordinal
+
+-- | Project the instance pointer of a wrong-type identity site.
+supplementalIdentityWrongTypeInstancePointer ::
+     SupplementalIdentityWrongTypeEvidence -> Text
+supplementalIdentityWrongTypeInstancePointer (SupplementalIdentityWrongTypeEvidence _ pointer _) =
+  pointer
+
+-- | Project the identity resolved to the wrong qualified type.
+supplementalIdentityWrongTypeModelIdentity ::
+     SupplementalIdentityWrongTypeEvidence -> ModelIdentity
+supplementalIdentityWrongTypeModelIdentity (SupplementalIdentityWrongTypeEvidence _ _ identity) =
+  identity
+
+-- | Project the input ordinal of an out-of-View identity site.
+supplementalIdentityOutOfViewInputOrdinal ::
+     SupplementalIdentityOutOfSelectedViewEvidence -> SupplementalInputOrdinal
+supplementalIdentityOutOfViewInputOrdinal (SupplementalIdentityOutOfSelectedViewEvidence ordinal _ _) =
+  ordinal
+
+-- | Project the instance pointer of an out-of-View identity site.
+supplementalIdentityOutOfViewInstancePointer ::
+     SupplementalIdentityOutOfSelectedViewEvidence -> Text
+supplementalIdentityOutOfViewInstancePointer (SupplementalIdentityOutOfSelectedViewEvidence _ pointer _) =
+  pointer
+
+-- | Project the exact identity outside the selected View.
+supplementalIdentityOutOfViewModelIdentity ::
+     SupplementalIdentityOutOfSelectedViewEvidence -> ModelIdentity
+supplementalIdentityOutOfViewModelIdentity (SupplementalIdentityOutOfSelectedViewEvidence _ _ identity) =
+  identity
+
+-- | Project the input ordinal containing malformed surrogate evidence.
+supplementalUnicodeScalarInputOrdinal ::
+     SupplementalModelIdentityUnicodeScalarInvalidEvidence
+  -> SupplementalInputOrdinal
+supplementalUnicodeScalarInputOrdinal (SupplementalModelIdentityUnicodeScalarInvalidEvidence ordinal _ _ _) =
+  ordinal
+
+-- | Project the malformed ModelIdentity instance pointer.
+supplementalUnicodeScalarInstancePointer ::
+     SupplementalModelIdentityUnicodeScalarInvalidEvidence -> Text
+supplementalUnicodeScalarInstancePointer (SupplementalModelIdentityUnicodeScalarInvalidEvidence _ pointer _ _) =
+  pointer
+
+-- | Project the schema pointer defining Unicode scalar admissibility.
+supplementalUnicodeScalarExpectedSchema ::
+     SupplementalModelIdentityUnicodeScalarInvalidEvidence -> Text
+supplementalUnicodeScalarExpectedSchema (SupplementalModelIdentityUnicodeScalarInvalidEvidence _ _ schema _) =
+  schema
+
+-- | Project exact indexes and malformed surrogate code points.
+supplementalUnicodeScalarOccurrences ::
+     SupplementalModelIdentityUnicodeScalarInvalidEvidence
+  -> NonEmpty SupplementalUnicodeScalarOccurrence
+supplementalUnicodeScalarOccurrences (SupplementalModelIdentityUnicodeScalarInvalidEvidence _ _ _ occurrences) =
+  occurrences
+
+-- | Project the input ordinal containing NUL scalars.
+supplementalModelIdentityNulInputOrdinal ::
+     SupplementalModelIdentityContainsNulEvidence -> SupplementalInputOrdinal
+supplementalModelIdentityNulInputOrdinal (SupplementalModelIdentityContainsNulEvidence ordinal _ _ _) =
+  ordinal
+
+-- | Project the ModelIdentity instance pointer containing NUL.
+supplementalModelIdentityNulInstancePointer ::
+     SupplementalModelIdentityContainsNulEvidence -> Text
+supplementalModelIdentityNulInstancePointer (SupplementalModelIdentityContainsNulEvidence _ pointer _ _) =
+  pointer
+
+-- | Project the schema pointer defining NUL exclusion.
+supplementalModelIdentityNulExpectedSchema ::
+     SupplementalModelIdentityContainsNulEvidence -> Text
+supplementalModelIdentityNulExpectedSchema (SupplementalModelIdentityContainsNulEvidence _ _ schema _) =
+  schema
+
+-- | Project zero-based decoded scalar indexes containing NUL.
+supplementalModelIdentityNulIndexes ::
+     SupplementalModelIdentityContainsNulEvidence -> NonEmpty Natural
+supplementalModelIdentityNulIndexes (SupplementalModelIdentityContainsNulEvidence _ _ _ indexes) =
+  indexes

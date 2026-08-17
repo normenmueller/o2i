@@ -51,7 +51,7 @@ unknownIdentity =
     (strategySet
        strategyFormulation {formulationStrategy = identity "unknown-strategy"})
     @?= [ identityDefect
-            SupplementalIdentityUnknown
+            SupplementalIdentityUnknownDefect
             strategyOrdinal
             "/strategy"
             "unknown-strategy"
@@ -63,7 +63,7 @@ ambiguousIdentity =
     [modelOccurrence (occurrence "strategy-alias") (identity "strategy-1")]
     (strategySet strategyFormulation)
     @?= [ identityDefect
-            SupplementalIdentityAmbiguous
+            SupplementalIdentityAmbiguousDefect
             strategyOrdinal
             "/strategy"
             "strategy-1"
@@ -76,7 +76,7 @@ outsideIdentity =
     (strategySet
        strategyFormulation {formulationStrategy = identity "strategy-outside"})
     @?= [ identityDefect
-            SupplementalIdentityOutOfSelectedView
+            SupplementalIdentityOutOfSelectedViewDefect
             strategyOrdinal
             "/strategy"
             "strategy-outside"
@@ -88,7 +88,7 @@ wrongKind =
     []
     (strategySet strategyFormulation {formulationStrategy = identity "driver-1"})
     @?= [ identityDefect
-            SupplementalIdentityWrongType
+            SupplementalIdentityWrongTypeDefect
             strategyOrdinal
             "/strategy"
             "driver-1"
@@ -98,7 +98,7 @@ nestedPointer :: IO ()
 nestedPointer =
   defectsFor [] (collectiveSet invalidCollective)
     @?= [ identityDefect
-            SupplementalIdentityUnknown
+            SupplementalIdentityUnknownDefect
             collectiveOrdinal
             "/pairwiseCoherence/0/participantB"
             "unknown-participant"
@@ -124,15 +124,15 @@ independentDefects =
          , formulationDiagnosis = identity "objective-1"
          })
     @?= [ identityDefect
-            SupplementalIdentityWrongType
-            strategyOrdinal
-            "/diagnosis"
-            "objective-1"
-        , identityDefect
-            SupplementalIdentityUnknown
+            SupplementalIdentityUnknownDefect
             strategyOrdinal
             "/strategy"
             "unknown-strategy"
+        , identityDefect
+            SupplementalIdentityWrongTypeDefect
+            strategyOrdinal
+            "/diagnosis"
+            "objective-1"
         ]
 
 siteLocalBinding :: IO ()
@@ -140,7 +140,7 @@ siteLocalBinding =
   runBinding [] inputs $ \binding -> do
     supplementalBindingDefects binding
       @?= [ identityDefect
-              SupplementalIdentityUnknown
+              SupplementalIdentityUnknownDefect
               strategyOrdinal
               "/diagnosis"
               "unknown-diagnosis"
@@ -191,15 +191,13 @@ runBinding extra inputs inspect =
           inspect (bindSupplementalInputs graph inputs)
 
 identityDefect ::
-     SupplementalInputDefectKind
+     (SupplementalInputOrdinal -> Text -> ModelIdentity -> SupplementalInputDefect)
   -> SupplementalInputOrdinal
   -> Text
   -> Text
   -> SupplementalInputDefect
-identityDefect kind ordinal pointer identifier =
-  SupplementalInputDefect
-    kind
-    (SupplementalIdentityKey ordinal pointer (identity identifier))
+identityDefect constructor ordinal pointer identifier =
+  constructor ordinal pointer (identity identifier)
 
 completeSet :: SupplementalInputSet
 completeSet =

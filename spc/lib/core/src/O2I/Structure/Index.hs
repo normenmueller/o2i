@@ -284,12 +284,14 @@ contextualizationCategoryDefects carriers projection =
   where
     ContextualizationProjection occurrence owner member _ = projection
     sourceDefect =
-      [ StructureDefect ContextualizationSourceCategoryRule occurrence [owner]
+      [ ContextualizationSourceCategoryDefect
+        (ContextualizationSourceCategoryEvidence occurrence owner)
       | Just (CarrierProjection _ category _ _) <- [Map.lookup owner carriers]
       , coreCarrierCategoryKind category /= ContextCarrierCategory
       ]
     targetDefect =
-      [ StructureDefect ContextualizationTargetCategoryRule occurrence [member]
+      [ ContextualizationTargetCategoryDefect
+        (ContextualizationTargetCategoryEvidence occurrence member)
       | Just (CarrierProjection _ category _ _) <- [Map.lookup member carriers]
       , not (isOwnedCarrierCategory category)
       ]
@@ -299,14 +301,12 @@ ownerCardinalityDefects ::
   -> Map OccurrenceIdentity [OccurrenceIdentity]
   -> [StructureDefect]
 ownerCardinalityDefects carriers ownersByMember =
-  [ StructureDefect
-    ContextualizationTargetOwnerCardinalityRule
-    member
-    (sort owners)
+  [ ContextualizationTargetOwnerCardinalityDefect
+    (ContextualizationTargetOwnerCardinalityEvidence member evidence)
   | (member, CarrierProjection _ category _ _) <- Map.toAscList carriers
   , isOwnedCarrierCategory category
   , let owners = Map.findWithDefault [] member ownersByMember
-  , length owners /= 1
+  , Just evidence <- [zeroOrMultipleOccurrences (sort owners)]
   ]
 
 qualifyCarrier ::
@@ -346,7 +346,8 @@ qualifyCarrier scoped carriers ownersByMember projection =
         lookupCoreQualifiedEndpointFor category requiredContext o2iType
       | otherwise = Nothing
     membershipDefect =
-      [ StructureDefect QualifiedEndpointCatalogMembershipRule occurrence []
+      [ QualifiedEndpointCatalogMembershipDefect
+        (QualifiedEndpointCatalogMembershipEvidence occurrence)
       | canQualify
       ]
 
@@ -373,10 +374,8 @@ assessRelation carriers projection =
               commitment
           ])
       | otherwise ->
-        ( [ StructureDefect
-              SemanticRelationCompatibilityRule
-              occurrence
-              [source, target]
+        ( [ SemanticRelationCompatibilityDefect
+              (SemanticRelationCompatibilityEvidence occurrence source target)
           ]
         , [])
     _ -> ([], [])
@@ -399,3 +398,12 @@ isOwnedCarrierCategory category =
     StructuringCarrierCategory -> True
     ContextCarrierCategory -> False
     SituationAnchorCarrierCategory -> False
+
+zeroOrMultipleOccurrences ::
+     [OccurrenceIdentity] -> Maybe StructureZeroOrMultipleOccurrences
+zeroOrMultipleOccurrences occurrences =
+  case occurrences of
+    [] -> Just NoStructureOccurrence
+    first:second:remaining ->
+      Just (MultipleStructureOccurrences first second remaining)
+    [_] -> Nothing

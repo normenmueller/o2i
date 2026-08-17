@@ -15,7 +15,22 @@ module O2I.Structure.Internal
   , StructureInputDefect(..)
   , StructureRule(..)
   , structureRuleId
+  , StructureZeroOrMultipleOccurrences(..)
+  , QualifiedEndpointCatalogMembershipEvidence(..)
+  , ContextualizationSourceCategoryEvidence(..)
+  , ContextualizationTargetCategoryEvidence(..)
+  , ContextualizationTargetOwnerCardinalityEvidence(..)
+  , SemanticRelationCompatibilityEvidence(..)
+  , StructuredPropositionIdentityEvidence(..)
+  , CollectiveParticipantTypeEvidence(..)
+  , CollectiveParticipantCardinalityEvidence(..)
+  , CollectiveParticipantUniquenessEvidence(..)
+  , CollectiveTargetTypeEvidence(..)
+  , CollectiveTargetCardinalityEvidence(..)
+  , CollectiveTargetDistinctnessEvidence(..)
   , StructureDefect(..)
+  , StructureDefectEliminator(..)
+  , foldStructureDefect
   , StructureAssessment(..)
   , StructuredIncidenceObservation(..)
   , StructuredPropositionObservation(..)
@@ -201,10 +216,173 @@ structureRuleIdText rule =
     CollectiveTargetDistinctnessRule ->
       "core.collective-strategy-realization.target-distinctness"
 
--- | One structurally invalid O2I proposition or carrier.
-data StructureDefect =
-  StructureDefect !StructureRule !OccurrenceIdentity ![OccurrenceIdentity]
+-- | Exact zero-or-at-least-two evidence for a violated cardinality.
+--
+-- The public module keeps constructors opaque and exposes a total fold.
+data StructureZeroOrMultipleOccurrences
+  = NoStructureOccurrence
+  | MultipleStructureOccurrences
+      !OccurrenceIdentity
+      !OccurrenceIdentity
+      ![OccurrenceIdentity]
   deriving (Eq, Ord, Show)
+
+-- | Evidence that one carrier has no admitted qualified endpoint.
+newtype QualifiedEndpointCatalogMembershipEvidence =
+  QualifiedEndpointCatalogMembershipEvidence OccurrenceIdentity
+  deriving (Eq, Ord, Show)
+
+-- | Evidence that a contextualization owner has the wrong category.
+data ContextualizationSourceCategoryEvidence =
+  ContextualizationSourceCategoryEvidence
+    !OccurrenceIdentity
+    !OccurrenceIdentity
+  deriving (Eq, Ord, Show)
+
+-- | Evidence that a contextualization member has the wrong category.
+data ContextualizationTargetCategoryEvidence =
+  ContextualizationTargetCategoryEvidence
+    !OccurrenceIdentity
+    !OccurrenceIdentity
+  deriving (Eq, Ord, Show)
+
+-- | Evidence that an owned carrier has zero or multiple owners.
+data ContextualizationTargetOwnerCardinalityEvidence =
+  ContextualizationTargetOwnerCardinalityEvidence
+    !OccurrenceIdentity
+    !StructureZeroOrMultipleOccurrences
+  deriving (Eq, Ord, Show)
+
+-- | Evidence that a semantic relation has incompatible endpoints.
+data SemanticRelationCompatibilityEvidence =
+  SemanticRelationCompatibilityEvidence
+    !OccurrenceIdentity
+    !OccurrenceIdentity
+    !OccurrenceIdentity
+  deriving (Eq, Ord, Show)
+
+-- | Evidence that a proposition model identity is not unique.
+data StructuredPropositionIdentityEvidence =
+  StructuredPropositionIdentityEvidence
+    !OccurrenceIdentity
+    !OccurrenceIdentity
+    !OccurrenceIdentity
+    ![OccurrenceIdentity]
+  deriving (Eq, Ord, Show)
+
+-- | Evidence that one participant incidence targets the wrong carrier type.
+data CollectiveParticipantTypeEvidence =
+  CollectiveParticipantTypeEvidence
+    !OccurrenceIdentity
+    !OccurrenceIdentity
+    !OccurrenceIdentity
+  deriving (Eq, Ord, Show)
+
+-- | Evidence that a collective proposition has fewer than two participants.
+data CollectiveParticipantCardinalityEvidence =
+  CollectiveParticipantCardinalityEvidence
+    !OccurrenceIdentity
+    !(Maybe OccurrenceIdentity)
+  deriving (Eq, Ord, Show)
+
+-- | Evidence that participant endpoint identities repeat.
+data CollectiveParticipantUniquenessEvidence =
+  CollectiveParticipantUniquenessEvidence
+    !OccurrenceIdentity
+    !(NonEmpty OccurrenceIdentity)
+  deriving (Eq, Ord, Show)
+
+-- | Evidence that one target incidence has the wrong carrier type.
+data CollectiveTargetTypeEvidence =
+  CollectiveTargetTypeEvidence
+    !OccurrenceIdentity
+    !OccurrenceIdentity
+    !OccurrenceIdentity
+  deriving (Eq, Ord, Show)
+
+-- | Evidence that a collective proposition has zero or multiple targets.
+data CollectiveTargetCardinalityEvidence =
+  CollectiveTargetCardinalityEvidence
+    !OccurrenceIdentity
+    !StructureZeroOrMultipleOccurrences
+  deriving (Eq, Ord, Show)
+
+-- | Evidence that target and participant endpoint roles overlap.
+data CollectiveTargetDistinctnessEvidence =
+  CollectiveTargetDistinctnessEvidence
+    !OccurrenceIdentity
+    !(NonEmpty OccurrenceIdentity)
+  deriving (Eq, Ord, Show)
+
+-- | One structurally invalid O2I proposition or carrier.
+--
+-- Each constructor is owned by exactly one Structure rule and admits only its
+-- exact evidence cardinality. Constructors stay private at the public API.
+data StructureDefect
+  = QualifiedEndpointCatalogMembershipDefect
+      !QualifiedEndpointCatalogMembershipEvidence
+  | ContextualizationSourceCategoryDefect
+      !ContextualizationSourceCategoryEvidence
+  | ContextualizationTargetCategoryDefect
+      !ContextualizationTargetCategoryEvidence
+  | ContextualizationTargetOwnerCardinalityDefect
+      !ContextualizationTargetOwnerCardinalityEvidence
+  | SemanticRelationCompatibilityDefect !SemanticRelationCompatibilityEvidence
+  | StructuredPropositionIdentityDefect !StructuredPropositionIdentityEvidence
+  | CollectiveParticipantTypeDefect !CollectiveParticipantTypeEvidence
+  | CollectiveParticipantCardinalityDefect
+      !CollectiveParticipantCardinalityEvidence
+  | CollectiveParticipantUniquenessDefect
+      !CollectiveParticipantUniquenessEvidence
+  | CollectiveTargetTypeDefect !CollectiveTargetTypeEvidence
+  | CollectiveTargetCardinalityDefect !CollectiveTargetCardinalityEvidence
+  | CollectiveTargetDistinctnessDefect !CollectiveTargetDistinctnessEvidence
+  deriving (Eq, Ord, Show)
+
+-- | Named total consumer for all twelve Structure rules.
+data StructureDefectEliminator result = StructureDefectEliminator
+  { eliminateQualifiedEndpointCatalogMembership :: QualifiedEndpointCatalogMembershipEvidence -> result
+  , eliminateContextualizationSourceCategory :: ContextualizationSourceCategoryEvidence -> result
+  , eliminateContextualizationTargetCategory :: ContextualizationTargetCategoryEvidence -> result
+  , eliminateContextualizationTargetOwnerCardinality :: ContextualizationTargetOwnerCardinalityEvidence -> result
+  , eliminateSemanticRelationCompatibility :: SemanticRelationCompatibilityEvidence -> result
+  , eliminateStructuredPropositionIdentity :: StructuredPropositionIdentityEvidence -> result
+  , eliminateCollectiveParticipantType :: CollectiveParticipantTypeEvidence -> result
+  , eliminateCollectiveParticipantCardinality :: CollectiveParticipantCardinalityEvidence -> result
+  , eliminateCollectiveParticipantUniqueness :: CollectiveParticipantUniquenessEvidence -> result
+  , eliminateCollectiveTargetType :: CollectiveTargetTypeEvidence -> result
+  , eliminateCollectiveTargetCardinality :: CollectiveTargetCardinalityEvidence -> result
+  , eliminateCollectiveTargetDistinctness :: CollectiveTargetDistinctnessEvidence -> result
+  }
+
+foldStructureDefect ::
+     StructureDefectEliminator result -> StructureDefect -> result
+foldStructureDefect eliminator defect =
+  case defect of
+    QualifiedEndpointCatalogMembershipDefect evidence ->
+      eliminateQualifiedEndpointCatalogMembership eliminator evidence
+    ContextualizationSourceCategoryDefect evidence ->
+      eliminateContextualizationSourceCategory eliminator evidence
+    ContextualizationTargetCategoryDefect evidence ->
+      eliminateContextualizationTargetCategory eliminator evidence
+    ContextualizationTargetOwnerCardinalityDefect evidence ->
+      eliminateContextualizationTargetOwnerCardinality eliminator evidence
+    SemanticRelationCompatibilityDefect evidence ->
+      eliminateSemanticRelationCompatibility eliminator evidence
+    StructuredPropositionIdentityDefect evidence ->
+      eliminateStructuredPropositionIdentity eliminator evidence
+    CollectiveParticipantTypeDefect evidence ->
+      eliminateCollectiveParticipantType eliminator evidence
+    CollectiveParticipantCardinalityDefect evidence ->
+      eliminateCollectiveParticipantCardinality eliminator evidence
+    CollectiveParticipantUniquenessDefect evidence ->
+      eliminateCollectiveParticipantUniqueness eliminator evidence
+    CollectiveTargetTypeDefect evidence ->
+      eliminateCollectiveTargetType eliminator evidence
+    CollectiveTargetCardinalityDefect evidence ->
+      eliminateCollectiveTargetCardinality eliminator evidence
+    CollectiveTargetDistinctnessDefect evidence ->
+      eliminateCollectiveTargetDistinctness eliminator evidence
 
 -- | Closed result of structural assessment.
 data StructureAssessment scope

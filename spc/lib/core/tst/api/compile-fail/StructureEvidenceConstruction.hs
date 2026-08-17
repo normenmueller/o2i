@@ -1,0 +1,46 @@
+module StructureEvidenceConstruction where
+
+import O2I.Structure
+
+forgeQualifiedEndpoint :: QualifiedEndpointCatalogMembershipEvidence
+forgeQualifiedEndpoint = QualifiedEndpointCatalogMembershipEvidence undefined
+
+forgeContextSource :: ContextualizationSourceCategoryEvidence
+forgeContextSource = ContextualizationSourceCategoryEvidence undefined undefined
+
+forgeContextTarget :: ContextualizationTargetCategoryEvidence
+forgeContextTarget = ContextualizationTargetCategoryEvidence undefined undefined
+
+forgeOwnerCardinality :: ContextualizationTargetOwnerCardinalityEvidence
+forgeOwnerCardinality =
+  ContextualizationTargetOwnerCardinalityEvidence undefined undefined
+
+forgeRelation :: SemanticRelationCompatibilityEvidence
+forgeRelation =
+  SemanticRelationCompatibilityEvidence undefined undefined undefined
+
+forgePropositionIdentity :: StructuredPropositionIdentityEvidence
+forgePropositionIdentity =
+  StructuredPropositionIdentityEvidence undefined undefined undefined undefined
+
+forgeParticipantType :: CollectiveParticipantTypeEvidence
+forgeParticipantType =
+  CollectiveParticipantTypeEvidence undefined undefined undefined
+
+forgeParticipantCardinality :: CollectiveParticipantCardinalityEvidence
+forgeParticipantCardinality =
+  CollectiveParticipantCardinalityEvidence undefined undefined
+
+forgeParticipantUniqueness :: CollectiveParticipantUniquenessEvidence
+forgeParticipantUniqueness =
+  CollectiveParticipantUniquenessEvidence undefined undefined
+
+forgeTargetType :: CollectiveTargetTypeEvidence
+forgeTargetType = CollectiveTargetTypeEvidence undefined undefined undefined
+
+forgeTargetCardinality :: CollectiveTargetCardinalityEvidence
+forgeTargetCardinality = CollectiveTargetCardinalityEvidence undefined undefined
+
+forgeTargetDistinctness :: CollectiveTargetDistinctnessEvidence
+forgeTargetDistinctness =
+  CollectiveTargetDistinctnessEvidence undefined undefined

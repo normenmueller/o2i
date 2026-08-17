@@ -8,7 +8,7 @@ module Main
 import Data.List (sort)
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as NonEmpty
-import Data.Maybe (fromMaybe)
+import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import O2I.Core.Contract
@@ -16,7 +16,24 @@ import O2I.Core.Contract.Internal (structureRuleIds)
 import O2I.Core.Graph.Observation
 import O2I.Core.Identity
 import O2I.Structure
-import O2I.Structure.Internal (structureRuleId)
+import O2I.Structure.Internal
+  ( CollectiveParticipantCardinalityEvidence(..)
+  , CollectiveParticipantTypeEvidence(..)
+  , CollectiveParticipantUniquenessEvidence(..)
+  , CollectiveTargetCardinalityEvidence(..)
+  , CollectiveTargetDistinctnessEvidence(..)
+  , CollectiveTargetTypeEvidence(..)
+  , ContextualizationSourceCategoryEvidence(..)
+  , ContextualizationTargetCategoryEvidence(..)
+  , ContextualizationTargetOwnerCardinalityEvidence(..)
+  , QualifiedEndpointCatalogMembershipEvidence(..)
+  , SemanticRelationCompatibilityEvidence(..)
+  , StructureDefect(..)
+  , StructureRule(..)
+  , StructureZeroOrMultipleOccurrences(..)
+  , StructuredPropositionIdentityEvidence(..)
+  , structureRuleId
+  )
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.HUnit ((@?=), assertBool, testCase)
 
@@ -31,6 +48,8 @@ main =
        , endpointAndRelationRulesAreExact
        , collectiveFamilyRulesAreComplete
        , duplicateHeavyClaimIdentityEvidenceIsLinear
+       , structureDefectAlgebraIsExact
+       , cardinalityEvidenceIsExact
        , structureRuleOwnershipIsExact
        ])
 
@@ -122,6 +141,156 @@ duplicateHeavyClaimIdentityEvidenceIsLinear =
             , sort duplicateHeavyClaimOccurrences)
           ]
     sum (map (length . snd) defects) @?= length duplicateHeavyClaimOccurrences
+
+structureDefectAlgebraIsExact :: TestTree
+structureDefectAlgebraIsExact =
+  testCase "eliminates all twelve branches with exact typed evidence" $ do
+    map (foldStructureDefect branchEliminator) examples @?= [(0 :: Int) .. 11]
+    examples
+      @?= [ QualifiedEndpointCatalogMembershipDefect
+              (QualifiedEndpointCatalogMembershipEvidence carrierA)
+          , ContextualizationSourceCategoryDefect
+              (ContextualizationSourceCategoryEvidence
+                 contextualizationOccurrence
+                 carrierA)
+          , ContextualizationTargetCategoryDefect
+              (ContextualizationTargetCategoryEvidence
+                 contextualizationOccurrence
+                 carrierB)
+          , ContextualizationTargetOwnerCardinalityDefect
+              (ContextualizationTargetOwnerCardinalityEvidence
+                 carrierA
+                 NoStructureOccurrence)
+          , SemanticRelationCompatibilityDefect
+              (SemanticRelationCompatibilityEvidence
+                 relationOccurrence
+                 carrierA
+                 carrierB)
+          , StructuredPropositionIdentityDefect
+              (StructuredPropositionIdentityEvidence
+                 propositionOccurrence
+                 claimAlias
+                 propositionOccurrence
+                 [])
+          , CollectiveParticipantTypeDefect
+              (CollectiveParticipantTypeEvidence
+                 propositionOccurrence
+                 incidenceParticipantA
+                 carrierA)
+          , CollectiveParticipantCardinalityDefect
+              (CollectiveParticipantCardinalityEvidence
+                 propositionOccurrence
+                 (Just carrierA))
+          , CollectiveParticipantUniquenessDefect
+              (CollectiveParticipantUniquenessEvidence
+                 propositionOccurrence
+                 (carrierA NonEmpty.:| []))
+          , CollectiveTargetTypeDefect
+              (CollectiveTargetTypeEvidence
+                 propositionOccurrence
+                 incidenceTarget
+                 targetCarrier)
+          , CollectiveTargetCardinalityDefect
+              (CollectiveTargetCardinalityEvidence
+                 propositionOccurrence
+                 NoStructureOccurrence)
+          , CollectiveTargetDistinctnessDefect
+              (CollectiveTargetDistinctnessEvidence
+                 propositionOccurrence
+                 (carrierA NonEmpty.:| []))
+          ]
+  where
+    examples =
+      [ defectFor
+          QualifiedEndpointCatalogMembershipRule
+          invalidDirectEndpoint
+          invalidDirectEndpointSelected
+      , defectFor
+          ContextualizationSourceCategoryRule
+          invalidContextualizationSource
+          invalidContextualizationSourceSelected
+      , defectFor
+          ContextualizationTargetCategoryRule
+          invalidContextualizationTarget
+          invalidContextualizationTargetSelected
+      , defectFor
+          ContextualizationTargetOwnerCardinalityRule
+          missingContextOwner
+          missingContextOwnerSelected
+      , defectFor
+          SemanticRelationCompatibilityRule
+          incompatibleRelation
+          incompatibleRelationSelected
+      , defectForWithIndex
+          duplicateClaimIdentityIndex
+          StructuredPropositionIdentityRule
+          canonicalProjection
+          canonicalSelected
+      , defectFor
+          CollectiveParticipantTypeRule
+          wrongParticipantType
+          wrongParticipantTypeSelected
+      , defectFor
+          CollectiveParticipantCardinalityRule
+          oneParticipant
+          oneParticipantSelected
+      , defectFor
+          CollectiveParticipantUniquenessRule
+          duplicateParticipant
+          duplicateParticipantSelected
+      , defectFor
+          CollectiveTargetTypeRule
+          wrongTargetType
+          wrongTargetTypeSelected
+      , defectFor CollectiveTargetCardinalityRule noTarget noTargetSelected
+      , defectFor
+          CollectiveTargetDistinctnessRule
+          overlappingTarget
+          overlappingTargetSelected
+      ]
+    branchEliminator =
+      StructureDefectEliminator
+        { eliminateQualifiedEndpointCatalogMembership = const 0
+        , eliminateContextualizationSourceCategory = const 1
+        , eliminateContextualizationTargetCategory = const 2
+        , eliminateContextualizationTargetOwnerCardinality = const 3
+        , eliminateSemanticRelationCompatibility = const 4
+        , eliminateStructuredPropositionIdentity = const 5
+        , eliminateCollectiveParticipantType = const 6
+        , eliminateCollectiveParticipantCardinality = const 7
+        , eliminateCollectiveParticipantUniqueness = const 8
+        , eliminateCollectiveTargetType = const 9
+        , eliminateCollectiveTargetCardinality = const 10
+        , eliminateCollectiveTargetDistinctness = const 11
+        }
+
+cardinalityEvidenceIsExact :: TestTree
+cardinalityEvidenceIsExact =
+  testCase "retains zero, one, multiple, and NonEmpty evidence exactly" $ do
+    defectFor
+      CollectiveParticipantCardinalityRule
+      noParticipant
+      noParticipantSelected
+      @?= CollectiveParticipantCardinalityDefect
+            (CollectiveParticipantCardinalityEvidence
+               propositionOccurrence
+               Nothing)
+    defectFor
+      ContextualizationTargetOwnerCardinalityRule
+      multipleContextOwners
+      multipleContextOwnersSelected
+      @?= ContextualizationTargetOwnerCardinalityDefect
+            (ContextualizationTargetOwnerCardinalityEvidence
+               actionMember
+               (MultipleStructureOccurrences carrierA carrierB [targetCarrier]))
+    defectFor
+      CollectiveTargetCardinalityRule
+      multipleTargets
+      multipleTargetsSelected
+      @?= CollectiveTargetCardinalityDefect
+            (CollectiveTargetCardinalityEvidence
+               propositionOccurrence
+               (MultipleStructureOccurrences carrierA targetCarrier []))
 
 structureRuleOwnershipIsExact :: TestTree
 structureRuleOwnershipIsExact =
@@ -219,8 +388,46 @@ ruleIdsWithIndex index projection selected =
     inspect assessment =
       case assessment of
         Right (StructureRejected defects) ->
-          map (coreRuleIdText . structureDefectRule) (NonEmpty.toList defects)
+          map (coreRuleIdText . defectRuleId) (NonEmpty.toList defects)
         _ -> []
+
+structureDefectsWithIndex ::
+     ModelIdentityIndex
+  -> StructureProjection
+  -> [OccurrenceIdentity]
+  -> [StructureDefect]
+structureDefectsWithIndex index projection selected =
+  runStructureWithIndex index projection selected inspect
+  where
+    inspect assessment =
+      case assessment of
+        Right (StructureRejected defects) -> NonEmpty.toList defects
+        _ -> []
+
+defectFor ::
+     StructureRule
+  -> StructureProjection
+  -> [OccurrenceIdentity]
+  -> StructureDefect
+defectFor = defectForWithIndex identityIndex
+
+defectForWithIndex ::
+     ModelIdentityIndex
+  -> StructureRule
+  -> StructureProjection
+  -> [OccurrenceIdentity]
+  -> StructureDefect
+defectForWithIndex index rule projection selected =
+  case filter
+         ((== structureRuleId rule) . defectRuleId)
+         (structureDefectsWithIndex index projection selected) of
+    [defect] -> defect
+    defects ->
+      error
+        ("expected one Structure defect for "
+           ++ show rule
+           ++ ", got "
+           ++ show defects)
 
 identityDefectsWithIndex ::
      ModelIdentityIndex
@@ -233,13 +440,65 @@ identityDefectsWithIndex index projection selected =
     inspect assessment =
       case assessment of
         Right (StructureRejected defects) ->
-          [ ( structureDefectSubject defect
-            , structureDefectRelatedOccurrences defect)
-          | defect <- NonEmpty.toList defects
-          , coreRuleIdText (structureDefectRule defect)
-              == "core.structured-proposition.identity"
-          ]
+          mapMaybe identityEvidence (NonEmpty.toList defects)
         _ -> []
+
+defectRuleId :: StructureDefect -> CoreRuleId
+defectRuleId = foldStructureDefect eliminator
+  where
+    rule = structureRuleId
+    eliminator =
+      StructureDefectEliminator
+        { eliminateQualifiedEndpointCatalogMembership =
+            const (rule QualifiedEndpointCatalogMembershipRule)
+        , eliminateContextualizationSourceCategory =
+            const (rule ContextualizationSourceCategoryRule)
+        , eliminateContextualizationTargetCategory =
+            const (rule ContextualizationTargetCategoryRule)
+        , eliminateContextualizationTargetOwnerCardinality =
+            const (rule ContextualizationTargetOwnerCardinalityRule)
+        , eliminateSemanticRelationCompatibility =
+            const (rule SemanticRelationCompatibilityRule)
+        , eliminateStructuredPropositionIdentity =
+            const (rule StructuredPropositionIdentityRule)
+        , eliminateCollectiveParticipantType =
+            const (rule CollectiveParticipantTypeRule)
+        , eliminateCollectiveParticipantCardinality =
+            const (rule CollectiveParticipantCardinalityRule)
+        , eliminateCollectiveParticipantUniqueness =
+            const (rule CollectiveParticipantUniquenessRule)
+        , eliminateCollectiveTargetType = const (rule CollectiveTargetTypeRule)
+        , eliminateCollectiveTargetCardinality =
+            const (rule CollectiveTargetCardinalityRule)
+        , eliminateCollectiveTargetDistinctness =
+            const (rule CollectiveTargetDistinctnessRule)
+        }
+
+identityEvidence ::
+     StructureDefect -> Maybe (OccurrenceIdentity, [OccurrenceIdentity])
+identityEvidence = foldStructureDefect eliminator
+  where
+    eliminator =
+      StructureDefectEliminator
+        { eliminateQualifiedEndpointCatalogMembership = const Nothing
+        , eliminateContextualizationSourceCategory = const Nothing
+        , eliminateContextualizationTargetCategory = const Nothing
+        , eliminateContextualizationTargetOwnerCardinality = const Nothing
+        , eliminateSemanticRelationCompatibility = const Nothing
+        , eliminateStructuredPropositionIdentity =
+            \evidence ->
+              Just
+                ( structuredPropositionIdentitySubject evidence
+                , structuredPropositionIdentityFirstOccurrence evidence
+                    : structuredPropositionIdentitySecondOccurrence evidence
+                    : structuredPropositionIdentityRemainingOccurrences evidence)
+        , eliminateCollectiveParticipantType = const Nothing
+        , eliminateCollectiveParticipantCardinality = const Nothing
+        , eliminateCollectiveParticipantUniqueness = const Nothing
+        , eliminateCollectiveTargetType = const Nothing
+        , eliminateCollectiveTargetCardinality = const Nothing
+        , eliminateCollectiveTargetDistinctness = const Nothing
+        }
 
 runStructure ::
      StructureProjection
@@ -536,6 +795,72 @@ noTargetSelected =
   , incidenceParticipantB
   ]
 
+noParticipant :: StructureProjection
+noParticipant =
+  collectiveProjection
+    [strategyCarrier targetCarrier]
+    []
+    [targetIncidence incidenceTarget targetCarrier]
+
+noParticipantSelected :: [OccurrenceIdentity]
+noParticipantSelected = [targetCarrier, propositionOccurrence, incidenceTarget]
+
+multipleTargets :: StructureProjection
+multipleTargets =
+  collectiveProjection
+    [ strategyCarrier carrierA
+    , strategyCarrier carrierB
+    , strategyCarrier targetCarrier
+    ]
+    [ participantIncidence incidenceParticipantA carrierA
+    , participantIncidence incidenceParticipantB carrierB
+    ]
+    [ targetIncidence incidenceTarget carrierA
+    , targetIncidence incidenceTargetSecond targetCarrier
+    ]
+
+multipleTargetsSelected :: [OccurrenceIdentity]
+multipleTargetsSelected = canonicalSelected ++ [incidenceTargetSecond]
+
+multipleContextOwners :: StructureProjection
+multipleContextOwners =
+  structureProjection
+    [ strategyCarrier carrierA
+    , strategyCarrier carrierB
+    , strategyCarrier targetCarrier
+    , carrierProjection actionMember primitiveCategory actionType Asserted
+    ]
+    [ contextualizationProjection
+        contextualizationOccurrence
+        carrierA
+        actionMember
+        Asserted
+    , contextualizationProjection
+        contextualizationSecond
+        carrierB
+        actionMember
+        Asserted
+    , contextualizationProjection
+        contextualizationThird
+        targetCarrier
+        actionMember
+        Asserted
+    ]
+    []
+    []
+    []
+
+multipleContextOwnersSelected :: [OccurrenceIdentity]
+multipleContextOwnersSelected =
+  [ carrierA
+  , carrierB
+  , targetCarrier
+  , actionMember
+  , contextualizationOccurrence
+  , contextualizationSecond
+  , contextualizationThird
+  ]
+
 wrongTargetType :: StructureProjection
 wrongTargetType =
   collectiveProjection
@@ -688,13 +1013,23 @@ relationOccurrence = occurrence "relation"
 
 contextualizationOccurrence = occurrence "contextualization"
 
-incidenceParticipantA, incidenceParticipantB, incidenceTarget ::
+incidenceParticipantA, incidenceParticipantB, incidenceTarget, incidenceTargetSecond ::
      OccurrenceIdentity
 incidenceParticipantA = occurrence "incidence-a"
 
 incidenceParticipantB = occurrence "incidence-b"
 
 incidenceTarget = occurrence "incidence-target"
+
+incidenceTargetSecond = occurrence "incidence-target-second"
+
+actionMember, contextualizationSecond, contextualizationThird ::
+     OccurrenceIdentity
+actionMember = occurrence "action-member"
+
+contextualizationSecond = occurrence "contextualization-second"
+
+contextualizationThird = occurrence "contextualization-third"
 
 allOccurrences :: [OccurrenceIdentity]
 allOccurrences =
@@ -707,6 +1042,10 @@ allOccurrences =
   , incidenceParticipantA
   , incidenceParticipantB
   , incidenceTarget
+  , incidenceTargetSecond
+  , actionMember
+  , contextualizationSecond
+  , contextualizationThird
   ]
 
 occurrence :: Text -> OccurrenceIdentity

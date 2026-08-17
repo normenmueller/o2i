@@ -5,17 +5,15 @@ module O2I.Input.Internal.Decode
   ( decodeSupplementalInput
   ) where
 
-import Data.Aeson (Object, Value(..))
-import qualified Data.Aeson.Key as Key
-import qualified Data.Aeson.KeyMap as KeyMap
 import Data.ByteString (ByteString)
-import Data.Foldable (toList)
 import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as Text
-import O2I.Core.Identity (ModelIdentity, ModelIdentityDefect(..), modelIdentity)
+import Numeric.Natural (Natural)
+import O2I.Core.Identity (ModelIdentity, modelIdentity)
 import O2I.Input.Internal.Json
 import O2I.Input.Internal.Text
 import O2I.Input.Internal.Types
@@ -31,26 +29,26 @@ decodeSupplementalInput ::
 decodeSupplementalInput ordinal bytes = do
   utf8 <-
     mapSingle
-      (inputDefect SupplementalInvalidUtf8 ordinal)
+      (const (SupplementalInvalidUtf8Defect ordinal))
       (decodeUtf8Json bytes)
   parsed <-
     mapSingle
-      (inputDefect SupplementalInvalidJsonSyntax ordinal)
+      (const (SupplementalInvalidJsonSyntaxDefect ordinal))
       (parseJsonSyntax utf8)
   duplicateFree <-
     case rejectDuplicateMembers parsed of
       Left pointers ->
         Left (fmap (memberDefect ordinal . jsonPointerText) pointers)
       Right value -> Right value
-  decodePayload ordinal (duplicateFreeValue duplicateFree)
+  decodePayload ordinal (duplicateFreeNode duplicateFree)
 
 decodePayload ::
      SupplementalInputOrdinal
-  -> Value
+  -> JsonNode
   -> Either (NonEmpty SupplementalInputDefect) SupplementalInput
-decodePayload ordinal value =
-  case value of
-    Object object -> do
+decodePayload ordinal node =
+  case jsonNodeValue node of
+    JsonObjectValue object -> do
       payloadType <- decodePayloadType ordinal object
       checkedToEither
         (case payloadType of
@@ -63,57 +61,73 @@ decodePayload ordinal value =
     _ ->
       Left
         (schemaDefect
-           SupplementalTopLevelObjectRequired
+           TopLevelObjectRequiredSchemaDefect
            ordinal
-           rootPointer
+           (jsonNodePath node)
            rootSchema
            :| [])
 
 decodePayloadType ::
      SupplementalInputOrdinal
-  -> Object
+  -> JsonObject
   -> Either (NonEmpty SupplementalInputDefect) SupplementalPayloadType
 decodePayloadType ordinal object =
-  case KeyMap.lookup "type" object of
+  case Map.lookup "type" object of
     Nothing -> Left (invalidTypeMember :| [])
-    Just (String "StrategyFormulationInput") -> Right StrategyFormulationPayload
-    Just (String "CollectiveFitInput") -> Right CollectiveFitPayload
-    Just (String _) ->
-      Left
-        (schemaDefect
-           SupplementalPayloadTypeNotAdmitted
-           ordinal
-           typePointer
-           typeSchema
-           :| [])
-    Just _ -> Left (invalidTypeMember :| [])
+    Just node ->
+      case jsonNodeValue node of
+        JsonStringValue source
+          | jsonStringMalformedScalars source == []
+              && jsonStringText source == "StrategyFormulationInput" ->
+            Right StrategyFormulationPayload
+          | jsonStringMalformedScalars source == []
+              && jsonStringText source == "CollectiveFitInput" ->
+            Right CollectiveFitPayload
+          | otherwise ->
+            Left
+              (schemaDefect
+                 PayloadTypeNotAdmittedSchemaDefect
+                 ordinal
+                 (jsonNodePath node)
+                 typeSchema
+                 :| [])
+        _ -> Left (invalidTypeMember :| [])
   where
     invalidTypeMember =
-      schemaDefect SupplementalTypeMemberInvalid ordinal typePointer typeSchema
+      schemaDefect
+        TypeMemberInvalidSchemaDefect
+        ordinal
+        (appendJsonMember rootJsonPath "type")
+        typeSchema
 
 decodeStrategyFormulation ::
-     SupplementalInputOrdinal -> Object -> Checked StrategyFormulationInput
+     SupplementalInputOrdinal -> JsonObject -> Checked StrategyFormulationInput
 decodeStrategyFormulation ordinal object =
   StrategyFormulationInput
-    <$> requiredModelIdentity ordinal rootPointer base object "strategy"
-    <*> requiredTextSequence ordinal rootPointer base object "scope"
-    <*> requiredAnchoring ordinal rootPointer base object "anchoring"
-    <*> requiredTextSequence ordinal rootPointer base object "derivedGuardrails"
-    <*> requiredModelIdentity ordinal rootPointer base object "diagnosis"
-    <*> requiredModelIdentity ordinal rootPointer base object "intent"
-    <*> requiredModelIdentity ordinal rootPointer base object "guidingPolicy"
-    <*> requiredTextSequence ordinal rootPointer base object "positioning"
-    <*> requiredDistinctTextSet ordinal rootPointer base object "tradeOffs"
-    <*> requiredDistinctIdentitySet ordinal rootPointer base object "actions" 1
+    <$> requiredModelIdentity ordinal rootJsonPath base object "strategy"
+    <*> requiredTextSequence ordinal rootJsonPath base object "scope"
+    <*> requiredAnchoring ordinal rootJsonPath base object "anchoring"
+    <*> requiredTextSequence
+          ordinal
+          rootJsonPath
+          base
+          object
+          "derivedGuardrails"
+    <*> requiredModelIdentity ordinal rootJsonPath base object "diagnosis"
+    <*> requiredModelIdentity ordinal rootJsonPath base object "intent"
+    <*> requiredModelIdentity ordinal rootJsonPath base object "guidingPolicy"
+    <*> requiredTextSequence ordinal rootJsonPath base object "positioning"
+    <*> requiredDistinctTextSet ordinal rootJsonPath base object "tradeOffs"
+    <*> requiredDistinctIdentitySet ordinal rootJsonPath base object "actions" 1
     <*> requiredDistinctIdentitySet
           ordinal
-          rootPointer
+          rootJsonPath
           base
           object
           "keyResults"
           1
-    <*> requiredTextSequence ordinal rootPointer base object "fitRationale"
-    <* rejectUnknownMembers ordinal rootPointer base admitted object
+    <*> requiredTextSequence ordinal rootJsonPath base object "fitRationale"
+    <* rejectUnknownMembers ordinal rootJsonPath base admitted object
   where
     base = "#/$defs/StrategyFormulationInput"
     admitted =
@@ -133,33 +147,33 @@ decodeStrategyFormulation ordinal object =
       ]
 
 decodeCollectiveFit ::
-     SupplementalInputOrdinal -> Object -> Checked CollectiveFitInput
+     SupplementalInputOrdinal -> JsonObject -> Checked CollectiveFitInput
 decodeCollectiveFit ordinal object =
   CollectiveFitInput
-    <$> requiredModelIdentity ordinal rootPointer base object "claim"
+    <$> requiredModelIdentity ordinal rootJsonPath base object "claim"
     <*> requiredDistinctIdentitySet
           ordinal
-          rootPointer
+          rootJsonPath
           base
           object
           "participants"
           2
-    <*> requiredModelIdentity ordinal rootPointer base object "target"
+    <*> requiredModelIdentity ordinal rootJsonPath base object "target"
     <*> requiredModelIdentity
           ordinal
-          rootPointer
+          rootJsonPath
           base
           object
           "targetGuidingPolicy"
     <*> requiredDistinctTextSet
           ordinal
-          rootPointer
+          rootJsonPath
           base
           object
           "targetTradeOffs"
     <*> requiredObjectSequence
           ordinal
-          rootPointer
+          rootJsonPath
           base
           object
           "pairwiseCoherence"
@@ -167,7 +181,7 @@ decodeCollectiveFit ordinal object =
           decodePairwiseCoherence
     <*> requiredObjectSequence
           ordinal
-          rootPointer
+          rootJsonPath
           base
           object
           "participantCompatibility"
@@ -175,11 +189,11 @@ decodeCollectiveFit ordinal object =
           decodeParticipantCompatibility
     <*> requiredTextSequence
           ordinal
-          rootPointer
+          rootJsonPath
           base
           object
           "contributionInteraction"
-    <* rejectUnknownMembers ordinal rootPointer base admitted object
+    <* rejectUnknownMembers ordinal rootJsonPath base admitted object
   where
     base = "#/$defs/CollectiveFitInput"
     admitted =
@@ -196,49 +210,50 @@ decodeCollectiveFit ordinal object =
 
 requiredAnchoring ::
      SupplementalInputOrdinal
+  -> JsonPath
   -> Text
-  -> Text
-  -> Object
+  -> JsonObject
   -> Text
   -> Checked StrategyAnchoring
 requiredAnchoring ordinal objectPointer parent object member =
-  requiredMember ordinal objectPointer parent object member $ \pointer value ->
-    case value of
-      Object anchoring ->
-        StrategyAnchoring
-          <$> requiredFachlicheText ordinal pointer base anchoring "period"
-          <*> requiredFachlicheText
-                ordinal
-                pointer
-                base
-                anchoring
-                "responsibilityScope"
-          <*> requiredFachlicheText
-                ordinal
-                pointer
-                base
-                anchoring
-                "decisionLevel"
-          <*> requiredTextSequence
-                ordinal
-                pointer
-                base
-                anchoring
-                "responsibilities"
-          <*> requiredTextSequence
-                ordinal
-                pointer
-                base
-                anchoring
-                "decisionPaths"
-          <*> requiredFachlicheText
-                ordinal
-                pointer
-                base
-                anchoring
-                "implementationLogic"
-          <* rejectUnknownMembers ordinal pointer base admitted anchoring
-      _ -> invalidValueKind ordinal pointer base
+  requiredMember ordinal objectPointer parent object member $ \value ->
+    let pointer = jsonNodePath value
+     in case jsonNodeValue value of
+          JsonObjectValue anchoring ->
+            StrategyAnchoring
+              <$> requiredFachlicheText ordinal pointer base anchoring "period"
+              <*> requiredFachlicheText
+                    ordinal
+                    pointer
+                    base
+                    anchoring
+                    "responsibilityScope"
+              <*> requiredFachlicheText
+                    ordinal
+                    pointer
+                    base
+                    anchoring
+                    "decisionLevel"
+              <*> requiredTextSequence
+                    ordinal
+                    pointer
+                    base
+                    anchoring
+                    "responsibilities"
+              <*> requiredTextSequence
+                    ordinal
+                    pointer
+                    base
+                    anchoring
+                    "decisionPaths"
+              <*> requiredFachlicheText
+                    ordinal
+                    pointer
+                    base
+                    anchoring
+                    "implementationLogic"
+              <* rejectUnknownMembers ordinal pointer base admitted anchoring
+          _ -> invalidValueKind ordinal pointer base
   where
     base = "#/$defs/StrategyAnchoring"
     admitted =
@@ -251,75 +266,129 @@ requiredAnchoring ordinal objectPointer parent object member =
       ]
 
 decodePairwiseCoherence ::
-     SupplementalInputOrdinal -> Text -> Value -> Checked PairwiseCoherence
-decodePairwiseCoherence ordinal pointer value =
-  case value of
-    Object object ->
+     SupplementalInputOrdinal -> JsonNode -> Checked PairwiseCoherence
+decodePairwiseCoherence ordinal value =
+  case jsonNodeValue value of
+    JsonObjectValue object ->
       PairwiseCoherence
-        <$> requiredModelIdentity ordinal pointer base object "participantA"
-        <*> requiredModelIdentity ordinal pointer base object "participantB"
-        <*> requiredFachlicheText ordinal pointer base object "rationale"
-        <* rejectUnknownMembers ordinal pointer base admitted object
-    _ -> invalidValueKind ordinal pointer base
+        <$> requiredModelIdentity ordinal path base object "participantA"
+        <*> requiredModelIdentity ordinal path base object "participantB"
+        <*> requiredFachlicheText ordinal path base object "rationale"
+        <* rejectUnknownMembers ordinal path base admitted object
+    _ -> invalidValueKind ordinal path base
   where
+    path = jsonNodePath value
     base = "#/$defs/PairwiseCoherence"
     admitted = ["participantA", "participantB", "rationale"]
 
 decodeParticipantCompatibility ::
-     SupplementalInputOrdinal
-  -> Text
-  -> Value
-  -> Checked ParticipantCompatibility
-decodeParticipantCompatibility ordinal pointer value =
-  case value of
-    Object object ->
+     SupplementalInputOrdinal -> JsonNode -> Checked ParticipantCompatibility
+decodeParticipantCompatibility ordinal value =
+  case jsonNodeValue value of
+    JsonObjectValue object ->
       ParticipantCompatibility
-        <$> requiredModelIdentity ordinal pointer base object "participant"
+        <$> requiredModelIdentity ordinal path base object "participant"
         <*> requiredFachlicheText
               ordinal
-              pointer
+              path
               base
               object
               "guidingPolicyRationale"
-        <*> requiredFachlicheText
-              ordinal
-              pointer
-              base
-              object
-              "tradeOffRationale"
-        <* rejectUnknownMembers ordinal pointer base admitted object
-    _ -> invalidValueKind ordinal pointer base
+        <*> requiredFachlicheText ordinal path base object "tradeOffRationale"
+        <* rejectUnknownMembers ordinal path base admitted object
+    _ -> invalidValueKind ordinal path base
   where
+    path = jsonNodePath value
     base = "#/$defs/ParticipantCompatibility"
     admitted = ["participant", "guidingPolicyRationale", "tradeOffRationale"]
 
 requiredModelIdentity ::
      SupplementalInputOrdinal
+  -> JsonPath
   -> Text
-  -> Text
-  -> Object
+  -> JsonObject
   -> Text
   -> Checked ModelIdentity
 requiredModelIdentity ordinal objectPointer base object member =
-  requiredMember ordinal objectPointer base object member $ \pointer value ->
-    case value of
-      String source ->
-        case modelIdentity source of
-          Right identifier -> valid identifier
-          Left defect ->
-            invalidOne
-              (schemaDefect
-                 (modelIdentityDefectKind defect)
-                 ordinal
-                 pointer
-                 "#/$defs/ModelIdentity")
-      _ -> invalidValueKind ordinal pointer "#/$defs/ModelIdentity"
+  requiredMember ordinal objectPointer base object member $ \value ->
+    decodeModelIdentity ordinal value
+
+decodeModelIdentity ::
+     SupplementalInputOrdinal -> JsonNode -> Checked ModelIdentity
+decodeModelIdentity ordinal node =
+  case jsonNodeValue node of
+    JsonStringValue source ->
+      case modelIdentityDefects ordinal path source of
+        defect:defects -> invalid (defect :| defects)
+        [] ->
+          case modelIdentity (jsonStringText source) of
+            Right identifier -> valid identifier
+            Left _ ->
+              invalidOne
+                (schemaDefect
+                   ScalarGrammarInvalidSchemaDefect
+                   ordinal
+                   path
+                   modelIdentitySchema)
+    _ -> invalidValueKind ordinal path modelIdentitySchema
+  where
+    path = jsonNodePath node
+
+modelIdentityDefects ::
+     SupplementalInputOrdinal
+  -> JsonPath
+  -> JsonString
+  -> [SupplementalInputDefect]
+modelIdentityDefects ordinal path source =
+  emptyDefect ++ unicodeDefect ++ nulDefect
+  where
+    unicodeOccurrences =
+      [ SupplementalUnicodeScalarOccurrence index codePoint
+      | JsonMalformedScalar index codePoint <- jsonStringMalformedScalars source
+      ]
+    nulIndexes =
+      [ index
+      | (index, value) <-
+          zip [0 :: Natural ..] (Text.unpack (jsonStringText source))
+      , value == '\NUL'
+      ]
+    emptyDefect =
+      [ schemaDefect
+        ScalarGrammarInvalidSchemaDefect
+        ordinal
+        path
+        modelIdentitySchema
+      | Text.null (jsonStringText source)
+      ]
+    unicodeDefect =
+      case NonEmpty.nonEmpty unicodeOccurrences of
+        Nothing -> []
+        Just details ->
+          [ SupplementalModelIdentityUnicodeScalarInvalidDefect
+              ordinal
+              (jsonPathText path)
+              modelIdentitySchema
+              details
+          ]
+    nulDefect =
+      case NonEmpty.nonEmpty nulIndexes of
+        Nothing -> []
+        Just indexes ->
+          [ SupplementalModelIdentityContainsNulDefect
+              ordinal
+              (jsonPathText path)
+              modelIdentitySchema
+              indexes
+          ]
+
+modelIdentitySchema :: Text
+modelIdentitySchema = "#/$defs/ModelIdentity"
 
 requiredFachlicheText ::
      SupplementalInputOrdinal
+  -> JsonPath
   -> Text
-  -> Text
-  -> Object
+  -> JsonObject
   -> Text
   -> Checked FachlicheText
 requiredFachlicheText ordinal objectPointer base object member =
@@ -332,26 +401,31 @@ requiredFachlicheText ordinal objectPointer base object member =
     (decodeFachlicheText ordinal)
 
 decodeFachlicheText ::
-     SupplementalInputOrdinal -> Text -> Value -> Checked FachlicheText
-decodeFachlicheText ordinal pointer value =
-  case value of
-    String source ->
-      case canonicalizeFachlicheText source of
-        Right canonical -> valid (FachlicheText canonical)
-        Left _ ->
-          invalidOne
-            (schemaDefect
-               SupplementalScalarGrammarInvalid
-               ordinal
-               pointer
-               "#/$defs/FachlicheText")
-    _ -> invalidValueKind ordinal pointer "#/$defs/FachlicheText"
+     SupplementalInputOrdinal -> JsonNode -> Checked FachlicheText
+decodeFachlicheText ordinal node =
+  case jsonNodeValue node of
+    JsonStringValue source
+      | jsonStringMalformedScalars source /= [] -> invalidGrammar
+      | otherwise ->
+        case canonicalizeFachlicheText (jsonStringText source) of
+          Right canonical -> valid (FachlicheText canonical)
+          Left _ -> invalidGrammar
+    _ -> invalidValueKind ordinal path "#/$defs/FachlicheText"
+  where
+    path = jsonNodePath node
+    invalidGrammar =
+      invalidOne
+        (schemaDefect
+           ScalarGrammarInvalidSchemaDefect
+           ordinal
+           path
+           "#/$defs/FachlicheText")
 
 requiredTextSequence ::
      SupplementalInputOrdinal
+  -> JsonPath
   -> Text
-  -> Text
-  -> Object
+  -> JsonObject
   -> Text
   -> Checked (NonEmpty FachlicheText)
 requiredTextSequence ordinal objectPointer base object member =
@@ -367,9 +441,9 @@ requiredTextSequence ordinal objectPointer base object member =
 
 requiredDistinctTextSet ::
      SupplementalInputOrdinal
+  -> JsonPath
   -> Text
-  -> Text
-  -> Object
+  -> JsonObject
   -> Text
   -> Checked (NonEmpty FachlicheText)
 requiredDistinctTextSet ordinal objectPointer base object member =
@@ -385,9 +459,9 @@ requiredDistinctTextSet ordinal objectPointer base object member =
 
 requiredDistinctIdentitySet ::
      SupplementalInputOrdinal
+  -> JsonPath
   -> Text
-  -> Text
-  -> Object
+  -> JsonObject
   -> Text
   -> Int
   -> Checked (NonEmpty ModelIdentity)
@@ -400,31 +474,17 @@ requiredDistinctIdentitySet ordinal objectPointer base object member minimumCard
     member
     minimumCardinality
     True
-    decodeIdentity
-  where
-    decodeIdentity pointer value =
-      case value of
-        String source ->
-          case modelIdentity source of
-            Right identifier -> valid identifier
-            Left defect ->
-              invalidOne
-                (schemaDefect
-                   (modelIdentityDefectKind defect)
-                   ordinal
-                   pointer
-                   "#/$defs/ModelIdentity")
-        _ -> invalidValueKind ordinal pointer "#/$defs/ModelIdentity"
+    (decodeModelIdentity ordinal)
 
 requiredObjectSequence ::
      Ord value
   => SupplementalInputOrdinal
+  -> JsonPath
   -> Text
-  -> Text
-  -> Object
+  -> JsonObject
   -> Text
   -> Int
-  -> (SupplementalInputOrdinal -> Text -> Value -> Checked value)
+  -> (SupplementalInputOrdinal -> JsonNode -> Checked value)
   -> Checked (NonEmpty value)
 requiredObjectSequence ordinal objectPointer base object member minimumCardinality decoder =
   requiredArray
@@ -440,28 +500,25 @@ requiredObjectSequence ordinal objectPointer base object member minimumCardinali
 requiredArray ::
      Ord value
   => SupplementalInputOrdinal
+  -> JsonPath
   -> Text
-  -> Text
-  -> Object
+  -> JsonObject
   -> Text
   -> Int
   -> Bool
-  -> (Text -> Value -> Checked value)
+  -> (JsonNode -> Checked value)
   -> Checked (NonEmpty value)
 requiredArray ordinal objectPointer base object member minimumCardinality distinct decoder =
-  requiredMember ordinal objectPointer base object member $ \pointer value ->
-    case value of
-      Array array ->
-        let sources = zip [0 :: Int ..] (toList array)
-            checkedMembers =
-              [ decoder (appendIndex pointer index) item
-              | (index, item) <- sources
-              ]
+  requiredMember ordinal objectPointer base object member $ \node ->
+    case jsonNodeValue node of
+      JsonArrayValue sources ->
+        let pointer = jsonNodePath node
+            checkedMembers = map decoder sources
             memberDefects = concatMap checkedDefects checkedMembers
             admittedMembers = foldr collectValue [] checkedMembers
             cardinalityDefects =
               [ schemaDefect
-                SupplementalArrayCardinalityInvalid
+                ArrayCardinalityInvalidSchemaDefect
                 ordinal
                 pointer
                 (propertySchema base member)
@@ -469,7 +526,7 @@ requiredArray ordinal objectPointer base object member minimumCardinality distin
               ]
             distinctnessDefects =
               [ schemaDefect
-                SupplementalArrayDistinctnessInvalid
+                ArrayDistinctnessInvalidSchemaDefect
                 ordinal
                 pointer
                 (propertySchema base member)
@@ -485,33 +542,42 @@ requiredArray ordinal objectPointer base object member minimumCardinality distin
                   Nothing ->
                     invalidOne
                       (schemaDefect
-                         SupplementalArrayCardinalityInvalid
+                         ArrayCardinalityInvalidSchemaDefect
                          ordinal
                          pointer
                          (propertySchema base member))
-      _ -> invalidValueKind ordinal pointer (propertySchema base member)
+      _ ->
+        invalidValueKind
+          ordinal
+          (jsonNodePath node)
+          (propertySchema base member)
 
 requiredMember ::
      SupplementalInputOrdinal
+  -> JsonPath
   -> Text
+  -> JsonObject
   -> Text
-  -> Object
-  -> Text
-  -> (Text -> Value -> Checked value)
+  -> (JsonNode -> Checked value)
   -> Checked value
 requiredMember ordinal objectPointer base object member decoder =
-  case KeyMap.lookup (Key.fromText member) object of
+  case Map.lookup member object of
     Nothing ->
       invalidOne
         (schemaDefect
-           SupplementalRequiredMemberMissing
+           RequiredMemberMissingSchemaDefect
            ordinal
-           (appendMember objectPointer member)
+           (appendJsonMember objectPointer member)
            (base <> "/required"))
-    Just value -> decoder (appendMember objectPointer member) value
+    Just value -> decoder value
 
 rejectUnknownMembers ::
-     SupplementalInputOrdinal -> Text -> Text -> [Text] -> Object -> Checked ()
+     SupplementalInputOrdinal
+  -> JsonPath
+  -> Text
+  -> [Text]
+  -> JsonObject
+  -> Checked ()
 rejectUnknownMembers ordinal objectPointer base admitted object =
   case defects of
     [] -> valid ()
@@ -520,27 +586,19 @@ rejectUnknownMembers ordinal objectPointer base admitted object =
     admittedKeys = Set.fromList admitted
     defects =
       [ schemaDefect
-        SupplementalUnknownMember
+        UnknownMemberSchemaDefect
         ordinal
-        (appendMember objectPointer member)
+        (appendJsonMember objectPointer member)
         (base <> "/additionalProperties")
-      | member <-
-          Set.toAscList (Set.fromList (map Key.toText (KeyMap.keys object)))
+      | member <- Set.toAscList (Set.fromList (Map.keys object))
       , Set.notMember member admittedKeys
       ]
 
-invalidValueKind :: SupplementalInputOrdinal -> Text -> Text -> Checked value
+invalidValueKind ::
+     SupplementalInputOrdinal -> JsonPath -> Text -> Checked value
 invalidValueKind ordinal pointer schemaPointer =
   invalidOne
-    (schemaDefect SupplementalValueKindInvalid ordinal pointer schemaPointer)
-
-modelIdentityDefectKind :: ModelIdentityDefect -> SupplementalInputDefectKind
-modelIdentityDefectKind defect =
-  case defect of
-    EmptyModelIdentity -> SupplementalScalarGrammarInvalid
-    ModelIdentityContainsU0000 -> SupplementalModelIdentityContainsNul
-    ModelIdentityContainsSurrogate ->
-      SupplementalModelIdentityUnicodeScalarInvalid
+    (schemaDefect ValueKindInvalidSchemaDefect ordinal pointer schemaPointer)
 
 data Checked value
   = CheckedInvalid !(NonEmpty SupplementalInputDefect)
@@ -594,30 +652,46 @@ collectValue checked values =
 hasDuplicates :: Ord value => [value] -> Bool
 hasDuplicates values = Set.size (Set.fromList values) /= length values
 
-inputDefect ::
-     SupplementalInputDefectKind
-  -> SupplementalInputOrdinal
-  -> ignored
-  -> SupplementalInputDefect
-inputDefect kind ordinal _ =
-  SupplementalInputDefect kind (SupplementalInputKey ordinal)
-
 memberDefect :: SupplementalInputOrdinal -> Text -> SupplementalInputDefect
-memberDefect ordinal pointer =
-  SupplementalInputDefect
-    SupplementalDuplicateObjectMember
-    (SupplementalMemberKey ordinal pointer)
+memberDefect = SupplementalDuplicateObjectMemberDefect
+
+data SchemaDefectKind
+  = TopLevelObjectRequiredSchemaDefect
+  | TypeMemberInvalidSchemaDefect
+  | PayloadTypeNotAdmittedSchemaDefect
+  | RequiredMemberMissingSchemaDefect
+  | UnknownMemberSchemaDefect
+  | ValueKindInvalidSchemaDefect
+  | ScalarGrammarInvalidSchemaDefect
+  | ArrayCardinalityInvalidSchemaDefect
+  | ArrayDistinctnessInvalidSchemaDefect
 
 schemaDefect ::
-     SupplementalInputDefectKind
+     SchemaDefectKind
   -> SupplementalInputOrdinal
-  -> Text
+  -> JsonPath
   -> Text
   -> SupplementalInputDefect
 schemaDefect kind ordinal instancePointer schemaPointer =
-  SupplementalInputDefect
-    kind
-    (SupplementalSchemaKey ordinal instancePointer schemaPointer)
+  constructor ordinal (jsonPathText instancePointer) schemaPointer
+  where
+    constructor =
+      case kind of
+        TopLevelObjectRequiredSchemaDefect ->
+          SupplementalTopLevelObjectRequiredDefect
+        TypeMemberInvalidSchemaDefect -> SupplementalTypeMemberInvalidDefect
+        PayloadTypeNotAdmittedSchemaDefect ->
+          SupplementalPayloadTypeNotAdmittedDefect
+        RequiredMemberMissingSchemaDefect ->
+          SupplementalRequiredMemberMissingDefect
+        UnknownMemberSchemaDefect -> SupplementalUnknownMemberDefect
+        ValueKindInvalidSchemaDefect -> SupplementalValueKindInvalidDefect
+        ScalarGrammarInvalidSchemaDefect ->
+          SupplementalScalarGrammarInvalidDefect
+        ArrayCardinalityInvalidSchemaDefect ->
+          SupplementalArrayCardinalityInvalidDefect
+        ArrayDistinctnessInvalidSchemaDefect ->
+          SupplementalArrayDistinctnessInvalidDefect
 
 mapSingle ::
      (failure -> SupplementalInputDefect)
@@ -628,23 +702,11 @@ mapSingle transform = either (Left . (:| []) . transform) Right
 propertySchema :: Text -> Text -> Text
 propertySchema base member = base <> "/properties/" <> escapePointer member
 
-rootPointer :: Text
-rootPointer = ""
-
-typePointer :: Text
-typePointer = "/type"
-
 rootSchema :: Text
 rootSchema = "#"
 
 typeSchema :: Text
-typeSchema = "#/properties/type"
-
-appendMember :: Text -> Text -> Text
-appendMember parent member = parent <> "/" <> escapePointer member
-
-appendIndex :: Text -> Int -> Text
-appendIndex parent = appendMember parent . Text.pack . show
+typeSchema = rootSchema
 
 escapePointer :: Text -> Text
 escapePointer = Text.replace "/" "~1" . Text.replace "~" "~0"

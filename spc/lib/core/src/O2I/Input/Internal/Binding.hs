@@ -5,10 +5,11 @@ module O2I.Input.Internal.Binding
   ( bindSupplementalInputs
   ) where
 
-import Data.List (sortOn)
+import Data.List (sort)
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
+import Data.Maybe (mapMaybe)
 import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as Text
@@ -59,11 +60,24 @@ bindSupplementalInputs graph inputs@(SupplementalInputSet payloads) =
     }
   where
     kinds = identityKinds graph
-    defects =
-      sortOn
-        supplementalInputDefectEvidence
-        (concatMap (bindingDefects graph kinds) payloads)
-    unresolvedSites = Set.fromList (map supplementalInputDefectEvidence defects)
+    defects = sort (concatMap (bindingDefects graph kinds) payloads)
+    unresolvedSites = Set.fromList (mapMaybe defectIdentitySite defects)
+
+defectIdentitySite :: SupplementalInputDefect -> Maybe SupplementalIdentitySite
+defectIdentitySite defect =
+  case defect of
+    SupplementalIdentityUnknownDefect ordinal pointer identifier ->
+      site ordinal pointer identifier
+    SupplementalIdentityAmbiguousDefect ordinal pointer identifier ->
+      site ordinal pointer identifier
+    SupplementalIdentityWrongTypeDefect ordinal pointer identifier ->
+      site ordinal pointer identifier
+    SupplementalIdentityOutOfSelectedViewDefect ordinal pointer identifier ->
+      site ordinal pointer identifier
+    _ -> Nothing
+  where
+    site ordinal pointer identifier =
+      Just (SupplementalIdentitySite ordinal pointer identifier)
 
 bindingDefects ::
      WellFormedGraph scope
@@ -212,18 +226,15 @@ resolveSite graph kinds ordinal pointer expected identifier =
          (classify kinds)
          expected
          identifier of
-    UnknownModelIdentity _ -> one SupplementalIdentityUnknown
-    AmbiguousModelIdentity _ _ -> one SupplementalIdentityAmbiguous
+    UnknownModelIdentity _ ->
+      [SupplementalIdentityUnknownDefect ordinal pointer identifier]
+    AmbiguousModelIdentity _ _ ->
+      [SupplementalIdentityAmbiguousDefect ordinal pointer identifier]
     ModelIdentityOutOfSelectedView _ _ ->
-      one SupplementalIdentityOutOfSelectedView
-    WrongSelectedIdentityKind _ _ _ -> one SupplementalIdentityWrongType
+      [SupplementalIdentityOutOfSelectedViewDefect ordinal pointer identifier]
+    WrongSelectedIdentityKind _ _ _ ->
+      [SupplementalIdentityWrongTypeDefect ordinal pointer identifier]
     ResolvedIdentity _ _ -> []
-  where
-    one kind =
-      [ SupplementalInputDefect
-          kind
-          (SupplementalIdentityKey ordinal pointer identifier)
-      ]
 
 classify ::
      Map OccurrenceIdentity SelectedIdentityKind

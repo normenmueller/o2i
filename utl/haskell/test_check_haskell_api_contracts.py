@@ -76,6 +76,74 @@ class HaskellApiContractTest(unittest.TestCase):
         self.assertNotIn("o2i-core", command)
         self.assertEqual(command[-1], str(source))
 
+    def test_evidence_record_update_inventory_is_exactly_twelve_plus_nineteen(
+        self,
+    ):
+        contracts.check_evidence_record_update_inventory()
+
+        domains = [
+            contract.module
+            for contract in contracts.EVIDENCE_RECORD_UPDATES
+        ]
+        identities = {
+            (
+                contract.module,
+                contract.evidence_type,
+                contract.projection,
+            )
+            for contract in contracts.EVIDENCE_RECORD_UPDATES
+        }
+        self.assertEqual(len(domains), 31)
+        self.assertEqual(domains.count("O2I.Structure"), 12)
+        self.assertEqual(domains.count("O2I.Semantics.Input"), 19)
+        self.assertEqual(len(identities), 31)
+
+    def test_evidence_record_update_inventory_rejects_missing_case(self):
+        incomplete = contracts.EVIDENCE_RECORD_UPDATES[:-1]
+
+        with patch.object(
+            contracts, "EVIDENCE_RECORD_UPDATES", incomplete
+        ):
+            with self.assertRaisesRegex(RuntimeError, "exactly 31"):
+                contracts.check_evidence_record_update_inventory()
+
+    @patch.object(contracts, "assert_compile_failure_at")
+    @patch.object(contracts.subprocess, "run")
+    def test_every_evidence_record_update_is_one_isolated_source(
+        self, run, assert_failure
+    ):
+        run.return_value = CompletedProcess([], 1, "", "")
+        sources = []
+
+        def observe(_root, source, _display, _expected, _result):
+            sources.append(source.read_text())
+
+        assert_failure.side_effect = observe
+        contracts.check_evidence_record_updates(
+            Path("/tmp/o2i"),
+            Path("/tmp/o2i/spc"),
+            "cabal.foundation.project",
+            Path("/tmp/o2i/build"),
+        )
+
+        self.assertEqual(run.call_count, 31)
+        self.assertEqual(assert_failure.call_count, 31)
+        self.assertEqual(len(sources), 31)
+        for source, contract in zip(
+            sources, contracts.EVIDENCE_RECORD_UPDATES
+        ):
+            self.assertIn(f"import {contract.module}", source)
+            self.assertIn(
+                f"forge :: {contract.evidence_type} "
+                f"-> {contract.evidence_type}",
+                source,
+            )
+            self.assertEqual(source.count("evidence {"), 1)
+            self.assertIn(
+                f"evidence {{{contract.projection} = undefined}}",
+                source,
+            )
+
     @patch.object(contracts, "compile_source")
     def test_compile_pass_checks_every_external_client(self, compile_source):
         compile_source.return_value = CompletedProcess([], 0, "", "")
