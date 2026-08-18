@@ -29,6 +29,7 @@ module O2I.Structure.Internal
   , CollectiveTargetCardinalityEvidence(..)
   , CollectiveTargetDistinctnessEvidence(..)
   , StructureDefect(..)
+  , structureDefectRule
   , StructureDefectEliminator(..)
   , foldStructureDefect
   , StructureAssessment(..)
@@ -338,6 +339,32 @@ data StructureDefect
   | CollectiveTargetCardinalityDefect !CollectiveTargetCardinalityEvidence
   | CollectiveTargetDistinctnessDefect !CollectiveTargetDistinctnessEvidence
   deriving (Eq, Ord, Show)
+
+-- | Project the exact Core-owned rule identity of one structural defect.
+structureDefectRule :: StructureDefect -> CoreRuleId
+structureDefectRule = structureRuleId . structureDefectRuleIdentity
+
+structureDefectRuleIdentity :: StructureDefect -> StructureRule
+structureDefectRuleIdentity defect =
+  case defect of
+    QualifiedEndpointCatalogMembershipDefect _ ->
+      QualifiedEndpointCatalogMembershipRule
+    ContextualizationSourceCategoryDefect _ ->
+      ContextualizationSourceCategoryRule
+    ContextualizationTargetCategoryDefect _ ->
+      ContextualizationTargetCategoryRule
+    ContextualizationTargetOwnerCardinalityDefect _ ->
+      ContextualizationTargetOwnerCardinalityRule
+    SemanticRelationCompatibilityDefect _ -> SemanticRelationCompatibilityRule
+    StructuredPropositionIdentityDefect _ -> StructuredPropositionIdentityRule
+    CollectiveParticipantTypeDefect _ -> CollectiveParticipantTypeRule
+    CollectiveParticipantCardinalityDefect _ ->
+      CollectiveParticipantCardinalityRule
+    CollectiveParticipantUniquenessDefect _ ->
+      CollectiveParticipantUniquenessRule
+    CollectiveTargetTypeDefect _ -> CollectiveTargetTypeRule
+    CollectiveTargetCardinalityDefect _ -> CollectiveTargetCardinalityRule
+    CollectiveTargetDistinctnessDefect _ -> CollectiveTargetDistinctnessRule
 
 -- | Named total consumer for all twelve Structure rules.
 data StructureDefectEliminator result = StructureDefectEliminator

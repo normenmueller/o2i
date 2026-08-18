@@ -141,6 +141,33 @@ def constructor_catalog(prefix: str, values: list[str], subject: str) -> dict[st
     return result
 
 
+def supplemental_rule_identity_associations(
+    companion: dict[str, Any],
+) -> dict[str, tuple[str, str]]:
+    rule_ids = companion["supplementalInputContract"]["ruleIds"]
+    if not isinstance(rule_ids, dict):
+        raise ValueError("supplemental rule identity catalog: expected an object")
+    keys = require_nonempty_unique_strings(
+        list(rule_ids), "supplemental rule identity key catalog"
+    )
+    require_exact(len(keys), 19, "supplemental rule identity cardinality")
+    rules = require_nonempty_unique_strings(
+        list(rule_ids.values()), "supplemental rule identity catalog"
+    )
+    constructors = {
+        key: haskell_constructor("GeneratedSupplemental", key) + "RuleIdentity"
+        for key in keys
+    }
+    require_nonempty_unique_strings(
+        list(constructors.values()),
+        "supplemental rule identity constructor catalog",
+    )
+    return {
+        key: (constructors[key], rule)
+        for key, rule in zip(keys, rules)
+    }
+
+
 def semantic_rule_constructor(rule: str) -> str:
     return (
         haskell_constructor(
@@ -373,6 +400,31 @@ def haskell_nonempty(name: str, type_name: str, values: list[str]) -> list[str]:
     lines.extend([f"{name} =", f"  {head}", f"    :| [ {tail[0]}"])
     lines.extend(f"       , {value}" for value in tail[1:])
     lines.extend(["       ]", ""])
+    return lines
+
+
+def haskell_supplemental_rule_identity_contract(
+    associations: dict[str, tuple[str, str]],
+) -> list[str]:
+    constructors = [constructor for constructor, _ in associations.values()]
+    rules = {
+        rule: constructor for constructor, rule in associations.values()
+    }
+    lines = haskell_data("GeneratedSupplementalRuleIdentity", constructors)
+    lines.extend(
+        haskell_text_projection(
+            "generatedSupplementalRuleIdentityText",
+            "GeneratedSupplementalRuleIdentity",
+            rules,
+        )
+    )
+    lines.extend(
+        haskell_nonempty(
+            "generatedSupplementalRuleIdentities",
+            "GeneratedSupplementalRuleIdentity",
+            constructors,
+        )
+    )
     return lines
 
 
@@ -621,6 +673,24 @@ def compile_contract() -> str:
     evidence_schemas, evidence_mappings = semantic_evidence_contract(
         companion, stages["semantics"]
     )
+    supplemental_rule_associations = supplemental_rule_identity_associations(
+        companion
+    )
+    supplemental_rules = [
+        rule for _, rule in supplemental_rule_associations.values()
+    ]
+    require_exact(
+        sorted(supplemental_rules, key=lambda value: value.encode("utf-8")),
+        sorted(
+            companion["supplementalInputContract"]["ruleIds"].values(),
+            key=lambda value: value.encode("utf-8"),
+        ),
+        "supplemental rule identity derivation",
+    )
+    if not set(supplemental_rules).issubset(stages["capability-input"]):
+        raise ValueError(
+            "supplemental rule identity catalog: rule outside capability-input stage"
+        )
 
     relation_tokens = require_nonempty_unique_strings(
         companion["relationTokenCatalog"], "relation token catalog"
@@ -1243,6 +1313,11 @@ def compile_contract() -> str:
     lines.extend(
         haskell_semantic_contract(
             stages["semantics"], evidence_schemas, evidence_mappings
+        )
+    )
+    lines.extend(
+        haskell_supplemental_rule_identity_contract(
+            supplemental_rule_associations
         )
     )
     lines.extend(nonempty("ruleIds", rules))

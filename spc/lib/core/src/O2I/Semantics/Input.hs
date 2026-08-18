@@ -93,6 +93,7 @@ module O2I.Semantics.Input
   , supplementalModelIdentityNulExpectedSchema
   , supplementalModelIdentityNulIndexes
   , SupplementalInputDefect
+  , supplementalInputDefectRule
   , SupplementalInputDefectEliminator(..)
   , foldSupplementalInputDefect
   ) where
@@ -100,11 +101,17 @@ module O2I.Semantics.Input
 import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
 import Numeric.Natural (Natural)
+import O2I.Core.Contract (CoreRuleId)
 import O2I.Core.Identity (ModelIdentity)
 import O2I.Input.Internal.Binding (bindSupplementalInputs)
 import O2I.Input.Internal.Decode (decodeSupplementalInput)
 import O2I.Input.Internal.Set (assessSupplementalInputSet)
-import O2I.Input.Internal.Types
+import qualified O2I.Input.Internal.Types as Internal
+import O2I.Input.Internal.Types hiding (supplementalInputDefectRule)
+
+-- | Project the exact Core-owned rule identity of one supplemental defect.
+supplementalInputDefectRule :: SupplementalInputDefect -> CoreRuleId
+supplementalInputDefectRule = Internal.supplementalInputDefectRule
 
 -- | Construct one stable zero-based ordinal assigned by Operation.
 supplementalInputOrdinal :: Natural -> SupplementalInputOrdinal

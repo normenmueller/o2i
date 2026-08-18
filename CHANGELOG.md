@@ -72,6 +72,7 @@
 
 ### Changed
 
+- Exposed total Core-owned Structure and supplemental-input defect-to-rule projections while retaining opaque rule and defect constructors.
 - Mapped `Strategy --directs--> Strategy` to ArchiMate `Influence`, retained
   directed `Association` for `Strategy --directs--> Intervention`, bound the
   endpoint-sensitive profile to explicit ArchiMate provenance, and split its

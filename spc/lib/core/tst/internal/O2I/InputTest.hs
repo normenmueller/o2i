@@ -18,6 +18,7 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as TextEncoding
 import qualified Data.Text.Read as TextRead
+import O2I.Core.Contract (CoreRuleId, coreRuleIdText, coreRuleIds)
 import O2I.Core.Identity (ModelIdentity, modelIdentity, modelIdentityText)
 import O2I.Input.Internal.Decode
 import O2I.Input.Internal.Json
@@ -97,6 +98,9 @@ tests =
         "every schema-defect branch points into the exact companion schema"
         schemaPointerResolution
     , testCase "all nineteen named defect handlers are total" defectEliminator
+    , testCase
+        "all fifteen real decode and set defects retain exact Core rules"
+        decodeAndSetRules
     , testCase
         "diagnostic details do not change stable defect identity"
         stableDefectIdentity
@@ -559,6 +563,144 @@ defectEliminator =
         , eliminateSupplementalModelIdentityUnicodeScalarInvalid = const 17
         , eliminateSupplementalModelIdentityContainsNul = const 18
         }
+
+decodeAndSetRules :: IO ()
+decodeAndSetRules = do
+  defects <- realDecodeAndSetDefects
+  let actual = map supplementalInputDefectRule defects
+      expected = map exactCoreRule expectedRuleTexts
+  actual @?= expected
+  if actual == drop 1 expected ++ take 1 expected
+    then fail "a Supplemental rule permutation preserved exact associations"
+    else pure ()
+  where
+    expectedRuleTexts =
+      [ "core.supplemental.decode.utf8"
+      , "core.supplemental.decode.json-syntax"
+      , "core.supplemental.decode.duplicate-member"
+      , "core.supplemental.schema.top-level-object"
+      , "core.supplemental.schema.type-member"
+      , "core.supplemental.schema.admitted-type"
+      , "core.supplemental.schema.required-member"
+      , "core.supplemental.schema.unknown-member"
+      , "core.supplemental.schema.value-kind"
+      , "core.supplemental.schema.scalar-grammar"
+      , "core.supplemental.schema.array-cardinality"
+      , "core.supplemental.schema.array-distinctness"
+      , "core.supplemental.subject.cardinality"
+      , "core.supplemental.schema.model-identity.unicode-scalar"
+      , "core.supplemental.schema.model-identity.nul"
+      ]
+
+realDecodeAndSetDefects :: IO [SupplementalInputDefect]
+realDecodeAndSetDefects = do
+  subjectFirst <-
+    accepted (decode (SupplementalInputOrdinal 13) (strategyJson "duplicate"))
+  subjectSecond <-
+    accepted (decode (SupplementalInputOrdinal 14) (strategyJson "duplicate"))
+  sequence
+    [ selectDefect
+        SupplementalInvalidUtf8
+        (decodeSupplementalInput
+           (SupplementalInputOrdinal 0)
+           (ByteString.pack [0xc3, 0x28]))
+    , selectDefect
+        SupplementalInvalidJsonSyntax
+        (decode (SupplementalInputOrdinal 1) "{")
+    , selectDefect
+        SupplementalDuplicateObjectMember
+        (decode (SupplementalInputOrdinal 2) "{\"x\":1,\"x\":2}")
+    , selectDefect
+        SupplementalTopLevelObjectRequired
+        (decode (SupplementalInputOrdinal 3) "[]")
+    , selectDefect
+        SupplementalTypeMemberInvalid
+        (decode (SupplementalInputOrdinal 4) "{}")
+    , selectDefect
+        SupplementalPayloadTypeNotAdmitted
+        (decode (SupplementalInputOrdinal 5) "{\"type\":\"Unknown\"}")
+    , selectDefect
+        SupplementalRequiredMemberMissing
+        (decode
+           (SupplementalInputOrdinal 6)
+           (Text.replace
+              ",\"fitRationale\":[\"rationale\"]"
+              ""
+              (strategyJson "required")))
+    , selectDefect
+        SupplementalUnknownMember
+        (decode
+           (SupplementalInputOrdinal 7)
+           (Text.dropEnd 1 (strategyJson "unknown") <> ",\"extra\":true}"))
+    , selectDefect
+        SupplementalValueKindInvalid
+        (decode
+           (SupplementalInputOrdinal 8)
+           (Text.replace
+              "\"strategy\":\"value-kind\""
+              "\"strategy\":7"
+              (strategyJson "value-kind")))
+    , selectDefect
+        SupplementalScalarGrammarInvalid
+        (decode
+           (SupplementalInputOrdinal 9)
+           (Text.replace
+              "\"scope\":[\"scope\"]"
+              "\"scope\":[\"\\uD800\"]"
+              (strategyJson "scalar")))
+    , selectDefect
+        SupplementalArrayCardinalityInvalid
+        (decode
+           (SupplementalInputOrdinal 10)
+           (Text.replace
+              "\"scope\":[\"scope\"]"
+              "\"scope\":[]"
+              (strategyJson "cardinality")))
+    , selectDefect
+        SupplementalArrayDistinctnessInvalid
+        (decode
+           (SupplementalInputOrdinal 11)
+           (Text.replace
+              "\"tradeOffs\":[\"trade-off\"]"
+              "\"tradeOffs\":[\"Caf\\u00e9\",\"Cafe\\u0301\"]"
+              (strategyJson "distinctness")))
+    , selectDefect
+        SupplementalSubjectCardinalityInvalid
+        (assessSupplementalInputSet [subjectFirst, subjectSecond])
+    , selectDefect
+        SupplementalModelIdentityUnicodeScalarInvalid
+        (decode (SupplementalInputOrdinal 15) (strategyJson "\\uD800"))
+    , selectDefect
+        SupplementalModelIdentityContainsNul
+        (decode (SupplementalInputOrdinal 16) (strategyJson "nul\\u0000"))
+    ]
+
+selectDefect ::
+     SupplementalInputDefectKind
+  -> Either (NonEmpty SupplementalInputDefect) value
+  -> IO SupplementalInputDefect
+selectDefect expected result =
+  case result of
+    Right _ -> fail ("expected Supplemental defect " ++ show expected)
+    Left defects ->
+      case filter
+             ((== expected) . supplementalInputDefectKind)
+             (NonEmpty.toList defects) of
+        [defect] -> pure defect
+        matches ->
+          fail
+            ("expected one Supplemental defect "
+               ++ show expected
+               ++ ", got "
+               ++ show matches)
+
+exactCoreRule :: Text -> CoreRuleId
+exactCoreRule identifier =
+  case filter ((== identifier) . coreRuleIdText) (NonEmpty.toList coreRuleIds) of
+    [rule] -> rule
+    rules ->
+      error
+        ("expected one Core rule " ++ show identifier ++ ", got " ++ show rules)
 
 stableDefectIdentity :: IO ()
 stableDefectIdentity = do

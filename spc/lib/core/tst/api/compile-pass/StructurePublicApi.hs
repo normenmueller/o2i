@@ -45,6 +45,9 @@ consumeAssessment assessment =
     StructureRejected defects -> Left defects
     StructureAccepted graph -> Right graph
 
+projectRule :: StructureDefect -> CoreRuleId
+projectRule = structureDefectRule
+
 data StructureEvidenceView
   = QualifiedEndpointView OccurrenceIdentity
   | ContextSourceView OccurrenceIdentity OccurrenceIdentity

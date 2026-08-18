@@ -1558,6 +1558,94 @@ generatedSemanticRuleEvidenceSchema rule =
     StrategyFormulationKeyResultsRule -> GeneratedStrategyKeyWitness
     StrategyFormulationVisionOrientationRule -> GeneratedStrategyKeyWitness
 
+data GeneratedSupplementalRuleIdentity
+  = GeneratedSupplementalUtf8RuleIdentity
+  | GeneratedSupplementalJsonSyntaxRuleIdentity
+  | GeneratedSupplementalDuplicateMemberRuleIdentity
+  | GeneratedSupplementalTopLevelObjectRuleIdentity
+  | GeneratedSupplementalTypeMemberRuleIdentity
+  | GeneratedSupplementalAdmittedTypeRuleIdentity
+  | GeneratedSupplementalRequiredMemberRuleIdentity
+  | GeneratedSupplementalUnknownMemberRuleIdentity
+  | GeneratedSupplementalValueKindRuleIdentity
+  | GeneratedSupplementalScalarGrammarRuleIdentity
+  | GeneratedSupplementalArrayCardinalityRuleIdentity
+  | GeneratedSupplementalArrayDistinctnessRuleIdentity
+  | GeneratedSupplementalSubjectCardinalityRuleIdentity
+  | GeneratedSupplementalIdentityUnknownRuleIdentity
+  | GeneratedSupplementalIdentityAmbiguousRuleIdentity
+  | GeneratedSupplementalIdentityWrongTypeRuleIdentity
+  | GeneratedSupplementalIdentityOutOfSelectedViewRuleIdentity
+  | GeneratedSupplementalModelIdentityUnicodeScalarRuleIdentity
+  | GeneratedSupplementalModelIdentityNulRuleIdentity
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+generatedSupplementalRuleIdentityText ::
+     GeneratedSupplementalRuleIdentity -> Text
+generatedSupplementalRuleIdentityText value =
+  case value of
+    GeneratedSupplementalUtf8RuleIdentity -> "core.supplemental.decode.utf8"
+    GeneratedSupplementalJsonSyntaxRuleIdentity ->
+      "core.supplemental.decode.json-syntax"
+    GeneratedSupplementalDuplicateMemberRuleIdentity ->
+      "core.supplemental.decode.duplicate-member"
+    GeneratedSupplementalTopLevelObjectRuleIdentity ->
+      "core.supplemental.schema.top-level-object"
+    GeneratedSupplementalTypeMemberRuleIdentity ->
+      "core.supplemental.schema.type-member"
+    GeneratedSupplementalAdmittedTypeRuleIdentity ->
+      "core.supplemental.schema.admitted-type"
+    GeneratedSupplementalRequiredMemberRuleIdentity ->
+      "core.supplemental.schema.required-member"
+    GeneratedSupplementalUnknownMemberRuleIdentity ->
+      "core.supplemental.schema.unknown-member"
+    GeneratedSupplementalValueKindRuleIdentity ->
+      "core.supplemental.schema.value-kind"
+    GeneratedSupplementalScalarGrammarRuleIdentity ->
+      "core.supplemental.schema.scalar-grammar"
+    GeneratedSupplementalArrayCardinalityRuleIdentity ->
+      "core.supplemental.schema.array-cardinality"
+    GeneratedSupplementalArrayDistinctnessRuleIdentity ->
+      "core.supplemental.schema.array-distinctness"
+    GeneratedSupplementalSubjectCardinalityRuleIdentity ->
+      "core.supplemental.subject.cardinality"
+    GeneratedSupplementalIdentityUnknownRuleIdentity ->
+      "core.supplemental.identity.unknown"
+    GeneratedSupplementalIdentityAmbiguousRuleIdentity ->
+      "core.supplemental.identity.ambiguous"
+    GeneratedSupplementalIdentityWrongTypeRuleIdentity ->
+      "core.supplemental.identity.wrong-type"
+    GeneratedSupplementalIdentityOutOfSelectedViewRuleIdentity ->
+      "core.supplemental.identity.out-of-selected-view"
+    GeneratedSupplementalModelIdentityUnicodeScalarRuleIdentity ->
+      "core.supplemental.schema.model-identity.unicode-scalar"
+    GeneratedSupplementalModelIdentityNulRuleIdentity ->
+      "core.supplemental.schema.model-identity.nul"
+
+generatedSupplementalRuleIdentities ::
+     NonEmpty GeneratedSupplementalRuleIdentity
+generatedSupplementalRuleIdentities =
+  GeneratedSupplementalUtf8RuleIdentity
+    :| [ GeneratedSupplementalJsonSyntaxRuleIdentity
+       , GeneratedSupplementalDuplicateMemberRuleIdentity
+       , GeneratedSupplementalTopLevelObjectRuleIdentity
+       , GeneratedSupplementalTypeMemberRuleIdentity
+       , GeneratedSupplementalAdmittedTypeRuleIdentity
+       , GeneratedSupplementalRequiredMemberRuleIdentity
+       , GeneratedSupplementalUnknownMemberRuleIdentity
+       , GeneratedSupplementalValueKindRuleIdentity
+       , GeneratedSupplementalScalarGrammarRuleIdentity
+       , GeneratedSupplementalArrayCardinalityRuleIdentity
+       , GeneratedSupplementalArrayDistinctnessRuleIdentity
+       , GeneratedSupplementalSubjectCardinalityRuleIdentity
+       , GeneratedSupplementalIdentityUnknownRuleIdentity
+       , GeneratedSupplementalIdentityAmbiguousRuleIdentity
+       , GeneratedSupplementalIdentityWrongTypeRuleIdentity
+       , GeneratedSupplementalIdentityOutOfSelectedViewRuleIdentity
+       , GeneratedSupplementalModelIdentityUnicodeScalarRuleIdentity
+       , GeneratedSupplementalModelIdentityNulRuleIdentity
+       ]
+
 ruleIds :: NonEmpty Text
 ruleIds =
   "core.assessment.actual-start.cardinality"

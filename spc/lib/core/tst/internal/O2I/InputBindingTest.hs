@@ -6,6 +6,7 @@ module Main
   ) where
 
 import Data.List.NonEmpty (NonEmpty((:|)))
+import qualified Data.List.NonEmpty as NonEmpty
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import O2I.Core.Contract
@@ -30,6 +31,9 @@ tests =
     , testCase "ambiguity precedes selected-View membership" ambiguousIdentity
     , testCase "unique identity outside the View is rejected" outsideIdentity
     , testCase "selected identity of the wrong kind is rejected" wrongKind
+    , testCase
+        "all four real binding defects retain exact Core rules"
+        bindingRules
     , testCase "nested sites retain exact pointer evidence" nestedPointer
     , testCase
         "independent identity defects accumulate by evidence key"
@@ -93,6 +97,61 @@ wrongKind =
             "/strategy"
             "driver-1"
         ]
+
+bindingRules :: IO ()
+bindingRules = do
+  let actual = map supplementalInputDefectRule realBindingDefects
+      expected =
+        map
+          exactCoreRule
+          [ "core.supplemental.identity.unknown"
+          , "core.supplemental.identity.ambiguous"
+          , "core.supplemental.identity.wrong-type"
+          , "core.supplemental.identity.out-of-selected-view"
+          ]
+  actual @?= expected
+  if actual == drop 1 expected ++ take 1 expected
+    then fail "a binding rule permutation preserved exact associations"
+    else pure ()
+
+realBindingDefects :: [SupplementalInputDefect]
+realBindingDefects =
+  [ onlyDefect
+      (defectsFor
+         []
+         (strategySet
+            strategyFormulation
+              {formulationStrategy = identity "unknown-strategy"}))
+  , onlyDefect
+      (defectsFor
+         [modelOccurrence (occurrence "strategy-alias") (identity "strategy-1")]
+         (strategySet strategyFormulation))
+  , onlyDefect
+      (defectsFor
+         []
+         (strategySet
+            strategyFormulation {formulationStrategy = identity "driver-1"}))
+  , onlyDefect
+      (defectsFor
+         [modelOccurrence (occurrence "outside") (identity "strategy-outside")]
+         (strategySet
+            strategyFormulation
+              {formulationStrategy = identity "strategy-outside"}))
+  ]
+
+onlyDefect :: [SupplementalInputDefect] -> SupplementalInputDefect
+onlyDefect defects =
+  case defects of
+    [defect] -> defect
+    _ -> error ("expected one binding defect, got " ++ show defects)
+
+exactCoreRule :: Text -> CoreRuleId
+exactCoreRule identifier =
+  case filter ((== identifier) . coreRuleIdText) (NonEmpty.toList coreRuleIds) of
+    [rule] -> rule
+    rules ->
+      error
+        ("expected one Core rule " ++ show identifier ++ ", got " ++ show rules)
 
 nestedPointer :: IO ()
 nestedPointer =

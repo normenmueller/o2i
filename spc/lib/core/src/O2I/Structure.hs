@@ -20,6 +20,7 @@ module O2I.Structure
   , StructureEndpointRole(..)
   , StructureInputDefect(..)
   , StructureDefect
+  , structureDefectRule
   , StructureZeroOrMultipleOccurrences
   , foldStructureZeroOrMultipleOccurrences
   , QualifiedEndpointCatalogMembershipEvidence
@@ -90,6 +91,7 @@ import O2I.Core.Contract
   , CoreO2IType
   , CoreParticipantCompleteness
   , CoreRelationToken
+  , CoreRuleId
   , CoreStructuredPropositionFamilyId
   , CoreStructuredPropositionRoleId
   )
@@ -101,8 +103,12 @@ import O2I.Core.Graph.Observation
   )
 import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
 import O2I.Structure.Index (assessStructure)
-import O2I.Structure.Internal hiding (foldStructureDefect)
+import O2I.Structure.Internal hiding (foldStructureDefect, structureDefectRule)
 import qualified O2I.Structure.Internal as StructureInternal
+
+-- | Project the exact Core-owned rule identity of one structural defect.
+structureDefectRule :: StructureDefect -> CoreRuleId
+structureDefectRule = StructureInternal.structureDefectRule
 
 -- | Project one carrier into the notation-independent Structure boundary.
 carrierProjection ::

@@ -146,6 +146,11 @@ structureDefectAlgebraIsExact :: TestTree
 structureDefectAlgebraIsExact =
   testCase "eliminates all twelve branches with exact typed evidence" $ do
     map (foldStructureDefect branchEliminator) examples @?= [(0 :: Int) .. 11]
+    map structureDefectRule examples @?= expectedRules
+    assertBool
+      "a Structure rule permutation must not preserve exact associations"
+      (map structureDefectRule examples
+         /= drop 1 expectedRules ++ take 1 expectedRules)
     examples
       @?= [ QualifiedEndpointCatalogMembershipDefect
               (QualifiedEndpointCatalogMembershipEvidence carrierA)
@@ -248,6 +253,22 @@ structureDefectAlgebraIsExact =
           overlappingTarget
           overlappingTargetSelected
       ]
+    expectedRules =
+      map
+        structureRuleId
+        [ QualifiedEndpointCatalogMembershipRule
+        , ContextualizationSourceCategoryRule
+        , ContextualizationTargetCategoryRule
+        , ContextualizationTargetOwnerCardinalityRule
+        , SemanticRelationCompatibilityRule
+        , StructuredPropositionIdentityRule
+        , CollectiveParticipantTypeRule
+        , CollectiveParticipantCardinalityRule
+        , CollectiveParticipantUniquenessRule
+        , CollectiveTargetTypeRule
+        , CollectiveTargetCardinalityRule
+        , CollectiveTargetDistinctnessRule
+        ]
     branchEliminator =
       StructureDefectEliminator
         { eliminateQualifiedEndpointCatalogMembership = const 0
@@ -444,35 +465,7 @@ identityDefectsWithIndex index projection selected =
         _ -> []
 
 defectRuleId :: StructureDefect -> CoreRuleId
-defectRuleId = foldStructureDefect eliminator
-  where
-    rule = structureRuleId
-    eliminator =
-      StructureDefectEliminator
-        { eliminateQualifiedEndpointCatalogMembership =
-            const (rule QualifiedEndpointCatalogMembershipRule)
-        , eliminateContextualizationSourceCategory =
-            const (rule ContextualizationSourceCategoryRule)
-        , eliminateContextualizationTargetCategory =
-            const (rule ContextualizationTargetCategoryRule)
-        , eliminateContextualizationTargetOwnerCardinality =
-            const (rule ContextualizationTargetOwnerCardinalityRule)
-        , eliminateSemanticRelationCompatibility =
-            const (rule SemanticRelationCompatibilityRule)
-        , eliminateStructuredPropositionIdentity =
-            const (rule StructuredPropositionIdentityRule)
-        , eliminateCollectiveParticipantType =
-            const (rule CollectiveParticipantTypeRule)
-        , eliminateCollectiveParticipantCardinality =
-            const (rule CollectiveParticipantCardinalityRule)
-        , eliminateCollectiveParticipantUniqueness =
-            const (rule CollectiveParticipantUniquenessRule)
-        , eliminateCollectiveTargetType = const (rule CollectiveTargetTypeRule)
-        , eliminateCollectiveTargetCardinality =
-            const (rule CollectiveTargetCardinalityRule)
-        , eliminateCollectiveTargetDistinctness =
-            const (rule CollectiveTargetDistinctnessRule)
-        }
+defectRuleId = structureDefectRule
 
 identityEvidence ::
      StructureDefect -> Maybe (OccurrenceIdentity, [OccurrenceIdentity])

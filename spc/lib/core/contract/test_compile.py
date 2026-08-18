@@ -17,6 +17,32 @@ if SPEC is None or SPEC.loader is None:
 COMPILER = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(COMPILER)
 
+SUPPLEMENTAL_RULE_CONSTRUCTOR_ORACLE = {
+    "utf8": "GeneratedSupplementalUtf8RuleIdentity",
+    "jsonSyntax": "GeneratedSupplementalJsonSyntaxRuleIdentity",
+    "duplicateMember": "GeneratedSupplementalDuplicateMemberRuleIdentity",
+    "topLevelObject": "GeneratedSupplementalTopLevelObjectRuleIdentity",
+    "typeMember": "GeneratedSupplementalTypeMemberRuleIdentity",
+    "admittedType": "GeneratedSupplementalAdmittedTypeRuleIdentity",
+    "requiredMember": "GeneratedSupplementalRequiredMemberRuleIdentity",
+    "unknownMember": "GeneratedSupplementalUnknownMemberRuleIdentity",
+    "valueKind": "GeneratedSupplementalValueKindRuleIdentity",
+    "scalarGrammar": "GeneratedSupplementalScalarGrammarRuleIdentity",
+    "arrayCardinality": "GeneratedSupplementalArrayCardinalityRuleIdentity",
+    "arrayDistinctness": "GeneratedSupplementalArrayDistinctnessRuleIdentity",
+    "subjectCardinality": "GeneratedSupplementalSubjectCardinalityRuleIdentity",
+    "identityUnknown": "GeneratedSupplementalIdentityUnknownRuleIdentity",
+    "identityAmbiguous": "GeneratedSupplementalIdentityAmbiguousRuleIdentity",
+    "identityWrongType": "GeneratedSupplementalIdentityWrongTypeRuleIdentity",
+    "identityOutOfSelectedView": (
+        "GeneratedSupplementalIdentityOutOfSelectedViewRuleIdentity"
+    ),
+    "modelIdentityUnicodeScalar": (
+        "GeneratedSupplementalModelIdentityUnicodeScalarRuleIdentity"
+    ),
+    "modelIdentityNul": "GeneratedSupplementalModelIdentityNulRuleIdentity",
+}
+
 
 class CoreContractCompilerTest(unittest.TestCase):
     def setUp(self):
@@ -41,6 +67,59 @@ class CoreContractCompilerTest(unittest.TestCase):
         rules = COMPILER.rule_inventory(companion)
         semantic_rules = COMPILER.rule_stage_partition(companion, rules)["semantics"]
         return COMPILER.semantic_evidence_contract(companion, semantic_rules)
+
+    def assert_supplemental_rule_associations(self, rendered):
+        rule_ids = self.companion["supplementalInputContract"]["ruleIds"]
+        self.assertEqual(
+            set(SUPPLEMENTAL_RULE_CONSTRUCTOR_ORACLE),
+            set(rule_ids),
+        )
+        expected_constructors = [
+            SUPPLEMENTAL_RULE_CONSTRUCTOR_ORACLE[key] for key in rule_ids
+        ]
+
+        data_match = re.search(
+            r"data GeneratedSupplementalRuleIdentity\n"
+            r"(?P<body>.*?)\n  deriving \(Bounded, Enum, Eq, Ord, Show\)",
+            rendered,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(data_match)
+        data_constructors = re.findall(
+            r"^  (?:=|\|) (\w+)$",
+            data_match.group("body"),
+            re.MULTILINE,
+        )
+        self.assertEqual(expected_constructors, data_constructors)
+
+        inventory_match = re.search(
+            r"generatedSupplementalRuleIdentities =\n"
+            r"(?P<body>.*?)\n\n",
+            rendered,
+            re.DOTALL,
+        )
+        self.assertIsNotNone(inventory_match)
+        inventory_constructors = re.findall(
+            r"GeneratedSupplemental\w+RuleIdentity",
+            inventory_match.group("body"),
+        )
+        self.assertEqual(expected_constructors, inventory_constructors)
+
+        projection_start = rendered.index(
+            "generatedSupplementalRuleIdentityText value ="
+        )
+        projection_end = rendered.index(
+            "\ngeneratedSupplementalRuleIdentities ::", projection_start
+        )
+        projection = rendered[projection_start:projection_end]
+        for key, rule in rule_ids.items():
+            constructor = SUPPLEMENTAL_RULE_CONSTRUCTOR_ORACLE[key]
+            literal = json.dumps(rule, ensure_ascii=True)
+            self.assertRegex(
+                projection,
+                rf"    {constructor} ->(?: |\n      ){re.escape(literal)}",
+            )
+            self.assertEqual(3, len(re.findall(rf"\b{constructor}\b", rendered)))
 
     def test_canonical_companion_compiles_deterministically(self):
         first = COMPILER.compile_contract()
@@ -96,7 +175,7 @@ class CoreContractCompilerTest(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            39,
+            58,
             len(
                 re.findall(
                     r"^  (?:=|\|) \w+RuleIdentity$",
@@ -111,6 +190,43 @@ class CoreContractCompilerTest(unittest.TestCase):
             r"  generatedSemanticRuleIdentityText "
             r"<\$> generatedSemanticRuleIdentities",
         )
+        self.assert_supplemental_rule_associations(first)
+
+    def test_supplemental_constructor_association_mutation_is_rejected(self):
+        canonical = COMPILER.supplemental_rule_identity_associations
+
+        def mutate(companion):
+            associations = canonical(companion)
+            utf8_constructor, utf8_text = associations["utf8"]
+            json_constructor, json_text = associations["jsonSyntax"]
+            associations["utf8"] = (json_constructor, utf8_text)
+            associations["jsonSyntax"] = (utf8_constructor, json_text)
+            return associations
+
+        with patch.object(
+            COMPILER, "supplemental_rule_identity_associations", mutate
+        ):
+            rendered = COMPILER.compile_contract()
+        with self.assertRaises(AssertionError):
+            self.assert_supplemental_rule_associations(rendered)
+
+    def test_supplemental_complete_key_binding_mutation_is_rejected(self):
+        canonical = COMPILER.supplemental_rule_identity_associations
+
+        def mutate(companion):
+            associations = canonical(companion)
+            associations["utf8"], associations["jsonSyntax"] = (
+                associations["jsonSyntax"],
+                associations["utf8"],
+            )
+            return associations
+
+        with patch.object(
+            COMPILER, "supplemental_rule_identity_associations", mutate
+        ):
+            rendered = COMPILER.compile_contract()
+        with self.assertRaises(AssertionError):
+            self.assert_supplemental_rule_associations(rendered)
 
     def test_duplicate_object_member_is_rejected(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -167,7 +167,7 @@ CONTRACTS = (
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "StructureLegacyDefectConsumers.hs",
-                (("GHC-88464", 3),),
+                (("GHC-88464", 4),),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
@@ -182,7 +182,7 @@ CONTRACTS = (
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "SupplementalInputLegacyConsumers.hs",
-                (("GHC-88464", 3),),
+                (("GHC-87110", 1),),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"

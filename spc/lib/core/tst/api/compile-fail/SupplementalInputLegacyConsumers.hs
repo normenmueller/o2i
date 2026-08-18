@@ -1,9 +1,5 @@
 module SupplementalInputLegacyConsumers where
 
-import O2I.Semantics.Input
+import O2I.Core.Contract.Generated
 
-legacyKind defect = supplementalInputDefectKind defect
-
-legacyRule defect = supplementalInputDefectRule defect
-
-legacyKindValue = SupplementalInvalidUtf8
+privateGeneratedRule = GeneratedSupplementalUtf8RuleIdentity

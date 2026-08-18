@@ -3,6 +3,7 @@ module SupplementalInputPublicApi where
 import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
 import Numeric.Natural (Natural)
+import O2I.Core.Contract (CoreRuleId)
 import O2I.Core.Identity (ModelIdentity)
 import O2I.Semantics.Input
 
@@ -34,6 +35,9 @@ data SupplementalEvidenceView
       Text
       (NonEmpty (Natural, Natural))
   | ModelIdentityNulView SupplementalInputOrdinal Text Text (NonEmpty Natural)
+
+projectRule :: SupplementalInputDefect -> CoreRuleId
+projectRule = supplementalInputDefectRule
 
 projectDefect :: SupplementalInputDefect -> SupplementalEvidenceView
 projectDefect = foldSupplementalInputDefect eliminator

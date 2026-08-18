@@ -42,6 +42,7 @@ module O2I.Input.Internal.Types
   , SupplementalIdentityOutOfSelectedViewEvidence(..)
   , SupplementalModelIdentityUnicodeScalarInvalidEvidence(..)
   , SupplementalModelIdentityContainsNulEvidence(..)
+  , supplementalInputDefectRule
   , SupplementalInputDefectEliminator(..)
   , foldSupplementalInputDefect
   , supplementalInputDefectKind
@@ -52,6 +53,9 @@ import qualified Data.Set as Set
 import Data.Set (Set)
 import Data.Text (Text)
 import Numeric.Natural (Natural)
+import O2I.Core.Contract (CoreRuleId)
+import qualified O2I.Core.Contract.Generated as Generated
+import O2I.Core.Contract.Internal (CoreRuleId(..))
 import O2I.Core.Identity (ModelIdentity)
 import O2I.Input.Internal.Text (CanonicalFachlicheText)
 
@@ -425,6 +429,56 @@ data SupplementalInputDefect
       !Text
       !(NonEmpty Natural)
   deriving (Show)
+
+-- | Project the exact Core-owned rule identity of one supplemental defect.
+supplementalInputDefectRule :: SupplementalInputDefect -> CoreRuleId
+supplementalInputDefectRule defect =
+  CoreRuleId
+    (Generated.generatedSupplementalRuleIdentityText
+       (supplementalInputDefectRuleIdentity defect))
+
+supplementalInputDefectRuleIdentity ::
+     SupplementalInputDefect -> Generated.GeneratedSupplementalRuleIdentity
+supplementalInputDefectRuleIdentity defect =
+  case defect of
+    SupplementalInvalidUtf8Defect _ ->
+      Generated.GeneratedSupplementalUtf8RuleIdentity
+    SupplementalInvalidJsonSyntaxDefect _ ->
+      Generated.GeneratedSupplementalJsonSyntaxRuleIdentity
+    SupplementalDuplicateObjectMemberDefect _ _ ->
+      Generated.GeneratedSupplementalDuplicateMemberRuleIdentity
+    SupplementalTopLevelObjectRequiredDefect _ _ _ ->
+      Generated.GeneratedSupplementalTopLevelObjectRuleIdentity
+    SupplementalTypeMemberInvalidDefect _ _ _ ->
+      Generated.GeneratedSupplementalTypeMemberRuleIdentity
+    SupplementalPayloadTypeNotAdmittedDefect _ _ _ ->
+      Generated.GeneratedSupplementalAdmittedTypeRuleIdentity
+    SupplementalRequiredMemberMissingDefect _ _ _ ->
+      Generated.GeneratedSupplementalRequiredMemberRuleIdentity
+    SupplementalUnknownMemberDefect _ _ _ ->
+      Generated.GeneratedSupplementalUnknownMemberRuleIdentity
+    SupplementalValueKindInvalidDefect _ _ _ ->
+      Generated.GeneratedSupplementalValueKindRuleIdentity
+    SupplementalScalarGrammarInvalidDefect _ _ _ ->
+      Generated.GeneratedSupplementalScalarGrammarRuleIdentity
+    SupplementalArrayCardinalityInvalidDefect _ _ _ ->
+      Generated.GeneratedSupplementalArrayCardinalityRuleIdentity
+    SupplementalArrayDistinctnessInvalidDefect _ _ _ ->
+      Generated.GeneratedSupplementalArrayDistinctnessRuleIdentity
+    SupplementalSubjectCardinalityInvalidDefect _ _ _ _ ->
+      Generated.GeneratedSupplementalSubjectCardinalityRuleIdentity
+    SupplementalIdentityUnknownDefect _ _ _ ->
+      Generated.GeneratedSupplementalIdentityUnknownRuleIdentity
+    SupplementalIdentityAmbiguousDefect _ _ _ ->
+      Generated.GeneratedSupplementalIdentityAmbiguousRuleIdentity
+    SupplementalIdentityWrongTypeDefect _ _ _ ->
+      Generated.GeneratedSupplementalIdentityWrongTypeRuleIdentity
+    SupplementalIdentityOutOfSelectedViewDefect _ _ _ ->
+      Generated.GeneratedSupplementalIdentityOutOfSelectedViewRuleIdentity
+    SupplementalModelIdentityUnicodeScalarInvalidDefect _ _ _ _ ->
+      Generated.GeneratedSupplementalModelIdentityUnicodeScalarRuleIdentity
+    SupplementalModelIdentityContainsNulDefect _ _ _ _ ->
+      Generated.GeneratedSupplementalModelIdentityNulRuleIdentity
 
 -- | Named total consumer for all nineteen supplemental-input rules.
 data SupplementalInputDefectEliminator result = SupplementalInputDefectEliminator
