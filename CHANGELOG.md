@@ -30,6 +30,7 @@
 
 ### Added
 
+- Added closed, generated Core semantic-defect occurrence evidence with exact named roles and cardinalities for all 27 emitting rules while keeping constructors and correlation private.
 - Added an exhaustive human- and machine-readable mixed-license map with
   canonical CC-BY-4.0 and Apache-2.0 texts, REUSE 3.3 metadata, and a dedicated
   deterministic licensing verification stage that rejects unsupported licenses

@@ -7,6 +7,7 @@
 module O2I.Core.Contract.Generated where
 
 import Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 
 contractIdentity :: Text
@@ -22,6 +23,14 @@ contractSha256 =
 contractShapeSha256 :: Text
 contractShapeSha256 =
   "3e091e8bc0fd3a887da02f8591292c2a8ea7d64c7e83951183ab71fe4f5b1278"
+
+diagnosticContractSha256 :: Text
+diagnosticContractSha256 =
+  "b44fda86659ee55e8de434de0ddc8c44be11ee5c10d0025e18b476e00f59ba0e"
+
+diagnosticContractShapeSha256 :: Text
+diagnosticContractShapeSha256 =
+  "bd450f3299730cbac912d7e7239f8d890486252c6abf7a2c1f6189ce7bf77424"
 
 data GeneratedCarrierCategory
   = GeneratedCarrierContext
@@ -1375,6 +1384,7 @@ data GeneratedSemanticEvidenceSchema
   | GeneratedParticipantClaimKeySchema
   | GeneratedStrategyKeySchema
   | GeneratedStrategyMemberKeySchema
+  | GeneratedAssertedDependencyKeySchema
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 data GeneratedSemanticEvidenceSchemaWitness (schema :: GeneratedSemanticEvidenceSchema) where
@@ -1391,6 +1401,9 @@ data GeneratedSemanticEvidenceSchemaWitness (schema :: GeneratedSemanticEvidence
     :: GeneratedSemanticEvidenceSchemaWitness 'GeneratedStrategyKeySchema
   GeneratedStrategyMemberKeyWitness
     :: GeneratedSemanticEvidenceSchemaWitness 'GeneratedStrategyMemberKeySchema
+  GeneratedAssertedDependencyKeyWitness
+    :: GeneratedSemanticEvidenceSchemaWitness
+         'GeneratedAssertedDependencyKeySchema
 
 generatedSemanticEvidenceSchemaName ::
      GeneratedSemanticEvidenceSchemaWitness schema -> Text
@@ -1402,6 +1415,7 @@ generatedSemanticEvidenceSchemaName witness =
     GeneratedParticipantClaimKeyWitness -> "ParticipantClaimKey"
     GeneratedStrategyKeyWitness -> "StrategyKey"
     GeneratedStrategyMemberKeyWitness -> "StrategyMemberKey"
+    GeneratedAssertedDependencyKeyWitness -> "AssertedDependencyKey"
 
 generatedSemanticEvidenceSchemaFields ::
      GeneratedSemanticEvidenceSchemaWitness schema -> NonEmpty Text
@@ -1413,69 +1427,368 @@ generatedSemanticEvidenceSchemaFields witness =
     GeneratedParticipantClaimKeyWitness -> "claim" :| ["participant"]
     GeneratedStrategyKeyWitness -> "strategy" :| []
     GeneratedStrategyMemberKeyWitness -> "strategy" :| ["member"]
+    GeneratedAssertedDependencyKeyWitness ->
+      "dependent" :| ["endpoint", "context"]
 
-data GeneratedSemanticRule (schema :: GeneratedSemanticEvidenceSchema) where
+data GeneratedSemanticOccurrenceSchema
+  = CollectiveAssertedCollectiveCoverageOccurrenceSchema
+  | CollectiveAssertedCompletenessOccurrenceSchema
+  | CollectiveAssertedMacroSupportOccurrenceSchema
+  | CollectiveAssertedParticipantPrimitiveSupportOccurrenceSchema
+  | CollectiveFitPairwiseCoherenceOccurrenceSchema
+  | CollectiveFitParticipantBindingOccurrenceSchema
+  | CollectiveFitParticipantCompatibilityOccurrenceSchema
+  | CollectiveFitTargetBindingOccurrenceSchema
+  | CollectiveFitTargetGuidingPolicyOccurrenceSchema
+  | CollectiveFitTargetTradeOffsOccurrenceSchema
+  | ContextualizationAssertedDependencyOccurrenceSchema
+  | SituatedNeedDriverAnchoringOccurrenceSchema
+  | SituatedNeedDriverCardinalityOccurrenceSchema
+  | SituatedNeedObjectiveCardinalityOccurrenceSchema
+  | SituatedNeedObjectiveGroundingOccurrenceSchema
+  | SituatedNeedSurfacingSituationAnchoringOccurrenceSchema
+  | SituatedNeedSurfacingSituationCardinalityOccurrenceSchema
+  | StrategyFormulationActionContributionsOccurrenceSchema
+  | StrategyFormulationActionsOccurrenceSchema
+  | StrategyFormulationDiagnosisOccurrenceSchema
+  | StrategyFormulationDiagnosisGroundingOccurrenceSchema
+  | StrategyFormulationGuidingPolicyOccurrenceSchema
+  | StrategyFormulationGuidingPolicyActionsOccurrenceSchema
+  | StrategyFormulationIntentOccurrenceSchema
+  | StrategyFormulationKeyResultSubstantiationOccurrenceSchema
+  | StrategyFormulationKeyResultsOccurrenceSchema
+  | StrategyFormulationVisionOrientationOccurrenceSchema
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+data GeneratedSemanticOccurrenceEvidence (schema :: GeneratedSemanticOccurrenceSchema) occurrence where
+  CollectiveAssertedCollectiveCoverageOccurrences
+    :: !(NonEmpty occurrence)
+    -> GeneratedSemanticOccurrenceEvidence
+         'CollectiveAssertedCollectiveCoverageOccurrenceSchema
+         occurrence
+  CollectiveAssertedCompletenessOccurrences
+    :: !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'CollectiveAssertedCompletenessOccurrenceSchema
+         occurrence
+  CollectiveAssertedMacroSupportOccurrences
+    :: !occurrence
+    -> !occurrence
+    -> !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'CollectiveAssertedMacroSupportOccurrenceSchema
+         occurrence
+  CollectiveAssertedParticipantPrimitiveSupportOccurrences
+    :: !occurrence
+    -> !occurrence
+    -> !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'CollectiveAssertedParticipantPrimitiveSupportOccurrenceSchema
+         occurrence
+  CollectiveFitPairwiseCoherenceOccurrences
+    :: !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'CollectiveFitPairwiseCoherenceOccurrenceSchema
+         occurrence
+  CollectiveFitParticipantBindingOccurrences
+    :: !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'CollectiveFitParticipantBindingOccurrenceSchema
+         occurrence
+  CollectiveFitParticipantCompatibilityOccurrences
+    :: !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'CollectiveFitParticipantCompatibilityOccurrenceSchema
+         occurrence
+  CollectiveFitTargetBindingOccurrences
+    :: !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'CollectiveFitTargetBindingOccurrenceSchema
+         occurrence
+  CollectiveFitTargetGuidingPolicyOccurrences
+    :: !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'CollectiveFitTargetGuidingPolicyOccurrenceSchema
+         occurrence
+  CollectiveFitTargetTradeOffsOccurrences
+    :: !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'CollectiveFitTargetTradeOffsOccurrenceSchema
+         occurrence
+  ContextualizationAssertedDependencyOccurrences
+    :: !occurrence
+    -> !occurrence
+    -> !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'ContextualizationAssertedDependencyOccurrenceSchema
+         occurrence
+  SituatedNeedDriverAnchoringOccurrences
+    :: !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'SituatedNeedDriverAnchoringOccurrenceSchema
+         occurrence
+  SituatedNeedDriverCardinalityOccurrences
+    :: GeneratedSemanticOccurrenceEvidence
+         'SituatedNeedDriverCardinalityOccurrenceSchema
+         occurrence
+  SituatedNeedObjectiveCardinalityOccurrences
+    :: GeneratedSemanticOccurrenceEvidence
+         'SituatedNeedObjectiveCardinalityOccurrenceSchema
+         occurrence
+  SituatedNeedObjectiveGroundingOccurrences
+    :: !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'SituatedNeedObjectiveGroundingOccurrenceSchema
+         occurrence
+  SituatedNeedSurfacingSituationAnchoringOccurrences
+    :: !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'SituatedNeedSurfacingSituationAnchoringOccurrenceSchema
+         occurrence
+  SituatedNeedSurfacingSituationCardinalityOccurrences
+    :: GeneratedSemanticOccurrenceEvidence
+         'SituatedNeedSurfacingSituationCardinalityOccurrenceSchema
+         occurrence
+  StrategyFormulationActionContributionsOccurrences
+    :: !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'StrategyFormulationActionContributionsOccurrenceSchema
+         occurrence
+  StrategyFormulationActionsOccurrences
+    :: !(NonEmpty occurrence)
+    -> GeneratedSemanticOccurrenceEvidence
+         'StrategyFormulationActionsOccurrenceSchema
+         occurrence
+  StrategyFormulationDiagnosisOccurrences
+    :: ![occurrence]
+    -> GeneratedSemanticOccurrenceEvidence
+         'StrategyFormulationDiagnosisOccurrenceSchema
+         occurrence
+  StrategyFormulationDiagnosisGroundingOccurrences
+    :: !occurrence
+    -> !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'StrategyFormulationDiagnosisGroundingOccurrenceSchema
+         occurrence
+  StrategyFormulationGuidingPolicyOccurrences
+    :: ![occurrence]
+    -> GeneratedSemanticOccurrenceEvidence
+         'StrategyFormulationGuidingPolicyOccurrenceSchema
+         occurrence
+  StrategyFormulationGuidingPolicyActionsOccurrences
+    :: !occurrence
+    -> !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'StrategyFormulationGuidingPolicyActionsOccurrenceSchema
+         occurrence
+  StrategyFormulationIntentOccurrences
+    :: ![occurrence]
+    -> GeneratedSemanticOccurrenceEvidence
+         'StrategyFormulationIntentOccurrenceSchema
+         occurrence
+  StrategyFormulationKeyResultSubstantiationOccurrences
+    :: !occurrence
+    -> !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'StrategyFormulationKeyResultSubstantiationOccurrenceSchema
+         occurrence
+  StrategyFormulationKeyResultsOccurrences
+    :: !(NonEmpty occurrence)
+    -> GeneratedSemanticOccurrenceEvidence
+         'StrategyFormulationKeyResultsOccurrenceSchema
+         occurrence
+  StrategyFormulationVisionOrientationOccurrences
+    :: GeneratedSemanticOccurrenceEvidence
+         'StrategyFormulationVisionOrientationOccurrenceSchema
+         occurrence
+
+generatedSemanticOccurrenceEvidenceGroups ::
+     GeneratedSemanticOccurrenceEvidence schema occurrence
+  -> NonEmpty (Text, [occurrence])
+generatedSemanticOccurrenceEvidenceGroups evidence =
+  case evidence of
+    CollectiveAssertedCollectiveCoverageOccurrences occurrence0 ->
+      ("uncovered-target-member", NonEmpty.toList occurrence0) :| []
+    CollectiveAssertedCompletenessOccurrences occurrence0 ->
+      ("claim", [occurrence0]) :| []
+    CollectiveAssertedMacroSupportOccurrences occurrence0 occurrence1 occurrence2 ->
+      ("claim", [occurrence0])
+        :| [("participant", [occurrence1]), ("target", [occurrence2])]
+    CollectiveAssertedParticipantPrimitiveSupportOccurrences occurrence0 occurrence1 occurrence2 ->
+      ("claim", [occurrence0])
+        :| [("participant", [occurrence1]), ("target", [occurrence2])]
+    CollectiveFitPairwiseCoherenceOccurrences occurrence0 ->
+      ("claim", [occurrence0]) :| []
+    CollectiveFitParticipantBindingOccurrences occurrence0 ->
+      ("claim", [occurrence0]) :| []
+    CollectiveFitParticipantCompatibilityOccurrences occurrence0 ->
+      ("claim", [occurrence0]) :| []
+    CollectiveFitTargetBindingOccurrences occurrence0 ->
+      ("claim", [occurrence0]) :| []
+    CollectiveFitTargetGuidingPolicyOccurrences occurrence0 ->
+      ("claim", [occurrence0]) :| []
+    CollectiveFitTargetTradeOffsOccurrences occurrence0 ->
+      ("claim", [occurrence0]) :| []
+    ContextualizationAssertedDependencyOccurrences occurrence0 occurrence1 occurrence2 ->
+      ("dependent", [occurrence0])
+        :| [ ("contextualized-endpoint", [occurrence1])
+           , ("candidate-contextualization", [occurrence2])
+           ]
+    SituatedNeedDriverAnchoringOccurrences occurrence0 ->
+      ("unanchored-driver", [occurrence0]) :| []
+    SituatedNeedDriverCardinalityOccurrences -> ("observed-driver", []) :| []
+    SituatedNeedObjectiveCardinalityOccurrences ->
+      ("observed-objective", []) :| []
+    SituatedNeedObjectiveGroundingOccurrences occurrence0 ->
+      ("ungrounded-objective", [occurrence0]) :| []
+    SituatedNeedSurfacingSituationAnchoringOccurrences occurrence0 ->
+      ("unanchored-surfacing-situation", [occurrence0]) :| []
+    SituatedNeedSurfacingSituationCardinalityOccurrences ->
+      ("observed-surfacing-situation", []) :| []
+    StrategyFormulationActionContributionsOccurrences occurrence0 ->
+      ("uncontributing-action", [occurrence0]) :| []
+    StrategyFormulationActionsOccurrences occurrence0 ->
+      ("listed-action", NonEmpty.toList occurrence0) :| []
+    StrategyFormulationDiagnosisOccurrences occurrence0 ->
+      ("owned-diagnosis", occurrence0) :| []
+    StrategyFormulationDiagnosisGroundingOccurrences occurrence0 occurrence1 ->
+      ("diagnosis", [occurrence0]) :| [("intent", [occurrence1])]
+    StrategyFormulationGuidingPolicyOccurrences occurrence0 ->
+      ("owned-guiding-policy", occurrence0) :| []
+    StrategyFormulationGuidingPolicyActionsOccurrences occurrence0 occurrence1 ->
+      ("guiding-policy", [occurrence0]) :| [("action", [occurrence1])]
+    StrategyFormulationIntentOccurrences occurrence0 ->
+      ("owned-intent", occurrence0) :| []
+    StrategyFormulationKeyResultSubstantiationOccurrences occurrence0 occurrence1 ->
+      ("key-result", [occurrence0]) :| [("intent", [occurrence1])]
+    StrategyFormulationKeyResultsOccurrences occurrence0 ->
+      ("listed-key-result", NonEmpty.toList occurrence0) :| []
+    StrategyFormulationVisionOrientationOccurrences ->
+      ("observed-vision-orientation", []) :| []
+
+data GeneratedSemanticRule (schema :: GeneratedSemanticEvidenceSchema) (occurrenceSchema :: GeneratedSemanticOccurrenceSchema) where
   CollectiveAssertedCollectiveCoverageRule
-    :: GeneratedSemanticRule 'GeneratedFitClaimKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedFitClaimKeySchema
+         'CollectiveAssertedCollectiveCoverageOccurrenceSchema
+  CollectiveAssertedCompletenessRule
+    :: GeneratedSemanticRule
+         'GeneratedFitClaimKeySchema
+         'CollectiveAssertedCompletenessOccurrenceSchema
   CollectiveAssertedMacroSupportRule
-    :: GeneratedSemanticRule 'GeneratedParticipantClaimKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedParticipantClaimKeySchema
+         'CollectiveAssertedMacroSupportOccurrenceSchema
   CollectiveAssertedParticipantPrimitiveSupportRule
-    :: GeneratedSemanticRule 'GeneratedParticipantClaimKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedParticipantClaimKeySchema
+         'CollectiveAssertedParticipantPrimitiveSupportOccurrenceSchema
   CollectiveFitPairwiseCoherenceRule
-    :: GeneratedSemanticRule 'GeneratedFitClaimKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedFitClaimKeySchema
+         'CollectiveFitPairwiseCoherenceOccurrenceSchema
   CollectiveFitParticipantBindingRule
-    :: GeneratedSemanticRule 'GeneratedFitClaimKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedFitClaimKeySchema
+         'CollectiveFitParticipantBindingOccurrenceSchema
   CollectiveFitParticipantCompatibilityRule
-    :: GeneratedSemanticRule 'GeneratedFitClaimKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedFitClaimKeySchema
+         'CollectiveFitParticipantCompatibilityOccurrenceSchema
   CollectiveFitTargetBindingRule
-    :: GeneratedSemanticRule 'GeneratedFitClaimKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedFitClaimKeySchema
+         'CollectiveFitTargetBindingOccurrenceSchema
   CollectiveFitTargetGuidingPolicyRule
-    :: GeneratedSemanticRule 'GeneratedFitClaimKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedFitClaimKeySchema
+         'CollectiveFitTargetGuidingPolicyOccurrenceSchema
   CollectiveFitTargetTradeOffsRule
-    :: GeneratedSemanticRule 'GeneratedFitClaimKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedFitClaimKeySchema
+         'CollectiveFitTargetTradeOffsOccurrenceSchema
+  ContextualizationAssertedDependencyRule
+    :: GeneratedSemanticRule
+         'GeneratedAssertedDependencyKeySchema
+         'ContextualizationAssertedDependencyOccurrenceSchema
   SituatedNeedDriverAnchoringRule
-    :: GeneratedSemanticRule 'GeneratedNeedMemberKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedNeedMemberKeySchema
+         'SituatedNeedDriverAnchoringOccurrenceSchema
   SituatedNeedDriverCardinalityRule
-    :: GeneratedSemanticRule 'GeneratedNeedKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedNeedKeySchema
+         'SituatedNeedDriverCardinalityOccurrenceSchema
   SituatedNeedObjectiveCardinalityRule
-    :: GeneratedSemanticRule 'GeneratedNeedKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedNeedKeySchema
+         'SituatedNeedObjectiveCardinalityOccurrenceSchema
   SituatedNeedObjectiveGroundingRule
-    :: GeneratedSemanticRule 'GeneratedNeedMemberKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedNeedMemberKeySchema
+         'SituatedNeedObjectiveGroundingOccurrenceSchema
   SituatedNeedSurfacingSituationAnchoringRule
-    :: GeneratedSemanticRule 'GeneratedNeedMemberKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedNeedMemberKeySchema
+         'SituatedNeedSurfacingSituationAnchoringOccurrenceSchema
   SituatedNeedSurfacingSituationCardinalityRule
-    :: GeneratedSemanticRule 'GeneratedNeedKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedNeedKeySchema
+         'SituatedNeedSurfacingSituationCardinalityOccurrenceSchema
   StrategyFormulationActionContributionsRule
-    :: GeneratedSemanticRule 'GeneratedStrategyMemberKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedStrategyMemberKeySchema
+         'StrategyFormulationActionContributionsOccurrenceSchema
   StrategyFormulationActionsRule
-    :: GeneratedSemanticRule 'GeneratedStrategyKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedStrategyKeySchema
+         'StrategyFormulationActionsOccurrenceSchema
   StrategyFormulationDiagnosisRule
-    :: GeneratedSemanticRule 'GeneratedStrategyKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedStrategyKeySchema
+         'StrategyFormulationDiagnosisOccurrenceSchema
   StrategyFormulationDiagnosisGroundingRule
-    :: GeneratedSemanticRule 'GeneratedStrategyKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedStrategyKeySchema
+         'StrategyFormulationDiagnosisGroundingOccurrenceSchema
   StrategyFormulationGuidingPolicyRule
-    :: GeneratedSemanticRule 'GeneratedStrategyKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedStrategyKeySchema
+         'StrategyFormulationGuidingPolicyOccurrenceSchema
   StrategyFormulationGuidingPolicyActionsRule
-    :: GeneratedSemanticRule 'GeneratedStrategyMemberKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedStrategyMemberKeySchema
+         'StrategyFormulationGuidingPolicyActionsOccurrenceSchema
   StrategyFormulationIntentRule
-    :: GeneratedSemanticRule 'GeneratedStrategyKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedStrategyKeySchema
+         'StrategyFormulationIntentOccurrenceSchema
   StrategyFormulationKeyResultSubstantiationRule
-    :: GeneratedSemanticRule 'GeneratedStrategyMemberKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedStrategyMemberKeySchema
+         'StrategyFormulationKeyResultSubstantiationOccurrenceSchema
   StrategyFormulationKeyResultsRule
-    :: GeneratedSemanticRule 'GeneratedStrategyKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedStrategyKeySchema
+         'StrategyFormulationKeyResultsOccurrenceSchema
   StrategyFormulationVisionOrientationRule
-    :: GeneratedSemanticRule 'GeneratedStrategyKeySchema
+    :: GeneratedSemanticRule
+         'GeneratedStrategyKeySchema
+         'StrategyFormulationVisionOrientationOccurrenceSchema
 
-generatedSemanticRuleId :: GeneratedSemanticRule schema -> Text
+generatedSemanticRuleId :: GeneratedSemanticRule schema occurrenceSchema -> Text
 generatedSemanticRuleId =
   generatedSemanticRuleIdentityText . generatedSemanticRuleIdentity
 
 generatedSemanticRuleIdentity ::
-     GeneratedSemanticRule schema -> GeneratedSemanticRuleIdentity
+     GeneratedSemanticRule schema occurrenceSchema
+  -> GeneratedSemanticRuleIdentity
 generatedSemanticRuleIdentity rule =
   case rule of
     CollectiveAssertedCollectiveCoverageRule ->
       CollectiveAssertedCollectiveCoverageRuleIdentity
+    CollectiveAssertedCompletenessRule ->
+      CollectiveAssertedCompletenessRuleIdentity
     CollectiveAssertedMacroSupportRule ->
       CollectiveAssertedMacroSupportRuleIdentity
     CollectiveAssertedParticipantPrimitiveSupportRule ->
@@ -1490,6 +1803,8 @@ generatedSemanticRuleIdentity rule =
     CollectiveFitTargetGuidingPolicyRule ->
       CollectiveFitTargetGuidingPolicyRuleIdentity
     CollectiveFitTargetTradeOffsRule -> CollectiveFitTargetTradeOffsRuleIdentity
+    ContextualizationAssertedDependencyRule ->
+      ContextualizationAssertedDependencyRuleIdentity
     SituatedNeedDriverAnchoringRule -> SituatedNeedDriverAnchoringRuleIdentity
     SituatedNeedDriverCardinalityRule ->
       SituatedNeedDriverCardinalityRuleIdentity
@@ -1519,16 +1834,18 @@ generatedSemanticRuleIdentity rule =
     StrategyFormulationVisionOrientationRule ->
       StrategyFormulationVisionOrientationRuleIdentity
 
-generatedSemanticRuleRank :: GeneratedSemanticRule schema -> Int
+generatedSemanticRuleRank ::
+     GeneratedSemanticRule schema occurrenceSchema -> Int
 generatedSemanticRuleRank =
   generatedSemanticRuleIdentityRank . generatedSemanticRuleIdentity
 
 generatedSemanticRuleEvidenceSchema ::
-     GeneratedSemanticRule schema
+     GeneratedSemanticRule schema occurrenceSchema
   -> GeneratedSemanticEvidenceSchemaWitness schema
 generatedSemanticRuleEvidenceSchema rule =
   case rule of
     CollectiveAssertedCollectiveCoverageRule -> GeneratedFitClaimKeyWitness
+    CollectiveAssertedCompletenessRule -> GeneratedFitClaimKeyWitness
     CollectiveAssertedMacroSupportRule -> GeneratedParticipantClaimKeyWitness
     CollectiveAssertedParticipantPrimitiveSupportRule ->
       GeneratedParticipantClaimKeyWitness
@@ -1538,6 +1855,8 @@ generatedSemanticRuleEvidenceSchema rule =
     CollectiveFitTargetBindingRule -> GeneratedFitClaimKeyWitness
     CollectiveFitTargetGuidingPolicyRule -> GeneratedFitClaimKeyWitness
     CollectiveFitTargetTradeOffsRule -> GeneratedFitClaimKeyWitness
+    ContextualizationAssertedDependencyRule ->
+      GeneratedAssertedDependencyKeyWitness
     SituatedNeedDriverAnchoringRule -> GeneratedNeedMemberKeyWitness
     SituatedNeedDriverCardinalityRule -> GeneratedNeedKeyWitness
     SituatedNeedObjectiveCardinalityRule -> GeneratedNeedKeyWitness

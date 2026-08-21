@@ -1,0 +1,472 @@
+{
+  "schema": "o2i.core.semantic-diagnostic-evidence/v1",
+  "core": {
+    "identity": "o2i.core-semantics",
+    "version": "0.3.0"
+  },
+  "companions": {
+    "semantics": {
+      "schema": "o2i.core-semantics/target-v46",
+      "rawSha256": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333",
+      "shapeSha256": "3e091e8bc0fd3a887da02f8591292c2a8ea7d64c7e83951183ab71fe4f5b1278"
+    },
+    "semanticDiagnosticEvidence": {
+      "schema": "o2i.core-semantic-diagnostic-evidence/v1",
+      "rawSha256": "b44fda86659ee55e8de434de0ddc8c44be11ee5c10d0025e18b476e00f59ba0e",
+      "shapeSha256": "bd450f3299730cbac912d7e7239f8d890486252c6abf7a2c1f6189ce7bf77424"
+    }
+  },
+  "diagnostics": [
+    {
+      "ruleId": "core.collective-strategy-realization.asserted-collective-coverage",
+      "subjectEvidence": {
+        "schema": "FitClaimKey",
+        "fields": [
+          "claim"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "uncovered-target-member",
+          "cardinality": "one-or-more"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.collective-strategy-realization.asserted-completeness",
+      "subjectEvidence": {
+        "schema": "FitClaimKey",
+        "fields": [
+          "claim"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "claim",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.collective-strategy-realization.asserted-macro-support",
+      "subjectEvidence": {
+        "schema": "ParticipantClaimKey",
+        "fields": [
+          "claim",
+          "participant"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "claim",
+          "cardinality": "one"
+        },
+        {
+          "roleId": "participant",
+          "cardinality": "one"
+        },
+        {
+          "roleId": "target",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.collective-strategy-realization.asserted-participant-primitive-support",
+      "subjectEvidence": {
+        "schema": "ParticipantClaimKey",
+        "fields": [
+          "claim",
+          "participant"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "claim",
+          "cardinality": "one"
+        },
+        {
+          "roleId": "participant",
+          "cardinality": "one"
+        },
+        {
+          "roleId": "target",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.collective-strategy-realization.fit-pairwise-coherence",
+      "subjectEvidence": {
+        "schema": "FitClaimKey",
+        "fields": [
+          "claim"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "claim",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.collective-strategy-realization.fit-participant-binding",
+      "subjectEvidence": {
+        "schema": "FitClaimKey",
+        "fields": [
+          "claim"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "claim",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.collective-strategy-realization.fit-participant-compatibility",
+      "subjectEvidence": {
+        "schema": "FitClaimKey",
+        "fields": [
+          "claim"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "claim",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.collective-strategy-realization.fit-target-binding",
+      "subjectEvidence": {
+        "schema": "FitClaimKey",
+        "fields": [
+          "claim"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "claim",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.collective-strategy-realization.fit-target-guiding-policy",
+      "subjectEvidence": {
+        "schema": "FitClaimKey",
+        "fields": [
+          "claim"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "claim",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.collective-strategy-realization.fit-target-trade-offs",
+      "subjectEvidence": {
+        "schema": "FitClaimKey",
+        "fields": [
+          "claim"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "claim",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.contextualization.asserted-dependency",
+      "subjectEvidence": {
+        "schema": "AssertedDependencyKey",
+        "fields": [
+          "dependent",
+          "endpoint",
+          "context"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "dependent",
+          "cardinality": "one"
+        },
+        {
+          "roleId": "contextualized-endpoint",
+          "cardinality": "one"
+        },
+        {
+          "roleId": "candidate-contextualization",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.situated-need.driver-anchoring",
+      "subjectEvidence": {
+        "schema": "NeedMemberKey",
+        "fields": [
+          "need",
+          "member"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "unanchored-driver",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.situated-need.driver-cardinality",
+      "subjectEvidence": {
+        "schema": "NeedKey",
+        "fields": [
+          "need"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "observed-driver",
+          "cardinality": "zero"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.situated-need.objective-cardinality",
+      "subjectEvidence": {
+        "schema": "NeedKey",
+        "fields": [
+          "need"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "observed-objective",
+          "cardinality": "zero"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.situated-need.objective-grounding",
+      "subjectEvidence": {
+        "schema": "NeedMemberKey",
+        "fields": [
+          "need",
+          "member"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "ungrounded-objective",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.situated-need.surfacing-situation-anchoring",
+      "subjectEvidence": {
+        "schema": "NeedMemberKey",
+        "fields": [
+          "need",
+          "member"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "unanchored-surfacing-situation",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.situated-need.surfacing-situation-cardinality",
+      "subjectEvidence": {
+        "schema": "NeedKey",
+        "fields": [
+          "need"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "observed-surfacing-situation",
+          "cardinality": "zero"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.strategy-formulation.action-contributions",
+      "subjectEvidence": {
+        "schema": "StrategyMemberKey",
+        "fields": [
+          "strategy",
+          "member"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "uncontributing-action",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.strategy-formulation.actions",
+      "subjectEvidence": {
+        "schema": "StrategyKey",
+        "fields": [
+          "strategy"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "listed-action",
+          "cardinality": "one-or-more"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.strategy-formulation.diagnosis",
+      "subjectEvidence": {
+        "schema": "StrategyKey",
+        "fields": [
+          "strategy"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "owned-diagnosis",
+          "cardinality": "zero-or-more"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.strategy-formulation.diagnosis-grounding",
+      "subjectEvidence": {
+        "schema": "StrategyKey",
+        "fields": [
+          "strategy"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "diagnosis",
+          "cardinality": "one"
+        },
+        {
+          "roleId": "intent",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.strategy-formulation.guiding-policy",
+      "subjectEvidence": {
+        "schema": "StrategyKey",
+        "fields": [
+          "strategy"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "owned-guiding-policy",
+          "cardinality": "zero-or-more"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.strategy-formulation.guiding-policy-actions",
+      "subjectEvidence": {
+        "schema": "StrategyMemberKey",
+        "fields": [
+          "strategy",
+          "member"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "guiding-policy",
+          "cardinality": "one"
+        },
+        {
+          "roleId": "action",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.strategy-formulation.intent",
+      "subjectEvidence": {
+        "schema": "StrategyKey",
+        "fields": [
+          "strategy"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "owned-intent",
+          "cardinality": "zero-or-more"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.strategy-formulation.key-result-substantiation",
+      "subjectEvidence": {
+        "schema": "StrategyMemberKey",
+        "fields": [
+          "strategy",
+          "member"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "key-result",
+          "cardinality": "one"
+        },
+        {
+          "roleId": "intent",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.strategy-formulation.key-results",
+      "subjectEvidence": {
+        "schema": "StrategyKey",
+        "fields": [
+          "strategy"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "listed-key-result",
+          "cardinality": "one-or-more"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.strategy-formulation.vision-orientation",
+      "subjectEvidence": {
+        "schema": "StrategyKey",
+        "fields": [
+          "strategy"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "observed-vision-orientation",
+          "cardinality": "zero"
+        }
+      ]
+    }
+  ]
+}

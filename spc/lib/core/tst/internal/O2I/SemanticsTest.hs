@@ -9,6 +9,7 @@ import Data.ByteString (ByteString)
 import qualified Data.ByteString.Char8 as ByteString
 import Data.List (intercalate, sort)
 import qualified Data.List.NonEmpty as NonEmpty
+import qualified Data.Map.Strict as Map
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
@@ -118,6 +119,21 @@ tests =
         , testCase
             "is independent of projection and input permutation"
             permutationIndependence
+        ]
+    , testGroup
+        "runtime occurrence evidence"
+        [ testCase
+            "retains direct macro-support occurrence roles"
+            directMacroSupportOccurrenceRoles
+        , testCase
+            "retains direct primitive-support occurrence roles"
+            directPrimitiveSupportOccurrenceRoles
+        , testCase
+            "executes the exact 27/27 real-producer matrix"
+            realProducerOccurrenceMatrix
+        , testCase
+            "preserves every cardinality and multi-role order"
+            runtimeOccurrenceCardinalityOracle
         ]
     , testGroup
         "work"
@@ -238,7 +254,7 @@ assertedContextualizationDependency =
               (semanticRuleIdentity
                  Generated.ContextualizationAssertedDependencyRuleIdentity)
           ]
-    map semanticDefectWitnesses defects
+    map flattenDefectOccurrences defects
       @?= [ map
               occurrenceId
               [ "relation-principle-guides-action"
@@ -454,12 +470,290 @@ collectiveComponentDefect =
               , replicate 2 Public.ComponentSatisfied)
         map semanticDefectRule (NonEmpty.toList defects)
           @?= [semanticRule Generated.CollectiveAssertedMacroSupportRule]
-        map semanticDefectWitnesses (NonEmpty.toList defects)
+        map flattenDefectOccurrences (NonEmpty.toList defects)
           @?= [ map
                   occurrenceId
                   ["collective-claim", "strategy-b", "strategy-target"]
               ]
       result -> assertFailure ("unexpected collective result: " ++ show result)
+
+directMacroSupportOccurrenceRoles :: Assertion
+directMacroSupportOccurrenceRoles =
+  assertProducerGroups
+    "core.collective-strategy-realization.asserted-macro-support"
+    [ ("claim", ["collective-claim"])
+    , ("participant", ["strategy-b"])
+    , ("target", ["strategy-target"])
+    ]
+
+directPrimitiveSupportOccurrenceRoles :: Assertion
+directPrimitiveSupportOccurrenceRoles =
+  assertProducerGroups
+    "core.collective-strategy-realization.asserted-participant-primitive-support"
+    [ ("claim", ["collective-claim"])
+    , ("participant", ["strategy-a"])
+    , ("target", ["strategy-target"])
+    ]
+
+assertProducerGroups :: Text -> [(Text, [Text])] -> Assertion
+assertProducerGroups rule expected =
+  case realProducerDefects of
+    Left problem -> assertFailure problem
+    Right defects ->
+      case filter ((== (rule, expected)) . runtimeOccurrenceSummary) defects of
+        [defect] -> snd (runtimeOccurrenceSummary defect) @?= expected
+        found ->
+          assertFailure
+            ("expected one real producer for "
+               ++ Text.unpack rule
+               ++ ", found "
+               ++ show (length found))
+
+realProducerOccurrenceMatrix :: Assertion
+realProducerOccurrenceMatrix =
+  case realProducerDefects of
+    Left problem -> assertFailure problem
+    Right defects ->
+      let byRule =
+            Map.fromListWith
+              min
+              [ (fst summary, summary)
+              | defect <- defects
+              , let summary = runtimeOccurrenceSummary defect
+              ]
+          actual = map (byRule Map.!) (map fst runtimeProducerOccurrenceOracle)
+       in do
+            length runtimeProducerOccurrenceOracle @?= 27
+            Map.keysSet byRule
+              @?= Map.keysSet (Map.fromList runtimeProducerOccurrenceOracle)
+            actual @?= runtimeProducerOccurrenceOracle
+
+runtimeOccurrenceCardinalityOracle :: Assertion
+runtimeOccurrenceCardinalityOracle = do
+  groups Generated.SituatedNeedDriverCardinalityOccurrences
+    @?= [("observed-driver", [])]
+  groups (Generated.StrategyFormulationDiagnosisOccurrences [])
+    @?= [("owned-diagnosis", [])]
+  groups (Generated.StrategyFormulationDiagnosisOccurrences ["one"])
+    @?= [("owned-diagnosis", ["one"])]
+  groups (Generated.StrategyFormulationDiagnosisOccurrences ["one", "many"])
+    @?= [("owned-diagnosis", ["one", "many"])]
+  groups
+    (Generated.StrategyFormulationActionsOccurrences ("one" NonEmpty.:| []))
+    @?= [("listed-action", ["one"])]
+  groups
+    (Generated.StrategyFormulationActionsOccurrences
+       ("one" NonEmpty.:| ["many"]))
+    @?= [("listed-action", ["one", "many"])]
+  groups
+    (Generated.CollectiveAssertedCollectiveCoverageOccurrences
+       ("one" NonEmpty.:| []))
+    @?= [("uncovered-target-member", ["one"])]
+  groups
+    (Generated.CollectiveAssertedCollectiveCoverageOccurrences
+       ("one" NonEmpty.:| ["many"]))
+    @?= [("uncovered-target-member", ["one", "many"])]
+  groups
+    (Generated.StrategyFormulationDiagnosisGroundingOccurrences
+       "diagnosis"
+       "intent")
+    @?= [("diagnosis", ["diagnosis"]), ("intent", ["intent"])]
+  assertBool
+    "binary role reassociation was observationally invisible"
+    (groups
+       (Generated.StrategyFormulationDiagnosisGroundingOccurrences
+          "intent"
+          "diagnosis")
+       /= [("diagnosis", ["diagnosis"]), ("intent", ["intent"])])
+  groups
+    (Generated.CollectiveAssertedMacroSupportOccurrences
+       "claim"
+       "participant"
+       "target")
+    @?= [ ("claim", ["claim"])
+        , ("participant", ["participant"])
+        , ("target", ["target"])
+        ]
+  assertBool
+    "three-role reassociation was observationally invisible"
+    (groups
+       (Generated.CollectiveAssertedMacroSupportOccurrences
+          "target"
+          "participant"
+          "claim")
+       /= [ ("claim", ["claim"])
+          , ("participant", ["participant"])
+          , ("target", ["target"])
+          ])
+  where
+    groups ::
+         Generated.GeneratedSemanticOccurrenceEvidence schema Text
+      -> [(Text, [Text])]
+    groups =
+      NonEmpty.toList . Generated.generatedSemanticOccurrenceEvidenceGroups
+
+runtimeOccurrenceSummary :: SemanticDefect -> (Text, [(Text, [Text])])
+runtimeOccurrenceSummary defect =
+  ( coreRuleIdText (Public.semanticDefectRule defect)
+  , [ ( Public.semanticOccurrenceRoleId
+          (Public.semanticOccurrenceGroupRole group)
+      , map
+          occurrenceIdentityText
+          (Public.semanticOccurrenceGroupOccurrences group))
+    | group <- NonEmpty.toList (Public.semanticDefectOccurrenceGroups defect)
+    ])
+
+runtimeProducerOccurrenceOracle :: [(Text, [(Text, [Text])])]
+runtimeProducerOccurrenceOracle =
+  [ ( "core.collective-strategy-realization.asserted-collective-coverage"
+    , [ ( "uncovered-target-member"
+        , ["strategy-target-action", "strategy-target-key-result"])
+      ])
+  , ( "core.collective-strategy-realization.asserted-completeness"
+    , [("claim", ["collective-claim"])])
+  , ( "core.collective-strategy-realization.asserted-macro-support"
+    , [ ("claim", ["collective-claim"])
+      , ("participant", ["strategy-b"])
+      , ("target", ["strategy-target"])
+      ])
+  , ( "core.collective-strategy-realization.asserted-participant-primitive-support"
+    , [ ("claim", ["collective-claim"])
+      , ("participant", ["strategy-a"])
+      , ("target", ["strategy-target"])
+      ])
+  , ( "core.collective-strategy-realization.fit-pairwise-coherence"
+    , [("claim", ["collective-claim"])])
+  , ( "core.collective-strategy-realization.fit-participant-binding"
+    , [("claim", ["collective-claim"])])
+  , ( "core.collective-strategy-realization.fit-participant-compatibility"
+    , [("claim", ["collective-claim"])])
+  , ( "core.collective-strategy-realization.fit-target-binding"
+    , [("claim", ["collective-claim"])])
+  , ( "core.collective-strategy-realization.fit-target-guiding-policy"
+    , [("claim", ["collective-claim"])])
+  , ( "core.collective-strategy-realization.fit-target-trade-offs"
+    , [("claim", ["collective-claim"])])
+  , ( "core.contextualization.asserted-dependency"
+    , [ ("dependent", ["relation-principle-guides-action"])
+      , ("contextualized-endpoint", ["strategy-a-principle"])
+      , ("candidate-contextualization", ["owns-strategy-a-principle"])
+      ])
+  , ( "core.situated-need.driver-anchoring"
+    , [("unanchored-driver", ["need-driver"])])
+  , ("core.situated-need.driver-cardinality", [("observed-driver", [])])
+  , ("core.situated-need.objective-cardinality", [("observed-objective", [])])
+  , ( "core.situated-need.objective-grounding"
+    , [("ungrounded-objective", ["need-objective"])])
+  , ( "core.situated-need.surfacing-situation-anchoring"
+    , [("unanchored-surfacing-situation", ["situation"])])
+  , ( "core.situated-need.surfacing-situation-cardinality"
+    , [("observed-surfacing-situation", [])])
+  , ( "core.strategy-formulation.action-contributions"
+    , [("uncontributing-action", ["strategy-a-action"])])
+  , ( "core.strategy-formulation.actions"
+    , [("listed-action", ["strategy-b-action"])])
+  , ( "core.strategy-formulation.diagnosis"
+    , [("owned-diagnosis", ["strategy-a-driver"])])
+  , ( "core.strategy-formulation.diagnosis-grounding"
+    , [ ("diagnosis", ["strategy-a-driver"])
+      , ("intent", ["strategy-a-objective"])
+      ])
+  , ( "core.strategy-formulation.guiding-policy"
+    , [("owned-guiding-policy", ["strategy-a-principle"])])
+  , ( "core.strategy-formulation.guiding-policy-actions"
+    , [ ("guiding-policy", ["strategy-a-principle"])
+      , ("action", ["strategy-a-action"])
+      ])
+  , ( "core.strategy-formulation.intent"
+    , [("owned-intent", ["strategy-a-objective"])])
+  , ( "core.strategy-formulation.key-result-substantiation"
+    , [ ("key-result", ["strategy-a-key-result"])
+      , ("intent", ["strategy-a-objective"])
+      ])
+  , ( "core.strategy-formulation.key-results"
+    , [("listed-key-result", ["strategy-b-key-result"])])
+  , ( "core.strategy-formulation.vision-orientation"
+    , [("observed-vision-orientation", [])])
+  ]
+
+realProducerDefects :: Either String [SemanticDefect]
+realProducerDefects =
+  concat
+    <$> sequence
+          [ scenarioDefects
+              contextualizationDependencyModels
+              contextualizationDependencyProjection
+              []
+          , scenarioDefects
+              (carrierModels ["need"])
+              (structureProjection
+                 [contextCarrier "need" "Need" Asserted]
+                 []
+                 []
+                 []
+                 [])
+              []
+          , scenarioDefects
+              needModelOccurrences
+              needProjectionWithCandidateAnchor
+              []
+          , scenarioDefects
+              needModelOccurrences
+              needProjectionWithoutGrounding
+              []
+          , scenarioDefects
+              strategyMismatchModelOccurrences
+              strategyMismatchProjection
+              [(0, strategyMismatchInput)]
+          , scenarioDefects
+              (strategyModelOccurrences "a")
+              (strategyProjectionMissingRelation "a" 0)
+              [(0, strategyInput "a")]
+          , scenarioDefects
+              (strategyModelOccurrences "a")
+              (strategyProjectionMissingRelation "a" 1)
+              [(0, strategyInput "a")]
+          , scenarioDefects
+              (strategyModelOccurrences "a")
+              (strategyProjectionMissingRelation "a" 2)
+              [(0, strategyInput "a")]
+          , scenarioDefects
+              (strategyModelOccurrences "a")
+              (strategyProjectionMissingRelation "a" 3)
+              [(0, strategyInput "a")]
+          , scenarioDefects
+              (strategyModelOccurrences "a")
+              (strategyProjectionWithoutVisionOrientation "a")
+              [(0, strategyInput "a")]
+          , scenarioDefects
+              completeModelOccurrences
+              (completeProjection Forward True)
+              (strategyInputs ++ [(3, collectiveInputAllFitDefects)])
+          , scenarioDefects
+              completeModelOccurrences
+              completeProjectionOpen
+              completeInputs
+          , scenarioDefects
+              completeModelOccurrences
+              completeProjectionWithoutPrimitives
+              completeInputs
+          , scenarioDefects
+              completeModelOccurrences
+              (completeProjection Forward False)
+              completeInputs
+          ]
+
+scenarioDefects ::
+     [ModelOccurrence]
+  -> StructureProjection
+  -> [(Natural, ByteString)]
+  -> Either String [SemanticDefect]
+scenarioDefects occurrences projection inputs =
+  runScenario
+    occurrences
+    projection
+    inputs
+    (\graph bound -> Public.semanticDefects (Public.assessSemantics graph bound))
 
 supplementalBindingIsolation :: Assertion
 supplementalBindingIsolation =
@@ -692,17 +986,17 @@ compiledRuleOrder = do
         mkSemanticDefect
           Generated.StrategyFormulationVisionOrientationRule
           (SemanticStrategyEvidenceKey (modelId "strategy-a"))
-          []
+          Generated.StrategyFormulationVisionOrientationOccurrences
       needObjectiveDefect =
         mkSemanticDefect
           Generated.SituatedNeedObjectiveCardinalityRule
           (SemanticNeedEvidenceKey (modelId "need"))
-          []
+          Generated.SituatedNeedObjectiveCardinalityOccurrences
       needDriverDefect =
         mkSemanticDefect
           Generated.SituatedNeedDriverCardinalityRule
           (SemanticNeedEvidenceKey (modelId "need"))
-          []
+          Generated.SituatedNeedDriverCardinalityOccurrences
   sortSemanticDefects [strategyDefect, needObjectiveDefect, needDriverDefect]
     @?= [needDriverDefect, needObjectiveDefect, strategyDefect]
   map
@@ -714,6 +1008,12 @@ compiledRuleOrder = do
     @?= map
           (semanticRuleId . semanticDefectRule)
           [needDriverDefect, needObjectiveDefect, strategyDefect]
+
+flattenDefectOccurrences :: SemanticDefect -> [OccurrenceIdentity]
+flattenDefectOccurrences =
+  concatMap Public.semanticOccurrenceGroupOccurrences
+    . NonEmpty.toList
+    . Public.semanticDefectOccurrenceGroups
 
 compiledRuleCatalog :: Assertion
 compiledRuleCatalog = do
@@ -781,7 +1081,11 @@ summarizeAssessment assessment =
     { summaryDisposition = Public.semanticDisposition assessment
     , summaryDefects =
         [ ( coreRuleIdText (Public.semanticDefectRule defect)
-          , map occurrenceIdentityText (Public.semanticDefectWitnesses defect))
+          , map
+              occurrenceIdentityText
+              (concatMap
+                 Public.semanticOccurrenceGroupOccurrences
+                 (NonEmpty.toList (Public.semanticDefectOccurrenceGroups defect))))
         | defect <- Public.semanticDefects assessment
         ]
     , summaryCandidates =
@@ -1014,6 +1318,15 @@ needProjectionWithCandidateAnchor =
     []
     []
 
+needProjectionWithoutGrounding :: StructureProjection
+needProjectionWithoutGrounding =
+  structureProjection
+    needCarriers
+    needContextualizations
+    (init needRelations)
+    []
+    []
+
 needCarriers :: [CarrierProjection]
 needCarriers =
   [ contextCarrier "need" "Need" Asserted
@@ -1077,6 +1390,47 @@ strategyProjectionWithoutVisionOrientation label =
     []
     []
 
+strategyProjectionMissingRelation :: String -> Int -> StructureProjection
+strategyProjectionMissingRelation label omitted =
+  structureProjection
+    (visionCarriers ++ strategyCarriers label)
+    (visionContextualizations ++ strategyContextualizations label)
+    (visionOrientation label
+       : [ relationRow
+         | (index, relationRow) <-
+             zip [0 :: Int ..] (strategyInternalRelations label)
+         , index /= omitted
+         ])
+    []
+    []
+
+strategyMismatchProjection :: StructureProjection
+strategyMismatchProjection =
+  structureProjection
+    (visionCarriers ++ strategyCarriers "a" ++ strategyCarriers "b")
+    (visionContextualizations
+       ++ strategyContextualizations "a"
+       ++ strategyContextualizations "b")
+    (concatMap
+       (\label -> visionOrientation label : strategyInternalRelations label)
+       ["a", "b"])
+    []
+    []
+
+strategyMismatchModelOccurrences :: [ModelOccurrence]
+strategyMismatchModelOccurrences =
+  carrierModels
+    (visionCarrierNames ++ strategyCarrierNames "a" ++ strategyCarrierNames "b")
+    ++ segmentModels
+         (visionContextualizationNames
+            ++ strategyContextualizationNames "a"
+            ++ strategyContextualizationNames "b"
+            ++ concatMap
+                 (\label ->
+                    visionOrientationName label
+                      : strategyInternalRelationNames label)
+                 ["a", "b"])
+
 strategyProjectionWithCandidateVisionObjective :: String -> StructureProjection
 strategyProjectionWithCandidateVisionObjective label =
   structureProjection
@@ -1123,6 +1477,31 @@ completeProjectionWithCandidateParticipant =
     (completeStrategyRelations
        ++ [macroRelation "a", macroRelation "b"]
        ++ collectivePrimitiveRelations)
+    [collectiveProposition]
+    collectiveIncidences
+
+completeProjectionOpen :: StructureProjection
+completeProjectionOpen =
+  structureProjection
+    completeCarriers
+    completeContextualizations
+    (completeStrategyRelations
+       ++ [macroRelation "a", macroRelation "b"]
+       ++ collectivePrimitiveRelations)
+    [ structuredPropositionProjection
+        (occurrenceId "collective-claim")
+        collectiveFamily
+        completenessOpen
+        Asserted
+    ]
+    collectiveIncidences
+
+completeProjectionWithoutPrimitives :: StructureProjection
+completeProjectionWithoutPrimitives =
+  structureProjection
+    completeCarriers
+    completeContextualizations
+    (completeStrategyRelations ++ [macroRelation "a", macroRelation "b"])
     [collectiveProposition]
     collectiveIncidences
 
@@ -1328,6 +1707,27 @@ strategyInput label =
 
 strategyInputWithDiagnosis :: String -> String -> ByteString
 strategyInputWithDiagnosis label diagnosis =
+  strategyInputWithMembers
+    label
+    diagnosis
+    (strategyMember label "objective")
+    (strategyMember label "principle")
+    (strategyMember label "action")
+    (strategyMember label "key-result")
+
+strategyMismatchInput :: ByteString
+strategyMismatchInput =
+  strategyInputWithMembers
+    "a"
+    (strategyMember "b" "driver")
+    (strategyMember "b" "objective")
+    (strategyMember "b" "principle")
+    (strategyMember "b" "action")
+    (strategyMember "b" "key-result")
+
+strategyInputWithMembers ::
+     String -> String -> String -> String -> String -> String -> ByteString
+strategyInputWithMembers label diagnosis intent guidingPolicy action keyResult =
   ByteString.pack
     (concat
        [ "{\"type\":\"StrategyFormulationInput\""
@@ -1346,20 +1746,20 @@ strategyInputWithDiagnosis label diagnosis =
        , ",\"diagnosis\":\""
        , diagnosis
        , "\""
-       , ",\"intent\":\"strategy-"
-       , label
-       , "-objective\""
-       , ",\"guidingPolicy\":\"strategy-"
-       , label
-       , "-principle\""
+       , ",\"intent\":\""
+       , intent
+       , "\""
+       , ",\"guidingPolicy\":\""
+       , guidingPolicy
+       , "\""
        , ",\"positioning\":[\"positioning\"]"
        , ",\"tradeOffs\":[\"trade-off\"]"
-       , ",\"actions\":[\"strategy-"
-       , label
-       , "-action\"]"
-       , ",\"keyResults\":[\"strategy-"
-       , label
-       , "-key-result\"]"
+       , ",\"actions\":[\""
+       , action
+       , "\"]"
+       , ",\"keyResults\":[\""
+       , keyResult
+       , "\"]"
        , ",\"fitRationale\":[\"fit rationale\"]}"
        ])
 
@@ -1382,6 +1782,30 @@ collectiveInput =
        , ",\"guidingPolicyRationale\":\"compatible\""
        , ",\"tradeOffRationale\":\"compatible\"}"
        , ",{\"participant\":\"strategy-b\""
+       , ",\"guidingPolicyRationale\":\"compatible\""
+       , ",\"tradeOffRationale\":\"compatible\"}]"
+       , ",\"contributionInteraction\":[\"coordinated\"]}"
+       ])
+
+collectiveInputAllFitDefects :: ByteString
+collectiveInputAllFitDefects =
+  ByteString.pack
+    (concat
+       [ "{\"type\":\"CollectiveFitInput\""
+       , ",\"claim\":\"collective-claim\""
+       , ",\"participants\":[\"strategy-a\",\"strategy-target\"]"
+       , ",\"target\":\"strategy-b\""
+       , ",\"targetGuidingPolicy\":\"strategy-a-principle\""
+       , ",\"targetTradeOffs\":[\"different-trade-off\"]"
+       , ",\"pairwiseCoherence\":[{"
+       , "\"participantA\":\"strategy-a\""
+       , ",\"participantB\":\"strategy-target\""
+       , ",\"rationale\":\"coherent\"}]"
+       , ",\"participantCompatibility\":["
+       , "{\"participant\":\"strategy-a\""
+       , ",\"guidingPolicyRationale\":\"compatible\""
+       , ",\"tradeOffRationale\":\"compatible\"}"
+       , ",{\"participant\":\"strategy-target\""
        , ",\"guidingPolicyRationale\":\"compatible\""
        , ",\"tradeOffRationale\":\"compatible\"}]"
        , ",\"contributionInteraction\":[\"coordinated\"]}"

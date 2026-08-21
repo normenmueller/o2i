@@ -194,6 +194,21 @@ CONTRACTS = (
                 "SemanticsInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "SemanticGeneratedModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "SemanticOccurrenceOpaqueConstructors.hs",
+                (("GHC-01928", 2),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "SemanticsLegacyWitnessConsumers.hs",
+                (("GHC-88464", 1),),
+            ),
         ),
     ),
     PackageContract(

@@ -341,6 +341,16 @@ verify_haskell() {
   profile_root=$(sed -n '1s#/.*##p' "$profile_inventory")
   operation_root=$(sed -n '1s#/.*##p' "$operation_inventory")
   amx_root=$(sed -n '1s#/.*##p' "$amx_inventory")
+  if ! grep -Eq '/semantic-diagnostic-evidence\.json$' "$core_inventory"; then
+    printf '[o2i|error] Core source archive lacks the diagnostic companion.\n' >&2
+    exit 1
+  fi
+  if ! grep -Eq \
+    '/contract/generated/o2i\.core\.semantic-diagnostic-evidence-v1\.json$' \
+    "$core_inventory"; then
+    printf '[o2i|error] Core source archive lacks the generated diagnostic inventory.\n' >&2
+    exit 1
+  fi
   if ! grep -Eq '/profile\.json$' "$profile_inventory"; then
     printf '[o2i|error] ArchiMate Profile source archive lacks profile.json.\n' >&2
     exit 1

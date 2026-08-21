@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import copy
+import hashlib
 import importlib.util
 import json
 import re
@@ -47,6 +48,9 @@ SUPPLEMENTAL_RULE_CONSTRUCTOR_ORACLE = {
 class CoreContractCompilerTest(unittest.TestCase):
     def setUp(self):
         self.companion = json.loads(COMPILER.COMPANION.read_text(encoding="utf-8"))
+        self.diagnostic = json.loads(
+            COMPILER.DIAGNOSTIC_COMPANION.read_text(encoding="utf-8")
+        )
 
     def compile_value(self, value):
         with tempfile.TemporaryDirectory() as directory:
@@ -62,6 +66,32 @@ class CoreContractCompilerTest(unittest.TestCase):
         value["companionFormatContract"]["shapeSha256"] = (
             COMPILER.shape_sha256(value)
         )
+
+    def compile_diagnostic_value(self, value):
+        changed = copy.deepcopy(value)
+        self.refresh_declared_shape(changed)
+        accepted_shape = changed["companionFormatContract"]["shapeSha256"]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "semantic-diagnostic-evidence.json"
+            path.write_text(
+                json.dumps(changed, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+            with (
+                patch.object(COMPILER, "DIAGNOSTIC_COMPANION", path),
+                patch.object(
+                    COMPILER,
+                    "EXPECTED_DIAGNOSTIC_SHAPE_SHA256",
+                    accepted_shape,
+                ),
+            ):
+                return COMPILER.compile_outputs()
+
+    def assert_occurrence_mutation_rejected(self, mutate):
+        changed = copy.deepcopy(self.diagnostic)
+        mutate(changed["occurrenceEvidenceByRule"])
+        with self.assertRaisesRegex(ValueError, "occurrence|diagnostic"):
+            self.compile_diagnostic_value(changed)
 
     def semantic_evidence_contract(self, companion):
         rules = COMPILER.rule_inventory(companion)
@@ -153,7 +183,7 @@ class CoreContractCompilerTest(unittest.TestCase):
         self.assertIn("generatedSemanticEvidenceSchemaFields", first)
         self.assertIn("generatedSemanticRuleEvidenceSchema", first)
         self.assertEqual(
-            6,
+            7,
             len(
                 re.findall(
                     r"^  Generated\w+Witness\n"
@@ -164,11 +194,11 @@ class CoreContractCompilerTest(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            25,
+            27,
             len(
                 re.findall(
                     r"^  \w+Rule\n"
-                    r"    :: GeneratedSemanticRule '",
+                    r"    :: GeneratedSemanticRule$",
                     first,
                     re.MULTILINE,
                 )
@@ -191,6 +221,349 @@ class CoreContractCompilerTest(unittest.TestCase):
             r"<\$> generatedSemanticRuleIdentities",
         )
         self.assert_supplemental_rule_associations(first)
+
+    def test_diagnostic_inventory_is_deterministic_and_has_fixed_raw_digest(self):
+        first_haskell, first_inventory = COMPILER.compile_outputs()
+        second_haskell, second_inventory = COMPILER.compile_outputs()
+        self.assertEqual(first_haskell, second_haskell)
+        self.assertEqual(first_inventory, second_inventory)
+        self.assertEqual(
+            COMPILER.EXPECTED_INVENTORY_SHA256,
+            hashlib.sha256(first_inventory).hexdigest(),
+        )
+        self.assertEqual(COMPILER.GENERATED_INVENTORY.read_bytes(), first_inventory)
+        COMPILER.validate_generated_inventory(first_inventory)
+
+    def test_exact_occurrence_authority_is_independent_of_diagnostic_input(self):
+        _, _, occurrences = COMPILER.semantic_diagnostic_contract(
+            self.diagnostic,
+            COMPILER.DIAGNOSTIC_COMPANION.read_bytes(),
+            COMPILER.COMPANION.read_bytes(),
+            COMPILER.rule_stage_partition(
+                self.companion,
+                COMPILER.rule_inventory(self.companion),
+            )["semantics"],
+            *self.semantic_evidence_contract(self.companion),
+        )
+        self.assertEqual(
+            COMPILER.OCCURRENCE_AUTHORITY,
+            tuple((rule, tuple(roles)) for rule, roles in occurrences.items()),
+        )
+
+    def test_additional_rule_to_schema_swap_is_rejected(self):
+        changed = copy.deepcopy(self.diagnostic)
+        mappings = changed["additionalEvidenceKeyByRule"]
+        first, second = mappings
+        mappings[first], mappings[second] = mappings[second], mappings[first]
+        with self.assertRaisesRegex(ValueError, "additional semantic evidence-key"):
+            self.compile_diagnostic_value(changed)
+
+    def test_each_additional_rule_rejects_a_wrong_known_schema(self):
+        for rule in self.diagnostic["additionalEvidenceKeyByRule"]:
+            with self.subTest(rule=rule):
+                changed = copy.deepcopy(self.diagnostic)
+                changed["additionalEvidenceKeyByRule"][rule] = "NeedKey"
+                with self.assertRaisesRegex(
+                    ValueError, "additional semantic evidence-key"
+                ):
+                    self.compile_diagnostic_value(changed)
+
+    def test_occurrence_rule_order_swap_is_rejected(self):
+        def mutate(rows):
+            items = list(rows.items())
+            items[0], items[1] = items[1], items[0]
+            rows.clear()
+            rows.update(items)
+
+        self.assert_occurrence_mutation_rejected(mutate)
+
+    def test_occurrence_role_swap_is_rejected(self):
+        def mutate(rows):
+            roles = rows[
+                "core.collective-strategy-realization.asserted-macro-support"
+            ]
+            roles[0]["roleId"], roles[1]["roleId"] = (
+                roles[1]["roleId"],
+                roles[0]["roleId"],
+            )
+
+        self.assert_occurrence_mutation_rejected(mutate)
+
+    def test_occurrence_role_drop_is_rejected(self):
+        def mutate(rows):
+            rows[
+                "core.collective-strategy-realization.asserted-macro-support"
+            ].pop()
+
+        self.assert_occurrence_mutation_rejected(mutate)
+
+    def test_occurrence_role_reorder_is_rejected(self):
+        def mutate(rows):
+            roles = rows["core.contextualization.asserted-dependency"]
+            roles.reverse()
+
+        self.assert_occurrence_mutation_rejected(mutate)
+
+    def test_occurrence_row_truncation_is_rejected(self):
+        self.assert_occurrence_mutation_rejected(lambda rows: rows.popitem())
+
+    def test_additional_subject_rule_truncation_is_rejected(self):
+        changed = copy.deepcopy(self.diagnostic)
+        changed["additionalEvidenceKeyByRule"].popitem()
+        with self.assertRaisesRegex(ValueError, "additional semantic evidence-key"):
+            self.compile_diagnostic_value(changed)
+
+    def test_additional_subject_overlap_is_rejected(self):
+        changed = copy.deepcopy(self.diagnostic)
+        mappings = changed["additionalEvidenceKeyByRule"]
+        mappings["core.situated-need.driver-anchoring"] = mappings.pop(
+            "core.contextualization.asserted-dependency"
+        )
+        with self.assertRaisesRegex(ValueError, "additional semantic evidence-key"):
+            self.compile_diagnostic_value(changed)
+
+    def test_additional_subject_extra_rule_is_rejected(self):
+        changed = copy.deepcopy(self.diagnostic)
+        changed["additionalEvidenceKeyByRule"]["core.unknown.extra"] = "FitClaimKey"
+        with self.assertRaisesRegex(ValueError, "additional semantic evidence-key"):
+            self.compile_diagnostic_value(changed)
+
+    def test_additional_subject_non_emitter_rule_is_rejected(self):
+        changed = copy.deepcopy(self.diagnostic)
+        mappings = changed["additionalEvidenceKeyByRule"]
+        mappings["core.structure.contextualization-cardinality"] = mappings.pop(
+            "core.contextualization.asserted-dependency"
+        )
+        with self.assertRaisesRegex(ValueError, "additional semantic evidence-key"):
+            self.compile_diagnostic_value(changed)
+
+    def test_additional_subject_shape_mismatch_is_rejected(self):
+        changed = copy.deepcopy(self.diagnostic)
+        changed["additionalEvidenceKeySchemas"]["AssertedDependencyKey"] = [
+            "dependent",
+            "context",
+            "endpoint",
+        ]
+        with self.assertRaisesRegex(ValueError, "additional semantic evidence-key"):
+            self.compile_diagnostic_value(changed)
+
+    def test_duplicate_additional_subject_rule_member_is_rejected(self):
+        payload = COMPILER.DIAGNOSTIC_COMPANION.read_text(encoding="utf-8")
+        member = (
+            '"core.contextualization.asserted-dependency": '
+            '"AssertedDependencyKey"'
+        )
+        duplicated = payload.replace(member, member + ",\n    " + member, 1)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "semantic-diagnostic-evidence.json"
+            path.write_text(duplicated, encoding="utf-8")
+            with patch.object(COMPILER, "DIAGNOSTIC_COMPANION", path):
+                with self.assertRaisesRegex(
+                    ValueError,
+                    "duplicate JSON object member: "
+                    "core.contextualization.asserted-dependency",
+                ):
+                    COMPILER.compile_outputs()
+
+    def test_duplicate_occurrence_rule_member_is_rejected(self):
+        payload = COMPILER.DIAGNOSTIC_COMPANION.read_text(encoding="utf-8")
+        marker = (
+            '"core.situated-need.driver-cardinality": [\n'
+            '      {"roleId": "observed-driver", "cardinality": "zero"}\n'
+            '    ]'
+        )
+        duplicated = payload.replace(marker, marker + ",\n    " + marker, 1)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "semantic-diagnostic-evidence.json"
+            path.write_text(duplicated, encoding="utf-8")
+            with patch.object(COMPILER, "DIAGNOSTIC_COMPANION", path):
+                with self.assertRaisesRegex(
+                    ValueError,
+                    "duplicate JSON object member: "
+                    "core.situated-need.driver-cardinality",
+                ):
+                    COMPILER.compile_outputs()
+
+    def test_occurrence_cardinality_widening_is_rejected(self):
+        def mutate(rows):
+            rows["core.situated-need.driver-cardinality"][0]["cardinality"] = (
+                "zero-or-more"
+            )
+
+        self.assert_occurrence_mutation_rejected(mutate)
+
+    def test_occurrence_cardinality_narrowing_is_rejected(self):
+        def mutate(rows):
+            rows["core.strategy-formulation.actions"][0]["cardinality"] = "one"
+
+        self.assert_occurrence_mutation_rejected(mutate)
+
+    def test_unknown_occurrence_role_is_rejected(self):
+        def mutate(rows):
+            rows["core.situated-need.driver-anchoring"][0]["roleId"] = "unknown"
+
+        self.assert_occurrence_mutation_rejected(mutate)
+
+    def test_duplicate_occurrence_role_is_rejected(self):
+        def mutate(rows):
+            roles = rows[
+                "core.collective-strategy-realization.asserted-macro-support"
+            ]
+            roles[1]["roleId"] = roles[0]["roleId"]
+
+        self.assert_occurrence_mutation_rejected(mutate)
+
+    def test_unknown_occurrence_cardinality_is_rejected(self):
+        def mutate(rows):
+            rows["core.situated-need.driver-anchoring"][0]["cardinality"] = "many"
+
+        self.assert_occurrence_mutation_rejected(mutate)
+
+    def test_duplicate_occurrence_cardinality_member_is_rejected(self):
+        payload = COMPILER.DIAGNOSTIC_COMPANION.read_text(encoding="utf-8")
+        duplicated = payload.replace(
+            '"cardinality": "one-or-more"',
+            '"cardinality": "one-or-more",\n        "cardinality": "one-or-more"',
+            1,
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "semantic-diagnostic-evidence.json"
+            path.write_text(duplicated, encoding="utf-8")
+            with patch.object(COMPILER, "DIAGNOSTIC_COMPANION", path):
+                with self.assertRaisesRegex(
+                    ValueError, "duplicate JSON object member: cardinality"
+                ):
+                    COMPILER.compile_outputs()
+
+    def test_stale_diagnostic_raw_digest_in_inventory_is_rejected(self):
+        value = json.loads(
+            COMPILER.GENERATED_INVENTORY.read_text(encoding="utf-8")
+        )
+        value["companions"]["semanticDiagnosticEvidence"]["rawSha256"] = "0" * 64
+        payload = (json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode()
+        with self.assertRaisesRegex(ValueError, "inventory bytes"):
+            COMPILER.validate_generated_inventory(payload)
+
+    def test_stale_diagnostic_shape_digest_in_inventory_is_rejected(self):
+        value = json.loads(
+            COMPILER.GENERATED_INVENTORY.read_text(encoding="utf-8")
+        )
+        value["companions"]["semanticDiagnosticEvidence"]["shapeSha256"] = "0" * 64
+        payload = (json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode()
+        with self.assertRaisesRegex(ValueError, "inventory bytes"):
+            COMPILER.validate_generated_inventory(payload)
+
+    def test_stale_semantics_link_raw_digest_is_rejected(self):
+        changed = copy.deepcopy(self.diagnostic)
+        changed["semanticsCompanion"]["rawSha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "diagnostic semantics link"):
+            self.compile_diagnostic_value(changed)
+
+    def test_stale_semantics_link_shape_digest_is_rejected(self):
+        changed = copy.deepcopy(self.diagnostic)
+        changed["semanticsCompanion"]["shapeSha256"] = "0" * 64
+        with self.assertRaisesRegex(ValueError, "diagnostic semantics link"):
+            self.compile_diagnostic_value(changed)
+
+    def test_same_shape_semantics_scalar_mutation_has_stale_raw_link(self):
+        changed_semantics = copy.deepcopy(self.companion)
+        changed_semantics["futureGraphExchangeBoundary"]["status"] += "-drift"
+        payload = (
+            json.dumps(changed_semantics, indent=2, ensure_ascii=False) + "\n"
+        ).encode("utf-8")
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "semantics.json"
+            path.write_bytes(payload)
+            with (
+                patch.object(COMPILER, "COMPANION", path),
+                patch.object(
+                    COMPILER,
+                    "EXPECTED_SHA256",
+                    hashlib.sha256(payload).hexdigest(),
+                ),
+            ):
+                with self.assertRaisesRegex(
+                    ValueError, "diagnostic semantics link"
+                ):
+                    COMPILER.compile_outputs()
+
+    def test_occurrence_subject_cross_layer_mismatch_is_rejected(self):
+        def mutate(rows):
+            rows["core.unknown.cross-layer-rule"] = rows.pop(
+                "core.situated-need.driver-anchoring"
+            )
+
+        self.assert_occurrence_mutation_rejected(mutate)
+
+    def test_all_twenty_seven_occurrence_constructors_have_one_real_producer(self):
+        source_root = COMPILER.PACKAGE_ROOT / "src/O2I/Semantics"
+        production = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in (
+                source_root / "Contextualization.hs",
+                source_root / "SituatedNeed.hs",
+                source_root / "Strategy.hs",
+                source_root / "Family/CollectiveStrategyRealization.hs",
+            )
+        )
+        for rule, _ in COMPILER.OCCURRENCE_AUTHORITY:
+            constructor = COMPILER.semantic_rule_constructor(rule).removesuffix(
+                "Rule"
+            ) + "Occurrences"
+            with self.subTest(rule=rule, constructor=constructor):
+                self.assertEqual(1, production.count("Generated." + constructor))
+
+    def test_occurrence_identity_has_one_production_carrier_instantiation(self):
+        source_root = COMPILER.PACKAGE_ROOT / "src"
+        pattern = re.compile(
+            r"GeneratedSemanticOccurrenceEvidence\s+schema\s+OccurrenceIdentity"
+        )
+        matches = []
+        for path in source_root.rglob("*.hs"):
+            matches.extend(pattern.findall(path.read_text(encoding="utf-8")))
+        self.assertEqual(1, len(matches))
+
+    def test_collective_support_defects_use_no_runtime_role_correlation(self):
+        path = (
+            COMPILER.PACKAGE_ROOT
+            / "src/O2I/Semantics/Family/CollectiveStrategyRealization.hs"
+        )
+        source = path.read_text(encoding="utf-8")
+        macro = source[source.index("assessMacroSupport ::"):source.index(
+            "assessPrimitiveSupport ::"
+        )]
+        primitive = source[source.index("assessPrimitiveSupport ::"):source.index(
+            "-- | Exact work performed by collective support preparation."
+        )]
+        components = source[source.index("componentDefects ::"):source.index(
+            "componentsUnavailable ::"
+        )]
+        for name, block in (("macro", macro), ("primitive", primitive)):
+            with self.subTest(path=name):
+                for forbidden in (
+                    "zip",
+                    "lookup",
+                    "Map.",
+                    "targetOccurrences",
+                    "participantBindings",
+                ):
+                    self.assertNotIn(forbidden, block)
+        self.assertIn(
+            "CollectiveAssertedMacroSupportOccurrences\n"
+            "              claimOccurrence\n"
+            "              source\n"
+            "              target",
+            macro,
+        )
+        self.assertIn(
+            "CollectiveAssertedParticipantPrimitiveSupportOccurrences\n"
+            "                  claimOccurrence\n"
+            "                  participantOccurrence\n"
+            "                  targetOccurrence",
+            primitive,
+        )
+        for forbidden in ("zip", "lookup", "mkSemanticDefect", "Occurrences"):
+            self.assertNotIn(forbidden, components)
 
     def test_supplemental_constructor_association_mutation_is_rejected(self):
         canonical = COMPILER.supplemental_rule_identity_associations

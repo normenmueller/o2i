@@ -1,0 +1,131 @@
+{
+  "companionFormatContract": {
+    "decoder": "exhaustive-closed-object-and-tagged-variant-decoder",
+    "rejects": [
+      "missing-member",
+      "unknown-member",
+      "duplicate-member",
+      "wrong-JSON-kind",
+      "invalid-discriminator",
+      "invalid-enum"
+    ],
+    "shapeDigestAlgorithm": "sha256-of-canonical-JSON-pointer-kind-and-exact-object-member-manifest-excluding-this-shapeSha256-member",
+    "shapeSha256": "bd450f3299730cbac912d7e7239f8d890486252c6abf7a2c1f6189ce7bf77424"
+  },
+  "schema": "o2i.core-semantic-diagnostic-evidence/v1",
+  "coreIdentity": {
+    "identity": "o2i.core-semantics",
+    "version": "0.3.0"
+  },
+  "semanticsCompanion": {
+    "schema": "o2i.core-semantics/target-v46",
+    "rawSha256": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333",
+    "shapeSha256": "3e091e8bc0fd3a887da02f8591292c2a8ea7d64c7e83951183ab71fe4f5b1278"
+  },
+  "additionalEvidenceKeySchemas": {
+    "AssertedDependencyKey": [
+      "dependent",
+      "endpoint",
+      "context"
+    ],
+    "FitClaimKey": [
+      "claim"
+    ]
+  },
+  "additionalEvidenceKeyByRule": {
+    "core.contextualization.asserted-dependency": "AssertedDependencyKey",
+    "core.collective-strategy-realization.asserted-completeness": "FitClaimKey"
+  },
+  "occurrenceEvidenceByRule": {
+    "core.collective-strategy-realization.asserted-collective-coverage": [
+      {"roleId": "uncovered-target-member", "cardinality": "one-or-more"}
+    ],
+    "core.collective-strategy-realization.asserted-completeness": [
+      {"roleId": "claim", "cardinality": "one"}
+    ],
+    "core.collective-strategy-realization.asserted-macro-support": [
+      {"roleId": "claim", "cardinality": "one"},
+      {"roleId": "participant", "cardinality": "one"},
+      {"roleId": "target", "cardinality": "one"}
+    ],
+    "core.collective-strategy-realization.asserted-participant-primitive-support": [
+      {"roleId": "claim", "cardinality": "one"},
+      {"roleId": "participant", "cardinality": "one"},
+      {"roleId": "target", "cardinality": "one"}
+    ],
+    "core.collective-strategy-realization.fit-pairwise-coherence": [
+      {"roleId": "claim", "cardinality": "one"}
+    ],
+    "core.collective-strategy-realization.fit-participant-binding": [
+      {"roleId": "claim", "cardinality": "one"}
+    ],
+    "core.collective-strategy-realization.fit-participant-compatibility": [
+      {"roleId": "claim", "cardinality": "one"}
+    ],
+    "core.collective-strategy-realization.fit-target-binding": [
+      {"roleId": "claim", "cardinality": "one"}
+    ],
+    "core.collective-strategy-realization.fit-target-guiding-policy": [
+      {"roleId": "claim", "cardinality": "one"}
+    ],
+    "core.collective-strategy-realization.fit-target-trade-offs": [
+      {"roleId": "claim", "cardinality": "one"}
+    ],
+    "core.contextualization.asserted-dependency": [
+      {"roleId": "dependent", "cardinality": "one"},
+      {"roleId": "contextualized-endpoint", "cardinality": "one"},
+      {"roleId": "candidate-contextualization", "cardinality": "one"}
+    ],
+    "core.situated-need.driver-anchoring": [
+      {"roleId": "unanchored-driver", "cardinality": "one"}
+    ],
+    "core.situated-need.driver-cardinality": [
+      {"roleId": "observed-driver", "cardinality": "zero"}
+    ],
+    "core.situated-need.objective-cardinality": [
+      {"roleId": "observed-objective", "cardinality": "zero"}
+    ],
+    "core.situated-need.objective-grounding": [
+      {"roleId": "ungrounded-objective", "cardinality": "one"}
+    ],
+    "core.situated-need.surfacing-situation-anchoring": [
+      {"roleId": "unanchored-surfacing-situation", "cardinality": "one"}
+    ],
+    "core.situated-need.surfacing-situation-cardinality": [
+      {"roleId": "observed-surfacing-situation", "cardinality": "zero"}
+    ],
+    "core.strategy-formulation.action-contributions": [
+      {"roleId": "uncontributing-action", "cardinality": "one"}
+    ],
+    "core.strategy-formulation.actions": [
+      {"roleId": "listed-action", "cardinality": "one-or-more"}
+    ],
+    "core.strategy-formulation.diagnosis": [
+      {"roleId": "owned-diagnosis", "cardinality": "zero-or-more"}
+    ],
+    "core.strategy-formulation.diagnosis-grounding": [
+      {"roleId": "diagnosis", "cardinality": "one"},
+      {"roleId": "intent", "cardinality": "one"}
+    ],
+    "core.strategy-formulation.guiding-policy": [
+      {"roleId": "owned-guiding-policy", "cardinality": "zero-or-more"}
+    ],
+    "core.strategy-formulation.guiding-policy-actions": [
+      {"roleId": "guiding-policy", "cardinality": "one"},
+      {"roleId": "action", "cardinality": "one"}
+    ],
+    "core.strategy-formulation.intent": [
+      {"roleId": "owned-intent", "cardinality": "zero-or-more"}
+    ],
+    "core.strategy-formulation.key-result-substantiation": [
+      {"roleId": "key-result", "cardinality": "one"},
+      {"roleId": "intent", "cardinality": "one"}
+    ],
+    "core.strategy-formulation.key-results": [
+      {"roleId": "listed-key-result", "cardinality": "one-or-more"}
+    ],
+    "core.strategy-formulation.vision-orientation": [
+      {"roleId": "observed-vision-orientation", "cardinality": "zero"}
+    ]
+  }
+}

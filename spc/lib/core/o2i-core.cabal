@@ -14,7 +14,9 @@ maintainer: normen.mueller@gmail.com
 build-type: Simple
 extra-source-files:
   contract/compile.py
+  contract/generated/o2i.core.semantic-diagnostic-evidence-v1.json
   contract/test_compile.py
+  semantic-diagnostic-evidence.json
   semantics.json
   tst/api/compile-pass/*.hs
   tst/api/compile-fail/*.hs

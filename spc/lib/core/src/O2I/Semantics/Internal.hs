@@ -12,13 +12,12 @@ module O2I.Semantics.Internal
   , semanticRuleRank
   , SemanticEvidence(..)
   , SemanticEvidenceKey(..)
+  , SemanticOccurrenceEvidence
   , SemanticDefect
   , mkSemanticDefect
-  , mkAssertedDependencyDefect
-  , mkCollectiveCompletenessDefect
   , semanticDefectRule
   , semanticDefectEvidence
-  , semanticDefectWitnesses
+  , semanticDefectOccurrenceGroups
   , sortSemanticDefects
   , StrategyFormulationUnavailableReason(..)
   , StrategyFormulationAssessment(..)
@@ -41,6 +40,7 @@ module O2I.Semantics.Internal
 
 import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty)
+import Data.Text (Text)
 import O2I.Core.Contract (CoreRuleId)
 import qualified O2I.Core.Contract.Generated as Generated
 import O2I.Core.Contract.Internal (CoreRuleId(..))
@@ -53,7 +53,8 @@ newtype SemanticRule =
   SemanticRule Generated.GeneratedSemanticRuleIdentity
 
 -- | Existentially project one generated semantic rule.
-semanticRule :: Generated.GeneratedSemanticRule schema -> SemanticRule
+semanticRule ::
+     Generated.GeneratedSemanticRule schema occurrenceSchema -> SemanticRule
 semanticRule = SemanticRule . Generated.generatedSemanticRuleIdentity
 
 -- | Project one generated semantic rule identity.
@@ -119,67 +120,46 @@ data SemanticEvidenceKey schema where
     :: !ModelIdentity
     -> !ModelIdentity
     -> SemanticEvidenceKey 'Generated.GeneratedParticipantClaimKeySchema
+  SemanticAssertedDependencyEvidenceKey
+    :: !OccurrenceIdentity
+    -> !OccurrenceIdentity
+    -> !OccurrenceIdentity
+    -> SemanticEvidenceKey 'Generated.GeneratedAssertedDependencyKeySchema
+
+-- | Sole production instantiation of generated occurrence evidence.
+type SemanticOccurrenceEvidence schema
+  = Generated.GeneratedSemanticOccurrenceEvidence schema OccurrenceIdentity
 
 -- | One deterministic defect whose rule and evidence schemas coincide.
 data SemanticDefect where
   SemanticDefectInternal
-    :: !(Generated.GeneratedSemanticRule schema)
+    :: !(Generated.GeneratedSemanticRule schema occurrenceSchema)
     -> !(SemanticEvidenceKey schema)
-    -> ![OccurrenceIdentity]
+    -> !(SemanticOccurrenceEvidence occurrenceSchema)
     -> SemanticDefect
-  AssertedDependencyDefectInternal
-    :: !OccurrenceIdentity
-    -> !OccurrenceIdentity
-    -> !OccurrenceIdentity
-    -> SemanticDefect
-  CollectiveCompletenessDefectInternal
-    :: !ModelIdentity -> !OccurrenceIdentity -> SemanticDefect
 
 -- | Construct a defect only from a rule and evidence key of the same schema.
 mkSemanticDefect ::
-     Generated.GeneratedSemanticRule schema
+     Generated.GeneratedSemanticRule schema occurrenceSchema
   -> SemanticEvidenceKey schema
-  -> [OccurrenceIdentity]
+  -> SemanticOccurrenceEvidence occurrenceSchema
   -> SemanticDefect
 mkSemanticDefect = SemanticDefectInternal
-
--- | Construct the closed asserted-contextualization dependency defect.
-mkAssertedDependencyDefect ::
-     OccurrenceIdentity
-  -> OccurrenceIdentity
-  -> OccurrenceIdentity
-  -> SemanticDefect
-mkAssertedDependencyDefect = AssertedDependencyDefectInternal
-
--- | Construct the closed collective-completeness defect.
-mkCollectiveCompletenessDefect ::
-     ModelIdentity -> OccurrenceIdentity -> SemanticDefect
-mkCollectiveCompletenessDefect = CollectiveCompletenessDefectInternal
 
 -- | Project the closed semantic rule carried by a defect.
 semanticDefectRule :: SemanticDefect -> SemanticRule
 semanticDefectRule (SemanticDefectInternal rule _ _) = semanticRule rule
-semanticDefectRule (AssertedDependencyDefectInternal _ _ _) =
-  semanticRuleIdentity Generated.ContextualizationAssertedDependencyRuleIdentity
-semanticDefectRule (CollectiveCompletenessDefectInternal _ _) =
-  semanticRuleIdentity Generated.CollectiveAssertedCompletenessRuleIdentity
 
 -- | Erase the private schema index for the stable public evidence projection.
 semanticDefectEvidence :: SemanticDefect -> SemanticEvidence
 semanticDefectEvidence (SemanticDefectInternal _ evidence _) =
   eraseSemanticEvidenceKey evidence
-semanticDefectEvidence (AssertedDependencyDefectInternal dependent endpoint context) =
-  SemanticAssertedDependencyKey dependent endpoint context
-semanticDefectEvidence (CollectiveCompletenessDefectInternal claim _) =
-  SemanticFitClaimKey claim
 
--- | Project canonical witness occurrences.
-semanticDefectWitnesses :: SemanticDefect -> [OccurrenceIdentity]
-semanticDefectWitnesses (SemanticDefectInternal _ _ witnesses) = witnesses
-semanticDefectWitnesses (AssertedDependencyDefectInternal dependent endpoint context) =
-  [dependent, endpoint, context]
-semanticDefectWitnesses (CollectiveCompletenessDefectInternal _ occurrence) =
-  [occurrence]
+-- | Project every named occurrence group without positional reconstruction.
+semanticDefectOccurrenceGroups ::
+     SemanticDefect -> NonEmpty (Text, [OccurrenceIdentity])
+semanticDefectOccurrenceGroups (SemanticDefectInternal _ _ occurrences) =
+  Generated.generatedSemanticOccurrenceEvidenceGroups occurrences
 
 eraseSemanticEvidenceKey :: SemanticEvidenceKey schema -> SemanticEvidence
 eraseSemanticEvidenceKey evidence =
@@ -193,6 +173,8 @@ eraseSemanticEvidenceKey evidence =
     SemanticFitClaimEvidenceKey claim -> SemanticFitClaimKey claim
     SemanticParticipantClaimEvidenceKey claim participant ->
       SemanticParticipantClaimKey claim participant
+    SemanticAssertedDependencyEvidenceKey dependent endpoint context ->
+      SemanticAssertedDependencyKey dependent endpoint context
 
 instance Eq SemanticDefect where
   left == right = semanticDefectOrderKey left == semanticDefectOrderKey right
@@ -207,18 +189,19 @@ instance Show SemanticDefect where
       precedence
       ( semanticDefectRule defect
       , semanticDefectEvidence defect
-      , semanticDefectWitnesses defect)
+      , semanticDefectOccurrenceGroups defect)
 
 -- | Sort defects by compiled rule order and exact canonical evidence.
 sortSemanticDefects :: [SemanticDefect] -> [SemanticDefect]
 sortSemanticDefects = sortOn semanticDefectOrderKey
 
 semanticDefectOrderKey ::
-     SemanticDefect -> (Int, SemanticEvidence, [OccurrenceIdentity])
+     SemanticDefect
+  -> (Int, SemanticEvidence, NonEmpty (Text, [OccurrenceIdentity]))
 semanticDefectOrderKey defect =
   ( semanticRuleRank (semanticDefectRule defect)
   , semanticDefectEvidence defect
-  , semanticDefectWitnesses defect)
+  , semanticDefectOccurrenceGroups defect)
 
 -- | Closed reason why one Strategy formulation cannot be assessed.
 data StrategyFormulationUnavailableReason
@@ -305,7 +288,7 @@ data CollectiveCoverageAssessment
 
 -- | Macro-support result for exactly one participant.
 data MacroSupportAssessment
-  = MacroSupportViolated !ModelIdentity !ModelIdentity
+  = MacroSupportViolated !ModelIdentity !ModelIdentity !SemanticDefect
   | MacroSupportSatisfied !ModelIdentity !ModelIdentity ![OccurrenceIdentity]
   deriving (Eq, Show)
 
@@ -316,7 +299,10 @@ data ParticipantPrimitiveSupportAssessment
       !ModelIdentity
       !(NonEmpty CollectiveFitUnavailableReason)
       ![ModelIdentity]
-  | ParticipantPrimitiveSupportViolated !ModelIdentity !ModelIdentity
+  | ParticipantPrimitiveSupportViolated
+      !ModelIdentity
+      !ModelIdentity
+      !SemanticDefect
   | ParticipantPrimitiveSupportSatisfied
       !ModelIdentity
       !ModelIdentity

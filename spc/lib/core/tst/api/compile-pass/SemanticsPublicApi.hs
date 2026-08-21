@@ -1,5 +1,8 @@
 module SemanticsPublicApi where
 
+import qualified Data.List.NonEmpty as NonEmpty
+import Data.Text (Text)
+import O2I.Core.Identity (OccurrenceIdentity)
 import O2I.Semantics
 import O2I.Semantics.Input (BoundSupplementalInputs)
 import O2I.Structure (WellFormedGraph)
@@ -17,6 +20,14 @@ summarize assessment =
   , length (semanticDefects assessment)
   , length (semanticCandidateOccurrences assessment)
   , length . semanticallyValidStrategies <$> acceptedSemanticModel assessment)
+
+diagnosticOccurrences :: SemanticDefect -> [(Text, [OccurrenceIdentity])]
+diagnosticOccurrences =
+  map projectGroup . NonEmpty.toList . semanticDefectOccurrenceGroups
+  where
+    projectGroup group =
+      ( semanticOccurrenceRoleId (semanticOccurrenceGroupRole group)
+      , semanticOccurrenceGroupOccurrences group)
 
 collectiveComponents ::
      CollectiveStrategyRealizationAssessment scope

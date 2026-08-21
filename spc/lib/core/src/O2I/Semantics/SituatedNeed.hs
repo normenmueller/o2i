@@ -93,34 +93,38 @@ assessSituatedNeed semanticIndex need =
     defects =
       cardinalityDefect
         Generated.SituatedNeedDriverCardinalityRule
+        Generated.SituatedNeedDriverCardinalityOccurrences
         drivers
         (SemanticNeedEvidenceKey needIdentity)
         ++ cardinalityDefect
              Generated.SituatedNeedObjectiveCardinalityRule
+             Generated.SituatedNeedObjectiveCardinalityOccurrences
              objectives
              (SemanticNeedEvidenceKey needIdentity)
         ++ cardinalityDefect
              Generated.SituatedNeedSurfacingSituationCardinalityRule
+             Generated.SituatedNeedSurfacingSituationCardinalityOccurrences
              situations
              (SemanticNeedEvidenceKey needIdentity)
         ++ [ mkSemanticDefect
              Generated.SituatedNeedSurfacingSituationAnchoringRule
              (SemanticNeedMemberEvidenceKey needIdentity situationIdentity)
-             [situation]
+             (Generated.SituatedNeedSurfacingSituationAnchoringOccurrences
+                situation)
            | (situation, []) <- anchorsBySituation
            , Just situationIdentity <- [modelIdentityAt semanticIndex situation]
            ]
         ++ [ mkSemanticDefect
              Generated.SituatedNeedDriverAnchoringRule
              (SemanticNeedMemberEvidenceKey needIdentity driverIdentity)
-             [driver]
+             (Generated.SituatedNeedDriverAnchoringOccurrences driver)
            | driver <- unanchoredDrivers
            , Just driverIdentity <- [modelIdentityAt semanticIndex driver]
            ]
         ++ [ mkSemanticDefect
              Generated.SituatedNeedObjectiveGroundingRule
              (SemanticNeedMemberEvidenceKey needIdentity objectiveIdentity)
-             [objective]
+             (Generated.SituatedNeedObjectiveGroundingOccurrences objective)
            | objective <- ungroundedObjectives
            , Just objectiveIdentity <- [modelIdentityAt semanticIndex objective]
            ]
@@ -180,13 +184,16 @@ assessSituatedNeed semanticIndex need =
              ]
 
 cardinalityDefect ::
-     Generated.GeneratedSemanticRule 'Generated.GeneratedNeedKeySchema
+     Generated.GeneratedSemanticRule
+       'Generated.GeneratedNeedKeySchema
+       occurrenceSchema
+  -> SemanticOccurrenceEvidence occurrenceSchema
   -> [OccurrenceIdentity]
   -> SemanticEvidenceKey 'Generated.GeneratedNeedKeySchema
   -> [SemanticDefect]
-cardinalityDefect rule occurrences evidence =
+cardinalityDefect rule occurrenceEvidence occurrences evidence =
   case occurrences of
-    [] -> [mkSemanticDefect rule evidence []]
+    [] -> [mkSemanticDefect rule evidence occurrenceEvidence]
     _ -> []
 
 modelIdentityAt ::

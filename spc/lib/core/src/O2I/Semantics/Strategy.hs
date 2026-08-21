@@ -154,6 +154,7 @@ assessFormulation semanticIndex strategy formulation =
         (formulationDiagnosis formulation)
         (exactOwnedDefect
            Generated.StrategyFormulationDiagnosisRule
+           Generated.StrategyFormulationDiagnosisOccurrences
            strategyIdentity
            diagnosis
            ownedDiagnosis)
@@ -162,6 +163,7 @@ assessFormulation semanticIndex strategy formulation =
              (formulationIntent formulation)
              (exactOwnedDefect
                 Generated.StrategyFormulationIntentRule
+                Generated.StrategyFormulationIntentOccurrences
                 strategyIdentity
                 intent
                 ownedIntent)
@@ -170,6 +172,7 @@ assessFormulation semanticIndex strategy formulation =
              (formulationGuidingPolicy formulation)
              (exactOwnedDefect
                 Generated.StrategyFormulationGuidingPolicyRule
+                Generated.StrategyFormulationGuidingPolicyOccurrences
                 strategyIdentity
                 guidingPolicy
                 ownedGuidingPolicy)
@@ -178,6 +181,7 @@ assessFormulation semanticIndex strategy formulation =
            , defect <-
                listedOwnedDefect
                  Generated.StrategyFormulationActionsRule
+                 Generated.StrategyFormulationActionsOccurrences
                  strategyIdentity
                  actions
                  ownedActions
@@ -187,6 +191,7 @@ assessFormulation semanticIndex strategy formulation =
            , defect <-
                listedOwnedDefect
                  Generated.StrategyFormulationKeyResultsRule
+                 Generated.StrategyFormulationKeyResultsOccurrences
                  strategyIdentity
                  keyResults
                  ownedKeyResults
@@ -196,6 +201,7 @@ assessFormulation semanticIndex strategy formulation =
              (formulationIntent formulation)
              (requiredRelationDefect
                 Generated.StrategyFormulationVisionOrientationRule
+                Generated.StrategyFormulationVisionOrientationOccurrences
                 (SemanticStrategyEvidenceKey strategyIdentity)
                 visionOrientations)
         ++ [ defect
@@ -226,7 +232,7 @@ assessFormulation semanticIndex strategy formulation =
         ++ [ mkSemanticDefect
              Generated.StrategyFormulationActionContributionsRule
              (SemanticStrategyMemberEvidenceKey strategyIdentity actionIdentity)
-             [action]
+             (Generated.StrategyFormulationActionContributionsOccurrences action)
            | allKeyResultsResolved
            , action <- actionWithoutContribution
            , Just actionIdentity <- [modelIdentityAt semanticIndex action]
@@ -325,40 +331,64 @@ assessFormulation semanticIndex strategy formulation =
     keyResultSet = Set.fromList keyResults
 
 exactOwnedDefect ::
-     Generated.GeneratedSemanticRule 'Generated.GeneratedStrategyKeySchema
+     Generated.GeneratedSemanticRule
+       'Generated.GeneratedStrategyKeySchema
+       occurrenceSchema
+  -> ([OccurrenceIdentity] -> SemanticOccurrenceEvidence occurrenceSchema)
   -> ModelIdentity
   -> Maybe OccurrenceIdentity
   -> [OccurrenceIdentity]
   -> [SemanticDefect]
-exactOwnedDefect rule strategy expected owned =
+exactOwnedDefect rule occurrenceEvidence strategy expected owned =
   case expected of
     Just member
       | owned == [member] -> []
-    _ -> [mkSemanticDefect rule (SemanticStrategyEvidenceKey strategy) owned]
+    _ ->
+      [ mkSemanticDefect
+          rule
+          (SemanticStrategyEvidenceKey strategy)
+          (occurrenceEvidence owned)
+      ]
 
 listedOwnedDefect ::
-     Generated.GeneratedSemanticRule 'Generated.GeneratedStrategyKeySchema
+     Generated.GeneratedSemanticRule
+       'Generated.GeneratedStrategyKeySchema
+       occurrenceSchema
+  -> (NonEmpty.NonEmpty OccurrenceIdentity -> SemanticOccurrenceEvidence
+                                                occurrenceSchema)
   -> ModelIdentity
   -> [OccurrenceIdentity]
   -> [OccurrenceIdentity]
   -> [SemanticDefect]
-listedOwnedDefect rule strategy listed owned
+listedOwnedDefect rule occurrenceEvidence strategy listed owned
   | not (null listed) && all (`elem` owned) listed = []
   | otherwise =
-    [mkSemanticDefect rule (SemanticStrategyEvidenceKey strategy) listed]
+    case NonEmpty.nonEmpty listed of
+      Nothing -> []
+      Just occurrences ->
+        [ mkSemanticDefect
+            rule
+            (SemanticStrategyEvidenceKey strategy)
+            (occurrenceEvidence occurrences)
+        ]
 
 requiredRelationDefect ::
-     Generated.GeneratedSemanticRule 'Generated.GeneratedStrategyKeySchema
+     Generated.GeneratedSemanticRule
+       'Generated.GeneratedStrategyKeySchema
+       occurrenceSchema
+  -> SemanticOccurrenceEvidence occurrenceSchema
   -> SemanticEvidenceKey 'Generated.GeneratedStrategyKeySchema
   -> [OccurrenceIdentity]
   -> [SemanticDefect]
-requiredRelationDefect rule evidence occurrences
-  | null occurrences = [mkSemanticDefect rule evidence []]
+requiredRelationDefect rule occurrenceEvidence evidence occurrences
+  | null occurrences = [mkSemanticDefect rule evidence occurrenceEvidence]
   | otherwise = []
 
 relationBetweenMaybeDefect ::
      SemanticIndex scope
-  -> Generated.GeneratedSemanticRule 'Generated.GeneratedStrategyKeySchema
+  -> Generated.GeneratedSemanticRule
+       'Generated.GeneratedStrategyKeySchema
+       'Generated.StrategyFormulationDiagnosisGroundingOccurrenceSchema
   -> SemanticEvidenceKey 'Generated.GeneratedStrategyKeySchema
   -> Maybe OccurrenceIdentity
   -> CoreRelationToken
@@ -368,16 +398,19 @@ relationBetweenMaybeDefect semanticIndex rule evidence source token target =
   case (source, target) of
     (Just from, Just to)
       | not (null (assertedMatchingRelations semanticIndex from token to)) -> []
-    _ ->
+    (Just from, Just to) ->
       [ mkSemanticDefect
           rule
           evidence
-          (maybeToList source ++ maybeToList target)
+          (Generated.StrategyFormulationDiagnosisGroundingOccurrences from to)
       ]
+    _ -> []
 
 sourceToMemberRelationDefect ::
      SemanticIndex scope
-  -> Generated.GeneratedSemanticRule 'Generated.GeneratedStrategyMemberKeySchema
+  -> Generated.GeneratedSemanticRule
+       'Generated.GeneratedStrategyMemberKeySchema
+       'Generated.StrategyFormulationGuidingPolicyActionsOccurrenceSchema
   -> ModelIdentity
   -> Maybe OccurrenceIdentity
   -> CoreRelationToken
@@ -392,19 +425,17 @@ sourceToMemberRelationDefect semanticIndex rule strategy maybeSource token membe
         [ mkSemanticDefect
             rule
             (SemanticStrategyMemberEvidenceKey strategy memberIdentity)
-            [source, member]
+            (Generated.StrategyFormulationGuidingPolicyActionsOccurrences
+               source
+               member)
         ]
-    (_, Just memberIdentity) ->
-      [ mkSemanticDefect
-          rule
-          (SemanticStrategyMemberEvidenceKey strategy memberIdentity)
-          (maybeToList maybeSource ++ [member])
-      ]
     _ -> []
 
 memberToTargetRelationDefect ::
      SemanticIndex scope
-  -> Generated.GeneratedSemanticRule 'Generated.GeneratedStrategyMemberKeySchema
+  -> Generated.GeneratedSemanticRule
+       'Generated.GeneratedStrategyMemberKeySchema
+       'Generated.StrategyFormulationKeyResultSubstantiationOccurrenceSchema
   -> ModelIdentity
   -> CoreRelationToken
   -> Maybe OccurrenceIdentity
@@ -419,14 +450,10 @@ memberToTargetRelationDefect semanticIndex rule strategy token maybeTarget membe
         [ mkSemanticDefect
             rule
             (SemanticStrategyMemberEvidenceKey strategy memberIdentity)
-            [member, target]
+            (Generated.StrategyFormulationKeyResultSubstantiationOccurrences
+               member
+               target)
         ]
-    (Just memberIdentity, Nothing) ->
-      [ mkSemanticDefect
-          rule
-          (SemanticStrategyMemberEvidenceKey strategy memberIdentity)
-          [member]
-      ]
     _ -> []
 
 occurrenceForIdentity ::

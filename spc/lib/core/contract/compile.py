@@ -14,12 +14,53 @@ from typing import Any
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 COMPANION = PACKAGE_ROOT / "semantics.json"
+DIAGNOSTIC_COMPANION = PACKAGE_ROOT / "semantic-diagnostic-evidence.json"
 GENERATED = PACKAGE_ROOT / "src/O2I/Core/Contract/Generated.hs"
+GENERATED_INVENTORY = (
+    PACKAGE_ROOT
+    / "contract/generated/o2i.core.semantic-diagnostic-evidence-v1.json"
+)
 EXPECTED_SHAPE_SHA256 = (
     "3e091e8bc0fd3a887da02f8591292c2a8ea7d64c7e83951183ab71fe4f5b1278"
 )
 EXPECTED_SHA256 = (
     "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333"
+)
+EXPECTED_DIAGNOSTIC_SHAPE_SHA256 = (
+    "bd450f3299730cbac912d7e7239f8d890486252c6abf7a2c1f6189ce7bf77424"
+)
+EXPECTED_INVENTORY_SHA256 = (
+    "8007829ae3b4cd94b4e645ef973926250f8bac654b1bd9d9d1f3f5402355ed55"
+)
+
+OCCURRENCE_AUTHORITY = (
+    ("core.collective-strategy-realization.asserted-collective-coverage", (("uncovered-target-member", "one-or-more"),)),
+    ("core.collective-strategy-realization.asserted-completeness", (("claim", "one"),)),
+    ("core.collective-strategy-realization.asserted-macro-support", (("claim", "one"), ("participant", "one"), ("target", "one"))),
+    ("core.collective-strategy-realization.asserted-participant-primitive-support", (("claim", "one"), ("participant", "one"), ("target", "one"))),
+    ("core.collective-strategy-realization.fit-pairwise-coherence", (("claim", "one"),)),
+    ("core.collective-strategy-realization.fit-participant-binding", (("claim", "one"),)),
+    ("core.collective-strategy-realization.fit-participant-compatibility", (("claim", "one"),)),
+    ("core.collective-strategy-realization.fit-target-binding", (("claim", "one"),)),
+    ("core.collective-strategy-realization.fit-target-guiding-policy", (("claim", "one"),)),
+    ("core.collective-strategy-realization.fit-target-trade-offs", (("claim", "one"),)),
+    ("core.contextualization.asserted-dependency", (("dependent", "one"), ("contextualized-endpoint", "one"), ("candidate-contextualization", "one"))),
+    ("core.situated-need.driver-anchoring", (("unanchored-driver", "one"),)),
+    ("core.situated-need.driver-cardinality", (("observed-driver", "zero"),)),
+    ("core.situated-need.objective-cardinality", (("observed-objective", "zero"),)),
+    ("core.situated-need.objective-grounding", (("ungrounded-objective", "one"),)),
+    ("core.situated-need.surfacing-situation-anchoring", (("unanchored-surfacing-situation", "one"),)),
+    ("core.situated-need.surfacing-situation-cardinality", (("observed-surfacing-situation", "zero"),)),
+    ("core.strategy-formulation.action-contributions", (("uncontributing-action", "one"),)),
+    ("core.strategy-formulation.actions", (("listed-action", "one-or-more"),)),
+    ("core.strategy-formulation.diagnosis", (("owned-diagnosis", "zero-or-more"),)),
+    ("core.strategy-formulation.diagnosis-grounding", (("diagnosis", "one"), ("intent", "one"))),
+    ("core.strategy-formulation.guiding-policy", (("owned-guiding-policy", "zero-or-more"),)),
+    ("core.strategy-formulation.guiding-policy-actions", (("guiding-policy", "one"), ("action", "one"))),
+    ("core.strategy-formulation.intent", (("owned-intent", "zero-or-more"),)),
+    ("core.strategy-formulation.key-result-substantiation", (("key-result", "one"), ("intent", "one"))),
+    ("core.strategy-formulation.key-results", (("listed-key-result", "one-or-more"),)),
+    ("core.strategy-formulation.vision-orientation", (("observed-vision-orientation", "zero"),)),
 )
 
 
@@ -36,16 +77,24 @@ def unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     return result
 
 
-def load_companion() -> tuple[dict[str, Any], bytes]:
-    payload = COMPANION.read_bytes()
+def load_json_object(path: Path, subject: str) -> tuple[dict[str, Any], bytes]:
+    payload = path.read_bytes()
     value = json.loads(
         payload.decode("utf-8"),
         object_pairs_hook=unique_object,
         parse_constant=reject_constant,
     )
     if not isinstance(value, dict):
-        raise ValueError("Core companion must be one JSON object")
+        raise ValueError(f"{subject} must be one JSON object")
     return value, payload
+
+
+def load_companion() -> tuple[dict[str, Any], bytes]:
+    return load_json_object(COMPANION, "Core companion")
+
+
+def load_diagnostic_companion() -> tuple[dict[str, Any], bytes]:
+    return load_json_object(DIAGNOSTIC_COMPANION, "Core diagnostic companion")
 
 
 def pointer(path: tuple[object, ...]) -> str:
@@ -324,6 +373,218 @@ def semantic_evidence_contract(
     return ordered_schemas, ordered_mappings
 
 
+def semantic_diagnostic_contract(
+    diagnostic: dict[str, Any],
+    diagnostic_payload: bytes,
+    semantics_payload: bytes,
+    semantic_rules: list[str],
+    existing_schemas: dict[str, list[str]],
+    existing_mappings: dict[str, str],
+) -> tuple[dict[str, list[str]], dict[str, str], dict[str, list[tuple[str, str]]]]:
+    require_exact(
+        list(diagnostic),
+        [
+            "companionFormatContract",
+            "schema",
+            "coreIdentity",
+            "semanticsCompanion",
+            "additionalEvidenceKeySchemas",
+            "additionalEvidenceKeyByRule",
+            "occurrenceEvidenceByRule",
+        ],
+        "diagnostic companion members",
+    )
+    require_exact(
+        diagnostic["schema"],
+        "o2i.core-semantic-diagnostic-evidence/v1",
+        "diagnostic companion schema",
+    )
+    require_exact(
+        diagnostic["coreIdentity"],
+        {"identity": "o2i.core-semantics", "version": "0.3.0"},
+        "diagnostic Core identity",
+    )
+    declared_shape = diagnostic["companionFormatContract"]["shapeSha256"]
+    require_exact(
+        declared_shape,
+        shape_sha256(diagnostic),
+        "diagnostic shape SHA-256",
+    )
+    require_exact(
+        declared_shape,
+        EXPECTED_DIAGNOSTIC_SHAPE_SHA256,
+        "accepted diagnostic shape SHA-256",
+    )
+    require_exact(
+        diagnostic["semanticsCompanion"],
+        {
+            "schema": "o2i.core-semantics/target-v46",
+            "rawSha256": sha256(semantics_payload),
+            "shapeSha256": EXPECTED_SHAPE_SHA256,
+        },
+        "diagnostic semantics link",
+    )
+
+    additional_schemas = diagnostic["additionalEvidenceKeySchemas"]
+    require_exact(
+        additional_schemas,
+        {
+            "AssertedDependencyKey": ["dependent", "endpoint", "context"],
+            "FitClaimKey": ["claim"],
+        },
+        "additional semantic evidence-key schemas",
+    )
+    additional_mappings = diagnostic["additionalEvidenceKeyByRule"]
+    require_exact(
+        additional_mappings,
+        {
+            "core.contextualization.asserted-dependency": (
+                "AssertedDependencyKey"
+            ),
+            "core.collective-strategy-realization.asserted-completeness": (
+                "FitClaimKey"
+            ),
+        },
+        "additional semantic evidence-key mappings",
+    )
+    require_exact(len(existing_mappings), 25, "existing diagnostic subject count")
+    overlap = set(existing_mappings).intersection(additional_mappings)
+    require_exact(overlap, set(), "disjoint diagnostic subject ownership")
+
+    schemas = dict(existing_schemas)
+    for schema, fields in additional_schemas.items():
+        if schema in schemas:
+            require_exact(
+                schemas[schema], fields, f"shared semantic evidence schema {schema}"
+            )
+        else:
+            schemas[schema] = fields
+    combined_mappings = dict(existing_mappings)
+    combined_mappings.update(additional_mappings)
+    authority_rules = [rule for rule, _ in OCCURRENCE_AUTHORITY]
+    require_exact(
+        set(combined_mappings),
+        set(authority_rules),
+        "complete diagnostic subject authority",
+    )
+    mappings = {rule: combined_mappings[rule] for rule in authority_rules}
+
+    raw_occurrences = diagnostic["occurrenceEvidenceByRule"]
+    if not isinstance(raw_occurrences, dict):
+        raise ValueError("occurrence evidence authority: expected an object")
+    occurrences: dict[str, list[tuple[str, str]]] = {}
+    cardinalities = {"zero", "one", "one-or-more", "zero-or-more"}
+    for rule, raw_roles in raw_occurrences.items():
+        if not isinstance(rule, str) or not rule:
+            raise ValueError("occurrence evidence authority: invalid rule")
+        if not isinstance(raw_roles, list) or not raw_roles:
+            raise ValueError(f"occurrence evidence {rule}: expected roles")
+        roles: list[tuple[str, str]] = []
+        for index, raw_role in enumerate(raw_roles):
+            if not isinstance(raw_role, dict):
+                raise ValueError(f"occurrence evidence {rule}[{index}]: expected object")
+            require_exact(
+                list(raw_role),
+                ["roleId", "cardinality"],
+                f"occurrence evidence {rule}[{index}] members",
+            )
+            role = raw_role["roleId"]
+            cardinality = raw_role["cardinality"]
+            if not isinstance(role, str) or not role:
+                raise ValueError(f"occurrence evidence {rule}[{index}]: invalid role")
+            if cardinality not in cardinalities:
+                raise ValueError(
+                    f"occurrence evidence {rule}[{index}]: unknown cardinality"
+                )
+            roles.append((role, cardinality))
+        require_nonempty_unique_strings(
+            [role for role, _ in roles], f"occurrence evidence {rule} roles"
+        )
+        occurrences[rule] = roles
+
+    actual_authority = tuple(
+        (rule, tuple(roles)) for rule, roles in occurrences.items()
+    )
+    require_exact(
+        actual_authority,
+        OCCURRENCE_AUTHORITY,
+        "exact 27-row occurrence authority",
+    )
+    require_exact(
+        list(mappings),
+        authority_rules,
+        "complete ordered diagnostic subject authority",
+    )
+    require_exact(
+        set(mappings),
+        set(occurrences),
+        "subject-to-occurrence cross-layer closure",
+    )
+    if not set(occurrences).issubset(semantic_rules):
+        raise ValueError("diagnostic occurrence authority: non-semantics rule")
+    for rule, schema in mappings.items():
+        if schema not in schemas:
+            raise ValueError(
+                f"diagnostic evidence-key mapping {rule}: unknown schema {schema}"
+            )
+    require_exact(len(mappings), 27, "complete diagnostic rule count")
+    return schemas, mappings, occurrences
+
+
+def diagnostic_inventory(
+    semantics: dict[str, Any],
+    semantics_payload: bytes,
+    diagnostic: dict[str, Any],
+    diagnostic_payload: bytes,
+    schemas: dict[str, list[str]],
+    mappings: dict[str, str],
+    occurrences: dict[str, list[tuple[str, str]]],
+) -> bytes:
+    value = {
+        "schema": "o2i.core.semantic-diagnostic-evidence/v1",
+        "core": semantics["coreIdentity"],
+        "companions": {
+            "semantics": {
+                "schema": semantics["schema"],
+                "rawSha256": sha256(semantics_payload),
+                "shapeSha256": shape_sha256(semantics),
+            },
+            "semanticDiagnosticEvidence": {
+                "schema": diagnostic["schema"],
+                "rawSha256": sha256(diagnostic_payload),
+                "shapeSha256": shape_sha256(diagnostic),
+            },
+        },
+        "diagnostics": [
+            {
+                "ruleId": rule,
+                "subjectEvidence": {
+                    "schema": mappings[rule],
+                    "fields": schemas[mappings[rule]],
+                },
+                "occurrenceEvidence": [
+                    {"roleId": role, "cardinality": cardinality}
+                    for role, cardinality in occurrences[rule]
+                ],
+            }
+            for rule, _ in OCCURRENCE_AUTHORITY
+        ],
+    }
+    return (
+        json.dumps(value, ensure_ascii=False, indent=2, separators=(",", ": "))
+        + "\n"
+    ).encode("utf-8")
+
+
+def validate_generated_inventory(payload: bytes) -> None:
+    _, expected = compile_outputs()
+    require_exact(
+        payload,
+        expected,
+        "generated Core diagnostic inventory bytes",
+    )
+
+
 def haskell_data(name: str, constructors: list[str]) -> list[str]:
     head, *tail = constructors
     if not tail:
@@ -432,6 +693,7 @@ def haskell_semantic_contract(
     semantic_rules: list[str],
     schemas: dict[str, list[str]],
     mappings: dict[str, str],
+    occurrences: dict[str, list[tuple[str, str]]],
 ) -> list[str]:
     schema_stems = constructor_catalog(
         "Generated", list(schemas), "semantic evidence-key schema catalog"
@@ -446,6 +708,16 @@ def haskell_semantic_contract(
         rule: semantic_rule_constructor(rule)
         for rule in mappings
     }
+    occurrence_schema_constructors = {
+        rule: semantic_rule_constructor(rule).removesuffix("Rule")
+        + "OccurrenceSchema"
+        for rule in mappings
+    }
+    occurrence_constructors = {
+        rule: semantic_rule_constructor(rule).removesuffix("Rule")
+        + "Occurrences"
+        for rule in mappings
+    }
     identity_constructors = {
         rule: f"{semantic_rule_constructor(rule)}Identity"
         for rule in semantic_rules
@@ -457,6 +729,8 @@ def haskell_semantic_contract(
         + list(schema_constructors.values())
         + list(witness_constructors.values())
         + list(rule_constructors.values())
+        + list(occurrence_schema_constructors.values())
+        + list(occurrence_constructors.values())
     )
     if len(generated_constructors) != len(set(generated_constructors)):
         raise ValueError("semantic contract: Haskell constructor collision")
@@ -554,9 +828,88 @@ def haskell_semantic_contract(
     lines.append("")
 
     lines.extend(
+        haskell_data(
+            "GeneratedSemanticOccurrenceSchema",
+            list(occurrence_schema_constructors.values()),
+        )
+    )
+    lines.extend(
+        [
+            "data GeneratedSemanticOccurrenceEvidence",
+            "       (schema :: GeneratedSemanticOccurrenceSchema)",
+            "       occurrence where",
+        ]
+    )
+    for rule, constructor in occurrence_constructors.items():
+        field_types = {
+            "zero": [],
+            "one": ["!occurrence"],
+            "one-or-more": ["!(NonEmpty occurrence)"],
+            "zero-or-more": ["![occurrence]"],
+        }
+        fields = [
+            field
+            for _, cardinality in occurrences[rule]
+            for field in field_types[cardinality]
+        ]
+        lines.append(f"  {constructor} ::")
+        lines.extend(f"       {field} ->" for field in fields)
+        lines.extend(
+            [
+                "       GeneratedSemanticOccurrenceEvidence",
+                f"         '{occurrence_schema_constructors[rule]}",
+                "         occurrence",
+            ]
+        )
+    lines.append("")
+    lines.extend(
+        [
+            "generatedSemanticOccurrenceEvidenceGroups ::",
+            "     GeneratedSemanticOccurrenceEvidence schema occurrence",
+            "  -> NonEmpty (Text, [occurrence])",
+            "generatedSemanticOccurrenceEvidenceGroups evidence =",
+            "  case evidence of",
+        ]
+    )
+    for rule, constructor in occurrence_constructors.items():
+        roles = occurrences[rule]
+        binders = [
+            f"occurrence{index}"
+            for index, (_, cardinality) in enumerate(roles)
+            if cardinality != "zero"
+        ]
+        pattern = " ".join([constructor, *binders])
+        groups: list[str] = []
+        binder_index = 0
+        for role, cardinality in roles:
+            if cardinality == "zero":
+                values = "[]"
+            else:
+                binder = binders[binder_index]
+                binder_index += 1
+                if cardinality == "one":
+                    values = f"[{binder}]"
+                elif cardinality == "one-or-more":
+                    values = f"NonEmpty.toList {binder}"
+                else:
+                    values = binder
+            groups.append(f"({json.dumps(role)}, {values})")
+        head, *tail = groups
+        lines.append(f"    {pattern} ->")
+        lines.append(f"      {head}")
+        if tail:
+            lines.append(f"        :| [ {tail[0]}")
+            lines.extend(f"           , {group}" for group in tail[1:])
+            lines.append("           ]")
+        else:
+            lines.append("        :| []")
+    lines.append("")
+
+    lines.extend(
         [
             "data GeneratedSemanticRule",
-            "       (schema :: GeneratedSemanticEvidenceSchema) where",
+            "       (schema :: GeneratedSemanticEvidenceSchema)",
+            "       (occurrenceSchema :: GeneratedSemanticOccurrenceSchema) where",
         ]
     )
     for rule, constructor in rule_constructors.items():
@@ -565,18 +918,20 @@ def haskell_semantic_contract(
                 f"  {constructor} ::",
                 "    GeneratedSemanticRule",
                 f"      '{schema_constructors[mappings[rule]]}",
+                f"      '{occurrence_schema_constructors[rule]}",
             ]
         )
     lines.append("")
 
     lines.extend(
         [
-            "generatedSemanticRuleId :: GeneratedSemanticRule schema -> Text",
+            "generatedSemanticRuleId ::",
+            "     GeneratedSemanticRule schema occurrenceSchema -> Text",
             "generatedSemanticRuleId =",
             "  generatedSemanticRuleIdentityText . generatedSemanticRuleIdentity",
             "",
             "generatedSemanticRuleIdentity ::",
-            "     GeneratedSemanticRule schema",
+            "     GeneratedSemanticRule schema occurrenceSchema",
             "  -> GeneratedSemanticRuleIdentity",
             "generatedSemanticRuleIdentity rule =",
             "  case rule of",
@@ -593,7 +948,8 @@ def haskell_semantic_contract(
 
     lines.extend(
         [
-            "generatedSemanticRuleRank :: GeneratedSemanticRule schema -> Int",
+            "generatedSemanticRuleRank ::",
+            "     GeneratedSemanticRule schema occurrenceSchema -> Int",
             "generatedSemanticRuleRank =",
             "  generatedSemanticRuleIdentityRank . generatedSemanticRuleIdentity",
         ]
@@ -603,7 +959,7 @@ def haskell_semantic_contract(
     lines.extend(
         [
             "generatedSemanticRuleEvidenceSchema ::",
-            "     GeneratedSemanticRule schema",
+            "     GeneratedSemanticRule schema occurrenceSchema",
             "  -> GeneratedSemanticEvidenceSchemaWitness schema",
             "generatedSemanticRuleEvidenceSchema rule =",
             "  case rule of",
@@ -621,7 +977,7 @@ def haskell_semantic_contract(
     return lines
 
 
-def compile_contract() -> str:
+def compile_outputs() -> tuple[str, bytes]:
     companion, payload = load_companion()
     require_exact(companion["schema"], "o2i.core-semantics/target-v46", "schema")
     require_exact(
@@ -876,6 +1232,26 @@ def compile_contract() -> str:
         "GeneratedType", o2i_types, "O2I type catalog"
     )
     require_exact(sha256(payload), EXPECTED_SHA256, "accepted file SHA-256")
+    diagnostic, diagnostic_payload = load_diagnostic_companion()
+    evidence_schemas, evidence_mappings, occurrence_mappings = (
+        semantic_diagnostic_contract(
+            diagnostic,
+            diagnostic_payload,
+            payload,
+            stages["semantics"],
+            evidence_schemas,
+            evidence_mappings,
+        )
+    )
+    inventory = diagnostic_inventory(
+        companion,
+        payload,
+        diagnostic,
+        diagnostic_payload,
+        evidence_schemas,
+        evidence_mappings,
+        occurrence_mappings,
+    )
 
     def string_literal(value: str) -> str:
         return json.dumps(value, ensure_ascii=True)
@@ -909,6 +1285,7 @@ def compile_contract() -> str:
         "module O2I.Core.Contract.Generated where",
         "",
         "import Data.List.NonEmpty (NonEmpty(..))",
+        "import qualified Data.List.NonEmpty as NonEmpty",
         "import Data.Text (Text)",
         "",
         "contractIdentity :: Text",
@@ -924,6 +1301,14 @@ def compile_contract() -> str:
         "contractShapeSha256 :: Text",
         "contractShapeSha256 =",
         f"  {string_literal(declared_shape)}",
+        "",
+        "diagnosticContractSha256 :: Text",
+        "diagnosticContractSha256 =",
+        f"  {string_literal(sha256(diagnostic_payload))}",
+        "",
+        "diagnosticContractShapeSha256 :: Text",
+        "diagnosticContractShapeSha256 =",
+        f"  {string_literal(shape_sha256(diagnostic))}",
         "",
     ]
     lines.extend(
@@ -1312,7 +1697,10 @@ def compile_contract() -> str:
     )
     lines.extend(
         haskell_semantic_contract(
-            stages["semantics"], evidence_schemas, evidence_mappings
+            stages["semantics"],
+            evidence_schemas,
+            evidence_mappings,
+            occurrence_mappings,
         )
     )
     lines.extend(
@@ -1346,7 +1734,15 @@ def compile_contract() -> str:
         raise ValueError(
             f"hindent rejected generated Core projection: {formatted.stderr}"
         )
-    return formatted.stdout
+    return formatted.stdout, inventory
+
+
+def compile_contract() -> str:
+    return compile_outputs()[0]
+
+
+def compile_inventory() -> bytes:
+    return compile_outputs()[1]
 
 
 def parse_args() -> argparse.Namespace:
@@ -1359,14 +1755,24 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    expected = compile_contract().encode("utf-8")
+    expected_haskell, expected_inventory = compile_outputs()
+    expected = expected_haskell.encode("utf-8")
     if args.write:
         GENERATED.parent.mkdir(parents=True, exist_ok=True)
         GENERATED.write_bytes(expected)
+        GENERATED_INVENTORY.parent.mkdir(parents=True, exist_ok=True)
+        GENERATED_INVENTORY.write_bytes(expected_inventory)
         return
     actual = GENERATED.read_bytes()
     if actual != expected:
         raise SystemExit(f"generated Core contract is stale: {GENERATED}")
+    actual_inventory = GENERATED_INVENTORY.read_bytes()
+    try:
+        validate_generated_inventory(actual_inventory)
+    except ValueError as error:
+        raise SystemExit(
+            f"generated Core diagnostic inventory is stale: {GENERATED_INVENTORY}"
+        ) from error
 
 
 if __name__ == "__main__":

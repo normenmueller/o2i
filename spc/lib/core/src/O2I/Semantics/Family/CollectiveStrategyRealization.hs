@@ -120,7 +120,6 @@ assessOneCollective semanticIndex strategyResults proposition =
     targetOccurrences = incidenceEndpointsFor roleCollectiveTarget incidences
     participantBindings =
       sortOn fst (identitiesAt semanticIndex participantOccurrences)
-    participantOccurrenceIndex = Map.fromList participantBindings
     participants = map fst participantBindings
     target = onlyIdentityAt semanticIndex targetOccurrences
     expectedParticipantPairs = allPairs participants
@@ -143,15 +142,31 @@ assessOneCollective semanticIndex strategyResults proposition =
     macroSupport =
       case targetOccurrences of
         [targetOccurrence] ->
-          zipWith
-            (assessMacroSupport semanticIndex claim targetOccurrence)
-            participants
-            (map snd participantBindings)
+          [ assessMacroSupport
+            semanticIndex
+            claim
+            claimOccurrence
+            targetOccurrence
+            participant
+            participantOccurrence
+          | (participant, participantOccurrence) <- participantBindings
+          ]
         _ -> []
     primitiveSupport =
-      map
-        (assessPrimitiveSupport strategyResults claim target preparedSupport)
-        participants
+      case targetOccurrences of
+        [targetOccurrence] ->
+          [ assessPrimitiveSupport
+            strategyResults
+            claim
+            claimOccurrence
+            target
+            targetOccurrence
+            (Map.lookup participant (preparedParticipantSupport preparedSupport))
+            participant
+            participantOccurrence
+          | (participant, participantOccurrence) <- participantBindings
+          ]
+        _ -> []
     components =
       CollectiveStrategyRealizationComponents
         { collectiveCompletenessResult = completeness
@@ -160,12 +175,7 @@ assessOneCollective semanticIndex strategyResults proposition =
         , collectiveMacroSupportResults = macroSupport
         , collectivePrimitiveSupportResults = primitiveSupport
         }
-    defects =
-      componentDefects
-        claimOccurrence
-        participantOccurrenceIndex
-        targetOccurrences
-        components
+    defects = componentDefects components
     prerequisiteWitnesses =
       concatMap
         strategyWitnesses
@@ -181,9 +191,12 @@ assessCompleteness proposition
     CollectiveCompletenessSatisfied
   | otherwise =
     CollectiveCompletenessViolated
-      (mkCollectiveCompletenessDefect
-         (structuredPropositionModelIdentity proposition)
-         (structuredPropositionOccurrence proposition))
+      (mkSemanticDefect
+         Generated.CollectiveAssertedCompletenessRule
+         (SemanticFitClaimEvidenceKey
+            (structuredPropositionModelIdentity proposition))
+         (Generated.CollectiveAssertedCompletenessOccurrences
+            (structuredPropositionOccurrence proposition)))
 
 assessFit ::
      SemanticIndex scope
@@ -284,6 +297,7 @@ assessFit semanticIndex strategyResults claim claimOccurrence participants targe
               , defect <-
                   predicateDefect
                     Generated.CollectiveFitParticipantBindingRule
+                    Generated.CollectiveFitParticipantBindingOccurrences
                     claim
                     claimOccurrence
                     (sort participants
@@ -294,6 +308,7 @@ assessFit semanticIndex strategyResults claim claimOccurrence participants targe
                    , defect <-
                        predicateDefect
                          Generated.CollectiveFitTargetBindingRule
+                         Generated.CollectiveFitTargetBindingOccurrences
                          claim
                          claimOccurrence
                          (Just (collectiveTarget input) == target)
@@ -303,6 +318,7 @@ assessFit semanticIndex strategyResults claim claimOccurrence participants targe
                    , defect <-
                        predicateDefect
                          Generated.CollectiveFitTargetGuidingPolicyRule
+                         Generated.CollectiveFitTargetGuidingPolicyOccurrences
                          claim
                          claimOccurrence
                          (maybe
@@ -313,6 +329,7 @@ assessFit semanticIndex strategyResults claim claimOccurrence participants targe
                    ]
                 ++ predicateDefect
                      Generated.CollectiveFitTargetTradeOffsRule
+                     Generated.CollectiveFitTargetTradeOffsOccurrences
                      claim
                      claimOccurrence
                      (maybe
@@ -329,6 +346,7 @@ assessFit semanticIndex strategyResults claim claimOccurrence participants targe
                    , defect <-
                        predicateDefect
                          Generated.CollectiveFitPairwiseCoherenceRule
+                         Generated.CollectiveFitPairwiseCoherenceOccurrences
                          claim
                          claimOccurrence
                          (suppliedPairs == expectedPairs)
@@ -338,6 +356,7 @@ assessFit semanticIndex strategyResults claim claimOccurrence participants targe
                    , defect <-
                        predicateDefect
                          Generated.CollectiveFitParticipantCompatibilityRule
+                         Generated.CollectiveFitParticipantCompatibilityOccurrences
                          claim
                          claimOccurrence
                          (compatibilityParticipants == sort participants)
@@ -362,16 +381,16 @@ assessCoverage strategyResults claim participants target prepared =
     Nothing ->
       case target >>= validStrategyInput strategyResults of
         Nothing -> CollectiveCoverageUnavailable blockers
-        Just _
-          | requiredTargets `Set.isSubsetOf` preparedCoveredTargets prepared ->
-            CollectiveCoverageSatisfied relationWitnesses
-          | otherwise ->
-            CollectiveCoverageViolated
-              (mkSemanticDefect
-                 Generated.CollectiveAssertedCollectiveCoverageRule
-                 (SemanticFitClaimEvidenceKey claim)
-                 (Set.toAscList
-                    (requiredTargets Set.\\ preparedCoveredTargets prepared)))
+        Just _ ->
+          case NonEmpty.nonEmpty uncoveredTargets of
+            Nothing -> CollectiveCoverageSatisfied relationWitnesses
+            Just occurrences ->
+              CollectiveCoverageViolated
+                (mkSemanticDefect
+                   Generated.CollectiveAssertedCollectiveCoverageRule
+                   (SemanticFitClaimEvidenceKey claim)
+                   (Generated.CollectiveAssertedCollectiveCoverageOccurrences
+                      occurrences))
   where
     prerequisiteStates =
       participantPrerequisites strategyResults participants
@@ -382,22 +401,36 @@ assessCoverage strategyResults claim participants target prepared =
       preparedTargetActions prepared
         `Set.union` preparedTargetKeyResults prepared
     relationWitnesses = Set.toAscList (preparedRelationWitnesses prepared)
+    uncoveredTargets =
+      Set.toAscList (requiredTargets Set.\\ preparedCoveredTargets prepared)
 
 assessMacroSupport ::
      SemanticIndex scope
   -> ModelIdentity
   -> OccurrenceIdentity
+  -> OccurrenceIdentity
   -> ModelIdentity
   -> OccurrenceIdentity
   -> MacroSupportAssessment
-assessMacroSupport semanticIndex claim target participant source =
+assessMacroSupport semanticIndex claim claimOccurrence target participant source =
   if isAssertedCarrierAt semanticIndex source
        && isAssertedCarrierAt semanticIndex target
     then case relationWitnesses of
-           [] -> MacroSupportViolated claim participant
+           [] -> violation
            _ -> MacroSupportSatisfied claim participant relationWitnesses
-    else MacroSupportViolated claim participant
+    else violation
   where
+    violation =
+      MacroSupportViolated
+        claim
+        participant
+        (mkSemanticDefect
+           Generated.CollectiveAssertedMacroSupportRule
+           (SemanticParticipantClaimEvidenceKey claim participant)
+           (Generated.CollectiveAssertedMacroSupportOccurrences
+              claimOccurrence
+              source
+              target))
     relationWitnesses =
       map
         relationOccurrenceIdentity
@@ -410,17 +443,30 @@ assessMacroSupport semanticIndex claim target participant source =
 assessPrimitiveSupport ::
      Map ModelIdentity (StrategyFormulationAssessment scope)
   -> ModelIdentity
+  -> OccurrenceIdentity
   -> Maybe ModelIdentity
-  -> PreparedCollectiveSupport
+  -> OccurrenceIdentity
+  -> Maybe ParticipantSupport
   -> ModelIdentity
+  -> OccurrenceIdentity
   -> ParticipantPrimitiveSupportAssessment
-assessPrimitiveSupport strategyResults claim target prepared participant =
+assessPrimitiveSupport strategyResults claim claimOccurrence target targetOccurrence participantSupport participant participantOccurrence =
   case NonEmpty.nonEmpty unavailableReasons of
     Just reasons ->
       ParticipantPrimitiveSupportUnavailable claim participant reasons blockers
     Nothing ->
       case relationWitnesses of
-        [] -> ParticipantPrimitiveSupportViolated claim participant
+        [] ->
+          ParticipantPrimitiveSupportViolated
+            claim
+            participant
+            (mkSemanticDefect
+               Generated.CollectiveAssertedParticipantPrimitiveSupportRule
+               (SemanticParticipantClaimEvidenceKey claim participant)
+               (Generated.CollectiveAssertedParticipantPrimitiveSupportOccurrences
+                  claimOccurrence
+                  participantOccurrence
+                  targetOccurrence))
         _ ->
           ParticipantPrimitiveSupportSatisfied
             claim
@@ -437,7 +483,7 @@ assessPrimitiveSupport strategyResults claim target prepared participant =
       maybe
         []
         (Set.toAscList . participantContributionWitnesses)
-        (Map.lookup participant (preparedParticipantSupport prepared))
+        participantSupport
 
 -- | Exact work performed by collective support preparation.
 data CollectiveWork = CollectiveWork
@@ -640,12 +686,8 @@ combineContributionWork left right =
     }
 
 componentDefects ::
-     OccurrenceIdentity
-  -> Map ModelIdentity OccurrenceIdentity
-  -> [OccurrenceIdentity]
-  -> CollectiveStrategyRealizationComponents scope
-  -> [SemanticDefect]
-componentDefects claimOccurrence participantBindings targetOccurrences components =
+     CollectiveStrategyRealizationComponents scope -> [SemanticDefect]
+componentDefects components =
   completenessDefects
     ++ fitDefects
     ++ coverageDefects
@@ -665,26 +707,15 @@ componentDefects claimOccurrence participantBindings targetOccurrences component
         CollectiveCoverageViolated defect -> [defect]
         _ -> []
     macroDefects =
-      [ mkSemanticDefect
-        Generated.CollectiveAssertedMacroSupportRule
-        (SemanticParticipantClaimEvidenceKey claim participant)
-        (supportFailureWitnesses participant)
-      | MacroSupportViolated claim participant <-
+      [ defect
+      | MacroSupportViolated _ _ defect <-
           collectiveMacroSupportResults components
       ]
     primitiveDefects =
-      [ mkSemanticDefect
-        Generated.CollectiveAssertedParticipantPrimitiveSupportRule
-        (SemanticParticipantClaimEvidenceKey claim participant)
-        (supportFailureWitnesses participant)
-      | ParticipantPrimitiveSupportViolated claim participant <-
+      [ defect
+      | ParticipantPrimitiveSupportViolated _ _ defect <-
           collectivePrimitiveSupportResults components
       ]
-    supportFailureWitnesses participant =
-      Set.toAscList . Set.fromList
-        $ claimOccurrence
-            : maybeToList (Map.lookup participant participantBindings)
-            ++ targetOccurrences
 
 componentsUnavailable :: CollectiveStrategyRealizationComponents scope -> Bool
 componentsUnavailable components =
@@ -838,13 +869,19 @@ isAssertedCarrierAt semanticIndex occurrence =
     (carrierAt semanticIndex occurrence)
 
 predicateDefect ::
-     Generated.GeneratedSemanticRule 'Generated.GeneratedFitClaimKeySchema
+     Generated.GeneratedSemanticRule
+       'Generated.GeneratedFitClaimKeySchema
+       occurrenceSchema
+  -> (OccurrenceIdentity -> SemanticOccurrenceEvidence occurrenceSchema)
   -> ModelIdentity
   -> OccurrenceIdentity
   -> Bool
   -> [SemanticDefect]
-predicateDefect rule claim occurrence satisfied =
-  [ mkSemanticDefect rule (SemanticFitClaimEvidenceKey claim) [occurrence]
+predicateDefect rule occurrenceEvidence claim occurrence satisfied =
+  [ mkSemanticDefect
+    rule
+    (SemanticFitClaimEvidenceKey claim)
+    (occurrenceEvidence occurrence)
   | not satisfied
   ]
 

@@ -16,7 +16,12 @@ module O2I.Semantics
   , SemanticEvidenceKind(..)
   , semanticDefectRule
   , semanticDefectEvidence
-  , semanticDefectWitnesses
+  , SemanticOccurrenceRole
+  , SemanticOccurrenceGroup
+  , semanticDefectOccurrenceGroups
+  , semanticOccurrenceGroupRole
+  , semanticOccurrenceGroupOccurrences
+  , semanticOccurrenceRoleId
   , semanticEvidenceKind
   , semanticEvidenceModelIdentities
   , semanticEvidenceOccurrenceIdentities
@@ -73,6 +78,8 @@ module O2I.Semantics
   ) where
 
 import qualified Data.List.NonEmpty as NonEmpty
+import Data.List.NonEmpty (NonEmpty)
+import Data.Text (Text)
 import O2I.Core.Contract (CoreRuleId)
 import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
 import O2I.Semantics.Eval (assessSemantics)
@@ -164,9 +171,39 @@ semanticDefectRule = Internal.semanticRuleId . Internal.semanticDefectRule
 semanticDefectEvidence :: SemanticDefect -> SemanticEvidence
 semanticDefectEvidence = Internal.semanticDefectEvidence
 
--- | Return the exact graph occurrences witnessing one semantic defect.
-semanticDefectWitnesses :: SemanticDefect -> [OccurrenceIdentity]
-semanticDefectWitnesses = Internal.semanticDefectWitnesses
+-- | Opaque, rule-local role of one semantic occurrence group.
+newtype SemanticOccurrenceRole =
+  SemanticOccurrenceRole Text
+
+-- | Opaque named group of occurrences retained by its Core producer.
+data SemanticOccurrenceGroup =
+  SemanticOccurrenceGroup !SemanticOccurrenceRole ![OccurrenceIdentity]
+
+-- | Return every named group in its admitted order, including empty groups.
+--
+-- Structural cardinality is fixed by the compiled Core companion. Concrete
+-- graph membership and semantic relations remain guarantees of the opaque
+-- producer path.
+semanticDefectOccurrenceGroups ::
+     SemanticDefect -> NonEmpty SemanticOccurrenceGroup
+semanticDefectOccurrenceGroups defect =
+  projectGroup <$> Internal.semanticDefectOccurrenceGroups defect
+  where
+    projectGroup (role, occurrences) =
+      SemanticOccurrenceGroup (SemanticOccurrenceRole role) occurrences
+
+-- | Project the opaque role of one occurrence group.
+semanticOccurrenceGroupRole :: SemanticOccurrenceGroup -> SemanticOccurrenceRole
+semanticOccurrenceGroupRole (SemanticOccurrenceGroup role _) = role
+
+-- | Project the exact canonical occurrences retained in one named group.
+semanticOccurrenceGroupOccurrences ::
+     SemanticOccurrenceGroup -> [OccurrenceIdentity]
+semanticOccurrenceGroupOccurrences (SemanticOccurrenceGroup _ values) = values
+
+-- | Return the admitted rule-local role identifier for serialization.
+semanticOccurrenceRoleId :: SemanticOccurrenceRole -> Text
+semanticOccurrenceRoleId (SemanticOccurrenceRole role) = role
 
 -- | Classify the closed evidence-key shape without exposing its representation.
 semanticEvidenceKind :: SemanticEvidence -> SemanticEvidenceKind
@@ -407,21 +444,21 @@ collectiveMacroSupportAssessments = Internal.collectiveMacroSupportResults
 macroSupportParticipant :: MacroSupportAssessment -> ModelIdentity
 macroSupportParticipant assessment =
   case assessment of
-    Internal.MacroSupportViolated _ participant -> participant
+    Internal.MacroSupportViolated _ participant _ -> participant
     Internal.MacroSupportSatisfied _ participant _ -> participant
 
 -- | Classify one contributor's macro support.
 macroSupportDisposition :: MacroSupportAssessment -> ComponentDisposition
 macroSupportDisposition assessment =
   case assessment of
-    Internal.MacroSupportViolated _ _ -> ComponentInvalid
+    Internal.MacroSupportViolated _ _ _ -> ComponentInvalid
     Internal.MacroSupportSatisfied _ _ _ -> ComponentSatisfied
 
 -- | Return exact occurrences witnessing satisfied macro support.
 macroSupportWitnesses :: MacroSupportAssessment -> [OccurrenceIdentity]
 macroSupportWitnesses assessment =
   case assessment of
-    Internal.MacroSupportViolated _ _ -> []
+    Internal.MacroSupportViolated _ _ _ -> []
     Internal.MacroSupportSatisfied _ _ witnesses -> witnesses
 
 -- | Enumerate primitive-support assessments for every contributor.
@@ -438,7 +475,7 @@ primitiveSupportParticipant assessment =
   case assessment of
     Internal.ParticipantPrimitiveSupportUnavailable _ participant _ _ ->
       participant
-    Internal.ParticipantPrimitiveSupportViolated _ participant -> participant
+    Internal.ParticipantPrimitiveSupportViolated _ participant _ -> participant
     Internal.ParticipantPrimitiveSupportSatisfied _ participant _ -> participant
 
 -- | Classify one contributor's primitive support.
@@ -448,7 +485,7 @@ primitiveSupportDisposition assessment =
   case assessment of
     Internal.ParticipantPrimitiveSupportUnavailable _ _ _ _ ->
       ComponentUnavailable
-    Internal.ParticipantPrimitiveSupportViolated _ _ -> ComponentInvalid
+    Internal.ParticipantPrimitiveSupportViolated _ _ _ -> ComponentInvalid
     Internal.ParticipantPrimitiveSupportSatisfied _ _ _ -> ComponentSatisfied
 
 -- | Return every reason primitive-support evaluation was unavailable.
