@@ -4,25 +4,57 @@ module O2I.Operation.Test.PreparationRuntime
   ( tests
   ) where
 
+import qualified Data.Aeson as Aeson
 import Data.ByteString (ByteString)
+import qualified Data.ByteString.Char8 as ByteString
 import Data.IORef (modifyIORef', newIORef, readIORef)
 import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
+import qualified Data.Text as Text
 import Numeric.Natural (Natural)
+import qualified O2I.ArchiMate.Profile.Closure as Closure
 import qualified O2I.ArchiMate.Profile.Draft as Draft
+import qualified O2I.ArchiMate.Profile.Notation as Notation
 import O2I.ArchiMate.Profile.Notation
   ( canonicalOccurrenceOrdinal
   , canonicalViewOccurrence
   )
+import qualified O2I.ArchiMate.Profile.Projection as Projection
 import O2I.ArchiMate.Profile.Resolution (compiledProfileDescriptor)
-import O2I.Core.Identity (modelIdentity)
-import O2I.Operation.Acquisition.Internal (AcquiredSource(..))
+import qualified O2I.ArchiMate.Profile.Resolution as Resolution
+import O2I.Core.Identity (modelIdentity, modelIdentityText)
+import O2I.Operation.Acquisition
+  ( acquireSource
+  , acquiredModelSource
+  , acquiredSourceIdentity
+  , fileInput
+  )
+import O2I.Operation.Acquisition.Internal
+  ( AcquiredModelSource(..)
+  , AcquiredSource(..)
+  )
 import O2I.Operation.Adapter
 import O2I.Operation.Adapter.Authoring
+import O2I.Operation.Diagnostic
+  ( Diagnostic
+  , diagnosticDisposition
+  , diagnosticDispositionText
+  , diagnosticOccurrences
+  , diagnosticProvenance
+  , diagnosticRuleIdentity
+  , diagnosticSeverity
+  , diagnosticSeverityText
+  , foldDiagnosticOccurrence
+  , foldDiagnosticProvenance
+  , foldOwnerEvidenceProvenance
+  )
+import O2I.Operation.Diagnostic.Owner
+import O2I.Operation.Diagnostic.Owner.Source
+import O2I.Operation.Encoding.Internal (canonicalFragmentBytes)
 import O2I.Operation.Failure
+import O2I.Operation.Machine.Fragment.Internal (diagnosticFragment)
 import O2I.Operation.Preparation
-import O2I.Operation.Preparation.Runtime.Internal
 import O2I.Operation.Profile
 import O2I.Operation.Provenance
 import O2I.Operation.Provenance.Internal (sourceIdentityFromBytes)
@@ -33,14 +65,22 @@ import O2I.Operation.Test.AdapterSupport
   , resolveNativeRule
   )
 import O2I.Operation.View
+import qualified O2I.Structure as Structure
+import System.FilePath ((</>))
 import Test.Tasty (TestTree, testGroup)
-import Test.Tasty.HUnit (Assertion, (@?=), assertFailure, testCase)
+import Test.Tasty.HUnit (Assertion, (@?=), assertBool, assertFailure, testCase)
 
 tests :: TestTree
 tests =
   testGroup
     "shared preparation runtime"
     [ testCase "executes the accepted prefix and delays exact inputs" accepted
+    , testCase
+        "binds one acquired model and two acquired supplements end to end"
+        acquiredOwnerVertical
+    , testCase
+        "derives the prepared model from the exact acquired bytes"
+        acquiredOwnerModelMutation
     , testCase "retains every Adapter-selection branch" adapterSelectionCases
     , testCase "retains the exact Adapter-decode cause" adapterDecodeCase
     , testCase "retains invalid marker evidence" invalidMarkerCase
@@ -86,6 +126,10 @@ data FailureObservation =
   FailureObservation !Text !Text !CauseObservation
   deriving (Eq, Show)
 
+data BindingObservation =
+  BindingObservation !Text !Text !Text !Text !Text !Text !SourceIdentity
+  deriving (Eq, Show)
+
 accepted :: Assertion
 accepted = do
   environment <- acceptedEnvironment acceptedDraft
@@ -108,6 +152,445 @@ accepted = do
        runPrefix environment Nothing request
          @?= Right (SuccessfulPrefix "amx" "o2i.archimate-profile@0.3" 1 inputs))
     cases
+
+acquiredOwnerVertical :: Assertion
+acquiredOwnerVertical = do
+  adapter <- ownerVerticalAdapter
+  adapters <- collection [adapter]
+  profileInventory <- profiles
+  viewIdentity <- requireRight (modelIdentity "view")
+  acquiredModelValue <-
+    acquireFixture ModelRole 0 "owner-model" "owner-model.amx"
+  model <-
+    case acquiredModelSource acquiredModelValue of
+      Nothing ->
+        assertFailure "model role was not retained" >> fail "unreachable"
+      Just value -> pure value
+  supplementalA <-
+    acquireFixture
+      SupplementalRole
+      0
+      "supplemental-a"
+      "owner-source-strategy.json"
+  supplementalB <-
+    acquireFixture
+      SupplementalRole
+      1
+      "supplemental-b"
+      "owner-source-strategy-2.json"
+  diagnostics <-
+    requireRight
+      (withPreparedSelectedView
+         adapters
+         profileInventory
+         Nothing
+         (traceRequest (viewByIdentity viewIdentity))
+         model
+         (const (Left "model preparation failed"))
+         (\_ _ _ modelSource selectedProfile _ universe _ ->
+            ownerVerticalDiagnostics
+              [supplementalA, supplementalB]
+              modelSource
+              selectedProfile
+              universe))
+  let bindingDiagnostics =
+        filter
+          ((== "core.supplemental.identity.unknown") . diagnosticRuleIdentity)
+          diagnostics
+      expectedBindingObservations =
+        concat
+          [ replicate
+              6
+              (BindingObservation
+                 "core.supplemental.identity.unknown"
+                 "error"
+                 "model-finding"
+                 "binding-owner"
+                 "subject"
+                 "unknown"
+                 (acquiredSourceIdentity supplementalA))
+          , replicate
+              6
+              (BindingObservation
+                 "core.supplemental.identity.unknown"
+                 "error"
+                 "model-finding"
+                 "binding-owner"
+                 "subject"
+                 "unknown-2"
+                 (acquiredSourceIdentity supplementalB))
+          ]
+  actualBindingObservations <-
+    traverse requireBindingObservation bindingDiagnostics
+  actualBindingObservations @?= expectedBindingObservations
+  assertBindingEncodingContract
+    bindingDiagnostics
+    expectedBindingObservations
+    (acquiredSourceIdentity supplementalA)
+    (acquiredSourceIdentity supplementalB)
+  assertBindingObservationMutations
+    actualBindingObservations
+    expectedBindingObservations
+    (acquiredSourceIdentity supplementalA)
+    (acquiredSourceIdentity supplementalB)
+  let profileDiagnostics =
+        filter
+          ((/= "core.supplemental.identity.unknown") . diagnosticRuleIdentity)
+          diagnostics
+  assertBool
+    "Profile diagnostics were absent from the real preparation path"
+    (not (null profileDiagnostics))
+  assertBool
+    "a model diagnostic was not bound to the exact acquired model"
+    (all
+       (== acquiredSourceIdentity acquiredModelValue)
+       (concatMap diagnosticOccurrenceSources profileDiagnostics))
+
+requireBindingObservation :: Diagnostic -> IO BindingObservation
+requireBindingObservation diagnostic =
+  case NonEmpty.toList (diagnosticOccurrences diagnostic) of
+    [occurrence] ->
+      case foldDiagnosticOccurrence
+             (const Nothing)
+             (\_ _ -> Nothing)
+             (\_ _ -> Nothing)
+             (\_ _ -> Nothing)
+             (\source subject ->
+                Just
+                  (BindingObservation
+                     (diagnosticRuleIdentity diagnostic)
+                     (diagnosticSeverityText (diagnosticSeverity diagnostic))
+                     (diagnosticDispositionText
+                        (diagnosticDisposition diagnostic))
+                     (diagnosticOwnerKind diagnostic)
+                     "subject"
+                     (modelIdentityText subject)
+                     source))
+             (\_ _ -> Nothing)
+             occurrence of
+        Nothing ->
+          assertFailure
+            "Binding diagnostic did not contain one Subject occurrence"
+            >> fail "unreachable"
+        Just observation -> pure observation
+    _ ->
+      assertFailure "Binding diagnostic occurrence cardinality changed"
+        >> fail "unreachable"
+
+assertBindingObservationMutations ::
+     [BindingObservation]
+  -> [BindingObservation]
+  -> SourceIdentity
+  -> SourceIdentity
+  -> Assertion
+assertBindingObservationMutations actual expected sourceA sourceB = do
+  let swapped = swapBindingSources sourceA sourceB expected
+      reordered = reverse expected
+      widened = expected <> take 1 expected
+      narrowed = drop 1 expected
+      wrongSeverity =
+        fmap
+          (\(BindingObservation rule _ disposition owner kind subject source) ->
+             BindingObservation
+               rule
+               "warning"
+               disposition
+               owner
+               kind
+               subject
+               source)
+          expected
+      wrongOwner =
+        fmap
+          (\(BindingObservation rule severity disposition _ kind subject source) ->
+             BindingObservation
+               rule
+               severity
+               disposition
+               "core-owner"
+               kind
+               subject
+               source)
+          expected
+      wrongDisposition =
+        fmap
+          (\(BindingObservation rule severity _ owner kind subject source) ->
+             BindingObservation
+               rule
+               severity
+               "process-failure"
+               owner
+               kind
+               subject
+               source)
+          expected
+  assertBool "a Source-swap mutation escaped" (actual /= swapped)
+  assertBool "an occurrence reorder mutation escaped" (actual /= reordered)
+  assertBool "an occurrence widening mutation escaped" (actual /= widened)
+  assertBool "an occurrence narrowing mutation escaped" (actual /= narrowed)
+  assertBool "a severity mutation escaped" (actual /= wrongSeverity)
+  assertBool "a disposition mutation escaped" (actual /= wrongDisposition)
+  assertBool "an owner-provenance mutation escaped" (actual /= wrongOwner)
+
+swapBindingSources ::
+     SourceIdentity
+  -> SourceIdentity
+  -> [BindingObservation]
+  -> [BindingObservation]
+swapBindingSources sourceA sourceB =
+  fmap
+    (\(BindingObservation rule severity disposition owner kind subject source) ->
+       BindingObservation
+         rule
+         severity
+         disposition
+         owner
+         kind
+         subject
+         (if source == sourceA
+            then sourceB
+            else sourceA))
+
+assertBindingEncodingContract ::
+     [Diagnostic]
+  -> [BindingObservation]
+  -> SourceIdentity
+  -> SourceIdentity
+  -> Assertion
+assertBindingEncodingContract diagnostics expected sourceA sourceB = do
+  actual <- traverse decodeDiagnosticValue diagnostics
+  let exact = map bindingDiagnosticValue expected
+      swapped =
+        map bindingDiagnosticValue (swapBindingSources sourceA sourceB expected)
+      reordered = reverse exact
+      widened =
+        case expected of
+          [] -> []
+          first:remaining ->
+            bindingDiagnosticValueWithOccurrences first [first, first]
+              : map bindingDiagnosticValue remaining
+      narrowed =
+        case expected of
+          [] -> []
+          first:remaining ->
+            bindingDiagnosticValueWithOccurrences first []
+              : map bindingDiagnosticValue remaining
+      missing = map bindingDiagnosticValueWithoutDisposition expected
+      extra = map bindingDiagnosticValueWithExtraMember expected
+  actual @?= exact
+  assertBool "encoded Source-swap mutation escaped" (actual /= swapped)
+  assertBool "encoded diagnostic reorder mutation escaped" (actual /= reordered)
+  assertBool "encoded occurrence widening mutation escaped" (actual /= widened)
+  assertBool
+    "encoded occurrence narrowing mutation escaped"
+    (actual /= narrowed)
+  assertBool "encoded missing-member mutation escaped" (actual /= missing)
+  assertBool "encoded extra-member mutation escaped" (actual /= extra)
+
+decodeDiagnosticValue :: Diagnostic -> IO Aeson.Value
+decodeDiagnosticValue diagnostic =
+  case Aeson.eitherDecodeStrict
+         (canonicalFragmentBytes (diagnosticFragment diagnostic)) of
+    Left message -> assertFailure message >> fail "unreachable"
+    Right value -> pure value
+
+bindingDiagnosticValue :: BindingObservation -> Aeson.Value
+bindingDiagnosticValue observation =
+  bindingDiagnosticValueWithOccurrences observation [observation]
+
+bindingDiagnosticValueWithOccurrences ::
+     BindingObservation -> [BindingObservation] -> Aeson.Value
+bindingDiagnosticValueWithOccurrences (BindingObservation rule severity disposition _ _ _ _) occurrences =
+  Aeson.object
+    [ "severity" Aeson..= severity
+    , "disposition" Aeson..= disposition
+    , "provenance" Aeson..= bindingProvenanceValue rule
+    , "occurrences" Aeson..= map bindingOccurrenceValue occurrences
+    ]
+
+bindingDiagnosticValueWithoutDisposition :: BindingObservation -> Aeson.Value
+bindingDiagnosticValueWithoutDisposition observation@(BindingObservation rule severity _ _ _ _ _) =
+  Aeson.object
+    [ "severity" Aeson..= severity
+    , "provenance" Aeson..= bindingProvenanceValue rule
+    , "occurrences" Aeson..= [bindingOccurrenceValue observation]
+    ]
+
+bindingDiagnosticValueWithExtraMember :: BindingObservation -> Aeson.Value
+bindingDiagnosticValueWithExtraMember observation@(BindingObservation rule severity disposition _ _ _ _) =
+  Aeson.object
+    [ "severity" Aeson..= severity
+    , "disposition" Aeson..= disposition
+    , "provenance" Aeson..= bindingProvenanceValue rule
+    , "occurrences" Aeson..= [bindingOccurrenceValue observation]
+    , "unexpected" Aeson..= True
+    ]
+
+bindingProvenanceValue :: Text -> Aeson.Value
+bindingProvenanceValue rule =
+  Aeson.object ["owner" Aeson..= ("core" :: Text), "ruleId" Aeson..= rule]
+
+bindingOccurrenceValue :: BindingObservation -> Aeson.Value
+bindingOccurrenceValue (BindingObservation _ _ _ _ kind subject source) =
+  Aeson.object
+    [ "kind" Aeson..= kind
+    , "source" Aeson..= sourceIdentityValue source
+    , "identity" Aeson..= subject
+    ]
+
+sourceIdentityValue :: SourceIdentity -> Aeson.Value
+sourceIdentityValue source =
+  Aeson.object
+    [ "role" Aeson..= sourceRoleText (sourceIdentityRole source)
+    , "ordinal" Aeson..= sourceOrdinalValue (sourceIdentityOrdinal source)
+    , "reference" Aeson..= sourceReferenceText (sourceIdentityReference source)
+    , "sha256" Aeson..= sourceSha256Text (sourceIdentitySha256 source)
+    ]
+
+sourceRoleText :: SourceRole -> Text
+sourceRoleText role =
+  case role of
+    ModelRole -> "model"
+    SupplementalRole -> "supplemental"
+    ReadinessRole -> "readiness"
+    AssessmentRole -> "assessment"
+
+diagnosticOwnerKind :: Diagnostic -> Text
+diagnosticOwnerKind diagnostic =
+  foldDiagnosticProvenance
+    (const "operation-owner")
+    (\_ _ -> "adapter-owner")
+    (const "profile-owner")
+    (const "core-owner")
+    (foldOwnerEvidenceProvenance
+       (\_ _ -> "profile-owner")
+       (const "structure-owner")
+       (const "binding-owner")
+       (const "semantics-owner"))
+    (diagnosticProvenance diagnostic)
+
+diagnosticOccurrenceSources :: Diagnostic -> [SourceIdentity]
+diagnosticOccurrenceSources diagnostic =
+  map
+    (foldDiagnosticOccurrence
+       id
+       (\source _ -> source)
+       (\source _ -> source)
+       (\source _ -> source)
+       (\source _ -> source)
+       (\source _ -> source))
+    (NonEmpty.toList (diagnosticOccurrences diagnostic))
+
+acquiredOwnerModelMutation :: Assertion
+acquiredOwnerModelMutation = do
+  adapter <- ownerVerticalAdapter
+  adapters <- collection [adapter]
+  profileInventory <- profiles
+  viewIdentity <- requireRight (modelIdentity "view")
+  acquired <-
+    acquireFixture ModelRole 0 "owner-model-mutated" "owner-model-mutated.amx"
+  model <-
+    case acquiredModelSource acquired of
+      Nothing ->
+        assertFailure "model role was not retained" >> fail "unreachable"
+      Just value -> pure value
+  case withPreparedSelectedView
+         adapters
+         profileInventory
+         Nothing
+         (traceRequest (viewByIdentity viewIdentity))
+         model
+         (const (Left ()))
+         (\_ _ _ _ _ _ _ _ -> Right ()) of
+    Left () -> pure ()
+    Right () ->
+      assertFailure "changed acquired bytes did not change the prepared model"
+
+ownerVerticalDiagnostics ::
+     [AcquiredSource]
+  -> ModelOwnerSource document
+  -> Resolution.SelectedArchiMateProfile profile
+  -> Closure.ProfileAssessmentUniverse profile document
+  -> Either String [Diagnostic]
+ownerVerticalDiagnostics supplements modelSource selected universe =
+  let activation = profileActivationDiagnostics modelSource selected universe
+   in Notation.foldStageResult
+        (const (Left "model Notation failed"))
+        (\conformant ->
+           let assessment = Projection.assessSelectedView conformant
+            in Projection.foldProfileProjectionAssessment
+                 (const (Left "model Profile contract failed"))
+                 (const (Left "model Profile failed"))
+                 (ownerVerticalProjection
+                    supplements
+                    modelSource
+                    activation
+                    selected
+                    universe
+                    assessment)
+                 assessment)
+        (Notation.notationConformance
+           (Notation.assessArchiMateNotation universe))
+
+ownerVerticalProjection ::
+     [AcquiredSource]
+  -> ModelOwnerSource document
+  -> [Diagnostic]
+  -> Resolution.SelectedArchiMateProfile profile
+  -> Closure.ProfileAssessmentUniverse profile document
+  -> Projection.ProfileProjectionAssessment profile document
+  -> Projection.ProfileProjection profile document
+  -> Either String [Diagnostic]
+ownerVerticalProjection supplements modelSource activation selected universe assessment projection =
+  foldProfileAssessmentDiagnostics
+    (const (Left "model Profile owner contract failed"))
+    (\profileDiagnostics ->
+       withModelStructureAssessment
+         modelSource
+         projection
+         (const (Left "model identity index failed"))
+         (const (Left "model selected scope failed"))
+         (const (Left "model Structure input failed"))
+         (\scopedSource structureAssessment ->
+            Structure.foldStructureAssessment
+              (\evidence ->
+                 Right
+                   (activation
+                      <> profileDiagnostics
+                      <> map
+                           (structureEvidenceDiagnostic scopedSource)
+                           (NonEmpty.toList evidence)))
+              (\graph ->
+                 withSupplementalOwnerBinding
+                   supplements
+                   graph
+                   (const (Left "supplemental provenance failed"))
+                   (const (Left "supplemental input failed"))
+                   (\binding ->
+                      Right
+                        (activation
+                           <> profileDiagnostics
+                           <> foldSupplementalOwnerBinding
+                                (\_ evidence ->
+                                   map
+                                     (bindingEvidenceDiagnostic binding)
+                                     evidence)
+                                binding)))
+              structureAssessment))
+    modelSource
+    selected
+    universe
+    assessment
+
+acquireFixture :: SourceRole -> Natural -> Text -> FilePath -> IO AcquiredSource
+acquireFixture role ordinal referenceText fileName = do
+  sourceReference <- reference referenceText
+  input <-
+    requireRight (fileInput sourceReference ("tst" </> "fixtures" </> fileName))
+  result <- acquireSource role (sourceOrdinal ordinal) input
+  case result of
+    Left _ -> assertFailure "fixture acquisition failed" >> fail "unreachable"
+    Right acquired -> pure acquired
 
 adapterSelectionCases :: Assertion
 adapterSelectionCases = do
@@ -261,21 +744,23 @@ viewCases = do
     cases
 
 data RuntimeEnvironment =
-  RuntimeEnvironment !AdapterCollection !ProfileInventory !AcquiredSource
+  RuntimeEnvironment !AdapterCollection !ProfileInventory !AcquiredModelSource
 
 runtimeEnvironment ::
      AdapterCollection
   -> ProfileInventory
   -> AcquiredSource
   -> RuntimeEnvironment
-runtimeEnvironment = RuntimeEnvironment
+runtimeEnvironment adapters profileInventory model =
+  RuntimeEnvironment adapters profileInventory (AcquiredModelSource model)
 
 acceptedEnvironment :: Draft.ProfileDraft -> IO RuntimeEnvironment
 acceptedEnvironment draft = do
   adapter <- simpleAdapter "amx" "archimate-3.2" True draft
   adapters <- collection [adapter]
   profileInventory <- profiles
-  RuntimeEnvironment adapters profileInventory <$> acquiredModel
+  RuntimeEnvironment adapters profileInventory . AcquiredModelSource
+    <$> acquiredModel
 
 runPrefix ::
      RuntimeEnvironment
@@ -290,7 +775,7 @@ runPrefix (RuntimeEnvironment adapters profileInventory model) requestedAdapter 
     request
     model
     (Left . observeFailure)
-    (\selected resolved _ selectedView _ inputs ->
+    (\selected resolved _ _ _ selectedView _ inputs ->
        Right
          (SuccessfulPrefix
             (adapterIdText
@@ -316,7 +801,7 @@ assertTerminatingFailure (RuntimeEnvironment adapters profileInventory model) re
       request
       model
       (pure . Left . observeFailure)
-      (\_ _ _ _ _ _ -> do
+      (\_ _ _ _ _ _ _ _ -> do
          modifyIORef' completions (+ 1)
          pure (Right (SuccessfulPrefix "unexpected" "unexpected" 0 TraceInputs)))
   actual @?= Left expected
@@ -425,6 +910,48 @@ simpleAdapter identifier notation matches draft = do
                then recognitionMatch
                else noRecognitionMatch))
          (const (decodedDraft draft)))
+
+ownerVerticalAdapter :: IO Adapter
+ownerVerticalAdapter = do
+  descriptor <- adapterDescriptor "amx" "archimate-3.2"
+  definition <- nativeRuleSpec "decode.failed"
+  compileCompleteAdapter descriptor [definition] $ \rules -> do
+    rule <- resolveNativeRule rules definition decodeRule
+    pure
+      (adapterBehavior
+         (\bytes ->
+            case decodeOwnerVerticalDraft bytes of
+              Nothing -> noRecognitionMatch
+              Just _ -> recognitionMatch)
+         (\bytes ->
+            case decodeOwnerVerticalDraft bytes of
+              Nothing ->
+                decodeFailure
+                  (decodeDiagnostic rule (unlocatedOccurrence :| []) :| [])
+              Just draft -> decodedDraft draft))
+
+decodeOwnerVerticalDraft :: ByteString -> Maybe Draft.ProfileDraft
+decodeOwnerVerticalDraft bytes =
+  case traverse splitOwnerModelField (ByteString.lines bytes) of
+    Just [("profile", profile), ("view", viewIdentity), ("name", viewName)] ->
+      Just
+        (modelDraft
+           [profileProperty [scalar (decodeOwnerModelText profile)]]
+           [ view
+               (decodeOwnerModelText viewIdentity)
+               (decodeOwnerModelText viewName)
+           ])
+    _ -> Nothing
+
+splitOwnerModelField :: ByteString -> Maybe (ByteString, ByteString)
+splitOwnerModelField line =
+  case ByteString.break (== '=') line of
+    (_, value)
+      | ByteString.null value -> Nothing
+    (key, value) -> Just (key, ByteString.drop 1 value)
+
+decodeOwnerModelText :: ByteString -> Text
+decodeOwnerModelText = Text.pack . ByteString.unpack
 
 recognitionFailureAdapter :: Text -> IO Adapter
 recognitionFailureAdapter identifier = do

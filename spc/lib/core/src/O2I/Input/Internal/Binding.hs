@@ -5,7 +5,7 @@ module O2I.Input.Internal.Binding
   ( bindSupplementalInputs
   ) where
 
-import Data.List (sort)
+import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
@@ -52,16 +52,41 @@ import O2I.Structure.Internal (WellFormedGraph(..))
 -- evidence-key order. The bound value retains exact unresolved sites so each
 -- dependent semantic rule can suppress only the prerequisites it requires.
 bindSupplementalInputs ::
-     WellFormedGraph scope -> SupplementalInputSet -> SupplementalBinding scope
+     WellFormedGraph scope
+  -> SupplementalInputSet provenance
+  -> SupplementalBinding scope provenance
 bindSupplementalInputs graph inputs@(SupplementalInputSet payloads) =
   SupplementalBinding
-    { supplementalBindingInputs = BoundSupplementalInputs inputs unresolvedSites
+    { supplementalBindingInputs =
+        BoundSupplementalInputs
+          (forgetSupplementalInputSetProvenance inputs)
+          unresolvedSites
     , supplementalBindingDefects = defects
     }
   where
     kinds = identityKinds graph
-    defects = sort (concatMap (bindingDefects graph kinds) payloads)
-    unresolvedSites = Set.fromList (mapMaybe defectIdentitySite defects)
+    defects =
+      sortOn
+        snd
+        (concatMap
+           (\input ->
+              map
+                (\defect -> (supplementalInputProvenance input, defect))
+                (bindingDefects graph kinds input))
+           payloads)
+    unresolvedSites = Set.fromList (mapMaybe (defectIdentitySite . snd) defects)
+
+forgetSupplementalInputSetProvenance ::
+     SupplementalInputSet provenance -> SupplementalInputSet ()
+forgetSupplementalInputSetProvenance (SupplementalInputSet inputs) =
+  SupplementalInputSet (map forget inputs)
+  where
+    forget input =
+      case input of
+        StrategyFormulationSupplement _ ordinal formulation ->
+          StrategyFormulationSupplement () ordinal formulation
+        CollectiveFitSupplement _ ordinal collective ->
+          CollectiveFitSupplement () ordinal collective
 
 defectIdentitySite :: SupplementalInputDefect -> Maybe SupplementalIdentitySite
 defectIdentitySite defect =
@@ -82,11 +107,11 @@ defectIdentitySite defect =
 bindingDefects ::
      WellFormedGraph scope
   -> Map OccurrenceIdentity SelectedIdentityKind
-  -> SupplementalInput
+  -> SupplementalInput provenance
   -> [SupplementalInputDefect]
 bindingDefects graph kinds input =
   case input of
-    StrategyFormulationSupplement ordinal formulation ->
+    StrategyFormulationSupplement _ ordinal formulation ->
       concat
         [ resolveSite
             graph
@@ -131,7 +156,7 @@ bindingDefects graph kinds input =
             strategyKeyResultKind
             (formulationKeyResults formulation)
         ]
-    CollectiveFitSupplement ordinal collective ->
+    CollectiveFitSupplement _ ordinal collective ->
       concat
         [ resolveSite
             graph

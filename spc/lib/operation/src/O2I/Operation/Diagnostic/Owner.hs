@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE RankNTypes #-}
 
 -- | Convert scoped owner evidence into canonical Operation diagnostics.
 --
@@ -8,6 +9,7 @@
 module O2I.Operation.Diagnostic.Owner
   ( profileActivationDiagnostics
   , foldProfileAssessmentDiagnostics
+  , withModelStructureAssessment
   , structureEvidenceDiagnostic
   , bindingEvidenceDiagnostic
   , SemanticEvidenceConversion
@@ -24,8 +26,20 @@ import qualified O2I.ArchiMate.Profile.Draft as Draft
 import O2I.ArchiMate.Profile.Notation (CanonicalOccurrence)
 import qualified O2I.ArchiMate.Profile.Projection as Profile
 import qualified O2I.ArchiMate.Profile.Resolution as Profile
-import O2I.Core.Identity (OccurrenceIdentity, SelectedViewScope)
+import O2I.Core.Identity
+  ( IdentityIndexDefect
+  , OccurrenceIdentity
+  , SelectedViewScopeDefect
+  )
+import O2I.Operation.Acquisition (acquiredSourceIdentity)
 import qualified O2I.Operation.Diagnostic.Internal as Internal
+import O2I.Operation.Diagnostic.Owner.Source.Internal
+  ( ModelOwnerSource(..)
+  , ScopedModelOwnerSource(..)
+  , SupplementalOwnerBinding(..)
+  , SupplementalOwnerBindingEvidence(..)
+  , SupplementalOwnerOccurrence(..)
+  )
 import O2I.Operation.Provenance (SourceIdentity)
 import qualified O2I.Semantics as Semantics
 import qualified O2I.Semantics.Input as Binding
@@ -33,11 +47,11 @@ import qualified O2I.Structure as Structure
 
 -- | Convert every positive activation fact in one exact Profile universe.
 profileActivationDiagnostics ::
-     SourceIdentity
+     ModelOwnerSource document
   -> Profile.SelectedArchiMateProfile profile
   -> Closure.ProfileAssessmentUniverse profile document
   -> [Internal.Diagnostic]
-profileActivationDiagnostics source selected universe =
+profileActivationDiagnostics (ModelOwnerSource source) selected universe =
   concatMap
     activationDiagnostics
     (Closure.assessmentActivationProvenance universe)
@@ -62,12 +76,12 @@ profileActivationDiagnostics source selected universe =
 foldProfileAssessmentDiagnostics ::
      (NonEmpty (Profile.ProfileContractEvidence profile document) -> result)
   -> ([Internal.Diagnostic] -> result)
-  -> SourceIdentity
+  -> ModelOwnerSource document
   -> Profile.SelectedArchiMateProfile profile
   -> Closure.ProfileAssessmentUniverse profile document
   -> Profile.ProfileProjectionAssessment profile document
   -> result
-foldProfileAssessmentDiagnostics contractFailure consume source selected _ assessment =
+foldProfileAssessmentDiagnostics contractFailure consume (ModelOwnerSource source) selected _ assessment =
   Profile.foldProfileProjectionAssessment
     contractFailure
     (consume . map (profileDefectDiagnostic source reference) . NonEmpty.toList)
@@ -179,13 +193,30 @@ profileEvidenceOccurrences source =
     (\occurrence related ->
        canonical source occurrence :| map (canonical source) related)
 
--- | Convert one scoped Structure defect while retaining its selected View.
+-- | Derive the model-source witness for the fresh Structure scope.
+withModelStructureAssessment ::
+     ModelOwnerSource document
+  -> Profile.ProfileProjection profile document
+  -> (NonEmpty IdentityIndexDefect -> result)
+  -> (NonEmpty SelectedViewScopeDefect -> result)
+  -> (NonEmpty Structure.StructureInputDefect -> result)
+  -> (forall scope. ScopedModelOwnerSource scope -> Structure.StructureAssessment
+                                                      scope -> result)
+  -> result
+withModelStructureAssessment (ModelOwnerSource source) projection identityFailure scopeFailure structureFailure consume =
+  Profile.withProfileStructureAssessment
+    projection
+    identityFailure
+    scopeFailure
+    structureFailure
+    (\assessment -> consume (ScopedModelOwnerSource source) assessment)
+
+-- | Convert one scoped Structure defect while retaining its model source.
 structureEvidenceDiagnostic ::
-     SourceIdentity
-  -> SelectedViewScope scope
+     ScopedModelOwnerSource scope
   -> Structure.StructureEvidence scope
   -> Internal.Diagnostic
-structureEvidenceDiagnostic source _ evidence =
+structureEvidenceDiagnostic (ScopedModelOwnerSource source) evidence =
   coreDiagnostic
     Internal.ErrorSeverity
     (Internal.StructureOwnerEvidenceProvenance
@@ -295,21 +326,21 @@ structureEvidenceDiagnostic source _ evidence =
 
 -- | Convert one graph-bound supplemental diagnostic at the same scope.
 bindingEvidenceDiagnostic ::
-     SourceIdentity
-  -> Binding.SupplementalBinding scope
-  -> Binding.SupplementalBindingEvidence scope
+     SupplementalOwnerBinding scope inputs
+  -> SupplementalOwnerBindingEvidence scope inputs
   -> Internal.Diagnostic
-bindingEvidenceDiagnostic source _ evidence =
+bindingEvidenceDiagnostic (SupplementalOwnerBinding _) (SupplementalOwnerBindingEvidence evidence) =
   coreDiagnostic
     Internal.ErrorSeverity
     (Internal.BindingOwnerEvidenceProvenance
        (Binding.supplementalBindingEvidenceRule evidence))
-    (Binding.foldSupplementalBindingEvidence bindingOccurrences evidence)
+    (Binding.foldSupplementalBindingEvidence
+       (bindingOccurrences . supplementalSourceIdentity)
+       evidence)
   where
-    sourceOnly = Internal.SourceDiagnosticOccurrence source :| []
-    subject identity =
-      Internal.SubjectDiagnosticOccurrence source identity :| []
-    bindingOccurrences =
+    supplementalSourceIdentity (SupplementalOwnerOccurrence acquired) =
+      acquiredSourceIdentity acquired
+    bindingOccurrences source =
       Binding.SupplementalInputDefectEliminator
         { Binding.eliminateSupplementalInvalidUtf8 = const sourceOnly
         , Binding.eliminateSupplementalInvalidJsonSyntax = const sourceOnly
@@ -340,6 +371,10 @@ bindingEvidenceDiagnostic source _ evidence =
         , Binding.eliminateSupplementalModelIdentityContainsNul =
             const sourceOnly
         }
+      where
+        sourceOnly = Internal.SourceDiagnosticOccurrence source :| []
+        subject identity =
+          Internal.SubjectDiagnosticOccurrence source identity :| []
 
 -- | Closed result of converting one scoped semantic evidence value.
 data SemanticEvidenceConversion
@@ -359,11 +394,11 @@ foldSemanticEvidenceConversion missing converted result =
 
 -- | Convert one semantic diagnostic retained by the same assessment scope.
 semanticsEvidenceDiagnostic ::
-     SourceIdentity
+     ScopedModelOwnerSource scope
   -> Semantics.SemanticAssessment scope
   -> Semantics.SemanticDiagnosticEvidence scope
   -> SemanticEvidenceConversion
-semanticsEvidenceDiagnostic source _ evidence =
+semanticsEvidenceDiagnostic (ScopedModelOwnerSource source) _ evidence =
   case values of
     first:remaining ->
       SemanticEvidenceConverted

@@ -197,6 +197,11 @@ CONTRACTS = (
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
+                "BindingCrossProvenanceEvidence.hs",
+                (("GHC-25897", 2),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
                 "SemanticsOpaqueConstructors.hs",
                 (("GHC-01928", 3), ("GHC-88464", 1)),
             ),
@@ -345,6 +350,36 @@ CONTRACTS = (
                 "spc/lib/operation/tst/api/compile-fail/"
                 "OwnerCoreCrossGeneration.hs",
                 (("GHC-25897", 3),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "OwnerSupplementalSourceCrossGeneration.hs",
+                (("GHC-25897", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "OwnerFreeSourceIdentity.hs",
+                (("GHC-83865", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "OwnerSourceCoercible.hs",
+                (("GHC-25897", 8),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "OwnerSourceOpaqueConstructors.hs",
+                (("GHC-01928", 5),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "OwnerSourceHiddenInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "AcquiredModelSourceOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
             ),
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/"

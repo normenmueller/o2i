@@ -6,6 +6,7 @@ module O2I.Operation.Acquisition.Internal
   , standardInput
   , AcquisitionFailure(..)
   , AcquiredSource(..)
+  , AcquiredModelSource(..)
   , acquireWith
   ) where
 
@@ -48,6 +49,11 @@ data AcquiredSource = AcquiredSource
   { acquiredIdentity :: !SourceIdentity
   , acquiredBytes :: !ByteString
   } deriving (Eq, Show)
+
+-- | Acquired source whose immutable role is exactly model.
+newtype AcquiredModelSource =
+  AcquiredModelSource AcquiredSource
+  deriving (Eq, Show)
 
 -- | Acquire through injected readers; used by the public IO boundary and
 -- focused tests of exactly-once behavior.

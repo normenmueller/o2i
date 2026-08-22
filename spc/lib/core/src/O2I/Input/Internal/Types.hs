@@ -13,6 +13,7 @@ module O2I.Input.Internal.Types
   , CollectiveFitInput(..)
   , SupplementalInput(..)
   , supplementalInputOrdinalOf
+  , supplementalInputProvenance
   , supplementalInputType
   , supplementalInputSubject
   , SupplementalInputSet(..)
@@ -132,55 +133,71 @@ data CollectiveFitInput = CollectiveFitInput
   } deriving (Eq, Ord, Show)
 
 -- | One individually decoded and canonicalized supplemental payload.
-data SupplementalInput
+data SupplementalInput provenance
   = StrategyFormulationSupplement
+      !provenance
       !SupplementalInputOrdinal
       !StrategyFormulationInput
-  | CollectiveFitSupplement !SupplementalInputOrdinal !CollectiveFitInput
+  | CollectiveFitSupplement
+      !provenance
+      !SupplementalInputOrdinal
+      !CollectiveFitInput
   deriving (Eq, Show)
 
 -- | Project the Operation-assigned input ordinal.
-supplementalInputOrdinalOf :: SupplementalInput -> SupplementalInputOrdinal
+supplementalInputOrdinalOf ::
+     SupplementalInput provenance -> SupplementalInputOrdinal
 supplementalInputOrdinalOf input =
   case input of
-    StrategyFormulationSupplement ordinal _ -> ordinal
-    CollectiveFitSupplement ordinal _ -> ordinal
+    StrategyFormulationSupplement _ ordinal _ -> ordinal
+    CollectiveFitSupplement _ ordinal _ -> ordinal
+
+-- | Project the provenance retained from the exact decoded source.
+supplementalInputProvenance :: SupplementalInput provenance -> provenance
+supplementalInputProvenance input =
+  case input of
+    StrategyFormulationSupplement provenance _ _ -> provenance
+    CollectiveFitSupplement provenance _ _ -> provenance
 
 -- | Project the closed payload type.
-supplementalInputType :: SupplementalInput -> SupplementalPayloadType
+supplementalInputType :: SupplementalInput provenance -> SupplementalPayloadType
 supplementalInputType input =
   case input of
-    StrategyFormulationSupplement _ _ -> StrategyFormulationPayload
-    CollectiveFitSupplement _ _ -> CollectiveFitPayload
+    StrategyFormulationSupplement _ _ _ -> StrategyFormulationPayload
+    CollectiveFitSupplement _ _ _ -> CollectiveFitPayload
 
 -- | Project the exact subject identity used by set uniqueness and binding.
-supplementalInputSubject :: SupplementalInput -> ModelIdentity
+supplementalInputSubject :: SupplementalInput provenance -> ModelIdentity
 supplementalInputSubject input =
   case input of
-    StrategyFormulationSupplement _ formulation ->
+    StrategyFormulationSupplement _ _ formulation ->
       formulationStrategy formulation
-    CollectiveFitSupplement _ collective -> collectiveClaim collective
+    CollectiveFitSupplement _ _ collective -> collectiveClaim collective
 
 -- | Canonically ordered payloads proven unique by type and subject identity.
-newtype SupplementalInputSet =
-  SupplementalInputSet [SupplementalInput]
+newtype SupplementalInputSet provenance =
+  SupplementalInputSet [SupplementalInput provenance]
   deriving (Eq, Show)
+
+type role SupplementalInput nominal
+
+type role SupplementalInputSet nominal
 
 type role BoundSupplementalInputs nominal
 
-type role SupplementalBinding nominal
+type role SupplementalBinding nominal nominal
 
 -- | Complete identity-binding outcome for one selected-View graph.
-data SupplementalBinding scope = SupplementalBinding
+data SupplementalBinding scope provenance = SupplementalBinding
     -- | Inputs retained with identity-resolution state.
   { supplementalBindingInputs :: !(BoundSupplementalInputs scope)
     -- | Deterministically ordered identity-binding defects.
-  , supplementalBindingDefects :: ![SupplementalInputDefect]
+  , supplementalBindingDefects :: ![(provenance, SupplementalInputDefect)]
   } deriving (Eq, Show)
 
 -- | Opaque payload set with exact resolution state for every identity site.
 data BoundSupplementalInputs scope = BoundSupplementalInputs
-  { boundSupplementalInputSet :: !SupplementalInputSet
+  { boundSupplementalInputSet :: !(SupplementalInputSet ())
   , unresolvedSupplementalIdentitySites :: !(Set SupplementalIdentitySite)
   } deriving (Eq, Show)
 

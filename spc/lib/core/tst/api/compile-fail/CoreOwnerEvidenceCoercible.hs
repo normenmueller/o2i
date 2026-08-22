@@ -14,12 +14,13 @@ coerceStructureAssessment ::
 coerceStructureAssessment = coerce
 
 coerceSupplementalBinding ::
-     SupplementalBinding firstScope -> SupplementalBinding secondScope
+     SupplementalBinding firstScope provenance
+  -> SupplementalBinding secondScope provenance
 coerceSupplementalBinding = coerce
 
 coerceSupplementalBindingEvidence ::
-     SupplementalBindingEvidence firstScope
-  -> SupplementalBindingEvidence secondScope
+     SupplementalBindingEvidence firstScope provenance
+  -> SupplementalBindingEvidence secondScope provenance
 coerceSupplementalBindingEvidence = coerce
 
 coerceSemanticAssessment ::

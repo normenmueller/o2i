@@ -20,7 +20,9 @@ extra-source-files:
   contract/schema/*.json,
   contract/test_compile.py,
   tst/api/compile-pass/*.hs,
-  tst/api/compile-fail/*.hs
+  tst/api/compile-fail/*.hs,
+  tst/fixtures/*.amx,
+  tst/fixtures/*.json
 
 flag werror
   description: Treat compiler warnings as errors during development.
@@ -57,6 +59,7 @@ library
     O2I.Operation.Discovery.View.Machine,
     O2I.Operation.Diagnostic,
     O2I.Operation.Diagnostic.Owner,
+    O2I.Operation.Diagnostic.Owner.Source,
     O2I.Operation.Failure,
     O2I.Operation.Machine,
     O2I.Operation.Preparation,
@@ -71,6 +74,7 @@ library
     O2I.Operation.Adapter.Internal,
     O2I.Operation.Diagnostic.AdapterOwner.Internal,
     O2I.Operation.Diagnostic.Internal,
+    O2I.Operation.Diagnostic.Owner.Source.Internal,
     O2I.Operation.Discovery.Machine.Internal,
     O2I.Operation.Discovery.Profile.Internal,
     O2I.Operation.Discovery.Rule.Internal,
@@ -129,6 +133,8 @@ test-suite o2i-operation-test
     O2I.Operation.Diagnostic.AdapterOwner.Internal,
     O2I.Operation.Diagnostic.Internal,
     O2I.Operation.Diagnostic.Owner,
+    O2I.Operation.Diagnostic.Owner.Source,
+    O2I.Operation.Diagnostic.Owner.Source.Internal,
     O2I.Operation.Discovery.Machine.Internal,
     O2I.Operation.Encoding.Internal,
     O2I.Operation.Failure,

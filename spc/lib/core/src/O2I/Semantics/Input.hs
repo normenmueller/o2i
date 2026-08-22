@@ -120,46 +120,52 @@ import O2I.Input.Internal.Types hiding
 import O2I.Structure (WellFormedGraph)
 
 -- | Opaque binding result nominal in its producing selected-View scope.
-newtype SupplementalBinding scope =
-  SupplementalBinding (Internal.SupplementalBinding scope)
+newtype SupplementalBinding scope provenance =
+  SupplementalBinding (Internal.SupplementalBinding scope provenance)
 
-type role SupplementalBinding nominal
+type role SupplementalBinding nominal nominal
 
 -- | Opaque graph-dependent binding evidence in the producing scope.
-newtype SupplementalBindingEvidence scope =
-  SupplementalBindingEvidence SupplementalInputDefect
+data SupplementalBindingEvidence scope provenance =
+  SupplementalBindingEvidence !provenance !SupplementalInputDefect
 
-type role SupplementalBindingEvidence nominal
+type role SupplementalBindingEvidence nominal nominal
 
 -- | Bind every supplemental identity under one exact selected-View scope.
 bindSupplementalInputs ::
-     WellFormedGraph scope -> SupplementalInputSet -> SupplementalBinding scope
+     WellFormedGraph scope
+  -> SupplementalInputSet provenance
+  -> SupplementalBinding scope provenance
 bindSupplementalInputs graph =
   SupplementalBinding . Binding.bindSupplementalInputs graph
 
 -- | Eliminate only the exact result produced by scoped Binding.
 foldSupplementalBinding ::
-     (BoundSupplementalInputs scope -> [SupplementalBindingEvidence scope] -> result)
-  -> SupplementalBinding scope
+     (BoundSupplementalInputs scope -> [SupplementalBindingEvidence
+                                          scope
+                                          provenance] -> result)
+  -> SupplementalBinding scope provenance
   -> result
 foldSupplementalBinding consume (SupplementalBinding binding) =
   consume
     (Internal.supplementalBindingInputs binding)
-    (SupplementalBindingEvidence <$> Internal.supplementalBindingDefects binding)
+    (map
+       (uncurry SupplementalBindingEvidence)
+       (Internal.supplementalBindingDefects binding))
 
 -- | Project the exact Core rule of scoped Binding evidence.
 supplementalBindingEvidenceRule ::
-     SupplementalBindingEvidence scope -> CoreRuleId
-supplementalBindingEvidenceRule (SupplementalBindingEvidence defect) =
+     SupplementalBindingEvidence scope provenance -> CoreRuleId
+supplementalBindingEvidenceRule (SupplementalBindingEvidence _ defect) =
   Internal.supplementalInputDefectRule defect
 
 -- | Eliminate scoped Binding evidence through its closed exact handlers.
 foldSupplementalBindingEvidence ::
-     SupplementalInputDefectEliminator result
-  -> SupplementalBindingEvidence scope
+     (provenance -> SupplementalInputDefectEliminator result)
+  -> SupplementalBindingEvidence scope provenance
   -> result
-foldSupplementalBindingEvidence eliminator (SupplementalBindingEvidence defect) =
-  Internal.foldSupplementalInputDefect eliminator defect
+foldSupplementalBindingEvidence eliminator (SupplementalBindingEvidence provenance defect) =
+  Internal.foldSupplementalInputDefect (eliminator provenance) defect
 
 -- | Project the exact Core-owned rule identity of one supplemental defect.
 supplementalInputDefectRule :: SupplementalInputDefect -> CoreRuleId

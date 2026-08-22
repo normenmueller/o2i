@@ -19,6 +19,7 @@ tests =
     "acquisition"
     [ testCase "file bytes are acquired exactly once" fileAcquiredOnceTest
     , testCase "standard input is acquired exactly once" stdinAcquiredOnceTest
+    , testCase "admits only an acquired model role to preparation" modelRoleTest
     , testCase "file paths are validated explicitly" filePathValidationTest
     , testCase
         "IO failures preserve source and exception"
@@ -61,6 +62,30 @@ stdinAcquiredOnceTest = do
   acquired <- requireRight result
   readIORef calls >>= (@?= 1)
   acquiredSourceBytes acquired @?= exactBytes
+
+modelRoleTest :: Assertion
+modelRoleTest = do
+  input <- requireRight (fileInput reference "model.archimate")
+  model <-
+    requireRight
+      =<< acquireWith
+            (const (pure exactBytes))
+            (pure exactBytes)
+            ModelRole
+            (sourceOrdinal 0)
+            input
+  supplemental <-
+    requireRight
+      =<< acquireWith
+            (const (pure exactBytes))
+            (pure exactBytes)
+            SupplementalRole
+            (sourceOrdinal 0)
+            input
+  case acquiredModelSource model of
+    Nothing -> assertFailure "model source was rejected"
+    Just _ -> pure ()
+  acquiredModelSource supplemental @?= Nothing
 
 filePathValidationTest :: Assertion
 filePathValidationTest = do

@@ -15,15 +15,16 @@ import O2I.Input.Internal.Types
 -- Accepted inputs are retained in ordinal order. No identity binding occurs at
 -- this phase.
 assessSupplementalInputSet ::
-     [SupplementalInput]
-  -> Either (NonEmpty SupplementalInputDefect) SupplementalInputSet
+     [SupplementalInput provenance]
+  -> Either (NonEmpty SupplementalInputDefect) (SupplementalInputSet provenance)
 assessSupplementalInputSet inputs =
   case duplicateSubjectDefects inputs of
     defect:defects -> Left (defect :| defects)
     [] ->
       Right (SupplementalInputSet (sortOn supplementalInputOrdinalOf inputs))
 
-duplicateSubjectDefects :: [SupplementalInput] -> [SupplementalInputDefect]
+duplicateSubjectDefects ::
+     [SupplementalInput provenance] -> [SupplementalInputDefect]
 duplicateSubjectDefects inputs =
   [ SupplementalSubjectCardinalityInvalidDefect
     payloadType

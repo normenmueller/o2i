@@ -105,18 +105,21 @@ structureCorpusRuleIds =
 
 -- | Consume every real supplemental-binding evidence value from the corpus.
 foldBindingCorpusEvidence ::
-     (forall scope. SupplementalBindingEvidence scope -> result)
+     provenance
+  -> (forall scope. SupplementalBindingEvidence scope provenance -> result)
   -> CoreConformanceResult result
-foldBindingCorpusEvidence consume =
-  foldBindingCorpusOwnerEvidence (\_ evidence -> consume evidence)
+foldBindingCorpusEvidence provenance consume =
+  foldBindingCorpusOwnerEvidence provenance (\_ evidence -> consume evidence)
 
 -- | Consume each Binding artifact together with its own scoped evidence.
 foldBindingCorpusOwnerEvidence ::
-     (forall scope. SupplementalBinding scope -> SupplementalBindingEvidence
-                                                   scope -> result)
+     provenance
+  -> (forall scope. SupplementalBinding scope provenance -> SupplementalBindingEvidence
+                                                              scope
+                                                              provenance -> result)
   -> CoreConformanceResult result
-foldBindingCorpusOwnerEvidence consume =
-  case buildBindingSources of
+foldBindingCorpusOwnerEvidence provenance consume =
+  case buildBindingSources provenance of
     Left failure -> CoreConformanceFailed (failure :| [])
     Right sources ->
       case traverse (runBindingSource consume) sources of
@@ -125,7 +128,8 @@ foldBindingCorpusOwnerEvidence consume =
 
 -- | Binding rule identities observed through their public evidence fold.
 bindingCorpusRuleIds :: CoreConformanceResult CoreRuleId
-bindingCorpusRuleIds = foldBindingCorpusEvidence supplementalBindingEvidenceRule
+bindingCorpusRuleIds =
+  foldBindingCorpusEvidence () supplementalBindingEvidenceRule
 
 -- | Consume every real semantic diagnostic evidence value from the corpus.
 foldSemanticsCorpusEvidence ::
@@ -173,6 +177,7 @@ runSemanticsSource consume source = do
                   traverse
                     (\(ordinal, payload) ->
                        case decodeSupplementalInput
+                              ()
                               (supplementalInputOrdinal ordinal)
                               payload of
                          Left defects ->
@@ -199,23 +204,31 @@ runSemanticsSource consume source = do
                   (bindSupplementalInputs graph inputSet))
              assessment)
 
-data BindingSource = BindingSource
+data BindingSource provenance = BindingSource
   { bindingSourceIndex :: !ModelIdentityIndex
   , bindingSourceSelected :: ![OccurrenceIdentity]
   , bindingSourceProjection :: !StructureProjection
-  , bindingSourceInput :: !SupplementalInputSet
+  , bindingSourceInput :: !(SupplementalInputSet provenance)
   }
 
-buildBindingSources :: Either CoreConformanceFailure [BindingSource]
-buildBindingSources = do
+buildBindingSources ::
+     provenance -> Either CoreConformanceFailure [BindingSource provenance]
+buildBindingSources provenance = do
   contextCategory <- requireContract "Context" lookupCoreCarrierCategory
   needType <- requireContract "Need" lookupCoreO2IType
-  unknown <- bindingSource [] [] (structureProjection [] [] [] [] []) "unknown"
+  unknown <-
+    bindingSource
+      provenance
+      []
+      []
+      (structureProjection [] [] [] [] [])
+      "unknown"
   ambiguousA <- requireOccurrence "ambiguous-a"
   ambiguousB <- requireOccurrence "ambiguous-b"
   ambiguousIdentity <- requireModelIdentity "ambiguous"
   ambiguous <-
     bindingSource
+      provenance
       [ modelOccurrence ambiguousA ambiguousIdentity
       , modelOccurrence ambiguousB ambiguousIdentity
       ]
@@ -226,6 +239,7 @@ buildBindingSources = do
   outsideIdentity <- requireModelIdentity "outside"
   outside <-
     bindingSource
+      provenance
       [modelOccurrence outsideOccurrence outsideIdentity]
       []
       (structureProjection [] [] [] [] [])
@@ -234,6 +248,7 @@ buildBindingSources = do
   wrongIdentity <- requireModelIdentity "wrong"
   wrong <-
     bindingSource
+      provenance
       [modelOccurrence wrongOccurrence wrongIdentity]
       [wrongOccurrence]
       (structureProjection
@@ -246,15 +261,17 @@ buildBindingSources = do
   Right [unknown, ambiguous, wrong, outside]
 
 bindingSource ::
-     [ModelOccurrence]
+     provenance
+  -> [ModelOccurrence]
   -> [OccurrenceIdentity]
   -> StructureProjection
   -> Text
-  -> Either CoreConformanceFailure BindingSource
-bindingSource occurrences selected projection identityValue = do
+  -> Either CoreConformanceFailure (BindingSource provenance)
+bindingSource provenance occurrences selected projection identityValue = do
   index <- requireIndex occurrences
   input <-
     case decodeSupplementalInput
+           provenance
            (supplementalInputOrdinal 0)
            (strategyPayload identityValue) of
       Left defects -> Left (InvalidSupplementalSource defects)
@@ -266,9 +283,10 @@ bindingSource occurrences selected projection identityValue = do
   Right (BindingSource index selected projection inputSet)
 
 runBindingSource ::
-     (forall scope. SupplementalBinding scope -> SupplementalBindingEvidence
-                                                   scope -> result)
-  -> BindingSource
+     (forall scope. SupplementalBinding scope provenance -> SupplementalBindingEvidence
+                                                              scope
+                                                              provenance -> result)
+  -> BindingSource provenance
   -> Either CoreConformanceFailure [result]
 runBindingSource consume source =
   runWithStructureScope

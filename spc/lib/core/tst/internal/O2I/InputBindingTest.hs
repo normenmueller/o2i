@@ -200,11 +200,12 @@ siteLocalBinding :: IO ()
 siteLocalBinding =
   runBinding [] inputs $ \binding -> do
     supplementalBindingDefects binding
-      @?= [ identityDefect
-              SupplementalIdentityUnknownDefect
-              strategyOrdinal
-              "/diagnosis"
-              "unknown-diagnosis"
+      @?= [ ( ()
+            , identityDefect
+                SupplementalIdentityUnknownDefect
+                strategyOrdinal
+                "/diagnosis"
+                "unknown-diagnosis")
           ]
     let bound = supplementalBindingInputs binding
     supplementalIdentitySiteResolved
@@ -226,13 +227,14 @@ siteLocalBinding =
           {formulationDiagnosis = identity "unknown-diagnosis"}
 
 defectsFor ::
-     [ModelOccurrence] -> SupplementalInputSet -> [SupplementalInputDefect]
-defectsFor extra inputs = runBinding extra inputs supplementalBindingDefects
+     [ModelOccurrence] -> SupplementalInputSet () -> [SupplementalInputDefect]
+defectsFor extra inputs =
+  runBinding extra inputs (map snd . supplementalBindingDefects)
 
 runBinding ::
      [ModelOccurrence]
-  -> SupplementalInputSet
-  -> (forall scope. SupplementalBinding scope -> result)
+  -> SupplementalInputSet ()
+  -> (forall scope. SupplementalBinding scope () -> result)
   -> result
 runBinding extra inputs inspect =
   case buildModelIdentityIndex (modelOccurrences ++ extra) of
@@ -260,21 +262,21 @@ identityDefect ::
 identityDefect constructor ordinal pointer identifier =
   constructor ordinal pointer (identity identifier)
 
-completeSet :: SupplementalInputSet
+completeSet :: SupplementalInputSet ()
 completeSet =
   SupplementalInputSet
-    [ StrategyFormulationSupplement strategyOrdinal strategyFormulation
-    , CollectiveFitSupplement collectiveOrdinal collectiveFit
+    [ StrategyFormulationSupplement () strategyOrdinal strategyFormulation
+    , CollectiveFitSupplement () collectiveOrdinal collectiveFit
     ]
 
-strategySet :: StrategyFormulationInput -> SupplementalInputSet
+strategySet :: StrategyFormulationInput -> SupplementalInputSet ()
 strategySet formulation =
   SupplementalInputSet
-    [StrategyFormulationSupplement strategyOrdinal formulation]
+    [StrategyFormulationSupplement () strategyOrdinal formulation]
 
-collectiveSet :: CollectiveFitInput -> SupplementalInputSet
+collectiveSet :: CollectiveFitInput -> SupplementalInputSet ()
 collectiveSet collective =
-  SupplementalInputSet [CollectiveFitSupplement collectiveOrdinal collective]
+  SupplementalInputSet [CollectiveFitSupplement () collectiveOrdinal collective]
 
 strategyOrdinal, collectiveOrdinal :: SupplementalInputOrdinal
 strategyOrdinal = SupplementalInputOrdinal 0

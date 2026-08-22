@@ -119,7 +119,7 @@ invalidUtf8 = decodeUtf8Json (ByteString.pack [0xc3, 0x28]) @?= Left InvalidUtf8
 
 phasePrecedence :: IO ()
 phasePrecedence = do
-  decodeSupplementalInput ordinal (ByteString.pack [0xc3, 0x28])
+  decodeSupplementalInput () ordinal (ByteString.pack [0xc3, 0x28])
     @?= Left (SupplementalInvalidUtf8Defect ordinal :| [])
   decode ordinal "{"
     @?= Left (SupplementalInvalidJsonSyntaxDefect ordinal :| [])
@@ -602,6 +602,7 @@ realDecodeAndSetDefects = do
     [ selectDefect
         SupplementalInvalidUtf8
         (decodeSupplementalInput
+           ()
            (SupplementalInputOrdinal 0)
            (ByteString.pack [0xc3, 0x28]))
     , selectDefect
@@ -866,8 +867,8 @@ encode = TextEncoding.encodeUtf8
 decode ::
      SupplementalInputOrdinal
   -> Text
-  -> Either (NonEmpty SupplementalInputDefect) SupplementalInput
-decode ordinal = decodeSupplementalInput ordinal . encode
+  -> Either (NonEmpty SupplementalInputDefect) (SupplementalInput ())
+decode ordinal = decodeSupplementalInput () ordinal . encode
 
 accepted :: Either (NonEmpty SupplementalInputDefect) value -> IO value
 accepted result =

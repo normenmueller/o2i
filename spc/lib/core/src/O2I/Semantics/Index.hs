@@ -152,7 +152,7 @@ buildSemanticIndex graph boundInputs@(BoundSupplementalInputs inputSet _) =
     , indexStrategyInputs =
         Map.fromList
           [ (formulationStrategy formulation, (ordinal, formulation))
-          | StrategyFormulationSupplement ordinal formulation <- inputs
+          | StrategyFormulationSupplement _ ordinal formulation <- inputs
           , supplementalIdentitySiteResolved
               boundInputs
               ordinal
@@ -162,7 +162,7 @@ buildSemanticIndex graph boundInputs@(BoundSupplementalInputs inputSet _) =
     , indexCollectiveInputs =
         Map.fromList
           [ (collectiveClaim collective, (ordinal, collective))
-          | CollectiveFitSupplement ordinal collective <- inputs
+          | CollectiveFitSupplement _ ordinal collective <- inputs
           , supplementalIdentitySiteResolved
               boundInputs
               ordinal

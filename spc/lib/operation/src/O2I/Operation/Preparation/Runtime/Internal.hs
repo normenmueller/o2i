@@ -14,8 +14,16 @@ import O2I.ArchiMate.Profile.Notation
   , assessMarkerEvidence
   , withCanonicalDocument
   )
-import O2I.ArchiMate.Profile.Resolution (withSelectedArchiMateProfile)
-import O2I.Operation.Acquisition (AcquiredSource, acquiredSourceBytes)
+import O2I.ArchiMate.Profile.Resolution
+  ( SelectedArchiMateProfile
+  , withSelectedArchiMateProfile
+  )
+import O2I.Operation.Acquisition
+  ( AcquiredModelSource
+  , acquiredSourceBytes
+  , acquiredSourceIdentity
+  )
+import O2I.Operation.Acquisition.Internal (AcquiredModelSource(..))
 import O2I.Operation.Adapter
   ( AdapterCollection
   , AdapterId
@@ -27,6 +35,8 @@ import O2I.Operation.Adapter
   , selectAdapter
   , selectedAdapterDescriptor
   )
+import O2I.Operation.Diagnostic.Owner.Source (ModelOwnerSource)
+import O2I.Operation.Diagnostic.Owner.Source.Internal (ModelOwnerSource(..))
 import O2I.Operation.Failure.Internal (PreparationFailure(..))
 import O2I.Operation.Profile
   ( ProfileInventory
@@ -62,15 +72,17 @@ withPreparedSelectedView ::
   -> ProfileInventory
   -> Maybe AdapterId
   -> RequestedContract
-  -> AcquiredSource
+  -> AcquiredModelSource
   -> (PreparationFailure -> result)
   -> (forall document profile. SelectedAdapter -> ResolvedProfile -> CanonicalDocument
-                                                                       document -> SelectedView
-                                                                                     document -> ProfileAssessmentUniverse
-                                                                                                   profile
-                                                                                                   document -> CapabilityInputReferences -> result)
+                                                                       document -> ModelOwnerSource
+                                                                                     document -> SelectedArchiMateProfile
+                                                                                                   profile -> SelectedView
+                                                                                                                document -> ProfileAssessmentUniverse
+                                                                                                                              profile
+                                                                                                                              document -> CapabilityInputReferences -> result)
   -> result
-withPreparedSelectedView adapters profiles requestedAdapter request model failed prepared =
+withPreparedSelectedView adapters profiles requestedAdapter request (AcquiredModelSource model) failed prepared =
   foldAdapterSelection
     (failed . AdapterSelectionPreparationFailure)
     decodeSelected
@@ -121,6 +133,8 @@ withPreparedSelectedView adapters profiles requestedAdapter request model failed
           selected
           resolved
           document
+          (ModelOwnerSource (acquiredSourceIdentity model))
+          profile
           selectedView
           (deriveProfileAssessmentUniverse
              profile

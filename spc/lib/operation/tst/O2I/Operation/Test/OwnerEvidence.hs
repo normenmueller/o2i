@@ -10,6 +10,7 @@ import qualified Data.ByteString.Char8 as ByteString
 import qualified Data.ByteString.Lazy as LazyByteString
 import Data.JSON.JSONSchema (validateJSONSchema)
 import Data.List (nub, sort)
+import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified O2I.ArchiMate.Profile.Closure as Closure
@@ -20,8 +21,25 @@ import qualified O2I.ArchiMate.Profile.Projection as Profile
 import qualified O2I.ArchiMate.Profile.Resolution as Profile
 import qualified O2I.Core.Conformance as CoreConformance
 import O2I.Core.Contract (coreRuleIdText)
+import O2I.Operation.Acquisition
+  ( acquireSource
+  , acquiredSourceIdentity
+  , fileInput
+  )
+import O2I.Operation.Acquisition.Internal (AcquiredSource(..))
 import O2I.Operation.Diagnostic
 import O2I.Operation.Diagnostic.Owner
+import O2I.Operation.Diagnostic.Owner.Source
+  ( foldSupplementalOwnerBinding
+  , withSupplementalOwnerBinding
+  )
+import O2I.Operation.Diagnostic.Owner.Source.Internal
+  ( ModelOwnerSource(..)
+  , ScopedModelOwnerSource(..)
+  , SupplementalOwnerBinding(..)
+  , SupplementalOwnerBindingEvidence(..)
+  , SupplementalOwnerOccurrence(..)
+  )
 import O2I.Operation.Encoding.Internal (canonicalFragmentBytes)
 import O2I.Operation.Machine.Fragment.Internal (diagnosticFragment)
 import O2I.Operation.Provenance
@@ -45,6 +63,9 @@ tests =
     , testCase
         "integrates reachable ArchiMate Binding 3/4 and masks ambiguity"
         integratedBindingEvidence
+    , testCase
+        "derives a Binding diagnostic from one exact public acquired source"
+        acquiredSourceVerticalEvidence
     ]
 
 profileOwnerEvidence :: Assertion
@@ -55,14 +76,17 @@ profileOwnerEvidence = do
       (ProfileConformance.foldProfileCorpusOwnerEvidence
          (\selected universe assessment ->
             let activation =
-                  profileActivationDiagnostics source selected universe
+                  profileActivationDiagnostics
+                    (ModelOwnerSource source)
+                    selected
+                    universe
              in case assessment of
                   Nothing -> Right activation
                   Just value ->
                     foldProfileAssessmentDiagnostics
                       (const (Left "Profile contract failure"))
                       (Right . (activation <>))
-                      source
+                      (ModelOwnerSource source)
                       selected
                       universe
                       value))
@@ -92,7 +116,8 @@ structureOwnerEvidence = do
   diagnostics <-
     requireCoreResult
       (CoreConformance.foldStructureCorpusEvidence
-         (structureEvidenceDiagnostic source))
+         (\_ evidence ->
+            structureEvidenceDiagnostic (ScopedModelOwnerSource source) evidence))
   expected <- requireCoreResult CoreConformance.structureCorpusRuleIds
   map diagnosticRuleIdentity diagnostics @?= map coreRuleIdText expected
   length (nub (map diagnosticRuleIdentity diagnostics)) @?= 12
@@ -100,23 +125,78 @@ structureOwnerEvidence = do
 
 bindingOwnerEvidence :: Assertion
 bindingOwnerEvidence = do
-  source <- supplementalSource
+  source <- supplementalAcquiredSource
+  let occurrence = SupplementalOwnerOccurrence source
   diagnostics <-
     requireCoreResult
       (CoreConformance.foldBindingCorpusOwnerEvidence
-         (bindingEvidenceDiagnostic source))
+         occurrence
+         (\binding evidence ->
+            bindingEvidenceDiagnostic
+              (SupplementalOwnerBinding binding)
+              (SupplementalOwnerBindingEvidence evidence)))
   expected <- requireCoreResult CoreConformance.bindingCorpusRuleIds
   map diagnosticRuleIdentity diagnostics @?= map coreRuleIdText expected
   length (nub (map diagnosticRuleIdentity diagnostics)) @?= 4
   assertCanonicalDiagnostics diagnostics
 
+acquiredSourceVerticalEvidence :: Assertion
+acquiredSourceVerticalEvidence = do
+  reference <-
+    case mkSourceReference "supplemental-owner-source" of
+      Left _ -> assertFailure "invalid source reference" >> fail "unreachable"
+      Right value -> pure value
+  input <-
+    case fileInput
+           reference
+           ("tst" </> "fixtures" </> "owner-source-strategy.json") of
+      Left _ -> assertFailure "invalid fixture path" >> fail "unreachable"
+      Right value -> pure value
+  acquiredResult <- acquireSource SupplementalRole (sourceOrdinal 0) input
+  acquired <-
+    case acquiredResult of
+      Left _ -> assertFailure "fixture acquisition failed" >> fail "unreachable"
+      Right value -> pure value
+  case ProfileConformance.profileIntegratedBindingSources of
+    [] -> assertFailure "missing integrated Profile source"
+    (draft, _):_ -> do
+      diagnostics <- requireRight (integratedAcquired [acquired] draft)
+      length diagnostics @?= 6
+      assertBool
+        "unexpected owner rule escaped the vertical path"
+        (all
+           ((== "core.supplemental.identity.unknown") . diagnosticRuleIdentity)
+           diagnostics)
+      assertBool
+        "diagnostic source differs from the acquired artifact"
+        (all
+           (== acquiredSourceIdentity acquired)
+           (concatMap diagnosticOccurrenceSources diagnostics))
+      assertCanonicalDiagnostics diagnostics
+
+diagnosticOccurrenceSources :: Diagnostic -> [SourceIdentity]
+diagnosticOccurrenceSources diagnostic =
+  map
+    (foldDiagnosticOccurrence
+       id
+       (\source _ -> source)
+       (\source _ -> source)
+       (\source _ -> source)
+       (\source _ -> source)
+       (\source _ -> source))
+    (NonEmpty.toList (diagnosticOccurrences diagnostic))
+
 semanticsOwnerEvidence :: Assertion
 semanticsOwnerEvidence = do
-  source <- supplementalSource
+  source <- modelSource
   conversions <-
     requireCoreResult
       (CoreConformance.foldSemanticsCorpusOwnerEvidence
-         (semanticsEvidenceDiagnostic source))
+         (\assessment evidence ->
+            semanticsEvidenceDiagnostic
+              (ScopedModelOwnerSource source)
+              assessment
+              evidence))
   diagnostics <-
     requireRight
       (traverse
@@ -131,18 +211,23 @@ semanticsOwnerEvidence = do
 
 integratedBindingEvidence :: Assertion
 integratedBindingEvidence = do
-  source <- supplementalSource
+  source <- supplementalAcquiredSource
+  let occurrence = SupplementalOwnerOccurrence source
   diagnostics <-
     requireRight
       (fmap
          concat
          (traverse
-            (uncurry (integratedDiagnostics source))
+            (uncurry (integratedDiagnostics occurrence))
             ProfileConformance.profileIntegratedBindingSources))
   generic <-
     requireCoreResult
       (CoreConformance.foldBindingCorpusOwnerEvidence
-         (bindingEvidenceDiagnostic source))
+         occurrence
+         (\binding evidence ->
+            bindingEvidenceDiagnostic
+              (SupplementalOwnerBinding binding)
+              (SupplementalOwnerBindingEvidence evidence)))
   let integratedRules = nub (map diagnosticRuleIdentity diagnostics)
       genericRules = nub (map diagnosticRuleIdentity generic)
       maskedRules = filter (`notElem` integratedRules) genericRules
@@ -160,9 +245,9 @@ integratedBindingEvidence = do
     (all duplicateCaseMasksBinding duplicateCases)
   assertCanonicalDiagnostics diagnostics
 
-integratedDiagnostics ::
-     SourceIdentity -> Draft.ProfileDraft -> Text -> Either String [Diagnostic]
-integratedDiagnostics source draft identityValue =
+integratedAcquired ::
+     [AcquiredSource] -> Draft.ProfileDraft -> Either String [Diagnostic]
+integratedAcquired sources draft =
   Profile.withSelectedArchiMateProfile Profile.compiledProfileDescriptor $ \selected ->
     Notation.withCanonicalDocument draft $ \document ->
       case Notation.canonicalViews document of
@@ -176,17 +261,79 @@ integratedDiagnostics source draft identityValue =
                    Profile.foldProfileProjectionAssessment
                      (const (Left "integrated Profile contract failure"))
                      (const (Left "integrated Profile source was rejected"))
-                     (bindProjection source identityValue)
+                     (bindAcquiredProjection sources)
+                     (Profile.assessSelectedView conformant))
+                (Notation.notationConformance
+                   (Notation.assessArchiMateNotation universe))
+
+bindAcquiredProjection ::
+     [AcquiredSource]
+  -> Profile.ProfileProjection profile document
+  -> Either String [Diagnostic]
+bindAcquiredProjection sources projection =
+  Profile.withProfileStructureAssessment
+    projection
+    (const (Left "integrated identity-index failure"))
+    (const (Left "integrated selected-scope failure"))
+    (const (Left "integrated Structure-input failure"))
+    (Structure.foldStructureAssessment
+       (const (Left "integrated Structure rejection"))
+       (\graph ->
+          withSupplementalOwnerBinding
+            sources
+            graph
+            (const (Left "integrated supplemental provenance failure"))
+            (const (Left "integrated supplemental input failure"))
+            (\binding ->
+               Right
+                 (foldSupplementalOwnerBinding
+                    (\_ evidence ->
+                       map (bindingEvidenceDiagnostic binding) evidence)
+                    binding))))
+
+integratedDiagnostics ::
+     SupplementalOwnerOccurrence inputs
+  -> Draft.ProfileDraft
+  -> Text
+  -> Either String [Diagnostic]
+integratedDiagnostics source draft identityValue =
+  case Binding.decodeSupplementalInput
+         source
+         (Binding.supplementalInputOrdinal 0)
+         (strategyPayload identityValue) of
+    Left _ -> Left "integrated supplemental decode failure"
+    Right decoded -> integratedDecoded source decoded draft
+
+integratedDecoded ::
+     SupplementalOwnerOccurrence inputs
+  -> Binding.SupplementalInput (SupplementalOwnerOccurrence inputs)
+  -> Draft.ProfileDraft
+  -> Either String [Diagnostic]
+integratedDecoded source decoded draft =
+  Profile.withSelectedArchiMateProfile Profile.compiledProfileDescriptor $ \selected ->
+    Notation.withCanonicalDocument draft $ \document ->
+      case Notation.canonicalViews document of
+        [] -> Left "integrated Profile source has no View"
+        view:_ ->
+          let universe =
+                Closure.deriveProfileAssessmentUniverse selected document view
+           in Notation.foldStageResult
+                (const (Left "integrated Profile source failed Notation"))
+                (\conformant ->
+                   Profile.foldProfileProjectionAssessment
+                     (const (Left "integrated Profile contract failure"))
+                     (const (Left "integrated Profile source was rejected"))
+                     (bindProjection source decoded)
                      (Profile.assessSelectedView conformant))
                 (Notation.notationConformance
                    (Notation.assessArchiMateNotation universe))
 
 bindProjection ::
-     SourceIdentity
-  -> Text
+     SupplementalOwnerOccurrence inputs
+  -> Binding.SupplementalInput (SupplementalOwnerOccurrence inputs)
   -> Profile.ProfileProjection profile document
   -> Either String [Diagnostic]
-bindProjection source identityValue projection =
+bindProjection _ decoded projection =
   Profile.withProfileStructureAssessment
     projection
     (const (Left "integrated identity-index failure"))
@@ -195,12 +342,6 @@ bindProjection source identityValue projection =
     (Structure.foldStructureAssessment
        (const (Left "integrated Structure rejection"))
        (\graph -> do
-          decoded <-
-            mapLeft
-              (const "integrated supplemental decode failure")
-              (Binding.decodeSupplementalInput
-                 (Binding.supplementalInputOrdinal 0)
-                 (strategyPayload identityValue))
           inputSet <-
             mapLeft
               (const "integrated supplemental set failure")
@@ -209,7 +350,12 @@ bindProjection source identityValue projection =
           pure
             (Binding.foldSupplementalBinding
                (\_ evidence ->
-                  map (bindingEvidenceDiagnostic source binding) evidence)
+                  map
+                    (\value ->
+                       bindingEvidenceDiagnostic
+                         (SupplementalOwnerBinding binding)
+                         (SupplementalOwnerBindingEvidence value))
+                    evidence)
                binding)))
 
 duplicateCaseMasksBinding :: ProfileConformance.DuplicateCase -> Bool
@@ -261,8 +407,10 @@ assertCanonicalDiagnostics diagnostics = do
 modelSource :: IO SourceIdentity
 modelSource = sourceIdentityFor ModelRole "model"
 
-supplementalSource :: IO SourceIdentity
-supplementalSource = sourceIdentityFor SupplementalRole "supplemental"
+supplementalAcquiredSource :: IO AcquiredSource
+supplementalAcquiredSource = do
+  identity <- sourceIdentityFor SupplementalRole "supplemental"
+  pure (AcquiredSource identity sourceBytes)
 
 sourceIdentityFor :: SourceRole -> Text -> IO SourceIdentity
 sourceIdentityFor role referenceText = do

@@ -163,19 +163,21 @@ roundTripOrdinal :: SupplementalInputOrdinal -> SupplementalInputOrdinal
 roundTripOrdinal = supplementalInputOrdinal . supplementalInputOrdinalValue
 
 bind ::
-     WellFormedGraph scope -> SupplementalInputSet -> SupplementalBinding scope
+     WellFormedGraph scope
+  -> SupplementalInputSet ()
+  -> SupplementalBinding scope ()
 bind = bindSupplementalInputs
 
 consumeBinding ::
-     SupplementalBinding scope
+     SupplementalBinding scope ()
   -> (BoundSupplementalInputs scope, [SupplementalEvidenceView])
 consumeBinding =
   foldSupplementalBinding
     (\bound evidence -> (bound, map projectBindingEvidence evidence))
 
 projectBindingEvidence ::
-     SupplementalBindingEvidence scope -> SupplementalEvidenceView
-projectBindingEvidence = foldSupplementalBindingEvidence eliminator
+     SupplementalBindingEvidence scope () -> SupplementalEvidenceView
+projectBindingEvidence = foldSupplementalBindingEvidence (const eliminator)
   where
     eliminator =
       SupplementalInputDefectEliminator

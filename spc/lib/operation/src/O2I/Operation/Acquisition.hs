@@ -15,6 +15,8 @@ module O2I.Operation.Acquisition
   , acquiredSourceIdentity
   , acquiredSourceBytes
   , foldAcquiredSource
+  , AcquiredModelSource
+  , acquiredModelSource
   ) where
 
 import Control.Exception (IOException)
@@ -77,3 +79,10 @@ foldAcquiredSource ::
      (SourceIdentity -> ByteString -> value) -> AcquiredSource -> value
 foldAcquiredSource project (AcquiredSource identity bytes) =
   project identity bytes
+
+-- | Retain an acquired source only when its immutable role is model.
+acquiredModelSource :: AcquiredSource -> Maybe AcquiredModelSource
+acquiredModelSource acquired
+  | sourceIdentityRole (acquiredSourceIdentity acquired) == ModelRole =
+    Just (AcquiredModelSource acquired)
+  | otherwise = Nothing

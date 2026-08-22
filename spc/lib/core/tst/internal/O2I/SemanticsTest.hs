@@ -846,9 +846,9 @@ assertCollectiveBindingDefects input expectedRules =
             ("unexpected site-local collective result: " ++ show result)
 
 supplementalBindingEvidenceIsUnknown ::
-     SupplementalBindingEvidence scope -> Bool
+     SupplementalBindingEvidence scope () -> Bool
 supplementalBindingEvidenceIsUnknown =
-  foldSupplementalBindingEvidence eliminator
+  foldSupplementalBindingEvidence (const eliminator)
   where
     eliminator =
       SupplementalInputDefectEliminator
@@ -1190,7 +1190,7 @@ assertBindingScenario ::
      [ModelOccurrence]
   -> StructureProjection
   -> [(Natural, ByteString)]
-  -> (forall scope. WellFormedGraph scope -> SupplementalBinding scope -> Assertion)
+  -> (forall scope. WellFormedGraph scope -> SupplementalBinding scope () -> Assertion)
   -> Assertion
 assertBindingScenario occurrences projection inputs inspect =
   case runBindingScenario occurrences projection inputs inspect of
@@ -1201,7 +1201,7 @@ runBindingScenario ::
      [ModelOccurrence]
   -> StructureProjection
   -> [(Natural, ByteString)]
-  -> (forall scope. WellFormedGraph scope -> SupplementalBinding scope -> result)
+  -> (forall scope. WellFormedGraph scope -> SupplementalBinding scope () -> result)
   -> Either String result
 runBindingScenario occurrences projection payloads inspect = do
   identityIndex <- mapLeft "identity" (buildModelIdentityIndex occurrences)
@@ -1229,7 +1229,10 @@ runBindingScenario occurrences projection payloads inspect = do
           (\(ordinal, bytes) ->
              mapLeft
                "supplemental decode"
-               (decodeSupplementalInput (supplementalInputOrdinal ordinal) bytes))
+               (decodeSupplementalInput
+                  ()
+                  (supplementalInputOrdinal ordinal)
+                  bytes))
           payloads
       inputSet <-
         mapLeft "supplemental set" (assessSupplementalInputSet decoded)

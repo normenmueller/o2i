@@ -23,10 +23,11 @@ import O2I.Input.Internal.Types
 -- Each failed phase suppresses every later phase for this input. Within the
 -- schema phase, independent member defects accumulate deterministically.
 decodeSupplementalInput ::
-     SupplementalInputOrdinal
+     provenance
+  -> SupplementalInputOrdinal
   -> ByteString
-  -> Either (NonEmpty SupplementalInputDefect) SupplementalInput
-decodeSupplementalInput ordinal bytes = do
+  -> Either (NonEmpty SupplementalInputDefect) (SupplementalInput provenance)
+decodeSupplementalInput provenance ordinal bytes = do
   utf8 <-
     mapSingle
       (const (SupplementalInvalidUtf8Defect ordinal))
@@ -40,23 +41,24 @@ decodeSupplementalInput ordinal bytes = do
       Left pointers ->
         Left (fmap (memberDefect ordinal . jsonPointerText) pointers)
       Right value -> Right value
-  decodePayload ordinal (duplicateFreeNode duplicateFree)
+  decodePayload provenance ordinal (duplicateFreeNode duplicateFree)
 
 decodePayload ::
-     SupplementalInputOrdinal
+     provenance
+  -> SupplementalInputOrdinal
   -> JsonNode
-  -> Either (NonEmpty SupplementalInputDefect) SupplementalInput
-decodePayload ordinal node =
+  -> Either (NonEmpty SupplementalInputDefect) (SupplementalInput provenance)
+decodePayload provenance ordinal node =
   case jsonNodeValue node of
     JsonObjectValue object -> do
       payloadType <- decodePayloadType ordinal object
       checkedToEither
         (case payloadType of
            StrategyFormulationPayload ->
-             StrategyFormulationSupplement ordinal
+             StrategyFormulationSupplement provenance ordinal
                <$> decodeStrategyFormulation ordinal object
            CollectiveFitPayload ->
-             CollectiveFitSupplement ordinal
+             CollectiveFitSupplement provenance ordinal
                <$> decodeCollectiveFit ordinal object)
     _ ->
       Left

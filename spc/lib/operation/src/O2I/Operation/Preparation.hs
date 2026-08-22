@@ -20,10 +20,12 @@ module O2I.Operation.Preparation
   , viewSelectionStage
   , preparationStageText
   , foldPreparationStage
+  , withPreparedSelectedView
   ) where
 
 import Data.Text (Text)
 import O2I.Operation.Preparation.Internal
+import O2I.Operation.Preparation.Runtime.Internal (withPreparedSelectedView)
 
 -- | Stage that selects one adapter from the static collection.
 adapterSelectionStage :: PreparationStage

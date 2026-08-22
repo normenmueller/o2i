@@ -5,24 +5,24 @@ import O2I.ArchiMate.Profile.Projection
 import O2I.ArchiMate.Profile.Resolution
 import O2I.Operation.Diagnostic
 import O2I.Operation.Diagnostic.Owner
-import O2I.Operation.Provenance
+import O2I.Operation.Diagnostic.Owner.Source
 
 consumeActivation ::
-     SourceIdentity
+     ModelOwnerSource document
   -> SelectedArchiMateProfile profile
   -> ProfileAssessmentUniverse profile document
   -> [Diagnostic]
 consumeActivation = profileActivationDiagnostics
 
 crossActivationProfile ::
-     SourceIdentity
+     ModelOwnerSource document
   -> SelectedArchiMateProfile firstProfile
   -> ProfileAssessmentUniverse secondProfile document
   -> [Diagnostic]
 crossActivationProfile = consumeActivation
 
 consumeAssessment ::
-     SourceIdentity
+     ModelOwnerSource document
   -> SelectedArchiMateProfile profile
   -> ProfileAssessmentUniverse profile document
   -> ProfileProjectionAssessment profile document
@@ -37,7 +37,7 @@ consumeAssessment source selected universe assessment =
     assessment
 
 crossAssessmentProfile ::
-     SourceIdentity
+     ModelOwnerSource document
   -> SelectedArchiMateProfile firstProfile
   -> ProfileAssessmentUniverse secondProfile document
   -> ProfileProjectionAssessment secondProfile document
@@ -45,7 +45,7 @@ crossAssessmentProfile ::
 crossAssessmentProfile = consumeAssessment
 
 crossAssessmentDocument ::
-     SourceIdentity
+     ModelOwnerSource firstDocument
   -> SelectedArchiMateProfile profile
   -> ProfileAssessmentUniverse profile firstDocument
   -> ProfileProjectionAssessment profile secondDocument
