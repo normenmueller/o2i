@@ -172,7 +172,7 @@ CONTRACTS = (
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "StructureCrossGenerationEvidence.hs",
-                (("GHC-25897", 1),),
+                (("GHC-25897", 2),),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
@@ -192,7 +192,7 @@ CONTRACTS = (
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "BindingCrossGenerationEvidence.hs",
-                (("GHC-25897", 1),),
+                (("GHC-25897", 2),),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
@@ -222,7 +222,12 @@ CONTRACTS = (
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "SemanticsCrossGenerationEvidence.hs",
-                (("GHC-25897", 1),),
+                (("GHC-25897", 2),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "CoreOwnerEvidenceCoercible.hs",
+                (("GHC-25897", 6),),
             ),
         ),
     ),
@@ -269,7 +274,7 @@ CONTRACTS = (
             CompileFailure(
                 "spc/ctr/archimate/tst/api/compile-fail/"
                 "ClosureOpaqueConstructor.hs",
-                (("GHC-01928", 1),),
+                (("GHC-01928", 3),),
             ),
             CompileFailure(
                 "spc/ctr/archimate/tst/api/compile-fail/"
@@ -284,12 +289,17 @@ CONTRACTS = (
             CompileFailure(
                 "spc/ctr/archimate/tst/api/compile-fail/"
                 "ProjectionOpaqueConstructor.hs",
-                (("GHC-01928", 3),),
+                (("GHC-01928", 8),),
             ),
             CompileFailure(
                 "spc/ctr/archimate/tst/api/compile-fail/"
                 "ProfileCrossGenerationEvidence.hs",
-                (("GHC-25897", 12),),
+                (("GHC-25897", 18),),
+            ),
+            CompileFailure(
+                "spc/ctr/archimate/tst/api/compile-fail/"
+                "ProfileOwnerEvidenceCoercible.hs",
+                (("GHC-25897", 21),),
             ),
             CompileFailure(
                 "spc/ctr/archimate/tst/api/compile-fail/"

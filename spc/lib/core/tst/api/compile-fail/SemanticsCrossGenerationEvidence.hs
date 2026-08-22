@@ -1,6 +1,7 @@
 module SemanticsCrossGenerationEvidence where
 
 import O2I.Semantics
+import O2I.Structure (WellFormedGraph)
 
 consume ::
      SemanticallyValidModel scope -> SemanticDiagnosticEvidence scope -> ()
@@ -11,3 +12,10 @@ crossGeneration ::
   -> SemanticDiagnosticEvidence secondScope
   -> ()
 crossGeneration = consume
+
+consumeAssessment :: WellFormedGraph scope -> SemanticAssessment scope -> ()
+consumeAssessment graph assessment = graph `seq` assessment `seq` ()
+
+crossGenerationAssessment ::
+     WellFormedGraph firstScope -> SemanticAssessment secondScope -> ()
+crossGenerationAssessment = consumeAssessment

@@ -21,6 +21,60 @@ crossProfileDiagnostic ::
   -> ()
 crossProfileDiagnostic = consumeDiagnostic
 
+consumeContract ::
+     ProfileProjection profile document
+  -> ProfileContractEvidence profile document
+  -> ()
+consumeContract projection evidence = projection `seq` evidence `seq` ()
+
+crossDocumentContract ::
+     ProfileProjection profile firstDocument
+  -> ProfileContractEvidence profile secondDocument
+  -> ()
+crossDocumentContract = consumeContract
+
+crossProfileContract ::
+     ProfileProjection firstProfile document
+  -> ProfileContractEvidence secondProfile document
+  -> ()
+crossProfileContract = consumeContract
+
+consumeAssessment ::
+     ProfileAssessmentUniverse profile document
+  -> ProfileProjectionAssessment profile document
+  -> ()
+consumeAssessment universe assessment = universe `seq` assessment `seq` ()
+
+crossDocumentAssessment ::
+     ProfileAssessmentUniverse profile firstDocument
+  -> ProfileProjectionAssessment profile secondDocument
+  -> ()
+crossDocumentAssessment = consumeAssessment
+
+crossProfileAssessment ::
+     ProfileAssessmentUniverse firstProfile document
+  -> ProfileProjectionAssessment secondProfile document
+  -> ()
+crossProfileAssessment = consumeAssessment
+
+consumeEvidence ::
+     ProfileProjection profile document
+  -> ProfileEvidence profile document kind
+  -> ()
+consumeEvidence projection evidence = projection `seq` evidence `seq` ()
+
+crossDocumentEvidence ::
+     ProfileProjection profile firstDocument
+  -> ProfileEvidence profile secondDocument kind
+  -> ()
+crossDocumentEvidence = consumeEvidence
+
+crossProfileEvidence ::
+     ProfileProjection firstProfile document
+  -> ProfileEvidence secondProfile document kind
+  -> ()
+crossProfileEvidence = consumeEvidence
+
 consumeClassification ::
      ProfileProjection profile document
   -> ProfileClassificationEvidence profile document
