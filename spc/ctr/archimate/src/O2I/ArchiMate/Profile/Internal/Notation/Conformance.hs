@@ -194,11 +194,16 @@ assessCanonicalViewInventoryValue document =
   canonicalOrder (identityIssues <> nameIssues)
   where
     raw = canonicalDocumentValue document
-    records = Raw.canonicalDocumentRecordsValue raw
+    records = Raw.canonicalIdentityDomainValue raw
     modelRecords =
       filter ((== ModelRootFamily) . Raw.canonicalRecordFamilyValue) records
     viewRecords =
       filter ((== ViewFamily) . Raw.canonicalRecordFamilyValue) records
+    otherRecords =
+      filter
+        ((`notElem` [ModelRootFamily, ViewFamily])
+           . Raw.canonicalRecordFamilyValue)
+        records
     globalDuplicates = duplicateIdentityLocations records
     identityIssues =
       concatMap
@@ -219,6 +224,9 @@ assessCanonicalViewInventoryValue document =
                 ViewIdentityDuplicate
                 globalDuplicates)
              viewRecords
+        <> concatMap
+             (recordIdentityDuplicateIssues globalDuplicates)
+             otherRecords
     nameIssues = concatMap viewNameIssues viewRecords
 
 assessProfileMarkerIssuesValue ::
@@ -241,15 +249,13 @@ assessArchiMateNotationValue universe =
     closed = profileAssessmentUniverseValue universe
     rawDocument = closedViewDocumentValue closed
     witnessedDocument = CanonicalDocument rawDocument
-    document = Raw.canonicalDocumentRecordsValue rawDocument
+    document = Raw.canonicalIdentityDomainValue rawDocument
     scope = closedViewUniverseValue closed
     records =
       filter
         ((`Set.member` scope) . Raw.canonicalRecordOccurrenceValue)
         document
-    duplicateLocations = duplicateIdentityLocations records
-    identityIssues =
-      concatMap (selectedIdentityIssues duplicateLocations) records
+    identityIssues = concatMap selectedIdentityIssues records
     referenceIssues =
       concatMap
         selectedReferenceIssues
@@ -300,20 +306,35 @@ inventoryIdentityIssues missing multiple invalid grammar duplicate duplicates re
     (Raw.canonicalRecordLocationValue record)
     (Raw.canonicalRecordIdentityValue record)
 
-selectedIdentityIssues ::
-     Map ModelIdentity [DraftLocation]
-  -> Raw.CanonicalRecord
-  -> [ArchiMateNotationIssue]
-selectedIdentityIssues duplicates record =
+selectedIdentityIssues :: Raw.CanonicalRecord -> [ArchiMateNotationIssue]
+selectedIdentityIssues record =
   identityOutcomeIssues
     (SelectedUniverseNotationKind RecordIdentityMissing)
     (SelectedUniverseNotationKind RecordIdentityMultiplicity)
     (SelectedUniverseNotationKind RecordIdentityValueKindInvalid)
     (SelectedUniverseNotationKind RecordIdentityGrammarInvalid)
     (SelectedUniverseNotationKind RecordIdentityDuplicate)
-    duplicates
+    Map.empty
     (Raw.canonicalRecordLocationValue record)
     (Raw.canonicalRecordIdentityValue record)
+
+recordIdentityDuplicateIssues ::
+     Map ModelIdentity [DraftLocation]
+  -> Raw.CanonicalRecord
+  -> [ArchiMateNotationIssue]
+recordIdentityDuplicateIssues duplicates record =
+  case Raw.canonicalRecordIdentityValue record of
+    Raw.IdentityResolved _ identifier ->
+      case Map.findWithDefault [] identifier duplicates of
+        _:_:_ ->
+          [ referenceIssue
+              (SelectedUniverseNotationKind RecordIdentityDuplicate)
+              (Raw.canonicalRecordLocationValue record)
+              (modelIdentityText identifier)
+              (Map.findWithDefault [] identifier duplicates)
+          ]
+        _ -> []
+    _ -> []
 
 identityOutcomeIssues ::
      ArchiMateNotationIssueKind

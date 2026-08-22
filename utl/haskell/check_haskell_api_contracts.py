@@ -152,7 +152,7 @@ CONTRACTS = (
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "StructureOpaqueConstructors.hs",
-                (("GHC-01928", 1), ("GHC-88464", 2)),
+                (("GHC-01928", 3), ("GHC-88464", 1)),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
@@ -167,12 +167,17 @@ CONTRACTS = (
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "StructureLegacyDefectConsumers.hs",
-                (("GHC-88464", 4),),
+                (("GHC-88464", 7),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "StructureCrossGenerationEvidence.hs",
+                (("GHC-25897", 1),),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "SupplementalInputOpaqueConstructors.hs",
-                (("GHC-88464", 1),),
+                (("GHC-01928", 2), ("GHC-88464", 1)),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
@@ -186,8 +191,13 @@ CONTRACTS = (
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
+                "BindingCrossGenerationEvidence.hs",
+                (("GHC-25897", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
                 "SemanticsOpaqueConstructors.hs",
-                (("GHC-01928", 2), ("GHC-88464", 1)),
+                (("GHC-01928", 3), ("GHC-88464", 1)),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
@@ -207,7 +217,12 @@ CONTRACTS = (
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "SemanticsLegacyWitnessConsumers.hs",
-                (("GHC-88464", 1),),
+                (("GHC-88464", 3),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "SemanticsCrossGenerationEvidence.hs",
+                (("GHC-25897", 1),),
             ),
         ),
     ),
@@ -269,7 +284,12 @@ CONTRACTS = (
             CompileFailure(
                 "spc/ctr/archimate/tst/api/compile-fail/"
                 "ProjectionOpaqueConstructor.hs",
-                (("GHC-01928", 1),),
+                (("GHC-01928", 3),),
+            ),
+            CompileFailure(
+                "spc/ctr/archimate/tst/api/compile-fail/"
+                "ProfileCrossGenerationEvidence.hs",
+                (("GHC-25897", 12),),
             ),
             CompileFailure(
                 "spc/ctr/archimate/tst/api/compile-fail/"
@@ -668,6 +688,18 @@ def compiler_command(
     ]
     if project_file is not None:
         command.append(f"--project-file={project_file}")
+    main_units = tuple(
+        path.stem
+        for path in build_dir.glob(f"packagedb/*/{package}-*-inplace.conf")
+    )
+    if not main_units:
+        package_selector = ["-package", package]
+    elif len(main_units) == 1:
+        package_selector = ["-package-id", main_units[0]]
+    else:
+        raise RuntimeError(
+            f"expected one main {package} unit, found {main_units!r}"
+        )
     return command + [
         f"--builddir={build_dir}", "exec",
         "--",
@@ -680,8 +712,7 @@ def compiler_command(
         f"-odir={output_dir}",
         f"-hidir={output_dir}",
         f"-stubdir={output_dir}",
-        "-package",
-        package,
+        *package_selector,
         str(source),
     ]
 

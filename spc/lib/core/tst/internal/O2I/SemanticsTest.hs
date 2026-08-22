@@ -39,6 +39,8 @@ import O2I.Semantics.Internal
 import O2I.Semantics.SituatedNeed (assessSituatedNeeds)
 import O2I.Semantics.Strategy (assessStrategyFormulations)
 import O2I.Structure
+import qualified O2I.Structure.Index as StructureIndex
+import O2I.Structure.Internal (StructureAssessment(..))
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.HUnit (Assertion, (@?=), assertBool, assertFailure, testCase)
 
@@ -155,9 +157,9 @@ aggregateAccepted =
     completeModelOccurrences
     (completeProjection Forward True)
     completeInputs $ \graph inputs -> do
-    let assessment = Eval.assessSemantics graph inputs
+    let assessment = Public.assessSemantics graph inputs
     Public.semanticDisposition assessment @?= Public.SemanticAccepted
-    Public.semanticDefects assessment @?= []
+    length (publicSemanticEvidence assessment) @?= 0
     Public.semanticCandidateOccurrences assessment @?= []
     case Public.acceptedSemanticModel assessment of
       Nothing -> assertFailure "accepted assessment did not retain its proof"
@@ -180,7 +182,7 @@ aggregateUnavailable =
     [] $ \graph inputs -> do
     let assessment = Public.assessSemantics graph inputs
     Public.semanticDisposition assessment @?= Public.SemanticUnavailable
-    Public.semanticDefects assessment @?= []
+    length (publicSemanticEvidence assessment) @?= 0
     map
       Public.strategyFormulationDisposition
       (Public.strategyFormulationAssessments assessment)
@@ -203,7 +205,7 @@ aggregatePrecedence =
       Public.strategyFormulationDisposition
       (Public.strategyFormulationAssessments assessment)
       @?= [Public.SubjectUnavailable]
-    map Public.semanticDefectRule (Public.semanticDefects assessment)
+    map Public.semanticDiagnosticRule (publicSemanticEvidence assessment)
       @?= map
             semanticRuleId
             [ semanticRule Generated.SituatedNeedDriverCardinalityRule
@@ -211,6 +213,12 @@ aggregatePrecedence =
             , semanticRule
                 Generated.SituatedNeedSurfacingSituationCardinalityRule
             ]
+
+publicSemanticEvidence ::
+     Public.SemanticAssessment scope
+  -> [Public.SemanticDiagnosticEvidence scope]
+publicSemanticEvidence =
+  Public.foldSemanticAssessment NonEmpty.toList [] (const [])
 
 candidateOutcomes :: Assertion
 candidateOutcomes =
@@ -594,13 +602,10 @@ runtimeOccurrenceCardinalityOracle = do
 
 runtimeOccurrenceSummary :: SemanticDefect -> (Text, [(Text, [Text])])
 runtimeOccurrenceSummary defect =
-  ( coreRuleIdText (Public.semanticDefectRule defect)
-  , [ ( Public.semanticOccurrenceRoleId
-          (Public.semanticOccurrenceGroupRole group)
-      , map
-          occurrenceIdentityText
-          (Public.semanticOccurrenceGroupOccurrences group))
-    | group <- NonEmpty.toList (Public.semanticDefectOccurrenceGroups defect)
+  ( coreRuleIdText (semanticRuleId (semanticDefectRule defect))
+  , [ (role, map occurrenceIdentityText occurrences)
+    | (role, occurrences) <-
+        NonEmpty.toList (semanticDefectOccurrenceGroups defect)
     ])
 
 runtimeProducerOccurrenceOracle :: [(Text, [(Text, [Text])])]
@@ -753,7 +758,10 @@ scenarioDefects occurrences projection inputs =
     occurrences
     projection
     inputs
-    (\graph bound -> Public.semanticDefects (Public.assessSemantics graph bound))
+    (\graph bound ->
+       case Eval.assessSemantics graph bound of
+         SemanticsRejected _ defects -> NonEmpty.toList defects
+         _ -> [])
 
 supplementalBindingIsolation :: Assertion
 supplementalBindingIsolation =
@@ -763,42 +771,43 @@ supplementalBindingIsolation =
     [ (0, strategyInputWithDiagnosis "a" "unknown-diagnosis")
     , (1, strategyInput "b")
     , (2, strategyInput "target")
-    ] $ \graph binding -> do
-    map supplementalDefectIsUnknown (supplementalBindingDefects binding)
-      @?= [True]
-    let semanticIndex =
-          buildSemanticIndex graph (supplementalBindingInputs binding)
-    case assessStrategyFormulations semanticIndex of
-      [StrategyFormulationUnavailable subject reason, StrategyFormulationValid strategyB, StrategyFormulationValid strategyTarget] -> do
-        subject @?= modelId "strategy-a"
-        reason @?= StrategyFormulationIdentityUnresolved
-        eligibleStrategyIdentity strategyB @?= modelId "strategy-b"
-        eligibleStrategyIdentity strategyTarget @?= modelId "strategy-target"
-      result ->
-        assertFailure
-          ("binding defect suppressed unrelated Strategy results: "
-             ++ show result)
+    ] $ \graph binding -> foldSupplementalBinding (inspect graph) binding
+  where
+    inspect graph bound evidence = do
+      map supplementalBindingEvidenceIsUnknown evidence @?= [True]
+      let semanticIndex = buildSemanticIndex graph bound
+      case assessStrategyFormulations semanticIndex of
+        [StrategyFormulationUnavailable subject reason, StrategyFormulationValid strategyB, StrategyFormulationValid strategyTarget] -> do
+          subject @?= modelId "strategy-a"
+          reason @?= StrategyFormulationIdentityUnresolved
+          eligibleStrategyIdentity strategyB @?= modelId "strategy-b"
+          eligibleStrategyIdentity strategyTarget @?= modelId "strategy-target"
+        result ->
+          assertFailure
+            ("binding defect suppressed unrelated Strategy results: "
+               ++ show result)
 
 collectiveSiteLocalSuppression :: Assertion
 collectiveSiteLocalSuppression =
   assertBindingScenario
     completeModelOccurrences
     (completeProjection Forward True)
-    (strategyInputs ++ [(3, collectiveInputWithUnresolvedPolicy)]) $ \graph binding -> do
-    map supplementalDefectIsUnknown (supplementalBindingDefects binding)
-      @?= [True]
-    let semanticIndex =
-          buildSemanticIndex graph (supplementalBindingInputs binding)
-        strategies = assessStrategyFormulations semanticIndex
-    case assessCollectiveStrategyRealizations semanticIndex strategies of
-      [CollectiveStrategyRealizationInvalid _ components defects] -> do
-        map semanticDefectRule (NonEmpty.toList defects)
-          @?= [semanticRule Generated.CollectiveFitTargetTradeOffsRule]
-        Public.collectiveFitDisposition components @?= Public.ComponentInvalid
-      result ->
-        assertFailure
-          ("unresolved collective site suppressed an independent predicate: "
-             ++ show result)
+    (strategyInputs ++ [(3, collectiveInputWithUnresolvedPolicy)]) $ \graph binding ->
+    foldSupplementalBinding (inspect graph) binding
+  where
+    inspect graph bound evidence = do
+      map supplementalBindingEvidenceIsUnknown evidence @?= [True]
+      let semanticIndex = buildSemanticIndex graph bound
+          strategies = assessStrategyFormulations semanticIndex
+      case assessCollectiveStrategyRealizations semanticIndex strategies of
+        [CollectiveStrategyRealizationInvalid _ components defects] -> do
+          map semanticDefectRule (NonEmpty.toList defects)
+            @?= [semanticRule Generated.CollectiveFitTargetTradeOffsRule]
+          Public.collectiveFitDisposition components @?= Public.ComponentInvalid
+        result ->
+          assertFailure
+            ("unresolved collective site suppressed an independent predicate: "
+               ++ show result)
 
 collectiveUnresolvedTargetIsolation :: Assertion
 collectiveUnresolvedTargetIsolation =
@@ -821,22 +830,25 @@ assertCollectiveBindingDefects input expectedRules =
   assertBindingScenario
     completeModelOccurrences
     (completeProjection Forward True)
-    (strategyInputs ++ [(3, input)]) $ \graph binding -> do
-    map supplementalDefectIsUnknown (supplementalBindingDefects binding)
-      @?= [True]
-    let semanticIndex =
-          buildSemanticIndex graph (supplementalBindingInputs binding)
-        strategies = assessStrategyFormulations semanticIndex
-    case assessCollectiveStrategyRealizations semanticIndex strategies of
-      [CollectiveStrategyRealizationInvalid _ components defects] -> do
-        map semanticDefectRule (NonEmpty.toList defects) @?= expectedRules
-        Public.collectiveFitDisposition components @?= Public.ComponentInvalid
-      result ->
-        assertFailure
-          ("unexpected site-local collective result: " ++ show result)
+    (strategyInputs ++ [(3, input)]) $ \graph binding ->
+    foldSupplementalBinding (inspect graph) binding
+  where
+    inspect graph bound evidence = do
+      map supplementalBindingEvidenceIsUnknown evidence @?= [True]
+      let semanticIndex = buildSemanticIndex graph bound
+          strategies = assessStrategyFormulations semanticIndex
+      case assessCollectiveStrategyRealizations semanticIndex strategies of
+        [CollectiveStrategyRealizationInvalid _ components defects] -> do
+          map semanticDefectRule (NonEmpty.toList defects) @?= expectedRules
+          Public.collectiveFitDisposition components @?= Public.ComponentInvalid
+        result ->
+          assertFailure
+            ("unexpected site-local collective result: " ++ show result)
 
-supplementalDefectIsUnknown :: SupplementalInputDefect -> Bool
-supplementalDefectIsUnknown = foldSupplementalInputDefect eliminator
+supplementalBindingEvidenceIsUnknown ::
+     SupplementalBindingEvidence scope -> Bool
+supplementalBindingEvidenceIsUnknown =
+  foldSupplementalBindingEvidence eliminator
   where
     eliminator =
       SupplementalInputDefectEliminator
@@ -1011,9 +1023,7 @@ compiledRuleOrder = do
 
 flattenDefectOccurrences :: SemanticDefect -> [OccurrenceIdentity]
 flattenDefectOccurrences =
-  concatMap Public.semanticOccurrenceGroupOccurrences
-    . NonEmpty.toList
-    . Public.semanticDefectOccurrenceGroups
+  concatMap snd . NonEmpty.toList . semanticDefectOccurrenceGroups
 
 compiledRuleCatalog :: Assertion
 compiledRuleCatalog = do
@@ -1080,13 +1090,14 @@ summarizeAssessment assessment =
   SemanticSummary
     { summaryDisposition = Public.semanticDisposition assessment
     , summaryDefects =
-        [ ( coreRuleIdText (Public.semanticDefectRule defect)
+        [ ( coreRuleIdText (Public.semanticDiagnosticRule defect)
           , map
               occurrenceIdentityText
               (concatMap
                  Public.semanticOccurrenceGroupOccurrences
-                 (NonEmpty.toList (Public.semanticDefectOccurrenceGroups defect))))
-        | defect <- Public.semanticDefects assessment
+                 (NonEmpty.toList
+                    (Public.semanticDiagnosticOccurrenceGroups defect))))
+        | defect <- publicSemanticEvidence assessment
         ]
     , summaryCandidates =
         map
@@ -1163,9 +1174,16 @@ runScenario ::
 runScenario occurrences projection payloads inspect = do
   result <-
     runBindingScenario occurrences projection payloads $ \graph binding ->
-      case supplementalBindingDefects binding of
-        [] -> Right (inspect graph (supplementalBindingInputs binding))
-        defects -> Left ("supplemental binding failed: " ++ show defects)
+      foldSupplementalBinding
+        (\bound evidence ->
+           case evidence of
+             [] -> Right (inspect graph bound)
+             _ ->
+               Left
+                 ("supplemental binding failed: "
+                    ++ show (length evidence)
+                    ++ " scoped diagnostics"))
+        binding
   result
 
 assertBindingScenario ::
@@ -1197,7 +1215,10 @@ runBindingScenario occurrences projection payloads inspect = do
   selected
   where
     assessScoped scope = do
-      structure <- mapLeft "Structure input" (assessStructure scope projection)
+      structure <-
+        mapLeft
+          "Structure input"
+          (StructureIndex.assessStructure scope projection)
       graph <-
         case structure of
           StructureRejected defects ->

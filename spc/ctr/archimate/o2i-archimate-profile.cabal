@@ -75,6 +75,39 @@ library
   hs-source-dirs:
     src
 
+-- Build-only public-source owner conformance.  The production library has no
+-- dependency on this component.
+library conformance
+  import:
+    warnings,
+    language
+  visibility: private
+  exposed-modules:
+    O2I.ArchiMate.Profile.Conformance,
+    O2I.ArchiMate.Profile.Conformance.Source
+  build-depends:
+    base >=4.20 && <4.21,
+    o2i-archimate-profile,
+    text >=2.1 && <2.2
+  hs-source-dirs:
+    conformance
+
+test-suite o2i-archimate-profile-conformance-test
+  import:
+    warnings,
+    language
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  build-depends:
+    base >=4.20 && <4.21,
+    containers >=0.7 && <0.8,
+    o2i-archimate-profile,
+    o2i-archimate-profile:conformance,
+    tasty >=1.4 && <1.6,
+    tasty-hunit >=0.10 && <0.11
+  hs-source-dirs:
+    conformance-test
+
 test-suite o2i-archimate-profile-test
   import:
     warnings,
@@ -83,13 +116,13 @@ test-suite o2i-archimate-profile-test
   main-is: Main.hs
   other-modules:
     O2I.ArchiMate.Profile.Test.Contract,
-    O2I.ArchiMate.Profile.Test.Fixture,
     Paths_o2i_archimate_profile
   autogen-modules:
     Paths_o2i_archimate_profile
   build-depends:
     base >=4.20 && <4.21,
     o2i-archimate-profile,
+    o2i-archimate-profile:conformance,
     o2i-core ==0.2.0.0,
     tasty >=1.4 && <1.6,
     tasty-hunit >=0.10 && <0.11,
@@ -131,7 +164,7 @@ test-suite o2i-archimate-profile-internal-test
     O2I.ArchiMate.Profile.Rule.Internal.Catalog,
     O2I.ArchiMate.Profile.Rule.Internal.Definition,
     O2I.ArchiMate.Profile.Rule.Internal.Explanation,
-    O2I.ArchiMate.Profile.Test.Fixture
+    O2I.ArchiMate.Profile.Conformance.Source
   build-depends:
     base >=4.20 && <4.21,
     containers >=0.7 && <0.8,
@@ -142,7 +175,7 @@ test-suite o2i-archimate-profile-internal-test
     unicode-transforms ==0.4.0.1
   hs-source-dirs:
     tst/internal,
-    tst,
+    conformance,
     src
 
 test-suite o2i-archimate-profile-api-test
@@ -156,6 +189,7 @@ test-suite o2i-archimate-profile-api-test
   build-depends:
     base >=4.20 && <4.21,
     o2i-archimate-profile,
+    o2i-archimate-profile:conformance,
     template-haskell >=2.22 && <2.23
   hs-source-dirs:
     tst/api

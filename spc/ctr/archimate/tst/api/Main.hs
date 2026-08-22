@@ -87,11 +87,13 @@ $(assertAbstractTypes
     , "Mapping.RelationMapping"
     , "Projection.ProfileEvidenceKind"
     , "Projection.ProfileEvidence"
-    , "Projection.ProfileDefect"
-    , "Projection.ProfileContractFailure"
+    , "Projection.ProfileDiagnosticEvidence"
+    , "Projection.ProfileContractEvidence"
     , "Projection.ProfileProjectionAssessment"
     , "Projection.ProfileProjection"
+    , "Projection.ProfileClassificationEvidence"
     , "Projection.ProfileMappingProvenance"
+    , "Projection.ProfileInvariantEvidence"
     , "Projection.QualificationProposal"
     , "Projection.QualificationRationale"
     , "Projection.QualificationSource"
@@ -306,15 +308,20 @@ $(assertOrdinaryFunctions
     , 'Projection.foldProfileEvidenceKind
     , 'Projection.profileEvidenceKind
     , 'Projection.foldProfileEvidence
-    , 'Projection.profileDefectRuleId
-    , 'Projection.foldProfileDefect
-    , 'Projection.foldProfileContractFailure
+    , 'Projection.profileDiagnosticRuleId
+    , 'Projection.foldProfileDiagnosticEvidence
+    , 'Projection.foldProfileContractEvidence
     , 'Projection.canonicalOccurrenceIdentity
     , 'Projection.assessSelectedView
     , 'Projection.foldProfileProjectionAssessment
-    , 'Projection.profileStructureProjection
+    , 'Projection.withProfileStructureAssessment
+    , 'Projection.profileClassificationEvidence
+    , 'Projection.foldProfileClassificationEvidence
     , 'Projection.profileMappingProvenance
+    , 'Projection.profileMappingEvidenceKind
     , 'Projection.foldProfileMappingProvenance
+    , 'Projection.profileQualificationInvariantEvidence
+    , 'Projection.foldProfileInvariantEvidence
     , 'Projection.profileQualificationProposals
     , 'Projection.qualificationProposalOccurrence
     , 'Projection.qualificationProposalIdentity

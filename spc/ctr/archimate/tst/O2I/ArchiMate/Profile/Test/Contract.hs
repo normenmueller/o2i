@@ -1,5 +1,6 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 
 -- | Executable contract for the compiled ArchiMate Profile boundary.
 module O2I.ArchiMate.Profile.Test.Contract
@@ -12,26 +13,27 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified O2I.ArchiMate.Profile as Profile
 import qualified O2I.ArchiMate.Profile.Closure as Closure
+import qualified O2I.ArchiMate.Profile.Conformance.Source as Fixture
 import qualified O2I.ArchiMate.Profile.Draft as Draft
 import qualified O2I.ArchiMate.Profile.Mapping as Mapping
 import qualified O2I.ArchiMate.Profile.Notation as Notation
 import qualified O2I.ArchiMate.Profile.Projection as Projection
 import qualified O2I.ArchiMate.Profile.Resolution as Resolution
-import qualified O2I.ArchiMate.Profile.Test.Fixture as Fixture
 import qualified O2I.Core.Contract as CoreContract
-import O2I.Core.Graph.Observation (Commitment(..))
+import O2I.Core.Graph.Observation
+  ( Commitment(..)
+  , carrierModelIdentity
+  , carrierOccurrenceIdentity
+  )
 import O2I.Core.Identity
   ( ModelIdentity
   , OccurrenceIdentity
-  , buildModelIdentityIndex
+  , OccurrenceIdentityDefect
   , modelIdentityText
-  , modelOccurrence
   , occurrenceIdentityText
-  , withSelectedViewScope
   )
 import O2I.Structure
-  ( StructureAssessment(..)
-  , assessStructure
+  ( foldStructureAssessment
   , structuredIncidenceEndpoint
   , structuredIncidenceRole
   , structuredPropositionCommitment
@@ -64,6 +66,7 @@ contractTests =
     , relationApplicabilityTest
     , profileDefectTest
     , qualificationTest
+    , qualificationInvariantTest
     , candidateRecognitionTest
     , qualificationNormalizationTest
     , qualificationAdversarialTest
@@ -191,9 +194,9 @@ assertGlobalDuplicate draft expectedToken =
             (Notation.archiMateNotationIssueKindToken
                . Notation.archiMateNotationIssueKind)
             inventory
-    tokens @?= [expectedToken]
+    tokens @?= [expectedToken, "record-identity-duplicate"]
     map (NonEmpty.length . Notation.archiMateNotationIssueEvidence) inventory
-      @?= [1]
+      @?= [1, 1]
     let view =
           singleWhere
             "View named Main"
@@ -344,34 +347,55 @@ closureAndProjectionTest =
     assertBool
       "closure provenance is missing"
       (not (null (closedClosureProvenance closed)))
-    projected <- acceptedProjection closed
-    mappingProvenance projected
-      @?= [ ("carrier", "archimate:record:1", "context", Nothing, Nothing)
-          , ("carrier", "archimate:record:2", "context", Nothing, Nothing)
-          , ( "relation"
-            , "archimate:record:3"
-            , "relation-syntax:AssociationRelationship:true:qualifies"
-            , Just "archimate:record:1"
-            , Just "archimate:record:2")
-          ]
-    Projection.profileQualificationProposals projected @?= []
-    summary <- assessProjectedStructure closed projected
-    summaryCarrierCount summary @?= 2
-    summaryRelationCount summary @?= 1
+    withAcceptedProjection closed $ \projected -> do
+      mappingProvenance projected
+        @?= [ ( "carrier"
+              , "archimate:record:1"
+              , "carrier:context"
+              , "context"
+              , Nothing
+              , Nothing)
+            , ( "carrier"
+              , "archimate:record:2"
+              , "carrier:context"
+              , "context"
+              , Nothing
+              , Nothing)
+            , ( "relation"
+              , "archimate:record:3"
+              , "relation:relation-syntax:AssociationRelationship:true:qualifies"
+              , "relation-syntax:AssociationRelationship:true:qualifies"
+              , Just "archimate:record:1"
+              , Just "archimate:record:2")
+            ]
+      Projection.profileQualificationProposals projected @?= []
+      summary <- assessProjectedStructure projected
+      summaryCarrierCount summary @?= 2
+      summaryRelationCount summary @?= 1
 
 validKpiCarrierTest :: TestTree
 validKpiCarrierTest =
   testCase "projects a KPI carrier without qualification semantics" $ do
     let closed = closedView Fixture.validKpiDraft "KPI"
-    projected <- acceptedProjection closed
-    mappingProvenance projected
-      @?= [ ("carrier", "archimate:record:1", "context", Nothing, Nothing)
-          , ("carrier", "archimate:record:2", "primitive.kpi", Nothing, Nothing)
-          ]
-    Projection.profileQualificationProposals projected @?= []
-    summary <- assessProjectedStructure closed projected
-    summaryCarrierCount summary @?= 2
-    summaryRelationCount summary @?= 0
+    withAcceptedProjection closed $ \projected -> do
+      mappingProvenance projected
+        @?= [ ( "carrier"
+              , "archimate:record:1"
+              , "carrier:context"
+              , "context"
+              , Nothing
+              , Nothing)
+            , ( "carrier"
+              , "archimate:record:2"
+              , "carrier:primitive.kpi"
+              , "primitive.kpi"
+              , Nothing
+              , Nothing)
+            ]
+      Projection.profileQualificationProposals projected @?= []
+      summary <- assessProjectedStructure projected
+      summaryCarrierCount summary @?= 2
+      summaryRelationCount summary @?= 0
 
 relationApplicabilityTest :: TestTree
 relationApplicabilityTest =
@@ -388,13 +412,13 @@ relationApplicabilityTest =
     acceptedCase (name, draft) =
       testCase ("accepts " <> name) $ do
         let closed = closedView draft "Relation"
-        projected <- acceptedProjection closed
-        length
-          [ ()
-          | (kind, _, _, _, _) <- mappingProvenance projected
-          , kind == "relation"
-          ]
-          @?= 1
+        withAcceptedProjection closed $ \projected ->
+          length
+            [ ()
+            | (kind, _, _, _, _, _) <- mappingProvenance projected
+            , kind == "relation"
+            ]
+            @?= 1
     rejectedRelations =
       [ relationCase
           "Influence contributes-to Action -> Action"
@@ -506,31 +530,21 @@ profileDefectTest =
     "pairs generated defects with occurrence-complete typed evidence"
     [ testCase "retains one exact invalid scalar" $ do
         let closed = closedView Fixture.invalidCarrierDraft "Main"
-        defects <- projectionDefects closed
-        map Projection.profileDefectRuleId defects
+        defects <- projectionDefectSummaries closed
+        map (\(rule, _, _) -> rule) defects
           @?= ["property:typed-carrier:o2i.type:value-domain"]
-        let defect = headTotal "invalid carrier defect" defects
-        Projection.foldProfileDefect
-          (\_ evidence -> do
-             evidenceKind evidence @?= "property-value"
-             evidenceScalarCount evidence @?= 1)
-          defect
+        let (_, kind, scalarCount) = headTotal "invalid carrier defect" defects
+        kind @?= "property-value"
+        scalarCount @?= 1
     , testCase "retains every invalid scalar as separate evidence" $ do
         defects <-
-          projectionDefects
+          projectionDefectSummaries
             (closedView
                Fixture.qualificationMultipleInvalidRoleValuesDraft
                "Qualification")
         sort
           [ (rule, scalarCount)
-          | defect <- defects
-          , let (rule, kind, scalarCount) =
-                  Projection.foldProfileDefect
-                    (\defectRule defectEvidence ->
-                       ( defectRule
-                       , evidenceKind defectEvidence
-                       , evidenceScalarCount defectEvidence))
-                    defect
+          | (rule, kind, scalarCount) <- defects
           , kind == "property-value"
           ]
           @?= sort
@@ -547,34 +561,90 @@ qualificationTest :: TestTree
 qualificationTest =
   testCase "projects one exact four-role qualification proposal" $ do
     let closed = closedView Fixture.qualificationDraft "Qualification"
-    projected <- acceptedProjection closed
-    let proposal =
-          headTotal
-            "qualification proposal"
-            (Projection.profileQualificationProposals projected)
-        identities = projectedIdentityInventory closed
-        references =
-          [ ( CoreContract.coreQualificationProposalRoleIdText
-                (Projection.qualificationReferenceRole reference)
-            , targetModelIdentity
-                identities
-                (Projection.qualificationReferenceTarget reference))
-          | reference <- Projection.qualificationProposalReferences proposal
-          ]
-    modelIdentityText (Projection.qualificationProposalIdentity proposal)
-      @?= "proposal"
-    qualificationRationale proposal
-      @?= Just
-            ( "proposal-documentation-field[1]"
-            , "A precise qualification rationale.")
-    qualificationSources proposal
-      @?= [("archimate:property:2", "source-document")]
-    references
-      @?= [ ("need-qualification-proposal.role.strategy", "strategy")
-          , ("need-qualification-proposal.role.need", "need")
-          , ("need-qualification-proposal.role.objective", "objective")
-          , ("need-qualification-proposal.role.key-result", "key-result")
-          ]
+    withAcceptedProjection closed $ \projected -> do
+      let proposal =
+            headTotal
+              "qualification proposal"
+              (Projection.profileQualificationProposals projected)
+          identities = projectedIdentityInventory closed
+          references =
+            [ ( CoreContract.coreQualificationProposalRoleIdText
+                  (Projection.qualificationReferenceRole reference)
+              , targetModelIdentity
+                  identities
+                  (Projection.qualificationReferenceTarget reference))
+            | reference <- Projection.qualificationProposalReferences proposal
+            ]
+      modelIdentityText (Projection.qualificationProposalIdentity proposal)
+        @?= "proposal"
+      qualificationRationale proposal
+        @?= Just
+              ( "proposal-documentation-field[1]"
+              , "A precise qualification rationale.")
+      qualificationSources proposal
+        @?= [("archimate:property:2", "source-document")]
+      references
+        @?= [ ("need-qualification-proposal.role.strategy", "strategy")
+            , ("need-qualification-proposal.role.need", "need")
+            , ("need-qualification-proposal.role.objective", "objective")
+            , ("need-qualification-proposal.role.key-result", "key-result")
+            ]
+
+qualificationInvariantTest :: TestTree
+qualificationInvariantTest =
+  testGroup
+    "retains qualification invariants only on actual proposals"
+    [ testCase "pairs exactly two rules with the projected proposal occurrence" $ do
+        let closed = closedView Fixture.qualificationDraft "Qualification"
+        withAcceptedProjection closed $ \projected -> do
+          let proposal =
+                headTotal
+                  "qualification proposal"
+                  (Projection.profileQualificationProposals projected)
+              expectedOccurrence =
+                Projection.qualificationProposalOccurrence proposal
+          map
+            qualificationInvariantObservation
+            (Projection.profileQualificationInvariantEvidence projected)
+            @?= [ ( "qualification.proposal.carrier.category"
+                  , Just (Right expectedOccurrence))
+                , ( "qualification.proposal.carrier.stable-identity-scope"
+                  , Just (Right expectedOccurrence))
+                ]
+    , testCase "emits no invariant row without a projected proposal" $ do
+        let closed = closedView Fixture.validDraft "Main"
+        withAcceptedProjection closed $ \projected ->
+          length (Projection.profileQualificationInvariantEvidence projected)
+            @?= 0
+    , testCase "retains exactly two constant invariant facts per proposal" $ do
+        let proposalCount = 32
+            closed =
+              closedView
+                (Fixture.qualificationBatchDraft proposalCount)
+                "Qualification batch"
+        withAcceptedProjection closed $ \projected -> do
+          let proposals = Projection.profileQualificationProposals projected
+              evidence =
+                Projection.profileQualificationInvariantEvidence projected
+          length proposals @?= proposalCount
+          length evidence @?= 2 * proposalCount
+          mapM_
+            (\proposal -> do
+               let occurrence =
+                     Projection.qualificationProposalOccurrence proposal
+                   rules =
+                     [ rule
+                     | invariant <- evidence
+                     , let (rule, observed) =
+                             qualificationInvariantObservation invariant
+                     , observed == Just (Right occurrence)
+                     ]
+               rules
+                 @?= [ "qualification.proposal.carrier.category"
+                     , "qualification.proposal.carrier.stable-identity-scope"
+                     ])
+            proposals
+    ]
 
 candidateRecognitionTest :: TestTree
 candidateRecognitionTest =
@@ -654,24 +724,55 @@ qualificationRationale proposal =
     (Projection.qualificationProposalRationale proposal)
 
 mappingProvenance ::
-     Projection.ProfileProjection
-  -> [(Text, Text, Text, Maybe Text, Maybe Text)]
+     Projection.ProfileProjection profile document
+  -> [(Text, Text, Text, Text, Maybe Text, Maybe Text)]
 mappingProvenance projection =
   map
     (Projection.foldProfileMappingProvenance
-       (\occurrence mappingId ->
+       (\rule occurrence mappingId ->
           ( "carrier"
           , occurrenceIdentityText occurrence
+          , rule
           , mappingId
           , Nothing
           , Nothing))
-       (\occurrence mappingId source target ->
+       (\rule occurrence mappingId source target ->
           ( "relation"
           , occurrenceIdentityText occurrence
+          , rule
           , mappingId
           , Just (occurrenceIdentityText source)
-          , Just (occurrenceIdentityText target))))
+          , Just (occurrenceIdentityText target)))
+       (\rule occurrence mappingId ->
+          ( "construction"
+          , occurrenceIdentityText occurrence
+          , rule
+          , mappingId
+          , Nothing
+          , Nothing)))
     (Projection.profileMappingProvenance projection)
+
+qualificationInvariantObservation ::
+     Projection.ProfileInvariantEvidence profile document
+  -> (Text, Maybe (Either OccurrenceIdentityDefect OccurrenceIdentity))
+qualificationInvariantObservation =
+  Projection.foldProfileInvariantEvidence
+    (\rule evidence ->
+       ( rule
+       , Projection.foldProfileEvidence
+           (const Nothing)
+           (const Nothing)
+           (\_ _ -> Nothing)
+           (\_ _ -> Nothing)
+           (\_ _ _ -> Nothing)
+           (\_ _ _ -> Nothing)
+           (Just . Projection.canonicalOccurrenceIdentity)
+           (\_ _ _ -> Nothing)
+           (const Nothing)
+           (\_ _ _ -> Nothing)
+           (const Nothing)
+           (\_ _ -> Nothing)
+           evidence))
 
 rulePresentTest :: String -> Draft.ProfileDraft -> Text -> Text -> TestTree
 rulePresentTest name draft view expected =
@@ -683,12 +784,12 @@ rulePresentTest name draft view expected =
 
 acceptedQualificationProposal ::
      Draft.ProfileDraft -> IO Projection.QualificationProposal
-acceptedQualificationProposal draft = do
-  projected <- acceptedProjection (closedView draft "Qualification")
-  pure
-    (headTotal
-       "qualification proposal"
-       (Projection.profileQualificationProposals projected))
+acceptedQualificationProposal draft =
+  withAcceptedProjection (closedView draft "Qualification") $ \projected ->
+    pure
+      (headTotal
+         "qualification proposal"
+         (Projection.profileQualificationProposals projected))
 
 qualificationAdversarialTest :: TestTree
 qualificationAdversarialTest =
@@ -742,24 +843,24 @@ collectiveTest =
     collectiveCase name draft completeness =
       testCase name $ do
         let closed = closedView draft "Collective"
-        projected <- acceptedProjection closed
-        summary <- assessProjectedStructure closed projected
-        summaryStructuredPropositions summary
-          @?= [ StructuredSummary
-                  { structuredIdentity = "claim"
-                  , structuredFamily = "collective-strategy-realization"
-                  , structuredCompleteness = completeness
-                  , structuredCommitment = "asserted"
-                  , structuredIncidences =
-                      [ ( "collective-strategy-realization.role.participant"
-                        , "contributor-a")
-                      , ( "collective-strategy-realization.role.participant"
-                        , "contributor-b")
-                      , ( "collective-strategy-realization.role.target"
-                        , "target")
-                      ]
-                  }
-              ]
+        withAcceptedProjection closed $ \projected -> do
+          summary <- assessProjectedStructure projected
+          summaryStructuredPropositions summary
+            @?= [ StructuredSummary
+                    { structuredIdentity = "claim"
+                    , structuredFamily = "collective-strategy-realization"
+                    , structuredCompleteness = completeness
+                    , structuredCommitment = "asserted"
+                    , structuredIncidences =
+                        [ ( "collective-strategy-realization.role.participant"
+                          , "contributor-a")
+                        , ( "collective-strategy-realization.role.participant"
+                          , "contributor-b")
+                        , ( "collective-strategy-realization.role.target"
+                          , "target")
+                        ]
+                    }
+                ]
 
 collectiveChainTest :: TestTree
 collectiveChainTest =
@@ -805,17 +906,17 @@ branchIsolationTest =
             , "outgoing"
             , "target"
             ]
-    qualificationProjection <- acceptedProjection qualification
-    collectiveProjection <- acceptedProjection collective
-    length (Projection.profileQualificationProposals qualificationProjection)
-      @?= 1
-    Projection.profileQualificationProposals collectiveProjection @?= []
-    qualificationStructure <-
-      assessProjectedStructure qualification qualificationProjection
-    collectiveStructure <-
-      assessProjectedStructure collective collectiveProjection
-    summaryStructuredPropositions qualificationStructure @?= []
-    length (summaryStructuredPropositions collectiveStructure) @?= 1
+    withAcceptedProjection qualification $ \qualificationProjection ->
+      withAcceptedProjection collective $ \collectiveProjection -> do
+        length
+          (Projection.profileQualificationProposals qualificationProjection)
+          @?= 1
+        Projection.profileQualificationProposals collectiveProjection @?= []
+        qualificationStructure <-
+          assessProjectedStructure qualificationProjection
+        collectiveStructure <- assessProjectedStructure collectiveProjection
+        summaryStructuredPropositions qualificationStructure @?= []
+        length (summaryStructuredPropositions collectiveStructure) @?= 1
 
 unmarkedDisplayedElementTest :: TestTree
 unmarkedDisplayedElementTest =
@@ -826,7 +927,7 @@ unmarkedDisplayedElementTest =
     closedQualificationOccurrences closed @?= []
     length (closedViewUniverse closed) @?= 2
     closedActivationProvenance closed @?= []
-    map renderClosure (closedClosureProvenance closed)
+    closedClosureProvenance closed
       @?= [ stableConceptProvenance "record:3"
           , stableConceptProvenance "record:4"
           ]
@@ -838,8 +939,12 @@ unmarkedDisplayedElementTest =
         <> trigger
         <> "|record:1|"
 
-acceptedProjection :: ClosedView -> IO Projection.ProfileProjection
-acceptedProjection (ClosedView universe) =
+withAcceptedProjection ::
+     ClosedView
+  -> (forall profile document. Projection.ProfileProjection profile document -> IO
+                                                                                  result)
+  -> IO result
+withAcceptedProjection (ClosedView universe) consume =
   Notation.foldStageResult
     (\issues ->
        assertFailure ("Notation rejected: " <> show (NonEmpty.length issues)))
@@ -849,7 +954,7 @@ acceptedProjection (ClosedView universe) =
             ("Profile/Core contract failed: " <> show (NonEmpty.length failures)))
        (\defects ->
           assertFailure ("Profile rejected: " <> show (NonEmpty.length defects)))
-       pure
+       consume
        . Projection.assessSelectedView)
     (Notation.notationConformance (Notation.assessArchiMateNotation universe))
 
@@ -868,43 +973,33 @@ data StructuredSummary = StructuredSummary
   } deriving (Eq, Show)
 
 assessProjectedStructure ::
-     ClosedView -> Projection.ProfileProjection -> IO StructureSummary
-assessProjectedStructure closed projected =
-  case buildModelIdentityIndex modelOccurrences of
-    Left defects -> assertFailure ("identity index rejected: " <> show defects)
-    Right index ->
-      case withSelectedViewScope index selectedOccurrences assess of
-        Left defects -> assertFailure ("scope rejected: " <> show defects)
-        Right (Left message) -> assertFailure message
-        Right (Right summary) -> pure summary
+     Projection.ProfileProjection profile document -> IO StructureSummary
+assessProjectedStructure projected =
+  Projection.withProfileStructureAssessment
+    projected
+    (\defects -> assertFailure ("identity index rejected: " <> show defects))
+    (\defects -> assertFailure ("scope rejected: " <> show defects))
+    (\defects -> assertFailure ("Core boundary rejected: " <> show defects))
+    (foldStructureAssessment
+       (\defects ->
+          assertFailure
+            ("Core Structure rejected: " <> show (NonEmpty.length defects)))
+       (pure . summarizeGraph))
   where
-    selectedOccurrences = map fst occurrenceModels
-    modelOccurrences =
-      [ modelOccurrence occurrence identifier
-      | (occurrence, identifier) <- occurrenceModels
-      ]
-    occurrenceModels =
-      [ (projectedOccurrence occurrence, identifier)
-      | (occurrence, outcome) <- canonicalRecordIdentities closed
-      , occurrence `elem` closedGraphOccurrences closed
-      , identifier <- maybeToList (resolvedIdentity outcome)
-      ]
-    assess scope =
-      case assessStructure
-             scope
-             (Projection.profileStructureProjection projected) of
-        Left defects -> Left ("Core boundary rejected: " <> show defects)
-        Right (StructureRejected defects) ->
-          Left ("Core Structure rejected: " <> show defects)
-        Right (StructureAccepted graph) ->
-          Right
-            StructureSummary
-              { summaryCarrierCount = length (wellFormedCarriers graph)
-              , summaryRelationCount = length (wellFormedRelations graph)
-              , summaryStructuredPropositions =
-                  map summarize (wellFormedStructuredPropositions graph)
-              }
-    summarize proposition =
+    summarizeGraph graph =
+      StructureSummary
+        { summaryCarrierCount = length (wellFormedCarriers graph)
+        , summaryRelationCount = length (wellFormedRelations graph)
+        , summaryStructuredPropositions =
+            map
+              (summarize
+                 [ ( carrierOccurrenceIdentity carrier
+                   , carrierModelIdentity carrier)
+                 | carrier <- wellFormedCarriers graph
+                 ])
+              (wellFormedStructuredPropositions graph)
+        }
+    summarize identities proposition =
       StructuredSummary
         { structuredIdentity =
             modelIdentityText (structuredPropositionModelIdentity proposition)
@@ -920,12 +1015,11 @@ assessProjectedStructure closed projected =
             [ ( CoreContract.coreStructuredPropositionRoleIdText
                   (structuredIncidenceRole incidence)
               , targetModelIdentity
-                  projectedIdentities
+                  identities
                   (structuredIncidenceEndpoint incidence))
             | incidence <- structuredPropositionIncidences proposition
             ]
         }
-    projectedIdentities = projectedIdentityInventory closed
 
 recordIdentity ::
      Notation.CanonicalRecord
@@ -1150,13 +1244,13 @@ closedQualificationOccurrences (ClosedView universe) =
 closedViewUniverse :: ClosedView -> [Notation.CanonicalOccurrence]
 closedViewUniverse (ClosedView universe) = Closure.assessmentUniverse universe
 
-closedActivationProvenance :: ClosedView -> [Closure.ActivationProvenance]
+closedActivationProvenance :: ClosedView -> [Text]
 closedActivationProvenance (ClosedView universe) =
-  Closure.assessmentActivationProvenance universe
+  map renderActivation (Closure.assessmentActivationProvenance universe)
 
-closedClosureProvenance :: ClosedView -> [Closure.ClosureProvenance]
+closedClosureProvenance :: ClosedView -> [Text]
 closedClosureProvenance (ClosedView universe) =
-  Closure.assessmentClosureProvenance universe
+  map renderClosure (Closure.assessmentClosureProvenance universe)
 
 canonicalRecordIdentities ::
      ClosedView -> [(Notation.CanonicalOccurrence, Notation.IdentityOutcome)]
@@ -1178,9 +1272,8 @@ closureSnapshot closed =
     , snapshotQualification =
         map renderOccurrence (closedQualificationOccurrences closed)
     , snapshotUniverse = map renderOccurrence (closedViewUniverse closed)
-    , snapshotActivation =
-        map renderActivation (closedActivationProvenance closed)
-    , snapshotClosure = map renderClosure (closedClosureProvenance closed)
+    , snapshotActivation = closedActivationProvenance closed
+    , snapshotClosure = closedClosureProvenance closed
     }
 
 closureSemanticSnapshot :: ClosedView -> ([Text], [Text], [Text])
@@ -1202,7 +1295,7 @@ renderOccurrence occurrence =
     <> ":"
     <> Text.pack (show (Notation.canonicalOccurrenceOrdinal occurrence))
 
-renderActivation :: Closure.ActivationProvenance -> Text
+renderActivation :: Closure.ActivationProvenance profile document -> Text
 renderActivation =
   Closure.foldActivationProvenance $ \profile digest branch rule owner trigger sources ->
     Text.intercalate
@@ -1216,7 +1309,7 @@ renderActivation =
       , Text.intercalate "," sources
       ]
 
-renderClosure :: Closure.ClosureProvenance -> Text
+renderClosure :: Closure.ClosureProvenance profile document -> Text
 renderClosure =
   Closure.foldClosureProvenance $ \profile digest branch rule trigger included context ->
     Text.intercalate
@@ -1272,8 +1365,8 @@ canonicalIdentityInventory closed =
   , identifier <- maybeToList (resolvedIdentity outcome)
   ]
 
-projectionDefects :: ClosedView -> IO [Projection.ProfileDefect]
-projectionDefects (ClosedView universe) =
+projectionDefectSummaries :: ClosedView -> IO [(Text, Text, Int)]
+projectionDefectSummaries (ClosedView universe) =
   Notation.foldStageResult
     (\issues -> assertFailure ("unexpected Notation defects: " <> show issues))
     (Projection.foldProfileProjectionAssessment
@@ -1281,20 +1374,25 @@ projectionDefects (ClosedView universe) =
           assertFailure
             ("unexpected Profile/Core contract failures: "
                <> show (NonEmpty.length failures)))
-       (pure . NonEmpty.toList)
+       (pure . map summarize . NonEmpty.toList)
        (const (assertFailure "invalid Profile fixture unexpectedly projected"))
        . Projection.assessSelectedView)
     (Notation.notationConformance (Notation.assessArchiMateNotation universe))
+  where
+    summarize evidence =
+      Projection.foldProfileDiagnosticEvidence
+        (\rule exact -> (rule, evidenceKind exact, evidenceScalarCount exact))
+        evidence
 
 projectionDefectRules :: ClosedView -> IO [Text]
 projectionDefectRules closed =
-  map Projection.profileDefectRuleId <$> projectionDefects closed
+  map (\(rule, _, _) -> rule) <$> projectionDefectSummaries closed
 
 commitmentText :: Commitment -> Text
 commitmentText Candidate = "candidate"
 commitmentText Asserted = "asserted"
 
-evidenceKind :: Projection.ProfileEvidence kind -> Text
+evidenceKind :: Projection.ProfileEvidence profile document kind -> Text
 evidenceKind evidence =
   Projection.foldProfileEvidenceKind
     "carrier"
@@ -1311,7 +1409,7 @@ evidenceKind evidence =
     "structured-incidence"
     (Projection.profileEvidenceKind evidence)
 
-evidenceScalarCount :: Projection.ProfileEvidence kind -> Int
+evidenceScalarCount :: Projection.ProfileEvidence profile document kind -> Int
 evidenceScalarCount =
   Projection.foldProfileEvidence
     (const 0)

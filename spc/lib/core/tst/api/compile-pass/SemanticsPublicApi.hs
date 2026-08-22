@@ -17,13 +17,14 @@ summarize ::
      SemanticAssessment scope -> (SemanticDisposition, Int, Int, Maybe Int)
 summarize assessment =
   ( semanticDisposition assessment
-  , length (semanticDefects assessment)
+  , foldSemanticAssessment NonEmpty.length 0 (const 0) assessment
   , length (semanticCandidateOccurrences assessment)
   , length . semanticallyValidStrategies <$> acceptedSemanticModel assessment)
 
-diagnosticOccurrences :: SemanticDefect -> [(Text, [OccurrenceIdentity])]
+diagnosticOccurrences ::
+     SemanticDiagnosticEvidence scope -> [(Text, [OccurrenceIdentity])]
 diagnosticOccurrences =
-  map projectGroup . NonEmpty.toList . semanticDefectOccurrenceGroups
+  map projectGroup . NonEmpty.toList . semanticDiagnosticOccurrenceGroups
   where
     projectGroup group =
       ( semanticOccurrenceRoleId (semanticOccurrenceGroupRole group)

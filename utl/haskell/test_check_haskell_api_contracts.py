@@ -61,6 +61,25 @@ class HaskellApiContractTest(unittest.TestCase):
         self.assertIn("-fdiagnostics-as-json", command)
         self.assertEqual(command[command.index("-package") + 1], "o2i-core")
 
+    def test_compiler_command_selects_the_exact_main_unit_when_registered(self):
+        with TemporaryDirectory() as temporary:
+            build = Path(temporary)
+            package_db = build / "packagedb/ghc-9.10.3"
+            package_db.mkdir(parents=True)
+            unit = "o2i-core-0.2.0.0-inplace"
+            (package_db / f"{unit}.conf").write_text("")
+
+            command = contracts.compiler_command(
+                Path("/tmp/o2i/spc"),
+                "cabal.foundation.project",
+                build,
+                "o2i-core",
+                Path("/tmp/o2i/Client.hs"),
+                Path("/tmp/o2i/output"),
+            )
+
+            self.assertEqual(command[command.index("-package-id") + 1], unit)
+
     def test_private_compiler_uses_source_tree_without_public_package(self):
         project = Path("/tmp/o2i/spc")
         build = Path("/tmp/o2i/build")

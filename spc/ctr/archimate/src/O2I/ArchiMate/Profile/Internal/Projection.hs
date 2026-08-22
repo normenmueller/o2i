@@ -18,8 +18,11 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Text.Normalize (NormalizationMode(NFC), normalize)
 import O2I.ArchiMate.Profile.Internal.Closure
-  ( ClosedView
+  ( ClassificationProvenance
+  , ClosedView
+  , closedViewClassificationProvenanceValue
   , closedViewDisplayedOccurrencesValue
+  , closedViewDocumentValue
   , closedViewGraphOccurrencesValue
   , closedViewIndexValue
   , closedViewQualificationOccurrencesValue
@@ -37,6 +40,7 @@ import O2I.ArchiMate.Profile.Internal.Generated
   , GeneratedProfileEvidenceKind(..)
   , GeneratedPropertyConstraint(..)
   , GeneratedPropertyRuntimePlan(..)
+  , GeneratedQualificationInvariantRule
   , GeneratedRelationMapping(..)
   , GeneratedRuntimeExpected(..)
   , generatedCarrierOccurrenceDefectRule
@@ -50,6 +54,8 @@ import O2I.ArchiMate.Profile.Internal.Generated
   , generatedPropertyValueEvidenceDefectRule
   , generatedProposalCarrierOccurrenceDefectRule
   , generatedProposalReferenceIncidenceDefectRule
+  , generatedQualificationProposalCategoryRule
+  , generatedQualificationProposalStableIdentityScopeRule
   , generatedRelationMappings
   , generatedRelationshipOccurrenceDefectRule
   , generatedReservedPropertyOccurrenceDefectRule
@@ -77,9 +83,11 @@ import O2I.Core.Contract
 import O2I.Core.Graph.Observation (Commitment(..))
 import O2I.Core.Identity
   ( ModelIdentity
+  , ModelOccurrence
   , OccurrenceIdentity
   , OccurrenceIdentityDefect
   , modelIdentity
+  , modelOccurrence
   , occurrenceIdentity
   )
 import O2I.Structure
@@ -211,21 +219,46 @@ data QualificationProposal = QualificationProposal
   , qualificationProposalReferencesValue :: ![QualificationReference]
   } deriving (Eq, Show)
 
+-- | One generated positive qualification invariant paired with the existing
+-- proposal-carrier occurrence evidence form.
+data ProfileInvariantEvidence =
+  ProfileInvariantEvidence
+    !GeneratedQualificationInvariantRule
+    !(ProfileEvidence 'GeneratedProfileEvidenceProposalCarrierOccurrence)
+  deriving (Show)
+
+-- | One successfully constructed proposal and its constant positive evidence.
+data QualificationProjection = QualificationProjection
+  { qualificationProjectionProposal :: !QualificationProposal
+  , qualificationProjectionMappingProvenance :: ![ProfileMappingProvenance]
+  , qualificationProjectionInvariantEvidence :: ![ProfileInvariantEvidence]
+  }
+
 -- | One concrete Profile mapping retained independently of Core semantics.
 data ProfileMappingProvenance
-  = CarrierMappingProvenance !OccurrenceIdentity !Text
+  = CarrierMappingProvenance !OccurrenceIdentity !Text !Text
   | RelationMappingProvenance
       !OccurrenceIdentity
       !Text
+      !Text
       !OccurrenceIdentity
       !OccurrenceIdentity
+  | ConstructionMappingProvenance
+      !OccurrenceIdentity
+      !Text
+      !Text
+      !GeneratedProfileEvidenceKind
   deriving (Eq, Ord, Show)
 
 -- | Accepted Core Structure plus retained qualification proposals.
 data ProfileProjection = ProfileProjection
   { profileStructureProjectionValue :: !StructureProjection
+  , profileModelIdentityOccurrencesValue :: ![ModelOccurrence]
+  , profileSelectedOccurrencesValue :: ![OccurrenceIdentity]
+  , profileClassificationProvenanceValue :: ![ClassificationProvenance]
   , profileMappingProvenanceValue :: ![ProfileMappingProvenance]
   , profileQualificationProposalsValue :: ![QualificationProposal]
+  , profileInvariantEvidenceValue :: ![ProfileInvariantEvidence]
   }
 
 -- | Closed outcome of applying the compiled Profile projection contract.
@@ -250,6 +283,7 @@ data StructuredResult = StructuredResult
   { structuredIssues :: ![ProfileIssue]
   , structuredPropositions :: ![StructuredPropositionProjection]
   , structuredIncidences :: ![StructuredIncidenceProjection]
+  , structuredMappingProvenance :: ![ProfileMappingProvenance]
   }
 
 data TextNormalization
@@ -343,6 +377,83 @@ patternForbiddenIssues subject occurrence violation issue =
     Right _ ->
       resultErrors (invalidPatternRuntimeExpectation subject occurrence)
 
+patternTextMappingProvenance ::
+     Text
+  -> Text
+  -> Text
+  -> GeneratedProfileEvidenceKind
+  -> CanonicalOccurrence
+  -> OccurrenceIdentity
+  -> ProjectionResult ProfileMappingProvenance
+patternTextMappingProvenance subject actual mappingId evidenceKind owner occurrence =
+  case patternTextExpectation subject owner of
+    Left issues -> ProjectionResult issues []
+    Right (rule, expected)
+      | actual == expected ->
+        ProjectionResult
+          []
+          [ConstructionMappingProvenance occurrence rule mappingId evidenceKind]
+      | otherwise ->
+        ProjectionResult
+          [ contractIssue
+              (MissingCoreContractBinding
+                 ("generated-positive-pattern-mapping:" <> subject)
+                 owner)
+          ]
+          []
+
+patternTextsMappingProvenance ::
+     Text
+  -> Text
+  -> Text
+  -> GeneratedProfileEvidenceKind
+  -> CanonicalOccurrence
+  -> OccurrenceIdentity
+  -> ProjectionResult ProfileMappingProvenance
+patternTextsMappingProvenance subject actual mappingId evidenceKind owner occurrence =
+  case patternTextsExpectation subject owner of
+    Left issues -> ProjectionResult issues []
+    Right (rule, expected)
+      | actual `elem` expected ->
+        ProjectionResult
+          []
+          [ConstructionMappingProvenance occurrence rule mappingId evidenceKind]
+      | otherwise ->
+        ProjectionResult
+          [ contractIssue
+              (MissingCoreContractBinding
+                 ("generated-positive-pattern-mapping:" <> subject)
+                 owner)
+          ]
+          []
+
+propertyCardinalityMappingProvenance ::
+     Text
+  -> CanonicalOccurrence
+  -> OccurrenceIdentity
+  -> ProjectionResult ProfileMappingProvenance
+propertyCardinalityMappingProvenance mappingId owner occurrence =
+  case filter
+         ((== mappingId) . generatedPropertyRuntimeMappingId)
+         generatedPropertyRuntimePlans of
+    [plan] ->
+      ProjectionResult
+        []
+        [ ConstructionMappingProvenance
+            occurrence
+            (generatedPropertyRuntimePropertyCardinalityRuleId plan)
+            mappingId
+            GeneratedProfileEvidencePropertySlotEvidence
+        ]
+    _ ->
+      ProjectionResult
+        [ contractIssue
+            (MissingCoreContractBinding
+               ("generated-positive-property-mapping:" <> mappingId)
+               owner)
+        ]
+        []
+
 projectClosedProfile :: ClosedView -> ProfileProjectionAssessment
 projectClosedProfile closed =
   case NonEmpty.nonEmpty contractFailures of
@@ -360,11 +471,27 @@ projectClosedProfile closed =
                     relations
                     propositions
                     incidences
+              , profileModelIdentityOccurrencesValue =
+                  mapMaybe
+                    canonicalModelOccurrence
+                    (canonicalIdentityDomainValue
+                       (closedViewDocumentValue closed))
+              , profileSelectedOccurrencesValue =
+                  mapMaybe
+                    (either (const Nothing) Just
+                       . canonicalOccurrenceIdentityValue)
+                    (Set.toAscList (graph `Set.intersection` recordOccurrences))
+              , profileClassificationProvenanceValue =
+                  closedViewClassificationProvenanceValue closed
               , profileMappingProvenanceValue =
                   sortOn
                     mappingProvenanceOccurrence
-                    (carrierMappingProvenance ++ relationMappingProvenance)
+                    (carrierMappingProvenance
+                       ++ relationMappingProvenance
+                       ++ structuredConstructionProvenance
+                       ++ qualificationMappingProvenance)
               , profileQualificationProposalsValue = proposals
+              , profileInvariantEvidenceValue = invariantEvidence
               }
   where
     projectionIndex = closedViewIndexValue closed
@@ -373,6 +500,11 @@ projectClosedProfile closed =
     qualificationProposals =
       closedViewQualificationProposalOccurrencesValue closed
     universe = closedViewUniverseValue closed
+    recordOccurrences =
+      Set.fromList
+        (map
+           canonicalRecordOccurrenceValue
+           (canonicalIdentityDomainValue (closedViewDocumentValue closed)))
     scopeSeed =
       indexModelRoots projectionIndex
         `Set.union` Set.fromList
@@ -456,8 +588,19 @@ projectClosedProfile closed =
     structuredIssues' = concatMap structuredIssues structuredResults
     propositions = concatMap structuredPropositions structuredResults
     incidences = concatMap structuredIncidences structuredResults
+    structuredConstructionProvenance =
+      concatMap structuredMappingProvenance structuredResults
     proposalIssues = concatMap projectionIssues proposalResults
-    proposals = concatMap projectionValues proposalResults
+    qualificationProjections = concatMap projectionValues proposalResults
+    proposals = map qualificationProjectionProposal qualificationProjections
+    qualificationMappingProvenance =
+      concatMap
+        qualificationProjectionMappingProvenance
+        qualificationProjections
+    invariantEvidence =
+      concatMap
+        qualificationProjectionInvariantEvidence
+        qualificationProjections
     allIssues =
       sortOn
         issueOrder
@@ -469,6 +612,15 @@ projectClosedProfile closed =
     contractFailures = [failure | ProfileContractFailure failure <- allIssues]
     modelDefects =
       [profileDefect | ProfileModelDefect profileDefect <- allIssues]
+
+canonicalModelOccurrence :: CanonicalRecord -> Maybe ModelOccurrence
+canonicalModelOccurrence record =
+  case ( canonicalOccurrenceIdentityValue
+           (canonicalRecordOccurrenceValue record)
+       , canonicalRecordIdentityValue record) of
+    (Right occurrence, IdentityResolved _ identifier) ->
+      Just (modelOccurrence occurrence identifier)
+    _ -> Nothing
 
 -- | Apply selected-Profile rules only after exact Notation conformance.
 assessSelectedViewValue ::
@@ -580,6 +732,7 @@ projectCarrier projectionIndex qualificationProposals record
                         commitment
                     , CarrierMappingProvenance
                         coreIdentity
+                        (carrierMappingRuleIdValue mapping)
                         (carrierMappingIdValue mapping))
                   ]
               (categoryResult, coreTypeResult) ->
@@ -794,6 +947,7 @@ projectSemanticRelationship projectionIndex relationship =
                   []
                   [ RelationMappingProvenance
                       projectedOccurrence
+                      (relationMappingRuleIdValue mapping)
                       (relationMappingIdValue mapping)
                       projectedSource
                       projectedTarget
@@ -905,11 +1059,13 @@ projectStructured projectionIndex structuredCarriers segments record =
             ]
             []
             []
+            []
         Just completeness ->
-          case projectSegments participantRole targetRole projectedOccurrence of
-            ProjectionResult issues incidences ->
+          case ( projectSegments participantRole targetRole projectedOccurrence
+               , structuredConstructionMappings projectedOccurrence commitment) of
+            (ProjectionResult issues incidences, ProjectionResult mappingIssues mappings) ->
               StructuredResult
-                issues
+                (issues ++ mappingIssues)
                 [ structuredPropositionProjection
                     projectedOccurrence
                     family
@@ -917,6 +1073,7 @@ projectStructured projectionIndex structuredCarriers segments record =
                     commitment
                 ]
                 incidences
+                mappings
     (validationIssues, commitmentAssessment, completenessAssessment, occurrenceResult, familyResult, participantRoleResult, targetRoleResult) ->
       StructuredResult
         (validationIssues
@@ -928,6 +1085,7 @@ projectStructured projectionIndex structuredCarriers segments record =
                 familyResult
                 participantRoleResult
                 targetRoleResult)
+        []
         []
         []
   where
@@ -957,11 +1115,12 @@ projectStructured projectionIndex structuredCarriers segments record =
            Just
            occurrence)
     structuredCarrierIssues =
-      patternTextIssues
-        "collective.carrier.archimate-element"
-        occurrence
-        (archiMateElement record)
-        (`structuredCarrierIssue` occurrence)
+      structuredAdditionalPropertyIssues
+        ++ patternTextIssues
+             "collective.carrier.archimate-element"
+             occurrence
+             (archiMateElement record)
+             (`structuredCarrierIssue` occurrence)
         ++ patternTextIssues
              "collective.carrier.junction-type"
              occurrence
@@ -969,6 +1128,20 @@ projectStructured projectionIndex structuredCarriers segments record =
                 then "and"
                 else "")
              (`structuredCarrierIssue` occurrence)
+    structuredAdditionalPropertyIssues =
+      case patternTextsExpectation
+             "collective.carrier.additional-properties"
+             occurrence of
+        Left issues -> issues
+        Right (rule, allowedKeys)
+          | null
+              [ key
+              | property <- propertiesFor projectionIndex occurrence
+              , key <- propertyInfoKeys property
+              , "o2i." `Text.isPrefixOf` key
+              , key `notElem` allowedKeys
+              ] -> []
+          | otherwise -> [structuredCarrierIssue rule occurrence]
     structuredTypeIssues result =
       case result of
         Right actual ->
@@ -1011,6 +1184,31 @@ projectStructured projectionIndex structuredCarriers segments record =
           ]
     allPresent (Just _) (Just _) (Just _) = True
     allPresent _ _ _ = False
+    structuredConstructionMappings projectedOccurrence commitment =
+      foldMapProjection
+        id
+        [ patternTextMappingProvenance
+            "collective.carrier.category"
+            "StructuredProposition"
+            "collective-strategy-realization"
+            GeneratedProfileEvidenceStructuredCarrierOccurrence
+            occurrence
+            projectedOccurrence
+        , patternTextMappingProvenance
+            "collective.carrier.commitment-key"
+            "o2i.commitment"
+            "collective-strategy-realization"
+            GeneratedProfileEvidenceStructuredCarrierOccurrence
+            occurrence
+            projectedOccurrence
+        , patternTextsMappingProvenance
+            "collective.carrier.commitment-values"
+            (commitmentToken commitment)
+            "collective-strategy-realization"
+            GeneratedProfileEvidenceStructuredCarrierOccurrence
+            occurrence
+            projectedOccurrence
+        ]
     projectSegments participantRole targetRole projectedOccurrence =
       foldMapProjection
         (projectStructuredSegment
@@ -1125,23 +1323,33 @@ projectQualificationProposal ::
      ProfileIndex
   -> Set CanonicalOccurrence
   -> RecordInfo
-  -> ProjectionResult QualificationProposal
+  -> ProjectionResult QualificationProjection
 projectQualificationProposal projectionIndex qualification record =
   case ( proposalIssues
        , rationaleResult
        , recordInfoIdentity record
        , coreOccurrence occurrence) of
     ([], Right rationale, IdentityResolved _ identifier, Right projectedOccurrence) ->
-      case foldMapProjection projectReference references of
-        ProjectionResult referenceIssues projectedReferences ->
+      case ( foldMapProjection projectReference references
+           , qualificationConstructionMappings projectedOccurrence) of
+        (ProjectionResult referenceIssues projectedReferences, ProjectionResult mappingIssues mappings) ->
           ProjectionResult
-            referenceIssues
-            [ QualificationProposal
-                projectedOccurrence
-                identifier
-                rationale
-                sources
-                projectedReferences
+            (referenceIssues ++ mappingIssues)
+            [ QualificationProjection
+                (QualificationProposal
+                   projectedOccurrence
+                   identifier
+                   rationale
+                   sources
+                   projectedReferences)
+                mappings
+                [ ProfileInvariantEvidence
+                    generatedQualificationProposalCategoryRule
+                    (ProposalCarrierOccurrenceEvidence occurrence)
+                , ProfileInvariantEvidence
+                    generatedQualificationProposalStableIdentityScopeRule
+                    (ProposalCarrierOccurrenceEvidence occurrence)
+                ]
             ]
     (issues, rationaleAssessment, identity, occurrenceResult) ->
       ProjectionResult
@@ -1205,6 +1413,21 @@ projectQualificationProposal projectionIndex qualification record =
               "qualification.proposal.carrier.stable-identity"
               occurrence
           ]
+    qualificationConstructionMappings projectedOccurrence =
+      foldMapProjection
+        id
+        [ patternTextMappingProvenance
+            "qualification.carrier.stable-identity"
+            "native-concept-identity"
+            "need-qualification-proposal"
+            GeneratedProfileEvidenceProposalCarrierOccurrence
+            occurrence
+            projectedOccurrence
+        , propertyCardinalityMappingProvenance
+            "property:qualification-proposal-assessment:o2i.source"
+            occurrence
+            projectedOccurrence
+        ]
     projectReference relationship =
       projectQualificationReference projectionIndex occurrence relationship
 
@@ -1231,8 +1454,9 @@ assessQualificationRationale record =
 mappingProvenanceOccurrence :: ProfileMappingProvenance -> OccurrenceIdentity
 mappingProvenanceOccurrence provenance =
   case provenance of
-    CarrierMappingProvenance occurrence _ -> occurrence
-    RelationMappingProvenance occurrence _ _ _ -> occurrence
+    CarrierMappingProvenance occurrence _ _ -> occurrence
+    RelationMappingProvenance occurrence _ _ _ _ -> occurrence
+    ConstructionMappingProvenance occurrence _ _ _ -> occurrence
 
 projectSources ::
      ProfileIndex -> CanonicalOccurrence -> ProjectionResult QualificationSource

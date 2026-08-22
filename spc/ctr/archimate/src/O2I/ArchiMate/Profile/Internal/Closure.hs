@@ -77,6 +77,14 @@ instance Ord ClosureProvenance where
         , closureProvenanceProfileIdentityValue provenance
         , closureProvenanceProfileDigestValue provenance)
 
+-- | Exact generated truth-table evidence for one classified scope occurrence.
+data ClassificationProvenance = ClassificationProvenance
+  { classificationProvenanceGraphMembershipValue :: !Bool
+  , classificationProvenanceQualificationMembershipValue :: !Bool
+  , classificationProvenanceRuleIdValue :: !Text
+  , classificationProvenanceOccurrenceValue :: !CanonicalOccurrence
+  } deriving (Eq, Ord, Show)
+
 -- | Deterministic graph and qualification closure of one selected View.
 data ClosedView = ClosedView
   { closedViewDocumentValue :: !CanonicalDocument
@@ -87,6 +95,7 @@ data ClosedView = ClosedView
   , closedViewQualificationOccurrencesValue :: !(Set CanonicalOccurrence)
   , closedViewQualificationProposalOccurrencesValue :: !(Set CanonicalOccurrence)
   , closedViewUniverseValue :: !(Set CanonicalOccurrence)
+  , closedViewClassificationProvenanceValue :: ![ClassificationProvenance]
   , closedViewActivationProvenanceValue :: !(Set ActivationProvenance)
   , closedViewClosureProvenanceValue :: !(Set ClosureProvenance)
   }
@@ -316,6 +325,8 @@ closeViewWithWork selected =
           seedSubjects
             `Set.union` graphMembers final
             `Set.union` qualificationMembers final
+      , closedViewClassificationProvenanceValue =
+          map classifyOccurrence (Set.toAscList seedSubjects)
       , closedViewActivationProvenanceValue = productActivationEvidence final
       , closedViewClosureProvenanceValue = productClosureEvidence final
       }
@@ -333,6 +344,17 @@ closeViewWithWork selected =
       recordIndexCandidates
         (workDeltaVisitedIndexCandidates (measuredWork measuredDisplayed))
         (evaluateProduct profileIndex displayed)
+    classifyOccurrence occurrence =
+      ClassificationProvenance
+        graphMembership
+        qualificationMembership
+        (generatedClassificationRuleId
+           (generatedClassificationRule graphMembership qualificationMembership))
+        occurrence
+      where
+        graphMembership = occurrence `Set.member` graphMembers final
+        qualificationMembership =
+          occurrence `Set.member` qualificationMembers final
 
 recordDequeuedWork :: ProductState -> ProductState
 recordDequeuedWork state =

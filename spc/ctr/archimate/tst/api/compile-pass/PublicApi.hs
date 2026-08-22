@@ -4,6 +4,7 @@
 module PublicApi where
 
 import Data.List.NonEmpty (NonEmpty)
+import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified O2I.ArchiMate.Profile as Profile
 import qualified O2I.ArchiMate.Profile.Closure as Closure
@@ -168,22 +169,24 @@ withAssessmentExample consume =
           consume
             (Closure.deriveProfileAssessmentUniverse profile document view)
 
-projectionOutcomeExample :: ProjectionOutcome
+projectionOutcomeExample :: Int
 projectionOutcomeExample =
   withAssessmentExample $ \universe ->
     Notation.foldStageResult
       (const (error "public API compile fixture notation rejected"))
-      (projectionOutcome . Projection.assessSelectedView)
+      (summarizeProjection . Projection.assessSelectedView)
       (Notation.notationConformance (Notation.assessArchiMateNotation universe))
 
 defectEvidenceOccurrences ::
-     Projection.ProfileDefect -> (Text, [Notation.CanonicalOccurrence])
+     Projection.ProfileDiagnosticEvidence profile document
+  -> (Text, [Notation.CanonicalOccurrence])
 defectEvidenceOccurrences =
-  Projection.foldProfileDefect
+  Projection.foldProfileDiagnosticEvidence
     (\rule evidence -> (rule, evidenceOccurrences evidence))
   where
     evidenceOccurrences ::
-         Projection.ProfileEvidence kind -> [Notation.CanonicalOccurrence]
+         Projection.ProfileEvidence profile document kind
+      -> [Notation.CanonicalOccurrence]
     evidenceOccurrences =
       Projection.foldProfileEvidence
         pure
@@ -206,39 +209,85 @@ data ContractFailureSummary
   | InvalidOccurrenceIdentity !Notation.CanonicalOccurrence !Text
 
 contractFailureSummary ::
-     Projection.ProfileContractFailure -> ContractFailureSummary
+     Projection.ProfileContractEvidence profile document
+  -> ContractFailureSummary
 contractFailureSummary =
-  Projection.foldProfileContractFailure
+  Projection.foldProfileContractEvidence
     UnknownRule
     EvidenceMismatch
     MissingCoreBinding
     InvalidOccurrenceIdentity
 
-data ProjectionOutcome
-  = ContractFailures !(NonEmpty Projection.ProfileContractFailure)
-  | ModelDefects !(NonEmpty Projection.ProfileDefect)
-  | ExactProjection !Projection.ProfileProjection
+data ProjectionOutcome profile document
+  = ContractFailures
+      !(NonEmpty (Projection.ProfileContractEvidence profile document))
+  | ModelDefects
+      !(NonEmpty (Projection.ProfileDiagnosticEvidence profile document))
+  | ExactProjection !(Projection.ProfileProjection profile document)
 
-projectionOutcome :: Projection.ProfileProjectionAssessment -> ProjectionOutcome
+projectionOutcome ::
+     Projection.ProfileProjectionAssessment profile document
+  -> ProjectionOutcome profile document
 projectionOutcome =
   Projection.foldProfileProjectionAssessment
     ContractFailures
     ModelDefects
     ExactProjection
 
-projectionParts ::
-     Projection.ProfileProjection -> [Projection.QualificationProposal]
-projectionParts projection =
-  Projection.profileStructureProjection projection
-    `seq` Projection.profileMappingProvenance projection
-    `seq` Projection.profileQualificationProposals projection
+summarizeProjection ::
+     Projection.ProfileProjectionAssessment profile document -> Int
+summarizeProjection =
+  Projection.foldProfileProjectionAssessment
+    NonEmpty.length
+    NonEmpty.length
+    (length . Projection.profileMappingProvenance)
 
-mappingProvenanceObservation :: Projection.ProfileMappingProvenance -> ()
-mappingProvenanceObservation =
-  Projection.foldProfileMappingProvenance
-    (\occurrence mappingId -> occurrence `seq` mappingId `seq` ())
-    (\occurrence mappingId source target ->
-       occurrence `seq` mappingId `seq` source `seq` target `seq` ())
+projectionParts ::
+     Projection.ProfileProjection profile document
+  -> [Projection.QualificationProposal]
+projectionParts projection =
+  Projection.withProfileStructureAssessment
+    projection
+    (const [])
+    (const [])
+    (const [])
+    (const (Projection.profileQualificationProposals projection))
+
+classificationEvidenceObservation ::
+     Projection.ProfileProjection profile document -> [(Text, ())]
+classificationEvidenceObservation =
+  map
+    (Projection.foldProfileClassificationEvidence
+       (\graph qualification rule occurrence ->
+          graph `seq` qualification `seq` (rule, occurrence `seq` ())))
+    . Projection.profileClassificationEvidence
+
+mappingProvenanceObservation ::
+     Projection.ProfileMappingProvenance profile document -> ()
+mappingProvenanceObservation provenance =
+  Projection.profileMappingEvidenceKind provenance
+    `seq` Projection.foldProfileMappingProvenance
+            (\rule occurrence mappingId ->
+               rule `seq` occurrence `seq` mappingId `seq` ())
+            (\rule occurrence mappingId source target ->
+               rule
+                 `seq` occurrence
+                 `seq` mappingId
+                 `seq` source
+                 `seq` target
+                 `seq` ())
+            (\rule occurrence mappingId ->
+               rule `seq` occurrence `seq` mappingId `seq` ())
+            provenance
+
+invariantEvidenceObservation ::
+     Projection.ProfileProjection profile document
+  -> [(Text, Projection.ProfileEvidenceKind)]
+invariantEvidenceObservation =
+  map
+    (Projection.foldProfileInvariantEvidence
+       (\rule evidence -> (rule, Projection.profileEvidenceKind evidence)))
+    . Projection.profileQualificationInvariantEvidence
 
 qualificationProposalObservation ::
      Projection.QualificationProposal

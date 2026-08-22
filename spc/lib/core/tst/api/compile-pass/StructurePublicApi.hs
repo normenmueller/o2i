@@ -39,14 +39,11 @@ assess = assessStructure
 
 consumeAssessment ::
      StructureAssessment scope
-  -> Either (NonEmpty StructureDefect) (WellFormedGraph scope)
-consumeAssessment assessment =
-  case assessment of
-    StructureRejected defects -> Left defects
-    StructureAccepted graph -> Right graph
+  -> Either (NonEmpty (StructureEvidence scope)) (WellFormedGraph scope)
+consumeAssessment = foldStructureAssessment Left Right
 
-projectRule :: StructureDefect -> CoreRuleId
-projectRule = structureDefectRule
+projectRule :: StructureEvidence scope -> CoreRuleId
+projectRule = structureEvidenceRule
 
 data StructureEvidenceView
   = QualifiedEndpointView OccurrenceIdentity
@@ -69,8 +66,8 @@ data StructureEvidenceView
   | TargetCardinalityView OccurrenceIdentity Int
   | TargetDistinctnessView OccurrenceIdentity (NonEmpty OccurrenceIdentity)
 
-projectDefect :: StructureDefect -> StructureEvidenceView
-projectDefect = foldStructureDefect eliminator
+projectDefect :: StructureEvidence scope -> StructureEvidenceView
+projectDefect = foldStructureEvidence eliminator
   where
     eliminator =
       StructureDefectEliminator

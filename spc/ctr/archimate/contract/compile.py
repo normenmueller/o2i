@@ -1982,6 +1982,16 @@ def render_generated(companion: dict[str, Any]) -> str:
     properties = companion["propertyMappings"]
     carriers = companion["carrierMappings"]
     classification = companion["viewScopeContract"]["classification"]
+    classification_truth_table = classification["truthTable"]
+    pattern_rule_ids = {
+        row["subject"]: row["ruleId"] for row in pattern_runtime_rules
+    }
+    qualification_category_rule_id = pattern_rule_ids[
+        "qualification.carrier.category"
+    ]
+    qualification_stable_identity_scope_rule_id = pattern_rule_ids[
+        "qualification.carrier.stable-identity-scope"
+    ]
     activation = activation_rows(companion)
     closure = closure_rows(companion)
     activation_contract = classification["activationRuleContract"]
@@ -2411,6 +2421,14 @@ def render_generated(companion: dict[str, Any]) -> str:
         f"  , {defect_rule_lookup_names[evidence_kind]}"
         for evidence_kind in EXPECTED_PROFILE_EVIDENCE_KINDS
     )
+    classification_equations = "\n".join(
+        "generatedClassificationRule "
+        f"{hs_bool(row['graphMembership'])} "
+        f"{hs_bool(row['qualificationMembership'])} =\n"
+        "  GeneratedClassificationRule "
+        f"{hs_string(row['ruleId'])}"
+        for row in classification_truth_table
+    )
 
     return f'''{{-# LANGUAGE DataKinds #-}}
 {{-# LANGUAGE GADTs #-}}
@@ -2453,6 +2471,13 @@ module O2I.ArchiMate.Profile.Internal.Generated
   , GeneratedActivationRule(..)
   , GeneratedClosureRule(..)
   , GeneratedProfileEvidenceKind(..)
+  , GeneratedClassificationRule
+  , generatedClassificationRuleId
+  , generatedClassificationRule
+  , GeneratedQualificationInvariantRule
+  , generatedQualificationInvariantRuleId
+  , generatedQualificationProposalCategoryRule
+  , generatedQualificationProposalStableIdentityScopeRule
   , GeneratedProfileDefectRule
   , generatedProfileDefectRuleId
 {defect_rule_lookup_exports}
@@ -2482,6 +2507,28 @@ module O2I.ArchiMate.Profile.Internal.Generated
 import Data.Text (Text)
 
 {evidence_kind_type}
+
+newtype GeneratedClassificationRule = GeneratedClassificationRule
+  {{ generatedClassificationRuleId :: Text
+  }} deriving (Eq, Ord, Show)
+
+generatedClassificationRule :: Bool -> Bool -> GeneratedClassificationRule
+{classification_equations}
+
+newtype GeneratedQualificationInvariantRule =
+  GeneratedQualificationInvariantRule
+    {{ generatedQualificationInvariantRuleId :: Text
+    }} deriving (Eq, Ord, Show)
+
+generatedQualificationProposalCategoryRule ::
+     GeneratedQualificationInvariantRule
+generatedQualificationProposalCategoryRule =
+  GeneratedQualificationInvariantRule {hs_string(qualification_category_rule_id)}
+
+generatedQualificationProposalStableIdentityScopeRule ::
+     GeneratedQualificationInvariantRule
+generatedQualificationProposalStableIdentityScopeRule =
+  GeneratedQualificationInvariantRule {hs_string(qualification_stable_identity_scope_rule_id)}
 
 {defect_rule_type}
 

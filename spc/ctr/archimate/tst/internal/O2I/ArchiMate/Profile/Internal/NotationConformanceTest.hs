@@ -107,24 +107,46 @@ inventoryIdentityCases missing multiple invalid grammar duplicate =
 
 selectedIdentityCases :: [ClassificationCase]
 selectedIdentityCases =
-  zipWith
-    make
-    (map
-       SelectedUniverseNotationKind
-       [ RecordIdentityMissing
-       , RecordIdentityMultiplicity
-       , RecordIdentityValueKindInvalid
-       , RecordIdentityGrammarInvalid
-       , RecordIdentityDuplicate
-       ])
-    identityOutcomes
+  zipWith make selectedKinds (take 4 identityOutcomes) <> [duplicateCase]
   where
-    make kind (outcome, duplicates, expected) =
+    selectedKinds =
+      map
+        SelectedUniverseNotationKind
+        [ RecordIdentityMissing
+        , RecordIdentityMultiplicity
+        , RecordIdentityValueKindInvalid
+        , RecordIdentityGrammarInvalid
+        ]
+    make kind (outcome, _, expected) =
       ClassificationCase
         kind
-        (selectedIdentityIssues duplicates (canonicalRecord outcome []))
+        (selectedIdentityIssues (canonicalRecord outcome []))
         subjectLocation
         expected
+    duplicateCase =
+      ClassificationCase
+        (SelectedUniverseNotationKind RecordIdentityDuplicate)
+        (recordIdentityDuplicateIssues
+           testDuplicateIdentityLocations
+           (canonicalRecord duplicateIdentityOutcome []))
+        subjectLocation
+        duplicateIdentityEvidence
+
+duplicateIdentityOutcome :: Raw.IdentityOutcome
+duplicateIdentityOutcome =
+  Raw.IdentityResolved scalarDuplicate duplicateIdentity
+
+testDuplicateIdentityLocations :: Map.Map ModelIdentity [DraftLocation]
+testDuplicateIdentityLocations =
+  Map.singleton duplicateIdentity [subjectLocation, targetLocation]
+
+duplicateIdentityEvidence :: NonEmpty.NonEmpty ArchiMateNotationEvidence
+duplicateIdentityEvidence =
+  NotationReferenceEvidence
+    subjectLocation
+    "duplicate"
+    [subjectLocation, targetLocation]
+    NonEmpty.:| []
 
 identityOutcomes ::
      [( Raw.IdentityOutcome
@@ -143,13 +165,9 @@ identityOutcomes =
   , ( Raw.IdentityInvalid scalarEmpty Raw.IdentityValueIsEmpty
     , Map.empty
     , scalarEvidence [scalarEmpty])
-  , ( Raw.IdentityResolved scalarDuplicate duplicateIdentity
-    , Map.singleton duplicateIdentity [subjectLocation, targetLocation]
-    , NotationReferenceEvidence
-        subjectLocation
-        "duplicate"
-        [subjectLocation, targetLocation]
-        NonEmpty.:| [])
+  , ( duplicateIdentityOutcome
+    , testDuplicateIdentityLocations
+    , duplicateIdentityEvidence)
   ]
 
 viewNameCases :: [ClassificationCase]

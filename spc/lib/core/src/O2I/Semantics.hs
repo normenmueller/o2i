@@ -1,3 +1,5 @@
+{-# LANGUAGE RoleAnnotations #-}
+
 -- | Public Core Semantics boundary.
 --
 -- Assessments and proofs are opaque. Consumers can inspect deterministic
@@ -8,23 +10,21 @@ module O2I.Semantics
   , SemanticDisposition(..)
   , assessSemantics
   , semanticDisposition
-  , semanticDefects
+  , foldSemanticAssessment
   , semanticCandidateOccurrences
   , acceptedSemanticModel
-  , SemanticDefect
-  , SemanticEvidence
+  , SemanticDiagnosticEvidence
   , SemanticEvidenceKind(..)
-  , semanticDefectRule
-  , semanticDefectEvidence
+  , semanticDiagnosticRule
   , SemanticOccurrenceRole
   , SemanticOccurrenceGroup
-  , semanticDefectOccurrenceGroups
+  , semanticDiagnosticOccurrenceGroups
   , semanticOccurrenceGroupRole
   , semanticOccurrenceGroupOccurrences
   , semanticOccurrenceRoleId
-  , semanticEvidenceKind
-  , semanticEvidenceModelIdentities
-  , semanticEvidenceOccurrenceIdentities
+  , semanticDiagnosticKind
+  , semanticDiagnosticModelIdentities
+  , semanticDiagnosticOccurrenceIdentities
   , SituatedNeedAssessment
   , StrategyFormulationAssessment
   , CollectiveStrategyRealizationAssessment
@@ -82,7 +82,8 @@ import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
 import O2I.Core.Contract (CoreRuleId)
 import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
-import O2I.Semantics.Eval (assessSemantics)
+import qualified O2I.Semantics.Eval as Eval
+import O2I.Semantics.Input (BoundSupplementalInputs)
 import O2I.Semantics.Internal
   ( CollectiveFitUnavailableReason(..)
   , CollectiveStrategyRealizationAssessment
@@ -91,9 +92,6 @@ import O2I.Semantics.Internal
   , MacroSupportAssessment
   , ParticipantPrimitiveSupportAssessment
   , QualificationEligibleStrategy
-  , SemanticAssessment
-  , SemanticDefect
-  , SemanticEvidence
   , SemanticallyValidModel
   , SituatedNeedAssessment
   , StrategyFormulationAssessment
@@ -101,6 +99,26 @@ import O2I.Semantics.Internal
   , ValidatedCollectiveStrategyRealization
   )
 import qualified O2I.Semantics.Internal as Internal
+import O2I.Structure (WellFormedGraph)
+
+-- | Opaque aggregate result nominal in its producing selected-View scope.
+newtype SemanticAssessment scope =
+  SemanticAssessment (Internal.SemanticAssessment scope)
+
+type role SemanticAssessment nominal
+
+-- | Opaque semantic diagnostic nominal in its producing scope.
+newtype SemanticDiagnosticEvidence scope =
+  SemanticDiagnosticEvidence Internal.SemanticDefect
+
+type role SemanticDiagnosticEvidence nominal
+
+-- | Evaluate Semantics without erasing the selected-View scope.
+assessSemantics ::
+     WellFormedGraph scope
+  -> BoundSupplementalInputs scope
+  -> SemanticAssessment scope
+assessSemantics graph = SemanticAssessment . Eval.assessSemantics graph
 
 -- | Aggregate Core Semantics disposition.
 data SemanticDisposition
@@ -137,18 +155,25 @@ data SemanticEvidenceKind
 
 -- | Classify the aggregate semantic outcome without exposing its proof data.
 semanticDisposition :: SemanticAssessment scope -> SemanticDisposition
-semanticDisposition assessment =
+semanticDisposition (SemanticAssessment assessment) =
   case assessment of
     Internal.SemanticsRejected _ _ -> SemanticRejected
     Internal.SemanticsUnavailable _ -> SemanticUnavailable
     Internal.SemanticsAccepted _ _ -> SemanticAccepted
 
--- | Return every semantic defect when the aggregate outcome is rejected.
-semanticDefects :: SemanticAssessment scope -> [SemanticDefect]
-semanticDefects assessment =
+-- | Eliminate only the exact aggregate result produced in one scope.
+foldSemanticAssessment ::
+     (NonEmpty (SemanticDiagnosticEvidence scope) -> result)
+  -> result
+  -> (SemanticallyValidModel scope -> result)
+  -> SemanticAssessment scope
+  -> result
+foldSemanticAssessment rejected unavailable accepted (SemanticAssessment assessment) =
   case assessment of
-    Internal.SemanticsRejected _ failures -> NonEmpty.toList failures
-    _ -> []
+    Internal.SemanticsRejected _ failures ->
+      rejected (SemanticDiagnosticEvidence <$> failures)
+    Internal.SemanticsUnavailable _ -> unavailable
+    Internal.SemanticsAccepted _ model -> accepted model
 
 -- | Return every Candidate occurrence retained during semantic assessment.
 semanticCandidateOccurrences :: SemanticAssessment scope -> [OccurrenceIdentity]
@@ -158,18 +183,15 @@ semanticCandidateOccurrences =
 -- | Project the validated model only from an accepted semantic outcome.
 acceptedSemanticModel ::
      SemanticAssessment scope -> Maybe (SemanticallyValidModel scope)
-acceptedSemanticModel assessment =
+acceptedSemanticModel (SemanticAssessment assessment) =
   case assessment of
     Internal.SemanticsAccepted _ model -> Just model
     _ -> Nothing
 
--- | Identify the compiled Core rule violated by one semantic defect.
-semanticDefectRule :: SemanticDefect -> CoreRuleId
-semanticDefectRule = Internal.semanticRuleId . Internal.semanticDefectRule
-
--- | Project the typed evidence key for one semantic defect.
-semanticDefectEvidence :: SemanticDefect -> SemanticEvidence
-semanticDefectEvidence = Internal.semanticDefectEvidence
+-- | Identify the compiled Core rule carried by scoped semantic evidence.
+semanticDiagnosticRule :: SemanticDiagnosticEvidence scope -> CoreRuleId
+semanticDiagnosticRule (SemanticDiagnosticEvidence defect) =
+  Internal.semanticRuleId (Internal.semanticDefectRule defect)
 
 -- | Opaque, rule-local role of one semantic occurrence group.
 newtype SemanticOccurrenceRole =
@@ -184,9 +206,9 @@ data SemanticOccurrenceGroup =
 -- Structural cardinality is fixed by the compiled Core companion. Concrete
 -- graph membership and semantic relations remain guarantees of the opaque
 -- producer path.
-semanticDefectOccurrenceGroups ::
-     SemanticDefect -> NonEmpty SemanticOccurrenceGroup
-semanticDefectOccurrenceGroups defect =
+semanticDiagnosticOccurrenceGroups ::
+     SemanticDiagnosticEvidence scope -> NonEmpty SemanticOccurrenceGroup
+semanticDiagnosticOccurrenceGroups (SemanticDiagnosticEvidence defect) =
   projectGroup <$> Internal.semanticDefectOccurrenceGroups defect
   where
     projectGroup (role, occurrences) =
@@ -206,8 +228,13 @@ semanticOccurrenceRoleId :: SemanticOccurrenceRole -> Text
 semanticOccurrenceRoleId (SemanticOccurrenceRole role) = role
 
 -- | Classify the closed evidence-key shape without exposing its representation.
-semanticEvidenceKind :: SemanticEvidence -> SemanticEvidenceKind
-semanticEvidenceKind evidence =
+semanticDiagnosticKind ::
+     SemanticDiagnosticEvidence scope -> SemanticEvidenceKind
+semanticDiagnosticKind (SemanticDiagnosticEvidence defect) =
+  semanticEvidenceKindValue (Internal.semanticDefectEvidence defect)
+
+semanticEvidenceKindValue :: Internal.SemanticEvidence -> SemanticEvidenceKind
+semanticEvidenceKindValue evidence =
   case evidence of
     Internal.SemanticNeedKey _ -> NeedEvidence
     Internal.SemanticNeedMemberKey _ _ -> NeedMemberEvidence
@@ -218,8 +245,14 @@ semanticEvidenceKind evidence =
     Internal.SemanticAssertedDependencyKey _ _ _ -> AssertedDependencyEvidence
 
 -- | Return model identities carried by one semantic evidence key.
-semanticEvidenceModelIdentities :: SemanticEvidence -> [ModelIdentity]
-semanticEvidenceModelIdentities evidence =
+semanticDiagnosticModelIdentities ::
+     SemanticDiagnosticEvidence scope -> [ModelIdentity]
+semanticDiagnosticModelIdentities (SemanticDiagnosticEvidence defect) =
+  semanticEvidenceModelIdentitiesValue (Internal.semanticDefectEvidence defect)
+
+semanticEvidenceModelIdentitiesValue ::
+     Internal.SemanticEvidence -> [ModelIdentity]
+semanticEvidenceModelIdentitiesValue evidence =
   case evidence of
     Internal.SemanticNeedKey need -> [need]
     Internal.SemanticNeedMemberKey need member -> [need, member]
@@ -231,8 +264,15 @@ semanticEvidenceModelIdentities evidence =
     Internal.SemanticAssertedDependencyKey _ _ _ -> []
 
 -- | Return occurrence identities carried by asserted-dependency evidence.
-semanticEvidenceOccurrenceIdentities :: SemanticEvidence -> [OccurrenceIdentity]
-semanticEvidenceOccurrenceIdentities evidence =
+semanticDiagnosticOccurrenceIdentities ::
+     SemanticDiagnosticEvidence scope -> [OccurrenceIdentity]
+semanticDiagnosticOccurrenceIdentities (SemanticDiagnosticEvidence defect) =
+  semanticEvidenceOccurrenceIdentitiesValue
+    (Internal.semanticDefectEvidence defect)
+
+semanticEvidenceOccurrenceIdentitiesValue ::
+     Internal.SemanticEvidence -> [OccurrenceIdentity]
+semanticEvidenceOccurrenceIdentitiesValue evidence =
   case evidence of
     Internal.SemanticAssertedDependencyKey dependent endpoint context ->
       [dependent, endpoint, context]
@@ -514,7 +554,7 @@ primitiveSupportWitnesses assessment =
     _ -> []
 
 semanticResults :: SemanticAssessment scope -> Internal.SemanticResults scope
-semanticResults assessment =
+semanticResults (SemanticAssessment assessment) =
   case assessment of
     Internal.SemanticsRejected results _ -> results
     Internal.SemanticsUnavailable results -> results

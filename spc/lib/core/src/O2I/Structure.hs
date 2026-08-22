@@ -1,3 +1,5 @@
+{-# LANGUAGE RoleAnnotations #-}
+
 -- | Structural validation of one selected O2I View.
 --
 -- Structure qualifies profile-projected carriers, validates their exact
@@ -19,8 +21,8 @@ module O2I.Structure
   , StructureProjectionKind(..)
   , StructureEndpointRole(..)
   , StructureInputDefect(..)
-  , StructureDefect
-  , structureDefectRule
+  , StructureEvidence
+  , structureEvidenceRule
   , StructureZeroOrMultipleOccurrences
   , foldStructureZeroOrMultipleOccurrences
   , QualifiedEndpointCatalogMembershipEvidence
@@ -64,8 +66,9 @@ module O2I.Structure
   , collectiveTargetDistinctnessClaim
   , collectiveTargetDistinctnessOverlappingEndpoints
   , StructureDefectEliminator(..)
-  , foldStructureDefect
-  , StructureAssessment(..)
+  , foldStructureEvidence
+  , StructureAssessment
+  , foldStructureAssessment
   , StructuredIncidenceObservation
   , structuredIncidenceOccurrence
   , structuredIncidenceRole
@@ -101,14 +104,31 @@ import O2I.Core.Graph.Observation
   , ContextualizationObservation
   , RelationObservation
   )
-import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
-import O2I.Structure.Index (assessStructure)
-import O2I.Structure.Internal hiding (foldStructureDefect, structureDefectRule)
+import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity, SelectedViewScope)
+import qualified O2I.Structure.Index as StructureIndex
+import O2I.Structure.Internal hiding
+  ( StructureAssessment
+  , foldStructureDefect
+  , structureDefectRule
+  )
 import qualified O2I.Structure.Internal as StructureInternal
 
--- | Project the exact Core-owned rule identity of one structural defect.
-structureDefectRule :: StructureDefect -> CoreRuleId
-structureDefectRule = StructureInternal.structureDefectRule
+-- | Opaque diagnostic evidence nominal in its producing selected-View scope.
+newtype StructureEvidence scope =
+  StructureEvidence StructureDefect
+
+type role StructureEvidence nominal
+
+-- | Opaque total assessment nominal in its producing selected-View scope.
+newtype StructureAssessment scope =
+  StructureAssessment (StructureInternal.StructureAssessment scope)
+
+type role StructureAssessment nominal
+
+-- | Project the exact Core-owned rule identity of scoped Structure evidence.
+structureEvidenceRule :: StructureEvidence scope -> CoreRuleId
+structureEvidenceRule (StructureEvidence defect) =
+  StructureInternal.structureDefectRule defect
 
 -- | Project one carrier into the notation-independent Structure boundary.
 carrierProjection ::
@@ -178,10 +198,11 @@ foldStructureZeroOrMultipleOccurrences onZero onMultiple occurrences =
     MultipleStructureOccurrences first second remaining ->
       onMultiple first second remaining
 
--- | Eliminate one closed structural defect through its exact named handler.
-foldStructureDefect ::
-     StructureDefectEliminator result -> StructureDefect -> result
-foldStructureDefect = StructureInternal.foldStructureDefect
+-- | Eliminate scoped Structure evidence through its exact named handler.
+foldStructureEvidence ::
+     StructureDefectEliminator result -> StructureEvidence scope -> result
+foldStructureEvidence eliminator (StructureEvidence defect) =
+  StructureInternal.foldStructureDefect eliminator defect
 
 -- | Project the carrier occurrence that could not be qualified.
 qualifiedEndpointCatalogMembershipSubject ::
@@ -420,3 +441,23 @@ wellFormedRelations = storedWellFormedRelations
 wellFormedStructuredPropositions ::
      WellFormedGraph scope -> [StructuredPropositionObservation scope]
 wellFormedStructuredPropositions = storedWellFormedStructuredPropositions
+
+-- | Assess one projection while retaining its generative selected-View scope.
+assessStructure ::
+     SelectedViewScope scope
+  -> StructureProjection
+  -> Either (NonEmpty StructureInputDefect) (StructureAssessment scope)
+assessStructure scope =
+  fmap StructureAssessment . StructureIndex.assessStructure scope
+
+-- | Eliminate only the exact scoped outcome produced by one assessment.
+foldStructureAssessment ::
+     (NonEmpty (StructureEvidence scope) -> result)
+  -> (WellFormedGraph scope -> result)
+  -> StructureAssessment scope
+  -> result
+foldStructureAssessment rejected accepted (StructureAssessment assessment) =
+  case assessment of
+    StructureInternal.StructureRejected defects ->
+      rejected (StructureEvidence <$> defects)
+    StructureInternal.StructureAccepted graph -> accepted graph

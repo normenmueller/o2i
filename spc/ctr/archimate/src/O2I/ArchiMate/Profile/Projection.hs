@@ -2,6 +2,8 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RoleAnnotations #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Opaque Profile assessment and notation-independent Core projection.
 module O2I.ArchiMate.Profile.Projection
@@ -10,13 +12,13 @@ module O2I.ArchiMate.Profile.Projection
   , ProfileEvidence
   , profileEvidenceKind
   , foldProfileEvidence
-  , -- | Opaque generated Profile-rule defect with exact typed evidence.
-    ProfileDefect
-  , profileDefectRuleId
-  , foldProfileDefect
+  , -- | Opaque generated Profile-rule evidence with exact owner indices.
+    ProfileDiagnosticEvidence
+  , profileDiagnosticRuleId
+  , foldProfileDiagnosticEvidence
   , -- | Closed internal contract failure, distinct from model rejection.
-    ProfileContractFailure
-  , foldProfileContractFailure
+    ProfileContractEvidence
+  , foldProfileContractEvidence
   , -- | Opaque total outcome of applying Profile projection.
     ProfileProjectionAssessment
   , canonicalOccurrenceIdentity
@@ -24,12 +26,20 @@ module O2I.ArchiMate.Profile.Projection
   , foldProfileProjectionAssessment
   , -- | Opaque successful notation-independent projection into Core material.
     ProfileProjection
-  , profileStructureProjection
-  , profileMappingProvenance
-  , profileQualificationProposals
+  , withProfileStructureAssessment
+  , ProfileClassificationEvidence
+  , profileClassificationEvidence
+  , foldProfileClassificationEvidence
   , -- | Opaque provenance for one concrete Profile mapping.
     ProfileMappingProvenance
+  , profileMappingProvenance
+  , profileMappingEvidenceKind
   , foldProfileMappingProvenance
+  , -- | Opaque positive proposal invariant with exact owner indices.
+    ProfileInvariantEvidence
+  , profileQualificationInvariantEvidence
+  , foldProfileInvariantEvidence
+  , profileQualificationProposals
   , -- | Opaque projected qualification proposal and its source evidence.
     QualificationProposal
   , qualificationProposalOccurrence
@@ -55,17 +65,15 @@ module O2I.ArchiMate.Profile.Projection
 import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
 import O2I.ArchiMate.Profile.Draft (DraftLocation, DraftScalar)
+import qualified O2I.ArchiMate.Profile.Internal.Closure as InternalClosure
 import O2I.ArchiMate.Profile.Internal.Generated
-  ( GeneratedProfileEvidenceKind(..)
+  ( GeneratedProfileDefectRule
+  , GeneratedProfileEvidenceKind(..)
   , generatedProfileDefectRuleId
+  , generatedQualificationInvariantRuleId
   )
 import O2I.ArchiMate.Profile.Internal.Projection
-  ( ProfileContractFailure
-  , ProfileDefect
-  , ProfileMappingProvenance
-  , ProfileProjection
-  , ProfileProjectionAssessment
-  , QualificationProposal
+  ( QualificationProposal
   , QualificationRationale
   , QualificationReference
   , QualificationSource
@@ -77,11 +85,61 @@ import O2I.ArchiMate.Profile.Notation
   )
 import O2I.Core.Contract (CoreQualificationProposalRoleId)
 import O2I.Core.Identity
-  ( ModelIdentity
+  ( IdentityIndexDefect
+  , ModelIdentity
   , OccurrenceIdentity
   , OccurrenceIdentityDefect
+  , SelectedViewScopeDefect
+  , buildModelIdentityIndex
+  , withSelectedViewScope
   )
-import O2I.Structure (StructureProjection)
+import O2I.Structure
+  ( StructureAssessment
+  , StructureInputDefect
+  , assessStructure
+  )
+
+-- | Opaque diagnostic evidence nominal in its producing Profile document.
+newtype ProfileDiagnosticEvidence profile document =
+  ProfileDiagnosticEvidence Internal.ProfileDefect
+
+type role ProfileDiagnosticEvidence nominal nominal
+
+-- | Opaque contract evidence nominal in its producing Profile document.
+newtype ProfileContractEvidence profile document =
+  ProfileContractEvidence Internal.ProfileContractFailure
+
+type role ProfileContractEvidence nominal nominal
+
+-- | Opaque total result nominal in its producing Profile document.
+newtype ProfileProjectionAssessment profile document =
+  ProfileProjectionAssessment Internal.ProfileProjectionAssessment
+
+type role ProfileProjectionAssessment nominal nominal
+
+-- | Opaque successful projection nominal in its producing Profile document.
+newtype ProfileProjection profile document =
+  ProfileProjection Internal.ProfileProjection
+
+type role ProfileProjection nominal nominal
+
+-- | Positive truth-table provenance nominal in its producing Profile document.
+newtype ProfileClassificationEvidence profile document =
+  ProfileClassificationEvidence InternalClosure.ClassificationProvenance
+
+type role ProfileClassificationEvidence nominal nominal
+
+-- | Concrete mapping provenance nominal in its producing Profile document.
+newtype ProfileMappingProvenance profile document =
+  ProfileMappingProvenance Internal.ProfileMappingProvenance
+
+type role ProfileMappingProvenance nominal nominal
+
+-- | Positive qualification invariant nominal in its producing Profile document.
+newtype ProfileInvariantEvidence profile document =
+  ProfileInvariantEvidence Internal.ProfileInvariantEvidence
+
+type role ProfileInvariantEvidence nominal nominal
 
 -- | Closed public vocabulary for generated Profile evidence shapes.
 data ProfileEvidenceKind
@@ -131,56 +189,63 @@ foldProfileEvidenceKind carrier classification metadata property slot value prop
     StructuredIncidenceEvidenceKind -> incidence
 
 -- | Exact evidence for one generated Profile defect rule.
-data ProfileEvidence (kind :: ProfileEvidenceKind) where
+data ProfileEvidence profile document (kind :: ProfileEvidenceKind) where
   CarrierOccurrenceEvidence
-    :: !CanonicalOccurrence -> ProfileEvidence 'CarrierOccurrenceEvidenceKind
+    :: !CanonicalOccurrence
+    -> ProfileEvidence profile document 'CarrierOccurrenceEvidenceKind
   ClassificationOccurrenceEvidence
     :: !CanonicalOccurrence
-    -> ProfileEvidence 'ClassificationOccurrenceEvidenceKind
+    -> ProfileEvidence profile document 'ClassificationOccurrenceEvidenceKind
   MetadataOwnerAndO2iPropertyOccurrencesEvidence
     :: !CanonicalOccurrence
     -> ![CanonicalOccurrence]
-    -> ProfileEvidence 'MetadataOwnerAndO2iPropertyOccurrencesEvidenceKind
+    -> ProfileEvidence
+         profile
+         document
+         'MetadataOwnerAndO2iPropertyOccurrencesEvidenceKind
   PropertyOccurrenceEvidence
     :: !CanonicalOccurrence
     -> !CanonicalOccurrence
-    -> ProfileEvidence 'PropertyOccurrenceEvidenceKind
+    -> ProfileEvidence profile document 'PropertyOccurrenceEvidenceKind
   PropertySlotEvidence
     :: !CanonicalOccurrence
     -> !Text
     -> ![CanonicalOccurrence]
-    -> ProfileEvidence 'PropertySlotEvidenceKind
+    -> ProfileEvidence profile document 'PropertySlotEvidenceKind
   PropertyValueEvidence
     :: !CanonicalOccurrence
     -> !CanonicalOccurrence
     -> ![DraftScalar]
-    -> ProfileEvidence 'PropertyValueEvidenceKind
+    -> ProfileEvidence profile document 'PropertyValueEvidenceKind
   ProposalCarrierOccurrenceEvidence
     :: !CanonicalOccurrence
-    -> ProfileEvidence 'ProposalCarrierOccurrenceEvidenceKind
+    -> ProfileEvidence profile document 'ProposalCarrierOccurrenceEvidenceKind
   ProposalReferenceIncidenceEvidence
     :: !CanonicalOccurrence
     -> !CanonicalOccurrence
     -> ![CanonicalOccurrence]
-    -> ProfileEvidence 'ProposalReferenceIncidenceEvidenceKind
+    -> ProfileEvidence profile document 'ProposalReferenceIncidenceEvidenceKind
   RelationshipOccurrenceEvidence
     :: !CanonicalOccurrence
-    -> ProfileEvidence 'RelationshipOccurrenceEvidenceKind
+    -> ProfileEvidence profile document 'RelationshipOccurrenceEvidenceKind
   ReservedPropertyOccurrenceEvidence
     :: !CanonicalOccurrence
     -> !CanonicalOccurrence
     -> !Text
-    -> ProfileEvidence 'ReservedPropertyOccurrenceEvidenceKind
+    -> ProfileEvidence profile document 'ReservedPropertyOccurrenceEvidenceKind
   StructuredCarrierOccurrenceEvidence
     :: !CanonicalOccurrence
-    -> ProfileEvidence 'StructuredCarrierOccurrenceEvidenceKind
+    -> ProfileEvidence profile document 'StructuredCarrierOccurrenceEvidenceKind
   StructuredIncidenceEvidence
     :: !CanonicalOccurrence
     -> ![CanonicalOccurrence]
-    -> ProfileEvidence 'StructuredIncidenceEvidenceKind
+    -> ProfileEvidence profile document 'StructuredIncidenceEvidenceKind
+
+type role ProfileEvidence nominal nominal nominal
 
 -- | Runtime witness for the statically indexed evidence shape.
-profileEvidenceKind :: ProfileEvidence kind -> ProfileEvidenceKind
+profileEvidenceKind ::
+     ProfileEvidence profile document kind -> ProfileEvidenceKind
 profileEvidenceKind evidence =
   case evidence of
     CarrierOccurrenceEvidence _ -> CarrierOccurrenceEvidenceKind
@@ -214,7 +279,7 @@ foldProfileEvidence ::
   -> (CanonicalOccurrence -> CanonicalOccurrence -> Text -> result)
   -> (CanonicalOccurrence -> result)
   -> (CanonicalOccurrence -> [CanonicalOccurrence] -> result)
-  -> ProfileEvidence kind
+  -> ProfileEvidence profile document kind
   -> result
 foldProfileEvidence carrier classification metadata property slot value proposal reference relationship reserved structured incidence evidence =
   case evidence of
@@ -237,57 +302,68 @@ foldProfileEvidence carrier classification metadata property slot value proposal
     StructuredIncidenceEvidence occurrence related ->
       incidence occurrence related
 
--- | Generated rule identifier that owns the exact defect evidence.
-profileDefectRuleId :: ProfileDefect -> Text
-profileDefectRuleId = Internal.profileDefectRuleIdValue
+-- | Generated rule identifier carried by exact scoped Profile evidence.
+profileDiagnosticRuleId :: ProfileDiagnosticEvidence profile document -> Text
+profileDiagnosticRuleId (ProfileDiagnosticEvidence defect) =
+  Internal.profileDefectRuleIdValue defect
 
 -- | Consume a rule identifier paired with evidence of exactly its rule kind.
-foldProfileDefect ::
-     (forall kind. Text -> ProfileEvidence kind -> result)
-  -> ProfileDefect
+foldProfileDiagnosticEvidence ::
+     forall profile document result.
+     (forall kind. Text -> ProfileEvidence profile document kind -> result)
+  -> ProfileDiagnosticEvidence profile document
   -> result
-foldProfileDefect consume (Internal.ProfileDefect rule evidence) =
-  case evidence of
-    Internal.CarrierOccurrenceEvidence occurrence ->
-      consume ruleId (CarrierOccurrenceEvidence occurrence)
-    Internal.ClassificationOccurrenceEvidence occurrence ->
-      consume ruleId (ClassificationOccurrenceEvidence occurrence)
-    Internal.MetadataOwnerAndO2iPropertyOccurrencesEvidence owner properties ->
-      consume
-        ruleId
-        (MetadataOwnerAndO2iPropertyOccurrencesEvidence owner properties)
-    Internal.PropertyOccurrenceEvidence property owner ->
-      consume ruleId (PropertyOccurrenceEvidence property owner)
-    Internal.PropertySlotEvidence owner key properties ->
-      consume ruleId (PropertySlotEvidence owner key properties)
-    Internal.PropertyValueEvidence property owner scalars ->
-      consume ruleId (PropertyValueEvidence property owner scalars)
-    Internal.ProposalCarrierOccurrenceEvidence occurrence ->
-      consume ruleId (ProposalCarrierOccurrenceEvidence occurrence)
-    Internal.ProposalReferenceIncidenceEvidence occurrence proposal related ->
-      consume
-        ruleId
-        (ProposalReferenceIncidenceEvidence occurrence proposal related)
-    Internal.RelationshipOccurrenceEvidence occurrence ->
-      consume ruleId (RelationshipOccurrenceEvidence occurrence)
-    Internal.ReservedPropertyOccurrenceEvidence property owner key ->
-      consume ruleId (ReservedPropertyOccurrenceEvidence property owner key)
-    Internal.StructuredCarrierOccurrenceEvidence occurrence ->
-      consume ruleId (StructuredCarrierOccurrenceEvidence occurrence)
-    Internal.StructuredIncidenceEvidence occurrence related ->
-      consume ruleId (StructuredIncidenceEvidence occurrence related)
+foldProfileDiagnosticEvidence consume (ProfileDiagnosticEvidence defect) =
+  case defect of
+    Internal.ProfileDefect rule evidence -> consumeEvidence rule evidence
   where
-    ruleId = generatedProfileDefectRuleId rule
+    consumeEvidence ::
+         forall kind.
+         GeneratedProfileDefectRule kind
+      -> Internal.ProfileEvidence kind
+      -> result
+    consumeEvidence rule evidence =
+      case evidence of
+        Internal.CarrierOccurrenceEvidence occurrence ->
+          consume ruleId (CarrierOccurrenceEvidence occurrence)
+        Internal.ClassificationOccurrenceEvidence occurrence ->
+          consume ruleId (ClassificationOccurrenceEvidence occurrence)
+        Internal.MetadataOwnerAndO2iPropertyOccurrencesEvidence owner properties ->
+          consume
+            ruleId
+            (MetadataOwnerAndO2iPropertyOccurrencesEvidence owner properties)
+        Internal.PropertyOccurrenceEvidence property owner ->
+          consume ruleId (PropertyOccurrenceEvidence property owner)
+        Internal.PropertySlotEvidence owner key properties ->
+          consume ruleId (PropertySlotEvidence owner key properties)
+        Internal.PropertyValueEvidence property owner scalars ->
+          consume ruleId (PropertyValueEvidence property owner scalars)
+        Internal.ProposalCarrierOccurrenceEvidence occurrence ->
+          consume ruleId (ProposalCarrierOccurrenceEvidence occurrence)
+        Internal.ProposalReferenceIncidenceEvidence occurrence proposal related ->
+          consume
+            ruleId
+            (ProposalReferenceIncidenceEvidence occurrence proposal related)
+        Internal.RelationshipOccurrenceEvidence occurrence ->
+          consume ruleId (RelationshipOccurrenceEvidence occurrence)
+        Internal.ReservedPropertyOccurrenceEvidence property owner key ->
+          consume ruleId (ReservedPropertyOccurrenceEvidence property owner key)
+        Internal.StructuredCarrierOccurrenceEvidence occurrence ->
+          consume ruleId (StructuredCarrierOccurrenceEvidence occurrence)
+        Internal.StructuredIncidenceEvidence occurrence related ->
+          consume ruleId (StructuredIncidenceEvidence occurrence related)
+      where
+        ruleId = generatedProfileDefectRuleId rule
 
 -- | Consume every closed compiled Profile/Core contract failure.
-foldProfileContractFailure ::
+foldProfileContractEvidence ::
      (Text -> ProfileEvidenceKind -> result)
   -> (Text -> ProfileEvidenceKind -> result)
   -> (Text -> CanonicalOccurrence -> result)
   -> (CanonicalOccurrence -> Text -> result)
-  -> ProfileContractFailure
+  -> ProfileContractEvidence profile document
   -> result
-foldProfileContractFailure unknown mismatch missing impossible failure =
+foldProfileContractEvidence unknown mismatch missing impossible (ProfileContractEvidence failure) =
   case failure of
     Internal.UnknownGeneratedProfileRule rule kind ->
       unknown rule (publicEvidenceKind kind)
@@ -313,47 +389,147 @@ canonicalOccurrenceIdentity = Internal.canonicalOccurrenceIdentityValue
 -- and successful projection. Profile maps notation into Core material; it does
 -- not define additional fachliche semantics.
 assessSelectedView ::
-     NotationConformantUniverse profile document -> ProfileProjectionAssessment
-assessSelectedView = Internal.assessSelectedViewValue
+     NotationConformantUniverse profile document
+  -> ProfileProjectionAssessment profile document
+assessSelectedView =
+  ProfileProjectionAssessment . Internal.assessSelectedViewValue
 
 -- | Distinguish contract failure, model rejection, and exact projection.
 foldProfileProjectionAssessment ::
-     (NonEmpty ProfileContractFailure -> result)
-  -> (NonEmpty ProfileDefect -> result)
-  -> (ProfileProjection -> result)
-  -> ProfileProjectionAssessment
+     (NonEmpty (ProfileContractEvidence profile document) -> result)
+  -> (NonEmpty (ProfileDiagnosticEvidence profile document) -> result)
+  -> (ProfileProjection profile document -> result)
+  -> ProfileProjectionAssessment profile document
   -> result
-foldProfileProjectionAssessment contractFailure rejected accepted assessment =
+foldProfileProjectionAssessment contractFailure rejected accepted (ProfileProjectionAssessment assessment) =
   case assessment of
-    Internal.ProfileContractFailed failures -> contractFailure failures
-    Internal.ProfileRejected defects -> rejected defects
-    Internal.ProfileAccepted projection -> accepted projection
+    Internal.ProfileContractFailed failures ->
+      contractFailure (ProfileContractEvidence <$> failures)
+    Internal.ProfileRejected defects ->
+      rejected (ProfileDiagnosticEvidence <$> defects)
+    Internal.ProfileAccepted projection ->
+      accepted (ProfileProjection projection)
 
--- | Notation-independent Core structure emitted by a successful projection.
-profileStructureProjection :: ProfileProjection -> StructureProjection
-profileStructureProjection = Internal.profileStructureProjectionValue
+-- | Assess the inseparable Profile-owned Core input under one fresh scope.
+--
+-- The Structure projection, complete model identity domain, and selected-View
+-- membership never leave this elimination independently. A caller therefore
+-- cannot combine any of the three from different Profile documents.
+withProfileStructureAssessment ::
+     ProfileProjection profile document
+  -> (NonEmpty IdentityIndexDefect -> result)
+  -> (NonEmpty SelectedViewScopeDefect -> result)
+  -> (NonEmpty StructureInputDefect -> result)
+  -> (forall scope. StructureAssessment scope -> result)
+  -> result
+withProfileStructureAssessment (ProfileProjection projection) identityFailure scopeFailure structureFailure consume =
+  case buildModelIdentityIndex
+         (Internal.profileModelIdentityOccurrencesValue projection) of
+    Left defects -> identityFailure defects
+    Right index ->
+      case withSelectedViewScope
+             index
+             (Internal.profileSelectedOccurrencesValue projection)
+             (\scope ->
+                case assessStructure
+                       scope
+                       (Internal.profileStructureProjectionValue projection) of
+                  Left defects -> structureFailure defects
+                  Right assessment -> consume assessment) of
+        Left defects -> scopeFailure defects
+        Right result -> result
+
+-- | Classified root and displayed occurrences retained by this exact result.
+profileClassificationEvidence ::
+     ProfileProjection profile document
+  -> [ProfileClassificationEvidence profile document]
+profileClassificationEvidence (ProfileProjection projection) =
+  map
+    ProfileClassificationEvidence
+    (Internal.profileClassificationProvenanceValue projection)
+
+-- | Consume positive classification provenance without exposing its owner.
+foldProfileClassificationEvidence ::
+     (Bool -> Bool -> Text -> CanonicalOccurrence -> result)
+  -> ProfileClassificationEvidence profile document
+  -> result
+foldProfileClassificationEvidence consume (ProfileClassificationEvidence evidence) =
+  consume
+    (InternalClosure.classificationProvenanceGraphMembershipValue evidence)
+    (InternalClosure.classificationProvenanceQualificationMembershipValue
+       evidence)
+    (InternalClosure.classificationProvenanceRuleIdValue evidence)
+    (InternalClosure.classificationProvenanceOccurrenceValue evidence)
 
 -- | Canonically ordered concrete mapping provenance retained by the Profile.
-profileMappingProvenance :: ProfileProjection -> [ProfileMappingProvenance]
-profileMappingProvenance = Internal.profileMappingProvenanceValue
+profileMappingProvenance ::
+     ProfileProjection profile document
+  -> [ProfileMappingProvenance profile document]
+profileMappingProvenance (ProfileProjection projection) =
+  map
+    ProfileMappingProvenance
+    (Internal.profileMappingProvenanceValue projection)
+
+-- | Generated evidence form carried by one real concrete mapping.
+profileMappingEvidenceKind ::
+     ProfileMappingProvenance profile document -> ProfileEvidenceKind
+profileMappingEvidenceKind (ProfileMappingProvenance provenance) =
+  case provenance of
+    Internal.CarrierMappingProvenance _ _ _ -> CarrierOccurrenceEvidenceKind
+    Internal.RelationMappingProvenance _ _ _ _ _ ->
+      RelationshipOccurrenceEvidenceKind
+    Internal.ConstructionMappingProvenance _ _ _ evidenceKind ->
+      publicEvidenceKind evidenceKind
 
 -- | Consume carrier or relationship mapping provenance without exposing its
 -- representation.
 foldProfileMappingProvenance ::
-     (OccurrenceIdentity -> Text -> result)
-  -> (OccurrenceIdentity -> Text -> OccurrenceIdentity -> OccurrenceIdentity -> result)
-  -> ProfileMappingProvenance
+     (Text -> OccurrenceIdentity -> Text -> result)
+  -> (Text -> OccurrenceIdentity -> Text -> OccurrenceIdentity -> OccurrenceIdentity -> result)
+  -> (Text -> OccurrenceIdentity -> Text -> result)
+  -> ProfileMappingProvenance profile document
   -> result
-foldProfileMappingProvenance carrier relation provenance =
+foldProfileMappingProvenance carrier relation construction (ProfileMappingProvenance provenance) =
   case provenance of
-    Internal.CarrierMappingProvenance occurrence mappingId ->
-      carrier occurrence mappingId
-    Internal.RelationMappingProvenance occurrence mappingId source target ->
-      relation occurrence mappingId source target
+    Internal.CarrierMappingProvenance occurrence ruleId mappingId ->
+      carrier ruleId occurrence mappingId
+    Internal.RelationMappingProvenance occurrence ruleId mappingId source target ->
+      relation ruleId occurrence mappingId source target
+    Internal.ConstructionMappingProvenance occurrence ruleId mappingId _ ->
+      construction ruleId occurrence mappingId
+
+-- | Two constant positive facts for each actually projected proposal.
+profileQualificationInvariantEvidence ::
+     ProfileProjection profile document
+  -> [ProfileInvariantEvidence profile document]
+profileQualificationInvariantEvidence (ProfileProjection projection) =
+  map
+    ProfileInvariantEvidence
+    (Internal.profileInvariantEvidenceValue projection)
+
+-- | Consume one generated qualification-invariant rule paired with the
+-- existing proposal-carrier occurrence evidence form.
+foldProfileInvariantEvidence ::
+     (Text -> ProfileEvidence
+                profile
+                document
+                'ProposalCarrierOccurrenceEvidenceKind -> result)
+  -> ProfileInvariantEvidence profile document
+  -> result
+foldProfileInvariantEvidence consume (ProfileInvariantEvidence invariantEvidence) =
+  case invariantEvidence of
+    Internal.ProfileInvariantEvidence rule evidence ->
+      case evidence of
+        Internal.ProposalCarrierOccurrenceEvidence occurrence ->
+          consume
+            (generatedQualificationInvariantRuleId rule)
+            (ProposalCarrierOccurrenceEvidence occurrence)
 
 -- | Qualification proposals retained separately from the structure graph.
-profileQualificationProposals :: ProfileProjection -> [QualificationProposal]
-profileQualificationProposals = Internal.profileQualificationProposalsValue
+profileQualificationProposals ::
+     ProfileProjection profile document -> [QualificationProposal]
+profileQualificationProposals (ProfileProjection projection) =
+  Internal.profileQualificationProposalsValue projection
 
 -- | Stable occurrence identity of the proposal carrier.
 qualificationProposalOccurrence :: QualificationProposal -> OccurrenceIdentity

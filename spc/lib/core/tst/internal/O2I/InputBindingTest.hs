@@ -16,6 +16,8 @@ import O2I.Input.Internal.Binding (bindSupplementalInputs)
 import O2I.Input.Internal.Text (canonicalizeFachlicheText)
 import O2I.Input.Internal.Types
 import O2I.Structure
+import qualified O2I.Structure.Index as StructureIndex
+import O2I.Structure.Internal (StructureAssessment(..))
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.HUnit ((@?=), testCase)
 
@@ -242,7 +244,7 @@ runBinding extra inputs inspect =
         Right result -> result
   where
     withinScope scope =
-      case assessStructure scope projection of
+      case StructureIndex.assessStructure scope projection of
         Left defects -> error ("invalid Structure input: " ++ show defects)
         Right (StructureRejected defects) ->
           error ("invalid Structure fixture: " ++ show defects)

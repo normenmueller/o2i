@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Observation-complete Draft fixtures for the Profile contract tests.
-module O2I.ArchiMate.Profile.Test.Fixture
+-- | Public-source scenarios shared by owner conformance and contract tests.
+module O2I.ArchiMate.Profile.Conformance.Source
   ( validDraft
   , validDraftPermuted
   , validKpiDraft
@@ -14,6 +14,7 @@ module O2I.ArchiMate.Profile.Test.Fixture
   , viewCrossFamilyDuplicateDraft
   , retentionDraft
   , qualificationDraft
+  , qualificationBatchDraft
   , qualificationMissingRoleDraft
   , qualificationWrongRoleDraft
   , qualificationMultipleInvalidRoleValuesDraft
@@ -27,23 +28,32 @@ module O2I.ArchiMate.Profile.Test.Fixture
   , qualificationMultipleRationaleDraft
   , qualificationInvalidRationaleDraft
   , qualificationNormalizedSourcesDraft
+  , qualificationContextualizedDraft
+  , graphPropertyDefinitionDraft
+  , qualificationPropertyDefinitionDraft
   , collectiveClosedDraft
   , collectiveOpenDraft
   , collectiveChainDraft
   , collectiveWrongCarrierDraft
   , collectiveInvalidTypeDraft
   , branchIsolationDraft
+  , ownerConformanceMutationDrafts
   ) where
 
+import Data.Maybe (mapMaybe)
 import Data.Text (Text)
+import qualified Data.Text as Text
 import qualified O2I.ArchiMate.Profile.Draft as Draft
 
+-- | Small valid Graph source in canonical member order.
 validDraft :: Draft.ProfileDraft
 validDraft = graphDraft False "Strategy"
 
+-- | 'validDraft' with semantically irrelevant source order permuted.
 validDraftPermuted :: Draft.ProfileDraft
 validDraftPermuted = graphDraft True "Strategy"
 
+-- | Valid source exercising the KPI carrier mapping.
 validKpiDraft :: Draft.ProfileDraft
 validKpiDraft =
   modelDraft
@@ -67,6 +77,7 @@ validKpiDraft =
            [("contextualizes", "measure", "kpi")])
     ]
 
+-- | Public source for one carrier/relation applicability combination.
 relationApplicabilityDraft ::
      Text -> Bool -> Text -> Text -> Text -> Text -> Text -> Draft.ProfileDraft
 relationApplicabilityDraft relationshipType directed label sourceElement sourceType targetElement targetType =
@@ -92,6 +103,7 @@ relationApplicabilityDraft relationshipType directed label sourceElement sourceT
            [("relation", "source", "target")])
     ]
 
+-- | Graph source with an invalid native carrier category.
 invalidCarrierDraft :: Draft.ProfileDraft
 invalidCarrierDraft = graphDraft False "Driver"
 
@@ -136,6 +148,7 @@ graphDraft permuted strategyType =
         [property "qualifies-commitment" "o2i.commitment" "asserted"]
     mainView = simpleView "main-view" "Main" ["strategy"]
 
+-- | Source with an unmarked element displayed more than once.
 unmarkedDisplayedDraft :: Draft.ProfileDraft
 unmarkedDisplayedDraft =
   modelDraft
@@ -144,6 +157,7 @@ unmarkedDisplayedDraft =
         (simpleView "main-view" "Main" ["unmarked", "unmarked"])
     ]
 
+-- | Source whose model identity has invalid cardinality.
 malformedIdentityDraft :: Draft.ProfileDraft
 malformedIdentityDraft =
   Draft.profileDraft
@@ -160,6 +174,7 @@ malformedIdentityDraft =
         [text "retained" "extension-value"]
         (location "extension")
 
+-- | Source covering the complete closed Notation outcome vocabulary.
 notationOutcomeDraft :: Draft.ProfileDraft
 notationOutcomeDraft =
   modelDraft
@@ -211,6 +226,7 @@ notationOutcomeDraft =
     , Draft.childRecordMember (viewNode "reference-resolved" "resolved-target")
     ]
 
+-- | Duplicate identity shared by the model root and an Element.
 modelRootCrossFamilyDuplicateDraft :: Draft.ProfileDraft
 modelRootCrossFamilyDuplicateDraft =
   modelDraft
@@ -218,6 +234,7 @@ modelRootCrossFamilyDuplicateDraft =
     , Draft.childRecordMember (simpleView "main-view" "Main" [])
     ]
 
+-- | Duplicate identity shared by the selected View and an Element.
 viewCrossFamilyDuplicateDraft :: Draft.ProfileDraft
 viewCrossFamilyDuplicateDraft =
   modelDraft
@@ -225,6 +242,7 @@ viewCrossFamilyDuplicateDraft =
     , Draft.childRecordMember (simpleView "main-view" "Main" [])
     ]
 
+-- | Source retaining every scalar, key, opaque, and location evidence form.
 retentionDraft :: Draft.ProfileDraft
 retentionDraft =
   modelDraft
@@ -277,9 +295,80 @@ retentionDraft =
         [text "opaque-child" "opaque-child-value"]
         (spannedLocation "opaque-child" 13 1 14 7)
 
+-- | Valid single-proposal qualification source.
 qualificationDraft :: Draft.ProfileDraft
 qualificationDraft = qualificationModel validQualificationReferences []
 
+-- | A public-source workload with the requested number of independent,
+-- successful qualification proposals in one selected View.
+qualificationBatchDraft :: Int -> Draft.ProfileDraft
+qualificationBatchDraft requestedCount =
+  modelDraft
+    (map Draft.childRecordMember batchElements
+       <> map Draft.childRecordMember batchRelationships
+       <> [Draft.childRecordMember batchView])
+  where
+    proposalOrdinals = [1 .. max 0 requestedCount]
+    batchElements = concatMap proposalElements proposalOrdinals
+    batchRelationships = concatMap proposalRelationships proposalOrdinals
+    batchView =
+      connectedView
+        "qualification-batch-view"
+        "Qualification batch"
+        (concatMap proposalElementIds proposalOrdinals)
+        (mapMaybe relationshipCoordinates batchRelationships)
+    proposalElements ordinal =
+      element
+        (proposalId ordinal)
+        "Assessment"
+        [ Draft.elementDocumentationFieldMember
+            [ text
+                "A precise qualification rationale."
+                (prefix ordinal <> "-documentation")
+            ]
+            (location (prefix ordinal <> "-documentation-field"))
+        , property
+            (prefix ordinal <> "-type")
+            "o2i.type"
+            "NeedQualificationProposal"
+        , property (prefix ordinal <> "-source") "o2i.source" "source-document"
+        ]
+        : [ typedElement
+            (targetId ordinal role)
+            archiMateType
+            o2iType
+            commitment
+          | (role, archiMateType, o2iType, commitment) <- batchTargets
+          ]
+    proposalRelationships ordinal =
+      [ relationship
+        (prefix ordinal <> "-reference-" <> role)
+        "AssociationRelationship"
+        True
+        "references"
+        (proposalId ordinal)
+        (targetId ordinal role)
+        [ property
+            (prefix ordinal <> "-reference-" <> role <> "-role")
+            "o2i.role"
+            role
+        ]
+      | (role, _, _, _) <- batchTargets
+      ]
+    proposalElementIds ordinal =
+      proposalId ordinal
+        : [targetId ordinal role | (role, _, _, _) <- batchTargets]
+    proposalId ordinal = prefix ordinal <> "-proposal"
+    targetId ordinal role = prefix ordinal <> "-" <> role
+    prefix ordinal = "batch-" <> Text.pack (show ordinal)
+    batchTargets =
+      [ ("strategy", "Grouping", "Strategy", "asserted")
+      , ("need", "Grouping", "Need", "candidate")
+      , ("objective", "Goal", "Objective", "asserted")
+      , ("key-result", "Outcome", "KeyResult", "asserted")
+      ]
+
+-- | Qualification source with one missing reference role.
 qualificationMissingRoleDraft :: Draft.ProfileDraft
 qualificationMissingRoleDraft =
   qualificationModel
@@ -287,6 +376,7 @@ qualificationMissingRoleDraft =
        : drop 1 validQualificationReferences)
     []
 
+-- | Qualification source with one unknown reference role.
 qualificationWrongRoleDraft :: Draft.ProfileDraft
 qualificationWrongRoleDraft =
   qualificationModel
@@ -294,6 +384,7 @@ qualificationWrongRoleDraft =
        : drop 1 validQualificationReferences)
     []
 
+-- | Qualification source with several invalid values in one role property.
 qualificationMultipleInvalidRoleValuesDraft :: Draft.ProfileDraft
 qualificationMultipleInvalidRoleValuesDraft =
   qualificationModel
@@ -319,6 +410,7 @@ qualificationMultipleInvalidRoleValuesDraft =
        : drop 1 validQualificationReferences)
     []
 
+-- | Qualification source using a non-Association reference.
 qualificationWrongRelationshipDraft :: Draft.ProfileDraft
 qualificationWrongRelationshipDraft =
   qualificationModel
@@ -333,6 +425,7 @@ qualificationWrongRelationshipDraft =
        : drop 1 validQualificationReferences)
     []
 
+-- | Qualification source whose reference points toward the proposal.
 qualificationWrongDirectionDraft :: Draft.ProfileDraft
 qualificationWrongDirectionDraft =
   qualificationModel
@@ -347,6 +440,7 @@ qualificationWrongDirectionDraft =
        : drop 1 validQualificationReferences)
     []
 
+-- | Source placing qualification-role metadata outside a proposal reference.
 qualificationNonProposalRoleDraft :: Draft.ProfileDraft
 qualificationNonProposalRoleDraft =
   qualificationModel
@@ -361,6 +455,7 @@ qualificationNonProposalRoleDraft =
         [property "unrelated-role-property" "o2i.role" "strategy"]
     ]
 
+-- | Qualification marker placed on the wrong native carrier.
 qualificationWrongCarrierDraft :: Draft.ProfileDraft
 qualificationWrongCarrierDraft =
   qualificationModelWithProposal
@@ -372,6 +467,7 @@ qualificationWrongCarrierDraft =
     validQualificationReferences
     []
 
+-- | Assessment carrier with an invalid qualification type marker.
 qualificationInvalidTypeDraft :: Draft.ProfileDraft
 qualificationInvalidTypeDraft =
   qualificationModelWithProposal
@@ -383,6 +479,7 @@ qualificationInvalidTypeDraft =
     validQualificationReferences
     []
 
+-- | Valid qualification proposal without an optional rationale.
 qualificationNoRationaleDraft :: Draft.ProfileDraft
 qualificationNoRationaleDraft =
   qualificationModelWithProposal
@@ -394,6 +491,7 @@ qualificationNoRationaleDraft =
     validQualificationReferences
     []
 
+-- | Qualification proposal whose rationale requires normalization.
 qualificationNormalizedRationaleDraft :: Draft.ProfileDraft
 qualificationNormalizedRationaleDraft =
   qualificationModelWithProposal
@@ -408,6 +506,7 @@ qualificationNormalizedRationaleDraft =
     validQualificationReferences
     []
 
+-- | Qualification proposal with ambiguous rationale fields.
 qualificationMultipleRationaleDraft :: Draft.ProfileDraft
 qualificationMultipleRationaleDraft =
   qualificationModelWithProposal
@@ -423,6 +522,7 @@ qualificationMultipleRationaleDraft =
     validQualificationReferences
     []
 
+-- | Qualification proposal with a forbidden rationale scalar.
 qualificationInvalidRationaleDraft :: Draft.ProfileDraft
 qualificationInvalidRationaleDraft =
   qualificationModelWithProposal
@@ -437,6 +537,7 @@ qualificationInvalidRationaleDraft =
     validQualificationReferences
     []
 
+-- | Qualification proposal with normalized, ordered, duplicate source values.
 qualificationNormalizedSourcesDraft :: Draft.ProfileDraft
 qualificationNormalizedSourcesDraft =
   qualificationModelWithProposal
@@ -451,6 +552,70 @@ qualificationNormalizedSourcesDraft =
        ])
     validQualificationReferences
     []
+
+-- | Qualification proposal with an additional contextualization relation.
+qualificationContextualizedDraft :: Draft.ProfileDraft
+qualificationContextualizedDraft =
+  qualificationModel
+    validQualificationReferences
+    [ relationship
+        "need-contextualizes-strategy"
+        "CompositionRelationship"
+        False
+        "contextualizes"
+        "need"
+        "strategy"
+        []
+    ]
+
+-- | Graph source using a definition-backed non-O2I property.
+graphPropertyDefinitionDraft :: Draft.ProfileDraft
+graphPropertyDefinitionDraft =
+  modelDraft
+    [ Draft.childRecordMember
+        (propertyDefinition "external-definition" "external")
+    , Draft.childRecordMember
+        (element
+           "strategy"
+           "Grouping"
+           [ property "strategy-type" "o2i.type" "Strategy"
+           , property "strategy-commitment" "o2i.commitment" "asserted"
+           , propertyByDefinition
+               "strategy-external"
+               "external-definition"
+               "value"
+           ])
+    , Draft.childRecordMember (simpleView "main-view" "Main" ["strategy"])
+    ]
+
+-- | Qualification source using a definition-backed O2I source property.
+qualificationPropertyDefinitionDraft :: Draft.ProfileDraft
+qualificationPropertyDefinitionDraft =
+  modelDraft
+    (Draft.childRecordMember
+       (propertyDefinition "source-definition" "o2i.source")
+       : map Draft.childRecordMember (proposal : qualificationTargetsElements)
+           <> map Draft.childRecordMember validQualificationReferences
+           <> [ Draft.childRecordMember
+                  (connectedView
+                     "qualification-view"
+                     "Qualification"
+                     (map fst qualificationTargets <> ["proposal"])
+                     (mapMaybe
+                        relationshipCoordinates
+                        validQualificationReferences))
+              ])
+  where
+    proposal =
+      qualificationProposal
+        "Assessment"
+        "NeedQualificationProposal"
+        [defaultRationale]
+        [ propertyByDefinition
+            "proposal-source-by-definition"
+            "source-definition"
+            "source-document"
+        ]
 
 qualificationModel ::
      [Draft.RelationshipDraft]
@@ -476,10 +641,7 @@ qualificationModelWithProposal proposal references extras =
         "qualification-view"
         "Qualification"
         (map fst qualificationTargets <> ["proposal"])
-        [ (identifier, source, target)
-        | relation <- allRelationships
-        , let (identifier, source, target) = relationshipCoordinates relation
-        ]
+        (mapMaybe relationshipCoordinates allRelationships)
 
 qualificationElements :: [Draft.ElementDraft]
 qualificationElements =
@@ -551,14 +713,17 @@ qualificationReference identifier target role =
        Nothing -> []
        Just value -> [property (identifier <> "-role") "o2i.role" value])
 
+-- | Valid closed and open collective-strategy-realization sources.
 collectiveClosedDraft, collectiveOpenDraft :: Draft.ProfileDraft
 collectiveClosedDraft = collectiveModel "closed" False
 
 collectiveOpenDraft = collectiveModel "open" False
 
+-- | Collective source containing a forbidden Junction-to-Junction chain.
 collectiveChainDraft :: Draft.ProfileDraft
 collectiveChainDraft = collectiveModel "closed" True
 
+-- | Collective marker placed on the wrong native carrier.
 collectiveWrongCarrierDraft :: Draft.ProfileDraft
 collectiveWrongCarrierDraft =
   collectiveCandidateDraft
@@ -567,6 +732,7 @@ collectiveWrongCarrierDraft =
        "Grouping"
        [property "claim-type" "o2i.type" "CollectiveStrategyRealization"])
 
+-- | Junction carrier with an invalid collective type marker.
 collectiveInvalidTypeDraft :: Draft.ProfileDraft
 collectiveInvalidTypeDraft =
   collectiveCandidateDraft
@@ -610,6 +776,7 @@ collectiveModel completeness includeChain =
            ]
     scopeView = simpleView "collective-view" "Collective" ["claim"]
 
+-- | One document with isolated qualification and collective selected Views.
 branchIsolationDraft :: Draft.ProfileDraft
 branchIsolationDraft =
   modelDraft
@@ -634,6 +801,334 @@ branchIsolationDraft =
       , collectiveSegment "incoming-b" "contributor-b" "claim"
       , collectiveSegment "outgoing" "claim" "target"
       ]
+
+-- | Public Draft mutations that exercise the remaining reachable negative
+-- owner rules.  The expected observations remain catalog-derived elsewhere.
+ownerConformanceMutationDrafts :: [Draft.ProfileDraft]
+ownerConformanceMutationDrafts =
+  [ reservedMutationDraft
+  , carrierMutationDraft
+      [ property "carrier-type-a" "o2i.type" "Strategy"
+      , property "carrier-type-b" "o2i.type" "Strategy"
+      ]
+      [property "carrier-commitment" "o2i.commitment" "asserted"]
+  , carrierMutationDraft
+      [ propertyScalars
+          "carrier-type"
+          "o2i.type"
+          [text "Strategy" "carrier-type-a", text "Strategy" "carrier-type-b"]
+      ]
+      [property "carrier-commitment" "o2i.commitment" "asserted"]
+  , carrierMutationDraft
+      [ propertyScalars
+          "carrier-type"
+          "o2i.type"
+          [Draft.draftBooleanScalar True (location "carrier-type-boolean")]
+      ]
+      [property "carrier-commitment" "o2i.commitment" "asserted"]
+  , carrierMutationDraft
+      [property "carrier-type" "o2i.type" "Strategy"]
+      [property "carrier-commitment" "o2i.commitment" "unknown"]
+  , carrierMutationDraft
+      [property "carrier-type" "o2i.type" "Strategy"]
+      [ propertyScalars
+          "carrier-commitment"
+          "o2i.commitment"
+          [ text "asserted" "carrier-commitment-a"
+          , text "asserted" "carrier-commitment-b"
+          ]
+      ]
+  , carrierMutationDraft
+      [property "carrier-type" "o2i.type" "Strategy"]
+      [ propertyScalars
+          "carrier-commitment"
+          "o2i.commitment"
+          [ Draft.draftBooleanScalar
+              True
+              (location "carrier-commitment-boolean")
+          ]
+      ]
+  , semanticRelationMutationDraft []
+  , semanticRelationMutationDraft
+      [ property "relation-commitment-a" "o2i.commitment" "asserted"
+      , property "relation-commitment-b" "o2i.commitment" "asserted"
+      ]
+  , semanticRelationMutationDraft
+      [property "relation-commitment" "o2i.commitment" "unknown"]
+  , semanticRelationMutationDraft
+      [ propertyScalars
+          "relation-commitment"
+          "o2i.commitment"
+          [ text "asserted" "relation-commitment-a"
+          , text "asserted" "relation-commitment-b"
+          ]
+      ]
+  , semanticRelationMutationDraft
+      [ propertyScalars
+          "relation-commitment"
+          "o2i.commitment"
+          [ Draft.draftBooleanScalar
+              True
+              (location "relation-commitment-boolean")
+          ]
+      ]
+  , collectivePropertyMutationDraft
+      [property "claim-completeness" "o2i.participant-completeness" "unknown"]
+  , collectivePropertyMutationDraft
+      [ propertyScalars
+          "claim-completeness"
+          "o2i.participant-completeness"
+          [ text "closed" "claim-completeness-a"
+          , text "closed" "claim-completeness-b"
+          ]
+      ]
+  , collectivePropertyMutationDraft
+      [ propertyScalars
+          "claim-completeness"
+          "o2i.participant-completeness"
+          [ Draft.draftBooleanScalar
+              True
+              (location "claim-completeness-boolean")
+          ]
+      ]
+  , qualificationSourceMutationDraft
+      [ propertyScalars
+          "proposal-source"
+          "o2i.source"
+          [ text "source-a" "proposal-source-a"
+          , text "source-b" "proposal-source-b"
+          ]
+      ]
+  , qualificationSourceMutationDraft
+      [ propertyScalars
+          "proposal-source"
+          "o2i.source"
+          [Draft.draftBooleanScalar True (location "proposal-source-boolean")]
+      ]
+  , qualificationSourceMutationDraft
+      [property "proposal-source" "o2i.source" "bad\NULsource"]
+  , qualificationCommitmentDraft
+  , qualificationReferenceCommitmentDraft
+  , qualificationUnstableIdentityDraft
+  , contextualizationMutationDraft
+  , collectiveAdditionalPropertyDraft
+  , collectiveSegmentMetadataDraft
+  ]
+    <> map
+         influenceStrengthDraft
+         [ "contributes-to"
+         , "determines"
+         , "directs"
+         , "grounds"
+         , "guides"
+         , "indicates"
+         , "orients"
+         , "translates-into"
+         ]
+
+reservedMutationDraft :: Draft.ProfileDraft
+reservedMutationDraft =
+  carrierMutationDraft
+    [ property "carrier-type" "o2i.type" "Strategy"
+    , property "carrier-profile" "o2i.profile" "o2i.archimate-profile@0.3"
+    , property "carrier-unknown" "o2i.unknown" "value"
+    ]
+    [property "carrier-commitment" "o2i.commitment" "asserted"]
+
+carrierMutationDraft ::
+     [Draft.DraftMember Draft.ElementRole]
+  -> [Draft.DraftMember Draft.ElementRole]
+  -> Draft.ProfileDraft
+carrierMutationDraft typeMembers commitmentMembers =
+  modelDraft
+    [ Draft.childRecordMember
+        (element "carrier" "Grouping" (typeMembers <> commitmentMembers))
+    , Draft.childRecordMember (simpleView "carrier-view" "Carrier" ["carrier"])
+    ]
+
+semanticRelationMutationDraft ::
+     [Draft.DraftMember Draft.RelationshipRole] -> Draft.ProfileDraft
+semanticRelationMutationDraft members =
+  modelDraft
+    [ Draft.childRecordMember
+        (typedElement "source" "Grouping" "Strategy" "asserted")
+    , Draft.childRecordMember
+        (typedElement "target" "Grouping" "Need" "candidate")
+    , Draft.childRecordMember
+        (relationship
+           "relation"
+           "AssociationRelationship"
+           True
+           "qualifies"
+           "source"
+           "target"
+           members)
+    , Draft.childRecordMember
+        (connectedView
+           "relation-view"
+           "Relation"
+           ["source", "target"]
+           [("relation", "source", "target")])
+    ]
+
+collectivePropertyMutationDraft ::
+     [Draft.DraftMember Draft.ElementRole] -> Draft.ProfileDraft
+collectivePropertyMutationDraft completenessMembers =
+  collectiveMutationDraft
+    ([ property "claim-type" "o2i.type" "CollectiveStrategyRealization"
+     , property "claim-commitment" "o2i.commitment" "asserted"
+     ]
+       <> completenessMembers)
+    []
+
+qualificationSourceMutationDraft ::
+     [Draft.DraftMember Draft.ElementRole] -> Draft.ProfileDraft
+qualificationSourceMutationDraft sources =
+  qualificationModelWithProposal
+    (qualificationProposal
+       "Assessment"
+       "NeedQualificationProposal"
+       [defaultRationale]
+       sources)
+    validQualificationReferences
+    []
+
+qualificationCommitmentDraft :: Draft.ProfileDraft
+qualificationCommitmentDraft =
+  qualificationModelWithProposal
+    (qualificationProposal
+       "Assessment"
+       "NeedQualificationProposal"
+       [defaultRationale]
+       [ property "proposal-source" "o2i.source" "source-document"
+       , property "proposal-commitment" "o2i.commitment" "asserted"
+       ])
+    validQualificationReferences
+    []
+
+qualificationReferenceCommitmentDraft :: Draft.ProfileDraft
+qualificationReferenceCommitmentDraft =
+  qualificationModel
+    (relationship
+       "proposal-strategy"
+       "AssociationRelationship"
+       True
+       "references"
+       "proposal"
+       "strategy"
+       [ property "proposal-strategy-role" "o2i.role" "strategy"
+       , property "proposal-strategy-commitment" "o2i.commitment" "asserted"
+       ]
+       : drop 1 validQualificationReferences)
+    []
+
+qualificationUnstableIdentityDraft :: Draft.ProfileDraft
+qualificationUnstableIdentityDraft =
+  qualificationModelWithProposal
+    (elementWithIdentity
+       (Draft.draftIdentity [])
+       "proposal"
+       "Assessment"
+       [ defaultRationale
+       , property "proposal-type" "o2i.type" "NeedQualificationProposal"
+       , property "proposal-source" "o2i.source" "source-document"
+       ])
+    validQualificationReferences
+    []
+
+contextualizationMutationDraft :: Draft.ProfileDraft
+contextualizationMutationDraft =
+  modelDraft
+    [ Draft.childRecordMember
+        (typedElement "measure" "Grouping" "Measure" "asserted")
+    , Draft.childRecordMember (typedElement "kpi" "Assessment" "KPI" "asserted")
+    , Draft.childRecordMember
+        (relationship
+           "contextualizes"
+           "CompositionRelationship"
+           False
+           "contextualizes"
+           "measure"
+           "kpi"
+           [ property "contextualizes-commitment" "o2i.commitment" "unknown"
+           , property "contextualizes-source" "o2i.source" "source-document"
+           ])
+    , Draft.childRecordMember
+        (connectedView
+           "context-view"
+           "Context"
+           ["measure", "kpi"]
+           [("contextualizes", "measure", "kpi")])
+    ]
+
+collectiveAdditionalPropertyDraft :: Draft.ProfileDraft
+collectiveAdditionalPropertyDraft =
+  collectiveMutationDraft
+    [ property "claim-type" "o2i.type" "CollectiveStrategyRealization"
+    , property "claim-commitment" "o2i.commitment" "asserted"
+    , property "claim-completeness" "o2i.participant-completeness" "closed"
+    , property "claim-source" "o2i.source" "source-document"
+    ]
+    []
+
+collectiveSegmentMetadataDraft :: Draft.ProfileDraft
+collectiveSegmentMetadataDraft =
+  collectiveMutationDraft
+    [ property "claim-type" "o2i.type" "CollectiveStrategyRealization"
+    , property "claim-commitment" "o2i.commitment" "asserted"
+    , property "claim-completeness" "o2i.participant-completeness" "closed"
+    ]
+    [property "segment-commitment" "o2i.commitment" "asserted"]
+
+collectiveMutationDraft ::
+     [Draft.DraftMember Draft.ElementRole]
+  -> [Draft.DraftMember Draft.RelationshipRole]
+  -> Draft.ProfileDraft
+collectiveMutationDraft claimMembers segmentMembers =
+  modelDraft
+    [ Draft.childRecordMember
+        (typedElement "participant" "Grouping" "Strategy" "asserted")
+    , Draft.childRecordMember (element "claim" "AndJunction" claimMembers)
+    , Draft.childRecordMember
+        (relationship
+           "segment"
+           "RealizationRelationship"
+           False
+           "realizes"
+           "participant"
+           "claim"
+           segmentMembers)
+    , Draft.childRecordMember
+        (simpleView "collective-view" "Collective" ["claim"])
+    ]
+
+influenceStrengthDraft :: Text -> Draft.ProfileDraft
+influenceStrengthDraft label =
+  modelDraft
+    [ Draft.childRecordMember
+        (typedElement "source" "Grouping" "Strategy" "asserted")
+    , Draft.childRecordMember
+        (typedElement "target" "Grouping" "Strategy" "asserted")
+    , Draft.childRecordMember
+        (relationship
+           "influence"
+           "InfluenceRelationship"
+           False
+           label
+           "source"
+           "target"
+           [ property "influence-commitment" "o2i.commitment" "asserted"
+           , Draft.influenceStrengthFieldMember
+               [text "strong" "influence-strength"]
+               (location "influence-strength-field")
+           ])
+    , Draft.childRecordMember
+        (connectedView
+           "influence-view"
+           "Influence"
+           ["source", "target"]
+           [("influence", "source", "target")])
+    ]
 
 collectiveClaim :: Text -> Text -> Draft.ElementDraft
 collectiveClaim identifier completeness =
@@ -736,13 +1231,14 @@ relationship identifier archiMateType directed label source target members =
      ]
        <> members)
 
-relationshipCoordinates :: Draft.RelationshipDraft -> (Text, Text, Text)
+relationshipCoordinates :: Draft.RelationshipDraft -> Maybe (Text, Text, Text)
 relationshipCoordinates relation =
-  ( singleIdentity (Draft.draftRecordIdentity relation)
-  , referenceIdentity "source" relation
-  , referenceIdentity "target" relation)
+  (,,)
+    <$> singleIdentity (Draft.draftRecordIdentity relation)
+    <*> referenceIdentity "source" relation
+    <*> referenceIdentity "target" relation
 
-referenceIdentity :: Text -> Draft.RelationshipDraft -> Text
+referenceIdentity :: Text -> Draft.RelationshipDraft -> Maybe Text
 referenceIdentity expected relation =
   case [ target
        | member <- Draft.draftRecordMembers relation
@@ -753,15 +1249,18 @@ referenceIdentity expected relation =
              (\reference ->
                 if referenceField (Draft.draftReferenceField reference)
                      == expected
-                  then [singleIdentity (Draft.draftReferenceIdentity reference)]
+                  then maybe
+                         []
+                         pure
+                         (singleIdentity
+                            (Draft.draftReferenceIdentity reference))
                   else [])
              (const [])
              (const [])
              member
        ] of
-    [target] -> target
-    targets ->
-      error ("expected one relationship endpoint, got " <> show targets)
+    [target] -> Just target
+    _ -> Nothing
 
 referenceField :: Draft.DraftReferenceFieldValue -> Text
 referenceField =
@@ -842,9 +1341,36 @@ viewConnection identifier relationshipId sourceNode targetNode =
 
 property :: Text -> Text -> Text -> Draft.DraftMember ownerRole
 property identifier key value =
+  propertyScalars identifier key [text value (identifier <> "-value")]
+
+propertyScalars ::
+     Text -> Text -> [Draft.DraftScalar] -> Draft.DraftMember ownerRole
+propertyScalars identifier key values =
   Draft.propertyMember
     (Draft.draftProperty
        (Draft.directPropertyKey [text key (identifier <> "-key")])
+       values
+       (location identifier)
+       [])
+
+propertyDefinition :: Text -> Text -> Draft.PropertyDefinitionDraft
+propertyDefinition identifier key =
+  Draft.propertyDefinitionDraft
+    (identity identifier)
+    (location identifier)
+    [ Draft.nameFieldMember
+        [text key (identifier <> "-name")]
+        (location (identifier <> "-name-field"))
+    ]
+
+propertyByDefinition :: Text -> Text -> Text -> Draft.DraftMember ownerRole
+propertyByDefinition identifier definition value =
+  Draft.propertyMember
+    (Draft.draftProperty
+       (Draft.propertyDefinitionKey
+          (Draft.propertyDefinitionReference
+             (identity definition)
+             (location (identifier <> "-definition"))))
        [text value (identifier <> "-value")]
        (location identifier)
        [])
@@ -852,11 +1378,11 @@ property identifier key value =
 identity :: Text -> Draft.DraftIdentity recordRole
 identity value = Draft.draftIdentity [text value (value <> "-identity")]
 
-singleIdentity :: Draft.DraftIdentity recordRole -> Text
+singleIdentity :: Draft.DraftIdentity recordRole -> Maybe Text
 singleIdentity identityEvidence =
   case Draft.foldDraftIdentity (map Draft.draftScalarText) identityEvidence of
-    [value] -> value
-    values -> error ("expected one identity value, got " <> show values)
+    [value] -> Just value
+    _ -> Nothing
 
 text :: Text -> Text -> Draft.DraftScalar
 text value source = Draft.draftTextScalar value (location source)

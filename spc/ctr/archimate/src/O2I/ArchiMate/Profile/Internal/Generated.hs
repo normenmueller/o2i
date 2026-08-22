@@ -39,6 +39,13 @@ module O2I.ArchiMate.Profile.Internal.Generated
   , GeneratedActivationRule(..)
   , GeneratedClosureRule(..)
   , GeneratedProfileEvidenceKind(..)
+  , GeneratedClassificationRule
+  , generatedClassificationRuleId
+  , generatedClassificationRule
+  , GeneratedQualificationInvariantRule
+  , generatedQualificationInvariantRuleId
+  , generatedQualificationProposalCategoryRule
+  , generatedQualificationProposalStableIdentityScopeRule
   , GeneratedProfileDefectRule
   , generatedProfileDefectRuleId
   , generatedCarrierOccurrenceDefectRule
@@ -92,6 +99,35 @@ data GeneratedProfileEvidenceKind
   | GeneratedProfileEvidenceStructuredCarrierOccurrence
   | GeneratedProfileEvidenceStructuredIncidence
   deriving (Eq, Ord, Show)
+
+newtype GeneratedClassificationRule = GeneratedClassificationRule
+  { generatedClassificationRuleId :: Text
+  } deriving (Eq, Ord, Show)
+
+generatedClassificationRule :: Bool -> Bool -> GeneratedClassificationRule
+generatedClassificationRule True True =
+  GeneratedClassificationRule "classification.both"
+generatedClassificationRule True False =
+  GeneratedClassificationRule "classification.graph-only"
+generatedClassificationRule False True =
+  GeneratedClassificationRule "classification.qualification-only"
+generatedClassificationRule False False =
+  GeneratedClassificationRule "classification.neither"
+
+newtype GeneratedQualificationInvariantRule = GeneratedQualificationInvariantRule
+  { generatedQualificationInvariantRuleId :: Text
+  } deriving (Eq, Ord, Show)
+
+generatedQualificationProposalCategoryRule ::
+     GeneratedQualificationInvariantRule
+generatedQualificationProposalCategoryRule =
+  GeneratedQualificationInvariantRule "qualification.proposal.carrier.category"
+
+generatedQualificationProposalStableIdentityScopeRule ::
+     GeneratedQualificationInvariantRule
+generatedQualificationProposalStableIdentityScopeRule =
+  GeneratedQualificationInvariantRule
+    "qualification.proposal.carrier.stable-identity-scope"
 
 data GeneratedProfileDefectRule (kind :: GeneratedProfileEvidenceKind) where
   GeneratedCarrierOccurrenceDefectRule

@@ -81,6 +81,40 @@ library
   hs-source-dirs:
     src
 
+library conformance
+  import:
+    warnings,
+    language
+  visibility: private
+  exposed-modules:
+    O2I.Core.Conformance
+  other-modules:
+    O2I.Core.Conformance.SemanticsSource
+  build-depends:
+    base >=4.20 && <4.21,
+    bytestring >=0.12 && <0.13,
+    containers >=0.7 && <0.8,
+    o2i-core,
+    text >=2.1 && <2.2
+  hs-source-dirs:
+    conformance
+
+test-suite o2i-core-conformance-test
+  import:
+    warnings,
+    language
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  build-depends:
+    base >=4.20 && <4.21,
+    containers >=0.7 && <0.8,
+    o2i-core,
+    o2i-core:conformance,
+    tasty >=1.4 && <1.6,
+    tasty-hunit >=0.10 && <0.11
+  hs-source-dirs:
+    conformance-test
+
 -- This component compiles the profile-neutral identity boundary directly. It
 -- verifies exact identity decoding, deterministic indexing, and nominal
 -- selected-View scope without exporting internal resolution machinery.

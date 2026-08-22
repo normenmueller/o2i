@@ -4,13 +4,13 @@ module O2I.ArchiMate.Profile.Internal.ClosureWorkTest
 
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
+import qualified O2I.ArchiMate.Profile.Conformance.Source as ContractFixture
 import O2I.ArchiMate.Profile.Internal.Closure
 import O2I.ArchiMate.Profile.Internal.Draft (ProfileDraft)
 import qualified O2I.ArchiMate.Profile.Internal.Fixture as Fixture
 import O2I.ArchiMate.Profile.Internal.Generated
 import O2I.ArchiMate.Profile.Internal.Index (buildProfileIndex, indexModelRoots)
 import O2I.ArchiMate.Profile.Internal.Notation
-import qualified O2I.ArchiMate.Profile.Test.Fixture as ContractFixture
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit ((@?=), assertBool, testCase)
 

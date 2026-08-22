@@ -15,7 +15,8 @@ import O2I.Core.Contract
 import O2I.Core.Contract.Internal (structureRuleIds)
 import O2I.Core.Graph.Observation
 import O2I.Core.Identity
-import O2I.Structure
+import O2I.Structure hiding (StructureAssessment)
+import qualified O2I.Structure.Index as StructureIndex
 import O2I.Structure.Internal
   ( CollectiveParticipantCardinalityEvidence(..)
   , CollectiveParticipantTypeEvidence(..)
@@ -28,10 +29,13 @@ import O2I.Structure.Internal
   , ContextualizationTargetOwnerCardinalityEvidence(..)
   , QualifiedEndpointCatalogMembershipEvidence(..)
   , SemanticRelationCompatibilityEvidence(..)
+  , StructureAssessment(..)
   , StructureDefect(..)
   , StructureRule(..)
   , StructureZeroOrMultipleOccurrences(..)
   , StructuredPropositionIdentityEvidence(..)
+  , foldStructureDefect
+  , structureDefectRule
   , structureRuleId
   )
 import Test.Tasty (TestTree, defaultMain, testGroup)
@@ -515,7 +519,7 @@ runStructureWithIndex index projection selected inspect =
   case withSelectedViewScope
          index
          selected
-         (\scope -> inspect (assessStructure scope projection)) of
+         (\scope -> inspect (StructureIndex.assessStructure scope projection)) of
     Left defects -> error ("invalid selected-View fixture: " ++ show defects)
     Right result -> result
 

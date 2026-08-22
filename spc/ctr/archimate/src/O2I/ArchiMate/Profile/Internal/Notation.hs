@@ -128,6 +128,10 @@ data CanonicalDocument = CanonicalDocument
   , canonicalDocumentReferencesValue :: ![CanonicalReference]
   }
 
+-- | Sole canonical record domain for global identity uniqueness and indexing.
+canonicalIdentityDomainValue :: CanonicalDocument -> [CanonicalRecord]
+canonicalIdentityDomainValue = canonicalDocumentRecordsValue
+
 -- | One identity outcome with its record family and source location.
 data IdentityObservation = IdentityObservation
   { identityObservationOccurrenceValue :: !CanonicalOccurrence

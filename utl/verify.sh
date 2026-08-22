@@ -276,7 +276,9 @@ verify_haskell() {
     if run_project_cabal haddock \
         o2i-core o2i-archimate-profile o2i-operation o2i-amx \
         --builddir="$build" \
-        --build-log="$build_log" >"$haddock_log" 2>&1; then
+        --build-log="$build_log" \
+        --haddock-option=--ignore-link-symbol=O2I.ArchiMate.Profile.Projection.ProposalCarrierOccurrenceEvidenceKind \
+        >"$haddock_log" 2>&1; then
       cat "$haddock_log"
     else
       cat "$haddock_log" >&2
@@ -291,7 +293,8 @@ verify_haskell() {
   else
     run_project_cabal haddock all \
       --builddir="$build" \
-      --build-log="$build_log"
+      --build-log="$build_log" \
+      --haddock-option=--ignore-link-symbol=O2I.ArchiMate.Profile.Projection.ProposalCarrierOccurrenceEvidenceKind
   fi
 
   info "Checking independently buildable Haskell source distributions."

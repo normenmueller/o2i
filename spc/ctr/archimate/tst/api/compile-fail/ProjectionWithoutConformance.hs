@@ -5,5 +5,5 @@ import qualified O2I.ArchiMate.Profile.Projection as Projection
 
 projectRaw ::
      Closure.ProfileAssessmentUniverse profile document
-  -> Projection.ProfileProjectionAssessment
+  -> Projection.ProfileProjectionAssessment profile document
 projectRaw = Projection.assessSelectedView

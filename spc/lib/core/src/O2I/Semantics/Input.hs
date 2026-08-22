@@ -1,3 +1,5 @@
+{-# LANGUAGE RoleAnnotations #-}
+
 -- | Closed supplemental-input boundary for semantic capabilities.
 --
 -- Operation supplies exact bytes and a stable ordinal. Core alone decodes,
@@ -13,10 +15,12 @@ module O2I.Semantics.Input
   , SupplementalInputSet
   , assessSupplementalInputSet
   , SupplementalBinding
+  , SupplementalBindingEvidence
   , BoundSupplementalInputs
   , bindSupplementalInputs
-  , supplementalBindingInputs
-  , supplementalBindingDefects
+  , foldSupplementalBinding
+  , supplementalBindingEvidenceRule
+  , foldSupplementalBindingEvidence
   , SupplementalUnicodeScalarOccurrence(..)
   , SupplementalInvalidUtf8Evidence
   , supplementalInvalidUtf8InputOrdinal
@@ -103,11 +107,59 @@ import Data.Text (Text)
 import Numeric.Natural (Natural)
 import O2I.Core.Contract (CoreRuleId)
 import O2I.Core.Identity (ModelIdentity)
-import O2I.Input.Internal.Binding (bindSupplementalInputs)
+import qualified O2I.Input.Internal.Binding as Binding
 import O2I.Input.Internal.Decode (decodeSupplementalInput)
 import O2I.Input.Internal.Set (assessSupplementalInputSet)
 import qualified O2I.Input.Internal.Types as Internal
-import O2I.Input.Internal.Types hiding (supplementalInputDefectRule)
+import O2I.Input.Internal.Types hiding
+  ( SupplementalBinding
+  , supplementalBindingDefects
+  , supplementalBindingInputs
+  , supplementalInputDefectRule
+  )
+import O2I.Structure (WellFormedGraph)
+
+-- | Opaque binding result nominal in its producing selected-View scope.
+newtype SupplementalBinding scope =
+  SupplementalBinding (Internal.SupplementalBinding scope)
+
+type role SupplementalBinding nominal
+
+-- | Opaque graph-dependent binding evidence in the producing scope.
+newtype SupplementalBindingEvidence scope =
+  SupplementalBindingEvidence SupplementalInputDefect
+
+type role SupplementalBindingEvidence nominal
+
+-- | Bind every supplemental identity under one exact selected-View scope.
+bindSupplementalInputs ::
+     WellFormedGraph scope -> SupplementalInputSet -> SupplementalBinding scope
+bindSupplementalInputs graph =
+  SupplementalBinding . Binding.bindSupplementalInputs graph
+
+-- | Eliminate only the exact result produced by scoped Binding.
+foldSupplementalBinding ::
+     (BoundSupplementalInputs scope -> [SupplementalBindingEvidence scope] -> result)
+  -> SupplementalBinding scope
+  -> result
+foldSupplementalBinding consume (SupplementalBinding binding) =
+  consume
+    (Internal.supplementalBindingInputs binding)
+    (SupplementalBindingEvidence <$> Internal.supplementalBindingDefects binding)
+
+-- | Project the exact Core rule of scoped Binding evidence.
+supplementalBindingEvidenceRule ::
+     SupplementalBindingEvidence scope -> CoreRuleId
+supplementalBindingEvidenceRule (SupplementalBindingEvidence defect) =
+  Internal.supplementalInputDefectRule defect
+
+-- | Eliminate scoped Binding evidence through its closed exact handlers.
+foldSupplementalBindingEvidence ::
+     SupplementalInputDefectEliminator result
+  -> SupplementalBindingEvidence scope
+  -> result
+foldSupplementalBindingEvidence eliminator (SupplementalBindingEvidence defect) =
+  Internal.foldSupplementalInputDefect eliminator defect
 
 -- | Project the exact Core-owned rule identity of one supplemental defect.
 supplementalInputDefectRule :: SupplementalInputDefect -> CoreRuleId

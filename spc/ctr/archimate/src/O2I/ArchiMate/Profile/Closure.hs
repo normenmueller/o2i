@@ -1,3 +1,5 @@
+{-# LANGUAGE RoleAnnotations #-}
+
 -- | Positive, branch-separated selected-View Profile closure.
 --
 -- Operation selects one View descriptor. Profile derives its displayed
@@ -32,7 +34,11 @@ module O2I.ArchiMate.Profile.Closure
 
 import qualified Data.Set as Set
 import Data.Text (Text)
-import O2I.ArchiMate.Profile.Internal.Closure
+import O2I.ArchiMate.Profile.Internal.Closure hiding
+  ( ActivationProvenance
+  , ClosureProvenance
+  )
+import qualified O2I.ArchiMate.Profile.Internal.Closure as Internal
 import O2I.ArchiMate.Profile.Internal.Closure.Witness
 import qualified O2I.ArchiMate.Profile.Internal.Notation.Witness as Witness
 import O2I.ArchiMate.Profile.Notation
@@ -41,6 +47,18 @@ import O2I.ArchiMate.Profile.Notation
   , CanonicalView
   )
 import O2I.ArchiMate.Profile.Resolution (SelectedArchiMateProfile)
+
+-- | Activation provenance nominal in its selected Profile document.
+newtype ActivationProvenance profile document =
+  ActivationProvenance Internal.ActivationProvenance
+
+type role ActivationProvenance nominal nominal
+
+-- | Closure provenance nominal in its selected Profile document.
+newtype ClosureProvenance profile document =
+  ClosureProvenance Internal.ClosureProvenance
+
+type role ClosureProvenance nominal nominal
 
 -- | Canonical occurrence of the native View displaying the subject.
 displayedViewOccurrence :: DisplayedOccurrence -> CanonicalOccurrence
@@ -63,32 +81,32 @@ foldClosureBranch graph qualification branch =
 -- introduces no independent fachliche semantics.
 foldActivationProvenance ::
      (Text -> Text -> ClosureBranch -> Text -> CanonicalOccurrence -> CanonicalOccurrence -> [Text] -> result)
-  -> ActivationProvenance
+  -> ActivationProvenance profile document
   -> result
-foldActivationProvenance consume provenance =
+foldActivationProvenance consume (ActivationProvenance provenance) =
   consume
-    (activationProvenanceProfileIdentityValue provenance)
-    (activationProvenanceProfileDigestValue provenance)
-    (activationProvenanceBranchValue provenance)
-    (activationProvenanceRuleIdValue provenance)
-    (activationProvenanceOwnerValue provenance)
-    (activationProvenanceTriggerValue provenance)
-    (activationProvenanceSourceRuleIdsValue provenance)
+    (Internal.activationProvenanceProfileIdentityValue provenance)
+    (Internal.activationProvenanceProfileDigestValue provenance)
+    (Internal.activationProvenanceBranchValue provenance)
+    (Internal.activationProvenanceRuleIdValue provenance)
+    (Internal.activationProvenanceOwnerValue provenance)
+    (Internal.activationProvenanceTriggerValue provenance)
+    (Internal.activationProvenanceSourceRuleIdsValue provenance)
 
 -- | Consume all closure evidence without exposing its constructor.
 foldClosureProvenance ::
      (Text -> Text -> ClosureBranch -> Text -> CanonicalOccurrence -> CanonicalOccurrence -> [CanonicalOccurrence] -> result)
-  -> ClosureProvenance
+  -> ClosureProvenance profile document
   -> result
-foldClosureProvenance consume provenance =
+foldClosureProvenance consume (ClosureProvenance provenance) =
   consume
-    (closureProvenanceProfileIdentityValue provenance)
-    (closureProvenanceProfileDigestValue provenance)
-    (closureProvenanceBranchValue provenance)
-    (closureProvenanceRuleIdValue provenance)
-    (closureProvenanceTriggerValue provenance)
-    (closureProvenanceIncludedValue provenance)
-    (closureProvenanceContextValue provenance)
+    (Internal.closureProvenanceProfileIdentityValue provenance)
+    (Internal.closureProvenanceProfileDigestValue provenance)
+    (Internal.closureProvenanceBranchValue provenance)
+    (Internal.closureProvenanceRuleIdValue provenance)
+    (Internal.closureProvenanceTriggerValue provenance)
+    (Internal.closureProvenanceIncludedValue provenance)
+    (Internal.closureProvenanceContextValue provenance)
 
 -- | Derive branch-separated positive closure for one selected Profile and View.
 --
@@ -145,16 +163,20 @@ assessmentUniverse =
 
 -- | Deterministic activation provenance retained for both branches.
 assessmentActivationProvenance ::
-     ProfileAssessmentUniverse profile document -> [ActivationProvenance]
+     ProfileAssessmentUniverse profile document
+  -> [ActivationProvenance profile document]
 assessmentActivationProvenance =
-  Set.toAscList
+  map ActivationProvenance
+    . Set.toAscList
     . closedViewActivationProvenanceValue
     . profileAssessmentUniverseValue
 
 -- | Deterministic inclusion provenance retained for both branches.
 assessmentClosureProvenance ::
-     ProfileAssessmentUniverse profile document -> [ClosureProvenance]
+     ProfileAssessmentUniverse profile document
+  -> [ClosureProvenance profile document]
 assessmentClosureProvenance =
-  Set.toAscList
+  map ClosureProvenance
+    . Set.toAscList
     . closedViewClosureProvenanceValue
     . profileAssessmentUniverseValue
