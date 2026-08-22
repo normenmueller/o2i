@@ -481,8 +481,8 @@ profileMappingEvidenceKind (ProfileMappingProvenance provenance) =
     Internal.ConstructionMappingProvenance _ _ _ evidenceKind ->
       publicEvidenceKind evidenceKind
 
--- | Consume carrier or relationship mapping provenance without exposing its
--- representation.
+-- | Consume carrier, relationship, or construction mapping provenance without
+-- exposing its representation.
 foldProfileMappingProvenance ::
      (Text -> OccurrenceIdentity -> Text -> result)
   -> (Text -> OccurrenceIdentity -> Text -> OccurrenceIdentity -> OccurrenceIdentity -> result)
