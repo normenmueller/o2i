@@ -167,7 +167,10 @@ class HaskellApiContractTest(unittest.TestCase):
     def test_compile_pass_checks_every_external_client(self, compile_source):
         compile_source.return_value = CompletedProcess([], 0, "", "")
         contract = contracts.PackageContract(
-            "o2i-core", ("FirstClient.hs", "SecondClient.hs"), ()
+            "o2i-core",
+            ("FirstClient.hs", "SecondClient.hs"),
+            (),
+            ("o2i-archimate-profile",),
         )
 
         contracts.check_compile_pass(
@@ -181,6 +184,13 @@ class HaskellApiContractTest(unittest.TestCase):
         self.assertEqual(
             [call.args[-1] for call in compile_source.call_args_list],
             ["FirstClient.hs", "SecondClient.hs"],
+        )
+        self.assertTrue(
+            all(
+                call.kwargs["client_dependencies"]
+                == ("o2i-archimate-profile",)
+                for call in compile_source.call_args_list
+            )
         )
 
     @patch.object(contracts, "check_compile_pass")

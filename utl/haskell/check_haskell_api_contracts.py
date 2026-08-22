@@ -83,6 +83,7 @@ class PackageContract:
     package: str
     compile_passes: tuple[str, ...]
     compile_failures: tuple[CompileFailure, ...]
+    client_dependencies: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -320,7 +321,11 @@ CONTRACTS = (
     ),
     PackageContract(
         "o2i-operation",
-        ("spc/lib/operation/tst/api/compile-pass/PublicApi.hs",),
+        (
+            "spc/lib/operation/tst/api/compile-pass/PublicApi.hs",
+            "spc/lib/operation/tst/api/compile-pass/"
+            "OwnerEvidencePublicApi.hs",
+        ),
         (
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/HiddenInternalModule.hs",
@@ -330,6 +335,21 @@ CONTRACTS = (
                 "spc/lib/operation/tst/api/compile-fail/"
                 "DiagnosticAdapterOwnerHiddenModule.hs",
                 (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "OwnerProfileCrossGeneration.hs",
+                (("GHC-25897", 3),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "OwnerCoreCrossGeneration.hs",
+                (("GHC-25897", 3),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "OwnerEvidenceOpaqueConstructor.hs",
+                (("GHC-88464", 2),),
             ),
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/OpaqueConstructors.hs",
@@ -466,6 +486,7 @@ CONTRACTS = (
                 (("GHC-88464", 1),),
             ),
         ),
+        ("o2i-core", "o2i-archimate-profile"),
     ),
 )
 
@@ -690,6 +711,7 @@ def compiler_command(
     package: str,
     source: Path,
     output_dir: Path,
+    client_dependencies: tuple[str, ...] = (),
 ) -> list[str]:
     command = [
         "cabal",
@@ -698,18 +720,23 @@ def compiler_command(
     ]
     if project_file is not None:
         command.append(f"--project-file={project_file}")
-    main_units = tuple(
-        path.stem
-        for path in build_dir.glob(f"packagedb/*/{package}-*-inplace.conf")
-    )
-    if not main_units:
-        package_selector = ["-package", package]
-    elif len(main_units) == 1:
-        package_selector = ["-package-id", main_units[0]]
-    else:
-        raise RuntimeError(
-            f"expected one main {package} unit, found {main_units!r}"
+    package_selector = []
+    for selected_package in (package, *client_dependencies):
+        main_units = tuple(
+            path.stem
+            for path in build_dir.glob(
+                f"packagedb/*/{selected_package}-*-inplace.conf"
+            )
         )
+        if not main_units:
+            package_selector.extend(["-package", selected_package])
+        elif len(main_units) == 1:
+            package_selector.extend(["-package-id", main_units[0]])
+        else:
+            raise RuntimeError(
+                f"expected one main {selected_package} unit, "
+                f"found {main_units!r}"
+            )
     return command + [
         f"--builddir={build_dir}", "exec",
         "--",
@@ -823,6 +850,7 @@ def compile_source(
     build_dir: Path,
     package: str,
     source_name: str,
+    client_dependencies: tuple[str, ...] = (),
 ) -> subprocess.CompletedProcess[str]:
     source = (root / source_name).resolve()
     with tempfile.TemporaryDirectory(prefix="o2i-api-contract.") as temporary:
@@ -833,6 +861,7 @@ def compile_source(
             package,
             source,
             Path(temporary),
+            client_dependencies,
         )
         return subprocess.run(
             command,
@@ -966,6 +995,7 @@ def check_compile_pass(
             build_dir,
             contract.package,
             source_name,
+            client_dependencies=contract.client_dependencies,
         )
         if result.returncode != 0:
             raise RuntimeError(
@@ -981,9 +1011,16 @@ def check_compile_failure(
     build_dir: Path,
     package: str,
     failure: CompileFailure,
+    client_dependencies: tuple[str, ...] = (),
 ) -> None:
     result = compile_source(
-        root, project_dir, project_file, build_dir, package, failure.source
+        root,
+        project_dir,
+        project_file,
+        build_dir,
+        package,
+        failure.source,
+        client_dependencies=client_dependencies,
     )
     assert_compile_failure(
         root, failure.source, failure.diagnostics, result
@@ -1086,6 +1123,7 @@ def check_contracts(
                 build_dir,
                 contract.package,
                 failure,
+                client_dependencies=contract.client_dependencies,
             )
     if core_selected:
         check_evidence_record_updates(

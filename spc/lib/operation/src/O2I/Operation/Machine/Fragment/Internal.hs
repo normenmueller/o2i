@@ -114,6 +114,7 @@ import O2I.Operation.Diagnostic
   , diagnosticSeverityText
   , foldDiagnosticOccurrence
   , foldDiagnosticProvenance
+  , foldOwnerEvidenceProvenance
   )
 import O2I.Operation.Encoding.Internal
   ( CanonicalFragment
@@ -268,12 +269,24 @@ diagnosticProvenanceFragment =
          ]
          (profileRuleIdText (profileRuleId rule)))
     (ownedRule "core" [] . coreRuleIdText . coreRuleIdentity)
+    ownerEvidenceRule
   where
     ownedRule owner members ruleIdentity =
       closedObjectFragment
         ([requiredMember "owner" (textFragment owner)]
            <> members
            <> [requiredMember "ruleId" (textFragment ruleIdentity)])
+    ownerEvidenceRule ownerEvidence =
+      foldOwnerEvidenceProvenance
+        (\reference ruleIdentity ->
+           ownedRule
+             "profile"
+             [requiredMember "profileReference" (textFragment reference)]
+             ruleIdentity)
+        (ownedRule "core" [] . coreRuleIdText)
+        (ownedRule "core" [] . coreRuleIdText)
+        (ownedRule "core" [] . coreRuleIdText)
+        ownerEvidence
 
 diagnosticOccurrenceFragment :: DiagnosticOccurrence -> CanonicalFragment
 diagnosticOccurrenceFragment =

@@ -10,6 +10,7 @@ import qualified O2I.Operation.Test.DiscoveryMachine as DiscoveryMachine
 import qualified O2I.Operation.Test.Encoding as Encoding
 import qualified O2I.Operation.Test.Failure as Failure
 import qualified O2I.Operation.Test.Machine as Machine
+import qualified O2I.Operation.Test.OwnerEvidence as OwnerEvidence
 import qualified O2I.Operation.Test.Preparation as Preparation
 import qualified O2I.Operation.Test.PreparationRuntime as PreparationRuntime
 import qualified O2I.Operation.Test.Profile as Profile
@@ -34,6 +35,7 @@ main =
        , Encoding.tests
        , Failure.tests
        , Machine.tests
+       , OwnerEvidence.tests
        , Preparation.tests
        , PreparationRuntime.tests
        , Profile.tests

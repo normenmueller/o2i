@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 
 module O2I.Adapter.AMX.Test.Contract
   ( contractTests
@@ -181,14 +182,15 @@ kpiCarrierProfileTest = do
              ("native KPI fixture was rejected: "
                 <> show
                      (map
-                        Projection.profileDefectRuleId
+                        Projection.profileDiagnosticRuleId
                         (NonEmpty.toList defects))))
         (\projection -> do
            let provenance =
                  map
                    (Projection.foldProfileMappingProvenance
-                      (\_ mappingId -> Just mappingId)
-                      (\_ _ _ _ -> Nothing))
+                      (\_ _ mappingId -> Just mappingId)
+                      (\_ _ _ _ _ -> Nothing)
+                      (\_ _ _ -> Nothing))
                    (Projection.profileMappingProvenance projection)
            assertBool
              "native KPI carrier mapping is missing"
@@ -234,7 +236,9 @@ assertProfileRejected subject model = do
 
 withProjectionAssessment ::
      Draft.ProfileDraft
-  -> (Projection.ProfileProjectionAssessment -> IO result)
+  -> (forall profile document. Projection.ProfileProjectionAssessment
+                                 profile
+                                 document -> IO result)
   -> IO result
 withProjectionAssessment draft consume =
   Resolution.withSelectedArchiMateProfile Resolution.compiledProfileDescriptor $ \profile ->

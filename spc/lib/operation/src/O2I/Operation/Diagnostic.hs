@@ -21,6 +21,8 @@ module O2I.Operation.Diagnostic
   , processFailure
   , diagnosticDispositionText
   , foldDiagnosticDisposition
+  , type OwnerEvidenceProvenance
+  , foldOwnerEvidenceProvenance
   , type DiagnosticProvenance
   , diagnosticProvenanceIdentity
   , diagnosticProvenanceAuthority
@@ -50,7 +52,7 @@ import O2I.ArchiMate.Profile.Rule.Explanation
   , profileRuleStage
   , profileRuleStageText
   )
-import O2I.Core.Contract (coreRuleIdText)
+import O2I.Core.Contract (CoreRuleId, coreRuleIdText)
 import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
 import O2I.Core.Rule.Catalog
   ( CoreRule
@@ -153,6 +155,8 @@ diagnosticProvenanceIdentity provenance =
         witness
     ProfileDiagnosticProvenance rule -> profileRuleIdText (profileRuleId rule)
     CoreDiagnosticProvenance rule -> coreRuleIdText (coreRuleIdentity rule)
+    OwnerEvidenceDiagnosticProvenance ownerEvidence ->
+      ownerEvidenceIdentity ownerEvidence
 
 -- | Stable closed authority, including exact adapter or Profile identity.
 diagnosticProvenanceAuthority :: DiagnosticProvenance -> Text
@@ -167,6 +171,8 @@ diagnosticProvenanceAuthority provenance =
     ProfileDiagnosticProvenance rule ->
       "Profile:" <> profileRuleProfileReference rule
     CoreDiagnosticProvenance _ -> "Core"
+    OwnerEvidenceDiagnosticProvenance ownerEvidence ->
+      ownerEvidenceAuthority ownerEvidence
 
 -- | Exact owner-defined stage without a second stage taxonomy.
 diagnosticProvenanceStage :: DiagnosticProvenance -> Text
@@ -181,6 +187,8 @@ diagnosticProvenanceStage provenance =
     ProfileDiagnosticProvenance rule ->
       profileRuleStageText (profileRuleStage rule)
     CoreDiagnosticProvenance rule -> coreRuleStageText (coreRuleStage rule)
+    OwnerEvidenceDiagnosticProvenance ownerEvidence ->
+      ownerEvidenceStage ownerEvidence
 
 -- | Consume every exact rule-owner alternative.
 foldDiagnosticProvenance ::
@@ -188,15 +196,34 @@ foldDiagnosticProvenance ::
   -> (AdapterDescriptor -> AdapterRule -> result)
   -> (ProfileRuleExplanation -> result)
   -> (CoreRule -> result)
+  -> (OwnerEvidenceProvenance -> result)
   -> DiagnosticProvenance
   -> result
-foldDiagnosticProvenance operation adapter profile core provenance =
+foldDiagnosticProvenance operation adapter profile core ownerEvidence provenance =
   case provenance of
     OperationDiagnosticProvenance rule -> operation rule
     AdapterDiagnosticProvenance witness ->
       foldAdapterRuleWitness adapter witness
     ProfileDiagnosticProvenance rule -> profile rule
     CoreDiagnosticProvenance rule -> core rule
+    OwnerEvidenceDiagnosticProvenance provenanceValue ->
+      ownerEvidence provenanceValue
+
+-- | Consume every evidence-issued Profile and Core owner alternative.
+foldOwnerEvidenceProvenance ::
+     (Text -> Text -> result)
+  -> (CoreRuleId -> result)
+  -> (CoreRuleId -> result)
+  -> (CoreRuleId -> result)
+  -> OwnerEvidenceProvenance
+  -> result
+foldOwnerEvidenceProvenance profile structure binding semantics provenance =
+  case provenance of
+    ProfileOwnerEvidenceProvenance reference ruleIdentity ->
+      profile reference ruleIdentity
+    StructureOwnerEvidenceProvenance ruleIdentity -> structure ruleIdentity
+    BindingOwnerEvidenceProvenance ruleIdentity -> binding ruleIdentity
+    SemanticsOwnerEvidenceProvenance ruleIdentity -> semantics ruleIdentity
 
 -- | Consume every closed occurrence shape while preserving source identity.
 foldDiagnosticOccurrence ::
@@ -238,7 +265,45 @@ diagnosticCode (Diagnostic _ _ provenance _) =
        ProfileDiagnosticProvenance rule ->
          "o2i.profile." <> profileRuleIdText (profileRuleId rule)
        CoreDiagnosticProvenance rule ->
-         "o2i.core." <> coreRuleIdText (coreRuleIdentity rule))
+         "o2i.core." <> coreRuleIdText (coreRuleIdentity rule)
+       OwnerEvidenceDiagnosticProvenance ownerEvidence ->
+         ownerEvidenceCode ownerEvidence)
+
+ownerEvidenceIdentity :: OwnerEvidenceProvenance -> Text
+ownerEvidenceIdentity ownerEvidence =
+  case ownerEvidence of
+    ProfileOwnerEvidenceProvenance _ ruleIdentity -> ruleIdentity
+    StructureOwnerEvidenceProvenance ruleIdentity -> coreRuleIdText ruleIdentity
+    BindingOwnerEvidenceProvenance ruleIdentity -> coreRuleIdText ruleIdentity
+    SemanticsOwnerEvidenceProvenance ruleIdentity -> coreRuleIdText ruleIdentity
+
+ownerEvidenceAuthority :: OwnerEvidenceProvenance -> Text
+ownerEvidenceAuthority ownerEvidence =
+  case ownerEvidence of
+    ProfileOwnerEvidenceProvenance reference _ -> "Profile:" <> reference
+    StructureOwnerEvidenceProvenance _ -> "Core"
+    BindingOwnerEvidenceProvenance _ -> "Core"
+    SemanticsOwnerEvidenceProvenance _ -> "Core"
+
+ownerEvidenceStage :: OwnerEvidenceProvenance -> Text
+ownerEvidenceStage ownerEvidence =
+  case ownerEvidence of
+    ProfileOwnerEvidenceProvenance _ _ -> "profile"
+    StructureOwnerEvidenceProvenance _ -> "structure"
+    BindingOwnerEvidenceProvenance _ -> "capability-input"
+    SemanticsOwnerEvidenceProvenance _ -> "semantics"
+
+ownerEvidenceCode :: OwnerEvidenceProvenance -> Text
+ownerEvidenceCode ownerEvidence =
+  case ownerEvidence of
+    ProfileOwnerEvidenceProvenance _ ruleIdentity ->
+      "o2i.profile." <> ruleIdentity
+    StructureOwnerEvidenceProvenance ruleIdentity ->
+      "o2i.core." <> coreRuleIdText ruleIdentity
+    BindingOwnerEvidenceProvenance ruleIdentity ->
+      "o2i.core." <> coreRuleIdText ruleIdentity
+    SemanticsOwnerEvidenceProvenance ruleIdentity ->
+      "o2i.core." <> coreRuleIdText ruleIdentity
 
 -- | Stable owning rule identity, distinct from the namespaced diagnostic code.
 diagnosticRuleIdentity :: Diagnostic -> Text

@@ -10,8 +10,10 @@ module O2I.Core.Conformance
   , foldStructureCorpusEvidence
   , structureCorpusRuleIds
   , foldBindingCorpusEvidence
+  , foldBindingCorpusOwnerEvidence
   , bindingCorpusRuleIds
   , foldSemanticsCorpusEvidence
+  , foldSemanticsCorpusOwnerEvidence
   , semanticsCorpusRuleIds
   ) where
 
@@ -106,6 +108,14 @@ foldBindingCorpusEvidence ::
      (forall scope. SupplementalBindingEvidence scope -> result)
   -> CoreConformanceResult result
 foldBindingCorpusEvidence consume =
+  foldBindingCorpusOwnerEvidence (\_ evidence -> consume evidence)
+
+-- | Consume each Binding artifact together with its own scoped evidence.
+foldBindingCorpusOwnerEvidence ::
+     (forall scope. SupplementalBinding scope -> SupplementalBindingEvidence
+                                                   scope -> result)
+  -> CoreConformanceResult result
+foldBindingCorpusOwnerEvidence consume =
   case buildBindingSources of
     Left failure -> CoreConformanceFailed (failure :| [])
     Right sources ->
@@ -122,6 +132,14 @@ foldSemanticsCorpusEvidence ::
      (forall scope. Semantics.SemanticDiagnosticEvidence scope -> result)
   -> CoreConformanceResult result
 foldSemanticsCorpusEvidence consume =
+  foldSemanticsCorpusOwnerEvidence (\_ evidence -> consume evidence)
+
+-- | Consume each Semantics assessment together with its own scoped evidence.
+foldSemanticsCorpusOwnerEvidence ::
+     (forall scope. Semantics.SemanticAssessment scope -> Semantics.SemanticDiagnosticEvidence
+                                                            scope -> result)
+  -> CoreConformanceResult result
+foldSemanticsCorpusOwnerEvidence consume =
   case traverse (runSemanticsSource consume) SemanticsSource.semanticSources of
     Left failure -> CoreConformanceFailed (failure :| [])
     Right values -> CoreConformanceObserved (concat values)
@@ -132,7 +150,8 @@ semanticsCorpusRuleIds =
   foldSemanticsCorpusEvidence Semantics.semanticDiagnosticRule
 
 runSemanticsSource ::
-     (forall scope. Semantics.SemanticDiagnosticEvidence scope -> result)
+     (forall scope. Semantics.SemanticAssessment scope -> Semantics.SemanticDiagnosticEvidence
+                                                            scope -> result)
   -> SemanticsSource.SemanticSource
   -> Either CoreConformanceFailure [result]
 runSemanticsSource consume source = do
@@ -167,12 +186,15 @@ runSemanticsSource consume source = do
                 foldSupplementalBinding
                   (\bound evidence ->
                      if null evidence
-                       then Right
-                              (Semantics.foldSemanticAssessment
-                                 (map consume . NonEmpty.toList)
-                                 []
-                                 (const [])
-                                 (Semantics.assessSemantics graph bound))
+                       then let semanticAssessment =
+                                  Semantics.assessSemantics graph bound
+                             in Right
+                                  (Semantics.foldSemanticAssessment
+                                     (map (consume semanticAssessment)
+                                        . NonEmpty.toList)
+                                     []
+                                     (const [])
+                                     semanticAssessment)
                        else Left InvalidBindingGraphSource)
                   (bindSupplementalInputs graph inputSet))
              assessment)
@@ -244,7 +266,8 @@ bindingSource occurrences selected projection identityValue = do
   Right (BindingSource index selected projection inputSet)
 
 runBindingSource ::
-     (forall scope. SupplementalBindingEvidence scope -> result)
+     (forall scope. SupplementalBinding scope -> SupplementalBindingEvidence
+                                                   scope -> result)
   -> BindingSource
   -> Either CoreConformanceFailure [result]
 runBindingSource consume source =
@@ -258,10 +281,12 @@ runBindingSource consume source =
            foldStructureAssessment
              (const (Left InvalidBindingGraphSource))
              (\graph ->
-                Right
-                  (foldSupplementalBinding
-                     (\_ evidence -> map consume evidence)
-                     (bindSupplementalInputs graph (bindingSourceInput source))))
+                let binding =
+                      bindSupplementalInputs graph (bindingSourceInput source)
+                 in Right
+                      (foldSupplementalBinding
+                         (\_ evidence -> map (consume binding) evidence)
+                         binding))
              assessment)
 
 strategyPayload :: Text -> ByteString.ByteString

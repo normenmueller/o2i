@@ -3,6 +3,7 @@ module O2I.Operation.Diagnostic.Internal
   ( DiagnosticCode(..)
   , DiagnosticSeverity(..)
   , DiagnosticDisposition(..)
+  , OwnerEvidenceProvenance(..)
   , DiagnosticProvenance(..)
   , DiagnosticOccurrence(..)
   , Diagnostic(..)
@@ -13,6 +14,7 @@ import Data.Text (Text)
 import O2I.ArchiMate.Profile.Draft (DraftLocation)
 import O2I.ArchiMate.Profile.Notation (CanonicalOccurrence)
 import O2I.ArchiMate.Profile.Rule.Explanation (ProfileRuleExplanation)
+import O2I.Core.Contract (CoreRuleId)
 import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
 import O2I.Core.Rule.Catalog (CoreRule)
 import O2I.Operation.Adapter (AdapterOccurrence)
@@ -39,12 +41,21 @@ data DiagnosticDisposition
   | ProcessFailure
   deriving (Bounded, Enum, Eq, Ord, Show)
 
+-- | Exact owner evidence retained without a runtime catalog lookup.
+data OwnerEvidenceProvenance
+  = ProfileOwnerEvidenceProvenance !Text !Text
+  | StructureOwnerEvidenceProvenance !CoreRuleId
+  | BindingOwnerEvidenceProvenance !CoreRuleId
+  | SemanticsOwnerEvidenceProvenance !CoreRuleId
+  deriving (Eq, Ord, Show)
+
 -- | Closed typed provenance of one diagnostic rule.
 data DiagnosticProvenance
   = OperationDiagnosticProvenance !OperationRule
   | AdapterDiagnosticProvenance !AdapterRuleWitness
   | ProfileDiagnosticProvenance !ProfileRuleExplanation
   | CoreDiagnosticProvenance !CoreRule
+  | OwnerEvidenceDiagnosticProvenance !OwnerEvidenceProvenance
   deriving (Eq, Ord, Show)
 
 -- | Closed typed location or subject occurrence retained by Operation.

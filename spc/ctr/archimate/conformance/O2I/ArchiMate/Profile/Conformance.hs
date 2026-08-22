@@ -1,5 +1,6 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 
 -- | Build-only public-source conformance corpus owned by the ArchiMate Profile.
 --
@@ -20,14 +21,23 @@ module O2I.ArchiMate.Profile.Conformance
   , duplicateCaseObservedFamilies
   , duplicateIdentityCases
   , profileCorpusRuleIds
+  , profileCorpusOwnerRuleIds
+  , profileCorpusProjectionRuleIds
   , profileCorpusDiagnosticRuleIds
   , profileCorpusClassificationRuleIds
   , profileCorpusInvariantRuleIds
   , profileCorpusClassifications
   , profileCorpusClosureRuleIds
   , profileCorpusEvidenceKinds
+  , ProfileConformanceFailure
+  , foldProfileConformanceFailure
+  , ProfileConformanceResult
+  , foldProfileConformanceResult
+  , foldProfileCorpusOwnerEvidence
+  , profileIntegratedBindingSources
   ) where
 
+import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified O2I.ArchiMate.Profile.Closure as Closure
@@ -68,6 +78,33 @@ data DuplicateCase = DuplicateCase
   , duplicateCaseTargetCardinalitiesValue :: ![Int]
   , duplicateCaseObservedFamiliesValue :: ![DuplicateFamily]
   }
+
+-- | Closed fixture failure, distinct from Profile model evidence.
+newtype ProfileConformanceFailure =
+  MissingSelectedView Int
+
+-- | Eliminate every closed Profile fixture failure.
+foldProfileConformanceFailure ::
+     (Int -> result) -> ProfileConformanceFailure -> result
+foldProfileConformanceFailure missing failure =
+  case failure of
+    MissingSelectedView ordinal -> missing ordinal
+
+-- | Closed outcome of producing nominal Profile owner evidence.
+data ProfileConformanceResult result
+  = ProfileConformanceFailed !(NonEmpty ProfileConformanceFailure)
+  | ProfileConformanceObserved ![result]
+
+-- | Eliminate both closed Profile conformance outcomes.
+foldProfileConformanceResult ::
+     (NonEmpty ProfileConformanceFailure -> result)
+  -> ([value] -> result)
+  -> ProfileConformanceResult value
+  -> result
+foldProfileConformanceResult failed observed result =
+  case result of
+    ProfileConformanceFailed failures -> failed failures
+    ProfileConformanceObserved values -> observed values
 
 -- | Families represented by one observed duplicate scenario.
 duplicateCaseFamilies :: DuplicateCase -> (DuplicateFamily, DuplicateFamily)
@@ -120,6 +157,16 @@ duplicateIdentityCases =
 profileCorpusRuleIds :: [Text]
 profileCorpusRuleIds = concatMap (uncurry observeProfileSource) profileSources
 
+-- | Exact mixed-polar owner rules, excluding separate closure inventory facts.
+profileCorpusOwnerRuleIds :: [Text]
+profileCorpusOwnerRuleIds =
+  concatMap (uncurry observeProfileOwnerSource) profileSources
+
+-- | New negative and positive Projection rules observed by the real corpus.
+profileCorpusProjectionRuleIds :: [Text]
+profileCorpusProjectionRuleIds =
+  concatMap (uncurry observeProfileProjectionRules) profileSources
+
 -- | Profile diagnostic rule identities emitted by real negative sources.
 profileCorpusDiagnosticRuleIds :: [Text]
 profileCorpusDiagnosticRuleIds =
@@ -150,6 +197,54 @@ profileCorpusClosureRuleIds =
 profileCorpusEvidenceKinds :: [Projection.ProfileEvidenceKind]
 profileCorpusEvidenceKinds =
   concatMap (uncurry observeProfileEvidenceKinds) profileSources
+
+-- | Consume every real Profile universe and any resulting projection outcome.
+--
+-- The selected Profile, universe, and projection assessment retain the same
+-- fresh Profile and document indices throughout the callback.
+foldProfileCorpusOwnerEvidence ::
+     (forall profile document. Resolution.SelectedArchiMateProfile profile -> Closure.ProfileAssessmentUniverse
+                                                                                profile
+                                                                                document -> Maybe
+                                                                                              (Projection.ProfileProjectionAssessment
+                                                                                                 profile
+                                                                                                 document) -> result)
+  -> ProfileConformanceResult result
+foldProfileCorpusOwnerEvidence consume =
+  case traverse (uncurry observe) profileSources of
+    Left failure -> ProfileConformanceFailed (failure :| [])
+    Right values -> ProfileConformanceObserved values
+  where
+    observe source viewOrdinal =
+      Resolution.withSelectedArchiMateProfile
+        Resolution.compiledProfileDescriptor $ \profile ->
+        Notation.withCanonicalDocument source $ \document ->
+          case drop viewOrdinal (Notation.canonicalViews document) of
+            [] -> Left (MissingSelectedView viewOrdinal)
+            view:_ ->
+              let universe =
+                    Closure.deriveProfileAssessmentUniverse
+                      profile
+                      document
+                      view
+                  assessment =
+                    Notation.foldStageResult
+                      (const Nothing)
+                      (Just . Projection.assessSelectedView)
+                      (Notation.notationConformance
+                         (Notation.assessArchiMateNotation universe))
+               in Right (consume profile universe assessment)
+
+-- | Existing real Profile sources for the three reachable Binding outcomes.
+--
+-- Unknown and out-of-View use the valid Graph source; wrong-kind uses the KPI
+-- source whose selected occurrences are real non-Strategy carriers.
+profileIntegratedBindingSources :: [(Draft.ProfileDraft, Text)]
+profileIntegratedBindingSources =
+  [ (Source.validDraft, "unknown")
+  , (Source.validDraft, "model")
+  , (Source.validKpiDraft, "kpi")
+  ]
 
 profileSources :: [(Draft.ProfileDraft, Int)]
 profileSources =
@@ -227,6 +322,41 @@ observeProfileSource source viewOrdinal =
                 map closureRuleId (Closure.assessmentClosureProvenance universe)
            in activationRules
                 <> closureRules
+                <> Notation.foldStageResult
+                     (const [])
+                     projectionRuleIds
+                     (Notation.notationConformance
+                        (Notation.assessArchiMateNotation universe))
+
+observeProfileProjectionRules :: Draft.ProfileDraft -> Int -> [Text]
+observeProfileProjectionRules source viewOrdinal =
+  Resolution.withSelectedArchiMateProfile Resolution.compiledProfileDescriptor $ \profile ->
+    Notation.withCanonicalDocument source $ \document ->
+      case drop viewOrdinal (Notation.canonicalViews document) of
+        [] -> []
+        view:_ ->
+          let universe =
+                Closure.deriveProfileAssessmentUniverse profile document view
+           in Notation.foldStageResult
+                (const [])
+                projectionRuleIds
+                (Notation.notationConformance
+                   (Notation.assessArchiMateNotation universe))
+
+observeProfileOwnerSource :: Draft.ProfileDraft -> Int -> [Text]
+observeProfileOwnerSource source viewOrdinal =
+  Resolution.withSelectedArchiMateProfile Resolution.compiledProfileDescriptor $ \profile ->
+    Notation.withCanonicalDocument source $ \document ->
+      case drop viewOrdinal (Notation.canonicalViews document) of
+        [] -> []
+        view:_ ->
+          let universe =
+                Closure.deriveProfileAssessmentUniverse profile document view
+              activationRules =
+                concatMap
+                  activationRuleIds
+                  (Closure.assessmentActivationProvenance universe)
+           in activationRules
                 <> Notation.foldStageResult
                      (const [])
                      projectionRuleIds

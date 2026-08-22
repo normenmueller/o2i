@@ -1,0 +1,10 @@
+module OwnerEvidenceOpaqueConstructor where
+
+import O2I.Operation.Diagnostic
+import O2I.Operation.Diagnostic.Owner
+
+forgedOwnerEvidence :: OwnerEvidenceProvenance
+forgedOwnerEvidence = ProfileOwnerEvidenceProvenance undefined undefined
+
+forgedSemanticConversion :: SemanticEvidenceConversion
+forgedSemanticConversion = SemanticEvidenceOccurrenceMissing

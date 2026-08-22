@@ -9,6 +9,7 @@ import qualified O2I.Operation.Acquisition as Acquisition
 import qualified O2I.Operation.Adapter as Adapter
 import qualified O2I.Operation.Adapter.Authoring as AdapterAuthoring
 import qualified O2I.Operation.Diagnostic as Diagnostic
+import qualified O2I.Operation.Diagnostic.Owner as DiagnosticOwner
 import qualified O2I.Operation.Discovery.Adapter as DiscoveryAdapter
 import qualified O2I.Operation.Discovery.Adapter.Machine as AdapterMachine
 import qualified O2I.Operation.Discovery.Profile as DiscoveryProfile
@@ -85,9 +86,11 @@ $(assertAbstractTypes
     , "Diagnostic.DiagnosticCode"
     , "Diagnostic.DiagnosticSeverity"
     , "Diagnostic.DiagnosticDisposition"
+    , "Diagnostic.OwnerEvidenceProvenance"
     , "Diagnostic.DiagnosticProvenance"
     , "Diagnostic.DiagnosticOccurrence"
     , "Diagnostic.Diagnostic"
+    , "DiagnosticOwner.SemanticEvidenceConversion"
     , "Failure.CommandFailure"
     , "Failure.PreparationFailure"
     , "Failure.CommonFailure"
@@ -284,6 +287,7 @@ $(assertOrdinaryFunctions
     , 'Diagnostic.processFailure
     , 'Diagnostic.diagnosticDispositionText
     , 'Diagnostic.foldDiagnosticDisposition
+    , 'Diagnostic.foldOwnerEvidenceProvenance
     , 'Diagnostic.diagnosticProvenanceIdentity
     , 'Diagnostic.diagnosticProvenanceAuthority
     , 'Diagnostic.diagnosticProvenanceStage
@@ -296,6 +300,12 @@ $(assertOrdinaryFunctions
     , 'Diagnostic.diagnosticProvenance
     , 'Diagnostic.diagnosticOccurrences
     , 'Diagnostic.foldDiagnostic
+    , 'DiagnosticOwner.profileActivationDiagnostics
+    , 'DiagnosticOwner.foldProfileAssessmentDiagnostics
+    , 'DiagnosticOwner.structureEvidenceDiagnostic
+    , 'DiagnosticOwner.bindingEvidenceDiagnostic
+    , 'DiagnosticOwner.foldSemanticEvidenceConversion
+    , 'DiagnosticOwner.semanticsEvidenceDiagnostic
     , 'Failure.inputAcquisitionFailure
     , 'Failure.commandFailureCode
     , 'Failure.foldCommandFailure

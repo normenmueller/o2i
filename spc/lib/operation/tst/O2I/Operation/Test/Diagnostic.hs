@@ -116,7 +116,12 @@ authorityCases = do
   fmap provenanceTag provenances @?= ([0, 1, 2, 3] :: [Int])
   where
     provenanceTag =
-      foldDiagnosticProvenance (const 0) (\_ _ -> 1) (const 2) (const 3)
+      foldDiagnosticProvenance
+        (const 0)
+        (\_ _ -> 1)
+        (const 2)
+        (const 3)
+        (const 4)
 
 occurrenceCases :: Assertion
 occurrenceCases = do
