@@ -7,16 +7,24 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "utl" / "model"))
 
+import repository_view_contract as contract_module  # noqa: E402
 from repository_view_contract import (  # noqa: E402
     CORE_PATH,
     PROFILE_PATH,
     ProfileContractError,
+    RepositoryViewContract,
     load_repository_view_contract,
+)
+
+
+project_validated_contract = (
+    contract_module._project_validated_repository_view_contract
 )
 
 
@@ -28,6 +36,26 @@ def set_path(value: object, path: tuple[object, ...], replacement: object) -> No
     current[path[-1]] = replacement  # type: ignore[index]
 
 
+def changed(value: object, suffix: str) -> object:
+    """Return a type-compatible value observably different from ``value``."""
+    if isinstance(value, bool):
+        return not value
+    if isinstance(value, str):
+        return f"{value}-mutation-{suffix}"
+    if isinstance(value, list):
+        return [f"mutation-{suffix}"]
+    raise TypeError(type(value).__name__)
+
+
+def frozen(value: object) -> object:
+    """Express the public immutable representation of one JSON value."""
+    if isinstance(value, list):
+        return tuple(frozen(item) for item in value)
+    if isinstance(value, dict):
+        return {key: frozen(item) for key, item in value.items()}
+    return value
+
+
 class RepositoryViewContractTest(unittest.TestCase):
     """Keep repository checks bound to the exact current authorities."""
 
@@ -37,35 +65,30 @@ class RepositoryViewContractTest(unittest.TestCase):
         cls.core_source = CORE_PATH.read_bytes()
         cls.profile = json.loads(cls.profile_source)
         cls.core = json.loads(cls.core_source)
+        cls.contract = load_repository_view_contract()
 
-    def load_copies(self, profile: object, core: object):
-        """Load mutated companions through the production authority path."""
+    def load_sources(
+        self,
+        profile_source: bytes,
+        core_source: bytes,
+    ) -> RepositoryViewContract:
+        """Load exact byte sources through the production authority boundary."""
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             profile_path = root / "profile.json"
             core_path = root / "semantics.json"
-            profile_path.write_text(
-                json.dumps(profile, ensure_ascii=False),
-                encoding="utf-8",
-            )
-            core_path.write_text(
-                json.dumps(core, ensure_ascii=False),
-                encoding="utf-8",
-            )
+            profile_path.write_bytes(profile_source)
+            core_path.write_bytes(core_source)
             return load_repository_view_contract(profile_path, core_path)
 
-    def assert_rejected(self, profile: object, core: object) -> None:
-        with self.assertRaises(ProfileContractError):
-            self.load_copies(profile, core)
-
-    def applicable_decision(self, profile: dict) -> dict:
-        return next(
+    def applicable_decisions(self, profile: dict) -> list[dict]:
+        return [
             decision
             for decision in profile["applicabilityProvenance"]["decisions"]
             if decision["subject"]["kind"]
             == "core-relation-mapping-pair"
             and decision["outcome"] == "applicable"
-        )
+        ]
 
     def pattern(self, profile: dict, identifier: str) -> dict:
         return next(
@@ -81,97 +104,209 @@ class RepositoryViewContractTest(unittest.TestCase):
             if family["id"] == identifier
         )
 
+    def assert_projection_matches_sources(
+        self,
+        contract: RepositoryViewContract,
+        profile: dict,
+        core: dict,
+    ) -> None:
+        """Check every projected row and field against its current owner."""
+        self.assertEqual(profile["schema"], contract.schema)
+        self.assertEqual(
+            profile["profileIdentity"]["version"],
+            contract.profile_version,
+        )
+
+        carriers = profile["carrierMappings"]
+        self.assertEqual(len(carriers), len(contract.carrier_mappings))
+        for source, projected in zip(carriers, contract.carrier_mappings):
+            self.assertEqual(source["id"], projected["id"])
+            self.assertEqual(source["carrierCategory"], projected["o2iKind"])
+            self.assertEqual(frozen(source["o2iTypes"]), projected["o2iTypes"])
+            self.assertEqual(
+                source["archimateElement"],
+                projected["archimateElement"],
+            )
+
+        syntax_by_id = {
+            row["id"]: row
+            for row in profile["relationMappings"]
+        }
+        semantic_by_id = {
+            row["id"]: row
+            for row in core["relationSemantics"]
+        }
+        decisions = self.applicable_decisions(profile)
+        self.assertEqual(len(decisions), len(contract.relation_mappings))
+        for decision, projected in zip(decisions, contract.relation_mappings):
+            subject = decision["subject"]
+            syntax = syntax_by_id[subject["relationMappingId"]]
+            semantic = semantic_by_id[subject["coreRelationSemanticsId"]]
+            self.assertEqual(
+                f"{semantic['id']}@{syntax['id']}",
+                projected["id"],
+            )
+            self.assertEqual(semantic["id"], projected["relationName"])
+            self.assertEqual(semantic["source"], projected["source"])
+            self.assertEqual(semantic["target"], projected["target"])
+            self.assertEqual(syntax["label"], projected["label"])
+            self.assertEqual(
+                syntax["archimateRelationship"],
+                projected["archimateRelationship"],
+            )
+            self.assertEqual(
+                syntax["associationDirected"],
+                projected["associationDirected"],
+            )
+
+        patterns = {
+            row["id"]: row
+            for row in profile["patternMappings"]
+        }
+        self.assertEqual(
+            [row["id"] for row in profile["patternMappings"]],
+            [row["id"] for row in contract.pattern_mappings],
+        )
+        contextualization = patterns["contextualization"]
+        contextualization_semantics = core["contextualizationSemantics"]
+        projected_contextualization = contract.pattern_mappings[0]
+        self.assertEqual(
+            contextualization["relationship"]["archimateRelationship"][
+                "expected"
+            ],
+            projected_contextualization["archimateRelationship"],
+        )
+        self.assertEqual(
+            contextualization["relationship"]["label"]["expected"],
+            projected_contextualization["label"],
+        )
+        self.assertEqual(
+            contextualization["relationship"]["associationDirected"][
+                "expected"
+            ],
+            projected_contextualization["associationDirected"],
+        )
+        self.assertEqual(
+            contextualization_semantics["sourceCategory"],
+            projected_contextualization["sourceKind"],
+        )
+        self.assertEqual(
+            frozen(contextualization_semantics["targetCategories"]),
+            projected_contextualization["targetKinds"],
+        )
+        self.assertEqual(
+            contextualization_semantics["targetOwnerCardinality"],
+            projected_contextualization["targetIncomingCardinality"],
+        )
+
+        collective = patterns["collective-strategy-realization"]
+        family = self.family(core, collective["propositionFamily"])
+        projected_collective = contract.pattern_mappings[1]
+        for field in ("o2iType", "archimateElement", "junctionType"):
+            self.assertEqual(
+                collective["carrier"][field]["expected"],
+                projected_collective["carrier"][field],
+            )
+        for field in (
+            "archimateRelationship",
+            "label",
+            "associationDirected",
+        ):
+            self.assertEqual(
+                collective["segments"][field]["expected"],
+                projected_collective["segments"][field],
+            )
+        self.assertEqual(
+            family["participant"]["target"],
+            projected_collective["contributors"]["endpoint"],
+        )
+        self.assertEqual(
+            family["participant"]["cardinality"],
+            projected_collective["contributors"]["cardinality"],
+        )
+        self.assertEqual(
+            "required"
+            if family["participant"]["uniqueness"] == "distinct"
+            else "forbidden",
+            projected_collective["contributors"]["distinct"],
+        )
+        self.assertEqual(
+            family["target"]["target"],
+            projected_collective["target"]["endpoint"],
+        )
+        self.assertEqual(
+            family["target"]["cardinality"],
+            projected_collective["target"]["cardinality"],
+        )
+        self.assertEqual(
+            "required"
+            if family["target"]["distinctFromParticipants"]
+            else "forbidden",
+            projected_collective["target"]["distinctFromContributors"],
+        )
+
     def test_loads_one_deterministic_immutable_current_projection(self) -> None:
-        contract = load_repository_view_contract()
         repeated = load_repository_view_contract()
+        copied = self.load_sources(self.profile_source, self.core_source)
+        pure = project_validated_contract(self.profile, self.core)
 
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            profile_path = root / "profile.json"
-            core_path = root / "semantics.json"
-            profile_path.write_bytes(self.profile_source)
-            core_path.write_bytes(self.core_source)
-            copied = load_repository_view_contract(profile_path, core_path)
-
-        self.assertEqual(contract, repeated)
-        self.assertEqual(contract, copied)
-        self.assertEqual(
-            "o2i.archimate-profile/target-v46",
-            contract.schema,
-        )
-        self.assertEqual("0.3.0", contract.profile_version)
-        self.assertEqual(
-            len(self.profile["carrierMappings"]),
-            len(contract.carrier_mappings),
-        )
-        self.assertEqual(
-            sum(
-                decision["subject"]["kind"]
-                == "core-relation-mapping-pair"
-                and decision["outcome"] == "applicable"
-                for decision in self.profile["applicabilityProvenance"][
-                    "decisions"
-                ]
-            ),
-            len(contract.relation_mappings),
-        )
-        self.assertEqual(
-            {"contextualization", "collective-strategy-realization"},
-            {pattern["id"] for pattern in contract.pattern_mappings},
+        self.assertEqual(self.contract, repeated)
+        self.assertEqual(self.contract, copied)
+        self.assertEqual(self.contract, pure)
+        self.assert_projection_matches_sources(
+            self.contract,
+            self.profile,
+            self.core,
         )
         with self.assertRaises(FrozenInstanceError):
-            contract.profile_version = "other"
+            self.contract.profile_version = "other"
 
-    def test_projects_facts_from_their_current_owners(self) -> None:
-        contract = load_repository_view_contract()
-        context = next(
-            mapping
-            for mapping in contract.carrier_mappings
-            if mapping["id"] == "context"
-        )
-        contributions = {
+    def test_exact_byte_integrity_is_separate_from_projection(self) -> None:
+        cases = (
             (
-                mapping["archimateRelationship"],
-                mapping["associationDirected"],
-            )
-            for mapping in contract.relation_mappings
-            if mapping["relationName"]
-            == "strategy-contributes-to-strategy"
-        }
-        contextualization = next(
-            pattern
-            for pattern in contract.pattern_mappings
-            if pattern["id"] == "contextualization"
+                "profile",
+                self.profile_source + b"\n",
+                self.core_source,
+                "accepted Profile file SHA-256",
+            ),
+            (
+                "core",
+                self.profile_source,
+                self.core_source + b"\n",
+                "accepted Core file SHA-256",
+            ),
         )
-        collective = next(
-            pattern
-            for pattern in contract.pattern_mappings
-            if pattern["id"] == "collective-strategy-realization"
-        )
+        for name, profile_source, core_source, message in cases:
+            with self.subTest(name=name):
+                with self.assertRaisesRegex(ProfileContractError, message):
+                    self.load_sources(profile_source, core_source)
 
-        self.assertEqual("Context", context["o2iKind"])
-        self.assertEqual("Grouping", context["archimateElement"])
-        self.assertEqual(
-            {
-                ("AssociationRelationship", True),
-                ("InfluenceRelationship", False),
-                ("RealizationRelationship", False),
-            },
-            contributions,
-        )
-        self.assertEqual("Context", contextualization["sourceKind"])
-        self.assertEqual(
-            ("Primitive", "Structuring"),
-            contextualization["targetKinds"],
-        )
-        self.assertEqual(
-            "at-least-two",
-            collective["contributors"]["cardinality"],
-        )
-        self.assertEqual(
-            "exactly-one",
-            collective["target"]["cardinality"],
-        )
+    def test_compiler_loading_failures_share_the_contract_boundary(self) -> None:
+        compiler_module = "o2i_current_archimate_profile_compiler"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            invalid = root / "invalid-compiler.py"
+            invalid.write_text("def invalid(:\n", encoding="utf-8")
+            cases = (
+                ("missing", root / "missing-compiler.py", FileNotFoundError),
+                ("not-importable", invalid, SyntaxError),
+            )
+            for name, compiler_path, cause_type in cases:
+                with self.subTest(name=name):
+                    with mock.patch.object(
+                        contract_module,
+                        "PROFILE_COMPILER_PATH",
+                        compiler_path,
+                    ), mock.patch.dict(
+                        sys.modules,
+                        {compiler_module: None},
+                    ):
+                        with self.assertRaisesRegex(
+                            ProfileContractError,
+                            "cannot load current Profile/Core authority",
+                        ) as raised:
+                            load_repository_view_contract()
+                    self.assertIsInstance(raised.exception.__cause__, cause_type)
 
     def test_rejects_malformed_duplicate_and_stale_profile_inputs(self) -> None:
         cases = {
@@ -184,29 +319,186 @@ class RepositoryViewContractTest(unittest.TestCase):
             "stale-v2": b'{"schema":"o2i.archimate-profile/v2"}',
         }
         for name, source in cases.items():
-            with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:
-                root = Path(directory)
-                profile_path = root / "profile.json"
-                core_path = root / "semantics.json"
-                profile_path.write_bytes(source)
-                core_path.write_bytes(self.core_source)
-                with self.assertRaises(ProfileContractError):
-                    load_repository_view_contract(profile_path, core_path)
+            with self.subTest(name=name):
+                with self.assertRaises(ProfileContractError) as raised:
+                    self.load_sources(source, self.core_source)
+                self.assertIsNotNone(raised.exception.__cause__)
 
-    def test_rejects_unbound_or_inconsistent_companions(self) -> None:
-        unbound = copy.deepcopy(self.profile)
-        unbound["coreSemanticContractBinding"]["sha256"] = "0" * 64
-        self.assert_rejected(unbound, self.core)
+    def test_every_profile_identity_and_carrier_field_is_projected(self) -> None:
+        identity_cases = (
+            (("schema",), "schema"),
+            (("profileIdentity", "version"), "profile_version"),
+        )
+        for path, field in identity_cases:
+            with self.subTest(path=path):
+                profile = copy.deepcopy(self.profile)
+                original = profile
+                for part in path:
+                    original = original[part]
+                set_path(profile, path, changed(original, field))
+                candidate = project_validated_contract(profile, self.core)
+                self.assertNotEqual(self.contract, candidate)
+                self.assert_projection_matches_sources(candidate, profile, self.core)
 
-        inconsistent = copy.deepcopy(self.core)
-        inconsistent["schema"] = "other"
-        self.assert_rejected(self.profile, inconsistent)
+        carrier_fields = (
+            "id",
+            "carrierCategory",
+            "o2iTypes",
+            "archimateElement",
+        )
+        for index, row in enumerate(self.profile["carrierMappings"]):
+            for field in carrier_fields:
+                with self.subTest(carrier=index, field=field):
+                    profile = copy.deepcopy(self.profile)
+                    replacement = changed(row[field], f"carrier-{index}-{field}")
+                    profile["carrierMappings"][index][field] = replacement
+                    candidate = project_validated_contract(
+                        profile,
+                        self.core,
+                    )
+                    self.assertNotEqual(self.contract, candidate)
+                    self.assert_projection_matches_sources(
+                        candidate,
+                        profile,
+                        self.core,
+                    )
 
-    def test_rejects_every_profile_projection_mutation(self) -> None:
-        decision = self.applicable_decision(self.profile)
-        decision_index = self.profile["applicabilityProvenance"][
-            "decisions"
-        ].index(decision)
+    def test_every_relation_owner_field_is_projected(self) -> None:
+        decisions = self.applicable_decisions(self.profile)
+        used_syntax = {
+            decision["subject"]["relationMappingId"]
+            for decision in decisions
+        }
+        used_semantics = {
+            decision["subject"]["coreRelationSemanticsId"]
+            for decision in decisions
+        }
+        self.assertEqual(
+            {row["id"] for row in self.profile["relationMappings"]},
+            used_syntax,
+        )
+        self.assertEqual(
+            {row["id"] for row in self.core["relationSemantics"]},
+            used_semantics,
+        )
+
+        for index, row in enumerate(self.profile["relationMappings"]):
+            for field in (
+                "id",
+                "label",
+                "archimateRelationship",
+                "associationDirected",
+            ):
+                with self.subTest(syntax=index, field=field):
+                    profile = copy.deepcopy(self.profile)
+                    replacement = changed(row[field], f"syntax-{index}-{field}")
+                    profile["relationMappings"][index][field] = replacement
+                    if field == "id":
+                        for decision in profile["applicabilityProvenance"][
+                            "decisions"
+                        ]:
+                            subject = decision["subject"]
+                            if subject.get("relationMappingId") == row["id"]:
+                                subject["relationMappingId"] = replacement
+                    candidate = project_validated_contract(
+                        profile,
+                        self.core,
+                    )
+                    self.assertNotEqual(self.contract, candidate)
+                    self.assert_projection_matches_sources(
+                        candidate,
+                        profile,
+                        self.core,
+                    )
+
+        for index, row in enumerate(self.core["relationSemantics"]):
+            for field in ("id", "source", "target"):
+                with self.subTest(semantics=index, field=field):
+                    core = copy.deepcopy(self.core)
+                    replacement = changed(row[field], f"core-{index}-{field}")
+                    core["relationSemantics"][index][field] = replacement
+                    profile = self.profile
+                    if field == "id":
+                        profile = copy.deepcopy(self.profile)
+                        for decision in profile["applicabilityProvenance"][
+                            "decisions"
+                        ]:
+                            subject = decision["subject"]
+                            if subject.get("coreRelationSemanticsId") == row["id"]:
+                                subject["coreRelationSemanticsId"] = replacement
+                    candidate = project_validated_contract(profile, core)
+                    self.assertNotEqual(self.contract, candidate)
+                    self.assert_projection_matches_sources(
+                        candidate,
+                        profile,
+                        core,
+                    )
+
+    def test_every_applicable_decision_field_controls_projection(self) -> None:
+        all_decisions = self.profile["applicabilityProvenance"]["decisions"]
+        applicable_indexes = [
+            index
+            for index, decision in enumerate(all_decisions)
+            if decision["subject"]["kind"]
+            == "core-relation-mapping-pair"
+            and decision["outcome"] == "applicable"
+        ]
+        for projection_index, decision_index in enumerate(applicable_indexes):
+            for field in ("kind", "outcome"):
+                with self.subTest(decision=projection_index, field=field):
+                    profile = copy.deepcopy(self.profile)
+                    decision = profile["applicabilityProvenance"]["decisions"][
+                        decision_index
+                    ]
+                    if field == "kind":
+                        decision["subject"][field] = "other"
+                    else:
+                        decision[field] = "inapplicable"
+                    candidate = project_validated_contract(
+                        profile,
+                        self.core,
+                    )
+                    expected = (
+                        self.contract.relation_mappings[:projection_index]
+                        + self.contract.relation_mappings[projection_index + 1 :]
+                    )
+                    self.assertEqual(expected, candidate.relation_mappings)
+                    self.assert_projection_matches_sources(
+                        candidate,
+                        profile,
+                        self.core,
+                    )
+
+            for field, rows_key in (
+                ("relationMappingId", "relationMappings"),
+                ("coreRelationSemanticsId", "relationSemantics"),
+            ):
+                with self.subTest(decision=projection_index, field=field):
+                    profile = copy.deepcopy(self.profile)
+                    core = copy.deepcopy(self.core)
+                    decision = profile["applicabilityProvenance"]["decisions"][
+                        decision_index
+                    ]
+                    rows = (
+                        profile[rows_key]
+                        if rows_key == "relationMappings"
+                        else core[rows_key]
+                    )
+                    old_id = decision["subject"][field]
+                    source = next(row for row in rows if row["id"] == old_id)
+                    clone = copy.deepcopy(source)
+                    clone["id"] = f"{old_id}-mutation-{projection_index}"
+                    rows.append(clone)
+                    decision["subject"][field] = clone["id"]
+                    candidate = project_validated_contract(profile, core)
+                    self.assertNotEqual(self.contract, candidate)
+                    self.assert_projection_matches_sources(
+                        candidate,
+                        profile,
+                        core,
+                    )
+
+    def test_every_pattern_projection_field_follows_its_owner(self) -> None:
         contextualization = self.pattern(self.profile, "contextualization")
         contextualization_index = self.profile["patternMappings"].index(
             contextualization
@@ -216,273 +508,145 @@ class RepositoryViewContractTest(unittest.TestCase):
             "collective-strategy-realization",
         )
         collective_index = self.profile["patternMappings"].index(collective)
-        cases = (
-            (("schema",), "other"),
-            (("profileIdentity", "version"), "other"),
-            (("carrierMappings", 0, "id"), "other"),
-            (("carrierMappings", 0, "carrierCategory"), "Primitive"),
-            (("carrierMappings", 0, "o2iTypes", 0), "Other"),
-            (("carrierMappings", 0, "archimateElement"), "Goal"),
-            (("relationMappings", 0, "id"), "other"),
-            (("relationMappings", 0, "label"), "other"),
-            (
-                ("relationMappings", 0, "archimateRelationship"),
-                "InfluenceRelationship",
-            ),
-            (("relationMappings", 0, "associationDirected"), True),
-            (
-                (
-                    "applicabilityProvenance",
-                    "decisions",
-                    decision_index,
-                    "subject",
-                    "kind",
-                ),
-                "other",
-            ),
-            (
-                (
-                    "applicabilityProvenance",
-                    "decisions",
-                    decision_index,
-                    "subject",
-                    "relationMappingId",
-                ),
-                "other",
-            ),
-            (
-                (
-                    "applicabilityProvenance",
-                    "decisions",
-                    decision_index,
-                    "subject",
-                    "coreRelationSemanticsId",
-                ),
-                "other",
-            ),
-            (
-                (
-                    "applicabilityProvenance",
-                    "decisions",
-                    decision_index,
-                    "outcome",
-                ),
-                "inapplicable",
-            ),
-            (
-                ("patternMappings", contextualization_index, "id"),
-                "other",
-            ),
-            (
+        profile_paths = (
+            *(
                 (
                     "patternMappings",
                     contextualization_index,
                     "relationship",
-                    "label",
+                    field,
                     "expected",
-                ),
-                "other",
-            ),
-            (
-                (
-                    "patternMappings",
-                    contextualization_index,
-                    "relationship",
+                )
+                for field in (
                     "archimateRelationship",
-                    "expected",
-                ),
-                "AssociationRelationship",
-            ),
-            (
-                (
-                    "patternMappings",
-                    contextualization_index,
-                    "relationship",
-                    "associationDirected",
-                    "expected",
-                ),
-                True,
-            ),
-            (
-                (
-                    "patternMappings",
-                    collective_index,
-                    "id",
-                ),
-                "other",
-            ),
-            (
-                (
-                    "patternMappings",
-                    collective_index,
-                    "propositionFamily",
-                ),
-                "other",
-            ),
-            (
-                (
-                    "patternMappings",
-                    collective_index,
-                    "carrier",
-                    "o2iType",
-                    "expected",
-                ),
-                "Other",
-            ),
-            (
-                (
-                    "patternMappings",
-                    collective_index,
-                    "carrier",
-                    "archimateElement",
-                    "expected",
-                ),
-                "Grouping",
-            ),
-            (
-                (
-                    "patternMappings",
-                    collective_index,
-                    "carrier",
-                    "junctionType",
-                    "expected",
-                ),
-                "or",
-            ),
-            (
-                (
-                    "patternMappings",
-                    collective_index,
-                    "segments",
-                    "archimateRelationship",
-                    "expected",
-                ),
-                "AssociationRelationship",
-            ),
-            (
-                (
-                    "patternMappings",
-                    collective_index,
-                    "segments",
                     "label",
-                    "expected",
-                ),
-                "other",
+                    "associationDirected",
+                )
             ),
-            (
+            *(
                 (
                     "patternMappings",
                     collective_index,
-                    "segments",
-                    "associationDirected",
+                    group,
+                    field,
                     "expected",
-                ),
-                True,
+                )
+                for group, fields in (
+                    (
+                        "carrier",
+                        ("o2iType", "archimateElement", "junctionType"),
+                    ),
+                    (
+                        "segments",
+                        (
+                            "archimateRelationship",
+                            "label",
+                            "associationDirected",
+                        ),
+                    ),
+                )
+                for field in fields
             ),
         )
-        for path, replacement in cases:
-            with self.subTest(path=path):
+        for path in profile_paths:
+            with self.subTest(profile_path=path):
                 profile = copy.deepcopy(self.profile)
-                set_path(profile, path, replacement)
-                self.assert_rejected(profile, self.core)
+                original = profile
+                for part in path:
+                    original = original[part]
+                set_path(profile, path, changed(original, "pattern"))
+                candidate = project_validated_contract(profile, self.core)
+                self.assertNotEqual(self.contract, candidate)
+                self.assert_projection_matches_sources(candidate, profile, self.core)
 
-    def test_rejects_every_core_projection_mutation(self) -> None:
-        decision = self.applicable_decision(self.profile)
-        relation_id = decision["subject"]["coreRelationSemanticsId"]
-        relation = next(
-            relation
-            for relation in self.core["relationSemantics"]
-            if relation["id"] == relation_id
-        )
-        relation_index = self.core["relationSemantics"].index(relation)
-        family = self.family(
-            self.core,
-            "collective-strategy-realization",
-        )
-        family_index = self.core["structuredPropositionFamilies"].index(
-            family
-        )
-        cases = (
-            (("relationSemantics", relation_index, "id"), "other"),
-            (("relationSemantics", relation_index, "source"), "context.need"),
-            (("relationSemantics", relation_index, "target"), "context.need"),
-            (("contextualizationSemantics", "sourceCategory"), "Primitive"),
-            (
-                ("contextualizationSemantics", "targetCategories", 0),
-                "Context",
-            ),
-            (
-                ("contextualizationSemantics", "targetOwnerCardinality"),
-                "zero-or-one",
-            ),
-            (
-                (
-                    "structuredPropositionFamilies",
-                    family_index,
-                    "id",
-                ),
-                "other",
-            ),
-            (
-                (
-                    "structuredPropositionFamilies",
-                    family_index,
-                    "participant",
-                    "target",
-                ),
-                "context.need",
-            ),
-            (
-                (
-                    "structuredPropositionFamilies",
-                    family_index,
-                    "participant",
-                    "cardinality",
-                ),
-                "exactly-one",
-            ),
-            (
-                (
-                    "structuredPropositionFamilies",
-                    family_index,
-                    "participant",
-                    "uniqueness",
-                ),
-                "duplicates-allowed",
-            ),
-            (
-                (
-                    "structuredPropositionFamilies",
-                    family_index,
-                    "target",
-                    "target",
-                ),
-                "context.need",
-            ),
-            (
-                (
-                    "structuredPropositionFamilies",
-                    family_index,
-                    "target",
-                    "cardinality",
-                ),
-                "zero-or-one",
-            ),
-            (
-                (
-                    "structuredPropositionFamilies",
-                    family_index,
-                    "target",
-                    "distinctFromParticipants",
-                ),
-                False,
+        family = self.family(self.core, collective["propositionFamily"])
+        family_index = self.core["structuredPropositionFamilies"].index(family)
+        core_paths = (
+            ("contextualizationSemantics", "sourceCategory"),
+            ("contextualizationSemantics", "targetCategories"),
+            ("contextualizationSemantics", "targetOwnerCardinality"),
+            *(
+                ("structuredPropositionFamilies", family_index, group, field)
+                for group, fields in (
+                    (
+                        "participant",
+                        ("target", "cardinality", "uniqueness"),
+                    ),
+                    (
+                        "target",
+                        (
+                            "target",
+                            "cardinality",
+                            "distinctFromParticipants",
+                        ),
+                    ),
+                )
+                for field in fields
             ),
         )
-        for path, replacement in cases:
-            with self.subTest(path=path):
+        for path in core_paths:
+            with self.subTest(core_path=path):
                 core = copy.deepcopy(self.core)
-                set_path(core, path, replacement)
-                self.assert_rejected(self.profile, core)
+                original = core
+                for part in path:
+                    original = original[part]
+                set_path(core, path, changed(original, "pattern-core"))
+                candidate = project_validated_contract(self.profile, core)
+                self.assertNotEqual(self.contract, candidate)
+                self.assert_projection_matches_sources(candidate, self.profile, core)
+
+    def test_pattern_and_family_selectors_fail_targetedly(self) -> None:
+        cases = (
+            (
+                "contextualization",
+                "missing pattern mapping identity: contextualization",
+            ),
+            (
+                "collective-strategy-realization",
+                "missing pattern mapping identity: collective-strategy-realization",
+            ),
+        )
+        for identifier, message in cases:
+            with self.subTest(identifier=identifier):
+                profile = copy.deepcopy(self.profile)
+                self.pattern(profile, identifier)["id"] = f"{identifier}-other"
+                with self.assertRaisesRegex(ProfileContractError, message):
+                    project_validated_contract(profile, self.core)
+
+        profile = copy.deepcopy(self.profile)
+        collective = self.pattern(profile, "collective-strategy-realization")
+        core = copy.deepcopy(self.core)
+        family = copy.deepcopy(
+            self.family(core, collective["propositionFamily"])
+        )
+        family["id"] = "collective-family-other"
+        family["participant"]["target"] = "mutation.family.target"
+        core["structuredPropositionFamilies"].append(family)
+        collective["propositionFamily"] = family["id"]
+        candidate = project_validated_contract(profile, core)
+        self.assertNotEqual(self.contract, candidate)
+        self.assert_projection_matches_sources(candidate, profile, core)
+
+    def test_missing_relation_references_fail_targetedly(self) -> None:
+        decision = self.applicable_decisions(self.profile)[0]
+        decision_index = self.profile["applicabilityProvenance"][
+            "decisions"
+        ].index(decision)
+        cases = (
+            ("relationMappingId", "missing relation mapping identity: absent"),
+            (
+                "coreRelationSemanticsId",
+                "missing Core relation identity: absent",
+            ),
+        )
+        for field, message in cases:
+            with self.subTest(field=field):
+                profile = copy.deepcopy(self.profile)
+                profile["applicabilityProvenance"]["decisions"][
+                    decision_index
+                ]["subject"][field] = "absent"
+                with self.assertRaisesRegex(ProfileContractError, message):
+                    project_validated_contract(profile, self.core)
 
 
 if __name__ == "__main__":

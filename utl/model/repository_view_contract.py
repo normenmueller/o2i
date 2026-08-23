@@ -49,8 +49,8 @@ def load_repository_view_contract(
     core_path: Path | str = CORE_PATH,
 ) -> RepositoryViewContract:
     """Validate exact companions and project only repository-View facts."""
-    compiler = _load_profile_compiler()
     try:
+        compiler = _load_profile_compiler()
         profile, payload = compiler.load_object(
             Path(profile_path),
             "Profile companion",
@@ -60,15 +60,20 @@ def load_repository_view_contract(
             payload,
             Path(core_path),
         )
-        return _project_contract(profile, core)
-    except (KeyError, OSError, UnicodeError, ValueError) as error:
-        raise ProfileContractError(str(error)) from error
+        return _project_validated_repository_view_contract(profile, core)
+    except ProfileContractError:
+        raise
+    except Exception as error:
+        raise ProfileContractError(
+            f"cannot load current Profile/Core authority: {error}"
+        ) from error
 
 
-def _project_contract(
+def _project_validated_repository_view_contract(
     profile: dict[str, Any],
     core: dict[str, Any],
 ) -> RepositoryViewContract:
+    """Project repository-View facts from companions validated together."""
     carriers = tuple(
         _freeze(
             {
@@ -106,8 +111,16 @@ def _project_relations(
             or decision["outcome"] != "applicable"
         ):
             continue
-        syntax = syntax_by_id[subject["relationMappingId"]]
-        semantic = semantic_by_id[subject["coreRelationSemanticsId"]]
+        syntax = _required_row(
+            syntax_by_id,
+            subject["relationMappingId"],
+            "relation mapping",
+        )
+        semantic = _required_row(
+            semantic_by_id,
+            subject["coreRelationSemanticsId"],
+            "Core relation",
+        )
         projected.append(
             _freeze(
                 {
@@ -137,20 +150,32 @@ def _project_patterns(
     core: dict[str, Any],
 ) -> tuple[FrozenObject, ...]:
     patterns = _rows_by_id(profile["patternMappings"], "pattern mapping")
-    contextualization = patterns["contextualization"]
+    contextualization = _required_row(
+        patterns,
+        "contextualization",
+        "pattern mapping",
+    )
     contextualization_semantics = core["contextualizationSemantics"]
 
-    collective = patterns["collective-strategy-realization"]
+    collective = _required_row(
+        patterns,
+        "collective-strategy-realization",
+        "pattern mapping",
+    )
     families = _rows_by_id(
         core["structuredPropositionFamilies"],
         "structured proposition family",
     )
-    family = families[collective["propositionFamily"]]
+    family = _required_row(
+        families,
+        collective["propositionFamily"],
+        "structured proposition family",
+    )
 
     return (
         _freeze(
             {
-                "id": "contextualization",
+                "id": contextualization["id"],
                 "archimateRelationship": contextualization[
                     "relationship"
                 ]["archimateRelationship"]["expected"],
@@ -173,7 +198,7 @@ def _project_patterns(
         ),
         _freeze(
             {
-                "id": "collective-strategy-realization",
+                "id": collective["id"],
                 "carrier": {
                     "o2iType": collective["carrier"]["o2iType"][
                         "expected"
@@ -226,6 +251,19 @@ def _rows_by_id(
             )
         result[identifier] = row
     return result
+
+
+def _required_row(
+    rows: dict[str, dict[str, Any]],
+    identifier: str,
+    subject: str,
+) -> dict[str, Any]:
+    try:
+        return rows[identifier]
+    except KeyError as error:
+        raise ProfileContractError(
+            f"missing {subject} identity: {identifier}"
+        ) from error
 
 
 def _requirement(value: bool) -> str:
