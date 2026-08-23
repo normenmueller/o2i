@@ -8,4 +8,7 @@ crossAuthority ::
   -> PreparedDiagnostic secondAuthority profile document
   -> PreparedDiagnosticDocument
 crossAuthority authority diagnostic =
-  preparedDiagnosticDocument authority [diagnostic] []
+  preparedDiagnosticDocument
+    authority
+    [diagnostic]
+    noSupplementalDiagnosticGroups

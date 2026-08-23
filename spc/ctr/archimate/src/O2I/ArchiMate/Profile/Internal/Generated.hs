@@ -328,9 +328,6 @@ generatedPropertySlotEvidenceDefectRule ruleId
       == "property:collective-strategy-realization-junction:o2i.participant-completeness:property-cardinality" =
     Just (GeneratedPropertySlotEvidenceDefectRule ruleId)
   | ruleId
-      == "property:qualification-proposal-assessment:o2i.source:property-cardinality" =
-    Just (GeneratedPropertySlotEvidenceDefectRule ruleId)
-  | ruleId
       == "property:qualification-proposal-reference-association:o2i.role:property-cardinality" =
     Just (GeneratedPropertySlotEvidenceDefectRule ruleId)
   | ruleId == "property:semantic-relation:o2i.commitment:property-cardinality" =

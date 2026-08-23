@@ -336,6 +336,33 @@ class ProfileCompilerTest(unittest.TestCase):
         )
         self.assertNotIn("graph.relationship-source-endpoint", bindings)
 
+    def test_diagnostic_rule_bindings_are_exactly_constructible(self) -> None:
+        bindings = compiler.derive_profile_diagnostic_rule_bindings(self.companion)
+        all_defect_bindings = compiler.derive_profile_defect_rule_bindings(
+            self.companion
+        )
+        non_rejecting_rules = {
+            plan["propertyCardinality"]["ruleId"]
+            for plan in compiler.derive_property_runtime_plans(self.companion)
+            if plan["propertyCardinality"]["expected"] == "zero-or-many"
+        }
+        self.assertEqual(
+            {
+                rule_id: evidence_kind
+                for rule_id, evidence_kind in all_defect_bindings.items()
+                if rule_id not in non_rejecting_rules
+            },
+            bindings,
+        )
+        self.assertEqual(125, len(bindings))
+        self.assertEqual(
+            {
+                "property:qualification-proposal-assessment:"
+                "o2i.source:property-cardinality"
+            },
+            non_rejecting_rules,
+        )
+
     def test_diagnostic_inventory_is_exact_and_deterministic(self) -> None:
         first = compiler.compile_diagnostic_inventory(CORE_COMPANION)
         second = compiler.compile_diagnostic_inventory(CORE_COMPANION)
@@ -352,7 +379,7 @@ class ProfileCompilerTest(unittest.TestCase):
             "o2i.archimate-profile.diagnostic-evidence/v1",
             inventory["schema"],
         )
-        self.assertEqual(190, len(inventory["diagnostics"]))
+        self.assertEqual(189, len(inventory["diagnostics"]))
         by_identity = {
             (row["producer"], row["ruleId"]): row
             for row in inventory["diagnostics"]
@@ -362,7 +389,37 @@ class ProfileCompilerTest(unittest.TestCase):
             for producer, rule_id in by_identity
             if producer == "profile-assessment"
         }
-        self.assertEqual(126, len(by_rule))
+        diagnostic_bindings = compiler.derive_profile_diagnostic_rule_bindings(
+            self.companion
+        )
+        self.assertEqual(set(diagnostic_bindings), set(by_rule))
+        for rule_id, evidence_kind in diagnostic_bindings.items():
+            row = by_rule[rule_id]
+            self.assertEqual("rejection", row["polarity"])
+            self.assertEqual("model", row["sourceRole"])
+            self.assertEqual(evidence_kind, row["evidenceKind"])
+            self.assertEqual(
+                compiler.diagnostic_field_alternatives(
+                    compiler.profile_diagnostic_evidence_fields(
+                        rule_id, evidence_kind
+                    )
+                ),
+                row["alternatives"],
+            )
+        self.assertEqual(125, len(by_rule))
+        self.assertNotIn(
+            "property:qualification-proposal-assessment:"
+            "o2i.source:property-cardinality",
+            by_rule,
+        )
+        self.assertIn(
+            (
+                "profile-mapping",
+                "property:qualification-proposal-assessment:"
+                "o2i.source:property-cardinality",
+            ),
+            by_identity,
+        )
         self.assertEqual(
             [(0, 0), (2, None)],
             [

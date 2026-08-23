@@ -17,10 +17,13 @@ module O2I.Semantics.Input
   , SupplementalBinding
   , SupplementalBindingEvidence
   , SupplementalBindingDiagnosticEvidence
+  , SupplementalBindingDiagnosticGroup
   , BoundSupplementalInputs
   , bindSupplementalInputs
   , foldSupplementalBinding
   , foldSupplementalBindingDiagnostics
+  , foldSupplementalBindingDiagnosticGroups
+  , foldSupplementalBindingDiagnosticGroup
   , supplementalBindingEvidenceRule
   , foldSupplementalBindingEvidence
   , supplementalBindingDiagnosticEvidenceRule
@@ -144,6 +147,15 @@ data SupplementalBindingDiagnosticEvidence scope provenance =
 
 type role SupplementalBindingDiagnosticEvidence nominal nominal
 
+-- | One constructively retained provenance occurrence and all of its locally
+-- ordered post-decode Binding diagnostics, including an empty diagnostic set.
+data SupplementalBindingDiagnosticGroup scope provenance =
+  SupplementalBindingDiagnosticGroup
+    !provenance
+    ![Internal.SupplementalBindingDiagnosticDefect]
+
+type role SupplementalBindingDiagnosticGroup nominal nominal
+
 -- | Bind every supplemental identity under one exact selected-View scope.
 bindSupplementalInputs ::
      WellFormedGraph scope
@@ -178,9 +190,39 @@ foldSupplementalBindingDiagnostics consume (SupplementalBinding binding) =
   consume
     (Internal.supplementalBindingInputs binding)
     [ SupplementalBindingDiagnosticEvidence provenance defect
-    | (provenance, defect) <-
-        Internal.supplementalBindingDiagnosticDefects binding
+    | (provenance, defects) <-
+        Internal.supplementalBindingDiagnosticGroups binding
+    , defect <- defects
     ]
+
+-- | Eliminate the exact Binding result without flattening its canonical
+-- provenance groups.
+foldSupplementalBindingDiagnosticGroups ::
+     (BoundSupplementalInputs scope -> [SupplementalBindingDiagnosticGroup
+                                          scope
+                                          provenance] -> result)
+  -> SupplementalBinding scope provenance
+  -> result
+foldSupplementalBindingDiagnosticGroups consume (SupplementalBinding binding) =
+  consume
+    (Internal.supplementalBindingInputs binding)
+    [ SupplementalBindingDiagnosticGroup provenance defects
+    | (provenance, defects) <-
+        Internal.supplementalBindingDiagnosticGroups binding
+    ]
+
+-- | Eliminate one opaque source group. Every returned diagnostic retains the
+-- same provenance that owns the group.
+foldSupplementalBindingDiagnosticGroup ::
+     (provenance -> [SupplementalBindingDiagnosticEvidence scope provenance] -> result)
+  -> SupplementalBindingDiagnosticGroup scope provenance
+  -> result
+foldSupplementalBindingDiagnosticGroup consume group =
+  case group of
+    SupplementalBindingDiagnosticGroup provenance defects ->
+      consume
+        provenance
+        (map (SupplementalBindingDiagnosticEvidence provenance) defects)
 
 -- | Project the exact Core rule of scoped Binding evidence.
 supplementalBindingEvidenceRule ::

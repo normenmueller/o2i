@@ -31,11 +31,11 @@ structureEvidence = structureEvidenceDiagnostic
 consumeBinding ::
      WellFormedGraph scope
   -> SupplementalOwnerBinding authority profile document scope inputs
-  -> ( [SupplementalDiagnosticGroup authority profile document]
+  -> ( SupplementalDiagnosticGroups authority profile document
      , SemanticAssessment scope)
 consumeBinding graph binding =
   foldSupplementalOwnerBinding
-    (\_ bound _ ->
+    (\bound _ ->
        (bindingDiagnosticGroups binding, assessOwnerSemantics graph bound))
     binding
 
@@ -43,7 +43,7 @@ bindAcquired ::
      PreparedScope authority profile document scope
   -> [AcquiredSupplementalSource]
   -> WellFormedGraph scope
-  -> Maybe [SupplementalDiagnosticGroup authority profile document]
+  -> Maybe (SupplementalDiagnosticGroups authority profile document)
 bindAcquired scope sources graph =
   withSupplementalOwnerBinding
     scope

@@ -9,10 +9,12 @@ module O2I.Operation.Diagnostic.Owner.Source
   ( PreparedAuthority
   , PreparedScope
   , SupplementalOwnerBinding
+  , SupplementalOwnerBindingGroup
   , SupplementalOwnerBindingEvidence
   , BoundOwnerSupplementalInputs
   , withSupplementalOwnerBinding
   , foldSupplementalOwnerBinding
+  , foldSupplementalOwnerBindingGroup
   , assessOwnerSemantics
   ) where
 
@@ -33,13 +35,12 @@ import O2I.Operation.Provenance
   )
 import O2I.Semantics (SemanticAssessment, assessSemantics)
 import O2I.Semantics.Input
-  ( SupplementalBindingDiagnosticEvidence
-  , SupplementalInputDefect
+  ( SupplementalInputDefect
   , assessSupplementalInputSet
   , bindSupplementalInputs
   , decodeSupplementalInput
-  , foldSupplementalBindingDiagnosticEvidence
-  , foldSupplementalBindingDiagnostics
+  , foldSupplementalBindingDiagnosticGroup
+  , foldSupplementalBindingDiagnosticGroups
   , supplementalInputOrdinal
   )
 import O2I.Structure (WellFormedGraph)
@@ -71,7 +72,6 @@ withSupplementalOwnerBinding _ acquired graph provenanceFailure inputFailure acc
             Right inputSet ->
               accepted
                 (SupplementalOwnerBinding
-                   ordered
                    (bindSupplementalInputs graph inputSet))
   where
     ordered = sortOn acquiredOrdinal acquired
@@ -87,37 +87,36 @@ withSupplementalOwnerBinding _ acquired graph provenanceFailure inputFailure acc
 
 -- | Eliminate the exact binding without exposing its private source tokens.
 foldSupplementalOwnerBinding ::
-     ([AcquiredSupplementalSource] -> BoundOwnerSupplementalInputs
-                                        authority
-                                        profile
-                                        document
-                                        scope
-                                        inputs -> [SupplementalOwnerBindingEvidence
-                                                     scope
-                                                     inputs] -> result)
+     (BoundOwnerSupplementalInputs authority profile document scope inputs -> [SupplementalOwnerBindingGroup
+                                                                                 scope
+                                                                                 inputs] -> result)
   -> SupplementalOwnerBinding authority profile document scope inputs
   -> result
-foldSupplementalOwnerBinding consume (SupplementalOwnerBinding sources binding) =
-  foldSupplementalBindingDiagnostics
-    (\bound evidence ->
-       consume
-         sources
-         (BoundOwnerSupplementalInputs bound)
-         (map retainSource evidence))
+foldSupplementalOwnerBinding consume (SupplementalOwnerBinding binding) =
+  foldSupplementalBindingDiagnosticGroups
+    (\bound groups ->
+       consume (BoundOwnerSupplementalInputs bound) (map retainGroup groups))
     binding
   where
-    retainSource evidence =
-      SupplementalOwnerBindingEvidence (bindingEvidenceSource evidence) evidence
+    retainGroup =
+      foldSupplementalBindingDiagnosticGroup $ \occurrence evidence ->
+        case occurrence of
+          SupplementalOwnerOccurrence source ->
+            SupplementalOwnerBindingGroup
+              source
+              (map SupplementalOwnerBindingEvidence evidence)
 
-bindingEvidenceSource ::
-     SupplementalBindingDiagnosticEvidence
-       scope
-       (SupplementalOwnerOccurrence inputs)
-  -> AcquiredSupplementalSource
-bindingEvidenceSource =
-  foldSupplementalBindingDiagnosticEvidence source source source source
-  where
-    source (SupplementalOwnerOccurrence value) _ = value
+-- | Eliminate one exact acquired source group without exposing a detachable
+-- source token or permitting child reassociation.
+foldSupplementalOwnerBindingGroup ::
+     (AcquiredSupplementalSource -> [SupplementalOwnerBindingEvidence
+                                       scope
+                                       inputs] -> result)
+  -> SupplementalOwnerBindingGroup scope inputs
+  -> result
+foldSupplementalOwnerBindingGroup consume group =
+  case group of
+    SupplementalOwnerBindingGroup source evidence -> consume source evidence
 
 -- | Evaluate Core Semantics from one accepted owner-bound input generation.
 assessOwnerSemantics ::

@@ -89,11 +89,12 @@ $(assertAbstractTypes
     , "Diagnostic.DiagnosticSeverity"
     , "Diagnostic.DiagnosticDisposition"
     , "Diagnostic.PreparedDiagnostic"
-    , "Diagnostic.SupplementalDiagnosticGroup"
+    , "Diagnostic.SupplementalDiagnosticGroups"
     , "Diagnostic.PreparedDiagnosticDocument"
     , "DiagnosticSource.PreparedAuthority"
     , "DiagnosticSource.PreparedScope"
     , "DiagnosticSource.SupplementalOwnerBinding"
+    , "DiagnosticSource.SupplementalOwnerBindingGroup"
     , "DiagnosticSource.SupplementalOwnerBindingEvidence"
     , "DiagnosticSource.BoundOwnerSupplementalInputs"
     , "Failure.CommandFailure"
@@ -296,7 +297,7 @@ $(assertOrdinaryFunctions
     , 'Diagnostic.preparedDiagnosticStage
     , 'Diagnostic.preparedDiagnosticRuleIdentity
     , 'Diagnostic.foldPreparedDiagnostic
-    , 'Diagnostic.foldSupplementalDiagnosticGroup
+    , 'Diagnostic.noSupplementalDiagnosticGroups
     , 'Diagnostic.preparedDiagnosticDocument
     , 'Diagnostic.foldPreparedDiagnosticDocument
     , 'DiagnosticMachine.diagnosticSchemaAuthority
@@ -309,6 +310,7 @@ $(assertOrdinaryFunctions
     , 'DiagnosticOwner.semanticsEvidenceDiagnostic
     , 'DiagnosticSource.withSupplementalOwnerBinding
     , 'DiagnosticSource.foldSupplementalOwnerBinding
+    , 'DiagnosticSource.foldSupplementalOwnerBindingGroup
     , 'DiagnosticSource.assessOwnerSemantics
     , 'Failure.inputAcquisitionFailure
     , 'Failure.commandFailureCode

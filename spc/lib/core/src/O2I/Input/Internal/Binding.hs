@@ -60,19 +60,20 @@ bindSupplementalInputs graph inputs@(SupplementalInputSet payloads) =
         BoundSupplementalInputs
           (forgetSupplementalInputSetProvenance inputs)
           unresolvedSites
-    , supplementalBindingDiagnosticDefects = defects
+    , supplementalBindingDiagnosticGroups = diagnosticGroups
     }
   where
     kinds = identityKinds graph
+    diagnosticGroups =
+      [ ( supplementalInputProvenance input
+        , sortOn id (bindingDefects graph kinds input))
+      | input <- payloads
+      ]
     defects =
-      sortOn
-        snd
-        (concatMap
-           (\input ->
-              map
-                (\defect -> (supplementalInputProvenance input, defect))
-                (bindingDefects graph kinds input))
-           payloads)
+      [ (provenance, defect)
+      | (provenance, groupedDefects) <- diagnosticGroups
+      , defect <- groupedDefects
+      ]
     unresolvedSites = Set.fromList (map (defectIdentitySite . snd) defects)
 
 forgetSupplementalInputSetProvenance ::

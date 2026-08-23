@@ -7,6 +7,7 @@ module O2I.Operation.Diagnostic.Internal
   , DiagnosticDisposition(..)
   , PreparedDiagnostic(..)
   , SupplementalDiagnosticGroup(..)
+  , SupplementalDiagnosticGroups(..)
   , PreparedDiagnosticDocument(..)
   ) where
 
@@ -70,10 +71,17 @@ data SupplementalDiagnosticGroup authority profile document where
 
 type role SupplementalDiagnosticGroup nominal nominal nominal
 
+-- | Opaque canonical collection minted from one exact owner binding.
+newtype SupplementalDiagnosticGroups authority profile document =
+  SupplementalDiagnosticGroups
+    [SupplementalDiagnosticGroup authority profile document]
+
+type role SupplementalDiagnosticGroups nominal nominal nominal
+
 -- | One authority-once, existentially sealed v2 machine subject.
 data PreparedDiagnosticDocument where
   PreparedDiagnosticDocument
     :: !(PreparedAuthority authority profile document)
     -> ![PreparedDiagnostic authority profile document]
-    -> ![SupplementalDiagnosticGroup authority profile document]
+    -> !(SupplementalDiagnosticGroups authority profile document)
     -> PreparedDiagnosticDocument

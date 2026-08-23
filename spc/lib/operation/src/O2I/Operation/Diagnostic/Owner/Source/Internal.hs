@@ -6,6 +6,7 @@ module O2I.Operation.Diagnostic.Owner.Source.Internal
   , PreparedScope(..)
   , SupplementalOwnerOccurrence(..)
   , SupplementalOwnerBinding(..)
+  , SupplementalOwnerBindingGroup(..)
   , SupplementalOwnerBindingEvidence(..)
   , BoundOwnerSupplementalInputs(..)
   ) where
@@ -39,17 +40,23 @@ newtype SupplementalOwnerOccurrence inputs =
 type role SupplementalOwnerOccurrence nominal
 
 -- | Exact Core binding whose source occurrences never escape Operation.
-data SupplementalOwnerBinding authority profile document scope inputs =
+newtype SupplementalOwnerBinding authority profile document scope inputs =
   SupplementalOwnerBinding
-    ![AcquiredSupplementalSource]
-    !(SupplementalBinding scope (SupplementalOwnerOccurrence inputs))
+    (SupplementalBinding scope (SupplementalOwnerOccurrence inputs))
 
 type role SupplementalOwnerBinding nominal nominal nominal nominal nominal
 
--- | Exact graph-dependent evidence retained with its private occurrence.
+-- | One exact acquired artifact with its constructively nested evidence.
+data SupplementalOwnerBindingGroup scope inputs =
+  SupplementalOwnerBindingGroup
+    !AcquiredSupplementalSource
+    ![SupplementalOwnerBindingEvidence scope inputs]
+
+type role SupplementalOwnerBindingGroup nominal nominal
+
+-- | Exact graph-dependent evidence retained inside its source group.
 data SupplementalOwnerBindingEvidence scope inputs =
   SupplementalOwnerBindingEvidence
-    !AcquiredSupplementalSource
     !(SupplementalBindingDiagnosticEvidence
         scope
         (SupplementalOwnerOccurrence inputs))

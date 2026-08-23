@@ -397,6 +397,11 @@ CONTRACTS = (
                 (("GHC-01928", 1), ("GHC-88464", 1)),
             ),
             CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "SupplementalDiagnosticGroupsOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/OpaqueConstructors.hs",
                 (("GHC-01928", 1),),
             ),

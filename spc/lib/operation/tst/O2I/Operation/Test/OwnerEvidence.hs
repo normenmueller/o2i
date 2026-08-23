@@ -6,12 +6,14 @@ module O2I.Operation.Test.OwnerEvidence
   ) where
 
 import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
 import qualified Data.Aeson.Types as AesonTypes
 import qualified Data.ByteString.Lazy as LazyByteString
 import Data.JSON.JSONSchema (validateJSONSchema)
-import Data.List (nub, sort)
+import Data.List (nub, sort, sortOn)
 import Data.Text (Text)
+import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified O2I.ArchiMate.Profile.Closure as Closure
 import qualified O2I.ArchiMate.Profile.Conformance as ProfileConformance
@@ -24,8 +26,10 @@ import O2I.Core.Contract (coreRuleIdText)
 import O2I.Operation.Acquisition
   ( AcquiredSupplementalSource
   , acquireSource
+  , acquiredSourceIdentity
   , acquiredSupplementalSource
   , fileInput
+  , foldAcquiredSupplementalSource
   )
 import O2I.Operation.Acquisition.Internal (AcquiredSource(..))
 import O2I.Operation.Adapter (AdapterDescriptor)
@@ -94,7 +98,10 @@ profileOwnerEvidence = do
                retained <- assessed
                let diagnostics = activation <> retained
                    document =
-                     preparedDiagnosticDocument authority diagnostics []
+                     preparedDiagnosticDocument
+                       authority
+                       diagnostics
+                       noSupplementalDiagnosticGroups
                pure
                  ( map preparedDiagnosticRuleIdentity diagnostics
                  , map preparedDiagnosticSeverity diagnostics
@@ -132,7 +139,11 @@ structureOwnerEvidence = do
                  source
              scope = PreparedScope source
              diagnostic = structureEvidenceDiagnostic scope evidence
-             document = preparedDiagnosticDocument authority [diagnostic] []
+             document =
+               preparedDiagnosticDocument
+                 authority
+                 [diagnostic]
+                 noSupplementalDiagnosticGroups
           in ( preparedDiagnosticRuleIdentity diagnostic
              , encodeDocument document))
   expected <- requireCoreResult CoreConformance.structureCorpusRuleIds
@@ -158,10 +169,12 @@ bindingOwnerEvidence = do
                     (SemanticsInput.supplementalBindingDiagnosticEvidenceRule
                        evidence)
                 group =
-                  SupplementalDiagnosticGroup
-                    source
-                    [SupplementalOwnerBindingEvidence source evidence]
-                document = preparedDiagnosticDocument authority [] [group]
+                  SupplementalDiagnosticGroups
+                    [ SupplementalDiagnosticGroup
+                        source
+                        [SupplementalOwnerBindingEvidence evidence]
+                    ]
+                document = preparedDiagnosticDocument authority [] group
              in (rule, encodeDocument document)))
   expected <- requireCoreResult CoreConformance.bindingCorpusRuleIds
   map fst rows @?= map coreRuleIdText expected
@@ -182,7 +195,11 @@ semanticsOwnerEvidence = do
                  source
              scope = PreparedScope source
              diagnostic = semanticsEvidenceDiagnostic scope evidence
-             document = preparedDiagnosticDocument authority [diagnostic] []
+             document =
+               preparedDiagnosticDocument
+                 authority
+                 [diagnostic]
+                 noSupplementalDiagnosticGroups
           in ( preparedDiagnosticRuleIdentity diagnostic
              , encodeDocument document))
   expected <- requireCoreResult CoreConformance.semanticsCorpusRuleIds
@@ -194,17 +211,25 @@ acquiredBindingEvidence :: Assertion
 acquiredBindingEvidence = do
   adapter <- testAdapterDescriptor
   model <- modelSource
-  supplemental <- acquiredStrategySource
+  first <- acquiredStrategySource
+  second <- acquiredStrategySource2
   case ProfileConformance.profileIntegratedBindingSources of
     [] -> assertFailure "missing integrated Profile source"
     (draft, _):_ -> do
-      bytes <-
+      forward <-
         requireRight
-          (integratedBindingDocument adapter model [supplemental] draft)
-      assertDocumentSchema bytes
-      value <- decodeDocument bytes
-      count <- parseSupplementalDiagnosticCount value
-      count @?= 6
+          (integratedBindingDocument adapter model [first, second] draft)
+      reversed <-
+        requireRight
+          (integratedBindingDocument adapter model [second, first] draft)
+      forward @?= reversed
+      assertDocumentSchema forward
+      value <- decodeDocument forward
+      actual <- parseSupplementalAssociations value
+      actual
+        @?= [ expectedSupplementalAssociation first "unknown"
+            , expectedSupplementalAssociation second "unknown-2"
+            ]
 
 integratedBindingDocument ::
      AdapterDescriptor
@@ -292,23 +317,60 @@ decodeDocument bytes =
     Left message -> assertFailure message >> fail "unreachable"
     Right value -> pure value
 
-parseSupplementalDiagnosticCount :: Aeson.Value -> IO Int
-parseSupplementalDiagnosticCount value =
-  case AesonTypes.parseEither parser value of
+parseSupplementalAssociations :: Aeson.Value -> IO [(Text, Text, Text, [Text])]
+parseSupplementalAssociations documentValue =
+  case AesonTypes.parseEither parser documentValue of
     Left message -> assertParseFailure message
-    Right count -> pure count
+    Right associations -> pure associations
   where
     parser =
       Aeson.withObject "prepared diagnostic document" $ \document -> do
         sources <- document Aeson..: "supplementalSources"
         Aeson.withObject
           "supplemental sources"
-          (fmap sum . traverse sourceCount . AesonKeyMap.elems)
+          (traverse sourceAssociation
+             . sortOn (AesonKey.toText . fst)
+             . AesonKeyMap.toList)
           sources
-    sourceCount =
-      Aeson.withObject "supplemental source" $ \source ->
-        length
-          <$> (source Aeson..: "diagnostics" :: AesonTypes.Parser [Aeson.Value])
+    sourceAssociation (ordinal, sourceValue) =
+      Aeson.withObject "supplemental source" (sourceFields ordinal) sourceValue
+    sourceFields ordinal source = do
+      reference <- source Aeson..: "reference"
+      digest <- source Aeson..: "sha256"
+      diagnostics <- source Aeson..: "diagnostics"
+      identities <- traverse diagnosticIdentity diagnostics
+      pure (AesonKey.toText ordinal, reference, digest, identities)
+    diagnosticIdentity =
+      Aeson.withObject "binding diagnostic" $ \diagnostic -> do
+        evidence <- diagnostic Aeson..: "evidence"
+        Aeson.withObject "binding evidence" identityField evidence
+    identityField evidence = do
+      evidenceFields <-
+        evidence Aeson..: "fields" :: AesonTypes.Parser [Aeson.Value]
+      values <- concat <$> traverse fieldIdentities evidenceFields
+      case values of
+        [identity] -> pure identity
+        _ -> fail "expected one Binding identity value"
+    fieldIdentities =
+      Aeson.withObject "binding evidence field" $ \field -> do
+        role <- field Aeson..: "role"
+        if role == ("identity" :: Text)
+          then field Aeson..: "values"
+          else pure []
+
+expectedSupplementalAssociation ::
+     AcquiredSupplementalSource -> Text -> (Text, Text, Text, [Text])
+expectedSupplementalAssociation source identityText =
+  foldAcquiredSupplementalSource
+    (\acquired ->
+       foldSourceIdentity
+         (\_ ordinal reference digest ->
+            ( Text.pack (show (sourceOrdinalValue ordinal))
+            , sourceReferenceText reference
+            , sourceSha256Text digest
+            , replicate 6 identityText))
+         (acquiredSourceIdentity acquired))
+    source
 
 assertParseFailure :: String -> IO value
 assertParseFailure message = assertFailure message >> fail "unreachable"
@@ -334,14 +396,25 @@ supplementalAcquiredSource = do
     Just source -> pure source
 
 acquiredStrategySource :: IO AcquiredSupplementalSource
-acquiredStrategySource = do
-  reference <- requireRight (mkSourceReference "supplemental-owner-source")
-  input <-
-    requireRight
-      (fileInput
-         reference
-         ("tst" </> "fixtures" </> "owner-source-strategy.json"))
-  result <- acquireSource SupplementalRole (sourceOrdinal 0) input
+acquiredStrategySource =
+  acquireStrategySource
+    0
+    "supplemental-owner-source"
+    "owner-source-strategy.json"
+
+acquiredStrategySource2 :: IO AcquiredSupplementalSource
+acquiredStrategySource2 =
+  acquireStrategySource
+    1
+    "supplemental-owner-source-2"
+    "owner-source-strategy-2.json"
+
+acquireStrategySource ::
+     Natural -> Text -> FilePath -> IO AcquiredSupplementalSource
+acquireStrategySource ordinal referenceText fixture = do
+  reference <- requireRight (mkSourceReference referenceText)
+  input <- requireRight (fileInput reference ("tst" </> "fixtures" </> fixture))
+  result <- acquireSource SupplementalRole (sourceOrdinal ordinal) input
   acquired <- requireRight result
   case acquiredSupplementalSource acquired of
     Nothing -> assertFailure "supplemental role was lost" >> fail "unreachable"

@@ -23,8 +23,8 @@ module O2I.Operation.Diagnostic
   , preparedDiagnosticStage
   , preparedDiagnosticRuleIdentity
   , foldPreparedDiagnostic
-  , type SupplementalDiagnosticGroup
-  , foldSupplementalDiagnosticGroup
+  , type SupplementalDiagnosticGroups
+  , noSupplementalDiagnosticGroups
   , type PreparedDiagnosticDocument
   , preparedDiagnosticDocument
   , foldPreparedDiagnosticDocument
@@ -34,12 +34,8 @@ import Data.Text (Text)
 import qualified O2I.ArchiMate.Profile.Closure as Closure
 import qualified O2I.ArchiMate.Profile.Projection as Profile
 import O2I.Core.Contract (coreRuleIdText)
-import O2I.Operation.Acquisition (AcquiredSupplementalSource)
 import O2I.Operation.Diagnostic.Internal
-import O2I.Operation.Diagnostic.Owner.Source.Internal
-  ( PreparedAuthority
-  , SupplementalOwnerBindingEvidence
-  )
+import O2I.Operation.Diagnostic.Owner.Source.Internal (PreparedAuthority)
 import qualified O2I.Semantics as Semantics
 import qualified O2I.Structure as Structure
 
@@ -166,22 +162,17 @@ foldPreparedDiagnostic activation rejection classification mapping invariant str
     StructureRejectionDiagnostic evidence -> structure evidence
     SemanticsRejectionDiagnostic evidence -> semantics evidence
 
--- | Eliminate one exact supplemental source group.
-foldSupplementalDiagnosticGroup ::
-     (forall scope inputs. AcquiredSupplementalSource -> [SupplementalOwnerBindingEvidence
-                                                            scope
-                                                            inputs] -> result)
-  -> SupplementalDiagnosticGroup authority profile document
-  -> result
-foldSupplementalDiagnosticGroup consume group =
-  case group of
-    SupplementalDiagnosticGroup source evidence -> consume source evidence
+-- | Canonical empty collection for a document produced before any
+-- supplemental binding exists.
+noSupplementalDiagnosticGroups ::
+     SupplementalDiagnosticGroups authority profile document
+noSupplementalDiagnosticGroups = SupplementalDiagnosticGroups []
 
 -- | Seal one authority with all model and supplemental diagnostics.
 preparedDiagnosticDocument ::
      PreparedAuthority authority profile document
   -> [PreparedDiagnostic authority profile document]
-  -> [SupplementalDiagnosticGroup authority profile document]
+  -> SupplementalDiagnosticGroups authority profile document
   -> PreparedDiagnosticDocument
 preparedDiagnosticDocument = PreparedDiagnosticDocument
 
@@ -193,10 +184,10 @@ foldPreparedDiagnosticDocument ::
                                            document -> [PreparedDiagnostic
                                                           authority
                                                           profile
-                                                          document] -> [SupplementalDiagnosticGroup
-                                                                          authority
-                                                                          profile
-                                                                          document] -> result)
+                                                          document] -> SupplementalDiagnosticGroups
+                                                                         authority
+                                                                         profile
+                                                                         document -> result)
   -> PreparedDiagnosticDocument
   -> result
 foldPreparedDiagnosticDocument consume document =

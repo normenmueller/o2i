@@ -250,7 +250,7 @@ class OperationContractCompilerTest(unittest.TestCase):
             ["adapter", "profile", "model"], authority["required"]
         )
         model_diagnostics = schema["$defs"]["modelDiagnostic"]["oneOf"]
-        self.assertEqual(229, len(model_diagnostics))
+        self.assertEqual(228, len(model_diagnostics))
         binding_diagnostics = schema["$defs"]["supplementalSources"][
             "patternProperties"
         ]["^(0|[1-9][0-9]*)$"]["properties"]["diagnostics"]["items"][

@@ -194,9 +194,9 @@ type role SupplementalBinding nominal nominal
 data SupplementalBinding scope provenance = SupplementalBinding
     -- | Inputs retained with identity-resolution state.
   { supplementalBindingInputs :: !(BoundSupplementalInputs scope)
-    -- | Deterministically ordered identity-binding defects.
-  , supplementalBindingDiagnosticDefects :: ![( provenance
-                                              , SupplementalBindingDiagnosticDefect)]
+    -- | Canonical source groups with their locally ordered Binding defects.
+  , supplementalBindingDiagnosticGroups :: ![( provenance
+                                             , [SupplementalBindingDiagnosticDefect])]
   } deriving (Eq, Show)
 
 -- | Closed graph-dependent defect set produced only after decoding and set
@@ -231,7 +231,9 @@ supplementalBindingDefects ::
   -> [(provenance, SupplementalInputDefect)]
 supplementalBindingDefects =
   map (fmap supplementalBindingDiagnosticDefect)
-    . supplementalBindingDiagnosticDefects
+    . concatMap
+        (\(provenance, defects) -> map (\defect -> (provenance, defect)) defects)
+    . supplementalBindingDiagnosticGroups
 
 -- | Opaque payload set with exact resolution state for every identity site.
 data BoundSupplementalInputs scope = BoundSupplementalInputs

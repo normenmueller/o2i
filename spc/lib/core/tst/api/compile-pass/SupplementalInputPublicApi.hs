@@ -175,6 +175,20 @@ consumeBinding =
   foldSupplementalBinding
     (\bound evidence -> (bound, map projectBindingEvidence evidence))
 
+consumeDiagnosticGroups ::
+     SupplementalBinding scope provenance
+  -> (BoundSupplementalInputs scope, [(provenance, [CoreRuleId])])
+consumeDiagnosticGroups =
+  foldSupplementalBindingDiagnosticGroups $ \bound groups ->
+    (bound, map projectDiagnosticGroup groups)
+
+projectDiagnosticGroup ::
+     SupplementalBindingDiagnosticGroup scope provenance
+  -> (provenance, [CoreRuleId])
+projectDiagnosticGroup =
+  foldSupplementalBindingDiagnosticGroup $ \provenance evidence ->
+    (provenance, map supplementalBindingDiagnosticEvidenceRule evidence)
+
 projectBindingEvidence ::
      SupplementalBindingEvidence scope () -> SupplementalEvidenceView
 projectBindingEvidence = foldSupplementalBindingEvidence (const eliminator)

@@ -112,18 +112,20 @@ import O2I.Operation.Adapter
 import O2I.Operation.Diagnostic
   ( PreparedDiagnostic
   , PreparedDiagnosticDocument
-  , SupplementalDiagnosticGroup
   , diagnosticDispositionText
   , diagnosticSeverityText
   , foldPreparedDiagnostic
   , foldPreparedDiagnosticDocument
-  , foldSupplementalDiagnosticGroup
   , preparedDiagnosticDisposition
   , preparedDiagnosticOwner
   , preparedDiagnosticProducer
   , preparedDiagnosticRuleIdentity
   , preparedDiagnosticSeverity
   , preparedDiagnosticStage
+  )
+import O2I.Operation.Diagnostic.Internal
+  ( SupplementalDiagnosticGroup(..)
+  , SupplementalDiagnosticGroups(..)
   )
 import O2I.Operation.Diagnostic.Owner.Source.Internal
   ( PreparedAuthority(..)
@@ -247,16 +249,19 @@ preparedDiagnosticDocumentFragment ::
      PreparedDiagnosticDocument -> CanonicalFragment
 preparedDiagnosticDocumentFragment =
   foldPreparedDiagnosticDocument $ \authority diagnostics groups ->
-    closedObjectFragment
-      [ requiredMember "schema" (textFragment "o2i.operation.diagnostic/v2")
-      , requiredMember "authority" (preparedAuthorityFragment authority)
-      , requiredMember
-          "modelDiagnostics"
-          (arrayFragment (map preparedDiagnosticFragment diagnostics))
-      , requiredMember
-          "supplementalSources"
-          (closedObjectFragment (map supplementalGroupMember groups))
-      ]
+    case groups of
+      SupplementalDiagnosticGroups supplementalGroups ->
+        closedObjectFragment
+          [ requiredMember "schema" (textFragment "o2i.operation.diagnostic/v2")
+          , requiredMember "authority" (preparedAuthorityFragment authority)
+          , requiredMember
+              "modelDiagnostics"
+              (arrayFragment (map preparedDiagnosticFragment diagnostics))
+          , requiredMember
+              "supplementalSources"
+              (closedObjectFragment
+                 (map supplementalGroupMember supplementalGroups))
+          ]
 
 preparedAuthorityFragment ::
      PreparedAuthority authority profile document -> CanonicalFragment
@@ -675,29 +680,31 @@ semanticEvidenceFields evidence =
 
 supplementalGroupMember ::
      SupplementalDiagnosticGroup authority profile document -> CanonicalMember
-supplementalGroupMember =
-  foldSupplementalDiagnosticGroup $ \source evidence ->
-    let identity = foldAcquiredSupplementalSource acquiredSourceIdentity source
-     in requiredMember
-          (Text.pack
-             (show (sourceOrdinalValue (sourceIdentityOrdinal identity))))
-          (closedObjectFragment
-             [ requiredMember
-                 "reference"
-                 (textFragment
-                    (sourceReferenceText (sourceIdentityReference identity)))
-             , requiredMember
-                 "sha256"
-                 (textFragment
-                    (sourceSha256Text (sourceIdentitySha256 identity)))
-             , requiredMember
-                 "diagnostics"
-                 (arrayFragment (map bindingDiagnosticFragment evidence))
-             ])
+supplementalGroupMember group =
+  case group of
+    SupplementalDiagnosticGroup source evidence ->
+      let identity =
+            foldAcquiredSupplementalSource acquiredSourceIdentity source
+       in requiredMember
+            (Text.pack
+               (show (sourceOrdinalValue (sourceIdentityOrdinal identity))))
+            (closedObjectFragment
+               [ requiredMember
+                   "reference"
+                   (textFragment
+                      (sourceReferenceText (sourceIdentityReference identity)))
+               , requiredMember
+                   "sha256"
+                   (textFragment
+                      (sourceSha256Text (sourceIdentitySha256 identity)))
+               , requiredMember
+                   "diagnostics"
+                   (arrayFragment (map bindingDiagnosticFragment evidence))
+               ])
 
 bindingDiagnosticFragment ::
      SupplementalOwnerBindingEvidence scope inputs -> CanonicalFragment
-bindingDiagnosticFragment (SupplementalOwnerBindingEvidence _ evidence) =
+bindingDiagnosticFragment (SupplementalOwnerBindingEvidence evidence) =
   Binding.foldSupplementalBindingDiagnosticEvidence
     (const
        (identityFinding

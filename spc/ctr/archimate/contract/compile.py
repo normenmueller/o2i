@@ -34,7 +34,7 @@ EXPECTED_FIXED_POINT_SEMANTICS_SHA256 = (
     "2bb2381468d8ec09b54879cd28d03acd0ede0ac519ba57c242979e749e233cb2"
 )
 EXPECTED_DIAGNOSTIC_INVENTORY_SHA256 = (
-    "b606b646c9348208755c47b20602b233255b6f01815b36b62e26a1ea000ecac2"
+    "ec900b7a13c689dadb0d87bf7bbd05f73840422477c36fda305b98234ab78f83"
 )
 
 EXPECTED_PROFILE_EVIDENCE_KINDS = (
@@ -677,6 +677,22 @@ def derive_profile_defect_rule_bindings(
     return {rule_id: bindings[rule_id] for rule_id in utf8_sorted(bindings)}
 
 
+def derive_profile_diagnostic_rule_bindings(
+    companion: dict[str, Any],
+) -> dict[str, str]:
+    bindings = derive_profile_defect_rule_bindings(companion)
+    non_rejecting_rules = {
+        plan["propertyCardinality"]["ruleId"]
+        for plan in derive_property_runtime_plans(companion)
+        if plan["propertyCardinality"]["expected"] == "zero-or-many"
+    }
+    return {
+        rule_id: evidence_kind
+        for rule_id, evidence_kind in bindings.items()
+        if rule_id not in non_rejecting_rules
+    }
+
+
 def profile_diagnostic_evidence_fields(
     rule_id: str, evidence_kind: str
 ) -> list[tuple[str, str, str]]:
@@ -975,7 +991,7 @@ def invariant_diagnostic_inventory(
 def render_diagnostic_inventory(
     companion: dict[str, Any], payload: bytes
 ) -> bytes:
-    bindings = derive_profile_defect_rule_bindings(companion)
+    bindings = derive_profile_diagnostic_rule_bindings(companion)
     profile_digest = sha256(payload)
     value = {
         "schema": "o2i.archimate-profile.diagnostic-evidence/v1",
@@ -2361,7 +2377,7 @@ def hs_list(values: Iterable[str], indent: int = 2) -> str:
 
 def render_generated(companion: dict[str, Any]) -> str:
     rules, bootstrap_rules, selected_rules = derive_rule_inventory(companion)
-    defect_rule_bindings = derive_profile_defect_rule_bindings(companion)
+    defect_rule_bindings = derive_profile_diagnostic_rule_bindings(companion)
     carrier_rule_ids, relation_rule_ids, property_rule_ids = derive_mapping_rule_ids(
         companion
     )

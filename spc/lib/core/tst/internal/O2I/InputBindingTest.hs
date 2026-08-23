@@ -41,6 +41,9 @@ tests =
         "independent identity defects accumulate by evidence key"
         independentDefects
     , testCase
+        "retains one source-local diagnostic group including empty groups"
+        sourceLocalDiagnosticGroups
+    , testCase
         "unresolved sites retain independently usable binding state"
         siteLocalBinding
     ]
@@ -196,6 +199,34 @@ independentDefects =
             "objective-1"
         ]
 
+sourceLocalDiagnosticGroups :: IO ()
+sourceLocalDiagnosticGroups =
+  runBinding [] inputs $ \binding ->
+    supplementalBindingDiagnosticGroups binding
+      @?= [ ("valid", [])
+          , ( "invalid"
+            , [ SupplementalBindingIdentityUnknown
+                  (SupplementalIdentityUnknownEvidence
+                     collectiveOrdinal
+                     "/strategy"
+                     (identity "unknown-strategy"))
+              ])
+          ]
+  where
+    inputs :: SupplementalInputSet Text
+    inputs =
+      SupplementalInputSet
+        [ StrategyFormulationSupplement
+            "valid"
+            strategyOrdinal
+            strategyFormulation
+        , StrategyFormulationSupplement
+            "invalid"
+            collectiveOrdinal
+            strategyFormulation
+              {formulationStrategy = identity "unknown-strategy"}
+        ]
+
 siteLocalBinding :: IO ()
 siteLocalBinding =
   runBinding [] inputs $ \binding -> do
@@ -233,8 +264,8 @@ defectsFor extra inputs =
 
 runBinding ::
      [ModelOccurrence]
-  -> SupplementalInputSet ()
-  -> (forall scope. SupplementalBinding scope () -> result)
+  -> SupplementalInputSet provenance
+  -> (forall scope. SupplementalBinding scope provenance -> result)
   -> result
 runBinding extra inputs inspect =
   case buildModelIdentityIndex (modelOccurrences ++ extra) of

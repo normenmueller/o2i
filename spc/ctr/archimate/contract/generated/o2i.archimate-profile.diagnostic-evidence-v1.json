@@ -1407,61 +1407,6 @@
     },
     {
       "producer": "profile-assessment",
-      "ruleId": "property:qualification-proposal-assessment:o2i.source:property-cardinality",
-      "polarity": "rejection",
-      "evidenceKind": "property-slot-evidence",
-      "sourceRole": "model",
-      "alternatives": [
-        {
-          "alternativeId": "properties-zero",
-          "fields": [
-            {
-              "roleId": "owner",
-              "valueKind": "canonical-occurrence",
-              "minimum": 1,
-              "maximum": 1
-            },
-            {
-              "roleId": "key",
-              "valueKind": "text",
-              "minimum": 1,
-              "maximum": 1
-            },
-            {
-              "roleId": "properties",
-              "valueKind": "canonical-occurrence",
-              "minimum": 0,
-              "maximum": 0
-            }
-          ]
-        },
-        {
-          "alternativeId": "properties-multiple",
-          "fields": [
-            {
-              "roleId": "owner",
-              "valueKind": "canonical-occurrence",
-              "minimum": 1,
-              "maximum": 1
-            },
-            {
-              "roleId": "key",
-              "valueKind": "text",
-              "minimum": 1,
-              "maximum": 1
-            },
-            {
-              "roleId": "properties",
-              "valueKind": "canonical-occurrence",
-              "minimum": 2,
-              "maximum": null
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "producer": "profile-assessment",
       "ruleId": "property:qualification-proposal-assessment:o2i.source:value-cardinality",
       "polarity": "rejection",
       "evidenceKind": "property-occurrence-evidence",

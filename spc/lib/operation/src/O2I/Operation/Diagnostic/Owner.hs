@@ -15,12 +15,11 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified O2I.ArchiMate.Profile.Closure as Closure
 import qualified O2I.ArchiMate.Profile.Projection as Profile
 import O2I.Core.Identity (IdentityIndexDefect, SelectedViewScopeDefect)
-import O2I.Operation.Acquisition
-  ( acquiredSourceIdentity
-  , foldAcquiredSupplementalSource
-  )
 import O2I.Operation.Diagnostic.Internal
-import O2I.Operation.Diagnostic.Owner.Source (foldSupplementalOwnerBinding)
+import O2I.Operation.Diagnostic.Owner.Source
+  ( foldSupplementalOwnerBinding
+  , foldSupplementalOwnerBindingGroup
+  )
 import O2I.Operation.Diagnostic.Owner.Source.Internal
 import qualified O2I.Semantics as Semantics
 import qualified O2I.Structure as Structure
@@ -89,17 +88,11 @@ structureEvidenceDiagnostic _ = StructureRejectionDiagnostic
 -- Role and ordinal therefore belong to the enclosing source, never to a child.
 bindingDiagnosticGroups ::
      SupplementalOwnerBinding authority profile document scope inputs
-  -> [SupplementalDiagnosticGroup authority profile document]
+  -> SupplementalDiagnosticGroups authority profile document
 bindingDiagnosticGroups binding = foldSupplementalOwnerBinding group binding
   where
-    group sources _ evidence =
-      [ SupplementalDiagnosticGroup source (evidenceFor source evidence)
-      | source <- sources
-      ]
-    evidenceFor source = filter (sameSource source)
-    sameSource source (SupplementalOwnerBindingEvidence evidenceSource _) =
-      sourceIdentity source == sourceIdentity evidenceSource
-    sourceIdentity = foldAcquiredSupplementalSource acquiredSourceIdentity
+    group _ = SupplementalDiagnosticGroups . map retainGroup
+    retainGroup = foldSupplementalOwnerBindingGroup SupplementalDiagnosticGroup
 
 -- | Retain one Semantics rejection together with its producing assessment.
 semanticsEvidenceDiagnostic ::
