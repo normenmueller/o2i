@@ -59,11 +59,8 @@ the Framework but never define its generic semantics.
   `Context --composition[contextualizes]--> element`. Visual nesting has no
   contextualization semantics.
 - The Profile derives a carrier category from its ArchiMate type and exact `o2i.type`; it does not persist a parallel `o2i.kind` classification.
-- `O2I Syntax - Carriers` and `O2I Syntax - Relations` are the unannotated carrier- and relation-mapping reference visualizations. Focused syntax Views make non-binary patterns and metadata-bearing proposal syntax explicit. These Views specify notation and are not mapping authorities or fachliche O2I graphs.
-- `O2I Syntax - Contextualization` and
-  `O2I Syntax - Collective Strategy Realization` are executable Candidate
-  conformance Views. They are inspected through the AMX adapter and Core,
-  not treated as mapping authorities.
+- `O2I Syntax - Carriers` and `O2I Syntax - Relations` are the unannotated carrier- and relation-mapping reference visualizations. Focused syntax Views are required to make non-binary patterns and metadata-bearing proposal syntax explicit. These Views specify notation and are not mapping authorities or fachliche O2I graphs.
+- A focused syntax View is an executable Candidate conformance View only when its persisted metadata, references, and dependencies match the current Profile contract. It is then inspected through the AMX adapter and Core, never treated as a mapping authority. A stale or missing focused View is a model-correction target, not evidence that the Profile contract is absent or different.
 - A `CollectiveStrategyRealization` uses at least two contributor Strategies, one distinct target Strategy, homogeneous `realizes` segments through one AND Junction, explicit participant completeness, and one Commitment on the Junction. Collective Fit is supplied separately as `CollectiveFitInput`; it is never persisted as ArchiMate metadata or a model reference.
 - ArchiMate Groupings and Junctions are notation carriers and introduce no O2I
   semantics.
