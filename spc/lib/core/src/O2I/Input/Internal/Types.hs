@@ -19,6 +19,7 @@ module O2I.Input.Internal.Types
   , SupplementalInputSet(..)
   , SupplementalBinding(..)
   , supplementalBindingDefects
+  , supplementalBindingDiagnosticDefects
   , SupplementalBindingDiagnosticDefect(..)
   , supplementalBindingDiagnosticDefect
   , BoundSupplementalInputs(..)
@@ -52,6 +53,7 @@ module O2I.Input.Internal.Types
   , supplementalInputDefectKind
   ) where
 
+import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.Set as Set
 import Data.Set (Set)
@@ -231,6 +233,15 @@ supplementalBindingDefects ::
   -> [(provenance, SupplementalInputDefect)]
 supplementalBindingDefects =
   map (fmap supplementalBindingDiagnosticDefect)
+    . supplementalBindingDiagnosticDefects
+
+-- | Accepted #61 flat compatibility view in global canonical defect order.
+-- Structural consumers use 'supplementalBindingDiagnosticGroups' instead.
+supplementalBindingDiagnosticDefects ::
+     SupplementalBinding scope provenance
+  -> [(provenance, SupplementalBindingDiagnosticDefect)]
+supplementalBindingDiagnosticDefects =
+  sortOn snd
     . concatMap
         (\(provenance, defects) -> map (\defect -> (provenance, defect)) defects)
     . supplementalBindingDiagnosticGroups

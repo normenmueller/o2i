@@ -336,31 +336,22 @@ class ProfileCompilerTest(unittest.TestCase):
         )
         self.assertNotIn("graph.relationship-source-endpoint", bindings)
 
-    def test_diagnostic_rule_bindings_are_exactly_constructible(self) -> None:
-        bindings = compiler.derive_profile_diagnostic_rule_bindings(self.companion)
-        all_defect_bindings = compiler.derive_profile_defect_rule_bindings(
-            self.companion
-        )
-        non_rejecting_rules = {
-            plan["propertyCardinality"]["ruleId"]
-            for plan in compiler.derive_property_runtime_plans(self.companion)
-            if plan["propertyCardinality"]["expected"] == "zero-or-many"
-        }
+    def test_rejection_rule_bindings_are_closed_and_constructible(self) -> None:
+        bindings = compiler.derive_profile_rejection_rule_bindings(self.companion)
+        self.assertEqual(54, len(bindings))
         self.assertEqual(
-            {
-                rule_id: evidence_kind
-                for rule_id, evidence_kind in all_defect_bindings.items()
-                if rule_id not in non_rejecting_rules
-            },
+            set(compiler.EXPECTED_PROFILE_REJECTION_EVIDENCE_KINDS),
+            set(bindings.values()),
+        )
+        self.assertFalse(any(rule.startswith("carrier:") for rule in bindings))
+        self.assertEqual(
+            {"classification.shared.activate.unknown-property"},
+            {rule for rule in bindings if rule.startswith("classification.")},
+        )
+        self.assertNotIn(
+            "property:qualification-proposal-assessment:"
+            "o2i.source:property-cardinality",
             bindings,
-        )
-        self.assertEqual(125, len(bindings))
-        self.assertEqual(
-            {
-                "property:qualification-proposal-assessment:"
-                "o2i.source:property-cardinality"
-            },
-            non_rejecting_rules,
         )
 
     def test_diagnostic_inventory_is_exact_and_deterministic(self) -> None:
@@ -379,7 +370,7 @@ class ProfileCompilerTest(unittest.TestCase):
             "o2i.archimate-profile.diagnostic-evidence/v1",
             inventory["schema"],
         )
-        self.assertEqual(189, len(inventory["diagnostics"]))
+        self.assertEqual(118, len(inventory["diagnostics"]))
         by_identity = {
             (row["producer"], row["ruleId"]): row
             for row in inventory["diagnostics"]
@@ -389,7 +380,7 @@ class ProfileCompilerTest(unittest.TestCase):
             for producer, rule_id in by_identity
             if producer == "profile-assessment"
         }
-        diagnostic_bindings = compiler.derive_profile_diagnostic_rule_bindings(
+        diagnostic_bindings = compiler.derive_profile_rejection_rule_bindings(
             self.companion
         )
         self.assertEqual(set(diagnostic_bindings), set(by_rule))
@@ -406,7 +397,41 @@ class ProfileCompilerTest(unittest.TestCase):
                 ),
                 row["alternatives"],
             )
-        self.assertEqual(125, len(by_rule))
+        self.assertEqual(54, len(by_rule))
+        positive_rows = [
+            row
+            for row in inventory["diagnostics"]
+            if row["producer"] != "profile-assessment"
+        ]
+        self.assertEqual(
+            compiler.activation_diagnostic_inventory(
+                self.companion, compiler.sha256(self.payload)
+            )
+            + compiler.classification_diagnostic_inventory(self.companion)
+            + compiler.mapping_diagnostic_inventory(self.companion)
+            + compiler.invariant_diagnostic_inventory(self.companion),
+            positive_rows,
+        )
+        expected_polarity = {
+            "profile-assessment": "rejection",
+            "profile-activation": "acceptance",
+            "profile-classification": "acceptance",
+            "profile-mapping": "acceptance",
+            "profile-invariant": "acceptance",
+        }
+        for row in inventory["diagnostics"]:
+            self.assertEqual(expected_polarity[row["producer"]], row["polarity"])
+            self.assertEqual("model", row["sourceRole"])
+            self.assertTrue(row["alternatives"])
+            for alternative in row["alternatives"]:
+                roles = [field["roleId"] for field in alternative["fields"]]
+                self.assertEqual(len(roles), len(set(roles)))
+                for field in alternative["fields"]:
+                    self.assertGreaterEqual(field["minimum"], 0)
+                    if field["maximum"] is not None:
+                        self.assertGreaterEqual(
+                            field["maximum"], field["minimum"]
+                        )
         self.assertNotIn(
             "property:qualification-proposal-assessment:"
             "o2i.source:property-cardinality",
@@ -556,7 +581,12 @@ class ProfileCompilerTest(unittest.TestCase):
         for evidence_kind in compiler.EXPECTED_PROFILE_EVIDENCE_KINDS:
             name = compiler.haskell_constructor("", evidence_kind)
             self.assertIn(f"generated{name}DefectRule ::", rendered)
-        self.assertIn('ruleId == "carrier:context"', rendered)
+        self.assertNotIn("GeneratedCarrierOccurrenceDefectRule", rendered)
+        self.assertNotIn('ruleId == "carrier:context"', rendered)
+        self.assertIn(
+            'ruleId == "classification.shared.activate.unknown-property"',
+            rendered,
+        )
         self.assertIn(
             'ruleId == "property:typed-carrier:o2i.type:value-kind"', rendered
         )

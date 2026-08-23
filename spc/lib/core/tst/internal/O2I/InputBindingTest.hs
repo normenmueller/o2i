@@ -44,6 +44,9 @@ tests =
         "retains one source-local diagnostic group including empty groups"
         sourceLocalDiagnosticGroups
     , testCase
+        "retains global defect order only in flat compatibility views"
+        flatCompatibilityOrder
+    , testCase
         "unresolved sites retain independently usable binding state"
         siteLocalBinding
     ]
@@ -227,6 +230,55 @@ sourceLocalDiagnosticGroups =
               {formulationStrategy = identity "unknown-strategy"}
         ]
 
+flatCompatibilityOrder :: IO ()
+flatCompatibilityOrder =
+  runGraph [] $ \graph -> do
+    let internal = bindSupplementalInputs graph inputs
+        unknown =
+          SupplementalBindingIdentityUnknown
+            (SupplementalIdentityUnknownEvidence
+               collectiveOrdinal
+               "/strategy"
+               (identity "unknown-strategy"))
+        wrongType =
+          SupplementalBindingIdentityWrongType
+            (SupplementalIdentityWrongTypeEvidence
+               strategyOrdinal
+               "/strategy"
+               (identity "driver-1"))
+    supplementalBindingDiagnosticGroups internal
+      @?= [("wrong-type-source", [wrongType]), ("unknown-source", [unknown])]
+    supplementalBindingDiagnosticDefects internal
+      @?= [("unknown-source", unknown), ("wrong-type-source", wrongType)]
+    supplementalBindingDefects internal
+      @?= [ ( "unknown-source"
+            , identityDefect
+                SupplementalIdentityUnknownDefect
+                collectiveOrdinal
+                "/strategy"
+                "unknown-strategy")
+          , ( "wrong-type-source"
+            , identityDefect
+                SupplementalIdentityWrongTypeDefect
+                strategyOrdinal
+                "/strategy"
+                "driver-1")
+          ]
+  where
+    inputs :: SupplementalInputSet Text
+    inputs =
+      SupplementalInputSet
+        [ StrategyFormulationSupplement
+            "wrong-type-source"
+            strategyOrdinal
+            strategyFormulation {formulationStrategy = identity "driver-1"}
+        , StrategyFormulationSupplement
+            "unknown-source"
+            collectiveOrdinal
+            strategyFormulation
+              {formulationStrategy = identity "unknown-strategy"}
+        ]
+
 siteLocalBinding :: IO ()
 siteLocalBinding =
   runBinding [] inputs $ \binding -> do
@@ -268,6 +320,13 @@ runBinding ::
   -> (forall scope. SupplementalBinding scope provenance -> result)
   -> result
 runBinding extra inputs inspect =
+  runGraph extra $ \graph -> inspect (bindSupplementalInputs graph inputs)
+
+runGraph ::
+     [ModelOccurrence]
+  -> (forall scope. WellFormedGraph scope -> result)
+  -> result
+runGraph extra inspect =
   case buildModelIdentityIndex (modelOccurrences ++ extra) of
     Left defects -> error ("invalid identity fixture: " ++ show defects)
     Right index ->
@@ -281,8 +340,7 @@ runBinding extra inputs inspect =
         Left defects -> error ("invalid Structure input: " ++ show defects)
         Right (StructureRejected defects) ->
           error ("invalid Structure fixture: " ++ show defects)
-        Right (StructureAccepted graph) ->
-          inspect (bindSupplementalInputs graph inputs)
+        Right (StructureAccepted graph) -> inspect graph
 
 identityDefect ::
      (SupplementalInputOrdinal -> Text -> ModelIdentity -> SupplementalInputDefect)

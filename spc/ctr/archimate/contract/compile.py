@@ -34,7 +34,7 @@ EXPECTED_FIXED_POINT_SEMANTICS_SHA256 = (
     "2bb2381468d8ec09b54879cd28d03acd0ede0ac519ba57c242979e749e233cb2"
 )
 EXPECTED_DIAGNOSTIC_INVENTORY_SHA256 = (
-    "ec900b7a13c689dadb0d87bf7bbd05f73840422477c36fda305b98234ab78f83"
+    "37ecfd88206f0b6b0431000c09094a5701bf2b4f7fe8ea7226bf60266e1fa23b"
 )
 
 EXPECTED_PROFILE_EVIDENCE_KINDS = (
@@ -73,6 +73,44 @@ EXPECTED_DERIVED_RULE_EVIDENCE = {
     "carrier": "carrier-occurrence",
     "relation": "relationship-occurrence",
 }
+
+PROFILE_REJECTION_DIRECT_RULE_PATHS = (
+    "/viewScopeContract/classification/directActivationRules/shared/0/ruleId",
+    "/viewScopeContract/classification/relationshipMappingSelection/ruleId",
+    "/viewScopeContract/classification/relationshipEndpointApplicability/ruleId",
+)
+
+PROFILE_REJECTION_PATTERN_SUBJECTS = (
+    "contextualization.metadata.additional-properties",
+    "contextualization.metadata.commitment-cardinality",
+    "contextualization.metadata.commitment-value",
+    "collective.carrier.additional-properties",
+    "collective.carrier.archimate-element",
+    "collective.carrier.junction-type",
+    "collective.carrier.o2i-type",
+    "collective.junction.chains",
+    "collective.segments.metadata",
+    "qualification.carrier.archimate-element",
+    "qualification.carrier.commitment",
+    "qualification.carrier.o2i-type",
+    "qualification.reference.relationship-type",
+    "qualification.reference.commitment",
+    "qualification.reference.direction",
+    "qualification.reference.role-property",
+)
+
+PROFILE_REJECTION_RESERVED_PROPERTY_KEYS = (
+    "o2i.commitment",
+    "o2i.profile",
+    "o2i.role",
+    "o2i.source",
+)
+
+EXPECTED_PROFILE_REJECTION_EVIDENCE_KINDS = tuple(
+    evidence_kind
+    for evidence_kind in EXPECTED_PROFILE_EVIDENCE_KINDS
+    if evidence_kind != "carrier-occurrence"
+)
 
 PROFILE_EVIDENCE_FIELDS: dict[str, tuple[tuple[str, str, str], ...]] = {
     "carrier-occurrence": (("carrier", "canonical-occurrence", "one"),),
@@ -677,20 +715,61 @@ def derive_profile_defect_rule_bindings(
     return {rule_id: bindings[rule_id] for rule_id in utf8_sorted(bindings)}
 
 
-def derive_profile_diagnostic_rule_bindings(
+def derive_profile_rejection_rule_bindings(
     companion: dict[str, Any],
 ) -> dict[str, str]:
-    bindings = derive_profile_defect_rule_bindings(companion)
-    non_rejecting_rules = {
-        plan["propertyCardinality"]["ruleId"]
-        for plan in derive_property_runtime_plans(companion)
-        if plan["propertyCardinality"]["expected"] == "zero-or-many"
+    evidence_bindings = derive_profile_defect_rule_bindings(companion)
+    pattern_rules = {
+        row["subject"]: row["ruleId"]
+        for row in derive_pattern_runtime_rules(companion)
     }
-    return {
-        rule_id: evidence_kind
-        for rule_id, evidence_kind in bindings.items()
-        if rule_id not in non_rejecting_rules
+    require_exact(
+        set(PROFILE_REJECTION_PATTERN_SUBJECTS).difference(pattern_rules),
+        set(),
+        "issue-emitting Profile Pattern subjects",
+    )
+    rejection_rule_ids = [
+        *(resolve_pointer(companion, path)
+          for path in PROFILE_REJECTION_DIRECT_RULE_PATHS),
+        *(pattern_rules[subject]
+          for subject in PROFILE_REJECTION_PATTERN_SUBJECTS),
+    ]
+    for plan in derive_property_runtime_plans(companion):
+        if plan["propertyCardinality"]["expected"] != "zero-or-many":
+            rejection_rule_ids.append(plan["propertyCardinality"]["ruleId"])
+        rejection_rule_ids.extend(
+            [ plan["valueCardinality"]["ruleId"]
+            , plan["valueKind"]["ruleId"]
+            , plan["constraint"]["ruleId"]
+            ]
+        )
+    rejection_rule_ids.extend(
+        mapping["attributeContract"]["ruleId"]
+        for mapping in companion["relationMappings"]
+        if "attributeContract" in mapping
+    )
+    rejection_rule_ids.extend(
+        f"reserved-placement:{key}"
+        for key in PROFILE_REJECTION_RESERVED_PROPERTY_KEYS
+    )
+    require_unique_strings(
+        rejection_rule_ids, "constructible Profile rejection rule identities"
+    )
+    missing = set(rejection_rule_ids).difference(evidence_bindings)
+    require_exact(missing, set(), "Profile rejection evidence bindings")
+    bindings = {
+        rule_id: evidence_bindings[rule_id]
+        for rule_id in utf8_sorted(rejection_rule_ids)
     }
+    require_exact(
+        len(bindings), 54, "constructible Profile rejection branch count"
+    )
+    require_exact(
+        set(bindings.values()),
+        set(EXPECTED_PROFILE_REJECTION_EVIDENCE_KINDS),
+        "constructible Profile rejection evidence kinds",
+    )
+    return bindings
 
 
 def profile_diagnostic_evidence_fields(
@@ -991,7 +1070,7 @@ def invariant_diagnostic_inventory(
 def render_diagnostic_inventory(
     companion: dict[str, Any], payload: bytes
 ) -> bytes:
-    bindings = derive_profile_diagnostic_rule_bindings(companion)
+    bindings = derive_profile_rejection_rule_bindings(companion)
     profile_digest = sha256(payload)
     value = {
         "schema": "o2i.archimate-profile.diagnostic-evidence/v1",
@@ -2377,7 +2456,7 @@ def hs_list(values: Iterable[str], indent: int = 2) -> str:
 
 def render_generated(companion: dict[str, Any]) -> str:
     rules, bootstrap_rules, selected_rules = derive_rule_inventory(companion)
-    defect_rule_bindings = derive_profile_diagnostic_rule_bindings(companion)
+    defect_rule_bindings = derive_profile_rejection_rule_bindings(companion)
     carrier_rule_ids, relation_rule_ids, property_rule_ids = derive_mapping_rule_ids(
         companion
     )
@@ -2781,6 +2860,11 @@ def render_generated(companion: dict[str, Any]) -> str:
         evidence_kind: f"Generated{evidence_names[evidence_kind]}DefectRule"
         for evidence_kind in EXPECTED_PROFILE_EVIDENCE_KINDS
     }
+    active_defect_evidence_kinds = [
+        evidence_kind
+        for evidence_kind in EXPECTED_PROFILE_EVIDENCE_KINDS
+        if evidence_kind in defect_rule_bindings.values()
+    ]
     defect_rule_type = (
         "data GeneratedProfileDefectRule "
         "(kind :: GeneratedProfileEvidenceKind) where\n"
@@ -2790,13 +2874,26 @@ def render_generated(companion: dict[str, Any]) -> str:
             + " :: !Text -> GeneratedProfileDefectRule "
             + "'"
             + haskell_constructor("GeneratedProfileEvidence", evidence_kind)
-            for evidence_kind in EXPECTED_PROFILE_EVIDENCE_KINDS
+            for evidence_kind in active_defect_evidence_kinds
         )
     )
     defect_rule_id_equations = "\n".join(
         "generatedProfileDefectRuleId "
         + f"({defect_rule_constructors[evidence_kind]} ruleId) = ruleId"
-        for evidence_kind in EXPECTED_PROFILE_EVIDENCE_KINDS
+        for evidence_kind in active_defect_evidence_kinds
+    )
+    defect_rule_inventory = text_values(defect_rule_bindings)
+    defect_rule_evidence_inventory = (
+        "\n  [ "
+        + "\n  , ".join(
+            "( "
+            + hs_string(rule_id)
+            + ", "
+            + haskell_constructor("GeneratedProfileEvidence", evidence_kind)
+            + " )"
+            for rule_id, evidence_kind in defect_rule_bindings.items()
+        )
+        + "\n  ]"
     )
     defect_rule_lookup_names = {
         evidence_kind: "generated"
@@ -2821,11 +2918,17 @@ def render_generated(companion: dict[str, Any]) -> str:
             f"Just ({value_constructor} ruleId)"
             for rule_id in bound_rules
         )
+        if bound_rules:
+            lookup_equations = (
+                f"{function_name} ruleId\n{guards}\n"
+                "  | otherwise = Nothing"
+            )
+        else:
+            lookup_equations = f"{function_name} _ = Nothing"
         defect_rule_lookups.append(
             f"{function_name} :: Text -> Maybe "
             f"(GeneratedProfileDefectRule '{type_constructor})\n"
-            f"{function_name} ruleId\n{guards}\n"
-            "  | otherwise = Nothing"
+            f"{lookup_equations}"
         )
     defect_rule_lookup_exports = "\n".join(
         f"  , {defect_rule_lookup_names[evidence_kind]}"
@@ -2890,6 +2993,8 @@ module O2I.ArchiMate.Profile.Internal.Generated
   , generatedQualificationProposalStableIdentityScopeRule
   , GeneratedProfileDefectRule
   , generatedProfileDefectRuleId
+  , generatedProfileRejectionRuleIds
+  , generatedProfileRejectionRuleEvidenceKinds
 {defect_rule_lookup_exports}
   , generatedActivationProvenanceRuleId
   , generatedActivationStaticSourceRuleIds
@@ -2944,6 +3049,13 @@ generatedQualificationProposalStableIdentityScopeRule =
 
 generatedProfileDefectRuleId :: GeneratedProfileDefectRule kind -> Text
 {defect_rule_id_equations}
+
+generatedProfileRejectionRuleIds :: [Text]
+generatedProfileRejectionRuleIds = {defect_rule_inventory}
+
+generatedProfileRejectionRuleEvidenceKinds ::
+     [(Text, GeneratedProfileEvidenceKind)]
+generatedProfileRejectionRuleEvidenceKinds = {defect_rule_evidence_inventory}
 
 {chr(10).join(defect_rule_lookups)}
 

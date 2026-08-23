@@ -65,7 +65,7 @@
       "schema": "o2i.archimate-profile.diagnostic-evidence/v1",
       "identity": "o2i.archimate-profile",
       "version": "0.3.0",
-      "sha256": "ec900b7a13c689dadb0d87bf7bbd05f73840422477c36fda305b98234ab78f83"
+      "sha256": "37ecfd88206f0b6b0431000c09094a5701bf2b4f7fe8ea7226bf60266e1fa23b"
     },
     "core": {
       "schema": "o2i.core.owner-diagnostic-evidence/v1",

@@ -190,9 +190,8 @@ foldSupplementalBindingDiagnostics consume (SupplementalBinding binding) =
   consume
     (Internal.supplementalBindingInputs binding)
     [ SupplementalBindingDiagnosticEvidence provenance defect
-    | (provenance, defects) <-
-        Internal.supplementalBindingDiagnosticGroups binding
-    , defect <- defects
+    | (provenance, defect) <-
+        Internal.supplementalBindingDiagnosticDefects binding
     ]
 
 -- | Eliminate the exact Binding result without flattening its canonical

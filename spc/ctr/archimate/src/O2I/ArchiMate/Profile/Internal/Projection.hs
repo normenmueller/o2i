@@ -1959,7 +1959,6 @@ profileDefectRuleIdValue (ProfileDefect rule _) =
 profileDefectSubjectValue :: ProfileDefect -> CanonicalOccurrence
 profileDefectSubjectValue (ProfileDefect _ evidence) =
   case evidence of
-    CarrierOccurrenceEvidence occurrence -> occurrence
     ClassificationOccurrenceEvidence occurrence -> occurrence
     MetadataOwnerAndO2iPropertyOccurrencesEvidence owner _ -> owner
     PropertyOccurrenceEvidence property _ -> property
@@ -1975,7 +1974,6 @@ profileDefectSubjectValue (ProfileDefect _ evidence) =
 profileDefectEvidenceOccurrences :: ProfileDefect -> [CanonicalOccurrence]
 profileDefectEvidenceOccurrences (ProfileDefect _ evidence) =
   case evidence of
-    CarrierOccurrenceEvidence occurrence -> [occurrence]
     ClassificationOccurrenceEvidence occurrence -> [occurrence]
     MetadataOwnerAndO2iPropertyOccurrencesEvidence owner properties ->
       owner : properties

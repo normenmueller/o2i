@@ -48,6 +48,8 @@ module O2I.ArchiMate.Profile.Internal.Generated
   , generatedQualificationProposalStableIdentityScopeRule
   , GeneratedProfileDefectRule
   , generatedProfileDefectRuleId
+  , generatedProfileRejectionRuleIds
+  , generatedProfileRejectionRuleEvidenceKinds
   , generatedCarrierOccurrenceDefectRule
   , generatedClassificationOccurrenceDefectRule
   , generatedMetadataOwnerAndO2iPropertyOccurrencesDefectRule
@@ -130,9 +132,6 @@ generatedQualificationProposalStableIdentityScopeRule =
     "qualification.proposal.carrier.stable-identity-scope"
 
 data GeneratedProfileDefectRule (kind :: GeneratedProfileEvidenceKind) where
-  GeneratedCarrierOccurrenceDefectRule
-    :: !Text
-    -> GeneratedProfileDefectRule 'GeneratedProfileEvidenceCarrierOccurrence
   GeneratedClassificationOccurrenceDefectRule
     :: !Text
     -> GeneratedProfileDefectRule
@@ -176,8 +175,6 @@ data GeneratedProfileDefectRule (kind :: GeneratedProfileEvidenceKind) where
     -> GeneratedProfileDefectRule 'GeneratedProfileEvidenceStructuredIncidence
 
 generatedProfileDefectRuleId :: GeneratedProfileDefectRule kind -> Text
-generatedProfileDefectRuleId (GeneratedCarrierOccurrenceDefectRule ruleId) =
-  ruleId
 generatedProfileDefectRuleId (GeneratedClassificationOccurrenceDefectRule ruleId) =
   ruleId
 generatedProfileDefectRuleId (GeneratedMetadataOwnerAndO2iPropertyOccurrencesDefectRule ruleId) =
@@ -201,36 +198,182 @@ generatedProfileDefectRuleId (GeneratedStructuredCarrierOccurrenceDefectRule rul
 generatedProfileDefectRuleId (GeneratedStructuredIncidenceDefectRule ruleId) =
   ruleId
 
+generatedProfileRejectionRuleIds :: [Text]
+generatedProfileRejectionRuleIds =
+  [ "classification.shared.activate.unknown-property"
+  , "graph.committed-relationship.archimate-applicability"
+  , "graph.committed-relationship.mapping-selection"
+  , "pattern.collective-strategy-realization.carrier.additional-properties"
+  , "pattern.collective-strategy-realization.carrier.archimate-element"
+  , "pattern.collective-strategy-realization.carrier.junction-type"
+  , "pattern.collective-strategy-realization.carrier.o2i-type"
+  , "pattern.collective-strategy-realization.junction.chains"
+  , "pattern.collective-strategy-realization.segments.metadata"
+  , "pattern.contextualization.metadata.additional-properties"
+  , "pattern.contextualization.metadata.commitment-cardinality"
+  , "pattern.contextualization.metadata.commitment-value"
+  , "property:claim-carrier:o2i.commitment:admitted-values"
+  , "property:claim-carrier:o2i.commitment:property-cardinality"
+  , "property:claim-carrier:o2i.commitment:value-cardinality"
+  , "property:claim-carrier:o2i.commitment:value-kind"
+  , "property:collective-strategy-realization-junction:o2i.participant-completeness:admitted-values"
+  , "property:collective-strategy-realization-junction:o2i.participant-completeness:property-cardinality"
+  , "property:collective-strategy-realization-junction:o2i.participant-completeness:value-cardinality"
+  , "property:collective-strategy-realization-junction:o2i.participant-completeness:value-kind"
+  , "property:qualification-proposal-assessment:o2i.source:value-cardinality"
+  , "property:qualification-proposal-assessment:o2i.source:value-grammar"
+  , "property:qualification-proposal-assessment:o2i.source:value-kind"
+  , "property:qualification-proposal-reference-association:o2i.role:admitted-values"
+  , "property:qualification-proposal-reference-association:o2i.role:property-cardinality"
+  , "property:qualification-proposal-reference-association:o2i.role:value-cardinality"
+  , "property:qualification-proposal-reference-association:o2i.role:value-kind"
+  , "property:semantic-relation:o2i.commitment:admitted-values"
+  , "property:semantic-relation:o2i.commitment:property-cardinality"
+  , "property:semantic-relation:o2i.commitment:value-cardinality"
+  , "property:semantic-relation:o2i.commitment:value-kind"
+  , "property:typed-carrier:o2i.type:property-cardinality"
+  , "property:typed-carrier:o2i.type:value-cardinality"
+  , "property:typed-carrier:o2i.type:value-domain"
+  , "property:typed-carrier:o2i.type:value-kind"
+  , "qualification.proposal.carrier.archimate-element"
+  , "qualification.proposal.carrier.commitment"
+  , "qualification.proposal.carrier.o2i-type"
+  , "qualification.proposal.reference.commitment"
+  , "qualification.proposal.reference.direction"
+  , "qualification.proposal.reference.relationship-type"
+  , "qualification.proposal.reference.role-property"
+  , "relation-attribute:relation-syntax:InfluenceRelationship:false:contributes-to:strength"
+  , "relation-attribute:relation-syntax:InfluenceRelationship:false:determines:strength"
+  , "relation-attribute:relation-syntax:InfluenceRelationship:false:directs:strength"
+  , "relation-attribute:relation-syntax:InfluenceRelationship:false:grounds:strength"
+  , "relation-attribute:relation-syntax:InfluenceRelationship:false:guides:strength"
+  , "relation-attribute:relation-syntax:InfluenceRelationship:false:indicates:strength"
+  , "relation-attribute:relation-syntax:InfluenceRelationship:false:orients:strength"
+  , "relation-attribute:relation-syntax:InfluenceRelationship:false:translates-into:strength"
+  , "reserved-placement:o2i.commitment"
+  , "reserved-placement:o2i.profile"
+  , "reserved-placement:o2i.role"
+  , "reserved-placement:o2i.source"
+  ]
+
+generatedProfileRejectionRuleEvidenceKinds ::
+     [(Text, GeneratedProfileEvidenceKind)]
+generatedProfileRejectionRuleEvidenceKinds =
+  [ ( "classification.shared.activate.unknown-property"
+    , GeneratedProfileEvidenceClassificationOccurrence)
+  , ( "graph.committed-relationship.archimate-applicability"
+    , GeneratedProfileEvidenceRelationshipOccurrence)
+  , ( "graph.committed-relationship.mapping-selection"
+    , GeneratedProfileEvidenceRelationshipOccurrence)
+  , ( "pattern.collective-strategy-realization.carrier.additional-properties"
+    , GeneratedProfileEvidenceStructuredCarrierOccurrence)
+  , ( "pattern.collective-strategy-realization.carrier.archimate-element"
+    , GeneratedProfileEvidenceStructuredCarrierOccurrence)
+  , ( "pattern.collective-strategy-realization.carrier.junction-type"
+    , GeneratedProfileEvidenceStructuredCarrierOccurrence)
+  , ( "pattern.collective-strategy-realization.carrier.o2i-type"
+    , GeneratedProfileEvidenceStructuredCarrierOccurrence)
+  , ( "pattern.collective-strategy-realization.junction.chains"
+    , GeneratedProfileEvidenceStructuredIncidence)
+  , ( "pattern.collective-strategy-realization.segments.metadata"
+    , GeneratedProfileEvidenceRelationshipOccurrence)
+  , ( "pattern.contextualization.metadata.additional-properties"
+    , GeneratedProfileEvidenceMetadataOwnerAndO2iPropertyOccurrences)
+  , ( "pattern.contextualization.metadata.commitment-cardinality"
+    , GeneratedProfileEvidencePropertySlotEvidence)
+  , ( "pattern.contextualization.metadata.commitment-value"
+    , GeneratedProfileEvidencePropertySlotEvidence)
+  , ( "property:claim-carrier:o2i.commitment:admitted-values"
+    , GeneratedProfileEvidencePropertyValueEvidence)
+  , ( "property:claim-carrier:o2i.commitment:property-cardinality"
+    , GeneratedProfileEvidencePropertySlotEvidence)
+  , ( "property:claim-carrier:o2i.commitment:value-cardinality"
+    , GeneratedProfileEvidencePropertyOccurrenceEvidence)
+  , ( "property:claim-carrier:o2i.commitment:value-kind"
+    , GeneratedProfileEvidencePropertyValueEvidence)
+  , ( "property:collective-strategy-realization-junction:o2i.participant-completeness:admitted-values"
+    , GeneratedProfileEvidencePropertyValueEvidence)
+  , ( "property:collective-strategy-realization-junction:o2i.participant-completeness:property-cardinality"
+    , GeneratedProfileEvidencePropertySlotEvidence)
+  , ( "property:collective-strategy-realization-junction:o2i.participant-completeness:value-cardinality"
+    , GeneratedProfileEvidencePropertyOccurrenceEvidence)
+  , ( "property:collective-strategy-realization-junction:o2i.participant-completeness:value-kind"
+    , GeneratedProfileEvidencePropertyValueEvidence)
+  , ( "property:qualification-proposal-assessment:o2i.source:value-cardinality"
+    , GeneratedProfileEvidencePropertyOccurrenceEvidence)
+  , ( "property:qualification-proposal-assessment:o2i.source:value-grammar"
+    , GeneratedProfileEvidencePropertyValueEvidence)
+  , ( "property:qualification-proposal-assessment:o2i.source:value-kind"
+    , GeneratedProfileEvidencePropertyValueEvidence)
+  , ( "property:qualification-proposal-reference-association:o2i.role:admitted-values"
+    , GeneratedProfileEvidencePropertyValueEvidence)
+  , ( "property:qualification-proposal-reference-association:o2i.role:property-cardinality"
+    , GeneratedProfileEvidencePropertySlotEvidence)
+  , ( "property:qualification-proposal-reference-association:o2i.role:value-cardinality"
+    , GeneratedProfileEvidencePropertyOccurrenceEvidence)
+  , ( "property:qualification-proposal-reference-association:o2i.role:value-kind"
+    , GeneratedProfileEvidencePropertyValueEvidence)
+  , ( "property:semantic-relation:o2i.commitment:admitted-values"
+    , GeneratedProfileEvidencePropertyValueEvidence)
+  , ( "property:semantic-relation:o2i.commitment:property-cardinality"
+    , GeneratedProfileEvidencePropertySlotEvidence)
+  , ( "property:semantic-relation:o2i.commitment:value-cardinality"
+    , GeneratedProfileEvidencePropertyOccurrenceEvidence)
+  , ( "property:semantic-relation:o2i.commitment:value-kind"
+    , GeneratedProfileEvidencePropertyValueEvidence)
+  , ( "property:typed-carrier:o2i.type:property-cardinality"
+    , GeneratedProfileEvidencePropertySlotEvidence)
+  , ( "property:typed-carrier:o2i.type:value-cardinality"
+    , GeneratedProfileEvidencePropertyOccurrenceEvidence)
+  , ( "property:typed-carrier:o2i.type:value-domain"
+    , GeneratedProfileEvidencePropertyValueEvidence)
+  , ( "property:typed-carrier:o2i.type:value-kind"
+    , GeneratedProfileEvidencePropertyValueEvidence)
+  , ( "qualification.proposal.carrier.archimate-element"
+    , GeneratedProfileEvidenceProposalCarrierOccurrence)
+  , ( "qualification.proposal.carrier.commitment"
+    , GeneratedProfileEvidenceProposalCarrierOccurrence)
+  , ( "qualification.proposal.carrier.o2i-type"
+    , GeneratedProfileEvidenceProposalCarrierOccurrence)
+  , ( "qualification.proposal.reference.commitment"
+    , GeneratedProfileEvidenceProposalReferenceIncidence)
+  , ( "qualification.proposal.reference.direction"
+    , GeneratedProfileEvidenceProposalReferenceIncidence)
+  , ( "qualification.proposal.reference.relationship-type"
+    , GeneratedProfileEvidenceProposalReferenceIncidence)
+  , ( "qualification.proposal.reference.role-property"
+    , GeneratedProfileEvidenceProposalReferenceIncidence)
+  , ( "relation-attribute:relation-syntax:InfluenceRelationship:false:contributes-to:strength"
+    , GeneratedProfileEvidenceRelationshipOccurrence)
+  , ( "relation-attribute:relation-syntax:InfluenceRelationship:false:determines:strength"
+    , GeneratedProfileEvidenceRelationshipOccurrence)
+  , ( "relation-attribute:relation-syntax:InfluenceRelationship:false:directs:strength"
+    , GeneratedProfileEvidenceRelationshipOccurrence)
+  , ( "relation-attribute:relation-syntax:InfluenceRelationship:false:grounds:strength"
+    , GeneratedProfileEvidenceRelationshipOccurrence)
+  , ( "relation-attribute:relation-syntax:InfluenceRelationship:false:guides:strength"
+    , GeneratedProfileEvidenceRelationshipOccurrence)
+  , ( "relation-attribute:relation-syntax:InfluenceRelationship:false:indicates:strength"
+    , GeneratedProfileEvidenceRelationshipOccurrence)
+  , ( "relation-attribute:relation-syntax:InfluenceRelationship:false:orients:strength"
+    , GeneratedProfileEvidenceRelationshipOccurrence)
+  , ( "relation-attribute:relation-syntax:InfluenceRelationship:false:translates-into:strength"
+    , GeneratedProfileEvidenceRelationshipOccurrence)
+  , ( "reserved-placement:o2i.commitment"
+    , GeneratedProfileEvidenceReservedPropertyOccurrence)
+  , ( "reserved-placement:o2i.profile"
+    , GeneratedProfileEvidenceReservedPropertyOccurrence)
+  , ( "reserved-placement:o2i.role"
+    , GeneratedProfileEvidenceReservedPropertyOccurrence)
+  , ( "reserved-placement:o2i.source"
+    , GeneratedProfileEvidenceReservedPropertyOccurrence)
+  ]
+
 generatedCarrierOccurrenceDefectRule ::
      Text
   -> Maybe
        (GeneratedProfileDefectRule 'GeneratedProfileEvidenceCarrierOccurrence)
-generatedCarrierOccurrenceDefectRule ruleId
-  | ruleId == "carrier:context" =
-    Just (GeneratedCarrierOccurrenceDefectRule ruleId)
-  | ruleId == "carrier:primitive.action" =
-    Just (GeneratedCarrierOccurrenceDefectRule ruleId)
-  | ruleId == "carrier:primitive.driver" =
-    Just (GeneratedCarrierOccurrenceDefectRule ruleId)
-  | ruleId == "carrier:primitive.key-result" =
-    Just (GeneratedCarrierOccurrenceDefectRule ruleId)
-  | ruleId == "carrier:primitive.kpi" =
-    Just (GeneratedCarrierOccurrenceDefectRule ruleId)
-  | ruleId == "carrier:primitive.objective" =
-    Just (GeneratedCarrierOccurrenceDefectRule ruleId)
-  | ruleId == "carrier:primitive.principle" =
-    Just (GeneratedCarrierOccurrenceDefectRule ruleId)
-  | ruleId == "carrier:situation-anchor.business-capability" =
-    Just (GeneratedCarrierOccurrenceDefectRule ruleId)
-  | ruleId == "carrier:situation-anchor.business-object" =
-    Just (GeneratedCarrierOccurrenceDefectRule ruleId)
-  | ruleId == "carrier:situation-anchor.business-process" =
-    Just (GeneratedCarrierOccurrenceDefectRule ruleId)
-  | ruleId == "carrier:situation-anchor.value-stream" =
-    Just (GeneratedCarrierOccurrenceDefectRule ruleId)
-  | ruleId == "carrier:structuring.performance-dimension" =
-    Just (GeneratedCarrierOccurrenceDefectRule ruleId)
-  | otherwise = Nothing
+generatedCarrierOccurrenceDefectRule _ = Nothing
 
 generatedClassificationOccurrenceDefectRule ::
      Text
@@ -238,44 +381,6 @@ generatedClassificationOccurrenceDefectRule ::
        (GeneratedProfileDefectRule
           'GeneratedProfileEvidenceClassificationOccurrence)
 generatedClassificationOccurrenceDefectRule ruleId
-  | ruleId == "classification.both" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.graph-only" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.graph.activate.carrier" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.graph.activate.committed-element" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.graph.activate.committed-relationship" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.graph.activate.committed-structured-carrier" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.graph.activate.contextualization-label" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.graph.activate.contextualization-shape" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.graph.activate.relation" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.graph.activate.structured-carrier" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.graph.activate.structured-property" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.graph.activate.structured-segment" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.neither" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.qualification-only" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.qualification.activate.proposal-incidence" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.qualification.activate.proposal-type" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.qualification.activate.role-key" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.qualification.activate.source-key" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
-  | ruleId == "classification.shared.activate.type-key" =
-    Just (GeneratedClassificationOccurrenceDefectRule ruleId)
   | ruleId == "classification.shared.activate.unknown-property" =
     Just (GeneratedClassificationOccurrenceDefectRule ruleId)
   | otherwise = Nothing
@@ -381,15 +486,9 @@ generatedProposalCarrierOccurrenceDefectRule ::
 generatedProposalCarrierOccurrenceDefectRule ruleId
   | ruleId == "qualification.proposal.carrier.archimate-element" =
     Just (GeneratedProposalCarrierOccurrenceDefectRule ruleId)
-  | ruleId == "qualification.proposal.carrier.category" =
-    Just (GeneratedProposalCarrierOccurrenceDefectRule ruleId)
   | ruleId == "qualification.proposal.carrier.commitment" =
     Just (GeneratedProposalCarrierOccurrenceDefectRule ruleId)
   | ruleId == "qualification.proposal.carrier.o2i-type" =
-    Just (GeneratedProposalCarrierOccurrenceDefectRule ruleId)
-  | ruleId == "qualification.proposal.carrier.stable-identity" =
-    Just (GeneratedProposalCarrierOccurrenceDefectRule ruleId)
-  | ruleId == "qualification.proposal.carrier.stable-identity-scope" =
     Just (GeneratedProposalCarrierOccurrenceDefectRule ruleId)
   | otherwise = Nothing
 
@@ -400,8 +499,6 @@ generatedProposalReferenceIncidenceDefectRule ::
           'GeneratedProfileEvidenceProposalReferenceIncidence)
 generatedProposalReferenceIncidenceDefectRule ruleId
   | ruleId == "qualification.proposal.reference.commitment" =
-    Just (GeneratedProposalReferenceIncidenceDefectRule ruleId)
-  | ruleId == "qualification.proposal.reference.directed" =
     Just (GeneratedProposalReferenceIncidenceDefectRule ruleId)
   | ruleId == "qualification.proposal.reference.direction" =
     Just (GeneratedProposalReferenceIncidenceDefectRule ruleId)
@@ -421,20 +518,7 @@ generatedRelationshipOccurrenceDefectRule ruleId
     Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
   | ruleId == "graph.committed-relationship.mapping-selection" =
     Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "pattern.collective-strategy-realization.segments.directed" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "pattern.collective-strategy-realization.segments.label" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
   | ruleId == "pattern.collective-strategy-realization.segments.metadata" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId
-      == "pattern.collective-strategy-realization.segments.relationship-type" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "pattern.contextualization.relationship.directed" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "pattern.contextualization.relationship.label" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "pattern.contextualization.relationship.type" =
     Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
   | ruleId
       == "relation-attribute:relation-syntax:InfluenceRelationship:false:contributes-to:strength" =
@@ -460,63 +544,6 @@ generatedRelationshipOccurrenceDefectRule ruleId
   | ruleId
       == "relation-attribute:relation-syntax:InfluenceRelationship:false:translates-into:strength" =
     Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:AggregationRelationship:false:contains" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId
-      == "relation:relation-syntax:AggregationRelationship:false:is-constituted-by" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:AssociationRelationship:true:addresses" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:AssociationRelationship:true:anchors" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:AssociationRelationship:true:changes" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId
-      == "relation:relation-syntax:AssociationRelationship:true:contributes-to" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:AssociationRelationship:true:directs" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:AssociationRelationship:true:frames" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:AssociationRelationship:true:grounds" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:AssociationRelationship:true:guides" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:AssociationRelationship:true:measures" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:AssociationRelationship:true:orients" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:AssociationRelationship:true:qualifies" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId
-      == "relation:relation-syntax:AssociationRelationship:true:sets-target-for" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:AssociationRelationship:true:surfaces" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId
-      == "relation:relation-syntax:InfluenceRelationship:false:contributes-to" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:InfluenceRelationship:false:determines" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:InfluenceRelationship:false:directs" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:InfluenceRelationship:false:grounds" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:InfluenceRelationship:false:guides" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:InfluenceRelationship:false:indicates" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId == "relation:relation-syntax:InfluenceRelationship:false:orients" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId
-      == "relation:relation-syntax:InfluenceRelationship:false:translates-into" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId
-      == "relation:relation-syntax:RealizationRelationship:false:contributes-to" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
-  | ruleId
-      == "relation:relation-syntax:RealizationRelationship:false:substantiates" =
-    Just (GeneratedRelationshipOccurrenceDefectRule ruleId)
   | otherwise = Nothing
 
 generatedReservedPropertyOccurrenceDefectRule ::
@@ -527,15 +554,11 @@ generatedReservedPropertyOccurrenceDefectRule ::
 generatedReservedPropertyOccurrenceDefectRule ruleId
   | ruleId == "reserved-placement:o2i.commitment" =
     Just (GeneratedReservedPropertyOccurrenceDefectRule ruleId)
-  | ruleId == "reserved-placement:o2i.participant-completeness" =
-    Just (GeneratedReservedPropertyOccurrenceDefectRule ruleId)
   | ruleId == "reserved-placement:o2i.profile" =
     Just (GeneratedReservedPropertyOccurrenceDefectRule ruleId)
   | ruleId == "reserved-placement:o2i.role" =
     Just (GeneratedReservedPropertyOccurrenceDefectRule ruleId)
   | ruleId == "reserved-placement:o2i.source" =
-    Just (GeneratedReservedPropertyOccurrenceDefectRule ruleId)
-  | ruleId == "reserved-placement:o2i.type" =
     Just (GeneratedReservedPropertyOccurrenceDefectRule ruleId)
   | otherwise = Nothing
 
@@ -550,13 +573,6 @@ generatedStructuredCarrierOccurrenceDefectRule ruleId
     Just (GeneratedStructuredCarrierOccurrenceDefectRule ruleId)
   | ruleId
       == "pattern.collective-strategy-realization.carrier.archimate-element" =
-    Just (GeneratedStructuredCarrierOccurrenceDefectRule ruleId)
-  | ruleId == "pattern.collective-strategy-realization.carrier.category" =
-    Just (GeneratedStructuredCarrierOccurrenceDefectRule ruleId)
-  | ruleId == "pattern.collective-strategy-realization.carrier.commitment-key" =
-    Just (GeneratedStructuredCarrierOccurrenceDefectRule ruleId)
-  | ruleId
-      == "pattern.collective-strategy-realization.carrier.commitment-values" =
     Just (GeneratedStructuredCarrierOccurrenceDefectRule ruleId)
   | ruleId == "pattern.collective-strategy-realization.carrier.junction-type" =
     Just (GeneratedStructuredCarrierOccurrenceDefectRule ruleId)

@@ -8,6 +8,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import qualified Data.Set as Set
 import Data.Text (Text)
+import qualified O2I.ArchiMate.Profile.Conformance as Conformance
 import O2I.ArchiMate.Profile.Internal.Closure
   ( activationRuleRank
   , closureRuleRank
@@ -16,6 +17,7 @@ import O2I.ArchiMate.Profile.Internal.Generated
 import O2I.ArchiMate.Profile.Internal.Notation
 import O2I.ArchiMate.Profile.Internal.Notation.Conformance
 import O2I.ArchiMate.Profile.Internal.Projection
+import qualified O2I.ArchiMate.Profile.Projection as PublicProjection
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit ((@?=), assertBool, testCase)
 
@@ -44,6 +46,9 @@ inventoryTests =
         assertUnique "pattern rule IDs" patternRuleIds
         assertSubset "pattern rule IDs" patternRuleIds selectedRuleIds
         mapM_ consumePatternRule generatedPatternRuntimeRules
+    , testCase
+        "matches every generated rejection to the public producer corpus"
+        exactProfileRejectionInventory
     , testCase "derives provenance ranks from generated rule order" $ do
         map activationRuleRank generatedActivationRules
           @?= [0 .. length generatedActivationRules - 1]
@@ -111,6 +116,66 @@ consumePatternRule rule =
     subject = generatedPatternRuntimeSubject rule
     ruleId = generatedPatternRuntimeRuleId rule
     occurrence = CanonicalOccurrence CanonicalRecordOccurrence 0
+
+exactProfileRejectionInventory :: IO ()
+exactProfileRejectionInventory = do
+  let generated =
+        Set.fromList
+          [ (rule, generatedEvidenceKindTag kind)
+          | (rule, kind) <- generatedProfileRejectionRuleEvidenceKinds
+          ]
+      observed =
+        Set.fromList
+          [ (rule, publicEvidenceKindTag kind)
+          | (rule, kind) <- Conformance.profileCorpusDiagnosticEvidenceKinds
+          ]
+  Set.size generated @?= 54
+  generated @?= observed
+  mapM_
+    (\omitted ->
+       assertBool
+         ("Profile rejection deletion survived: " <> show omitted)
+         (Set.delete omitted generated /= observed))
+    (Set.toList generated)
+
+generatedEvidenceKindTag :: GeneratedProfileEvidenceKind -> Text
+generatedEvidenceKindTag kind =
+  case kind of
+    GeneratedProfileEvidenceCarrierOccurrence -> "carrier-occurrence"
+    GeneratedProfileEvidenceClassificationOccurrence ->
+      "classification-occurrence"
+    GeneratedProfileEvidenceMetadataOwnerAndO2iPropertyOccurrences ->
+      "metadata-owner-and-o2i-property-occurrences"
+    GeneratedProfileEvidencePropertyOccurrenceEvidence ->
+      "property-occurrence-evidence"
+    GeneratedProfileEvidencePropertySlotEvidence -> "property-slot-evidence"
+    GeneratedProfileEvidencePropertyValueEvidence -> "property-value-evidence"
+    GeneratedProfileEvidenceProposalCarrierOccurrence ->
+      "proposal-carrier-occurrence"
+    GeneratedProfileEvidenceProposalReferenceIncidence ->
+      "proposal-reference-incidence"
+    GeneratedProfileEvidenceRelationshipOccurrence -> "relationship-occurrence"
+    GeneratedProfileEvidenceReservedPropertyOccurrence ->
+      "reserved-property-occurrence"
+    GeneratedProfileEvidenceStructuredCarrierOccurrence ->
+      "structured-carrier-occurrence"
+    GeneratedProfileEvidenceStructuredIncidence -> "structured-incidence"
+
+publicEvidenceKindTag :: PublicProjection.ProfileEvidenceKind -> Text
+publicEvidenceKindTag =
+  PublicProjection.foldProfileEvidenceKind
+    "carrier-occurrence"
+    "classification-occurrence"
+    "metadata-owner-and-o2i-property-occurrences"
+    "property-occurrence-evidence"
+    "property-slot-evidence"
+    "property-value-evidence"
+    "proposal-carrier-occurrence"
+    "proposal-reference-incidence"
+    "relationship-occurrence"
+    "reserved-property-occurrence"
+    "structured-carrier-occurrence"
+    "structured-incidence"
 
 assertUnique :: Ord value => String -> [value] -> IO ()
 assertUnique subject values =

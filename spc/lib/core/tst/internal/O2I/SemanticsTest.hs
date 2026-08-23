@@ -119,6 +119,9 @@ tests =
             compiledEvidenceSchemas
         , testCase "sorts defects by compiled rule order" compiledRuleOrder
         , testCase
+            "retains accepted global order in flat Binding diagnostics"
+            flatBindingDiagnosticOrder
+        , testCase
             "is independent of projection and input permutation"
             permutationIndependence
         ]
@@ -786,6 +789,24 @@ supplementalBindingIsolation =
           assertFailure
             ("binding defect suppressed unrelated Strategy results: "
                ++ show result)
+
+flatBindingDiagnosticOrder :: Assertion
+flatBindingDiagnosticOrder =
+  assertBindingScenario
+    completeModelOccurrences
+    (completeProjection Forward True)
+    [ (0, strategyInputWithDiagnosis "a" "strategy-a")
+    , (1, strategyInputWithDiagnosis "b" "unknown-diagnosis")
+    ] $ \_ binding ->
+    foldSupplementalBindingDiagnostics
+      (\_ evidence ->
+         map
+           (coreRuleIdText . supplementalBindingDiagnosticEvidenceRule)
+           evidence
+           @?= [ "core.supplemental.identity.unknown"
+               , "core.supplemental.identity.wrong-type"
+               ])
+      binding
 
 collectiveSiteLocalSuppression :: Assertion
 collectiveSiteLocalSuppression =

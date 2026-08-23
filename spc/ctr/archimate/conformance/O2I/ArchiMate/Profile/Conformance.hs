@@ -24,6 +24,7 @@ module O2I.ArchiMate.Profile.Conformance
   , profileCorpusOwnerRuleIds
   , profileCorpusProjectionRuleIds
   , profileCorpusDiagnosticRuleIds
+  , profileCorpusDiagnosticEvidenceKinds
   , profileCorpusClassificationRuleIds
   , profileCorpusInvariantRuleIds
   , profileCorpusClassifications
@@ -171,6 +172,12 @@ profileCorpusProjectionRuleIds =
 profileCorpusDiagnosticRuleIds :: [Text]
 profileCorpusDiagnosticRuleIds =
   concatMap (uncurry observeProfileDiagnostics) profileSources
+
+-- | Negative rule identities paired with the exact public owner evidence kind
+-- observed from the exhaustive real-source corpus.
+profileCorpusDiagnosticEvidenceKinds :: [(Text, Projection.ProfileEvidenceKind)]
+profileCorpusDiagnosticEvidenceKinds =
+  concatMap (uncurry observeProfileDiagnosticEvidenceKinds) profileSources
 
 -- | Profile classification rule identities emitted by real source outcomes.
 profileCorpusClassificationRuleIds :: [Text]
@@ -394,6 +401,22 @@ observeProfileDiagnostics source viewOrdinal =
                 (Notation.notationConformance
                    (Notation.assessArchiMateNotation universe))
 
+observeProfileDiagnosticEvidenceKinds ::
+     Draft.ProfileDraft -> Int -> [(Text, Projection.ProfileEvidenceKind)]
+observeProfileDiagnosticEvidenceKinds source viewOrdinal =
+  Resolution.withSelectedArchiMateProfile Resolution.compiledProfileDescriptor $ \profile ->
+    Notation.withCanonicalDocument source $ \document ->
+      case drop viewOrdinal (Notation.canonicalViews document) of
+        [] -> []
+        view:_ ->
+          let universe =
+                Closure.deriveProfileAssessmentUniverse profile document view
+           in Notation.foldStageResult
+                (const [])
+                projectionDiagnosticEvidenceKinds
+                (Notation.notationConformance
+                   (Notation.assessArchiMateNotation universe))
+
 observeProfileClosureRules :: Draft.ProfileDraft -> Int -> [Text]
 observeProfileClosureRules source viewOrdinal =
   Resolution.withSelectedArchiMateProfile Resolution.compiledProfileDescriptor $ \profile ->
@@ -470,6 +493,19 @@ projectionDiagnosticRuleIds conformant =
   Projection.foldProfileProjectionAssessment
     (const [])
     (map Projection.profileDiagnosticRuleId . NonEmpty.toList)
+    (const [])
+    (Projection.assessSelectedView conformant)
+
+projectionDiagnosticEvidenceKinds ::
+     Notation.NotationConformantUniverse profile document
+  -> [(Text, Projection.ProfileEvidenceKind)]
+projectionDiagnosticEvidenceKinds conformant =
+  Projection.foldProfileProjectionAssessment
+    (const [])
+    (map
+       (Projection.foldProfileDiagnosticEvidence $ \rule evidence ->
+          (rule, Projection.profileEvidenceKind evidence))
+       . NonEmpty.toList)
     (const [])
     (Projection.assessSelectedView conformant)
 
