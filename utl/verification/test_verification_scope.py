@@ -285,21 +285,29 @@ class VerificationWorkflowTests(unittest.TestCase):
 
     def test_haskell_job_consumes_the_frozen_foundation_contract(self) -> None:
         content = WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("CABAL_VERSION: 3.16.1.0", content)
-        self.assertIn("GHC_VERSION: 9.10.3", content)
-        self.assertIn("REUSE_VERSION: 6.2.0", content)
-        self.assertNotIn("CABAL_VERSION: 3.14.2.0", content)
-        self.assertNotIn("GHC_VERSION: 9.6.5", content)
+        haskell_job = content.split("\n  haskell:\n", maxsplit=1)[1].split(
+            "\n  paper:\n",
+            maxsplit=1,
+        )[0]
+        foundation_tools = haskell_job.split(
+            "\n      - name: Install Foundation verification tools\n",
+            maxsplit=1,
+        )[1].split("\n      - name:", maxsplit=1)[0]
+        self.assertIn("CABAL_VERSION: 3.16.1.0", haskell_job)
+        self.assertIn("GHC_VERSION: 9.10.3", haskell_job)
+        self.assertIn("REUSE_VERSION: 6.2.0", haskell_job)
+        self.assertNotIn("CABAL_VERSION: 3.14.2.0", haskell_job)
+        self.assertNotIn("GHC_VERSION: 9.6.5", haskell_job)
         self.assertIn(
             'pipx install "reuse[charset-normalizer]==$REUSE_VERSION"',
-            content,
+            foundation_tools,
         )
         self.assertIn(
             "if [ \"$O2I_EVENT_NAME\" = 'pull_request' ]; then",
-            content,
+            haskell_job,
         )
-        self.assertIn("./utl/verify.sh foundation", content)
-        self.assertIn("./utl/verify.sh haskell", content)
+        self.assertIn("./utl/verify.sh foundation", haskell_job)
+        self.assertIn("./utl/verify.sh haskell", haskell_job)
         for contract in (
             "spc/.ghc-version",
             "spc/cabal.project",
@@ -308,7 +316,7 @@ class VerificationWorkflowTests(unittest.TestCase):
             "spc/cabal.foundation.project.freeze",
         ):
             with self.subTest(contract=contract):
-                self.assertIn(contract, content)
+                self.assertIn(contract, haskell_job)
 
     def test_remote_triggers_are_pull_request_manual_and_release_only(self) -> None:
         content = WORKFLOW.read_text(encoding="utf-8")
