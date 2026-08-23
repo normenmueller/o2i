@@ -1,8 +1,10 @@
 module OwnerEvidencePublicApi where
 
 import O2I.ArchiMate.Profile.Closure
+import O2I.ArchiMate.Profile.Notation
 import O2I.ArchiMate.Profile.Projection
 import O2I.Operation.Acquisition
+import O2I.Operation.Adapter
 import O2I.Operation.Diagnostic
 import O2I.Operation.Diagnostic.Owner
 import O2I.Operation.Diagnostic.Owner.Source
@@ -22,6 +24,30 @@ profileAssessment ::
 profileAssessment authority assessment =
   foldProfileAssessmentDiagnostics (const []) id authority assessment
 
+notationAssessment ::
+     PreparedAuthority authority profile document
+  -> CompiledAdapterContract
+  -> NotationResult profile document
+  -> Either
+       AdapterNotationResolutionFailure
+       [PreparedDiagnostic authority profile document]
+notationAssessment authority contract =
+  foldNotationAssessmentDiagnostics Left Right authority contract
+
+notationEvidence ::
+     PreparedDiagnostic authority profile document
+  -> Maybe ArchiMateNotationIssue
+notationEvidence =
+  foldPreparedDiagnostic
+    (foldAdapterNotationDiagnostic (\_ _ issue -> Just issue))
+    (const Nothing)
+    (const Nothing)
+    (const Nothing)
+    (const Nothing)
+    (const Nothing)
+    (const Nothing)
+    (const Nothing)
+
 structureEvidence ::
      PreparedScope authority profile document scope
   -> StructureEvidence scope
@@ -40,18 +66,23 @@ consumeBinding graph binding =
     binding
 
 bindAcquired ::
-     PreparedScope authority profile document scope
+     PreparedAuthority authority profile document
+  -> PreparedScope authority profile document scope
   -> [AcquiredSupplementalSource]
   -> WellFormedGraph scope
   -> Maybe (SupplementalDiagnosticGroups authority profile document)
-bindAcquired scope sources graph =
-  withSupplementalOwnerBinding
-    scope
+bindAcquired authority scope sources graph =
+  withAdmittedOwnerSupplementalInputs
+    authority
     sources
-    graph
     (const Nothing)
     (const Nothing)
-    (Just . fst . consumeBinding graph)
+    (\admitted ->
+       withBoundAdmittedOwnerSupplementalInputs
+         scope
+         graph
+         admitted
+         (Just . fst . consumeBinding graph))
 
 admitSupplemental :: AcquiredSource -> Maybe AcquiredSupplementalSource
 admitSupplemental = acquiredSupplementalSource

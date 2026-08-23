@@ -47,11 +47,18 @@ import O2I.ArchiMate.Profile.Draft
   , foldDraftValueKind
   )
 import O2I.ArchiMate.Profile.Notation
-  ( CanonicalField
+  ( ArchiMateNotationEvidence
+  , ArchiMateNotationIssueKind
+  , CanonicalField
   , CanonicalOccurrence
   , CanonicalView
   , IdentityInvalidReason
   , IdentityOutcome
+  , allArchiMateNotationIssueKinds
+  , archiMateNotationIssueEvidence
+  , archiMateNotationIssueKind
+  , archiMateNotationIssueKindToken
+  , archiMateNotationIssueSubject
   , canonicalFieldKind
   , canonicalFieldLocation
   , canonicalFieldScalars
@@ -61,6 +68,7 @@ import O2I.ArchiMate.Profile.Notation
   , canonicalViewLocation
   , canonicalViewNameFields
   , canonicalViewOccurrence
+  , foldArchiMateNotationEvidence
   , foldCanonicalOccurrenceKind
   , foldIdentityInvalidReason
   , foldIdentityOutcome
@@ -90,7 +98,9 @@ import O2I.Operation.Adapter
   , AdapterOccurrence
   , AdapterRule
   , AdapterSelectionError
+  , CompiledAdapterContract
   , NativeLocation
+  , adapterContractDescriptor
   , adapterDescriptorId
   , adapterDescriptorName
   , adapterDescriptorNotation
@@ -108,6 +118,7 @@ import O2I.Operation.Adapter
   , foldAdapterOccurrence
   , foldAdapterSelectionError
   , foldNativeLocation
+  , lookupArchiMateNotationRule
   )
 import O2I.Operation.Diagnostic
   ( PreparedDiagnostic
@@ -122,6 +133,10 @@ import O2I.Operation.Diagnostic
   , preparedDiagnosticRuleIdentity
   , preparedDiagnosticSeverity
   , preparedDiagnosticStage
+  , processFailure
+  )
+import O2I.Operation.Diagnostic.AdapterOwner.Internal
+  ( foldAdapterNotationDiagnostic
   )
 import O2I.Operation.Diagnostic.Internal
   ( SupplementalDiagnosticGroup(..)
@@ -265,12 +280,39 @@ preparedDiagnosticDocumentFragment =
 
 preparedAuthorityFragment ::
      PreparedAuthority authority profile document -> CanonicalFragment
-preparedAuthorityFragment (PreparedAuthority adapter profile model) =
+preparedAuthorityFragment (PreparedAuthority contract profile model) =
   closedObjectFragment
-    [ requiredMember "adapter" (adapterDescriptorFragment adapter)
+    [ requiredMember
+        "adapter"
+        (adapterDescriptorFragment (adapterContractDescriptor contract))
+    , requiredMember
+        "notationRules"
+        (arrayFragment
+           (concatMap
+              (notationRuleBindingFragments contract)
+              (NonEmpty.toList allArchiMateNotationIssueKinds)))
     , requiredMember "profile" (profileDescriptorFragment profile)
     , requiredMember "model" (sourceIdentityFragment model)
     ]
+
+notationRuleBindingFragments ::
+     CompiledAdapterContract
+  -> ArchiMateNotationIssueKind
+  -> [CanonicalFragment]
+notationRuleBindingFragments contract kind =
+  case lookupArchiMateNotationRule kind contract of
+    Nothing -> []
+    Just rule ->
+      [ closedObjectFragment
+          [ requiredMember
+              "evidenceKind"
+              (textFragment
+                 ("archimate-notation-" <> archiMateNotationIssueKindToken kind))
+          , requiredMember
+              "ruleId"
+              (textFragment (adapterRuleIdText (adapterRuleId rule)))
+          ]
+      ]
 
 profileDescriptorFragment :: ProfileDescriptor -> CanonicalFragment
 profileDescriptorFragment =
@@ -290,6 +332,7 @@ preparedDiagnosticFragment ::
      PreparedDiagnostic authority profile document -> CanonicalFragment
 preparedDiagnosticFragment diagnostic =
   foldPreparedDiagnostic
+    notation
     activation
     rejection
     classification
@@ -299,32 +342,60 @@ preparedDiagnosticFragment diagnostic =
     semantics
     diagnostic
   where
+    wrapWithoutRule = wrapWithRule Nothing
     wrap evidenceKind evidence =
+      wrapWithRule
+        (Just (preparedDiagnosticRuleIdentity diagnostic))
+        evidenceKind
+        evidence
+    wrapWithRule ruleIdentity evidenceKind evidence =
       closedObjectFragment
-        [ requiredMember
-            "producer"
-            (textFragment (preparedDiagnosticProducer diagnostic))
-        , requiredMember
-            "owner"
-            (textFragment (preparedDiagnosticOwner diagnostic))
-        , requiredMember
-            "stage"
-            (textFragment (preparedDiagnosticStage diagnostic))
-        , requiredMember
-            "ruleId"
-            (textFragment (preparedDiagnosticRuleIdentity diagnostic))
-        , requiredMember "evidenceKind" (textFragment evidenceKind)
-        , requiredMember
-            "severity"
-            (textFragment
-               (diagnosticSeverityText (preparedDiagnosticSeverity diagnostic)))
-        , requiredMember
-            "disposition"
-            (textFragment
-               (diagnosticDispositionText
-                  (preparedDiagnosticDisposition diagnostic)))
-        , requiredMember "evidence" evidence
-        ]
+        ([ requiredMember
+             "producer"
+             (textFragment (preparedDiagnosticProducer diagnostic))
+         , requiredMember
+             "owner"
+             (textFragment (preparedDiagnosticOwner diagnostic))
+         , requiredMember
+             "stage"
+             (textFragment (preparedDiagnosticStage diagnostic))
+         , requiredMember "evidenceKind" (textFragment evidenceKind)
+         , requiredMember
+             "severity"
+             (textFragment
+                (diagnosticSeverityText (preparedDiagnosticSeverity diagnostic)))
+         , requiredMember
+             "disposition"
+             (textFragment
+                (diagnosticDispositionText
+                   (preparedDiagnosticDisposition diagnostic)))
+         , requiredMember "evidence" evidence
+         ]
+           <> maybe
+                []
+                (\rule -> [requiredMember "ruleId" (textFragment rule)])
+                ruleIdentity)
+    notation evidence =
+      foldAdapterNotationDiagnostic
+        (\_ _ issue ->
+           wrapWithoutRule
+             ("archimate-notation-"
+                <> archiMateNotationIssueKindToken
+                     (archiMateNotationIssueKind issue))
+             (evidenceFragment
+                []
+                [ fieldFragment
+                    "subject"
+                    [ draftLocationFragment
+                        (archiMateNotationIssueSubject issue)
+                    ]
+                , fieldFragment
+                    "observations"
+                    (map
+                       notationEvidenceFragment
+                       (NonEmpty.toList (archiMateNotationIssueEvidence issue)))
+                ]))
+        evidence
     activation evidence =
       Closure.foldActivationProvenance
         (\_ _ branch _ owner trigger sourceRules ->
@@ -738,7 +809,9 @@ bindingDiagnosticFragment (SupplementalOwnerBindingEvidence evidence) =
             "evidenceKind"
             (textFragment "supplemental-identity-site")
         , requiredMember "severity" (textFragment "error")
-        , requiredMember "disposition" (textFragment "model-finding")
+        , requiredMember
+            "disposition"
+            (textFragment (diagnosticDispositionText processFailure))
         , requiredMember
             "evidence"
             (evidenceFragment
@@ -749,6 +822,31 @@ bindingDiagnosticFragment (SupplementalOwnerBindingEvidence evidence) =
                    [modelIdentityFragment (project value)]
                ])
         ]
+
+notationEvidenceFragment :: ArchiMateNotationEvidence -> CanonicalFragment
+notationEvidenceFragment =
+  foldArchiMateNotationEvidence
+    (\location ->
+       closedObjectFragment
+         [ requiredMember "kind" (textFragment "occurrence")
+         , requiredMember "location" (draftLocationFragment location)
+         ])
+    (\location valueKind value ->
+       closedObjectFragment
+         [ requiredMember "kind" (textFragment "value")
+         , requiredMember "location" (draftLocationFragment location)
+         , requiredMember "valueKind" (draftValueKindFragment valueKind)
+         , requiredMember "value" (textFragment value)
+         ])
+    (\location value targets ->
+       closedObjectFragment
+         [ requiredMember "kind" (textFragment "reference")
+         , requiredMember "location" (draftLocationFragment location)
+         , requiredMember "value" (textFragment value)
+         , requiredMember
+             "targets"
+             (arrayFragment (map draftLocationFragment targets))
+         ])
 
 viewDescriptorFragment :: CanonicalView document -> CanonicalFragment
 viewDescriptorFragment descriptor =

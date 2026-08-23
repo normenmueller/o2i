@@ -88,11 +88,14 @@ $(assertAbstractTypes
     , "ViewMachine.ViewDiscoveryDocument"
     , "Diagnostic.DiagnosticSeverity"
     , "Diagnostic.DiagnosticDisposition"
+    , "Diagnostic.AdapterNotationDiagnostic"
     , "Diagnostic.PreparedDiagnostic"
     , "Diagnostic.SupplementalDiagnosticGroups"
     , "Diagnostic.PreparedDiagnosticDocument"
     , "DiagnosticSource.PreparedAuthority"
     , "DiagnosticSource.PreparedScope"
+    , "DiagnosticOwner.AdapterNotationResolutionFailure"
+    , "DiagnosticSource.AdmittedOwnerSupplementalInputs"
     , "DiagnosticSource.SupplementalOwnerBinding"
     , "DiagnosticSource.SupplementalOwnerBindingGroup"
     , "DiagnosticSource.SupplementalOwnerBindingEvidence"
@@ -289,7 +292,9 @@ $(assertOrdinaryFunctions
     , 'Diagnostic.errorSeverity
     , 'Diagnostic.diagnosticSeverityText
     , 'Diagnostic.modelFinding
+    , 'Diagnostic.processFailure
     , 'Diagnostic.diagnosticDispositionText
+    , 'Diagnostic.foldAdapterNotationDiagnostic
     , 'Diagnostic.preparedDiagnosticSeverity
     , 'Diagnostic.preparedDiagnosticDisposition
     , 'Diagnostic.preparedDiagnosticProducer
@@ -303,12 +308,15 @@ $(assertOrdinaryFunctions
     , 'DiagnosticMachine.diagnosticSchemaAuthority
     , 'DiagnosticMachine.encodePreparedDiagnosticDocument
     , 'DiagnosticOwner.profileActivationDiagnostics
+    , 'DiagnosticOwner.foldAdapterNotationResolutionFailure
+    , 'DiagnosticOwner.foldNotationAssessmentDiagnostics
     , 'DiagnosticOwner.foldProfileAssessmentDiagnostics
     , 'DiagnosticOwner.withModelStructureAssessment
     , 'DiagnosticOwner.structureEvidenceDiagnostic
     , 'DiagnosticOwner.bindingDiagnosticGroups
     , 'DiagnosticOwner.semanticsEvidenceDiagnostic
-    , 'DiagnosticSource.withSupplementalOwnerBinding
+    , 'DiagnosticSource.withAdmittedOwnerSupplementalInputs
+    , 'DiagnosticSource.withBoundAdmittedOwnerSupplementalInputs
     , 'DiagnosticSource.foldSupplementalOwnerBinding
     , 'DiagnosticSource.foldSupplementalOwnerBindingGroup
     , 'DiagnosticSource.assessOwnerSemantics

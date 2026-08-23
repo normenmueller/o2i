@@ -130,5 +130,5 @@ diagnosticSchemaAuthority =
     , schemaAuthorityVersionValue = SchemaVersion 2
     , schemaAuthorityDigestValue =
         SchemaDigest
-          "e17d39a6b90fe35b3fc6ce5a96476dcec37f2dcf1476034dcbe04a457886bad5"
+          "df848ec7e82802ca13c24ffbe0ea0c0883001251af44d6ef9a24a403507f8ff2"
     }

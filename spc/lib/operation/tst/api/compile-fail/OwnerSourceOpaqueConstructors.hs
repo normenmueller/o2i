@@ -8,6 +8,10 @@ forgedAuthority = PreparedAuthority undefined undefined undefined
 forgedScope :: PreparedScope authority profile document scope
 forgedScope = PreparedScope undefined
 
+forgedAdmitted ::
+     AdmittedOwnerSupplementalInputs authority profile document inputs
+forgedAdmitted = AdmittedOwnerSupplementalInputs undefined
+
 forgedSupplementalBinding ::
      SupplementalOwnerBinding authority profile document scope inputs
 forgedSupplementalBinding = SupplementalOwnerBinding undefined undefined

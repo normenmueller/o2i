@@ -74,6 +74,7 @@
 
 ### Changed
 
+- Retained every real Adapter-owned Notation rejection beneath its exact prepared authority and one complete statically compiled kind-to-rule inventory, generated the closed per-kind occurrence, value, or reference evidence alternatives, classified supplemental Binding diagnostics as process failures, accumulated all independently decoded source failures before set assessment, and split complete supplemental admission before Structure from exact-once continuation binding after accepted Structure.
 - Exposed total Core-owned Structure and supplemental-input defect-to-rule projections while retaining opaque rule and defect constructors.
 - Mapped `Strategy --directs--> Strategy` to ArchiMate `Influence`, retained
   directed `Association` for `Strategy --directs--> Intervention`, bound the

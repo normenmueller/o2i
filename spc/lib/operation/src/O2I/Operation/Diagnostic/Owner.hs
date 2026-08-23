@@ -1,8 +1,12 @@
+{-# LANGUAGE ExplicitNamespaces #-}
 {-# LANGUAGE RankNTypes #-}
 
 -- | Retain exact owner evidence under one prepared authority.
 module O2I.Operation.Diagnostic.Owner
-  ( profileActivationDiagnostics
+  ( type AdapterNotationResolutionFailure
+  , foldAdapterNotationResolutionFailure
+  , foldNotationAssessmentDiagnostics
+  , profileActivationDiagnostics
   , foldProfileAssessmentDiagnostics
   , withModelStructureAssessment
   , structureEvidenceDiagnostic
@@ -13,8 +17,16 @@ module O2I.Operation.Diagnostic.Owner
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified O2I.ArchiMate.Profile.Closure as Closure
+import qualified O2I.ArchiMate.Profile.Notation as Notation
 import qualified O2I.ArchiMate.Profile.Projection as Profile
 import O2I.Core.Identity (IdentityIndexDefect, SelectedViewScopeDefect)
+import O2I.Operation.Adapter (CompiledAdapterContract)
+import O2I.Operation.Diagnostic.AdapterOwner.Internal
+  ( AdapterNotationResolutionFailure
+  , foldAdapterNotationResolutionFailure
+  , resolveAdapterNotationDiagnostic
+  , verifyAdapterNotationAuthority
+  )
 import O2I.Operation.Diagnostic.Internal
 import O2I.Operation.Diagnostic.Owner.Source
   ( foldSupplementalOwnerBinding
@@ -23,6 +35,28 @@ import O2I.Operation.Diagnostic.Owner.Source
 import O2I.Operation.Diagnostic.Owner.Source.Internal
 import qualified O2I.Semantics as Semantics
 import qualified O2I.Structure as Structure
+
+-- | Resolve and retain every real Notation issue beneath the exact prepared
+-- authority and compiled Adapter contract that own its machine explanation.
+foldNotationAssessmentDiagnostics ::
+     (AdapterNotationResolutionFailure -> result)
+  -> ([PreparedDiagnostic authority profile document] -> result)
+  -> PreparedAuthority authority profile document
+  -> CompiledAdapterContract
+  -> Notation.NotationResult profile document
+  -> result
+foldNotationAssessmentDiagnostics failed consume authority contract result =
+  case authority of
+    PreparedAuthority authorityContract _ _ ->
+      case verifyAdapterNotationAuthority authorityContract contract of
+        Left failure -> failed failure
+        Right () ->
+          case traverse
+                 (resolveAdapterNotationDiagnostic authorityContract)
+                 (Notation.notationIssues result) of
+            Left failure -> failed failure
+            Right diagnostics ->
+              consume (map NotationRejectionDiagnostic diagnostics)
 
 -- | Retain every positive activation fact from one exact Profile universe.
 profileActivationDiagnostics ::

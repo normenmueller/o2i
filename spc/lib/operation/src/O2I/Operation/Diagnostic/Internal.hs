@@ -14,6 +14,9 @@ module O2I.Operation.Diagnostic.Internal
 import qualified O2I.ArchiMate.Profile.Closure as Closure
 import qualified O2I.ArchiMate.Profile.Projection as Profile
 import O2I.Operation.Acquisition (AcquiredSupplementalSource)
+import O2I.Operation.Diagnostic.AdapterOwner.Internal
+  ( AdapterNotationDiagnostic
+  )
 import O2I.Operation.Diagnostic.Owner.Source.Internal
   ( PreparedAuthority
   , SupplementalOwnerBindingEvidence
@@ -27,9 +30,10 @@ data DiagnosticSeverity
   | ErrorSeverity
   deriving (Bounded, Enum, Eq, Ord, Show)
 
--- | Every post-preparation owner diagnostic is a model finding.
-data DiagnosticDisposition =
-  ModelFinding
+-- | Closed impact classification derived from the retained producer branch.
+data DiagnosticDisposition
+  = ModelFinding
+  | ProcessFailure
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 -- | One exact owner value retained until encoding.
@@ -38,6 +42,9 @@ data DiagnosticDisposition =
 -- preparation runs from being combined through the public API. Structure and
 -- Semantics scopes remain existential inside their exact evidence values.
 data PreparedDiagnostic authority profile document where
+  NotationRejectionDiagnostic
+    :: !AdapterNotationDiagnostic
+    -> PreparedDiagnostic authority profile document
   ProfileActivationDiagnostic
     :: !(Closure.ActivationProvenance profile document)
     -> PreparedDiagnostic authority profile document

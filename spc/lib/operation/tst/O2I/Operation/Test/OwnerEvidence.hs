@@ -9,9 +9,14 @@ import qualified Data.Aeson as Aeson
 import qualified Data.Aeson.Key as AesonKey
 import qualified Data.Aeson.KeyMap as AesonKeyMap
 import qualified Data.Aeson.Types as AesonTypes
+import Data.ByteString (ByteString)
 import qualified Data.ByteString.Lazy as LazyByteString
+import Data.IORef (IORef, modifyIORef', newIORef, readIORef)
 import Data.JSON.JSONSchema (validateJSONSchema)
 import Data.List (nub, sort, sortOn)
+import Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty as NonEmpty
+import Data.Maybe (catMaybes)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
@@ -32,12 +37,30 @@ import O2I.Operation.Acquisition
   , foldAcquiredSupplementalSource
   )
 import O2I.Operation.Acquisition.Internal (AcquiredSource(..))
-import O2I.Operation.Adapter (AdapterDescriptor)
-import O2I.Operation.Adapter.Authoring (mkAdapterDescriptor, mkAdapterId)
+import O2I.Operation.Adapter
+  ( AdapterDescriptor
+  , CompiledAdapterContract
+  , adapterCollectionContracts
+  , notationRuleStage
+  )
+import O2I.Operation.Adapter.Authoring
+  ( adapterBehavior
+  , archiMateNotationRule
+  , compileAdapter
+  , compileAdapterCollection
+  , decodedDraft
+  , mkAdapterDescriptor
+  , mkAdapterId
+  , mkAdapterRuleSpec
+  , noRecognitionMatch
+  )
 import O2I.Operation.Diagnostic
 import O2I.Operation.Diagnostic.Internal
 import O2I.Operation.Diagnostic.Owner
-import O2I.Operation.Diagnostic.Owner.Source (withSupplementalOwnerBinding)
+import O2I.Operation.Diagnostic.Owner.Source
+  ( withAdmittedOwnerSupplementalInputs
+  , withBoundAdmittedOwnerSupplementalInputs
+  )
 import O2I.Operation.Diagnostic.Owner.Source.Internal
 import O2I.Operation.Encoding.Internal (canonicalFragmentBytes)
 import O2I.Operation.Machine.Fragment.Internal
@@ -45,6 +68,7 @@ import O2I.Operation.Machine.Fragment.Internal
   )
 import O2I.Operation.Provenance
 import O2I.Operation.Provenance.Internal (sourceIdentityFromBytes)
+import O2I.Operation.Test.AdapterSupport (compileCompleteAdapter)
 import qualified O2I.Semantics.Input as SemanticsInput
 import qualified O2I.Structure as Structure
 import System.FilePath ((</>))
@@ -56,6 +80,12 @@ tests =
   testGroup
     "owner evidence"
     [ testCase
+        "keeps exact 38-kind Notation schema closure"
+        notationSchemaClosure
+    , testCase
+        "retains and encodes real Adapter-owned Notation evidence"
+        notationOwnerEvidence
+    , testCase
         "retains and encodes real Profile owner evidence"
         profileOwnerEvidence
     , testCase
@@ -70,18 +100,176 @@ tests =
     , testCase
         "nests real acquired Binding evidence under its exact source"
         acquiredBindingEvidence
+    , testCase
+        "accumulates every decode failure and stops before later stages"
+        supplementalAdmissionFailureBoundaries
+    , testCase
+        "binds exactly once after Structure and never after rejection"
+        supplementalBindingLifecycle
     ]
+
+notationSchemaClosure :: Assertion
+notationSchemaClosure = do
+  actual <- schemaNotationEvidenceKinds
+  let expected =
+        map
+          (("archimate-notation-" <>) . Notation.archiMateNotationIssueKindToken)
+          (NonEmpty.toList Notation.allArchiMateNotationIssueKinds)
+  length actual @?= 38
+  sort actual @?= sort expected
+
+notationOwnerEvidence :: Assertion
+notationOwnerEvidence = do
+  descriptor <- testAdapterDescriptor
+  otherIdentifier <- requireRight (mkAdapterId "other")
+  otherDescriptor <-
+    requireRight
+      (mkAdapterDescriptor
+         otherIdentifier
+         "Other Adapter"
+         "1.0.0"
+         "archimate-3.2")
+  contract <- compileTestContract descriptor
+  model <- modelSource
+  otherContract <- compileTestContract otherDescriptor
+  swappedContract <- compileSwappedNotationContract descriptor
+  Notation.withCanonicalDocument notationOwnerDraft $ \document ->
+    case Notation.canonicalViews document of
+      [] -> assertFailure "Notation owner source has no View"
+      view:_ ->
+        Profile.withSelectedArchiMateProfile
+          Profile.compiledProfileDescriptor
+          (\selected -> do
+             let result =
+                   Notation.assessArchiMateNotation
+                     (Closure.deriveProfileAssessmentUniverse
+                        selected
+                        document
+                        view)
+                 issues = Notation.notationIssues result
+                 authority =
+                   PreparedAuthority
+                     contract
+                     Profile.compiledProfileDescriptor
+                     model
+                 mismatchedAuthority =
+                   PreparedAuthority
+                     otherContract
+                     Profile.compiledProfileDescriptor
+                     model
+             assertBool
+               "Notation owner source emitted no issues"
+               (not (null issues))
+             assertBool
+               "real empty View name fields emitted no occurrence-backed multiplicity"
+               (any isOccurrenceBackedViewNameMultiplicity issues)
+             foldNotationAssessmentDiagnostics
+               (foldAdapterNotationResolutionFailure
+                  (\actual expected -> do
+                     actual @?= otherDescriptor
+                     expected @?= descriptor)
+                  (\_ _ -> assertFailure "unexpected Notation rule failure"))
+               (const (assertFailure "mismatched Notation authority accepted"))
+               mismatchedAuthority
+               contract
+               result
+             foldNotationAssessmentDiagnostics
+               (foldAdapterNotationResolutionFailure
+                  (\actual expected -> do
+                     actual @?= descriptor
+                     expected @?= descriptor)
+                  (\_ _ -> assertFailure "unexpected Notation rule failure"))
+               (const (assertFailure "swapped Notation authority accepted"))
+               authority
+               swappedContract
+               result
+             foldNotationAssessmentDiagnostics
+               (foldAdapterNotationResolutionFailure
+                  (\_ _ -> assertFailure "Notation authority mismatch")
+                  (\_ _ -> assertFailure "Notation rule missing"))
+               (assertNotationDiagnostics authority issues)
+               authority
+               contract
+               result)
+  where
+    isOccurrenceBackedViewNameMultiplicity issue =
+      Notation.archiMateNotationIssueKindToken
+        (Notation.archiMateNotationIssueKind issue)
+        == "view-name-multiplicity"
+        && any
+             (Notation.foldArchiMateNotationEvidence
+                (const True)
+                (\_ _ _ -> False)
+                (\_ _ _ -> False))
+             (NonEmpty.toList (Notation.archiMateNotationIssueEvidence issue))
+
+assertNotationDiagnostics ::
+     PreparedAuthority authority profile document
+  -> [Notation.ArchiMateNotationIssue]
+  -> [PreparedDiagnostic authority profile document]
+  -> Assertion
+assertNotationDiagnostics authority issues diagnostics = do
+  length diagnostics @?= length issues
+  map preparedDiagnosticRuleIdentity diagnostics
+    @?= map
+          (("test.notation." <>)
+             . Notation.archiMateNotationIssueKindToken
+             . Notation.archiMateNotationIssueKind)
+          issues
+  assertBool
+    "a Notation diagnostic escaped the Adapter-owned branch"
+    (all isNotationDiagnostic diagnostics)
+  let document =
+        encodeDocument
+          (preparedDiagnosticDocument
+             authority
+             diagnostics
+             noSupplementalDiagnosticGroups)
+  assertDocumentSchema document
+  value <- decodeDocument document
+  rows <- parseModelClassifications value
+  rows
+    @?= replicate
+          (length diagnostics)
+          ( "notation-assessment"
+          , "adapter"
+          , "notation"
+          , "error"
+          , "model-finding")
+  encodedEvidence <- parseNotationEvidence value
+  encodedEvidence @?= map notationIssueEvidenceValue issues
+  notationRules <- parseNotationRuleInventory value
+  notationRules
+    @?= [ ( "archimate-notation-"
+              <> Notation.archiMateNotationIssueKindToken kind
+          , "test.notation." <> Notation.archiMateNotationIssueKindToken kind)
+        | kind <- NonEmpty.toList Notation.allArchiMateNotationIssueKinds
+        ]
+  assertDocumentValueRejected (addDiagnosticRule value)
+  assertDocumentValueRejected (mutateNotationDisposition value)
+  assertDocumentValueRejected (mutateNotationEvidenceKind value)
+  where
+    isNotationDiagnostic =
+      foldPreparedDiagnostic
+        (const True)
+        (const False)
+        (const False)
+        (const False)
+        (const False)
+        (const False)
+        (const False)
+        (const False)
 
 profileOwnerEvidence :: Assertion
 profileOwnerEvidence = do
-  adapter <- testAdapterDescriptor
+  contract <- testAdapterContract
   source <- modelSource
   observed <-
     requireProfileResult
       (ProfileConformance.foldProfileCorpusOwnerEvidence $ \_ universe assessment ->
          let authority =
                PreparedAuthority
-                 adapter
+                 contract
                  Profile.compiledProfileDescriptor
                  source
              activation = profileActivationDiagnostics authority universe
@@ -127,14 +315,14 @@ profileOwnerEvidence = do
 
 structureOwnerEvidence :: Assertion
 structureOwnerEvidence = do
-  adapter <- testAdapterDescriptor
+  contract <- testAdapterContract
   source <- modelSource
   rows <-
     requireCoreResult
       (CoreConformance.foldStructureCorpusEvidence $ \_ evidence ->
          let authority =
                PreparedAuthority
-                 adapter
+                 contract
                  Profile.compiledProfileDescriptor
                  source
              scope = PreparedScope source
@@ -153,12 +341,12 @@ structureOwnerEvidence = do
 
 bindingOwnerEvidence :: Assertion
 bindingOwnerEvidence = do
-  adapter <- testAdapterDescriptor
+  contract <- testAdapterContract
   model <- modelSource
   source <- supplementalAcquiredSource
   let occurrence = SupplementalOwnerOccurrence source
       authority =
-        PreparedAuthority adapter Profile.compiledProfileDescriptor model
+        PreparedAuthority contract Profile.compiledProfileDescriptor model
   rows <-
     requireCoreResult
       (CoreConformance.foldBindingCorpusOwnerEvidence
@@ -179,18 +367,24 @@ bindingOwnerEvidence = do
   expected <- requireCoreResult CoreConformance.bindingCorpusRuleIds
   map fst rows @?= map coreRuleIdText expected
   length (nub (map fst rows)) @?= 4
-  mapM_ (assertDocumentSchema . snd) rows
+  mapM_
+    (\document -> do
+       assertDocumentSchema document
+       value <- decodeDocument document
+       dispositions <- parseSupplementalDispositions value
+       dispositions @?= ["process-failure"])
+    (map snd rows)
 
 semanticsOwnerEvidence :: Assertion
 semanticsOwnerEvidence = do
-  adapter <- testAdapterDescriptor
+  contract <- testAdapterContract
   source <- modelSource
   rows <-
     requireCoreResult
       (CoreConformance.foldSemanticsCorpusOwnerEvidence $ \_ evidence ->
          let authority =
                PreparedAuthority
-                 adapter
+                 contract
                  Profile.compiledProfileDescriptor
                  source
              scope = PreparedScope source
@@ -209,35 +403,102 @@ semanticsOwnerEvidence = do
 
 acquiredBindingEvidence :: Assertion
 acquiredBindingEvidence = do
-  adapter <- testAdapterDescriptor
+  contract <- testAdapterContract
   model <- modelSource
   first <- acquiredStrategySource
   second <- acquiredStrategySource2
-  case ProfileConformance.profileIntegratedBindingSources of
-    [] -> assertFailure "missing integrated Profile source"
-    (draft, _):_ -> do
-      forward <-
-        requireRight
-          (integratedBindingDocument adapter model [first, second] draft)
-      reversed <-
-        requireRight
-          (integratedBindingDocument adapter model [second, first] draft)
-      forward @?= reversed
-      assertDocumentSchema forward
-      value <- decodeDocument forward
-      actual <- parseSupplementalAssociations value
-      actual
-        @?= [ expectedSupplementalAssociation first "unknown"
-            , expectedSupplementalAssociation second "unknown-2"
-            ]
+  valid <- acquiredValidStrategySource
+  let draft = bindingOwnerDraft
+  forward <-
+    requireRight
+      (integratedBindingDocument contract model [first, second, valid] draft)
+  reversed <-
+    requireRight
+      (integratedBindingDocument contract model [valid, second, first] draft)
+  forward @?= reversed
+  assertDocumentSchema forward
+  value <- decodeDocument forward
+  actual <- parseSupplementalAssociations value
+  actual
+    @?= [ expectedSupplementalAssociation first "unknown"
+        , expectedSupplementalAssociation second "unknown-2"
+        , expectedEmptySupplementalAssociation valid
+        ]
+
+supplementalAdmissionFailureBoundaries :: Assertion
+supplementalAdmissionFailureBoundaries = do
+  contract <- testAdapterContract
+  model <- modelSource
+  invalidFirst <- acquiredSupplementalBytes 0 "invalid-first" "{"
+  invalidSecond <- acquiredSupplementalBytes 1 "invalid-second" "["
+  let authority =
+        PreparedAuthority contract Profile.compiledProfileDescriptor model
+  withAdmittedOwnerSupplementalInputs
+    authority
+    [invalidSecond, invalidFirst]
+    (const (assertFailure "valid supplemental provenance was rejected"))
+    (\defects -> NonEmpty.length defects @?= 2)
+    (const (assertFailure "decode failure reached set admission or Structure"))
+  valid <- acquiredStrategySource
+  withAdmittedOwnerSupplementalInputs
+    authority
+    [valid, valid]
+    (\defects -> NonEmpty.length defects @?= 1)
+    (const (assertFailure "provenance failure reached decode or set assessment"))
+    (const (assertFailure "provenance failure reached Structure"))
+  duplicateSubject <-
+    acquireStrategySource
+      1
+      "supplemental-owner-source-duplicate-subject"
+      "owner-source-strategy.json"
+  withAdmittedOwnerSupplementalInputs
+    authority
+    [valid, duplicateSubject]
+    (const (assertFailure "valid supplemental provenance was rejected"))
+    (\defects -> NonEmpty.length defects @?= 1)
+    (const (assertFailure "set-assessment failure reached Structure"))
+
+supplementalBindingLifecycle :: Assertion
+supplementalBindingLifecycle = do
+  contract <- testAdapterContract
+  model <- modelSource
+  valid <- acquiredValidStrategySource
+  counter <- newIORef 0
+  let rejected =
+        withIntegratedProjection
+          bindingStructureRejectedDraft
+          (bindProjectionOnce counter contract model [valid])
+  case rejected of
+    Left _ -> pure ()
+    Right action ->
+      action >> assertFailure "Structure rejection reached Binding"
+  countAfterRejection <- readIORef counter
+  countAfterRejection @?= 0
+  accepted <-
+    requireRight
+      (withIntegratedProjection
+         bindingOwnerDraft
+         (bindProjectionOnce counter contract model [valid]))
+  accepted
+  countAfterAcceptance <- readIORef counter
+  countAfterAcceptance @?= 1
 
 integratedBindingDocument ::
-     AdapterDescriptor
+     CompiledAdapterContract
   -> SourceIdentity
   -> [AcquiredSupplementalSource]
   -> Draft.ProfileDraft
   -> Either String LazyByteString.ByteString
-integratedBindingDocument adapter model sources draft =
+integratedBindingDocument contract model sources draft =
+  withIntegratedProjection draft (bindProjection contract model sources)
+
+withIntegratedProjection ::
+     Draft.ProfileDraft
+  -> (forall profile document. Profile.ProfileProjection profile document -> Either
+                                                                               String
+                                                                               result)
+  -> Either String result
+withIntegratedProjection draft consume =
   Profile.withSelectedArchiMateProfile Profile.compiledProfileDescriptor $ \selected ->
     Notation.withCanonicalDocument draft $ \document ->
       case Notation.canonicalViews document of
@@ -250,46 +511,96 @@ integratedBindingDocument adapter model sources draft =
                 (\conformant ->
                    Profile.foldProfileProjectionAssessment
                      (const (Left "integrated Profile contract failure"))
-                     (const (Left "integrated Profile source was rejected"))
-                     (bindProjection adapter model sources)
+                     (\evidence ->
+                        Left
+                          ("integrated Profile source was rejected: "
+                             <> show
+                                  (map
+                                     Profile.profileDiagnosticRuleId
+                                     (NonEmpty.toList evidence))))
+                     consume
                      (Profile.assessSelectedView conformant))
                 (Notation.notationConformance
                    (Notation.assessArchiMateNotation universe))
 
+bindProjectionOnce ::
+     IORef Int
+  -> CompiledAdapterContract
+  -> SourceIdentity
+  -> [AcquiredSupplementalSource]
+  -> Profile.ProfileProjection profile document
+  -> Either String (IO ())
+bindProjectionOnce counter contract model sources projection =
+  let authority =
+        PreparedAuthority contract Profile.compiledProfileDescriptor model
+   in withAdmittedOwnerSupplementalInputs
+        authority
+        sources
+        (const (Left "supplemental provenance failure"))
+        (const (Left "supplemental input failure"))
+        (\admitted ->
+           Profile.withProfileStructureAssessment
+             projection
+             (const (Left "identity-index failure"))
+             (const (Left "selected-scope failure"))
+             (const (Left "Structure-input failure"))
+             (Structure.foldStructureAssessment
+                (const (Left "Structure rejection"))
+                (\graph ->
+                   let scope = PreparedScope model
+                    in withBoundAdmittedOwnerSupplementalInputs
+                         scope
+                         graph
+                         admitted
+                         (\binding ->
+                            Right $ do
+                              modifyIORef' counter (+ 1)
+                              case bindingDiagnosticGroups binding of
+                                SupplementalDiagnosticGroups groups ->
+                                  length groups @?= length sources))))
+
 bindProjection ::
-     AdapterDescriptor
+     CompiledAdapterContract
   -> SourceIdentity
   -> [AcquiredSupplementalSource]
   -> Profile.ProfileProjection profile document
   -> Either String LazyByteString.ByteString
-bindProjection adapter model sources projection =
-  Profile.withProfileStructureAssessment
-    projection
-    (const (Left "integrated identity-index failure"))
-    (const (Left "integrated selected-scope failure"))
-    (const (Left "integrated Structure-input failure"))
-    (Structure.foldStructureAssessment
-       (const (Left "integrated Structure rejection"))
-       (\graph ->
-          let authority =
-                PreparedAuthority
-                  adapter
-                  Profile.compiledProfileDescriptor
-                  model
-              scope = PreparedScope model
-           in withSupplementalOwnerBinding
-                scope
-                sources
-                graph
-                (const (Left "integrated supplemental provenance failure"))
-                (const (Left "integrated supplemental input failure"))
-                (\binding ->
-                   Right
-                     (encodeDocument
-                        (preparedDiagnosticDocument
-                           authority
-                           []
-                           (bindingDiagnosticGroups binding))))))
+bindProjection contract model sources projection =
+  let authority =
+        PreparedAuthority contract Profile.compiledProfileDescriptor model
+   in withAdmittedOwnerSupplementalInputs
+        authority
+        sources
+        (const (Left "integrated supplemental provenance failure"))
+        (const (Left "integrated supplemental input failure"))
+        (\admitted ->
+           Profile.withProfileStructureAssessment
+             projection
+             (const (Left "integrated identity-index failure"))
+             (const (Left "integrated selected-scope failure"))
+             (const (Left "integrated Structure-input failure"))
+             (Structure.foldStructureAssessment
+                (\evidence ->
+                   Left
+                     ("integrated Structure rejection: "
+                        <> show
+                             (map
+                                (coreRuleIdText
+                                   . Structure.structureEvidenceRule)
+                                (NonEmpty.toList evidence))))
+                (\graph ->
+                   let scope = PreparedScope model
+                    in withBoundAdmittedOwnerSupplementalInputs
+                         scope
+                         graph
+                         admitted
+                         (\binding ->
+                            Right
+                              (encodeDocument
+                                 (preparedDiagnosticDocument
+                                    authority
+                                    []
+                                    (bindingDiagnosticGroups binding)))))))
 
 encodeDocument :: PreparedDiagnosticDocument -> LazyByteString.ByteString
 encodeDocument =
@@ -311,11 +622,276 @@ assertDocumentSchema bytes = do
     ("v2 schema rejected exact owner document: " <> show bytes)
     (validateJSONSchema schema document)
 
+assertDocumentValueRejected :: Aeson.Value -> Assertion
+assertDocumentValueRejected document = do
+  schemaBytes <-
+    LazyByteString.readFile
+      ("contract" </> "schema" </> "o2i.operation.diagnostic-v2.schema.json")
+  schema <- decodeDocument schemaBytes
+  assertBool
+    "v2 schema accepted a forbidden Notation association"
+    (not (validateJSONSchema schema document))
+
+notationIssueEvidenceValue :: Notation.ArchiMateNotationIssue -> Aeson.Value
+notationIssueEvidenceValue issue =
+  Aeson.object
+    [ "fields"
+        Aeson..= [ Aeson.object
+                     [ "role" Aeson..= ("subject" :: Text)
+                     , "values"
+                         Aeson..= [ draftLocationValue
+                                      (Notation.archiMateNotationIssueSubject
+                                         issue)
+                                  ]
+                     ]
+                 , Aeson.object
+                     [ "role" Aeson..= ("observations" :: Text)
+                     , "values"
+                         Aeson..= map
+                                    notationObservationValue
+                                    (NonEmpty.toList
+                                       (Notation.archiMateNotationIssueEvidence
+                                          issue))
+                     ]
+                 ]
+    ]
+
+notationObservationValue :: Notation.ArchiMateNotationEvidence -> Aeson.Value
+notationObservationValue =
+  Notation.foldArchiMateNotationEvidence
+    (\location ->
+       Aeson.object
+         [ "kind" Aeson..= ("occurrence" :: Text)
+         , "location" Aeson..= draftLocationValue location
+         ])
+    (\location valueKind value ->
+       Aeson.object
+         [ "kind" Aeson..= ("value" :: Text)
+         , "location" Aeson..= draftLocationValue location
+         , "valueKind" Aeson..= draftValueKindText valueKind
+         , "value" Aeson..= value
+         ])
+    (\location value targets ->
+       Aeson.object
+         [ "kind" Aeson..= ("reference" :: Text)
+         , "location" Aeson..= draftLocationValue location
+         , "value" Aeson..= value
+         , "targets" Aeson..= map draftLocationValue targets
+         ])
+
+draftValueKindText :: Draft.DraftValueKind -> Text
+draftValueKindText =
+  Draft.foldDraftValueKind "text" "boolean" "number" "native-name" id
+
+draftLocationValue :: Draft.DraftLocation -> Aeson.Value
+draftLocationValue location =
+  Aeson.object
+    [ "path"
+        Aeson..= Draft.foldDraftSourcePath
+                   (\first rest -> map draftPathStepValue (first : rest))
+                   (Draft.draftLocationPath location)
+    , "span"
+        Aeson..= maybe
+                   Aeson.Null
+                   draftSourceSpanValue
+                   (Draft.draftLocationSpan location)
+    ]
+
+draftPathStepValue :: Draft.DraftPathStep -> Aeson.Value
+draftPathStepValue step =
+  Aeson.object
+    [ "name" Aeson..= draftNativeNameValue (Draft.draftPathStepName step)
+    , "ordinal" Aeson..= Draft.draftPathStepOrdinal step
+    ]
+
+draftNativeNameValue :: Draft.DraftNativeName -> Aeson.Value
+draftNativeNameValue name =
+  Aeson.object
+    [ "namespace" Aeson..= Draft.draftNativeNamespace name
+    , "localName" Aeson..= Draft.draftNativeLocalName name
+    ]
+
+draftSourceSpanValue :: Draft.DraftSourceSpan -> Aeson.Value
+draftSourceSpanValue sourceSpan =
+  Aeson.object
+    [ "start"
+        Aeson..= draftSourcePositionValue (Draft.draftSpanStart sourceSpan)
+    , "end" Aeson..= draftSourcePositionValue (Draft.draftSpanEnd sourceSpan)
+    ]
+
+draftSourcePositionValue :: Draft.DraftSourcePosition -> Aeson.Value
+draftSourcePositionValue position =
+  Aeson.object
+    [ "line" Aeson..= Draft.draftSourceLine position
+    , "column" Aeson..= Draft.draftSourceColumn position
+    , "offset" Aeson..= Draft.draftSourceOffset position
+    ]
+
+addDiagnosticRule :: Aeson.Value -> Aeson.Value
+addDiagnosticRule =
+  mutateFirstModelDiagnostic
+    (AesonKeyMap.insert "ruleId" (Aeson.String "totally.wrong.rule"))
+
+mutateNotationDisposition :: Aeson.Value -> Aeson.Value
+mutateNotationDisposition =
+  mutateFirstModelDiagnostic
+    (AesonKeyMap.insert "disposition" (Aeson.String "process-failure"))
+
+mutateNotationEvidenceKind :: Aeson.Value -> Aeson.Value
+mutateNotationEvidenceKind =
+  mutateModelDiagnostics $ \diagnostic ->
+    case AesonKeyMap.lookup "evidenceKind" diagnostic of
+      Just (Aeson.String "archimate-notation-view-name-multiplicity") ->
+        AesonKeyMap.insert
+          "evidenceKind"
+          (Aeson.String "archimate-notation-view-name-missing")
+          diagnostic
+      _ -> diagnostic
+
+mutateFirstModelDiagnostic ::
+     (Aeson.Object -> Aeson.Object) -> Aeson.Value -> Aeson.Value
+mutateFirstModelDiagnostic mutate =
+  mutateModelDiagnosticsOnce $ \diagnostics ->
+    case diagnostics of
+      Aeson.Object first:rest -> Aeson.Object (mutate first) : rest
+      _ -> diagnostics
+
+mutateModelDiagnostics ::
+     (Aeson.Object -> Aeson.Object) -> Aeson.Value -> Aeson.Value
+mutateModelDiagnostics mutate =
+  mutateModelDiagnosticsOnce
+    (map $ \diagnostic ->
+       case diagnostic of
+         Aeson.Object value -> Aeson.Object (mutate value)
+         _ -> diagnostic)
+
+mutateModelDiagnosticsOnce ::
+     ([Aeson.Value] -> [Aeson.Value]) -> Aeson.Value -> Aeson.Value
+mutateModelDiagnosticsOnce mutate documentValue =
+  case documentValue of
+    Aeson.Object document ->
+      case AesonKeyMap.lookup "modelDiagnostics" document of
+        Just diagnostics ->
+          case Aeson.fromJSON diagnostics of
+            Aeson.Success values ->
+              Aeson.Object
+                (AesonKeyMap.insert
+                   "modelDiagnostics"
+                   (Aeson.toJSON (mutate values))
+                   document)
+            Aeson.Error _ -> documentValue
+        _ -> documentValue
+    _ -> documentValue
+
 decodeDocument :: LazyByteString.ByteString -> IO Aeson.Value
 decodeDocument bytes =
   case Aeson.eitherDecode bytes of
     Left message -> assertFailure message >> fail "unreachable"
     Right value -> pure value
+
+parseModelClassifications :: Aeson.Value -> IO [(Text, Text, Text, Text, Text)]
+parseModelClassifications documentValue =
+  case AesonTypes.parseEither parser documentValue of
+    Left message -> assertParseFailure message
+    Right rows -> pure rows
+  where
+    parser =
+      Aeson.withObject "prepared diagnostic document" $ \document -> do
+        diagnostics <- document Aeson..: "modelDiagnostics"
+        traverse classification diagnostics
+    classification =
+      Aeson.withObject "model diagnostic" $ \diagnostic ->
+        (,,,,)
+          <$> diagnostic Aeson..: "producer"
+          <*> diagnostic Aeson..: "owner"
+          <*> diagnostic Aeson..: "stage"
+          <*> diagnostic Aeson..: "severity"
+          <*> diagnostic Aeson..: "disposition"
+
+parseNotationEvidence :: Aeson.Value -> IO [Aeson.Value]
+parseNotationEvidence documentValue =
+  case AesonTypes.parseEither parser documentValue of
+    Left message -> assertParseFailure message
+    Right evidence -> pure evidence
+  where
+    parser =
+      Aeson.withObject "prepared diagnostic document" $ \document -> do
+        diagnostics <- document Aeson..: "modelDiagnostics"
+        traverse
+          (Aeson.withObject "Notation diagnostic" (Aeson..: "evidence"))
+          diagnostics
+
+parseNotationRuleInventory :: Aeson.Value -> IO [(Text, Text)]
+parseNotationRuleInventory documentValue =
+  case AesonTypes.parseEither parser documentValue of
+    Left message -> assertParseFailure message
+    Right rules -> pure rules
+  where
+    parser =
+      Aeson.withObject "prepared diagnostic document" $ \document -> do
+        authority <- document Aeson..: "authority"
+        Aeson.withObject "prepared authority" parseRules authority
+    parseRules authority = do
+      rules <- authority Aeson..: "notationRules"
+      traverse
+        (Aeson.withObject "Notation rule binding" $ \binding ->
+           (,) <$> binding Aeson..: "evidenceKind" <*> binding Aeson..: "ruleId")
+        rules
+
+parseSupplementalDispositions :: Aeson.Value -> IO [Text]
+parseSupplementalDispositions documentValue =
+  case AesonTypes.parseEither parser documentValue of
+    Left message -> assertParseFailure message
+    Right dispositions -> pure dispositions
+  where
+    parser =
+      Aeson.withObject "prepared diagnostic document" $ \document -> do
+        sources <- document Aeson..: "supplementalSources"
+        concat
+          <$> traverse sourceDispositions (map snd (AesonKeyMap.toList sources))
+    sourceDispositions =
+      Aeson.withObject "supplemental source" $ \source -> do
+        diagnostics <- source Aeson..: "diagnostics"
+        traverse
+          (Aeson.withObject "binding diagnostic" (Aeson..: "disposition"))
+          diagnostics
+
+schemaNotationEvidenceKinds :: IO [Text]
+schemaNotationEvidenceKinds = do
+  schemaBytes <-
+    LazyByteString.readFile
+      ("contract" </> "schema" </> "o2i.operation.diagnostic-v2.schema.json")
+  schema <- decodeDocument schemaBytes
+  case AesonTypes.parseEither parser schema of
+    Left message -> assertParseFailure message
+    Right values -> pure values
+  where
+    parser =
+      Aeson.withObject "diagnostic schema" $ \schema -> do
+        definitions <- schema Aeson..: "$defs"
+        Aeson.withObject "diagnostic definitions" modelDiagnostics definitions
+    modelDiagnostics definitions = do
+      diagnostic <- definitions Aeson..: "modelDiagnostic"
+      Aeson.withObject "model diagnostic union" alternatives diagnostic
+    alternatives diagnostic = do
+      rows <- diagnostic Aeson..: "oneOf"
+      catMaybes <$> traverse notationKind rows
+    notationKind =
+      Aeson.withObject "model diagnostic" $ \diagnostic -> do
+        properties <- diagnostic Aeson..: "properties"
+        Aeson.withObject "model diagnostic properties" inspect properties
+    inspect properties = do
+      producerSchema <- properties Aeson..: "producer"
+      producer <- Aeson.withObject "producer" (Aeson..: "const") producerSchema
+      if producer == ("notation-assessment" :: Text)
+        then do
+          evidenceSchema <- properties Aeson..: "evidenceKind"
+          Just
+            <$> Aeson.withObject
+                  "evidence kind"
+                  (Aeson..: "const")
+                  evidenceSchema
+        else pure Nothing
 
 parseSupplementalAssociations :: Aeson.Value -> IO [(Text, Text, Text, [Text])]
 parseSupplementalAssociations documentValue =
@@ -372,6 +948,20 @@ expectedSupplementalAssociation source identityText =
          (acquiredSourceIdentity acquired))
     source
 
+expectedEmptySupplementalAssociation ::
+     AcquiredSupplementalSource -> (Text, Text, Text, [Text])
+expectedEmptySupplementalAssociation source =
+  foldAcquiredSupplementalSource
+    (\acquired ->
+       foldSourceIdentity
+         (\_ ordinal reference digest ->
+            ( Text.pack (show (sourceOrdinalValue ordinal))
+            , sourceReferenceText reference
+            , sourceSha256Text digest
+            , []))
+         (acquiredSourceIdentity acquired))
+    source
+
 assertParseFailure :: String -> IO value
 assertParseFailure message = assertFailure message >> fail "unreachable"
 
@@ -384,6 +974,274 @@ testAdapterDescriptor = do
   identifier <- requireRight (mkAdapterId "test")
   requireRight
     (mkAdapterDescriptor identifier "Test Adapter" "1.0.0" "archimate-3.2")
+
+testAdapterContract :: IO CompiledAdapterContract
+testAdapterContract = testAdapterDescriptor >>= compileTestContract
+
+compileTestContract :: AdapterDescriptor -> IO CompiledAdapterContract
+compileTestContract descriptor = do
+  adapter <-
+    compileCompleteAdapter descriptor [] $ \_ ->
+      pure
+        (adapterBehavior
+           (const noRecognitionMatch)
+           (const (decodedDraft notationOwnerDraft)))
+  collection <- requireRight (compileAdapterCollection (adapter :| []))
+  pure (NonEmpty.head (adapterCollectionContracts collection))
+
+compileSwappedNotationContract ::
+     AdapterDescriptor -> IO CompiledAdapterContract
+compileSwappedNotationContract descriptor = do
+  bindings <-
+    traverse
+      (\kind -> do
+         spec <-
+           requireRight
+             (mkAdapterRuleSpec
+                (swappedRuleIdentifier kind)
+                notationRuleStage
+                "expectation"
+                "meaning"
+                "action")
+         pure (archiMateNotationRule kind spec))
+      (NonEmpty.toList Notation.allArchiMateNotationIssueKinds)
+  case bindings of
+    firstBinding:remainingBindings -> do
+      adapter <-
+        requireRight
+          (compileAdapter
+             descriptor
+             (firstBinding :| remainingBindings)
+             (\_ ->
+                Right
+                  (adapterBehavior
+                     (const noRecognitionMatch)
+                     (const (decodedDraft notationOwnerDraft)))))
+      collection <- requireRight (compileAdapterCollection (adapter :| []))
+      pure (NonEmpty.head (adapterCollectionContracts collection))
+    [] ->
+      assertFailure "closed Notation inventory is empty" >> fail "unreachable"
+  where
+    swappedRuleIdentifier kind = "test.notation." <> swappedToken
+      where
+        token = Notation.archiMateNotationIssueKindToken kind
+        swappedToken
+          | token == "model-identity-missing" = "view-identity-missing"
+          | token == "view-identity-missing" = "model-identity-missing"
+          | otherwise = token
+
+notationOwnerDraft :: Draft.ProfileDraft
+notationOwnerDraft =
+  Draft.profileDraft
+    (Draft.modelRootDraft
+       (draftIdentity "model")
+       (draftLocation "model")
+       [ Draft.childRecordMember
+           (Draft.elementDraft
+              (draftIdentity "model")
+              (draftLocation "duplicate-model")
+              [ Draft.typeFieldMember
+                  [ Draft.draftTextScalar
+                      "Grouping"
+                      (draftLocation "duplicate-model-type")
+                  ]
+                  (draftLocation "duplicate-model-type-field")
+              ])
+       , Draft.childRecordMember
+           (Draft.viewDraft
+              (draftIdentity "empty-name-view")
+              (draftLocation "empty-name-view")
+              [ Draft.nameFieldMember [] (draftLocation "empty-name-field-a")
+              , Draft.nameFieldMember [] (draftLocation "empty-name-field-b")
+              ])
+       , Draft.childRecordMember
+           (Draft.viewDraft
+              (draftIdentity "main-view")
+              (draftLocation "main-view")
+              [ Draft.nameFieldMember
+                  [ Draft.draftTextScalar
+                      "Main"
+                      (draftLocation "main-view-name")
+                  , Draft.draftTextScalar
+                      "Alternate"
+                      (draftLocation "main-view-name-alternate")
+                  ]
+                  (draftLocation "main-view-name-field")
+              ])
+       ])
+
+bindingOwnerDraft :: Draft.ProfileDraft
+bindingOwnerDraft = bindingOwnerDraftWithOwnership True
+
+bindingStructureRejectedDraft :: Draft.ProfileDraft
+bindingStructureRejectedDraft = bindingOwnerDraftWithOwnership False
+
+bindingOwnerDraftWithOwnership :: Bool -> Draft.ProfileDraft
+bindingOwnerDraftWithOwnership includeOwnership =
+  Draft.profileDraft
+    (Draft.modelRootDraft
+       (draftIdentity "model")
+       (draftLocation "model")
+       (draftPropertyMember
+          "model-profile"
+          "o2i.profile"
+          "o2i.archimate-profile@0.3"
+          : map
+              (Draft.childRecordMember . uncurry3 bindingElement)
+              [ ("strategy", "Grouping", "Strategy")
+              , ("driver", "Driver", "Driver")
+              , ("objective", "Goal", "Objective")
+              , ("principle", "Principle", "Principle")
+              , ("action", "CourseOfAction", "Action")
+              , ("key-result", "Outcome", "KeyResult")
+              ]
+              <> (if includeOwnership
+                    then map
+                           (Draft.childRecordMember . bindingOwnership)
+                           bindingPrimitiveTargets
+                    else [])
+              <> [ Draft.childRecordMember
+                     (Draft.viewDraft
+                        (draftIdentity "binding-view")
+                        (draftLocation "binding-view")
+                        (Draft.nameFieldMember
+                           [ Draft.draftTextScalar
+                               "Binding"
+                               (draftLocation "binding-view-name")
+                           ]
+                           (draftLocation "binding-view-name-field")
+                           : map
+                               (Draft.childRecordMember . bindingViewNode)
+                               [ "strategy"
+                               , "driver"
+                               , "objective"
+                               , "principle"
+                               , "action"
+                               , "key-result"
+                               ]
+                               <> (if includeOwnership
+                                     then map
+                                            (Draft.childRecordMember
+                                               . bindingViewConnection)
+                                            bindingPrimitiveTargets
+                                     else [])))
+                 ]))
+
+bindingPrimitiveTargets :: [Text]
+bindingPrimitiveTargets =
+  ["driver", "objective", "principle", "action", "key-result"]
+
+bindingElement :: Text -> Text -> Text -> Draft.ElementDraft
+bindingElement identifier archiMateType o2iType =
+  Draft.elementDraft
+    (draftIdentity identifier)
+    (draftLocation identifier)
+    [ Draft.typeFieldMember
+        [ Draft.draftTextScalar
+            archiMateType
+            (draftLocation (identifier <> "-archimate-type"))
+        ]
+        (draftLocation (identifier <> "-archimate-type-field"))
+    , draftPropertyMember (identifier <> "-type") "o2i.type" o2iType
+    , draftPropertyMember
+        (identifier <> "-commitment")
+        "o2i.commitment"
+        "asserted"
+    ]
+
+bindingViewNode :: Text -> Draft.ViewNodeDraft
+bindingViewNode target =
+  Draft.viewNodeDraft
+    (draftIdentity (target <> "-node"))
+    (draftLocation (target <> "-node"))
+    [ Draft.referenceMember
+        (Draft.viewNodeElementReference
+           (draftIdentity target)
+           (draftLocation (target <> "-node-element")))
+    ]
+
+bindingOwnership :: Text -> Draft.RelationshipDraft
+bindingOwnership target =
+  Draft.relationshipDraft
+    (draftIdentity ("owns-" <> target))
+    (draftLocation ("owns-" <> target))
+    [ Draft.typeFieldMember
+        [ Draft.draftTextScalar
+            "CompositionRelationship"
+            (draftLocation ("owns-" <> target <> "-type"))
+        ]
+        (draftLocation ("owns-" <> target <> "-type-field"))
+    , Draft.directedFieldMember
+        [ Draft.draftBooleanScalar
+            False
+            (draftLocation ("owns-" <> target <> "-directed"))
+        ]
+        (draftLocation ("owns-" <> target <> "-directed-field"))
+    , Draft.nameFieldMember
+        [ Draft.draftTextScalar
+            "contextualizes"
+            (draftLocation ("owns-" <> target <> "-name"))
+        ]
+        (draftLocation ("owns-" <> target <> "-name-field"))
+    , Draft.referenceMember
+        (Draft.relationshipSourceReference
+           (draftIdentity "strategy")
+           (draftLocation ("owns-" <> target <> "-source")))
+    , Draft.referenceMember
+        (Draft.relationshipTargetReference
+           (draftIdentity target)
+           (draftLocation ("owns-" <> target <> "-target")))
+    , draftPropertyMember
+        ("owns-" <> target <> "-commitment")
+        "o2i.commitment"
+        "asserted"
+    ]
+
+bindingViewConnection :: Text -> Draft.ViewConnectionDraft
+bindingViewConnection target =
+  Draft.viewConnectionDraft
+    (draftIdentity ("owns-" <> target <> "-connection"))
+    (draftLocation ("owns-" <> target <> "-connection"))
+    [ Draft.referenceMember
+        (Draft.viewConnectionRelationshipReference
+           (draftIdentity ("owns-" <> target))
+           (draftLocation ("owns-" <> target <> "-connection-relationship")))
+    , Draft.referenceMember
+        (Draft.viewConnectionSourceReference
+           (draftIdentity "strategy-node")
+           (draftLocation ("owns-" <> target <> "-connection-source")))
+    , Draft.referenceMember
+        (Draft.viewConnectionTargetReference
+           (draftIdentity (target <> "-node"))
+           (draftLocation ("owns-" <> target <> "-connection-target")))
+    ]
+
+draftPropertyMember :: Text -> Text -> Text -> Draft.DraftMember recordRole
+draftPropertyMember identifier key value =
+  Draft.propertyMember
+    (Draft.draftProperty
+       (Draft.directPropertyKey
+          [Draft.draftTextScalar key (draftLocation (identifier <> "-key"))])
+       [Draft.draftTextScalar value (draftLocation (identifier <> "-value"))]
+       (draftLocation identifier)
+       [])
+
+uncurry3 ::
+     (first -> second -> third -> result) -> (first, second, third) -> result
+uncurry3 function (first, second, third) = function first second third
+
+draftIdentity :: Text -> Draft.DraftIdentity recordRole
+draftIdentity value =
+  Draft.draftIdentity
+    [Draft.draftTextScalar value (draftLocation (value <> "-identity"))]
+
+draftLocation :: Text -> Draft.DraftLocation
+draftLocation subject =
+  Draft.draftLocation
+    (Draft.draftSourcePath
+       (Draft.draftPathStep (Draft.draftNativeName Nothing subject) 0)
+       [])
+    Nothing
 
 modelSource :: IO SourceIdentity
 modelSource = sourceIdentityFor ModelRole 0 "model"
@@ -408,6 +1266,27 @@ acquiredStrategySource2 =
     1
     "supplemental-owner-source-2"
     "owner-source-strategy-2.json"
+
+acquiredValidStrategySource :: IO AcquiredSupplementalSource
+acquiredValidStrategySource =
+  acquireStrategySource
+    2
+    "supplemental-owner-source-valid"
+    "owner-source-strategy-valid.json"
+
+acquiredSupplementalBytes ::
+     Natural -> Text -> ByteString -> IO AcquiredSupplementalSource
+acquiredSupplementalBytes ordinal referenceText bytes = do
+  reference <- requireRight (mkSourceReference referenceText)
+  let identity =
+        sourceIdentityFromBytes
+          SupplementalRole
+          (sourceOrdinal ordinal)
+          reference
+          bytes
+  case acquiredSupplementalSource (AcquiredSource identity bytes) of
+    Nothing -> assertFailure "supplemental role was lost" >> fail "unreachable"
+    Just source -> pure source
 
 acquireStrategySource ::
      Natural -> Text -> FilePath -> IO AcquiredSupplementalSource

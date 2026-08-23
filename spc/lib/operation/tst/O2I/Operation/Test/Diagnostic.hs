@@ -42,6 +42,7 @@ classifications = do
   diagnosticSeverityText infoSeverity @?= "info"
   diagnosticSeverityText errorSeverity @?= "error"
   diagnosticDispositionText modelFinding @?= "model-finding"
+  diagnosticDispositionText processFailure @?= "process-failure"
 
 schemaRoot :: Assertion
 schemaRoot = do
@@ -64,4 +65,4 @@ schemaAuthority = do
   schemaAuthorityReference diagnosticSchemaAuthority
     @?= "o2i.operation.diagnostic/v2"
   schemaDigestText (schemaAuthorityDigest diagnosticSchemaAuthority)
-    @?= "e17d39a6b90fe35b3fc6ce5a96476dcec37f2dcf1476034dcbe04a457886bad5"
+    @?= "df848ec7e82802ca13c24ffbe0ea0c0883001251af44d6ef9a24a403507f8ff2"

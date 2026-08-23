@@ -261,17 +261,942 @@
         }
       }
     },
+    "notationOccurrenceEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fields"
+      ],
+      "properties": {
+        "fields": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "values"
+              ],
+              "properties": {
+                "role": {
+                  "const": "subject"
+                },
+                "values": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 1,
+                  "items": {
+                    "$ref": "#/$defs/sourceLocation"
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "values"
+              ],
+              "properties": {
+                "role": {
+                  "const": "observations"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "location"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "occurrence"
+                      },
+                      "location": {
+                        "$ref": "#/$defs/sourceLocation"
+                      }
+                    }
+                  },
+                  "minItems": 1
+                }
+              }
+            }
+          ],
+          "items": false
+        }
+      }
+    },
+    "notationValueEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fields"
+      ],
+      "properties": {
+        "fields": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "values"
+              ],
+              "properties": {
+                "role": {
+                  "const": "subject"
+                },
+                "values": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 1,
+                  "items": {
+                    "$ref": "#/$defs/sourceLocation"
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "values"
+              ],
+              "properties": {
+                "role": {
+                  "const": "observations"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "location",
+                      "valueKind",
+                      "value"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "value"
+                      },
+                      "location": {
+                        "$ref": "#/$defs/sourceLocation"
+                      },
+                      "valueKind": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "minItems": 1
+                }
+              }
+            }
+          ],
+          "items": false
+        }
+      }
+    },
+    "notationReferenceEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fields"
+      ],
+      "properties": {
+        "fields": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "values"
+              ],
+              "properties": {
+                "role": {
+                  "const": "subject"
+                },
+                "values": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 1,
+                  "items": {
+                    "$ref": "#/$defs/sourceLocation"
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "values"
+              ],
+              "properties": {
+                "role": {
+                  "const": "observations"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "kind",
+                      "location",
+                      "value",
+                      "targets"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "reference"
+                      },
+                      "location": {
+                        "$ref": "#/$defs/sourceLocation"
+                      },
+                      "value": {
+                        "type": "string"
+                      },
+                      "targets": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/$defs/sourceLocation"
+                        }
+                      }
+                    }
+                  },
+                  "minItems": 1
+                }
+              }
+            }
+          ],
+          "items": false
+        }
+      }
+    },
     "preparedAuthority": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "adapter",
+        "notationRules",
         "profile",
         "model"
       ],
       "properties": {
         "adapter": {
           "$ref": "#/$defs/adapterDescriptor"
+        },
+        "notationRules": {
+          "type": "array",
+          "minItems": 38,
+          "maxItems": 38,
+          "prefixItems": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-model-identity-missing"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-model-identity-multiplicity"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-model-identity-value-kind-invalid"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-model-identity-grammar-invalid"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-model-identity-duplicate"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-view-identity-missing"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-view-identity-multiplicity"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-view-identity-value-kind-invalid"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-view-identity-grammar-invalid"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-view-identity-duplicate"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-view-name-missing"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-view-name-multiplicity"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-view-name-value-kind-invalid"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-marker-key-missing"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-marker-key-multiplicity"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-marker-key-value-kind-invalid"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-marker-reference-identity-missing"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-marker-reference-identity-multiplicity"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-marker-reference-identity-value-kind-invalid"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-marker-reference-identity-grammar-invalid"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-marker-reference-target-missing"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-marker-reference-target-wrong-family"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-marker-reference-target-ambiguous"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-marker-definition-name-missing"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-marker-definition-name-multiplicity"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-marker-definition-name-value-kind-invalid"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-record-identity-missing"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-record-identity-multiplicity"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-record-identity-value-kind-invalid"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-record-identity-grammar-invalid"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-record-identity-duplicate"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-reference-identity-missing"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-reference-identity-multiplicity"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-reference-identity-value-kind-invalid"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-reference-identity-grammar-invalid"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-reference-target-missing"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-reference-target-wrong-family"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "evidenceKind",
+                "ruleId"
+              ],
+              "properties": {
+                "evidenceKind": {
+                  "const": "archimate-notation-reference-target-ambiguous"
+                },
+                "ruleId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^[^\u0000]+$"
+                }
+              }
+            }
+          ],
+          "items": false
         },
         "profile": {
           "type": "object",
@@ -346,6 +1271,1430 @@
     },
     "modelDiagnostic": {
       "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-model-identity-missing"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationOccurrenceEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-model-identity-multiplicity"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/notationOccurrenceEvidence"
+                },
+                {
+                  "$ref": "#/$defs/notationValueEvidence"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-model-identity-value-kind-invalid"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationValueEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-model-identity-grammar-invalid"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationValueEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-model-identity-duplicate"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationReferenceEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-view-identity-missing"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationOccurrenceEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-view-identity-multiplicity"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/notationOccurrenceEvidence"
+                },
+                {
+                  "$ref": "#/$defs/notationValueEvidence"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-view-identity-value-kind-invalid"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationValueEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-view-identity-grammar-invalid"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationValueEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-view-identity-duplicate"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationReferenceEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-view-name-missing"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationOccurrenceEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-view-name-multiplicity"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/notationOccurrenceEvidence"
+                },
+                {
+                  "$ref": "#/$defs/notationValueEvidence"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-view-name-value-kind-invalid"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationValueEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-marker-key-missing"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationOccurrenceEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-marker-key-multiplicity"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/notationOccurrenceEvidence"
+                },
+                {
+                  "$ref": "#/$defs/notationValueEvidence"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-marker-key-value-kind-invalid"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationValueEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-marker-reference-identity-missing"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationOccurrenceEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-marker-reference-identity-multiplicity"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/notationOccurrenceEvidence"
+                },
+                {
+                  "$ref": "#/$defs/notationValueEvidence"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-marker-reference-identity-value-kind-invalid"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationValueEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-marker-reference-identity-grammar-invalid"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationValueEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-marker-reference-target-missing"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationReferenceEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-marker-reference-target-wrong-family"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationReferenceEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-marker-reference-target-ambiguous"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationReferenceEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-marker-definition-name-missing"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationOccurrenceEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-marker-definition-name-multiplicity"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/notationOccurrenceEvidence"
+                },
+                {
+                  "$ref": "#/$defs/notationValueEvidence"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-marker-definition-name-value-kind-invalid"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationValueEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-record-identity-missing"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationOccurrenceEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-record-identity-multiplicity"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/notationOccurrenceEvidence"
+                },
+                {
+                  "$ref": "#/$defs/notationValueEvidence"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-record-identity-value-kind-invalid"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationValueEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-record-identity-grammar-invalid"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationValueEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-record-identity-duplicate"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationReferenceEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-reference-identity-missing"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationOccurrenceEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-reference-identity-multiplicity"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/notationOccurrenceEvidence"
+                },
+                {
+                  "$ref": "#/$defs/notationValueEvidence"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-reference-identity-value-kind-invalid"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationValueEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-reference-identity-grammar-invalid"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationValueEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-reference-target-missing"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationReferenceEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-reference-target-wrong-family"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationReferenceEvidence"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "notation-assessment"
+            },
+            "owner": {
+              "const": "adapter"
+            },
+            "stage": {
+              "const": "notation"
+            },
+            "evidenceKind": {
+              "const": "archimate-notation-reference-target-ambiguous"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "$ref": "#/$defs/notationReferenceEvidence"
+            }
+          }
+        },
         {
           "type": "object",
           "additionalProperties": false,
@@ -22113,7 +24462,7 @@
                         "const": "error"
                       },
                       "disposition": {
-                        "const": "model-finding"
+                        "const": "process-failure"
                       },
                       "evidence": {
                         "oneOf": [
@@ -22217,7 +24566,7 @@
                         "const": "error"
                       },
                       "disposition": {
-                        "const": "model-finding"
+                        "const": "process-failure"
                       },
                       "evidence": {
                         "oneOf": [
@@ -22321,7 +24670,7 @@
                         "const": "error"
                       },
                       "disposition": {
-                        "const": "model-finding"
+                        "const": "process-failure"
                       },
                       "evidence": {
                         "oneOf": [
@@ -22425,7 +24774,7 @@
                         "const": "error"
                       },
                       "disposition": {
-                        "const": "model-finding"
+                        "const": "process-failure"
                       },
                       "evidence": {
                         "oneOf": [

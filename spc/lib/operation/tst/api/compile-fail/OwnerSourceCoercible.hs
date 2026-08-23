@@ -13,6 +13,11 @@ coerceScope ::
   -> PreparedScope authority profile document secondScope
 coerceScope = coerce
 
+coerceAdmittedInputs ::
+     AdmittedOwnerSupplementalInputs authority profile document firstInputs
+  -> AdmittedOwnerSupplementalInputs authority profile document secondInputs
+coerceAdmittedInputs = coerce
+
 coerceSupplementalBindingInputs ::
      SupplementalOwnerBinding authority profile document scope firstInputs
   -> SupplementalOwnerBinding authority profile document scope secondInputs

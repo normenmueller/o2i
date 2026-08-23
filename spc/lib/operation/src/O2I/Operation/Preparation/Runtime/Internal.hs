@@ -35,6 +35,10 @@ import O2I.Operation.Adapter
   , selectAdapter
   , selectedAdapterDescriptor
   )
+import O2I.Operation.Adapter.Internal
+  ( CompiledAdapterContract(..)
+  , SelectedAdapter(..)
+  )
 import O2I.Operation.Diagnostic.Owner.Source (PreparedAuthority)
 import O2I.Operation.Diagnostic.Owner.Source.Internal (PreparedAuthority(..))
 import O2I.Operation.Failure.Internal (PreparationFailure(..))
@@ -133,7 +137,7 @@ withPreparedSelectedView adapters profiles requestedAdapter request (AcquiredMod
       withSelectedArchiMateProfile (resolvedProfileDescriptor resolved) $ \profile ->
         prepared
           (PreparedAuthority
-             (selectedAdapterDescriptor selected)
+             (selectedAdapterContract selected)
              (resolvedProfileDescriptor resolved)
              (acquiredSourceIdentity model))
           selected
@@ -146,3 +150,5 @@ withPreparedSelectedView adapters profiles requestedAdapter request (AcquiredMod
              document
              (selectedViewDescriptor selectedView))
           (requestedInputs request)
+    selectedAdapterContract (SelectedAdapter adapter) =
+      CompiledAdapterContract adapter
