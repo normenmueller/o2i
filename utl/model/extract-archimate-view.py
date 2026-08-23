@@ -11,18 +11,18 @@ import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from archimate_profile import (
-    ArchimateProfileContract,
+from repository_view_contract import (
     FrozenObject,
     ProfileContractError,
-    load_profile_contract,
+    RepositoryViewContract,
+    load_repository_view_contract,
 )
 
 
 XSI_TYPE = "{http://www.w3.org/2001/XMLSchema-instance}type"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MODEL = REPOSITORY_ROOT / "mdl" / "o2i.archimate"
-PROFILE_CONTRACT = (
+PROFILE_PATH = (
     REPOSITORY_ROOT / "spc" / "ctr" / "archimate" / "profile.json"
 )
 SYNTAX_CARRIERS_VIEW = "O2I Syntax - Carriers"
@@ -350,7 +350,7 @@ RELATION_CONTRACTS = {
 
 
 def profile_pattern(
-    contract: ArchimateProfileContract,
+    contract: RepositoryViewContract,
     identifier: str,
 ) -> FrozenObject:
     """Resolve one unique structured pattern from the profile authority."""
@@ -378,7 +378,7 @@ def kebab(identifier: str) -> str:
 
 
 def carrier_mapping_edges(
-    contract: ArchimateProfileContract,
+    contract: RepositoryViewContract,
 ) -> frozenset[tuple[str, str, str, str, bool, str, str]]:
     """Project carrier facts into the repository's mapping-only notation."""
     edges = set()
@@ -404,7 +404,7 @@ def carrier_mapping_edges(
 
 
 def endpoint_archimate_element(
-    contract: ArchimateProfileContract,
+    contract: RepositoryViewContract,
     endpoint: str,
 ) -> str:
     """Resolve one notation-independent endpoint to its carrier mapping."""
@@ -420,7 +420,7 @@ def endpoint_archimate_element(
 
 
 def carrier_archimate_element(
-    contract: ArchimateProfileContract,
+    contract: RepositoryViewContract,
     kind: str,
     o2i_type: str,
 ) -> str:
@@ -446,7 +446,7 @@ def carrier_archimate_element(
 
 
 def relation_mapping_edges(
-    contract: ArchimateProfileContract,
+    contract: RepositoryViewContract,
 ) -> frozenset[tuple[str, str, str, str, bool, str, str]]:
     """Project exact relation representations as generic View exemplars."""
     return frozenset(
@@ -470,7 +470,7 @@ def relation_mapping_edges(
 
 
 def relation_mapping_families(
-    contract: ArchimateProfileContract,
+    contract: RepositoryViewContract,
 ) -> dict[
     tuple[str, str, str, bool],
     frozenset[tuple[str, str, str, str, bool, str, str]],
@@ -600,7 +600,7 @@ def canonical_mapping_edge(
 
 
 def syntax_pattern_contracts(
-    contract: ArchimateProfileContract,
+    contract: RepositoryViewContract,
 ) -> dict[str, frozenset[tuple[str, str, str, str, bool, str, str]]]:
     """Project exact binary syntax exemplars into repository Views."""
     contextualization = profile_pattern(contract, "contextualization")
@@ -650,7 +650,7 @@ def syntax_pattern_contracts(
 
 
 def syntax_pattern_nodes(
-    contract: ArchimateProfileContract,
+    contract: RepositoryViewContract,
 ) -> dict[str, frozenset[tuple[str, str]]]:
     """Derive the carrier types of repository pattern exemplars."""
     contextualization = profile_pattern(contract, "contextualization")
@@ -891,7 +891,7 @@ def visible_element_ids(
 
 def collective_pattern_errors(
     root: ET.Element,
-    contract: ArchimateProfileContract,
+    contract: RepositoryViewContract,
     view_name: str,
     object_targets: dict[str, str],
     relation_records: list[
@@ -1039,7 +1039,7 @@ def collective_pattern_errors(
 
 
 def contextualization_pattern_errors(
-    contract: ArchimateProfileContract,
+    contract: RepositoryViewContract,
     view_name: str,
     relation_records: list[
         tuple[str, str, str, str, str, bool, str, str, str]
@@ -1271,7 +1271,7 @@ def rendered_view(
 def validate_model(root: ET.Element) -> list[str]:
     """Validate repository View contracts without validating O2I semantics."""
     try:
-        profile_contract = load_profile_contract(PROFILE_CONTRACT)
+        profile_contract = load_repository_view_contract(PROFILE_PATH)
         pattern_contracts = syntax_pattern_contracts(profile_contract)
         pattern_nodes = syntax_pattern_nodes(profile_contract)
         expected_carrier_mappings = carrier_mapping_edges(profile_contract)

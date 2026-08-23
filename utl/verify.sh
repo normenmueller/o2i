@@ -116,10 +116,7 @@ verify_model() {
   python3 -B utl/model/audit-archimate-model.py
   python3 -B utl/model/extract-archimate-view.py --preset all --check
   python3 -B -m unittest discover \
-    -s utl/model -p 'test_archimate_profile.py'
-  python3 -B -m unittest discover \
-    -s utl/model -p 'test_render_archimate_profile.py'
-  python3 -B utl/model/render-archimate-profile.py --check
+    -s utl/model -p 'test_repository_view_contract.py'
   python3 -B -m unittest discover \
     -s utl/model -p 'test_*archimate_model.py'
   python3 -B -m unittest discover \

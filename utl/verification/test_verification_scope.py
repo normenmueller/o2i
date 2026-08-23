@@ -96,6 +96,10 @@ class VerificationPathMatrixTests(unittest.TestCase):
             "utl/licensing/check-license-texts.sh": {"licensing"},
             "utl/licensing/check_license_assignments.py": {"licensing"},
             "utl/licensing/test_license_assignments.py": {"licensing"},
+            "utl/model/repository_view_contract.py": {
+                "licensing",
+                "model",
+            },
             "utl/model/render-archimate-profile.py": {
                 "licensing",
                 "model",

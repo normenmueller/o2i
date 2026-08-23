@@ -580,6 +580,12 @@ class RepositoryViewContractTest(unittest.TestCase):
                     "InfluenceRelationship",
                     False,
                 ),
+                (
+                    EXTRACTOR.CONTEXT_RELATION_FAMILY,
+                    generic,
+                    "RealizationRelationship",
+                    False,
+                ),
                 *{
                     (
                         EXTRACTOR.CONTENT_RELATION_FAMILY,
@@ -639,7 +645,7 @@ class RepositoryViewContractTest(unittest.TestCase):
         self,
     ) -> None:
         families = self._relation_mapping_families()
-        self.assertEqual(10, len(families))
+        self.assertEqual(11, len(families))
 
         for family, admissible in sorted(families.items()):
             with self.subTest(family=EXTRACTOR.format_mapping_family(family)):
@@ -1118,8 +1124,8 @@ class RepositoryViewContractTest(unittest.TestCase):
         tuple[str, str, str, bool],
         frozenset[tuple[str, str, str, str, bool, str, str]],
     ]:
-        contract = EXTRACTOR.load_profile_contract(
-            EXTRACTOR.PROFILE_CONTRACT,
+        contract = EXTRACTOR.load_repository_view_contract(
+            EXTRACTOR.PROFILE_PATH,
         )
         return EXTRACTOR.relation_mapping_families(contract)
 
