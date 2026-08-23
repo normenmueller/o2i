@@ -4,6 +4,11 @@ module O2I.Operation.Provenance
   , SourceOrdinal
   , sourceOrdinal
   , sourceOrdinalValue
+  , SourceKey
+  , sourceKey
+  , sourceKeyRole
+  , sourceKeyOrdinal
+  , foldSourceKey
   , SourceReference
   , SourceReferenceError(..)
   , mkSourceReference
@@ -11,6 +16,7 @@ module O2I.Operation.Provenance
   , SourceSha256
   , sourceSha256Text
   , SourceIdentity
+  , sourceIdentityKey
   , sourceIdentityRole
   , sourceIdentityOrdinal
   , sourceIdentityReference
@@ -37,6 +43,22 @@ sourceOrdinal = SourceOrdinal
 sourceOrdinalValue :: SourceOrdinal -> Natural
 sourceOrdinalValue (SourceOrdinal value) = value
 
+-- | Bind one role to one role-local ordinal.
+sourceKey :: SourceRole -> SourceOrdinal -> SourceKey
+sourceKey = SourceKey
+
+-- | Project the role of an exact source key.
+sourceKeyRole :: SourceKey -> SourceRole
+sourceKeyRole (SourceKey role _) = role
+
+-- | Project the role-local ordinal of an exact source key.
+sourceKeyOrdinal :: SourceKey -> SourceOrdinal
+sourceKeyOrdinal (SourceKey _ ordinal) = ordinal
+
+-- | Consume both fields of one exact source key.
+foldSourceKey :: (SourceRole -> SourceOrdinal -> value) -> SourceKey -> value
+foldSourceKey consume (SourceKey role ordinal) = consume role ordinal
+
 -- | Project the stable source reference.
 sourceReferenceText :: SourceReference -> Text
 sourceReferenceText (SourceReference value) = value
@@ -45,28 +67,32 @@ sourceReferenceText (SourceReference value) = value
 sourceSha256Text :: SourceSha256 -> Text
 sourceSha256Text (SourceSha256 value) = value
 
+-- | Project the exact role-local source key.
+sourceIdentityKey :: SourceIdentity -> SourceKey
+sourceIdentityKey (SourceIdentity key _ _) = key
+
 -- | Project the source role.
 sourceIdentityRole :: SourceIdentity -> SourceRole
-sourceIdentityRole (SourceIdentity role _ _ _) = role
+sourceIdentityRole (SourceIdentity (SourceKey role _) _ _) = role
 
 -- | Project the Operation-assigned ordinal.
 sourceIdentityOrdinal :: SourceIdentity -> SourceOrdinal
-sourceIdentityOrdinal (SourceIdentity _ ordinal _ _) = ordinal
+sourceIdentityOrdinal (SourceIdentity (SourceKey _ ordinal) _ _) = ordinal
 
 -- | Project the caller-owned source reference.
 sourceIdentityReference :: SourceIdentity -> SourceReference
-sourceIdentityReference (SourceIdentity _ _ reference _) = reference
+sourceIdentityReference (SourceIdentity _ reference _) = reference
 
 -- | Project the digest of the exact acquired bytes.
 sourceIdentitySha256 :: SourceIdentity -> SourceSha256
-sourceIdentitySha256 (SourceIdentity _ _ _ digest) = digest
+sourceIdentitySha256 (SourceIdentity _ _ digest) = digest
 
 -- | Eliminate an opaque source identity without exposing its constructor.
 foldSourceIdentity ::
      (SourceRole -> SourceOrdinal -> SourceReference -> SourceSha256 -> value)
   -> SourceIdentity
   -> value
-foldSourceIdentity project (SourceIdentity role ordinal reference digest) =
+foldSourceIdentity project (SourceIdentity (SourceKey role ordinal) reference digest) =
   project role ordinal reference digest
 
 -- | Project canonically ordered consumed supplemental sources.
@@ -82,11 +108,10 @@ foldSupplementalProvenance project (SupplementalProvenance identities) =
 -- | Eliminate every closed supplemental-provenance defect.
 foldSupplementalProvenanceDefect ::
      (SourceIdentity -> value)
-  -> (SourceOrdinal -> NonEmpty SourceIdentity -> value)
+  -> (SourceKey -> NonEmpty SourceIdentity -> value)
   -> SupplementalProvenanceDefect
   -> value
 foldSupplementalProvenanceDefect onModel onDuplicate defect =
   case defect of
     ModelIdentityIsNotSupplemental identity -> onModel identity
-    DuplicateSupplementalOrdinal ordinal identities ->
-      onDuplicate ordinal identities
+    DuplicateSupplementalSource key identities -> onDuplicate key identities

@@ -23,26 +23,58 @@ PROFILE_COMPANION = Path(
         "O2I_PROFILE_COMPANION", COMPILER.DEFAULT_PROFILE_COMPANION
     )
 )
+PROFILE_DIAGNOSTIC_INVENTORY = Path(
+    os.environ.get(
+        "O2I_PROFILE_DIAGNOSTIC_INVENTORY",
+        COMPILER.DEFAULT_PROFILE_DIAGNOSTIC_INVENTORY,
+    )
+)
+CORE_OWNER_DIAGNOSTIC_INVENTORY = Path(
+    os.environ.get(
+        "O2I_CORE_OWNER_DIAGNOSTIC_INVENTORY",
+        COMPILER.DEFAULT_CORE_OWNER_DIAGNOSTIC_INVENTORY,
+    )
+)
 
 
 class OperationContractCompilerTest(unittest.TestCase):
     def setUp(self):
         self.companion = json.loads(COMPILER.COMPANION.read_text(encoding="utf-8"))
+        self.profile_inventory = json.loads(
+            PROFILE_DIAGNOSTIC_INVENTORY.read_text(encoding="utf-8")
+        )
+        self.core_inventory = json.loads(
+            CORE_OWNER_DIAGNOSTIC_INVENTORY.read_text(encoding="utf-8")
+        )
+
+    def validate_contract(self, profile_companion=PROFILE_COMPANION):
+        return COMPILER.validate(
+            profile_companion,
+            PROFILE_DIAGNOSTIC_INVENTORY,
+            CORE_OWNER_DIAGNOSTIC_INVENTORY,
+        )
+
+    def render_contract(self):
+        return COMPILER.render_outputs(
+            PROFILE_COMPANION,
+            PROFILE_DIAGNOSTIC_INVENTORY,
+            CORE_OWNER_DIAGNOSTIC_INVENTORY,
+        )
 
     def render_value(self, value):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "operation.json"
             path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
             with patch.object(COMPILER, "COMPANION", path):
-                return COMPILER.render_outputs(PROFILE_COMPANION)
+                return self.render_contract()
 
     def assert_invalid(self, value, pattern):
         with self.assertRaisesRegex(ValueError, pattern):
             self.render_value(value)
 
     def test_canonical_contract_compiles_deterministically(self):
-        first = COMPILER.render_outputs(PROFILE_COMPANION)
-        second = COMPILER.render_outputs(PROFILE_COMPANION)
+        first = self.render_contract()
+        second = self.render_contract()
         self.assertEqual(first, second)
         self.assertEqual(8, len(first))
         self.assertIn(b"data GeneratedOperationRule", first[COMPILER.RULE_GENERATED])
@@ -50,9 +82,13 @@ class OperationContractCompilerTest(unittest.TestCase):
             b"adapterInventoryMachineSchema :: MachineSchema",
             first[COMPILER.SCHEMA_GENERATED],
         )
+        self.assertIn(
+            b"diagnosticSchemaAuthority :: SchemaAuthority",
+            first[COMPILER.SCHEMA_GENERATED],
+        )
         self.assertEqual(9, first[COMPILER.RULE_GENERATED].count(b'"bootstrap.'))
 
-        documents = COMPILER.validate(PROFILE_COMPANION)[3]
+        documents = self.validate_contract()[3]
         for document in documents:
             payload = first[document.schema_path]
             schema = json.loads(payload)
@@ -65,20 +101,25 @@ class OperationContractCompilerTest(unittest.TestCase):
             )
 
     def test_schema_projection_closes_every_object_boundary(self):
-        for document in COMPILER.validate(PROFILE_COMPANION)[3]:
+        for document in self.validate_contract()[3]:
             schema = json.loads(COMPILER.render_schema(document))
             self.assert_closed_objects(schema)
-        for fragment in COMPILER.validate(PROFILE_COMPANION)[4]:
-            schema = json.loads(COMPILER.render_schema_fragment(fragment))
+        for fragment in self.validate_contract()[4]:
+            schema = json.loads(
+                COMPILER.render_schema_fragment(
+                    fragment, self.profile_inventory, self.core_inventory
+                )
+            )
             self.assert_closed_objects(schema)
 
     def assert_closed_objects(self, value):
         if isinstance(value, dict):
             if value.get("type") == "object":
                 self.assertIs(False, value.get("additionalProperties"))
-                self.assertLessEqual(
-                    set(value["required"]), set(value["properties"])
-                )
+                if "properties" in value:
+                    self.assertLessEqual(
+                        set(value["required"]), set(value["properties"])
+                    )
             for nested in value.values():
                 self.assert_closed_objects(nested)
         elif isinstance(value, list):
@@ -87,7 +128,7 @@ class OperationContractCompilerTest(unittest.TestCase):
 
     def test_rule_definition_failure_has_no_unencodable_authority(self):
         schema = json.loads(
-            COMPILER.render_schema(COMPILER.validate(PROFILE_COMPANION)[3][2])
+            COMPILER.render_schema(self.validate_contract()[3][2])
         )
         invalid = schema["$defs"]["ruleInvalid"]
         self.assertEqual(
@@ -97,7 +138,7 @@ class OperationContractCompilerTest(unittest.TestCase):
 
     def test_rule_authority_requires_only_available_contract_digests(self):
         schema = json.loads(
-            COMPILER.render_schema(COMPILER.validate(PROFILE_COMPANION)[3][2])
+            COMPILER.render_schema(self.validate_contract()[3][2])
         )
         authorities = schema["$defs"]["ruleAuthority"]["oneOf"]
         bindings = {
@@ -117,7 +158,7 @@ class OperationContractCompilerTest(unittest.TestCase):
 
     def test_multiple_adapter_matches_require_at_least_two_descriptors(self):
         schema = json.loads(
-            COMPILER.render_schema(COMPILER.validate(PROFILE_COMPANION)[3][4])
+            COMPILER.render_schema(self.validate_contract()[3][4])
         )
         selection = schema["$defs"]["selectionFailure"]
         multiple = selection["oneOf"][3]
@@ -125,14 +166,14 @@ class OperationContractCompilerTest(unittest.TestCase):
 
     def test_post_acquisition_view_failures_require_source_identity(self):
         schema = json.loads(
-            COMPILER.render_schema(COMPILER.validate(PROFILE_COMPANION)[3][4])
+            COMPILER.render_schema(self.validate_contract()[3][4])
         )
         self.assertIn("source", schema["$defs"]["selectionFailed"]["required"])
         self.assertIn("source", schema["$defs"]["decodeFailed"]["required"])
 
     def test_view_failure_diagnostics_share_adapter_preparation_stage(self):
         schema = json.loads(
-            COMPILER.render_schema(COMPILER.validate(PROFILE_COMPANION)[3][4])
+            COMPILER.render_schema(self.validate_contract()[3][4])
         )
         definitions = schema["$defs"]
         recognition = definitions["recognitionAdapterDiagnostic"]
@@ -158,7 +199,7 @@ class OperationContractCompilerTest(unittest.TestCase):
 
     def test_view_schema_preserves_empty_native_lexemes(self):
         schema = json.loads(
-            COMPILER.render_schema(COMPILER.validate(PROFILE_COMPANION)[3][4])
+            COMPILER.render_schema(self.validate_contract()[3][4])
         )
         definitions = schema["$defs"]
         self.assertNotIn(
@@ -177,62 +218,150 @@ class OperationContractCompilerTest(unittest.TestCase):
 
     def test_view_source_path_uses_one_based_ordinals(self):
         schema = json.loads(
-            COMPILER.render_schema(COMPILER.validate(PROFILE_COMPANION)[3][4])
+            COMPILER.render_schema(self.validate_contract()[3][4])
         )
         path_step = schema["$defs"]["sourceLocation"]["properties"]["path"][
             "items"
         ]
         self.assertEqual(1, path_step["properties"]["ordinal"]["minimum"])
 
-    def test_diagnostic_schema_closes_the_haskell_occurrence_algebra(self):
-        fragment = COMPILER.validate(PROFILE_COMPANION)[4][0]
-        schema = json.loads(COMPILER.render_schema_fragment(fragment))
-        self.assertEqual("o2i.operation.diagnostic/v1", fragment.reference)
-        self.assertEqual("#/$defs/diagnosticValue", schema["$ref"])
-        self.assertEqual(COMPILER.diagnostic_definitions(), schema["$defs"])
-        occurrences = schema["$defs"]["diagnosticOccurrence"]["oneOf"]
-        self.assertEqual(
-            ["source", "native", "draft", "canonical", "subject", "occurrence"],
-            [branch["properties"]["kind"]["const"] for branch in occurrences],
+    def test_diagnostic_schema_is_owner_inventory_exact(self):
+        fragment = self.validate_contract()[4][0]
+        schema = json.loads(
+            COMPILER.render_schema_fragment(
+                fragment, self.profile_inventory, self.core_inventory
+            )
         )
-        provenances = schema["$defs"]["diagnosticProvenance"]["oneOf"]
+        self.assertEqual("o2i.operation.diagnostic/v2", fragment.reference)
+        self.assertEqual("#/$defs/preparedDiagnosticDocument", schema["$ref"])
         self.assertEqual(
-            ["operation", "adapter", "profile", "core"],
-            [branch["properties"]["owner"]["const"] for branch in provenances],
+            COMPILER.diagnostic_definitions(
+                self.profile_inventory, self.core_inventory
+            ),
+            schema["$defs"],
         )
+        document = schema["$defs"]["preparedDiagnosticDocument"]
         self.assertEqual(
+            ["schema", "authority", "modelDiagnostics", "supplementalSources"],
+            document["required"],
+        )
+        authority = schema["$defs"]["preparedAuthority"]
+        self.assertEqual(
+            ["adapter", "profile", "model"], authority["required"]
+        )
+        model_diagnostics = schema["$defs"]["modelDiagnostic"]["oneOf"]
+        self.assertEqual(229, len(model_diagnostics))
+        binding_diagnostics = schema["$defs"]["supplementalSources"][
+            "patternProperties"
+        ]["^(0|[1-9][0-9]*)$"]["properties"]["diagnostics"]["items"][
+            "oneOf"
+        ]
+        self.assertEqual(4, len(binding_diagnostics))
+        self.assertEqual(
+            {"const": "supplemental-binding"},
+            binding_diagnostics[0]["properties"]["producer"],
+        )
+        target_owner = self.find_diagnostic(
+            model_diagnostics,
+            "structure-assessment",
+            "core.contextualization.target-owner-cardinality",
+        )
+        alternatives = target_owner["properties"]["evidence"]["oneOf"]
+        self.assertEqual(2, len(alternatives))
+        self.assertEqual(
+            [(0, 0), (2, None)],
             [
-                ["owner", "ruleId"],
-                ["owner", "adapterId", "ruleId"],
-                ["owner", "profileReference", "ruleId"],
-                ["owner", "ruleId"],
+                (
+                    branch["properties"]["fields"]["prefixItems"][1][
+                        "properties"
+                    ]["values"]["minItems"],
+                    branch["properties"]["fields"]["prefixItems"][1][
+                        "properties"
+                    ]["values"].get("maxItems"),
+                )
+                for branch in alternatives
             ],
-            [branch["required"] for branch in provenances],
         )
-        diagnostic = schema["$defs"]["diagnosticValue"]
-        self.assertEqual(
-            ["severity", "disposition", "provenance", "occurrences"],
-            diagnostic["required"],
+        semantic = self.find_diagnostic(
+            model_diagnostics,
+            "semantics-assessment",
+            "core.collective-strategy-realization.asserted-collective-coverage",
         )
-        for redundant in ("code", "ruleId", "authority", "stage"):
-            self.assertNotIn(redundant, diagnostic["properties"])
+        semantic_fields = semantic["properties"]["evidence"]["oneOf"][0][
+            "properties"
+        ]["fields"]
         self.assertEqual(
-            ["debug", "info", "warning", "error"],
-            diagnostic["properties"]["severity"]["enum"],
-        )
-        self.assertEqual(
-            ["model-finding", "process-failure"],
-            diagnostic["properties"]["disposition"]["enum"],
-        )
-        self.assertEqual(
-            1,
-            schema["$defs"]["sourceLocation"]["properties"]["path"]["items"][
-                "properties"
-            ]["ordinal"]["minimum"],
+            ["claim", "uncovered-target-member"],
+            [
+                field["properties"]["role"]["const"]
+                for field in semantic_fields["prefixItems"]
+            ],
         )
 
+    def test_mutated_profile_inventory_digest_is_rejected(self):
+        inventory = copy.deepcopy(self.profile_inventory)
+        inventory["diagnostics"][0]["alternatives"][0]["fields"][0][
+            "minimum"
+        ] = 0
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "profile-diagnostic.json"
+            path.write_text(json.dumps(inventory) + "\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "inventory digest differs"):
+                COMPILER.validate(
+                    PROFILE_COMPANION,
+                    path,
+                    CORE_OWNER_DIAGNOSTIC_INVENTORY,
+                )
+
+    def test_mutated_core_inventory_digest_is_rejected(self):
+        inventory = copy.deepcopy(self.core_inventory)
+        inventory["owners"]["semantics"][0]["alternatives"][0]["fields"].reverse()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "core-diagnostic.json"
+            path.write_text(json.dumps(inventory) + "\n", encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "inventory digest differs"):
+                COMPILER.validate(
+                    PROFILE_COMPANION,
+                    PROFILE_DIAGNOSTIC_INVENTORY,
+                    path,
+                )
+
+    def test_semantic_role_order_is_projected_without_reconstruction(self):
+        profile = copy.deepcopy(self.profile_inventory)
+        core = copy.deepcopy(self.core_inventory)
+        target = next(
+            row
+            for row in core["owners"]["semantics"]
+            if row["ruleId"]
+            == "core.collective-strategy-realization.asserted-collective-coverage"
+        )
+        target["alternatives"][0]["fields"].reverse()
+        definitions = COMPILER.diagnostic_definitions(profile, core)
+        diagnostic = self.find_diagnostic(
+            definitions["modelDiagnostic"]["oneOf"],
+            "semantics-assessment",
+            target["ruleId"],
+        )
+        fields = diagnostic["properties"]["evidence"]["oneOf"][0][
+            "properties"
+        ]["fields"]["prefixItems"]
+        self.assertEqual(
+            ["uncovered-target-member", "claim"],
+            [field["properties"]["role"]["const"] for field in fields],
+        )
+
+    def find_diagnostic(self, rows, producer, rule_id):
+        matches = [
+            row
+            for row in rows
+            if row["properties"]["producer"]["const"] == producer
+            and row["properties"]["ruleId"]["const"] == rule_id
+        ]
+        self.assertEqual(1, len(matches))
+        return matches[0]
+
     def test_completed_views_alone_has_the_exact_operation_envelope(self):
-        document = COMPILER.validate(PROFILE_COMPANION)[3][4]
+        document = self.validate_contract()[3][4]
         schema = json.loads(COMPILER.render_schema(document))
         definitions = schema["$defs"]
         self.assertEqual(2, document.version)
@@ -252,7 +381,7 @@ class OperationContractCompilerTest(unittest.TestCase):
 
     def test_tool_descriptor_schema_is_closed_and_nul_free(self):
         schema = json.loads(
-            COMPILER.render_schema(COMPILER.validate(PROFILE_COMPANION)[3][4])
+            COMPILER.render_schema(self.validate_contract()[3][4])
         )
         descriptor = schema["$defs"]["toolDescriptor"]
         self.assertEqual(["identity", "version"], descriptor["required"])
@@ -272,7 +401,7 @@ class OperationContractCompilerTest(unittest.TestCase):
             path = Path(directory) / "profile.json"
             path.write_text(json.dumps(profile) + "\n", encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "conformance inventory"):
-                COMPILER.validate(path)
+                self.validate_contract(path)
 
     def test_machine_document_shape_is_closed(self):
         changed = copy.deepcopy(self.companion)

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import os
 import re
@@ -334,6 +335,148 @@ class ProfileCompilerTest(unittest.TestCase):
             "reserved-property-occurrence",
         )
         self.assertNotIn("graph.relationship-source-endpoint", bindings)
+
+    def test_diagnostic_inventory_is_exact_and_deterministic(self) -> None:
+        first = compiler.compile_diagnostic_inventory(CORE_COMPANION)
+        second = compiler.compile_diagnostic_inventory(CORE_COMPANION)
+        self.assertEqual(first, second)
+        self.assertEqual(
+            compiler.EXPECTED_DIAGNOSTIC_INVENTORY_SHA256,
+            hashlib.sha256(first).hexdigest(),
+        )
+        self.assertEqual(
+            compiler.GENERATED_DIAGNOSTIC_INVENTORY.read_bytes(), first
+        )
+        inventory = json.loads(first)
+        self.assertEqual(
+            "o2i.archimate-profile.diagnostic-evidence/v1",
+            inventory["schema"],
+        )
+        self.assertEqual(190, len(inventory["diagnostics"]))
+        by_identity = {
+            (row["producer"], row["ruleId"]): row
+            for row in inventory["diagnostics"]
+        }
+        by_rule = {
+            rule_id: by_identity[("profile-assessment", rule_id)]
+            for producer, rule_id in by_identity
+            if producer == "profile-assessment"
+        }
+        self.assertEqual(126, len(by_rule))
+        self.assertEqual(
+            [(0, 0), (2, None)],
+            [
+                (
+                    alternative["fields"][-1]["minimum"],
+                    alternative["fields"][-1]["maximum"],
+                )
+                for alternative in by_rule[
+                    "property:typed-carrier:o2i.type:property-cardinality"
+                ]["alternatives"]
+            ],
+        )
+        self.assertEqual(
+            [(1, 1)],
+            [
+                (
+                    alternative["fields"][-1]["minimum"],
+                    alternative["fields"][-1]["maximum"],
+                )
+                for alternative in by_rule[
+                    "pattern.contextualization.metadata.commitment-value"
+                ]["alternatives"]
+            ],
+        )
+        self.assertEqual(
+            [(0, 0)],
+            [
+                (
+                    alternative["fields"][-1]["minimum"],
+                    alternative["fields"][-1]["maximum"],
+                )
+                for alternative in by_rule[
+                    "qualification.proposal.reference.role-property"
+                ]["alternatives"]
+            ],
+        )
+        self.assertEqual(
+            [(1, None)],
+            [
+                (
+                    alternative["fields"][-1]["minimum"],
+                    alternative["fields"][-1]["maximum"],
+                )
+                for alternative in by_rule[
+                    "qualification.proposal.reference.commitment"
+                ]["alternatives"]
+            ],
+        )
+        self.assertEqual(
+            [(2, None)],
+            [
+                (
+                    alternative["fields"][-1]["minimum"],
+                    alternative["fields"][-1]["maximum"],
+                )
+                for alternative in by_rule[
+                    "pattern.collective-strategy-realization.junction.chains"
+                ]["alternatives"]
+            ],
+        )
+        self.assertEqual(
+            "rejection",
+            by_rule[
+                "property:typed-carrier:o2i.type:property-cardinality"
+            ]["polarity"],
+        )
+        activation = by_identity[
+            ("profile-activation", "classification.graph.activate.carrier")
+        ]
+        self.assertEqual(12, len(activation["alternatives"]))
+        self.assertEqual(
+            "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081",
+            activation["authorityBinding"]["profileContractDigest"],
+        )
+        shared = by_identity[
+            ("profile-activation", "classification.shared.activate.unknown-property")
+        ]
+        self.assertEqual(
+            ["graph", "qualification"],
+            [alternative["branch"] for alternative in shared["alternatives"]],
+        )
+        classification = by_identity[
+            ("profile-classification", "classification.both")
+        ]
+        self.assertEqual(
+            {
+                "class": "both",
+                "graphMembership": True,
+                "qualificationMembership": True,
+            },
+            classification["classification"],
+        )
+        carrier = by_identity[("profile-mapping", "carrier:context")]
+        self.assertEqual("context", carrier["mappingId"])
+        self.assertEqual(
+            ["carrier"],
+            [field["roleId"] for field in carrier["alternatives"][0]["fields"]],
+        )
+        relation = by_identity[
+            (
+                "profile-mapping",
+                "relation:relation-syntax:AggregationRelationship:false:contains",
+            )
+        ]
+        self.assertEqual(
+            ["relationship", "source", "target"],
+            [field["roleId"] for field in relation["alternatives"][0]["fields"]],
+        )
+        self.assertEqual(
+            "proposal-carrier-occurrence",
+            by_identity[
+                ("profile-invariant", "qualification.proposal.carrier.category")
+            ]["evidenceKind"],
+        )
 
     def test_generated_defect_rule_api_is_opaque_indexed_and_exact(self) -> None:
         rendered = compiler.compile_contract(CORE_COMPANION)

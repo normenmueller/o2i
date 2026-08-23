@@ -1,0 +1,6081 @@
+{
+  "schema": "o2i.archimate-profile.diagnostic-evidence/v1",
+  "profile": {
+    "archimateVersion": "3.2",
+    "identity": "o2i.archimate-profile",
+    "token": "0.3",
+    "version": "0.3.0",
+    "adapterIds": [
+      "amx"
+    ],
+    "notation": "archimate-3.2"
+  },
+  "companion": {
+    "schema": "o2i.archimate-profile/target-v46",
+    "rawSha256": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081",
+    "shapeSha256": "17a008818fc1e3cd0c590f74d9440892ce76a7f255c32fa84cd5831b11a3fcd1"
+  },
+  "diagnostics": [
+    {
+      "producer": "profile-assessment",
+      "ruleId": "carrier:context",
+      "polarity": "rejection",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "carrier:primitive.action",
+      "polarity": "rejection",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "carrier:primitive.driver",
+      "polarity": "rejection",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "carrier:primitive.key-result",
+      "polarity": "rejection",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "carrier:primitive.kpi",
+      "polarity": "rejection",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "carrier:primitive.objective",
+      "polarity": "rejection",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "carrier:primitive.principle",
+      "polarity": "rejection",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "carrier:situation-anchor.business-capability",
+      "polarity": "rejection",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "carrier:situation-anchor.business-object",
+      "polarity": "rejection",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "carrier:situation-anchor.business-process",
+      "polarity": "rejection",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "carrier:situation-anchor.value-stream",
+      "polarity": "rejection",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "carrier:structuring.performance-dimension",
+      "polarity": "rejection",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.both",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.graph-only",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.graph.activate.carrier",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.graph.activate.committed-element",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.graph.activate.committed-relationship",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.graph.activate.committed-structured-carrier",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.graph.activate.contextualization-label",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.graph.activate.contextualization-shape",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.graph.activate.relation",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.graph.activate.structured-carrier",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.graph.activate.structured-property",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.graph.activate.structured-segment",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.neither",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.qualification-only",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.qualification.activate.proposal-incidence",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.qualification.activate.proposal-type",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.qualification.activate.role-key",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.qualification.activate.source-key",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.shared.activate.type-key",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "classification.shared.activate.unknown-property",
+      "polarity": "rejection",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "graph.committed-relationship.archimate-applicability",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "graph.committed-relationship.mapping-selection",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.collective-strategy-realization.carrier.additional-properties",
+      "polarity": "rejection",
+      "evidenceKind": "structured-carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.collective-strategy-realization.carrier.archimate-element",
+      "polarity": "rejection",
+      "evidenceKind": "structured-carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.collective-strategy-realization.carrier.category",
+      "polarity": "rejection",
+      "evidenceKind": "structured-carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.collective-strategy-realization.carrier.commitment-key",
+      "polarity": "rejection",
+      "evidenceKind": "structured-carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.collective-strategy-realization.carrier.commitment-values",
+      "polarity": "rejection",
+      "evidenceKind": "structured-carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.collective-strategy-realization.carrier.junction-type",
+      "polarity": "rejection",
+      "evidenceKind": "structured-carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.collective-strategy-realization.carrier.o2i-type",
+      "polarity": "rejection",
+      "evidenceKind": "structured-carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.collective-strategy-realization.junction.chains",
+      "polarity": "rejection",
+      "evidenceKind": "structured-incidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "incidence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "related",
+              "valueKind": "canonical-occurrence",
+              "minimum": 2,
+              "maximum": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.collective-strategy-realization.segments.directed",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.collective-strategy-realization.segments.label",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.collective-strategy-realization.segments.metadata",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.collective-strategy-realization.segments.relationship-type",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.contextualization.metadata.additional-properties",
+      "polarity": "rejection",
+      "evidenceKind": "metadata-owner-and-o2i-property-occurrences",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "properties",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.contextualization.metadata.commitment-cardinality",
+      "polarity": "rejection",
+      "evidenceKind": "property-slot-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "properties-zero",
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "properties",
+              "valueKind": "canonical-occurrence",
+              "minimum": 0,
+              "maximum": 0
+            }
+          ]
+        },
+        {
+          "alternativeId": "properties-multiple",
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "properties",
+              "valueKind": "canonical-occurrence",
+              "minimum": 2,
+              "maximum": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.contextualization.metadata.commitment-value",
+      "polarity": "rejection",
+      "evidenceKind": "property-slot-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "properties",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.contextualization.relationship.directed",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.contextualization.relationship.label",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "pattern.contextualization.relationship.type",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:claim-carrier:o2i.commitment:admitted-values",
+      "polarity": "rejection",
+      "evidenceKind": "property-value-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "scalars",
+              "valueKind": "draft-scalar",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:claim-carrier:o2i.commitment:property-cardinality",
+      "polarity": "rejection",
+      "evidenceKind": "property-slot-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "properties-zero",
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "properties",
+              "valueKind": "canonical-occurrence",
+              "minimum": 0,
+              "maximum": 0
+            }
+          ]
+        },
+        {
+          "alternativeId": "properties-multiple",
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "properties",
+              "valueKind": "canonical-occurrence",
+              "minimum": 2,
+              "maximum": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:claim-carrier:o2i.commitment:value-cardinality",
+      "polarity": "rejection",
+      "evidenceKind": "property-occurrence-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:claim-carrier:o2i.commitment:value-kind",
+      "polarity": "rejection",
+      "evidenceKind": "property-value-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "scalars",
+              "valueKind": "draft-scalar",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:collective-strategy-realization-junction:o2i.participant-completeness:admitted-values",
+      "polarity": "rejection",
+      "evidenceKind": "property-value-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "scalars",
+              "valueKind": "draft-scalar",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:collective-strategy-realization-junction:o2i.participant-completeness:property-cardinality",
+      "polarity": "rejection",
+      "evidenceKind": "property-slot-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "properties-zero",
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "properties",
+              "valueKind": "canonical-occurrence",
+              "minimum": 0,
+              "maximum": 0
+            }
+          ]
+        },
+        {
+          "alternativeId": "properties-multiple",
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "properties",
+              "valueKind": "canonical-occurrence",
+              "minimum": 2,
+              "maximum": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:collective-strategy-realization-junction:o2i.participant-completeness:value-cardinality",
+      "polarity": "rejection",
+      "evidenceKind": "property-occurrence-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:collective-strategy-realization-junction:o2i.participant-completeness:value-kind",
+      "polarity": "rejection",
+      "evidenceKind": "property-value-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "scalars",
+              "valueKind": "draft-scalar",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:qualification-proposal-assessment:o2i.source:property-cardinality",
+      "polarity": "rejection",
+      "evidenceKind": "property-slot-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "properties-zero",
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "properties",
+              "valueKind": "canonical-occurrence",
+              "minimum": 0,
+              "maximum": 0
+            }
+          ]
+        },
+        {
+          "alternativeId": "properties-multiple",
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "properties",
+              "valueKind": "canonical-occurrence",
+              "minimum": 2,
+              "maximum": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:qualification-proposal-assessment:o2i.source:value-cardinality",
+      "polarity": "rejection",
+      "evidenceKind": "property-occurrence-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:qualification-proposal-assessment:o2i.source:value-grammar",
+      "polarity": "rejection",
+      "evidenceKind": "property-value-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "scalars",
+              "valueKind": "draft-scalar",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:qualification-proposal-assessment:o2i.source:value-kind",
+      "polarity": "rejection",
+      "evidenceKind": "property-value-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "scalars",
+              "valueKind": "draft-scalar",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:qualification-proposal-reference-association:o2i.role:admitted-values",
+      "polarity": "rejection",
+      "evidenceKind": "property-value-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "scalars",
+              "valueKind": "draft-scalar",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:qualification-proposal-reference-association:o2i.role:property-cardinality",
+      "polarity": "rejection",
+      "evidenceKind": "property-slot-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "properties-zero",
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "properties",
+              "valueKind": "canonical-occurrence",
+              "minimum": 0,
+              "maximum": 0
+            }
+          ]
+        },
+        {
+          "alternativeId": "properties-multiple",
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "properties",
+              "valueKind": "canonical-occurrence",
+              "minimum": 2,
+              "maximum": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:qualification-proposal-reference-association:o2i.role:value-cardinality",
+      "polarity": "rejection",
+      "evidenceKind": "property-occurrence-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:qualification-proposal-reference-association:o2i.role:value-kind",
+      "polarity": "rejection",
+      "evidenceKind": "property-value-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "scalars",
+              "valueKind": "draft-scalar",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:semantic-relation:o2i.commitment:admitted-values",
+      "polarity": "rejection",
+      "evidenceKind": "property-value-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "scalars",
+              "valueKind": "draft-scalar",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:semantic-relation:o2i.commitment:property-cardinality",
+      "polarity": "rejection",
+      "evidenceKind": "property-slot-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "properties-zero",
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "properties",
+              "valueKind": "canonical-occurrence",
+              "minimum": 0,
+              "maximum": 0
+            }
+          ]
+        },
+        {
+          "alternativeId": "properties-multiple",
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "properties",
+              "valueKind": "canonical-occurrence",
+              "minimum": 2,
+              "maximum": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:semantic-relation:o2i.commitment:value-cardinality",
+      "polarity": "rejection",
+      "evidenceKind": "property-occurrence-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:semantic-relation:o2i.commitment:value-kind",
+      "polarity": "rejection",
+      "evidenceKind": "property-value-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "scalars",
+              "valueKind": "draft-scalar",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:typed-carrier:o2i.type:property-cardinality",
+      "polarity": "rejection",
+      "evidenceKind": "property-slot-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "properties-zero",
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "properties",
+              "valueKind": "canonical-occurrence",
+              "minimum": 0,
+              "maximum": 0
+            }
+          ]
+        },
+        {
+          "alternativeId": "properties-multiple",
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "properties",
+              "valueKind": "canonical-occurrence",
+              "minimum": 2,
+              "maximum": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:typed-carrier:o2i.type:value-cardinality",
+      "polarity": "rejection",
+      "evidenceKind": "property-occurrence-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:typed-carrier:o2i.type:value-domain",
+      "polarity": "rejection",
+      "evidenceKind": "property-value-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "scalars",
+              "valueKind": "draft-scalar",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "property:typed-carrier:o2i.type:value-kind",
+      "polarity": "rejection",
+      "evidenceKind": "property-value-evidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "scalars",
+              "valueKind": "draft-scalar",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "qualification.proposal.carrier.archimate-element",
+      "polarity": "rejection",
+      "evidenceKind": "proposal-carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "proposal",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "qualification.proposal.carrier.category",
+      "polarity": "rejection",
+      "evidenceKind": "proposal-carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "proposal",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "qualification.proposal.carrier.commitment",
+      "polarity": "rejection",
+      "evidenceKind": "proposal-carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "proposal",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "qualification.proposal.carrier.o2i-type",
+      "polarity": "rejection",
+      "evidenceKind": "proposal-carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "proposal",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "qualification.proposal.carrier.stable-identity",
+      "polarity": "rejection",
+      "evidenceKind": "proposal-carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "proposal",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "qualification.proposal.carrier.stable-identity-scope",
+      "polarity": "rejection",
+      "evidenceKind": "proposal-carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "proposal",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "qualification.proposal.reference.commitment",
+      "polarity": "rejection",
+      "evidenceKind": "proposal-reference-incidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "reference",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "proposal",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "related",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "qualification.proposal.reference.directed",
+      "polarity": "rejection",
+      "evidenceKind": "proposal-reference-incidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "related-zero",
+          "fields": [
+            {
+              "roleId": "reference",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "proposal",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "related",
+              "valueKind": "canonical-occurrence",
+              "minimum": 0,
+              "maximum": 0
+            }
+          ]
+        },
+        {
+          "alternativeId": "related-one",
+          "fields": [
+            {
+              "roleId": "reference",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "proposal",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "related",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "qualification.proposal.reference.direction",
+      "polarity": "rejection",
+      "evidenceKind": "proposal-reference-incidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "related-zero",
+          "fields": [
+            {
+              "roleId": "reference",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "proposal",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "related",
+              "valueKind": "canonical-occurrence",
+              "minimum": 0,
+              "maximum": 0
+            }
+          ]
+        },
+        {
+          "alternativeId": "related-one",
+          "fields": [
+            {
+              "roleId": "reference",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "proposal",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "related",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "qualification.proposal.reference.relationship-type",
+      "polarity": "rejection",
+      "evidenceKind": "proposal-reference-incidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "related-zero",
+          "fields": [
+            {
+              "roleId": "reference",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "proposal",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "related",
+              "valueKind": "canonical-occurrence",
+              "minimum": 0,
+              "maximum": 0
+            }
+          ]
+        },
+        {
+          "alternativeId": "related-one",
+          "fields": [
+            {
+              "roleId": "reference",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "proposal",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "related",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "qualification.proposal.reference.role-property",
+      "polarity": "rejection",
+      "evidenceKind": "proposal-reference-incidence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "reference",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "proposal",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "related",
+              "valueKind": "canonical-occurrence",
+              "minimum": 0,
+              "maximum": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation-attribute:relation-syntax:InfluenceRelationship:false:contributes-to:strength",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation-attribute:relation-syntax:InfluenceRelationship:false:determines:strength",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation-attribute:relation-syntax:InfluenceRelationship:false:directs:strength",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation-attribute:relation-syntax:InfluenceRelationship:false:grounds:strength",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation-attribute:relation-syntax:InfluenceRelationship:false:guides:strength",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation-attribute:relation-syntax:InfluenceRelationship:false:indicates:strength",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation-attribute:relation-syntax:InfluenceRelationship:false:orients:strength",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation-attribute:relation-syntax:InfluenceRelationship:false:translates-into:strength",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:AggregationRelationship:false:contains",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:AggregationRelationship:false:is-constituted-by",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:addresses",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:anchors",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:changes",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:contributes-to",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:directs",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:frames",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:grounds",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:guides",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:measures",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:orients",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:qualifies",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:sets-target-for",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:surfaces",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:InfluenceRelationship:false:contributes-to",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:InfluenceRelationship:false:determines",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:InfluenceRelationship:false:directs",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:InfluenceRelationship:false:grounds",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:InfluenceRelationship:false:guides",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:InfluenceRelationship:false:indicates",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:InfluenceRelationship:false:orients",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:InfluenceRelationship:false:translates-into",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:RealizationRelationship:false:contributes-to",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "relation:relation-syntax:RealizationRelationship:false:substantiates",
+      "polarity": "rejection",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "reserved-placement:o2i.commitment",
+      "polarity": "rejection",
+      "evidenceKind": "reserved-property-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "reserved-placement:o2i.participant-completeness",
+      "polarity": "rejection",
+      "evidenceKind": "reserved-property-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "reserved-placement:o2i.profile",
+      "polarity": "rejection",
+      "evidenceKind": "reserved-property-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "reserved-placement:o2i.role",
+      "polarity": "rejection",
+      "evidenceKind": "reserved-property-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "reserved-placement:o2i.source",
+      "polarity": "rejection",
+      "evidenceKind": "reserved-property-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-assessment",
+      "ruleId": "reserved-placement:o2i.type",
+      "polarity": "rejection",
+      "evidenceKind": "reserved-property-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "property",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "key",
+              "valueKind": "text",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-activation",
+      "ruleId": "classification.graph.activate.carrier",
+      "polarity": "acceptance",
+      "evidenceKind": "activation-provenance",
+      "sourceRole": "model",
+      "authorityBinding": {
+        "profileIdentity": "o2i.archimate-profile",
+        "profileContractDigest": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+      },
+      "alternatives": [
+        {
+          "alternativeId": "graph-source-1",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:context"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-2",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:primitive.principle"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-3",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:primitive.driver"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-4",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:primitive.objective"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-5",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:primitive.key-result"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-6",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:primitive.kpi"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-7",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:primitive.action"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-8",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:structuring.performance-dimension"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-9",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:situation-anchor.business-capability"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-10",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:situation-anchor.business-process"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-11",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:situation-anchor.business-object"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-12",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:situation-anchor.value-stream"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-activation",
+      "ruleId": "classification.graph.activate.structured-carrier",
+      "polarity": "acceptance",
+      "evidenceKind": "activation-provenance",
+      "sourceRole": "model",
+      "authorityBinding": {
+        "profileIdentity": "o2i.archimate-profile",
+        "profileContractDigest": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+      },
+      "alternatives": [
+        {
+          "alternativeId": "graph-source-1",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "pattern.collective-strategy-realization.carrier.archimate-element",
+            "pattern.collective-strategy-realization.carrier.junction-type",
+            "pattern.collective-strategy-realization.carrier.o2i-type"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-activation",
+      "ruleId": "classification.graph.activate.structured-property",
+      "polarity": "acceptance",
+      "evidenceKind": "activation-provenance",
+      "sourceRole": "model",
+      "authorityBinding": {
+        "profileIdentity": "o2i.archimate-profile",
+        "profileContractDigest": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+      },
+      "alternatives": [
+        {
+          "alternativeId": "graph-source-1",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "reserved-placement:o2i.participant-completeness"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-activation",
+      "ruleId": "classification.graph.activate.committed-element",
+      "polarity": "acceptance",
+      "evidenceKind": "activation-provenance",
+      "sourceRole": "model",
+      "authorityBinding": {
+        "profileIdentity": "o2i.archimate-profile",
+        "profileContractDigest": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+      },
+      "alternatives": [
+        {
+          "alternativeId": "graph-source-1",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "reserved-placement:o2i.commitment"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-activation",
+      "ruleId": "classification.graph.activate.committed-structured-carrier",
+      "polarity": "acceptance",
+      "evidenceKind": "activation-provenance",
+      "sourceRole": "model",
+      "authorityBinding": {
+        "profileIdentity": "o2i.archimate-profile",
+        "profileContractDigest": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+      },
+      "alternatives": [
+        {
+          "alternativeId": "graph-source-1",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "reserved-placement:o2i.commitment"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-activation",
+      "ruleId": "classification.graph.activate.committed-relationship",
+      "polarity": "acceptance",
+      "evidenceKind": "activation-provenance",
+      "sourceRole": "model",
+      "authorityBinding": {
+        "profileIdentity": "o2i.archimate-profile",
+        "profileContractDigest": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+      },
+      "alternatives": [
+        {
+          "alternativeId": "graph-source-1",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "reserved-placement:o2i.commitment"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-activation",
+      "ruleId": "classification.qualification.activate.proposal-type",
+      "polarity": "acceptance",
+      "evidenceKind": "activation-provenance",
+      "sourceRole": "model",
+      "authorityBinding": {
+        "profileIdentity": "o2i.archimate-profile",
+        "profileContractDigest": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+      },
+      "alternatives": [
+        {
+          "alternativeId": "qualification-source-1",
+          "branch": "qualification",
+          "sourceRuleIds": [
+            "qualification.proposal.carrier.archimate-element",
+            "qualification.proposal.carrier.o2i-type"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-activation",
+      "ruleId": "classification.qualification.activate.source-key",
+      "polarity": "acceptance",
+      "evidenceKind": "activation-provenance",
+      "sourceRole": "model",
+      "authorityBinding": {
+        "profileIdentity": "o2i.archimate-profile",
+        "profileContractDigest": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+      },
+      "alternatives": [
+        {
+          "alternativeId": "qualification-source-1",
+          "branch": "qualification",
+          "sourceRuleIds": [
+            "reserved-placement:o2i.source"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-activation",
+      "ruleId": "classification.qualification.activate.role-key",
+      "polarity": "acceptance",
+      "evidenceKind": "activation-provenance",
+      "sourceRole": "model",
+      "authorityBinding": {
+        "profileIdentity": "o2i.archimate-profile",
+        "profileContractDigest": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+      },
+      "alternatives": [
+        {
+          "alternativeId": "qualification-source-1",
+          "branch": "qualification",
+          "sourceRuleIds": [
+            "reserved-placement:o2i.role"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-activation",
+      "ruleId": "classification.shared.activate.unknown-property",
+      "polarity": "acceptance",
+      "evidenceKind": "activation-provenance",
+      "sourceRole": "model",
+      "authorityBinding": {
+        "profileIdentity": "o2i.archimate-profile",
+        "profileContractDigest": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+      },
+      "alternatives": [
+        {
+          "alternativeId": "graph-source-1",
+          "branch": "graph",
+          "sourceRuleIds": [],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "qualification-source-1",
+          "branch": "qualification",
+          "sourceRuleIds": [],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-activation",
+      "ruleId": "classification.shared.activate.type-key",
+      "polarity": "acceptance",
+      "evidenceKind": "activation-provenance",
+      "sourceRole": "model",
+      "authorityBinding": {
+        "profileIdentity": "o2i.archimate-profile",
+        "profileContractDigest": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+      },
+      "alternatives": [
+        {
+          "alternativeId": "graph-source-1",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "reserved-placement:o2i.type"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "qualification-source-1",
+          "branch": "qualification",
+          "sourceRuleIds": [
+            "reserved-placement:o2i.type"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-activation",
+      "ruleId": "classification.graph.activate.relation",
+      "polarity": "acceptance",
+      "evidenceKind": "activation-provenance",
+      "sourceRole": "model",
+      "authorityBinding": {
+        "profileIdentity": "o2i.archimate-profile",
+        "profileContractDigest": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+      },
+      "alternatives": [
+        {
+          "alternativeId": "graph-source-1",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:AggregationRelationship:false:contains"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-2",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:AggregationRelationship:false:is-constituted-by"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-3",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:AssociationRelationship:true:addresses"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-4",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:AssociationRelationship:true:anchors"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-5",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:AssociationRelationship:true:changes"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-6",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:AssociationRelationship:true:contributes-to"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-7",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:AssociationRelationship:true:directs"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-8",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:AssociationRelationship:true:frames"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-9",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:AssociationRelationship:true:grounds"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-10",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:AssociationRelationship:true:guides"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-11",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:AssociationRelationship:true:measures"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-12",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:AssociationRelationship:true:orients"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-13",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:AssociationRelationship:true:qualifies"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-14",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:AssociationRelationship:true:sets-target-for"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-15",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:AssociationRelationship:true:surfaces"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-16",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:InfluenceRelationship:false:contributes-to"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-17",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:InfluenceRelationship:false:determines"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-18",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:InfluenceRelationship:false:directs"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-19",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:InfluenceRelationship:false:grounds"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-20",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:InfluenceRelationship:false:guides"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-21",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:InfluenceRelationship:false:indicates"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-22",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:InfluenceRelationship:false:orients"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-23",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:InfluenceRelationship:false:translates-into"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-24",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:RealizationRelationship:false:contributes-to"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-25",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "relation:relation-syntax:RealizationRelationship:false:substantiates"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-activation",
+      "ruleId": "classification.graph.activate.contextualization-label",
+      "polarity": "acceptance",
+      "evidenceKind": "activation-provenance",
+      "sourceRole": "model",
+      "authorityBinding": {
+        "profileIdentity": "o2i.archimate-profile",
+        "profileContractDigest": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+      },
+      "alternatives": [
+        {
+          "alternativeId": "graph-source-1",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "pattern.contextualization.relationship.directed",
+            "pattern.contextualization.relationship.label",
+            "pattern.contextualization.relationship.type"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-activation",
+      "ruleId": "classification.graph.activate.contextualization-shape",
+      "polarity": "acceptance",
+      "evidenceKind": "activation-provenance",
+      "sourceRole": "model",
+      "authorityBinding": {
+        "profileIdentity": "o2i.archimate-profile",
+        "profileContractDigest": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+      },
+      "alternatives": [
+        {
+          "alternativeId": "graph-source-1",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:context"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-2",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:context",
+            "carrier:primitive.principle"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-3",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:context",
+            "carrier:primitive.driver"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-4",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:context",
+            "carrier:primitive.objective"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-5",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:context",
+            "carrier:primitive.key-result"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-6",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:context",
+            "carrier:primitive.kpi"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-7",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:context",
+            "carrier:primitive.action"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-8",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:context",
+            "carrier:structuring.performance-dimension"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-9",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:context",
+            "carrier:situation-anchor.business-capability"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-10",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:context",
+            "carrier:situation-anchor.business-process"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-11",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:context",
+            "carrier:situation-anchor.business-object"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        },
+        {
+          "alternativeId": "graph-source-12",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "carrier:context",
+            "carrier:situation-anchor.value-stream"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-activation",
+      "ruleId": "classification.graph.activate.structured-segment",
+      "polarity": "acceptance",
+      "evidenceKind": "activation-provenance",
+      "sourceRole": "model",
+      "authorityBinding": {
+        "profileIdentity": "o2i.archimate-profile",
+        "profileContractDigest": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+      },
+      "alternatives": [
+        {
+          "alternativeId": "graph-source-1",
+          "branch": "graph",
+          "sourceRuleIds": [
+            "pattern.collective-strategy-realization.segments.directed",
+            "pattern.collective-strategy-realization.segments.label",
+            "pattern.collective-strategy-realization.segments.relationship-type"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-activation",
+      "ruleId": "classification.qualification.activate.proposal-incidence",
+      "polarity": "acceptance",
+      "evidenceKind": "activation-provenance",
+      "sourceRole": "model",
+      "authorityBinding": {
+        "profileIdentity": "o2i.archimate-profile",
+        "profileContractDigest": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+      },
+      "alternatives": [
+        {
+          "alternativeId": "qualification-source-1",
+          "branch": "qualification",
+          "sourceRuleIds": [
+            "qualification.proposal.reference.directed",
+            "qualification.proposal.reference.direction",
+            "qualification.proposal.reference.relationship-type",
+            "qualification.proposal.reference.role-property"
+          ],
+          "fields": [
+            {
+              "roleId": "owner",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "trigger",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-classification",
+      "ruleId": "classification.both",
+      "polarity": "acceptance",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "classification": {
+        "class": "both",
+        "graphMembership": true,
+        "qualificationMembership": true
+      },
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-classification",
+      "ruleId": "classification.graph-only",
+      "polarity": "acceptance",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "classification": {
+        "class": "graph-only",
+        "graphMembership": true,
+        "qualificationMembership": false
+      },
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-classification",
+      "ruleId": "classification.qualification-only",
+      "polarity": "acceptance",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "classification": {
+        "class": "qualification-only",
+        "graphMembership": false,
+        "qualificationMembership": true
+      },
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-classification",
+      "ruleId": "classification.neither",
+      "polarity": "acceptance",
+      "evidenceKind": "classification-occurrence",
+      "sourceRole": "model",
+      "classification": {
+        "class": "neither",
+        "graphMembership": false,
+        "qualificationMembership": false
+      },
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "classifiedOccurrence",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "carrier:context",
+      "polarity": "acceptance",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "mappingId": "context",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "carrier:primitive.principle",
+      "polarity": "acceptance",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "mappingId": "primitive.principle",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "carrier:primitive.driver",
+      "polarity": "acceptance",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "mappingId": "primitive.driver",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "carrier:primitive.objective",
+      "polarity": "acceptance",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "mappingId": "primitive.objective",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "carrier:primitive.key-result",
+      "polarity": "acceptance",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "mappingId": "primitive.key-result",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "carrier:primitive.kpi",
+      "polarity": "acceptance",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "mappingId": "primitive.kpi",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "carrier:primitive.action",
+      "polarity": "acceptance",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "mappingId": "primitive.action",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "carrier:structuring.performance-dimension",
+      "polarity": "acceptance",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "mappingId": "structuring.performance-dimension",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "carrier:situation-anchor.business-capability",
+      "polarity": "acceptance",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "mappingId": "situation-anchor.business-capability",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "carrier:situation-anchor.business-process",
+      "polarity": "acceptance",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "mappingId": "situation-anchor.business-process",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "carrier:situation-anchor.business-object",
+      "polarity": "acceptance",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "mappingId": "situation-anchor.business-object",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "carrier:situation-anchor.value-stream",
+      "polarity": "acceptance",
+      "evidenceKind": "carrier-occurrence",
+      "sourceRole": "model",
+      "mappingId": "situation-anchor.value-stream",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "carrier",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:AggregationRelationship:false:contains",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:AggregationRelationship:false:contains",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:AggregationRelationship:false:is-constituted-by",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:AggregationRelationship:false:is-constituted-by",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:addresses",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:AssociationRelationship:true:addresses",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:anchors",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:AssociationRelationship:true:anchors",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:changes",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:AssociationRelationship:true:changes",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:contributes-to",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:AssociationRelationship:true:contributes-to",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:directs",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:AssociationRelationship:true:directs",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:frames",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:AssociationRelationship:true:frames",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:grounds",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:AssociationRelationship:true:grounds",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:guides",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:AssociationRelationship:true:guides",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:measures",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:AssociationRelationship:true:measures",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:orients",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:AssociationRelationship:true:orients",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:qualifies",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:AssociationRelationship:true:qualifies",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:sets-target-for",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:AssociationRelationship:true:sets-target-for",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:AssociationRelationship:true:surfaces",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:AssociationRelationship:true:surfaces",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:InfluenceRelationship:false:contributes-to",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:InfluenceRelationship:false:contributes-to",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:InfluenceRelationship:false:determines",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:InfluenceRelationship:false:determines",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:InfluenceRelationship:false:directs",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:InfluenceRelationship:false:directs",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:InfluenceRelationship:false:grounds",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:InfluenceRelationship:false:grounds",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:InfluenceRelationship:false:guides",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:InfluenceRelationship:false:guides",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:InfluenceRelationship:false:indicates",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:InfluenceRelationship:false:indicates",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:InfluenceRelationship:false:orients",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:InfluenceRelationship:false:orients",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:InfluenceRelationship:false:translates-into",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:InfluenceRelationship:false:translates-into",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:RealizationRelationship:false:contributes-to",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:RealizationRelationship:false:contributes-to",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "relation:relation-syntax:RealizationRelationship:false:substantiates",
+      "polarity": "acceptance",
+      "evidenceKind": "relationship-occurrence",
+      "sourceRole": "model",
+      "mappingId": "relation-syntax:RealizationRelationship:false:substantiates",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "relationship",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "source",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            },
+            {
+              "roleId": "target",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "pattern.collective-strategy-realization.carrier.category",
+      "polarity": "acceptance",
+      "evidenceKind": "structured-carrier-occurrence",
+      "sourceRole": "model",
+      "mappingId": "collective-strategy-realization",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "constructedOccurrence",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "pattern.collective-strategy-realization.carrier.commitment-key",
+      "polarity": "acceptance",
+      "evidenceKind": "structured-carrier-occurrence",
+      "sourceRole": "model",
+      "mappingId": "collective-strategy-realization",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "constructedOccurrence",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "pattern.collective-strategy-realization.carrier.commitment-values",
+      "polarity": "acceptance",
+      "evidenceKind": "structured-carrier-occurrence",
+      "sourceRole": "model",
+      "mappingId": "collective-strategy-realization",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "constructedOccurrence",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "qualification.proposal.carrier.stable-identity",
+      "polarity": "acceptance",
+      "evidenceKind": "proposal-carrier-occurrence",
+      "sourceRole": "model",
+      "mappingId": "need-qualification-proposal",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "constructedOccurrence",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-mapping",
+      "ruleId": "property:qualification-proposal-assessment:o2i.source:property-cardinality",
+      "polarity": "acceptance",
+      "evidenceKind": "property-slot-evidence",
+      "sourceRole": "model",
+      "mappingId": "property:qualification-proposal-assessment:o2i.source",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "constructedOccurrence",
+              "valueKind": "occurrence-identity",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-invariant",
+      "ruleId": "qualification.proposal.carrier.category",
+      "polarity": "acceptance",
+      "evidenceKind": "proposal-carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "proposal",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "producer": "profile-invariant",
+      "ruleId": "qualification.proposal.carrier.stable-identity-scope",
+      "polarity": "acceptance",
+      "evidenceKind": "proposal-carrier-occurrence",
+      "sourceRole": "model",
+      "alternatives": [
+        {
+          "alternativeId": "exact",
+          "fields": [
+            {
+              "roleId": "proposal",
+              "valueKind": "canonical-occurrence",
+              "minimum": 1,
+              "maximum": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

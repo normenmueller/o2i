@@ -57,9 +57,23 @@
     {
       "name": "diagnostic",
       "identity": "o2i.operation.diagnostic",
-      "version": 1
+      "version": 2
     }
   ],
+  "diagnosticConformance": {
+    "profile": {
+      "schema": "o2i.archimate-profile.diagnostic-evidence/v1",
+      "identity": "o2i.archimate-profile",
+      "version": "0.3.0",
+      "sha256": "b606b646c9348208755c47b20602b233255b6f01815b36b62e26a1ea000ecac2"
+    },
+    "core": {
+      "schema": "o2i.core.owner-diagnostic-evidence/v1",
+      "identity": "o2i.core-semantics",
+      "version": "0.3.0",
+      "sha256": "f21319a50ab84fe30c35889ab15d581022783523b1e1198b1f0c2acf021b90db"
+    }
+  },
   "rules": [
     {
       "constructor": "ProfileAdapterId",

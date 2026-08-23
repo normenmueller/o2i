@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import itertools
 import json
 import re
 import subprocess
@@ -20,6 +21,9 @@ GENERATED_INVENTORY = (
     PACKAGE_ROOT
     / "contract/generated/o2i.core.semantic-diagnostic-evidence-v1.json"
 )
+GENERATED_OWNER_INVENTORY = (
+    PACKAGE_ROOT / "contract/generated/o2i.core.owner-diagnostic-evidence-v1.json"
+)
 EXPECTED_SHAPE_SHA256 = (
     "3e091e8bc0fd3a887da02f8591292c2a8ea7d64c7e83951183ab71fe4f5b1278"
 )
@@ -31,6 +35,9 @@ EXPECTED_DIAGNOSTIC_SHAPE_SHA256 = (
 )
 EXPECTED_INVENTORY_SHA256 = (
     "8007829ae3b4cd94b4e645ef973926250f8bac654b1bd9d9d1f3f5402355ed55"
+)
+EXPECTED_OWNER_INVENTORY_SHA256 = (
+    "f21319a50ab84fe30c35889ab15d581022783523b1e1198b1f0c2acf021b90db"
 )
 
 OCCURRENCE_AUTHORITY = (
@@ -62,6 +69,118 @@ OCCURRENCE_AUTHORITY = (
     ("core.strategy-formulation.key-results", (("listed-key-result", "one-or-more"),)),
     ("core.strategy-formulation.vision-orientation", (("observed-vision-orientation", "zero"),)),
 )
+
+STRUCTURE_DIAGNOSTIC_AUTHORITY = (
+    (
+        "core.qualified-endpoint.catalog-membership",
+        "qualified-endpoint-catalog-membership",
+        (("subject", "occurrence-identity", "one"),),
+    ),
+    (
+        "core.contextualization.source-category",
+        "contextualization-source-category",
+        (
+            ("segment", "occurrence-identity", "one"),
+            ("owner", "occurrence-identity", "one"),
+        ),
+    ),
+    (
+        "core.contextualization.target-category",
+        "contextualization-target-category",
+        (
+            ("segment", "occurrence-identity", "one"),
+            ("member", "occurrence-identity", "one"),
+        ),
+    ),
+    (
+        "core.contextualization.target-owner-cardinality",
+        "contextualization-target-owner-cardinality",
+        (
+            ("member", "occurrence-identity", "one"),
+            ("owners", "occurrence-identity", "zero-or-multiple"),
+        ),
+    ),
+    (
+        "core.semantic-relation.compatibility",
+        "semantic-relation-compatibility",
+        (
+            ("relation", "occurrence-identity", "one"),
+            ("source", "occurrence-identity", "one"),
+            ("target", "occurrence-identity", "one"),
+        ),
+    ),
+    (
+        "core.structured-proposition.identity",
+        "structured-proposition-identity",
+        (
+            ("subject", "occurrence-identity", "one"),
+            ("occurrences", "occurrence-identity", "two-or-more"),
+        ),
+    ),
+    (
+        "core.collective-strategy-realization.participant-type",
+        "collective-participant-type",
+        (
+            ("claim", "occurrence-identity", "one"),
+            ("segment", "occurrence-identity", "one"),
+            ("endpoint", "occurrence-identity", "one"),
+        ),
+    ),
+    (
+        "core.collective-strategy-realization.participant-cardinality",
+        "collective-participant-cardinality",
+        (
+            ("claim", "occurrence-identity", "one"),
+            ("endpoints", "occurrence-identity", "zero-or-one"),
+        ),
+    ),
+    (
+        "core.collective-strategy-realization.participant-uniqueness",
+        "collective-participant-uniqueness",
+        (
+            ("claim", "occurrence-identity", "one"),
+            ("duplicateEndpoints", "occurrence-identity", "one-or-more"),
+        ),
+    ),
+    (
+        "core.collective-strategy-realization.target-type",
+        "collective-target-type",
+        (
+            ("claim", "occurrence-identity", "one"),
+            ("segment", "occurrence-identity", "one"),
+            ("endpoint", "occurrence-identity", "one"),
+        ),
+    ),
+    (
+        "core.collective-strategy-realization.target-cardinality",
+        "collective-target-cardinality",
+        (
+            ("claim", "occurrence-identity", "one"),
+            ("endpoints", "occurrence-identity", "zero-or-multiple"),
+        ),
+    ),
+    (
+        "core.collective-strategy-realization.target-distinctness",
+        "collective-target-distinctness",
+        (
+            ("claim", "occurrence-identity", "one"),
+            ("overlappingEndpoints", "occurrence-identity", "one-or-more"),
+        ),
+    ),
+)
+
+BINDING_DIAGNOSTIC_RULE_KEYS = (
+    "identityUnknown",
+    "identityAmbiguous",
+    "identityWrongType",
+    "identityOutOfSelectedView",
+)
+
+STRUCTURE_NON_DIAGNOSTIC_RULES = {
+    "core.structured-proposition.commitment",
+    "core.structured-proposition.family",
+    "core.structured-proposition.incidence",
+}
 
 
 def reject_constant(value: str) -> None:
@@ -574,6 +693,165 @@ def diagnostic_inventory(
         json.dumps(value, ensure_ascii=False, indent=2, separators=(",", ": "))
         + "\n"
     ).encode("utf-8")
+
+
+def diagnostic_field_alternatives(
+    fields: tuple[tuple[str, str, str], ...],
+) -> list[dict[str, Any]]:
+    cardinality_alternatives = {
+        "zero": (("zero", 0, 0),),
+        "one": (("one", 1, 1),),
+        "zero-or-one": (("zero", 0, 0), ("one", 1, 1)),
+        "zero-or-multiple": (("zero", 0, 0), ("multiple", 2, None)),
+        "zero-or-more": (("zero-or-more", 0, None),),
+        "one-or-more": (("one-or-more", 1, None),),
+        "two-or-more": (("two-or-more", 2, None),),
+    }
+    choices = [
+        cardinality_alternatives[cardinality]
+        for _, _, cardinality in fields
+    ]
+    alternatives = []
+    for selected in itertools.product(*choices):
+        varying = [
+            f"{role_id}-{alternative_id}"
+            for (role_id, _, cardinality), (alternative_id, _, _) in zip(
+                fields, selected
+            )
+            if cardinality in {"zero-or-one", "zero-or-multiple"}
+        ]
+        alternatives.append(
+            {
+                "alternativeId": "-and-".join(varying) if varying else "exact",
+                "fields": [
+                    {
+                        "roleId": role_id,
+                        "valueKind": value_kind,
+                        "minimum": minimum,
+                        "maximum": maximum,
+                    }
+                    for (role_id, value_kind, _), (_, minimum, maximum) in zip(
+                        fields, selected
+                    )
+                ],
+            }
+        )
+    return alternatives
+
+
+def owner_diagnostic_inventory(
+    semantics: dict[str, Any],
+    semantics_payload: bytes,
+    semantic_inventory_payload: bytes,
+) -> bytes:
+    semantic_inventory = json.loads(semantic_inventory_payload)
+    binding_rules = semantics["supplementalInputContract"]["ruleIds"]
+    stages = rule_stage_partition(semantics, rule_inventory(semantics))
+    structure_rule_ids = [
+        rule_id for rule_id, _, _ in STRUCTURE_DIAGNOSTIC_AUTHORITY
+    ]
+    require_exact(
+        set(structure_rule_ids),
+        set(stages["structure"]).difference(STRUCTURE_NON_DIAGNOSTIC_RULES),
+        "complete Structure diagnostic authority",
+    )
+    require_exact(
+        [binding_rules[key] for key in BINDING_DIAGNOSTIC_RULE_KEYS],
+        [
+            "core.supplemental.identity.unknown",
+            "core.supplemental.identity.ambiguous",
+            "core.supplemental.identity.wrong-type",
+            "core.supplemental.identity.out-of-selected-view",
+        ],
+        "complete Binding diagnostic authority",
+    )
+    structure = [
+        {
+            "ruleId": rule_id,
+            "polarity": "rejection",
+            "evidenceKind": evidence_kind,
+            "sourceRole": "model",
+            "alternatives": diagnostic_field_alternatives(fields),
+        }
+        for rule_id, evidence_kind, fields in STRUCTURE_DIAGNOSTIC_AUTHORITY
+    ]
+    binding = [
+        {
+            "ruleId": binding_rules[key],
+            "polarity": "rejection",
+            "evidenceKind": "supplemental-identity-site",
+            "sourceBinding": {
+                "role": "supplemental",
+                "ordinalEvidence": "inputOrdinal",
+            },
+            "alternatives": diagnostic_field_alternatives(
+                (
+                    ("instancePointer", "text", "one"),
+                    ("identity", "model-identity", "one"),
+                )
+            ),
+        }
+        for key in BINDING_DIAGNOSTIC_RULE_KEYS
+    ]
+    semantics_rows = []
+    for row in semantic_inventory["diagnostics"]:
+        subject = row["subjectEvidence"]
+        subject_kind = (
+            "occurrence-identity"
+            if subject["schema"] == "AssertedDependencyKey"
+            else "model-identity"
+        )
+        fields = tuple(
+            (field, subject_kind, "one")
+            for field in subject["fields"]
+        ) + tuple(
+            (
+                occurrence["roleId"],
+                "occurrence-identity",
+                occurrence["cardinality"],
+            )
+            for occurrence in row["occurrenceEvidence"]
+        )
+        semantics_rows.append(
+            {
+                "ruleId": row["ruleId"],
+                "polarity": "rejection",
+                "evidenceKind": subject["schema"],
+                "sourceRole": "model",
+                "subjectFieldCount": len(subject["fields"]),
+                "alternatives": diagnostic_field_alternatives(fields),
+            }
+        )
+    value = {
+        "schema": "o2i.core.owner-diagnostic-evidence/v1",
+        "core": semantics["coreIdentity"],
+        "companions": {
+            "semantics": {
+                "schema": semantics["schema"],
+                "rawSha256": sha256(semantics_payload),
+                "shapeSha256": shape_sha256(semantics),
+            },
+            "semanticDiagnosticInventory": {
+                "schema": semantic_inventory["schema"],
+                "rawSha256": sha256(semantic_inventory_payload),
+            },
+        },
+        "owners": {
+            "structure": structure,
+            "binding": binding,
+            "semantics": semantics_rows,
+        },
+    }
+    rendered = (
+        json.dumps(value, ensure_ascii=False, indent=2, separators=(",", ": "))
+        + "\n"
+    ).encode("utf-8")
+    require_exact(
+        sha256(rendered),
+        EXPECTED_OWNER_INVENTORY_SHA256,
+        "generated Core owner diagnostic inventory SHA-256",
+    )
+    return rendered
 
 
 def validate_generated_inventory(payload: bytes) -> None:
@@ -1745,6 +2023,11 @@ def compile_inventory() -> bytes:
     return compile_outputs()[1]
 
 
+def compile_owner_inventory() -> bytes:
+    companion, payload = load_companion()
+    return owner_diagnostic_inventory(companion, payload, compile_inventory())
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     mode = parser.add_mutually_exclusive_group(required=True)
@@ -1756,12 +2039,17 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
     expected_haskell, expected_inventory = compile_outputs()
+    expected_owner_inventory = owner_diagnostic_inventory(
+        *load_companion(), expected_inventory
+    )
     expected = expected_haskell.encode("utf-8")
     if args.write:
         GENERATED.parent.mkdir(parents=True, exist_ok=True)
         GENERATED.write_bytes(expected)
         GENERATED_INVENTORY.parent.mkdir(parents=True, exist_ok=True)
         GENERATED_INVENTORY.write_bytes(expected_inventory)
+        GENERATED_OWNER_INVENTORY.parent.mkdir(parents=True, exist_ok=True)
+        GENERATED_OWNER_INVENTORY.write_bytes(expected_owner_inventory)
         return
     actual = GENERATED.read_bytes()
     if actual != expected:
@@ -1773,6 +2061,14 @@ def main() -> None:
         raise SystemExit(
             f"generated Core diagnostic inventory is stale: {GENERATED_INVENTORY}"
         ) from error
+    if (
+        not GENERATED_OWNER_INVENTORY.exists()
+        or GENERATED_OWNER_INVENTORY.read_bytes() != expected_owner_inventory
+    ):
+        raise SystemExit(
+            "generated Core owner diagnostic inventory is stale: "
+            f"{GENERATED_OWNER_INVENTORY}"
+        )
 
 
 if __name__ == "__main__":

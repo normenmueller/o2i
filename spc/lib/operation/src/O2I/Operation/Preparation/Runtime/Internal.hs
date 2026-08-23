@@ -35,8 +35,8 @@ import O2I.Operation.Adapter
   , selectAdapter
   , selectedAdapterDescriptor
   )
-import O2I.Operation.Diagnostic.Owner.Source (ModelOwnerSource)
-import O2I.Operation.Diagnostic.Owner.Source.Internal (ModelOwnerSource(..))
+import O2I.Operation.Diagnostic.Owner.Source (PreparedAuthority)
+import O2I.Operation.Diagnostic.Owner.Source.Internal (PreparedAuthority(..))
 import O2I.Operation.Failure.Internal (PreparationFailure(..))
 import O2I.Operation.Profile
   ( ProfileInventory
@@ -74,13 +74,15 @@ withPreparedSelectedView ::
   -> RequestedContract
   -> AcquiredModelSource
   -> (PreparationFailure -> result)
-  -> (forall document profile. SelectedAdapter -> ResolvedProfile -> CanonicalDocument
-                                                                       document -> ModelOwnerSource
-                                                                                     document -> SelectedArchiMateProfile
-                                                                                                   profile -> SelectedView
-                                                                                                                document -> ProfileAssessmentUniverse
-                                                                                                                              profile
-                                                                                                                              document -> CapabilityInputReferences -> result)
+  -> (forall authority document profile. PreparedAuthority
+                                           authority
+                                           profile
+                                           document -> SelectedAdapter -> ResolvedProfile -> CanonicalDocument
+                                                                                               document -> SelectedArchiMateProfile
+                                                                                                             profile -> SelectedView
+                                                                                                                          document -> ProfileAssessmentUniverse
+                                                                                                                                        profile
+                                                                                                                                        document -> CapabilityInputReferences -> result)
   -> result
 withPreparedSelectedView adapters profiles requestedAdapter request (AcquiredModelSource model) failed prepared =
   foldAdapterSelection
@@ -130,10 +132,13 @@ withPreparedSelectedView adapters profiles requestedAdapter request (AcquiredMod
     complete selected resolved document selectedView =
       withSelectedArchiMateProfile (resolvedProfileDescriptor resolved) $ \profile ->
         prepared
+          (PreparedAuthority
+             (selectedAdapterDescriptor selected)
+             (resolvedProfileDescriptor resolved)
+             (acquiredSourceIdentity model))
           selected
           resolved
           document
-          (ModelOwnerSource (acquiredSourceIdentity model))
           profile
           selectedView
           (deriveProfileAssessmentUniverse

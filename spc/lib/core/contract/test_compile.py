@@ -234,6 +234,65 @@ class CoreContractCompilerTest(unittest.TestCase):
         self.assertEqual(COMPILER.GENERATED_INVENTORY.read_bytes(), first_inventory)
         COMPILER.validate_generated_inventory(first_inventory)
 
+    def test_owner_diagnostic_inventory_is_exact_and_deterministic(self):
+        first = COMPILER.compile_owner_inventory()
+        second = COMPILER.compile_owner_inventory()
+        self.assertEqual(first, second)
+        self.assertEqual(
+            COMPILER.EXPECTED_OWNER_INVENTORY_SHA256,
+            hashlib.sha256(first).hexdigest(),
+        )
+        self.assertEqual(COMPILER.GENERATED_OWNER_INVENTORY.read_bytes(), first)
+        inventory = json.loads(first)
+        self.assertEqual(
+            "o2i.core.owner-diagnostic-evidence/v1", inventory["schema"]
+        )
+        self.assertEqual(
+            {"structure": 12, "binding": 4, "semantics": 27},
+            {
+                owner: len(rows)
+                for owner, rows in inventory["owners"].items()
+            },
+        )
+        structure = {
+            row["ruleId"]: row for row in inventory["owners"]["structure"]
+        }
+        self.assertEqual(
+            [(0, 0), (2, None)],
+            [
+                (
+                    alternative["fields"][-1]["minimum"],
+                    alternative["fields"][-1]["maximum"],
+                )
+                for alternative in structure[
+                    "core.contextualization.target-owner-cardinality"
+                ]["alternatives"]
+            ],
+        )
+        binding = inventory["owners"]["binding"]
+        self.assertTrue(
+            all(
+                row["sourceBinding"]
+                == {
+                    "role": "supplemental",
+                    "ordinalEvidence": "inputOrdinal",
+                }
+                for row in binding
+            )
+        )
+        semantic = {
+            row["ruleId"]: row for row in inventory["owners"]["semantics"]
+        }
+        anchoring = semantic["core.situated-need.driver-anchoring"]
+        self.assertEqual(2, anchoring["subjectFieldCount"])
+        self.assertEqual(
+            ["need", "member", "unanchored-driver"],
+            [
+                field["roleId"]
+                for field in anchoring["alternatives"][0]["fields"]
+            ],
+        )
+
     def test_exact_occurrence_authority_is_independent_of_diagnostic_input(self):
         _, _, occurrences = COMPILER.semantic_diagnostic_contract(
             self.diagnostic,

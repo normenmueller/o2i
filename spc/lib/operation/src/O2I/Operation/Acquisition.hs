@@ -17,6 +17,9 @@ module O2I.Operation.Acquisition
   , foldAcquiredSource
   , AcquiredModelSource
   , acquiredModelSource
+  , AcquiredSupplementalSource
+  , acquiredSupplementalSource
+  , foldAcquiredSupplementalSource
   ) where
 
 import Control.Exception (IOException)
@@ -86,3 +89,16 @@ acquiredModelSource acquired
   | sourceIdentityRole (acquiredSourceIdentity acquired) == ModelRole =
     Just (AcquiredModelSource acquired)
   | otherwise = Nothing
+
+-- | Retain an acquired source only when its immutable role is supplemental.
+acquiredSupplementalSource :: AcquiredSource -> Maybe AcquiredSupplementalSource
+acquiredSupplementalSource acquired
+  | sourceIdentityRole (acquiredSourceIdentity acquired) == SupplementalRole =
+    Just (AcquiredSupplementalSource acquired)
+  | otherwise = Nothing
+
+-- | Consume an acquired source after exact supplemental-role refinement.
+foldAcquiredSupplementalSource ::
+     (AcquiredSource -> value) -> AcquiredSupplementalSource -> value
+foldAcquiredSupplementalSource consume (AcquiredSupplementalSource acquired) =
+  consume acquired

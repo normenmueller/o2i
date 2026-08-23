@@ -86,4 +86,4 @@ contractProvenance = do
   operationRuleCatalogContractIdentity operationRuleCatalog @?= "o2i.operation"
   operationRuleCatalogContractVersion operationRuleCatalog @?= "0.3.0"
   operationRuleCatalogContractDigest operationRuleCatalog
-    @?= "3046aeb097ea5802097a1d5625772201c7856681202293c6b89f4ca2f102015f"
+    @?= "81798862858111306bee2823c27696a036f8e8ddaf65d0bf6fd64e14fb43f1c4"

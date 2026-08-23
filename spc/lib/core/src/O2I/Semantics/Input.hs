@@ -16,11 +16,15 @@ module O2I.Semantics.Input
   , assessSupplementalInputSet
   , SupplementalBinding
   , SupplementalBindingEvidence
+  , SupplementalBindingDiagnosticEvidence
   , BoundSupplementalInputs
   , bindSupplementalInputs
   , foldSupplementalBinding
+  , foldSupplementalBindingDiagnostics
   , supplementalBindingEvidenceRule
   , foldSupplementalBindingEvidence
+  , supplementalBindingDiagnosticEvidenceRule
+  , foldSupplementalBindingDiagnosticEvidence
   , SupplementalUnicodeScalarOccurrence(..)
   , SupplementalInvalidUtf8Evidence
   , supplementalInvalidUtf8InputOrdinal
@@ -131,6 +135,15 @@ data SupplementalBindingEvidence scope provenance =
 
 type role SupplementalBindingEvidence nominal nominal
 
+-- | Opaque post-decode, graph-dependent evidence. Its closed algebra contains
+-- exactly the four outcomes that Binding can construct.
+data SupplementalBindingDiagnosticEvidence scope provenance =
+  SupplementalBindingDiagnosticEvidence
+    !provenance
+    !Internal.SupplementalBindingDiagnosticDefect
+
+type role SupplementalBindingDiagnosticEvidence nominal nominal
+
 -- | Bind every supplemental identity under one exact selected-View scope.
 bindSupplementalInputs ::
      WellFormedGraph scope
@@ -153,6 +166,22 @@ foldSupplementalBinding consume (SupplementalBinding binding) =
        (uncurry SupplementalBindingEvidence)
        (Internal.supplementalBindingDefects binding))
 
+-- | Eliminate the exact Binding result through its closed graph-dependent
+-- evidence algebra, without reintroducing pre-binding failures.
+foldSupplementalBindingDiagnostics ::
+     (BoundSupplementalInputs scope -> [SupplementalBindingDiagnosticEvidence
+                                          scope
+                                          provenance] -> result)
+  -> SupplementalBinding scope provenance
+  -> result
+foldSupplementalBindingDiagnostics consume (SupplementalBinding binding) =
+  consume
+    (Internal.supplementalBindingInputs binding)
+    [ SupplementalBindingDiagnosticEvidence provenance defect
+    | (provenance, defect) <-
+        Internal.supplementalBindingDiagnosticDefects binding
+    ]
+
 -- | Project the exact Core rule of scoped Binding evidence.
 supplementalBindingEvidenceRule ::
      SupplementalBindingEvidence scope provenance -> CoreRuleId
@@ -166,6 +195,33 @@ foldSupplementalBindingEvidence ::
   -> result
 foldSupplementalBindingEvidence eliminator (SupplementalBindingEvidence provenance defect) =
   Internal.foldSupplementalInputDefect (eliminator provenance) defect
+
+-- | Project the exact Core rule of closed Binding diagnostic evidence.
+supplementalBindingDiagnosticEvidenceRule ::
+     SupplementalBindingDiagnosticEvidence scope provenance -> CoreRuleId
+supplementalBindingDiagnosticEvidenceRule (SupplementalBindingDiagnosticEvidence _ defect) =
+  Internal.supplementalInputDefectRule
+    (Internal.supplementalBindingDiagnosticDefect defect)
+
+-- | Eliminate closed Binding evidence through exactly its four possible
+-- graph-dependent outcomes.
+foldSupplementalBindingDiagnosticEvidence ::
+     (provenance -> SupplementalIdentityUnknownEvidence -> result)
+  -> (provenance -> SupplementalIdentityAmbiguousEvidence -> result)
+  -> (provenance -> SupplementalIdentityWrongTypeEvidence -> result)
+  -> (provenance -> SupplementalIdentityOutOfSelectedViewEvidence -> result)
+  -> SupplementalBindingDiagnosticEvidence scope provenance
+  -> result
+foldSupplementalBindingDiagnosticEvidence unknown ambiguous wrongType outOfView (SupplementalBindingDiagnosticEvidence provenance defect) =
+  case defect of
+    Internal.SupplementalBindingIdentityUnknown evidence ->
+      unknown provenance evidence
+    Internal.SupplementalBindingIdentityAmbiguous evidence ->
+      ambiguous provenance evidence
+    Internal.SupplementalBindingIdentityWrongType evidence ->
+      wrongType provenance evidence
+    Internal.SupplementalBindingIdentityOutOfSelectedView evidence ->
+      outOfView provenance evidence
 
 -- | Project the exact Core-owned rule identity of one supplemental defect.
 supplementalInputDefectRule :: SupplementalInputDefect -> CoreRuleId

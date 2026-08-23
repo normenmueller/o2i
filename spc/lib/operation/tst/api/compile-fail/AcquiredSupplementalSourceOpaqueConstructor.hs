@@ -1,0 +1,6 @@
+module AcquiredSupplementalSourceOpaqueConstructor where
+
+import O2I.Operation.Acquisition
+
+forgedSupplemental :: AcquiredSupplementalSource
+forgedSupplemental = AcquiredSupplementalSource undefined

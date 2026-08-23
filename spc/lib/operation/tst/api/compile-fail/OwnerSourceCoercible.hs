@@ -3,22 +3,19 @@ module OwnerSourceCoercible where
 import Data.Coerce (coerce)
 import O2I.Operation.Diagnostic.Owner.Source
 
-coerceModelSource ::
-     ModelOwnerSource firstDocument -> ModelOwnerSource secondDocument
-coerceModelSource = coerce
+coerceAuthority ::
+     PreparedAuthority firstAuthority profile document
+  -> PreparedAuthority secondAuthority profile document
+coerceAuthority = coerce
 
-coerceScopedModelSource ::
-     ScopedModelOwnerSource firstScope -> ScopedModelOwnerSource secondScope
-coerceScopedModelSource = coerce
-
-coerceSupplementalBindingScope ::
-     SupplementalOwnerBinding firstScope inputs
-  -> SupplementalOwnerBinding secondScope inputs
-coerceSupplementalBindingScope = coerce
+coerceScope ::
+     PreparedScope authority profile document firstScope
+  -> PreparedScope authority profile document secondScope
+coerceScope = coerce
 
 coerceSupplementalBindingInputs ::
-     SupplementalOwnerBinding scope firstInputs
-  -> SupplementalOwnerBinding scope secondInputs
+     SupplementalOwnerBinding authority profile document scope firstInputs
+  -> SupplementalOwnerBinding authority profile document scope secondInputs
 coerceSupplementalBindingInputs = coerce
 
 coerceSupplementalEvidenceScope ::
@@ -26,17 +23,7 @@ coerceSupplementalEvidenceScope ::
   -> SupplementalOwnerBindingEvidence secondScope inputs
 coerceSupplementalEvidenceScope = coerce
 
-coerceSupplementalEvidenceInputs ::
-     SupplementalOwnerBindingEvidence scope firstInputs
-  -> SupplementalOwnerBindingEvidence scope secondInputs
-coerceSupplementalEvidenceInputs = coerce
-
 coerceBoundScope ::
-     BoundOwnerSupplementalInputs firstScope inputs
-  -> BoundOwnerSupplementalInputs secondScope inputs
+     BoundOwnerSupplementalInputs authority profile document firstScope inputs
+  -> BoundOwnerSupplementalInputs authority profile document secondScope inputs
 coerceBoundScope = coerce
-
-coerceBoundInputs ::
-     BoundOwnerSupplementalInputs scope firstInputs
-  -> BoundOwnerSupplementalInputs scope secondInputs
-coerceBoundInputs = coerce

@@ -8,15 +8,24 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import tempfile
 from pathlib import Path
-from typing import Any, Callable, NamedTuple
+from typing import Any, Callable, NamedTuple, Optional
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 COMPANION = PACKAGE_ROOT / "contract/operation.json"
 DEFAULT_PROFILE_COMPANION = (
     PACKAGE_ROOT.parents[1] / "ctr/archimate/profile.json"
+)
+DEFAULT_PROFILE_DIAGNOSTIC_INVENTORY = (
+    PACKAGE_ROOT.parents[1]
+    / "ctr/archimate/contract/generated/o2i.archimate-profile.diagnostic-evidence-v1.json"
+)
+DEFAULT_CORE_OWNER_DIAGNOSTIC_INVENTORY = (
+    PACKAGE_ROOT.parents[1]
+    / "lib/core/contract/generated/o2i.core.owner-diagnostic-evidence-v1.json"
 )
 RULE_GENERATED = PACKAGE_ROOT / "src/O2I/Operation/Rule/Generated.hs"
 SCHEMA_GENERATED = PACKAGE_ROOT / "src/O2I/Operation/Schema/Generated.hs"
@@ -60,6 +69,10 @@ class SchemaFragment(NamedTuple):
     @property
     def reference(self) -> str:
         return f"{self.identity}/v{self.version}"
+
+    @property
+    def binding(self) -> str:
+        return self.name + "SchemaAuthority"
 
     @property
     def schema_path(self) -> Path:
@@ -254,12 +267,16 @@ def validate_schema_output_ownership(
 
 def validate(
     profile_companion: Path = DEFAULT_PROFILE_COMPANION,
+    profile_diagnostic_inventory: Path = DEFAULT_PROFILE_DIAGNOSTIC_INVENTORY,
+    core_owner_diagnostic_inventory: Path = DEFAULT_CORE_OWNER_DIAGNOSTIC_INVENTORY,
 ) -> tuple[
     dict[str, str],
     list[dict[str, str]],
     str,
     list[MachineDocument],
     list[SchemaFragment],
+    dict[str, Any],
+    dict[str, Any],
 ]:
     companion, payload = load_object(COMPANION)
     require_keys(
@@ -269,6 +286,7 @@ def validate(
             "contract",
             "machineDocuments",
             "schemaFragments",
+            "diagnosticConformance",
             "rules",
             "profileConformance",
         },
@@ -291,6 +309,45 @@ def validate(
     documents = validate_machine_documents(companion["machineDocuments"])
     fragments = validate_schema_fragments(companion["schemaFragments"])
     validate_schema_output_ownership(documents, fragments)
+
+    conformance = companion["diagnosticConformance"]
+    require_keys(conformance, {"profile", "core"}, "diagnosticConformance")
+    profile_inventory, profile_inventory_bytes = load_object(
+        profile_diagnostic_inventory
+    )
+    core_inventory, core_inventory_bytes = load_object(
+        core_owner_diagnostic_inventory
+    )
+    for name, declared, inventory, inventory_bytes, identity, version in (
+        (
+            "profile",
+            conformance["profile"],
+            profile_inventory,
+            profile_inventory_bytes,
+            profile_inventory.get("profile", {}).get("identity"),
+            profile_inventory.get("profile", {}).get("version"),
+        ),
+        (
+            "core",
+            conformance["core"],
+            core_inventory,
+            core_inventory_bytes,
+            core_inventory.get("core", {}).get("identity"),
+            core_inventory.get("core", {}).get("version"),
+        ),
+    ):
+        subject = f"diagnosticConformance.{name}"
+        if not isinstance(declared, dict):
+            raise ValueError(f"{subject}: expected object")
+        require_keys(
+            declared, {"schema", "identity", "version", "sha256"}, subject
+        )
+        if inventory.get("schema") != declared["schema"]:
+            raise ValueError(f"{subject}: inventory schema differs")
+        if identity != declared["identity"] or version != declared["version"]:
+            raise ValueError(f"{subject}: owner identity differs")
+        if hashlib.sha256(inventory_bytes).hexdigest() != declared["sha256"]:
+            raise ValueError(f"{subject}: inventory digest differs")
 
     raw_rules = companion["rules"]
     if not isinstance(raw_rules, list) or not raw_rules:
@@ -338,6 +395,8 @@ def validate(
         hashlib.sha256(payload).hexdigest(),
         documents,
         fragments,
+        profile_inventory,
+        core_inventory,
     )
 
 
@@ -1108,27 +1167,225 @@ def view_discovery_schema(document: MachineDocument) -> dict[str, Any]:
     )
 
 
-def diagnostic_definitions() -> dict[str, Any]:
-    """Single generator-owned definition set for every diagnostic consumer."""
+def exact_text_array(values: list[str]) -> dict[str, Any]:
     return {
-        "adapterOccurrence": adapter_occurrence(path_pattern=TOOL_TEXT_PATTERN),
-        "diagnosticSourceIdentity": diagnostic_source_identity(),
-        "nativeName": native_name(),
-        "sourcePosition": source_position(),
-        "sourceLocation": source_location(),
-        "canonicalOccurrence": canonical_occurrence(),
-        "diagnosticOccurrence": diagnostic_occurrence(),
-        "diagnosticProvenance": diagnostic_provenance(),
-        "diagnosticValue": diagnostic_value(),
+        "type": "array",
+        "minItems": len(values),
+        "maxItems": len(values),
+        "prefixItems": [{"const": value} for value in values],
+        "items": False,
     }
 
 
-def diagnostic_schema(fragment: SchemaFragment) -> dict[str, Any]:
+def diagnostic_value_schema(value_kind: str) -> dict[str, Any]:
+    if value_kind == "canonical-occurrence":
+        return reference("canonicalOccurrence")
+    if value_kind == "draft-scalar":
+        return reference("draftScalar")
+    if value_kind in {"occurrence-identity", "model-identity", "text"}:
+        return text_schema(pattern=TOOL_TEXT_PATTERN)
+    raise ValueError(f"unsupported diagnostic value kind: {value_kind!r}")
+
+
+def diagnostic_evidence_alternative(
+    row: dict[str, Any], alternative: dict[str, Any]
+) -> dict[str, Any]:
+    properties: dict[str, Any] = {}
+    if "branch" in alternative:
+        properties["branch"] = {"const": alternative["branch"]}
+        properties["sourceRuleIds"] = exact_text_array(
+            alternative["sourceRuleIds"]
+        )
+    if "classification" in row:
+        classification = row["classification"]
+        properties.update(
+            {
+                "class": {"const": classification["class"]},
+                "graphMembership": {
+                    "const": classification["graphMembership"]
+                },
+                "qualificationMembership": {
+                    "const": classification["qualificationMembership"]
+                },
+            }
+        )
+    if "mappingId" in row:
+        properties["mappingId"] = {"const": row["mappingId"]}
+    fields = []
+    for field in alternative["fields"]:
+        values = {
+            "type": "array",
+            "items": diagnostic_value_schema(field["valueKind"]),
+            "minItems": field["minimum"],
+        }
+        if field["maximum"] is not None:
+            values["maxItems"] = field["maximum"]
+        fields.append(
+            object_schema(
+                {
+                    "role": {"const": field["roleId"]},
+                    "values": values,
+                }
+            )
+        )
+    properties["fields"] = {
+        "type": "array",
+        "minItems": len(fields),
+        "maxItems": len(fields),
+        "prefixItems": fields,
+        "items": False,
+    }
+    return object_schema(properties)
+
+
+def owner_diagnostic_schema(
+    row: dict[str, Any], *, owner: str, stage: str, producer: str
+) -> dict[str, Any]:
+    polarity = row["polarity"]
+    severity = "info" if polarity == "acceptance" else "error"
+    return object_schema(
+        {
+            "producer": {"const": producer},
+            "owner": {"const": owner},
+            "stage": {"const": stage},
+            "ruleId": {"const": row["ruleId"]},
+            "evidenceKind": {"const": row["evidenceKind"]},
+            "severity": {"const": severity},
+            "disposition": {"const": "model-finding"},
+            "evidence": {
+                "oneOf": [
+                    diagnostic_evidence_alternative(row, alternative)
+                    for alternative in row["alternatives"]
+                ]
+            },
+        }
+    )
+
+
+def diagnostic_definitions(
+    profile_inventory: Optional[dict[str, Any]] = None,
+    core_inventory: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """Generate v2 exclusively from the two explicit owner inventories."""
+    if profile_inventory is None:
+        profile_inventory, _ = load_object(DEFAULT_PROFILE_DIAGNOSTIC_INVENTORY)
+    if core_inventory is None:
+        core_inventory, _ = load_object(DEFAULT_CORE_OWNER_DIAGNOSTIC_INVENTORY)
+    profile = profile_inventory["profile"]
+    owners = core_inventory["owners"]
+    profile_diagnostics = [
+        owner_diagnostic_schema(
+            row,
+            owner="profile",
+            stage="profile",
+            producer=row["producer"],
+        )
+        for row in profile_inventory["diagnostics"]
+    ]
+    structure_diagnostics = [
+        owner_diagnostic_schema(
+            row,
+            owner="core",
+            stage="structure",
+            producer="structure-assessment",
+        )
+        for row in owners["structure"]
+    ]
+    semantics_diagnostics = [
+        owner_diagnostic_schema(
+            row,
+            owner="core",
+            stage="semantics",
+            producer="semantics-assessment",
+        )
+        for row in owners["semantics"]
+    ]
+    binding_diagnostics = [
+        owner_diagnostic_schema(
+            row,
+            owner="core",
+            stage="capability-input",
+            producer="supplemental-binding",
+        )
+        for row in owners["binding"]
+    ]
+    source_entry = object_schema(
+        {
+            "reference": text_schema(pattern=TOOL_TEXT_PATTERN),
+            "sha256": text_schema(pattern=SHA256_PATTERN),
+            "diagnostics": {
+                "type": "array",
+                "items": {"oneOf": binding_diagnostics},
+            },
+        }
+    )
+    supplemental_sources = {
+        "type": "object",
+        "propertyNames": {"pattern": "^(0|[1-9][0-9]*)$"},
+        "patternProperties": {"^(0|[1-9][0-9]*)$": source_entry},
+        "additionalProperties": False,
+    }
+    return {
+        "adapterDescriptor": adapter_descriptor(),
+        "canonicalOccurrence": canonical_occurrence(),
+        "nativeName": native_name(),
+        "sourcePosition": source_position(),
+        "sourceLocation": source_location(),
+        "draftScalar": draft_scalar(),
+        "preparedAuthority": object_schema(
+            {
+                "adapter": reference("adapterDescriptor"),
+                "profile": object_schema(
+                    {
+                        "identity": {"const": profile["identity"]},
+                        "token": {"const": profile["token"]},
+                        "version": {"const": profile["version"]},
+                        "notation": {"const": profile["notation"]},
+                        "adapterIds": exact_text_array(profile["adapterIds"]),
+                        "contractDigest": {
+                            "const": profile_inventory["companion"]["rawSha256"]
+                        },
+                    }
+                ),
+                "model": object_schema(
+                    {
+                        "role": {"const": "model"},
+                        "ordinal": {"type": "integer", "minimum": 0},
+                        "reference": text_schema(pattern=TOOL_TEXT_PATTERN),
+                        "sha256": text_schema(pattern=SHA256_PATTERN),
+                    }
+                ),
+            }
+        ),
+        "modelDiagnostic": {
+            "oneOf": [
+                *profile_diagnostics,
+                *structure_diagnostics,
+                *semantics_diagnostics,
+            ]
+        },
+        "supplementalSources": supplemental_sources,
+        "preparedDiagnosticDocument": object_schema(
+            {
+                "schema": {"const": "o2i.operation.diagnostic/v2"},
+                "authority": reference("preparedAuthority"),
+                "modelDiagnostics": array_schema(reference("modelDiagnostic")),
+                "supplementalSources": reference("supplementalSources"),
+            }
+        ),
+    }
+
+
+def diagnostic_schema(
+    fragment: SchemaFragment,
+    profile_inventory: Optional[dict[str, Any]] = None,
+    core_inventory: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
     return schema_fragment_document(
         fragment,
-        "Common typed Operation diagnostic",
-        diagnostic_definitions(),
-        "diagnosticValue",
+        "Prepared owner-bound Operation diagnostic document",
+        diagnostic_definitions(profile_inventory, core_inventory),
+        "preparedDiagnosticDocument",
     )
 
 
@@ -1235,8 +1492,15 @@ def render_schema(document: MachineDocument) -> bytes:
     ).encode("utf-8")
 
 
-def render_schema_fragment(fragment: SchemaFragment) -> bytes:
-    schema = SCHEMA_FRAGMENT_BUILDERS[fragment.name](fragment)
+def render_schema_fragment(
+    fragment: SchemaFragment,
+    profile_inventory: Optional[dict[str, Any]] = None,
+    core_inventory: Optional[dict[str, Any]] = None,
+) -> bytes:
+    if fragment.name == "diagnostic":
+        schema = diagnostic_schema(fragment, profile_inventory, core_inventory)
+    else:
+        schema = SCHEMA_FRAGMENT_BUILDERS[fragment.name](fragment)
     verify_closed_objects(schema, fragment.name)
     verify_referenced_definitions(schema, fragment.name)
     return (
@@ -1387,12 +1651,36 @@ def hs_machine_schema(document: MachineDocument, schema_bytes: bytes) -> str:
     }}'''
 
 
+def hs_schema_fragment_authority(
+    fragment: SchemaFragment, schema_bytes: bytes
+) -> str:
+    digest = hashlib.sha256(schema_bytes).hexdigest()
+    return f'''{fragment.binding} :: SchemaAuthority
+{fragment.binding} =
+  SchemaAuthority
+    {{ schemaAuthorityIdentityValue = SchemaIdentity {hs_text(fragment.identity)}
+    , schemaAuthorityVersionValue = SchemaVersion {fragment.version}
+    , schemaAuthorityDigestValue = SchemaDigest {hs_text(digest)}
+    }}'''
+
+
 def render_schema_module(
-    documents: list[MachineDocument], schemas: dict[str, bytes]
+    documents: list[MachineDocument],
+    schemas: dict[str, bytes],
+    fragments: list[SchemaFragment],
+    fragment_schemas: dict[str, bytes],
 ) -> str:
     bindings = "\n\n".join(
-        hs_machine_schema(document, schemas[document.name])
-        for document in documents
+        [
+            hs_machine_schema(document, schemas[document.name])
+            for document in documents
+        ]
+        + [
+            hs_schema_fragment_authority(
+                fragment, fragment_schemas[fragment.name]
+            )
+            for fragment in fragments
+        ]
     )
     return f'''{{-# LANGUAGE OverloadedStrings #-}}
 
@@ -1406,17 +1694,52 @@ import O2I.Operation.Schema.Internal
 '''
 
 
+def format_generated_haskell(rendered: str, subject: str) -> bytes:
+    formatted = subprocess.run(
+        ["hindent", "--line-length", "80"],
+        input=rendered,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if formatted.returncode != 0:
+        raise ValueError(f"hindent rejected generated {subject}: {formatted.stderr}")
+    return formatted.stdout.encode("utf-8")
+
+
 def render_outputs(
     profile_companion: Path = DEFAULT_PROFILE_COMPANION,
+    profile_diagnostic_inventory: Path = DEFAULT_PROFILE_DIAGNOSTIC_INVENTORY,
+    core_owner_diagnostic_inventory: Path = DEFAULT_CORE_OWNER_DIAGNOSTIC_INVENTORY,
 ) -> dict[Path, bytes]:
-    contract, rules, digest, documents, fragments = validate(profile_companion)
+    (
+        contract,
+        rules,
+        digest,
+        documents,
+        fragments,
+        profile_inventory,
+        core_inventory,
+    ) = validate(
+        profile_companion,
+        profile_diagnostic_inventory,
+        core_owner_diagnostic_inventory,
+    )
     schemas = {document.name: render_schema(document) for document in documents}
     fragment_schemas = {
-        fragment.name: render_schema_fragment(fragment) for fragment in fragments
+        fragment.name: render_schema_fragment(
+            fragment, profile_inventory, core_inventory
+        )
+        for fragment in fragments
     }
     outputs: dict[Path, bytes] = {
         RULE_GENERATED: render_rules(contract, rules, digest).encode("utf-8"),
-        SCHEMA_GENERATED: render_schema_module(documents, schemas).encode("utf-8"),
+        SCHEMA_GENERATED: format_generated_haskell(
+            render_schema_module(
+                documents, schemas, fragments, fragment_schemas
+            ),
+            "Schema authority",
+        ),
     }
     outputs.update(
         {document.schema_path: schemas[document.name] for document in documents}
@@ -1483,8 +1806,24 @@ def main() -> int:
         required=True,
         help="path to the exact authoritative ArchiMate Profile companion",
     )
+    parser.add_argument(
+        "--profile-diagnostic-inventory",
+        type=Path,
+        required=True,
+        help="path to the exact Profile diagnostic evidence inventory",
+    )
+    parser.add_argument(
+        "--core-owner-diagnostic-inventory",
+        type=Path,
+        required=True,
+        help="path to the exact Core owner diagnostic evidence inventory",
+    )
     args = parser.parse_args()
-    outputs = render_outputs(args.profile_companion)
+    outputs = render_outputs(
+        args.profile_companion,
+        args.profile_diagnostic_inventory,
+        args.core_owner_diagnostic_inventory,
+    )
     if args.write:
         write_outputs(outputs)
     else:

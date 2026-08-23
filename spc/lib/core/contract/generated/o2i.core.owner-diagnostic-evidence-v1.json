@@ -1,0 +1,1317 @@
+{
+  "schema": "o2i.core.owner-diagnostic-evidence/v1",
+  "core": {
+    "identity": "o2i.core-semantics",
+    "version": "0.3.0"
+  },
+  "companions": {
+    "semantics": {
+      "schema": "o2i.core-semantics/target-v46",
+      "rawSha256": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333",
+      "shapeSha256": "3e091e8bc0fd3a887da02f8591292c2a8ea7d64c7e83951183ab71fe4f5b1278"
+    },
+    "semanticDiagnosticInventory": {
+      "schema": "o2i.core.semantic-diagnostic-evidence/v1",
+      "rawSha256": "8007829ae3b4cd94b4e645ef973926250f8bac654b1bd9d9d1f3f5402355ed55"
+    }
+  },
+  "owners": {
+    "structure": [
+      {
+        "ruleId": "core.qualified-endpoint.catalog-membership",
+        "polarity": "rejection",
+        "evidenceKind": "qualified-endpoint-catalog-membership",
+        "sourceRole": "model",
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "subject",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.contextualization.source-category",
+        "polarity": "rejection",
+        "evidenceKind": "contextualization-source-category",
+        "sourceRole": "model",
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "segment",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "owner",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.contextualization.target-category",
+        "polarity": "rejection",
+        "evidenceKind": "contextualization-target-category",
+        "sourceRole": "model",
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "segment",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "member",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.contextualization.target-owner-cardinality",
+        "polarity": "rejection",
+        "evidenceKind": "contextualization-target-owner-cardinality",
+        "sourceRole": "model",
+        "alternatives": [
+          {
+            "alternativeId": "owners-zero",
+            "fields": [
+              {
+                "roleId": "member",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "owners",
+                "valueKind": "occurrence-identity",
+                "minimum": 0,
+                "maximum": 0
+              }
+            ]
+          },
+          {
+            "alternativeId": "owners-multiple",
+            "fields": [
+              {
+                "roleId": "member",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "owners",
+                "valueKind": "occurrence-identity",
+                "minimum": 2,
+                "maximum": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.semantic-relation.compatibility",
+        "polarity": "rejection",
+        "evidenceKind": "semantic-relation-compatibility",
+        "sourceRole": "model",
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "relation",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "source",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "target",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.structured-proposition.identity",
+        "polarity": "rejection",
+        "evidenceKind": "structured-proposition-identity",
+        "sourceRole": "model",
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "subject",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "occurrences",
+                "valueKind": "occurrence-identity",
+                "minimum": 2,
+                "maximum": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.collective-strategy-realization.participant-type",
+        "polarity": "rejection",
+        "evidenceKind": "collective-participant-type",
+        "sourceRole": "model",
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "segment",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "endpoint",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.collective-strategy-realization.participant-cardinality",
+        "polarity": "rejection",
+        "evidenceKind": "collective-participant-cardinality",
+        "sourceRole": "model",
+        "alternatives": [
+          {
+            "alternativeId": "endpoints-zero",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "endpoints",
+                "valueKind": "occurrence-identity",
+                "minimum": 0,
+                "maximum": 0
+              }
+            ]
+          },
+          {
+            "alternativeId": "endpoints-one",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "endpoints",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.collective-strategy-realization.participant-uniqueness",
+        "polarity": "rejection",
+        "evidenceKind": "collective-participant-uniqueness",
+        "sourceRole": "model",
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "duplicateEndpoints",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.collective-strategy-realization.target-type",
+        "polarity": "rejection",
+        "evidenceKind": "collective-target-type",
+        "sourceRole": "model",
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "segment",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "endpoint",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.collective-strategy-realization.target-cardinality",
+        "polarity": "rejection",
+        "evidenceKind": "collective-target-cardinality",
+        "sourceRole": "model",
+        "alternatives": [
+          {
+            "alternativeId": "endpoints-zero",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "endpoints",
+                "valueKind": "occurrence-identity",
+                "minimum": 0,
+                "maximum": 0
+              }
+            ]
+          },
+          {
+            "alternativeId": "endpoints-multiple",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "endpoints",
+                "valueKind": "occurrence-identity",
+                "minimum": 2,
+                "maximum": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.collective-strategy-realization.target-distinctness",
+        "polarity": "rejection",
+        "evidenceKind": "collective-target-distinctness",
+        "sourceRole": "model",
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "overlappingEndpoints",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": null
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "binding": [
+      {
+        "ruleId": "core.supplemental.identity.unknown",
+        "polarity": "rejection",
+        "evidenceKind": "supplemental-identity-site",
+        "sourceBinding": {
+          "role": "supplemental",
+          "ordinalEvidence": "inputOrdinal"
+        },
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "instancePointer",
+                "valueKind": "text",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "identity",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.supplemental.identity.ambiguous",
+        "polarity": "rejection",
+        "evidenceKind": "supplemental-identity-site",
+        "sourceBinding": {
+          "role": "supplemental",
+          "ordinalEvidence": "inputOrdinal"
+        },
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "instancePointer",
+                "valueKind": "text",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "identity",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.supplemental.identity.wrong-type",
+        "polarity": "rejection",
+        "evidenceKind": "supplemental-identity-site",
+        "sourceBinding": {
+          "role": "supplemental",
+          "ordinalEvidence": "inputOrdinal"
+        },
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "instancePointer",
+                "valueKind": "text",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "identity",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.supplemental.identity.out-of-selected-view",
+        "polarity": "rejection",
+        "evidenceKind": "supplemental-identity-site",
+        "sourceBinding": {
+          "role": "supplemental",
+          "ordinalEvidence": "inputOrdinal"
+        },
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "instancePointer",
+                "valueKind": "text",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "identity",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "semantics": [
+      {
+        "ruleId": "core.collective-strategy-realization.asserted-collective-coverage",
+        "polarity": "rejection",
+        "evidenceKind": "FitClaimKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "uncovered-target-member",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.collective-strategy-realization.asserted-completeness",
+        "polarity": "rejection",
+        "evidenceKind": "FitClaimKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "claim",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.collective-strategy-realization.asserted-macro-support",
+        "polarity": "rejection",
+        "evidenceKind": "ParticipantClaimKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 2,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "participant",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "claim",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "participant",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "target",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.collective-strategy-realization.asserted-participant-primitive-support",
+        "polarity": "rejection",
+        "evidenceKind": "ParticipantClaimKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 2,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "participant",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "claim",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "participant",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "target",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.collective-strategy-realization.fit-pairwise-coherence",
+        "polarity": "rejection",
+        "evidenceKind": "FitClaimKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "claim",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.collective-strategy-realization.fit-participant-binding",
+        "polarity": "rejection",
+        "evidenceKind": "FitClaimKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "claim",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.collective-strategy-realization.fit-participant-compatibility",
+        "polarity": "rejection",
+        "evidenceKind": "FitClaimKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "claim",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.collective-strategy-realization.fit-target-binding",
+        "polarity": "rejection",
+        "evidenceKind": "FitClaimKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "claim",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.collective-strategy-realization.fit-target-guiding-policy",
+        "polarity": "rejection",
+        "evidenceKind": "FitClaimKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "claim",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.collective-strategy-realization.fit-target-trade-offs",
+        "polarity": "rejection",
+        "evidenceKind": "FitClaimKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "claim",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "claim",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.contextualization.asserted-dependency",
+        "polarity": "rejection",
+        "evidenceKind": "AssertedDependencyKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 3,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "dependent",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "endpoint",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "context",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "dependent",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "contextualized-endpoint",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "candidate-contextualization",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.situated-need.driver-anchoring",
+        "polarity": "rejection",
+        "evidenceKind": "NeedMemberKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 2,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "need",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "member",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "unanchored-driver",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.situated-need.driver-cardinality",
+        "polarity": "rejection",
+        "evidenceKind": "NeedKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "need",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "observed-driver",
+                "valueKind": "occurrence-identity",
+                "minimum": 0,
+                "maximum": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.situated-need.objective-cardinality",
+        "polarity": "rejection",
+        "evidenceKind": "NeedKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "need",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "observed-objective",
+                "valueKind": "occurrence-identity",
+                "minimum": 0,
+                "maximum": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.situated-need.objective-grounding",
+        "polarity": "rejection",
+        "evidenceKind": "NeedMemberKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 2,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "need",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "member",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "ungrounded-objective",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.situated-need.surfacing-situation-anchoring",
+        "polarity": "rejection",
+        "evidenceKind": "NeedMemberKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 2,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "need",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "member",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "unanchored-surfacing-situation",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.situated-need.surfacing-situation-cardinality",
+        "polarity": "rejection",
+        "evidenceKind": "NeedKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "need",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "observed-surfacing-situation",
+                "valueKind": "occurrence-identity",
+                "minimum": 0,
+                "maximum": 0
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.strategy-formulation.action-contributions",
+        "polarity": "rejection",
+        "evidenceKind": "StrategyMemberKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 2,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "strategy",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "member",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "uncontributing-action",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.strategy-formulation.actions",
+        "polarity": "rejection",
+        "evidenceKind": "StrategyKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "strategy",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "listed-action",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.strategy-formulation.diagnosis",
+        "polarity": "rejection",
+        "evidenceKind": "StrategyKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "strategy",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "owned-diagnosis",
+                "valueKind": "occurrence-identity",
+                "minimum": 0,
+                "maximum": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.strategy-formulation.diagnosis-grounding",
+        "polarity": "rejection",
+        "evidenceKind": "StrategyKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "strategy",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "diagnosis",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "intent",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.strategy-formulation.guiding-policy",
+        "polarity": "rejection",
+        "evidenceKind": "StrategyKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "strategy",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "owned-guiding-policy",
+                "valueKind": "occurrence-identity",
+                "minimum": 0,
+                "maximum": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.strategy-formulation.guiding-policy-actions",
+        "polarity": "rejection",
+        "evidenceKind": "StrategyMemberKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 2,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "strategy",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "member",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "guiding-policy",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "action",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.strategy-formulation.intent",
+        "polarity": "rejection",
+        "evidenceKind": "StrategyKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "strategy",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "owned-intent",
+                "valueKind": "occurrence-identity",
+                "minimum": 0,
+                "maximum": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.strategy-formulation.key-result-substantiation",
+        "polarity": "rejection",
+        "evidenceKind": "StrategyMemberKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 2,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "strategy",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "member",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "key-result",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "intent",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.strategy-formulation.key-results",
+        "polarity": "rejection",
+        "evidenceKind": "StrategyKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "strategy",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "listed-key-result",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.strategy-formulation.vision-orientation",
+        "polarity": "rejection",
+        "evidenceKind": "StrategyKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 1,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "strategy",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "observed-vision-orientation",
+                "valueKind": "occurrence-identity",
+                "minimum": 0,
+                "maximum": 0
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

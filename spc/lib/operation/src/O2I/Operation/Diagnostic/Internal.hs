@@ -1,78 +1,79 @@
--- | Private representation of common typed Operation diagnostics.
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE RoleAnnotations #-}
+
+-- | Private lossless representation of prepared owner diagnostics.
 module O2I.Operation.Diagnostic.Internal
-  ( DiagnosticCode(..)
-  , DiagnosticSeverity(..)
+  ( DiagnosticSeverity(..)
   , DiagnosticDisposition(..)
-  , OwnerEvidenceProvenance(..)
-  , DiagnosticProvenance(..)
-  , DiagnosticOccurrence(..)
-  , Diagnostic(..)
+  , PreparedDiagnostic(..)
+  , SupplementalDiagnosticGroup(..)
+  , PreparedDiagnosticDocument(..)
   ) where
 
-import Data.List.NonEmpty (NonEmpty)
-import Data.Text (Text)
-import O2I.ArchiMate.Profile.Draft (DraftLocation)
-import O2I.ArchiMate.Profile.Notation (CanonicalOccurrence)
-import O2I.ArchiMate.Profile.Rule.Explanation (ProfileRuleExplanation)
-import O2I.Core.Contract (CoreRuleId)
-import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
-import O2I.Core.Rule.Catalog (CoreRule)
-import O2I.Operation.Adapter (AdapterOccurrence)
-import O2I.Operation.Diagnostic.AdapterOwner.Internal (AdapterRuleWitness)
-import O2I.Operation.Provenance (SourceIdentity)
-import O2I.Operation.Rule.Catalog (OperationRule)
+import qualified O2I.ArchiMate.Profile.Closure as Closure
+import qualified O2I.ArchiMate.Profile.Projection as Profile
+import O2I.Operation.Acquisition (AcquiredSupplementalSource)
+import O2I.Operation.Diagnostic.Owner.Source.Internal
+  ( PreparedAuthority
+  , SupplementalOwnerBindingEvidence
+  )
+import qualified O2I.Semantics as Semantics
+import qualified O2I.Structure as Structure
 
--- | Stable code derived exclusively from the owning compiled rule identity.
-newtype DiagnosticCode =
-  DiagnosticCode Text
-  deriving (Eq, Ord, Show)
-
--- | Closed impact level of one emitted diagnostic.
+-- | Closed impact derived from the retained producer branch.
 data DiagnosticSeverity
-  = DebugSeverity
-  | InfoSeverity
-  | WarningSeverity
+  = InfoSeverity
   | ErrorSeverity
   deriving (Bounded, Enum, Eq, Ord, Show)
 
--- | Closed interpretation of one diagnostic at the command boundary.
-data DiagnosticDisposition
-  = ModelFinding
-  | ProcessFailure
+-- | Every post-preparation owner diagnostic is a model finding.
+data DiagnosticDisposition =
+  ModelFinding
   deriving (Bounded, Enum, Eq, Ord, Show)
 
--- | Exact owner evidence retained without a runtime catalog lookup.
-data OwnerEvidenceProvenance
-  = ProfileOwnerEvidenceProvenance !Text !Text
-  | StructureOwnerEvidenceProvenance !CoreRuleId
-  | BindingOwnerEvidenceProvenance !CoreRuleId
-  | SemanticsOwnerEvidenceProvenance !CoreRuleId
-  deriving (Eq, Ord, Show)
+-- | One exact owner value retained until encoding.
+--
+-- The authority, Profile and document parameters prevent evidence from two
+-- preparation runs from being combined through the public API. Structure and
+-- Semantics scopes remain existential inside their exact evidence values.
+data PreparedDiagnostic authority profile document where
+  ProfileActivationDiagnostic
+    :: !(Closure.ActivationProvenance profile document)
+    -> PreparedDiagnostic authority profile document
+  ProfileRejectionDiagnostic
+    :: !(Profile.ProfileDiagnosticEvidence profile document)
+    -> PreparedDiagnostic authority profile document
+  ProfileClassificationDiagnostic
+    :: !(Profile.ProfileClassificationEvidence profile document)
+    -> PreparedDiagnostic authority profile document
+  ProfileMappingDiagnostic
+    :: !(Profile.ProfileMappingProvenance profile document)
+    -> PreparedDiagnostic authority profile document
+  ProfileInvariantDiagnostic
+    :: !(Profile.ProfileInvariantEvidence profile document)
+    -> PreparedDiagnostic authority profile document
+  StructureRejectionDiagnostic
+    :: !(Structure.StructureEvidence scope)
+    -> PreparedDiagnostic authority profile document
+  SemanticsRejectionDiagnostic
+    :: !(Semantics.SemanticDiagnosticEvidence scope)
+    -> PreparedDiagnostic authority profile document
 
--- | Closed typed provenance of one diagnostic rule.
-data DiagnosticProvenance
-  = OperationDiagnosticProvenance !OperationRule
-  | AdapterDiagnosticProvenance !AdapterRuleWitness
-  | ProfileDiagnosticProvenance !ProfileRuleExplanation
-  | CoreDiagnosticProvenance !CoreRule
-  | OwnerEvidenceDiagnosticProvenance !OwnerEvidenceProvenance
-  deriving (Eq, Ord, Show)
+type role PreparedDiagnostic nominal nominal nominal
 
--- | Closed typed location or subject occurrence retained by Operation.
-data DiagnosticOccurrence
-  = SourceDiagnosticOccurrence !SourceIdentity
-  | AdapterDiagnosticOccurrence !SourceIdentity !AdapterOccurrence
-  | DraftDiagnosticOccurrence !SourceIdentity !DraftLocation
-  | CanonicalDiagnosticOccurrence !SourceIdentity !CanonicalOccurrence
-  | SubjectDiagnosticOccurrence !SourceIdentity !ModelIdentity
-  | CoreDiagnosticOccurrence !SourceIdentity !OccurrenceIdentity
-  deriving (Eq, Ord, Show)
+-- | All Binding findings for one exact acquired supplemental source.
+data SupplementalDiagnosticGroup authority profile document where
+  SupplementalDiagnosticGroup
+    :: !AcquiredSupplementalSource
+    -> ![SupplementalOwnerBindingEvidence scope inputs]
+    -> SupplementalDiagnosticGroup authority profile document
 
--- | One rule-owned diagnostic with a non-empty exact occurrence set.
-data Diagnostic =
-  Diagnostic
-    !DiagnosticSeverity
-    !DiagnosticDisposition
-    !DiagnosticProvenance
-    !(NonEmpty DiagnosticOccurrence)
-  deriving (Eq, Ord, Show)
+type role SupplementalDiagnosticGroup nominal nominal nominal
+
+-- | One authority-once, existentially sealed v2 machine subject.
+data PreparedDiagnosticDocument where
+  PreparedDiagnosticDocument
+    :: !(PreparedAuthority authority profile document)
+    -> ![PreparedDiagnostic authority profile document]
+    -> ![SupplementalDiagnosticGroup authority profile document]
+    -> PreparedDiagnosticDocument

@@ -17,6 +17,7 @@ data-files:
   profile.json
 extra-source-files:
   contract/compile.py,
+  contract/generated/o2i.archimate-profile.diagnostic-evidence-v1.json,
   contract/test_compile.py,
   tst/api/compile-pass/*.hs,
   tst/api/compile-fail/*.hs

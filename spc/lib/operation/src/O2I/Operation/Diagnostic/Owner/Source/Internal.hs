@@ -2,56 +2,62 @@
 
 -- | Representation-private source witnesses for owner diagnostics.
 module O2I.Operation.Diagnostic.Owner.Source.Internal
-  ( ModelOwnerSource(..)
-  , ScopedModelOwnerSource(..)
+  ( PreparedAuthority(..)
+  , PreparedScope(..)
   , SupplementalOwnerOccurrence(..)
   , SupplementalOwnerBinding(..)
   , SupplementalOwnerBindingEvidence(..)
   , BoundOwnerSupplementalInputs(..)
   ) where
 
-import O2I.Operation.Acquisition (AcquiredSource)
+import O2I.ArchiMate.Profile.Resolution (ProfileDescriptor)
+import O2I.Operation.Acquisition (AcquiredSupplementalSource)
+import O2I.Operation.Adapter (AdapterDescriptor)
 import O2I.Operation.Provenance (SourceIdentity)
 import O2I.Semantics.Input
   ( BoundSupplementalInputs
   , SupplementalBinding
-  , SupplementalBindingEvidence
+  , SupplementalBindingDiagnosticEvidence
   )
 
--- | Exact acquired model identity retained at its canonical document.
-newtype ModelOwnerSource document =
-  ModelOwnerSource SourceIdentity
+-- | One exact selected Adapter/Profile/model authority minted by preparation.
+data PreparedAuthority authority profile document =
+  PreparedAuthority !AdapterDescriptor !ProfileDescriptor !SourceIdentity
 
-type role ModelOwnerSource nominal
+type role PreparedAuthority nominal nominal nominal
 
--- | Exact model identity retained at the selected-View scope derived from it.
-newtype ScopedModelOwnerSource scope =
-  ScopedModelOwnerSource SourceIdentity
+-- | The model authority retained at one fresh accepted Structure scope.
+newtype PreparedScope authority profile document scope =
+  PreparedScope SourceIdentity
 
-type role ScopedModelOwnerSource nominal
+type role PreparedScope nominal nominal nominal nominal
 
 -- | Exact acquired artifact retained privately in one input generation.
 newtype SupplementalOwnerOccurrence inputs =
-  SupplementalOwnerOccurrence AcquiredSource
+  SupplementalOwnerOccurrence AcquiredSupplementalSource
 
 type role SupplementalOwnerOccurrence nominal
 
 -- | Exact Core binding whose source occurrences never escape Operation.
-newtype SupplementalOwnerBinding scope inputs =
+data SupplementalOwnerBinding authority profile document scope inputs =
   SupplementalOwnerBinding
-    (SupplementalBinding scope (SupplementalOwnerOccurrence inputs))
+    ![AcquiredSupplementalSource]
+    !(SupplementalBinding scope (SupplementalOwnerOccurrence inputs))
 
-type role SupplementalOwnerBinding nominal nominal
+type role SupplementalOwnerBinding nominal nominal nominal nominal nominal
 
 -- | Exact graph-dependent evidence retained with its private occurrence.
-newtype SupplementalOwnerBindingEvidence scope inputs =
+data SupplementalOwnerBindingEvidence scope inputs =
   SupplementalOwnerBindingEvidence
-    (SupplementalBindingEvidence scope (SupplementalOwnerOccurrence inputs))
+    !AcquiredSupplementalSource
+    !(SupplementalBindingDiagnosticEvidence
+        scope
+        (SupplementalOwnerOccurrence inputs))
 
 type role SupplementalOwnerBindingEvidence nominal nominal
 
 -- | Accepted bound payloads after source-attributed Binding succeeds.
-newtype BoundOwnerSupplementalInputs scope inputs =
+newtype BoundOwnerSupplementalInputs authority profile document scope inputs =
   BoundOwnerSupplementalInputs (BoundSupplementalInputs scope)
 
-type role BoundOwnerSupplementalInputs nominal nominal
+type role BoundOwnerSupplementalInputs nominal nominal nominal nominal nominal

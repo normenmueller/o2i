@@ -9,7 +9,6 @@ import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
-import Data.Maybe (mapMaybe)
 import qualified Data.Set as Set
 import Data.Text (Text)
 import qualified Data.Text as Text
@@ -61,7 +60,7 @@ bindSupplementalInputs graph inputs@(SupplementalInputSet payloads) =
         BoundSupplementalInputs
           (forgetSupplementalInputSetProvenance inputs)
           unresolvedSites
-    , supplementalBindingDefects = defects
+    , supplementalBindingDiagnosticDefects = defects
     }
   where
     kinds = identityKinds graph
@@ -74,7 +73,7 @@ bindSupplementalInputs graph inputs@(SupplementalInputSet payloads) =
                 (\defect -> (supplementalInputProvenance input, defect))
                 (bindingDefects graph kinds input))
            payloads)
-    unresolvedSites = Set.fromList (mapMaybe (defectIdentitySite . snd) defects)
+    unresolvedSites = Set.fromList (map (defectIdentitySite . snd) defects)
 
 forgetSupplementalInputSetProvenance ::
      SupplementalInputSet provenance -> SupplementalInputSet ()
@@ -88,27 +87,24 @@ forgetSupplementalInputSetProvenance (SupplementalInputSet inputs) =
         CollectiveFitSupplement _ ordinal collective ->
           CollectiveFitSupplement () ordinal collective
 
-defectIdentitySite :: SupplementalInputDefect -> Maybe SupplementalIdentitySite
+defectIdentitySite ::
+     SupplementalBindingDiagnosticDefect -> SupplementalIdentitySite
 defectIdentitySite defect =
   case defect of
-    SupplementalIdentityUnknownDefect ordinal pointer identifier ->
-      site ordinal pointer identifier
-    SupplementalIdentityAmbiguousDefect ordinal pointer identifier ->
-      site ordinal pointer identifier
-    SupplementalIdentityWrongTypeDefect ordinal pointer identifier ->
-      site ordinal pointer identifier
-    SupplementalIdentityOutOfSelectedViewDefect ordinal pointer identifier ->
-      site ordinal pointer identifier
-    _ -> Nothing
-  where
-    site ordinal pointer identifier =
-      Just (SupplementalIdentitySite ordinal pointer identifier)
+    SupplementalBindingIdentityUnknown (SupplementalIdentityUnknownEvidence ordinal pointer identifier) ->
+      SupplementalIdentitySite ordinal pointer identifier
+    SupplementalBindingIdentityAmbiguous (SupplementalIdentityAmbiguousEvidence ordinal pointer identifier) ->
+      SupplementalIdentitySite ordinal pointer identifier
+    SupplementalBindingIdentityWrongType (SupplementalIdentityWrongTypeEvidence ordinal pointer identifier) ->
+      SupplementalIdentitySite ordinal pointer identifier
+    SupplementalBindingIdentityOutOfSelectedView (SupplementalIdentityOutOfSelectedViewEvidence ordinal pointer identifier) ->
+      SupplementalIdentitySite ordinal pointer identifier
 
 bindingDefects ::
      WellFormedGraph scope
   -> Map OccurrenceIdentity SelectedIdentityKind
   -> SupplementalInput provenance
-  -> [SupplementalInputDefect]
+  -> [SupplementalBindingDiagnosticDefect]
 bindingDefects graph kinds input =
   case input of
     StrategyFormulationSupplement _ ordinal formulation ->
@@ -224,7 +220,7 @@ resolveSites ::
   -> Text
   -> SelectedIdentityKind
   -> NonEmpty ModelIdentity
-  -> [SupplementalInputDefect]
+  -> [SupplementalBindingDiagnosticDefect]
 resolveSites graph kinds ordinal pointer expected identities =
   concat
     [ resolveSite
@@ -244,7 +240,7 @@ resolveSite ::
   -> Text
   -> SelectedIdentityKind
   -> ModelIdentity
-  -> [SupplementalInputDefect]
+  -> [SupplementalBindingDiagnosticDefect]
 resolveSite graph kinds ordinal pointer expected identifier =
   case resolveIdentity
          (wellFormedSelectedViewScope graph)
@@ -252,13 +248,24 @@ resolveSite graph kinds ordinal pointer expected identifier =
          expected
          identifier of
     UnknownModelIdentity _ ->
-      [SupplementalIdentityUnknownDefect ordinal pointer identifier]
+      [ SupplementalBindingIdentityUnknown
+          (SupplementalIdentityUnknownEvidence ordinal pointer identifier)
+      ]
     AmbiguousModelIdentity _ _ ->
-      [SupplementalIdentityAmbiguousDefect ordinal pointer identifier]
+      [ SupplementalBindingIdentityAmbiguous
+          (SupplementalIdentityAmbiguousEvidence ordinal pointer identifier)
+      ]
     ModelIdentityOutOfSelectedView _ _ ->
-      [SupplementalIdentityOutOfSelectedViewDefect ordinal pointer identifier]
+      [ SupplementalBindingIdentityOutOfSelectedView
+          (SupplementalIdentityOutOfSelectedViewEvidence
+             ordinal
+             pointer
+             identifier)
+      ]
     WrongSelectedIdentityKind _ _ _ ->
-      [SupplementalIdentityWrongTypeDefect ordinal pointer identifier]
+      [ SupplementalBindingIdentityWrongType
+          (SupplementalIdentityWrongTypeEvidence ordinal pointer identifier)
+      ]
     ResolvedIdentity _ _ -> []
 
 classify ::

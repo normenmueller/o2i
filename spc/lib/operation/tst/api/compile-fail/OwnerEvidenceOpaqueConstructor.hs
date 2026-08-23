@@ -1,10 +1,9 @@
 module OwnerEvidenceOpaqueConstructor where
 
 import O2I.Operation.Diagnostic
-import O2I.Operation.Diagnostic.Owner
 
-forgedOwnerEvidence :: OwnerEvidenceProvenance
-forgedOwnerEvidence = ProfileOwnerEvidenceProvenance undefined undefined
+forgedDiagnostic :: PreparedDiagnostic authority profile document
+forgedDiagnostic = ProfileActivationDiagnostic undefined
 
-forgedSemanticConversion :: SemanticEvidenceConversion
-forgedSemanticConversion = SemanticEvidenceOccurrenceMissing
+forgedDocument :: PreparedDiagnosticDocument
+forgedDocument = PreparedDiagnosticDocument undefined undefined undefined

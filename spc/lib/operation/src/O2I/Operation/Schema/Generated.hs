@@ -122,3 +122,13 @@ viewDiscoveryMachineSchema =
              , viewAdapterDecodeFailedVariant
              ]
     }
+
+diagnosticSchemaAuthority :: SchemaAuthority
+diagnosticSchemaAuthority =
+  SchemaAuthority
+    { schemaAuthorityIdentityValue = SchemaIdentity "o2i.operation.diagnostic"
+    , schemaAuthorityVersionValue = SchemaVersion 2
+    , schemaAuthorityDigestValue =
+        SchemaDigest
+          "becc0cc4dc574200325c702a872ed53d748d9f9a47fafda075d1b2832cc01183"
+    }

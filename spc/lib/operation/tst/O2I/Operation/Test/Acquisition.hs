@@ -19,7 +19,9 @@ tests =
     "acquisition"
     [ testCase "file bytes are acquired exactly once" fileAcquiredOnceTest
     , testCase "standard input is acquired exactly once" stdinAcquiredOnceTest
-    , testCase "admits only an acquired model role to preparation" modelRoleTest
+    , testCase
+        "refines acquired sources only to their exact roles"
+        sourceRoleRefinementTest
     , testCase "file paths are validated explicitly" filePathValidationTest
     , testCase
         "IO failures preserve source and exception"
@@ -63,8 +65,8 @@ stdinAcquiredOnceTest = do
   readIORef calls >>= (@?= 1)
   acquiredSourceBytes acquired @?= exactBytes
 
-modelRoleTest :: Assertion
-modelRoleTest = do
+sourceRoleRefinementTest :: Assertion
+sourceRoleRefinementTest = do
   input <- requireRight (fileInput reference "model.archimate")
   model <-
     requireRight
@@ -82,10 +84,34 @@ modelRoleTest = do
             SupplementalRole
             (sourceOrdinal 0)
             input
+  readiness <-
+    requireRight
+      =<< acquireWith
+            (const (pure exactBytes))
+            (pure exactBytes)
+            ReadinessRole
+            (sourceOrdinal 0)
+            input
+  assessment <-
+    requireRight
+      =<< acquireWith
+            (const (pure exactBytes))
+            (pure exactBytes)
+            AssessmentRole
+            (sourceOrdinal 0)
+            input
   case acquiredModelSource model of
     Nothing -> assertFailure "model source was rejected"
     Just _ -> pure ()
   acquiredModelSource supplemental @?= Nothing
+  acquiredModelSource readiness @?= Nothing
+  acquiredModelSource assessment @?= Nothing
+  acquiredSupplementalSource model @?= Nothing
+  case acquiredSupplementalSource supplemental of
+    Nothing -> assertFailure "supplemental source was rejected"
+    Just refined -> foldAcquiredSupplementalSource id refined @?= supplemental
+  acquiredSupplementalSource readiness @?= Nothing
+  acquiredSupplementalSource assessment @?= Nothing
 
 filePathValidationTest :: Assertion
 filePathValidationTest = do

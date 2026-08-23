@@ -18,6 +18,9 @@ module O2I.Input.Internal.Types
   , supplementalInputSubject
   , SupplementalInputSet(..)
   , SupplementalBinding(..)
+  , supplementalBindingDefects
+  , SupplementalBindingDiagnosticDefect(..)
+  , supplementalBindingDiagnosticDefect
   , BoundSupplementalInputs(..)
   , SupplementalIdentitySite(..)
   , supplementalIdentitySiteResolved
@@ -192,8 +195,43 @@ data SupplementalBinding scope provenance = SupplementalBinding
     -- | Inputs retained with identity-resolution state.
   { supplementalBindingInputs :: !(BoundSupplementalInputs scope)
     -- | Deterministically ordered identity-binding defects.
-  , supplementalBindingDefects :: ![(provenance, SupplementalInputDefect)]
+  , supplementalBindingDiagnosticDefects :: ![( provenance
+                                              , SupplementalBindingDiagnosticDefect)]
   } deriving (Eq, Show)
+
+-- | Closed graph-dependent defect set produced only after decoding and set
+-- validation have succeeded.
+data SupplementalBindingDiagnosticDefect
+  = SupplementalBindingIdentityUnknown !SupplementalIdentityUnknownEvidence
+  | SupplementalBindingIdentityAmbiguous !SupplementalIdentityAmbiguousEvidence
+  | SupplementalBindingIdentityWrongType !SupplementalIdentityWrongTypeEvidence
+  | SupplementalBindingIdentityOutOfSelectedView
+      !SupplementalIdentityOutOfSelectedViewEvidence
+  deriving (Eq, Ord, Show)
+
+-- | Project the established common defect only at Core's compatibility
+-- boundary. The binding representation itself cannot contain pre-binding
+-- failures.
+supplementalBindingDiagnosticDefect ::
+     SupplementalBindingDiagnosticDefect -> SupplementalInputDefect
+supplementalBindingDiagnosticDefect defect =
+  case defect of
+    SupplementalBindingIdentityUnknown (SupplementalIdentityUnknownEvidence ordinal pointer identity) ->
+      SupplementalIdentityUnknownDefect ordinal pointer identity
+    SupplementalBindingIdentityAmbiguous (SupplementalIdentityAmbiguousEvidence ordinal pointer identity) ->
+      SupplementalIdentityAmbiguousDefect ordinal pointer identity
+    SupplementalBindingIdentityWrongType (SupplementalIdentityWrongTypeEvidence ordinal pointer identity) ->
+      SupplementalIdentityWrongTypeDefect ordinal pointer identity
+    SupplementalBindingIdentityOutOfSelectedView (SupplementalIdentityOutOfSelectedViewEvidence ordinal pointer identity) ->
+      SupplementalIdentityOutOfSelectedViewDefect ordinal pointer identity
+
+-- | Compatibility projection of the complete binding evidence.
+supplementalBindingDefects ::
+     SupplementalBinding scope provenance
+  -> [(provenance, SupplementalInputDefect)]
+supplementalBindingDefects =
+  map (fmap supplementalBindingDiagnosticDefect)
+    . supplementalBindingDiagnosticDefects
 
 -- | Opaque payload set with exact resolution state for every identity site.
 data BoundSupplementalInputs scope = BoundSupplementalInputs

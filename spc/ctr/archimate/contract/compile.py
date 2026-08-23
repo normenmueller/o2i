@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import itertools
 import json
 import re
 import subprocess
@@ -16,6 +17,10 @@ PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 COMPANION = PACKAGE_ROOT / "profile.json"
 DEFAULT_CORE_COMPANION = PACKAGE_ROOT.parents[1] / "lib/core/semantics.json"
 GENERATED = PACKAGE_ROOT / "src/O2I/ArchiMate/Profile/Internal/Generated.hs"
+GENERATED_DIAGNOSTIC_INVENTORY = (
+    PACKAGE_ROOT
+    / "contract/generated/o2i.archimate-profile.diagnostic-evidence-v1.json"
+)
 EXPECTED_SHAPE_SHA256 = (
     "17a008818fc1e3cd0c590f74d9440892ce76a7f255c32fa84cd5831b11a3fcd1"
 )
@@ -27,6 +32,9 @@ EXPECTED_CORE_SHA256 = (
 )
 EXPECTED_FIXED_POINT_SEMANTICS_SHA256 = (
     "2bb2381468d8ec09b54879cd28d03acd0ede0ac519ba57c242979e749e233cb2"
+)
+EXPECTED_DIAGNOSTIC_INVENTORY_SHA256 = (
+    "b606b646c9348208755c47b20602b233255b6f01815b36b62e26a1ea000ecac2"
 )
 
 EXPECTED_PROFILE_EVIDENCE_KINDS = (
@@ -64,6 +72,54 @@ EXPECTED_PROPERTY_RULE_EVIDENCE = {
 EXPECTED_DERIVED_RULE_EVIDENCE = {
     "carrier": "carrier-occurrence",
     "relation": "relationship-occurrence",
+}
+
+PROFILE_EVIDENCE_FIELDS: dict[str, tuple[tuple[str, str, str], ...]] = {
+    "carrier-occurrence": (("carrier", "canonical-occurrence", "one"),),
+    "classification-occurrence": (
+        ("classifiedOccurrence", "canonical-occurrence", "one"),
+    ),
+    "metadata-owner-and-o2i-property-occurrences": (
+        ("owner", "canonical-occurrence", "one"),
+        ("properties", "canonical-occurrence", "one-or-more"),
+    ),
+    "property-occurrence-evidence": (
+        ("property", "canonical-occurrence", "one"),
+        ("owner", "canonical-occurrence", "one"),
+    ),
+    "property-slot-evidence": (
+        ("owner", "canonical-occurrence", "one"),
+        ("key", "text", "one"),
+        ("properties", "canonical-occurrence", "zero-or-multiple"),
+    ),
+    "property-value-evidence": (
+        ("property", "canonical-occurrence", "one"),
+        ("owner", "canonical-occurrence", "one"),
+        ("scalars", "draft-scalar", "one"),
+    ),
+    "proposal-carrier-occurrence": (
+        ("proposal", "canonical-occurrence", "one"),
+    ),
+    "proposal-reference-incidence": (
+        ("reference", "canonical-occurrence", "one"),
+        ("proposal", "canonical-occurrence", "one"),
+        ("related", "canonical-occurrence", "zero-or-one"),
+    ),
+    "relationship-occurrence": (
+        ("relationship", "canonical-occurrence", "one"),
+    ),
+    "reserved-property-occurrence": (
+        ("property", "canonical-occurrence", "one"),
+        ("owner", "canonical-occurrence", "one"),
+        ("key", "text", "one"),
+    ),
+    "structured-carrier-occurrence": (
+        ("carrier", "canonical-occurrence", "one"),
+    ),
+    "structured-incidence": (
+        ("incidence", "canonical-occurrence", "one"),
+        ("related", "canonical-occurrence", "two-or-more"),
+    ),
 }
 
 EXPECTED_GRAPH_FACTS = (
@@ -619,6 +675,344 @@ def derive_profile_defect_rule_bindings(
         "closed Profile evidence kind inventory",
     )
     return {rule_id: bindings[rule_id] for rule_id in utf8_sorted(bindings)}
+
+
+def profile_diagnostic_evidence_fields(
+    rule_id: str, evidence_kind: str
+) -> list[tuple[str, str, str]]:
+    fields = list(PROFILE_EVIDENCE_FIELDS[evidence_kind])
+    if evidence_kind == "property-slot-evidence" and rule_id == (
+        "pattern.contextualization.metadata.commitment-value"
+    ):
+        name, representation, _ = fields[-1]
+        fields[-1] = (name, representation, "one")
+    if evidence_kind == "proposal-reference-incidence":
+        if rule_id == "qualification.proposal.reference.role-property":
+            name, representation, _ = fields[-1]
+            fields[-1] = (name, representation, "zero")
+        elif rule_id == "qualification.proposal.reference.commitment":
+            name, representation, _ = fields[-1]
+            fields[-1] = (name, representation, "one-or-more")
+    return fields
+
+
+def diagnostic_field_alternatives(
+    fields: list[tuple[str, str, str]],
+) -> list[dict[str, Any]]:
+    cardinality_alternatives = {
+        "zero": (("zero", 0, 0),),
+        "one": (("one", 1, 1),),
+        "zero-or-one": (("zero", 0, 0), ("one", 1, 1)),
+        "zero-or-multiple": (("zero", 0, 0), ("multiple", 2, None)),
+        "one-or-more": (("one-or-more", 1, None),),
+        "two-or-more": (("two-or-more", 2, None),),
+    }
+    choices = [cardinality_alternatives[cardinality] for _, _, cardinality in fields]
+    alternatives = []
+    for selected in itertools.product(*choices):
+        varying = [
+            f"{role_id}-{alternative_id}"
+            for (role_id, _, cardinality), (alternative_id, _, _) in zip(
+                fields, selected
+            )
+            if cardinality in {"zero-or-one", "zero-or-multiple"}
+        ]
+        alternatives.append(
+            {
+                "alternativeId": "-and-".join(varying) if varying else "exact",
+                "fields": [
+                    {
+                        "roleId": role_id,
+                        "valueKind": value_kind,
+                        "minimum": minimum,
+                        "maximum": maximum,
+                    }
+                    for (role_id, value_kind, _), (_, minimum, maximum) in zip(
+                        fields, selected
+                    )
+                ],
+            }
+        )
+    return alternatives
+
+
+def exact_diagnostic_fields(
+    fields: Iterable[tuple[str, str]],
+) -> list[dict[str, Any]]:
+    return [
+        {
+            "alternativeId": "exact",
+            "fields": [
+                {
+                    "roleId": role_id,
+                    "valueKind": value_kind,
+                    "minimum": 1,
+                    "maximum": 1,
+                }
+                for role_id, value_kind in fields
+            ],
+        }
+    ]
+
+
+def activation_diagnostic_inventory(
+    companion: dict[str, Any], profile_digest: str
+) -> list[dict[str, Any]]:
+    carrier_rules, relation_rules, _ = derive_mapping_rule_ids(companion)
+    static_sources = derive_activation_static_source_rule_ids(companion)
+    rows = []
+    for declared_branch, row in activation_rows(companion):
+        source = row["selector"]["predicateSource"]
+        branches = (
+            ["graph", "qualification"]
+            if declared_branch == "shared"
+            else [declared_branch]
+        )
+        if source == "carrierMappings":
+            source_rule_alternatives = [
+                [rule_id] for rule_id in carrier_rules.values()
+            ]
+        elif source == "relationMappings":
+            source_rule_alternatives = [
+                [rule_id] for rule_id in relation_rules.values()
+            ]
+        elif source == "patternMappings[id=contextualization]":
+            source_rule_alternatives = [
+                utf8_sorted(set(static_sources[row["constructorId"]] + [rule_id]))
+                for rule_id in carrier_rules.values()
+            ]
+        else:
+            source_rule_alternatives = [static_sources[row["constructorId"]]]
+        alternatives = []
+        for branch in branches:
+            for index, source_rule_ids in enumerate(source_rule_alternatives):
+                alternatives.append(
+                    {
+                        "alternativeId": f"{branch}-source-{index + 1}",
+                        "branch": branch,
+                        "sourceRuleIds": source_rule_ids,
+                        "fields": [
+                            {
+                                "roleId": "owner",
+                                "valueKind": "canonical-occurrence",
+                                "minimum": 1,
+                                "maximum": 1,
+                            },
+                            {
+                                "roleId": "trigger",
+                                "valueKind": "canonical-occurrence",
+                                "minimum": 1,
+                                "maximum": 1,
+                            },
+                        ],
+                    }
+                )
+        rows.append(
+            {
+                "producer": "profile-activation",
+                "ruleId": row["ruleId"],
+                "polarity": "acceptance",
+                "evidenceKind": "activation-provenance",
+                "sourceRole": "model",
+                "authorityBinding": {
+                    "profileIdentity": companion["profileIdentity"]["identity"],
+                    "profileContractDigest": profile_digest,
+                },
+                "alternatives": alternatives,
+            }
+        )
+    return rows
+
+
+def classification_diagnostic_inventory(
+    companion: dict[str, Any],
+) -> list[dict[str, Any]]:
+    return [
+        {
+            "producer": "profile-classification",
+            "ruleId": row["ruleId"],
+            "polarity": "acceptance",
+            "evidenceKind": "classification-occurrence",
+            "sourceRole": "model",
+            "classification": {
+                "class": row["class"],
+                "graphMembership": row["graphMembership"],
+                "qualificationMembership": row["qualificationMembership"],
+            },
+            "alternatives": exact_diagnostic_fields(
+                [("classifiedOccurrence", "canonical-occurrence")]
+            ),
+        }
+        for row in companion["viewScopeContract"]["classification"]["truthTable"]
+    ]
+
+
+def mapping_diagnostic_inventory(
+    companion: dict[str, Any],
+) -> list[dict[str, Any]]:
+    carrier_rules, relation_rules, _ = derive_mapping_rule_ids(companion)
+    runtime_rules = {
+        row["subject"]: row["ruleId"]
+        for row in derive_pattern_runtime_rules(companion)
+    }
+    rows = [
+        {
+            "producer": "profile-mapping",
+            "ruleId": carrier_rules[row["id"]],
+            "polarity": "acceptance",
+            "evidenceKind": "carrier-occurrence",
+            "sourceRole": "model",
+            "mappingId": row["id"],
+            "alternatives": exact_diagnostic_fields(
+                [("carrier", "occurrence-identity")]
+            ),
+        }
+        for row in companion["carrierMappings"]
+    ]
+    rows.extend(
+        {
+            "producer": "profile-mapping",
+            "ruleId": relation_rules[row["id"]],
+            "polarity": "acceptance",
+            "evidenceKind": "relationship-occurrence",
+            "sourceRole": "model",
+            "mappingId": row["id"],
+            "alternatives": exact_diagnostic_fields(
+                [
+                    ("relationship", "occurrence-identity"),
+                    ("source", "occurrence-identity"),
+                    ("target", "occurrence-identity"),
+                ]
+            ),
+        }
+        for row in companion["relationMappings"]
+    )
+    construction_rows = (
+        (
+            "collective.carrier.category",
+            "collective-strategy-realization",
+            "structured-carrier-occurrence",
+        ),
+        (
+            "collective.carrier.commitment-key",
+            "collective-strategy-realization",
+            "structured-carrier-occurrence",
+        ),
+        (
+            "collective.carrier.commitment-values",
+            "collective-strategy-realization",
+            "structured-carrier-occurrence",
+        ),
+        (
+            "qualification.carrier.stable-identity",
+            "need-qualification-proposal",
+            "proposal-carrier-occurrence",
+        ),
+    )
+    rows.extend(
+        {
+            "producer": "profile-mapping",
+            "ruleId": runtime_rules[subject],
+            "polarity": "acceptance",
+            "evidenceKind": evidence_kind,
+            "sourceRole": "model",
+            "mappingId": mapping_id,
+            "alternatives": exact_diagnostic_fields(
+                [("constructedOccurrence", "occurrence-identity")]
+            ),
+        }
+        for subject, mapping_id, evidence_kind in construction_rows
+    )
+    qualification_source_mapping = companion["qualificationProposalMapping"][
+        "carrier"
+    ]["sourceProjection"]["propertyMapping"]
+    property_plan = require_one(
+        derive_property_runtime_plans(companion),
+        lambda row: row["id"] == qualification_source_mapping,
+        "qualification source positive mapping",
+    )
+    rows.append(
+        {
+            "producer": "profile-mapping",
+            "ruleId": property_plan["propertyCardinality"]["ruleId"],
+            "polarity": "acceptance",
+            "evidenceKind": "property-slot-evidence",
+            "sourceRole": "model",
+            "mappingId": qualification_source_mapping,
+            "alternatives": exact_diagnostic_fields(
+                [("constructedOccurrence", "occurrence-identity")]
+            ),
+        }
+    )
+    return rows
+
+
+def invariant_diagnostic_inventory(
+    companion: dict[str, Any],
+) -> list[dict[str, Any]]:
+    runtime_rules = {
+        row["subject"]: row["ruleId"]
+        for row in derive_pattern_runtime_rules(companion)
+    }
+    return [
+        {
+            "producer": "profile-invariant",
+            "ruleId": runtime_rules[subject],
+            "polarity": "acceptance",
+            "evidenceKind": "proposal-carrier-occurrence",
+            "sourceRole": "model",
+            "alternatives": exact_diagnostic_fields(
+                [("proposal", "canonical-occurrence")]
+            ),
+        }
+        for subject in (
+            "qualification.carrier.category",
+            "qualification.carrier.stable-identity-scope",
+        )
+    ]
+
+
+def render_diagnostic_inventory(
+    companion: dict[str, Any], payload: bytes
+) -> bytes:
+    bindings = derive_profile_defect_rule_bindings(companion)
+    profile_digest = sha256(payload)
+    value = {
+        "schema": "o2i.archimate-profile.diagnostic-evidence/v1",
+        "profile": companion["profileIdentity"],
+        "companion": {
+            "schema": companion["schema"],
+            "rawSha256": profile_digest,
+            "shapeSha256": shape_sha256(companion),
+        },
+        "diagnostics": [
+            {
+                "producer": "profile-assessment",
+                "ruleId": rule_id,
+                "polarity": "rejection",
+                "evidenceKind": evidence_kind,
+                "sourceRole": "model",
+                "alternatives": diagnostic_field_alternatives(
+                    profile_diagnostic_evidence_fields(rule_id, evidence_kind)
+                ),
+            }
+            for rule_id, evidence_kind in bindings.items()
+        ]
+        + activation_diagnostic_inventory(companion, profile_digest)
+        + classification_diagnostic_inventory(companion)
+        + mapping_diagnostic_inventory(companion)
+        + invariant_diagnostic_inventory(companion),
+    }
+    rendered = (
+        json.dumps(value, ensure_ascii=False, indent=2, separators=(",", ": "))
+        + "\n"
+    ).encode("utf-8")
+    require_exact(
+        sha256(rendered),
+        EXPECTED_DIAGNOSTIC_INVENTORY_SHA256,
+        "generated Profile diagnostic inventory SHA-256",
+    )
+    return rendered
 
 
 def require_one(
@@ -2814,7 +3208,7 @@ generatedClosureRules = {hs_list(closure_values, 4)}
 '''
 
 
-def compile_contract(core_companion: Path) -> str:
+def compile_outputs(core_companion: Path) -> tuple[str, bytes]:
     companion, payload = load_object(COMPANION, "Profile companion")
     validate_companion(companion, payload, core_companion)
     rendered = render_generated(companion)
@@ -2827,7 +3221,15 @@ def compile_contract(core_companion: Path) -> str:
     )
     if formatted.returncode != 0:
         raise ValueError(f"hindent rejected generated Profile projection: {formatted.stderr}")
-    return formatted.stdout
+    return formatted.stdout, render_diagnostic_inventory(companion, payload)
+
+
+def compile_contract(core_companion: Path) -> str:
+    return compile_outputs(core_companion)[0]
+
+
+def compile_diagnostic_inventory(core_companion: Path) -> bytes:
+    return compile_outputs(core_companion)[1]
 
 
 def main() -> int:
@@ -2840,13 +3242,23 @@ def main() -> int:
         help="path to the exact authoritative Core semantic companion",
     )
     args = parser.parse_args()
-    rendered = compile_contract(args.core_companion)
+    rendered, inventory = compile_outputs(args.core_companion)
     if args.check:
         if not GENERATED.exists() or GENERATED.read_text(encoding="utf-8") != rendered:
             raise SystemExit(f"generated Profile projection is stale: {GENERATED}")
+        if (
+            not GENERATED_DIAGNOSTIC_INVENTORY.exists()
+            or GENERATED_DIAGNOSTIC_INVENTORY.read_bytes() != inventory
+        ):
+            raise SystemExit(
+                "generated Profile diagnostic inventory is stale: "
+                f"{GENERATED_DIAGNOSTIC_INVENTORY}"
+            )
     else:
         GENERATED.parent.mkdir(parents=True, exist_ok=True)
         GENERATED.write_text(rendered, encoding="utf-8")
+        GENERATED_DIAGNOSTIC_INVENTORY.parent.mkdir(parents=True, exist_ok=True)
+        GENERATED_DIAGNOSTIC_INVENTORY.write_bytes(inventory)
     return 0
 
 

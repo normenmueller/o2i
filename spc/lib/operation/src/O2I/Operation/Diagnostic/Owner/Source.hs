@@ -6,8 +6,8 @@
 -- Supplemental binding retains identity and bytes from the same acquired
 -- artifacts without exposing a detachable source token.
 module O2I.Operation.Diagnostic.Owner.Source
-  ( ModelOwnerSource
-  , ScopedModelOwnerSource
+  ( PreparedAuthority
+  , PreparedScope
   , SupplementalOwnerBinding
   , SupplementalOwnerBindingEvidence
   , BoundOwnerSupplementalInputs
@@ -19,9 +19,10 @@ module O2I.Operation.Diagnostic.Owner.Source
 import Data.List (sortOn)
 import Data.List.NonEmpty (NonEmpty)
 import O2I.Operation.Acquisition
-  ( AcquiredSource
+  ( AcquiredSupplementalSource
   , acquiredSourceBytes
   , acquiredSourceIdentity
+  , foldAcquiredSupplementalSource
   )
 import O2I.Operation.Diagnostic.Owner.Source.Internal
 import O2I.Operation.Provenance
@@ -32,11 +33,13 @@ import O2I.Operation.Provenance
   )
 import O2I.Semantics (SemanticAssessment, assessSemantics)
 import O2I.Semantics.Input
-  ( SupplementalInputDefect
+  ( SupplementalBindingDiagnosticEvidence
+  , SupplementalInputDefect
   , assessSupplementalInputSet
   , bindSupplementalInputs
   , decodeSupplementalInput
-  , foldSupplementalBinding
+  , foldSupplementalBindingDiagnosticEvidence
+  , foldSupplementalBindingDiagnostics
   , supplementalInputOrdinal
   )
 import O2I.Structure (WellFormedGraph)
@@ -44,14 +47,20 @@ import O2I.Structure (WellFormedGraph)
 -- | Acquire no new bytes: validate, decode, and bind the supplied exact
 -- acquired artifacts in one fresh input generation.
 withSupplementalOwnerBinding ::
-     [AcquiredSource]
+     PreparedScope authority profile document scope
+  -> [AcquiredSupplementalSource]
   -> WellFormedGraph scope
   -> (NonEmpty SupplementalProvenanceDefect -> result)
   -> (NonEmpty SupplementalInputDefect -> result)
-  -> (forall inputs. SupplementalOwnerBinding scope inputs -> result)
+  -> (forall inputs. SupplementalOwnerBinding
+                       authority
+                       profile
+                       document
+                       scope
+                       inputs -> result)
   -> result
-withSupplementalOwnerBinding acquired graph provenanceFailure inputFailure accepted =
-  case mkSupplementalProvenance (map acquiredSourceIdentity acquired) of
+withSupplementalOwnerBinding _ acquired graph provenanceFailure inputFailure accepted =
+  case mkSupplementalProvenance (map acquiredIdentity acquired) of
     Left defects -> provenanceFailure defects
     Right _ ->
       case traverse decodeOwnerSource ordered of
@@ -62,36 +71,58 @@ withSupplementalOwnerBinding acquired graph provenanceFailure inputFailure accep
             Right inputSet ->
               accepted
                 (SupplementalOwnerBinding
+                   ordered
                    (bindSupplementalInputs graph inputSet))
   where
     ordered = sortOn acquiredOrdinal acquired
     acquiredOrdinal =
-      sourceOrdinalValue . sourceIdentityOrdinal . acquiredSourceIdentity
+      sourceOrdinalValue . sourceIdentityOrdinal . acquiredIdentity
+    acquiredIdentity = foldAcquiredSupplementalSource acquiredSourceIdentity
+    acquiredBytes = foldAcquiredSupplementalSource acquiredSourceBytes
     decodeOwnerSource source =
       decodeSupplementalInput
         (SupplementalOwnerOccurrence source)
         (supplementalInputOrdinal (acquiredOrdinal source))
-        (acquiredSourceBytes source)
+        (acquiredBytes source)
 
 -- | Eliminate the exact binding without exposing its private source tokens.
 foldSupplementalOwnerBinding ::
-     (BoundOwnerSupplementalInputs scope inputs -> [SupplementalOwnerBindingEvidence
-                                                      scope
-                                                      inputs] -> result)
-  -> SupplementalOwnerBinding scope inputs
+     ([AcquiredSupplementalSource] -> BoundOwnerSupplementalInputs
+                                        authority
+                                        profile
+                                        document
+                                        scope
+                                        inputs -> [SupplementalOwnerBindingEvidence
+                                                     scope
+                                                     inputs] -> result)
+  -> SupplementalOwnerBinding authority profile document scope inputs
   -> result
-foldSupplementalOwnerBinding consume (SupplementalOwnerBinding binding) =
-  foldSupplementalBinding
+foldSupplementalOwnerBinding consume (SupplementalOwnerBinding sources binding) =
+  foldSupplementalBindingDiagnostics
     (\bound evidence ->
        consume
+         sources
          (BoundOwnerSupplementalInputs bound)
-         (map SupplementalOwnerBindingEvidence evidence))
+         (map retainSource evidence))
     binding
+  where
+    retainSource evidence =
+      SupplementalOwnerBindingEvidence (bindingEvidenceSource evidence) evidence
+
+bindingEvidenceSource ::
+     SupplementalBindingDiagnosticEvidence
+       scope
+       (SupplementalOwnerOccurrence inputs)
+  -> AcquiredSupplementalSource
+bindingEvidenceSource =
+  foldSupplementalBindingDiagnosticEvidence source source source source
+  where
+    source (SupplementalOwnerOccurrence value) _ = value
 
 -- | Evaluate Core Semantics from one accepted owner-bound input generation.
 assessOwnerSemantics ::
      WellFormedGraph scope
-  -> BoundOwnerSupplementalInputs scope inputs
+  -> BoundOwnerSupplementalInputs authority profile document scope inputs
   -> SemanticAssessment scope
 assessOwnerSemantics graph (BoundOwnerSupplementalInputs bound) =
   assessSemantics graph bound

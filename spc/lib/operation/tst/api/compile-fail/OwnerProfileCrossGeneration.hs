@@ -2,52 +2,37 @@ module OwnerProfileCrossGeneration where
 
 import O2I.ArchiMate.Profile.Closure
 import O2I.ArchiMate.Profile.Projection
-import O2I.ArchiMate.Profile.Resolution
 import O2I.Operation.Diagnostic
 import O2I.Operation.Diagnostic.Owner
 import O2I.Operation.Diagnostic.Owner.Source
 
 consumeActivation ::
-     ModelOwnerSource document
-  -> SelectedArchiMateProfile profile
+     PreparedAuthority authority profile document
   -> ProfileAssessmentUniverse profile document
-  -> [Diagnostic]
+  -> [PreparedDiagnostic authority profile document]
 consumeActivation = profileActivationDiagnostics
 
 crossActivationProfile ::
-     ModelOwnerSource document
-  -> SelectedArchiMateProfile firstProfile
+     PreparedAuthority authority firstProfile document
   -> ProfileAssessmentUniverse secondProfile document
-  -> [Diagnostic]
+  -> [PreparedDiagnostic authority firstProfile document]
 crossActivationProfile = consumeActivation
 
 consumeAssessment ::
-     ModelOwnerSource document
-  -> SelectedArchiMateProfile profile
-  -> ProfileAssessmentUniverse profile document
+     PreparedAuthority authority profile document
   -> ProfileProjectionAssessment profile document
-  -> [Diagnostic]
-consumeAssessment source selected universe assessment =
-  foldProfileAssessmentDiagnostics
-    (const [])
-    id
-    source
-    selected
-    universe
-    assessment
+  -> [PreparedDiagnostic authority profile document]
+consumeAssessment authority assessment =
+  foldProfileAssessmentDiagnostics (const []) id authority assessment
 
 crossAssessmentProfile ::
-     ModelOwnerSource document
-  -> SelectedArchiMateProfile firstProfile
-  -> ProfileAssessmentUniverse secondProfile document
+     PreparedAuthority authority firstProfile document
   -> ProfileProjectionAssessment secondProfile document
-  -> [Diagnostic]
+  -> [PreparedDiagnostic authority firstProfile document]
 crossAssessmentProfile = consumeAssessment
 
 crossAssessmentDocument ::
-     ModelOwnerSource firstDocument
-  -> SelectedArchiMateProfile profile
-  -> ProfileAssessmentUniverse profile firstDocument
+     PreparedAuthority authority profile firstDocument
   -> ProfileProjectionAssessment profile secondDocument
-  -> [Diagnostic]
+  -> [PreparedDiagnostic authority profile firstDocument]
 crossAssessmentDocument = consumeAssessment

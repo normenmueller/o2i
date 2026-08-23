@@ -11,7 +11,7 @@ module O2I.Operation.Machine.Fragment.Internal
   , draftValueKindFragment
   , draftScalarFragment
   , canonicalOccurrenceFragment
-  , diagnosticFragment
+  , preparedDiagnosticDocumentFragment
   , viewDescriptorFragment
   ) where
 
@@ -19,6 +19,7 @@ import Control.Exception (IOException, displayException)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified Data.Text as Text
+import qualified O2I.ArchiMate.Profile.Closure as Closure
 import O2I.ArchiMate.Profile.Draft
   ( DraftFieldValue
   , DraftLocation
@@ -64,16 +65,22 @@ import O2I.ArchiMate.Profile.Notation
   , foldIdentityInvalidReason
   , foldIdentityOutcome
   )
-import O2I.ArchiMate.Profile.Rule.Explanation
-  ( profileRuleId
-  , profileRuleIdText
-  , profileRuleProfileReference
+import qualified O2I.ArchiMate.Profile.Projection as Profile
+import O2I.ArchiMate.Profile.Resolution
+  ( ProfileDescriptor
+  , foldProfileDescriptor
   )
 import O2I.Core.Contract (coreRuleIdText)
-import O2I.Core.Identity (modelIdentityText, occurrenceIdentityText)
-import O2I.Core.Rule.Catalog (coreRuleIdentity)
+import O2I.Core.Identity
+  ( ModelIdentity
+  , OccurrenceIdentity
+  , modelIdentityText
+  , occurrenceIdentityText
+  )
 import O2I.Operation.Acquisition
   ( AcquisitionFailure
+  , acquiredSourceIdentity
+  , foldAcquiredSupplementalSource
   , foldAcquisitionFailure
   , foldInputSource
   )
@@ -103,21 +110,28 @@ import O2I.Operation.Adapter
   , foldNativeLocation
   )
 import O2I.Operation.Diagnostic
-  ( Diagnostic
-  , DiagnosticOccurrence
-  , DiagnosticProvenance
-  , diagnosticDisposition
+  ( PreparedDiagnostic
+  , PreparedDiagnosticDocument
+  , SupplementalDiagnosticGroup
   , diagnosticDispositionText
-  , diagnosticOccurrences
-  , diagnosticProvenance
-  , diagnosticSeverity
   , diagnosticSeverityText
-  , foldDiagnosticOccurrence
-  , foldDiagnosticProvenance
-  , foldOwnerEvidenceProvenance
+  , foldPreparedDiagnostic
+  , foldPreparedDiagnosticDocument
+  , foldSupplementalDiagnosticGroup
+  , preparedDiagnosticDisposition
+  , preparedDiagnosticOwner
+  , preparedDiagnosticProducer
+  , preparedDiagnosticRuleIdentity
+  , preparedDiagnosticSeverity
+  , preparedDiagnosticStage
+  )
+import O2I.Operation.Diagnostic.Owner.Source.Internal
+  ( PreparedAuthority(..)
+  , SupplementalOwnerBindingEvidence(..)
   )
 import O2I.Operation.Encoding.Internal
   ( CanonicalFragment
+  , CanonicalMember
   , arrayFragment
   , booleanFragment
   , closedObjectFragment
@@ -130,11 +144,16 @@ import O2I.Operation.Provenance
   ( SourceIdentity
   , SourceRole(..)
   , foldSourceIdentity
+  , sourceIdentityOrdinal
+  , sourceIdentityReference
+  , sourceIdentitySha256
   , sourceOrdinalValue
   , sourceReferenceText
   , sourceSha256Text
   )
-import O2I.Operation.Rule.Catalog (operationRuleIdText, operationRuleIdentity)
+import qualified O2I.Semantics as Semantics
+import qualified O2I.Semantics.Input as Binding
+import qualified O2I.Structure as Structure
 
 adapterDescriptorFragment :: AdapterDescriptor -> CanonicalFragment
 adapterDescriptorFragment descriptor =
@@ -223,110 +242,506 @@ sourceIdentityFragment =
       , requiredMember "sha256" (textFragment (sourceSha256Text digest))
       ]
 
--- | Encode the common rule-owned diagnostic contract in canonical order.
-diagnosticFragment :: Diagnostic -> CanonicalFragment
-diagnosticFragment diagnostic =
+-- | Encode one authority-once prepared diagnostic document.
+preparedDiagnosticDocumentFragment ::
+     PreparedDiagnosticDocument -> CanonicalFragment
+preparedDiagnosticDocumentFragment =
+  foldPreparedDiagnosticDocument $ \authority diagnostics groups ->
+    closedObjectFragment
+      [ requiredMember "schema" (textFragment "o2i.operation.diagnostic/v2")
+      , requiredMember "authority" (preparedAuthorityFragment authority)
+      , requiredMember
+          "modelDiagnostics"
+          (arrayFragment (map preparedDiagnosticFragment diagnostics))
+      , requiredMember
+          "supplementalSources"
+          (closedObjectFragment (map supplementalGroupMember groups))
+      ]
+
+preparedAuthorityFragment ::
+     PreparedAuthority authority profile document -> CanonicalFragment
+preparedAuthorityFragment (PreparedAuthority adapter profile model) =
   closedObjectFragment
-    [ requiredMember
-        "severity"
-        (textFragment (diagnosticSeverityText (diagnosticSeverity diagnostic)))
-    , requiredMember
-        "disposition"
-        (textFragment
-           (diagnosticDispositionText (diagnosticDisposition diagnostic)))
-    , requiredMember
-        "provenance"
-        (diagnosticProvenanceFragment (diagnosticProvenance diagnostic))
-    , requiredMember
-        "occurrences"
-        (arrayFragment
-           (fmap
-              diagnosticOccurrenceFragment
-              (NonEmpty.toList (diagnosticOccurrences diagnostic))))
+    [ requiredMember "adapter" (adapterDescriptorFragment adapter)
+    , requiredMember "profile" (profileDescriptorFragment profile)
+    , requiredMember "model" (sourceIdentityFragment model)
     ]
 
--- | Encode the exact locator of the compiled owning rule. Stable code,
--- authority, and stage are derived from this closed owner branch and its
--- catalog rule rather than repeated as independently variable fields.
-diagnosticProvenanceFragment :: DiagnosticProvenance -> CanonicalFragment
-diagnosticProvenanceFragment =
-  foldDiagnosticProvenance
-    (ownedRule "operation" [] . operationRuleIdText . operationRuleIdentity)
-    (\descriptor rule ->
-       ownedRule
-         "adapter"
-         [ requiredMember
-             "adapterId"
-             (textFragment (adapterIdText (adapterDescriptorId descriptor)))
-         ]
-         (adapterRuleIdText (adapterRuleId rule)))
-    (\rule ->
-       ownedRule
-         "profile"
-         [ requiredMember
-             "profileReference"
-             (textFragment (profileRuleProfileReference rule))
-         ]
-         (profileRuleIdText (profileRuleId rule)))
-    (ownedRule "core" [] . coreRuleIdText . coreRuleIdentity)
-    ownerEvidenceRule
-  where
-    ownedRule owner members ruleIdentity =
-      closedObjectFragment
-        ([requiredMember "owner" (textFragment owner)]
-           <> members
-           <> [requiredMember "ruleId" (textFragment ruleIdentity)])
-    ownerEvidenceRule ownerEvidence =
-      foldOwnerEvidenceProvenance
-        (\reference ruleIdentity ->
-           ownedRule
-             "profile"
-             [requiredMember "profileReference" (textFragment reference)]
-             ruleIdentity)
-        (ownedRule "core" [] . coreRuleIdText)
-        (ownedRule "core" [] . coreRuleIdText)
-        (ownedRule "core" [] . coreRuleIdText)
-        ownerEvidence
+profileDescriptorFragment :: ProfileDescriptor -> CanonicalFragment
+profileDescriptorFragment =
+  foldProfileDescriptor $ \identity token version notation adapterIds digest ->
+    closedObjectFragment
+      [ requiredMember "identity" (textFragment identity)
+      , requiredMember "token" (textFragment token)
+      , requiredMember "version" (textFragment version)
+      , requiredMember "notation" (textFragment notation)
+      , requiredMember
+          "adapterIds"
+          (arrayFragment (map textFragment adapterIds))
+      , requiredMember "contractDigest" (textFragment digest)
+      ]
 
-diagnosticOccurrenceFragment :: DiagnosticOccurrence -> CanonicalFragment
-diagnosticOccurrenceFragment =
-  foldDiagnosticOccurrence
-    (withSource "source" [])
-    (\source occurrence ->
-       withSource
-         "native"
-         [requiredMember "location" (adapterOccurrenceFragment occurrence)]
-         source)
-    (\source location ->
-       withSource
-         "draft"
-         [requiredMember "location" (draftLocationFragment location)]
-         source)
-    (\source occurrence ->
-       withSource
-         "canonical"
-         [requiredMember "occurrence" (canonicalOccurrenceFragment occurrence)]
-         source)
-    (\source subject ->
-       withSource
-         "subject"
-         [requiredMember "identity" (textFragment (modelIdentityText subject))]
-         source)
-    (\source occurrence ->
-       withSource
-         "occurrence"
-         [ requiredMember
-             "identity"
-             (textFragment (occurrenceIdentityText occurrence))
-         ]
-         source)
+preparedDiagnosticFragment ::
+     PreparedDiagnostic authority profile document -> CanonicalFragment
+preparedDiagnosticFragment diagnostic =
+  foldPreparedDiagnostic
+    activation
+    rejection
+    classification
+    mapping
+    invariant
+    structure
+    semantics
+    diagnostic
   where
-    withSource kind members source =
+    wrap evidenceKind evidence =
       closedObjectFragment
-        ([ requiredMember "kind" (textFragment kind)
-         , requiredMember "source" (sourceIdentityFragment source)
-         ]
-           <> members)
+        [ requiredMember
+            "producer"
+            (textFragment (preparedDiagnosticProducer diagnostic))
+        , requiredMember
+            "owner"
+            (textFragment (preparedDiagnosticOwner diagnostic))
+        , requiredMember
+            "stage"
+            (textFragment (preparedDiagnosticStage diagnostic))
+        , requiredMember
+            "ruleId"
+            (textFragment (preparedDiagnosticRuleIdentity diagnostic))
+        , requiredMember "evidenceKind" (textFragment evidenceKind)
+        , requiredMember
+            "severity"
+            (textFragment
+               (diagnosticSeverityText (preparedDiagnosticSeverity diagnostic)))
+        , requiredMember
+            "disposition"
+            (textFragment
+               (diagnosticDispositionText
+                  (preparedDiagnosticDisposition diagnostic)))
+        , requiredMember "evidence" evidence
+        ]
+    activation evidence =
+      Closure.foldActivationProvenance
+        (\_ _ branch _ owner trigger sourceRules ->
+           wrap
+             "activation-provenance"
+             (evidenceFragment
+                [ requiredMember
+                    "branch"
+                    (textFragment
+                       (Closure.foldClosureBranch "graph" "qualification" branch))
+                , requiredMember
+                    "sourceRuleIds"
+                    (arrayFragment (map textFragment sourceRules))
+                ]
+                [ fieldFragment "owner" [canonicalOccurrenceFragment owner]
+                , fieldFragment "trigger" [canonicalOccurrenceFragment trigger]
+                ]))
+        evidence
+    rejection evidence =
+      Profile.foldProfileDiagnosticEvidence
+        (\_ value ->
+           let (kind, fields) = profileEvidenceFragment value
+            in wrap kind (evidenceFragment [] fields))
+        evidence
+    classification evidence =
+      Profile.foldProfileClassificationEvidence
+        (\graph qualification _ occurrence ->
+           wrap
+             "classification-occurrence"
+             (evidenceFragment
+                [ requiredMember
+                    "class"
+                    (textFragment (classificationText graph qualification))
+                , requiredMember "graphMembership" (booleanFragment graph)
+                , requiredMember
+                    "qualificationMembership"
+                    (booleanFragment qualification)
+                ]
+                [ fieldFragment
+                    "classifiedOccurrence"
+                    [canonicalOccurrenceFragment occurrence]
+                ]))
+        evidence
+    mapping evidence =
+      Profile.foldProfileMappingProvenance
+        (\_ occurrence mappingId ->
+           wrap
+             "carrier-occurrence"
+             (mappingEvidence
+                mappingId
+                [fieldFragment "carrier" [coreIdentityFragment occurrence]]))
+        (\_ occurrence mappingId source target ->
+           wrap
+             "relationship-occurrence"
+             (mappingEvidence
+                mappingId
+                [ fieldFragment "relationship" [coreIdentityFragment occurrence]
+                , fieldFragment "source" [coreIdentityFragment source]
+                , fieldFragment "target" [coreIdentityFragment target]
+                ]))
+        (\_ occurrence mappingId ->
+           wrap
+             (profileEvidenceKindText
+                (Profile.profileMappingEvidenceKind evidence))
+             (mappingEvidence
+                mappingId
+                [ fieldFragment
+                    "constructedOccurrence"
+                    [coreIdentityFragment occurrence]
+                ]))
+        evidence
+    invariant evidence =
+      Profile.foldProfileInvariantEvidence
+        (\_ value ->
+           let (kind, fields) = profileEvidenceFragment value
+            in wrap kind (evidenceFragment [] fields))
+        evidence
+    structure evidence =
+      let (kind, fields) = structureEvidenceFragment evidence
+       in wrap kind (evidenceFragment [] fields)
+    semantics evidence =
+      wrap
+        (semanticEvidenceKindText (Semantics.semanticDiagnosticKind evidence))
+        (evidenceFragment [] (semanticEvidenceFields evidence))
+
+classificationText :: Bool -> Bool -> Text
+classificationText graph qualification =
+  case (graph, qualification) of
+    (True, True) -> "both"
+    (True, False) -> "graph-only"
+    (False, True) -> "qualification-only"
+    (False, False) -> "neither"
+
+mappingEvidence :: Text -> [CanonicalFragment] -> CanonicalFragment
+mappingEvidence mappingId =
+  evidenceFragment [requiredMember "mappingId" (textFragment mappingId)]
+
+evidenceFragment ::
+     [CanonicalMember] -> [CanonicalFragment] -> CanonicalFragment
+evidenceFragment members fields =
+  closedObjectFragment
+    (members <> [requiredMember "fields" (arrayFragment fields)])
+
+fieldFragment :: Text -> [CanonicalFragment] -> CanonicalFragment
+fieldFragment role values =
+  closedObjectFragment
+    [ requiredMember "role" (textFragment role)
+    , requiredMember "values" (arrayFragment values)
+    ]
+
+coreIdentityFragment :: OccurrenceIdentity -> CanonicalFragment
+coreIdentityFragment = textFragment . occurrenceIdentityText
+
+modelIdentityFragment :: ModelIdentity -> CanonicalFragment
+modelIdentityFragment = textFragment . modelIdentityText
+
+profileEvidenceKindText :: Profile.ProfileEvidenceKind -> Text
+profileEvidenceKindText =
+  Profile.foldProfileEvidenceKind
+    "carrier-occurrence"
+    "classification-occurrence"
+    "metadata-owner-and-o2i-property-occurrences"
+    "property-occurrence-evidence"
+    "property-slot-evidence"
+    "property-value-evidence"
+    "proposal-carrier-occurrence"
+    "proposal-reference-incidence"
+    "relationship-occurrence"
+    "reserved-property-occurrence"
+    "structured-carrier-occurrence"
+    "structured-incidence"
+
+profileEvidenceFragment ::
+     Profile.ProfileEvidence profile document kind
+  -> (Text, [CanonicalFragment])
+profileEvidenceFragment evidence =
+  ( profileEvidenceKindText (Profile.profileEvidenceKind evidence)
+  , Profile.foldProfileEvidence
+      (\occurrence -> canonicalField "carrier" [occurrence])
+      (\occurrence -> canonicalField "classifiedOccurrence" [occurrence])
+      (\owner properties ->
+         [ canonicalValues "owner" [owner]
+         , canonicalValues "properties" properties
+         ])
+      (\property owner ->
+         [ canonicalValues "property" [property]
+         , canonicalValues "owner" [owner]
+         ])
+      (\owner key properties ->
+         [ canonicalValues "owner" [owner]
+         , fieldFragment "key" [textFragment key]
+         , canonicalValues "properties" properties
+         ])
+      (\property owner scalars ->
+         [ canonicalValues "property" [property]
+         , canonicalValues "owner" [owner]
+         , fieldFragment "scalars" (map draftScalarFragment scalars)
+         ])
+      (\occurrence -> canonicalField "proposal" [occurrence])
+      (\occurrence proposal related ->
+         [ canonicalValues "reference" [occurrence]
+         , canonicalValues "proposal" [proposal]
+         , canonicalValues "related" related
+         ])
+      (\occurrence -> canonicalField "relationship" [occurrence])
+      (\property owner key ->
+         [ canonicalValues "property" [property]
+         , canonicalValues "owner" [owner]
+         , fieldFragment "key" [textFragment key]
+         ])
+      (\occurrence -> canonicalField "carrier" [occurrence])
+      (\occurrence related ->
+         [ canonicalValues "incidence" [occurrence]
+         , canonicalValues "related" related
+         ])
+      evidence)
+  where
+    canonicalField role values = [canonicalValues role values]
+    canonicalValues role = fieldFragment role . map canonicalOccurrenceFragment
+
+structureEvidenceFragment ::
+     Structure.StructureEvidence scope -> (Text, [CanonicalFragment])
+structureEvidenceFragment =
+  Structure.foldStructureEvidence
+    Structure.StructureDefectEliminator
+      { Structure.eliminateQualifiedEndpointCatalogMembership =
+          \value ->
+            exact
+              "qualified-endpoint-catalog-membership"
+              [ ( "subject"
+                , [Structure.qualifiedEndpointCatalogMembershipSubject value])
+              ]
+      , Structure.eliminateContextualizationSourceCategory =
+          \value ->
+            exact
+              "contextualization-source-category"
+              [ ( "segment"
+                , [Structure.contextualizationSourceCategorySegment value])
+              , ( "owner"
+                , [Structure.contextualizationSourceCategoryOwner value])
+              ]
+      , Structure.eliminateContextualizationTargetCategory =
+          \value ->
+            exact
+              "contextualization-target-category"
+              [ ( "segment"
+                , [Structure.contextualizationTargetCategorySegment value])
+              , ( "member"
+                , [Structure.contextualizationTargetCategoryMember value])
+              ]
+      , Structure.eliminateContextualizationTargetOwnerCardinality =
+          \value ->
+            exact
+              "contextualization-target-owner-cardinality"
+              [ ( "member"
+                , [ Structure.contextualizationTargetOwnerCardinalityMember
+                      value
+                  ])
+              , ( "owners"
+                , Structure.foldStructureZeroOrMultipleOccurrences
+                    []
+                    (\first second remaining -> first : second : remaining)
+                    (Structure.contextualizationTargetOwnerCardinalityOwners
+                       value))
+              ]
+      , Structure.eliminateSemanticRelationCompatibility =
+          \value ->
+            exact
+              "semantic-relation-compatibility"
+              [ ( "relation"
+                , [Structure.semanticRelationCompatibilityRelation value])
+              , ( "source"
+                , [Structure.semanticRelationCompatibilitySource value])
+              , ( "target"
+                , [Structure.semanticRelationCompatibilityTarget value])
+              ]
+      , Structure.eliminateStructuredPropositionIdentity =
+          \value ->
+            exact
+              "structured-proposition-identity"
+              [ ( "subject"
+                , [Structure.structuredPropositionIdentitySubject value])
+              , ( "occurrences"
+                , Structure.structuredPropositionIdentityFirstOccurrence value
+                    : Structure.structuredPropositionIdentitySecondOccurrence
+                        value
+                    : Structure.structuredPropositionIdentityRemainingOccurrences
+                        value)
+              ]
+      , Structure.eliminateCollectiveParticipantType =
+          \value ->
+            exact
+              "collective-participant-type"
+              [ ("claim", [Structure.collectiveParticipantTypeClaim value])
+              , ("segment", [Structure.collectiveParticipantTypeSegment value])
+              , ( "endpoint"
+                , [Structure.collectiveParticipantTypeEndpoint value])
+              ]
+      , Structure.eliminateCollectiveParticipantCardinality =
+          \value ->
+            exact
+              "collective-participant-cardinality"
+              [ ( "claim"
+                , [Structure.collectiveParticipantCardinalityClaim value])
+              , ( "endpoints"
+                , maybe
+                    []
+                    (: [])
+                    (Structure.collectiveParticipantCardinalitySoleEndpoint
+                       value))
+              ]
+      , Structure.eliminateCollectiveParticipantUniqueness =
+          \value ->
+            exact
+              "collective-participant-uniqueness"
+              [ ( "claim"
+                , [Structure.collectiveParticipantUniquenessClaim value])
+              , ( "duplicateEndpoints"
+                , NonEmpty.toList
+                    (Structure.collectiveParticipantUniquenessDuplicateEndpoints
+                       value))
+              ]
+      , Structure.eliminateCollectiveTargetType =
+          \value ->
+            exact
+              "collective-target-type"
+              [ ("claim", [Structure.collectiveTargetTypeClaim value])
+              , ("segment", [Structure.collectiveTargetTypeSegment value])
+              , ("endpoint", [Structure.collectiveTargetTypeEndpoint value])
+              ]
+      , Structure.eliminateCollectiveTargetCardinality =
+          \value ->
+            exact
+              "collective-target-cardinality"
+              [ ("claim", [Structure.collectiveTargetCardinalityClaim value])
+              , ( "endpoints"
+                , Structure.foldStructureZeroOrMultipleOccurrences
+                    []
+                    (\first second remaining -> first : second : remaining)
+                    (Structure.collectiveTargetCardinalityEndpoints value))
+              ]
+      , Structure.eliminateCollectiveTargetDistinctness =
+          \value ->
+            exact
+              "collective-target-distinctness"
+              [ ("claim", [Structure.collectiveTargetDistinctnessClaim value])
+              , ( "overlappingEndpoints"
+                , NonEmpty.toList
+                    (Structure.collectiveTargetDistinctnessOverlappingEndpoints
+                       value))
+              ]
+      }
+  where
+    exact kind values =
+      ( kind
+      , [ fieldFragment role (map coreIdentityFragment occurrences)
+        | (role, occurrences) <- values
+        ])
+
+semanticEvidenceKindText :: Semantics.SemanticEvidenceKind -> Text
+semanticEvidenceKindText kind =
+  case kind of
+    Semantics.NeedEvidence -> "NeedKey"
+    Semantics.NeedMemberEvidence -> "NeedMemberKey"
+    Semantics.StrategyEvidence -> "StrategyKey"
+    Semantics.StrategyMemberEvidence -> "StrategyMemberKey"
+    Semantics.CollectiveEvidence -> "FitClaimKey"
+    Semantics.CollectiveParticipantEvidence -> "ParticipantClaimKey"
+    Semantics.AssertedDependencyEvidence -> "AssertedDependencyKey"
+
+semanticEvidenceFields ::
+     Semantics.SemanticDiagnosticEvidence scope -> [CanonicalFragment]
+semanticEvidenceFields evidence =
+  map
+    semanticSubjectField
+    (NonEmpty.toList (Semantics.semanticDiagnosticSubjects evidence))
+    <> map
+         semanticOccurrenceField
+         (NonEmpty.toList
+            (Semantics.semanticDiagnosticOccurrenceGroups evidence))
+  where
+    semanticSubjectField =
+      Semantics.foldSemanticSubject
+        (\role identity -> fieldFragment role [modelIdentityFragment identity])
+        (\role identity -> fieldFragment role [coreIdentityFragment identity])
+    semanticOccurrenceField group =
+      fieldFragment
+        (Semantics.semanticOccurrenceRoleId
+           (Semantics.semanticOccurrenceGroupRole group))
+        (map
+           coreIdentityFragment
+           (Semantics.semanticOccurrenceGroupOccurrences group))
+
+supplementalGroupMember ::
+     SupplementalDiagnosticGroup authority profile document -> CanonicalMember
+supplementalGroupMember =
+  foldSupplementalDiagnosticGroup $ \source evidence ->
+    let identity = foldAcquiredSupplementalSource acquiredSourceIdentity source
+     in requiredMember
+          (Text.pack
+             (show (sourceOrdinalValue (sourceIdentityOrdinal identity))))
+          (closedObjectFragment
+             [ requiredMember
+                 "reference"
+                 (textFragment
+                    (sourceReferenceText (sourceIdentityReference identity)))
+             , requiredMember
+                 "sha256"
+                 (textFragment
+                    (sourceSha256Text (sourceIdentitySha256 identity)))
+             , requiredMember
+                 "diagnostics"
+                 (arrayFragment (map bindingDiagnosticFragment evidence))
+             ])
+
+bindingDiagnosticFragment ::
+     SupplementalOwnerBindingEvidence scope inputs -> CanonicalFragment
+bindingDiagnosticFragment (SupplementalOwnerBindingEvidence _ evidence) =
+  Binding.foldSupplementalBindingDiagnosticEvidence
+    (const
+       (identityFinding
+          Binding.supplementalIdentityUnknownInstancePointer
+          Binding.supplementalIdentityUnknownModelIdentity))
+    (const
+       (identityFinding
+          Binding.supplementalIdentityAmbiguousInstancePointer
+          Binding.supplementalIdentityAmbiguousModelIdentity))
+    (const
+       (identityFinding
+          Binding.supplementalIdentityWrongTypeInstancePointer
+          Binding.supplementalIdentityWrongTypeModelIdentity))
+    (const
+       (identityFinding
+          Binding.supplementalIdentityOutOfViewInstancePointer
+          Binding.supplementalIdentityOutOfViewModelIdentity))
+    evidence
+  where
+    identityFinding pointer project value =
+      closedObjectFragment
+        [ requiredMember "producer" (textFragment "supplemental-binding")
+        , requiredMember "owner" (textFragment "core")
+        , requiredMember "stage" (textFragment "capability-input")
+        , requiredMember
+            "ruleId"
+            (textFragment
+               (coreRuleIdText
+                  (Binding.supplementalBindingDiagnosticEvidenceRule evidence)))
+        , requiredMember
+            "evidenceKind"
+            (textFragment "supplemental-identity-site")
+        , requiredMember "severity" (textFragment "error")
+        , requiredMember "disposition" (textFragment "model-finding")
+        , requiredMember
+            "evidence"
+            (evidenceFragment
+               []
+               [ fieldFragment "instancePointer" [textFragment (pointer value)]
+               , fieldFragment
+                   "identity"
+                   [modelIdentityFragment (project value)]
+               ])
+        ]
 
 viewDescriptorFragment :: CanonicalView document -> CanonicalFragment
 viewDescriptorFragment descriptor =

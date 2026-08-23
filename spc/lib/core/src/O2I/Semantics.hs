@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RoleAnnotations #-}
 
 -- | Public Core Semantics boundary.
@@ -16,6 +17,9 @@ module O2I.Semantics
   , SemanticDiagnosticEvidence
   , SemanticEvidenceKind(..)
   , semanticDiagnosticRule
+  , SemanticSubject
+  , semanticDiagnosticSubjects
+  , foldSemanticSubject
   , SemanticOccurrenceRole
   , SemanticOccurrenceGroup
   , semanticDiagnosticOccurrenceGroups
@@ -192,6 +196,48 @@ acceptedSemanticModel (SemanticAssessment assessment) =
 semanticDiagnosticRule :: SemanticDiagnosticEvidence scope -> CoreRuleId
 semanticDiagnosticRule (SemanticDiagnosticEvidence defect) =
   Internal.semanticRuleId (Internal.semanticDefectRule defect)
+
+-- | One exact named subject retained by the semantic evidence key.
+data SemanticSubject
+  = SemanticModelSubject !Text !ModelIdentity
+  | SemanticOccurrenceSubject !Text !OccurrenceIdentity
+
+-- | Return every subject with its owner-defined role in admitted order.
+semanticDiagnosticSubjects ::
+     SemanticDiagnosticEvidence scope -> NonEmpty SemanticSubject
+semanticDiagnosticSubjects (SemanticDiagnosticEvidence defect) =
+  case Internal.semanticDefectEvidence defect of
+    Internal.SemanticNeedKey need ->
+      SemanticModelSubject "need" need NonEmpty.:| []
+    Internal.SemanticNeedMemberKey need member ->
+      SemanticModelSubject "need" need
+        NonEmpty.:| [SemanticModelSubject "member" member]
+    Internal.SemanticStrategyKey strategy ->
+      SemanticModelSubject "strategy" strategy NonEmpty.:| []
+    Internal.SemanticStrategyMemberKey strategy member ->
+      SemanticModelSubject "strategy" strategy
+        NonEmpty.:| [SemanticModelSubject "member" member]
+    Internal.SemanticFitClaimKey claim ->
+      SemanticModelSubject "claim" claim NonEmpty.:| []
+    Internal.SemanticParticipantClaimKey claim participant ->
+      SemanticModelSubject "claim" claim
+        NonEmpty.:| [SemanticModelSubject "participant" participant]
+    Internal.SemanticAssertedDependencyKey dependent endpoint context ->
+      SemanticOccurrenceSubject "dependent" dependent
+        NonEmpty.:| [ SemanticOccurrenceSubject "endpoint" endpoint
+                    , SemanticOccurrenceSubject "context" context
+                    ]
+
+-- | Eliminate either exact semantic subject value without exposing constructors.
+foldSemanticSubject ::
+     (Text -> ModelIdentity -> result)
+  -> (Text -> OccurrenceIdentity -> result)
+  -> SemanticSubject
+  -> result
+foldSemanticSubject model occurrence subject =
+  case subject of
+    SemanticModelSubject role identity -> model role identity
+    SemanticOccurrenceSubject role identity -> occurrence role identity
 
 -- | Opaque, rule-local role of one semantic occurrence group.
 newtype SemanticOccurrenceRole =

@@ -5,6 +5,7 @@ module O2I.Operation.Test.Provenance
   ) where
 
 import Data.ByteString (ByteString)
+import Data.List (sort)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import Numeric.Natural (Natural)
@@ -21,11 +22,11 @@ tests =
     , testCase "source references reject invalid values" referenceTest
     , testCase "source identity hashes exact bytes" sourceIdentityTest
     , testCase
-        "supplemental provenance is canonical by ordinal"
+        "supplemental provenance is canonical by role-local key"
         canonicalSupplementalProvenanceTest
     , testCase "empty supplemental provenance is valid" emptyProvenanceTest
     , testCase "model sources are rejected as supplemental" modelRejectedTest
-    , testCase "duplicate ordinals are rejected" duplicateOrdinalTest
+    , testCase "duplicate source keys are rejected" duplicateSourceKeyTest
     ]
 
 sourceRoleClosureTest :: Assertion
@@ -45,6 +46,12 @@ sourceIdentityTest = do
   let identity = supplementalIdentity 0 "abc"
   sourceIdentityRole identity @?= SupplementalRole
   sourceOrdinalValue (sourceIdentityOrdinal identity) @?= 0
+  sourceKeyRole (sourceIdentityKey identity) @?= SupplementalRole
+  sourceOrdinalValue (sourceKeyOrdinal (sourceIdentityKey identity)) @?= 0
+  foldSourceKey
+    (\role ordinal -> (role, sourceOrdinalValue ordinal))
+    (sourceIdentityKey identity)
+    @?= (SupplementalRole, 0)
   sourceReferenceText (sourceIdentityReference identity) @?= "supplemental"
   sourceSha256Text (sourceIdentitySha256 identity)
     @?= "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
@@ -63,8 +70,8 @@ sourceIdentityTest = do
 canonicalSupplementalProvenanceTest :: Assertion
 canonicalSupplementalProvenanceTest = do
   let first = supplementalIdentity 0 "first"
-      second = readinessIdentity 1 "second"
-      third = assessmentIdentity 2 "third"
+      second = readinessIdentity 0 "second"
+      third = assessmentIdentity 0 "third"
   provenance <- requireRight (mkSupplementalProvenance [third, first, second])
   supplementalProvenanceSources provenance @?= [first, second, third]
   foldSupplementalProvenance length provenance @?= 3
@@ -91,20 +98,21 @@ modelRejectedTest = do
         defect
     _ -> assertFailure "expected exactly one model-role defect"
 
-duplicateOrdinalTest :: Assertion
-duplicateOrdinalTest = do
+duplicateSourceKeyTest :: Assertion
+duplicateSourceKeyTest = do
   let first = supplementalIdentity 4 "first"
-      second = readinessIdentity 4 "second"
+      second = supplementalIdentity 4 "second"
   defects <- requireLeft (mkSupplementalProvenance [second, first])
   case NonEmpty.toList defects of
     [defect] ->
       foldSupplementalProvenanceDefect
         (const (assertFailure "reported model role instead of duplicate"))
-        (\ordinal identities -> do
-           sourceOrdinalValue ordinal @?= 4
-           NonEmpty.toList identities @?= [first, second])
+        (\key identities -> do
+           sourceKeyRole key @?= SupplementalRole
+           sourceOrdinalValue (sourceKeyOrdinal key) @?= 4
+           NonEmpty.toList identities @?= sort [first, second])
         defect
-    _ -> assertFailure "expected exactly one duplicate-ordinal defect"
+    _ -> assertFailure "expected exactly one duplicate-source-key defect"
 
 supplementalIdentity :: Natural -> ByteString -> SourceIdentity
 supplementalIdentity ordinal =

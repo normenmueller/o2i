@@ -195,6 +195,10 @@ verify_haskell() {
     -s spc/ctr/archimate/contract -p 'test_compile.py'
   python3 -B spc/lib/operation/contract/compile.py \
     --profile-companion spc/ctr/archimate/profile.json \
+    --profile-diagnostic-inventory \
+      spc/ctr/archimate/contract/generated/o2i.archimate-profile.diagnostic-evidence-v1.json \
+    --core-owner-diagnostic-inventory \
+      spc/lib/core/contract/generated/o2i.core.owner-diagnostic-evidence-v1.json \
     --check
   O2I_PROFILE_COMPANION=spc/ctr/archimate/profile.json \
     python3 -B -m unittest discover \
@@ -354,6 +358,12 @@ verify_haskell() {
     printf '[o2i|error] Core source archive lacks the generated diagnostic inventory.\n' >&2
     exit 1
   fi
+  if ! grep -Eq \
+    '/contract/generated/o2i\.core\.owner-diagnostic-evidence-v1\.json$' \
+    "$core_inventory"; then
+    printf '[o2i|error] Core source archive lacks the owner diagnostic inventory.\n' >&2
+    exit 1
+  fi
   if ! grep -Eq '/profile\.json$' "$profile_inventory"; then
     printf '[o2i|error] ArchiMate Profile source archive lacks profile.json.\n' >&2
     exit 1
@@ -362,6 +372,12 @@ verify_haskell() {
     '/src/O2I/ArchiMate/Profile/Internal/Generated\.hs$' \
     "$profile_inventory"; then
     printf '[o2i|error] ArchiMate Profile source archive lacks generated Haskell.\n' >&2
+    exit 1
+  fi
+  if ! grep -Eq \
+    '/contract/generated/o2i\.archimate-profile\.diagnostic-evidence-v1\.json$' \
+    "$profile_inventory"; then
+    printf '[o2i|error] ArchiMate Profile source archive lacks the diagnostic inventory.\n' >&2
     exit 1
   fi
   if ! grep -Eq '/contract/compile\.py$' "$profile_inventory" || \
@@ -402,8 +418,14 @@ verify_haskell() {
     -p 'test_compile.py'
   python3 -B "$source_project/$operation_root/contract/compile.py" \
     --profile-companion "$source_project/$profile_root/profile.json" \
+    --profile-diagnostic-inventory \
+      "$source_project/$profile_root/contract/generated/o2i.archimate-profile.diagnostic-evidence-v1.json" \
+    --core-owner-diagnostic-inventory \
+      "$source_project/$core_root/contract/generated/o2i.core.owner-diagnostic-evidence-v1.json" \
     --check
   O2I_PROFILE_COMPANION="$source_project/$profile_root/profile.json" \
+    O2I_PROFILE_DIAGNOSTIC_INVENTORY="$source_project/$profile_root/contract/generated/o2i.archimate-profile.diagnostic-evidence-v1.json" \
+    O2I_CORE_OWNER_DIAGNOSTIC_INVENTORY="$source_project/$core_root/contract/generated/o2i.core.owner-diagnostic-evidence-v1.json" \
     python3 -B -m unittest discover \
     -s "$source_project/$operation_root/contract" \
     -p 'test_compile.py'

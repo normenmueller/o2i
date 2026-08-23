@@ -2,8 +2,6 @@ module OwnerEvidencePublicApi where
 
 import O2I.ArchiMate.Profile.Closure
 import O2I.ArchiMate.Profile.Projection
-import O2I.ArchiMate.Profile.Resolution
-import O2I.Core.Identity
 import O2I.Operation.Acquisition
 import O2I.Operation.Diagnostic
 import O2I.Operation.Diagnostic.Owner
@@ -12,66 +10,57 @@ import O2I.Semantics
 import O2I.Structure
 
 profileActivation ::
-     ModelOwnerSource document
-  -> SelectedArchiMateProfile profile
+     PreparedAuthority authority profile document
   -> ProfileAssessmentUniverse profile document
-  -> [Diagnostic]
+  -> [PreparedDiagnostic authority profile document]
 profileActivation = profileActivationDiagnostics
 
 profileAssessment ::
-     ModelOwnerSource document
-  -> SelectedArchiMateProfile profile
-  -> ProfileAssessmentUniverse profile document
+     PreparedAuthority authority profile document
   -> ProfileProjectionAssessment profile document
-  -> [Diagnostic]
-profileAssessment source selected universe assessment =
-  foldProfileAssessmentDiagnostics
-    (const [])
-    id
-    source
-    selected
-    universe
-    assessment
+  -> [PreparedDiagnostic authority profile document]
+profileAssessment authority assessment =
+  foldProfileAssessmentDiagnostics (const []) id authority assessment
 
 structureEvidence ::
-     ScopedModelOwnerSource scope -> StructureEvidence scope -> Diagnostic
+     PreparedScope authority profile document scope
+  -> StructureEvidence scope
+  -> PreparedDiagnostic authority profile document
 structureEvidence = structureEvidenceDiagnostic
-
-bindingEvidence ::
-     SupplementalOwnerBinding scope inputs
-  -> SupplementalOwnerBindingEvidence scope inputs
-  -> Diagnostic
-bindingEvidence = bindingEvidenceDiagnostic
 
 consumeBinding ::
      WellFormedGraph scope
-  -> SupplementalOwnerBinding scope inputs
-  -> ([Diagnostic], SemanticAssessment scope)
+  -> SupplementalOwnerBinding authority profile document scope inputs
+  -> ( [SupplementalDiagnosticGroup authority profile document]
+     , SemanticAssessment scope)
 consumeBinding graph binding =
   foldSupplementalOwnerBinding
-    (\bound evidence ->
-       ( map (bindingEvidenceDiagnostic binding) evidence
-       , assessOwnerSemantics graph bound))
+    (\_ bound _ ->
+       (bindingDiagnosticGroups binding, assessOwnerSemantics graph bound))
     binding
 
-bindAcquired :: [AcquiredSource] -> WellFormedGraph scope -> Maybe [Diagnostic]
-bindAcquired sources graph =
+bindAcquired ::
+     PreparedScope authority profile document scope
+  -> [AcquiredSupplementalSource]
+  -> WellFormedGraph scope
+  -> Maybe [SupplementalDiagnosticGroup authority profile document]
+bindAcquired scope sources graph =
   withSupplementalOwnerBinding
+    scope
     sources
     graph
     (const Nothing)
     (const Nothing)
     (Just . fst . consumeBinding graph)
 
-admitModel :: AcquiredSource -> Maybe AcquiredModelSource
-admitModel = acquiredModelSource
+admitSupplemental :: AcquiredSource -> Maybe AcquiredSupplementalSource
+admitSupplemental = acquiredSupplementalSource
+
+consumeSupplemental :: AcquiredSupplementalSource -> AcquiredSource
+consumeSupplemental = foldAcquiredSupplementalSource id
 
 semanticEvidence ::
-     ScopedModelOwnerSource scope
-  -> SemanticAssessment scope
+     PreparedScope authority profile document scope
   -> SemanticDiagnosticEvidence scope
-  -> SemanticEvidenceConversion
+  -> PreparedDiagnostic authority profile document
 semanticEvidence = semanticsEvidenceDiagnostic
-
-consumeSemanticConversion :: SemanticEvidenceConversion -> Maybe Diagnostic
-consumeSemanticConversion = foldSemanticEvidenceConversion Nothing Just

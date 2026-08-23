@@ -1,335 +1,205 @@
 {-# LANGUAGE ExplicitNamespaces #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 
--- | Common typed diagnostics without caller-extensible detail maps.
+-- | Lossless diagnostics bound to one successful preparation authority.
 --
--- Stable codes, authorities, and stages are projected from their compiled
--- rule owners. Exact source, native, Draft, canonical, subject, and Core
--- occurrences remain distinct typed alternatives.
+-- Severity, disposition, owner, stage and rule identity are total projections
+-- of the retained owner evidence. Callers cannot combine those fields or
+-- attach evidence to a separately supplied source.
 module O2I.Operation.Diagnostic
-  ( type DiagnosticCode
-  , diagnosticCodeText
-  , type DiagnosticSeverity
-  , debugSeverity
+  ( type DiagnosticSeverity
   , infoSeverity
-  , warningSeverity
   , errorSeverity
   , diagnosticSeverityText
-  , foldDiagnosticSeverity
   , type DiagnosticDisposition
   , modelFinding
-  , processFailure
   , diagnosticDispositionText
-  , foldDiagnosticDisposition
-  , type OwnerEvidenceProvenance
-  , foldOwnerEvidenceProvenance
-  , type DiagnosticProvenance
-  , diagnosticProvenanceIdentity
-  , diagnosticProvenanceAuthority
-  , diagnosticProvenanceStage
-  , foldDiagnosticProvenance
-  , type DiagnosticOccurrence
-  , foldDiagnosticOccurrence
-  , type Diagnostic
-  , diagnosticCode
-  , diagnosticRuleIdentity
-  , diagnosticSeverity
-  , diagnosticDisposition
-  , diagnosticProvenance
-  , diagnosticOccurrences
-  , foldDiagnostic
+  , type PreparedDiagnostic
+  , preparedDiagnosticSeverity
+  , preparedDiagnosticDisposition
+  , preparedDiagnosticProducer
+  , preparedDiagnosticOwner
+  , preparedDiagnosticStage
+  , preparedDiagnosticRuleIdentity
+  , foldPreparedDiagnostic
+  , type SupplementalDiagnosticGroup
+  , foldSupplementalDiagnosticGroup
+  , type PreparedDiagnosticDocument
+  , preparedDiagnosticDocument
+  , foldPreparedDiagnosticDocument
   ) where
 
-import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
-import O2I.ArchiMate.Profile.Draft (DraftLocation)
-import O2I.ArchiMate.Profile.Notation (CanonicalOccurrence)
-import O2I.ArchiMate.Profile.Rule.Explanation
-  ( ProfileRuleExplanation
-  , profileRuleId
-  , profileRuleIdText
-  , profileRuleProfileReference
-  , profileRuleStage
-  , profileRuleStageText
-  )
-import O2I.Core.Contract (CoreRuleId, coreRuleIdText)
-import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
-import O2I.Core.Rule.Catalog
-  ( CoreRule
-  , coreRuleIdentity
-  , coreRuleStage
-  , coreRuleStageText
-  )
-import O2I.Operation.Adapter
-  ( AdapterDescriptor
-  , AdapterOccurrence
-  , AdapterRule
-  , adapterDescriptorId
-  , adapterIdText
-  , adapterRuleId
-  , adapterRuleIdText
-  , adapterRuleStage
-  , adapterRuleStageText
-  )
-import O2I.Operation.Diagnostic.AdapterOwner.Internal (foldAdapterRuleWitness)
+import qualified O2I.ArchiMate.Profile.Closure as Closure
+import qualified O2I.ArchiMate.Profile.Projection as Profile
+import O2I.Core.Contract (coreRuleIdText)
+import O2I.Operation.Acquisition (AcquiredSupplementalSource)
 import O2I.Operation.Diagnostic.Internal
-import O2I.Operation.Provenance (SourceIdentity)
-import O2I.Operation.Rule.Catalog
-  ( OperationRule
-  , operationRuleIdText
-  , operationRuleIdentity
-  , operationRuleStage
-  , operationRuleStageText
+import O2I.Operation.Diagnostic.Owner.Source.Internal
+  ( PreparedAuthority
+  , SupplementalOwnerBindingEvidence
   )
+import qualified O2I.Semantics as Semantics
+import qualified O2I.Structure as Structure
 
--- | Project the stable namespaced diagnostic code.
-diagnosticCodeText :: DiagnosticCode -> Text
-diagnosticCodeText (DiagnosticCode value) = value
-
--- | Severity for diagnostic execution detail.
-debugSeverity :: DiagnosticSeverity
-debugSeverity = DebugSeverity
-
--- | Severity for non-failing operational information.
+-- | Severity for an accepted positive owner fact.
 infoSeverity :: DiagnosticSeverity
 infoSeverity = InfoSeverity
 
--- | Severity for a non-fatal concern requiring attention.
-warningSeverity :: DiagnosticSeverity
-warningSeverity = WarningSeverity
-
--- | Severity for a failed operation or invalid result.
+-- | Severity for an owner rejection.
 errorSeverity :: DiagnosticSeverity
 errorSeverity = ErrorSeverity
 
--- | Render one severity as its stable machine value.
+-- | Stable machine token of a derived severity.
 diagnosticSeverityText :: DiagnosticSeverity -> Text
 diagnosticSeverityText severity =
   case severity of
-    DebugSeverity -> "debug"
     InfoSeverity -> "info"
-    WarningSeverity -> "warning"
     ErrorSeverity -> "error"
 
--- | Consume every closed diagnostic severity.
-foldDiagnosticSeverity ::
-     result -> result -> result -> result -> DiagnosticSeverity -> result
-foldDiagnosticSeverity debug info warning failure severity =
-  case severity of
-    DebugSeverity -> debug
-    InfoSeverity -> info
-    WarningSeverity -> warning
-    ErrorSeverity -> failure
-
--- | Disposition for a finding attributable to model content.
+-- | The sole post-preparation disposition.
 modelFinding :: DiagnosticDisposition
 modelFinding = ModelFinding
 
--- | Disposition for a failure of acquisition or processing.
-processFailure :: DiagnosticDisposition
-processFailure = ProcessFailure
-
--- | Render one disposition as its stable machine value.
+-- | Stable machine token of the derived disposition.
 diagnosticDispositionText :: DiagnosticDisposition -> Text
-diagnosticDispositionText disposition =
-  case disposition of
-    ModelFinding -> "model-finding"
-    ProcessFailure -> "process-failure"
+diagnosticDispositionText ModelFinding = "model-finding"
 
--- | Consume either closed diagnostic disposition.
-foldDiagnosticDisposition :: result -> result -> DiagnosticDisposition -> result
-foldDiagnosticDisposition finding failure disposition =
-  case disposition of
-    ModelFinding -> finding
-    ProcessFailure -> failure
+-- | Derive impact directly from the closed producer branch.
+preparedDiagnosticSeverity ::
+     PreparedDiagnostic authority profile document -> DiagnosticSeverity
+preparedDiagnosticSeverity diagnostic =
+  case diagnostic of
+    ProfileActivationDiagnostic _ -> InfoSeverity
+    ProfileRejectionDiagnostic _ -> ErrorSeverity
+    ProfileClassificationDiagnostic _ -> InfoSeverity
+    ProfileMappingDiagnostic _ -> InfoSeverity
+    ProfileInvariantDiagnostic _ -> InfoSeverity
+    StructureRejectionDiagnostic _ -> ErrorSeverity
+    SemanticsRejectionDiagnostic _ -> ErrorSeverity
 
--- | Exact compiled rule identity and therefore the stable diagnostic code.
-diagnosticProvenanceIdentity :: DiagnosticProvenance -> Text
-diagnosticProvenanceIdentity provenance =
-  case provenance of
-    OperationDiagnosticProvenance rule ->
-      operationRuleIdText (operationRuleIdentity rule)
-    AdapterDiagnosticProvenance witness ->
-      foldAdapterRuleWitness
-        (\_ rule -> adapterRuleIdText (adapterRuleId rule))
-        witness
-    ProfileDiagnosticProvenance rule -> profileRuleIdText (profileRuleId rule)
-    CoreDiagnosticProvenance rule -> coreRuleIdText (coreRuleIdentity rule)
-    OwnerEvidenceDiagnosticProvenance ownerEvidence ->
-      ownerEvidenceIdentity ownerEvidence
+-- | Every retained owner result is attributable to model content.
+preparedDiagnosticDisposition ::
+     PreparedDiagnostic authority profile document -> DiagnosticDisposition
+preparedDiagnosticDisposition _ = ModelFinding
 
--- | Stable closed authority, including exact adapter or Profile identity.
-diagnosticProvenanceAuthority :: DiagnosticProvenance -> Text
-diagnosticProvenanceAuthority provenance =
-  case provenance of
-    OperationDiagnosticProvenance _ -> "Operation"
-    AdapterDiagnosticProvenance witness ->
-      foldAdapterRuleWitness
-        (\descriptor _ ->
-           "Adapter:" <> adapterIdText (adapterDescriptorId descriptor))
-        witness
-    ProfileDiagnosticProvenance rule ->
-      "Profile:" <> profileRuleProfileReference rule
-    CoreDiagnosticProvenance _ -> "Core"
-    OwnerEvidenceDiagnosticProvenance ownerEvidence ->
-      ownerEvidenceAuthority ownerEvidence
+-- | Stable closed producer token.
+preparedDiagnosticProducer ::
+     PreparedDiagnostic authority profile document -> Text
+preparedDiagnosticProducer diagnostic =
+  case diagnostic of
+    ProfileActivationDiagnostic _ -> "profile-activation"
+    ProfileRejectionDiagnostic _ -> "profile-assessment"
+    ProfileClassificationDiagnostic _ -> "profile-classification"
+    ProfileMappingDiagnostic _ -> "profile-mapping"
+    ProfileInvariantDiagnostic _ -> "profile-invariant"
+    StructureRejectionDiagnostic _ -> "structure-assessment"
+    SemanticsRejectionDiagnostic _ -> "semantics-assessment"
 
--- | Exact owner-defined stage without a second stage taxonomy.
-diagnosticProvenanceStage :: DiagnosticProvenance -> Text
-diagnosticProvenanceStage provenance =
-  case provenance of
-    OperationDiagnosticProvenance rule ->
-      operationRuleStageText (operationRuleStage rule)
-    AdapterDiagnosticProvenance witness ->
-      foldAdapterRuleWitness
-        (\_ rule -> adapterRuleStageText (adapterRuleStage rule))
-        witness
-    ProfileDiagnosticProvenance rule ->
-      profileRuleStageText (profileRuleStage rule)
-    CoreDiagnosticProvenance rule -> coreRuleStageText (coreRuleStage rule)
-    OwnerEvidenceDiagnosticProvenance ownerEvidence ->
-      ownerEvidenceStage ownerEvidence
+-- | Stable closed owner token.
+preparedDiagnosticOwner :: PreparedDiagnostic authority profile document -> Text
+preparedDiagnosticOwner diagnostic =
+  case diagnostic of
+    ProfileActivationDiagnostic _ -> "profile"
+    ProfileRejectionDiagnostic _ -> "profile"
+    ProfileClassificationDiagnostic _ -> "profile"
+    ProfileMappingDiagnostic _ -> "profile"
+    ProfileInvariantDiagnostic _ -> "profile"
+    StructureRejectionDiagnostic _ -> "core"
+    SemanticsRejectionDiagnostic _ -> "core"
 
--- | Consume every exact rule-owner alternative.
-foldDiagnosticProvenance ::
-     (OperationRule -> result)
-  -> (AdapterDescriptor -> AdapterRule -> result)
-  -> (ProfileRuleExplanation -> result)
-  -> (CoreRule -> result)
-  -> (OwnerEvidenceProvenance -> result)
-  -> DiagnosticProvenance
+-- | Stable closed stage token.
+preparedDiagnosticStage :: PreparedDiagnostic authority profile document -> Text
+preparedDiagnosticStage diagnostic =
+  case diagnostic of
+    ProfileActivationDiagnostic _ -> "profile"
+    ProfileRejectionDiagnostic _ -> "profile"
+    ProfileClassificationDiagnostic _ -> "profile"
+    ProfileMappingDiagnostic _ -> "profile"
+    ProfileInvariantDiagnostic _ -> "profile"
+    StructureRejectionDiagnostic _ -> "structure"
+    SemanticsRejectionDiagnostic _ -> "semantics"
+
+-- | Exact rule identity projected from the retained owner value.
+preparedDiagnosticRuleIdentity ::
+     PreparedDiagnostic authority profile document -> Text
+preparedDiagnosticRuleIdentity diagnostic =
+  case diagnostic of
+    ProfileActivationDiagnostic evidence ->
+      Closure.foldActivationProvenance (\_ _ _ rule _ _ _ -> rule) evidence
+    ProfileRejectionDiagnostic evidence ->
+      Profile.profileDiagnosticRuleId evidence
+    ProfileClassificationDiagnostic evidence ->
+      Profile.foldProfileClassificationEvidence (\_ _ rule _ -> rule) evidence
+    ProfileMappingDiagnostic evidence ->
+      Profile.foldProfileMappingProvenance
+        (\rule _ _ -> rule)
+        (\rule _ _ _ _ -> rule)
+        (\rule _ _ -> rule)
+        evidence
+    ProfileInvariantDiagnostic evidence ->
+      Profile.foldProfileInvariantEvidence (\rule _ -> rule) evidence
+    StructureRejectionDiagnostic evidence ->
+      coreRuleIdText (Structure.structureEvidenceRule evidence)
+    SemanticsRejectionDiagnostic evidence ->
+      coreRuleIdText (Semantics.semanticDiagnosticRule evidence)
+
+-- | Eliminate every lossless owner branch.
+foldPreparedDiagnostic ::
+     (Closure.ActivationProvenance profile document -> result)
+  -> (Profile.ProfileDiagnosticEvidence profile document -> result)
+  -> (Profile.ProfileClassificationEvidence profile document -> result)
+  -> (Profile.ProfileMappingProvenance profile document -> result)
+  -> (Profile.ProfileInvariantEvidence profile document -> result)
+  -> (forall scope. Structure.StructureEvidence scope -> result)
+  -> (forall scope. Semantics.SemanticDiagnosticEvidence scope -> result)
+  -> PreparedDiagnostic authority profile document
   -> result
-foldDiagnosticProvenance operation adapter profile core ownerEvidence provenance =
-  case provenance of
-    OperationDiagnosticProvenance rule -> operation rule
-    AdapterDiagnosticProvenance witness ->
-      foldAdapterRuleWitness adapter witness
-    ProfileDiagnosticProvenance rule -> profile rule
-    CoreDiagnosticProvenance rule -> core rule
-    OwnerEvidenceDiagnosticProvenance provenanceValue ->
-      ownerEvidence provenanceValue
+foldPreparedDiagnostic activation rejection classification mapping invariant structure semantics diagnostic =
+  case diagnostic of
+    ProfileActivationDiagnostic evidence -> activation evidence
+    ProfileRejectionDiagnostic evidence -> rejection evidence
+    ProfileClassificationDiagnostic evidence -> classification evidence
+    ProfileMappingDiagnostic evidence -> mapping evidence
+    ProfileInvariantDiagnostic evidence -> invariant evidence
+    StructureRejectionDiagnostic evidence -> structure evidence
+    SemanticsRejectionDiagnostic evidence -> semantics evidence
 
--- | Consume every evidence-issued Profile and Core owner alternative.
-foldOwnerEvidenceProvenance ::
-     (Text -> Text -> result)
-  -> (CoreRuleId -> result)
-  -> (CoreRuleId -> result)
-  -> (CoreRuleId -> result)
-  -> OwnerEvidenceProvenance
+-- | Eliminate one exact supplemental source group.
+foldSupplementalDiagnosticGroup ::
+     (forall scope inputs. AcquiredSupplementalSource -> [SupplementalOwnerBindingEvidence
+                                                            scope
+                                                            inputs] -> result)
+  -> SupplementalDiagnosticGroup authority profile document
   -> result
-foldOwnerEvidenceProvenance profile structure binding semantics provenance =
-  case provenance of
-    ProfileOwnerEvidenceProvenance reference ruleIdentity ->
-      profile reference ruleIdentity
-    StructureOwnerEvidenceProvenance ruleIdentity -> structure ruleIdentity
-    BindingOwnerEvidenceProvenance ruleIdentity -> binding ruleIdentity
-    SemanticsOwnerEvidenceProvenance ruleIdentity -> semantics ruleIdentity
+foldSupplementalDiagnosticGroup consume group =
+  case group of
+    SupplementalDiagnosticGroup source evidence -> consume source evidence
 
--- | Consume every closed occurrence shape while preserving source identity.
-foldDiagnosticOccurrence ::
-     (SourceIdentity -> result)
-  -> (SourceIdentity -> AdapterOccurrence -> result)
-  -> (SourceIdentity -> DraftLocation -> result)
-  -> (SourceIdentity -> CanonicalOccurrence -> result)
-  -> (SourceIdentity -> ModelIdentity -> result)
-  -> (SourceIdentity -> OccurrenceIdentity -> result)
-  -> DiagnosticOccurrence
+-- | Seal one authority with all model and supplemental diagnostics.
+preparedDiagnosticDocument ::
+     PreparedAuthority authority profile document
+  -> [PreparedDiagnostic authority profile document]
+  -> [SupplementalDiagnosticGroup authority profile document]
+  -> PreparedDiagnosticDocument
+preparedDiagnosticDocument = PreparedDiagnosticDocument
+
+-- | Eliminate the existential document without detaching its authority.
+foldPreparedDiagnosticDocument ::
+     (forall authority profile document. PreparedAuthority
+                                           authority
+                                           profile
+                                           document -> [PreparedDiagnostic
+                                                          authority
+                                                          profile
+                                                          document] -> [SupplementalDiagnosticGroup
+                                                                          authority
+                                                                          profile
+                                                                          document] -> result)
+  -> PreparedDiagnosticDocument
   -> result
-foldDiagnosticOccurrence source native draft canonical subject core occurrence =
-  case occurrence of
-    SourceDiagnosticOccurrence identity -> source identity
-    AdapterDiagnosticOccurrence identity location -> native identity location
-    DraftDiagnosticOccurrence identity location -> draft identity location
-    CanonicalDiagnosticOccurrence identity location ->
-      canonical identity location
-    SubjectDiagnosticOccurrence identity modelIdentity ->
-      subject identity modelIdentity
-    CoreDiagnosticOccurrence identity occurrenceIdentity ->
-      core identity occurrenceIdentity
-
--- | Derive the stable namespaced code from the exact owning rule.
-diagnosticCode :: Diagnostic -> DiagnosticCode
-diagnosticCode (Diagnostic _ _ provenance _) =
-  DiagnosticCode
-    (case provenance of
-       OperationDiagnosticProvenance rule ->
-         "o2i.operation." <> operationRuleIdText (operationRuleIdentity rule)
-       AdapterDiagnosticProvenance witness ->
-         foldAdapterRuleWitness
-           (\descriptor rule ->
-              "o2i.adapter."
-                <> adapterIdText (adapterDescriptorId descriptor)
-                <> "."
-                <> adapterRuleIdText (adapterRuleId rule))
-           witness
-       ProfileDiagnosticProvenance rule ->
-         "o2i.profile." <> profileRuleIdText (profileRuleId rule)
-       CoreDiagnosticProvenance rule ->
-         "o2i.core." <> coreRuleIdText (coreRuleIdentity rule)
-       OwnerEvidenceDiagnosticProvenance ownerEvidence ->
-         ownerEvidenceCode ownerEvidence)
-
-ownerEvidenceIdentity :: OwnerEvidenceProvenance -> Text
-ownerEvidenceIdentity ownerEvidence =
-  case ownerEvidence of
-    ProfileOwnerEvidenceProvenance _ ruleIdentity -> ruleIdentity
-    StructureOwnerEvidenceProvenance ruleIdentity -> coreRuleIdText ruleIdentity
-    BindingOwnerEvidenceProvenance ruleIdentity -> coreRuleIdText ruleIdentity
-    SemanticsOwnerEvidenceProvenance ruleIdentity -> coreRuleIdText ruleIdentity
-
-ownerEvidenceAuthority :: OwnerEvidenceProvenance -> Text
-ownerEvidenceAuthority ownerEvidence =
-  case ownerEvidence of
-    ProfileOwnerEvidenceProvenance reference _ -> "Profile:" <> reference
-    StructureOwnerEvidenceProvenance _ -> "Core"
-    BindingOwnerEvidenceProvenance _ -> "Core"
-    SemanticsOwnerEvidenceProvenance _ -> "Core"
-
-ownerEvidenceStage :: OwnerEvidenceProvenance -> Text
-ownerEvidenceStage ownerEvidence =
-  case ownerEvidence of
-    ProfileOwnerEvidenceProvenance _ _ -> "profile"
-    StructureOwnerEvidenceProvenance _ -> "structure"
-    BindingOwnerEvidenceProvenance _ -> "capability-input"
-    SemanticsOwnerEvidenceProvenance _ -> "semantics"
-
-ownerEvidenceCode :: OwnerEvidenceProvenance -> Text
-ownerEvidenceCode ownerEvidence =
-  case ownerEvidence of
-    ProfileOwnerEvidenceProvenance _ ruleIdentity ->
-      "o2i.profile." <> ruleIdentity
-    StructureOwnerEvidenceProvenance ruleIdentity ->
-      "o2i.core." <> coreRuleIdText ruleIdentity
-    BindingOwnerEvidenceProvenance ruleIdentity ->
-      "o2i.core." <> coreRuleIdText ruleIdentity
-    SemanticsOwnerEvidenceProvenance ruleIdentity ->
-      "o2i.core." <> coreRuleIdText ruleIdentity
-
--- | Stable owning rule identity, distinct from the namespaced diagnostic code.
-diagnosticRuleIdentity :: Diagnostic -> Text
-diagnosticRuleIdentity = diagnosticProvenanceIdentity . diagnosticProvenance
-
--- | Impact level assigned to the diagnostic.
-diagnosticSeverity :: Diagnostic -> DiagnosticSeverity
-diagnosticSeverity (Diagnostic severity _ _ _) = severity
-
--- | Model-finding or process-failure interpretation of the diagnostic.
-diagnosticDisposition :: Diagnostic -> DiagnosticDisposition
-diagnosticDisposition (Diagnostic _ disposition _ _) = disposition
-
--- | Exact compiled rule provenance owning the diagnostic.
-diagnosticProvenance :: Diagnostic -> DiagnosticProvenance
-diagnosticProvenance (Diagnostic _ _ provenance _) = provenance
-
--- | Non-empty exact occurrence set reported by the diagnostic.
-diagnosticOccurrences :: Diagnostic -> NonEmpty DiagnosticOccurrence
-diagnosticOccurrences (Diagnostic _ _ _ occurrences) = occurrences
-
--- | Consume every immutable diagnostic field in canonical order.
-foldDiagnostic ::
-     (DiagnosticSeverity -> DiagnosticDisposition -> DiagnosticProvenance -> NonEmpty
-                                                                               DiagnosticOccurrence -> result)
-  -> Diagnostic
-  -> result
-foldDiagnostic consume (Diagnostic severity disposition provenance occurrences) =
-  consume severity disposition provenance occurrences
+foldPreparedDiagnosticDocument consume document =
+  case document of
+    PreparedDiagnosticDocument authority modelDiagnostics supplementalGroups ->
+      consume authority modelDiagnostics supplementalGroups

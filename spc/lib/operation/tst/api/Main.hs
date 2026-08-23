@@ -9,7 +9,9 @@ import qualified O2I.Operation.Acquisition as Acquisition
 import qualified O2I.Operation.Adapter as Adapter
 import qualified O2I.Operation.Adapter.Authoring as AdapterAuthoring
 import qualified O2I.Operation.Diagnostic as Diagnostic
+import qualified O2I.Operation.Diagnostic.Machine as DiagnosticMachine
 import qualified O2I.Operation.Diagnostic.Owner as DiagnosticOwner
+import qualified O2I.Operation.Diagnostic.Owner.Source as DiagnosticSource
 import qualified O2I.Operation.Discovery.Adapter as DiscoveryAdapter
 import qualified O2I.Operation.Discovery.Adapter.Machine as AdapterMachine
 import qualified O2I.Operation.Discovery.Profile as DiscoveryProfile
@@ -33,6 +35,7 @@ $(assertAbstractTypes
     [ "Acquisition.InputSource"
     , "Acquisition.AcquisitionFailure"
     , "Acquisition.AcquiredSource"
+    , "Acquisition.AcquiredSupplementalSource"
     , "Adapter.AdapterId"
     , "Adapter.AdapterDescriptor"
     , "Adapter.AdapterRuleId"
@@ -83,14 +86,16 @@ $(assertAbstractTypes
     , "DiscoveryView.ViewDiscoveryResult"
     , "DiscoveryView.ViewDiscovery"
     , "ViewMachine.ViewDiscoveryDocument"
-    , "Diagnostic.DiagnosticCode"
     , "Diagnostic.DiagnosticSeverity"
     , "Diagnostic.DiagnosticDisposition"
-    , "Diagnostic.OwnerEvidenceProvenance"
-    , "Diagnostic.DiagnosticProvenance"
-    , "Diagnostic.DiagnosticOccurrence"
-    , "Diagnostic.Diagnostic"
-    , "DiagnosticOwner.SemanticEvidenceConversion"
+    , "Diagnostic.PreparedDiagnostic"
+    , "Diagnostic.SupplementalDiagnosticGroup"
+    , "Diagnostic.PreparedDiagnosticDocument"
+    , "DiagnosticSource.PreparedAuthority"
+    , "DiagnosticSource.PreparedScope"
+    , "DiagnosticSource.SupplementalOwnerBinding"
+    , "DiagnosticSource.SupplementalOwnerBindingEvidence"
+    , "DiagnosticSource.BoundOwnerSupplementalInputs"
     , "Failure.CommandFailure"
     , "Failure.PreparationFailure"
     , "Failure.CommonFailure"
@@ -108,6 +113,7 @@ $(assertAbstractTypes
     , "Profile.ProfileResolution"
     , "Profile.ProfileCompatibility"
     , "Provenance.SourceOrdinal"
+    , "Provenance.SourceKey"
     , "Provenance.SourceReference"
     , "Provenance.SourceSha256"
     , "Provenance.SourceIdentity"
@@ -144,6 +150,8 @@ $(assertOrdinaryFunctions
     , 'Acquisition.acquiredSourceIdentity
     , 'Acquisition.acquiredSourceBytes
     , 'Acquisition.foldAcquiredSource
+    , 'Acquisition.acquiredSupplementalSource
+    , 'Acquisition.foldAcquiredSupplementalSource
     , 'Adapter.adapterIdText
     , 'Adapter.adapterDescriptorId
     , 'Adapter.adapterDescriptorName
@@ -276,36 +284,32 @@ $(assertOrdinaryFunctions
     , 'ViewMachine.viewDiscoverySchema
     , 'ViewMachine.viewDiscoveryDocumentVariant
     , 'ViewMachine.encodeViewDiscoveryDocument
-    , 'Diagnostic.diagnosticCodeText
-    , 'Diagnostic.debugSeverity
     , 'Diagnostic.infoSeverity
-    , 'Diagnostic.warningSeverity
     , 'Diagnostic.errorSeverity
     , 'Diagnostic.diagnosticSeverityText
-    , 'Diagnostic.foldDiagnosticSeverity
     , 'Diagnostic.modelFinding
-    , 'Diagnostic.processFailure
     , 'Diagnostic.diagnosticDispositionText
-    , 'Diagnostic.foldDiagnosticDisposition
-    , 'Diagnostic.foldOwnerEvidenceProvenance
-    , 'Diagnostic.diagnosticProvenanceIdentity
-    , 'Diagnostic.diagnosticProvenanceAuthority
-    , 'Diagnostic.diagnosticProvenanceStage
-    , 'Diagnostic.foldDiagnosticProvenance
-    , 'Diagnostic.foldDiagnosticOccurrence
-    , 'Diagnostic.diagnosticCode
-    , 'Diagnostic.diagnosticRuleIdentity
-    , 'Diagnostic.diagnosticSeverity
-    , 'Diagnostic.diagnosticDisposition
-    , 'Diagnostic.diagnosticProvenance
-    , 'Diagnostic.diagnosticOccurrences
-    , 'Diagnostic.foldDiagnostic
+    , 'Diagnostic.preparedDiagnosticSeverity
+    , 'Diagnostic.preparedDiagnosticDisposition
+    , 'Diagnostic.preparedDiagnosticProducer
+    , 'Diagnostic.preparedDiagnosticOwner
+    , 'Diagnostic.preparedDiagnosticStage
+    , 'Diagnostic.preparedDiagnosticRuleIdentity
+    , 'Diagnostic.foldPreparedDiagnostic
+    , 'Diagnostic.foldSupplementalDiagnosticGroup
+    , 'Diagnostic.preparedDiagnosticDocument
+    , 'Diagnostic.foldPreparedDiagnosticDocument
+    , 'DiagnosticMachine.diagnosticSchemaAuthority
+    , 'DiagnosticMachine.encodePreparedDiagnosticDocument
     , 'DiagnosticOwner.profileActivationDiagnostics
     , 'DiagnosticOwner.foldProfileAssessmentDiagnostics
+    , 'DiagnosticOwner.withModelStructureAssessment
     , 'DiagnosticOwner.structureEvidenceDiagnostic
-    , 'DiagnosticOwner.bindingEvidenceDiagnostic
-    , 'DiagnosticOwner.foldSemanticEvidenceConversion
+    , 'DiagnosticOwner.bindingDiagnosticGroups
     , 'DiagnosticOwner.semanticsEvidenceDiagnostic
+    , 'DiagnosticSource.withSupplementalOwnerBinding
+    , 'DiagnosticSource.foldSupplementalOwnerBinding
+    , 'DiagnosticSource.assessOwnerSemantics
     , 'Failure.inputAcquisitionFailure
     , 'Failure.commandFailureCode
     , 'Failure.foldCommandFailure
@@ -356,9 +360,14 @@ $(assertOrdinaryFunctions
     , 'Profile.checkProfileCompatibility
     , 'Provenance.sourceOrdinal
     , 'Provenance.sourceOrdinalValue
+    , 'Provenance.sourceKey
+    , 'Provenance.sourceKeyRole
+    , 'Provenance.sourceKeyOrdinal
+    , 'Provenance.foldSourceKey
     , 'Provenance.mkSourceReference
     , 'Provenance.sourceReferenceText
     , 'Provenance.sourceSha256Text
+    , 'Provenance.sourceIdentityKey
     , 'Provenance.sourceIdentityRole
     , 'Provenance.sourceIdentityOrdinal
     , 'Provenance.sourceIdentityReference

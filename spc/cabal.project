@@ -1,5 +1,6 @@
 packages:
   lib/core
+  lib/operation
   lib/inspection
   ctr/archimate
   lib/adapter/amx

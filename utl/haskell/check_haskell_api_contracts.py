@@ -349,7 +349,7 @@ CONTRACTS = (
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/"
                 "OwnerCoreCrossGeneration.hs",
-                (("GHC-25897", 3),),
+                (("GHC-25897", 2),),
             ),
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/"
@@ -364,7 +364,7 @@ CONTRACTS = (
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/"
                 "OwnerSourceCoercible.hs",
-                (("GHC-25897", 8),),
+                (("GHC-25897", 5),),
             ),
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/"
@@ -383,8 +383,18 @@ CONTRACTS = (
             ),
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/"
+                "AcquiredSupplementalSourceOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "OwnerSupplementalRoleRequired.hs",
+                (("GHC-83865", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
                 "OwnerEvidenceOpaqueConstructor.hs",
-                (("GHC-88464", 2),),
+                (("GHC-01928", 1), ("GHC-88464", 1)),
             ),
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/OpaqueConstructors.hs",

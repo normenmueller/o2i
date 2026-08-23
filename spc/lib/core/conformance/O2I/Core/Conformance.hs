@@ -106,7 +106,7 @@ structureCorpusRuleIds =
 -- | Consume every real supplemental-binding evidence value from the corpus.
 foldBindingCorpusEvidence ::
      provenance
-  -> (forall scope. SupplementalBindingEvidence scope provenance -> result)
+  -> (forall scope. SupplementalBindingDiagnosticEvidence scope provenance -> result)
   -> CoreConformanceResult result
 foldBindingCorpusEvidence provenance consume =
   foldBindingCorpusOwnerEvidence provenance (\_ evidence -> consume evidence)
@@ -114,7 +114,7 @@ foldBindingCorpusEvidence provenance consume =
 -- | Consume each Binding artifact together with its own scoped evidence.
 foldBindingCorpusOwnerEvidence ::
      provenance
-  -> (forall scope. SupplementalBinding scope provenance -> SupplementalBindingEvidence
+  -> (forall scope. SupplementalBinding scope provenance -> SupplementalBindingDiagnosticEvidence
                                                               scope
                                                               provenance -> result)
   -> CoreConformanceResult result
@@ -129,7 +129,7 @@ foldBindingCorpusOwnerEvidence provenance consume =
 -- | Binding rule identities observed through their public evidence fold.
 bindingCorpusRuleIds :: CoreConformanceResult CoreRuleId
 bindingCorpusRuleIds =
-  foldBindingCorpusEvidence () supplementalBindingEvidenceRule
+  foldBindingCorpusEvidence () supplementalBindingDiagnosticEvidenceRule
 
 -- | Consume every real semantic diagnostic evidence value from the corpus.
 foldSemanticsCorpusEvidence ::
@@ -283,7 +283,7 @@ bindingSource provenance occurrences selected projection identityValue = do
   Right (BindingSource index selected projection inputSet)
 
 runBindingSource ::
-     (forall scope. SupplementalBinding scope provenance -> SupplementalBindingEvidence
+     (forall scope. SupplementalBinding scope provenance -> SupplementalBindingDiagnosticEvidence
                                                               scope
                                                               provenance -> result)
   -> BindingSource provenance
@@ -302,7 +302,7 @@ runBindingSource consume source =
                 let binding =
                       bindSupplementalInputs graph (bindingSourceInput source)
                  in Right
-                      (foldSupplementalBinding
+                      (foldSupplementalBindingDiagnostics
                          (\_ evidence -> map (consume binding) evidence)
                          binding))
              assessment)

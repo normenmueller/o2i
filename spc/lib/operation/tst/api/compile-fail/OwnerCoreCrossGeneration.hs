@@ -1,6 +1,5 @@
 module OwnerCoreCrossGeneration where
 
-import O2I.Core.Identity
 import O2I.Operation.Diagnostic
 import O2I.Operation.Diagnostic.Owner
 import O2I.Operation.Diagnostic.Owner.Source
@@ -8,20 +7,13 @@ import O2I.Semantics
 import O2I.Structure
 
 crossStructure ::
-     ScopedModelOwnerSource firstScope
+     PreparedScope authority profile document firstScope
   -> StructureEvidence secondScope
-  -> Diagnostic
+  -> PreparedDiagnostic authority profile document
 crossStructure = structureEvidenceDiagnostic
 
-crossBinding ::
-     SupplementalOwnerBinding firstScope inputs
-  -> SupplementalOwnerBindingEvidence secondScope inputs
-  -> Diagnostic
-crossBinding = bindingEvidenceDiagnostic
-
 crossSemantics ::
-     ScopedModelOwnerSource firstScope
-  -> SemanticAssessment firstScope
+     PreparedScope authority profile document firstScope
   -> SemanticDiagnosticEvidence secondScope
-  -> SemanticEvidenceConversion
+  -> PreparedDiagnostic authority profile document
 crossSemantics = semanticsEvidenceDiagnostic
