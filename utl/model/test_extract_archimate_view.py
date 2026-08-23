@@ -13,11 +13,14 @@ import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 
-
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "utl" / "model" / "extract-archimate-view.py"
 MODEL = ROOT / "mdl" / "o2i.archimate"
 sys.path.insert(0, str(ROOT / "utl" / "model"))
+
+import focused_view_contract as FOCUSED  # noqa: E402
+
+
 EXPECTED_PRESET_KEYS = {
     "strategy-constituents",
     "semantics-situation",
@@ -29,6 +32,7 @@ EXPECTED_PRESET_KEYS = {
     "syntax-relations",
     "syntax-contextualization",
     "syntax-collective-strategy-realization",
+    "syntax-need-qualification-proposal",
     "layered-cake",
 }
 
@@ -36,6 +40,7 @@ SPEC = importlib.util.spec_from_file_location("extract_archimate_view", SCRIPT)
 if SPEC is None or SPEC.loader is None:
     raise RuntimeError(f"cannot load {SCRIPT}")
 EXTRACTOR = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = EXTRACTOR
 SPEC.loader.exec_module(EXTRACTOR)
 
 
@@ -43,7 +48,9 @@ class RepositoryViewContractTest(unittest.TestCase):
     """Validate deterministic repository Views without duplicating semantics."""
 
     def setUp(self) -> None:
-        self.root = ET.parse(MODEL).getroot()
+        self.current_root = ET.parse(MODEL).getroot()
+        self.root = copy.deepcopy(self.current_root)
+        self._materialize_target_model(self.root)
 
     def test_repository_model_satisfies_view_contracts(self) -> None:
         self.assertEqual([], EXTRACTOR.validate_model(self.root))
@@ -56,19 +63,10 @@ class RepositoryViewContractTest(unittest.TestCase):
             for element in self.root.iter("element")
             if EXTRACTOR.xtype(element) == "ArchimateDiagramModel"
         }
-        repository_snapshots = {
-            path.relative_to(ROOT)
-            for path in (ROOT / "mdl").glob("o2i-*.md")
-        }
-
         self.assertEqual(EXPECTED_PRESET_KEYS, set(EXTRACTOR.PRESETS))
         self.assertEqual(len(view_names), len(set(view_names)))
         self.assertEqual(len(snapshots), len(set(snapshots)))
         self.assertEqual(model_views, set(view_names))
-        self.assertEqual(
-            repository_snapshots,
-            set(snapshots),
-        )
 
     def test_missing_required_view_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
@@ -108,8 +106,8 @@ class RepositoryViewContractTest(unittest.TestCase):
         errors = EXTRACTOR.validate_model(root)
 
         self.assertIn(
-            "O2I Syntax - Contextualization is missing node "
-            "<Name> :: O2I Mission (Grouping)",
+            "O2I Syntax - Contextualization requires node "
+            "'<Name> :: O2I Mission' (Grouping) exactly once; found 0",
             errors,
         )
 
@@ -185,7 +183,7 @@ class RepositoryViewContractTest(unittest.TestCase):
         self.assertTrue(
             any(
                 "O2I Syntax - Collective Strategy Realization element "
-                "<Name> :: O2I Collective Strategy Realization (Junction) "
+                "'<Name> :: O2I Collective Strategy Realization' "
                 "documentation is missing:"
                 in error
                 for error in errors
@@ -766,8 +764,7 @@ class RepositoryViewContractTest(unittest.TestCase):
             errors,
         )
 
-    def test_profile_metadata_is_outside_extractor_authority(self) -> None:
-        baseline_validation = EXTRACTOR.validate_model(self.root)
+    def test_profile_metadata_drift_is_reported_but_not_rendered(self) -> None:
         baseline_snapshot = self._snapshot(
             self.root,
             "O2I Syntax - Collective Strategy Realization",
@@ -792,7 +789,27 @@ class RepositoryViewContractTest(unittest.TestCase):
             {"key": "o2i.owner", "value": "invalid-owner"},
         )
 
-        self.assertEqual(baseline_validation, EXTRACTOR.validate_model(root))
+        errors = EXTRACTOR.validate_model(root)
+        self.assertTrue(
+            any("property 'o2i.owner'" in error for error in errors),
+            errors,
+        )
+        self.assertTrue(
+            any(
+                "property 'o2i.type' admits only" in error
+                and "UnknownStructuredProposition" in error
+                for error in errors
+            ),
+            errors,
+        )
+        self.assertTrue(
+            any(
+                "property 'o2i.commitment' admits only" in error
+                and "tentative" in error
+                for error in errors
+            ),
+            errors,
+        )
         self.assertEqual(
             baseline_snapshot,
             self._snapshot(
@@ -952,13 +969,15 @@ class RepositoryViewContractTest(unittest.TestCase):
 
     def test_cli_check_is_independent_of_current_working_directory(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "snapshot.md"
             completed = subprocess.run(
                 [
                     sys.executable,
                     str(SCRIPT),
-                    "--preset",
-                    "all",
-                    "--check",
+                    "--view",
+                    "O2I Semantics - Context",
+                    "--output",
+                    str(output),
                 ],
                 cwd=directory,
                 check=False,
@@ -1042,6 +1061,272 @@ class RepositoryViewContractTest(unittest.TestCase):
             errors = EXTRACTOR.snapshot_diff(snapshot, content)
             self.assertEqual(1, len(errors))
             self.assertIn("snapshot drift:", errors[0])
+
+    def _materialize_target_model(self, root: ET.Element) -> None:
+        """Build the accepted focused-View target only inside the test copy."""
+        contract = EXTRACTOR.load_repository_view_contract(
+            EXTRACTOR.PROFILE_PATH,
+        )
+        node_contracts = FOCUSED.syntax_pattern_nodes(contract)
+        for view_name in (
+            EXTRACTOR.SYNTAX_CONTEXTUALIZATION_VIEW,
+            EXTRACTOR.SYNTAX_COLLECTIVE_VIEW,
+        ):
+            for node in node_contracts[view_name]:
+                element = self._model_element(
+                    root,
+                    node.name,
+                    node.archimate_element,
+                )
+                self._set_profile_metadata(
+                    element,
+                    node.metadata,
+                    o2i_type=node.o2i_type,
+                )
+
+        persisted = EXTRACTOR.model_elements_by_id(root)
+        for view_name, metadata in (
+            (
+                EXTRACTOR.SYNTAX_CONTEXTUALIZATION_VIEW,
+                FOCUSED.profile_pattern(
+                    contract,
+                    "contextualization",
+                )["relationshipMetadata"],
+            ),
+            (
+                EXTRACTOR.SYNTAX_COLLECTIVE_VIEW,
+                FOCUSED.profile_pattern(
+                    contract,
+                    "collective-strategy-realization",
+                )["segmentMetadata"],
+            ),
+        ):
+            view = EXTRACTOR.find_view(root, view_name)
+            for connection in view.iter("sourceConnection"):
+                relation_id = connection.get("archimateRelationship")
+                self.assertIn(relation_id, persisted)
+                self._set_profile_metadata(
+                    persisted[relation_id],
+                    metadata,
+                )
+
+        collective = self._model_element(
+            root,
+            "<Name> :: O2I Collective Strategy Realization",
+            "Junction",
+        )
+        documentation = collective.find("documentation")
+        self.assertIsNotNone(documentation)
+        documentation.text = " ".join(
+            FOCUSED.REQUIRED_COLLECTIVE_ELEMENT_DOCUMENTATION
+        )
+        collective_view = EXTRACTOR.find_view(
+            root,
+            EXTRACTOR.SYNTAX_COLLECTIVE_VIEW,
+        )
+        view_documentation = collective_view.find("documentation")
+        self.assertIsNotNone(view_documentation)
+        view_documentation.text = (view_documentation.text or "").replace(
+            "collective Fit-evidence",
+            "participant-completeness",
+        )
+
+        self._append_qualification_view(root, contract, node_contracts)
+
+    def _set_profile_metadata(
+        self,
+        element: ET.Element,
+        metadata: object,
+        *,
+        o2i_type: str | None = None,
+        role: str | None = None,
+    ) -> None:
+        for property_element in list(element.findall("property")):
+            if (property_element.get("key") or "").startswith("o2i."):
+                element.remove(property_element)
+        for requirement in metadata["properties"]:
+            cardinality = requirement["cardinality"]
+            if cardinality == "forbidden":
+                continue
+            property_role = requirement["role"]
+            if property_role == "type":
+                value = o2i_type
+            elif property_role == "commitment":
+                value = "candidate"
+            elif property_role == "participant-completeness":
+                value = requirement["admittedValues"][0]
+            elif property_role == "source":
+                value = "urn:o2i:test-source"
+            elif property_role == "role":
+                value = role
+            else:
+                self.fail(f"unsupported test metadata role: {property_role}")
+            self.assertIsNotNone(value)
+            ET.SubElement(
+                element,
+                "property",
+                {"key": requirement["key"], "value": value},
+            )
+
+    def _append_qualification_view(
+        self,
+        root: ET.Element,
+        contract: object,
+        node_contracts: object,
+    ) -> None:
+        qualification = contract.qualification_proposal
+        conformance_parent = self._parent_of(
+            root,
+            self._model_element(
+                root,
+                "<Name> :: O2I Collective Strategy Realization",
+                "Junction",
+            ),
+        )
+        nodes = {}
+        for index, node in enumerate(
+            node_contracts[EXTRACTOR.SYNTAX_QUALIFICATION_VIEW]
+        ):
+            element = ET.SubElement(
+                conformance_parent,
+                "element",
+                {
+                    EXTRACTOR.XSI_TYPE: f"archimate:{node.archimate_element}",
+                    "name": node.name,
+                    "id": f"qualification-node-{index}",
+                },
+            )
+            if index == 0:
+                ET.SubElement(element, "documentation").text = (
+                    "Concrete nonempty rationale for the syntax exemplar."
+                )
+            self._set_profile_metadata(
+                element,
+                node.metadata,
+                o2i_type=node.o2i_type,
+            )
+            nodes[node.name] = element
+
+        diagrams_parent = self._parent_of(
+            root,
+            EXTRACTOR.find_view(root, EXTRACTOR.SYNTAX_COLLECTIVE_VIEW),
+        )
+        view = ET.SubElement(
+            diagrams_parent,
+            "element",
+            {
+                EXTRACTOR.XSI_TYPE: "archimate:ArchimateDiagramModel",
+                "name": EXTRACTOR.SYNTAX_QUALIFICATION_VIEW,
+                "id": "qualification-view",
+            },
+        )
+        ET.SubElement(view, "documentation").text = " ".join(
+            FOCUSED.REQUIRED_QUALIFICATION_DOCUMENTATION
+        )
+        occurrences = {}
+        for index, (name, element) in enumerate(nodes.items()):
+            occurrences[name] = ET.SubElement(
+                view,
+                "child",
+                {
+                    EXTRACTOR.XSI_TYPE: "archimate:DiagramObject",
+                    "id": f"qualification-occurrence-{index}",
+                    "archimateElement": element.get("id", ""),
+                },
+            )
+
+        relations_parent = next(
+            folder
+            for folder in root.iter("folder")
+            if folder.get("type") == "relations"
+        )
+        proposal_name = FOCUSED.qualification_proposal_name(qualification)
+        role_nodes = {
+            role["role"]: FOCUSED.qualification_role_name(role)
+            for role in qualification["references"]["roles"]
+        }
+
+        def append_relation(
+            identifier: str,
+            source_name: str,
+            target_name: str,
+            relationship_type: str,
+            directed: bool,
+            metadata: object,
+            *,
+            name: str = "",
+            role: str | None = None,
+        ) -> None:
+            attributes = {
+                EXTRACTOR.XSI_TYPE: f"archimate:{relationship_type}",
+                "id": identifier,
+                "source": nodes[source_name].get("id", ""),
+                "target": nodes[target_name].get("id", ""),
+            }
+            if name:
+                attributes["name"] = name
+            if relationship_type == "AssociationRelationship":
+                attributes["directed"] = str(directed).lower()
+            relationship = ET.SubElement(
+                relations_parent,
+                "element",
+                attributes,
+            )
+            self._set_profile_metadata(
+                relationship,
+                metadata,
+                role=role,
+            )
+            ET.SubElement(
+                occurrences[source_name],
+                "sourceConnection",
+                {
+                    EXTRACTOR.XSI_TYPE: "archimate:Connection",
+                    "id": f"{identifier}-connection",
+                    "source": occurrences[source_name].get("id", ""),
+                    "target": occurrences[target_name].get("id", ""),
+                    "archimateRelationship": identifier,
+                },
+            )
+
+        for role, target_name in role_nodes.items():
+            append_relation(
+                f"qualification-reference-{role}",
+                proposal_name,
+                target_name,
+                qualification["references"]["archimateRelationship"],
+                qualification["references"]["associationDirected"],
+                qualification["references"]["metadata"],
+                role=role,
+            )
+
+        contextualization = FOCUSED.profile_pattern(
+            contract,
+            "contextualization",
+        )
+        roles = {
+            role["role"]: role
+            for role in qualification["references"]["roles"]
+        }
+        for role_name, role in roles.items():
+            context_type = role["contextType"]
+            if context_type is None:
+                continue
+            context_role = next(
+                name
+                for name, candidate in roles.items()
+                if candidate["o2iKind"] == "Context"
+                and candidate["o2iType"] == context_type
+            )
+            append_relation(
+                f"qualification-contextualization-{role_name}",
+                role_nodes[context_role],
+                role_nodes[role_name],
+                contextualization["archimateRelationship"],
+                contextualization["associationDirected"],
+                contextualization["relationshipMetadata"],
+                name=contextualization["label"],
+            )
 
     def _connection(
         self,

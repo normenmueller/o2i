@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import importlib.util
 from pathlib import Path
+import re
 import sys
 from types import ModuleType
 from typing import Any, Iterable
@@ -42,6 +43,8 @@ class RepositoryViewContract:
     carrier_mappings: tuple[FrozenObject, ...]
     relation_mappings: tuple[FrozenObject, ...]
     pattern_mappings: tuple[FrozenObject, ...]
+    typed_claim_metadata: FrozenObject
+    qualification_proposal: FrozenObject
 
 
 def load_repository_view_contract(
@@ -86,7 +89,17 @@ def _project_validated_repository_view_contract(
         for row in profile["carrierMappings"]
     )
     relations = _project_relations(profile, core)
-    patterns = _project_patterns(profile, core)
+    typed_claim_metadata = _project_typed_claim_metadata(profile)
+    patterns = _project_patterns(
+        profile,
+        core,
+        typed_claim_metadata,
+    )
+    qualification_proposal = _project_qualification_proposal(
+        profile,
+        core,
+        typed_claim_metadata,
+    )
     identity = profile["profileIdentity"]
     return RepositoryViewContract(
         schema=profile["schema"],
@@ -94,6 +107,31 @@ def _project_validated_repository_view_contract(
         carrier_mappings=carriers,
         relation_mappings=relations,
         pattern_mappings=patterns,
+        typed_claim_metadata=typed_claim_metadata,
+        qualification_proposal=qualification_proposal,
+    )
+
+
+def _project_typed_claim_metadata(
+    profile: dict[str, Any],
+) -> FrozenObject:
+    metadata = profile["metadata"]
+    typed = metadata["typedCarrier"]
+    claim = metadata["claimCarrier"]
+    return _metadata_contract(
+        (
+            _property_requirement(
+                "type",
+                typed["typeKey"],
+                typed["cardinality"],
+            ),
+            _property_requirement(
+                "commitment",
+                claim["commitmentKey"],
+                claim["cardinality"],
+                claim["commitmentValues"],
+            ),
+        )
     )
 
 
@@ -148,6 +186,7 @@ def _project_relations(
 def _project_patterns(
     profile: dict[str, Any],
     core: dict[str, Any],
+    typed_claim_metadata: FrozenObject,
 ) -> tuple[FrozenObject, ...]:
     patterns = _rows_by_id(profile["patternMappings"], "pattern mapping")
     contextualization = _required_row(
@@ -170,6 +209,55 @@ def _project_patterns(
         families,
         collective["propositionFamily"],
         "structured proposition family",
+    )
+    completeness = _required_row(
+        _rows_by_id(profile["propertyMappings"], "property mapping"),
+        collective["carrier"][
+            "participantCompletenessPropertyMapping"
+        ],
+        "property mapping",
+    )
+    collective_metadata = _metadata_contract(
+        (
+            _property_requirement(
+                "type",
+                profile["metadata"]["typedCarrier"]["typeKey"],
+                profile["metadata"]["typedCarrier"]["cardinality"],
+                (collective["carrier"]["o2iType"]["expected"],),
+            ),
+            _property_requirement(
+                "commitment",
+                collective["carrier"]["commitmentKey"]["expected"],
+                "exactly-one",
+                collective["carrier"]["commitmentValues"]["expected"],
+            ),
+            _property_requirement(
+                "participant-completeness",
+                completeness["key"],
+                completeness["multiplicity"]["propertyOccurrences"][
+                    "expected"
+                ],
+                completeness["value"]["admittedValues"]["expected"],
+            ),
+        ),
+        collective["carrier"]["additionalO2IProperties"]["expected"],
+    )
+    contextualization_metadata = _metadata_contract(
+        (
+            _property_requirement(
+                "commitment",
+                profile["metadata"]["claimCarrier"]["commitmentKey"],
+                contextualization["metadata"]["commitmentCardinality"][
+                    "expected"
+                ],
+                contextualization["metadata"]["commitmentValue"][
+                    "expected"
+                ],
+            ),
+        ),
+        additional_policy=contextualization["metadata"][
+            "additionalProperties"
+        ]["expected"],
     )
 
     return (
@@ -194,6 +282,8 @@ def _project_patterns(
                 "targetIncomingCardinality": contextualization_semantics[
                     "targetOwnerCardinality"
                 ],
+                "carrierMetadata": typed_claim_metadata,
+                "relationshipMetadata": contextualization_metadata,
             }
         ),
         _freeze(
@@ -233,9 +323,245 @@ def _project_patterns(
                         family["target"]["distinctFromParticipants"]
                     ),
                 },
+                "endpointMetadata": typed_claim_metadata,
+                "carrierMetadata": collective_metadata,
+                "segmentMetadata": _metadata_contract(
+                    (),
+                    additional_policy=collective["segments"][
+                        "o2iMetadata"
+                    ]["expected"],
+                ),
             }
         ),
     )
+
+
+def _project_qualification_proposal(
+    profile: dict[str, Any],
+    core: dict[str, Any],
+    typed_claim_metadata: FrozenObject,
+) -> FrozenObject:
+    proposal = profile["qualificationProposalMapping"]
+    semantics = core["qualificationProposalSemantics"]
+    source = _required_row(
+        _rows_by_id(profile["propertyMappings"], "property mapping"),
+        proposal["carrier"]["sourceProjection"]["propertyMapping"],
+        "property mapping",
+    )
+    endpoints = _rows_by_id(
+        core["qualifiedEndpointCatalog"],
+        "qualified endpoint",
+    )
+    roles = []
+    for role in semantics["routingContract"]["roleOrder"]:
+        mapping = proposal["references"]["roles"].get(role)
+        if mapping is None:
+            raise ProfileContractError(
+                f"missing qualification proposal role mapping: {role}"
+            )
+        semantic_role = semantics["roles"].get(role)
+        if semantic_role is None:
+            raise ProfileContractError(
+                f"missing qualification proposal Core role: {role}"
+            )
+        endpoint = _required_row(
+            endpoints,
+            semantic_role["target"],
+            "qualified endpoint",
+        )
+        roles.append(
+            {
+                "role": role,
+                "endpoint": semantic_role["target"],
+                "cardinality": semantic_role["cardinality"],
+                "o2iKind": endpoint["carrierCategory"],
+                "o2iType": endpoint["o2iType"],
+                "contextType": endpoint.get("contextType"),
+            }
+        )
+
+    type_key = profile["metadata"]["typedCarrier"]["typeKey"]
+    commitment_key = profile["metadata"]["claimCarrier"]["commitmentKey"]
+    role_key = proposal["references"]["roleProperty"]["expected"]
+    carrier_metadata = _metadata_contract(
+        (
+            _property_requirement(
+                "type",
+                type_key,
+                profile["metadata"]["typedCarrier"]["cardinality"],
+                (proposal["carrier"]["o2iType"]["expected"],),
+            ),
+            _property_requirement(
+                "source",
+                source["key"],
+                _qualification_source_cardinality(semantics["sources"]),
+                value_kind=source["value"]["kind"]["expected"],
+                grammar=source["value"]["grammar"]["expected"],
+                profile_cardinality=source["multiplicity"][
+                    "propertyOccurrences"
+                ]["expected"],
+                value_cardinality=source["multiplicity"][
+                    "valuesPerPropertyOccurrence"
+                ]["expected"],
+            ),
+            _property_requirement(
+                "commitment",
+                commitment_key,
+                proposal["carrier"]["commitment"]["expected"],
+            ),
+        )
+    )
+    reference_metadata = _metadata_contract(
+        (
+            _property_requirement(
+                "role",
+                role_key,
+                "exactly-one",
+                tuple(role["role"] for role in roles),
+            ),
+            _property_requirement(
+                "commitment",
+                commitment_key,
+                proposal["references"]["commitment"]["expected"],
+            ),
+        )
+    )
+    return _freeze(
+        {
+            "id": proposal["id"],
+            "carrier": {
+                "archimateElement": proposal["carrier"][
+                    "archimateElement"
+                ]["expected"],
+                "o2iType": proposal["carrier"]["o2iType"]["expected"],
+                "rationale": semantics["rationale"],
+                "metadata": carrier_metadata,
+            },
+            "references": {
+                "archimateRelationship": proposal["references"][
+                    "archimateRelationship"
+                ]["expected"],
+                "associationDirected": proposal["references"][
+                    "associationDirected"
+                ]["expected"],
+                "direction": proposal["references"]["direction"][
+                    "expected"
+                ],
+                "metadata": reference_metadata,
+                "roles": roles,
+            },
+            "endpointMetadata": typed_claim_metadata,
+        }
+    )
+
+
+def _qualification_source_cardinality(value: str) -> str:
+    if value != "one-or-more-normalized-source-identities":
+        raise ProfileContractError(
+            f"unsupported qualification source cardinality: {value}"
+        )
+    return "one-or-more"
+
+
+def _metadata_contract(
+    properties: Iterable[dict[str, Any]],
+    declared_allowed: Iterable[str] | None = None,
+    *,
+    additional_policy: str = "forbidden",
+) -> FrozenObject:
+    rows = tuple(properties)
+    allowed = tuple(
+        row["key"]
+        for row in rows
+        if row["cardinality"] != "forbidden"
+    )
+    if declared_allowed is not None and set(declared_allowed) != set(allowed):
+        raise ProfileContractError(
+            "metadata property projection does not match declared allowed keys"
+        )
+    return _freeze(
+        {
+            "additionalO2IProperties": additional_policy,
+            "allowedO2IProperties": allowed,
+            "properties": rows,
+        }
+    )
+
+
+def _property_requirement(
+    role: str,
+    key: str,
+    cardinality: str,
+    admitted_values: Iterable[str] = (),
+    *,
+    value_kind: str | None = None,
+    grammar: str | None = None,
+    profile_cardinality: str | None = None,
+    value_cardinality: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "role": role,
+        "key": key,
+        "cardinality": cardinality,
+        "admittedValues": tuple(admitted_values),
+        "valueKind": value_kind,
+        "grammar": grammar,
+        "profileCardinality": profile_cardinality,
+        "valueCardinality": value_cardinality,
+    }
+
+
+def carrier_archimate_element(
+    contract: RepositoryViewContract,
+    kind: str,
+    o2i_type: str,
+) -> str:
+    """Resolve one O2I constructor to its unique current Profile carrier."""
+    matches = [
+        mapping["archimateElement"]
+        for mapping in contract.carrier_mappings
+        if mapping["o2iKind"] == kind
+        and (
+            kind == "Context"
+            or any(
+                _kebab(candidate) == _kebab(o2i_type)
+                for candidate in mapping["o2iTypes"]
+            )
+        )
+    ]
+    if len(matches) != 1:
+        raise ProfileContractError(
+            "Profile constructor has no unique carrier mapping: "
+            f"{kind}.{o2i_type}"
+        )
+    return matches[0]
+
+
+def endpoint_archimate_element(
+    contract: RepositoryViewContract,
+    endpoint: str,
+) -> str:
+    """Resolve one bound Core endpoint to its current Profile carrier."""
+    endpoint_kind = endpoint.split(".", 1)[0]
+    kind = {
+        "context": "Context",
+        "primitive": "Primitive",
+        "structuring": "Structuring",
+        "situation-anchor": "SituationAnchor",
+    }.get(endpoint_kind)
+    if kind is None:
+        raise ProfileContractError(
+            f"Profile relation has unsupported endpoint: {endpoint!r}"
+        )
+    return carrier_archimate_element(
+        contract,
+        kind,
+        endpoint.rsplit(".", 1)[-1],
+    )
+
+
+def _kebab(identifier: str) -> str:
+    return re.sub(r"(?<=[a-z0-9])(?=[A-Z])", "-", identifier).lower()
 
 
 def _rows_by_id(
@@ -278,7 +604,7 @@ def _freeze(value: Any) -> Any:
                 for key, item in sorted(value.items())
             )
         )
-    if isinstance(value, list):
+    if isinstance(value, (list, tuple)):
         return tuple(_freeze(item) for item in value)
     return value
 

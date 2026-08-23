@@ -104,6 +104,20 @@ class RepositoryViewContractTest(unittest.TestCase):
             if family["id"] == identifier
         )
 
+    def property_mapping(self, profile: dict, identifier: str) -> dict:
+        return next(
+            mapping
+            for mapping in profile["propertyMappings"]
+            if mapping["id"] == identifier
+        )
+
+    def requirement(self, metadata: object, role: str) -> object:
+        return next(
+            requirement
+            for requirement in metadata["properties"]
+            if requirement["role"] == role
+        )
+
     def assert_projection_matches_sources(
         self,
         contract: RepositoryViewContract,
@@ -245,6 +259,211 @@ class RepositoryViewContractTest(unittest.TestCase):
             projected_collective["target"]["distinctFromContributors"],
         )
 
+        typed = profile["metadata"]["typedCarrier"]
+        claim = profile["metadata"]["claimCarrier"]
+        typed_type = self.requirement(contract.typed_claim_metadata, "type")
+        typed_commitment = self.requirement(
+            contract.typed_claim_metadata,
+            "commitment",
+        )
+        self.assertEqual(typed["typeKey"], typed_type["key"])
+        self.assertEqual(typed["cardinality"], typed_type["cardinality"])
+        self.assertEqual(claim["commitmentKey"], typed_commitment["key"])
+        self.assertEqual(
+            claim["cardinality"],
+            typed_commitment["cardinality"],
+        )
+        self.assertEqual(
+            frozen(claim["commitmentValues"]),
+            typed_commitment["admittedValues"],
+        )
+
+        context_metadata = projected_contextualization[
+            "relationshipMetadata"
+        ]
+        context_commitment = self.requirement(
+            context_metadata,
+            "commitment",
+        )
+        self.assertEqual(
+            contextualization["metadata"]["additionalProperties"][
+                "expected"
+            ],
+            context_metadata["additionalO2IProperties"],
+        )
+        self.assertEqual(
+            contextualization["metadata"]["commitmentCardinality"][
+                "expected"
+            ],
+            context_commitment["cardinality"],
+        )
+        self.assertEqual(
+            frozen(
+                contextualization["metadata"]["commitmentValue"][
+                    "expected"
+                ]
+            ),
+            context_commitment["admittedValues"],
+        )
+        self.assertEqual(
+            contract.typed_claim_metadata,
+            projected_contextualization["carrierMetadata"],
+        )
+
+        completeness = self.property_mapping(
+            profile,
+            collective["carrier"][
+                "participantCompletenessPropertyMapping"
+            ],
+        )
+        collective_metadata = projected_collective["carrierMetadata"]
+        collective_type = self.requirement(collective_metadata, "type")
+        collective_commitment = self.requirement(
+            collective_metadata,
+            "commitment",
+        )
+        collective_completeness = self.requirement(
+            collective_metadata,
+            "participant-completeness",
+        )
+        self.assertEqual(typed["typeKey"], collective_type["key"])
+        self.assertEqual(
+            collective["carrier"]["o2iType"]["expected"],
+            collective_type["admittedValues"][0],
+        )
+        self.assertEqual(
+            collective["carrier"]["commitmentKey"]["expected"],
+            collective_commitment["key"],
+        )
+        self.assertEqual(
+            frozen(
+                collective["carrier"]["commitmentValues"]["expected"]
+            ),
+            collective_commitment["admittedValues"],
+        )
+        self.assertEqual(completeness["key"], collective_completeness["key"])
+        self.assertEqual(
+            completeness["multiplicity"]["propertyOccurrences"]["expected"],
+            collective_completeness["cardinality"],
+        )
+        self.assertEqual(
+            frozen(completeness["value"]["admittedValues"]["expected"]),
+            collective_completeness["admittedValues"],
+        )
+        self.assertEqual(
+            collective["segments"]["o2iMetadata"]["expected"],
+            projected_collective["segmentMetadata"][
+                "additionalO2IProperties"
+            ],
+        )
+        self.assertEqual(
+            contract.typed_claim_metadata,
+            projected_collective["endpointMetadata"],
+        )
+
+        proposal = profile["qualificationProposalMapping"]
+        semantics = core["qualificationProposalSemantics"]
+        projected_proposal = contract.qualification_proposal
+        carrier = projected_proposal["carrier"]
+        self.assertEqual(proposal["id"], projected_proposal["id"])
+        self.assertEqual(
+            proposal["carrier"]["archimateElement"]["expected"],
+            carrier["archimateElement"],
+        )
+        self.assertEqual(
+            proposal["carrier"]["o2iType"]["expected"],
+            carrier["o2iType"],
+        )
+        self.assertEqual(semantics["rationale"], carrier["rationale"])
+        proposal_type = self.requirement(carrier["metadata"], "type")
+        proposal_source = self.requirement(carrier["metadata"], "source")
+        proposal_commitment = self.requirement(
+            carrier["metadata"],
+            "commitment",
+        )
+        source = self.property_mapping(
+            profile,
+            proposal["carrier"]["sourceProjection"]["propertyMapping"],
+        )
+        self.assertEqual(typed["typeKey"], proposal_type["key"])
+        self.assertEqual(
+            (proposal["carrier"]["o2iType"]["expected"],),
+            proposal_type["admittedValues"],
+        )
+        self.assertEqual(source["key"], proposal_source["key"])
+        self.assertEqual("one-or-more", proposal_source["cardinality"])
+        self.assertEqual(
+            source["value"]["kind"]["expected"],
+            proposal_source["valueKind"],
+        )
+        self.assertEqual(
+            source["value"]["grammar"]["expected"],
+            proposal_source["grammar"],
+        )
+        self.assertEqual(
+            source["multiplicity"]["propertyOccurrences"]["expected"],
+            proposal_source["profileCardinality"],
+        )
+        self.assertEqual(
+            source["multiplicity"]["valuesPerPropertyOccurrence"][
+                "expected"
+            ],
+            proposal_source["valueCardinality"],
+        )
+        self.assertEqual(
+            proposal["carrier"]["commitment"]["expected"],
+            proposal_commitment["cardinality"],
+        )
+
+        references = projected_proposal["references"]
+        for field in (
+            "archimateRelationship",
+            "associationDirected",
+            "direction",
+        ):
+            self.assertEqual(
+                proposal["references"][field]["expected"],
+                references[field],
+            )
+        reference_role = self.requirement(references["metadata"], "role")
+        reference_commitment = self.requirement(
+            references["metadata"],
+            "commitment",
+        )
+        self.assertEqual(
+            proposal["references"]["roleProperty"]["expected"],
+            reference_role["key"],
+        )
+        self.assertEqual(
+            frozen(semantics["routingContract"]["roleOrder"]),
+            reference_role["admittedValues"],
+        )
+        self.assertEqual(
+            proposal["references"]["commitment"]["expected"],
+            reference_commitment["cardinality"],
+        )
+        endpoints = {
+            endpoint["id"]: endpoint
+            for endpoint in core["qualifiedEndpointCatalog"]
+        }
+        self.assertEqual(
+            semantics["routingContract"]["roleOrder"],
+            [role["role"] for role in references["roles"]],
+        )
+        for role in references["roles"]:
+            name = role["role"]
+            semantic_role = semantics["roles"][name]
+            endpoint = endpoints[semantic_role["target"]]
+            self.assertEqual(semantic_role["target"], role["endpoint"])
+            self.assertEqual(semantic_role["cardinality"], role["cardinality"])
+            self.assertEqual(endpoint["carrierCategory"], role["o2iKind"])
+            self.assertEqual(endpoint["o2iType"], role["o2iType"])
+            self.assertEqual(endpoint.get("contextType"), role["contextType"])
+        self.assertEqual(
+            contract.typed_claim_metadata,
+            projected_proposal["endpointMetadata"],
+        )
+
     def test_loads_one_deterministic_immutable_current_projection(self) -> None:
         repeated = load_repository_view_contract()
         copied = self.load_sources(self.profile_source, self.core_source)
@@ -260,6 +479,10 @@ class RepositoryViewContractTest(unittest.TestCase):
         )
         with self.assertRaises(FrozenInstanceError):
             self.contract.profile_version = "other"
+        with self.assertRaises(TypeError):
+            self.contract.typed_claim_metadata["properties"][0][
+                "key"
+            ] = "other"
 
     def test_exact_byte_integrity_is_separate_from_projection(self) -> None:
         cases = (
@@ -594,6 +817,292 @@ class RepositoryViewContractTest(unittest.TestCase):
                 candidate = project_validated_contract(self.profile, core)
                 self.assertNotEqual(self.contract, candidate)
                 self.assert_projection_matches_sources(candidate, self.profile, core)
+
+    def test_every_focused_metadata_field_controls_projection(self) -> None:
+        contextualization = self.pattern(self.profile, "contextualization")
+        context_index = self.profile["patternMappings"].index(
+            contextualization
+        )
+        collective = self.pattern(
+            self.profile,
+            "collective-strategy-realization",
+        )
+        collective_index = self.profile["patternMappings"].index(collective)
+        completeness_id = collective["carrier"][
+            "participantCompletenessPropertyMapping"
+        ]
+        completeness_index = next(
+            index
+            for index, mapping in enumerate(self.profile["propertyMappings"])
+            if mapping["id"] == completeness_id
+        )
+        paths = (
+            ("metadata", "typedCarrier", "typeKey"),
+            ("metadata", "typedCarrier", "cardinality"),
+            ("metadata", "claimCarrier", "commitmentKey"),
+            ("metadata", "claimCarrier", "cardinality"),
+            ("metadata", "claimCarrier", "commitmentValues"),
+            (
+                "patternMappings",
+                context_index,
+                "metadata",
+                "additionalProperties",
+                "expected",
+            ),
+            (
+                "patternMappings",
+                context_index,
+                "metadata",
+                "commitmentCardinality",
+                "expected",
+            ),
+            (
+                "patternMappings",
+                context_index,
+                "metadata",
+                "commitmentValue",
+                "expected",
+            ),
+            (
+                "patternMappings",
+                collective_index,
+                "carrier",
+                "commitmentKey",
+                "expected",
+            ),
+            (
+                "patternMappings",
+                collective_index,
+                "carrier",
+                "commitmentValues",
+                "expected",
+            ),
+            (
+                "patternMappings",
+                collective_index,
+                "segments",
+                "o2iMetadata",
+                "expected",
+            ),
+            (
+                "propertyMappings",
+                completeness_index,
+                "key",
+            ),
+            (
+                "propertyMappings",
+                completeness_index,
+                "multiplicity",
+                "propertyOccurrences",
+                "expected",
+            ),
+            (
+                "propertyMappings",
+                completeness_index,
+                "value",
+                "admittedValues",
+                "expected",
+            ),
+        )
+        for path in paths:
+            with self.subTest(path=path):
+                profile = copy.deepcopy(self.profile)
+                original = profile
+                for part in path:
+                    original = original[part]
+                replacement = changed(original, "focused-metadata")
+                set_path(profile, path, replacement)
+                if path in (
+                    ("metadata", "typedCarrier", "typeKey"),
+                    (
+                        "patternMappings",
+                        collective_index,
+                        "carrier",
+                        "commitmentKey",
+                        "expected",
+                    ),
+                    ("propertyMappings", completeness_index, "key"),
+                ):
+                    allowed = profile["patternMappings"][collective_index][
+                        "carrier"
+                    ]["additionalO2IProperties"]["expected"]
+                    allowed[allowed.index(original)] = replacement
+                candidate = project_validated_contract(profile, self.core)
+                self.assertNotEqual(self.contract, candidate)
+                self.assert_projection_matches_sources(
+                    candidate,
+                    profile,
+                    self.core,
+                )
+
+    def test_every_qualification_field_controls_projection(self) -> None:
+        proposal = self.profile["qualificationProposalMapping"]
+        source_id = proposal["carrier"]["sourceProjection"][
+            "propertyMapping"
+        ]
+        source_index = next(
+            index
+            for index, mapping in enumerate(self.profile["propertyMappings"])
+            if mapping["id"] == source_id
+        )
+        profile_paths = (
+            ("qualificationProposalMapping", "id"),
+            *(
+                ("qualificationProposalMapping", "carrier", field, "expected")
+                for field in (
+                    "archimateElement",
+                    "o2iType",
+                    "commitment",
+                )
+            ),
+            *(
+                (
+                    "qualificationProposalMapping",
+                    "references",
+                    field,
+                    "expected",
+                )
+                for field in (
+                    "archimateRelationship",
+                    "associationDirected",
+                    "direction",
+                    "roleProperty",
+                    "commitment",
+                )
+            ),
+            ("propertyMappings", source_index, "key"),
+            (
+                "propertyMappings",
+                source_index,
+                "multiplicity",
+                "propertyOccurrences",
+                "expected",
+            ),
+            (
+                "propertyMappings",
+                source_index,
+                "multiplicity",
+                "valuesPerPropertyOccurrence",
+                "expected",
+            ),
+            (
+                "propertyMappings",
+                source_index,
+                "value",
+                "kind",
+                "expected",
+            ),
+            (
+                "propertyMappings",
+                source_index,
+                "value",
+                "grammar",
+                "expected",
+            ),
+        )
+        for path in profile_paths:
+            with self.subTest(profile_path=path):
+                profile = copy.deepcopy(self.profile)
+                original = profile
+                for part in path:
+                    original = original[part]
+                set_path(profile, path, changed(original, "qualification"))
+                candidate = project_validated_contract(profile, self.core)
+                self.assertNotEqual(self.contract, candidate)
+                self.assert_projection_matches_sources(
+                    candidate,
+                    profile,
+                    self.core,
+                )
+
+        semantics = self.core["qualificationProposalSemantics"]
+        core_paths = [
+            ("qualificationProposalSemantics", "rationale"),
+        ]
+        for role, role_contract in semantics["roles"].items():
+            core_paths.extend(
+                (
+                    ("qualificationProposalSemantics", "roles", role, "target"),
+                    (
+                        "qualificationProposalSemantics",
+                        "roles",
+                        role,
+                        "cardinality",
+                    ),
+                )
+            )
+            endpoint_index = next(
+                index
+                for index, endpoint in enumerate(
+                    self.core["qualifiedEndpointCatalog"]
+                )
+                if endpoint["id"] == role_contract["target"]
+            )
+            core_paths.extend(
+                (
+                    (
+                        "qualifiedEndpointCatalog",
+                        endpoint_index,
+                        "carrierCategory",
+                    ),
+                    (
+                        "qualifiedEndpointCatalog",
+                        endpoint_index,
+                        "o2iType",
+                    ),
+                )
+            )
+            if "contextType" in self.core["qualifiedEndpointCatalog"][
+                endpoint_index
+            ]:
+                core_paths.append(
+                    (
+                        "qualifiedEndpointCatalog",
+                        endpoint_index,
+                        "contextType",
+                    )
+                )
+        for path in core_paths:
+            with self.subTest(core_path=path):
+                core = copy.deepcopy(self.core)
+                original = core
+                for part in path:
+                    original = original[part]
+                replacement = changed(original, "qualification-core")
+                set_path(core, path, replacement)
+                if path[-1] == "target":
+                    endpoint = next(
+                        endpoint
+                        for endpoint in core["qualifiedEndpointCatalog"]
+                        if endpoint["id"] == original
+                    )
+                    endpoint["id"] = replacement
+                candidate = project_validated_contract(self.profile, core)
+                self.assertNotEqual(self.contract, candidate)
+                self.assert_projection_matches_sources(
+                    candidate,
+                    self.profile,
+                    core,
+                )
+
+        core = copy.deepcopy(self.core)
+        core["qualificationProposalSemantics"]["routingContract"][
+            "roleOrder"
+        ].reverse()
+        candidate = project_validated_contract(self.profile, core)
+        self.assertNotEqual(self.contract, candidate)
+        self.assert_projection_matches_sources(candidate, self.profile, core)
+
+    def test_unsupported_qualification_source_contract_fails_targetedly(
+        self,
+    ) -> None:
+        core = copy.deepcopy(self.core)
+        core["qualificationProposalSemantics"]["sources"] = "zero-or-more"
+        with self.assertRaisesRegex(
+            ProfileContractError,
+            "unsupported qualification source cardinality: zero-or-more",
+        ):
+            project_validated_contract(self.profile, core)
 
     def test_pattern_and_family_selectors_fail_targetedly(self) -> None:
         cases = (

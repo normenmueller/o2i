@@ -139,6 +139,23 @@ class VerificationPathMatrixTests(unittest.TestCase):
             set(selection.stages),
         )
 
+    def test_repository_view_tools_route_to_model_and_licensing(self) -> None:
+        paths = (
+            "utl/model/repository_view_contract.py",
+            "utl/model/test_repository_view_contract.py",
+            "utl/model/focused_view_contract.py",
+            "utl/model/test_focused_view_contract.py",
+        )
+        for path in paths:
+            with self.subTest(path=path):
+                selection = scope.classify_paths((path,))
+                self.assertEqual("selective", selection.mode)
+                self.assertEqual("path-matrix", selection.reason)
+                self.assertEqual(
+                    {"licensing", "model"},
+                    set(selection.stages),
+                )
+
     def test_unknown_path_selects_every_stage(self) -> None:
         selection = scope.classify_paths(("future/contract.txt",))
         self.assertEqual("full", selection.mode)

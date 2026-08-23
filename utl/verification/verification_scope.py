@@ -52,11 +52,13 @@ MODEL_PATHS = frozenset(
         "utl/model/archimate_profile.py",
         "utl/model/audit-archimate-model.py",
         "utl/model/extract-archimate-view.py",
+        "utl/model/focused_view_contract.py",
         "utl/model/render-archimate-profile.py",
         "utl/model/repository_view_contract.py",
         "utl/model/test_audit_archimate_model.py",
         "utl/model/test_check_executable_views.py",
         "utl/model/test_extract_archimate_view.py",
+        "utl/model/test_focused_view_contract.py",
         "utl/model/test_repository_view_contract.py",
     }
 )
