@@ -463,11 +463,10 @@ verify_paper() {
     -s utl/paper -p 'test_check_pdf_freshness.py'
 
   paper="$work/paper"
-  mkdir -p "$paper/spc/lib/core" "$paper/spc/ctr/archimate"
+  mkdir -p "$paper/spc/lib/core"
   cp o2i.md README.md ACKNOWLEDGEMENTS.md "$paper/"
   cp -R acc img "$paper/"
   cp -R spc/lib/core/src "$paper/spc/lib/core/"
-  cp spc/ctr/archimate/profile.md "$paper/spc/ctr/archimate/"
 
   info "Rendering TikZ figures in an isolated paper workspace."
   ./utl/paper/render-paper-figures.sh "$paper"

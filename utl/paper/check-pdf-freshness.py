@@ -22,7 +22,6 @@ STATIC_INPUTS = (
     "README.md",
     "ACKNOWLEDGEMENTS.md",
     "toPDF.sh",
-    "utl/model/render-archimate-profile.py",
     "utl/paper/render-paper-figures.sh",
 )
 INCLUDE_PATTERN = re.compile(

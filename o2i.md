@@ -463,9 +463,9 @@ Die Qualifikationsprüfung folgt einer klaren Arbeitsteilung:
 
 1. Der Einreicher legt einen vollständig situierten Bedarf vor und referenziert die bestehende Strategie, an der er sich ausgerichtet hat. Die Strategie selbst ist Bestandteil des O2I-Modells und wird nicht mit der Vorlage eingereicht.
 2. Eine fachliche Analyse schlägt die Primitive-Verbindung samt Begründung und Quellenbezug vor. Agentic AI kann diese Analyse unterstützen; O2I setzt ihren Einsatz nicht voraus und behandelt ihren Vorschlag nicht als Entscheidung.
-3. Nach vollständiger Situierung des Bedarfs und vor der Modellierung von `translates-into` und `qualifies` prüft die O2I-Spezifikation mit `validateNeedQualificationProposal` deterministisch Situierung, Typen, Kontextualisierung, Strategy-Rollen, die formale Zulässigkeit der vorgeschlagenen Verbindung sowie das Vorliegen einer nichtleeren Begründung und Quellenreferenz. Ein Fehlerergebnis erzeugt keinen Kandidaten und keine fachliche Annahmeentscheidung; die Prüfung lässt den Graphen unverändert.
-4. Ein positives Ergebnis ist ein formal zulässiger `NeedQualificationCandidate`, noch keine akzeptierte Qualifikation. Eine nach der jeweiligen Instanzgovernance legitimierte Annahme bewertet Begründung und Quelle; O2I definiert weder Entscheidungsbefugnisse noch einen Freigabeworkflow. Eine Ablehnung lässt den Graphen unverändert.
-5. Bei Annahme werden `Key Result @ Strategy --translates-into--> Objective @ Need` und `Strategy --qualifies--> Need` modelliert und das Modell erneut validiert. Erst wenn `qualifyingStrategies` danach die Strategie als qualifizierend liefert, ist der situierte Bedarf wirkungsrelevant.
+3. Nach vollständiger Situierung des Bedarfs und vor der Modellierung von `translates-into` und `qualifies` prüft die O2I-Spezifikation deterministisch Situierung, Typen, Kontextualisierung, Strategy-Rollen, die formale Zulässigkeit der vorgeschlagenen Verbindung sowie das Vorliegen einer nichtleeren Begründung und Quellenreferenz. Ein Fehlerergebnis erzeugt keine zulässige Vorlage und keine fachliche Annahmeentscheidung; die Prüfung lässt den Graphen unverändert.
+4. Ein positives Ergebnis bestätigt nur die formale Zulässigkeit der Vorlage, noch keine akzeptierte Qualifikation. Eine nach der jeweiligen Instanzgovernance legitimierte Annahme bewertet Begründung und Quelle; O2I definiert weder Entscheidungsbefugnisse noch einen Freigabeworkflow. Eine Ablehnung lässt den Graphen unverändert.
+5. Bei Annahme werden `Key Result @ Strategy --translates-into--> Objective @ Need` und `Strategy --qualifies--> Need` modelliert und das Modell erneut validiert. Erst wenn die erneute Semantikprüfung die Strategie als qualifizierend ausweist, ist der situierte Bedarf wirkungsrelevant.
 
 Die Qualifikationsvorlage bleibt vom späteren Nachweisentwurf getrennt. Dieser entscheidet nicht über die strategische Relevanz des Bedarfs, sondern bereitet dessen Handlungs- und Nachweisfähigkeit vor.
 
@@ -610,7 +610,7 @@ Damit bleibt Nachweislogik von Messung getrennt: Messung macht beobachtbar, Nach
 
 Das O2I-Metamodell ist der formale Kern des O2I Frameworks. Es übersetzt die O2I-Terminologie in eine prüfbare Modellstruktur: Begriffe werden als Typen gefasst, konkrete Modellelemente werden als Instanzen dieser Typen beschrieben, Primitives erhalten ihre Bedeutung durch Interpretation in Kontexten, und die gestufte Validierung prüft, ob ein Modell die O2I-Wirkungslogik einhält.
 
-Die Haskell-Spezifikation in `spc/lib/core/` formalisiert das O2I-Metamodell normativ und maschinenprüfbar. Sie typisiert zulässige Modellformen und unterscheidet strukturelle Wohlgeformtheit, semantische Gültigkeit, relationale Wirkungsnachvollziehbarkeit, ex-ante Evidenzbereitschaft und empirische Wirkungsevidenz. Das Metamodell bleibt technologieunabhängig; GADTs, Module und opake Validierungsstufen sind Haskell-Designentscheidungen und keine zusätzliche O2I-Fachsemantik.
+Die maschinenprüfbare Spezifikation in `spc/lib/core/` bindet den geschlossenen semantischen Vertrag an typisierte Struktur- und Semantikauswertungen. Der ArchiMate-Profilvertrag, der native Adapter und die Operation-Komposition bleiben davon getrennte Eigentümer ihrer jeweiligen Übersetzung und Ausführung. Das Metamodell bleibt technologieunabhängig; Haskell-Typen, Module und opake Auswertungsergebnisse sind technische Realisierungsentscheidungen und keine zusätzliche O2I-Fachsemantik.
 
 Das Metamodell ersetzt die Terminologie nicht. Die Terminologie legt die fachliche Bedeutung fest; das Metamodell macht diese Bedeutung modellierbar, referenzierbar und validierbar.
 
@@ -621,7 +621,7 @@ Das Metamodell ersetzt die Terminologie nicht. Die Terminologie legt die fachlic
 
 Die O2I-Semantik definiert, welche Modellformen zulässig sind und wie sie gelesen werden. Sie wird in den folgenden semantischen Bausteinen konkretisiert:
 
-Die Haskell-Library trennt dafür drei Verantwortungsbereiche: `O2I.Language` definiert den semantischen Formvorrat, `O2I.Graph` repräsentiert konkrete O2I-Graphen und `O2I.Validation` prüft diese Graphen stufenweise. Das Typsystem beschränkt zulässige Interpretationen und Relationsdomänen; die Laufzeitvalidierung prüft konkrete Bezeichner, Kontextzuordnungen, globale Invarianten und vollständige Wirkungspfade. `O2I` bildet die kuratierte Gesamtfassade.
+Die technische Spezifikation trennt dafür vier Verantwortungen: `O2I.Core.Contract` projiziert den geschlossenen semantischen Vertrag, `O2I.Core.Graph.Observation` repräsentiert notationunabhängige Beobachtungen einer ausgewählten View, `O2I.Structure` prüft deren lokale Struktur und `O2I.Semantics` bewertet die globale Semantik. ArchiMate-Profil und Adapter übersetzen native Modellbeobachtungen in diese Core-Grenze; Operation koordiniert Erwerb, Auswahl, Vorbereitung, Diagnose und maschinenlesbare Ergebnisse, ohne Semantik neu zu definieren.
 
 Typen
 
@@ -635,7 +635,7 @@ Interpretation
 
 : legt fest, welche Bedeutung ein Primitive in einem Kontext erhält.
 
-Die Haskell-Spezifikation verwendet `DataKinds` und GADTs, um zulässige Relationstypen auf Typebene auszudrücken. Dadurch wird ein Teil der O2I-Semantik bereits in der Spezifikation typisiert.
+Die Haskell-Spezifikation verwendet geschlossene generierte Vokabulare, opake Ergebnisse und nominal an die ausgewählte View gebundene Zeugen. Dadurch können Aufrufer weder fremde Evidenz unterschieben noch intern ungültige Struktur- oder Semantikergebnisse konstruieren.
 
 Typen und Instanziierung beschreiben die formale Struktur eines O2I-Modells. Interpretation legt fest, welche Bedeutung diese Struktur trägt. Wohlgeformtheit und Validierung prüfen anschließend, ob ein Modell O2I-konform ist.
 
@@ -660,23 +660,11 @@ Die Darstellung ist als semantische Verdichtung der Terminologie zu lesen. Sie e
 
 ##### Elemente
 
-@Lst:o2i-context-types zeigt das Kontext-Inventar und legt fest, welche fachlichen Interpretationsrahmen O2I als Kontexttypen kennt.
-
-```{#lst:o2i-context-types .haskell caption="O2I Kontexttypen"}
-!include`snippetStart="-- ** Contexts", snippetEnd="-- ** Primitives"` spc/lib/core/src/O2I/Language/Element.hs
-```
-
-`Ethos`, `Mission` und `Vision` bilden eine Orientierung. `Strategy` ist der Kontext für eine strategische Wegentscheidung innerhalb einer Formierung. Kritische Erfolgsfaktoren sind in O2I kein eigener Kontext, sondern strukturieren die strategische Erfolgslogik; sie vermitteln zwischen Strategie, Bedarfsqualifikation, Messrahmung und späterer Operationalisierung. `Need`, `Intervention`, `Measure` und `Situation` bilden die Kontexte für Situierung, Operationalisierung und Wirkung.
+Das geschlossene Kontext-Inventar umfasst `Ethos`, `Mission`, `Vision`, `Strategy`, `Situation`, `Need`, `Intervention` und `Measure`. `Ethos`, `Mission` und `Vision` bilden eine Orientierung. `Strategy` ist der Kontext für eine strategische Wegentscheidung innerhalb einer Formierung. Kritische Erfolgsfaktoren sind in O2I kein eigener Kontext, sondern strukturieren die strategische Erfolgslogik; sie vermitteln zwischen Strategie, Bedarfsqualifikation, Messrahmung und späterer Operationalisierung. `Need`, `Intervention`, `Measure` und `Situation` bilden die Kontexte für Situierung, Operationalisierung und Wirkung.
 
 ##### Relationen
 
-Kontextrelationen beschreiben fachliche Relationen zwischen Kontexttypen. @Lst:o2i-context-relations zeigt exemplarisch ihre kontextsensitive Typisierung; das vollständige Inventar liegt in der totalen Relationsregistry der Spezifikation.
-
-```{#lst:o2i-context-relations .haskell caption="O2I Kontextrelationen (Auszug)"}
-!include`snippetStart="-- ** Context macrorelations", snippetEnd="-- ** Remaining context macrorelations"` spc/lib/core/src/O2I/Language/Relation.hs
-```
-
-Diese typisierte Spezifikation verhindert, dass beliebige Kontextrelationen als O2I-Relationen ausgegeben werden. Beispielsweise ist `Strategy --qualifies--> Need` zulässig; `Need --qualifies--> Strategy` ist kein O2I-Relationstyp.
+Kontextrelationen beschreiben fachliche Relationen zwischen Kontexttypen. Der geschlossene semantische Vertrag bindet jede Relation an exakte Quell- und Zieltypen. Beispielsweise ist `Strategy --qualifies--> Need` zulässig; `Need --qualifies--> Strategy` ist kein O2I-Relationstyp.
 
 #### Primitives
 
@@ -693,35 +681,11 @@ Die Darstellung ist als semantische Übersicht des abstrakten Formvorrats zu les
 
 ##### Elemente
 
-Das Primitive-Inventar legt fest, welche abstrakten Träger fachlicher Inhalte O2I kennt. @Lst:o2i-primitive-types zeigt diese Primitive-Typen.
-
-```{#lst:o2i-primitive-types .haskell caption="O2I Primitive-Typen"}
-!include`snippetStart="-- ** Primitives", snippetEnd="-- ** Structuring"` spc/lib/core/src/O2I/Language/Element.hs
-```
+Das geschlossene Primitive-Inventar umfasst `Principle`, `Driver`, `Objective`, `Key Result`, `KPI` und `Action`.
 
 ##### Relationen
 
-Primitive-Relationen beschreiben die abstrakte Begründungsstruktur zwischen modellierten Inhalten. Sie verbinden kontextualisierte Primitives und, wo erforderlich, Strukturierungen oder Situationsanker. Die Spezifikation gliedert repräsentative typisierte Ausschnitte in Orientierungs- und Strategie-Bezüge, Bedarfs- und Messrahmungsbezüge sowie Interventions- und Wirkungsbezüge; die totale Relationsregistry enthält das vollständige Inventar.
-
-@Lst:o2i-primitive-relations-orientation-strategy zeigt den typisierten Übergang von Orientierung zu Formierung.
-
-```{#lst:o2i-primitive-relations-orientation-strategy .haskell caption="O2I Primitive-Relationen: Orientierung und Strategie (Auszug)"}
-!include`snippetStart="-- ** Orientation and strategy evidence", snippetEnd="-- ** Remaining orientation and strategy evidence"` spc/lib/core/src/O2I/Language/Relation.hs
-```
-
-@Lst:o2i-primitive-relations-need-measure konkretisiert die Begründungsstruktur für Bedarfsqualifikation und Messrahmung.
-
-```{#lst:o2i-primitive-relations-need-measure .haskell caption="O2I Primitive-Relationen: Bedarf und Messrahmung (Auszug)"}
-!include`snippetStart="-- ** Need and measurement evidence", snippetEnd="-- ** Remaining need and measurement evidence"` spc/lib/core/src/O2I/Language/Relation.hs
-```
-
-@Lst:o2i-primitive-relations-intervention-effect konkretisiert die Begründungsstruktur für Intervention, Zielbezug, Situationsveränderung und Messbeobachtung.
-
-```{#lst:o2i-primitive-relations-intervention-effect .haskell caption="O2I Primitive-Relationen: Intervention und Wirkung (Auszug)"}
-!include`snippetStart="-- ** Intervention and effect evidence", snippetEnd="-- ** Remaining intervention and effect evidence"` spc/lib/core/src/O2I/Language/Relation.hs
-```
-
-Diese typisierten Spezifikationen verhindern, dass beliebige Primitive-Relationen als O2I-Relationen ausgegeben werden. Eine Relation wird nicht nur nach Primitive-Art, sondern nach kontextualisiertem Endpunkt typisiert, etwa `KeyResult @ Strategy -> Objective @ Need`.
+Primitive-Relationen beschreiben die abstrakte Begründungsstruktur zwischen modellierten Inhalten. Sie verbinden kontextualisierte Primitives und, wo erforderlich, Strukturierungen oder Situationsanker. Der geschlossene Relationskatalog gliedert sie in Orientierungs- und Strategie-Bezüge, Bedarfs- und Messrahmungsbezüge sowie Interventions- und Wirkungsbezüge. Eine Relation wird nicht nur nach Primitive-Art, sondern nach kontextualisiertem Endpunkt zugelassen, etwa `Key Result @ Strategy -> Objective @ Need`; beliebige Kombinationen bleiben ausgeschlossen.
 
 #### Strukturierung
 
@@ -730,15 +694,9 @@ Diese typisierten Spezifikationen verhindern, dass beliebige Primitive-Relatione
 >
 > [^o2i-performance-dimension]: *Autorenableitung in Anlehnung an Parmenter (2020) und The Open Group (2026)*: O2I verbindet fachliche Erfolgs- und Messbereiche in einem einheitlichen, typisierten Strukturierungskonzept.
 
-@lst:o2i-structuring-types zeigt den Strukturierungstyp und seine beiden geschlossenen Rollen.
-
-```{#lst:o2i-structuring-types .haskell caption="O2I Performance-Dimensionen"}
-!include`snippetStart="-- ** Structuring", snippetEnd="-- ** Situation anchors"` spc/lib/core/src/O2I/Language/Element.hs
-```
-
 `PerformanceDimension` ist ein einheitlicher, geschlossener Strukturierungstyp des O2I-Metamodells. `StrategySuccessDimension` und `MeasureMeasurementDimension` bezeichnen seine beiden zulässigen Rollen, keine zusätzlichen Metamodelltypen. Ein kritischer Erfolgsfaktor (`CSF`) kann als benannte strategische Erfolgsdimension modelliert werden; eine Messdimension strukturiert zugehörige KPIs. Andere Strukturierungsformen sind keine O2I-Performance-Dimensionen.
 
-Die Haskell-Spezifikation typisiert jede Performance-Dimension durch einen `PerformanceDimensionRole`-Zeugen. Derselbe Zeuge bestimmt den zulässigen Kontexttyp, den zulässigen Mitgliedstyp und die `contains`-Relation. Die Rolle interpretiert die enthaltenen Primitives nicht; deren Bedeutung bleibt durch ihr jeweiliges `Primitive @ Context` bestimmt. Dadurch sind andere Kontexte oder Mitgliedschaften weder Teil des Metamodells noch als typisierte O2I-Relation konstruierbar.
+Der geschlossene semantische Vertrag bindet jede Performance-Dimension an genau eine dieser Rollen. Die Rolle bestimmt den zulässigen Kontexttyp, den zulässigen Mitgliedstyp und die `contains`-Relation. Sie interpretiert die enthaltenen Primitives nicht; deren Bedeutung bleibt durch ihr jeweiliges `Primitive @ Context` bestimmt. Dadurch sind andere Kontexte oder Mitgliedschaften nicht Teil des Metamodells.
 
 #### Situationsanker
 
@@ -747,36 +705,13 @@ Die Haskell-Spezifikation typisiert jede Performance-Dimension durch einen `Perf
 >
 > [^o2i-situation-anchor]: *Autorenableitung in Anlehnung an The Open Group (2025, 2026)*: O2I verwendet Business-Architecture-Artefakte als fachliche Anker für Situierung, Intervention und Messung. Business Capability, Business Process, Business Object und Value Stream bilden den minimal nachgewiesenen geschlossenen O2I-Kern; sie stellen keine durch TOGAF oder ArchiMate vorgegebene vollständige Menge dar.
 
-@Lst:o2i-situation-anchor-types zeigt das zulässige Inventar dieser Anker.
-
-```{#lst:o2i-situation-anchor-types .haskell caption="O2I Situationsanker"}
-!include`snippetStart="-- ** Situation anchors", snippetEnd="-- ** Node kinds"` spc/lib/core/src/O2I/Language/Element.hs
-```
-
-Für jeden zulässigen Ankertyp beziehen sich `is-constituted-by`, `anchors`, `changes` und `measures` unmittelbar auf denselben operativen Wirkungsgegenstand. Eine Business Role ordnet Verantwortung oder Verhalten einem Akteur zu; ein Regulatory Constraint beschreibt eine äußere Randbedingung. Beide können mit dem betroffenen Architekturartefakt verbunden sein, sind jedoch keine O2I-Situationsanker. Ein außerhalb des geschlossenen Inventars liegender Wirkungsgegenstand darf nicht durch einen lediglich formal passenden Ersatzanker vertreten werden.
+Das geschlossene Anker-Inventar umfasst `Business Capability`, `Business Process`, `Business Object` und `Value Stream`. Für jeden zulässigen Ankertyp beziehen sich `is-constituted-by`, `anchors`, `changes` und `measures` unmittelbar auf denselben operativen Wirkungsgegenstand. Eine Business Role ordnet Verantwortung oder Verhalten einem Akteur zu; ein Regulatory Constraint beschreibt eine äußere Randbedingung. Beide können mit dem betroffenen Architekturartefakt verbunden sein, sind jedoch keine O2I-Situationsanker. Ein außerhalb des geschlossenen Inventars liegender Wirkungsgegenstand darf nicht durch einen lediglich formal passenden Ersatzanker vertreten werden.
 
 ### Instanziierung
 
 Instanziierung beschreibt, wie aus O2I-Typen konkrete Modellelemente in einem O2I-Modell entstehen. `Need` ist ein Kontexttyp; ein konkreter Bedarf in einem Modell ist eine `Need`-Instanz. `Objective` ist ein Primitive-Typ; ein konkretes Objective in einem Modell ist eine `Objective`-Instanz.
 
-Graph bezeichnet als Oberbegriff die Knoten-Kanten-Repräsentation eines O2I-Modells. `RawGraph` ist ihre ungeprüfte, `WellFormedGraph` ihre lokal validierte Form. Ein `WellFormedGraph` erfüllt die lokale graphbezogene Zulässigkeit von Identitäten, Kontextualisierungen, Interpretationen und Relationsdomänen. Ab `SemanticallyValidModel` bezeichnet `Model` die fachlich angereicherte Einheit, die den wohlgeformten Graphen stufenweise mit globalen fachlichen Invarianten, abgeleiteten Wirkungstraces und Evidenzbewertungen verbindet. Der Übergang markiert damit die Grenze zwischen lokaler graphbezogener Zulässigkeit und globaler fachlicher Invariantenprüfung.
-
-Die Validierung überführt eine Modellinstanz in aufeinander aufbauende Stufen:
-
-```text
-RawGraph
-  -> WellFormedGraph
-  -> SemanticallyValidModel
-  -> TraceableEffectModel
-  -> EvidenceReadyModel
-  -> EvidenceAssessedModel
-```
-
-@lst:o2i-model-graph zeigt den generischen konkreten O2I-Modellgraphen, mit dem konkrete Kontexte, Primitives, Strukturierungen, Situationsanker und Relationen repräsentiert werden.
-
-```{#lst:o2i-model-graph .haskell caption="O2I Modellgraph"}
-!include`snippetStart="-- * Typed graph", snippetEnd="-- * Well-formed graph stage"` spc/lib/core/src/O2I/Graph/Typed.hs
-```
+Graph bezeichnet als Oberbegriff die Knoten-Kanten-Repräsentation eines O2I-Modells. Der native Adapter dekodiert das Modell in ein kanonisches Dokument; das ausgewählte ArchiMate-Profil projiziert daraus eine notationunabhängige `StructureProjection` für genau eine ausgewählte View. Die lokale Strukturauswertung erzeugt daraus entweder exakt gebundene Diagnostik oder einen opaken `WellFormedGraph`. Erst die anschließende globale Semantikauswertung kann ein `SemanticallyValidModel` erzeugen. Wirkungstrace, Evidenzbereitschaft und Wirkungsevidenz bauen fachlich auf diesem semantisch gültigen Modell auf; keine spätere Stufe kann eine frühere Prüfung umgehen.
 
 #### Kontextinstanzen
 
@@ -810,13 +745,7 @@ Eine Relationsinstanz verbindet konkrete Kontext-, Primitive-, Strukturierungs- 
 
 Claims erfassen unter anderem Elementdeklarationen, Kontextualisierungen, Relationsinstanzen, Strategy-Formulierungen und kollektive Strategierealisierungen. Ein Claim ist kein zusätzliches O2I-Modellelement und kein Knoten des Wirkungsgraphen. Er qualifiziert den Aussageanspruch einer modellierten Proposition.
 
-@Lst:o2i-claim-commitment zeigt den geschlossenen Aussagenstatus. Ein `Candidate` bleibt über Diagnosezugriffe prüfbar, geht jedoch nicht in validierte O2I-Semantik, fachliche Modellabfragen, Wirkungstraces oder Evidenzbewertungen ein. Ein `Asserted` muss sämtliche anwendbaren Typ-, Abhängigkeits-, Evidenz- und Vollständigkeitspflichten erfüllen.
-
-```{#lst:o2i-claim-commitment .haskell caption="O2I Claim-Commitment"}
-!include`snippetStart="-- * Claim commitment", snippetEnd="-- * Claim construction and access"` spc/lib/core/src/O2I/Language/Claim.hs
-```
-
-`NeedQualificationCandidate` bezeichnet davon unabhängig das opake positive Ergebnis der formalen Prüfung einer Qualifikationsvorlage. Es ist kein `Candidate`-Commitment und behauptet noch keine persistierte `Strategy --qualifies--> Need`-Relation.
+Der geschlossene Aussagenstatus kennt ausschließlich `Candidate` und `Asserted`. Ein `Candidate` bleibt über Diagnosezugriffe prüfbar, geht jedoch nicht in validierte O2I-Semantik, fachliche Modellabfragen, Wirkungstraces oder Evidenzbewertungen ein. Ein `Asserted` muss sämtliche anwendbaren Typ-, Abhängigkeits-, Evidenz- und Vollständigkeitspflichten erfüllen. Das positive Ergebnis der formalen Prüfung einer Qualifikationsvorlage ist davon unabhängig: Es ist kein `Candidate`-Commitment und behauptet noch keine persistierte `Strategy --qualifies--> Need`-Relation.
 
 `Asserted` setzt eine fachlich legitimierte Behauptung voraus. O2I modelliert
 weder die zuständige Person oder Rolle noch deren Berechtigung oder
@@ -828,15 +757,7 @@ Commitment- und Evidenzzustand.
 
 Interpretation legt fest, welche Bedeutung ein O2I-Primitive in einem O2I-Kontext erhält. Dadurch wird derselbe abstrakte Primitive-Typ in unterschiedlichen Kontexten fachlich unterschiedlich lesbar.
 
-@lst:o2i-interpretations zeigt die zulässigen Interpretationen von Primitives in Kontexten.
-
-```{#lst:o2i-interpretations .haskell caption="O2I Interpretationen"}
-!include`snippetStart="-- ** Interpretations", snippetEnd="-- ** Interpretation registry"` spc/lib/core/src/O2I/Language/Interpretation.hs
-```
-
-Die GADT-Konstruktoren bilden den typisierten Spezifikationskern der Interpretationen. Die endliche Registry projiziert diese Interpretationszeugen in eine zur Laufzeit prüfbare Zuordnung für konkrete Modellelemente. Dadurch wird keine zweite fachliche Zulässigkeitstabelle gepflegt.
-
-Für eine konkrete Primitive-Instanz ist die Kombination aus Kontexttyp und Primitive-Typ genau dann interpretatorisch zulässig, wenn `lookupInterpretation` einen Registry-Eintrag liefert.
+Der geschlossene semantische Vertrag führt jede zulässige Kombination aus Kontexttyp und Primitive-Typ genau einmal. Struktur- und Semantikauswertung verwenden diese kompilierte Autorität gemeinsam; dadurch entsteht keine zweite fachliche Zulässigkeitstabelle.
 
 #### Primitives
 
@@ -875,57 +796,17 @@ Diese Primitive-Relation kann begründen, warum eine konkrete Strategie einen ko
 
 ## Wohlgeformtheit und Validierung
 
-O2I unterscheidet einen ungeprüften Rohgraphen und fünf aufeinander aufbauende Validierungsstufen. Ein `RawGraph` enthält ungeprüfte Eingabedaten. Ein `WellFormedGraph` erfüllt die strukturellen Typ-, Interpretations- und Relationsregeln. Ein `SemanticallyValidModel` erfüllt zusätzlich die globalen Mindestinvarianten und die Relationsevidenz aller acht Kontexttypen einschließlich der vollständigen Strategy-Formulierung. Ein `TraceableEffectModel` weist für jeden durch eine Intervention adressierten Bedarf einen vollständigen relationalen Wirkungstrace von Vision bis Situationsanker nach. Ein `EvidenceReadyModel` ergänzt jeden Trace vor Interventionsbeginn um einen validierten Evidenzplan. Ein `EvidenceAssessedModel` bewertet konsistente Folgebeobachtungen getrennt nach Effekt und Zielerreichung.
+Die aktuelle Foundation materialisiert eine notationunabhängige `StructureProjection`, aus der die Strukturauswertung entweder vollständige Diagnostik oder einen opaken `WellFormedGraph` erzeugt. Die anschließende Semantikauswertung prüft die globale Modellgrenze und kann ein `SemanticallyValidModel` erzeugen. Qualifikation, Wirkungstrace, Evidenzbereitschaft und Wirkungsevidenz bleiben davon getrennte fachliche Capabilities mit eigenen Eingaben, Ergebnissen und Diagnostik; sie werden nicht als weitere Konstruktoren einer monolithischen Validierungskette ausgegeben.
 
 @Fig:o2i-evidence-sequence verdichtet die fachliche Nachweisfolge vom sichtbaren Bedarf bis zur Wirkungsevidenz. Sie trennt Bedarfsqualifikation, relationale Wirkungsnachvollziehbarkeit, ex-ante Evidenzbereitschaft und ex-post Evidenzbewertung und markiert den Interventionsbeginn als zeitliche Grenze.
 
 ![O2I Nachweisfolge](<img/O2I Nachweisfolge.png>){#fig:o2i-evidence-sequence width=65%}
 
-Die Abbildung fokussiert die Nachweisfolge ab dem semantisch gültigen Modell. Die folgenden Listings zeigen ergänzend die vollständige Validierungskette von der strukturellen Prüfung bis zur Evidenzbewertung.
-
-@Lst:o2i-validation zeigt die strukturelle Validierung eines `RawGraph` zu einem opaken `WellFormedGraph`.
-
-```{#lst:o2i-validation .haskell caption="O2I Strukturvalidierung"}
-!include`snippetStart="-- * Structural validation interface", snippetEnd="-- * Structural validation implementation"` spc/lib/core/src/O2I/Validation/Structure.hs
-```
-
-@Lst:o2i-semantic-validation zeigt den einzigen Eintrittspunkt in die zweite Validierungsstufe. Er prüft Kontext- und Strategy-Semantik, die Primitive-Evidenz behaupteter Kontext-Makrorelationen sowie kollektive Strategierealisierungen als eine vollständige semantische Modellgrenze.
-
-```{#lst:o2i-semantic-validation .haskell caption="O2I Semantikvalidierung"}
-!include`snippetStart="-- * Complete semantic validation interface", snippetEnd="-- * Complete semantic validation implementation"` spc/lib/core/src/O2I/Validation/Semantics.hs
-```
-
-@Lst:o2i-effect-trace zeigt die dritte Validierungsstufe für relational nachvollziehbare Wirkung.
-
-```{#lst:o2i-effect-trace .haskell caption="O2I Wirkungstrace"}
-!include`snippetStart="-- * Traceability validation interface", snippetEnd="-- * Traceability validation implementation"` spc/lib/core/src/O2I/Validation/Trace.hs
-```
-
-@Lst:o2i-readiness-validation zeigt die vierte Validierungsstufe für ex-ante Evidenzbereitschaft.
-
-```{#lst:o2i-readiness-validation .haskell caption="O2I Evidenzbereitschaft"}
-!include`snippetStart="-- * Readiness validation interface", snippetEnd="-- * Readiness validation implementation"` spc/lib/core/src/O2I/Validation/Readiness.hs
-```
-
-@Lst:o2i-evidence-validation zeigt die fünfte Validierungsstufe für empirische Wirkungsevidenz.
-
-```{#lst:o2i-evidence-validation .haskell caption="O2I Evidenzvalidierung"}
-!include`snippetStart="-- * Evidence validation interface", snippetEnd="-- * Evidence validation implementation"` spc/lib/core/src/O2I/Validation/Evidence.hs
-```
+Die Abbildung fokussiert die fachliche Nachweisfolge ab dem semantisch gültigen Modell. Technisch stellt die Foundation derzeit die getrennten opaken Ergebnisse von Struktur und Semantik bereit. Die nachfolgenden Capabilities `trace`, `readiness` und `assess` behalten ihre jeweils eigene Vertragsgrenze: Traceability verlangt relationale Wirkungsnachvollziehbarkeit, Readiness bindet den ex-ante Nachweisentwurf und Assessment bewertet ex-post Beobachtungen. Keine dieser Capabilities darf die erfolgreiche vorgelagerte Prüfung ersetzen oder ihre Diagnostik vermischen.
 
 ### Modellzustand
 
 `Commitment`, `Elaboration` und `Maturity` bezeichnen drei verschiedene Ebenen. `Commitment` ist der explizite Aussageanspruch eines einzelnen Claims. `Elaboration` ist der abgeleitete Zustand des verpflichtenden Inhalts einer konkreten Kontextinstanz. `Maturity` ist der abgeleitete Zustand der gesamten geprüften Modellgrenze. Keiner dieser Werte ist ein frei gesetztes fachliches O2I-Element.
-
-@Lst:o2i-context-elaboration und @lst:o2i-model-maturity zeigen die beiden abgeleiteten Statusmengen.
-
-```{#lst:o2i-context-elaboration .haskell caption="O2I Kontextelaboration"}
-!include`snippetStart="-- * Semantic assessment state", snippetEnd="-- * Context candidate assessment"` spc/lib/core/src/O2I/Validation/Semantics/Context.hs
-```
-
-```{#lst:o2i-model-maturity .haskell caption="O2I Modellreife"}
-!include`snippetStart="-- * Complete model assessment state", snippetEnd="-- * Complete semantic input"` spc/lib/core/src/O2I/Validation/Semantics.hs
-```
 
 Für eine behauptete Kontextinstanz gilt `Elaborated` genau dann, wenn ihr vollständiger verpflichtender Inhalt durch gültige `Asserted`-Claims innerhalb der geprüften Modellgrenze vorliegt. Andernfalls ist sie `Referenced`. Ein `Candidate` erfüllt keine verpflichtende Proposition und keine Abhängigkeit. Zusätzliche Candidates setzen einen unabhängig vollständig belegten Kontext jedoch nicht auf `Referenced` zurück.
 
@@ -945,7 +826,7 @@ Skeleton           andernfalls; kein Kontext ist Elaborated
 
 Ein Modell ist wohlgeformt, wenn Bezeichner eindeutig sind, Primitive- und Strukturierungsinstanzen genau einer existierenden Kontextinstanz zugeordnet sind, Primitives nur in zulässigen Kontexten verwendet werden, Performance-Dimensionen nur in ihren zulässigen Rollen stehen, Situationsanker zulässige Formen besitzen und Relationsendpunkte typgerecht sind. Fehler werden akkumuliert, damit eine Prüfung sämtliche erkannten Strukturverletzungen gemeinsam ausweist.
 
-Die statische Relationstypisierung sichert Kontext- und Primitive-Typen. Identitätsabhängige Invarianten konkreter Modellinstanzen prüft die Runtime-Validierung; dazu gehört, dass eine Performance-Dimension und ihre Mitglieder durch dieselbe konkrete Kontextinstanz kontextualisiert werden. Erst eine erfolgreiche Validierung erzeugt den opaken `WellFormedGraph`, der diese Garantien nach außen bewahrt. Ausführbare Tests prüfen diesen Vertrag, führen jedoch keine zusätzliche O2I-Semantik ein. In der Haskell-Repräsentation heißt die dafür gespeicherte Kontextreferenz technisch `owner` beziehungsweise `Context Ownership`.
+Der kompilierte Relations- und Endpunktvertrag sichert zulässige Kontext- und Primitive-Typen. Identitätsabhängige Invarianten konkreter Modellinstanzen prüft die Strukturauswertung; dazu gehört, dass eine Performance-Dimension und ihre Mitglieder durch dieselbe konkrete Kontextinstanz kontextualisiert werden. Erst eine erfolgreiche Auswertung erzeugt den opaken `WellFormedGraph`, der diese Garantien nach außen bewahrt. Ausführbare Tests prüfen diesen Vertrag, führen jedoch keine zusätzliche O2I-Semantik ein.
 
 ### Semantische Gültigkeit
 
@@ -964,11 +845,7 @@ Die folgende Matrix normiert die kontextbezogenen Mindestinhalte und ihre Relati
 
 Existenzielle Relationsevidenz muss von zusätzlichen eigenen Primitives oder Strukturierungselementen desselben Kontexts nicht wiederholt werden; universelle Pflichten sind in der Matrix ausdrücklich als solche benannt. Kontext-Makrorelationen ersetzen die geforderte Primitive-Evidenz nicht. Diese Stufe verlangt noch keine strategische Qualifikation jedes Needs, keinen vollständigen Wirkungstrace, keine KPI-Definition oder Evidenzplanung und keine Beobachtung. Diese Pflichten entstehen erst durch Wirkungsrelevanz, Traceability, Evidenzbereitschaft beziehungsweise Wirkungsevidenz.
 
-Jede Strategy-Instanz besitzt genau eine vollständige Formulierung. Sie umfasst Geltungsbereich, strategische Verankerung, abgeleitete Leitplanken, Diagnose, strategische Absicht, Guiding Policy, Positionierung, Trade-offs, kohärente Handlungsfestlegungen, strategische Erfolgsbezüge und Fit-Begründung. Jeder strategische Erfolgsbezug wird durch ein `Key Result @ Strategy` modelliert. Sämtliche Textfelder müssen nichtleer sein; Action- und Key-Result-Referenzen müssen innerhalb ihrer Rolle eindeutig sein. @Lst:o2i-strategy-formulation zeigt die strukturierte Repräsentation dieser Bestandteile.
-
-```{#lst:o2i-strategy-formulation .haskell caption="O2I Strategy-Formulierung"}
-!include`snippetStart="-- * Strategy formulation input", snippetEnd="-- | A Strategy formulation"` spc/lib/core/src/O2I/Validation/Semantics/Context.hs
-```
+Jede Strategy-Instanz besitzt genau eine vollständige Formulierung. Sie umfasst Geltungsbereich, strategische Verankerung, abgeleitete Leitplanken, Diagnose, strategische Absicht, Guiding Policy, Positionierung, Trade-offs, kohärente Handlungsfestlegungen, strategische Erfolgsbezüge und Fit-Begründung. Jeder strategische Erfolgsbezug wird durch ein `Key Result @ Strategy` modelliert. Sämtliche Textfelder müssen nichtleer sein; Action- und Key-Result-Referenzen müssen innerhalb ihrer Rolle eindeutig sein.
 
 Die Formulierung muss ihre Primitive-Rollen derselben Strategy-Instanz zuordnen und relational kohärent sein: Der Diagnosis-Driver begründet das Intent-Objective, die Guiding Policy führt jede gelistete Action, jede gelistete Action trägt zu mindestens einem gelisteten Key Result bei und jedes gelistete Key Result substantiiert das Intent-Objective.
 
@@ -983,11 +860,7 @@ Nur O2I-Primitives, die einer validierten Strategy-Formulierung in der jeweilige
 
 ### Kollektive Strategierealisierung
 
-Eine kollektive Strategierealisierung ist eine n-äre Modellaussage über mindestens zwei beitragende Strategy-Instanzen und genau eine davon verschiedene Ziel-Strategy. Sie ist weder ein zusätzliches O2I-Element noch eine binäre Relationsinstanz. @Lst:o2i-collective-strategy-realization zeigt ihre notationunabhängige Eingabeform.
-
-```{#lst:o2i-collective-strategy-realization .haskell caption="O2I kollektive Strategierealisierung"}
-!include`snippetStart="-- * Collective Strategy realization input", snippetEnd="-- * Collective Strategy realization validation vocabulary"` spc/lib/core/src/O2I/Validation/Collective.hs
-```
+Eine kollektive Strategierealisierung ist eine n-äre Modellaussage über mindestens zwei beitragende Strategy-Instanzen und genau eine davon verschiedene Ziel-Strategy. Sie ist weder ein zusätzliches O2I-Element noch eine binäre Relationsinstanz. Ihre notationunabhängige Struktur besteht aus einem eindeutigen Claim, der geschlossenen Proposition-Familie, den rollengebundenen Teilnehmern, dem Ziel, dem `Commitment` und der expliziten Teilnehmer-Vollständigkeit.
 
 Eine kollektive Strategierealisierung ist semantisch gültig, wenn:
 
@@ -998,9 +871,9 @@ Eine kollektive Strategierealisierung ist semantisch gültig, wenn:
 5. die Vereinigungsmenge dieser Beitragsevidenz sämtliche Actions und Key Results der validierten Ziel-Strategy-Formulierung abdeckt;
 6. strukturierte Fit-Evidenz paarweise Kohärenz, Guiding-Policy-Kompatibilität, Trade-off-Kompatibilität und tragfähige Interaktion belegt.
 
-Die strukturelle Zulässigkeit verlangt zusätzlich eine nichtleere, global eindeutige Claim-ID, eine nichtleere Referenz auf genau ein Fit-Evidenzbündel, bekannte und eindeutig gebundene Strategy-Teilnehmer sowie eine eindeutige Zielbindung. Die Beitragsevidenz wird für jeden Beitragenden separat als zulässige `contributes-to`-Makroevidenz an genau diese Ziel-Strategy gebunden. Ihre Vereinigungsmenge muss die vollständigen Actions und Key Results der validierten Ziel-Strategy-Formulierung abdecken.
+Die strukturelle Zulässigkeit verlangt zusätzlich eine nichtleere, global eindeutige Claim-ID, bekannte und eindeutig gebundene Strategy-Teilnehmer, eine eindeutige Zielbindung sowie genau einen Wert für die Teilnehmer-Vollständigkeit. `Asserted` verlangt eine als `closed` erklärte Teilnehmermenge; `open` bleibt einem `Candidate` vorbehalten. Die Beitragsevidenz wird für jeden Beitragenden separat als zulässige `contributes-to`-Makroevidenz an genau diese Ziel-Strategy gebunden. Ihre Vereinigungsmenge muss die vollständigen Actions und Key Results der validierten Ziel-Strategy-Formulierung abdecken.
 
-Das referenzierte Fit-Evidenzbündel muss denselben Teilnehmerkreis und dasselbe Ziel binden. Für jedes ungeordnete Teilnehmerpaar liegt genau eine nichtleere Kohärenzbegründung vor; für jeden Beitragenden genau eine nichtleere Begründung seiner Kompatibilität mit Guiding Policy und Trade-offs. Die gebundene Guiding Policy und die gebundenen Trade-offs entsprechen der validierten Ziel-Strategy-Formulierung. Mindestens eine nichtleere Aussage begründet die tragfähige Interaktion der Beiträge.
+Der kollektive Fit wird nicht im Modell referenziert, sondern für die jeweilige Operation als separates `CollectiveFitInput` an den Claim gebunden. Dieser Input muss denselben Teilnehmerkreis und dasselbe Ziel binden. Für jedes ungeordnete Teilnehmerpaar liegt genau eine nichtleere Kohärenzbegründung vor; für jeden Beitragenden genau eine nichtleere Begründung seiner Kompatibilität mit Guiding Policy und Trade-offs. Die gebundene Guiding Policy und die gebundenen Trade-offs entsprechen der validierten Ziel-Strategy-Formulierung. Mindestens eine nichtleere Aussage begründet die tragfähige Interaktion der Beiträge. Fehlt der Input für einen `Asserted` Claim, ist dessen Fit-Bewertung nicht verfügbar; dies ist kein Modelldefekt und erfüllt die Fit-Pflicht nicht.
 
 Die Spezifikation prüft Existenz, Eindeutigkeit, Typisierung, Bindung, Abdeckung und Vollständigkeit dieser Aussagen. Sie beweist nicht die fachliche Wahrheit ihrer Begründungstexte. Mit `Asserted` wird deren fachlich autorisierte Gültigkeit behauptet; ein `Candidate` bleibt als Vorschlag diagnostizierbar und von validierter Semantik ausgeschlossen.
 
@@ -1014,21 +887,19 @@ Eine `Need`-Instanz ist im Metamodell wirkungsrelevant, wenn sie in einer `Situa
 
 Die Spezifikation konkretisiert dafür den zentralen O2I-USP: Eine `Strategy --qualifies--> Need`-Relation zählt nur dann als belastbar, wenn es eine passende Primitive-Begründung gibt, etwa `Key Result @ Strategy --translates-into--> Objective @ Need`.
 
-Die Funktion `validateNeedQualificationProposal` prüft nach vollständiger Situierung des Bedarfs und vor der Modellierung dieser Relationen, ob eine Kombination aus Kandidatenstrategie, situiertem Bedarf, strategischem Key Result und Need-Objective formal zulässig ist und eine nichtleere fachliche Begründung mit Quellenreferenz enthält. Bei Fehlern bleibt das Modell unverändert. Ihr opakes Ergebnis `NeedQualificationCandidate` bestätigt ausschließlich die formale Zulässigkeit der Vorlage; es ersetzt weder die fachlich legitimierte Entscheidung noch persistiert es eine Qualifikation. Nach fachlicher Annahme werden beide Relationen modelliert, das Modell erneut validiert und die Qualifikation mit `qualifyingStrategies` abgefragt.
-
-Die Abfrage `qualifyingStrategies` ermittelt diese Strategien direkt am semantisch gültigen Modell. Sie benötigt weder Intervention noch Messung und hält Bedarfsqualifikation damit von der späteren Operationalisierung und Wirkungsevidenz getrennt.
+Die formale Qualifikationsprüfung bewertet nach vollständiger Situierung des Bedarfs und vor der Modellierung dieser Relationen, ob eine Kombination aus Kandidatenstrategie, situiertem Bedarf, strategischem Key Result und Need-Objective zulässig ist und eine nichtleere fachliche Begründung mit Quellenreferenz enthält. Bei Fehlern bleibt das Modell unverändert. Ein positives Ergebnis bestätigt ausschließlich die formale Zulässigkeit der Vorlage; es ersetzt weder die fachlich legitimierte Entscheidung noch persistiert es eine Qualifikation. Nach fachlicher Annahme werden beide Relationen modelliert und das Modell erneut validiert. Die daraus abgeleitete Menge qualifizierender Strategien benötigt weder Intervention noch Messung und hält Bedarfsqualifikation damit von der späteren Operationalisierung und Wirkungsevidenz getrennt.
 
 ### Wirkungstrace
 
 Ein Wirkungstrace entsteht, wenn dieselbe `Strategy`-Instanz eine `Need`-Instanz qualifiziert, eine `Intervention`-Instanz richtet und eine `Measure`-Instanz rahmt; wenn diese Intervention den wirkungsrelevanten Bedarf adressiert, eine über Situationsanker verankerte `Situation` verändert, Zielbezüge für die Messung setzt und diese Messung denselben Situationsbezug beobachtet. Die Messrahmung ist nur belastbar, wenn ein Strategy-Driver den Beobachtungsbereich anzeigt und ein Strategy-Key-Result denselben Messbereich für den Erfolgsnachweis bestimmt.
 
-Ein vollständiger Wirkungstrace ist relational nachvollziehbar, aber weder evidenzbereit noch empirisch bewertet. Die Abfrage `readyTracesForIntervention` liefert ausschließlich Wirkungstraces einer Intervention, deren Evidenzpläne bereits ex ante validiert sind.
+Ein vollständiger Wirkungstrace ist relational nachvollziehbar, aber weder evidenzbereit noch empirisch bewertet. Erst ein ex ante validierter Evidenzplan macht einen Trace evidenzbereit.
 
 ### Evidenzbereitschaft
 
 Evidenzbereitschaft setzt einen vollständigen Wirkungstrace voraus. Die Spezifikation formalisiert den Nachweisentwurf durch `EvidencePlan`, die zugehörige `KPIDefinition` und `PlannedInterventionStart`. Für jeden im Trace verwendeten KPI wird genau eine `KPIDefinition`, für jede Intervention genau ein geplanter Beginn und für jeden Trace genau ein `EvidencePlan` validiert. Die KPI-Definition legt Einheit, zulässigen Wertebereich, Messmethode und fachliche Interpretation fest. Der Plan bindet Baseline, Effektkriterium, Zielkriterium, Zieltermin sowie Quellenbezug an denselben KPI und Situationsanker. Plan und Baseline müssen spätestens zum expliziten Prüfzeitpunkt feststehen; dieser Prüfzeitpunkt muss vor dem geplanten Interventionsbeginn liegen. Messniveaus, Kriterien und spätere Beobachtungen müssen dem definierten Wertebereich entsprechen; Quellen müssen eindeutig benannt sein.
 
-`EvidenceReadyModel` bezeichnet damit den validierten ex-ante Zustand des Wirkungsmodells. Er enthält noch keine Folgebeobachtung und keine Aussage darüber, ob Wirkung oder Zielerreichung eingetreten sind.
+Evidenzbereitschaft bezeichnet damit den validierten ex-ante Zustand eines Wirkungstraces. Sie enthält noch keine Folgebeobachtung und keine Aussage darüber, ob Wirkung oder Zielerreichung eingetreten sind.
 
 ### Wirkungsevidenz
 
@@ -1046,7 +917,7 @@ Evidenztypen wie `KPIDefinition`, `ValueDomain`, `Level`, `Delta`, `Observation`
 
 ### ArchiMate-Profil
 
-Der maschinenlesbare Profilvertrag in `spc/ctr/archimate/profile.json` ist die exakte Quelle der konkreten ArchiMate-Syntax. Die daraus generierte Profilbeschreibung führt sämtliche Syntaxträgerabbildungen, Relationsabbildungen, Metadaten und Kardinalitäten auf.
+Der maschinenlesbare Profilvertrag in `spc/ctr/archimate/profile.json` ist die exakte Quelle der konkreten ArchiMate-Syntax. Er definiert sämtliche Syntaxträgerabbildungen, Relationsabbildungen, Metadaten und Kardinalitäten; die ausführbaren Compiler- und Prüfschritte konsumieren diesen Vertrag unmittelbar.
 
 Ein inspizierbares ArchiMate-Modell deklariert die verwendete Profilversion genau einmal durch die direkte Modelleigenschaft `o2i.profile`. Die Deklaration gilt für das Modell, weil mehrere Views dieselben Elemente und Relationen projizieren können. Sie macht jedoch weder sämtliche Modellinhalte noch jede View zu einem O2I-Gegenstand.
 
@@ -1062,14 +933,9 @@ Zwei komplementäre Mapping-Sichten verdichten diesen Vertrag. @Fig:o2i-syntax-c
 ![O2I ArchiMate-Relationsrepräsentationen](<img/O2I Syntax - Relations.png>){#fig:o2i-syntax-relations-view width=95%}
 
 \clearpage
-
-\begingroup
-\scriptsize
-
-!include spc/ctr/archimate/profile.md
-
-\endgroup
 \restoregeometry
+
+Der geschlossene Profilvertrag bindet seine Mappingbereiche ohne parallele Publikationsregistry: Profilidentität und Modellwurzel, Syntaxträger, O2I-Properties samt Eigentümer- und Kardinalitätsregeln, Relationsrepräsentationen mit endpunktsensitiver ArchiMate-Anwendbarkeit, Kontextualisierung und strukturierte Propositionen sowie die Qualifikationsvorlage. Die beiden Abbildungen verdichten Träger und Relationsfamilien; die ausführbare Prüfung konsumiert unmittelbar denselben Profilvertrag und den daran gebundenen Core-Vertrag.
 
 Die Syntaxträgerabbildung bestimmt die konkrete ArchiMate-Form; die Bedeutung
 eines Primitives folgt weiterhin aus seiner O2I-Interpretation im konkreten Kontext.
@@ -1086,7 +952,7 @@ und jedes Strukturierungselement genau einer zulässigen Kontextinstanz zu. Die
 visuelle Platzierung innerhalb des Groupings ersetzt diese explizite
 Kontextualisierung nicht. Bei der Überführung in die formale Spezifikation wird
 die Composition auf die technische Eigentümerreferenz des Knotens abgebildet
-und nicht als fachliche `RawEdge` interpretiert.
+und nicht als fachliche binäre Relation interpretiert.
 
 ### Semantische Begründung
 
@@ -1097,20 +963,21 @@ persistierten Makrorelation
 `Strategy --qualifies--> Need` und einer zulässigen Begründung wie
 `Key Result @ Strategy --translates-into--> Objective @ Need`.
 
+### Qualifikationsvorlage
+
+Eine Qualifikationsvorlage wird als ArchiMate `Assessment` mit `o2i.type = NeedQualificationProposal` dargestellt; daraus leitet das Profil die Trägerkategorie `QualificationProposal` ab. Die Vorlage besitzt kein `Commitment`. Ihre Dokumentation bewahrt null oder eine Begründung, und `o2i.source` bewahrt null oder mehrere Quellenbezüge, damit auch unvollständige Vorlagen diagnostizierbar bleiben. Für ein formal zulässiges Ergebnis verlangt der Core-Vertrag genau eine nichtleere normalisierte Begründung und mindestens eine normalisierte Quellenidentität. Gerichtete ArchiMate `Association`-Referenzen führen von der Vorlage zu Bedarf, Strategie, strategischem Key Result und Need-Objective. Jede Referenz trägt genau eine der Rollen `need`, `strategy`, `key-result` oder `objective` in `o2i.role`; eine zulässige Vorlage bindet jede Rolle genau einmal an einen Endpunkt des geforderten Typs. Diese Syntax persistiert ausschließlich die zu prüfende Vorlage und keine angenommene Qualifikation.
+
 ### Kollektive Strategierealisierung
 
 Die konkrete ArchiMate-Syntax einer kollektiven Strategierealisierung verwendet eine AND-Junction als Repräsentation des n-ären Claims. Diese Junction trägt genau folgende O2I-Metadaten:
 
 ```text
-o2i.kind = StructuredProposition
 o2i.type = CollectiveStrategyRealization
 o2i.commitment = candidate | asserted
-o2i.collective-fit-evidence = <nichtleere Referenz>
+o2i.participant-completeness = open | closed
 ```
 
-`StructuredProposition` kennzeichnet den persistierten Syntaxträger; `Claim`
-bleibt der notationunabhängige formale Wrapper aus Proposition und
-`Commitment`.
+Das Profil leitet aus der AND-Junction und `o2i.type` die Trägerkategorie `StructuredProposition` ab; `Claim` bleibt der notationunabhängige formale Wrapper aus Proposition und `Commitment`. `open` erklärt die persistierte Teilnehmermenge ausdrücklich für unvollständig; ein `asserted` Claim verlangt `closed`. Der fachliche Fit der beteiligten Strategien wird separat als ergänzender Core-Input `CollectiveFitInput` bereitgestellt und niemals als ArchiMate-Metadatum oder Referenz im Modell gespeichert.
 
 Mindestens zwei eingehende und genau eine ausgehende ArchiMate `Realization` verbinden die beitragenden Strategy-Kontexte über die Junction mit der Ziel-Strategy. Jedes Segment trägt exakt das Label `realizes` und keine eigenen O2I-Metadaten. Beitrags- und Zielrolle folgen ausschließlich aus Richtung und Topologie.
 
@@ -1118,11 +985,11 @@ Die Junction-Segmente sind konkrete Syntax und erzeugen keine binären O2I-`real
 
 ### View-Scope
 
-Eine ausgewählte ArchiMate-View bildet den Ausgangspunkt einer Inspection, nicht ihre semantische Grenze. Der AMX-Adapter löst diese View auf und projiziert ihre Präsentationen sowie die persistierten O2I-Fakten, Referenzen und Abhängigkeiten. Erst die notationunabhängige Inspection bildet daraus den kleinsten semantisch geschlossenen Scope. Mehrere O2I-Views desselben Modells können dadurch unter derselben Profilversion unabhängig geprüft werden; nicht erreichte Modellinhalte bleiben außerhalb des Ergebnisses.
+Eine Operation wählt genau eine ArchiMate-View aus dem vom AMX-Adapter dekodierten kanonischen Dokument aus; das Profil berechnet daraus zwei getrennte positive Closures für Graph und Qualifikationsvorlagen. Ausgangspunkte sind die Modellwurzel und die dargestellten Vorkommen, erweitert ausschließlich durch die im Profilvertrag geschlossenen Aktivierungs- und Abhängigkeitsregeln. Beide Zweige entwickeln sich ohne wechselseitige Fortpflanzung und bewahren für jede Aufnahme ihre Provenienz. Die Closure validiert keine fachliche Aussage und erzeugt keine neue Modellproposition; Profile-Prüfung und Core-Semantik bleiben eigene Capabilities. Mehrere O2I-Views desselben Modells können dadurch unter derselben Profilversion unabhängig ausgewertet werden; nicht erreichte Modellinhalte bleiben außerhalb des jeweiligen Ergebnisses.
 
-Enthält der ausgewählte Ausgangspunkt einen Bestandteil einer persistierten kollektiven Strategierealisierung, führen deren projizierte Abhängigkeiten in dieser Closure zur vollständigen Junction, zu sämtlichen Segmenten und Beitragenden, zum Ziel und zur persistierten Beitragsevidenz. Jede Ergänzung bewahrt ihre Herkunft; die Closure erzeugt oder errät keine Aussage.
+Enthält die ausgewählte View einen Bestandteil einer persistierten kollektiven Strategierealisierung, führen deren explizite Abhängigkeiten in der Graph-Closure zur Junction, zu den persistierten Segmenten und Teilnehmern, zum Ziel sowie zu den erforderlichen Kontextualisierungen. Der separat gelieferte `CollectiveFitInput` gehört nicht zur ArchiMate-Closure.
 
-Eine View darf nur einen Teil der Beitragenden darstellen. Für einen global vollständigen Claim wird dies als Information mit sichtbarer und gesamter Anzahl ausgewiesen. Ein global unvollständiger `Candidate` bleibt dagegen unvollständig, auch wenn die ausgewählte View vollständig erscheint. Unabhängige Defekte außerhalb des geschlossenen Scopes gehören nicht zum Ergebnis dieser Inspection.
+Eine View darf nur einen Teil der persistierten Teilnehmer darstellen. Die positive Closure ergänzt die durch den geschlossenen Vertrag erreichbaren Teilnehmer, ohne unbekannte Teilnehmer zu erraten. `open` erklärt die Teilnehmermenge unabhängig von der sichtbaren Darstellung für unvollständig; deshalb kann ein solcher Claim nicht `asserted` sein. Unabhängige Defekte außerhalb der jeweiligen Closure gehören nicht zu ihrem Ergebnis.
 
 ### Modellierungsregeln
 

@@ -100,11 +100,6 @@ class VerificationPathMatrixTests(unittest.TestCase):
                 "licensing",
                 "model",
             },
-            "utl/model/render-archimate-profile.py": {
-                "licensing",
-                "model",
-                "paper",
-            },
             "utl/model/check-executable-views.py": {
                 "licensing",
                 "model",
