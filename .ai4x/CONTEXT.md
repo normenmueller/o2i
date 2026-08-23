@@ -104,8 +104,8 @@ repository Views and snapshots. It never validates O2I instances.
 - `spc/lib/adapter/amx/`: native AMX profile and projection.
 - `spc/cli/`: thin `o2i` CLI.
 - `.ai4x/operations/`: task-specific execution and quality contracts.
-- GitHub Issues: authority for change contracts, admission, dependencies, independent reviews, and open or closed state.
-- GitHub Project `O2I`: workflow-status and PO-ordering authority; no contract, admission, dependency, review, or closure authority.
+- GitHub Issues: authority for change contracts, material decisions, acceptance criteria, dependencies, independent reviews, and open or closed state; an explicit Product Owner request may directly authorize Routine work.
+- GitHub Project `O2I`: workflow-status and PO-ordering authority; no contract, acceptance, dependency, review, or closure authority.
 - `.ai4x/governance/guidelines.md`: normative agent-facing GitHub workflow and evidence contract; no backlog, project history, or fachliche semantics.
 - `utl/model/extract-archimate-view.py`: repository View/snapshot checker.
 - `utl/verify.sh`: canonical staged verification.

@@ -46,14 +46,10 @@ tests, adapters, or the complete machine-checkable O2I chain.
   projections without redesigning a stable shared evaluator?
 - Is the design proportionate to O2I's actual formal value?
 
-# Findings And Scores
+# Findings And Verdict
 
-- Report Blocker, High, Medium, and Low findings first.
-- Every finding includes one clean target-state solution. No workaround,
-  migration, compatibility layer, or retrospective rationale.
-- Report separate 0.0-10.0 scores for Fachlichkeit, Metamodell,
-  Typtheorie/Formalisierung, Haskell design, tests, diagnostics/provenance,
-  extensibility, cross-package consistency, and formal value/proportionality.
-- Use `10/10` only when every required dimension is independently 10.0.
-- Acceptance requires no unresolved finding and 10.0 in every required
-  dimension.
+- Report blocking findings before advisory follow-ups. Use severity only when it materially helps prioritize correction.
+- Every blocking finding includes one clean target-state solution. No workaround, migration, compatibility layer, or retrospective rationale.
+- Assess every materially affected dimension among Fachlichkeit, Metamodell, Typtheorie/Formalisierung, Haskell design, tests, diagnostics/provenance, extensibility, cross-package consistency, and formal value/proportionality.
+- Use exactly one verdict from the governance contract: `accepted`, `accepted with follow-ups`, or `changes required`.
+- Acceptance requires no unresolved blocking finding. Numerical scores are prohibited.

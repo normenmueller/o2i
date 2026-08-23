@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static tests for the active GitHub-native governance contract."""
+"""Static tests for the lean GitHub-native governance contract."""
 
 from __future__ import annotations
 
@@ -8,16 +8,27 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+BEHAVIOR = ROOT / ".ai4x/BEHAVIOR.md"
+CONTEXT = ROOT / ".ai4x/CONTEXT.md"
 GOVERNANCE = ROOT / ".ai4x/governance/guidelines.md"
 STATE = ROOT / ".ai4x/STATE.md"
 CONTRIBUTING = ROOT / "CONTRIBUTING.md"
+HASKELL_AUTHORING = ROOT / ".ai4x/operations/haskell-authoring.md"
+HASKELL_REVIEW = ROOT / ".ai4x/operations/haskell-review.md"
+STRATEGY_REVIEW = ROOT / ".ai4x/operations/strategy-review.md"
 FRAMEWORK_FORM = ROOT / ".github/ISSUE_TEMPLATE/framework-change.yml"
 MAINTENANCE_FORM = ROOT / ".github/ISSUE_TEMPLATE/maintenance.yml"
 FORM_CONFIG = ROOT / ".github/ISSUE_TEMPLATE/config.yml"
+REVIEW_CONTRACTS = (GOVERNANCE, CONTRIBUTING, HASKELL_REVIEW, STRATEGY_REVIEW)
 PUBLIC_CONTRACTS = (
+    BEHAVIOR,
+    CONTEXT,
     GOVERNANCE,
     STATE,
     CONTRIBUTING,
+    HASKELL_AUTHORING,
+    HASKELL_REVIEW,
+    STRATEGY_REVIEW,
 )
 
 
@@ -38,170 +49,19 @@ def issue_form_fields(path: Path) -> dict[str, bool]:
     return fields
 
 
-def markdown_field_values(content: str, name: str) -> tuple[str, ...]:
-    """Return normalized values of one Markdown bullet field."""
-    pattern = rf"(?m)^- {re.escape(name)}:[ \t]*(.*(?:\n  .*)*)$"
-    return tuple(
-        " ".join(line.strip() for line in block.splitlines()).strip()
-        for block in re.findall(pattern, content)
-    )
-
-
-def markdown_section(content: str, heading: str) -> str:
-    """Return one level-two Markdown section without its heading."""
-    pattern = rf"(?ms)^## {re.escape(heading)}\n\n(.*?)(?=^## |\Z)"
-    match = re.search(pattern, content)
-    if match is None:
-        raise AssertionError(f"missing Markdown section: {heading}")
-    return " ".join(match.group(1).split())
-
-
-def handoff_contract_violations(content: str) -> list[str]:
-    """Return violations of the closed repository handoff contract."""
-    violations: list[str] = []
-    fields: dict[str, str] = {}
-    for name in (
-        "Work status",
-        "Execution authorization",
-        "Current Issue",
-        "Current gate",
-        "Gate status",
-    ):
-        matches = re.findall(rf"(?m)^- {re.escape(name)}: `([^`]+)`$", content)
-        if len(matches) != 1:
-            violations.append(f"{name} must occur exactly once")
-            continue
-        fields[name] = matches[0]
-
-    if len(fields) != 5:
-        return violations
-
-    vocabularies = {
-        "Work status": {"ACTIVE", "PAUSED", "BLOCKED", "COMPLETE"},
-        "Execution authorization": {"APPROVED", "REQUIRED"},
-        "Gate status": {"NOT_REQUIRED", "PENDING", "ACCEPTED", "REJECTED"},
-    }
-    for name, allowed in vocabularies.items():
-        if fields[name] not in allowed:
-            violations.append(f"{name} has an invalid value")
-    if violations:
-        return violations
-
-    gate_sections = content.count("# Current Gate\n")
-    work_status = fields["Work status"]
-    if work_status in {"PAUSED", "BLOCKED"}:
-        if fields["Execution authorization"] != "REQUIRED":
-            violations.append(f"{work_status} work must require authorization")
-        if work_status == "BLOCKED" and fields["Current Issue"] == "NONE":
-            violations.append("BLOCKED work must identify its Issue")
-        if fields["Current gate"] != "NONE":
-            violations.append(f"{work_status} work must be gate-free")
-        if fields["Gate status"] != "NOT_REQUIRED":
-            violations.append("a gate-free handoff must not require a gate")
-        if gate_sections != 0:
-            violations.append("a gate-free handoff must omit Current Gate")
-        return violations
-
-    if fields["Execution authorization"] != "APPROVED":
-        violations.append(f"{work_status} work must be approved")
-    if fields["Current Issue"] == "NONE":
-        violations.append(f"{work_status} work must identify its Issue")
-    if fields["Current gate"] == "NONE":
-        violations.append(f"{work_status} work must identify its gate")
-    allowed_gate_statuses = {
-        "ACTIVE": {"PENDING", "REJECTED"},
-        "COMPLETE": {"ACCEPTED"},
-    }
-    if fields["Gate status"] not in allowed_gate_statuses[work_status]:
-        violations.append(
-            f"{work_status} work has an incompatible gate status"
-        )
-    if gate_sections != 1:
-        violations.append(f"{work_status} work must have one Current Gate section")
-        return violations
-
-    gate = content.split("# Current Gate\n", 1)[1].split("\n# ", 1)[0]
-    gate_fields = {
-        name: markdown_field_values(gate, name)
-        for name in (
-            "Attempt",
-            "Candidate revision",
-            "Review scope",
-            "Mandatory checks",
-            "Finding status",
-            "Result",
-        )
-    }
-    for name, values in gate_fields.items():
-        if len(values) != 1:
-            violations.append(f"Current Gate must contain one {name}")
-
-    gate_values = {
-        name: values[0]
-        for name, values in gate_fields.items()
-        if len(values) == 1
-    }
-    revision = gate_values.get("Candidate revision")
-    if revision is not None and revision != "`PENDING`":
-        if re.fullmatch(r"`[0-9a-f]{40}`", revision) is None:
-            violations.append(
-                "Candidate revision must be PENDING or one full Git revision"
-            )
-
-    scope = gate_values.get("Review scope")
-    if scope is not None:
-        subjects = tuple(re.findall(r"`([^`]+)`", scope))
-        immutable_subjects = tuple(
-            subject for subject in subjects if subject != ".ai4x/STATE.md"
-        )
-        if not immutable_subjects:
-            violations.append("Review scope must declare an immutable subject")
-        if ".ai4x/STATE.md" not in subjects or "excluded" not in scope.lower():
-            violations.append("Review scope must exclude mutable .ai4x/STATE.md")
-
-    scalar_fields = (
-        "Attempt",
-        "Candidate revision",
-        "Finding status",
-        "Result",
-    )
-    scalar_values: dict[str, str] = {}
-    for name in scalar_fields:
-        value = gate_values.get(name)
-        if value is not None and re.fullmatch(r"`([^`]+)`", value) is not None:
-            scalar_values[name] = value[1:-1]
-
-    result_fields = ("Attempt", "Finding status", "Result")
-    if all(name in scalar_values for name in result_fields):
-        if fields["Current gate"] != scalar_values["Attempt"]:
-            violations.append("Current gate must match Attempt")
-        if fields["Gate status"] != scalar_values["Result"]:
-            violations.append("Gate status must match Result")
-        if (
-            scalar_values["Result"] == "ACCEPTED"
-            and scalar_values["Finding status"] != "CLOSED"
-        ):
-            violations.append("an accepted gate must have closed findings")
-        if (
-            scalar_values["Result"] in {"PENDING", "REJECTED"}
-            and scalar_values["Finding status"] != "OPEN"
-        ):
-            violations.append("a non-accepted gate must have open findings")
-        if (
-            scalar_values["Result"] in {"ACCEPTED", "REJECTED"}
-            and scalar_values.get("Candidate revision") == "PENDING"
-        ):
-            violations.append("a decided gate must bind one full Git revision")
-    return violations
-
-
 class GitHubGovernanceContractTests(unittest.TestCase):
-    """Keep human, agent, intake, and execution contracts aligned."""
+    """Keep human, agent, intake, and handoff contracts aligned."""
 
     def test_required_surfaces_exist(self) -> None:
         for path in (
+            BEHAVIOR,
+            CONTEXT,
             GOVERNANCE,
+            STATE,
             CONTRIBUTING,
+            HASKELL_AUTHORING,
+            HASKELL_REVIEW,
+            STRATEGY_REVIEW,
             FRAMEWORK_FORM,
             MAINTENANCE_FORM,
             FORM_CONFIG,
@@ -219,228 +79,179 @@ class GitHubGovernanceContractTests(unittest.TestCase):
                     with self.subTest(path=path):
                         self.assertEqual(path.name, path.name.lower())
 
-    def test_active_authority_split_is_explicit(self) -> None:
+    def test_authority_is_recorded_once(self) -> None:
         content = read(GOVERNANCE)
         for term in (
             "A GitHub Issue owns",
             "Native Issue Dependencies own",
             "owns workflow status and Product Owner ordering",
-            "owns no contract, admission",
-            "activated repository-local handoff",
-            "deterministic and network-independent",
+            "owns no product contract or acceptance fact",
+            "concise repository-local handoff",
+            "Git commits and deterministic checks own",
+            "Issue-free Routine work",
         ):
             with self.subTest(term=term):
                 self.assertIn(term, content)
 
-    def test_review_candidate_and_evidence_contract_are_exact(self) -> None:
-        content = read(GOVERNANCE)
-        for term in (
-            "one committed exact candidate revision",
-            "accepted exact revision",
-            "No reviewed file changes",
-            "lowercase SHA-256",
-            "exact UTF-8 bytes returned by the GitHub API",
-            "without normalization or an added newline",
-            "comment database ID",
-            "Project item is archived",
-            "exact Issue-body digest for Admission",
-            "implementation-contract comment ID and digest for Finalreview",
-        ):
-            with self.subTest(term=term):
-                self.assertIn(term, content)
+    def test_issue_free_work_is_a_bounded_routine_exception(self) -> None:
+        self.assertIn("current Issue or `NONE`", read(BEHAVIOR))
+        self.assertIn("Issue-free Routine work", read(BEHAVIOR))
+        self.assertIn("Issue-free Routine work", read(GOVERNANCE))
+        self.assertIn("Routinearbeit auch ohne Issue", read(CONTRIBUTING))
+        self.assertIn("Scope des Issues oder des ausdrücklichen PO-Auftrags", read(CONTRIBUTING))
+
+    def test_change_paths_are_risk_proportionate(self) -> None:
+        agent = read(GOVERNANCE)
         human = read(CONTRIBUTING)
         for term in (
-            "Issue-Body-Digest für Admission",
-            "ID und Digest des Implementierungsvertrags-Kommentars für "
-            "Finalreview",
-        ):
-            with self.subTest(term=term):
-                self.assertIn(term, human)
-
-    def test_human_status_vocabulary_is_complete(self) -> None:
-        content = read(CONTRIBUTING)
-        for status in (
-            "Backlog",
-            "Refinement",
-            "Ready",
-            "In progress",
-            "Paused",
-            "In review",
-            "Done",
-        ):
-            with self.subTest(status=status):
-                self.assertIn(f"`{status}`", content)
-
-    def test_workflow_authority_and_transitions_are_explicit(self) -> None:
-        content = read(GOVERNANCE)
-        for term in (
-            "Backlog -> Refinement",
-            "Refinement -> Ready",
-            "Ready -> In progress",
-            "In progress -> In review",
-            "In review -> In progress",
-            "In review -> Done",
-            "In progress -> Paused",
-            "Paused -> Ready",
-            "Only the Product Owner moves",
-            "Agents control later transitions",
-            "Project order never creates a dependency",
-        ):
-            with self.subTest(term=term):
-                self.assertIn(term, content)
-
-    def test_implementation_batches_have_one_explicit_trigger(self) -> None:
-        agent = markdown_section(read(GOVERNANCE), "Implementation Batches")
-        human = markdown_section(read(CONTRIBUTING), "Status")
-        for term in (
-            "authorized implementation contract names implementation batches",
-            "exactly one direct GitHub Sub-Issue for every named batch",
-            "before that batch begins",
-            "without an explicit batch-based implementation contract creates "
-            "no Sub-Issues",
+            "### Routine",
+            "### Significant",
+            "### Protected",
+            "impact, reversibility, and blast radius",
+            "author self-review",
+            "at least one independent reviewer",
+            "explicit Product Owner decision",
+            "select the next safer path",
         ):
             with self.subTest(surface="agent", term=term):
                 self.assertIn(term, agent)
         for term in (
-            "genau je ein direktes GitHub Sub-Issue",
-            "Ohne einen ausdrücklich batchbasierten Implementierungsvertrag "
-            "entstehen keine Sub-Issues",
+            "### Routine",
+            "### Signifikant",
+            "### Geschützt",
+            "Wirkung, Reversibilität und Reichweite",
+            "kritischer Selbstreview",
+            "mindestens ein unabhängiger Reviewer",
+            "ausdrückliche PO-Entscheidung",
+            "nächstsicherere Klasse",
         ):
             with self.subTest(surface="human", term=term):
                 self.assertIn(term, human)
 
-    def test_batch_children_have_no_independent_authority(self) -> None:
-        agent = markdown_section(read(GOVERNANCE), "Implementation Batches")
-        human = markdown_section(read(CONTRIBUTING), "Status")
+    def test_quality_controls_are_not_waived(self) -> None:
+        agent = read(GOVERNANCE)
+        human = read(CONTRIBUTING)
         for term in (
-            "leaves the parent authoritative",
-            "remain outside the O2I Project",
-            "no independent authorization, Admission, dependency, Project "
-            "workflow, review, or acceptance authority over the parent",
-            "Each child owns its own open or closed state",
-            "neither accepts nor closes the parent",
+            "Never weaken deterministic verification",
+            "type safety",
+            "repository autonomy",
+            "security",
+            "publication checks",
         ):
             with self.subTest(surface="agent", term=term):
                 self.assertIn(term, agent)
         for term in (
-            "bleibt außerhalb des O2I Projects",
-            "keine eigene Freigabe-, Scope-, Abhängigkeits-, Review- oder "
-            "Annahmeautorität über den Parent",
-            "eigenen Open/Closed-Zustand",
-            "bewirkt weder Annahme noch Schließung des Parents",
+            "Kein Änderungspfad schwächt Tests",
+            "Typsicherheit",
+            "Reproduzierbarkeit",
+            "Repository-Autonomie",
+            "Publikationsprüfungen",
         ):
             with self.subTest(surface="human", term=term):
                 self.assertIn(term, human)
 
-    def test_batch_children_reference_the_authoritative_contract(self) -> None:
-        agent = markdown_section(read(GOVERNANCE), "Implementation Batches")
-        human = markdown_section(read(CONTRIBUTING), "Status")
+    def test_workflow_is_visible_without_ceremonial_hops(self) -> None:
+        for path in (GOVERNANCE, CONTRIBUTING):
+            content = read(path)
+            with self.subTest(path=path):
+                for status in (
+                    "Backlog",
+                    "Refinement",
+                    "Ready",
+                    "In progress",
+                    "Paused",
+                    "In review",
+                    "Done",
+                ):
+                    self.assertIn(f"`{status}`", content)
+                self.assertIn("Backlog -> Refinement -> Ready -> In progress", content)
+        self.assertIn("not a mandatory stop", read(GOVERNANCE))
+        self.assertIn("kein Pflichtschritt", read(CONTRIBUTING))
+        self.assertIn("Board reflects work; it does not manufacture authority", read(GOVERNANCE))
+        self.assertIn("Board bildet Autorität ab, erzeugt sie aber nicht", read(CONTRIBUTING))
+
+    def test_paused_means_a_real_wait(self) -> None:
+        agent = read(GOVERNANCE)
+        human = read(CONTRIBUTING)
+        self.assertIn("only a genuine wait state", agent)
+        self.assertIn("active investigation is never paused", agent)
+        self.assertIn("echter Wartezustand", human)
+        self.assertIn("aktive Konzeption, Umsetzung, Untersuchung", human)
+
+    def test_subissues_are_optional_visibility(self) -> None:
+        agent = read(GOVERNANCE)
+        human = read(CONTRIBUTING)
         for term in (
-            "For Maintenance, the parent Issue body is the implementation contract",
-            "For a Framework Change, the separate implementation-contract comment "
-            "remains authoritative",
-            "body contains only the parent Issue link, the Framework Change "
-            "implementation-contract comment link when applicable, concise "
-            "deliverable, inherited batch completion conditions, and the fixed notice",
-            "the fixed notice that the child makes one authorized implementation "
-            "batch visible",
-            "leaves the parent authoritative",
+            "when they materially improve visibility",
+            "parent owns integrated scope, authority, acceptance, and publication",
+            "adds no product scope or authority",
+            "Put active Stories on the Project",
         ):
             with self.subTest(surface="agent", term=term):
                 self.assertIn(term, agent)
         for term in (
-            "Bei Maintenance ist der Parent-Body der Implementierungsvertrag",
-            "bei Framework Changes bleibt der separate "
-            "Implementierungsvertragskommentar autoritativ",
-            "Body jedes Sub-Issues enthält nur den Parent-Link, gegebenenfalls den "
-            "Link auf diesen Vertragskommentar, Liefergegenstand und übernommene "
-            "Abschlussbedingungen des Batches sowie die feste Notiz",
-            "die feste Notiz, dass das Sub-Issue genau einen autorisierten Batch "
-            "sichtbar macht",
-            "der Parent autoritativ bleibt",
+            "wenn sie einen mehrteiligen Liefergegenstand",
+            "Parent besitzt integrierten Scope, Autorität, Annahme und Publikation",
+            "ergänzt aber keinen Produktscope und keine Autorität",
+            "Aktive Stories dürfen zur Sichtbarkeit im Project stehen",
         ):
             with self.subTest(surface="human", term=term):
                 self.assertIn(term, human)
 
-    def test_batch_children_use_native_title_and_assignment_metadata(self) -> None:
-        agent = markdown_section(read(GOVERNANCE), "Implementation Batches")
-        human = markdown_section(read(CONTRIBUTING), "Status")
-        self.assertIn(
-            "batch identifier and batch name use only the native GitHub Issue title",
-            agent,
-        )
-        self.assertIn(
-            "assignment uses only native GitHub assignee metadata and is never "
-            "copied into the body",
-            agent,
-        )
-        self.assertIn(
-            "Batch-ID und Batchname werden ausschließlich im nativen "
-            "GitHub-Issue-Titel",
-            human,
-        )
-        self.assertIn(
-            "Zuweisung wird ausschließlich in nativen GitHub-Assignee-Metadaten "
-            "geführt",
-            human,
-        )
-        self.assertNotIn("batch identifier and title", agent)
-        self.assertNotIn("current assignee", agent)
-
-    def test_batch_children_bound_lifecycle_comments(self) -> None:
-        agent = markdown_section(read(GOVERNANCE), "Implementation Batches")
-        human = markdown_section(read(CONTRIBUTING), "Status")
+    def test_later_findings_are_acceptance_challenges(self) -> None:
+        agent = read(GOVERNANCE)
+        human = read(CONTRIBUTING)
         for term in (
-            "Lifecycle comments may record only a blocker or pause reason",
-            "its return condition",
-            "implementation or verification evidence",
+            "first an acceptance challenge",
+            "not a retroactive invalidation",
+            "Reproduce the concern",
+            "new linked correction Issue",
+            "Reopen closed history only when the Product Owner explicitly chooses",
         ):
             with self.subTest(surface="agent", term=term):
                 self.assertIn(term, agent)
         for term in (
-            "Lifecycle-Kommentare dürfen nur einen Blocker- oder Pausengrund",
-            "dessen Rückkehrbedingung",
-            "Implementierungs- oder Verifikationsevidenz",
+            "zunächst eine Akzeptanz-Challenge",
+            "keine rückwirkende Entwertung",
+            "neues verlinktes Korrektur-Issue",
+            "geschlossene Historie bleibt geschlossen",
         ):
             with self.subTest(surface="human", term=term):
                 self.assertIn(term, human)
 
-    def test_parent_review_requires_closed_batch_children(self) -> None:
-        agent = markdown_section(read(GOVERNANCE), "Implementation Batches")
-        human = markdown_section(read(CONTRIBUTING), "Status")
-        self.assertIn(
-            "The parent enters `In review` only after every required batch "
-            "Sub-Issue is closed",
-            agent,
-        )
-        self.assertIn(
-            "Der Parent darf erst nach Schließung aller erforderlichen Batch "
-            "Sub-Issues in `In review` wechseln",
-            human,
-        )
+    def test_review_uses_verdicts_without_scores(self) -> None:
+        for path in REVIEW_CONTRACTS:
+            content = read(path)
+            with self.subTest(path=path):
+                for verdict in (
+                    "`accepted`",
+                    "`accepted with follow-ups`",
+                    "`changes required`",
+                ):
+                    self.assertIn(verdict, content)
+                self.assertNotIn("10.0", content)
+                self.assertNotIn("10,0", content)
+        self.assertIn("Numerical scores are prohibited", read(GOVERNANCE))
+        self.assertIn("Numerische Bewertungen entfallen", read(CONTRIBUTING))
 
-    def test_batch_children_neither_nest_nor_absorb_scope(self) -> None:
-        agent = markdown_section(read(GOVERNANCE), "Implementation Batches")
-        human = markdown_section(read(CONTRIBUTING), "Status")
-        self.assertIn("never nest", agent)
-        self.assertIn("never absorbs new scope", agent)
-        self.assertIn("Weitere Ebenen sind ausgeschlossen", human)
-        self.assertIn(
-            "Neue Inhalte werden niemals in ein Sub-Issue aufgenommen",
-            human,
-        )
+    def test_coauthoring_follows_material_complexity(self) -> None:
+        content = " ".join(read(HASKELL_AUTHORING).split())
+        self.assertIn("Significant or Protected change", content)
+        self.assertIn("materially benefits from a second active author", content)
+        self.assertIn("alone never makes co-authoring mandatory", content)
 
-    def test_refinement_reads_body_and_comments(self) -> None:
-        content = read(GOVERNANCE)
+    def test_integrity_evidence_is_exception_based(self) -> None:
+        agent = read(GOVERNANCE)
+        human = read(CONTRIBUTING)
         for term in (
-            "complete Issue body",
-            "every existing comment",
-            "internally consistent contract",
-            "Product Owner decision",
-            "never silently mutate",
+            "externally supplied authority",
+            "release artifact",
+            "security-sensitive evidence",
+            "another stated integrity need",
         ):
-            with self.subTest(term=term):
-                self.assertIn(term, content)
+            with self.subTest(surface="agent", term=term):
+                self.assertIn(term, agent)
+        self.assertIn("anderen konkret benannten Integritätsbedarf", human)
 
     def test_delegated_remote_facts_use_primary_agent(self) -> None:
         content = read(GOVERNANCE)
@@ -448,339 +259,66 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "never query or mutate remote",
             "primary agent",
             "unmodified result",
-            "never inferred",
+            "without inference",
         ):
             with self.subTest(term=term):
                 self.assertIn(term, content)
 
-    def test_human_guidance_contains_portable_workflow_diagram(self) -> None:
-        content = read(CONTRIBUTING)
-        self.assertIn("```text\n", content)
-        self.assertIn("Backlog -- Beginn --> Refinement", content)
-        self.assertIn("Refinement -- PO-Freigabe --> Ready", content)
-        self.assertIn("In progress -- Kandidat vollständig --> In review", content)
-        self.assertIn("Findings", content)
-
-    def test_dependency_boundary_is_explicit_without_reserved_label(
-        self,
-    ) -> None:
-        for path, terms in (
-            (
-                GOVERNANCE,
-                ("outside", "affected Issue", "next-check condition"),
-            ),
-            (
-                CONTRIBUTING,
-                ("außerhalb", "betroffenen Issue", "nächster Prüfbedingung"),
-            ),
-        ):
-            with self.subTest(path=path):
-                content = read(path)
-                normalized = " ".join(content.split())
-                self.assertRegex(
-                    normalized.lower(), r"native issue dependenc(?:y|ies)"
-                )
-                for term in terms:
-                    self.assertIn(term, normalized)
-                self.assertIn("Paused", normalized)
-                self.assertNotIn("blocked:external", normalized)
-
-    def test_framework_form_captures_admission_contract(self) -> None:
-        self.assertRegex(
-            read(FRAMEWORK_FORM),
-            r"(?m)^labels:\n  - framework-change$",
-        )
-        expected = {
-            "problem",
-            "benefit",
-            "target",
-            "scope",
-            "acceptance",
-            "alternatives",
-            "risks",
-            "participants",
-            "reviews",
-        }
-        fields = issue_form_fields(FRAMEWORK_FORM)
-        self.assertEqual(expected, set(fields))
-        self.assertTrue(all(fields.values()))
-
-    def test_maintenance_form_captures_semantic_boundary(self) -> None:
-        content = read(MAINTENANCE_FORM)
-        self.assertRegex(content, r"(?m)^labels:\n  - maintenance$")
-        fields = issue_form_fields(MAINTENANCE_FORM)
-        self.assertEqual(
-            {"problem", "target", "scope", "acceptance", "semantics"},
-            set(fields),
-        )
-        self.assertTrue(all(fields.values()))
-        self.assertIn("does not alter O2I semantics", content)
-
-    def test_maintenance_review_is_independent_and_proportionate(self) -> None:
+    def test_attribution_and_push_authority_are_explicit(self) -> None:
         agent = read(GOVERNANCE)
         human = read(CONTRIBUTING)
         for term in (
-            "Maintenance has no Framework Admission requirement or Admission "
-            "digest",
-            "every exact Maintenance candidate revision receives at least one "
-            "independent Finalreview",
-            "Add another reviewer only when a materially distinct risk",
-            "Do not impose a fixed capability table, reviewer bundle, reviewer "
-            "count, or reviewer-selection mechanism",
-            "Any finding rejects that exact candidate",
-            "Acceptance requires no finding",
-            "10.0 in every selected dimension",
-            "Maintenance review never substitutes for Framework Admission",
-            "Maintenance Finalreview evidence instead records the selected "
-            "capability and concise risk rationale",
-            "requires neither an Admission digest nor an implementation-contract "
-            "comment",
+            "Product Owner authority commits",
+            "Issue-scoped commits include `Refs #N`",
+            "Push, release, protected publication",
+            "explicit Product Owner authority",
         ):
             with self.subTest(term=term):
                 self.assertIn(term, agent)
-        for term in (
-            "Maintenance benötigt weder Framework Admission noch "
-            "Admission-Digest",
-            "mindestens einen unabhängigen externen Finalreviewer",
-            "nur für ein materiell anderes Risiko",
-            "feste Reviewer-Matrix, -Anzahl oder Auswahlmechanik gibt es nicht",
-            "Jedes Finding verwirft den exakten Kandidaten",
-            "Die Annahme erfordert kein Finding und 10,0",
-            "Maintenance-Finalreviews benötigen keinen Admission-Digest",
-        ):
-            with self.subTest(term=term):
-                self.assertIn(term, human)
-        self.assertNotIn("| Trigger ID |", agent)
-
-    def test_all_reviews_are_critical_and_independent(self) -> None:
-        agent = read(GOVERNANCE)
-        human = read(CONTRIBUTING)
-        for term in (
-            "Reviewers assess critically, neutrally, objectively, and "
-            "independently",
-            "Review is never an acceptance default",
-            "leanness, clarity, elegance, robustness, modularity, and "
-            "usefulness",
-        ):
-            with self.subTest(term=term):
-                self.assertIn(term, agent)
-        for term in (
-            "Reviewer bewerten kritisch, neutral, objektiv und unabhängig",
-            "Ein Review ist keine Annahmeautomatik",
-        ):
-            with self.subTest(term=term):
-                self.assertIn(term, human)
-
-    def test_agentic_responsibility_requires_assignment(self) -> None:
-        agent = read(GOVERNANCE)
-        human = read(CONTRIBUTING)
-        self.assertIn("Add `gertrud-ai4x` as an assignee", agent)
-        self.assertIn("Advisory-only participation creates no assignment", agent)
-        self.assertIn("Gertrud wird einem Issue zugewiesen", human)
-        self.assertIn("reine Advisory-Beteiligung genügt nicht", human)
-
-    def test_issue_scoped_commits_reference_without_premature_closure(self) -> None:
-        agent = read(GOVERNANCE)
-        human = read(CONTRIBUTING)
-        self.assertIn("Issue-scoped commits include `Refs #N`", agent)
-        self.assertIn("Use `Closes #N` only when", agent)
         self.assertIn("Issue-bezogene Commits führen `Refs #N`", human)
-        self.assertIn("`Closes #N` bleibt dem tatsächlich abschließenden", human)
+
+    def test_repository_handoff_is_concise(self) -> None:
+        content = read(STATE)
+        self.assertLess(len(content.splitlines()), 90)
+        self.assertEqual(1, len(re.findall(r"(?m)^- Work status: `(?:ACTIVE|PAUSED|COMPLETE)`$", content)))
+        self.assertRegex(content, r"(?m)^- Current Issue: `(?:#[0-9]+|NONE)`$")
+        for heading in (
+            "# Objective",
+            "# Authority",
+            "# Material Risk",
+            "# Verification",
+            "# Next Action",
+            "# Local Return Point",
+        ):
+            with self.subTest(heading=heading):
+                self.assertIn(heading, content)
+        for obsolete in ("Current gate", "Gate status", "Execution authorization"):
+            self.assertNotIn(obsolete, content)
+
+    def test_issue_forms_remain_focused(self) -> None:
+        framework = issue_form_fields(FRAMEWORK_FORM)
+        maintenance = issue_form_fields(MAINTENANCE_FORM)
+        self.assertTrue({"change_path", "problem", "benefit", "target", "scope", "acceptance", "risks"}.issubset(framework))
+        self.assertTrue(all(framework[field] for field in ("change_path", "problem", "benefit", "target", "scope", "acceptance", "risks")))
+        self.assertTrue(all(not framework[field] for field in ("alternatives", "participants", "reviews")))
+        self.assertTrue({"problem", "target", "scope", "acceptance", "semantics"}.issubset(maintenance))
+        self.assertTrue(all(maintenance.values()))
 
     def test_blank_issues_are_disabled(self) -> None:
         self.assertEqual("blank_issues_enabled: false\n", read(FORM_CONFIG))
 
-    def test_repository_handoff_matches_execution_contract(self) -> None:
-        content = read(STATE)
-        self.assertLess(len(content.splitlines()), 90)
-        self.assertEqual([], handoff_contract_violations(content))
-
-    def test_active_handoff_requires_one_complete_gate(self) -> None:
-        content = """\
-# Handoff
-
-- Work status: `ACTIVE`
-- Execution authorization: `APPROVED`
-- Current Issue: `#10`
-- Current gate: `closed-handoff-contract-1`
-- Gate status: `PENDING`
-
-# Current Gate
-
-- Attempt: `closed-handoff-contract-1`
-- Candidate revision: `0123456789abcdef0123456789abcdef01234567`
-- Review scope: `src/Contract.hs`;
-  mutable `.ai4x/STATE.md` is excluded.
-- Mandatory checks: governance verification.
-- Finding status: `OPEN`
-- Result: `PENDING`
-"""
-        self.assertEqual([], handoff_contract_violations(content))
-        pending = content.replace(
-            "`0123456789abcdef0123456789abcdef01234567`",
-            "`PENDING`",
-        )
-        self.assertEqual([], handoff_contract_violations(pending))
-        cases = (
-            (
-                "gate identity",
-                content.replace(
-                    "- Current gate: `closed-handoff-contract-1`",
-                    "- Current gate: `different-gate`",
-                ),
-                "Current gate must match Attempt",
-            ),
-            (
-                "candidate revision",
-                content.replace(
-                    "`0123456789abcdef0123456789abcdef01234567`",
-                    "`01234567`",
-                ),
-                "Candidate revision must be PENDING or one full Git revision",
-            ),
-            (
-                "empty review scope",
-                content.replace(
-                    "- Review scope: `src/Contract.hs`;\n"
-                    "  mutable `.ai4x/STATE.md` is excluded.",
-                    "- Review scope:",
-                ),
-                "Review scope must declare an immutable subject",
-            ),
-            (
-                "exclusion-only review scope",
-                content.replace(
-                    "- Review scope: `src/Contract.hs`;\n"
-                    "  mutable `.ai4x/STATE.md` is excluded.",
-                    "- Review scope: mutable `.ai4x/STATE.md` is excluded.",
-                ),
-                "Review scope must declare an immutable subject",
-            ),
-            (
-                "misplaced state exclusion",
-                content.replace(
-                    "- Review scope: `src/Contract.hs`;\n"
-                    "  mutable `.ai4x/STATE.md` is excluded.\n"
-                    "- Mandatory checks: governance verification.",
-                    "- Review scope: `src/Contract.hs`.\n"
-                    "- Mandatory checks: governance verification; mutable "
-                    "`.ai4x/STATE.md` is excluded.",
-                ),
-                "Review scope must exclude mutable .ai4x/STATE.md",
-            ),
-            (
-                "gate result",
-                content.replace(
-                    "- Gate status: `PENDING`",
-                    "- Gate status: `REJECTED`",
-                ),
-                "Gate status must match Result",
-            ),
-            (
-                "accepted finding",
-                content.replace(
-                    "- Gate status: `PENDING`",
-                    "- Gate status: `ACCEPTED`",
-                ).replace(
-                    "- Result: `PENDING`",
-                    "- Result: `ACCEPTED`",
-                ),
-                "an accepted gate must have closed findings",
-            ),
-        )
-        for name, malformed, expected in cases:
-            with self.subTest(name=name):
-                self.assertIn(expected, handoff_contract_violations(malformed))
-
-    def test_paused_handoff_requires_no_current_gate(self) -> None:
-        content = """\
-# Handoff
-
-- Work status: `PAUSED`
-- Execution authorization: `REQUIRED`
-- Current Issue: `NONE`
-- Current gate: `NONE`
-- Gate status: `NOT_REQUIRED`
-
-# Repository Facts
-
-- The accepted revision remains recorded here.
-"""
-        self.assertEqual([], handoff_contract_violations(content))
-
-    def test_handoff_status_table_is_closed(self) -> None:
-        blocked = """\
-# Handoff
-
-- Work status: `BLOCKED`
-- Execution authorization: `REQUIRED`
-- Current Issue: `#10`
-- Current gate: `NONE`
-- Gate status: `NOT_REQUIRED`
-"""
-        complete = """\
-# Handoff
-
-- Work status: `COMPLETE`
-- Execution authorization: `APPROVED`
-- Current Issue: `#10`
-- Current gate: `finalreview-1`
-- Gate status: `ACCEPTED`
-
-# Current Gate
-
-- Attempt: `finalreview-1`
-- Candidate revision: `0123456789abcdef0123456789abcdef01234567`
-- Review scope: `src/Contract.hs`; mutable `.ai4x/STATE.md` is excluded.
-- Mandatory checks: governance verification.
-- Finding status: `CLOSED`
-- Result: `ACCEPTED`
-"""
-        for name, valid in (("blocked", blocked), ("complete", complete)):
-            with self.subTest(name=name):
-                self.assertEqual([], handoff_contract_violations(valid))
-
-        invalid_cases = (
-            (
-                "unknown work status",
-                blocked.replace("`BLOCKED`", "`INVALID`"),
-                "Work status has an invalid value",
-            ),
-            (
-                "active authorization required",
-                complete.replace("`COMPLETE`", "`ACTIVE`").replace(
-                    "`APPROVED`", "`REQUIRED`", 1
-                ).replace("`ACCEPTED`", "`PENDING`", 2).replace(
-                    "`CLOSED`", "`OPEN`"
-                ),
-                "ACTIVE work must be approved",
-            ),
-            (
-                "blocked gate",
-                complete.replace("`COMPLETE`", "`BLOCKED`").replace(
-                    "`APPROVED`", "`REQUIRED`", 1
-                ),
-                "BLOCKED work must be gate-free",
-            ),
-            (
-                "complete authorization required",
-                complete.replace("`APPROVED`", "`REQUIRED`", 1),
-                "COMPLETE work must be approved",
-            ),
-        )
-        for name, invalid, expected in invalid_cases:
-            with self.subTest(name=name):
-                self.assertIn(expected, handoff_contract_violations(invalid))
+    def test_repository_verification_remains_deterministic(self) -> None:
+        content = read(GOVERNANCE)
+        self.assertIn("deterministic and network-independent", content)
+        self.assertIn("./utl/verify.sh", content)
+        self.assertIn("Before every release tag", content)
+        self.assertIn("Remote verification", content)
 
     def test_public_contract_is_repository_autonomous(self) -> None:
-        absolute_posix_path = re.compile(
-            r"(?:^|[\s`(])/(?!/)[A-Za-z0-9._~-]",
-            re.MULTILINE,
-        )
+        absolute_posix_path = re.compile(r"(?:^|[\s`(])/(?!/)[A-Za-z0-9._~-]", re.MULTILINE)
         absolute_windows_path = re.compile(r"\b[A-Za-z]:[\\/]")
         parent_traversal = re.compile(r"(?:^|[\s`(])\.\./")
         relative_link = re.compile(r"\]\((?!https?://|#)([^)#]+)")
-
         root = ROOT.resolve()
         for path in PUBLIC_CONTRACTS:
             with self.subTest(path=path):
@@ -794,8 +332,13 @@ class GitHubGovernanceContractTests(unittest.TestCase):
 
     def test_text_contracts_use_clean_files(self) -> None:
         for path in (
+            BEHAVIOR,
+            CONTEXT,
             GOVERNANCE,
             CONTRIBUTING,
+            HASKELL_AUTHORING,
+            HASKELL_REVIEW,
+            STRATEGY_REVIEW,
             FRAMEWORK_FORM,
             MAINTENANCE_FORM,
             FORM_CONFIG,

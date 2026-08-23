@@ -1,174 +1,142 @@
 # O2I Governance Guidelines
 
-O2I uses a lean, agentic-first rule for change: think before writing. This contract governs O2I development and defines no fachliche O2I semantics.
+O2I governance protects product quality and clear authority with the least process justified by actual risk. It defines no fachliche O2I semantics.
+
+## Operating Principles
+
+- Prefer working software, executable evidence, and clear ownership over ceremonial proof.
+- Apply more process only when impact, irreversibility, or blast radius justifies it.
+- Treat integration feedback as normal engineering evidence, especially during the O2I general overhaul.
+- Preserve accepted evidence for its exact revision and scope without claiming permanent defect-freedom.
+- Keep decisions discoverable, but record each fact once in its owning system.
+- Never weaken deterministic verification, type safety, repository autonomy, documentation quality, security, or publication checks to save process effort.
 
 ## Authority
 
-- A GitHub Issue owns its problem, target, scope, acceptance criteria, dependencies, admission, implementation contract, review evidence, and open or closed state.
+- A GitHub Issue owns its problem, target, scope, acceptance criteria, dependencies, material decisions, review evidence, and open or closed state.
+- For Issue-free Routine work, the explicit Product Owner request owns the bounded scope and the concise repository handoff records it for local continuity. This exception creates no Project item, dependency, or durable product contract.
 - Native Issue Dependencies own genuine prerequisite relations.
-- The public GitHub Project [O2I](https://github.com/users/normenmueller/projects/4) owns workflow status and Product Owner ordering. It owns no contract, admission, dependency, review, or closure fact.
-- `.ai4x/STATE.md` holds only the activated repository-local handoff. It is neither backlog nor history.
-- Git commits and CI own implementation and verification artifacts.
+- The public GitHub Project [O2I](https://github.com/users/normenmueller/projects/4) owns workflow status and Product Owner ordering. It owns no product contract or acceptance fact.
+- `.ai4x/STATE.md` is a concise repository-local handoff, not a backlog, audit log, or second workflow authority.
+- Git commits and deterministic checks own implementation and verification artifacts.
 - `CONTRIBUTING.md` is the concise human-facing projection of this contract.
 
-Do not duplicate Project workflow state or Project history in `.ai4x`.
+## Risk-Proportionate Change Paths
 
-## Change Classification
+Classify the actual change by impact, reversibility, and blast radius. Labels aid discovery but never determine process by themselves.
 
-Use `framework-change` when work affects terminology, metamodel semantics, normative syntax, formalization, validation behavior, or a public API.
+### Routine
 
-Use `maintenance` for semantics-preserving tooling, presentation, tests, CI, agent memory, workflow, or repository administration. Review depth follows demonstrated risk. If classification is uncertain, use `framework-change`.
+Routine work is reversible, local, and semantics-preserving. Examples include focused bug fixes, refactoring without public-contract change, tests, documentation corrections, CI, tooling, and repository administration.
 
-## Maintenance Review
+Minimum path: one understandable Issue or explicit Product Owner request, one focused candidate, relevant deterministic checks, and author self-review. Add an independent reviewer only when a material risk cannot be credibly closed by tests and local inspection.
 
-Maintenance has no Framework Admission requirement or Admission digest. Advisory review is optional and never grants implementation authority or produces gate evidence.
+### Significant
 
-Before acceptance, every exact Maintenance candidate revision receives at least one independent Finalreview by an external reviewer whose capability matches the actual impact and risk of the change. Record the selected capability and one concise risk rationale. Add another reviewer only when a materially distinct risk cannot be credibly assessed by the selected reviewer. Do not impose a fixed capability table, reviewer bundle, reviewer count, or reviewer-selection mechanism.
+Significant work affects a public contract, crosses package or capability ownership, performs a migration, or has material user or repository blast radius without changing protected fachliche meaning.
 
-Each Finalreview binds the exact revision and scope and records findings, checks, and scores for its selected quality dimensions. Any finding rejects that exact candidate and requires review of a corrected revision. Acceptance requires no finding and 10.0 in every selected dimension.
+Minimum path: one Issue with the design decision and alternatives that matter, explicit execution authority, relevant deterministic verification, and at least one independent reviewer whose capability matches the primary risk. Add another reviewer only for a materially distinct risk.
 
-Suspected terminology, metamodel-semantic, normative-syntax, formalization, validation-behavior, or public-API impact triggers reclassification assessment as `framework-change`; Maintenance review never substitutes for Framework Admission.
+### Protected
 
-## Refinement And Authorization
+Protected work changes fachliche terminology or metamodel semantics, normative syntax, irreversible compatibility commitments, release or publication authority, security-sensitive behavior, or repository governance authority.
 
-The linear workflow is:
+Minimum path: explicit Product Owner decision, an Issue that states problem, benefit, target, scope, non-goals, risks, and observable acceptance criteria, risk-selected independent specialist review, complete applicable verification, and explicit Product Owner publication authority.
+
+An exact digest or immutable manifest is required only for an externally supplied authority, a release artifact, security-sensitive evidence, or another stated integrity need. File count, implementation effort, or uncertainty alone never escalates a change to the maximum process. When classification remains genuinely ambiguous after inspection, select the next safer path, not automatically `Protected`.
+
+## Workflow
+
+The Project workflow is:
 
 ```text
 Backlog -> Refinement -> Ready -> In progress -> In review -> Done
+                                      |
+                                      +-> Paused -> Ready
 ```
 
-- `Backlog` captures an understandable idea, problem, and rough target without design, admission, or implementation authority.
-- `Refinement` is the active preparation stage in which the complete Issue body and existing comments are assessed and consolidated into one viable, internally consistent contract; applicable Admission and implementation planning are completed before Product Owner authorization.
-- `Ready` is an open Issue explicitly authorized by the Product Owner, complete for its applicable Admission and implementation contract, within the recorded local authorization scope, free of any prerequisite blocking its next action, and queued for execution.
-- `In progress` is authorized work actively implemented by an agent.
-- `In review` binds an exact candidate revision to mandatory verification and risk-selected independent review.
-- `Done` is accepted, remotely available, successfully verified when remote verification is required, and closed.
-- `Paused` is a side state for an actual interruption with one explicit reason and return condition.
+- `Backlog` is an understandable idea or problem.
+- `Refinement` is used when a material product or design decision still needs preparation. It is not a mandatory stop for routine work or already explicit Product Owner instructions.
+- `Ready` is authorized and free of a prerequisite that blocks its next action. Explicit Product Owner direction can establish this authority without ceremonial status hops.
+- `In progress` covers active design, implementation, investigation, reproduction, and correction.
+- `In review` means a complete candidate is undergoing its required checks or awaits Product Owner publication authority.
+- `Paused` is only a genuine wait state. Its Issue records one reason and return condition; active investigation is never paused merely because a question exists.
+- `Done` is accepted, remotely available when publication is required, closed, and successfully verified at the required boundary.
 
-Backlog intake is deliberately lightweight. When the Product Owner presents an idea for Backlog intake, the primary agent briefly evaluates O2I fit, expected benefit, possible duplicates, change classification, and suitable labels; asks only questions that materially affect capture; and records a suitable idea directly in `Backlog` without design, Admission, or implementation authority.
+The Board reflects work; it does not manufacture authority. The Product Owner sets priorities and decides protected scope, publication, and release. Agents may administer statuses after explicit authority and may correct an inaccurate status to reflect observed work.
 
-Agents move `Backlog -> Refinement` when material preparation begins. They read the complete Issue body and every existing comment, resolve compatible material into the body, and obtain an explicit Product Owner decision for conflicts or superseded instructions. Refinement is not implementation.
+Project order never creates a dependency. Use native Issue Dependencies for genuine prerequisites. Record an external prerequisite once in the affected Issue with its source and next-check condition.
 
-Only the Product Owner moves `Refinement -> Ready`. That transition confirms completed refinement and grants execution authorization. Agents neither perform nor infer it.
+## Epics, Stories, And Batches
 
-Agents control later transitions within the authorized contract:
+Use native Sub-Issues when they materially improve visibility of a multi-part deliverable. Do not create them merely because work has multiple files, owners, days, or handoffs.
 
-- `Ready -> In progress` requires the complete Ready contract to remain true and follows Ready order unless the Product Owner explicitly authorizes parallel execution or another order.
-- `In progress -> In review` requires release notes when release-relevant, completed implementation and verification, and one committed exact candidate revision.
-- `In review -> In progress` follows a rejected review or open finding and requires no renewed Product Owner authorization.
-- `In review -> Done` requires accepted review evidence for that exact revision, remote availability, required remote verification, Issue closure, and then Project status `Done`.
-- `In progress -> Paused` records the actual interruption and one return condition.
-- `Paused -> Ready` requires that condition and every genuine blocker to be resolved. Existing authorization remains valid only for unchanged scope; a material scope change returns through refinement and Product Owner authorization.
+The parent owns integrated scope, authority, acceptance, and publication. A Story or batch owns one bounded deliverable and its own open or closed state; it adds no product scope or authority and never substitutes for a dependency. Keep its body concise. Put active Stories on the Project when that improves Product Owner visibility.
 
-Vertical order means intake priority in `Backlog`, refinement and Product Owner decision priority in `Refinement`, and authorized execution order in `Ready`. Order in every other Project column has no workflow meaning. After completing authorized work, agents continue with the next Ready Issue or pause when none exists.
+Close a Story when its bounded deliverable and checks are complete. The parent remains open until integrated acceptance and publication conditions are met. A new concern outside the parent scope receives its own Issue.
 
-Later comments never silently mutate the contract. During `Refinement`, consolidate them into the Issue body before `Ready`; after authorization, a material scope change returns through `Refinement` and Product Owner authorization or receives a new Issue. Findings within admitted scope remain correction work.
+## Later Integration Findings
 
-## Implementation Batches
+A concern discovered while consuming accepted work is first an acceptance challenge, not a retroactive invalidation.
 
-When the authorized implementation contract names implementation batches, activation of the parent as `In progress` creates exactly one direct GitHub Sub-Issue for every named batch before that batch begins. An authorized contract amendment that adds a batch creates its Sub-Issue before the new batch begins. Work without an explicit batch-based implementation contract creates no Sub-Issues; ownership, blockers, handoffs, size, and duration introduce no additional trigger.
+1. Reproduce the concern against the exact accepted revision and governing authority.
+2. Classify it as a predecessor defect, current-work responsibility, contract ambiguity, or non-finding.
+3. Keep the accepted historical evidence valid for its declared subject.
+4. Create a new linked correction Issue for a confirmed predecessor defect by default. Reopen closed history only when the Product Owner explicitly chooses that representation.
+5. Continue active reproduction and correction in `In progress`; use `Paused` only for an actual wait state.
 
-For Maintenance, the parent Issue body is the implementation contract. For a Framework Change, the separate implementation-contract comment remains authoritative. Each batch Sub-Issue body contains only the parent Issue link, the Framework Change implementation-contract comment link when applicable, concise deliverable, inherited batch completion conditions, and the fixed notice that the child makes one authorized implementation batch visible, adds no scope or authorization, and leaves the parent authoritative. The batch identifier and batch name use only the native GitHub Issue title; assignment uses only native GitHub assignee metadata and is never copied into the body. Lifecycle comments may record only a blocker or pause reason, its return condition, and implementation or verification evidence.
+A challenge blocks only the dependent action it makes unsafe. It never silently expands scope or authorizes a workaround, compatibility layer, weakened verification, or change to fachliche meaning.
 
-Batch Sub-Issues remain outside the O2I Project and have no independent authorization, Admission, dependency, Project workflow, review, or acceptance authority over the parent. Each child owns its own open or closed state; closing it records only completion of that batch and neither accepts nor closes the parent. They never copy parent-wide contracts or evidence, never nest, and never substitute for native Issue Dependencies.
+## Review
 
-Close a batch Sub-Issue when its contracted deliverable and completion conditions are satisfied. A blocked or paused batch records its reason and return condition without automatically changing the parent. The parent enters `In review` only after every required batch Sub-Issue is closed; a review correction reopens the affected batch when the correction belongs to it.
+Every review records the reviewed revision or other exact subject, declared scope, reviewer capability, checks performed, findings, and one verdict:
 
-Implementation commits reference their active batch with `Refs #N`. After the exact batch candidate is accepted, the final authority or handoff commit uses `Closes #N` only when that commit completes every batch condition and is intended for the default branch; the Product Owner push then publishes and closes the batch atomically. If an accepted batch was already published without the closing keyword, close it manually after recording evidence. Never rewrite existing history merely to add `Closes #N`.
+- `accepted`: no blocking finding remains;
+- `accepted with follow-ups`: no blocking finding remains and separately tracked advisory improvements do not prevent acceptance;
+- `changes required`: at least one blocking finding remains.
 
-Work discovered outside the authorized parent contract stops and follows ordinary refinement and Product Owner authorization or receives a separate Backlog Issue. A batch Sub-Issue never absorbs new scope.
+Numerical scores are prohibited. Review depth follows the risk path above. Reviewers assess critically, neutrally, objectively, and independently; review is never an acceptance default. A reviewer states one target-state remedy for each blocking finding and distinguishes required correction from optional improvement.
 
-## Dependencies
-
-Model every genuine O2I prerequisite with a native Issue Dependency. Project order never creates a dependency. Duplicated prose, labels, and non-blocking lineage links never substitute for one.
-
-A required dependency outside the O2I Issue graph is recorded in the affected Issue with its source and next-check condition. No dedicated label is reserved for it, and a blocker alone does not imply `Paused`.
-
-An idea discovered during implementation receives its own Issue before it changes admitted scope.
-
-## Framework Admission
-
-A Framework-change Issue states:
-
-1. generic problem and affected users;
-2. generic benefit and fit with O2I;
-3. fresh target state;
-4. scope, non-goals, alternatives, and risks;
-5. observable acceptance criteria;
-6. participants, lineage, and required review capabilities.
-
-Strategy and formalization reviewers independently accept the exact Issue-body digest. The author, co-authors, and reviewers are distinct. From the first Admission review, the body is contractually frozen; editing it invalidates Admission.
-
-The implementation contract is written after Admission as one separate digest-bound Issue comment. A changed contract is a new comment and requires a new impact classification.
-
-A digest is lowercase SHA-256 over the exact UTF-8 bytes returned by the GitHub API for the Issue body or implementation-contract comment body, without normalization or an added newline. Comment evidence additionally records the immutable comment database ID.
+Later changes require review only for the changed risk surface. They do not invalidate historical evidence for unchanged revisions and laws. Correct a published review receipt with a new comment rather than editing its history.
 
 ## Remote Facts And Delegation
 
-Delegated agents and independent reviewers never query or mutate remote Issue, Project, review, or CI state directly. They request every material remote fact from the primary agent and state why it is needed.
+Delegated agents and independent reviewers never query or mutate remote Issue, Project, review, or CI state directly. They request material remote facts from the primary agent, which returns the unmodified result or reports it unavailable without inference.
 
-The primary agent performs the authoritative query and returns the unmodified result, including absence or failure. Unavailable facts remain unavailable and are never inferred. Delegated work remains read-only with respect to remote work state.
+Delegated agents never start commands that require host or sandbox approval. The primary agent executes any necessary approved command in the main thread. When GitHub is unavailable, continue only an already active local scope and do not infer remote state.
 
-Read GitHub Issue and comment bodies through the connected GitHub application and compute required SHA-256 digests directly over its exact UTF-8 result in the orchestration process. Do not introduce a repository utility, temporary file, `gh api` pipeline, or Python subprocess for a connector-covered read. Use `gh` only when the connector lacks the required capability.
+Use the connected GitHub application for connector-covered reads. Use `gh` only when the connector lacks the required capability. Stage temporary remote-write bodies under workspace `tmp/`, never in tracked repository paths.
 
-When GitHub is unavailable, agents continue only an already activated local handoff. They never infer, create, transition, or close remote work offline.
-
-## Attribution And Accountability
+## Attribution And Publication
 
 - `gertrud-ai4x` is the transparent O2I machine user for agentic work.
-- Agent-produced commits use `Gertrud ai4X <311782161+gertrud-ai4x@users.noreply.github.com>` as author and preserve the configured accountable human as committer. Never rewrite existing commits merely to add this attribution.
-- Issue-scoped commits include `Refs #N` in the commit body. Use `Closes #N` only when the commit actually completes the Issue; never rewrite existing history merely to add a reference.
-- Add `gertrud-ai4x` as an assignee when the primary agent takes material responsibility for refining, coordinating, or implementing an Issue. Advisory-only participation creates no assignment.
-- A commit that changes `.ai4x/` is an authority commit: keep it separate from implementation changes and use the configured Product Owner identity as both author and committer. The machine user never authors its own operating authority.
-- The primary agent may create an authority commit locally but never pushes it. Before a Product Owner push, report every outgoing commit and its scope. The Product Owner's own push accepts and publishes those authority commits; no separate pre-commit confirmation is required.
-- Agent-originated Issue comments and agent-controlled Project transitions from `Ready` onward use the machine user. If its separate authentication is unavailable, do not impersonate it through the Product Owner account.
-- Product Owner authorization, `Refinement -> Ready`, release authorization, and other accountable decisions remain actions of the Product Owner.
-- The machine user may publish evidence produced by an independent reviewer but never becomes or impersonates that reviewer; the evidence identifies the actual independent capability and exact subject.
-- Store machine-user credentials only in host credential storage, never in the repository or Agent Memory.
+- Agent-produced implementation commits use `Gertrud ai4X <311782161+gertrud-ai4x@users.noreply.github.com>` as author and preserve the configured accountable human as committer.
+- Commits that change `.ai4x/` are Product Owner authority commits and use the configured Product Owner identity as author and committer.
+- Issue-scoped commits include `Refs #N`. Use `Closes #N` only when publication of that commit actually completes the Issue.
+- Assign `gertrud-ai4x` when the primary agent takes material responsibility. Advisory participation alone creates no assignment.
+- Agent-originated Issue comments and agent-administered Project transitions use the machine user. Never impersonate an unavailable identity.
+- The primary agent may prepare and review local candidates within explicit scope. Push, release, protected publication, and accountable Product Owner decisions require explicit Product Owner authority.
 
-## Cross-Cutting Review Dimensions
+Before a Product Owner push, report every outgoing commit, its scope, verification, review verdict, and any non-blocking follow-up. No reviewed file changes occur between accepted review and publication.
 
-Every review considers this cross-cutting dimension inventory:
+## Repository Handoff
 
-- authority consistency;
-- agentic-AI suitability;
-- human usability;
-- clarity;
-- lean proportionality;
-- repository autonomy;
-- workflow determinism; and
-- verification evidence.
+Keep `.ai4x/STATE.md` below 90 lines and useful from an isolated checkout. It contains only:
 
-Score every dimension materially affected by the reviewed scope and its risks. Reviews of `.ai4x`, governance, or repository workflow require all eight dimensions. Applicable Operations contracts add their mandatory specialist dimensions. A reviewer may add risk-specific dimensions but never omit a materially affected or otherwise mandatory dimension.
+- current Issue or `NONE`, and work status;
+- current objective and explicit authority;
+- material risk, blocker, or open acceptance challenge;
+- verification and review state;
+- next action and local return point.
 
-## Review And Closure
-
-Every accepted review comment records:
-
-- phase and reviewer capability;
-- full candidate revision and reviewed scope for Finalreview;
-- verdict, findings, checks, and every required dimension score.
-
-Framework-change evidence additionally records the exact Issue-body digest for Admission and the implementation-contract comment ID and digest for Finalreview. Maintenance Finalreview evidence instead records the selected capability and concise risk rationale; it requires neither an Admission digest nor an implementation-contract comment.
-
-Reviewers assess critically, neutrally, objectively, and independently. Review is never an acceptance default: reject the candidate when a substantiated objection, improvement, or materially better alternative exists under the applicable criteria of leanness, clarity, elegance, robustness, modularity, and usefulness.
-
-For Framework Changes, one reviewer satisfies one capability per gate. Maintenance follows the minimum independent-review contract above. Finalreviews bind the same candidate revision. Acceptance requires no finding and 10.0 in every required dimension.
-
-Accepted comments are append-only. Editing invalidates the evidence; corrections use a new comment. Review capabilities follow actual impact, and semantics-preserving Maintenance does not activate every specialist by default.
-
-After acceptance, make the accepted exact revision available from the configured remote, complete required remote verification, close the Issue, and set Project status `Done`. No reviewed file changes between Finalreview and publication.
-
-Git and the Issue retain history. No local change archive is created. A rejected Finalreview returns to `In progress`. Work discarded by the Product Owner is closed as not planned and its Project item is archived.
+Use `NONE` only for explicit Product Owner authority over Issue-free Routine work. Use `ACTIVE` for design, implementation, investigation, correction, review, and publication preparation; `PAUSED` only for a genuine wait; and `COMPLETE` only after the recorded work is actually complete. Do not create self-referential gates, duplicate Issue history, or require a follow-up commit merely to refresh a stale handoff after publication.
 
 ## Verification
 
-Repository verification remains deterministic and network-independent. Before every commit, run every verification stage selected for the changed paths by the canonical path matrix; if classification is unknown or spans a shared contract, run the complete suite. Before every release tag, run the complete suite locally:
+Repository verification remains deterministic and network-independent. Before every commit, run every stage selected for the changed paths by the canonical path matrix. If classification is unknown or spans a shared contract, run the complete suite. Before every release tag, run:
 
 ```sh
 ./utl/verify.sh
 ```
 
-Direct branch pushes do not trigger GitHub Actions. Remote verification runs only for Pull Requests, manual dispatches, and release tags matching `o2i-v*`. Pull Requests use conservative path-sensitive selection; manual dispatches and release tags always run the complete suite. A release is not accepted until its remote verification succeeds.
-
-Do not use `[skip ci]` as a routine workflow mechanism. The repository trigger policy, not commit-message decoration, owns whether remote verification runs.
+Direct branch pushes do not trigger GitHub Actions. Remote verification runs only for Pull Requests, manual dispatches, and release tags matching `o2i-v*`. A release is accepted only after required remote verification succeeds. Do not use `[skip ci]` as a routine workflow mechanism.

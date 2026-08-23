@@ -1,5 +1,5 @@
 name: Framework change
-description: Propose a normative change to O2I.
+description: Propose a Significant or Protected change to O2I.
 title: ""
 labels:
   - framework-change
@@ -7,8 +7,19 @@ body:
   - type: markdown
     attributes:
       value: |
-        Use this form for terminology, metamodel, syntax, formalization,
-        validation, or public API changes.
+        Use this form for Significant or Protected terminology, metamodel,
+        syntax, formalization, validation, or public API changes. Routine work
+        uses the Maintenance form or an explicit Product Owner request.
+  - type: dropdown
+    id: change_path
+    attributes:
+      label: Change path
+      description: Select the risk-proportionate path. Reclassify if later evidence changes the risk.
+      options:
+        - Significant
+        - Protected
+    validations:
+      required: true
   - type: textarea
     id: problem
     attributes:
@@ -48,9 +59,7 @@ body:
     id: alternatives
     attributes:
       label: Alternatives
-      description: Which credible alternatives were considered, and why are they insufficient?
-    validations:
-      required: true
+      description: Which credible alternatives matter, and why are they insufficient? Leave empty when none materially differs.
   - type: textarea
     id: risks
     attributes:
@@ -66,12 +75,8 @@ body:
       placeholder: |
         Coauthors: none
         Derived from: none
-    validations:
-      required: true
   - type: textarea
     id: reviews
     attributes:
       label: Required review capabilities
       description: Which independent capabilities are required by the actual risk?
-    validations:
-      required: true

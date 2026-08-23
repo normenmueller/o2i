@@ -33,12 +33,10 @@ The reviewer is read-only and must assess:
 - practical applicability, limitations, and governance implications;
 - whether O2I creates genuine strategic value without unnecessary ceremony.
 
-# Findings And Scores
+# Findings And Verdict
 
-- Findings use Blocker, High, Medium, and Low severity and one concrete
-  target-state solution.
-- Score separately: fachliche quality, source grounding, authors' derivation,
-  strategic coherence, terminology, practical applicability, limitations, and
-  overall value.
-- Acceptance requires no unresolved finding and 10.0 in every required
-  dimension.
+- Report blocking findings before advisory follow-ups. Use severity only when it materially helps prioritize correction.
+- Every blocking finding includes one concrete target-state solution.
+- Assess every materially affected dimension among fachliche quality, source grounding, authors' derivation, strategic coherence, terminology, practical applicability, limitations, and overall value.
+- Use exactly one verdict from the governance contract: `accepted`, `accepted with follow-ups`, or `changes required`.
+- Acceptance requires no unresolved blocking finding. Numerical scores are prohibited.

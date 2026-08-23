@@ -20,7 +20,7 @@ repository.
 | Strategy design or strategy review | `.ai4x/operations/strategy-review.md` |
 | Git commit, remote write, normative O2I change, Issue, Project, or workflow administration | `.ai4x/governance/guidelines.md` |
 
-Every independent review additionally reads `.ai4x/governance/guidelines.md` for the cross-cutting dimension inventory. Applicable Operations contracts remain additive.
+Every independent review additionally reads `.ai4x/governance/guidelines.md` for the risk-proportionate review contract. Applicable Operations contracts remain additive.
 
 Read multiple contracts when a task crosses classes. Do not load unrelated
 contracts.
@@ -51,7 +51,7 @@ resolved in the owning source before synchronization.
 | Exact concrete ArchiMate mapping | `spc/ctr/archimate/profile.json` | White Paper projection, syntax Views, notation adapters |
 | Machine-checkable formalization | `spc/lib/core/` | Inspection, adapters, CLI |
 | AMX profile validation and projection | `spc/lib/adapter/amx/` | CLI reports |
-| Change contract, admission, dependencies, reviews, and open/closed state | GitHub Issues | Project workflow, Agent Memory handoff |
+| Change contract, material decisions, dependencies, reviews, and open/closed state | GitHub Issues; explicit Product Owner request for Issue-free Routine work | Project workflow, Agent Memory handoff |
 | Workflow status and PO ordering | GitHub Project `O2I` | Issue contract, Agent Memory handoff |
 | Verification evidence | tests and generated snapshots | no semantic ownership |
 
@@ -60,46 +60,17 @@ prove, own, or define O2I semantics.
 
 # Execution Contract
 
-`.ai4x/STATE.md` uses four independent fields:
+Work only within the latest explicit Product Owner authority and, when one exists, the owning Issue. An explicit Product Owner request may authorize clear Routine work without an Issue or additional authorization ceremony. A material expansion of protected scope returns to the Product Owner before implementation.
 
-- `Work status`: `ACTIVE | PAUSED | BLOCKED | COMPLETE`
-- `Execution authorization`: `APPROVED | REQUIRED`
-- `Current gate`: one stable gate identifier or `NONE`
-- `Gate status`: `NOT_REQUIRED | PENDING | ACCEPTED | REJECTED`
+`.ai4x/STATE.md` is a concise local return point. It records one `Work status` value:
 
-Implement or correct autonomously only when work is `ACTIVE` and authorization
-is `APPROVED`, and only within the recorded authorization scope. `COMPLETE`
-permits only already-authorized publication and closure of the accepted exact
-revision. A gate controls acceptance, not permission to implement. `REJECTED`
-returns work to correction; `PENDING` awaits review; `ACCEPTED` requires no
-unresolved finding and all recorded checks.
+- `ACTIVE` for design, implementation, investigation, correction, review, or publication preparation;
+- `PAUSED` only for a genuine wait state with one reason and return condition;
+- `COMPLETE` only when the recorded work is actually complete.
 
-The valid handoff shapes are closed:
+The handoff names the current Issue or `NONE`, objective, authority, material risk or acceptance challenge, verification state, next action, and local return point. `NONE` is valid only for Issue-free Routine work explicitly requested by the Product Owner. The handoff contains no self-referential gate, duplicated Issue history, or mandatory digest. GitHub Issues and the Project remain authoritative over a stale handoff.
 
-| Work status | Authorization | Current Issue | Current gate | Gate status |
-| --- | --- | --- | --- | --- |
-| `ACTIVE` | `APPROVED` | one Issue | one gate | `PENDING | REJECTED` |
-| `PAUSED` | `REQUIRED` | one Issue or `NONE` | `NONE` | `NOT_REQUIRED` |
-| `BLOCKED` | `REQUIRED` | one Issue | `NONE` | `NOT_REQUIRED` |
-| `COMPLETE` | `APPROVED` | one Issue | one gate | `ACCEPTED` |
-
-Every active gate record in `STATE.md` contains exactly:
-
-- gate attempt ID and scope;
-- exact Git revision when available;
-- mandatory checks;
-- finding status: `OPEN | CLOSED`;
-- result: `PENDING | ACCEPTED | REJECTED`.
-
-A gate-free handoff contains no `Current Gate` section. An active gate contains
-exactly one such section. Accepted revisions remain repository facts;
-recording their closure never creates a new gate.
-
-A review identifies its immutable subject by exact Git revision and declared
-file scope. Any later change within that scope requires a new review for the
-later change without invalidating accepted historical evidence.
-`.ai4x/STATE.md` is volatile runtime handoff and never belongs to an immutable
-implementation review scope.
+A review identifies its exact subject and declared scope. Later changes require review only for the changed risk surface and never invalidate accepted historical evidence for an unchanged subject.
 
 # Universal Design Rules
 
@@ -125,17 +96,16 @@ implementation review scope.
   narrow patch to one file, then reread the changed range and its diff before
   the next edit.
 - Use `rg` and repository tooling for inspection.
-- Move `Backlog -> Refinement` when material preparation begins; read the complete Issue body and every existing comment and consolidate one explicit contract. Only the Product Owner moves `Refinement -> Ready`. Agents control later transitions within the authorized scope according to `.ai4x/governance/guidelines.md`.
+- Use `Refinement` only when a material product or design decision still needs preparation. An explicit Product Owner request may authorize routine or already clear work without ceremonial status hops. Agents administer later transitions within the authorized scope according to `.ai4x/governance/guidelines.md`.
 - Delegated agents and independent reviewers never query or mutate remote work state. They request every material remote fact from the primary agent, which returns the unmodified query result or reports it unavailable without inference.
 - Delegated agents never start commands that require host or sandbox approval. They report the exact command to the primary agent, which executes it in the main thread. Never leave a delegated thread waiting on an approval prompt.
 - Update `CHANGELOG.md` for release-relevant changes.
-- Verify the narrow scope before broad gates.
-- Required external reviews are independent and read-only. Every finding has a
-  severity and one target-state solution; repeat until accepted.
+- Verify the narrow scope before broader checks.
+- Required external reviews are independent and read-only. Distinguish blocking findings from advisory follow-ups, state one target-state solution for each blocking finding, and repeat until no blocking finding remains.
 - Keep `.ai4x/STATE.md` repository-autark and limited to the current handoff. It must
   contain objective, current node, dirty scope, risks, verification, next
   action, and local return point without depending on a workspace plan.
-- Treat GitHub Project Status as the authority for workflow state and its vertical order as PO scheduling authority. Never infer Issue validity, admission, dependencies, review evidence, or closure from Project state.
+- Treat GitHub Project Status as the authority for workflow state and its vertical order as PO scheduling authority. The Board reflects authorization but never creates it. Never infer Issue validity, dependencies, review evidence, or closure from Project state.
 - When GitHub is unavailable, continue only an already activated local handoff.
   Never infer or mutate remote work state offline.
 - Keep `.ai4x/STATE.md` below 90 lines. Remove completed detail once its result and

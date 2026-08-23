@@ -1,78 +1,58 @@
 # Contributing to O2I
 
-Beiträge beginnen mit einem GitHub Issue. Das Issue beschreibt das Problem und den angestrebten Zustand; Pull Requests setzen ein ausreichend geklärtes Issue um.
+Öffentliche Beiträge beginnen mit einem GitHub Issue. Das Issue beschreibt das Problem und den angestrebten Zustand; Pull Requests setzen ein ausreichend geklärtes Issue um. Ein ausdrücklicher PO-Auftrag darf klar begrenzte Routinearbeit auch ohne Issue autorisieren; der lokale Handoff hält Scope und Autorität für die Arbeitskontinuität fest.
 
-Das öffentliche GitHub Project [O2I](https://github.com/users/normenmueller/projects/4) bildet Arbeitszustand und PO-Reihenfolge ab. Issues bleiben für Vertrag, Abhängigkeiten, Admission, Reviews sowie offenen oder geschlossenen Zustand maßgebend.
+Das öffentliche GitHub Project [O2I](https://github.com/users/normenmueller/projects/4) bildet Arbeitszustand und PO-Reihenfolge ab. Issues bleiben für Vertrag, materielle Entscheidungen, Abhängigkeiten, Reviews sowie offenen oder geschlossenen Zustand maßgebend.
 
 Für die Aufnahme ins Backlog genügt eine verständliche Idee mit Problem und grobem Ziel. Ein Agent bewertet kurz O2I-Passung, erwarteten Nutzen, mögliche Dopplungen, Änderungsklasse und Labels und erfasst einen geeigneten Vorschlag ohne Design- oder Umsetzungsfreigabe.
 
-## Arten von Änderungen
+## Risikogerechte Änderungspfade
 
-### Framework Change
+Der notwendige Prozess richtet sich nach Wirkung, Reversibilität und Reichweite der tatsächlichen Änderung. Labels erleichtern das Finden, bestimmen aber nicht automatisch die Governance.
 
-Ein Framework Change verändert Terminologie, Metamodellsemantik, normative Syntax, Formalisierung, Validierungsverhalten oder einen öffentlichen API-Vertrag.
+### Routine
 
-Das Issue enthält:
+Routinearbeit ist lokal, reversibel und semantikerhaltend, beispielsweise ein fokussierter Bugfix, Refactoring ohne öffentlichen Vertragswechsel, Tests, Dokumentationskorrekturen, CI oder Tooling.
 
-- Problem und betroffene Anwender;
-- generischen Nutzen und Passung zu O2I;
-- angestrebten Zustand;
-- Scope und Non-Goals;
-- Akzeptanzkriterien;
-- geprüfte Alternativen;
-- fachliche, technische und nutzungsbezogene Risiken;
-- Autor, Co-Autoren und nicht blockierende Herleitung;
-- erforderliche, risikogerechte Reviewfähigkeiten.
+Minimal erforderlich sind ein verständliches Issue oder ein ausdrücklicher PO-Auftrag, ein fokussierter Kandidat, die relevanten deterministischen Prüfungen und ein kritischer Selbstreview. Ein unabhängiger Reviewer kommt nur hinzu, wenn Tests und lokale Inspektion ein materielles Risiko nicht glaubwürdig schließen.
 
-Die Umsetzung beginnt erst nach fachlicher und formaler Admission. Ab dem ersten Admission Review bleibt der Proposal-Inhalt unverändert und ist über seinen SHA-256 gebunden. Der anschließend erstellte Implementierungsvertrag steht in einem separaten, ebenfalls digestgebundenen Issue-Kommentar. Ein Digest ist der kleingeschriebene SHA-256 der vom GitHub API gelieferten UTF-8-Bytes ohne Normalisierung oder zusätzliches Zeilenende; bei Kommentaren gehört die Kommentar-ID zur Evidenz.
+### Signifikant
 
-### Maintenance
+Signifikante Arbeit verändert einen öffentlichen Vertrag, überschreitet Paket- oder Capability-Grenzen, führt eine Migration durch oder besitzt eine größere technische beziehungsweise nutzungsbezogene Reichweite, ohne geschützte fachliche Bedeutung zu verändern.
 
-Maintenance umfasst Fehlerkorrekturen und Änderungen an Darstellung, Tooling, Tests, CI oder Repository-Administration, sofern sie die O2I-Semantik nicht verändern. Reviewtiefe und Prüfungen richten sich nach dem tatsächlichen Risiko.
+Das Issue hält die relevante Designentscheidung und echte Alternativen fest. Erforderlich sind ausdrückliche Umsetzungsautorität, deterministische Verifikation und mindestens ein unabhängiger Reviewer mit passender Fähigkeit. Weitere Reviewer gibt es nur für materiell eigenständige Risiken.
 
-Bei unklarer Einordnung gilt die strengere Einordnung als Framework Change.
+### Geschützt
 
-Maintenance benötigt weder Framework Admission noch Admission-Digest. Ein Advisory Review ist optional und niemals Freigabe oder Gate-Evidenz. Jeder exakte Maintenance-Kandidat erhält vor seiner Annahme mindestens einen unabhängigen externen Finalreviewer, dessen Fähigkeit zum tatsächlichen Änderungsrisiko passt. Ein weiterer Reviewer kommt nur für ein materiell anderes Risiko hinzu, das der bereits ausgewählte Reviewer nicht glaubwürdig beurteilen kann; eine feste Reviewer-Matrix, -Anzahl oder Auswahlmechanik gibt es nicht.
+Geschützte Arbeit verändert fachliche Terminologie oder Metamodellsemantik, normative Syntax, schwer umkehrbare Kompatibilitätszusagen, Release- oder Publikationsautorität, sicherheitsrelevantes Verhalten oder die Repository-Governance selbst.
 
-Der Finalreview bindet Revision und Scope und dokumentiert Auswahlbegründung, Findings, Prüfungen und Bewertungen. Jedes Finding verwirft den exakten Kandidaten und verlangt den Review einer korrigierten Revision. Die Annahme erfordert kein Finding und 10,0 in jeder ausgewählten Dimension. Ein möglicher Einfluss auf O2I-Semantik, normative Syntax, Formalisierung, Validierungsverhalten oder öffentliche APIs verlangt stattdessen die erneute Einordnung als Framework Change.
+Sie benötigt eine ausdrückliche PO-Entscheidung, ein vollständiges aber kompaktes Issue, risikogerecht ausgewählte unabhängige Fachreviews, alle anwendbaren Prüfungen und eine gesonderte PO-Freigabe für Veröffentlichung oder Push. Digests und unveränderliche Manifeste werden nur für externe Autoritäten, Release-Artefakte, sicherheitsrelevante Evidenz oder einen anderen konkret benannten Integritätsbedarf verwendet.
+
+Unklarheit führt nach Prüfung höchstens in die nächstsicherere Klasse, nicht automatisch in den Maximalprozess. Kein Änderungspfad schwächt Tests, Typsicherheit, Reproduzierbarkeit, Dokumentationsqualität, Repository-Autonomie oder Publikationsprüfungen.
 
 ## Status
 
-Das GitHub Project `O2I` ist die Planungssicht des Product Owners:
+Das GitHub Project `O2I` zeigt Arbeitsstand und PO-Reihenfolge:
 
-- `Backlog`: verständliche Idee, noch nicht aufbereitet;
-- `Refinement`: aktive Aufbereitung zu einem konsistenten, entscheidungsreifen Vertrag; noch keine Umsetzung oder Freigabe;
-- `Ready`: offen, vollständig vorbereitet, ohne blockierende Voraussetzung und durch den Product Owner ausdrücklich zur Umsetzung freigegeben;
-- `In progress`: aus `Ready` aktivierte Umsetzung;
-- `Paused`: bewusst ausgesetzt; Grund und Rückkehrbedingung stehen im Issue;
-- `In review`: eine exakte Kandidatenrevision wird geprüft;
-- `Done`: akzeptiert, remote verfügbar, erforderlichenfalls remote verifiziert und geschlossen.
-
-Mit `Backlog -> Refinement` beginnt die materielle Aufbereitung. Agenten lesen den vollständigen Issue-Body und sämtliche vorhandenen Kommentare und führen die akzeptierten Inhalte zu einem eindeutigen Vertrag zusammen; widersprüchliche oder überholte Aussagen benötigen eine ausdrückliche Entscheidung des Product Owners. Diese Aufbereitung ist noch keine Umsetzung.
-
-Ausschließlich der Product Owner verschiebt `Refinement -> Ready`; damit bestätigt er den Abschluss des Refinements und erteilt die Ausführungsfreigabe. Ab `Ready` steuern Agenten Aktivierung, Review, Korrekturen und Abschluss innerhalb des freigegebenen Vertrags. Die Reihenfolge in `Ready` bestimmt die Abarbeitungsfolge, sofern der Product Owner keine andere Reihenfolge oder Parallelisierung freigibt.
+- `Backlog`: verständliche Idee oder Problem;
+- `Refinement`: eine materielle Produkt- oder Designentscheidung wird vorbereitet; kein Pflichtschritt für Routinearbeit oder bereits eindeutige PO-Aufträge;
+- `Ready`: autorisiert und ohne Voraussetzung, die den nächsten Schritt blockiert;
+- `In progress`: aktive Konzeption, Umsetzung, Untersuchung, Reproduktion oder Korrektur;
+- `Paused`: echter Wartezustand mit genau einem Grund und einer Rückkehrbedingung;
+- `In review`: vollständiger Kandidat in Prüfung oder mit ausstehender PO-Publikationsentscheidung;
+- `Done`: akzeptiert, erforderlichenfalls remote verfügbar und verifiziert sowie geschlossen.
 
 ```text
-Backlog -- Beginn --> Refinement -- PO-Freigabe --> Ready -- Aktivierung --> In progress
-                                                        ^                       |
-                                                        |                       +-- Pause --> Paused
-                                                        |                                       |
-                                                        +-- Rückkehrbedingung erfüllt ----------+
-
-In progress -- Kandidat vollständig --> In review -- akzeptiert --> Done
-    ^                                      |
-    +--------------- Findings -------------+
+Backlog -> Refinement -> Ready -> In progress -> In review -> Done
+                                      |
+                                      +-> Paused -> Ready
 ```
 
-Vertikale Reihenfolge bedeutet Aufnahmepriorität in `Backlog`, Aufbereitungs- und Entscheidungspriorität in `Refinement` und autorisierte Abarbeitungsfolge in `Ready`. Die Reihenfolge aller anderen Spalten hat keine Workflow-Bedeutung.
+Das Board bildet Autorität ab, erzeugt sie aber nicht. Ein ausdrücklicher PO-Auftrag kann klare Arbeit ohne zeremonielle Statusdurchläufe autorisieren. Project-Reihenfolge ersetzt keine Abhängigkeit; echte Voraussetzungen werden als native Issue Dependencies modelliert.
 
-Echte Voraussetzungen innerhalb des O2I-Issue-Graphen werden ausschließlich als native Issue Dependencies modelliert. Eine erforderliche Abhängigkeit außerhalb dieses Graphen wird mit Quelle und nächster Prüfbedingung im betroffenen Issue dokumentiert. Project-Reihenfolge ersetzt keine Abhängigkeit; ein Blocker allein setzt ein Issue nicht auf `Paused`.
+Native Sub-Issues werden nur genutzt, wenn sie einen mehrteiligen Liefergegenstand für den Product Owner sichtbar besser machen. Der Parent besitzt integrierten Scope, Autorität, Annahme und Publikation. Eine Story oder ein Batch besitzt genau einen begrenzten Liefergegenstand und den eigenen Open/Closed-Zustand, ergänzt aber keinen Produktscope und keine Autorität. Aktive Stories dürfen zur Sichtbarkeit im Project stehen.
 
-Benannte Umsetzungsbatches werden nach Aktivierung des Parent Issues durch genau je ein direktes GitHub Sub-Issue sichtbar gemacht. Ohne einen ausdrücklich batchbasierten Implementierungsvertrag entstehen keine Sub-Issues. Bei Maintenance ist der Parent-Body der Implementierungsvertrag; bei Framework Changes bleibt der separate Implementierungsvertragskommentar autoritativ. Der Body jedes Sub-Issues enthält nur den Parent-Link, gegebenenfalls den Link auf diesen Vertragskommentar, Liefergegenstand und übernommene Abschlussbedingungen des Batches sowie die feste Notiz, dass das Sub-Issue genau einen autorisierten Batch sichtbar macht, weder Scope noch Autorisierung ergänzt und der Parent autoritativ bleibt. Batch-ID und Batchname werden ausschließlich im nativen GitHub-Issue-Titel geführt. Die Zuweisung wird ausschließlich in nativen GitHub-Assignee-Metadaten geführt. Das Sub-Issue bleibt außerhalb des O2I Projects und besitzt keine eigene Freigabe-, Scope-, Abhängigkeits-, Review- oder Annahmeautorität über den Parent. Weitere Ebenen sind ausgeschlossen, und die Hierarchie ersetzt keine native Issue Dependency.
-
-Jedes Batch Sub-Issue besitzt seinen eigenen Open/Closed-Zustand. Seine Schließung dokumentiert ausschließlich den Abschluss des Batches und bewirkt weder Annahme noch Schließung des Parents. Lifecycle-Kommentare dürfen nur einen Blocker- oder Pausengrund, dessen Rückkehrbedingung sowie Implementierungs- oder Verifikationsevidenz festhalten. Der Parent darf erst nach Schließung aller erforderlichen Batch Sub-Issues in `In review` wechseln. Neue Inhalte werden niemals in ein Sub-Issue aufgenommen, sondern durchlaufen den regulären Refinement- und Freigabeweg.
-
-Vor `In review` sind release-relevante Hinweise ergänzt und der vollständige Kandidat committed. Nach Annahme wird exakt diese Revision veröffentlicht und verifiziert. Findings führen zurück zu `In progress`; ein vom Product Owner verworfenes Vorhaben wird als `not planned` geschlossen und sein Project-Eintrag archiviert.
+Ein bei der späteren Integration entdecktes Problem ist zunächst eine Akzeptanz-Challenge und keine rückwirkende Entwertung. Es wird gegen die exakte akzeptierte Revision und ihre Autorität reproduziert und danach als Vorgängerfehler, Verantwortung der aktuellen Arbeit, Vertragsunklarheit oder Nicht-Finding klassifiziert. Ein bestätigter Vorgängerfehler erhält standardmäßig ein neues verlinktes Korrektur-Issue; geschlossene Historie bleibt geschlossen, sofern der Product Owner keine andere Darstellung entscheidet.
 
 ## Repository-Struktur
 
@@ -106,7 +86,7 @@ Agentisch erstellte Commits führen den transparenten Machine User [`gertrud-ai4
 
 ## Umsetzung
 
-- Änderungen bleiben im Scope des Issues.
+- Änderungen bleiben im Scope des Issues oder des ausdrücklichen PO-Auftrags.
 - Neue fachliche Ideen erhalten ein eigenes Issue, bevor sie den Scope ändern.
 - Veröffentlichungstexte beschreiben ausschließlich den frischen SOLL-Zustand.
 - Normative O2I-Designs verwenden keine Workarounds, Kompatibilitätsschichten oder Migrationskonstrukte; ein unpassender Kern wird kohärent neu entworfen.
@@ -116,20 +96,17 @@ Agentisch erstellte Commits führen den transparenten Machine User [`gertrud-ai4
 
 ## Review
 
-Framework Changes werden von den im Issue benannten unabhängigen Fähigkeiten geprüft. Ein Review bindet:
+Ein Review dokumentiert den exakten Gegenstand und Scope, die Reviewerfähigkeit, ausgeführte Prüfungen, Findings und genau eines dieser Verdicts:
 
-- Issue-Body-Digest für Admission;
-- ID und Digest des Implementierungsvertrags-Kommentars für Finalreview;
-- vollständige Git-Revision und Scope beim Finalreview;
-- Reviewerfähigkeit und Verdict;
-- Findings und ausgeführte Prüfungen;
-- Bewertung jeder erforderlichen Qualitätsdimension.
+- `accepted`: kein blockierendes Finding bleibt offen;
+- `accepted with follow-ups`: kein blockierendes Finding bleibt offen; separat erfasste Verbesserungen verhindern die Annahme nicht;
+- `changes required`: mindestens ein blockierendes Finding bleibt offen.
 
-Maintenance-Finalreviews benötigen keinen Admission-Digest und keinen separaten Implementierungsvertrags-Kommentar. Sie binden die vollständige Revision und den Scope und dokumentieren die ausgewählte Reviewerfähigkeit, die knappe Risikobegründung, Findings, Prüfungen und Bewertungen.
+Numerische Bewertungen entfallen. Reviewtiefe und Zahl der Reviewer folgen dem tatsächlichen Risiko. Routinearbeit benötigt nicht automatisch einen externen Reviewer; signifikante Arbeit mindestens einen passenden unabhängigen Reviewer; geschützte Arbeit risikogerecht ausgewählte unabhängige Fachreviews und die verantwortliche PO-Entscheidung.
 
-Reviewer bewerten kritisch, neutral, objektiv und unabhängig. Ein Review ist keine Annahmeautomatik: Begründete Einwände, Verbesserungen oder materiell bessere Alternativen hinsichtlich Leanheit, Klarheit, Eleganz, Robustheit, Modularität oder Nutzen führen zur Ablehnung des Kandidaten.
+Reviewer bewerten kritisch, neutral, objektiv und unabhängig. Ein Review ist keine Annahmeautomatik. Jedes blockierende Finding benennt eine konkrete SOLL-Lösung und bleibt von optionalen Verbesserungen unterscheidbar.
 
-Akzeptierte Reviewkommentare werden nicht editiert. Korrekturen erfolgen als neuer Kommentar. Ein geänderter Reviewkommentar ist keine gültige Akzeptanzevidenz.
+Spätere Änderungen benötigen nur für ihre geänderte Risikofläche einen neuen Review. Sie entwerten akzeptierte historische Evidenz für unveränderte Revisionen und Gesetze nicht. Korrekturen eines veröffentlichten Review-Belegs erfolgen durch einen neuen Kommentar statt durch das Umschreiben der Historie.
 
 ## Verifikation
 

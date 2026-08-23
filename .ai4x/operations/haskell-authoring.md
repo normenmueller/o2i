@@ -51,22 +51,23 @@ adapters, or Haddock.
 
 # Co-Authoring
 
-- Trigger external co-authoring for changes to type design, validation
-  semantics, public API, package architecture, adapter projection, or
-  non-mechanical Haskell implementation.
+- Use external co-authoring when a Significant or Protected change has design
+  or implementation complexity that materially benefits from a second active
+  author. Haskell, type design, or a public API alone never makes co-authoring
+  mandatory.
 - The co-author role combines metamodel, formal-methods, type-theory, and
   idiomatic Haskell expertise during design and implementation.
 - Assign small semantically coherent packages with explicit write scope and one
   independently verifiable result.
 - Each handoff records target contract, owned paths, changed paths, checks,
   unresolved findings, and whether commit permission exists. Record its current
-  package and gate in `.ai4x/STATE.md`.
+  package and next action in `.ai4x/STATE.md`.
 - Preserve concurrent work. Do not permit commits or model edits unless the
   assignment explicitly authorizes them.
 
 # Verification
 
-Canonical repository-root gate:
+Canonical repository-root verification entry:
 
 ```text
 ./utl/verify.sh haskell
