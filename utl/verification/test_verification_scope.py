@@ -287,8 +287,13 @@ class VerificationWorkflowTests(unittest.TestCase):
         content = WORKFLOW.read_text(encoding="utf-8")
         self.assertIn("CABAL_VERSION: 3.16.1.0", content)
         self.assertIn("GHC_VERSION: 9.10.3", content)
+        self.assertIn("REUSE_VERSION: 6.2.0", content)
         self.assertNotIn("CABAL_VERSION: 3.14.2.0", content)
         self.assertNotIn("GHC_VERSION: 9.6.5", content)
+        self.assertIn(
+            'pipx install "reuse[charset-normalizer]==$REUSE_VERSION"',
+            content,
+        )
         self.assertIn(
             "if [ \"$O2I_EVENT_NAME\" = 'pull_request' ]; then",
             content,
@@ -345,7 +350,7 @@ on:
             ("Verify model contracts", "model"),
             ("Set up Haskell", "haskell"),
             ("Restore Haskell dependencies and tools", "haskell"),
-            ("Install Haskell verification tools", "haskell"),
+            ("Install Foundation verification tools", "haskell"),
             ("Verify Haskell specification", "haskell"),
             ("Install White Paper dependencies", "paper"),
             ("Verify White Paper", "paper"),
