@@ -126,8 +126,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      CABAL_VERSION: 3.14.2.0
-      GHC_VERSION: 9.6.5
+      CABAL_VERSION: 3.16.1.0
+      GHC_VERSION: 9.10.3
       HINDENT_VERSION: 6.2.1
 
     steps:
@@ -162,7 +162,7 @@ jobs:
             ~/.cabal/packages
             ~/.cabal/store
             ~/.local/bin/hindent
-          key: haskell-dependencies-${{ runner.os }}-ghc-${{ env.GHC_VERSION }}-cabal-${{ env.CABAL_VERSION }}-hindent-${{ env.HINDENT_VERSION }}-${{ hashFiles('spc/cabal.project', 'spc/**/*.cabal') }}
+          key: haskell-dependencies-${{ runner.os }}-ghc-${{ env.GHC_VERSION }}-cabal-${{ env.CABAL_VERSION }}-hindent-${{ env.HINDENT_VERSION }}-${{ hashFiles('spc/.ghc-version', 'spc/cabal.project', 'spc/cabal.project.freeze', 'spc/cabal.foundation.project', 'spc/cabal.foundation.project.freeze', 'spc/**/*.cabal') }}
           restore-keys: |
             haskell-dependencies-${{ runner.os }}-ghc-${{ env.GHC_VERSION }}-cabal-${{ env.CABAL_VERSION }}-hindent-${{ env.HINDENT_VERSION }}-
 
@@ -180,7 +180,12 @@ jobs:
 
       - name: Verify Haskell specification
         if: steps.scope.outputs.haskell == 'true'
-        run: ./utl/verify.sh haskell
+        run: |
+          if [ "$O2I_EVENT_NAME" = 'pull_request' ]; then
+            ./utl/verify.sh foundation
+          else
+            ./utl/verify.sh haskell
+          fi
 
       - name: Report skipped Haskell verification
         if: steps.scope.outputs.haskell != 'true'

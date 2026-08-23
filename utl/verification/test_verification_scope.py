@@ -283,6 +283,28 @@ reason=path-matrix""",
 class VerificationWorkflowTests(unittest.TestCase):
     """Keep all required checks visible while heavy work is conditional."""
 
+    def test_haskell_job_consumes_the_frozen_foundation_contract(self) -> None:
+        content = WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("CABAL_VERSION: 3.16.1.0", content)
+        self.assertIn("GHC_VERSION: 9.10.3", content)
+        self.assertNotIn("CABAL_VERSION: 3.14.2.0", content)
+        self.assertNotIn("GHC_VERSION: 9.6.5", content)
+        self.assertIn(
+            "if [ \"$O2I_EVENT_NAME\" = 'pull_request' ]; then",
+            content,
+        )
+        self.assertIn("./utl/verify.sh foundation", content)
+        self.assertIn("./utl/verify.sh haskell", content)
+        for contract in (
+            "spc/.ghc-version",
+            "spc/cabal.project",
+            "spc/cabal.project.freeze",
+            "spc/cabal.foundation.project",
+            "spc/cabal.foundation.project.freeze",
+        ):
+            with self.subTest(contract=contract):
+                self.assertIn(contract, content)
+
     def test_remote_triggers_are_pull_request_manual_and_release_only(self) -> None:
         content = WORKFLOW.read_text(encoding="utf-8")
         self.assertIn(
