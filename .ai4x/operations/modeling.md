@@ -25,12 +25,7 @@ instance-conformance work.
 - Syntax Views map semantic types, relation families, metadata, and structured
   patterns to ArchiMate notation. They never repeat a complete semantic graph
   merely to illustrate the mapping.
-- `O2I Syntax - Carriers` and `O2I Syntax - Relations` jointly form the
-  complete reference visualization of the declarative profile contract. The
-  former owns carrier projection; the latter owns relation-family projection.
-  Add a focused presentation excerpt only when a concrete publication need
-  requires it; such an excerpt reuses the exact persisted mapping elements and
-  relationships and introduces no independent contract.
+- `O2I Syntax - Carriers` and `O2I Syntax - Relations` jointly form the complete reference visualization of carrier mappings and applicable relation-mapping families. The former owns carrier projection; the latter owns relation-family projection. Focused syntax Views own metadata-bearing or non-binary patterns that cannot be represented by those two mapping Views, including contextualization, structured propositions, and qualification proposals. Every such current Profile mapping requires one checked focused visualization; each View reuses the exact persisted mapping elements and relationships and introduces no independent contract.
 - Keep carrier mappings, relation mappings, and non-trivial syntax patterns
   explicit:
   - carrier mappings define which ArchiMate element represents an O2I type;
@@ -69,9 +64,7 @@ instance-conformance work.
 - Illustrative Views explain a conceptual reading without claiming executable
   profile or conformance status. `O2I Layered Cake` is such a non-executable
   overview; its repository contract is checked without `o2i inspect`.
-- `spc/ctr/archimate/profile.json` is the exact mapping authority. `O2I Syntax
-  - Carriers` and `O2I Syntax - Relations` must jointly visualize it
-  completely.
+- `spc/ctr/archimate/profile.json` is the exact mapping authority. `O2I Syntax - Carriers`, `O2I Syntax - Relations`, and the focused syntax Views must jointly visualize every current mapping class without creating a parallel registry.
 - Executable conformance and instance Views require Haskell `o2i inspect`.
 
 # ArchiMate Applicability Review

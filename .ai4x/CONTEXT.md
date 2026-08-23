@@ -45,8 +45,7 @@ the Framework but never define its generic semantics.
   attainment are assessed independently.
 - O2I supports evidence consistency and plausible attribution, not causal
   proof.
-- Validation stages:
-  `RawGraph -> WellFormedGraph -> SemanticallyValidModel -> TraceableEffectModel -> EvidenceReadyModel -> EvidenceAssessedModel`.
+- The current Foundation separates a Profile-projected `StructureProjection`, Core-owned `WellFormedGraph`, and Core-owned `SemanticallyValidModel`. Qualification, trace, readiness, and assessment remain separate capabilities with their own inputs, opaque results, rules, and diagnostics; they are not constructors of one monolithic validation pipeline.
 
 # Proposition And Syntax Baseline
 
@@ -59,31 +58,26 @@ the Framework but never define its generic semantics.
 - Primitives and PerformanceDimensions are contextualized exclusively through
   `Context --composition[contextualizes]--> element`. Visual nesting has no
   contextualization semantics.
-- `o2i.kind` identifies `Context`, `Primitive`, `Structuring`,
-  `SituationAnchor`, or `StructuredProposition`; `o2i.type` identifies the
-  corresponding O2I constructor.
-- `O2I Syntax - Carriers` and `O2I Syntax - Relations` jointly form the
-  complete unannotated mapping visualization of the declarative ArchiMate
-  profile. They specify notation and are not O2I graphs.
+- The Profile derives a carrier category from its ArchiMate type and exact `o2i.type`; it does not persist a parallel `o2i.kind` classification.
+- `O2I Syntax - Carriers` and `O2I Syntax - Relations` are the unannotated carrier- and relation-mapping reference visualizations. Focused syntax Views make non-binary patterns and metadata-bearing proposal syntax explicit. These Views specify notation and are not mapping authorities or fachliche O2I graphs.
 - `O2I Syntax - Contextualization` and
   `O2I Syntax - Collective Strategy Realization` are executable Candidate
   conformance Views. They are inspected through the AMX adapter and Core,
   not treated as mapping authorities.
-- A `CollectiveStrategyRealization` uses at least two contributor Strategies,
-  one distinct target Strategy, homogeneous `realizes` segments through one
-  AND Junction, and collective Fit evidence. The Junction is the sole
-  Commitment carrier.
+- A `CollectiveStrategyRealization` uses at least two contributor Strategies, one distinct target Strategy, homogeneous `realizes` segments through one AND Junction, explicit participant completeness, and one Commitment on the Junction. Collective Fit is supplied separately as `CollectiveFitInput`; it is never persisted as ArchiMate metadata or a model reference.
 - ArchiMate Groupings and Junctions are notation carriers and introduce no O2I
   semantics.
 
 # Tool Architecture
 
 ```text
-AMX
- -> Haskell AMX adapter: Decode, View scope, profile, projection
- -> notation-independent O2I graph
- -> Core/Inspection: structure, semantics, trace, readiness, evidence
- -> CLI: report rendering
+AMX source
+ -> AMX Adapter: bounded acquisition and canonical native observations
+ -> Operation: exact View selection and capability request
+ -> ArchiMate Profile: root resolution, branch-separated closure, validation, projection
+ -> Core: notation-independent structure and semantics; separate qualification, trace, readiness, and assessment contracts
+ -> Operation: owner-bound diagnostics and deterministic machine results
+ -> CLI: thin composition and rendering
 ```
 
 The Python extractor is separate: it supports development and review of O2I
@@ -100,8 +94,10 @@ repository Views and snapshots. It never validates O2I instances.
 - `mdl/o2i-*.md`: generated review snapshots.
 - `img/`, `acc/`, `toPDF.sh`: publication figures and rendering.
 - `spc/lib/core/`: normative Haskell formalization.
-- `spc/lib/inspection/`: format-neutral inspection pipeline.
-- `spc/lib/adapter/amx/`: native AMX profile and projection.
+- `spc/ctr/archimate/`: typed ArchiMate Profile projection and generated contract artifacts.
+- `spc/lib/operation/`: capability-sized execution, provenance, diagnostics, and machine contracts.
+- `spc/lib/adapter/amx/`: native AMX acquisition and Adapter implementation.
+- `spc/lib/inspection/`: legacy package awaiting atomic removal; never extend it or use it as target architecture.
 - `spc/cli/`: thin `o2i` CLI.
 - `.ai4x/operations/`: task-specific execution and quality contracts.
 - GitHub Issues: authority for change contracts, material decisions, acceptance criteria, dependencies, independent reviews, and open or closed state; an explicit Product Owner request may directly authorize Routine work.
