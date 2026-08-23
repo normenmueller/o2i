@@ -503,6 +503,7 @@ Contributor and target roles follow from realizes topology. Exact cardinality, C
     <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-f9bb6850f6074905bd6d258048d80bbe" source="id-26cecad3e94b4123a9669f7530fc666e" target="id-3b98d0546b914dd0ab9962dcc1d1bf8b"/>
     <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-f313d18da57e4eaca6aab232e0b89994" source="id-a9ce771c416e45ab8cfb450e032817c0" target="id-2fb50ac1b2a3440695f860b0b1aed15c"/>
     <element xsi:type="archimate:InfluenceRelationship" name="&lt;O2I relation name>" id="id-395841ebd7c1423fbe795e9f9e2b90a1" source="id-c8a94a0fdcfb4fda9395c77465b8b404" target="id-405fac672c5d435686f2943c23cc7d6c"/>
+    <element xsi:type="archimate:RealizationRelationship" name="&lt;O2I relation name>" id="id-14ad881fe354477493b1bbe3dca3965c" source="id-c8a94a0fdcfb4fda9395c77465b8b404" target="id-405fac672c5d435686f2943c23cc7d6c"/>
   </folder>
   <folder name="Views" id="id-c4a47547d89649babef754e47e83c429" type="diagrams">
     <folder name="Illustration" id="id-f8adbfc1a975482da607ff5058deaf0a">
@@ -1639,6 +1640,15 @@ Candidate Strategy carriers connect through realizes segments and one AND Juncti
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-3ba46e0166db485e80936afeabd492c2" targetConnections="id-a451a9d47917451bba5b47e1e2e8b8b4" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-405fac672c5d435686f2943c23cc7d6c">
           <bounds x="395" y="108" width="120" height="55"/>
+          <feature name="deriveElementLineColor" value="false"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-5b10cc5fe00242259ba754e1497a5d38" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-c8a94a0fdcfb4fda9395c77465b8b404">
+          <bounds x="540" y="108" width="120" height="55"/>
+          <feature name="deriveElementLineColor" value="false"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-5c0539f70f4e49e2af5767e9cd68fbed" font="1|DB Sans|10.0|2|COCOA|1|DBSans-Italic" source="id-5b10cc5fe00242259ba754e1497a5d38" target="id-1201fcb2435b45a5a18c17b1aa30b3c8" archimateRelationship="id-14ad881fe354477493b1bbe3dca3965c"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-1201fcb2435b45a5a18c17b1aa30b3c8" targetConnections="id-5c0539f70f4e49e2af5767e9cd68fbed" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-405fac672c5d435686f2943c23cc7d6c">
+          <bounds x="816" y="108" width="120" height="55"/>
           <feature name="deriveElementLineColor" value="false"/>
         </child>
         <documentation>Visualizes the relation-representation families of the concrete ArchiMate profile defined by spc/ctr/archimate/profile.json.
