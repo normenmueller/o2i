@@ -296,6 +296,7 @@ class VerificationWorkflowTests(unittest.TestCase):
         self.assertIn("CABAL_VERSION: 3.16.1.0", haskell_job)
         self.assertIn("GHC_VERSION: 9.10.3", haskell_job)
         self.assertIn("REUSE_VERSION: 6.2.0", haskell_job)
+        self.assertIn("timeout-minutes: 60", haskell_job)
         self.assertNotIn("CABAL_VERSION: 3.14.2.0", haskell_job)
         self.assertNotIn("GHC_VERSION: 9.6.5", haskell_job)
         self.assertIn(
