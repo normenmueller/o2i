@@ -238,15 +238,11 @@ verify_haskell() {
       --ghc-options=-Werror
   fi
 
-  if [ "$scope" = complete ]; then
-    info "Checking executable Candidate View acceptance."
-    python3 -B -m unittest discover \
-      -s utl/model -p 'test_check_executable_views.py'
-    o2i_bin=$(run_project_cabal list-bin o2i --builddir="$build")
-    python3 -B utl/model/check-executable-views.py \
-      --o2i "$o2i_bin" \
-      --model mdl/o2i.archimate
-  fi
+  info "Checking repository Candidate Views through AMX, Profile, and Core."
+  candidate_view_checker=$(run_project_cabal list-bin \
+    o2i-amx:o2i-amx-repository-view-check \
+    --builddir="$build")
+  "$candidate_view_checker" "$root/mdl/o2i.archimate"
 
   info "Checking external Haskell API contracts."
   python3 -B -m unittest discover \

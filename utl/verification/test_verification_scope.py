@@ -13,6 +13,7 @@ import verification_scope as scope
 
 
 ROOT = Path(__file__).resolve().parents[2]
+VERIFY = ROOT / "utl" / "verify.sh"
 WORKFLOW = ROOT / ".github/workflows/verify.yml"
 
 
@@ -100,16 +101,6 @@ class VerificationPathMatrixTests(unittest.TestCase):
                 "licensing",
                 "model",
             },
-            "utl/model/check-executable-views.py": {
-                "licensing",
-                "model",
-                "haskell",
-            },
-            "utl/model/test_check_executable_views.py": {
-                "licensing",
-                "model",
-                "haskell",
-            },
         }
         for path, expected in cases.items():
             with self.subTest(path=path):
@@ -132,6 +123,32 @@ class VerificationPathMatrixTests(unittest.TestCase):
         self.assertEqual(
             {"licensing", "model", "haskell"},
             set(selection.stages),
+        )
+
+    def test_foundation_routes_the_real_model_to_the_typed_view_checker(
+        self,
+    ) -> None:
+        contract = VERIFY.read_text(encoding="utf-8")
+
+        self.assertIn(
+            "o2i-amx:o2i-amx-repository-view-check",
+            contract,
+        )
+        self.assertIn(
+            '"$candidate_view_checker" "$root/mdl/o2i.archimate"',
+            contract,
+        )
+        self.assertNotIn("check-executable-views.py", contract)
+        self.assertFalse(
+            (ROOT / "utl" / "model" / "check-executable-views.py").exists()
+        )
+        self.assertFalse(
+            (
+                ROOT
+                / "utl"
+                / "model"
+                / "test_check_executable_views.py"
+            ).exists()
         )
 
     def test_repository_view_tools_route_to_model_and_licensing(self) -> None:

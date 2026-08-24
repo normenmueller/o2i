@@ -48,13 +48,11 @@ LICENSING_PATHS = frozenset(
 )
 MODEL_PATHS = frozenset(
     {
-        "utl/model/check-executable-views.py",
         "utl/model/audit-archimate-model.py",
         "utl/model/extract-archimate-view.py",
         "utl/model/focused_view_contract.py",
         "utl/model/repository_view_contract.py",
         "utl/model/test_audit_archimate_model.py",
-        "utl/model/test_check_executable_views.py",
         "utl/model/test_extract_archimate_view.py",
         "utl/model/test_focused_view_contract.py",
         "utl/model/test_repository_view_contract.py",
@@ -63,8 +61,6 @@ MODEL_PATHS = frozenset(
 HASKELL_PATHS = frozenset(
     {
         "mdl/o2i.archimate",
-        "utl/model/check-executable-views.py",
-        "utl/model/test_check_executable_views.py",
         "utl/haskell/check-package-licenses.sh",
         "utl/haskell/check_cabal_plan.py",
         "utl/haskell/check_haskell_api_contracts.py",
