@@ -31,15 +31,16 @@ Complete one coherent PR #69 candidate that combines the accepted #46 Foundation
 - Integrated product candidate through `06a00682073df6dea44b09152377866e523b8778` carries all durable #46, #70, #71, #72, #74, #75, and #76 changes plus every remediation of the integrated reviews; branch-local historical Return Point commits were deliberately not copied.
 - Passed locally on the integrated tree: licensing/REUSE 465/465, Governance 21 plus 18 tests, model hygiene and all 70 model tests, the complete Foundation Haskell gate including 49 Profile tests, 71 AMX tests, real-model AMX/Profile/Core execution, 100% Haddock, independently built source distributions and formatting, the complete Paper gate using canonical `md2pdf`, `git diff --check`, and the workspace O2I boundary.
 - The complete Haskell gate was also reproduced: all 150 pre-build contract tests pass and Cabal then stops exactly at the known `o2i-cli` `base <4.19` versus installed `base-4.20.2.0` conflict. This gate is not represented as passed and is not the PR-scope Haskell command.
-- Haskell/CI review of predecessor exact revision `19ae9410e5b9c65fe6b693ad2aec306803340f7c` is `accepted` with no blocking finding or advisory follow-up. Its integration/publication peer required only the now-remediated #75 README correction. Exact review of the current clean `HEAD` and remote CI for all five PR jobs remain pending.
+- Independent Haskell/CI and integration/publication reviews of exact integrated revision `82bc9f16ccead21aca59cac14b5d807cf4eb9c13` are both `accepted` with no blocking finding or advisory follow-up. Remote CI for all five PR jobs remains pending.
 
 # Next Action
 
-Obtain independent exact-revision reviews of the current clean `HEAD`. After intrinsic acceptance, push the branch to PR #69, update the PR body and Issue evidence without claiming the complete Haskell gate is green, and require all five remote pull-request jobs to pass: licensing, governance, model, Foundation-scoped Haskell, and White Paper.
+Push the authorized branch to PR #69, update the PR body and Issue evidence without claiming the complete Haskell gate is green, and require all five remote pull-request jobs to pass: licensing, governance, model, Foundation-scoped Haskell, and White Paper.
 
 # Local Return Point
 
 - Branch: `fix/46-toolchain-workflow-correction`.
 - Base: published `origin/trunk` revision `1551bf87b2de09b4b2797fac2e566d699fce3991`.
 - Worktree: workspace-local `tmp/worktrees/o2i-46-toolchain-workflow-correction`.
-- Exact integrated review subject: the current clean `HEAD`, including this Authority Memory update; acceptance remains pending until an independent reviewer reports it for that exact revision.
+- Accepted immutable integrated product subject: `82bc9f16ccead21aca59cac14b5d807cf4eb9c13`.
+- This Authority Memory is mutable coordination state and is not part of that immutable review scope.
