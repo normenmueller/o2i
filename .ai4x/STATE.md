@@ -3,7 +3,7 @@
 - Observed: 2026-08-24 CEST
 - Work status: `ACTIVE`
 - Current Issue: `#67`
-- Current node: `post-69-exact-revision-review`
+- Current node: `pr-68-publication`
 
 # Objective
 
@@ -26,18 +26,22 @@ Integrate the accepted #67 prepared-Diagnostic and supplemental-staging owner co
 
 - Exact published integration base: `fb09fd83d70440d137bd6705d81bd38e0d461346`.
 - Previously accepted #67 publication revision: `0a4086cdcccc192fb0aadd6759293b6047eb97e6`; its independent verdict was `accepted` with no blocking finding and no advisory follow-up.
-- Fresh post-#69 product integration subject: `3e28509ebe432e515482d420c37964b9c5eb0e0d`; the pre-integration merge analysis exposed only the mutable `.ai4x/STATE.md` coordination conflict and no product-code conflict.
+- Fresh post-#69 product integration subject: `a95b3d40115bd7a285231edc0c9b65e17683611c`; the pre-integration merge analysis exposed only the mutable `.ai4x/STATE.md` coordination conflict and no product-code conflict.
 - The current-basis Foundation gate initially rejected the PR #69 real-model checker because it still consumed the intentionally removed broad Owner-binding helper. The Haskell/API Co-Author corrected only that AMX test checker to admit supplemental inputs before Structure, carry the opaque generation through Structure, bind exactly once after `WellFormedGraph`, and eliminate only through the closed fold API; no public API, Core, Profile, model, White Paper, or fachliche semantic change was required.
 - Passed on the fresh integrated subject: Governance 21 plus 18 tests, model hygiene and all 70 model tests, licensing/REUSE 466/466, the complete Foundation gate including all 150 pre-build contracts, Profile 49, AMX 71, Operation 105, the real three-View repository checker, API contracts, 100% Haddock, four independently built and offline-tested source distributions, formatting, the complete White Paper gate through canonical `md2pdf`, `git diff --check`, and the workspace O2I boundary.
-- One independent exact-revision integration review and green remote PR #68 CI remain required.
+- The first independent review of predecessor subject `3e28509ebe432e515482d420c37964b9c5eb0e0d` found one blocking performance defect: left-associated `NonEmpty` decode-failure accumulation performed quadratically for unbounded invalid supplemental inputs.
+- The Haskell/Performance Co-Author replaced the accumulation with total, order-preserving `sconcat` and added a non-timing-based 4096-input adversarial test for completeness and exact canonical order. Error accumulation is now O(D+n), and complete Admission remains O(n log n + D) because of the existing canonical sort.
+- The independent full re-review of exact product subject `a95b3d40115bd7a285231edc0c9b65e17683611c`, excluding mutable `.ai4x/STATE.md`, is `accepted` with no blocking finding and no advisory follow-up.
+- Green remote PR #68 CI remains required.
 
 # Next Action
 
-Obtain one independent exact-revision specialist review of `3e28509ebe432e515482d420c37964b9c5eb0e0d`, remediate any current-basis finding, and update PR #68 only after the integrated candidate is accepted locally.
+Publish the accepted post-#69 integration to the existing PR #68 branch with an exact lease, verify all remote PR jobs, and leave the merge decision with the Product Owner.
 
 # Local Return Point
 
 - Branch: `fix/67-post-69-integration`.
 - Pull request to update after acceptance: `#68` on remote branch `fix/67-operation-owner-correction`.
 - Worktree: workspace-local `tmp/worktrees/o2i-67-post-69-integration`.
+- Accepted immutable product subject: `a95b3d40115bd7a285231edc0c9b65e17683611c`, with `.ai4x/STATE.md` excluded from the review scope.
 - Preserve the earlier #67 worktree and every unrelated local change until the new publication return point is durable; cleanup belongs exclusively to #73.
