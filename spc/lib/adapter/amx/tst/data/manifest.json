@@ -33,6 +33,14 @@
       "draftSha256": "242707cbb9275fafc595ca678d3d1820d428c5426b2176ee93044a29f1f57192"
     },
     {
+      "fixtureId": "native-junction-operators",
+      "path": "tst/data/valid/native/junction-operators.archimate",
+      "origin": "hand-minimized native positive",
+      "sha256": "b93704a990a55cb3d6b6f567430859eb8170ca711ef97999063bc460512fb9e3",
+      "expected": "match",
+      "draftSha256": "6a1cd5bcdbb8921605080ca6746733fc107eb66e0230f7b88552df1c9a3bd5a1"
+    },
+    {
       "fixtureId": "native-group-archimate-element-overlap",
       "path": "tst/data/valid/native/group-archimate-element-overlap.archimate",
       "origin": "hand-minimized native positive",

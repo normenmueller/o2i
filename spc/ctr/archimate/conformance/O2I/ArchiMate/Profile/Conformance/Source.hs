@@ -36,6 +36,8 @@ module O2I.ArchiMate.Profile.Conformance.Source
   , collectiveChainDraft
   , collectiveWrongCarrierDraft
   , collectiveInvalidTypeDraft
+  , collectiveUnclassifiedJunctionDraft
+  , collectiveOrJunctionDraft
   , branchIsolationDraft
   , ownerConformanceMutationDrafts
   ) where
@@ -744,6 +746,16 @@ collectiveInvalidTypeDraft =
        , property "claim-completeness" "o2i.participant-completeness" "closed"
        ])
 
+-- | Collective marker on a Junction whose native operator was not admitted.
+collectiveUnclassifiedJunctionDraft :: Draft.ProfileDraft
+collectiveUnclassifiedJunctionDraft =
+  collectiveModelWithJunction "Junction" "closed" False
+
+-- | Collective marker on a native OR Junction.
+collectiveOrJunctionDraft :: Draft.ProfileDraft
+collectiveOrJunctionDraft =
+  collectiveModelWithJunction "OrJunction" "closed" False
+
 collectiveCandidateDraft :: Draft.ElementDraft -> Draft.ProfileDraft
 collectiveCandidateDraft claim =
   modelDraft
@@ -753,7 +765,10 @@ collectiveCandidateDraft claim =
     ]
 
 collectiveModel :: Text -> Bool -> Draft.ProfileDraft
-collectiveModel completeness includeChain =
+collectiveModel = collectiveModelWithJunction "AndJunction"
+
+collectiveModelWithJunction :: Text -> Text -> Bool -> Draft.ProfileDraft
+collectiveModelWithJunction junctionType completeness includeChain =
   modelDraft
     (map Draft.childRecordMember elements
        <> map Draft.childRecordMember segments
@@ -763,9 +778,11 @@ collectiveModel completeness includeChain =
       [ typedElement "contributor-a" "Grouping" "Strategy" "asserted"
       , typedElement "contributor-b" "Grouping" "Strategy" "asserted"
       , typedElement "target" "Grouping" "Strategy" "asserted"
-      , collectiveClaim "claim" completeness
+      , collectiveClaimWithJunction junctionType "claim" completeness
       ]
-        <> [collectiveClaim "other-claim" completeness | includeChain]
+        <> [ collectiveClaimWithJunction junctionType "other-claim" completeness
+           | includeChain
+           ]
     segments =
       [ collectiveSegment "incoming-a" "contributor-a" "claim"
       , collectiveSegment "incoming-b" "contributor-b" "claim"
@@ -1131,10 +1148,13 @@ influenceStrengthDraft label =
     ]
 
 collectiveClaim :: Text -> Text -> Draft.ElementDraft
-collectiveClaim identifier completeness =
+collectiveClaim = collectiveClaimWithJunction "AndJunction"
+
+collectiveClaimWithJunction :: Text -> Text -> Text -> Draft.ElementDraft
+collectiveClaimWithJunction junctionType identifier completeness =
   element
     identifier
-    "AndJunction"
+    junctionType
     [ property
         (identifier <> "-type")
         "o2i.type"
