@@ -3,7 +3,7 @@
 - Observed: 2026-08-24 CEST
 - Work status: `ACTIVE`
 - Current Issue: `#67`
-- Current node: `pr-68-publication`
+- Current node: `pr-68-po-review`
 
 # Objective
 
@@ -32,11 +32,11 @@ Integrate the accepted #67 prepared-Diagnostic and supplemental-staging owner co
 - The first independent review of predecessor subject `3e28509ebe432e515482d420c37964b9c5eb0e0d` found one blocking performance defect: left-associated `NonEmpty` decode-failure accumulation performed quadratically for unbounded invalid supplemental inputs.
 - The Haskell/Performance Co-Author replaced the accumulation with total, order-preserving `sconcat` and added a non-timing-based 4096-input adversarial test for completeness and exact canonical order. Error accumulation is now O(D+n), and complete Admission remains O(n log n + D) because of the existing canonical sort.
 - The independent full re-review of exact product subject `a95b3d40115bd7a285231edc0c9b65e17683611c`, excluding mutable `.ai4x/STATE.md`, is `accepted` with no blocking finding and no advisory follow-up.
-- Green remote PR #68 CI remains required.
+- PR #68 run `32743451651` passed all five jobs on published branch revision `ed2f5eae9e1cd72963918f2a42986fb5434cebec`: Repository licensing, Change governance, Model contracts, Foundation-scoped Haskell specification, and White Paper. The Haskell job completed in 24 minutes 51 seconds.
 
 # Next Action
 
-Publish the accepted post-#69 integration to the existing PR #68 branch with an exact lease, verify all remote PR jobs, and leave the merge decision with the Product Owner.
+The Product Owner reviews PR #68 and, if satisfied, squash-merges it. The merge closes #67 through the PR closing reference; do not merge on the Product Owner's behalf.
 
 # Local Return Point
 
