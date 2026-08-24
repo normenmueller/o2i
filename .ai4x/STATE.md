@@ -34,7 +34,7 @@ Complete one coherent PR #69 candidate that combines the accepted #46 Foundation
 
 # Next Action
 
-Commit this Authority Memory update, then obtain independent exact-revision reviews of the resulting clean `HEAD`. After intrinsic acceptance, push the branch to PR #69, update the PR body and Issue evidence without claiming the complete Haskell gate is green, and require all five remote pull-request jobs to pass: licensing, governance, model, Foundation-scoped Haskell, and White Paper.
+Obtain independent exact-revision reviews of the current clean `HEAD`. After intrinsic acceptance, push the branch to PR #69, update the PR body and Issue evidence without claiming the complete Haskell gate is green, and require all five remote pull-request jobs to pass: licensing, governance, model, Foundation-scoped Haskell, and White Paper.
 
 # Local Return Point
 
