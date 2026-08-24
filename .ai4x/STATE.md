@@ -1,39 +1,43 @@
 # Handoff
 
-- Observed: 2026-08-23 CEST
+- Observed: 2026-08-24 CEST
 - Work status: `ACTIVE`
-- Current Issue: `#62`
-- Current node: `lean-governance-publication-preparation`
+- Current Issue: `#46`
+- Current node: `pr-69-integrated-candidate-review`
 
 # Objective
 
-Replace disproportionate O2I governance ceremony with the risk-proportionate model authorized by Epic #62 while preserving every objective quality, verification, repository-boundary, and Product Owner publication control.
+Complete one coherent PR #69 candidate that combines the accepted #46 Foundation CI correction, the #70 current-authority model verifier, the #71 White Paper synchronization, and the Product Owner-authored #72/#74 focused model corrections without changing Core, Profile, or fachliche semantics.
 
 # Authority
 
-- The Product Owner explicitly authorized #62 as a bounded meta-governance bootstrap and authorized direct execution without the old Admission, digest, numerical-score, fixed-gate, or mandatory-status-hop requirements that the Epic replaces.
-- #62 owns the integrated cutover. Stories #63 through #66 make the risk model, workflow and evidence simplification, repository implementation, and active-overhaul reconciliation visible without adding product scope.
-- Push, Epic closure, Project `Done`, product implementation, release, and publication remain outside the local authority.
+- Issue #46 owns the Foundation toolchain and pull-request workflow correction; Issue #70 owns the verifier correction; Issue #71 owns publication synchronization; Issues #72 and #74 own the separate model corrections exposed by the verifier.
+- The Product Owner authorized implementation, independent review, push, and PR publication through `In review`; the Product Owner performed every Archi edit under guided instructions.
+- PR #69 is the existing publication line for this integrated predecessor correction. Merge remains a separate Product Owner decision.
 
 # Material Risk
 
-- This is protected governance authority, so one independent governance and agentic-workflow sanity review is required despite the bootstrap exception.
-- The change must remove ceremony without weakening deterministic verification, fachliche authority, public-contract protection, repository autonomy, or explicit Product Owner control of push and release.
-- The three #51 observations are acceptance challenges pending post-cutover reproduction and ownership classification; they do not invalidate accepted #49 evidence.
+- Pull requests intentionally run the frozen Foundation Haskell closure. Manual dispatches and release tags intentionally run the complete Haskell closure and remain fail-closed until the later atomic package cutover.
+- The complete package set cannot currently resolve under one compiler: Foundation packages require `base >=4.20 && <4.21`, while the legacy CLI still requires `base >=4.18 && <4.19`; no complete-project freeze exists yet. This is a known deferred package-graph boundary, not a reason to weaken or misreport the PR gate.
+- The #70/#71 integration touched shared verification routing and `utl/verify.sh`; the resolved target retains #46's Foundation workflow, #70's current focused verifier and complete model-test discovery, and #71's removal of the obsolete generated Profile-renderer path.
+- Accepted issue-local revisions remain evidence for their exact subjects. The integrated resolution requires its own independent exact-revision review and green remote PR jobs.
 
 # Verification
 
-- Candidate scope: `.ai4x/BEHAVIOR.md`, `.ai4x/CONTEXT.md`, `.ai4x/governance/guidelines.md`, `.ai4x/STATE.md`, the Haskell authoring and Haskell/strategy review contracts under `.ai4x/operations/`, the Framework-change Issue form, `CONTRIBUTING.md`, and `utl/governance/test_github_governance.py`.
-- Passed impact-relevant checks: governance, licensing, foundation, `git diff --check`, and the workspace public O2I boundary.
-- The complete suite did not pass: model verification detects the unchanged #49 profile/compiler schema mismatch, and complete Haskell verification detects the unchanged #49 mixed GHC/base package bounds. Foundation Haskell verification passes; neither challenge is caused or concealed by #62, and both remain for post-cutover #51 classification.
-- Review verdict: `accepted` for the current branch `HEAD`, with no blocking finding or advisory follow-up after four findings from two earlier candidates were corrected.
+- #70/#72/#74 revision `4076297b3029c0db765c5c05c6d90e4b2b3cf559` is independently `accepted` with no blocking finding or advisory follow-up.
+- #71 product/Authority revision `14c434e2082a7fad973111559799ab1d56e6a0de` is independently `accepted` with no blocking finding or advisory follow-up.
+- Integrated product candidate through `c34bd2527721013faa73f4eadf534cfbefff21fb` carries all durable #46, #70, #71, #72, and #74 changes; branch-local historical Return Point commits were deliberately not copied.
+- Passed locally on the integrated tree: licensing/REUSE 464/464, Governance 21 plus 17 tests, model hygiene and all 83 model tests, the complete Foundation Haskell gate including reproducible source distributions, the complete Paper gate using canonical `md2pdf`, `git diff --check`, and the workspace O2I boundary.
+- The complete Haskell gate was also reproduced: all 150 pre-build contract tests pass and Cabal then stops exactly at the known `o2i-cli` `base <4.19` versus installed `base-4.20.2.0` conflict. This gate is not represented as passed and is not the PR-scope Haskell command.
+- Independent review of the integrated current clean `HEAD` and remote CI for all five PR jobs remain pending.
 
 # Next Action
 
-Await explicit Product Owner authority to push the current branch `HEAD`; after successful publication, close #62 as `Done` and resume #45 at the #51 acceptance-challenge classification.
+Obtain an independent exact-revision review of the current clean `HEAD`. After intrinsic acceptance, push the branch to PR #69, update the PR body and Issue evidence without claiming the complete Haskell gate is green, and require all five remote pull-request jobs to pass: licensing, governance, model, Foundation-scoped Haskell, and White Paper.
 
 # Local Return Point
 
-- Branch: `maintenance/62-lean-governance`.
-- Base: published revision `ec72bc0ea68b7c6aaf272dac50b9ccb750ee9fcc`.
-- Parent #45 and Batch #51 are paused only for the #62 cutover; #49 remains closed and `Done`; #52 remains pending under #45.
+- Branch: `fix/46-toolchain-workflow-correction`.
+- Base: published `origin/trunk` revision `1551bf87b2de09b4b2797fac2e566d699fce3991`.
+- Worktree: workspace-local `tmp/worktrees/o2i-46-toolchain-workflow-correction`.
+- Exact integrated review subject: the current clean `HEAD`, including this Authority Memory update; acceptance remains pending until an independent reviewer reports it for that exact revision.
