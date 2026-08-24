@@ -39,7 +39,8 @@ import O2I.Operation.Diagnostic.Owner (withModelStructureAssessment)
 import O2I.Operation.Diagnostic.Owner.Source
   ( assessOwnerSemantics
   , foldSupplementalOwnerBinding
-  , withSupplementalOwnerBinding
+  , withAdmittedOwnerSupplementalInputs
+  , withBoundAdmittedOwnerSupplementalInputs
   )
 import O2I.Operation.Failure (preparationFailureCode)
 import O2I.Operation.Preparation (withPreparedSelectedView)
@@ -223,53 +224,58 @@ checkCandidateView adapters profiles model candidate =
       if length (Projection.profileQualificationProposals projection)
            /= expectedProposalCount candidate
         then Left (viewFailure "qualification proposal projection differs")
-        else withModelStructureAssessment
+        else withAdmittedOwnerSupplementalInputs
                authority
-               projection
+               []
                (\defects ->
                   Left
                     (viewFailure
-                       ("Core identity index failed with "
+                       ("supplemental provenance failed with "
                           <> count defects
                           <> " defect(s)")))
                (\defects ->
                   Left
                     (viewFailure
-                       ("Core selected-View scope failed with "
+                       ("supplemental input failed with "
                           <> count defects
                           <> " defect(s)")))
-               (\defects ->
-                  Left
-                    (viewFailure
-                       ("Core Structure input failed with "
-                          <> count defects
-                          <> " defect(s)")))
-               checkStructure
-    checkStructure scope assessment =
+               (checkStructureProjection authority projection)
+    checkStructureProjection authority projection admitted =
+      withModelStructureAssessment
+        authority
+        projection
+        (\defects ->
+           Left
+             (viewFailure
+                ("Core identity index failed with "
+                   <> count defects
+                   <> " defect(s)")))
+        (\defects ->
+           Left
+             (viewFailure
+                ("Core selected-View scope failed with "
+                   <> count defects
+                   <> " defect(s)")))
+        (\defects ->
+           Left
+             (viewFailure
+                ("Core Structure input failed with "
+                   <> count defects
+                   <> " defect(s)")))
+        (checkStructure admitted)
+    checkStructure admitted scope assessment =
       Structure.foldStructureAssessment
         (\defects ->
            Left
              (viewFailure
                 ("Core Structure rejected " <> count defects <> " defect(s)")))
-        (checkSemantics scope)
+        (checkSemantics scope admitted)
         assessment
-    checkSemantics scope graph =
-      withSupplementalOwnerBinding
+    checkSemantics scope admitted graph =
+      withBoundAdmittedOwnerSupplementalInputs
         scope
-        []
         graph
-        (\defects ->
-           Left
-             (viewFailure
-                ("supplemental provenance failed with "
-                   <> count defects
-                   <> " defect(s)")))
-        (\defects ->
-           Left
-             (viewFailure
-                ("supplemental input failed with "
-                   <> count defects
-                   <> " defect(s)")))
+        admitted
         (foldSupplementalOwnerBinding $ \bound _ ->
            Semantics.foldSemanticAssessment
              (\defects ->

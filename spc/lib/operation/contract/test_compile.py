@@ -247,16 +247,134 @@ class OperationContractCompilerTest(unittest.TestCase):
         )
         authority = schema["$defs"]["preparedAuthority"]
         self.assertEqual(
-            ["adapter", "profile", "model"], authority["required"]
+            ["adapter", "notationRules", "profile", "model"],
+            authority["required"],
         )
         model_diagnostics = schema["$defs"]["modelDiagnostic"]["oneOf"]
-        self.assertEqual(157, len(model_diagnostics))
+        self.assertEqual(195, len(model_diagnostics))
+        notation_diagnostics = [
+            row
+            for row in model_diagnostics
+            if row["properties"]["producer"]["const"]
+            == "notation-assessment"
+        ]
+        self.assertEqual(38, len(notation_diagnostics))
+        self.assertEqual(
+            {
+                "archimate-notation-" + token
+                for token in COMPILER.NOTATION_ISSUE_TOKENS
+            },
+            {
+                row["properties"]["evidenceKind"]["const"]
+                for row in notation_diagnostics
+            },
+        )
+        self.assertEqual(
+            {
+                ("adapter", "notation", "error", "model-finding")
+            },
+            {
+                (
+                    row["properties"]["owner"]["const"],
+                    row["properties"]["stage"]["const"],
+                    row["properties"]["severity"]["const"],
+                    row["properties"]["disposition"]["const"],
+                )
+                for row in notation_diagnostics
+            },
+        )
+        self.assertNotIn("ruleId", notation_diagnostics[0]["properties"])
+        notation_rules = authority["properties"]["notationRules"]
+        self.assertEqual(38, notation_rules["minItems"])
+        self.assertEqual(38, notation_rules["maxItems"])
+        self.assertEqual(
+            [
+                "archimate-notation-" + token
+                for token in COMPILER.NOTATION_ISSUE_TOKENS
+            ],
+            [
+                row["properties"]["evidenceKind"]["const"]
+                for row in notation_rules["prefixItems"]
+            ],
+        )
+        notation_by_kind = {
+            row["properties"]["evidenceKind"]["const"]: row
+            for row in notation_diagnostics
+        }
+        evidence_definitions = [
+            "notationOccurrenceEvidence",
+            "notationValueEvidence",
+            "notationReferenceEvidence",
+        ]
+        self.assertEqual(
+            COMPILER.NOTATION_ISSUE_TOKENS,
+            tuple(COMPILER.NOTATION_OBSERVATION_KINDS),
+        )
+        for token, kinds in COMPILER.NOTATION_OBSERVATION_KINDS.items():
+            evidence = notation_by_kind["archimate-notation-" + token][
+                "properties"
+            ]["evidence"]
+            actual_references = (
+                [evidence["$ref"]]
+                if len(kinds) == 1
+                else [alternative["$ref"] for alternative in evidence["oneOf"]]
+            )
+            self.assertEqual(
+                [
+                    "#/$defs/notation" + kind.capitalize() + "Evidence"
+                    for kind in kinds
+                ],
+                actual_references,
+            )
+        self.assertEqual(
+            "#/$defs/notationOccurrenceEvidence",
+            notation_by_kind["archimate-notation-model-identity-missing"]
+            ["properties"]["evidence"]["$ref"],
+        )
+        self.assertEqual(
+            {
+                "#/$defs/notationOccurrenceEvidence",
+                "#/$defs/notationValueEvidence",
+            },
+            {
+                alternative["$ref"]
+                for alternative in notation_by_kind[
+                    "archimate-notation-model-identity-multiplicity"
+                ]["properties"]["evidence"]["oneOf"]
+            },
+        )
+        self.assertEqual(
+            "#/$defs/notationReferenceEvidence",
+            notation_by_kind["archimate-notation-model-identity-duplicate"]
+            ["properties"]["evidence"]["$ref"],
+        )
+        notation_observations = [
+            schema["$defs"][name]["properties"]["fields"]["prefixItems"][1][
+                "properties"
+            ]["values"]["items"]
+            for name in evidence_definitions
+        ]
+        self.assertEqual(
+            {"type": "string"},
+            notation_observations[1]["properties"]["value"],
+        )
+        self.assertEqual(
+            {"type": "string"},
+            notation_observations[2]["properties"]["value"],
+        )
         binding_diagnostics = schema["$defs"]["supplementalSources"][
             "patternProperties"
         ]["^(0|[1-9][0-9]*)$"]["properties"]["diagnostics"]["items"][
             "oneOf"
         ]
         self.assertEqual(4, len(binding_diagnostics))
+        self.assertEqual(
+            {"process-failure"},
+            {
+                row["properties"]["disposition"]["const"]
+                for row in binding_diagnostics
+            },
+        )
         self.assertEqual(
             {"const": "supplemental-binding"},
             binding_diagnostics[0]["properties"]["producer"],

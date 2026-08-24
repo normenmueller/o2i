@@ -41,6 +41,47 @@ IDENTITY_PATTERN = (
     "(?:\\.[a-z][a-z0-9]*(?:-[a-z0-9]+)*)+$"
 )
 
+NOTATION_ISSUE_TOKENS = (
+    "model-identity-missing",
+    "model-identity-multiplicity",
+    "model-identity-value-kind-invalid",
+    "model-identity-grammar-invalid",
+    "model-identity-duplicate",
+    "view-identity-missing",
+    "view-identity-multiplicity",
+    "view-identity-value-kind-invalid",
+    "view-identity-grammar-invalid",
+    "view-identity-duplicate",
+    "view-name-missing",
+    "view-name-multiplicity",
+    "view-name-value-kind-invalid",
+    "marker-key-missing",
+    "marker-key-multiplicity",
+    "marker-key-value-kind-invalid",
+    "marker-reference-identity-missing",
+    "marker-reference-identity-multiplicity",
+    "marker-reference-identity-value-kind-invalid",
+    "marker-reference-identity-grammar-invalid",
+    "marker-reference-target-missing",
+    "marker-reference-target-wrong-family",
+    "marker-reference-target-ambiguous",
+    "marker-definition-name-missing",
+    "marker-definition-name-multiplicity",
+    "marker-definition-name-value-kind-invalid",
+    "record-identity-missing",
+    "record-identity-multiplicity",
+    "record-identity-value-kind-invalid",
+    "record-identity-grammar-invalid",
+    "record-identity-duplicate",
+    "reference-identity-missing",
+    "reference-identity-multiplicity",
+    "reference-identity-value-kind-invalid",
+    "reference-identity-grammar-invalid",
+    "reference-target-missing",
+    "reference-target-wrong-family",
+    "reference-target-ambiguous",
+)
+
 
 class MachineDocument(NamedTuple):
     name: str
@@ -1239,7 +1280,8 @@ def diagnostic_evidence_alternative(
 
 
 def owner_diagnostic_schema(
-    row: dict[str, Any], *, owner: str, stage: str, producer: str
+    row: dict[str, Any], *, owner: str, stage: str, producer: str,
+    disposition: str = "model-finding"
 ) -> dict[str, Any]:
     polarity = row["polarity"]
     severity = "info" if polarity == "acceptance" else "error"
@@ -1251,13 +1293,148 @@ def owner_diagnostic_schema(
             "ruleId": {"const": row["ruleId"]},
             "evidenceKind": {"const": row["evidenceKind"]},
             "severity": {"const": severity},
-            "disposition": {"const": "model-finding"},
+            "disposition": {"const": disposition},
             "evidence": {
                 "oneOf": [
                     diagnostic_evidence_alternative(row, alternative)
                     for alternative in row["alternatives"]
                 ]
             },
+        }
+    )
+
+
+def notation_observation_schema(kind: str) -> dict[str, Any]:
+    if kind == "occurrence":
+        return object_schema(
+            {
+                "kind": {"const": "occurrence"},
+                "location": reference("sourceLocation"),
+            }
+        )
+    if kind == "value":
+        return object_schema(
+            {
+                "kind": {"const": "value"},
+                "location": reference("sourceLocation"),
+                "valueKind": {"type": "string"},
+                "value": {"type": "string"},
+            }
+        )
+    if kind == "reference":
+        return object_schema(
+            {
+                "kind": {"const": "reference"},
+                "location": reference("sourceLocation"),
+                "value": {"type": "string"},
+                "targets": array_schema(reference("sourceLocation")),
+            }
+        )
+    raise ValueError(f"unknown Notation observation kind: {kind}")
+
+
+NOTATION_OBSERVATION_KINDS: dict[str, tuple[str, ...]] = {
+    "model-identity-missing": ("occurrence",),
+    "model-identity-multiplicity": ("occurrence", "value"),
+    "model-identity-value-kind-invalid": ("value",),
+    "model-identity-grammar-invalid": ("value",),
+    "model-identity-duplicate": ("reference",),
+    "view-identity-missing": ("occurrence",),
+    "view-identity-multiplicity": ("occurrence", "value"),
+    "view-identity-value-kind-invalid": ("value",),
+    "view-identity-grammar-invalid": ("value",),
+    "view-identity-duplicate": ("reference",),
+    "view-name-missing": ("occurrence",),
+    "view-name-multiplicity": ("occurrence", "value"),
+    "view-name-value-kind-invalid": ("value",),
+    "marker-key-missing": ("occurrence",),
+    "marker-key-multiplicity": ("occurrence", "value"),
+    "marker-key-value-kind-invalid": ("value",),
+    "marker-reference-identity-missing": ("occurrence",),
+    "marker-reference-identity-multiplicity": ("occurrence", "value"),
+    "marker-reference-identity-value-kind-invalid": ("value",),
+    "marker-reference-identity-grammar-invalid": ("value",),
+    "marker-reference-target-missing": ("reference",),
+    "marker-reference-target-wrong-family": ("reference",),
+    "marker-reference-target-ambiguous": ("reference",),
+    "marker-definition-name-missing": ("occurrence",),
+    "marker-definition-name-multiplicity": ("occurrence", "value"),
+    "marker-definition-name-value-kind-invalid": ("value",),
+    "record-identity-missing": ("occurrence",),
+    "record-identity-multiplicity": ("occurrence", "value"),
+    "record-identity-value-kind-invalid": ("value",),
+    "record-identity-grammar-invalid": ("value",),
+    "record-identity-duplicate": ("reference",),
+    "reference-identity-missing": ("occurrence",),
+    "reference-identity-multiplicity": ("occurrence", "value"),
+    "reference-identity-value-kind-invalid": ("value",),
+    "reference-identity-grammar-invalid": ("value",),
+    "reference-target-missing": ("reference",),
+    "reference-target-wrong-family": ("reference",),
+    "reference-target-ambiguous": ("reference",),
+}
+
+
+def notation_observation_kinds(token: str) -> tuple[str, ...]:
+    try:
+        return NOTATION_OBSERVATION_KINDS[token]
+    except KeyError as error:
+        raise ValueError(f"unclassified Notation issue token: {token}") from error
+
+
+def notation_evidence_schema(observation_kind: str) -> dict[str, Any]:
+    observation = notation_observation_schema(observation_kind)
+    return object_schema(
+        {
+            "fields": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "prefixItems": [
+                    object_schema(
+                        {
+                            "role": {"const": "subject"},
+                            "values": {
+                                "type": "array",
+                                "minItems": 1,
+                                "maxItems": 1,
+                                "items": reference("sourceLocation"),
+                            },
+                        }
+                    ),
+                    object_schema(
+                        {
+                            "role": {"const": "observations"},
+                            "values": array_schema(observation, minimum=1),
+                        }
+                    ),
+                ],
+                "items": False,
+            }
+        }
+    )
+
+
+def notation_diagnostic_schema(token: str) -> dict[str, Any]:
+    observation_kinds = notation_observation_kinds(token)
+    evidence_alternatives = [
+        reference("notation" + kind.capitalize() + "Evidence")
+        for kind in observation_kinds
+    ]
+    evidence_schema = (
+        evidence_alternatives[0]
+        if len(evidence_alternatives) == 1
+        else {"oneOf": evidence_alternatives}
+    )
+    return object_schema(
+        {
+            "producer": {"const": "notation-assessment"},
+            "owner": {"const": "adapter"},
+            "stage": {"const": "notation"},
+            "evidenceKind": {"const": f"archimate-notation-{token}"},
+            "severity": {"const": "error"},
+            "disposition": {"const": "model-finding"},
+            "evidence": evidence_schema,
         }
     )
 
@@ -1306,8 +1483,12 @@ def diagnostic_definitions(
             owner="core",
             stage="capability-input",
             producer="supplemental-binding",
+            disposition="process-failure",
         )
         for row in owners["binding"]
+    ]
+    notation_diagnostics = [
+        notation_diagnostic_schema(token) for token in NOTATION_ISSUE_TOKENS
     ]
     source_entry = object_schema(
         {
@@ -1332,9 +1513,31 @@ def diagnostic_definitions(
         "sourcePosition": source_position(),
         "sourceLocation": source_location(),
         "draftScalar": draft_scalar(),
+        "notationOccurrenceEvidence": notation_evidence_schema("occurrence"),
+        "notationValueEvidence": notation_evidence_schema("value"),
+        "notationReferenceEvidence": notation_evidence_schema("reference"),
         "preparedAuthority": object_schema(
             {
                 "adapter": reference("adapterDescriptor"),
+                "notationRules": {
+                    "type": "array",
+                    "minItems": len(NOTATION_ISSUE_TOKENS),
+                    "maxItems": len(NOTATION_ISSUE_TOKENS),
+                    "prefixItems": [
+                        object_schema(
+                            {
+                                "evidenceKind": {
+                                    "const": f"archimate-notation-{token}"
+                                },
+                                "ruleId": text_schema(
+                                    pattern=TOOL_TEXT_PATTERN
+                                ),
+                            }
+                        )
+                        for token in NOTATION_ISSUE_TOKENS
+                    ],
+                    "items": False,
+                },
                 "profile": object_schema(
                     {
                         "identity": {"const": profile["identity"]},
@@ -1359,6 +1562,7 @@ def diagnostic_definitions(
         ),
         "modelDiagnostic": {
             "oneOf": [
+                *notation_diagnostics,
                 *profile_diagnostics,
                 *structure_diagnostics,
                 *semantics_diagnostics,

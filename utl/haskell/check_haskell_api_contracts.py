@@ -364,12 +364,12 @@ CONTRACTS = (
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/"
                 "OwnerSourceCoercible.hs",
-                (("GHC-25897", 5),),
+                (("GHC-25897", 6),),
             ),
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/"
                 "OwnerSourceOpaqueConstructors.hs",
-                (("GHC-01928", 5),),
+                (("GHC-01928", 6),),
             ),
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/"

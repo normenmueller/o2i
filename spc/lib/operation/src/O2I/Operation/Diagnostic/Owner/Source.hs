@@ -8,18 +8,22 @@
 module O2I.Operation.Diagnostic.Owner.Source
   ( PreparedAuthority
   , PreparedScope
+  , AdmittedOwnerSupplementalInputs
   , SupplementalOwnerBinding
   , SupplementalOwnerBindingGroup
   , SupplementalOwnerBindingEvidence
   , BoundOwnerSupplementalInputs
-  , withSupplementalOwnerBinding
+  , withAdmittedOwnerSupplementalInputs
+  , withBoundAdmittedOwnerSupplementalInputs
   , foldSupplementalOwnerBinding
   , foldSupplementalOwnerBindingGroup
   , assessOwnerSemantics
   ) where
 
+import Data.Either (partitionEithers)
 import Data.List (sortOn)
-import Data.List.NonEmpty (NonEmpty)
+import Data.List.NonEmpty (NonEmpty((:|)))
+import Data.Semigroup (sconcat)
 import O2I.Operation.Acquisition
   ( AcquiredSupplementalSource
   , acquiredSourceBytes
@@ -45,34 +49,31 @@ import O2I.Semantics.Input
   )
 import O2I.Structure (WellFormedGraph)
 
--- | Acquire no new bytes: validate, decode, and bind the supplied exact
--- acquired artifacts in one fresh input generation.
-withSupplementalOwnerBinding ::
-     PreparedScope authority profile document scope
+-- | Acquire no new bytes: validate provenance, decode every supplied exact
+-- artifact once, and assess the complete set before Structure.
+withAdmittedOwnerSupplementalInputs ::
+     PreparedAuthority authority profile document
   -> [AcquiredSupplementalSource]
-  -> WellFormedGraph scope
   -> (NonEmpty SupplementalProvenanceDefect -> result)
   -> (NonEmpty SupplementalInputDefect -> result)
-  -> (forall inputs. SupplementalOwnerBinding
+  -> (forall inputs. AdmittedOwnerSupplementalInputs
                        authority
                        profile
                        document
-                       scope
                        inputs -> result)
   -> result
-withSupplementalOwnerBinding _ acquired graph provenanceFailure inputFailure accepted =
+withAdmittedOwnerSupplementalInputs _ acquired provenanceFailure inputFailure accepted =
   case mkSupplementalProvenance (map acquiredIdentity acquired) of
     Left defects -> provenanceFailure defects
     Right _ ->
-      case traverse decodeOwnerSource ordered of
-        Left defects -> inputFailure defects
-        Right decoded ->
+      case partitionEithers (map decodeOwnerSource ordered) of
+        (firstFailure:laterFailures, _) ->
+          inputFailure (sconcat (firstFailure :| laterFailures))
+        ([], decoded) ->
           case assessSupplementalInputSet decoded of
             Left defects -> inputFailure defects
             Right inputSet ->
-              accepted
-                (SupplementalOwnerBinding
-                   (bindSupplementalInputs graph inputSet))
+              accepted (AdmittedOwnerSupplementalInputs inputSet)
   where
     ordered = sortOn acquiredOrdinal acquired
     acquiredOrdinal =
@@ -84,6 +85,19 @@ withSupplementalOwnerBinding _ acquired graph provenanceFailure inputFailure acc
         (SupplementalOwnerOccurrence source)
         (supplementalInputOrdinal (acquiredOrdinal source))
         (acquiredBytes source)
+
+-- | Bind only one already admitted pre-Structure input generation against the
+-- exact accepted Structure graph.
+withBoundAdmittedOwnerSupplementalInputs ::
+     PreparedScope authority profile document scope
+  -> WellFormedGraph scope
+  -> AdmittedOwnerSupplementalInputs authority profile document inputs
+  -> (SupplementalOwnerBinding authority profile document scope inputs -> result)
+  -> result
+withBoundAdmittedOwnerSupplementalInputs _ graph admitted consume =
+  case admitted of
+    AdmittedOwnerSupplementalInputs inputSet ->
+      consume (SupplementalOwnerBinding (bindSupplementalInputs graph inputSet))
 
 -- | Eliminate the exact binding without exposing its private source tokens.
 foldSupplementalOwnerBinding ::

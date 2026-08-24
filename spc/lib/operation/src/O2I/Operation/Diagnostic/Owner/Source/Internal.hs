@@ -5,6 +5,7 @@ module O2I.Operation.Diagnostic.Owner.Source.Internal
   ( PreparedAuthority(..)
   , PreparedScope(..)
   , SupplementalOwnerOccurrence(..)
+  , AdmittedOwnerSupplementalInputs(..)
   , SupplementalOwnerBinding(..)
   , SupplementalOwnerBindingGroup(..)
   , SupplementalOwnerBindingEvidence(..)
@@ -13,17 +14,18 @@ module O2I.Operation.Diagnostic.Owner.Source.Internal
 
 import O2I.ArchiMate.Profile.Resolution (ProfileDescriptor)
 import O2I.Operation.Acquisition (AcquiredSupplementalSource)
-import O2I.Operation.Adapter (AdapterDescriptor)
+import O2I.Operation.Adapter (CompiledAdapterContract)
 import O2I.Operation.Provenance (SourceIdentity)
 import O2I.Semantics.Input
   ( BoundSupplementalInputs
   , SupplementalBinding
   , SupplementalBindingDiagnosticEvidence
+  , SupplementalInputSet
   )
 
 -- | One exact selected Adapter/Profile/model authority minted by preparation.
 data PreparedAuthority authority profile document =
-  PreparedAuthority !AdapterDescriptor !ProfileDescriptor !SourceIdentity
+  PreparedAuthority !CompiledAdapterContract !ProfileDescriptor !SourceIdentity
 
 type role PreparedAuthority nominal nominal nominal
 
@@ -38,6 +40,14 @@ newtype SupplementalOwnerOccurrence inputs =
   SupplementalOwnerOccurrence AcquiredSupplementalSource
 
 type role SupplementalOwnerOccurrence nominal
+
+-- | Complete decoded and set-assessed supplemental inputs admitted before
+-- Structure while retaining their exact acquired-source occurrences.
+newtype AdmittedOwnerSupplementalInputs authority profile document inputs =
+  AdmittedOwnerSupplementalInputs
+    (SupplementalInputSet (SupplementalOwnerOccurrence inputs))
+
+type role AdmittedOwnerSupplementalInputs nominal nominal nominal nominal
 
 -- | Exact Core binding whose source occurrences never escape Operation.
 newtype SupplementalOwnerBinding authority profile document scope inputs =
