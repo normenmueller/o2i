@@ -51,6 +51,22 @@
         "view-adapter-selection-failed",
         "view-adapter-decode-failed"
       ]
+    },
+    {
+      "name": "validateResult",
+      "identity": "o2i.operation.validate",
+      "version": 1,
+      "variants": [
+        "notation-validation-accepted",
+        "notation-validation-rejected",
+        "profile-validation-accepted",
+        "profile-validation-rejected",
+        "structure-validation-accepted",
+        "structure-validation-rejected",
+        "semantics-validation-accepted",
+        "semantics-validation-rejected",
+        "semantics-validation-unavailable"
+      ]
     }
   ],
   "schemaFragments": [

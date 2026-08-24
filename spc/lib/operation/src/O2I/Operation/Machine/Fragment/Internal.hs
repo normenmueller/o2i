@@ -12,6 +12,8 @@ module O2I.Operation.Machine.Fragment.Internal
   , draftScalarFragment
   , canonicalOccurrenceFragment
   , preparedDiagnosticDocumentFragment
+  , foldPreparedDiagnosticDocumentFragments
+  , emptySupplementalDiagnosticGroupFragments
   , viewDescriptorFragment
   ) where
 
@@ -86,7 +88,8 @@ import O2I.Core.Identity
   , occurrenceIdentityText
   )
 import O2I.Operation.Acquisition
-  ( AcquisitionFailure
+  ( AcquiredSupplementalSource
+  , AcquisitionFailure
   , acquiredSourceIdentity
   , foldAcquiredSupplementalSource
   , foldAcquisitionFailure
@@ -277,6 +280,30 @@ preparedDiagnosticDocumentFragment =
               (closedObjectFragment
                  (map supplementalGroupMember supplementalGroups))
           ]
+
+-- | Project exactly one sealed common diagnostic document into the three
+-- authority-correlated fragment sequences needed by capability envelopes.
+-- Supplemental entries retain their canonical group order and deliberately
+-- carry no ordinal field: an enclosing array position is their sole ordinal.
+foldPreparedDiagnosticDocumentFragments ::
+     (CanonicalFragment -> [CanonicalFragment] -> [CanonicalFragment] -> result)
+  -> PreparedDiagnosticDocument
+  -> result
+foldPreparedDiagnosticDocumentFragments consume =
+  foldPreparedDiagnosticDocument $ \authority diagnostics groups ->
+    case groups of
+      SupplementalDiagnosticGroups supplementalGroups ->
+        consume
+          (preparedAuthorityFragment authority)
+          (map preparedDiagnosticFragment diagnostics)
+          (map supplementalGroupFragment supplementalGroups)
+
+-- | Project already acquired pre-Binding sources through the same ordered
+-- array-entry form, with an exact empty diagnostic sequence per source.
+emptySupplementalDiagnosticGroupFragments ::
+     [AcquiredSupplementalSource] -> [CanonicalFragment]
+emptySupplementalDiagnosticGroupFragments =
+  map (\source -> supplementalSourceFragment source [])
 
 preparedAuthorityFragment ::
      PreparedAuthority authority profile document -> CanonicalFragment
@@ -759,19 +786,31 @@ supplementalGroupMember group =
        in requiredMember
             (Text.pack
                (show (sourceOrdinalValue (sourceIdentityOrdinal identity))))
-            (closedObjectFragment
-               [ requiredMember
-                   "reference"
-                   (textFragment
-                      (sourceReferenceText (sourceIdentityReference identity)))
-               , requiredMember
-                   "sha256"
-                   (textFragment
-                      (sourceSha256Text (sourceIdentitySha256 identity)))
-               , requiredMember
-                   "diagnostics"
-                   (arrayFragment (map bindingDiagnosticFragment evidence))
-               ])
+            (supplementalSourceFragment
+               source
+               (map bindingDiagnosticFragment evidence))
+
+supplementalGroupFragment ::
+     SupplementalDiagnosticGroup authority profile document -> CanonicalFragment
+supplementalGroupFragment group =
+  case group of
+    SupplementalDiagnosticGroup source evidence ->
+      supplementalSourceFragment source (map bindingDiagnosticFragment evidence)
+
+supplementalSourceFragment ::
+     AcquiredSupplementalSource -> [CanonicalFragment] -> CanonicalFragment
+supplementalSourceFragment source diagnostics =
+  let identity = foldAcquiredSupplementalSource acquiredSourceIdentity source
+   in closedObjectFragment
+        [ requiredMember
+            "reference"
+            (textFragment
+               (sourceReferenceText (sourceIdentityReference identity)))
+        , requiredMember
+            "sha256"
+            (textFragment (sourceSha256Text (sourceIdentitySha256 identity)))
+        , requiredMember "diagnostics" (arrayFragment diagnostics)
+        ]
 
 bindingDiagnosticFragment ::
      SupplementalOwnerBindingEvidence scope inputs -> CanonicalFragment

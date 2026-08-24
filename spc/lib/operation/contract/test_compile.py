@@ -10,6 +10,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import PropertyMock, patch
 
+from jsonschema import Draft202012Validator
+
 
 HERE = Path(__file__).resolve().parent
 SPEC = importlib.util.spec_from_file_location("compile_operation", HERE / "compile.py")
@@ -76,7 +78,7 @@ class OperationContractCompilerTest(unittest.TestCase):
         first = self.render_contract()
         second = self.render_contract()
         self.assertEqual(first, second)
-        self.assertEqual(8, len(first))
+        self.assertEqual(9, len(first))
         self.assertIn(b"data GeneratedOperationRule", first[COMPILER.RULE_GENERATED])
         self.assertIn(
             b"adapterInventoryMachineSchema :: MachineSchema",
@@ -102,7 +104,11 @@ class OperationContractCompilerTest(unittest.TestCase):
 
     def test_schema_projection_closes_every_object_boundary(self):
         for document in self.validate_contract()[3]:
-            schema = json.loads(COMPILER.render_schema(document))
+            schema = json.loads(
+                COMPILER.render_schema(
+                    document, self.profile_inventory, self.core_inventory
+                )
+            )
             self.assert_closed_objects(schema)
         for fragment in self.validate_contract()[4]:
             schema = json.loads(
@@ -111,6 +117,17 @@ class OperationContractCompilerTest(unittest.TestCase):
                 )
             )
             self.assert_closed_objects(schema)
+
+    def test_every_rendered_schema_is_valid_draft_2020_12(self):
+        rendered = self.render_contract()
+        documents = self.validate_contract()[3]
+        fragments = self.validate_contract()[4]
+        for subject in [*documents, *fragments]:
+            with self.subTest(schema=subject.name):
+                schema = json.loads(rendered[subject.schema_path])
+                self.assertEqual(COMPILER.SCHEMA_DRAFT, schema["$schema"])
+                self.assertEqual(subject.reference, schema["$id"])
+                Draft202012Validator.check_schema(schema)
 
     def assert_closed_objects(self, value):
         if isinstance(value, dict):
@@ -125,6 +142,309 @@ class OperationContractCompilerTest(unittest.TestCase):
         elif isinstance(value, list):
             for nested in value:
                 self.assert_closed_objects(nested)
+
+    def sample_schema_value(self, schema, definitions):
+        if schema is False:
+            raise AssertionError("cannot sample an impossible schema")
+        if "$ref" in schema:
+            return self.sample_schema_value(
+                definitions[schema["$ref"].removeprefix("#/$defs/")],
+                definitions,
+            )
+        if "const" in schema:
+            return copy.deepcopy(schema["const"])
+        if "oneOf" in schema:
+            return self.sample_schema_value(schema["oneOf"][0], definitions)
+        if "enum" in schema:
+            return copy.deepcopy(schema["enum"][0])
+        kind = schema.get("type")
+        if kind == "object":
+            properties = schema.get("properties", {})
+            return {
+                name: self.sample_schema_value(properties[name], definitions)
+                for name in schema.get("required", [])
+            }
+        if kind == "array":
+            values = [
+                self.sample_schema_value(item, definitions)
+                for item in schema.get("prefixItems", [])
+            ]
+            if "contains" in schema and not values:
+                values.append(
+                    self.sample_schema_value(schema["contains"], definitions)
+                )
+            minimum = schema.get("minItems", 0)
+            while len(values) < minimum:
+                values.append(
+                    self.sample_schema_value(schema["items"], definitions)
+                )
+            return values
+        if kind == "string":
+            if schema.get("pattern") == COMPILER.SHA256_PATTERN:
+                return "0" * 64
+            return "x"
+        if kind == "integer":
+            return schema.get("minimum", 0)
+        if kind == "boolean":
+            return False
+        if kind == "null":
+            return None
+        raise AssertionError(f"unsupported sample schema: {schema!r}")
+
+    def resolve_local_schema(self, schema, definitions):
+        while "$ref" in schema:
+            schema = definitions[
+                schema["$ref"].removeprefix("#/$defs/")
+            ]
+        return schema
+
+    def validate_schema_fixture(self):
+        document = next(
+            document
+            for document in self.validate_contract()[3]
+            if document.name == "validateResult"
+        )
+        schema = json.loads(
+            COMPILER.render_schema(
+                document, self.profile_inventory, self.core_inventory
+            )
+        )
+        self.assertEqual(document.reference, schema["$id"])
+        Draft202012Validator.check_schema(schema)
+        fixture_schema = copy.deepcopy(schema)
+        # Fixture validation needs only local $defs; omitting the root identity
+        # avoids deprecated resolver versions rebasing that valid relative ID.
+        del fixture_schema["$id"]
+        return schema, Draft202012Validator(fixture_schema)
+
+    def validate_variant_schema(self, schema, name, requested_level=None):
+        root = schema["$defs"][name]
+        alternatives = root.get("oneOf", [root])
+        if requested_level is None:
+            return alternatives[0]
+        return next(
+            alternative
+            for alternative in alternatives
+            if alternative["properties"]["request"]["properties"]["level"][
+                "const"
+            ]
+            == requested_level
+        )
+
+    def validate_variant_fixture(
+        self, schema, name, requested_level=None
+    ):
+        return self.sample_schema_value(
+            self.validate_variant_schema(schema, name, requested_level),
+            schema["$defs"],
+        )
+
+    def test_validate_schema_rejects_multi_axis_negative_mutations(self):
+        schema, validator = self.validate_schema_fixture()
+        definitions = schema["$defs"]
+
+        baseline = self.validate_variant_fixture(schema, "notationAccepted")
+        self.assertTrue(validator.is_valid(baseline))
+        for field, invalid in (("role", "supplemental"), ("ordinal", 1)):
+            with self.subTest(axis=f"model-source-{field}"):
+                changed = copy.deepcopy(baseline)
+                changed["context"]["authority"]["model"][field] = invalid
+                self.assertFalse(validator.is_valid(changed))
+
+        missing_notation_rule = copy.deepcopy(baseline)
+        missing_notation_rule["context"]["authority"]["notationRules"].pop()
+        self.assertFalse(validator.is_valid(missing_notation_rule))
+
+        earlier_supplement = copy.deepcopy(baseline)
+        earlier_supplement["context"]["supplements"] = [
+            {
+                "reference": "x",
+                "sha256": "0" * 64,
+                "diagnostics": [],
+            }
+        ]
+        self.assertFalse(validator.is_valid(earlier_supplement))
+
+        profile_rejected = self.validate_variant_fixture(
+            schema, "profileRejected"
+        )
+        self.assertTrue(validator.is_valid(profile_rejected))
+        profile_positive = self.validate_variant_schema(
+            schema, "profileAccepted"
+        )["properties"][
+            "diagnostics"
+        ]["properties"]["modelDiagnostics"]["items"]["oneOf"][0]
+        positive_only = copy.deepcopy(profile_rejected)
+        positive_only["diagnostics"]["modelDiagnostics"] = [
+            self.sample_schema_value(profile_positive, definitions)
+        ]
+        self.assertFalse(validator.is_valid(positive_only))
+
+        structure_rejection = self.validate_variant_schema(
+            schema, "structureRejected"
+        )["properties"][
+            "diagnostics"
+        ]["properties"]["modelDiagnostics"]["contains"]["oneOf"][0]
+        wrong_stage = copy.deepcopy(profile_rejected)
+        wrong_stage["diagnostics"]["modelDiagnostics"] = [
+            self.sample_schema_value(structure_rejection, definitions)
+        ]
+        self.assertFalse(validator.is_valid(wrong_stage))
+
+        unavailable = self.validate_variant_fixture(
+            schema, "semanticsUnavailable"
+        )
+        binding_items = self.validate_variant_schema(
+            schema, "semanticsUnavailable"
+        )["properties"][
+            "context"
+        ]["properties"]["supplements"]["items"]["properties"][
+            "diagnostics"
+        ]["items"]
+        binding_schema = self.resolve_local_schema(
+            binding_items, definitions
+        )["oneOf"][0]
+        binding = self.sample_schema_value(binding_schema, definitions)
+        for name in ("semanticsAccepted", "semanticsRejected"):
+            with self.subTest(axis=f"binding-in-{name}"):
+                changed = self.validate_variant_fixture(schema, name)
+                changed["context"]["supplements"] = [
+                    {
+                        "reference": "x",
+                        "sha256": "0" * 64,
+                        "diagnostics": [binding],
+                    }
+                ]
+                self.assertFalse(validator.is_valid(changed))
+
+        wrong_three_contracts = copy.deepcopy(baseline)
+        wrong_three_contracts["provenance"]["contracts"].append(
+            copy.deepcopy(
+                unavailable["provenance"]["contracts"][-1]
+            )
+        )
+        self.assertFalse(validator.is_valid(wrong_three_contracts))
+
+        structure_accepted = self.validate_variant_fixture(
+            schema, "structureAccepted"
+        )
+        wrong_four_contracts = copy.deepcopy(structure_accepted)
+        wrong_four_contracts["provenance"]["contracts"].pop()
+        self.assertFalse(validator.is_valid(wrong_four_contracts))
+        wrong_order = copy.deepcopy(structure_accepted)
+        wrong_order["provenance"]["contracts"][0:2] = reversed(
+            wrong_order["provenance"]["contracts"][0:2]
+        )
+        self.assertFalse(validator.is_valid(wrong_order))
+
+        foreign_operation = copy.deepcopy(baseline)
+        foreign_operation["provenance"]["contracts"][0]["identity"] = (
+            "foreign.operation"
+        )
+        self.assertFalse(validator.is_valid(foreign_operation))
+        foreign_profile = copy.deepcopy(baseline)
+        foreign_profile["context"]["authority"]["profile"]["identity"] = (
+            "foreign.profile"
+        )
+        self.assertFalse(validator.is_valid(foreign_profile))
+        foreign_core = copy.deepcopy(structure_accepted)
+        foreign_core["provenance"]["contracts"][3]["identity"] = (
+            "foreign.core"
+        )
+        self.assertFalse(validator.is_valid(foreign_core))
+
+        notation_for_semantics = self.validate_variant_fixture(
+            schema, "notationRejected", "semantics"
+        )
+        self.assertEqual(
+            "semantics", notation_for_semantics["request"]["level"]
+        )
+        self.assertEqual([], notation_for_semantics["context"]["supplements"])
+        self.assertEqual(
+            4, len(notation_for_semantics["provenance"]["contracts"])
+        )
+        self.assertTrue(validator.is_valid(notation_for_semantics))
+        wrong_notation_contracts = copy.deepcopy(notation_for_semantics)
+        wrong_notation_contracts["provenance"]["contracts"].pop()
+        self.assertFalse(validator.is_valid(wrong_notation_contracts))
+
+        structure_for_semantics = self.validate_variant_fixture(
+            schema, "structureRejected", "semantics"
+        )
+        structure_for_semantics["context"]["supplements"] = [
+            {"reference": "x", "sha256": "0" * 64, "diagnostics": []}
+        ]
+        self.assertTrue(validator.is_valid(structure_for_semantics))
+        mismatched_structure_level = copy.deepcopy(structure_for_semantics)
+        mismatched_structure_level["request"]["level"] = "structure"
+        self.assertFalse(validator.is_valid(mismatched_structure_level))
+
+    def test_validate_unavailable_covers_binding_core_and_combined_witnesses(self):
+        schema, validator = self.validate_schema_fixture()
+        definitions = schema["$defs"]
+        unavailable_schema = self.validate_variant_schema(
+            schema, "semanticsUnavailable"
+        )
+        witness_items = unavailable_schema["properties"]["execution"][
+            "properties"
+        ]["coreWitnesses"]["items"]
+        witness_schemas = self.resolve_local_schema(
+            witness_items, definitions
+        )["oneOf"]
+        binding_items = unavailable_schema["properties"]["context"][
+            "properties"
+        ]["supplements"]["items"]["properties"]["diagnostics"]["items"]
+        binding_schema = self.resolve_local_schema(
+            binding_items, definitions
+        )["oneOf"][0]
+        semantic_schema = self.validate_variant_schema(
+            schema, "semanticsRejected"
+        )["properties"][
+            "diagnostics"
+        ]["properties"]["modelDiagnostics"]["contains"]["oneOf"][0]
+
+        binding_only = self.validate_variant_fixture(
+            schema, "semanticsUnavailable"
+        )
+        binding_only["execution"]["coreWitnesses"] = []
+        binding_only["context"]["supplements"] = [
+            {
+                "reference": "x",
+                "sha256": "0" * 64,
+                "diagnostics": [
+                    self.sample_schema_value(binding_schema, definitions)
+                ],
+            }
+        ]
+        self.assertTrue(validator.is_valid(binding_only))
+
+        core_only = self.validate_variant_fixture(
+            schema, "semanticsUnavailable"
+        )
+        core_only["execution"]["coreWitnesses"] = [
+            self.sample_schema_value(witness_schemas[0], definitions)
+        ]
+        self.assertEqual([], core_only["context"]["supplements"])
+        self.assertTrue(validator.is_valid(core_only))
+
+        combined = copy.deepcopy(binding_only)
+        combined["execution"]["coreWitnesses"].append(
+            self.sample_schema_value(witness_schemas[0], definitions)
+        )
+        combined["diagnostics"]["modelDiagnostics"] = [
+            self.sample_schema_value(semantic_schema, definitions)
+        ]
+        self.assertTrue(validator.is_valid(combined))
+
+        no_witness = copy.deepcopy(core_only)
+        no_witness["execution"]["coreWitnesses"] = []
+        self.assertFalse(validator.is_valid(no_witness))
+
+        ordinal_key_gap = copy.deepcopy(binding_only)
+        ordinal_key_gap["context"]["supplements"] = {
+            "7": binding_only["context"]["supplements"][0]
+        }
+        self.assertFalse(validator.is_valid(ordinal_key_gap))
 
     def test_rule_definition_failure_has_no_unencodable_authority(self):
         schema = json.loads(

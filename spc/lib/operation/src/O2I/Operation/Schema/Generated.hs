@@ -123,6 +123,63 @@ viewDiscoveryMachineSchema =
              ]
     }
 
+notationValidationAcceptedVariant :: SchemaVariant
+notationValidationAcceptedVariant = SchemaVariant "notation-validation-accepted"
+
+notationValidationRejectedVariant :: SchemaVariant
+notationValidationRejectedVariant = SchemaVariant "notation-validation-rejected"
+
+profileValidationAcceptedVariant :: SchemaVariant
+profileValidationAcceptedVariant = SchemaVariant "profile-validation-accepted"
+
+profileValidationRejectedVariant :: SchemaVariant
+profileValidationRejectedVariant = SchemaVariant "profile-validation-rejected"
+
+structureValidationAcceptedVariant :: SchemaVariant
+structureValidationAcceptedVariant =
+  SchemaVariant "structure-validation-accepted"
+
+structureValidationRejectedVariant :: SchemaVariant
+structureValidationRejectedVariant =
+  SchemaVariant "structure-validation-rejected"
+
+semanticsValidationAcceptedVariant :: SchemaVariant
+semanticsValidationAcceptedVariant =
+  SchemaVariant "semantics-validation-accepted"
+
+semanticsValidationRejectedVariant :: SchemaVariant
+semanticsValidationRejectedVariant =
+  SchemaVariant "semantics-validation-rejected"
+
+semanticsValidationUnavailableVariant :: SchemaVariant
+semanticsValidationUnavailableVariant =
+  SchemaVariant "semantics-validation-unavailable"
+
+validateResultMachineSchema :: MachineSchema
+validateResultMachineSchema =
+  MachineSchema
+    { machineSchemaAuthorityValue =
+        SchemaAuthority
+          { schemaAuthorityIdentityValue =
+              SchemaIdentity "o2i.operation.validate"
+          , schemaAuthorityVersionValue = SchemaVersion 1
+          , schemaAuthorityDigestValue =
+              SchemaDigest
+                "f66ad7018516b0128969a2b47fe2ad5f23c88691065b667106de40db0392ba83"
+          }
+    , machineSchemaVariantsValue =
+        notationValidationAcceptedVariant
+          :| [ notationValidationRejectedVariant
+             , profileValidationAcceptedVariant
+             , profileValidationRejectedVariant
+             , structureValidationAcceptedVariant
+             , structureValidationRejectedVariant
+             , semanticsValidationAcceptedVariant
+             , semanticsValidationRejectedVariant
+             , semanticsValidationUnavailableVariant
+             ]
+    }
+
 diagnosticSchemaAuthority :: SchemaAuthority
 diagnosticSchemaAuthority =
   SchemaAuthority
@@ -130,5 +187,5 @@ diagnosticSchemaAuthority =
     , schemaAuthorityVersionValue = SchemaVersion 2
     , schemaAuthorityDigestValue =
         SchemaDigest
-          "df848ec7e82802ca13c24ffbe0ea0c0883001251af44d6ef9a24a403507f8ff2"
+          "ff4e550795d72b8cfbd2502d146266512623d0f1801fc6e3f1ce807b85167788"
     }

@@ -29,6 +29,10 @@ import qualified O2I.Operation.Provenance as Provenance
 import qualified O2I.Operation.Request as Request
 import qualified O2I.Operation.Rule.Catalog as RuleCatalog
 import qualified O2I.Operation.Schema as Schema
+import qualified O2I.Operation.Validate as Validate
+import qualified O2I.Operation.Validate.Machine as ValidateMachine
+import qualified O2I.Operation.Validate.Request as ValidateRequest
+import qualified O2I.Operation.Validate.Result as ValidateResult
 import qualified O2I.Operation.View as View
 
 $(assertAbstractTypes
@@ -137,6 +141,15 @@ $(assertAbstractTypes
     , "Schema.SchemaVariant"
     , "Schema.SchemaAuthority"
     , "Schema.MachineSchema"
+    , "ValidateRequest.ValidationLevel"
+    , "ValidateRequest.ValidateRequest"
+    , "ValidateResult.ValidationDisposition"
+    , "ValidateResult.ValidateInternalFailure"
+    , "ValidateResult.ValidateFailure"
+    , "ValidateResult.ValidateUnavailabilityWitness"
+    , "ValidateResult.PreparedValidation"
+    , "ValidateResult.ValidateResult"
+    , "ValidateMachine.ValidateResultDocument"
     , "View.ViewSelector"
     , "View.ViewSelectionCandidate"
     , "View.ViewSelectionFailure"
@@ -435,6 +448,40 @@ $(assertOrdinaryFunctions
     , 'Schema.machineSchemaAuthority
     , 'Schema.machineSchemaVariants
     , 'Schema.foldMachineSchema
+    , 'Validate.runValidate
+    , 'ValidateRequest.notationValidationLevel
+    , 'ValidateRequest.profileValidationLevel
+    , 'ValidateRequest.structureValidationLevel
+    , 'ValidateRequest.semanticsValidationLevel
+    , 'ValidateRequest.validationLevelText
+    , 'ValidateRequest.foldValidationLevel
+    , 'ValidateRequest.notationValidateRequest
+    , 'ValidateRequest.profileValidateRequest
+    , 'ValidateRequest.structureValidateRequest
+    , 'ValidateRequest.semanticsValidateRequest
+    , 'ValidateRequest.validateRequestLevel
+    , 'ValidateRequest.validateModelInput
+    , 'ValidateRequest.validateViewSelector
+    , 'ValidateRequest.validateAdapterId
+    , 'ValidateRequest.validateSupplementalInputs
+    , 'ValidateRequest.foldValidateRequest
+    , 'ValidateResult.validationAccepted
+    , 'ValidateResult.validationRejected
+    , 'ValidateResult.validationUnavailable
+    , 'ValidateResult.validationDispositionText
+    , 'ValidateResult.foldValidationDisposition
+    , 'ValidateResult.foldValidateInternalFailure
+    , 'ValidateResult.foldValidateFailure
+    , 'ValidateResult.foldValidateUnavailabilityWitness
+    , 'ValidateResult.preparedValidationLevel
+    , 'ValidateResult.preparedValidationDiagnostics
+    , 'ValidateResult.foldPreparedValidation
+    , 'ValidateResult.validateResultDisposition
+    , 'ValidateResult.foldValidateResult
+    , 'ValidateMachine.validateResultDocument
+    , 'ValidateMachine.validateResultSchema
+    , 'ValidateMachine.validateResultDocumentVariant
+    , 'ValidateMachine.encodeValidateResultDocument
     , 'View.viewByName
     , 'View.viewByIdentity
     , 'View.foldViewSelector

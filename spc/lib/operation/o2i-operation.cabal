@@ -69,6 +69,10 @@ library
     O2I.Operation.Request,
     O2I.Operation.Rule.Catalog,
     O2I.Operation.Schema,
+    O2I.Operation.Validate,
+    O2I.Operation.Validate.Machine,
+    O2I.Operation.Validate.Request,
+    O2I.Operation.Validate.Result,
     O2I.Operation.View
   other-modules:
     O2I.Operation.Acquisition.Internal,
@@ -94,6 +98,9 @@ library
     O2I.Operation.Rule.Internal.Catalog,
     O2I.Operation.Schema.Generated,
     O2I.Operation.Schema.Internal,
+    O2I.Operation.Validate.Request.Internal,
+    O2I.Operation.Validate.Result.Internal,
+    O2I.Operation.Validate.Runtime.Internal,
     O2I.Operation.View.Internal
   build-depends:
     base >=4.20 && <4.21,
@@ -160,6 +167,13 @@ test-suite o2i-operation-test
     O2I.Operation.Schema,
     O2I.Operation.Schema.Generated,
     O2I.Operation.Schema.Internal,
+    O2I.Operation.Validate,
+    O2I.Operation.Validate.Machine,
+    O2I.Operation.Validate.Request,
+    O2I.Operation.Validate.Request.Internal,
+    O2I.Operation.Validate.Result,
+    O2I.Operation.Validate.Result.Internal,
+    O2I.Operation.Validate.Runtime.Internal,
     O2I.Operation.View,
     O2I.Operation.View.Internal,
     O2I.Operation.Test.Acquisition,
@@ -180,6 +194,7 @@ test-suite o2i-operation-test
     O2I.Operation.Test.Result,
     O2I.Operation.Test.RuleCatalog,
     O2I.Operation.Test.Schema,
+    O2I.Operation.Test.Validate,
     O2I.Operation.Test.View
   build-depends:
     aeson >=2.2 && <2.3,
