@@ -104,6 +104,9 @@ tests =
         "accumulates every decode failure and stops before later stages"
         supplementalAdmissionFailureBoundaries
     , testCase
+        "accumulates high-fanout decode failures completely and canonically"
+        supplementalAdmissionFailureHighFanout
+    , testCase
         "binds exactly once after Structure and never after rejection"
         supplementalBindingLifecycle
     ]
@@ -457,6 +460,34 @@ supplementalAdmissionFailureBoundaries = do
     (const (assertFailure "valid supplemental provenance was rejected"))
     (\defects -> NonEmpty.length defects @?= 1)
     (const (assertFailure "set-assessment failure reached Structure"))
+
+supplementalAdmissionFailureHighFanout :: Assertion
+supplementalAdmissionFailureHighFanout = do
+  contract <- testAdapterContract
+  model <- modelSource
+  let fanout = 4096
+      authority =
+        PreparedAuthority contract Profile.compiledProfileDescriptor model
+      observe ::
+           [AcquiredSupplementalSource]
+        -> Either Text (NonEmpty SemanticsInput.SupplementalInputDefect)
+      observe candidates =
+        withAdmittedOwnerSupplementalInputs
+          authority
+          candidates
+          (const (Left "valid high-fanout provenance was rejected"))
+          Right
+          (const (Left "invalid high-fanout input reached set admission"))
+      invalidSource ordinal =
+        acquiredSupplementalBytes
+          (fromIntegral ordinal)
+          ("invalid-high-fanout-" <> Text.pack (show ordinal))
+          "{"
+  sources <- traverse invalidSource [0 .. fanout - 1]
+  expectedGroups <- traverse (requireRight . observe . pure) sources
+  actual <- requireRight (observe (reverse sources))
+  NonEmpty.length actual @?= fanout
+  NonEmpty.toList actual @?= concatMap NonEmpty.toList expectedGroups
 
 supplementalBindingLifecycle :: Assertion
 supplementalBindingLifecycle = do

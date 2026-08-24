@@ -22,7 +22,8 @@ module O2I.Operation.Diagnostic.Owner.Source
 
 import Data.Either (partitionEithers)
 import Data.List (sortOn)
-import Data.List.NonEmpty (NonEmpty)
+import Data.List.NonEmpty (NonEmpty((:|)))
+import Data.Semigroup (sconcat)
 import O2I.Operation.Acquisition
   ( AcquiredSupplementalSource
   , acquiredSourceBytes
@@ -67,7 +68,7 @@ withAdmittedOwnerSupplementalInputs _ acquired provenanceFailure inputFailure ac
     Right _ ->
       case partitionEithers (map decodeOwnerSource ordered) of
         (firstFailure:laterFailures, _) ->
-          inputFailure (foldl (<>) firstFailure laterFailures)
+          inputFailure (sconcat (firstFailure :| laterFailures))
         ([], decoded) ->
           case assessSupplementalInputSet decoded of
             Left defects -> inputFailure defects
