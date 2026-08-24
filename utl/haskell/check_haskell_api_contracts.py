@@ -330,6 +330,7 @@ CONTRACTS = (
             "spc/lib/operation/tst/api/compile-pass/PublicApi.hs",
             "spc/lib/operation/tst/api/compile-pass/"
             "OwnerEvidencePublicApi.hs",
+            "spc/lib/operation/tst/api/compile-pass/ValidatePublicApi.hs",
         ),
         (
             CompileFailure(
@@ -534,6 +535,31 @@ CONTRACTS = (
                 "spc/lib/operation/tst/api/compile-fail/"
                 "ViewOpaqueConstructors.hs",
                 (("GHC-88464", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "ValidateRequestHiddenInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "ValidateResultHiddenInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "ValidateRuntimeHiddenInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "ValidateResultOpaqueConstructor.hs",
+                (("GHC-88464", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "ValidateResultDocumentOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
             ),
         ),
         ("o2i-core", "o2i-archimate-profile"),

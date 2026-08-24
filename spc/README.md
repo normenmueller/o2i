@@ -80,6 +80,10 @@ O2I.Operation.Provenance
 O2I.Operation.Request
 O2I.Operation.Rule.Catalog
 O2I.Operation.Schema
+O2I.Operation.Validate
+O2I.Operation.Validate.Machine
+O2I.Operation.Validate.Request
+O2I.Operation.Validate.Result
 O2I.Operation.View
 ```
 
@@ -108,7 +112,7 @@ native AMX bytes
 
 Profile produces a `StructureProjection`; Core alone assesses it and can admit an opaque `WellFormedGraph`. Core semantics then assesses that graph with its bound supplemental inputs and can admit an opaque `SemanticallyValidModel`. These are owner-specific guarantees, not stages of one universal inspection pipeline.
 
-Operation exposes closed request identities for validation, trace, qualification, readiness, and assessment, but the later executable capability compositions and their CLI cutover are still pending. The Foundation therefore does not claim a current public path from an unchecked graph through trace, readiness, and evidence assessment.
+Operation exposes the complete public library-level Validate composition for explicit Notation, Profile, Structure, and Semantics levels: closed requests, cumulative orchestration, typed terminal results, and generated schema-bound machine documents. Validate has no supported CLI or executable integration yet. The request identities for trace, qualification, readiness, and assessment remain shared request vocabulary whose executable capability compositions are still pending; the Foundation therefore does not claim a current public path from an unchecked graph through trace, readiness, and evidence assessment.
 
 ## Profile And Candidate Views
 
@@ -158,7 +162,7 @@ The complete project still contains legacy inspection and CLI packages whose `ba
 
 ## Command Status
 
-The current Foundation exposes libraries and verification executables only. It provides no supported `o2i` installation path and no available `o2i inspect` command. User-facing capability execution, rendering, installation, and the CLI package-graph cutover remain pending and are not documented here as usable behavior.
+The current Foundation exposes the library-level Validate composition and verification executables only. It provides no supported `o2i` installation path and no available `o2i validate` or `o2i inspect` command. User-facing capability execution, rendering, installation, and the CLI package-graph cutover remain pending and are not documented here as usable behavior.
 
 ## License
 

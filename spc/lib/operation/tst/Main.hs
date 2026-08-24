@@ -19,6 +19,7 @@ import qualified O2I.Operation.Test.Request as Request
 import qualified O2I.Operation.Test.Result as Result
 import qualified O2I.Operation.Test.RuleCatalog as RuleCatalog
 import qualified O2I.Operation.Test.Schema as Schema
+import qualified O2I.Operation.Test.Validate as Validate
 import qualified O2I.Operation.Test.View as View
 import Test.Tasty (defaultMain, testGroup)
 
@@ -44,5 +45,6 @@ main =
        , Result.tests
        , RuleCatalog.tests
        , Schema.tests
+       , Validate.tests
        , View.tests
        ])

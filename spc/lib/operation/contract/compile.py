@@ -143,6 +143,20 @@ EXPECTED_DOCUMENTS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "view-adapter-decode-failed",
         ),
     ),
+    (
+        "validateResult",
+        (
+            "notation-validation-accepted",
+            "notation-validation-rejected",
+            "profile-validation-accepted",
+            "profile-validation-rejected",
+            "structure-validation-accepted",
+            "structure-validation-rejected",
+            "semantics-validation-accepted",
+            "semantics-validation-rejected",
+            "semantics-validation-unavailable",
+        ),
+    ),
 )
 EXPECTED_VARIANTS = dict(EXPECTED_DOCUMENTS)
 EXPECTED_FRAGMENTS = ("diagnostic",)
@@ -159,6 +173,15 @@ VARIANT_BINDINGS: dict[str, str] = {
     "view-acquisition-failed": "viewAcquisitionFailedVariant",
     "view-adapter-selection-failed": "viewAdapterSelectionFailedVariant",
     "view-adapter-decode-failed": "viewAdapterDecodeFailedVariant",
+    "notation-validation-accepted": "notationValidationAcceptedVariant",
+    "notation-validation-rejected": "notationValidationRejectedVariant",
+    "profile-validation-accepted": "profileValidationAcceptedVariant",
+    "profile-validation-rejected": "profileValidationRejectedVariant",
+    "structure-validation-accepted": "structureValidationAcceptedVariant",
+    "structure-validation-rejected": "structureValidationRejectedVariant",
+    "semantics-validation-accepted": "semanticsValidationAcceptedVariant",
+    "semantics-validation-rejected": "semanticsValidationRejectedVariant",
+    "semantics-validation-unavailable": "semanticsValidationUnavailableVariant",
 }
 
 
@@ -1209,13 +1232,15 @@ def view_discovery_schema(document: MachineDocument) -> dict[str, Any]:
 
 
 def exact_text_array(values: list[str]) -> dict[str, Any]:
-    return {
+    schema = {
         "type": "array",
         "minItems": len(values),
         "maxItems": len(values),
-        "prefixItems": [{"const": value} for value in values],
-        "items": False,
     }
+    if values:
+        schema["prefixItems"] = [{"const": value} for value in values]
+    schema["items"] = False
+    return schema
 
 
 def diagnostic_value_schema(value_kind: str) -> dict[str, Any]:
@@ -1439,23 +1464,25 @@ def notation_diagnostic_schema(token: str) -> dict[str, Any]:
     )
 
 
-def diagnostic_definitions(
+def diagnostic_schema_groups(
     profile_inventory: Optional[dict[str, Any]] = None,
     core_inventory: Optional[dict[str, Any]] = None,
 ) -> dict[str, Any]:
-    """Generate v2 exclusively from the two explicit owner inventories."""
     if profile_inventory is None:
         profile_inventory, _ = load_object(DEFAULT_PROFILE_DIAGNOSTIC_INVENTORY)
     if core_inventory is None:
         core_inventory, _ = load_object(DEFAULT_CORE_OWNER_DIAGNOSTIC_INVENTORY)
     profile = profile_inventory["profile"]
     owners = core_inventory["owners"]
-    profile_diagnostics = [
-        owner_diagnostic_schema(
+    profile_rows = [
+        (
             row,
-            owner="profile",
-            stage="profile",
-            producer=row["producer"],
+            owner_diagnostic_schema(
+                row,
+                owner="profile",
+                stage="profile",
+                producer=row["producer"],
+            ),
         )
         for row in profile_inventory["diagnostics"]
     ]
@@ -1490,6 +1517,47 @@ def diagnostic_definitions(
     notation_diagnostics = [
         notation_diagnostic_schema(token) for token in NOTATION_ISSUE_TOKENS
     ]
+    return {
+        "profile": profile,
+        "notation": notation_diagnostics,
+        "profileAll": [schema for _, schema in profile_rows],
+        "profileAcceptance": [
+            schema
+            for row, schema in profile_rows
+            if row["polarity"] == "acceptance"
+        ],
+        "profileActivation": [
+            schema
+            for row, schema in profile_rows
+            if row["producer"] == "profile-activation"
+        ],
+        "profileRejection": [
+            schema
+            for row, schema in profile_rows
+            if row["polarity"] == "rejection"
+        ],
+        "structure": structure_diagnostics,
+        "semantics": semantics_diagnostics,
+        "binding": binding_diagnostics,
+    }
+
+
+def diagnostic_definitions(
+    profile_inventory: Optional[dict[str, Any]] = None,
+    core_inventory: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    """Generate v2 exclusively from the two explicit owner inventories."""
+    if profile_inventory is None:
+        profile_inventory, _ = load_object(DEFAULT_PROFILE_DIAGNOSTIC_INVENTORY)
+    if core_inventory is None:
+        core_inventory, _ = load_object(DEFAULT_CORE_OWNER_DIAGNOSTIC_INVENTORY)
+    groups = diagnostic_schema_groups(profile_inventory, core_inventory)
+    profile = groups["profile"]
+    notation_diagnostics = groups["notation"]
+    profile_diagnostics = groups["profileAll"]
+    structure_diagnostics = groups["structure"]
+    semantics_diagnostics = groups["semantics"]
+    binding_diagnostics = groups["binding"]
     source_entry = object_schema(
         {
             "reference": text_schema(pattern=TOOL_TEXT_PATTERN),
@@ -1580,6 +1648,413 @@ def diagnostic_definitions(
     }
 
 
+def validate_result_schema(
+    document: MachineDocument,
+    profile_inventory: Optional[dict[str, Any]] = None,
+    core_inventory: Optional[dict[str, Any]] = None,
+    operation_contract: Optional[dict[str, Any]] = None,
+    operation_digest: Optional[str] = None,
+) -> dict[str, Any]:
+    if profile_inventory is None:
+        profile_inventory, _ = load_object(DEFAULT_PROFILE_DIAGNOSTIC_INVENTORY)
+    if core_inventory is None:
+        core_inventory, _ = load_object(DEFAULT_CORE_OWNER_DIAGNOSTIC_INVENTORY)
+    if operation_contract is None or operation_digest is None:
+        operation_companion, operation_payload = load_object(COMPANION)
+        operation_contract = operation_companion["contract"]
+        operation_digest = hashlib.sha256(operation_payload).hexdigest()
+    definitions = diagnostic_definitions(profile_inventory, core_inventory)
+    groups = diagnostic_schema_groups(profile_inventory, core_inventory)
+    for generic_document_definition in (
+        "preparedAuthority",
+        "modelDiagnostic",
+        "supplementalSources",
+        "preparedDiagnosticDocument",
+    ):
+        del definitions[generic_document_definition]
+    profile = profile_inventory["profile"]
+    profile_digest = profile_inventory["companion"]["rawSha256"]
+    core = core_inventory["core"]
+    core_digest = core_inventory["companions"]["semantics"]["rawSha256"]
+
+    selector = {
+        "oneOf": [
+            object_schema(
+                {"kind": {"const": "name"}, "value": text_schema()}
+            ),
+            object_schema(
+                {"kind": {"const": "identity"}, "value": text_schema()}
+            ),
+        ]
+    }
+    input_reference = {
+        "oneOf": [
+            object_schema(
+                {"kind": {"const": "file"}, "path": text_schema()}
+            ),
+            object_schema({"kind": {"const": "stdin"}}),
+        ]
+    }
+    model_source = object_schema(
+        {
+            "role": {"const": "model"},
+            "ordinal": {"const": 0},
+            "reference": text_schema(pattern=TOOL_TEXT_PATTERN),
+            "sha256": text_schema(pattern=SHA256_PATTERN),
+        }
+    )
+    profile_authority = object_schema(
+        {
+            "identity": {"const": profile["identity"]},
+            "token": {"const": profile["token"]},
+            "version": {"const": profile["version"]},
+            "notation": {"const": profile["notation"]},
+            "adapterIds": exact_text_array(profile["adapterIds"]),
+            "contractDigest": {"const": profile_digest},
+        }
+    )
+    operation_contract = object_schema(
+        {
+            "kind": {"const": "operation"},
+            "identity": {"const": operation_contract["identity"]},
+            "version": {"const": operation_contract["version"]},
+            "digest": {"const": operation_digest},
+        }
+    )
+    adapter_contract = object_schema({"kind": {"const": "adapter"}})
+    profile_contract = object_schema({"kind": {"const": "profile"}})
+    core_contract = object_schema(
+        {
+            "kind": {"const": "core"},
+            "identity": {"const": core["identity"]},
+            "version": {"const": core["version"]},
+            "digest": {"const": core_digest},
+        }
+    )
+
+    def contract_sequence(level: str) -> dict[str, Any]:
+        entries = [operation_contract, adapter_contract, profile_contract]
+        if level in {"structure", "semantics"}:
+            entries.append(core_contract)
+        return {
+            "type": "array",
+            "minItems": len(entries),
+            "maxItems": len(entries),
+            "prefixItems": entries,
+            "items": False,
+        }
+
+    def validation_request(level: str) -> dict[str, Any]:
+        supplements = (
+            array_schema(input_reference)
+            if level == "semantics"
+            else {"type": "array", "maxItems": 0}
+        )
+        return object_schema(
+            {
+                "level": {"const": level},
+                "view": selector,
+                "adapterId": nullable(text_schema()),
+                "supplements": supplements,
+            }
+        )
+
+    prepared_authority = object_schema(
+        {
+            "adapter": reference("adapterDescriptor"),
+            "notationRules": {
+                "type": "array",
+                "minItems": len(NOTATION_ISSUE_TOKENS),
+                "maxItems": len(NOTATION_ISSUE_TOKENS),
+                "prefixItems": [
+                    object_schema(
+                        {
+                            "evidenceKind": {
+                                "const": f"archimate-notation-{token}"
+                            },
+                            "ruleId": text_schema(pattern=TOOL_TEXT_PATTERN),
+                        }
+                    )
+                    for token in NOTATION_ISSUE_TOKENS
+                ],
+                "items": False,
+            },
+            "profile": profile_authority,
+            "model": reference("validateModelSource"),
+        }
+    )
+
+    def supplemental_groups(binding: str) -> dict[str, Any]:
+        diagnostics = {
+            "type": "array",
+            "items": reference("validateBindingDiagnostic"),
+        }
+        if binding != "admitted":
+            diagnostics["maxItems"] = 0
+        source_entry = object_schema(
+            {
+                "reference": text_schema(pattern=TOOL_TEXT_PATTERN),
+                "sha256": text_schema(pattern=SHA256_PATTERN),
+                "diagnostics": diagnostics,
+            }
+        )
+        result = array_schema(source_entry)
+        if binding == "forbidden":
+            result["maxItems"] = 0
+        return result
+
+    def diagnostic_document(
+        allowed: list[str],
+        required: list[str],
+    ) -> dict[str, Any]:
+        items = (
+            {"oneOf": [reference(name) for name in allowed]}
+            if allowed
+            else False
+        )
+        model_diagnostics: dict[str, Any] = {"type": "array", "items": items}
+        if not allowed:
+            model_diagnostics["maxItems"] = 0
+        if required:
+            model_diagnostics["contains"] = {
+                "oneOf": [reference(name) for name in required]
+            }
+            model_diagnostics["minContains"] = 1
+        return object_schema(
+            {
+                "schema": {"const": "o2i.operation.diagnostic/v2"},
+                "modelDiagnostics": model_diagnostics,
+            }
+        )
+
+    diagnostic_shapes = {
+        ("notation", "accepted"): diagnostic_document([], []),
+        ("notation", "rejected"): diagnostic_document(
+            ["validateNotationDiagnostic"],
+            ["validateNotationDiagnostic"],
+        ),
+        ("profile", "accepted"): diagnostic_document(
+            ["validateProfileAcceptanceDiagnostic"], []
+        ),
+        ("profile", "rejected"): diagnostic_document(
+            [
+                "validateProfileActivationDiagnostic",
+                "validateProfileRejectionDiagnostic",
+            ],
+            ["validateProfileRejectionDiagnostic"],
+        ),
+        ("structure", "accepted"): diagnostic_document(
+            ["validateProfileAcceptanceDiagnostic"], []
+        ),
+        ("structure", "rejected"): diagnostic_document(
+            [
+                "validateProfileAcceptanceDiagnostic",
+                "validateStructureDiagnostic",
+            ],
+            ["validateStructureDiagnostic"],
+        ),
+        ("semantics", "accepted"): diagnostic_document(
+            ["validateProfileAcceptanceDiagnostic"], []
+        ),
+        ("semantics", "rejected"): diagnostic_document(
+            [
+                "validateProfileAcceptanceDiagnostic",
+                "validateSemanticsDiagnostic",
+            ],
+            ["validateSemanticsDiagnostic"],
+        ),
+        ("semantics", "unavailable"): diagnostic_document(
+            [
+                "validateProfileAcceptanceDiagnostic",
+                "validateSemanticsDiagnostic",
+            ],
+            [],
+        ),
+    }
+
+    collective_reasons = {
+        "enum": [
+            "collective-fit-input-missing",
+            "collective-fit-identity-unresolved",
+            "participant-strategy-formulation-unavailable",
+            "participant-strategy-formulation-invalid",
+            "target-strategy-formulation-unavailable",
+            "target-strategy-formulation-invalid",
+        ]
+    }
+    model_identities = array_schema(text_schema(pattern=TOOL_TEXT_PATTERN))
+    unavailability_witness = {
+        "oneOf": [
+            object_schema(
+                {
+                    "kind": {"const": "strategy-formulation"},
+                    "subject": text_schema(pattern=TOOL_TEXT_PATTERN),
+                    "reason": {
+                        "enum": ["input-missing", "identity-unresolved"]
+                    },
+                }
+            ),
+            object_schema(
+                {
+                    "kind": {"const": "collective-fit"},
+                    "subject": text_schema(pattern=TOOL_TEXT_PATTERN),
+                    "reasons": array_schema(collective_reasons, minimum=1),
+                    "blockers": model_identities,
+                }
+            ),
+            object_schema(
+                {
+                    "kind": {"const": "collective-coverage"},
+                    "subject": text_schema(pattern=TOOL_TEXT_PATTERN),
+                    "blockers": model_identities,
+                }
+            ),
+            object_schema(
+                {
+                    "kind": {"const": "primitive-support"},
+                    "subject": text_schema(pattern=TOOL_TEXT_PATTERN),
+                    "participant": text_schema(pattern=TOOL_TEXT_PATTERN),
+                    "reasons": array_schema(collective_reasons, minimum=1),
+                    "blockers": model_identities,
+                }
+            ),
+        ]
+    }
+
+    levels = ["notation", "profile", "structure", "semantics"]
+
+    def report(
+        stage: str, status: str, requested_level: str
+    ) -> dict[str, Any]:
+        kind = f"{stage}-validation-{status}"
+        execution_members: dict[str, Any] = {"status": {"const": status}}
+        if status == "unavailable":
+            execution_members["coreWitnesses"] = array_schema(
+                reference("validateCoreUnavailabilityWitness")
+            )
+        report_schema = operation_variant(
+            document,
+            "validate",
+            kind,
+            {
+                "context": object_schema(
+                    {
+                        "authority": reference("validatePreparedAuthority"),
+                        "view": reference("viewDescriptor"),
+                        "supplements": supplemental_groups(
+                            "admitted"
+                            if status == "unavailable"
+                            else (
+                                "empty"
+                                if requested_level == "semantics"
+                                and stage not in {"notation", "profile"}
+                                else "forbidden"
+                            )
+                        ),
+                    }
+                ),
+                "request": validation_request(requested_level),
+                "execution": object_schema(execution_members),
+                "diagnostics": diagnostic_shapes[(stage, status)],
+                "provenance": object_schema(
+                    {"contracts": contract_sequence(requested_level)}
+                ),
+            },
+        )
+        if status == "unavailable":
+            report_schema["anyOf"] = [
+                {
+                    "properties": {
+                        "context": {
+                            "properties": {
+                                "supplements": {
+                                    "contains": {
+                                        "properties": {
+                                            "diagnostics": {"minItems": 1}
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "properties": {
+                        "execution": {
+                            "properties": {
+                                "coreWitnesses": {"minItems": 1}
+                            }
+                        }
+                    }
+                },
+            ]
+        return report_schema
+
+    def reports(stage: str, status: str) -> dict[str, Any]:
+        if status == "rejected":
+            requested_levels = levels[levels.index(stage):]
+        else:
+            requested_levels = [stage]
+        alternatives = [
+            report(stage, status, requested_level)
+            for requested_level in requested_levels
+        ]
+        if len(alternatives) == 1:
+            return alternatives[0]
+        return {"oneOf": alternatives}
+
+    definitions.update(
+        {
+            "toolDescriptor": tool_descriptor(),
+            "validateNotationDiagnostic": {"oneOf": groups["notation"]},
+            "validateProfileAcceptanceDiagnostic": {
+                "oneOf": groups["profileAcceptance"]
+            },
+            "validateProfileActivationDiagnostic": {
+                "oneOf": groups["profileActivation"]
+            },
+            "validateProfileRejectionDiagnostic": {
+                "oneOf": groups["profileRejection"]
+            },
+            "validateStructureDiagnostic": {"oneOf": groups["structure"]},
+            "validateSemanticsDiagnostic": {"oneOf": groups["semantics"]},
+            "validateBindingDiagnostic": {"oneOf": groups["binding"]},
+            "validateCoreUnavailabilityWitness": unavailability_witness,
+            "validateModelSource": model_source,
+            "validatePreparedAuthority": prepared_authority,
+            "identityInvalidReason": identity_invalid_reason(),
+            "identityOutcome": identity_outcome(),
+            "viewNameField": view_name_field(),
+            "viewDescriptor": view_descriptor(),
+            "notationAccepted": reports("notation", "accepted"),
+            "notationRejected": reports("notation", "rejected"),
+            "profileAccepted": reports("profile", "accepted"),
+            "profileRejected": reports("profile", "rejected"),
+            "structureAccepted": reports("structure", "accepted"),
+            "structureRejected": reports("structure", "rejected"),
+            "semanticsAccepted": reports("semantics", "accepted"),
+            "semanticsRejected": reports("semantics", "rejected"),
+            "semanticsUnavailable": reports("semantics", "unavailable"),
+        }
+    )
+    return schema_document(
+        document,
+        "Cumulative Validate result",
+        definitions,
+        [
+            "notationAccepted",
+            "notationRejected",
+            "profileAccepted",
+            "profileRejected",
+            "structureAccepted",
+            "structureRejected",
+            "semanticsAccepted",
+            "semanticsRejected",
+            "semanticsUnavailable",
+        ],
+    )
+
+
 def diagnostic_schema(
     fragment: SchemaFragment,
     profile_inventory: Optional[dict[str, Any]] = None,
@@ -1608,12 +2083,13 @@ def schema_document(
     }
 
 
-SCHEMA_BUILDERS: dict[str, Callable[[MachineDocument], dict[str, Any]]] = {
+SCHEMA_BUILDERS: dict[str, Callable[..., dict[str, Any]]] = {
     "adapterInventory": adapter_inventory_schema,
     "profileInventory": profile_inventory_schema,
     "ruleInventory": rule_inventory_schema,
     "ruleExplanation": rule_explanation_schema,
     "viewDiscovery": view_discovery_schema,
+    "validateResult": validate_result_schema,
 }
 
 SCHEMA_FRAGMENT_BUILDERS: dict[
@@ -1687,8 +2163,23 @@ def local_references(value: Any) -> list[str]:
     return []
 
 
-def render_schema(document: MachineDocument) -> bytes:
-    schema = SCHEMA_BUILDERS[document.name](document)
+def render_schema(
+    document: MachineDocument,
+    profile_inventory: Optional[dict[str, Any]] = None,
+    core_inventory: Optional[dict[str, Any]] = None,
+    operation_contract: Optional[dict[str, Any]] = None,
+    operation_digest: Optional[str] = None,
+) -> bytes:
+    if document.name == "validateResult":
+        schema = validate_result_schema(
+            document,
+            profile_inventory,
+            core_inventory,
+            operation_contract,
+            operation_digest,
+        )
+    else:
+        schema = SCHEMA_BUILDERS[document.name](document)
     verify_closed_objects(schema, document.name)
     return (
         json.dumps(schema, ensure_ascii=False, indent=2, separators=(",", ": "))
@@ -1929,7 +2420,16 @@ def render_outputs(
         profile_diagnostic_inventory,
         core_owner_diagnostic_inventory,
     )
-    schemas = {document.name: render_schema(document) for document in documents}
+    schemas = {
+        document.name: render_schema(
+            document,
+            profile_inventory,
+            core_inventory,
+            contract,
+            digest,
+        )
+        for document in documents
+    }
     fragment_schemas = {
         fragment.name: render_schema_fragment(
             fragment, profile_inventory, core_inventory

@@ -30,6 +30,7 @@
 
 ### Added
 
+- Added the public library-level cumulative Validate composition with closed Notation, Profile, Structure, and Semantics requests, typed terminal results, and generated deterministic machine documents; CLI integration remains pending.
 - Added nominal, generation-bound owner evidence for Profile classification, mapping, invariants, activation, and closure and for Core Structure, Binding, and Semantics, with build-only public conformance corpora and same- versus cross-generation API contracts.
 - Added closed, generated Core semantic-defect occurrence evidence with exact named roles and cardinalities for all 27 emitting rules while keeping constructors and correlation private.
 - Added an exhaustive human- and machine-readable mixed-license map with
