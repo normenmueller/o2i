@@ -63,9 +63,12 @@ instance-conformance work.
 - Mapping-only Views are checked reference visualizations, not O2I graphs.
 - Illustrative Views explain a conceptual reading without claiming executable
   profile or conformance status. `O2I Layered Cake` is such a non-executable
-  overview; its repository contract is checked without `o2i inspect`.
+  overview; its repository contract is checked without executable Haskell
+  conformance evaluation.
 - `spc/ctr/archimate/profile.json` is the exact mapping authority. `O2I Syntax - Carriers`, `O2I Syntax - Relations`, and the focused syntax Views must jointly visualize every current mapping class without creating a parallel registry.
-- Executable conformance and instance Views require Haskell `o2i inspect`.
+- Executable conformance and instance Views require the current Haskell
+  AMX/Profile/Core integration check in addition to the repository View
+  contract.
 
 # ArchiMate Applicability Review
 
@@ -103,10 +106,16 @@ instance-conformance work.
 
 - The Python model-hygiene audit checks only repository structure: identifiers,
   references, model usage, custom folders, and View documentation.
-- The Python extractor checks only named repository Views, labels,
-  documentation, displayed relation signatures, and snapshots.
-- AMX validates concrete O2I profile metadata and projects selected Views.
-- Core/Inspection validates notation-independent O2I structure and semantics.
+- The Python extractor checks named repository Views and snapshots together
+  with their exact repository visualization contracts projected from the
+  current Profile and bound Core companion: carrier and relation families,
+  focused metadata, references, and topology. It validates no fachliche
+  instance semantics and owns no parallel mapping registry.
+- AMX decodes native model evidence losslessly; the compiled Profile applies
+  the concrete mapping and projects selected Views.
+- Core validates notation-independent O2I structure and semantics. Operation
+  composes acquisition, adapter/Profile resolution, View selection, and the
+  current preparation boundary.
 
 # Commands
 
@@ -115,6 +124,6 @@ python3 -B utl/model/audit-archimate-model.py
 python3 -B utl/model/extract-archimate-view.py --preset all
 python3 -B utl/model/extract-archimate-view.py --preset all --check
 python3 -B -m unittest discover -s utl/model -p 'test_*.py'
-cabal --project-dir=spc run o2i -- inspect MODEL --view "VIEW"
-python3 -B utl/model/check-executable-views.py --o2i O2I_BINARY
+./utl/verify.sh model
+./utl/verify.sh foundation
 ```

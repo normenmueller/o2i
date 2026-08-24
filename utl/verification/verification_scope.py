@@ -49,7 +49,6 @@ LICENSING_PATHS = frozenset(
 MODEL_PATHS = frozenset(
     {
         "utl/model/check-executable-views.py",
-        "utl/model/archimate_profile.py",
         "utl/model/audit-archimate-model.py",
         "utl/model/extract-archimate-view.py",
         "utl/model/focused_view_contract.py",
