@@ -34,6 +34,9 @@ draftTests =
         namespaceTest
     , testCase "retains recognized scalar kinds and references" scalarTest
     , testCase
+        "maps native Junction operators and retains invalid values"
+        junctionOperatorTest
+    , testCase
         "retains unresolved xsi:type values as opaque evidence"
         unresolvedTypeTest
     , testCase "ignores formatting whitespace as scalar content" whitespaceTest
@@ -133,6 +136,29 @@ scalarTest = do
         , "source-node"
         , "target-node"
         ]
+
+junctionOperatorTest :: Assertion
+junctionOperatorTest = do
+  draft <- fixtureDraft "native-junction-operators"
+  let elements = filter ((== "element") . recordFamily) (recordInventory draft)
+      typeValues record =
+        [ map Draft.draftScalarText values
+        | FieldMember field values <- recordMembers record
+        , fieldName field == "type"
+        ]
+      opaqueTypeValues record =
+        [ map Draft.draftScalarText (Draft.draftOpaqueScalars evidence)
+        | OpaqueMember evidence <- recordMembers record
+        , Draft.draftNativeLocalName (Draft.draftOpaqueName evidence) == "type"
+        ]
+  map typeValues elements
+    @?= [ [["AndJunction"]]
+        , [["AndJunction"]]
+        , [["OrJunction"]]
+        , [["Junction"]]
+        , [["Driver"]]
+        ]
+  map opaqueTypeValues elements @?= [[], [], [], [["xor"]], [["or"]]]
 
 unresolvedTypeTest :: Assertion
 unresolvedTypeTest = do

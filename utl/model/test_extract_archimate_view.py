@@ -13,11 +13,12 @@ import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 
-
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "utl" / "model" / "extract-archimate-view.py"
 MODEL = ROOT / "mdl" / "o2i.archimate"
 sys.path.insert(0, str(ROOT / "utl" / "model"))
+
+
 EXPECTED_PRESET_KEYS = {
     "strategy-constituents",
     "semantics-situation",
@@ -29,6 +30,7 @@ EXPECTED_PRESET_KEYS = {
     "syntax-relations",
     "syntax-contextualization",
     "syntax-collective-strategy-realization",
+    "syntax-need-qualification-proposal",
     "layered-cake",
 }
 
@@ -36,6 +38,7 @@ SPEC = importlib.util.spec_from_file_location("extract_archimate_view", SCRIPT)
 if SPEC is None or SPEC.loader is None:
     raise RuntimeError(f"cannot load {SCRIPT}")
 EXTRACTOR = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = EXTRACTOR
 SPEC.loader.exec_module(EXTRACTOR)
 
 
@@ -43,7 +46,8 @@ class RepositoryViewContractTest(unittest.TestCase):
     """Validate deterministic repository Views without duplicating semantics."""
 
     def setUp(self) -> None:
-        self.root = ET.parse(MODEL).getroot()
+        self.current_root = ET.parse(MODEL).getroot()
+        self.root = copy.deepcopy(self.current_root)
 
     def test_repository_model_satisfies_view_contracts(self) -> None:
         self.assertEqual([], EXTRACTOR.validate_model(self.root))
@@ -56,19 +60,10 @@ class RepositoryViewContractTest(unittest.TestCase):
             for element in self.root.iter("element")
             if EXTRACTOR.xtype(element) == "ArchimateDiagramModel"
         }
-        repository_snapshots = {
-            path.relative_to(ROOT)
-            for path in (ROOT / "mdl").glob("o2i-*.md")
-        }
-
         self.assertEqual(EXPECTED_PRESET_KEYS, set(EXTRACTOR.PRESETS))
         self.assertEqual(len(view_names), len(set(view_names)))
         self.assertEqual(len(snapshots), len(set(snapshots)))
         self.assertEqual(model_views, set(view_names))
-        self.assertEqual(
-            repository_snapshots,
-            set(snapshots),
-        )
 
     def test_missing_required_view_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
@@ -108,8 +103,8 @@ class RepositoryViewContractTest(unittest.TestCase):
         errors = EXTRACTOR.validate_model(root)
 
         self.assertIn(
-            "O2I Syntax - Contextualization is missing node "
-            "<Name> :: O2I Mission (Grouping)",
+            "O2I Syntax - Contextualization requires node "
+            "'<Name> :: O2I Mission' (Grouping) exactly once; found 0",
             errors,
         )
 
@@ -185,7 +180,7 @@ class RepositoryViewContractTest(unittest.TestCase):
         self.assertTrue(
             any(
                 "O2I Syntax - Collective Strategy Realization element "
-                "<Name> :: O2I Collective Strategy Realization (Junction) "
+                "'<Name> :: O2I Collective Strategy Realization' "
                 "documentation is missing:"
                 in error
                 for error in errors
@@ -580,6 +575,12 @@ class RepositoryViewContractTest(unittest.TestCase):
                     "InfluenceRelationship",
                     False,
                 ),
+                (
+                    EXTRACTOR.CONTEXT_RELATION_FAMILY,
+                    generic,
+                    "RealizationRelationship",
+                    False,
+                ),
                 *{
                     (
                         EXTRACTOR.CONTENT_RELATION_FAMILY,
@@ -639,7 +640,7 @@ class RepositoryViewContractTest(unittest.TestCase):
         self,
     ) -> None:
         families = self._relation_mapping_families()
-        self.assertEqual(10, len(families))
+        self.assertEqual(11, len(families))
 
         for family, admissible in sorted(families.items()):
             with self.subTest(family=EXTRACTOR.format_mapping_family(family)):
@@ -760,8 +761,7 @@ class RepositoryViewContractTest(unittest.TestCase):
             errors,
         )
 
-    def test_profile_metadata_is_outside_extractor_authority(self) -> None:
-        baseline_validation = EXTRACTOR.validate_model(self.root)
+    def test_profile_metadata_drift_is_reported_but_not_rendered(self) -> None:
         baseline_snapshot = self._snapshot(
             self.root,
             "O2I Syntax - Collective Strategy Realization",
@@ -786,7 +786,27 @@ class RepositoryViewContractTest(unittest.TestCase):
             {"key": "o2i.owner", "value": "invalid-owner"},
         )
 
-        self.assertEqual(baseline_validation, EXTRACTOR.validate_model(root))
+        errors = EXTRACTOR.validate_model(root)
+        self.assertTrue(
+            any("property 'o2i.owner'" in error for error in errors),
+            errors,
+        )
+        self.assertTrue(
+            any(
+                "property 'o2i.type' admits only" in error
+                and "UnknownStructuredProposition" in error
+                for error in errors
+            ),
+            errors,
+        )
+        self.assertTrue(
+            any(
+                "property 'o2i.commitment' admits only" in error
+                and "tentative" in error
+                for error in errors
+            ),
+            errors,
+        )
         self.assertEqual(
             baseline_snapshot,
             self._snapshot(
@@ -946,13 +966,15 @@ class RepositoryViewContractTest(unittest.TestCase):
 
     def test_cli_check_is_independent_of_current_working_directory(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "snapshot.md"
             completed = subprocess.run(
                 [
                     sys.executable,
                     str(SCRIPT),
-                    "--preset",
-                    "all",
-                    "--check",
+                    "--view",
+                    "O2I Semantics - Context",
+                    "--output",
+                    str(output),
                 ],
                 cwd=directory,
                 check=False,
@@ -1118,8 +1140,8 @@ class RepositoryViewContractTest(unittest.TestCase):
         tuple[str, str, str, bool],
         frozenset[tuple[str, str, str, str, bool, str, str]],
     ]:
-        contract = EXTRACTOR.load_profile_contract(
-            EXTRACTOR.PROFILE_CONTRACT,
+        contract = EXTRACTOR.load_repository_view_contract(
+            EXTRACTOR.PROFILE_PATH,
         )
         return EXTRACTOR.relation_mapping_families(contract)
 

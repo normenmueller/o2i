@@ -116,16 +116,7 @@ verify_model() {
   python3 -B utl/model/audit-archimate-model.py
   python3 -B utl/model/extract-archimate-view.py --preset all --check
   python3 -B -m unittest discover \
-    -s utl/model -p 'test_archimate_profile.py'
-  python3 -B -m unittest discover \
-    -s utl/model -p 'test_render_archimate_profile.py'
-  python3 -B utl/model/render-archimate-profile.py --check
-  python3 -B -m unittest discover \
-    -s utl/model -p 'test_*archimate_model.py'
-  python3 -B -m unittest discover \
-    -s utl/model -p 'test_extract_archimate_view.py'
-  python3 -B -m unittest discover \
-    -s utl/model -p 'test_check_executable_views.py'
+    -s utl/model -p 'test_*.py'
 }
 
 verify_haskell() {
@@ -247,15 +238,11 @@ verify_haskell() {
       --ghc-options=-Werror
   fi
 
-  if [ "$scope" = complete ]; then
-    info "Checking executable Candidate View acceptance."
-    python3 -B -m unittest discover \
-      -s utl/model -p 'test_check_executable_views.py'
-    o2i_bin=$(run_project_cabal list-bin o2i --builddir="$build")
-    python3 -B utl/model/check-executable-views.py \
-      --o2i "$o2i_bin" \
-      --model mdl/o2i.archimate
-  fi
+  info "Checking repository Candidate Views through AMX, Profile, and Core."
+  candidate_view_checker=$(run_project_cabal list-bin \
+    o2i-amx:o2i-amx-repository-view-check \
+    --builddir="$build")
+  "$candidate_view_checker" "$root/mdl/o2i.archimate"
 
   info "Checking external Haskell API contracts."
   python3 -B -m unittest discover \
@@ -472,11 +459,10 @@ verify_paper() {
     -s utl/paper -p 'test_check_pdf_freshness.py'
 
   paper="$work/paper"
-  mkdir -p "$paper/spc/lib/core" "$paper/spc/ctr/archimate"
+  mkdir -p "$paper/spc/lib/core"
   cp o2i.md README.md ACKNOWLEDGEMENTS.md "$paper/"
   cp -R acc img "$paper/"
   cp -R spc/lib/core/src "$paper/spc/lib/core/"
-  cp spc/ctr/archimate/profile.md "$paper/spc/ctr/archimate/"
 
   info "Rendering TikZ figures in an isolated paper workspace."
   ./utl/paper/render-paper-figures.sh "$paper"

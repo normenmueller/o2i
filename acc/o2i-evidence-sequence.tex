@@ -41,7 +41,7 @@
   {\footnotesize\color{omuted}in einer Situation fachlich verankert}
 };
 \node[phase, above=0.22cm of visible] {
-  AUSGANGSPUNKT \quad \texttt{SemanticallyValidModel}
+  AUSGANGSPUNKT \quad SEMANTISCH GÜLTIGES MODELL
 };
 
 \node[state, below=1.92cm of visible] (relevant) {
@@ -50,29 +50,31 @@
 };
 
 \draw[flow] (visible) -- node[gate] {
-  {\color{omuted}Qualifikationsvorlage formal prüfen;}\\[-1pt]
-  {\color{omuted}fachlich annehmen und Relationen modellieren}\\[-1pt]
-  \texttt{validateNeedQualificationProposal}
+  \textbf{Capability: Bedarfsqualifikation}\\[-1pt]
+  {\color{omuted}Vorlage formal prüfen; fachlich annehmen}\\[-1pt]
+  {\color{omuted}und Qualifikationsrelationen modellieren}
 } (relevant);
 
 \node[state, below=1.72cm of relevant] (traceable) {
   \textbf{Vollständiger Wirkungstrace}\\[-1pt]
-  {\footnotesize\color{omuted}\texttt{TraceableEffectModel}}
+  {\footnotesize\color{omuted}relational nachvollziehbar}
 };
 
 \draw[flow] (relevant) -- node[gate] {
-  {\color{omuted}Intervention und Measure modellieren}\\[-1pt]
-  \texttt{validateTraceability}
+  \textbf{Capability: Traceability}\\[-1pt]
+  {\color{omuted}Intervention und Measure modellieren;}\\[-1pt]
+  {\color{omuted}relationale Vollständigkeit prüfen}
 } (traceable);
 
 \node[state, below=1.72cm of traceable] (ready) {
   \textbf{Evidenzbereiter Wirkungstrace}\\[-1pt]
-  {\footnotesize\color{omuted}\texttt{EvidenceReadyModel}}
+  {\footnotesize\color{omuted}ex ante geprüfter Nachweisentwurf}
 };
 
 \draw[flow] (traceable) -- node[gate] {
-  {\color{omuted}KPI definieren; Evidenzplan, Baseline und geplanten Beginn festlegen}\\[-1pt]
-  \texttt{validateEvidenceReadinessAt}
+  \textbf{Capability: Evidenzbereitschaft}\\[-1pt]
+  {\color{omuted}KPI-Definition, Evidenzplan, Baseline}\\[-1pt]
+  {\color{omuted}und geplanten Beginn prüfen}
 } (ready);
 
 \coordinate[below=1.02cm of ready] (boundary);
@@ -87,12 +89,13 @@
 
 \node[final state, below=2.32cm of boundary] (assessed) {
   \textbf{Wirkungsevidenz}\\[-1pt]
-  {\footnotesize\color{omuted}\texttt{EvidenceAssessedModel}: Effekt und Ziel getrennt bewertet}
+  {\footnotesize\color{omuted}Effekt und Ziel getrennt bewertet}
 };
 
 \draw[flow] (ready) -- (boundary) -- node[gate, pos=0.72] {
-  {\color{omuted}Intervention durchführen und Folgebeobachtung erheben}\\[-1pt]
-  \texttt{assessEffectEvidenceAt}
+  \textbf{Capability: Evidenzbewertung}\\[-1pt]
+  {\color{omuted}Intervention durchführen und Folgebeobachtung erheben;}\\[-1pt]
+  {\color{omuted}gegen Effekt- und Zielkriterium bewerten}
 } (assessed);
 
 \end{tikzpicture}

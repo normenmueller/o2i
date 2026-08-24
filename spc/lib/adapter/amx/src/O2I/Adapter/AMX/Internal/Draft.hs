@@ -145,7 +145,20 @@ commonAttributeMember element attribute
 
 elementAttributeMembers ::
      NativeElement -> [Draft.DraftMember Draft.ElementRole]
-elementAttributeMembers = commonAttributeMembers
+elementAttributeMembers element =
+  mapMaybe member (nativeElementAttributes element)
+  where
+    operator = nativeJunctionOperator element
+    member attribute
+      | nativeAttributeName attribute == xsiTypeName
+      , Just junctionOperator <- operator =
+        Just
+          (Draft.typeFieldMember
+             [elementTypeAttribute element attribute junctionOperator]
+             (attributeLocation attribute))
+      | nativeAttributeName attribute == typeName
+      , Just _ <- operator = Nothing
+      | otherwise = commonAttributeMember element attribute
 
 relationshipAttributeMembers ::
      NativeElement -> [Draft.DraftMember Draft.RelationshipRole]
@@ -402,6 +415,41 @@ typeAttribute element attribute =
         (nativeAttributeValue attribute)
         (attributeLocation attribute)
 
+-- Archi stores AND as the empty default and serializes OR as @type="or"@.
+data NativeJunctionOperator
+  = NativeAndJunction
+  | NativeOrJunction
+
+elementTypeAttribute ::
+     NativeElement
+  -> NativeAttribute
+  -> NativeJunctionOperator
+  -> Draft.DraftScalar
+elementTypeAttribute element attribute operator =
+  case operator of
+    NativeAndJunction -> junctionScalar "AndJunction"
+    NativeOrJunction -> junctionScalar "OrJunction"
+  where
+    junctionScalar value =
+      Draft.draftTextScalar
+        value
+        (maybe
+           (attributeLocation attribute)
+           attributeLocation
+           (find
+              ((== typeName) . nativeAttributeName)
+              (nativeElementAttributes element)))
+
+nativeJunctionOperator :: NativeElement -> Maybe NativeJunctionOperator
+nativeJunctionOperator element
+  | typeNameOf element /= Just junctionType = Nothing
+  | otherwise =
+    case attributeText typeName element of
+      Nothing -> Just NativeAndJunction
+      Just "" -> Just NativeAndJunction
+      Just "or" -> Just NativeOrJunction
+      Just _ -> Nothing
+
 resolveNativeName :: NativeElement -> Text -> Maybe NativeName
 resolveNativeName element lexical =
   case parseQName lexical of
@@ -588,6 +636,9 @@ diagramObjectType = NativeName (Just archiNamespace) "DiagramObject"
 
 influenceRelationshipType =
   NativeName (Just archiNamespace) "InfluenceRelationship"
+
+junctionType :: NativeName
+junctionType = NativeName (Just archiNamespace) "Junction"
 
 (<|>) :: Maybe value -> Maybe value -> Maybe value
 left <|> right =

@@ -48,23 +48,19 @@ LICENSING_PATHS = frozenset(
 )
 MODEL_PATHS = frozenset(
     {
-        "utl/model/check-executable-views.py",
-        "utl/model/archimate_profile.py",
         "utl/model/audit-archimate-model.py",
         "utl/model/extract-archimate-view.py",
-        "utl/model/render-archimate-profile.py",
-        "utl/model/test_archimate_profile.py",
+        "utl/model/focused_view_contract.py",
+        "utl/model/repository_view_contract.py",
         "utl/model/test_audit_archimate_model.py",
-        "utl/model/test_check_executable_views.py",
         "utl/model/test_extract_archimate_view.py",
-        "utl/model/test_render_archimate_profile.py",
+        "utl/model/test_focused_view_contract.py",
+        "utl/model/test_repository_view_contract.py",
     }
 )
 HASKELL_PATHS = frozenset(
     {
         "mdl/o2i.archimate",
-        "utl/model/check-executable-views.py",
-        "utl/model/test_check_executable_views.py",
         "utl/haskell/check-package-licenses.sh",
         "utl/haskell/check_cabal_plan.py",
         "utl/haskell/check_haskell_api_contracts.py",
@@ -82,7 +78,6 @@ PAPER_PATHS = frozenset(
         "toPDF.sh",
         "utl/paper/check-paper-assets.py",
         "utl/paper/check-pdf-freshness.py",
-        "utl/model/render-archimate-profile.py",
         "utl/paper/render-paper-figures.sh",
         "utl/paper/test_check_paper_assets.py",
         "utl/paper/test_check_pdf_freshness.py",

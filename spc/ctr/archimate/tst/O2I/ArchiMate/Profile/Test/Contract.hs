@@ -838,6 +838,12 @@ collectiveTest =
         Fixture.collectiveClosedDraft
         "closed"
     , collectiveCase "open participants" Fixture.collectiveOpenDraft "open"
+    , junctionRejectionCase
+        "rejects an unclassified native Junction operator"
+        Fixture.collectiveUnclassifiedJunctionDraft
+    , junctionRejectionCase
+        "rejects an OR Junction"
+        Fixture.collectiveOrJunctionDraft
     ]
   where
     collectiveCase name draft completeness =
@@ -861,6 +867,11 @@ collectiveTest =
                         ]
                     }
                 ]
+    junctionRejectionCase name draft =
+      testCase name $ do
+        defects <- projectionDefectRules (closedView draft "Collective")
+        defects
+          @?= ["pattern.collective-strategy-realization.carrier.junction-type"]
 
 collectiveChainTest :: TestTree
 collectiveChainTest =

@@ -42,12 +42,18 @@ adapters, or Haddock.
 
 # Package Boundaries
 
-- `o2i-core`: language, graph, validation, trace, and evidence semantics.
-- `o2i-inspection`: format-neutral staged inspection and reports.
-- `o2i-archimate-profile`: typed projection of the declarative ArchiMate
-  profile contract.
-- `o2i-amx`: Decode, View scope, concrete AMX profile, provenance, projection.
-- `o2i-cli`: arguments, composition, and rendering.
+- `o2i-core`: notation-independent contract, identities, canonical graph
+  observations, structure, semantics, and capability-owned domain contracts.
+- `o2i-archimate-profile`: compiled immutable projection of the exact
+  declarative ArchiMate Profile and its bound Core companion.
+- `o2i-operation`: acquisition, Adapter composition, Profile and View
+  resolution, preparation, provenance, diagnostics, discovery, and machine
+  contracts without redefining Core or Profile semantics.
+- `o2i-amx`: native AMX recognition and lossless decode into the Draft consumed
+  by the current Operation/Profile pipeline.
+- `o2i-inspection` and the current `o2i-cli` are legacy packages awaiting their
+  atomic target cutover. Never extend them, route new Foundation behavior
+  through them, or treat their package graph as current architecture.
 
 # Co-Authoring
 
@@ -67,18 +73,24 @@ adapters, or Haddock.
 
 # Verification
 
-Canonical repository-root verification entry:
+Canonical repository-root verification entry for the current Foundation and
+pull-request scope:
 
 ```text
-./utl/verify.sh haskell
+./utl/verify.sh foundation
 ```
+
+`./utl/verify.sh haskell` verifies the complete package set used by manual and
+release gates. It remains intentionally fail-closed while legacy package bounds
+and the complete freeze await their atomic cutover; never represent that gate
+as passed from Foundation evidence.
 
 Focused commands use the stated working directory:
 
 ```text
-spc/: cabal build all --ghc-options=-Werror
-spc/: cabal test all --ghc-options=-Werror
-spc/: cabal haddock all
+spc/: cabal --project-file=cabal.foundation.project build all --ghc-options=-Werror
+spc/: cabal --project-file=cabal.foundation.project test all --ghc-options=-Werror
+spc/: cabal --project-file=cabal.foundation.project haddock all
 each package directory: cabal check
 repository root:
   rg --files spc -g '*.hs' | xargs hindent --line-length 80 --validate

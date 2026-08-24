@@ -450,8 +450,7 @@ class PdfFreshnessTest(unittest.TestCase):
     def _publication_root(self, root: Path) -> Path:
         (root / "img").mkdir()
         (root / "acc").mkdir()
-        (root / "utl" / "model").mkdir(parents=True)
-        (root / "utl" / "paper").mkdir()
+        (root / "utl" / "paper").mkdir(parents=True)
         (root / "o2i.md").write_text(
             "# O2I\n\n"
             "!include snippet.hs\n\n"
@@ -474,10 +473,6 @@ class PdfFreshnessTest(unittest.TestCase):
             encoding="utf-8",
         )
         (root / "toPDF.sh").write_text("#!/bin/sh\n", encoding="ascii")
-        (root / "utl" / "model" / "render-archimate-profile.py").write_text(
-            "# generated profile\n",
-            encoding="ascii",
-        )
         (root / "utl" / "paper" / "render-paper-figures.sh").write_text(
             "#!/bin/sh\n",
             encoding="ascii",

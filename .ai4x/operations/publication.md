@@ -40,10 +40,10 @@ text.
 - The White Paper concrete-syntax section explains every normative mapping
   class projected from `spc/ctr/archimate/profile.json`: carriers,
   metadata, relationship representations, context-sensitive signatures, and
-  structured patterns. The generated fragment remains readable publication
-  prose; it never exposes raw JSON structure.
-- `O2I Syntax - Carriers` and `O2I Syntax - Relations` jointly visualize that
-  contract. They are not independent normative sources.
+  structured patterns. It explains these mapping classes in concise
+  publication prose and checked contract visualizations; it neither exposes
+  raw JSON structure nor maintains a parallel generated registry.
+- `O2I Syntax - Carriers` and `O2I Syntax - Relations` visualize the carrier- and relation-mapping portions of that contract. Focused checked syntax Views visualize metadata-bearing and non-binary patterns. None is an independent normative source.
 
 # Verification
 
