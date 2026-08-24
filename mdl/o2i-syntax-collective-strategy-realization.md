@@ -5,9 +5,7 @@
 
 ## View Contract
 
-Visualizes the executable ArchiMate conformance pattern for one O2I CollectiveStrategyRealization.
-
-Candidate Strategy carriers connect through realizes segments and one AND Junction serving as the StructuredProposition carrier. Exact cardinality, topology, metadata, and collective Fit-evidence contracts are defined by spc/ctr/archimate/profile.json. The displayed carriers are syntax exemplars, not fachliche model instances.
+Visualizes the executable ArchiMate conformance pattern for one O2I CollectiveStrategyRealization. Two or more contributor Strategies and one target Strategy connect through realizes segments and one AND Junction. The Junction is the StructuredProposition carrier and declares participant-completeness. Exact contracts are defined by spc/ctr/archimate/profile.json. These are syntax exemplars, not fachliche model instances.
 
 ## Nodes
 

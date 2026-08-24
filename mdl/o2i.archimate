@@ -19,8 +19,20 @@
     <folder name="Syntax" id="id-e601a6c950824d6d88f463e7cd06cf0a">
       <folder name="Conformance" id="id-afe278c4ae96464485166cd996dbbf36">
         <element xsi:type="archimate:Driver" name="&lt;Name> :: O2I Driver" id="id-34f587fbc060415faf043067eaa8a74d">
-          <property key="o2i.kind" value="Primitive"/>
           <property key="o2i.type" value="Driver"/>
+          <property key="o2i.commitment" value="candidate"/>
+        </element>
+        <element xsi:type="archimate:Assessment" name="&lt;Name> :: O2I Need Qualification Proposal" id="id-aa307e45fe0a42589ab8870d111c9459">
+          <documentation>Syntax exemplar rationale: the referenced Strategy Key Result is proposed as the formal justification for qualifying the referenced Need Objective.</documentation>
+          <property key="o2i.type" value="NeedQualificationProposal"/>
+          <property key="o2i.source" value="urn:o2i:syntax:need-qualification-proposal"/>
+        </element>
+        <element xsi:type="archimate:Outcome" name="&lt;Key Result> :: O2I Key Result" id="id-c8e8f2d22857430e97450c717d1b9316">
+          <property key="o2i.type" value="KeyResult"/>
+          <property key="o2i.commitment" value="candidate"/>
+        </element>
+        <element xsi:type="archimate:Goal" name="&lt;Objective> :: O2I Objective" id="id-2d1d051782954e89a7afd4cffbbf1a9e">
+          <property key="o2i.type" value="Objective"/>
           <property key="o2i.commitment" value="candidate"/>
         </element>
       </folder>
@@ -179,41 +191,40 @@ See o2i.md: Metamodell / Situationsanker.</documentation>
       <folder name="Conformance" id="id-267c762f80ae4c6e9b835654ac1e8466">
         <documentation>Contains executable Candidate syntax exemplars for repository conformance Views. Exact contracts are defined by spc/ctr/archimate/profile.json.</documentation>
         <element xsi:type="archimate:Grouping" name="&lt;Contributor Strategy 1> :: O2I Strategy" id="id-a6fc406d20184ff98a2c46c3b9c90a6d">
-          <property key="o2i.kind" value="Context"/>
           <property key="o2i.type" value="Strategy"/>
           <property key="o2i.commitment" value="candidate"/>
         </element>
         <element xsi:type="archimate:Grouping" name="&lt;Contributor Strategy 2> :: O2I Strategy" id="id-45f90e003d614d75bbdf2cd0ecb165bb">
-          <property key="o2i.kind" value="Context"/>
           <property key="o2i.type" value="Strategy"/>
           <property key="o2i.commitment" value="candidate"/>
         </element>
         <element xsi:type="archimate:Grouping" name="&lt;Target Strategy> :: O2I Strategy" id="id-34f256a7a0c5484c9b6754e7bf4ba61c">
-          <property key="o2i.kind" value="Context"/>
           <property key="o2i.type" value="Strategy"/>
           <property key="o2i.commitment" value="candidate"/>
         </element>
         <element xsi:type="archimate:Junction" name="&lt;Name> :: O2I Collective Strategy Realization" id="id-1e63836a9eb0426096a5eb96b4176788">
-          <documentation>Candidate ArchiMate AND Junction carrier for one O2I CollectiveStrategyRealization StructuredProposition.
-
-Contributor and target roles follow from realizes topology. Exact cardinality, Commitment, and collective Fit-evidence contracts are defined by spc/ctr/archimate/profile.json. This syntax exemplar is not a fachliche model instance.</documentation>
-          <property key="o2i.kind" value="StructuredProposition"/>
+          <documentation>Candidate ArchiMate AND Junction carrier for one O2I CollectiveStrategyRealization StructuredProposition. Contributor and target roles follow from realizes topology. Exact cardinality, Commitment, and participant-completeness contracts are defined by spc/ctr/archimate/profile.json. This syntax exemplar is not a fachliche model instance.</documentation>
           <property key="o2i.type" value="CollectiveStrategyRealization"/>
           <property key="o2i.commitment" value="candidate"/>
-          <property key="o2i.collective-fit-evidence" value="&lt;Reference>"/>
+          <property key="o2i.participant-completeness" value="open"/>
         </element>
         <element xsi:type="archimate:Grouping" name="&lt;Name> :: O2I Mission" id="id-1cf38dc66c7f4a06800c8bf89dd7f476">
-          <property key="o2i.kind" value="Context"/>
           <property key="o2i.type" value="Mission"/>
           <property key="o2i.commitment" value="candidate"/>
         </element>
         <element xsi:type="archimate:Grouping" name="&lt;Name> :: O2I Performance Dimension" id="id-5d86d1b167d045748a0605ab0cf5a08b">
-          <property key="o2i.kind" value="Structuring"/>
           <property key="o2i.type" value="PerformanceDimension"/>
           <property key="o2i.commitment" value="candidate"/>
         </element>
         <element xsi:type="archimate:Grouping" name="&lt;Name> :: O2I Strategy" id="id-44063ecc73024c70827811bed992dd39">
-          <property key="o2i.kind" value="Context"/>
+          <property key="o2i.type" value="Strategy"/>
+          <property key="o2i.commitment" value="candidate"/>
+        </element>
+        <element xsi:type="archimate:Grouping" name="&lt;Need> :: O2I Need" id="id-911d349bd58d4fcea36a5a09061000a9">
+          <property key="o2i.type" value="Need"/>
+          <property key="o2i.commitment" value="candidate"/>
+        </element>
+        <element xsi:type="archimate:Grouping" name="&lt;Strategy> :: O2I Strategy" id="id-e7b72ea11adb443fb972a1e3e21fa965">
           <property key="o2i.type" value="Strategy"/>
           <property key="o2i.commitment" value="candidate"/>
         </element>
@@ -456,8 +467,12 @@ Contributor and target roles follow from realizes topology. Exact cardinality, C
     <element xsi:type="archimate:RealizationRelationship" name="realizes" id="id-5f8c48a3a3714c6fb4532975f560d082" source="id-a6fc406d20184ff98a2c46c3b9c90a6d" target="id-1e63836a9eb0426096a5eb96b4176788"/>
     <element xsi:type="archimate:RealizationRelationship" name="realizes" id="id-ac69b349dccc43bf948f920f7aa1c5e8" source="id-45f90e003d614d75bbdf2cd0ecb165bb" target="id-1e63836a9eb0426096a5eb96b4176788"/>
     <element xsi:type="archimate:RealizationRelationship" name="realizes" id="id-59d58d59c30c4a5682774ba148ad0f46" source="id-1e63836a9eb0426096a5eb96b4176788" target="id-34f256a7a0c5484c9b6754e7bf4ba61c"/>
-    <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-47136e05b8ba4545aeea54721ce80c1f" source="id-1cf38dc66c7f4a06800c8bf89dd7f476" target="id-34f587fbc060415faf043067eaa8a74d"/>
-    <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-493e7df2cf8d4209b7eeadae5b99e91c" source="id-44063ecc73024c70827811bed992dd39" target="id-5d86d1b167d045748a0605ab0cf5a08b"/>
+    <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-47136e05b8ba4545aeea54721ce80c1f" source="id-1cf38dc66c7f4a06800c8bf89dd7f476" target="id-34f587fbc060415faf043067eaa8a74d">
+      <property key="o2i.commitment" value="candidate"/>
+    </element>
+    <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-493e7df2cf8d4209b7eeadae5b99e91c" source="id-44063ecc73024c70827811bed992dd39" target="id-5d86d1b167d045748a0605ab0cf5a08b">
+      <property key="o2i.commitment" value="candidate"/>
+    </element>
     <element xsi:type="archimate:AssociationRelationship" name="maps-to" id="id-a10ca228e28d4a7d9f4be61f75c27985" source="id-f08503535a3a41fab16c720b556d5b59" target="id-334a9c218c8947bc935a4e9aefbb7692" directed="true"/>
     <element xsi:type="archimate:AssociationRelationship" name="&lt;O2I relation name>" id="id-76680c5656c14af494208e7b4955834a" source="id-c8a94a0fdcfb4fda9395c77465b8b404" target="id-405fac672c5d435686f2943c23cc7d6c" directed="true"/>
     <element xsi:type="archimate:AssociationRelationship" name="maps-to" id="id-2ac4fce42cae4f3591072536f4c9c7f5" source="id-dee340198eb64cc48b52f8b42cb0c070" target="id-54239700651b4cbc80ad0293da25df0d" directed="true"/>
@@ -503,7 +518,25 @@ Contributor and target roles follow from realizes topology. Exact cardinality, C
     <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-f9bb6850f6074905bd6d258048d80bbe" source="id-26cecad3e94b4123a9669f7530fc666e" target="id-3b98d0546b914dd0ab9962dcc1d1bf8b"/>
     <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-f313d18da57e4eaca6aab232e0b89994" source="id-a9ce771c416e45ab8cfb450e032817c0" target="id-2fb50ac1b2a3440695f860b0b1aed15c"/>
     <element xsi:type="archimate:InfluenceRelationship" name="&lt;O2I relation name>" id="id-395841ebd7c1423fbe795e9f9e2b90a1" source="id-c8a94a0fdcfb4fda9395c77465b8b404" target="id-405fac672c5d435686f2943c23cc7d6c"/>
-    <element xsi:type="archimate:RealizationRelationship" name="&lt;O2I relation name>" id="id-14ad881fe354477493b1bbe3dca3965c" source="id-c8a94a0fdcfb4fda9395c77465b8b404" target="id-405fac672c5d435686f2943c23cc7d6c"/>
+    <element xsi:type="archimate:AssociationRelationship" id="id-e6995de25b6049aea39e689681817c3a" source="id-aa307e45fe0a42589ab8870d111c9459" target="id-911d349bd58d4fcea36a5a09061000a9" directed="true">
+      <property key="o2i.role" value="need"/>
+    </element>
+    <element xsi:type="archimate:AssociationRelationship" id="id-c170f8150c66437197730da37bd4b700" source="id-aa307e45fe0a42589ab8870d111c9459" target="id-e7b72ea11adb443fb972a1e3e21fa965" directed="true">
+      <property key="o2i.role" value="strategy"/>
+    </element>
+    <element xsi:type="archimate:AssociationRelationship" id="id-4f677b5e3ae14fad888403ca33abd789" source="id-aa307e45fe0a42589ab8870d111c9459" target="id-c8e8f2d22857430e97450c717d1b9316" directed="true">
+      <property key="o2i.role" value="key-result"/>
+    </element>
+    <element xsi:type="archimate:AssociationRelationship" id="id-29d4dd50cd144ef4ac0a73f21c0cb4b6" source="id-aa307e45fe0a42589ab8870d111c9459" target="id-2d1d051782954e89a7afd4cffbbf1a9e" directed="true">
+      <property key="o2i.role" value="objective"/>
+    </element>
+    <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-a21ee9adfa2146f186cdc4bf00ef1f59" source="id-e7b72ea11adb443fb972a1e3e21fa965" target="id-c8e8f2d22857430e97450c717d1b9316">
+      <property key="o2i.commitment" value="candidate"/>
+    </element>
+    <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-45b67487587f465a9bdd2c26b3146c2e" source="id-911d349bd58d4fcea36a5a09061000a9" target="id-2d1d051782954e89a7afd4cffbbf1a9e">
+      <property key="o2i.commitment" value="candidate"/>
+    </element>
+    <element xsi:type="archimate:RealizationRelationship" name="&lt;O2I relation name>" id="id-420035e66e6741a2bb308cbfb5809f15" source="id-c8a94a0fdcfb4fda9395c77465b8b404" target="id-405fac672c5d435686f2943c23cc7d6c"/>
   </folder>
   <folder name="Views" id="id-c4a47547d89649babef754e47e83c429" type="diagrams">
     <folder name="Illustration" id="id-f8adbfc1a975482da607ff5058deaf0a">
@@ -1505,12 +1538,12 @@ Each maps-to association maps an O2I type or closed type family to its ArchiMate
           <bounds x="396" y="252" width="349" height="49"/>
           <feature name="deriveElementLineColor" value="false"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-76136a8abfd140d7915b37627353b288" font="1|Arial|14.0|0|COCOA|1|ArialMT" textAlignment="1" archimateElement="id-1cf38dc66c7f4a06800c8bf89dd7f476">
+        <child xsi:type="archimate:DiagramObject" id="id-76136a8abfd140d7915b37627353b288" font="1|Arial|14.0|0|COCOA|1|ArialMT" textAlignment="1" textPosition="1" archimateElement="id-1cf38dc66c7f4a06800c8bf89dd7f476">
           <bounds x="144" y="120" width="174" height="55"/>
           <feature name="deriveElementLineColor" value="false"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-1d1d6564a75a41df8400a29c5e684bd0" source="id-76136a8abfd140d7915b37627353b288" target="id-732e3ac36216456cb48d223d0ae07761" archimateRelationship="id-47136e05b8ba4545aeea54721ce80c1f"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-134fad1fdb474960bb14d2a9e4fc97fe" font="1|Arial|14.0|0|COCOA|1|ArialMT" textAlignment="1" archimateElement="id-44063ecc73024c70827811bed992dd39">
+        <child xsi:type="archimate:DiagramObject" id="id-134fad1fdb474960bb14d2a9e4fc97fe" font="1|Arial|14.0|0|COCOA|1|ArialMT" textAlignment="1" textPosition="1" archimateElement="id-44063ecc73024c70827811bed992dd39">
           <bounds x="483" y="120" width="175" height="55"/>
           <feature name="deriveElementLineColor" value="false"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-af48db74a4154b24abddf691187bcc43" source="id-134fad1fdb474960bb14d2a9e4fc97fe" target="id-e502ecc5930e4df484474eca413bfc5a" archimateRelationship="id-493e7df2cf8d4209b7eeadae5b99e91c"/>
@@ -1543,9 +1576,7 @@ A typed Context owns an element through composition[contextualizes]; visual nest
           <feature name="deriveElementLineColor" value="false"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-ac3ea3e6d0e6454c87e662132ab91d46" source="id-79619aa3766744888560ccb9e6c76d29" target="id-4844b06331e640cca8f9d5cf65c44d42" archimateRelationship="id-59d58d59c30c4a5682774ba148ad0f46"/>
         </child>
-        <documentation>Visualizes the executable ArchiMate conformance pattern for one O2I CollectiveStrategyRealization.
-
-Candidate Strategy carriers connect through realizes segments and one AND Junction serving as the StructuredProposition carrier. Exact cardinality, topology, metadata, and collective Fit-evidence contracts are defined by spc/ctr/archimate/profile.json. The displayed carriers are syntax exemplars, not fachliche model instances.</documentation>
+        <documentation>Visualizes the executable ArchiMate conformance pattern for one O2I CollectiveStrategyRealization. Two or more contributor Strategies and one target Strategy connect through realizes segments and one AND Junction. The Junction is the StructuredProposition carrier and declares participant-completeness. Exact contracts are defined by spc/ctr/archimate/profile.json. These are syntax exemplars, not fachliche model instances.</documentation>
       </element>
       <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Syntax - Relations" id="id-45f7616f2e204bcebd06a8e56bb966ee">
         <child xsi:type="archimate:DiagramObject" id="id-584c0667936b41868f470b1e28efa801" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-c8a94a0fdcfb4fda9395c77465b8b404">
@@ -1642,18 +1673,49 @@ Candidate Strategy carriers connect through realizes segments and one AND Juncti
           <bounds x="395" y="108" width="120" height="55"/>
           <feature name="deriveElementLineColor" value="false"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-5b10cc5fe00242259ba754e1497a5d38" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-c8a94a0fdcfb4fda9395c77465b8b404">
+        <child xsi:type="archimate:DiagramObject" id="id-fd51f89ae770482cbe1bf3cad7ec67af" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-c8a94a0fdcfb4fda9395c77465b8b404">
           <bounds x="540" y="108" width="120" height="55"/>
           <feature name="deriveElementLineColor" value="false"/>
-          <sourceConnection xsi:type="archimate:Connection" id="id-5c0539f70f4e49e2af5767e9cd68fbed" font="1|DB Sans|10.0|2|COCOA|1|DBSans-Italic" source="id-5b10cc5fe00242259ba754e1497a5d38" target="id-1201fcb2435b45a5a18c17b1aa30b3c8" archimateRelationship="id-14ad881fe354477493b1bbe3dca3965c"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-cdd37ef5c58b40fe9058cb9e9df92255" font="1|DB Sans|10.0|2|COCOA|1|DBSans-Italic" source="id-fd51f89ae770482cbe1bf3cad7ec67af" target="id-44c0efd63fb741dd90536b27fabf8607" archimateRelationship="id-420035e66e6741a2bb308cbfb5809f15"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-1201fcb2435b45a5a18c17b1aa30b3c8" targetConnections="id-5c0539f70f4e49e2af5767e9cd68fbed" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-405fac672c5d435686f2943c23cc7d6c">
+        <child xsi:type="archimate:DiagramObject" id="id-44c0efd63fb741dd90536b27fabf8607" targetConnections="id-cdd37ef5c58b40fe9058cb9e9df92255" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-405fac672c5d435686f2943c23cc7d6c">
           <bounds x="816" y="108" width="120" height="55"/>
           <feature name="deriveElementLineColor" value="false"/>
         </child>
         <documentation>Visualizes the relation-representation families of the concrete ArchiMate profile defined by spc/ctr/archimate/profile.json.
 
 Each &lt;O2I relation name> placeholder represents one or more endpoint-compatible O2I relations that share the displayed ArchiMate relationship type and direction. The displayed relations are unannotated mapping specifications, not concrete model relations or executable O2I graph propositions. Exact endpoint-sensitive assignments remain defined by the profile contract.</documentation>
+      </element>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Syntax - Need Qualification Proposal" id="id-3223add6bc934fb3a806248aa8ab830c">
+        <child xsi:type="archimate:DiagramObject" id="id-646db6c271d04826b1a78d11c102fa37" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-aa307e45fe0a42589ab8870d111c9459">
+          <bounds x="321" y="48" width="150" height="55"/>
+          <feature name="deriveElementLineColor" value="false"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-be3133678f7a413cbccee6635e7922b9" source="id-646db6c271d04826b1a78d11c102fa37" target="id-f48e0c48b9564ac19c89be51bde09616" archimateRelationship="id-e6995de25b6049aea39e689681817c3a"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-931f0eaf5e56408a8c19ce6dc3c6cb90" source="id-646db6c271d04826b1a78d11c102fa37" target="id-6f095c9da56444b4a9c8ad35e018b6a7" archimateRelationship="id-c170f8150c66437197730da37bd4b700"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-be40e7197a9249c88959c2b0dbf866a8" source="id-646db6c271d04826b1a78d11c102fa37" target="id-42e926a1270e462b866eb535bf9fc360" archimateRelationship="id-4f677b5e3ae14fad888403ca33abd789"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-c5606dabefaa4560b006207f47f2f516" source="id-646db6c271d04826b1a78d11c102fa37" target="id-af9798ddc28a4119b73f377fb4b360d7" archimateRelationship="id-29d4dd50cd144ef4ac0a73f21c0cb4b6"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-f48e0c48b9564ac19c89be51bde09616" targetConnections="id-be3133678f7a413cbccee6635e7922b9" font="1|Arial|14.0|0|COCOA|1|ArialMT" textAlignment="1" textPosition="1" archimateElement="id-911d349bd58d4fcea36a5a09061000a9">
+          <bounds x="492" y="72" width="174" height="55"/>
+          <feature name="deriveElementLineColor" value="false"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-49f57d016e014d0c8ed241c855eb7bf3" source="id-f48e0c48b9564ac19c89be51bde09616" target="id-af9798ddc28a4119b73f377fb4b360d7" archimateRelationship="id-45b67487587f465a9bdd2c26b3146c2e"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-6f095c9da56444b4a9c8ad35e018b6a7" targetConnections="id-931f0eaf5e56408a8c19ce6dc3c6cb90" font="1|Arial|14.0|0|COCOA|1|ArialMT" textAlignment="1" textPosition="1" archimateElement="id-e7b72ea11adb443fb972a1e3e21fa965">
+          <bounds x="120" y="72" width="174" height="55"/>
+          <feature name="deriveElementLineColor" value="false"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-67690e43a2464af5951bf733cb12f176" source="id-6f095c9da56444b4a9c8ad35e018b6a7" target="id-42e926a1270e462b866eb535bf9fc360" archimateRelationship="id-a21ee9adfa2146f186cdc4bf00ef1f59"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-42e926a1270e462b866eb535bf9fc360" targetConnections="id-be40e7197a9249c88959c2b0dbf866a8 id-67690e43a2464af5951bf733cb12f176" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-c8e8f2d22857430e97450c717d1b9316">
+          <bounds x="175" y="180" width="150" height="55"/>
+          <feature name="deriveElementLineColor" value="false"/>
+          <feature name="labelExpression" value="&lt;Key Result>&#xA;:: O2I Key Result"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-af9798ddc28a4119b73f377fb4b360d7" targetConnections="id-c5606dabefaa4560b006207f47f2f516 id-49f57d016e014d0c8ed241c855eb7bf3" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-2d1d051782954e89a7afd4cffbbf1a9e">
+          <bounds x="468" y="180" width="150" height="55"/>
+          <feature name="deriveElementLineColor" value="false"/>
+          <feature name="labelExpression" value="&lt;Objective>&#xA;:: O2I Objective"/>
+        </child>
+        <documentation>Visualizes the executable ArchiMate conformance pattern for one O2I NeedQualificationProposal. The Assessment carrier preserves a nonempty rationale and source. Four directed Association references use o2i.role to bind Need, Strategy, Key Result, and Objective. Exact carrier, metadata, and cardinality contracts are defined by spc/ctr/archimate/profile.json. Together, the displayed carriers form a syntax exemplar, not a fachliche model instance.</documentation>
       </element>
     </folder>
   </folder>
