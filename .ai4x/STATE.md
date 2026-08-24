@@ -3,7 +3,7 @@
 - Observed: 2026-08-24 CEST
 - Work status: `ACTIVE`
 - Current Issue: `#46`
-- Current node: `pr-69-remediated-candidate-review`
+- Current node: `pr-69-po-review`
 
 # Objective
 
@@ -31,11 +31,12 @@ Complete one coherent PR #69 candidate that combines the accepted #46 Foundation
 - Integrated product candidate through `06a00682073df6dea44b09152377866e523b8778` carries all durable #46, #70, #71, #72, #74, #75, and #76 changes plus every remediation of the integrated reviews; branch-local historical Return Point commits were deliberately not copied.
 - Passed locally on the integrated tree: licensing/REUSE 465/465, Governance 21 plus 18 tests, model hygiene and all 70 model tests, the complete Foundation Haskell gate including 49 Profile tests, 71 AMX tests, real-model AMX/Profile/Core execution, 100% Haddock, independently built source distributions and formatting, the complete Paper gate using canonical `md2pdf`, `git diff --check`, and the workspace O2I boundary.
 - The complete Haskell gate was also reproduced: all 150 pre-build contract tests pass and Cabal then stops exactly at the known `o2i-cli` `base <4.19` versus installed `base-4.20.2.0` conflict. This gate is not represented as passed and is not the PR-scope Haskell command.
-- Independent Haskell/CI and integration/publication reviews of exact integrated revision `82bc9f16ccead21aca59cac14b5d807cf4eb9c13` are both `accepted` with no blocking finding or advisory follow-up. Remote CI for all five PR jobs remains pending.
+- Independent Haskell/CI and integration/publication reviews of exact integrated revision `82bc9f16ccead21aca59cac14b5d807cf4eb9c13` are both `accepted` with no blocking finding or advisory follow-up.
+- PR #69 verification run `32732325288` passed all five jobs: Repository licensing, Change governance, Model contracts, Foundation-scoped Haskell specification, and White Paper.
 
 # Next Action
 
-Push the authorized branch to PR #69, update the PR body and Issue evidence without claiming the complete Haskell gate is green, and require all five remote pull-request jobs to pass: licensing, governance, model, Foundation-scoped Haskell, and White Paper.
+The Product Owner reviews PR #69 and, if satisfied, squash-merges it. The merge closes #46, #70, #71, #72, #74, #75, and #76 through the PR closing references; do not merge on the Product Owner's behalf.
 
 # Local Return Point
 
