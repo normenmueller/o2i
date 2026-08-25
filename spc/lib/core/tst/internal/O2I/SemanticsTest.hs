@@ -55,6 +55,12 @@ tests =
         "aggregate"
         [ testCase "accepts a complete semantic model" aggregateAccepted
         , testCase
+            "keeps the model proof independent of optional supplements"
+            aggregateModelIndependentOfSupplements
+        , testCase
+            "retains valid optional proofs when the model is rejected"
+            aggregateRejectedWithValidOptionalProof
+        , testCase
             "reports unavailable without model defects"
             aggregateUnavailable
         , testCase
@@ -167,19 +173,95 @@ aggregateAccepted =
     wellFormedGraphIdentity graph @?= selectedViewIdentity
     semanticIndexGraphIdentity (buildSemanticIndex graph inputs)
       @?= selectedViewIdentity
-    case Public.acceptedSemanticModel assessment of
+    case Public.semanticallyValidModel assessment of
       Nothing -> assertFailure "accepted assessment did not retain its proof"
       Just model -> do
         semanticallyValidModelGraphIdentity model @?= selectedViewIdentity
         Public.semanticallyValidSituatedNeeds model @?= []
-        map
-          Public.qualificationEligibleStrategyIdentity
-          (Public.semanticallyValidStrategies model)
-          @?= map modelId ["strategy-a", "strategy-b", "strategy-target"]
-        map
-          Public.validatedCollectiveStrategyRealizationIdentity
-          (Public.semanticallyValidCollectiveRealizations model)
-          @?= [modelId "collective-claim"]
+    map
+      Public.qualificationEligibleStrategyIdentity
+      (Public.semanticallyValidStrategies assessment)
+      @?= map modelId ["strategy-a", "strategy-b", "strategy-target"]
+    map
+      Public.validatedCollectiveStrategyRealizationIdentity
+      (Public.semanticallyValidCollectiveRealizations assessment)
+      @?= [modelId "collective-claim"]
+
+aggregateModelIndependentOfSupplements :: Assertion
+aggregateModelIndependentOfSupplements =
+  assertBindingScenario
+    completeModelWithNeedOccurrences
+    completeProjectionWithNeed
+    completeInputs $ \graph completeBinding ->
+    case assessSupplementalInputSet ([] :: [SupplementalInput ()]) of
+      Left defects ->
+        assertFailure ("empty supplemental set was rejected: " ++ show defects)
+      Right emptyInputs ->
+        foldSupplementalBinding
+          (\unavailableInputs unavailableEvidence ->
+             foldSupplementalBinding
+               (\acceptedInputs acceptedEvidence -> do
+                  length unavailableEvidence @?= 0
+                  length acceptedEvidence @?= 0
+                  let unavailableAssessment =
+                        Public.assessSemantics graph unavailableInputs
+                      acceptedAssessment =
+                        Public.assessSemantics graph acceptedInputs
+                  Public.semanticDisposition unavailableAssessment
+                    @?= Public.SemanticUnavailable
+                  Public.semanticDisposition acceptedAssessment
+                    @?= Public.SemanticAccepted
+                  Public.semanticallyValidModel unavailableAssessment
+                    @?= Public.semanticallyValidModel acceptedAssessment
+                  case ( Public.semanticallyValidModel unavailableAssessment
+                       , Public.semanticallyValidModel acceptedAssessment) of
+                    (Just unavailableModel, Just acceptedModel) -> do
+                      semanticallyValidModelGraphIdentity unavailableModel
+                        @?= selectedViewIdentity
+                      semanticallyValidModelGraphIdentity acceptedModel
+                        @?= selectedViewIdentity
+                      map
+                        Public.globallySituatedNeedIdentity
+                        (Public.semanticallyValidSituatedNeeds unavailableModel)
+                        @?= [modelId "need"]
+                      Public.semanticallyValidSituatedNeeds unavailableModel
+                        @?= Public.semanticallyValidSituatedNeeds acceptedModel
+                    _ -> assertFailure "non-rejected assessment lost its model"
+                  Public.semanticallyValidStrategies unavailableAssessment
+                    @?= []
+                  map
+                    Public.qualificationEligibleStrategyIdentity
+                    (Public.semanticallyValidStrategies acceptedAssessment)
+                    @?= map
+                          modelId
+                          ["strategy-a", "strategy-b", "strategy-target"]
+                  Public.semanticallyValidCollectiveRealizations
+                    unavailableAssessment
+                    @?= []
+                  map
+                    Public.validatedCollectiveStrategyRealizationIdentity
+                    (Public.semanticallyValidCollectiveRealizations
+                       acceptedAssessment)
+                    @?= [modelId "collective-claim"])
+               completeBinding)
+          (bindSupplementalInputs graph emptyInputs)
+
+aggregateRejectedWithValidOptionalProof :: Assertion
+aggregateRejectedWithValidOptionalProof =
+  assertScenario
+    (needModelOccurrences ++ strategyModelOccurrences "a")
+    rejectedNeedWithValidStrategyProjection
+    [(0, strategyInput "a")] $ \graph inputs -> do
+    let assessment = Public.assessSemantics graph inputs
+    Public.semanticDisposition assessment @?= Public.SemanticRejected
+    Public.semanticallyValidModel assessment @?= Nothing
+    case Public.strategyFormulationAssessments assessment of
+      [StrategyFormulationValid proof] ->
+        Public.semanticallyValidStrategies assessment @?= [proof]
+      result ->
+        assertFailure
+          ("rejected aggregate lost its valid optional Strategy proof: "
+             ++ show result)
 
 aggregateUnavailable :: Assertion
 aggregateUnavailable =
@@ -190,6 +272,10 @@ aggregateUnavailable =
     let assessment = Public.assessSemantics graph inputs
     Public.semanticDisposition assessment @?= Public.SemanticUnavailable
     length (publicSemanticEvidence assessment) @?= 0
+    case Public.semanticallyValidModel assessment of
+      Nothing -> assertFailure "unavailable assessment lost its model proof"
+      Just model ->
+        semanticallyValidModelGraphIdentity model @?= selectedViewIdentity
     map
       Public.strategyFormulationDisposition
       (Public.strategyFormulationAssessments assessment)
@@ -208,6 +294,7 @@ aggregatePrecedence =
     [] $ \graph inputs -> do
     let assessment = Public.assessSemantics graph inputs
     Public.semanticDisposition assessment @?= Public.SemanticRejected
+    Public.semanticallyValidModel assessment @?= Nothing
     map
       Public.strategyFormulationDisposition
       (Public.strategyFormulationAssessments assessment)
@@ -783,6 +870,12 @@ supplementalBindingIsolation =
     inspect graph bound evidence = do
       map supplementalBindingEvidenceIsUnknown evidence @?= [True]
       let semanticIndex = buildSemanticIndex graph bound
+          assessment = Public.assessSemantics graph bound
+      Public.semanticDisposition assessment @?= Public.SemanticUnavailable
+      map
+        Public.qualificationEligibleStrategyIdentity
+        (Public.semanticallyValidStrategies assessment)
+        @?= map modelId ["strategy-b", "strategy-target"]
       case assessStrategyFormulations semanticIndex of
         [StrategyFormulationUnavailable subject reason, StrategyFormulationValid strategyB, StrategyFormulationValid strategyTarget] -> do
           subject @?= modelId "strategy-a"
@@ -1380,6 +1473,17 @@ needProjectionWithoutGrounding =
     []
     []
 
+rejectedNeedWithValidStrategyProjection :: StructureProjection
+rejectedNeedWithValidStrategyProjection =
+  structureProjection
+    (needCarriers ++ visionCarriers ++ strategyCarriers "a")
+    (needContextualizations
+       ++ visionContextualizations
+       ++ strategyContextualizations "a")
+    (init needRelations ++ visionOrientation "a" : strategyInternalRelations "a")
+    []
+    []
+
 needCarriers :: [CarrierProjection]
 needCarriers =
   [ contextCarrier "need" "Need" Asserted
@@ -1519,6 +1623,18 @@ completeProjection order includeSecondMacro =
         ++ [macroRelation "b" | includeSecondMacro]
         ++ collectivePrimitiveRelations
 
+completeProjectionWithNeed :: StructureProjection
+completeProjectionWithNeed =
+  structureProjection
+    (needCarriers ++ completeCarriers)
+    (needContextualizations ++ completeContextualizations)
+    (needRelations
+       ++ completeStrategyRelations
+       ++ [macroRelation "a", macroRelation "b"]
+       ++ collectivePrimitiveRelations)
+    [collectiveProposition]
+    collectiveIncidences
+
 completeProjectionWithCandidateParticipant :: StructureProjection
 completeProjectionWithCandidateParticipant =
   structureProjection
@@ -1635,6 +1751,10 @@ completeModelOccurrences =
                , "claim-participant-b"
                , "claim-target"
                ])
+
+completeModelWithNeedOccurrences :: [ModelOccurrence]
+completeModelWithNeedOccurrences =
+  needModelOccurrences ++ completeModelOccurrences
 
 visionCarriers :: [CarrierProjection]
 visionCarriers =

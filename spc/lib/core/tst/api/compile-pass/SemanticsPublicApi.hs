@@ -14,12 +14,16 @@ assess ::
 assess = assessSemantics
 
 summarize ::
-     SemanticAssessment scope -> (SemanticDisposition, Int, Int, Maybe Int)
+     SemanticAssessment scope
+  -> (SemanticDisposition, Int, Int, Maybe Int, Int, Int)
 summarize assessment =
   ( semanticDisposition assessment
   , foldSemanticAssessment NonEmpty.length 0 (const 0) assessment
   , length (semanticCandidateOccurrences assessment)
-  , length . semanticallyValidStrategies <$> acceptedSemanticModel assessment)
+  , length . semanticallyValidSituatedNeeds
+      <$> semanticallyValidModel assessment
+  , length (semanticallyValidStrategies assessment)
+  , length (semanticallyValidCollectiveRealizations assessment))
 
 diagnosticOccurrences ::
      SemanticDiagnosticEvidence scope -> [(Text, [OccurrenceIdentity])]

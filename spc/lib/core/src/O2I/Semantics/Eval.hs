@@ -44,17 +44,15 @@ assessSemantics ::
 assessSemantics graph inputs =
   case NonEmpty.nonEmpty defects of
     Just failures -> SemanticsRejected results failures
-    Nothing
-      | unavailable -> SemanticsUnavailable results
-      | otherwise ->
-        SemanticsAccepted
-          results
-          SemanticallyValidModel
-            { semanticModelGraph = graph
-            , semanticModelSituatedNeeds = validNeeds
-            , semanticModelEligibleStrategies = validStrategies
-            , semanticModelCollectiveRealizations = validCollectives
-            }
+    Nothing ->
+      let model =
+            SemanticallyValidModel
+              { semanticModelGraph = graph
+              , semanticModelSituatedNeeds = validNeeds
+              }
+       in if unavailable
+            then SemanticsUnavailable results model
+            else SemanticsAccepted results model
   where
     semanticIndex = buildSemanticIndex graph inputs
     needs = assessSituatedNeeds semanticIndex
@@ -79,9 +77,6 @@ assessSemantics graph inputs =
         , storedCandidateOccurrences = candidateOccurrences graph
         }
     validNeeds = [proof | SituatedNeedValid proof <- needs]
-    validStrategies = [proof | StrategyFormulationValid proof <- strategies]
-    validCollectives =
-      [proof | CollectiveStrategyRealizationValid proof _ <- collectives]
 
 situatedNeedDefects :: SituatedNeedAssessment scope -> [SemanticDefect]
 situatedNeedDefects assessment =

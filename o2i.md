@@ -830,20 +830,25 @@ Der kompilierte Relations- und Endpunktvertrag sichert zulässige Kontext- und P
 
 ### Semantische Gültigkeit
 
-Die folgende Matrix normiert die kontextbezogenen Mindestinhalte und ihre Relationsevidenz für ein `SemanticallyValidModel`. Eine existenzielle Pflicht verlangt mindestens einen passenden Relationszeugen für die jeweilige Kontextinstanz; eine universelle Pflicht gilt für jedes in der bezeichneten Rolle berücksichtigte Element.
+Die folgende Übersicht normiert die modellinternen kontextbezogenen Mindestinhalte und ihre Relationsevidenz und grenzt die ergänzend bewertete Strategy-Formulierung davon ab. Nur die modellinternen Pflichten gehen in den `SemanticallyValidModel` ein; die vollständige Strategy-Formulierung bleibt eine fachliche Pflicht, ihr opaker Beweis ist jedoch ein Ergebnis des optionalen Assessments. Fehlt die ergänzende Eingabe, bleibt dieses Assessment nicht verfügbar, ohne den Modellbeweis zu verhindern. Eine existenzielle Pflicht verlangt mindestens einen passenden Relationszeugen für die jeweilige Kontextinstanz; eine universelle Pflicht gilt für jedes in der bezeichneten Rolle berücksichtigte Element.
 
-| Kontext | Mindestinhalt | Relationsevidenz der semantischen Gültigkeit |
-| --- | --- | --- |
-| `Ethos` | mindestens ein eigenes `Principle` | keine zusätzliche Relationsevidenz |
-| `Mission` | mindestens ein eigener `Driver` | existenziell: Mindestens ein `Principle @ Ethos` führt mindestens einen `Driver` dieser Mission. |
-| `Vision` | mindestens ein eigenes `Objective` | jeweils existenziell: Mindestens ein `Driver @ Mission` begründet ein Objective dieser Vision und mindestens ein `Principle @ Ethos` führt ein Objective dieser Vision; beide Pflichten dürfen verschiedene Objectives als Zeugen verwenden. |
-| `Strategy` | genau eine vollständige Formulierung mit genau einem Diagnosis-`Driver`, einem Intent-`Objective` und einem Guiding-Policy-`Principle` sowie mindestens einer gelisteten `Action` und mindestens einem gelisteten `Key Result` | existenziell: Ein `Objective @ Vision` richtet das Intent-Objective aus. Universell innerhalb der Formulierung: Der Diagnosis-Driver begründet das Intent-Objective, die Guiding Policy führt jede gelistete Action, jede gelistete Action trägt zu mindestens einem gelisteten Key Result bei und jedes gelistete Key Result substantiiert das Intent-Objective. |
-| `Situation` | mindestens ein konstituierender Situationsanker | existenziell: Mindestens ein zulässiger Situationsanker konstituiert diese Situation. |
-| `Need` | mindestens ein eigener `Driver`, mindestens ein eigenes `Objective` und mindestens eine sichtbar machende Situation | existenziell: Mindestens eine `Situation --surfaces--> Need`-Relation liegt vor. Universell: Jeder Driver dieses Needs ist an mindestens einen Anker einer sichtbar machenden Situation gebunden; jedes Objective dieses Needs wird durch mindestens einen Driver desselben Needs begründet. |
-| `Intervention` | mindestens eine eigene `Action` und mindestens ein eigenes `Key Result` | existenziell: Mindestens eine eigene Action trägt zu mindestens einem eigenen Key Result bei. |
-| `Measure` | mindestens eine eigene Messdimension und mindestens ein eigener `KPI` | existenziell: Mindestens eine eigene Messdimension enthält mindestens einen eigenen KPI. |
+**`Ethos`: Mindestinhalt:** mindestens ein eigenes `Principle` **Relationsevidenz:** keine zusätzliche Relationsevidenz
 
-Existenzielle Relationsevidenz muss von zusätzlichen eigenen Primitives oder Strukturierungselementen desselben Kontexts nicht wiederholt werden; universelle Pflichten sind in der Matrix ausdrücklich als solche benannt. Kontext-Makrorelationen ersetzen die geforderte Primitive-Evidenz nicht. Diese Stufe verlangt noch keine strategische Qualifikation jedes Needs, keinen vollständigen Wirkungstrace, keine KPI-Definition oder Evidenzplanung und keine Beobachtung. Diese Pflichten entstehen erst durch Wirkungsrelevanz, Traceability, Evidenzbereitschaft beziehungsweise Wirkungsevidenz.
+**`Mission`: Mindestinhalt:** mindestens ein eigener `Driver` **Relationsevidenz:** existenziell: Mindestens ein `Principle @ Ethos` führt mindestens einen `Driver` dieser Mission.
+
+**`Vision`: Mindestinhalt:** mindestens ein eigenes `Objective` **Relationsevidenz:** jeweils existenziell: Mindestens ein `Driver @ Mission` begründet ein Objective dieser Vision und mindestens ein `Principle @ Ethos` führt ein Objective dieser Vision; beide Pflichten dürfen verschiedene Objectives als Zeugen verwenden.
+
+**`Strategy`: Mindestinhalt:** kein ergänzender Mindestinhalt des Modellbeweises; fachlich genau eine vollständige Formulierung mit genau einem Diagnosis-`Driver`, einem Intent-`Objective` und einem Guiding-Policy-`Principle` sowie mindestens einer gelisteten `Action` und mindestens einem gelisteten `Key Result` **Relationsevidenz:** im optionalen Strategy-Assessment existenziell: Ein `Objective @ Vision` richtet das Intent-Objective aus. Universell innerhalb der Formulierung: Der Diagnosis-Driver begründet das Intent-Objective, die Guiding Policy führt jede gelistete Action, jede gelistete Action trägt zu mindestens einem gelisteten Key Result bei und jedes gelistete Key Result substantiiert das Intent-Objective.
+
+**`Situation`: Mindestinhalt:** mindestens ein konstituierender Situationsanker **Relationsevidenz:** existenziell: Mindestens ein zulässiger Situationsanker konstituiert diese Situation.
+
+**`Need`: Mindestinhalt:** mindestens ein eigener `Driver`, mindestens ein eigenes `Objective` und mindestens eine sichtbar machende Situation **Relationsevidenz:** existenziell: Mindestens eine `Situation --surfaces--> Need`-Relation liegt vor. Universell: Jeder Driver dieses Needs ist an mindestens einen Anker einer sichtbar machenden Situation gebunden; jedes Objective dieses Needs wird durch mindestens einen Driver desselben Needs begründet.
+
+**`Intervention`: Mindestinhalt:** mindestens eine eigene `Action` und mindestens ein eigenes `Key Result` **Relationsevidenz:** existenziell: Mindestens eine eigene Action trägt zu mindestens einem eigenen Key Result bei.
+
+**`Measure`: Mindestinhalt:** mindestens eine eigene Messdimension und mindestens ein eigener `KPI` **Relationsevidenz:** existenziell: Mindestens eine eigene Messdimension enthält mindestens einen eigenen KPI.
+
+Existenzielle Relationsevidenz muss von zusätzlichen eigenen Primitives oder Strukturierungselementen desselben Kontexts nicht wiederholt werden; universelle Pflichten sind in der Übersicht ausdrücklich als solche benannt. Kontext-Makrorelationen ersetzen die geforderte Primitive-Evidenz nicht. Diese Stufe verlangt noch keine strategische Qualifikation jedes Needs, keinen vollständigen Wirkungstrace, keine KPI-Definition oder Evidenzplanung und keine Beobachtung. Diese Pflichten entstehen erst durch Wirkungsrelevanz, Traceability, Evidenzbereitschaft beziehungsweise Wirkungsevidenz.
 
 Jede Strategy-Instanz besitzt genau eine vollständige Formulierung. Sie umfasst Geltungsbereich, strategische Verankerung, abgeleitete Leitplanken, Diagnose, strategische Absicht, Guiding Policy, Positionierung, Trade-offs, kohärente Handlungsfestlegungen, strategische Erfolgsbezüge und Fit-Begründung. Jeder strategische Erfolgsbezug wird durch ein `Key Result @ Strategy` modelliert. Sämtliche Textfelder müssen nichtleer sein; Action- und Key-Result-Referenzen müssen innerhalb ihrer Rolle eindeutig sein.
 
@@ -879,7 +884,9 @@ Die Spezifikation prüft Existenz, Eindeutigkeit, Typisierung, Bindung, Abdeckun
 
 Beitragsevidenz und kollektiver Fit sind unabhängige Pflichten. Organisatorische Zugehörigkeit, gemeinsame Ausrichtung oder bloße Widerspruchsfreiheit begründen keine kollektive Realisierung. Eine direkte binäre `Strategy --realizes--> Strategy`-Relation ist deshalb kein zulässiger O2I-Relationstyp.
 
-Die globale Semantikprüfung bewertet Kontext- und Strategy-Semantik sowie kollektive Claims als eine vollständige Modellgrenze. Ein strukturell gültiger `Candidate` bleibt mit seinen fachlichen Defiziten diagnostizierbar, erzeugt jedoch keinen Realisierungszeugen. Steht die erforderliche Kontextsemantik nicht zur Verfügung, bleibt er ausdrücklich als semantisch noch nicht bewertbar gekennzeichnet. Ein `Asserted` muss sämtliche Pflichten erfüllen. Erst wenn keine fatalen Fehler und keine Candidates verbleiben, entsteht ein `SemanticallyValidModel`, das die validierten kollektiven Realisierungen als opake Zeugen und Abfragen einschließt. `Maturity` wird ausschließlich aus diesem vollständigen Core-Assessment abgeleitet.
+\clearpage
+
+Die globale Semantikprüfung bewertet die modellinterne Kontext- und Strategy-Semantik sowie kollektive Claims an der vollständigen Modellgrenze. Ein strukturell gültiger `Candidate` bleibt mit seinen fachlichen Defiziten diagnostizierbar, erzeugt jedoch keinen Realisierungszeugen; ein `Asserted` muss sämtliche modellinternen Pflichten erfüllen. Ein `SemanticallyValidModel` belegt ausschließlich die modellinterne globale Semantik. Gültige Strategy-Formulierungen und validierte kollektive Fits aus ergänzenden Eingaben bleiben exakte Ergebnisse der jeweiligen optionalen Assessments und sind keine Bestandteile dieses Modellbeweises. Fehlt eine solche optionale Eingabe, ist das betroffene Assessment nicht verfügbar; dies verhindert den Modellbeweis ebenso wenig, wie die Eingabe ihn erzeugen kann. `Maturity` wird ausschließlich aus diesem vollständigen Core-Assessment abgeleitet.
 
 ### Wirkungsrelevanz
 
