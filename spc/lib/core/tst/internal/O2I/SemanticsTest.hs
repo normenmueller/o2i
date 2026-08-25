@@ -58,6 +58,9 @@ tests =
             "keeps the model proof independent of optional supplements"
             aggregateModelIndependentOfSupplements
         , testCase
+            "retains valid optional proofs when the model is rejected"
+            aggregateRejectedWithValidOptionalProof
+        , testCase
             "reports unavailable without model defects"
             aggregateUnavailable
         , testCase
@@ -242,6 +245,23 @@ aggregateModelIndependentOfSupplements =
                     @?= [modelId "collective-claim"])
                completeBinding)
           (bindSupplementalInputs graph emptyInputs)
+
+aggregateRejectedWithValidOptionalProof :: Assertion
+aggregateRejectedWithValidOptionalProof =
+  assertScenario
+    (needModelOccurrences ++ strategyModelOccurrences "a")
+    rejectedNeedWithValidStrategyProjection
+    [(0, strategyInput "a")] $ \graph inputs -> do
+    let assessment = Public.assessSemantics graph inputs
+    Public.semanticDisposition assessment @?= Public.SemanticRejected
+    Public.semanticallyValidModel assessment @?= Nothing
+    case Public.strategyFormulationAssessments assessment of
+      [StrategyFormulationValid proof] ->
+        Public.semanticallyValidStrategies assessment @?= [proof]
+      result ->
+        assertFailure
+          ("rejected aggregate lost its valid optional Strategy proof: "
+             ++ show result)
 
 aggregateUnavailable :: Assertion
 aggregateUnavailable =
@@ -1450,6 +1470,17 @@ needProjectionWithoutGrounding =
     needCarriers
     needContextualizations
     (init needRelations)
+    []
+    []
+
+rejectedNeedWithValidStrategyProjection :: StructureProjection
+rejectedNeedWithValidStrategyProjection =
+  structureProjection
+    (needCarriers ++ visionCarriers ++ strategyCarriers "a")
+    (needContextualizations
+       ++ visionContextualizations
+       ++ strategyContextualizations "a")
+    (init needRelations ++ visionOrientation "a" : strategyInternalRelations "a")
     []
     []
 

@@ -879,7 +879,9 @@ Die Spezifikation prüft Existenz, Eindeutigkeit, Typisierung, Bindung, Abdeckun
 
 Beitragsevidenz und kollektiver Fit sind unabhängige Pflichten. Organisatorische Zugehörigkeit, gemeinsame Ausrichtung oder bloße Widerspruchsfreiheit begründen keine kollektive Realisierung. Eine direkte binäre `Strategy --realizes--> Strategy`-Relation ist deshalb kein zulässiger O2I-Relationstyp.
 
-Die globale Semantikprüfung bewertet Kontext- und Strategy-Semantik sowie kollektive Claims als eine vollständige Modellgrenze. Ein strukturell gültiger `Candidate` bleibt mit seinen fachlichen Defiziten diagnostizierbar, erzeugt jedoch keinen Realisierungszeugen. Steht die erforderliche Kontextsemantik nicht zur Verfügung, bleibt er ausdrücklich als semantisch noch nicht bewertbar gekennzeichnet. Ein `Asserted` muss sämtliche Pflichten erfüllen. Erst wenn keine fatalen Fehler und keine Candidates verbleiben, entsteht ein `SemanticallyValidModel`, das die validierten kollektiven Realisierungen als opake Zeugen und Abfragen einschließt. `Maturity` wird ausschließlich aus diesem vollständigen Core-Assessment abgeleitet.
+\clearpage
+
+Die globale Semantikprüfung bewertet die modellinterne Kontext- und Strategy-Semantik sowie kollektive Claims an der vollständigen Modellgrenze. Ein strukturell gültiger `Candidate` bleibt mit seinen fachlichen Defiziten diagnostizierbar, erzeugt jedoch keinen Realisierungszeugen; ein `Asserted` muss sämtliche modellinternen Pflichten erfüllen. Ein `SemanticallyValidModel` belegt ausschließlich die modellinterne globale Semantik. Gültige Strategy-Formulierungen und validierte kollektive Fits aus ergänzenden Eingaben bleiben exakte Ergebnisse der jeweiligen optionalen Assessments und sind keine Bestandteile dieses Modellbeweises. Fehlt eine solche optionale Eingabe, ist das betroffene Assessment nicht verfügbar; dies verhindert den Modellbeweis ebenso wenig, wie die Eingabe ihn erzeugen kann. `Maturity` wird ausschließlich aus diesem vollständigen Core-Assessment abgeleitet.
 
 ### Wirkungsrelevanz
 
