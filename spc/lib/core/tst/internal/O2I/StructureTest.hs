@@ -518,6 +518,7 @@ runStructureWithIndex ::
 runStructureWithIndex index projection selected inspect =
   case withSelectedViewScope
          index
+         selectedViewSubject
          selected
          (\scope -> inspect (StructureIndex.assessStructure scope projection)) of
     Left defects -> error ("invalid selected-View fixture: " ++ show defects)
@@ -1055,15 +1056,18 @@ model identifier =
     (expectRight (modelIdentity ("model-" <> occurrenceIdentityText identifier)))
 
 identityIndex :: ModelIdentityIndex
-identityIndex = expectRight (buildModelIdentityIndex (map model allOccurrences))
+identityIndex =
+  expectRight
+    (buildModelIdentityIndex (selectedViewSubject : map model allOccurrences))
 
 duplicateClaimIdentityIndex :: ModelIdentityIndex
 duplicateClaimIdentityIndex =
   expectRight
     (buildModelIdentityIndex
-       (modelOccurrence
-          claimAlias
-          (expectRight (modelIdentity "model-proposition"))
+       (selectedViewSubject
+          : modelOccurrence
+              claimAlias
+              (expectRight (modelIdentity "model-proposition"))
           : map model allOccurrences))
 
 duplicateHeavyClaimOccurrences :: [OccurrenceIdentity]
@@ -1085,11 +1089,18 @@ duplicateHeavyClaimIdentityIndex :: ModelIdentityIndex
 duplicateHeavyClaimIdentityIndex =
   expectRight
     (buildModelIdentityIndex
-       [ modelOccurrence identifier sharedIdentity
-       | identifier <- duplicateHeavyClaimOccurrences
-       ])
+       (selectedViewSubject
+          : [ modelOccurrence identifier sharedIdentity
+            | identifier <- duplicateHeavyClaimOccurrences
+            ]))
   where
     sharedIdentity = expectRight (modelIdentity "model-claim-collision")
+
+selectedViewSubject :: ModelOccurrence
+selectedViewSubject =
+  modelOccurrence
+    (occurrence "selected-view")
+    (expectRight (modelIdentity "selected-view-identity"))
 
 claimAlias :: OccurrenceIdentity
 claimAlias = occurrence "claim-alias"

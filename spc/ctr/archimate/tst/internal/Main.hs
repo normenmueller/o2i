@@ -7,6 +7,9 @@ import O2I.ArchiMate.Profile.Internal.InventoryTest (inventoryTests)
 import O2I.ArchiMate.Profile.Internal.NotationConformanceTest
   ( notationConformanceTests
   )
+import O2I.ArchiMate.Profile.Internal.ProjectionIdentityTest
+  ( projectionIdentityTests
+  )
 import O2I.ArchiMate.Profile.Rule.CatalogTest (catalogTests)
 import Test.Tasty (defaultMain, testGroup)
 
@@ -18,5 +21,6 @@ main =
        [ closureWorkTests
        , inventoryTests
        , notationConformanceTests
+       , projectionIdentityTests
        , catalogTests
        ])

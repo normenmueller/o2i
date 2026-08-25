@@ -90,6 +90,7 @@ data ClosedView = ClosedView
   { closedViewDocumentValue :: !CanonicalDocument
   , closedViewIndexValue :: !ProfileIndex
   , closedViewOccurrenceValue :: !CanonicalOccurrence
+  , closedViewIdentityValue :: !IdentityOutcome
   , closedViewDisplayedOccurrencesValue :: ![DisplayedOccurrence]
   , closedViewGraphOccurrencesValue :: !(Set CanonicalOccurrence)
   , closedViewQualificationOccurrencesValue :: !(Set CanonicalOccurrence)
@@ -316,6 +317,7 @@ closeViewWithWork selected =
       { closedViewDocumentValue = document
       , closedViewIndexValue = profileIndex
       , closedViewOccurrenceValue = selectedView
+      , closedViewIdentityValue = viewDescriptorIdentityValue selected
       , closedViewDisplayedOccurrencesValue = displayed
       , closedViewGraphOccurrencesValue = graphMembers final
       , closedViewQualificationOccurrencesValue = qualificationMembers final

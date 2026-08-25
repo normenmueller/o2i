@@ -160,6 +160,7 @@ test-suite o2i-archimate-profile-internal-test
     O2I.ArchiMate.Profile.Internal.NotationConformanceTest,
     O2I.ArchiMate.Profile.Internal.Notation.Witness,
     O2I.ArchiMate.Profile.Internal.Projection,
+    O2I.ArchiMate.Profile.Internal.ProjectionIdentityTest,
     O2I.ArchiMate.Profile.Internal.Resolution,
     O2I.ArchiMate.Profile.Conformance,
     O2I.ArchiMate.Profile.Rule.CatalogTest,

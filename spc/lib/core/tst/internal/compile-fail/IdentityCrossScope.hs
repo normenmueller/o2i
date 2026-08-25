@@ -8,9 +8,10 @@ sameScope _ _ = ()
 
 invalidCrossScope ::
      ModelIdentityIndex
+  -> ModelOccurrence
   -> Either
        (NonEmpty SelectedViewScopeDefect)
        (Either (NonEmpty SelectedViewScopeDefect) ())
-invalidCrossScope index =
-  withSelectedViewScope index [] $ \left ->
-    withSelectedViewScope index [] $ \right -> sameScope left right
+invalidCrossScope index selectedView =
+  withSelectedViewScope index selectedView [] $ \left ->
+    withSelectedViewScope index selectedView [] $ \right -> sameScope left right

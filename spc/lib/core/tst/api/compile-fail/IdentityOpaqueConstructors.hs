@@ -18,7 +18,7 @@ invalidIdentityIndexDefect :: IdentityIndexDefect
 invalidIdentityIndexDefect = IdentityIndexDefect undefined undefined
 
 invalidSelectedViewScope :: SelectedViewScope scope
-invalidSelectedViewScope = SelectedViewScope undefined undefined
+invalidSelectedViewScope = SelectedViewScope undefined undefined undefined
 
 invalidSelectedViewScopeDefect :: SelectedViewScopeDefect
 invalidSelectedViewScopeDefect =

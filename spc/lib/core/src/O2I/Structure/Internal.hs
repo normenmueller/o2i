@@ -36,6 +36,7 @@ module O2I.Structure.Internal
   , StructuredIncidenceObservation(..)
   , StructuredPropositionObservation(..)
   , WellFormedGraph(..)
+  , wellFormedGraphIdentity
   ) where
 
 import Data.List.NonEmpty (NonEmpty)
@@ -57,7 +58,11 @@ import O2I.Core.Graph.Observation
   , RelationObservation
   )
 import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
-import O2I.Core.Identity.Internal (ScopedOccurrence, SelectedViewScope)
+import O2I.Core.Identity.Internal
+  ( ScopedOccurrence
+  , SelectedViewScope
+  , selectedViewScopeGraphIdentity
+  )
 
 -- | One profile-projected O2I carrier before endpoint qualification.
 data CarrierProjection =
@@ -454,6 +459,11 @@ data WellFormedGraph scope = WellFormedGraph
   , storedWellFormedStructuredPropositions :: ![StructuredPropositionObservation
                                                   scope]
   }
+
+-- | Project the exact selected View identity for later Core stages.
+wellFormedGraphIdentity :: WellFormedGraph scope -> ModelIdentity
+wellFormedGraphIdentity =
+  selectedViewScopeGraphIdentity . wellFormedSelectedViewScope
 
 instance Eq (WellFormedGraph scope) where
   left == right =
