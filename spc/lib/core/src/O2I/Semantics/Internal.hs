@@ -337,13 +337,10 @@ data CollectiveStrategyRealizationAssessment scope
 
 type role SemanticallyValidModel nominal
 
--- | Opaque selected-View model whose complete Core Semantics stage is valid.
+-- | Opaque selected-View model whose model-internal Core Semantics is valid.
 data SemanticallyValidModel scope = SemanticallyValidModel
   { semanticModelGraph :: !(WellFormedGraph scope)
   , semanticModelSituatedNeeds :: ![GloballySituatedNeed scope]
-  , semanticModelEligibleStrategies :: ![QualificationEligibleStrategy scope]
-  , semanticModelCollectiveRealizations :: ![ValidatedCollectiveStrategyRealization
-                                               scope]
   }
 
 -- | Project the exact selected View identity from the retained proof spine.
@@ -356,10 +353,6 @@ instance Eq (SemanticallyValidModel scope) where
   left == right =
     semanticModelGraph left == semanticModelGraph right
       && semanticModelSituatedNeeds left == semanticModelSituatedNeeds right
-      && semanticModelEligibleStrategies left
-           == semanticModelEligibleStrategies right
-      && semanticModelCollectiveRealizations left
-           == semanticModelCollectiveRealizations right
 
 instance Show (SemanticallyValidModel scope) where
   showsPrec precedence model =
@@ -368,10 +361,6 @@ instance Show (SemanticallyValidModel scope) where
           . showsPrec 11 (semanticModelGraph model)
           . showChar ' '
           . showsPrec 11 (semanticModelSituatedNeeds model)
-          . showChar ' '
-          . showsPrec 11 (semanticModelEligibleStrategies model)
-          . showChar ' '
-          . showsPrec 11 (semanticModelCollectiveRealizations model)
 
 -- | Complete subject-local results retained by every aggregate outcome.
 data SemanticResults scope = SemanticResults
@@ -385,6 +374,8 @@ data SemanticResults scope = SemanticResults
 -- | Complete semantic assessment with deterministic rejection precedence.
 data SemanticAssessment scope
   = SemanticsRejected !(SemanticResults scope) !(NonEmpty SemanticDefect)
-  | SemanticsUnavailable !(SemanticResults scope)
+  | SemanticsUnavailable
+      !(SemanticResults scope)
+      !(SemanticallyValidModel scope)
   | SemanticsAccepted !(SemanticResults scope) !(SemanticallyValidModel scope)
   deriving (Eq, Show)

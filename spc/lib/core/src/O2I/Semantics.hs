@@ -13,7 +13,7 @@ module O2I.Semantics
   , semanticDisposition
   , foldSemanticAssessment
   , semanticCandidateOccurrences
-  , acceptedSemanticModel
+  , semanticallyValidModel
   , SemanticDiagnosticEvidence
   , SemanticEvidenceKind(..)
   , semanticDiagnosticRule
@@ -162,7 +162,7 @@ semanticDisposition :: SemanticAssessment scope -> SemanticDisposition
 semanticDisposition (SemanticAssessment assessment) =
   case assessment of
     Internal.SemanticsRejected _ _ -> SemanticRejected
-    Internal.SemanticsUnavailable _ -> SemanticUnavailable
+    Internal.SemanticsUnavailable _ _ -> SemanticUnavailable
     Internal.SemanticsAccepted _ _ -> SemanticAccepted
 
 -- | Eliminate only the exact aggregate result produced in one scope.
@@ -176,7 +176,7 @@ foldSemanticAssessment rejected unavailable accepted (SemanticAssessment assessm
   case assessment of
     Internal.SemanticsRejected _ failures ->
       rejected (SemanticDiagnosticEvidence <$> failures)
-    Internal.SemanticsUnavailable _ -> unavailable
+    Internal.SemanticsUnavailable _ _ -> unavailable
     Internal.SemanticsAccepted _ model -> accepted model
 
 -- | Return every Candidate occurrence retained during semantic assessment.
@@ -184,13 +184,14 @@ semanticCandidateOccurrences :: SemanticAssessment scope -> [OccurrenceIdentity]
 semanticCandidateOccurrences =
   Internal.storedCandidateOccurrences . semanticResults
 
--- | Project the validated model only from an accepted semantic outcome.
-acceptedSemanticModel ::
+-- | Project the model-internal proof from every non-rejected outcome.
+semanticallyValidModel ::
      SemanticAssessment scope -> Maybe (SemanticallyValidModel scope)
-acceptedSemanticModel (SemanticAssessment assessment) =
+semanticallyValidModel (SemanticAssessment assessment) =
   case assessment of
+    Internal.SemanticsRejected _ _ -> Nothing
+    Internal.SemanticsUnavailable _ model -> Just model
     Internal.SemanticsAccepted _ model -> Just model
-    _ -> Nothing
 
 -- | Identify the compiled Core rule carried by scoped semantic evidence.
 semanticDiagnosticRule :: SemanticDiagnosticEvidence scope -> CoreRuleId
@@ -414,17 +415,23 @@ semanticallyValidSituatedNeeds ::
      SemanticallyValidModel scope -> [GloballySituatedNeed scope]
 semanticallyValidSituatedNeeds = Internal.semanticModelSituatedNeeds
 
--- | Enumerate every proven qualification-eligible Strategy.
+-- | Enumerate every qualification proof retained by this assessment.
 semanticallyValidStrategies ::
-     SemanticallyValidModel scope -> [QualificationEligibleStrategy scope]
-semanticallyValidStrategies = Internal.semanticModelEligibleStrategies
+     SemanticAssessment scope -> [QualificationEligibleStrategy scope]
+semanticallyValidStrategies assessment =
+  [ proof
+  | Internal.StrategyFormulationValid proof <-
+      strategyFormulationAssessments assessment
+  ]
 
--- | Enumerate every validated collective Strategy realization.
+-- | Enumerate every collective proof retained by this assessment.
 semanticallyValidCollectiveRealizations ::
-     SemanticallyValidModel scope
-  -> [ValidatedCollectiveStrategyRealization scope]
-semanticallyValidCollectiveRealizations =
-  Internal.semanticModelCollectiveRealizations
+     SemanticAssessment scope -> [ValidatedCollectiveStrategyRealization scope]
+semanticallyValidCollectiveRealizations assessment =
+  [ proof
+  | Internal.CollectiveStrategyRealizationValid proof _ <-
+      collectiveStrategyRealizationAssessments assessment
+  ]
 
 -- | Identify the Need proven globally situated.
 globallySituatedNeedIdentity :: GloballySituatedNeed scope -> ModelIdentity
@@ -603,5 +610,5 @@ semanticResults :: SemanticAssessment scope -> Internal.SemanticResults scope
 semanticResults (SemanticAssessment assessment) =
   case assessment of
     Internal.SemanticsRejected results _ -> results
-    Internal.SemanticsUnavailable results -> results
+    Internal.SemanticsUnavailable results _ -> results
     Internal.SemanticsAccepted results _ -> results

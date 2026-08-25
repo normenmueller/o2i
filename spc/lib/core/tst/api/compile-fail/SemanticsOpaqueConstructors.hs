@@ -3,7 +3,7 @@ module SemanticsOpaqueConstructors where
 import O2I.Semantics
 
 forgeSemanticModel :: SemanticallyValidModel scope
-forgeSemanticModel = SemanticallyValidModel undefined [] [] []
+forgeSemanticModel = SemanticallyValidModel undefined []
 
 forgeEvidence :: SemanticDiagnosticEvidence scope
 forgeEvidence = SemanticDiagnosticEvidence undefined
