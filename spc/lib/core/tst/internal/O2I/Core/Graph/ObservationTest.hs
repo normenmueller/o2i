@@ -46,7 +46,12 @@ canonicalConstruction =
 derivesCanonicalCarrierIdentity :: TestTree
 derivesCanonicalCarrierIdentity =
   testCase "derives carrier model identity from the canonical identity index" $ do
-    case withGraphObservationIndex identityIndex [occurrenceA] inputs inspect of
+    case withGraphObservationIndex
+           identityIndex
+           selectedViewSubject
+           [occurrenceA]
+           inputs
+           inspect of
       Left defects -> assertFailure ("unexpected defects: " ++ show defects)
       Right modelIdentifiers -> modelIdentifiers @?= [modelId "model-a"]
   where
@@ -61,7 +66,12 @@ permutationIndependent =
 rejectsInvalidScope :: TestTree
 rejectsInvalidScope =
   testCase "rejects unknown selected-View membership before observations" $ do
-    case withGraphObservationIndex identityIndex [unknownOccurrence] [] result of
+    case withGraphObservationIndex
+           identityIndex
+           selectedViewSubject
+           [unknownOccurrence]
+           []
+           result of
       Left (SelectedViewScopeRejected defect NonEmpty.:| []) ->
         selectedViewScopeDefectOccurrence defect @?= unknownOccurrence
       other -> assertFailure ("unexpected result: " ++ show other)
@@ -71,7 +81,12 @@ rejectsInvalidScope =
 rejectsOutsideObservation :: TestTree
 rejectsOutsideObservation =
   testCase "rejects observation occurrences outside the selected View" $ do
-    case withGraphObservationIndex identityIndex [occurrenceA] inputs result of
+    case withGraphObservationIndex
+           identityIndex
+           selectedViewSubject
+           [occurrenceA]
+           inputs
+           result of
       Left (ObservationOutsideSelectedView occurrence NonEmpty.:| []) ->
         occurrence @?= occurrenceB
       other -> assertFailure ("unexpected result: " ++ show other)
@@ -82,7 +97,12 @@ rejectsOutsideObservation =
 rejectsDuplicateObservation :: TestTree
 rejectsDuplicateObservation =
   testCase "rejects duplicate canonical observation occurrences" $ do
-    case withGraphObservationIndex identityIndex [occurrenceA] inputs result of
+    case withGraphObservationIndex
+           identityIndex
+           selectedViewSubject
+           [occurrenceA]
+           inputs
+           result of
       Left (DuplicateGraphObservation occurrence kinds NonEmpty.:| []) -> do
         occurrence @?= occurrenceA
         NonEmpty.toList kinds
@@ -98,7 +118,12 @@ rejectsDuplicateObservation =
 rejectsCrossKindDuplicate :: TestTree
 rejectsCrossKindDuplicate =
   testCase "rejects one occurrence observed through different graph kinds" $ do
-    case withGraphObservationIndex identityIndex selected inputs result of
+    case withGraphObservationIndex
+           identityIndex
+           selectedViewSubject
+           selected
+           inputs
+           result of
       Left (DuplicateGraphObservation occurrence kinds NonEmpty.:| []) -> do
         occurrence @?= occurrenceA
         NonEmpty.toList kinds
@@ -121,7 +146,12 @@ rejectsCrossKindDuplicate =
 rejectsMissingCarrier :: TestTree
 rejectsMissingCarrier =
   testCase "rejects relation endpoints without carrier observations" $ do
-    case withGraphObservationIndex identityIndex selected inputs result of
+    case withGraphObservationIndex
+           identityIndex
+           selectedViewSubject
+           selected
+           inputs
+           result of
       Left (MissingCarrierEndpoint owner role endpoint NonEmpty.:| []) -> do
         owner @?= relationOccurrence
         role @?= RelationTargetRole
@@ -143,7 +173,12 @@ rejectsMissingCarrier =
 reportsEveryMissingEndpointRole :: TestTree
 reportsEveryMissingEndpointRole =
   testCase "reports every missing relation and contextualization endpoint" $ do
-    withGraphObservationIndex identityIndex selected inputs result
+    withGraphObservationIndex
+      identityIndex
+      selectedViewSubject
+      selected
+      inputs
+      result
       @?= Left expected
   where
     selected =
@@ -197,6 +232,7 @@ snapshot :: [GraphObservationInput] -> Either String Snapshot
 snapshot inputs =
   case withGraphObservationIndex
          identityIndex
+         selectedViewSubject
          selectedOccurrences
          inputs
          inspect of
@@ -269,13 +305,18 @@ identityIndex :: ModelIdentityIndex
 identityIndex =
   expectRight
     (buildModelIdentityIndex
-       [ modelOccurrenceA
+       [ selectedViewSubject
+       , modelOccurrenceA
        , modelOccurrenceB
        , modelOccurrence relationOccurrence (modelId "model-relation")
        , modelOccurrence
            contextualizationOccurrence
            (modelId "model-contextualization")
        ])
+
+selectedViewSubject :: ModelOccurrence
+selectedViewSubject =
+  modelOccurrence (occurrenceId "selected-view") (modelId "selected-view-id")
 
 modelOccurrenceA :: ModelOccurrence
 modelOccurrenceA = modelOccurrence occurrenceA (modelId "model-a")

@@ -412,9 +412,10 @@ foldProfileProjectionAssessment contractFailure rejected accepted (ProfileProjec
 
 -- | Assess the inseparable Profile-owned Core input under one fresh scope.
 --
--- The Structure projection, complete model identity domain, and selected-View
--- membership never leave this elimination independently. A caller therefore
--- cannot combine any of the three from different Profile documents.
+-- The selected View subject, Structure projection, complete model identity
+-- domain, and graph membership never leave this elimination independently. A
+-- caller therefore cannot combine any of them from different Profile
+-- documents.
 withProfileStructureAssessment ::
      ProfileProjection profile document
   -> (NonEmpty IdentityIndexDefect -> result)
@@ -429,6 +430,7 @@ withProfileStructureAssessment (ProfileProjection projection) identityFailure sc
     Right index ->
       case withSelectedViewScope
              index
+             (Internal.profileSelectedViewValue projection)
              (Internal.profileSelectedOccurrencesValue projection)
              (\scope ->
                 case assessStructure

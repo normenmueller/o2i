@@ -5,6 +5,7 @@
 module Main where
 
 import Control.Monad (forM_)
+import Data.List (isInfixOf)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified Data.Text as Text
@@ -18,6 +19,9 @@ import O2I.Core.Identity.Internal
   , SelectedIdentityKind(..)
   , resolveIdentity
   , scopedOccurrenceIdentity
+  , selectedViewScopeDefectIndexedModelIdentity
+  , selectedViewScopeDefectSuppliedModelIdentity
+  , selectedViewScopeGraphIdentity
   )
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -44,6 +48,9 @@ tests =
     , testCase
         "selected-View membership defects accumulate canonically"
         selectedViewMembershipContract
+    , testCase
+        "selected-View subject is indexed exactly before scope construction"
+        selectedViewSubjectContract
     , testCase
         "resolution obeys the exact precedence"
         resolutionPrecedenceContract
@@ -141,6 +148,7 @@ selectedViewMembershipContract =
   withIndex [occurrence "known" "model"] $ \index ->
     case withSelectedViewScope
            index
+           selectedViewSubject
            [occurrenceId "missing", occurrenceId "known", occurrenceId "known"]
            (const ()) of
       Left defects ->
@@ -154,6 +162,51 @@ selectedViewMembershipContract =
       ( selectedViewScopeDefectKind defect
       , selectedViewScopeDefectOccurrence defect
       , selectedViewScopeDefectCardinality defect)
+
+selectedViewSubjectContract :: Assertion
+selectedViewSubjectContract =
+  withIndex [] $ \index -> do
+    case withSelectedViewScope
+           index
+           (occurrence "unknown-view" "unknown-identity")
+           []
+           (const ()) of
+      Left (defect NonEmpty.:| []) ->
+        defectIdentity defect
+          @?= ( UnknownSelectedViewSubjectOccurrence
+              , occurrenceId "unknown-view"
+              , Nothing
+              , Nothing)
+      other ->
+        assertFailure ("unexpected unknown-subject result: " ++ show other)
+    case withSelectedViewScope
+           index
+           (occurrence "selected-view" "replacement-identity")
+           []
+           (const ()) of
+      Left (defect NonEmpty.:| []) -> do
+        defectIdentity defect
+          @?= ( SelectedViewSubjectIdentityMismatch
+              , occurrenceId "selected-view"
+              , Just (modelId "selected-view-identity")
+              , Just (modelId "replacement-identity"))
+        assertBool
+          "public defect rendering leaked a replaceable model identity"
+          (not
+             ("selected-view-identity" `isInfixOf` show defect
+                || "replacement-identity" `isInfixOf` show defect))
+      other -> assertFailure ("unexpected mismatch result: " ++ show other)
+    case withSelectedViewScope index selectedViewSubject [] inspectIdentity of
+      Left defects ->
+        assertFailure ("valid subject was rejected: " ++ show defects)
+      Right identityValue -> identityValue @?= modelId "selected-view-identity"
+  where
+    defectIdentity defect =
+      ( selectedViewScopeDefectKind defect
+      , selectedViewScopeDefectOccurrence defect
+      , selectedViewScopeDefectIndexedModelIdentity defect
+      , selectedViewScopeDefectSuppliedModelIdentity defect)
+    inspectIdentity scope = selectedViewScopeGraphIdentity scope
 
 resolutionPrecedenceContract :: Assertion
 resolutionPrecedenceContract =
@@ -250,7 +303,7 @@ occurrenceId value =
 
 withIndex :: [ModelOccurrence] -> (ModelIdentityIndex -> Assertion) -> Assertion
 withIndex occurrences action =
-  case buildModelIdentityIndex occurrences of
+  case buildModelIdentityIndex (selectedViewSubject : occurrences) of
     Left defects -> assertFailure ("invalid identity fixture: " ++ show defects)
     Right index -> action index
 
@@ -260,9 +313,12 @@ withScope ::
   -> (forall scope. SelectedViewScope scope -> Assertion)
   -> Assertion
 withScope index identities action =
-  case withSelectedViewScope index identities action of
+  case withSelectedViewScope index selectedViewSubject identities action of
     Left defects -> assertFailure ("invalid View fixture: " ++ show defects)
     Right assertion -> assertion
+
+selectedViewSubject :: ModelOccurrence
+selectedViewSubject = occurrence "selected-view" "selected-view-identity"
 
 firstElement :: SelectedIdentityKind
 firstElement = SelectedCarrier (NonEmpty.head coreQualifiedEndpointIds)

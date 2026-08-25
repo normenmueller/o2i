@@ -327,10 +327,14 @@ runGraph ::
   -> (forall scope. WellFormedGraph scope -> result)
   -> result
 runGraph extra inspect =
-  case buildModelIdentityIndex (modelOccurrences ++ extra) of
+  case buildModelIdentityIndex (selectedViewSubject : modelOccurrences ++ extra) of
     Left defects -> error ("invalid identity fixture: " ++ show defects)
     Right index ->
-      case withSelectedViewScope index selectedOccurrences withinScope of
+      case withSelectedViewScope
+             index
+             selectedViewSubject
+             selectedOccurrences
+             withinScope of
         Left defects ->
           error ("invalid selected-View fixture: " ++ show defects)
         Right result -> result
@@ -553,6 +557,10 @@ modelOccurrences =
 
 selectedOccurrences :: [OccurrenceIdentity]
 selectedOccurrences = map modelOccurrenceIdentity modelOccurrences
+
+selectedViewSubject :: ModelOccurrence
+selectedViewSubject =
+  model (occurrence "selected-view") "selected-view-identity"
 
 segmentModel :: OccurrenceIdentity -> ModelOccurrence
 segmentModel identifier =

@@ -63,7 +63,8 @@ consumeScopeDefect defect =
 
 consumeScope ::
      ModelIdentityIndex
+  -> ModelOccurrence
   -> [OccurrenceIdentity]
   -> Either (NonEmpty SelectedViewScopeDefect) ()
-consumeScope index identities =
-  withSelectedViewScope index identities (\_ -> ())
+consumeScope index selectedView identities =
+  withSelectedViewScope index selectedView identities (\_ -> ())

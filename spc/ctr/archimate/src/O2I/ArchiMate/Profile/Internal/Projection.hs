@@ -24,7 +24,9 @@ import O2I.ArchiMate.Profile.Internal.Closure
   , closedViewDisplayedOccurrencesValue
   , closedViewDocumentValue
   , closedViewGraphOccurrencesValue
+  , closedViewIdentityValue
   , closedViewIndexValue
+  , closedViewOccurrenceValue
   , closedViewQualificationOccurrencesValue
   , closedViewQualificationProposalOccurrencesValue
   , closedViewUniverseValue
@@ -254,6 +256,7 @@ data ProfileMappingProvenance
 data ProfileProjection = ProfileProjection
   { profileStructureProjectionValue :: !StructureProjection
   , profileModelIdentityOccurrencesValue :: ![ModelOccurrence]
+  , profileSelectedViewValue :: !ModelOccurrence
   , profileSelectedOccurrencesValue :: ![OccurrenceIdentity]
   , profileClassificationProvenanceValue :: ![ClassificationProvenance]
   , profileMappingProvenanceValue :: ![ProfileMappingProvenance]
@@ -456,43 +459,51 @@ propertyCardinalityMappingProvenance mappingId owner occurrence =
 
 projectClosedProfile :: ClosedView -> ProfileProjectionAssessment
 projectClosedProfile closed =
-  case NonEmpty.nonEmpty contractFailures of
-    Just failures -> ProfileContractFailed failures
-    Nothing ->
-      case NonEmpty.nonEmpty modelDefects of
-        Just defects -> ProfileRejected defects
+  case selectedViewModelOccurrence closed of
+    Left selectedViewFailure ->
+      ProfileContractFailed
+        (NonEmpty.fromList
+           (sortOn contractFailureOrder (selectedViewFailure : contractFailures)))
+    Right selectedView ->
+      case NonEmpty.nonEmpty contractFailures of
+        Just failures -> ProfileContractFailed failures
         Nothing ->
-          ProfileAccepted
-            ProfileProjection
-              { profileStructureProjectionValue =
-                  structureProjection
-                    carriers
-                    contextualizations
-                    relations
-                    propositions
-                    incidences
-              , profileModelIdentityOccurrencesValue =
-                  mapMaybe
-                    canonicalModelOccurrence
-                    (canonicalIdentityDomainValue
-                       (closedViewDocumentValue closed))
-              , profileSelectedOccurrencesValue =
-                  mapMaybe
-                    (either (const Nothing) Just
-                       . canonicalOccurrenceIdentityValue)
-                    (Set.toAscList (graph `Set.intersection` recordOccurrences))
-              , profileClassificationProvenanceValue =
-                  closedViewClassificationProvenanceValue closed
-              , profileMappingProvenanceValue =
-                  sortOn
-                    mappingProvenanceOccurrence
-                    (carrierMappingProvenance
-                       ++ relationMappingProvenance
-                       ++ structuredConstructionProvenance
-                       ++ qualificationMappingProvenance)
-              , profileQualificationProposalsValue = proposals
-              , profileInvariantEvidenceValue = invariantEvidence
-              }
+          case NonEmpty.nonEmpty modelDefects of
+            Just defects -> ProfileRejected defects
+            Nothing ->
+              ProfileAccepted
+                ProfileProjection
+                  { profileStructureProjectionValue =
+                      structureProjection
+                        carriers
+                        contextualizations
+                        relations
+                        propositions
+                        incidences
+                  , profileModelIdentityOccurrencesValue =
+                      mapMaybe
+                        canonicalModelOccurrence
+                        (canonicalIdentityDomainValue
+                           (closedViewDocumentValue closed))
+                  , profileSelectedViewValue = selectedView
+                  , profileSelectedOccurrencesValue =
+                      mapMaybe
+                        (either (const Nothing) Just
+                           . canonicalOccurrenceIdentityValue)
+                        (Set.toAscList
+                           (graph `Set.intersection` recordOccurrences))
+                  , profileClassificationProvenanceValue =
+                      closedViewClassificationProvenanceValue closed
+                  , profileMappingProvenanceValue =
+                      sortOn
+                        mappingProvenanceOccurrence
+                        (carrierMappingProvenance
+                           ++ relationMappingProvenance
+                           ++ structuredConstructionProvenance
+                           ++ qualificationMappingProvenance)
+                  , profileQualificationProposalsValue = proposals
+                  , profileInvariantEvidenceValue = invariantEvidence
+                  }
   where
     projectionIndex = closedViewIndexValue closed
     graph = closedViewGraphOccurrencesValue closed
@@ -621,6 +632,24 @@ canonicalModelOccurrence record =
     (Right occurrence, IdentityResolved _ identifier) ->
       Just (modelOccurrence occurrence identifier)
     _ -> Nothing
+
+selectedViewModelOccurrence ::
+     ClosedView -> Either ProfileContractFailure ModelOccurrence
+selectedViewModelOccurrence closed =
+  case ( canonicalOccurrenceIdentityValue (closedViewOccurrenceValue closed)
+       , closedViewIdentityValue closed) of
+    (Left identityDefect, _) ->
+      Left
+        (ImpossibleOccurrenceIdentity
+           (closedViewOccurrenceValue closed)
+           (Text.pack (show identityDefect)))
+    (Right occurrence, IdentityResolved _ identifier) ->
+      Right (modelOccurrence occurrence identifier)
+    (Right _, _) ->
+      Left
+        (MissingCoreContractBinding
+           "selected-view-identity-resolved"
+           (closedViewOccurrenceValue closed))
 
 -- | Apply selected-Profile rules only after exact Notation conformance.
 assessSelectedViewValue ::

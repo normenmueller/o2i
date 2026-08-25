@@ -39,6 +39,7 @@ import O2I.Core.Graph.Commitment (Commitment)
 import O2I.Core.Graph.Observation.Internal
 import O2I.Core.Identity
   ( ModelIdentityIndex
+  , ModelOccurrence
   , OccurrenceIdentity
   , SelectedViewScope
   , SelectedViewScopeDefect
@@ -172,12 +173,13 @@ graphBuildIndexEntries (GraphObservationBuildWork _ _ _ entries) = entries
 -- scoped observation can exist until selected membership is valid.
 withGraphObservationIndex ::
      ModelIdentityIndex
+  -> ModelOccurrence
   -> [OccurrenceIdentity]
   -> [GraphObservationInput]
   -> (forall scope. SelectedViewScope scope -> GraphObservationIndex scope -> result)
   -> Either (NonEmpty GraphObservationIndexDefect) result
-withGraphObservationIndex modelIndex selected inputs action =
-  case withSelectedViewScope modelIndex selected buildWithinScope of
+withGraphObservationIndex modelIndex selectedView selected inputs action =
+  case withSelectedViewScope modelIndex selectedView selected buildWithinScope of
     Left defects -> Left (SelectedViewScopeRejected <$> defects)
     Right result -> result
   where

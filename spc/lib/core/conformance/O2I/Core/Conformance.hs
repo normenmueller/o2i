@@ -160,9 +160,11 @@ runSemanticsSource ::
   -> Either CoreConformanceFailure [result]
 runSemanticsSource consume source = do
   let occurrences = SemanticsSource.semanticSourceOccurrences source
-  index <- requireIndex occurrences
+  selectedView <- requireSelectedViewSubject
+  index <- requireIndex (selectedView : occurrences)
   runWithStructureScope
     index
+    selectedView
     (map modelOccurrenceIdentity occurrences)
     (\scope ->
        case assessStructure
@@ -206,6 +208,7 @@ runSemanticsSource consume source = do
 
 data BindingSource provenance = BindingSource
   { bindingSourceIndex :: !ModelIdentityIndex
+  , bindingSourceSelectedView :: !ModelOccurrence
   , bindingSourceSelected :: ![OccurrenceIdentity]
   , bindingSourceProjection :: !StructureProjection
   , bindingSourceInput :: !(SupplementalInputSet provenance)
@@ -268,7 +271,8 @@ bindingSource ::
   -> Text
   -> Either CoreConformanceFailure (BindingSource provenance)
 bindingSource provenance occurrences selected projection identityValue = do
-  index <- requireIndex occurrences
+  selectedView <- requireSelectedViewSubject
+  index <- requireIndex (selectedView : occurrences)
   input <-
     case decodeSupplementalInput
            provenance
@@ -280,7 +284,7 @@ bindingSource provenance occurrences selected projection identityValue = do
     case assessSupplementalInputSet [input] of
       Left defects -> Left (InvalidSupplementalSource defects)
       Right accepted -> Right accepted
-  Right (BindingSource index selected projection inputSet)
+  Right (BindingSource index selectedView selected projection inputSet)
 
 runBindingSource ::
      (forall scope. SupplementalBinding scope provenance -> SupplementalBindingDiagnosticEvidence
@@ -291,6 +295,7 @@ runBindingSource ::
 runBindingSource consume source =
   runWithStructureScope
     (bindingSourceIndex source)
+    (bindingSourceSelectedView source)
     (bindingSourceSelected source)
     (\scope ->
        case assessStructure scope (bindingSourceProjection source) of
@@ -335,6 +340,7 @@ runStructureSource ::
 runStructureSource fixture consume projection selected =
   runWithStructureScope
     (fixtureIdentityIndex fixture)
+    (fixtureSelectedView fixture)
     selected
     (\scope ->
        case assessStructure scope projection of
@@ -353,6 +359,7 @@ runDuplicateIdentitySource ::
 runDuplicateIdentitySource fixture consume =
   runWithStructureScope
     (fixtureDuplicateIdentityIndex fixture)
+    (fixtureSelectedView fixture)
     (canonicalSelected fixture)
     (\scope ->
        case assessStructure scope (canonicalProjection fixture) of
@@ -366,13 +373,14 @@ runDuplicateIdentitySource fixture consume =
 
 runWithStructureScope ::
      ModelIdentityIndex
+  -> ModelOccurrence
   -> [OccurrenceIdentity]
   -> (forall scope. SelectedViewScope scope -> Either
                                                  CoreConformanceFailure
                                                  result)
   -> Either CoreConformanceFailure result
-runWithStructureScope index selected consume =
-  case withSelectedViewScope index selected consume of
+runWithStructureScope index selectedView selected consume =
+  case withSelectedViewScope index selectedView selected consume of
     Left defects -> Left (InvalidSelectedScopeSource defects)
     Right result -> result
 
@@ -400,6 +408,7 @@ data Fixture = Fixture
   , fixtureIncidenceParticipantA :: !OccurrenceIdentity
   , fixtureIncidenceParticipantB :: !OccurrenceIdentity
   , fixtureIncidenceTarget :: !OccurrenceIdentity
+  , fixtureSelectedView :: !ModelOccurrence
   , fixtureIdentityIndex :: !ModelIdentityIndex
   , fixtureDuplicateIdentityIndex :: !ModelIdentityIndex
   }
@@ -441,6 +450,7 @@ buildFixture = do
   incidenceParticipantA <- requireOccurrence "incidence-a"
   incidenceParticipantB <- requireOccurrence "incidence-b"
   incidenceTarget <- requireOccurrence "incidence-target"
+  selectedView <- requireSelectedViewSubject
   let occurrences =
         [ carrierA
         , carrierB
@@ -455,11 +465,12 @@ buildFixture = do
         , incidenceTarget
         ]
   modelOccurrences <- traverse distinctModelOccurrence occurrences
-  identityIndex <- requireIndex modelOccurrences
+  identityIndex <- requireIndex (selectedView : modelOccurrences)
   propositionIdentity <- requireModelIdentity "model-proposition"
   duplicateIdentityIndex <-
     requireIndex
-      (modelOccurrence propositionAlias propositionIdentity
+      (selectedView
+         : modelOccurrence propositionAlias propositionIdentity
          : filter
              ((/= propositionAlias) . modelOccurrenceIdentity)
              modelOccurrences)
@@ -488,6 +499,7 @@ buildFixture = do
       , fixtureIncidenceParticipantA = incidenceParticipantA
       , fixtureIncidenceParticipantB = incidenceParticipantB
       , fixtureIncidenceTarget = incidenceTarget
+      , fixtureSelectedView = selectedView
       , fixtureIdentityIndex = identityIndex
       , fixtureDuplicateIdentityIndex = duplicateIdentityIndex
       }
@@ -512,6 +524,12 @@ requireModelIdentity value =
   case modelIdentity value of
     Left _ -> Left (InvalidModelIdentitySource value)
     Right identity -> Right identity
+
+requireSelectedViewSubject :: Either CoreConformanceFailure ModelOccurrence
+requireSelectedViewSubject = do
+  occurrence <- requireOccurrence "selected-view"
+  identifier <- requireModelIdentity "selected-view-identity"
+  Right (modelOccurrence occurrence identifier)
 
 requireIndex ::
      [ModelOccurrence] -> Either CoreConformanceFailure ModelIdentityIndex

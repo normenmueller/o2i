@@ -40,7 +40,7 @@ import O2I.Semantics.SituatedNeed (assessSituatedNeeds)
 import O2I.Semantics.Strategy (assessStrategyFormulations)
 import O2I.Structure
 import qualified O2I.Structure.Index as StructureIndex
-import O2I.Structure.Internal (StructureAssessment(..))
+import O2I.Structure.Internal (StructureAssessment(..), wellFormedGraphIdentity)
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.HUnit (Assertion, (@?=), assertBool, assertFailure, testCase)
 
@@ -164,9 +164,13 @@ aggregateAccepted =
     Public.semanticDisposition assessment @?= Public.SemanticAccepted
     length (publicSemanticEvidence assessment) @?= 0
     Public.semanticCandidateOccurrences assessment @?= []
+    wellFormedGraphIdentity graph @?= selectedViewIdentity
+    semanticIndexGraphIdentity (buildSemanticIndex graph inputs)
+      @?= selectedViewIdentity
     case Public.acceptedSemanticModel assessment of
       Nothing -> assertFailure "accepted assessment did not retain its proof"
       Just model -> do
+        semanticallyValidModelGraphIdentity model @?= selectedViewIdentity
         Public.semanticallyValidSituatedNeeds model @?= []
         map
           Public.qualificationEligibleStrategyIdentity
@@ -1225,12 +1229,16 @@ runBindingScenario ::
   -> (forall scope. WellFormedGraph scope -> SupplementalBinding scope () -> result)
   -> Either String result
 runBindingScenario occurrences projection payloads inspect = do
-  identityIndex <- mapLeft "identity" (buildModelIdentityIndex occurrences)
+  identityIndex <-
+    mapLeft
+      "identity"
+      (buildModelIdentityIndex (selectedViewSubject : occurrences))
   selected <-
     mapLeft
       "selected View"
       (withSelectedViewScope
          identityIndex
+         selectedViewSubject
          (map modelOccurrenceIdentity occurrences)
          (\scope -> assessScoped scope))
   selected
@@ -2291,6 +2299,13 @@ segmentModels =
        modelOccurrence
          (occurrenceId identifier)
          (modelId ("segment-" ++ identifier)))
+
+selectedViewSubject :: ModelOccurrence
+selectedViewSubject =
+  modelOccurrence (occurrenceId "selected-view") selectedViewIdentity
+
+selectedViewIdentity :: ModelIdentity
+selectedViewIdentity = modelId "selected-view-identity"
 
 contextCategory, primitiveCategory, situationAnchorCategory ::
      CoreCarrierCategory

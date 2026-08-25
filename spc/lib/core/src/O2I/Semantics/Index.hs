@@ -9,6 +9,7 @@
 module O2I.Semantics.Index
   ( SemanticIndex
   , buildSemanticIndex
+  , semanticIndexGraphIdentity
   , indexedCarriers
   , carrierAt
   , occurrencesForModelIdentity
@@ -70,12 +71,14 @@ import O2I.Structure
   , wellFormedRelations
   , wellFormedStructuredPropositions
   )
+import O2I.Structure.Internal (wellFormedGraphIdentity)
 
 type role SemanticIndex nominal
 
 -- | Fixed indexes required by Core-owned semantic rules.
 data SemanticIndex scope = SemanticIndex
-  { indexCarriers :: ![CarrierObservation scope]
+  { indexGraphIdentity :: !ModelIdentity
+  , indexCarriers :: ![CarrierObservation scope]
   , indexCarrierByOccurrence :: !(Map
                                     OccurrenceIdentity
                                     (CarrierObservation scope))
@@ -113,7 +116,8 @@ buildSemanticIndex ::
   -> SemanticIndex scope
 buildSemanticIndex graph boundInputs@(BoundSupplementalInputs inputSet _) =
   SemanticIndex
-    { indexCarriers = carriers
+    { indexGraphIdentity = wellFormedGraphIdentity graph
+    , indexCarriers = carriers
     , indexCarrierByOccurrence =
         Map.fromList
           [(carrierOccurrenceIdentity carrier, carrier) | carrier <- carriers]
@@ -176,6 +180,10 @@ buildSemanticIndex graph boundInputs@(BoundSupplementalInputs inputSet _) =
     carriers = wellFormedCarriers graph
     contextualizations = wellFormedContextualizations graph
     relations = wellFormedRelations graph
+
+-- | Project the selected View identity retained by this stage index.
+semanticIndexGraphIdentity :: SemanticIndex scope -> ModelIdentity
+semanticIndexGraphIdentity = indexGraphIdentity
 
 indexedCarriers :: SemanticIndex scope -> [CarrierObservation scope]
 indexedCarriers = indexCarriers

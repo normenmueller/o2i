@@ -34,6 +34,7 @@ module O2I.Semantics.Internal
   , QualificationEligibleStrategy(..)
   , ValidatedCollectiveStrategyRealization(..)
   , SemanticallyValidModel(..)
+  , semanticallyValidModelGraphIdentity
   , SemanticResults(..)
   , SemanticAssessment(..)
   ) where
@@ -47,6 +48,7 @@ import O2I.Core.Contract.Internal (CoreRuleId(..))
 import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
 import O2I.Input.Internal.Types (CollectiveFitInput, StrategyFormulationInput)
 import O2I.Structure (WellFormedGraph)
+import O2I.Structure.Internal (wellFormedGraphIdentity)
 
 -- | Existential projection of one generated schema-indexed semantic rule.
 newtype SemanticRule =
@@ -343,6 +345,12 @@ data SemanticallyValidModel scope = SemanticallyValidModel
   , semanticModelCollectiveRealizations :: ![ValidatedCollectiveStrategyRealization
                                                scope]
   }
+
+-- | Project the exact selected View identity from the retained proof spine.
+semanticallyValidModelGraphIdentity ::
+     SemanticallyValidModel scope -> ModelIdentity
+semanticallyValidModelGraphIdentity =
+  wellFormedGraphIdentity . semanticModelGraph
 
 instance Eq (SemanticallyValidModel scope) where
   left == right =
