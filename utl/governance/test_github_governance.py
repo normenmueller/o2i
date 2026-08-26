@@ -378,12 +378,34 @@ class GitHubGovernanceContractTests(unittest.TestCase):
                 self.assertIn(term, behavior)
         self.assertIn(".ai4x/local/\n", read(GITIGNORE))
 
-    def test_issue_82_handoff_preserves_independent_issue_52(self) -> None:
+    def test_normal_session_continuity_is_prompt_free_and_durable(self) -> None:
+        behavior = read(BEHAVIOR)
+        for term in (
+            "# Normal Session Continuity",
+            "any ordinary greeting",
+            "prompt carries no work state",
+            "requires no path, digest, snapshot locator, or handoff payload",
+            "durable repository-owned sources",
+            "observed tracked Git branch, revision, and status",
+            "GitHub Issue and Project facts",
+            "Conversation transcripts, prior-session runtime context",
+            "neither authority nor required continuity input",
+            "missing, contradictory, or unverifiable",
+            "ask the Product Owner instead of guessing",
+            "exceptional recovery",
+            "never routine startup",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, behavior)
+
+    def test_routine_handoff_preserves_independent_issue_52(self) -> None:
         content = read(STATE)
-        self.assertIn("- Current Issue: `#82`", content)
+        self.assertIn("- Current Issue: `NONE`", content)
+        self.assertIn("Issue-free Routine maintenance", content)
         self.assertIn("independent #52 branch", content)
         self.assertIn("remain separate, preserved, and untouched", content)
-        self.assertIn("Product artifacts remain outside the candidate", content)
+        self.assertIn("neither activates nor changes them", content)
+        self.assertIn("d6f445b2f22ad8a5b0ced12f88932babb9c2d4c0", content)
 
     def test_integrity_evidence_is_exception_based(self) -> None:
         agent = read(GOVERNANCE)

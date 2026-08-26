@@ -10,7 +10,8 @@ repository.
    `git status --short --branch --untracked-files=all`; otherwise record Git
    metadata as unavailable and continue from the repository files.
 3. If `.ai4x/local/ACTIVE.md` is a non-symlink regular file, evaluate its optional local active-checkout pointer under the contract below before selecting the return point.
-4. Read `.ai4x/TEAM.md`, select the capabilities and role separation required by the actual task and risk, then read only the applicable task contracts:
+4. Reconstruct and revalidate the current handoff under Normal Session Continuity below.
+5. Read `.ai4x/TEAM.md`, select the capabilities and role separation required by the actual task and risk, then read only the applicable task contracts:
 
 | Task class | Required Contract |
 | --- | --- |
@@ -33,6 +34,16 @@ contracts.
 Resolve the path relative to the checkout root. Activate it only after Git metadata proves that it uses the same common Git directory, its observed branch equals `Expected branch`, and its own `AGENTS.md`, `.ai4x/CONTEXT.md`, and `.ai4x/STATE.md` are readable. Then rerun the startup protocol from that exact checkout and treat its tracked state plus observed Git and remote facts as authoritative. Never checkout, reset, mutate, or select a target merely because the pointer names it.
 
 If the pointer is absent, a symlink, not a regular file, absolute, malformed, stale, or unverifiable, report that fact and continue from the current checkout's tracked state. The repository remains fully operational without the pointer, and a local pointer never overrides an Issue, Project, tracked handoff, or observed repository fact.
+
+# Normal Session Continuity
+
+A fresh primary-agent session may begin with any ordinary greeting. The prompt carries no work state and requires no path, digest, snapshot locator, or handoff payload; startup reconstructs the return point from durable repository-owned sources.
+
+Reconcile the exact checkout's `.ai4x` memory, observed tracked Git branch, revision, and status, any validated local active-checkout pointer, and repository-native GitHub Issue and Project facts when they are available and material to the next action. Tracked state is a handoff, not permission to ignore newer observed facts or the owning remote authority.
+
+Conversation transcripts, prior-session runtime context, and model recollection are neither authority nor required continuity input. If a durable source required for the next action is missing, contradictory, or unverifiable, stop at the safe boundary, mark the uncertainty, and ask the Product Owner instead of guessing or synthesizing a return point.
+
+A long transport snapshot or payload-bearing startup prompt is exceptional recovery for a return point that could not be durably materialized before interruption. It is never routine startup and never overrides repository-owned authority.
 
 # Referent Role
 
