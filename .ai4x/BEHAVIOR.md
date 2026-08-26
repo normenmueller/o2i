@@ -43,6 +43,16 @@ Reconcile the exact checkout's `.ai4x` memory, observed tracked Git branch, revi
 
 Conversation transcripts, prior-session runtime context, and model recollection are neither authority nor required continuity input. If a durable source required for the next action is missing, contradictory, or unverifiable, stop at the safe boundary, mark the uncertainty, and ask the Product Owner instead of guessing or synthesizing a return point.
 
+Only after the return point is durably materialized, all required work and review activities are complete, and no delegated or background work remains may the primary Gertrud recommend completing a routine cold-start transition. Derive the repository root from the current checkout; never place an absolute host path in the instructions.
+
+At that boundary, give the Product Owner exactly these three actionable steps and no additional transition instruction. Render the wording of all three actions in the Product Owner's language while keeping `/delete`, `resume`, and `Hi Gertrud, weiter geht’s!` literal:
+
+1. Enter `/delete` and confirm.
+2. Start a fresh Codex CLI session without `resume` in this repository root.
+3. Say `Hi Gertrud, weiter geht’s!`.
+
+`/delete` permanently removes the completed current session and its descendant sessions. Never recommend it before the closure conditions above hold or when transcript retention is required. The example greeting carries no state and may be replaced by any ordinary greeting; routine transitions provide no path, digest, snapshot locator, or handoff payload.
+
 A long transport snapshot or payload-bearing startup prompt is exceptional recovery for a return point that could not be durably materialized before interruption. It is never routine startup and never overrides repository-owned authority.
 
 # Referent Role
