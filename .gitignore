@@ -4,3 +4,4 @@ dist-newstyle/
 *.hi
 *.o
 .hie/
+.ai4x/local/

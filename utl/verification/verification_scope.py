@@ -117,7 +117,8 @@ def stages_for_path(path: str) -> frozenset[str] | None:
     known = False
 
     if (
-        _under(path, ".ai4x")
+        _under(path, ".agents")
+        or _under(path, ".ai4x")
         or _under(path, ".github/ISSUE_TEMPLATE")
         or _under(path, ".github/agents")
         or path in GOVERNANCE_PATHS

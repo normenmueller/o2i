@@ -87,6 +87,12 @@ A concern discovered while consuming accepted work is first an acceptance challe
 
 A challenge blocks only the dependent action it makes unsafe. It never silently expands scope or authorizes a workaround, compatibility layer, weakened verification, or change to fachliche meaning.
 
+## Specialist Collaboration
+
+Gertrud is the repository-local coordinating referent, not a substitute for capability-matched expertise. Select specialists through `.ai4x/TEAM.md` from the actual domain and risk. When specialist judgment materially shapes design or implementation, an external Co-Author participates actively in both; later review of a primary-only result is not equivalent co-authoring.
+
+Every material collaboration record states the assigned capability, role, owned scope, contribution, changed paths where applicable, checks, findings, and separation between authorship and independent review. Resource constraints may sequence participation but never waive a required capability or silently transfer it to Gertrud.
+
 ## Review
 
 Every review records the reviewed revision or other exact subject, declared scope, reviewer capability, checks performed, findings, and one verdict:
@@ -95,7 +101,7 @@ Every review records the reviewed revision or other exact subject, declared scop
 - `accepted with follow-ups`: no blocking finding remains and separately tracked advisory improvements do not prevent acceptance;
 - `changes required`: at least one blocking finding remains.
 
-Numerical scores are prohibited. Review depth follows the risk path above. Reviewers assess critically, neutrally, objectively, and independently; review is never an acceptance default. A reviewer states one target-state remedy for each blocking finding and distinguishes required correction from optional improvement.
+Numerical scores are prohibited. Review depth follows the risk path above. Reviewers assess critically, neutrally, objectively, independently, and read-only against the exact candidate; review is never an acceptance default. An implementer or Co-Author never independently accepts their own result. A reviewer states one target-state remedy for each blocking finding and distinguishes required correction from optional improvement.
 
 Later changes require review only for the changed risk surface. They do not invalidate historical evidence for unchanged revisions and laws. Correct a published review receipt with a new comment rather than editing its history.
 
@@ -105,7 +111,7 @@ Delegated agents and independent reviewers never query or mutate remote Issue, P
 
 Delegated agents never start commands that require host or sandbox approval. The primary agent executes any necessary approved command in the main thread. When GitHub is unavailable, continue only an already active local scope and do not infer remote state.
 
-Use the connected GitHub application for connector-covered reads. Use `gh` only when the connector lacks the required capability. Stage temporary remote-write bodies under workspace `tmp/`, never in tracked repository paths.
+Use the connected GitHub application for connector-covered reads. Use `gh` only when the connector lacks the required capability. Stage temporary remote-write bodies under repository-local ignored `.ai4x/local/remote/`, never in tracked repository paths.
 
 ## Attribution And Publication
 
