@@ -10,6 +10,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 BEHAVIOR = ROOT / ".ai4x/BEHAVIOR.md"
 CONTEXT = ROOT / ".ai4x/CONTEXT.md"
+TEAM = ROOT / ".ai4x/TEAM.md"
 GOVERNANCE = ROOT / ".ai4x/governance/guidelines.md"
 STATE = ROOT / ".ai4x/STATE.md"
 CONTRIBUTING = ROOT / "CONTRIBUTING.md"
@@ -19,16 +20,42 @@ STRATEGY_REVIEW = ROOT / ".ai4x/operations/strategy-review.md"
 FRAMEWORK_FORM = ROOT / ".github/ISSUE_TEMPLATE/framework-change.yml"
 MAINTENANCE_FORM = ROOT / ".github/ISSUE_TEMPLATE/maintenance.yml"
 FORM_CONFIG = ROOT / ".github/ISSUE_TEMPLATE/config.yml"
+GITIGNORE = ROOT / ".gitignore"
+SKILLS = {
+    "o2i-formalization": (
+        ROOT / ".agents/skills/o2i-formalization/SKILL.md",
+        ".ai4x/operations/haskell-authoring.md",
+    ),
+    "o2i-modeling": (
+        ROOT / ".agents/skills/o2i-modeling/SKILL.md",
+        ".ai4x/operations/modeling.md",
+    ),
+    "o2i-strategy": (
+        ROOT / ".agents/skills/o2i-strategy/SKILL.md",
+        ".ai4x/operations/strategy-review.md",
+    ),
+    "o2i-publication": (
+        ROOT / ".agents/skills/o2i-publication/SKILL.md",
+        ".ai4x/operations/publication.md",
+    ),
+    "o2i-independent-review": (
+        ROOT / ".agents/skills/o2i-independent-review/SKILL.md",
+        ".ai4x/governance/guidelines.md",
+    ),
+}
+AGENT_PROFILES = tuple(sorted((ROOT / ".github/agents").glob("*.agent.md")))
 REVIEW_CONTRACTS = (GOVERNANCE, CONTRIBUTING, HASKELL_REVIEW, STRATEGY_REVIEW)
 PUBLIC_CONTRACTS = (
     BEHAVIOR,
     CONTEXT,
+    TEAM,
     GOVERNANCE,
     STATE,
     CONTRIBUTING,
     HASKELL_AUTHORING,
     HASKELL_REVIEW,
     STRATEGY_REVIEW,
+    *(path for path, _ in SKILLS.values()),
 )
 
 
@@ -56,15 +83,19 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         for path in (
             BEHAVIOR,
             CONTEXT,
+            TEAM,
             GOVERNANCE,
             STATE,
             CONTRIBUTING,
+            GITIGNORE,
             HASKELL_AUTHORING,
             HASKELL_REVIEW,
             STRATEGY_REVIEW,
             FRAMEWORK_FORM,
             MAINTENANCE_FORM,
             FORM_CONFIG,
+            *(path for path, _ in SKILLS.values()),
+            *AGENT_PROFILES,
         ):
             with self.subTest(path=path):
                 self.assertTrue(path.is_file())
@@ -234,11 +265,108 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         self.assertIn("Numerical scores are prohibited", read(GOVERNANCE))
         self.assertIn("Numerische Bewertungen entfallen", read(CONTRIBUTING))
 
-    def test_coauthoring_follows_material_complexity(self) -> None:
-        content = " ".join(read(HASKELL_AUTHORING).split())
-        self.assertIn("Significant or Protected change", content)
-        self.assertIn("materially benefits from a second active author", content)
-        self.assertIn("alone never makes co-authoring mandatory", content)
+    def test_coauthoring_follows_material_specialist_judgment(self) -> None:
+        behavior = " ".join(read(BEHAVIOR).split())
+        team = " ".join(read(TEAM).split())
+        haskell = " ".join(read(HASKELL_AUTHORING).split())
+        for content in (behavior, team, haskell):
+            with self.subTest(contract=content[:40]):
+                self.assertIn("specialist judgment materially shapes", content)
+                self.assertIn("design and implementation", content)
+        self.assertIn("alone never makes co-authoring mandatory", haskell)
+        self.assertIn("never independently accepts", behavior)
+        self.assertIn("never changes role to independently accept", team)
+
+    def test_gertrud_and_sessions_are_repository_local(self) -> None:
+        behavior = read(BEHAVIOR)
+        for term in (
+            "Top-Quality referent",
+            "she is not a universal domain specialist",
+            "sole human participant",
+            "own repository-local Gertrud instance",
+            "No global or cross-project Gertrud instance exists",
+            "share no runtime context, memory, work state",
+            "Never discover authority, state, or tools through a neighboring checkout",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, behavior)
+
+    def test_team_routes_capabilities_and_records_role_separation(self) -> None:
+        content = read(TEAM)
+        for term in (
+            "# Capability Routing",
+            "O2I metamodel, formal methods, type theory",
+            "TOGAF/ArchiMate expertise",
+            "strategy, performance measurement, source criticism",
+            "technical publication",
+            "repository governance, agentic-workflow safety",
+            "assigned capability and role",
+            "authorship, implementation, and independent review",
+            "stop at the safe boundary",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, content)
+
+    def test_repository_skills_are_lean_local_routers(self) -> None:
+        for name, (path, contract) in SKILLS.items():
+            content = read(path)
+            with self.subTest(skill=name):
+                frontmatter = re.match(
+                    r"\A---\nname: ([a-z0-9-]+)\ndescription: ([^\n]+)\n---\n",
+                    content,
+                )
+                self.assertIsNotNone(frontmatter)
+                self.assertEqual(name, frontmatter.group(1) if frontmatter else None)
+                self.assertEqual(name, path.parent.name)
+                self.assertIn(contract, content)
+                self.assertIn(".ai4x/TEAM.md", content)
+                self.assertLess(len(content.splitlines()), 25)
+
+    def test_agent_profiles_are_thin_and_role_specific(self) -> None:
+        expected = {
+            "o2i.agent.md",
+            "o2i-formalization-coauthor.agent.md",
+            "o2i-governance-coauthor.agent.md",
+            "o2i-independent-reviewer.agent.md",
+            "o2i-modeling-coauthor.agent.md",
+            "o2i-publication-coauthor.agent.md",
+            "o2i-strategy-coauthor.agent.md",
+        }
+        self.assertEqual(expected, {path.name for path in AGENT_PROFILES})
+        relative_link = re.compile(r"\]\(([^)#]+)")
+        for path in AGENT_PROFILES:
+            content = read(path)
+            with self.subTest(profile=path.name):
+                self.assertLess(len(content.splitlines()), 12)
+                for target in relative_link.findall(content):
+                    self.assertTrue((path.parent / target).resolve().is_relative_to(ROOT))
+                    self.assertTrue((path.parent / target).resolve().is_file())
+                if "coauthor" in path.name:
+                    self.assertIn("Active Co-Author", content)
+                    self.assertIn("design and implementation", content)
+                    self.assertIn("never independently accept", content)
+                elif "reviewer" in path.name:
+                    self.assertIn("Read-only external reviewer", content)
+                    self.assertIn("did not author or implement", content)
+                    self.assertIn("never mutate", content)
+                else:
+                    self.assertIn("Gertrud instance", content)
+                    self.assertIn("never as a global agent", content)
+
+    def test_temporary_staging_is_local_and_ignored(self) -> None:
+        behavior = read(BEHAVIOR)
+        governance = read(GOVERNANCE)
+        self.assertIn(".ai4x/local/", behavior)
+        self.assertIn(".ai4x/local/remote/", governance)
+        self.assertNotIn("workspace `tmp/`", governance)
+        self.assertIn(".ai4x/local/\n", read(GITIGNORE))
+
+    def test_issue_82_handoff_preserves_independent_issue_52(self) -> None:
+        content = read(STATE)
+        self.assertIn("- Current Issue: `#82`", content)
+        self.assertIn("independent #52 branch", content)
+        self.assertIn("remain separate, preserved, and untouched", content)
+        self.assertIn("Product artifacts remain outside the candidate", content)
 
     def test_integrity_evidence_is_exception_based(self) -> None:
         agent = read(GOVERNANCE)
@@ -334,14 +462,18 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         for path in (
             BEHAVIOR,
             CONTEXT,
+            TEAM,
             GOVERNANCE,
             CONTRIBUTING,
+            GITIGNORE,
             HASKELL_AUTHORING,
             HASKELL_REVIEW,
             STRATEGY_REVIEW,
             FRAMEWORK_FORM,
             MAINTENANCE_FORM,
             FORM_CONFIG,
+            *(path for path, _ in SKILLS.values()),
+            *AGENT_PROFILES,
         ):
             with self.subTest(path=path):
                 content = read(path)

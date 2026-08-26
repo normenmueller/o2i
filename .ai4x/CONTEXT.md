@@ -96,7 +96,10 @@ repository Views and snapshots. It never validates O2I instances.
 - `spc/lib/adapter/amx/`: native AMX acquisition and Adapter implementation.
 - `spc/lib/inspection/`: legacy package awaiting atomic removal; never extend it or use it as target architecture.
 - `spc/cli/`: thin `o2i` CLI.
+- `.ai4x/TEAM.md`: repository-local capability routing and authorship/review separation for the O2I AI team.
 - `.ai4x/operations/`: task-specific execution and quality contracts.
+- `.agents/skills/`: lean repository skills that route matching work to the canonical local contracts without duplicating them.
+- `.github/agents/`: thin Copilot-compatible Gertrud, specialist Co-Author, and independent reviewer adapters.
 - GitHub Issues: authority for change contracts, material decisions, acceptance criteria, dependencies, independent reviews, and open or closed state; an explicit Product Owner request may directly authorize Routine work.
 - GitHub Project `O2I`: workflow-status and PO-ordering authority; no contract, acceptance, dependency, review, or closure authority.
 - `.ai4x/governance/guidelines.md`: normative agent-facing GitHub workflow and evidence contract; no backlog, project history, or fachliche semantics.

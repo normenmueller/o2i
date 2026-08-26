@@ -54,6 +54,10 @@ class VerificationPathMatrixTests(unittest.TestCase):
 
     def test_representative_path_matrix(self) -> None:
         cases = {
+            ".agents/skills/o2i-formalization/SKILL.md": {
+                "licensing",
+                "governance",
+            },
             ".ai4x/STATE.md": {"licensing", "governance"},
             ".ai4x/operations/haskell-authoring.md": {
                 "licensing",

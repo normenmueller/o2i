@@ -57,17 +57,12 @@ adapters, or Haddock.
 
 # Co-Authoring
 
-- Use external co-authoring when a Significant or Protected change has design
-  or implementation complexity that materially benefits from a second active
-  author. Haskell, type design, or a public API alone never makes co-authoring
-  mandatory.
-- The co-author role combines metamodel, formal-methods, type-theory, and
-  idiomatic Haskell expertise during design and implementation.
+- Use an external Co-Author whenever specialist judgment materially shapes design or implementation. Haskell, type design, or a public API alone never makes co-authoring mandatory; material reliance on specialist judgment does.
+- The Co-Author contributes actively during both design and implementation and combines the exact metamodel, formal-methods, type-theory, idiomatic Haskell, API, or performance capabilities required by the assigned scope.
 - Assign small semantically coherent packages with explicit write scope and one
   independently verifiable result.
-- Each handoff records target contract, owned paths, changed paths, checks,
-  unresolved findings, and whether commit permission exists. Record its current
-  package and next action in `.ai4x/STATE.md`.
+- Each handoff records capability, role, target contract, owned paths, contribution, changed paths, checks, unresolved findings, authorship-versus-review separation, and whether commit permission exists. Record its current package and next action in `.ai4x/STATE.md`.
+- A Co-Author or implementer never independently accepts their own candidate.
 - Preserve concurrent work. Do not permit commits or model edits unless the
   assignment explicitly authorizes them.
 

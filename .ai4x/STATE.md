@@ -1,47 +1,45 @@
 # Handoff
 
-- Observed: 2026-08-24 CEST
+- Observed: 2026-08-26 CEST
 - Work status: `ACTIVE`
-- Current Issue: `#67`
-- Current node: `pr-68-po-review`
+- Current Issue: `#82`
+- Current node: `local-commit-ready`
 
 # Objective
 
-Integrate the accepted #67 prepared-Diagnostic and supplemental-staging owner correction onto the published Foundation baseline from PR #69 without changing Core, Profile semantics, fachliche meaning, model content, or Validate behavior.
+Make O2I's repository-local agent environment independently operational from an isolated checkout by establishing its own Gertrud referent, capability-routed AI team, active material Co-Authoring, independent exact-candidate review, local skills, and deterministic autonomy checks.
 
 # Authority
 
-- Issue #67 owns the three reproduced predecessor defects and natively blocks #51; PR #68 is its existing publication line.
-- The Product Owner authorized Issue creation, implementation, delegated independent review, push, PR publication, conditional merge after complete green evidence, closure, and subsequent #51 execution through its PR at `In review`.
-- PR #69 was squash-merged as `fb09fd83d70440d137bd6705d81bd38e0d461346`; Issues #46, #70, #71, #72, #74, #75, and #76 are closed and their Project items are `Done`.
+- The Product Owner approved the controlled separation of O2I into an autonomous project and authorized careful implementation without data loss.
+- Issue #82 owns this repository-governance candidate. Batch A is limited to agent roles, session isolation, capability routing, local skills and adapters, local staging, handoff, and deterministic governance verification.
+- The Product Owner subsequently authorized careful implementation of the independent O2I repository and its separate private continuity backup. This authorizes the reviewed local commit; remote publication, product semantics, model content, Haskell product code, and cleanup remain outside this batch.
+- The independent #52 branch and its repository-local return point remain separate, preserved, and untouched by this candidate.
 
 # Material Risk
 
-- The correction is `Significant`: it changes the shared public Operation Diagnostic, Adapter-owner, machine-schema, and staging contract.
-- `o2i-core`, Core rules and contracts, Profile mapping, fachliche semantics, Validate result reduction, CLI behavior, and model files are hard non-goals. Any required change to one of those boundaries stops execution for Product Owner direction.
-- Notation evidence must remain lossless and statically bound to its Adapter rule and one prepared authority; supplemental decode and set assessment must precede Structure, and binding must follow Structure exactly once.
-- The former #67 and published PR #68 branches had different commit histories but the identical tree `eed9642459cb9988507d48655cf15a23dcf615a5`; only the reviewed product commit was reapplied to the new published basis. Historical candidate architecture remains evidence, not authority.
+- This is a Protected repository-governance change because it determines future agent authority, collaboration, and review separation.
+- Autonomy must not create a global Gertrud, shared runtime memory, foreign repository dependency, absolute host path, or duplicated fachliche authority.
+- A Co-Author is participating in design and implementation. Acceptance requires an external independent reviewer of the exact candidate; authors and implementers cannot self-accept.
 
 # Verification
 
-- Exact published integration base: `fb09fd83d70440d137bd6705d81bd38e0d461346`.
-- Previously accepted #67 publication revision: `0a4086cdcccc192fb0aadd6759293b6047eb97e6`; its independent verdict was `accepted` with no blocking finding and no advisory follow-up.
-- Fresh post-#69 product integration subject: `a95b3d40115bd7a285231edc0c9b65e17683611c`; the pre-integration merge analysis exposed only the mutable `.ai4x/STATE.md` coordination conflict and no product-code conflict.
-- The current-basis Foundation gate initially rejected the PR #69 real-model checker because it still consumed the intentionally removed broad Owner-binding helper. The Haskell/API Co-Author corrected only that AMX test checker to admit supplemental inputs before Structure, carry the opaque generation through Structure, bind exactly once after `WellFormedGraph`, and eliminate only through the closed fold API; no public API, Core, Profile, model, White Paper, or fachliche semantic change was required.
-- Passed on the fresh integrated subject: Governance 21 plus 18 tests, model hygiene and all 70 model tests, licensing/REUSE 466/466, the complete Foundation gate including all 150 pre-build contracts, Profile 49, AMX 71, Operation 105, the real three-View repository checker, API contracts, 100% Haddock, four independently built and offline-tested source distributions, formatting, the complete White Paper gate through canonical `md2pdf`, `git diff --check`, and the workspace O2I boundary.
-- The first independent review of predecessor subject `3e28509ebe432e515482d420c37964b9c5eb0e0d` found one blocking performance defect: left-associated `NonEmpty` decode-failure accumulation performed quadratically for unbounded invalid supplemental inputs.
-- The Haskell/Performance Co-Author replaced the accumulation with total, order-preserving `sconcat` and added a non-timing-based 4096-input adversarial test for completeness and exact canonical order. Error accumulation is now O(D+n), and complete Admission remains O(n log n + D) because of the existing canonical sort.
-- The independent full re-review of exact product subject `a95b3d40115bd7a285231edc0c9b65e17683611c`, excluding mutable `.ai4x/STATE.md`, is `accepted` with no blocking finding and no advisory follow-up.
-- PR #68 run `32743451651` passed all five jobs on published branch revision `ed2f5eae9e1cd72963918f2a42986fb5434cebec`: Repository licensing, Change governance, Model contracts, Foundation-scoped Haskell specification, and White Paper. The Haskell job completed in 24 minutes 51 seconds.
+- Basis: published `trunk` revision `5a40df38c1897b06e1ac0a6c23988bca425ae498`.
+- Repository-autonomy and agent-governance Co-Author scope: `.ai4x`, `.agents`, `.github/agents`, `.gitignore`, `REUSE.toml`, and deterministic governance/verification routing.
+- Product artifacts remain outside the candidate.
+- Five repository skills pass the canonical skill validator. Governance 27, verification-scope 18, and licensing-assignment 10 tests pass; REUSE reports complete assignments for 494/494 files.
+- The canonical Governance, Licensing, and Foundation stages pass, including compiled contracts, complete Foundation build/tests, Candidate Views, API contracts, 100% Haddock, source distributions, and formatting. `git diff --check` passes.
+- Collaboration evidence: assigned capability `Repository Autonomy and Agent Governance`, role `external Design and Implementation Co-Author`; exact candidate is the uncommitted worktree delta from basis `5a40df38c1897b06e1ac0a6c23988bca425ae498` scoped to `.ai4x/{BEHAVIOR.md,CONTEXT.md,STATE.md,TEAM.md,governance/guidelines.md,operations/haskell-authoring.md}`, `.agents/skills/{o2i-formalization,o2i-modeling,o2i-strategy,o2i-publication,o2i-independent-review}/SKILL.md`, `.github/agents/{o2i,o2i-formalization-coauthor,o2i-governance-coauthor,o2i-independent-reviewer,o2i-modeling-coauthor,o2i-publication-coauthor,o2i-strategy-coauthor}.agent.md`, `.gitignore`, `REUSE.toml`, `utl/governance/test_github_governance.py`, and `utl/verification/{verification_scope.py,test_verification_scope.py}`; the Co-Author designed the repository-local Gertrud/session/team/role-separation contract and implemented its routing, skills, adapters, staging, licensing, and deterministic invariants; checks passed with Governance 27, Verification Scope 18, skills 5/5, Licensing and REUSE 494/494, the complete Foundation gate, and `git diff --check`; the Co-Author found no own blocking finding, while the separate independent reviewer found two blockers; authorship and implementation belong to this Co-Author, whereas acceptance belongs exclusively to the separate read-only independent reviewer.
+- Isolated-checkout evidence: the complete 23-file candidate was materialized in a fresh local clone outside the STR workspace at basis `5a40df38c1897b06e1ac0a6c23988bca425ae498`; its changed-file manifest matched the source candidate byte-for-byte, `AGENTS.md` resolved to the clone-local `.ai4x/BEHAVIOR.md`, Governance 27 and Verification Scope 18 tests passed, all five repository skills passed the canonical validator, and `git diff --check` passed without a parent-workspace memory or neighboring checkout.
+- The independent full re-review of the corrected 23-file candidate with manifest digest `852a6692064ff0cac21d80a90a88a16f6813b724e2456e06466d7ae176d7efd4` is `accepted` with no blocking finding and no advisory follow-up. The reviewer did not author or implement the candidate.
 
 # Next Action
 
-The Product Owner reviews PR #68 and, if satisfied, squash-merges it. The merge closes #67 through the PR closing reference; do not merge on the Product Owner's behalf.
+Create the authorized local commit, rerun the affected deterministic checks, and refresh the private continuity bundle. Do not push or otherwise publish without separate Product Owner authority.
 
 # Local Return Point
 
-- Branch: `fix/67-post-69-integration`.
-- Pull request to update after acceptance: `#68` on remote branch `fix/67-operation-owner-correction`.
-- Worktree: workspace-local `tmp/worktrees/o2i-67-post-69-integration`.
-- Accepted immutable product subject: `a95b3d40115bd7a285231edc0c9b65e17683611c`, with `.ai4x/STATE.md` excluded from the review scope.
-- Preserve the earlier #67 worktree and every unrelated local change until the new publication return point is durable; cleanup belongs exclusively to #73.
+- Branch: `chore/82-repository-autonomy`.
+- Basis: `5a40df38c1897b06e1ac0a6c23988bca425ae498`.
+- Dirty scope: Batch A governance and agent-autonomy files only.
+- No O2I product file or independent Issue branch belongs to this candidate.
