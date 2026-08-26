@@ -165,7 +165,7 @@ validateResultMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "f66ad7018516b0128969a2b47fe2ad5f23c88691065b667106de40db0392ba83"
+                "ca79209b0672cf96c680473f2f83dc25988cdfd94e2a5beb015ddeb88dbc1e77"
           }
     , machineSchemaVariantsValue =
         notationValidationAcceptedVariant
@@ -178,6 +178,31 @@ validateResultMachineSchema =
              , semanticsValidationRejectedVariant
              , semanticsValidationUnavailableVariant
              ]
+    }
+
+tracePrerequisiteRejectedVariant :: SchemaVariant
+tracePrerequisiteRejectedVariant = SchemaVariant "trace-prerequisite-rejected"
+
+traceRejectedVariant :: SchemaVariant
+traceRejectedVariant = SchemaVariant "trace-rejected"
+
+traceAcceptedVariant :: SchemaVariant
+traceAcceptedVariant = SchemaVariant "trace-accepted"
+
+traceResultMachineSchema :: MachineSchema
+traceResultMachineSchema =
+  MachineSchema
+    { machineSchemaAuthorityValue =
+        SchemaAuthority
+          { schemaAuthorityIdentityValue = SchemaIdentity "o2i.operation.trace"
+          , schemaAuthorityVersionValue = SchemaVersion 1
+          , schemaAuthorityDigestValue =
+              SchemaDigest
+                "facc62f1102bfb69d4a7c1201636da40525e61f66edd66fa41261e6f435847a1"
+          }
+    , machineSchemaVariantsValue =
+        tracePrerequisiteRejectedVariant
+          :| [traceRejectedVariant, traceAcceptedVariant]
     }
 
 diagnosticSchemaAuthority :: SchemaAuthority

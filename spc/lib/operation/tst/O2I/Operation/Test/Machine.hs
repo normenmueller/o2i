@@ -13,6 +13,7 @@ import O2I.Operation.Machine
 import O2I.Operation.Machine.Internal
   ( operationIdentityInventory
   , operationIdentityValue
+  , traceOperationIdentity
   , validateOperationIdentity
   , viewsOperationIdentity
   )
@@ -53,9 +54,12 @@ invalidDescriptor = do
 exactIdentities :: Assertion
 exactIdentities = do
   operationIdentityInventory
-    @?= [viewsOperationIdentity, validateOperationIdentity]
+    @?= [ viewsOperationIdentity
+        , validateOperationIdentity
+        , traceOperationIdentity
+        ]
   fmap operationIdentityValue operationIdentityInventory
-    @?= ["views", "validate"]
+    @?= ["views", "validate", "trace"]
 
 exactEnvelope :: Assertion
 exactEnvelope = do

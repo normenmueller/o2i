@@ -185,13 +185,15 @@ verify_haskell() {
     python3 -B -m unittest discover \
     -s spc/ctr/archimate/contract -p 'test_compile.py'
   python3 -B spc/lib/operation/contract/compile.py \
+    --core-companion spc/lib/core/semantics.json \
     --profile-companion spc/ctr/archimate/profile.json \
     --profile-diagnostic-inventory \
       spc/ctr/archimate/contract/generated/o2i.archimate-profile.diagnostic-evidence-v1.json \
     --core-owner-diagnostic-inventory \
       spc/lib/core/contract/generated/o2i.core.owner-diagnostic-evidence-v1.json \
     --check
-  O2I_PROFILE_COMPANION=spc/ctr/archimate/profile.json \
+  O2I_CORE_COMPANION=spc/lib/core/semantics.json \
+    O2I_PROFILE_COMPANION=spc/ctr/archimate/profile.json \
     python3 -B -m unittest discover \
     -s spc/lib/operation/contract -p 'test_compile.py'
 
@@ -404,13 +406,15 @@ verify_haskell() {
     -s "$source_project/$profile_root/contract" \
     -p 'test_compile.py'
   python3 -B "$source_project/$operation_root/contract/compile.py" \
+    --core-companion "$source_project/$core_root/semantics.json" \
     --profile-companion "$source_project/$profile_root/profile.json" \
     --profile-diagnostic-inventory \
       "$source_project/$profile_root/contract/generated/o2i.archimate-profile.diagnostic-evidence-v1.json" \
     --core-owner-diagnostic-inventory \
       "$source_project/$core_root/contract/generated/o2i.core.owner-diagnostic-evidence-v1.json" \
     --check
-  O2I_PROFILE_COMPANION="$source_project/$profile_root/profile.json" \
+  O2I_CORE_COMPANION="$source_project/$core_root/semantics.json" \
+    O2I_PROFILE_COMPANION="$source_project/$profile_root/profile.json" \
     O2I_PROFILE_DIAGNOSTIC_INVENTORY="$source_project/$profile_root/contract/generated/o2i.archimate-profile.diagnostic-evidence-v1.json" \
     O2I_CORE_OWNER_DIAGNOSTIC_INVENTORY="$source_project/$core_root/contract/generated/o2i.core.owner-diagnostic-evidence-v1.json" \
     python3 -B -m unittest discover \

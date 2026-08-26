@@ -67,6 +67,16 @@
         "semantics-validation-rejected",
         "semantics-validation-unavailable"
       ]
+    },
+    {
+      "name": "traceResult",
+      "identity": "o2i.operation.trace",
+      "version": 1,
+      "variants": [
+        "trace-prerequisite-rejected",
+        "trace-rejected",
+        "trace-accepted"
+      ]
     }
   ],
   "schemaFragments": [

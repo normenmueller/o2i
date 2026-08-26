@@ -8,6 +8,7 @@ module O2I.Operation.Machine.Internal
   , OperationIdentity
   , viewsOperationIdentity
   , validateOperationIdentity
+  , traceOperationIdentity
   , operationIdentityValue
   , operationIdentityInventory
   ) where
@@ -36,6 +37,7 @@ data ToolDescriptor = ToolDescriptor
 data OperationIdentity
   = ViewsOperationIdentity
   | ValidateOperationIdentity
+  | TraceOperationIdentity
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 -- | Exact identity of the profile-neutral View discovery operation.
@@ -46,12 +48,17 @@ viewsOperationIdentity = ViewsOperationIdentity
 validateOperationIdentity :: OperationIdentity
 validateOperationIdentity = ValidateOperationIdentity
 
+-- | Exact identity of selected-View effect tracing.
+traceOperationIdentity :: OperationIdentity
+traceOperationIdentity = TraceOperationIdentity
+
 -- | Project the exact stable machine token by total case distinction.
 operationIdentityValue :: OperationIdentity -> Text
 operationIdentityValue identity =
   case identity of
     ViewsOperationIdentity -> "views"
     ValidateOperationIdentity -> "validate"
+    TraceOperationIdentity -> "trace"
 
 -- | Exhaustive inventory tied mechanically to the closed constructors.
 operationIdentityInventory :: [OperationIdentity]

@@ -71,7 +71,9 @@ assessFormulation semanticIndex strategy formulation =
     Nothing ->
       StrategyFormulationValid
         QualificationEligibleStrategy
-          { eligibleStrategyIdentity = strategyIdentity
+          { eligibleStrategyGraphIdentity =
+              semanticIndexGraphIdentity semanticIndex
+          , eligibleStrategyIdentity = strategyIdentity
           , eligibleStrategyOccurrence = strategyOccurrence
           , eligibleStrategyInput = formulation
           , eligibleStrategyWitnesses = Set.toAscList (Set.fromList witnesses)

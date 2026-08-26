@@ -29,6 +29,10 @@ import qualified O2I.Operation.Provenance as Provenance
 import qualified O2I.Operation.Request as Request
 import qualified O2I.Operation.Rule.Catalog as RuleCatalog
 import qualified O2I.Operation.Schema as Schema
+import qualified O2I.Operation.Trace as Trace
+import qualified O2I.Operation.Trace.Machine as TraceMachine
+import qualified O2I.Operation.Trace.Request as TraceRequest
+import qualified O2I.Operation.Trace.Result as TraceResult
 import qualified O2I.Operation.Validate as Validate
 import qualified O2I.Operation.Validate.Machine as ValidateMachine
 import qualified O2I.Operation.Validate.Request as ValidateRequest
@@ -141,6 +145,13 @@ $(assertAbstractTypes
     , "Schema.SchemaVariant"
     , "Schema.SchemaAuthority"
     , "Schema.MachineSchema"
+    , "TraceRequest.TraceRequest"
+    , "TraceResult.TracePrerequisite"
+    , "TraceResult.TraceInternalFailure"
+    , "TraceResult.TraceFailure"
+    , "TraceResult.PreparedTrace"
+    , "TraceResult.TraceResult"
+    , "TraceMachine.TraceResultDocument"
     , "ValidateRequest.ValidationLevel"
     , "ValidateRequest.ValidateRequest"
     , "ValidateResult.ValidationDisposition"
@@ -448,6 +459,28 @@ $(assertOrdinaryFunctions
     , 'Schema.machineSchemaAuthority
     , 'Schema.machineSchemaVariants
     , 'Schema.foldMachineSchema
+    , 'Trace.runTrace
+    , 'TraceRequest.traceRequest
+    , 'TraceRequest.traceModelInput
+    , 'TraceRequest.traceViewSelector
+    , 'TraceRequest.traceAdapterId
+    , 'TraceRequest.foldTraceRequest
+    , 'TraceResult.notationTracePrerequisite
+    , 'TraceResult.profileTracePrerequisite
+    , 'TraceResult.structureTracePrerequisite
+    , 'TraceResult.semanticsTracePrerequisite
+    , 'TraceResult.tracePrerequisiteText
+    , 'TraceResult.foldTracePrerequisite
+    , 'TraceResult.foldTraceInternalFailure
+    , 'TraceResult.foldTraceFailure
+    , 'TraceResult.preparedTraceRequest
+    , 'TraceResult.preparedTraceDiagnostics
+    , 'TraceResult.foldPreparedTrace
+    , 'TraceResult.foldTraceResult
+    , 'TraceMachine.traceResultDocument
+    , 'TraceMachine.traceResultSchema
+    , 'TraceMachine.traceResultDocumentVariant
+    , 'TraceMachine.encodeTraceResultDocument
     , 'Validate.runValidate
     , 'ValidateRequest.notationValidationLevel
     , 'ValidateRequest.profileValidationLevel

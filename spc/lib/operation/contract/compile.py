@@ -27,6 +27,7 @@ DEFAULT_CORE_OWNER_DIAGNOSTIC_INVENTORY = (
     PACKAGE_ROOT.parents[1]
     / "lib/core/contract/generated/o2i.core.owner-diagnostic-evidence-v1.json"
 )
+DEFAULT_CORE_COMPANION = PACKAGE_ROOT.parents[1] / "lib/core/semantics.json"
 RULE_GENERATED = PACKAGE_ROOT / "src/O2I/Operation/Rule/Generated.hs"
 SCHEMA_GENERATED = PACKAGE_ROOT / "src/O2I/Operation/Schema/Generated.hs"
 SCHEMA_DIRECTORY = PACKAGE_ROOT / "contract/schema"
@@ -157,6 +158,14 @@ EXPECTED_DOCUMENTS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "semantics-validation-unavailable",
         ),
     ),
+    (
+        "traceResult",
+        (
+            "trace-prerequisite-rejected",
+            "trace-rejected",
+            "trace-accepted",
+        ),
+    ),
 )
 EXPECTED_VARIANTS = dict(EXPECTED_DOCUMENTS)
 EXPECTED_FRAGMENTS = ("diagnostic",)
@@ -182,6 +191,9 @@ VARIANT_BINDINGS: dict[str, str] = {
     "semantics-validation-accepted": "semanticsValidationAcceptedVariant",
     "semantics-validation-rejected": "semanticsValidationRejectedVariant",
     "semantics-validation-unavailable": "semanticsValidationUnavailableVariant",
+    "trace-prerequisite-rejected": "tracePrerequisiteRejectedVariant",
+    "trace-rejected": "traceRejectedVariant",
+    "trace-accepted": "traceAcceptedVariant",
 }
 
 
@@ -2055,6 +2067,531 @@ def validate_result_schema(
     )
 
 
+def load_bound_core_companion(
+    path: Path, core_inventory: dict[str, Any]
+) -> dict[str, Any]:
+    companion, payload = load_object(path)
+    binding = core_inventory.get("companions", {}).get("semantics", {})
+    if companion.get("schema") != binding.get("schema"):
+        raise ValueError("Core companion schema differs from owner inventory")
+    if hashlib.sha256(payload).hexdigest() != binding.get("rawSha256"):
+        raise ValueError("Core companion digest differs from owner inventory")
+    if not isinstance(companion.get("traceSemantics"), dict):
+        raise ValueError("Core companion Trace semantics must be an object")
+    return companion
+
+
+def trace_result_schema(
+    document: MachineDocument,
+    profile_inventory: Optional[dict[str, Any]] = None,
+    core_inventory: Optional[dict[str, Any]] = None,
+    operation_contract: Optional[dict[str, Any]] = None,
+    operation_digest: Optional[str] = None,
+    core_companion: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    if profile_inventory is None:
+        profile_inventory, _ = load_object(DEFAULT_PROFILE_DIAGNOSTIC_INVENTORY)
+    if core_inventory is None:
+        core_inventory, _ = load_object(DEFAULT_CORE_OWNER_DIAGNOSTIC_INVENTORY)
+    if operation_contract is None or operation_digest is None:
+        operation_companion, operation_payload = load_object(COMPANION)
+        operation_contract = operation_companion["contract"]
+        operation_digest = hashlib.sha256(operation_payload).hexdigest()
+    if core_companion is None:
+        core_companion, _ = load_object(DEFAULT_CORE_COMPANION)
+    trace_contract = core_companion["traceSemantics"]
+    variables = trace_contract["variableCatalog"]
+    relation_slots = trace_contract["relationSlots"]
+    ownership_slots = trace_contract["ownershipSlots"]
+
+    definitions = diagnostic_definitions(profile_inventory, core_inventory)
+    groups = diagnostic_schema_groups(profile_inventory, core_inventory)
+    for generic_document_definition in (
+        "preparedAuthority",
+        "modelDiagnostic",
+        "supplementalSources",
+        "preparedDiagnosticDocument",
+    ):
+        del definitions[generic_document_definition]
+    profile = profile_inventory["profile"]
+    core = core_inventory["core"]
+
+    def exact_array(items: list[dict[str, Any]]) -> dict[str, Any]:
+        schema = {
+            "type": "array",
+            "minItems": len(items),
+            "maxItems": len(items),
+            "items": False,
+        }
+        if items:
+            schema["prefixItems"] = items
+        return schema
+
+    def binding(variable: dict[str, Any]) -> dict[str, Any]:
+        return object_schema(
+            {
+                "variable": {"const": variable["id"]},
+                "identity": text_schema(pattern=TOOL_TEXT_PATTERN),
+            }
+        )
+
+    def slot_support(
+        kind: str, slot: dict[str, Any], occurrence_minimum: int = 0
+    ) -> dict[str, Any]:
+        return object_schema(
+            {
+                "slotKind": {"const": kind},
+                "slotId": {"const": slot["id"]},
+                "ruleId": {"const": slot["ruleRef"]},
+                "occurrences": array_schema(
+                    text_schema(pattern=TOOL_TEXT_PATTERN),
+                    minimum=occurrence_minimum,
+                ),
+            }
+        )
+
+    def projection(
+        variable: dict[str, Any], require_empty: bool = False
+    ) -> dict[str, Any]:
+        return object_schema(
+            {
+                "variable": {"const": variable["id"]},
+                "identities": (
+                    exact_array([])
+                    if require_empty
+                    else array_schema(text_schema(pattern=TOOL_TEXT_PATTERN))
+                ),
+            }
+        )
+
+    slots = [
+        (
+            "relation",
+            slot,
+            slot["sourceVariable"],
+            slot["targetVariable"],
+        )
+        for slot in relation_slots
+    ] + [
+        (
+            "ownership",
+            slot,
+            slot["contextVariable"],
+            slot["memberVariable"],
+        )
+        for slot in ownership_slots
+    ]
+    local_gap_disposition = {
+        "enum": ["missing-support", "candidate-only"]
+    }
+
+    def slot_descriptor(kind: str, slot: dict[str, Any]) -> dict[str, Any]:
+        return object_schema(
+            {
+                "slotKind": {"const": kind},
+                "slotId": {"const": slot["id"]},
+                "ruleId": {"const": slot["ruleRef"]},
+            }
+        )
+
+    any_slot_descriptor = {
+        "oneOf": [slot_descriptor(kind, slot) for kind, slot, _, _ in slots]
+    }
+    bound_gap = {
+        "oneOf": [
+            object_schema(
+                {
+                    "kind": {"const": "bound-slot"},
+                    "slot": slot_descriptor(kind, slot),
+                    "disposition": local_gap_disposition,
+                    "endpoints": exact_array(
+                        [
+                            object_schema(
+                                {
+                                    "variable": {"const": source},
+                                    "identity": text_schema(
+                                        pattern=TOOL_TEXT_PATTERN
+                                    ),
+                                }
+                            ),
+                            object_schema(
+                                {
+                                    "variable": {"const": target},
+                                    "identity": text_schema(
+                                        pattern=TOOL_TEXT_PATTERN
+                                    ),
+                                }
+                            ),
+                        ]
+                    ),
+                }
+            )
+            for kind, slot, source, target in slots
+        ]
+    }
+    unbound_gap = {
+        "oneOf": [
+            object_schema(
+                {
+                    "kind": {"const": "unbound-slot"},
+                    "slot": slot_descriptor(kind, slot),
+                    "disposition": local_gap_disposition,
+                    "establishedBindings": exact_array(
+                        [
+                            object_schema(
+                                {
+                                    "variable": {"const": variable},
+                                    "identity": text_schema(
+                                        pattern=TOOL_TEXT_PATTERN
+                                    ),
+                                }
+                            )
+                            for variable in established
+                        ]
+                    ),
+                    "unresolvedVariables": exact_array(
+                        [{"const": variable} for variable in unresolved]
+                    ),
+                }
+            )
+            for kind, slot, source, target in slots
+            for established, unresolved in (
+                ([source], [target]),
+                ([target], [source]),
+                ([], [source, target]),
+            )
+        ]
+    }
+    local_gap = {"oneOf": [bound_gap, unbound_gap]}
+    global_gap = object_schema(
+        {
+            "kind": {"const": "global-consistency-obstruction"},
+            "disposition": {"const": "globally-inconsistent"},
+            "slots": array_schema(any_slot_descriptor, minimum=1),
+        }
+    )
+    trace_identity = object_schema(
+        {
+            "graphIdentity": text_schema(pattern=TOOL_TEXT_PATTERN),
+            "bindings": exact_array([binding(variable) for variable in variables]),
+        }
+    )
+    partial_relation_support = exact_array(
+        [slot_support("relation", slot) for slot in relation_slots]
+    )
+    partial_ownership_support = exact_array(
+        [slot_support("ownership", slot) for slot in ownership_slots]
+    )
+    complete_relation_support = exact_array(
+        [slot_support("relation", slot, 1) for slot in relation_slots]
+    )
+    complete_ownership_support = exact_array(
+        [slot_support("ownership", slot, 1) for slot in ownership_slots]
+    )
+    complete_witness = object_schema(
+        {
+            "kind": {"const": "complete-witness"},
+            "identity": trace_identity,
+            "relationSupport": complete_relation_support,
+            "ownershipSupport": complete_ownership_support,
+        }
+    )
+    partial_trace = {
+        "oneOf": [
+            object_schema(
+                {
+                    "kind": {"const": "partial-trace"},
+                    "variableProjections": exact_array(
+                        [projection(variable) for variable in variables]
+                    ),
+                    "relationSupport": partial_relation_support,
+                    "ownershipSupport": partial_ownership_support,
+                    "gaps": array_schema(local_gap, minimum=1),
+                }
+            ),
+            object_schema(
+                {
+                    "kind": {"const": "partial-trace"},
+                    "variableProjections": exact_array(
+                        [projection(variable, True) for variable in variables]
+                    ),
+                    "relationSupport": partial_relation_support,
+                    "ownershipSupport": partial_ownership_support,
+                    "gaps": exact_array([global_gap]),
+                }
+            ),
+        ]
+    }
+
+    def root(result: dict[str, Any]) -> dict[str, Any]:
+        return object_schema(
+            {
+                "graphIdentity": text_schema(pattern=TOOL_TEXT_PATTERN),
+                "intervention": text_schema(pattern=TOOL_TEXT_PATTERN),
+                "need": text_schema(pattern=TOOL_TEXT_PATTERN),
+                "rootSupport": array_schema(
+                    text_schema(pattern=TOOL_TEXT_PATTERN), minimum=1
+                ),
+                "result": result,
+            }
+        )
+
+    no_root = object_schema(
+        {
+            "kind": {"const": "no-asserted-root"},
+            "graphIdentity": text_schema(pattern=TOOL_TEXT_PATTERN),
+            "disposition": {"const": "rejected"},
+        }
+    )
+    accepted_core_result = object_schema(
+        {
+            "kind": {"const": "root-traces"},
+            "graphIdentity": text_schema(pattern=TOOL_TEXT_PATTERN),
+            "disposition": {"const": "accepted"},
+            "roots": array_schema(root(complete_witness), minimum=1),
+        }
+    )
+    rejected_roots = array_schema(
+        root({"oneOf": [complete_witness, partial_trace]}), minimum=1
+    )
+    rejected_roots["contains"] = root(partial_trace)
+    rejected_core_result = {
+        "oneOf": [
+            no_root,
+            object_schema(
+                {
+                    "kind": {"const": "root-traces"},
+                    "graphIdentity": text_schema(pattern=TOOL_TEXT_PATTERN),
+                    "disposition": {"const": "rejected"},
+                    "roots": rejected_roots,
+                }
+            ),
+        ]
+    }
+
+    selector = {
+        "oneOf": [
+            object_schema(
+                {"kind": {"const": "name"}, "value": text_schema()}
+            ),
+            object_schema(
+                {"kind": {"const": "identity"}, "value": text_schema()}
+            ),
+        ]
+    }
+    prepared_authority = object_schema(
+        {
+            "adapter": reference("adapterDescriptor"),
+            "notationRules": exact_array(
+                [
+                    object_schema(
+                        {
+                            "evidenceKind": {
+                                "const": f"archimate-notation-{token}"
+                            },
+                            "ruleId": text_schema(pattern=TOOL_TEXT_PATTERN),
+                        }
+                    )
+                    for token in NOTATION_ISSUE_TOKENS
+                ]
+            ),
+            "profile": object_schema(
+                {
+                    "identity": {"const": profile["identity"]},
+                    "token": {"const": profile["token"]},
+                    "version": {"const": profile["version"]},
+                    "notation": {"const": profile["notation"]},
+                    "adapterIds": exact_text_array(profile["adapterIds"]),
+                    "contractDigest": {
+                        "const": profile_inventory["companion"]["rawSha256"]
+                    },
+                }
+            ),
+            "model": object_schema(
+                {
+                    "role": {"const": "model"},
+                    "ordinal": {"const": 0},
+                    "reference": text_schema(pattern=TOOL_TEXT_PATTERN),
+                    "sha256": text_schema(pattern=SHA256_PATTERN),
+                }
+            ),
+        }
+    )
+
+    def diagnostic_document(
+        allowed: list[str], required: list[str]
+    ) -> dict[str, Any]:
+        items = (
+            {"oneOf": [reference(name) for name in allowed]}
+            if allowed
+            else False
+        )
+        diagnostics: dict[str, Any] = {"type": "array", "items": items}
+        if not allowed:
+            diagnostics["maxItems"] = 0
+        if required:
+            diagnostics["contains"] = {
+                "oneOf": [reference(name) for name in required]
+            }
+            diagnostics["minContains"] = 1
+        return object_schema(
+            {
+                "schema": {"const": "o2i.operation.diagnostic/v2"},
+                "modelDiagnostics": diagnostics,
+            }
+        )
+
+    diagnostic_shapes = {
+        "notation": diagnostic_document(
+            ["traceNotationDiagnostic"], ["traceNotationDiagnostic"]
+        ),
+        "profile": diagnostic_document(
+            [
+                "traceProfileActivationDiagnostic",
+                "traceProfileRejectionDiagnostic",
+            ],
+            ["traceProfileRejectionDiagnostic"],
+        ),
+        "structure": diagnostic_document(
+            [
+                "traceProfileAcceptanceDiagnostic",
+                "traceStructureDiagnostic",
+            ],
+            ["traceStructureDiagnostic"],
+        ),
+        "semantics": diagnostic_document(
+            [
+                "traceProfileAcceptanceDiagnostic",
+                "traceSemanticsDiagnostic",
+            ],
+            ["traceSemanticsDiagnostic"],
+        ),
+        "trace": diagnostic_document(
+            ["traceProfileAcceptanceDiagnostic"], []
+        ),
+    }
+    operation_binding = object_schema(
+        {
+            "kind": {"const": "operation"},
+            "identity": {"const": operation_contract["identity"]},
+            "version": {"const": operation_contract["version"]},
+            "digest": {"const": operation_digest},
+        }
+    )
+    adapter_binding = object_schema({"kind": {"const": "adapter"}})
+    profile_binding = object_schema({"kind": {"const": "profile"}})
+    core_binding = object_schema(
+        {
+            "kind": {"const": "core"},
+            "identity": {"const": core["identity"]},
+            "version": {"const": core["version"]},
+            "digest": {
+                "const": core_inventory["companions"]["semantics"]["rawSha256"]
+            },
+        }
+    )
+
+    def contract_sequence(include_core: bool) -> dict[str, Any]:
+        entries = [operation_binding, adapter_binding, profile_binding]
+        if include_core:
+            entries.append(core_binding)
+        return exact_array(entries)
+
+    common_members = {
+        "context": object_schema(
+            {
+                "authority": reference("tracePreparedAuthority"),
+                "view": reference("viewDescriptor"),
+            }
+        ),
+        "request": object_schema(
+            {"view": selector, "adapterId": nullable(text_schema())}
+        ),
+    }
+
+    def prerequisite(stage: str) -> dict[str, Any]:
+        return operation_variant(
+            document,
+            "trace",
+            "trace-prerequisite-rejected",
+            {
+                **common_members,
+                "execution": object_schema(
+                    {
+                        "status": {"const": "prerequisite-rejected"},
+                        "prerequisite": {"const": stage},
+                    }
+                ),
+                "trace": {"type": "null"},
+                "diagnostics": diagnostic_shapes[stage],
+                "provenance": object_schema(
+                    {
+                        "contracts": contract_sequence(
+                            stage in {"structure", "semantics"}
+                        )
+                    }
+                ),
+            },
+        )
+
+    def completed(
+        status: str, trace_schema: dict[str, Any]
+    ) -> dict[str, Any]:
+        return operation_variant(
+            document,
+            "trace",
+            f"trace-{status}",
+            {
+                **common_members,
+                "execution": object_schema({"status": {"const": status}}),
+                "trace": trace_schema,
+                "diagnostics": diagnostic_shapes["trace"],
+                "provenance": object_schema(
+                    {"contracts": contract_sequence(True)}
+                ),
+            },
+        )
+
+    definitions.update(
+        {
+            "toolDescriptor": tool_descriptor(),
+            "traceNotationDiagnostic": {"oneOf": groups["notation"]},
+            "traceProfileAcceptanceDiagnostic": {
+                "oneOf": groups["profileAcceptance"]
+            },
+            "traceProfileActivationDiagnostic": {
+                "oneOf": groups["profileActivation"]
+            },
+            "traceProfileRejectionDiagnostic": {
+                "oneOf": groups["profileRejection"]
+            },
+            "traceStructureDiagnostic": {"oneOf": groups["structure"]},
+            "traceSemanticsDiagnostic": {"oneOf": groups["semantics"]},
+            "tracePreparedAuthority": prepared_authority,
+            "identityInvalidReason": identity_invalid_reason(),
+            "identityOutcome": identity_outcome(),
+            "viewNameField": view_name_field(),
+            "viewDescriptor": view_descriptor(),
+            "prerequisiteRejected": {
+                "oneOf": [
+                    prerequisite("notation"),
+                    prerequisite("profile"),
+                    prerequisite("structure"),
+                    prerequisite("semantics"),
+                ]
+            },
+            "traceRejected": completed("rejected", rejected_core_result),
+            "traceAccepted": completed("accepted", accepted_core_result),
+        }
+    )
+    return schema_document(
+        document,
+        "Selected-View Trace result",
+        definitions,
+        ["prerequisiteRejected", "traceRejected", "traceAccepted"],
+    )
+
+
 def diagnostic_schema(
     fragment: SchemaFragment,
     profile_inventory: Optional[dict[str, Any]] = None,
@@ -2090,6 +2627,7 @@ SCHEMA_BUILDERS: dict[str, Callable[..., dict[str, Any]]] = {
     "ruleExplanation": rule_explanation_schema,
     "viewDiscovery": view_discovery_schema,
     "validateResult": validate_result_schema,
+    "traceResult": trace_result_schema,
 }
 
 SCHEMA_FRAGMENT_BUILDERS: dict[
@@ -2169,6 +2707,7 @@ def render_schema(
     core_inventory: Optional[dict[str, Any]] = None,
     operation_contract: Optional[dict[str, Any]] = None,
     operation_digest: Optional[str] = None,
+    core_companion: Optional[dict[str, Any]] = None,
 ) -> bytes:
     if document.name == "validateResult":
         schema = validate_result_schema(
@@ -2177,6 +2716,15 @@ def render_schema(
             core_inventory,
             operation_contract,
             operation_digest,
+        )
+    elif document.name == "traceResult":
+        schema = trace_result_schema(
+            document,
+            profile_inventory,
+            core_inventory,
+            operation_contract,
+            operation_digest,
+            core_companion,
         )
     else:
         schema = SCHEMA_BUILDERS[document.name](document)
@@ -2406,6 +2954,7 @@ def render_outputs(
     profile_companion: Path = DEFAULT_PROFILE_COMPANION,
     profile_diagnostic_inventory: Path = DEFAULT_PROFILE_DIAGNOSTIC_INVENTORY,
     core_owner_diagnostic_inventory: Path = DEFAULT_CORE_OWNER_DIAGNOSTIC_INVENTORY,
+    core_companion: Path = DEFAULT_CORE_COMPANION,
 ) -> dict[Path, bytes]:
     (
         contract,
@@ -2420,6 +2969,9 @@ def render_outputs(
         profile_diagnostic_inventory,
         core_owner_diagnostic_inventory,
     )
+    bound_core_companion = load_bound_core_companion(
+        core_companion, core_inventory
+    )
     schemas = {
         document.name: render_schema(
             document,
@@ -2427,6 +2979,7 @@ def render_outputs(
             core_inventory,
             contract,
             digest,
+            bound_core_companion,
         )
         for document in documents
     }
@@ -2522,11 +3075,18 @@ def main() -> int:
         required=True,
         help="path to the exact Core owner diagnostic evidence inventory",
     )
+    parser.add_argument(
+        "--core-companion",
+        type=Path,
+        required=True,
+        help="path to the exact authoritative Core semantic companion",
+    )
     args = parser.parse_args()
     outputs = render_outputs(
         args.profile_companion,
         args.profile_diagnostic_inventory,
         args.core_owner_diagnostic_inventory,
+        args.core_companion,
     )
     if args.write:
         write_outputs(outputs)
