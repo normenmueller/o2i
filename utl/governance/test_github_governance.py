@@ -398,6 +398,37 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             with self.subTest(term=term):
                 self.assertIn(term, behavior)
 
+    def test_routine_cold_start_completion_is_exact_and_safe(self) -> None:
+        behavior = read(BEHAVIOR)
+        completion = behavior.split("Only after the return point", 1)[1].split(
+            "A long transport snapshot", 1
+        )[0]
+        self.assertEqual(
+            [
+                "1. Enter `/delete` and confirm.",
+                "2. Start a fresh Codex CLI session without `resume` in this repository root.",
+                "3. Say `Hi Gertrud, weiter geht’s!`.",
+            ],
+            re.findall(r"(?m)^[1-3]\. .+$", completion),
+        )
+        for term in (
+            "durably materialized",
+            "all required work and review activities are complete",
+            "no delegated or background work remains",
+            "exactly these three actionable steps",
+            "wording of all three actions in the Product Owner's language",
+            "keeping `/delete`, `resume`, and `Hi Gertrud, weiter geht’s!` literal",
+            "repository root from the current checkout",
+            "never place an absolute host path",
+            "permanently removes the completed current session and its descendant sessions",
+            "when transcript retention is required",
+            "example greeting carries no state and may be replaced by any ordinary greeting",
+            "routine transitions provide no path, digest, snapshot locator, or handoff payload",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, completion)
+        self.assertNotIn("first two actions", completion)
+
     def test_routine_handoff_preserves_independent_issue_52(self) -> None:
         content = read(STATE)
         self.assertIn("- Current Issue: `NONE`", content)
@@ -405,7 +436,7 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         self.assertIn("independent #52 branch", content)
         self.assertIn("remain separate, preserved, and untouched", content)
         self.assertIn("neither activates nor changes them", content)
-        self.assertIn("d6f445b2f22ad8a5b0ced12f88932babb9c2d4c0", content)
+        self.assertIn("b9b86b1220c39cb2c433e58201253a47d98b4c9e", content)
 
     def test_integrity_evidence_is_exception_based(self) -> None:
         agent = read(GOVERNANCE)
@@ -490,7 +521,8 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         for path in PUBLIC_CONTRACTS:
             with self.subTest(path=path):
                 content = read(path)
-                self.assertIsNone(absolute_posix_path.search(content))
+                path_content = content.replace("`/delete`", "")
+                self.assertIsNone(absolute_posix_path.search(path_content))
                 self.assertIsNone(absolute_windows_path.search(content))
                 self.assertIsNone(parent_traversal.search(content))
                 for target in relative_link.findall(content):
