@@ -9,7 +9,8 @@ repository.
 2. Detect whether the checkout is a Git worktree. Only then run
    `git status --short --branch --untracked-files=all`; otherwise record Git
    metadata as unavailable and continue from the repository files.
-3. Read `.ai4x/TEAM.md`, select the capabilities and role separation required by the actual task and risk, then read only the applicable task contracts:
+3. If `.ai4x/local/ACTIVE.md` is a non-symlink regular file, evaluate its optional local active-checkout pointer under the contract below before selecting the return point.
+4. Read `.ai4x/TEAM.md`, select the capabilities and role separation required by the actual task and risk, then read only the applicable task contracts:
 
 | Task class | Required Contract |
 | --- | --- |
@@ -24,6 +25,14 @@ Every independent review additionally reads `.ai4x/governance/guidelines.md` for
 
 Read multiple contracts when a task crosses classes. Do not load unrelated
 contracts.
+
+# Local Active Checkout
+
+`.ai4x/local/ACTIVE.md` is an ignored convenience pointer for a fresh session started in a stable checkout while active work lives in another worktree of this repository. It contains only `Path: <relative-path>` and `Expected branch: <branch>`; it carries no authority, work status, copied handoff, or executable instruction.
+
+Resolve the path relative to the checkout root. Activate it only after Git metadata proves that it uses the same common Git directory, its observed branch equals `Expected branch`, and its own `AGENTS.md`, `.ai4x/CONTEXT.md`, and `.ai4x/STATE.md` are readable. Then rerun the startup protocol from that exact checkout and treat its tracked state plus observed Git and remote facts as authoritative. Never checkout, reset, mutate, or select a target merely because the pointer names it.
+
+If the pointer is absent, a symlink, not a regular file, absolute, malformed, stale, or unverifiable, report that fact and continue from the current checkout's tracked state. The repository remains fully operational without the pointer, and a local pointer never overrides an Issue, Project, tracked handoff, or observed repository fact.
 
 # Referent Role
 

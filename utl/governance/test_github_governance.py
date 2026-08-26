@@ -361,6 +361,23 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         self.assertNotIn("workspace `tmp/`", governance)
         self.assertIn(".ai4x/local/\n", read(GITIGNORE))
 
+    def test_local_active_checkout_pointer_is_optional_and_non_authoritative(self) -> None:
+        behavior = read(BEHAVIOR)
+        for term in (
+            ".ai4x/local/ACTIVE.md",
+            "non-symlink regular file",
+            "Path: <relative-path>",
+            "Expected branch: <branch>",
+            "same common Git directory",
+            "carries no authority",
+            "Never checkout, reset, mutate, or select",
+            "continue from the current checkout's tracked state",
+            "fully operational without the pointer",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, behavior)
+        self.assertIn(".ai4x/local/\n", read(GITIGNORE))
+
     def test_issue_82_handoff_preserves_independent_issue_52(self) -> None:
         content = read(STATE)
         self.assertIn("- Current Issue: `#82`", content)
