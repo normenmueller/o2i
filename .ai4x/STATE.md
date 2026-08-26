@@ -1,9 +1,9 @@
 # Handoff
 
 - Observed: 2026-08-27 CEST
-- Work status: `ACTIVE`
+- Work status: `COMPLETE`
 - Current Issue: `#52`
-- Current node: `accepted-local-candidate-publication-and-ci`
+- Current node: `published-green-candidate-awaiting-squash-merge`
 
 # Objective
 
@@ -38,14 +38,16 @@ Publish the accepted Batch-7 Trace candidate, obtain green remote verification, 
 - Core Trace tests: 28/28 passed; Operation tests: 147/147 passed; Operation contract compiler: 39/39 passed.
 - Full Foundation Cabal tests with `-Werror`, external API contracts, generated-artifact freshness, Candidate Views, Haddock, package metadata, independent source distributions, formatting, licensing/REUSE, and `git diff --check` passed.
 - Canonical `./utl/verify.sh foundation` completed with exit code 0 on the exact reviewed candidate.
+- PR #86 publishes the accepted candidate, closes #52 on merge, and is linked from the Issue. Project `O2I` records #52 as `In review`.
+- Pull-request Verify run `33021693931` passed Governance, Licensing, Model, White Paper, and Haskell on head `3b3eed7`; the final handoff-only commit receives the same automatic gate before Product Owner handoff.
 - Governance forbids numerical review scores. Every applicable qualitative dimension was fully satisfied and both independent verdicts are `accepted` without findings.
 
 # Next Action
 
-Commit this handoff under Product Owner identity, push `fix/52-trace-white-sheet`, publish the Pull Request and review evidence, move #52 to Project `In review`, wait for every required remote check, and correct any failure before handoff.
+Product Owner reviews PR #86 and, if satisfied, performs the squash-merge. Merge, Issue/Project closure, branch deletion, and cleanup remain unperformed.
 
 # Local Return Point
 
 - Branch: `fix/52-trace-white-sheet`.
 - Worktree: repository-relative `.ai4x/local/worktrees/52-gertrud-trace-white-sheet` from the stable checkout.
-- Dirty scope: `.ai4x/STATE.md` only until the handoff commit is created.
+- Dirty scope: none after the final handoff commit.
