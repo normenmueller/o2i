@@ -67,6 +67,29 @@ The Board reflects work; it does not manufacture authority. The Product Owner se
 
 Project order never creates a dependency. Use native Issue Dependencies for genuine prerequisites. Record an external prerequisite once in the affected Issue with its source and next-check condition.
 
+### Ready-Issue Release Authority
+
+An explicit Product Owner release of one exact Issue in Project status `Ready` authorizes Gertrud, within that Issue's accepted scope, to activate it and carry it through `In review` without another execution or Pull Request publication prompt. This authority includes Project `In progress`, capability-matched specialist and Co-Author coordination, implementation, deterministic verification, independent review and corrections, commit, push, Pull Request publication, green required remote verification, evidence receipts, and Project `In review`.
+
+Project status `Ready` alone creates no authority. A Ready-Issue release never authorizes scope expansion, bypassing statement owners or required role separation, merge, Issue closure, Project `Done`, branch or worktree cleanup, release or tag, or protected publication. It is explicit Product Owner authority for only the listed Issue-scoped remote writes; agent remote writes stop when the required machine identity is unavailable or unverified.
+
+`10/10` is Product Owner shorthand for all required formal verdicts being `accepted`, zero blocking or advisory findings, all exact-candidate local and remote checks being green, and intact authorship-versus-review separation. It is never a formal review score, and `accepted with follow-ups` does not satisfy it.
+
+### Completed-Issue Cleanup Authority
+
+Explicit Product Owner authority for one exact Issue's completion actions remains effective according to its stated scope and conditions. When that authority also covers cleanup, only the cleanup portion becomes executable after the Issue is accepted, published when publication is required, green at its required remote verification boundary, closed, and in Project status `Done`. Gertrud must then remove all no-longer-needed Issue-scoped local and remote working branches, linked worktrees, Issue-owned stashes, any stale `.ai4x/local/ACTIVE.md` pointer, and Issue-owned scratch artifacts. Cleanup is part of the authorized completion, not an optional chat convention. The ordinary Ready-Issue release through `In review` never authorizes completion or cleanup.
+
+Before deleting anything, Gertrud performs one read-only preflight that:
+
+1. verifies the exact Issue, accepted and published result, required remote checks, closed state, Project `Done`, and explicit Product Owner completion-and-cleanup authority;
+2. enumerates every exact candidate by stable identity and expected ref where applicable: named local branch and ref, named remote branch and ref, repository-relative linked-worktree path, named stash and object, exact active-checkout pointer, and exact Issue-owned scratch path;
+3. proves that each candidate's unique work is durable on the owning published branch or intentionally obsolete under the same authority; and
+4. excludes default or protected branches; active, review, unmerged, or recovery branches; active worktrees or handoffs; stashes or scratch artifacts containing unique or user-owned data; anything outside the completed Issue's scope; and every broad root, unresolved variable, glob, or recursive filesystem deletion target.
+
+Immediately before each individual deletion, re-resolve the exact target and revalidate its stable identity plus any expected ref against the preflight; any mismatch stops cleanup before that mutation. Use scoped native Git operations for worktrees and branches; never substitute a broad direct filesystem deletion. Clear a stale active-checkout pointer before removing the exact worktree it names and remove a linked worktree before its local branch. Perform remote branch deletion only through the verified machine identity and with a lease or equivalent conditional operation bound to the expected ref. A missing fact, ambiguous owner, unique change, failed durability proof, or identity mismatch stops cleanup at the safe boundary without weakening the exclusions.
+
+After cleanup, re-inventory local and remote branches, worktrees, stashes, the active-checkout pointer, and Issue-owned scratch paths. Confirm that every authorized target is absent and every protected or unrelated target remains. Correct stale Project or `.ai4x/local/ACTIVE.md` state only within the same explicit authority; otherwise report it without inference or mutation.
+
 ## Epics, Stories, And Batches
 
 Use native Sub-Issues when they materially improve visibility of a multi-part deliverable. Do not create them merely because work has multiple files, owners, days, or handoffs.

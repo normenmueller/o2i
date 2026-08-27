@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+AGENTS = ROOT / "AGENTS.md"
 BEHAVIOR = ROOT / ".ai4x/BEHAVIOR.md"
 CONTEXT = ROOT / ".ai4x/CONTEXT.md"
 TEAM = ROOT / ".ai4x/TEAM.md"
@@ -46,6 +47,7 @@ SKILLS = {
 AGENT_PROFILES = tuple(sorted((ROOT / ".github/agents").glob("*.agent.md")))
 REVIEW_CONTRACTS = (GOVERNANCE, CONTRIBUTING, HASKELL_REVIEW, STRATEGY_REVIEW)
 PUBLIC_CONTRACTS = (
+    AGENTS,
     BEHAVIOR,
     CONTEXT,
     TEAM,
@@ -81,6 +83,7 @@ class GitHubGovernanceContractTests(unittest.TestCase):
 
     def test_required_surfaces_exist(self) -> None:
         for path in (
+            AGENTS,
             BEHAVIOR,
             CONTEXT,
             TEAM,
@@ -99,6 +102,11 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         ):
             with self.subTest(path=path):
                 self.assertTrue(path.is_file())
+
+    def test_agents_facade_is_the_canonical_behavior_symlink(self) -> None:
+        self.assertTrue(AGENTS.is_symlink())
+        self.assertEqual(Path(".ai4x/BEHAVIOR.md"), AGENTS.readlink())
+        self.assertEqual(BEHAVIOR.resolve(), AGENTS.resolve())
 
     def test_non_core_ai4x_contract_names_are_lowercase(self) -> None:
         for directory in ("governance", "operations", "rules"):
@@ -201,6 +209,136 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         self.assertIn("Board reflects work; it does not manufacture authority", read(GOVERNANCE))
         self.assertIn("Board bildet Autorität ab, erzeugt sie aber nicht", read(CONTRIBUTING))
 
+    def test_ready_issue_release_authority_reaches_in_review_and_stops(self) -> None:
+        for path in (BEHAVIOR, GOVERNANCE):
+            content = read(path)
+            with self.subTest(path=path):
+                for term in (
+                    "explicit Product Owner release of one exact Issue in Project status `Ready`",
+                    "within that Issue's accepted scope",
+                    "carry it through `In review`",
+                    "capability-matched specialist and Co-Author coordination",
+                    "deterministic verification",
+                    "independent review and corrections",
+                    "commit, push, Pull Request publication",
+                    "green required remote verification",
+                    "evidence receipts",
+                    "Project status `Ready` alone creates no authority",
+                    "scope expansion",
+                    "bypassing statement owners or required role separation",
+                    "merge, Issue closure, Project `Done`",
+                    "branch or worktree cleanup",
+                    "release or tag, or protected publication",
+                    "required machine identity is unavailable or unverified",
+                ):
+                    self.assertIn(term, content)
+
+        human = read(CONTRIBUTING)
+        for term in (
+            "ausdrückliche PO-Freigabe eines exakten Issues im Project-Status `Ready`",
+            "innerhalb seines akzeptierten Scopes standardmäßig bis `In review`",
+            "Commit, Push, Pull Request",
+            "Der bloße Status `Ready` genügt nicht",
+            "Merge, Issue-Schließung, `Done`",
+            "Branch- oder Worktree-Bereinigung",
+            "geschützte Publikation",
+            "verifizierte Machine-User-Identität",
+        ):
+            with self.subTest(surface="human", term=term):
+                self.assertIn(term, human)
+
+    def test_completed_issue_cleanup_is_mandatory_bounded_and_audited(self) -> None:
+        governance = read(GOVERNANCE).split(
+            "### Completed-Issue Cleanup Authority", 1
+        )[1].split("## Epics, Stories, And Batches", 1)[0]
+        behavior = "Explicit Product Owner authority" + read(BEHAVIOR).split(
+            "Explicit Product Owner authority", 1
+        )[1].split("`.ai4x/STATE.md`", 1)[0]
+        for path, content in ((BEHAVIOR, behavior), (GOVERNANCE, governance)):
+            with self.subTest(path=path):
+                for term in (
+                    "accepted",
+                    "published",
+                    "remote",
+                    "closed",
+                    "Project status `Done`",
+                    "Product Owner authority for one exact Issue's completion actions",
+                    "only the cleanup portion becomes executable",
+                    "remove all no-longer-needed Issue-scoped local and remote working branches",
+                    "linked worktrees",
+                    "Issue-owned stashes",
+                    "stale `.ai4x/local/ACTIVE.md` pointer",
+                    "Issue-owned scratch artifacts",
+                    "ordinary Ready-Issue release through `In review` never authorizes",
+                    "durable on the owning published branch or intentionally obsolete",
+                    "Immediately before each",
+                    "re-resolve",
+                    "stable identity plus any expected ref against the preflight",
+                    "any mismatch stops cleanup",
+                    "default or protected branch",
+                    "active, review, unmerged, or recovery branch",
+                    "active worktree",
+                    "unique or user-owned",
+                    "outside the completed Issue's scope",
+                    "unresolved variable, glob, or recursive",
+                    "verified machine identity",
+                    "conditional operation bound to the expected ref",
+                    "re-inventory local and remote",
+                    "only within the same explicit authority",
+                ):
+                    self.assertIn(term, content)
+
+        for term in (
+            "completion actions remains effective according to its stated scope and conditions",
+            "only the cleanup portion becomes executable after the Issue is accepted, published when publication is required, green at its required remote verification boundary, closed, and in Project status `Done`",
+            "Cleanup is part of the authorized completion, not an optional chat convention",
+            "one read-only preflight",
+            "enumerates every exact candidate by stable identity and expected ref where applicable",
+            "Immediately before each individual deletion",
+            "Use scoped native Git operations",
+            "never substitute a broad direct filesystem deletion",
+            "Clear a stale active-checkout pointer before removing the exact worktree it names",
+            "remove a linked worktree before its local branch",
+            "remote branch deletion only through the verified machine identity and with a lease or equivalent conditional operation bound to the expected ref",
+            "stops cleanup at the safe boundary",
+            "every authorized target is absent and every protected or unrelated target remains",
+        ):
+            with self.subTest(surface="operational", term=term):
+                self.assertIn(term, governance)
+
+        self.assertIn(
+            "completion actions applies according to its stated scope",
+            behavior,
+        )
+        self.assertIn(
+            "only the cleanup portion becomes executable after the Issue is accepted, published when required, remotely verified, closed, and in Project status `Done`",
+            behavior,
+        )
+        self.assertIn(
+            "Remote branch deletion additionally requires the verified machine identity and a lease or conditional operation bound to the expected ref",
+            behavior,
+        )
+
+        human = read(CONTRIBUTING)
+        for term in (
+            "PO-Autorität für die Abschlussaktionen eines exakten Issues gilt nach ihrem genannten Scope und ihren Bedingungen",
+            "nur dieser Bereinigungsanteil erst ausführbar",
+            "muss dann sämtliche nicht mehr benötigten Issue-eigenen lokalen und Remote-Arbeitsbranches",
+            "gewöhnliche Ready-Freigabe bis `In review` autorisiert sie nicht",
+            "Unmittelbar vor jeder einzelnen Löschung",
+            "stabile Identität sowie ein gegebenenfalls erwarteter Ref gegen den Vorabnachweis geprüft",
+            "jede Abweichung stoppt die Bereinigung vor dieser Mutation",
+            "Default-, geschützte, aktive, im Review befindliche, ungemergte",
+            "einzigartigem oder nutzereigenem Inhalt bleiben unangetastet",
+            "unaufgelöste Variablen, Globs und rekursive Dateisystemlöschungen sind ausgeschlossen",
+            "Remote-Branch-Löschungen benötigen die verifizierte Machine-User-Identität",
+            "an den erwarteten Ref gebundene bedingte Operation",
+            "lokale und Remote-Bestände erneut inventarisiert",
+            "nur innerhalb derselben Autorität korrigiert",
+        ):
+            with self.subTest(surface="human", term=term):
+                self.assertIn(term, human)
+
     def test_paused_means_a_real_wait(self) -> None:
         agent = read(GOVERNANCE)
         human = read(CONTRIBUTING)
@@ -264,6 +402,36 @@ class GitHubGovernanceContractTests(unittest.TestCase):
                 self.assertNotIn("10,0", content)
         self.assertIn("Numerical scores are prohibited", read(GOVERNANCE))
         self.assertIn("Numerische Bewertungen entfallen", read(CONTRIBUTING))
+        for path in (HASKELL_REVIEW, STRATEGY_REVIEW):
+            with self.subTest(formal_review=path):
+                self.assertNotIn("10/10", read(path))
+
+    def test_ten_of_ten_is_only_product_owner_acceptance_shorthand(self) -> None:
+        for path in (BEHAVIOR, GOVERNANCE):
+            content = read(path)
+            with self.subTest(path=path):
+                for term in (
+                    "`10/10` is Product Owner shorthand",
+                    "all required formal verdicts being `accepted`",
+                    "zero blocking or advisory findings",
+                    "all exact-candidate local and remote checks being green",
+                    "intact authorship-versus-review separation",
+                    "never a formal review score",
+                    "`accepted with follow-ups` does not satisfy it",
+                ):
+                    self.assertIn(term, content)
+
+        human = read(CONTRIBUTING)
+        for term in (
+            "`10/10` ist ausschließlich die PO-Kurzform",
+            "alle erforderlichen formalen Verdicts `accepted`",
+            "weder blockierende noch beratende Findings offen",
+            "Prüfungen des exakten Kandidaten grün",
+            "Trennung von Autorschaft und Review gewahrt",
+            "`accepted with follow-ups` erfüllt diese Kurzform nicht",
+        ):
+            with self.subTest(surface="human", term=term):
+                self.assertIn(term, human)
 
     def test_coauthoring_follows_material_specialist_judgment(self) -> None:
         behavior = " ".join(read(BEHAVIOR).split())
@@ -522,6 +690,7 @@ class GitHubGovernanceContractTests(unittest.TestCase):
 
     def test_text_contracts_use_clean_files(self) -> None:
         for path in (
+            AGENTS,
             BEHAVIOR,
             CONTEXT,
             TEAM,

@@ -3,7 +3,7 @@
 - Observed: 2026-08-27 CEST
 - Work status: `ACTIVE`
 - Current Issue: `#53`
-- Current node: `accepted-candidate-integration`
+- Current node: `integrated-full-verification`
 
 # Objective
 
@@ -49,10 +49,10 @@ Deliver Batch 8 Qualification through one accepted, published, remotely green Pu
 
 # Next Action
 
-Materialize the accepted product and handoff commits, integrate published governance-only trunk, resolve only the handoff conflict, and run the full exact-candidate verification.
+Complete the merge commit, run the full integrated foundation verification and exact API/performance/diff checks, then prepare publication evidence and the Pull Request.
 
 # Local Return Point
 
 - Branch: `feat/53-qualification`.
 - Worktree: repository-relative `.ai4x/local/worktrees/53-qualification` from the stable checkout.
-- Dirty scope: `.ai4x/STATE.md` plus Issue-scoped Core/Operation Qualification implementation, contracts, generated schemas, API probes, performance probes, and tests.
+- Dirty scope: merge resolution in `.ai4x/STATE.md`; accepted product and governance changes are already committed on their owning branches.

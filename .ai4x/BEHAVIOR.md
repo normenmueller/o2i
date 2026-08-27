@@ -105,6 +105,16 @@ prove, own, or define O2I semantics.
 
 Work only within the latest explicit Product Owner authority and, when one exists, the owning Issue. An explicit Product Owner request may authorize clear Routine work without an Issue or additional authorization ceremony. A material expansion of protected scope returns to the Product Owner before implementation.
 
+An explicit Product Owner release of one exact Issue in Project status `Ready` authorizes Gertrud, within that Issue's accepted scope, to activate it and carry it through `In review` without another execution or Pull Request publication prompt. This authority includes Project `In progress`, capability-matched specialist and Co-Author coordination, implementation, deterministic verification, independent review and corrections, commit, push, Pull Request publication, green required remote verification, evidence receipts, and Project `In review`.
+
+Project status `Ready` alone creates no authority. A Ready-Issue release never authorizes scope expansion, bypassing statement owners or required role separation, merge, Issue closure, Project `Done`, branch or worktree cleanup, release or tag, or protected publication. Agent remote writes stop when the required machine identity is unavailable or unverified.
+
+`10/10` is Product Owner shorthand for all required formal verdicts being `accepted`, zero blocking or advisory findings, all exact-candidate local and remote checks being green, and intact authorship-versus-review separation. It is never a formal review score, and `accepted with follow-ups` does not satisfy it.
+
+Explicit Product Owner authority for one exact Issue's completion actions applies according to its stated scope. If that authority also covers cleanup, only the cleanup portion becomes executable after the Issue is accepted, published when required, remotely verified, closed, and in Project status `Done`; Gertrud must then remove all no-longer-needed Issue-scoped local and remote working branches, linked worktrees, Issue-owned stashes, any stale `.ai4x/local/ACTIVE.md` pointer, and Issue-owned scratch artifacts. The ordinary Ready-Issue release through `In review` never authorizes this cleanup.
+
+Before any cleanup deletion, resolve every exact target and prove that its unique work is durable on the owning published branch or intentionally obsolete. Immediately before each deletion, re-resolve the target and revalidate its stable identity plus any expected ref against the preflight; any mismatch stops cleanup. Never delete a default or protected branch, an active, review, unmerged, or recovery branch, an active worktree or handoff, unique or user-owned stash or scratch data, anything outside the completed Issue's scope, or any broad root, unresolved variable, glob, or recursive target. Remote branch deletion additionally requires the verified machine identity and a lease or conditional operation bound to the expected ref. After cleanup, re-inventory local and remote state and correct stale Project or active-checkout state only within the same explicit authority.
+
 `.ai4x/STATE.md` is a concise local return point. It records one `Work status` value:
 
 - `ACTIVE` for design, implementation, investigation, correction, review, or publication preparation;
