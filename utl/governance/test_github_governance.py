@@ -596,6 +596,176 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             with self.subTest(term=term):
                 self.assertIn(term, completion)
         self.assertNotIn("first two actions", completion)
+        self.assertNotIn("`Approval:`", completion)
+        self.assertNotRegex(completion, r"(?m)^4\. ")
+
+    def test_product_owner_decision_handoff_is_deterministic(self) -> None:
+        behavior = read(BEHAVIOR)
+        decision = behavior.split("# Product Owner Decision Handoff\n", 1)[1].split(
+            "\n# Referent Role", 1
+        )[0]
+        continuity_and_decision = behavior.split("# Normal Session Continuity\n", 1)[
+            1
+        ].split("\n# Referent Role", 1)[0]
+        self.assertEqual(
+            [
+                "1. Enter `/delete` and confirm.",
+                "2. Start a fresh Codex CLI session without `resume` in this repository root.",
+                "3. Say `Hi Gertrud, weiter geht’s!`.",
+            ],
+            re.findall(r"(?m)^[1-9]\. .+$", continuity_and_decision),
+        )
+        self.assertNotRegex(decision, r"(?m)^[1-9]\. ")
+        self.assertEqual(
+            ["Recommendation:", "Alternatives:", "Cold start:", "Approval:"],
+            re.findall(r"(?m)^- `([^`]+:)`", decision),
+        )
+        self.assertEqual(
+            [
+                "- `Approval:` the exact standalone Product Owner reply `Freigegeben.` for this recommendation. When the Product Owner's language is German, render the prompt label as `Antwort zur Freigabe:` followed by the reply literal `Freigegeben.`; never render `Freigabe: Freigegeben.`."
+            ],
+            re.findall(r"(?m)^- `Approval:` .+$", decision),
+        )
+        recommendation = re.search(r"(?m)^- `Recommendation:` (.+)$", decision)
+        self.assertIsNotNone(recommendation)
+        assert recommendation is not None
+        self.assertEqual(
+            ["Subject", "Scope", "Target state", "Authority boundary", "Reason"],
+            re.findall(
+                r"`(Subject|Scope|Target state|Authority boundary|Reason)`",
+                recommendation.group(1),
+            ),
+        )
+        self.assertEqual(
+            ["Requested agent authority:", "Exclusions:"],
+            re.findall(
+                r"`(Requested agent authority:|Exclusions:)`",
+                recommendation.group(1),
+            ),
+        )
+        self.assertEqual(
+            {"recommended", "not recommended"},
+            set(
+                re.findall(r"`(recommended|not recommended)`", decision)
+            ),
+        )
+        self.assertNotIn("`eligible but not recommended`", decision)
+        self.assertNotIn("`ineligible`", decision)
+        for term in (
+            "completes an authorized work unit",
+            "hands control back at a Product Owner decision or wait point",
+            "Interim progress updates",
+            "autonomous continuation within existing authority",
+            "exactly one concrete next action",
+            "exactly these labeled elements in order",
+            "subject is unambiguous",
+            "scope is bounded",
+            "target state is observable",
+            "one short evidence-based sentence",
+            "exact newly requested agent authority or the literal `none`",
+            "mandatory `Exclusions:` value in both cases",
+            "write `none` when no such alternative exists",
+            "never invent one for symmetry",
+            "exactly one of `recommended` or `not recommended`",
+            "every Normal Session Continuity safety gate",
+            "`safety gate failed:`",
+            "`eligible, but not the recommendation:`",
+            "the exact standalone Product Owner reply `Freigegeben.`",
+            "Product Owner's language is German",
+            "render the prompt label as `Antwort zur Freigabe:`",
+            "followed by the reply literal `Freigegeben.`",
+            "never render `Freigabe: Freigegeben.`",
+            "recommendation never creates authority",
+            "never pauses autonomous work still covered by existing authority",
+            "recommendation with `Approval:` requires the exact newly requested agent authority",
+            "may not use `Requested agent authority: none`",
+            "replace `Approval:` with `Product Owner action:`",
+            "one exact, self-contained action with its subject, bounded scope, target state, and authority boundary",
+            "that boundary must use `Requested agent authority: none`",
+            "recommended cold start must also use `Requested agent authority: none`",
+            "never invent agent authority",
+            "exclusions remain mandatory for every recommendation",
+            "observable single-use binding",
+            "immediately preceding still-open decision handoff",
+            "authorizes solely that handoff's single recommendation",
+            "never authorizes an alternative or any omitted action",
+            "consumed by one valid approval",
+            "revalidates that exactly one such handoff exists",
+            "immediately precedes the approval",
+            "still matches current facts",
+            "A missing handoff",
+            "multiple candidate handoffs",
+            "an already consumed handoff",
+            "superseded by a later handoff or material new fact blocks execution",
+            "requires a new decision handoff",
+            "one non-authorizing `Approval bound:` receipt",
+            "marks the handoff `consumed` before executing it",
+            "binds the approval to this one bounded execution and prevents replay",
+            "receipt makes that one-time binding observable but never broadens it",
+            "exists only in the current live exchange",
+            "never reconstructed from a conversation transcript or carried across a session boundary",
+            "creates no binding for a `Product Owner action:` handoff or a recommended cold start",
+            "only the three non-imperative decision metadata fields",
+            "omit `Approval:` and `Product Owner action:`",
+            "exactly the three numbered actions defined under Normal Session Continuity",
+            "metadata contains no imperative",
+            "no other imperative sentence or numbered transition instruction",
+            "only transition instructions",
+            "ends immediately after step 3 with no following text",
+            "If `Cold start: not recommended`, do not print the three actions",
+        ):
+            with self.subTest(term=term):
+                self.assertIn(term, decision)
+
+        governance = read(GOVERNANCE)
+        for term in (
+            "follow the deterministic Product Owner Decision Handoff in `.ai4x/BEHAVIOR.md`",
+            "presentation and authority-request contract",
+            "not workflow state or authority",
+            "never copied into `.ai4x/STATE.md`",
+        ):
+            with self.subTest(surface="governance", term=term):
+                self.assertIn(term, governance)
+        self.assertNotIn("# Product Owner Decision Handoff", read(STATE))
+
+        human = read(CONTRIBUTING)
+        self.assertNotIn("`eligible but not recommended`", human)
+        self.assertNotIn("`ineligible`", human)
+        for term in (
+            "## PO-Entscheidungsvorlage",
+            "genau einer konkreten Empfehlung",
+            "exakten Gegenstand, begrenzten Scope, beobachtbaren Zielzustand",
+            "exakt neu angefragte Agentenautorität oder das Literal `none`",
+            "in beiden Fällen zwingend die Ausschlüsse",
+            "durch `Freigegeben.` ausführbare Empfehlung muss die exakte neue Agentenautorität nennen",
+            "darf `none` nicht verwenden",
+            "direkte PO-Aktion und ein empfohlener Cold Start müssen `none` verwenden",
+            "dürfen keine Agentenautorität erfinden",
+            "kurzen evidenzbasierten Grund",
+            "Zwischenstände, reine Antworten und autonomes Weiterarbeiten",
+            "genau `recommended` oder `not recommended`",
+            "fehlgeschlagenen Sicherheitsbedingung",
+            "sicheren, aber gegenüber der Empfehlung nachrangigen Cold Start",
+            "kanonische Feld `Approval:` erscheint im deutschen Bericht als `Antwort zur Freigabe:`",
+            "darauf folgt als exakte alleinstehende PO-Antwort `Freigegeben.`",
+            "Ausgabe `Freigabe: Freigegeben.` ist ausgeschlossen",
+            "alleinstehende PO-Antwort",
+            "Diese Antwort bindet genau einmal ausschließlich",
+            "unmittelbar vorausgehenden, noch offenen Entscheidungsvorlage",
+            "Zustand `consumed` sichtbar",
+            "eine begrenzte Ausführung und verhindert ihre Wiederverwendung",
+            "fehlende oder mehrdeutige Vorlage",
+            "bereits verbrauchte Vorlage",
+            "spätere Vorlage oder neue materielle Fakten überholte Vorlage blockieren",
+            "nur im aktuellen laufenden Austausch",
+            "weder aus einem Gesprächsprotokoll rekonstruiert noch über eine Session-Grenze getragen",
+            "nicht imperative Entscheidungsmetadaten",
+            "unveränderten drei nummerierten Aktionsschritte",
+            "Weitere imperative Sätze oder nummerierte Übergangsanweisungen sind ausgeschlossen",
+            "endet unmittelbar nach Schritt 3",
+        ):
+            with self.subTest(surface="human", term=term):
+                self.assertIn(term, human)
 
     def test_integrity_evidence_is_exception_based(self) -> None:
         agent = read(GOVERNANCE)
