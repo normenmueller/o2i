@@ -160,6 +160,8 @@ Keep `.ai4x/STATE.md` below 90 lines and useful from an isolated checkout. It co
 
 Use `NONE` only for explicit Product Owner authority over Issue-free Routine work. Use `ACTIVE` for design, implementation, investigation, correction, review, and publication preparation; `PAUSED` only for a genuine wait; and `COMPLETE` only after the recorded work is actually complete. Do not create self-referential gates, duplicate Issue history, or require a follow-up commit merely to refresh a stale handoff after publication.
 
+Product Owner-facing completion and status handoff reports follow the deterministic Product Owner Decision Handoff in `.ai4x/BEHAVIOR.md`. The decision block is a presentation and authority-request contract, not workflow state or authority, and is never copied into `.ai4x/STATE.md`.
+
 ## Verification
 
 Repository verification remains deterministic and network-independent. Before every commit, run every stage selected for the changed paths by the canonical path matrix. If classification is unknown or spans a shared contract, run the complete suite. Before every release tag, run:
