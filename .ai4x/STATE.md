@@ -1,9 +1,9 @@
 # Handoff
 
 - Observed: 2026-08-27 CEST
-- Work status: `ACTIVE`
+- Work status: `PAUSED`
 - Current Issue: `#53`
-- Current node: `publication-preflight`
+- Current node: `po-squash-merge`
 
 # Objective
 
@@ -35,7 +35,7 @@ Deliver Batch 8 Qualification through one accepted, published, remotely green Pu
 
 - Basis: clean published `trunk` at `c59b02845ba5841b852168af838806f993e69dc5`.
 - Published `trunk` has since advanced independently to `4608dfc531742fab6fa988cd932c7b8f98629de2` through governance-only #87 and #89; both are complete and cleaned up, and their commits are integrated before #53 publication without entering its product scope.
-- Project records #53 as `In progress`; activation receipt is Issue comment `5439129504`.
+- Project records #53 as `In review`; activation receipt is Issue comment `5439129504` and final review receipt is Issue comment `5442434487`.
 - First exact Core candidate digest `0d777d69e7ad89049e80f77f887cd6dbd52e79a603f312826300e4db20ee2e2d`: focused tests 16/16, API compile contracts, Cabal check, Haddock, and diff checks passed.
 - Independent Core review returned `changes required`: exact graph/semantic same-origin binding, all-observation effect-graph membership, truthful complete performance algorithm/counters/probes, and executable 21-rule/provenance coverage remain blocking; advisory findings none.
 - Corrected 19-path Core candidate digest `17648f50664fc3837344d29194f3cc77cce415ecf7ccf3fe5815235c519356aa`: the four first-review findings are corrected; Qualification 32/32, Semantics 36/36, Core suites, API compile contracts, public Qualification Haddock, Cabal check, format, and diff checks pass.
@@ -47,13 +47,19 @@ Deliver Batch 8 Qualification through one accepted, published, remotely green Pu
 - Schema-only intermediate digest `13004bee797594add05ad18bdf162a7252afff489deda68cd41504dc82dbb8f5` closed the first blocker but was not an acceptance candidate.
 - Final corrected 37-path Operation digest `f40760b29d3400d089e844f99a874f5c753f534fb11ac5b9c32e21f82b335039`: all three findings are corrected; focused binding 10/10, Operation 163/163, compiler/schema 41/41, adversarial Qualification 33/33, API, Haddock, Cabal, format, and diff checks pass; independent verdict `accepted` with zero blocking and zero advisory findings.
 - Integrated commit `9c6b0bf` includes published governance-only trunk and preserves both accepted product digests unchanged. `./utl/verify.sh foundation` and `./utl/verify.sh governance` pass with Licensing 551/551, full Haskell/package/source-distribution tests, external API contracts, Candidate Views, Haddock 100%, governance 33/33 plus routing 18/18, generated contract, digest, format, and diff checks green.
+- Pull Request #91 is open and mergeable. Remote Verify run `33092667169` passed Repository licensing, Change governance, Model contracts, White Paper, and Haskell specification for product head `4b21b1f39fd05f95e85d5e2c00a45469ffecd061`.
+
+# Wait State
+
+- Reason: the accepted and remotely green Pull Request awaits Product Owner review and squash-merge; Issue closure, Project `Done`, and cleanup are outside the standing release.
+- Return condition: the Product Owner merges PR #91, requests a correction, or explicitly authorizes the remaining closure or cleanup actions.
 
 # Next Action
 
-Commit this verified handoff, publish the branch and Pull Request as the machine user, obtain green remote checks, record review evidence, and move Project status to `In review`.
+The Product Owner reviews and squash-merges PR #91 to close #53. Gertrud performs no merge, closure, `Done`, branch deletion, worktree removal, or cleanup without the required further authority.
 
 # Local Return Point
 
 - Branch: `feat/53-qualification`.
 - Worktree: repository-relative `.ai4x/local/worktrees/53-qualification` from the stable checkout.
-- Dirty scope: this verified handoff update only; product and governance integration commits are durable locally.
+- Dirty scope: this final wait-state handoff update only; product and governance integration commits are durable locally and published.
