@@ -37,6 +37,9 @@ CORE_OWNER_DIAGNOSTIC_INVENTORY = Path(
         COMPILER.DEFAULT_CORE_OWNER_DIAGNOSTIC_INVENTORY,
     )
 )
+CORE_COMPANION = Path(
+    os.environ.get("O2I_CORE_COMPANION", COMPILER.DEFAULT_CORE_COMPANION)
+)
 
 
 class OperationContractCompilerTest(unittest.TestCase):
@@ -47,6 +50,9 @@ class OperationContractCompilerTest(unittest.TestCase):
         )
         self.core_inventory = json.loads(
             CORE_OWNER_DIAGNOSTIC_INVENTORY.read_text(encoding="utf-8")
+        )
+        self.core_companion = json.loads(
+            CORE_COMPANION.read_text(encoding="utf-8")
         )
 
     def validate_contract(self, profile_companion=PROFILE_COMPANION):
@@ -61,6 +67,7 @@ class OperationContractCompilerTest(unittest.TestCase):
             PROFILE_COMPANION,
             PROFILE_DIAGNOSTIC_INVENTORY,
             CORE_OWNER_DIAGNOSTIC_INVENTORY,
+            CORE_COMPANION,
         )
 
     def render_value(self, value):
@@ -78,7 +85,7 @@ class OperationContractCompilerTest(unittest.TestCase):
         first = self.render_contract()
         second = self.render_contract()
         self.assertEqual(first, second)
-        self.assertEqual(9, len(first))
+        self.assertEqual(10, len(first))
         self.assertIn(b"data GeneratedOperationRule", first[COMPILER.RULE_GENERATED])
         self.assertIn(
             b"adapterInventoryMachineSchema :: MachineSchema",
@@ -106,7 +113,10 @@ class OperationContractCompilerTest(unittest.TestCase):
         for document in self.validate_contract()[3]:
             schema = json.loads(
                 COMPILER.render_schema(
-                    document, self.profile_inventory, self.core_inventory
+                    document,
+                    self.profile_inventory,
+                    self.core_inventory,
+                    core_companion=self.core_companion,
                 )
             )
             self.assert_closed_objects(schema)
@@ -238,6 +248,176 @@ class OperationContractCompilerTest(unittest.TestCase):
             self.validate_variant_schema(schema, name, requested_level),
             schema["$defs"],
         )
+
+    def trace_schema_fixture(self):
+        document = next(
+            document
+            for document in self.validate_contract()[3]
+            if document.name == "traceResult"
+        )
+        schema = json.loads(
+            COMPILER.render_schema(
+                document,
+                self.profile_inventory,
+                self.core_inventory,
+                core_companion=self.core_companion,
+            )
+        )
+        Draft202012Validator.check_schema(schema)
+        fixture_schema = copy.deepcopy(schema)
+        del fixture_schema["$id"]
+        return schema, Draft202012Validator(fixture_schema)
+
+    def test_trace_schema_binds_gap_slots_and_endpoints_exactly(self):
+        schema, validator = self.trace_schema_fixture()
+        definitions = schema["$defs"]
+        baseline = self.sample_schema_value(
+            definitions["traceRejected"], definitions
+        )
+        rejected_roots = definitions["traceRejected"]["properties"]["trace"][
+            "oneOf"
+        ][1]
+        baseline["trace"] = self.sample_schema_value(
+            rejected_roots, definitions
+        )
+        self.assertTrue(validator.is_valid(baseline))
+        gap = baseline["trace"]["roots"][0]["result"]["gaps"][0]
+
+        for field, invalid in (
+            ("slotKind", "ownership"),
+            ("slotId", "strategy-qualifies-need"),
+            ("ruleId", "core.trace.slot.strategy-qualifies-need"),
+        ):
+            with self.subTest(axis=field):
+                changed = copy.deepcopy(baseline)
+                changed_gap = changed["trace"]["roots"][0]["result"]["gaps"][0]
+                changed_gap["slot"][field] = invalid
+                self.assertFalse(validator.is_valid(changed))
+
+        wrong_endpoint = copy.deepcopy(baseline)
+        wrong_gap = wrong_endpoint["trace"]["roots"][0]["result"]["gaps"][0]
+        wrong_gap["endpoints"][0]["variable"] = "strategy"
+        self.assertFalse(validator.is_valid(wrong_endpoint))
+
+        partial_schema = rejected_roots["properties"]["roots"]["contains"][
+            "properties"
+        ]["result"]
+        gap_schema = partial_schema["oneOf"][0]["properties"]["gaps"][
+            "items"
+        ]
+        unbound = copy.deepcopy(baseline)
+        unbound_gap = self.sample_schema_value(
+            gap_schema["oneOf"][1], definitions
+        )
+        unbound["trace"]["roots"][0]["result"]["gaps"][0] = unbound_gap
+        self.assertTrue(validator.is_valid(unbound))
+
+        for field in ("establishedBindings", "unresolvedVariables"):
+            with self.subTest(axis=f"unbound-{field}"):
+                changed = copy.deepcopy(unbound)
+                changed_gap = changed["trace"]["roots"][0]["result"][
+                    "gaps"
+                ][0]
+                if field == "establishedBindings":
+                    changed_gap[field][0]["variable"] = "strategy"
+                else:
+                    changed_gap[field][0] = "strategy"
+                self.assertFalse(validator.is_valid(changed))
+
+    def test_trace_schema_requires_every_complete_support_occurrence(self):
+        schema, validator = self.trace_schema_fixture()
+        definitions = schema["$defs"]
+        accepted = self.sample_schema_value(
+            definitions["traceAccepted"], definitions
+        )
+        self.assertTrue(validator.is_valid(accepted))
+
+        for support in ("relationSupport", "ownershipSupport"):
+            with self.subTest(result="accepted", support=support):
+                changed = copy.deepcopy(accepted)
+                changed["trace"]["roots"][0]["result"][support][0][
+                    "occurrences"
+                ] = []
+                self.assertFalse(validator.is_valid(changed))
+
+        rejected_roots = definitions["traceRejected"]["properties"]["trace"][
+            "oneOf"
+        ][1]
+        mixed = self.sample_schema_value(
+            definitions["traceRejected"], definitions
+        )
+        mixed["trace"] = self.sample_schema_value(rejected_roots, definitions)
+        complete_root = self.sample_schema_value(
+            rejected_roots["properties"]["roots"]["items"], definitions
+        )
+        mixed["trace"]["roots"].append(complete_root)
+        self.assertTrue(validator.is_valid(mixed))
+
+        for support in ("relationSupport", "ownershipSupport"):
+            with self.subTest(result="mixed", support=support):
+                changed = copy.deepcopy(mixed)
+                changed["trace"]["roots"][1]["result"][support][0][
+                    "occurrences"
+                ] = []
+                self.assertFalse(validator.is_valid(changed))
+
+    def test_trace_schema_separates_local_and_global_partial_failures(self):
+        schema, validator = self.trace_schema_fixture()
+        definitions = schema["$defs"]
+        rejected_roots = definitions["traceRejected"]["properties"]["trace"][
+            "oneOf"
+        ][1]
+        local = self.sample_schema_value(
+            definitions["traceRejected"], definitions
+        )
+        local["trace"] = self.sample_schema_value(rejected_roots, definitions)
+        self.assertTrue(validator.is_valid(local))
+
+        partial_schema = rejected_roots["properties"]["roots"]["contains"][
+            "properties"
+        ]["result"]
+        local_partial, global_partial = partial_schema["oneOf"]
+        local_gap_schema = local_partial["properties"]["gaps"]["items"]
+        global_gap_schema = global_partial["properties"]["gaps"][
+            "prefixItems"
+        ][0]
+
+        global_disposition = copy.deepcopy(local)
+        global_disposition["trace"]["roots"][0]["result"]["gaps"][0][
+            "disposition"
+        ] = "globally-inconsistent"
+        self.assertFalse(validator.is_valid(global_disposition))
+
+        mixed_local = copy.deepcopy(local)
+        mixed_local["trace"]["roots"][0]["result"]["gaps"].append(
+            self.sample_schema_value(global_gap_schema, definitions)
+        )
+        self.assertFalse(validator.is_valid(mixed_local))
+
+        global_result = self.sample_schema_value(global_partial, definitions)
+        global_failure = copy.deepcopy(local)
+        global_failure["trace"]["roots"][0]["result"] = global_result
+        self.assertTrue(validator.is_valid(global_failure))
+
+        nonempty_projection = copy.deepcopy(global_failure)
+        nonempty_projection["trace"]["roots"][0]["result"][
+            "variableProjections"
+        ][0]["identities"].append("x")
+        self.assertFalse(validator.is_valid(nonempty_projection))
+
+        mixed_global = copy.deepcopy(global_failure)
+        mixed_global["trace"]["roots"][0]["result"]["gaps"].append(
+            self.sample_schema_value(local_gap_schema, definitions)
+        )
+        self.assertFalse(validator.is_valid(mixed_global))
+
+        repeated_global = copy.deepcopy(global_failure)
+        repeated_global["trace"]["roots"][0]["result"]["gaps"].append(
+            copy.deepcopy(
+                repeated_global["trace"]["roots"][0]["result"]["gaps"][0]
+            )
+        )
+        self.assertFalse(validator.is_valid(repeated_global))
 
     def test_validate_schema_rejects_multi_axis_negative_mutations(self):
         schema, validator = self.validate_schema_fixture()
@@ -761,6 +941,22 @@ class OperationContractCompilerTest(unittest.TestCase):
                 COMPILER.validate(
                     PROFILE_COMPANION,
                     PROFILE_DIAGNOSTIC_INVENTORY,
+                    path,
+                )
+
+    def test_mutated_core_companion_digest_is_rejected(self):
+        companion = copy.deepcopy(self.core_companion)
+        companion["traceSemantics"]["variableCatalog"].reverse()
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "semantics.json"
+            path.write_text(json.dumps(companion) + "\n", encoding="utf-8")
+            with self.assertRaisesRegex(
+                ValueError, "Core companion digest differs from owner inventory"
+            ):
+                COMPILER.render_outputs(
+                    PROFILE_COMPANION,
+                    PROFILE_DIAGNOSTIC_INVENTORY,
+                    CORE_OWNER_DIAGNOSTIC_INVENTORY,
                     path,
                 )
 

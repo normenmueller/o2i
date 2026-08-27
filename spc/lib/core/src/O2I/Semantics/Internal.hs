@@ -215,7 +215,8 @@ type role QualificationEligibleStrategy nominal
 
 -- | Opaque proof that one Strategy has a complete valid formulation.
 data QualificationEligibleStrategy scope = QualificationEligibleStrategy
-  { eligibleStrategyIdentity :: !ModelIdentity
+  { eligibleStrategyGraphIdentity :: !ModelIdentity
+  , eligibleStrategyIdentity :: !ModelIdentity
   , eligibleStrategyOccurrence :: !OccurrenceIdentity
   , eligibleStrategyInput :: !StrategyFormulationInput
   , eligibleStrategyWitnesses :: ![OccurrenceIdentity]

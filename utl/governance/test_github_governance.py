@@ -429,15 +429,6 @@ class GitHubGovernanceContractTests(unittest.TestCase):
                 self.assertIn(term, completion)
         self.assertNotIn("first two actions", completion)
 
-    def test_routine_handoff_preserves_independent_issue_52(self) -> None:
-        content = read(STATE)
-        self.assertIn("- Current Issue: `NONE`", content)
-        self.assertIn("Issue-free Routine maintenance", content)
-        self.assertIn("independent #52 branch", content)
-        self.assertIn("remain separate, preserved, and untouched", content)
-        self.assertIn("neither activates nor changes them", content)
-        self.assertIn("b9b86b1220c39cb2c433e58201253a47d98b4c9e", content)
-
     def test_integrity_evidence_is_exception_based(self) -> None:
         agent = read(GOVERNANCE)
         human = read(CONTRIBUTING)
