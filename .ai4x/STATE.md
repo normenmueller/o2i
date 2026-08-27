@@ -1,46 +1,46 @@
 # Handoff
 
 - Observed: 2026-08-27 CEST
-- Work status: `PAUSED`
-- Current Issue: `#92`
-- Current node: `po-publication-authority`
+- Work status: `ACTIVE`
+- Current Issue: `#94`
+- Current node: `accepted-candidate-publication`
 
 # Objective
 
-Require every primary-Gertrud final response that returns control for a Product Owner decision to end with one concise, deterministic, approval-ready decision proposal and an explicit Cold Start assessment.
+Require the `Recommendation:` field in every primary-Gertrud Product Owner Decision Handoff to be one single-line Markdown paragraph with one empty source line immediately before and after it.
 
 # Authority
 
-- The Product Owner explicitly requested the correction and required AI-suitable formulation.
-- Issue #92 owns the Protected repository-governance change and is in Project status `Paused`.
-- The Product Owner approved only the local correction from rendered `Freigabe:` to natural `Antwort zur Freigabe:`, synchronized tests, and focused re-review; push, Pull Request publication, and other governance changes remain excluded.
-- Scope is `.ai4x/BEHAVIOR.md`, the non-duplicating governance pointer, concise human projection, deterministic governance tests, and this handoff; no Product Owner, Ready-release, review, publication, or cleanup authority changes.
+- Issue #94 owns this linked Protected repository-governance follow-up and is in Project status `In progress`.
+- The Product Owner explicitly authorized the exact recommendation-paragraph invariant through `In review`, including Co-Authoring, deterministic tests, independent review, commit, push, Pull Request publication, required remote checks, evidence publication, and Project administration.
+- Scope is `.ai4x/BEHAVIOR.md`, the concise German projection in `CONTRIBUTING.md`, deterministic governance tests, and this handoff.
+- Exclusions are every other report-content or formatting rule, merge, Issue closure, `Done`, cleanup, release, and tag.
 
 # Material Risk
 
-- The trigger must be observable from control transfer so progress updates and bounded factual answers do not acquire ceremony.
-- A recommendation or approval phrase must not manufacture or broaden authority; Cold Start branches must preserve the existing exact three-step safety contract.
+- The source-level blank-line invariant must be deterministic without changing decision semantics or contradicting the existing complete single-line recommendation rule.
+- The rule must exclude heading and list rendering while avoiding claims that static repository tests validate every future generated response.
+
+# Participants
+
+- Primary Gertrud: authority boundary, supplied remote facts, coordination, independent-review routing, publication, and workflow administration.
+- External agent-governance Co-Author: actively designed and implemented the exact paragraph invariant in `.ai4x/BEHAVIOR.md`, `CONTRIBUTING.md`, and `utl/governance/test_github_governance.py`; author self-review only and no independent acceptance.
+- Independent agent-governance reviewer: independently and read-only accepted the exact candidate with no authorship or implementation contribution.
 
 # Verification
 
-- #53 is merged as `67bca7a3ba6ae85ccbd62b60b9611557f9a5929d`, closed as completed, Project `Done`, and cleaned locally and remotely.
-- External agent-governance Co-Author designed and implemented the candidate and all review corrections. Independent read-only review accepted the exact candidate with zero blocking and zero advisory findings after all findings were closed; role separation is intact.
-- Accepted candidate commit `3fb1a1fca8c1abf4ad7437575468ea18690c4640` is durable locally with Product Owner author and committer attribution.
-- The exact standalone `Freigegeben.` bound the local wording-and-test correction once and is consumed. Commit `0640aa0ac0a0bf6da39bcce2f8b9f229b74ede79` provides the natural German `Antwort zur Freigabe:` rendering and guards against `Freigabe: Freigegeben.`.
-- Focused independent read-only review accepted the exact rendering correction with zero blocking and zero advisory findings. Primary governance 34/34, routing 18/18, licensing 551/551, and diff checks pass.
-- The accepted commits remain local and unpublished; no push or Pull Request authority was granted by the consumed correction approval.
-
-# Wait State
-
-- Reason: protected push and Pull Request publication authority for the exact current branch tip is not explicit.
-- Return condition: the Product Owner grants exact publication authority or changes the target.
+- Basis is clean published #92 baseline `988b6be4d39454c9e7c7f7a6422704a5c73b1181` plus the pre-existing #94 handoff.
+- Candidate hashes: `.ai4x/BEHAVIOR.md` `8ca9bf6bff72bfd9a8b045b33d8e444369caf9cd034d5fb346987615330f18d3`; `CONTRIBUTING.md` `c1bb8ab74c4c29ab7724bc0af5a85d18b399cfe3643fac583115df01ce5185f9`; `utl/governance/test_github_governance.py` `ba7fa43b31c9e144a0db9072fe5d1c5ded8184d0d03acea44896684657494966`.
+- Focused governance contract tests pass 35/35; `./utl/verify.sh governance` passes governance 35/35 and routing 18/18; scoped `git diff --check` passes.
+- Independent read-only review returned `accepted` with zero blocking and zero advisory findings; all supplied candidate and handoff hashes were reproduced and role separation remains intact.
+- Commit, publication, remote verification, evidence receipt, and Project `In review` remain pending.
 
 # Next Action
 
-After exact Product Owner authority, push the accepted branch tip, open the Pull Request, await required remote checks, publish review evidence, and move #92 to `In review`.
+Commit the accepted candidate, publish it through the verified machine identity, open the Pull Request, await required remote verification, publish the review receipt, and move #94 to `In review`.
 
 # Local Return Point
 
-- Branch: `feat/92-decision-ready-handoffs`.
-- Worktree: repository-relative `.ai4x/local/worktrees/92-decision-ready-handoffs` from the stable checkout.
-- Dirty scope: `.ai4x/STATE.md` only. All accepted governance and rendering changes are committed locally and unpublished.
+- Branch: `feat/94-recommendation-paragraph`.
+- Worktree: repository-relative `.ai4x/local/worktrees/94-recommendation-paragraph` from the stable checkout.
+- Dirty scope: `.ai4x/BEHAVIOR.md`, `CONTRIBUTING.md`, `utl/governance/test_github_governance.py`, and `.ai4x/STATE.md`; no candidate commit or branch publication has occurred.
