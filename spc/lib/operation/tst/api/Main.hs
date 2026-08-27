@@ -26,6 +26,14 @@ import qualified O2I.Operation.Machine as Machine
 import qualified O2I.Operation.Preparation as Preparation
 import qualified O2I.Operation.Profile as Profile
 import qualified O2I.Operation.Provenance as Provenance
+import qualified O2I.Operation.Qualification.Subjects as QualificationSubjects
+import qualified O2I.Operation.Qualification.Subjects.Machine as QualificationSubjectsMachine
+import qualified O2I.Operation.Qualification.Subjects.Request as QualificationSubjectsRequest
+import qualified O2I.Operation.Qualification.Subjects.Result as QualificationSubjectsResult
+import qualified O2I.Operation.Qualify as Qualify
+import qualified O2I.Operation.Qualify.Machine as QualifyMachine
+import qualified O2I.Operation.Qualify.Request as QualifyRequest
+import qualified O2I.Operation.Qualify.Result as QualifyResult
 import qualified O2I.Operation.Request as Request
 import qualified O2I.Operation.Rule.Catalog as RuleCatalog
 import qualified O2I.Operation.Schema as Schema
@@ -131,6 +139,26 @@ $(assertAbstractTypes
     , "Provenance.SourceIdentity"
     , "Provenance.SupplementalProvenance"
     , "Provenance.SupplementalProvenanceDefect"
+    , "QualificationSubjectsRequest.QualificationSubjectsRequest"
+    , "QualificationSubjectsResult.QualificationSubjectsPrerequisite"
+    , "QualificationSubjectsResult.QualificationSubjectCategory"
+    , "QualificationSubjectsResult.QualificationSubjectEligibility"
+    , "QualificationSubjectsResult.DiscoveredQualificationSubject"
+    , "QualificationSubjectsResult.QualificationSubjectsInventory"
+    , "QualificationSubjectsResult.QualificationSubjectsInternalFailure"
+    , "QualificationSubjectsResult.QualificationSubjectsFailure"
+    , "QualificationSubjectsResult.PreparedQualificationSubjects"
+    , "QualificationSubjectsResult.QualificationSubjectsResult"
+    , "QualificationSubjectsMachine.QualificationSubjectsDocument"
+    , "QualifyRequest.QualifySelectorCategory"
+    , "QualifyRequest.QualifyRequestDefect"
+    , "QualifyRequest.QualifyRequest"
+    , "QualifyResult.QualifyPrerequisite"
+    , "QualifyResult.QualifyInternalFailure"
+    , "QualifyResult.QualifyFailure"
+    , "QualifyResult.PreparedQualify"
+    , "QualifyResult.QualifyResult"
+    , "QualifyMachine.QualifyResultDocument"
     , "Request.CapabilityIdentity"
     , "Request.CapabilityInputReferences"
     , "Request.RequestedContract"
@@ -411,6 +439,79 @@ $(assertOrdinaryFunctions
     , 'Provenance.supplementalProvenanceSources
     , 'Provenance.foldSupplementalProvenance
     , 'Provenance.foldSupplementalProvenanceDefect
+    , 'QualificationSubjects.runQualificationSubjects
+    , 'QualificationSubjectsRequest.qualificationSubjectsRequest
+    , 'QualificationSubjectsRequest.qualificationSubjectsModelInput
+    , 'QualificationSubjectsRequest.qualificationSubjectsViewSelector
+    , 'QualificationSubjectsRequest.qualificationSubjectsAdapterId
+    , 'QualificationSubjectsRequest.qualificationSubjectsSupplementalInputs
+    , 'QualificationSubjectsRequest.foldQualificationSubjectsRequest
+    , 'QualificationSubjectsResult.notationQualificationSubjectsPrerequisite
+    , 'QualificationSubjectsResult.profileQualificationSubjectsPrerequisite
+    , 'QualificationSubjectsResult.structureQualificationSubjectsPrerequisite
+    , 'QualificationSubjectsResult.qualificationSubjectsPrerequisiteText
+    , 'QualificationSubjectsResult.foldQualificationSubjectsPrerequisite
+    , 'QualificationSubjectsResult.needQualificationSubjectCategory
+    , 'QualificationSubjectsResult.strategyQualificationSubjectCategory
+    , 'QualificationSubjectsResult.qualificationSubjectCategoryText
+    , 'QualificationSubjectsResult.foldQualificationSubjectCategory
+    , 'QualificationSubjectsResult.eligibleQualificationSubject
+    , 'QualificationSubjectsResult.ineligibleQualificationSubject
+    , 'QualificationSubjectsResult.unavailableQualificationSubjectEligibility
+    , 'QualificationSubjectsResult.qualificationSubjectEligibilityText
+    , 'QualificationSubjectsResult.foldQualificationSubjectEligibility
+    , 'QualificationSubjectsResult.discoveredQualificationSubjectCategory
+    , 'QualificationSubjectsResult.discoveredQualificationSubjectIdentity
+    , 'QualificationSubjectsResult.discoveredQualificationSubjectOccurrence
+    , 'QualificationSubjectsResult.discoveredQualificationSubjectQualifiedEndpoint
+    , 'QualificationSubjectsResult.discoveredQualificationSubjectDisplayName
+    , 'QualificationSubjectsResult.discoveredQualificationSubjectEligibility
+    , 'QualificationSubjectsResult.foldDiscoveredQualificationSubject
+    , 'QualificationSubjectsResult.qualificationInventoryNeedSubjects
+    , 'QualificationSubjectsResult.qualificationInventoryStrategySubjects
+    , 'QualificationSubjectsResult.foldQualificationSubjectsInventory
+    , 'QualificationSubjectsResult.foldQualificationSubjectsInternalFailure
+    , 'QualificationSubjectsResult.foldQualificationSubjectsFailure
+    , 'QualificationSubjectsResult.preparedQualificationSubjectsRequest
+    , 'QualificationSubjectsResult.preparedQualificationSubjectsSupplementalSources
+    , 'QualificationSubjectsResult.preparedQualificationSubjectsDiagnostics
+    , 'QualificationSubjectsResult.foldPreparedQualificationSubjects
+    , 'QualificationSubjectsResult.foldQualificationSubjectsResult
+    , 'QualificationSubjectsMachine.qualificationSubjectsDocument
+    , 'QualificationSubjectsMachine.qualificationSubjectsSchema
+    , 'QualificationSubjectsMachine.qualificationSubjectsDocumentVariant
+    , 'QualificationSubjectsMachine.encodeQualificationSubjectsDocument
+    , 'Qualify.runQualify
+    , 'QualifyRequest.needQualifySelectorCategory
+    , 'QualifyRequest.strategyQualifySelectorCategory
+    , 'QualifyRequest.qualifySelectorCategoryText
+    , 'QualifyRequest.foldQualifySelectorCategory
+    , 'QualifyRequest.qualifyRequestDefectCategory
+    , 'QualifyRequest.qualifyRequestDefectIdentity
+    , 'QualifyRequest.foldQualifyRequestDefect
+    , 'QualifyRequest.qualifyRequest
+    , 'QualifyRequest.qualifyModelInput
+    , 'QualifyRequest.qualifyViewSelector
+    , 'QualifyRequest.qualifyAdapterId
+    , 'QualifyRequest.qualifyStrategySelectors
+    , 'QualifyRequest.qualifyNeedSelectors
+    , 'QualifyRequest.qualifySupplementalInputs
+    , 'QualifyRequest.foldQualifyRequest
+    , 'QualifyResult.notationQualifyPrerequisite
+    , 'QualifyResult.profileQualifyPrerequisite
+    , 'QualifyResult.structureQualifyPrerequisite
+    , 'QualifyResult.qualifyPrerequisiteText
+    , 'QualifyResult.foldQualifyPrerequisite
+    , 'QualifyResult.foldQualifyInternalFailure
+    , 'QualifyResult.foldQualifyFailure
+    , 'QualifyResult.preparedQualifyRequest
+    , 'QualifyResult.preparedQualifyDiagnostics
+    , 'QualifyResult.foldPreparedQualify
+    , 'QualifyResult.foldQualifyResult
+    , 'QualifyMachine.qualifyResultDocument
+    , 'QualifyMachine.qualifyResultSchema
+    , 'QualifyMachine.qualifyResultDocumentVariant
+    , 'QualifyMachine.encodeQualifyResultDocument
     , 'Request.validationCapability
     , 'Request.traceCapability
     , 'Request.qualificationCapability

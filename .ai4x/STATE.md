@@ -1,49 +1,65 @@
 # Handoff
 
 - Observed: 2026-08-27 CEST
-- Work status: `ACTIVE`
-- Current Issue: `#89`
-- Current node: `publication-and-closure`
+- Work status: `PAUSED`
+- Current Issue: `#53`
+- Current node: `po-squash-merge`
 
 # Objective
 
-Make cleanup of no-longer-needed Issue-owned branches, worktrees, stashes, active-checkout pointers, and scratch artifacts a durable post-completion duty with strict destructive-action safeguards.
+Deliver Batch 8 Qualification through one accepted, published, remotely green Pull Request and Project `In review`, leaving squash-merge and closure to the Product Owner.
 
 # Authority
 
-- The Product Owner explicitly requested that the cleanup rule be recorded stringently in `.ai4x`, not merely stated in conversation.
-- Authorized scope is the canonical operating/governance contracts, deterministic governance tests, and only required concise human-facing synchronization.
-- Completion and protected publication of this governance change are explicitly requested; all work remains isolated from #53.
-- The normal explicit release of a `Ready` Issue remains bounded through `In review` and alone authorizes no cleanup.
+- Parent #45 owns the accepted target architecture and implementation contract; #53 owns Batch 8 only.
+- The Product Owner explicitly released #53 from `Ready` for autonomous execution through `In review`, including capability-matched Co-Authoring, implementation, deterministic verification, independent reviews, correction loops, commit, push, PR publication, remote CI, and workflow administration.
+- Scope is Core Qualification plus Operation `qualification-subjects` and `qualify`, their request/result/runtime/machine contracts, schemas and manifest rows, public API probes, performance probes, and tests.
+- Merge, Issue/Project closure, branch deletion, and cleanup remain Product Owner decisions.
+- Governance Issues #87 and #89 are separate authority surfaces; no governance hunk enters #53.
 
 # Material Risk
 
-- Cleanup must require completed, published and remotely verified work, closed Issue, Project `Done`, explicit completion-and-cleanup authority, and proof that no unique work remains only on a target.
-- Default/protected, active, review, unmerged, recovery, foreign, user-owned, or otherwise unique data must never be deleted.
-- Every destructive target must be resolved explicitly before action; remote deletion requires verified machine identity; local and remote inventories must be verified afterward.
-- Protected repository governance requires active external Co-Authoring, deterministic evidence, and independent read-only acceptance.
+- Qualification is a Significant strategy/formalization/Operation/API change with selector precedence, proposal routing, complete requested-pair outcomes, source/rationale, provenance, schema, and asymptotic obligations.
+- Every proposal is examined exactly once for routing; complete out-of-request routes produce no output or diagnostic; no unrequested pair product, acceptance, persistence, query behavior, compatibility layer, model edit, CLI cutover, or publication change is admitted.
+- Work must meet `O(W_p + P_q + Q_q + U_q + D_q log(1 + N_q) + Z_q)` and retention `O(S_p + P_q + Q_q + D_q + Z_q)` with truthful adversarial counters.
 
 # Participants
 
-- Primary Gertrud: authority framing, Issue/Project administration, integration, remote identity, verification, publication, and exact cleanup.
-- External Repository Governance, Agentic Workflow, Destructive-Action Safety, and Human Usability Co-Author: target design and implementation; no independent acceptance.
-- Independent Repository Governance, Agentic Workflow, Destructive-Action Safety, and Human Usability reviewer: read-only acceptance of the exact Co-Authored candidate; no authorship or mutation.
+- Primary Gertrud: coordination, remote facts, integration, verification, correction routing, publication, and handoff.
+- External Strategy/O2I Qualification and Haskell/formal-methods Co-Author: Core Qualification design and implementation; no independent acceptance.
+- External Operation/API/schema/performance Co-Author: Operation Qualification design and implementation; no independent acceptance.
+- Independent Core Strategy/Formalization/Haskell/API/Performance reviewer: read-only review of exact Core candidates; final verdict `accepted`, no authorship or mutation.
+- Independent Operation/API/schema/provenance/performance reviewer: read-only review of exact Operation candidates; final verdict `accepted`, no authorship or mutation.
 
 # Verification
 
-- Basis: clean published `trunk` at `258d47dc6593c250dc160e06e97227aa1109bc93`.
-- Issue #89 is Project `In progress` in isolated branch `chore/89-clean-completed-work`.
-- Corrected exact scoped candidate digest: `594e440582d0351b9b80bb0245880977a20d4c0151ed2be264e676ae695acb60`.
-- Governance 33/33, verification routing 18/18, licensing 10/10, REUSE 518/518, package-license, focused cleanup, and diff checks pass.
-- The first independent review returned three blockers and zero advisory findings; all three are corrected in the new digest.
-- Independent re-review reproduced the digest and checks, found zero blocking and zero advisory findings, preserved role separation, and returned `accepted`.
+- Basis: clean published `trunk` at `c59b02845ba5841b852168af838806f993e69dc5`.
+- Published `trunk` has since advanced independently to `4608dfc531742fab6fa988cd932c7b8f98629de2` through governance-only #87 and #89; both are complete and cleaned up, and their commits are integrated before #53 publication without entering its product scope.
+- Project records #53 as `In review`; activation receipt is Issue comment `5439129504` and final review receipt is Issue comment `5442434487`.
+- First exact Core candidate digest `0d777d69e7ad89049e80f77f887cd6dbd52e79a603f312826300e4db20ee2e2d`: focused tests 16/16, API compile contracts, Cabal check, Haddock, and diff checks passed.
+- Independent Core review returned `changes required`: exact graph/semantic same-origin binding, all-observation effect-graph membership, truthful complete performance algorithm/counters/probes, and executable 21-rule/provenance coverage remain blocking; advisory findings none.
+- Corrected 19-path Core candidate digest `17648f50664fc3837344d29194f3cc77cce415ecf7ccf3fe5815235c519356aa`: the four first-review findings are corrected; Qualification 32/32, Semantics 36/36, Core suites, API compile contracts, public Qualification Haddock, Cabal check, format, and diff checks pass.
+- Independent re-review bound to `17648f...` found one blocker and zero advisory findings: per-proposal ordered lookups coupled `P_q` to `log V` and `log Q_q` outside the accepted bound.
+- Final corrected Core digest `a08e5fa43b5179b5e6f612b85036b00c7909776a5392d6f54ec2ef6553256312`: prepared scalar-linear occurrence radices and compact bounded-word pair ranks remove both coupled factors; joint large-`V`/`Q_q` evidence, Qualification 33/33, API, Haddock, Cabal, format, and diff checks are green; independent verdict `accepted` with zero blocking and zero advisory findings.
+- Operation invariant checkpoint before the Core context change: contract compiler 41/41 and Operation suite 157/157 under `-Werror`; direct Core bindings are intentionally frozen until the corrected context is green.
+- 37-path Operation candidate canonical digest `fdfe1599042adf3fd54bb12dd4732baca7aad4cbbeac8d513c88a61e5c3ebe4e`: accepted Core context bound once per Semantics run; Operation 157/157, compiler 41/41, API, Haddock, exact-once performance, Cabal, format, and diff checks pass.
+- Independent review of `fdfe...` found three blockers and zero advisory findings: positional Proposal schemas admit impossible states; public `QualifySemanticModelContractFailure` is unreachable dead algebra; and focused Operation binding tests do not yet execute all material acquisition, prerequisite, Semantics-continuation, selector-accumulation, requested-pair/emission, Machine, and provenance paths.
+- Schema-only intermediate digest `13004bee797594add05ad18bdf162a7252afff489deda68cd41504dc82dbb8f5` closed the first blocker but was not an acceptance candidate.
+- Final corrected 37-path Operation digest `f40760b29d3400d089e844f99a874f5c753f534fb11ac5b9c32e21f82b335039`: all three findings are corrected; focused binding 10/10, Operation 163/163, compiler/schema 41/41, adversarial Qualification 33/33, API, Haddock, Cabal, format, and diff checks pass; independent verdict `accepted` with zero blocking and zero advisory findings.
+- Integrated commit `9c6b0bf` includes published governance-only trunk and preserves both accepted product digests unchanged. `./utl/verify.sh foundation` and `./utl/verify.sh governance` pass with Licensing 551/551, full Haskell/package/source-distribution tests, external API contracts, Candidate Views, Haddock 100%, governance 33/33 plus routing 18/18, generated contract, digest, format, and diff checks green.
+- Pull Request #91 is open and mergeable. Remote Verify run `33092667169` passed Repository licensing, Change governance, Model contracts, White Paper, and Haskell specification for product head `4b21b1f39fd05f95e85d5e2c00a45469ffecd061`.
+
+# Wait State
+
+- Reason: the accepted and remotely green Pull Request awaits Product Owner review and squash-merge; Issue closure, Project `Done`, and cleanup are outside the standing release.
+- Return condition: the Product Owner merges PR #91, requests a correction, or explicitly authorizes the remaining closure or cleanup actions.
 
 # Next Action
 
-Publish the accepted candidate through green remote verification, merge, close, set `Done`, and apply the rule to #89 itself.
+The Product Owner reviews and squash-merges PR #91 to close #53. Gertrud performs no merge, closure, `Done`, branch deletion, worktree removal, or cleanup without the required further authority.
 
 # Local Return Point
 
-- Branch: `chore/89-clean-completed-work`.
-- Worktree: repository-relative `.ai4x/local/worktrees/89-clean-completed-work` from the stable checkout.
-- Dirty scope: `.ai4x/STATE.md` plus Co-Author-owned governance candidate paths.
+- Branch: `feat/53-qualification`.
+- Worktree: repository-relative `.ai4x/local/worktrees/53-qualification` from the stable checkout.
+- Dirty scope: this final wait-state handoff update only; product and governance integration commits are durable locally and published.

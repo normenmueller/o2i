@@ -53,6 +53,15 @@
       ]
     },
     {
+      "name": "qualificationSubjects",
+      "identity": "o2i.discovery.qualification-subjects",
+      "version": 1,
+      "variants": [
+        "qualification-subjects-prerequisite-rejected",
+        "qualification-subjects-discovered"
+      ]
+    },
+    {
       "name": "validateResult",
       "identity": "o2i.operation.validate",
       "version": 1,
@@ -76,6 +85,15 @@
         "trace-prerequisite-rejected",
         "trace-rejected",
         "trace-accepted"
+      ]
+    },
+    {
+      "name": "qualifyResult",
+      "identity": "o2i.operation.qualify",
+      "version": 1,
+      "variants": [
+        "qualify-prerequisite-rejected",
+        "qualify-completed"
       ]
     }
   ],

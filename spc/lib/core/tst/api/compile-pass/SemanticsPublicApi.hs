@@ -13,6 +13,10 @@ assess ::
   -> SemanticAssessment scope
 assess = assessSemantics
 
+matchesProducingGraph ::
+     WellFormedGraph scope -> SemanticAssessment scope -> Bool
+matchesProducingGraph = semanticAssessmentMatchesGraph
+
 summarize ::
      SemanticAssessment scope
   -> (SemanticDisposition, Int, Int, Maybe Int, Int, Int)

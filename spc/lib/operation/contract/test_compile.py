@@ -85,7 +85,7 @@ class OperationContractCompilerTest(unittest.TestCase):
         first = self.render_contract()
         second = self.render_contract()
         self.assertEqual(first, second)
-        self.assertEqual(10, len(first))
+        self.assertEqual(12, len(first))
         self.assertIn(b"data GeneratedOperationRule", first[COMPILER.RULE_GENERATED])
         self.assertIn(
             b"adapterInventoryMachineSchema :: MachineSchema",
@@ -267,6 +267,182 @@ class OperationContractCompilerTest(unittest.TestCase):
         fixture_schema = copy.deepcopy(schema)
         del fixture_schema["$id"]
         return schema, Draft202012Validator(fixture_schema)
+
+    def qualification_schema_fixture(self, name):
+        document = next(
+            document
+            for document in self.validate_contract()[3]
+            if document.name == name
+        )
+        schema = json.loads(
+            COMPILER.render_schema(
+                document, self.profile_inventory, self.core_inventory
+            )
+        )
+        Draft202012Validator.check_schema(schema)
+        fixture_schema = copy.deepcopy(schema)
+        del fixture_schema["$id"]
+        return schema, Draft202012Validator(fixture_schema)
+
+    def test_qualification_subjects_schema_closes_prepared_discovery(self):
+        schema, validator = self.qualification_schema_fixture(
+            "qualificationSubjects"
+        )
+        definitions = schema["$defs"]
+        discovered = self.sample_schema_value(
+            definitions["subjectsDiscovered"], definitions
+        )
+        self.assertTrue(validator.is_valid(discovered))
+        self.assertEqual(
+            ["operation", "adapter", "profile", "core"],
+            [
+                contract["kind"]
+                for contract in discovered["provenance"]["contracts"]
+            ],
+        )
+
+        missing_contract = copy.deepcopy(discovered)
+        missing_contract["provenance"]["contracts"].pop()
+        self.assertFalse(validator.is_valid(missing_contract))
+
+        invalid_subject = copy.deepcopy(discovered)
+        invalid_subject["subjects"]["needs"].append(
+            {"identity": "valid", "occurrence": "\x00"}
+        )
+        self.assertFalse(validator.is_valid(invalid_subject))
+
+        wrong_category = copy.deepcopy(discovered)
+        need_schema = definitions["subjectsDiscovered"]["properties"][
+            "subjects"
+        ]["properties"]["needs"]["items"]
+        need = self.sample_schema_value(need_schema, definitions)
+        need["category"] = "strategy"
+        wrong_category["subjects"]["needs"] = [need]
+        self.assertFalse(validator.is_valid(wrong_category))
+
+        semantic_prerequisite = self.sample_schema_value(
+            definitions["prerequisiteRejected"], definitions
+        )
+        semantic_prerequisite["execution"]["prerequisite"] = "semantics"
+        self.assertFalse(validator.is_valid(semantic_prerequisite))
+
+    def test_qualify_schema_binds_dispositions_to_exact_payloads(self):
+        schema, validator = self.qualification_schema_fixture("qualifyResult")
+        definitions = schema["$defs"]
+        completed = self.sample_schema_value(
+            definitions["qualifyCompleted"], definitions
+        )
+        self.assertTrue(validator.is_valid(completed))
+        self.assertEqual(
+            ["operation", "adapter", "profile", "core"],
+            [
+                contract["kind"]
+                for contract in completed["provenance"]["contracts"]
+            ],
+        )
+
+        qualification = definitions["qualifyCompleted"]["properties"][
+            "qualification"
+        ]
+        available_qualification = qualification["oneOf"][1]
+        completed["qualification"] = self.sample_schema_value(
+            available_qualification, definitions
+        )
+        self.assertTrue(validator.is_valid(completed))
+        duplicate_request = copy.deepcopy(completed)
+        duplicate_request["request"]["strategies"] = ["same", "same"]
+        self.assertFalse(validator.is_valid(duplicate_request))
+
+        semantic_prerequisite = self.sample_schema_value(
+            definitions["prerequisiteRejected"], definitions
+        )
+        semantic_prerequisite["execution"]["prerequisite"] = "semantics"
+        self.assertFalse(validator.is_valid(semantic_prerequisite))
+        unrouted_proposal_schema = available_qualification["properties"][
+            "unroutedProposals"
+        ]["items"]
+        pair_schema = available_qualification["properties"]["pairs"][
+            "items"
+        ]
+        pair_proposal_schema = pair_schema["oneOf"][2]["properties"][
+            "proposals"
+        ]["items"]
+
+        route_invalid = self.sample_schema_value(
+            unrouted_proposal_schema, definitions
+        )
+        routed = copy.deepcopy(completed)
+        routed["qualification"]["unroutedProposals"] = [route_invalid]
+        self.assertTrue(validator.is_valid(routed))
+        route_invalid["disposition"] = "formally-invalid"
+        self.assertFalse(validator.is_valid(routed))
+
+        for index, disposition in enumerate(
+            ("formally-invalid", "formally-admissible")
+        ):
+            with self.subTest(proposal=disposition):
+                changed = copy.deepcopy(completed)
+                proposal = self.sample_schema_value(
+                    pair_proposal_schema["oneOf"][index], definitions
+                )
+                pair = self.sample_schema_value(
+                    pair_schema["oneOf"][2], definitions
+                )
+                pair["proposals"] = [proposal]
+                changed["qualification"]["pairs"] = [pair]
+                self.assertTrue(validator.is_valid(changed))
+                proposal["disposition"] = "route-invalid"
+                self.assertFalse(validator.is_valid(changed))
+
+                wrong_context = copy.deepcopy(completed)
+                wrong_context["qualification"]["unroutedProposals"] = [
+                    self.sample_schema_value(
+                        pair_proposal_schema["oneOf"][index], definitions
+                    )
+                ]
+                self.assertFalse(validator.is_valid(wrong_context))
+
+        wrong_pair_context = copy.deepcopy(completed)
+        pair = self.sample_schema_value(pair_schema["oneOf"][2], definitions)
+        pair["proposals"] = [
+            self.sample_schema_value(unrouted_proposal_schema, definitions)
+        ]
+        wrong_pair_context["qualification"]["pairs"] = [pair]
+        self.assertFalse(validator.is_valid(wrong_pair_context))
+
+        for index, disposition in enumerate(
+            (
+                "invalid-selected-subjects",
+                "proposal-missing",
+                "proposals-assessed",
+            )
+        ):
+            with self.subTest(pair=disposition):
+                changed = copy.deepcopy(completed)
+                pair = self.sample_schema_value(
+                    pair_schema["oneOf"][index], definitions
+                )
+                changed["qualification"]["pairs"] = [pair]
+                self.assertTrue(validator.is_valid(changed))
+                pair["disposition"] = (
+                    "proposals-assessed"
+                    if disposition != "proposals-assessed"
+                    else "proposal-missing"
+                )
+                self.assertFalse(validator.is_valid(changed))
+
+        unavailable = copy.deepcopy(completed)
+        unavailable["qualification"] = self.sample_schema_value(
+            qualification["oneOf"][0], definitions
+        )
+        self.assertTrue(validator.is_valid(unavailable))
+        unavailable["qualification"]["pairs"] = [
+            self.sample_schema_value(pair_schema["oneOf"][0], definitions)
+        ]
+        self.assertFalse(validator.is_valid(unavailable))
+        unavailable["qualification"]["pairs"] = []
+        unavailable["qualification"]["subjectUnavailable"] = []
+        self.assertFalse(validator.is_valid(unavailable))
 
     def test_trace_schema_binds_gap_slots_and_endpoints_exactly(self):
         schema, validator = self.trace_schema_fixture()

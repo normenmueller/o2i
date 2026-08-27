@@ -43,7 +43,7 @@ assessSemantics ::
   -> SemanticAssessment scope
 assessSemantics graph inputs =
   case NonEmpty.nonEmpty defects of
-    Just failures -> SemanticsRejected results failures
+    Just failures -> SemanticsRejected graph results failures
     Nothing ->
       let model =
             SemanticallyValidModel
