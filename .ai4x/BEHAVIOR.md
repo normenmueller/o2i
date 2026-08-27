@@ -105,6 +105,12 @@ prove, own, or define O2I semantics.
 
 Work only within the latest explicit Product Owner authority and, when one exists, the owning Issue. An explicit Product Owner request may authorize clear Routine work without an Issue or additional authorization ceremony. A material expansion of protected scope returns to the Product Owner before implementation.
 
+An explicit Product Owner release of one exact Issue in Project status `Ready` authorizes Gertrud, within that Issue's accepted scope, to activate it and carry it through `In review` without another execution or Pull Request publication prompt. This authority includes Project `In progress`, capability-matched specialist and Co-Author coordination, implementation, deterministic verification, independent review and corrections, commit, push, Pull Request publication, green required remote verification, evidence receipts, and Project `In review`.
+
+Project status `Ready` alone creates no authority. A Ready-Issue release never authorizes scope expansion, bypassing statement owners or required role separation, merge, Issue closure, Project `Done`, branch or worktree cleanup, release or tag, or protected publication. Agent remote writes stop when the required machine identity is unavailable or unverified.
+
+`10/10` is Product Owner shorthand for all required formal verdicts being `accepted`, zero blocking or advisory findings, all exact-candidate local and remote checks being green, and intact authorship-versus-review separation. It is never a formal review score, and `accepted with follow-ups` does not satisfy it.
+
 `.ai4x/STATE.md` is a concise local return point. It records one `Work status` value:
 
 - `ACTIVE` for design, implementation, investigation, correction, review, or publication preparation;

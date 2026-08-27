@@ -1,53 +1,48 @@
 # Handoff
 
 - Observed: 2026-08-27 CEST
-- Work status: `COMPLETE`
-- Current Issue: `#52`
-- Current node: `published-green-candidate-awaiting-squash-merge`
+- Work status: `ACTIVE`
+- Current Issue: `#87`
+- Current node: `publication-and-closure`
 
 # Objective
 
-Publish the accepted Batch-7 Trace candidate, obtain green remote verification, and leave Issue #52 and its Pull Request at `In review` for the Product Owner's squash-merge decision.
+Make an explicit Product Owner release of one exact `Ready` Issue a durable standing authority for autonomous execution through `In review`, with narrow retained Product Owner boundaries and qualitative review evidence.
 
 # Authority
 
-- Issue #52 owns Batch 7; parent #45 owns the integrated implementation program.
-- The Product Owner authorized Gertrud to complete #52 autonomously through independent acceptance, commit, push, Pull Request publication, remote CI, review evidence, and Project `In review`.
-- Squash-merge, Issue/Project closure, branch deletion, and cleanup remain reserved to the Product Owner.
-- Product scope remains the fresh target-state Core Trace grammar and factorized evaluator plus the Operation Trace capability, machine contract, API, and exact verification evidence. No compatibility, migration, generic planner, model edit, or unrelated capability is authorized.
+- The Product Owner explicitly requested and approved the exact standing rule recorded in Issue #87.
+- Authorized local scope is canonical operating/governance contracts, deterministic governance tests, and only required human-facing synchronization.
+- “10/10” is Product Owner shorthand for all required verdicts `accepted`, zero blocking or advisory findings, complete exact-candidate checks, and preserved role separation; formal review evidence remains numerical-score-free.
+- This Issue changes no O2I product semantics and contributes no hunk to #53.
+- On 2026-08-27, the Product Owner explicitly authorized completing Issue #87, including commit, push, Pull Request publication, merge, Issue/Project closure, branch deletion, and worktree cleanup after green verification.
 
 # Material Risk
 
-- Batch 7 is a Significant Core/Operation change with formal, API, diagnostic, schema, provenance, and asymptotic work/retention obligations.
-- The accepted design fixes an Asserted-only 18-variable grammar, 27 relation slots, 11 ownership slots, exactly 38 fixed frontier stages, one canonical complete witness, exact partial projections and gaps, direct supplied-trace validation, and no Cartesian product, complete witness set, or general planner.
-- Preparation performs measured deterministic ordering and dense interning within `W_p`; runtime bucket, frontier, and reverse-identity addressing use fixed-machine-word-depth structures. Partial support is derived only from root-bound admissible frontiers.
+- The trigger must be an explicit Product Owner release of one exact currently `Ready` Issue; Board status alone never creates authority.
+- Standing authority ends at `In review` and never covers scope expansion, merge, closure, `Done`, release, tag, protected publication, deletion, or unavailable machine-identity impersonation.
+- Protected repository governance requires active external Co-Authoring, deterministic evidence, and one independent read-only acceptance review.
 
 # Participants
 
-- Primary Gertrud: coordination, remote authority, integration, verification, correction routing, and publication preparation.
-- External Haskell/formal-methods Co-Author: fresh Core design and implementation, exact performance correction, focused checks; no independent acceptance.
-- Operation implementer: request/result/runtime/machine/schema implementation and focused checks; no independent acceptance.
-- Independent formal reviewer: Core grammar, types, Haskell, root-bound provenance, and work/retention review; final verdict `accepted`, no blocking or advisory findings.
-- Independent Operation reviewer: orchestration, Core boundary, API, JSON Schema, generated authority, provenance, and source autonomy review; final verdict `accepted`, no blocking or advisory findings.
+- Primary Gertrud: authority framing, coordination, integration, verification, and remote facts.
+- External Repository Governance, Agentic Workflow, and Human Usability Co-Author: target design and implementation; no independent acceptance.
+- Independent Repository Governance, Agentic Workflow, and Human Usability reviewer: read-only acceptance of the exact candidate; no authorship or mutation.
 
 # Verification
 
-- Published basis: `bae30d9548d418625dd0af0214c94ee043265d38`.
-- Product commit: `71d4b6e` (`add factorized trace capability`, `Refs #52`).
-- Exact reviewed product-diff SHA-256: `69b37b517e79ac2b0a22b43e13542124e1e02409c506658b226db133e992c312`.
-- Core Trace tests: 28/28 passed; Operation tests: 147/147 passed; Operation contract compiler: 39/39 passed.
-- Full Foundation Cabal tests with `-Werror`, external API contracts, generated-artifact freshness, Candidate Views, Haddock, package metadata, independent source distributions, formatting, licensing/REUSE, and `git diff --check` passed.
-- Canonical `./utl/verify.sh foundation` completed with exit code 0 on the exact reviewed candidate.
-- PR #86 publishes the accepted candidate, closes #52 on merge, and is linked from the Issue. Project `O2I` records #52 as `In review`.
-- Pull-request Verify run `33021693931` passed Governance, Licensing, Model, White Paper, and Haskell on head `3b3eed7`; the final handoff-only commit receives the same automatic gate before Product Owner handoff.
-- Governance forbids numerical review scores. Every applicable qualitative dimension was fully satisfied and both independent verdicts are `accepted` without findings.
+- Basis: clean published `trunk` at `c59b02845ba5841b852168af838806f993e69dc5`.
+- Issue #87 is durable and Project `Paused`; publication authority is now available and the status returns to active work before publication.
+- Exact authored diff SHA-256: `f79389443b6e864410ecdfb4b98c4d3b96bde1f912435b5a2b11efc517f5636e`.
+- Co-Author checks: governance unit suite 32/32; canonical governance and licensing scopes passed; scoped `git diff --check` passed.
+- Independent review reproduced the digest and checks, found zero blocking and zero advisory findings, preserved role separation, and returned `accepted`.
 
 # Next Action
 
-Product Owner reviews PR #86 and, if satisfied, performs the squash-merge. Merge, Issue/Project closure, branch deletion, and cleanup remain unperformed.
+Reverify the accepted candidate, publish it through a green Pull Request, merge it, close Issue #87, set Project `Done`, and remove only its branch/worktree after verifying the published result.
 
 # Local Return Point
 
-- Branch: `fix/52-trace-white-sheet`.
-- Worktree: repository-relative `.ai4x/local/worktrees/52-gertrud-trace-white-sheet` from the stable checkout.
-- Dirty scope: none after the final handoff commit.
+- Branch: `chore/87-ready-in-review-authority`.
+- Worktree: repository-relative `.ai4x/local/worktrees/87-ready-in-review-authority` from the stable checkout.
+- Dirty scope: `.ai4x/STATE.md` plus Co-Author-owned governance candidate paths.
