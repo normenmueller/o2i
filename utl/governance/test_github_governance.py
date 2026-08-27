@@ -622,7 +622,7 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         )
         self.assertEqual(
             [
-                "- `Approval:` the exact standalone Product Owner reply `Freigegeben.` for this recommendation."
+                "- `Approval:` the exact standalone Product Owner reply `Freigegeben.` for this recommendation. When the Product Owner's language is German, render the prompt label as `Antwort zur Freigabe:` followed by the reply literal `Freigegeben.`; never render `Freigabe: Freigegeben.`."
             ],
             re.findall(r"(?m)^- `Approval:` .+$", decision),
         )
@@ -671,6 +671,10 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "`safety gate failed:`",
             "`eligible, but not the recommendation:`",
             "the exact standalone Product Owner reply `Freigegeben.`",
+            "Product Owner's language is German",
+            "render the prompt label as `Antwort zur Freigabe:`",
+            "followed by the reply literal `Freigegeben.`",
+            "never render `Freigabe: Freigegeben.`",
             "recommendation never creates authority",
             "never pauses autonomous work still covered by existing authority",
             "recommendation with `Approval:` requires the exact newly requested agent authority",
@@ -742,8 +746,11 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "genau `recommended` oder `not recommended`",
             "fehlgeschlagenen Sicherheitsbedingung",
             "sicheren, aber gegenüber der Empfehlung nachrangigen Cold Start",
+            "kanonische Feld `Approval:` erscheint im deutschen Bericht als `Antwort zur Freigabe:`",
+            "darauf folgt als exakte alleinstehende PO-Antwort `Freigegeben.`",
+            "Ausgabe `Freigabe: Freigegeben.` ist ausgeschlossen",
             "alleinstehende PO-Antwort",
-            "`Freigegeben.` bindet genau einmal ausschließlich",
+            "Diese Antwort bindet genau einmal ausschließlich",
             "unmittelbar vorausgehenden, noch offenen Entscheidungsvorlage",
             "Zustand `consumed` sichtbar",
             "eine begrenzte Ausführung und verhindert ihre Wiederverwendung",
