@@ -8,6 +8,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
+AGENTS = ROOT / "AGENTS.md"
 BEHAVIOR = ROOT / ".ai4x/BEHAVIOR.md"
 CONTEXT = ROOT / ".ai4x/CONTEXT.md"
 TEAM = ROOT / ".ai4x/TEAM.md"
@@ -46,6 +47,7 @@ SKILLS = {
 AGENT_PROFILES = tuple(sorted((ROOT / ".github/agents").glob("*.agent.md")))
 REVIEW_CONTRACTS = (GOVERNANCE, CONTRIBUTING, HASKELL_REVIEW, STRATEGY_REVIEW)
 PUBLIC_CONTRACTS = (
+    AGENTS,
     BEHAVIOR,
     CONTEXT,
     TEAM,
@@ -81,6 +83,7 @@ class GitHubGovernanceContractTests(unittest.TestCase):
 
     def test_required_surfaces_exist(self) -> None:
         for path in (
+            AGENTS,
             BEHAVIOR,
             CONTEXT,
             TEAM,
@@ -99,6 +102,11 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         ):
             with self.subTest(path=path):
                 self.assertTrue(path.is_file())
+
+    def test_agents_facade_is_the_canonical_behavior_symlink(self) -> None:
+        self.assertTrue(AGENTS.is_symlink())
+        self.assertEqual(Path(".ai4x/BEHAVIOR.md"), AGENTS.readlink())
+        self.assertEqual(BEHAVIOR.resolve(), AGENTS.resolve())
 
     def test_non_core_ai4x_contract_names_are_lowercase(self) -> None:
         for directory in ("governance", "operations", "rules"):
@@ -201,6 +209,44 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         self.assertIn("Board reflects work; it does not manufacture authority", read(GOVERNANCE))
         self.assertIn("Board bildet Autorität ab, erzeugt sie aber nicht", read(CONTRIBUTING))
 
+    def test_ready_issue_release_authority_reaches_in_review_and_stops(self) -> None:
+        for path in (BEHAVIOR, GOVERNANCE):
+            content = read(path)
+            with self.subTest(path=path):
+                for term in (
+                    "explicit Product Owner release of one exact Issue in Project status `Ready`",
+                    "within that Issue's accepted scope",
+                    "carry it through `In review`",
+                    "capability-matched specialist and Co-Author coordination",
+                    "deterministic verification",
+                    "independent review and corrections",
+                    "commit, push, Pull Request publication",
+                    "green required remote verification",
+                    "evidence receipts",
+                    "Project status `Ready` alone creates no authority",
+                    "scope expansion",
+                    "bypassing statement owners or required role separation",
+                    "merge, Issue closure, Project `Done`",
+                    "branch or worktree cleanup",
+                    "release or tag, or protected publication",
+                    "required machine identity is unavailable or unverified",
+                ):
+                    self.assertIn(term, content)
+
+        human = read(CONTRIBUTING)
+        for term in (
+            "ausdrückliche PO-Freigabe eines exakten Issues im Project-Status `Ready`",
+            "innerhalb seines akzeptierten Scopes standardmäßig bis `In review`",
+            "Commit, Push, Pull Request",
+            "Der bloße Status `Ready` genügt nicht",
+            "Merge, Issue-Schließung, `Done`",
+            "Branch- oder Worktree-Bereinigung",
+            "geschützte Publikation",
+            "verifizierte Machine-User-Identität",
+        ):
+            with self.subTest(surface="human", term=term):
+                self.assertIn(term, human)
+
     def test_paused_means_a_real_wait(self) -> None:
         agent = read(GOVERNANCE)
         human = read(CONTRIBUTING)
@@ -264,6 +310,36 @@ class GitHubGovernanceContractTests(unittest.TestCase):
                 self.assertNotIn("10,0", content)
         self.assertIn("Numerical scores are prohibited", read(GOVERNANCE))
         self.assertIn("Numerische Bewertungen entfallen", read(CONTRIBUTING))
+        for path in (HASKELL_REVIEW, STRATEGY_REVIEW):
+            with self.subTest(formal_review=path):
+                self.assertNotIn("10/10", read(path))
+
+    def test_ten_of_ten_is_only_product_owner_acceptance_shorthand(self) -> None:
+        for path in (BEHAVIOR, GOVERNANCE):
+            content = read(path)
+            with self.subTest(path=path):
+                for term in (
+                    "`10/10` is Product Owner shorthand",
+                    "all required formal verdicts being `accepted`",
+                    "zero blocking or advisory findings",
+                    "all exact-candidate local and remote checks being green",
+                    "intact authorship-versus-review separation",
+                    "never a formal review score",
+                    "`accepted with follow-ups` does not satisfy it",
+                ):
+                    self.assertIn(term, content)
+
+        human = read(CONTRIBUTING)
+        for term in (
+            "`10/10` ist ausschließlich die PO-Kurzform",
+            "alle erforderlichen formalen Verdicts `accepted`",
+            "weder blockierende noch beratende Findings offen",
+            "Prüfungen des exakten Kandidaten grün",
+            "Trennung von Autorschaft und Review gewahrt",
+            "`accepted with follow-ups` erfüllt diese Kurzform nicht",
+        ):
+            with self.subTest(surface="human", term=term):
+                self.assertIn(term, human)
 
     def test_coauthoring_follows_material_specialist_judgment(self) -> None:
         behavior = " ".join(read(BEHAVIOR).split())
@@ -522,6 +598,7 @@ class GitHubGovernanceContractTests(unittest.TestCase):
 
     def test_text_contracts_use_clean_files(self) -> None:
         for path in (
+            AGENTS,
             BEHAVIOR,
             CONTEXT,
             TEAM,

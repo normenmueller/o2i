@@ -67,6 +67,14 @@ The Board reflects work; it does not manufacture authority. The Product Owner se
 
 Project order never creates a dependency. Use native Issue Dependencies for genuine prerequisites. Record an external prerequisite once in the affected Issue with its source and next-check condition.
 
+### Ready-Issue Release Authority
+
+An explicit Product Owner release of one exact Issue in Project status `Ready` authorizes Gertrud, within that Issue's accepted scope, to activate it and carry it through `In review` without another execution or Pull Request publication prompt. This authority includes Project `In progress`, capability-matched specialist and Co-Author coordination, implementation, deterministic verification, independent review and corrections, commit, push, Pull Request publication, green required remote verification, evidence receipts, and Project `In review`.
+
+Project status `Ready` alone creates no authority. A Ready-Issue release never authorizes scope expansion, bypassing statement owners or required role separation, merge, Issue closure, Project `Done`, branch or worktree cleanup, release or tag, or protected publication. It is explicit Product Owner authority for only the listed Issue-scoped remote writes; agent remote writes stop when the required machine identity is unavailable or unverified.
+
+`10/10` is Product Owner shorthand for all required formal verdicts being `accepted`, zero blocking or advisory findings, all exact-candidate local and remote checks being green, and intact authorship-versus-review separation. It is never a formal review score, and `accepted with follow-ups` does not satisfy it.
+
 ## Epics, Stories, And Batches
 
 Use native Sub-Issues when they materially improve visibility of a multi-part deliverable. Do not create them merely because work has multiple files, owners, days, or handoffs.
