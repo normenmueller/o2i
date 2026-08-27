@@ -59,6 +59,8 @@ A long transport snapshot or payload-bearing startup prompt is exceptional recov
 
 Every final report from the primary Gertrud that completes an authorized work unit or hands control back at a Product Owner decision or wait point ends with one concise decision block. Interim progress updates, answers that do not hand off work, and autonomous continuation within existing authority do not create this block.
 
+In every rendered decision block, the `Recommendation:` field occupies exactly one single-line ordinary Markdown paragraph. Exactly one empty source line containing zero characters appears immediately before it, and exactly one appears immediately after it. The paragraph begins with its rendered field label and contains the complete recommendation on that same source line; it is never a heading or list item. This source-level separation changes no field content, order, semantics, or other field layout. Static repository tests protect this canonical instruction text and do not claim to validate future generated responses.
+
 Use exactly these ordered fields, rendered in the Product Owner's language:
 
 - `Recommendation:` exactly one concrete next action followed on the same line by exactly these labeled elements in order: `Subject`, `Scope`, `Target state`, `Authority boundary`, and `Reason`. The subject is unambiguous, the scope is bounded, the target state is observable, and the reason is one short evidence-based sentence. The authority boundary contains `Requested agent authority:` followed by either the exact newly requested agent authority or the literal `none`, plus a mandatory `Exclusions:` value in both cases.

@@ -599,6 +599,68 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         self.assertNotIn("`Approval:`", completion)
         self.assertNotRegex(completion, r"(?m)^4\. ")
 
+    def test_decision_recommendation_is_one_standalone_paragraph(self) -> None:
+        behavior = read(BEHAVIOR)
+        decision = behavior.split("# Product Owner Decision Handoff\n", 1)[1].split(
+            "\n# Referent Role", 1
+        )[0]
+        rule = (
+            "In every rendered decision block, the `Recommendation:` field occupies exactly one single-line ordinary Markdown paragraph. "
+            "Exactly one empty source line containing zero characters appears immediately before it, and exactly one appears immediately after it. "
+            "The paragraph begins with its rendered field label and contains the complete recommendation on that same source line; it is never a heading or list item. "
+            "This source-level separation changes no field content, order, semantics, or other field layout. "
+            "Static repository tests protect this canonical instruction text and do not claim to validate future generated responses."
+        )
+        self.assertEqual(1, decision.count(rule))
+        self.assertIn(f"\n\n{rule}\n\n", decision)
+        self.assertNotIn(f"\n\n\n{rule}", decision)
+        self.assertNotIn(f"{rule}\n\n\n", decision)
+        self.assertNotIn("\n", rule)
+        self.assertNotRegex(rule, r"^(?:#{1,6} |[-*+] |[1-9]\. )")
+        for contradiction in (
+            "may span multiple source lines",
+            "may be a heading",
+            "may be a list item",
+            "at least one empty source line",
+            "one or more empty source lines",
+            "zero or more empty source lines",
+        ):
+            with self.subTest(surface="behavior", contradiction=contradiction):
+                self.assertNotIn(contradiction, decision)
+        for term in (
+            "exactly one single-line ordinary Markdown paragraph",
+            "Exactly one empty source line containing zero characters",
+            "immediately before it, and exactly one appears immediately after it",
+            "complete recommendation on that same source line",
+            "never a heading or list item",
+            "changes no field content, order, semantics, or other field layout",
+            "do not claim to validate future generated responses",
+        ):
+            with self.subTest(surface="behavior", term=term):
+                self.assertIn(term, rule)
+
+        human = read(CONTRIBUTING)
+        human_rule = (
+            "Das Feld `Recommendation:` bildet genau einen einzeiligen gewöhnlichen Markdown-Absatz. "
+            "Unmittelbar davor und danach steht jeweils genau eine leere Quellzeile ohne Zeichen. "
+            "Der Absatz beginnt mit der übersetzten Feldbezeichnung und enthält die vollständige Empfehlung auf derselben Quellzeile; er ist weder Überschrift noch Listeneintrag. "
+            "Diese Trennung ändert Inhalt, Reihenfolge und Semantik sowie das Layout der übrigen Felder nicht."
+        )
+        self.assertEqual(1, human.count(human_rule))
+        self.assertIn(f"\n\n{human_rule}\n\n", human)
+        self.assertNotIn(f"\n\n\n{human_rule}", human)
+        self.assertNotIn(f"{human_rule}\n\n\n", human)
+        self.assertNotIn("\n", human_rule)
+        for term in (
+            "genau einen einzeiligen gewöhnlichen Markdown-Absatz",
+            "jeweils genau eine leere Quellzeile ohne Zeichen",
+            "vollständige Empfehlung auf derselben Quellzeile",
+            "weder Überschrift noch Listeneintrag",
+            "Layout der übrigen Felder nicht",
+        ):
+            with self.subTest(surface="human", term=term):
+                self.assertIn(term, human_rule)
+
     def test_product_owner_decision_handoff_is_deterministic(self) -> None:
         behavior = read(BEHAVIOR)
         decision = behavior.split("# Product Owner Decision Handoff\n", 1)[1].split(
