@@ -3,7 +3,7 @@
 - Observed: 2026-08-27 CEST
 - Work status: `ACTIVE`
 - Current Issue: `#53`
-- Current node: `integrated-full-verification`
+- Current node: `publication-preflight`
 
 # Objective
 
@@ -46,13 +46,14 @@ Deliver Batch 8 Qualification through one accepted, published, remotely green Pu
 - Independent review of `fdfe...` found three blockers and zero advisory findings: positional Proposal schemas admit impossible states; public `QualifySemanticModelContractFailure` is unreachable dead algebra; and focused Operation binding tests do not yet execute all material acquisition, prerequisite, Semantics-continuation, selector-accumulation, requested-pair/emission, Machine, and provenance paths.
 - Schema-only intermediate digest `13004bee797594add05ad18bdf162a7252afff489deda68cd41504dc82dbb8f5` closed the first blocker but was not an acceptance candidate.
 - Final corrected 37-path Operation digest `f40760b29d3400d089e844f99a874f5c753f534fb11ac5b9c32e21f82b335039`: all three findings are corrected; focused binding 10/10, Operation 163/163, compiler/schema 41/41, adversarial Qualification 33/33, API, Haddock, Cabal, format, and diff checks pass; independent verdict `accepted` with zero blocking and zero advisory findings.
+- Integrated commit `9c6b0bf` includes published governance-only trunk and preserves both accepted product digests unchanged. `./utl/verify.sh foundation` and `./utl/verify.sh governance` pass with Licensing 551/551, full Haskell/package/source-distribution tests, external API contracts, Candidate Views, Haddock 100%, governance 33/33 plus routing 18/18, generated contract, digest, format, and diff checks green.
 
 # Next Action
 
-Complete the merge commit, run the full integrated foundation verification and exact API/performance/diff checks, then prepare publication evidence and the Pull Request.
+Commit this verified handoff, publish the branch and Pull Request as the machine user, obtain green remote checks, record review evidence, and move Project status to `In review`.
 
 # Local Return Point
 
 - Branch: `feat/53-qualification`.
 - Worktree: repository-relative `.ai4x/local/worktrees/53-qualification` from the stable checkout.
-- Dirty scope: merge resolution in `.ai4x/STATE.md`; accepted product and governance changes are already committed on their owning branches.
+- Dirty scope: this verified handoff update only; product and governance integration commits are durable locally.
