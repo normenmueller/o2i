@@ -13,6 +13,7 @@ Require every primary-Gertrud final response that returns control for a Product 
 
 - The Product Owner explicitly requested the correction and required AI-suitable formulation.
 - Issue #92 owns the Protected repository-governance change and is in Project status `Paused`.
+- The Product Owner approved only the local correction from rendered `Freigabe:` to natural `Antwort zur Freigabe:`, synchronized tests, and focused re-review; push, Pull Request publication, and other governance changes remain excluded.
 - Scope is `.ai4x/BEHAVIOR.md`, the non-duplicating governance pointer, concise human projection, deterministic governance tests, and this handoff; no Product Owner, Ready-release, review, publication, or cleanup authority changes.
 
 # Material Risk
@@ -23,25 +24,23 @@ Require every primary-Gertrud final response that returns control for a Product 
 # Verification
 
 - #53 is merged as `67bca7a3ba6ae85ccbd62b60b9611557f9a5929d`, closed as completed, Project `Done`, and cleaned locally and remotely.
-- External agent-governance Co-Author designed and implemented the first candidate; focused governance 34/34, routing 18/18, licensing 551/551, and diff checks passed.
-- Independent read-only review returned `changes required` with six blocking findings and no advisory findings: exact one-time `Freigegeben.` binding, complete recommendation semantics, exactly two Cold Start states, contradiction-free three-action grammar, negative test coverage, and current handoff scope.
-- In the corrected exact five-path candidate, the Co-Author closed all six findings with live single-use approval binding, complete recommendation semantics, exactly two Cold Start states, contradiction-free three-action grammar, negative safeguards, and current handoff scope.
-- Primary rerun passes governance 34/34, routing 18/18, licensing 551/551, and diff checks. Independent re-review confirmed the original six findings closed but found one new blocker: a direct Product Owner action or Cold Start must state requested authority as `none` rather than invent agent authority, while retaining explicit exclusions.
-- The Co-Author corrected the new blocker: ordinary approval requires exact requested agent authority, direct Product Owner action and recommended Cold Start require `none`, and all branches require explicit exclusions.
-- Final independent re-review of base-diff digest `06192261cbc640bc8cb94622bf69abfe1a54e53f0e3e7dd09a43dac1901567cb` returned `accepted` with zero blocking and zero advisory findings. Primary and reviewer checks pass governance 34/34, routing 18/18, licensing 551/551, and diff validation; role separation is intact.
-- Accepted candidate commit `3fb1a1fca8c1abf4ad7437575468ea18690c4640` is durable and clean locally with Product Owner author and committer attribution; remote publication was not attempted after the protected publication boundary required a separate explicit Product Owner decision.
+- External agent-governance Co-Author designed and implemented the candidate and all review corrections. Independent read-only review accepted the exact candidate with zero blocking and zero advisory findings after all findings were closed; role separation is intact.
+- Accepted candidate commit `3fb1a1fca8c1abf4ad7437575468ea18690c4640` is durable locally with Product Owner author and committer attribution.
+- The exact standalone `Freigegeben.` bound the local wording-and-test correction once and is consumed. Commit `0640aa0ac0a0bf6da39bcce2f8b9f229b74ede79` provides the natural German `Antwort zur Freigabe:` rendering and guards against `Freigabe: Freigegeben.`.
+- Focused independent read-only review accepted the exact rendering correction with zero blocking and zero advisory findings. Primary governance 34/34, routing 18/18, licensing 551/551, and diff checks pass.
+- The accepted commits remain local and unpublished; no push or Pull Request authority was granted by the consumed correction approval.
 
 # Wait State
 
-- Reason: protected publication authority for pushing commit `3fb1a1f` and opening its Pull Request is not explicit.
-- Return condition: the Product Owner grants that exact push and Pull Request publication authority or changes the target.
+- Reason: protected push and Pull Request publication authority for the exact current branch tip is not explicit.
+- Return condition: the Product Owner grants exact publication authority or changes the target.
 
 # Next Action
 
-After exact Product Owner publication authority, push commit `3fb1a1f`, open the Issue #92 Pull Request, require green remote verification, record the accepted review evidence, and move the Project item to `In review`.
+After exact Product Owner authority, push the accepted branch tip, open the Pull Request, await required remote checks, publish review evidence, and move #92 to `In review`.
 
 # Local Return Point
 
 - Branch: `feat/92-decision-ready-handoffs`.
 - Worktree: repository-relative `.ai4x/local/worktrees/92-decision-ready-handoffs` from the stable checkout.
-- Dirty scope: `.ai4x/STATE.md` only; the accepted governance candidate is committed locally and unpublished.
+- Dirty scope: `.ai4x/STATE.md` only. All accepted governance and rendering changes are committed locally and unpublished.
