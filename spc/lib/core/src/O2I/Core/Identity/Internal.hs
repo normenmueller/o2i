@@ -35,6 +35,8 @@ module O2I.Core.Identity.Internal
   , selectedViewScopeDefectSuppliedModelIdentity
   , withSelectedViewScope
   , selectedViewScopeGraphIdentity
+  , selectedViewOccurrenceModelIdentity
+  , sameSelectedViewScope
   , ScopedOccurrence
   , lookupScopedOccurrence
   , scopedOccurrenceIdentity
@@ -369,6 +371,28 @@ indexedSelectedViewIdentity index selectedView =
 -- | Project the exact selected View identity inside Core only.
 selectedViewScopeGraphIdentity :: SelectedViewScope scope -> ModelIdentity
 selectedViewScopeGraphIdentity = selectedGraphIdentity
+
+-- | Recover the profile-neutral model identity of one selected occurrence.
+selectedViewOccurrenceModelIdentity ::
+     SelectedViewScope scope -> OccurrenceIdentity -> Maybe ModelIdentity
+selectedViewOccurrenceModelIdentity scope occurrence =
+  modelOccurrenceModelIdentity
+    <$> Map.lookup occurrence (occurrencesByIdentity (selectedModelIndex scope))
+
+-- | Compare every fact retained by two selected-View boundaries.
+sameSelectedViewScope ::
+     SelectedViewScope scope -> SelectedViewScope scope -> Bool
+sameSelectedViewScope left right =
+  selectedGraphIdentity left == selectedGraphIdentity right
+    && selectedOccurrenceIdentities left == selectedOccurrenceIdentities right
+    && sameModelIdentityIndex
+         (selectedModelIndex left)
+         (selectedModelIndex right)
+
+sameModelIdentityIndex :: ModelIdentityIndex -> ModelIdentityIndex -> Bool
+sameModelIdentityIndex left right =
+  occurrencesByIdentity left == occurrencesByIdentity right
+    && occurrencesByModelIdentity left == occurrencesByModelIdentity right
 
 selectedViewDefects ::
      ModelIdentityIndex -> [OccurrenceIdentity] -> [SelectedViewScopeDefect]

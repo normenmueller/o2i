@@ -145,6 +145,13 @@ EXPECTED_DOCUMENTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         ),
     ),
     (
+        "qualificationSubjects",
+        (
+            "qualification-subjects-prerequisite-rejected",
+            "qualification-subjects-discovered",
+        ),
+    ),
+    (
         "validateResult",
         (
             "notation-validation-accepted",
@@ -166,6 +173,10 @@ EXPECTED_DOCUMENTS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "trace-accepted",
         ),
     ),
+    (
+        "qualifyResult",
+        ("qualify-prerequisite-rejected", "qualify-completed"),
+    ),
 )
 EXPECTED_VARIANTS = dict(EXPECTED_DOCUMENTS)
 EXPECTED_FRAGMENTS = ("diagnostic",)
@@ -182,6 +193,12 @@ VARIANT_BINDINGS: dict[str, str] = {
     "view-acquisition-failed": "viewAcquisitionFailedVariant",
     "view-adapter-selection-failed": "viewAdapterSelectionFailedVariant",
     "view-adapter-decode-failed": "viewAdapterDecodeFailedVariant",
+    "qualification-subjects-prerequisite-rejected": (
+        "qualificationSubjectsPrerequisiteRejectedVariant"
+    ),
+    "qualification-subjects-discovered": (
+        "qualificationSubjectsDiscoveredVariant"
+    ),
     "notation-validation-accepted": "notationValidationAcceptedVariant",
     "notation-validation-rejected": "notationValidationRejectedVariant",
     "profile-validation-accepted": "profileValidationAcceptedVariant",
@@ -194,6 +211,8 @@ VARIANT_BINDINGS: dict[str, str] = {
     "trace-prerequisite-rejected": "tracePrerequisiteRejectedVariant",
     "trace-rejected": "traceRejectedVariant",
     "trace-accepted": "traceAcceptedVariant",
+    "qualify-prerequisite-rejected": "qualifyPrerequisiteRejectedVariant",
+    "qualify-completed": "qualifyCompletedVariant",
 }
 
 
@@ -2592,6 +2611,532 @@ def trace_result_schema(
     )
 
 
+def qualification_schema_support(
+    profile_inventory: dict[str, Any],
+    core_inventory: dict[str, Any],
+    operation_contract: dict[str, Any],
+    operation_digest: str,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    definitions = diagnostic_definitions(profile_inventory, core_inventory)
+    definitions.update(
+        {
+            "identityInvalidReason": identity_invalid_reason(),
+            "identityOutcome": identity_outcome(),
+            "viewNameField": view_name_field(),
+        }
+    )
+    selector = {
+        "oneOf": [
+            object_schema(
+                {"kind": {"const": "name"}, "value": text_schema()}
+            ),
+            object_schema(
+                {"kind": {"const": "identity"}, "value": text_schema()}
+            ),
+        ]
+    }
+    exact_contracts = {
+        "type": "array",
+        "minItems": 4,
+        "maxItems": 4,
+        "prefixItems": [
+            object_schema(
+                {
+                    "kind": {"const": "operation"},
+                    "identity": {"const": operation_contract["identity"]},
+                    "version": {"const": operation_contract["version"]},
+                    "digest": {"const": operation_digest},
+                }
+            ),
+            object_schema({"kind": {"const": "adapter"}}),
+            object_schema({"kind": {"const": "profile"}}),
+            object_schema(
+                {
+                    "kind": {"const": "core"},
+                    "identity": {
+                        "const": core_inventory["core"]["identity"]
+                    },
+                    "version": {
+                        "const": core_inventory["core"]["version"]
+                    },
+                    "digest": {
+                        "const": core_inventory["companions"]["semantics"][
+                            "rawSha256"
+                        ]
+                    },
+                }
+            ),
+        ],
+        "items": False,
+    }
+    return definitions, selector, exact_contracts
+
+
+def qualification_subjects_schema(
+    document: MachineDocument,
+    profile_inventory: Optional[dict[str, Any]] = None,
+    core_inventory: Optional[dict[str, Any]] = None,
+    operation_contract: Optional[dict[str, Any]] = None,
+    operation_digest: Optional[str] = None,
+) -> dict[str, Any]:
+    if profile_inventory is None:
+        profile_inventory, _ = load_object(DEFAULT_PROFILE_DIAGNOSTIC_INVENTORY)
+    if core_inventory is None:
+        core_inventory, _ = load_object(DEFAULT_CORE_OWNER_DIAGNOSTIC_INVENTORY)
+    if operation_contract is None or operation_digest is None:
+        operation_companion, operation_payload = load_object(COMPANION)
+        operation_contract = operation_companion["contract"]
+        operation_digest = hashlib.sha256(operation_payload).hexdigest()
+    definitions, selector, contracts = qualification_schema_support(
+        profile_inventory,
+        core_inventory,
+        operation_contract,
+        operation_digest,
+    )
+    groups = diagnostic_schema_groups(profile_inventory, core_inventory)
+    identity = text_schema(pattern=TOOL_TEXT_PATTERN)
+    source_input = {
+        "oneOf": [
+            object_schema(
+                {"kind": {"const": "file"}, "path": text_schema()}
+            ),
+            object_schema({"kind": {"const": "stdin"}}),
+        ]
+    }
+
+    def subject(category: str, qualified_type: str) -> dict[str, Any]:
+        return object_schema(
+            {
+                "category": {"const": category},
+                "identity": identity,
+                "occurrence": identity,
+                "qualifiedType": {"const": qualified_type},
+                "displayName": nullable(text_schema()),
+                "eligibility": {
+                    "enum": [
+                        "eligible",
+                        "ineligible",
+                        "eligibility-unavailable",
+                    ]
+                },
+            }
+        )
+
+    subjects = object_schema(
+        {
+            "needs": array_schema(subject("need", "context.need")),
+            "strategies": array_schema(
+                subject("strategy", "context.strategy")
+            ),
+        }
+    )
+    diagnostics = object_schema(
+        {
+            "schema": {"const": "o2i.operation.diagnostic/v2"},
+            "modelDiagnostics": array_schema(reference("modelDiagnostic")),
+        }
+    )
+    common = {
+        "context": object_schema(
+            {
+                "authority": reference("preparedAuthority"),
+                "view": reference("qualificationViewDescriptor"),
+                "supplements": array_schema(
+                    object_schema(
+                        {
+                            "reference": text_schema(pattern=TOOL_TEXT_PATTERN),
+                            "sha256": text_schema(pattern=SHA256_PATTERN),
+                            "diagnostics": {
+                                "type": "array",
+                                "items": {"oneOf": groups["binding"]},
+                            },
+                        }
+                    )
+                ),
+            }
+        ),
+        "request": object_schema(
+            {
+                "view": selector,
+                "adapterId": nullable(text_schema()),
+                "supplements": array_schema(source_input),
+            }
+        ),
+        "diagnostics": diagnostics,
+        "provenance": object_schema({"contracts": contracts}),
+    }
+
+    def prerequisite(stage: str) -> dict[str, Any]:
+        return operation_variant(
+            document,
+            "qualification-subjects",
+            "qualification-subjects-prerequisite-rejected",
+            {
+                **common,
+                "execution": object_schema(
+                    {
+                        "status": {"const": "prerequisite-rejected"},
+                        "prerequisite": {"const": stage},
+                    }
+                ),
+                "subjects": {"type": "null"},
+            },
+        )
+
+    discovered = operation_variant(
+        document,
+        "qualification-subjects",
+        "qualification-subjects-discovered",
+        {
+            **common,
+            "execution": object_schema({"status": {"const": "discovered"}}),
+            "subjects": subjects,
+        },
+    )
+    definitions.update(
+        {
+            "toolDescriptor": tool_descriptor(),
+            "qualificationViewDescriptor": view_descriptor(),
+            "prerequisiteRejected": {
+                "oneOf": [
+                    prerequisite("notation"),
+                    prerequisite("profile"),
+                    prerequisite("structure"),
+                ]
+            },
+            "subjectsDiscovered": discovered,
+        }
+    )
+    return schema_document(
+        document,
+        "Selected-View qualification subjects",
+        definitions,
+        ["prerequisiteRejected", "subjectsDiscovered"],
+    )
+
+
+def qualify_result_schema(
+    document: MachineDocument,
+    profile_inventory: Optional[dict[str, Any]] = None,
+    core_inventory: Optional[dict[str, Any]] = None,
+    operation_contract: Optional[dict[str, Any]] = None,
+    operation_digest: Optional[str] = None,
+) -> dict[str, Any]:
+    if profile_inventory is None:
+        profile_inventory, _ = load_object(DEFAULT_PROFILE_DIAGNOSTIC_INVENTORY)
+    if core_inventory is None:
+        core_inventory, _ = load_object(DEFAULT_CORE_OWNER_DIAGNOSTIC_INVENTORY)
+    if operation_contract is None or operation_digest is None:
+        operation_companion, operation_payload = load_object(COMPANION)
+        operation_contract = operation_companion["contract"]
+        operation_digest = hashlib.sha256(operation_payload).hexdigest()
+    definitions, selector, contracts = qualification_schema_support(
+        profile_inventory,
+        core_inventory,
+        operation_contract,
+        operation_digest,
+    )
+    groups = diagnostic_schema_groups(profile_inventory, core_inventory)
+    identity = text_schema(pattern=TOOL_TEXT_PATTERN)
+    source_input = {
+        "oneOf": [
+            object_schema(
+                {"kind": {"const": "file"}, "path": text_schema()}
+            ),
+            object_schema({"kind": {"const": "stdin"}}),
+        ]
+    }
+    request = object_schema(
+        {
+            "view": selector,
+            "adapterId": nullable(text_schema()),
+            "strategies": {
+                **array_schema(identity, minimum=1),
+                "uniqueItems": True,
+            },
+            "needs": {**array_schema(identity), "uniqueItems": True},
+            "supplements": array_schema(source_input),
+        }
+    )
+    diagnostic_subject = {
+        "oneOf": [
+            object_schema(
+                {
+                    "kind": {"const": kind},
+                    "label": text_schema(),
+                    "value": identity,
+                }
+            )
+            for kind in ("model", "occurrence", "role", "text")
+        ]
+    }
+    qualification_diagnostic = object_schema(
+        {
+            "ruleId": identity,
+            "evidenceKind": {
+                "enum": [
+                    "proposal",
+                    "proposal-role",
+                    "proposal-role-target",
+                    "selected-need",
+                    "selected-strategy",
+                    "pair",
+                    "proposal-relation",
+                ]
+            },
+            "subjects": array_schema(diagnostic_subject, minimum=1),
+            "occurrenceGroups": array_schema(
+                object_schema(
+                    {
+                        "role": text_schema(),
+                        "occurrences": array_schema(identity),
+                    }
+                ),
+                minimum=1,
+            ),
+        }
+    )
+    admissible = object_schema(
+        {
+            "proposal": identity,
+            "occurrence": identity,
+            "need": identity,
+            "strategy": identity,
+            "keyResult": identity,
+            "objective": identity,
+            "rationale": text_schema(),
+            "sources": array_schema(text_schema(), minimum=1),
+            "witnesses": array_schema(identity),
+        }
+    )
+    empty_diagnostics = {
+        "type": "array",
+        "items": qualification_diagnostic,
+        "maxItems": 0,
+    }
+
+    def proposal_variant(
+        disposition: str,
+        diagnostics: dict[str, Any],
+        admissible_value: dict[str, Any],
+    ) -> dict[str, Any]:
+        return object_schema(
+            {
+                "identity": identity,
+                "occurrence": identity,
+                "disposition": {"const": disposition},
+                "diagnostics": diagnostics,
+                "admissible": admissible_value,
+            }
+        )
+
+    unrouted_proposal = proposal_variant(
+        "route-invalid",
+        array_schema(qualification_diagnostic, minimum=1),
+        {"type": "null"},
+    )
+    pair_proposal = {
+        "oneOf": [
+            proposal_variant(
+                "formally-invalid",
+                array_schema(qualification_diagnostic, minimum=1),
+                {"type": "null"},
+            ),
+            proposal_variant(
+                "formally-admissible", empty_diagnostics, admissible
+            ),
+        ]
+    }
+    empty_pair_proposals = {
+        "type": "array",
+        "items": pair_proposal,
+        "maxItems": 0,
+    }
+
+    def pair_variant(
+        disposition: str,
+        diagnostics: dict[str, Any],
+        proposals: dict[str, Any],
+    ) -> dict[str, Any]:
+        return object_schema(
+            {
+                "need": identity,
+                "strategy": identity,
+                "disposition": {"const": disposition},
+                "diagnostics": diagnostics,
+                "proposals": proposals,
+            }
+        )
+
+    pair = {
+        "oneOf": [
+            pair_variant(
+                "invalid-selected-subjects",
+                array_schema(qualification_diagnostic, minimum=1),
+                empty_pair_proposals,
+            ),
+            pair_variant(
+                "proposal-missing",
+                array_schema(qualification_diagnostic, minimum=1),
+                empty_pair_proposals,
+            ),
+            pair_variant(
+                "proposals-assessed",
+                empty_diagnostics,
+                array_schema(pair_proposal, minimum=1),
+            ),
+        ]
+    }
+    empty_occurrences = {**array_schema(identity), "maxItems": 0}
+    one_occurrence = {
+        **array_schema(identity, minimum=1),
+        "maxItems": 1,
+    }
+
+    def unavailable_variant(
+        reason: str, occurrences: dict[str, Any]
+    ) -> dict[str, Any]:
+        return object_schema(
+            {
+                "category": {"enum": ["need", "strategy"]},
+                "identity": identity,
+                "reason": {"const": reason},
+                "occurrences": occurrences,
+            }
+        )
+
+    subject_unavailable = {
+        "oneOf": [
+            unavailable_variant("unknown", empty_occurrences),
+            unavailable_variant(
+                "ambiguous", array_schema(identity, minimum=2)
+            ),
+            unavailable_variant("out-of-selected-view", one_occurrence),
+            unavailable_variant("wrong-type-or-family", one_occurrence),
+            unavailable_variant(
+                "eligibility-prerequisite-unavailable", one_occurrence
+            ),
+        ]
+    }
+    empty_unavailable = {
+        **array_schema(subject_unavailable),
+        "maxItems": 0,
+    }
+    empty_pairs = {**array_schema(pair), "maxItems": 0}
+    empty_unrouted = {**array_schema(unrouted_proposal), "maxItems": 0}
+    selected_needs = {**array_schema(identity), "uniqueItems": True}
+    selected_strategies = {**array_schema(identity), "uniqueItems": True}
+    qualification = {
+        "oneOf": [
+            object_schema(
+                {
+                    "graphIdentity": identity,
+                    "disposition": {"const": "subjects-unavailable"},
+                    "selectedNeeds": selected_needs,
+                    "selectedStrategies": selected_strategies,
+                    "subjectUnavailable": array_schema(
+                        subject_unavailable, minimum=1
+                    ),
+                    "unroutedProposals": empty_unrouted,
+                    "pairs": empty_pairs,
+                }
+            ),
+            object_schema(
+                {
+                    "graphIdentity": identity,
+                    "disposition": {
+                        "const": "pair-outcomes-available"
+                    },
+                    "selectedNeeds": selected_needs,
+                    "selectedStrategies": {
+                        **selected_strategies,
+                        "minItems": 1,
+                    },
+                    "subjectUnavailable": empty_unavailable,
+                    "unroutedProposals": array_schema(unrouted_proposal),
+                    "pairs": array_schema(pair),
+                }
+            ),
+        ]
+    }
+    common = {
+        "context": object_schema(
+            {
+                "authority": reference("preparedAuthority"),
+                "view": reference("qualifyViewDescriptor"),
+                "supplements": array_schema(
+                    object_schema(
+                        {
+                            "reference": text_schema(pattern=TOOL_TEXT_PATTERN),
+                            "sha256": text_schema(pattern=SHA256_PATTERN),
+                            "diagnostics": {
+                                "type": "array",
+                                "items": {"oneOf": groups["binding"]},
+                            },
+                        }
+                    )
+                ),
+            }
+        ),
+        "request": request,
+        "diagnostics": object_schema(
+            {
+                "schema": {"const": "o2i.operation.diagnostic/v2"},
+                "modelDiagnostics": array_schema(reference("modelDiagnostic")),
+            }
+        ),
+        "provenance": object_schema({"contracts": contracts}),
+    }
+
+    def prerequisite(stage: str) -> dict[str, Any]:
+        return operation_variant(
+            document,
+            "qualify",
+            "qualify-prerequisite-rejected",
+            {
+                **common,
+                "execution": object_schema(
+                    {
+                        "status": {"const": "prerequisite-rejected"},
+                        "prerequisite": {"const": stage},
+                    }
+                ),
+                "qualification": {"type": "null"},
+            },
+        )
+
+    completed = operation_variant(
+        document,
+        "qualify",
+        "qualify-completed",
+        {
+            **common,
+            "execution": object_schema({"status": {"const": "completed"}}),
+            "qualification": qualification,
+        },
+    )
+    definitions.update(
+        {
+            "toolDescriptor": tool_descriptor(),
+            "qualifyViewDescriptor": view_descriptor(),
+            "prerequisiteRejected": {
+                "oneOf": [
+                    prerequisite("notation"),
+                    prerequisite("profile"),
+                    prerequisite("structure"),
+                ]
+            },
+            "qualifyCompleted": completed,
+        }
+    )
+    return schema_document(
+        document,
+        "Selected-View formal qualification result",
+        definitions,
+        ["prerequisiteRejected", "qualifyCompleted"],
+    )
+
+
 def diagnostic_schema(
     fragment: SchemaFragment,
     profile_inventory: Optional[dict[str, Any]] = None,
@@ -2626,8 +3171,10 @@ SCHEMA_BUILDERS: dict[str, Callable[..., dict[str, Any]]] = {
     "ruleInventory": rule_inventory_schema,
     "ruleExplanation": rule_explanation_schema,
     "viewDiscovery": view_discovery_schema,
+    "qualificationSubjects": qualification_subjects_schema,
     "validateResult": validate_result_schema,
     "traceResult": trace_result_schema,
+    "qualifyResult": qualify_result_schema,
 }
 
 SCHEMA_FRAGMENT_BUILDERS: dict[
@@ -2709,8 +3256,12 @@ def render_schema(
     operation_digest: Optional[str] = None,
     core_companion: Optional[dict[str, Any]] = None,
 ) -> bytes:
-    if document.name == "validateResult":
-        schema = validate_result_schema(
+    if document.name in (
+        "qualificationSubjects",
+        "validateResult",
+        "qualifyResult",
+    ):
+        schema = SCHEMA_BUILDERS[document.name](
             document,
             profile_inventory,
             core_inventory,

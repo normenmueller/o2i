@@ -37,6 +37,7 @@ module O2I.Semantics.Internal
   , semanticallyValidModelGraphIdentity
   , SemanticResults(..)
   , SemanticAssessment(..)
+  , semanticAssessmentMatchesGraph
   ) where
 
 import Data.List (sortOn)
@@ -48,7 +49,7 @@ import O2I.Core.Contract.Internal (CoreRuleId(..))
 import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
 import O2I.Input.Internal.Types (CollectiveFitInput, StrategyFormulationInput)
 import O2I.Structure (WellFormedGraph)
-import O2I.Structure.Internal (wellFormedGraphIdentity)
+import O2I.Structure.Internal (sameWellFormedGraph, wellFormedGraphIdentity)
 
 -- | Existential projection of one generated schema-indexed semantic rule.
 newtype SemanticRule =
@@ -374,9 +375,24 @@ data SemanticResults scope = SemanticResults
 
 -- | Complete semantic assessment with deterministic rejection precedence.
 data SemanticAssessment scope
-  = SemanticsRejected !(SemanticResults scope) !(NonEmpty SemanticDefect)
+  = SemanticsRejected
+      !(WellFormedGraph scope)
+      !(SemanticResults scope)
+      !(NonEmpty SemanticDefect)
   | SemanticsUnavailable
       !(SemanticResults scope)
       !(SemanticallyValidModel scope)
   | SemanticsAccepted !(SemanticResults scope) !(SemanticallyValidModel scope)
   deriving (Eq, Show)
+
+-- | Decide whether an assessment came from this exact selected-View graph.
+semanticAssessmentMatchesGraph ::
+     WellFormedGraph scope -> SemanticAssessment scope -> Bool
+semanticAssessmentMatchesGraph graph assessment =
+  sameWellFormedGraph graph producingGraph
+  where
+    producingGraph =
+      case assessment of
+        SemanticsRejected rejectedGraph _ _ -> rejectedGraph
+        SemanticsUnavailable _ model -> semanticModelGraph model
+        SemanticsAccepted _ model -> semanticModelGraph model

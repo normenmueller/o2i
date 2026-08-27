@@ -123,6 +123,31 @@ viewDiscoveryMachineSchema =
              ]
     }
 
+qualificationSubjectsPrerequisiteRejectedVariant :: SchemaVariant
+qualificationSubjectsPrerequisiteRejectedVariant =
+  SchemaVariant "qualification-subjects-prerequisite-rejected"
+
+qualificationSubjectsDiscoveredVariant :: SchemaVariant
+qualificationSubjectsDiscoveredVariant =
+  SchemaVariant "qualification-subjects-discovered"
+
+qualificationSubjectsMachineSchema :: MachineSchema
+qualificationSubjectsMachineSchema =
+  MachineSchema
+    { machineSchemaAuthorityValue =
+        SchemaAuthority
+          { schemaAuthorityIdentityValue =
+              SchemaIdentity "o2i.discovery.qualification-subjects"
+          , schemaAuthorityVersionValue = SchemaVersion 1
+          , schemaAuthorityDigestValue =
+              SchemaDigest
+                "22c3320fd35a58d30be229f1f1690035f18264a16b9fa36ef46d8b91ba123d0e"
+          }
+    , machineSchemaVariantsValue =
+        qualificationSubjectsPrerequisiteRejectedVariant
+          :| [qualificationSubjectsDiscoveredVariant]
+    }
+
 notationValidationAcceptedVariant :: SchemaVariant
 notationValidationAcceptedVariant = SchemaVariant "notation-validation-accepted"
 
@@ -165,7 +190,7 @@ validateResultMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "ca79209b0672cf96c680473f2f83dc25988cdfd94e2a5beb015ddeb88dbc1e77"
+                "86051e15e8328cea1d41042f254f0b7a2dcb5140f6aeff263018eff7d7902317"
           }
     , machineSchemaVariantsValue =
         notationValidationAcceptedVariant
@@ -198,11 +223,34 @@ traceResultMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "facc62f1102bfb69d4a7c1201636da40525e61f66edd66fa41261e6f435847a1"
+                "b7d4d4bc200cc9ffc14fad05f084fe38afd9af4610a5559fbf6e2d24ff9edfd4"
           }
     , machineSchemaVariantsValue =
         tracePrerequisiteRejectedVariant
           :| [traceRejectedVariant, traceAcceptedVariant]
+    }
+
+qualifyPrerequisiteRejectedVariant :: SchemaVariant
+qualifyPrerequisiteRejectedVariant =
+  SchemaVariant "qualify-prerequisite-rejected"
+
+qualifyCompletedVariant :: SchemaVariant
+qualifyCompletedVariant = SchemaVariant "qualify-completed"
+
+qualifyResultMachineSchema :: MachineSchema
+qualifyResultMachineSchema =
+  MachineSchema
+    { machineSchemaAuthorityValue =
+        SchemaAuthority
+          { schemaAuthorityIdentityValue =
+              SchemaIdentity "o2i.operation.qualify"
+          , schemaAuthorityVersionValue = SchemaVersion 1
+          , schemaAuthorityDigestValue =
+              SchemaDigest
+                "39cf57d70caddc8a452a55a4152782fe147ff496073eddeedf7d8b11230d6f3b"
+          }
+    , machineSchemaVariantsValue =
+        qualifyPrerequisiteRejectedVariant :| [qualifyCompletedVariant]
     }
 
 diagnosticSchemaAuthority :: SchemaAuthority

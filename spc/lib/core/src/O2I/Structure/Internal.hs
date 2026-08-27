@@ -37,6 +37,7 @@ module O2I.Structure.Internal
   , StructuredPropositionObservation(..)
   , WellFormedGraph(..)
   , wellFormedGraphIdentity
+  , sameWellFormedGraph
   ) where
 
 import Data.List.NonEmpty (NonEmpty)
@@ -61,6 +62,7 @@ import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
 import O2I.Core.Identity.Internal
   ( ScopedOccurrence
   , SelectedViewScope
+  , sameSelectedViewScope
   , selectedViewScopeGraphIdentity
   )
 
@@ -464,6 +466,14 @@ data WellFormedGraph scope = WellFormedGraph
 wellFormedGraphIdentity :: WellFormedGraph scope -> ModelIdentity
 wellFormedGraphIdentity =
   selectedViewScopeGraphIdentity . wellFormedSelectedViewScope
+
+-- | Compare the complete producing graph, including its selected-View scope.
+sameWellFormedGraph :: WellFormedGraph scope -> WellFormedGraph scope -> Bool
+sameWellFormedGraph left right =
+  sameSelectedViewScope
+    (wellFormedSelectedViewScope left)
+    (wellFormedSelectedViewScope right)
+    && left == right
 
 instance Eq (WellFormedGraph scope) where
   left == right =

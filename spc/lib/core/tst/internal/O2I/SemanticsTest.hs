@@ -854,7 +854,7 @@ scenarioDefects occurrences projection inputs =
     inputs
     (\graph bound ->
        case Eval.assessSemantics graph bound of
-         SemanticsRejected _ defects -> NonEmpty.toList defects
+         SemanticsRejected _ _ defects -> NonEmpty.toList defects
          _ -> [])
 
 supplementalBindingIsolation :: Assertion

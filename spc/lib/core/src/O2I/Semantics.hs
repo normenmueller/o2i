@@ -10,6 +10,7 @@ module O2I.Semantics
   ( SemanticAssessment
   , SemanticDisposition(..)
   , assessSemantics
+  , semanticAssessmentMatchesGraph
   , semanticDisposition
   , foldSemanticAssessment
   , semanticCandidateOccurrences
@@ -124,6 +125,12 @@ assessSemantics ::
   -> SemanticAssessment scope
 assessSemantics graph = SemanticAssessment . Eval.assessSemantics graph
 
+-- | Decide whether this assessment was produced from the exact graph value.
+semanticAssessmentMatchesGraph ::
+     WellFormedGraph scope -> SemanticAssessment scope -> Bool
+semanticAssessmentMatchesGraph graph (SemanticAssessment assessment) =
+  Internal.semanticAssessmentMatchesGraph graph assessment
+
 -- | Aggregate Core Semantics disposition.
 data SemanticDisposition
   = SemanticRejected
@@ -161,7 +168,7 @@ data SemanticEvidenceKind
 semanticDisposition :: SemanticAssessment scope -> SemanticDisposition
 semanticDisposition (SemanticAssessment assessment) =
   case assessment of
-    Internal.SemanticsRejected _ _ -> SemanticRejected
+    Internal.SemanticsRejected _ _ _ -> SemanticRejected
     Internal.SemanticsUnavailable _ _ -> SemanticUnavailable
     Internal.SemanticsAccepted _ _ -> SemanticAccepted
 
@@ -174,7 +181,7 @@ foldSemanticAssessment ::
   -> result
 foldSemanticAssessment rejected unavailable accepted (SemanticAssessment assessment) =
   case assessment of
-    Internal.SemanticsRejected _ failures ->
+    Internal.SemanticsRejected _ _ failures ->
       rejected (SemanticDiagnosticEvidence <$> failures)
     Internal.SemanticsUnavailable _ _ -> unavailable
     Internal.SemanticsAccepted _ model -> accepted model
@@ -189,7 +196,7 @@ semanticallyValidModel ::
      SemanticAssessment scope -> Maybe (SemanticallyValidModel scope)
 semanticallyValidModel (SemanticAssessment assessment) =
   case assessment of
-    Internal.SemanticsRejected _ _ -> Nothing
+    Internal.SemanticsRejected _ _ _ -> Nothing
     Internal.SemanticsUnavailable _ model -> Just model
     Internal.SemanticsAccepted _ model -> Just model
 
@@ -609,6 +616,6 @@ primitiveSupportWitnesses assessment =
 semanticResults :: SemanticAssessment scope -> Internal.SemanticResults scope
 semanticResults (SemanticAssessment assessment) =
   case assessment of
-    Internal.SemanticsRejected results _ -> results
+    Internal.SemanticsRejected _ results _ -> results
     Internal.SemanticsUnavailable results _ -> results
     Internal.SemanticsAccepted results _ -> results
