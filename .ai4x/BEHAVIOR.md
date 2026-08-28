@@ -74,6 +74,8 @@ The exact standalone Product Owner message `Freigegeben.` is an observable singl
 
 Before execution, Gertrud revalidates that exactly one such handoff exists, immediately precedes the approval, remains open, and still matches current facts. A missing handoff, multiple candidate handoffs, an already consumed handoff, or a handoff superseded by a later handoff or material new fact blocks execution and requires a new decision handoff. On a valid binding, Gertrud emits one non-authorizing `Approval bound:` receipt that repeats the exact subject, bounded scope, target state, and authority boundary and marks the handoff `consumed` before executing it. `Consumed` binds the approval to this one bounded execution and prevents replay; the receipt makes that one-time binding observable but never broadens it. The binding exists only in the current live exchange and is never reconstructed from a conversation transcript or carried across a session boundary. `Freigegeben.` creates no binding for a `Product Owner action:` handoff or a recommended cold start.
 
+`Consumed` applies to the approval reply, not to the bounded authority it establishes. Once bound, that authority remains effective as one atomic work-unit authority through its stated target; each covered action proceeds without another decision handoff or Product Owner prompt. Fresh Product Owner authority is required only when the next action expands the stated scope or target, crosses an explicit exclusion, or introduces material irreversibility outside the bound authority.
+
 If `Cold start: recommended`, output only the three non-imperative decision metadata fields `Recommendation:`, `Alternatives:`, and `Cold start:` and omit `Approval:` and `Product Owner action:`. Then append exactly the three numbered actions defined under Normal Session Continuity, rendered only as that contract permits. The metadata contains no imperative, and no other imperative sentence or numbered transition instruction may appear. Those three actions remain the only transition instructions, and the report ends immediately after step 3 with no following text. If `Cold start: not recommended`, do not print the three actions.
 
 # Referent Role
@@ -124,11 +126,13 @@ prove, own, or define O2I semantics.
 
 # Execution Contract
 
-Work only within the latest explicit Product Owner authority and, when one exists, the owning Issue. An explicit Product Owner request may authorize clear Routine work without an Issue or additional authorization ceremony. A material expansion of protected scope returns to the Product Owner before implementation.
+Work only within the latest explicit Product Owner authority and, when one exists, the owning Issue. An explicit Product Owner request may authorize clear Routine work without an Issue or additional authorization ceremony. Authority for one exact Issue or bounded Issue-free Routine request is one atomic work-unit authority through its stated target, not a sequence of action-level approvals. A material expansion of protected scope returns to the Product Owner before implementation.
 
 An explicit Product Owner release of one exact Issue in Project status `Ready` authorizes Gertrud, within that Issue's accepted scope, to activate it and carry it through `In review` without another execution or Pull Request publication prompt. This authority includes Project `In progress`, capability-matched specialist and Co-Author coordination, implementation, deterministic verification, independent review and corrections, commit, push, Pull Request publication, green required remote verification, evidence receipts, and Project `In review`.
 
-Project status `Ready` alone creates no authority. A Ready-Issue release never authorizes scope expansion, bypassing statement owners or required role separation, merge, Issue closure, Project `Done`, branch or worktree cleanup, release or tag, or protected publication. Agent remote writes stop when the required machine identity is unavailable or unverified.
+Project status `Ready` alone creates no authority. A Ready-Issue release never authorizes scope or target expansion, bypassing statement owners or required role separation, merge, Issue closure, Project `Done`, branch or worktree cleanup, release or tag, protected publication, or another materially irreversible action outside its explicit boundary. Covered actions retain their required review, deterministic and remote verification, protected-branch controls, and verified machine identity; none creates a new Product Owner approval point.
+
+A host, sandbox, or tool permission is an independent technical execution control. It may block an otherwise authorized command and must never be bypassed, but granting or denying it neither creates nor narrows Product Owner governance authority and never justifies a duplicate Product Owner approval prompt. Agent remote writes stop when the required machine identity is unavailable or unverified.
 
 `10/10` is Product Owner shorthand for all required formal verdicts being `accepted`, zero blocking or advisory findings, all exact-candidate local and remote checks being green, and intact authorship-versus-review separation. It is never a formal review score, and `accepted with follow-ups` does not satisfy it.
 
@@ -161,7 +165,7 @@ A review identifies its exact subject and declared scope. Later changes require 
 - Agentic AI may support O2I reasoning but must never be required by O2I.
 - Preserve unrelated user changes. Never edit `mdl/o2i.archimate` directly;
   guide the user through model changes in small steps.
-- Do not push unless the user explicitly requests it.
+- Push only when explicit Product Owner authority covers it; one exact work-unit release may provide that authority without an action-level push prompt.
 
 # Workflow
 

@@ -1,46 +1,53 @@
 # Handoff
 
-- Observed: 2026-08-27 CEST
+- Observed: 2026-08-28 CEST
 - Work status: `ACTIVE`
-- Current Issue: `#94`
-- Current node: `accepted-candidate-publication`
+- Current Issue: `#97`
+- Current node: `final-changed-surface-review`
 
 # Objective
 
-Require the `Recommendation:` field in every primary-Gertrud Product Owner Decision Handoff to be one single-line Markdown paragraph with one empty source line immediately before and after it.
+Make one explicit release of an exact accepted work unit authority-atomic through its stated target state, without repeated action-level Product Owner prompts.
 
 # Authority
 
-- Issue #94 owns this linked Protected repository-governance follow-up and is in Project status `In progress`.
-- The Product Owner explicitly authorized the exact recommendation-paragraph invariant through `In review`, including Co-Authoring, deterministic tests, independent review, commit, push, Pull Request publication, required remote checks, evidence publication, and Project administration.
-- Scope is `.ai4x/BEHAVIOR.md`, the concise German projection in `CONTRIBUTING.md`, deterministic governance tests, and this handoff.
-- Exclusions are every other report-content or formatting rule, merge, Issue closure, `Done`, cleanup, release, and tag.
+- Issue #97 owns this small Protected repository-governance correction and is open in Project status `In progress`.
+- The Product Owner explicitly authorized the exact accepted candidate on 2026-08-28 for commit, machine-user branch push, Pull Request publication, required remote verification and scope-internal correction with changed-surface review, evidence receipt, and Project `In review`.
+- After a project-local Codex-rule approach exposed unrelated baseline work, the Product Owner explicitly authorized withdrawing that technical integration and preserving the original focused governance candidate.
+- Scope is `.ai4x/BEHAVIOR.md`, `.ai4x/governance/guidelines.md`, the concise German projection in `CONTRIBUTING.md`, deterministic governance tests, and this handoff.
+- Full Access, `approval_policy = "never"`, other global Codex changes, CLI or Haskell correction, merge, Issue closure, Project `Done`, cleanup, release, tag, and further scope expansion remain excluded.
 
 # Material Risk
 
-- The source-level blank-line invariant must be deterministic without changing decision semantics or contradicting the existing complete single-line recommendation rule.
-- The rule must exclude heading and list rendering while avoiding claims that static repository tests validate every future generated response.
+- Atomic work-unit authority must not become standing repository authority or arise from Project status, assignment, CI, or branch existence.
+- Technical runtime permission must remain distinct from Product Owner governance authority without bypassing either control or recreating a redundant PO prompt.
+- Technical runtime permission must grant no amend, publication, or remote-write authority.
+- Review independence, deterministic verification, protected-branch enforcement, and verified machine identity remain unchanged.
 
 # Participants
 
-- Primary Gertrud: authority boundary, supplied remote facts, coordination, independent-review routing, publication, and workflow administration.
-- External agent-governance Co-Author: actively designed and implemented the exact paragraph invariant in `.ai4x/BEHAVIOR.md`, `CONTRIBUTING.md`, and `utl/governance/test_github_governance.py`; author self-review only and no independent acceptance.
-- Independent agent-governance reviewer: independently and read-only accepted the exact candidate with no authorship or implementation contribution.
+- Primary Gertrud: source synthesis, authority boundary, supplied remote facts, coordination, local handoff, review routing, and any later authorized publication or workflow administration.
+- External agent-governance Co-Author: actively designed and implemented the exact four-surface governance candidate, completed self-review with no unresolved finding, and provided no independent acceptance.
+- Independent agent-governance reviewer: independently and read-only accepted the original exact candidate with zero blocking and zero advisory findings.
 
 # Verification
 
-- Basis is clean published #92 baseline `988b6be4d39454c9e7c7f7a6422704a5c73b1181` plus the pre-existing #94 handoff.
-- Candidate hashes: `.ai4x/BEHAVIOR.md` `8ca9bf6bff72bfd9a8b045b33d8e444369caf9cd034d5fb346987615330f18d3`; `CONTRIBUTING.md` `c1bb8ab74c4c29ab7724bc0af5a85d18b399cfe3643fac583115df01ce5185f9`; `utl/governance/test_github_governance.py` `ba7fa43b31c9e144a0db9072fe5d1c5ded8184d0d03acea44896684657494966`.
-- Focused governance contract tests pass 35/35; `./utl/verify.sh governance` passes governance 35/35 and routing 18/18; scoped `git diff --check` passes.
-- Independent read-only review returned `accepted` with zero blocking and zero advisory findings; all supplied candidate and handoff hashes were reproduced and role separation remains intact.
-- Commit, publication, remote verification, evidence receipt, and Project `In review` remain pending.
+- Clean basis is `a45aa961b8e2c4cf30bef5c51c408d394ac7ae31`, equal to observed `origin/trunk` when the worktree was created.
+- Issue #97 is observed open, assigned to `gertrud-ai4x`, and in Project status `In progress`.
+- Co-Authored candidate authoring is complete in `.ai4x/BEHAVIOR.md`, `.ai4x/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/governance/test_github_governance.py`.
+- Focused governance tests pass 37/37; canonical `./utl/verify.sh governance` passes governance 37/37 and routing 18/18; `git diff --check` passes.
+- Independent review reproduced every exact candidate hash and returned `accepted` with zero blocking and zero advisory findings after the isolated stale-handoff correction; role separation remains intact.
+- The temporary project-local Codex rule, verification-routing entries, and REUSE assignment are absent from the worktree and introduce no repository diff.
+- Exactly five candidate files are staged with no unstaged path; governance passes 37/37, routing passes 18/18, and the cached diff check is clean.
+- An exploratory complete-suite run exposed a pre-existing legacy `o2i-cli` dependency conflict and reproduced it against the clean basis; it is outside #97 and does not invalidate candidate-specific accepted evidence.
+- The publication approval was bound and consumed for this work unit, but the host technical control rejected both the primary agent's local `git commit` and the authorized user-local prefix rules. No Codex configuration changed; the candidate itself remains intact.
 
 # Next Action
 
-Commit the accepted candidate, publish it through the verified machine identity, open the Pull Request, await required remote verification, publish the review receipt, and move #94 to `In review`.
+Obtain the final independent changed-surface verdict, then continue the already authorized commit and publication through Project `In review` if accepted.
 
 # Local Return Point
 
-- Branch: `feat/94-recommendation-paragraph`.
-- Worktree: repository-relative `.ai4x/local/worktrees/94-recommendation-paragraph` from the stable checkout.
-- Dirty scope: `.ai4x/BEHAVIOR.md`, `CONTRIBUTING.md`, `utl/governance/test_github_governance.py`, and `.ai4x/STATE.md`; no candidate commit or branch publication has occurred.
+- Branch: `chore/97-atomic-work-unit-authority`.
+- Worktree: repository-relative `.ai4x/local/worktrees/97-atomic-work-unit-authority` from the stable checkout.
+- Dirty scope: `.ai4x/STATE.md` plus the four accepted Issue-scoped governance candidate paths; no commit or branch publication has occurred.

@@ -224,11 +224,12 @@ class GitHubGovernanceContractTests(unittest.TestCase):
                     "green required remote verification",
                     "evidence receipts",
                     "Project status `Ready` alone creates no authority",
-                    "scope expansion",
+                    "scope or target expansion",
                     "bypassing statement owners or required role separation",
                     "merge, Issue closure, Project `Done`",
                     "branch or worktree cleanup",
-                    "release or tag, or protected publication",
+                    "release or tag",
+                    "protected publication",
                     "required machine identity is unavailable or unverified",
                 ):
                     self.assertIn(term, content)
@@ -243,6 +244,92 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "Branch- oder Worktree-Bereinigung",
             "geschützte Publikation",
             "verifizierte Machine-User-Identität",
+        ):
+            with self.subTest(surface="human", term=term):
+                self.assertIn(term, human)
+
+    def test_work_unit_authority_is_atomic_without_weakening_controls(self) -> None:
+        behavior = read(BEHAVIOR)
+        governance = read(GOVERNANCE)
+        human = read(CONTRIBUTING)
+
+        for term in (
+            "one atomic work-unit authority through its stated target",
+            "not a sequence of action-level approvals",
+            "each covered action proceeds without another decision handoff or Product Owner prompt",
+            "`Consumed` applies to the approval reply",
+            "not to the bounded authority it establishes",
+            "explicit exclusion",
+            "material irreversibility outside the bound authority",
+            "Push only when explicit Product Owner authority covers it",
+            "without an action-level push prompt",
+        ):
+            with self.subTest(surface="behavior", term=term):
+                self.assertIn(term, behavior)
+
+        for term in (
+            "one atomic work-unit authority",
+            "without another action-level Product Owner prompt",
+            "Fresh Product Owner authority is required only",
+            "expands the stated scope or target",
+            "crosses an explicit exclusion",
+            "introduces material irreversibility outside the bound authority",
+            "required review, deterministic and remote verification",
+            "protected-branch controls",
+            "without becoming a new approval point",
+        ):
+            with self.subTest(surface="governance", term=term):
+                self.assertIn(term, governance)
+
+        for term in (
+            "atomare Autorität für die Arbeitseinheit",
+            "ohne weitere aktionsbezogene PO-Freigabe",
+            "Neue PO-Autorität ist nur nötig",
+            "Scope oder Zielzustand erweitert",
+            "ausdrücklichen Ausschluss überschreitet",
+            "materielle Irreversibilität einführt",
+            "Reviews, deterministische und Remote-Prüfungen",
+            "geschützte Branches",
+            "keinen neuen PO-Freigabepunkt",
+            "`Consumed` verbraucht die Freigabeantwort",
+            "nicht die durch sie begründete begrenzte Autorität",
+        ):
+            with self.subTest(surface="human", term=term):
+                self.assertIn(term, human)
+
+        self.assertNotIn("- Do not push unless the user explicitly requests it.", behavior)
+        self.assertNotIn(
+            "gesonderte PO-Freigabe für Veröffentlichung oder Push", human
+        )
+
+    def test_technical_permission_is_separate_and_never_bypassed(self) -> None:
+        behavior = read(BEHAVIOR)
+        governance = read(GOVERNANCE)
+        human = read(CONTRIBUTING)
+
+        for term in (
+            "independent technical execution control",
+            "must never be bypassed",
+            "neither creates nor narrows Product Owner governance authority",
+            "never justifies a duplicate Product Owner approval prompt",
+        ):
+            with self.subTest(surface="behavior", term=term):
+                self.assertIn(term, behavior)
+
+        for term in (
+            "independent technical execution controls",
+            "must never be bypassed",
+            "neither creates nor narrows Product Owner governance authority",
+            "never justifies a duplicate Product Owner approval prompt",
+        ):
+            with self.subTest(surface="governance", term=term):
+                self.assertIn(term, governance)
+
+        for term in (
+            "eigenständige technische Ausführungskontrollen",
+            "wird niemals umgangen",
+            "erzeugt oder beschränkt jedoch keine PO-Governance-Autorität",
+            "rechtfertigt keine doppelte PO-Freigabeanfrage",
         ):
             with self.subTest(surface="human", term=term):
                 self.assertIn(term, human)
@@ -764,6 +851,11 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "marks the handoff `consumed` before executing it",
             "binds the approval to this one bounded execution and prevents replay",
             "receipt makes that one-time binding observable but never broadens it",
+            "`Consumed` applies to the approval reply",
+            "not to the bounded authority it establishes",
+            "one atomic work-unit authority through its stated target",
+            "each covered action proceeds without another decision handoff or Product Owner prompt",
+            "Fresh Product Owner authority is required only",
             "exists only in the current live exchange",
             "never reconstructed from a conversation transcript or carried across a session boundary",
             "creates no binding for a `Product Owner action:` handoff or a recommended cold start",
@@ -815,7 +907,10 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "Diese Antwort bindet genau einmal ausschließlich",
             "unmittelbar vorausgehenden, noch offenen Entscheidungsvorlage",
             "Zustand `consumed` sichtbar",
-            "eine begrenzte Ausführung und verhindert ihre Wiederverwendung",
+            "`Consumed` verbraucht die Freigabeantwort",
+            "nicht die durch sie begründete begrenzte Autorität",
+            "atomare Autorität der Arbeitseinheit bis zu ihrem genannten Zielzustand",
+            "ohne weitere Entscheidungsvorlage oder PO-Freigabeanfrage",
             "fehlende oder mehrdeutige Vorlage",
             "bereits verbrauchte Vorlage",
             "spätere Vorlage oder neue materielle Fakten überholte Vorlage blockieren",
