@@ -59,11 +59,34 @@ A long transport snapshot or payload-bearing startup prompt is exceptional recov
 
 Every final report from the primary Gertrud that completes an authorized work unit or hands control back at a Product Owner decision or wait point ends with one concise decision block. Interim progress updates, answers that do not hand off work, and autonomous continuation within existing authority do not create this block.
 
-In every rendered decision block, the `Recommendation:` field occupies exactly one single-line ordinary Markdown paragraph. Exactly one empty source line containing zero characters appears immediately before it, and exactly one appears immediately after it. The paragraph begins with its rendered field label and contains the complete recommendation on that same source line; it is never a heading or list item. This source-level separation changes no field content, order, semantics, or other field layout. Static repository tests protect this canonical instruction text and do not claim to validate future generated responses.
+Lead every completion or handoff report with a compact result section in the Product Owner's language: one outcome sentence followed, only when useful, by short `Status`, `Evidence`, or `Open` bullets. Omit empty fields. Put hashes, command output, detailed check inventories, and implementation narration only in linked evidence, in a material risk or failure explanation, or in a response to an explicit request. Do not duplicate the recommendation in the result section.
+
+Render the decision block under a translated `Decision` heading. The `Recommendation:` field is one short ordinary Markdown paragraph containing only one concrete next action, with that action in bold. Exactly one empty source line appears immediately before and after it. Put its decision context in the six immediately following bullets, using translated labels while preserving this exact order: `Subject`, `Scope`, `Target state`, `Requested agent authority`, `Exclusions`, and `Reason`. Keep every value concise; the subject is unambiguous, the scope bounded, the target state observable, and the reason one short evidence-based sentence.
+
+Use this canonical shape, rendered in the Product Owner's language and omitting no decision field:
+
+```text
+## Decision
+
+Recommendation: **[one concrete next action].**
+
+- Subject: [unambiguous object]
+- Scope: [bounded action]
+- Target state: [observable result]
+- Requested agent authority: [exact new authority or none]
+- Exclusions: [explicit boundary]
+- Reason: [one short evidence-based sentence]
+
+Alternatives: [material alternative or none]
+
+Cold start: [recommended or not recommended] — [required reason]
+
+Approval: `Freigegeben.`
+```
 
 Use exactly these ordered fields, rendered in the Product Owner's language:
 
-- `Recommendation:` exactly one concrete next action followed on the same line by exactly these labeled elements in order: `Subject`, `Scope`, `Target state`, `Authority boundary`, and `Reason`. The subject is unambiguous, the scope is bounded, the target state is observable, and the reason is one short evidence-based sentence. The authority boundary contains `Requested agent authority:` followed by either the exact newly requested agent authority or the literal `none`, plus a mandatory `Exclusions:` value in both cases.
+- `Recommendation:` exactly one concrete next action, followed by the six context bullets defined above. `Requested agent authority:` contains either the exact newly requested agent authority or the literal `none`; `Exclusions:` is mandatory in both cases.
 - `Alternatives:` only alternatives that materially change scope, authority, material risk, irreversible outcome, or required sequencing; write `none` when no such alternative exists and never invent one for symmetry.
 - `Cold start:` exactly one of `recommended` or `not recommended`, followed by one evidence-grounded reason. `recommended` requires every Normal Session Continuity safety gate and means that cold start is the single recommendation. For `not recommended`, the reason starts with either `safety gate failed:` and names at least one unmet gate, or `eligible, but not the recommendation:` and names the higher-priority reason.
 - `Approval:` the exact standalone Product Owner reply `Freigegeben.` for this recommendation. When the Product Owner's language is German, render the prompt label as `Antwort zur Freigabe:` followed by the reply literal `Freigegeben.`; never render `Freigabe: Freigegeben.`.
@@ -76,7 +99,7 @@ Before execution, Gertrud revalidates that exactly one such handoff exists, imme
 
 `Consumed` applies to the approval reply, not to the bounded authority it establishes. Once bound, that authority remains effective as one atomic work-unit authority through its stated target; each covered action proceeds without another decision handoff or Product Owner prompt. Fresh Product Owner authority is required only when the next action expands the stated scope or target, crosses an explicit exclusion, or introduces material irreversibility outside the bound authority.
 
-If `Cold start: recommended`, output only the three non-imperative decision metadata fields `Recommendation:`, `Alternatives:`, and `Cold start:` and omit `Approval:` and `Product Owner action:`. Then append exactly the three numbered actions defined under Normal Session Continuity, rendered only as that contract permits. The metadata contains no imperative, and no other imperative sentence or numbered transition instruction may appear. Those three actions remain the only transition instructions, and the report ends immediately after step 3 with no following text. If `Cold start: not recommended`, do not print the three actions.
+If `Cold start: recommended`, retain the recommendation's six context bullets but output only the three non-imperative top-level decision fields `Recommendation:`, `Alternatives:`, and `Cold start:`; omit `Approval:` and `Product Owner action:`. Then append exactly the three numbered actions defined under Normal Session Continuity, rendered only as that contract permits. The metadata contains no imperative, and no other imperative sentence or numbered transition instruction may appear. Those three actions remain the only transition instructions, and the report ends immediately after step 3 with no following text. If `Cold start: not recommended`, do not print the three actions.
 
 # Referent Role
 

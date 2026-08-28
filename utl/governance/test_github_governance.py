@@ -686,67 +686,80 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         self.assertNotIn("`Approval:`", completion)
         self.assertNotRegex(completion, r"(?m)^4\. ")
 
-    def test_decision_recommendation_is_one_standalone_paragraph(self) -> None:
+    def test_decision_report_is_compact_and_scannable(self) -> None:
         behavior = read(BEHAVIOR)
         decision = behavior.split("# Product Owner Decision Handoff\n", 1)[1].split(
             "\n# Referent Role", 1
         )[0]
-        rule = (
-            "In every rendered decision block, the `Recommendation:` field occupies exactly one single-line ordinary Markdown paragraph. "
-            "Exactly one empty source line containing zero characters appears immediately before it, and exactly one appears immediately after it. "
-            "The paragraph begins with its rendered field label and contains the complete recommendation on that same source line; it is never a heading or list item. "
-            "This source-level separation changes no field content, order, semantics, or other field layout. "
-            "Static repository tests protect this canonical instruction text and do not claim to validate future generated responses."
+        template = decision.split("```text\n", 1)[1].split("\n```", 1)[0]
+        self.assertEqual("## Decision", template.splitlines()[0])
+        self.assertIn(
+            "\n\nRecommendation: **[one concrete next action].**\n\n", template
         )
-        self.assertEqual(1, decision.count(rule))
-        self.assertIn(f"\n\n{rule}\n\n", decision)
-        self.assertNotIn(f"\n\n\n{rule}", decision)
-        self.assertNotIn(f"{rule}\n\n\n", decision)
-        self.assertNotIn("\n", rule)
-        self.assertNotRegex(rule, r"^(?:#{1,6} |[-*+] |[1-9]\. )")
-        for contradiction in (
-            "may span multiple source lines",
-            "may be a heading",
-            "may be a list item",
-            "at least one empty source line",
-            "one or more empty source lines",
-            "zero or more empty source lines",
-        ):
-            with self.subTest(surface="behavior", contradiction=contradiction):
-                self.assertNotIn(contradiction, decision)
+        self.assertEqual(
+            [
+                "Subject",
+                "Scope",
+                "Target state",
+                "Requested agent authority",
+                "Exclusions",
+                "Reason",
+            ],
+            re.findall(
+                r"(?m)^- (Subject|Scope|Target state|Requested agent authority|Exclusions|Reason):",
+                template,
+            ),
+        )
         for term in (
-            "exactly one single-line ordinary Markdown paragraph",
-            "Exactly one empty source line containing zero characters",
-            "immediately before it, and exactly one appears immediately after it",
-            "complete recommendation on that same source line",
-            "never a heading or list item",
-            "changes no field content, order, semantics, or other field layout",
-            "do not claim to validate future generated responses",
+            "compact result section",
+            "one outcome sentence",
+            "`Status`, `Evidence`, or `Open` bullets",
+            "Omit empty fields",
+            "Do not duplicate the recommendation",
+            "translated `Decision` heading",
+            "one short ordinary Markdown paragraph",
+            "only one concrete next action",
+            "with that action in bold",
+            "six immediately following bullets",
+            "preserving this exact order",
+            "Keep every value concise",
         ):
             with self.subTest(surface="behavior", term=term):
-                self.assertIn(term, rule)
+                self.assertIn(term, decision)
 
         human = read(CONTRIBUTING)
-        human_rule = (
-            "Das Feld `Recommendation:` bildet genau einen einzeiligen gewöhnlichen Markdown-Absatz. "
-            "Unmittelbar davor und danach steht jeweils genau eine leere Quellzeile ohne Zeichen. "
-            "Der Absatz beginnt mit der übersetzten Feldbezeichnung und enthält die vollständige Empfehlung auf derselben Quellzeile; er ist weder Überschrift noch Listeneintrag. "
-            "Diese Trennung ändert Inhalt, Reihenfolge und Semantik sowie das Layout der übrigen Felder nicht."
+        human_template = human.split("## PO-Entscheidungsvorlage\n", 1)[1].split(
+            "```text\n", 1
+        )[1].split("\n```", 1)[0]
+        self.assertEqual("## Entscheidung", human_template.splitlines()[0])
+        self.assertIn(
+            "\n\nEmpfehlung: **[eine konkrete nächste Aktion].**\n\n",
+            human_template,
         )
-        self.assertEqual(1, human.count(human_rule))
-        self.assertIn(f"\n\n{human_rule}\n\n", human)
-        self.assertNotIn(f"\n\n\n{human_rule}", human)
-        self.assertNotIn(f"{human_rule}\n\n\n", human)
-        self.assertNotIn("\n", human_rule)
+        self.assertEqual(
+            [
+                "Gegenstand",
+                "Umfang",
+                "Zielzustand",
+                "Angefragte Agentenautorität",
+                "Ausgeschlossen",
+                "Grund",
+            ],
+            re.findall(
+                r"(?m)^- (Gegenstand|Umfang|Zielzustand|Angefragte Agentenautorität|Ausgeschlossen|Grund):",
+                human_template,
+            ),
+        )
         for term in (
-            "genau einen einzeiligen gewöhnlichen Markdown-Absatz",
-            "jeweils genau eine leere Quellzeile ohne Zeichen",
-            "vollständige Empfehlung auf derselben Quellzeile",
-            "weder Überschrift noch Listeneintrag",
-            "Layout der übrigen Felder nicht",
+            "kompakten Ergebnis",
+            "nur bei Bedarf kurze Punkte",
+            "Die Empfehlung wird im Ergebnis nicht wiederholt",
+            "eigenen Überschrift",
+            "kurze, fett hervorgehobene Aktion",
+            "sechs kurze Punkte in genau dieser Reihenfolge",
         ):
             with self.subTest(surface="human", term=term):
-                self.assertIn(term, human_rule)
+                self.assertIn(term, human)
 
     def test_product_owner_decision_handoff_is_deterministic(self) -> None:
         behavior = read(BEHAVIOR)
@@ -775,21 +788,19 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             ],
             re.findall(r"(?m)^- `Approval:` .+$", decision),
         )
-        recommendation = re.search(r"(?m)^- `Recommendation:` (.+)$", decision)
-        self.assertIsNotNone(recommendation)
-        assert recommendation is not None
+        template = decision.split("```text\n", 1)[1].split("\n```", 1)[0]
         self.assertEqual(
-            ["Subject", "Scope", "Target state", "Authority boundary", "Reason"],
+            [
+                "Subject",
+                "Scope",
+                "Target state",
+                "Requested agent authority",
+                "Exclusions",
+                "Reason",
+            ],
             re.findall(
-                r"`(Subject|Scope|Target state|Authority boundary|Reason)`",
-                recommendation.group(1),
-            ),
-        )
-        self.assertEqual(
-            ["Requested agent authority:", "Exclusions:"],
-            re.findall(
-                r"`(Requested agent authority:|Exclusions:)`",
-                recommendation.group(1),
+                r"(?m)^- (Subject|Scope|Target state|Requested agent authority|Exclusions|Reason):",
+                template,
             ),
         )
         self.assertEqual(
@@ -805,14 +816,19 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "hands control back at a Product Owner decision or wait point",
             "Interim progress updates",
             "autonomous continuation within existing authority",
+            "compact result section",
+            "one outcome sentence",
+            "Omit empty fields",
+            "Do not duplicate the recommendation",
             "exactly one concrete next action",
-            "exactly these labeled elements in order",
+            "six context bullets",
+            "using translated labels while preserving this exact order",
             "subject is unambiguous",
-            "scope is bounded",
-            "target state is observable",
+            "scope bounded",
+            "target state observable",
             "one short evidence-based sentence",
             "exact newly requested agent authority or the literal `none`",
-            "mandatory `Exclusions:` value in both cases",
+            "`Exclusions:` is mandatory in both cases",
             "write `none` when no such alternative exists",
             "never invent one for symmetry",
             "exactly one of `recommended` or `not recommended`",
@@ -859,7 +875,7 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "exists only in the current live exchange",
             "never reconstructed from a conversation transcript or carried across a session boundary",
             "creates no binding for a `Product Owner action:` handoff or a recommended cold start",
-            "only the three non-imperative decision metadata fields",
+            "only the three non-imperative top-level decision fields",
             "omit `Approval:` and `Product Owner action:`",
             "exactly the three numbered actions defined under Normal Session Continuity",
             "metadata contains no imperative",
@@ -887,15 +903,15 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         self.assertNotIn("`ineligible`", human)
         for term in (
             "## PO-Entscheidungsvorlage",
-            "genau einer konkreten Empfehlung",
-            "exakten Gegenstand, begrenzten Scope, beobachtbaren Zielzustand",
-            "exakt neu angefragte Agentenautorität oder das Literal `none`",
-            "in beiden Fällen zwingend die Ausschlüsse",
+            "genau einer solchen Entscheidung",
+            "Gegenstand, Umfang, Zielzustand",
+            "Angefragte Agentenautorität: [exakte neue Autorität oder none]",
+            "Ausschlüsse bleiben immer Pflicht",
             "durch `Freigegeben.` ausführbare Empfehlung muss die exakte neue Agentenautorität nennen",
             "darf `none` nicht verwenden",
             "direkte PO-Aktion und ein empfohlener Cold Start müssen `none` verwenden",
             "dürfen keine Agentenautorität erfinden",
-            "kurzen evidenzbasierten Grund",
+            "ein kurzer evidenzbasierter Satz",
             "Zwischenstände, reine Antworten und autonomes Weiterarbeiten",
             "genau `recommended` oder `not recommended`",
             "fehlgeschlagenen Sicherheitsbedingung",
@@ -916,7 +932,7 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "spätere Vorlage oder neue materielle Fakten überholte Vorlage blockieren",
             "nur im aktuellen laufenden Austausch",
             "weder aus einem Gesprächsprotokoll rekonstruiert noch über eine Session-Grenze getragen",
-            "nicht imperative Entscheidungsmetadaten",
+            "ausschließlich nicht imperativen Entscheidungsmetadaten",
             "unveränderten drei nummerierten Aktionsschritte",
             "Weitere imperative Sätze oder nummerierte Übergangsanweisungen sind ausgeschlossen",
             "endet unmittelbar nach Schritt 3",
