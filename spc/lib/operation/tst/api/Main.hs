@@ -34,6 +34,10 @@ import qualified O2I.Operation.Qualify as Qualify
 import qualified O2I.Operation.Qualify.Machine as QualifyMachine
 import qualified O2I.Operation.Qualify.Request as QualifyRequest
 import qualified O2I.Operation.Qualify.Result as QualifyResult
+import qualified O2I.Operation.Readiness as Readiness
+import qualified O2I.Operation.Readiness.Machine as ReadinessMachine
+import qualified O2I.Operation.Readiness.Request as ReadinessRequest
+import qualified O2I.Operation.Readiness.Result as ReadinessResult
 import qualified O2I.Operation.Request as Request
 import qualified O2I.Operation.Rule.Catalog as RuleCatalog
 import qualified O2I.Operation.Schema as Schema
@@ -52,6 +56,7 @@ $(assertAbstractTypes
     , "Acquisition.AcquisitionFailure"
     , "Acquisition.AcquiredSource"
     , "Acquisition.AcquiredSupplementalSource"
+    , "Acquisition.AcquiredReadinessSource"
     , "Adapter.AdapterId"
     , "Adapter.AdapterDescriptor"
     , "Adapter.AdapterRuleId"
@@ -159,6 +164,14 @@ $(assertAbstractTypes
     , "QualifyResult.PreparedQualify"
     , "QualifyResult.QualifyResult"
     , "QualifyMachine.QualifyResultDocument"
+    , "ReadinessRequest.ReadinessRequest"
+    , "ReadinessResult.ReadinessPrerequisite"
+    , "ReadinessResult.ReadinessInternalFailure"
+    , "ReadinessResult.ReadinessFailure"
+    , "ReadinessResult.ReadinessUnavailable"
+    , "ReadinessResult.PreparedReadiness"
+    , "ReadinessResult.ReadinessResult"
+    , "ReadinessMachine.ReadinessResultDocument"
     , "Request.CapabilityIdentity"
     , "Request.CapabilityInputReferences"
     , "Request.RequestedContract"
@@ -208,6 +221,8 @@ $(assertOrdinaryFunctions
     , 'Acquisition.foldAcquiredSource
     , 'Acquisition.acquiredSupplementalSource
     , 'Acquisition.foldAcquiredSupplementalSource
+    , 'Acquisition.acquiredReadinessSource
+    , 'Acquisition.foldAcquiredReadinessSource
     , 'Adapter.adapterIdText
     , 'Adapter.adapterDescriptorId
     , 'Adapter.adapterDescriptorName
@@ -582,6 +597,31 @@ $(assertOrdinaryFunctions
     , 'TraceMachine.traceResultSchema
     , 'TraceMachine.traceResultDocumentVariant
     , 'TraceMachine.encodeTraceResultDocument
+    , 'Readiness.runReadiness
+    , 'ReadinessRequest.readinessRequest
+    , 'ReadinessRequest.readinessModelInput
+    , 'ReadinessRequest.readinessViewSelector
+    , 'ReadinessRequest.readinessAdapterId
+    , 'ReadinessRequest.readinessEvidenceInput
+    , 'ReadinessRequest.readinessSupplementalInputs
+    , 'ReadinessRequest.foldReadinessRequest
+    , 'ReadinessResult.notationReadinessPrerequisite
+    , 'ReadinessResult.profileReadinessPrerequisite
+    , 'ReadinessResult.structureReadinessPrerequisite
+    , 'ReadinessResult.semanticsReadinessPrerequisite
+    , 'ReadinessResult.readinessPrerequisiteText
+    , 'ReadinessResult.foldReadinessPrerequisite
+    , 'ReadinessResult.foldReadinessInternalFailure
+    , 'ReadinessResult.foldReadinessFailure
+    , 'ReadinessResult.foldReadinessUnavailable
+    , 'ReadinessResult.preparedReadinessRequest
+    , 'ReadinessResult.preparedReadinessDiagnostics
+    , 'ReadinessResult.foldPreparedReadiness
+    , 'ReadinessResult.foldReadinessResult
+    , 'ReadinessMachine.readinessResultDocument
+    , 'ReadinessMachine.readinessResultSchema
+    , 'ReadinessMachine.readinessResultDocumentVariant
+    , 'ReadinessMachine.encodeReadinessResultDocument
     , 'Validate.runValidate
     , 'ValidateRequest.notationValidationLevel
     , 'ValidateRequest.profileValidationLevel

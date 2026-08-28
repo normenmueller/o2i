@@ -1,46 +1,51 @@
 # Handoff
 
-- Observed: 2026-08-27 CEST
+- Observed: 2026-08-28 CEST
 - Work status: `ACTIVE`
-- Current Issue: `#94`
-- Current node: `accepted-candidate-publication`
+- Current Issue: `#54`
+- Current node: `independent-review`
 
 # Objective
 
-Require the `Recommendation:` field in every primary-Gertrud Product Owner Decision Handoff to be one single-line Markdown paragraph with one empty source line immediately before and after it.
+Implement Batch 9 Readiness under parent #45: explicit readiness input, binding, supplied-trace validation, promotion reconstruction, criteria, prerequisite-unavailable outcomes, Operation orchestration, the versioned machine contract, public API probes, performance probes, and tests.
 
 # Authority
 
-- Issue #94 owns this linked Protected repository-governance follow-up and is in Project status `In progress`.
-- The Product Owner explicitly authorized the exact recommendation-paragraph invariant through `In review`, including Co-Authoring, deterministic tests, independent review, commit, push, Pull Request publication, required remote checks, evidence publication, and Project administration.
-- Scope is `.ai4x/BEHAVIOR.md`, the concise German projection in `CONTRIBUTING.md`, deterministic governance tests, and this handoff.
-- Exclusions are every other report-content or formatting rule, merge, Issue closure, `Done`, cleanup, release, and tag.
+- The Product Owner explicitly released #54 from `Backlog` through `Ready` for autonomous execution through Project status `In review`.
+- Authorized work includes capability-matched external Co-Authoring, implementation, deterministic verification, independent read-only reviews and corrections, commit, push, Pull Request publication, required remote CI, evidence publication, and Project administration.
+- Scope is Core Readiness plus Operation Readiness request, result, orchestration, schema and manifest row, public API probes, performance probes, tests, and this handoff.
+- Exclusions are merge, Issue closure, `Done`, cleanup, release, tag, Assessment, CLI, model, publication, protected-Terminology change, and scope expansion.
 
 # Material Risk
 
-- The source-level blank-line invariant must be deterministic without changing decision semantics or contradicting the existing complete single-line recommendation rule.
-- The rule must exclude heading and list rendering while avoiding claims that static repository tests validate every future generated response.
+- Readiness must remain an independent optional evaluation over explicit input and a supplied complete trace; it must not become hidden validation, qualification, assessment, persistence, or authorization.
+- Core must own input decoding, binding, promotion reconstruction, criteria, and unavailable outcomes while Operation owns acquisition, preparation, provenance, orchestration, canonical encoding, and schema closure.
+- The evaluator must use addressed indices, preserve deterministic diagnostics and provenance, and satisfy the accepted `O(W_p + X_r + T_r + C_r + D_r log(1 + N_r) + Z_r)` work and `O(S_p + X_r + T_r + C_r + D_r + Z_r)` retention contract.
 
 # Participants
 
-- Primary Gertrud: authority boundary, supplied remote facts, coordination, independent-review routing, publication, and workflow administration.
-- External agent-governance Co-Author: actively designed and implemented the exact paragraph invariant in `.ai4x/BEHAVIOR.md`, `CONTRIBUTING.md`, and `utl/governance/test_github_governance.py`; author self-review only and no independent acceptance.
-- Independent agent-governance reviewer: independently and read-only accepted the exact candidate with no authorship or implementation contribution.
+- Primary Gertrud: authority boundary, remote facts and workflow, coordination, synthesis, verification, review routing, publication, and handoff.
+- External Haskell/formal-methods Co-Author Beauvoir: completed active authorship of the Core Readiness boundary and the review-driven guard and Situation Anchor corrections with adversarial tests; excluded from independent acceptance.
+- Independent Core reviewer: accepted the exact final candidate with zero blocking and zero advisory findings after two correction cycles; read-only and separate from authorship.
+- Independent Operation reviewer: accepted the exact corrected schema candidate with zero blocking and zero advisory findings after one correction cycle; read-only and separate from authorship.
 
 # Verification
 
-- Basis is clean published #92 baseline `988b6be4d39454c9e7c7f7a6422704a5c73b1181` plus the pre-existing #94 handoff.
-- Candidate hashes: `.ai4x/BEHAVIOR.md` `8ca9bf6bff72bfd9a8b045b33d8e444369caf9cd034d5fb346987615330f18d3`; `CONTRIBUTING.md` `c1bb8ab74c4c29ab7724bc0af5a85d18b399cfe3643fac583115df01ce5185f9`; `utl/governance/test_github_governance.py` `ba7fa43b31c9e144a0db9072fe5d1c5ded8184d0d03acea44896684657494966`.
-- Focused governance contract tests pass 35/35; `./utl/verify.sh governance` passes governance 35/35 and routing 18/18; scoped `git diff --check` passes.
-- Independent read-only review returned `accepted` with zero blocking and zero advisory findings; all supplied candidate and handoff hashes were reproduced and role separation remains intact.
-- Commit, publication, remote verification, evidence receipt, and Project `In review` remain pending.
+- Baseline is clean `trunk` revision `a45aa961b8e2c4cf30bef5c51c408d394ac7ae31` after accepted Batch 8 and governance follow-up #94.
+- Project #54 is observed `In progress`; machine identity `gertrud-ai4x` is verified with required Project scope; activation receipt is Issue comment `5445429138`.
+- The candidate keeps Readiness in one opaque public Core boundary, binds explicit input against one well-formed graph, reconstructs promotion from the supplied complete trace and the exact semantic assessment, evaluates the closed 17-rule inventory, and exposes only total folds and projections.
+- The Operation candidate owns ordered acquisition and preparation, the four exact prerequisite stages, distinct binding and reconstruction unavailability, ready and not-ready outcomes, canonical provenance-bearing machine documents, and the exact generated schema and manifest contracts.
+- The Core corrections use dependency-specific guards, retain independent diagnostics, suppress foreign-derived diagnostics, and project the complete four-kind Situation Anchor union; the Operation schema now correlates binding context and homogeneous reconstruction reason families through full-document alternatives while retaining one manifest variant.
+- The serial canonical `./utl/verify.sh foundation` gate passed on the exact corrected candidate: licensing 576/576, contract suites 68/50/43, all package tests including Core Readiness 26 and Operation 172, repository Candidate Views, 25 external API contracts, 100% public Haddock including Core Readiness 103/103 and all Readiness Operation modules, independent source distributions, and global Haskell formatting.
+- Independent Core and Operation reviews both returned `accepted` with zero blocking and zero advisory findings; authorship-versus-review separation remains intact.
+- `git diff --check` passes; no commit or remote publication exists for this candidate.
 
 # Next Action
 
-Commit the accepted candidate, publish it through the verified machine identity, open the Pull Request, await required remote verification, publish the review receipt, and move #94 to `In review`.
+Commit the accepted candidate, push through the verified machine identity, publish the Pull Request, verify required remote CI, publish evidence, and move #54 to `In review`.
 
 # Local Return Point
 
-- Branch: `feat/94-recommendation-paragraph`.
-- Worktree: repository-relative `.ai4x/local/worktrees/94-recommendation-paragraph` from the stable checkout.
-- Dirty scope: `.ai4x/BEHAVIOR.md`, `CONTRIBUTING.md`, `utl/governance/test_github_governance.py`, and `.ai4x/STATE.md`; no candidate commit or branch publication has occurred.
+- Branch: `feat/54-readiness`.
+- Worktree: repository-relative `.ai4x/local/worktrees/54-readiness` from the stable checkout.
+- Dirty scope: `.ai4x/STATE.md`, `CHANGELOG.md`, Core Readiness and its narrow shared Input/Trace/API/test seams, and Operation Readiness request/acquisition/runtime/machine/contract/schema/API/test surfaces.

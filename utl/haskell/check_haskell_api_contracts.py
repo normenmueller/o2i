@@ -24,6 +24,7 @@ CORE_EXPOSED_MODULES = frozenset(
         "O2I.Core.Identity",
         "O2I.Core.Rule.Catalog",
         "O2I.Qualification",
+        "O2I.Readiness",
         "O2I.Semantics",
         "O2I.Semantics.Input",
         "O2I.Structure",
@@ -60,6 +61,11 @@ CORE_SOURCE_FILES = frozenset(
         "src/O2I/Qualification/Eval.hs",
         "src/O2I/Qualification/Index.hs",
         "src/O2I/Qualification/Internal.hs",
+        "src/O2I/Readiness.hs",
+        "src/O2I/Readiness/Binding.hs",
+        "src/O2I/Readiness/Decode.hs",
+        "src/O2I/Readiness/Eval.hs",
+        "src/O2I/Readiness/Internal.hs",
         "src/O2I/Semantics.hs",
         "src/O2I/Semantics/Contextualization.hs",
         "src/O2I/Semantics/Eval.hs",
@@ -126,6 +132,7 @@ CONTRACTS = (
             "spc/lib/core/tst/api/compile-pass/SemanticsPublicApi.hs",
             "spc/lib/core/tst/api/compile-pass/QualificationPublicApi.hs",
             "spc/lib/core/tst/api/compile-pass/TracePublicApi.hs",
+            "spc/lib/core/tst/api/compile-pass/ReadinessPublicApi.hs",
         ),
         (
             CompileFailure(
@@ -285,6 +292,19 @@ CONTRACTS = (
                 "spc/lib/core/tst/api/compile-fail/TraceBoundCoercible.hs",
                 (("GHC-25897", 1),),
             ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "ReadinessOpaqueConstructors.hs",
+                (("GHC-01928", 3),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/ReadinessInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/ReadinessCrossScope.hs",
+                (("GHC-25897", 2),),
+            ),
         ),
     ),
     PackageContract(
@@ -381,6 +401,7 @@ CONTRACTS = (
             "spc/lib/operation/tst/api/compile-pass/"
             "OwnerEvidencePublicApi.hs",
             "spc/lib/operation/tst/api/compile-pass/TracePublicApi.hs",
+            "spc/lib/operation/tst/api/compile-pass/ReadinessPublicApi.hs",
             "spc/lib/operation/tst/api/compile-pass/ValidatePublicApi.hs",
             "spc/lib/operation/tst/api/compile-pass/"
             "QualificationPublicApi.hs",
@@ -638,6 +659,26 @@ CONTRACTS = (
                 "spc/lib/operation/tst/api/compile-fail/"
                 "QualifyRequestOpaqueConstructors.hs",
                 (("GHC-88464", 2), ("GHC-01928", 1)),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "AcquiredReadinessSourceOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "ReadinessResultOpaqueConstructors.hs",
+                (("GHC-01928", 1), ("GHC-88464", 1)),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "ReadinessDocumentOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "ReadinessHiddenInternalModule.hs",
+                (("GHC-87110", 1),),
             ),
         ),
         ("o2i-core", "o2i-archimate-profile"),

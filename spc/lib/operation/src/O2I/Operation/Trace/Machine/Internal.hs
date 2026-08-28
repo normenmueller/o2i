@@ -3,6 +3,10 @@
 -- | Private canonical projection of opaque Core Trace results.
 module O2I.Operation.Trace.Machine.Internal
   ( traceAssessmentFragment
+  , traceIdentityFragment
+  , boundEndpointsFragment
+  , slotFragment
+  , gapDispositionFragment
   ) where
 
 import qualified Data.List.NonEmpty as NonEmpty

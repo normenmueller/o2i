@@ -95,6 +95,17 @@
         "qualify-prerequisite-rejected",
         "qualify-completed"
       ]
+    },
+    {
+      "name": "readinessResult",
+      "identity": "o2i.operation.readiness",
+      "version": 1,
+      "variants": [
+        "readiness-prerequisite-rejected",
+        "readiness-subject-unavailable",
+        "readiness-not-ready",
+        "readiness-ready"
+      ]
     }
   ],
   "schemaFragments": [

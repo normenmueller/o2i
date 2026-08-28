@@ -112,6 +112,12 @@ sourceRoleRefinementTest = do
     Just refined -> foldAcquiredSupplementalSource id refined @?= supplemental
   acquiredSupplementalSource readiness @?= Nothing
   acquiredSupplementalSource assessment @?= Nothing
+  acquiredReadinessSource model @?= Nothing
+  acquiredReadinessSource supplemental @?= Nothing
+  case acquiredReadinessSource readiness of
+    Nothing -> assertFailure "readiness source was rejected"
+    Just refined -> foldAcquiredReadinessSource id refined @?= readiness
+  acquiredReadinessSource assessment @?= Nothing
 
 filePathValidationTest :: Assertion
 filePathValidationTest = do
