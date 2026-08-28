@@ -41,7 +41,7 @@ Minimum path: one Issue with the design decision and alternatives that matter, e
 
 Protected work changes fachliche terminology or metamodel semantics, normative syntax, irreversible compatibility commitments, release or publication authority, security-sensitive behavior, or repository governance authority.
 
-Minimum path: explicit Product Owner decision, an Issue that states problem, benefit, target, scope, non-goals, risks, and observable acceptance criteria, risk-selected independent specialist review, complete applicable verification, and explicit Product Owner publication authority.
+Minimum path: explicit Product Owner decision, an Issue that states problem, benefit, target, scope, non-goals, risks, and observable acceptance criteria, risk-selected independent specialist review, complete applicable verification, and explicit Product Owner authority for any protected publication. Authority already granted for the exact work unit is not requested again per covered action.
 
 An exact digest or immutable manifest is required only for an externally supplied authority, a release artifact, security-sensitive evidence, or another stated integrity need. File count, implementation effort, or uncertainty alone never escalates a change to the maximum process. When classification remains genuinely ambiguous after inspection, select the next safer path, not automatically `Protected`.
 
@@ -67,11 +67,13 @@ The Board reflects work; it does not manufacture authority. The Product Owner se
 
 Project order never creates a dependency. Use native Issue Dependencies for genuine prerequisites. Record an external prerequisite once in the affected Issue with its source and next-check condition.
 
-### Ready-Issue Release Authority
+### Atomic Ready-Issue Release Authority
 
-An explicit Product Owner release of one exact Issue in Project status `Ready` authorizes Gertrud, within that Issue's accepted scope, to activate it and carry it through `In review` without another execution or Pull Request publication prompt. This authority includes Project `In progress`, capability-matched specialist and Co-Author coordination, implementation, deterministic verification, independent review and corrections, commit, push, Pull Request publication, green required remote verification, evidence receipts, and Project `In review`.
+An explicit Product Owner release of one exact Issue in Project status `Ready` is one atomic work-unit authority and, within that Issue's accepted scope, authorizes Gertrud to activate the Issue and carry it through `In review` without another action-level Product Owner prompt. This authority includes Project `In progress`, capability-matched specialist and Co-Author coordination, implementation, deterministic verification, independent review and corrections, commit, push, Pull Request publication, green required remote verification, evidence receipts, and Project `In review`.
 
-Project status `Ready` alone creates no authority. A Ready-Issue release never authorizes scope expansion, bypassing statement owners or required role separation, merge, Issue closure, Project `Done`, branch or worktree cleanup, release or tag, or protected publication. It is explicit Product Owner authority for only the listed Issue-scoped remote writes; agent remote writes stop when the required machine identity is unavailable or unverified.
+Project status `Ready` alone creates no authority. Fresh Product Owner authority is required only when the next action expands the stated scope or target, crosses an explicit exclusion, or introduces material irreversibility outside the bound authority. A Ready-Issue release never authorizes scope or target expansion, bypassing statement owners or required role separation, merge, Issue closure, Project `Done`, branch or worktree cleanup, release or tag, protected publication, or another materially irreversible action outside its explicit boundary. It is explicit Product Owner authority for only the listed Issue-scoped remote writes; every covered action retains its required review, deterministic and remote verification, protected-branch controls, and verified machine identity without becoming a new approval point.
+
+Host, sandbox, and tool permissions are independent technical execution controls. A required permission may block an otherwise authorized command and must never be bypassed, but its grant or denial neither creates nor narrows Product Owner governance authority and never justifies a duplicate Product Owner approval prompt. Agent remote writes stop when the required machine identity is unavailable or unverified.
 
 `10/10` is Product Owner shorthand for all required formal verdicts being `accepted`, zero blocking or advisory findings, all exact-candidate local and remote checks being green, and intact authorship-versus-review separation. It is never a formal review score, and `accepted with follow-ups` does not satisfy it.
 
@@ -144,7 +146,7 @@ Use the connected GitHub application for connector-covered reads. Use `gh` only 
 - Issue-scoped commits include `Refs #N`. Use `Closes #N` only when publication of that commit actually completes the Issue.
 - Assign `gertrud-ai4x` when the primary agent takes material responsibility. Advisory participation alone creates no assignment.
 - Agent-originated Issue comments and agent-administered Project transitions use the machine user. Never impersonate an unavailable identity.
-- The primary agent may prepare and review local candidates within explicit scope. Push, release, protected publication, and accountable Product Owner decisions require explicit Product Owner authority.
+- The primary agent may prepare and review local candidates within explicit scope. Push, release, protected publication, and accountable Product Owner decisions require explicit Product Owner authority; an exact work-unit authority may cover a push without a second action-level request.
 
 Before a Product Owner push, report every outgoing commit, its scope, verification, review verdict, and any non-blocking follow-up. No reviewed file changes occur between accepted review and publication.
 
