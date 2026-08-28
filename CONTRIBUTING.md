@@ -58,6 +58,24 @@ Die ausdrückliche PO-Autorität für die Abschlussaktionen eines exakten Issues
 
 Vor jeder Löschung werden alle Ziele exakt identifiziert und nur bereinigt, wenn ihre einzigartigen Änderungen auf dem maßgebenden publizierten Branch dauerhaft vorhanden oder ausdrücklich obsolet sind. Unmittelbar vor jeder einzelnen Löschung werden das Ziel erneut aufgelöst und seine stabile Identität sowie ein gegebenenfalls erwarteter Ref gegen den Vorabnachweis geprüft; jede Abweichung stoppt die Bereinigung vor dieser Mutation. Default-, geschützte, aktive, im Review befindliche, ungemergte oder der Wiederherstellung dienende Branches, aktive Worktrees und Handoffs sowie Stash- oder Scratch-Daten mit einzigartigem oder nutzereigenem Inhalt bleiben unangetastet; breite Wurzelziele, unaufgelöste Variablen, Globs und rekursive Dateisystemlöschungen sind ausgeschlossen. Remote-Branch-Löschungen benötigen die verifizierte Machine-User-Identität und eine Lease oder gleichwertige, an den erwarteten Ref gebundene bedingte Operation. Danach werden lokale und Remote-Bestände erneut inventarisiert und veralteter Project- oder ACTIVE-Zustand nur innerhalb derselben Autorität korrigiert.
 
+## Branchgebundener Repository-Handoff
+
+Jede `.ai4x/STATE.md` benennt mit genau einer kanonischen Quellzeile den Branch, auf dem ihr Handoff gilt:
+
+```text
+- Applies on branch: `<branch>`
+```
+
+Der Wert muss `git check-ref-format --branch` bestehen; jede zusätzliche mit `- Applies on branch:` beginnende Zeile macht die Bindung mehrfach oder missgebildet. Die Anwendbarkeit folgt genau dieser Reihenfolge: Ein vorhandener Active-Checkout-Verweis wird zuerst geprüft und aktiviert. Gelingt die Aktivierung nicht, ist das Ergebnis sofort `UNVERIFIED`, selbst wenn der aktuelle Branch exakt übereinstimmt. Eine erfolgreiche Aktivierung startet das vollständige Protokoll im Ziel-Checkout neu und trifft selbst noch keine Anwendbarkeitsentscheidung.
+
+Erst nach Pointer-Abwesenheit oder validierter Aktivierung mit Neustart werden Git-Metadaten, angehängter Branch, vollständiger Worktree-Status einschließlich ungetrackter Dateien und die exakte Branchbindung validiert. Ein exakter gültiger Branchgleichstand ist anwendbar; ein schmutziger gleichnamiger Checkout bleibt anwendbar und seine Änderungen werden geschützt. Ein gültig abweichender Handoff ist nur dann dormant, wenn kein Pointer vorhanden ist, der Checkout sauber auf `trunk` steht und die Bindung einen anderen Branch nennt. Alle übrigen Fälle bleiben `UNVERIFIED`.
+
+Dormanz bedeutet ausschließlich, dass der branchgebundene Handoff diesen Checkout nicht steuert; sie beweist weder Merge, Abschluss, Annahme, Issue-Schließung, Project-Status noch Autorität. Für die Cold-Start-Eignung ist sie neutral; die unabhängigen verbleibenden Repository- und maßgebenden Remote-Fakten müssen alle Abschlussbedingungen belegen.
+
+Ein so nachgewiesener dormanter Handoff ist erwartbarer getrackter Inhalt und weder Widerspruch noch Reparaturziel. Gertrud untersucht zu seiner Erklärung keine Branch-, Pull-Request- oder Git-Historie, aktualisiert den Handoff nicht nachträglich und verlangt keinen zusätzlichen Publikations-Commit; maßgebend bleiben das getrackte `trunk` sowie direkte Issue- und Project-Fakten, soweit sie für den nächsten Schritt wesentlich sind.
+
+Fehlende, mehrfache, missgebildete oder ungültige Branchbindungen, fehlende Git-Metadaten, ein Detached HEAD, ein abweichender Nicht-`trunk`-Branch oder ein schmutziger abweichender `trunk` belegen keine Dormanz. Ihre Anwendbarkeit bleibt `UNVERIFIED`; ohne Git-Metadaten bleibt der Bootstrap aus Repository-Dateien möglich, aber ein Cold Start erhält daraus keinen Sicherheitsnachweis.
+
 ## PO-Entscheidungsvorlage
 
 Ein abschließender Übergabebericht beginnt mit einem kompakten Ergebnis: ein Ergebnissatz und nur bei Bedarf kurze Punkte für Status, Evidenz oder den noch offenen Punkt. Hashes, Befehlsausgaben, vollständige Prüfinventare und Umsetzungsnarrative gehören nur bei einem materiellen Risiko oder Fehler, auf ausdrückliche Nachfrage oder in einen verlinkten Beleg. Die Empfehlung wird im Ergebnis nicht wiederholt.

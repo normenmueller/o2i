@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import re
+import subprocess
 import unittest
 from pathlib import Path
 
@@ -76,6 +77,57 @@ def issue_form_fields(path: Path) -> dict[str, bool]:
         required = re.search(r"(?m)^ {6,}required: true$", block)
         fields[identifier.group(1)] = required is not None
     return fields
+
+
+def handoff_branch_binding(content: str) -> tuple[str, str | None]:
+    """Extract and validate one canonical branch binding from raw STATE text."""
+    prefix = "- Applies on branch:"
+    occurrences = [line for line in content.splitlines() if line.startswith(prefix)]
+    if not occurrences:
+        return "missing", None
+    if len(occurrences) != 1:
+        return "duplicate", None
+    canonical = re.fullmatch(r"- Applies on branch: `([^`\r\n]+)`", occurrences[0])
+    if canonical is None:
+        return "malformed", None
+    branch = canonical.group(1)
+    result = subprocess.run(
+        ["git", "check-ref-format", "--branch", branch],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        return "invalid", branch
+    return "valid", branch
+
+
+def classify_handoff_fixture(
+    content: str,
+    *,
+    git_metadata: bool,
+    pointer_outcome: str,
+    observed_branch: str | None,
+    clean: bool,
+) -> str:
+    """Classify raw handoff evidence through the normative ordered ladder."""
+    if pointer_outcome == "unresolved":
+        return "UNVERIFIED"
+    if pointer_outcome not in {"absent", "activated_restart"} or not git_metadata:
+        return "UNVERIFIED"
+    binding_state, handoff_branch = handoff_branch_binding(content)
+    if binding_state != "valid" or handoff_branch is None or observed_branch is None:
+        return "UNVERIFIED"
+    if observed_branch == handoff_branch:
+        return "applicable"
+    if (
+        pointer_outcome == "absent"
+        and observed_branch == "trunk"
+        and clean
+        and handoff_branch != "trunk"
+    ):
+        return "dormant"
+    return "UNVERIFIED"
 
 
 class GitHubGovernanceContractTests(unittest.TestCase):
@@ -626,12 +678,133 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "same common Git directory",
             "carries no authority",
             "Never checkout, reset, mutate, or select",
-            "continue from the current checkout's tracked state",
-            "fully operational without the pointer",
+            "If the pointer is absent, continue in the current checkout",
+            "any pointer is present",
+            "not successfully activated",
+            "`UNVERIFIED` before considering any branch match",
+            "Repository-file bootstrap remains available",
         ):
             with self.subTest(term=term):
                 self.assertIn(term, behavior)
         self.assertIn(".ai4x/local/\n", read(GITIGNORE))
+
+    def test_branch_scoped_handoff_applicability_is_exact(self) -> None:
+        behavior = read(BEHAVIOR)
+        applicability = behavior.split("# Handoff Applicability\n", 1)[1].split(
+            "\n# Normal Session Continuity", 1
+        )[0]
+        for term in (
+            "exactly one canonical branch-binding source line",
+            "- Applies on branch: `<branch>`",
+            "must pass `git check-ref-format --branch`",
+            "any additional line beginning `- Applies on branch:`",
+            "Apply this decision ladder in order without reordering its checks",
+            "Any present pointer that is not successfully activated yields `UNVERIFIED` immediately",
+            "even when the current branch exactly matches the handoff",
+            "successful activation restarts the complete protocol",
+            "Only after pointer absence or a validated activation and restart",
+            "exactly equals the observed branch",
+            "dirty matching checkout remains applicable",
+            "dormant only when the pointer is absent",
+            "observed branch is `trunk`",
+            "complete worktree status is clean",
+            "valid named branch is not `trunk`",
+            "proves no merge, completion, acceptance, Issue closure, Project state, or authority",
+            "not a contradiction or a repair target",
+            "Do not inspect branch or Pull Request history",
+            "mutate or refresh `.ai4x/STATE.md`",
+            "direct repository-native Issue and Project facts",
+            "Every remaining case leaves handoff applicability `UNVERIFIED`",
+            "missing, duplicate, malformed, or invalid branch binding",
+            "unavailable Git metadata",
+            "detached HEAD",
+            "non-`trunk` branch mismatch",
+            "dirty `trunk` mismatch",
+            "never infer a return point or authority from the handoff",
+        ):
+            with self.subTest(surface="behavior", term=term):
+                self.assertIn(term, applicability)
+
+        governance = read(GOVERNANCE)
+        human = read(CONTRIBUTING)
+        for term in (
+            "Dormancy is only an applicability result",
+            "never replaces direct owning Issue or Project facts",
+            "neutral to cold-start eligibility",
+            "neither a contradiction nor a repair target",
+            "post-publication refresh commit",
+        ):
+            with self.subTest(surface="governance", term=term):
+                self.assertIn(term, governance)
+        for term in (
+            "## Branchgebundener Repository-Handoff",
+            "Dormanz bedeutet ausschließlich",
+            "Gelingt die Aktivierung nicht, ist das Ergebnis sofort `UNVERIFIED`",
+            "selbst wenn der aktuelle Branch exakt übereinstimmt",
+            "Für die Cold-Start-Eignung ist sie neutral",
+            "weder Widerspruch noch Reparaturziel",
+            "Branch-, Pull-Request- oder Git-Historie",
+            "Anwendbarkeit bleibt `UNVERIFIED`",
+        ):
+            with self.subTest(surface="human", term=term):
+                self.assertIn(term, human)
+
+        fixtures = {
+            "valid": "# Handoff\n\n- Applies on branch: `feat/100`\n",
+            "missing": "# Handoff\n\n- Current Issue: `#100`\n",
+            "duplicate": "# Handoff\n\n- Applies on branch: `feat/100`\n- Applies on branch: `feat/101`\n",
+            "additional_malformed": "# Handoff\n\n- Applies on branch: `feat/100`\n- Applies on branch: feat/101\n",
+            "malformed": "# Handoff\n\n- Applies on branch: feat/100\n",
+            "invalid": "# Handoff\n\n- Applies on branch: `bad branch`\n",
+            "trunk": "# Handoff\n\n- Applies on branch: `trunk`\n",
+        }
+        binding_expectations = {
+            "valid": ("valid", "feat/100"),
+            "missing": ("missing", None),
+            "duplicate": ("duplicate", None),
+            "additional_malformed": ("duplicate", None),
+            "malformed": ("malformed", None),
+            "invalid": ("invalid", "bad branch"),
+        }
+        for fixture, expected in binding_expectations.items():
+            with self.subTest(binding_fixture=fixture):
+                self.assertEqual(expected, handoff_branch_binding(fixtures[fixture]))
+
+        cases = (
+            ("valid", True, "absent", "feat/100", True, "applicable"),
+            ("valid", True, "absent", "feat/100", False, "applicable"),
+            ("valid", True, "activated_restart", "feat/100", True, "applicable"),
+            ("valid", True, "unresolved", "feat/100", True, "UNVERIFIED"),
+            ("trunk", True, "absent", "trunk", True, "applicable"),
+            ("valid", True, "absent", "trunk", True, "dormant"),
+            ("valid", True, "absent", "trunk", False, "UNVERIFIED"),
+            ("valid", True, "absent", "feat/101", True, "UNVERIFIED"),
+            ("valid", True, "absent", None, True, "UNVERIFIED"),
+            ("valid", False, "absent", None, True, "UNVERIFIED"),
+            ("missing", True, "absent", "trunk", True, "UNVERIFIED"),
+            ("duplicate", True, "absent", "trunk", True, "UNVERIFIED"),
+            ("additional_malformed", True, "absent", "trunk", True, "UNVERIFIED"),
+            ("malformed", True, "absent", "trunk", True, "UNVERIFIED"),
+            ("invalid", True, "absent", "trunk", True, "UNVERIFIED"),
+        )
+        for fixture, git_metadata, pointer_outcome, observed_branch, clean, expected in cases:
+            with self.subTest(
+                fixture=fixture,
+                git_metadata=git_metadata,
+                pointer_outcome=pointer_outcome,
+                observed_branch=observed_branch,
+                clean=clean,
+            ):
+                self.assertEqual(
+                    expected,
+                    classify_handoff_fixture(
+                        fixtures[fixture],
+                        git_metadata=git_metadata,
+                        pointer_outcome=pointer_outcome,
+                        observed_branch=observed_branch,
+                        clean=clean,
+                    ),
+                )
 
     def test_normal_session_continuity_is_prompt_free_and_durable(self) -> None:
         behavior = read(BEHAVIOR)
@@ -670,6 +843,9 @@ class GitHubGovernanceContractTests(unittest.TestCase):
             "durably materialized",
             "all required work and review activities are complete",
             "no delegated or background work remains",
+            "proven dormant handoff is neutral",
+            "neither passes nor fails those completion gates",
+            "Independent remaining repository and owning remote facts must establish cold-start eligibility",
             "exactly these three actionable steps",
             "wording of all three actions in the Product Owner's language",
             "keeping `/delete`, `resume`, and `Hi Gertrud, weiter geht’s!` literal",
@@ -981,6 +1157,9 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         content = read(STATE)
         self.assertLess(len(content.splitlines()), 90)
         self.assertEqual(1, len(re.findall(r"(?m)^- Work status: `(?:ACTIVE|PAUSED|COMPLETE)`$", content)))
+        binding_state, branch = handoff_branch_binding(content)
+        self.assertEqual("valid", binding_state)
+        self.assertIsNotNone(branch)
         self.assertRegex(content, r"(?m)^- Current Issue: `(?:#[0-9]+|NONE)`$")
         for heading in (
             "# Objective",
