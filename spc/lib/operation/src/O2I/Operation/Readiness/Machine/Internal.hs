@@ -4,6 +4,8 @@
 module O2I.Operation.Readiness.Machine.Internal
   ( readinessUnavailableFragment
   , readinessAssessmentFragment
+  , reconstructionReasonFragment
+  , readinessEvidenceKeyFragment
   ) where
 
 import qualified Data.List.NonEmpty as NonEmpty

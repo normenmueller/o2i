@@ -1,49 +1,49 @@
 # Handoff
 
 - Observed: 2026-08-28 CEST
-- Work status: `PAUSED`
-- Current Issue: `#100`
-- Applies on branch: `feat/100-cold-start-dormancy`
-- Current node: `protected-publication-authority`
+- Work status: `ACTIVE`
+- Current Issue: `#55`
+- Applies on branch: `feat/55-assessment`
+- Current node: `reviewed-assessment-publication-candidate`
 
 # Objective
 
-Make merged branch handoffs deterministically dormant on clean `trunk` so fresh sessions select the current repository return point without treating expected historical state as a contradiction or repair task.
+Implement Batch 10 Assessment as the explicit Core and Operation capability for assessment bundles, collection validity, mixed item outcomes, effect, target attainment, and limitations without an aggregate score or causal claim.
 
 # Authority
 
-- The Product Owner explicitly requested immediate implementation of the agreed target design.
-- Issue #100 owns this Protected repository-governance change.
-- Authorized scope is Issue creation and activation, capability-matched Co-Authoring, `.ai4x/BEHAVIOR.md`, `.ai4x/governance/guidelines.md`, `.ai4x/STATE.md`, `CONTRIBUTING.md`, deterministic governance tests, local verification, independent read-only review and corrections, and a local commit.
-- Exclusions are protected publication, merge, Issue closure, Project `Done`, cleanup, release, tag, fachliche O2I semantics, model, Haskell, CLI, approval binding, and `/delete` behavior.
+- The Product Owner explicitly released Issue #55 from `Backlog` through `Ready` for one atomic work unit ending in Project status `In review`.
+- Authorized scope includes Project activation, capability-matched Co-Authoring, implementation, deterministic verification, independent review and corrections, commit, push, Pull Request publication, green required remote verification, evidence receipts, and Project `In review`.
+- Exclusions are merge, Issue closure, Project `Done`, cleanup, release, tag, later Batches, model edits, protected fachliche expansion, and every change outside Issue #55 and its accepted parent contract.
 
 # Material Risk
 
-- False dormancy must not hide active or dirty work, and dormancy must never imply merge, completion, closure, Project state, or authority.
-- Only a clean `trunk` checkout with no active-checkout pointer and one valid different non-`trunk` binding may classify the tracked handoff as dormant.
-- Missing, multiple, malformed, detached, Git-unavailable, dirty-`trunk`, or non-`trunk` mismatch cases remain unresolved and retain the safe boundary.
+- The implementation must enforce the already accepted assessment contract without inventing fachliche meaning in Haskell.
+- Collection validity, mixed per-item outcomes, effect, target attainment, limitations, deterministic source order, and performance bounds must remain distinct and complete.
+- No aggregate score, causal proof, hidden Readiness execution, compatibility surface, or unrelated CLI/model/publication change is authorized.
 
 # Participants
 
-- Primary Gertrud: authority boundary, remote facts, Issue and Project administration, current handoff, verification, review routing, and publication preparation.
-- External Repository Governance, Agentic Workflow Safety, and Human Usability Co-Author: completed target design and active implementation of canonical and human-facing contracts and deterministic tests; excluded from independent acceptance.
-- Independent reviewer: returned `changes required` on the exact first candidate, then accepted the corrected exact five-path candidate with zero blocking and zero advisory findings; remained read-only and separate from authorship.
+- Primary Gertrud: authority boundary, remote facts, integration, verification, review routing, publication, and current handoff.
+- Core Haskell/formal-methods Co-Author: authored the typed Assessment boundary, decoder, evaluator, same-invocation preparation, API contracts, and work probes; excluded from independent acceptance.
+- Operation Haskell/API Co-Author: authored orchestration, acquisition, closed results, machine encoding, generated Schema integration, API contracts, and runtime probes; excluded from independent acceptance.
+- Three independent read-only reviewers separately accepted Core formalization/API/performance, Operation integration/API/performance, and strategy/measurement applicability with zero blocking and zero advisory findings.
 
 # Verification
 
-- Official OpenAI documentation confirms that `/delete` permanently removes the current transcript and descendants while resuming a saved session reloads its selected transcript; repository continuity must therefore remain sufficient without session history.
-- The Co-Author completed the target design, canonical and human-facing contracts, and deterministic positive and negative applicability matrix; the primary Gertrud owns this current handoff.
-- Issue #100 is open, assigned to `gertrud-ai4x`, and in Project status `In progress`; the required Machine User identity and Project scope are verified.
-- `./utl/verify.sh governance` passes governance 38/38 and routing 18/18; `./utl/verify.sh licensing` passes all licensing contracts including 576/576 path assignments; `git diff --check` passes.
-- Independent review found pointer-precedence ambiguity and insufficient raw branch-field and cold-start evidence. The Co-Author corrected both through one pointer-first decision ladder, raw STATE fixtures, Git branch validation, and an explicit dormant-cold-start linkage.
-- Independent re-review accepted the corrected exact five-path candidate with zero blocking and zero advisory findings; the candidate is committed locally on the bound branch.
+- Issue #54 is closed as completed and in Project status `Done`.
+- Issue #55 is open, assigned to `gertrud-ai4x`, and was observed in `Backlog`, explicitly released, transitioned through `Ready`, and activated in Project status `In progress`.
+- Machine User `gertrud-ai4x` and its required `project`, `repo`, and `workflow` scopes are verified.
+- Baseline is clean `trunk` revision `0db7b2354e9a24bc396892c7e56fceb9bef97a4d`.
+- Core Assessment 20/20, complete Operation 181/181, Operation contract 47/47, external Core and Operation API contracts, Haskell formatting, package metadata, generated artifact freshness, source distributions, and 100% public Haddock coverage pass.
+- `./utl/verify.sh foundation` and `./utl/verify.sh governance` pass on the frozen reviewed candidate; `git diff --check` passes and no generated Python cache remains.
 
 # Next Action
 
-Wait for explicit protected-publication authority; resume by publishing this exact reviewed candidate without merging or closing Issue #100.
+Commit and publish the exact reviewed candidate, require green remote verification, record evidence, and transition Issue #55 to Project status `In review`.
 
 # Local Return Point
 
-- Branch: `feat/100-cold-start-dormancy`.
-- Base: clean `trunk` revision `ceeec6d5632f78152d96d908d9ed1fdc682bcbbd`.
-- The reviewed five-path scope is committed locally; no uncommitted work remains after the handoff amendment.
+- Branch: `feat/55-assessment`.
+- Base: clean `trunk` revision `0db7b2354e9a24bc396892c7e56fceb9bef97a4d`.
+- Dirty scope: exact Issue #55 Core Assessment, Operation Assess, generated contract artifacts, tests, API contracts, changelog, and this handoff.

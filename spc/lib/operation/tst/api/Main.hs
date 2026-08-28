@@ -8,6 +8,10 @@ import ApiContractTH (assertAbstractTypes, assertOrdinaryFunctions)
 import qualified O2I.Operation.Acquisition as Acquisition
 import qualified O2I.Operation.Adapter as Adapter
 import qualified O2I.Operation.Adapter.Authoring as AdapterAuthoring
+import qualified O2I.Operation.Assess as Assess
+import qualified O2I.Operation.Assess.Machine as AssessMachine
+import qualified O2I.Operation.Assess.Request as AssessRequest
+import qualified O2I.Operation.Assess.Result as AssessResult
 import qualified O2I.Operation.Diagnostic as Diagnostic
 import qualified O2I.Operation.Diagnostic.Machine as DiagnosticMachine
 import qualified O2I.Operation.Diagnostic.Owner as DiagnosticOwner
@@ -57,6 +61,7 @@ $(assertAbstractTypes
     , "Acquisition.AcquiredSource"
     , "Acquisition.AcquiredSupplementalSource"
     , "Acquisition.AcquiredReadinessSource"
+    , "Acquisition.AcquiredAssessmentSource"
     , "Adapter.AdapterId"
     , "Adapter.AdapterDescriptor"
     , "Adapter.AdapterRuleId"
@@ -164,6 +169,15 @@ $(assertAbstractTypes
     , "QualifyResult.PreparedQualify"
     , "QualifyResult.QualifyResult"
     , "QualifyMachine.QualifyResultDocument"
+    , "AssessRequest.AssessRequest"
+    , "AssessResult.AssessExitClass"
+    , "AssessResult.AssessPrerequisite"
+    , "AssessResult.AssessInternalFailure"
+    , "AssessResult.AssessFailure"
+    , "AssessResult.AssessUnavailable"
+    , "AssessResult.PreparedAssess"
+    , "AssessResult.AssessResult"
+    , "AssessMachine.AssessResultDocument"
     , "ReadinessRequest.ReadinessRequest"
     , "ReadinessResult.ReadinessPrerequisite"
     , "ReadinessResult.ReadinessInternalFailure"
@@ -223,6 +237,8 @@ $(assertOrdinaryFunctions
     , 'Acquisition.foldAcquiredSupplementalSource
     , 'Acquisition.acquiredReadinessSource
     , 'Acquisition.foldAcquiredReadinessSource
+    , 'Acquisition.acquiredAssessmentSource
+    , 'Acquisition.foldAcquiredAssessmentSource
     , 'Adapter.adapterIdText
     , 'Adapter.adapterDescriptorId
     , 'Adapter.adapterDescriptorName
@@ -597,6 +613,39 @@ $(assertOrdinaryFunctions
     , 'TraceMachine.traceResultSchema
     , 'TraceMachine.traceResultDocumentVariant
     , 'TraceMachine.encodeTraceResultDocument
+    , 'Assess.runAssess
+    , 'AssessRequest.assessRequest
+    , 'AssessRequest.assessModelInput
+    , 'AssessRequest.assessViewSelector
+    , 'AssessRequest.assessAdapterId
+    , 'AssessRequest.assessBundleInput
+    , 'AssessRequest.assessSupplementalInputs
+    , 'AssessRequest.foldAssessRequest
+    , 'AssessResult.assessSuccessExit
+    , 'AssessResult.assessPrimaryNegativeExit
+    , 'AssessResult.assessOperationalFailureExit
+    , 'AssessResult.assessSubjectUnavailableExit
+    , 'AssessResult.assessExitClassText
+    , 'AssessResult.assessExitCode
+    , 'AssessResult.foldAssessExitClass
+    , 'AssessResult.notationAssessPrerequisite
+    , 'AssessResult.profileAssessPrerequisite
+    , 'AssessResult.structureAssessPrerequisite
+    , 'AssessResult.semanticsAssessPrerequisite
+    , 'AssessResult.assessPrerequisiteText
+    , 'AssessResult.foldAssessPrerequisite
+    , 'AssessResult.foldAssessInternalFailure
+    , 'AssessResult.foldAssessFailure
+    , 'AssessResult.foldAssessUnavailable
+    , 'AssessResult.preparedAssessRequest
+    , 'AssessResult.preparedAssessDiagnostics
+    , 'AssessResult.foldPreparedAssess
+    , 'AssessResult.assessResultExitClass
+    , 'AssessResult.foldAssessResult
+    , 'AssessMachine.assessResultDocument
+    , 'AssessMachine.assessResultSchema
+    , 'AssessMachine.assessResultDocumentVariant
+    , 'AssessMachine.encodeAssessResultDocument
     , 'Readiness.runReadiness
     , 'ReadinessRequest.readinessRequest
     , 'ReadinessRequest.readinessModelInput

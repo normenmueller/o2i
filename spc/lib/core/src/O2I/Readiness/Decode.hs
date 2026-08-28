@@ -4,6 +4,21 @@
 module O2I.Readiness.Decode
   ( decodeReadinessInputInternal
   , decodeReadinessInputWithWorkInternal
+  , Checked(..)
+  , decodeReadinessObject
+  , decodeReadinessObjectAt
+  , decodeCanonicalText
+  , decodeDomainValue
+  , decodeModelIdentity
+  , decodeTraceIdentity
+  , decodeTimestamp
+  , field
+  , withObject
+  , objectContract
+  , inputDefect
+  , inputDefectKeyScalarLength
+  , kindFailure
+  , nonEmptyDefects
   ) where
 
 import Data.ByteString (ByteString)
@@ -160,7 +175,11 @@ rootDiscriminator ordinal node =
 
 decodeReadinessObject ::
      ReadinessInputOrdinal -> JsonObject -> Checked ReadinessInput
-decodeReadinessObject ordinal object =
+decodeReadinessObject ordinal = decodeReadinessObjectAt ordinal ""
+
+decodeReadinessObjectAt ::
+     ReadinessInputOrdinal -> Text -> JsonObject -> Checked ReadinessInput
+decodeReadinessObjectAt ordinal root object =
   ReadinessInput ordinal
     <$> field ordinal root "readinessCheckedAt" decodeTimestamp object
     <*> field ordinal root "kpiDefinition" decodeKpiDefinition object
@@ -182,8 +201,6 @@ decodeReadinessObject ordinal object =
          , "evidencePlan"
          ]
          object
-  where
-    root = ""
 
 decodeKpiDefinition ::
      ReadinessInputOrdinal -> Text -> JsonNode -> Checked KPIDefinition

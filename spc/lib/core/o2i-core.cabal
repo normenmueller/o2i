@@ -34,6 +34,7 @@ library
     warnings,
     language
   exposed-modules:
+    O2I.Assessment,
     O2I.Core.Contract,
     O2I.Core.Graph.Observation,
     O2I.Core.Identity,
@@ -45,6 +46,11 @@ library
     O2I.Structure,
     O2I.Trace
   other-modules:
+    O2I.Assessment.Binding,
+    O2I.Assessment.Decode,
+    O2I.Assessment.Eval,
+    O2I.Assessment.Internal,
+    O2I.Assessment.Subject,
     O2I.Core.Contract.Generated,
     O2I.Core.Contract.Internal,
     O2I.Core.Graph.Commitment,
@@ -535,6 +541,75 @@ test-suite o2i-readiness-internal-test
   main-is:
     O2I/ReadinessTest.hs
   other-modules:
+    O2I.Core.Contract,
+    O2I.Core.Contract.Generated,
+    O2I.Core.Contract.Internal,
+    O2I.Core.Graph.Commitment,
+    O2I.Core.Graph.Observation,
+    O2I.Core.Graph.Observation.Index,
+    O2I.Core.Graph.Observation.Internal,
+    O2I.Core.Identity,
+    O2I.Core.Identity.Internal,
+    O2I.Input.Internal.Binding,
+    O2I.Input.Internal.Decode,
+    O2I.Input.Internal.Json,
+    O2I.Input.Internal.Set,
+    O2I.Input.Internal.Text,
+    O2I.Input.Internal.Types,
+    O2I.Readiness,
+    O2I.Readiness.Binding,
+    O2I.Readiness.Decode,
+    O2I.Readiness.Eval,
+    O2I.Readiness.Internal,
+    O2I.Semantics,
+    O2I.Semantics.Contextualization,
+    O2I.Semantics.Eval,
+    O2I.Semantics.Family.CollectiveStrategyRealization,
+    O2I.Semantics.Index,
+    O2I.Semantics.Input,
+    O2I.Semantics.Internal,
+    O2I.Semantics.SituatedNeed,
+    O2I.Semantics.Strategy,
+    O2I.Semantics.Vocabulary,
+    O2I.Structure,
+    O2I.Structure.Index,
+    O2I.Structure.Internal,
+    O2I.Structure.Proposition,
+    O2I.Trace,
+    O2I.Trace.Eval,
+    O2I.Trace.Grammar,
+    O2I.Trace.Index,
+    O2I.Trace.Internal
+  build-depends:
+    base >=4.20 && <4.21,
+    bytestring >=0.12 && <0.13,
+    containers >=0.7 && <0.8,
+    tasty >=1.4 && <1.6,
+    tasty-hunit >=0.10 && <0.11,
+    text >=2.1 && <2.2,
+    unicode-transforms ==0.4.0.1
+  hs-source-dirs:
+    tst/internal,
+    src
+
+-- This component verifies Assessment decoding, collection suppression, mixed
+-- source-ordered item outcomes, independent effect and target evaluation,
+-- fixed limitations, opaque proof promotion, and private work bounds.
+test-suite o2i-assessment-internal-test
+  import:
+    warnings,
+    language
+  type:
+    exitcode-stdio-1.0
+  main-is:
+    O2I/AssessmentTest.hs
+  other-modules:
+    O2I.Assessment,
+    O2I.Assessment.Binding,
+    O2I.Assessment.Decode,
+    O2I.Assessment.Eval,
+    O2I.Assessment.Internal,
+    O2I.Assessment.Subject,
     O2I.Core.Contract,
     O2I.Core.Contract.Generated,
     O2I.Core.Contract.Internal,

@@ -4,6 +4,7 @@ module Main
 
 import qualified O2I.Operation.Test.Acquisition as Acquisition
 import qualified O2I.Operation.Test.Adapter as Adapter
+import qualified O2I.Operation.Test.Assess as Assess
 import qualified O2I.Operation.Test.Diagnostic as Diagnostic
 import qualified O2I.Operation.Test.Discovery as Discovery
 import qualified O2I.Operation.Test.DiscoveryMachine as DiscoveryMachine
@@ -34,6 +35,7 @@ main =
        "operation"
        [ Acquisition.tests
        , Adapter.tests
+       , Assess.tests
        , Discovery.tests
        , DiscoveryMachine.tests
        , Diagnostic.tests
