@@ -10,7 +10,7 @@ repository.
    `git status --short --branch --untracked-files=all`; otherwise record Git
    metadata as unavailable and continue from the repository files.
 3. If `.ai4x/local/ACTIVE.md` is a non-symlink regular file, evaluate its optional local active-checkout pointer under the contract below before selecting the return point.
-4. Reconstruct and revalidate the current handoff under Normal Session Continuity below.
+4. Classify the exact checkout's handoff applicability under the contract below, then reconstruct and revalidate only an applicable handoff under Normal Session Continuity.
 5. Read `.ai4x/TEAM.md`, select the capabilities and role separation required by the actual task and risk, then read only the applicable task contracts:
 
 | Task class | Required Contract |
@@ -33,17 +33,39 @@ contracts.
 
 Resolve the path relative to the checkout root. Activate it only after Git metadata proves that it uses the same common Git directory, its observed branch equals `Expected branch`, and its own `AGENTS.md`, `.ai4x/CONTEXT.md`, and `.ai4x/STATE.md` are readable. Then rerun the startup protocol from that exact checkout and treat its tracked state plus observed Git and remote facts as authoritative. Never checkout, reset, mutate, or select a target merely because the pointer names it.
 
-If the pointer is absent, a symlink, not a regular file, absolute, malformed, stale, or unverifiable, report that fact and continue from the current checkout's tracked state. The repository remains fully operational without the pointer, and a local pointer never overrides an Issue, Project, tracked handoff, or observed repository fact.
+If the pointer is absent, continue in the current checkout. If any pointer is present but is a symlink, not a regular file, absolute, malformed, stale, unverifiable, or otherwise not successfully activated, report that fact and classify handoff applicability as `UNVERIFIED` before considering any branch match. Repository-file bootstrap remains available, but the unresolved pointer may not select a return point or authority. A local pointer never overrides an Issue, Project, tracked handoff, or observed repository fact.
+
+# Handoff Applicability
+
+Every `.ai4x/STATE.md` contains exactly one canonical branch-binding source line:
+
+```text
+- Applies on branch: `<branch>`
+```
+
+Its value must pass `git check-ref-format --branch`; any additional line beginning `- Applies on branch:` makes the binding duplicate or malformed. Apply this decision ladder in order without reordering its checks:
+
+1. If any `.ai4x/local/ACTIVE.md` is present, attempt its validation and activation first. Any present pointer that is not successfully activated yields `UNVERIFIED` immediately, even when the current branch exactly matches the handoff. A successful activation restarts the complete protocol in the exact target checkout and makes no applicability decision by itself.
+2. Only after pointer absence or a validated activation and restart, require Git metadata, an attached observed branch, complete worktree status including untracked files, and exactly one canonical valid branch binding.
+3. If the valid named branch exactly equals the observed branch of the selected checkout, the handoff is applicable. A dirty matching checkout remains applicable; report and preserve its changes under the normal continuity contract.
+4. Otherwise, the handoff is dormant only when the pointer is absent, the observed branch is `trunk`, the complete worktree status is clean, and the valid named branch is not `trunk`.
+5. Every remaining case leaves handoff applicability `UNVERIFIED`.
+
+Dormancy means only that this branch-scoped handoff does not govern the selected checkout; it proves no merge, completion, acceptance, Issue closure, Project state, or authority.
+
+A dormant handoff is expected tracked content, not a contradiction or a repair target. Do not inspect branch or Pull Request history merely to explain it, mutate or refresh `.ai4x/STATE.md`, or require a follow-up commit after publication. Select the current return point from tracked `trunk` and direct repository-native Issue and Project facts when they are available and material.
+
+A missing, duplicate, malformed, or invalid branch binding; unavailable Git metadata; detached HEAD; a non-`trunk` branch mismatch; or a dirty `trunk` mismatch therefore remains `UNVERIFIED`. Git metadata absence never blocks repository-file bootstrap, but it cannot establish dormancy. Stop only when the unverified applicability is material to the next action, mark the exact uncertainty, and never infer a return point or authority from the handoff.
 
 # Normal Session Continuity
 
 A fresh primary-agent session may begin with any ordinary greeting. The prompt carries no work state and requires no path, digest, snapshot locator, or handoff payload; startup reconstructs the return point from durable repository-owned sources.
 
-Reconcile the exact checkout's `.ai4x` memory, observed tracked Git branch, revision, and status, any validated local active-checkout pointer, and repository-native GitHub Issue and Project facts when they are available and material to the next action. Tracked state is a handoff, not permission to ignore newer observed facts or the owning remote authority.
+Reconcile an applicable handoff with the exact checkout's `.ai4x` memory, observed tracked Git branch, revision, and status, any validated local active-checkout pointer, and repository-native GitHub Issue and Project facts when they are available and material to the next action. A dormant handoff is excluded from this reconciliation, and tracked state is never permission to ignore newer observed facts or the owning remote authority.
 
 Conversation transcripts, prior-session runtime context, and model recollection are neither authority nor required continuity input. If a durable source required for the next action is missing, contradictory, or unverifiable, stop at the safe boundary, mark the uncertainty, and ask the Product Owner instead of guessing or synthesizing a return point.
 
-Only after the return point is durably materialized, all required work and review activities are complete, and no delegated or background work remains may the primary Gertrud recommend completing a routine cold-start transition. Derive the repository root from the current checkout; never place an absolute host path in the instructions.
+Only after the return point is durably materialized, all required work and review activities are complete, and no delegated or background work remains may the primary Gertrud recommend completing a routine cold-start transition. A proven dormant handoff is neutral: it neither passes nor fails those completion gates and requires no refresh commit. Independent remaining repository and owning remote facts must establish cold-start eligibility. Derive the repository root from the current checkout; never place an absolute host path in the instructions.
 
 At that boundary, give the Product Owner exactly these three actionable steps and no additional transition instruction. Render the wording of all three actions in the Product Owner's language while keeping `/delete`, `resume`, and `Hi Gertrud, weiter geht’s!` literal:
 
@@ -169,7 +191,7 @@ Before any cleanup deletion, resolve every exact target and prove that its uniqu
 - `PAUSED` only for a genuine wait state with one reason and return condition;
 - `COMPLETE` only when the recorded work is actually complete.
 
-The handoff names the current Issue or `NONE`, objective, authority, material risk or acceptance challenge, verification state, next action, and local return point. `NONE` is valid only for Issue-free Routine work explicitly requested by the Product Owner. The handoff contains no self-referential gate, duplicated Issue history, or mandatory digest. GitHub Issues and the Project remain authoritative over a stale handoff.
+The handoff names exactly one branch on which it applies, the current Issue or `NONE`, objective, authority, material risk or acceptance challenge, verification state, next action, and local return point. `NONE` is valid only for Issue-free Routine work explicitly requested by the Product Owner. The handoff contains no self-referential gate, duplicated Issue history, or mandatory digest. GitHub Issues and the Project remain authoritative over an applicable handoff, while the applicability contract makes an expected branch-scoped handoff dormant on clean `trunk` without a refresh commit.
 
 A review identifies its exact subject and declared scope. Later changes require review only for the changed risk surface and never invalidate accepted historical evidence for an unchanged subject.
 
@@ -205,7 +227,7 @@ A review identifies its exact subject and declared scope. Later changes require 
 - Verify the narrow scope before broader checks.
 - Required external reviews are independent and read-only. Distinguish blocking findings from advisory follow-ups, state one target-state solution for each blocking finding, and repeat until no blocking finding remains.
 - Keep `.ai4x/STATE.md` repository-autark and limited to the current handoff. It must
-  contain objective, current node, dirty scope, risks, verification, next
+  contain its exact applicable branch, objective, current node, dirty scope, risks, verification, next
   action, and local return point without depending on a workspace plan.
 - Treat GitHub Project Status as the authority for workflow state and its vertical order as PO scheduling authority. The Board reflects authorization but never creates it. Never infer Issue validity, dependencies, review evidence, or closure from Project state.
 - When GitHub is unavailable, continue only an already activated local handoff.

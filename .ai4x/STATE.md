@@ -2,37 +2,48 @@
 
 - Observed: 2026-08-28 CEST
 - Work status: `PAUSED`
-- Current Issue: `NONE`
-- Current node: `publication-authority`
+- Current Issue: `#100`
+- Applies on branch: `feat/100-cold-start-dormancy`
+- Current node: `protected-publication-authority`
 
 # Objective
 
-Replace the dense one-line Product Owner recommendation with a compact, scannable report and decision template while preserving the existing authority and approval semantics.
+Make merged branch handoffs deterministically dormant on clean `trunk` so fresh sessions select the current repository return point without treating expected historical state as a contradiction or repair task.
 
 # Authority
 
-- The Product Owner explicitly requested that the agreed future report template be recorded.
-- This is bounded Issue-free Routine work covering the presentation contract, its human projection, deterministic tests, local verification, and a local commit.
-- Exclusions are remote publication, changes to authority or approval semantics, #54 completion or cleanup, release, and tag.
+- The Product Owner explicitly requested immediate implementation of the agreed target design.
+- Issue #100 owns this Protected repository-governance change.
+- Authorized scope is Issue creation and activation, capability-matched Co-Authoring, `.ai4x/BEHAVIOR.md`, `.ai4x/governance/guidelines.md`, `.ai4x/STATE.md`, `CONTRIBUTING.md`, deterministic governance tests, local verification, independent read-only review and corrections, and a local commit.
+- Exclusions are protected publication, merge, Issue closure, Project `Done`, cleanup, release, tag, fachliche O2I semantics, model, Haskell, CLI, approval binding, and `/delete` behavior.
 
 # Material Risk
 
-- Presentation must become materially easier to scan without weakening exact subject, scope, target state, authority boundary, exclusions, evidence-based reason, single-use approval binding, or cold-start safety.
+- False dormancy must not hide active or dirty work, and dormancy must never imply merge, completion, closure, Project state, or authority.
+- Only a clean `trunk` checkout with no active-checkout pointer and one valid different non-`trunk` binding may classify the tracked handoff as dormant.
+- Missing, multiple, malformed, detached, Git-unavailable, dirty-`trunk`, or non-`trunk` mismatch cases remain unresolved and retain the safe boundary.
+
+# Participants
+
+- Primary Gertrud: authority boundary, remote facts, Issue and Project administration, current handoff, verification, review routing, and publication preparation.
+- External Repository Governance, Agentic Workflow Safety, and Human Usability Co-Author: completed target design and active implementation of canonical and human-facing contracts and deterministic tests; excluded from independent acceptance.
+- Independent reviewer: returned `changes required` on the exact first candidate, then accepted the corrected exact five-path candidate with zero blocking and zero advisory findings; remained read-only and separate from authorship.
 
 # Verification
 
-- The canonical template now separates one bold recommendation from six short context bullets and keeps detailed technical evidence out of the foreground unless risk, failure, or an explicit request requires it.
-- `.ai4x/BEHAVIOR.md`, `CONTRIBUTING.md`, and the deterministic governance tests are synchronized.
-- `./utl/verify.sh governance` passes governance 37/37 and routing 18/18.
-- `./utl/verify.sh licensing` passes the complete repository licensing contract, including 576/576 path assignments.
-- The verified candidate is committed locally on `chore/decision-report-template`.
-- The separate #54 result is already merged as PR #96; Issue #54 remains open and in Project status `In review`, outside this routine work unit.
+- Official OpenAI documentation confirms that `/delete` permanently removes the current transcript and descendants while resuming a saved session reloads its selected transcript; repository continuity must therefore remain sufficient without session history.
+- The Co-Author completed the target design, canonical and human-facing contracts, and deterministic positive and negative applicability matrix; the primary Gertrud owns this current handoff.
+- Issue #100 is open, assigned to `gertrud-ai4x`, and in Project status `In progress`; the required Machine User identity and Project scope are verified.
+- `./utl/verify.sh governance` passes governance 38/38 and routing 18/18; `./utl/verify.sh licensing` passes all licensing contracts including 576/576 path assignments; `git diff --check` passes.
+- Independent review found pointer-precedence ambiguity and insufficient raw branch-field and cold-start evidence. The Co-Author corrected both through one pointer-first decision ladder, raw STATE fixtures, Git branch validation, and an explicit dormant-cold-start linkage.
+- Independent re-review accepted the corrected exact five-path candidate with zero blocking and zero advisory findings; the candidate is committed locally on the bound branch.
 
 # Next Action
 
-Wait for explicit remote-publication authority. Resume by publishing and integrating this exact template candidate; the separate #54 completion remains outside this work unit.
+Wait for explicit protected-publication authority; resume by publishing this exact reviewed candidate without merging or closing Issue #100.
 
 # Local Return Point
 
-- Branch: `chore/decision-report-template`.
-- Base: `trunk` at merged #54 revision `980edd09df4f723a7f844c8c8b68d93ec9a56615`.
+- Branch: `feat/100-cold-start-dormancy`.
+- Base: clean `trunk` revision `ceeec6d5632f78152d96d908d9ed1fdc682bcbbd`.
+- The reviewed five-path scope is committed locally; no uncommitted work remains after the handoff amendment.

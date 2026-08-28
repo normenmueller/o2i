@@ -154,6 +154,7 @@ Before a Product Owner push, report every outgoing commit, its scope, verificati
 
 Keep `.ai4x/STATE.md` below 90 lines and useful from an isolated checkout. It contains only:
 
+- exactly one canonical branch-binding source line in the form shown in `.ai4x/BEHAVIOR.md`, whose value passes `git check-ref-format --branch`;
 - current Issue or `NONE`, and work status;
 - current objective and explicit authority;
 - material risk, blocker, or open acceptance challenge;
@@ -161,6 +162,10 @@ Keep `.ai4x/STATE.md` below 90 lines and useful from an isolated checkout. It co
 - next action and local return point.
 
 Use `NONE` only for explicit Product Owner authority over Issue-free Routine work. Use `ACTIVE` for design, implementation, investigation, correction, review, and publication preparation; `PAUSED` only for a genuine wait; and `COMPLETE` only after the recorded work is actually complete. Do not create self-referential gates, duplicate Issue history, or require a follow-up commit merely to refresh a stale handoff after publication.
+
+Classify handoff applicability through one ordered ladder. First, any present local active-checkout pointer that is not successfully activated yields `UNVERIFIED`, even if the current branch matches; successful activation restarts the protocol in the target checkout. Only after pointer absence or validated activation and restart, validate Git metadata and the exact branch-binding source. An exact valid branch match is applicable; a valid mismatch is dormant only on clean `trunk` with no pointer and a non-`trunk` binding; every remaining case is `UNVERIFIED` under `.ai4x/BEHAVIOR.md`.
+
+Dormancy is only an applicability result. It creates no inference about merge, completion, acceptance, Issue closure, Project state, or authority, and it never replaces direct owning Issue or Project facts when they are material. It is neutral to cold-start eligibility, which independent remaining repository and owning remote facts must establish. Expected dormant content is neither a contradiction nor a repair target: do not perform branch or Pull Request history forensics merely to explain it, mutate the handoff, or require a post-publication refresh commit.
 
 Product Owner-facing completion and status handoff reports follow the deterministic Product Owner Decision Handoff in `.ai4x/BEHAVIOR.md`. The decision block is a presentation and authority-request contract, not workflow state or authority, and is never copied into `.ai4x/STATE.md`.
 
