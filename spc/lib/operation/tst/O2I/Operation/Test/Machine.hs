@@ -11,7 +11,8 @@ import qualified Data.Text as Text
 import O2I.Operation.Encoding.Internal
 import O2I.Operation.Machine
 import O2I.Operation.Machine.Internal
-  ( operationIdentityInventory
+  ( assessOperationIdentity
+  , operationIdentityInventory
   , operationIdentityValue
   , qualificationSubjectsOperationIdentity
   , qualifyOperationIdentity
@@ -63,6 +64,7 @@ exactIdentities = do
         , traceOperationIdentity
         , qualifyOperationIdentity
         , readinessOperationIdentity
+        , assessOperationIdentity
         ]
   fmap operationIdentityValue operationIdentityInventory
     @?= [ "views"
@@ -71,6 +73,7 @@ exactIdentities = do
         , "trace"
         , "qualify"
         , "readiness"
+        , "assess"
         ]
 
 exactEnvelope :: Assertion

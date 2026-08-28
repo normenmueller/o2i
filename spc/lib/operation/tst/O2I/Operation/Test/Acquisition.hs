@@ -118,6 +118,12 @@ sourceRoleRefinementTest = do
     Nothing -> assertFailure "readiness source was rejected"
     Just refined -> foldAcquiredReadinessSource id refined @?= readiness
   acquiredReadinessSource assessment @?= Nothing
+  acquiredAssessmentSource model @?= Nothing
+  acquiredAssessmentSource supplemental @?= Nothing
+  acquiredAssessmentSource readiness @?= Nothing
+  case acquiredAssessmentSource assessment of
+    Nothing -> assertFailure "assessment source was rejected"
+    Just refined -> foldAcquiredAssessmentSource id refined @?= assessment
 
 filePathValidationTest :: Assertion
 filePathValidationTest = do

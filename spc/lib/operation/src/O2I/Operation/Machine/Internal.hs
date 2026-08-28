@@ -12,6 +12,7 @@ module O2I.Operation.Machine.Internal
   , traceOperationIdentity
   , qualifyOperationIdentity
   , readinessOperationIdentity
+  , assessOperationIdentity
   , operationIdentityValue
   , operationIdentityInventory
   ) where
@@ -44,6 +45,7 @@ data OperationIdentity
   | TraceOperationIdentity
   | QualifyOperationIdentity
   | ReadinessOperationIdentity
+  | AssessOperationIdentity
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 -- | Exact identity of the profile-neutral View discovery operation.
@@ -70,6 +72,10 @@ qualifyOperationIdentity = QualifyOperationIdentity
 readinessOperationIdentity :: OperationIdentity
 readinessOperationIdentity = ReadinessOperationIdentity
 
+-- | Exact identity of selected-View evidence assessment.
+assessOperationIdentity :: OperationIdentity
+assessOperationIdentity = AssessOperationIdentity
+
 -- | Project the exact stable machine token by total case distinction.
 operationIdentityValue :: OperationIdentity -> Text
 operationIdentityValue identity =
@@ -80,6 +86,7 @@ operationIdentityValue identity =
     TraceOperationIdentity -> "trace"
     QualifyOperationIdentity -> "qualify"
     ReadinessOperationIdentity -> "readiness"
+    AssessOperationIdentity -> "assess"
 
 -- | Exhaustive inventory tied mechanically to the closed constructors.
 operationIdentityInventory :: [OperationIdentity]

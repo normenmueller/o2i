@@ -85,7 +85,7 @@ class OperationContractCompilerTest(unittest.TestCase):
         first = self.render_contract()
         second = self.render_contract()
         self.assertEqual(first, second)
-        self.assertEqual(13, len(first))
+        self.assertEqual(14, len(first))
         self.assertIn(b"data GeneratedOperationRule", first[COMPILER.RULE_GENERATED])
         self.assertIn(
             b"adapterInventoryMachineSchema :: MachineSchema",
@@ -289,6 +289,25 @@ class OperationContractCompilerTest(unittest.TestCase):
             document
             for document in self.validate_contract()[3]
             if document.name == "readinessResult"
+        )
+        schema = json.loads(
+            COMPILER.render_schema(
+                document,
+                self.profile_inventory,
+                self.core_inventory,
+                core_companion=self.core_companion,
+            )
+        )
+        Draft202012Validator.check_schema(schema)
+        fixture_schema = copy.deepcopy(schema)
+        del fixture_schema["$id"]
+        return schema, Draft202012Validator(fixture_schema)
+
+    def assessment_schema_fixture(self):
+        document = next(
+            document
+            for document in self.validate_contract()[3]
+            if document.name == "assessResult"
         )
         schema = json.loads(
             COMPILER.render_schema(
@@ -590,6 +609,192 @@ class OperationContractCompilerTest(unittest.TestCase):
             promotion["readiness"]["reasons"][0]
         )
         self.assertFalse(validator.is_valid(mixed_reasons))
+
+    def test_assessment_schema_binds_variants_and_exit_classification(self):
+        schema, validator = self.assessment_schema_fixture()
+        definitions = schema["$defs"]
+
+        for index, stage in enumerate(
+            ("notation", "profile", "structure", "semantics")
+        ):
+            with self.subTest(prerequisite=stage):
+                rejected = self.sample_schema_value(
+                    definitions["prerequisiteRejected"]["oneOf"][index],
+                    definitions,
+                )
+                self.assertTrue(validator.is_valid(rejected))
+                self.assertEqual(
+                    {
+                        "status": "prerequisite-rejected",
+                        "prerequisite": stage,
+                        "exitClass": "subject-unavailable",
+                        "exitCode": 3,
+                    },
+                    rejected["execution"],
+                )
+                self.assertEqual(
+                    stage in ("structure", "semantics"),
+                    rejected["context"]["assessment"] is not None,
+                )
+
+        expected = (
+            ("subjectUnavailable", "subject-unavailable", 3),
+            ("collectionInvalid", "primary-negative", 1),
+            ("observationsInvalid", "primary-negative", 1),
+            ("completed", "success", 0),
+        )
+        for name, exit_class, exit_code in expected:
+            with self.subTest(variant=name):
+                variant = self.sample_schema_value(
+                    definitions[name], definitions
+                )
+                if name in ("observationsInvalid", "completed"):
+                    observation = variant["assessment"]["observations"][0]
+                    observation["observedAt"] = "2026-08-28T12:34:56Z"
+                    if observation["value"]["kind"] == "quantitative":
+                        observation["value"]["value"] = "1.5"
+                self.assertTrue(validator.is_valid(variant))
+                self.assertEqual(
+                    exit_class, variant["execution"]["exitClass"]
+                )
+                self.assertEqual(exit_code, variant["execution"]["exitCode"])
+
+                changed = copy.deepcopy(variant)
+                changed["execution"]["exitCode"] = 2
+                self.assertFalse(validator.is_valid(changed))
+
+    def test_assessment_schema_preserves_mixed_source_order_without_aggregation(self):
+        schema, validator = self.assessment_schema_fixture()
+        definitions = schema["$defs"]
+        invalid = self.sample_schema_value(
+            definitions["observationsInvalid"], definitions
+        )
+        invalid_observation = invalid["assessment"]["observations"][0]
+        invalid_observation["sourceOrdinal"] = 2
+        invalid_observation["observedAt"] = "2026-08-28T12:35:00Z"
+        invalid_observation["value"]["value"] = "1.5"
+
+        completed = self.sample_schema_value(
+            definitions["completed"], definitions
+        )
+        assessed_observation = completed["assessment"]["observations"][0]
+        assessed_observation["sourceOrdinal"] = 1
+        assessed_observation["observedAt"] = "2026-08-28T12:34:56Z"
+        assessed_observation["value"]["value"] = "1.25"
+        invalid["assessment"]["observations"] = [
+            assessed_observation,
+            invalid_observation,
+        ]
+        self.assertTrue(validator.is_valid(invalid))
+        self.assertEqual(
+            [1, 2],
+            [
+                observation["sourceOrdinal"]
+                for observation in invalid["assessment"]["observations"]
+            ],
+        )
+        self.assertNotIn("score", invalid["assessment"])
+        self.assertIsNone(invalid["assessment"]["proof"])
+
+        no_invalid_observation = copy.deepcopy(invalid)
+        no_invalid_observation["assessment"]["observations"] = [
+            assessed_observation
+        ]
+        self.assertFalse(validator.is_valid(no_invalid_observation))
+
+        collection_invalid = self.sample_schema_value(
+            definitions["collectionInvalid"], definitions
+        )
+        self.assertTrue(validator.is_valid(collection_invalid))
+        self.assertEqual([], collection_invalid["assessment"]["observations"])
+        self.assertIsNone(collection_invalid["assessment"]["proof"])
+
+    def test_assessment_schema_executes_timestamp_and_domain_value_grammars(self):
+        schema, validator = self.assessment_schema_fixture()
+        definitions = schema["$defs"]
+        completed = self.sample_schema_value(
+            definitions["completed"], definitions
+        )
+        observation = completed["assessment"]["observations"][0]
+        observation["observedAt"] = "2026-08-28T12:34:56.123Z"
+        observation["value"] = {
+            "kind": "quantitative",
+            "value": "1.25",
+            "unit": "seconds",
+        }
+        self.assertTrue(validator.is_valid(completed))
+
+        for value in (
+            {"kind": "ordinal", "scaleId": "maturity", "level": "high"},
+            {"kind": "categorical", "value": "available"},
+        ):
+            with self.subTest(value=value["kind"]):
+                changed = copy.deepcopy(completed)
+                changed["assessment"]["observations"][0]["value"] = value
+                self.assertTrue(validator.is_valid(changed))
+
+        offset_timestamp = copy.deepcopy(completed)
+        offset_timestamp["assessment"]["observations"][0][
+            "observedAt"
+        ] = "2026-08-28T14:34:56+02:00"
+        self.assertFalse(validator.is_valid(offset_timestamp))
+
+        noncanonical_number = copy.deepcopy(completed)
+        noncanonical_number["assessment"]["observations"][0]["value"][
+            "value"
+        ] = "01.250"
+        self.assertFalse(validator.is_valid(noncanonical_number))
+
+    def test_assessment_scalar_patterns_are_posix_compatible(self):
+        evidence_definitions = self.core_companion["evidenceInputSchema"][
+            "$defs"
+        ]
+        for name in (
+            "UtcTimestamp",
+            "CanonicalDecimal",
+            "CanonicalText",
+            "Unit",
+        ):
+            with self.subTest(scalar=name):
+                original = evidence_definitions[name]
+                translated = COMPILER.assessment_scalar_schema(original)
+                self.assertNotIn("(?:", translated["pattern"])
+                expected = copy.deepcopy(original)
+                if name in ("CanonicalText", "Unit"):
+                    expected["pattern"] = (
+                        COMPILER.PORTABLE_CANONICAL_TEXT_PATTERN
+                    )
+                    expected["allOf"] = [
+                        {
+                            "not": {
+                                "pattern": "^"
+                                + COMPILER.ECMA_WHITESPACE_CLASS
+                            }
+                        },
+                        {
+                            "not": {
+                                "pattern": COMPILER.ECMA_WHITESPACE_CLASS
+                                + "$"
+                            }
+                        },
+                    ]
+                else:
+                    expected["pattern"] = expected["pattern"].replace(
+                        "(?:", "("
+                    )
+                self.assertEqual(expected, translated)
+
+        canonical = COMPILER.assessment_scalar_schema(
+            evidence_definitions["CanonicalText"]
+        )
+        validator = Draft202012Validator(canonical)
+        for value in ("sensor", "sensor A", "sensor\nA", "sensor\x00A"):
+            with self.subTest(valid=value):
+                self.assertTrue(validator.is_valid(value))
+        for whitespace in COMPILER.ECMA_WHITESPACE:
+            for value in (whitespace + "sensor", "sensor" + whitespace):
+                with self.subTest(edge=ord(whitespace)):
+                    self.assertFalse(validator.is_valid(value))
 
     def test_trace_schema_binds_gap_slots_and_endpoints_exactly(self):
         schema, validator = self.trace_schema_fixture()

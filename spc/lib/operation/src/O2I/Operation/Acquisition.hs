@@ -23,6 +23,9 @@ module O2I.Operation.Acquisition
   , AcquiredReadinessSource
   , acquiredReadinessSource
   , foldAcquiredReadinessSource
+  , AcquiredAssessmentSource
+  , acquiredAssessmentSource
+  , foldAcquiredAssessmentSource
   ) where
 
 import Control.Exception (IOException)
@@ -117,4 +120,17 @@ acquiredReadinessSource acquired
 foldAcquiredReadinessSource ::
      (AcquiredSource -> value) -> AcquiredReadinessSource -> value
 foldAcquiredReadinessSource consume (AcquiredReadinessSource acquired) =
+  consume acquired
+
+-- | Retain an acquired source only when its immutable role is assessment.
+acquiredAssessmentSource :: AcquiredSource -> Maybe AcquiredAssessmentSource
+acquiredAssessmentSource acquired
+  | sourceIdentityRole (acquiredSourceIdentity acquired) == AssessmentRole =
+    Just (AcquiredAssessmentSource acquired)
+  | otherwise = Nothing
+
+-- | Consume an acquired source after exact assessment-role refinement.
+foldAcquiredAssessmentSource ::
+     (AcquiredSource -> value) -> AcquiredAssessmentSource -> value
+foldAcquiredAssessmentSource consume (AcquiredAssessmentSource acquired) =
   consume acquired

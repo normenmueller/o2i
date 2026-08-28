@@ -106,6 +106,18 @@
         "readiness-not-ready",
         "readiness-ready"
       ]
+    },
+    {
+      "name": "assessResult",
+      "identity": "o2i.operation.assess",
+      "version": 1,
+      "variants": [
+        "assess-prerequisite-rejected",
+        "assess-subject-unavailable",
+        "assess-collection-invalid",
+        "assess-observations-invalid",
+        "assess-completed"
+      ]
     }
   ],
   "schemaFragments": [

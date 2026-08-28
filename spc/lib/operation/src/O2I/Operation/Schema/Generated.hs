@@ -141,7 +141,7 @@ qualificationSubjectsMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "2955af496ca7c2e15d946b27407758980b95409930483b06d2344d06d144cdfb"
+                "ae3370f663f94af6f32ab9b3b5b736a6df8cc4ca283d5b056a5e489f0c96fa85"
           }
     , machineSchemaVariantsValue =
         qualificationSubjectsPrerequisiteRejectedVariant
@@ -190,7 +190,7 @@ validateResultMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "85ea7f0955303326d67340df20af1143025e4a35f98886763bb6726b4797f48e"
+                "20b7ff7a2058a2529daba19354928eb35d5a334c2f31cc2011a80acf5b8fe4c3"
           }
     , machineSchemaVariantsValue =
         notationValidationAcceptedVariant
@@ -223,7 +223,7 @@ traceResultMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "34b045904eb5bd80f4c1760d4b14036e0c024eb05d10fbc02aa87fd54b4239bb"
+                "4071317b5446643d5cbf0384ea3b3b0fb2c7db4bd9d5e3fae8fad28b50bd7bd2"
           }
     , machineSchemaVariantsValue =
         tracePrerequisiteRejectedVariant
@@ -247,7 +247,7 @@ qualifyResultMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "1a9ab41581da48bace1f6ac5fef249312a8e5c0bd94c3cec9a1e8836a8d11090"
+                "a31ab4971f10ef68763e00fa0532d626bce45cd937523279813afd000fad5dfa"
           }
     , machineSchemaVariantsValue =
         qualifyPrerequisiteRejectedVariant :| [qualifyCompletedVariant]
@@ -277,13 +277,48 @@ readinessResultMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "1a716ec294e56cc91e462cea837947e2bf69a1859f774f121bbdb6c5d5be7603"
+                "fac7a120baf1ecfd1b889bd65deb8067bb2eb5acb5c473b10a701f24edfc9352"
           }
     , machineSchemaVariantsValue =
         readinessPrerequisiteRejectedVariant
           :| [ readinessSubjectUnavailableVariant
              , readinessNotReadyVariant
              , readinessReadyVariant
+             ]
+    }
+
+assessPrerequisiteRejectedVariant :: SchemaVariant
+assessPrerequisiteRejectedVariant = SchemaVariant "assess-prerequisite-rejected"
+
+assessSubjectUnavailableVariant :: SchemaVariant
+assessSubjectUnavailableVariant = SchemaVariant "assess-subject-unavailable"
+
+assessCollectionInvalidVariant :: SchemaVariant
+assessCollectionInvalidVariant = SchemaVariant "assess-collection-invalid"
+
+assessObservationsInvalidVariant :: SchemaVariant
+assessObservationsInvalidVariant = SchemaVariant "assess-observations-invalid"
+
+assessCompletedVariant :: SchemaVariant
+assessCompletedVariant = SchemaVariant "assess-completed"
+
+assessResultMachineSchema :: MachineSchema
+assessResultMachineSchema =
+  MachineSchema
+    { machineSchemaAuthorityValue =
+        SchemaAuthority
+          { schemaAuthorityIdentityValue = SchemaIdentity "o2i.operation.assess"
+          , schemaAuthorityVersionValue = SchemaVersion 1
+          , schemaAuthorityDigestValue =
+              SchemaDigest
+                "0e0a6339678509db305ca174583c0ca187ebd96c79fd45fa11a0d5167445d1e7"
+          }
+    , machineSchemaVariantsValue =
+        assessPrerequisiteRejectedVariant
+          :| [ assessSubjectUnavailableVariant
+             , assessCollectionInvalidVariant
+             , assessObservationsInvalidVariant
+             , assessCompletedVariant
              ]
     }
 

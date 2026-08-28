@@ -19,6 +19,7 @@ from typing import Iterable
 ERROR_CODE = re.compile(r"GHC-\d+")
 CORE_EXPOSED_MODULES = frozenset(
     {
+        "O2I.Assessment",
         "O2I.Core.Contract",
         "O2I.Core.Graph.Observation",
         "O2I.Core.Identity",
@@ -33,6 +34,12 @@ CORE_EXPOSED_MODULES = frozenset(
 )
 CORE_SOURCE_FILES = frozenset(
     {
+        "src/O2I/Assessment.hs",
+        "src/O2I/Assessment/Binding.hs",
+        "src/O2I/Assessment/Decode.hs",
+        "src/O2I/Assessment/Eval.hs",
+        "src/O2I/Assessment/Internal.hs",
+        "src/O2I/Assessment/Subject.hs",
         "src/O2I/Core/Contract.hs",
         "src/O2I/Core/Contract/Generated.hs",
         "src/O2I/Core/Contract/Internal.hs",
@@ -133,6 +140,7 @@ CONTRACTS = (
             "spc/lib/core/tst/api/compile-pass/QualificationPublicApi.hs",
             "spc/lib/core/tst/api/compile-pass/TracePublicApi.hs",
             "spc/lib/core/tst/api/compile-pass/ReadinessPublicApi.hs",
+            "spc/lib/core/tst/api/compile-pass/AssessmentPublicApi.hs",
         ),
         (
             CompileFailure(
@@ -305,6 +313,20 @@ CONTRACTS = (
                 "spc/lib/core/tst/api/compile-fail/ReadinessCrossScope.hs",
                 (("GHC-25897", 2),),
             ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "AssessmentOpaqueConstructors.hs",
+                (("GHC-01928", 4),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/"
+                "AssessmentInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/core/tst/api/compile-fail/AssessmentCrossScope.hs",
+                (("GHC-25897", 3),),
+            ),
         ),
     ),
     PackageContract(
@@ -402,6 +424,7 @@ CONTRACTS = (
             "OwnerEvidencePublicApi.hs",
             "spc/lib/operation/tst/api/compile-pass/TracePublicApi.hs",
             "spc/lib/operation/tst/api/compile-pass/ReadinessPublicApi.hs",
+            "spc/lib/operation/tst/api/compile-pass/AssessPublicApi.hs",
             "spc/lib/operation/tst/api/compile-pass/ValidatePublicApi.hs",
             "spc/lib/operation/tst/api/compile-pass/"
             "QualificationPublicApi.hs",
@@ -678,6 +701,26 @@ CONTRACTS = (
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/"
                 "ReadinessHiddenInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "AcquiredAssessmentSourceOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "AssessResultOpaqueConstructors.hs",
+                (("GHC-01928", 1), ("GHC-88464", 1)),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "AssessDocumentOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "AssessHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
         ),
