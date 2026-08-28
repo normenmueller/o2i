@@ -60,15 +60,36 @@ Vor jeder Löschung werden alle Ziele exakt identifiziert und nur bereinigt, wen
 
 ## PO-Entscheidungsvorlage
 
-Das Feld `Recommendation:` bildet genau einen einzeiligen gewöhnlichen Markdown-Absatz. Unmittelbar davor und danach steht jeweils genau eine leere Quellzeile ohne Zeichen. Der Absatz beginnt mit der übersetzten Feldbezeichnung und enthält die vollständige Empfehlung auf derselben Quellzeile; er ist weder Überschrift noch Listeneintrag. Diese Trennung ändert Inhalt, Reihenfolge und Semantik sowie das Layout der übrigen Felder nicht.
+Ein abschließender Übergabebericht beginnt mit einem kompakten Ergebnis: ein Ergebnissatz und nur bei Bedarf kurze Punkte für Status, Evidenz oder den noch offenen Punkt. Hashes, Befehlsausgaben, vollständige Prüfinventare und Umsetzungsnarrative gehören nur bei einem materiellen Risiko oder Fehler, auf ausdrückliche Nachfrage oder in einen verlinkten Beleg. Die Empfehlung wird im Ergebnis nicht wiederholt.
 
-Jeder abschließende Bericht, der eine autorisierte Arbeitseinheit beendet oder an einem PO-Entscheidungs- beziehungsweise Wartepunkt zurückgibt, endet mit genau einer konkreten Empfehlung. Sie benennt in fester Reihenfolge den exakten Gegenstand, begrenzten Scope, beobachtbaren Zielzustand, die Autoritätsgrenze und einen kurzen evidenzbasierten Grund. Die Autoritätsgrenze enthält entweder die exakt neu angefragte Agentenautorität oder das Literal `none` sowie in beiden Fällen zwingend die Ausschlüsse. Eine durch `Freigegeben.` ausführbare Empfehlung muss die exakte neue Agentenautorität nennen und darf `none` nicht verwenden; eine direkte PO-Aktion und ein empfohlener Cold Start müssen `none` verwenden und dürfen keine Agentenautorität erfinden. Die Vorlage nennt nur Alternativen, die Scope, Autorität, materielles Risiko, unumkehrbare Folgen oder die erforderliche Reihenfolge tatsächlich verändern, und andernfalls ausdrücklich keine. Zwischenstände, reine Antworten und autonomes Weiterarbeiten innerhalb bestehender Autorität benötigen keine Entscheidungsvorlage.
+Die Entscheidung erscheint unter einer eigenen Überschrift. Die Empfehlung selbst ist genau eine kurze, fett hervorgehobene Aktion; Gegenstand, Umfang, Zielzustand, angefragte Agentenautorität, Ausschlüsse und Grund folgen lesbar als sechs kurze Punkte in genau dieser Reihenfolge:
+
+```text
+## Entscheidung
+
+Empfehlung: **[eine konkrete nächste Aktion].**
+
+- Gegenstand: [eindeutiges Objekt]
+- Umfang: [begrenzte Aktion]
+- Zielzustand: [beobachtbares Ergebnis]
+- Angefragte Agentenautorität: [exakte neue Autorität oder none]
+- Ausgeschlossen: [klare Grenze]
+- Grund: [ein kurzer evidenzbasierter Satz]
+
+Alternativen: [materielle Alternative oder keine]
+
+Kaltstart: [recommended oder not recommended] — [erforderlicher Grund]
+
+Antwort zur Freigabe: `Freigegeben.`
+```
+
+Jeder abschließende Bericht, der eine autorisierte Arbeitseinheit beendet oder an einem PO-Entscheidungs- beziehungsweise Wartepunkt zurückgibt, endet mit genau einer solchen Entscheidung. Eine durch `Freigegeben.` ausführbare Empfehlung muss die exakte neue Agentenautorität nennen und darf `none` nicht verwenden; eine direkte PO-Aktion und ein empfohlener Cold Start müssen `none` verwenden und dürfen keine Agentenautorität erfinden. Ausschlüsse bleiben immer Pflicht. Die Vorlage nennt nur Alternativen, die Scope, Autorität, materielles Risiko, unumkehrbare Folgen oder die erforderliche Reihenfolge tatsächlich verändern, und andernfalls ausdrücklich keine. Zwischenstände, reine Antworten und autonomes Weiterarbeiten innerhalb bestehender Autorität benötigen keine Entscheidungsvorlage.
 
 Die Vorlage bewertet den Cold Start mit genau `recommended` oder `not recommended`. `recommended` setzt alle Sicherheitsbedingungen voraus und macht den Cold Start zur einzigen Empfehlung. Bei `not recommended` unterscheidet der Grund ausdrücklich zwischen einer fehlgeschlagenen Sicherheitsbedingung und einem sicheren, aber gegenüber der Empfehlung nachrangigen Cold Start.
 
 Das kanonische Feld `Approval:` erscheint im deutschen Bericht als `Antwort zur Freigabe:`; darauf folgt als exakte alleinstehende PO-Antwort `Freigegeben.`. Die Ausgabe `Freigabe: Freigegeben.` ist ausgeschlossen. Diese Antwort bindet genau einmal ausschließlich die eine Empfehlung der unmittelbar vorausgehenden, noch offenen Entscheidungsvorlage mit ihrem Gegenstand, Scope, Zielzustand und ihrer Autoritätsgrenze. Gertrud prüft diese Bindung unmittelbar vor der Ausführung und macht sie durch einen nicht autoritätserweiternden Beleg mit denselben vier Angaben und dem Zustand `consumed` sichtbar. `Consumed` verbraucht die Freigabeantwort, nicht die durch sie begründete begrenzte Autorität: Diese bleibt als atomare Autorität der Arbeitseinheit bis zu ihrem genannten Zielzustand wirksam, und jede abgedeckte Aktion erfolgt ohne weitere Entscheidungsvorlage oder PO-Freigabeanfrage. Eine fehlende oder mehrdeutige Vorlage, eine bereits verbrauchte Vorlage sowie eine durch eine spätere Vorlage oder neue materielle Fakten überholte Vorlage blockieren die erstmalige Bindung. Die Bindung gilt nur im aktuellen laufenden Austausch; sie wird weder aus einem Gesprächsprotokoll rekonstruiert noch über eine Session-Grenze getragen. Eine direkte PO-Aktion und ein empfohlener Cold Start werden nicht durch `Freigegeben.` gebunden.
 
-Beim empfohlenen Cold Start folgen auf ausschließlich nicht imperative Entscheidungsmetadaten die unveränderten drei nummerierten Aktionsschritte des Cold-Start-Vertrags. Weitere imperative Sätze oder nummerierte Übergangsanweisungen sind ausgeschlossen, und der Bericht endet unmittelbar nach Schritt 3. Bei `not recommended` werden diese Schritte nicht ausgegeben.
+Beim empfohlenen Cold Start bleiben die sechs Kontextpunkte erhalten; auf die ausschließlich nicht imperativen Entscheidungsmetadaten folgen die unveränderten drei nummerierten Aktionsschritte des Cold-Start-Vertrags. Weitere imperative Sätze oder nummerierte Übergangsanweisungen sind ausgeschlossen, und der Bericht endet unmittelbar nach Schritt 3. Bei `not recommended` werden diese Schritte nicht ausgegeben.
 
 Native Sub-Issues werden nur genutzt, wenn sie einen mehrteiligen Liefergegenstand für den Product Owner sichtbar besser machen. Der Parent besitzt integrierten Scope, Autorität, Annahme und Publikation. Eine Story oder ein Batch besitzt genau einen begrenzten Liefergegenstand und den eigenen Open/Closed-Zustand, ergänzt aber keinen Produktscope und keine Autorität. Aktive Stories dürfen zur Sichtbarkeit im Project stehen.
 
