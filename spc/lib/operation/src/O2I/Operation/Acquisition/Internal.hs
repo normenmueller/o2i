@@ -8,6 +8,7 @@ module O2I.Operation.Acquisition.Internal
   , AcquiredSource(..)
   , AcquiredModelSource(..)
   , AcquiredSupplementalSource(..)
+  , AcquiredReadinessSource(..)
   , acquireWith
   ) where
 
@@ -59,6 +60,11 @@ newtype AcquiredModelSource =
 -- | Acquired source whose immutable role is exactly supplemental.
 newtype AcquiredSupplementalSource =
   AcquiredSupplementalSource AcquiredSource
+  deriving (Eq, Show)
+
+-- | Acquired source whose immutable role is exactly readiness.
+newtype AcquiredReadinessSource =
+  AcquiredReadinessSource AcquiredSource
   deriving (Eq, Show)
 
 -- | Acquire through injected readers; used by the public IO boundary and

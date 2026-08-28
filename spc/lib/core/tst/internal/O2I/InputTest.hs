@@ -38,6 +38,7 @@ tests =
     [ testCase "invalid UTF-8 fails before JSON syntax" invalidUtf8
     , testCase "public decoder preserves exact phase precedence" phasePrecedence
     , testCase "one complete JSON value is required" jsonSyntax
+    , testCase "numeric lexemes are retained losslessly" numberLexemeRetention
     , testCase "UTF-8 BOM is not silently discarded" jsonBom
     , testCase
         "decoded duplicate keys share one canonical site"
@@ -137,6 +138,33 @@ jsonSyntax = do
   parse "{\"value\":1} \n\t" @?= Right []
   parse "{\"value\":1} trailing" @?= Left InvalidJsonSyntax
   parse "{\"value\":}" @?= Left InvalidJsonSyntax
+
+numberLexemeRetention :: IO ()
+numberLexemeRetention = do
+  let source = "[-0,1.20e+3,0.001,42]"
+      expected = ["-0", "1.20e+3", "0.001", "42"]
+  first <- parsedNumbers source
+  second <- parsedNumbers source
+  first @?= expected
+  second @?= first
+  where
+    parsedNumbers source =
+      case decodeUtf8Json (encode source) of
+        Left failure -> fail (show failure)
+        Right utf8 ->
+          case parseJsonSyntax utf8 of
+            Left failure -> fail (show failure)
+            Right parsed ->
+              case rejectDuplicateMembers parsed of
+                Left duplicates -> fail (show duplicates)
+                Right document ->
+                  case jsonNodeValue (duplicateFreeNode document) of
+                    JsonArrayValue values -> traverse numberLexeme values
+                    value -> fail (show value)
+    numberLexeme node =
+      case jsonNodeValue node of
+        JsonNumberValue lexeme -> pure lexeme
+        value -> fail (show value)
 
 jsonBom :: IO ()
 jsonBom = parse "\xfeff{}" @?= Left InvalidJsonSyntax

@@ -17,6 +17,7 @@ import qualified O2I.Operation.Test.Profile as Profile
 import qualified O2I.Operation.Test.Provenance as Provenance
 import qualified O2I.Operation.Test.Qualification as Qualification
 import qualified O2I.Operation.Test.QualificationRequest as QualificationRequest
+import qualified O2I.Operation.Test.Readiness as Readiness
 import qualified O2I.Operation.Test.Request as Request
 import qualified O2I.Operation.Test.Result as Result
 import qualified O2I.Operation.Test.RuleCatalog as RuleCatalog
@@ -46,6 +47,7 @@ main =
        , Provenance.tests
        , Qualification.tests
        , QualificationRequest.tests
+       , Readiness.tests
        , Request.tests
        , Result.tests
        , RuleCatalog.tests

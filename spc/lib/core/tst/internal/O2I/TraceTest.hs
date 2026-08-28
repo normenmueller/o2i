@@ -12,12 +12,16 @@ import qualified Data.Text as Text
 import O2I.Core.Contract
 import O2I.Core.Graph.Observation (Commitment(..))
 import O2I.Core.Identity
+import O2I.Input.Internal.Binding (bindSupplementalInputs)
 import O2I.Input.Internal.Text (canonicalizeFachlicheText)
 import O2I.Input.Internal.Types
   ( FachlicheText(..)
   , StrategyAnchoring(..)
   , StrategyFormulationInput(..)
+  , SupplementalBinding(..)
+  , SupplementalInputSet(..)
   )
+import qualified O2I.Semantics as PublicSemantics
 import O2I.Semantics.Internal
   ( QualificationEligibleStrategy(..)
   , SemanticallyValidModel(..)
@@ -395,6 +399,20 @@ promotionPrecedence =
                 @?= variableIdentity StrategyVariable
             outcome ->
               assertFailure ("promotion did not succeed: " ++ show outcome)
+          case Public.reconstructTraceableEffectModel
+                 model
+                 (PublicSemantics.assessSemantics
+                    (semanticModelGraph model)
+                    (supplementalBindingInputs
+                       (bindSupplementalInputs
+                          (semanticModelGraph model)
+                          (SupplementalInputSet [] :: SupplementalInputSet ()))))
+                 supplied of
+            TracePromotionUnavailable _ _ reasons ->
+              NonEmpty.toList reasons @?= [StrategyAssessmentUnavailable]
+            outcome ->
+              assertFailure
+                ("missing reconstruction proof succeeded: " ++ show outcome)
         outcome ->
           assertFailure ("promotion fixture was unavailable: " ++ show outcome)
   where

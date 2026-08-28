@@ -2,6 +2,14 @@
 
 module O2I.Operation.Test.Trace
   ( tests
+  , fixtureModelInput
+  , withFixtureEnvironment
+  , notationRejectedDraft
+  , profileRejectedDraft
+  , structureRejectedDraft
+  , semanticsRejectedDraft
+  , traceContractDraft
+  , readinessContractDraft
   ) where
 
 import qualified Data.Aeson as Aeson
@@ -429,6 +437,27 @@ traceContractDraft missing includeSecondRoot =
                       "needObjectiveTwo"
                   ]
              else []
+
+readinessContractDraft :: Maybe Text -> Draft.ProfileDraft
+readinessContractDraft missing =
+  traceDraft
+    (traceElements <> [("strategyPrinciple", "Principle", "Principle")])
+    (filter
+       (\(identifier, _, _, _, _, _) -> Just identifier /= missing)
+       (traceRelationships
+          <> [ association
+                 "strategy-principle-guides-strategy-action"
+                 "guides"
+                 "strategyPrinciple"
+                 "strategyAction"
+             ])
+       <> traceOwnerships
+       <> [ ownership
+              "strategy-principle-at-strategy"
+              "strategy"
+              "strategyPrinciple"
+          ])
+    []
 
 traceElements :: [(Text, Text, Text)]
 traceElements =

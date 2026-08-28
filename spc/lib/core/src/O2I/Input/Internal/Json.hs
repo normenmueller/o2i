@@ -140,13 +140,14 @@ escapePointerToken member =
 
 -- | Lossless JSON value needed by the closed typed decoder.
 --
--- JSON numbers do not occur in an admitted payload position. Their lexical
--- representation is validated but deliberately not retained.
+-- Numeric lexemes are retained exactly after JSON-grammar validation. Closed
+-- payload decoders decide whether one admitted site requires an integer or
+-- another numeric schema without reparsing the source document.
 data JsonValue
   = JsonObjectValue !JsonObject
   | JsonArrayValue ![JsonNode]
   | JsonStringValue !JsonString
-  | JsonNumberValue
+  | JsonNumberValue !Text
   | JsonBooleanValue !Bool
   | JsonNullValue
   deriving (Eq, Show)
@@ -544,7 +545,17 @@ parseNumber path cursor = do
   afterInteger <- parseInteger afterSign
   afterFraction <- parseFraction afterInteger
   afterExponent <- parseExponent afterFraction
-  Right (JsonNode path JsonNumberValue, noDuplicatePaths, afterExponent)
+  Right
+    ( JsonNode path (JsonNumberValue (consumedLexeme cursor afterExponent))
+    , noDuplicatePaths
+    , afterExponent)
+
+consumedLexeme :: Cursor -> Cursor -> Text
+consumedLexeme before after =
+  Text.take
+    (jsonSourceScalarVisits (cursorWork after)
+       - jsonSourceScalarVisits (cursorWork before))
+    (cursorInput before)
 
 parseInteger :: Cursor -> Either JsonSyntaxFailure Cursor
 parseInteger cursor =

@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import json
 import os
@@ -177,6 +178,15 @@ EXPECTED_DOCUMENTS: tuple[tuple[str, tuple[str, ...]], ...] = (
         "qualifyResult",
         ("qualify-prerequisite-rejected", "qualify-completed"),
     ),
+    (
+        "readinessResult",
+        (
+            "readiness-prerequisite-rejected",
+            "readiness-subject-unavailable",
+            "readiness-not-ready",
+            "readiness-ready",
+        ),
+    ),
 )
 EXPECTED_VARIANTS = dict(EXPECTED_DOCUMENTS)
 EXPECTED_FRAGMENTS = ("diagnostic",)
@@ -213,6 +223,12 @@ VARIANT_BINDINGS: dict[str, str] = {
     "trace-accepted": "traceAcceptedVariant",
     "qualify-prerequisite-rejected": "qualifyPrerequisiteRejectedVariant",
     "qualify-completed": "qualifyCompletedVariant",
+    "readiness-prerequisite-rejected": (
+        "readinessPrerequisiteRejectedVariant"
+    ),
+    "readiness-subject-unavailable": "readinessSubjectUnavailableVariant",
+    "readiness-not-ready": "readinessNotReadyVariant",
+    "readiness-ready": "readinessReadyVariant",
 }
 
 
@@ -3137,6 +3153,436 @@ def qualify_result_schema(
     )
 
 
+def readiness_result_schema(
+    document: MachineDocument,
+    profile_inventory: Optional[dict[str, Any]] = None,
+    core_inventory: Optional[dict[str, Any]] = None,
+    operation_contract: Optional[dict[str, Any]] = None,
+    operation_digest: Optional[str] = None,
+    core_companion: Optional[dict[str, Any]] = None,
+) -> dict[str, Any]:
+    if profile_inventory is None:
+        profile_inventory, _ = load_object(DEFAULT_PROFILE_DIAGNOSTIC_INVENTORY)
+    if core_inventory is None:
+        core_inventory, _ = load_object(DEFAULT_CORE_OWNER_DIAGNOSTIC_INVENTORY)
+    if operation_contract is None or operation_digest is None:
+        operation_companion, operation_payload = load_object(COMPANION)
+        operation_contract = operation_companion["contract"]
+        operation_digest = hashlib.sha256(operation_payload).hexdigest()
+    if core_companion is None:
+        core_companion, _ = load_object(DEFAULT_CORE_COMPANION)
+    definitions, selector, contracts = qualification_schema_support(
+        profile_inventory,
+        core_inventory,
+        operation_contract,
+        operation_digest,
+    )
+    groups = diagnostic_schema_groups(profile_inventory, core_inventory)
+    identity = text_schema(pattern=TOOL_TEXT_PATTERN)
+    source_input = {
+        "oneOf": [
+            object_schema(
+                {"kind": {"const": "file"}, "path": text_schema()}
+            ),
+            object_schema({"kind": {"const": "stdin"}}),
+        ]
+    }
+    variables = core_companion["traceSemantics"]["variableCatalog"]
+    relation_slots = core_companion["traceSemantics"]["relationSlots"]
+    ownership_slots = core_companion["traceSemantics"]["ownershipSlots"]
+
+    def exact_array(items: list[dict[str, Any]]) -> dict[str, Any]:
+        schema = {
+            "type": "array",
+            "minItems": len(items),
+            "maxItems": len(items),
+            "items": False,
+        }
+        if items:
+            schema["prefixItems"] = items
+        return schema
+
+    trace_identity = object_schema(
+        {
+            "graphIdentity": identity,
+            "bindings": exact_array(
+                [
+                    object_schema(
+                        {
+                            "variable": {"const": variable["id"]},
+                            "identity": identity,
+                        }
+                    )
+                    for variable in variables
+                ]
+            ),
+        }
+    )
+    readiness_rules = core_companion["evidenceReadinessSemantics"]["ruleIds"]
+    evidence_key_by_rule = core_companion["evidenceReadinessSemantics"][
+        "evidenceKeyByRule"
+    ]
+    kpi_rules = [
+        readiness_rules[name]
+        for name, key in evidence_key_by_rule.items()
+        if key == "KPIDefinitionSlotKey"
+    ]
+    planned_start_rules = [
+        readiness_rules[name]
+        for name, key in evidence_key_by_rule.items()
+        if key == "PlannedStartSlotKey"
+    ]
+    evidence_plan_rules = [
+        readiness_rules[name]
+        for name, key in evidence_key_by_rule.items()
+        if key == "EvidencePlanSlotKey"
+    ]
+    readiness_diagnostic = {
+        "oneOf": [
+            object_schema(
+                {
+                    "ruleId": {"enum": kpi_rules},
+                    "evidenceKey": object_schema(
+                        {"kind": {"const": "kpi-definition"}, "kpi": identity}
+                    ),
+                }
+            ),
+            object_schema(
+                {
+                    "ruleId": {"enum": planned_start_rules},
+                    "evidenceKey": object_schema(
+                        {
+                            "kind": {"const": "planned-start"},
+                            "intervention": identity,
+                        }
+                    ),
+                }
+            ),
+            object_schema(
+                {
+                    "ruleId": {"enum": evidence_plan_rules},
+                    "evidenceKey": object_schema(
+                        {"kind": {"const": "evidence-plan"}, "trace": trace_identity}
+                    ),
+                }
+            ),
+        ]
+    }
+    evidence_subject = {
+        "oneOf": [
+            object_schema(
+                {
+                    "kind": {"const": "text"},
+                    "label": text_schema(pattern=TOOL_TEXT_PATTERN),
+                    "value": text_schema(),
+                }
+            ),
+            object_schema(
+                {
+                    "kind": {"const": "natural"},
+                    "label": text_schema(pattern=TOOL_TEXT_PATTERN),
+                    "value": {"type": "integer", "minimum": 0},
+                }
+            ),
+            *[
+                object_schema(
+                    {
+                        "kind": {"const": kind},
+                        "label": text_schema(pattern=TOOL_TEXT_PATTERN),
+                        "value": identity,
+                    }
+                )
+                for kind in (
+                    "model-identity",
+                    "occurrence-identity",
+                    "qualified-type",
+                )
+            ],
+        ]
+    }
+    binding_rule_ids = core_companion["evidenceInputDecoderContract"][
+        "ruleIds"
+    ]
+    binding_reason_rules = (
+        ("unknown", binding_rule_ids["identityUnknown"]),
+        ("ambiguous", binding_rule_ids["identityAmbiguous"]),
+        (
+            "out-of-selected-view",
+            binding_rule_ids["identityOutOfSelectedView"],
+        ),
+        ("wrong-type", binding_rule_ids["identityWrongType"]),
+    )
+    binding_unavailable = {
+        "oneOf": [
+            object_schema(
+                {
+                    "phase": {"const": "binding"},
+                    "ruleId": {"const": rule_id},
+                    "reason": {"const": reason},
+                    "jsonPointer": text_schema(),
+                    "subjects": array_schema(evidence_subject, minimum=1),
+                }
+            )
+            for reason, rule_id in binding_reason_rules
+        ]
+    }
+
+    def trace_slot(
+        kind: str, slot: dict[str, Any], source: str, target: str
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        descriptor = object_schema(
+            {
+                "slotKind": {"const": kind},
+                "slotId": {"const": slot["id"]},
+                "ruleId": {"const": slot["ruleRef"]},
+            }
+        )
+        endpoints = exact_array(
+            [
+                object_schema(
+                    {
+                        "variable": {"const": source},
+                        "identity": identity,
+                    }
+                ),
+                object_schema(
+                    {
+                        "variable": {"const": target},
+                        "identity": identity,
+                    }
+                ),
+            ]
+        )
+        return descriptor, endpoints
+
+    trace_slots = [
+        trace_slot(
+            "relation", slot, slot["sourceVariable"], slot["targetVariable"]
+        )
+        for slot in relation_slots
+    ] + [
+        trace_slot(
+            "ownership", slot, slot["contextVariable"], slot["memberVariable"]
+        )
+        for slot in ownership_slots
+    ]
+    supplied_trace_unavailable = {
+        "oneOf": [
+            object_schema(
+                {
+                    "phase": {"const": "supplied-trace"},
+                    "reason": {"const": "graph-identity-mismatch"},
+                    "expectedGraphIdentity": identity,
+                    "suppliedGraphIdentity": identity,
+                }
+            ),
+            *[
+                object_schema(
+                    {
+                        "phase": {"const": "supplied-trace"},
+                        "reason": {"const": "exact-slot-unsupported"},
+                        "slot": descriptor,
+                        "endpoints": endpoints,
+                        "disposition": {
+                            "enum": ["missing-support", "candidate-only"]
+                        },
+                    }
+                )
+                for descriptor, endpoints in trace_slots
+            ],
+        ]
+    }
+    promotion_unavailable = object_schema(
+        {
+            "phase": {"const": "promotion"},
+            "reason": {
+                "enum": [
+                    "strategy-assessment-unavailable",
+                    "strategy-assessment-invalid",
+                    "strategy-proof-model-mismatch",
+                    "strategy-identity-mismatch",
+                    "strategy-diagnosis-mismatch",
+                    "strategy-intent-mismatch",
+                    "strategy-action-not-in-formulation",
+                    "strategy-key-result-not-in-formulation",
+                ]
+            },
+        }
+    )
+    subject = {
+        "graphIdentity": identity,
+        "traceIdentity": trace_identity,
+    }
+    binding_subject_unavailable = object_schema(
+        {
+            "suppliedTraceIdentity": trace_identity,
+            "disposition": {"const": "subject-unavailable"},
+            "reasons": array_schema(binding_unavailable, minimum=1),
+        }
+    )
+
+    def reconstruction_subject_unavailable(
+        reason: dict[str, Any],
+    ) -> dict[str, Any]:
+        return object_schema(
+            {
+                **subject,
+                "disposition": {"const": "subject-unavailable"},
+                "reasons": array_schema(reason, minimum=1),
+            }
+        )
+    not_ready = object_schema(
+        {
+            **subject,
+            "disposition": {"const": "not-ready"},
+            "diagnostics": array_schema(readiness_diagnostic, minimum=1),
+        }
+    )
+    ready = object_schema(
+        {
+            **subject,
+            "disposition": {"const": "ready"},
+            "diagnostics": {
+                **array_schema(readiness_diagnostic),
+                "maxItems": 0,
+            },
+        }
+    )
+    readiness_source = object_schema(
+        {
+            "role": {"const": "readiness"},
+            "ordinal": {"const": 0},
+            "reference": text_schema(pattern=TOOL_TEXT_PATTERN),
+            "sha256": text_schema(pattern=SHA256_PATTERN),
+        }
+    )
+    supplemental_group = object_schema(
+        {
+            "reference": text_schema(pattern=TOOL_TEXT_PATTERN),
+            "sha256": text_schema(pattern=SHA256_PATTERN),
+            "diagnostics": {
+                "type": "array",
+                "items": {"oneOf": groups["binding"]},
+            },
+        }
+    )
+    shared = {
+        "request": object_schema(
+            {
+                "view": selector,
+                "adapterId": nullable(text_schema()),
+                "readiness": source_input,
+                "supplements": array_schema(source_input),
+            }
+        ),
+        "diagnostics": object_schema(
+            {
+                "schema": {"const": "o2i.operation.diagnostic/v2"},
+                "modelDiagnostics": array_schema(reference("modelDiagnostic")),
+            }
+        ),
+        "provenance": object_schema({"contracts": contracts}),
+    }
+
+    def context(
+        prerequisite: Optional[str],
+        supplemental_diagnostics: bool = True,
+    ) -> dict[str, Any]:
+        if prerequisite in {"notation", "profile"}:
+            readiness_context = {"type": "null"}
+            supplements = {**array_schema(supplemental_group), "maxItems": 0}
+        else:
+            readiness_context = readiness_source
+            group = supplemental_group
+            if prerequisite == "structure" or not supplemental_diagnostics:
+                group = copy.deepcopy(supplemental_group)
+                group["properties"]["diagnostics"]["maxItems"] = 0
+            supplements = array_schema(group)
+        return object_schema(
+            {
+                "authority": reference("preparedAuthority"),
+                "view": reference("readinessViewDescriptor"),
+                "readiness": readiness_context,
+                "supplements": supplements,
+            }
+        )
+
+    def variant(
+        kind: str,
+        status: str,
+        readiness: dict[str, Any],
+        prerequisite: Optional[str] = None,
+        supplemental_diagnostics: bool = True,
+    ) -> dict[str, Any]:
+        execution = {"status": {"const": status}}
+        if prerequisite is not None:
+            execution["prerequisite"] = {"const": prerequisite}
+        return operation_variant(
+            document,
+            "readiness",
+            kind,
+            {
+                "context": context(prerequisite, supplemental_diagnostics),
+                **shared,
+                "execution": object_schema(execution),
+                "readiness": readiness,
+            },
+        )
+
+    prerequisite = {
+        "oneOf": [
+            variant(
+                "readiness-prerequisite-rejected",
+                "prerequisite-rejected",
+                {"type": "null"},
+                stage,
+            )
+            for stage in ("notation", "profile", "structure", "semantics")
+        ]
+    }
+    definitions.update(
+        {
+            "toolDescriptor": tool_descriptor(),
+            "readinessViewDescriptor": view_descriptor(),
+            "prerequisiteRejected": prerequisite,
+            "subjectUnavailable": {
+                "oneOf": [
+                    variant(
+                        "readiness-subject-unavailable",
+                        "subject-unavailable",
+                        binding_subject_unavailable,
+                        supplemental_diagnostics=False,
+                    ),
+                    variant(
+                        "readiness-subject-unavailable",
+                        "subject-unavailable",
+                        reconstruction_subject_unavailable(
+                            supplied_trace_unavailable
+                        ),
+                    ),
+                    variant(
+                        "readiness-subject-unavailable",
+                        "subject-unavailable",
+                        reconstruction_subject_unavailable(
+                            promotion_unavailable
+                        ),
+                    ),
+                ]
+            },
+            "notReady": variant(
+                "readiness-not-ready", "not-ready", not_ready
+            ),
+            "ready": variant("readiness-ready", "ready", ready),
+        }
+    )
+    return schema_document(
+        document,
+        "Selected-View evidence-readiness result",
+        definitions,
+        ["prerequisiteRejected", "subjectUnavailable", "notReady", "ready"],
+    )
+
+
 def diagnostic_schema(
     fragment: SchemaFragment,
     profile_inventory: Optional[dict[str, Any]] = None,
@@ -3175,6 +3621,7 @@ SCHEMA_BUILDERS: dict[str, Callable[..., dict[str, Any]]] = {
     "validateResult": validate_result_schema,
     "traceResult": trace_result_schema,
     "qualifyResult": qualify_result_schema,
+    "readinessResult": readiness_result_schema,
 }
 
 SCHEMA_FRAGMENT_BUILDERS: dict[
@@ -3268,8 +3715,8 @@ def render_schema(
             operation_contract,
             operation_digest,
         )
-    elif document.name == "traceResult":
-        schema = trace_result_schema(
+    elif document.name in ("traceResult", "readinessResult"):
+        schema = SCHEMA_BUILDERS[document.name](
             document,
             profile_inventory,
             core_inventory,

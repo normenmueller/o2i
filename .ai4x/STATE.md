@@ -2,52 +2,53 @@
 
 - Observed: 2026-08-28 CEST
 - Work status: `ACTIVE`
-- Current Issue: `#97`
-- Current node: `final-changed-surface-review`
+- Current Issue: `#54`
+- Current node: `integration-revalidation`
 
 # Objective
 
-Make one explicit release of an exact accepted work unit authority-atomic through its stated target state, without repeated action-level Product Owner prompts.
+Implement Batch 9 Readiness under parent #45: explicit readiness input, binding, supplied-trace validation, promotion reconstruction, criteria, prerequisite-unavailable outcomes, Operation orchestration, the versioned machine contract, public API probes, performance probes, and tests.
 
 # Authority
 
-- Issue #97 owns this small Protected repository-governance correction and is open in Project status `In progress`.
-- The Product Owner explicitly authorized the exact accepted candidate on 2026-08-28 for commit, machine-user branch push, Pull Request publication, required remote verification and scope-internal correction with changed-surface review, evidence receipt, and Project `In review`.
-- After a project-local Codex-rule approach exposed unrelated baseline work, the Product Owner explicitly authorized withdrawing that technical integration and preserving the original focused governance candidate.
-- Scope is `.ai4x/BEHAVIOR.md`, `.ai4x/governance/guidelines.md`, the concise German projection in `CONTRIBUTING.md`, deterministic governance tests, and this handoff.
-- Full Access, `approval_policy = "never"`, other global Codex changes, CLI or Haskell correction, merge, Issue closure, Project `Done`, cleanup, release, tag, and further scope expansion remain excluded.
+- The Product Owner explicitly released #54 from `Backlog` through `Ready` for autonomous execution through Project status `In review`.
+- Authorized work includes capability-matched external Co-Authoring, implementation, deterministic verification, independent read-only reviews and corrections, commit, push, Pull Request publication, required remote CI, evidence publication, and Project administration.
+- Scope is Core Readiness plus Operation Readiness request, result, orchestration, schema and manifest row, public API probes, performance probes, tests, and this handoff.
+- Exclusions are merge, Issue closure, `Done`, cleanup, release, tag, Assessment, CLI, model, publication, protected-Terminology change, and scope expansion.
 
 # Material Risk
 
-- Atomic work-unit authority must not become standing repository authority or arise from Project status, assignment, CI, or branch existence.
-- Technical runtime permission must remain distinct from Product Owner governance authority without bypassing either control or recreating a redundant PO prompt.
-- Technical runtime permission must grant no amend, publication, or remote-write authority.
-- Review independence, deterministic verification, protected-branch enforcement, and verified machine identity remain unchanged.
+- Readiness must remain an independent optional evaluation over explicit input and a supplied complete trace; it must not become hidden validation, qualification, assessment, persistence, or authorization.
+- Core must own input decoding, binding, promotion reconstruction, criteria, and unavailable outcomes while Operation owns acquisition, preparation, provenance, orchestration, canonical encoding, and schema closure.
+- The evaluator must use addressed indices, preserve deterministic diagnostics and provenance, and satisfy the accepted `O(W_p + X_r + T_r + C_r + D_r log(1 + N_r) + Z_r)` work and `O(S_p + X_r + T_r + C_r + D_r + Z_r)` retention contract.
+- Integration of completed governance Issue #97 must not change accepted Readiness semantics, public APIs, performance, or authorship-versus-review separation.
 
 # Participants
 
-- Primary Gertrud: source synthesis, authority boundary, supplied remote facts, coordination, local handoff, review routing, and any later authorized publication or workflow administration.
-- External agent-governance Co-Author: actively designed and implemented the exact four-surface governance candidate, completed self-review with no unresolved finding, and provided no independent acceptance.
-- Independent agent-governance reviewer: independently and read-only accepted the original exact candidate with zero blocking and zero advisory findings.
+- Primary Gertrud: authority boundary, remote facts and workflow, coordination, synthesis, verification, review routing, publication, and handoff.
+- External Haskell/formal-methods Co-Author Beauvoir: completed active authorship of the Core Readiness boundary and the review-driven guard and Situation Anchor corrections with adversarial tests; excluded from independent acceptance.
+- Independent Core reviewer: accepted the exact final candidate with zero blocking and zero advisory findings after two correction cycles; read-only and separate from authorship.
+- Independent Operation reviewer: accepted the exact corrected schema candidate with zero blocking and zero advisory findings after one correction cycle; read-only and separate from authorship.
 
 # Verification
 
-- Clean basis is `a45aa961b8e2c4cf30bef5c51c408d394ac7ae31`, equal to observed `origin/trunk` when the worktree was created.
-- Issue #97 is observed open, assigned to `gertrud-ai4x`, and in Project status `In progress`.
-- Co-Authored candidate authoring is complete in `.ai4x/BEHAVIOR.md`, `.ai4x/governance/guidelines.md`, `CONTRIBUTING.md`, and `utl/governance/test_github_governance.py`.
-- Focused governance tests pass 37/37; canonical `./utl/verify.sh governance` passes governance 37/37 and routing 18/18; `git diff --check` passes.
-- Independent review reproduced every exact candidate hash and returned `accepted` with zero blocking and zero advisory findings after the isolated stale-handoff correction; role separation remains intact.
-- The temporary project-local Codex rule, verification-routing entries, and REUSE assignment are absent from the worktree and introduce no repository diff.
-- Exactly five candidate files are staged with no unstaged path; governance passes 37/37, routing passes 18/18, and the cached diff check is clean.
-- An exploratory complete-suite run exposed a pre-existing legacy `o2i-cli` dependency conflict and reproduced it against the clean basis; it is outside #97 and does not invalidate candidate-specific accepted evidence.
-- The publication approval was bound and consumed for this work unit, but the host technical control rejected both the primary agent's local `git commit` and the authorized user-local prefix rules. No Codex configuration changed; the candidate itself remains intact.
+- Original baseline is clean `trunk` revision `a45aa961b8e2c4cf30bef5c51c408d394ac7ae31`; current integration source is completed #97 merge commit `d672741f029f8dda2b752149d452e393a8ff4af5`.
+- Project #54 is observed `In review`; exact published candidate `a00d50719fbe62e57f15e872bf5bdfc11b6e11cc` and its original five-job green CI are recorded in evidence comment `5449413826`.
+- The candidate keeps Readiness in one opaque public Core boundary, binds explicit input against one well-formed graph, reconstructs promotion from the supplied complete trace and the exact semantic assessment, evaluates the closed 17-rule inventory, and exposes only total folds and projections.
+- The Operation candidate owns ordered acquisition and preparation, the four exact prerequisite stages, distinct binding and reconstruction unavailability, ready and not-ready outcomes, canonical provenance-bearing machine documents, and the exact generated schema and manifest contracts.
+- The Core corrections use dependency-specific guards, retain independent diagnostics, suppress foreign-derived diagnostics, and project the complete four-kind Situation Anchor union; the Operation schema now correlates binding context and homogeneous reconstruction reason families through full-document alternatives while retaining one manifest variant.
+- The serial canonical `./utl/verify.sh foundation` gate passed on the exact corrected candidate: licensing 576/576, contract suites 68/50/43, all package tests including Core Readiness 26 and Operation 172, repository Candidate Views, 25 external API contracts, 100% public Haddock including Core Readiness 103/103 and all Readiness Operation modules, independent source distributions, and global Haskell formatting.
+- Independent Core and Operation reviews both returned `accepted` with zero blocking and zero advisory findings; authorship-versus-review separation remains intact.
+- Independent Core and Operation reviews remain valid for unchanged Readiness surfaces under the changed-surface review rule.
+- Local integration reproduced exactly one textual conflict in this handoff; all #97 governance surfaces integrated without conflict and no Readiness source or test path changed.
+- Integrated `./utl/verify.sh governance` passes governance 37/37 and routing 18/18; integrated canonical `./utl/verify.sh foundation` passes the complete previously recorded Foundation inventory. Commit, push, renewed remote CI, and corrected evidence remain pending.
 
 # Next Action
 
-Obtain the final independent changed-surface verdict, then continue the already authorized commit and publication through Project `In review` if accepted.
+Create the integration commit, publish through the verified machine identity, require green remote CI, correct the evidence receipt, and restore PR #96 to a mergeable `In review` state.
 
 # Local Return Point
 
-- Branch: `chore/97-atomic-work-unit-authority`.
-- Worktree: repository-relative `.ai4x/local/worktrees/97-atomic-work-unit-authority` from the stable checkout.
-- Dirty scope: `.ai4x/STATE.md` plus the four accepted Issue-scoped governance candidate paths; no commit or branch publication has occurred.
+- Branch: `feat/54-readiness`.
+- Worktree: repository-relative `.ai4x/local/worktrees/54-readiness` from the stable checkout.
+- Merge source: `origin/trunk` at `d672741f029f8dda2b752149d452e393a8ff4af5`; only `.ai4x/STATE.md` required manual resolution.

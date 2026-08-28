@@ -85,7 +85,7 @@ class OperationContractCompilerTest(unittest.TestCase):
         first = self.render_contract()
         second = self.render_contract()
         self.assertEqual(first, second)
-        self.assertEqual(12, len(first))
+        self.assertEqual(13, len(first))
         self.assertIn(b"data GeneratedOperationRule", first[COMPILER.RULE_GENERATED])
         self.assertIn(
             b"adapterInventoryMachineSchema :: MachineSchema",
@@ -284,6 +284,25 @@ class OperationContractCompilerTest(unittest.TestCase):
         del fixture_schema["$id"]
         return schema, Draft202012Validator(fixture_schema)
 
+    def readiness_schema_fixture(self):
+        document = next(
+            document
+            for document in self.validate_contract()[3]
+            if document.name == "readinessResult"
+        )
+        schema = json.loads(
+            COMPILER.render_schema(
+                document,
+                self.profile_inventory,
+                self.core_inventory,
+                core_companion=self.core_companion,
+            )
+        )
+        Draft202012Validator.check_schema(schema)
+        fixture_schema = copy.deepcopy(schema)
+        del fixture_schema["$id"]
+        return schema, Draft202012Validator(fixture_schema)
+
     def test_qualification_subjects_schema_closes_prepared_discovery(self):
         schema, validator = self.qualification_schema_fixture(
             "qualificationSubjects"
@@ -443,6 +462,134 @@ class OperationContractCompilerTest(unittest.TestCase):
         unavailable["qualification"]["pairs"] = []
         unavailable["qualification"]["subjectUnavailable"] = []
         self.assertFalse(validator.is_valid(unavailable))
+
+    def test_readiness_schema_binds_dispositions_and_evidence_keys(self):
+        schema, validator = self.readiness_schema_fixture()
+        definitions = schema["$defs"]
+        ready = self.sample_schema_value(definitions["ready"], definitions)
+        self.assertTrue(validator.is_valid(ready))
+        self.assertEqual([], ready["readiness"]["diagnostics"])
+        self.assertEqual(
+            ["operation", "adapter", "profile", "core"],
+            [
+                contract["kind"]
+                for contract in ready["provenance"]["contracts"]
+            ],
+        )
+
+        prerequisite_schemas = definitions["prerequisiteRejected"]["oneOf"]
+        for index, stage in enumerate(
+            ("notation", "profile", "structure", "semantics")
+        ):
+            with self.subTest(prerequisite=stage):
+                prerequisite = self.sample_schema_value(
+                    prerequisite_schemas[index], definitions
+                )
+                self.assertTrue(validator.is_valid(prerequisite))
+                self.assertEqual(
+                    stage, prerequisite["execution"]["prerequisite"]
+                )
+                if stage in ("notation", "profile"):
+                    self.assertIsNone(prerequisite["context"]["readiness"])
+                    self.assertEqual(
+                        [], prerequisite["context"]["supplements"]
+                    )
+                else:
+                    self.assertEqual(
+                        "readiness",
+                        prerequisite["context"]["readiness"]["role"],
+                    )
+
+        not_ready = self.sample_schema_value(
+            definitions["notReady"], definitions
+        )
+        self.assertTrue(validator.is_valid(not_ready))
+        not_ready["readiness"]["disposition"] = "ready"
+        self.assertFalse(validator.is_valid(not_ready))
+
+        mismatched_key = self.sample_schema_value(
+            definitions["notReady"], definitions
+        )
+        planned_start_rule = next(
+            rule_id
+            for name, rule_id in self.core_companion[
+                "evidenceReadinessSemantics"
+            ]["ruleIds"].items()
+            if self.core_companion["evidenceReadinessSemantics"][
+                "evidenceKeyByRule"
+            ][name]
+            == "PlannedStartSlotKey"
+        )
+        mismatched_key["readiness"]["diagnostics"][0][
+            "ruleId"
+        ] = planned_start_rule
+        self.assertFalse(validator.is_valid(mismatched_key))
+
+        subject_unavailable = definitions["subjectUnavailable"]["oneOf"]
+        unavailable = self.sample_schema_value(
+            subject_unavailable[0], definitions
+        )
+        self.assertTrue(validator.is_valid(unavailable))
+        self.assertIn("suppliedTraceIdentity", unavailable["readiness"])
+        self.assertNotIn("graphIdentity", unavailable["readiness"])
+        reconstruction = self.sample_schema_value(
+            subject_unavailable[1], definitions
+        )
+        self.assertTrue(validator.is_valid(reconstruction))
+        self.assertIn("graphIdentity", reconstruction["readiness"])
+        self.assertIn("traceIdentity", reconstruction["readiness"])
+        self.assertNotIn(
+            "suppliedTraceIdentity", reconstruction["readiness"]
+        )
+        unavailable["readiness"]["reasons"] = []
+        self.assertFalse(validator.is_valid(unavailable))
+
+    def test_readiness_schema_rejects_impossible_unavailability_states(self):
+        schema, validator = self.readiness_schema_fixture()
+        definitions = schema["$defs"]
+        variants = definitions["subjectUnavailable"]["oneOf"]
+        binding = self.sample_schema_value(variants[0], definitions)
+        binding_group_schema = variants[0]["properties"]["context"][
+            "properties"
+        ]["supplements"]["items"]
+        binding_group = self.sample_schema_value(
+            binding_group_schema, definitions
+        )
+        binding_diagnostic_schema = binding_group_schema["properties"][
+            "diagnostics"
+        ]["items"]
+        binding_group["diagnostics"] = [
+            self.sample_schema_value(binding_diagnostic_schema, definitions)
+        ]
+        binding["context"]["supplements"].append(binding_group)
+        self.assertFalse(validator.is_valid(binding))
+
+        supplied_trace = self.sample_schema_value(variants[1], definitions)
+        reconstruction_group_schema = variants[1]["properties"]["context"][
+            "properties"
+        ]["supplements"]["items"]
+        reconstruction_group = self.sample_schema_value(
+            reconstruction_group_schema, definitions
+        )
+        reconstruction_diagnostic_schema = reconstruction_group_schema[
+            "properties"
+        ]["diagnostics"]["items"]
+        reconstruction_group["diagnostics"] = [
+            self.sample_schema_value(
+                reconstruction_diagnostic_schema, definitions
+            )
+        ]
+        supplied_trace["context"]["supplements"].append(
+            reconstruction_group
+        )
+        self.assertTrue(validator.is_valid(supplied_trace))
+
+        promotion = self.sample_schema_value(variants[2], definitions)
+        mixed_reasons = copy.deepcopy(supplied_trace)
+        mixed_reasons["readiness"]["reasons"].append(
+            promotion["readiness"]["reasons"][0]
+        )
+        self.assertFalse(validator.is_valid(mixed_reasons))
 
     def test_trace_schema_binds_gap_slots_and_endpoints_exactly(self):
         schema, validator = self.trace_schema_fixture()

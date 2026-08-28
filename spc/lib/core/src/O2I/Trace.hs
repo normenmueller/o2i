@@ -92,6 +92,7 @@ module O2I.Trace
   , TracePromotionAssessment
   , PromotedTraceableEffectModel
   , promoteTraceableEffectModel
+  , reconstructTraceableEffectModel
   , tracePromotionDisposition
   , tracePromotionUnavailableReasons
   , promotedTraceableEffectModel
@@ -104,7 +105,15 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Data.List.NonEmpty (NonEmpty)
 import qualified Data.Map.Strict as Map
 import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
-import O2I.Semantics (SemanticallyValidModel, StrategyFormulationAssessment)
+import O2I.Semantics
+  ( SemanticAssessment
+  , SemanticallyValidModel
+  , StrategyFormulationAssessment
+  , semanticAssessmentMatchesGraph
+  , strategyFormulationAssessments
+  , strategyFormulationSubject
+  )
+import qualified O2I.Semantics.Internal as SemanticsInternal
 import qualified O2I.Trace.Eval as Eval
 import O2I.Trace.Grammar
   ( TraceOwnershipSlot(..)
@@ -473,6 +482,34 @@ promoteTraceableEffectModel ::
   -> SuppliedCompleteTrace scope
   -> TracePromotionAssessment scope
 promoteTraceableEffectModel = Eval.promoteTraceInternal
+
+-- | Reconstruct the traced Strategy proof from the exact producing semantic
+-- assessment before applying the closed Trace promotion. Callers cannot
+-- select, substitute, or join a different strategy proof.
+reconstructTraceableEffectModel ::
+     SemanticallyValidModel scope
+  -> SemanticAssessment scope
+  -> SuppliedCompleteTrace scope
+  -> TracePromotionAssessment scope
+reconstructTraceableEffectModel model assessment supplied =
+  promoteTraceableEffectModel model selected supplied
+  where
+    strategy =
+      traceIdentityBinding (suppliedCompleteIdentity supplied) StrategyVariable
+    selected =
+      if semanticAssessmentMatchesGraph
+           (SemanticsInternal.semanticModelGraph model)
+           assessment
+        then case filter
+                    ((== strategy) . strategyFormulationSubject)
+                    (strategyFormulationAssessments assessment) of
+               candidate:_ -> candidate
+               [] -> unavailable
+        else unavailable
+    unavailable =
+      SemanticsInternal.StrategyFormulationUnavailable
+        strategy
+        SemanticsInternal.StrategyFormulationInputMissing
 
 -- | Classify promotion as rejected or accepted.
 tracePromotionDisposition ::

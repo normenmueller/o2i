@@ -141,7 +141,7 @@ qualificationSubjectsMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "22c3320fd35a58d30be229f1f1690035f18264a16b9fa36ef46d8b91ba123d0e"
+                "2955af496ca7c2e15d946b27407758980b95409930483b06d2344d06d144cdfb"
           }
     , machineSchemaVariantsValue =
         qualificationSubjectsPrerequisiteRejectedVariant
@@ -190,7 +190,7 @@ validateResultMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "86051e15e8328cea1d41042f254f0b7a2dcb5140f6aeff263018eff7d7902317"
+                "85ea7f0955303326d67340df20af1143025e4a35f98886763bb6726b4797f48e"
           }
     , machineSchemaVariantsValue =
         notationValidationAcceptedVariant
@@ -223,7 +223,7 @@ traceResultMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "b7d4d4bc200cc9ffc14fad05f084fe38afd9af4610a5559fbf6e2d24ff9edfd4"
+                "34b045904eb5bd80f4c1760d4b14036e0c024eb05d10fbc02aa87fd54b4239bb"
           }
     , machineSchemaVariantsValue =
         tracePrerequisiteRejectedVariant
@@ -247,10 +247,44 @@ qualifyResultMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "39cf57d70caddc8a452a55a4152782fe147ff496073eddeedf7d8b11230d6f3b"
+                "1a9ab41581da48bace1f6ac5fef249312a8e5c0bd94c3cec9a1e8836a8d11090"
           }
     , machineSchemaVariantsValue =
         qualifyPrerequisiteRejectedVariant :| [qualifyCompletedVariant]
+    }
+
+readinessPrerequisiteRejectedVariant :: SchemaVariant
+readinessPrerequisiteRejectedVariant =
+  SchemaVariant "readiness-prerequisite-rejected"
+
+readinessSubjectUnavailableVariant :: SchemaVariant
+readinessSubjectUnavailableVariant =
+  SchemaVariant "readiness-subject-unavailable"
+
+readinessNotReadyVariant :: SchemaVariant
+readinessNotReadyVariant = SchemaVariant "readiness-not-ready"
+
+readinessReadyVariant :: SchemaVariant
+readinessReadyVariant = SchemaVariant "readiness-ready"
+
+readinessResultMachineSchema :: MachineSchema
+readinessResultMachineSchema =
+  MachineSchema
+    { machineSchemaAuthorityValue =
+        SchemaAuthority
+          { schemaAuthorityIdentityValue =
+              SchemaIdentity "o2i.operation.readiness"
+          , schemaAuthorityVersionValue = SchemaVersion 1
+          , schemaAuthorityDigestValue =
+              SchemaDigest
+                "1a716ec294e56cc91e462cea837947e2bf69a1859f774f121bbdb6c5d5be7603"
+          }
+    , machineSchemaVariantsValue =
+        readinessPrerequisiteRejectedVariant
+          :| [ readinessSubjectUnavailableVariant
+             , readinessNotReadyVariant
+             , readinessReadyVariant
+             ]
     }
 
 diagnosticSchemaAuthority :: SchemaAuthority
