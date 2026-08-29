@@ -1,199 +1,78 @@
-# Contributing to O2I
+# Beiträge zu O2I
 
-Öffentliche Beiträge beginnen mit einem GitHub Issue. Das Issue beschreibt das Problem und den angestrebten Zustand; Pull Requests setzen ein ausreichend geklärtes Issue um. Ein ausdrücklicher PO-Auftrag darf klar begrenzte Routinearbeit auch ohne Issue autorisieren; der lokale Handoff hält Scope und Autorität für die Arbeitskontinuität fest.
+Öffentliche Beiträge beginnen mit einem GitHub Issue. Das Issue besitzt Problem, Ziel, Scope, Entscheidungen, Abhängigkeiten, Annahmekriterien und Review-Evidenz. Das öffentliche Project [O2I](https://github.com/users/normenmueller/projects/4) zeigt ausschließlich Arbeitsstatus und Product-Owner-Reihenfolge.
 
-Das öffentliche GitHub Project [O2I](https://github.com/users/normenmueller/projects/4) bildet Arbeitszustand und PO-Reihenfolge ab. Issues bleiben für Vertrag, materielle Entscheidungen, Abhängigkeiten, Reviews sowie offenen oder geschlossenen Zustand maßgebend.
+<!-- BEGIN GENERATED: ai4x-governance -->
+## Generierte Governance-Übersicht
 
-Für die Aufnahme ins Backlog genügt eine verständliche Idee mit Problem und grobem Ziel. Ein Agent bewertet kurz O2I-Passung, erwarteten Nutzen, mögliche Dopplungen, Änderungsklasse und Labels und erfasst einen geeigneten Vorschlag ohne Design- oder Umsetzungsfreigabe.
+> Automatisch aus `.ai4x/governance/policy.json` erzeugt; diese Projektion ist nicht normativ und wird niemals manuell editiert.
 
-## Risikogerechte Änderungspfade
+### Arbeitsstatus und Autorität
 
-Der notwendige Prozess richtet sich nach Wirkung, Reversibilität und Reichweite der tatsächlichen Änderung. Labels erleichtern das Finden, bestimmen aber nicht automatisch die Governance.
+Das Project zeigt Arbeitsstand und Product-Owner-Reihenfolge. `Ready` bedeutet ausschließlich: Der Issue-Vertrag ist geklärt, Voraussetzungen sind bekannt und kein bekannter Blocker verhindert den nächsten Schritt. Ein Status erzeugt niemals Autorität; beliebig viele Issues dürfen `Ready` sein, ihre vertikale Product-Owner-Reihenfolge bestimmt die Planung.
 
-### Routine
+Erlaubte Übergänge: `Backlog` → `Refinement`; `Refinement` → `Ready`; `Ready` → `In progress`; `In progress` → `In review`; `In progress` → `Paused`; `Paused` → `Ready`; `In review` → `Done`. Jeder nicht aufgeführte Übergang ist verboten.
 
-Routinearbeit ist lokal, reversibel und semantikerhaltend, beispielsweise ein fokussierter Bugfix, Refactoring ohne öffentlichen Vertragswechsel, Tests, Dokumentationskorrekturen, CI oder Tooling.
+Eine Mutation benötigt gleichzeitig einen aktuellen Subject-Grant, die ereignisspezifischen Guards, die deklarierte und verifizierte Ausführungsidentität sowie die technische Host- oder Tool-Berechtigung. Fehlt eine Bedingung oder bleibt sie unbekannt, wird nicht ausgeführt. Eine technische Berechtigung erzeugt oder widerruft keine Product-Owner-Autorität.
 
-Minimal erforderlich sind ein verständliches Issue oder ein ausdrücklicher PO-Auftrag, ein fokussierter Kandidat, die relevanten deterministischen Prüfungen und ein kritischer Selbstreview. Ein unabhängiger Reviewer kommt nur hinzu, wenn Tests und lokale Inspektion ein materielles Risiko nicht glaubwürdig schließen.
+Ein gebundener Grant bleibt bis zu seinem Zielzustand wirksam; nur die Freigabeantwort wird einmalig verbraucht. Vor einer Session-Grenze muss genau ein vollständiger, unveränderlicher Grant-Beleg im owning Issue aktuell beobachtbar und durch die vorgeschriebene Machine-User-Identität verifizierbar sein.
 
-### Signifikant
+### Entscheidungsereignisse
 
-Signifikante Arbeit verändert einen öffentlichen Vertrag, überschreitet Paket- oder Capability-Grenzen, führt eine Migration durch oder besitzt eine größere technische beziehungsweise nutzungsbezogene Reichweite, ohne geschützte fachliche Bedeutung zu verändern.
+`authority_request` fordert genau einen begrenzten Agenten-Grant an und akzeptiert allein die unmittelbar folgende, alleinstehende Antwort `Freigegeben.`. `product_owner_action` fordert genau eine Handlung des Product Owners und erzeugt keinen Grant. `cold_start` verwendet ausschließlich die drei festen Übergangsaktionen und erzeugt ebenfalls keinen Grant. Falsche, nicht angrenzende, überholte, rekonstruierte oder bereits verbrauchte Freigaben werden abgewiesen.
 
-Das Issue hält die relevante Designentscheidung und echte Alternativen fest. Erforderlich sind ausdrückliche Umsetzungsautorität, deterministische Verifikation und mindestens ein unabhängiger Reviewer mit passender Fähigkeit. Weitere Reviewer gibt es nur für materiell eigenständige Risiken.
+### Provenienz und Grenzen
 
-### Geschützt
+Product-Owner-Entscheidungsautorität, tatsächliche Inhaltsautorschaft, Erzeuger des Git-Commit-Objekts und verifizierte Remote-Publisher-Identität sind unabhängige Fakten. Eine Freigabe macht den Product Owner niemals automatisch zum Autor, Co-Author, Committer oder Publisher.
 
-Geschützte Arbeit verändert fachliche Terminologie oder Metamodellsemantik, normative Syntax, schwer umkehrbare Kompatibilitätszusagen, Release- oder Publikationsautorität, sicherheitsrelevantes Verhalten oder die Repository-Governance selbst.
+Ein gewöhnlicher Work-Unit-Grant bis `In review` umfasst insbesondere nicht: `pull-request.merge`, `issue.close`, `completed-work.cleanup`, `release.publish`, `tag.create`, `protected.publication`, `scope.expand`. Scope- oder Zielerweiterung und das Überschreiten eines Ausschlusses benötigen einen neuen exakten Grant.
+<!-- END GENERATED: ai4x-governance -->
 
-Sie benötigt eine ausdrückliche PO-Entscheidung, ein vollständiges aber kompaktes Issue, risikogerecht ausgewählte unabhängige Fachreviews, alle anwendbaren Prüfungen und ausdrückliche PO-Autorität für jede geschützte Publikation. Eine bereits für die exakte Arbeitseinheit erteilte Autorität wird für abgedeckte Einzelaktionen einschließlich Push nicht erneut angefragt. Digests und unveränderliche Manifeste werden nur für externe Autoritäten, Release-Artefakte, sicherheitsrelevante Evidenz oder einen anderen konkret benannten Integritätsbedarf verwendet.
+## Beitragsweg
 
-Unklarheit führt nach Prüfung höchstens in die nächstsicherere Klasse, nicht automatisch in den Maximalprozess. Kein Änderungspfad schwächt Tests, Typsicherheit, Reproduzierbarkeit, Dokumentationsqualität, Repository-Autonomie oder Publikationsprüfungen.
+Die Änderungsklasse richtet sich nach Wirkung, Reversibilität und Reichweite: `Routine` für lokale semantikerhaltende Arbeit, `Significant` für öffentliche oder capability-übergreifende Verträge und `Protected` für fachliche Bedeutung, normative Syntax, Sicherheit, Publikationsautorität oder Repository-Governance. Der kanonische risikogerechte Vertrag steht in [`.ai4x/governance/guidelines.md`](./.ai4x/governance/guidelines.md); die Issue-Formulare erfassen seine erforderlichen Felder.
 
-## Status
+Ein ausreichend geklärter Issue beschreibt einen frischen kohärenten Zielzustand und echte Nichtziele. Alte Abstraktionen erhalten weder Migrationsschicht noch Kompatibilitätsalias. Fachliche Bedeutung, Metamodell, konkrete Notation, Formalisierung, Implementierung und Verifikation bleiben in ihren jeweiligen Ownern getrennt.
 
-Das GitHub Project `O2I` zeigt Arbeitsstand und PO-Reihenfolge:
+Wenn spezialisiertes Urteil den Kandidaten materiell prägt, arbeitet ein capability-passender Co-Author bereits an Design und Implementierung mit. Jeder materielle Kandidat erhält die risikogerecht erforderlichen unabhängigen, read-only Reviews. Autoren und Implementierer akzeptieren ihren eigenen Kandidaten niemals unabhängig.
 
-- `Backlog`: verständliche Idee oder Problem;
-- `Refinement`: eine materielle Produkt- oder Designentscheidung wird vorbereitet; kein Pflichtschritt für Routinearbeit oder bereits eindeutige PO-Aufträge;
-- `Ready`: autorisiert und ohne Voraussetzung, die den nächsten Schritt blockiert;
-- `In progress`: aktive Konzeption, Umsetzung, Untersuchung, Reproduktion oder Korrektur;
-- `Paused`: echter Wartezustand mit genau einem Grund und einer Rückkehrbedingung;
-- `In review`: vollständiger Kandidat in Prüfung oder mit ausstehender PO-Publikationsentscheidung;
-- `Done`: akzeptiert, erforderlichenfalls remote verfügbar und verifiziert sowie geschlossen.
+Ein Review nennt exakten Gegenstand und Scope, Reviewer-Fähigkeit, Prüfungen, Findings und genau ein Verdict: `accepted`, `accepted with follow-ups` oder `changes required`. Jedes blockierende Finding enthält eine konkrete SOLL-Lösung. Numerische Review-Scores sind ausgeschlossen.
 
-```text
-Backlog -> Refinement -> Ready -> In progress -> In review -> Done
-                                      |
-                                      +-> Paused -> Ready
-```
+## Umsetzung
 
-Das Board bildet Autorität ab, erzeugt sie aber nicht. Ein ausdrücklicher PO-Auftrag kann klare Arbeit ohne zeremonielle Statusdurchläufe autorisieren. Project-Reihenfolge ersetzt keine Abhängigkeit; echte Voraussetzungen werden als native Issue Dependencies modelliert.
-
-Die ausdrückliche PO-Freigabe eines exakten Issues im Project-Status `Ready` ist eine atomare Autorität für die Arbeitseinheit und autorisiert Gertrud innerhalb seines akzeptierten Scopes standardmäßig bis `In review`: Aktivierung und `In progress`, passende Spezialisten und Co-Authors, Umsetzung, deterministische Verifikation, unabhängige Reviews und Korrekturen, Commit, Push, Pull Request, grüne erforderliche Remote-Prüfungen, Evidenzbelege und `In review`. Diese abgedeckten Aktionen werden ohne weitere aktionsbezogene PO-Freigabe ausgeführt. Der bloße Status `Ready` genügt nicht. Neue PO-Autorität ist nur nötig, wenn die nächste Aktion Scope oder Zielzustand erweitert, einen ausdrücklichen Ausschluss überschreitet oder außerhalb der gebundenen Autorität materielle Irreversibilität einführt. Die Freigabe umfasst weder eine solche Scope- oder Zielerweiterung oder umgangene Owner und Rollentrennung noch Merge, Issue-Schließung, `Done`, Branch- oder Worktree-Bereinigung, Release oder Tag, geschützte Publikation oder eine andere materiell irreversible Aktion außerhalb ihrer ausdrücklichen Grenze. Reviews, deterministische und Remote-Prüfungen, geschützte Branches sowie die verifizierte Machine-User-Identität bleiben unverändert erforderlich, erzeugen aber keinen neuen PO-Freigabepunkt.
-
-Host-, Sandbox- und Tool-Berechtigungen sind eigenständige technische Ausführungskontrollen. Eine erforderliche Berechtigung darf einen anderweitig autorisierten Befehl blockieren und wird niemals umgangen; ihre Erteilung oder Ablehnung erzeugt oder beschränkt jedoch keine PO-Governance-Autorität und rechtfertigt keine doppelte PO-Freigabeanfrage. Fehlt die verifizierte Machine-User-Identität, unterbleiben agentische Remote-Schreibvorgänge.
-
-Die ausdrückliche PO-Autorität für die Abschlussaktionen eines exakten Issues gilt nach ihrem genannten Scope und ihren Bedingungen. Umfasst sie auch die Bereinigung, wird nur dieser Bereinigungsanteil erst ausführbar, wenn das Issue akzeptiert, erforderlichenfalls publiziert und remote grün verifiziert, geschlossen sowie im Project `Done` ist. Gertrud muss dann sämtliche nicht mehr benötigten Issue-eigenen lokalen und Remote-Arbeitsbranches, verknüpften Worktrees, Stashes, jeden veralteten `.ai4x/local/ACTIVE.md`-Verweis und Scratch-Artefakte entfernen. Diese Aufräumpflicht ist Teil des autorisierten Abschlusses; die gewöhnliche Ready-Freigabe bis `In review` autorisiert sie nicht.
-
-Vor jeder Löschung werden alle Ziele exakt identifiziert und nur bereinigt, wenn ihre einzigartigen Änderungen auf dem maßgebenden publizierten Branch dauerhaft vorhanden oder ausdrücklich obsolet sind. Unmittelbar vor jeder einzelnen Löschung werden das Ziel erneut aufgelöst und seine stabile Identität sowie ein gegebenenfalls erwarteter Ref gegen den Vorabnachweis geprüft; jede Abweichung stoppt die Bereinigung vor dieser Mutation. Default-, geschützte, aktive, im Review befindliche, ungemergte oder der Wiederherstellung dienende Branches, aktive Worktrees und Handoffs sowie Stash- oder Scratch-Daten mit einzigartigem oder nutzereigenem Inhalt bleiben unangetastet; breite Wurzelziele, unaufgelöste Variablen, Globs und rekursive Dateisystemlöschungen sind ausgeschlossen. Remote-Branch-Löschungen benötigen die verifizierte Machine-User-Identität und eine Lease oder gleichwertige, an den erwarteten Ref gebundene bedingte Operation. Danach werden lokale und Remote-Bestände erneut inventarisiert und veralteter Project- oder ACTIVE-Zustand nur innerhalb derselben Autorität korrigiert.
-
-## Branchgebundener Repository-Handoff
-
-Jede `.ai4x/STATE.md` benennt mit genau einer kanonischen Quellzeile den Branch, auf dem ihr Handoff gilt:
-
-```text
-- Applies on branch: `<branch>`
-```
-
-Der Wert muss `git check-ref-format --branch` bestehen; jede zusätzliche mit `- Applies on branch:` beginnende Zeile macht die Bindung mehrfach oder missgebildet. Die Anwendbarkeit folgt genau dieser Reihenfolge: Ein vorhandener Active-Checkout-Verweis wird zuerst geprüft und aktiviert. Gelingt die Aktivierung nicht, ist das Ergebnis sofort `UNVERIFIED`, selbst wenn der aktuelle Branch exakt übereinstimmt. Eine erfolgreiche Aktivierung startet das vollständige Protokoll im Ziel-Checkout neu und trifft selbst noch keine Anwendbarkeitsentscheidung.
-
-Erst nach Pointer-Abwesenheit oder validierter Aktivierung mit Neustart werden Git-Metadaten, angehängter Branch, vollständiger Worktree-Status einschließlich ungetrackter Dateien und die exakte Branchbindung validiert. Ein exakter gültiger Branchgleichstand ist anwendbar; ein schmutziger gleichnamiger Checkout bleibt anwendbar und seine Änderungen werden geschützt. Ein gültig abweichender Handoff ist nur dann dormant, wenn kein Pointer vorhanden ist, der Checkout sauber auf `trunk` steht und die Bindung einen anderen Branch nennt. Alle übrigen Fälle bleiben `UNVERIFIED`.
-
-Dormanz bedeutet ausschließlich, dass der branchgebundene Handoff diesen Checkout nicht steuert; sie beweist weder Merge, Abschluss, Annahme, Issue-Schließung, Project-Status noch Autorität. Für die Cold-Start-Eignung ist sie neutral; die unabhängigen verbleibenden Repository- und maßgebenden Remote-Fakten müssen alle Abschlussbedingungen belegen.
-
-Ein so nachgewiesener dormanter Handoff ist erwartbarer getrackter Inhalt und weder Widerspruch noch Reparaturziel. Gertrud untersucht zu seiner Erklärung keine Branch-, Pull-Request- oder Git-Historie, aktualisiert den Handoff nicht nachträglich und verlangt keinen zusätzlichen Publikations-Commit; maßgebend bleiben das getrackte `trunk` sowie direkte Issue- und Project-Fakten, soweit sie für den nächsten Schritt wesentlich sind.
-
-Fehlende, mehrfache, missgebildete oder ungültige Branchbindungen, fehlende Git-Metadaten, ein Detached HEAD, ein abweichender Nicht-`trunk`-Branch oder ein schmutziger abweichender `trunk` belegen keine Dormanz. Ihre Anwendbarkeit bleibt `UNVERIFIED`; ohne Git-Metadaten bleibt der Bootstrap aus Repository-Dateien möglich, aber ein Cold Start erhält daraus keinen Sicherheitsnachweis.
-
-## PO-Entscheidungsvorlage
-
-Ein abschließender Übergabebericht beginnt mit einem kompakten Ergebnis: ein Ergebnissatz und nur bei Bedarf kurze Punkte für Status, Evidenz oder den noch offenen Punkt. Hashes, Befehlsausgaben, vollständige Prüfinventare und Umsetzungsnarrative gehören nur bei einem materiellen Risiko oder Fehler, auf ausdrückliche Nachfrage oder in einen verlinkten Beleg. Die Empfehlung wird im Ergebnis nicht wiederholt.
-
-Die Entscheidung erscheint unter einer eigenen Überschrift. Die Empfehlung selbst ist genau eine kurze, fett hervorgehobene Aktion; Gegenstand, Umfang, Zielzustand, angefragte Agentenautorität, Ausschlüsse und Grund folgen lesbar als sechs kurze Punkte in genau dieser Reihenfolge:
-
-```text
-## Entscheidung
-
-Empfehlung: **[eine konkrete nächste Aktion].**
-
-- Gegenstand: [eindeutiges Objekt]
-- Umfang: [begrenzte Aktion]
-- Zielzustand: [beobachtbares Ergebnis]
-- Angefragte Agentenautorität: [exakte neue Autorität oder none]
-- Ausgeschlossen: [klare Grenze]
-- Grund: [ein kurzer evidenzbasierter Satz]
-
-Alternativen: [materielle Alternative oder keine]
-
-Kaltstart: [recommended oder not recommended] — [erforderlicher Grund]
-
-Antwort zur Freigabe: `Freigegeben.`
-```
-
-Jeder abschließende Bericht, der eine autorisierte Arbeitseinheit beendet oder an einem PO-Entscheidungs- beziehungsweise Wartepunkt zurückgibt, endet mit genau einer solchen Entscheidung. Eine durch `Freigegeben.` ausführbare Empfehlung muss die exakte neue Agentenautorität nennen und darf `none` nicht verwenden; eine direkte PO-Aktion und ein empfohlener Cold Start müssen `none` verwenden und dürfen keine Agentenautorität erfinden. Ausschlüsse bleiben immer Pflicht. Die Vorlage nennt nur Alternativen, die Scope, Autorität, materielles Risiko, unumkehrbare Folgen oder die erforderliche Reihenfolge tatsächlich verändern, und andernfalls ausdrücklich keine. Zwischenstände, reine Antworten und autonomes Weiterarbeiten innerhalb bestehender Autorität benötigen keine Entscheidungsvorlage.
-
-Die Vorlage bewertet den Cold Start mit genau `recommended` oder `not recommended`. `recommended` setzt alle Sicherheitsbedingungen voraus und macht den Cold Start zur einzigen Empfehlung. Bei `not recommended` unterscheidet der Grund ausdrücklich zwischen einer fehlgeschlagenen Sicherheitsbedingung und einem sicheren, aber gegenüber der Empfehlung nachrangigen Cold Start.
-
-Das kanonische Feld `Approval:` erscheint im deutschen Bericht als `Antwort zur Freigabe:`; darauf folgt als exakte alleinstehende PO-Antwort `Freigegeben.`. Die Ausgabe `Freigabe: Freigegeben.` ist ausgeschlossen. Diese Antwort bindet genau einmal ausschließlich die eine Empfehlung der unmittelbar vorausgehenden, noch offenen Entscheidungsvorlage mit ihrem Gegenstand, Scope, Zielzustand und ihrer Autoritätsgrenze. Gertrud prüft diese Bindung unmittelbar vor der Ausführung und macht sie durch einen nicht autoritätserweiternden Beleg mit denselben vier Angaben und dem Zustand `consumed` sichtbar. `Consumed` verbraucht die Freigabeantwort, nicht die durch sie begründete begrenzte Autorität: Diese bleibt als atomare Autorität der Arbeitseinheit bis zu ihrem genannten Zielzustand wirksam, und jede abgedeckte Aktion erfolgt ohne weitere Entscheidungsvorlage oder PO-Freigabeanfrage. Eine fehlende oder mehrdeutige Vorlage, eine bereits verbrauchte Vorlage sowie eine durch eine spätere Vorlage oder neue materielle Fakten überholte Vorlage blockieren die erstmalige Bindung. Die Bindung gilt nur im aktuellen laufenden Austausch; sie wird weder aus einem Gesprächsprotokoll rekonstruiert noch über eine Session-Grenze getragen. Eine direkte PO-Aktion und ein empfohlener Cold Start werden nicht durch `Freigegeben.` gebunden.
-
-Beim empfohlenen Cold Start bleiben die sechs Kontextpunkte erhalten; auf die ausschließlich nicht imperativen Entscheidungsmetadaten folgen die unveränderten drei nummerierten Aktionsschritte des Cold-Start-Vertrags. Weitere imperative Sätze oder nummerierte Übergangsanweisungen sind ausgeschlossen, und der Bericht endet unmittelbar nach Schritt 3. Bei `not recommended` werden diese Schritte nicht ausgegeben.
-
-Native Sub-Issues werden nur genutzt, wenn sie einen mehrteiligen Liefergegenstand für den Product Owner sichtbar besser machen. Der Parent besitzt integrierten Scope, Autorität, Annahme und Publikation. Eine Story oder ein Batch besitzt genau einen begrenzten Liefergegenstand und den eigenen Open/Closed-Zustand, ergänzt aber keinen Produktscope und keine Autorität. Aktive Stories dürfen zur Sichtbarkeit im Project stehen.
-
-Ein bei der späteren Integration entdecktes Problem ist zunächst eine Akzeptanz-Challenge und keine rückwirkende Entwertung. Es wird gegen die exakte akzeptierte Revision und ihre Autorität reproduziert und danach als Vorgängerfehler, Verantwortung der aktuellen Arbeit, Vertragsunklarheit oder Nicht-Finding klassifiziert. Ein bestätigter Vorgängerfehler erhält standardmäßig ein neues verlinktes Korrektur-Issue; geschlossene Historie bleibt geschlossen, sofern der Product Owner keine andere Darstellung entscheidet.
+- Änderungen bleiben im exakten Issue- oder Routine-Grant; neue fachliche Ideen erhalten einen eigenen Issue.
+- Markdown verwendet eine Quellzeile pro Absatz. Unmittelbar vor jeder manuellen Änderung wird der Zielbereich frisch gelesen, danach werden Änderung und Diff geprüft.
+- `mdl/o2i.archimate` wird nie direkt durch Agenten editiert; Modelländerungen erfolgen schrittweise durch den Product Owner.
+- Commit-Messages sind kleingeschriebenes Englisch ohne Typpräfix. Issue-Commits führen `Refs #N`; agentische Commits zusätzlich den wahrheitsgetreuen Grant-Trailer.
+- Agentische Remote-Aktionen verwenden ausschließlich die verifizierte Identität `gertrud-ai4x`. Technische Berechtigung ersetzt keine Governance-Autorität.
+- Release-relevante Änderungen aktualisieren `CHANGELOG.md`.
+- Vor Commit laufen mindestens alle durch die Pfadmatrix ausgewählten lokalen Stufen; unbekannte oder gemeinsam genutzte Flächen wählen die vollständige Suite.
 
 ## Repository-Struktur
 
 | Pfad | Verantwortung |
 | --- | --- |
-| `o2i.md` | aktives White Paper und fachlicher Referenztext |
-| `o2i.pdf` | bleeding-edge PDF-Fassung des White Papers |
-| `o2i.pdf.manifest.json` | exakte Quellen- und Rendererbindung des PDF |
-| `wtf.md` | kurzer, bewusst direkter und nicht normativer Einstieg |
-| `acc/` | reproduzierbare TikZ-Quellen der White-Paper-Abbildungen |
-| `img/` | gerenderte Abbildungen für White Paper und Modellkommunikation |
+| `README.md`, `o2i.md`, `wtf.md` | Zweck, White Paper, fachliche Referenz und Einstieg |
 | `mdl/` | ArchiMate-Modell, Views und Review-Snapshots |
-| `spc/` | Haskell-Spezifikation, Profilvertrag, Inspection und CLI |
-| `utl/` | deterministische Repository-, Modell- und Publikationsprüfungen |
+| `spc/` | formale Haskell-Spezifikation, Profile, Adapter, Operation und CLI |
+| `acc/`, `img/` | reproduzierbare Abbildungsquellen und Renderings |
+| `.ai4x/` | hostneutraler agentischer Betriebsvertrag |
+| `utl/` | deterministische Repository-, Governance-, Modell- und Publikationsprüfungen |
 
-Die technische Architektur, Paketstruktur, Installation und Nutzung der Haskell-Codebasis beschreibt [`spc/README.md`](./spc/README.md).
+Die technische Haskell-Architektur, Installation und Nutzung beschreibt [`spc/README.md`](./spc/README.md).
 
-## White-Paper-Build
+## Verifikation und White-Paper-Build
 
-Das White Paper und alle TikZ-basierten Abbildungen werden reproduzierbar erzeugt:
-
-```sh
-./toPDF.sh
-```
-
-Das Skript rendert zunächst die Quellen aus `acc/` nach `img/`, ruft anschließend [`md2pdf`](https://github.com/normenmueller/md2pdf) auf und versiegelt die Quellen- und Rendererbindung in `o2i.pdf.manifest.json`.
-
-## Attribution
-
-Agentisch erstellte Commits führen den transparenten Machine User [`gertrud-ai4x`](https://github.com/gertrud-ai4x) als Autorin und den verantwortlichen Menschen als Committer. Gertrud wird einem Issue zugewiesen, sobald sie materielle Verantwortung für dessen Refinement, Koordination oder Umsetzung übernimmt; reine Advisory-Beteiligung genügt nicht. Agentische Issue-Kommentare und Board-Übergänge ab `Ready` erfolgen über diesen Account; PO-Freigaben, Releases und andere verantwortliche Entscheidungen bleiben dem Product Owner zugeordnet. Der Machine User kann unabhängige Review-Evidenz veröffentlichen, ersetzt oder imitiert jedoch keinen Reviewer.
-
-## Umsetzung
-
-- Änderungen bleiben im Scope des Issues oder des ausdrücklichen PO-Auftrags.
-- Neue fachliche Ideen erhalten ein eigenes Issue, bevor sie den Scope ändern.
-- Veröffentlichungstexte beschreiben ausschließlich den frischen SOLL-Zustand.
-- Normative O2I-Designs verwenden keine Workarounds, Kompatibilitätsschichten oder Migrationskonstrukte; ein unpassender Kern wird kohärent neu entworfen.
-- Commit Messages sind kleingeschriebenes Englisch ohne Typpräfix.
-- Issue-bezogene Commits führen `Refs #N` im Commit-Body; `Closes #N` bleibt dem tatsächlich abschließenden Commit vorbehalten.
-- Pull Requests referenzieren ihr Issue und benennen ausgeführte Prüfungen.
-
-## Review
-
-Ein Review dokumentiert den exakten Gegenstand und Scope, die Reviewerfähigkeit, ausgeführte Prüfungen, Findings und genau eines dieser Verdicts:
-
-- `accepted`: kein blockierendes Finding bleibt offen;
-- `accepted with follow-ups`: kein blockierendes Finding bleibt offen; separat erfasste Verbesserungen verhindern die Annahme nicht;
-- `changes required`: mindestens ein blockierendes Finding bleibt offen.
-
-Numerische Bewertungen entfallen. `10/10` ist ausschließlich die PO-Kurzform dafür, dass alle erforderlichen formalen Verdicts `accepted` lauten, weder blockierende noch beratende Findings offen sind, alle lokalen und entfernten Prüfungen des exakten Kandidaten grün sind und die Trennung von Autorschaft und Review gewahrt ist; `accepted with follow-ups` erfüllt diese Kurzform nicht. Reviewtiefe und Zahl der Reviewer folgen dem tatsächlichen Risiko. Routinearbeit benötigt nicht automatisch einen externen Reviewer; signifikante Arbeit mindestens einen passenden unabhängigen Reviewer; geschützte Arbeit risikogerecht ausgewählte unabhängige Fachreviews und die verantwortliche PO-Entscheidung.
-
-Reviewer bewerten kritisch, neutral, objektiv und unabhängig. Ein Review ist keine Annahmeautomatik. Jedes blockierende Finding benennt eine konkrete SOLL-Lösung und bleibt von optionalen Verbesserungen unterscheidbar.
-
-Spätere Änderungen benötigen nur für ihre geänderte Risikofläche einen neuen Review. Sie entwerten akzeptierte historische Evidenz für unveränderte Revisionen und Gesetze nicht. Korrekturen eines veröffentlichten Review-Belegs erfolgen durch einen neuen Kommentar statt durch das Umschreiben der Historie.
-
-## Verifikation
-
-Der vollständige lokale Repository-Vertrag verändert keine getrackten Arbeitsartefakte und lautet:
+Der vollständige lokale Vertrag lautet:
 
 ```sh
 ./utl/verify.sh
 ```
 
-Fokussierte Prüfungen mit `licensing`, `governance`, `model`, `haskell` oder `paper` sind während der Entwicklung vorgesehen. Die Lizenzstufe setzt den offiziellen REUSE-Validator 6.2.0 voraus; er kann mit `pipx install "reuse[charset-normalizer]==6.2.0"` installiert werden. Sie verlangt für jede getrackte Datei genau eine pfadbasierte Annotation in `REUSE.toml`, verbietet konkurrierende eingebettete SPDX-Angaben und ist deshalb bei jeder Änderung aktiv. Vor jedem Commit müssen mindestens alle von der Pfadmatrix betroffenen Stufen lokal erfolgreich sein; bei unbekannter oder gemeinsam genutzter Vertragsfläche gilt der vollständige Vertrag. Vor jedem Release-Tag ist `./utl/verify.sh` vollständig auszuführen. Die Paper-Stufe prüft zusätzlich die festgelegte `md2pdf`-Version, Quellenbindung sowie Seiten- und Textstruktur eines frischen Builds.
+Fokussierte Entwicklungsläufe verwenden `licensing`, `governance`, `model`, `foundation`, `haskell` oder `paper`. Die ausführbare Pfadmatrix liegt ausschließlich in `utl/verification/verification_scope.py`; Pull Requests zeigen alle fünf Remote-Checks, wobei nicht betroffene Stufen erfolgreich skippen.
 
-Direkte Branch-Pushes lösen keine GitHub Actions aus. Remote-Verifikation läuft ausschließlich für Pull Requests, manuelle Workflow-Aufrufe und Release-Tags mit dem Muster `o2i-v*`.
+Das White Paper und seine TikZ-Abbildungen werden reproduzierbar erzeugt und versiegelt:
 
-Bei jedem Lauf bestimmt `utl/verification/verification_scope.py` aus dem Git-Diff, welche Stufen betroffen sind. Die primäre Zuordnung lautet:
-
-| Änderung | Ausgeführte Stufen |
-| --- | --- |
-| jeder getrackte Pfad | Repository-Lizenzierung |
-| `.ai4x/` oder Governance-Werkzeuge | Governance |
-| `mdl/` oder Modellwerkzeuge | Modellverträge |
-| `spc/` | Haskell-Spezifikation |
-| White-Paper-Quellen oder Rendering | White Paper |
-| gemeinsam genutzte, unbekannte oder nicht eindeutig bestimmbare Pfade | alle Stufen |
-
-Gekoppelte Verträge ergänzen diese Primärzuordnung: fachbezogene `.ai4x/operations/` aktivieren zusätzlich ihre jeweilige Stufe, `spc/lib/core/src/` zusätzlich das White Paper und `spc/ctr/archimate/` zusätzlich Modellverträge und White Paper. Die vollständige ausführbare Matrix liegt ausschließlich im Selektor und seiner Vertragssuite.
-
-Bei Pull Requests bleiben alle fünf GitHub-Checks sichtbar. Eine nicht betroffene Stufe endet mit einem expliziten erfolgreichen Skip; eine betroffene Stufe führt unverändert den entsprechenden lokalen `verify.sh`-Vertrag aus. Manuelle Aufrufe und Release-Tags erzwingen stets den vollständigen Vertrag. Ein Release gilt erst nach erfolgreicher Remote-Verifikation als akzeptiert.
-
-`[skip ci]` ist kein regulärer Workflowmechanismus. Die repository-seitige Triggerregel entscheidet über Remote-Verifikation und hält Commit-Messages frei von wiederkehrender CI-Steuerung.
-
-Agentische Ausführung folgt zusätzlich dem hostneutralen Vertrag unter [`.ai4x/`](./.ai4x/).
+```sh
+./toPDF.sh
+```

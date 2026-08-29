@@ -103,6 +103,7 @@ verify_governance() {
   require python3
 
   info "Checking O2I change governance."
+  python3 -B utl/governance/ai4x_contract.py check
   python3 -B -m unittest discover \
     -s utl/governance -p 'test_github_governance.py'
   python3 -B -m unittest discover \

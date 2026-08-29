@@ -61,7 +61,7 @@ adapters, or Haddock.
 - The Co-Author contributes actively during both design and implementation and combines the exact metamodel, formal-methods, type-theory, idiomatic Haskell, API, or performance capabilities required by the assigned scope.
 - Assign small semantically coherent packages with explicit write scope and one
   independently verifiable result.
-- Each handoff records capability, role, target contract, owned paths, contribution, changed paths, checks, unresolved findings, authorship-versus-review separation, and whether commit permission exists. Record its current package and next action in `.ai4x/STATE.md`.
+- Each handoff records capability, role, target contract, owned paths, contribution, changed paths, checks, unresolved findings, authorship-versus-review separation, and whether commit permission exists. Record its current package and next action in `.ai4x/HANDOFF.md` only after applicability is proven.
 - A Co-Author or implementer never independently accepts their own candidate.
 - Preserve concurrent work. Do not permit commits or model edits unless the
   assignment explicitly authorizes them.

@@ -36,6 +36,7 @@ GOVERNANCE_PATHS = frozenset(
     {
         "AGENTS.md",
         "CONTRIBUTING.md",
+        "utl/governance/ai4x_contract.py",
         "utl/governance/test_github_governance.py",
     }
 )
