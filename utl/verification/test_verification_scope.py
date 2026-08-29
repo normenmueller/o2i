@@ -91,6 +91,10 @@ class VerificationPathMatrixTests(unittest.TestCase):
                 "haskell",
                 "paper",
             },
+            "utl/governance/ai4x_contract.py": {
+                "licensing",
+                "governance",
+            },
             "utl/haskell/check_cabal_plan.py": {"licensing", "haskell"},
             "README.md": {"licensing", "paper"},
             "wtf.md": {"licensing", "paper"},

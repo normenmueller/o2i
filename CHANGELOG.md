@@ -41,6 +41,7 @@
   and missing, overlapping, or competing embedded assignments.
 - Added lean, agentic-first admission, dependency, and independent-review
   governance for normative O2I Framework changes.
+- Added a bounded agent bootstrap, closed canonical JSON governance policy, generated agent and contributor projections, applicability-gated handoff loading, subject-bound durable authority grants, anti-replay decision events, truthful provenance rules, exact source budgets, and structural negative verification.
 - Added a strictly technical `spc/README.md` for the Haskell package
   architecture, build, verification, installation, and CLI usage without
   introducing a competing source of O2I subject-matter semantics.

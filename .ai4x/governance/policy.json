@@ -1,0 +1,667 @@
+{
+  "schema": "o2i.ai4x-governance-policy/v1",
+  "ruleOwners": [
+    {
+      "id": "bootstrap",
+      "owner": ".ai4x/BEHAVIOR.md",
+      "loadsWhen": "always",
+      "scope": "precedence, bounded startup, active-checkout pointer validation, handoff applicability, repository isolation, routing, and universal fail-closed safety"
+    },
+    {
+      "id": "applicability-envelope",
+      "owner": ".ai4x/STATE.md",
+      "loadsWhen": "bootstrap",
+      "scope": "one bounded closed header and no handoff body"
+    },
+    {
+      "id": "return-point",
+      "owner": ".ai4x/HANDOFF.md",
+      "loadsWhen": "handoff-applicable",
+      "scope": "branch-bound local return point"
+    },
+    {
+      "id": "repository-context",
+      "owner": ".ai4x/CONTEXT.md",
+      "loadsWhen": "repository-context-required-after-checkout-selection",
+      "scope": "stable identity, statement-class ownership, retrieval links, and durable product invariants"
+    },
+    {
+      "id": "capability-routing",
+      "owner": ".ai4x/TEAM.md",
+      "loadsWhen": "collaboration-or-review-required",
+      "scope": "capability routing and authorship-versus-review separation"
+    },
+    {
+      "id": "executable-governance",
+      "owner": ".ai4x/governance/policy.json",
+      "loadsWhen": "deterministic-evaluation-before-authority-decision-or-mutation",
+      "scope": "workflow transitions, actions, grants, mutation gates, events, provenance, rule registry, and budgets"
+    },
+    {
+      "id": "governance-practice",
+      "owner": ".ai4x/governance/guidelines.md",
+      "loadsWhen": "risk-classification-issue-project-review-or-remote-work",
+      "scope": "risk paths, Issue and Project ownership, reviews, and remote-work rules"
+    },
+    {
+      "id": "decision-rendering",
+      "owner": ".ai4x/governance/decision-handoff.md",
+      "loadsWhen": "product-owner-decision-or-control-handoff",
+      "scope": "event rendering and live approval binding"
+    },
+    {
+      "id": "session-continuity",
+      "owner": ".ai4x/governance/continuity.md",
+      "loadsWhen": "applicable-handoff-reconstruction-or-cold-start-evaluation",
+      "scope": "post-classification reconstruction and cold-start eligibility"
+    },
+    {
+      "id": "completed-work-cleanup",
+      "owner": ".ai4x/governance/cleanup.md",
+      "loadsWhen": "explicit-completion-and-cleanup-grant",
+      "scope": "cleanup preflight, destructive-action safeguards, deletion ordering, and postflight"
+    },
+    {
+      "id": "task-contracts",
+      "owner": ".ai4x/operations/*.md",
+      "loadsWhen": "matching-task-class",
+      "scope": "task-class-specific design, implementation, and quality rules"
+    }
+  ],
+  "loadRoutes": [
+    {
+      "from": "bootstrap",
+      "to": "applicability-envelope",
+      "justification": "classify the branch-bound handoff from a bounded header"
+    },
+    {
+      "from": "applicability-envelope",
+      "to": "return-point",
+      "justification": "load only after an applicable result"
+    },
+    {
+      "from": "bootstrap",
+      "to": "repository-context",
+      "justification": "retrieve stable repository context after checkout selection when required"
+    },
+    {
+      "from": "bootstrap",
+      "to": "capability-routing",
+      "justification": "select roles when collaboration or review is required"
+    },
+    {
+      "from": "bootstrap",
+      "to": "governance-practice",
+      "justification": "route governance work to its canonical practice contract"
+    },
+    {
+      "from": "governance-practice",
+      "to": "executable-governance",
+      "justification": "evaluate authority decisions and mutations deterministically"
+    },
+    {
+      "from": "governance-practice",
+      "to": "decision-rendering",
+      "justification": "render a Product Owner decision or control handoff"
+    },
+    {
+      "from": "applicability-envelope",
+      "to": "session-continuity",
+      "justification": "reconstruct only after applicability classification"
+    },
+    {
+      "from": "governance-practice",
+      "to": "completed-work-cleanup",
+      "justification": "perform cleanup only under its dedicated grant"
+    },
+    {
+      "from": "bootstrap",
+      "to": "task-contracts",
+      "justification": "load only contracts selected by the actual task class"
+    }
+  ],
+  "budgets": {
+    "wordDefinition": "one maximal non-whitespace Unicode sequence after strict UTF-8 decoding",
+    "byteDefinition": "exact source bytes of the worktree file or named Git blob",
+    "tokenCounts": "advisory-only",
+    "symlinkRule": "allow only one repository-contained tracked regular-file target with no broken, chained, cyclic, absolute, or escaping target; deduplicate unions by canonical repository-relative tracked target",
+    "surfaces": [
+      {
+        "id": "behavior-kernel",
+        "path": ".ai4x/BEHAVIOR.md",
+        "wordCap": 1000,
+        "byteCap": 8000
+      },
+      {
+        "id": "state-header",
+        "path": ".ai4x/STATE.md",
+        "wordCap": 80,
+        "byteCap": 1024
+      },
+      {
+        "id": "mandatory-bootstrap-union",
+        "members": [
+          "behavior-kernel",
+          "state-header"
+        ],
+        "wordCap": 1080,
+        "byteCap": 9024
+      },
+      {
+        "id": "context",
+        "path": ".ai4x/CONTEXT.md",
+        "wordCap": 600,
+        "byteCap": 5000
+      },
+      {
+        "id": "team",
+        "path": ".ai4x/TEAM.md",
+        "wordCap": 500,
+        "byteCap": 4200
+      },
+      {
+        "id": "applicable-handoff",
+        "path": ".ai4x/HANDOFF.md",
+        "wordCap": 600,
+        "byteCap": 5000
+      },
+      {
+        "id": "pre-task-union",
+        "members": [
+          "mandatory-bootstrap-union",
+          "context",
+          "team",
+          "applicable-handoff"
+        ],
+        "wordCap": 2780,
+        "byteCap": 23224
+      },
+      {
+        "id": "canonical-policy",
+        "path": ".ai4x/governance/policy.json",
+        "wordCap": 3000,
+        "byteCap": 32000
+      },
+      {
+        "glob": ".ai4x/governance/*.agent.md",
+        "id": "generated-governance-route",
+        "wordCap": 800,
+        "byteCap": 6500
+      },
+      {
+        "glob": ".ai4x/governance/*.md",
+        "id": "hand-authored-governance-contract",
+        "exclude": [
+          ".ai4x/governance/*.agent.md"
+        ],
+        "wordCap": 1200,
+        "byteCap": 10000
+      },
+      {
+        "glob": ".ai4x/operations/*.md",
+        "id": "operation-contract",
+        "wordCap": 1200,
+        "byteCap": 10000
+      },
+      {
+        "glob": ".agents/skills/*/SKILL.md",
+        "id": "repository-skill-router",
+        "wordCap": 180,
+        "byteCap": 1500
+      },
+      {
+        "glob": ".github/agents/*.agent.md",
+        "id": "github-agent-facade",
+        "wordCap": 120,
+        "byteCap": 1000
+      },
+      {
+        "id": "contributing-governance-block",
+        "path": "CONTRIBUTING.md",
+        "region": "generated-governance",
+        "wordCap": 1000,
+        "byteCap": 8000
+      },
+      {
+        "glob": ".ai4x/**/*",
+        "id": "complete-ai4x-tree",
+        "wordCap": 12000,
+        "byteCap": 96000
+      }
+    ]
+  },
+  "workflow": {
+    "states": [
+      "Backlog",
+      "Refinement",
+      "Ready",
+      "In progress",
+      "In review",
+      "Paused",
+      "Done"
+    ],
+    "readySemantics": "descriptive execution readiness only; the Issue contract is refined, prerequisites are clear, and no known blocker prevents the next action",
+    "readyCapacity": "unbounded",
+    "statusCreatesAuthority": false,
+    "productOwnerOrderingIsSchedulingAuthority": true,
+    "transitions": [
+      {
+        "id": "workflow.backlog-to-refinement",
+        "from": "Backlog",
+        "to": "Refinement"
+      },
+      {
+        "id": "workflow.refinement-to-ready",
+        "from": "Refinement",
+        "to": "Ready"
+      },
+      {
+        "id": "workflow.ready-to-in-progress",
+        "from": "Ready",
+        "to": "In progress"
+      },
+      {
+        "id": "workflow.in-progress-to-in-review",
+        "from": "In progress",
+        "to": "In review"
+      },
+      {
+        "id": "workflow.in-progress-to-paused",
+        "from": "In progress",
+        "to": "Paused"
+      },
+      {
+        "id": "workflow.paused-to-ready",
+        "from": "Paused",
+        "to": "Ready"
+      },
+      {
+        "id": "workflow.in-review-to-done",
+        "from": "In review",
+        "to": "Done"
+      }
+    ],
+    "unlistedTransition": "forbidden"
+  },
+  "actions": [
+    {
+      "id": "local.write",
+      "identityRequirement": "declared-agent-or-directly-evidenced-human"
+    },
+    {
+      "id": "git.commit.create",
+      "identityRequirement": "truthful-commit-actor"
+    },
+    {
+      "id": "project.transition",
+      "identityRequirement": "verified-machine-user-for-agent-action"
+    },
+    {
+      "id": "remote.issue-comment.create",
+      "identityRequirement": "verified-machine-user-for-agent-action"
+    },
+    {
+      "id": "remote.push",
+      "identityRequirement": "verified-machine-user-for-agent-action"
+    },
+    {
+      "id": "remote.pull-request.publish",
+      "identityRequirement": "verified-machine-user-for-agent-action"
+    },
+    {
+      "id": "remote.evidence.publish",
+      "identityRequirement": "verified-machine-user-for-agent-action"
+    },
+    {
+      "id": "issue.contract.mutate",
+      "identityRequirement": "verified-machine-user-for-agent-action"
+    },
+    {
+      "id": "issue.close",
+      "identityRequirement": "verified-machine-user-for-agent-action"
+    },
+    {
+      "id": "pull-request.merge",
+      "identityRequirement": "verified-authorized-publisher"
+    },
+    {
+      "id": "completed-work.cleanup",
+      "identityRequirement": "declared-local-and-verified-remote-identity-as-applicable"
+    },
+    {
+      "id": "release.publish",
+      "identityRequirement": "verified-authorized-publisher"
+    },
+    {
+      "id": "tag.create",
+      "identityRequirement": "verified-authorized-publisher"
+    },
+    {
+      "id": "protected.publication",
+      "identityRequirement": "verified-authorized-publisher"
+    },
+    {
+      "id": "scope.expand",
+      "identityRequirement": "new-product-owner-grant"
+    }
+  ],
+  "authorityGrant": {
+    "schema": "o2i.authority-grant/v1",
+    "requiredFields": [
+      "grantId",
+      "issuer",
+      "subject.repository",
+      "subject.issue",
+      "decisionPayloadSha256",
+      "expectedIssueBodySha256",
+      "actionIds",
+      "resourceIds",
+      "scope",
+      "targetState",
+      "exclusions",
+      "durableReceipt",
+      "validity",
+      "lifecycle"
+    ],
+    "immutableFields": [
+      "grantId",
+      "issuer",
+      "subject",
+      "decisionPayloadSha256",
+      "expectedIssueBodySha256",
+      "actionIds",
+      "resourceIds",
+      "scope",
+      "targetState",
+      "exclusions"
+    ],
+    "lifecycleStates": [
+      "active",
+      "fulfilled",
+      "revoked",
+      "superseded",
+      "invalidated"
+    ],
+    "activeUntil": [
+      "target-fulfilled",
+      "revoked",
+      "superseded",
+      "material-mismatch"
+    ],
+    "validityRules": [
+      "grant-id-is-unique-and-immutable",
+      "issuer-is-product-owner",
+      "repository-and-issue-match-current-subject",
+      "decision-payload-sha256-matches-approved-canonical-bytes",
+      "issue-body-sha256-matches-bind-time-precondition",
+      "action-and-resource-ids-contain-requested-mutation",
+      "scope-and-target-contain-requested-mutation",
+      "no-exclusion-is-crossed",
+      "durable-receipt-is-currently-verifiable-after-session-boundary"
+    ],
+    "invalidationConditions": [
+      "target-fulfilled",
+      "product-owner-revocation",
+      "newer-grant-supersession",
+      "subject-or-decision-digest-mismatch",
+      "issue-body-precondition-mismatch",
+      "scope-target-action-resource-or-exclusion-mismatch",
+      "durable-receipt-missing-ambiguous-malformed-or-unverifiable"
+    ],
+    "approvalConsumptionDoesNotConsumeGrant": true,
+    "issueBodyUnchangedByActivation": true,
+    "durableReceipt": {
+      "action": "remote.issue-comment.create",
+      "mustBeFirstAuthorizedRemoteWrite": true,
+      "immutableCommentRequired": true,
+      "requiredContent": [
+        "full-approved-canonical-decision-payload",
+        "decision-payload-sha256",
+        "expected-unchanged-issue-body-sha256",
+        "complete-grant-receipt"
+      ],
+      "sameSessionReadbackRequired": true,
+      "crossSessionReconstruction": {
+        "authoritySource": "current-observable-remote-state-only",
+        "requiresExactlyOneReceiptForGrantId": true,
+        "requiresVerifiedAuthorIdentity": true,
+        "requiresCanonicalBytesAndAllGrantFields": true,
+        "rejects": [
+          "zero-receipts",
+          "multiple-receipts",
+          "malformed-receipt",
+          "mismatched-receipt",
+          "superseded-grant",
+          "revoked-grant",
+          "unverifiable-receipt",
+          "transcript-source",
+          "historical-readback-only"
+        ]
+      }
+    }
+  },
+  "mutationGates": {
+    "allRequired": true,
+    "missingOrUnknown": "deny",
+    "gates": [
+      "current-matching-subject-grant",
+      "event-specific-guards",
+      "declared-and-verified-execution-identity",
+      "technical-host-or-tool-permission"
+    ],
+    "permissionDenialRevokesAuthority": false,
+    "identityFailureBlocksOnlyIdentityRequiringActions": true,
+    "policyTransitionMustBeEnumerated": true
+  },
+  "events": {
+    "authority_request": {
+      "createsGrant": true,
+      "requiredFields": [
+        "requestId",
+        "payloadFingerprint",
+        "subject",
+        "scope",
+        "targetState",
+        "requestedAuthority",
+        "exclusions",
+        "reason",
+        "alternatives",
+        "coldStart"
+      ],
+      "approvalReply": "Freigegeben.",
+      "bindingRequires": [
+        "unique-request-id",
+        "canonical-payload-fingerprint",
+        "immediately-following-standalone-exact-reply",
+        "exactly-one-open-request",
+        "still-current-request",
+        "unchanged-revalidated-facts",
+        "same-live-exchange",
+        "unused-request"
+      ],
+      "receiptRepeats": [
+        "subject",
+        "scope",
+        "targetState",
+        "exclusions"
+      ],
+      "requestLifecycle": [
+        "open",
+        "bound",
+        "consumed",
+        "rejected",
+        "superseded",
+        "invalidated"
+      ],
+      "rejectApprovalWhen": [
+        "superseded",
+        "facts-changed",
+        "already-consumed",
+        "non-adjacent",
+        "session-reconstructed",
+        "wrong-event",
+        "wrong-reply"
+      ]
+    },
+    "product_owner_action": {
+      "createsGrant": false,
+      "requiredFields": [
+        "eventId",
+        "subject",
+        "scope",
+        "targetState",
+        "requestedAgentAuthority",
+        "exclusions",
+        "reason",
+        "alternatives",
+        "coldStart",
+        "productOwnerAction"
+      ],
+      "requestedAgentAuthorityMustEqual": "none",
+      "forbiddenFields": [
+        "approvalReply",
+        "requestedAuthority"
+      ]
+    },
+    "cold_start": {
+      "createsGrant": false,
+      "requiredFields": [
+        "eventId",
+        "subject",
+        "scope",
+        "targetState",
+        "requestedAgentAuthority",
+        "exclusions",
+        "reason",
+        "alternatives",
+        "coldStart"
+      ],
+      "requestedAgentAuthorityMustEqual": "none",
+      "coldStartMustEqual": "recommended",
+      "fixedActionIds": [
+        "delete-current-session",
+        "start-fresh-session-without-resume-in-repository-root",
+        "say-literal-greeting"
+      ],
+      "fixedLiterals": [
+        "/delete",
+        "resume",
+        "Hi Gertrud, weiter geht’s!"
+      ],
+      "forbiddenFields": [
+        "approvalReply",
+        "productOwnerAction",
+        "requestedAuthority"
+      ]
+    }
+  },
+  "provenance": {
+    "independentFacts": [
+      "product-owner-decision-authority",
+      "actual-content-authorship",
+      "git-commit-object-creator",
+      "verified-remote-publisher-identity"
+    ],
+    "approvalNeverImplies": [
+      "author",
+      "co-author",
+      "committer",
+      "publisher"
+    ],
+    "agentIdentity": {
+      "name": "Gertrud ai4X",
+      "email": "311782161+gertrud-ai4x@users.noreply.github.com",
+      "remoteLogin": "gertrud-ai4x"
+    },
+    "agentAuthoredAndCommitted": {
+      "author": "agentIdentity",
+      "committer": "agentIdentity"
+    },
+    "humanIdentityUse": "direct-evidence-only",
+    "mixedAuthorship": "principal-actual-author-plus-truthful-co-authored-by-trailers",
+    "matrix": [
+      {
+        "case": "product-owner-approval",
+        "decisionAuthority": "Product Owner",
+        "contentAuthor": "no-inference",
+        "commitActor": "no-inference",
+        "remotePublisher": "no-inference"
+      },
+      {
+        "case": "agent-authored-and-committed",
+        "decisionAuthority": "current-grant-issuer",
+        "contentAuthor": "agentIdentity",
+        "commitActor": "agentIdentity",
+        "remotePublisher": "separately-verified-identity"
+      },
+      {
+        "case": "human-authored-or-committed",
+        "decisionAuthority": "current-grant-issuer",
+        "contentAuthor": "direct-evidence-only",
+        "commitActor": "direct-evidence-only",
+        "remotePublisher": "separately-verified-identity"
+      },
+      {
+        "case": "agent-remote-publication",
+        "decisionAuthority": "current-grant-issuer",
+        "contentAuthor": "independent-observed-fact",
+        "commitActor": "independent-observed-fact",
+        "remotePublisher": "verified-gertrud-ai4x"
+      }
+    ],
+    "issueScopedAgentCommitTrailers": [
+      "Refs #N",
+      "O2I-Grant: <grant-id>"
+    ],
+    "decisionAuthorityRecord": "owning-Issue-durable-grant-receipt"
+  },
+  "forbiddenActions": [
+    {
+      "id": "forbid-ready-as-authority",
+      "when": "Project-status-Ready-without-current-matching-grant",
+      "selector": "all-actions"
+    },
+    {
+      "id": "forbid-unlisted-transition",
+      "when": "workflow-transition-is-not-enumerated",
+      "actionIds": [
+        "project.transition"
+      ]
+    },
+    {
+      "id": "forbid-grant-activation-issue-mutation",
+      "when": "activating-or-materializing-a-grant",
+      "actionIds": [
+        "issue.contract.mutate"
+      ]
+    },
+    {
+      "id": "forbid-ordinary-execution-completion",
+      "when": "grant-target-ends-at-In-review",
+      "actionIds": [
+        "pull-request.merge",
+        "issue.close",
+        "completed-work.cleanup",
+        "release.publish",
+        "tag.create",
+        "protected.publication",
+        "scope.expand"
+      ]
+    },
+    {
+      "id": "forbid-gate-substitution",
+      "when": "identity-or-permission-is-present-without-another-required-gate",
+      "selector": "all-actions"
+    },
+    {
+      "id": "forbid-scope-or-exclusion-mismatch",
+      "when": "action-expands-scope-target-or-crosses-an-exclusion",
+      "selector": "current-action"
+    },
+    {
+      "id": "forbid-unverified-remote-identity",
+      "when": "agent-remote-action-without-required-verified-machine-user",
+      "selector": "remote-actions"
+    }
+  ]
+}

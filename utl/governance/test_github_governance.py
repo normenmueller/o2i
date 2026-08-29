@@ -1,1169 +1,852 @@
 #!/usr/bin/env python3
-"""Static tests for the lean GitHub-native governance contract."""
+"""Structural tests for the executable O2I agent-governance contract."""
 
 from __future__ import annotations
 
+import copy
+import itertools
+from pathlib import Path
 import re
 import subprocess
+import sys
+import tempfile
 import unittest
-from pathlib import Path
+from unittest import mock
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import ai4x_contract as contract  # noqa: E402
+
 
 ROOT = Path(__file__).resolve().parents[2]
 AGENTS = ROOT / "AGENTS.md"
 BEHAVIOR = ROOT / ".ai4x/BEHAVIOR.md"
 CONTEXT = ROOT / ".ai4x/CONTEXT.md"
-TEAM = ROOT / ".ai4x/TEAM.md"
-GOVERNANCE = ROOT / ".ai4x/governance/guidelines.md"
 STATE = ROOT / ".ai4x/STATE.md"
+HANDOFF = ROOT / ".ai4x/HANDOFF.md"
+TEAM = ROOT / ".ai4x/TEAM.md"
+POLICY = ROOT / ".ai4x/governance/policy.json"
+AGENT_PROJECTION = ROOT / ".ai4x/governance/policy.agent.md"
+GOVERNANCE = ROOT / ".ai4x/governance/guidelines.md"
+DECISIONS = ROOT / ".ai4x/governance/decision-handoff.md"
+CONTINUITY = ROOT / ".ai4x/governance/continuity.md"
+CLEANUP = ROOT / ".ai4x/governance/cleanup.md"
 CONTRIBUTING = ROOT / "CONTRIBUTING.md"
-HASKELL_AUTHORING = ROOT / ".ai4x/operations/haskell-authoring.md"
-HASKELL_REVIEW = ROOT / ".ai4x/operations/haskell-review.md"
-STRATEGY_REVIEW = ROOT / ".ai4x/operations/strategy-review.md"
 FRAMEWORK_FORM = ROOT / ".github/ISSUE_TEMPLATE/framework-change.yml"
 MAINTENANCE_FORM = ROOT / ".github/ISSUE_TEMPLATE/maintenance.yml"
 FORM_CONFIG = ROOT / ".github/ISSUE_TEMPLATE/config.yml"
-GITIGNORE = ROOT / ".gitignore"
-SKILLS = {
-    "o2i-formalization": (
-        ROOT / ".agents/skills/o2i-formalization/SKILL.md",
-        ".ai4x/operations/haskell-authoring.md",
-    ),
-    "o2i-modeling": (
-        ROOT / ".agents/skills/o2i-modeling/SKILL.md",
-        ".ai4x/operations/modeling.md",
-    ),
-    "o2i-strategy": (
-        ROOT / ".agents/skills/o2i-strategy/SKILL.md",
-        ".ai4x/operations/strategy-review.md",
-    ),
-    "o2i-publication": (
-        ROOT / ".agents/skills/o2i-publication/SKILL.md",
-        ".ai4x/operations/publication.md",
-    ),
-    "o2i-independent-review": (
-        ROOT / ".agents/skills/o2i-independent-review/SKILL.md",
-        ".ai4x/governance/guidelines.md",
-    ),
-}
-AGENT_PROFILES = tuple(sorted((ROOT / ".github/agents").glob("*.agent.md")))
-REVIEW_CONTRACTS = (GOVERNANCE, CONTRIBUTING, HASKELL_REVIEW, STRATEGY_REVIEW)
+SKILLS = tuple(sorted((ROOT / ".agents/skills").glob("*/SKILL.md")))
+FACADES = tuple(sorted((ROOT / ".github/agents").glob("*.agent.md")))
+OPERATIONS = tuple(sorted((ROOT / ".ai4x/operations").glob("*.md")))
 PUBLIC_CONTRACTS = (
     AGENTS,
     BEHAVIOR,
     CONTEXT,
-    TEAM,
-    GOVERNANCE,
     STATE,
+    HANDOFF,
+    TEAM,
+    POLICY,
+    AGENT_PROJECTION,
+    GOVERNANCE,
+    DECISIONS,
+    CONTINUITY,
+    CLEANUP,
     CONTRIBUTING,
-    HASKELL_AUTHORING,
-    HASKELL_REVIEW,
-    STRATEGY_REVIEW,
-    *(path for path, _ in SKILLS.values()),
+    *SKILLS,
+    *FACADES,
+    *OPERATIONS,
 )
 
 
 def read(path: Path) -> str:
-    """Read one UTF-8 contract."""
-    return path.read_text(encoding="utf-8")
+    """Read one strict UTF-8 repository contract."""
+    return path.read_text(encoding="utf-8", errors="strict")
 
 
 def issue_form_fields(path: Path) -> dict[str, bool]:
-    """Return each issue-form field and whether it is required."""
+    """Return Issue-form fields and whether each is required."""
     fields: dict[str, bool] = {}
     for block in re.split(r"(?m)^  - type: ", read(path))[1:]:
         identifier = re.search(r"(?m)^    id: ([a-z][a-z0-9_-]*)$", block)
-        if identifier is None:
-            continue
-        required = re.search(r"(?m)^ {6,}required: true$", block)
-        fields[identifier.group(1)] = required is not None
+        if identifier is not None:
+            fields[identifier.group(1)] = bool(
+                re.search(r"(?m)^ {6,}required: true$", block)
+            )
     return fields
 
 
-def handoff_branch_binding(content: str) -> tuple[str, str | None]:
-    """Extract and validate one canonical branch binding from raw STATE text."""
-    prefix = "- Applies on branch:"
-    occurrences = [line for line in content.splitlines() if line.startswith(prefix)]
-    if not occurrences:
-        return "missing", None
-    if len(occurrences) != 1:
-        return "duplicate", None
-    canonical = re.fullmatch(r"- Applies on branch: `([^`\r\n]+)`", occurrences[0])
-    if canonical is None:
-        return "malformed", None
-    branch = canonical.group(1)
-    result = subprocess.run(
-        ["git", "check-ref-format", "--branch", branch],
-        cwd=ROOT,
-        check=False,
-        capture_output=True,
-    )
-    if result.returncode != 0:
-        return "invalid", branch
-    return "valid", branch
+def policy_copy() -> dict[str, object]:
+    """Return one mutable exact copy of the canonical policy."""
+    return copy.deepcopy(dict(contract.load_policy()))
 
 
-def classify_handoff_fixture(
-    content: str,
-    *,
-    git_metadata: bool,
-    pointer_outcome: str,
-    observed_branch: str | None,
-    clean: bool,
-) -> str:
-    """Classify raw handoff evidence through the normative ordered ladder."""
-    if pointer_outcome == "unresolved":
-        return "UNVERIFIED"
-    if pointer_outcome not in {"absent", "activated_restart"} or not git_metadata:
-        return "UNVERIFIED"
-    binding_state, handoff_branch = handoff_branch_binding(content)
-    if binding_state != "valid" or handoff_branch is None or observed_branch is None:
-        return "UNVERIFIED"
-    if observed_branch == handoff_branch:
-        return "applicable"
-    if (
-        pointer_outcome == "absent"
-        and observed_branch == "trunk"
-        and clean
-        and handoff_branch != "trunk"
-    ):
-        return "dormant"
-    return "UNVERIFIED"
-
-
-class GitHubGovernanceContractTests(unittest.TestCase):
-    """Keep human, agent, intake, and handoff contracts aligned."""
+class PolicyShapeTests(unittest.TestCase):
+    """Keep the canonical policy closed, linked, and projection-complete."""
 
     def test_required_surfaces_exist(self) -> None:
-        for path in (
-            AGENTS,
-            BEHAVIOR,
-            CONTEXT,
-            TEAM,
-            GOVERNANCE,
-            STATE,
-            CONTRIBUTING,
-            GITIGNORE,
-            HASKELL_AUTHORING,
-            HASKELL_REVIEW,
-            STRATEGY_REVIEW,
+        for path in PUBLIC_CONTRACTS + (
             FRAMEWORK_FORM,
             MAINTENANCE_FORM,
             FORM_CONFIG,
-            *(path for path, _ in SKILLS.values()),
-            *AGENT_PROFILES,
+            ROOT / "utl/governance/ai4x_contract.py",
         ):
             with self.subTest(path=path):
                 self.assertTrue(path.is_file())
 
-    def test_agents_facade_is_the_canonical_behavior_symlink(self) -> None:
-        self.assertTrue(AGENTS.is_symlink())
-        self.assertEqual(Path(".ai4x/BEHAVIOR.md"), AGENTS.readlink())
-        self.assertEqual(BEHAVIOR.resolve(), AGENTS.resolve())
+    def test_policy_is_strict_canonical_json(self) -> None:
+        policy = contract.load_policy()
+        self.assertEqual(contract.POLICY_SCHEMA, policy["schema"])
+        self.assertEqual(POLICY.read_bytes(), contract.canonical_policy_bytes(policy))
 
-    def test_non_core_ai4x_contract_names_are_lowercase(self) -> None:
-        for directory in ("governance", "operations", "rules"):
-            root = ROOT / ".ai4x" / directory
-            if not root.is_dir():
-                continue
-            for path in root.rglob("*"):
-                if path.is_file() and not path.name.startswith("."):
-                    with self.subTest(path=path):
-                        self.assertEqual(path.name, path.name.lower())
-
-    def test_authority_is_recorded_once(self) -> None:
-        content = read(GOVERNANCE)
-        for term in (
-            "A GitHub Issue owns",
-            "Native Issue Dependencies own",
-            "owns workflow status and Product Owner ordering",
-            "owns no product contract or acceptance fact",
-            "concise repository-local handoff",
-            "Git commits and deterministic checks own",
-            "Issue-free Routine work",
-        ):
-            with self.subTest(term=term):
-                self.assertIn(term, content)
-
-    def test_issue_free_work_is_a_bounded_routine_exception(self) -> None:
-        self.assertIn("current Issue or `NONE`", read(BEHAVIOR))
-        self.assertIn("Issue-free Routine work", read(BEHAVIOR))
-        self.assertIn("Issue-free Routine work", read(GOVERNANCE))
-        self.assertIn("Routinearbeit auch ohne Issue", read(CONTRIBUTING))
-        self.assertIn("Scope des Issues oder des ausdrücklichen PO-Auftrags", read(CONTRIBUTING))
-
-    def test_change_paths_are_risk_proportionate(self) -> None:
-        agent = read(GOVERNANCE)
-        human = read(CONTRIBUTING)
-        for term in (
-            "### Routine",
-            "### Significant",
-            "### Protected",
-            "impact, reversibility, and blast radius",
-            "author self-review",
-            "at least one independent reviewer",
-            "explicit Product Owner decision",
-            "select the next safer path",
-        ):
-            with self.subTest(surface="agent", term=term):
-                self.assertIn(term, agent)
-        for term in (
-            "### Routine",
-            "### Signifikant",
-            "### Geschützt",
-            "Wirkung, Reversibilität und Reichweite",
-            "kritischer Selbstreview",
-            "mindestens ein unabhängiger Reviewer",
-            "ausdrückliche PO-Entscheidung",
-            "nächstsicherere Klasse",
-        ):
-            with self.subTest(surface="human", term=term):
-                self.assertIn(term, human)
-
-    def test_quality_controls_are_not_waived(self) -> None:
-        agent = read(GOVERNANCE)
-        human = read(CONTRIBUTING)
-        for term in (
-            "Never weaken deterministic verification",
-            "type safety",
-            "repository autonomy",
-            "security",
-            "publication checks",
-        ):
-            with self.subTest(surface="agent", term=term):
-                self.assertIn(term, agent)
-        for term in (
-            "Kein Änderungspfad schwächt Tests",
-            "Typsicherheit",
-            "Reproduzierbarkeit",
-            "Repository-Autonomie",
-            "Publikationsprüfungen",
-        ):
-            with self.subTest(surface="human", term=term):
-                self.assertIn(term, human)
-
-    def test_workflow_is_visible_without_ceremonial_hops(self) -> None:
-        for path in (GOVERNANCE, CONTRIBUTING):
-            content = read(path)
-            with self.subTest(path=path):
-                for status in (
-                    "Backlog",
-                    "Refinement",
-                    "Ready",
-                    "In progress",
-                    "Paused",
-                    "In review",
-                    "Done",
-                ):
-                    self.assertIn(f"`{status}`", content)
-                self.assertIn("Backlog -> Refinement -> Ready -> In progress", content)
-        self.assertIn("not a mandatory stop", read(GOVERNANCE))
-        self.assertIn("kein Pflichtschritt", read(CONTRIBUTING))
-        self.assertIn("Board reflects work; it does not manufacture authority", read(GOVERNANCE))
-        self.assertIn("Board bildet Autorität ab, erzeugt sie aber nicht", read(CONTRIBUTING))
-
-    def test_ready_issue_release_authority_reaches_in_review_and_stops(self) -> None:
-        for path in (BEHAVIOR, GOVERNANCE):
-            content = read(path)
-            with self.subTest(path=path):
-                for term in (
-                    "explicit Product Owner release of one exact Issue in Project status `Ready`",
-                    "within that Issue's accepted scope",
-                    "carry it through `In review`",
-                    "capability-matched specialist and Co-Author coordination",
-                    "deterministic verification",
-                    "independent review and corrections",
-                    "commit, push, Pull Request publication",
-                    "green required remote verification",
-                    "evidence receipts",
-                    "Project status `Ready` alone creates no authority",
-                    "scope or target expansion",
-                    "bypassing statement owners or required role separation",
-                    "merge, Issue closure, Project `Done`",
-                    "branch or worktree cleanup",
-                    "release or tag",
-                    "protected publication",
-                    "required machine identity is unavailable or unverified",
-                ):
-                    self.assertIn(term, content)
-
-        human = read(CONTRIBUTING)
-        for term in (
-            "ausdrückliche PO-Freigabe eines exakten Issues im Project-Status `Ready`",
-            "innerhalb seines akzeptierten Scopes standardmäßig bis `In review`",
-            "Commit, Push, Pull Request",
-            "Der bloße Status `Ready` genügt nicht",
-            "Merge, Issue-Schließung, `Done`",
-            "Branch- oder Worktree-Bereinigung",
-            "geschützte Publikation",
-            "verifizierte Machine-User-Identität",
-        ):
-            with self.subTest(surface="human", term=term):
-                self.assertIn(term, human)
-
-    def test_work_unit_authority_is_atomic_without_weakening_controls(self) -> None:
-        behavior = read(BEHAVIOR)
-        governance = read(GOVERNANCE)
-        human = read(CONTRIBUTING)
-
-        for term in (
-            "one atomic work-unit authority through its stated target",
-            "not a sequence of action-level approvals",
-            "each covered action proceeds without another decision handoff or Product Owner prompt",
-            "`Consumed` applies to the approval reply",
-            "not to the bounded authority it establishes",
-            "explicit exclusion",
-            "material irreversibility outside the bound authority",
-            "Push only when explicit Product Owner authority covers it",
-            "without an action-level push prompt",
-        ):
-            with self.subTest(surface="behavior", term=term):
-                self.assertIn(term, behavior)
-
-        for term in (
-            "one atomic work-unit authority",
-            "without another action-level Product Owner prompt",
-            "Fresh Product Owner authority is required only",
-            "expands the stated scope or target",
-            "crosses an explicit exclusion",
-            "introduces material irreversibility outside the bound authority",
-            "required review, deterministic and remote verification",
-            "protected-branch controls",
-            "without becoming a new approval point",
-        ):
-            with self.subTest(surface="governance", term=term):
-                self.assertIn(term, governance)
-
-        for term in (
-            "atomare Autorität für die Arbeitseinheit",
-            "ohne weitere aktionsbezogene PO-Freigabe",
-            "Neue PO-Autorität ist nur nötig",
-            "Scope oder Zielzustand erweitert",
-            "ausdrücklichen Ausschluss überschreitet",
-            "materielle Irreversibilität einführt",
-            "Reviews, deterministische und Remote-Prüfungen",
-            "geschützte Branches",
-            "keinen neuen PO-Freigabepunkt",
-            "`Consumed` verbraucht die Freigabeantwort",
-            "nicht die durch sie begründete begrenzte Autorität",
-        ):
-            with self.subTest(surface="human", term=term):
-                self.assertIn(term, human)
-
-        self.assertNotIn("- Do not push unless the user explicitly requests it.", behavior)
-        self.assertNotIn(
-            "gesonderte PO-Freigabe für Veröffentlichung oder Push", human
+    def test_duplicate_json_members_are_rejected_at_every_depth(self) -> None:
+        fixtures = (
+            b'{"schema":"a","schema":"b"}',
+            b'{"outer":{"id":"a","id":"b"}}',
         )
+        for source in fixtures:
+            with self.subTest(source=source), self.assertRaises(contract.ContractError):
+                contract.decode_json(source, origin="fixture")
 
-    def test_technical_permission_is_separate_and_never_bypassed(self) -> None:
-        behavior = read(BEHAVIOR)
-        governance = read(GOVERNANCE)
-        human = read(CONTRIBUTING)
-
-        for term in (
-            "independent technical execution control",
-            "must never be bypassed",
-            "neither creates nor narrows Product Owner governance authority",
-            "never justifies a duplicate Product Owner approval prompt",
-        ):
-            with self.subTest(surface="behavior", term=term):
-                self.assertIn(term, behavior)
-
-        for term in (
-            "independent technical execution controls",
-            "must never be bypassed",
-            "neither creates nor narrows Product Owner governance authority",
-            "never justifies a duplicate Product Owner approval prompt",
-        ):
-            with self.subTest(surface="governance", term=term):
-                self.assertIn(term, governance)
-
-        for term in (
-            "eigenständige technische Ausführungskontrollen",
-            "wird niemals umgangen",
-            "erzeugt oder beschränkt jedoch keine PO-Governance-Autorität",
-            "rechtfertigt keine doppelte PO-Freigabeanfrage",
-        ):
-            with self.subTest(surface="human", term=term):
-                self.assertIn(term, human)
-
-    def test_completed_issue_cleanup_is_mandatory_bounded_and_audited(self) -> None:
-        governance = read(GOVERNANCE).split(
-            "### Completed-Issue Cleanup Authority", 1
-        )[1].split("## Epics, Stories, And Batches", 1)[0]
-        behavior = "Explicit Product Owner authority" + read(BEHAVIOR).split(
-            "Explicit Product Owner authority", 1
-        )[1].split("`.ai4x/STATE.md`", 1)[0]
-        for path, content in ((BEHAVIOR, behavior), (GOVERNANCE, governance)):
-            with self.subTest(path=path):
-                for term in (
-                    "accepted",
-                    "published",
-                    "remote",
-                    "closed",
-                    "Project status `Done`",
-                    "Product Owner authority for one exact Issue's completion actions",
-                    "only the cleanup portion becomes executable",
-                    "remove all no-longer-needed Issue-scoped local and remote working branches",
-                    "linked worktrees",
-                    "Issue-owned stashes",
-                    "stale `.ai4x/local/ACTIVE.md` pointer",
-                    "Issue-owned scratch artifacts",
-                    "ordinary Ready-Issue release through `In review` never authorizes",
-                    "durable on the owning published branch or intentionally obsolete",
-                    "Immediately before each",
-                    "re-resolve",
-                    "stable identity plus any expected ref against the preflight",
-                    "any mismatch stops cleanup",
-                    "default or protected branch",
-                    "active, review, unmerged, or recovery branch",
-                    "active worktree",
-                    "unique or user-owned",
-                    "outside the completed Issue's scope",
-                    "unresolved variable, glob, or recursive",
-                    "verified machine identity",
-                    "conditional operation bound to the expected ref",
-                    "re-inventory local and remote",
-                    "only within the same explicit authority",
-                ):
-                    self.assertIn(term, content)
-
-        for term in (
-            "completion actions remains effective according to its stated scope and conditions",
-            "only the cleanup portion becomes executable after the Issue is accepted, published when publication is required, green at its required remote verification boundary, closed, and in Project status `Done`",
-            "Cleanup is part of the authorized completion, not an optional chat convention",
-            "one read-only preflight",
-            "enumerates every exact candidate by stable identity and expected ref where applicable",
-            "Immediately before each individual deletion",
-            "Use scoped native Git operations",
-            "never substitute a broad direct filesystem deletion",
-            "Clear a stale active-checkout pointer before removing the exact worktree it names",
-            "remove a linked worktree before its local branch",
-            "remote branch deletion only through the verified machine identity and with a lease or equivalent conditional operation bound to the expected ref",
-            "stops cleanup at the safe boundary",
-            "every authorized target is absent and every protected or unrelated target remains",
-        ):
-            with self.subTest(surface="operational", term=term):
-                self.assertIn(term, governance)
-
-        self.assertIn(
-            "completion actions applies according to its stated scope",
-            behavior,
-        )
-        self.assertIn(
-            "only the cleanup portion becomes executable after the Issue is accepted, published when required, remotely verified, closed, and in Project status `Done`",
-            behavior,
-        )
-        self.assertIn(
-            "Remote branch deletion additionally requires the verified machine identity and a lease or conditional operation bound to the expected ref",
-            behavior,
-        )
-
-        human = read(CONTRIBUTING)
-        for term in (
-            "PO-Autorität für die Abschlussaktionen eines exakten Issues gilt nach ihrem genannten Scope und ihren Bedingungen",
-            "nur dieser Bereinigungsanteil erst ausführbar",
-            "muss dann sämtliche nicht mehr benötigten Issue-eigenen lokalen und Remote-Arbeitsbranches",
-            "gewöhnliche Ready-Freigabe bis `In review` autorisiert sie nicht",
-            "Unmittelbar vor jeder einzelnen Löschung",
-            "stabile Identität sowie ein gegebenenfalls erwarteter Ref gegen den Vorabnachweis geprüft",
-            "jede Abweichung stoppt die Bereinigung vor dieser Mutation",
-            "Default-, geschützte, aktive, im Review befindliche, ungemergte",
-            "einzigartigem oder nutzereigenem Inhalt bleiben unangetastet",
-            "unaufgelöste Variablen, Globs und rekursive Dateisystemlöschungen sind ausgeschlossen",
-            "Remote-Branch-Löschungen benötigen die verifizierte Machine-User-Identität",
-            "an den erwarteten Ref gebundene bedingte Operation",
-            "lokale und Remote-Bestände erneut inventarisiert",
-            "nur innerhalb derselben Autorität korrigiert",
-        ):
-            with self.subTest(surface="human", term=term):
-                self.assertIn(term, human)
-
-    def test_paused_means_a_real_wait(self) -> None:
-        agent = read(GOVERNANCE)
-        human = read(CONTRIBUTING)
-        self.assertIn("only a genuine wait state", agent)
-        self.assertIn("active investigation is never paused", agent)
-        self.assertIn("echter Wartezustand", human)
-        self.assertIn("aktive Konzeption, Umsetzung, Untersuchung", human)
-
-    def test_subissues_are_optional_visibility(self) -> None:
-        agent = read(GOVERNANCE)
-        human = read(CONTRIBUTING)
-        for term in (
-            "when they materially improve visibility",
-            "parent owns integrated scope, authority, acceptance, and publication",
-            "adds no product scope or authority",
-            "Put active Stories on the Project",
-        ):
-            with self.subTest(surface="agent", term=term):
-                self.assertIn(term, agent)
-        for term in (
-            "wenn sie einen mehrteiligen Liefergegenstand",
-            "Parent besitzt integrierten Scope, Autorität, Annahme und Publikation",
-            "ergänzt aber keinen Produktscope und keine Autorität",
-            "Aktive Stories dürfen zur Sichtbarkeit im Project stehen",
-        ):
-            with self.subTest(surface="human", term=term):
-                self.assertIn(term, human)
-
-    def test_later_findings_are_acceptance_challenges(self) -> None:
-        agent = read(GOVERNANCE)
-        human = read(CONTRIBUTING)
-        for term in (
-            "first an acceptance challenge",
-            "not a retroactive invalidation",
-            "Reproduce the concern",
-            "new linked correction Issue",
-            "Reopen closed history only when the Product Owner explicitly chooses",
-        ):
-            with self.subTest(surface="agent", term=term):
-                self.assertIn(term, agent)
-        for term in (
-            "zunächst eine Akzeptanz-Challenge",
-            "keine rückwirkende Entwertung",
-            "neues verlinktes Korrektur-Issue",
-            "geschlossene Historie bleibt geschlossen",
-        ):
-            with self.subTest(surface="human", term=term):
-                self.assertIn(term, human)
-
-    def test_review_uses_verdicts_without_scores(self) -> None:
-        for path in REVIEW_CONTRACTS:
-            content = read(path)
-            with self.subTest(path=path):
-                for verdict in (
-                    "`accepted`",
-                    "`accepted with follow-ups`",
-                    "`changes required`",
-                ):
-                    self.assertIn(verdict, content)
-                self.assertNotIn("10.0", content)
-                self.assertNotIn("10,0", content)
-        self.assertIn("Numerical scores are prohibited", read(GOVERNANCE))
-        self.assertIn("Numerische Bewertungen entfallen", read(CONTRIBUTING))
-        for path in (HASKELL_REVIEW, STRATEGY_REVIEW):
-            with self.subTest(formal_review=path):
-                self.assertNotIn("10/10", read(path))
-
-    def test_ten_of_ten_is_only_product_owner_acceptance_shorthand(self) -> None:
-        for path in (BEHAVIOR, GOVERNANCE):
-            content = read(path)
-            with self.subTest(path=path):
-                for term in (
-                    "`10/10` is Product Owner shorthand",
-                    "all required formal verdicts being `accepted`",
-                    "zero blocking or advisory findings",
-                    "all exact-candidate local and remote checks being green",
-                    "intact authorship-versus-review separation",
-                    "never a formal review score",
-                    "`accepted with follow-ups` does not satisfy it",
-                ):
-                    self.assertIn(term, content)
-
-        human = read(CONTRIBUTING)
-        for term in (
-            "`10/10` ist ausschließlich die PO-Kurzform",
-            "alle erforderlichen formalen Verdicts `accepted`",
-            "weder blockierende noch beratende Findings offen",
-            "Prüfungen des exakten Kandidaten grün",
-            "Trennung von Autorschaft und Review gewahrt",
-            "`accepted with follow-ups` erfüllt diese Kurzform nicht",
-        ):
-            with self.subTest(surface="human", term=term):
-                self.assertIn(term, human)
-
-    def test_coauthoring_follows_material_specialist_judgment(self) -> None:
-        behavior = " ".join(read(BEHAVIOR).split())
-        team = " ".join(read(TEAM).split())
-        haskell = " ".join(read(HASKELL_AUTHORING).split())
-        for content in (behavior, team, haskell):
-            with self.subTest(contract=content[:40]):
-                self.assertIn("specialist judgment materially shapes", content)
-                self.assertIn("design and implementation", content)
-        self.assertIn("alone never makes co-authoring mandatory", haskell)
-        self.assertIn("never independently accepts", behavior)
-        self.assertIn("never changes role to independently accept", team)
-
-    def test_gertrud_and_sessions_are_repository_local(self) -> None:
-        behavior = read(BEHAVIOR)
-        for term in (
-            "Top-Quality referent",
-            "she is not a universal domain specialist",
-            "sole human participant",
-            "own repository-local Gertrud instance",
-            "No global or cross-project Gertrud instance exists",
-            "share no runtime context, memory, work state",
-            "Never discover authority, state, or tools through a neighboring checkout",
-        ):
-            with self.subTest(term=term):
-                self.assertIn(term, behavior)
-
-    def test_team_routes_capabilities_and_records_role_separation(self) -> None:
-        content = read(TEAM)
-        for term in (
-            "# Capability Routing",
-            "O2I metamodel, formal methods, type theory",
-            "TOGAF/ArchiMate expertise",
-            "strategy, performance measurement, source criticism",
-            "technical publication",
-            "repository governance, agentic-workflow safety",
-            "assigned capability and role",
-            "authorship, implementation, and independent review",
-            "stop at the safe boundary",
-        ):
-            with self.subTest(term=term):
-                self.assertIn(term, content)
-
-    def test_repository_skills_are_lean_local_routers(self) -> None:
-        for name, (path, contract) in SKILLS.items():
-            content = read(path)
-            with self.subTest(skill=name):
-                frontmatter = re.match(
-                    r"\A---\nname: ([a-z0-9-]+)\ndescription: ([^\n]+)\n---\n",
-                    content,
-                )
-                self.assertIsNotNone(frontmatter)
-                self.assertEqual(name, frontmatter.group(1) if frontmatter else None)
-                self.assertEqual(name, path.parent.name)
-                self.assertIn(contract, content)
-                self.assertIn(".ai4x/TEAM.md", content)
-                self.assertLess(len(content.splitlines()), 25)
-
-    def test_agent_profiles_are_thin_and_role_specific(self) -> None:
-        expected = {
-            "o2i.agent.md",
-            "o2i-formalization-coauthor.agent.md",
-            "o2i-governance-coauthor.agent.md",
-            "o2i-independent-reviewer.agent.md",
-            "o2i-modeling-coauthor.agent.md",
-            "o2i-publication-coauthor.agent.md",
-            "o2i-strategy-coauthor.agent.md",
-        }
-        self.assertEqual(expected, {path.name for path in AGENT_PROFILES})
-        relative_link = re.compile(r"\]\(([^)#]+)")
-        for path in AGENT_PROFILES:
-            content = read(path)
-            with self.subTest(profile=path.name):
-                self.assertLess(len(content.splitlines()), 12)
-                for target in relative_link.findall(content):
-                    self.assertTrue((path.parent / target).resolve().is_relative_to(ROOT))
-                    self.assertTrue((path.parent / target).resolve().is_file())
-                if "coauthor" in path.name:
-                    self.assertIn("Active Co-Author", content)
-                    self.assertIn("design and implementation", content)
-                    self.assertIn("never independently accept", content)
-                elif "reviewer" in path.name:
-                    self.assertIn("Read-only external reviewer", content)
-                    self.assertIn("did not author or implement", content)
-                    self.assertIn("never mutate", content)
-                else:
-                    self.assertIn("Gertrud instance", content)
-                    self.assertIn("never as a global agent", content)
-
-    def test_temporary_staging_is_local_and_ignored(self) -> None:
-        behavior = read(BEHAVIOR)
-        governance = read(GOVERNANCE)
-        self.assertIn(".ai4x/local/", behavior)
-        self.assertIn(".ai4x/local/remote/", governance)
-        self.assertNotIn("workspace `tmp/`", governance)
-        self.assertIn(".ai4x/local/\n", read(GITIGNORE))
-
-    def test_local_active_checkout_pointer_is_optional_and_non_authoritative(self) -> None:
-        behavior = read(BEHAVIOR)
-        for term in (
-            ".ai4x/local/ACTIVE.md",
-            "non-symlink regular file",
-            "Path: <relative-path>",
-            "Expected branch: <branch>",
-            "same common Git directory",
-            "carries no authority",
-            "Never checkout, reset, mutate, or select",
-            "If the pointer is absent, continue in the current checkout",
-            "any pointer is present",
-            "not successfully activated",
-            "`UNVERIFIED` before considering any branch match",
-            "Repository-file bootstrap remains available",
-        ):
-            with self.subTest(term=term):
-                self.assertIn(term, behavior)
-        self.assertIn(".ai4x/local/\n", read(GITIGNORE))
-
-    def test_branch_scoped_handoff_applicability_is_exact(self) -> None:
-        behavior = read(BEHAVIOR)
-        applicability = behavior.split("# Handoff Applicability\n", 1)[1].split(
-            "\n# Normal Session Continuity", 1
-        )[0]
-        for term in (
-            "exactly one canonical branch-binding source line",
-            "- Applies on branch: `<branch>`",
-            "must pass `git check-ref-format --branch`",
-            "any additional line beginning `- Applies on branch:`",
-            "Apply this decision ladder in order without reordering its checks",
-            "Any present pointer that is not successfully activated yields `UNVERIFIED` immediately",
-            "even when the current branch exactly matches the handoff",
-            "successful activation restarts the complete protocol",
-            "Only after pointer absence or a validated activation and restart",
-            "exactly equals the observed branch",
-            "dirty matching checkout remains applicable",
-            "dormant only when the pointer is absent",
-            "observed branch is `trunk`",
-            "complete worktree status is clean",
-            "valid named branch is not `trunk`",
-            "proves no merge, completion, acceptance, Issue closure, Project state, or authority",
-            "not a contradiction or a repair target",
-            "Do not inspect branch or Pull Request history",
-            "mutate or refresh `.ai4x/STATE.md`",
-            "direct repository-native Issue and Project facts",
-            "Every remaining case leaves handoff applicability `UNVERIFIED`",
-            "missing, duplicate, malformed, or invalid branch binding",
-            "unavailable Git metadata",
-            "detached HEAD",
-            "non-`trunk` branch mismatch",
-            "dirty `trunk` mismatch",
-            "never infer a return point or authority from the handoff",
-        ):
-            with self.subTest(surface="behavior", term=term):
-                self.assertIn(term, applicability)
-
-        governance = read(GOVERNANCE)
-        human = read(CONTRIBUTING)
-        for term in (
-            "Dormancy is only an applicability result",
-            "never replaces direct owning Issue or Project facts",
-            "neutral to cold-start eligibility",
-            "neither a contradiction nor a repair target",
-            "post-publication refresh commit",
-        ):
-            with self.subTest(surface="governance", term=term):
-                self.assertIn(term, governance)
-        for term in (
-            "## Branchgebundener Repository-Handoff",
-            "Dormanz bedeutet ausschließlich",
-            "Gelingt die Aktivierung nicht, ist das Ergebnis sofort `UNVERIFIED`",
-            "selbst wenn der aktuelle Branch exakt übereinstimmt",
-            "Für die Cold-Start-Eignung ist sie neutral",
-            "weder Widerspruch noch Reparaturziel",
-            "Branch-, Pull-Request- oder Git-Historie",
-            "Anwendbarkeit bleibt `UNVERIFIED`",
-        ):
-            with self.subTest(surface="human", term=term):
-                self.assertIn(term, human)
-
-        fixtures = {
-            "valid": "# Handoff\n\n- Applies on branch: `feat/100`\n",
-            "missing": "# Handoff\n\n- Current Issue: `#100`\n",
-            "duplicate": "# Handoff\n\n- Applies on branch: `feat/100`\n- Applies on branch: `feat/101`\n",
-            "additional_malformed": "# Handoff\n\n- Applies on branch: `feat/100`\n- Applies on branch: feat/101\n",
-            "malformed": "# Handoff\n\n- Applies on branch: feat/100\n",
-            "invalid": "# Handoff\n\n- Applies on branch: `bad branch`\n",
-            "trunk": "# Handoff\n\n- Applies on branch: `trunk`\n",
-        }
-        binding_expectations = {
-            "valid": ("valid", "feat/100"),
-            "missing": ("missing", None),
-            "duplicate": ("duplicate", None),
-            "additional_malformed": ("duplicate", None),
-            "malformed": ("malformed", None),
-            "invalid": ("invalid", "bad branch"),
-        }
-        for fixture, expected in binding_expectations.items():
-            with self.subTest(binding_fixture=fixture):
-                self.assertEqual(expected, handoff_branch_binding(fixtures[fixture]))
-
-        cases = (
-            ("valid", True, "absent", "feat/100", True, "applicable"),
-            ("valid", True, "absent", "feat/100", False, "applicable"),
-            ("valid", True, "activated_restart", "feat/100", True, "applicable"),
-            ("valid", True, "unresolved", "feat/100", True, "UNVERIFIED"),
-            ("trunk", True, "absent", "trunk", True, "applicable"),
-            ("valid", True, "absent", "trunk", True, "dormant"),
-            ("valid", True, "absent", "trunk", False, "UNVERIFIED"),
-            ("valid", True, "absent", "feat/101", True, "UNVERIFIED"),
-            ("valid", True, "absent", None, True, "UNVERIFIED"),
-            ("valid", False, "absent", None, True, "UNVERIFIED"),
-            ("missing", True, "absent", "trunk", True, "UNVERIFIED"),
-            ("duplicate", True, "absent", "trunk", True, "UNVERIFIED"),
-            ("additional_malformed", True, "absent", "trunk", True, "UNVERIFIED"),
-            ("malformed", True, "absent", "trunk", True, "UNVERIFIED"),
-            ("invalid", True, "absent", "trunk", True, "UNVERIFIED"),
-        )
-        for fixture, git_metadata, pointer_outcome, observed_branch, clean, expected in cases:
-            with self.subTest(
-                fixture=fixture,
-                git_metadata=git_metadata,
-                pointer_outcome=pointer_outcome,
-                observed_branch=observed_branch,
-                clean=clean,
+    def test_policy_rejects_unknown_missing_and_reordered_members(self) -> None:
+        mutations = []
+        unknown = policy_copy()
+        unknown["unknown"] = True
+        mutations.append(unknown)
+        missing = policy_copy()
+        del missing["events"]
+        mutations.append(missing)
+        reordered = policy_copy()
+        events = reordered.pop("events")
+        reordered["events"] = events
+        mutations.append(reordered)
+        invalid_boolean = policy_copy()
+        invalid_boolean["workflow"]["statusCreatesAuthority"] = "false"
+        mutations.append(invalid_boolean)
+        boolean_budget = policy_copy()
+        boolean_budget["budgets"]["surfaces"][0]["wordCap"] = True
+        mutations.append(boolean_budget)
+        for value in mutations:
+            with self.subTest(keys=tuple(value)), self.assertRaises(
+                contract.ContractError
             ):
+                contract._validate_policy_shape(value)
+
+    def test_policy_rejects_every_material_v1_vocabulary_change(self) -> None:
+        mutations = []
+        for mutate in (
+            lambda p: p["authorityGrant"].__setitem__("schema", "evil/v1"),
+            lambda p: p["ruleOwners"][2].__setitem__("loadsWhen", "always"),
+            lambda p: p["loadRoutes"].append(
+                {
+                    "from": "bootstrap",
+                    "to": "return-point",
+                    "justification": "bypass applicability",
+                }
+            ),
+            lambda p: p["budgets"].__setitem__("wordDefinition", "anything"),
+            lambda p: p["workflow"]["states"].append("Later"),
+            lambda p: p["workflow"]["transitions"][0].__setitem__("to", "Done"),
+            lambda p: p["actions"][0].__setitem__("id", "local.erase"),
+            lambda p: p["mutationGates"]["gates"].__setitem__(0, "maybe-grant"),
+            lambda p: p["events"]["authority_request"]["requiredFields"].__setitem__(0, "anything"),
+            lambda p: p["authorityGrant"]["validityRules"].__setitem__(0, "anything"),
+            lambda p: p["provenance"]["approvalNeverImplies"].remove("author"),
+            lambda p: p["forbiddenActions"][0].__setitem__("when", "never"),
+        ):
+            policy = policy_copy()
+            mutate(policy)
+            mutations.append(policy)
+        for index, value in enumerate(mutations):
+            with self.subTest(index=index), self.assertRaises(contract.ContractError):
+                contract._validate_policy_shape(value)
+
+    def test_rule_owners_are_unique_and_load_routes_are_acyclic(self) -> None:
+        policy = contract.load_policy()
+        owners = policy["ruleOwners"]
+        self.assertEqual(len(owners), len({item["id"] for item in owners}))
+        self.assertEqual(len(owners), len({item["owner"] for item in owners}))
+        contract.validate_owner_routes(policy)
+        cyclic = policy_copy()
+        cyclic["loadRoutes"].append(
+            {
+                "from": "return-point",
+                "to": "applicability-envelope",
+                "justification": "negative-cycle-fixture",
+            }
+        )
+        with self.assertRaises(contract.ContractError):
+            contract._validate_policy_shape(cyclic)
+
+    def test_workflow_is_closed_and_ready_is_descriptive_only(self) -> None:
+        policy = contract.load_policy()
+        workflow = policy["workflow"]
+        expected = {
+            ("Backlog", "Refinement"),
+            ("Refinement", "Ready"),
+            ("Ready", "In progress"),
+            ("In progress", "In review"),
+            ("In progress", "Paused"),
+            ("Paused", "Ready"),
+            ("In review", "Done"),
+        }
+        observed = {(item["from"], item["to"]) for item in workflow["transitions"]}
+        self.assertEqual(expected, observed)
+        self.assertFalse(workflow["statusCreatesAuthority"])
+        self.assertEqual("forbidden", workflow["unlistedTransition"])
+        self.assertIn("descriptive execution readiness only", workflow["readySemantics"])
+        for source, target in itertools.product(workflow["states"], repeat=2):
+            with self.subTest(source=source, target=target):
                 self.assertEqual(
-                    expected,
-                    classify_handoff_fixture(
-                        fixtures[fixture],
-                        git_metadata=git_metadata,
-                        pointer_outcome=pointer_outcome,
-                        observed_branch=observed_branch,
-                        clean=clean,
-                    ),
+                    (source, target) in expected,
+                    contract.transition_allowed(policy, source, target),
                 )
 
-    def test_normal_session_continuity_is_prompt_free_and_durable(self) -> None:
-        behavior = read(BEHAVIOR)
-        for term in (
-            "# Normal Session Continuity",
-            "any ordinary greeting",
-            "prompt carries no work state",
-            "requires no path, digest, snapshot locator, or handoff payload",
-            "durable repository-owned sources",
-            "observed tracked Git branch, revision, and status",
-            "GitHub Issue and Project facts",
-            "Conversation transcripts, prior-session runtime context",
-            "neither authority nor required continuity input",
-            "missing, contradictory, or unverifiable",
-            "ask the Product Owner instead of guessing",
-            "exceptional recovery",
-            "never routine startup",
-        ):
-            with self.subTest(term=term):
-                self.assertIn(term, behavior)
-
-    def test_routine_cold_start_completion_is_exact_and_safe(self) -> None:
-        behavior = read(BEHAVIOR)
-        completion = behavior.split("Only after the return point", 1)[1].split(
-            "A long transport snapshot", 1
-        )[0]
-        self.assertEqual(
-            [
-                "1. Enter `/delete` and confirm.",
-                "2. Start a fresh Codex CLI session without `resume` in this repository root.",
-                "3. Say `Hi Gertrud, weiter geht’s!`.",
-            ],
-            re.findall(r"(?m)^[1-3]\. .+$", completion),
+    def test_actions_forbidden_rules_and_grant_receipt_resolve(self) -> None:
+        policy = contract.load_policy()
+        actions = {item["id"] for item in policy["actions"]}
+        self.assertEqual(len(actions), len(policy["actions"]))
+        receipt = policy["authorityGrant"]["durableReceipt"]
+        self.assertIn(receipt["action"], actions)
+        self.assertTrue(receipt["mustBeFirstAuthorizedRemoteWrite"])
+        self.assertTrue(receipt["sameSessionReadbackRequired"])
+        self.assertTrue(
+            receipt["crossSessionReconstruction"][
+                "requiresExactlyOneReceiptForGrantId"
+            ]
         )
-        for term in (
-            "durably materialized",
-            "all required work and review activities are complete",
-            "no delegated or background work remains",
-            "proven dormant handoff is neutral",
-            "neither passes nor fails those completion gates",
-            "Independent remaining repository and owning remote facts must establish cold-start eligibility",
-            "exactly these three actionable steps",
-            "wording of all three actions in the Product Owner's language",
-            "keeping `/delete`, `resume`, and `Hi Gertrud, weiter geht’s!` literal",
-            "repository root from the current checkout",
-            "never place an absolute host path",
-            "permanently removes the completed current session and its descendant sessions",
-            "when transcript retention is required",
-            "example greeting carries no state and may be replaced by any ordinary greeting",
-            "routine transitions provide no path, digest, snapshot locator, or handoff payload",
-        ):
-            with self.subTest(term=term):
-                self.assertIn(term, completion)
-        self.assertNotIn("first two actions", completion)
-        self.assertNotIn("`Approval:`", completion)
-        self.assertNotRegex(completion, r"(?m)^4\. ")
-
-    def test_decision_report_is_compact_and_scannable(self) -> None:
-        behavior = read(BEHAVIOR)
-        decision = behavior.split("# Product Owner Decision Handoff\n", 1)[1].split(
-            "\n# Referent Role", 1
-        )[0]
-        template = decision.split("```text\n", 1)[1].split("\n```", 1)[0]
-        self.assertEqual("## Decision", template.splitlines()[0])
-        self.assertIn(
-            "\n\nRecommendation: **[one concrete next action].**\n\n", template
+        for rule in policy["forbiddenActions"]:
+            with self.subTest(rule=rule["id"]):
+                self.assertTrue(set(rule.get("actionIds", ())).issubset(actions))
+        ordinary_boundary = next(
+            rule
+            for rule in policy["forbiddenActions"]
+            if rule["id"] == "forbid-ordinary-execution-completion"
         )
+        self.assertNotIn("project.transition", ordinary_boundary["actionIds"])
+        self.assertTrue(
+            {"pull-request.merge", "issue.close", "completed-work.cleanup"}.issubset(
+                ordinary_boundary["actionIds"]
+            )
+        )
+
+    def test_authority_grant_is_subject_bound_and_non_consuming(self) -> None:
+        grant = contract.load_policy()["authorityGrant"]
+        required = set(grant["requiredFields"])
+        self.assertTrue(
+            {
+                "grantId",
+                "subject.repository",
+                "subject.issue",
+                "decisionPayloadSha256",
+                "expectedIssueBodySha256",
+                "actionIds",
+                "resourceIds",
+                "scope",
+                "targetState",
+                "exclusions",
+                "durableReceipt",
+                "validity",
+                "lifecycle",
+            }.issubset(required)
+        )
+        self.assertTrue(grant["approvalConsumptionDoesNotConsumeGrant"])
+        self.assertTrue(grant["issueBodyUnchangedByActivation"])
         self.assertEqual(
-            [
-                "Subject",
-                "Scope",
-                "Target state",
-                "Requested agent authority",
-                "Exclusions",
-                "Reason",
-            ],
-            re.findall(
-                r"(?m)^- (Subject|Scope|Target state|Requested agent authority|Exclusions|Reason):",
-                template,
+            {"active", "fulfilled", "revoked", "superseded", "invalidated"},
+            set(grant["lifecycleStates"]),
+        )
+
+    def test_events_are_disjoint_and_only_authority_request_creates_grant(self) -> None:
+        events = contract.load_policy()["events"]
+        self.assertEqual(
+            {"authority_request", "product_owner_action", "cold_start"},
+            set(events),
+        )
+        self.assertTrue(events["authority_request"]["createsGrant"])
+        self.assertEqual(
+            "Freigegeben.", events["authority_request"]["approvalReply"]
+        )
+        for name in ("product_owner_action", "cold_start"):
+            with self.subTest(event=name):
+                self.assertFalse(events[name]["createsGrant"])
+                self.assertEqual("none", events[name]["requestedAgentAuthorityMustEqual"])
+                self.assertIn("approvalReply", events[name]["forbiddenFields"])
+
+    def test_provenance_never_infers_identity_from_approval(self) -> None:
+        provenance = contract.load_policy()["provenance"]
+        self.assertEqual(
+            {
+                "product-owner-decision-authority",
+                "actual-content-authorship",
+                "git-commit-object-creator",
+                "verified-remote-publisher-identity",
+            },
+            set(provenance["independentFacts"]),
+        )
+        approval = next(
+            row
+            for row in provenance["matrix"]
+            if row["case"] == "product-owner-approval"
+        )
+        self.assertEqual("Product Owner", approval["decisionAuthority"])
+        self.assertEqual("no-inference", approval["contentAuthor"])
+        self.assertEqual("no-inference", approval["commitActor"])
+        self.assertEqual("no-inference", approval["remotePublisher"])
+        self.assertEqual(
+            {"author", "co-author", "committer", "publisher"},
+            set(provenance["approvalNeverImplies"]),
+        )
+
+    def test_generated_projections_are_byte_exact_and_identifier_complete(self) -> None:
+        policy = contract.load_policy()
+        contract.validate_projections(policy)
+        projection = read(AGENT_PROJECTION)
+        identifiers = (
+            [item["id"] for item in policy["ruleOwners"]]
+            + [item["id"] for item in policy["workflow"]["transitions"]]
+            + [item["id"] for item in policy["actions"]]
+            + list(policy["events"])
+            + [item["id"] for item in policy["forbiddenActions"]]
+        )
+        for identifier in identifiers:
+            with self.subTest(identifier=identifier):
+                self.assertIn(f"`{identifier}`", projection)
+
+
+class StateAndBudgetTests(unittest.TestCase):
+    """Keep startup bounded and handoff loading observably fail-closed."""
+
+    def test_state_is_exact_bounded_envelope(self) -> None:
+        state = contract.read_state_envelope()
+        self.assertEqual(contract.STATE_SCHEMA, state["schema"])
+        self.assertEqual(contract.HANDOFF_SCHEMA, state["handoffSchema"])
+        self.assertLessEqual(len(STATE.read_bytes()), 1024)
+
+    def test_state_rejects_noncanonical_or_unbounded_fixtures(self) -> None:
+        canonical = STATE.read_bytes()
+        fixtures = (
+            canonical.replace(b'"schema"', b'"unknown"', 1),
+            canonical.replace(b'","appliesOnBranch"', b', "appliesOnBranch"', 1),
+            canonical.replace(b"\n", b"\r\n", 1),
+            canonical + b"extra\n",
+            canonical + b"x" * 1024,
+        )
+        for index, source in enumerate(fixtures):
+            with tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / "STATE.md"
+                path.write_bytes(source)
+                with self.subTest(fixture=index), self.assertRaises(
+                    contract.ContractError
+                ):
+                    contract.read_state_envelope(path)
+
+    def test_applicability_ladder_is_exhaustive_for_material_cases(self) -> None:
+        evidence = contract.ApplicabilityEvidence
+        cases = (
+            (evidence("absent", True, "feat/1", True, "feat/1"), "applicable"),
+            (evidence("absent", True, "feat/1", False, "feat/1"), "applicable"),
+            (
+                evidence("activated_restart", True, "feat/1", True, "feat/1"),
+                "applicable",
             ),
-        )
-        for term in (
-            "compact result section",
-            "one outcome sentence",
-            "`Status`, `Evidence`, or `Open` bullets",
-            "Omit empty fields",
-            "Do not duplicate the recommendation",
-            "translated `Decision` heading",
-            "one short ordinary Markdown paragraph",
-            "only one concrete next action",
-            "with that action in bold",
-            "six immediately following bullets",
-            "preserving this exact order",
-            "Keep every value concise",
-        ):
-            with self.subTest(surface="behavior", term=term):
-                self.assertIn(term, decision)
-
-        human = read(CONTRIBUTING)
-        human_template = human.split("## PO-Entscheidungsvorlage\n", 1)[1].split(
-            "```text\n", 1
-        )[1].split("\n```", 1)[0]
-        self.assertEqual("## Entscheidung", human_template.splitlines()[0])
-        self.assertIn(
-            "\n\nEmpfehlung: **[eine konkrete nächste Aktion].**\n\n",
-            human_template,
-        )
-        self.assertEqual(
-            [
-                "Gegenstand",
-                "Umfang",
-                "Zielzustand",
-                "Angefragte Agentenautorität",
-                "Ausgeschlossen",
-                "Grund",
-            ],
-            re.findall(
-                r"(?m)^- (Gegenstand|Umfang|Zielzustand|Angefragte Agentenautorität|Ausgeschlossen|Grund):",
-                human_template,
+            (evidence("unresolved", True, "feat/1", True, "feat/1"), "UNVERIFIED"),
+            (evidence("absent", False, None, True, "feat/1"), "UNVERIFIED"),
+            (evidence("absent", True, None, True, "feat/1"), "UNVERIFIED"),
+            (evidence("absent", True, "trunk", True, "feat/1"), "dormant"),
+            (evidence("absent", True, "trunk", False, "feat/1"), "UNVERIFIED"),
+            (
+                evidence("activated_restart", True, "trunk", True, "feat/1"),
+                "UNVERIFIED",
             ),
+            (evidence("absent", True, "feat/2", True, "feat/1"), "UNVERIFIED"),
         )
-        for term in (
-            "kompakten Ergebnis",
-            "nur bei Bedarf kurze Punkte",
-            "Die Empfehlung wird im Ergebnis nicht wiederholt",
-            "eigenen Überschrift",
-            "kurze, fett hervorgehobene Aktion",
-            "sechs kurze Punkte in genau dieser Reihenfolge",
-        ):
-            with self.subTest(surface="human", term=term):
-                self.assertIn(term, human)
+        for value, expected in cases:
+            with self.subTest(value=value):
+                self.assertEqual(expected, contract.classify_applicability(value))
 
-    def test_product_owner_decision_handoff_is_deterministic(self) -> None:
-        behavior = read(BEHAVIOR)
-        decision = behavior.split("# Product Owner Decision Handoff\n", 1)[1].split(
-            "\n# Referent Role", 1
-        )[0]
-        continuity_and_decision = behavior.split("# Normal Session Continuity\n", 1)[
-            1
-        ].split("\n# Referent Role", 1)[0]
+    def test_handoff_loader_is_never_called_for_dormant_or_unverified(self) -> None:
+        for classification in ("dormant", "UNVERIFIED"):
+            loader = mock.Mock(return_value="forbidden")
+            with self.subTest(classification=classification):
+                self.assertIsNone(
+                    contract.load_handoff_if_applicable(classification, loader)
+                )
+                loader.assert_not_called()
+        loader = mock.Mock(return_value="handoff")
         self.assertEqual(
-            [
-                "1. Enter `/delete` and confirm.",
-                "2. Start a fresh Codex CLI session without `resume` in this repository root.",
-                "3. Say `Hi Gertrud, weiter geht’s!`.",
-            ],
-            re.findall(r"(?m)^[1-9]\. .+$", continuity_and_decision),
+            "handoff", contract.load_handoff_if_applicable("applicable", loader)
         )
-        self.assertNotRegex(decision, r"(?m)^[1-9]\. ")
-        self.assertEqual(
-            ["Recommendation:", "Alternatives:", "Cold start:", "Approval:"],
-            re.findall(r"(?m)^- `([^`]+:)`", decision),
+        loader.assert_called_once_with()
+
+    def test_bootstrap_reads_handoff_only_after_actual_applicability(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            state = root / "STATE.md"
+            handoff = root / "HANDOFF.md"
+            pointer = root / "ACTIVE.md"
+            state.write_bytes(STATE.read_bytes())
+            handoff.write_bytes(HANDOFF.read_bytes())
+            branch = contract.read_state_envelope(state)["appliesOnBranch"]
+            applicable = contract.bootstrap_checkout(
+                pointer_path=pointer,
+                state_path=state,
+                handoff_path=handoff,
+                git_metadata=True,
+                observed_branch=branch,
+                clean=False,
+                activate_pointer=mock.Mock(),
+            )
+            self.assertEqual("applicable", applicable.classification)
+            self.assertEqual(contract.HANDOFF_SCHEMA, applicable.handoff["schema"])
+            with mock.patch.object(contract, "read_handoff") as loader:
+                dormant = contract.bootstrap_checkout(
+                    pointer_path=pointer,
+                    state_path=state,
+                    handoff_path=handoff,
+                    git_metadata=True,
+                    observed_branch="trunk",
+                    clean=True,
+                    activate_pointer=mock.Mock(),
+                )
+                detached = contract.bootstrap_checkout(
+                    pointer_path=pointer,
+                    state_path=state,
+                    handoff_path=handoff,
+                    git_metadata=True,
+                    observed_branch=None,
+                    clean=True,
+                    activate_pointer=mock.Mock(),
+                )
+            self.assertEqual("dormant", dormant.classification)
+            self.assertEqual("UNVERIFIED", detached.classification)
+            loader.assert_not_called()
+
+    def test_bootstrap_rejects_pointer_and_handoff_uncertainty(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            state = root / "STATE.md"
+            handoff = root / "HANDOFF.md"
+            pointer = root / "ACTIVE.md"
+            state.write_bytes(STATE.read_bytes())
+            handoff.write_bytes(HANDOFF.read_bytes())
+            branch = contract.read_state_envelope(state)["appliesOnBranch"]
+            for source in (
+                "bad\n",
+                "Path: ../escape\nExpected branch: feat/1\n",
+                "Path: checkout\nExpected branch: bad branch\n",
+            ):
+                pointer.write_text(source, encoding="utf-8")
+                with self.subTest(source=source):
+                    result = contract.bootstrap_checkout(
+                        pointer_path=pointer,
+                        state_path=state,
+                        handoff_path=handoff,
+                        git_metadata=True,
+                        observed_branch=branch,
+                        clean=True,
+                        activate_pointer=mock.Mock(return_value=True),
+                    )
+                    self.assertEqual("UNVERIFIED", result.classification)
+                    self.assertIsNone(result.handoff)
+            pointer.write_text(
+                "Path: checkout\nExpected branch: feat/1\n", encoding="utf-8"
+            )
+            stale = contract.bootstrap_checkout(
+                pointer_path=pointer,
+                state_path=state,
+                handoff_path=handoff,
+                git_metadata=True,
+                observed_branch=branch,
+                clean=True,
+                activate_pointer=mock.Mock(return_value=False),
+            )
+            self.assertEqual("UNVERIFIED", stale.classification)
+            activated = contract.bootstrap_checkout(
+                pointer_path=pointer,
+                state_path=state,
+                handoff_path=handoff,
+                git_metadata=True,
+                observed_branch=branch,
+                clean=True,
+                activate_pointer=mock.Mock(return_value=True),
+            )
+            self.assertTrue(activated.restart_required)
+            self.assertIsNone(activated.handoff)
+            pointer.unlink()
+            target = root / "pointer-target"
+            target.write_text(
+                "Path: checkout\nExpected branch: feat/1\n", encoding="utf-8"
+            )
+            pointer.symlink_to(target.name)
+            symlinked = contract.bootstrap_checkout(
+                pointer_path=pointer,
+                state_path=state,
+                handoff_path=handoff,
+                git_metadata=True,
+                observed_branch=branch,
+                clean=True,
+                activate_pointer=mock.Mock(return_value=True),
+            )
+            self.assertEqual("UNVERIFIED", symlinked.classification)
+            pointer.unlink()
+            handoff.write_text("malformed\n", encoding="utf-8")
+            invalid_handoff = contract.bootstrap_checkout(
+                pointer_path=pointer,
+                state_path=state,
+                handoff_path=handoff,
+                git_metadata=True,
+                observed_branch=branch,
+                clean=True,
+                activate_pointer=mock.Mock(),
+            )
+            self.assertEqual("UNVERIFIED", invalid_handoff.classification)
+            self.assertIsNone(invalid_handoff.handoff)
+
+    def test_active_pointer_read_is_bounded_before_overflow_rejection(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ACTIVE.md"
+            path.write_text("placeholder\n", encoding="utf-8")
+            context = mock.MagicMock()
+            context.__enter__.return_value.read.return_value = b"x" * 1025
+            with mock.patch.object(Path, "open", return_value=context) as opened:
+                with self.assertRaises(contract.ContractError):
+                    contract.read_active_pointer(path)
+            opened.assert_called_once_with("rb")
+            context.__enter__.return_value.read.assert_called_once_with(1025)
+
+    def test_symlink_resolution_is_direct_contained_and_deduplicated(self) -> None:
+        self.assertTrue(AGENTS.is_symlink())
+        unit = contract.worktree_source("AGENTS.md")
+        self.assertEqual(".ai4x/BEHAVIOR.md", unit.canonical_path)
+        self.assertEqual(BEHAVIOR.read_bytes(), unit.source)
+        revision_unit = contract.revision_source("HEAD", "AGENTS.md")
+        self.assertEqual(".ai4x/BEHAVIOR.md", revision_unit.canonical_path)
+        for target in ("/tmp/file", "../../escape", ""):
+            with self.subTest(target=target), self.assertRaises(contract.ContractError):
+                contract._canonical_link_target("AGENTS.md", target)
+
+    def test_recursive_glob_matches_zero_or_more_path_components(self) -> None:
+        pattern = ".ai4x/**/*"
+        for path in (
+            ".ai4x/BEHAVIOR.md",
+            ".ai4x/governance/policy.json",
+            ".ai4x/operations/haskell-authoring.md",
+        ):
+            with self.subTest(path=path):
+                self.assertTrue(contract._path_matches(path, pattern))
+        self.assertFalse(contract._path_matches("README.md", pattern))
+
+    def test_complete_ai4x_budget_inventory_equals_every_tracked_source(self) -> None:
+        policy = contract.load_policy()
+        surfaces = {
+            item["id"]: item for item in policy["budgets"]["surfaces"]
+        }
+        units = contract._surface_units(
+            surfaces["complete-ai4x-tree"],
+            surfaces,
+            revision=None,
         )
-        self.assertEqual(
-            [
-                "- `Approval:` the exact standalone Product Owner reply `Freigegeben.` for this recommendation. When the Product Owner's language is German, render the prompt label as `Antwort zur Freigabe:` followed by the reply literal `Freigegeben.`; never render `Freigabe: Freigegeben.`."
-            ],
-            re.findall(r"(?m)^- `Approval:` .+$", decision),
+        result = subprocess.run(
+            ["git", "ls-files", "-z", "--", ".ai4x"],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
         )
-        template = decision.split("```text\n", 1)[1].split("\n```", 1)[0]
-        self.assertEqual(
-            [
-                "Subject",
-                "Scope",
-                "Target state",
-                "Requested agent authority",
-                "Exclusions",
-                "Reason",
-            ],
-            re.findall(
-                r"(?m)^- (Subject|Scope|Target state|Requested agent authority|Exclusions|Reason):",
-                template,
-            ),
+        requested = {
+            value.decode("utf-8")
+            for value in result.stdout.split(b"\0")
+            if value
+        }
+        expected = {
+            contract.worktree_source(path).canonical_path for path in requested
+        }
+        self.assertEqual(expected, {unit.canonical_path for unit in units})
+
+    def test_named_tree_inventory_is_nul_delimited_and_utf8_exact(self) -> None:
+        output = b".ai4x/line\nbreak.md\0.ai4x/gr\xc3\xbc\xc3\x9fe.md\0README.md\0"
+        completed = subprocess.CompletedProcess(
+            args=(), returncode=0, stdout=output, stderr=b""
         )
-        self.assertEqual(
-            {"recommended", "not recommended"},
-            set(
-                re.findall(r"`(recommended|not recommended)`", decision)
-            ),
+        with mock.patch.object(contract, "_git", return_value=completed) as git:
+            self.assertEqual(
+                (".ai4x/gr\u00fc\u00dfe.md", ".ai4x/line\nbreak.md"),
+                contract._glob_paths(".ai4x/**/*", (), revision="tree-id"),
+            )
+        git.assert_called_once_with(
+            "ls-tree", "-rz", "--name-only", "--full-tree", "tree-id"
         )
-        self.assertNotIn("`eligible but not recommended`", decision)
-        self.assertNotIn("`ineligible`", decision)
-        for term in (
-            "completes an authorized work unit",
-            "hands control back at a Product Owner decision or wait point",
-            "Interim progress updates",
-            "autonomous continuation within existing authority",
-            "compact result section",
-            "one outcome sentence",
-            "Omit empty fields",
-            "Do not duplicate the recommendation",
-            "exactly one concrete next action",
-            "six context bullets",
-            "using translated labels while preserving this exact order",
-            "subject is unambiguous",
-            "scope bounded",
-            "target state observable",
-            "one short evidence-based sentence",
-            "exact newly requested agent authority or the literal `none`",
-            "`Exclusions:` is mandatory in both cases",
-            "write `none` when no such alternative exists",
-            "never invent one for symmetry",
-            "exactly one of `recommended` or `not recommended`",
-            "every Normal Session Continuity safety gate",
-            "`safety gate failed:`",
-            "`eligible, but not the recommendation:`",
-            "the exact standalone Product Owner reply `Freigegeben.`",
-            "Product Owner's language is German",
-            "render the prompt label as `Antwort zur Freigabe:`",
-            "followed by the reply literal `Freigegeben.`",
-            "never render `Freigabe: Freigegeben.`",
-            "recommendation never creates authority",
-            "never pauses autonomous work still covered by existing authority",
-            "recommendation with `Approval:` requires the exact newly requested agent authority",
-            "may not use `Requested agent authority: none`",
-            "replace `Approval:` with `Product Owner action:`",
-            "one exact, self-contained action with its subject, bounded scope, target state, and authority boundary",
-            "that boundary must use `Requested agent authority: none`",
-            "recommended cold start must also use `Requested agent authority: none`",
-            "never invent agent authority",
-            "exclusions remain mandatory for every recommendation",
-            "observable single-use binding",
-            "immediately preceding still-open decision handoff",
-            "authorizes solely that handoff's single recommendation",
-            "never authorizes an alternative or any omitted action",
-            "consumed by one valid approval",
-            "revalidates that exactly one such handoff exists",
-            "immediately precedes the approval",
-            "still matches current facts",
-            "A missing handoff",
-            "multiple candidate handoffs",
-            "an already consumed handoff",
-            "superseded by a later handoff or material new fact blocks execution",
-            "requires a new decision handoff",
-            "one non-authorizing `Approval bound:` receipt",
-            "marks the handoff `consumed` before executing it",
-            "binds the approval to this one bounded execution and prevents replay",
-            "receipt makes that one-time binding observable but never broadens it",
-            "`Consumed` applies to the approval reply",
-            "not to the bounded authority it establishes",
-            "one atomic work-unit authority through its stated target",
-            "each covered action proceeds without another decision handoff or Product Owner prompt",
-            "Fresh Product Owner authority is required only",
-            "exists only in the current live exchange",
-            "never reconstructed from a conversation transcript or carried across a session boundary",
-            "creates no binding for a `Product Owner action:` handoff or a recommended cold start",
-            "only the three non-imperative top-level decision fields",
-            "omit `Approval:` and `Product Owner action:`",
-            "exactly the three numbered actions defined under Normal Session Continuity",
-            "metadata contains no imperative",
-            "no other imperative sentence or numbered transition instruction",
-            "only transition instructions",
-            "ends immediately after step 3 with no following text",
-            "If `Cold start: not recommended`, do not print the three actions",
-        ):
-            with self.subTest(term=term):
-                self.assertIn(term, decision)
 
-        governance = read(GOVERNANCE)
-        for term in (
-            "follow the deterministic Product Owner Decision Handoff in `.ai4x/BEHAVIOR.md`",
-            "presentation and authority-request contract",
-            "not workflow state or authority",
-            "never copied into `.ai4x/STATE.md`",
-        ):
-            with self.subTest(surface="governance", term=term):
-                self.assertIn(term, governance)
-        self.assertNotIn("# Product Owner Decision Handoff", read(STATE))
+    def test_exact_policy_budgets_and_current_counts_pass(self) -> None:
+        policy = contract.load_policy()
+        expected = {
+            "behavior-kernel": (1000, 8000),
+            "state-header": (80, 1024),
+            "mandatory-bootstrap-union": (1080, 9024),
+            "context": (600, 5000),
+            "team": (500, 4200),
+            "applicable-handoff": (600, 5000),
+            "pre-task-union": (2780, 23224),
+            "canonical-policy": (3000, 32000),
+            "generated-governance-route": (800, 6500),
+            "hand-authored-governance-contract": (1200, 10000),
+            "operation-contract": (1200, 10000),
+            "repository-skill-router": (180, 1500),
+            "github-agent-facade": (120, 1000),
+            "contributing-governance-block": (1000, 8000),
+            "complete-ai4x-tree": (12000, 96000),
+        }
+        observed = {
+            item["id"]: (item["wordCap"], item["byteCap"])
+            for item in policy["budgets"]["surfaces"]
+        }
+        self.assertEqual(expected, observed)
+        counts = contract.validate_budgets(policy)
+        self.assertEqual(set(expected), set(counts))
 
-        human = read(CONTRIBUTING)
-        self.assertNotIn("`eligible but not recommended`", human)
-        self.assertNotIn("`ineligible`", human)
-        for term in (
-            "## PO-Entscheidungsvorlage",
-            "genau einer solchen Entscheidung",
-            "Gegenstand, Umfang, Zielzustand",
-            "Angefragte Agentenautorität: [exakte neue Autorität oder none]",
-            "Ausschlüsse bleiben immer Pflicht",
-            "durch `Freigegeben.` ausführbare Empfehlung muss die exakte neue Agentenautorität nennen",
-            "darf `none` nicht verwenden",
-            "direkte PO-Aktion und ein empfohlener Cold Start müssen `none` verwenden",
-            "dürfen keine Agentenautorität erfinden",
-            "ein kurzer evidenzbasierter Satz",
-            "Zwischenstände, reine Antworten und autonomes Weiterarbeiten",
-            "genau `recommended` oder `not recommended`",
-            "fehlgeschlagenen Sicherheitsbedingung",
-            "sicheren, aber gegenüber der Empfehlung nachrangigen Cold Start",
-            "kanonische Feld `Approval:` erscheint im deutschen Bericht als `Antwort zur Freigabe:`",
-            "darauf folgt als exakte alleinstehende PO-Antwort `Freigegeben.`",
-            "Ausgabe `Freigabe: Freigegeben.` ist ausgeschlossen",
-            "alleinstehende PO-Antwort",
-            "Diese Antwort bindet genau einmal ausschließlich",
-            "unmittelbar vorausgehenden, noch offenen Entscheidungsvorlage",
-            "Zustand `consumed` sichtbar",
-            "`Consumed` verbraucht die Freigabeantwort",
-            "nicht die durch sie begründete begrenzte Autorität",
-            "atomare Autorität der Arbeitseinheit bis zu ihrem genannten Zielzustand",
-            "ohne weitere Entscheidungsvorlage oder PO-Freigabeanfrage",
-            "fehlende oder mehrdeutige Vorlage",
-            "bereits verbrauchte Vorlage",
-            "spätere Vorlage oder neue materielle Fakten überholte Vorlage blockieren",
-            "nur im aktuellen laufenden Austausch",
-            "weder aus einem Gesprächsprotokoll rekonstruiert noch über eine Session-Grenze getragen",
-            "ausschließlich nicht imperativen Entscheidungsmetadaten",
-            "unveränderten drei nummerierten Aktionsschritte",
-            "Weitere imperative Sätze oder nummerierte Übergangsanweisungen sind ausgeschlossen",
-            "endet unmittelbar nach Schritt 3",
-        ):
-            with self.subTest(surface="human", term=term):
-                self.assertIn(term, human)
+    def test_budget_overflow_is_rejected(self) -> None:
+        policy = policy_copy()
+        surface = next(
+            item
+            for item in policy["budgets"]["surfaces"]
+            if item["id"] == "behavior-kernel"
+        )
+        surface["wordCap"] = 1
+        with self.assertRaises(contract.ContractError):
+            contract.validate_budgets(policy)
 
-    def test_integrity_evidence_is_exception_based(self) -> None:
-        agent = read(GOVERNANCE)
-        human = read(CONTRIBUTING)
-        for term in (
-            "externally supplied authority",
-            "release artifact",
-            "security-sensitive evidence",
-            "another stated integrity need",
-        ):
-            with self.subTest(surface="agent", term=term):
-                self.assertIn(term, agent)
-        self.assertIn("anderen konkret benannten Integritätsbedarf", human)
 
-    def test_delegated_remote_facts_use_primary_agent(self) -> None:
-        content = read(GOVERNANCE)
-        for term in (
-            "never query or mutate remote",
-            "primary agent",
-            "unmodified result",
-            "without inference",
-        ):
-            with self.subTest(term=term):
-                self.assertIn(term, content)
+class DecisionAndMutationTests(unittest.TestCase):
+    """Exercise closed mutation, approval, and cleanup predicates."""
 
-    def test_attribution_and_push_authority_are_explicit(self) -> None:
-        agent = read(GOVERNANCE)
-        human = read(CONTRIBUTING)
-        for term in (
-            "Product Owner authority commits",
-            "Issue-scoped commits include `Refs #N`",
-            "Push, release, protected publication",
-            "explicit Product Owner authority",
-        ):
-            with self.subTest(term=term):
-                self.assertIn(term, agent)
-        self.assertIn("Issue-bezogene Commits führen `Refs #N`", human)
+    def test_mutation_requires_every_gate_and_enumerated_transition(self) -> None:
+        policy = contract.load_policy()
+        names = tuple(policy["mutationGates"]["gates"])
+        passing = {name: True for name in names}
+        self.assertTrue(
+            contract.mutation_allowed(
+                policy,
+                action_id="project.transition",
+                gate_evidence=passing,
+                transition=("In progress", "In review"),
+            )
+        )
+        for name in names:
+            for missing in (False, None):
+                values = dict(passing)
+                values[name] = missing
+                with self.subTest(gate=name, value=missing):
+                    self.assertFalse(
+                        contract.mutation_allowed(
+                            policy,
+                            action_id="project.transition",
+                            gate_evidence=values,
+                            transition=("In progress", "In review"),
+                        )
+                    )
+        self.assertFalse(
+            contract.mutation_allowed(
+                policy,
+                action_id="project.transition",
+                gate_evidence=passing,
+                transition=("Ready", "Done"),
+            )
+        )
 
-    def test_repository_handoff_is_concise(self) -> None:
-        content = read(STATE)
-        self.assertLess(len(content.splitlines()), 90)
-        self.assertEqual(1, len(re.findall(r"(?m)^- Work status: `(?:ACTIVE|PAUSED|COMPLETE)`$", content)))
-        binding_state, branch = handoff_branch_binding(content)
-        self.assertEqual("valid", binding_state)
-        self.assertIsNotNone(branch)
-        self.assertRegex(content, r"(?m)^- Current Issue: `(?:#[0-9]+|NONE)`$")
+    def test_ready_without_matching_grant_denies_execution(self) -> None:
+        policy = contract.load_policy()
+        evidence = {name: True for name in policy["mutationGates"]["gates"]}
+        evidence["current-matching-subject-grant"] = False
+        self.assertFalse(
+            contract.mutation_allowed(
+                policy,
+                action_id="local.write",
+                gate_evidence=evidence,
+            )
+        )
+
+    def test_exact_adjacent_unused_reply_binds_once(self) -> None:
+        policy = contract.load_policy()
+        guards = tuple(policy["events"]["authority_request"]["bindingRequires"])
+        passing = {name: True for name in guards}
+        self.assertTrue(
+            contract.authority_reply_binds(
+                policy,
+                event_type="authority_request",
+                reply="Freigegeben.",
+                binding_evidence=passing,
+            )
+        )
+        for name in guards:
+            values = dict(passing)
+            values[name] = False
+            with self.subTest(guard=name):
+                self.assertFalse(
+                    contract.authority_reply_binds(
+                        policy,
+                        event_type="authority_request",
+                        reply="Freigegeben.",
+                        binding_evidence=values,
+                    )
+                )
+
+    def test_wrong_event_reply_and_replay_never_bind(self) -> None:
+        policy = contract.load_policy()
+        guards = tuple(policy["events"]["authority_request"]["bindingRequires"])
+        evidence = {name: True for name in guards}
+        for event in ("product_owner_action", "cold_start"):
+            with self.subTest(event=event):
+                self.assertFalse(
+                    contract.authority_reply_binds(
+                        policy,
+                        event_type=event,
+                        reply="Freigegeben.",
+                        binding_evidence=evidence,
+                    )
+                )
+        for reply in ("freigegeben.", "Freigegeben", " Freigegeben."):
+            with self.subTest(reply=reply):
+                self.assertFalse(
+                    contract.authority_reply_binds(
+                        policy,
+                        event_type="authority_request",
+                        reply=reply,
+                        binding_evidence=evidence,
+                    )
+                )
+
+    def test_forbidden_actions_and_grant_instances_are_policy_driven(self) -> None:
+        policy = contract.load_policy()
+        condition = "grant-target-ends-at-In-review"
+        self.assertTrue(
+            contract.action_forbidden(policy, "issue.close", (condition,))
+        )
+        self.assertFalse(
+            contract.action_forbidden(policy, "project.transition", (condition,))
+        )
+        required = policy["authorityGrant"]["requiredFields"]
+        grant = dict.fromkeys(required)
+        grant.update(
+            {
+                "grantId": "grant-1",
+                "issuer": "Product Owner",
+                "subject.repository": "o2i",
+                "subject.issue": "#103",
+                "decisionPayloadSha256": "a" * 64,
+                "expectedIssueBodySha256": "b" * 64,
+                "actionIds": ["local.write", "project.transition"],
+                "resourceIds": ["issue:#103"],
+                "scope": "Issue #103",
+                "targetState": "In review",
+                "exclusions": ["merge"],
+                "durableReceipt": "comment:1",
+                "validity": {
+                    name: True
+                    for name in policy["authorityGrant"]["validityRules"]
+                },
+                "lifecycle": "active",
+            }
+        )
+        expected = {name: copy.deepcopy(grant[name]) for name in required[:-2]}
+        evidence = copy.deepcopy(grant["validity"])
+        self.assertTrue(
+            contract.grant_instance_valid(
+                policy,
+                grant,
+                action_id="local.write",
+                resource_id="issue:#103",
+                expected_binding=expected,
+                validity_evidence=evidence,
+                current_lifecycle="active",
+            )
+        )
+        for field, value in (
+            ("lifecycle", "fulfilled"),
+            ("decisionPayloadSha256", "bad"),
+            ("actionIds", ["unknown.action"]),
+        ):
+            invalid = copy.deepcopy(grant)
+            invalid[field] = value
+            with self.subTest(field=field):
+                self.assertFalse(
+                    contract.grant_instance_valid(
+                        policy,
+                        invalid,
+                        action_id="local.write",
+                        resource_id="issue:#103",
+                        expected_binding=expected,
+                        validity_evidence=evidence,
+                        current_lifecycle="active",
+                    )
+                )
+        forged = copy.deepcopy(grant)
+        forged.update(
+            {
+                "issuer": "Mallory",
+                "subject.repository": "foreign",
+                "subject.issue": "#999",
+                "scope": "everything",
+                "targetState": "Done",
+                "durableReceipt": "unverified-comment",
+            }
+        )
+        self.assertFalse(
+            contract.grant_instance_valid(
+                policy,
+                forged,
+                action_id="local.write",
+                resource_id="issue:#103",
+                expected_binding=expected,
+                validity_evidence=evidence,
+                current_lifecycle="active",
+            )
+        )
+        receipt_unknown = copy.deepcopy(evidence)
+        receipt_unknown[
+            "durable-receipt-is-currently-verifiable-after-session-boundary"
+        ] = None
+        self.assertFalse(
+            contract.grant_instance_valid(
+                policy,
+                grant,
+                action_id="local.write",
+                resource_id="issue:#103",
+                expected_binding=expected,
+                validity_evidence=receipt_unknown,
+                current_lifecycle="active",
+            )
+        )
+
+    def test_cleanup_requires_every_completion_and_safety_fact(self) -> None:
+        names = (
+            "issue_accepted",
+            "publication_complete",
+            "remote_checks_green",
+            "issue_closed",
+            "project_done",
+            "cleanup_grant",
+            "durability_proven",
+            "target_identity_stable",
+            "required_identity_verified",
+            "technical_permission",
+        )
+        passing = {name: True for name in names}
+        self.assertTrue(contract.cleanup_allowed(**passing))
+        for name in names:
+            values = dict(passing)
+            values[name] = False
+            with self.subTest(fact=name):
+                self.assertFalse(contract.cleanup_allowed(**values))
+
+
+class RepositorySurfaceTests(unittest.TestCase):
+    """Keep repository routing, intake, autonomy, and text hygiene aligned."""
+
+    def test_handoff_contains_only_the_branch_return_point(self) -> None:
+        content = read(HANDOFF)
+        self.assertEqual(contract.HANDOFF_SCHEMA, contract.read_handoff()["schema"])
         for heading in (
             "# Objective",
             "# Authority",
+            "# Current Facts",
             "# Material Risk",
             "# Verification",
             "# Next Action",
@@ -1171,65 +854,84 @@ class GitHubGovernanceContractTests(unittest.TestCase):
         ):
             with self.subTest(heading=heading):
                 self.assertIn(heading, content)
-        for obsolete in ("Current gate", "Gate status", "Execution authorization"):
-            self.assertNotIn(obsolete, content)
+        self.assertNotRegex(content, r"(?i)(session[_ -]?id|conversation transcript)")
 
-    def test_issue_forms_remain_focused(self) -> None:
+    def test_issue_forms_remain_focused_and_blank_issues_are_disabled(self) -> None:
         framework = issue_form_fields(FRAMEWORK_FORM)
         maintenance = issue_form_fields(MAINTENANCE_FORM)
-        self.assertTrue({"change_path", "problem", "benefit", "target", "scope", "acceptance", "risks"}.issubset(framework))
-        self.assertTrue(all(framework[field] for field in ("change_path", "problem", "benefit", "target", "scope", "acceptance", "risks")))
-        self.assertTrue(all(not framework[field] for field in ("alternatives", "participants", "reviews")))
-        self.assertTrue({"problem", "target", "scope", "acceptance", "semantics"}.issubset(maintenance))
+        required_framework = {
+            "change_path",
+            "problem",
+            "benefit",
+            "target",
+            "scope",
+            "acceptance",
+            "risks",
+        }
+        self.assertTrue(required_framework.issubset(framework))
+        self.assertTrue(all(framework[field] for field in required_framework))
+        self.assertTrue(
+            all(
+                not framework[field]
+                for field in ("alternatives", "participants", "reviews")
+            )
+        )
+        self.assertTrue(
+            {"problem", "target", "scope", "acceptance", "semantics"}.issubset(
+                maintenance
+            )
+        )
         self.assertTrue(all(maintenance.values()))
-
-    def test_blank_issues_are_disabled(self) -> None:
         self.assertEqual("blank_issues_enabled: false\n", read(FORM_CONFIG))
 
-    def test_repository_verification_remains_deterministic(self) -> None:
-        content = read(GOVERNANCE)
-        self.assertIn("deterministic and network-independent", content)
-        self.assertIn("./utl/verify.sh", content)
-        self.assertIn("Before every release tag", content)
-        self.assertIn("Remote verification", content)
+    def test_skills_and_facades_are_bounded_routes(self) -> None:
+        self.assertTrue(SKILLS)
+        self.assertTrue(FACADES)
+        for path in SKILLS:
+            words, octets = contract.source_measure(path.read_bytes(), origin=str(path))
+            with self.subTest(skill=path):
+                self.assertLessEqual(words, 180)
+                self.assertLessEqual(octets, 1500)
+                self.assertIn(".ai4x/TEAM.md", read(path))
+        for path in FACADES:
+            words, octets = contract.source_measure(path.read_bytes(), origin=str(path))
+            with self.subTest(facade=path):
+                self.assertLessEqual(words, 120)
+                self.assertLessEqual(octets, 1000)
 
-    def test_public_contract_is_repository_autonomous(self) -> None:
-        absolute_posix_path = re.compile(r"(?:^|[\s`(])/(?!/)[A-Za-z0-9._~-]", re.MULTILINE)
-        absolute_windows_path = re.compile(r"\b[A-Za-z]:[\\/]")
-        parent_traversal = re.compile(r"(?:^|[\s`(])\.\./")
+    def test_local_staging_is_ignored(self) -> None:
+        result = subprocess.run(
+            ["git", "check-ignore", "-q", ".ai4x/local/probe"],
+            cwd=ROOT,
+            check=False,
+        )
+        self.assertEqual(0, result.returncode)
+
+    def test_public_contracts_are_repository_autonomous(self) -> None:
+        absolute_posix = re.compile(
+            r"(?:^|[\s`(])/(?:Users|home|private|var|tmp)/", re.MULTILINE
+        )
+        absolute_windows = re.compile(r"\b[A-Za-z]:[\\/]")
         relative_link = re.compile(r"\]\((?!https?://|#)([^)#]+)")
-        root = ROOT.resolve()
         for path in PUBLIC_CONTRACTS:
+            content = read(path)
+            without_literal_delete = content.replace("`/delete`", "")
             with self.subTest(path=path):
-                content = read(path)
-                path_content = content.replace("`/delete`", "")
-                self.assertIsNone(absolute_posix_path.search(path_content))
-                self.assertIsNone(absolute_windows_path.search(content))
-                self.assertIsNone(parent_traversal.search(content))
+                self.assertIsNone(absolute_posix.search(without_literal_delete))
+                self.assertIsNone(absolute_windows.search(content))
                 for target in relative_link.findall(content):
                     resolved = (path.parent / target).resolve()
-                    self.assertTrue(resolved.is_relative_to(root), target)
+                    self.assertTrue(resolved.is_relative_to(ROOT.resolve()), target)
+                    self.assertTrue(resolved.is_file(), target)
 
-    def test_text_contracts_use_clean_files(self) -> None:
-        for path in (
-            AGENTS,
-            BEHAVIOR,
-            CONTEXT,
-            TEAM,
-            GOVERNANCE,
-            CONTRIBUTING,
-            GITIGNORE,
-            HASKELL_AUTHORING,
-            HASKELL_REVIEW,
-            STRATEGY_REVIEW,
+    def test_text_contracts_are_clean_utf8_files(self) -> None:
+        for path in PUBLIC_CONTRACTS + (
             FRAMEWORK_FORM,
             MAINTENANCE_FORM,
             FORM_CONFIG,
-            *(path for path, _ in SKILLS.values()),
-            *AGENT_PROFILES,
         ):
+            content = read(path)
             with self.subTest(path=path):
-                content = read(path)
                 self.assertTrue(content.endswith("\n"))
                 self.assertNotIn("\t", content)
                 self.assertNotIn(" \n", content)
