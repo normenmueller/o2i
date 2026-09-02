@@ -146,6 +146,7 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
             "actions",
             "authorityGrant",
             "mutationGates",
+            "continuity",
             "events",
             "provenance",
             "forbiddenActions",
@@ -568,6 +569,8 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
     if gates["policyTransitionMustBeEnumerated"] is not True:
         raise ContractError("policy.mutationGates: transitions must be enumerated")
 
+    _validate_continuity(top["continuity"])
+
     events = _require_keys(
         top["events"],
         ("authority_request", "product_owner_action", "cold_start"),
@@ -747,6 +750,81 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
     if tuple(forbidden) != expected_forbidden:
         raise ContractError("policy.forbiddenActions: unsupported v1 rules")
     return top
+
+
+def _validate_continuity(value: Any) -> None:
+    continuity = _require_keys(
+        value,
+        (
+            "operationalTarget",
+            "sharedRequiredEvidence",
+            "boundaryKinds",
+            "missingOrUnknown",
+        ),
+        "policy.continuity",
+    )
+    if continuity["operationalTarget"] != "GitHub":
+        raise ContractError("policy.continuity: GitHub must be the sole target")
+    if continuity["missingOrUnknown"] != "deny":
+        raise ContractError("policy.continuity: unknown evidence must deny")
+    if _unique_strings(
+        continuity["sharedRequiredEvidence"],
+        "policy.continuity.sharedRequiredEvidence",
+    ) != (
+        "published-head-and-clean-fresh-clone",
+        "applicable-tracked-state-and-handoff",
+        "remote-return-point-and-authority-current",
+        "no-delegated-or-background-work",
+        "no-local-or-session-dependency",
+        "restore-proof-current",
+    ):
+        raise ContractError("policy.continuity: unsupported shared evidence")
+    expected = (
+        (
+            "completed-work-unit",
+            "COMPLETE",
+            (
+                "work-verification-corrections-and-reviews-complete",
+                "no-unresolved-fact-or-decision",
+            ),
+        ),
+        (
+            "active-product-owner-decision",
+            "ACTIVE",
+            (
+                "one-exact-current-non-authorizing-decision-next",
+                "all-required-changes-pushed",
+                "incomplete-and-unaccepted-state-explicit",
+                "no-other-unresolved-fact",
+            ),
+        ),
+    )
+    observed = []
+    for index, item in enumerate(
+        _require_sequence(continuity["boundaryKinds"], "policy.continuity.boundaryKinds")
+    ):
+        boundary = _require_keys(
+            item,
+            ("id", "handoffWorkStatus", "additionalRequiredEvidence"),
+            f"policy.continuity.boundaryKinds[{index}]",
+        )
+        observed.append(
+            (
+                _require_string(
+                    boundary["id"], f"policy.continuity.boundaryKinds[{index}].id"
+                ),
+                _require_string(
+                    boundary["handoffWorkStatus"],
+                    f"policy.continuity.boundaryKinds[{index}].handoffWorkStatus",
+                ),
+                _unique_strings(
+                    boundary["additionalRequiredEvidence"],
+                    f"policy.continuity.boundaryKinds[{index}].additionalRequiredEvidence",
+                ),
+            )
+        )
+    if tuple(observed) != expected:
+        raise ContractError("policy.continuity: unsupported boundary kinds")
 
 
 def _validate_events(events: Mapping[str, Any]) -> None:
@@ -1621,23 +1699,61 @@ def cleanup_allowed(
     target_identity_stable: bool | None,
     required_identity_verified: bool | None,
     technical_permission: bool | None,
+    cleanup_kind: str = "completed-work",
+    replacement_restore_proven: bool | None = None,
+    unique_data_resolved: bool | None = None,
+    recoverable_deletion: bool | None = None,
 ) -> bool:
-    """Evaluate the fail-closed completed-work cleanup predicate."""
+    """Evaluate one closed fail-safe cleanup predicate."""
+    shared = (
+        issue_accepted,
+        publication_complete,
+        remote_checks_green,
+        cleanup_grant,
+        durability_proven,
+        target_identity_stable,
+        required_identity_verified,
+        technical_permission,
+    )
+    if cleanup_kind == "completed-work":
+        required = shared + (issue_closed, project_done)
+    elif cleanup_kind == "superseded-continuity-source":
+        required = shared + (
+            replacement_restore_proven,
+            unique_data_resolved,
+            recoverable_deletion,
+        )
+    else:
+        return False
     return all(
         value is True
-        for value in (
-            issue_accepted,
-            publication_complete,
-            remote_checks_green,
-            issue_closed,
-            project_done,
-            cleanup_grant,
-            durability_proven,
-            target_identity_stable,
-            required_identity_verified,
-            technical_permission,
-        )
+        for value in required
     )
+
+
+def cold_start_eligible(
+    policy: Mapping[str, Any],
+    *,
+    boundary_kind: str,
+    handoff_work_status: str,
+    evidence: Mapping[str, bool | None],
+) -> bool:
+    """Evaluate one policy-owned cold-start boundary fail closed."""
+    continuity = policy["continuity"]
+    boundary = next(
+        (
+            item
+            for item in continuity["boundaryKinds"]
+            if item["id"] == boundary_kind
+        ),
+        None,
+    )
+    if boundary is None or boundary["handoffWorkStatus"] != handoff_work_status:
+        return False
+    required = tuple(continuity["sharedRequiredEvidence"]) + tuple(
+        boundary["additionalRequiredEvidence"]
+    )
+    return tuple(evidence) == required and all(evidence[name] is True for name in required)
 
 
 def render_agent_projection(policy: Mapping[str, Any]) -> str:
@@ -1692,6 +1808,13 @@ def render_agent_projection(policy: Mapping[str, Any]) -> str:
     lines.append(
         "Only `authority_request` accepts the exact adjacent reply `Freigegeben.`; it is single-use, current-fact-bound, observable, and non-replayable."
     )
+    continuity = policy["continuity"]
+    lines.extend(("", "# Cold Start Continuity", ""))
+    lines.append(
+        f"`{continuity['operationalTarget']}` alone. Boundaries: `completed-work-unit`, "
+        "`active-product-owner-decision`. Load `session-continuity`; unknown denies; "
+        "no local/session dependency; no checkpoint-derived acceptance or authority."
+    )
     lines.extend(("", "# Provenance And Forbidden Actions", ""))
     provenance = policy["provenance"]
     lines.append(
@@ -1745,6 +1868,10 @@ def render_contributing_projection(policy: Mapping[str, Any]) -> str:
         "### Entscheidungsereignisse",
         "",
         "`authority_request` fordert genau einen begrenzten Agenten-Grant an und akzeptiert allein die unmittelbar folgende, alleinstehende Antwort `Freigegeben.`. `product_owner_action` fordert genau eine Handlung des Product Owners und erzeugt keinen Grant. `cold_start` verwendet ausschließlich die drei festen Übergangsaktionen und erzeugt ebenfalls keinen Grant. Falsche, nicht angrenzende, überholte, rekonstruierte oder bereits verbrauchte Freigaben werden abgewiesen.",
+        "",
+        "### Cold Start",
+        "",
+        "GitHub ist das einzige operative Continuity-Ziel. Zulässig sind ein vollständig abgeschlossener Arbeitsstand und eine aktive, vollständig veröffentlichte Entscheidungsgrenze. Beide benötigen einen sauberen Fresh-Clone-Beweis, ein passendes getracktes State/Handoff-Paar, aktuelle dauerhafte Autoritätsbelege und dürfen weder Transcript, `resume`, lokale Pointer, ignorierte Dateien, Host-Snapshots noch Modellgedächtnis voraussetzen. Ein aktiver Checkpoint macht Unfertigkeit und fehlende Akzeptanz ausdrücklich sichtbar und erzeugt selbst weder Akzeptanz noch Autorität.",
         "",
         "### Provenienz und Grenzen",
         "",
