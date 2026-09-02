@@ -11,6 +11,18 @@
     },
     {
       "$ref": "#/$defs/preparationFailed"
+    },
+    {
+      "$ref": "#/$defs/validateFailed"
+    },
+    {
+      "$ref": "#/$defs/qualifyFailed"
+    },
+    {
+      "$ref": "#/$defs/readinessFailed"
+    },
+    {
+      "$ref": "#/$defs/assessFailed"
     }
   ],
   "$defs": {
@@ -58,6 +70,675 @@
           "type": "string"
         }
       }
+    },
+    "inputFailureDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ruleId",
+        "inputOrdinals",
+        "reason",
+        "fields"
+      ],
+      "properties": {
+        "ruleId": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\u0000]+$"
+        },
+        "inputOrdinals": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minItems": 1
+        },
+        "reason": {
+          "enum": [
+            "invalid-utf8",
+            "invalid-json-syntax",
+            "duplicate-object-member",
+            "top-level-object-required",
+            "type-member-invalid",
+            "payload-type-not-admitted",
+            "required-member-missing",
+            "unknown-member",
+            "value-kind-invalid",
+            "scalar-grammar-invalid",
+            "array-cardinality-invalid",
+            "array-distinctness-invalid",
+            "subject-cardinality-invalid",
+            "identity-unknown",
+            "identity-ambiguous",
+            "identity-wrong-type",
+            "identity-out-of-selected-view",
+            "model-identity-unicode-scalar-invalid",
+            "model-identity-contains-nul",
+            "discriminator-invalid",
+            "normalization-collision"
+          ]
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/commandDiagnosticField"
+          }
+        }
+      }
+    },
+    "commandDiagnosticValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "text"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "natural"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "model-identity"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^\u0000]+$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "occurrence-identity"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^\u0000]+$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "qualified-type"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^\u0000]+$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "role",
+            "ordinal"
+          ],
+          "properties": {
+            "kind": {
+              "const": "source-key"
+            },
+            "role": {
+              "enum": [
+                "model",
+                "supplemental",
+                "readiness",
+                "assessment"
+              ]
+            },
+            "ordinal": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "role",
+            "ordinal",
+            "reference",
+            "sha256"
+          ],
+          "properties": {
+            "kind": {
+              "const": "source-identity"
+            },
+            "role": {
+              "enum": [
+                "model",
+                "supplemental",
+                "readiness",
+                "assessment"
+              ]
+            },
+            "ordinal": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "reference": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "name",
+            "version",
+            "notation"
+          ],
+          "properties": {
+            "kind": {
+              "const": "adapter-descriptor"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^\u0000]+$"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^\u0000]+$"
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^\u0000]+$"
+            },
+            "notation": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[^\u0000]+$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "occurrenceKind",
+            "ordinal"
+          ],
+          "properties": {
+            "kind": {
+              "const": "canonical-occurrence"
+            },
+            "occurrenceKind": {
+              "enum": [
+                "record",
+                "property",
+                "reference"
+              ]
+            },
+            "ordinal": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "index",
+            "codePoint"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unicode-scalar"
+            },
+            "index": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "codePoint": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "commandDiagnosticField": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "values"
+      ],
+      "properties": {
+        "name": {
+          "enum": [
+            "jsonPointer",
+            "expectedSchema",
+            "payloadType",
+            "subject",
+            "identity",
+            "unicodeScalars",
+            "nulIndexes",
+            "member",
+            "observed",
+            "expected",
+            "minimum",
+            "duplicate",
+            "schema",
+            "modelIdentity",
+            "expectedGraphIdentity",
+            "occurrence",
+            "expectedQualifiedType",
+            "zeroBasedIndex",
+            "codePoint",
+            "source",
+            "adapter",
+            "authorityAdapter",
+            "contractAdapter",
+            "notationIssueKind",
+            "ruleId",
+            "evidenceKind",
+            "binding",
+            "details",
+            "modelIdentities",
+            "cardinality",
+            "projectionKinds",
+            "owner",
+            "endpointRole",
+            "endpoint",
+            "proposition",
+            "sourceKey",
+            "sources",
+            "occurrences"
+          ]
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/commandDiagnosticValue"
+          }
+        }
+      }
+    },
+    "commandOwnerEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "fields"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "source-identity",
+            "adapter-descriptor",
+            "adapter-authority-mismatch",
+            "adapter-notation-rule-missing",
+            "unknown-generated-profile-rule",
+            "generated-profile-evidence-mismatch",
+            "missing-core-contract-binding",
+            "impossible-occurrence-identity",
+            "duplicate-model-identity",
+            "unknown-selected-view-subject-occurrence",
+            "selected-view-subject-identity-mismatch",
+            "unknown-selected-view-occurrence",
+            "duplicate-selected-view-occurrence",
+            "projection-outside-selected-view",
+            "duplicate-structure-projection",
+            "missing-carrier-projection",
+            "missing-structured-proposition-projection",
+            "model-source-is-not-supplemental",
+            "duplicate-supplemental-source",
+            "semantic-occurrences",
+            "semantic-graph-mismatch"
+          ]
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/commandDiagnosticField"
+          }
+        }
+      }
+    },
+    "validateFailure": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "category",
+            "diagnostics"
+          ],
+          "properties": {
+            "category": {
+              "const": "supplemental-input"
+            },
+            "diagnostics": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/inputFailureDiagnostic"
+              },
+              "minItems": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "category",
+            "branch",
+            "evidence"
+          ],
+          "properties": {
+            "category": {
+              "const": "owner-contract"
+            },
+            "branch": {
+              "enum": [
+                "acquired-model-role",
+                "acquired-supplemental-role",
+                "selected-adapter-contract",
+                "notation-contract",
+                "profile-contract",
+                "identity-index",
+                "selected-view-scope",
+                "structure-input",
+                "supplemental-provenance",
+                "semantic-unavailable-contract"
+              ]
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/commandOwnerEvidence"
+              },
+              "minItems": 1
+            }
+          }
+        }
+      ]
+    },
+    "qualifyFailure": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "category",
+            "diagnostics"
+          ],
+          "properties": {
+            "category": {
+              "const": "supplemental-input"
+            },
+            "diagnostics": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/inputFailureDiagnostic"
+              },
+              "minItems": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "category",
+            "branch",
+            "evidence"
+          ],
+          "properties": {
+            "category": {
+              "const": "owner-contract"
+            },
+            "branch": {
+              "enum": [
+                "acquired-model-role",
+                "acquired-supplemental-role",
+                "selected-adapter-contract",
+                "notation-contract",
+                "profile-contract",
+                "identity-index",
+                "selected-view-scope",
+                "structure-input",
+                "supplemental-provenance",
+                "qualification-context"
+              ]
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/commandOwnerEvidence"
+              },
+              "minItems": 1
+            }
+          }
+        }
+      ]
+    },
+    "readinessFailure": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "category",
+            "diagnostics"
+          ],
+          "properties": {
+            "category": {
+              "const": "evidence-input"
+            },
+            "diagnostics": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/inputFailureDiagnostic"
+              },
+              "minItems": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "category",
+            "diagnostics"
+          ],
+          "properties": {
+            "category": {
+              "const": "supplemental-input"
+            },
+            "diagnostics": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/inputFailureDiagnostic"
+              },
+              "minItems": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "category",
+            "branch",
+            "evidence"
+          ],
+          "properties": {
+            "category": {
+              "const": "owner-contract"
+            },
+            "branch": {
+              "enum": [
+                "acquired-model-role",
+                "acquired-readiness-role",
+                "acquired-supplemental-role",
+                "selected-adapter-contract",
+                "notation-contract",
+                "profile-contract",
+                "identity-index",
+                "selected-view-scope",
+                "structure-input",
+                "supplemental-provenance",
+                "semantic-model-contract"
+              ]
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/commandOwnerEvidence"
+              },
+              "minItems": 1
+            }
+          }
+        }
+      ]
+    },
+    "assessFailure": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "category",
+            "diagnostics"
+          ],
+          "properties": {
+            "category": {
+              "const": "assessment-input"
+            },
+            "diagnostics": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/inputFailureDiagnostic"
+              },
+              "minItems": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "category",
+            "diagnostics"
+          ],
+          "properties": {
+            "category": {
+              "const": "supplemental-input"
+            },
+            "diagnostics": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/inputFailureDiagnostic"
+              },
+              "minItems": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "category",
+            "branch",
+            "evidence"
+          ],
+          "properties": {
+            "category": {
+              "const": "owner-contract"
+            },
+            "branch": {
+              "enum": [
+                "acquired-model-role",
+                "acquired-assessment-role",
+                "acquired-supplemental-role",
+                "selected-adapter-contract",
+                "notation-contract",
+                "profile-contract",
+                "identity-index",
+                "selected-view-scope",
+                "structure-input",
+                "supplemental-provenance",
+                "semantic-model-contract"
+              ]
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/commandOwnerEvidence"
+              },
+              "minItems": 1
+            }
+          }
+        }
+      ]
     },
     "argumentInvalid": {
       "type": "object",
@@ -153,6 +834,126 @@
             "profile-compatibility",
             "view-selection"
           ]
+        }
+      }
+    },
+    "validateFailed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "kind",
+        "tool",
+        "code",
+        "failure"
+      ],
+      "properties": {
+        "schema": {
+          "const": "o2i.command-error/v1"
+        },
+        "kind": {
+          "const": "validate-failed"
+        },
+        "tool": {
+          "$ref": "#/$defs/toolDescriptor"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\u0000]+$"
+        },
+        "failure": {
+          "$ref": "#/$defs/validateFailure"
+        }
+      }
+    },
+    "qualifyFailed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "kind",
+        "tool",
+        "code",
+        "failure"
+      ],
+      "properties": {
+        "schema": {
+          "const": "o2i.command-error/v1"
+        },
+        "kind": {
+          "const": "qualify-failed"
+        },
+        "tool": {
+          "$ref": "#/$defs/toolDescriptor"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\u0000]+$"
+        },
+        "failure": {
+          "$ref": "#/$defs/qualifyFailure"
+        }
+      }
+    },
+    "readinessFailed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "kind",
+        "tool",
+        "code",
+        "failure"
+      ],
+      "properties": {
+        "schema": {
+          "const": "o2i.command-error/v1"
+        },
+        "kind": {
+          "const": "readiness-failed"
+        },
+        "tool": {
+          "$ref": "#/$defs/toolDescriptor"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\u0000]+$"
+        },
+        "failure": {
+          "$ref": "#/$defs/readinessFailure"
+        }
+      }
+    },
+    "assessFailed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "kind",
+        "tool",
+        "code",
+        "failure"
+      ],
+      "properties": {
+        "schema": {
+          "const": "o2i.command-error/v1"
+        },
+        "kind": {
+          "const": "assess-failed"
+        },
+        "tool": {
+          "$ref": "#/$defs/toolDescriptor"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\u0000]+$"
+        },
+        "failure": {
+          "$ref": "#/$defs/assessFailure"
         }
       }
     }

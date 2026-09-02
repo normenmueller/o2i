@@ -21,6 +21,8 @@ import O2I.Operation.Acquisition
   , fileInput
   )
 import O2I.Operation.Acquisition.Internal (acquireWith)
+import O2I.Operation.Command.Error (commandErrorCode, readinessCommandError)
+import O2I.Operation.Command.Error.Machine
 import O2I.Operation.Machine (ToolDescriptor, mkToolDescriptor)
 import O2I.Operation.Provenance (SourceOrdinal, SourceRole, mkSourceReference)
 import O2I.Operation.Readiness.Machine
@@ -53,6 +55,9 @@ tests =
     , testCase
         "keeps malformed evidence outside the machine envelope"
         malformedEvidence
+    , testCase
+        "lifts malformed supplemental input through the real Left branch"
+        malformedSupplemental
     , testCase "reports binding unavailability" bindingUnavailable
     , testCase "reports reconstruction unavailability" reconstructionUnavailable
     , testCase "reports a failed criterion as not ready" notReady
@@ -139,10 +144,62 @@ malformedEvidence = do
     (\_ _ -> assertFailure "malformed evidence reached not ready")
     (\_ _ -> assertFailure "malformed evidence reached ready")
     result
+  assertReadinessCommandError
+    "readiness.evidence-input"
+    "{\"schema\":\"o2i.command-error/v1\",\"kind\":\"readiness-failed\",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},\"code\":\"readiness.evidence-input\",\"failure\":{\"category\":\"evidence-input\",\"diagnostics\":[{\"ruleId\":\"core.evidence-input.decode.discriminator\",\"inputOrdinals\":[0],\"reason\":\"discriminator-invalid\",\"fields\":[{\"name\":\"jsonPointer\",\"values\":[{\"kind\":\"text\",\"value\":\"/type\"}]},{\"name\":\"expected\",\"values\":[{\"kind\":\"text\",\"value\":\"ReadinessInput\"}]}]}]}}"
+    result
+
+malformedSupplemental :: Assertion
+malformedSupplemental = do
+  model <- fixtureModelInput
+  evidence <- input "readiness" "readiness.json"
+  supplement <- input "supplement" "malformed-supplement.json"
+  result <-
+    withFixtureEnvironment (traceContractDraft Nothing False) $ \adapters profiles ->
+      runReadinessWith
+        (fixtureAcquirer quantitativeJson Nothing)
+        adapters
+        profiles
+        (readinessRequest
+           model
+           (viewByName "Binding")
+           Nothing
+           evidence
+           [supplement])
+  foldReadinessResult
+    (\failure ->
+       foldReadinessFailure
+         (const (assertFailure "malformed supplement became common failure"))
+         (const (assertFailure "malformed supplement became evidence failure"))
+         (const (pure ()))
+         (const (assertFailure "malformed supplement became owner failure"))
+         failure)
+    (\_ _ -> assertFailure "malformed supplement reached prerequisite")
+    (\_ _ -> assertFailure "malformed supplement reached unavailability")
+    (\_ _ -> assertFailure "malformed supplement reached not ready")
+    (\_ _ -> assertFailure "malformed supplement reached ready")
+    result
+  assertReadinessCommandError
+    "readiness.supplemental-input"
+    "{\"schema\":\"o2i.command-error/v1\",\"kind\":\"readiness-failed\",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},\"code\":\"readiness.supplemental-input\",\"failure\":{\"category\":\"supplemental-input\",\"diagnostics\":[{\"ruleId\":\"core.supplemental.decode.json-syntax\",\"inputOrdinals\":[0],\"reason\":\"invalid-json-syntax\",\"fields\":[]}]}}"
+    result
+
+assertReadinessCommandError ::
+     Text -> ByteString.ByteString -> ReadinessResult -> Assertion
+assertReadinessCommandError expectedCode expectedBytes result = do
   tool <- testTool
   case readinessResultDocument tool result of
-    Left _ -> pure ()
-    Right _ -> assertFailure "malformed evidence acquired a machine envelope"
+    Left failure -> do
+      let commandError = readinessCommandError failure
+          document = commandErrorDocument tool commandError
+          encoded = encodeCommandErrorDocument document
+      commandErrorCode commandError @?= expectedCode
+      schemaVariantText (commandErrorDocumentVariant document)
+        @?= "readiness-failed"
+      encoded @?= expectedBytes
+      assertCommandErrorSchema encoded
+    Right _ ->
+      assertFailure "failed Readiness result acquired a machine envelope"
 
 bindingUnavailable :: Assertion
 bindingUnavailable = do
@@ -344,6 +401,16 @@ assertMachine expected result = do
       Right documentValue -> pure documentValue
   validateJSONSchema schema value
     @? "Readiness machine document violates its generated Schema"
+
+assertCommandErrorSchema :: ByteString.ByteString -> Assertion
+assertCommandErrorSchema encoded = do
+  schema <- requireJson (LazyByteString.fromStrict commandErrorSchemaBytes)
+  value <-
+    case Aeson.eitherDecodeStrict encoded of
+      Left message -> assertFailure message >> fail "unreachable"
+      Right documentValue -> pure documentValue
+  validateJSONSchema schema value
+    @? "Readiness command error violates the generated Schema"
 
 testTool :: IO ToolDescriptor
 testTool = requireRight (mkToolDescriptor "o2i" "0.3.0")

@@ -23,6 +23,8 @@ import O2I.Operation.Acquisition (InputSource, fileInput)
 import O2I.Operation.Acquisition.Internal (acquireWith)
 import O2I.Operation.Adapter
 import O2I.Operation.Adapter.Authoring
+import O2I.Operation.Command.Error (commandErrorCode, validateCommandError)
+import O2I.Operation.Command.Error.Machine
 import O2I.Operation.Diagnostic
 import O2I.Operation.Diagnostic.Internal
   ( SupplementalDiagnosticGroup(..)
@@ -590,13 +592,38 @@ assertCommonFailureCode expected =
 assertSupplementalFailureCount :: Int -> ValidateResult -> Assertion
 assertSupplementalFailureCount expected =
   foldValidateResult
-    (foldValidateFailure
-       (const (assertFailure "expected a supplemental-input failure"))
-       (\defects -> NonEmpty.length defects @?= expected)
-       (const (assertFailure "expected a supplemental-input failure")))
+    (\failure -> do
+       foldValidateFailure
+         (const (assertFailure "expected a supplemental-input failure"))
+         (\defects -> NonEmpty.length defects @?= expected)
+         (const (assertFailure "expected a supplemental-input failure"))
+         failure
+       tool <- validateTool
+       let commandError = validateCommandError failure
+           document = commandErrorDocument tool commandError
+           encoded = encodeCommandErrorDocument document
+       commandErrorCode commandError @?= "validate.supplemental-input"
+       schemaVariantText (commandErrorDocumentVariant document)
+         @?= "validate-failed"
+       case expected of
+         2 ->
+           encoded
+             @?= "{\"schema\":\"o2i.command-error/v1\",\"kind\":\"validate-failed\",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},\"code\":\"validate.supplemental-input\",\"failure\":{\"category\":\"supplemental-input\",\"diagnostics\":[{\"ruleId\":\"core.supplemental.decode.json-syntax\",\"inputOrdinals\":[0],\"reason\":\"invalid-json-syntax\",\"fields\":[]},{\"ruleId\":\"core.supplemental.decode.json-syntax\",\"inputOrdinals\":[1],\"reason\":\"invalid-json-syntax\",\"fields\":[]}]}}"
+         _ -> pure ()
+       assertCommandErrorSchema encoded)
     (const (assertFailure "expected a failure"))
     (const (assertFailure "expected a failure"))
     (\_ _ -> assertFailure "expected a failure")
+
+assertCommandErrorSchema :: ByteString.ByteString -> Assertion
+assertCommandErrorSchema encoded = do
+  schema <-
+    case Aeson.eitherDecodeStrict commandErrorSchemaBytes of
+      Left message -> assertFailure message >> fail "unreachable"
+      Right value -> pure value
+  document <- decodeValue encoded
+  validateJSONSchema schema document
+    @? "Validate command error violates the generated Schema"
 
 requestProjectionTests :: TestTree
 requestProjectionTests =

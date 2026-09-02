@@ -32,6 +32,10 @@ DEFAULT_CORE_OWNER_DIAGNOSTIC_INVENTORY = (
 DEFAULT_CORE_COMPANION = PACKAGE_ROOT.parents[1] / "lib/core/semantics.json"
 RULE_GENERATED = PACKAGE_ROOT / "src/O2I/Operation/Rule/Generated.hs"
 SCHEMA_GENERATED = PACKAGE_ROOT / "src/O2I/Operation/Schema/Generated.hs"
+COMMAND_ERROR_BRANCH_GENERATED = (
+    PACKAGE_ROOT
+    / "src/O2I/Operation/Command/Error/Branch/Generated.hs"
+)
 SCHEMA_DIRECTORY = PACKAGE_ROOT / "contract/schema"
 GENERATED = RULE_GENERATED
 
@@ -220,7 +224,15 @@ EXPECTED_VARIANTS = dict(EXPECTED_DOCUMENTS)
 COMMAND_ERROR_DOCUMENTS = (
     (
         "commandError",
-        ("argument-invalid", "command-failed", "preparation-failed"),
+        (
+            "argument-invalid",
+            "command-failed",
+            "preparation-failed",
+            "validate-failed",
+            "qualify-failed",
+            "readiness-failed",
+            "assess-failed",
+        ),
     ),
 )
 EXPECTED_VARIANTS.update(COMMAND_ERROR_DOCUMENTS)
@@ -247,6 +259,10 @@ VARIANT_BINDINGS: dict[str, str] = {
     "argument-invalid": "argumentInvalidVariant",
     "command-failed": "commandFailedVariant",
     "preparation-failed": "preparationFailedVariant",
+    "validate-failed": "validateFailedVariant",
+    "qualify-failed": "qualifyFailedVariant",
+    "readiness-failed": "readinessFailedVariant",
+    "assess-failed": "assessFailedVariant",
     "notation-validation-accepted": "notationValidationAcceptedVariant",
     "notation-validation-rejected": "notationValidationRejectedVariant",
     "profile-validation-accepted": "profileValidationAcceptedVariant",
@@ -303,6 +319,49 @@ def require_text(value: Any, subject: str) -> str:
     if not isinstance(value, str) or not value or "\x00" in value:
         raise ValueError(f"{subject}: expected non-empty NUL-free text")
     return value
+
+
+def validate_command_error_owner_branches(
+    value: Any,
+) -> dict[str, list[dict[str, str]]]:
+    if not isinstance(value, dict):
+        raise ValueError("ownerBranches: expected object")
+    capabilities = ["validate", "qualify", "readiness", "assess"]
+    require_keys(value, set(capabilities), "ownerBranches")
+    expected_lengths = {
+        "validate": 10,
+        "qualify": 10,
+        "readiness": 11,
+        "assess": 11,
+    }
+    checked: dict[str, list[dict[str, str]]] = {}
+    for capability in capabilities:
+        rows = value[capability]
+        if not isinstance(rows, list):
+            raise ValueError(f"ownerBranches.{capability}: expected array")
+        if len(rows) != expected_lengths[capability]:
+            raise ValueError(
+                f"ownerBranches.{capability}: unexpected branch cardinality"
+            )
+        checked_rows: list[dict[str, str]] = []
+        for index, row in enumerate(rows):
+            subject = f"ownerBranches.{capability}[{index}]"
+            if not isinstance(row, dict):
+                raise ValueError(f"{subject}: expected object")
+            require_keys(row, {"constructor", "token"}, subject)
+            constructor = require_text(row["constructor"], f"{subject}.constructor")
+            token = require_text(row["token"], f"{subject}.token")
+            if re.fullmatch(r"[A-Z][A-Za-z0-9]+", constructor) is None:
+                raise ValueError(f"{subject}.constructor: invalid Haskell constructor")
+            if re.fullmatch(TOKEN_PATTERN, token) is None:
+                raise ValueError(f"{subject}.token: invalid stable token")
+            checked_rows.append({"constructor": constructor, "token": token})
+        if len({row["constructor"] for row in checked_rows}) != len(checked_rows):
+            raise ValueError(f"ownerBranches.{capability}: duplicate constructor")
+        if len({row["token"] for row in checked_rows}) != len(checked_rows):
+            raise ValueError(f"ownerBranches.{capability}: duplicate token")
+        checked[capability] = checked_rows
+    return checked
 
 
 def require_positive_integer(value: Any, subject: str) -> int:
@@ -469,11 +528,12 @@ def validate(
     command_error, _ = load_object(COMMAND_ERROR_COMPANION)
     require_keys(
         command_error,
-        {"schema", "document"},
+        {"schema", "document", "ownerBranches"},
         "Command-error companion",
     )
     if command_error["schema"] != "o2i.command-error-contract/1":
         raise ValueError("unsupported Command-error companion schema")
+    validate_command_error_owner_branches(command_error["ownerBranches"])
     documents.extend(
         validate_machine_documents(
             [command_error["document"]], COMMAND_ERROR_DOCUMENTS
@@ -4296,6 +4356,184 @@ def diagnostic_schema(
 
 
 def command_error_schema(document: MachineDocument) -> dict[str, Any]:
+    command_error, _ = load_object(COMMAND_ERROR_COMPANION)
+    owner_branches = validate_command_error_owner_branches(
+        command_error["ownerBranches"]
+    )
+    def input_failure(category: str) -> dict[str, Any]:
+        return object_schema(
+            {
+                "category": {"const": category},
+                "diagnostics": array_schema(
+                    reference("inputFailureDiagnostic"), minimum=1
+                ),
+            }
+        )
+
+    def owner_failure(branches: list[str]) -> dict[str, Any]:
+        return object_schema(
+            {
+                "category": {"const": "owner-contract"},
+                "branch": {"enum": branches},
+                "evidence": array_schema(
+                    reference("commandOwnerEvidence"), minimum=1
+                ),
+            }
+        )
+
+    validate_owner_branches = [
+        row["token"] for row in owner_branches["validate"]
+    ]
+    qualify_owner_branches = [
+        row["token"] for row in owner_branches["qualify"]
+    ]
+    readiness_owner_branches = [
+        row["token"] for row in owner_branches["readiness"]
+    ]
+    assess_owner_branches = [
+        row["token"] for row in owner_branches["assess"]
+    ]
+    input_reasons = [
+        "invalid-utf8",
+        "invalid-json-syntax",
+        "duplicate-object-member",
+        "top-level-object-required",
+        "type-member-invalid",
+        "payload-type-not-admitted",
+        "required-member-missing",
+        "unknown-member",
+        "value-kind-invalid",
+        "scalar-grammar-invalid",
+        "array-cardinality-invalid",
+        "array-distinctness-invalid",
+        "subject-cardinality-invalid",
+        "identity-unknown",
+        "identity-ambiguous",
+        "identity-wrong-type",
+        "identity-out-of-selected-view",
+        "model-identity-unicode-scalar-invalid",
+        "model-identity-contains-nul",
+        "discriminator-invalid",
+        "normalization-collision",
+    ]
+    field_names = [
+        "jsonPointer",
+        "expectedSchema",
+        "payloadType",
+        "subject",
+        "identity",
+        "unicodeScalars",
+        "nulIndexes",
+        "member",
+        "observed",
+        "expected",
+        "minimum",
+        "duplicate",
+        "schema",
+        "modelIdentity",
+        "expectedGraphIdentity",
+        "occurrence",
+        "expectedQualifiedType",
+        "zeroBasedIndex",
+        "codePoint",
+        "source",
+        "adapter",
+        "authorityAdapter",
+        "contractAdapter",
+        "notationIssueKind",
+        "ruleId",
+        "evidenceKind",
+        "binding",
+        "details",
+        "modelIdentities",
+        "cardinality",
+        "projectionKinds",
+        "owner",
+        "endpointRole",
+        "endpoint",
+        "proposition",
+        "sourceKey",
+        "sources",
+        "occurrences",
+    ]
+    owner_evidence_kinds = [
+        "source-identity",
+        "adapter-descriptor",
+        "adapter-authority-mismatch",
+        "adapter-notation-rule-missing",
+        "unknown-generated-profile-rule",
+        "generated-profile-evidence-mismatch",
+        "missing-core-contract-binding",
+        "impossible-occurrence-identity",
+        "duplicate-model-identity",
+        "unknown-selected-view-subject-occurrence",
+        "selected-view-subject-identity-mismatch",
+        "unknown-selected-view-occurrence",
+        "duplicate-selected-view-occurrence",
+        "projection-outside-selected-view",
+        "duplicate-structure-projection",
+        "missing-carrier-projection",
+        "missing-structured-proposition-projection",
+        "model-source-is-not-supplemental",
+        "duplicate-supplemental-source",
+        "semantic-occurrences",
+        "semantic-graph-mismatch",
+    ]
+    scalar_values = [
+        ("text", {"type": "string"}),
+        ("natural", {"type": "integer", "minimum": 0}),
+        ("model-identity", text_schema(pattern=TOOL_TEXT_PATTERN)),
+        ("occurrence-identity", text_schema(pattern=TOOL_TEXT_PATTERN)),
+        ("qualified-type", text_schema(pattern=TOOL_TEXT_PATTERN)),
+    ]
+    command_diagnostic_values = [
+        object_schema({"kind": {"const": kind}, "value": value})
+        for kind, value in scalar_values
+    ] + [
+        object_schema(
+            {
+                "kind": {"const": "source-key"},
+                "role": {
+                    "enum": ["model", "supplemental", "readiness", "assessment"]
+                },
+                "ordinal": {"type": "integer", "minimum": 0},
+            }
+        ),
+        object_schema(
+            {
+                "kind": {"const": "source-identity"},
+                "role": {
+                    "enum": ["model", "supplemental", "readiness", "assessment"]
+                },
+                "ordinal": {"type": "integer", "minimum": 0},
+                "reference": {"type": "string"},
+                "sha256": text_schema(pattern="^[0-9a-f]{64}$"),
+            }
+        ),
+        object_schema(
+            {
+                "kind": {"const": "adapter-descriptor"},
+                "id": text_schema(pattern=TOOL_TEXT_PATTERN),
+                "name": text_schema(pattern=TOOL_TEXT_PATTERN),
+                "version": text_schema(pattern=TOOL_TEXT_PATTERN),
+                "notation": text_schema(pattern=TOOL_TEXT_PATTERN),
+            }
+        ),
+        object_schema(
+            {
+                "kind": {"const": "canonical-occurrence"},
+                "occurrenceKind": {"enum": ["record", "property", "reference"]},
+                "ordinal": {"type": "integer", "minimum": 0},
+            }
+        ),
+        object_schema(
+            {
+                "kind": {"const": "unicode-scalar"},
+                "index": {"type": "integer", "minimum": 0},
+                "codePoint": {"type": "integer", "minimum": 0},
+            }
+        ),
+    ]
     definitions = {
         "toolDescriptor": tool_descriptor(),
         "acquisitionFailure": object_schema(
@@ -4305,6 +4543,55 @@ def command_error_schema(document: MachineDocument) -> dict[str, Any]:
                 "message": {"type": "string"},
             }
         ),
+        "inputFailureDiagnostic": object_schema(
+            {
+                "ruleId": text_schema(pattern=TOOL_TEXT_PATTERN),
+                "inputOrdinals": array_schema(
+                    {"type": "integer", "minimum": 0}, minimum=1
+                ),
+                "reason": {"enum": input_reasons},
+                "fields": array_schema(reference("commandDiagnosticField")),
+            }
+        ),
+        "commandDiagnosticValue": {"oneOf": command_diagnostic_values},
+        "commandDiagnosticField": object_schema(
+            {
+                "name": {"enum": field_names},
+                "values": array_schema(reference("commandDiagnosticValue")),
+            }
+        ),
+        "commandOwnerEvidence": object_schema(
+            {
+                "kind": {"enum": owner_evidence_kinds},
+                "fields": array_schema(reference("commandDiagnosticField")),
+            }
+        ),
+        "validateFailure": {
+            "oneOf": [
+                input_failure("supplemental-input"),
+                owner_failure(validate_owner_branches),
+            ]
+        },
+        "qualifyFailure": {
+            "oneOf": [
+                input_failure("supplemental-input"),
+                owner_failure(qualify_owner_branches),
+            ]
+        },
+        "readinessFailure": {
+            "oneOf": [
+                input_failure("evidence-input"),
+                input_failure("supplemental-input"),
+                owner_failure(readiness_owner_branches),
+            ]
+        },
+        "assessFailure": {
+            "oneOf": [
+                input_failure("assessment-input"),
+                input_failure("supplemental-input"),
+                owner_failure(assess_owner_branches),
+            ]
+        },
         "argumentInvalid": variant(
             document,
             "argument-invalid",
@@ -4343,12 +4630,56 @@ def command_error_schema(document: MachineDocument) -> dict[str, Any]:
                 },
             },
         ),
+        "validateFailed": variant(
+            document,
+            "validate-failed",
+            {
+                "tool": reference("toolDescriptor"),
+                "code": text_schema(pattern=TOOL_TEXT_PATTERN),
+                "failure": reference("validateFailure"),
+            },
+        ),
+        "qualifyFailed": variant(
+            document,
+            "qualify-failed",
+            {
+                "tool": reference("toolDescriptor"),
+                "code": text_schema(pattern=TOOL_TEXT_PATTERN),
+                "failure": reference("qualifyFailure"),
+            },
+        ),
+        "readinessFailed": variant(
+            document,
+            "readiness-failed",
+            {
+                "tool": reference("toolDescriptor"),
+                "code": text_schema(pattern=TOOL_TEXT_PATTERN),
+                "failure": reference("readinessFailure"),
+            },
+        ),
+        "assessFailed": variant(
+            document,
+            "assess-failed",
+            {
+                "tool": reference("toolDescriptor"),
+                "code": text_schema(pattern=TOOL_TEXT_PATTERN),
+                "failure": reference("assessFailure"),
+            },
+        ),
     }
     return schema_document(
         document,
         "Closed O2I command error",
         definitions,
-        ["argumentInvalid", "commandFailed", "preparationFailed"],
+        [
+            "argumentInvalid",
+            "commandFailed",
+            "preparationFailed",
+            "validateFailed",
+            "qualifyFailed",
+            "readinessFailed",
+            "assessFailed",
+        ],
     )
 
 
@@ -4705,6 +5036,108 @@ import O2I.Operation.Schema.Internal
 '''
 
 
+def render_command_error_branch_module(
+    branches: dict[str, list[dict[str, str]]],
+) -> str:
+    capabilities = ["validate", "qualify", "readiness", "assess"]
+    type_names = {
+        capability: capability.capitalize() + "OwnerBranch"
+        for capability in capabilities
+    }
+    module_names = {
+        "validate": "ValidateInternal",
+        "qualify": "QualifyInternal",
+        "readiness": "ReadinessInternal",
+        "assess": "AssessInternal",
+    }
+
+    def generated_constructor(row: dict[str, str]) -> str:
+        return "Generated" + row["constructor"].removesuffix("Failure")
+
+    declarations: list[str] = []
+    for capability in capabilities:
+        type_name = type_names[capability]
+        rows = branches[capability]
+        constructors = "\n".join(
+            [f"  = {generated_constructor(rows[0])}"]
+            + [f"  | {generated_constructor(row)}" for row in rows[1:]]
+        )
+        token_cases = "\n".join(
+            f"    {generated_constructor(row)} -> {hs_text(row['token'])}"
+            for row in rows
+        )
+        inventory_tail = "\n           , ".join(
+            generated_constructor(row) for row in rows[1:]
+        )
+        module_name = module_names[capability]
+        projector_cases = "\n".join(
+            f"    {module_name}.{row['constructor']} _ -> "
+            f"{generated_constructor(row)}"
+            for row in rows
+        )
+        declarations.append(
+            f'''data {type_name}
+{constructors}
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+{capability}OwnerBranchToken :: {type_name} -> Text
+{capability}OwnerBranchToken branch =
+  case branch of
+{token_cases}
+
+{capability}OwnerBranches :: NonEmpty {type_name}
+{capability}OwnerBranches =
+  {generated_constructor(rows[0])}
+    :| [ {inventory_tail}
+       ]
+
+{capability}OwnerBranch ::
+     {module_name}.{capability.capitalize()}InternalFailure -> {type_name}
+{capability}OwnerBranch failure =
+  case failure of
+{projector_cases}'''
+        )
+
+    union_constructors = "\n".join(
+        ["  = ValidateCommandOwnerBranch !ValidateOwnerBranch"]
+        + [
+            f"  | {capability.capitalize()}CommandOwnerBranch "
+            f"!{type_names[capability]}"
+            for capability in capabilities[1:]
+        ]
+    )
+    union_cases = "\n".join(
+        f"    {capability.capitalize()}CommandOwnerBranch capabilityBranch ->\n"
+        f"      {capability}OwnerBranchToken capabilityBranch"
+        for capability in capabilities
+    )
+    declarations.append(
+        f'''data CommandOwnerBranch
+{union_constructors}
+  deriving (Eq, Ord, Show)
+
+commandOwnerBranchToken :: CommandOwnerBranch -> Text
+commandOwnerBranchToken branch =
+  case branch of
+{union_cases}'''
+    )
+    body = "\n\n".join(declarations)
+    return f'''{{-# LANGUAGE OverloadedStrings #-}}
+
+-- This module is generated by contract/compile.py. Do not edit.
+module O2I.Operation.Command.Error.Branch.Generated where
+
+import Data.List.NonEmpty (NonEmpty(..))
+import Data.Text (Text)
+import qualified O2I.Operation.Assess.Result.Internal as AssessInternal
+import qualified O2I.Operation.Qualify.Result.Internal as QualifyInternal
+import qualified O2I.Operation.Readiness.Result.Internal as ReadinessInternal
+import qualified O2I.Operation.Validate.Result.Internal as ValidateInternal
+
+{body}
+'''
+
+
 def format_generated_haskell(rendered: str, subject: str) -> bytes:
     formatted = subprocess.run(
         ["hindent", "--line-length", "80"],
@@ -4757,6 +5190,10 @@ def render_outputs(
         )
         for fragment in fragments
     }
+    command_error, _ = load_object(COMMAND_ERROR_COMPANION)
+    owner_branches = validate_command_error_owner_branches(
+        command_error["ownerBranches"]
+    )
     outputs: dict[Path, bytes] = {
         RULE_GENERATED: render_rules(contract, rules, digest).encode("utf-8"),
         SCHEMA_GENERATED: format_generated_haskell(
@@ -4764,6 +5201,10 @@ def render_outputs(
                 documents, schemas, fragments, fragment_schemas
             ),
             "Schema authority",
+        ),
+        COMMAND_ERROR_BRANCH_GENERATED: format_generated_haskell(
+            render_command_error_branch_module(owner_branches),
+            "command-error owner branches",
         ),
     }
     outputs.update(

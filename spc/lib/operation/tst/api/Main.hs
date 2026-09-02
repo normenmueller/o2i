@@ -136,6 +136,11 @@ $(assertAbstractTypes
     , "CommandError.ArgumentFailureField"
     , "CommandError.ArgumentFailureDefect"
     , "CommandError.ArgumentFailure"
+    , "CommandError.CommandDiagnosticValue"
+    , "CommandError.CommandDiagnosticField"
+    , "CommandError.CommandInputDiagnostic"
+    , "CommandError.CommandOwnerEvidence"
+    , "CommandError.CommandOwnerDiagnostic"
     , "CommandError.CommandError"
     , "CommandErrorMachine.CommandErrorDocument"
     , "Identity.ModelIdentity"
@@ -442,9 +447,25 @@ $(assertOrdinaryFunctions
     , 'CommandError.argumentFailureCode
     , 'CommandError.argumentFailureMessage
     , 'CommandError.foldArgumentFailure
+    , 'CommandError.foldCommandDiagnosticValue
+    , 'CommandError.foldCommandDiagnosticField
+    , 'CommandError.foldCommandInputDiagnostic
+    , 'CommandError.supplementalCommandInputDiagnostic
+    , 'CommandError.readinessCommandInputDiagnostic
+    , 'CommandError.assessmentCommandInputDiagnostic
+    , 'CommandError.foldCommandOwnerEvidence
+    , 'CommandError.foldCommandOwnerDiagnostic
+    , 'CommandError.validateCommandOwnerDiagnostic
+    , 'CommandError.qualifyCommandOwnerDiagnostic
+    , 'CommandError.readinessCommandOwnerDiagnostic
+    , 'CommandError.assessCommandOwnerDiagnostic
     , 'CommandError.argumentCommandError
     , 'CommandError.processCommandError
     , 'CommandError.commonCommandError
+    , 'CommandError.validateCommandError
+    , 'CommandError.qualifyCommandError
+    , 'CommandError.readinessCommandError
+    , 'CommandError.assessCommandError
     , 'CommandError.commandErrorCode
     , 'CommandError.foldCommandError
     , 'CommandErrorMachine.commandErrorDocument

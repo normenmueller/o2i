@@ -7,7 +7,63 @@
     "variants": [
       "argument-invalid",
       "command-failed",
-      "preparation-failed"
+      "preparation-failed",
+      "validate-failed",
+      "qualify-failed",
+      "readiness-failed",
+      "assess-failed"
+    ]
+  },
+  "ownerBranches": {
+    "validate": [
+      {"constructor":"ValidateAcquiredModelRoleFailure","token":"acquired-model-role"},
+      {"constructor":"ValidateAcquiredSupplementalRoleFailure","token":"acquired-supplemental-role"},
+      {"constructor":"ValidateSelectedAdapterContractFailure","token":"selected-adapter-contract"},
+      {"constructor":"ValidateNotationContractFailure","token":"notation-contract"},
+      {"constructor":"ValidateProfileContractFailure","token":"profile-contract"},
+      {"constructor":"ValidateIdentityIndexFailure","token":"identity-index"},
+      {"constructor":"ValidateSelectedViewScopeFailure","token":"selected-view-scope"},
+      {"constructor":"ValidateStructureInputFailure","token":"structure-input"},
+      {"constructor":"ValidateSupplementalProvenanceFailure","token":"supplemental-provenance"},
+      {"constructor":"ValidateSemanticUnavailableContractFailure","token":"semantic-unavailable-contract"}
+    ],
+    "qualify": [
+      {"constructor":"QualifyAcquiredModelRoleFailure","token":"acquired-model-role"},
+      {"constructor":"QualifyAcquiredSupplementalRoleFailure","token":"acquired-supplemental-role"},
+      {"constructor":"QualifySelectedAdapterContractFailure","token":"selected-adapter-contract"},
+      {"constructor":"QualifyNotationContractFailure","token":"notation-contract"},
+      {"constructor":"QualifyProfileContractFailure","token":"profile-contract"},
+      {"constructor":"QualifyIdentityIndexFailure","token":"identity-index"},
+      {"constructor":"QualifySelectedViewScopeFailure","token":"selected-view-scope"},
+      {"constructor":"QualifyStructureInputFailure","token":"structure-input"},
+      {"constructor":"QualifySupplementalProvenanceFailure","token":"supplemental-provenance"},
+      {"constructor":"QualifyContextFailure","token":"qualification-context"}
+    ],
+    "readiness": [
+      {"constructor":"ReadinessAcquiredModelRoleFailure","token":"acquired-model-role"},
+      {"constructor":"ReadinessAcquiredEvidenceRoleFailure","token":"acquired-readiness-role"},
+      {"constructor":"ReadinessAcquiredSupplementalRoleFailure","token":"acquired-supplemental-role"},
+      {"constructor":"ReadinessSelectedAdapterContractFailure","token":"selected-adapter-contract"},
+      {"constructor":"ReadinessNotationContractFailure","token":"notation-contract"},
+      {"constructor":"ReadinessProfileContractFailure","token":"profile-contract"},
+      {"constructor":"ReadinessIdentityIndexFailure","token":"identity-index"},
+      {"constructor":"ReadinessSelectedViewScopeFailure","token":"selected-view-scope"},
+      {"constructor":"ReadinessStructureInputFailure","token":"structure-input"},
+      {"constructor":"ReadinessSupplementalProvenanceFailure","token":"supplemental-provenance"},
+      {"constructor":"ReadinessSemanticModelContractFailure","token":"semantic-model-contract"}
+    ],
+    "assess": [
+      {"constructor":"AssessAcquiredModelRoleFailure","token":"acquired-model-role"},
+      {"constructor":"AssessAcquiredBundleRoleFailure","token":"acquired-assessment-role"},
+      {"constructor":"AssessAcquiredSupplementalRoleFailure","token":"acquired-supplemental-role"},
+      {"constructor":"AssessSelectedAdapterContractFailure","token":"selected-adapter-contract"},
+      {"constructor":"AssessNotationContractFailure","token":"notation-contract"},
+      {"constructor":"AssessProfileContractFailure","token":"profile-contract"},
+      {"constructor":"AssessIdentityIndexFailure","token":"identity-index"},
+      {"constructor":"AssessSelectedViewScopeFailure","token":"selected-view-scope"},
+      {"constructor":"AssessStructureInputFailure","token":"structure-input"},
+      {"constructor":"AssessSupplementalProvenanceFailure","token":"supplemental-provenance"},
+      {"constructor":"AssessSemanticModelContractFailure","token":"semantic-model-contract"}
     ]
   }
 }

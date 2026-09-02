@@ -33,6 +33,8 @@ import O2I.Operation.Acquisition
 import O2I.Operation.Acquisition.Internal (acquireWith)
 import O2I.Operation.Adapter
 import O2I.Operation.Adapter.Authoring
+import O2I.Operation.Command.Error (commandErrorCode, qualifyCommandError)
+import O2I.Operation.Command.Error.Machine
 import O2I.Operation.Diagnostic
   ( foldPreparedDiagnosticDocument
   , preparedDiagnosticStage
@@ -77,6 +79,9 @@ tests =
     , testCase
         "acquires Qualify inputs exactly once and fails fast"
         qualifyAcquisition
+    , testCase
+        "lifts malformed supplemental input through the real Left branch"
+        malformedQualifySupplemental
     , testCase
         "rejects every Qualify prerequisite at its exact stage"
         qualifyPrerequisites
@@ -272,6 +277,47 @@ qualifyAcquisition = do
     [ (Nothing, ["model.amx", "supplement-0", "supplement-1", "supplement-2"])
     , (Just "supplement-1", ["model.amx", "supplement-0", "supplement-1"])
     ]
+
+malformedQualifySupplemental :: Assertion
+malformedQualifySupplemental = do
+  model <- modelSource
+  supplement <- supplementalSource 0
+  request <-
+    requireRight
+      (qualifyRequest
+         model
+         (viewByName "Binding")
+         Nothing
+         (identity "strategy" :| [])
+         []
+         [supplement])
+  result <-
+    withEnvironment $ \adapters profiles ->
+      runQualifyWith memoryAcquire adapters profiles request
+  tool <- requireRight (mkToolDescriptor "o2i" "0.3.0")
+  case qualifyResultDocument tool result of
+    Left failure -> do
+      foldQualifyFailure
+        (const (assertFailure "malformed supplement became common failure"))
+        (const (pure ()))
+        (const (assertFailure "malformed supplement became owner failure"))
+        failure
+      let commandError = qualifyCommandError failure
+          document = commandErrorDocument tool commandError
+          encoded = encodeCommandErrorDocument document
+      commandErrorCode commandError @?= "qualify.supplemental-input"
+      schemaVariantText (commandErrorDocumentVariant document)
+        @?= "qualify-failed"
+      encoded
+        @?= "{\"schema\":\"o2i.command-error/v1\",\"kind\":\"qualify-failed\",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},\"code\":\"qualify.supplemental-input\",\"failure\":{\"category\":\"supplemental-input\",\"diagnostics\":[{\"ruleId\":\"core.supplemental.decode.json-syntax\",\"inputOrdinals\":[0],\"reason\":\"invalid-json-syntax\",\"fields\":[]}]}}"
+      schema <- requireJson (LazyByteString.fromStrict commandErrorSchemaBytes)
+      value <-
+        case Aeson.eitherDecodeStrict encoded of
+          Left message -> assertFailure message >> fail "unreachable"
+          Right decoded -> pure decoded
+      validateJSONSchema schema value
+        @? "Qualify command error violates its generated Schema"
+    Right _ -> assertFailure "malformed supplement acquired a result document"
 
 qualifyPrerequisites :: Assertion
 qualifyPrerequisites =

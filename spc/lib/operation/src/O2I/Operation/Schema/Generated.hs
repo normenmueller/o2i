@@ -334,6 +334,18 @@ commandFailedVariant = SchemaVariant "command-failed"
 preparationFailedVariant :: SchemaVariant
 preparationFailedVariant = SchemaVariant "preparation-failed"
 
+validateFailedVariant :: SchemaVariant
+validateFailedVariant = SchemaVariant "validate-failed"
+
+qualifyFailedVariant :: SchemaVariant
+qualifyFailedVariant = SchemaVariant "qualify-failed"
+
+readinessFailedVariant :: SchemaVariant
+readinessFailedVariant = SchemaVariant "readiness-failed"
+
+assessFailedVariant :: SchemaVariant
+assessFailedVariant = SchemaVariant "assess-failed"
+
 commandErrorMachineSchema :: MachineSchema
 commandErrorMachineSchema =
   MachineSchema
@@ -343,11 +355,17 @@ commandErrorMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "96c7abc8d0425bd172169832184e4ea7fa5ae54910524b110597ae3a632dce0f"
+                "a313abeb43bb966886803f8bedb4bfd18ef26d98aa6a145613a5d7ff289862ae"
           }
     , machineSchemaVariantsValue =
         argumentInvalidVariant
-          :| [commandFailedVariant, preparationFailedVariant]
+          :| [ commandFailedVariant
+             , preparationFailedVariant
+             , validateFailedVariant
+             , qualifyFailedVariant
+             , readinessFailedVariant
+             , assessFailedVariant
+             ]
     }
 
 commandErrorSchemaBytes :: ByteString

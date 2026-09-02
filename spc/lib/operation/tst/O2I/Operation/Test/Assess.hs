@@ -29,6 +29,8 @@ import O2I.Operation.Assess.Machine
 import O2I.Operation.Assess.Request
 import O2I.Operation.Assess.Result
 import O2I.Operation.Assess.Runtime.Internal (runAssessWith)
+import O2I.Operation.Command.Error (assessCommandError, commandErrorCode)
+import O2I.Operation.Command.Error.Machine
 import O2I.Operation.Machine (ToolDescriptor, mkToolDescriptor)
 import O2I.Operation.Provenance
   ( SourceOrdinal
@@ -237,10 +239,69 @@ terminalMachineBranches = do
           , ("assess-completed", completed)
           ])
   failed <- runFixture (readinessContractDraft Nothing) "{}"
+  foldAssessResult
+    (\failure ->
+       foldAssessFailure
+         (const (assertFailure "malformed assessment became common failure"))
+         (const (pure ()))
+         (const
+            (assertFailure "malformed assessment became supplemental failure"))
+         (const (assertFailure "malformed assessment became owner failure"))
+         failure)
+    (\_ _ -> assertFailure "malformed assessment reached prerequisite")
+    (\_ _ -> assertFailure "malformed assessment reached unavailability")
+    (\_ _ -> assertFailure "malformed assessment reached collection")
+    (\_ _ -> assertFailure "malformed assessment reached invalid observations")
+    (\_ _ -> assertFailure "malformed assessment reached completion")
+    failed
+  assertAssessCommandError
+    "assess.assessment-input"
+    "{\"schema\":\"o2i.command-error/v1\",\"kind\":\"assess-failed\",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},\"code\":\"assess.assessment-input\",\"failure\":{\"category\":\"assessment-input\",\"diagnostics\":[{\"ruleId\":\"core.evidence-input.decode.discriminator\",\"inputOrdinals\":[0],\"reason\":\"discriminator-invalid\",\"fields\":[{\"name\":\"jsonPointer\",\"values\":[{\"kind\":\"text\",\"value\":\"/type\"}]},{\"name\":\"expected\",\"values\":[{\"kind\":\"text\",\"value\":\"AssessmentBundleInput\"}]}]}]}}"
+    failed
+  (supplementalFailed, _) <-
+    observedRun
+      (readinessContractDraft Nothing)
+      completedBundle
+      ["malformed-supplement.json"]
+      Nothing
+  foldAssessResult
+    (\failure ->
+       foldAssessFailure
+         (const (assertFailure "malformed supplement became common failure"))
+         (const (assertFailure "malformed supplement became assessment failure"))
+         (const (pure ()))
+         (const (assertFailure "malformed supplement became owner failure"))
+         failure)
+    (\_ _ -> assertFailure "malformed supplement reached prerequisite")
+    (\_ _ -> assertFailure "malformed supplement reached unavailability")
+    (\_ _ -> assertFailure "malformed supplement reached collection")
+    (\_ _ -> assertFailure "malformed supplement reached invalid observations")
+    (\_ _ -> assertFailure "malformed supplement reached completion")
+    supplementalFailed
+  assertAssessCommandError
+    "assess.supplemental-input"
+    "{\"schema\":\"o2i.command-error/v1\",\"kind\":\"assess-failed\",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},\"code\":\"assess.supplemental-input\",\"failure\":{\"category\":\"supplemental-input\",\"diagnostics\":[{\"ruleId\":\"core.supplemental.decode.json-syntax\",\"inputOrdinals\":[0],\"reason\":\"invalid-json-syntax\",\"fields\":[]}]}}"
+    supplementalFailed
+
+assertAssessCommandError ::
+     Text -> ByteString.ByteString -> AssessResult -> Assertion
+assertAssessCommandError expectedCode expectedBytes result = do
   tool <- testTool
-  case assessResultDocument tool failed of
-    Left _ -> pure ()
-    Right _ -> assertFailure "operational failure acquired a machine envelope"
+  case assessResultDocument tool result of
+    Left failure -> do
+      let commandError = assessCommandError failure
+          document = commandErrorDocument tool commandError
+          encoded = encodeCommandErrorDocument document
+      commandErrorCode commandError @?= expectedCode
+      schemaVariantText (commandErrorDocumentVariant document)
+        @?= "assess-failed"
+      encoded @?= expectedBytes
+      schema <- requireJson (LazyByteString.fromStrict commandErrorSchemaBytes)
+      value <- requireStrictJson encoded
+      validateJSONSchema schema value
+        @? "Assessment command error violates its generated Schema"
+    Right _ ->
+      assertFailure "failed Assessment result acquired a machine envelope"
 
 mixedMachineEvidence :: Assertion
 mixedMachineEvidence = do
