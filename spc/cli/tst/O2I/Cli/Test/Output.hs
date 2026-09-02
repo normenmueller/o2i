@@ -1,392 +1,64 @@
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module O2I.Cli.Test.Output
   ( tests
   ) where
 
+import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as ByteString
-import qualified Data.ByteString.Char8 as ByteStringChar8
-import qualified Data.ByteString.Lazy as LazyByteString
-import Data.Char (chr, ord)
-import Data.List.NonEmpty (NonEmpty((:|)))
-import Data.Text (Text)
-import qualified Data.Text as Text
-import qualified Data.Text.Encoding as TextEncoding
-import O2I.Adapter.AMX (amxAdapter)
-import O2I.Cli.Options (Verbosity(DebugVerbosity))
+import Data.JSON.JSONSchema (validateJSONSchema)
+import O2I.Cli.Options (CliError(..))
 import O2I.Cli.Output
-import O2I.Cli.TerminalText (terminalSafeText)
-import O2I.Inspection
-import System.Directory (getTemporaryDirectory, removeFile)
-import System.IO (hClose, openBinaryTempFile)
+import O2I.Operation.Command.Error.Machine (commandErrorSchemaBytes)
+import O2I.Operation.Machine (mkToolDescriptor)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 
 tests :: TestTree
 tests =
   testGroup
-    "output"
-    [ testCase "terminal encoding covers C0, DEL, and C1" controlEncoding
-    , testCase "terminal encoding preserves readable text" readableEncoding
-    , testCase "invocation errors retain one intact prefix" prefixedInvocation
-    , testCase "input errors do not enter stdout report syntax" inputError
-    , testCase
-        "adapter and diagnostic scalars are terminal-safe"
-        hostileInspection
-    , testCase
-        "collective partial-View human output is deterministic"
-        collectivePartialViewOutput
-    , testCase
-        "asserted collective Candidate dependency renders stably"
-        collectiveCandidateDependencyOutput
-    , testCase
-        "Candidate collective participant issue renders stably"
-        collectiveCandidateParticipantOutput
-    , testCase "SourceLocation scalars are terminal-safe" hostileLocation
-    , testCase "human output contains no ANSI escape" ansiFree
-    , testCase "closed output handle is normalized" closedHandle
+    "command-error output"
+    [ testCase "uses the canonical Operation document" canonicalDocument
+    , testCase "rejects a non-argument CLI code before output" invalidCode
     ]
 
-controlEncoding :: Assertion
-controlEncoding = do
-  terminalSafeText "\r\n\ESC\DEL\x0085\&\x009f"
-    @?= "\\u{000D}\\u{000A}\\u{001B}\\u{007F}\\u{0085}\\u{009F}"
-  let controls =
-        Text.pack (map chr ([0x00 .. 0x1f] <> [0x7f] <> [0x80 .. 0x9f]))
-      encoded = terminalSafeText controls
-  assertBool "encoded controls remain in output" (terminalSafe encoded)
-  countText "\\u{" encoded @?= 65
+canonicalDocument :: Assertion
+canonicalDocument = do
+  tool <- requireRight (mkToolDescriptor "o2i" "0.3.0")
+  encoded <-
+    requireRight
+      (prepareArgumentCommandError
+         tool
+         (CliError "cli.argument.command" "Unknown command: frobnicate"))
+  encoded
+    @?= ByteString.concat
+          [ "{\"schema\":\"o2i.command-error/v1\","
+          , "\"kind\":\"argument-invalid\","
+          , "\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},"
+          , "\"code\":\"cli.argument.command\","
+          , "\"message\":\"Unknown command: frobnicate\"}"
+          ]
+  schema <- decode "embedded command-error Schema" commandErrorSchemaBytes
+  document <- decode "prepared command-error document" encoded
+  validateJSONSchema schema document
+    @? "prepared command-error document violates the exact embedded Schema"
 
-readableEncoding :: Assertion
-readableEncoding = do
-  terminalSafeText "Visible ASCII and Unicode: \x00c4\& \x03a9\& \x2192"
-    @?= "Visible ASCII and Unicode: \x00c4\& \x03a9\& \x2192"
-  terminalSafeText "literal \\u{000A}" @?= "literal \\\\u{000A}"
+invalidCode :: Assertion
+invalidCode = do
+  tool <- requireRight (mkToolDescriptor "o2i" "0.3.0")
+  prepareArgumentCommandError
+    tool
+    (CliError "cli.internal.failure" "Internal failure")
+    @?= Left InvalidArgumentCommandError
 
-prefixedInvocation :: Assertion
-prefixedInvocation =
-  renderHumanCommandError
-    (InvocationCommandError InvalidInvocation "first line\nsecond line")
-    @?= "[o2i|error] first line\\u{000A}second line\n"
+decode :: String -> ByteString.ByteString -> IO Aeson.Value
+decode label bytes =
+  case Aeson.eitherDecodeStrict bytes of
+    Left message -> assertFailure (label <> ": " <> message) >> fail "unreachable"
+    Right value -> pure value
 
-inputError :: Assertion
-inputError =
-  renderHumanCommandError (InputCommandError "missing" "not found")
-    @?= "[o2i|error] Cannot read missing: not found\n"
-
-hostileInspection :: Assertion
-hostileInspection = do
-  report <- adversarialReport
-  let human = LazyByteString.toStrict (renderHumanReport report)
-      diagnostics =
-        LazyByteString.toStrict (renderHumanDiagnostics DebugVerbosity report)
-      escaped = TextEncoding.encodeUtf8 (terminalSafeText adversarialText)
-  assertContains human ("Adapter: a" <> escaped)
-  assertContains human ("View: id \"" <> escaped <> "\"")
-  assertContains diagnostics ("[o2i|warn] o2i.test." <> escaped)
-  assertContains diagnostics ("[" <> escaped <> "=" <> escaped <> "]")
-  assertTerminalSafe human
-  assertTerminalSafe diagnostics
-  assertPrefixed diagnostics
-
-collectivePartialViewOutput :: Assertion
-collectivePartialViewOutput = do
-  report <- collectivePartialViewReport
-  let firstReport = renderHumanReport report
-      secondReport = renderHumanReport report
-      firstDiagnostics = renderHumanDiagnostics DebugVerbosity report
-      secondDiagnostics = renderHumanDiagnostics DebugVerbosity report
-  firstReport @?= secondReport
-  firstDiagnostics @?= secondDiagnostics
-  assertContains
-    (LazyByteString.toStrict firstReport)
-    "collective-realization-segment"
-  assertContains
-    (LazyByteString.toStrict firstDiagnostics)
-    "shown-contributors=0"
-  assertContains
-    (LazyByteString.toStrict firstDiagnostics)
-    "total-contributors=2"
-
-collectiveCandidateDependencyOutput :: Assertion
-collectiveCandidateDependencyOutput = do
-  report <- collectiveCandidateDependencyReport
-  let diagnostics =
-        LazyByteString.toStrict (renderHumanDiagnostics DebugVerbosity report)
-  assertContains
-    diagnostics
-    "[o2i|error] o2i.semantics.collective.asserted-depends-on-candidate"
-  assertContains
-    diagnostics
-    "An asserted collective claim depends on a Candidate Strategy participant."
-  assertPrefixed diagnostics
-
-collectiveCandidateParticipantOutput :: Assertion
-collectiveCandidateParticipantOutput = do
-  report <- collectiveCandidateParticipantReport
-  let diagnostics =
-        LazyByteString.toStrict (renderHumanDiagnostics DebugVerbosity report)
-  assertContains
-    diagnostics
-    "[o2i|warn] o2i.semantics.collective.candidate-participant-semantics-unavailable"
-  assertContains
-    diagnostics
-    "A Candidate Strategy participant is unavailable to validated collective semantics."
-  assertPrefixed diagnostics
-
-collectivePartialViewReport :: IO InspectionReport
-collectivePartialViewReport =
-  case inspectSourceDocument
-         amxAdapter
-         (ViewByName "Partial")
-         emptyInputs
-         (sourceDocumentFromBytes
-            "collective.archimate"
-            FileSource
-            (TextEncoding.encodeUtf8 collectivePartialViewModel)) of
-    InspectionCompleted report -> pure report
-    InspectionCommandFailed failure ->
-      fail ("unexpected command failure: " <> show failure)
-
-collectiveCandidateDependencyReport :: IO InspectionReport
-collectiveCandidateDependencyReport =
-  case inspectSourceDocument
-         amxAdapter
-         (ViewByName "Scope")
-         semanticInputs
-         (sourceDocumentFromBytes
-            "collective-candidate.archimate"
-            FileSource
-            (TextEncoding.encodeUtf8 collectiveCandidateDependencyModel)) of
-    InspectionCompleted report -> pure report
-    InspectionCommandFailed failure ->
-      fail ("unexpected command failure: " <> show failure)
-
-collectiveCandidateParticipantReport :: IO InspectionReport
-collectiveCandidateParticipantReport =
-  case inspectSourceDocument
-         amxAdapter
-         (ViewByName "Scope")
-         semanticInputs
-         (sourceDocumentFromBytes
-            "collective-candidate-participant.archimate"
-            FileSource
-            (TextEncoding.encodeUtf8 collectiveCandidateParticipantModel)) of
-    InspectionCompleted report -> pure report
-    InspectionCommandFailed failure ->
-      fail ("unexpected command failure: " <> show failure)
-
-collectivePartialViewModel :: Text
-collectivePartialViewModel =
-  collectiveOutputModel "asserted" "asserted" "asserted" "asserted" "Partial"
-
-collectiveCandidateDependencyModel :: Text
-collectiveCandidateDependencyModel =
-  collectiveOutputModel "candidate" "asserted" "asserted" "asserted" "Scope"
-
-collectiveCandidateParticipantModel :: Text
-collectiveCandidateParticipantModel =
-  collectiveOutputModel "candidate" "candidate" "candidate" "candidate" "Scope"
-
-collectiveOutputModel :: Text -> Text -> Text -> Text -> Text -> Text
-collectiveOutputModel contributorACommitment contributorBCommitment targetCommitment claimCommitment viewName =
-  Text.concat
-    [ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-    , "<a:model xmlns:a=\"http://www.archimatetool.com/archimate\" "
-    , "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" "
-    , "version=\"5.0.0\"><folder>"
-    , strategy contributorACommitment "contributor-a"
-    , strategy contributorBCommitment "contributor-b"
-    , strategy targetCommitment "target"
-    , "<element xsi:type=\"a:Junction\" id=\"claim\" name=\"claim\">"
-    , propertyText "o2i.kind" "StructuredProposition"
-    , propertyText "o2i.type" "CollectiveStrategyRealization"
-    , propertyText "o2i.commitment" claimCommitment
-    , propertyText "o2i.collective-fit-evidence" "fit-claim"
-    , "</element>"
-    , realization "incoming-a" "contributor-a" "claim"
-    , realization "incoming-b" "contributor-b" "claim"
-    , realization "outgoing" "claim" "target"
-    , "<element xsi:type=\"a:ArchimateDiagramModel\" id=\"scope\" name=\""
-    , viewName
-    , "\"><child xsi:type=\"a:DiagramObject\" "
-    , "id=\"claim-object\" archimateElement=\"claim\"/></element>"
-    , "</folder>"
-    , propertyText "o2i.profile" "0.3"
-    , "</a:model>"
-    ]
-  where
-    strategy commitment identifier =
-      Text.concat
-        [ "<element xsi:type=\"a:Grouping\" id=\""
-        , identifier
-        , "\" name=\""
-        , identifier
-        , "\">"
-        , propertyText "o2i.kind" "Context"
-        , propertyText "o2i.type" "Strategy"
-        , propertyText "o2i.commitment" commitment
-        , "</element>"
-        ]
-    realization identifier source target =
-      Text.concat
-        [ "<element xsi:type=\"a:RealizationRelationship\" id=\""
-        , identifier
-        , "\" name=\"realizes\" source=\""
-        , source
-        , "\" target=\""
-        , target
-        , "\"/>"
-        ]
-    propertyText key value =
-      "<property key=\"" <> key <> "\" value=\"" <> value <> "\"/>"
-
-hostileLocation :: Assertion
-hostileLocation = do
-  report <- adversarialReport
-  case concatMap
-         diagnosticLocations
-         (diagnosticsList (reportDiagnostics report)) of
-    location:_ -> do
-      let rendered = renderHumanSourceLocation location
-          escaped = terminalSafeText adversarialText
-      assertBool
-        "property target was not encoded"
-        (("target=property:" <> escaped) `Text.isInfixOf` rendered)
-      assertBool
-        "QName path was not encoded"
-        (("{" <> escaped <> "}q" <> escaped) `Text.isInfixOf` rendered)
-      assertBool "location contains raw controls" (terminalSafe rendered)
-    [] -> assertFailure "adversarial diagnostic has no SourceLocation"
-
-ansiFree :: Assertion
-ansiFree =
-  assertBool
-    "unexpected ANSI control sequence"
-    (not
-       (ByteString.isInfixOf
-          "\ESC["
-          (LazyByteString.toStrict
-             (renderHumanCommandError
-                (InvocationCommandError InvalidInvocation "invalid")))))
-
-closedHandle :: Assertion
-closedHandle = do
-  temporary <- getTemporaryDirectory
-  (path, handle) <- openBinaryTempFile temporary "o2i-cli-output"
-  hClose handle
-  written <- writeHandleBytes handle "report"
-  removeFile path
-  assertBool "closed handle should reject output" (not written)
-
-adversarialReport :: IO InspectionReport
-adversarialReport =
-  case inspectSourceDocument
-         adversarialAdapter
-         (ViewById adversarialText)
-         emptyInputs
-         (sourceDocumentFromBytes adversarialText FileSource "model") of
-    InspectionCompleted report -> pure report
-    InspectionCommandFailed failure ->
-      fail ("unexpected command failure: " <> show failure)
-
-adversarialAdapter :: Adapter
-adversarialAdapter =
-  case amxAdapter of
-    Adapter _ _ _ resolveView viewDefect contract observe ->
-      Adapter
-        descriptor
-        decode
-        diagnostic
-        resolveView
-        viewDefect
-        contract
-        observe
-  where
-    descriptor =
-      adapterDescriptor
-        ('a' :| Text.unpack adversarialText)
-        ('a' :| Text.unpack adversarialText)
-        ('a' :| Text.unpack adversarialText)
-    decode _ =
-      DecodeUnavailable
-        (DecodeUnavailableObservation EncodingNotObserved)
-        (Located adversarialPosition () :| [])
-    diagnostic () =
-      diagnosticSpec
-        (o2iDiagnosticCode ("test." <> adversarialText))
-        WarningSeverity
-        ModelFinding
-        adversarialText
-        [DiagnosticSubject adversarialText adversarialText]
-        mempty
-
-adversarialPosition :: SourcePosition
-adversarialPosition =
-  sourcePosition
-    (firstPathStep name :| [])
-    (PropertyTarget adversarialText)
-    Nothing
-  where
-    name = expandedQName (Just adversarialText) 'q' adversarialText
-
-emptyInputs :: InspectionInputs
-emptyInputs =
-  InspectionInputs
-    { strategyInput = Absent
-    , collectiveFitInput = Absent
-    , readinessInput = Absent
-    , evidenceInput = Absent
-    }
-
-semanticInputs :: InspectionInputs
-semanticInputs =
-  emptyInputs
-    { strategyInput =
-        Supplied
-          (sourcedFromDocument
-             (sourceDocumentFromBytes
-                "strategy-input"
-                FileSource
-                "empty Strategy formulation input")
-             (StrategyFormulationBundle []))
-    }
-
-adversarialText :: Text
-adversarialText = "ASCII\\literal\r\n\ESC\DEL\x0085\&\x009f\x03a9"
-
-terminalSafe :: Text -> Bool
-terminalSafe = Text.all safeCharacter
-  where
-    safeCharacter character =
-      let code = ord character
-       in code > 0x1f && code /= 0x7f && not (code >= 0x80 && code <= 0x9f)
-
-assertTerminalSafe :: ByteString.ByteString -> Assertion
-assertTerminalSafe bytes =
-  case TextEncoding.decodeUtf8' bytes of
-    Left failure -> assertFailure (show failure)
-    Right rendered ->
-      assertBool
-        "human output contains raw controls"
-        (Text.all
-           (\character ->
-              character == '\n' || terminalSafe (Text.singleton character))
-           rendered)
-
-assertPrefixed :: ByteString.ByteString -> Assertion
-assertPrefixed bytes =
-  mapM_
-    (assertBool "diagnostic prefix was displaced"
-       . ByteString.isPrefixOf "[o2i|")
-    (ByteStringChar8.lines bytes)
-
-assertContains :: ByteString.ByteString -> ByteString.ByteString -> Assertion
-assertContains actual expected =
-  assertBool
-    ("missing expected bytes: " <> show expected)
-    (ByteString.isInfixOf expected actual)
-
-countText :: Text -> Text -> Int
-countText needle = length . Text.breakOnAll needle
+requireRight :: Show failure => Either failure value -> IO value
+requireRight outcome =
+  case outcome of
+    Left failure -> assertFailure (show failure) >> fail "unreachable"
+    Right value -> pure value

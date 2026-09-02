@@ -4,6 +4,7 @@ module Main where
 
 import ApiContractTH (assertFacadeContract)
 import O2I.Cli
+import PublicComposition (selectedProfileRules)
 
 main :: IO ()
-main = $(assertFacadeContract)
+main = selectedProfileRules `seq` $(assertFacadeContract)

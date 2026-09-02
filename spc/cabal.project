@@ -1,10 +1,11 @@
 packages:
   lib/core
-  lib/operation
-  lib/inspection
   ctr/archimate
+  lib/operation
   lib/adapter/amx
   cli
+
+index-state: 2026-08-07T18:07:13Z
 
 tests: True
 

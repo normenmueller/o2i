@@ -330,32 +330,6 @@ CONTRACTS = (
         ),
     ),
     PackageContract(
-        "o2i-inspection",
-        ("spc/lib/inspection/tst/api/compile-pass/PublicApi.hs",),
-        (
-            CompileFailure(
-                "spc/lib/inspection/tst/api/compile-fail/"
-                "ForeignAdapterLocation.hs",
-                (("GHC-83865", 1),),
-            ),
-            CompileFailure(
-                "spc/lib/inspection/tst/api/compile-fail/"
-                "HiddenNormalization.hs",
-                (("GHC-76037", 6),),
-            ),
-            CompileFailure(
-                "spc/lib/inspection/tst/api/compile-fail/"
-                "HiddenSourceBinding.hs",
-                (("GHC-76037", 2),),
-            ),
-            CompileFailure(
-                "spc/lib/inspection/tst/api/compile-fail/"
-                "OpaqueConstructors.hs",
-                (("GHC-22385", 1),),
-            ),
-        ),
-    ),
-    PackageContract(
         "o2i-archimate-profile",
         ("spc/ctr/archimate/tst/api/compile-pass/PublicApi.hs",),
         (

@@ -1,17 +1,15 @@
 module O2I.Cli.Test.Support
   ( ProcessResult(..)
-  , fixtureBytes
-  , fixturePath
   , goldenBytes
   , runO2I
-  , runO2IChunks
   ) where
 
 import Control.Concurrent (forkIO, newEmptyMVar, putMVar, takeMVar)
 import Control.Monad (void)
-import qualified Data.ByteString as ByteString
 import Data.ByteString (ByteString)
+import qualified Data.ByteString as ByteString
 import qualified Paths_o2i_cli as Package
+import System.Environment (lookupEnv)
 import System.Exit (ExitCode)
 import System.IO (hClose)
 import System.Process
@@ -22,24 +20,16 @@ data ProcessResult = ProcessResult
   , processStderr :: ByteString
   } deriving (Eq, Show)
 
-fixturePath :: FilePath -> IO FilePath
-fixturePath name = Package.getDataFileName ("tst/data/" <> name)
-
-fixtureBytes :: FilePath -> IO ByteString
-fixtureBytes name = fixturePath name >>= ByteString.readFile
-
 goldenBytes :: FilePath -> IO ByteString
 goldenBytes name =
   Package.getDataFileName ("tst/golden/" <> name) >>= ByteString.readFile
 
 runO2I :: [String] -> ByteString -> IO ProcessResult
-runO2I arguments input = runO2IChunks arguments [input]
-
-runO2IChunks :: [String] -> [ByteString] -> IO ProcessResult
-runO2IChunks arguments chunks = do
+runO2I arguments input = do
+  executable <- maybe "o2i" id <$> lookupEnv "O2I_CLI_TEST_EXECUTABLE"
   created <-
     createProcess
-      (proc "o2i" arguments)
+      (proc executable arguments)
         {std_in = CreatePipe, std_out = CreatePipe, std_err = CreatePipe}
   case created of
     (Just inputHandle, Just outputHandle, Just errorHandle, processHandle) -> do
@@ -49,7 +39,7 @@ runO2IChunks arguments chunks = do
         (forkIO (ByteString.hGetContents outputHandle >>= putMVar outputResult))
       void
         (forkIO (ByteString.hGetContents errorHandle >>= putMVar errorResult))
-      mapM_ (ByteString.hPut inputHandle) chunks
+      ByteString.hPut inputHandle input
       hClose inputHandle
       output <- takeMVar outputResult
       errors <- takeMVar errorResult
