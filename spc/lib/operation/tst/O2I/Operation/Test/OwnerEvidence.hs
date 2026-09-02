@@ -95,6 +95,9 @@ tests =
         "retains and encodes real generic Binding evidence 4/4"
         bindingOwnerEvidence
     , testCase
+        "publicly consumes every supplemental Binding branch with its source"
+        publicSupplementalConsumption
+    , testCase
         "retains and encodes real Semantics evidence 27/27"
         semanticsOwnerEvidence
     , testCase
@@ -377,6 +380,71 @@ bindingOwnerEvidence = do
        dispositions <- parseSupplementalDispositions value
        dispositions @?= ["process-failure"])
     (map snd rows)
+
+publicSupplementalConsumption :: Assertion
+publicSupplementalConsumption = do
+  source <- supplementalAcquiredSource
+  let occurrence = SupplementalOwnerOccurrence source
+  rows <-
+    requireCoreResult
+      (CoreConformance.foldBindingCorpusOwnerEvidence
+         occurrence
+         (\_ evidence ->
+            let groups =
+                  SupplementalDiagnosticGroups
+                    [ SupplementalDiagnosticGroup
+                        source
+                        [SupplementalOwnerBindingEvidence evidence]
+                    ]
+             in foldSupplementalDiagnosticGroups consumeGroup concat groups))
+  expectedRules <- requireCoreResult CoreConformance.bindingCorpusRuleIds
+  let findings = concat rows
+  fmap findingRule findings @?= fmap coreRuleIdText expectedRules
+  sort (nub (fmap findingBranch findings))
+    @?= sort ["unknown", "ambiguous", "wrong-type", "out-of-view"]
+  fmap findingSource findings @?= replicate (length findings) "supplemental"
+  assertBool
+    "diagnostic-retained source differs from its enclosing group source"
+    (all findingSourceMatchesGroup findings)
+  assertBool
+    "public supplemental fold lost an instance pointer"
+    (all (not . Text.null . findingPointer) findings)
+  assertBool
+    "public supplemental fold lost a lexical model identity"
+    (all (not . Text.null . findingIdentity) findings)
+  where
+    consumeGroup acquired diagnostics =
+      let reference =
+            foldAcquiredSupplementalSource
+              (sourceReferenceText
+                 . sourceIdentityReference
+                 . acquiredSourceIdentity)
+              acquired
+       in fmap (consumeDiagnostic acquired reference) diagnostics
+    consumeDiagnostic groupSource reference diagnostic =
+      foldSupplementalDiagnostic
+        (finding groupSource reference diagnostic "unknown")
+        (finding groupSource reference diagnostic "ambiguous")
+        (finding groupSource reference diagnostic "wrong-type")
+        (finding groupSource reference diagnostic "out-of-view")
+        diagnostic
+    finding groupSource reference diagnostic branch retainedSource pointer identity =
+      SupplementalFinding
+        reference
+        (supplementalDiagnosticRuleIdentity diagnostic)
+        branch
+        pointer
+        identity
+        (retainedSource == groupSource)
+
+data SupplementalFinding = SupplementalFinding
+  { findingSource :: !Text
+  , findingRule :: !Text
+  , findingBranch :: !Text
+  , findingPointer :: !Text
+  , findingIdentity :: !Text
+  , findingSourceMatchesGroup :: !Bool
+  }
 
 semanticsOwnerEvidence :: Assertion
 semanticsOwnerEvidence = do

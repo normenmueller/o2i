@@ -723,8 +723,47 @@ CONTRACTS = (
                 "AssessHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "ArgumentFailureOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "CommandErrorOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "CommandErrorDocumentOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "SupplementalDiagnosticOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "CommandErrorHiddenInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "SchemaEmbedHiddenModule.hs",
+                (("GHC-87110", 1),),
+            ),
         ),
         ("o2i-core", "o2i-archimate-profile"),
+    ),
+    PackageContract(
+        "o2i-operation",
+        (
+            "spc/lib/operation/tst/api/compile-pass/"
+            "OperationAmxCliConsumer.hs",
+        ),
+        (),
+        ("o2i-amx",),
     ),
 )
 

@@ -1,0 +1,13 @@
+{
+  "schema": "o2i.command-error-contract/1",
+  "document": {
+    "name": "commandError",
+    "identity": "o2i.command-error",
+    "version": 1,
+    "variants": [
+      "argument-invalid",
+      "command-failed",
+      "preparation-failed"
+    ]
+  }
+}

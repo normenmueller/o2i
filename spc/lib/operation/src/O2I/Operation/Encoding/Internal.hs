@@ -20,6 +20,7 @@ module O2I.Operation.Encoding.Internal
   , closedObjectFragment
   , requiredMember
   , optionalMember
+  , toolDescriptorFragment
   , machineResult
   , closedMachineResult
   , closedOperationMachineResult

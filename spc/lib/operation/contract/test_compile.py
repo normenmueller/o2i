@@ -45,6 +45,9 @@ CORE_COMPANION = Path(
 class OperationContractCompilerTest(unittest.TestCase):
     def setUp(self):
         self.companion = json.loads(COMPILER.COMPANION.read_text(encoding="utf-8"))
+        self.command_error = json.loads(
+            COMPILER.COMMAND_ERROR_COMPANION.read_text(encoding="utf-8")
+        )
         self.profile_inventory = json.loads(
             PROFILE_DIAGNOSTIC_INVENTORY.read_text(encoding="utf-8")
         )
@@ -81,11 +84,22 @@ class OperationContractCompilerTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, pattern):
             self.render_value(value)
 
+    def render_command_error_value(self, value):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "command-error.json"
+            path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+            with patch.object(COMPILER, "COMMAND_ERROR_COMPANION", path):
+                return self.render_contract()
+
+    def assert_command_error_invalid(self, value, pattern):
+        with self.assertRaisesRegex(ValueError, pattern):
+            self.render_command_error_value(value)
+
     def test_canonical_contract_compiles_deterministically(self):
         first = self.render_contract()
         second = self.render_contract()
         self.assertEqual(first, second)
-        self.assertEqual(14, len(first))
+        self.assertEqual(15, len(first))
         self.assertIn(b"data GeneratedOperationRule", first[COMPILER.RULE_GENERATED])
         self.assertIn(
             b"adapterInventoryMachineSchema :: MachineSchema",
@@ -138,6 +152,42 @@ class OperationContractCompilerTest(unittest.TestCase):
                 self.assertEqual(COMPILER.SCHEMA_DRAFT, schema["$schema"])
                 self.assertEqual(subject.reference, schema["$id"])
                 Draft202012Validator.check_schema(schema)
+
+    def test_command_error_schema_and_manifest_are_exact(self):
+        rendered = self.render_contract()
+        document = next(
+            document
+            for document in self.validate_contract()[3]
+            if document.name == "commandError"
+        )
+        schema = json.loads(rendered[document.schema_path])
+        self.assertEqual("o2i.command-error/v1", schema["$id"])
+        self.assertEqual(
+            ["argument-invalid", "command-failed", "preparation-failed"],
+            list(document.variants),
+        )
+        self.assertIn(
+            b"commandErrorSchemaBytes :: ByteString",
+            rendered[COMPILER.SCHEMA_GENERATED],
+        )
+        Draft202012Validator.check_schema(schema)
+
+    def test_command_error_companion_is_closed_and_ordered(self):
+        changed = copy.deepcopy(self.command_error)
+        changed["document"]["description"] = "not admitted"
+        self.assert_command_error_invalid(changed, "expected members")
+
+        changed = copy.deepcopy(self.command_error)
+        changed["document"]["variants"].reverse()
+        self.assert_command_error_invalid(
+            changed, "unexpected closed variant inventory"
+        )
+
+        changed = copy.deepcopy(self.command_error)
+        changed["schema"] = "o2i.command-error-contract/2"
+        self.assert_command_error_invalid(
+            changed, "unsupported Command-error companion schema"
+        )
 
     def assert_closed_objects(self, value):
         if isinstance(value, dict):

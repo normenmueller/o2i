@@ -17,6 +17,7 @@ from typing import Any, Callable, NamedTuple, Optional
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 COMPANION = PACKAGE_ROOT / "contract/operation.json"
+COMMAND_ERROR_COMPANION = PACKAGE_ROOT / "contract/command-error.json"
 DEFAULT_PROFILE_COMPANION = (
     PACKAGE_ROOT.parents[1] / "ctr/archimate/profile.json"
 )
@@ -216,6 +217,13 @@ EXPECTED_DOCUMENTS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ),
 )
 EXPECTED_VARIANTS = dict(EXPECTED_DOCUMENTS)
+COMMAND_ERROR_DOCUMENTS = (
+    (
+        "commandError",
+        ("argument-invalid", "command-failed", "preparation-failed"),
+    ),
+)
+EXPECTED_VARIANTS.update(COMMAND_ERROR_DOCUMENTS)
 EXPECTED_FRAGMENTS = ("diagnostic",)
 
 VARIANT_BINDINGS: dict[str, str] = {
@@ -236,6 +244,9 @@ VARIANT_BINDINGS: dict[str, str] = {
     "qualification-subjects-discovered": (
         "qualificationSubjectsDiscoveredVariant"
     ),
+    "argument-invalid": "argumentInvalidVariant",
+    "command-failed": "commandFailedVariant",
+    "preparation-failed": "preparationFailedVariant",
     "notation-validation-accepted": "notationValidationAcceptedVariant",
     "notation-validation-rejected": "notationValidationRejectedVariant",
     "profile-validation-accepted": "profileValidationAcceptedVariant",
@@ -316,7 +327,10 @@ def resolve_pointer(value: Any, pointer: str) -> Any:
     return current
 
 
-def validate_machine_documents(value: Any) -> list[MachineDocument]:
+def validate_machine_documents(
+    value: Any,
+    expected: tuple[tuple[str, tuple[str, ...]], ...] = EXPECTED_DOCUMENTS,
+) -> list[MachineDocument]:
     if not isinstance(value, list) or not value:
         raise ValueError("machineDocuments: expected non-empty array")
     documents: list[MachineDocument] = []
@@ -362,7 +376,7 @@ def validate_machine_documents(value: Any) -> list[MachineDocument]:
         raise ValueError("duplicate machine document Haskell binding")
     if len(paths) != len(set(paths)):
         raise ValueError("duplicate machine document output path")
-    if tuple(names) != tuple(name for name, _ in EXPECTED_DOCUMENTS):
+    if tuple(names) != tuple(name for name, _ in expected):
         raise ValueError("machine documents are not in canonical order")
     return documents
 
@@ -452,6 +466,19 @@ def validate(
         raise ValueError("Operation authority must be exact")
 
     documents = validate_machine_documents(companion["machineDocuments"])
+    command_error, _ = load_object(COMMAND_ERROR_COMPANION)
+    require_keys(
+        command_error,
+        {"schema", "document"},
+        "Command-error companion",
+    )
+    if command_error["schema"] != "o2i.command-error-contract/1":
+        raise ValueError("unsupported Command-error companion schema")
+    documents.extend(
+        validate_machine_documents(
+            [command_error["document"]], COMMAND_ERROR_DOCUMENTS
+        )
+    )
     fragments = validate_schema_fragments(companion["schemaFragments"])
     validate_schema_output_ownership(documents, fragments)
 
@@ -4268,6 +4295,63 @@ def diagnostic_schema(
     )
 
 
+def command_error_schema(document: MachineDocument) -> dict[str, Any]:
+    definitions = {
+        "toolDescriptor": tool_descriptor(),
+        "acquisitionFailure": object_schema(
+            {
+                "sourceKind": {"enum": ["file", "stdin"]},
+                "sourceReference": text_schema(pattern=TOOL_TEXT_PATTERN),
+                "message": {"type": "string"},
+            }
+        ),
+        "argumentInvalid": variant(
+            document,
+            "argument-invalid",
+            {
+                "tool": reference("toolDescriptor"),
+                "code": text_schema(
+                    pattern="^cli\\.argument\\.[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+                ),
+                "message": text_schema(pattern=TOOL_TEXT_PATTERN),
+            },
+        ),
+        "commandFailed": variant(
+            document,
+            "command-failed",
+            {
+                "tool": reference("toolDescriptor"),
+                "code": {"const": "command.input-io"},
+                "failure": reference("acquisitionFailure"),
+            },
+        ),
+        "preparationFailed": variant(
+            document,
+            "preparation-failed",
+            {
+                "tool": reference("toolDescriptor"),
+                "code": text_schema(pattern=TOOL_TEXT_PATTERN),
+                "stage": {
+                    "enum": [
+                        "adapter-selection",
+                        "adapter-decode",
+                        "profile-marker",
+                        "profile-resolution",
+                        "profile-compatibility",
+                        "view-selection",
+                    ]
+                },
+            },
+        ),
+    }
+    return schema_document(
+        document,
+        "Closed O2I command error",
+        definitions,
+        ["argumentInvalid", "commandFailed", "preparationFailed"],
+    )
+
+
 def schema_document(
     document: MachineDocument,
     title: str,
@@ -4290,6 +4374,7 @@ SCHEMA_BUILDERS: dict[str, Callable[..., dict[str, Any]]] = {
     "ruleExplanation": rule_explanation_schema,
     "viewDiscovery": view_discovery_schema,
     "qualificationSubjects": qualification_subjects_schema,
+    "commandError": command_error_schema,
     "validateResult": validate_result_schema,
     "traceResult": trace_result_schema,
     "qualifyResult": qualify_result_schema,
@@ -4427,6 +4512,11 @@ def hs_text(value: str) -> str:
     return json.dumps(value, ensure_ascii=False)
 
 
+def hs_embedded_schema(path: Path) -> str:
+    relative = path.relative_to(PACKAGE_ROOT).as_posix()
+    return f'$(embedSchemaBytes "../../../../{relative}")'
+
+
 def projection_cases(rules: list[dict[str, str]], field: str) -> str:
     lines: list[str] = []
     for rule in rules:
@@ -4548,6 +4638,10 @@ def hs_machine_schema(document: MachineDocument, schema_bytes: bytes) -> str:
             "          { schemaAuthorityIdentityValue =\n"
             f"              SchemaIdentity {hs_text(document.identity)}"
         )
+    schema_bytes_binding = ""
+    if document.name == "commandError":
+        schema_bytes_binding = f'''\n\ncommandErrorSchemaBytes :: ByteString
+commandErrorSchemaBytes = {hs_embedded_schema(document.schema_path)}'''
     return f'''{variant_bindings}
 
 {document.binding} :: MachineSchema
@@ -4562,7 +4656,7 @@ def hs_machine_schema(document: MachineDocument, schema_bytes: bytes) -> str:
                 {hs_text(digest)}
           }}
 {inventory}
-    }}'''
+    }}{schema_bytes_binding}'''
 
 
 def hs_schema_fragment_authority(
@@ -4597,11 +4691,14 @@ def render_schema_module(
         ]
     )
     return f'''{{-# LANGUAGE OverloadedStrings #-}}
+{{-# LANGUAGE TemplateHaskell #-}}
 
 -- This module is generated by contract/compile.py. Do not edit.
 module O2I.Operation.Schema.Generated where
 
+import Data.ByteString (ByteString)
 import Data.List.NonEmpty (NonEmpty(..))
+import O2I.Operation.Schema.Embed (embedSchemaBytes)
 import O2I.Operation.Schema.Internal
 
 {bindings}

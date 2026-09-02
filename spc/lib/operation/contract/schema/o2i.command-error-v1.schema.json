@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "o2i.command-error/v1",
+  "title": "Closed O2I command error",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/argumentInvalid"
+    },
+    {
+      "$ref": "#/$defs/commandFailed"
+    },
+    {
+      "$ref": "#/$defs/preparationFailed"
+    }
+  ],
+  "$defs": {
+    "toolDescriptor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "version"
+      ],
+      "properties": {
+        "identity": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\u0000]+$"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\u0000]+$"
+        }
+      }
+    },
+    "acquisitionFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceKind",
+        "sourceReference",
+        "message"
+      ],
+      "properties": {
+        "sourceKind": {
+          "enum": [
+            "file",
+            "stdin"
+          ]
+        },
+        "sourceReference": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\u0000]+$"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "argumentInvalid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "kind",
+        "tool",
+        "code",
+        "message"
+      ],
+      "properties": {
+        "schema": {
+          "const": "o2i.command-error/v1"
+        },
+        "kind": {
+          "const": "argument-invalid"
+        },
+        "tool": {
+          "$ref": "#/$defs/toolDescriptor"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^cli\\.argument\\.[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\u0000]+$"
+        }
+      }
+    },
+    "commandFailed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "kind",
+        "tool",
+        "code",
+        "failure"
+      ],
+      "properties": {
+        "schema": {
+          "const": "o2i.command-error/v1"
+        },
+        "kind": {
+          "const": "command-failed"
+        },
+        "tool": {
+          "$ref": "#/$defs/toolDescriptor"
+        },
+        "code": {
+          "const": "command.input-io"
+        },
+        "failure": {
+          "$ref": "#/$defs/acquisitionFailure"
+        }
+      }
+    },
+    "preparationFailed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "kind",
+        "tool",
+        "code",
+        "stage"
+      ],
+      "properties": {
+        "schema": {
+          "const": "o2i.command-error/v1"
+        },
+        "kind": {
+          "const": "preparation-failed"
+        },
+        "tool": {
+          "$ref": "#/$defs/toolDescriptor"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^\u0000]+$"
+        },
+        "stage": {
+          "enum": [
+            "adapter-selection",
+            "adapter-decode",
+            "profile-marker",
+            "profile-resolution",
+            "profile-compatibility",
+            "view-selection"
+          ]
+        }
+      }
+    }
+  }
+}
