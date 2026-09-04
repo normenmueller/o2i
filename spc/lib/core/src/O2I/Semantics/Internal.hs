@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RoleAnnotations #-}
 
 -- | Internal result algebra of Core semantic assessment.
@@ -15,6 +16,7 @@ module O2I.Semantics.Internal
   , SemanticOccurrenceEvidence
   , SemanticDefect
   , mkSemanticDefect
+  , foldSemanticDefect
   , semanticDefectRule
   , semanticDefectEvidence
   , semanticDefectOccurrenceGroups
@@ -148,6 +150,18 @@ mkSemanticDefect ::
   -> SemanticOccurrenceEvidence occurrenceSchema
   -> SemanticDefect
 mkSemanticDefect = SemanticDefectInternal
+
+-- | Eliminate a defect while preserving its generated schema indices.
+foldSemanticDefect ::
+     (forall evidenceSchema occurrenceSchema. Generated.GeneratedSemanticRule
+                                                evidenceSchema
+                                                occurrenceSchema -> SemanticEvidenceKey
+                                                                      evidenceSchema -> SemanticOccurrenceEvidence
+                                                                                          occurrenceSchema -> result)
+  -> SemanticDefect
+  -> result
+foldSemanticDefect consume (SemanticDefectInternal rule evidence occurrences) =
+  consume rule evidence occurrences
 
 -- | Project the closed semantic rule carried by a defect.
 semanticDefectRule :: SemanticDefect -> SemanticRule

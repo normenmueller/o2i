@@ -41,7 +41,7 @@ import Data.Text (Text)
 import qualified O2I.ArchiMate.Profile.Closure as Closure
 import qualified O2I.ArchiMate.Profile.Projection as Profile
 import O2I.Core.Contract (coreRuleIdText)
-import O2I.Core.Identity (modelIdentityText)
+import O2I.Core.Identity (ModelIdentity)
 import O2I.Operation.Acquisition (AcquiredSupplementalSource)
 import O2I.Operation.Adapter (adapterRuleId, adapterRuleIdText)
 import O2I.Operation.Diagnostic.AdapterOwner.Internal
@@ -209,10 +209,10 @@ supplementalDiagnosticRuleIdentity (SupplementalDiagnostic (SupplementalOwnerBin
 -- RFC 6901 instance pointer, and validated model identity. No caller-supplied
 -- source, Core constructor, or detachable provenance token is admitted.
 foldSupplementalDiagnostic ::
-     (AcquiredSupplementalSource -> Text -> Text -> result)
-  -> (AcquiredSupplementalSource -> Text -> Text -> result)
-  -> (AcquiredSupplementalSource -> Text -> Text -> result)
-  -> (AcquiredSupplementalSource -> Text -> Text -> result)
+     (AcquiredSupplementalSource -> Text -> ModelIdentity -> result)
+  -> (AcquiredSupplementalSource -> Text -> ModelIdentity -> result)
+  -> (AcquiredSupplementalSource -> Text -> ModelIdentity -> result)
+  -> (AcquiredSupplementalSource -> Text -> ModelIdentity -> result)
   -> SupplementalDiagnostic
   -> result
 foldSupplementalDiagnostic unknown ambiguous wrongType outOfView diagnostic =
@@ -224,29 +224,25 @@ foldSupplementalDiagnostic unknown ambiguous wrongType outOfView diagnostic =
              occurrence
              unknown
              (Binding.supplementalIdentityUnknownInstancePointer value)
-             (modelIdentityText
-                (Binding.supplementalIdentityUnknownModelIdentity value)))
+             (Binding.supplementalIdentityUnknownModelIdentity value))
         (\occurrence value ->
            withOccurrence
              occurrence
              ambiguous
              (Binding.supplementalIdentityAmbiguousInstancePointer value)
-             (modelIdentityText
-                (Binding.supplementalIdentityAmbiguousModelIdentity value)))
+             (Binding.supplementalIdentityAmbiguousModelIdentity value))
         (\occurrence value ->
            withOccurrence
              occurrence
              wrongType
              (Binding.supplementalIdentityWrongTypeInstancePointer value)
-             (modelIdentityText
-                (Binding.supplementalIdentityWrongTypeModelIdentity value)))
+             (Binding.supplementalIdentityWrongTypeModelIdentity value))
         (\occurrence value ->
            withOccurrence
              occurrence
              outOfView
              (Binding.supplementalIdentityOutOfViewInstancePointer value)
-             (modelIdentityText
-                (Binding.supplementalIdentityOutOfViewModelIdentity value)))
+             (Binding.supplementalIdentityOutOfViewModelIdentity value))
         evidence
   where
     withOccurrence occurrence consume pointer identity =

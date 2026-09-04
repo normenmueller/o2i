@@ -22,6 +22,7 @@ import Data.IORef
 import Data.JSON.JSONSchema (validateJSONSchema)
 import Data.List (sort)
 import Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified O2I.ArchiMate.Profile.Draft as Draft
 import O2I.ArchiMate.Profile.Resolution (compiledProfileDescriptor)
@@ -34,6 +35,8 @@ import O2I.Operation.Acquisition
 import O2I.Operation.Acquisition.Internal (acquireWith)
 import O2I.Operation.Adapter
 import O2I.Operation.Adapter.Authoring
+import qualified O2I.Operation.Human.Diagnostic as HumanDiagnostic
+import qualified O2I.Operation.Human.Value as HumanValue
 import O2I.Operation.Machine (ToolDescriptor, mkToolDescriptor)
 import O2I.Operation.Profile
 import O2I.Operation.Provenance
@@ -43,7 +46,10 @@ import O2I.Operation.Provenance
   )
 import O2I.Operation.Schema (schemaVariantText)
 import O2I.Operation.Test.AdapterSupport (compileCompleteAdapter)
+import qualified O2I.Operation.Test.HumanFailureCorrespondence as FailureCorrespondence
+import qualified O2I.Operation.Test.ReportEnvelope as ReportEnvelope
 import O2I.Operation.Trace (runTrace)
+import qualified O2I.Operation.Trace.Human as Human
 import O2I.Operation.Trace.Machine
 import O2I.Operation.Trace.Request
 import O2I.Operation.Trace.Result
@@ -51,6 +57,10 @@ import qualified O2I.Operation.Trace.Result.Internal as Internal
 import O2I.Operation.Trace.Runtime.Internal (runTraceWith)
 import O2I.Operation.View (viewByName)
 import qualified O2I.Trace as CoreTrace
+import OperationReportPublicObserver
+  ( ObservedReportContract
+  , ObservedReportOperation(..)
+  )
 import System.FilePath ((</>))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
@@ -78,6 +88,9 @@ tests =
     , testCase
         "keeps impossible owner failures outside the machine envelope"
         internalFailureDocument
+    , testCase
+        "projects every real terminal branch with its complete context"
+        humanBranches
     ]
 
 exactRequest :: Assertion
@@ -244,6 +257,7 @@ failedMachineDocument = do
         profiles
         (traceRequest model (viewByName "Binding") Nothing)
   tool <- requireRight (mkToolDescriptor "o2i" "0.3.0")
+  assertTraceFailureCorrespondence tool result
   case traceResultDocument tool result of
     Left _ -> pure ()
     Right _ -> assertFailure "command failure acquired a Trace envelope"
@@ -268,9 +282,183 @@ internalFailureDocument = do
     (\_ _ -> assertFailure "internal failure reached accepted Trace")
     result
   tool <- requireRight (mkToolDescriptor "o2i" "0.3.0")
+  assertTraceFailureCorrespondence tool result
   case traceResultDocument tool result of
     Left _ -> pure ()
     Right _ -> assertFailure "owner failure acquired a Trace envelope"
+
+assertTraceFailureCorrespondence :: ToolDescriptor -> TraceResult -> Assertion
+assertTraceFailureCorrespondence tool result =
+  Human.foldHumanTraceReport
+    (\failureValue -> do
+       raw <- observeRawTraceFailure result
+       human <- observeHumanTraceFailure failureValue
+       human @?= raw)
+    (\_ _ -> unexpectedTraceFailure "Trace prerequisite in failed fixture")
+    (\_ _ -> unexpectedTraceFailure "Trace rejection in failed fixture")
+    (\_ _ -> unexpectedTraceFailure "Trace acceptance in failed fixture")
+    (Human.traceHumanReport tool result)
+
+observeRawTraceFailure :: TraceResult -> IO [[Text]]
+observeRawTraceFailure =
+  foldTraceResult
+    (foldTraceFailure
+       (pure . (: []) . FailureCorrespondence.observeRawCommonFailure)
+       (foldTraceInternalFailure
+          (pure . (: []) . FailureCorrespondence.observeRawSourceIdentity)
+          (\_ -> unexpectedTraceFailure "unexpected Trace adapter failure")
+          (\_ -> unexpectedTraceFailure "unexpected Trace notation failure")
+          (\_ -> unexpectedTraceFailure "unexpected Trace Profile failure")
+          (\_ -> unexpectedTraceFailure "unexpected Trace identity failure")
+          (\_ -> unexpectedTraceFailure "unexpected Trace scope failure")
+          (\_ -> unexpectedTraceFailure "unexpected Trace Structure failure")
+          (\_ -> unexpectedTraceFailure "unexpected Trace provenance failure")
+          (pure
+             . map FailureCorrespondence.observeRawSupplementalInputDefect
+             . NonEmpty.toList)
+          (\_ -> unexpectedTraceFailure "unexpected Trace semantic failure")))
+    (\_ _ -> unexpectedTraceFailure "Trace prerequisite in failed fixture")
+    (\_ _ -> unexpectedTraceFailure "Trace rejection in failed fixture")
+    (\_ _ -> unexpectedTraceFailure "Trace acceptance in failed fixture")
+
+observeHumanTraceFailure :: Human.HumanTraceFailure -> IO [[Text]]
+observeHumanTraceFailure =
+  Human.foldHumanTraceFailure
+    (pure . (: []) . FailureCorrespondence.observeHumanCommonFailure)
+    (pure . (: []) . FailureCorrespondence.observeHumanSourceIdentity)
+    (\_ -> unexpectedTraceFailure "unexpected Human Trace adapter failure")
+    (\_ -> unexpectedTraceFailure "unexpected Human Trace notation failure")
+    (\_ -> unexpectedTraceFailure "unexpected Human Trace Profile failure")
+    (\_ -> unexpectedTraceFailure "unexpected Human Trace identity failure")
+    (\_ -> unexpectedTraceFailure "unexpected Human Trace scope failure")
+    (\_ -> unexpectedTraceFailure "unexpected Human Trace Structure failure")
+    (\_ -> unexpectedTraceFailure "unexpected Human Trace provenance failure")
+    (pure
+       . map FailureCorrespondence.observeHumanSupplementalInputDefect
+       . NonEmpty.toList)
+    (\_ -> unexpectedTraceFailure "unexpected Human Trace semantic failure")
+
+unexpectedTraceFailure :: String -> IO value
+unexpectedTraceFailure message = assertFailure message >> fail "unreachable"
+
+humanBranches :: Assertion
+humanBranches = do
+  model <-
+    do
+      reference <- requireRight (mkSourceReference "missing-model")
+      requireRight
+        (fileInput reference ("tst" </> "fixtures" </> "trace-missing.amx"))
+  failed <-
+    withFixtureEnvironment emptyTraceDraft $ \adapters profiles ->
+      runTrace
+        adapters
+        profiles
+        (traceRequest model (viewByName "Binding") Nothing)
+  prerequisite <- runFixture notationRejectedDraft
+  rejected <- runFixture emptyTraceDraft
+  accepted <- runFixture (traceContractDraft Nothing False)
+  tool <- ReportEnvelope.hostileTool
+  assertHuman tool "failed" ReportEnvelope.contractsWithoutCore failed
+  assertHuman
+    tool
+    "prerequisite"
+    ReportEnvelope.contractsWithoutCore
+    prerequisite
+  assertHuman tool "rejected" ReportEnvelope.contractsWithCore rejected
+  assertHuman tool "accepted" ReportEnvelope.contractsWithCore accepted
+  where
+    assertHuman ::
+         ToolDescriptor
+      -> Text
+      -> NonEmpty ObservedReportContract
+      -> TraceResult
+      -> Assertion
+    assertHuman tool expected contracts result =
+      Human.foldHumanTraceReport
+        (\failureValue -> do
+           expected @?= "failed"
+           raw <- observeRawTraceFailure result
+           human <- observeHumanTraceFailure failureValue
+           human @?= raw)
+        (\_ context -> do
+           expected @?= "prerequisite"
+           assertContext tool result contracts context)
+        (\_ context -> do
+           expected @?= "rejected"
+           assertContext tool result contracts context)
+        (\assessment context -> do
+           expected @?= "accepted"
+           Human.foldHumanTraceAssessment
+             (\_ roots -> length roots @?= 1)
+             assessment
+           assertContext tool result contracts context)
+        (Human.traceHumanReport tool result)
+    assertContext ::
+         ToolDescriptor
+      -> TraceResult
+      -> NonEmpty ObservedReportContract
+      -> Human.HumanTraceContext
+      -> Assertion
+    assertContext tool result contracts context = do
+      document <- requireDocument tool result
+      Human.foldHumanTraceContext
+        (\envelope request modelSource view diagnostics -> do
+           ReportEnvelope.assertPreparedEnvelope
+             traceResultSchema
+             (traceResultDocumentVariant document)
+             ObservedTraceReportOperation
+             contracts
+             envelope
+           Human.foldHumanTraceRequest
+             (\modelInput selector adapter -> do
+                HumanValue.foldHumanInputSource
+                  (\reference path -> do
+                     reference @?= "model"
+                     path @?= "tst" </> "fixtures" </> "owner-model.amx")
+                  (const (assertFailure "Trace model became standard input"))
+                  modelInput
+                HumanValue.foldHumanViewSelector
+                  (@?= "Binding")
+                  (const (assertFailure "Trace request changed selector kind"))
+                  selector
+                HumanValue.foldHumanAdapterSelection
+                  (pure ())
+                  (const
+                     (assertFailure "Trace request changed adapter selection"))
+                  adapter)
+             request
+           let tuple =
+                 HumanValue.foldHumanSourceIdentity $ \role ordinal reference digest ->
+                   ( HumanValue.foldHumanSourceRole
+                       "model"
+                       "supplemental"
+                       "readiness"
+                       "assessment"
+                       role
+                   , ordinal
+                   , reference
+                   , digest)
+               retained = tuple modelSource
+           retained
+             @?= tuple
+                   (HumanDiagnostic.humanDiagnosticDocumentModelSource
+                      diagnostics)
+           case retained of
+             (role, ordinal, reference, digest) -> do
+               role @?= ("model" :: Text)
+               ordinal @?= 0
+               reference @?= "model"
+               assertBool "Trace source digest is empty" (digest /= "")
+           HumanValue.foldHumanViewDescriptor
+             (\_ identity _ _ ->
+                HumanValue.foldHumanIdentityOutcome
+                  (pure ())
+                  (const (pure ()))
+                  (\_ _ -> pure ())
+                  (\_ _ -> pure ())
+                  identity)
+             view)
+        context
 
 fixtureModelInput :: IO InputSource
 fixtureModelInput = do

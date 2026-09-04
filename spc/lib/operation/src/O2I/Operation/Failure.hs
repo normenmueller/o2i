@@ -16,8 +16,12 @@ module O2I.Operation.Failure
   , adapterSelectionFailure
   , adapterDecodeFailure
   , profileMarkerFailure
+  , type ProfileResolutionFailure
   , profileResolutionFailure
+  , foldProfileResolutionFailure
+  , type ProfileCompatibilityFailure
   , profileCompatibilityFailure
+  , foldProfileCompatibilityFailure
   , viewSelectionFailure
   , preparationFailureCode
   , preparationFailureStage
@@ -31,7 +35,8 @@ module O2I.Operation.Failure
 
 import Data.List.NonEmpty (NonEmpty)
 import Data.Text (Text)
-import O2I.ArchiMate.Profile.Notation (MarkerCandidate)
+import O2I.ArchiMate.Profile.Draft (DraftScalar, DraftValueKind)
+import O2I.ArchiMate.Profile.Notation (CanonicalProperty, MarkerCandidate)
 import O2I.Operation.Acquisition (AcquisitionFailure)
 import O2I.Operation.Adapter
   ( AdapterDescriptor
@@ -49,11 +54,16 @@ import O2I.Operation.Profile
   ( ProfileCompatibility
   , ProfileMarkerEvidenceOutcome
   , ProfileResolution
+  , ResolvedProfile
   , foldProfileCompatibility
   , foldProfileMarkerEvidenceOutcome
   , foldProfileResolution
   )
-import O2I.Operation.Rule.Catalog (operationRuleIdText, operationRuleIdentity)
+import O2I.Operation.Rule.Catalog
+  ( OperationRule
+  , operationRuleIdText
+  , operationRuleIdentity
+  )
 import O2I.Operation.View
   ( ViewSelection
   , ViewSelectionFailure
@@ -98,31 +108,81 @@ profileMarkerFailure =
     (Just . ProfileMarkerPreparationFailure)
     (const Nothing)
 
--- | Project a Profile-resolution failure, or 'Nothing' on success.
-profileResolutionFailure :: ProfileResolution -> Maybe PreparationFailure
-profileResolutionFailure outcome =
+-- | Project the exact rejected Profile-resolution branch.
+profileResolutionFailure :: ProfileResolution -> Maybe ProfileResolutionFailure
+profileResolutionFailure =
   foldProfileResolution
-    (\_ _ -> failed)
-    (\_ _ _ -> failed)
-    (\_ _ _ _ -> failed)
-    (\_ _ _ _ -> failed)
-    (\_ _ _ -> failed)
-    (\_ _ _ -> failed)
-    (const Nothing)
-    outcome
-  where
-    failed = Just (ProfileResolutionPreparationFailure outcome)
+    (\rule key -> Just (ProfileReferenceMissingFailure rule key))
+    (\rule key occurrences ->
+       Just (ProfileReferencePropertyMultiplicityFailure rule key occurrences))
+    (\rule key occurrence occurrences ->
+       Just
+         (ProfileReferenceValueMultiplicityFailure
+            rule
+            key
+            occurrence
+            occurrences))
+    (\rule key occurrence kind ->
+       Just (ProfileReferenceValueKindInvalidFailure rule key occurrence kind))
+    (\rule key occurrence ->
+       Just (ProfileReferenceGrammarInvalidFailure rule key occurrence))
+    (\rule key reference ->
+       Just (ProfileReferenceUnknownFailure rule key reference))
+    (\_resolved -> Nothing)
 
--- | Project a Profile-compatibility failure, or 'Nothing' on success.
-profileCompatibilityFailure :: ProfileCompatibility -> Maybe PreparationFailure
-profileCompatibilityFailure outcome =
+-- | Consume every rejected Profile-resolution branch and exact field.
+foldProfileResolutionFailure ::
+     (OperationRule -> Text -> result)
+  -> (OperationRule -> Text -> [CanonicalProperty] -> result)
+  -> (OperationRule -> Text -> CanonicalProperty -> [DraftScalar] -> result)
+  -> (OperationRule -> Text -> DraftScalar -> DraftValueKind -> result)
+  -> (OperationRule -> Text -> DraftScalar -> result)
+  -> (OperationRule -> Text -> Text -> result)
+  -> ProfileResolutionFailure
+  -> result
+foldProfileResolutionFailure missing properties values kind grammar unknown failure =
+  case failure of
+    ProfileReferenceMissingFailure rule key -> missing rule key
+    ProfileReferencePropertyMultiplicityFailure rule key occurrences ->
+      properties rule key occurrences
+    ProfileReferenceValueMultiplicityFailure rule key occurrence occurrences ->
+      values rule key occurrence occurrences
+    ProfileReferenceValueKindInvalidFailure rule key occurrence actual ->
+      kind rule key occurrence actual
+    ProfileReferenceGrammarInvalidFailure rule key occurrence ->
+      grammar rule key occurrence
+    ProfileReferenceUnknownFailure rule key reference ->
+      unknown rule key reference
+
+-- | Project the exact rejected Profile/Adapter compatibility branch.
+profileCompatibilityFailure ::
+     ProfileCompatibility -> Maybe ProfileCompatibilityFailure
+profileCompatibilityFailure =
   foldProfileCompatibility
-    (\_ _ _ _ -> failed)
-    (\_ _ _ _ _ -> failed)
-    (\_ _ _ -> Nothing)
-    outcome
-  where
-    failed = Just (ProfileCompatibilityPreparationFailure outcome)
+    (\rule profile adapter admitted ->
+       Just (ProfileAdapterIdNotAdmittedFailure rule profile adapter admitted))
+    (\rule profile adapter profileNotation adapterNotation ->
+       Just
+         (ProfileAdapterNotationMismatchFailure
+            rule
+            profile
+            adapter
+            profileNotation
+            adapterNotation))
+    (\_profile _adapter _notation -> Nothing)
+
+-- | Consume both rejected Profile/Adapter compatibility branches.
+foldProfileCompatibilityFailure ::
+     (OperationRule -> ResolvedProfile -> AdapterDescriptor -> [Text] -> result)
+  -> (OperationRule -> ResolvedProfile -> AdapterDescriptor -> Text -> Text -> result)
+  -> ProfileCompatibilityFailure
+  -> result
+foldProfileCompatibilityFailure notAdmitted mismatch failure =
+  case failure of
+    ProfileAdapterIdNotAdmittedFailure rule profile adapter admitted ->
+      notAdmitted rule profile adapter admitted
+    ProfileAdapterNotationMismatchFailure rule profile adapter profileNotation adapterNotation ->
+      mismatch rule profile adapter profileNotation adapterNotation
 
 -- | Project a View-selection failure, or 'Nothing' on success.
 viewSelectionFailure :: ViewSelection document -> Maybe PreparationFailure
@@ -136,22 +196,20 @@ preparationFailureCode failure =
     AdapterSelectionPreparationFailure _ -> "preparation.adapter-selection"
     AdapterDecodePreparationFailure _ _ -> "preparation.adapter-decode"
     ProfileMarkerPreparationFailure _ -> "preparation.profile-marker"
-    ProfileResolutionPreparationFailure outcome ->
-      foldProfileResolution
+    ProfileResolutionPreparationFailure failureValue ->
+      foldProfileResolutionFailure
         (\rule _ -> ruleCode rule)
         (\rule _ _ -> ruleCode rule)
         (\rule _ _ _ -> ruleCode rule)
         (\rule _ _ _ -> ruleCode rule)
         (\rule _ _ -> ruleCode rule)
         (\rule _ _ -> ruleCode rule)
-        (const "preparation.profile-resolution")
-        outcome
-    ProfileCompatibilityPreparationFailure outcome ->
-      foldProfileCompatibility
+        failureValue
+    ProfileCompatibilityPreparationFailure failureValue ->
+      foldProfileCompatibilityFailure
         (\rule _ _ _ -> ruleCode rule)
         (\rule _ _ _ _ -> ruleCode rule)
-        (\_ _ _ -> "preparation.profile-compatibility")
-        outcome
+        failureValue
     ViewSelectionPreparationFailure _ -> "preparation.view-selection"
   where
     ruleCode rule = operationRuleIdText (operationRuleIdentity rule)
@@ -172,8 +230,8 @@ foldPreparationFailure ::
      (AdapterSelectionError -> result)
   -> (AdapterDescriptor -> NonEmpty AdapterDiagnostic -> result)
   -> ([MarkerCandidate] -> result)
-  -> (ProfileResolution -> result)
-  -> (ProfileCompatibility -> result)
+  -> (ProfileResolutionFailure -> result)
+  -> (ProfileCompatibilityFailure -> result)
   -> (forall document. ViewSelectionFailure document -> result)
   -> PreparationFailure
   -> result

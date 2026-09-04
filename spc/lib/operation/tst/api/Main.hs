@@ -131,6 +131,8 @@ $(assertAbstractTypes
     , "DiagnosticSource.SupplementalOwnerBindingEvidence"
     , "DiagnosticSource.BoundOwnerSupplementalInputs"
     , "Failure.CommandFailure"
+    , "Failure.ProfileResolutionFailure"
+    , "Failure.ProfileCompatibilityFailure"
     , "Failure.PreparationFailure"
     , "Failure.CommonFailure"
     , "CommandError.ArgumentFailureField"
@@ -429,7 +431,9 @@ $(assertOrdinaryFunctions
     , 'Failure.adapterDecodeFailure
     , 'Failure.profileMarkerFailure
     , 'Failure.profileResolutionFailure
+    , 'Failure.foldProfileResolutionFailure
     , 'Failure.profileCompatibilityFailure
+    , 'Failure.foldProfileCompatibilityFailure
     , 'Failure.viewSelectionFailure
     , 'Failure.preparationFailureCode
     , 'Failure.preparationFailureStage

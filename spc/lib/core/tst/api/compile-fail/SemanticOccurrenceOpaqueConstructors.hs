@@ -2,8 +2,8 @@ module SemanticOccurrenceOpaqueConstructors where
 
 import O2I.Semantics
 
-forgeRole :: SemanticOccurrenceRole
-forgeRole = SemanticOccurrenceRole undefined
+removedRole :: SemanticOccurrenceRole
+removedRole = undefined
 
-forgeGroup :: SemanticOccurrenceGroup
-forgeGroup = SemanticOccurrenceGroup forgeRole []
+removedGroup :: SemanticOccurrenceGroup
+removedGroup = undefined

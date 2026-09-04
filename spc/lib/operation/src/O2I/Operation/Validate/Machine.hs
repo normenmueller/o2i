@@ -19,14 +19,6 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Data.Maybe (mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as Text
-import O2I.Core.Contract
-  ( coreContractIdentity
-  , coreContractIdentityText
-  , coreContractSha256
-  , coreContractSha256Text
-  , coreContractVersion
-  , coreContractVersionText
-  )
 import O2I.Core.Identity (ModelIdentity, modelIdentityText)
 import O2I.Operation.Acquisition
   ( AcquiredSupplementalSource
@@ -42,6 +34,7 @@ import O2I.Operation.Encoding.Internal
   , closedObjectFragment
   , closedOperationMachineResult
   , nullFragment
+  , reportAuthorityMember
   , requiredMember
   , textFragment
   )
@@ -51,15 +44,13 @@ import O2I.Operation.Machine.Fragment.Internal
   , foldPreparedDiagnosticDocumentFragments
   , viewDescriptorFragment
   )
-import O2I.Operation.Machine.Internal (validateOperationIdentity)
-import qualified O2I.Operation.Rule.Generated as Rule
+import O2I.Operation.Report.Internal (foldValidateReport)
 import O2I.Operation.Schema (MachineSchema, SchemaVariant)
 import qualified O2I.Operation.Schema.Generated as Generated
 import O2I.Operation.Validate.Request
   ( ValidateRequest
   , ValidationLevel
   , foldValidateRequest
-  , foldValidationLevel
   , semanticsValidationLevel
   , structureValidationLevel
   , validateRequestLevel
@@ -69,7 +60,6 @@ import O2I.Operation.Validate.Result
   , ValidateResult
   , ValidateUnavailabilityWitness
   , foldPreparedValidation
-  , foldValidateResult
   , foldValidateUnavailabilityWitness
   )
 import O2I.Operation.View
@@ -93,32 +83,29 @@ validateResultDocument ::
   -> ValidateResult
   -> Either ValidateFailure ValidateResultDocument
 validateResultDocument tool =
-  foldValidateResult
+  foldValidateReport
+    tool
     Left
-    (\prepared ->
-       Right (preparedDocument tool "accepted" acceptedVariant Nothing prepared))
-    (\prepared ->
-       Right (preparedDocument tool "rejected" rejectedVariant Nothing prepared))
-    (\witnesses prepared ->
+    (\envelope prepared ->
+       Right (preparedDocument envelope "accepted" Nothing prepared))
+    (\envelope prepared ->
+       Right (preparedDocument envelope "rejected" Nothing prepared))
+    (\envelope witnesses prepared ->
        Right
          (preparedDocument
-            tool
+            envelope
             "unavailable"
-            (const Generated.semanticsValidationUnavailableVariant)
             (Just (NonEmpty.toList witnesses))
             prepared))
   where
-    preparedDocument toolDescriptor status selectVariant witnesses prepared =
+    preparedDocument envelope status witnesses prepared =
       foldPreparedValidation
         (\request completed view acquired diagnostics ->
            foldPreparedDiagnosticDocumentFragments
              (\authority modelDiagnostics supplementalGroups ->
                 ValidateResultDocument
                   (closedOperationMachineResult
-                     Generated.validateResultMachineSchema
-                     validateOperationIdentity
-                     toolDescriptor
-                     (selectVariant completed)
+                     envelope
                      [ requiredMember
                          "context"
                          (contextFragment
@@ -135,9 +122,7 @@ validateResultDocument tool =
                      , requiredMember
                          "diagnostics"
                          (diagnosticsFragment modelDiagnostics)
-                     , requiredMember
-                         "provenance"
-                         (provenanceFragment (validateRequestLevel request))
+                     , reportAuthorityMember envelope
                      ]))
              diagnostics)
         prepared
@@ -155,22 +140,6 @@ validateResultDocumentVariant (ValidateResultDocument result) =
 encodeValidateResultDocument :: ValidateResultDocument -> ByteString
 encodeValidateResultDocument (ValidateResultDocument result) =
   machineResultBytesValue result
-
-acceptedVariant :: ValidationLevel -> SchemaVariant
-acceptedVariant =
-  foldValidationLevel
-    Generated.notationValidationAcceptedVariant
-    Generated.profileValidationAcceptedVariant
-    Generated.structureValidationAcceptedVariant
-    Generated.semanticsValidationAcceptedVariant
-
-rejectedVariant :: ValidationLevel -> SchemaVariant
-rejectedVariant =
-  foldValidationLevel
-    Generated.notationValidationRejectedVariant
-    Generated.profileValidationRejectedVariant
-    Generated.structureValidationRejectedVariant
-    Generated.semanticsValidationRejectedVariant
 
 contextFragment ::
      ValidateRequest
@@ -333,50 +302,4 @@ diagnosticsFragment diagnostics =
   closedObjectFragment
     [ requiredMember "schema" (textFragment "o2i.operation.diagnostic/v2")
     , requiredMember "modelDiagnostics" (arrayFragment diagnostics)
-    ]
-
-provenanceFragment :: ValidationLevel -> CanonicalFragment
-provenanceFragment level =
-  closedObjectFragment
-    [ requiredMember
-        "contracts"
-        (arrayFragment
-           ([ operationContractFragment
-            , kindContractFragment "adapter"
-            , kindContractFragment "profile"
-            ]
-              <> foldValidationLevel
-                   []
-                   []
-                   [coreContractFragment]
-                   [coreContractFragment]
-                   level))
-    ]
-
-operationContractFragment :: CanonicalFragment
-operationContractFragment =
-  closedObjectFragment
-    [ requiredMember "kind" (textFragment "operation")
-    , requiredMember "identity" (textFragment Rule.operationContractIdentity)
-    , requiredMember "version" (textFragment Rule.operationContractVersion)
-    , requiredMember "digest" (textFragment Rule.operationContractSha256)
-    ]
-
-kindContractFragment :: Text -> CanonicalFragment
-kindContractFragment kind =
-  closedObjectFragment [requiredMember "kind" (textFragment kind)]
-
-coreContractFragment :: CanonicalFragment
-coreContractFragment =
-  closedObjectFragment
-    [ requiredMember "kind" (textFragment "core")
-    , requiredMember
-        "identity"
-        (textFragment (coreContractIdentityText coreContractIdentity))
-    , requiredMember
-        "version"
-        (textFragment (coreContractVersionText coreContractVersion))
-    , requiredMember
-        "digest"
-        (textFragment (coreContractSha256Text coreContractSha256))
     ]

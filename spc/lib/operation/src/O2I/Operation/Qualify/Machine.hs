@@ -14,14 +14,6 @@ import Data.ByteString (ByteString)
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified Data.Text as Text
-import O2I.Core.Contract
-  ( coreContractIdentity
-  , coreContractIdentityText
-  , coreContractSha256
-  , coreContractSha256Text
-  , coreContractVersion
-  , coreContractVersionText
-  )
 import O2I.Core.Identity (modelIdentityText)
 import O2I.Operation.Acquisition
   ( AcquiredSupplementalSource
@@ -36,6 +28,7 @@ import O2I.Operation.Encoding.Internal
   , closedObjectFragment
   , closedOperationMachineResult
   , nullFragment
+  , reportAuthorityMember
   , requiredMember
   , textFragment
   )
@@ -45,7 +38,6 @@ import O2I.Operation.Machine.Fragment.Internal
   , foldPreparedDiagnosticDocumentFragments
   , viewDescriptorFragment
   )
-import O2I.Operation.Machine.Internal (qualifyOperationIdentity)
 import O2I.Operation.Qualify.Machine.Internal (qualificationAssessmentFragment)
 import O2I.Operation.Qualify.Request (QualifyRequest, foldQualifyRequest)
 import O2I.Operation.Qualify.Result
@@ -55,10 +47,9 @@ import O2I.Operation.Qualify.Result
   , QualifyResult
   , foldPreparedQualify
   , foldQualifyPrerequisite
-  , foldQualifyResult
   , qualifyPrerequisiteText
   )
-import qualified O2I.Operation.Rule.Generated as Rule
+import O2I.Operation.Report.Internal (ReportEnvelope, foldQualifyReport)
 import O2I.Operation.Schema (MachineSchema, SchemaVariant)
 import qualified O2I.Operation.Schema.Generated as Generated
 import O2I.Operation.View
@@ -78,22 +69,21 @@ qualifyResultDocument ::
   -> QualifyResult
   -> Either QualifyFailure QualifyResultDocument
 qualifyResultDocument tool =
-  foldQualifyResult
+  foldQualifyReport
+    tool
     Left
-    (\stage prepared ->
+    (\envelope stage prepared ->
        Right
          (preparedDocument
-            tool
-            Generated.qualifyPrerequisiteRejectedVariant
+            envelope
             "prerequisite-rejected"
             (Just stage)
             nullFragment
             prepared))
-    (\assessment prepared ->
+    (\envelope assessment prepared ->
        Right
          (preparedDocument
-            tool
-            Generated.qualifyCompletedVariant
+            envelope
             "completed"
             Nothing
             (qualificationAssessmentFragment assessment)
@@ -114,24 +104,20 @@ encodeQualifyResultDocument (QualifyResultDocument result) =
   machineResultBytesValue result
 
 preparedDocument ::
-     ToolDescriptor
-  -> SchemaVariant
+     ReportEnvelope
   -> Text
   -> Maybe QualifyPrerequisite
   -> CanonicalFragment
   -> PreparedQualify
   -> QualifyResultDocument
-preparedDocument tool variant status prerequisite qualificationFragment prepared =
+preparedDocument envelope status prerequisite qualificationFragment prepared =
   foldPreparedQualify
     (\request view acquired diagnostics ->
        foldPreparedDiagnosticDocumentFragments
          (\authority modelDiagnostics supplementalGroups ->
             QualifyResultDocument
               (closedOperationMachineResult
-                 Generated.qualifyResultMachineSchema
-                 qualifyOperationIdentity
-                 tool
-                 variant
+                 envelope
                  [ requiredMember
                      "context"
                      (contextFragment
@@ -148,7 +134,7 @@ preparedDocument tool variant status prerequisite qualificationFragment prepared
                  , requiredMember
                      "diagnostics"
                      (diagnosticsFragment modelDiagnostics)
-                 , requiredMember "provenance" provenanceFragment
+                 , reportAuthorityMember envelope
                  ]))
          diagnostics)
     prepared
@@ -238,45 +224,4 @@ diagnosticsFragment diagnostics =
   closedObjectFragment
     [ requiredMember "schema" (textFragment "o2i.operation.diagnostic/v2")
     , requiredMember "modelDiagnostics" (arrayFragment diagnostics)
-    ]
-
-provenanceFragment :: CanonicalFragment
-provenanceFragment =
-  closedObjectFragment
-    [ requiredMember
-        "contracts"
-        (arrayFragment
-           [ operationContractFragment
-           , kindContractFragment "adapter"
-           , kindContractFragment "profile"
-           , coreContractFragment
-           ])
-    ]
-
-operationContractFragment :: CanonicalFragment
-operationContractFragment =
-  closedObjectFragment
-    [ requiredMember "kind" (textFragment "operation")
-    , requiredMember "identity" (textFragment Rule.operationContractIdentity)
-    , requiredMember "version" (textFragment Rule.operationContractVersion)
-    , requiredMember "digest" (textFragment Rule.operationContractSha256)
-    ]
-
-kindContractFragment :: Text -> CanonicalFragment
-kindContractFragment kind =
-  closedObjectFragment [requiredMember "kind" (textFragment kind)]
-
-coreContractFragment :: CanonicalFragment
-coreContractFragment =
-  closedObjectFragment
-    [ requiredMember "kind" (textFragment "core")
-    , requiredMember
-        "identity"
-        (textFragment (coreContractIdentityText coreContractIdentity))
-    , requiredMember
-        "version"
-        (textFragment (coreContractVersionText coreContractVersion))
-    , requiredMember
-        "digest"
-        (textFragment (coreContractSha256Text coreContractSha256))
     ]

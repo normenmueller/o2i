@@ -13,15 +13,7 @@ module O2I.Operation.Qualification.Subjects.Machine
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import qualified Data.Text as Text
-import O2I.Core.Contract
-  ( coreContractIdentity
-  , coreContractIdentityText
-  , coreContractSha256
-  , coreContractSha256Text
-  , coreContractVersion
-  , coreContractVersionText
-  , coreQualifiedEndpointIdText
-  )
+import O2I.Core.Contract (coreQualifiedEndpointIdText)
 import O2I.Core.Identity (modelIdentityText, occurrenceIdentityText)
 import O2I.Operation.Acquisition
   ( AcquiredSupplementalSource
@@ -36,6 +28,7 @@ import O2I.Operation.Encoding.Internal
   , closedObjectFragment
   , closedOperationMachineResult
   , nullFragment
+  , reportAuthorityMember
   , requiredMember
   , textFragment
   )
@@ -45,7 +38,6 @@ import O2I.Operation.Machine.Fragment.Internal
   , foldPreparedDiagnosticDocumentFragments
   , viewDescriptorFragment
   )
-import O2I.Operation.Machine.Internal (qualificationSubjectsOperationIdentity)
 import O2I.Operation.Qualification.Subjects.Request
   ( QualificationSubjectsRequest
   , foldQualificationSubjectsRequest
@@ -64,14 +56,16 @@ import O2I.Operation.Qualification.Subjects.Result
   , discoveredQualificationSubjectOccurrence
   , discoveredQualificationSubjectQualifiedEndpoint
   , foldPreparedQualificationSubjects
-  , foldQualificationSubjectsResult
   , qualificationInventoryNeedSubjects
   , qualificationInventoryStrategySubjects
   , qualificationSubjectCategoryText
   , qualificationSubjectEligibilityText
   , qualificationSubjectsPrerequisiteText
   )
-import qualified O2I.Operation.Rule.Generated as Rule
+import O2I.Operation.Report.Internal
+  ( ReportEnvelope
+  , foldQualificationSubjectsReport
+  )
 import O2I.Operation.Schema (MachineSchema, SchemaVariant)
 import qualified O2I.Operation.Schema.Generated as Generated
 import O2I.Operation.View
@@ -90,22 +84,21 @@ qualificationSubjectsDocument ::
   -> QualificationSubjectsResult
   -> Either QualificationSubjectsFailure QualificationSubjectsDocument
 qualificationSubjectsDocument tool =
-  foldQualificationSubjectsResult
+  foldQualificationSubjectsReport
+    tool
     Left
-    (\stage prepared ->
+    (\envelope stage prepared ->
        Right
          (preparedDocument
-            tool
-            Generated.qualificationSubjectsPrerequisiteRejectedVariant
+            envelope
             "prerequisite-rejected"
             (Just stage)
             nullFragment
             prepared))
-    (\subjects prepared ->
+    (\envelope subjects prepared ->
        Right
          (preparedDocument
-            tool
-            Generated.qualificationSubjectsDiscoveredVariant
+            envelope
             "discovered"
             Nothing
             (qualificationSubjectsFragment subjects)
@@ -128,24 +121,20 @@ encodeQualificationSubjectsDocument (QualificationSubjectsDocument result) =
   machineResultBytesValue result
 
 preparedDocument ::
-     ToolDescriptor
-  -> SchemaVariant
+     ReportEnvelope
   -> Text
   -> Maybe QualificationSubjectsPrerequisite
   -> CanonicalFragment
   -> PreparedQualificationSubjects
   -> QualificationSubjectsDocument
-preparedDocument tool variant status prerequisite subjectsFragment prepared =
+preparedDocument envelope status prerequisite subjectsFragment prepared =
   foldPreparedQualificationSubjects
     (\request view acquired diagnostics ->
        foldPreparedDiagnosticDocumentFragments
          (\authority modelDiagnostics supplementalGroups ->
             QualificationSubjectsDocument
               (closedOperationMachineResult
-                 Generated.qualificationSubjectsMachineSchema
-                 qualificationSubjectsOperationIdentity
-                 tool
-                 variant
+                 envelope
                  [ requiredMember
                      "context"
                      (closedObjectFragment
@@ -170,7 +159,7 @@ preparedDocument tool variant status prerequisite subjectsFragment prepared =
                  , requiredMember
                      "diagnostics"
                      (diagnosticsFragment modelDiagnostics)
-                 , requiredMember "provenance" provenanceFragment
+                 , reportAuthorityMember envelope
                  ]))
          diagnostics)
     prepared
@@ -290,45 +279,4 @@ diagnosticsFragment diagnostics =
   closedObjectFragment
     [ requiredMember "schema" (textFragment "o2i.operation.diagnostic/v2")
     , requiredMember "modelDiagnostics" (arrayFragment diagnostics)
-    ]
-
-provenanceFragment :: CanonicalFragment
-provenanceFragment =
-  closedObjectFragment
-    [ requiredMember
-        "contracts"
-        (arrayFragment
-           [ operationContractFragment
-           , kindContractFragment "adapter"
-           , kindContractFragment "profile"
-           , coreContractFragment
-           ])
-    ]
-
-operationContractFragment :: CanonicalFragment
-operationContractFragment =
-  closedObjectFragment
-    [ requiredMember "kind" (textFragment "operation")
-    , requiredMember "identity" (textFragment Rule.operationContractIdentity)
-    , requiredMember "version" (textFragment Rule.operationContractVersion)
-    , requiredMember "digest" (textFragment Rule.operationContractSha256)
-    ]
-
-kindContractFragment :: Text -> CanonicalFragment
-kindContractFragment kind =
-  closedObjectFragment [requiredMember "kind" (textFragment kind)]
-
-coreContractFragment :: CanonicalFragment
-coreContractFragment =
-  closedObjectFragment
-    [ requiredMember "kind" (textFragment "core")
-    , requiredMember
-        "identity"
-        (textFragment (coreContractIdentityText coreContractIdentity))
-    , requiredMember
-        "version"
-        (textFragment (coreContractVersionText coreContractVersion))
-    , requiredMember
-        "digest"
-        (textFragment (coreContractSha256Text coreContractSha256))
     ]

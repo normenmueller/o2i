@@ -12,19 +12,17 @@ module O2I.Operation.Discovery.View.Machine
 
 import Data.ByteString (ByteString)
 import qualified Data.List.NonEmpty as NonEmpty
-import O2I.Operation.Discovery.Machine.Internal (viewDiscoveryAuthorityFragment)
 import O2I.Operation.Discovery.View
   ( ViewDiscovery
-  , foldViewDiscovery
   , foldViewDiscoveryFailure
   , foldViewDiscoveryResult
-  , viewDiscoveryAuthorities
   )
 import O2I.Operation.Encoding.Internal
   ( MachineResult(..)
   , arrayFragment
   , closedMachineResult
   , closedOperationMachineResult
+  , reportAuthorityMember
   , requiredMember
   )
 import O2I.Operation.Machine (ToolDescriptor)
@@ -36,7 +34,7 @@ import O2I.Operation.Machine.Fragment.Internal
   , sourceIdentityFragment
   , viewDescriptorFragment
   )
-import O2I.Operation.Machine.Internal (viewsOperationIdentity)
+import O2I.Operation.Report.Internal (foldViewReport)
 import O2I.Operation.Schema (MachineSchema, SchemaVariant)
 import qualified O2I.Operation.Schema.Generated as Generated
 
@@ -49,7 +47,7 @@ newtype ViewDiscoveryDocument =
 -- when a pre-completion command failure does not emit an Operation envelope.
 viewDiscoveryDocument ::
      ToolDescriptor -> ViewDiscovery -> ViewDiscoveryDocument
-viewDiscoveryDocument tool = foldViewDiscovery failed succeeded
+viewDiscoveryDocument tool = foldViewReport tool failed succeeded
   where
     failed =
       foldViewDiscoveryFailure
@@ -83,23 +81,15 @@ viewDiscoveryDocument tool = foldViewDiscovery failed succeeded
                           adapterDiagnosticFragment
                           (NonEmpty.toList diagnostics)))
                 ]))
-    succeeded result =
+    succeeded envelope result =
       foldViewDiscoveryResult
         (\source adapter _ views ->
            ViewDiscoveryDocument
              (closedOperationMachineResult
-                Generated.viewDiscoveryMachineSchema
-                viewsOperationIdentity
-                tool
-                Generated.viewsDiscoveredVariant
+                envelope
                 [ requiredMember "source" (sourceIdentityFragment source)
                 , requiredMember "adapter" (adapterDescriptorFragment adapter)
-                , requiredMember
-                    "authorities"
-                    (arrayFragment
-                       (fmap
-                          viewDiscoveryAuthorityFragment
-                          (NonEmpty.toList (viewDiscoveryAuthorities result))))
+                , reportAuthorityMember envelope
                 , requiredMember
                     "views"
                     (arrayFragment (fmap viewDescriptorFragment views))
