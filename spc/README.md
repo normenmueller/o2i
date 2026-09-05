@@ -23,6 +23,12 @@ o2i-amx               -> o2i-operation + o2i-archimate-profile
 
 Core alone owns notation-independent O2I structure and semantics. The ArchiMate Profile alone owns its compiled mapping and projection. Operation coordinates acquisition and exact requests without redefining either contract. AMX contributes one native Adapter and does not own Profile or Core semantics.
 
+## Presentation Scope
+
+The [White Paper](../o2i.md#syntax) owns the distinction between meaning-bearing notation and editorial presentation. Consistent reference-diagram styling, including solid outlines for semantic metamodel elements, is an editorial recommendation assessed by visual review, not an additional instance-conformance condition. Colors, fonts, layout, and ArchiMate Grouping border styles do not affect O2I conformance unless the governing notation or Profile contract assigns them meaning. Metamodel abstraction is documented explicitly; O2I introduces no dashed-border encoding of abstraction.
+
+Editorial consistency does not justify a new product presentation checker, API, CLI option or command, validation level, or engine. Any justified meaning-bearing graphical rule must be defined by its owning contract, implemented in the responsible O2I library, and exposed through the thin O2I CLI. Shell or Python tooling must not maintain parallel product-rule logic for these checks.
+
 ## Public Foundation Surface
 
 The production libraries expose exactly the following modules in their Cabal metadata.

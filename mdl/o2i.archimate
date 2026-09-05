@@ -936,12 +936,14 @@ This View is a non-executable illustrative overview used to explain the metamode
           <bounds x="192" y="240" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
+          <feature name="lineStyle" value="0"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-9bffaa3f7dd74994a5c270066d33f379" source="id-10d2ccd44a0d4390af95055a035da747" target="id-61349cc01a3246978fd9b5b42743866e" archimateRelationship="id-76fdb740fff743c5a118d7b977a1e72e"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-136590af6a224b6689af72c90ec669e5" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-cf054314f7e944cea52ff8ec082377f8">
           <bounds x="60" y="120" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
+          <feature name="lineStyle" value="0"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-ee786d8c69bc4581b745b81be6acca4c" source="id-136590af6a224b6689af72c90ec669e5" target="id-10d2ccd44a0d4390af95055a035da747" archimateRelationship="id-bb43d55e900449e1b0ff3e0e8eec1f05"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-600083859f6a4f2288d087ffc255380b" source="id-136590af6a224b6689af72c90ec669e5" target="id-61349cc01a3246978fd9b5b42743866e" archimateRelationship="id-fb625ef24a8c4ed7be348d25c4fceb26"/>
         </child>
@@ -949,6 +951,7 @@ This View is a non-executable illustrative overview used to explain the metamode
           <bounds x="60" y="360" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
+          <feature name="lineStyle" value="0"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-f12be91d75e441c8bd871652cd622d06" lineColor="#c0c0c0" fillColor="#ffffff" textPosition="1" archimateElement="id-c9c995beb0e645a3a2ca7c4afc3e6e2c" type="1">
           <bounds x="192" y="96" width="96" height="48"/>
@@ -1298,7 +1301,9 @@ This View is an explanatory semantic projection of the metamodel defined in o2i.
         </child>
         <documentation>Visualizes the closed O2I SituationAnchor type, its four constructors, and the constitution of Situation.
 
-This View is a checked semantic projection of the metamodel defined in o2i.md; it contains neither concrete SituationAnchor instances nor an ArchiMate syntax contract.</documentation>
+This View is a checked semantic projection of the metamodel defined in o2i.md; it contains neither concrete SituationAnchor instances nor an ArchiMate syntax contract.
+
+Situation Anchor is an abstract, non-instantiable family; its closed constructors are defined by the metamodel.</documentation>
       </element>
       <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Semantics - Strategy Constituents" id="id-c7990370c7ab4a668bdd4ec7fdb8a3ed">
         <child xsi:type="archimate:DiagramObject" id="id-3a5b93b3ad064e47a704f005c8e0b028" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-c746985283b74d8ea73daf99c6694a18">

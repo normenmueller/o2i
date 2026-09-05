@@ -920,6 +920,12 @@ Ihre Einordnung als Teil der Metamodellsemantik zeigt @Fig:o2i-framework-archite
 
 Die Syntax beschreibt, wie die O2I-Semantik in einer Modellierungssprache dargestellt wird. O2I verwendet ArchiMate als visuelle Darstellungs- und Integrationssyntax, ohne die O2I-Semantik durch ArchiMate-Semantik zu ersetzen.
 
+O2I unterscheidet bedeutungstragende Notation von redaktioneller Gestaltung. Farben, Schriftarten, Layout und die Umrandung eines ArchiMate `Grouping` beeinflussen die O2I-Konformität nicht, sofern ihnen der maßgebliche Notations- oder Profilvertrag keine Bedeutung zuweist. Die durch diesen Vertrag bestimmten Element- und Relationstypen, Relationsrichtungen und Metadaten bleiben davon unberührt.
+
+Für die Referenzdiagramme empfiehlt O2I eine einheitliche, lesbare Gestaltung, insbesondere durchgezogene Rahmen für semantische Metamodellelemente. Diese redaktionelle Empfehlung wird durch Sichtprüfung begleitet; sie begründet keine zusätzliche Konformitätsanforderung an O2I-Instanzen. Die Abstraktion von Metamodelltypen wird ausdrücklich dokumentiert. O2I führt dafür keine zusätzliche Kodierung wie "gestrichelt bedeutet abstrakt" ein.
+
+Für rein redaktionelle Gestaltung stellt O2I keine zusätzliche produktive Darstellungsprüfung bereit. Eine bedeutungstragende grafische Unterscheidung setzt einen begründeten Bedarf und eine ausdrückliche Definition im zuständigen Notations- oder Profilvertrag voraus. Ihre maschinelle Prüfung gehört in die O2I-Bibliotheken und wird über die O2I-CLI zugänglich gemacht; parallele Prüflogik in Shell- oder Python-Skripten ist dafür ausgeschlossen.
+
 Evidenztypen wie `KPIDefinition`, `ValueDomain`, `Level`, `Delta`, `Observation`, `EvidencePlan`, `EffectCriterion`, `TargetCriterion`, `PlannedInterventionStart`, `ActualInterventionStart` und `FollowUpObservation` sind weder O2I-Kontexte noch O2I-Primitives. Ihre konkrete Persistenz- oder Darstellungsform ist nicht Bestandteil des ArchiMate-Profils; sie werden durch die Validierungsspezifikation an einen Wirkungstrace gebunden.
 
 ### ArchiMate-Profil

@@ -45,3 +45,4 @@ Tests verify contracts; they never define fachliche meaning.
 - A complete effect trace precedes evidence readiness. Effect and target attainment remain independent assessments.
 - The Profile projects notation structure; Core owns notation-independent well-formedness and semantic validity. Qualification, trace, readiness, and assessment remain separate capabilities rather than one validation pipeline.
 - Semantic Views visualize the metamodel; syntax Views visualize the declarative Profile. Neither ArchiMate nor Python owns O2I semantics.
+- Reference styling is editorial guidance, not instance conformance. Preserve the lean presentation boundary in `o2i.md` (Syntax) and `operations/modeling.md`: no cosmetic product checker or implicit graphical semantics; justified meaning-bearing checks belong in O2I libraries and the CLI.

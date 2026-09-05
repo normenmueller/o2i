@@ -1,5 +1,6 @@
 *.bak
 .DS_Store
+[Ss]cratch.md
 dist-newstyle/
 *.hi
 *.o

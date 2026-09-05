@@ -39,6 +39,10 @@ adapters, or Haddock.
   requirement; never add a workaround, compatibility layer, unsafe mechanism,
   or speculative abstraction.
 - Keep the CLI thin. Reusable logic belongs in libraries.
+- Apply the presentation boundary in `modeling.md`: no new product capability
+  for editorial reference styling. Product checks for explicitly justified,
+  meaning-bearing notation belong in O2I libraries and the CLI, never in
+  parallel shell/Python rule implementations.
 
 # Package Boundaries
 
@@ -51,9 +55,11 @@ adapters, or Haddock.
   contracts without redefining Core or Profile semantics.
 - `o2i-amx`: native AMX recognition and lossless decode into the Draft consumed
   by the current Operation/Profile pipeline.
-- `o2i-inspection` and the current `o2i-cli` are legacy packages awaiting their
-  atomic target cutover. Never extend them, route new Foundation behavior
-  through them, or treat their package graph as current architecture.
+- `o2i-cli`: the public executable, composing Operation APIs and the AMX
+  adapter through a thin argument, acquisition, rendering, and exit boundary.
+  Reusable evaluators and machine-result contracts remain library-owned.
+- `spc/cabal.project` owns the complete five-package build. `o2i-inspection`
+  is retired; never reintroduce its package, command, or runtime registrations.
 
 # Co-Authoring
 
@@ -68,24 +74,28 @@ adapters, or Haddock.
 
 # Verification
 
-Canonical repository-root verification entry for the current Foundation and
-pull-request scope:
+Canonical repository-root verification entries:
 
 ```text
+./utl/verify.sh haskell
 ./utl/verify.sh foundation
 ```
 
-`./utl/verify.sh haskell` verifies the complete package set used by manual and
-release gates. It remains intentionally fail-closed while legacy package bounds
-and the complete freeze await their atomic cutover; never represent that gate
-as passed from Foundation evidence.
+`haskell` verifies all five packages, including the CLI, against
+`spc/cabal.project` and its freeze, and checks the atomic package cutover.
+`foundation` verifies the four-library subset against
+`spc/cabal.foundation.project` and its freeze; it does not establish CLI
+verification. The current workflow selects Foundation for Pull Requests and
+the complete Haskell stage for manual and release runs. CLI changes require
+complete Haskell evidence; never report that gate as passed from Foundation
+results alone.
 
 Focused commands use the stated working directory:
 
 ```text
-spc/: cabal --project-file=cabal.foundation.project build all --ghc-options=-Werror
-spc/: cabal --project-file=cabal.foundation.project test all --ghc-options=-Werror
-spc/: cabal --project-file=cabal.foundation.project haddock all
+spc/: cabal --project-file=cabal.project build all --ghc-options=-Werror
+spc/: cabal --project-file=cabal.project test all --ghc-options=-Werror
+spc/: cabal --project-file=cabal.project haddock all
 each package directory: cabal check
 repository root:
   rg --files spc -g '*.hs' | xargs hindent --line-length 80 --validate

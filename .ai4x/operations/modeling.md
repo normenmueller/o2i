@@ -9,9 +9,20 @@ instance-conformance work.
 - Semantic Views visualize the metamodel. Syntax Views visualize the concrete
   mapping defined by `spc/ctr/archimate/profile.json` and introduce no
   independent fachliche semantics.
-- Semantic Views render O2I metamodel elements as plain boxes with solid
-  outlines. This is a readability convention only and carries no formal
-  semantics.
+- Prefer plain boxes with solid outlines for O2I metamodel elements in
+  reference Semantic Views. Consistent reference presentation is an editorial
+  recommendation assessed through visual review, not a mandatory model
+  conformance condition.
+- Colors, fonts, and Grouping outline styles in O2I instances do not affect
+  O2I conformance unless the authoritative notation/Profile contract explicitly
+  assigns meaning to them. Preserve every existing meaning-bearing carrier,
+  relationship, direction, and metadata requirement.
+- Do not add a product presentation validator, CLI command or option,
+  validation level, API, or styling engine for reference-diagram cosmetics.
+  A future meaning-bearing graphical distinction requires an explicit,
+  justified definition in its owning notation/Profile contract; its product
+  checks belong in O2I libraries and the O2I CLI, without parallel shell/Python
+  rule logic. This conditional boundary creates no speculative capability.
 - Audit every Semantic View as a purpose-bounded metamodel visualization:
   verify its purpose, elements, relations, directions, labels, consistency
   within scope, and visual representation. No single View must project the
@@ -19,9 +30,9 @@ instance-conformance work.
 - Semantic metatype and type labels use their canonical unprefixed names, such
   as `Context`, `Principle`, and `Situation Anchor`. The View already supplies
   the O2I namespace.
-- Abstract closed types use the same solid-box convention as other metamodel
-  elements. Their abstraction is stated explicitly in View documentation,
-  never encoded through dotted borders, color, or layout.
+- The same editorial recommendation applies to abstract closed types. State
+  their abstraction explicitly in View documentation; do not introduce
+  `dashed = abstract` or another border-, color-, or layout-based encoding.
 - Syntax Views map semantic types, relation families, metadata, and structured
   patterns to ArchiMate notation. They never repeat a complete semantic graph
   merely to illustrate the mapping.

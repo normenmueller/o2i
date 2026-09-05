@@ -9,6 +9,8 @@ Visualizes the closed O2I SituationAnchor type, its four constructors, and the c
 
 This View is a checked semantic projection of the metamodel defined in o2i.md; it contains neither concrete SituationAnchor instances nor an ArchiMate syntax contract.
 
+Situation Anchor is an abstract, non-instantiable family; its closed constructors are defined by the metamodel.
+
 ## Nodes
 
 - [Business Capability] `Business Capability` (Grouping)
