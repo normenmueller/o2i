@@ -346,6 +346,13 @@ readinessFailedVariant = SchemaVariant "readiness-failed"
 assessFailedVariant :: SchemaVariant
 assessFailedVariant = SchemaVariant "assess-failed"
 
+qualificationSubjectsFailedVariant :: SchemaVariant
+qualificationSubjectsFailedVariant =
+  SchemaVariant "qualification-subjects-failed"
+
+traceFailedVariant :: SchemaVariant
+traceFailedVariant = SchemaVariant "trace-failed"
+
 commandErrorMachineSchema :: MachineSchema
 commandErrorMachineSchema =
   MachineSchema
@@ -355,7 +362,7 @@ commandErrorMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "a313abeb43bb966886803f8bedb4bfd18ef26d98aa6a145613a5d7ff289862ae"
+                "216795aa6a36359ca8ae0dcfa87ce4767fb5dd069734f41837abfd88a7a16a19"
           }
     , machineSchemaVariantsValue =
         argumentInvalidVariant
@@ -365,6 +372,8 @@ commandErrorMachineSchema =
              , qualifyFailedVariant
              , readinessFailedVariant
              , assessFailedVariant
+             , qualificationSubjectsFailedVariant
+             , traceFailedVariant
              ]
     }
 

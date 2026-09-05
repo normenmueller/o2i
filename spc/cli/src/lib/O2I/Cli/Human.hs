@@ -1,23 +1,28 @@
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Package-external proof of the exact CLI composition dependency edge.
-module OperationAmxCliConsumer where
+-- | Terminal-safe rendering of complete public Operation Human projections.
+module O2I.Cli.Human
+  ( renderViews
+  , renderQualificationSubjects
+  , renderValidate
+  , renderTrace
+  , renderQualify
+  , renderReadiness
+  , renderAssess
+  ) where
 
-import Data.ByteString (ByteString)
 import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified Data.Text as Text
-import O2I.Adapter.AMX (amxAdapter, foldAMXAdapterDefect)
+import O2I.Cli.TerminalText (terminalSafeText)
 import O2I.Operation.Acquisition
-  ( AcquiredSupplementalSource
-  , InputSource
+  ( InputSource
   , foldAcquisitionFailure
   , foldInputSource
   )
 import O2I.Operation.Adapter
-  ( AdapterCollection
-  , AdapterDescriptor
+  ( AdapterDescriptor
   , AdapterDiagnostic
   , adapterDiagnosticOccurrences
   , adapterDiagnosticRule
@@ -29,25 +34,14 @@ import O2I.Operation.Adapter
   , foldAdapterSelectionError
   , foldNativeLocation
   )
-import O2I.Operation.Adapter.Authoring
-  ( AdapterCollectionDefect(..)
-  , compileAdapterCollection
-  )
 import qualified O2I.Operation.Assess.Human as HumanAssess
-import O2I.Operation.Assess.Machine
-import O2I.Operation.Assess.Result
-import O2I.Operation.Command.Error
-import O2I.Operation.Command.Error.Machine
-import O2I.Operation.Diagnostic
+import O2I.Operation.Assess.Result (assessPrerequisiteText)
 import qualified O2I.Operation.Discovery.View as ViewResult
 import qualified O2I.Operation.Discovery.View.Human as HumanViews
-import O2I.Operation.Failure
 import qualified O2I.Operation.Human.Diagnostic as HumanDiagnostic
 import qualified O2I.Operation.Human.Failure as HumanFailure
 import qualified O2I.Operation.Human.Value as HumanValue
-import O2I.Operation.Identity
-import O2I.Operation.Machine (ToolDescriptor)
-import O2I.Operation.Profile
+import O2I.Operation.Machine (foldToolDescriptor)
 import O2I.Operation.Provenance
   ( SourceIdentity
   , foldSourceIdentity
@@ -58,151 +52,45 @@ import O2I.Operation.Provenance
 import qualified O2I.Operation.Qualification.Subjects.Human as HumanSubjects
 import qualified O2I.Operation.Qualification.Subjects.Result as SubjectsResult
 import qualified O2I.Operation.Qualify.Human as HumanQualify
-import O2I.Operation.Qualify.Machine
 import O2I.Operation.Qualify.Result
 import qualified O2I.Operation.Readiness.Human as HumanReadiness
-import O2I.Operation.Readiness.Machine
 import O2I.Operation.Readiness.Result
-import O2I.Operation.Report (ReportEnvelope)
-import O2I.Operation.Rule.Catalog (operationRuleIdText, operationRuleIdentity)
-import O2I.Operation.Schema (MachineSchema, schemaVariantText)
+import O2I.Operation.Report
+import O2I.Operation.Schema
 import qualified O2I.Operation.Trace.Human as HumanTrace
 import qualified O2I.Operation.Trace.Result as TraceResult
 import qualified O2I.Operation.Validate.Human as HumanValidate
-import O2I.Operation.Validate.Machine
 import O2I.Operation.Validate.Request (validationLevelText)
-import O2I.Operation.Validate.Result
-import O2I.Operation.View (ViewSelector, viewByIdentity)
-import OperationReportPublicObserver
 
--- | Compile the exact statically linked AMX and Profile composition.
-staticComposition :: Either Text (AdapterCollection, ProfileInventory)
-staticComposition =
-  case amxAdapter of
-    Left defects ->
-      Left
-        (renderNonEmpty
-           (foldAMXAdapterDefect
-              "amx-identifier"
-              "amx-descriptor"
-              "amx-rule"
-              "amx-compilation")
-           defects)
-    Right adapter ->
-      case compileAdapterCollection (adapter :| []) of
-        Left defects ->
-          Left
-            (renderNonEmpty
-               (\(DuplicateAdapterIdentifier identifier) ->
-                  renderMany ["duplicate-adapter", adapterIdText identifier])
-               defects)
-        Right adapters ->
-          foldProfileInventoryCompilation
-            (Left . renderNonEmpty consumeProfileInventoryDefect)
-            (\profiles -> Right (adapters, profiles))
-            compiledProfileInventory
+-- | Render every View-discovery branch and nested public value.
+renderViews :: HumanViews.HumanViewDiscovery -> Text
+renderViews = terminalSafeText . consumeHumanViews
 
-consumeProfileInventoryDefect :: ProfileInventoryDefect -> Text
-consumeProfileInventoryDefect =
-  foldProfileInventoryDefect
-    "empty-profile-inventory"
-    (\rule key ->
-       foldProfileInventoryKey
-         (\identity token ->
-            renderMany
-              [ "duplicate-profile"
-              , operationRuleIdText (operationRuleIdentity rule)
-              , identity
-              , token
-              ])
-         key)
+-- | Render every qualification-subject branch and nested public value.
+renderQualificationSubjects ::
+     HumanSubjects.HumanQualificationSubjectsReport -> Text
+renderQualificationSubjects = terminalSafeText . consumeHumanSubjects
 
--- | Decode an exact lexical identity and retain the owned Core type opaquely.
-identitySelector :: Text -> Either ModelIdentityDefect ViewSelector
-identitySelector = fmap viewByIdentity . lexicalModelIdentity
+-- | Render every validation branch and nested public value.
+renderValidate :: HumanValidate.HumanValidateReport -> Text
+renderValidate = terminalSafeText . consumeHumanValidate
 
--- | Author and encode a CLI-owned argument error without reconstructing JSON.
-argumentErrorBytes ::
-     ToolDescriptor
-  -> Text
-  -> Text
-  -> Either (NonEmpty ArgumentFailureDefect) ByteString
-argumentErrorBytes tool code message =
-  fmap
-    (encodeCommandErrorDocument
-       . commandErrorDocument tool
-       . argumentCommandError)
-    (argumentFailure code message)
+-- | Render every trace branch and nested public value.
+renderTrace :: HumanTrace.HumanTraceReport -> Text
+renderTrace = terminalSafeText . consumeHumanTrace
 
--- | Encode either existing common Operation failure through the same algebra.
-commonErrorBytes :: ToolDescriptor -> CommonFailure -> ByteString
-commonErrorBytes tool =
-  encodeCommandErrorDocument . commandErrorDocument tool . commonCommandError
+-- | Render every qualification branch and nested public value.
+renderQualify :: HumanQualify.HumanQualifyReport -> Text
+renderQualify = terminalSafeText . consumeHumanQualify
 
--- | Route a real Validate document failure through the closed error encoder.
-validateResultOrErrorBytes :: ToolDescriptor -> ValidateResult -> ByteString
-validateResultOrErrorBytes tool result =
-  either
-    (commandErrorBytes tool . validateCommandError)
-    encodeValidateResultDocument
-    (validateResultDocument tool result)
+-- | Render every readiness branch and nested public value.
+renderReadiness :: HumanReadiness.HumanReadinessReport -> Text
+renderReadiness = terminalSafeText . consumeHumanReadiness
 
--- | Route a real Qualify document failure through the closed error encoder.
-qualifyResultOrErrorBytes :: ToolDescriptor -> QualifyResult -> ByteString
-qualifyResultOrErrorBytes tool result =
-  either
-    (commandErrorBytes tool . qualifyCommandError)
-    encodeQualifyResultDocument
-    (qualifyResultDocument tool result)
+-- | Render every assessment branch and nested public value.
+renderAssess :: HumanAssess.HumanAssessReport -> Text
+renderAssess = terminalSafeText . consumeHumanAssess
 
--- | Route a real Readiness document failure through the closed error encoder.
-readinessResultOrErrorBytes :: ToolDescriptor -> ReadinessResult -> ByteString
-readinessResultOrErrorBytes tool result =
-  either
-    (commandErrorBytes tool . readinessCommandError)
-    encodeReadinessResultDocument
-    (readinessResultDocument tool result)
-
--- | Route a real Assess document failure through the closed error encoder.
-assessResultOrErrorBytes :: ToolDescriptor -> AssessResult -> ByteString
-assessResultOrErrorBytes tool result =
-  either
-    (commandErrorBytes tool . assessCommandError)
-    encodeAssessResultDocument
-    (assessResultDocument tool result)
-
--- | Route an externally received Trace failure through its exact command arm.
-traceFailureBytes :: ToolDescriptor -> TraceResult.TraceFailure -> ByteString
-traceFailureBytes tool = commandErrorBytes tool . traceCommandError
-
-commandErrorBytes :: ToolDescriptor -> CommandError -> ByteString
-commandErrorBytes tool = encodeCommandErrorDocument . commandErrorDocument tool
-
--- | Exact immutable Schema input available before the first output byte.
-commandErrorPreflight :: (MachineSchema, ByteString)
-commandErrorPreflight = (commandErrorSchema, commandErrorSchemaBytes)
-
--- | Consume all supplemental groups and all closed finding branches.
-consumeSupplementalGroups ::
-     SupplementalDiagnosticGroups authority profile document -> [Text]
-consumeSupplementalGroups =
-  foldSupplementalDiagnosticGroups
-    (\source diagnostics -> fmap (consumeSupplemental source) diagnostics)
-    concat
-
-consumeSupplemental ::
-     AcquiredSupplementalSource -> SupplementalDiagnostic -> Text
-consumeSupplemental groupSource diagnostic =
-  supplementalDiagnosticRuleIdentity diagnostic
-    <> ":"
-    <> foldSupplementalDiagnostic tagged tagged tagged tagged diagnostic
-  where
-    tagged retainedSource pointer identity
-      | retainedSource == groupSource =
-        pointer <> ":" <> modelIdentityText identity
-      | otherwise = "source-mismatch"
-
--- | Recursively consume every View-discovery Human branch.
 consumeHumanViews :: HumanViews.HumanViewDiscovery -> Text
 consumeHumanViews =
   HumanViews.foldHumanViewDiscovery
@@ -1634,47 +1522,44 @@ consumeHumanSupplementalProvenanceDefect =
 
 -- | Render every common Human report-authority field at the CLI boundary.
 consumeHumanEnvelope :: ReportEnvelope -> Text
-consumeHumanEnvelope = renderObservedEnvelope . observeReportEnvelope
+consumeHumanEnvelope =
+  foldReportEnvelope $ \schema variant operation tool authority ->
+    renderMany
+      [ foldSchemaAuthority
+          (\identity version digest ->
+             renderMany
+               [ schemaIdentityText identity
+               , renderNatural (schemaVersionValue version)
+               , schemaDigestText digest
+               ])
+          schema
+      , schemaVariantText variant
+      , foldReportOperation
+          "views"
+          "qualification-subjects"
+          "validate"
+          "trace"
+          "qualify"
+          "readiness"
+          "assess"
+          operation
+      , foldToolDescriptor
+          (\identity version -> renderMany [identity, version])
+          tool
+      , foldReportAuthority
+          adapterIdText
+          (renderNonEmpty consumeHumanContract)
+          authority
+      ]
 
-renderObservedEnvelope :: ObservedReportEnvelope -> Text
-renderObservedEnvelope (ObservedReportEnvelope (ObservedSchemaAuthority schema version digest) variant operation (ObservedToolDescriptor tool toolVersion) authority) =
-  renderMany
-    [ schema
-    , renderNatural version
-    , digest
-    , variant
-    , renderObservedOperation operation
-    , renderMany [tool, toolVersion]
-    , renderObservedAuthority authority
-    ]
-
-renderObservedOperation :: ObservedReportOperation -> Text
-renderObservedOperation operation =
-  case operation of
-    ObservedViewsReportOperation -> "views"
-    ObservedQualificationSubjectsReportOperation -> "qualification-subjects"
-    ObservedValidateReportOperation -> "validate"
-    ObservedTraceReportOperation -> "trace"
-    ObservedQualifyReportOperation -> "qualify"
-    ObservedReadinessReportOperation -> "readiness"
-    ObservedAssessReportOperation -> "assess"
-
-renderObservedAuthority :: ObservedReportAuthority -> Text
-renderObservedAuthority authority =
-  case authority of
-    ObservedViewReportAuthority adapter -> adapter
-    ObservedPreparedReportAuthority contracts ->
-      renderMany (map renderObservedContract (NonEmpty.toList contracts))
-
-renderObservedContract :: ObservedReportContract -> Text
-renderObservedContract contract =
-  case contract of
-    ObservedOperationReportContract identity version digest ->
-      renderMany ["operation", identity, version, digest]
-    ObservedAdapterReportContract -> "adapter"
-    ObservedProfileReportContract -> "profile"
-    ObservedCoreReportContract identity version digest ->
-      renderMany ["core", identity, version, digest]
+consumeHumanContract :: ReportContract -> Text
+consumeHumanContract =
+  foldReportContract
+    (\identity version digest ->
+       renderMany ["operation", identity, version, digest])
+    "adapter"
+    "profile"
+    (\identity version digest -> renderMany ["core", identity, version, digest])
 
 consumeHumanDiagnosticDocument ::
      HumanDiagnostic.HumanDiagnosticDocument -> Text

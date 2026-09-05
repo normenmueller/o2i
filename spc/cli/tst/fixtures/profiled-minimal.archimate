@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a:model xmlns:a="http://www.archimatetool.com/archimate" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="model" name="CLI &quot;hostile&quot; model" version="5.0.0">
+  <property key="o2i.profile" value="o2i.archimate-profile@0.3"/>
+  <folder id="motivation" type="motivation">
+    <element xsi:type="a:Grouping" id="measure">
+      <property key="o2i.type" value="Measure"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:Assessment" id="kpi">
+      <property key="o2i.type" value="KPI"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+  </folder>
+  <folder id="relations" type="relations">
+    <element xsi:type="a:CompositionRelationship" id="contextualizes" name="contextualizes" source="measure" target="kpi">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+  </folder>
+  <folder id="views" type="diagrams">
+    <element xsi:type="a:ArchimateDiagramModel" id="view" name="KPI">
+      <child xsi:type="a:DiagramObject" id="measure-node" archimateElement="measure">
+        <sourceConnection xsi:type="a:Connection" id="contextualizes-connection" archimateRelationship="contextualizes" source="measure-node" target="kpi-node"/>
+      </child>
+      <child xsi:type="a:DiagramObject" id="kpi-node" archimateElement="kpi"/>
+    </element>
+  </folder>
+</a:model>

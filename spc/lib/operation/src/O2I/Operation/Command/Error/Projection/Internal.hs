@@ -9,6 +9,8 @@ module O2I.Operation.Command.Error.Projection.Internal
   , qualifyCommandOwnerDiagnostic
   , readinessCommandOwnerDiagnostic
   , assessCommandOwnerDiagnostic
+  , qualificationSubjectsCommandOwnerDiagnostic
+  , traceCommandOwnerDiagnostic
   ) where
 
 import Data.List.NonEmpty (NonEmpty((:|)))
@@ -23,6 +25,7 @@ import O2I.Core.Identity
   ( IdentityIndexDefect
   , ModelIdentity
   , OccurrenceIdentity
+  , OccurrenceIdentityDefect(..)
   , SelectedViewScopeDefect
   , SelectedViewScopeDefectKind(..)
   , identityIndexDefectModelIdentities
@@ -46,16 +49,30 @@ import O2I.Operation.Assess.Result
   , foldAssessInternalFailure
   )
 import O2I.Operation.Command.Error.Branch.Generated
-  ( CommandOwnerBranch(..)
-  , assessOwnerBranch
+  ( assessOwnerBranch
+  , assessOwnerBranchToken
+  , qualificationSubjectsOwnerBranch
+  , qualificationSubjectsOwnerBranchToken
   , qualifyOwnerBranch
+  , qualifyOwnerBranchToken
   , readinessOwnerBranch
+  , readinessOwnerBranchToken
+  , traceOwnerBranch
+  , traceOwnerBranchToken
   , validateOwnerBranch
+  , validateOwnerBranchToken
   )
-import O2I.Operation.Command.Error.Internal
 import O2I.Operation.Diagnostic.Owner
   ( AdapterNotationResolutionFailure
   , foldAdapterNotationResolutionFailure
+  )
+import O2I.Operation.Encoding.Internal
+  ( CanonicalFragment
+  , arrayFragment
+  , closedObjectFragment
+  , naturalFragment
+  , requiredMember
+  , textFragment
   )
 import O2I.Operation.Provenance
   ( SourceIdentity
@@ -69,6 +86,10 @@ import O2I.Operation.Provenance
   , sourceReferenceText
   , sourceSha256Text
   )
+import O2I.Operation.Qualification.Subjects.Result
+  ( QualificationSubjectsInternalFailure
+  , foldQualificationSubjectsInternalFailure
+  )
 import O2I.Operation.Qualify.Result
   ( QualifyInternalFailure
   , foldQualifyInternalFailure
@@ -77,10 +98,15 @@ import O2I.Operation.Readiness.Result
   ( ReadinessInternalFailure
   , foldReadinessInternalFailure
   )
+import O2I.Operation.Trace.Result
+  ( TraceInternalFailure
+  , foldTraceInternalFailure
+  )
 import O2I.Operation.Validate.Result
   ( ValidateInternalFailure
   , foldValidateInternalFailure
   )
+import qualified O2I.Qualification as Qualification
 import qualified O2I.Readiness as Readiness
 import qualified O2I.Semantics.Input as Supplemental
 import qualified O2I.Structure as Structure
@@ -88,13 +114,20 @@ import qualified O2I.Structure as Structure
 -- | Project all rule-specific supplemental evidence into the closed command
 -- diagnostic boundary.
 supplementalCommandInputDiagnostic ::
-     Supplemental.SupplementalInputDefect -> CommandInputDiagnostic
-supplementalCommandInputDiagnostic defect =
+     Supplemental.SupplementalInputDefect -> CanonicalFragment
+supplementalCommandInputDiagnostic =
+  supplementalInputDiagnosticWith inputDiagnosticFragment
+
+supplementalInputDiagnosticWith ::
+     (Text -> NonEmpty Natural -> Text -> [CanonicalFragment] -> result)
+  -> Supplemental.SupplementalInputDefect
+  -> result
+supplementalInputDiagnosticWith project defect =
   Supplemental.foldSupplementalInputDefect eliminator defect
   where
     rule = coreRuleIdText (Supplemental.supplementalInputDefectRule defect)
     exact reason ordinal fields =
-      CommandInputDiagnostic
+      project
         rule
         (Supplemental.supplementalInputOrdinalValue ordinal :| [])
         reason
@@ -206,7 +239,7 @@ supplementalCommandInputDiagnostic defect =
                 (Supplemental.supplementalArrayDistinctnessExpectedSchema value)
         , Supplemental.eliminateSupplementalSubjectCardinalityInvalid =
             \value ->
-              CommandInputDiagnostic
+              project
                 rule
                 (fmap
                    Supplemental.supplementalInputOrdinalValue
@@ -264,15 +297,10 @@ supplementalCommandInputDiagnostic defect =
                 , textField
                     "expectedSchema"
                     (Supplemental.supplementalUnicodeScalarExpectedSchema value)
-                , CommandDiagnosticField
+                , fieldFragment
                     "unicodeScalars"
                     (map
-                       (\occurrence ->
-                          CommandDiagnosticUnicodeScalar
-                            (Supplemental.supplementalUnicodeScalarIndex
-                               occurrence)
-                            (Supplemental.supplementalUnicodeScalarCodePoint
-                               occurrence))
+                       unicodeScalarValueFragment
                        (NonEmpty.toList
                           (Supplemental.supplementalUnicodeScalarOccurrences
                              value)))
@@ -290,10 +318,10 @@ supplementalCommandInputDiagnostic defect =
                     "expectedSchema"
                     (Supplemental.supplementalModelIdentityNulExpectedSchema
                        value)
-                , CommandDiagnosticField
+                , fieldFragment
                     "nulIndexes"
                     (map
-                       CommandDiagnosticNatural
+                       (scalarValueFragment "natural" naturalFragment)
                        (NonEmpty.toList
                           (Supplemental.supplementalModelIdentityNulIndexes
                              value)))
@@ -302,7 +330,7 @@ supplementalCommandInputDiagnostic defect =
 
 -- | Project one complete Readiness-input diagnostic.
 readinessCommandInputDiagnostic ::
-     Readiness.EvidenceInputDefect -> CommandInputDiagnostic
+     Readiness.EvidenceInputDefect -> CanonicalFragment
 readinessCommandInputDiagnostic defect =
   evidenceCommandInputDiagnostic
     (coreRuleIdText (Readiness.evidenceInputDefectRule defect))
@@ -314,7 +342,7 @@ readinessCommandInputDiagnostic defect =
 
 -- | Project one complete Assessment-input diagnostic.
 assessmentCommandInputDiagnostic ::
-     Assessment.AssessmentInputDefect -> CommandInputDiagnostic
+     Assessment.AssessmentInputDefect -> CanonicalFragment
 assessmentCommandInputDiagnostic defect =
   evidenceCommandInputDiagnostic
     (coreRuleIdText (Assessment.assessmentInputDefectRule defect))
@@ -325,11 +353,10 @@ assessmentCommandInputDiagnostic defect =
     (Assessment.assessmentInputDefectSubjects defect)
 
 -- | Project every Validate owner-contract branch with retained evidence.
-validateCommandOwnerDiagnostic ::
-     ValidateInternalFailure -> CommandOwnerDiagnostic
+validateCommandOwnerDiagnostic :: ValidateInternalFailure -> CanonicalFragment
 validateCommandOwnerDiagnostic failure =
-  CommandOwnerDiagnostic
-    (ValidateCommandOwnerBranch (validateOwnerBranch failure))
+  ownerFailureFragment
+    (validateOwnerBranchToken (validateOwnerBranch failure))
     (foldValidateInternalFailure
        sourceOwnerEvidence
        sourceOwnerEvidence
@@ -344,11 +371,10 @@ validateCommandOwnerDiagnostic failure =
        failure)
 
 -- | Project every Qualify owner-contract branch with retained evidence.
-qualifyCommandOwnerDiagnostic ::
-     QualifyInternalFailure -> CommandOwnerDiagnostic
+qualifyCommandOwnerDiagnostic :: QualifyInternalFailure -> CanonicalFragment
 qualifyCommandOwnerDiagnostic failure =
-  CommandOwnerDiagnostic
-    (QualifyCommandOwnerBranch (qualifyOwnerBranch failure))
+  ownerFailureFragment
+    (qualifyOwnerBranchToken (qualifyOwnerBranch failure))
     (foldQualifyInternalFailure
        sourceOwnerEvidence
        sourceOwnerEvidence
@@ -363,11 +389,10 @@ qualifyCommandOwnerDiagnostic failure =
        failure)
 
 -- | Project every Readiness owner-contract branch with retained evidence.
-readinessCommandOwnerDiagnostic ::
-     ReadinessInternalFailure -> CommandOwnerDiagnostic
+readinessCommandOwnerDiagnostic :: ReadinessInternalFailure -> CanonicalFragment
 readinessCommandOwnerDiagnostic failure =
-  CommandOwnerDiagnostic
-    (ReadinessCommandOwnerBranch (readinessOwnerBranch failure))
+  ownerFailureFragment
+    (readinessOwnerBranchToken (readinessOwnerBranch failure))
     (foldReadinessInternalFailure
        sourceOwnerEvidence
        sourceOwnerEvidence
@@ -383,10 +408,10 @@ readinessCommandOwnerDiagnostic failure =
        failure)
 
 -- | Project every Assess owner-contract branch with retained evidence.
-assessCommandOwnerDiagnostic :: AssessInternalFailure -> CommandOwnerDiagnostic
+assessCommandOwnerDiagnostic :: AssessInternalFailure -> CanonicalFragment
 assessCommandOwnerDiagnostic failure =
-  CommandOwnerDiagnostic
-    (AssessCommandOwnerBranch (assessOwnerBranch failure))
+  ownerFailureFragment
+    (assessOwnerBranchToken (assessOwnerBranch failure))
     (foldAssessInternalFailure
        sourceOwnerEvidence
        sourceOwnerEvidence
@@ -401,36 +426,109 @@ assessCommandOwnerDiagnostic failure =
        semanticOwnerEvidence
        failure)
 
-sourceOwnerEvidence :: SourceIdentity -> NonEmpty CommandOwnerEvidence
+-- | Project every QualificationSubjects owner-contract branch with retained
+-- evidence.
+qualificationSubjectsCommandOwnerDiagnostic ::
+     QualificationSubjectsInternalFailure -> CanonicalFragment
+qualificationSubjectsCommandOwnerDiagnostic failure =
+  ownerFailureFragment
+    (qualificationSubjectsOwnerBranchToken
+       (qualificationSubjectsOwnerBranch failure))
+    (foldQualificationSubjectsInternalFailure
+       sourceOwnerEvidence
+       sourceOwnerEvidence
+       adapterOwnerEvidence
+       notationOwnerEvidence
+       profileOwnerEvidenceOccurrences
+       identityOwnerEvidenceOccurrences
+       scopeOwnerEvidenceOccurrences
+       structureOwnerEvidenceOccurrences
+       provenanceOwnerEvidenceOccurrences
+       qualificationContextOwnerEvidence
+       occurrenceProjectionOwnerEvidence
+       occurrenceJoinOwnerEvidence
+       failure)
+
+-- | Project every Trace owner-contract branch with retained evidence.
+traceCommandOwnerDiagnostic :: TraceInternalFailure -> CanonicalFragment
+traceCommandOwnerDiagnostic failure =
+  ownerFailureFragment
+    (traceOwnerBranchToken (traceOwnerBranch failure))
+    (foldTraceInternalFailure
+       sourceOwnerEvidence
+       adapterOwnerEvidence
+       notationOwnerEvidence
+       profileOwnerEvidenceOccurrences
+       identityOwnerEvidenceOccurrences
+       scopeOwnerEvidenceOccurrences
+       structureOwnerEvidenceOccurrences
+       provenanceOwnerEvidenceOccurrences
+       supplementalInputOwnerEvidenceOccurrences
+       semanticOwnerEvidence
+       failure)
+
+qualificationContextOwnerEvidence ::
+     Qualification.QualificationContextError -> NonEmpty CanonicalFragment
+qualificationContextOwnerEvidence context =
+  case context of
+    Qualification.QualificationSemanticGraphMismatch ->
+      oneOwnerEvidence "semantic-graph-mismatch" []
+
+occurrenceProjectionOwnerEvidence ::
+     Notation.CanonicalOccurrence
+  -> OccurrenceIdentityDefect
+  -> NonEmpty CanonicalFragment
+occurrenceProjectionOwnerEvidence occurrence defect =
+  oneOwnerEvidence
+    "impossible-occurrence-identity"
+    [ fieldFragment "occurrence" [canonicalOccurrenceValue occurrence]
+    , textField "details" (occurrenceIdentityDefectText defect)
+    ]
+
+occurrenceJoinOwnerEvidence ::
+     OccurrenceIdentity
+  -> [Notation.CanonicalOccurrence]
+  -> NonEmpty CanonicalFragment
+occurrenceJoinOwnerEvidence occurrence candidates =
+  oneOwnerEvidence
+    "occurrence-join-mismatch"
+    [ occurrenceIdentityField "occurrence" occurrence
+    , fieldFragment "candidates" (map canonicalOccurrenceValue candidates)
+    ]
+
+occurrenceIdentityDefectText :: OccurrenceIdentityDefect -> Text
+occurrenceIdentityDefectText defect =
+  case defect of
+    EmptyOccurrenceIdentity -> "empty"
+    OccurrenceIdentityContainsU0000 -> "contains-u0000"
+    OccurrenceIdentityContainsSurrogate -> "contains-surrogate"
+
+sourceOwnerEvidence :: SourceIdentity -> NonEmpty CanonicalFragment
 sourceOwnerEvidence identity =
   oneOwnerEvidence
     "source-identity"
-    [CommandDiagnosticField "source" [sourceIdentityValue identity]]
+    [fieldFragment "source" [sourceIdentityValue identity]]
 
-adapterOwnerEvidence :: AdapterDescriptor -> NonEmpty CommandOwnerEvidence
+adapterOwnerEvidence :: AdapterDescriptor -> NonEmpty CanonicalFragment
 adapterOwnerEvidence descriptor =
   oneOwnerEvidence
     "adapter-descriptor"
-    [CommandDiagnosticField "adapter" [adapterDescriptorValue descriptor]]
+    [fieldFragment "adapter" [adapterDescriptorValue descriptor]]
 
 notationOwnerEvidence ::
-     AdapterNotationResolutionFailure -> NonEmpty CommandOwnerEvidence
+     AdapterNotationResolutionFailure -> NonEmpty CanonicalFragment
 notationOwnerEvidence =
   foldAdapterNotationResolutionFailure
     (\authority contract ->
        oneOwnerEvidence
          "adapter-authority-mismatch"
-         [ CommandDiagnosticField
-             "authorityAdapter"
-             [adapterDescriptorValue authority]
-         , CommandDiagnosticField
-             "contractAdapter"
-             [adapterDescriptorValue contract]
+         [ fieldFragment "authorityAdapter" [adapterDescriptorValue authority]
+         , fieldFragment "contractAdapter" [adapterDescriptorValue contract]
          ])
     (\descriptor kind ->
        oneOwnerEvidence
          "adapter-notation-rule-missing"
-         [ CommandDiagnosticField "adapter" [adapterDescriptorValue descriptor]
+         [ fieldFragment "adapter" [adapterDescriptorValue descriptor]
          , textField
              "notationIssueKind"
              (Notation.archiMateNotationIssueKindToken kind)
@@ -438,141 +536,160 @@ notationOwnerEvidence =
 
 profileOwnerEvidenceOccurrences ::
      NonEmpty (Profile.ProfileContractEvidence profile document)
-  -> NonEmpty CommandOwnerEvidence
+  -> NonEmpty CanonicalFragment
 profileOwnerEvidenceOccurrences = fmap profileOwnerEvidence
 
 profileOwnerEvidence ::
-     Profile.ProfileContractEvidence profile document -> CommandOwnerEvidence
+     Profile.ProfileContractEvidence profile document -> CanonicalFragment
 profileOwnerEvidence =
   Profile.foldProfileContractEvidence
     (\rule kind ->
-       CommandOwnerEvidence
+       ownerEvidenceFragment
          "unknown-generated-profile-rule"
          [ textField "ruleId" rule
          , textField "evidenceKind" (profileEvidenceKindText kind)
          ])
     (\rule kind ->
-       CommandOwnerEvidence
+       ownerEvidenceFragment
          "generated-profile-evidence-mismatch"
          [ textField "ruleId" rule
          , textField "evidenceKind" (profileEvidenceKindText kind)
          ])
     (\binding occurrence ->
-       CommandOwnerEvidence
+       ownerEvidenceFragment
          "missing-core-contract-binding"
          [ textField "binding" binding
-         , CommandDiagnosticField
-             "occurrence"
-             [canonicalOccurrenceValue occurrence]
+         , fieldFragment "occurrence" [canonicalOccurrenceValue occurrence]
          ])
     (\occurrence details ->
-       CommandOwnerEvidence
+       ownerEvidenceFragment
          "impossible-occurrence-identity"
-         [ CommandDiagnosticField
-             "occurrence"
-             [canonicalOccurrenceValue occurrence]
+         [ fieldFragment "occurrence" [canonicalOccurrenceValue occurrence]
          , textField "details" details
          ])
 
 identityOwnerEvidenceOccurrences ::
-     NonEmpty IdentityIndexDefect -> NonEmpty CommandOwnerEvidence
+     NonEmpty IdentityIndexDefect -> NonEmpty CanonicalFragment
 identityOwnerEvidenceOccurrences = fmap identityOwnerEvidence
 
-identityOwnerEvidence :: IdentityIndexDefect -> CommandOwnerEvidence
+identityOwnerEvidence :: IdentityIndexDefect -> CanonicalFragment
 identityOwnerEvidence defect =
-  CommandOwnerEvidence
+  ownerEvidenceFragment
     "duplicate-model-identity"
     [ occurrenceIdentityField
         "occurrence"
         (identityIndexDefectOccurrence defect)
-    , CommandDiagnosticField
+    , fieldFragment
         "modelIdentities"
         (map
-           (CommandDiagnosticModelIdentity . modelIdentityText)
+           (scalarValueFragment "model-identity" textFragment
+              . modelIdentityText)
            (NonEmpty.toList (identityIndexDefectModelIdentities defect)))
     ]
 
 scopeOwnerEvidenceOccurrences ::
-     NonEmpty SelectedViewScopeDefect -> NonEmpty CommandOwnerEvidence
+     NonEmpty SelectedViewScopeDefect -> NonEmpty CanonicalFragment
 scopeOwnerEvidenceOccurrences = fmap scopeOwnerEvidence
 
-scopeOwnerEvidence :: SelectedViewScopeDefect -> CommandOwnerEvidence
+scopeOwnerEvidence :: SelectedViewScopeDefect -> CanonicalFragment
 scopeOwnerEvidence defect =
-  CommandOwnerEvidence
+  ownerEvidenceFragment
     (selectedViewScopeDefectKindText (selectedViewScopeDefectKind defect))
     [ occurrenceIdentityField
         "occurrence"
         (selectedViewScopeDefectOccurrence defect)
-    , CommandDiagnosticField
+    , fieldFragment
         "cardinality"
-        [ CommandDiagnosticNatural
+        [ scalarValueFragment
+            "natural"
+            naturalFragment
             (fromIntegral (selectedViewScopeDefectCardinality defect))
         ]
     ]
 
 structureOwnerEvidenceOccurrences ::
-     NonEmpty Structure.StructureInputDefect -> NonEmpty CommandOwnerEvidence
+     NonEmpty Structure.StructureInputDefect -> NonEmpty CanonicalFragment
 structureOwnerEvidenceOccurrences = fmap structureOwnerEvidence
 
-structureOwnerEvidence :: Structure.StructureInputDefect -> CommandOwnerEvidence
+structureOwnerEvidence :: Structure.StructureInputDefect -> CanonicalFragment
 structureOwnerEvidence defect =
   case defect of
     Structure.ProjectionOutsideSelectedView occurrence ->
-      CommandOwnerEvidence
+      ownerEvidenceFragment
         "projection-outside-selected-view"
         [occurrenceIdentityField "occurrence" occurrence]
     Structure.DuplicateStructureProjection occurrence kinds ->
-      CommandOwnerEvidence
+      ownerEvidenceFragment
         "duplicate-structure-projection"
         [ occurrenceIdentityField "occurrence" occurrence
-        , CommandDiagnosticField
+        , fieldFragment
             "projectionKinds"
             (map
-               (CommandDiagnosticText . structureProjectionKindText)
+               (scalarValueFragment "text" textFragment
+                  . structureProjectionKindText)
                (NonEmpty.toList kinds))
         ]
     Structure.MissingCarrierProjection owner role endpoint ->
-      CommandOwnerEvidence
+      ownerEvidenceFragment
         "missing-carrier-projection"
         [ occurrenceIdentityField "owner" owner
         , textField "endpointRole" (structureEndpointRoleText role)
         , occurrenceIdentityField "endpoint" endpoint
         ]
     Structure.MissingStructuredPropositionProjection proposition occurrence ->
-      CommandOwnerEvidence
+      ownerEvidenceFragment
         "missing-structured-proposition-projection"
         [ occurrenceIdentityField "proposition" proposition
         , occurrenceIdentityField "occurrence" occurrence
         ]
 
 provenanceOwnerEvidenceOccurrences ::
-     NonEmpty SupplementalProvenanceDefect -> NonEmpty CommandOwnerEvidence
+     NonEmpty SupplementalProvenanceDefect -> NonEmpty CanonicalFragment
 provenanceOwnerEvidenceOccurrences = fmap provenanceOwnerEvidence
 
-provenanceOwnerEvidence :: SupplementalProvenanceDefect -> CommandOwnerEvidence
+provenanceOwnerEvidence :: SupplementalProvenanceDefect -> CanonicalFragment
 provenanceOwnerEvidence =
   foldSupplementalProvenanceDefect
     (\identity ->
-       CommandOwnerEvidence
+       ownerEvidenceFragment
          "model-source-is-not-supplemental"
-         [CommandDiagnosticField "source" [sourceIdentityValue identity]])
+         [fieldFragment "source" [sourceIdentityValue identity]])
     (\key identities ->
-       CommandOwnerEvidence
+       ownerEvidenceFragment
          "duplicate-supplemental-source"
-         [ CommandDiagnosticField "sourceKey" [sourceKeyValue key]
-         , CommandDiagnosticField
+         [ fieldFragment "sourceKey" [sourceKeyValue key]
+         , fieldFragment
              "sources"
              (map sourceIdentityValue (NonEmpty.toList identities))
          ])
 
-semanticOwnerEvidence :: [OccurrenceIdentity] -> NonEmpty CommandOwnerEvidence
+supplementalInputOwnerEvidenceOccurrences ::
+     NonEmpty Supplemental.SupplementalInputDefect -> NonEmpty CanonicalFragment
+supplementalInputOwnerEvidenceOccurrences = fmap supplementalInputOwnerEvidence
+
+supplementalInputOwnerEvidence ::
+     Supplemental.SupplementalInputDefect -> CanonicalFragment
+supplementalInputOwnerEvidence =
+  supplementalInputDiagnosticWith $ \rule ordinals reason fields ->
+    ownerEvidenceFragment
+      reason
+      (textField "ruleId" rule
+         : fieldFragment
+             "inputOrdinals"
+             (map
+                (scalarValueFragment "natural" naturalFragment)
+                (NonEmpty.toList ordinals))
+         : fields)
+
+semanticOwnerEvidence :: [OccurrenceIdentity] -> NonEmpty CanonicalFragment
 semanticOwnerEvidence occurrences =
   oneOwnerEvidence
     "semantic-occurrences"
-    [ CommandDiagnosticField
+    [ fieldFragment
         "occurrences"
         (map
-           (CommandDiagnosticOccurrenceIdentity . occurrenceIdentityText)
+           (scalarValueFragment "occurrence-identity" textFragment
+              . occurrenceIdentityText)
            occurrences)
     ]
 
@@ -582,9 +699,9 @@ evidenceCommandInputDiagnostic ::
   -> Readiness.EvidenceInputDefectKind
   -> Text
   -> NonEmpty Readiness.EvidenceInputDiagnosticSubject
-  -> CommandInputDiagnostic
+  -> CanonicalFragment
 evidenceCommandInputDiagnostic rule ordinal kind pointer subjects =
-  CommandInputDiagnostic
+  inputDiagnosticFragment
     rule
     (ordinal :| [])
     (evidenceInputDefectKindText kind)
@@ -592,18 +709,23 @@ evidenceCommandInputDiagnostic rule ordinal kind pointer subjects =
        : map evidenceInputSubjectField (NonEmpty.toList subjects))
 
 evidenceInputSubjectField ::
-     Readiness.EvidenceInputDiagnosticSubject -> CommandDiagnosticField
+     Readiness.EvidenceInputDiagnosticSubject -> CanonicalFragment
 evidenceInputSubjectField =
   Readiness.foldEvidenceInputDiagnosticSubject
-    (\label value -> CommandDiagnosticField label [CommandDiagnosticText value])
     (\label value ->
-       CommandDiagnosticField label [CommandDiagnosticNatural value])
+       fieldFragment label [scalarValueFragment "text" textFragment value])
+    (\label value ->
+       fieldFragment label [scalarValueFragment "natural" naturalFragment value])
     modelIdentityField
     occurrenceIdentityField
     (\label value ->
-       CommandDiagnosticField
+       fieldFragment
          label
-         [CommandDiagnosticQualifiedType (coreQualifiedEndpointIdText value)])
+         [ scalarValueFragment
+             "qualified-type"
+             textFragment
+             (coreQualifiedEndpointIdText value)
+         ])
 
 evidenceInputDefectKindText :: Readiness.EvidenceInputDefectKind -> Text
 evidenceInputDefectKindText kind =
@@ -632,24 +754,93 @@ evidenceInputDefectKindText kind =
       "identity-out-of-selected-view"
     Readiness.EvidenceInputIdentityWrongType -> "identity-wrong-type"
 
-oneOwnerEvidence ::
-     Text -> [CommandDiagnosticField] -> NonEmpty CommandOwnerEvidence
-oneOwnerEvidence kind fields = CommandOwnerEvidence kind fields :| []
+inputDiagnosticFragment ::
+     Text
+  -> NonEmpty Natural
+  -> Text
+  -> [CanonicalFragment]
+  -> CanonicalFragment
+inputDiagnosticFragment rule ordinals reason fields =
+  closedObjectFragment
+    [ requiredMember "ruleId" (textFragment rule)
+    , requiredMember
+        "inputOrdinals"
+        (arrayFragment (map naturalFragment (NonEmpty.toList ordinals)))
+    , requiredMember "reason" (textFragment reason)
+    , requiredMember "fields" (arrayFragment fields)
+    ]
 
-textField :: Text -> Text -> CommandDiagnosticField
-textField name value = CommandDiagnosticField name [CommandDiagnosticText value]
+ownerFailureFragment :: Text -> NonEmpty CanonicalFragment -> CanonicalFragment
+ownerFailureFragment branch evidence =
+  closedObjectFragment
+    [ requiredMember "category" (textFragment "owner-contract")
+    , requiredMember "branch" (textFragment branch)
+    , requiredMember "evidence" (arrayFragment (NonEmpty.toList evidence))
+    ]
 
-modelIdentityField :: Text -> ModelIdentity -> CommandDiagnosticField
+ownerEvidenceFragment :: Text -> [CanonicalFragment] -> CanonicalFragment
+ownerEvidenceFragment kind fields =
+  closedObjectFragment
+    [ requiredMember "kind" (textFragment kind)
+    , requiredMember "fields" (arrayFragment fields)
+    ]
+
+fieldFragment :: Text -> [CanonicalFragment] -> CanonicalFragment
+fieldFragment name values =
+  closedObjectFragment
+    [ requiredMember "name" (textFragment name)
+    , requiredMember "values" (arrayFragment values)
+    ]
+
+scalarValueFragment ::
+     Text -> (value -> CanonicalFragment) -> value -> CanonicalFragment
+scalarValueFragment kind project value =
+  closedObjectFragment
+    [ requiredMember "kind" (textFragment kind)
+    , requiredMember "value" (project value)
+    ]
+
+unicodeScalarValueFragment ::
+     Supplemental.SupplementalUnicodeScalarOccurrence -> CanonicalFragment
+unicodeScalarValueFragment occurrence =
+  closedObjectFragment
+    [ requiredMember "kind" (textFragment "unicode-scalar")
+    , requiredMember
+        "index"
+        (naturalFragment
+           (Supplemental.supplementalUnicodeScalarIndex occurrence))
+    , requiredMember
+        "codePoint"
+        (naturalFragment
+           (Supplemental.supplementalUnicodeScalarCodePoint occurrence))
+    ]
+
+oneOwnerEvidence :: Text -> [CanonicalFragment] -> NonEmpty CanonicalFragment
+oneOwnerEvidence kind fields = ownerEvidenceFragment kind fields :| []
+
+textField :: Text -> Text -> CanonicalFragment
+textField name value =
+  fieldFragment name [scalarValueFragment "text" textFragment value]
+
+modelIdentityField :: Text -> ModelIdentity -> CanonicalFragment
 modelIdentityField name identity =
-  CommandDiagnosticField
+  fieldFragment
     name
-    [CommandDiagnosticModelIdentity (modelIdentityText identity)]
+    [ scalarValueFragment
+        "model-identity"
+        textFragment
+        (modelIdentityText identity)
+    ]
 
-occurrenceIdentityField :: Text -> OccurrenceIdentity -> CommandDiagnosticField
+occurrenceIdentityField :: Text -> OccurrenceIdentity -> CanonicalFragment
 occurrenceIdentityField name identity =
-  CommandDiagnosticField
+  fieldFragment
     name
-    [CommandDiagnosticOccurrenceIdentity (occurrenceIdentityText identity)]
+    [ scalarValueFragment
+        "occurrence-identity"
+        textFragment
+        (occurrenceIdentityText identity)
+    ]
 
 supplementalPayloadTypeText :: Supplemental.SupplementalPayloadType -> Text
 supplementalPayloadTypeText payloadType =
@@ -657,21 +848,27 @@ supplementalPayloadTypeText payloadType =
     Supplemental.StrategyFormulationPayload -> "strategy-formulation"
     Supplemental.CollectiveFitPayload -> "collective-fit"
 
-sourceKeyValue :: SourceKey -> CommandDiagnosticValue
+sourceKeyValue :: SourceKey -> CanonicalFragment
 sourceKeyValue =
   foldSourceKey $ \role ordinal ->
-    CommandDiagnosticSourceKey
-      (sourceRoleText role)
-      (sourceOrdinalValue ordinal)
+    closedObjectFragment
+      [ requiredMember "kind" (textFragment "source-key")
+      , requiredMember "role" (textFragment (sourceRoleText role))
+      , requiredMember "ordinal" (naturalFragment (sourceOrdinalValue ordinal))
+      ]
 
-sourceIdentityValue :: SourceIdentity -> CommandDiagnosticValue
+sourceIdentityValue :: SourceIdentity -> CanonicalFragment
 sourceIdentityValue =
   foldSourceIdentity $ \role ordinal reference digest ->
-    CommandDiagnosticSourceIdentity
-      (sourceRoleText role)
-      (sourceOrdinalValue ordinal)
-      (sourceReferenceText reference)
-      (sourceSha256Text digest)
+    closedObjectFragment
+      [ requiredMember "kind" (textFragment "source-identity")
+      , requiredMember "role" (textFragment (sourceRoleText role))
+      , requiredMember "ordinal" (naturalFragment (sourceOrdinalValue ordinal))
+      , requiredMember
+          "reference"
+          (textFragment (sourceReferenceText reference))
+      , requiredMember "sha256" (textFragment (sourceSha256Text digest))
+      ]
 
 sourceRoleText :: SourceRole -> Text
 sourceRoleText role =
@@ -681,24 +878,38 @@ sourceRoleText role =
     ReadinessRole -> "readiness"
     AssessmentRole -> "assessment"
 
-adapterDescriptorValue :: AdapterDescriptor -> CommandDiagnosticValue
+adapterDescriptorValue :: AdapterDescriptor -> CanonicalFragment
 adapterDescriptorValue descriptor =
-  CommandDiagnosticAdapterDescriptor
-    (adapterIdText (adapterDescriptorId descriptor))
-    (adapterDescriptorName descriptor)
-    (adapterDescriptorVersion descriptor)
-    (adapterDescriptorNotation descriptor)
+  closedObjectFragment
+    [ requiredMember "kind" (textFragment "adapter-descriptor")
+    , requiredMember
+        "id"
+        (textFragment (adapterIdText (adapterDescriptorId descriptor)))
+    , requiredMember "name" (textFragment (adapterDescriptorName descriptor))
+    , requiredMember
+        "version"
+        (textFragment (adapterDescriptorVersion descriptor))
+    , requiredMember
+        "notation"
+        (textFragment (adapterDescriptorNotation descriptor))
+    ]
 
-canonicalOccurrenceValue ::
-     Notation.CanonicalOccurrence -> CommandDiagnosticValue
+canonicalOccurrenceValue :: Notation.CanonicalOccurrence -> CanonicalFragment
 canonicalOccurrenceValue occurrence =
-  CommandDiagnosticCanonicalOccurrence
-    (Notation.foldCanonicalOccurrenceKind
-       "record"
-       "property"
-       "reference"
-       (Notation.canonicalOccurrenceKind occurrence))
-    (Notation.canonicalOccurrenceOrdinal occurrence)
+  closedObjectFragment
+    [ requiredMember "kind" (textFragment "canonical-occurrence")
+    , requiredMember
+        "occurrenceKind"
+        (textFragment
+           (Notation.foldCanonicalOccurrenceKind
+              "record"
+              "property"
+              "reference"
+              (Notation.canonicalOccurrenceKind occurrence)))
+    , requiredMember
+        "ordinal"
+        (naturalFragment (Notation.canonicalOccurrenceOrdinal occurrence))
+    ]
 
 profileEvidenceKindText :: Profile.ProfileEvidenceKind -> Text
 profileEvidenceKindText =

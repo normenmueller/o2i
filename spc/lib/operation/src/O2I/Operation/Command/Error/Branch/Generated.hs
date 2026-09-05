@@ -6,8 +6,10 @@ module O2I.Operation.Command.Error.Branch.Generated where
 import Data.List.NonEmpty (NonEmpty(..))
 import Data.Text (Text)
 import qualified O2I.Operation.Assess.Result.Internal as AssessInternal
+import qualified O2I.Operation.Qualification.Subjects.Result.Internal as QualificationSubjectsInternal
 import qualified O2I.Operation.Qualify.Result.Internal as QualifyInternal
 import qualified O2I.Operation.Readiness.Result.Internal as ReadinessInternal
+import qualified O2I.Operation.Trace.Result.Internal as TraceInternal
 import qualified O2I.Operation.Validate.Result.Internal as ValidateInternal
 
 data ValidateOwnerBranch
@@ -56,25 +58,25 @@ validateOwnerBranch ::
      ValidateInternal.ValidateInternalFailure -> ValidateOwnerBranch
 validateOwnerBranch failure =
   case failure of
-    ValidateInternal.ValidateAcquiredModelRoleFailure _ ->
+    ValidateInternal.ValidateAcquiredModelRoleFailure {} ->
       GeneratedValidateAcquiredModelRole
-    ValidateInternal.ValidateAcquiredSupplementalRoleFailure _ ->
+    ValidateInternal.ValidateAcquiredSupplementalRoleFailure {} ->
       GeneratedValidateAcquiredSupplementalRole
-    ValidateInternal.ValidateSelectedAdapterContractFailure _ ->
+    ValidateInternal.ValidateSelectedAdapterContractFailure {} ->
       GeneratedValidateSelectedAdapterContract
-    ValidateInternal.ValidateNotationContractFailure _ ->
+    ValidateInternal.ValidateNotationContractFailure {} ->
       GeneratedValidateNotationContract
-    ValidateInternal.ValidateProfileContractFailure _ ->
+    ValidateInternal.ValidateProfileContractFailure {} ->
       GeneratedValidateProfileContract
-    ValidateInternal.ValidateIdentityIndexFailure _ ->
+    ValidateInternal.ValidateIdentityIndexFailure {} ->
       GeneratedValidateIdentityIndex
-    ValidateInternal.ValidateSelectedViewScopeFailure _ ->
+    ValidateInternal.ValidateSelectedViewScopeFailure {} ->
       GeneratedValidateSelectedViewScope
-    ValidateInternal.ValidateStructureInputFailure _ ->
+    ValidateInternal.ValidateStructureInputFailure {} ->
       GeneratedValidateStructureInput
-    ValidateInternal.ValidateSupplementalProvenanceFailure _ ->
+    ValidateInternal.ValidateSupplementalProvenanceFailure {} ->
       GeneratedValidateSupplementalProvenance
-    ValidateInternal.ValidateSemanticUnavailableContractFailure _ ->
+    ValidateInternal.ValidateSemanticUnavailableContractFailure {} ->
       GeneratedValidateSemanticUnavailableContract
 
 data QualifyOwnerBranch
@@ -122,25 +124,25 @@ qualifyOwnerBranch ::
      QualifyInternal.QualifyInternalFailure -> QualifyOwnerBranch
 qualifyOwnerBranch failure =
   case failure of
-    QualifyInternal.QualifyAcquiredModelRoleFailure _ ->
+    QualifyInternal.QualifyAcquiredModelRoleFailure {} ->
       GeneratedQualifyAcquiredModelRole
-    QualifyInternal.QualifyAcquiredSupplementalRoleFailure _ ->
+    QualifyInternal.QualifyAcquiredSupplementalRoleFailure {} ->
       GeneratedQualifyAcquiredSupplementalRole
-    QualifyInternal.QualifySelectedAdapterContractFailure _ ->
+    QualifyInternal.QualifySelectedAdapterContractFailure {} ->
       GeneratedQualifySelectedAdapterContract
-    QualifyInternal.QualifyNotationContractFailure _ ->
+    QualifyInternal.QualifyNotationContractFailure {} ->
       GeneratedQualifyNotationContract
-    QualifyInternal.QualifyProfileContractFailure _ ->
+    QualifyInternal.QualifyProfileContractFailure {} ->
       GeneratedQualifyProfileContract
-    QualifyInternal.QualifyIdentityIndexFailure _ ->
+    QualifyInternal.QualifyIdentityIndexFailure {} ->
       GeneratedQualifyIdentityIndex
-    QualifyInternal.QualifySelectedViewScopeFailure _ ->
+    QualifyInternal.QualifySelectedViewScopeFailure {} ->
       GeneratedQualifySelectedViewScope
-    QualifyInternal.QualifyStructureInputFailure _ ->
+    QualifyInternal.QualifyStructureInputFailure {} ->
       GeneratedQualifyStructureInput
-    QualifyInternal.QualifySupplementalProvenanceFailure _ ->
+    QualifyInternal.QualifySupplementalProvenanceFailure {} ->
       GeneratedQualifySupplementalProvenance
-    QualifyInternal.QualifyContextFailure _ -> GeneratedQualifyContext
+    QualifyInternal.QualifyContextFailure {} -> GeneratedQualifyContext
 
 data ReadinessOwnerBranch
   = GeneratedReadinessAcquiredModelRole
@@ -190,27 +192,27 @@ readinessOwnerBranch ::
      ReadinessInternal.ReadinessInternalFailure -> ReadinessOwnerBranch
 readinessOwnerBranch failure =
   case failure of
-    ReadinessInternal.ReadinessAcquiredModelRoleFailure _ ->
+    ReadinessInternal.ReadinessAcquiredModelRoleFailure {} ->
       GeneratedReadinessAcquiredModelRole
-    ReadinessInternal.ReadinessAcquiredEvidenceRoleFailure _ ->
+    ReadinessInternal.ReadinessAcquiredEvidenceRoleFailure {} ->
       GeneratedReadinessAcquiredEvidenceRole
-    ReadinessInternal.ReadinessAcquiredSupplementalRoleFailure _ ->
+    ReadinessInternal.ReadinessAcquiredSupplementalRoleFailure {} ->
       GeneratedReadinessAcquiredSupplementalRole
-    ReadinessInternal.ReadinessSelectedAdapterContractFailure _ ->
+    ReadinessInternal.ReadinessSelectedAdapterContractFailure {} ->
       GeneratedReadinessSelectedAdapterContract
-    ReadinessInternal.ReadinessNotationContractFailure _ ->
+    ReadinessInternal.ReadinessNotationContractFailure {} ->
       GeneratedReadinessNotationContract
-    ReadinessInternal.ReadinessProfileContractFailure _ ->
+    ReadinessInternal.ReadinessProfileContractFailure {} ->
       GeneratedReadinessProfileContract
-    ReadinessInternal.ReadinessIdentityIndexFailure _ ->
+    ReadinessInternal.ReadinessIdentityIndexFailure {} ->
       GeneratedReadinessIdentityIndex
-    ReadinessInternal.ReadinessSelectedViewScopeFailure _ ->
+    ReadinessInternal.ReadinessSelectedViewScopeFailure {} ->
       GeneratedReadinessSelectedViewScope
-    ReadinessInternal.ReadinessStructureInputFailure _ ->
+    ReadinessInternal.ReadinessStructureInputFailure {} ->
       GeneratedReadinessStructureInput
-    ReadinessInternal.ReadinessSupplementalProvenanceFailure _ ->
+    ReadinessInternal.ReadinessSupplementalProvenanceFailure {} ->
       GeneratedReadinessSupplementalProvenance
-    ReadinessInternal.ReadinessSemanticModelContractFailure _ ->
+    ReadinessInternal.ReadinessSemanticModelContractFailure {} ->
       GeneratedReadinessSemanticModelContract
 
 data AssessOwnerBranch
@@ -260,33 +262,180 @@ assessOwnerBranches =
 assessOwnerBranch :: AssessInternal.AssessInternalFailure -> AssessOwnerBranch
 assessOwnerBranch failure =
   case failure of
-    AssessInternal.AssessAcquiredModelRoleFailure _ ->
+    AssessInternal.AssessAcquiredModelRoleFailure {} ->
       GeneratedAssessAcquiredModelRole
-    AssessInternal.AssessAcquiredBundleRoleFailure _ ->
+    AssessInternal.AssessAcquiredBundleRoleFailure {} ->
       GeneratedAssessAcquiredBundleRole
-    AssessInternal.AssessAcquiredSupplementalRoleFailure _ ->
+    AssessInternal.AssessAcquiredSupplementalRoleFailure {} ->
       GeneratedAssessAcquiredSupplementalRole
-    AssessInternal.AssessSelectedAdapterContractFailure _ ->
+    AssessInternal.AssessSelectedAdapterContractFailure {} ->
       GeneratedAssessSelectedAdapterContract
-    AssessInternal.AssessNotationContractFailure _ ->
+    AssessInternal.AssessNotationContractFailure {} ->
       GeneratedAssessNotationContract
-    AssessInternal.AssessProfileContractFailure _ ->
+    AssessInternal.AssessProfileContractFailure {} ->
       GeneratedAssessProfileContract
-    AssessInternal.AssessIdentityIndexFailure _ -> GeneratedAssessIdentityIndex
-    AssessInternal.AssessSelectedViewScopeFailure _ ->
+    AssessInternal.AssessIdentityIndexFailure {} -> GeneratedAssessIdentityIndex
+    AssessInternal.AssessSelectedViewScopeFailure {} ->
       GeneratedAssessSelectedViewScope
-    AssessInternal.AssessStructureInputFailure _ ->
+    AssessInternal.AssessStructureInputFailure {} ->
       GeneratedAssessStructureInput
-    AssessInternal.AssessSupplementalProvenanceFailure _ ->
+    AssessInternal.AssessSupplementalProvenanceFailure {} ->
       GeneratedAssessSupplementalProvenance
-    AssessInternal.AssessSemanticModelContractFailure _ ->
+    AssessInternal.AssessSemanticModelContractFailure {} ->
       GeneratedAssessSemanticModelContract
+
+data QualificationSubjectsOwnerBranch
+  = GeneratedQualificationSubjectsAcquiredModelRole
+  | GeneratedQualificationSubjectsAcquiredSupplementalRole
+  | GeneratedQualificationSubjectsSelectedAdapterContract
+  | GeneratedQualificationSubjectsNotationContract
+  | GeneratedQualificationSubjectsProfileContract
+  | GeneratedQualificationSubjectsIdentityIndex
+  | GeneratedQualificationSubjectsSelectedViewScope
+  | GeneratedQualificationSubjectsStructureInput
+  | GeneratedQualificationSubjectsSupplementalProvenance
+  | GeneratedQualificationSubjectsContext
+  | GeneratedQualificationSubjectsOccurrenceProjection
+  | GeneratedQualificationSubjectsOccurrenceJoin
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+qualificationSubjectsOwnerBranchToken ::
+     QualificationSubjectsOwnerBranch -> Text
+qualificationSubjectsOwnerBranchToken branch =
+  case branch of
+    GeneratedQualificationSubjectsAcquiredModelRole -> "acquired-model-role"
+    GeneratedQualificationSubjectsAcquiredSupplementalRole ->
+      "acquired-supplemental-role"
+    GeneratedQualificationSubjectsSelectedAdapterContract ->
+      "selected-adapter-contract"
+    GeneratedQualificationSubjectsNotationContract -> "notation-contract"
+    GeneratedQualificationSubjectsProfileContract -> "profile-contract"
+    GeneratedQualificationSubjectsIdentityIndex -> "identity-index"
+    GeneratedQualificationSubjectsSelectedViewScope -> "selected-view-scope"
+    GeneratedQualificationSubjectsStructureInput -> "structure-input"
+    GeneratedQualificationSubjectsSupplementalProvenance ->
+      "supplemental-provenance"
+    GeneratedQualificationSubjectsContext -> "qualification-context"
+    GeneratedQualificationSubjectsOccurrenceProjection ->
+      "occurrence-projection"
+    GeneratedQualificationSubjectsOccurrenceJoin -> "occurrence-join"
+
+qualificationSubjectsOwnerBranches :: NonEmpty QualificationSubjectsOwnerBranch
+qualificationSubjectsOwnerBranches =
+  GeneratedQualificationSubjectsAcquiredModelRole
+    :| [ GeneratedQualificationSubjectsAcquiredSupplementalRole
+       , GeneratedQualificationSubjectsSelectedAdapterContract
+       , GeneratedQualificationSubjectsNotationContract
+       , GeneratedQualificationSubjectsProfileContract
+       , GeneratedQualificationSubjectsIdentityIndex
+       , GeneratedQualificationSubjectsSelectedViewScope
+       , GeneratedQualificationSubjectsStructureInput
+       , GeneratedQualificationSubjectsSupplementalProvenance
+       , GeneratedQualificationSubjectsContext
+       , GeneratedQualificationSubjectsOccurrenceProjection
+       , GeneratedQualificationSubjectsOccurrenceJoin
+       ]
+
+qualificationSubjectsOwnerBranch ::
+     QualificationSubjectsInternal.QualificationSubjectsInternalFailure
+  -> QualificationSubjectsOwnerBranch
+qualificationSubjectsOwnerBranch failure =
+  case failure of
+    QualificationSubjectsInternal.QualificationSubjectsAcquiredModelRoleFailure {} ->
+      GeneratedQualificationSubjectsAcquiredModelRole
+    QualificationSubjectsInternal.QualificationSubjectsAcquiredSupplementalRoleFailure {} ->
+      GeneratedQualificationSubjectsAcquiredSupplementalRole
+    QualificationSubjectsInternal.QualificationSubjectsSelectedAdapterContractFailure {} ->
+      GeneratedQualificationSubjectsSelectedAdapterContract
+    QualificationSubjectsInternal.QualificationSubjectsNotationContractFailure {} ->
+      GeneratedQualificationSubjectsNotationContract
+    QualificationSubjectsInternal.QualificationSubjectsProfileContractFailure {} ->
+      GeneratedQualificationSubjectsProfileContract
+    QualificationSubjectsInternal.QualificationSubjectsIdentityIndexFailure {} ->
+      GeneratedQualificationSubjectsIdentityIndex
+    QualificationSubjectsInternal.QualificationSubjectsSelectedViewScopeFailure {} ->
+      GeneratedQualificationSubjectsSelectedViewScope
+    QualificationSubjectsInternal.QualificationSubjectsStructureInputFailure {} ->
+      GeneratedQualificationSubjectsStructureInput
+    QualificationSubjectsInternal.QualificationSubjectsSupplementalProvenanceFailure {} ->
+      GeneratedQualificationSubjectsSupplementalProvenance
+    QualificationSubjectsInternal.QualificationSubjectsContextFailure {} ->
+      GeneratedQualificationSubjectsContext
+    QualificationSubjectsInternal.QualificationSubjectsOccurrenceProjectionFailure {} ->
+      GeneratedQualificationSubjectsOccurrenceProjection
+    QualificationSubjectsInternal.QualificationSubjectsOccurrenceJoinFailure {} ->
+      GeneratedQualificationSubjectsOccurrenceJoin
+
+data TraceOwnerBranch
+  = GeneratedTraceAcquiredModelRole
+  | GeneratedTraceSelectedAdapterContract
+  | GeneratedTraceNotationContract
+  | GeneratedTraceProfileContract
+  | GeneratedTraceIdentityIndex
+  | GeneratedTraceSelectedViewScope
+  | GeneratedTraceStructureInput
+  | GeneratedTraceEmptyInputProvenance
+  | GeneratedTraceEmptyInputContract
+  | GeneratedTraceSemanticModelContract
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+traceOwnerBranchToken :: TraceOwnerBranch -> Text
+traceOwnerBranchToken branch =
+  case branch of
+    GeneratedTraceAcquiredModelRole -> "acquired-model-role"
+    GeneratedTraceSelectedAdapterContract -> "selected-adapter-contract"
+    GeneratedTraceNotationContract -> "notation-contract"
+    GeneratedTraceProfileContract -> "profile-contract"
+    GeneratedTraceIdentityIndex -> "identity-index"
+    GeneratedTraceSelectedViewScope -> "selected-view-scope"
+    GeneratedTraceStructureInput -> "structure-input"
+    GeneratedTraceEmptyInputProvenance -> "empty-input-provenance"
+    GeneratedTraceEmptyInputContract -> "empty-input-contract"
+    GeneratedTraceSemanticModelContract -> "semantic-model-contract"
+
+traceOwnerBranches :: NonEmpty TraceOwnerBranch
+traceOwnerBranches =
+  GeneratedTraceAcquiredModelRole
+    :| [ GeneratedTraceSelectedAdapterContract
+       , GeneratedTraceNotationContract
+       , GeneratedTraceProfileContract
+       , GeneratedTraceIdentityIndex
+       , GeneratedTraceSelectedViewScope
+       , GeneratedTraceStructureInput
+       , GeneratedTraceEmptyInputProvenance
+       , GeneratedTraceEmptyInputContract
+       , GeneratedTraceSemanticModelContract
+       ]
+
+traceOwnerBranch :: TraceInternal.TraceInternalFailure -> TraceOwnerBranch
+traceOwnerBranch failure =
+  case failure of
+    TraceInternal.TraceAcquiredModelRoleFailure {} ->
+      GeneratedTraceAcquiredModelRole
+    TraceInternal.TraceSelectedAdapterContractFailure {} ->
+      GeneratedTraceSelectedAdapterContract
+    TraceInternal.TraceNotationContractFailure {} ->
+      GeneratedTraceNotationContract
+    TraceInternal.TraceProfileContractFailure {} ->
+      GeneratedTraceProfileContract
+    TraceInternal.TraceIdentityIndexFailure {} -> GeneratedTraceIdentityIndex
+    TraceInternal.TraceSelectedViewScopeFailure {} ->
+      GeneratedTraceSelectedViewScope
+    TraceInternal.TraceStructureInputFailure {} -> GeneratedTraceStructureInput
+    TraceInternal.TraceEmptyInputProvenanceFailure {} ->
+      GeneratedTraceEmptyInputProvenance
+    TraceInternal.TraceEmptyInputContractFailure {} ->
+      GeneratedTraceEmptyInputContract
+    TraceInternal.TraceSemanticModelContractFailure {} ->
+      GeneratedTraceSemanticModelContract
 
 data CommandOwnerBranch
   = ValidateCommandOwnerBranch !ValidateOwnerBranch
   | QualifyCommandOwnerBranch !QualifyOwnerBranch
   | ReadinessCommandOwnerBranch !ReadinessOwnerBranch
   | AssessCommandOwnerBranch !AssessOwnerBranch
+  | QualificationSubjectsCommandOwnerBranch !QualificationSubjectsOwnerBranch
+  | TraceCommandOwnerBranch !TraceOwnerBranch
   deriving (Eq, Ord, Show)
 
 commandOwnerBranchToken :: CommandOwnerBranch -> Text
@@ -300,3 +449,7 @@ commandOwnerBranchToken branch =
       readinessOwnerBranchToken capabilityBranch
     AssessCommandOwnerBranch capabilityBranch ->
       assessOwnerBranchToken capabilityBranch
+    QualificationSubjectsCommandOwnerBranch capabilityBranch ->
+      qualificationSubjectsOwnerBranchToken capabilityBranch
+    TraceCommandOwnerBranch capabilityBranch ->
+      traceOwnerBranchToken capabilityBranch

@@ -18,34 +18,17 @@ import Data.Text (Text)
 import O2I.Operation.Assess.Result (AssessFailure, foldAssessFailure)
 import O2I.Operation.Command.Error
   ( ArgumentFailure
-  , CommandDiagnosticField
-  , CommandDiagnosticValue
   , CommandError
-  , CommandInputDiagnostic
-  , CommandOwnerDiagnostic
-  , CommandOwnerEvidence
-  , assessCommandOwnerDiagnostic
-  , assessmentCommandInputDiagnostic
   , foldArgumentFailure
-  , foldCommandDiagnosticField
-  , foldCommandDiagnosticValue
   , foldCommandError
-  , foldCommandInputDiagnostic
-  , foldCommandOwnerDiagnostic
-  , foldCommandOwnerEvidence
-  , qualifyCommandOwnerDiagnostic
-  , readinessCommandInputDiagnostic
-  , readinessCommandOwnerDiagnostic
-  , supplementalCommandInputDiagnostic
-  , validateCommandOwnerDiagnostic
   )
+import O2I.Operation.Command.Error.Projection.Internal
 import O2I.Operation.Encoding.Internal
   ( CanonicalFragment
   , MachineResult(..)
   , arrayFragment
   , closedMachineResult
   , closedObjectFragment
-  , naturalFragment
   , requiredMember
   , textFragment
   , toolDescriptorFragment
@@ -63,10 +46,15 @@ import O2I.Operation.Failure
 import O2I.Operation.Machine (ToolDescriptor)
 import O2I.Operation.Machine.Fragment.Internal (acquisitionFailureFragment)
 import O2I.Operation.Preparation (preparationStageText)
+import O2I.Operation.Qualification.Subjects.Result
+  ( QualificationSubjectsFailure
+  , foldQualificationSubjectsFailure
+  )
 import O2I.Operation.Qualify.Result (QualifyFailure, foldQualifyFailure)
 import O2I.Operation.Readiness.Result (ReadinessFailure, foldReadinessFailure)
 import O2I.Operation.Schema (MachineSchema, SchemaVariant)
 import qualified O2I.Operation.Schema.Generated as Generated
+import O2I.Operation.Trace.Result (TraceFailure, foldTraceFailure)
 import O2I.Operation.Validate.Result (ValidateFailure, foldValidateFailure)
 
 -- | One immutable command error sealed by Operation's generated contract.
@@ -84,6 +72,8 @@ commandErrorDocument tool =
     qualifyDocument
     readinessDocument
     assessDocument
+    qualificationSubjectsDocument
+    traceDocument
   where
     argumentDocument :: ArgumentFailure -> CommandErrorDocument
     argumentDocument failure =
@@ -154,7 +144,6 @@ commandErrorDocument tool =
         (capabilityDocument
            Generated.validateFailedVariant
            "validate.owner-contract"
-           . ownerFailureFragment
            . validateCommandOwnerDiagnostic)
     qualifyDocument :: QualifyFailure -> CommandErrorDocument
     qualifyDocument =
@@ -169,7 +158,6 @@ commandErrorDocument tool =
         (capabilityDocument
            Generated.qualifyFailedVariant
            "qualify.owner-contract"
-           . ownerFailureFragment
            . qualifyCommandOwnerDiagnostic)
     readinessDocument :: ReadinessFailure -> CommandErrorDocument
     readinessDocument =
@@ -190,7 +178,6 @@ commandErrorDocument tool =
         (capabilityDocument
            Generated.readinessFailedVariant
            "readiness.owner-contract"
-           . ownerFailureFragment
            . readinessCommandOwnerDiagnostic)
     assessDocument :: AssessFailure -> CommandErrorDocument
     assessDocument =
@@ -211,12 +198,32 @@ commandErrorDocument tool =
         (capabilityDocument
            Generated.assessFailedVariant
            "assess.owner-contract"
-           . ownerFailureFragment
            . assessCommandOwnerDiagnostic)
+    qualificationSubjectsDocument ::
+         QualificationSubjectsFailure -> CommandErrorDocument
+    qualificationSubjectsDocument =
+      foldQualificationSubjectsFailure
+        commonDocument
+        (capabilityDocument
+           Generated.qualificationSubjectsFailedVariant
+           "qualification-subjects.supplemental-input"
+           . inputFailureFragment
+               "supplemental-input"
+               supplementalCommandInputDiagnostic)
+        (capabilityDocument
+           Generated.qualificationSubjectsFailedVariant
+           "qualification-subjects.owner-contract"
+           . qualificationSubjectsCommandOwnerDiagnostic)
+    traceDocument :: TraceFailure -> CommandErrorDocument
+    traceDocument =
+      foldTraceFailure
+        commonDocument
+        (capabilityDocument Generated.traceFailedVariant "trace.owner-contract"
+           . traceCommandOwnerDiagnostic)
 
 inputFailureFragment ::
      Text
-  -> (defect -> CommandInputDiagnostic)
+  -> (defect -> CanonicalFragment)
   -> NonEmpty defect
   -> CanonicalFragment
 inputFailureFragment category project diagnostics =
@@ -224,106 +231,7 @@ inputFailureFragment category project diagnostics =
     [ requiredMember "category" (textFragment category)
     , requiredMember
         "diagnostics"
-        (arrayFragment
-           (map
-              (inputDiagnosticFragment . project)
-              (NonEmpty.toList diagnostics)))
-    ]
-
-inputDiagnosticFragment :: CommandInputDiagnostic -> CanonicalFragment
-inputDiagnosticFragment =
-  foldCommandInputDiagnostic $ \rule ordinals reason fields ->
-    closedObjectFragment
-      [ requiredMember "ruleId" (textFragment rule)
-      , requiredMember
-          "inputOrdinals"
-          (arrayFragment (map naturalFragment (NonEmpty.toList ordinals)))
-      , requiredMember "reason" (textFragment reason)
-      , requiredMember
-          "fields"
-          (arrayFragment (map diagnosticFieldFragment fields))
-      ]
-
-ownerFailureFragment :: CommandOwnerDiagnostic -> CanonicalFragment
-ownerFailureFragment =
-  foldCommandOwnerDiagnostic $ \branch evidence ->
-    closedObjectFragment
-      [ requiredMember "category" (textFragment "owner-contract")
-      , requiredMember "branch" (textFragment branch)
-      , requiredMember
-          "evidence"
-          (arrayFragment (map ownerEvidenceFragment (NonEmpty.toList evidence)))
-      ]
-
-ownerEvidenceFragment :: CommandOwnerEvidence -> CanonicalFragment
-ownerEvidenceFragment =
-  foldCommandOwnerEvidence $ \kind fields ->
-    closedObjectFragment
-      [ requiredMember "kind" (textFragment kind)
-      , requiredMember
-          "fields"
-          (arrayFragment (map diagnosticFieldFragment fields))
-      ]
-
-diagnosticFieldFragment :: CommandDiagnosticField -> CanonicalFragment
-diagnosticFieldFragment =
-  foldCommandDiagnosticField $ \name values ->
-    closedObjectFragment
-      [ requiredMember "name" (textFragment name)
-      , requiredMember
-          "values"
-          (arrayFragment (map diagnosticValueFragment values))
-      ]
-
-diagnosticValueFragment :: CommandDiagnosticValue -> CanonicalFragment
-diagnosticValueFragment =
-  foldCommandDiagnosticValue
-    (scalarValueFragment "text" textFragment)
-    (scalarValueFragment "natural" naturalFragment)
-    (scalarValueFragment "model-identity" textFragment)
-    (scalarValueFragment "occurrence-identity" textFragment)
-    (scalarValueFragment "qualified-type" textFragment)
-    (\role ordinal ->
-       closedObjectFragment
-         [ requiredMember "kind" (textFragment "source-key")
-         , requiredMember "role" (textFragment role)
-         , requiredMember "ordinal" (naturalFragment ordinal)
-         ])
-    (\role ordinal reference digest ->
-       closedObjectFragment
-         [ requiredMember "kind" (textFragment "source-identity")
-         , requiredMember "role" (textFragment role)
-         , requiredMember "ordinal" (naturalFragment ordinal)
-         , requiredMember "reference" (textFragment reference)
-         , requiredMember "sha256" (textFragment digest)
-         ])
-    (\identifier name version notation ->
-       closedObjectFragment
-         [ requiredMember "kind" (textFragment "adapter-descriptor")
-         , requiredMember "id" (textFragment identifier)
-         , requiredMember "name" (textFragment name)
-         , requiredMember "version" (textFragment version)
-         , requiredMember "notation" (textFragment notation)
-         ])
-    (\kind ordinal ->
-       closedObjectFragment
-         [ requiredMember "kind" (textFragment "canonical-occurrence")
-         , requiredMember "occurrenceKind" (textFragment kind)
-         , requiredMember "ordinal" (naturalFragment ordinal)
-         ])
-    (\index codePoint ->
-       closedObjectFragment
-         [ requiredMember "kind" (textFragment "unicode-scalar")
-         , requiredMember "index" (naturalFragment index)
-         , requiredMember "codePoint" (naturalFragment codePoint)
-         ])
-
-scalarValueFragment ::
-     Text -> (value -> CanonicalFragment) -> value -> CanonicalFragment
-scalarValueFragment kind valueFragment value =
-  closedObjectFragment
-    [ requiredMember "kind" (textFragment kind)
-    , requiredMember "value" (valueFragment value)
+        (arrayFragment (map project (NonEmpty.toList diagnostics)))
     ]
 
 -- | Exact generated Schema metadata and immutable bytes.

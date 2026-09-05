@@ -45,8 +45,9 @@ formatBoundaries =
 
 assertEscaped :: Int -> Assertion
 assertEscaped code =
-  terminalSafeText (Text.singleton (chr code))
-    @?= "\\u{" <> scalarCode code <> "}"
+  terminalSafeText (Text.singleton (chr code)) @?= "\\u{"
+    <> scalarCode code
+    <> "}"
 
 scalarCode :: Int -> Text.Text
 scalarCode code =

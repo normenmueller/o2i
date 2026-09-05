@@ -54,7 +54,8 @@ invalidCode = do
 decode :: String -> ByteString.ByteString -> IO Aeson.Value
 decode label bytes =
   case Aeson.eitherDecodeStrict bytes of
-    Left message -> assertFailure (label <> ": " <> message) >> fail "unreachable"
+    Left message ->
+      assertFailure (label <> ": " <> message) >> fail "unreachable"
     Right value -> pure value
 
 requireRight :: Show failure => Either failure value -> IO value

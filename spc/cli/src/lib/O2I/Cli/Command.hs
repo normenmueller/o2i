@@ -7,9 +7,12 @@ module O2I.Cli.Command
   ) where
 
 import Data.ByteString (ByteString)
+import qualified Data.ByteString as ByteString
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified Data.Text as Text
+import Numeric (showHex)
+import qualified O2I.Cli.Human as Human
 import O2I.Cli.Input
 import O2I.Cli.Options
 import O2I.Cli.Output
@@ -26,23 +29,24 @@ import O2I.Operation.Adapter
   , adapterIdText
   )
 import O2I.Operation.Assess (runAssess)
+import qualified O2I.Operation.Assess.Human as AssessHuman
 import O2I.Operation.Assess.Machine
   ( assessResultDocument
   , encodeAssessResultDocument
   )
 import O2I.Operation.Assess.Request (assessRequest)
 import O2I.Operation.Assess.Result
-  ( AssessFailure
-  , assessExitClassText
+  ( assessExitClassText
   , assessExitCode
   , assessResultExitClass
   )
 import O2I.Operation.Command.Error
   ( CommandError
   , assessCommandError
-  , commonCommandError
+  , qualificationSubjectsCommandError
   , qualifyCommandError
   , readinessCommandError
+  , traceCommandError
   , validateCommandError
   )
 import O2I.Operation.Discovery.Adapter (discoverAdapters, foldAdapterDiscovery)
@@ -71,6 +75,7 @@ import O2I.Operation.Discovery.Rule
   , foldDiscoveredRule
   , foldRuleDiscovery
   , foldRuleDiscoveryCompilation
+  , foldRuleExplanation
   )
 import qualified O2I.Operation.Discovery.Rule as DiscoveredRule
 import O2I.Operation.Discovery.Rule.Explanation.Machine
@@ -82,12 +87,14 @@ import O2I.Operation.Discovery.Rule.Inventory.Machine
   , ruleInventoryDocument
   )
 import O2I.Operation.Discovery.View (discoverViews, foldViewDiscovery)
+import qualified O2I.Operation.Discovery.View.Human as ViewsHuman
 import O2I.Operation.Discovery.View.Machine
   ( encodeViewDiscoveryDocument
   , viewDiscoveryDocument
   )
 import O2I.Operation.Machine (ToolDescriptor)
 import O2I.Operation.Qualification.Subjects (runQualificationSubjects)
+import qualified O2I.Operation.Qualification.Subjects.Human as SubjectsHuman
 import O2I.Operation.Qualification.Subjects.Machine
   ( encodeQualificationSubjectsDocument
   , qualificationSubjectsDocument
@@ -96,42 +103,34 @@ import O2I.Operation.Qualification.Subjects.Request
   ( qualificationSubjectsRequest
   )
 import O2I.Operation.Qualification.Subjects.Result
-  ( QualificationSubjectsFailure
-  , foldQualificationSubjectsFailure
-  , foldQualificationSubjectsResult
+  ( foldQualificationSubjectsResult
   )
 import O2I.Operation.Qualify (runQualify)
+import qualified O2I.Operation.Qualify.Human as QualifyHuman
 import O2I.Operation.Qualify.Machine
   ( encodeQualifyResultDocument
   , qualifyResultDocument
   )
 import O2I.Operation.Qualify.Request (QualifyRequest, qualifyRequest)
-import O2I.Operation.Qualify.Result
-  ( QualifyFailure
-  , foldQualifyResult
-  )
+import O2I.Operation.Qualify.Result (foldQualifyResult)
 import O2I.Operation.Readiness (runReadiness)
+import qualified O2I.Operation.Readiness.Human as ReadinessHuman
 import O2I.Operation.Readiness.Machine
   ( encodeReadinessResultDocument
   , readinessResultDocument
   )
 import O2I.Operation.Readiness.Request (readinessRequest)
-import O2I.Operation.Readiness.Result
-  ( ReadinessFailure
-  , foldReadinessResult
-  )
+import O2I.Operation.Readiness.Result (foldReadinessResult)
 import O2I.Operation.Trace (runTrace)
+import qualified O2I.Operation.Trace.Human as TraceHuman
 import O2I.Operation.Trace.Machine
   ( encodeTraceResultDocument
   , traceResultDocument
   )
 import O2I.Operation.Trace.Request (traceRequest)
-import O2I.Operation.Trace.Result
-  ( TraceFailure
-  , foldTraceFailure
-  , foldTraceResult
-  )
+import O2I.Operation.Trace.Result (TraceFailure, foldTraceResult)
 import O2I.Operation.Validate (runValidate)
+import qualified O2I.Operation.Validate.Human as ValidateHuman
 import O2I.Operation.Validate.Machine
   ( encodeValidateResultDocument
   , validateResultDocument
@@ -142,17 +141,14 @@ import O2I.Operation.Validate.Request
   , semanticsValidateRequest
   , structureValidateRequest
   )
-import O2I.Operation.Validate.Result
-  ( ValidateFailure
-  , foldValidateResult
-  )
+import O2I.Operation.Validate.Result (foldValidateResult)
 import O2I.Operation.View (ViewSelector)
 
 -- | Pre-report failure retaining either exact CLI grammar evidence or one
 -- closed Operation command failure.
 data ExecutionError
   = ExecutionArgumentError CliError
-  | ExecutionCommandError CommandError
+  | ExecutionCommandError CommandError Text
 
 -- | Execute one parsed report command. Help and version are process metadata
 -- handled by 'O2I.Cli'; this function owns only report-producing commands.
@@ -162,6 +158,16 @@ executeCommand ::
   -> CliOptions
   -> IO (Either ExecutionError PrimaryReport)
 executeCommand static tool command =
+  fmap
+    (fmap (applyVerbosity (commandVerbosity command)))
+    (executeReportCommand static tool command)
+
+executeReportCommand ::
+     StaticComposition
+  -> ToolDescriptor
+  -> CliOptions
+  -> IO (Either ExecutionError PrimaryReport)
+executeReportCommand static tool command =
   case command of
     AdaptersCommand _ -> pure (Right (adapterReport static))
     ProfilesCommand _ -> pure (Right (profileReport static))
@@ -188,13 +194,51 @@ executeCommand static tool command =
     HelpCommand _ ->
       pure
         (Left
-           (ExecutionArgumentError
-              (internal "Help reached report dispatch.")))
+           (ExecutionArgumentError (internal "Help reached report dispatch.")))
     VersionCommand ->
       pure
         (Left
-           (ExecutionArgumentError
-              (internal "Version reached report dispatch.")))
+           (ExecutionArgumentError (internal "Version reached report dispatch.")))
+
+commandVerbosity :: CliOptions -> Verbosity
+commandVerbosity command =
+  case command of
+    HelpCommand _ -> NormalVerbosity
+    VersionCommand -> NormalVerbosity
+    AdaptersCommand options -> reportVerbosity options
+    ProfilesCommand options -> reportVerbosity options
+    RulesCommand _ options -> reportVerbosity options
+    ExplainCommand _ _ options -> reportVerbosity options
+    ViewsCommand _ _ options -> reportVerbosity options
+    QualificationSubjectsCommand _ _ options -> reportVerbosity options
+    ValidateCommand _ _ _ options -> reportVerbosity options
+    TraceCommand _ options -> reportVerbosity options
+    QualifyCommand _ _ _ _ options -> reportVerbosity options
+    ReadinessCommand _ _ _ options -> reportVerbosity options
+    AssessCommand _ _ _ options -> reportVerbosity options
+
+applyVerbosity :: Verbosity -> PrimaryReport -> PrimaryReport
+applyVerbosity verbosity primary =
+  primary
+    { primaryHumanBytes =
+        primaryHumanBytes primary
+          <> case verbosity of
+               NormalVerbosity -> ByteString.empty
+               VerboseVerbosity -> verboseBytes
+               DebugVerbosity -> verboseBytes <> debugBytes
+    }
+  where
+    verboseBytes =
+      lineBytes ("  exit=" <> Text.pack (show (primaryExitCode primary)))
+    debugBytes =
+      lineBytes
+        ("  machine-utf8-hex=" <> byteStringHex (primaryJsonBytes primary))
+
+byteStringHex :: ByteString -> Text
+byteStringHex =
+  Text.concat
+    . map (Text.justifyRight 2 '0' . Text.pack . (`showHex` ""))
+    . ByteString.unpack
 
 adapterReport :: StaticComposition -> PrimaryReport
 adapterReport static =
@@ -264,9 +308,8 @@ rulesReport static authority = do
           foldRuleDiscovery
             (\owner rows ->
                report
-                 ("O2I rules "
-                    <> safeAuthority owner
-                    <> ":\n"
+                 ("O2I rules: discovered\n"
+                    <> ruleAuthorityLine owner
                     <> foldMap ruleLine rows)
                  machine
                  0)
@@ -303,7 +346,53 @@ explainReport static authority identifier = do
       (explainDiscoveredRule identifier discovery)
   let machine =
         encodeRuleExplanationDocument (ruleExplanationDocument explanation)
-  pure (report ("O2I rule explanation: " <> safe identifier <> "\n") machine 0)
+  pure
+    (foldRuleExplanation
+       (\owner requested rule ->
+          report
+            ("O2I rule explanation: found\n"
+               <> ruleAuthorityLine owner
+               <> "  requested="
+               <> safe requested
+               <> "\n"
+               <> ruleLine rule)
+            machine
+            0)
+       (\owner requested ->
+          report
+            ("O2I rule explanation: not-found\n"
+               <> ruleAuthorityLine owner
+               <> "  requested="
+               <> safe requested
+               <> "\n")
+            machine
+            1)
+       explanation)
+
+ruleAuthorityLine :: DiscoveredRule.RuleAuthority -> Text
+ruleAuthorityLine authority =
+  DiscoveredRule.foldRuleAuthority
+    (binding "operation" Nothing)
+    (binding "core" Nothing)
+    (\reference -> binding "profile" (Just reference))
+    (\identifier -> binding "adapter" (Just (adapterIdText identifier)))
+    authority
+  where
+    binding kind subject contract =
+      DiscoveredRule.foldRuleContractBinding
+        (\identity version digest ->
+           "  authority="
+             <> kind
+             <> " | subject="
+             <> maybe "unavailable" safe subject
+             <> " | contract="
+             <> safe identity
+             <> " | version="
+             <> safe version
+             <> " | sha256="
+             <> maybe "unavailable" safe digest
+             <> "\n")
+        contract
 
 ruleCompilation ::
      StaticComposition
@@ -336,10 +425,11 @@ viewsReport static tool model adapter =
       outcome <- discoverViews (staticAdapters static) identifier source
       let machine =
             encodeViewDiscoveryDocument (viewDiscoveryDocument tool outcome)
+          human = Human.renderViews (ViewsHuman.viewHumanDiscovery tool outcome)
           exit = foldViewDiscovery (const 2) (const 0) outcome
           status =
             foldViewDiscovery (const "failed") (const "discovered") outcome
-      pure (Right (report (statusLine "views" status) machine exit))
+      pure (Right (report (humanOutput "views" status human) machine exit))
 
 qualificationSubjectsReport ::
      StaticComposition
@@ -356,9 +446,16 @@ qualificationSubjectsReport static tool model supplements =
           (staticAdapters static)
           (staticProfiles static)
           (qualificationSubjectsRequest source view adapter supplementSources)
+      let human =
+            Human.renderQualificationSubjects
+              (SubjectsHuman.qualificationSubjectsHumanReport tool result)
       case qualificationSubjectsDocument tool result of
         Left failure ->
-          pure (Left (qualificationSubjectsExecutionError failure))
+          pure
+            (Left
+               (ExecutionCommandError
+                  (qualificationSubjectsCommandError failure)
+                  human))
         Right document ->
           let exit =
                 foldQualificationSubjectsResult
@@ -375,7 +472,7 @@ qualificationSubjectsReport static tool model supplements =
            in pure
                 (Right
                    (report
-                      (statusLine "qualification-subjects" status)
+                      (humanOutput "qualification-subjects" status human)
                       (encodeQualificationSubjectsDocument document)
                       exit))
 
@@ -399,8 +496,12 @@ validateReport static tool model level supplements =
                 semanticsValidateRequest source view adapter supplementSources
       result <-
         runValidate (staticAdapters static) (staticProfiles static) request
+      let human =
+            Human.renderValidate (ValidateHuman.validateHumanReport tool result)
       case validateResultDocument tool result of
-        Left failure -> pure (Left (validateExecutionError failure))
+        Left failure ->
+          pure
+            (Left (ExecutionCommandError (validateCommandError failure) human))
         Right document ->
           let exit =
                 foldValidateResult
@@ -419,7 +520,7 @@ validateReport static tool model level supplements =
            in pure
                 (Right
                    (report
-                      (statusLine "validate" status)
+                      (humanOutput "validate" status human)
                       (encodeValidateResultDocument document)
                       exit))
 
@@ -437,8 +538,9 @@ traceReport static tool model =
           (staticAdapters static)
           (staticProfiles static)
           (traceRequest source view adapter)
+      let human = Human.renderTrace (TraceHuman.traceHumanReport tool result)
       case traceResultDocument tool result of
-        Left failure -> pure (Left (traceExecutionError failure))
+        Left failure -> pure (Left (traceExecutionError human failure))
         Right document ->
           let exit =
                 foldTraceResult
@@ -457,7 +559,7 @@ traceReport static tool model =
            in pure
                 (Right
                    (report
-                      (statusLine "trace" status)
+                      (humanOutput "trace" status human)
                       (encodeTraceResultDocument document)
                       exit))
 
@@ -475,8 +577,12 @@ qualifyReport static tool model strategies needs supplements =
     Right request -> do
       result <-
         runQualify (staticAdapters static) (staticProfiles static) request
+      let human =
+            Human.renderQualify (QualifyHuman.qualifyHumanReport tool result)
       case qualifyResultDocument tool result of
-        Left failure -> pure (Left (qualifyExecutionError failure))
+        Left failure ->
+          pure
+            (Left (ExecutionCommandError (qualifyCommandError failure) human))
         Right document ->
           let exit = foldQualifyResult (const 2) (\_ _ -> 3) (\_ _ -> 0) result
               status =
@@ -488,7 +594,7 @@ qualifyReport static tool model strategies needs supplements =
            in pure
                 (Right
                    (report
-                      (statusLine "qualify" status)
+                      (humanOutput "qualify" status human)
                       (encodeQualifyResultDocument document)
                       exit))
 
@@ -508,8 +614,13 @@ readinessReport static tool model input supplements =
           (staticAdapters static)
           (staticProfiles static)
           (readinessRequest source view adapter primary supplementSources)
+      let human =
+            Human.renderReadiness
+              (ReadinessHuman.readinessHumanReport tool result)
       case readinessResultDocument tool result of
-        Left failure -> pure (Left (readinessExecutionError failure))
+        Left failure ->
+          pure
+            (Left (ExecutionCommandError (readinessCommandError failure) human))
         Right document ->
           let exit =
                 foldReadinessResult
@@ -530,7 +641,7 @@ readinessReport static tool model input supplements =
            in pure
                 (Right
                    (report
-                      (statusLine "readiness" status)
+                      (humanOutput "readiness" status human)
                       (encodeReadinessResultDocument document)
                       exit))
 
@@ -550,14 +661,19 @@ assessReport static tool model input supplements =
           (staticAdapters static)
           (staticProfiles static)
           (assessRequest source view adapter primary supplementSources)
+      let human = Human.renderAssess (AssessHuman.assessHumanReport tool result)
       case assessResultDocument tool result of
-        Left failure -> pure (Left (assessExecutionError failure))
+        Left failure ->
+          pure (Left (ExecutionCommandError (assessCommandError failure) human))
         Right document ->
           let exitClass = assessResultExitClass result
            in pure
                 (Right
                    (report
-                      (statusLine "assess" (assessExitClassText exitClass))
+                      (humanOutput
+                         "assess"
+                         (assessExitClassText exitClass)
+                         human)
                       (encodeAssessResultDocument document)
                       (fromIntegral (assessExitCode exitClass))))
 
@@ -621,46 +737,19 @@ report human machine exit =
 statusLine :: Text -> Text -> Text
 statusLine command status = "O2I " <> command <> ": " <> status <> "\n"
 
+humanOutput :: Text -> Text -> Text -> Text
+humanOutput command status details =
+  statusLine command status <> "  " <> details <> "\n"
+
 safe :: Text -> Text
 safe = terminalLiteral
-
-safeAuthority :: DiscoveredRule.RuleAuthority -> Text
-safeAuthority = safe . DiscoveredRule.ruleAuthorityText
 
 argument :: Text -> CliError
 argument = CliError "cli.argument.value"
 
-qualificationSubjectsExecutionError ::
-     QualificationSubjectsFailure -> ExecutionError
-qualificationSubjectsExecutionError =
-  foldQualificationSubjectsFailure
-    (ExecutionCommandError . commonCommandError)
-    (const (unsupportedExecutionFailure "supplemental input"))
-    (const (unsupportedExecutionFailure "owner contract"))
-
-validateExecutionError :: ValidateFailure -> ExecutionError
-validateExecutionError = ExecutionCommandError . validateCommandError
-
-traceExecutionError :: TraceFailure -> ExecutionError
-traceExecutionError =
-  foldTraceFailure
-    (ExecutionCommandError . commonCommandError)
-    (const (unsupportedExecutionFailure "owner contract"))
-
-qualifyExecutionError :: QualifyFailure -> ExecutionError
-qualifyExecutionError = ExecutionCommandError . qualifyCommandError
-
-readinessExecutionError :: ReadinessFailure -> ExecutionError
-readinessExecutionError = ExecutionCommandError . readinessCommandError
-
-assessExecutionError :: AssessFailure -> ExecutionError
-assessExecutionError = ExecutionCommandError . assessCommandError
-
-unsupportedExecutionFailure :: Text -> ExecutionError
-unsupportedExecutionFailure category =
-  ExecutionArgumentError
-    (internal
-       ("Operation reported an unencodable " <> category <> " failure."))
+traceExecutionError :: Text -> TraceFailure -> ExecutionError
+traceExecutionError human failure =
+  ExecutionCommandError (traceCommandError failure) human
 
 internal :: Text -> CliError
 internal = CliError "cli.internal.dispatch"

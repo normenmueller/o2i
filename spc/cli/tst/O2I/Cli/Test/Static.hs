@@ -20,7 +20,9 @@ tests :: TestTree
 tests =
   testGroup
     "static composition"
-    [ testCase "selects Profile rules through public Operation folds" profileRules
+    [ testCase
+        "selects Profile rules through public Operation folds"
+        profileRules
     , testCase "rejects an unknown Profile reference" unknownProfile
     ]
 
@@ -28,10 +30,8 @@ profileRules :: Assertion
 profileRules = do
   composition <- requireRight staticComposition
   compilation <-
-    requireRight
-      (staticProfileRules "o2i.archimate-profile@0.3" composition)
-  selectedProfileReference compilation
-    @?= Just "o2i.archimate-profile@0.3"
+    requireRight (staticProfileRules "o2i.archimate-profile@0.3" composition)
+  selectedProfileReference compilation @?= Just "o2i.archimate-profile@0.3"
 
 unknownProfile :: Assertion
 unknownProfile = do

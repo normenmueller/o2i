@@ -26,12 +26,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified O2I.ArchiMate.Profile.Draft as Draft
 import O2I.ArchiMate.Profile.Resolution (compiledProfileDescriptor)
-import O2I.Operation.Acquisition
-  ( InputSource
-  , acquireSource
-  , acquiredSourceIdentity
-  , fileInput
-  )
+import O2I.Operation.Acquisition (InputSource, fileInput)
 import O2I.Operation.Acquisition.Internal (acquireWith)
 import O2I.Operation.Adapter
 import O2I.Operation.Adapter.Authoring
@@ -42,7 +37,7 @@ import O2I.Operation.Profile
 import O2I.Operation.Provenance
   ( SourceRole(..)
   , mkSourceReference
-  , sourceOrdinal
+  , sourceIdentityRole
   )
 import O2I.Operation.Schema (schemaVariantText)
 import O2I.Operation.Test.AdapterSupport (compileCompleteAdapter)
@@ -53,7 +48,6 @@ import qualified O2I.Operation.Trace.Human as Human
 import O2I.Operation.Trace.Machine
 import O2I.Operation.Trace.Request
 import O2I.Operation.Trace.Result
-import qualified O2I.Operation.Trace.Result.Internal as Internal
 import O2I.Operation.Trace.Runtime.Internal (runTraceWith)
 import O2I.Operation.View (viewByName)
 import qualified O2I.Trace as CoreTrace
@@ -265,17 +259,34 @@ failedMachineDocument = do
 internalFailureDocument :: Assertion
 internalFailureDocument = do
   model <- fixtureModelInput
-  acquired <- acquireSource ModelRole (sourceOrdinal 0) model >>= requireRight
-  let result =
-        Internal.TraceFailed
-          (Internal.TraceOwnerContractFailure
-             (Internal.TraceAcquiredModelRoleFailure
-                (acquiredSourceIdentity acquired)))
+  result <-
+    withFixtureEnvironment emptyTraceDraft $ \adapters profiles ->
+      runTraceWith
+        (\_ ordinal input ->
+           acquireWith
+             (const (pure ByteString.empty))
+             (pure ByteString.empty)
+             AssessmentRole
+             ordinal
+             input)
+        adapters
+        profiles
+        (traceRequest model (viewByName "Binding") Nothing)
   foldTraceResult
     (\failure ->
        foldTraceFailure
          (const (assertFailure "internal failure became common"))
-         (const (pure ()))
+         (foldTraceInternalFailure
+            (\identity -> sourceIdentityRole identity @?= AssessmentRole)
+            (const (assertFailure "unexpected adapter failure"))
+            (const (assertFailure "unexpected notation failure"))
+            (const (assertFailure "unexpected Profile failure"))
+            (const (assertFailure "unexpected identity failure"))
+            (const (assertFailure "unexpected scope failure"))
+            (const (assertFailure "unexpected Structure failure"))
+            (const (assertFailure "unexpected provenance failure"))
+            (const (assertFailure "unexpected input failure"))
+            (const (assertFailure "unexpected semantic failure")))
          failure)
     (\_ _ -> assertFailure "internal failure became prerequisite rejection")
     (\_ _ -> assertFailure "internal failure reached rejected Trace")

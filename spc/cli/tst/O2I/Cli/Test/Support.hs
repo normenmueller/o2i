@@ -1,5 +1,6 @@
 module O2I.Cli.Test.Support
   ( ProcessResult(..)
+  , fixturePath
   , goldenBytes
   , runO2I
   ) where
@@ -23,6 +24,9 @@ data ProcessResult = ProcessResult
 goldenBytes :: FilePath -> IO ByteString
 goldenBytes name =
   Package.getDataFileName ("tst/golden/" <> name) >>= ByteString.readFile
+
+fixturePath :: FilePath -> IO FilePath
+fixturePath name = Package.getDataFileName ("tst/fixtures/" <> name)
 
 runO2I :: [String] -> ByteString -> IO ProcessResult
 runO2I arguments input = do

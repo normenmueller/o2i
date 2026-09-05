@@ -37,7 +37,9 @@ import O2I.Operation.Profile
 
 -- | Validated static Adapter and Profile collections shared by all commands.
 data StaticComposition = StaticComposition
+    -- | The complete validated static Adapter collection.
   { staticAdapters :: AdapterCollection
+    -- | The complete validated static Profile inventory.
   , staticProfiles :: ProfileInventory
   }
 
@@ -73,7 +75,8 @@ staticProfileRules reference composition = do
   classified <- traverse classify compilations
   case [compilation | (compilation, True) <- classified] of
     [selected] -> Right selected
-    [] -> Left (CliError "cli.argument.profile-ref" "Unknown Profile reference.")
+    [] ->
+      Left (CliError "cli.argument.profile-ref" "Unknown Profile reference.")
     _ -> Left (internal "The static Profile rule authorities are ambiguous.")
   where
     compilations =
@@ -83,9 +86,7 @@ staticProfileRules reference composition = do
            (profileInventoryDescriptors (staticProfiles composition)))
     classify compilation =
       foldRuleDiscoveryCompilation
-        (const
-           (Left
-              (internal "A static Profile rule inventory is invalid.")))
+        (const (Left (internal "A static Profile rule inventory is invalid.")))
         (\discovery ->
            Right
              ( compilation
@@ -94,8 +95,7 @@ staticProfileRules reference composition = do
                  (const False)
                  (\candidate _ -> candidate == reference)
                  (\_ _ -> False)
-                 (ruleDiscoveryAuthority discovery)
-             ))
+                 (ruleDiscoveryAuthority discovery)))
         compilation
 
 internal :: Text -> CliError

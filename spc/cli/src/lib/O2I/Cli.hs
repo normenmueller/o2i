@@ -81,14 +81,13 @@ finishExecutionError mode tool failure =
   case failure of
     ExecutionArgumentError argumentFailure ->
       finishInvocationError mode argumentFailure
-    ExecutionCommandError commandFailure ->
+    ExecutionCommandError commandFailure human ->
       case mode of
         HumanOutput ->
-          emitHumanCommandError commandFailure >>= (`finishOutput` 2)
+          emitHumanCommandError commandFailure human >>= (`finishOutput` 2)
         JsonOutput ->
-          case prepareCommandError tool commandFailure of
-            Left _ -> failClosedCommandError
-            Right encoded -> emitMachineError encoded >>= (`finishOutput` 2)
+          emitMachineError (prepareCommandError tool commandFailure)
+            >>= (`finishOutput` 2)
 
 failClosedCommandError :: IO Int
 failClosedCommandError = do
@@ -96,7 +95,7 @@ failClosedCommandError = do
     emitHumanError
       (CliError
          "cli.internal.command-error-preflight"
-         "A canonical command-error document could not be validated.")
+         "A typed command-error document could not be prepared.")
   finishOutput emitted 2
 
 finishOutput :: Either OutputFailure () -> Int -> IO Int

@@ -21,10 +21,8 @@ module O2I.Cli.Output
 
 import Control.Exception (IOException, try)
 import Control.Monad (void)
-import qualified Data.Aeson as Aeson
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as ByteString
-import Data.JSON.JSONSchema (validateJSONSchema)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as TextEncoding
@@ -40,11 +38,10 @@ import O2I.Operation.Command.Error
   )
 import O2I.Operation.Command.Error.Machine
   ( commandErrorDocument
-  , commandErrorSchemaBytes
   , encodeCommandErrorDocument
   )
-import O2I.Operation.Machine (ToolDescriptor)
 import O2I.Operation.Failure (preparationFailureStage)
+import O2I.Operation.Machine (ToolDescriptor)
 import O2I.Operation.Preparation (preparationStageText)
 import System.IO (Handle, hFlush, stderr, stdout)
 
@@ -59,12 +56,9 @@ newtype OutputFailure = OutputFailure
   { failedOutputStream :: OutputStream
   } deriving (Eq, Show)
 
--- | Fail-closed reason why canonical command-error bytes were not established.
-data CommandErrorPreflightFailure
-  = InvalidArgumentCommandError
-  | InvalidEmbeddedCommandErrorSchema
-  | InvalidEncodedCommandErrorDocument
-  | CommandErrorSchemaRejected
+-- | Why CLI-owned input could not become a typed Operation command error.
+data CommandErrorPreflightFailure =
+  InvalidArgumentCommandError
   deriving (Eq, Show)
 
 -- | Both complete renderings and the already classified process exit.
@@ -86,8 +80,7 @@ emitPrimaryReport mode report = writeStream StandardOutput stdout selected
 
 -- | Emit one already Schema-validated canonical command-error document.
 emitMachineError :: ByteString -> IO (Either OutputFailure ())
-emitMachineError =
-  writeStream StandardOutput stdout . (<> "\n")
+emitMachineError = writeStream StandardOutput stdout . (<> "\n")
 
 -- | Validate a CLI-authored argument error and seal it through Operation.
 prepareArgumentCommandError ::
@@ -99,33 +92,23 @@ prepareArgumentCommandError tool failure = do
     mapLeft
       (const InvalidArgumentCommandError)
       (argumentFailure (cliErrorCode failure) (cliErrorMessage failure))
-  prepareCommandError tool (argumentCommandError authored)
+  pure (prepareCommandError tool (argumentCommandError authored))
 
--- | Encode the closed Operation command-error algebra and validate the whole
--- document against the exact embedded Schema before any stream write.
-prepareCommandError ::
-     ToolDescriptor
-  -> CommandError
-  -> Either CommandErrorPreflightFailure ByteString
-prepareCommandError tool failure = do
-  schema <-
-    mapLeft
-      (const InvalidEmbeddedCommandErrorSchema)
-      (Aeson.eitherDecodeStrict commandErrorSchemaBytes)
-  let encoded = encodeCommandErrorDocument (commandErrorDocument tool failure)
-  document <-
-    mapLeft
-      (const InvalidEncodedCommandErrorDocument)
-      (Aeson.eitherDecodeStrict encoded)
-  if validateJSONSchema schema document
-    then Right encoded
-    else Left CommandErrorSchemaRejected
+-- | Encode the closed Operation command-error algebra directly to its
+-- canonical machine bytes. Schema conformance is established at the Operation
+-- contract boundary and exercised in tests, not reconstructed at runtime.
+prepareCommandError :: ToolDescriptor -> CommandError -> ByteString
+prepareCommandError tool =
+  encodeCommandErrorDocument . commandErrorDocument tool
 
 -- | Render one closed Operation command error on stderr without losing its
 -- stable branch code or exposing terminal controls.
-emitHumanCommandError :: CommandError -> IO (Either OutputFailure ())
-emitHumanCommandError failure =
-  writeStream StandardError stderr (lineBytes (render failure))
+emitHumanCommandError :: CommandError -> Text -> IO (Either OutputFailure ())
+emitHumanCommandError failure details =
+  writeStream
+    StandardError
+    stderr
+    (lineBytes (render failure) <> lineBytes ("  " <> details))
   where
     render commandError =
       prefixed
@@ -142,12 +125,11 @@ emitHumanCommandError failure =
            (const "Qualify could not start.")
            (const "Readiness could not start.")
            (const "Assess could not start.")
+           (const "Qualification-subject discovery could not start.")
+           (const "Trace could not start.")
            commandError)
     prefixed code message =
-      "[o2i|error] "
-        <> terminalLiteral code
-        <> ": "
-        <> terminalLiteral message
+      "[o2i|error] " <> terminalLiteral code <> ": " <> terminalLiteral message
 
 -- | Emit one terminal-safe human command error and no stdout bytes.
 emitHumanError :: CliError -> IO (Either OutputFailure ())

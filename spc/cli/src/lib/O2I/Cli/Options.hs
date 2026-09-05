@@ -285,9 +285,7 @@ parseArguments spec arguments
                             ((token, value) : assigned)
                             rest
       | token `elem` ["--help", "--version"] =
-        invalid
-          "cli.argument.option"
-          ("Unknown option: " <> Text.pack token)
+        invalid "cli.argument.option" ("Unknown option: " <> Text.pack token)
       | length positionals < specPositionals spec =
         scan False (token : positionals) flags assigned remaining
       | "--" `isPrefixOf` token && '=' `elem` token =

@@ -12,10 +12,12 @@ import Data.ByteString (ByteString)
 import Data.Foldable (toList, traverse_)
 import Data.JSON.JSONSchema (validateJSONSchema)
 import Data.List (nub)
+import Data.List.NonEmpty (NonEmpty((:|)))
 import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import qualified O2I.Assessment as Assessment
+import O2I.Core.Identity (occurrenceIdentity)
 import O2I.Operation.Acquisition (acquiredSourceIdentity)
 import O2I.Operation.Acquisition.Internal
   ( AcquisitionFailure(..)
@@ -27,10 +29,14 @@ import O2I.Operation.Command.Error
 import O2I.Operation.Command.Error.Branch.Generated
   ( assessOwnerBranchToken
   , assessOwnerBranches
+  , qualificationSubjectsOwnerBranchToken
+  , qualificationSubjectsOwnerBranches
   , qualifyOwnerBranchToken
   , qualifyOwnerBranches
   , readinessOwnerBranchToken
   , readinessOwnerBranches
+  , traceOwnerBranchToken
+  , traceOwnerBranches
   , validateOwnerBranchToken
   , validateOwnerBranches
   )
@@ -48,12 +54,15 @@ import O2I.Operation.Provenance
   , mkSourceReference
   , sourceOrdinal
   )
+import qualified O2I.Operation.Qualification.Subjects.Result.Internal as SubjectsInternal
 import qualified O2I.Operation.Qualify.Result.Internal as QualifyInternal
 import qualified O2I.Operation.Readiness.Result.Internal as ReadinessInternal
 import O2I.Operation.Schema
+import qualified O2I.Operation.Trace.Result.Internal as TraceInternal
 import qualified O2I.Operation.Validate.Result.Internal as ValidateInternal
 import qualified O2I.Readiness as Readiness
 import qualified O2I.Semantics.Input as Supplemental
+import qualified O2I.Structure as Structure
 import System.FilePath ((</>))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
@@ -83,6 +92,12 @@ tests =
     , testCase
         "separates Readiness and Assessment source roles with full evidence"
         distinctPrimaryOwnerRoles
+    , testCase
+        "rejects cross-branch and empty owner evidence"
+        rejectsInvalidOwnerEvidence
+    , testCase
+        "rejects impossible closed owner scalar values"
+        rejectsImpossibleOwnerScalars
     , testCase "embeds the exact generated Schema bytes" embeddedSchema
     ]
 
@@ -102,6 +117,8 @@ argumentAuthoring = do
     (const 4)
     (const 5)
     (const 6)
+    (const 7)
+    (const 8)
     (argumentCommandError failure)
     @?= 0
 
@@ -154,6 +171,12 @@ branchBijection = do
             (ReadinessInternal.ReadinessEvidenceInputFailure evidenceDefects)
         , assessCommandError
             (AssessInternal.AssessBundleInputFailure assessmentDefects)
+        , qualificationSubjectsCommandError
+            (SubjectsInternal.QualificationSubjectsSupplementalInputFailure
+               supplementalDefects)
+        , traceCommandError
+            (TraceInternal.TraceOwnerContractFailure
+               (TraceInternal.TraceSemanticModelContractFailure []))
         ]
       documents = map (commandErrorDocument tool) errors
       encoded = fmap encodeCommandErrorDocument documents
@@ -165,6 +188,8 @@ branchBijection = do
         , "qualify-failed"
         , "readiness-failed"
         , "assess-failed"
+        , "qualification-subjects-failed"
+        , "trace-failed"
         ]
   fmap commandErrorCode errors
     @?= [ "cli.argument.input"
@@ -174,6 +199,8 @@ branchBijection = do
         , "qualify.supplemental-input"
         , "readiness.evidence-input"
         , "assess.assessment-input"
+        , "qualification-subjects.supplemental-input"
+        , "trace.owner-contract"
         ]
   fmap
     schemaVariantText
@@ -185,6 +212,8 @@ branchBijection = do
         , "qualify-failed"
         , "readiness-failed"
         , "assess-failed"
+        , "qualification-subjects-failed"
+        , "trace-failed"
         ]
   take 3 encoded
     @?= [ "{\"schema\":\"o2i.command-error/v1\",\"kind\":\"argument-invalid\",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},\"code\":\"cli.argument.input\",\"message\":\"missing input\"}"
@@ -215,6 +244,14 @@ ownerBranchInventoryBijection = do
         , ( "assessFailure"
           , 11
           , map assessOwnerBranchToken (NonEmpty.toList assessOwnerBranches))
+        , ( "qualificationSubjectsFailure"
+          , 12
+          , map
+              qualificationSubjectsOwnerBranchToken
+              (NonEmpty.toList qualificationSubjectsOwnerBranches))
+        , ( "traceFailure"
+          , 10
+          , map traceOwnerBranchToken (NonEmpty.toList traceOwnerBranches))
         ]
   traverse_
     (\(definition, cardinality, tokens) -> do
@@ -227,36 +264,30 @@ schemaOwnerBranchTokens :: Text.Text -> Aeson.Value -> Either String [Text.Text]
 schemaOwnerBranchTokens definition schema =
   case schema of
     Aeson.Object root ->
-      case [ mapMaybeText (toList values)
-           | Just (Aeson.Object definitions) <-
-               [AesonKeyMap.lookup "$defs" root]
-           , Just (Aeson.Object failure) <-
-               [AesonKeyMap.lookup (AesonKey.fromText definition) definitions]
-           , Just (Aeson.Array alternatives) <-
-               [AesonKeyMap.lookup "oneOf" failure]
-           , Aeson.Object alternative <- toList alternatives
-           , Just (Aeson.Object properties) <-
-               [AesonKeyMap.lookup "properties" alternative]
-           , Just (Aeson.Object category) <-
-               [AesonKeyMap.lookup "category" properties]
-           , AesonKeyMap.lookup "const" category
-               == Just (Aeson.String "owner-contract")
-           , Just (Aeson.Object branch) <-
-               [AesonKeyMap.lookup "branch" properties]
-           , Just (Aeson.Array values) <- [AesonKeyMap.lookup "enum" branch]
-           ] of
-        [Just tokens] -> Right tokens
-        _ ->
-          Left
-            ("missing exact owner branch enum for " <> Text.unpack definition)
+      case AesonKeyMap.lookup "$defs" root of
+        Just (Aeson.Object definitions) ->
+          case AesonKeyMap.lookup (AesonKey.fromText definition) definitions of
+            Just failure -> Right (ownerBranchTokens failure)
+            Nothing ->
+              Left ("missing Schema definition " <> Text.unpack definition)
+        _ -> Left "command-error Schema has no definitions"
     _ -> Left "command-error Schema is not an object"
   where
-    mapMaybeText values =
-      if length texts == length values
-        then Just texts
-        else Nothing
-      where
-        texts = [value | Aeson.String value <- values]
+    ownerBranchTokens value =
+      case value of
+        Aeson.Object object ->
+          case ownerBranchToken object of
+            Just token -> [token]
+            Nothing -> concatMap ownerBranchTokens (AesonKeyMap.elems object)
+        Aeson.Array values -> concatMap ownerBranchTokens (toList values)
+        _ -> []
+    ownerBranchToken object = do
+      Aeson.Object properties <- AesonKeyMap.lookup "properties" object
+      Aeson.Object category <- AesonKeyMap.lookup "category" properties
+      Aeson.String "owner-contract" <- AesonKeyMap.lookup "const" category
+      Aeson.Object branch <- AesonKeyMap.lookup "branch" properties
+      Aeson.String token <- AesonKeyMap.lookup "const" branch
+      pure token
 
 ownerCategoryDocuments :: Assertion
 ownerCategoryDocuments = do
@@ -266,7 +297,7 @@ ownerCategoryDocuments = do
     acquireWith
       (const (pure ByteString.empty))
       (pure ByteString.empty)
-      ModelRole
+      AssessmentRole
       (sourceOrdinal 0)
       (standardInput reference)
   acquired <-
@@ -288,6 +319,13 @@ ownerCategoryDocuments = do
         , assessCommandError
             (AssessInternal.AssessOwnerContractFailure
                (AssessInternal.AssessAcquiredModelRoleFailure identity))
+        , qualificationSubjectsCommandError
+            (SubjectsInternal.QualificationSubjectsOwnerContractFailure
+               (SubjectsInternal.QualificationSubjectsAcquiredModelRoleFailure
+                  identity))
+        , traceCommandError
+            (TraceInternal.TraceOwnerContractFailure
+               (TraceInternal.TraceAcquiredModelRoleFailure identity))
         ]
       documents = map (commandErrorDocument tool) errors
       encoded = map encodeCommandErrorDocument documents
@@ -296,18 +334,26 @@ ownerCategoryDocuments = do
         , "qualify.owner-contract"
         , "readiness.owner-contract"
         , "assess.owner-contract"
+        , "qualification-subjects.owner-contract"
+        , "trace.owner-contract"
         ]
   fmap (schemaVariantText . commandErrorDocumentVariant) documents
     @?= [ "validate-failed"
         , "qualify-failed"
         , "readiness-failed"
         , "assess-failed"
+        , "qualification-subjects-failed"
+        , "trace-failed"
         ]
   encoded
     @?= [ ownerBytes "validate-failed" "validate.owner-contract"
         , ownerBytes "qualify-failed" "qualify.owner-contract"
         , ownerBytes "readiness-failed" "readiness.owner-contract"
         , ownerBytes "assess-failed" "assess.owner-contract"
+        , ownerBytes
+            "qualification-subjects-failed"
+            "qualification-subjects.owner-contract"
+        , ownerBytes "trace-failed" "trace.owner-contract"
         ]
   traverse_ assertEmbeddedSchema encoded
 
@@ -322,15 +368,18 @@ commonCapabilityDocuments = do
         , readinessCommandError
             (ReadinessInternal.ReadinessCommonFailure common)
         , assessCommandError (AssessInternal.AssessCommonFailure common)
+        , qualificationSubjectsCommandError
+            (SubjectsInternal.QualificationSubjectsCommonFailure common)
+        , traceCommandError (TraceInternal.TraceCommonFailure common)
         ]
       documents = map (commandErrorDocument tool) errors
       encoded = map encodeCommandErrorDocument documents
-  fmap commandErrorCode errors @?= replicate 4 "preparation.profile-marker"
+  fmap commandErrorCode errors @?= replicate 6 "preparation.profile-marker"
   fmap (schemaVariantText . commandErrorDocumentVariant) documents
-    @?= replicate 4 "preparation-failed"
+    @?= replicate 6 "preparation-failed"
   encoded
     @?= replicate
-          4
+          6
           "{\"schema\":\"o2i.command-error/v1\",\"kind\":\"preparation-failed\",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},\"code\":\"preparation.profile-marker\",\"stage\":\"profile-marker\"}"
   traverse_ assertEmbeddedSchema encoded
   let process =
@@ -345,90 +394,208 @@ commonCapabilityDocuments = do
         , readinessCommandError
             (ReadinessInternal.ReadinessCommonFailure process)
         , assessCommandError (AssessInternal.AssessCommonFailure process)
+        , qualificationSubjectsCommandError
+            (SubjectsInternal.QualificationSubjectsCommonFailure process)
+        , traceCommandError (TraceInternal.TraceCommonFailure process)
         ]
       processDocuments = map (commandErrorDocument tool) processErrors
       processEncoded = map encodeCommandErrorDocument processDocuments
-  fmap commandErrorCode processErrors @?= replicate 4 "command.input-io"
+  fmap commandErrorCode processErrors @?= replicate 6 "command.input-io"
   fmap (schemaVariantText . commandErrorDocumentVariant) processDocuments
-    @?= replicate 4 "command-failed"
+    @?= replicate 6 "command-failed"
   processEncoded
     @?= replicate
-          4
+          6
           "{\"schema\":\"o2i.command-error/v1\",\"kind\":\"command-failed\",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},\"code\":\"command.input-io\",\"failure\":{\"sourceKind\":\"stdin\",\"sourceReference\":\"common-stdin\",\"message\":\"user error (common unavailable)\"}}"
   traverse_ assertEmbeddedSchema processEncoded
 
 distinctPrimaryOwnerRoles :: Assertion
 distinctPrimaryOwnerRoles = do
-  readiness <- requireSourceIdentity ReadinessRole "readiness-source"
+  tool <- requireTool
   assessment <- requireSourceIdentity AssessmentRole "assessment-source"
-  let readinessDiagnostic =
-        readinessCommandOwnerDiagnostic
-          (ReadinessInternal.ReadinessAcquiredEvidenceRoleFailure readiness)
-      assessmentDiagnostic =
-        assessCommandOwnerDiagnostic
-          (AssessInternal.AssessAcquiredBundleRoleFailure assessment)
-  ownerDiagnosticSummary readinessDiagnostic
-    @?= ( "acquired-readiness-role"
-        , [ ( "source-identity"
-            , [ ( "source"
-                , [ "source-identity:readiness:0:readiness-source:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-                  ])
-              ])
-          ])
-  ownerDiagnosticSummary assessmentDiagnostic
-    @?= ( "acquired-assessment-role"
-        , [ ( "source-identity"
-            , [ ( "source"
-                , [ "source-identity:assessment:0:assessment-source:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-                  ])
-              ])
-          ])
+  readiness <- requireSourceIdentity ReadinessRole "readiness-source"
+  encodeCommandErrorDocument
+    (commandErrorDocument
+       tool
+       (readinessCommandError
+          (ReadinessInternal.ReadinessOwnerContractFailure
+             (ReadinessInternal.ReadinessAcquiredEvidenceRoleFailure assessment))))
+    @?= ownerSourceBytes
+          "readiness-failed"
+          "readiness.owner-contract"
+          "acquired-readiness-role"
+          "assessment"
+          "assessment-source"
+  encodeCommandErrorDocument
+    (commandErrorDocument
+       tool
+       (assessCommandError
+          (AssessInternal.AssessOwnerContractFailure
+             (AssessInternal.AssessAcquiredBundleRoleFailure readiness))))
+    @?= ownerSourceBytes
+          "assess-failed"
+          "assess.owner-contract"
+          "acquired-assessment-role"
+          "readiness"
+          "readiness-source"
 
-ownerDiagnosticSummary ::
-     CommandOwnerDiagnostic
-  -> (Text.Text, [(Text.Text, [(Text.Text, [Text.Text])])])
-ownerDiagnosticSummary =
-  foldCommandOwnerDiagnostic $ \branch evidence ->
-    (branch, map evidenceSummary (NonEmpty.toList evidence))
+rejectsInvalidOwnerEvidence :: Assertion
+rejectsInvalidOwnerEvidence = do
+  tool <- requireTool
+  mismatched <-
+    requireSourceIdentity AssessmentRole "hostile-\"assessment\"\nsource"
+  let sourceBytes =
+        encodeCommandErrorDocument
+          (commandErrorDocument
+             tool
+             (traceCommandError
+                (TraceInternal.TraceOwnerContractFailure
+                   (TraceInternal.TraceAcquiredModelRoleFailure mismatched))))
+      semanticBytes =
+        encodeCommandErrorDocument
+          (commandErrorDocument
+             tool
+             (traceCommandError
+                (TraceInternal.TraceOwnerContractFailure
+                   (TraceInternal.TraceSemanticModelContractFailure []))))
+  sourceValue <- requireJSON sourceBytes
+  semanticValue <- requireJSON semanticBytes
+  assertEmbeddedSchema sourceBytes
+  assertEmbeddedSchema semanticBytes
+  assertRejectedByEmbeddedSchema
+    (replaceOwnerBranch "acquired-model-role" semanticValue)
+  assertRejectedByEmbeddedSchema (replaceOwnerFields [] sourceValue)
+  assertRejectedByEmbeddedSchema
+    (replaceOwnerFieldMember "source" "role" (Aeson.String "model") sourceValue)
+  assertRejectedByEmbeddedSchema
+    (replaceOwnerFieldMember
+       "source"
+       "role"
+       (Aeson.String "unknown-role")
+       sourceValue)
+  traverse_
+    (\reference ->
+       assertRejectedByEmbeddedSchema
+         (replaceOwnerFieldMember
+            "source"
+            "reference"
+            (Aeson.String reference)
+            sourceValue))
+    ["", "contains\NULnul"]
+
+rejectsImpossibleOwnerScalars :: Assertion
+rejectsImpossibleOwnerScalars = do
+  tool <- requireTool
+  occurrence <- requireRight (occurrenceIdentity "closed-domain-occurrence")
+  let projectionBytes =
+        encodeCommandErrorDocument
+          (commandErrorDocument
+             tool
+             (traceCommandError
+                (TraceInternal.TraceOwnerContractFailure
+                   (TraceInternal.TraceStructureInputFailure
+                      (Structure.DuplicateStructureProjection
+                         occurrence
+                         (Structure.CarrierProjectionKind :| [])
+                         :| [])))))
+      endpointBytes =
+        encodeCommandErrorDocument
+          (commandErrorDocument
+             tool
+             (traceCommandError
+                (TraceInternal.TraceOwnerContractFailure
+                   (TraceInternal.TraceStructureInputFailure
+                      (Structure.MissingCarrierProjection
+                         occurrence
+                         Structure.RelationSourceRole
+                         occurrence
+                         :| [])))))
+  traverse_ assertEmbeddedSchema [projectionBytes, endpointBytes]
+  projectionValue <- requireJSON projectionBytes
+  endpointValue <- requireJSON endpointBytes
+  assertRejectedByEmbeddedSchema
+    (replaceOwnerFieldMember
+       "projectionKinds"
+       "value"
+       (Aeson.String "unknown-projection-kind")
+       projectionValue)
+  assertRejectedByEmbeddedSchema
+    (replaceOwnerFieldMember
+       "endpointRole"
+       "value"
+       (Aeson.String "unknown-endpoint-role")
+       endpointValue)
+
+replaceOwnerBranch :: Text.Text -> Aeson.Value -> Aeson.Value
+replaceOwnerBranch branch =
+  mapFailureObject (AesonKeyMap.insert "branch" (Aeson.String branch))
+
+replaceOwnerFields :: [Aeson.Value] -> Aeson.Value -> Aeson.Value
+replaceOwnerFields fields =
+  mapFailureObject $ \failure ->
+    case AesonKeyMap.lookup "evidence" failure of
+      Just (Aeson.Array evidence) ->
+        AesonKeyMap.insert
+          "evidence"
+          (Aeson.toJSON (map clearFields (toList evidence)))
+          failure
+      _ -> failure
   where
-    evidenceSummary =
-      foldCommandOwnerEvidence $ \kind fields -> (kind, map fieldSummary fields)
-    fieldSummary =
-      foldCommandDiagnosticField $ \name values ->
-        (name, map valueSummary values)
-    valueSummary =
-      foldCommandDiagnosticValue
-        ("text:" <>)
-        (("natural:" <>) . Text.pack . show)
-        ("model-identity:" <>)
-        ("occurrence-identity:" <>)
-        ("qualified-type:" <>)
-        (\role ordinal ->
-           Text.intercalate ":" ["source-key", role, Text.pack (show ordinal)])
-        (\role ordinal reference digest ->
-           Text.intercalate
-             ":"
-             [ "source-identity"
-             , role
-             , Text.pack (show ordinal)
-             , reference
-             , digest
-             ])
-        (\identifier name version notation ->
-           Text.intercalate
-             ":"
-             ["adapter-descriptor", identifier, name, version, notation])
-        (\kind ordinal ->
-           Text.intercalate
-             ":"
-             ["canonical-occurrence", kind, Text.pack (show ordinal)])
-        (\index codePoint ->
-           Text.intercalate
-             ":"
-             [ "unicode-scalar"
-             , Text.pack (show index)
-             , Text.pack (show codePoint)
-             ])
+    clearFields (Aeson.Object evidence) =
+      Aeson.Object (AesonKeyMap.insert "fields" (Aeson.toJSON fields) evidence)
+    clearFields value = value
+
+replaceOwnerFieldMember ::
+     Text.Text -> Text.Text -> Aeson.Value -> Aeson.Value -> Aeson.Value
+replaceOwnerFieldMember fieldName memberName replacement =
+  mapFailureObject $ \failure ->
+    case AesonKeyMap.lookup "evidence" failure of
+      Just (Aeson.Array evidence) ->
+        AesonKeyMap.insert
+          "evidence"
+          (Aeson.Array (fmap replaceEvidence evidence))
+          failure
+      _ -> failure
+  where
+    replaceEvidence (Aeson.Object evidence) =
+      case AesonKeyMap.lookup "fields" evidence of
+        Just (Aeson.Array fields) ->
+          Aeson.Object
+            (AesonKeyMap.insert
+               "fields"
+               (Aeson.Array (fmap replaceField fields))
+               evidence)
+        _ -> Aeson.Object evidence
+    replaceEvidence value = value
+    replaceField (Aeson.Object field)
+      | AesonKeyMap.lookup "name" field == Just (Aeson.String fieldName) =
+        case AesonKeyMap.lookup "values" field of
+          Just (Aeson.Array values) ->
+            Aeson.Object
+              (AesonKeyMap.insert
+                 "values"
+                 (Aeson.Array (fmap replaceValue values))
+                 field)
+          _ -> Aeson.Object field
+    replaceField value = value
+    replaceValue (Aeson.Object value) =
+      Aeson.Object
+        (AesonKeyMap.insert (AesonKey.fromText memberName) replacement value)
+    replaceValue value = value
+
+mapFailureObject ::
+     (AesonKeyMap.KeyMap Aeson.Value -> AesonKeyMap.KeyMap Aeson.Value)
+  -> Aeson.Value
+  -> Aeson.Value
+mapFailureObject alter value =
+  case value of
+    Aeson.Object root ->
+      case AesonKeyMap.lookup "failure" root of
+        Just (Aeson.Object failure) ->
+          Aeson.Object
+            (AesonKeyMap.insert "failure" (Aeson.Object (alter failure)) root)
+        _ -> value
+    _ -> value
 
 requireSourceIdentity :: SourceRole -> Text.Text -> IO SourceIdentity
 requireSourceIdentity role source = do
@@ -445,12 +612,23 @@ requireSourceIdentity role source = do
 
 ownerBytes :: Text.Text -> Text.Text -> ByteString
 ownerBytes variant code =
+  ownerSourceBytes variant code "acquired-model-role" "assessment" "owner-model"
+
+ownerSourceBytes ::
+     Text.Text -> Text.Text -> Text.Text -> Text.Text -> Text.Text -> ByteString
+ownerSourceBytes variant code branch role reference =
   Text.encodeUtf8
     ("{\"schema\":\"o2i.command-error/v1\",\"kind\":\""
        <> variant
        <> "\",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},\"code\":\""
        <> code
-       <> "\",\"failure\":{\"category\":\"owner-contract\",\"branch\":\"acquired-model-role\",\"evidence\":[{\"kind\":\"source-identity\",\"fields\":[{\"name\":\"source\",\"values\":[{\"kind\":\"source-identity\",\"role\":\"model\",\"ordinal\":0,\"reference\":\"owner-model\",\"sha256\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"}]}]}]}}")
+       <> "\",\"failure\":{\"category\":\"owner-contract\",\"branch\":\""
+       <> branch
+       <> "\",\"evidence\":[{\"kind\":\"source-identity\",\"fields\":[{\"name\":\"source\",\"values\":[{\"kind\":\"source-identity\",\"role\":\""
+       <> role
+       <> "\",\"ordinal\":0,\"reference\":\""
+       <> reference
+       <> "\",\"sha256\":\"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\"}]}]}]}}")
 
 embeddedSchema :: Assertion
 embeddedSchema = do
@@ -471,6 +649,18 @@ assertEmbeddedSchema encoded = do
       Right value -> pure value
   validateJSONSchema schemaValue documentValue
     @? "encoded command error violates the embedded Schema"
+
+assertRejectedByEmbeddedSchema :: Aeson.Value -> Assertion
+assertRejectedByEmbeddedSchema documentValue = do
+  schemaValue <- requireJSON commandErrorSchemaBytes
+  not (validateJSONSchema schemaValue documentValue)
+    @? "invalid cross-branch command error satisfies the embedded Schema"
+
+requireJSON :: ByteString -> IO Aeson.Value
+requireJSON encoded =
+  case Aeson.eitherDecodeStrict encoded of
+    Left message -> assertFailure message >> fail "unreachable"
+    Right value -> pure value
 
 schemaPath :: FilePath
 schemaPath = "contract" </> "schema" </> "o2i.command-error-v1.schema.json"

@@ -14,6 +14,9 @@ author: Normen Mueller
 maintainer: normen.mueller@gmail.com
 build-type: Simple
 data-files:
+  tst/fixtures/assessment-input.json
+  tst/fixtures/profiled-minimal.archimate
+  tst/fixtures/readiness-input.json
   tst/golden/adapters-human.txt
   tst/golden/adapters-json.json
   tst/golden/help.txt
@@ -44,6 +47,7 @@ library o2i-cli-internal
   exposed-modules:
     O2I.Cli,
     O2I.Cli.Command,
+    O2I.Cli.Human,
     O2I.Cli.Input,
     O2I.Cli.Options,
     O2I.Cli.Output,
@@ -55,10 +59,8 @@ library o2i-cli-internal
   other-modules:
     Paths_o2i_cli
   build-depends:
-    aeson >=2.2 && <2.3,
     base >=4.20 && <4.21,
     bytestring >=0.12 && <0.13,
-    jsonschema ==0.2.0.0,
     o2i-amx ==0.3.0.0,
     o2i-operation ==0.3.0.0,
     text >=2.1 && <2.2

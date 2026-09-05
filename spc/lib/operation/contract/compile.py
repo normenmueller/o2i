@@ -106,6 +106,50 @@ NOTATION_ISSUE_TOKENS = (
     "reference-target-ambiguous",
 )
 
+PROFILE_EVIDENCE_KIND_TOKENS = (
+    "carrier-occurrence",
+    "classification-occurrence",
+    "metadata-owner-and-o2i-property-occurrences",
+    "property-occurrence-evidence",
+    "property-slot-evidence",
+    "property-value-evidence",
+    "proposal-carrier-occurrence",
+    "proposal-reference-incidence",
+    "relationship-occurrence",
+    "reserved-property-occurrence",
+    "structured-carrier-occurrence",
+    "structured-incidence",
+)
+
+STRUCTURE_PROJECTION_KIND_TOKENS = (
+    "carrier",
+    "contextualization",
+    "relation",
+    "structured-proposition",
+    "structured-incidence",
+)
+
+STRUCTURE_ENDPOINT_ROLE_TOKENS = (
+    "relation-source",
+    "relation-target",
+    "contextualization-owner",
+    "contextualization-member",
+    "structured-incidence-endpoint",
+)
+
+OCCURRENCE_IDENTITY_DEFECT_TOKENS = (
+    "empty",
+    "contains-u0000",
+    "contains-surrogate",
+)
+
+SOURCE_ROLE_TOKENS = ("model", "supplemental", "readiness", "assessment")
+
+SUPPLEMENTAL_PAYLOAD_TYPE_TOKENS = (
+    "strategy-formulation",
+    "collective-fit",
+)
+
 
 class MachineDocument(NamedTuple):
     name: str
@@ -232,6 +276,8 @@ COMMAND_ERROR_DOCUMENTS = (
             "qualify-failed",
             "readiness-failed",
             "assess-failed",
+            "qualification-subjects-failed",
+            "trace-failed",
         ),
     ),
 )
@@ -263,6 +309,8 @@ VARIANT_BINDINGS: dict[str, str] = {
     "qualify-failed": "qualifyFailedVariant",
     "readiness-failed": "readinessFailedVariant",
     "assess-failed": "assessFailedVariant",
+    "qualification-subjects-failed": "qualificationSubjectsFailedVariant",
+    "trace-failed": "traceFailedVariant",
     "notation-validation-accepted": "notationValidationAcceptedVariant",
     "notation-validation-rejected": "notationValidationRejectedVariant",
     "profile-validation-accepted": "profileValidationAcceptedVariant",
@@ -326,13 +374,22 @@ def validate_command_error_owner_branches(
 ) -> dict[str, list[dict[str, str]]]:
     if not isinstance(value, dict):
         raise ValueError("ownerBranches: expected object")
-    capabilities = ["validate", "qualify", "readiness", "assess"]
+    capabilities = [
+        "validate",
+        "qualify",
+        "readiness",
+        "assess",
+        "qualificationSubjects",
+        "trace",
+    ]
     require_keys(value, set(capabilities), "ownerBranches")
     expected_lengths = {
         "validate": 10,
         "qualify": 10,
         "readiness": 11,
         "assess": 11,
+        "qualificationSubjects": 12,
+        "trace": 10,
     }
     checked: dict[str, list[dict[str, str]]] = {}
     for capability in capabilities:
@@ -361,6 +418,70 @@ def validate_command_error_owner_branches(
         if len({row["token"] for row in checked_rows}) != len(checked_rows):
             raise ValueError(f"ownerBranches.{capability}: duplicate token")
         checked[capability] = checked_rows
+    return checked
+
+
+def validate_command_error_owner_evidence_shapes(
+    value: Any, branches: dict[str, list[dict[str, str]]]
+) -> dict[str, str]:
+    if not isinstance(value, dict):
+        raise ValueError("ownerEvidenceShapes: expected object")
+    tokens = {
+        row["token"]
+        for rows in branches.values()
+        for row in rows
+    }
+    require_keys(value, tokens, "ownerEvidenceShapes")
+    admitted = {
+        "source-identity",
+        "adapter-descriptor",
+        "notation-contract",
+        "profile-contract",
+        "identity-index",
+        "selected-view-scope",
+        "structure-input",
+        "supplemental-provenance",
+        "supplemental-input",
+        "semantic-occurrences",
+        "qualification-context",
+        "occurrence-projection",
+        "occurrence-join",
+    }
+    checked = {
+        token: require_text(shape, f"ownerEvidenceShapes.{token}")
+        for token, shape in value.items()
+    }
+    unknown = set(checked.values()) - admitted
+    if unknown:
+        raise ValueError(
+            "ownerEvidenceShapes: unknown shapes " + ", ".join(sorted(unknown))
+        )
+    return checked
+
+
+def validate_command_error_owner_expected_source_roles(
+    value: Any, shapes: dict[str, str]
+) -> dict[str, str]:
+    if not isinstance(value, dict):
+        raise ValueError("ownerExpectedSourceRoles: expected object")
+    source_tokens = {
+        token for token, shape in shapes.items() if shape == "source-identity"
+    }
+    require_keys(value, source_tokens, "ownerExpectedSourceRoles")
+    expected = {
+        "acquired-model-role": "model",
+        "acquired-supplemental-role": "supplemental",
+        "acquired-readiness-role": "readiness",
+        "acquired-assessment-role": "assessment",
+    }
+    checked = {
+        token: require_text(role, f"ownerExpectedSourceRoles.{token}")
+        for token, role in value.items()
+    }
+    if checked != expected:
+        raise ValueError(
+            "ownerExpectedSourceRoles: unexpected branch-role correlation"
+        )
     return checked
 
 
@@ -528,12 +649,26 @@ def validate(
     command_error, _ = load_object(COMMAND_ERROR_COMPANION)
     require_keys(
         command_error,
-        {"schema", "document", "ownerBranches"},
+        {
+            "schema",
+            "document",
+            "ownerBranches",
+            "ownerEvidenceShapes",
+            "ownerExpectedSourceRoles",
+        },
         "Command-error companion",
     )
     if command_error["schema"] != "o2i.command-error-contract/1":
         raise ValueError("unsupported Command-error companion schema")
-    validate_command_error_owner_branches(command_error["ownerBranches"])
+    owner_branches = validate_command_error_owner_branches(
+        command_error["ownerBranches"]
+    )
+    owner_shapes = validate_command_error_owner_evidence_shapes(
+        command_error["ownerEvidenceShapes"], owner_branches
+    )
+    validate_command_error_owner_expected_source_roles(
+        command_error["ownerExpectedSourceRoles"], owner_shapes
+    )
     documents.extend(
         validate_machine_documents(
             [command_error["document"]], COMMAND_ERROR_DOCUMENTS
@@ -4360,43 +4495,328 @@ def command_error_schema(document: MachineDocument) -> dict[str, Any]:
     owner_branches = validate_command_error_owner_branches(
         command_error["ownerBranches"]
     )
-    def input_failure(category: str) -> dict[str, Any]:
+    owner_evidence_shapes = validate_command_error_owner_evidence_shapes(
+        command_error["ownerEvidenceShapes"], owner_branches
+    )
+    owner_expected_source_roles = (
+        validate_command_error_owner_expected_source_roles(
+            command_error["ownerExpectedSourceRoles"], owner_evidence_shapes
+        )
+    )
+
+    def exact_array(items: list[dict[str, Any]]) -> dict[str, Any]:
+        schema = {
+            "type": "array",
+            "minItems": len(items),
+            "maxItems": len(items),
+            "items": False,
+        }
+        if items:
+            schema["prefixItems"] = items
+        return schema
+
+    def scalar_value(kind: str, value: dict[str, Any]) -> dict[str, Any]:
+        return object_schema({"kind": {"const": kind}, "value": value})
+
+    text_value = scalar_value("text", {"type": "string"})
+    notation_issue_kind_value = scalar_value(
+        "text", {"enum": list(NOTATION_ISSUE_TOKENS)}
+    )
+    profile_evidence_kind_value = scalar_value(
+        "text", {"enum": list(PROFILE_EVIDENCE_KIND_TOKENS)}
+    )
+    structure_projection_kind_value = scalar_value(
+        "text", {"enum": list(STRUCTURE_PROJECTION_KIND_TOKENS)}
+    )
+    structure_endpoint_role_value = scalar_value(
+        "text", {"enum": list(STRUCTURE_ENDPOINT_ROLE_TOKENS)}
+    )
+    occurrence_identity_defect_value = scalar_value(
+        "text", {"enum": list(OCCURRENCE_IDENTITY_DEFECT_TOKENS)}
+    )
+    supplemental_payload_type_value = scalar_value(
+        "text", {"enum": list(SUPPLEMENTAL_PAYLOAD_TYPE_TOKENS)}
+    )
+    natural_value = scalar_value(
+        "natural", {"type": "integer", "minimum": 0}
+    )
+    model_identity_value = scalar_value(
+        "model-identity", text_schema(pattern=TOOL_TEXT_PATTERN)
+    )
+    occurrence_identity_value = scalar_value(
+        "occurrence-identity", text_schema(pattern=TOOL_TEXT_PATTERN)
+    )
+    def source_key_value(role: str) -> dict[str, Any]:
         return object_schema(
             {
-                "category": {"const": category},
-                "diagnostics": array_schema(
-                    reference("inputFailureDiagnostic"), minimum=1
-                ),
+                "kind": {"const": "source-key"},
+                "role": {"const": role},
+                "ordinal": {"type": "integer", "minimum": 0},
             }
         )
 
-    def owner_failure(branches: list[str]) -> dict[str, Any]:
+    def source_identity_value(roles: tuple[str, ...]) -> dict[str, Any]:
         return object_schema(
             {
-                "category": {"const": "owner-contract"},
-                "branch": {"enum": branches},
-                "evidence": array_schema(
-                    reference("commandOwnerEvidence"), minimum=1
-                ),
+                "kind": {"const": "source-identity"},
+                "role": {"enum": list(roles)},
+                "ordinal": {"type": "integer", "minimum": 0},
+                "reference": text_schema(pattern=TOOL_TEXT_PATTERN),
+                "sha256": text_schema(pattern="^[0-9a-f]{64}$"),
             }
         )
 
-    validate_owner_branches = [
-        row["token"] for row in owner_branches["validate"]
-    ]
-    qualify_owner_branches = [
-        row["token"] for row in owner_branches["qualify"]
-    ]
-    readiness_owner_branches = [
-        row["token"] for row in owner_branches["readiness"]
-    ]
-    assess_owner_branches = [
-        row["token"] for row in owner_branches["assess"]
-    ]
-    input_reasons = [
-        "invalid-utf8",
-        "invalid-json-syntax",
-        "duplicate-object-member",
+    adapter_value = object_schema(
+        {
+            "kind": {"const": "adapter-descriptor"},
+            "id": text_schema(pattern=TOOL_TEXT_PATTERN),
+            "name": text_schema(pattern=TOOL_TEXT_PATTERN),
+            "version": text_schema(pattern=TOOL_TEXT_PATTERN),
+            "notation": text_schema(pattern=TOOL_TEXT_PATTERN),
+        }
+    )
+    canonical_occurrence_value = object_schema(
+        {
+            "kind": {"const": "canonical-occurrence"},
+            "occurrenceKind": {"enum": ["record", "property", "reference"]},
+            "ordinal": {"type": "integer", "minimum": 0},
+        }
+    )
+    unicode_scalar_value = object_schema(
+        {
+            "kind": {"const": "unicode-scalar"},
+            "index": {"type": "integer", "minimum": 0},
+            "codePoint": {"type": "integer", "minimum": 0},
+        }
+    )
+
+    def field(
+        name: str,
+        value: dict[str, Any],
+        *,
+        minimum: int = 1,
+        exactly_one: bool = False,
+    ) -> dict[str, Any]:
+        values = array_schema(value, minimum=minimum)
+        if exactly_one:
+            values["maxItems"] = 1
+        return object_schema({"name": {"const": name}, "values": values})
+
+    def evidence(kind: str, fields: list[dict[str, Any]]) -> dict[str, Any]:
+        return object_schema(
+            {"kind": {"const": kind}, "fields": exact_array(fields)}
+        )
+
+    source_evidence_by_role = {
+        role: evidence(
+            "source-identity",
+            [
+                field(
+                    "source",
+                    source_identity_value(
+                        tuple(
+                            candidate
+                            for candidate in SOURCE_ROLE_TOKENS
+                            if candidate != role
+                        )
+                    ),
+                    exactly_one=True,
+                )
+            ],
+        )
+        for role in SOURCE_ROLE_TOKENS
+    }
+    adapter_evidence = evidence(
+        "adapter-descriptor",
+        [field("adapter", adapter_value, exactly_one=True)],
+    )
+    notation_evidence = {
+        "oneOf": [
+            evidence(
+                "adapter-authority-mismatch",
+                [
+                    field("authorityAdapter", adapter_value, exactly_one=True),
+                    field("contractAdapter", adapter_value, exactly_one=True),
+                ],
+            ),
+            evidence(
+                "adapter-notation-rule-missing",
+                [
+                    field("adapter", adapter_value, exactly_one=True),
+                    field(
+                        "notationIssueKind",
+                        notation_issue_kind_value,
+                        exactly_one=True,
+                    ),
+                ],
+            ),
+        ]
+    }
+    profile_evidence = {
+        "oneOf": [
+            evidence(
+                "unknown-generated-profile-rule",
+                [
+                    field("ruleId", text_value, exactly_one=True),
+                    field(
+                        "evidenceKind",
+                        profile_evidence_kind_value,
+                        exactly_one=True,
+                    ),
+                ],
+            ),
+            evidence(
+                "generated-profile-evidence-mismatch",
+                [
+                    field("ruleId", text_value, exactly_one=True),
+                    field(
+                        "evidenceKind",
+                        profile_evidence_kind_value,
+                        exactly_one=True,
+                    ),
+                ],
+            ),
+            evidence(
+                "missing-core-contract-binding",
+                [
+                    field("binding", text_value, exactly_one=True),
+                    field(
+                        "occurrence", canonical_occurrence_value, exactly_one=True
+                    ),
+                ],
+            ),
+            evidence(
+                "impossible-occurrence-identity",
+                [
+                    field(
+                        "occurrence", canonical_occurrence_value, exactly_one=True
+                    ),
+                    field("details", text_value, exactly_one=True),
+                ],
+            ),
+        ]
+    }
+    identity_evidence = evidence(
+        "duplicate-model-identity",
+        [
+            field("occurrence", occurrence_identity_value, exactly_one=True),
+            field("modelIdentities", model_identity_value),
+        ],
+    )
+    scope_evidence = {
+        "oneOf": [
+            evidence(
+                kind,
+                [
+                    field(
+                        "occurrence", occurrence_identity_value, exactly_one=True
+                    ),
+                    field("cardinality", natural_value, exactly_one=True),
+                ],
+            )
+            for kind in [
+                "unknown-selected-view-subject-occurrence",
+                "selected-view-subject-identity-mismatch",
+                "unknown-selected-view-occurrence",
+                "duplicate-selected-view-occurrence",
+            ]
+        ]
+    }
+    structure_evidence = {
+        "oneOf": [
+            evidence(
+                "projection-outside-selected-view",
+                [field("occurrence", occurrence_identity_value, exactly_one=True)],
+            ),
+            evidence(
+                "duplicate-structure-projection",
+                [
+                    field(
+                        "occurrence", occurrence_identity_value, exactly_one=True
+                    ),
+                    field(
+                        "projectionKinds", structure_projection_kind_value
+                    ),
+                ],
+            ),
+            evidence(
+                "missing-carrier-projection",
+                [
+                    field("owner", occurrence_identity_value, exactly_one=True),
+                    field(
+                        "endpointRole",
+                        structure_endpoint_role_value,
+                        exactly_one=True,
+                    ),
+                    field("endpoint", occurrence_identity_value, exactly_one=True),
+                ],
+            ),
+            evidence(
+                "missing-structured-proposition-projection",
+                [
+                    field(
+                        "proposition", occurrence_identity_value, exactly_one=True
+                    ),
+                    field(
+                        "occurrence", occurrence_identity_value, exactly_one=True
+                    ),
+                ],
+            ),
+        ]
+    }
+    provenance_evidence = {
+        "oneOf": [
+            evidence(
+                "model-source-is-not-supplemental",
+                [
+                    field(
+                        "source",
+                        source_identity_value(("model",)),
+                        exactly_one=True,
+                    )
+                ],
+            ),
+            *[
+                evidence(
+                    "duplicate-supplemental-source",
+                    [
+                        field(
+                            "sourceKey",
+                            source_key_value(role),
+                            exactly_one=True,
+                        ),
+                        field("sources", source_identity_value((role,))),
+                    ],
+                )
+                for role in ("supplemental", "readiness", "assessment")
+            ],
+        ]
+    }
+    semantic_evidence = evidence(
+        "semantic-occurrences",
+        [field("occurrences", occurrence_identity_value, minimum=0)],
+    )
+    qualification_context_evidence = evidence(
+        "semantic-graph-mismatch", []
+    )
+    occurrence_projection_evidence = evidence(
+        "impossible-occurrence-identity",
+        [
+            field("occurrence", canonical_occurrence_value, exactly_one=True),
+            field(
+                "details", occurrence_identity_defect_value, exactly_one=True
+            ),
+        ],
+    )
+    occurrence_join_evidence = evidence(
+        "occurrence-join-mismatch",
+        [
+            field("occurrence", occurrence_identity_value, exactly_one=True),
+            field("candidates", canonical_occurrence_value, minimum=0),
+        ],
+    )
+
+    supplemental_schema_reasons = [
         "top-level-object-required",
         "type-member-invalid",
         "payload-type-not-admitted",
@@ -4406,134 +4826,233 @@ def command_error_schema(document: MachineDocument) -> dict[str, Any]:
         "scalar-grammar-invalid",
         "array-cardinality-invalid",
         "array-distinctness-invalid",
-        "subject-cardinality-invalid",
+    ]
+    supplemental_identity_reasons = [
         "identity-unknown",
         "identity-ambiguous",
         "identity-wrong-type",
         "identity-out-of-selected-view",
+    ]
+
+    def supplemental_fields(reason: str) -> list[dict[str, Any]]:
+        common = [
+            field("ruleId", text_value, exactly_one=True),
+            field("inputOrdinals", natural_value),
+        ]
+        if reason in ["invalid-utf8", "invalid-json-syntax"]:
+            return common
+        if reason == "duplicate-object-member":
+            return common + [field("jsonPointer", text_value, exactly_one=True)]
+        if reason in supplemental_schema_reasons:
+            return common + [
+                field("jsonPointer", text_value, exactly_one=True),
+                field("expectedSchema", text_value, exactly_one=True),
+            ]
+        if reason == "subject-cardinality-invalid":
+            return common + [
+                field(
+                    "payloadType",
+                    supplemental_payload_type_value,
+                    exactly_one=True,
+                ),
+                field("subject", model_identity_value, exactly_one=True),
+            ]
+        if reason in supplemental_identity_reasons:
+            return common + [
+                field("jsonPointer", text_value, exactly_one=True),
+                field("identity", model_identity_value, exactly_one=True),
+            ]
+        if reason == "model-identity-unicode-scalar-invalid":
+            return common + [
+                field("jsonPointer", text_value, exactly_one=True),
+                field("expectedSchema", text_value, exactly_one=True),
+                field("unicodeScalars", unicode_scalar_value),
+            ]
+        if reason == "model-identity-contains-nul":
+            return common + [
+                field("jsonPointer", text_value, exactly_one=True),
+                field("expectedSchema", text_value, exactly_one=True),
+                field("nulIndexes", natural_value),
+            ]
+        raise ValueError(f"unsupported supplemental evidence reason: {reason}")
+
+    supplemental_reasons = [
+        "invalid-utf8",
+        "invalid-json-syntax",
+        "duplicate-object-member",
+        *supplemental_schema_reasons,
+        "subject-cardinality-invalid",
+        *supplemental_identity_reasons,
         "model-identity-unicode-scalar-invalid",
         "model-identity-contains-nul",
-        "discriminator-invalid",
-        "normalization-collision",
     ]
-    field_names = [
-        "jsonPointer",
-        "expectedSchema",
-        "payloadType",
-        "subject",
-        "identity",
-        "unicodeScalars",
-        "nulIndexes",
-        "member",
-        "observed",
-        "expected",
-        "minimum",
-        "duplicate",
-        "schema",
-        "modelIdentity",
-        "expectedGraphIdentity",
-        "occurrence",
-        "expectedQualifiedType",
-        "zeroBasedIndex",
-        "codePoint",
-        "source",
-        "adapter",
-        "authorityAdapter",
-        "contractAdapter",
-        "notationIssueKind",
-        "ruleId",
-        "evidenceKind",
-        "binding",
-        "details",
-        "modelIdentities",
-        "cardinality",
-        "projectionKinds",
-        "owner",
-        "endpointRole",
-        "endpoint",
-        "proposition",
-        "sourceKey",
-        "sources",
-        "occurrences",
-    ]
-    owner_evidence_kinds = [
-        "source-identity",
-        "adapter-descriptor",
-        "adapter-authority-mismatch",
-        "adapter-notation-rule-missing",
-        "unknown-generated-profile-rule",
-        "generated-profile-evidence-mismatch",
-        "missing-core-contract-binding",
-        "impossible-occurrence-identity",
-        "duplicate-model-identity",
-        "unknown-selected-view-subject-occurrence",
-        "selected-view-subject-identity-mismatch",
-        "unknown-selected-view-occurrence",
-        "duplicate-selected-view-occurrence",
-        "projection-outside-selected-view",
-        "duplicate-structure-projection",
-        "missing-carrier-projection",
-        "missing-structured-proposition-projection",
-        "model-source-is-not-supplemental",
-        "duplicate-supplemental-source",
-        "semantic-occurrences",
-        "semantic-graph-mismatch",
-    ]
-    scalar_values = [
-        ("text", {"type": "string"}),
-        ("natural", {"type": "integer", "minimum": 0}),
-        ("model-identity", text_schema(pattern=TOOL_TEXT_PATTERN)),
-        ("occurrence-identity", text_schema(pattern=TOOL_TEXT_PATTERN)),
-        ("qualified-type", text_schema(pattern=TOOL_TEXT_PATTERN)),
-    ]
-    command_diagnostic_values = [
-        object_schema({"kind": {"const": kind}, "value": value})
-        for kind, value in scalar_values
-    ] + [
-        object_schema(
+    supplemental_evidence = {
+        "oneOf": [
+            evidence(reason, supplemental_fields(reason))
+            for reason in supplemental_reasons
+        ]
+    }
+
+    owner_shape_definitions = {
+        "adapter-descriptor": adapter_evidence,
+        "notation-contract": notation_evidence,
+        "profile-contract": profile_evidence,
+        "identity-index": identity_evidence,
+        "selected-view-scope": scope_evidence,
+        "structure-input": structure_evidence,
+        "supplemental-provenance": provenance_evidence,
+        "supplemental-input": supplemental_evidence,
+        "semantic-occurrences": semantic_evidence,
+        "qualification-context": qualification_context_evidence,
+        "occurrence-projection": occurrence_projection_evidence,
+        "occurrence-join": occurrence_join_evidence,
+    }
+    owner_shape_definition_names = {
+        "adapter-descriptor": "commandAdapterDescriptorEvidence",
+        "notation-contract": "commandNotationContractEvidence",
+        "profile-contract": "commandProfileContractEvidence",
+        "identity-index": "commandIdentityIndexEvidence",
+        "selected-view-scope": "commandSelectedViewScopeEvidence",
+        "structure-input": "commandStructureInputEvidence",
+        "supplemental-provenance": "commandSupplementalProvenanceEvidence",
+        "supplemental-input": "commandSupplementalInputEvidence",
+        "semantic-occurrences": "commandSemanticOccurrencesEvidence",
+        "qualification-context": "commandQualificationContextEvidence",
+        "occurrence-projection": "commandOccurrenceProjectionEvidence",
+        "occurrence-join": "commandOccurrenceJoinEvidence",
+    }
+    owner_shape_schemas = {
+        shape: reference(owner_shape_definition_names[shape])
+        for shape in owner_shape_definitions
+    }
+    source_evidence_definition_names = {
+        "model": "commandExpectedModelRoleMismatchEvidence",
+        "supplemental": "commandExpectedSupplementalRoleMismatchEvidence",
+        "readiness": "commandExpectedReadinessRoleMismatchEvidence",
+        "assessment": "commandExpectedAssessmentRoleMismatchEvidence",
+    }
+
+    def owner_evidence_schema(token: str) -> dict[str, Any]:
+        shape = owner_evidence_shapes[token]
+        if shape == "source-identity":
+            return reference(
+                source_evidence_definition_names[
+                    owner_expected_source_roles[token]
+                ]
+            )
+        return owner_shape_schemas[shape]
+
+    supplemental_input_diagnostic = {
+        "oneOf": [
+            object_schema(
+                {
+                    "ruleId": text_schema(pattern=TOOL_TEXT_PATTERN),
+                    "inputOrdinals": array_schema(
+                        {"type": "integer", "minimum": 0}, minimum=1
+                    ),
+                    "reason": {"const": reason},
+                    "fields": exact_array(supplemental_fields(reason)[2:]),
+                }
+            )
+            for reason in supplemental_reasons
+        ]
+    }
+    evidence_subject_field = {
+        "oneOf": [
+            field(
+                name, text_value, exactly_one=True
+            )
+            for name in [
+                "member",
+                "observed",
+                "expected",
+                "duplicate",
+                "schema",
+                "expectedGraphIdentity",
+            ]
+        ]
+        + [
+            field(name, natural_value, exactly_one=True)
+            for name in ["minimum", "zeroBasedIndex", "codePoint"]
+        ]
+        + [
+            field("modelIdentity", model_identity_value, exactly_one=True),
+            field("occurrence", occurrence_identity_value, exactly_one=True),
+            field(
+                "expectedQualifiedType",
+                scalar_value(
+                    "qualified-type", text_schema(pattern=TOOL_TEXT_PATTERN)
+                ),
+                exactly_one=True,
+            ),
+        ]
+    }
+    evidence_input_diagnostic = object_schema(
+        {
+            "ruleId": text_schema(pattern=TOOL_TEXT_PATTERN),
+            "inputOrdinals": array_schema(
+                {"type": "integer", "minimum": 0}, minimum=1
+            ),
+            "reason": {
+                "enum": [
+                    "invalid-utf8",
+                    "invalid-json-syntax",
+                    "duplicate-object-member",
+                    "top-level-object-required",
+                    "discriminator-invalid",
+                    "required-member-missing",
+                    "unknown-member",
+                    "value-kind-invalid",
+                    "scalar-grammar-invalid",
+                    "array-cardinality-invalid",
+                    "array-distinctness-invalid",
+                    "normalization-collision",
+                    "model-identity-unicode-scalar-invalid",
+                    "model-identity-contains-nul",
+                    "identity-unknown",
+                    "identity-ambiguous",
+                    "identity-out-of-selected-view",
+                    "identity-wrong-type",
+                ]
+            },
+            "fields": {
+                "type": "array",
+                "minItems": 2,
+                "prefixItems": [
+                    field("jsonPointer", text_value, exactly_one=True)
+                ],
+                "items": evidence_subject_field,
+            },
+        }
+    )
+
+    def input_failure(
+        category: str, diagnostic: dict[str, Any]
+    ) -> dict[str, Any]:
+        return object_schema(
             {
-                "kind": {"const": "source-key"},
-                "role": {
-                    "enum": ["model", "supplemental", "readiness", "assessment"]
-                },
-                "ordinal": {"type": "integer", "minimum": 0},
+                "category": {"const": category},
+                "diagnostics": array_schema(diagnostic, minimum=1),
             }
-        ),
-        object_schema(
-            {
-                "kind": {"const": "source-identity"},
-                "role": {
-                    "enum": ["model", "supplemental", "readiness", "assessment"]
-                },
-                "ordinal": {"type": "integer", "minimum": 0},
-                "reference": {"type": "string"},
-                "sha256": text_schema(pattern="^[0-9a-f]{64}$"),
-            }
-        ),
-        object_schema(
-            {
-                "kind": {"const": "adapter-descriptor"},
-                "id": text_schema(pattern=TOOL_TEXT_PATTERN),
-                "name": text_schema(pattern=TOOL_TEXT_PATTERN),
-                "version": text_schema(pattern=TOOL_TEXT_PATTERN),
-                "notation": text_schema(pattern=TOOL_TEXT_PATTERN),
-            }
-        ),
-        object_schema(
-            {
-                "kind": {"const": "canonical-occurrence"},
-                "occurrenceKind": {"enum": ["record", "property", "reference"]},
-                "ordinal": {"type": "integer", "minimum": 0},
-            }
-        ),
-        object_schema(
-            {
-                "kind": {"const": "unicode-scalar"},
-                "index": {"type": "integer", "minimum": 0},
-                "codePoint": {"type": "integer", "minimum": 0},
-            }
-        ),
-    ]
+        )
+
+    def owner_failure(rows: list[dict[str, str]]) -> dict[str, Any]:
+        return {
+            "oneOf": [
+                object_schema(
+                    {
+                        "category": {"const": "owner-contract"},
+                        "branch": {"const": row["token"]},
+                        "evidence": array_schema(
+                            owner_evidence_schema(row["token"]),
+                            minimum=1,
+                        ),
+                    }
+                )
+                for row in rows
+            ]
+        }
+
     definitions = {
         "toolDescriptor": tool_descriptor(),
         "acquisitionFailure": object_schema(
@@ -4543,55 +5062,57 @@ def command_error_schema(document: MachineDocument) -> dict[str, Any]:
                 "message": {"type": "string"},
             }
         ),
-        "inputFailureDiagnostic": object_schema(
-            {
-                "ruleId": text_schema(pattern=TOOL_TEXT_PATTERN),
-                "inputOrdinals": array_schema(
-                    {"type": "integer", "minimum": 0}, minimum=1
-                ),
-                "reason": {"enum": input_reasons},
-                "fields": array_schema(reference("commandDiagnosticField")),
-            }
-        ),
-        "commandDiagnosticValue": {"oneOf": command_diagnostic_values},
-        "commandDiagnosticField": object_schema(
-            {
-                "name": {"enum": field_names},
-                "values": array_schema(reference("commandDiagnosticValue")),
-            }
-        ),
-        "commandOwnerEvidence": object_schema(
-            {
-                "kind": {"enum": owner_evidence_kinds},
-                "fields": array_schema(reference("commandDiagnosticField")),
-            }
-        ),
+        **{
+            owner_shape_definition_names[shape]: schema
+            for shape, schema in owner_shape_definitions.items()
+        },
+        **{
+            source_evidence_definition_names[role]: schema
+            for role, schema in source_evidence_by_role.items()
+        },
         "validateFailure": {
             "oneOf": [
-                input_failure("supplemental-input"),
-                owner_failure(validate_owner_branches),
+                input_failure(
+                    "supplemental-input", supplemental_input_diagnostic
+                ),
+                owner_failure(owner_branches["validate"]),
             ]
         },
         "qualifyFailure": {
             "oneOf": [
-                input_failure("supplemental-input"),
-                owner_failure(qualify_owner_branches),
+                input_failure(
+                    "supplemental-input", supplemental_input_diagnostic
+                ),
+                owner_failure(owner_branches["qualify"]),
             ]
         },
         "readinessFailure": {
             "oneOf": [
-                input_failure("evidence-input"),
-                input_failure("supplemental-input"),
-                owner_failure(readiness_owner_branches),
+                input_failure("evidence-input", evidence_input_diagnostic),
+                input_failure(
+                    "supplemental-input", supplemental_input_diagnostic
+                ),
+                owner_failure(owner_branches["readiness"]),
             ]
         },
         "assessFailure": {
             "oneOf": [
-                input_failure("assessment-input"),
-                input_failure("supplemental-input"),
-                owner_failure(assess_owner_branches),
+                input_failure("assessment-input", evidence_input_diagnostic),
+                input_failure(
+                    "supplemental-input", supplemental_input_diagnostic
+                ),
+                owner_failure(owner_branches["assess"]),
             ]
         },
+        "qualificationSubjectsFailure": {
+            "oneOf": [
+                input_failure(
+                    "supplemental-input", supplemental_input_diagnostic
+                ),
+                owner_failure(owner_branches["qualificationSubjects"]),
+            ]
+        },
+        "traceFailure": {"oneOf": [owner_failure(owner_branches["trace"])]},
         "argumentInvalid": variant(
             document,
             "argument-invalid",
@@ -4666,6 +5187,24 @@ def command_error_schema(document: MachineDocument) -> dict[str, Any]:
                 "failure": reference("assessFailure"),
             },
         ),
+        "qualificationSubjectsFailed": variant(
+            document,
+            "qualification-subjects-failed",
+            {
+                "tool": reference("toolDescriptor"),
+                "code": text_schema(pattern=TOOL_TEXT_PATTERN),
+                "failure": reference("qualificationSubjectsFailure"),
+            },
+        ),
+        "traceFailed": variant(
+            document,
+            "trace-failed",
+            {
+                "tool": reference("toolDescriptor"),
+                "code": {"const": "trace.owner-contract"},
+                "failure": reference("traceFailure"),
+            },
+        ),
     }
     return schema_document(
         document,
@@ -4679,6 +5218,8 @@ def command_error_schema(document: MachineDocument) -> dict[str, Any]:
             "qualifyFailed",
             "readinessFailed",
             "assessFailed",
+            "qualificationSubjectsFailed",
+            "traceFailed",
         ],
     )
 
@@ -5039,9 +5580,20 @@ import O2I.Operation.Schema.Internal
 def render_command_error_branch_module(
     branches: dict[str, list[dict[str, str]]],
 ) -> str:
-    capabilities = ["validate", "qualify", "readiness", "assess"]
+    capabilities = [
+        "validate",
+        "qualify",
+        "readiness",
+        "assess",
+        "qualificationSubjects",
+        "trace",
+    ]
     type_names = {
-        capability: capability.capitalize() + "OwnerBranch"
+        capability: (
+            "QualificationSubjectsOwnerBranch"
+            if capability == "qualificationSubjects"
+            else capability.capitalize() + "OwnerBranch"
+        )
         for capability in capabilities
     }
     module_names = {
@@ -5049,6 +5601,16 @@ def render_command_error_branch_module(
         "qualify": "QualifyInternal",
         "readiness": "ReadinessInternal",
         "assess": "AssessInternal",
+        "qualificationSubjects": "QualificationSubjectsInternal",
+        "trace": "TraceInternal",
+    }
+    constructor_prefixes = {
+        capability: (
+            "QualificationSubjects"
+            if capability == "qualificationSubjects"
+            else capability.capitalize()
+        )
+        for capability in capabilities
     }
 
     def generated_constructor(row: dict[str, str]) -> str:
@@ -5071,7 +5633,7 @@ def render_command_error_branch_module(
         )
         module_name = module_names[capability]
         projector_cases = "\n".join(
-            f"    {module_name}.{row['constructor']} _ -> "
+            f"    {module_name}.{row['constructor']} {{}} -> "
             f"{generated_constructor(row)}"
             for row in rows
         )
@@ -5092,7 +5654,7 @@ def render_command_error_branch_module(
        ]
 
 {capability}OwnerBranch ::
-     {module_name}.{capability.capitalize()}InternalFailure -> {type_name}
+     {module_name}.{constructor_prefixes[capability]}InternalFailure -> {type_name}
 {capability}OwnerBranch failure =
   case failure of
 {projector_cases}'''
@@ -5101,13 +5663,13 @@ def render_command_error_branch_module(
     union_constructors = "\n".join(
         ["  = ValidateCommandOwnerBranch !ValidateOwnerBranch"]
         + [
-            f"  | {capability.capitalize()}CommandOwnerBranch "
+            f"  | {constructor_prefixes[capability]}CommandOwnerBranch "
             f"!{type_names[capability]}"
             for capability in capabilities[1:]
         ]
     )
     union_cases = "\n".join(
-        f"    {capability.capitalize()}CommandOwnerBranch capabilityBranch ->\n"
+        f"    {constructor_prefixes[capability]}CommandOwnerBranch capabilityBranch ->\n"
         f"      {capability}OwnerBranchToken capabilityBranch"
         for capability in capabilities
     )
@@ -5131,7 +5693,9 @@ import Data.List.NonEmpty (NonEmpty(..))
 import Data.Text (Text)
 import qualified O2I.Operation.Assess.Result.Internal as AssessInternal
 import qualified O2I.Operation.Qualify.Result.Internal as QualifyInternal
+import qualified O2I.Operation.Qualification.Subjects.Result.Internal as QualificationSubjectsInternal
 import qualified O2I.Operation.Readiness.Result.Internal as ReadinessInternal
+import qualified O2I.Operation.Trace.Result.Internal as TraceInternal
 import qualified O2I.Operation.Validate.Result.Internal as ValidateInternal
 
 {body}
