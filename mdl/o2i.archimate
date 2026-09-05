@@ -1249,7 +1249,9 @@ Concrete contextualization and context-sensitive admissibility remain defined by
         </child>
         <documentation>Illustrates how one Situation Anchor binds Situation, Driver @ Need, Action @ Intervention, and KPI @ Measure to the same operational subject.
 
-This View is an explanatory semantic projection of the metamodel defined in o2i.md, not an independent semantic contract.</documentation>
+This View is an explanatory semantic projection of the metamodel defined in o2i.md, not an independent semantic contract.
+
+Situation Anchor is an abstract, non-instantiable family; its closed constructors are defined by the metamodel.</documentation>
       </element>
       <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Semantics - Situation" id="id-89a01cc61d914152b250393e720bc6e2">
         <child xsi:type="archimate:DiagramObject" id="id-7faa52476e1a401697613ccfade3d34f" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-95420d4e66164023b79676213a6147e2">

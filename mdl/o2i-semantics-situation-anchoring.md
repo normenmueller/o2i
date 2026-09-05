@@ -9,6 +9,8 @@ Illustrates how one Situation Anchor binds Situation, Driver @ Need, Action @ In
 
 This View is an explanatory semantic projection of the metamodel defined in o2i.md, not an independent semantic contract.
 
+Situation Anchor is an abstract, non-instantiable family; its closed constructors are defined by the metamodel.
+
 ## Nodes
 
 - [Action] `Action @ Intervention` (Grouping)
