@@ -13,9 +13,11 @@ import qualified Data.ByteString.Lazy as LazyByteString
 import Data.IORef
 import Data.JSON.JSONSchema (validateJSONSchema)
 import Data.List.NonEmpty (NonEmpty(..))
+import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Map.Strict as Map
 import Data.Text (Text)
 import qualified Data.Text as Text
+import Numeric.Natural (Natural)
 import qualified O2I.ArchiMate.Profile.Draft as Draft
 import O2I.ArchiMate.Profile.Resolution (compiledProfileDescriptor)
 import O2I.Core.Identity
@@ -33,27 +35,36 @@ import O2I.Operation.Acquisition
 import O2I.Operation.Acquisition.Internal (acquireWith)
 import O2I.Operation.Adapter
 import O2I.Operation.Adapter.Authoring
+import O2I.Operation.Command.Error (commandErrorCode, qualifyCommandError)
+import O2I.Operation.Command.Error.Machine
 import O2I.Operation.Diagnostic
   ( foldPreparedDiagnosticDocument
   , preparedDiagnosticStage
   )
+import qualified O2I.Operation.Human.Diagnostic as HumanDiagnostic
+import qualified O2I.Operation.Human.Value as HumanValue
 import O2I.Operation.Machine (ToolDescriptor, mkToolDescriptor)
 import O2I.Operation.Profile
 import O2I.Operation.Provenance (SourceOrdinal, SourceRole, mkSourceReference)
+import qualified O2I.Operation.Qualification.Subjects.Human as SubjectsHuman
 import O2I.Operation.Qualification.Subjects.Machine
 import O2I.Operation.Qualification.Subjects.Request
 import O2I.Operation.Qualification.Subjects.Result
 import O2I.Operation.Qualification.Subjects.Runtime.Internal
   ( runQualificationSubjectsWith
   )
+import qualified O2I.Operation.Qualify.Human as QualifyHuman
 import O2I.Operation.Qualify.Machine
 import O2I.Operation.Qualify.Request
 import O2I.Operation.Qualify.Result
 import O2I.Operation.Qualify.Runtime.Internal (runQualifyWith)
 import O2I.Operation.Schema (schemaVariantText)
 import O2I.Operation.Test.AdapterSupport (compileCompleteAdapter)
+import qualified O2I.Operation.Test.HumanFailureCorrespondence as FailureCorrespondence
+import qualified O2I.Operation.Test.ReportEnvelope as ReportEnvelope
 import O2I.Operation.View (viewByName)
 import qualified O2I.Qualification as Qualification
+import OperationReportPublicObserver (ObservedReportOperation(..))
 import System.FilePath ((</>))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
@@ -78,6 +89,9 @@ tests =
         "acquires Qualify inputs exactly once and fails fast"
         qualifyAcquisition
     , testCase
+        "lifts malformed supplemental input through the real Left branch"
+        malformedQualifySupplemental
+    , testCase
         "rejects every Qualify prerequisite at its exact stage"
         qualifyPrerequisites
     , testCase
@@ -92,6 +106,9 @@ tests =
     , testCase
         "encodes actual Qualify variants and exact provenance"
         qualifyMachineContracts
+    , testCase
+        "projects both reports through every real terminal branch"
+        humanReports
     ]
 
 discoveryProjection :: Assertion
@@ -273,6 +290,47 @@ qualifyAcquisition = do
     , (Just "supplement-1", ["model.amx", "supplement-0", "supplement-1"])
     ]
 
+malformedQualifySupplemental :: Assertion
+malformedQualifySupplemental = do
+  model <- modelSource
+  supplement <- supplementalSource 0
+  request <-
+    requireRight
+      (qualifyRequest
+         model
+         (viewByName "Binding")
+         Nothing
+         (identity "strategy" :| [])
+         []
+         [supplement])
+  result <-
+    withEnvironment $ \adapters profiles ->
+      runQualifyWith memoryAcquire adapters profiles request
+  tool <- requireRight (mkToolDescriptor "o2i" "0.3.0")
+  case qualifyResultDocument tool result of
+    Left failure -> do
+      foldQualifyFailure
+        (const (assertFailure "malformed supplement became common failure"))
+        (const (pure ()))
+        (const (assertFailure "malformed supplement became owner failure"))
+        failure
+      let commandError = qualifyCommandError failure
+          document = commandErrorDocument tool commandError
+          encoded = encodeCommandErrorDocument document
+      commandErrorCode commandError @?= "qualify.supplemental-input"
+      schemaVariantText (commandErrorDocumentVariant document)
+        @?= "qualify-failed"
+      encoded
+        @?= "{\"schema\":\"o2i.command-error/v1\",\"kind\":\"qualify-failed\",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},\"code\":\"qualify.supplemental-input\",\"failure\":{\"category\":\"supplemental-input\",\"diagnostics\":[{\"ruleId\":\"core.supplemental.decode.json-syntax\",\"inputOrdinals\":[0],\"reason\":\"invalid-json-syntax\",\"fields\":[]}]}}"
+      schema <- requireJson (LazyByteString.fromStrict commandErrorSchemaBytes)
+      value <-
+        case Aeson.eitherDecodeStrict encoded of
+          Left message -> assertFailure message >> fail "unreachable"
+          Right decoded -> pure decoded
+      validateJSONSchema schema value
+        @? "Qualify command error violates its generated Schema"
+    Right _ -> assertFailure "malformed supplement acquired a result document"
+
 qualifyPrerequisites :: Assertion
 qualifyPrerequisites =
   mapM_
@@ -397,6 +455,244 @@ qualifyMachineContracts = do
       assertImpossibleSemanticsPrerequisite
         (encodeQualifyResultDocument prerequisite)
     [] -> assertFailure "machine fixture table is empty"
+
+humanReports :: Assertion
+humanReports = do
+  supplement <- supplementalSource 0
+  subjectsFailed <- runSubjects [supplement]
+  model <- modelSource
+  subjectsPrerequisite <-
+    withDraftEnvironment notationRejectedDraft $ \adapters profiles ->
+      runQualificationSubjectsWith
+        memoryAcquire
+        adapters
+        profiles
+        (qualificationSubjectsRequest model (viewByName "Binding") Nothing [])
+  subjectsDiscovered <- runSubjects []
+  tool <- ReportEnvelope.hostileTool
+  assertSubjects tool "failed" subjectsFailed
+  assertSubjects tool "prerequisite" subjectsPrerequisite
+  assertSubjects tool "discovered" subjectsDiscovered
+  qualifyRequestValue <-
+    requireRight
+      (qualifyRequest
+         model
+         (viewByName "Binding")
+         Nothing
+         (identity "strategy" :| [])
+         []
+         [supplement])
+  qualifyFailed <-
+    withEnvironment $ \adapters profiles ->
+      runQualifyWith memoryAcquire adapters profiles qualifyRequestValue
+  qualifyPrerequisite <-
+    runQualifyDraft notationRejectedDraft (identity "strategy" :| []) [] []
+  qualifyCompleted <-
+    runQualifyDraft semanticsUnavailableDraft (identity "strategy" :| []) [] []
+  assertQualify tool "failed" qualifyFailed
+  assertQualify tool "prerequisite" qualifyPrerequisite
+  assertQualify tool "completed" qualifyCompleted
+  where
+    assertSubjects ::
+         ToolDescriptor -> Text -> QualificationSubjectsResult -> Assertion
+    assertSubjects tool expected result =
+      SubjectsHuman.foldHumanQualificationSubjectsReport
+        (\failureValue -> do
+           expected @?= "failed"
+           raw <- observeRawSubjectsFailure result
+           human <- observeHumanSubjectsFailure failureValue
+           human @?= raw)
+        (\_ context -> do
+           expected @?= "prerequisite"
+           assertSubjectsContext tool result context)
+        (\needs strategies context -> do
+           expected @?= "discovered"
+           length needs @?= 4
+           length strategies @?= 1
+           assertSubjectsContext tool result context)
+        (SubjectsHuman.qualificationSubjectsHumanReport tool result)
+    observeRawSubjectsFailure result =
+      foldQualificationSubjectsResult
+        (foldQualificationSubjectsFailure
+           (pure . (: []) . FailureCorrespondence.observeRawCommonFailure)
+           (pure
+              . map FailureCorrespondence.observeRawSupplementalInputDefect
+              . NonEmpty.toList)
+           (\_ -> unexpected "Subjects owner failure in real input fixture"))
+        (\_ _ -> unexpected "Subjects prerequisite in failed fixture")
+        (\_ _ -> unexpected "Subjects discovery in failed fixture")
+        result
+    observeHumanSubjectsFailure failureValue =
+      SubjectsHuman.foldHumanQualificationSubjectsFailure
+        (pure . (: []) . FailureCorrespondence.observeHumanCommonFailure)
+        (pure
+           . map FailureCorrespondence.observeHumanSupplementalInputDefect
+           . NonEmpty.toList)
+        (\_ -> unexpected "Subjects model-role failure in real input fixture")
+        (\_ ->
+           unexpected "Subjects supplemental-role failure in real input fixture")
+        (\_ -> unexpected "Subjects adapter failure in real input fixture")
+        (\_ -> unexpected "Subjects notation failure in real input fixture")
+        (\_ -> unexpected "Subjects Profile failure in real input fixture")
+        (\_ -> unexpected "Subjects identity failure in real input fixture")
+        (\_ -> unexpected "Subjects scope failure in real input fixture")
+        (\_ -> unexpected "Subjects Structure failure in real input fixture")
+        (\_ -> unexpected "Subjects provenance failure in real input fixture")
+        (unexpected "Subjects context failure in real input fixture")
+        (\_ _ -> unexpected "Subjects projection failure in real input fixture")
+        (\_ _ -> unexpected "Subjects join failure in real input fixture")
+        failureValue
+    assertSubjectsContext ::
+         ToolDescriptor
+      -> QualificationSubjectsResult
+      -> SubjectsHuman.HumanQualificationSubjectsContext
+      -> Assertion
+    assertSubjectsContext tool result context = do
+      document <- requireSubjectsDocument tool result
+      SubjectsHuman.foldHumanQualificationSubjectsContext
+        (\envelope request model supplements _ diagnostics -> do
+           ReportEnvelope.assertPreparedEnvelope
+             qualificationSubjectsSchema
+             (qualificationSubjectsDocumentVariant document)
+             ObservedQualificationSubjectsReportOperation
+             ReportEnvelope.contractsWithCore
+             envelope
+           SubjectsHuman.foldHumanQualificationSubjectsRequest
+             (\modelInput selector adapter requestedSupplements -> do
+                assertModelInput modelInput
+                assertSelector selector
+                assertAutomatic adapter
+                assertBool
+                  "supplement-free Subjects request gained inputs"
+                  (null requestedSupplements))
+             request
+           assertBool
+             "supplement-free Subjects context gained inputs"
+             (null supplements)
+           assertContextModel model diagnostics)
+        context
+    assertQualify :: ToolDescriptor -> Text -> QualifyResult -> Assertion
+    assertQualify tool expected result =
+      QualifyHuman.foldHumanQualifyReport
+        (\failureValue -> do
+           expected @?= "failed"
+           raw <- observeRawQualifyFailure result
+           human <- observeHumanQualifyFailure failureValue
+           human @?= raw)
+        (\_ context -> do
+           expected @?= "prerequisite"
+           assertQualifyContext tool result context)
+        (\assessment context -> do
+           expected @?= "completed"
+           QualifyHuman.foldHumanQualificationAssessment
+             (\_ _ _ _ _ _ _ -> pure ())
+             assessment
+           assertQualifyContext tool result context)
+        (QualifyHuman.qualifyHumanReport tool result)
+    observeRawQualifyFailure result =
+      foldQualifyResult
+        (foldQualifyFailure
+           (pure . (: []) . FailureCorrespondence.observeRawCommonFailure)
+           (pure
+              . map FailureCorrespondence.observeRawSupplementalInputDefect
+              . NonEmpty.toList)
+           (\_ -> unexpected "Qualify owner failure in real input fixture"))
+        (\_ _ -> unexpected "Qualify prerequisite in failed fixture")
+        (\_ _ -> unexpected "Qualify completion in failed fixture")
+        result
+    observeHumanQualifyFailure failureValue =
+      QualifyHuman.foldHumanQualifyFailure
+        (pure . (: []) . FailureCorrespondence.observeHumanCommonFailure)
+        (pure
+           . map FailureCorrespondence.observeHumanSupplementalInputDefect
+           . NonEmpty.toList)
+        (\_ -> unexpected "Qualify model-role failure in real input fixture")
+        (\_ ->
+           unexpected "Qualify supplemental-role failure in real input fixture")
+        (\_ -> unexpected "Qualify adapter failure in real input fixture")
+        (\_ -> unexpected "Qualify notation failure in real input fixture")
+        (\_ -> unexpected "Qualify Profile failure in real input fixture")
+        (\_ -> unexpected "Qualify identity failure in real input fixture")
+        (\_ -> unexpected "Qualify scope failure in real input fixture")
+        (\_ -> unexpected "Qualify Structure failure in real input fixture")
+        (\_ -> unexpected "Qualify provenance failure in real input fixture")
+        (unexpected "Qualify context failure in real input fixture")
+        failureValue
+    unexpected message = assertFailure message >> fail "unreachable"
+    assertQualifyContext ::
+         ToolDescriptor
+      -> QualifyResult
+      -> QualifyHuman.HumanQualifyContext
+      -> Assertion
+    assertQualifyContext tool result context = do
+      document <- requireQualifyDocument tool result
+      QualifyHuman.foldHumanQualifyContext
+        (\envelope request model supplements _ diagnostics -> do
+           ReportEnvelope.assertPreparedEnvelope
+             qualifyResultSchema
+             (qualifyResultDocumentVariant document)
+             ObservedQualifyReportOperation
+             ReportEnvelope.contractsWithCore
+             envelope
+           QualifyHuman.foldHumanQualifyRequest
+             (\modelInput selector adapter strategies needs requestedSupplements -> do
+                assertModelInput modelInput
+                assertSelector selector
+                assertAutomatic adapter
+                length strategies @?= 1
+                assertBool "Qualify request gained Needs" (null needs)
+                assertBool
+                  "supplement-free Qualify request gained inputs"
+                  (null requestedSupplements))
+             request
+           assertBool
+             "supplement-free Qualify context gained inputs"
+             (null supplements)
+           assertContextModel model diagnostics)
+        context
+    assertModelInput :: HumanValue.HumanInputSource -> Assertion
+    assertModelInput =
+      HumanValue.foldHumanInputSource
+        (\reference path -> do
+           reference @?= "model"
+           path @?= "model.amx")
+        (const (assertFailure "Qualification model became standard input"))
+    assertSelector :: HumanValue.HumanViewSelector -> Assertion
+    assertSelector =
+      HumanValue.foldHumanViewSelector
+        (@?= "Binding")
+        (const (assertFailure "Qualification selector changed kind"))
+    assertAutomatic :: HumanValue.HumanAdapterSelection -> Assertion
+    assertAutomatic =
+      HumanValue.foldHumanAdapterSelection
+        (pure ())
+        (const (assertFailure "Qualification adapter became explicit"))
+    assertContextModel ::
+         HumanValue.HumanSourceIdentity
+      -> HumanDiagnostic.HumanDiagnosticDocument
+      -> Assertion
+    assertContextModel model diagnostics = do
+      let sourceTuple =
+            HumanValue.foldHumanSourceIdentity $ \role ordinal reference digest ->
+              ( HumanValue.foldHumanSourceRole
+                  "model"
+                  "supplemental"
+                  "readiness"
+                  "assessment"
+                  role
+              , ordinal
+              , reference
+              , digest)
+          retained = sourceTuple model
+      retained
+        @?= sourceTuple
+              (HumanDiagnostic.humanDiagnosticDocumentModelSource diagnostics)
+      case retained of
+        (role, ordinal, reference, digest) -> do
+          role @?= ("model" :: Text)
+          ordinal @?= (0 :: Natural)
+          reference @?= "model"
+          assertBool "Qualification source digest is empty" (digest /= "")
 
 runSubjects :: [InputSource] -> IO QualificationSubjectsResult
 runSubjects supplements = do

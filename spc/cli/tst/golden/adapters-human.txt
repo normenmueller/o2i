@@ -1,0 +1,2 @@
+O2I adapters:
+  "amx" | "Archi Model XML" | "5.0.0-v1" | "archimate-3.2"

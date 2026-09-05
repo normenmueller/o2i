@@ -20,9 +20,11 @@ module O2I.Operation.Encoding.Internal
   , closedObjectFragment
   , requiredMember
   , optionalMember
+  , toolDescriptorFragment
   , machineResult
   , closedMachineResult
   , closedOperationMachineResult
+  , reportAuthorityMember
   ) where
 
 import qualified Data.ByteString as ByteString
@@ -37,10 +39,13 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Numeric.Natural (Natural)
+import O2I.Operation.Adapter (adapterIdText)
 import O2I.Operation.Machine (ToolDescriptor, foldToolDescriptor)
-import O2I.Operation.Machine.Internal
-  ( OperationIdentity
-  , operationIdentityValue
+import O2I.Operation.Report.Internal
+  ( ReportAuthority(..)
+  , ReportContract(..)
+  , ReportEnvelope(..)
+  , reportOperationText
   )
 import O2I.Operation.Schema
   ( MachineSchema
@@ -211,13 +216,8 @@ closedMachineResult schema variant members =
 -- descriptor is supplied only by the executable composition boundary. This
 -- shared primitive is the sole encoder of the four envelope members.
 closedOperationMachineResult ::
-     MachineSchema
-  -> OperationIdentity
-  -> ToolDescriptor
-  -> SchemaVariant
-  -> [CanonicalMember]
-  -> MachineResult
-closedOperationMachineResult schema operation tool variant members =
+     ReportEnvelope -> [CanonicalMember] -> MachineResult
+closedOperationMachineResult (ReportEnvelope schema variant operation tool _) members =
   MachineResult
     { machineResultSchemaValue = schema
     , machineResultVariantValue = variant
@@ -232,12 +232,56 @@ closedOperationMachineResult schema operation tool variant members =
         "schema"
         (textFragment (schemaAuthorityReference (machineSchemaAuthority schema)))
     operationMember =
-      CanonicalMember
-        "operation"
-        (textFragment (operationIdentityValue operation))
+      CanonicalMember "operation" (textFragment (reportOperationText operation))
     toolMember = CanonicalMember "tool" (toolDescriptorFragment tool)
     kindMember =
       CanonicalMember "kind" (textFragment (schemaVariantText variant))
+
+-- | Encode the authority field selected by the shared report envelope.
+reportAuthorityMember :: ReportEnvelope -> CanonicalMember
+reportAuthorityMember (ReportEnvelope _ _ _ _ authority) =
+  case authority of
+    ViewReportAuthority adapter ->
+      requiredMember
+        "authorities"
+        (arrayFragment
+           [ closedObjectFragment
+               [requiredMember "kind" (textFragment "operation")]
+           , closedObjectFragment
+               [ requiredMember "kind" (textFragment "adapter")
+               , requiredMember
+                   "adapterId"
+                   (textFragment (adapterIdText adapter))
+               ]
+           ])
+    PreparedReportAuthority contracts ->
+      requiredMember
+        "provenance"
+        (closedObjectFragment
+           [ requiredMember
+               "contracts"
+               (arrayFragment (map contractFragment (NonEmpty.toList contracts)))
+           ])
+
+contractFragment :: ReportContract -> CanonicalFragment
+contractFragment contract =
+  case contract of
+    OperationReportContract identity version digest ->
+      described "operation" identity version digest
+    AdapterReportContract -> kind "adapter"
+    ProfileReportContract -> kind "profile"
+    CoreReportContract identity version digest ->
+      described "core" identity version digest
+  where
+    kind value =
+      closedObjectFragment [requiredMember "kind" (textFragment value)]
+    described value identity version digest =
+      closedObjectFragment
+        [ requiredMember "kind" (textFragment value)
+        , requiredMember "identity" (textFragment identity)
+        , requiredMember "version" (textFragment version)
+        , requiredMember "digest" (textFragment digest)
+        ]
 
 toolDescriptorFragment :: ToolDescriptor -> CanonicalFragment
 toolDescriptorFragment =

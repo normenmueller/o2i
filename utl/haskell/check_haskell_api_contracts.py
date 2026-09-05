@@ -246,7 +246,7 @@ CONTRACTS = (
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
                 "SemanticOccurrenceOpaqueConstructors.hs",
-                (("GHC-01928", 2),),
+                (("GHC-76037", 2),),
             ),
             CompileFailure(
                 "spc/lib/core/tst/api/compile-fail/"
@@ -330,32 +330,6 @@ CONTRACTS = (
         ),
     ),
     PackageContract(
-        "o2i-inspection",
-        ("spc/lib/inspection/tst/api/compile-pass/PublicApi.hs",),
-        (
-            CompileFailure(
-                "spc/lib/inspection/tst/api/compile-fail/"
-                "ForeignAdapterLocation.hs",
-                (("GHC-83865", 1),),
-            ),
-            CompileFailure(
-                "spc/lib/inspection/tst/api/compile-fail/"
-                "HiddenNormalization.hs",
-                (("GHC-76037", 6),),
-            ),
-            CompileFailure(
-                "spc/lib/inspection/tst/api/compile-fail/"
-                "HiddenSourceBinding.hs",
-                (("GHC-76037", 2),),
-            ),
-            CompileFailure(
-                "spc/lib/inspection/tst/api/compile-fail/"
-                "OpaqueConstructors.hs",
-                (("GHC-22385", 1),),
-            ),
-        ),
-    ),
-    PackageContract(
         "o2i-archimate-profile",
         ("spc/ctr/archimate/tst/api/compile-pass/PublicApi.hs",),
         (
@@ -428,6 +402,8 @@ CONTRACTS = (
             "spc/lib/operation/tst/api/compile-pass/ValidatePublicApi.hs",
             "spc/lib/operation/tst/api/compile-pass/"
             "QualificationPublicApi.hs",
+            "spc/lib/operation/tst/api/compile-pass/"
+            "HumanConsumerPublicApi.hs",
         ),
         (
             CompileFailure(
@@ -501,7 +477,7 @@ CONTRACTS = (
             ),
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/OpaqueConstructors.hs",
-                (("GHC-01928", 1),),
+                (("GHC-01928", 1), ("GHC-88464", 2)),
             ),
             CompileFailure(
                 "spc/lib/operation/tst/api/compile-fail/"
@@ -723,8 +699,95 @@ CONTRACTS = (
                 "AssessHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "ArgumentFailureOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "CommandErrorOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "CommandErrorDocumentOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "SupplementalDiagnosticOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "HumanValueOpaqueConstructor.hs",
+                (("GHC-01928", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "HumanDiagnosticOpaqueConstructor.hs",
+                (("GHC-01928", 2),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "HumanClosedProjectionOpaqueConstructors.hs",
+                (("GHC-01928", 11), ("GHC-88464", 11)),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "HumanFailureOpaqueConstructorsA.hs",
+                (("GHC-76037", 12),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "HumanFailureOpaqueConstructorsB.hs",
+                (("GHC-76037", 18),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "HumanFailureOpaqueConstructorsC.hs",
+                (("GHC-01928", 12),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "HumanReportOpaqueConstructor.hs",
+                (("GHC-88464", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "HumanValueHiddenInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "CommandErrorHiddenInternalModule.hs",
+                (("GHC-87110", 1),),
+            ),
+            CompileFailure(
+                "spc/lib/operation/tst/api/compile-fail/"
+                "SchemaEmbedHiddenModule.hs",
+                (("GHC-87110", 1),),
+            ),
         ),
         ("o2i-core", "o2i-archimate-profile"),
+    ),
+    PackageContract(
+        "o2i-operation",
+        (
+            "spc/lib/operation/tst/api/compile-pass/"
+            "OperationReportPublicObserver.hs",
+        ),
+        (),
+    ),
+    PackageContract(
+        "o2i-operation",
+        (
+            "spc/lib/operation/tst/api/compile-pass/"
+            "OperationAmxCliConsumer.hs",
+        ),
+        (),
+        ("o2i-amx",),
     ),
 )
 
@@ -987,6 +1050,7 @@ def compiler_command(
         f"-odir={output_dir}",
         f"-hidir={output_dir}",
         f"-stubdir={output_dir}",
+        f"-i{source.parent}",
         *package_selector,
         str(source),
     ]

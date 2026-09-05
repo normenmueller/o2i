@@ -4,20 +4,16 @@ module O2I.Cli.Test.Process
   ( tests
   ) where
 
-import Control.Exception (bracket)
-import Data.Aeson (Value(..), decodeStrict')
-import Data.Aeson.Key (Key)
-import qualified Data.Aeson.KeyMap as KeyMap
+import qualified Data.Aeson as Aeson
 import qualified Data.ByteString as ByteString
-import qualified Data.ByteString.Char8 as ByteStringChar8
 import Data.Char (ord)
-import Data.Text (Text)
+import Data.JSON.JSONSchema (validateJSONSchema)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as TextEncoding
+import Numeric (showHex)
 import O2I.Cli.Test.Support
-import System.Directory (getTemporaryDirectory, removeFile)
+import O2I.Operation.Command.Error.Machine (commandErrorSchemaBytes)
 import System.Exit (ExitCode(..))
-import System.IO (hClose, openBinaryTempFile)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
 
@@ -25,335 +21,422 @@ tests :: TestTree
 tests =
   testGroup
     "process"
-    [ testCase "top-level help" topLevelHelp
-    , testCase "inspect help" inspectHelp
-    , testCase "version" version
-    , testCase "exact-name selection" exactNameSelection
-    , testCase "stable-ID selection" stableIdentifierSelection
-    , testCase "stdin source identity" stdinIdentity
-    , testCase "file and stdin preserve model result" fileStdinEquivalence
-    , testCase "one-byte stdin chunks are deterministic" chunkDeterminism
-    , testCase "model failure exits 1" modelFailure
-    , testCase "empty stdin exits 1" emptyInputFailure
-    , testCase "missing View exits 1" missingViewFailure
-    , testCase "command failure exits 2" commandFailure
-    , testCase "partial inspection exits 3" partialFailure
-    , testCase "invalid invocation exits 2" invocationFailure
-    , testCase "invalid JSON invocation is uncontaminated" jsonInvocation
+    [ testCase "root help golden" rootHelp
+    , testCase "every admitted command path has exact help" allCommandHelp
+    , testCase "root version" version
+    , testCase "adapter human golden" (golden "adapters-human.txt" ["adapters"])
     , testCase
-        "JSON before option termination selects JSON errors"
-        jsonBeforeTerminator
-    , testCase "JSON after option termination is positional" jsonAfterTerminator
-    , testCase "JSON model diagnostics remain on stderr" jsonDiagnostics
-    , testCase "unsupported options fail in the executable" forbiddenOptions
+        "adapter machine golden"
+        (golden "adapters-json.json" ["adapters", "--json"])
+    , testCase "Profile human golden" (golden "profiles-human.txt" ["profiles"])
     , testCase
-        "human stdout and diagnostics stderr are separate"
-        streamSeparation
-    , testCase "verbose leaves report bytes unchanged" verboseReport
-    , testCase "debug includes verbose diagnostics" debugIncludesVerbose
-    , testCase "adversarial file name preserves human structure" hostileFileName
+        "Profile machine golden"
+        (golden "profiles-json.json" ["profiles", "--json"])
     , testCase
-        "adversarial View selector preserves diagnostic prefixes"
-        hostileViewSelector
-    , testCase "repeated process output is deterministic" repeatedOutput
-    , testCase "repeated diagnostics are deterministic" repeatedDiagnostics
-    , testCase "human report golden" humanGolden
-    , testCase "JSON report golden" jsonGolden
+        "rules and explanations retain complete Human authority"
+        ruleHumanReports
+    , testCase
+        "rules and explanations retain complete Machine authority"
+        ruleMachineReports
+    , testCase "human command error uses stderr only" humanCommandError
+    , testCase "machine command error uses stdout only" machineCommandError
+    , testCase
+        "option-looking fixed operand selects human mode"
+        optionLookingOperand
+    , testCase "stdin cardinality error is machine-safe" stdinCardinality
+    , testCase "marker placement error retains JSON intent" markerPlacement
+    , testCase "human error scalars are terminal-safe" terminalSafeError
+    , testCase
+        "all model reports render complete terminal-safe Human projections"
+        realHumanReports
+    , testCase
+        "all machine-capable model reports preserve canonical documents"
+        realMachineReports
+    , testCase
+        "qualification-subject supplemental failure is canonical machine output"
+        qualificationSubjectsMachineFailure
+    , testCase
+        "qualification-subject supplemental failure is complete Human output"
+        qualificationSubjectsHumanFailure
+    , testCase
+        "debug Human output strictly extends verbose with exact machine bytes"
+        verbosityExtension
     ]
 
-topLevelHelp :: Assertion
-topLevelHelp = do
+rootHelp :: Assertion
+rootHelp = do
   result <- runO2I ["--help"] ByteString.empty
   expected <- goldenBytes "help.txt"
-  processExitCode result @?= ExitSuccess
-  processStdout result @?= expected
-  processStderr result @?= ByteString.empty
+  result @?= ProcessResult ExitSuccess expected ByteString.empty
 
-inspectHelp :: Assertion
-inspectHelp = do
-  result <- runO2I ["inspect", "--help"] ByteString.empty
-  processExitCode result @?= ExitSuccess
-  assertContains (processStdout result) "MODEL (--view NAME | --view-id ID)"
-  assertContains (processStdout result) "Model path, or - for standard input."
-  countOccurrences "-h,--help" (processStdout result) @?= 1
-  assertNotContains (processStdout result) "RawGraph"
+allCommandHelp :: Assertion
+allCommandHelp = mapM_ assertHelp commandPaths
+  where
+    assertHelp path = do
+      result <- runO2I (path <> ["--help"]) ByteString.empty
+      processExitCode result @?= ExitSuccess
+      assertContains (processStdout result) "Usage: o2i "
+      processStderr result @?= ByteString.empty
 
 version :: Assertion
 version = do
   result <- runO2I ["--version"] ByteString.empty
-  processExitCode result @?= ExitSuccess
-  processStdout result @?= "o2i 0.2.0.0\n"
+  result @?= ProcessResult ExitSuccess "o2i 0.3.0.0\n" ByteString.empty
+
+golden :: FilePath -> [String] -> Assertion
+golden name arguments = do
+  result <- runO2I arguments ByteString.empty
+  expected <- goldenBytes name
+  result @?= ProcessResult ExitSuccess expected ByteString.empty
+
+ruleHumanReports :: Assertion
+ruleHumanReports = mapM_ assertAuthority ruleAuthorities
+  where
+    assertAuthority (authority, rule, authorityLine, ruleLine) = do
+      inventory <- runO2I (["rules"] <> authority) ByteString.empty
+      processExitCode inventory @?= ExitSuccess
+      processStderr inventory @?= ByteString.empty
+      assertContains (processStdout inventory) "O2I rules: discovered\n"
+      assertContains (processStdout inventory) authorityLine
+      assertContains (processStdout inventory) ruleLine
+      found <- runO2I (["explain"] <> authority <> [rule]) ByteString.empty
+      processExitCode found @?= ExitSuccess
+      processStderr found @?= ByteString.empty
+      assertContains (processStdout found) "O2I rule explanation: found\n"
+      assertContains (processStdout found) authorityLine
+      assertContains
+        (processStdout found)
+        ("  requested=\"" <> TextEncoding.encodeUtf8 (Text.pack rule) <> "\"\n")
+      assertContains (processStdout found) ruleLine
+      missing <-
+        runO2I
+          (["explain"] <> authority <> ["hostile-\"missing\""])
+          ByteString.empty
+      processExitCode missing @?= ExitFailure 1
+      processStderr missing @?= ByteString.empty
+      assertContains (processStdout missing) "O2I rule explanation: not-found\n"
+      assertContains (processStdout missing) authorityLine
+      assertContains
+        (processStdout missing)
+        "  requested=\"hostile-\\\"missing\\\"\"\n"
+      mapM_ (assertTerminalSafe . processStdout) [inventory, found, missing]
+
+ruleMachineReports :: Assertion
+ruleMachineReports = mapM_ assertAuthority ruleAuthorities
+  where
+    assertAuthority (authority, rule, _, _) = do
+      inventory <-
+        runO2I (["rules"] <> authority <> ["--json"]) ByteString.empty
+      processExitCode inventory @?= ExitSuccess
+      processStderr inventory @?= ByteString.empty
+      assertJsonObject (processStdout inventory)
+      assertContains
+        (processStdout inventory)
+        "\"schema\":\"o2i.discovery.rule-inventory/v1\""
+      assertContains (processStdout inventory) "\"kind\":\"rule-inventory\""
+      ByteString.count 10 (processStdout inventory) @?= 1
+      found <-
+        runO2I (["explain"] <> authority <> [rule, "--json"]) ByteString.empty
+      processExitCode found @?= ExitSuccess
+      processStderr found @?= ByteString.empty
+      assertJsonObject (processStdout found)
+      assertContains
+        (processStdout found)
+        "\"schema\":\"o2i.discovery.rule-explanation/v1\""
+      assertContains (processStdout found) "\"kind\":\"rule-explanation-found\""
+      assertContains
+        (processStdout found)
+        ("\"requestedRuleId\":\""
+           <> TextEncoding.encodeUtf8 (Text.pack rule)
+           <> "\"")
+      missing <-
+        runO2I
+          (["explain"] <> authority <> ["hostile-\"missing\"", "--json"])
+          ByteString.empty
+      processExitCode missing @?= ExitFailure 1
+      processStderr missing @?= ByteString.empty
+      assertJsonObject (processStdout missing)
+      assertContains
+        (processStdout missing)
+        "\"kind\":\"rule-explanation-not-found\""
+      assertContains
+        (processStdout missing)
+        "\"requestedRuleId\":\"hostile-\\\"missing\\\"\""
+
+ruleAuthorities ::
+     [([String], String, ByteString.ByteString, ByteString.ByteString)]
+ruleAuthorities =
+  [ ( ["operation"]
+    , "bootstrap.profile-adapter.adapter-id"
+    , "  authority=operation | subject=unavailable | contract=\"o2i.operation\" | version=\"0.3.0\" | sha256=\"3566684fcc278d3359f7c4620f9f058c39fd9a8dd9fd12b5616da5b860bfe347\"\n"
+    , "  \"bootstrap.profile-adapter.adapter-id\" | \"preparation\" | expectation=\"The selected adapter identifier is admitted by the resolved compiled Profile.\" | meaning=\"A Profile explicitly declares which compiled adapters may project its notation.\" | action=\"Select an admitted adapter or update the compiled Profile contract.\"\n")
+  , ( ["core"]
+    , "core.assessment.actual-start.cardinality"
+    , "  authority=core | subject=unavailable | contract=\"o2i.core-semantics\" | version=\"0.3.0\" | sha256=\"fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333\"\n"
+    , "  \"core.assessment.actual-start.cardinality\" | \"readiness-and-assessment\" | expectation=\"An assessment has exactly one actual start for the traced Intervention.\" | meaning=\"Assessment chronology begins from one unambiguous Intervention start.\" | action=\"Provide one actual start bound to the traced Intervention.\"\n")
+  , ( ["adapter", "amx"]
+    , "o2i.amx.decode.encoding"
+    , "  authority=adapter | subject=\"amx\" | contract=\"amx\" | version=\"5.0.0-v1\" | sha256=unavailable\n"
+    , "  \"o2i.amx.decode.encoding\" | \"preparation\" | expectation=\"The XML encoding is UTF-8.\" | meaning=\"Draft projection requires one complete, safely decoded native XML observation.\" | action=\"Save the AMX document with UTF-8 encoding.\"\n")
+  , ( ["profile", "o2i.archimate-profile@0.3"]
+    , "carrier:context"
+    , "  authority=profile | subject=\"o2i.archimate-profile@0.3\" | contract=\"o2i.archimate-profile\" | version=\"0.3.0\" | sha256=\"3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081\"\n"
+    , "  \"carrier:context\" | \"profile\" | expectation=\"A displayed concept carrying an O2I type in [Ethos, Mission, Vision, Strategy, Situation, Need, Intervention, Measure] must use ArchiMate element 'Grouping' in carrier category 'Context'.\" | meaning=\"The carrier tuple is the compiled notation representation of those O2I types.\" | action=\"Use ArchiMate element 'Grouping' and an admitted o2i.type value.\"\n")
+  ]
+
+humanCommandError :: Assertion
+humanCommandError = do
+  result <- runO2I ["frobnicate"] ByteString.empty
+  processExitCode result @?= ExitFailure 2
+  processStdout result @?= ByteString.empty
+  assertContains (processStderr result) "[o2i|error] \"cli.argument.command\":"
+
+machineCommandError :: Assertion
+machineCommandError = do
+  result <- runO2I ["adapters", "--json=true"] ByteString.empty
+  processExitCode result @?= ExitFailure 2
+  processStderr result @?= ByteString.empty
+  assertMachineError (processStdout result)
+
+optionLookingOperand :: Assertion
+optionLookingOperand = do
+  result <- runO2I ["views", "--json=true"] ByteString.empty
+  processExitCode result @?= ExitFailure 2
+  assertContains (processStdout result) "O2I views: failed\n  acquisition|"
+  assertContains (processStdout result) "--json=true"
   processStderr result @?= ByteString.empty
 
-exactNameSelection :: Assertion
-exactNameSelection = do
-  result <- partialStdin ["--view", "CLI Scope", "--json"]
-  processExitCode result @?= ExitFailure 3
-  assertContains (processStdout result) "\"kind\":\"name\""
-
-stableIdentifierSelection :: Assertion
-stableIdentifierSelection = do
-  result <- partialStdin ["--view-id", "view", "--json"]
-  processExitCode result @?= ExitFailure 3
-  assertContains (processStdout result) "\"kind\":\"id\""
-
-stdinIdentity :: Assertion
-stdinIdentity = do
-  result <- partialStdin ["--view", "CLI Scope", "--json"]
-  assertContains (processStdout result) "\"label\":\"<stdin>\""
-  assertContains (processStdout result) "\"inputKind\":\"stdin\""
-
-fileStdinEquivalence :: Assertion
-fileStdinEquivalence = do
-  path <- fixturePath "partial-strategy.archimate"
-  fileResult <-
-    runO2I ["inspect", path, "--view", "CLI Scope", "--json"] ByteString.empty
-  stdinResult <- partialStdin ["--view", "CLI Scope", "--json"]
-  processExitCode fileResult @?= processExitCode stdinResult
-  jsonField "result" fileResult @?= jsonField "result" stdinResult
-  jsonField "stages" fileResult @?= jsonField "stages" stdinResult
-  assertContains
-    (processStdout fileResult)
-    "\"sha256\":\"517502bb478055c5fdd170dcf1c4fde61a6d4c15a890cd4ea2ef31ddb7b0dbe2\""
-  assertContains
-    (processStdout stdinResult)
-    "\"sha256\":\"517502bb478055c5fdd170dcf1c4fde61a6d4c15a890cd4ea2ef31ddb7b0dbe2\""
-
-chunkDeterminism :: Assertion
-chunkDeterminism = do
-  bytes <- fixtureBytes "partial-strategy.archimate"
-  whole <- runO2I ["inspect", "-", "--view", "CLI Scope", "--json"] bytes
-  chunked <-
-    runO2IChunks
-      ["inspect", "-", "--view", "CLI Scope", "--json"]
-      (map ByteString.singleton (ByteString.unpack bytes))
-  chunked @?= whole
-
-modelFailure :: Assertion
-modelFailure = do
-  bytes <- fixtureBytes "malformed.archimate"
-  result <- runO2I ["inspect", "-", "--view", "Scope"] bytes
-  processExitCode result @?= ExitFailure 1
-  assertContains (processStdout result) "O2I inspection: failed"
-  assertContains (processStderr result) "[o2i|error] o2i.amx.decode."
-
-emptyInputFailure :: Assertion
-emptyInputFailure = do
-  result <- runO2I ["inspect", "-", "--view", "Scope"] ByteString.empty
-  processExitCode result @?= ExitFailure 1
-  assertContains (processStdout result) "decode       failed"
-
-missingViewFailure :: Assertion
-missingViewFailure = do
-  result <- partialStdin ["--view", "Missing"]
-  processExitCode result @?= ExitFailure 1
-  assertContains (processStdout result) "view-scope   failed"
-
-commandFailure :: Assertion
-commandFailure = do
+stdinCardinality :: Assertion
+stdinCardinality = do
   result <-
     runO2I
-      ["inspect", "missing-cli-model.archimate", "--view", "Scope"]
+      ["readiness", "-", "--view", "Scope", "--input", "-", "--json"]
       ByteString.empty
   processExitCode result @?= ExitFailure 2
-  processStdout result @?= ByteString.empty
-  assertContains (processStderr result) "[o2i|error] Cannot read"
+  processStderr result @?= ByteString.empty
+  assertMachineError (processStdout result)
 
-partialFailure :: Assertion
-partialFailure = do
-  result <- partialStdin ["--view", "CLI Scope"]
-  processExitCode result @?= ExitFailure 3
-  assertContains (processStdout result) "semantics    unavailable"
-
-invocationFailure :: Assertion
-invocationFailure = do
-  result <- runO2I ["inspect"] ByteString.empty
-  processExitCode result @?= ExitFailure 2
-  processStdout result @?= ByteString.empty
-  assertContains (processStderr result) "[o2i|error] Missing: MODEL"
-
-jsonInvocation :: Assertion
-jsonInvocation = do
-  result <- runO2I ["inspect", "--json"] ByteString.empty
+markerPlacement :: Assertion
+markerPlacement = do
+  result <- runO2I ["adapters", "--", "--json"] ByteString.empty
   processExitCode result @?= ExitFailure 2
   processStderr result @?= ByteString.empty
-  assertContains (processStdout result) "\"schema\":\"o2i.command-error/v1\""
-  assertNotContains (processStdout result) "[o2i|error]"
+  assertMachineError (processStdout result)
 
-jsonBeforeTerminator :: Assertion
-jsonBeforeTerminator = do
-  result <- runO2I ["inspect", "--json", "--", "model"] ByteString.empty
+terminalSafeError :: Assertion
+terminalSafeError = do
+  result <- runO2I ["bad\n\ESC\DEL\x0085"] ByteString.empty
+  processExitCode result @?= ExitFailure 2
+  processStdout result @?= ByteString.empty
+  case TextEncoding.decodeUtf8' (processStderr result) of
+    Left failure -> assertFailure (show failure)
+    Right rendered ->
+      assertBool
+        "stderr contains an unsafe terminal control"
+        (Text.all safeCharacter rendered)
+  assertContains
+    (processStderr result)
+    "bad\\u{000A}\\u{001B}\\u{007F}\\u{0085}"
+
+realHumanReports :: Assertion
+realHumanReports = do
+  model <- fixturePath "profiled-minimal.archimate"
+  readiness <- fixturePath "readiness-input.json"
+  assessment <- fixturePath "assessment-input.json"
+  mapM_
+    assertHumanReport
+    [ ( ["views", model]
+      , ExitSuccess
+      , "O2I views: discovered\n"
+      , "|views|o2i|0.3.0.0|")
+    , ( ["qualification-subjects", model, "--view", "KPI", "--verbose"]
+      , ExitSuccess
+      , "O2I qualification-subjects: discovered\n"
+      , "|qualification-subjects|o2i|0.3.0.0|")
+    , ( ["validate", model, "--view", "KPI", "--level", "semantics", "--debug"]
+      , ExitSuccess
+      , "O2I validate: accepted\n"
+      , "|validate|o2i|0.3.0.0|")
+    , ( ["trace", model, "--view", "KPI"]
+      , ExitFailure 1
+      , "O2I trace: partial\n"
+      , "|trace|o2i|0.3.0.0|")
+    , ( ["qualify", model, "--view", "KPI", "--strategy-id", "strategy"]
+      , ExitSuccess
+      , "O2I qualify: completed\n"
+      , "|qualify|o2i|0.3.0.0|")
+    , ( ["readiness", model, "--view", "KPI", "--input", readiness]
+      , ExitFailure 3
+      , "O2I readiness: unavailable\n"
+      , "|readiness|o2i|0.3.0.0|")
+    , ( ["assess", model, "--view", "KPI", "--input", assessment]
+      , ExitFailure 3
+      , "O2I assess: subject-unavailable\n"
+      , "|assess|o2i|0.3.0.0|")
+    ]
+  where
+    assertHumanReport (arguments, expectedExit, status, envelope) = do
+      result <- runO2I arguments ByteString.empty
+      processExitCode result @?= expectedExit
+      processStderr result @?= ByteString.empty
+      assertContains (processStdout result) status
+      assertContains (processStdout result) envelope
+      assertTerminalSafe (processStdout result)
+
+realMachineReports :: Assertion
+realMachineReports = do
+  model <- fixturePath "profiled-minimal.archimate"
+  readiness <- fixturePath "readiness-input.json"
+  assessment <- fixturePath "assessment-input.json"
+  mapM_
+    assertMachineReport
+    [ ( ["views", model, "--json"]
+      , ExitSuccess
+      , "o2i.discovery.view/v2"
+      , "views")
+    , ( ["qualification-subjects", model, "--view", "KPI", "--json"]
+      , ExitSuccess
+      , "o2i.discovery.qualification-subjects/v1"
+      , "qualification-subjects")
+    , ( ["validate", model, "--view", "KPI", "--level", "semantics", "--json"]
+      , ExitSuccess
+      , "o2i.operation.validate/v1"
+      , "validate")
+    , ( ["trace", model, "--view", "KPI", "--json"]
+      , ExitFailure 1
+      , "o2i.operation.trace/v1"
+      , "trace")
+    , ( [ "qualify"
+        , model
+        , "--view"
+        , "KPI"
+        , "--strategy-id"
+        , "strategy"
+        , "--json"
+        ]
+      , ExitSuccess
+      , "o2i.operation.qualify/v1"
+      , "qualify")
+    , ( ["readiness", model, "--view", "KPI", "--input", readiness, "--json"]
+      , ExitFailure 3
+      , "o2i.operation.readiness/v1"
+      , "readiness")
+    , ( ["assess", model, "--view", "KPI", "--input", assessment, "--json"]
+      , ExitFailure 3
+      , "o2i.operation.assess/v1"
+      , "assess")
+    ]
+  where
+    assertMachineReport (arguments, expectedExit, schema, operation) = do
+      result <- runO2I arguments ByteString.empty
+      processExitCode result @?= expectedExit
+      processStderr result @?= ByteString.empty
+      assertJsonObject (processStdout result)
+      assertContains (processStdout result) ("\"schema\":\"" <> schema <> "\"")
+      assertContains
+        (processStdout result)
+        ("\"operation\":\"" <> operation <> "\"")
+      assertContains
+        (processStdout result)
+        "\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0.0\"}"
+      ByteString.count 10 (processStdout result) @?= 1
+
+qualificationSubjectsMachineFailure :: Assertion
+qualificationSubjectsMachineFailure = do
+  model <- fixturePath "profiled-minimal.archimate"
+  result <-
+    runO2I
+      [ "qualification-subjects"
+      , model
+      , "--view"
+      , "KPI"
+      , "--supplement"
+      , "-"
+      , "--json"
+      ]
+      ByteString.empty
   processExitCode result @?= ExitFailure 2
   processStderr result @?= ByteString.empty
-  assertContains (processStdout result) "\"schema\":\"o2i.command-error/v1\""
+  assertMachineError (processStdout result)
+  assertContains
+    (processStdout result)
+    "\"kind\":\"qualification-subjects-failed\""
+  assertContains
+    (processStdout result)
+    "\"code\":\"qualification-subjects.supplemental-input\""
+  assertContains
+    (processStdout result)
+    "\"ruleId\":\"core.supplemental.decode.json-syntax\""
 
-jsonAfterTerminator :: Assertion
-jsonAfterTerminator = do
-  result <- runO2I ["inspect", "--", "--json"] ByteString.empty
+qualificationSubjectsHumanFailure :: Assertion
+qualificationSubjectsHumanFailure = do
+  model <- fixturePath "profiled-minimal.archimate"
+  result <-
+    runO2I
+      ["qualification-subjects", model, "--view", "KPI", "--supplement", "-"]
+      ByteString.empty
   processExitCode result @?= ExitFailure 2
   processStdout result @?= ByteString.empty
   assertContains
     (processStderr result)
-    "[o2i|error] Missing: (--view NAME | --view-id ID)"
-  assertNotContains (processStderr result) "\"schema\""
-
-jsonDiagnostics :: Assertion
-jsonDiagnostics = do
-  bytes <- fixtureBytes "malformed.archimate"
-  result <- runO2I ["inspect", "-", "--view", "Scope", "--json"] bytes
-  processExitCode result @?= ExitFailure 1
-  case decodeStrict' (processStdout result) :: Maybe Value of
-    Nothing -> assertFailure "stdout is not an inspection JSON document"
-    Just _ -> pure ()
-  assertNotContains (processStdout result) "[o2i|"
-  assertContains (processStderr result) "[o2i|error] o2i.amx.decode."
-
-forbiddenOptions :: Assertion
-forbiddenOptions = mapM_ assertRejected ["--format", "--through", "--no-color"]
-  where
-    assertRejected option = do
-      result <-
-        runO2I
-          ["inspect", "model.archimate", "--view", "Scope", option]
-          ByteString.empty
-      processExitCode result @?= ExitFailure 2
-      processStdout result @?= ByteString.empty
-
-streamSeparation :: Assertion
-streamSeparation = do
-  bytes <- fixtureBytes "malformed.archimate"
-  result <- runO2I ["inspect", "-", "--view", "Scope"] bytes
-  assertNotContains (processStdout result) "[o2i|"
-  assertNotContains (processStderr result) "O2I inspection:"
-
-verboseReport :: Assertion
-verboseReport = do
-  normal <- partialStdin ["--view", "CLI Scope"]
-  verbose <- partialStdin ["--view", "CLI Scope", "--verbose"]
-  processStdout verbose @?= processStdout normal
-  assertContains (processStderr verbose) "[o2i|info] Inspected <stdin>"
-
-debugIncludesVerbose :: Assertion
-debugIncludesVerbose = do
-  debug <- partialStdin ["--view", "CLI Scope", "--debug"]
-  assertContains (processStderr debug) "[o2i|info] Inspected <stdin>"
-  assertContains (processStderr debug) "[o2i|debug] decode=passed"
-
-hostileFileName :: Assertion
-hostileFileName =
-  withAdversarialFixture $ \path -> do
-    result <-
-      runO2I
-        ["inspect", path, "--view", "CLI Scope", "--debug"]
-        ByteString.empty
-    processExitCode result @?= ExitFailure 3
-    assertContains
-      (processStdout result)
-      (TextEncoding.encodeUtf8 expectedTerminalEscapeFragment)
-    assertContains (processStderr result) "[o2i|info] Inspected "
-    assertTerminalSafe (processStdout result)
-    assertTerminalSafe (processStderr result)
-    assertPrefixed (processStderr result)
-
-hostileViewSelector :: Assertion
-hostileViewSelector = do
-  bytes <- fixtureBytes "partial-strategy.archimate"
-  result <-
-    runO2I
-      ["inspect", "-", "--view", Text.unpack adversarialText, "--debug"]
-      bytes
-  processExitCode result @?= ExitFailure 1
-  let escaped = TextEncoding.encodeUtf8 expectedTerminalEscapeFragment
-  assertContains (processStdout result) escaped
-  assertContains (processStderr result) escaped
-  assertTerminalSafe (processStdout result)
+    "[o2i|error] \"qualification-subjects.supplemental-input\":"
+  assertContains
+    (processStderr result)
+    "invalid-json-syntax|core.supplemental.decode.json-syntax|0"
   assertTerminalSafe (processStderr result)
-  assertPrefixed (processStderr result)
 
-repeatedOutput :: Assertion
-repeatedOutput = do
-  first <- partialStdin ["--view", "CLI Scope", "--json"]
-  second <- partialStdin ["--view", "CLI Scope", "--json"]
-  second @?= first
-
-repeatedDiagnostics :: Assertion
-repeatedDiagnostics = do
-  bytes <- fixtureBytes "malformed.archimate"
-  first <- runO2I ["inspect", "-", "--view", "Scope", "--json"] bytes
-  second <- runO2I ["inspect", "-", "--view", "Scope", "--json"] bytes
-  second @?= first
-
-humanGolden :: Assertion
-humanGolden = do
-  actual <- partialStdin ["--view", "CLI Scope"]
-  expected <- goldenBytes "inspect-human.txt"
-  processStdout actual @?= expected
-
-jsonGolden :: Assertion
-jsonGolden = do
-  actual <- partialStdin ["--view", "CLI Scope", "--json"]
-  expected <- goldenBytes "inspect-json.json"
-  processStdout actual @?= expected
-
-partialStdin :: [String] -> IO ProcessResult
-partialStdin extra = do
-  bytes <- fixtureBytes "partial-strategy.archimate"
-  runO2I (["inspect", "-"] <> extra) bytes
-
-jsonField :: Key -> ProcessResult -> Maybe Value
-jsonField name result = do
-  value <- decodeStrict' (processStdout result)
-  case value of
-    Object object -> KeyMap.lookup name object
-    _ -> Nothing
-
-assertContains :: ByteString.ByteString -> ByteString.ByteString -> Assertion
-assertContains actual expected =
+verbosityExtension :: Assertion
+verbosityExtension = do
+  normal <- runO2I ["adapters"] ByteString.empty
+  verbose <- runO2I ["adapters", "--verbose"] ByteString.empty
+  debug <- runO2I ["adapters", "--debug"] ByteString.empty
+  machine <- runO2I ["adapters", "--json"] ByteString.empty
+  mapM_ ((@?= ExitSuccess) . processExitCode) [normal, verbose, debug, machine]
   assertBool
-    ("missing expected bytes: " <> show expected)
-    (ByteString.isInfixOf expected actual)
-
-assertNotContains :: ByteString.ByteString -> ByteString.ByteString -> Assertion
-assertNotContains actual unexpected =
+    "verbose output does not preserve the complete normal report prefix"
+    (processStdout normal `ByteString.isPrefixOf` processStdout verbose)
   assertBool
-    ("unexpected bytes: " <> show unexpected)
-    (not (ByteString.isInfixOf unexpected actual))
+    "debug output does not preserve the complete verbose report prefix"
+    (processStdout verbose `ByteString.isPrefixOf` processStdout debug)
+  assertContains (processStdout verbose) "  exit=0\n"
+  assertContains
+    (processStdout debug)
+    ("  machine-utf8-hex=" <> hexBytes (processStdout machine) <> "\n")
+  mapM_ (assertTerminalSafe . processStdout) [normal, verbose, debug]
 
-countOccurrences :: ByteString.ByteString -> ByteString.ByteString -> Int
-countOccurrences needle haystack
-  | ByteString.null needle = 0
-  | otherwise =
-    case ByteString.breakSubstring needle haystack of
-      (_, suffix)
-        | ByteString.null suffix -> 0
-        | otherwise ->
-          1
-            + countOccurrences
-                needle
-                (ByteString.drop (ByteString.length needle) suffix)
+hexBytes :: ByteString.ByteString -> ByteString.ByteString
+hexBytes =
+  TextEncoding.encodeUtf8
+    . Text.concat
+    . map (Text.justifyRight 2 '0' . Text.pack . (`showHex` ""))
+    . ByteString.unpack
 
-withAdversarialFixture :: (FilePath -> IO value) -> IO value
-withAdversarialFixture action = bracket create removeFile action
-  where
-    create = do
-      temporary <- getTemporaryDirectory
-      bytes <- fixtureBytes "partial-strategy.archimate"
-      (path, handle) <-
-        openBinaryTempFile
-          temporary
-          ("o2i-" <> Text.unpack adversarialText <> ".archimate")
-      ByteString.hPut handle bytes
-      hClose handle
-      pure path
+assertMachineError :: ByteString.ByteString -> Assertion
+assertMachineError bytes = do
+  schema <- decodeJsonObject commandErrorSchemaBytes
+  document <- decodeJsonObject bytes
+  assertBool
+    "command error document does not conform to its embedded Schema"
+    (validateJSONSchema schema document)
+  case document of
+    Aeson.Object object -> do
+      assertContains bytes "\"schema\":\"o2i.command-error/v1\""
+      assertBool "command error document is empty" (not (null object))
+    _ -> assertFailure "command-error output is not a JSON object"
 
-adversarialText :: Text
-adversarialText = "file\\literal\r\n\ESC\DEL\x0085\&\x009f\x03a9"
+assertJsonObject :: ByteString.ByteString -> Assertion
+assertJsonObject bytes = do
+  document <- decodeJsonObject bytes
+  case document of
+    Aeson.Object object ->
+      assertBool "machine report document is empty" (not (null object))
+    _ -> assertFailure "machine report output is not a JSON object"
 
--- This expected fragment is intentionally literal and independent of the
--- production encoder exercised by the process.
-expectedTerminalEscapeFragment :: Text
-expectedTerminalEscapeFragment =
-  "file\\\\literal\\u{000D}\\u{000A}\\u{001B}\\u{007F}\\u{0085}\\u{009F}\x03a9"
+decodeJsonObject :: ByteString.ByteString -> IO Aeson.Value
+decodeJsonObject bytes =
+  case Aeson.eitherDecodeStrict bytes of
+    Left message -> assertFailure message >> fail "unreachable"
+    Right value -> pure value
 
 assertTerminalSafe :: ByteString.ByteString -> Assertion
 assertTerminalSafe bytes =
@@ -361,19 +444,38 @@ assertTerminalSafe bytes =
     Left failure -> assertFailure (show failure)
     Right rendered ->
       assertBool
-        "human process output contains raw controls"
+        "human report contains an unsafe terminal control"
         (Text.all safeCharacter rendered)
-  where
-    safeCharacter character =
-      let code = ord character
-       in character == '\n'
-            || (code > 0x1f
-                  && code /= 0x7f
-                  && not (code >= 0x80 && code <= 0x9f))
 
-assertPrefixed :: ByteString.ByteString -> Assertion
-assertPrefixed bytes =
-  mapM_
-    (assertBool "diagnostic prefix was displaced"
-       . ByteString.isPrefixOf "[o2i|")
-    (ByteStringChar8.lines bytes)
+assertContains :: ByteString.ByteString -> ByteString.ByteString -> Assertion
+assertContains actual expected =
+  assertBool
+    ("missing expected bytes: " <> show expected)
+    (ByteString.isInfixOf expected actual)
+
+safeCharacter :: Char -> Bool
+safeCharacter character =
+  let code = ord character
+   in character == '\n'
+        || (code > 0x1f && code /= 0x7f && not (code >= 0x80 && code <= 0x9f))
+
+commandPaths :: [[String]]
+commandPaths =
+  [ ["adapters"]
+  , ["profiles"]
+  , ["rules", "adapter"]
+  , ["rules", "operation"]
+  , ["rules", "core"]
+  , ["rules", "profile"]
+  , ["explain", "adapter"]
+  , ["explain", "operation"]
+  , ["explain", "core"]
+  , ["explain", "profile"]
+  , ["views"]
+  , ["qualification-subjects"]
+  , ["validate"]
+  , ["trace"]
+  , ["qualify"]
+  , ["readiness"]
+  , ["assess"]
+  ]

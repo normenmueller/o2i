@@ -13,14 +13,6 @@ module O2I.Operation.Assess.Machine
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import qualified Data.Text as Text
-import O2I.Core.Contract
-  ( coreContractIdentity
-  , coreContractIdentityText
-  , coreContractSha256
-  , coreContractSha256Text
-  , coreContractVersion
-  , coreContractVersionText
-  )
 import O2I.Core.Identity (modelIdentityText)
 import O2I.Operation.Acquisition
   ( AcquiredAssessmentSource
@@ -49,7 +41,6 @@ import O2I.Operation.Assess.Result
   , assessSubjectUnavailableExit
   , assessSuccessExit
   , foldAssessPrerequisite
-  , foldAssessResult
   , foldPreparedAssess
   )
 import O2I.Operation.Encoding.Internal
@@ -60,6 +51,7 @@ import O2I.Operation.Encoding.Internal
   , closedOperationMachineResult
   , naturalFragment
   , nullFragment
+  , reportAuthorityMember
   , requiredMember
   , textFragment
   )
@@ -70,8 +62,7 @@ import O2I.Operation.Machine.Fragment.Internal
   , sourceIdentityFragment
   , viewDescriptorFragment
   )
-import O2I.Operation.Machine.Internal (assessOperationIdentity)
-import qualified O2I.Operation.Rule.Generated as Rule
+import O2I.Operation.Report.Internal (ReportEnvelope, foldAssessReport)
 import O2I.Operation.Schema (MachineSchema, SchemaVariant)
 import qualified O2I.Operation.Schema.Generated as Generated
 import O2I.Operation.View
@@ -89,53 +80,49 @@ newtype AssessResultDocument =
 assessResultDocument ::
      ToolDescriptor -> AssessResult -> Either AssessFailure AssessResultDocument
 assessResultDocument tool =
-  foldAssessResult
+  foldAssessReport
+    tool
     Left
-    (\stage prepared ->
+    (\envelope stage prepared ->
        Right
          (preparedDocument
-            tool
-            Generated.assessPrerequisiteRejectedVariant
+            envelope
             "prerequisite-rejected"
             assessSubjectUnavailableExit
             (Just stage)
             nullFragment
             prepared))
-    (\unavailable prepared ->
+    (\envelope unavailable prepared ->
        Right
          (preparedDocument
-            tool
-            Generated.assessSubjectUnavailableVariant
+            envelope
             "subject-unavailable"
             assessSubjectUnavailableExit
             Nothing
             (assessUnavailableFragment unavailable)
             prepared))
-    (\assessment prepared ->
+    (\envelope assessment prepared ->
        Right
          (preparedDocument
-            tool
-            Generated.assessCollectionInvalidVariant
+            envelope
             "collection-invalid"
             assessPrimaryNegativeExit
             Nothing
             (assessmentResultFragment assessment)
             prepared))
-    (\assessment prepared ->
+    (\envelope assessment prepared ->
        Right
          (preparedDocument
-            tool
-            Generated.assessObservationsInvalidVariant
+            envelope
             "observations-invalid"
             assessPrimaryNegativeExit
             Nothing
             (assessmentResultFragment assessment)
             prepared))
-    (\assessment prepared ->
+    (\envelope assessment prepared ->
        Right
          (preparedDocument
-            tool
-            Generated.assessCompletedVariant
+            envelope
             "completed"
             assessSuccessExit
             Nothing
@@ -157,25 +144,21 @@ encodeAssessResultDocument (AssessResultDocument result) =
   machineResultBytesValue result
 
 preparedDocument ::
-     ToolDescriptor
-  -> SchemaVariant
+     ReportEnvelope
   -> Text
   -> AssessExitClass
   -> Maybe AssessPrerequisite
   -> CanonicalFragment
   -> PreparedAssess
   -> AssessResultDocument
-preparedDocument tool variant status classification prerequisite assessment prepared =
+preparedDocument envelope status classification prerequisite assessment prepared =
   foldPreparedAssess
     (\request view bundle supplements diagnostics ->
        foldPreparedDiagnosticDocumentFragments
          (\authority modelDiagnostics supplementalGroups ->
             AssessResultDocument
               (closedOperationMachineResult
-                 Generated.assessResultMachineSchema
-                 assessOperationIdentity
-                 tool
-                 variant
+                 envelope
                  [ requiredMember
                      "context"
                      (contextFragment
@@ -193,7 +176,7 @@ preparedDocument tool variant status classification prerequisite assessment prep
                  , requiredMember
                      "diagnostics"
                      (diagnosticsFragment modelDiagnostics)
-                 , requiredMember "provenance" provenanceFragment
+                 , reportAuthorityMember envelope
                  ]))
          diagnostics)
     prepared
@@ -292,45 +275,4 @@ diagnosticsFragment diagnostics =
   closedObjectFragment
     [ requiredMember "schema" (textFragment "o2i.operation.diagnostic/v2")
     , requiredMember "modelDiagnostics" (arrayFragment diagnostics)
-    ]
-
-provenanceFragment :: CanonicalFragment
-provenanceFragment =
-  closedObjectFragment
-    [ requiredMember
-        "contracts"
-        (arrayFragment
-           [ operationContractFragment
-           , kindContractFragment "adapter"
-           , kindContractFragment "profile"
-           , coreContractFragment
-           ])
-    ]
-
-operationContractFragment :: CanonicalFragment
-operationContractFragment =
-  closedObjectFragment
-    [ requiredMember "kind" (textFragment "operation")
-    , requiredMember "identity" (textFragment Rule.operationContractIdentity)
-    , requiredMember "version" (textFragment Rule.operationContractVersion)
-    , requiredMember "digest" (textFragment Rule.operationContractSha256)
-    ]
-
-kindContractFragment :: Text -> CanonicalFragment
-kindContractFragment kind =
-  closedObjectFragment [requiredMember "kind" (textFragment kind)]
-
-coreContractFragment :: CanonicalFragment
-coreContractFragment =
-  closedObjectFragment
-    [ requiredMember "kind" (textFragment "core")
-    , requiredMember
-        "identity"
-        (textFragment (coreContractIdentityText coreContractIdentity))
-    , requiredMember
-        "version"
-        (textFragment (coreContractVersionText coreContractVersion))
-    , requiredMember
-        "digest"
-        (textFragment (coreContractSha256Text coreContractSha256))
     ]

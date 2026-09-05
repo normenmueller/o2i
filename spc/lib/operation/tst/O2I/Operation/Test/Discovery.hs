@@ -24,6 +24,13 @@ import O2I.Operation.Discovery.Adapter
 import O2I.Operation.Discovery.Profile
 import O2I.Operation.Discovery.Rule
 import O2I.Operation.Discovery.View
+import qualified O2I.Operation.Discovery.View.Human as Human
+import O2I.Operation.Discovery.View.Machine
+  ( viewDiscoveryDocument
+  , viewDiscoveryDocumentVariant
+  , viewDiscoverySchema
+  )
+import qualified O2I.Operation.Human.Value as HumanValue
 import O2I.Operation.Profile
 import O2I.Operation.Provenance
 import O2I.Operation.Provenance.Internal (sourceIdentityFromBytes)
@@ -33,6 +40,7 @@ import O2I.Operation.Test.AdapterSupport
   , nativeRuleSpec
   , resolveNativeRule
   )
+import qualified O2I.Operation.Test.ReportEnvelope as ReportEnvelope
 import Test.Tasty (TestTree, defaultMain, testGroup)
 import Test.Tasty.HUnit
 
@@ -152,6 +160,41 @@ viewDiscovery = do
          @?= [1, 2]
        length (Notation.canonicalDocumentRecords document) @?= 3)
     result
+  tool <- ReportEnvelope.hostileTool
+  let variant =
+        viewDiscoveryDocumentVariant (viewDiscoveryDocument tool outcome)
+  Human.foldHumanViewDiscovery
+    (const (assertFailure "successful View discovery projected as failed"))
+    (\envelope source adapter views -> do
+       ReportEnvelope.assertViewEnvelope
+         viewDiscoverySchema
+         variant
+         "amx"
+         envelope
+       HumanValue.foldHumanSourceIdentity
+         (\role ordinal reference digest -> do
+            HumanValue.foldHumanSourceRole
+              (pure ())
+              (assertFailure "View source became supplemental")
+              (assertFailure "View source became readiness")
+              (assertFailure "View source became assessment")
+              role
+            ordinal @?= 0
+            reference @?= "model"
+            assertBool "View source digest is empty" (digest /= ""))
+         source
+       HumanValue.foldHumanAdapterDescriptor
+         (\adapterId _ _ _ -> adapterId @?= "amx")
+         adapter
+       length views @?= 2)
+    (Human.viewHumanDiscovery tool outcome)
+  missing <- requireAdapterId "missing"
+  Human.foldHumanViewDiscovery
+    (const (pure ()))
+    (\_ _ _ _ -> assertFailure "missing adapter discovered Views")
+    (Human.viewHumanDiscovery
+       tool
+       (discoverAcquiredViews collection (Just missing) acquired))
 
 assertProfileRow :: ProfileDiscoveryRow -> Assertion
 assertProfileRow row = do

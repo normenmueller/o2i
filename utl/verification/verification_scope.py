@@ -63,8 +63,10 @@ HASKELL_PATHS = frozenset(
     {
         "mdl/o2i.archimate",
         "utl/haskell/check-package-licenses.sh",
+        "utl/haskell/check_atomic_cutover.py",
         "utl/haskell/check_cabal_plan.py",
         "utl/haskell/check_haskell_api_contracts.py",
+        "utl/haskell/test_check_atomic_cutover.py",
         "utl/haskell/test_check_cabal_plan.py",
         "utl/haskell/test_check_haskell_api_contracts.py",
     }

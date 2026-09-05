@@ -21,6 +21,10 @@ Ein gebundener Grant bleibt bis zu seinem Zielzustand wirksam; nur die Freigabea
 
 `authority_request` fordert genau einen begrenzten Agenten-Grant an und akzeptiert allein die unmittelbar folgende, alleinstehende Antwort `Freigegeben.`. `product_owner_action` fordert genau eine Handlung des Product Owners und erzeugt keinen Grant. `cold_start` verwendet ausschließlich die drei festen Übergangsaktionen und erzeugt ebenfalls keinen Grant. Falsche, nicht angrenzende, überholte, rekonstruierte oder bereits verbrauchte Freigaben werden abgewiesen.
 
+### Cold Start
+
+GitHub ist das einzige operative Continuity-Ziel. Zulässig sind ein vollständig abgeschlossener Arbeitsstand und eine aktive, vollständig veröffentlichte Entscheidungsgrenze. Beide benötigen einen sauberen Fresh-Clone-Beweis, ein passendes getracktes State/Handoff-Paar, aktuelle dauerhafte Autoritätsbelege und dürfen weder Transcript, `resume`, lokale Pointer, ignorierte Dateien, Host-Snapshots noch Modellgedächtnis voraussetzen. Ein aktiver Checkpoint macht Unfertigkeit und fehlende Akzeptanz ausdrücklich sichtbar und erzeugt selbst weder Akzeptanz noch Autorität.
+
 ### Provenienz und Grenzen
 
 Product-Owner-Entscheidungsautorität, tatsächliche Inhaltsautorschaft, Erzeuger des Git-Commit-Objekts und verifizierte Remote-Publisher-Identität sind unabhängige Fakten. Eine Freigabe macht den Product Owner niemals automatisch zum Autor, Co-Author, Committer oder Publisher.

@@ -15,6 +15,7 @@ module O2I.Operation.Profile
   , foldProfileInventoryDefect
   , type ProfileInventoryCompilation
   , foldProfileInventoryCompilation
+  , compiledProfileInventory
   , compileProfileInventory
   , type ProfileInventory
   , profileInventoryDescriptors
@@ -44,6 +45,7 @@ import Data.Maybe (mapMaybe)
 import Data.Ord (comparing)
 import Data.Text (Text)
 import qualified Data.Text as Text
+import qualified O2I.ArchiMate.Profile as ArchiMate
 import O2I.ArchiMate.Profile.Draft
   ( DraftScalar
   , DraftValueKind
@@ -106,6 +108,14 @@ foldProfileInventoryCompilation failed compiled outcome =
   case outcome of
     ProfileInventoryCompilationFailed defects -> failed defects
     ProfileInventoryCompiled inventory -> compiled inventory
+
+-- | Compile the complete immutable Profile contribution linked into Operation.
+--
+-- This is the sole executable composition entry for the closed Profile set;
+-- consumers need no direct dependency on the Profile package.
+compiledProfileInventory :: ProfileInventoryCompilation
+compiledProfileInventory =
+  compileProfileInventory ArchiMate.compiledProfileInventory
 
 -- | Validate and canonically order one closed static Profile collection.
 --

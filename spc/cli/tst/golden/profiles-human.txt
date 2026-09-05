@@ -1,0 +1,2 @@
+O2I profiles:
+  "o2i.archimate-profile"@"0.3" | "0.3.0" | "archimate-3.2" | adapters="amx" | sha256="3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"

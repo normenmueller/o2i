@@ -26,8 +26,12 @@ module O2I.Operation.Diagnostic
   , preparedDiagnosticStage
   , preparedDiagnosticRuleIdentity
   , foldPreparedDiagnostic
+  , type SupplementalDiagnostic
+  , supplementalDiagnosticRuleIdentity
+  , foldSupplementalDiagnostic
   , type SupplementalDiagnosticGroups
   , noSupplementalDiagnosticGroups
+  , foldSupplementalDiagnosticGroups
   , type PreparedDiagnosticDocument
   , preparedDiagnosticDocument
   , foldPreparedDiagnosticDocument
@@ -37,14 +41,21 @@ import Data.Text (Text)
 import qualified O2I.ArchiMate.Profile.Closure as Closure
 import qualified O2I.ArchiMate.Profile.Projection as Profile
 import O2I.Core.Contract (coreRuleIdText)
+import O2I.Core.Identity (ModelIdentity)
+import O2I.Operation.Acquisition (AcquiredSupplementalSource)
 import O2I.Operation.Adapter (adapterRuleId, adapterRuleIdText)
 import O2I.Operation.Diagnostic.AdapterOwner.Internal
   ( AdapterNotationDiagnostic
   , foldAdapterNotationDiagnostic
   )
 import O2I.Operation.Diagnostic.Internal
-import O2I.Operation.Diagnostic.Owner.Source.Internal (PreparedAuthority)
+import O2I.Operation.Diagnostic.Owner.Source.Internal
+  ( PreparedAuthority
+  , SupplementalOwnerBindingEvidence(..)
+  , SupplementalOwnerOccurrence(..)
+  )
 import qualified O2I.Semantics as Semantics
+import qualified O2I.Semantics.Input as Binding
 import qualified O2I.Structure as Structure
 
 -- | Severity for an accepted positive owner fact.
@@ -187,11 +198,80 @@ foldPreparedDiagnostic notation activation rejection classification mapping inva
     StructureRejectionDiagnostic evidence -> structure evidence
     SemanticsRejectionDiagnostic evidence -> semantics evidence
 
+-- | Exact Core rule identity retained by one supplemental Binding finding.
+supplementalDiagnosticRuleIdentity :: SupplementalDiagnostic -> Text
+supplementalDiagnosticRuleIdentity (SupplementalDiagnostic (SupplementalOwnerBindingEvidence evidence)) =
+  coreRuleIdText (Binding.supplementalBindingDiagnosticEvidenceRule evidence)
+
+-- | Consume every closed graph-dependent supplemental Binding outcome.
+--
+-- Each callback receives the exact acquired source retained by the evidence,
+-- RFC 6901 instance pointer, and validated model identity. No caller-supplied
+-- source, Core constructor, or detachable provenance token is admitted.
+foldSupplementalDiagnostic ::
+     (AcquiredSupplementalSource -> Text -> ModelIdentity -> result)
+  -> (AcquiredSupplementalSource -> Text -> ModelIdentity -> result)
+  -> (AcquiredSupplementalSource -> Text -> ModelIdentity -> result)
+  -> (AcquiredSupplementalSource -> Text -> ModelIdentity -> result)
+  -> SupplementalDiagnostic
+  -> result
+foldSupplementalDiagnostic unknown ambiguous wrongType outOfView diagnostic =
+  case diagnostic of
+    SupplementalDiagnostic (SupplementalOwnerBindingEvidence evidence) ->
+      Binding.foldSupplementalBindingDiagnosticEvidence
+        (\occurrence value ->
+           withOccurrence
+             occurrence
+             unknown
+             (Binding.supplementalIdentityUnknownInstancePointer value)
+             (Binding.supplementalIdentityUnknownModelIdentity value))
+        (\occurrence value ->
+           withOccurrence
+             occurrence
+             ambiguous
+             (Binding.supplementalIdentityAmbiguousInstancePointer value)
+             (Binding.supplementalIdentityAmbiguousModelIdentity value))
+        (\occurrence value ->
+           withOccurrence
+             occurrence
+             wrongType
+             (Binding.supplementalIdentityWrongTypeInstancePointer value)
+             (Binding.supplementalIdentityWrongTypeModelIdentity value))
+        (\occurrence value ->
+           withOccurrence
+             occurrence
+             outOfView
+             (Binding.supplementalIdentityOutOfViewInstancePointer value)
+             (Binding.supplementalIdentityOutOfViewModelIdentity value))
+        evidence
+  where
+    withOccurrence occurrence consume pointer identity =
+      case occurrence of
+        SupplementalOwnerOccurrence source -> consume source pointer identity
+
 -- | Canonical empty collection for a document produced before any
 -- supplemental binding exists.
 noSupplementalDiagnosticGroups ::
      SupplementalDiagnosticGroups authority profile document
 noSupplementalDiagnosticGroups = SupplementalDiagnosticGroups []
+
+-- | Consume every source group in canonical order, including empty groups.
+--
+-- The source and all of its sealed child findings are delivered together, so
+-- callers cannot flatten and reassociate diagnostics across source authority.
+foldSupplementalDiagnosticGroups ::
+     (AcquiredSupplementalSource -> [SupplementalDiagnostic] -> group)
+  -> ([group] -> result)
+  -> SupplementalDiagnosticGroups authority profile document
+  -> result
+foldSupplementalDiagnosticGroups group consume groups =
+  case groups of
+    SupplementalDiagnosticGroups values -> consume (map foldGroup values)
+  where
+    foldGroup diagnosticGroup =
+      case diagnosticGroup of
+        SupplementalDiagnosticGroup source evidence ->
+          group source (map SupplementalDiagnostic evidence)
 
 -- | Seal one authority with all model and supplemental diagnostics.
 preparedDiagnosticDocument ::

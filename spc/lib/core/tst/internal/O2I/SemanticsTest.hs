@@ -143,6 +143,9 @@ tests =
             "executes the exact 27/27 real-producer matrix"
             realProducerOccurrenceMatrix
         , testCase
+            "publicly eliminates every field of all 27 real producers"
+            publicProducerProjectionMatrix
+        , testCase
             "preserves every cardinality and multi-role order"
             runtimeOccurrenceCardinalityOracle
         ]
@@ -630,6 +633,109 @@ realProducerOccurrenceMatrix =
               @?= Map.keysSet (Map.fromList runtimeProducerOccurrenceOracle)
             actual @?= runtimeProducerOccurrenceOracle
 
+publicProducerProjectionMatrix :: Assertion
+publicProducerProjectionMatrix =
+  case (realProducerDefects, realProducerPublicProjections) of
+    (Left problem, _) -> assertFailure problem
+    (_, Left problem) -> assertFailure problem
+    (Right defects, Right projections) -> do
+      let internalByRule =
+            Map.fromListWith
+              min
+              [ ( coreRuleIdText (semanticRuleId (semanticDefectRule defect))
+                , internalDiagnosticProjection defect)
+              | defect <- defects
+              ]
+          publicByRule = Map.fromListWith min projections
+      Map.size internalByRule @?= 27
+      Map.keysSet publicByRule @?= Map.keysSet internalByRule
+      publicByRule @?= internalByRule
+
+type RuntimeDiagnosticProjection = ([Text], [[Text]])
+
+internalDiagnosticProjection :: SemanticDefect -> RuntimeDiagnosticProjection
+internalDiagnosticProjection defect =
+  ( internalKeyValues (semanticDefectEvidence defect)
+  , [ map occurrenceIdentityText occurrences
+    | (_, occurrences) <-
+        NonEmpty.toList (semanticDefectOccurrenceGroups defect)
+    ])
+  where
+    internalKeyValues evidence =
+      case evidence of
+        SemanticNeedKey need -> [modelIdentityText need]
+        SemanticNeedMemberKey need member ->
+          [modelIdentityText need, modelIdentityText member]
+        SemanticStrategyKey strategy -> [modelIdentityText strategy]
+        SemanticStrategyMemberKey strategy member ->
+          [modelIdentityText strategy, modelIdentityText member]
+        SemanticFitClaimKey claim -> [modelIdentityText claim]
+        SemanticParticipantClaimKey claim participant ->
+          [modelIdentityText claim, modelIdentityText participant]
+        SemanticAssertedDependencyKey dependent endpoint context ->
+          map occurrenceIdentityText [dependent, endpoint, context]
+
+publicDiagnosticProjection ::
+     Public.SemanticDiagnosticEvidence scope -> RuntimeDiagnosticProjection
+publicDiagnosticProjection =
+  Public.foldSemanticDiagnosticEvidence
+    Public.SemanticDiagnosticEliminator
+      { Public.eliminateCollectiveAssertedCollectiveCoverage =
+          \claim values -> exact [model claim] [many values]
+      , Public.eliminateCollectiveAssertedCompleteness =
+          \claim occurrence -> exact [model claim] [[item occurrence]]
+      , Public.eliminateCollectiveAssertedMacroSupport = participantTriple
+      , Public.eliminateCollectiveAssertedParticipantPrimitiveSupport =
+          participantTriple
+      , Public.eliminateCollectiveFitPairwiseCoherence = fit
+      , Public.eliminateCollectiveFitParticipantBinding = fit
+      , Public.eliminateCollectiveFitParticipantCompatibility = fit
+      , Public.eliminateCollectiveFitTargetBinding = fit
+      , Public.eliminateCollectiveFitTargetGuidingPolicy = fit
+      , Public.eliminateCollectiveFitTargetTradeOffs = fit
+      , Public.eliminateContextualizationAssertedDependency =
+          \dependent endpoint context first second third ->
+            exact
+              (map item [dependent, endpoint, context])
+              (map (\value -> [item value]) [first, second, third])
+      , Public.eliminateSituatedNeedDriverAnchoring = member
+      , Public.eliminateSituatedNeedDriverCardinality = empty
+      , Public.eliminateSituatedNeedObjectiveCardinality = empty
+      , Public.eliminateSituatedNeedObjectiveGrounding = member
+      , Public.eliminateSituatedNeedSurfacingSituationAnchoring = member
+      , Public.eliminateSituatedNeedSurfacingSituationCardinality = empty
+      , Public.eliminateStrategyFormulationActionContributions = member
+      , Public.eliminateStrategyFormulationActions =
+          \strategy values -> exact [model strategy] [many values]
+      , Public.eliminateStrategyFormulationDiagnosis = listed
+      , Public.eliminateStrategyFormulationDiagnosisGrounding = pair
+      , Public.eliminateStrategyFormulationGuidingPolicy = listed
+      , Public.eliminateStrategyFormulationGuidingPolicyActions = memberPair
+      , Public.eliminateStrategyFormulationIntent = listed
+      , Public.eliminateStrategyFormulationKeyResultSubstantiation = memberPair
+      , Public.eliminateStrategyFormulationKeyResults =
+          \strategy values -> exact [model strategy] [many values]
+      , Public.eliminateStrategyFormulationVisionOrientation = empty
+      }
+  where
+    exact keys groups = (keys, groups)
+    model = modelIdentityText
+    item = occurrenceIdentityText
+    many = map item . NonEmpty.toList
+    fit claim occurrence = exact [model claim] [[item occurrence]]
+    participantTriple claim participant first second third =
+      exact
+        [model claim, model participant]
+        (map (\value -> [item value]) [first, second, third])
+    member owner owned occurrence =
+      exact [model owner, model owned] [[item occurrence]]
+    empty identity = exact [model identity] [[]]
+    listed identity values = exact [model identity] [map item values]
+    pair identity first second =
+      exact [model identity] [[item first], [item second]]
+    memberPair owner owned first second =
+      exact [model owner, model owned] [[item first], [item second]]
+
 runtimeOccurrenceCardinalityOracle :: Assertion
 runtimeOccurrenceCardinalityOracle = do
   groups Generated.SituatedNeedDriverCardinalityOccurrences
@@ -856,6 +962,86 @@ scenarioDefects occurrences projection inputs =
        case Eval.assessSemantics graph bound of
          SemanticsRejected _ _ defects -> NonEmpty.toList defects
          _ -> [])
+
+realProducerPublicProjections ::
+     Either String [(Text, RuntimeDiagnosticProjection)]
+realProducerPublicProjections =
+  concat
+    <$> sequence
+          [ scenarioPublicProjections
+              contextualizationDependencyModels
+              contextualizationDependencyProjection
+              []
+          , scenarioPublicProjections
+              (carrierModels ["need"])
+              (structureProjection
+                 [contextCarrier "need" "Need" Asserted]
+                 []
+                 []
+                 []
+                 [])
+              []
+          , scenarioPublicProjections
+              needModelOccurrences
+              needProjectionWithCandidateAnchor
+              []
+          , scenarioPublicProjections
+              needModelOccurrences
+              needProjectionWithoutGrounding
+              []
+          , scenarioPublicProjections
+              strategyMismatchModelOccurrences
+              strategyMismatchProjection
+              [(0, strategyMismatchInput)]
+          , scenarioPublicProjections
+              (strategyModelOccurrences "a")
+              (strategyProjectionMissingRelation "a" 0)
+              [(0, strategyInput "a")]
+          , scenarioPublicProjections
+              (strategyModelOccurrences "a")
+              (strategyProjectionMissingRelation "a" 1)
+              [(0, strategyInput "a")]
+          , scenarioPublicProjections
+              (strategyModelOccurrences "a")
+              (strategyProjectionMissingRelation "a" 2)
+              [(0, strategyInput "a")]
+          , scenarioPublicProjections
+              (strategyModelOccurrences "a")
+              (strategyProjectionMissingRelation "a" 3)
+              [(0, strategyInput "a")]
+          , scenarioPublicProjections
+              (strategyModelOccurrences "a")
+              (strategyProjectionWithoutVisionOrientation "a")
+              [(0, strategyInput "a")]
+          , scenarioPublicProjections
+              completeModelOccurrences
+              (completeProjection Forward True)
+              (strategyInputs ++ [(3, collectiveInputAllFitDefects)])
+          , scenarioPublicProjections
+              completeModelOccurrences
+              completeProjectionOpen
+              completeInputs
+          , scenarioPublicProjections
+              completeModelOccurrences
+              completeProjectionWithoutPrimitives
+              completeInputs
+          , scenarioPublicProjections
+              completeModelOccurrences
+              (completeProjection Forward False)
+              completeInputs
+          ]
+
+scenarioPublicProjections ::
+     [ModelOccurrence]
+  -> StructureProjection
+  -> [(Natural, ByteString)]
+  -> Either String [(Text, RuntimeDiagnosticProjection)]
+scenarioPublicProjections occurrences projection inputs =
+  runScenario occurrences projection inputs $ \graph bound ->
+    [ ( coreRuleIdText (Public.semanticDiagnosticRule evidence)
+      , publicDiagnosticProjection evidence)
+    | evidence <- publicSemanticEvidence (Public.assessSemantics graph bound)
+    ]
 
 supplementalBindingIsolation :: Assertion
 supplementalBindingIsolation =
@@ -1209,12 +1395,7 @@ summarizeAssessment assessment =
     { summaryDisposition = Public.semanticDisposition assessment
     , summaryDefects =
         [ ( coreRuleIdText (Public.semanticDiagnosticRule defect)
-          , map
-              occurrenceIdentityText
-              (concatMap
-                 Public.semanticOccurrenceGroupOccurrences
-                 (NonEmpty.toList
-                    (Public.semanticDiagnosticOccurrenceGroups defect))))
+          , map occurrenceIdentityText (publicDiagnosticOccurrences defect))
         | defect <- publicSemanticEvidence assessment
         ]
     , summaryCandidates =
@@ -1243,6 +1424,52 @@ summarizeAssessment assessment =
         | result <- Public.collectiveStrategyRealizationAssessments assessment
         ]
     }
+
+publicDiagnosticOccurrences ::
+     Public.SemanticDiagnosticEvidence scope -> [OccurrenceIdentity]
+publicDiagnosticOccurrences =
+  Public.foldSemanticDiagnosticEvidence
+    Public.SemanticDiagnosticEliminator
+      { Public.eliminateCollectiveAssertedCollectiveCoverage =
+          \_ values -> NonEmpty.toList values
+      , Public.eliminateCollectiveAssertedCompleteness = \_ value -> [value]
+      , Public.eliminateCollectiveAssertedMacroSupport =
+          \_ _ first second third -> [first, second, third]
+      , Public.eliminateCollectiveAssertedParticipantPrimitiveSupport =
+          \_ _ first second third -> [first, second, third]
+      , Public.eliminateCollectiveFitPairwiseCoherence = \_ value -> [value]
+      , Public.eliminateCollectiveFitParticipantBinding = \_ value -> [value]
+      , Public.eliminateCollectiveFitParticipantCompatibility =
+          \_ value -> [value]
+      , Public.eliminateCollectiveFitTargetBinding = \_ value -> [value]
+      , Public.eliminateCollectiveFitTargetGuidingPolicy = \_ value -> [value]
+      , Public.eliminateCollectiveFitTargetTradeOffs = \_ value -> [value]
+      , Public.eliminateContextualizationAssertedDependency =
+          \_ _ _ first second third -> [first, second, third]
+      , Public.eliminateSituatedNeedDriverAnchoring = \_ _ value -> [value]
+      , Public.eliminateSituatedNeedDriverCardinality = \_ -> []
+      , Public.eliminateSituatedNeedObjectiveCardinality = \_ -> []
+      , Public.eliminateSituatedNeedObjectiveGrounding = \_ _ value -> [value]
+      , Public.eliminateSituatedNeedSurfacingSituationAnchoring =
+          \_ _ value -> [value]
+      , Public.eliminateSituatedNeedSurfacingSituationCardinality = \_ -> []
+      , Public.eliminateStrategyFormulationActionContributions =
+          \_ _ value -> [value]
+      , Public.eliminateStrategyFormulationActions =
+          \_ values -> NonEmpty.toList values
+      , Public.eliminateStrategyFormulationDiagnosis = \_ values -> values
+      , Public.eliminateStrategyFormulationDiagnosisGrounding =
+          \_ first second -> [first, second]
+      , Public.eliminateStrategyFormulationGuidingPolicy = \_ values -> values
+      , Public.eliminateStrategyFormulationGuidingPolicyActions =
+          \_ _ first second -> [first, second]
+      , Public.eliminateStrategyFormulationIntent = \_ values -> values
+      , Public.eliminateStrategyFormulationKeyResultSubstantiation =
+          \_ _ first second -> [first, second]
+      , Public.eliminateStrategyFormulationKeyResults =
+          \_ values -> NonEmpty.toList values
+      , Public.eliminateStrategyFormulationVisionOrientation = \_ -> []
+      }
 
 componentSummary ::
      CollectiveStrategyRealizationComponents scope

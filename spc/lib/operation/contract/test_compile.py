@@ -45,6 +45,9 @@ CORE_COMPANION = Path(
 class OperationContractCompilerTest(unittest.TestCase):
     def setUp(self):
         self.companion = json.loads(COMPILER.COMPANION.read_text(encoding="utf-8"))
+        self.command_error = json.loads(
+            COMPILER.COMMAND_ERROR_COMPANION.read_text(encoding="utf-8")
+        )
         self.profile_inventory = json.loads(
             PROFILE_DIAGNOSTIC_INVENTORY.read_text(encoding="utf-8")
         )
@@ -81,11 +84,22 @@ class OperationContractCompilerTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, pattern):
             self.render_value(value)
 
+    def render_command_error_value(self, value):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "command-error.json"
+            path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+            with patch.object(COMPILER, "COMMAND_ERROR_COMPANION", path):
+                return self.render_contract()
+
+    def assert_command_error_invalid(self, value, pattern):
+        with self.assertRaisesRegex(ValueError, pattern):
+            self.render_command_error_value(value)
+
     def test_canonical_contract_compiles_deterministically(self):
         first = self.render_contract()
         second = self.render_contract()
         self.assertEqual(first, second)
-        self.assertEqual(14, len(first))
+        self.assertEqual(16, len(first))
         self.assertIn(b"data GeneratedOperationRule", first[COMPILER.RULE_GENERATED])
         self.assertIn(
             b"adapterInventoryMachineSchema :: MachineSchema",
@@ -138,6 +152,465 @@ class OperationContractCompilerTest(unittest.TestCase):
                 self.assertEqual(COMPILER.SCHEMA_DRAFT, schema["$schema"])
                 self.assertEqual(subject.reference, schema["$id"])
                 Draft202012Validator.check_schema(schema)
+
+    def test_command_error_schema_and_manifest_are_exact(self):
+        rendered = self.render_contract()
+        document = next(
+            document
+            for document in self.validate_contract()[3]
+            if document.name == "commandError"
+        )
+        schema = json.loads(rendered[document.schema_path])
+        self.assertEqual("o2i.command-error/v1", schema["$id"])
+        self.assertEqual(
+            [
+                "argument-invalid",
+                "command-failed",
+                "preparation-failed",
+                "validate-failed",
+                "qualify-failed",
+                "readiness-failed",
+                "assess-failed",
+                "qualification-subjects-failed",
+                "trace-failed",
+            ],
+            list(document.variants),
+        )
+        self.assertIn(
+            b"commandErrorSchemaBytes :: ByteString",
+            rendered[COMPILER.SCHEMA_GENERATED],
+        )
+        Draft202012Validator.check_schema(schema)
+
+    def test_command_error_owner_branch_artifacts_are_exact_and_bijective(self):
+        expected = {
+            "validate": [
+                ("ValidateAcquiredModelRoleFailure", "acquired-model-role"),
+                ("ValidateAcquiredSupplementalRoleFailure", "acquired-supplemental-role"),
+                ("ValidateSelectedAdapterContractFailure", "selected-adapter-contract"),
+                ("ValidateNotationContractFailure", "notation-contract"),
+                ("ValidateProfileContractFailure", "profile-contract"),
+                ("ValidateIdentityIndexFailure", "identity-index"),
+                ("ValidateSelectedViewScopeFailure", "selected-view-scope"),
+                ("ValidateStructureInputFailure", "structure-input"),
+                ("ValidateSupplementalProvenanceFailure", "supplemental-provenance"),
+                ("ValidateSemanticUnavailableContractFailure", "semantic-unavailable-contract"),
+            ],
+            "qualify": [
+                ("QualifyAcquiredModelRoleFailure", "acquired-model-role"),
+                ("QualifyAcquiredSupplementalRoleFailure", "acquired-supplemental-role"),
+                ("QualifySelectedAdapterContractFailure", "selected-adapter-contract"),
+                ("QualifyNotationContractFailure", "notation-contract"),
+                ("QualifyProfileContractFailure", "profile-contract"),
+                ("QualifyIdentityIndexFailure", "identity-index"),
+                ("QualifySelectedViewScopeFailure", "selected-view-scope"),
+                ("QualifyStructureInputFailure", "structure-input"),
+                ("QualifySupplementalProvenanceFailure", "supplemental-provenance"),
+                ("QualifyContextFailure", "qualification-context"),
+            ],
+            "readiness": [
+                ("ReadinessAcquiredModelRoleFailure", "acquired-model-role"),
+                ("ReadinessAcquiredEvidenceRoleFailure", "acquired-readiness-role"),
+                ("ReadinessAcquiredSupplementalRoleFailure", "acquired-supplemental-role"),
+                ("ReadinessSelectedAdapterContractFailure", "selected-adapter-contract"),
+                ("ReadinessNotationContractFailure", "notation-contract"),
+                ("ReadinessProfileContractFailure", "profile-contract"),
+                ("ReadinessIdentityIndexFailure", "identity-index"),
+                ("ReadinessSelectedViewScopeFailure", "selected-view-scope"),
+                ("ReadinessStructureInputFailure", "structure-input"),
+                ("ReadinessSupplementalProvenanceFailure", "supplemental-provenance"),
+                ("ReadinessSemanticModelContractFailure", "semantic-model-contract"),
+            ],
+            "assess": [
+                ("AssessAcquiredModelRoleFailure", "acquired-model-role"),
+                ("AssessAcquiredBundleRoleFailure", "acquired-assessment-role"),
+                ("AssessAcquiredSupplementalRoleFailure", "acquired-supplemental-role"),
+                ("AssessSelectedAdapterContractFailure", "selected-adapter-contract"),
+                ("AssessNotationContractFailure", "notation-contract"),
+                ("AssessProfileContractFailure", "profile-contract"),
+                ("AssessIdentityIndexFailure", "identity-index"),
+                ("AssessSelectedViewScopeFailure", "selected-view-scope"),
+                ("AssessStructureInputFailure", "structure-input"),
+                ("AssessSupplementalProvenanceFailure", "supplemental-provenance"),
+                ("AssessSemanticModelContractFailure", "semantic-model-contract"),
+            ],
+            "qualificationSubjects": [
+                ("QualificationSubjectsAcquiredModelRoleFailure", "acquired-model-role"),
+                ("QualificationSubjectsAcquiredSupplementalRoleFailure", "acquired-supplemental-role"),
+                ("QualificationSubjectsSelectedAdapterContractFailure", "selected-adapter-contract"),
+                ("QualificationSubjectsNotationContractFailure", "notation-contract"),
+                ("QualificationSubjectsProfileContractFailure", "profile-contract"),
+                ("QualificationSubjectsIdentityIndexFailure", "identity-index"),
+                ("QualificationSubjectsSelectedViewScopeFailure", "selected-view-scope"),
+                ("QualificationSubjectsStructureInputFailure", "structure-input"),
+                ("QualificationSubjectsSupplementalProvenanceFailure", "supplemental-provenance"),
+                ("QualificationSubjectsContextFailure", "qualification-context"),
+                ("QualificationSubjectsOccurrenceProjectionFailure", "occurrence-projection"),
+                ("QualificationSubjectsOccurrenceJoinFailure", "occurrence-join"),
+            ],
+            "trace": [
+                ("TraceAcquiredModelRoleFailure", "acquired-model-role"),
+                ("TraceSelectedAdapterContractFailure", "selected-adapter-contract"),
+                ("TraceNotationContractFailure", "notation-contract"),
+                ("TraceProfileContractFailure", "profile-contract"),
+                ("TraceIdentityIndexFailure", "identity-index"),
+                ("TraceSelectedViewScopeFailure", "selected-view-scope"),
+                ("TraceStructureInputFailure", "structure-input"),
+                ("TraceEmptyInputProvenanceFailure", "empty-input-provenance"),
+                ("TraceEmptyInputContractFailure", "empty-input-contract"),
+                ("TraceSemanticModelContractFailure", "semantic-model-contract"),
+            ],
+        }
+        actual = {
+            capability: [
+                (row["constructor"], row["token"])
+                for row in self.command_error["ownerBranches"][capability]
+            ]
+            for capability in expected
+        }
+        self.assertEqual(expected, actual)
+
+        rendered = self.render_contract()
+        generated = rendered[COMPILER.COMMAND_ERROR_BRANCH_GENERATED]
+        self.assertEqual(
+            COMPILER.COMMAND_ERROR_BRANCH_GENERATED.read_bytes(), generated
+        )
+        command_document = next(
+            document
+            for document in self.validate_contract()[3]
+            if document.name == "commandError"
+        )
+        command_schema_bytes = rendered[command_document.schema_path]
+        self.assertEqual(
+            command_document.schema_path.read_bytes(), command_schema_bytes
+        )
+        command_schema = json.loads(command_schema_bytes)
+        for capability, rows in expected.items():
+            with self.subTest(capability=capability):
+                tokens = [token for _, token in rows]
+                owner_alternatives = self.owner_failure_alternatives(
+                    command_schema["$defs"][capability + "Failure"]
+                )
+                self.assertEqual(
+                    tokens,
+                    [
+                        alternative["properties"]["branch"]["const"]
+                        for alternative in owner_alternatives
+                    ],
+                )
+                self.assertEqual(len(tokens), len(set(tokens)))
+                for constructor, token in rows:
+                    self.assertIn(
+                        f".{constructor} {{}} ->".encode("utf-8"), generated
+                    )
+                    self.assertIn(f'"{token}"'.encode("utf-8"), generated)
+
+        expected_shapes = self.command_error["ownerEvidenceShapes"]
+        source_roles = self.command_error["ownerExpectedSourceRoles"]
+        source_definitions = {
+            "model": "commandExpectedModelRoleMismatchEvidence",
+            "supplemental": "commandExpectedSupplementalRoleMismatchEvidence",
+            "readiness": "commandExpectedReadinessRoleMismatchEvidence",
+            "assessment": "commandExpectedAssessmentRoleMismatchEvidence",
+        }
+        expected_definitions = {
+            "adapter-descriptor": "commandAdapterDescriptorEvidence",
+            "notation-contract": "commandNotationContractEvidence",
+            "profile-contract": "commandProfileContractEvidence",
+            "identity-index": "commandIdentityIndexEvidence",
+            "selected-view-scope": "commandSelectedViewScopeEvidence",
+            "structure-input": "commandStructureInputEvidence",
+            "supplemental-provenance": "commandSupplementalProvenanceEvidence",
+            "supplemental-input": "commandSupplementalInputEvidence",
+            "semantic-occurrences": "commandSemanticOccurrencesEvidence",
+            "qualification-context": "commandQualificationContextEvidence",
+            "occurrence-projection": "commandOccurrenceProjectionEvidence",
+            "occurrence-join": "commandOccurrenceJoinEvidence",
+        }
+        for capability in expected:
+            alternatives = self.owner_failure_alternatives(
+                command_schema["$defs"][capability + "Failure"]
+            )
+            for alternative in alternatives:
+                token = alternative["properties"]["branch"]["const"]
+                reference = alternative["properties"]["evidence"]["items"][
+                    "$ref"
+                ]
+                shape = expected_shapes[token]
+                definition = (
+                    source_definitions[source_roles[token]]
+                    if shape == "source-identity"
+                    else expected_definitions[shape]
+                )
+                self.assertEqual(
+                    "#/$defs/" + definition,
+                    reference,
+                )
+
+    def test_command_error_closed_evidence_scalars_match_encoder_domains(self):
+        rendered = self.render_contract()
+        document = next(
+            document
+            for document in self.validate_contract()[3]
+            if document.name == "commandError"
+        )
+        schema = json.loads(rendered[document.schema_path])
+        definitions = schema["$defs"]
+        cases = [
+            (
+                "commandNotationContractEvidence",
+                "adapter-notation-rule-missing",
+                "notationIssueKind",
+                COMPILER.NOTATION_ISSUE_TOKENS,
+            ),
+            (
+                "commandProfileContractEvidence",
+                "unknown-generated-profile-rule",
+                "evidenceKind",
+                COMPILER.PROFILE_EVIDENCE_KIND_TOKENS,
+            ),
+            (
+                "commandProfileContractEvidence",
+                "generated-profile-evidence-mismatch",
+                "evidenceKind",
+                COMPILER.PROFILE_EVIDENCE_KIND_TOKENS,
+            ),
+            (
+                "commandStructureInputEvidence",
+                "duplicate-structure-projection",
+                "projectionKinds",
+                COMPILER.STRUCTURE_PROJECTION_KIND_TOKENS,
+            ),
+            (
+                "commandStructureInputEvidence",
+                "missing-carrier-projection",
+                "endpointRole",
+                COMPILER.STRUCTURE_ENDPOINT_ROLE_TOKENS,
+            ),
+            (
+                "commandOccurrenceProjectionEvidence",
+                "impossible-occurrence-identity",
+                "details",
+                COMPILER.OCCURRENCE_IDENTITY_DEFECT_TOKENS,
+            ),
+            (
+                "commandSupplementalInputEvidence",
+                "subject-cardinality-invalid",
+                "payloadType",
+                COMPILER.SUPPLEMENTAL_PAYLOAD_TYPE_TOKENS,
+            ),
+        ]
+        for definition, evidence_kind, field_name, tokens in cases:
+            with self.subTest(
+                definition=definition,
+                evidence_kind=evidence_kind,
+                field=field_name,
+            ):
+                evidence_schema = self.evidence_alternative(
+                    definitions[definition], evidence_kind
+                )
+                field_schema = next(
+                    field
+                    for field in evidence_schema["properties"]["fields"][
+                        "prefixItems"
+                    ]
+                    if field["properties"]["name"]["const"] == field_name
+                )
+                value_schema = field_schema["properties"]["values"]["items"]
+                self.assertEqual(
+                    list(tokens), value_schema["properties"]["value"]["enum"]
+                )
+                fixture_schema = {
+                    "$schema": COMPILER.SCHEMA_DRAFT,
+                    "$defs": definitions,
+                    **evidence_schema,
+                }
+                validator = Draft202012Validator(fixture_schema)
+                sample = self.sample_schema_value(
+                    evidence_schema, definitions
+                )
+                for token in tokens:
+                    admitted = copy.deepcopy(sample)
+                    self.evidence_field_value(admitted, field_name)["value"] = (
+                        token
+                    )
+                    self.assertTrue(validator.is_valid(admitted))
+                rejected = copy.deepcopy(sample)
+                self.evidence_field_value(rejected, field_name)["value"] = (
+                    "not-an-owner-token"
+                )
+                self.assertFalse(validator.is_valid(rejected))
+
+    def test_command_error_source_references_are_nonempty_and_nul_free(self):
+        rendered = self.render_contract()
+        document = next(
+            document
+            for document in self.validate_contract()[3]
+            if document.name == "commandError"
+        )
+        schema = json.loads(rendered[document.schema_path])
+        definitions = schema["$defs"]
+        cases = [
+            (
+                "commandExpectedModelRoleMismatchEvidence",
+                "source-identity",
+                "source",
+            ),
+            (
+                "commandExpectedSupplementalRoleMismatchEvidence",
+                "source-identity",
+                "source",
+            ),
+            (
+                "commandExpectedReadinessRoleMismatchEvidence",
+                "source-identity",
+                "source",
+            ),
+            (
+                "commandExpectedAssessmentRoleMismatchEvidence",
+                "source-identity",
+                "source",
+            ),
+            (
+                "commandSupplementalProvenanceEvidence",
+                "model-source-is-not-supplemental",
+                "source",
+            ),
+            (
+                "commandSupplementalProvenanceEvidence",
+                "duplicate-supplemental-source",
+                "sources",
+            ),
+        ]
+        for definition, evidence_kind, field_name in cases:
+            with self.subTest(definition=definition, field=field_name):
+                evidence_schema = self.evidence_alternative(
+                    definitions[definition], evidence_kind
+                )
+                fixture_schema = {
+                    "$schema": COMPILER.SCHEMA_DRAFT,
+                    "$defs": definitions,
+                    **evidence_schema,
+                }
+                validator = Draft202012Validator(fixture_schema)
+                sample = self.sample_schema_value(
+                    evidence_schema, definitions
+                )
+                self.assertTrue(validator.is_valid(sample))
+                for invalid_reference in ("", "contains\x00nul"):
+                    rejected = copy.deepcopy(sample)
+                    self.evidence_field_value(
+                        rejected, field_name
+                    )["reference"] = invalid_reference
+                    self.assertFalse(validator.is_valid(rejected))
+
+    def test_command_error_source_role_mismatches_are_exact_complements(self):
+        rendered = self.render_contract()
+        document = next(
+            document
+            for document in self.validate_contract()[3]
+            if document.name == "commandError"
+        )
+        definitions = json.loads(rendered[document.schema_path])["$defs"]
+        cases = {
+            "model": "commandExpectedModelRoleMismatchEvidence",
+            "supplemental": "commandExpectedSupplementalRoleMismatchEvidence",
+            "readiness": "commandExpectedReadinessRoleMismatchEvidence",
+            "assessment": "commandExpectedAssessmentRoleMismatchEvidence",
+        }
+        for expected_role, definition in cases.items():
+            with self.subTest(expected_role=expected_role):
+                evidence_schema = definitions[definition]
+                fixture_schema = {
+                    "$schema": COMPILER.SCHEMA_DRAFT,
+                    "$defs": definitions,
+                    **evidence_schema,
+                }
+                validator = Draft202012Validator(fixture_schema)
+                sample = self.sample_schema_value(
+                    evidence_schema, definitions
+                )
+                source = self.evidence_field_value(sample, "source")
+                for actual_role in COMPILER.SOURCE_ROLE_TOKENS:
+                    source["role"] = actual_role
+                    self.assertEqual(
+                        actual_role != expected_role,
+                        validator.is_valid(sample),
+                    )
+                source["role"] = "unknown-role"
+                self.assertFalse(validator.is_valid(sample))
+
+    def evidence_alternative(self, schema, evidence_kind):
+        alternatives = schema.get("oneOf", [schema])
+        return next(
+            alternative
+            for alternative in alternatives
+            if alternative["properties"]["kind"]["const"] == evidence_kind
+        )
+
+    def evidence_field_value(self, evidence, field_name):
+        field = next(
+            field
+            for field in evidence["fields"]
+            if field["name"] == field_name
+        )
+        return field["values"][0]
+
+    def owner_failure_alternatives(self, schema):
+        alternatives = []
+        if isinstance(schema, dict):
+            properties = schema.get("properties", {})
+            if (
+                properties.get("category", {}).get("const")
+                == "owner-contract"
+            ):
+                alternatives.append(schema)
+            for alternative in schema.get("oneOf", []):
+                alternatives.extend(
+                    self.owner_failure_alternatives(alternative)
+                )
+        return alternatives
+
+    def test_command_error_owner_branch_inventory_is_closed(self):
+        changed = copy.deepcopy(self.command_error)
+        changed["ownerBranches"]["validate"].pop()
+        self.assert_command_error_invalid(changed, "unexpected branch cardinality")
+
+        changed = copy.deepcopy(self.command_error)
+        changed["ownerBranches"]["assess"][1]["token"] = changed[
+            "ownerBranches"
+        ]["assess"][0]["token"]
+        self.assert_command_error_invalid(changed, "duplicate token")
+
+    def test_command_error_owner_source_roles_are_closed_and_correlated(self):
+        for token, role in self.command_error[
+            "ownerExpectedSourceRoles"
+        ].items():
+            with self.subTest(token=token):
+                changed = copy.deepcopy(self.command_error)
+                changed["ownerExpectedSourceRoles"][token] = (
+                    "assessment" if role != "assessment" else "model"
+                )
+                self.assert_command_error_invalid(
+                    changed, "unexpected branch-role correlation"
+                )
+
+    def test_command_error_companion_is_closed_and_ordered(self):
+        changed = copy.deepcopy(self.command_error)
+        changed["document"]["description"] = "not admitted"
+        self.assert_command_error_invalid(changed, "expected members")
+
+        changed = copy.deepcopy(self.command_error)
+        changed["document"]["variants"].reverse()
+        self.assert_command_error_invalid(
+            changed, "unexpected closed variant inventory"
+        )
+
+        changed = copy.deepcopy(self.command_error)
+        changed["schema"] = "o2i.command-error-contract/2"
+        self.assert_command_error_invalid(
+            changed, "unsupported Command-error companion schema"
+        )
 
     def assert_closed_objects(self, value):
         if isinstance(value, dict):

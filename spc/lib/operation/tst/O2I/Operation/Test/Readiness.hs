@@ -13,6 +13,7 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as TextEncoding
+import Numeric.Natural (Natural)
 import qualified O2I.ArchiMate.Profile.Draft as Draft
 import O2I.Operation.Acquisition
   ( AcquiredSource
@@ -21,13 +22,20 @@ import O2I.Operation.Acquisition
   , fileInput
   )
 import O2I.Operation.Acquisition.Internal (acquireWith)
+import O2I.Operation.Command.Error (commandErrorCode, readinessCommandError)
+import O2I.Operation.Command.Error.Machine
+import qualified O2I.Operation.Human.Diagnostic as HumanDiagnostic
+import qualified O2I.Operation.Human.Value as HumanValue
 import O2I.Operation.Machine (ToolDescriptor, mkToolDescriptor)
 import O2I.Operation.Provenance (SourceOrdinal, SourceRole, mkSourceReference)
+import qualified O2I.Operation.Readiness.Human as Human
 import O2I.Operation.Readiness.Machine
 import O2I.Operation.Readiness.Request
 import O2I.Operation.Readiness.Result
 import O2I.Operation.Readiness.Runtime.Internal (runReadinessWith)
 import O2I.Operation.Schema (schemaVariantText)
+import qualified O2I.Operation.Test.HumanFailureCorrespondence as FailureCorrespondence
+import qualified O2I.Operation.Test.ReportEnvelope as ReportEnvelope
 import O2I.Operation.Test.Trace
   ( fixtureModelInput
   , notationRejectedDraft
@@ -39,6 +47,10 @@ import O2I.Operation.Test.Trace
   )
 import O2I.Operation.View (foldViewSelector, viewByName)
 import qualified O2I.Readiness as CoreReadiness
+import OperationReportPublicObserver
+  ( ObservedReportContract
+  , ObservedReportOperation(..)
+  )
 import System.FilePath ((</>))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
@@ -53,11 +65,17 @@ tests =
     , testCase
         "keeps malformed evidence outside the machine envelope"
         malformedEvidence
+    , testCase
+        "lifts malformed supplemental input through the real Left branch"
+        malformedSupplemental
     , testCase "reports binding unavailability" bindingUnavailable
     , testCase "reports reconstruction unavailability" reconstructionUnavailable
     , testCase "reports a failed criterion as not ready" notReady
     , testCase "accepts complete readiness evidence" ready
     , testCase "encodes every result variant against its Schema" machineVariants
+    , testCase
+        "projects every real terminal branch with its complete context"
+        humanVariants
     ]
 
 exactRequest :: Assertion
@@ -139,10 +157,62 @@ malformedEvidence = do
     (\_ _ -> assertFailure "malformed evidence reached not ready")
     (\_ _ -> assertFailure "malformed evidence reached ready")
     result
+  assertReadinessCommandError
+    "readiness.evidence-input"
+    "{\"schema\":\"o2i.command-error/v1\",\"kind\":\"readiness-failed\",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},\"code\":\"readiness.evidence-input\",\"failure\":{\"category\":\"evidence-input\",\"diagnostics\":[{\"ruleId\":\"core.evidence-input.decode.discriminator\",\"inputOrdinals\":[0],\"reason\":\"discriminator-invalid\",\"fields\":[{\"name\":\"jsonPointer\",\"values\":[{\"kind\":\"text\",\"value\":\"/type\"}]},{\"name\":\"expected\",\"values\":[{\"kind\":\"text\",\"value\":\"ReadinessInput\"}]}]}]}}"
+    result
+
+malformedSupplemental :: Assertion
+malformedSupplemental = do
+  model <- fixtureModelInput
+  evidence <- input "readiness" "readiness.json"
+  supplement <- input "supplement" "malformed-supplement.json"
+  result <-
+    withFixtureEnvironment (traceContractDraft Nothing False) $ \adapters profiles ->
+      runReadinessWith
+        (fixtureAcquirer quantitativeJson Nothing)
+        adapters
+        profiles
+        (readinessRequest
+           model
+           (viewByName "Binding")
+           Nothing
+           evidence
+           [supplement])
+  foldReadinessResult
+    (\failure ->
+       foldReadinessFailure
+         (const (assertFailure "malformed supplement became common failure"))
+         (const (assertFailure "malformed supplement became evidence failure"))
+         (const (pure ()))
+         (const (assertFailure "malformed supplement became owner failure"))
+         failure)
+    (\_ _ -> assertFailure "malformed supplement reached prerequisite")
+    (\_ _ -> assertFailure "malformed supplement reached unavailability")
+    (\_ _ -> assertFailure "malformed supplement reached not ready")
+    (\_ _ -> assertFailure "malformed supplement reached ready")
+    result
+  assertReadinessCommandError
+    "readiness.supplemental-input"
+    "{\"schema\":\"o2i.command-error/v1\",\"kind\":\"readiness-failed\",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},\"code\":\"readiness.supplemental-input\",\"failure\":{\"category\":\"supplemental-input\",\"diagnostics\":[{\"ruleId\":\"core.supplemental.decode.json-syntax\",\"inputOrdinals\":[0],\"reason\":\"invalid-json-syntax\",\"fields\":[]}]}}"
+    result
+
+assertReadinessCommandError ::
+     Text -> ByteString.ByteString -> ReadinessResult -> Assertion
+assertReadinessCommandError expectedCode expectedBytes result = do
   tool <- testTool
   case readinessResultDocument tool result of
-    Left _ -> pure ()
-    Right _ -> assertFailure "malformed evidence acquired a machine envelope"
+    Left failure -> do
+      let commandError = readinessCommandError failure
+          document = commandErrorDocument tool commandError
+          encoded = encodeCommandErrorDocument document
+      commandErrorCode commandError @?= expectedCode
+      schemaVariantText (commandErrorDocumentVariant document)
+        @?= "readiness-failed"
+      encoded @?= expectedBytes
+      assertCommandErrorSchema encoded
+    Right _ ->
+      assertFailure "failed Readiness result acquired a machine envelope"
 
 bindingUnavailable :: Assertion
 bindingUnavailable = do
@@ -225,6 +295,196 @@ machineVariants = do
           , ("readiness-not-ready", rejected)
           , ("readiness-ready", accepted)
           ])
+
+humanVariants :: Assertion
+humanVariants = do
+  failed <- runFixture (traceContractDraft Nothing False) "{}"
+  prerequisite <- runFixture notationRejectedDraft quantitativeJson
+  binding <- bindingUnavailableResult
+  reconstruction <- reconstructionUnavailableResult
+  rejected <- notReadyResult
+  accepted <- readyResult
+  tool <- ReportEnvelope.hostileTool
+  assertHuman tool "failed" ReportEnvelope.contractsWithoutCore failed
+  assertHuman tool "prerequisite" ReportEnvelope.contractsWithCore prerequisite
+  assertHuman
+    tool
+    "binding-unavailable"
+    ReportEnvelope.contractsWithCore
+    binding
+  assertHuman
+    tool
+    "reconstruction-unavailable"
+    ReportEnvelope.contractsWithCore
+    reconstruction
+  assertHuman tool "not-ready" ReportEnvelope.contractsWithCore rejected
+  assertHuman tool "ready" ReportEnvelope.contractsWithCore accepted
+  where
+    assertHuman ::
+         ToolDescriptor
+      -> Text
+      -> NonEmpty.NonEmpty ObservedReportContract
+      -> ReadinessResult
+      -> Assertion
+    assertHuman tool expected contracts result =
+      Human.foldHumanReadinessReport
+        (\failureValue -> do
+           expected @?= "failed"
+           raw <- observeRawReadinessFailure result
+           human <- observeHumanReadinessFailure failureValue
+           human @?= raw)
+        (\_ context -> do
+           expected @?= "prerequisite"
+           assertContext tool result contracts False context)
+        (\unavailable context -> do
+           branch <-
+             Human.foldHumanReadinessUnavailable
+               (\_ _ -> pure "binding-unavailable")
+               (\_ _ _ -> pure "reconstruction-unavailable")
+               unavailable
+           expected @?= branch
+           assertContext tool result contracts True context)
+        (\_ context -> do
+           expected @?= "not-ready"
+           assertContext tool result contracts True context)
+        (\_ context -> do
+           expected @?= "ready"
+           assertContext tool result contracts True context)
+        (Human.readinessHumanReport tool result)
+    observeRawReadinessFailure result =
+      foldReadinessResult
+        (foldReadinessFailure
+           (pure . (: []) . FailureCorrespondence.observeRawCommonFailure)
+           (pure
+              . map FailureCorrespondence.observeRawReadinessInputDefect
+              . NonEmpty.toList)
+           (pure
+              . map FailureCorrespondence.observeRawSupplementalInputDefect
+              . NonEmpty.toList)
+           (\_ -> unexpected "Readiness owner failure in input fixture"))
+        (\_ _ -> unexpected "Readiness prerequisite in failed fixture")
+        (\_ _ -> unexpected "Readiness unavailability in failed fixture")
+        (\_ _ -> unexpected "Readiness not-ready result in failed fixture")
+        (\_ _ -> unexpected "Readiness ready result in failed fixture")
+        result
+    observeHumanReadinessFailure failureValue =
+      Human.foldHumanReadinessFailure
+        (pure . (: []) . FailureCorrespondence.observeHumanCommonFailure)
+        (pure
+           . map FailureCorrespondence.observeHumanInputDefect
+           . NonEmpty.toList)
+        (pure
+           . map FailureCorrespondence.observeHumanSupplementalInputDefect
+           . NonEmpty.toList)
+        (\_ -> unexpected "Readiness model-role failure in input fixture")
+        (\_ -> unexpected "Readiness evidence-role failure in input fixture")
+        (\_ -> unexpected "Readiness supplemental-role failure in input fixture")
+        (\_ -> unexpected "Readiness adapter failure in input fixture")
+        (\_ -> unexpected "Readiness notation failure in input fixture")
+        (\_ -> unexpected "Readiness Profile failure in input fixture")
+        (\_ -> unexpected "Readiness identity failure in input fixture")
+        (\_ -> unexpected "Readiness scope failure in input fixture")
+        (\_ -> unexpected "Readiness Structure failure in input fixture")
+        (\_ -> unexpected "Readiness provenance failure in input fixture")
+        (\_ -> unexpected "Readiness semantic failure in input fixture")
+        failureValue
+    unexpected message = assertFailure message >> fail "unreachable"
+    assertContext ::
+         ToolDescriptor
+      -> ReadinessResult
+      -> NonEmpty.NonEmpty ObservedReportContract
+      -> Bool
+      -> Human.HumanReadinessContext
+      -> Assertion
+    assertContext tool result contracts completed context = do
+      document <-
+        case readinessResultDocument tool result of
+          Left _ ->
+            assertFailure "prepared Readiness result has no document"
+              >> fail "unreachable"
+          Right value -> pure value
+      Human.foldHumanReadinessContext
+        (\envelope request model evidence supplements _ diagnostics -> do
+           ReportEnvelope.assertPreparedEnvelope
+             readinessResultSchema
+             (readinessResultDocumentVariant document)
+             ObservedReadinessReportOperation
+             contracts
+             envelope
+           Human.foldHumanReadinessRequest
+             (\modelInput view adapter evidenceInput supplementInputs -> do
+                assertFile
+                  "model"
+                  ("tst" </> "fixtures" </> "owner-model.amx")
+                  modelInput
+                HumanValue.foldHumanViewSelector
+                  (@?= "Binding")
+                  (const
+                     (assertFailure "Readiness request changed selector kind"))
+                  view
+                HumanValue.foldHumanAdapterSelection
+                  (pure ())
+                  (const
+                     (assertFailure
+                        "Readiness request changed adapter selection"))
+                  adapter
+                assertFile "readiness" "readiness.json" evidenceInput
+                length supplementInputs @?= 1)
+             request
+           assertSource "model" "model" 0 model
+           if completed
+             then do
+               maybe
+                 (assertFailure "prepared Readiness lost acquired evidence")
+                 (assertSource "readiness" "readiness" 0)
+                 evidence
+               length supplements @?= 1
+               mapM_ (assertSource "supplemental" "strategy" 0) supplements
+             else do
+               case evidence of
+                 Nothing -> pure ()
+                 Just _ ->
+                   assertFailure
+                     "early prerequisite unexpectedly acquired evidence"
+               assertBool
+                 "early prerequisite unexpectedly acquired supplements"
+                 (null supplements)
+           let diagnosticModel =
+                 HumanValue.foldHumanSourceIdentity
+                   (\role ordinal reference digest ->
+                      (sourceRole role, ordinal, reference, digest))
+                   (HumanDiagnostic.humanDiagnosticDocumentModelSource
+                      diagnostics)
+               contextModel =
+                 HumanValue.foldHumanSourceIdentity
+                   (\role ordinal reference digest ->
+                      (sourceRole role, ordinal, reference, digest))
+                   model
+           diagnosticModel @?= contextModel)
+        context
+    assertFile :: Text -> FilePath -> HumanValue.HumanInputSource -> Assertion
+    assertFile reference path =
+      HumanValue.foldHumanInputSource
+        (\actualReference actualPath -> do
+           actualReference @?= reference
+           actualPath @?= path)
+        (const (assertFailure "Readiness file input became standard input"))
+    assertSource ::
+         Text -> Text -> Natural -> HumanValue.HumanSourceIdentity -> Assertion
+    assertSource role reference ordinal =
+      HumanValue.foldHumanSourceIdentity
+        (\actualRole actualOrdinal actualReference digest -> do
+           sourceRole actualRole @?= role
+           actualOrdinal @?= ordinal
+           actualReference @?= reference
+           assertBool "Readiness source digest is empty" (digest /= ""))
+    sourceRole :: HumanValue.HumanSourceRole -> Text
+    sourceRole =
+      HumanValue.foldHumanSourceRole
+        "model"
+        "supplemental"
+        "readiness"
+        "assessment"
 
 bindingUnavailableResult :: IO ReadinessResult
 bindingUnavailableResult =
@@ -344,6 +604,16 @@ assertMachine expected result = do
       Right documentValue -> pure documentValue
   validateJSONSchema schema value
     @? "Readiness machine document violates its generated Schema"
+
+assertCommandErrorSchema :: ByteString.ByteString -> Assertion
+assertCommandErrorSchema encoded = do
+  schema <- requireJson (LazyByteString.fromStrict commandErrorSchemaBytes)
+  value <-
+    case Aeson.eitherDecodeStrict encoded of
+      Left message -> assertFailure message >> fail "unreachable"
+      Right documentValue -> pure documentValue
+  validateJSONSchema schema value
+    @? "Readiness command error violates the generated Schema"
 
 testTool :: IO ToolDescriptor
 testTool = requireRight (mkToolDescriptor "o2i" "0.3.0")

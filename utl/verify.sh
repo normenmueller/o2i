@@ -133,7 +133,7 @@ verify_haskell() {
       project_file=cabal.project
       project_contract=spc/cabal.project
       freeze_contract=spc/cabal.project.freeze
-      package_paths='spc/lib/core spc/lib/inspection spc/ctr/archimate spc/lib/operation spc/lib/adapter/amx spc/cli'
+      package_paths='spc/lib/core spc/ctr/archimate spc/lib/operation spc/lib/adapter/amx spc/cli'
       ;;
     *)
       printf '[o2i|error] Unknown Haskell verification scope: %s.\n' \
@@ -197,6 +197,11 @@ verify_haskell() {
     O2I_PROFILE_COMPANION=spc/ctr/archimate/profile.json \
     python3 -B -m unittest discover \
     -s spc/lib/operation/contract -p 'test_compile.py'
+
+  if [ "$scope" = complete ]; then
+    info "Checking the atomic target package cutover."
+    python3 -B utl/haskell/check_atomic_cutover.py --root "$root"
+  fi
 
   info "Checking package metadata."
   for package in $package_paths; do
@@ -294,8 +299,11 @@ verify_haskell() {
   info "Checking independently buildable Haskell source distributions."
   source_dist="$work/source-dist"
   mkdir -p "$source_dist"
-  run_project_cabal sdist \
-    o2i-core o2i-archimate-profile o2i-operation o2i-amx \
+  source_packages='o2i-core o2i-archimate-profile o2i-operation o2i-amx'
+  if [ "$scope" = complete ]; then
+    source_packages="$source_packages o2i-cli"
+  fi
+  run_project_cabal sdist $source_packages \
     --output-directory="$source_dist"
 
   set -- "$source_dist"/o2i-core-*.tar.gz
@@ -326,18 +334,36 @@ verify_haskell() {
   fi
   amx_archive=$1
 
+  cli_archive=
+  if [ "$scope" = complete ]; then
+    set -- "$source_dist"/o2i-cli-*.tar.gz
+    if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
+      printf '[o2i|error] Expected exactly one CLI source archive.\n' >&2
+      exit 1
+    fi
+    cli_archive=$1
+  fi
+
   core_inventory="$source_dist/core-inventory.txt"
   profile_inventory="$source_dist/profile-inventory.txt"
   operation_inventory="$source_dist/operation-inventory.txt"
   amx_inventory="$source_dist/amx-inventory.txt"
+  cli_inventory="$source_dist/cli-inventory.txt"
   tar -tzf "$core_archive" >"$core_inventory"
   tar -tzf "$profile_archive" >"$profile_inventory"
   tar -tzf "$operation_archive" >"$operation_inventory"
   tar -tzf "$amx_archive" >"$amx_inventory"
+  if [ "$scope" = complete ]; then
+    tar -tzf "$cli_archive" >"$cli_inventory"
+  fi
   core_root=$(sed -n '1s#/.*##p' "$core_inventory")
   profile_root=$(sed -n '1s#/.*##p' "$profile_inventory")
   operation_root=$(sed -n '1s#/.*##p' "$operation_inventory")
   amx_root=$(sed -n '1s#/.*##p' "$amx_inventory")
+  cli_root=
+  if [ "$scope" = complete ]; then
+    cli_root=$(sed -n '1s#/.*##p' "$cli_inventory")
+  fi
   if ! grep -Eq '/semantic-diagnostic-evidence\.json$' "$core_inventory"; then
     printf '[o2i|error] Core source archive lacks the diagnostic companion.\n' >&2
     exit 1
@@ -382,18 +408,28 @@ verify_haskell() {
   tar -xzf "$profile_archive" -C "$source_project"
   tar -xzf "$operation_archive" -C "$source_project"
   tar -xzf "$amx_archive" -C "$source_project"
+  if [ "$scope" = complete ]; then
+    tar -xzf "$cli_archive" -C "$source_project"
+  fi
   if [ ! -d "$source_project/$core_root" ] || \
     [ ! -d "$source_project/$profile_root" ] || \
     [ ! -d "$source_project/$operation_root" ] || \
-    [ ! -d "$source_project/$amx_root" ]; then
+    [ ! -d "$source_project/$amx_root" ] || \
+    { [ "$scope" = complete ] && [ ! -d "$source_project/$cli_root" ]; }; then
     printf '[o2i|error] Cannot resolve unpacked Haskell source archives.\n' >&2
     exit 1
   fi
   python3 -B utl/haskell/check_haskell_api_contracts.py \
     --core-package-root "$source_project/$core_root"
-  printf 'packages:\n  ./%s\n  ./%s\n  ./%s\n  ./%s\n\nindex-state: 2026-08-07T18:07:13Z\n' \
-    "$core_root" "$profile_root" "$operation_root" "$amx_root" \
-    >"$source_project/cabal.project"
+  if [ "$scope" = foundation ]; then
+    printf 'packages:\n  ./%s\n  ./%s\n  ./%s\n  ./%s\n\nindex-state: 2026-08-07T18:07:13Z\n' \
+      "$core_root" "$profile_root" "$operation_root" "$amx_root" \
+      >"$source_project/cabal.project"
+  else
+    printf 'packages:\n  ./%s\n  ./%s\n  ./%s\n  ./%s\n  ./%s\n\nindex-state: 2026-08-07T18:07:13Z\n' \
+      "$core_root" "$profile_root" "$operation_root" "$amx_root" \
+      "$cli_root" >"$source_project/cabal.project"
+  fi
   cp "$freeze_contract" "$source_project/cabal.project.freeze"
   python3 -B "$source_project/$core_root/contract/compile.py" --check
   python3 -B -m unittest discover \

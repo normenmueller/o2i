@@ -16,6 +16,7 @@ import Data.List.NonEmpty (NonEmpty(..))
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.Text (Text)
 import qualified Data.Text as Text
+import Numeric.Natural (Natural)
 import qualified O2I.ArchiMate.Profile.Draft as Draft
 import O2I.ArchiMate.Profile.Resolution (compiledProfileDescriptor)
 import O2I.Core.Identity (modelIdentity, modelIdentityText)
@@ -23,6 +24,8 @@ import O2I.Operation.Acquisition (InputSource, fileInput)
 import O2I.Operation.Acquisition.Internal (acquireWith)
 import O2I.Operation.Adapter
 import O2I.Operation.Adapter.Authoring
+import O2I.Operation.Command.Error (commandErrorCode, validateCommandError)
+import O2I.Operation.Command.Error.Machine
 import O2I.Operation.Diagnostic
 import O2I.Operation.Diagnostic.Internal
   ( SupplementalDiagnosticGroup(..)
@@ -34,6 +37,8 @@ import O2I.Operation.Encoding.Internal
   , canonicalFragmentBytes
   )
 import O2I.Operation.Failure (commonFailureCode)
+import qualified O2I.Operation.Human.Diagnostic as HumanDiagnostic
+import qualified O2I.Operation.Human.Value as HumanValue
 import O2I.Operation.Machine (ToolDescriptor, mkToolDescriptor)
 import O2I.Operation.Machine.Fragment.Internal
   ( emptySupplementalDiagnosticGroupFragments
@@ -43,7 +48,10 @@ import O2I.Operation.Profile
 import O2I.Operation.Provenance
 import O2I.Operation.Schema (schemaVariantText)
 import O2I.Operation.Test.AdapterSupport (compileCompleteAdapter)
+import qualified O2I.Operation.Test.HumanFailureCorrespondence as FailureCorrespondence
+import qualified O2I.Operation.Test.ReportEnvelope as ReportEnvelope
 import O2I.Operation.Validate (runValidate)
+import qualified O2I.Operation.Validate.Human as Human
 import O2I.Operation.Validate.Machine
 import O2I.Operation.Validate.Request
 import O2I.Operation.Validate.Result
@@ -53,6 +61,10 @@ import O2I.Operation.View (ViewSelector, viewByName)
 import O2I.Semantics
   ( CollectiveFitUnavailableReason(..)
   , StrategyFormulationUnavailableReason(..)
+  )
+import OperationReportPublicObserver
+  ( ObservedReportContract
+  , ObservedReportOperation(..)
   )
 import System.FilePath ((</>))
 import Test.Tasty (TestTree, testGroup)
@@ -76,6 +88,9 @@ tests =
         partialBindingWithSemanticDiagnostics
     , privateMachineFragmentTests
     , validateMachineDocumentTests
+    , testCase
+        "projects every real terminal branch with its complete context"
+        humanReports
     ]
 
 validateMachineDocumentTests :: TestTree
@@ -300,6 +315,242 @@ failedMachineDocument = do
   case validateResultDocument tool result of
     Left _ -> pure ()
     Right _ -> assertFailure "command failure acquired an Operation envelope"
+
+humanReports :: Assertion
+humanReports = do
+  model <- fixtureInput "missing-model" "validate-model-does-not-exist"
+  failed <-
+    runFixtureRequest
+      emptyValidateDraft
+      (requestAt notationValidationLevel model (viewByName "Binding") [])
+  accepted <-
+    mapM
+      (\(level, contracts) -> do
+         result <- runFixtureAt emptyValidateDraft level []
+         pure ("accepted", level, contracts, [], result))
+      [ (notationValidationLevel, ReportEnvelope.contractsWithoutCore)
+      , (profileValidationLevel, ReportEnvelope.contractsWithoutCore)
+      , (structureValidationLevel, ReportEnvelope.contractsWithCore)
+      , (semanticsValidationLevel, ReportEnvelope.contractsWithCore)
+      ]
+  rejected <-
+    mapM
+      (\(draft, level, contracts) -> do
+         result <- runFixtureAt draft level []
+         pure ("rejected", level, contracts, [], result))
+      [ ( notationRejectedDraft
+        , notationValidationLevel
+        , ReportEnvelope.contractsWithoutCore)
+      , ( profileRejectedDraft
+        , profileValidationLevel
+        , ReportEnvelope.contractsWithoutCore)
+      , ( structureRejectedDraft
+        , structureValidationLevel
+        , ReportEnvelope.contractsWithCore)
+      , ( semanticsRejectedDraft
+        , semanticsValidationLevel
+        , ReportEnvelope.contractsWithCore)
+      ]
+  supplemental <- fixtureInput "supplement" "owner-source-strategy.json"
+  unavailableWithoutSupplement <- runFixture bindingOwnerDraft []
+  unavailableWithSupplement <- runFixture emptyValidateDraft [supplemental]
+  unavailableCombined <-
+    runFixture bindingAndSemanticRejectedDraft [supplemental]
+  let supplementExpectation =
+        [("supplement", "tst" </> "fixtures" </> "owner-source-strategy.json")]
+      unavailable =
+        [ ( "unavailable"
+          , semanticsValidationLevel
+          , ReportEnvelope.contractsWithCore
+          , []
+          , unavailableWithoutSupplement)
+        , ( "unavailable"
+          , semanticsValidationLevel
+          , ReportEnvelope.contractsWithCore
+          , supplementExpectation
+          , unavailableWithSupplement)
+        , ( "unavailable"
+          , semanticsValidationLevel
+          , ReportEnvelope.contractsWithCore
+          , supplementExpectation
+          , unavailableCombined)
+        ]
+  tool <- ReportEnvelope.hostileTool
+  assertHuman
+    tool
+    "failed"
+    notationValidationLevel
+    ReportEnvelope.contractsWithoutCore
+    []
+    failed
+  mapM_
+    (\(branch, level, contracts, supplementInputs, result) ->
+       assertHuman tool branch level contracts supplementInputs result)
+    (accepted <> rejected <> unavailable)
+  where
+    assertHuman ::
+         ToolDescriptor
+      -> Text
+      -> ValidationLevel
+      -> NonEmpty ObservedReportContract
+      -> [(Text, FilePath)]
+      -> ValidateResult
+      -> Assertion
+    assertHuman tool expected expectedLevel contracts expectedSupplements result =
+      Human.foldHumanValidateReport
+        (\failureValue -> do
+           expected @?= "failed"
+           raw <- observeRawValidateFailure result
+           human <- observeHumanValidateFailure failureValue
+           human @?= raw)
+        (\context -> do
+           expected @?= "accepted"
+           assertContext
+             tool
+             result
+             expectedLevel
+             contracts
+             expectedSupplements
+             context)
+        (\context -> do
+           expected @?= "rejected"
+           assertContext
+             tool
+             result
+             expectedLevel
+             contracts
+             expectedSupplements
+             context)
+        (\witnesses context -> do
+           expected @?= "unavailable"
+           assertBool
+             "Validate unavailability lost its nonempty witness"
+             (not (null (NonEmpty.toList witnesses)))
+           assertContext
+             tool
+             result
+             expectedLevel
+             contracts
+             expectedSupplements
+             context)
+        (Human.validateHumanReport tool result)
+    observeRawValidateFailure result =
+      foldValidateResult
+        (foldValidateFailure
+           (pure . (: []) . FailureCorrespondence.observeRawCommonFailure)
+           (pure
+              . map FailureCorrespondence.observeRawSupplementalInputDefect
+              . NonEmpty.toList)
+           (\_ -> unexpected "Validate owner failure in acquisition fixture"))
+        (\_ -> unexpected "Validate acceptance in failed fixture")
+        (\_ -> unexpected "Validate rejection in failed fixture")
+        (\_ _ -> unexpected "Validate unavailability in failed fixture")
+        result
+    observeHumanValidateFailure failureValue =
+      Human.foldHumanValidateFailure
+        (pure . (: []) . FailureCorrespondence.observeHumanCommonFailure)
+        (pure
+           . map FailureCorrespondence.observeHumanSupplementalInputDefect
+           . NonEmpty.toList)
+        (\_ -> unexpected "Validate model-role failure in acquisition fixture")
+        (\_ ->
+           unexpected
+             "Validate supplemental-role failure in acquisition fixture")
+        (\_ -> unexpected "Validate adapter failure in acquisition fixture")
+        (\_ -> unexpected "Validate notation failure in acquisition fixture")
+        (\_ -> unexpected "Validate Profile failure in acquisition fixture")
+        (\_ -> unexpected "Validate identity failure in acquisition fixture")
+        (\_ -> unexpected "Validate scope failure in acquisition fixture")
+        (\_ -> unexpected "Validate Structure failure in acquisition fixture")
+        (\_ -> unexpected "Validate provenance failure in acquisition fixture")
+        (\_ -> unexpected "Validate semantic failure in acquisition fixture")
+        failureValue
+    unexpected message = assertFailure message >> fail "unreachable"
+    assertContext ::
+         ToolDescriptor
+      -> ValidateResult
+      -> ValidationLevel
+      -> NonEmpty ObservedReportContract
+      -> [(Text, FilePath)]
+      -> Human.HumanValidateContext
+      -> Assertion
+    assertContext tool result expectedLevel contracts expectedSupplements context = do
+      document <- requireValidateDocument tool result
+      Human.foldHumanValidateContext
+        (\envelope request _ modelSource supplements _ diagnostics -> do
+           ReportEnvelope.assertPreparedEnvelope
+             validateResultSchema
+             (validateResultDocumentVariant document)
+             ObservedValidateReportOperation
+             contracts
+             envelope
+           Human.foldHumanValidateRequest
+             (\requestedLevel modelInput selector adapter supplementInputs -> do
+                requestedLevel @?= expectedLevel
+                HumanValue.foldHumanInputSource
+                  (\reference path -> do
+                     reference @?= "model"
+                     path @?= "tst" </> "fixtures" </> "owner-model.amx")
+                  (const (assertFailure "Validate model became standard input"))
+                  modelInput
+                HumanValue.foldHumanViewSelector
+                  (@?= "Binding")
+                  (const
+                     (assertFailure "Validate request changed selector kind"))
+                  selector
+                HumanValue.foldHumanAdapterSelection
+                  (pure ())
+                  (const
+                     (assertFailure "Validate request changed adapter selection"))
+                  adapter
+                let observeInput =
+                      HumanValue.foldHumanInputSource
+                        (\reference path -> pure (reference, path))
+                        (\_ ->
+                           assertFailure
+                             "Validate supplement became standard input"
+                             >> fail "unreachable")
+                observedSupplements <- traverse observeInput supplementInputs
+                observedSupplements @?= expectedSupplements)
+             request
+           let sourceTuple =
+                 HumanValue.foldHumanSourceIdentity $ \role ordinal reference digest ->
+                   ( HumanValue.foldHumanSourceRole
+                       "model"
+                       "supplemental"
+                       "readiness"
+                       "assessment"
+                       role
+                   , ordinal
+                   , reference
+                   , digest)
+               retained = sourceTuple modelSource
+               retainedSupplements = map sourceTuple supplements
+           retained
+             @?= sourceTuple
+                   (HumanDiagnostic.humanDiagnosticDocumentModelSource
+                      diagnostics)
+           case retained of
+             (role, ordinal, reference, digest) -> do
+               role @?= ("model" :: Text)
+               ordinal @?= (0 :: Natural)
+               reference @?= "model"
+               assertBool "Validate source digest is empty" (digest /= "")
+           map
+             (\(role, ordinal, reference, _) -> (role, ordinal, reference))
+             retainedSupplements
+             @?= zipWith
+                   (\ordinal (reference, _) ->
+                      ("supplemental", ordinal, reference))
+                   [0 ..]
+                   expectedSupplements
+           mapM_
+             (\(_, _, _, digest) ->
+                assertBool
+                  "Validate supplemental digest is empty"
+                  (digest /= ""))
+             retainedSupplements)
+        context
 
 validateTool :: IO ToolDescriptor
 validateTool = requireRight (mkToolDescriptor "o2i" "0.3.0")
@@ -590,13 +841,38 @@ assertCommonFailureCode expected =
 assertSupplementalFailureCount :: Int -> ValidateResult -> Assertion
 assertSupplementalFailureCount expected =
   foldValidateResult
-    (foldValidateFailure
-       (const (assertFailure "expected a supplemental-input failure"))
-       (\defects -> NonEmpty.length defects @?= expected)
-       (const (assertFailure "expected a supplemental-input failure")))
+    (\failure -> do
+       foldValidateFailure
+         (const (assertFailure "expected a supplemental-input failure"))
+         (\defects -> NonEmpty.length defects @?= expected)
+         (const (assertFailure "expected a supplemental-input failure"))
+         failure
+       tool <- validateTool
+       let commandError = validateCommandError failure
+           document = commandErrorDocument tool commandError
+           encoded = encodeCommandErrorDocument document
+       commandErrorCode commandError @?= "validate.supplemental-input"
+       schemaVariantText (commandErrorDocumentVariant document)
+         @?= "validate-failed"
+       case expected of
+         2 ->
+           encoded
+             @?= "{\"schema\":\"o2i.command-error/v1\",\"kind\":\"validate-failed\",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},\"code\":\"validate.supplemental-input\",\"failure\":{\"category\":\"supplemental-input\",\"diagnostics\":[{\"ruleId\":\"core.supplemental.decode.json-syntax\",\"inputOrdinals\":[0],\"reason\":\"invalid-json-syntax\",\"fields\":[]},{\"ruleId\":\"core.supplemental.decode.json-syntax\",\"inputOrdinals\":[1],\"reason\":\"invalid-json-syntax\",\"fields\":[]}]}}"
+         _ -> pure ()
+       assertCommandErrorSchema encoded)
     (const (assertFailure "expected a failure"))
     (const (assertFailure "expected a failure"))
     (\_ _ -> assertFailure "expected a failure")
+
+assertCommandErrorSchema :: ByteString.ByteString -> Assertion
+assertCommandErrorSchema encoded = do
+  schema <-
+    case Aeson.eitherDecodeStrict commandErrorSchemaBytes of
+      Left message -> assertFailure message >> fail "unreachable"
+      Right value -> pure value
+  document <- decodeValue encoded
+  validateJSONSchema schema document
+    @? "Validate command error violates the generated Schema"
 
 requestProjectionTests :: TestTree
 requestProjectionTests =

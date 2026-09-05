@@ -6,6 +6,7 @@ module O2I.Operation.Diagnostic.Internal
   ( DiagnosticSeverity(..)
   , DiagnosticDisposition(..)
   , PreparedDiagnostic(..)
+  , SupplementalDiagnostic(..)
   , SupplementalDiagnosticGroup(..)
   , SupplementalDiagnosticGroups(..)
   , PreparedDiagnosticDocument(..)
@@ -68,6 +69,12 @@ data PreparedDiagnostic authority profile document where
     -> PreparedDiagnostic authority profile document
 
 type role PreparedDiagnostic nominal nominal nominal
+
+-- | One existentially sealed supplemental Binding finding.
+data SupplementalDiagnostic where
+  SupplementalDiagnostic
+    :: !(SupplementalOwnerBindingEvidence scope inputs)
+    -> SupplementalDiagnostic
 
 -- | All Binding findings for one exact acquired supplemental source.
 data SupplementalDiagnosticGroup authority profile document where

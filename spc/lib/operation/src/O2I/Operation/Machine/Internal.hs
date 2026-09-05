@@ -1,20 +1,8 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 -- | Private representation of Operation-owned machine-envelope metadata.
 module O2I.Operation.Machine.Internal
   ( ToolDescriptorField(..)
   , ToolDescriptorDefect(..)
   , ToolDescriptor(..)
-  , OperationIdentity
-  , viewsOperationIdentity
-  , qualificationSubjectsOperationIdentity
-  , validateOperationIdentity
-  , traceOperationIdentity
-  , qualifyOperationIdentity
-  , readinessOperationIdentity
-  , assessOperationIdentity
-  , operationIdentityValue
-  , operationIdentityInventory
   ) where
 
 import Data.Text (Text)
@@ -36,58 +24,3 @@ data ToolDescriptor = ToolDescriptor
   { toolDescriptorIdentityValue :: !Text
   , toolDescriptorVersionValue :: !Text
   } deriving (Eq, Ord, Show)
-
--- | Closed package-internal operation identity for one machine envelope.
-data OperationIdentity
-  = ViewsOperationIdentity
-  | QualificationSubjectsOperationIdentity
-  | ValidateOperationIdentity
-  | TraceOperationIdentity
-  | QualifyOperationIdentity
-  | ReadinessOperationIdentity
-  | AssessOperationIdentity
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | Exact identity of the profile-neutral View discovery operation.
-viewsOperationIdentity :: OperationIdentity
-viewsOperationIdentity = ViewsOperationIdentity
-
--- | Exact identity of selected-View qualification-subject discovery.
-qualificationSubjectsOperationIdentity :: OperationIdentity
-qualificationSubjectsOperationIdentity = QualificationSubjectsOperationIdentity
-
--- | Exact identity of cumulative selected-View validation.
-validateOperationIdentity :: OperationIdentity
-validateOperationIdentity = ValidateOperationIdentity
-
--- | Exact identity of selected-View effect tracing.
-traceOperationIdentity :: OperationIdentity
-traceOperationIdentity = TraceOperationIdentity
-
--- | Exact identity of formal selected-View qualification assessment.
-qualifyOperationIdentity :: OperationIdentity
-qualifyOperationIdentity = QualifyOperationIdentity
-
--- | Exact identity of selected-View evidence-readiness assessment.
-readinessOperationIdentity :: OperationIdentity
-readinessOperationIdentity = ReadinessOperationIdentity
-
--- | Exact identity of selected-View evidence assessment.
-assessOperationIdentity :: OperationIdentity
-assessOperationIdentity = AssessOperationIdentity
-
--- | Project the exact stable machine token by total case distinction.
-operationIdentityValue :: OperationIdentity -> Text
-operationIdentityValue identity =
-  case identity of
-    ViewsOperationIdentity -> "views"
-    QualificationSubjectsOperationIdentity -> "qualification-subjects"
-    ValidateOperationIdentity -> "validate"
-    TraceOperationIdentity -> "trace"
-    QualifyOperationIdentity -> "qualify"
-    ReadinessOperationIdentity -> "readiness"
-    AssessOperationIdentity -> "assess"
-
--- | Exhaustive inventory tied mechanically to the closed constructors.
-operationIdentityInventory :: [OperationIdentity]
-operationIdentityInventory = [minBound .. maxBound]

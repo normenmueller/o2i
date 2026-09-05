@@ -504,9 +504,9 @@ preparedDiagnosticFragment diagnostic =
       let (kind, fields) = structureEvidenceFragment evidence
        in wrap kind (evidenceFragment [] fields)
     semantics evidence =
-      wrap
-        (semanticEvidenceKindText (Semantics.semanticDiagnosticKind evidence))
-        (evidenceFragment [] (semanticEvidenceFields evidence))
+      Semantics.foldSemanticDiagnosticEvidence
+        (semanticDiagnosticEliminator wrap)
+        evidence
 
 classificationText :: Bool -> Bool -> Text
 classificationText graph qualification =
@@ -742,39 +742,158 @@ structureEvidenceFragment =
         | (role, occurrences) <- values
         ])
 
-semanticEvidenceKindText :: Semantics.SemanticEvidenceKind -> Text
-semanticEvidenceKindText kind =
-  case kind of
-    Semantics.NeedEvidence -> "NeedKey"
-    Semantics.NeedMemberEvidence -> "NeedMemberKey"
-    Semantics.StrategyEvidence -> "StrategyKey"
-    Semantics.StrategyMemberEvidence -> "StrategyMemberKey"
-    Semantics.CollectiveEvidence -> "FitClaimKey"
-    Semantics.CollectiveParticipantEvidence -> "ParticipantClaimKey"
-    Semantics.AssertedDependencyEvidence -> "AssertedDependencyKey"
-
-semanticEvidenceFields ::
-     Semantics.SemanticDiagnosticEvidence scope -> [CanonicalFragment]
-semanticEvidenceFields evidence =
-  map
-    semanticSubjectField
-    (NonEmpty.toList (Semantics.semanticDiagnosticSubjects evidence))
-    <> map
-         semanticOccurrenceField
-         (NonEmpty.toList
-            (Semantics.semanticDiagnosticOccurrenceGroups evidence))
+semanticDiagnosticEliminator ::
+     (Text -> CanonicalFragment -> CanonicalFragment)
+  -> Semantics.SemanticDiagnosticEliminator CanonicalFragment
+semanticDiagnosticEliminator wrap =
+  Semantics.SemanticDiagnosticEliminator
+    { Semantics.eliminateCollectiveAssertedCollectiveCoverage =
+        \claim uncovered ->
+          exact
+            "FitClaimKey"
+            [ model "claim" claim
+            , occurrences "uncovered-target-member" (NonEmpty.toList uncovered)
+            ]
+    , Semantics.eliminateCollectiveAssertedCompleteness =
+        \claim occurrence ->
+          exact
+            "FitClaimKey"
+            [model "claim" claim, occurrences "claim" [occurrence]]
+    , Semantics.eliminateCollectiveAssertedMacroSupport =
+        \claim participant claimOccurrence participantOccurrence targetOccurrence ->
+          exact
+            "ParticipantClaimKey"
+            [ model "claim" claim
+            , model "participant" participant
+            , occurrences "claim" [claimOccurrence]
+            , occurrences "participant" [participantOccurrence]
+            , occurrences "target" [targetOccurrence]
+            ]
+    , Semantics.eliminateCollectiveAssertedParticipantPrimitiveSupport =
+        \claim participant claimOccurrence participantOccurrence targetOccurrence ->
+          exact
+            "ParticipantClaimKey"
+            [ model "claim" claim
+            , model "participant" participant
+            , occurrences "claim" [claimOccurrence]
+            , occurrences "participant" [participantOccurrence]
+            , occurrences "target" [targetOccurrence]
+            ]
+    , Semantics.eliminateCollectiveFitPairwiseCoherence = fitClaim "claim"
+    , Semantics.eliminateCollectiveFitParticipantBinding = fitClaim "claim"
+    , Semantics.eliminateCollectiveFitParticipantCompatibility =
+        fitClaim "claim"
+    , Semantics.eliminateCollectiveFitTargetBinding = fitClaim "claim"
+    , Semantics.eliminateCollectiveFitTargetGuidingPolicy = fitClaim "claim"
+    , Semantics.eliminateCollectiveFitTargetTradeOffs = fitClaim "claim"
+    , Semantics.eliminateContextualizationAssertedDependency =
+        \dependent endpoint context dependentOccurrence endpointOccurrence contextOccurrence ->
+          exact
+            "AssertedDependencyKey"
+            [ occurrences "dependent" [dependent]
+            , occurrences "endpoint" [endpoint]
+            , occurrences "context" [context]
+            , occurrences "dependent" [dependentOccurrence]
+            , occurrences "contextualized-endpoint" [endpointOccurrence]
+            , occurrences "candidate-contextualization" [contextOccurrence]
+            ]
+    , Semantics.eliminateSituatedNeedDriverAnchoring =
+        needMember "unanchored-driver"
+    , Semantics.eliminateSituatedNeedDriverCardinality =
+        \need ->
+          exact "NeedKey" [model "need" need, occurrences "observed-driver" []]
+    , Semantics.eliminateSituatedNeedObjectiveCardinality =
+        \need ->
+          exact
+            "NeedKey"
+            [model "need" need, occurrences "observed-objective" []]
+    , Semantics.eliminateSituatedNeedObjectiveGrounding =
+        needMember "ungrounded-objective"
+    , Semantics.eliminateSituatedNeedSurfacingSituationAnchoring =
+        needMember "unanchored-surfacing-situation"
+    , Semantics.eliminateSituatedNeedSurfacingSituationCardinality =
+        \need ->
+          exact
+            "NeedKey"
+            [model "need" need, occurrences "observed-surfacing-situation" []]
+    , Semantics.eliminateStrategyFormulationActionContributions =
+        strategyMember "uncontributing-action"
+    , Semantics.eliminateStrategyFormulationActions =
+        \strategy values ->
+          exact
+            "StrategyKey"
+            [ model "strategy" strategy
+            , occurrences "listed-action" (NonEmpty.toList values)
+            ]
+    , Semantics.eliminateStrategyFormulationDiagnosis =
+        strategyMany "owned-diagnosis"
+    , Semantics.eliminateStrategyFormulationDiagnosisGrounding =
+        \strategy diagnosis intent ->
+          exact
+            "StrategyKey"
+            [ model "strategy" strategy
+            , occurrences "diagnosis" [diagnosis]
+            , occurrences "intent" [intent]
+            ]
+    , Semantics.eliminateStrategyFormulationGuidingPolicy =
+        strategyMany "owned-guiding-policy"
+    , Semantics.eliminateStrategyFormulationGuidingPolicyActions =
+        \strategy member policy action ->
+          exact
+            "StrategyMemberKey"
+            [ model "strategy" strategy
+            , model "member" member
+            , occurrences "guiding-policy" [policy]
+            , occurrences "action" [action]
+            ]
+    , Semantics.eliminateStrategyFormulationIntent = strategyMany "owned-intent"
+    , Semantics.eliminateStrategyFormulationKeyResultSubstantiation =
+        \strategy member keyResult intent ->
+          exact
+            "StrategyMemberKey"
+            [ model "strategy" strategy
+            , model "member" member
+            , occurrences "key-result" [keyResult]
+            , occurrences "intent" [intent]
+            ]
+    , Semantics.eliminateStrategyFormulationKeyResults =
+        \strategy values ->
+          exact
+            "StrategyKey"
+            [ model "strategy" strategy
+            , occurrences "listed-key-result" (NonEmpty.toList values)
+            ]
+    , Semantics.eliminateStrategyFormulationVisionOrientation =
+        \strategy ->
+          exact
+            "StrategyKey"
+            [ model "strategy" strategy
+            , occurrences "observed-vision-orientation" []
+            ]
+    }
   where
-    semanticSubjectField =
-      Semantics.foldSemanticSubject
-        (\role identity -> fieldFragment role [modelIdentityFragment identity])
-        (\role identity -> fieldFragment role [coreIdentityFragment identity])
-    semanticOccurrenceField group =
-      fieldFragment
-        (Semantics.semanticOccurrenceRoleId
-           (Semantics.semanticOccurrenceGroupRole group))
-        (map
-           coreIdentityFragment
-           (Semantics.semanticOccurrenceGroupOccurrences group))
+    exact kind fields = wrap kind (evidenceFragment [] fields)
+    model role identity = fieldFragment role [modelIdentityFragment identity]
+    occurrences role identities =
+      fieldFragment role (map coreIdentityFragment identities)
+    fitClaim role claim occurrence =
+      exact "FitClaimKey" [model "claim" claim, occurrences role [occurrence]]
+    needMember role need member occurrence =
+      exact
+        "NeedMemberKey"
+        [ model "need" need
+        , model "member" member
+        , occurrences role [occurrence]
+        ]
+    strategyMember role strategy member occurrence =
+      exact
+        "StrategyMemberKey"
+        [ model "strategy" strategy
+        , model "member" member
+        , occurrences role [occurrence]
+        ]
+    strategyMany role strategy values =
+      exact "StrategyKey" [model "strategy" strategy, occurrences role values]
 
 supplementalGroupMember ::
      SupplementalDiagnosticGroup authority profile document -> CanonicalMember

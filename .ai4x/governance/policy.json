@@ -453,6 +453,38 @@
     "identityFailureBlocksOnlyIdentityRequiringActions": true,
     "policyTransitionMustBeEnumerated": true
   },
+  "continuity": {
+    "operationalTarget": "GitHub",
+    "sharedRequiredEvidence": [
+      "published-head-and-clean-fresh-clone",
+      "applicable-tracked-state-and-handoff",
+      "remote-return-point-and-authority-current",
+      "no-delegated-or-background-work",
+      "no-local-or-session-dependency",
+      "restore-proof-current"
+    ],
+    "boundaryKinds": [
+      {
+        "id": "completed-work-unit",
+        "handoffWorkStatus": "COMPLETE",
+        "additionalRequiredEvidence": [
+          "work-verification-corrections-and-reviews-complete",
+          "no-unresolved-fact-or-decision"
+        ]
+      },
+      {
+        "id": "active-product-owner-decision",
+        "handoffWorkStatus": "ACTIVE",
+        "additionalRequiredEvidence": [
+          "one-exact-current-non-authorizing-decision-next",
+          "all-required-changes-pushed",
+          "incomplete-and-unaccepted-state-explicit",
+          "no-other-unresolved-fact"
+        ]
+      }
+    ],
+    "missingOrUnknown": "deny"
+  },
   "events": {
     "authority_request": {
       "createsGrant": true,

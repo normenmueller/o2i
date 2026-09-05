@@ -25,10 +25,15 @@ import O2I.Operation.Acquisition
   , fileInput
   )
 import O2I.Operation.Acquisition.Internal (acquireWith)
+import qualified O2I.Operation.Assess.Human as Human
 import O2I.Operation.Assess.Machine
 import O2I.Operation.Assess.Request
 import O2I.Operation.Assess.Result
 import O2I.Operation.Assess.Runtime.Internal (runAssessWith)
+import O2I.Operation.Command.Error (assessCommandError, commandErrorCode)
+import O2I.Operation.Command.Error.Machine
+import qualified O2I.Operation.Human.Diagnostic as HumanDiagnostic
+import qualified O2I.Operation.Human.Value as HumanValue
 import O2I.Operation.Machine (ToolDescriptor, mkToolDescriptor)
 import O2I.Operation.Provenance
   ( SourceOrdinal
@@ -37,6 +42,8 @@ import O2I.Operation.Provenance
   , sourceOrdinalValue
   )
 import O2I.Operation.Schema (machineSchemaVariants, schemaVariantText)
+import qualified O2I.Operation.Test.HumanFailureCorrespondence as FailureCorrespondence
+import qualified O2I.Operation.Test.ReportEnvelope as ReportEnvelope
 import O2I.Operation.Test.Trace
   ( fixtureModelInput
   , notationRejectedDraft
@@ -46,6 +53,10 @@ import O2I.Operation.Test.Trace
   , withFixtureEnvironment
   )
 import O2I.Operation.View (foldViewSelector, viewByName)
+import OperationReportPublicObserver
+  ( ObservedReportContract
+  , ObservedReportOperation(..)
+  )
 import System.FilePath ((</>))
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit
@@ -236,11 +247,275 @@ terminalMachineBranches = do
           , ("assess-observations-invalid", mixed)
           , ("assess-completed", completed)
           ])
+  mapM_ (assertHumanAssess "prerequisite") prerequisiteResults
+  assertHumanAssess "binding-unavailable" binding
+  assertHumanAssess "reconstruction-unavailable" reconstruction
+  assertHumanAssess "collection-invalid" collection
+  assertHumanAssess "observations-invalid" mixed
+  assertHumanAssess "completed" completed
   failed <- runFixture (readinessContractDraft Nothing) "{}"
+  assertHumanAssess "failed" failed
+  foldAssessResult
+    (\failure ->
+       foldAssessFailure
+         (const (assertFailure "malformed assessment became common failure"))
+         (const (pure ()))
+         (const
+            (assertFailure "malformed assessment became supplemental failure"))
+         (const (assertFailure "malformed assessment became owner failure"))
+         failure)
+    (\_ _ -> assertFailure "malformed assessment reached prerequisite")
+    (\_ _ -> assertFailure "malformed assessment reached unavailability")
+    (\_ _ -> assertFailure "malformed assessment reached collection")
+    (\_ _ -> assertFailure "malformed assessment reached invalid observations")
+    (\_ _ -> assertFailure "malformed assessment reached completion")
+    failed
+  assertAssessCommandError
+    "assess.assessment-input"
+    "{\"schema\":\"o2i.command-error/v1\",\"kind\":\"assess-failed\",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},\"code\":\"assess.assessment-input\",\"failure\":{\"category\":\"assessment-input\",\"diagnostics\":[{\"ruleId\":\"core.evidence-input.decode.discriminator\",\"inputOrdinals\":[0],\"reason\":\"discriminator-invalid\",\"fields\":[{\"name\":\"jsonPointer\",\"values\":[{\"kind\":\"text\",\"value\":\"/type\"}]},{\"name\":\"expected\",\"values\":[{\"kind\":\"text\",\"value\":\"AssessmentBundleInput\"}]}]}]}}"
+    failed
+  (supplementalFailed, _) <-
+    observedRun
+      (readinessContractDraft Nothing)
+      completedBundle
+      ["malformed-supplement.json"]
+      Nothing
+  foldAssessResult
+    (\failure ->
+       foldAssessFailure
+         (const (assertFailure "malformed supplement became common failure"))
+         (const (assertFailure "malformed supplement became assessment failure"))
+         (const (pure ()))
+         (const (assertFailure "malformed supplement became owner failure"))
+         failure)
+    (\_ _ -> assertFailure "malformed supplement reached prerequisite")
+    (\_ _ -> assertFailure "malformed supplement reached unavailability")
+    (\_ _ -> assertFailure "malformed supplement reached collection")
+    (\_ _ -> assertFailure "malformed supplement reached invalid observations")
+    (\_ _ -> assertFailure "malformed supplement reached completion")
+    supplementalFailed
+  assertAssessCommandError
+    "assess.supplemental-input"
+    "{\"schema\":\"o2i.command-error/v1\",\"kind\":\"assess-failed\",\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0\"},\"code\":\"assess.supplemental-input\",\"failure\":{\"category\":\"supplemental-input\",\"diagnostics\":[{\"ruleId\":\"core.supplemental.decode.json-syntax\",\"inputOrdinals\":[0],\"reason\":\"invalid-json-syntax\",\"fields\":[]}]}}"
+    supplementalFailed
+
+assertHumanAssess :: Text -> AssessResult -> Assertion
+assertHumanAssess expected result = do
+  tool <- ReportEnvelope.hostileTool
+  Human.foldHumanAssessReport
+    (\failureValue -> do
+       expected @?= "failed"
+       raw <- observeRawAssessFailure result
+       human <- observeHumanAssessFailure failureValue
+       human @?= raw)
+    (\_ context -> do
+       expected @?= "prerequisite"
+       assertHumanAssessContext
+         tool
+         result
+         ReportEnvelope.contractsWithCore
+         False
+         context)
+    (\unavailable context -> do
+       branch <-
+         Human.foldHumanAssessUnavailable
+           (\_ _ -> pure "binding-unavailable")
+           (\_ _ _ -> pure "reconstruction-unavailable")
+           unavailable
+       expected @?= branch
+       assertHumanAssessContext
+         tool
+         result
+         ReportEnvelope.contractsWithCore
+         True
+         context)
+    (\_ context -> do
+       expected @?= "collection-invalid"
+       assertHumanAssessContext
+         tool
+         result
+         ReportEnvelope.contractsWithCore
+         True
+         context)
+    (\assessment context -> do
+       expected @?= "observations-invalid"
+       Human.foldHumanAssessmentResult
+         (\_ _ _ -> assertFailure "mixed fixture lost its observations")
+         (\_ _ observations _ ->
+            traverse humanObservationSource observations
+              >>= (@?= ["sensor-A raw", "sensor-B raw", "sensor-C raw"]))
+         assessment
+       assertHumanAssessContext
+         tool
+         result
+         ReportEnvelope.contractsWithCore
+         True
+         context)
+    (\_ context -> do
+       expected @?= "completed"
+       assertHumanAssessContext
+         tool
+         result
+         ReportEnvelope.contractsWithCore
+         True
+         context)
+    (Human.assessHumanReport tool result)
+
+observeRawAssessFailure :: AssessResult -> IO [[Text]]
+observeRawAssessFailure =
+  foldAssessResult
+    (foldAssessFailure
+       (pure . (: []) . FailureCorrespondence.observeRawCommonFailure)
+       (pure
+          . map FailureCorrespondence.observeRawAssessmentInputDefect
+          . NonEmpty.toList)
+       (pure
+          . map FailureCorrespondence.observeRawSupplementalInputDefect
+          . NonEmpty.toList)
+       (\_ -> unexpectedAssessFailure "Assess owner failure in input fixture"))
+    (\_ _ -> unexpectedAssessFailure "Assess prerequisite in failed fixture")
+    (\_ _ -> unexpectedAssessFailure "Assess unavailability in failed fixture")
+    (\_ _ ->
+       unexpectedAssessFailure "Assess collection result in failed fixture")
+    (\_ _ -> unexpectedAssessFailure "Assess invalid result in failed fixture")
+    (\_ _ -> unexpectedAssessFailure "Assess completion in failed fixture")
+
+observeHumanAssessFailure :: Human.HumanAssessFailure -> IO [[Text]]
+observeHumanAssessFailure =
+  Human.foldHumanAssessFailure
+    (pure . (: []) . FailureCorrespondence.observeHumanCommonFailure)
+    (pure . map FailureCorrespondence.observeHumanInputDefect . NonEmpty.toList)
+    (pure
+       . map FailureCorrespondence.observeHumanSupplementalInputDefect
+       . NonEmpty.toList)
+    (\_ -> unexpectedAssessFailure "Assess model-role failure in input fixture")
+    (\_ -> unexpectedAssessFailure "Assess bundle-role failure in input fixture")
+    (\_ ->
+       unexpectedAssessFailure
+         "Assess supplemental-role failure in input fixture")
+    (\_ -> unexpectedAssessFailure "Assess adapter failure in input fixture")
+    (\_ -> unexpectedAssessFailure "Assess notation failure in input fixture")
+    (\_ -> unexpectedAssessFailure "Assess Profile failure in input fixture")
+    (\_ -> unexpectedAssessFailure "Assess identity failure in input fixture")
+    (\_ -> unexpectedAssessFailure "Assess scope failure in input fixture")
+    (\_ -> unexpectedAssessFailure "Assess Structure failure in input fixture")
+    (\_ -> unexpectedAssessFailure "Assess provenance failure in input fixture")
+    (\_ -> unexpectedAssessFailure "Assess semantic failure in input fixture")
+
+unexpectedAssessFailure :: String -> IO value
+unexpectedAssessFailure message = assertFailure message >> fail "unreachable"
+
+assertHumanAssessContext ::
+     ToolDescriptor
+  -> AssessResult
+  -> NonEmpty.NonEmpty ObservedReportContract
+  -> Bool
+  -> Human.HumanAssessContext
+  -> Assertion
+assertHumanAssessContext tool result contracts completed context = do
+  document <-
+    case assessResultDocument tool result of
+      Left _ ->
+        assertFailure "prepared Assess result has no document"
+          >> fail "unreachable"
+      Right value -> pure value
+  Human.foldHumanAssessContext
+    (\envelope request model bundle supplements _ diagnostics -> do
+       ReportEnvelope.assertPreparedEnvelope
+         assessResultSchema
+         (assessResultDocumentVariant document)
+         ObservedAssessReportOperation
+         contracts
+         envelope
+       Human.foldHumanAssessRequest
+         (\modelInput view adapter bundleInput supplementInputs -> do
+            assertHumanFile
+              "model"
+              ("tst" </> "fixtures" </> "owner-model.amx")
+              modelInput
+            HumanValue.foldHumanViewSelector
+              (@?= "Binding")
+              (const (assertFailure "Assess request changed selector kind"))
+              view
+            HumanValue.foldHumanAdapterSelection
+              (pure ())
+              (const (assertFailure "Assess request changed adapter selection"))
+              adapter
+            assertHumanFile "assessment" "assessment.json" bundleInput
+            length supplementInputs @?= 1)
+         request
+       assertHumanSource "model" "model" 0 model
+       if completed
+         then do
+           maybe
+             (assertFailure "prepared Assess lost acquired bundle")
+             (assertHumanSource "assessment" "assessment" 0)
+             bundle
+           length supplements @?= 1
+           mapM_ (assertHumanSource "supplemental" "supplement-0" 0) supplements
+         else pure ()
+       humanSourceTuple
+         (HumanDiagnostic.humanDiagnosticDocumentModelSource diagnostics)
+         @?= humanSourceTuple model)
+    context
+
+assertHumanFile :: Text -> FilePath -> HumanValue.HumanInputSource -> Assertion
+assertHumanFile reference path =
+  HumanValue.foldHumanInputSource
+    (\actualReference actualPath -> do
+       actualReference @?= reference
+       actualPath @?= path)
+    (const (assertFailure "Assess file input became standard input"))
+
+assertHumanSource ::
+     Text -> Text -> Natural -> HumanValue.HumanSourceIdentity -> Assertion
+assertHumanSource role reference ordinal =
+  HumanValue.foldHumanSourceIdentity
+    (\actualRole actualOrdinal actualReference digest -> do
+       humanSourceRole actualRole @?= role
+       actualOrdinal @?= ordinal
+       actualReference @?= reference
+       assertBool "Assess source digest is empty" (digest /= ""))
+
+humanSourceTuple ::
+     HumanValue.HumanSourceIdentity -> (Text, Natural, Text, Text)
+humanSourceTuple =
+  HumanValue.foldHumanSourceIdentity $ \role ordinal reference digest ->
+    (humanSourceRole role, ordinal, reference, digest)
+
+humanSourceRole :: HumanValue.HumanSourceRole -> Text
+humanSourceRole =
+  HumanValue.foldHumanSourceRole "model" "supplemental" "readiness" "assessment"
+
+humanObservationSource :: Human.HumanObservationAssessment -> IO Text
+humanObservationSource =
+  Human.foldHumanObservationAssessment
+    (\retained _ -> source retained)
+    (\retained _ _ _ -> source retained)
+  where
+    source =
+      Human.foldHumanObservation $ \_ _ _ retainedSource _ ->
+        pure retainedSource
+
+assertAssessCommandError ::
+     Text -> ByteString.ByteString -> AssessResult -> Assertion
+assertAssessCommandError expectedCode expectedBytes result = do
   tool <- testTool
-  case assessResultDocument tool failed of
-    Left _ -> pure ()
-    Right _ -> assertFailure "operational failure acquired a machine envelope"
+  case assessResultDocument tool result of
+    Left failure -> do
+      let commandError = assessCommandError failure
+          document = commandErrorDocument tool commandError
+          encoded = encodeCommandErrorDocument document
+      commandErrorCode commandError @?= expectedCode
+      schemaVariantText (commandErrorDocumentVariant document)
+        @?= "assess-failed"
+      encoded @?= expectedBytes
+      schema <- requireJson (LazyByteString.fromStrict commandErrorSchemaBytes)
+      value <- requireStrictJson encoded
+      validateJSONSchema schema value
+        @? "Assessment command error violates its generated Schema"
+    Right _ ->
+      assertFailure "failed Assessment result acquired a machine envelope"
 
 mixedMachineEvidence :: Assertion
 mixedMachineEvidence = do

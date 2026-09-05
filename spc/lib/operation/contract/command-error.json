@@ -1,0 +1,123 @@
+{
+  "schema": "o2i.command-error-contract/1",
+  "document": {
+    "name": "commandError",
+    "identity": "o2i.command-error",
+    "version": 1,
+    "variants": [
+      "argument-invalid",
+      "command-failed",
+      "preparation-failed",
+      "validate-failed",
+      "qualify-failed",
+      "readiness-failed",
+      "assess-failed",
+      "qualification-subjects-failed",
+      "trace-failed"
+    ]
+  },
+  "ownerEvidenceShapes": {
+    "acquired-model-role": "source-identity",
+    "acquired-supplemental-role": "source-identity",
+    "acquired-readiness-role": "source-identity",
+    "acquired-assessment-role": "source-identity",
+    "selected-adapter-contract": "adapter-descriptor",
+    "notation-contract": "notation-contract",
+    "profile-contract": "profile-contract",
+    "identity-index": "identity-index",
+    "selected-view-scope": "selected-view-scope",
+    "structure-input": "structure-input",
+    "supplemental-provenance": "supplemental-provenance",
+    "empty-input-provenance": "supplemental-provenance",
+    "empty-input-contract": "supplemental-input",
+    "semantic-unavailable-contract": "semantic-occurrences",
+    "semantic-model-contract": "semantic-occurrences",
+    "qualification-context": "qualification-context",
+    "occurrence-projection": "occurrence-projection",
+    "occurrence-join": "occurrence-join"
+  },
+  "ownerExpectedSourceRoles": {
+    "acquired-model-role": "model",
+    "acquired-supplemental-role": "supplemental",
+    "acquired-readiness-role": "readiness",
+    "acquired-assessment-role": "assessment"
+  },
+  "ownerBranches": {
+    "validate": [
+      {"constructor":"ValidateAcquiredModelRoleFailure","token":"acquired-model-role"},
+      {"constructor":"ValidateAcquiredSupplementalRoleFailure","token":"acquired-supplemental-role"},
+      {"constructor":"ValidateSelectedAdapterContractFailure","token":"selected-adapter-contract"},
+      {"constructor":"ValidateNotationContractFailure","token":"notation-contract"},
+      {"constructor":"ValidateProfileContractFailure","token":"profile-contract"},
+      {"constructor":"ValidateIdentityIndexFailure","token":"identity-index"},
+      {"constructor":"ValidateSelectedViewScopeFailure","token":"selected-view-scope"},
+      {"constructor":"ValidateStructureInputFailure","token":"structure-input"},
+      {"constructor":"ValidateSupplementalProvenanceFailure","token":"supplemental-provenance"},
+      {"constructor":"ValidateSemanticUnavailableContractFailure","token":"semantic-unavailable-contract"}
+    ],
+    "qualify": [
+      {"constructor":"QualifyAcquiredModelRoleFailure","token":"acquired-model-role"},
+      {"constructor":"QualifyAcquiredSupplementalRoleFailure","token":"acquired-supplemental-role"},
+      {"constructor":"QualifySelectedAdapterContractFailure","token":"selected-adapter-contract"},
+      {"constructor":"QualifyNotationContractFailure","token":"notation-contract"},
+      {"constructor":"QualifyProfileContractFailure","token":"profile-contract"},
+      {"constructor":"QualifyIdentityIndexFailure","token":"identity-index"},
+      {"constructor":"QualifySelectedViewScopeFailure","token":"selected-view-scope"},
+      {"constructor":"QualifyStructureInputFailure","token":"structure-input"},
+      {"constructor":"QualifySupplementalProvenanceFailure","token":"supplemental-provenance"},
+      {"constructor":"QualifyContextFailure","token":"qualification-context"}
+    ],
+    "readiness": [
+      {"constructor":"ReadinessAcquiredModelRoleFailure","token":"acquired-model-role"},
+      {"constructor":"ReadinessAcquiredEvidenceRoleFailure","token":"acquired-readiness-role"},
+      {"constructor":"ReadinessAcquiredSupplementalRoleFailure","token":"acquired-supplemental-role"},
+      {"constructor":"ReadinessSelectedAdapterContractFailure","token":"selected-adapter-contract"},
+      {"constructor":"ReadinessNotationContractFailure","token":"notation-contract"},
+      {"constructor":"ReadinessProfileContractFailure","token":"profile-contract"},
+      {"constructor":"ReadinessIdentityIndexFailure","token":"identity-index"},
+      {"constructor":"ReadinessSelectedViewScopeFailure","token":"selected-view-scope"},
+      {"constructor":"ReadinessStructureInputFailure","token":"structure-input"},
+      {"constructor":"ReadinessSupplementalProvenanceFailure","token":"supplemental-provenance"},
+      {"constructor":"ReadinessSemanticModelContractFailure","token":"semantic-model-contract"}
+    ],
+    "assess": [
+      {"constructor":"AssessAcquiredModelRoleFailure","token":"acquired-model-role"},
+      {"constructor":"AssessAcquiredBundleRoleFailure","token":"acquired-assessment-role"},
+      {"constructor":"AssessAcquiredSupplementalRoleFailure","token":"acquired-supplemental-role"},
+      {"constructor":"AssessSelectedAdapterContractFailure","token":"selected-adapter-contract"},
+      {"constructor":"AssessNotationContractFailure","token":"notation-contract"},
+      {"constructor":"AssessProfileContractFailure","token":"profile-contract"},
+      {"constructor":"AssessIdentityIndexFailure","token":"identity-index"},
+      {"constructor":"AssessSelectedViewScopeFailure","token":"selected-view-scope"},
+      {"constructor":"AssessStructureInputFailure","token":"structure-input"},
+      {"constructor":"AssessSupplementalProvenanceFailure","token":"supplemental-provenance"},
+      {"constructor":"AssessSemanticModelContractFailure","token":"semantic-model-contract"}
+    ],
+    "qualificationSubjects": [
+      {"constructor":"QualificationSubjectsAcquiredModelRoleFailure","token":"acquired-model-role"},
+      {"constructor":"QualificationSubjectsAcquiredSupplementalRoleFailure","token":"acquired-supplemental-role"},
+      {"constructor":"QualificationSubjectsSelectedAdapterContractFailure","token":"selected-adapter-contract"},
+      {"constructor":"QualificationSubjectsNotationContractFailure","token":"notation-contract"},
+      {"constructor":"QualificationSubjectsProfileContractFailure","token":"profile-contract"},
+      {"constructor":"QualificationSubjectsIdentityIndexFailure","token":"identity-index"},
+      {"constructor":"QualificationSubjectsSelectedViewScopeFailure","token":"selected-view-scope"},
+      {"constructor":"QualificationSubjectsStructureInputFailure","token":"structure-input"},
+      {"constructor":"QualificationSubjectsSupplementalProvenanceFailure","token":"supplemental-provenance"},
+      {"constructor":"QualificationSubjectsContextFailure","token":"qualification-context"},
+      {"constructor":"QualificationSubjectsOccurrenceProjectionFailure","token":"occurrence-projection"},
+      {"constructor":"QualificationSubjectsOccurrenceJoinFailure","token":"occurrence-join"}
+    ],
+    "trace": [
+      {"constructor":"TraceAcquiredModelRoleFailure","token":"acquired-model-role"},
+      {"constructor":"TraceSelectedAdapterContractFailure","token":"selected-adapter-contract"},
+      {"constructor":"TraceNotationContractFailure","token":"notation-contract"},
+      {"constructor":"TraceProfileContractFailure","token":"profile-contract"},
+      {"constructor":"TraceIdentityIndexFailure","token":"identity-index"},
+      {"constructor":"TraceSelectedViewScopeFailure","token":"selected-view-scope"},
+      {"constructor":"TraceStructureInputFailure","token":"structure-input"},
+      {"constructor":"TraceEmptyInputProvenanceFailure","token":"empty-input-provenance"},
+      {"constructor":"TraceEmptyInputContractFailure","token":"empty-input-contract"},
+      {"constructor":"TraceSemanticModelContractFailure","token":"semantic-model-contract"}
+    ]
+  }
+}

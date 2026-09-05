@@ -10,16 +10,13 @@ import qualified Data.List.NonEmpty as NonEmpty
 import qualified Data.Text as Text
 import O2I.Operation.Encoding.Internal
 import O2I.Operation.Machine
-import O2I.Operation.Machine.Internal
-  ( assessOperationIdentity
-  , operationIdentityInventory
-  , operationIdentityValue
-  , qualificationSubjectsOperationIdentity
-  , qualifyOperationIdentity
-  , readinessOperationIdentity
-  , traceOperationIdentity
-  , validateOperationIdentity
-  , viewsOperationIdentity
+import O2I.Operation.Report (foldReportOperation)
+import O2I.Operation.Report.Internal
+  ( ReportAuthority(..)
+  , ReportContract(..)
+  , ReportEnvelope(..)
+  , ReportOperation(..)
+  , reportOperationText
   )
 import O2I.Operation.Schema (machineSchemaVariants)
 import O2I.Operation.Schema.Internal (defineMachineSchema)
@@ -32,7 +29,7 @@ tests =
     "Operation machine envelope"
     [ testCase "validates exact composition metadata" validDescriptor
     , testCase "accumulates every unsafe descriptor field" invalidDescriptor
-    , testCase "closes the exact operation identity inventory" exactIdentities
+    , testCase "closes the sole report-operation authority" exactIdentities
     , testCase "encodes the sole common envelope order" exactEnvelope
     ]
 
@@ -57,24 +54,37 @@ invalidDescriptor = do
 
 exactIdentities :: Assertion
 exactIdentities = do
-  operationIdentityInventory
-    @?= [ viewsOperationIdentity
-        , qualificationSubjectsOperationIdentity
-        , validateOperationIdentity
-        , traceOperationIdentity
-        , qualifyOperationIdentity
-        , readinessOperationIdentity
-        , assessOperationIdentity
-        ]
-  fmap operationIdentityValue operationIdentityInventory
-    @?= [ "views"
-        , "qualification-subjects"
-        , "validate"
-        , "trace"
-        , "qualify"
-        , "readiness"
-        , "assess"
-        ]
+  fmap reportOperationText operations @?= expected
+  fmap
+    (foldReportOperation
+       "views"
+       "qualification-subjects"
+       "validate"
+       "trace"
+       "qualify"
+       "readiness"
+       "assess")
+    operations
+    @?= expected
+  where
+    operations =
+      [ ViewsReportOperation
+      , QualificationSubjectsReportOperation
+      , ValidateReportOperation
+      , TraceReportOperation
+      , QualifyReportOperation
+      , ReadinessReportOperation
+      , AssessReportOperation
+      ]
+    expected =
+      [ "views"
+      , "qualification-subjects"
+      , "validate"
+      , "trace"
+      , "qualify"
+      , "readiness"
+      , "assess"
+      ]
 
 exactEnvelope :: Assertion
 exactEnvelope = do
@@ -88,10 +98,12 @@ exactEnvelope = do
   let variant = NonEmpty.head (machineSchemaVariants schema)
       result =
         closedOperationMachineResult
-          schema
-          validateOperationIdentity
-          descriptor
-          variant
+          (ReportEnvelope
+             schema
+             variant
+             ValidateReportOperation
+             descriptor
+             (PreparedReportAuthority (AdapterReportContract :| [])))
           [requiredMember "value" (textFragment "exact")]
   machineResultBytesValue result
     @?= ByteString.pack

@@ -1,5 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RoleAnnotations #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 -- | Public Core Semantics boundary.
 --
@@ -16,20 +18,9 @@ module O2I.Semantics
   , semanticCandidateOccurrences
   , semanticallyValidModel
   , SemanticDiagnosticEvidence
-  , SemanticEvidenceKind(..)
+  , SemanticDiagnosticEliminator(..)
+  , foldSemanticDiagnosticEvidence
   , semanticDiagnosticRule
-  , SemanticSubject
-  , semanticDiagnosticSubjects
-  , foldSemanticSubject
-  , SemanticOccurrenceRole
-  , SemanticOccurrenceGroup
-  , semanticDiagnosticOccurrenceGroups
-  , semanticOccurrenceGroupRole
-  , semanticOccurrenceGroupOccurrences
-  , semanticOccurrenceRoleId
-  , semanticDiagnosticKind
-  , semanticDiagnosticModelIdentities
-  , semanticDiagnosticOccurrenceIdentities
   , SituatedNeedAssessment
   , StrategyFormulationAssessment
   , CollectiveStrategyRealizationAssessment
@@ -84,8 +75,8 @@ module O2I.Semantics
 
 import qualified Data.List.NonEmpty as NonEmpty
 import Data.List.NonEmpty (NonEmpty)
-import Data.Text (Text)
 import O2I.Core.Contract (CoreRuleId)
+import qualified O2I.Core.Contract.Generated as Generated
 import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
 import qualified O2I.Semantics.Eval as Eval
 import O2I.Semantics.Input (BoundSupplementalInputs)
@@ -153,17 +144,6 @@ data ComponentDisposition
   | ComponentSatisfied
   deriving (Bounded, Enum, Eq, Ord, Show)
 
--- | Closed public classification of one semantic evidence key.
-data SemanticEvidenceKind
-  = NeedEvidence
-  | NeedMemberEvidence
-  | StrategyEvidence
-  | StrategyMemberEvidence
-  | CollectiveEvidence
-  | CollectiveParticipantEvidence
-  | AssertedDependencyEvidence
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
 -- | Classify the aggregate semantic outcome without exposing its proof data.
 semanticDisposition :: SemanticAssessment scope -> SemanticDisposition
 semanticDisposition (SemanticAssessment assessment) =
@@ -205,132 +185,154 @@ semanticDiagnosticRule :: SemanticDiagnosticEvidence scope -> CoreRuleId
 semanticDiagnosticRule (SemanticDiagnosticEvidence defect) =
   Internal.semanticRuleId (Internal.semanticDefectRule defect)
 
--- | One exact named subject retained by the semantic evidence key.
-data SemanticSubject
-  = SemanticModelSubject !Text !ModelIdentity
-  | SemanticOccurrenceSubject !Text !OccurrenceIdentity
-
--- | Return every subject with its owner-defined role in admitted order.
-semanticDiagnosticSubjects ::
-     SemanticDiagnosticEvidence scope -> NonEmpty SemanticSubject
-semanticDiagnosticSubjects (SemanticDiagnosticEvidence defect) =
-  case Internal.semanticDefectEvidence defect of
-    Internal.SemanticNeedKey need ->
-      SemanticModelSubject "need" need NonEmpty.:| []
-    Internal.SemanticNeedMemberKey need member ->
-      SemanticModelSubject "need" need
-        NonEmpty.:| [SemanticModelSubject "member" member]
-    Internal.SemanticStrategyKey strategy ->
-      SemanticModelSubject "strategy" strategy NonEmpty.:| []
-    Internal.SemanticStrategyMemberKey strategy member ->
-      SemanticModelSubject "strategy" strategy
-        NonEmpty.:| [SemanticModelSubject "member" member]
-    Internal.SemanticFitClaimKey claim ->
-      SemanticModelSubject "claim" claim NonEmpty.:| []
-    Internal.SemanticParticipantClaimKey claim participant ->
-      SemanticModelSubject "claim" claim
-        NonEmpty.:| [SemanticModelSubject "participant" participant]
-    Internal.SemanticAssertedDependencyKey dependent endpoint context ->
-      SemanticOccurrenceSubject "dependent" dependent
-        NonEmpty.:| [ SemanticOccurrenceSubject "endpoint" endpoint
-                    , SemanticOccurrenceSubject "context" context
-                    ]
-
--- | Eliminate either exact semantic subject value without exposing constructors.
-foldSemanticSubject ::
-     (Text -> ModelIdentity -> result)
-  -> (Text -> OccurrenceIdentity -> result)
-  -> SemanticSubject
-  -> result
-foldSemanticSubject model occurrence subject =
-  case subject of
-    SemanticModelSubject role identity -> model role identity
-    SemanticOccurrenceSubject role identity -> occurrence role identity
-
--- | Opaque, rule-local role of one semantic occurrence group.
-newtype SemanticOccurrenceRole =
-  SemanticOccurrenceRole Text
-
--- | Opaque named group of occurrences retained by its Core producer.
-data SemanticOccurrenceGroup =
-  SemanticOccurrenceGroup !SemanticOccurrenceRole ![OccurrenceIdentity]
-
--- | Return every named group in its admitted order, including empty groups.
+-- | Total consumer algebra for every produced semantic diagnostic shape.
 --
--- Structural cardinality is fixed by the compiled Core companion. Concrete
--- graph membership and semantic relations remain guarantees of the opaque
--- producer path.
-semanticDiagnosticOccurrenceGroups ::
-     SemanticDiagnosticEvidence scope -> NonEmpty SemanticOccurrenceGroup
-semanticDiagnosticOccurrenceGroups (SemanticDiagnosticEvidence defect) =
-  projectGroup <$> Internal.semanticDefectOccurrenceGroups defect
+-- Each handler receives evidence-key fields first and occurrence evidence
+-- second. 'NonEmpty' and list cardinalities are retained exactly from the
+-- compiled Core contract.
+data SemanticDiagnosticEliminator result = SemanticDiagnosticEliminator
+  { eliminateCollectiveAssertedCollectiveCoverage :: ModelIdentity -> NonEmpty
+                                                                        OccurrenceIdentity -> result
+  , eliminateCollectiveAssertedCompleteness :: ModelIdentity -> OccurrenceIdentity -> result
+  , eliminateCollectiveAssertedMacroSupport :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> result
+  , eliminateCollectiveAssertedParticipantPrimitiveSupport :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> result
+  , eliminateCollectiveFitPairwiseCoherence :: ModelIdentity -> OccurrenceIdentity -> result
+  , eliminateCollectiveFitParticipantBinding :: ModelIdentity -> OccurrenceIdentity -> result
+  , eliminateCollectiveFitParticipantCompatibility :: ModelIdentity -> OccurrenceIdentity -> result
+  , eliminateCollectiveFitTargetBinding :: ModelIdentity -> OccurrenceIdentity -> result
+  , eliminateCollectiveFitTargetGuidingPolicy :: ModelIdentity -> OccurrenceIdentity -> result
+  , eliminateCollectiveFitTargetTradeOffs :: ModelIdentity -> OccurrenceIdentity -> result
+  , eliminateContextualizationAssertedDependency :: OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> result
+  , eliminateSituatedNeedDriverAnchoring :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> result
+  , eliminateSituatedNeedDriverCardinality :: ModelIdentity -> result
+  , eliminateSituatedNeedObjectiveCardinality :: ModelIdentity -> result
+  , eliminateSituatedNeedObjectiveGrounding :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> result
+  , eliminateSituatedNeedSurfacingSituationAnchoring :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> result
+  , eliminateSituatedNeedSurfacingSituationCardinality :: ModelIdentity -> result
+  , eliminateStrategyFormulationActionContributions :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> result
+  , eliminateStrategyFormulationActions :: ModelIdentity -> NonEmpty
+                                                              OccurrenceIdentity -> result
+  , eliminateStrategyFormulationDiagnosis :: ModelIdentity -> [OccurrenceIdentity] -> result
+  , eliminateStrategyFormulationDiagnosisGrounding :: ModelIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> result
+  , eliminateStrategyFormulationGuidingPolicy :: ModelIdentity -> [OccurrenceIdentity] -> result
+  , eliminateStrategyFormulationGuidingPolicyActions :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> result
+  , eliminateStrategyFormulationIntent :: ModelIdentity -> [OccurrenceIdentity] -> result
+  , eliminateStrategyFormulationKeyResultSubstantiation :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> result
+  , eliminateStrategyFormulationKeyResults :: ModelIdentity -> NonEmpty
+                                                                 OccurrenceIdentity -> result
+  , eliminateStrategyFormulationVisionOrientation :: ModelIdentity -> result
+  }
+
+-- | Eliminate opaque evidence through its one exact typed producer branch.
+foldSemanticDiagnosticEvidence ::
+     forall result scope.
+     SemanticDiagnosticEliminator result
+  -> SemanticDiagnosticEvidence scope
+  -> result
+foldSemanticDiagnosticEvidence eliminator (SemanticDiagnosticEvidence defect) =
+  Internal.foldSemanticDefect eliminate defect
   where
-    projectGroup (role, occurrences) =
-      SemanticOccurrenceGroup (SemanticOccurrenceRole role) occurrences
-
--- | Project the opaque role of one occurrence group.
-semanticOccurrenceGroupRole :: SemanticOccurrenceGroup -> SemanticOccurrenceRole
-semanticOccurrenceGroupRole (SemanticOccurrenceGroup role _) = role
-
--- | Project the exact canonical occurrences retained in one named group.
-semanticOccurrenceGroupOccurrences ::
-     SemanticOccurrenceGroup -> [OccurrenceIdentity]
-semanticOccurrenceGroupOccurrences (SemanticOccurrenceGroup _ values) = values
-
--- | Return the admitted rule-local role identifier for serialization.
-semanticOccurrenceRoleId :: SemanticOccurrenceRole -> Text
-semanticOccurrenceRoleId (SemanticOccurrenceRole role) = role
-
--- | Classify the closed evidence-key shape without exposing its representation.
-semanticDiagnosticKind ::
-     SemanticDiagnosticEvidence scope -> SemanticEvidenceKind
-semanticDiagnosticKind (SemanticDiagnosticEvidence defect) =
-  semanticEvidenceKindValue (Internal.semanticDefectEvidence defect)
-
-semanticEvidenceKindValue :: Internal.SemanticEvidence -> SemanticEvidenceKind
-semanticEvidenceKindValue evidence =
-  case evidence of
-    Internal.SemanticNeedKey _ -> NeedEvidence
-    Internal.SemanticNeedMemberKey _ _ -> NeedMemberEvidence
-    Internal.SemanticStrategyKey _ -> StrategyEvidence
-    Internal.SemanticStrategyMemberKey _ _ -> StrategyMemberEvidence
-    Internal.SemanticFitClaimKey _ -> CollectiveEvidence
-    Internal.SemanticParticipantClaimKey _ _ -> CollectiveParticipantEvidence
-    Internal.SemanticAssertedDependencyKey _ _ _ -> AssertedDependencyEvidence
-
--- | Return model identities carried by one semantic evidence key.
-semanticDiagnosticModelIdentities ::
-     SemanticDiagnosticEvidence scope -> [ModelIdentity]
-semanticDiagnosticModelIdentities (SemanticDiagnosticEvidence defect) =
-  semanticEvidenceModelIdentitiesValue (Internal.semanticDefectEvidence defect)
-
-semanticEvidenceModelIdentitiesValue ::
-     Internal.SemanticEvidence -> [ModelIdentity]
-semanticEvidenceModelIdentitiesValue evidence =
-  case evidence of
-    Internal.SemanticNeedKey need -> [need]
-    Internal.SemanticNeedMemberKey need member -> [need, member]
-    Internal.SemanticStrategyKey strategy -> [strategy]
-    Internal.SemanticStrategyMemberKey strategy member -> [strategy, member]
-    Internal.SemanticFitClaimKey claim -> [claim]
-    Internal.SemanticParticipantClaimKey claim participant ->
-      [claim, participant]
-    Internal.SemanticAssertedDependencyKey _ _ _ -> []
-
--- | Return occurrence identities carried by asserted-dependency evidence.
-semanticDiagnosticOccurrenceIdentities ::
-     SemanticDiagnosticEvidence scope -> [OccurrenceIdentity]
-semanticDiagnosticOccurrenceIdentities (SemanticDiagnosticEvidence defect) =
-  semanticEvidenceOccurrenceIdentitiesValue
-    (Internal.semanticDefectEvidence defect)
-
-semanticEvidenceOccurrenceIdentitiesValue ::
-     Internal.SemanticEvidence -> [OccurrenceIdentity]
-semanticEvidenceOccurrenceIdentitiesValue evidence =
-  case evidence of
-    Internal.SemanticAssertedDependencyKey dependent endpoint context ->
-      [dependent, endpoint, context]
-    _ -> []
+    eliminate ::
+         forall evidenceSchema occurrenceSchema.
+         Generated.GeneratedSemanticRule evidenceSchema occurrenceSchema
+      -> Internal.SemanticEvidenceKey evidenceSchema
+      -> Internal.SemanticOccurrenceEvidence occurrenceSchema
+      -> result
+    eliminate Generated.CollectiveAssertedCollectiveCoverageRule (Internal.SemanticFitClaimEvidenceKey claim) (Generated.CollectiveAssertedCollectiveCoverageOccurrences values) =
+      eliminateCollectiveAssertedCollectiveCoverage eliminator claim values
+    eliminate Generated.CollectiveAssertedCompletenessRule (Internal.SemanticFitClaimEvidenceKey claim) (Generated.CollectiveAssertedCompletenessOccurrences occurrence) =
+      eliminateCollectiveAssertedCompleteness eliminator claim occurrence
+    eliminate Generated.CollectiveAssertedMacroSupportRule (Internal.SemanticParticipantClaimEvidenceKey claim participant) (Generated.CollectiveAssertedMacroSupportOccurrences claimOccurrence participantOccurrence targetOccurrence) =
+      eliminateCollectiveAssertedMacroSupport
+        eliminator
+        claim
+        participant
+        claimOccurrence
+        participantOccurrence
+        targetOccurrence
+    eliminate Generated.CollectiveAssertedParticipantPrimitiveSupportRule (Internal.SemanticParticipantClaimEvidenceKey claim participant) (Generated.CollectiveAssertedParticipantPrimitiveSupportOccurrences claimOccurrence participantOccurrence targetOccurrence) =
+      eliminateCollectiveAssertedParticipantPrimitiveSupport
+        eliminator
+        claim
+        participant
+        claimOccurrence
+        participantOccurrence
+        targetOccurrence
+    eliminate Generated.CollectiveFitPairwiseCoherenceRule (Internal.SemanticFitClaimEvidenceKey claim) (Generated.CollectiveFitPairwiseCoherenceOccurrences occurrence) =
+      eliminateCollectiveFitPairwiseCoherence eliminator claim occurrence
+    eliminate Generated.CollectiveFitParticipantBindingRule (Internal.SemanticFitClaimEvidenceKey claim) (Generated.CollectiveFitParticipantBindingOccurrences occurrence) =
+      eliminateCollectiveFitParticipantBinding eliminator claim occurrence
+    eliminate Generated.CollectiveFitParticipantCompatibilityRule (Internal.SemanticFitClaimEvidenceKey claim) (Generated.CollectiveFitParticipantCompatibilityOccurrences occurrence) =
+      eliminateCollectiveFitParticipantCompatibility eliminator claim occurrence
+    eliminate Generated.CollectiveFitTargetBindingRule (Internal.SemanticFitClaimEvidenceKey claim) (Generated.CollectiveFitTargetBindingOccurrences occurrence) =
+      eliminateCollectiveFitTargetBinding eliminator claim occurrence
+    eliminate Generated.CollectiveFitTargetGuidingPolicyRule (Internal.SemanticFitClaimEvidenceKey claim) (Generated.CollectiveFitTargetGuidingPolicyOccurrences occurrence) =
+      eliminateCollectiveFitTargetGuidingPolicy eliminator claim occurrence
+    eliminate Generated.CollectiveFitTargetTradeOffsRule (Internal.SemanticFitClaimEvidenceKey claim) (Generated.CollectiveFitTargetTradeOffsOccurrences occurrence) =
+      eliminateCollectiveFitTargetTradeOffs eliminator claim occurrence
+    eliminate Generated.ContextualizationAssertedDependencyRule (Internal.SemanticAssertedDependencyEvidenceKey dependent endpoint context) (Generated.ContextualizationAssertedDependencyOccurrences dependentOccurrence endpointOccurrence contextOccurrence) =
+      eliminateContextualizationAssertedDependency
+        eliminator
+        dependent
+        endpoint
+        context
+        dependentOccurrence
+        endpointOccurrence
+        contextOccurrence
+    eliminate Generated.SituatedNeedDriverAnchoringRule (Internal.SemanticNeedMemberEvidenceKey need member) (Generated.SituatedNeedDriverAnchoringOccurrences occurrence) =
+      eliminateSituatedNeedDriverAnchoring eliminator need member occurrence
+    eliminate Generated.SituatedNeedDriverCardinalityRule (Internal.SemanticNeedEvidenceKey need) Generated.SituatedNeedDriverCardinalityOccurrences =
+      eliminateSituatedNeedDriverCardinality eliminator need
+    eliminate Generated.SituatedNeedObjectiveCardinalityRule (Internal.SemanticNeedEvidenceKey need) Generated.SituatedNeedObjectiveCardinalityOccurrences =
+      eliminateSituatedNeedObjectiveCardinality eliminator need
+    eliminate Generated.SituatedNeedObjectiveGroundingRule (Internal.SemanticNeedMemberEvidenceKey need member) (Generated.SituatedNeedObjectiveGroundingOccurrences occurrence) =
+      eliminateSituatedNeedObjectiveGrounding eliminator need member occurrence
+    eliminate Generated.SituatedNeedSurfacingSituationAnchoringRule (Internal.SemanticNeedMemberEvidenceKey need member) (Generated.SituatedNeedSurfacingSituationAnchoringOccurrences occurrence) =
+      eliminateSituatedNeedSurfacingSituationAnchoring
+        eliminator
+        need
+        member
+        occurrence
+    eliminate Generated.SituatedNeedSurfacingSituationCardinalityRule (Internal.SemanticNeedEvidenceKey need) Generated.SituatedNeedSurfacingSituationCardinalityOccurrences =
+      eliminateSituatedNeedSurfacingSituationCardinality eliminator need
+    eliminate Generated.StrategyFormulationActionContributionsRule (Internal.SemanticStrategyMemberEvidenceKey strategy member) (Generated.StrategyFormulationActionContributionsOccurrences occurrence) =
+      eliminateStrategyFormulationActionContributions
+        eliminator
+        strategy
+        member
+        occurrence
+    eliminate Generated.StrategyFormulationActionsRule (Internal.SemanticStrategyEvidenceKey strategy) (Generated.StrategyFormulationActionsOccurrences occurrences) =
+      eliminateStrategyFormulationActions eliminator strategy occurrences
+    eliminate Generated.StrategyFormulationDiagnosisRule (Internal.SemanticStrategyEvidenceKey strategy) (Generated.StrategyFormulationDiagnosisOccurrences occurrences) =
+      eliminateStrategyFormulationDiagnosis eliminator strategy occurrences
+    eliminate Generated.StrategyFormulationDiagnosisGroundingRule (Internal.SemanticStrategyEvidenceKey strategy) (Generated.StrategyFormulationDiagnosisGroundingOccurrences diagnosis grounding) =
+      eliminateStrategyFormulationDiagnosisGrounding
+        eliminator
+        strategy
+        diagnosis
+        grounding
+    eliminate Generated.StrategyFormulationGuidingPolicyRule (Internal.SemanticStrategyEvidenceKey strategy) (Generated.StrategyFormulationGuidingPolicyOccurrences occurrences) =
+      eliminateStrategyFormulationGuidingPolicy eliminator strategy occurrences
+    eliminate Generated.StrategyFormulationGuidingPolicyActionsRule (Internal.SemanticStrategyMemberEvidenceKey strategy member) (Generated.StrategyFormulationGuidingPolicyActionsOccurrences policy action) =
+      eliminateStrategyFormulationGuidingPolicyActions
+        eliminator
+        strategy
+        member
+        policy
+        action
+    eliminate Generated.StrategyFormulationIntentRule (Internal.SemanticStrategyEvidenceKey strategy) (Generated.StrategyFormulationIntentOccurrences occurrences) =
+      eliminateStrategyFormulationIntent eliminator strategy occurrences
+    eliminate Generated.StrategyFormulationKeyResultSubstantiationRule (Internal.SemanticStrategyMemberEvidenceKey strategy member) (Generated.StrategyFormulationKeyResultSubstantiationOccurrences keyResult substantiation) =
+      eliminateStrategyFormulationKeyResultSubstantiation
+        eliminator
+        strategy
+        member
+        keyResult
+        substantiation
+    eliminate Generated.StrategyFormulationKeyResultsRule (Internal.SemanticStrategyEvidenceKey strategy) (Generated.StrategyFormulationKeyResultsOccurrences occurrences) =
+      eliminateStrategyFormulationKeyResults eliminator strategy occurrences
+    eliminate Generated.StrategyFormulationVisionOrientationRule (Internal.SemanticStrategyEvidenceKey strategy) Generated.StrategyFormulationVisionOrientationOccurrences =
+      eliminateStrategyFormulationVisionOrientation eliminator strategy
 
 -- | Enumerate deterministic assessments for all recognized Need subjects.
 situatedNeedAssessments ::

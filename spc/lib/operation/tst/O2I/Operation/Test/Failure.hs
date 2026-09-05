@@ -59,9 +59,13 @@ preparationBranches = do
         [ AdapterSelectionPreparationFailure (UnknownAdapter adapterIdentifier)
         , ProfileMarkerPreparationFailure []
         , ProfileResolutionPreparationFailure
-            (ProfileReferenceMissing rule "o2i.profile")
+            (ProfileReferenceMissingFailure rule "o2i.profile")
         , ProfileCompatibilityPreparationFailure
-            (ProfileAdapterIdNotAdmitted rule selectedProfile descriptor [])
+            (ProfileAdapterIdNotAdmittedFailure
+               rule
+               selectedProfile
+               descriptor
+               [])
         , ViewSelectionPreparationFailure
             (ViewSelectionUnknown (viewByName "missing"))
         ]

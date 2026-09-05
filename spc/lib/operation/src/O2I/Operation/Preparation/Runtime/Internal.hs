@@ -41,7 +41,11 @@ import O2I.Operation.Adapter.Internal
   )
 import O2I.Operation.Diagnostic.Owner.Source (PreparedAuthority)
 import O2I.Operation.Diagnostic.Owner.Source.Internal (PreparedAuthority(..))
-import O2I.Operation.Failure.Internal (PreparationFailure(..))
+import O2I.Operation.Failure.Internal
+  ( PreparationFailure(..)
+  , ProfileCompatibilityFailure(..)
+  , ProfileResolutionFailure(..)
+  )
 import O2I.Operation.Profile
   ( ProfileInventory
   , ResolvedProfile
@@ -109,23 +113,64 @@ withPreparedSelectedView adapters profiles requestedAdapter request (AcquiredMod
         (prepareProfileMarkerEvidence (assessMarkerEvidence document))
     resolveSelected selected document evidence =
       let resolution = resolveProfile profiles evidence
-          rejected = failed (ProfileResolutionPreparationFailure resolution)
        in foldProfileResolution
-            (\_ _ -> rejected)
-            (\_ _ _ -> rejected)
-            (\_ _ _ _ -> rejected)
-            (\_ _ _ _ -> rejected)
-            (\_ _ _ -> rejected)
-            (\_ _ _ -> rejected)
+            (\rule key ->
+               failed
+                 (ProfileResolutionPreparationFailure
+                    (ProfileReferenceMissingFailure rule key)))
+            (\rule key occurrences ->
+               failed
+                 (ProfileResolutionPreparationFailure
+                    (ProfileReferencePropertyMultiplicityFailure
+                       rule
+                       key
+                       occurrences)))
+            (\rule key occurrence occurrences ->
+               failed
+                 (ProfileResolutionPreparationFailure
+                    (ProfileReferenceValueMultiplicityFailure
+                       rule
+                       key
+                       occurrence
+                       occurrences)))
+            (\rule key occurrence kind ->
+               failed
+                 (ProfileResolutionPreparationFailure
+                    (ProfileReferenceValueKindInvalidFailure
+                       rule
+                       key
+                       occurrence
+                       kind)))
+            (\rule key occurrence ->
+               failed
+                 (ProfileResolutionPreparationFailure
+                    (ProfileReferenceGrammarInvalidFailure rule key occurrence)))
+            (\rule key reference ->
+               failed
+                 (ProfileResolutionPreparationFailure
+                    (ProfileReferenceUnknownFailure rule key reference)))
             (compatible selected document)
             resolution
     compatible selected document resolved =
       let compatibility = checkProfileCompatibility resolved selected
-          rejected =
-            failed (ProfileCompatibilityPreparationFailure compatibility)
        in foldProfileCompatibility
-            (\_ _ _ _ -> rejected)
-            (\_ _ _ _ _ -> rejected)
+            (\rule profile adapter admitted ->
+               failed
+                 (ProfileCompatibilityPreparationFailure
+                    (ProfileAdapterIdNotAdmittedFailure
+                       rule
+                       profile
+                       adapter
+                       admitted)))
+            (\rule profile adapter profileNotation adapterNotation ->
+               failed
+                 (ProfileCompatibilityPreparationFailure
+                    (ProfileAdapterNotationMismatchFailure
+                       rule
+                       profile
+                       adapter
+                       profileNotation
+                       adapterNotation)))
             (\_ _ _ -> selectPrepared selected resolved document)
             compatibility
     selectPrepared selected resolved document =

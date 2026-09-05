@@ -13,14 +13,6 @@ module O2I.Operation.Readiness.Machine
 import Data.ByteString (ByteString)
 import Data.Text (Text)
 import qualified Data.Text as Text
-import O2I.Core.Contract
-  ( coreContractIdentity
-  , coreContractIdentityText
-  , coreContractSha256
-  , coreContractSha256Text
-  , coreContractVersion
-  , coreContractVersionText
-  )
 import O2I.Core.Identity (modelIdentityText)
 import O2I.Operation.Acquisition
   ( AcquiredReadinessSource
@@ -38,6 +30,7 @@ import O2I.Operation.Encoding.Internal
   , closedObjectFragment
   , closedOperationMachineResult
   , nullFragment
+  , reportAuthorityMember
   , requiredMember
   , textFragment
   )
@@ -48,7 +41,6 @@ import O2I.Operation.Machine.Fragment.Internal
   , sourceIdentityFragment
   , viewDescriptorFragment
   )
-import O2I.Operation.Machine.Internal (readinessOperationIdentity)
 import O2I.Operation.Readiness.Machine.Internal
   ( readinessAssessmentFragment
   , readinessUnavailableFragment
@@ -61,10 +53,9 @@ import O2I.Operation.Readiness.Result
   , ReadinessResult
   , foldPreparedReadiness
   , foldReadinessPrerequisite
-  , foldReadinessResult
   , readinessPrerequisiteText
   )
-import qualified O2I.Operation.Rule.Generated as Rule
+import O2I.Operation.Report.Internal (ReportEnvelope, foldReadinessReport)
 import O2I.Operation.Schema (MachineSchema, SchemaVariant)
 import qualified O2I.Operation.Schema.Generated as Generated
 import O2I.Operation.View
@@ -84,40 +75,37 @@ readinessResultDocument ::
   -> ReadinessResult
   -> Either ReadinessFailure ReadinessResultDocument
 readinessResultDocument tool =
-  foldReadinessResult
+  foldReadinessReport
+    tool
     Left
-    (\stage prepared ->
+    (\envelope stage prepared ->
        Right
          (preparedDocument
-            tool
-            Generated.readinessPrerequisiteRejectedVariant
+            envelope
             "prerequisite-rejected"
             (Just stage)
             nullFragment
             prepared))
-    (\unavailable prepared ->
+    (\envelope unavailable prepared ->
        Right
          (preparedDocument
-            tool
-            Generated.readinessSubjectUnavailableVariant
+            envelope
             "subject-unavailable"
             Nothing
             (readinessUnavailableFragment unavailable)
             prepared))
-    (\assessment prepared ->
+    (\envelope assessment prepared ->
        Right
          (preparedDocument
-            tool
-            Generated.readinessNotReadyVariant
+            envelope
             "not-ready"
             Nothing
             (readinessAssessmentFragment assessment)
             prepared))
-    (\assessment prepared ->
+    (\envelope assessment prepared ->
        Right
          (preparedDocument
-            tool
-            Generated.readinessReadyVariant
+            envelope
             "ready"
             Nothing
             (readinessAssessmentFragment assessment)
@@ -138,24 +126,20 @@ encodeReadinessResultDocument (ReadinessResultDocument result) =
   machineResultBytesValue result
 
 preparedDocument ::
-     ToolDescriptor
-  -> SchemaVariant
+     ReportEnvelope
   -> Text
   -> Maybe ReadinessPrerequisite
   -> CanonicalFragment
   -> PreparedReadiness
   -> ReadinessResultDocument
-preparedDocument tool variant status prerequisite readinessFragment prepared =
+preparedDocument envelope status prerequisite readinessFragment prepared =
   foldPreparedReadiness
     (\request view evidence supplements diagnostics ->
        foldPreparedDiagnosticDocumentFragments
          (\authority modelDiagnostics supplementalGroups ->
             ReadinessResultDocument
               (closedOperationMachineResult
-                 Generated.readinessResultMachineSchema
-                 readinessOperationIdentity
-                 tool
-                 variant
+                 envelope
                  [ requiredMember
                      "context"
                      (contextFragment
@@ -173,7 +157,7 @@ preparedDocument tool variant status prerequisite readinessFragment prepared =
                  , requiredMember
                      "diagnostics"
                      (diagnosticsFragment modelDiagnostics)
-                 , requiredMember "provenance" provenanceFragment
+                 , reportAuthorityMember envelope
                  ]))
          diagnostics)
     prepared
@@ -264,45 +248,4 @@ diagnosticsFragment diagnostics =
   closedObjectFragment
     [ requiredMember "schema" (textFragment "o2i.operation.diagnostic/v2")
     , requiredMember "modelDiagnostics" (arrayFragment diagnostics)
-    ]
-
-provenanceFragment :: CanonicalFragment
-provenanceFragment =
-  closedObjectFragment
-    [ requiredMember
-        "contracts"
-        (arrayFragment
-           [ operationContractFragment
-           , kindContractFragment "adapter"
-           , kindContractFragment "profile"
-           , coreContractFragment
-           ])
-    ]
-
-operationContractFragment :: CanonicalFragment
-operationContractFragment =
-  closedObjectFragment
-    [ requiredMember "kind" (textFragment "operation")
-    , requiredMember "identity" (textFragment Rule.operationContractIdentity)
-    , requiredMember "version" (textFragment Rule.operationContractVersion)
-    , requiredMember "digest" (textFragment Rule.operationContractSha256)
-    ]
-
-kindContractFragment :: Text -> CanonicalFragment
-kindContractFragment kind =
-  closedObjectFragment [requiredMember "kind" (textFragment kind)]
-
-coreContractFragment :: CanonicalFragment
-coreContractFragment =
-  closedObjectFragment
-    [ requiredMember "kind" (textFragment "core")
-    , requiredMember
-        "identity"
-        (textFragment (coreContractIdentityText coreContractIdentity))
-    , requiredMember
-        "version"
-        (textFragment (coreContractVersionText coreContractVersion))
-    , requiredMember
-        "digest"
-        (textFragment (coreContractSha256Text coreContractSha256))
     ]

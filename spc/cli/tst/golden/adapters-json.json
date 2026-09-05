@@ -1,0 +1,1 @@
+{"schema":"o2i.discovery.adapter-inventory/v1","kind":"adapter-inventory","authority":"Operation","adapters":[{"id":"amx","name":"Archi Model XML","version":"5.0.0-v1","notation":"archimate-3.2"}]}

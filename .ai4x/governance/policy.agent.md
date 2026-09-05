@@ -41,6 +41,10 @@ Grant schema `o2i.authority-grant/v1` remains active until `target-fulfilled`, `
 - `cold_start` creates no grant; required fields: `eventId`, `subject`, `scope`, `targetState`, `requestedAgentAuthority`, `exclusions`, `reason`, `alternatives`, `coldStart`.
 Only `authority_request` accepts the exact adjacent reply `Freigegeben.`; it is single-use, current-fact-bound, observable, and non-replayable.
 
+# Cold Start Continuity
+
+`GitHub` alone. Boundaries: `completed-work-unit`, `active-product-owner-decision`. Load `session-continuity`; unknown denies; no local/session dependency; no checkpoint-derived acceptance or authority.
+
 # Provenance And Forbidden Actions
 
 Independent provenance facts: `product-owner-decision-authority`, `actual-content-authorship`, `git-commit-object-creator`, `verified-remote-publisher-identity`. Approval never implies authorship, committer, or publisher identity.

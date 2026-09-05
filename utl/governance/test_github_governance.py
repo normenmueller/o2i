@@ -147,6 +147,7 @@ class PolicyShapeTests(unittest.TestCase):
             lambda p: p["workflow"]["transitions"][0].__setitem__("to", "Done"),
             lambda p: p["actions"][0].__setitem__("id", "local.erase"),
             lambda p: p["mutationGates"]["gates"].__setitem__(0, "maybe-grant"),
+            lambda p: p["continuity"].__setitem__("operationalTarget", "iCloud"),
             lambda p: p["events"]["authority_request"]["requiredFields"].__setitem__(0, "anything"),
             lambda p: p["authorityGrant"]["validityRules"].__setitem__(0, "anything"),
             lambda p: p["provenance"]["approvalNeverImplies"].remove("author"),
@@ -270,6 +271,51 @@ class PolicyShapeTests(unittest.TestCase):
                 self.assertFalse(events[name]["createsGrant"])
                 self.assertEqual("none", events[name]["requestedAgentAuthorityMustEqual"])
                 self.assertIn("approvalReply", events[name]["forbiddenFields"])
+
+    def test_cold_start_boundaries_are_closed_and_fail_closed(self) -> None:
+        policy = contract.load_policy()
+        continuity = policy["continuity"]
+        self.assertEqual("GitHub", continuity["operationalTarget"])
+        self.assertEqual(
+            {"completed-work-unit", "active-product-owner-decision"},
+            {item["id"] for item in continuity["boundaryKinds"]},
+        )
+        for boundary in continuity["boundaryKinds"]:
+            required = tuple(continuity["sharedRequiredEvidence"]) + tuple(
+                boundary["additionalRequiredEvidence"]
+            )
+            evidence = {name: True for name in required}
+            arguments = {
+                "boundary_kind": boundary["id"],
+                "handoff_work_status": boundary["handoffWorkStatus"],
+                "evidence": evidence,
+            }
+            with self.subTest(boundary=boundary["id"]):
+                self.assertTrue(contract.cold_start_eligible(policy, **arguments))
+                self.assertFalse(
+                    contract.cold_start_eligible(
+                        policy,
+                        **{**arguments, "handoff_work_status": "PAUSED"},
+                    )
+                )
+                for name in required:
+                    for value in (False, None):
+                        incomplete = dict(evidence)
+                        incomplete[name] = value
+                        self.assertFalse(
+                            contract.cold_start_eligible(
+                                policy,
+                                **{**arguments, "evidence": incomplete},
+                            )
+                        )
+        self.assertFalse(
+            contract.cold_start_eligible(
+                policy,
+                boundary_kind="unknown",
+                handoff_work_status="ACTIVE",
+                evidence={},
+            )
+        )
 
     def test_provenance_never_infers_identity_from_approval(self) -> None:
         provenance = contract.load_policy()["provenance"]
@@ -835,6 +881,43 @@ class DecisionAndMutationTests(unittest.TestCase):
             values[name] = False
             with self.subTest(fact=name):
                 self.assertFalse(contract.cleanup_allowed(**values))
+
+    def test_superseded_continuity_cleanup_uses_restore_not_done(self) -> None:
+        values = {
+            "issue_accepted": True,
+            "publication_complete": True,
+            "remote_checks_green": True,
+            "issue_closed": False,
+            "project_done": False,
+            "cleanup_grant": True,
+            "durability_proven": True,
+            "target_identity_stable": True,
+            "required_identity_verified": True,
+            "technical_permission": True,
+            "cleanup_kind": "superseded-continuity-source",
+            "replacement_restore_proven": True,
+            "unique_data_resolved": True,
+            "recoverable_deletion": True,
+        }
+        self.assertTrue(contract.cleanup_allowed(**values))
+        for name in (
+            "issue_accepted",
+            "publication_complete",
+            "remote_checks_green",
+            "cleanup_grant",
+            "durability_proven",
+            "target_identity_stable",
+            "required_identity_verified",
+            "technical_permission",
+            "replacement_restore_proven",
+            "unique_data_resolved",
+            "recoverable_deletion",
+        ):
+            rejected = dict(values)
+            rejected[name] = False
+            with self.subTest(fact=name):
+                self.assertFalse(contract.cleanup_allowed(**rejected))
+        self.assertFalse(contract.cleanup_allowed(**{**values, "cleanup_kind": "other"}))
 
 
 class RepositorySurfaceTests(unittest.TestCase):

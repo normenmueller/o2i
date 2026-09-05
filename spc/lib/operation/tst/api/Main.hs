@@ -12,6 +12,8 @@ import qualified O2I.Operation.Assess as Assess
 import qualified O2I.Operation.Assess.Machine as AssessMachine
 import qualified O2I.Operation.Assess.Request as AssessRequest
 import qualified O2I.Operation.Assess.Result as AssessResult
+import qualified O2I.Operation.Command.Error as CommandError
+import qualified O2I.Operation.Command.Error.Machine as CommandErrorMachine
 import qualified O2I.Operation.Diagnostic as Diagnostic
 import qualified O2I.Operation.Diagnostic.Machine as DiagnosticMachine
 import qualified O2I.Operation.Diagnostic.Owner as DiagnosticOwner
@@ -26,6 +28,7 @@ import qualified O2I.Operation.Discovery.Rule.Inventory.Machine as RuleInventory
 import qualified O2I.Operation.Discovery.View as DiscoveryView
 import qualified O2I.Operation.Discovery.View.Machine as ViewMachine
 import qualified O2I.Operation.Failure as Failure
+import qualified O2I.Operation.Identity as Identity
 import qualified O2I.Operation.Machine as Machine
 import qualified O2I.Operation.Preparation as Preparation
 import qualified O2I.Operation.Profile as Profile
@@ -116,6 +119,7 @@ $(assertAbstractTypes
     , "Diagnostic.DiagnosticDisposition"
     , "Diagnostic.AdapterNotationDiagnostic"
     , "Diagnostic.PreparedDiagnostic"
+    , "Diagnostic.SupplementalDiagnostic"
     , "Diagnostic.SupplementalDiagnosticGroups"
     , "Diagnostic.PreparedDiagnosticDocument"
     , "DiagnosticSource.PreparedAuthority"
@@ -127,8 +131,17 @@ $(assertAbstractTypes
     , "DiagnosticSource.SupplementalOwnerBindingEvidence"
     , "DiagnosticSource.BoundOwnerSupplementalInputs"
     , "Failure.CommandFailure"
+    , "Failure.ProfileResolutionFailure"
+    , "Failure.ProfileCompatibilityFailure"
     , "Failure.PreparationFailure"
     , "Failure.CommonFailure"
+    , "CommandError.ArgumentFailureField"
+    , "CommandError.ArgumentFailureDefect"
+    , "CommandError.ArgumentFailure"
+    , "CommandError.CommandError"
+    , "CommandErrorMachine.CommandErrorDocument"
+    , "Identity.ModelIdentity"
+    , "Identity.ModelIdentityDefect"
     , "Machine.ToolDescriptorField"
     , "Machine.ToolDescriptorDefect"
     , "Machine.ToolDescriptor"
@@ -385,7 +398,10 @@ $(assertOrdinaryFunctions
     , 'Diagnostic.preparedDiagnosticStage
     , 'Diagnostic.preparedDiagnosticRuleIdentity
     , 'Diagnostic.foldPreparedDiagnostic
+    , 'Diagnostic.supplementalDiagnosticRuleIdentity
+    , 'Diagnostic.foldSupplementalDiagnostic
     , 'Diagnostic.noSupplementalDiagnosticGroups
+    , 'Diagnostic.foldSupplementalDiagnosticGroups
     , 'Diagnostic.preparedDiagnosticDocument
     , 'Diagnostic.foldPreparedDiagnosticDocument
     , 'DiagnosticMachine.diagnosticSchemaAuthority
@@ -410,7 +426,9 @@ $(assertOrdinaryFunctions
     , 'Failure.adapterDecodeFailure
     , 'Failure.profileMarkerFailure
     , 'Failure.profileResolutionFailure
+    , 'Failure.foldProfileResolutionFailure
     , 'Failure.profileCompatibilityFailure
+    , 'Failure.foldProfileCompatibilityFailure
     , 'Failure.viewSelectionFailure
     , 'Failure.preparationFailureCode
     , 'Failure.preparationFailureStage
@@ -419,6 +437,34 @@ $(assertOrdinaryFunctions
     , 'Failure.preparationFailure
     , 'Failure.commonFailureCode
     , 'Failure.foldCommonFailure
+    , 'CommandError.argumentFailureCodeField
+    , 'CommandError.argumentFailureMessageField
+    , 'CommandError.argumentFailureFieldText
+    , 'CommandError.foldArgumentFailureField
+    , 'CommandError.foldArgumentFailureDefect
+    , 'CommandError.argumentFailure
+    , 'CommandError.argumentFailureCode
+    , 'CommandError.argumentFailureMessage
+    , 'CommandError.foldArgumentFailure
+    , 'CommandError.argumentCommandError
+    , 'CommandError.processCommandError
+    , 'CommandError.commonCommandError
+    , 'CommandError.validateCommandError
+    , 'CommandError.qualifyCommandError
+    , 'CommandError.readinessCommandError
+    , 'CommandError.assessCommandError
+    , 'CommandError.qualificationSubjectsCommandError
+    , 'CommandError.traceCommandError
+    , 'CommandError.commandErrorCode
+    , 'CommandError.foldCommandError
+    , 'CommandErrorMachine.commandErrorDocument
+    , 'CommandErrorMachine.commandErrorSchema
+    , 'CommandErrorMachine.commandErrorSchemaBytes
+    , 'CommandErrorMachine.commandErrorDocumentVariant
+    , 'CommandErrorMachine.encodeCommandErrorDocument
+    , 'Identity.lexicalModelIdentity
+    , 'Identity.modelIdentityText
+    , 'Identity.foldModelIdentityDefect
     , 'Machine.toolIdentityField
     , 'Machine.toolVersionField
     , 'Machine.toolDescriptorFieldText
@@ -440,6 +486,7 @@ $(assertOrdinaryFunctions
     , 'Profile.foldProfileInventoryKey
     , 'Profile.foldProfileInventoryDefect
     , 'Profile.foldProfileInventoryCompilation
+    , 'Profile.compiledProfileInventory
     , 'Profile.compileProfileInventory
     , 'Profile.profileInventoryDescriptors
     , 'Profile.foldProfileMarkerEvidenceOutcome

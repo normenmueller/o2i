@@ -28,6 +28,7 @@ import qualified O2I.ArchiMate.Profile.Projection as Profile
 import qualified O2I.ArchiMate.Profile.Resolution as Profile
 import qualified O2I.Core.Conformance as CoreConformance
 import O2I.Core.Contract (coreRuleIdText)
+import O2I.Core.Identity (modelIdentityText)
 import O2I.Operation.Acquisition
   ( AcquiredSupplementalSource
   , acquireSource
@@ -63,6 +64,8 @@ import O2I.Operation.Diagnostic.Owner.Source
   )
 import O2I.Operation.Diagnostic.Owner.Source.Internal
 import O2I.Operation.Encoding.Internal (canonicalFragmentBytes)
+import qualified O2I.Operation.Human.Diagnostic as Human
+import qualified O2I.Operation.Human.Value as HumanValue
 import O2I.Operation.Machine.Fragment.Internal
   ( preparedDiagnosticDocumentFragment
   )
@@ -94,6 +97,9 @@ tests =
     , testCase
         "retains and encodes real generic Binding evidence 4/4"
         bindingOwnerEvidence
+    , testCase
+        "publicly consumes every supplemental Binding branch with its source"
+        publicSupplementalConsumption
     , testCase
         "retains and encodes real Semantics evidence 27/27"
         semanticsOwnerEvidence
@@ -223,13 +229,14 @@ assertNotationDiagnostics authority issues diagnostics = do
     "a Notation diagnostic escaped the Adapter-owned branch"
     (all isNotationDiagnostic diagnostics)
   let document =
-        encodeDocument
-          (preparedDiagnosticDocument
-             authority
-             diagnostics
-             noSupplementalDiagnosticGroups)
-  assertDocumentSchema document
-  value <- decodeDocument document
+        preparedDiagnosticDocument
+          authority
+          diagnostics
+          noSupplementalDiagnosticGroups
+      encodedDocument = encodeDocument document
+  humanDiagnosticFamilies document @?= replicate (length diagnostics) "notation"
+  assertDocumentSchema encodedDocument
+  value <- decodeDocument encodedDocument
   rows <- parseModelClassifications value
   rows
     @?= replicate
@@ -296,11 +303,13 @@ profileOwnerEvidence = do
                pure
                  ( map preparedDiagnosticRuleIdentity diagnostics
                  , map preparedDiagnosticSeverity diagnostics
-                 , encodeDocument document))
+                 , encodeDocument document
+                 , humanDiagnosticFamilies document))
   rows <- traverse requireProfileObservation observed
-  let rules = concatMap firstOf3 rows
-      severities = concatMap secondOf3 rows
-      documents = map thirdOf3 rows
+  let rules = concatMap (\(values, _, _, _) -> values) rows
+      severities = concatMap (\(_, values, _, _) -> values) rows
+      documents = map (\(_, _, value, _) -> value) rows
+      humanFamilies = concatMap (\(_, _, _, values) -> values) rows
   assertBool
     "a Profile diagnostic rule escaped the owner corpus"
     (all (`elem` ProfileConformance.profileCorpusOwnerRuleIds) (nub rules))
@@ -314,6 +323,13 @@ profileOwnerEvidence = do
     (nub
        (map profileEvidenceKindTag ProfileConformance.profileCorpusEvidenceKinds))
     @?= 12
+  sort (nub humanFamilies)
+    @?= [ "activation"
+        , "profile"
+        , "profile-classification"
+        , "profile-invariant"
+        , "profile-mapping"
+        ]
   mapM_ assertDocumentSchema documents
 
 structureOwnerEvidence :: Assertion
@@ -336,11 +352,15 @@ structureOwnerEvidence = do
                  [diagnostic]
                  noSupplementalDiagnosticGroups
           in ( preparedDiagnosticRuleIdentity diagnostic
-             , encodeDocument document))
+             , encodeDocument document
+             , humanDiagnosticFamilies document))
   expected <- requireCoreResult CoreConformance.structureCorpusRuleIds
-  map fst rows @?= map coreRuleIdText expected
-  length (nub (map fst rows)) @?= 12
-  mapM_ (assertDocumentSchema . snd) rows
+  map firstOf3 rows @?= map coreRuleIdText expected
+  length (nub (map firstOf3 rows)) @?= 12
+  mapM_ (assertDocumentSchema . secondOf3) rows
+  assertBool
+    "a Structure diagnostic escaped its typed evidence family"
+    (all (== "structure") (concatMap thirdOf3 rows))
 
 bindingOwnerEvidence :: Assertion
 bindingOwnerEvidence = do
@@ -366,43 +386,516 @@ bindingOwnerEvidence = do
                         [SupplementalOwnerBindingEvidence evidence]
                     ]
                 document = preparedDiagnosticDocument authority [] group
-             in (rule, encodeDocument document)))
+             in ( rule
+                , encodeDocument document
+                , humanDiagnosticFamilies document)))
   expected <- requireCoreResult CoreConformance.bindingCorpusRuleIds
-  map fst rows @?= map coreRuleIdText expected
-  length (nub (map fst rows)) @?= 4
+  map firstOf3 rows @?= map coreRuleIdText expected
+  length (nub (map firstOf3 rows)) @?= 4
   mapM_
     (\document -> do
        assertDocumentSchema document
        value <- decodeDocument document
        dispositions <- parseSupplementalDispositions value
        dispositions @?= ["process-failure"])
-    (map snd rows)
+    (map secondOf3 rows)
+  sort (nub (concatMap thirdOf3 rows))
+    @?= sort
+          [ "supplemental-identity-ambiguous"
+          , "supplemental-identity-out-of-view"
+          , "supplemental-identity-unknown"
+          , "supplemental-identity-wrong-type"
+          ]
+
+publicSupplementalConsumption :: Assertion
+publicSupplementalConsumption = do
+  source <- supplementalAcquiredSource
+  let occurrence = SupplementalOwnerOccurrence source
+  rows <-
+    requireCoreResult
+      (CoreConformance.foldBindingCorpusOwnerEvidence
+         occurrence
+         (\_ evidence ->
+            let groups =
+                  SupplementalDiagnosticGroups
+                    [ SupplementalDiagnosticGroup
+                        source
+                        [SupplementalOwnerBindingEvidence evidence]
+                    ]
+             in foldSupplementalDiagnosticGroups consumeGroup concat groups))
+  expectedRules <- requireCoreResult CoreConformance.bindingCorpusRuleIds
+  let findings = concat rows
+  fmap findingRule findings @?= fmap coreRuleIdText expectedRules
+  sort (nub (fmap findingBranch findings))
+    @?= sort ["unknown", "ambiguous", "wrong-type", "out-of-view"]
+  fmap findingSource findings @?= replicate (length findings) "supplemental"
+  assertBool
+    "diagnostic-retained source differs from its enclosing group source"
+    (all findingSourceMatchesGroup findings)
+  assertBool
+    "public supplemental fold lost an instance pointer"
+    (all (not . Text.null . findingPointer) findings)
+  assertBool
+    "public supplemental fold lost a lexical model identity"
+    (all (not . Text.null . findingIdentity) findings)
+  where
+    consumeGroup acquired diagnostics =
+      let reference =
+            foldAcquiredSupplementalSource
+              (sourceReferenceText
+                 . sourceIdentityReference
+                 . acquiredSourceIdentity)
+              acquired
+       in fmap (consumeDiagnostic acquired reference) diagnostics
+    consumeDiagnostic groupSource reference diagnostic =
+      foldSupplementalDiagnostic
+        (finding groupSource reference diagnostic "unknown")
+        (finding groupSource reference diagnostic "ambiguous")
+        (finding groupSource reference diagnostic "wrong-type")
+        (finding groupSource reference diagnostic "out-of-view")
+        diagnostic
+    finding groupSource reference diagnostic branch retainedSource pointer identity =
+      SupplementalFinding
+        reference
+        (supplementalDiagnosticRuleIdentity diagnostic)
+        branch
+        pointer
+        (modelIdentityText identity)
+        (retainedSource == groupSource)
+
+data SupplementalFinding = SupplementalFinding
+  { findingSource :: !Text
+  , findingRule :: !Text
+  , findingBranch :: !Text
+  , findingPointer :: !Text
+  , findingIdentity :: !Text
+  , findingSourceMatchesGroup :: !Bool
+  }
 
 semanticsOwnerEvidence :: Assertion
 semanticsOwnerEvidence = do
+  rows <- semanticsOwnerRows
+  checkedIn <-
+    LazyByteString.readFile
+      ("tst" </> "fixtures" </> "semantic-diagnostic-machine-v2.jsonl")
+  expected <- requireCoreResult CoreConformance.semanticsCorpusRuleIds
+  map firstOf3 rows @?= map coreRuleIdText expected
+  length (nub (map firstOf3 rows)) @?= 27
+  mapM_ (assertDocumentSchema . secondOf3) rows
+  semanticsMachineBaseline rows @?= checkedIn
+  assertBool
+    "a Semantics diagnostic escaped its typed evidence family"
+    (all (== "semantics") (concatMap thirdOf3 rows))
+
+semanticsOwnerRows :: IO [(Text, LazyByteString.ByteString, [Text])]
+semanticsOwnerRows = do
   contract <- testAdapterContract
   source <- modelSource
-  rows <-
-    requireCoreResult
-      (CoreConformance.foldSemanticsCorpusOwnerEvidence $ \_ evidence ->
-         let authority =
-               PreparedAuthority
-                 contract
-                 Profile.compiledProfileDescriptor
-                 source
-             scope = PreparedScope source
-             diagnostic = semanticsEvidenceDiagnostic scope evidence
-             document =
-               preparedDiagnosticDocument
-                 authority
-                 [diagnostic]
-                 noSupplementalDiagnosticGroups
-          in ( preparedDiagnosticRuleIdentity diagnostic
-             , encodeDocument document))
-  expected <- requireCoreResult CoreConformance.semanticsCorpusRuleIds
-  map fst rows @?= map coreRuleIdText expected
-  length (nub (map fst rows)) @?= 27
-  mapM_ (assertDocumentSchema . snd) rows
+  requireCoreResult
+    (CoreConformance.foldSemanticsCorpusOwnerEvidence $ \_ evidence ->
+       let authority =
+             PreparedAuthority contract Profile.compiledProfileDescriptor source
+           scope = PreparedScope source
+           diagnostic = semanticsEvidenceDiagnostic scope evidence
+           document =
+             preparedDiagnosticDocument
+               authority
+               [diagnostic]
+               noSupplementalDiagnosticGroups
+        in ( preparedDiagnosticRuleIdentity diagnostic
+           , encodeDocument document
+           , humanDiagnosticFamilies document))
+
+semanticsMachineBaseline ::
+     [(Text, LazyByteString.ByteString, [Text])] -> LazyByteString.ByteString
+semanticsMachineBaseline rows =
+  LazyByteString.intercalate "\n" (map secondOf3 rows) <> "\n"
+
+humanDiagnosticFamilies :: PreparedDiagnosticDocument -> [Text]
+humanDiagnosticFamilies document =
+  Human.foldHumanDiagnosticDocument
+    (\_ diagnostics groups ->
+       map diagnosticFamily diagnostics <> concatMap groupFamilies groups)
+    (Human.humanDiagnosticDocument document)
+  where
+    groupFamilies =
+      Human.foldHumanSupplementalDiagnosticGroup $ \_ diagnostics ->
+        map diagnosticFamily diagnostics
+    diagnosticFamily =
+      Human.foldHumanDiagnostic $ \_ _ _ _ _ _ _ evidence ->
+        Human.foldHumanDiagnosticEvidence
+          humanNotationFamily
+          humanActivationFamily
+          humanProfileFamily
+          humanProfileClassificationFamily
+          humanProfileMappingFamily
+          humanProfileInvariantFamily
+          humanStructureFamily
+          humanSemanticFamily
+          (\_ _ _ -> "supplemental-identity-unknown")
+          (\_ _ _ -> "supplemental-identity-ambiguous")
+          (\_ _ _ -> "supplemental-identity-wrong-type")
+          (\_ _ _ -> "supplemental-identity-out-of-view")
+          evidence
+
+humanNotationFamily :: Human.HumanNotationDiagnosticEvidence -> Text
+humanNotationFamily =
+  Human.foldHumanNotationDiagnosticEvidence $ \adapter rule kind subject observations ->
+    consumeTag
+      "notation"
+      [ humanAdapter adapter
+      , humanAdapterRule rule
+      , humanNotationKind kind
+      , humanLocation subject
+      , foldMap humanNotationObservation observations
+      ]
+
+humanAdapter :: HumanValue.HumanAdapterDescriptor -> ()
+humanAdapter =
+  HumanValue.foldHumanAdapterDescriptor $ \identifier name version notation ->
+    consumeUnit
+      [identifier `seq` (), name `seq` (), version `seq` (), notation `seq` ()]
+
+humanAdapterRule :: Human.HumanAdapterRule -> ()
+humanAdapterRule =
+  Human.foldHumanAdapterRule $ \identity stage expectation meaning action ->
+    consumeUnit
+      [ identity `seq` ()
+      , Human.foldHumanAdapterRuleStage () () stage
+      , expectation `seq` ()
+      , meaning `seq` ()
+      , action `seq` ()
+      ]
+
+humanNotationKind :: Human.HumanNotationIssueKind -> ()
+humanNotationKind =
+  Human.foldHumanNotationIssueKind
+    (Human.foldHumanViewInventoryIssueKind (\token -> token `seq` ()))
+    (Human.foldHumanProfileMarkerIssueKind (\token -> token `seq` ()))
+    (Human.foldHumanSelectedUniverseIssueKind (\token -> token `seq` ()))
+
+humanNotationObservation :: Human.HumanNotationObservation -> ()
+humanNotationObservation =
+  Human.foldHumanNotationObservation
+    humanLocation
+    (\location kind value ->
+       consumeUnit
+         [ humanLocation location
+         , Human.foldHumanDraftValueKind
+             ()
+             ()
+             ()
+             ()
+             (\token -> token `seq` ())
+             kind
+         , value `seq` ()
+         ])
+    (\location value targets ->
+       consumeUnit
+         [ humanLocation location
+         , value `seq` ()
+         , consumeUnit (map humanLocation targets)
+         ])
+
+humanLocation :: HumanValue.HumanSourceLocation -> ()
+humanLocation =
+  HumanValue.foldHumanSourceLocation $ \path sourceSpan ->
+    consumeUnit
+      [ foldMap
+          (HumanValue.foldHumanSourcePathStep $ \name ordinal ->
+             HumanValue.foldHumanNativeName
+               (\kind value -> kind `seq` value `seq` ())
+               name
+               `seq` ordinal
+               `seq` ())
+          path
+      , foldMap
+          (HumanValue.foldHumanSourceSpan $ \start end ->
+             humanPosition start `seq` humanPosition end)
+          sourceSpan
+      ]
+  where
+    humanPosition =
+      HumanValue.foldHumanSourcePosition $ \offset line column ->
+        offset `seq` line `seq` column `seq` ()
+
+humanActivationFamily :: Human.HumanActivationDiagnosticEvidence -> Text
+humanActivationFamily =
+  Human.foldHumanActivationDiagnosticEvidence $ \profile digest branch rule owner trigger sources ->
+    consumeTag
+      "activation"
+      [ profile `seq` ()
+      , digest `seq` ()
+      , Human.foldHumanClosureBranch () () branch
+      , rule `seq` ()
+      , humanCanonical owner
+      , humanCanonical trigger
+      , consumeUnit (map (\source -> source `seq` ()) sources)
+      ]
+
+humanProfileFamily :: Human.HumanProfileDiagnosticEvidence -> Text
+humanProfileFamily =
+  Human.foldHumanProfileDiagnosticEvidence
+    Human.HumanProfileDiagnosticEliminator
+      { Human.eliminateHumanProfileCarrierOccurrence = one
+      , Human.eliminateHumanProfileClassificationOccurrence = one
+      , Human.eliminateHumanProfileMetadataOwnerAndO2iPropertyOccurrences = many
+      , Human.eliminateHumanProfilePropertyOccurrence = two
+      , Human.eliminateHumanProfilePropertySlot =
+          \rule owner slot values ->
+            consumeTag
+              "profile"
+              [ rule `seq` ()
+              , humanCanonical owner
+              , slot `seq` ()
+              , consumeUnit (map humanCanonical values)
+              ]
+      , Human.eliminateHumanProfilePropertyValue =
+          \rule property value drafts ->
+            consumeTag
+              "profile"
+              [ rule `seq` ()
+              , humanCanonical property
+              , humanCanonical value
+              , consumeUnit (map humanDraftScalar drafts)
+              ]
+      , Human.eliminateHumanProfileProposalCarrierOccurrence = one
+      , Human.eliminateHumanProfileProposalReferenceIncidence = three
+      , Human.eliminateHumanProfileRelationshipOccurrence = one
+      , Human.eliminateHumanProfileReservedPropertyOccurrence =
+          \rule property owner reserved ->
+            consumeTag
+              "profile"
+              [ rule `seq` ()
+              , humanCanonical property
+              , humanCanonical owner
+              , reserved `seq` ()
+              ]
+      , Human.eliminateHumanProfileStructuredCarrierOccurrence = one
+      , Human.eliminateHumanProfileStructuredIncidence = many
+      }
+  where
+    one rule occurrence =
+      consumeTag "profile" [rule `seq` (), humanCanonical occurrence]
+    two rule first second =
+      consumeTag
+        "profile"
+        [rule `seq` (), humanCanonical first, humanCanonical second]
+    three rule first second remaining =
+      consumeTag
+        "profile"
+        [ rule `seq` ()
+        , humanCanonical first
+        , humanCanonical second
+        , consumeUnit (map humanCanonical remaining)
+        ]
+    many rule owner values =
+      consumeTag
+        "profile"
+        [ rule `seq` ()
+        , humanCanonical owner
+        , consumeUnit (map humanCanonical values)
+        ]
+
+humanProfileClassificationFamily ::
+     Human.HumanProfileClassificationDiagnosticEvidence -> Text
+humanProfileClassificationFamily =
+  Human.foldHumanProfileClassificationDiagnosticEvidence $ \graph qualification rule occurrence ->
+    consumeTag
+      "profile-classification"
+      [ graph `seq` ()
+      , qualification `seq` ()
+      , rule `seq` ()
+      , humanCanonical occurrence
+      ]
+
+humanProfileMappingFamily :: Human.HumanProfileMappingDiagnosticEvidence -> Text
+humanProfileMappingFamily =
+  Human.foldHumanProfileMappingDiagnosticEvidence
+    (\rule occurrence mapping ->
+       consumeTag
+         "profile-mapping"
+         [rule `seq` (), humanOccurrence occurrence, mapping `seq` ()])
+    (\rule occurrence mapping source target ->
+       consumeTag
+         "profile-mapping"
+         [ rule `seq` ()
+         , humanOccurrence occurrence
+         , mapping `seq` ()
+         , humanOccurrence source
+         , humanOccurrence target
+         ])
+    (\rule occurrence mapping kind ->
+       consumeTag
+         "profile-mapping"
+         [ rule `seq` ()
+         , humanOccurrence occurrence
+         , mapping `seq` ()
+         , humanProfileKind kind
+         ])
+
+humanProfileInvariantFamily ::
+     Human.HumanProfileInvariantDiagnosticEvidence -> Text
+humanProfileInvariantFamily =
+  Human.foldHumanProfileInvariantDiagnosticEvidence $ \rule occurrence ->
+    consumeTag "profile-invariant" [rule `seq` (), humanCanonical occurrence]
+
+humanProfileKind :: Human.HumanProfileEvidenceKind -> ()
+humanProfileKind =
+  Human.foldHumanProfileEvidenceKind () () () () () () () () () () () ()
+
+humanStructureFamily :: Human.HumanStructureDiagnosticEvidence -> Text
+humanStructureFamily =
+  Human.foldHumanStructureDiagnosticEvidence
+    Human.HumanStructureDiagnosticEliminator
+      { Human.eliminateHumanQualifiedEndpointCatalogMembership = one
+      , Human.eliminateHumanContextualizationSourceCategory = two
+      , Human.eliminateHumanContextualizationTargetCategory = two
+      , Human.eliminateHumanContextualizationTargetOwnerCardinality = zeroMany
+      , Human.eliminateHumanSemanticRelationCompatibility = three
+      , Human.eliminateHumanStructuredPropositionIdentity =
+          \owner source target values ->
+            consumeTag
+              "structure"
+              [ humanOccurrence owner
+              , humanOccurrence source
+              , humanOccurrence target
+              , consumeUnit (map humanOccurrence values)
+              ]
+      , Human.eliminateHumanCollectiveParticipantType = three
+      , Human.eliminateHumanCollectiveParticipantCardinality =
+          \owner participant ->
+            consumeTag
+              "structure"
+              [humanOccurrence owner, foldMap humanOccurrence participant]
+      , Human.eliminateHumanCollectiveParticipantUniqueness =
+          \owner participants ->
+            consumeTag
+              "structure"
+              [humanOccurrence owner, foldMap humanOccurrence participants]
+      , Human.eliminateHumanCollectiveTargetType = three
+      , Human.eliminateHumanCollectiveTargetCardinality = zeroMany
+      , Human.eliminateHumanCollectiveTargetDistinctness =
+          \owner targets ->
+            consumeTag
+              "structure"
+              [humanOccurrence owner, foldMap humanOccurrence targets]
+      }
+  where
+    one value = consumeTag "structure" [humanOccurrence value]
+    two first second =
+      consumeTag "structure" [humanOccurrence first, humanOccurrence second]
+    three first second third =
+      consumeTag
+        "structure"
+        [humanOccurrence first, humanOccurrence second, humanOccurrence third]
+    zeroMany owner values =
+      consumeTag
+        "structure"
+        [ humanOccurrence owner
+        , Human.foldHumanStructureZeroOrMultipleOccurrences
+            ()
+            (\first second remaining ->
+               consumeUnit (map humanOccurrence (first : second : remaining)))
+            values
+        ]
+
+humanCanonical :: HumanValue.HumanCanonicalOccurrence -> ()
+humanCanonical =
+  HumanValue.foldHumanCanonicalOccurrence $ \kind ordinal ->
+    HumanValue.foldHumanCanonicalOccurrenceKind () () () kind
+      `seq` ordinal
+      `seq` ()
+
+humanOccurrence :: HumanValue.HumanOccurrenceIdentity -> ()
+humanOccurrence =
+  HumanValue.foldHumanOccurrenceIdentity (\identity -> identity `seq` ())
+
+humanDraftScalar :: HumanValue.HumanDraftScalar -> ()
+humanDraftScalar =
+  HumanValue.foldHumanDraftScalar $ \value location ->
+    humanScalar value `seq` humanLocation location
+  where
+    humanScalar =
+      HumanValue.foldHumanScalarValue
+        (\text -> text `seq` ())
+        (\boolean -> boolean `seq` ())
+        (\number -> number `seq` ())
+        (HumanValue.foldHumanNativeName $ \kind name -> kind `seq` name `seq` ())
+        (\kind retained -> kind `seq` retained `seq` ())
+
+consumeTag :: Text -> [()] -> Text
+consumeTag tag values = consumeUnit values `seq` tag
+
+consumeUnit :: [()] -> ()
+consumeUnit = foldr seq ()
+
+humanSemanticFamily :: Human.HumanSemanticDiagnosticEvidence -> Text
+humanSemanticFamily =
+  Human.foldHumanSemanticDiagnosticEvidence
+    Human.HumanSemanticDiagnosticEliminator
+      { Human.eliminateHumanCollectiveAssertedCollectiveCoverage =
+          \claim values -> consume [model claim, occurrences values]
+      , Human.eliminateHumanCollectiveAssertedCompleteness = field
+      , Human.eliminateHumanCollectiveAssertedMacroSupport =
+          \claim participant first second third ->
+            consume
+              [ model claim
+              , model participant
+              , occurrences [first, second, third]
+              ]
+      , Human.eliminateHumanCollectiveAssertedParticipantPrimitiveSupport =
+          \claim participant first second third ->
+            consume
+              [ model claim
+              , model participant
+              , occurrences [first, second, third]
+              ]
+      , Human.eliminateHumanCollectiveFitPairwiseCoherence = field
+      , Human.eliminateHumanCollectiveFitParticipantBinding = field
+      , Human.eliminateHumanCollectiveFitParticipantCompatibility = field
+      , Human.eliminateHumanCollectiveFitTargetBinding = field
+      , Human.eliminateHumanCollectiveFitTargetGuidingPolicy = field
+      , Human.eliminateHumanCollectiveFitTargetTradeOffs = field
+      , Human.eliminateHumanContextualizationAssertedDependency =
+          \dependent endpoint context first second third ->
+            consume
+              [occurrences [dependent, endpoint, context, first, second, third]]
+      , Human.eliminateHumanSituatedNeedDriverAnchoring = member
+      , Human.eliminateHumanSituatedNeedDriverCardinality = one
+      , Human.eliminateHumanSituatedNeedObjectiveCardinality = one
+      , Human.eliminateHumanSituatedNeedObjectiveGrounding = member
+      , Human.eliminateHumanSituatedNeedSurfacingSituationAnchoring = member
+      , Human.eliminateHumanSituatedNeedSurfacingSituationCardinality = one
+      , Human.eliminateHumanStrategyFormulationActionContributions = member
+      , Human.eliminateHumanStrategyFormulationActions = fields
+      , Human.eliminateHumanStrategyFormulationDiagnosis = fields
+      , Human.eliminateHumanStrategyFormulationDiagnosisGrounding = pair
+      , Human.eliminateHumanStrategyFormulationGuidingPolicy = fields
+      , Human.eliminateHumanStrategyFormulationGuidingPolicyActions = memberPair
+      , Human.eliminateHumanStrategyFormulationIntent = fields
+      , Human.eliminateHumanStrategyFormulationKeyResultSubstantiation =
+          memberPair
+      , Human.eliminateHumanStrategyFormulationKeyResults = fields
+      , Human.eliminateHumanStrategyFormulationVisionOrientation = one
+      }
+  where
+    consume values =
+      foldr (\value result -> value `seq` result) "semantics" values
+    model = HumanValue.foldHumanModelIdentity (\value -> value `seq` ())
+    occurrence =
+      HumanValue.foldHumanOccurrenceIdentity (\value -> value `seq` ())
+    occurrences values =
+      foldr (\value result -> occurrence value `seq` result) () values
+    one identity = consume [model identity]
+    field identity value = consume [model identity, occurrence value]
+    fields identity values = consume [model identity, occurrences values]
+    pair identity first second =
+      consume [model identity, occurrence first, occurrence second]
+    member owner owned value =
+      consume [model owner, model owned, occurrence value]
+    memberPair owner owned first second =
+      consume [model owner, model owned, occurrence first, occurrence second]
 
 acquiredBindingEvidence :: Assertion
 acquiredBindingEvidence = do
