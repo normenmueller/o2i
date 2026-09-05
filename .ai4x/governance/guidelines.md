@@ -67,7 +67,7 @@ Load `TEAM.md` when collaboration or review is required. Every review identifies
 
 Delegated agents and independent reviewers never query or mutate remote Issue, Project, review, or CI state. They request each material fact from the primary agent, which returns the unmodified result or reports it unavailable. They never start approval-requiring commands; the primary agent runs any authorized command in the main thread. When GitHub is unavailable, continue only an already active local scope and infer no remote fact.
 
-Prefer the connected GitHub application for covered reads and use `gh` only when required capability is absent. Stage remote-write bodies only under ignored `.ai4x/local/remote/`. Agent remote writes require the verified `gertrud-ai4x` identity and stop when it is unavailable. Never impersonate an unavailable identity. Before publication, report outgoing commits, scope, verification, review verdict, and follow-ups; change no reviewed file after acceptance.
+Prefer the connected GitHub application for covered reads and use `gh` only when required capability is absent. Stage drafts for remote writes only under ignored `.ai4x/local/drafts/`. Agent remote writes require the verified `gertrud-ai4x` identity and stop when it is unavailable. Never impersonate an unavailable identity. Before publication, report outgoing commits, scope, verification, review verdict, and follow-ups; change no reviewed file after acceptance.
 
 ## Verification
 
