@@ -75,17 +75,17 @@ class VerificationPathMatrixTests(unittest.TestCase):
                 "paper",
             },
             ".github/workflows/verify.yml": set(scope.STAGES),
-            "mdl/o2i.archimate": {"licensing", "model", "haskell"},
-            "spc/lib/adapter/amx/src/O2I/Adapter/AMX.hs": {
+            "meta/o2i.archimate": {"licensing", "model", "haskell"},
+            "spec/lib/adapter/amx/src/O2I/Adapter/AMX.hs": {
                 "licensing",
                 "haskell",
             },
-            "spc/lib/core/src/O2I/Graph.hs": {
+            "spec/lib/core/src/O2I/Graph.hs": {
                 "licensing",
                 "haskell",
                 "paper",
             },
-            "spc/ctr/archimate/profile.json": {
+            "spec/ctr/archimate/profile.json": {
                 "licensing",
                 "model",
                 "haskell",
@@ -97,7 +97,18 @@ class VerificationPathMatrixTests(unittest.TestCase):
             },
             "utl/haskell/check_cabal_plan.py": {"licensing", "haskell"},
             "README.md": {"licensing", "paper"},
-            "wtf.md": {"licensing", "paper"},
+            "doc/README.md": {"licensing", "paper"},
+            "doc/misc/wtf.md": {"licensing", "paper"},
+            "doc/guide/ethos.md": {"licensing", "paper"},
+            "doc/paper/o2i.md": {"licensing", "paper"},
+            "doc/paper/o2i.pdf": {"licensing", "paper"},
+            "doc/paper/o2i.pdf.manifest.json": {"licensing", "paper"},
+            "doc/images/O2I Modellzustand.png": {"licensing", "paper"},
+            "doc/resources/md2pdf.json": {"licensing", "paper"},
+            "utl/paper/render-paper.sh": {"licensing", "paper"},
+            "doc/model/illustration.archimate": {
+                "licensing", "model", "haskell", "paper",
+            },
             "CHANGELOG.md": {"licensing"},
             "LICENSING.md": {"licensing"},
             "REUSE.toml": {"licensing"},
@@ -116,7 +127,7 @@ class VerificationPathMatrixTests(unittest.TestCase):
 
     def test_multiple_paths_form_one_union(self) -> None:
         selection = scope.classify_paths(
-            (".ai4x/STATE.md", "mdl/o2i.archimate", "README.md")
+            (".ai4x/STATE.md", "meta/o2i.archimate", "README.md")
         )
         self.assertEqual("selective", selection.mode)
         self.assertEqual(
@@ -125,7 +136,7 @@ class VerificationPathMatrixTests(unittest.TestCase):
         )
 
     def test_model_source_selects_executable_candidate_gate(self) -> None:
-        selection = scope.classify_paths(("mdl/o2i.archimate",))
+        selection = scope.classify_paths(("meta/o2i.archimate",))
 
         self.assertEqual("selective", selection.mode)
         self.assertEqual(
@@ -143,7 +154,7 @@ class VerificationPathMatrixTests(unittest.TestCase):
             contract,
         )
         self.assertIn(
-            '"$candidate_view_checker" "$root/mdl/o2i.archimate"',
+            '"$candidate_view_checker" "$root/meta/o2i.archimate"',
             contract,
         )
         self.assertNotIn("check-executable-views.py", contract)
@@ -257,21 +268,21 @@ class VerificationDiffTests(unittest.TestCase):
             git(root, "init", "--quiet")
             git(root, "config", "user.email", "o2i@example.invalid")
             git(root, "config", "user.name", "O2I Test")
-            source = root / "spc/source.hs"
+            source = root / "spec/source.hs"
             source.parent.mkdir(parents=True)
             source.write_text("module Source where\n", encoding="ascii")
-            git(root, "add", "spc/source.hs")
+            git(root, "add", "spec/source.hs")
             git(root, "commit", "--quiet", "-m", "base")
             base = git(root, "rev-parse", "HEAD")
 
-            git(root, "mv", "spc/source.hs", "LICENSING.md")
+            git(root, "mv", "spec/source.hs", "LICENSING.md")
             git(root, "commit", "--quiet", "-m", "rename")
             head = git(root, "rev-parse", "HEAD")
 
             paths = scope.changed_paths(root, "push", base, head)
             self.assertIsNotNone(paths)
             self.assertEqual(
-                {"spc/source.hs", "LICENSING.md"},
+                {"spec/source.hs", "LICENSING.md"},
                 set(paths or ()),
             )
             selection = scope.classify_paths(paths or ())
@@ -294,15 +305,15 @@ class VerificationDiffTests(unittest.TestCase):
             base = git(root, "rev-parse", "HEAD")
 
             git(root, "checkout", "--quiet", "feature")
-            source = root / "spc/source.hs"
+            source = root / "spec/source.hs"
             source.parent.mkdir(parents=True)
             source.write_text("module Source where\n", encoding="ascii")
-            git(root, "add", "spc/source.hs")
+            git(root, "add", "spec/source.hs")
             git(root, "commit", "--quiet", "-m", "feature")
             head = git(root, "rev-parse", "HEAD")
 
             paths = scope.changed_paths(root, "pull_request", base, head)
-            self.assertEqual(("spc/source.hs",), paths)
+            self.assertEqual(("spec/source.hs",), paths)
             selection = scope.classify_paths(paths or ())
             self.assertEqual({"licensing", "haskell"}, set(selection.stages))
 
@@ -351,11 +362,11 @@ class VerificationWorkflowTests(unittest.TestCase):
         self.assertIn("./utl/verify.sh foundation", haskell_job)
         self.assertIn("./utl/verify.sh haskell", haskell_job)
         for contract in (
-            "spc/.ghc-version",
-            "spc/cabal.project",
-            "spc/cabal.project.freeze",
-            "spc/cabal.foundation.project",
-            "spc/cabal.foundation.project.freeze",
+            "spec/.ghc-version",
+            "spec/cabal.project",
+            "spec/cabal.project.freeze",
+            "spec/cabal.foundation.project",
+            "spec/cabal.foundation.project.freeze",
         ):
             with self.subTest(contract=contract):
                 self.assertIn(contract, haskell_job)

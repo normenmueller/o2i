@@ -12,9 +12,9 @@ from typing import Any, Iterable
 
 
 ROOT = Path(__file__).resolve().parents[2]
-PROFILE_PATH = ROOT / "spc/ctr/archimate/profile.json"
-CORE_PATH = ROOT / "spc/lib/core/semantics.json"
-PROFILE_COMPILER_PATH = ROOT / "spc/ctr/archimate/contract/compile.py"
+PROFILE_PATH = ROOT / "spec/ctr/archimate/profile.json"
+CORE_PATH = ROOT / "spec/lib/core/semantics.json"
+PROFILE_COMPILER_PATH = ROOT / "spec/ctr/archimate/contract/compile.py"
 
 
 class ProfileContractError(ValueError):

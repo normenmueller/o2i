@@ -61,7 +61,7 @@ MODEL_PATHS = frozenset(
 )
 HASKELL_PATHS = frozenset(
     {
-        "mdl/o2i.archimate",
+        "meta/o2i.archimate",
         "utl/haskell/check-package-licenses.sh",
         "utl/haskell/check_atomic_cutover.py",
         "utl/haskell/check_cabal_plan.py",
@@ -75,16 +75,12 @@ PAPER_PATHS = frozenset(
     {
         "ACKNOWLEDGEMENTS.md",
         "README.md",
-        "o2i.md",
-        "o2i.pdf",
-        "o2i.pdf.manifest.json",
-        "toPDF.sh",
+        "utl/paper/render-paper.sh",
         "utl/paper/check-paper-assets.py",
         "utl/paper/check-pdf-freshness.py",
         "utl/paper/render-paper-figures.sh",
         "utl/paper/test_check_paper_assets.py",
         "utl/paper/test_check_pdf_freshness.py",
-        "wtf.md",
     }
 )
 HASKELL_OPERATION_PATHS = frozenset(
@@ -135,24 +131,25 @@ def stages_for_path(path: str) -> frozenset[str] | None:
     if path in PAPER_OPERATION_PATHS:
         stages.add("paper")
 
-    if _under(path, "mdl") or path in MODEL_PATHS:
+    if _under(path, "meta") or _under(path, "doc/model") or path in MODEL_PATHS:
         stages.add("model")
         known = True
+    if _under(path, "doc/model"):
+        stages.add("haskell")
 
-    if _under(path, "spc"):
+    if _under(path, "spec"):
         stages.add("haskell")
         known = True
-    if _under(path, "spc/lib/core/src"):
+    if _under(path, "spec/lib/core/src"):
         stages.add("paper")
-    if _under(path, "spc/ctr/archimate"):
+    if _under(path, "spec/ctr/archimate"):
         stages.update(("model", "paper"))
     if path in HASKELL_PATHS:
         stages.add("haskell")
         known = True
 
     if (
-        _under(path, "acc")
-        or _under(path, "img")
+        _under(path, "doc")
         or path in PAPER_PATHS
     ):
         stages.add("paper")

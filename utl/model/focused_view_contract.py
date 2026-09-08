@@ -31,7 +31,7 @@ REQUIRED_CONTEXTUALIZATION_DOCUMENTATION = (
     "contextualizing O2I Primitives and PerformanceDimensions.",
     "composition[contextualizes]",
     "visual nesting has no contextualization semantics",
-    "spc/ctr/archimate/profile.json",
+    "spec/ctr/archimate/profile.json",
     "Candidate syntax exemplars, not fachliche model instances",
 )
 REQUIRED_COLLECTIVE_DOCUMENTATION = (
@@ -40,7 +40,7 @@ REQUIRED_COLLECTIVE_DOCUMENTATION = (
     "realizes segments and one AND Junction",
     "StructuredProposition carrier",
     "participant-completeness",
-    "spc/ctr/archimate/profile.json",
+    "spec/ctr/archimate/profile.json",
     "syntax exemplars, not fachliche model instances",
 )
 REQUIRED_COLLECTIVE_ELEMENT_DOCUMENTATION = (
@@ -48,7 +48,7 @@ REQUIRED_COLLECTIVE_ELEMENT_DOCUMENTATION = (
     "CollectiveStrategyRealization StructuredProposition",
     "roles follow from realizes topology",
     "participant-completeness",
-    "spc/ctr/archimate/profile.json",
+    "spec/ctr/archimate/profile.json",
     "syntax exemplar is not a fachliche model instance",
 )
 REQUIRED_QUALIFICATION_DOCUMENTATION = (
@@ -58,7 +58,7 @@ REQUIRED_QUALIFICATION_DOCUMENTATION = (
     "directed Association references",
     "o2i.role",
     "rationale and source",
-    "spc/ctr/archimate/profile.json",
+    "spec/ctr/archimate/profile.json",
     "syntax exemplar, not a fachliche model instance",
 )
 REQUIRED_VIEW_DOCUMENTATION = {

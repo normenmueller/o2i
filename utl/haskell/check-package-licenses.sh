@@ -3,7 +3,7 @@
 set -euo pipefail
 
 repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-specification_root="$repository_root/spc"
+specification_root="$repository_root/spec"
 canonical_license="$repository_root/LICENSES/Apache-2.0.txt"
 
 if [[ ! -f "$canonical_license" ]]; then

@@ -163,7 +163,7 @@ jobs:
             ~/.cabal/packages
             ~/.cabal/store
             ~/.local/bin/hindent
-          key: haskell-dependencies-${{ runner.os }}-ghc-${{ env.GHC_VERSION }}-cabal-${{ env.CABAL_VERSION }}-hindent-${{ env.HINDENT_VERSION }}-${{ hashFiles('spc/.ghc-version', 'spc/cabal.project', 'spc/cabal.project.freeze', 'spc/cabal.foundation.project', 'spc/cabal.foundation.project.freeze', 'spc/**/*.cabal') }}
+          key: haskell-dependencies-${{ runner.os }}-ghc-${{ env.GHC_VERSION }}-cabal-${{ env.CABAL_VERSION }}-hindent-${{ env.HINDENT_VERSION }}-${{ hashFiles('spec/.ghc-version', 'spec/cabal.project', 'spec/cabal.project.freeze', 'spec/cabal.foundation.project', 'spec/cabal.foundation.project.freeze', 'spec/**/*.cabal') }}
           restore-keys: |
             haskell-dependencies-${{ runner.os }}-ghc-${{ env.GHC_VERSION }}-cabal-${{ env.CABAL_VERSION }}-hindent-${{ env.HINDENT_VERSION }}-
 

@@ -15,7 +15,7 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "utl" / "model" / "extract-archimate-view.py"
-MODEL = ROOT / "mdl" / "o2i.archimate"
+MODEL = ROOT / "meta" / "o2i.archimate"
 sys.path.insert(0, str(ROOT / "utl" / "model"))
 
 
@@ -1129,7 +1129,7 @@ class RepositoryViewContractTest(unittest.TestCase):
     def _snapshot(self, root: ET.Element, view_name: str) -> str:
         return EXTRACTOR.rendered_view(
             root,
-            Path("mdl/o2i.archimate"),
+            Path("meta/o2i.archimate"),
             view_name,
             False,
         )

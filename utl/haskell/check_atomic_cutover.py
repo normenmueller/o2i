@@ -24,10 +24,10 @@ TARGET_PACKAGES = (
     ("cli", "o2i-cli", frozenset({"o2i-operation", "o2i-amx"})),
 )
 TARGET_NAMES = frozenset(name for _, name, _ in TARGET_PACKAGES)
-LEGACY_DIRECTORY = Path("spc/lib") / "inspection"
+LEGACY_DIRECTORY = Path("spec/lib") / "inspection"
 LEGACY_MARKERS = (
     b"o2i-" + b"inspection",
-    b"spc/lib/" + b"inspection",
+    b"spec/lib/" + b"inspection",
     b"O2I." + b"Inspection",
     b"o2i." + b"inspection.",
 )
@@ -89,7 +89,7 @@ def local_dependencies(path: Path) -> frozenset[str]:
 def scanned_files(root: Path) -> tuple[Path, ...]:
     """Return runtime and registration surfaces that may retain legacy bytes."""
     paths: list[Path] = []
-    for directory in (root / "spc", root / ".github" / "workflows"):
+    for directory in (root / "spec", root / ".github" / "workflows"):
         if not directory.exists():
             continue
         paths.extend(
@@ -110,7 +110,7 @@ def scanned_files(root: Path) -> tuple[Path, ...]:
 
 def check(root: Path) -> None:
     """Reject any incomplete package cutover or legacy registration."""
-    project = root / "spc" / "cabal.project"
+    project = root / "spec" / "cabal.project"
     expected_paths = tuple(path for path, _, _ in TARGET_PACKAGES)
     actual_paths = project_packages(project)
     if actual_paths != expected_paths:
@@ -123,7 +123,7 @@ def check(root: Path) -> None:
         raise ValueError(f"legacy Inspection package still exists: {legacy}")
 
     for relative, name, expected_dependencies in TARGET_PACKAGES:
-        cabal_file = root / "spc" / relative / f"{name}.cabal"
+        cabal_file = root / "spec" / relative / f"{name}.cabal"
         if not cabal_file.is_file():
             raise ValueError(f"missing target package metadata: {cabal_file}")
         actual_dependencies = local_dependencies(cabal_file)
@@ -135,7 +135,7 @@ def check(root: Path) -> None:
             )
 
     findings: list[str] = []
-    cli_root = root / "spc" / "cli"
+    cli_root = root / "spec" / "cli"
     for path in scanned_files(root):
         content = path.read_bytes()
         for marker in LEGACY_MARKERS:

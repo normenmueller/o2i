@@ -58,7 +58,7 @@ adapters, or Haddock.
 - `o2i-cli`: the public executable, composing Operation APIs and the AMX
   adapter through a thin argument, acquisition, rendering, and exit boundary.
   Reusable evaluators and machine-result contracts remain library-owned.
-- `spc/cabal.project` owns the complete five-package build. `o2i-inspection`
+- `spec/cabal.project` owns the complete five-package build. `o2i-inspection`
   is retired; never reintroduce its package, command, or runtime registrations.
 
 # Co-Authoring
@@ -82,9 +82,9 @@ Canonical repository-root verification entries:
 ```
 
 `haskell` verifies all five packages, including the CLI, against
-`spc/cabal.project` and its freeze, and checks the atomic package cutover.
+`spec/cabal.project` and its freeze, and checks the atomic package cutover.
 `foundation` verifies the four-library subset against
-`spc/cabal.foundation.project` and its freeze; it does not establish CLI
+`spec/cabal.foundation.project` and its freeze; it does not establish CLI
 verification. The current workflow selects Foundation for Pull Requests and
 the complete Haskell stage for manual and release runs. CLI changes require
 complete Haskell evidence; never report that gate as passed from Foundation
@@ -93,12 +93,12 @@ results alone.
 Focused commands use the stated working directory:
 
 ```text
-spc/: cabal --project-file=cabal.project build all --ghc-options=-Werror
-spc/: cabal --project-file=cabal.project test all --ghc-options=-Werror
-spc/: cabal --project-file=cabal.project haddock all
+spec/: cabal --project-file=cabal.project build all --ghc-options=-Werror
+spec/: cabal --project-file=cabal.project test all --ghc-options=-Werror
+spec/: cabal --project-file=cabal.project haddock all
 each package directory: cabal check
 repository root:
-  rg --files spc -g '*.hs' | xargs hindent --line-length 80 --validate
+  rg --files spec -g '*.hs' | xargs hindent --line-length 80 --validate
 ./utl/haskell/check-package-licenses.sh
 ```
 

@@ -12,7 +12,7 @@ import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "utl" / "model" / "audit-archimate-model.py"
-MODEL = ROOT / "mdl" / "o2i.archimate"
+MODEL = ROOT / "meta" / "o2i.archimate"
 SPEC = importlib.util.spec_from_file_location("audit_archimate_model", SCRIPT)
 if SPEC is None or SPEC.loader is None:
     raise RuntimeError(f"cannot load {SCRIPT}")

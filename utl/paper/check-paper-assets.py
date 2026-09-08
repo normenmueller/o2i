@@ -33,9 +33,16 @@ def image_targets(node: Any) -> Iterator[str]:
             yield from image_targets(value)
 
 
-def validate_assets(document: Any, root: Path) -> list[str]:
+def validate_assets(
+    document: Any, root: Path, source_directory: Path | None = None
+) -> list[str]:
     """Return deterministic diagnostics for invalid local image targets."""
     resolved_root = root.resolve()
+    source_root = (source_directory or root).resolve()
+    try:
+        source_root.relative_to(resolved_root)
+    except ValueError as error:
+        raise ValueError("paper source directory escapes workspace") from error
     errors: list[str] = []
     for target in sorted(set(image_targets(document))):
         parsed = urlparse(target)
@@ -43,7 +50,7 @@ def validate_assets(document: Any, root: Path) -> list[str]:
             continue
 
         relative = Path(unquote(parsed.path))
-        candidate = (resolved_root / relative).resolve()
+        candidate = (source_root / relative).resolve()
         try:
             candidate.relative_to(resolved_root)
         except ValueError:
@@ -64,7 +71,12 @@ def parse_args() -> argparse.Namespace:
         "--root",
         type=Path,
         required=True,
-        help="Root used to resolve local image targets.",
+        help="Workspace boundary for local image resources.",
+    )
+    parser.add_argument(
+        "--source-directory",
+        type=Path,
+        help="Directory used to resolve image targets; defaults to the workspace root.",
     )
     return parser.parse_args()
 
@@ -73,7 +85,7 @@ def main() -> int:
     args = parse_args()
     try:
         document = json.loads(args.document.read_text(encoding="utf-8"))
-        errors = validate_assets(document, args.root)
+        errors = validate_assets(document, args.root, args.source_directory)
     except (OSError, json.JSONDecodeError, ValueError) as error:
         print(f"[o2i|error] Cannot validate paper assets: {error}", file=sys.stderr)
         return 1

@@ -30,6 +30,8 @@
 
 ### Added
 
+- Added human documentation under `doc/`, with a guided Ethos modeling lesson and one shared illustrative model; relocated the White Paper, images, rendering resources and freshness manifest with their build and verification paths.
+- Renamed the metamodel and specification directories to `meta/` and `spec/`, keeping their documentation, build, verification and licensing paths synchronized.
 - Added the closed Core and Operation evidence-assessment boundary with same-invocation readiness reconstruction, collection-level validity and suppression, source-ordered mixed observation outcomes, separate effect and target-attainment results, fixed causal and first-attainment limitations, deterministic provenance-bearing machine documents, public API contracts, and adversarial work probes without aggregate scoring.
 - Added the closed Core and Operation evidence-readiness boundary with exact Readiness-only input decoding, selected-View identity binding, supplied complete-Trace validation, Core-owned Strategy-proof reconstruction, all 17 readiness criteria, typed prerequisite and unavailable outcomes, deterministic provenance-bearing machine documents, public API contracts, and adversarial work probes.
 - Added the public library-level cumulative Validate composition with closed Notation, Profile, Structure, and Semantics requests, typed terminal results, and generated deterministic machine documents; CLI integration remains pending.

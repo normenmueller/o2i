@@ -7,9 +7,9 @@
 
 Die hostneutrale Agent-Memory liegt unter [`.ai4x/`](./.ai4x/). Versionierte Host-Fassaden wie [`AGENTS.md`](./AGENTS.md) und [`.github/agents/o2i.agent.md`](./.github/agents/o2i.agent.md) verweisen auf diesen kanonischen Vertrag. [ai4X](https://github.com/normenmueller/ai4X) unterstützt die Materialisierung und Verwaltung solcher laufzeitspezifischen Integrationen.
 
-Empfohlene Lesereihenfolge: [`.ai4x/BEHAVIOR.md`](./.ai4x/BEHAVIOR.md) → [`.ai4x/CONTEXT.md`](./.ai4x/CONTEXT.md) → [`.ai4x/STATE.md`](./.ai4x/STATE.md) → [`o2i.md`](./o2i.md). Für Formalisierung und Validierung folgt [`spc/`](./spc/), für Modell und konkrete Syntax [`mdl/`](./mdl/).
+Empfohlene Lesereihenfolge: [`.ai4x/BEHAVIOR.md`](./.ai4x/BEHAVIOR.md) → [`.ai4x/CONTEXT.md`](./.ai4x/CONTEXT.md) → [`.ai4x/STATE.md`](./.ai4x/STATE.md) → [`o2i.md`](./doc/paper/o2i.md). Für Formalisierung und Validierung folgt [`spec/`](./spec/), für Modell und konkrete Syntax [`meta/`](./meta/).
 
-Für die maschinenlesbare Prüfung von O2I-Modellen dient das Kommando [`o2i`](./spc/README.md#inspect); Agenten sollten dessen deterministische JSON-Ausgabe verwenden.
+Für die maschinenlesbare Prüfung von O2I-Modellen dient das Kommando [`o2i`](./spec/README.md#cli-setup); Agenten sollten dessen deterministische JSON-Ausgabe verwenden.
 
 Vor Abschluss einer Änderung prüft `./utl/verify.sh` den vollständigen Repository-Vertrag.
 
@@ -36,9 +36,9 @@ O2I dient dazu, *orientierte Wirkung* durch relationale Modellierung nachvollzie
 ## Start
 
 - **Projektplanung:** [O2I Project](https://github.com/users/normenmueller/projects/4) und [`CONTRIBUTING.md`](./CONTRIBUTING.md)
-- **White Paper:** [`o2i.pdf`](./o2i.pdf) als bleeding-edge PDF-Fassung und [`o2i.md`](./o2i.md) als fachlicher Referenztext
-- **Direkteinstieg:** [`wtf.md`](./wtf.md) beantwortet zentrale O2I-Fragen kurz und bewusst direkt
-- **Spezifikation und CLI:** [`spc/README.md`](./spc/README.md) beschreibt Architektur, Build, Installation und Nutzung
+- **Dokumentation:** [`doc/README.md`](./doc/README.md) führt zu Begriffserklärung, Guide und Beispielmodell
+- **White Paper:** [`o2i.pdf`](./doc/paper/o2i.pdf) als bleeding-edge PDF-Fassung und [`o2i.md`](./doc/paper/o2i.md) als fachlicher Referenztext
+- **Spezifikation und CLI:** [`spec/README.md`](./spec/README.md) beschreibt Architektur, Build, Installation und Nutzung
 
 ## License
 
