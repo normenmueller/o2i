@@ -5,4 +5,6 @@ dist-newstyle/
 *.hi
 *.o
 .hie/
+__pycache__/
+*.py[co]
 .ai4x/local/
