@@ -1250,7 +1250,7 @@
               "items": false
             },
             "contractDigest": {
-              "const": "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+              "const": "be8204d09d6dae8eda1fe6969d1bea62e3b35419108474ea8af177bb9030a3da"
             }
           }
         },
@@ -23550,7 +23550,7 @@
                           ],
                           "properties": {
                             "role": {
-                              "const": "owned-diagnosis"
+                              "const": "listed-diagnosis"
                             },
                             "values": {
                               "type": "array",
@@ -23559,7 +23559,7 @@
                                 "minLength": 1,
                                 "pattern": "^[^\u0000]+$"
                               },
-                              "minItems": 0
+                              "minItems": 1
                             }
                           }
                         }
@@ -23599,7 +23599,7 @@
               "const": "core.strategy-formulation.diagnosis-grounding"
             },
             "evidenceKind": {
-              "const": "StrategyKey"
+              "const": "StrategyMemberKey"
             },
             "severity": {
               "const": "error"
@@ -23618,8 +23618,8 @@
                   "properties": {
                     "fields": {
                       "type": "array",
-                      "minItems": 3,
-                      "maxItems": 3,
+                      "minItems": 4,
+                      "maxItems": 4,
                       "prefixItems": [
                         {
                           "type": "object",
@@ -23653,7 +23653,7 @@
                           ],
                           "properties": {
                             "role": {
-                              "const": "diagnosis"
+                              "const": "member"
                             },
                             "values": {
                               "type": "array",
@@ -23676,7 +23676,7 @@
                           ],
                           "properties": {
                             "role": {
-                              "const": "intent"
+                              "const": "ungrounding-diagnosis"
                             },
                             "values": {
                               "type": "array",
@@ -23687,6 +23687,28 @@
                               },
                               "minItems": 1,
                               "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "listed-intent"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1
                             }
                           }
                         }
@@ -23780,7 +23802,7 @@
                           ],
                           "properties": {
                             "role": {
-                              "const": "owned-guiding-policy"
+                              "const": "listed-guiding-policy"
                             },
                             "values": {
                               "type": "array",
@@ -23789,7 +23811,7 @@
                                 "minLength": 1,
                                 "pattern": "^[^\u0000]+$"
                               },
-                              "minItems": 0
+                              "minItems": 1
                             }
                           }
                         }
@@ -23906,7 +23928,7 @@
                           ],
                           "properties": {
                             "role": {
-                              "const": "guiding-policy"
+                              "const": "unguided-action"
                             },
                             "values": {
                               "type": "array",
@@ -23929,7 +23951,7 @@
                           ],
                           "properties": {
                             "role": {
-                              "const": "action"
+                              "const": "listed-guiding-policy"
                             },
                             "values": {
                               "type": "array",
@@ -23938,8 +23960,7 @@
                                 "minLength": 1,
                                 "pattern": "^[^\u0000]+$"
                               },
-                              "minItems": 1,
-                              "maxItems": 1
+                              "minItems": 1
                             }
                           }
                         }
@@ -24033,7 +24054,7 @@
                           ],
                           "properties": {
                             "role": {
-                              "const": "owned-intent"
+                              "const": "listed-intent"
                             },
                             "values": {
                               "type": "array",
@@ -24042,7 +24063,305 @@
                                 "minLength": 1,
                                 "pattern": "^[^\u0000]+$"
                               },
-                              "minItems": 0
+                              "minItems": 1
+                            }
+                          }
+                        }
+                      ],
+                      "items": false
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "ruleId",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "semantics-assessment"
+            },
+            "owner": {
+              "const": "core"
+            },
+            "stage": {
+              "const": "semantics"
+            },
+            "ruleId": {
+              "const": "core.strategy-formulation.intent-grounding"
+            },
+            "evidenceKind": {
+              "const": "StrategyMemberKey"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "fields"
+                  ],
+                  "properties": {
+                    "fields": {
+                      "type": "array",
+                      "minItems": 4,
+                      "maxItems": 4,
+                      "prefixItems": [
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "strategy"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "member"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "ungrounded-intent"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "listed-diagnosis"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1
+                            }
+                          }
+                        }
+                      ],
+                      "items": false
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "ruleId",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "semantics-assessment"
+            },
+            "owner": {
+              "const": "core"
+            },
+            "stage": {
+              "const": "semantics"
+            },
+            "ruleId": {
+              "const": "core.strategy-formulation.intent-substantiation"
+            },
+            "evidenceKind": {
+              "const": "StrategyMemberKey"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "fields"
+                  ],
+                  "properties": {
+                    "fields": {
+                      "type": "array",
+                      "minItems": 4,
+                      "maxItems": 4,
+                      "prefixItems": [
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "strategy"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "member"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "unsubstantiated-intent"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "listed-key-result"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1
                             }
                           }
                         }
@@ -24159,7 +24478,7 @@
                           ],
                           "properties": {
                             "role": {
-                              "const": "key-result"
+                              "const": "unsubstantiating-key-result"
                             },
                             "values": {
                               "type": "array",
@@ -24182,7 +24501,7 @@
                           ],
                           "properties": {
                             "role": {
-                              "const": "intent"
+                              "const": "listed-intent"
                             },
                             "values": {
                               "type": "array",
@@ -24191,8 +24510,7 @@
                                 "minLength": 1,
                                 "pattern": "^[^\u0000]+$"
                               },
-                              "minItems": 1,
-                              "maxItems": 1
+                              "minItems": 1
                             }
                           }
                         }
@@ -24335,7 +24653,7 @@
               "const": "core.strategy-formulation.vision-orientation"
             },
             "evidenceKind": {
-              "const": "StrategyKey"
+              "const": "StrategyMemberKey"
             },
             "severity": {
               "const": "error"
@@ -24354,8 +24672,8 @@
                   "properties": {
                     "fields": {
                       "type": "array",
-                      "minItems": 2,
-                      "maxItems": 2,
+                      "minItems": 3,
+                      "maxItems": 3,
                       "prefixItems": [
                         {
                           "type": "object",
@@ -24389,7 +24707,7 @@
                           ],
                           "properties": {
                             "role": {
-                              "const": "observed-vision-orientation"
+                              "const": "member"
                             },
                             "values": {
                               "type": "array",
@@ -24398,8 +24716,31 @@
                                 "minLength": 1,
                                 "pattern": "^[^\u0000]+$"
                               },
-                              "minItems": 0,
-                              "maxItems": 0
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "unoriented-intent"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
                             }
                           }
                         }
@@ -25791,7 +26132,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "3566684fcc278d3359f7c4620f9f058c39fd9a8dd9fd12b5616da5b860bfe347"
+                          "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
                         }
                       }
                     },
@@ -25839,7 +26180,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333"
+                          "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
                         }
                       }
                     }
@@ -26555,7 +26896,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "3566684fcc278d3359f7c4620f9f058c39fd9a8dd9fd12b5616da5b860bfe347"
+                          "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
                         }
                       }
                     },
@@ -26603,7 +26944,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333"
+                          "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
                         }
                       }
                     }
@@ -27344,7 +27685,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "3566684fcc278d3359f7c4620f9f058c39fd9a8dd9fd12b5616da5b860bfe347"
+                          "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
                         }
                       }
                     },
@@ -27392,7 +27733,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333"
+                          "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
                         }
                       }
                     }
@@ -28132,7 +28473,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "3566684fcc278d3359f7c4620f9f058c39fd9a8dd9fd12b5616da5b860bfe347"
+                          "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
                         }
                       }
                     },
@@ -28180,7 +28521,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333"
+                          "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
                         }
                       }
                     }
@@ -28925,7 +29266,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "3566684fcc278d3359f7c4620f9f058c39fd9a8dd9fd12b5616da5b860bfe347"
+                          "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
                         }
                       }
                     },
@@ -28973,7 +29314,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333"
+                          "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
                         }
                       }
                     }
@@ -30683,7 +31024,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "3566684fcc278d3359f7c4620f9f058c39fd9a8dd9fd12b5616da5b860bfe347"
+                          "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
                         }
                       }
                     },
@@ -30731,7 +31072,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333"
+                          "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
                         }
                       }
                     }
@@ -35249,7 +35590,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "3566684fcc278d3359f7c4620f9f058c39fd9a8dd9fd12b5616da5b860bfe347"
+                          "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
                         }
                       }
                     },
@@ -35297,7 +35638,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333"
+                          "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
                         }
                       }
                     }
@@ -36426,7 +36767,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "3566684fcc278d3359f7c4620f9f058c39fd9a8dd9fd12b5616da5b860bfe347"
+                          "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
                         }
                       }
                     },
@@ -36474,7 +36815,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333"
+                          "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
                         }
                       }
                     }
@@ -38052,7 +38393,7 @@
                       "const": "0.3.0"
                     },
                     "digest": {
-                      "const": "3566684fcc278d3359f7c4620f9f058c39fd9a8dd9fd12b5616da5b860bfe347"
+                      "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
                     }
                   }
                 },
@@ -38100,7 +38441,7 @@
                       "const": "0.3.0"
                     },
                     "digest": {
-                      "const": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333"
+                      "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
                     }
                   }
                 }
@@ -40940,7 +41281,7 @@
                       "const": "0.3.0"
                     },
                     "digest": {
-                      "const": "3566684fcc278d3359f7c4620f9f058c39fd9a8dd9fd12b5616da5b860bfe347"
+                      "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
                     }
                   }
                 },
@@ -40988,7 +41329,7 @@
                       "const": "0.3.0"
                     },
                     "digest": {
-                      "const": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333"
+                      "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
                     }
                   }
                 }
@@ -47235,7 +47576,7 @@
                       "const": "0.3.0"
                     },
                     "digest": {
-                      "const": "3566684fcc278d3359f7c4620f9f058c39fd9a8dd9fd12b5616da5b860bfe347"
+                      "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
                     }
                   }
                 },
@@ -47283,7 +47624,7 @@
                       "const": "0.3.0"
                     },
                     "digest": {
-                      "const": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333"
+                      "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
                     }
                   }
                 }

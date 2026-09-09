@@ -386,22 +386,34 @@ data HumanSemanticDiagnosticEliminator result = HumanSemanticDiagnosticEliminato
   , eliminateHumanStrategyFormulationActions :: HumanModelIdentity -> NonEmpty
                                                                         HumanOccurrenceIdentity -> result
     -- | Consume Strategy diagnosis evidence.
-  , eliminateHumanStrategyFormulationDiagnosis :: HumanModelIdentity -> [HumanOccurrenceIdentity] -> result
+  , eliminateHumanStrategyFormulationDiagnosis :: HumanModelIdentity -> NonEmpty
+                                                                          HumanOccurrenceIdentity -> result
     -- | Consume Strategy diagnosis-grounding evidence.
-  , eliminateHumanStrategyFormulationDiagnosisGrounding :: HumanModelIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> result
+  , eliminateHumanStrategyFormulationDiagnosisGrounding :: HumanModelIdentity -> HumanModelIdentity -> HumanOccurrenceIdentity -> NonEmpty
+                                                                                                                                    HumanOccurrenceIdentity -> result
     -- | Consume Strategy guiding-policy evidence.
-  , eliminateHumanStrategyFormulationGuidingPolicy :: HumanModelIdentity -> [HumanOccurrenceIdentity] -> result
+  , eliminateHumanStrategyFormulationGuidingPolicy :: HumanModelIdentity -> NonEmpty
+                                                                              HumanOccurrenceIdentity -> result
     -- | Consume Strategy guiding-policy action evidence.
-  , eliminateHumanStrategyFormulationGuidingPolicyActions :: HumanModelIdentity -> HumanModelIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> result
+  , eliminateHumanStrategyFormulationGuidingPolicyActions :: HumanModelIdentity -> HumanModelIdentity -> HumanOccurrenceIdentity -> NonEmpty
+                                                                                                                                      HumanOccurrenceIdentity -> result
     -- | Consume Strategy intent evidence.
-  , eliminateHumanStrategyFormulationIntent :: HumanModelIdentity -> [HumanOccurrenceIdentity] -> result
+  , eliminateHumanStrategyFormulationIntent :: HumanModelIdentity -> NonEmpty
+                                                                       HumanOccurrenceIdentity -> result
+    -- | Consume an intent lacking diagnosis support.
+  , eliminateHumanStrategyFormulationIntentGrounding :: HumanModelIdentity -> HumanModelIdentity -> HumanOccurrenceIdentity -> NonEmpty
+                                                                                                                                 HumanOccurrenceIdentity -> result
+    -- | Consume an intent lacking a strategic success reference.
+  , eliminateHumanStrategyFormulationIntentSubstantiation :: HumanModelIdentity -> HumanModelIdentity -> HumanOccurrenceIdentity -> NonEmpty
+                                                                                                                                      HumanOccurrenceIdentity -> result
     -- | Consume Strategy key-result substantiation evidence.
-  , eliminateHumanStrategyFormulationKeyResultSubstantiation :: HumanModelIdentity -> HumanModelIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> result
+  , eliminateHumanStrategyFormulationKeyResultSubstantiation :: HumanModelIdentity -> HumanModelIdentity -> HumanOccurrenceIdentity -> NonEmpty
+                                                                                                                                         HumanOccurrenceIdentity -> result
     -- | Consume Strategy key-result-list evidence.
   , eliminateHumanStrategyFormulationKeyResults :: HumanModelIdentity -> NonEmpty
                                                                            HumanOccurrenceIdentity -> result
     -- | Consume Strategy vision-orientation evidence.
-  , eliminateHumanStrategyFormulationVisionOrientation :: HumanModelIdentity -> result
+  , eliminateHumanStrategyFormulationVisionOrientation :: HumanModelIdentity -> HumanModelIdentity -> HumanOccurrenceIdentity -> result
   }
 
 -- | Closed authority-typed diagnostic evidence family.
@@ -1440,16 +1452,22 @@ projectSemanticDiagnosticEvidence =
       , Semantics.eliminateStrategyFormulationDiagnosis =
           projectMany eliminateHumanStrategyFormulationDiagnosis
       , Semantics.eliminateStrategyFormulationDiagnosisGrounding =
-          projectPair eliminateHumanStrategyFormulationDiagnosisGrounding
+          projectMemberSupport
+            eliminateHumanStrategyFormulationDiagnosisGrounding
       , Semantics.eliminateStrategyFormulationGuidingPolicy =
           projectMany eliminateHumanStrategyFormulationGuidingPolicy
       , Semantics.eliminateStrategyFormulationGuidingPolicyActions =
-          projectMemberPair
+          projectMemberSupport
             eliminateHumanStrategyFormulationGuidingPolicyActions
       , Semantics.eliminateStrategyFormulationIntent =
           projectMany eliminateHumanStrategyFormulationIntent
+      , Semantics.eliminateStrategyFormulationIntentGrounding =
+          projectMemberSupport eliminateHumanStrategyFormulationIntentGrounding
+      , Semantics.eliminateStrategyFormulationIntentSubstantiation =
+          projectMemberSupport
+            eliminateHumanStrategyFormulationIntentSubstantiation
       , Semantics.eliminateStrategyFormulationKeyResultSubstantiation =
-          projectMemberPair
+          projectMemberSupport
             eliminateHumanStrategyFormulationKeyResultSubstantiation
       , Semantics.eliminateStrategyFormulationKeyResults =
           \strategy occurrences ->
@@ -1459,7 +1477,7 @@ projectSemanticDiagnosticEvidence =
                 (projectModelIdentity strategy)
                 (projectOccurrenceIdentity <$> occurrences)
       , Semantics.eliminateStrategyFormulationVisionOrientation =
-          projectOne eliminateHumanStrategyFormulationVisionOrientation
+          projectNeedMember eliminateHumanStrategyFormulationVisionOrientation
       }
   where
     projected ::
@@ -1498,44 +1516,33 @@ projectSemanticDiagnosticEvidence =
       projected $ \eliminator ->
         consume eliminator (projectModelIdentity identity)
     projectMany ::
-         (forall result. HumanSemanticDiagnosticEliminator result -> HumanModelIdentity -> [HumanOccurrenceIdentity] -> result)
+         (forall result. HumanSemanticDiagnosticEliminator result -> HumanModelIdentity -> NonEmpty
+                                                                                             HumanOccurrenceIdentity -> result)
       -> ModelIdentity
-      -> [OccurrenceIdentity]
+      -> NonEmpty OccurrenceIdentity
       -> HumanSemanticDiagnosticEvidence
     projectMany consume identity occurrences =
       projected $ \eliminator ->
         consume
           eliminator
           (projectModelIdentity identity)
-          (map projectOccurrenceIdentity occurrences)
-    projectPair ::
-         (forall result. HumanSemanticDiagnosticEliminator result -> HumanModelIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> result)
+          (projectOccurrenceIdentity <$> occurrences)
+    projectMemberSupport ::
+         (forall result. HumanSemanticDiagnosticEliminator result -> HumanModelIdentity -> HumanModelIdentity -> HumanOccurrenceIdentity -> NonEmpty
+                                                                                                                                              HumanOccurrenceIdentity -> result)
+      -> ModelIdentity
       -> ModelIdentity
       -> OccurrenceIdentity
-      -> OccurrenceIdentity
+      -> NonEmpty OccurrenceIdentity
       -> HumanSemanticDiagnosticEvidence
-    projectPair consume identity first second =
-      projected $ \eliminator ->
-        consume
-          eliminator
-          (projectModelIdentity identity)
-          (projectOccurrenceIdentity first)
-          (projectOccurrenceIdentity second)
-    projectMemberPair ::
-         (forall result. HumanSemanticDiagnosticEliminator result -> HumanModelIdentity -> HumanModelIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> result)
-      -> ModelIdentity
-      -> ModelIdentity
-      -> OccurrenceIdentity
-      -> OccurrenceIdentity
-      -> HumanSemanticDiagnosticEvidence
-    projectMemberPair consume owner member first second =
+    projectMemberSupport consume owner member first second =
       projected $ \eliminator ->
         consume
           eliminator
           (projectModelIdentity owner)
           (projectModelIdentity member)
           (projectOccurrenceIdentity first)
-          (projectOccurrenceIdentity second)
+          (projectOccurrenceIdentity <$> second)
 
 semanticEvidenceCode :: HumanSemanticDiagnosticEvidence -> Text
 semanticEvidenceCode =
@@ -1570,15 +1577,20 @@ semanticEvidenceCode =
       , eliminateHumanStrategyFormulationActions = \_ _ -> "StrategyKey"
       , eliminateHumanStrategyFormulationDiagnosis = \_ _ -> "StrategyKey"
       , eliminateHumanStrategyFormulationDiagnosisGrounding =
-          \_ _ _ -> "StrategyKey"
+          \_ _ _ _ -> "StrategyMemberKey"
       , eliminateHumanStrategyFormulationGuidingPolicy = \_ _ -> "StrategyKey"
       , eliminateHumanStrategyFormulationGuidingPolicyActions =
           \_ _ _ _ -> "StrategyMemberKey"
       , eliminateHumanStrategyFormulationIntent = \_ _ -> "StrategyKey"
+      , eliminateHumanStrategyFormulationIntentGrounding =
+          \_ _ _ _ -> "StrategyMemberKey"
+      , eliminateHumanStrategyFormulationIntentSubstantiation =
+          \_ _ _ _ -> "StrategyMemberKey"
       , eliminateHumanStrategyFormulationKeyResultSubstantiation =
           \_ _ _ _ -> "StrategyMemberKey"
       , eliminateHumanStrategyFormulationKeyResults = \_ _ -> "StrategyKey"
-      , eliminateHumanStrategyFormulationVisionOrientation = \_ -> "StrategyKey"
+      , eliminateHumanStrategyFormulationVisionOrientation =
+          \_ _ _ -> "StrategyMemberKey"
       }
 
 toList :: Foldable collection => collection value -> [value]

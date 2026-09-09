@@ -1752,7 +1752,7 @@ class OperationContractCompilerTest(unittest.TestCase):
             authority["required"],
         )
         model_diagnostics = schema["$defs"]["modelDiagnostic"]["oneOf"]
-        self.assertEqual(195, len(model_diagnostics))
+        self.assertEqual(197, len(model_diagnostics))
         notation_diagnostics = [
             row
             for row in model_diagnostics

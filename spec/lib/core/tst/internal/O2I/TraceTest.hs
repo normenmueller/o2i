@@ -399,6 +399,11 @@ promotionPrecedence =
                 @?= variableIdentity StrategyVariable
             outcome ->
               assertFailure ("promotion did not succeed: " ++ show outcome)
+          case promoteTraceInternal model proofPlural supplied of
+            TracePromotionSucceeded _ -> pure ()
+            outcome ->
+              assertFailure
+                ("plural membership promotion failed: " ++ show outcome)
           case Public.reconstructTraceableEffectModel
                  model
                  (PublicSemantics.assessSemantics
@@ -436,6 +441,19 @@ promotionPrecedence =
       validStrategyAssessment selectedViewIdentity strategy mismatchFormulation
     proofValid =
       validStrategyAssessment selectedViewIdentity strategy validFormulation
+    proofPlural =
+      validStrategyAssessment
+        selectedViewIdentity
+        strategy
+        validFormulation
+          { formulationDiagnosis =
+              modelId "other-driver"
+                NonEmpty.:| NonEmpty.toList
+                              (formulationDiagnosis validFormulation)
+          , formulationIntent =
+              modelId "other-objective"
+                NonEmpty.:| NonEmpty.toList (formulationIntent validFormulation)
+          }
 
 assertPromotionReasons ::
      SemanticallyValidModel scope
@@ -500,9 +518,9 @@ formulation diagnosis intent action keyResult =
           , strategyAnchoringImplementationLogic = fachlicheText
           }
     , formulationDerivedGuardrails = fachlicheText NonEmpty.:| []
-    , formulationDiagnosis = diagnosis
-    , formulationIntent = intent
-    , formulationGuidingPolicy = modelId "guiding-policy"
+    , formulationDiagnosis = diagnosis NonEmpty.:| []
+    , formulationIntent = intent NonEmpty.:| []
+    , formulationGuidingPolicy = modelId "guiding-policy" NonEmpty.:| []
     , formulationPositioning = fachlicheText NonEmpty.:| []
     , formulationTradeOffs = fachlicheText NonEmpty.:| []
     , formulationActions = action NonEmpty.:| []

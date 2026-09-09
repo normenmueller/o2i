@@ -856,9 +856,9 @@ strategyFormulation trace =
           (fachliche :| [])
           fachliche
     , formulationDerivedGuardrails = fachliche :| []
-    , formulationDiagnosis = binding StrategyDriverVariable
-    , formulationIntent = binding StrategyObjectiveVariable
-    , formulationGuidingPolicy = strategyPrincipleIdentity
+    , formulationDiagnosis = binding StrategyDriverVariable :| []
+    , formulationIntent = binding StrategyObjectiveVariable :| []
+    , formulationGuidingPolicy = strategyPrincipleIdentity :| []
     , formulationPositioning = fachliche :| []
     , formulationTradeOffs = fachliche :| []
     , formulationActions = binding StrategyActionVariable :| []

@@ -20,7 +20,7 @@ main =
            structureCoverage
        , testCase "covers Binding 4/4 through real producers" bindingCoverage
        , testCase
-           "covers Semantics 27/27 through real producers"
+           "covers Semantics 29/29 through real producers"
            semanticsCoverage
        ])
 
@@ -97,10 +97,10 @@ semanticsCoverage =
                   NonEmpty.toList
                     (coreRulesForStage coreRuleCatalog semanticsRuleStage)
               ]
-      Set.size catalog @?= 39
+      Set.size catalog @?= 41
       assertBool
         ("observed="
            <> show (Set.toAscList observed)
            <> "; extra="
            <> show (Set.toAscList (observed Set.\\ catalog)))
-        (Set.size observed == 27 && observed `Set.isSubsetOf` catalog)
+        (Set.size observed == 29 && observed `Set.isSubsetOf` catalog)

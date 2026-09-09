@@ -5,6 +5,7 @@ module O2I.Cli.Test.Process
   ) where
 
 import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.KeyMap as AesonKeyMap
 import qualified Data.ByteString as ByteString
 import Data.Char (ord)
 import Data.JSON.JSONSchema (validateJSONSchema)
@@ -52,6 +53,9 @@ tests =
     , testCase
         "all machine-capable model reports preserve canonical documents"
         realMachineReports
+    , testCase
+        "plural strategy constituents retain complete per-intent coverage"
+        pluralStrategyConstituents
     , testCase
         "qualification-subject supplemental failure is canonical machine output"
         qualificationSubjectsMachineFailure
@@ -168,11 +172,11 @@ ruleAuthorities ::
 ruleAuthorities =
   [ ( ["operation"]
     , "bootstrap.profile-adapter.adapter-id"
-    , "  authority=operation | subject=unavailable | contract=\"o2i.operation\" | version=\"0.3.0\" | sha256=\"3566684fcc278d3359f7c4620f9f058c39fd9a8dd9fd12b5616da5b860bfe347\"\n"
+    , "  authority=operation | subject=unavailable | contract=\"o2i.operation\" | version=\"0.3.0\" | sha256=\"71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff\"\n"
     , "  \"bootstrap.profile-adapter.adapter-id\" | \"preparation\" | expectation=\"The selected adapter identifier is admitted by the resolved compiled Profile.\" | meaning=\"A Profile explicitly declares which compiled adapters may project its notation.\" | action=\"Select an admitted adapter or update the compiled Profile contract.\"\n")
   , ( ["core"]
     , "core.assessment.actual-start.cardinality"
-    , "  authority=core | subject=unavailable | contract=\"o2i.core-semantics\" | version=\"0.3.0\" | sha256=\"fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333\"\n"
+    , "  authority=core | subject=unavailable | contract=\"o2i.core-semantics\" | version=\"0.3.0\" | sha256=\"193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5\"\n"
     , "  \"core.assessment.actual-start.cardinality\" | \"readiness-and-assessment\" | expectation=\"An assessment has exactly one actual start for the traced Intervention.\" | meaning=\"Assessment chronology begins from one unambiguous Intervention start.\" | action=\"Provide one actual start bound to the traced Intervention.\"\n")
   , ( ["adapter", "amx"]
     , "o2i.amx.decode.encoding"
@@ -180,7 +184,7 @@ ruleAuthorities =
     , "  \"o2i.amx.decode.encoding\" | \"preparation\" | expectation=\"The XML encoding is UTF-8.\" | meaning=\"Draft projection requires one complete, safely decoded native XML observation.\" | action=\"Save the AMX document with UTF-8 encoding.\"\n")
   , ( ["profile", "o2i.archimate-profile@0.3"]
     , "carrier:context"
-    , "  authority=profile | subject=\"o2i.archimate-profile@0.3\" | contract=\"o2i.archimate-profile\" | version=\"0.3.0\" | sha256=\"3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081\"\n"
+    , "  authority=profile | subject=\"o2i.archimate-profile@0.3\" | contract=\"o2i.archimate-profile\" | version=\"0.3.0\" | sha256=\"be8204d09d6dae8eda1fe6969d1bea62e3b35419108474ea8af177bb9030a3da\"\n"
     , "  \"carrier:context\" | \"profile\" | expectation=\"A displayed concept carrying an O2I type in [Ethos, Mission, Vision, Strategy, Situation, Need, Intervention, Measure] must use ArchiMate element 'Grouping' in carrier category 'Context'.\" | meaning=\"The carrier tuple is the compiled notation representation of those O2I types.\" | action=\"Use ArchiMate element 'Grouping' and an admitted o2i.type value.\"\n")
   ]
 
@@ -340,6 +344,90 @@ realMachineReports = do
         (processStdout result)
         "\"tool\":{\"identity\":\"o2i\",\"version\":\"0.3.0.0\"}"
       ByteString.count 10 (processStdout result) @?= 1
+
+pluralStrategyConstituents :: Assertion
+pluralStrategyConstituents = do
+  modelPath <- fixturePath "profiled-plural-strategy.archimate"
+  supplementPath <- fixturePath "plural-strategy-input.json"
+  model <- ByteString.readFile modelPath
+  let arguments =
+        [ "validate"
+        , "-"
+        , "--view"
+        , "Plural strategy"
+        , "--level"
+        , "semantics"
+        , "--supplement"
+        , supplementPath
+        ]
+  accepted <- runO2I (arguments <> ["--json"]) model
+  processExitCode accepted @?= ExitSuccess
+  processStderr accepted @?= ByteString.empty
+  assertJsonObject (processStdout accepted)
+  assertContains
+    (processStdout accepted)
+    "\"kind\":\"semantics-validation-accepted\""
+  assertContains
+    (processStdout accepted)
+    "\"execution\":{\"status\":\"accepted\"}"
+  assertBool
+    "accepted plural strategy contains an error diagnostic"
+    (not
+       ("\"severity\":\"error\"" `ByteString.isInfixOf` processStdout accepted))
+  human <- runO2I arguments model
+  processExitCode human @?= ExitSuccess
+  processStderr human @?= ByteString.empty
+  assertContains (processStdout human) "O2I validate: accepted\n"
+  -- Keep both Key Results supported while removing only the second
+  -- Intent's substantiation. Retarget its diagram connection as well.
+  let original = TextEncoding.decodeUtf8 model
+      relation =
+        "id=\"substantiates-2\" name=\"substantiates\" source=\"key-result-2\" target=\"objective-2\""
+      connection =
+        "archimateRelationship=\"substantiates-2\" source=\"key-result-2-node\" target=\"objective-2-node\""
+      altered =
+        Text.replace
+          relation
+          (Text.replace "objective-2" "objective-1" relation)
+          (Text.replace
+             connection
+             (Text.replace "objective-2-node" "objective-1-node" connection)
+             original)
+  Text.count relation original @?= 1
+  Text.count connection original @?= 1
+  rejected <- runO2I (arguments <> ["--json"]) (TextEncoding.encodeUtf8 altered)
+  processExitCode rejected @?= ExitFailure 1
+  processStderr rejected @?= ByteString.empty
+  let output = processStdout rejected
+  assertContains output "\"kind\":\"semantics-validation-rejected\""
+  assertContains output "\"execution\":{\"status\":\"rejected\"}"
+  assertContains
+    output
+    "\"ruleId\":\"core.strategy-formulation.intent-substantiation\""
+  assertContains output "\"role\":\"member\",\"values\":[\"objective-2\"]"
+  assertContains
+    output
+    "\"role\":\"unsubstantiated-intent\",\"values\":[\"archimate:record:14\"]"
+  assertContains
+    output
+    "\"role\":\"listed-key-result\",\"values\":[\"archimate:record:12\",\"archimate:record:17\"]"
+  document <- decodeJsonObject output
+  case document of
+    Aeson.Object root ->
+      case AesonKeyMap.lookup "diagnostics" root of
+        Just (Aeson.Object diagnostics) ->
+          case AesonKeyMap.lookup "modelDiagnostics" diagnostics of
+            Just (Aeson.Array findings) ->
+              length
+                [ finding
+                | finding@(Aeson.Object fields) <- foldr (:) [] findings
+                , AesonKeyMap.lookup "severity" fields
+                    == Just (Aeson.String "error")
+                ]
+                @?= 1
+            _ -> assertFailure "missing model diagnostic array"
+        _ -> assertFailure "missing diagnostic document"
+    _ -> assertFailure "expected a Validate result document"
 
 qualificationSubjectsMachineFailure :: Assertion
 qualificationSubjectsMachineFailure = do

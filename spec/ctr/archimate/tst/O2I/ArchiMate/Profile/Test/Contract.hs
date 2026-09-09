@@ -89,7 +89,7 @@ descriptorTest =
     Profile.profileDescriptorNotation descriptor @?= "archimate-3.2"
     Profile.profileDescriptorAdapterIds descriptor @?= ["amx"]
     Profile.profileDescriptorContractDigest descriptor
-      @?= "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+      @?= "be8204d09d6dae8eda1fe6969d1bea62e3b35419108474ea8af177bb9030a3da"
 
 mappingTest :: TestTree
 mappingTest =
@@ -306,7 +306,7 @@ closureDeterminismTest =
   where
     provenancePrefix =
       "o2i.archimate-profile|"
-        <> "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081|"
+        <> "be8204d09d6dae8eda1fe6969d1bea62e3b35419108474ea8af177bb9030a3da|"
     activationSuffixes =
       [ "graph|classification.graph.activate.carrier|record:1|record:1|carrier:context"
       , "graph|classification.graph.activate.committed-element|record:1|record:1|reserved-placement:o2i.commitment"
@@ -945,7 +945,7 @@ unmarkedDisplayedElementTest =
   where
     stableConceptProvenance trigger =
       "o2i.archimate-profile|"
-        <> "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081|"
+        <> "be8204d09d6dae8eda1fe6969d1bea62e3b35419108474ea8af177bb9030a3da|"
         <> "graph|graph.stable-concept|"
         <> trigger
         <> "|record:1|"

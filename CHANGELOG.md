@@ -80,6 +80,7 @@
 
 ### Changed
 
+- Represent Strategy Diagnosis, Intent, and Guiding Policy as nonempty sets of distinct Primitive identities, with per-member semantic coverage and provenance-bearing diagnostics. Collective Fit references the complete target Guiding Policy; Trace validation follows constituent membership. Supplemental inputs use arrays without a scalar compatibility format.
 - Decoupled the public Core `SemanticallyValidModel` proof from optional Strategy-formulation and collective-Fit assessments, replaced `acceptedSemanticModel` with total `semanticallyValidModel`, and retained optional proof projections on `SemanticAssessment`.
 - Bound each opaque Core selected-View scope to the exact identity-resolved View subject carried by the Profile projection, retained that identity through Structure and Semantics, and rejected unknown or mismatched selected-View subjects before graph construction.
 - Retained every real Adapter-owned Notation rejection beneath its exact prepared authority and one complete statically compiled kind-to-rule inventory, generated the closed per-kind occurrence, value, or reference evidence alternatives, classified supplemental Binding diagnostics as process failures, accumulated all independently decoded source failures before set assessment, and split complete supplemental admission before Structure from exact-once continuation binding after accepted Structure.

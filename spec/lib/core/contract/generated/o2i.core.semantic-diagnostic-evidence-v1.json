@@ -6,14 +6,14 @@
   },
   "companions": {
     "semantics": {
-      "schema": "o2i.core-semantics/target-v46",
-      "rawSha256": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333",
-      "shapeSha256": "3e091e8bc0fd3a887da02f8591292c2a8ea7d64c7e83951183ab71fe4f5b1278"
+      "schema": "o2i.core-semantics/target-v47",
+      "rawSha256": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5",
+      "shapeSha256": "75ac10aed2730bdb154d166fcb8034f206d4822285b76a45d0ba966bf2265969"
     },
     "semanticDiagnosticEvidence": {
       "schema": "o2i.core-semantic-diagnostic-evidence/v1",
-      "rawSha256": "b44fda86659ee55e8de434de0ddc8c44be11ee5c10d0025e18b476e00f59ba0e",
-      "shapeSha256": "bd450f3299730cbac912d7e7239f8d890486252c6abf7a2c1f6189ce7bf77424"
+      "rawSha256": "8f752908c052ab9323418740d6bb1f8fcd9ec12e13af0c46e6bde8477d089d54",
+      "shapeSha256": "79eae313c8658a1cf760687c115e31e9e2fce1bb36c7dff1c0504578f4f1a5be"
     }
   },
   "diagnostics": [
@@ -344,27 +344,28 @@
       },
       "occurrenceEvidence": [
         {
-          "roleId": "owned-diagnosis",
-          "cardinality": "zero-or-more"
+          "roleId": "listed-diagnosis",
+          "cardinality": "one-or-more"
         }
       ]
     },
     {
       "ruleId": "core.strategy-formulation.diagnosis-grounding",
       "subjectEvidence": {
-        "schema": "StrategyKey",
+        "schema": "StrategyMemberKey",
         "fields": [
-          "strategy"
+          "strategy",
+          "member"
         ]
       },
       "occurrenceEvidence": [
         {
-          "roleId": "diagnosis",
+          "roleId": "ungrounding-diagnosis",
           "cardinality": "one"
         },
         {
-          "roleId": "intent",
-          "cardinality": "one"
+          "roleId": "listed-intent",
+          "cardinality": "one-or-more"
         }
       ]
     },
@@ -378,8 +379,8 @@
       },
       "occurrenceEvidence": [
         {
-          "roleId": "owned-guiding-policy",
-          "cardinality": "zero-or-more"
+          "roleId": "listed-guiding-policy",
+          "cardinality": "one-or-more"
         }
       ]
     },
@@ -394,12 +395,12 @@
       },
       "occurrenceEvidence": [
         {
-          "roleId": "guiding-policy",
+          "roleId": "unguided-action",
           "cardinality": "one"
         },
         {
-          "roleId": "action",
-          "cardinality": "one"
+          "roleId": "listed-guiding-policy",
+          "cardinality": "one-or-more"
         }
       ]
     },
@@ -413,8 +414,48 @@
       },
       "occurrenceEvidence": [
         {
-          "roleId": "owned-intent",
-          "cardinality": "zero-or-more"
+          "roleId": "listed-intent",
+          "cardinality": "one-or-more"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.strategy-formulation.intent-grounding",
+      "subjectEvidence": {
+        "schema": "StrategyMemberKey",
+        "fields": [
+          "strategy",
+          "member"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "ungrounded-intent",
+          "cardinality": "one"
+        },
+        {
+          "roleId": "listed-diagnosis",
+          "cardinality": "one-or-more"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.strategy-formulation.intent-substantiation",
+      "subjectEvidence": {
+        "schema": "StrategyMemberKey",
+        "fields": [
+          "strategy",
+          "member"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "unsubstantiated-intent",
+          "cardinality": "one"
+        },
+        {
+          "roleId": "listed-key-result",
+          "cardinality": "one-or-more"
         }
       ]
     },
@@ -429,12 +470,12 @@
       },
       "occurrenceEvidence": [
         {
-          "roleId": "key-result",
+          "roleId": "unsubstantiating-key-result",
           "cardinality": "one"
         },
         {
-          "roleId": "intent",
-          "cardinality": "one"
+          "roleId": "listed-intent",
+          "cardinality": "one-or-more"
         }
       ]
     },
@@ -456,15 +497,16 @@
     {
       "ruleId": "core.strategy-formulation.vision-orientation",
       "subjectEvidence": {
-        "schema": "StrategyKey",
+        "schema": "StrategyMemberKey",
         "fields": [
-          "strategy"
+          "strategy",
+          "member"
         ]
       },
       "occurrenceEvidence": [
         {
-          "roleId": "observed-vision-orientation",
-          "cardinality": "zero"
+          "roleId": "unoriented-intent",
+          "cardinality": "one"
         }
       ]
     }

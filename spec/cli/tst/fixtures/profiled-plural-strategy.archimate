@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<a:model xmlns:a="http://www.archimatetool.com/archimate" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="plural-model" name="Distributed strategy constituents" version="5.0.0">
+  <property key="o2i.profile" value="o2i.archimate-profile@0.3"/>
+  <folder id="elements" type="motivation">
+    <element xsi:type="a:Grouping" id="ethos" name="ethos">
+      <property key="o2i.type" value="Ethos"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:Grouping" id="mission" name="mission">
+      <property key="o2i.type" value="Mission"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:Grouping" id="vision" name="vision">
+      <property key="o2i.type" value="Vision"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:Grouping" id="strategy" name="strategy">
+      <property key="o2i.type" value="Strategy"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:Principle" id="ethos-principle" name="ethos-principle">
+      <property key="o2i.type" value="Principle"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:Driver" id="mission-driver" name="mission-driver">
+      <property key="o2i.type" value="Driver"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:Goal" id="vision-objective" name="vision-objective">
+      <property key="o2i.type" value="Objective"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:Driver" id="driver-1" name="driver-1">
+      <property key="o2i.type" value="Driver"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:Goal" id="objective-1" name="objective-1">
+      <property key="o2i.type" value="Objective"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:Principle" id="principle-1" name="principle-1">
+      <property key="o2i.type" value="Principle"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:CourseOfAction" id="action-1" name="action-1">
+      <property key="o2i.type" value="Action"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:Outcome" id="key-result-1" name="key-result-1">
+      <property key="o2i.type" value="KeyResult"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:Driver" id="driver-2" name="driver-2">
+      <property key="o2i.type" value="Driver"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:Goal" id="objective-2" name="objective-2">
+      <property key="o2i.type" value="Objective"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:Principle" id="principle-2" name="principle-2">
+      <property key="o2i.type" value="Principle"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:CourseOfAction" id="action-2" name="action-2">
+      <property key="o2i.type" value="Action"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:Outcome" id="key-result-2" name="key-result-2">
+      <property key="o2i.type" value="KeyResult"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+  </folder>
+  <folder id="relations" type="relations">
+    <element xsi:type="a:CompositionRelationship" id="ethos-ownership" name="contextualizes" source="ethos" target="ethos-principle">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:CompositionRelationship" id="mission-ownership" name="contextualizes" source="mission" target="mission-driver">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:CompositionRelationship" id="vision-ownership" name="contextualizes" source="vision" target="vision-objective">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:CompositionRelationship" id="driver-1-ownership" name="contextualizes" source="strategy" target="driver-1">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:CompositionRelationship" id="objective-1-ownership" name="contextualizes" source="strategy" target="objective-1">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:CompositionRelationship" id="principle-1-ownership" name="contextualizes" source="strategy" target="principle-1">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:CompositionRelationship" id="action-1-ownership" name="contextualizes" source="strategy" target="action-1">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:CompositionRelationship" id="key-result-1-ownership" name="contextualizes" source="strategy" target="key-result-1">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:CompositionRelationship" id="driver-2-ownership" name="contextualizes" source="strategy" target="driver-2">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:CompositionRelationship" id="objective-2-ownership" name="contextualizes" source="strategy" target="objective-2">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:CompositionRelationship" id="principle-2-ownership" name="contextualizes" source="strategy" target="principle-2">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:CompositionRelationship" id="action-2-ownership" name="contextualizes" source="strategy" target="action-2">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:CompositionRelationship" id="key-result-2-ownership" name="contextualizes" source="strategy" target="key-result-2">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:AssociationRelationship" id="ethos-guides-mission" name="guides" source="ethos" target="mission" directed="true">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:AssociationRelationship" id="ethos-guides-vision" name="guides" source="ethos" target="vision" directed="true">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:AssociationRelationship" id="mission-grounds-vision" name="grounds" source="mission" target="vision" directed="true">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:AssociationRelationship" id="vision-orients-strategy" name="orients" source="vision" target="strategy" directed="true">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:AssociationRelationship" id="ethos-principle-guides-mission" name="guides" source="ethos-principle" target="mission-driver" directed="true">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:AssociationRelationship" id="ethos-principle-guides-vision" name="guides" source="ethos-principle" target="vision-objective" directed="true">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:AssociationRelationship" id="mission-driver-grounds-vision" name="grounds" source="mission-driver" target="vision-objective" directed="true">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:AssociationRelationship" id="orients-1" name="orients" source="vision-objective" target="objective-1" directed="true">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:AssociationRelationship" id="grounds-1" name="grounds" source="driver-1" target="objective-1" directed="true">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:AssociationRelationship" id="guides-1" name="guides" source="principle-1" target="action-1" directed="true">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:AssociationRelationship" id="contributes-1" name="contributes-to" source="action-1" target="key-result-1" directed="true">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:RealizationRelationship" id="substantiates-1" name="substantiates" source="key-result-1" target="objective-1">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:AssociationRelationship" id="orients-2" name="orients" source="vision-objective" target="objective-2" directed="true">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:AssociationRelationship" id="grounds-2" name="grounds" source="driver-2" target="objective-2" directed="true">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:AssociationRelationship" id="guides-2" name="guides" source="principle-2" target="action-2" directed="true">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:AssociationRelationship" id="contributes-2" name="contributes-to" source="action-2" target="key-result-2" directed="true">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="a:RealizationRelationship" id="substantiates-2" name="substantiates" source="key-result-2" target="objective-2">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+  </folder>
+  <folder id="views" type="diagrams">
+    <element xsi:type="a:ArchimateDiagramModel" id="plural-view" name="Plural strategy">
+      <child xsi:type="a:DiagramObject" id="ethos-node" archimateElement="ethos">
+        <sourceConnection xsi:type="a:Connection" id="ethos-ownership-connection" archimateRelationship="ethos-ownership" source="ethos-node" target="ethos-principle-node"/>
+        <sourceConnection xsi:type="a:Connection" id="ethos-guides-mission-connection" archimateRelationship="ethos-guides-mission" source="ethos-node" target="mission-node"/>
+        <sourceConnection xsi:type="a:Connection" id="ethos-guides-vision-connection" archimateRelationship="ethos-guides-vision" source="ethos-node" target="vision-node"/>
+      </child>
+      <child xsi:type="a:DiagramObject" id="mission-node" archimateElement="mission">
+        <sourceConnection xsi:type="a:Connection" id="mission-ownership-connection" archimateRelationship="mission-ownership" source="mission-node" target="mission-driver-node"/>
+        <sourceConnection xsi:type="a:Connection" id="mission-grounds-vision-connection" archimateRelationship="mission-grounds-vision" source="mission-node" target="vision-node"/>
+      </child>
+      <child xsi:type="a:DiagramObject" id="vision-node" archimateElement="vision">
+        <sourceConnection xsi:type="a:Connection" id="vision-ownership-connection" archimateRelationship="vision-ownership" source="vision-node" target="vision-objective-node"/>
+        <sourceConnection xsi:type="a:Connection" id="vision-orients-strategy-connection" archimateRelationship="vision-orients-strategy" source="vision-node" target="strategy-node"/>
+      </child>
+      <child xsi:type="a:DiagramObject" id="strategy-node" archimateElement="strategy">
+        <sourceConnection xsi:type="a:Connection" id="driver-1-ownership-connection" archimateRelationship="driver-1-ownership" source="strategy-node" target="driver-1-node"/>
+        <sourceConnection xsi:type="a:Connection" id="objective-1-ownership-connection" archimateRelationship="objective-1-ownership" source="strategy-node" target="objective-1-node"/>
+        <sourceConnection xsi:type="a:Connection" id="principle-1-ownership-connection" archimateRelationship="principle-1-ownership" source="strategy-node" target="principle-1-node"/>
+        <sourceConnection xsi:type="a:Connection" id="action-1-ownership-connection" archimateRelationship="action-1-ownership" source="strategy-node" target="action-1-node"/>
+        <sourceConnection xsi:type="a:Connection" id="key-result-1-ownership-connection" archimateRelationship="key-result-1-ownership" source="strategy-node" target="key-result-1-node"/>
+        <sourceConnection xsi:type="a:Connection" id="driver-2-ownership-connection" archimateRelationship="driver-2-ownership" source="strategy-node" target="driver-2-node"/>
+        <sourceConnection xsi:type="a:Connection" id="objective-2-ownership-connection" archimateRelationship="objective-2-ownership" source="strategy-node" target="objective-2-node"/>
+        <sourceConnection xsi:type="a:Connection" id="principle-2-ownership-connection" archimateRelationship="principle-2-ownership" source="strategy-node" target="principle-2-node"/>
+        <sourceConnection xsi:type="a:Connection" id="action-2-ownership-connection" archimateRelationship="action-2-ownership" source="strategy-node" target="action-2-node"/>
+        <sourceConnection xsi:type="a:Connection" id="key-result-2-ownership-connection" archimateRelationship="key-result-2-ownership" source="strategy-node" target="key-result-2-node"/>
+      </child>
+      <child xsi:type="a:DiagramObject" id="ethos-principle-node" archimateElement="ethos-principle">
+        <sourceConnection xsi:type="a:Connection" id="ethos-principle-guides-mission-connection" archimateRelationship="ethos-principle-guides-mission" source="ethos-principle-node" target="mission-driver-node"/>
+        <sourceConnection xsi:type="a:Connection" id="ethos-principle-guides-vision-connection" archimateRelationship="ethos-principle-guides-vision" source="ethos-principle-node" target="vision-objective-node"/>
+      </child>
+      <child xsi:type="a:DiagramObject" id="mission-driver-node" archimateElement="mission-driver">
+        <sourceConnection xsi:type="a:Connection" id="mission-driver-grounds-vision-connection" archimateRelationship="mission-driver-grounds-vision" source="mission-driver-node" target="vision-objective-node"/>
+      </child>
+      <child xsi:type="a:DiagramObject" id="vision-objective-node" archimateElement="vision-objective">
+        <sourceConnection xsi:type="a:Connection" id="orients-1-connection" archimateRelationship="orients-1" source="vision-objective-node" target="objective-1-node"/>
+        <sourceConnection xsi:type="a:Connection" id="orients-2-connection" archimateRelationship="orients-2" source="vision-objective-node" target="objective-2-node"/>
+      </child>
+      <child xsi:type="a:DiagramObject" id="driver-1-node" archimateElement="driver-1">
+        <sourceConnection xsi:type="a:Connection" id="grounds-1-connection" archimateRelationship="grounds-1" source="driver-1-node" target="objective-1-node"/>
+      </child>
+      <child xsi:type="a:DiagramObject" id="objective-1-node" archimateElement="objective-1">
+      </child>
+      <child xsi:type="a:DiagramObject" id="principle-1-node" archimateElement="principle-1">
+        <sourceConnection xsi:type="a:Connection" id="guides-1-connection" archimateRelationship="guides-1" source="principle-1-node" target="action-1-node"/>
+      </child>
+      <child xsi:type="a:DiagramObject" id="action-1-node" archimateElement="action-1">
+        <sourceConnection xsi:type="a:Connection" id="contributes-1-connection" archimateRelationship="contributes-1" source="action-1-node" target="key-result-1-node"/>
+      </child>
+      <child xsi:type="a:DiagramObject" id="key-result-1-node" archimateElement="key-result-1">
+        <sourceConnection xsi:type="a:Connection" id="substantiates-1-connection" archimateRelationship="substantiates-1" source="key-result-1-node" target="objective-1-node"/>
+      </child>
+      <child xsi:type="a:DiagramObject" id="driver-2-node" archimateElement="driver-2">
+        <sourceConnection xsi:type="a:Connection" id="grounds-2-connection" archimateRelationship="grounds-2" source="driver-2-node" target="objective-2-node"/>
+      </child>
+      <child xsi:type="a:DiagramObject" id="objective-2-node" archimateElement="objective-2">
+      </child>
+      <child xsi:type="a:DiagramObject" id="principle-2-node" archimateElement="principle-2">
+        <sourceConnection xsi:type="a:Connection" id="guides-2-connection" archimateRelationship="guides-2" source="principle-2-node" target="action-2-node"/>
+      </child>
+      <child xsi:type="a:DiagramObject" id="action-2-node" archimateElement="action-2">
+        <sourceConnection xsi:type="a:Connection" id="contributes-2-connection" archimateRelationship="contributes-2" source="action-2-node" target="key-result-2-node"/>
+      </child>
+      <child xsi:type="a:DiagramObject" id="key-result-2-node" archimateElement="key-result-2">
+        <sourceConnection xsi:type="a:Connection" id="substantiates-2-connection" archimateRelationship="substantiates-2" source="key-result-2-node" target="objective-2-node"/>
+      </child>
+    </element>
+  </folder>
+</a:model>

@@ -144,7 +144,7 @@ qualificationSubjectsMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "ae3370f663f94af6f32ab9b3b5b736a6df8cc4ca283d5b056a5e489f0c96fa85"
+                "f0a1504ccfd1d3fb130401b4cbe98cf4b4e5209cdb33fc039878f3440f1ad740"
           }
     , machineSchemaVariantsValue =
         qualificationSubjectsPrerequisiteRejectedVariant
@@ -193,7 +193,7 @@ validateResultMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "20b7ff7a2058a2529daba19354928eb35d5a334c2f31cc2011a80acf5b8fe4c3"
+                "7b11dbede900d8fee69043f7eae370f3615aadfd2466b45ff6692a1ac13f42b6"
           }
     , machineSchemaVariantsValue =
         notationValidationAcceptedVariant
@@ -226,7 +226,7 @@ traceResultMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "4071317b5446643d5cbf0384ea3b3b0fb2c7db4bd9d5e3fae8fad28b50bd7bd2"
+                "c569a6270698d421cde569f003171c1ce46934f9d054cde97744ce7dbe89abc9"
           }
     , machineSchemaVariantsValue =
         tracePrerequisiteRejectedVariant
@@ -250,7 +250,7 @@ qualifyResultMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "a31ab4971f10ef68763e00fa0532d626bce45cd937523279813afd000fad5dfa"
+                "10d041e4415ab98bcdbcb21b8d6978756a72fb701f21ef82a74af716c39f82c7"
           }
     , machineSchemaVariantsValue =
         qualifyPrerequisiteRejectedVariant :| [qualifyCompletedVariant]
@@ -280,7 +280,7 @@ readinessResultMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "fac7a120baf1ecfd1b889bd65deb8067bb2eb5acb5c473b10a701f24edfc9352"
+                "b70dc65ba4bedbb5bfc28e322d83209abf3fda4ea861f5f7089f5106ebf141c0"
           }
     , machineSchemaVariantsValue =
         readinessPrerequisiteRejectedVariant
@@ -314,7 +314,7 @@ assessResultMachineSchema =
           , schemaAuthorityVersionValue = SchemaVersion 1
           , schemaAuthorityDigestValue =
               SchemaDigest
-                "0e0a6339678509db305ca174583c0ca187ebd96c79fd45fa11a0d5167445d1e7"
+                "0d20115a25f2b1d0a6ecffcbe5cfd5e5858343ee9e43f571f6ba9a9206a9eaf7"
           }
     , machineSchemaVariantsValue =
         assessPrerequisiteRejectedVariant
@@ -389,5 +389,5 @@ diagnosticSchemaAuthority =
     , schemaAuthorityVersionValue = SchemaVersion 2
     , schemaAuthorityDigestValue =
         SchemaDigest
-          "ff4e550795d72b8cfbd2502d146266512623d0f1801fc6e3f1ce807b85167788"
+          "b187b2d429347474ba28d02bd73c173c508209636f950a054832926a5fc37121"
     }

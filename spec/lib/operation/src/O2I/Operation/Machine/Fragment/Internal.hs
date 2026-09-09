@@ -826,36 +826,21 @@ semanticDiagnosticEliminator wrap =
             , occurrences "listed-action" (NonEmpty.toList values)
             ]
     , Semantics.eliminateStrategyFormulationDiagnosis =
-        strategyMany "owned-diagnosis"
+        strategyMany "listed-diagnosis"
     , Semantics.eliminateStrategyFormulationDiagnosisGrounding =
-        \strategy diagnosis intent ->
-          exact
-            "StrategyKey"
-            [ model "strategy" strategy
-            , occurrences "diagnosis" [diagnosis]
-            , occurrences "intent" [intent]
-            ]
+        strategySupport "ungrounding-diagnosis" "listed-intent"
     , Semantics.eliminateStrategyFormulationGuidingPolicy =
-        strategyMany "owned-guiding-policy"
+        strategyMany "listed-guiding-policy"
     , Semantics.eliminateStrategyFormulationGuidingPolicyActions =
-        \strategy member policy action ->
-          exact
-            "StrategyMemberKey"
-            [ model "strategy" strategy
-            , model "member" member
-            , occurrences "guiding-policy" [policy]
-            , occurrences "action" [action]
-            ]
-    , Semantics.eliminateStrategyFormulationIntent = strategyMany "owned-intent"
+        strategySupport "unguided-action" "listed-guiding-policy"
+    , Semantics.eliminateStrategyFormulationIntent =
+        strategyMany "listed-intent"
+    , Semantics.eliminateStrategyFormulationIntentGrounding =
+        strategySupport "ungrounded-intent" "listed-diagnosis"
+    , Semantics.eliminateStrategyFormulationIntentSubstantiation =
+        strategySupport "unsubstantiated-intent" "listed-key-result"
     , Semantics.eliminateStrategyFormulationKeyResultSubstantiation =
-        \strategy member keyResult intent ->
-          exact
-            "StrategyMemberKey"
-            [ model "strategy" strategy
-            , model "member" member
-            , occurrences "key-result" [keyResult]
-            , occurrences "intent" [intent]
-            ]
+        strategySupport "unsubstantiating-key-result" "listed-intent"
     , Semantics.eliminateStrategyFormulationKeyResults =
         \strategy values ->
           exact
@@ -864,12 +849,7 @@ semanticDiagnosticEliminator wrap =
             , occurrences "listed-key-result" (NonEmpty.toList values)
             ]
     , Semantics.eliminateStrategyFormulationVisionOrientation =
-        \strategy ->
-          exact
-            "StrategyKey"
-            [ model "strategy" strategy
-            , occurrences "observed-vision-orientation" []
-            ]
+        strategyMember "unoriented-intent"
     }
   where
     exact kind fields = wrap kind (evidenceFragment [] fields)
@@ -893,7 +873,17 @@ semanticDiagnosticEliminator wrap =
         , occurrences role [occurrence]
         ]
     strategyMany role strategy values =
-      exact "StrategyKey" [model "strategy" strategy, occurrences role values]
+      exact
+        "StrategyKey"
+        [model "strategy" strategy, occurrences role (NonEmpty.toList values)]
+    strategySupport memberRole supportRole strategy member occurrence support =
+      exact
+        "StrategyMemberKey"
+        [ model "strategy" strategy
+        , model "member" member
+        , occurrences memberRole [occurrence]
+        , occurrences supportRole (NonEmpty.toList support)
+        ]
 
 supplementalGroupMember ::
      SupplementalDiagnosticGroup authority profile document -> CanonicalMember

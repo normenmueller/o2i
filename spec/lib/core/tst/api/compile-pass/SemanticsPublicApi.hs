@@ -90,7 +90,7 @@ diagnosticValues = foldSemanticDiagnosticEvidence eliminator
             \strategy values -> "actions" : model strategy : occurrences values
         , eliminateStrategyFormulationDiagnosis = many "diagnosis"
         , eliminateStrategyFormulationDiagnosisGrounding =
-            pair "diagnosis-grounding"
+            memberPair "diagnosis-grounding"
         , eliminateStrategyFormulationGuidingPolicy = many "guiding-policy"
         , eliminateStrategyFormulationGuidingPolicyActions =
             memberPair "guiding-policy-actions"
@@ -101,7 +101,11 @@ diagnosticValues = foldSemanticDiagnosticEvidence eliminator
             \strategy values ->
               "key-results" : model strategy : occurrences values
         , eliminateStrategyFormulationVisionOrientation =
-            one "vision-orientation"
+            member "vision-orientation"
+        , eliminateStrategyFormulationIntentGrounding =
+            memberPair "intent-grounding"
+        , eliminateStrategyFormulationIntentSubstantiation =
+            memberPair "intent-substantiation"
         }
     model = modelIdentityText
     item = occurrenceIdentityText
@@ -110,11 +114,9 @@ diagnosticValues = foldSemanticDiagnosticEvidence eliminator
     member tag owner owned occurrence =
       [tag, model owner, model owned, item occurrence]
     one tag identity = [tag, model identity]
-    many tag identity values = tag : model identity : map item values
-    pair tag identity first second =
-      [tag, model identity, item first, item second]
+    many tag identity values = tag : model identity : occurrences values
     memberPair tag owner owned first second =
-      [tag, model owner, model owned, item first, item second]
+      [tag, model owner, model owned, item first] ++ occurrences second
 
 collectiveComponents ::
      CollectiveStrategyRealizationAssessment scope

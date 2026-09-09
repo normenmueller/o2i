@@ -10,7 +10,7 @@
       "invalid-enum"
     ],
     "shapeDigestAlgorithm": "sha256-of-canonical-JSON-pointer-kind-and-exact-object-member-manifest-excluding-this-shapeSha256-member",
-    "shapeSha256": "bd450f3299730cbac912d7e7239f8d890486252c6abf7a2c1f6189ce7bf77424"
+    "shapeSha256": "79eae313c8658a1cf760687c115e31e9e2fce1bb36c7dff1c0504578f4f1a5be"
   },
   "schema": "o2i.core-semantic-diagnostic-evidence/v1",
   "coreIdentity": {
@@ -18,9 +18,9 @@
     "version": "0.3.0"
   },
   "semanticsCompanion": {
-    "schema": "o2i.core-semantics/target-v46",
-    "rawSha256": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333",
-    "shapeSha256": "3e091e8bc0fd3a887da02f8591292c2a8ea7d64c7e83951183ab71fe4f5b1278"
+    "schema": "o2i.core-semantics/target-v47",
+    "rawSha256": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5",
+    "shapeSha256": "75ac10aed2730bdb154d166fcb8034f206d4822285b76a45d0ba966bf2265969"
   },
   "additionalEvidenceKeySchemas": {
     "AssertedDependencyKey": [
@@ -101,31 +101,39 @@
       {"roleId": "listed-action", "cardinality": "one-or-more"}
     ],
     "core.strategy-formulation.diagnosis": [
-      {"roleId": "owned-diagnosis", "cardinality": "zero-or-more"}
+      {"roleId": "listed-diagnosis", "cardinality": "one-or-more"}
     ],
     "core.strategy-formulation.diagnosis-grounding": [
-      {"roleId": "diagnosis", "cardinality": "one"},
-      {"roleId": "intent", "cardinality": "one"}
+      {"roleId": "ungrounding-diagnosis", "cardinality": "one"},
+      {"roleId": "listed-intent", "cardinality": "one-or-more"}
     ],
     "core.strategy-formulation.guiding-policy": [
-      {"roleId": "owned-guiding-policy", "cardinality": "zero-or-more"}
+      {"roleId": "listed-guiding-policy", "cardinality": "one-or-more"}
     ],
     "core.strategy-formulation.guiding-policy-actions": [
-      {"roleId": "guiding-policy", "cardinality": "one"},
-      {"roleId": "action", "cardinality": "one"}
+      {"roleId": "unguided-action", "cardinality": "one"},
+      {"roleId": "listed-guiding-policy", "cardinality": "one-or-more"}
     ],
     "core.strategy-formulation.intent": [
-      {"roleId": "owned-intent", "cardinality": "zero-or-more"}
+      {"roleId": "listed-intent", "cardinality": "one-or-more"}
+    ],
+    "core.strategy-formulation.intent-grounding": [
+      {"roleId": "ungrounded-intent", "cardinality": "one"},
+      {"roleId": "listed-diagnosis", "cardinality": "one-or-more"}
+    ],
+    "core.strategy-formulation.intent-substantiation": [
+      {"roleId": "unsubstantiated-intent", "cardinality": "one"},
+      {"roleId": "listed-key-result", "cardinality": "one-or-more"}
     ],
     "core.strategy-formulation.key-result-substantiation": [
-      {"roleId": "key-result", "cardinality": "one"},
-      {"roleId": "intent", "cardinality": "one"}
+      {"roleId": "unsubstantiating-key-result", "cardinality": "one"},
+      {"roleId": "listed-intent", "cardinality": "one-or-more"}
     ],
     "core.strategy-formulation.key-results": [
       {"roleId": "listed-key-result", "cardinality": "one-or-more"}
     ],
     "core.strategy-formulation.vision-orientation": [
-      {"roleId": "observed-vision-orientation", "cardinality": "zero"}
+      {"roleId": "unoriented-intent", "cardinality": "one"}
     ]
   }
 }

@@ -18,19 +18,19 @@ contractVersion = "0.3.0"
 
 contractSha256 :: Text
 contractSha256 =
-  "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333"
+  "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
 
 contractShapeSha256 :: Text
 contractShapeSha256 =
-  "3e091e8bc0fd3a887da02f8591292c2a8ea7d64c7e83951183ab71fe4f5b1278"
+  "75ac10aed2730bdb154d166fcb8034f206d4822285b76a45d0ba966bf2265969"
 
 diagnosticContractSha256 :: Text
 diagnosticContractSha256 =
-  "b44fda86659ee55e8de434de0ddc8c44be11ee5c10d0025e18b476e00f59ba0e"
+  "8f752908c052ab9323418740d6bb1f8fcd9ec12e13af0c46e6bde8477d089d54"
 
 diagnosticContractShapeSha256 :: Text
 diagnosticContractShapeSha256 =
-  "bd450f3299730cbac912d7e7239f8d890486252c6abf7a2c1f6189ce7bf77424"
+  "79eae313c8658a1cf760687c115e31e9e2fce1bb36c7dff1c0504578f4f1a5be"
 
 data GeneratedCarrierCategory
   = GeneratedCarrierContext
@@ -1238,6 +1238,8 @@ data GeneratedSemanticRuleIdentity
   | StrategyFormulationGuidingPolicyRuleIdentity
   | StrategyFormulationGuidingPolicyActionsRuleIdentity
   | StrategyFormulationIntentRuleIdentity
+  | StrategyFormulationIntentGroundingRuleIdentity
+  | StrategyFormulationIntentSubstantiationRuleIdentity
   | StrategyFormulationKeyResultSubstantiationRuleIdentity
   | StrategyFormulationKeyResultsRuleIdentity
   | StrategyFormulationPositioningRuleIdentity
@@ -1313,6 +1315,10 @@ generatedSemanticRuleIdentityText value =
     StrategyFormulationGuidingPolicyActionsRuleIdentity ->
       "core.strategy-formulation.guiding-policy-actions"
     StrategyFormulationIntentRuleIdentity -> "core.strategy-formulation.intent"
+    StrategyFormulationIntentGroundingRuleIdentity ->
+      "core.strategy-formulation.intent-grounding"
+    StrategyFormulationIntentSubstantiationRuleIdentity ->
+      "core.strategy-formulation.intent-substantiation"
     StrategyFormulationKeyResultSubstantiationRuleIdentity ->
       "core.strategy-formulation.key-result-substantiation"
     StrategyFormulationKeyResultsRuleIdentity ->
@@ -1364,6 +1370,8 @@ generatedSemanticRuleIdentities =
        , StrategyFormulationGuidingPolicyRuleIdentity
        , StrategyFormulationGuidingPolicyActionsRuleIdentity
        , StrategyFormulationIntentRuleIdentity
+       , StrategyFormulationIntentGroundingRuleIdentity
+       , StrategyFormulationIntentSubstantiationRuleIdentity
        , StrategyFormulationKeyResultSubstantiationRuleIdentity
        , StrategyFormulationKeyResultsRuleIdentity
        , StrategyFormulationPositioningRuleIdentity
@@ -1455,6 +1463,8 @@ data GeneratedSemanticOccurrenceSchema
   | StrategyFormulationGuidingPolicyOccurrenceSchema
   | StrategyFormulationGuidingPolicyActionsOccurrenceSchema
   | StrategyFormulationIntentOccurrenceSchema
+  | StrategyFormulationIntentGroundingOccurrenceSchema
+  | StrategyFormulationIntentSubstantiationOccurrenceSchema
   | StrategyFormulationKeyResultSubstantiationOccurrenceSchema
   | StrategyFormulationKeyResultsOccurrenceSchema
   | StrategyFormulationVisionOrientationOccurrenceSchema
@@ -1560,35 +1570,47 @@ data GeneratedSemanticOccurrenceEvidence (schema :: GeneratedSemanticOccurrenceS
          'StrategyFormulationActionsOccurrenceSchema
          occurrence
   StrategyFormulationDiagnosisOccurrences
-    :: ![occurrence]
+    :: !(NonEmpty occurrence)
     -> GeneratedSemanticOccurrenceEvidence
          'StrategyFormulationDiagnosisOccurrenceSchema
          occurrence
   StrategyFormulationDiagnosisGroundingOccurrences
     :: !occurrence
-    -> !occurrence
+    -> !(NonEmpty occurrence)
     -> GeneratedSemanticOccurrenceEvidence
          'StrategyFormulationDiagnosisGroundingOccurrenceSchema
          occurrence
   StrategyFormulationGuidingPolicyOccurrences
-    :: ![occurrence]
+    :: !(NonEmpty occurrence)
     -> GeneratedSemanticOccurrenceEvidence
          'StrategyFormulationGuidingPolicyOccurrenceSchema
          occurrence
   StrategyFormulationGuidingPolicyActionsOccurrences
     :: !occurrence
-    -> !occurrence
+    -> !(NonEmpty occurrence)
     -> GeneratedSemanticOccurrenceEvidence
          'StrategyFormulationGuidingPolicyActionsOccurrenceSchema
          occurrence
   StrategyFormulationIntentOccurrences
-    :: ![occurrence]
+    :: !(NonEmpty occurrence)
     -> GeneratedSemanticOccurrenceEvidence
          'StrategyFormulationIntentOccurrenceSchema
          occurrence
+  StrategyFormulationIntentGroundingOccurrences
+    :: !occurrence
+    -> !(NonEmpty occurrence)
+    -> GeneratedSemanticOccurrenceEvidence
+         'StrategyFormulationIntentGroundingOccurrenceSchema
+         occurrence
+  StrategyFormulationIntentSubstantiationOccurrences
+    :: !occurrence
+    -> !(NonEmpty occurrence)
+    -> GeneratedSemanticOccurrenceEvidence
+         'StrategyFormulationIntentSubstantiationOccurrenceSchema
+         occurrence
   StrategyFormulationKeyResultSubstantiationOccurrences
     :: !occurrence
-    -> !occurrence
+    -> !(NonEmpty occurrence)
     -> GeneratedSemanticOccurrenceEvidence
          'StrategyFormulationKeyResultSubstantiationOccurrenceSchema
          occurrence
@@ -1598,7 +1620,8 @@ data GeneratedSemanticOccurrenceEvidence (schema :: GeneratedSemanticOccurrenceS
          'StrategyFormulationKeyResultsOccurrenceSchema
          occurrence
   StrategyFormulationVisionOrientationOccurrences
-    :: GeneratedSemanticOccurrenceEvidence
+    :: !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
          'StrategyFormulationVisionOrientationOccurrenceSchema
          occurrence
 
@@ -1650,21 +1673,30 @@ generatedSemanticOccurrenceEvidenceGroups evidence =
     StrategyFormulationActionsOccurrences occurrence0 ->
       ("listed-action", NonEmpty.toList occurrence0) :| []
     StrategyFormulationDiagnosisOccurrences occurrence0 ->
-      ("owned-diagnosis", occurrence0) :| []
+      ("listed-diagnosis", NonEmpty.toList occurrence0) :| []
     StrategyFormulationDiagnosisGroundingOccurrences occurrence0 occurrence1 ->
-      ("diagnosis", [occurrence0]) :| [("intent", [occurrence1])]
+      ("ungrounding-diagnosis", [occurrence0])
+        :| [("listed-intent", NonEmpty.toList occurrence1)]
     StrategyFormulationGuidingPolicyOccurrences occurrence0 ->
-      ("owned-guiding-policy", occurrence0) :| []
+      ("listed-guiding-policy", NonEmpty.toList occurrence0) :| []
     StrategyFormulationGuidingPolicyActionsOccurrences occurrence0 occurrence1 ->
-      ("guiding-policy", [occurrence0]) :| [("action", [occurrence1])]
+      ("unguided-action", [occurrence0])
+        :| [("listed-guiding-policy", NonEmpty.toList occurrence1)]
     StrategyFormulationIntentOccurrences occurrence0 ->
-      ("owned-intent", occurrence0) :| []
+      ("listed-intent", NonEmpty.toList occurrence0) :| []
+    StrategyFormulationIntentGroundingOccurrences occurrence0 occurrence1 ->
+      ("ungrounded-intent", [occurrence0])
+        :| [("listed-diagnosis", NonEmpty.toList occurrence1)]
+    StrategyFormulationIntentSubstantiationOccurrences occurrence0 occurrence1 ->
+      ("unsubstantiated-intent", [occurrence0])
+        :| [("listed-key-result", NonEmpty.toList occurrence1)]
     StrategyFormulationKeyResultSubstantiationOccurrences occurrence0 occurrence1 ->
-      ("key-result", [occurrence0]) :| [("intent", [occurrence1])]
+      ("unsubstantiating-key-result", [occurrence0])
+        :| [("listed-intent", NonEmpty.toList occurrence1)]
     StrategyFormulationKeyResultsOccurrences occurrence0 ->
       ("listed-key-result", NonEmpty.toList occurrence0) :| []
-    StrategyFormulationVisionOrientationOccurrences ->
-      ("observed-vision-orientation", []) :| []
+    StrategyFormulationVisionOrientationOccurrences occurrence0 ->
+      ("unoriented-intent", [occurrence0]) :| []
 
 data GeneratedSemanticRule (schema :: GeneratedSemanticEvidenceSchema) (occurrenceSchema :: GeneratedSemanticOccurrenceSchema) where
   CollectiveAssertedCollectiveCoverageRule
@@ -1749,7 +1781,7 @@ data GeneratedSemanticRule (schema :: GeneratedSemanticEvidenceSchema) (occurren
          'StrategyFormulationDiagnosisOccurrenceSchema
   StrategyFormulationDiagnosisGroundingRule
     :: GeneratedSemanticRule
-         'GeneratedStrategyKeySchema
+         'GeneratedStrategyMemberKeySchema
          'StrategyFormulationDiagnosisGroundingOccurrenceSchema
   StrategyFormulationGuidingPolicyRule
     :: GeneratedSemanticRule
@@ -1763,6 +1795,14 @@ data GeneratedSemanticRule (schema :: GeneratedSemanticEvidenceSchema) (occurren
     :: GeneratedSemanticRule
          'GeneratedStrategyKeySchema
          'StrategyFormulationIntentOccurrenceSchema
+  StrategyFormulationIntentGroundingRule
+    :: GeneratedSemanticRule
+         'GeneratedStrategyMemberKeySchema
+         'StrategyFormulationIntentGroundingOccurrenceSchema
+  StrategyFormulationIntentSubstantiationRule
+    :: GeneratedSemanticRule
+         'GeneratedStrategyMemberKeySchema
+         'StrategyFormulationIntentSubstantiationOccurrenceSchema
   StrategyFormulationKeyResultSubstantiationRule
     :: GeneratedSemanticRule
          'GeneratedStrategyMemberKeySchema
@@ -1773,7 +1813,7 @@ data GeneratedSemanticRule (schema :: GeneratedSemanticEvidenceSchema) (occurren
          'StrategyFormulationKeyResultsOccurrenceSchema
   StrategyFormulationVisionOrientationRule
     :: GeneratedSemanticRule
-         'GeneratedStrategyKeySchema
+         'GeneratedStrategyMemberKeySchema
          'StrategyFormulationVisionOrientationOccurrenceSchema
 
 generatedSemanticRuleId :: GeneratedSemanticRule schema occurrenceSchema -> Text
@@ -1827,6 +1867,10 @@ generatedSemanticRuleIdentity rule =
     StrategyFormulationGuidingPolicyActionsRule ->
       StrategyFormulationGuidingPolicyActionsRuleIdentity
     StrategyFormulationIntentRule -> StrategyFormulationIntentRuleIdentity
+    StrategyFormulationIntentGroundingRule ->
+      StrategyFormulationIntentGroundingRuleIdentity
+    StrategyFormulationIntentSubstantiationRule ->
+      StrategyFormulationIntentSubstantiationRuleIdentity
     StrategyFormulationKeyResultSubstantiationRule ->
       StrategyFormulationKeyResultSubstantiationRuleIdentity
     StrategyFormulationKeyResultsRule ->
@@ -1867,15 +1911,20 @@ generatedSemanticRuleEvidenceSchema rule =
       GeneratedStrategyMemberKeyWitness
     StrategyFormulationActionsRule -> GeneratedStrategyKeyWitness
     StrategyFormulationDiagnosisRule -> GeneratedStrategyKeyWitness
-    StrategyFormulationDiagnosisGroundingRule -> GeneratedStrategyKeyWitness
+    StrategyFormulationDiagnosisGroundingRule ->
+      GeneratedStrategyMemberKeyWitness
     StrategyFormulationGuidingPolicyRule -> GeneratedStrategyKeyWitness
     StrategyFormulationGuidingPolicyActionsRule ->
       GeneratedStrategyMemberKeyWitness
     StrategyFormulationIntentRule -> GeneratedStrategyKeyWitness
+    StrategyFormulationIntentGroundingRule -> GeneratedStrategyMemberKeyWitness
+    StrategyFormulationIntentSubstantiationRule ->
+      GeneratedStrategyMemberKeyWitness
     StrategyFormulationKeyResultSubstantiationRule ->
       GeneratedStrategyMemberKeyWitness
     StrategyFormulationKeyResultsRule -> GeneratedStrategyKeyWitness
-    StrategyFormulationVisionOrientationRule -> GeneratedStrategyKeyWitness
+    StrategyFormulationVisionOrientationRule ->
+      GeneratedStrategyMemberKeyWitness
 
 data GeneratedSupplementalRuleIdentity
   = GeneratedSupplementalUtf8RuleIdentity
@@ -2081,6 +2130,8 @@ ruleIds =
        , "core.strategy-formulation.guiding-policy"
        , "core.strategy-formulation.guiding-policy-actions"
        , "core.strategy-formulation.intent"
+       , "core.strategy-formulation.intent-grounding"
+       , "core.strategy-formulation.intent-substantiation"
        , "core.strategy-formulation.key-result-substantiation"
        , "core.strategy-formulation.key-results"
        , "core.strategy-formulation.positioning"

@@ -1967,44 +1967,36 @@ consumeHumanSemanticEvidence =
       , HumanDiagnostic.eliminateHumanStrategyFormulationActions =
           nonEmpty "actions"
       , HumanDiagnostic.eliminateHumanStrategyFormulationDiagnosis =
-          many "diagnosis"
+          nonEmpty "diagnosis"
       , HumanDiagnostic.eliminateHumanStrategyFormulationDiagnosisGrounding =
-          pair "diagnosis-grounding"
+          memberSupport "diagnosis-grounding"
       , HumanDiagnostic.eliminateHumanStrategyFormulationGuidingPolicy =
-          many "guiding-policy"
+          nonEmpty "guiding-policy"
       , HumanDiagnostic.eliminateHumanStrategyFormulationGuidingPolicyActions =
-          memberPair "guiding-policy-actions"
-      , HumanDiagnostic.eliminateHumanStrategyFormulationIntent = many "intent"
+          memberSupport "guiding-policy-actions"
+      , HumanDiagnostic.eliminateHumanStrategyFormulationIntent =
+          nonEmpty "intent"
+      , HumanDiagnostic.eliminateHumanStrategyFormulationIntentGrounding =
+          memberSupport "intent-grounding"
+      , HumanDiagnostic.eliminateHumanStrategyFormulationIntentSubstantiation =
+          memberSupport "intent-substantiation"
       , HumanDiagnostic.eliminateHumanStrategyFormulationKeyResultSubstantiation =
-          memberPair "key-result-substantiation"
+          memberSupport "key-result-substantiation"
       , HumanDiagnostic.eliminateHumanStrategyFormulationKeyResults =
           nonEmpty "key-results"
       , HumanDiagnostic.eliminateHumanStrategyFormulationVisionOrientation =
-          model "vision-orientation"
+          member "vision-orientation"
       }
   where
     model branch identity = renderMany [branch, consumeHumanModel identity]
     field branch identity occurrence =
       renderMany
         [branch, consumeHumanModel identity, consumeHumanOccurrence occurrence]
-    many branch identity occurrences =
-      renderMany
-        [ branch
-        , consumeHumanModel identity
-        , renderMany (map consumeHumanOccurrence occurrences)
-        ]
     nonEmpty branch identity occurrences =
       renderMany
         [ branch
         , consumeHumanModel identity
         , renderMany (map consumeHumanOccurrence (NonEmpty.toList occurrences))
-        ]
-    pair branch identity first second =
-      renderMany
-        [ branch
-        , consumeHumanModel identity
-        , consumeHumanOccurrence first
-        , consumeHumanOccurrence second
         ]
     member branch owner owned occurrence =
       renderMany
@@ -2013,13 +2005,13 @@ consumeHumanSemanticEvidence =
         , consumeHumanModel owned
         , consumeHumanOccurrence occurrence
         ]
-    memberPair branch owner owned first second =
+    memberSupport branch owner owned first support =
       renderMany
         [ branch
         , consumeHumanModel owner
         , consumeHumanModel owned
         , consumeHumanOccurrence first
-        , consumeHumanOccurrence second
+        , renderMany (map consumeHumanOccurrence (NonEmpty.toList support))
         ]
     member3 branch owner owned first second third =
       renderMany

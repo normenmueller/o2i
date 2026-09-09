@@ -212,15 +212,25 @@ data SemanticDiagnosticEliminator result = SemanticDiagnosticEliminator
   , eliminateStrategyFormulationActionContributions :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> result
   , eliminateStrategyFormulationActions :: ModelIdentity -> NonEmpty
                                                               OccurrenceIdentity -> result
-  , eliminateStrategyFormulationDiagnosis :: ModelIdentity -> [OccurrenceIdentity] -> result
-  , eliminateStrategyFormulationDiagnosisGrounding :: ModelIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> result
-  , eliminateStrategyFormulationGuidingPolicy :: ModelIdentity -> [OccurrenceIdentity] -> result
-  , eliminateStrategyFormulationGuidingPolicyActions :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> result
-  , eliminateStrategyFormulationIntent :: ModelIdentity -> [OccurrenceIdentity] -> result
-  , eliminateStrategyFormulationKeyResultSubstantiation :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> result
+  , eliminateStrategyFormulationDiagnosis :: ModelIdentity -> NonEmpty
+                                                                OccurrenceIdentity -> result
+  , eliminateStrategyFormulationDiagnosisGrounding :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> NonEmpty
+                                                                                                                OccurrenceIdentity -> result
+  , eliminateStrategyFormulationGuidingPolicy :: ModelIdentity -> NonEmpty
+                                                                    OccurrenceIdentity -> result
+  , eliminateStrategyFormulationGuidingPolicyActions :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> NonEmpty
+                                                                                                                  OccurrenceIdentity -> result
+  , eliminateStrategyFormulationIntent :: ModelIdentity -> NonEmpty
+                                                             OccurrenceIdentity -> result
+  , eliminateStrategyFormulationKeyResultSubstantiation :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> NonEmpty
+                                                                                                                     OccurrenceIdentity -> result
   , eliminateStrategyFormulationKeyResults :: ModelIdentity -> NonEmpty
                                                                  OccurrenceIdentity -> result
-  , eliminateStrategyFormulationVisionOrientation :: ModelIdentity -> result
+  , eliminateStrategyFormulationVisionOrientation :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> result
+  , eliminateStrategyFormulationIntentGrounding :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> NonEmpty
+                                                                                                             OccurrenceIdentity -> result
+  , eliminateStrategyFormulationIntentSubstantiation :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> NonEmpty
+                                                                                                                  OccurrenceIdentity -> result
   }
 
 -- | Eliminate opaque evidence through its one exact typed producer branch.
@@ -305,12 +315,13 @@ foldSemanticDiagnosticEvidence eliminator (SemanticDiagnosticEvidence defect) =
       eliminateStrategyFormulationActions eliminator strategy occurrences
     eliminate Generated.StrategyFormulationDiagnosisRule (Internal.SemanticStrategyEvidenceKey strategy) (Generated.StrategyFormulationDiagnosisOccurrences occurrences) =
       eliminateStrategyFormulationDiagnosis eliminator strategy occurrences
-    eliminate Generated.StrategyFormulationDiagnosisGroundingRule (Internal.SemanticStrategyEvidenceKey strategy) (Generated.StrategyFormulationDiagnosisGroundingOccurrences diagnosis grounding) =
+    eliminate Generated.StrategyFormulationDiagnosisGroundingRule (Internal.SemanticStrategyMemberEvidenceKey strategy member) (Generated.StrategyFormulationDiagnosisGroundingOccurrences diagnosis intents) =
       eliminateStrategyFormulationDiagnosisGrounding
         eliminator
         strategy
+        member
         diagnosis
-        grounding
+        intents
     eliminate Generated.StrategyFormulationGuidingPolicyRule (Internal.SemanticStrategyEvidenceKey strategy) (Generated.StrategyFormulationGuidingPolicyOccurrences occurrences) =
       eliminateStrategyFormulationGuidingPolicy eliminator strategy occurrences
     eliminate Generated.StrategyFormulationGuidingPolicyActionsRule (Internal.SemanticStrategyMemberEvidenceKey strategy member) (Generated.StrategyFormulationGuidingPolicyActionsOccurrences policy action) =
@@ -331,8 +342,26 @@ foldSemanticDiagnosticEvidence eliminator (SemanticDiagnosticEvidence defect) =
         substantiation
     eliminate Generated.StrategyFormulationKeyResultsRule (Internal.SemanticStrategyEvidenceKey strategy) (Generated.StrategyFormulationKeyResultsOccurrences occurrences) =
       eliminateStrategyFormulationKeyResults eliminator strategy occurrences
-    eliminate Generated.StrategyFormulationVisionOrientationRule (Internal.SemanticStrategyEvidenceKey strategy) Generated.StrategyFormulationVisionOrientationOccurrences =
-      eliminateStrategyFormulationVisionOrientation eliminator strategy
+    eliminate Generated.StrategyFormulationVisionOrientationRule (Internal.SemanticStrategyMemberEvidenceKey strategy member) (Generated.StrategyFormulationVisionOrientationOccurrences intent) =
+      eliminateStrategyFormulationVisionOrientation
+        eliminator
+        strategy
+        member
+        intent
+    eliminate Generated.StrategyFormulationIntentGroundingRule (Internal.SemanticStrategyMemberEvidenceKey strategy member) (Generated.StrategyFormulationIntentGroundingOccurrences intent diagnosis) =
+      eliminateStrategyFormulationIntentGrounding
+        eliminator
+        strategy
+        member
+        intent
+        diagnosis
+    eliminate Generated.StrategyFormulationIntentSubstantiationRule (Internal.SemanticStrategyMemberEvidenceKey strategy member) (Generated.StrategyFormulationIntentSubstantiationOccurrences intent keyResults) =
+      eliminateStrategyFormulationIntentSubstantiation
+        eliminator
+        strategy
+        member
+        intent
+        keyResults
 
 -- | Enumerate deterministic assessments for all recognized Need subjects.
 situatedNeedAssessments ::

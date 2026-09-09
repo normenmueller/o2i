@@ -6,13 +6,13 @@
   },
   "companions": {
     "semantics": {
-      "schema": "o2i.core-semantics/target-v46",
-      "rawSha256": "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333",
-      "shapeSha256": "3e091e8bc0fd3a887da02f8591292c2a8ea7d64c7e83951183ab71fe4f5b1278"
+      "schema": "o2i.core-semantics/target-v47",
+      "rawSha256": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5",
+      "shapeSha256": "75ac10aed2730bdb154d166fcb8034f206d4822285b76a45d0ba966bf2265969"
     },
     "semanticDiagnosticInventory": {
       "schema": "o2i.core.semantic-diagnostic-evidence/v1",
-      "rawSha256": "8007829ae3b4cd94b4e645ef973926250f8bac654b1bd9d9d1f3f5402355ed55"
+      "rawSha256": "745d616eb9f9a91e6ced5c0d0d7b24917fe0bdd6d6af34a8d7f8fb56becfe22c"
     }
   },
   "owners": {
@@ -1091,9 +1091,9 @@
                 "maximum": 1
               },
               {
-                "roleId": "owned-diagnosis",
+                "roleId": "listed-diagnosis",
                 "valueKind": "occurrence-identity",
-                "minimum": 0,
+                "minimum": 1,
                 "maximum": null
               }
             ]
@@ -1103,9 +1103,9 @@
       {
         "ruleId": "core.strategy-formulation.diagnosis-grounding",
         "polarity": "rejection",
-        "evidenceKind": "StrategyKey",
+        "evidenceKind": "StrategyMemberKey",
         "sourceRole": "model",
-        "subjectFieldCount": 1,
+        "subjectFieldCount": 2,
         "alternatives": [
           {
             "alternativeId": "exact",
@@ -1117,16 +1117,22 @@
                 "maximum": 1
               },
               {
-                "roleId": "diagnosis",
+                "roleId": "member",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "ungrounding-diagnosis",
                 "valueKind": "occurrence-identity",
                 "minimum": 1,
                 "maximum": 1
               },
               {
-                "roleId": "intent",
+                "roleId": "listed-intent",
                 "valueKind": "occurrence-identity",
                 "minimum": 1,
-                "maximum": 1
+                "maximum": null
               }
             ]
           }
@@ -1149,9 +1155,9 @@
                 "maximum": 1
               },
               {
-                "roleId": "owned-guiding-policy",
+                "roleId": "listed-guiding-policy",
                 "valueKind": "occurrence-identity",
-                "minimum": 0,
+                "minimum": 1,
                 "maximum": null
               }
             ]
@@ -1181,16 +1187,16 @@
                 "maximum": 1
               },
               {
-                "roleId": "guiding-policy",
+                "roleId": "unguided-action",
                 "valueKind": "occurrence-identity",
                 "minimum": 1,
                 "maximum": 1
               },
               {
-                "roleId": "action",
+                "roleId": "listed-guiding-policy",
                 "valueKind": "occurrence-identity",
                 "minimum": 1,
-                "maximum": 1
+                "maximum": null
               }
             ]
           }
@@ -1213,9 +1219,85 @@
                 "maximum": 1
               },
               {
-                "roleId": "owned-intent",
+                "roleId": "listed-intent",
                 "valueKind": "occurrence-identity",
-                "minimum": 0,
+                "minimum": 1,
+                "maximum": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.strategy-formulation.intent-grounding",
+        "polarity": "rejection",
+        "evidenceKind": "StrategyMemberKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 2,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "strategy",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "member",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "ungrounded-intent",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "listed-diagnosis",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "ruleId": "core.strategy-formulation.intent-substantiation",
+        "polarity": "rejection",
+        "evidenceKind": "StrategyMemberKey",
+        "sourceRole": "model",
+        "subjectFieldCount": 2,
+        "alternatives": [
+          {
+            "alternativeId": "exact",
+            "fields": [
+              {
+                "roleId": "strategy",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "member",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "unsubstantiated-intent",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "listed-key-result",
+                "valueKind": "occurrence-identity",
+                "minimum": 1,
                 "maximum": null
               }
             ]
@@ -1245,16 +1327,16 @@
                 "maximum": 1
               },
               {
-                "roleId": "key-result",
+                "roleId": "unsubstantiating-key-result",
                 "valueKind": "occurrence-identity",
                 "minimum": 1,
                 "maximum": 1
               },
               {
-                "roleId": "intent",
+                "roleId": "listed-intent",
                 "valueKind": "occurrence-identity",
                 "minimum": 1,
-                "maximum": 1
+                "maximum": null
               }
             ]
           }
@@ -1289,9 +1371,9 @@
       {
         "ruleId": "core.strategy-formulation.vision-orientation",
         "polarity": "rejection",
-        "evidenceKind": "StrategyKey",
+        "evidenceKind": "StrategyMemberKey",
         "sourceRole": "model",
-        "subjectFieldCount": 1,
+        "subjectFieldCount": 2,
         "alternatives": [
           {
             "alternativeId": "exact",
@@ -1303,10 +1385,16 @@
                 "maximum": 1
               },
               {
-                "roleId": "observed-vision-orientation",
+                "roleId": "member",
+                "valueKind": "model-identity",
+                "minimum": 1,
+                "maximum": 1
+              },
+              {
+                "roleId": "unoriented-intent",
                 "valueKind": "occurrence-identity",
-                "minimum": 0,
-                "maximum": 0
+                "minimum": 1,
+                "maximum": 1
               }
             ]
           }
