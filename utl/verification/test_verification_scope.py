@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -226,6 +227,201 @@ class VerificationPathMatrixTests(unittest.TestCase):
                 {".ai4x/STATE.md", "README.md"},
                 repository_paths(root),
             )
+
+
+class CheckpointVerificationTests(unittest.TestCase):
+    """Checkpoint reduction must account for every local input without altering CI."""
+
+    def repository(self, root: Path) -> Path:
+        git(root, "init", "--quiet")
+        git(root, "config", "user.email", "o2i@example.invalid")
+        git(root, "config", "user.name", "O2I Test")
+        model = root / "doc/model/illustration.archimate"
+        model.parent.mkdir(parents=True)
+        model.write_text("original model\n", encoding="utf-8")
+        (root / ".gitignore").write_text("ignored/\n", encoding="utf-8")
+        git(root, "add", ".")
+        git(root, "commit", "--quiet", "-m", "base")
+        return model
+
+    def selection(self, root: Path) -> scope.Selection:
+        return scope.select_for_event(root, "checkpoint", "", "", "false")
+
+    def test_staged_unstaged_untracked_and_ignored_inputs(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            model = self.repository(root)
+            model.write_text("staged model\n", encoding="utf-8")
+            git(root, "add", "doc/model/illustration.archimate")
+            model.write_text("original model\n", encoding="utf-8")
+            untracked = root / "doc/model/new model.archimate"
+            untracked.write_text("new\n", encoding="utf-8")
+            ignored = root / "ignored/unsafe.py"
+            ignored.parent.mkdir()
+            ignored.write_text("ignored\n", encoding="utf-8")
+            self.assertEqual(
+                {"doc/model/illustration.archimate", "doc/model/new model.archimate"},
+                set(scope.checkpoint_paths(root) or ()),
+            )
+            self.assertEqual({"licensing", "model"}, set(self.selection(root).stages))
+
+    def test_each_working_tree_layer_can_select_the_checkpoint(self) -> None:
+        for state in ("staged", "unstaged", "untracked"):
+            with self.subTest(state=state), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                model = self.repository(root)
+                if state == "untracked":
+                    model = model.with_name("new.archimate")
+                model.write_text("changed\n", encoding="utf-8")
+                if state == "staged":
+                    git(root, "add", "doc/model/illustration.archimate")
+                self.assertEqual("illustration-checkpoint", self.selection(root).reason)
+
+    def test_rename_keeps_old_and_new_paths_and_deletion_remains_visible(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            model = self.repository(root)
+            git(root, "mv", "doc/model/illustration.archimate", "unknown.archimate")
+            self.assertEqual(
+                {"doc/model/illustration.archimate", "unknown.archimate"},
+                set(scope.checkpoint_paths(root) or ()),
+            )
+            self.assertEqual("unknown-path", self.selection(root).reason)
+            (root / "unknown.archimate").unlink()
+            self.assertIn("unknown.archimate", scope.checkpoint_paths(root) or ())
+            self.assertEqual(scope.ALL_STAGES, self.selection(root).stages)
+
+    def test_intermediate_staged_rename_path_cannot_be_hidden(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.repository(root)
+            (root / "spec").mkdir()
+            git(root, "mv", "doc/model/illustration.archimate", "spec/intermediate.hs")
+            (root / "spec/intermediate.hs").rename(root / "doc/model/renamed.archimate")
+            paths = {
+                "doc/model/illustration.archimate", "spec/intermediate.hs",
+                "doc/model/renamed.archimate",
+            }
+            self.assertEqual(paths, set(scope.checkpoint_paths(root) or ()))
+            self.assertEqual(scope.classify_paths(paths), self.selection(root))
+            self.assertIn("haskell", self.selection(root).stages)
+
+    def test_unstaged_deletion_and_unknown_untracked_file_are_not_lost(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.repository(root).unlink()
+            self.assertEqual(
+                ("doc/model/illustration.archimate",), scope.checkpoint_paths(root)
+            )
+            (root / "unknown.txt").write_text("unknown\n", encoding="utf-8")
+            self.assertEqual("unknown-path", self.selection(root).reason)
+
+    def test_mixed_changes_keep_the_regular_matrix(self) -> None:
+        for other in (
+            "spec/cli/src/app/Main.hs", "README.md", "utl/verify.sh",
+            ".github/workflows/verify.yml", "future/unknown.txt",
+            "doc/model/tool.py", "meta/o2i.archimate",
+        ):
+            with self.subTest(other=other), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                model = self.repository(root)
+                model.write_text("changed\n", encoding="utf-8")
+                added = root / other
+                added.parent.mkdir(parents=True, exist_ok=True)
+                added.write_text("mixed\n", encoding="utf-8")
+                self.assertEqual(
+                    scope.classify_paths(("doc/model/illustration.archimate", other)),
+                    self.selection(root),
+                )
+
+    def test_missing_git_empty_tree_forced_and_explicit_ranges_fail_closed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.assertEqual("unavailable-working-tree", self.selection(root).reason)
+            self.repository(root)
+            self.assertEqual("empty-change-set", self.selection(root).reason)
+            for base, head, forced, reason in (
+                ("", "", "true", "forced-checkpoint"),
+                ("HEAD", "", "false", "checkpoint-range-unsupported"),
+                ("", "HEAD", "false", "checkpoint-range-unsupported"),
+                (git(root, "rev-parse", "HEAD"), git(root, "rev-parse", "HEAD"),
+                 "false", "checkpoint-range-unsupported"),
+            ):
+                selection = scope.select_for_event(root, "checkpoint", base, head, forced)
+                self.assertEqual(reason, selection.reason)
+                self.assertEqual(scope.ALL_STAGES, selection.stages)
+
+    def test_same_illustration_commit_keeps_pr_and_push_checks(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            model = self.repository(root)
+            base = git(root, "rev-parse", "HEAD")
+            model.write_text("changed\n", encoding="utf-8")
+            self.assertEqual({"licensing", "model"}, set(self.selection(root).stages))
+            git(root, "add", ".")
+            git(root, "commit", "--quiet", "-m", "model change")
+            head = git(root, "rev-parse", "HEAD")
+            for event in ("push", "pull_request"):
+                self.assertEqual(
+                    {"licensing", "model", "haskell", "paper"},
+                    set(scope.select_for_event(root, event, base, head, "false").stages),
+                )
+
+    def test_checkpoint_dispatch_executes_only_selected_stages(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.repository(root).write_text("changed\n", encoding="utf-8")
+            selector = root / "utl/verification/verification_scope.py"
+            selector.parent.mkdir(parents=True)
+            shutil.copyfile(Path(scope.__file__), selector)
+            runner = root / "utl/verify.sh"
+            source = VERIFY.read_text(encoding="utf-8")
+            for stage in scope.STAGES:
+                source = re.sub(
+                    rf"(?ms)^verify_{stage}\(\) \{{.*?^\}}",
+                    lambda match, stage=stage:
+                        f"verify_{stage}() {{\n  printf '{stage}\\n' >> calls\n}}",
+                    source,
+                    count=1,
+                )
+            runner.write_text(source, encoding="utf-8")
+            git(root, "add", "utl")
+            git(root, "commit", "--quiet", "-m", "test runner")
+            result = subprocess.run(
+                ["sh", str(runner), "checkpoint"], cwd=root,
+                capture_output=True, text=True,
+            )
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assertEqual("licensing\nmodel\n", (root / "calls").read_text())
+            self.assertIn("illustration-checkpoint", result.stderr)
+            for program, expected_exit, expected_calls in (
+                ("pass\n", 2, ""),
+                ("raise SystemExit(9)\n", 9, ""),
+                ("print('licensing\\n$(touch executed)')\n", 2, "licensing\n"),
+            ):
+                with self.subTest(program=program):
+                    (root / "calls").unlink(missing_ok=True)
+                    selector.write_text(program, encoding="utf-8")
+                    failed = subprocess.run(
+                        ["sh", str(runner), "checkpoint"], cwd=root,
+                        capture_output=True, text=True,
+                    )
+                    self.assertEqual(expected_exit, failed.returncode, failed.stderr)
+                    calls = root / "calls"
+                    self.assertEqual(expected_calls, calls.read_text() if calls.exists() else "")
+                    self.assertFalse((root / "executed").exists())
+            (root / "calls").unlink(missing_ok=True)
+            selector.write_text("print('licensing\\nmodel\\npaper')\n", encoding="utf-8")
+            runner.write_text(
+                source.replace("printf 'model\\n' >> calls", "return 7"),
+                encoding="utf-8",
+            )
+            failed = subprocess.run(
+                ["sh", str(runner), "checkpoint"], cwd=root,
+                capture_output=True, text=True,
+            )
+            self.assertEqual(7, failed.returncode, failed.stderr)
+            self.assertEqual("licensing\n", (root / "calls").read_text())
 
 
 class VerificationDiffTests(unittest.TestCase):

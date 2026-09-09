@@ -75,6 +75,10 @@ Der vollständige lokale Vertrag lautet:
 
 Fokussierte Entwicklungsläufe verwenden `licensing`, `governance`, `model`, `foundation`, `haskell` oder `paper`. Die ausführbare Pfadmatrix liegt ausschließlich in `utl/verification/verification_scope.py`; Pull Requests zeigen alle fünf Remote-Checks, wobei nicht betroffene Stufen erfolgreich skippen.
 
+Auf Feature-Branches sichern wir sinnvolle Arbeitsschritte regelmäßig durch Commits und Pushes. Vor der Meldung eines gesicherten Standes prüfen wir den Remote-Abgleich und benennen noch ungesicherte Änderungen. Entscheidungen und Arbeitsstände halten wir in den zugehörigen Issues fest.
+
+Für Backup-Zwischencommits verwenden wir `./utl/verify.sh checkpoint`. Der Lauf berücksichtigt vorgemerkte, weitere lokale und neue, nicht ignorierte Dateien. Bei reinen ArchiMate-Änderungen unter `doc/model/` genügen die Lizenz- und Modellstufen sowie die tatsächlichen CLI-Prüfungen nach jedem gespeicherten Modellierungsschritt. Offene Modellbefunde werden im Zwischenstand benannt. Die Prüfungen für Integration, Pull Requests und Releases bleiben verbindlich.
+
 Das White Paper und seine TikZ-Abbildungen werden reproduzierbar erzeugt und versiegelt:
 
 ```sh

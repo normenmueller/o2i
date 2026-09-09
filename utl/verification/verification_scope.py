@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 import re
 import subprocess
+import sys
 from typing import Iterable, Sequence
 
 
@@ -218,6 +219,46 @@ def changed_paths(
     )
 
 
+def checkpoint_paths(root: Path) -> tuple[str, ...] | None:
+    """Include staged, unstaged, and nonignored untracked checkpoint inputs."""
+    commands = (
+        ("diff", "--cached", "--name-only", "--no-renames", "-z", "HEAD", "--"),
+        ("diff", "--name-only", "--no-renames", "-z", "--"),
+        ("ls-files", "--others", "--exclude-standard", "-z"),
+    )
+    paths: list[str] = []
+    try:
+        for command in commands:
+            result = subprocess.run(
+                ["git", "-C", str(root), *command],
+                check=True,
+                capture_output=True,
+            )
+            paths.extend(
+                value.decode("utf-8", errors="surrogateescape")
+                for value in result.stdout.split(b"\0")
+                if value
+            )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return tuple(dict.fromkeys(paths))
+
+
+def classify_checkpoint_paths(paths: Iterable[str]) -> Selection:
+    """Reduce only a nonempty checkpoint containing illustration models alone."""
+    changed = tuple(dict.fromkeys(paths))
+    if changed and all(
+        _under(path, "doc/model") and path.endswith(".archimate")
+        for path in changed
+    ):
+        return Selection(
+            frozenset({"licensing", "model"}),
+            "selective",
+            "illustration-checkpoint",
+        )
+    return classify_paths(changed)
+
+
 def select_for_event(
     root: Path,
     event: str,
@@ -225,10 +266,19 @@ def select_for_event(
     head: str,
     forced: str,
 ) -> Selection:
-    """Select stages for one GitHub event with a complete-suite fallback."""
+    """Select stages for a GitHub event or local checkpoint, failing closed."""
     normalized_forced = forced.lower()
     if normalized_forced not in {"true", "false"}:
         return Selection(ALL_STAGES, "full", "invalid-force-flag")
+    if event == "checkpoint":
+        if base or head:
+            return Selection(ALL_STAGES, "full", "checkpoint-range-unsupported")
+        if normalized_forced == "true":
+            return Selection(ALL_STAGES, "full", "forced-checkpoint")
+        paths = checkpoint_paths(root)
+        if paths is None:
+            return Selection(ALL_STAGES, "full", "unavailable-working-tree")
+        return classify_checkpoint_paths(paths)
     if event == "workflow_dispatch":
         return Selection(ALL_STAGES, "full", "manual-dispatch")
     if event not in {"push", "pull_request"}:
@@ -263,7 +313,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--forced", default="false")
     parser.add_argument(
         "--format",
-        choices=("github", "json"),
+        choices=("github", "json", "stages"),
         default="json",
     )
     parser.add_argument("--root", type=Path, default=Path.cwd())
@@ -278,6 +328,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     if arguments.format == "github":
         print(github_output(selection))
+    elif arguments.format == "stages":
+        print(
+            f"[o2i|info] Verification scope: {selection.mode} ({selection.reason}).",
+            file=sys.stderr,
+        )
+        print("\n".join(stage for stage in STAGES if stage in selection.stages))
     else:
         print(
             json.dumps(
