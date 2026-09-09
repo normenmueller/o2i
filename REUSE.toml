@@ -12,12 +12,15 @@ path = [
   "CONTRIBUTING.md",
   "LICENSING.md",
   "README.md",
-  "acc/**",
-  "img/**",
-  "mdl/**",
-  "o2i.md",
-  "o2i.pdf",
-  "wtf.md",
+  "doc/README.md",
+  "doc/resources/**",
+  "doc/guide/**",
+  "doc/images/**",
+  "doc/misc/**",
+  "doc/model/**",
+  "doc/paper/o2i.md",
+  "doc/paper/o2i.pdf",
+  "meta/**",
 ]
 precedence = "override"
 SPDX-FileCopyrightText = "2026 nemron <https://github.com/normenmueller>"
@@ -29,9 +32,8 @@ path = [
   ".github/workflows/**",
   ".gitignore",
   "REUSE.toml",
-  "o2i.pdf.manifest.json",
-  "spc/**",
-  "toPDF.sh",
+  "doc/paper/o2i.pdf.manifest.json",
+  "spec/**",
   "utl/**",
 ]
 precedence = "override"

@@ -7,7 +7,7 @@ import check_atomic_cutover as cutover
 
 class AtomicCutoverTest(unittest.TestCase):
     def write_target(self, root: Path) -> None:
-        project = root / "spc" / "cabal.project"
+        project = root / "spec" / "cabal.project"
         project.parent.mkdir(parents=True)
         project.write_text(
             "packages:\n"
@@ -19,7 +19,7 @@ class AtomicCutoverTest(unittest.TestCase):
             encoding="utf-8",
         )
         for relative, name, dependencies in cutover.TARGET_PACKAGES:
-            package = root / "spc" / relative
+            package = root / "spec" / relative
             package.mkdir(parents=True)
             dependency_lines = ["    base >=4.20 && <4.21"]
             dependency_lines.extend(
@@ -48,7 +48,7 @@ class AtomicCutoverTest(unittest.TestCase):
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
             self.write_target(root)
-            project = root / "spc" / "cabal.project"
+            project = root / "spec" / "cabal.project"
             project.write_text(
                 project.read_text(encoding="utf-8").replace(
                     "  cli\n", "  lib/inspection\n  cli\n"
@@ -62,7 +62,7 @@ class AtomicCutoverTest(unittest.TestCase):
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
             self.write_target(root)
-            (root / "spc" / "lib" / "inspection").mkdir()
+            (root / "spec" / "lib" / "inspection").mkdir()
             with self.assertRaisesRegex(ValueError, "still exists"):
                 cutover.check(root)
 
@@ -80,7 +80,7 @@ class AtomicCutoverTest(unittest.TestCase):
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
             self.write_target(root)
-            source = root / "spc" / "cli" / "src" / "Command.hs"
+            source = root / "spec" / "cli" / "src" / "Command.hs"
             source.parent.mkdir(parents=True)
             source.write_text('command = "inspect"\n', encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "legacy CLI"):
@@ -90,7 +90,7 @@ class AtomicCutoverTest(unittest.TestCase):
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
             self.write_target(root)
-            cli = root / "spc" / "cli" / "o2i-cli.cabal"
+            cli = root / "spec" / "cli" / "o2i-cli.cabal"
             cli.write_text(
                 cli.read_text(encoding="utf-8").replace(
                     "    o2i-operation ==0.3.0.0",

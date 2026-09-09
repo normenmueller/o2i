@@ -1,13 +1,13 @@
 # Scope
 
-Load for `mdl/o2i.archimate`, semantic Views, concrete syntax, snapshots, or
+Load for `meta/o2i.archimate`, semantic Views, concrete syntax, snapshots, or
 instance-conformance work.
 
 # Semantic And Syntax Discipline
 
 - Treat ArchiMate as notation, never as the source of O2I semantics.
 - Semantic Views visualize the metamodel. Syntax Views visualize the concrete
-  mapping defined by `spc/ctr/archimate/profile.json` and introduce no
+  mapping defined by `spec/ctr/archimate/profile.json` and introduce no
   independent fachliche semantics.
 - Prefer plain boxes with solid outlines for O2I metamodel elements in
   reference Semantic Views. Consistent reference presentation is an editorial
@@ -76,7 +76,7 @@ instance-conformance work.
   profile or conformance status. `O2I Layered Cake` is such a non-executable
   overview; its repository contract is checked without executable Haskell
   conformance evaluation.
-- `spc/ctr/archimate/profile.json` is the exact mapping authority. `O2I Syntax - Carriers`, `O2I Syntax - Relations`, and the focused syntax Views must jointly visualize every current mapping class without creating a parallel registry.
+- `spec/ctr/archimate/profile.json` is the exact mapping authority. `O2I Syntax - Carriers`, `O2I Syntax - Relations`, and the focused syntax Views must jointly visualize every current mapping class without creating a parallel registry.
 - Executable conformance and instance Views require the current Haskell
   AMX/Profile/Core integration check in addition to the repository View
   contract.
@@ -103,7 +103,7 @@ instance-conformance work.
 
 # Model Editing
 
-- Never edit `mdl/o2i.archimate` directly.
+- Never edit `meta/o2i.archimate` directly.
 - Guide the user through one small Archi change at a time.
 - After every saved model change:
   1. read the model freshly;

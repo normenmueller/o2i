@@ -129,10 +129,38 @@ class PdfFreshnessTest(unittest.TestCase):
                 ),
             )
 
+    def test_nested_article_resolves_and_deduplicates_repository_inputs(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._publication_root(Path(directory))
+            article = root / "doc/paper/o2i.md"
+            article.write_text(
+                article.read_text(encoding="utf-8")
+                + "\n!include ../../README.md\n"
+                + "\n!include ../../snippet.hs\n",
+                encoding="utf-8",
+            )
+            inputs = CHECKER.publication_inputs(root)
+            self.assertIn((root / "doc/images/figure.png").resolve(), inputs)
+            self.assertIn((root / "snippet.hs").resolve(), inputs)
+            self.assertEqual(1, inputs.count((root / "README.md").resolve()))
+            self.assertEqual(len(inputs), len(set(inputs)))
+
+    def test_nested_article_cannot_include_outside_repository(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = self._publication_root(Path(directory))
+            (root / "doc/paper/o2i.md").write_text(
+                "# O2I\n\n!include ../../../outside.md\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(
+                CHECKER.PdfFreshnessError, "publication source escapes repository"
+            ):
+                CHECKER.publication_inputs(root)
+
     def test_source_digest_detects_visual_asset_drift(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = self._publication_root(Path(directory))
-            figure = root / "img" / "figure.png"
+            figure = root / "doc/images/figure.png"
             before = CHECKER.publication_source_digest(root)
             figure.write_bytes(b"new pixels")
             after = CHECKER.publication_source_digest(root)
@@ -142,7 +170,7 @@ class PdfFreshnessTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = self._publication_root(Path(directory))
             before = CHECKER.publication_source_digest(root)
-            article = root / "o2i.md"
+            article = root / "doc/paper/o2i.md"
             article.write_text(
                 article.read_text(encoding="utf-8") + "\n\\clearpage\n",
                 encoding="utf-8",
@@ -317,8 +345,8 @@ class PdfFreshnessTest(unittest.TestCase):
     def test_manifest_binds_current_sources_and_pdf(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = self._publication_root(Path(directory))
-            pdf = root / "o2i.pdf"
-            manifest = root / "o2i.pdf.manifest.json"
+            pdf = root / "doc/paper/o2i.pdf"
+            manifest = root / "doc/paper/o2i.pdf.manifest.json"
             CHECKER.write_manifest(root, pdf, manifest)
             payload = CHECKER.read_manifest(manifest)
             self.assertEqual(MANIFEST_RENDERER, payload["renderer"])
@@ -330,8 +358,8 @@ class PdfFreshnessTest(unittest.TestCase):
     def test_manifest_rejects_renderer_identity_drift(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = self._publication_root(Path(directory))
-            pdf = root / "o2i.pdf"
-            manifest = root / "o2i.pdf.manifest.json"
+            pdf = root / "doc/paper/o2i.pdf"
+            manifest = root / "doc/paper/o2i.pdf.manifest.json"
             CHECKER.write_manifest(root, pdf, manifest)
             contract = dict(RENDERER_CONTRACT, version="1.2.4")
             (root / CHECKER.RENDERER_CONTRACT).write_text(
@@ -349,10 +377,10 @@ class PdfFreshnessTest(unittest.TestCase):
     def test_manifest_rejects_stale_sources_and_pdf(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = self._publication_root(Path(directory))
-            pdf = root / "o2i.pdf"
-            manifest = root / "o2i.pdf.manifest.json"
+            pdf = root / "doc/paper/o2i.pdf"
+            manifest = root / "doc/paper/o2i.pdf.manifest.json"
             CHECKER.write_manifest(root, pdf, manifest)
-            (root / "img" / "figure.png").write_bytes(b"changed")
+            (root / "doc/images/figure.png").write_bytes(b"changed")
             pdf.write_bytes(b"changed pdf")
             self.assertEqual(
                 [
@@ -448,13 +476,14 @@ class PdfFreshnessTest(unittest.TestCase):
         self.assertEqual("0" * 40 + "\n", output.getvalue())
 
     def _publication_root(self, root: Path) -> Path:
-        (root / "img").mkdir()
-        (root / "acc").mkdir()
+        (root / "doc/images").mkdir(parents=True)
+        (root / "doc/resources").mkdir()
+        (root / "doc/paper").mkdir()
         (root / "utl" / "paper").mkdir(parents=True)
-        (root / "o2i.md").write_text(
+        (root / "doc/paper/o2i.md").write_text(
             "# O2I\n\n"
-            "!include snippet.hs\n\n"
-            "![Figure](img/figure.png)\n",
+            "!include ../../snippet.hs\n\n"
+            "![Figure](../images/figure.png)\n",
             encoding="utf-8",
         )
         (root / "README.md").write_text("# O2I\n", encoding="utf-8")
@@ -463,8 +492,8 @@ class PdfFreshnessTest(unittest.TestCase):
             encoding="utf-8",
         )
         (root / "snippet.hs").write_text("answer = 42\n", encoding="ascii")
-        (root / "img" / "figure.png").write_bytes(b"pixels")
-        (root / "acc" / "figure.tex").write_text(
+        (root / "doc/images/figure.png").write_bytes(b"pixels")
+        (root / "doc/resources/figure.tex").write_text(
             "\\begin{tikzpicture}\\end{tikzpicture}\n",
             encoding="ascii",
         )
@@ -472,18 +501,18 @@ class PdfFreshnessTest(unittest.TestCase):
             json.dumps(RENDERER_CONTRACT, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
-        (root / "toPDF.sh").write_text("#!/bin/sh\n", encoding="ascii")
+        (root / "utl/paper/render-paper.sh").write_text("#!/bin/sh\n", encoding="ascii")
         (root / "utl" / "paper" / "render-paper-figures.sh").write_text(
             "#!/bin/sh\n",
             encoding="ascii",
         )
-        (root / "o2i.pdf").write_bytes(b"pdf")
+        (root / "doc/paper/o2i.pdf").write_bytes(b"pdf")
         return root
 
     def _snippet_root(self, root: Path, options: str, source: str) -> Path:
         publication = self._publication_root(root)
-        (publication / "o2i.md").write_text(
-            f"# O2I\n\n!include`{options}` snippet.hs\n",
+        (publication / "doc/paper/o2i.md").write_text(
+            f"# O2I\n\n!include`{options}` ../../snippet.hs\n",
             encoding="utf-8",
         )
         (publication / "snippet.hs").write_text(source, encoding="utf-8")

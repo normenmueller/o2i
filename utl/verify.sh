@@ -125,15 +125,15 @@ verify_haskell() {
   case "$scope" in
     foundation)
       project_file=cabal.foundation.project
-      project_contract=spc/cabal.foundation.project
-      freeze_contract=spc/cabal.foundation.project.freeze
-      package_paths='spc/lib/core spc/ctr/archimate spc/lib/operation spc/lib/adapter/amx'
+      project_contract=spec/cabal.foundation.project
+      freeze_contract=spec/cabal.foundation.project.freeze
+      package_paths='spec/lib/core spec/ctr/archimate spec/lib/operation spec/lib/adapter/amx'
       ;;
     complete)
       project_file=cabal.project
-      project_contract=spc/cabal.project
-      freeze_contract=spc/cabal.project.freeze
-      package_paths='spc/lib/core spc/ctr/archimate spc/lib/operation spc/lib/adapter/amx spc/cli'
+      project_contract=spec/cabal.project
+      freeze_contract=spec/cabal.project.freeze
+      package_paths='spec/lib/core spec/ctr/archimate spec/lib/operation spec/lib/adapter/amx spec/cli'
       ;;
     *)
       printf '[o2i|error] Unknown Haskell verification scope: %s.\n' \
@@ -148,7 +148,7 @@ verify_haskell() {
 
   info "Checking the exact Haskell toolchain."
   require_version \
-    "spc/.ghc-version" "9.10.3" "$(tr -d '\r\n' <spc/.ghc-version)"
+    "spec/.ghc-version" "9.10.3" "$(tr -d '\r\n' <spec/.ghc-version)"
   require_version "GHC" "9.10.3" "$(ghc --numeric-version)"
   require_version "Cabal" "3.16.1.0" "$(cabal --numeric-version)"
   require_version \
@@ -170,33 +170,33 @@ verify_haskell() {
 
   run_project_cabal() {
     cabal --config-file="$cabal_config" -v0 \
-      --project-dir=spc \
+      --project-dir=spec \
       --project-file="$project_file" \
       "$@"
   }
 
   info "Checking compiled Haskell contract artifacts."
-  python3 -B spc/lib/core/contract/compile.py --check
+  python3 -B spec/lib/core/contract/compile.py --check
   python3 -B -m unittest discover \
-    -s spc/lib/core/contract -p 'test_compile.py'
-  python3 -B spc/ctr/archimate/contract/compile.py \
-    --core-companion spc/lib/core/semantics.json \
+    -s spec/lib/core/contract -p 'test_compile.py'
+  python3 -B spec/ctr/archimate/contract/compile.py \
+    --core-companion spec/lib/core/semantics.json \
     --check
-  O2I_CORE_COMPANION=spc/lib/core/semantics.json \
+  O2I_CORE_COMPANION=spec/lib/core/semantics.json \
     python3 -B -m unittest discover \
-    -s spc/ctr/archimate/contract -p 'test_compile.py'
-  python3 -B spc/lib/operation/contract/compile.py \
-    --core-companion spc/lib/core/semantics.json \
-    --profile-companion spc/ctr/archimate/profile.json \
+    -s spec/ctr/archimate/contract -p 'test_compile.py'
+  python3 -B spec/lib/operation/contract/compile.py \
+    --core-companion spec/lib/core/semantics.json \
+    --profile-companion spec/ctr/archimate/profile.json \
     --profile-diagnostic-inventory \
-      spc/ctr/archimate/contract/generated/o2i.archimate-profile.diagnostic-evidence-v1.json \
+      spec/ctr/archimate/contract/generated/o2i.archimate-profile.diagnostic-evidence-v1.json \
     --core-owner-diagnostic-inventory \
-      spc/lib/core/contract/generated/o2i.core.owner-diagnostic-evidence-v1.json \
+      spec/lib/core/contract/generated/o2i.core.owner-diagnostic-evidence-v1.json \
     --check
-  O2I_CORE_COMPANION=spc/lib/core/semantics.json \
-    O2I_PROFILE_COMPANION=spc/ctr/archimate/profile.json \
+  O2I_CORE_COMPANION=spec/lib/core/semantics.json \
+    O2I_PROFILE_COMPANION=spec/ctr/archimate/profile.json \
     python3 -B -m unittest discover \
-    -s spc/lib/operation/contract -p 'test_compile.py'
+    -s spec/lib/operation/contract -p 'test_compile.py'
 
   if [ "$scope" = complete ]; then
     info "Checking the atomic target package cutover."
@@ -250,14 +250,14 @@ verify_haskell() {
   candidate_view_checker=$(run_project_cabal list-bin \
     o2i-amx:o2i-amx-repository-view-check \
     --builddir="$build")
-  "$candidate_view_checker" "$root/mdl/o2i.archimate"
+  "$candidate_view_checker" "$root/meta/o2i.archimate"
 
   info "Checking external Haskell API contracts."
   python3 -B -m unittest discover \
     -s utl/haskell -p 'test_*.py'
   if [ "$scope" = foundation ]; then
   python3 -B utl/haskell/check_haskell_api_contracts.py \
-      --project-dir "$root/spc" \
+      --project-dir "$root/spec" \
       --project-file "$project_file" \
       --builddir "$build" \
       --package o2i-core \
@@ -265,7 +265,7 @@ verify_haskell() {
       --package o2i-operation
   else
     python3 -B utl/haskell/check_haskell_api_contracts.py \
-      --project-dir "$root/spc" \
+      --project-dir "$root/spec" \
       --builddir "$build"
   fi
 
@@ -469,13 +469,13 @@ verify_haskell() {
 
   info "Checking Haskell formatting."
   if [ "$scope" = foundation ]; then
-    find spc/lib/core spc/ctr/archimate spc/lib/operation \
-      spc/lib/adapter/amx \
+    find spec/lib/core spec/ctr/archimate spec/lib/operation \
+      spec/lib/adapter/amx \
       -path '*/dist-newstyle' -prune -o \
       -type f -name '*.hs' \
       -exec hindent --line-length 80 --validate {} +
   else
-    find spc \
+    find spec \
       -path '*/dist-newstyle' -prune -o \
       -type f -name '*.hs' \
       -exec hindent --line-length 80 --validate {} +
@@ -493,31 +493,32 @@ verify_paper() {
   python3 -B utl/paper/check-pdf-freshness.py sources --root .
 
   info "Checking the expanded White Paper source."
-  pandoc o2i.md --filter pandoc-include -t markdown >/dev/null
+  (cd doc/paper && pandoc o2i.md --filter pandoc-include -t markdown) >/dev/null
   python3 -B -m unittest discover \
     -s utl/paper -p 'test_check_paper_assets.py'
   python3 -B -m unittest discover \
     -s utl/paper -p 'test_check_pdf_freshness.py'
 
   paper="$work/paper"
-  mkdir -p "$paper/spc/lib/core"
-  cp o2i.md README.md ACKNOWLEDGEMENTS.md "$paper/"
-  cp -R acc img "$paper/"
-  cp -R spc/lib/core/src "$paper/spc/lib/core/"
+  mkdir -p "$paper/spec/lib/core" "$paper/doc/paper"
+  cp README.md ACKNOWLEDGEMENTS.md "$paper/"
+  cp doc/paper/o2i.md "$paper/doc/paper/"
+  cp -R doc/resources doc/images "$paper/doc/"
+  cp -R spec/lib/core/src "$paper/spec/lib/core/"
 
   info "Rendering TikZ figures in an isolated paper workspace."
   ./utl/paper/render-paper-figures.sh "$paper"
   for figure in \
     "O2I Nachweisfolge.png" \
     "O2I Frameworkarchitektur.png"; do
-    if [ ! -s "$paper/img/$figure" ]; then
+    if [ ! -s "$paper/doc/images/$figure" ]; then
       printf '[o2i|error] Figure rendering produced no output: %s\n' "$figure" >&2
       exit 1
     fi
   done
 
   info "Checking White Paper image resources."
-  if ! (cd "$paper" && pandoc o2i.md --filter pandoc-include -t json) \
+  if ! (cd "$paper/doc/paper" && pandoc o2i.md --filter pandoc-include -t json) \
     >"$work/paper.json" 2>"$work/pandoc-include.log"; then
     cat "$work/pandoc-include.log" >&2
     exit 1
@@ -530,19 +531,20 @@ verify_paper() {
   fi
   python3 -B utl/paper/check-paper-assets.py \
     --root "$paper" \
+    --source-directory "$paper/doc/paper" \
     "$work/paper.json"
 
   info "Building the White Paper in an isolated paper workspace."
-  (cd "$paper" && md2pdf -o "$work/o2i.pdf" -- o2i.md -H acc/o2i.icl)
+  (cd "$paper/doc/paper" && md2pdf -o "$work/o2i.pdf" -- o2i.md -H ../resources/o2i.icl)
   if [ ! -s "$work/o2i.pdf" ]; then
     printf '[o2i|error] White Paper build produced no PDF.\n' >&2
     exit 1
   fi
   python3 -B utl/paper/check-pdf-freshness.py check \
     --root . \
-    --versioned o2i.pdf \
+    --versioned doc/paper/o2i.pdf \
     --rendered "$work/o2i.pdf" \
-    --manifest o2i.pdf.manifest.json
+    --manifest doc/paper/o2i.pdf.manifest.json
 }
 
 case "$stage" in

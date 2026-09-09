@@ -31,6 +31,30 @@ def document_with(*targets: str) -> dict:
 
 
 class PaperAssetTest(unittest.TestCase):
+    def test_nested_article_uses_sibling_images_within_workspace(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "doc/paper"
+            source.mkdir(parents=True)
+            image = root / "doc/images/figure.png"
+            image.parent.mkdir()
+            image.write_bytes(b"png")
+
+            self.assertEqual(
+                [],
+                CHECKER.validate_assets(document_with("../images/figure.png"), root, source),
+            )
+            self.assertEqual(
+                ["paper image escapes workspace: ../../../outside.png"],
+                CHECKER.validate_assets(document_with("../../../outside.png"), root, source),
+            )
+
+    def test_source_directory_cannot_escape_workspace(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with self.assertRaisesRegex(ValueError, "source directory escapes workspace"):
+                CHECKER.validate_assets(document_with("figure.png"), root, root.parent)
+
     def test_existing_nonempty_local_image_passes(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

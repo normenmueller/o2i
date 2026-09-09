@@ -15,13 +15,13 @@ from typing import Optional, Sequence
 
 
 MANIFEST_SCHEMA = "o2i.paper-freshness/v2"
-RENDERER_CONTRACT = Path("acc/md2pdf.json")
+RENDERER_CONTRACT = Path("doc/resources/md2pdf.json")
 RENDERER_CONTRACT_SCHEMA = "o2i.publication-renderer/v1"
 STATIC_INPUTS = (
-    "o2i.md",
+    "doc/paper/o2i.md",
     "README.md",
     "ACKNOWLEDGEMENTS.md",
-    "toPDF.sh",
+    "utl/paper/render-paper.sh",
     "utl/paper/render-paper-figures.sh",
 )
 INCLUDE_PATTERN = re.compile(
@@ -223,13 +223,17 @@ def publication_inputs(root: Path) -> tuple[Path, ...]:
     """Return the closed, deterministic source set of the White Paper."""
     resolved_root = root.resolve()
     relative_inputs = {Path(name) for name in STATIC_INPUTS}
-    article = resolved_root / "o2i.md"
+    article = resolved_root / "doc/paper/o2i.md"
     if not article.is_file():
         raise PdfFreshnessError(f"missing publication source: {article}")
     source = article.read_text(encoding="utf-8")
 
+    def article_input(target: str) -> Path:
+        relative = article.parent.relative_to(resolved_root) / target
+        return _publication_source(resolved_root, relative).relative_to(resolved_root)
+
     for match in INCLUDE_PATTERN.finditer(source):
-        relative = Path(match.group("path"))
+        relative = article_input(match.group("path"))
         included = _publication_source(resolved_root, relative)
         markers = _snippet_markers(match.group("options") or "", relative)
         if markers is not None:
@@ -239,15 +243,15 @@ def publication_inputs(root: Path) -> tuple[Path, ...]:
         r"!\[[^\]]*\]\((?:<([^>]+)>|([^\s)]+))\)",
         source,
     ):
-        relative_inputs.add(Path(match.group(1) or match.group(2)))
+        relative_inputs.add(article_input(match.group(1) or match.group(2)))
     for match in re.finditer(r"\\includegraphics(?:\[[^\]]*\])?\{([^}]+)\}", source):
-        relative_inputs.add(Path(match.group(1)))
+        relative_inputs.add(article_input(match.group(1)))
 
-    acc = resolved_root / "acc"
-    if acc.is_dir():
+    resources = resolved_root / "doc/resources"
+    if resources.is_dir():
         relative_inputs.update(
             path.relative_to(resolved_root)
-            for path in acc.rglob("*")
+            for path in resources.rglob("*")
             if path.is_file() and path.name != ".DS_Store"
         )
 

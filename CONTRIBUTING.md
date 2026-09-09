@@ -46,7 +46,7 @@ Ein Review nennt exakten Gegenstand und Scope, Reviewer-Fähigkeit, Prüfungen, 
 
 - Änderungen bleiben im exakten Issue- oder Routine-Grant; neue fachliche Ideen erhalten einen eigenen Issue.
 - Markdown verwendet eine Quellzeile pro Absatz. Unmittelbar vor jeder manuellen Änderung wird der Zielbereich frisch gelesen, danach werden Änderung und Diff geprüft.
-- `mdl/o2i.archimate` wird nie direkt durch Agenten editiert; Modelländerungen erfolgen schrittweise durch den Product Owner.
+- `meta/o2i.archimate` wird nie direkt durch Agenten editiert; Modelländerungen erfolgen schrittweise durch den Product Owner.
 - Commit-Messages sind kleingeschriebenes Englisch ohne Typpräfix. Issue-Commits führen `Refs #N`; agentische Commits zusätzlich den wahrheitsgetreuen Grant-Trailer.
 - Agentische Remote-Aktionen verwenden ausschließlich die verifizierte Identität `gertrud-ai4x`. Technische Berechtigung ersetzt keine Governance-Autorität.
 - Release-relevante Änderungen aktualisieren `CHANGELOG.md`.
@@ -56,14 +56,14 @@ Ein Review nennt exakten Gegenstand und Scope, Reviewer-Fähigkeit, Prüfungen, 
 
 | Pfad | Verantwortung |
 | --- | --- |
-| `README.md`, `o2i.md`, `wtf.md` | Zweck, White Paper, fachliche Referenz und Einstieg |
-| `mdl/` | ArchiMate-Modell, Views und Review-Snapshots |
-| `spc/` | formale Haskell-Spezifikation, Profile, Adapter, Operation und CLI |
-| `acc/`, `img/` | reproduzierbare Abbildungsquellen und Renderings |
+| `README.md`, `doc/` | Projekteinstieg und menschliche Dokumentation: White Paper, Guide, Begriffe und Illustrationsmodell |
+| `meta/` | ArchiMate-Metamodell, Referenz-Views und Review-Snapshots |
+| `spec/` | formale Haskell-Spezifikation, Profile, Adapter, Operation und CLI |
+| `doc/resources/`, `doc/images/` | reproduzierbare Abbildungsquellen und Renderings |
 | `.ai4x/` | hostneutraler agentischer Betriebsvertrag |
 | `utl/` | deterministische Repository-, Governance-, Modell- und Publikationsprüfungen |
 
-Die technische Haskell-Architektur, Installation und Nutzung beschreibt [`spc/README.md`](./spc/README.md).
+Die technische Haskell-Architektur, Installation und Nutzung beschreibt [`spec/README.md`](./spec/README.md).
 
 ## Verifikation und White-Paper-Build
 
@@ -78,5 +78,5 @@ Fokussierte Entwicklungsläufe verwenden `licensing`, `governance`, `model`, `fo
 Das White Paper und seine TikZ-Abbildungen werden reproduzierbar erzeugt und versiegelt:
 
 ```sh
-./toPDF.sh
+./utl/paper/render-paper.sh
 ```

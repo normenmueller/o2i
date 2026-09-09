@@ -32,9 +32,9 @@ from repository_view_contract import (
 
 XSI_TYPE = "{http://www.w3.org/2001/XMLSchema-instance}type"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_MODEL = REPOSITORY_ROOT / "mdl" / "o2i.archimate"
+DEFAULT_MODEL = REPOSITORY_ROOT / "meta" / "o2i.archimate"
 PROFILE_PATH = (
-    REPOSITORY_ROOT / "spc" / "ctr" / "archimate" / "profile.json"
+    REPOSITORY_ROOT / "spec" / "ctr" / "archimate" / "profile.json"
 )
 SYNTAX_CARRIERS_VIEW = "O2I Syntax - Carriers"
 SYNTAX_RELATIONS_VIEW = "O2I Syntax - Relations"
@@ -57,46 +57,46 @@ CONTENT_ENDPOINT_KINDS = frozenset({"primitive", "structuring"})
 PRESETS = {
     "strategy-constituents": (
         "O2I Semantics - Strategy Constituents",
-        Path("mdl/o2i-semantics-strategy-constituents.md"),
+        Path("meta/o2i-semantics-strategy-constituents.md"),
     ),
     "semantics-situation": (
         "O2I Semantics - Situation",
-        Path("mdl/o2i-semantics-situation.md"),
+        Path("meta/o2i-semantics-situation.md"),
     ),
     "situation-anchoring": (
         "O2I Semantics - Situation Anchoring",
-        Path("mdl/o2i-semantics-situation-anchoring.md"),
+        Path("meta/o2i-semantics-situation-anchoring.md"),
     ),
-    "orientation": ("O2I Orientierung", Path("mdl/o2i-orientation.md")),
+    "orientation": ("O2I Orientierung", Path("meta/o2i-orientation.md")),
     "semantics-context": (
         "O2I Semantics - Context",
-        Path("mdl/o2i-semantics-context.md"),
+        Path("meta/o2i-semantics-context.md"),
     ),
     "semantics-primitives": (
         "O2I Semantics - Primitives",
-        Path("mdl/o2i-semantics-primitives.md"),
+        Path("meta/o2i-semantics-primitives.md"),
     ),
     "syntax-carriers": (
         SYNTAX_CARRIERS_VIEW,
-        Path("mdl/o2i-syntax-carriers.md"),
+        Path("meta/o2i-syntax-carriers.md"),
     ),
     "syntax-relations": (
         SYNTAX_RELATIONS_VIEW,
-        Path("mdl/o2i-syntax-relations.md"),
+        Path("meta/o2i-syntax-relations.md"),
     ),
     "syntax-contextualization": (
         SYNTAX_CONTEXTUALIZATION_VIEW,
-        Path("mdl/o2i-syntax-contextualization.md"),
+        Path("meta/o2i-syntax-contextualization.md"),
     ),
     "syntax-collective-strategy-realization": (
         SYNTAX_COLLECTIVE_VIEW,
-        Path("mdl/o2i-syntax-collective-strategy-realization.md"),
+        Path("meta/o2i-syntax-collective-strategy-realization.md"),
     ),
     "syntax-need-qualification-proposal": (
         SYNTAX_QUALIFICATION_VIEW,
-        Path("mdl/o2i-syntax-need-qualification-proposal.md"),
+        Path("meta/o2i-syntax-need-qualification-proposal.md"),
     ),
-    "layered-cake": ("O2I Layered Cake", Path("mdl/o2i-layered-cake.md")),
+    "layered-cake": ("O2I Layered Cake", Path("meta/o2i-layered-cake.md")),
 }
 
 REQUIRED_CARRIER_MAPPING_DOCUMENTATION = (
@@ -769,7 +769,7 @@ def render(
         f"> Generated review snapshot of `{view_name}` from `{source_path}`.",
         (
             "> Review artifact only; exact syntax mapping authority is "
-            "`spc/ctr/archimate/profile.json`."
+            "`spec/ctr/archimate/profile.json`."
             if view_name.startswith("O2I Syntax")
             else "> Review artifact only; semantic authority remains the "
             "O2I metamodel."
@@ -1221,7 +1221,7 @@ def snapshot_contract_errors() -> list[str]:
     }
     actual = {
         path.resolve()
-        for path in (REPOSITORY_ROOT / "mdl").glob("o2i-*.md")
+        for path in (REPOSITORY_ROOT / "meta").glob("o2i-*.md")
     }
     errors = []
     for path in sorted(expected - actual):

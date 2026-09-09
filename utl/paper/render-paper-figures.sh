@@ -3,7 +3,7 @@
 set -eu
 
 if [ "$#" -gt 1 ]; then
-  printf '[o2i|error] Usage: %s [paper-root]\n' "$0" >&2
+  printf '[o2i|error] Usage: %s [repository-root]\n' "$0" >&2
   exit 2
 fi
 
@@ -30,6 +30,6 @@ render() {
     "$root/$target"
 }
 
-render "acc/o2i-evidence-sequence.tex" "img/O2I Nachweisfolge"
-render "acc/o2i-framework-architecture.tex" "img/O2I Frameworkarchitektur"
-render "acc/o2i-model-state.tex" "img/O2I Modellzustand"
+render "doc/resources/o2i-evidence-sequence.tex" "doc/images/O2I Nachweisfolge"
+render "doc/resources/o2i-framework-architecture.tex" "doc/images/O2I Frameworkarchitektur"
+render "doc/resources/o2i-model-state.tex" "doc/images/O2I Modellzustand"

@@ -127,264 +127,264 @@ CONTRACTS = (
     PackageContract(
         "o2i-core",
         (
-            "spc/lib/core/tst/api/compile-pass/PublicApi.hs",
-            "spc/lib/core/tst/api/compile-pass/IdentityPublicApi.hs",
-            "spc/lib/core/tst/api/compile-pass/"
+            "spec/lib/core/tst/api/compile-pass/PublicApi.hs",
+            "spec/lib/core/tst/api/compile-pass/IdentityPublicApi.hs",
+            "spec/lib/core/tst/api/compile-pass/"
             "CoreGraphObservationPublicApi.hs",
-            "spc/lib/core/tst/api/compile-pass/"
+            "spec/lib/core/tst/api/compile-pass/"
             "CoreRuleCatalogPublicApi.hs",
-            "spc/lib/core/tst/api/compile-pass/StructurePublicApi.hs",
-            "spc/lib/core/tst/api/compile-pass/"
+            "spec/lib/core/tst/api/compile-pass/StructurePublicApi.hs",
+            "spec/lib/core/tst/api/compile-pass/"
             "SupplementalInputPublicApi.hs",
-            "spc/lib/core/tst/api/compile-pass/SemanticsPublicApi.hs",
-            "spc/lib/core/tst/api/compile-pass/QualificationPublicApi.hs",
-            "spc/lib/core/tst/api/compile-pass/TracePublicApi.hs",
-            "spc/lib/core/tst/api/compile-pass/ReadinessPublicApi.hs",
-            "spc/lib/core/tst/api/compile-pass/AssessmentPublicApi.hs",
+            "spec/lib/core/tst/api/compile-pass/SemanticsPublicApi.hs",
+            "spec/lib/core/tst/api/compile-pass/QualificationPublicApi.hs",
+            "spec/lib/core/tst/api/compile-pass/TracePublicApi.hs",
+            "spec/lib/core/tst/api/compile-pass/ReadinessPublicApi.hs",
+            "spec/lib/core/tst/api/compile-pass/AssessmentPublicApi.hs",
         ),
         (
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "CoreContractOpaqueConstructors.hs",
                 (("GHC-01928", 14),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "IdentityOpaqueConstructors.hs",
                 (("GHC-01928", 7),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "IdentityInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "CoreGraphObservationOpaqueConstructors.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "CoreGraphObservationInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "CoreRuleCatalogOpaqueConstructors.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "CoreRuleCatalogInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "StructureOpaqueConstructors.hs",
                 (("GHC-01928", 3), ("GHC-88464", 1)),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "StructureEvidenceConstruction.hs",
                 (("GHC-01928", 12),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "StructureInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "StructureLegacyDefectConsumers.hs",
                 (("GHC-88464", 7),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "StructureCrossGenerationEvidence.hs",
                 (("GHC-25897", 2),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "SupplementalInputOpaqueConstructors.hs",
                 (("GHC-01928", 2), ("GHC-88464", 1)),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "SupplementalInputEvidenceConstruction.hs",
                 (("GHC-01928", 19),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "SupplementalInputLegacyConsumers.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "BindingCrossGenerationEvidence.hs",
                 (("GHC-25897", 2),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "BindingCrossProvenanceEvidence.hs",
                 (("GHC-25897", 2),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "SemanticsOpaqueConstructors.hs",
                 (("GHC-01928", 3), ("GHC-88464", 1)),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "SemanticsInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "SemanticGeneratedModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "SemanticOccurrenceOpaqueConstructors.hs",
                 (("GHC-76037", 2),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "SemanticsLegacyWitnessConsumers.hs",
                 (("GHC-88464", 3),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "SemanticsCrossGenerationEvidence.hs",
                 (("GHC-25897", 2),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "CoreOwnerEvidenceCoercible.hs",
                 (("GHC-25897", 6),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "QualificationOpaqueConstructors.hs",
                 (("GHC-01928", 6), ("GHC-88464", 2)),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "QualificationInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/QualificationCrossScope.hs",
+                "spec/lib/core/tst/api/compile-fail/QualificationCrossScope.hs",
                 (("GHC-25897", 2),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "QualificationBoundCoercible.hs",
                 (("GHC-25897", 3),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "TraceOpaqueConstructors.hs",
                 (("GHC-01928", 4),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "TraceInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/TraceCrossScope.hs",
+                "spec/lib/core/tst/api/compile-fail/TraceCrossScope.hs",
                 (("GHC-25897", 1),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/TraceBoundCoercible.hs",
+                "spec/lib/core/tst/api/compile-fail/TraceBoundCoercible.hs",
                 (("GHC-25897", 1),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "ReadinessOpaqueConstructors.hs",
                 (("GHC-01928", 3),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/ReadinessInternalModule.hs",
+                "spec/lib/core/tst/api/compile-fail/ReadinessInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/ReadinessCrossScope.hs",
+                "spec/lib/core/tst/api/compile-fail/ReadinessCrossScope.hs",
                 (("GHC-25897", 2),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "AssessmentOpaqueConstructors.hs",
                 (("GHC-01928", 4),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/"
+                "spec/lib/core/tst/api/compile-fail/"
                 "AssessmentInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/core/tst/api/compile-fail/AssessmentCrossScope.hs",
+                "spec/lib/core/tst/api/compile-fail/AssessmentCrossScope.hs",
                 (("GHC-25897", 3),),
             ),
         ),
     ),
     PackageContract(
         "o2i-archimate-profile",
-        ("spc/ctr/archimate/tst/api/compile-pass/PublicApi.hs",),
+        ("spec/ctr/archimate/tst/api/compile-pass/PublicApi.hs",),
         (
             CompileFailure(
-                "spc/ctr/archimate/tst/api/compile-fail/"
+                "spec/ctr/archimate/tst/api/compile-fail/"
                 "DraftOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/ctr/archimate/tst/api/compile-fail/"
+                "spec/ctr/archimate/tst/api/compile-fail/"
                 "ResolutionOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/ctr/archimate/tst/api/compile-fail/"
+                "spec/ctr/archimate/tst/api/compile-fail/"
                 "ClosureOpaqueConstructor.hs",
                 (("GHC-01928", 3),),
             ),
             CompileFailure(
-                "spc/ctr/archimate/tst/api/compile-fail/"
+                "spec/ctr/archimate/tst/api/compile-fail/"
                 "CrossDocumentView.hs",
                 (("GHC-25897", 1),),
             ),
             CompileFailure(
-                "spc/ctr/archimate/tst/api/compile-fail/"
+                "spec/ctr/archimate/tst/api/compile-fail/"
                 "ProjectionWithoutConformance.hs",
                 (("GHC-83865", 1),),
             ),
             CompileFailure(
-                "spc/ctr/archimate/tst/api/compile-fail/"
+                "spec/ctr/archimate/tst/api/compile-fail/"
                 "ProjectionOpaqueConstructor.hs",
                 (("GHC-01928", 8),),
             ),
             CompileFailure(
-                "spc/ctr/archimate/tst/api/compile-fail/"
+                "spec/ctr/archimate/tst/api/compile-fail/"
                 "ProfileCrossGenerationEvidence.hs",
                 (("GHC-25897", 18),),
             ),
             CompileFailure(
-                "spc/ctr/archimate/tst/api/compile-fail/"
+                "spec/ctr/archimate/tst/api/compile-fail/"
                 "ProfileOwnerEvidenceCoercible.hs",
                 (("GHC-25897", 21),),
             ),
             CompileFailure(
-                "spc/ctr/archimate/tst/api/compile-fail/"
+                "spec/ctr/archimate/tst/api/compile-fail/"
                 "DraftIdentityRoleMismatch.hs",
                 (("GHC-83865", 1),),
             ),
             CompileFailure(
-                "spc/ctr/archimate/tst/api/compile-fail/"
+                "spec/ctr/archimate/tst/api/compile-fail/"
                 "ProfileDescriptorRecordUpdate.hs",
                 (("GHC-22385", 1),),
             ),
             CompileFailure(
-                "spc/ctr/archimate/tst/api/compile-fail/"
+                "spec/ctr/archimate/tst/api/compile-fail/"
                 "HiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
@@ -393,379 +393,379 @@ CONTRACTS = (
     PackageContract(
         "o2i-operation",
         (
-            "spc/lib/operation/tst/api/compile-pass/PublicApi.hs",
-            "spc/lib/operation/tst/api/compile-pass/"
+            "spec/lib/operation/tst/api/compile-pass/PublicApi.hs",
+            "spec/lib/operation/tst/api/compile-pass/"
             "OwnerEvidencePublicApi.hs",
-            "spc/lib/operation/tst/api/compile-pass/TracePublicApi.hs",
-            "spc/lib/operation/tst/api/compile-pass/ReadinessPublicApi.hs",
-            "spc/lib/operation/tst/api/compile-pass/AssessPublicApi.hs",
-            "spc/lib/operation/tst/api/compile-pass/ValidatePublicApi.hs",
-            "spc/lib/operation/tst/api/compile-pass/"
+            "spec/lib/operation/tst/api/compile-pass/TracePublicApi.hs",
+            "spec/lib/operation/tst/api/compile-pass/ReadinessPublicApi.hs",
+            "spec/lib/operation/tst/api/compile-pass/AssessPublicApi.hs",
+            "spec/lib/operation/tst/api/compile-pass/ValidatePublicApi.hs",
+            "spec/lib/operation/tst/api/compile-pass/"
             "QualificationPublicApi.hs",
-            "spc/lib/operation/tst/api/compile-pass/"
+            "spec/lib/operation/tst/api/compile-pass/"
             "HumanConsumerPublicApi.hs",
         ),
         (
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/HiddenInternalModule.hs",
+                "spec/lib/operation/tst/api/compile-fail/HiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "DiagnosticAdapterOwnerHiddenModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "OwnerProfileCrossGeneration.hs",
                 (("GHC-25897", 3),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "OwnerCoreCrossGeneration.hs",
                 (("GHC-25897", 2),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "OwnerSupplementalSourceCrossGeneration.hs",
                 (("GHC-25897", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "OwnerFreeSourceIdentity.hs",
                 (("GHC-83865", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "OwnerSourceCoercible.hs",
                 (("GHC-25897", 6),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "OwnerSourceOpaqueConstructors.hs",
                 (("GHC-01928", 6),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "OwnerSourceHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "AcquiredModelSourceOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "AcquiredSupplementalSourceOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "OwnerSupplementalRoleRequired.hs",
                 (("GHC-83865", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "OwnerEvidenceOpaqueConstructor.hs",
                 (("GHC-01928", 1), ("GHC-88464", 1)),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "SupplementalDiagnosticGroupsOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/OpaqueConstructors.hs",
+                "spec/lib/operation/tst/api/compile-fail/OpaqueConstructors.hs",
                 (("GHC-01928", 1), ("GHC-88464", 2)),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "AdapterContractOpaqueConstructors.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "AdapterWrongStageDiagnostic.hs",
                 (("GHC-83865", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "AdapterRuleScopeEscape.hs",
                 (("GHC-25897", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "AdapterRuleCrossScope.hs",
                 (("GHC-25897", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "AdapterRuleCoercibleScope.hs",
                 (("GHC-25897", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "AdapterExecutionOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "ProfileHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "ProfileOpaqueConstructors.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "EncodingHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "EncodingOpaqueConstructors.hs",
                 (("GHC-61948", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "MachineHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "ToolDescriptorOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "AdapterInventoryDocumentOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "ProfileInventoryDocumentOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "RuleInventoryDocumentOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "RuleExplanationDocumentOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "ViewDiscoveryDocumentOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "DiscoveryProfileHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "DiscoveryRuleHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "DiscoveryViewHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "SchemaGeneratedHiddenModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "MachineDocumentTypeSeparation.hs",
                 (("GHC-83865", 5),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "SchemaHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "SchemaOpaqueConstructors.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "ViewHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "ViewOpaqueConstructors.hs",
                 (("GHC-88464", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "ValidateRequestHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "ValidateResultHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "ValidateRuntimeHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "ValidateResultOpaqueConstructor.hs",
                 (("GHC-88464", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "TraceResultOpaqueConstructor.hs",
                 (("GHC-88464", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "TraceResultDocumentOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "ValidateResultDocumentOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "QualificationResultOpaqueConstructors.hs",
                 (("GHC-88464", 2),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "QualificationDocumentOpaqueConstructors.hs",
                 (("GHC-01928", 2),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "QualifyRequestOpaqueConstructors.hs",
                 (("GHC-88464", 2), ("GHC-01928", 1)),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "AcquiredReadinessSourceOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "ReadinessResultOpaqueConstructors.hs",
                 (("GHC-01928", 1), ("GHC-88464", 1)),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "ReadinessDocumentOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "ReadinessHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "AcquiredAssessmentSourceOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "AssessResultOpaqueConstructors.hs",
                 (("GHC-01928", 1), ("GHC-88464", 1)),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "AssessDocumentOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "AssessHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "ArgumentFailureOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "CommandErrorOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "CommandErrorDocumentOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "SupplementalDiagnosticOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "HumanValueOpaqueConstructor.hs",
                 (("GHC-01928", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "HumanDiagnosticOpaqueConstructor.hs",
                 (("GHC-01928", 2),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "HumanClosedProjectionOpaqueConstructors.hs",
                 (("GHC-01928", 11), ("GHC-88464", 11)),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "HumanFailureOpaqueConstructorsA.hs",
                 (("GHC-76037", 12),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "HumanFailureOpaqueConstructorsB.hs",
                 (("GHC-76037", 18),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "HumanFailureOpaqueConstructorsC.hs",
                 (("GHC-01928", 12),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "HumanReportOpaqueConstructor.hs",
                 (("GHC-88464", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "HumanValueHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "CommandErrorHiddenInternalModule.hs",
                 (("GHC-87110", 1),),
             ),
             CompileFailure(
-                "spc/lib/operation/tst/api/compile-fail/"
+                "spec/lib/operation/tst/api/compile-fail/"
                 "SchemaEmbedHiddenModule.hs",
                 (("GHC-87110", 1),),
             ),
@@ -775,7 +775,7 @@ CONTRACTS = (
     PackageContract(
         "o2i-operation",
         (
-            "spc/lib/operation/tst/api/compile-pass/"
+            "spec/lib/operation/tst/api/compile-pass/"
             "OperationReportPublicObserver.hs",
         ),
         (),
@@ -783,7 +783,7 @@ CONTRACTS = (
     PackageContract(
         "o2i-operation",
         (
-            "spc/lib/operation/tst/api/compile-pass/"
+            "spec/lib/operation/tst/api/compile-pass/"
             "OperationAmxCliConsumer.hs",
         ),
         (),
@@ -793,12 +793,12 @@ CONTRACTS = (
 
 PRIVATE_COMPILE_FAILURES = (
     PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/"
+        "spec/lib/core/tst/internal/compile-fail/"
         "GraphCarrierModelIdentityInjection.hs",
         (("GHC-83865", 1),),
     ),
     PrivateCompileFailure(
-        "spc/lib/core/tst/internal/compile-fail/IdentityCrossScope.hs",
+        "spec/lib/core/tst/internal/compile-fail/IdentityCrossScope.hs",
         (("GHC-25897", 1),),
     ),
 )
@@ -1257,7 +1257,7 @@ def compile_private_source(
     source_name: str,
 ) -> subprocess.CompletedProcess[str]:
     source = (root / source_name).resolve()
-    source_dir = (root / "spc/lib/core/src").resolve()
+    source_dir = (root / "spec/lib/core/src").resolve()
     with tempfile.TemporaryDirectory(
         prefix="o2i-private-contract."
     ) as temporary:
@@ -1412,7 +1412,7 @@ def check_contracts(
 
     core_selected = packages is None or "o2i-core" in packages
     if core_selected:
-        check_core_package_inventory(root / "spc/lib/core")
+        check_core_package_inventory(root / "spec/lib/core")
     for contract in selected:
         check_compile_pass(
             root, project_dir, project_file, build_dir, contract

@@ -44,7 +44,7 @@ class HaskellApiContractTest(unittest.TestCase):
                 contracts.check_core_package_inventory(package)
 
     def test_compiler_command_uses_the_exact_project_and_build(self):
-        project = Path("/tmp/o2i/spc")
+        project = Path("/tmp/o2i/spec")
         build = Path("/tmp/o2i/build")
         source = Path("/tmp/o2i/Client.hs")
         output = Path("/tmp/o2i/output")
@@ -70,7 +70,7 @@ class HaskellApiContractTest(unittest.TestCase):
             (package_db / f"{unit}.conf").write_text("")
 
             command = contracts.compiler_command(
-                Path("/tmp/o2i/spc"),
+                Path("/tmp/o2i/spec"),
                 "cabal.foundation.project",
                 build,
                 "o2i-core",
@@ -81,10 +81,10 @@ class HaskellApiContractTest(unittest.TestCase):
             self.assertEqual(command[command.index("-package-id") + 1], unit)
 
     def test_private_compiler_uses_source_tree_without_public_package(self):
-        project = Path("/tmp/o2i/spc")
+        project = Path("/tmp/o2i/spec")
         build = Path("/tmp/o2i/build")
         source = Path("/tmp/o2i/PrivateFailure.hs")
-        source_dir = Path("/tmp/o2i/spc/lib/core/src")
+        source_dir = Path("/tmp/o2i/spec/lib/core/src")
         output = Path("/tmp/o2i/output")
 
         command = contracts.private_compiler_command(
@@ -140,7 +140,7 @@ class HaskellApiContractTest(unittest.TestCase):
         assert_failure.side_effect = observe
         contracts.check_evidence_record_updates(
             Path("/tmp/o2i"),
-            Path("/tmp/o2i/spc"),
+            Path("/tmp/o2i/spec"),
             "cabal.foundation.project",
             Path("/tmp/o2i/build"),
         )
@@ -175,7 +175,7 @@ class HaskellApiContractTest(unittest.TestCase):
 
         contracts.check_compile_pass(
             Path("/tmp/o2i"),
-            Path("/tmp/o2i/spc"),
+            Path("/tmp/o2i/spec"),
             None,
             Path("/tmp/o2i/build"),
             contract,
@@ -201,7 +201,7 @@ class HaskellApiContractTest(unittest.TestCase):
         with patch.object(contracts, "PRIVATE_COMPILE_FAILURES", ()):
             contracts.check_contracts(
                 Path("/tmp/o2i"),
-                Path("/tmp/o2i/spc"),
+                Path("/tmp/o2i/spec"),
                 Path("/tmp/o2i/build"),
                 frozenset({"o2i-archimate-profile"}),
             )
@@ -221,7 +221,7 @@ class HaskellApiContractTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "unknown API-contract packages"):
             contracts.check_contracts(
                 Path("/tmp/o2i"),
-                Path("/tmp/o2i/spc"),
+                Path("/tmp/o2i/spec"),
                 Path("/tmp/o2i/build"),
                 frozenset({"o2i-unknown"}),
             )
@@ -254,26 +254,26 @@ class HaskellApiContractTest(unittest.TestCase):
     def test_resolves_fixture_local_diagnostic_paths(self):
         root = Path("/tmp/o2i").resolve()
         diagnostic = {
-            "span": {"file": "spc/tst/Fixture.hs"},
+            "span": {"file": "spec/tst/Fixture.hs"},
             "messageClass": "MCDiagnostic SevError Just GHC-76037",
         }
 
         self.assertEqual(
             contracts.diagnostic_file(root, diagnostic),
-            (root / "spc/tst/Fixture.hs").resolve(),
+            (root / "spec/tst/Fixture.hs").resolve(),
         )
 
     @patch.object(contracts, "compile_source")
     def test_compile_failure_rejects_unexpected_success(self, compile_source):
         compile_source.return_value = CompletedProcess([], 0, "", "")
         failure = contracts.CompileFailure(
-            "spc/tst/Fixture.hs", (("GHC-31891", 1),)
+            "spec/tst/Fixture.hs", (("GHC-31891", 1),)
         )
 
         with self.assertRaisesRegex(RuntimeError, "unexpectedly compiled"):
             contracts.check_compile_failure(
                 Path("/tmp/o2i"),
-                Path("/tmp/o2i/spc"),
+                Path("/tmp/o2i/spec"),
                 None,
                 Path("/tmp/o2i/build"),
                 "o2i-core",
@@ -283,18 +283,18 @@ class HaskellApiContractTest(unittest.TestCase):
     @patch.object(contracts, "compile_source")
     def test_compile_failure_rejects_foreign_spans(self, compile_source):
         diagnostic = (
-            '{"span":{"file":"spc/tst/Other.hs"},'
+            '{"span":{"file":"spec/tst/Other.hs"},'
             '"messageClass":"MCDiagnostic SevError Just GHC-31891"}'
         )
         compile_source.return_value = CompletedProcess([], 1, diagnostic, "")
         failure = contracts.CompileFailure(
-            "spc/tst/Fixture.hs", (("GHC-31891", 1),)
+            "spec/tst/Fixture.hs", (("GHC-31891", 1),)
         )
 
         with self.assertRaisesRegex(RuntimeError, "non-local diagnostics"):
             contracts.check_compile_failure(
                 Path("/tmp/o2i"),
-                Path("/tmp/o2i/spc"),
+                Path("/tmp/o2i/spec"),
                 None,
                 Path("/tmp/o2i/build"),
                 "o2i-core",
