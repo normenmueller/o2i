@@ -71,4 +71,6 @@ Prefer the connected GitHub application for covered reads and use `gh` only when
 
 ## Verification
 
-Verification is deterministic and network-independent. Before commit, run every stage selected by the canonical path matrix; unknown or shared scope selects the complete suite. Before a release tag, run `./utl/verify.sh`. Direct branch pushes do not trigger GitHub Actions. Required remote verification applies to Pull Requests, manual dispatches, and matching release tags. Never use `[skip ci]` as routine workflow.
+Keep feature branches backed up through regular scoped commits and pushes. Verify remote HEAD and report unbacked changes before declaring a recoverable source state. For backup commits, run `./utl/verify.sh checkpoint`. Pure illustration changes select licensing and model checks; per-save CLI checks still apply. Record unfinished-model findings. Checkpoints grant no final acceptance or merge authority.
+
+Verification is deterministic and network-independent. Integration uses the regular path matrix; unknown or shared scope selects the complete suite. Checkpoints do not change Pull Request, manual-dispatch or release verification. Before a release tag, run `./utl/verify.sh`. Direct branch pushes do not trigger GitHub Actions. Never use `[skip ci]` as routine workflow.
