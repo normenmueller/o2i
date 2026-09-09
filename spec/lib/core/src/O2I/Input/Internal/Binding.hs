@@ -117,21 +117,21 @@ bindingDefects graph kinds input =
             "/strategy"
             strategyKind
             (formulationStrategy formulation)
-        , resolveSite
+        , resolveSites
             graph
             kinds
             ordinal
             "/diagnosis"
             strategyDriverKind
             (formulationDiagnosis formulation)
-        , resolveSite
+        , resolveSites
             graph
             kinds
             ordinal
             "/intent"
             strategyObjectiveKind
             (formulationIntent formulation)
-        , resolveSite
+        , resolveSites
             graph
             kinds
             ordinal
@@ -176,7 +176,7 @@ bindingDefects graph kinds input =
             "/target"
             strategyKind
             (collectiveTarget collective)
-        , resolveSite
+        , resolveSites
             graph
             kinds
             ordinal

@@ -833,10 +833,12 @@ formulationMismatches ::
   -> [TracePromotionUnavailableReason]
 formulationMismatches identity proof =
   [ StrategyDiagnosisMismatch
-  | formulationDiagnosis formulation /= binding StrategyDriverVariable
+  | binding StrategyDriverVariable
+      `notElem` NonEmpty.toList (formulationDiagnosis formulation)
   ]
     ++ [ StrategyIntentMismatch
-       | formulationIntent formulation /= binding StrategyObjectiveVariable
+       | binding StrategyObjectiveVariable
+           `notElem` NonEmpty.toList (formulationIntent formulation)
        ]
     ++ [ StrategyActionNotInFormulation
        | binding StrategyActionVariable

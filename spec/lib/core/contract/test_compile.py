@@ -194,7 +194,7 @@ class CoreContractCompilerTest(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            27,
+            29,
             len(
                 re.findall(
                     r"^  \w+Rule\n"
@@ -205,7 +205,7 @@ class CoreContractCompilerTest(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            58,
+            60,
             len(
                 re.findall(
                     r"^  (?:=|\|) \w+RuleIdentity$",
@@ -248,7 +248,7 @@ class CoreContractCompilerTest(unittest.TestCase):
             "o2i.core.owner-diagnostic-evidence/v1", inventory["schema"]
         )
         self.assertEqual(
-            {"structure": 12, "binding": 4, "semantics": 27},
+            {"structure": 12, "binding": 4, "semantics": 29},
             {
                 owner: len(rows)
                 for owner, rows in inventory["owners"].items()
@@ -757,8 +757,8 @@ class CoreContractCompilerTest(unittest.TestCase):
         rules = COMPILER.rule_inventory(self.companion)
         stages = COMPILER.rule_stage_partition(self.companion, rules)
         schemas, mappings = self.semantic_evidence_contract(self.companion)
-        self.assertEqual(193, len(rules))
-        self.assertEqual(39, len(stages["semantics"]))
+        self.assertEqual(195, len(rules))
+        self.assertEqual(41, len(stages["semantics"]))
         self.assertEqual(
             {
                 "FitClaimKey": ["claim"],
@@ -770,7 +770,7 @@ class CoreContractCompilerTest(unittest.TestCase):
             },
             schemas,
         )
-        self.assertEqual(25, len(mappings))
+        self.assertEqual(27, len(mappings))
         self.assertTrue(set(mappings).issubset(stages["semantics"]))
         self.assertNotIn("core.contextualization.asserted-dependency", mappings)
         self.assertNotIn(
@@ -881,7 +881,7 @@ class CoreContractCompilerTest(unittest.TestCase):
             set(strategy["ruleIds"]),
             set(strategy["semanticObligations"]),
         )
-        self.assertEqual(22, len(strategy["ruleIds"]))
+        self.assertEqual(24, len(strategy["ruleIds"]))
         semantic_rules = set(
             self.companion["ruleExplanationContract"]["stagePartition"][
                 "semantics"

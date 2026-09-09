@@ -188,7 +188,7 @@ independentDefects =
     (strategySet
        strategyFormulation
          { formulationStrategy = identity "unknown-strategy"
-         , formulationDiagnosis = identity "objective-1"
+         , formulationDiagnosis = identity "objective-1" :| []
          })
     @?= [ identityDefect
             SupplementalIdentityUnknownDefect
@@ -198,7 +198,7 @@ independentDefects =
         , identityDefect
             SupplementalIdentityWrongTypeDefect
             strategyOrdinal
-            "/diagnosis"
+            "/diagnosis/0"
             "objective-1"
         ]
 
@@ -287,7 +287,7 @@ siteLocalBinding =
             , identityDefect
                 SupplementalIdentityUnknownDefect
                 strategyOrdinal
-                "/diagnosis"
+                "/diagnosis/0"
                 "unknown-diagnosis")
           ]
     let bound = supplementalBindingInputs binding
@@ -300,14 +300,14 @@ siteLocalBinding =
     supplementalIdentitySiteResolved
       bound
       strategyOrdinal
-      "/diagnosis"
+      "/diagnosis/0"
       (identity "unknown-diagnosis")
       @?= False
   where
     inputs =
       strategySet
         strategyFormulation
-          {formulationDiagnosis = identity "unknown-diagnosis"}
+          {formulationDiagnosis = identity "unknown-diagnosis" :| []}
 
 defectsFor ::
      [ModelOccurrence] -> SupplementalInputSet () -> [SupplementalInputDefect]
@@ -391,9 +391,9 @@ strategyFormulation =
           , strategyAnchoringImplementationLogic = fachlicheText
           }
     , formulationDerivedGuardrails = fachlicheText :| []
-    , formulationDiagnosis = identity "driver-1"
-    , formulationIntent = identity "objective-1"
-    , formulationGuidingPolicy = identity "principle-1"
+    , formulationDiagnosis = identity "driver-1" :| []
+    , formulationIntent = identity "objective-1" :| []
+    , formulationGuidingPolicy = identity "principle-1" :| []
     , formulationPositioning = fachlicheText :| []
     , formulationTradeOffs = fachlicheText :| []
     , formulationActions = identity "action-1" :| []
@@ -407,7 +407,7 @@ collectiveFit =
     { collectiveClaim = identity "claim-1"
     , collectiveParticipants = identity "strategy-a" :| [identity "strategy-b"]
     , collectiveTarget = identity "strategy-target"
-    , collectiveTargetGuidingPolicy = identity "principle-target"
+    , collectiveTargetGuidingPolicy = identity "principle-target" :| []
     , collectiveTargetTradeOffs = fachlicheText :| []
     , collectivePairwiseCoherence =
         PairwiseCoherence

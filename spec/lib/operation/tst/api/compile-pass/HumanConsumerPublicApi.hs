@@ -190,18 +190,22 @@ consumeSemanticEvidence =
           \strategy values ->
             consume [consumeModelIdentity strategy, occurrences values]
       , Diagnostic.eliminateHumanStrategyFormulationDiagnosis = fields
-      , Diagnostic.eliminateHumanStrategyFormulationDiagnosisGrounding = pair
+      , Diagnostic.eliminateHumanStrategyFormulationDiagnosisGrounding =
+          memberSupport
       , Diagnostic.eliminateHumanStrategyFormulationGuidingPolicy = fields
       , Diagnostic.eliminateHumanStrategyFormulationGuidingPolicyActions =
-          memberPair
+          memberSupport
       , Diagnostic.eliminateHumanStrategyFormulationIntent = fields
+      , Diagnostic.eliminateHumanStrategyFormulationIntentGrounding =
+          memberSupport
+      , Diagnostic.eliminateHumanStrategyFormulationIntentSubstantiation =
+          memberSupport
       , Diagnostic.eliminateHumanStrategyFormulationKeyResultSubstantiation =
-          memberPair
+          memberSupport
       , Diagnostic.eliminateHumanStrategyFormulationKeyResults =
           \strategy values ->
             consume [consumeModelIdentity strategy, occurrences values]
-      , Diagnostic.eliminateHumanStrategyFormulationVisionOrientation =
-          consumeModelIdentity
+      , Diagnostic.eliminateHumanStrategyFormulationVisionOrientation = member
       }
   where
     consume = foldr seq ()
@@ -215,24 +219,18 @@ consumeSemanticEvidence =
         [consumeModelIdentity identity, consumeOccurrenceIdentity occurrence]
     fields identity values =
       consume [consumeModelIdentity identity, occurrences values]
-    pair identity first second =
-      consume
-        [ consumeModelIdentity identity
-        , consumeOccurrenceIdentity first
-        , consumeOccurrenceIdentity second
-        ]
     member owner owned occurrence =
       consume
         [ consumeModelIdentity owner
         , consumeModelIdentity owned
         , consumeOccurrenceIdentity occurrence
         ]
-    memberPair owner owned first second =
+    memberSupport owner owned occurrence support =
       consume
         [ consumeModelIdentity owner
         , consumeModelIdentity owned
-        , consumeOccurrenceIdentity first
-        , consumeOccurrenceIdentity second
+        , consumeOccurrenceIdentity occurrence
+        , occurrences support
         ]
 
 consumeDiagnosticEvidence :: Diagnostic.HumanDiagnosticEvidence -> ()

@@ -689,8 +689,8 @@ strategyJson =
     , "\"responsibilityScope\":\"responsibility scope\",\"decisionLevel\":\"decision level\","
     , "\"responsibilities\":[\"responsibility\"],\"decisionPaths\":[\"decision path\"],"
     , "\"implementationLogic\":\"implementation logic\"},\"derivedGuardrails\":[\"guardrail\"],"
-    , "\"diagnosis\":\"strategyDriver\",\"intent\":\"strategyObjective\","
-    , "\"guidingPolicy\":\"strategyPrinciple\",\"positioning\":[\"positioning\"],"
+    , "\"diagnosis\":[\"strategyDriver\"],\"intent\":[\"strategyObjective\"],"
+    , "\"guidingPolicy\":[\"strategyPrinciple\"],\"positioning\":[\"positioning\"],"
     , "\"tradeOffs\":[\"trade-off\"],\"actions\":[\"strategyAction\"],"
     , "\"keyResults\":[\"strategyKeyResult\"],\"fitRationale\":[\"fit rationale\"]}"
     ]

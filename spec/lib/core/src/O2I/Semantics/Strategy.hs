@@ -81,277 +81,205 @@ assessFormulation semanticIndex strategy formulation =
   where
     strategyIdentity = carrierModelIdentity strategy
     strategyOccurrence = carrierOccurrenceIdentity strategy
-    diagnosis =
-      resolvedOccurrence "/diagnosis" (formulationDiagnosis formulation)
-    intent = resolvedOccurrence "/intent" (formulationIntent formulation)
-    guidingPolicy =
-      resolvedOccurrence "/guidingPolicy" (formulationGuidingPolicy formulation)
-    actionSites =
-      resolvedOccurrences
-        "/actions"
-        (NonEmpty.toList (formulationActions formulation))
-    keyResultSites =
-      resolvedOccurrences
-        "/keyResults"
-        (NonEmpty.toList (formulationKeyResults formulation))
-    actions = map snd actionSites
-    keyResults = map snd keyResultSites
-    allActionsResolved =
-      length actionSites == NonEmpty.length (formulationActions formulation)
-    allKeyResultsResolved =
-      length keyResultSites
-        == NonEmpty.length (formulationKeyResults formulation)
+    diagnosis = resolveMembers "/diagnosis" (formulationDiagnosis formulation)
+    intents = resolveMembers "/intent" (formulationIntent formulation)
+    policies =
+      resolveMembers "/guidingPolicy" (formulationGuidingPolicy formulation)
+    actions = resolveMembers "/actions" (formulationActions formulation)
+    keyResults =
+      resolveMembers "/keyResults" (formulationKeyResults formulation)
+    diagnosisResolved = complete diagnosis (formulationDiagnosis formulation)
+    intentsResolved = complete intents (formulationIntent formulation)
+    policiesResolved = complete policies (formulationGuidingPolicy formulation)
+    actionsResolved = complete actions (formulationActions formulation)
+    keyResultsResolved = complete keyResults (formulationKeyResults formulation)
     allIdentitySitesResolved =
-      allActionsResolved
-        && allKeyResultsResolved
-        && all
-             identityResolved
-             [ ("/diagnosis", formulationDiagnosis formulation)
-             , ("/intent", formulationIntent formulation)
-             , ("/guidingPolicy", formulationGuidingPolicy formulation)
-             ]
-    ownedDiagnosis =
-      assertedOwnedMembersAtEndpoint
-        semanticIndex
-        strategyOccurrence
-        endpointStrategyDriver
-    ownedIntent =
-      assertedOwnedMembersAtEndpoint
-        semanticIndex
-        strategyOccurrence
-        endpointStrategyObjective
-    ownedGuidingPolicy =
-      assertedOwnedMembersAtEndpoint
-        semanticIndex
-        strategyOccurrence
-        endpointStrategyPrinciple
-    ownedActions =
-      assertedOwnedMembersAtEndpoint
-        semanticIndex
-        strategyOccurrence
-        endpointStrategyAction
-    ownedKeyResults =
-      assertedOwnedMembersAtEndpoint
-        semanticIndex
-        strategyOccurrence
-        endpointStrategyKeyResult
-    visionOrientations =
-      case intent of
-        Just target ->
-          filter
-            (isAssertedEndpoint semanticIndex endpointVisionObjective)
-            (assertedIncomingSources semanticIndex target tokenOrients)
-        Nothing -> []
-    actionWithoutContribution =
-      [ action
-      | action <- actions
-      , null
-          (filter
-             (`Set.member` keyResultSet)
-             (assertedOutgoingTargets semanticIndex action tokenContributesTo))
-      ]
+      and
+        [ diagnosisResolved
+        , intentsResolved
+        , policiesResolved
+        , actionsResolved
+        , keyResultsResolved
+        ]
+    complete occurrences identifiers =
+      length occurrences == NonEmpty.length identifiers
+    owned endpoint =
+      assertedOwnedMembersAtEndpoint semanticIndex strategyOccurrence endpoint
+    visionSources intent =
+      filter
+        (isAssertedEndpoint semanticIndex endpointVisionObjective)
+        (assertedIncomingSources semanticIndex intent tokenOrients)
     defects =
-      whenResolved
-        "/diagnosis"
-        (formulationDiagnosis formulation)
-        (exactOwnedDefect
-           Generated.StrategyFormulationDiagnosisRule
-           Generated.StrategyFormulationDiagnosisOccurrences
-           strategyIdentity
-           diagnosis
-           ownedDiagnosis)
-        ++ whenResolved
-             "/intent"
-             (formulationIntent formulation)
-             (exactOwnedDefect
-                Generated.StrategyFormulationIntentRule
-                Generated.StrategyFormulationIntentOccurrences
-                strategyIdentity
-                intent
-                ownedIntent)
-        ++ whenResolved
-             "/guidingPolicy"
-             (formulationGuidingPolicy formulation)
-             (exactOwnedDefect
-                Generated.StrategyFormulationGuidingPolicyRule
-                Generated.StrategyFormulationGuidingPolicyOccurrences
-                strategyIdentity
-                guidingPolicy
-                ownedGuidingPolicy)
-        ++ [ defect
-           | allActionsResolved
-           , defect <-
-               listedOwnedDefect
-                 Generated.StrategyFormulationActionsRule
-                 Generated.StrategyFormulationActionsOccurrences
-                 strategyIdentity
-                 actions
-                 ownedActions
+      ownedDefects
+        diagnosisResolved
+        Generated.StrategyFormulationDiagnosisRule
+        Generated.StrategyFormulationDiagnosisOccurrences
+        diagnosis
+        endpointStrategyDriver
+        ++ ownedDefects
+             intentsResolved
+             Generated.StrategyFormulationIntentRule
+             Generated.StrategyFormulationIntentOccurrences
+             intents
+             endpointStrategyObjective
+        ++ ownedDefects
+             policiesResolved
+             Generated.StrategyFormulationGuidingPolicyRule
+             Generated.StrategyFormulationGuidingPolicyOccurrences
+             policies
+             endpointStrategyPrinciple
+        ++ ownedDefects
+             actionsResolved
+             Generated.StrategyFormulationActionsRule
+             Generated.StrategyFormulationActionsOccurrences
+             actions
+             endpointStrategyAction
+        ++ ownedDefects
+             keyResultsResolved
+             Generated.StrategyFormulationKeyResultsRule
+             Generated.StrategyFormulationKeyResultsOccurrences
+             keyResults
+             endpointStrategyKeyResult
+        ++ [ mkSemanticDefect
+             Generated.StrategyFormulationVisionOrientationRule
+             (SemanticStrategyMemberEvidenceKey strategyIdentity identifier)
+             (Generated.StrategyFormulationVisionOrientationOccurrences intent)
+           | intent <- intents
+           , null (visionSources intent)
+           , Just identifier <- [modelIdentityAt semanticIndex intent]
            ]
-        ++ [ defect
-           | allKeyResultsResolved
-           , defect <-
-               listedOwnedDefect
-                 Generated.StrategyFormulationKeyResultsRule
-                 Generated.StrategyFormulationKeyResultsOccurrences
-                 strategyIdentity
-                 keyResults
-                 ownedKeyResults
-           ]
-        ++ whenResolved
-             "/intent"
-             (formulationIntent formulation)
-             (requiredRelationDefect
-                Generated.StrategyFormulationVisionOrientationRule
-                Generated.StrategyFormulationVisionOrientationOccurrences
-                (SemanticStrategyEvidenceKey strategyIdentity)
-                visionOrientations)
-        ++ [ defect
-           | identityResolved ("/diagnosis", formulationDiagnosis formulation)
-           , identityResolved ("/intent", formulationIntent formulation)
-           , defect <-
-               relationBetweenMaybeDefect
-                 semanticIndex
-                 Generated.StrategyFormulationDiagnosisGroundingRule
-                 (SemanticStrategyEvidenceKey strategyIdentity)
-                 diagnosis
-                 tokenGrounds
-                 intent
-           ]
-        ++ [ defect
-           | identityResolved
-               ("/guidingPolicy", formulationGuidingPolicy formulation)
-           , action <- actions
-           , defect <-
-               sourceToMemberRelationDefect
-                 semanticIndex
-                 Generated.StrategyFormulationGuidingPolicyActionsRule
-                 strategyIdentity
-                 guidingPolicy
-                 tokenGuides
-                 action
-           ]
+        ++ coverage
+             intentsResolved
+             Generated.StrategyFormulationDiagnosisGroundingRule
+             Generated.StrategyFormulationDiagnosisGroundingOccurrences
+             outgoing
+             tokenGrounds
+             diagnosis
+             intents
+        ++ coverage
+             diagnosisResolved
+             Generated.StrategyFormulationIntentGroundingRule
+             Generated.StrategyFormulationIntentGroundingOccurrences
+             incoming
+             tokenGrounds
+             intents
+             diagnosis
+        ++ coverage
+             policiesResolved
+             Generated.StrategyFormulationGuidingPolicyActionsRule
+             Generated.StrategyFormulationGuidingPolicyActionsOccurrences
+             incoming
+             tokenGuides
+             actions
+             policies
         ++ [ mkSemanticDefect
              Generated.StrategyFormulationActionContributionsRule
-             (SemanticStrategyMemberEvidenceKey strategyIdentity actionIdentity)
+             (SemanticStrategyMemberEvidenceKey strategyIdentity identifier)
              (Generated.StrategyFormulationActionContributionsOccurrences action)
-           | allKeyResultsResolved
-           , action <- actionWithoutContribution
-           , Just actionIdentity <- [modelIdentityAt semanticIndex action]
+           | keyResultsResolved
+           , action <- actions
+           , not (hasNeighbour outgoing tokenContributesTo keyResultSet action)
+           , Just identifier <- [modelIdentityAt semanticIndex action]
            ]
-        ++ [ defect
-           | identityResolved ("/intent", formulationIntent formulation)
-           , keyResult <- keyResults
-           , defect <-
-               memberToTargetRelationDefect
-                 semanticIndex
-                 Generated.StrategyFormulationKeyResultSubstantiationRule
-                 strategyIdentity
-                 tokenSubstantiates
-                 intent
-                 keyResult
-           ]
+        ++ coverage
+             intentsResolved
+             Generated.StrategyFormulationKeyResultSubstantiationRule
+             Generated.StrategyFormulationKeyResultSubstantiationOccurrences
+             outgoing
+             tokenSubstantiates
+             keyResults
+             intents
+        ++ coverage
+             keyResultsResolved
+             Generated.StrategyFormulationIntentSubstantiationRule
+             Generated.StrategyFormulationIntentSubstantiationOccurrences
+             incoming
+             tokenSubstantiates
+             intents
+             keyResults
+    ownedDefects resolved rule evidence listed endpoint
+      | resolved =
+        listedOwnedDefect rule evidence strategyIdentity listed (owned endpoint)
+      | otherwise = []
+    coverage resolved rule evidence neighbours token members opposite
+      | resolved =
+        memberCoverageDefects
+          semanticIndex
+          rule
+          evidence
+          strategyIdentity
+          (hasNeighbour neighbours token oppositeSet)
+          members
+          opposite
+      | otherwise = []
+      where
+        oppositeSet = Set.fromList opposite
+    outgoing member token = assertedOutgoingTargets semanticIndex member token
+    incoming member token = assertedIncomingSources semanticIndex member token
+    hasNeighbour neighbours token selected member =
+      any (`Set.member` selected) (neighbours member token)
+    selectedMembers = diagnosis ++ intents ++ policies ++ actions ++ keyResults
     witnesses =
       strategyOccurrence
-        : maybeToList diagnosis
-        ++ maybeToList intent
-        ++ maybeToList guidingPolicy
-        ++ actions
-        ++ keyResults
-        ++ visionOrientations
-        ++ contextualizationWitnesses
-             semanticIndex
-             (maybeToList diagnosis
-                ++ maybeToList intent
-                ++ maybeToList guidingPolicy
-                ++ actions
-                ++ keyResults)
+        : selectedMembers
+        ++ concatMap visionSources intents
+        ++ contextualizationWitnesses semanticIndex selectedMembers
         ++ relationWitnesses
     relationWitnesses =
-      case intent of
-        Nothing -> []
-        Just objective ->
-          concat
-            [ relationOccurrences
-              (assertedMatchingRelations
-                 semanticIndex
-                 visionObjective
-                 tokenOrients
-                 objective)
-            | visionObjective <- visionOrientations
-            ]
-            ++ maybeRelationOccurrences
-                 semanticIndex
-                 diagnosis
-                 tokenGrounds
-                 (Just objective)
-            ++ concat
-                 [ maybeRelationOccurrences
-                   semanticIndex
-                   guidingPolicy
-                   tokenGuides
-                   (Just action)
-                 | action <- actions
-                 ]
-            ++ concat
-                 [ relationOccurrencesToTargets
-                   semanticIndex
-                   action
-                   tokenContributesTo
-                   keyResultSet
-                 | action <- actions
-                 ]
-            ++ concat
-                 [ relationOccurrences
-                   (assertedMatchingRelations
-                      semanticIndex
-                      keyResult
-                      tokenSubstantiates
-                      objective)
-                 | keyResult <- keyResults
-                 ]
-    identityResolved (pointer, identifier) =
-      strategyIdentitySiteResolved
-        semanticIndex
-        strategyIdentity
-        pointer
-        identifier
-    resolvedOccurrence pointer identifier
-      | identityResolved (pointer, identifier) =
-        occurrenceForIdentity semanticIndex identifier
-      | otherwise = Nothing
-    resolvedOccurrences base identifiers =
-      [ (identifier, occurrence)
-      | (index, identifier) <- zip [0 :: Int ..] identifiers
+      concat
+        [ relationOccurrences
+          (assertedMatchingRelations semanticIndex vision tokenOrients intent)
+        | intent <- intents
+        , vision <- visionSources intent
+        ]
+        ++ concatMap
+             (\driver ->
+                relationOccurrencesToTargets
+                  semanticIndex
+                  driver
+                  tokenGrounds
+                  intentSet)
+             diagnosis
+        ++ concatMap
+             (\policy ->
+                relationOccurrencesToTargets
+                  semanticIndex
+                  policy
+                  tokenGuides
+                  actionSet)
+             policies
+        ++ concatMap
+             (\action ->
+                relationOccurrencesToTargets
+                  semanticIndex
+                  action
+                  tokenContributesTo
+                  keyResultSet)
+             actions
+        ++ concatMap
+             (\keyResult ->
+                relationOccurrencesToTargets
+                  semanticIndex
+                  keyResult
+                  tokenSubstantiates
+                  intentSet)
+             keyResults
+    intentSet = Set.fromList intents
+    actionSet = Set.fromList actions
+    keyResultSet = Set.fromList keyResults
+    resolveMembers base identifiers =
+      [ occurrence
+      | (index, identifier) <- zip [0 :: Int ..] (NonEmpty.toList identifiers)
       , let pointer = base <> "/" <> Text.pack (show index)
-      , identityResolved (pointer, identifier)
+      , strategyIdentitySiteResolved
+          semanticIndex
+          strategyIdentity
+          pointer
+          identifier
       , Just occurrence <- [occurrenceForIdentity semanticIndex identifier]
       ]
-    whenResolved pointer identifier values
-      | identityResolved (pointer, identifier) = values
-      | otherwise = []
-    keyResultSet = Set.fromList keyResults
 
-exactOwnedDefect ::
-     Generated.GeneratedSemanticRule
-       'Generated.GeneratedStrategyKeySchema
-       occurrenceSchema
-  -> ([OccurrenceIdentity] -> SemanticOccurrenceEvidence occurrenceSchema)
-  -> ModelIdentity
-  -> Maybe OccurrenceIdentity
-  -> [OccurrenceIdentity]
-  -> [SemanticDefect]
-exactOwnedDefect rule occurrenceEvidence strategy expected owned =
-  case expected of
-    Just member
-      | owned == [member] -> []
-    _ ->
-      [ mkSemanticDefect
-          rule
-          (SemanticStrategyEvidenceKey strategy)
-          (occurrenceEvidence owned)
-      ]
-
+-- | Listed membership does not exclude additional unselected Strategy primitives.
 listedOwnedDefect ::
      Generated.GeneratedSemanticRule
        'Generated.GeneratedStrategyKeySchema
@@ -362,101 +290,46 @@ listedOwnedDefect ::
   -> [OccurrenceIdentity]
   -> [OccurrenceIdentity]
   -> [SemanticDefect]
-listedOwnedDefect rule occurrenceEvidence strategy listed owned
-  | not (null listed) && all (`elem` owned) listed = []
+listedOwnedDefect rule evidence strategy listed owned
+  | all (`Set.member` ownedSet) listed = []
   | otherwise =
-    case NonEmpty.nonEmpty listed of
+    case NonEmpty.nonEmpty (Set.toAscList (Set.fromList listed)) of
       Nothing -> []
       Just occurrences ->
         [ mkSemanticDefect
             rule
             (SemanticStrategyEvidenceKey strategy)
-            (occurrenceEvidence occurrences)
+            (evidence occurrences)
         ]
+  where
+    ownedSet = Set.fromList owned
 
-requiredRelationDefect ::
-     Generated.GeneratedSemanticRule
-       'Generated.GeneratedStrategyKeySchema
+-- | One defect per uncovered member, preserving the full selected opposite role.
+-- Only addressed neighbours are inspected; no member-pair product is constructed.
+memberCoverageDefects ::
+     SemanticIndex scope
+  -> Generated.GeneratedSemanticRule
+       'Generated.GeneratedStrategyMemberKeySchema
        occurrenceSchema
-  -> SemanticOccurrenceEvidence occurrenceSchema
-  -> SemanticEvidenceKey 'Generated.GeneratedStrategyKeySchema
+  -> (OccurrenceIdentity -> NonEmpty.NonEmpty OccurrenceIdentity -> SemanticOccurrenceEvidence
+                                                                      occurrenceSchema)
+  -> ModelIdentity
+  -> (OccurrenceIdentity -> Bool)
+  -> [OccurrenceIdentity]
   -> [OccurrenceIdentity]
   -> [SemanticDefect]
-requiredRelationDefect rule occurrenceEvidence evidence occurrences
-  | null occurrences = [mkSemanticDefect rule evidence occurrenceEvidence]
-  | otherwise = []
-
-relationBetweenMaybeDefect ::
-     SemanticIndex scope
-  -> Generated.GeneratedSemanticRule
-       'Generated.GeneratedStrategyKeySchema
-       'Generated.StrategyFormulationDiagnosisGroundingOccurrenceSchema
-  -> SemanticEvidenceKey 'Generated.GeneratedStrategyKeySchema
-  -> Maybe OccurrenceIdentity
-  -> CoreRelationToken
-  -> Maybe OccurrenceIdentity
-  -> [SemanticDefect]
-relationBetweenMaybeDefect semanticIndex rule evidence source token target =
-  case (source, target) of
-    (Just from, Just to)
-      | not (null (assertedMatchingRelations semanticIndex from token to)) -> []
-    (Just from, Just to) ->
+memberCoverageDefects semanticIndex rule evidence strategy covered members opposite =
+  case NonEmpty.nonEmpty (Set.toAscList (Set.fromList opposite)) of
+    Nothing -> []
+    Just selected ->
       [ mkSemanticDefect
-          rule
-          evidence
-          (Generated.StrategyFormulationDiagnosisGroundingOccurrences from to)
+        rule
+        (SemanticStrategyMemberEvidenceKey strategy identifier)
+        (evidence member selected)
+      | member <- members
+      , not (covered member)
+      , Just identifier <- [modelIdentityAt semanticIndex member]
       ]
-    _ -> []
-
-sourceToMemberRelationDefect ::
-     SemanticIndex scope
-  -> Generated.GeneratedSemanticRule
-       'Generated.GeneratedStrategyMemberKeySchema
-       'Generated.StrategyFormulationGuidingPolicyActionsOccurrenceSchema
-  -> ModelIdentity
-  -> Maybe OccurrenceIdentity
-  -> CoreRelationToken
-  -> OccurrenceIdentity
-  -> [SemanticDefect]
-sourceToMemberRelationDefect semanticIndex rule strategy maybeSource token member =
-  case (maybeSource, modelIdentityAt semanticIndex member) of
-    (Just source, Just memberIdentity)
-      | not (null (assertedMatchingRelations semanticIndex source token member)) ->
-        []
-      | otherwise ->
-        [ mkSemanticDefect
-            rule
-            (SemanticStrategyMemberEvidenceKey strategy memberIdentity)
-            (Generated.StrategyFormulationGuidingPolicyActionsOccurrences
-               source
-               member)
-        ]
-    _ -> []
-
-memberToTargetRelationDefect ::
-     SemanticIndex scope
-  -> Generated.GeneratedSemanticRule
-       'Generated.GeneratedStrategyMemberKeySchema
-       'Generated.StrategyFormulationKeyResultSubstantiationOccurrenceSchema
-  -> ModelIdentity
-  -> CoreRelationToken
-  -> Maybe OccurrenceIdentity
-  -> OccurrenceIdentity
-  -> [SemanticDefect]
-memberToTargetRelationDefect semanticIndex rule strategy token maybeTarget member =
-  case (modelIdentityAt semanticIndex member, maybeTarget) of
-    (Just memberIdentity, Just target)
-      | not (null (assertedMatchingRelations semanticIndex member token target)) ->
-        []
-      | otherwise ->
-        [ mkSemanticDefect
-            rule
-            (SemanticStrategyMemberEvidenceKey strategy memberIdentity)
-            (Generated.StrategyFormulationKeyResultSubstantiationOccurrences
-               member
-               target)
-        ]
-    _ -> []
 
 occurrenceForIdentity ::
      SemanticIndex scope -> ModelIdentity -> Maybe OccurrenceIdentity
@@ -491,19 +364,6 @@ contextualizationWitnesses semanticIndex members =
   , Just contextualization <- [contextualizationForMember semanticIndex member]
   ]
 
-maybeRelationOccurrences ::
-     SemanticIndex scope
-  -> Maybe OccurrenceIdentity
-  -> CoreRelationToken
-  -> Maybe OccurrenceIdentity
-  -> [OccurrenceIdentity]
-maybeRelationOccurrences semanticIndex source token target =
-  case (source, target) of
-    (Just from, Just to) ->
-      relationOccurrences
-        (assertedMatchingRelations semanticIndex from token to)
-    _ -> []
-
 relationOccurrences :: [RelationObservation scope] -> [OccurrenceIdentity]
 relationOccurrences = map relationOccurrenceIdentity
 
@@ -522,9 +382,3 @@ relationOccurrencesToTargets semanticIndex source token targets =
           (`Set.member` targets)
           (assertedOutgoingTargets semanticIndex source token)
     ]
-
-maybeToList :: Maybe value -> [value]
-maybeToList maybeValue =
-  case maybeValue of
-    Just value -> [value]
-    Nothing -> []
