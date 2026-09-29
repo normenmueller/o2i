@@ -356,6 +356,15 @@ class PolicyShapeTests(unittest.TestCase):
         for identifier in identifiers:
             with self.subTest(identifier=identifier):
                 self.assertIn(f"`{identifier}`", projection)
+        for owner in policy["ruleOwners"]:
+            with self.subTest(owner=owner["id"]):
+                rows = [
+                    line for line in projection.splitlines()
+                    if line.startswith(f"- `{owner['id']}`:")
+                ]
+                self.assertEqual(1, len(rows))
+                self.assertIn(f"`{owner['owner']}`", rows[0])
+                self.assertIn(f"`{owner['loadsWhen']}`", rows[0])
 
 
 class StateAndBudgetTests(unittest.TestCase):
@@ -983,12 +992,18 @@ class RepositorySurfaceTests(unittest.TestCase):
                 self.assertLessEqual(octets, 1000)
 
     def test_local_staging_is_ignored(self) -> None:
-        result = subprocess.run(
-            ["git", "check-ignore", "-q", ".ai4x/local/probe"],
-            cwd=ROOT,
-            check=False,
-        )
-        self.assertEqual(0, result.returncode)
+        for path in (
+            ".ai4x/work/local/probe",
+            ".ai4x/work/remote/probe",
+            "utl/verification/.local/probe",
+        ):
+            with self.subTest(path=path):
+                result = subprocess.run(
+                    ["git", "check-ignore", "-q", path],
+                    cwd=ROOT,
+                    check=False,
+                )
+                self.assertEqual(0, result.returncode)
 
     def test_public_contracts_are_repository_autonomous(self) -> None:
         absolute_posix = re.compile(

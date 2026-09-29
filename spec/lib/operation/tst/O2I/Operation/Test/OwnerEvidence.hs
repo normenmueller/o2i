@@ -101,7 +101,7 @@ tests =
         "publicly consumes every supplemental Binding branch with its source"
         publicSupplementalConsumption
     , testCase
-        "retains and encodes real Semantics evidence 27/27"
+        "retains and encodes every real Semantics evidence family"
         semanticsOwnerEvidence
     , testCase
         "nests real acquired Binding evidence under its exact source"
@@ -480,7 +480,7 @@ semanticsOwnerEvidence = do
       ("tst" </> "fixtures" </> "semantic-diagnostic-machine-v2.jsonl")
   expected <- requireCoreResult CoreConformance.semanticsCorpusRuleIds
   map firstOf3 rows @?= map coreRuleIdText expected
-  length (nub (map firstOf3 rows)) @?= 27
+  length (nub (map firstOf3 rows)) @?= 29
   mapM_ (assertDocumentSchema . secondOf3) rows
   semanticsMachineBaseline rows @?= checkedIn
   assertBool
@@ -870,14 +870,19 @@ humanSemanticFamily =
       , Human.eliminateHumanStrategyFormulationActionContributions = member
       , Human.eliminateHumanStrategyFormulationActions = fields
       , Human.eliminateHumanStrategyFormulationDiagnosis = fields
-      , Human.eliminateHumanStrategyFormulationDiagnosisGrounding = pair
+      , Human.eliminateHumanStrategyFormulationDiagnosisGrounding =
+          memberSupport
       , Human.eliminateHumanStrategyFormulationGuidingPolicy = fields
-      , Human.eliminateHumanStrategyFormulationGuidingPolicyActions = memberPair
+      , Human.eliminateHumanStrategyFormulationGuidingPolicyActions =
+          memberSupport
       , Human.eliminateHumanStrategyFormulationIntent = fields
+      , Human.eliminateHumanStrategyFormulationIntentGrounding = memberSupport
+      , Human.eliminateHumanStrategyFormulationIntentSubstantiation =
+          memberSupport
       , Human.eliminateHumanStrategyFormulationKeyResultSubstantiation =
-          memberPair
+          memberSupport
       , Human.eliminateHumanStrategyFormulationKeyResults = fields
-      , Human.eliminateHumanStrategyFormulationVisionOrientation = one
+      , Human.eliminateHumanStrategyFormulationVisionOrientation = member
       }
   where
     consume values =
@@ -890,12 +895,10 @@ humanSemanticFamily =
     one identity = consume [model identity]
     field identity value = consume [model identity, occurrence value]
     fields identity values = consume [model identity, occurrences values]
-    pair identity first second =
-      consume [model identity, occurrence first, occurrence second]
     member owner owned value =
       consume [model owner, model owned, occurrence value]
-    memberPair owner owned first second =
-      consume [model owner, model owned, occurrence first, occurrence second]
+    memberSupport owner owned value support =
+      consume [model owner, model owned, occurrence value, occurrences support]
 
 acquiredBindingEvidence :: Assertion
 acquiredBindingEvidence = do

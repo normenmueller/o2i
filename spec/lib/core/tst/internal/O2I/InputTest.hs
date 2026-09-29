@@ -65,6 +65,9 @@ tests =
     , testCase "Strategy formulation payload decodes completely" strategyInput
     , testCase "Collective Fit payload decodes completely" collectiveInput
     , testCase
+        "primitive constituent sets reject scalar, empty and duplicate input"
+        pluralConstituentInputs
+    , testCase
         "payload-discriminator failure suppresses schema assessment"
         discriminatorSuppression
     , testCase
@@ -235,6 +238,38 @@ strategyInput =
       supplementalInputOrdinalOf input @?= SupplementalInputOrdinal 0
       supplementalInputType input @?= StrategyFormulationPayload
       modelIdentityText (supplementalInputSubject input) @?= "strategy-1"
+
+pluralConstituentInputs :: IO ()
+pluralConstituentInputs =
+  forM_ rows $ \(base, field, identifier) -> do
+    let prefix = "\"" <> field <> "\":"
+        quoted = "\"" <> identifier <> "\""
+        old = prefix <> "[" <> quoted <> "]"
+        change value =
+          decode
+            (SupplementalInputOrdinal 0)
+            (Text.replace old (prefix <> value) base)
+    defectKinds (change quoted) @?= [SupplementalValueKindInvalid]
+    defectKinds (change "[]") @?= [SupplementalArrayCardinalityInvalid]
+    defectKinds (change ("[" <> quoted <> "," <> quoted <> "]"))
+      @?= [SupplementalArrayDistinctnessInvalid]
+    _ <- accepted (change ("[" <> quoted <> ",\"second-member\"]"))
+    pure ()
+  where
+    rows =
+      [ (strategyJson "strategy-1", field, identifier)
+      | (field, identifier) <-
+          [ ("diagnosis", "driver-1")
+          , ("intent", "objective-1")
+          , ("guidingPolicy", "principle-1")
+          , ("actions", "action-1")
+          , ("keyResults", "key-result-1")
+          ]
+      ]
+        ++ [ ( collectiveJson "claim-1"
+             , "targetGuidingPolicy"
+             , "principle-target")
+           ]
 
 collectiveInput :: IO ()
 collectiveInput =
@@ -956,8 +991,8 @@ strategyJson strategy =
     , "\"decisionPaths\":[\"path\"],"
     , "\"implementationLogic\":\"logic\"},"
     , "\"derivedGuardrails\":[\"guardrail\"],"
-    , "\"diagnosis\":\"driver-1\",\"intent\":\"objective-1\","
-    , "\"guidingPolicy\":\"principle-1\","
+    , "\"diagnosis\":[\"driver-1\"],\"intent\":[\"objective-1\"],"
+    , "\"guidingPolicy\":[\"principle-1\"],"
     , "\"positioning\":[\"position\"],"
     , "\"tradeOffs\":[\"trade-off\"],"
     , "\"actions\":[\"action-1\"],"
@@ -972,7 +1007,7 @@ collectiveJson claim =
     , claim
     , "\",\"participants\":[\"strategy-a\",\"strategy-b\"],"
     , "\"target\":\"strategy-target\","
-    , "\"targetGuidingPolicy\":\"principle-target\","
+    , "\"targetGuidingPolicy\":[\"principle-target\"],"
     , "\"targetTradeOffs\":[\"trade-off\"],"
     , "\"pairwiseCoherence\":[{\"participantA\":\"strategy-a\","
     , "\"participantB\":\"strategy-b\",\"rationale\":\"coherent\"}],"

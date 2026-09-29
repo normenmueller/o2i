@@ -132,13 +132,13 @@
       "schema": "o2i.archimate-profile.diagnostic-evidence/v1",
       "identity": "o2i.archimate-profile",
       "version": "0.3.0",
-      "sha256": "37ecfd88206f0b6b0431000c09094a5701bf2b4f7fe8ea7226bf60266e1fa23b"
+      "sha256": "fbc46ff02f5a0895b82fcd8da076cf3ba2533f993337c531af65726345d77471"
     },
     "core": {
       "schema": "o2i.core.owner-diagnostic-evidence/v1",
       "identity": "o2i.core-semantics",
       "version": "0.3.0",
-      "sha256": "f21319a50ab84fe30c35889ab15d581022783523b1e1198b1f0c2acf021b90db"
+      "sha256": "1e728a31bcba2d4613df53326264df394a301684c33ea906c1ab18c6961aff7a"
     }
   },
   "rules": [

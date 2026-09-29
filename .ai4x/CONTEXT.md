@@ -1,12 +1,10 @@
 # Purpose
 
-Stable identity, product boundaries, statement-class ownership, retrieval routes, and durable invariants for work in the O2I repository. Bootstrap belongs to `.ai4x/BEHAVIOR.md`; collaboration to `.ai4x/TEAM.md`; governance to `.ai4x/governance/`; task rules to `.ai4x/operations/`; and the applicable local return point to `.ai4x/HANDOFF.md`.
+Stable identity, product ownership, retrieval, and durable invariants. Load after checkout selection when repository context is material; `BEHAVIOR.md` owns operational routing.
 
 # Project Identity
 
-O2I is a generic framework for effect architectures. It makes oriented effect understandable and evidencable through terminology, a metamodel, concrete notation, and machine-checkable formalization. O2I remains independent of every organizational instance: instances test and apply the Framework but never define its generic semantics. Agentic AI may support O2I reasoning but must never be required by O2I.
-
-Contexts provide meaning and Primitives carry modeled content. Relations between contextualized Primitives justify Context macrorelations, so O2I defines a checkable effect graph rather than only a terminology catalog. O2I supports evidence consistency and plausible attribution, not causal proof.
+O2I is a generic framework for effect architectures: terminology, metamodel, notation, and machine-checkable formalization make oriented effect understandable and evidencable. Organizational instances test and apply O2I without defining its semantics. Agentic AI may assist but is never required. O2I supports evidence consistency and plausible attribution, not causal proof.
 
 # Statement-Class Boundaries
 
@@ -18,31 +16,27 @@ Each statement class has exactly one owner. Resolve conflicts in that owner befo
 | Fachliche definitions and authors' derivations | `doc/paper/o2i.md` Terminology | WTF and model documentation |
 | Metamodel types, relations, and invariants | `doc/paper/o2i.md` Metamodel | semantic Views and Haskell |
 | Exact ArchiMate mapping | `spec/ctr/archimate/profile.json` | White Paper projection, syntax Views, adapters |
-| Machine-checkable formalization | `spec/lib/core/` | Operation, adapters, CLI |
-| AMX acquisition, validation, and projection | `spec/lib/adapter/amx/` and `spec/ctr/archimate/` | Operation and CLI results |
+| Notation-independent structure, semantics, qualification, trace, readiness, assessment | `spec/lib/core/` | Operation, adapters, CLI |
+| Bounded AMX acquisition and native observations | `spec/lib/adapter/amx/` | Operation and CLI results |
 | Change contract, decisions, dependencies, review evidence, open state | owning GitHub Issue | Project and local handoff references |
 | Workflow status and Product Owner ordering | GitHub Project `O2I` | no product or authority fact |
 | Verification evidence | tests and generated snapshots | no semantic ownership |
 
-Tests verify contracts; they never define fachliche meaning.
-
 # Retrieval Routes
 
-- `README.md` and `doc/README.md`: project entry and human reading routes; `doc/paper/o2i.md` owns normative fachliche/metamodel content, `doc/misc/wtf.md` informal orientation, and `doc/guide/` guided modeling with the shared instance in `doc/model/illustration.archimate`.
-- `spec/lib/core/`: notation-independent structure, semantics, qualification, trace, readiness, and assessment contracts.
-- `spec/ctr/archimate/`: declarative Profile, typed projection, and generated contract artifacts.
-- `spec/lib/adapter/amx/`: bounded AMX acquisition and canonical native observations.
-- `spec/lib/operation/` and `spec/cli/`: capability-sized execution, diagnostics, machine results, and thin rendering.
-- `meta/o2i.archimate` and `meta/o2i-*.md`: reference model and generated review snapshots; agents never edit the model directly.
-- `.ai4x/governance/`, `.ai4x/operations/`, `.agents/skills/`, and `.github/agents/`: canonical operating contracts and their lean routers.
-- `utl/verify.sh`: canonical staged deterministic verification.
+- Human entry: `README.md`, `doc/README.md`; informal orientation: `doc/misc/wtf.md`; guided modeling: `doc/guide/` with `doc/model/illustration.archimate`.
+- Profile projection and generated contracts: `spec/ctr/archimate/`.
+- Capability execution, diagnostics, machine results, thin CLI rendering: `spec/lib/operation/`, `spec/cli/`.
+- Reference model and generated snapshots: `meta/o2i.archimate`, `meta/o2i-*.md`.
+- Operating contracts: `governance/`, `operations/`; lean routers: `.agents/skills/`, `.github/agents/`.
+- Artifact placement and local execution: `operations/artifact-placement.md`, `operations/local-verification.md`; tool procedure: `utl/verification/README.md`.
 
 # Durable Invariants
 
 - Keep terminology, metamodel semantics, concrete notation, formalization, and verification distinct and synchronized.
-- Contextualized Primitive relations substantiate Context macrorelations; visual nesting alone has no contextualization semantics.
+- Contexts provide meaning; Primitives carry modeled content. Contextualized Primitive relations substantiate Context macrorelations; visual nesting has no contextualization semantics.
 - Persisted propositions carry explicit `Candidate` or `Asserted` commitment. Candidates remain diagnostic, and Asserted propositions depend only on Asserted propositions.
 - A complete effect trace precedes evidence readiness. Effect and target attainment remain independent assessments.
 - The Profile projects notation structure; Core owns notation-independent well-formedness and semantic validity. Qualification, trace, readiness, and assessment remain separate capabilities rather than one validation pipeline.
-- Semantic Views visualize the metamodel; syntax Views visualize the declarative Profile. Neither ArchiMate nor Python owns O2I semantics.
-- Reference styling is editorial guidance, not instance conformance. Preserve the lean presentation boundary in `doc/paper/o2i.md` (Syntax) and `operations/modeling.md`: no cosmetic product checker or implicit graphical semantics; justified meaning-bearing checks belong in O2I libraries and the CLI.
+- Semantic Views visualize the metamodel; syntax Views visualize the Profile. ArchiMate, Python, and tests never define O2I semantics.
+- Reference styling is editorial, not conformance. Apply `operations/modeling.md` and the White Paper Syntax boundary: no cosmetic product checker or implicit graphical semantics; justified meaning-bearing checks remain library/CLI-owned.

@@ -317,13 +317,13 @@ strategyPayload identityValue =
   ByteString.pack
     ("{\"type\":\"StrategyFormulationInput\",\"strategy\":\""
        <> text
-       <> "\",\"scope\":[\"scope\"],\"anchoring\":{\"period\":\"period\",\"responsibilityScope\":\"responsibility scope\",\"decisionLevel\":\"decision level\",\"responsibilities\":[\"responsibility\"],\"decisionPaths\":[\"decision path\"],\"implementationLogic\":\"implementation logic\"},\"derivedGuardrails\":[\"guardrail\"],\"diagnosis\":\""
+       <> "\",\"scope\":[\"scope\"],\"anchoring\":{\"period\":\"period\",\"responsibilityScope\":\"responsibility scope\",\"decisionLevel\":\"decision level\",\"responsibilities\":[\"responsibility\"],\"decisionPaths\":[\"decision path\"],\"implementationLogic\":\"implementation logic\"},\"derivedGuardrails\":[\"guardrail\"],\"diagnosis\":[\""
        <> text
-       <> "\",\"intent\":\""
+       <> "\"],\"intent\":[\""
        <> text
-       <> "\",\"guidingPolicy\":\""
+       <> "\"],\"guidingPolicy\":[\""
        <> text
-       <> "\",\"positioning\":[\"positioning\"],\"tradeOffs\":[\"trade-off\"],\"actions\":[\""
+       <> "\"],\"positioning\":[\"positioning\"],\"tradeOffs\":[\"trade-off\"],\"actions\":[\""
        <> text
        <> "\"],\"keyResults\":[\""
        <> text

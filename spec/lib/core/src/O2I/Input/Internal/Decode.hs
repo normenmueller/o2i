@@ -115,9 +115,21 @@ decodeStrategyFormulation ordinal object =
           base
           object
           "derivedGuardrails"
-    <*> requiredModelIdentity ordinal rootJsonPath base object "diagnosis"
-    <*> requiredModelIdentity ordinal rootJsonPath base object "intent"
-    <*> requiredModelIdentity ordinal rootJsonPath base object "guidingPolicy"
+    <*> requiredDistinctIdentitySet
+          ordinal
+          rootJsonPath
+          base
+          object
+          "diagnosis"
+          1
+    <*> requiredDistinctIdentitySet ordinal rootJsonPath base object "intent" 1
+    <*> requiredDistinctIdentitySet
+          ordinal
+          rootJsonPath
+          base
+          object
+          "guidingPolicy"
+          1
     <*> requiredTextSequence ordinal rootJsonPath base object "positioning"
     <*> requiredDistinctTextSet ordinal rootJsonPath base object "tradeOffs"
     <*> requiredDistinctIdentitySet ordinal rootJsonPath base object "actions" 1
@@ -161,12 +173,13 @@ decodeCollectiveFit ordinal object =
           "participants"
           2
     <*> requiredModelIdentity ordinal rootJsonPath base object "target"
-    <*> requiredModelIdentity
+    <*> requiredDistinctIdentitySet
           ordinal
           rootJsonPath
           base
           object
           "targetGuidingPolicy"
+          1
     <*> requiredDistinctTextSet
           ordinal
           rootJsonPath

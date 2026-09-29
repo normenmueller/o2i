@@ -25,19 +25,19 @@ GENERATED_OWNER_INVENTORY = (
     PACKAGE_ROOT / "contract/generated/o2i.core.owner-diagnostic-evidence-v1.json"
 )
 EXPECTED_SHAPE_SHA256 = (
-    "3e091e8bc0fd3a887da02f8591292c2a8ea7d64c7e83951183ab71fe4f5b1278"
+    "75ac10aed2730bdb154d166fcb8034f206d4822285b76a45d0ba966bf2265969"
 )
 EXPECTED_SHA256 = (
-    "fa431df65d5a5fdd64d91d5ad4089a3e8e31421027f4e0258370e742c8b1a333"
+    "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
 )
 EXPECTED_DIAGNOSTIC_SHAPE_SHA256 = (
-    "bd450f3299730cbac912d7e7239f8d890486252c6abf7a2c1f6189ce7bf77424"
+    "79eae313c8658a1cf760687c115e31e9e2fce1bb36c7dff1c0504578f4f1a5be"
 )
 EXPECTED_INVENTORY_SHA256 = (
-    "8007829ae3b4cd94b4e645ef973926250f8bac654b1bd9d9d1f3f5402355ed55"
+    "745d616eb9f9a91e6ced5c0d0d7b24917fe0bdd6d6af34a8d7f8fb56becfe22c"
 )
 EXPECTED_OWNER_INVENTORY_SHA256 = (
-    "f21319a50ab84fe30c35889ab15d581022783523b1e1198b1f0c2acf021b90db"
+    "1e728a31bcba2d4613df53326264df394a301684c33ea906c1ab18c6961aff7a"
 )
 
 OCCURRENCE_AUTHORITY = (
@@ -60,14 +60,16 @@ OCCURRENCE_AUTHORITY = (
     ("core.situated-need.surfacing-situation-cardinality", (("observed-surfacing-situation", "zero"),)),
     ("core.strategy-formulation.action-contributions", (("uncontributing-action", "one"),)),
     ("core.strategy-formulation.actions", (("listed-action", "one-or-more"),)),
-    ("core.strategy-formulation.diagnosis", (("owned-diagnosis", "zero-or-more"),)),
-    ("core.strategy-formulation.diagnosis-grounding", (("diagnosis", "one"), ("intent", "one"))),
-    ("core.strategy-formulation.guiding-policy", (("owned-guiding-policy", "zero-or-more"),)),
-    ("core.strategy-formulation.guiding-policy-actions", (("guiding-policy", "one"), ("action", "one"))),
-    ("core.strategy-formulation.intent", (("owned-intent", "zero-or-more"),)),
-    ("core.strategy-formulation.key-result-substantiation", (("key-result", "one"), ("intent", "one"))),
+    ("core.strategy-formulation.diagnosis", (("listed-diagnosis", "one-or-more"),)),
+    ("core.strategy-formulation.diagnosis-grounding", (("ungrounding-diagnosis", "one"), ("listed-intent", "one-or-more"))),
+    ("core.strategy-formulation.guiding-policy", (("listed-guiding-policy", "one-or-more"),)),
+    ("core.strategy-formulation.guiding-policy-actions", (("unguided-action", "one"), ("listed-guiding-policy", "one-or-more"))),
+    ("core.strategy-formulation.intent", (("listed-intent", "one-or-more"),)),
+    ("core.strategy-formulation.intent-grounding", (("ungrounded-intent", "one"), ("listed-diagnosis", "one-or-more"))),
+    ("core.strategy-formulation.intent-substantiation", (("unsubstantiated-intent", "one"), ("listed-key-result", "one-or-more"))),
+    ("core.strategy-formulation.key-result-substantiation", (("unsubstantiating-key-result", "one"), ("listed-intent", "one-or-more"))),
     ("core.strategy-formulation.key-results", (("listed-key-result", "one-or-more"),)),
-    ("core.strategy-formulation.vision-orientation", (("observed-vision-orientation", "zero"),)),
+    ("core.strategy-formulation.vision-orientation", (("unoriented-intent", "one"),)),
 )
 
 STRUCTURE_DIAGNOSTIC_AUTHORITY = (
@@ -537,7 +539,7 @@ def semantic_diagnostic_contract(
     require_exact(
         diagnostic["semanticsCompanion"],
         {
-            "schema": "o2i.core-semantics/target-v46",
+            "schema": "o2i.core-semantics/target-v47",
             "rawSha256": sha256(semantics_payload),
             "shapeSha256": EXPECTED_SHAPE_SHA256,
         },
@@ -566,7 +568,7 @@ def semantic_diagnostic_contract(
         },
         "additional semantic evidence-key mappings",
     )
-    require_exact(len(existing_mappings), 25, "existing diagnostic subject count")
+    require_exact(len(existing_mappings), 27, "existing diagnostic subject count")
     overlap = set(existing_mappings).intersection(additional_mappings)
     require_exact(overlap, set(), "disjoint diagnostic subject ownership")
 
@@ -627,7 +629,7 @@ def semantic_diagnostic_contract(
     require_exact(
         actual_authority,
         OCCURRENCE_AUTHORITY,
-        "exact 27-row occurrence authority",
+        "exact 29-row occurrence authority",
     )
     require_exact(
         list(mappings),
@@ -646,7 +648,7 @@ def semantic_diagnostic_contract(
             raise ValueError(
                 f"diagnostic evidence-key mapping {rule}: unknown schema {schema}"
             )
-    require_exact(len(mappings), 27, "complete diagnostic rule count")
+    require_exact(len(mappings), 29, "complete diagnostic rule count")
     return schemas, mappings, occurrences
 
 
@@ -1257,7 +1259,7 @@ def haskell_semantic_contract(
 
 def compile_outputs() -> tuple[str, bytes]:
     companion, payload = load_companion()
-    require_exact(companion["schema"], "o2i.core-semantics/target-v46", "schema")
+    require_exact(companion["schema"], "o2i.core-semantics/target-v47", "schema")
     require_exact(
         companion["coreIdentity"],
         {"identity": "o2i.core-semantics", "version": "0.3.0"},

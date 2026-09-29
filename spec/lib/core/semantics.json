@@ -10,9 +10,9 @@
       "invalid-enum"
     ],
     "shapeDigestAlgorithm": "sha256-of-canonical-JSON-pointer-kind-and-exact-object-member-manifest-excluding-this-shapeSha256-member",
-    "shapeSha256": "3e091e8bc0fd3a887da02f8591292c2a8ea7d64c7e83951183ab71fe4f5b1278"
+    "shapeSha256": "75ac10aed2730bdb154d166fcb8034f206d4822285b76a45d0ba966bf2265969"
   },
-  "schema": "o2i.core-semantics/target-v46",
+  "schema": "o2i.core-semantics/target-v47",
   "coreIdentity": {
     "identity": "o2i.core-semantics",
     "version": "0.3.0"
@@ -566,7 +566,7 @@
     "QualificationEligibleStrategy": {
       "requiredObservations": [
         "subject-Strategy",
-        "diagnosis-intent-guidingPolicy-and-each-listed-Action-and-KeyResult",
+        "each-listed-Diagnosis-Intent-GuidingPolicy-Action-and-KeyResult",
         "each-contextualization-establishing-their-Strategy-ownership",
         "each-Vision-Objective-and-orients-relation-used-by-visionOrientation",
         "each-grounds-guides-contributes-to-and-substantiates-relation-used-by-the-formulation"
@@ -600,11 +600,13 @@
       "core.strategy-formulation.guiding-policy": "StrategyKey",
       "core.strategy-formulation.actions": "StrategyKey",
       "core.strategy-formulation.key-results": "StrategyKey",
-      "core.strategy-formulation.vision-orientation": "StrategyKey",
-      "core.strategy-formulation.diagnosis-grounding": "StrategyKey",
+      "core.strategy-formulation.vision-orientation": "StrategyMemberKey",
+      "core.strategy-formulation.diagnosis-grounding": "StrategyMemberKey",
       "core.strategy-formulation.guiding-policy-actions": "StrategyMemberKey",
       "core.strategy-formulation.action-contributions": "StrategyMemberKey",
-      "core.strategy-formulation.key-result-substantiation": "StrategyMemberKey"
+      "core.strategy-formulation.key-result-substantiation": "StrategyMemberKey",
+      "core.strategy-formulation.intent-grounding": "StrategyMemberKey",
+      "core.strategy-formulation.intent-substantiation": "StrategyMemberKey"
     },
     "defectIdentity": "rule-id-and-the-exact-evidence-key-schema-bound-by-evidenceKeyByRule"
   },
@@ -622,16 +624,18 @@
       "positioning": "supplementalInputSchema.StrategyFormulationInput.positioning",
       "tradeOffs": "supplementalInputSchema.StrategyFormulationInput.tradeOffs",
       "fitRationale": "supplementalInputSchema.StrategyFormulationInput.fitRationale",
-      "diagnosis": "exactly-one-primitive.strategy.driver-owned-by-strategy",
-      "intent": "exactly-one-primitive.strategy.objective-owned-by-strategy",
-      "guidingPolicy": "exactly-one-primitive.strategy.principle-owned-by-strategy",
+      "diagnosis": "one-or-more-distinct-listed-primitive.strategy.driver-owned-by-strategy",
+      "intent": "one-or-more-distinct-listed-primitive.strategy.objective-owned-by-strategy",
+      "guidingPolicy": "one-or-more-distinct-listed-primitive.strategy.principle-owned-by-strategy",
       "actions": "one-or-more-distinct-primitive.strategy.action-owned-by-strategy",
       "keyResults": "one-or-more-distinct-primitive.strategy.key-result-owned-by-strategy",
-      "visionOrientation": "at-least-one-primitive.vision.objective-orients-the-intent",
-      "diagnosisGrounding": "the-diagnosis-grounds-the-intent",
-      "guidingPolicyActions": "the-guiding-policy-guides-every-listed-action",
+      "visionOrientation": "every-listed-intent-is-oriented-by-at-least-one-primitive.vision.objective",
+      "diagnosisGrounding": "every-listed-diagnosis-grounds-at-least-one-listed-intent",
+      "guidingPolicyActions": "every-listed-action-is-guided-by-at-least-one-listed-guiding-policy-principle",
       "actionContributions": "every-listed-action-contributes-to-at-least-one-listed-key-result",
-      "keyResultSubstantiation": "every-listed-key-result-substantiates-the-intent"
+      "keyResultSubstantiation": "every-listed-key-result-substantiates-at-least-one-listed-intent",
+      "intentGrounding": "every-listed-intent-is-grounded-by-at-least-one-listed-diagnosis",
+      "intentSubstantiation": "every-listed-intent-is-substantiated-by-at-least-one-listed-key-result"
     },
     "derivedProof": "QualificationEligibleStrategy-only-after-complete-available-assessment",
     "ruleIds": {
@@ -656,7 +660,9 @@
       "diagnosisGrounding": "core.strategy-formulation.diagnosis-grounding",
       "guidingPolicyActions": "core.strategy-formulation.guiding-policy-actions",
       "actionContributions": "core.strategy-formulation.action-contributions",
-      "keyResultSubstantiation": "core.strategy-formulation.key-result-substantiation"
+      "keyResultSubstantiation": "core.strategy-formulation.key-result-substantiation",
+      "intentGrounding": "core.strategy-formulation.intent-grounding",
+      "intentSubstantiation": "core.strategy-formulation.intent-substantiation"
     },
     "supplementalInputBinding": {
       "input": "supplementalInputContract",
@@ -725,7 +731,7 @@
         "predicates": {
           "participants": "set-input-participants-equals-exact-Claim-participant-set",
           "target": "input-target-equals-exact-Claim-target",
-          "targetGuidingPolicy": "input-targetGuidingPolicy-equals-valid-target-formulation-guidingPolicy",
+          "targetGuidingPolicy": "set-input-targetGuidingPolicy-equals-set-valid-target-formulation-guidingPolicy",
           "targetTradeOffs": "set-input-targetTradeOffs-equals-set-valid-target-formulation-tradeOffs",
           "pairwiseCoherence": "multiset-of-canonical-unordered-distinct-participant-pairs-equals-every-two-element-subset-of-the-participant-set-exactly-once",
           "participantCompatibility": "multiset-of-participant-keys-equals-every-participant-exactly-once"
@@ -1455,6 +1461,14 @@
       {
         "path": "/qualificationProposalSemantics/ruleIds/existingMacroQualification",
         "evidenceKind": "qualification-proposal-and-semantic-relation-index"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/intentGrounding",
+        "evidenceKind": "strategy-formulation-and-model-observation"
+      },
+      {
+        "path": "/strategyFormulationSemantics/ruleIds/intentSubstantiation",
+        "evidenceKind": "strategy-formulation-and-model-observation"
       }
     ],
     "completeRuleInventory": [
@@ -1572,6 +1586,8 @@
       "core.strategy-formulation.guiding-policy",
       "core.strategy-formulation.guiding-policy-actions",
       "core.strategy-formulation.intent",
+      "core.strategy-formulation.intent-grounding",
+      "core.strategy-formulation.intent-substantiation",
       "core.strategy-formulation.key-result-substantiation",
       "core.strategy-formulation.key-results",
       "core.strategy-formulation.positioning",
@@ -1659,7 +1675,7 @@
         "derivedInventoryGroups"
       ],
       "ordering": "UTF8-bytewise-ruleId",
-      "cardinality": 193,
+      "cardinality": 195,
       "bijection": "exactly-one-complete-inventory-entry-per-emit-capable-rule-and-no-other-entry"
     }
   },
@@ -1808,9 +1824,9 @@
     "sites": {
       "StrategyFormulationInput": {
         "/strategy": "context.strategy",
-        "/diagnosis": "primitive.strategy.driver",
-        "/intent": "primitive.strategy.objective",
-        "/guidingPolicy": "primitive.strategy.principle",
+        "/diagnosis/*": "primitive.strategy.driver",
+        "/intent/*": "primitive.strategy.objective",
+        "/guidingPolicy/*": "primitive.strategy.principle",
         "/actions/*": "primitive.strategy.action",
         "/keyResults/*": "primitive.strategy.key-result"
       },
@@ -1818,7 +1834,7 @@
         "/claim": "structured-family:collective-strategy-realization",
         "/participants/*": "context.strategy",
         "/target": "context.strategy",
-        "/targetGuidingPolicy": "primitive.strategy.principle",
+        "/targetGuidingPolicy/*": "primitive.strategy.principle",
         "/pairwiseCoherence/*/participantA": "context.strategy",
         "/pairwiseCoherence/*/participantB": "context.strategy",
         "/participantCompatibility/*/participant": "context.strategy"
@@ -1837,7 +1853,7 @@
   },
   "supplementalInputSchema": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://github.com/normenmueller/o2i/schema/supplemental-input-target-v46.json",
+    "$id": "https://github.com/normenmueller/o2i/schema/supplemental-input-target-v47.json",
     "oneOf": [
       {
         "$ref": "#/$defs/StrategyFormulationInput"
@@ -1945,13 +1961,13 @@
             "$ref": "#/$defs/NonEmptyOrderedText"
           },
           "diagnosis": {
-            "$ref": "#/$defs/ModelIdentity"
+            "$ref": "#/$defs/NonEmptyDistinctIdentitySet"
           },
           "intent": {
-            "$ref": "#/$defs/ModelIdentity"
+            "$ref": "#/$defs/NonEmptyDistinctIdentitySet"
           },
           "guidingPolicy": {
-            "$ref": "#/$defs/ModelIdentity"
+            "$ref": "#/$defs/NonEmptyDistinctIdentitySet"
           },
           "positioning": {
             "$ref": "#/$defs/NonEmptyOrderedText"
@@ -2045,7 +2061,7 @@
             "$ref": "#/$defs/ModelIdentity"
           },
           "targetGuidingPolicy": {
-            "$ref": "#/$defs/ModelIdentity"
+            "$ref": "#/$defs/NonEmptyDistinctIdentitySet"
           },
           "targetTradeOffs": {
             "$ref": "#/$defs/NonEmptyDistinctTextSet"
@@ -2751,8 +2767,8 @@
       "graphIdentity": "identical-to-the-SemanticallyValidModel-and-QualificationEligibleStrategy-proof-graph-identity-by-opaque-Core-construction",
       "successConditions": {
         "strategy": "traced-strategy-equals-the-proof-strategy",
-        "diagnosis": "traced-strategyDriver-equals-the-proof-formulation-diagnosis",
-        "intent": "traced-strategyObjective-equals-the-proof-formulation-intent",
+        "diagnosis": "traced-strategyDriver-is-member-of-the-proof-formulation-diagnosis",
+        "intent": "traced-strategyObjective-is-member-of-the-proof-formulation-intent",
         "action": "traced-strategyAction-is-a-member-of-the-proof-formulation-actions-set",
         "keyResult": "traced-strategyKeyResult-is-a-member-of-the-proof-formulation-keyResults-set"
       },
@@ -4420,6 +4436,8 @@
         "core.strategy-formulation.guiding-policy",
         "core.strategy-formulation.guiding-policy-actions",
         "core.strategy-formulation.intent",
+        "core.strategy-formulation.intent-grounding",
+        "core.strategy-formulation.intent-substantiation",
         "core.strategy-formulation.key-result-substantiation",
         "core.strategy-formulation.key-results",
         "core.strategy-formulation.positioning",

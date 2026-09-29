@@ -7,4 +7,5 @@ dist-newstyle/
 .hie/
 __pycache__/
 *.py[co]
-.ai4x/local/
+/.ai4x/work/
+/utl/verification/.local/

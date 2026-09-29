@@ -1771,7 +1771,7 @@ generatedProfileDescriptor =
     "0.3.0"
     "archimate-3.2"
     ["amx"]
-    "3254127ed6029c6df26fb30578956429fe9d3f82de8ee2f9bbe8d363b676d081"
+    "be8204d09d6dae8eda1fe6969d1bea62e3b35419108474ea8af177bb9030a3da"
 
 generatedProfileRuleIds :: [Text]
 generatedProfileRuleIds =

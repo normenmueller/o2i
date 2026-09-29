@@ -1,0 +1,51 @@
+{
+  "type": "StrategyFormulationInput",
+  "strategy": "strategy",
+  "scope": [
+    "One fictional business function"
+  ],
+  "anchoring": {
+    "period": "Planning horizon",
+    "responsibilityScope": "Business function",
+    "decisionLevel": "Functional",
+    "responsibilities": [
+      "Function owner"
+    ],
+    "decisionPaths": [
+      "Review proposed changes"
+    ],
+    "implementationLogic": "Deliver the chosen capabilities"
+  },
+  "derivedGuardrails": [
+    "Support the agreed business outcomes"
+  ],
+  "diagnosis": [
+    "driver-1",
+    "driver-2"
+  ],
+  "intent": [
+    "objective-1",
+    "objective-2"
+  ],
+  "guidingPolicy": [
+    "principle-1",
+    "principle-2"
+  ],
+  "positioning": [
+    "Select capabilities by their contribution"
+  ],
+  "tradeOffs": [
+    "Avoid capabilities without an outcome contribution"
+  ],
+  "actions": [
+    "action-1",
+    "action-2"
+  ],
+  "keyResults": [
+    "key-result-1",
+    "key-result-2"
+  ],
+  "fitRationale": [
+    "The two action paths address distinct but compatible aspects of the intended business contribution"
+  ]
+}

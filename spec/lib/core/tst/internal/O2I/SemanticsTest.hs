@@ -89,12 +89,24 @@ tests =
         , testCase "rejects an incomplete Strategy graph" strategyInvalid
         , testCase "accepts a complete Strategy formulation" strategyValid
         , testCase
+            "accepts distributed plural constituent support"
+            pluralStrategyValid
+        , testCase
+            "diagnoses every uncovered plural member"
+            pluralStrategyCoverage
+        , testCase
+            "canonicalizes plural input and occurrence evidence"
+            pluralStrategyPermutation
+        , testCase
             "rejects Candidate carriers as Strategy support"
             strategyCandidateSupportRejected
         , testCase
             "keeps missing collective Fit separate from support"
             collectiveInputUnavailable
         , testCase "accepts a complete collective realization" collectiveValid
+        , testCase
+            "collective Fit binds the complete plural target policy"
+            collectivePluralPolicy
         , testCase
             "rejects Candidate Strategy carriers as collective support"
             collectiveCandidateSupportRejected
@@ -140,10 +152,10 @@ tests =
             "retains direct primitive-support occurrence roles"
             directPrimitiveSupportOccurrenceRoles
         , testCase
-            "executes the exact 27/27 real-producer matrix"
+            "executes the exact 29/29 real-producer matrix"
             realProducerOccurrenceMatrix
         , testCase
-            "publicly eliminates every field of all 27 real producers"
+            "publicly eliminates every field of all 29 real producers"
             publicProducerProjectionMatrix
         , testCase
             "preserves every cardinality and multi-role order"
@@ -478,6 +490,171 @@ strategyValid =
           result ->
             assertFailure ("unexpected Strategy result: " ++ show result)
 
+-- Two disjoint support paths are sufficient: no all-pairs relation requirement.
+-- The selected third Principle has no Action edge; an unselected Driver may coexist.
+pluralStrategyMembers :: [(String, Text)]
+pluralStrategyMembers =
+  [ ("driver-2", "Driver")
+  , ("objective-2", "Objective")
+  , ("principle-2", "Principle")
+  , ("action-2", "Action")
+  , ("key-result-2", "KeyResult")
+  , ("principle-3", "Principle")
+  , ("driver-unselected", "Driver")
+  ]
+
+pluralStrategyRelationRows :: [(String, String, Text, String)]
+pluralStrategyRelationRows =
+  [ ("orientation-2", "vision-objective", "orients", "strategy-a-objective-2")
+  , ("grounding-2", "strategy-a-driver-2", "grounds", "strategy-a-objective-2")
+  , ("guidance-2", "strategy-a-principle-2", "guides", "strategy-a-action-2")
+  , ( "contribution-2"
+    , "strategy-a-action-2"
+    , "contributes-to"
+    , "strategy-a-key-result-2")
+  , ( "substantiation-2"
+    , "strategy-a-key-result-2"
+    , "substantiates"
+    , "strategy-a-objective-2")
+  ]
+
+pluralStrategyModels :: [ModelOccurrence]
+pluralStrategyModels =
+  strategyModelOccurrences "a"
+    ++ carrierModels
+         [strategyMember "a" name | (name, _) <- pluralStrategyMembers]
+    ++ segmentModels
+         ([ "owns-" ++ strategyMember "a" name
+          | (name, _) <- pluralStrategyMembers
+          ]
+            ++ [name | (name, _, _, _) <- pluralStrategyRelationRows])
+
+pluralStrategyProjection :: Bool -> [String] -> StructureProjection
+pluralStrategyProjection reverseRows omitted =
+  structureProjection
+    (order
+       (visionCarriers
+          ++ strategyCarriers "a"
+          ++ [ primitiveCarrier (strategyMember "a" name) kind Asserted
+             | (name, kind) <- pluralStrategyMembers
+             ]))
+    (order
+       (visionContextualizations
+          ++ strategyContextualizations "a"
+          ++ [ ownership
+               ("owns-" ++ strategyMember "a" name)
+               "strategy-a"
+               (strategyMember "a" name)
+               Asserted
+             | (name, _) <- pluralStrategyMembers
+             ]))
+    (order
+       (visionOrientation "a"
+          : strategyInternalRelations "a"
+          ++ [ relation name source token target Asserted
+             | (name, source, token, target) <- pluralStrategyRelationRows
+             , name `notElem` omitted
+             ]))
+    []
+    []
+  where
+    order values =
+      if reverseRows
+        then reverse values
+        else values
+
+pluralStrategyInput :: Bool -> ByteString
+pluralStrategyInput reverseMembers =
+  ByteString.pack . Text.unpack
+    $ foldl
+        expand
+        (Text.pack (ByteString.unpack (strategyInput "a")))
+        [ ("diagnosis", "driver")
+        , ("intent", "objective")
+        , ("guidingPolicy", "principle")
+        , ("actions", "action")
+        , ("keyResults", "key-result")
+        ]
+  where
+    expand :: Text -> (String, String) -> Text
+    expand payload (field, kind) =
+      let identifiers =
+            [strategyMember "a" kind, strategyMember "a" (kind ++ "-2")]
+              ++ [strategyMember "a" "principle-3" | kind == "principle"]
+          orderedIds =
+            if reverseMembers
+              then reverse identifiers
+              else identifiers
+          memberArray values = "[" ++ intercalate "," (map show values) ++ "]"
+          prefix = show field ++ ":"
+       in Text.replace
+            (Text.pack (prefix ++ memberArray [strategyMember "a" kind]))
+            (Text.pack (prefix ++ memberArray orderedIds))
+            payload
+
+pluralStrategyOutcome ::
+     Bool -> [String] -> Either String ([SemanticDefect], [OccurrenceIdentity])
+pluralStrategyOutcome reversed omitted =
+  runScenario
+    (if reversed
+       then reverse pluralStrategyModels
+       else pluralStrategyModels)
+    (pluralStrategyProjection reversed omitted)
+    [(0, pluralStrategyInput reversed)] $ \graph inputs ->
+    case assessStrategyFormulations (buildSemanticIndex graph inputs) of
+      [StrategyFormulationValid proof] -> ([], eligibleStrategyWitnesses proof)
+      [StrategyFormulationInvalid _ defects] -> (NonEmpty.toList defects, [])
+      _ -> ([], [])
+
+pluralStrategyValid :: Assertion
+pluralStrategyValid =
+  case pluralStrategyOutcome False [] of
+    Right ([], witnesses) -> do
+      assertBool
+        "both paths must be included as proof support"
+        (all
+           ((`elem` witnesses) . occurrenceId)
+           [name | (name, _, _, _) <- pluralStrategyRelationRows])
+      assertBool
+        "an unselected Driver must not enter proof support"
+        (occurrenceId "strategy-a-driver-unselected" `notElem` witnesses)
+      assertBool
+        "the selected Principle without an Action edge remains represented"
+        (occurrenceId "strategy-a-principle-3" `elem` witnesses)
+    result -> assertFailure ("unexpected plural Strategy: " ++ show result)
+
+pluralStrategyCoverage :: Assertion
+pluralStrategyCoverage =
+  mapM_
+    check
+    [ ("orientation-2", ["vision-orientation"])
+    , ("grounding-2", ["diagnosis-grounding", "intent-grounding"])
+    , ("guidance-2", ["guiding-policy-actions"])
+    , ("contribution-2", ["action-contributions"])
+    , ( "substantiation-2"
+      , ["intent-substantiation", "key-result-substantiation"])
+    ]
+  where
+    check (omitted, expected) =
+      case pluralStrategyOutcome False [omitted] of
+        Right (defects, []) -> do
+          map (coreRuleIdText . semanticRuleId . semanticDefectRule) defects
+            @?= map ("core.strategy-formulation." <>) expected
+          assertBool
+            "defects must identify the uncovered second-path member"
+            (all
+               (any (Text.isSuffixOf "-2" . occurrenceIdentityText)
+                  . flattenDefectOccurrences)
+               defects)
+        result -> assertFailure ("unexpected coverage result: " ++ show result)
+
+pluralStrategyPermutation :: Assertion
+pluralStrategyPermutation =
+  mapM_ check [[], ["grounding-2", "guidance-2", "substantiation-2"]]
+  where
+    check omitted =
+      pluralStrategyOutcome False omitted @?= pluralStrategyOutcome True omitted
+
 strategyCandidateSupportRejected :: Assertion
 strategyCandidateSupportRejected =
   assertScenario
@@ -512,6 +689,70 @@ collectiveInputUnavailable =
               , replicate 2 Public.ComponentSatisfied
               , replicate 2 Public.ComponentSatisfied)
       result -> assertFailure ("unexpected collective result: " ++ show result)
+
+collectivePluralPolicy :: Assertion
+collectivePluralPolicy =
+  mapM_
+    check
+    [ (["strategy-target-principle", "strategy-target-principle-2"], [])
+    , (["strategy-target-principle-2", "strategy-target-principle"], [])
+    , ( ["strategy-target-principle"]
+      , [semanticRule Generated.CollectiveFitTargetGuidingPolicyRule])
+    , ( [ "strategy-target-principle"
+        , "strategy-target-principle-2"
+        , "strategy-a-principle"
+        ]
+      , [semanticRule Generated.CollectiveFitTargetGuidingPolicyRule])
+    ]
+  where
+    check (policies, expected) =
+      assertScenario models projection (inputs policies) $ \graph bound ->
+        let index = buildSemanticIndex graph bound
+            strategies = assessStrategyFormulations index
+         in case assessCollectiveStrategyRealizations index strategies of
+              [CollectiveStrategyRealizationValid _ _] -> expected @?= []
+              [CollectiveStrategyRealizationInvalid _ _ defects] ->
+                map semanticDefectRule (NonEmpty.toList defects) @?= expected
+              result -> assertFailure ("unexpected plural Fit: " ++ show result)
+    models =
+      completeModelOccurrences
+        ++ carrierModels ["strategy-target-principle-2"]
+        ++ segmentModels ["owns-strategy-target-principle-2"]
+    projection =
+      structureProjection
+        (primitiveCarrier "strategy-target-principle-2" "Principle" Asserted
+           : completeCarriers)
+        (ownership
+           "owns-strategy-target-principle-2"
+           "strategy-target"
+           "strategy-target-principle-2"
+           Asserted
+           : completeContextualizations)
+        (completeStrategyRelations
+           ++ [macroRelation "a", macroRelation "b"]
+           ++ collectivePrimitiveRelations)
+        [collectiveProposition]
+        collectiveIncidences
+    inputs policies =
+      [ (0, strategyInput "a")
+      , (1, strategyInput "b")
+      , ( 2
+        , replacePolicy
+            "guidingPolicy"
+            ["strategy-target-principle", "strategy-target-principle-2"]
+            (strategyInput "target"))
+      , (3, replacePolicy "targetGuidingPolicy" policies collectiveInput)
+      ]
+    replacePolicy :: String -> [String] -> ByteString -> ByteString
+    replacePolicy field values =
+      ByteString.pack
+        . Text.unpack
+        . Text.replace
+            (Text.pack (show field ++ ":[\"strategy-target-principle\"]"))
+            (Text.pack
+               (show field ++ ":[" ++ intercalate "," (map show values) ++ "]"))
+        . Text.pack
+        . ByteString.unpack
 
 collectiveValid :: Assertion
 collectiveValid =
@@ -628,7 +869,7 @@ realProducerOccurrenceMatrix =
               ]
           actual = map (byRule Map.!) (map fst runtimeProducerOccurrenceOracle)
        in do
-            length runtimeProducerOccurrenceOracle @?= 27
+            length runtimeProducerOccurrenceOracle @?= 29
             Map.keysSet byRule
               @?= Map.keysSet (Map.fromList runtimeProducerOccurrenceOracle)
             actual @?= runtimeProducerOccurrenceOracle
@@ -647,7 +888,7 @@ publicProducerProjectionMatrix =
               | defect <- defects
               ]
           publicByRule = Map.fromListWith min projections
-      Map.size internalByRule @?= 27
+      Map.size internalByRule @?= 29
       Map.keysSet publicByRule @?= Map.keysSet internalByRule
       publicByRule @?= internalByRule
 
@@ -708,14 +949,16 @@ publicDiagnosticProjection =
       , Public.eliminateStrategyFormulationActions =
           \strategy values -> exact [model strategy] [many values]
       , Public.eliminateStrategyFormulationDiagnosis = listed
-      , Public.eliminateStrategyFormulationDiagnosisGrounding = pair
+      , Public.eliminateStrategyFormulationDiagnosisGrounding = memberPair
       , Public.eliminateStrategyFormulationGuidingPolicy = listed
       , Public.eliminateStrategyFormulationGuidingPolicyActions = memberPair
       , Public.eliminateStrategyFormulationIntent = listed
       , Public.eliminateStrategyFormulationKeyResultSubstantiation = memberPair
       , Public.eliminateStrategyFormulationKeyResults =
           \strategy values -> exact [model strategy] [many values]
-      , Public.eliminateStrategyFormulationVisionOrientation = empty
+      , Public.eliminateStrategyFormulationVisionOrientation = member
+      , Public.eliminateStrategyFormulationIntentGrounding = memberPair
+      , Public.eliminateStrategyFormulationIntentSubstantiation = memberPair
       }
   where
     exact keys groups = (keys, groups)
@@ -730,22 +973,21 @@ publicDiagnosticProjection =
     member owner owned occurrence =
       exact [model owner, model owned] [[item occurrence]]
     empty identity = exact [model identity] [[]]
-    listed identity values = exact [model identity] [map item values]
-    pair identity first second =
-      exact [model identity] [[item first], [item second]]
+    listed identity values = exact [model identity] [many values]
     memberPair owner owned first second =
-      exact [model owner, model owned] [[item first], [item second]]
+      exact [model owner, model owned] [[item first], many second]
 
 runtimeOccurrenceCardinalityOracle :: Assertion
 runtimeOccurrenceCardinalityOracle = do
   groups Generated.SituatedNeedDriverCardinalityOccurrences
     @?= [("observed-driver", [])]
-  groups (Generated.StrategyFormulationDiagnosisOccurrences [])
-    @?= [("owned-diagnosis", [])]
-  groups (Generated.StrategyFormulationDiagnosisOccurrences ["one"])
-    @?= [("owned-diagnosis", ["one"])]
-  groups (Generated.StrategyFormulationDiagnosisOccurrences ["one", "many"])
-    @?= [("owned-diagnosis", ["one", "many"])]
+  groups
+    (Generated.StrategyFormulationDiagnosisOccurrences ("one" NonEmpty.:| []))
+    @?= [("listed-diagnosis", ["one"])]
+  groups
+    (Generated.StrategyFormulationDiagnosisOccurrences
+       ("one" NonEmpty.:| ["many"]))
+    @?= [("listed-diagnosis", ["one", "many"])]
   groups
     (Generated.StrategyFormulationActionsOccurrences ("one" NonEmpty.:| []))
     @?= [("listed-action", ["one"])]
@@ -764,15 +1006,19 @@ runtimeOccurrenceCardinalityOracle = do
   groups
     (Generated.StrategyFormulationDiagnosisGroundingOccurrences
        "diagnosis"
-       "intent")
-    @?= [("diagnosis", ["diagnosis"]), ("intent", ["intent"])]
+       ("intent" NonEmpty.:| []))
+    @?= [ ("ungrounding-diagnosis", ["diagnosis"])
+        , ("listed-intent", ["intent"])
+        ]
   assertBool
     "binary role reassociation was observationally invisible"
     (groups
        (Generated.StrategyFormulationDiagnosisGroundingOccurrences
           "intent"
-          "diagnosis")
-       /= [("diagnosis", ["diagnosis"]), ("intent", ["intent"])])
+          ("diagnosis" NonEmpty.:| []))
+       /= [ ("ungrounding-diagnosis", ["diagnosis"])
+          , ("listed-intent", ["intent"])
+          ])
   groups
     (Generated.CollectiveAssertedMacroSupportOccurrences
        "claim"
@@ -858,27 +1104,35 @@ runtimeProducerOccurrenceOracle =
   , ( "core.strategy-formulation.actions"
     , [("listed-action", ["strategy-b-action"])])
   , ( "core.strategy-formulation.diagnosis"
-    , [("owned-diagnosis", ["strategy-a-driver"])])
+    , [("listed-diagnosis", ["strategy-b-driver"])])
   , ( "core.strategy-formulation.diagnosis-grounding"
-    , [ ("diagnosis", ["strategy-a-driver"])
-      , ("intent", ["strategy-a-objective"])
+    , [ ("ungrounding-diagnosis", ["strategy-a-driver"])
+      , ("listed-intent", ["strategy-a-objective"])
       ])
   , ( "core.strategy-formulation.guiding-policy"
-    , [("owned-guiding-policy", ["strategy-a-principle"])])
+    , [("listed-guiding-policy", ["strategy-b-principle"])])
   , ( "core.strategy-formulation.guiding-policy-actions"
-    , [ ("guiding-policy", ["strategy-a-principle"])
-      , ("action", ["strategy-a-action"])
+    , [ ("unguided-action", ["strategy-a-action"])
+      , ("listed-guiding-policy", ["strategy-a-principle"])
       ])
   , ( "core.strategy-formulation.intent"
-    , [("owned-intent", ["strategy-a-objective"])])
+    , [("listed-intent", ["strategy-b-objective"])])
+  , ( "core.strategy-formulation.intent-grounding"
+    , [ ("ungrounded-intent", ["strategy-a-objective"])
+      , ("listed-diagnosis", ["strategy-a-driver"])
+      ])
+  , ( "core.strategy-formulation.intent-substantiation"
+    , [ ("unsubstantiated-intent", ["strategy-a-objective"])
+      , ("listed-key-result", ["strategy-a-key-result"])
+      ])
   , ( "core.strategy-formulation.key-result-substantiation"
-    , [ ("key-result", ["strategy-a-key-result"])
-      , ("intent", ["strategy-a-objective"])
+    , [ ("unsubstantiating-key-result", ["strategy-a-key-result"])
+      , ("listed-intent", ["strategy-a-objective"])
       ])
   , ( "core.strategy-formulation.key-results"
     , [("listed-key-result", ["strategy-b-key-result"])])
   , ( "core.strategy-formulation.vision-orientation"
-    , [("observed-vision-orientation", [])])
+    , [("unoriented-intent", ["strategy-a-objective"])])
   ]
 
 realProducerDefects :: Either String [SemanticDefect]
@@ -1301,8 +1555,11 @@ compiledRuleOrder = do
   let strategyDefect =
         mkSemanticDefect
           Generated.StrategyFormulationVisionOrientationRule
-          (SemanticStrategyEvidenceKey (modelId "strategy-a"))
-          Generated.StrategyFormulationVisionOrientationOccurrences
+          (SemanticStrategyMemberEvidenceKey
+             (modelId "strategy-a")
+             (modelId "strategy-a-objective"))
+          (Generated.StrategyFormulationVisionOrientationOccurrences
+             (occurrenceId "strategy-a-objective"))
       needObjectiveDefect =
         mkSemanticDefect
           Generated.SituatedNeedObjectiveCardinalityRule
@@ -1457,18 +1714,26 @@ publicDiagnosticOccurrences =
           \_ _ value -> [value]
       , Public.eliminateStrategyFormulationActions =
           \_ values -> NonEmpty.toList values
-      , Public.eliminateStrategyFormulationDiagnosis = \_ values -> values
+      , Public.eliminateStrategyFormulationDiagnosis =
+          \_ values -> NonEmpty.toList values
       , Public.eliminateStrategyFormulationDiagnosisGrounding =
-          \_ first second -> [first, second]
-      , Public.eliminateStrategyFormulationGuidingPolicy = \_ values -> values
+          \_ _ first second -> first : NonEmpty.toList second
+      , Public.eliminateStrategyFormulationGuidingPolicy =
+          \_ values -> NonEmpty.toList values
       , Public.eliminateStrategyFormulationGuidingPolicyActions =
-          \_ _ first second -> [first, second]
-      , Public.eliminateStrategyFormulationIntent = \_ values -> values
+          \_ _ first second -> first : NonEmpty.toList second
+      , Public.eliminateStrategyFormulationIntent =
+          \_ values -> NonEmpty.toList values
       , Public.eliminateStrategyFormulationKeyResultSubstantiation =
-          \_ _ first second -> [first, second]
+          \_ _ first second -> first : NonEmpty.toList second
       , Public.eliminateStrategyFormulationKeyResults =
           \_ values -> NonEmpty.toList values
-      , Public.eliminateStrategyFormulationVisionOrientation = \_ -> []
+      , Public.eliminateStrategyFormulationVisionOrientation =
+          \_ _ value -> [value]
+      , Public.eliminateStrategyFormulationIntentGrounding =
+          \_ _ first rest -> first : NonEmpty.toList rest
+      , Public.eliminateStrategyFormulationIntentSubstantiation =
+          \_ _ first rest -> first : NonEmpty.toList rest
       }
 
 componentSummary ::
@@ -2143,15 +2408,15 @@ strategyInputWithMembers label diagnosis intent guidingPolicy action keyResult =
        , ",\"decisionPaths\":[\"decision path\"]"
        , ",\"implementationLogic\":\"implementation logic\"}"
        , ",\"derivedGuardrails\":[\"guardrail\"]"
-       , ",\"diagnosis\":\""
+       , ",\"diagnosis\":[\""
        , diagnosis
-       , "\""
-       , ",\"intent\":\""
+       , "\"]"
+       , ",\"intent\":[\""
        , intent
-       , "\""
-       , ",\"guidingPolicy\":\""
+       , "\"]"
+       , ",\"guidingPolicy\":[\""
        , guidingPolicy
-       , "\""
+       , "\"]"
        , ",\"positioning\":[\"positioning\"]"
        , ",\"tradeOffs\":[\"trade-off\"]"
        , ",\"actions\":[\""
@@ -2171,7 +2436,7 @@ collectiveInput =
        , ",\"claim\":\"collective-claim\""
        , ",\"participants\":[\"strategy-a\",\"strategy-b\"]"
        , ",\"target\":\"strategy-target\""
-       , ",\"targetGuidingPolicy\":\"strategy-target-principle\""
+       , ",\"targetGuidingPolicy\":[\"strategy-target-principle\"]"
        , ",\"targetTradeOffs\":[\"trade-off\"]"
        , ",\"pairwiseCoherence\":[{"
        , "\"participantA\":\"strategy-a\""
@@ -2195,7 +2460,7 @@ collectiveInputAllFitDefects =
        , ",\"claim\":\"collective-claim\""
        , ",\"participants\":[\"strategy-a\",\"strategy-target\"]"
        , ",\"target\":\"strategy-b\""
-       , ",\"targetGuidingPolicy\":\"strategy-a-principle\""
+       , ",\"targetGuidingPolicy\":[\"strategy-a-principle\"]"
        , ",\"targetTradeOffs\":[\"different-trade-off\"]"
        , ",\"pairwiseCoherence\":[{"
        , "\"participantA\":\"strategy-a\""
@@ -2219,7 +2484,7 @@ collectiveInputWithUnresolvedPolicy =
        , ",\"claim\":\"collective-claim\""
        , ",\"participants\":[\"strategy-a\",\"strategy-b\"]"
        , ",\"target\":\"strategy-target\""
-       , ",\"targetGuidingPolicy\":\"unknown-policy\""
+       , ",\"targetGuidingPolicy\":[\"unknown-policy\"]"
        , ",\"targetTradeOffs\":[\"different-trade-off\"]"
        , ",\"pairwiseCoherence\":[{"
        , "\"participantA\":\"strategy-a\""
@@ -2243,7 +2508,7 @@ collectiveInputWithUnresolvedTarget =
        , ",\"claim\":\"collective-claim\""
        , ",\"participants\":[\"strategy-a\",\"strategy-b\"]"
        , ",\"target\":\"unknown-target\""
-       , ",\"targetGuidingPolicy\":\"strategy-a-principle\""
+       , ",\"targetGuidingPolicy\":[\"strategy-a-principle\"]"
        , ",\"targetTradeOffs\":[\"different-trade-off\"]"
        , ",\"pairwiseCoherence\":[{"
        , "\"participantA\":\"strategy-a\""
@@ -2267,7 +2532,7 @@ collectiveInputWithUnresolvedParticipants =
        , ",\"claim\":\"collective-claim\""
        , ",\"participants\":[\"unknown-participant\",\"strategy-b\"]"
        , ",\"target\":\"strategy-target\""
-       , ",\"targetGuidingPolicy\":\"strategy-target-principle\""
+       , ",\"targetGuidingPolicy\":[\"strategy-target-principle\"]"
        , ",\"targetTradeOffs\":[\"trade-off\"]"
        , ",\"pairwiseCoherence\":[{"
        , "\"participantA\":\"strategy-a\""
@@ -2509,15 +2774,15 @@ workStrategyInput label width =
        , ",\"decisionPaths\":[\"decision path\"]"
        , ",\"implementationLogic\":\"implementation logic\"}"
        , ",\"derivedGuardrails\":[\"guardrail\"]"
-       , ",\"diagnosis\":\""
+       , ",\"diagnosis\":[\""
        , strategyMember label "driver"
-       , "\""
-       , ",\"intent\":\""
+       , "\"]"
+       , ",\"intent\":[\""
        , strategyMember label "objective"
-       , "\""
-       , ",\"guidingPolicy\":\""
+       , "\"]"
+       , ",\"guidingPolicy\":[\""
        , strategyMember label "principle"
-       , "\""
+       , "\"]"
        , ",\"positioning\":[\"positioning\"]"
        , ",\"tradeOffs\":[\"trade-off\"]"
        , ",\"actions\":"
@@ -2536,7 +2801,7 @@ workCollectiveInput participants =
        , ",\"participants\":"
        , jsonStringArray (map ("strategy-" ++) participants)
        , ",\"target\":\"strategy-target\""
-       , ",\"targetGuidingPolicy\":\"strategy-target-principle\""
+       , ",\"targetGuidingPolicy\":[\"strategy-target-principle\"]"
        , ",\"targetTradeOffs\":[\"trade-off\"]"
        , ",\"pairwiseCoherence\":["
        , intercalate "," (map pairwiseJson (stringPairs participants))

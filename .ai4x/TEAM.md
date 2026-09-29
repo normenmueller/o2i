@@ -1,13 +1,13 @@
 # O2I AI Team
 
-This contract owns repository-local capability routing and authorship-versus-review separation. Load it only when collaboration or review is required. Governance, authority, remote-work, and review-verdict rules remain in `governance/`.
+Load for collaboration or review. This contract owns capability routing, collaboration timing and records, and authorship/review separation. `governance/` owns authority, risk, remote work, and verdicts.
 
 ## Roles
 
 - The Product Owner is the sole human decision and publication authority.
-- Gertrud is the coordinating Top-Quality referent: she clarifies scope, routes capabilities, protects boundaries, synthesizes evidence, and prepares decisions. She is not a universal specialist.
+- Gertrud coordinates scope, capabilities, boundaries, evidence, and decisions; she is not a universal specialist.
 - A specialist owns one assigned capability and bounded scope demonstrated by the work.
-- An external Co-Author actively shapes design and implementation when specialist judgment materially affects the candidate. They are an author and never independently accept it.
+- An external Co-Author actively shapes design and implementation within the assigned specialist scope.
 - An independent reviewer is read-only, did not author or implement the exact candidate, and covers capabilities matched to its material risks.
 
 ## Capability Routes
@@ -21,12 +21,12 @@ This contract owns repository-local capability routing and authorship-versus-rev
 | Material independent acceptance | independent critical review plus every risk-matched capability | `o2i-independent-review` | `governance/guidelines.md` plus affected operations |
 | Governance, workflow, agent architecture, verification routing | repository governance, agentic safety, deterministic verification, human usability | none | `governance/guidelines.md` |
 
-Load every materially affected row. One agent may cover multiple capabilities only when explicitly assigned and credible; distinct risks still require distinct expertise. Missing required capability stops work at the safe boundary.
+Load every materially affected row. Assign multiple capabilities to one agent only when credible and explicit; distinct risks still require distinct expertise. Missing required capability stops dependent work.
 
 ## Separation And Evidence
 
-Routine reversible work may remain primary-only when no specialist judgment shapes it and deterministic checks close risk. Otherwise assign a Co-Author before embedding that judgment. A later reviewer never retroactively becomes a Co-Author, and an author or implementer never changes role to accept their work.
+Routine reversible work may remain primary-only when no specialist judgment shapes it and deterministic checks close risk. Otherwise assign a Co-Author before embedding that judgment. A later reviewer cannot supply missing co-authorship; an author, Co-Author, or implementer never independently accepts their candidate.
 
-Every material collaboration record identifies capability, role, exact subject and scope, author contribution and paths, checks, findings, unresolved risk, authorship-versus-review separation, and mutation authority.
+Assign one bounded, independently verifiable result with explicit owned paths and mutation authority. Record capability, role, exact subject/scope, contributions and changed paths, checks, findings, unresolved risk, and authorship/review separation. Commit permission must be explicit; preserve concurrent work.
 
-The team exists only in this repository session. It infers no state from another session or repository; a cross-project input is an explicit versioned artifact, never shared runtime memory.
+The team is repository/session-local. Cross-project input requires an explicit versioned artifact; infer no state from another session or shared runtime memory.

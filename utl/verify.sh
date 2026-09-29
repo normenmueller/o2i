@@ -7,15 +7,15 @@ work=$(mktemp -d "${TMPDIR:-/tmp}/o2i-verify.XXXXXX")
 trap 'rm -rf "$work"' EXIT HUP INT TERM
 
 if [ "$#" -gt 1 ]; then
-  printf 'Usage: %s [all|licensing|governance|model|foundation|haskell|paper]\n' "$0" >&2
+  printf 'Usage: %s [all|checkpoint|licensing|governance|model|foundation|haskell|paper]\n' "$0" >&2
   exit 2
 fi
 
 stage=${1:-all}
 case "$stage" in
-  all | licensing | governance | model | foundation | haskell | paper) ;;
+  all | checkpoint | licensing | governance | model | foundation | haskell | paper) ;;
   *)
-    printf 'Usage: %s [all|licensing|governance|model|foundation|haskell|paper]\n' "$0" >&2
+    printf 'Usage: %s [all|checkpoint|licensing|governance|model|foundation|haskell|paper]\n' "$0" >&2
     exit 2
     ;;
 esac
@@ -547,7 +547,32 @@ verify_paper() {
     --manifest doc/paper/o2i.pdf.manifest.json
 }
 
+verify_checkpoint() {
+  require python3
+  python3 -B utl/verification/verification_scope.py \
+    --event checkpoint --root "$root" --format stages >"$work/checkpoint-stages"
+  if [ ! -s "$work/checkpoint-stages" ]; then
+    printf '[o2i|error] Checkpoint verification selected no stages.\n' >&2
+    exit 2
+  fi
+  while IFS= read -r checkpoint_stage <&3 || [ -n "$checkpoint_stage" ]; do
+    info "Running checkpoint stage: $checkpoint_stage."
+    case "$checkpoint_stage" in
+      licensing) verify_licensing ;;
+      governance) verify_governance ;;
+      model) verify_model ;;
+      haskell) verify_haskell complete ;;
+      paper) verify_paper ;;
+      *)
+        printf '[o2i|error] Invalid checkpoint stage: %s\n' "$checkpoint_stage" >&2
+        exit 2
+        ;;
+    esac
+  done 3<"$work/checkpoint-stages"
+}
+
 case "$stage" in
+  checkpoint) verify_checkpoint ;;
   licensing) verify_licensing ;;
   governance) verify_governance ;;
   model) verify_model ;;

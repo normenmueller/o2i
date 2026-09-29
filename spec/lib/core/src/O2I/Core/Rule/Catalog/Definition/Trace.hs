@@ -67,9 +67,9 @@ traceDefinitions =
            "Select an Action listed in the eligible Strategy formulation."
        , define
            "core.trace.promotion.strategy-diagnosis"
-           "The traced Strategy Driver equals the eligible formulation diagnosis."
+           "The traced Strategy Driver belongs to the eligible formulation diagnosis."
            "Trace promotion preserves the Strategy proof's exact diagnosis."
-           "Set strategyDriver to the formulation diagnosis."
+           "Select strategyDriver from the formulation diagnosis Drivers."
        , define
            "core.trace.promotion.strategy-identity"
            "The traced Strategy equals the Strategy represented by the eligibility proof."
@@ -77,9 +77,9 @@ traceDefinitions =
            "Use the eligibility proof for the traced Strategy."
        , define
            "core.trace.promotion.strategy-intent"
-           "The traced Strategy Objective equals the eligible formulation intent."
+           "The traced Strategy Objective belongs to the eligible formulation intent."
            "Trace promotion preserves the Strategy proof's exact intent."
-           "Set strategyObjective to the formulation intent."
+           "Select strategyObjective from the formulation intent Objectives."
        , define
            "core.trace.promotion.strategy-key-result-membership"
            "The traced Strategy Key Result belongs to the eligible Strategy formulation."

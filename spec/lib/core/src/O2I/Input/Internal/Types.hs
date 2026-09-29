@@ -101,9 +101,9 @@ data StrategyFormulationInput = StrategyFormulationInput
   , formulationScope :: !(NonEmpty FachlicheText)
   , formulationAnchoring :: !StrategyAnchoring
   , formulationDerivedGuardrails :: !(NonEmpty FachlicheText)
-  , formulationDiagnosis :: !ModelIdentity
-  , formulationIntent :: !ModelIdentity
-  , formulationGuidingPolicy :: !ModelIdentity
+  , formulationDiagnosis :: !(NonEmpty ModelIdentity)
+  , formulationIntent :: !(NonEmpty ModelIdentity)
+  , formulationGuidingPolicy :: !(NonEmpty ModelIdentity)
   , formulationPositioning :: !(NonEmpty FachlicheText)
   , formulationTradeOffs :: !(NonEmpty FachlicheText)
   , formulationActions :: !(NonEmpty ModelIdentity)
@@ -130,7 +130,7 @@ data CollectiveFitInput = CollectiveFitInput
   { collectiveClaim :: !ModelIdentity
   , collectiveParticipants :: !(NonEmpty ModelIdentity)
   , collectiveTarget :: !ModelIdentity
-  , collectiveTargetGuidingPolicy :: !ModelIdentity
+  , collectiveTargetGuidingPolicy :: !(NonEmpty ModelIdentity)
   , collectiveTargetTradeOffs :: !(NonEmpty FachlicheText)
   , collectivePairwiseCoherence :: !(NonEmpty PairwiseCoherence)
   , collectiveParticipantCompatibility :: !(NonEmpty ParticipantCompatibility)

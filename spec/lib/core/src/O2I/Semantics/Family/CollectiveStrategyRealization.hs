@@ -240,9 +240,12 @@ assessFit semanticIndex strategyResults claim claimOccurrence participants targe
             targetResolved =
               identitySiteResolved "/target" (collectiveTarget input)
             targetGuidingPolicyResolved =
-              identitySiteResolved
-                "/targetGuidingPolicy"
-                (collectiveTargetGuidingPolicy input)
+              all
+                (uncurry
+                   (identitySiteResolved . indexedPointer "/targetGuidingPolicy"))
+                (zip
+                   [0 :: Int ..]
+                   (NonEmpty.toList (collectiveTargetGuidingPolicy input)))
             pairwiseCoherenceResolved =
               and
                 [ identitySiteResolved
@@ -323,7 +326,11 @@ assessFit semanticIndex strategyResults claim claimOccurrence participants targe
                          claimOccurrence
                          (maybe
                             False
-                            ((== collectiveTargetGuidingPolicy input)
+                            ((== Set.fromList
+                                   (NonEmpty.toList
+                                      (collectiveTargetGuidingPolicy input)))
+                               . Set.fromList
+                               . NonEmpty.toList
                                . formulationGuidingPolicy)
                             targetFormulation)
                    ]
