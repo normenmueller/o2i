@@ -2,21 +2,21 @@
 
 > Generated from `.ai4x/governance/policy.json`; non-authoritative and never manually edited.
 
-# Owners And Loads
+# Owner Lookup
 
-- `bootstrap` → `.ai4x/BEHAVIOR.md`; load `always`; precedence, bounded startup, active-checkout pointer validation, handoff applicability, repository isolation, routing, and universal fail-closed safety.
-- `applicability-envelope` → `.ai4x/STATE.md`; load `bootstrap`; one bounded closed header and no handoff body.
-- `return-point` → `.ai4x/HANDOFF.md`; load `handoff-applicable`; branch-bound local return point.
-- `repository-context` → `.ai4x/CONTEXT.md`; load `repository-context-required-after-checkout-selection`; stable identity, statement-class ownership, retrieval links, and durable product invariants.
-- `capability-routing` → `.ai4x/TEAM.md`; load `collaboration-or-review-required`; capability routing and authorship-versus-review separation.
-- `executable-governance` → `.ai4x/governance/policy.json`; load `deterministic-evaluation-before-authority-decision-or-mutation`; workflow transitions, actions, grants, mutation gates, events, provenance, rule registry, and budgets.
-- `governance-practice` → `.ai4x/governance/guidelines.md`; load `risk-classification-issue-project-review-or-remote-work`; risk paths, Issue and Project ownership, reviews, and remote-work rules.
-- `decision-rendering` → `.ai4x/governance/decision-handoff.md`; load `product-owner-decision-or-control-handoff`; event rendering and live approval binding.
-- `session-continuity` → `.ai4x/governance/continuity.md`; load `applicable-handoff-reconstruction-or-cold-start-evaluation`; post-classification reconstruction and cold-start eligibility.
-- `completed-work-cleanup` → `.ai4x/governance/cleanup.md`; load `explicit-completion-and-cleanup-grant`; cleanup preflight, destructive-action safeguards, deletion ordering, and postflight.
-- `task-contracts` → `.ai4x/operations/*.md`; load `matching-task-class`; task-class-specific design, implementation, and quality rules.
+Follow `BEHAVIOR.md` precedence and these declared loading conditions.
 
-Routes: `bootstrap` → `applicability-envelope`; `applicability-envelope` → `return-point`; `bootstrap` → `repository-context`; `bootstrap` → `capability-routing`; `bootstrap` → `governance-practice`; `governance-practice` → `executable-governance`; `governance-practice` → `decision-rendering`; `applicability-envelope` → `session-continuity`; `governance-practice` → `completed-work-cleanup`; `bootstrap` → `task-contracts`.
+- `bootstrap`: `.ai4x/BEHAVIOR.md`; load `always`.
+- `applicability-envelope`: `.ai4x/STATE.md`; load `bootstrap`.
+- `return-point`: `.ai4x/HANDOFF.md`; load `handoff-applicable`.
+- `repository-context`: `.ai4x/CONTEXT.md`; load `repository-context-required-after-checkout-selection`.
+- `capability-routing`: `.ai4x/TEAM.md`; load `collaboration-or-review-required`.
+- `executable-governance`: `.ai4x/governance/policy.json`; load `deterministic-evaluation-before-authority-decision-or-mutation`.
+- `governance-practice`: `.ai4x/governance/guidelines.md`; load `risk-classification-issue-project-review-or-remote-work`.
+- `decision-rendering`: `.ai4x/governance/decision-handoff.md`; load `product-owner-decision-or-control-handoff`.
+- `session-continuity`: `.ai4x/governance/continuity.md`; load `applicable-handoff-reconstruction-or-cold-start-evaluation`.
+- `completed-work-cleanup`: `.ai4x/governance/cleanup.md`; load `explicit-completion-and-cleanup-grant`.
+- `task-contracts`: `.ai4x/operations/*.md`; load `matching-task-class`.
 
 # Workflow And Authority
 

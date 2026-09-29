@@ -66,26 +66,25 @@ adapters, or Haddock.
 
 # Co-Authoring
 
-- Use an external Co-Author whenever specialist judgment materially shapes design or implementation. Haskell, type design, or a public API alone never makes co-authoring mandatory; material reliance on specialist judgment does.
-- The Co-Author contributes actively during both design and implementation and combines the exact metamodel, formal-methods, type-theory, idiomatic Haskell, API, or performance capabilities required by the assigned scope.
+- Follow `TEAM.md` for collaboration timing, bounded assignments, records and
+  independence. Haskell, type design or a public API alone does not trigger
+  co-authoring; material specialist judgment does. Combine the metamodel,
+  formal-methods, type-theory, idiomatic Haskell, API and performance capabilities
+  needed by the assigned scope during design and implementation.
 - Material Core semantic or architectural changes require scoped independent
   design review before implementation. Use `haskell-review.md` and governance
   for review evidence and acceptance; design review never replaces final
   candidate review.
-- Assign small semantically coherent packages with explicit write scope and one
-  independently verifiable result.
-- Each handoff records capability, role, target contract, owned paths, contribution, changed paths, checks, unresolved findings, authorship-versus-review separation, and whether commit permission exists. Record its current package and next action in `.ai4x/HANDOFF.md` only after applicability is proven.
-- A Co-Author or implementer never independently accepts their own candidate.
-- Preserve concurrent work. Do not permit commits or model edits unless the
-  assignment explicitly authorizes them.
+- Record the current package and next action in the applicable Handoff under
+  `governance/continuity.md`; preserve semantically coherent package boundaries.
 
 # Verification
 
-Canonical repository-root verification entries:
+Use `local-verification.md` for local tools and recovery. Repository-root entries:
 
 ```text
-./utl/verify.sh haskell
-./utl/verify.sh foundation
+./utl/verification/local.sh haskell
+./utl/verification/local.sh foundation
 ```
 
 `haskell` verifies all five packages, including the CLI, against

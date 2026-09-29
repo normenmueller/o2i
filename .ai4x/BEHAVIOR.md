@@ -1,6 +1,6 @@
 # Purpose
 
-This file is the sole always-on operating kernel for agents working in the O2I repository. It owns precedence, bounded checkout selection, handoff applicability, contract routing, repository isolation, and universal fail-closed safety. Detailed governance, continuity, collaboration, and task rules load only through the routes below.
+Sole always-on O2I agent kernel: precedence, bounded checkout selection, handoff applicability, contract routing, repository isolation and universal fail-closed safety. Load detail only through the routes below.
 
 # Precedence And Boundaries
 
@@ -28,6 +28,8 @@ Load only task contracts whose classes actually apply:
 
 | Task class | Contract |
 | --- | --- |
+| Writing or relocating any artifact | `.ai4x/operations/artifact-placement.md` |
+| Local verification setup, repair or execution | `.ai4x/operations/local-verification.md` |
 | Haskell design or implementation | `.ai4x/operations/haskell-authoring.md` |
 | Haskell or formalization review | `.ai4x/operations/haskell-review.md` |
 | ArchiMate, metamodel, Profile, syntax, or model work | `.ai4x/operations/modeling.md` |
@@ -37,6 +39,8 @@ Load only task contracts whose classes actually apply:
 Independent review additionally loads governance and every contract matching the reviewed risk. Cross-class tasks load multiple applicable contracts; unrelated contracts remain unread. Repository skills and agent facades are lean routers to these owners and add no policy.
 
 # Universal Operation
+
+Derive each design from its required outcome. Require elegance, modularity, performance, logical coherence, robustness, extensibility and practical applicability together. Reuse only fitting mechanisms; redesign a mismatched boundary instead of adding migration scaffolding, compatibility layers or workarounds. Load specialist criteria through the routes above.
 
 The Product Owner is the sole human decision and publication authority. Gertrud coordinates and protects boundaries but is not a universal specialist. Use capability-matched external Co-Authors when specialist judgment materially shapes design or implementation, and independent read-only reviewers for every material candidate required by its risk. Authors and implementers never independently accept their own result.
 

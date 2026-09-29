@@ -356,6 +356,15 @@ class PolicyShapeTests(unittest.TestCase):
         for identifier in identifiers:
             with self.subTest(identifier=identifier):
                 self.assertIn(f"`{identifier}`", projection)
+        for owner in policy["ruleOwners"]:
+            with self.subTest(owner=owner["id"]):
+                rows = [
+                    line for line in projection.splitlines()
+                    if line.startswith(f"- `{owner['id']}`:")
+                ]
+                self.assertEqual(1, len(rows))
+                self.assertIn(f"`{owner['owner']}`", rows[0])
+                self.assertIn(f"`{owner['loadsWhen']}`", rows[0])
 
 
 class StateAndBudgetTests(unittest.TestCase):

@@ -1,7 +1,8 @@
 # Scope
 
-Load for `doc/paper/o2i.md`, README, WTF, acknowledgements, figures, rendering, or release
-text.
+Load for White Paper, README, WTF, acknowledgements, figures, rendering, or
+release text. `../CONTEXT.md` owns product sources; `artifact-placement.md`
+owns audience and location.
 
 # Prose
 
@@ -27,9 +28,8 @@ text.
 
 # Artifact Boundaries
 
-- `doc/paper/o2i.md` owns normative fachliche and metamodel prose.
-- `doc/misc/wtf.md` is concise, informal, and non-normative.
-- `README.md` owns the concise project entry, Purpose, USP, and central links.
+- Keep `doc/misc/wtf.md` concise, informal, and non-normative; keep `README.md`
+  a concise project entry with central links.
 - `spec/README.md` owns technical architecture, the validation model, build,
   installation, and CLI use; it never competes with fachliche sources.
 - `CONTRIBUTING.md` owns contribution workflow, repository navigation,
@@ -37,18 +37,18 @@ text.
 - TikZ sources live in `doc/resources/`; generated PNGs live in `doc/images/`.
 - ArchiMate exports and model documentation remain synchronized with the
   article and formalization.
-- The White Paper concrete-syntax section explains every normative mapping
-  class projected from `spec/ctr/archimate/profile.json`: carriers,
-  metadata, relationship representations, context-sensitive signatures, and
-  structured patterns. It explains these mapping classes in concise
-  publication prose and checked contract visualizations; it neither exposes
-  raw JSON structure nor maintains a parallel generated registry.
-- `O2I Syntax - Carriers` and `O2I Syntax - Relations` visualize the carrier- and relation-mapping portions of that contract. Focused checked syntax Views visualize metadata-bearing and non-binary patterns. None is an independent normative source.
+- Explain every normative Profile mapping class in the White Paper Syntax
+  section: carriers, metadata, relationships, context-sensitive signatures,
+  structured patterns. Use concise publication prose and the checked contract
+  visualizations required by `modeling.md`; expose neither raw JSON structure
+  nor a parallel registry. Views introduce no independent normative source.
 
 # Verification
 
+Apply `local-verification.md` before local execution.
+
 ```text
-./utl/verify.sh paper
+./utl/verification/local.sh paper
 ./utl/paper/render-paper.sh
 (cd doc/paper && pandoc o2i.md --filter pandoc-include -t markdown)
 ```
