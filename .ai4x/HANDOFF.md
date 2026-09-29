@@ -6,37 +6,34 @@
 
 # Objective
 
-Preserve the fictional company illustration in #115/#116 under #109 while #125 corrects strategic cascading. The Product Owner explicitly paused illustration work. Resume at the company Vision after the independently accepted correction has been integrated by agreement. The illustration remains incomplete.
+Preserve the incomplete fictional-company illustration in #115/#116 under #109. The Product Owner paused illustration work until #125's independently accepted correction and agreed integration. Resume at the company Vision.
 
 # Authority
 
-Re-fetch #125 and the owning illustration Issues before continuing. The current Product Owner decision authorizes isolation, preservation and visible dependency tracking; it does not authorize trunk merge, release, Issue closure or cleanup. This handoff creates no authority or cold-start eligibility. Do not reconstruct historical grants.
+Re-fetch the owning illustration Issues, #125 and https://github.com/normenmueller/o2i/issues/126 before the next dependent action. Current #126 authority covers memory correction and branch integration; it neither starts #125 implementation nor resumes illustration content. This handoff creates no authority or cold-start eligibility.
+
+Product Owner operating instruction: assign every newly created Issue to both `normenmueller` and `gertrud-ai4x`; verify the remote assignees.
 
 # Current Facts
 
-- Parked branch: `feat/116-illustration`; saved product/tooling baseline: `0266299b6dbb304a8971bc893e0ac813e65d50e4`, verified on origin before isolation.
-- #125 owns the generic correction, quality criteria, specialist design/review and implementation. #115/#116 have native blocked-by dependencies on #125. Project O2I owns displayed status; re-fetch rather than infer it.
-- Correction branch: `feat/125-strategy-cascading`, based on this work line. Preserve #123/#124, whose trunk integration remains pending. Do not count their inherited changes as newly authored correction work.
-- Native illustration: `doc/model/illustration.archimate`; Ethos/Mission and three exports remain saved. Mission: "Entscheiden und Verwirklichen ermöglichen". Vision and technology choices remain open.
-- Only a preliminary White Paper correction draft existed at isolation; carry it to #125 without treating it as accepted. Core, Profile and native models had no correction edits.
+- Branch: `feat/116-illustration`. #115/#116 depend on #125; re-fetch current dependencies and Project status when material.
+- #126 owns #123/#124 integration, agent-memory correction and feature-branch synchronization. PR #127 merged accepted candidate `0202bc77290690d3a176b7db45c5e68b51e8c10c` into trunk as `36968ccb1f2c4c9cbd7c1d6bd09092596dc242b5`. Re-fetch #126 for final synchronization evidence.
+- `doc/model/illustration.archimate` preserves Ethos/Mission and three exports. Mission: "Entscheiden und Verwirklichen ermöglichen". Vision and technology choices remain open.
+- Saved illustration SHA-256: `fb02ecec86041a2961301162e6f052ae7f30c7254be60a9bd32fd28389b76fc6`.
+- Cascading design and preliminary wording remain on `feat/125-strategy-cascading`; #126 does not implement that correction.
 
 # Material Risk
 
-Do not resume illustration content before the return condition. Keep fictional content and per-save native checks. Two empty illustration orientation folders remain intentional unfinished-model findings. Agents never edit `meta/o2i.archimate`. The complete agent-memory byte budget already fails at the saved baseline; no passing governance gate is claimed.
+Keep fictional content and required per-save native checks. Two empty illustration orientation folders remain intentional unfinished-model findings. Agents never edit `meta/o2i.archimate`.
 
 # Verification
 
-- #124 reviewed product checkpoint:
-  https://github.com/normenmueller/o2i/issues/124#issuecomment-5601742281
-- #123 reviewed tooling checkpoint:
-  https://github.com/normenmueller/o2i/issues/123#issuecomment-5598732900
-- Saved illustration SHA-256: `fb02ecec86041a2961301162e6f052ae7f30c7254be60a9bd32fd28389b76fc6`; prior nine Profile/Structure/Semantics results and 70 extractor tests apply only to those bytes.
-- Run checkpoint checks and verify published heads. Backup establishes preservation, not final acceptance or integration.
+All local stages and five required remote checks passed for the #126 candidate; independent source reviews accepted it. This does not establish #125 implementation acceptance. Preserve historical #123/#124 evidence at its reviewed revisions; synchronization checks and published heads belong to #126.
 
 # Next Action
 
-Wait for #125's independently accepted correction and agreed integration. Then reconcile #115/#116, return to this branch and formulate the company Vision with the Product Owner before the next native slice.
+Keep illustration paused until #125 acceptance and agreed integration. Reconcile #115/#116 before resuming.
 
 # Local Return Point
 
-Use the parked branch, saved illustration and current #109/#115/#116/#125 records. No temporary file or conversation history is required to identify the pause reason and return condition.
+Return to this branch and formulate the company Vision with the Product Owner before the next native slice.

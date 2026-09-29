@@ -1757,22 +1757,22 @@ def cold_start_eligible(
 
 
 def render_agent_projection(policy: Mapping[str, Any]) -> str:
-    """Render the complete non-authoritative English agent route."""
+    """Render actionable governance and compact canonical owner lookups."""
     lines = [
         "# Generated Agent Governance Projection",
         "",
         "> Generated from `.ai4x/governance/policy.json`; non-authoritative and never manually edited.",
         "",
-        "# Owners And Loads",
+        "# Owner Lookup",
+        "",
+        "Follow `BEHAVIOR.md` precedence and these declared loading conditions.",
         "",
     ]
     for owner in policy["ruleOwners"]:
         lines.append(
-            f"- `{owner['id']}` → `{owner['owner']}`; load `{owner['loadsWhen']}`; {owner['scope']}."
+            f"- `{owner['id']}`: `{owner['owner']}`; load `{owner['loadsWhen']}`."
         )
-    lines.extend(("", "Routes: " + "; ".join(
-        f"`{route['from']}` → `{route['to']}`" for route in policy["loadRoutes"]
-    ) + ".", "", "# Workflow And Authority", ""))
+    lines.extend(("", "# Workflow And Authority", ""))
     workflow = policy["workflow"]
     lines.append(
         f"`Ready`: {workflow['readySemantics']}. Capacity: `{workflow['readyCapacity']}`. "

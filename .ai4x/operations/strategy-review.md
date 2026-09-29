@@ -21,7 +21,8 @@ analysis, or an independent review by an external strategist.
 
 # Independent Strategy Review
 
-The reviewer is read-only and must assess:
+Apply `../TEAM.md` for independence and `../governance/guidelines.md` for review
+evidence, remedies, and verdicts. Assess every materially affected dimension:
 
 - fachliche soundness and strategic coherence;
 - source grounding and explicit authors' derivations;
@@ -33,10 +34,5 @@ The reviewer is read-only and must assess:
 - practical applicability, limitations, and governance implications;
 - whether O2I creates genuine strategic value without unnecessary ceremony.
 
-# Findings And Verdict
-
-- Report blocking findings before advisory follow-ups. Use severity only when it materially helps prioritize correction.
-- Every blocking finding includes one concrete target-state solution.
-- Assess every materially affected dimension among fachliche quality, source grounding, authors' derivation, strategic coherence, terminology, practical applicability, limitations, and overall value.
-- Use exactly one verdict from the governance contract: `accepted`, `accepted with follow-ups`, or `changes required`.
-- Acceptance requires no unresolved blocking finding. Numerical scores are prohibited.
+Report blocking findings before advisory follow-ups; use severity only to
+prioritize correction. Include the overall strategic value in the verdict.

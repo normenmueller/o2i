@@ -5,101 +5,87 @@ instance-conformance work.
 
 # Semantic And Syntax Discipline
 
-- Treat ArchiMate as notation, never as the source of O2I semantics.
-- Semantic Views visualize the metamodel. Syntax Views visualize the concrete
-  mapping defined by `spec/ctr/archimate/profile.json` and introduce no
-  independent fachliche semantics.
-- Prefer plain boxes with solid outlines for O2I metamodel elements in
-  reference Semantic Views. Consistent reference presentation is an editorial
-  recommendation assessed through visual review, not a mandatory model
-  conformance condition.
-- Colors, fonts, and Grouping outline styles in O2I instances do not affect
-  O2I conformance unless the authoritative notation/Profile contract explicitly
-  assigns meaning to them. Preserve every existing meaning-bearing carrier,
-  relationship, direction, and metadata requirement.
-- Do not add a product presentation validator, CLI command or option,
-  validation level, API, or styling engine for reference-diagram cosmetics.
-  A future meaning-bearing graphical distinction requires an explicit,
-  justified definition in its owning notation/Profile contract; its product
-  checks belong in O2I libraries and the O2I CLI, without parallel shell/Python
-  rule logic. This conditional boundary creates no speculative capability.
-- Audit every Semantic View as a purpose-bounded metamodel visualization:
-  verify its purpose, elements, relations, directions, labels, consistency
-  within scope, and visual representation. No single View must project the
-  complete metamodel; a naming audit alone is insufficient.
-- Semantic metatype and type labels use their canonical unprefixed names, such
-  as `Context`, `Principle`, and `Situation Anchor`. The View already supplies
-  the O2I namespace.
-- The same editorial recommendation applies to abstract closed types. State
-  their abstraction explicitly in View documentation; do not introduce
-  `dashed = abstract` or another border-, color-, or layout-based encoding.
-- Syntax Views map semantic types, relation families, metadata, and structured
-  patterns to ArchiMate notation. They never repeat a complete semantic graph
-  merely to illustrate the mapping.
-- `O2I Syntax - Carriers` and `O2I Syntax - Relations` jointly form the complete reference visualization of carrier mappings and applicable relation-mapping families. The former owns carrier projection; the latter owns relation-family projection. Focused syntax Views own metadata-bearing or non-binary patterns that cannot be represented by those two mapping Views, including contextualization, structured propositions, and qualification proposals. Every such current Profile mapping requires one checked focused visualization; each View reuses the exact persisted mapping elements and relationships and introduces no independent contract.
-- Keep carrier mappings, relation mappings, and non-trivial syntax patterns
-  explicit:
-  - carrier mappings define which ArchiMate element represents an O2I type;
-  - relation mappings define ArchiMate relationship type, direction, and
-    naming;
-  - pattern Views define syntax that cannot be expressed by one binary mapping,
-    such as contextualization or collective Strategy realization.
-- Represent a semantic-to-ArchiMate carrier mapping only as
-  `O2I Type --association[maps-to]--> ArchiMate Construct`. `maps-to` is a
-  directed, mapping-only ArchiMate Association and never an O2I relation or
-  executable instance syntax.
-- Reuse the exact persisted semantic metamodel element as the source of a
-  type-specific mapping. Never create a prefixed duplicate such as
-  `O2I Principle`.
-- A closed type may define one family-level carrier mapping only when every
-  constructor shares the same ArchiMate representation. `Context` therefore
-  maps once to `ArchiMate Grouping`; its constructors are documented by the
-  closed Context registry.
-- A closed type with heterogeneous representations maps each constructor
-  separately. `Situation Anchor` therefore remains the abstract family while
-  Business Capability, Business Process, Business Object, and Value Stream map
-  individually.
-- Keep unannotated mapping Views distinct from executable Candidate conformance
-  Views. Never reuse one persisted element across those levels.
-- Mapping Views represent types only. Their semantic sources use canonical
-  unprefixed labels such as `Principle`; their notation targets identify the
-  ArchiMate construct, such as `ArchiMate Principle`. Neither side contains
-  fachliche names or `<Name>` placeholders.
-- Executable conformance Views may use `<Name> :: O2I <Type>` for typed
-  carriers. Fachliche instances retain their domain names; O2I typing follows
-  exclusively from profile metadata and graph structure.
-- Contextualization is only
-  `Context --composition[contextualizes]--> element`; visual nesting is
-  presentational.
-- Mapping-only Views are checked reference visualizations, not O2I graphs.
-- Illustrative Views explain a conceptual reading without claiming executable
-  profile or conformance status. `O2I Layered Cake` is such a non-executable
-  overview; its repository contract is checked without executable Haskell
-  conformance evaluation.
-- `spec/ctr/archimate/profile.json` is the exact mapping authority. `O2I Syntax - Carriers`, `O2I Syntax - Relations`, and the focused syntax Views must jointly visualize every current mapping class without creating a parallel registry.
-- Executable conformance and instance Views require the current Haskell
-  AMX/Profile/Core integration check in addition to the repository View
-  contract.
+ArchiMate is notation, never semantic authority. Semantic Views visualize the
+metamodel; syntax Views visualize `spec/ctr/archimate/profile.json`, the exact
+mapping owner. Neither introduces independent fachliche semantics.
+
+## Presentation And Semantic Views
+
+- Prefer plain solid-outline boxes, including abstract closed types. This is
+  visual-review guidance, not conformance. Document abstraction explicitly;
+  never encode it through dashes, borders, colors, or layout.
+- Colors, fonts, and Grouping outlines affect conformance only when the owning
+  notation/Profile contract assigns explicit meaning. Preserve meaning-bearing
+  carriers, relationships, directions, and metadata.
+- Add no cosmetic product validator, CLI command/option, validation level, API,
+  or styling engine. A meaning-bearing graphical distinction requires a
+  justified definition in the notation/Profile owner; checks belong in O2I
+  libraries and CLI, never parallel shell/Python logic. This permits no
+  speculative capability.
+- Audit each Semantic View's purpose, elements, relations, directions, labels,
+  scoped consistency, and visual representation. Naming alone is insufficient;
+  no View must project the complete metamodel.
+- Use canonical unprefixed metatype/type labels: `Context`, `Principle`,
+  `Situation Anchor`. The View supplies the O2I namespace.
+
+## Mapping Coverage And Identity
+
+`O2I Syntax - Carriers` owns carrier projection; `O2I Syntax - Relations` owns
+applicable relation-family projection, including relationship type, direction,
+and naming. Focused syntax Views cover metadata-bearing and non-binary patterns
+not expressible there: contextualization, structured propositions, qualification
+proposals, and collective Strategy realization. Each such current Profile
+mapping requires one checked focused visualization. Together these Views cover
+every current mapping class without a parallel registry or repeated complete
+semantic graph.
+
+- Reuse exact persisted mapping elements/relationships and semantic metamodel
+  sources. Never create prefixed duplicates such as `O2I Principle`.
+- Carrier mappings use only
+  `O2I Type --association[maps-to]--> ArchiMate Construct`: a directed,
+  mapping-only ArchiMate Association, never an O2I relation or instance syntax.
+- Map a closed family once only when all constructors share its representation:
+  `Context` maps to `ArchiMate Grouping`, with constructors in the Context
+  registry. Otherwise map constructors individually: `Situation Anchor`
+  remains abstract; Business Capability, Business Process, Business Object,
+  and Value Stream each map separately.
+- Mapping Views contain types only: canonical semantic names (`Principle`)
+  and named notation constructs (`ArchiMate Principle`), without fachliche
+  names or `<Name>` placeholders.
+- Never reuse a persisted element between unannotated mapping and executable
+  Candidate conformance Views. Executable typed carriers may use
+  `<Name> :: O2I <Type>`; fachliche instances retain domain names. Only Profile
+  metadata and graph structure determine O2I typing.
+- Contextualization is
+  `Context --composition[contextualizes]--> element`; nesting is presentational.
+
+## View Verification Classes
+
+| Class | Required verification |
+| --- | --- |
+| Mapping-only | Repository reference-visualization contract; not an O2I graph |
+| Illustrative | Repository contract and conceptual reading; no executable Profile/conformance claim or Haskell conformance evaluation (`O2I Layered Cake`) |
+| Executable conformance or instance | Repository View contract plus current Haskell AMX/Profile/Core integration |
 
 # ArchiMate Applicability Review
 
-- Decide element and relationship applicability from the ArchiMate 3.2 relationship matrix, not from diagram appearance or a relationship definition in isolation. An exact Archi implementation matrix may provide reproducible supporting evidence when its version and symbol mapping are identified.
-- Require an independent TOGAF/ArchiMate reviewer when a material decision disputes or changes an ArchiMate carrier, endpoint applicability, relationship type, derived relationship, or concrete profile mapping. Routine model maintenance does not activate this reviewer.
+- Decide applicability from the ArchiMate 3.2 relationship matrix. Diagram appearance or an isolated relationship definition is insufficient. An exact Archi implementation matrix is supporting evidence only with identified version and symbol mapping.
+- Require independent TOGAF/ArchiMate review for material disputes or changes to carriers, endpoint applicability, relationship types, derived relationships, or concrete Profile mappings; routine maintenance does not trigger it.
 - Review ArchiMate validity, O2I semantic fidelity, profile consistency, and validator consequences as separate conclusions.
 
 # Model Documentation
 
-- Keep model documentation minimal and subordinate to its owning authority.
-- Semantic metatypes carry one concise definition and a reference to the
-  corresponding White Paper section; they never duplicate literature anchors
-  or complete fachliche definitions.
-- Mapping exemplars carry no independent fachliche documentation.
-- Every View states only its purpose, authority boundary, and reading.
-  Conformance Views may additionally identify their exact profile-contract
-  reference.
-- Illustrative elements and relations may carry one concise reading.
-- Never copy complete registries, profile mappings, source apparatus, or
-  publication prose into the model.
+Keep documentation minimal and subordinate to its owner:
+
+| Subject | Allowed documentation |
+| --- | --- |
+| Semantic metatype | One concise definition and corresponding White Paper section |
+| Mapping exemplar | No independent fachliche documentation |
+| View | Purpose, authority boundary, reading; conformance Views may add exact Profile-contract reference |
+| Illustrative element/relation | One concise reading |
+
+Never copy literature anchors, complete fachliche definitions, registries,
+Profile mappings, source apparatus, or publication prose into the model.
 
 # Model Editing
 
@@ -115,26 +101,24 @@ instance-conformance work.
 
 # Tool Responsibilities
 
-- The Python model-hygiene audit checks only repository structure: identifiers,
-  references, model usage, custom folders, and View documentation.
-- The Python extractor checks named repository Views and snapshots together
-  with their exact repository visualization contracts projected from the
-  current Profile and bound Core companion: carrier and relation families,
-  focused metadata, references, and topology. It validates no fachliche
-  instance semantics and owns no parallel mapping registry.
-- AMX decodes native model evidence losslessly; the compiled Profile applies
-  the concrete mapping and projects selected Views.
-- Core validates notation-independent O2I structure and semantics. Operation
-  composes acquisition, adapter/Profile resolution, View selection, and the
-  current preparation boundary.
+- Python hygiene: identifiers, references, usage, custom folders, View documentation.
+- Python extractor: named Views/snapshots against visualization contracts from
+  current Profile and bound Core companion; carrier/relation families, focused
+  metadata, references, topology. No fachliche instance validation or parallel
+  mapping registry.
+- AMX: lossless native decode. Compiled Profile: mapping and selected-View projection.
+- Core: notation-independent structure/semantics. Operation: acquisition,
+  adapter/Profile resolution, View selection, and preparation.
 
 # Commands
+
+Apply `local-verification.md` before local execution.
 
 ```text
 python3 -B utl/model/audit-archimate-model.py
 python3 -B utl/model/extract-archimate-view.py --preset all
 python3 -B utl/model/extract-archimate-view.py --preset all --check
 python3 -B -m unittest discover -s utl/model -p 'test_*.py'
-./utl/verify.sh model
-./utl/verify.sh foundation
+./utl/verification/local.sh model
+./utl/verification/local.sh foundation
 ```

@@ -20,6 +20,8 @@ REVISION = re.compile(r"[0-9a-f]{40}")
 FULL_PATHS = frozenset(
     {
         ".gitattributes",
+        "utl/verification/README.md",
+        "utl/verification/local.sh",
         "utl/verification/verification_scope.py",
         "utl/verification/test_verification_scope.py",
         "utl/verify.sh",
