@@ -17,7 +17,7 @@ The grant remains bounded by its subject, resources, scope, target, and exclusio
 Before deleting anything, perform one read-only preflight that:
 
 1. verifies the selected cleanup mode, exact Issue, accepted and published result, required green remote checks, active cleanup grant, and either the completed-work closure gates or the superseded-source replacement, restore, unique-data, and recoverability gates;
-2. enumerates every exact candidate by stable identity and expected ref where applicable: named local branch and full ref, named remote branch and ref, repository-relative linked-worktree path and registered identity, named stash and object ID, exact `.ai4x/local/ACTIVE.md` pointer, exact Issue-owned scratch path, or exact grant-bound superseded continuity source;
+2. enumerates every exact candidate by stable identity and expected ref where applicable: named local branch and full ref, named remote branch and ref, repository-relative linked-worktree path and registered identity, named stash and object ID, exact `.ai4x/work/local/ACTIVE.md` pointer, exact Issue-owned scratch path, or exact grant-bound superseded continuity source;
 3. proves each candidate's unique work durable on the owning published branch or intentionally obsolete under the same grant; and
 4. records the permitted native deletion operation, conditions, expected identity, and required ordering for each candidate.
 

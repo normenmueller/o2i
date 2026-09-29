@@ -983,12 +983,18 @@ class RepositorySurfaceTests(unittest.TestCase):
                 self.assertLessEqual(octets, 1000)
 
     def test_local_staging_is_ignored(self) -> None:
-        result = subprocess.run(
-            ["git", "check-ignore", "-q", ".ai4x/local/probe"],
-            cwd=ROOT,
-            check=False,
-        )
-        self.assertEqual(0, result.returncode)
+        for path in (
+            ".ai4x/work/local/probe",
+            ".ai4x/work/remote/probe",
+            "utl/verification/.local/probe",
+        ):
+            with self.subTest(path=path):
+                result = subprocess.run(
+                    ["git", "check-ignore", "-q", path],
+                    cwd=ROOT,
+                    check=False,
+                )
+                self.assertEqual(0, result.returncode)
 
     def test_public_contracts_are_repository_autonomous(self) -> None:
         absolute_posix = re.compile(

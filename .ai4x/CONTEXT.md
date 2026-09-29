@@ -35,7 +35,8 @@ Tests verify contracts; they never define fachliche meaning.
 - `spec/lib/operation/` and `spec/cli/`: capability-sized execution, diagnostics, machine results, and thin rendering.
 - `meta/o2i.archimate` and `meta/o2i-*.md`: reference model and generated review snapshots; agents never edit the model directly.
 - `.ai4x/governance/`, `.ai4x/operations/`, `.agents/skills/`, and `.github/agents/`: canonical operating contracts and their lean routers.
-- `utl/verify.sh`: canonical staged deterministic verification.
+- Before writing or relocating artifacts, read `.ai4x/operations/artifact-placement.md`: agentic-first, agentic-facing, human-approvable memory; project artifacts stay with their owners; agent scratch remains disposable.
+- `.ai4x/operations/local-verification.md`: local setup and recovery; `utl/verify.sh`: canonical verification.
 
 # Durable Invariants
 
