@@ -8,9 +8,10 @@ adapters, or Haddock.
 - Treat Haskell as the normative machine-checkable formalization of the O2I
   metamodel, never as an independent fachliche source.
 - Optimize simultaneously for semantic force, totality, idiomatic elegance,
-  local clarity, a small public API, and proportionate complexity. A formally
-  strong design that is unnecessarily difficult to explain or use is not
-  acceptable.
+  modularity, performance, logical coherence, robustness, extensibility,
+  practical applicability, local clarity, a small public API, and proportionate
+  complexity. A formally strong design that is unnecessarily difficult to
+  explain or use is not acceptable.
 - Keep type design, module boundaries, package architecture, and semantic
   ownership coherent and explicit. Signatures and Haddock must make the
   intended use and guarantee boundary understandable without reading the whole
@@ -34,10 +35,12 @@ adapters, or Haddock.
 - Design nontrivial graph and rule evaluation around addressed indices and
   truthful work contracts. Exclude hidden Cartesian intermediates and support
   asymptotic claims with adversarial multi-axis tests.
-- Extend stable mechanisms through fachlich owned rules and projections.
-  Redesign a shared evaluator only for a separately demonstrated new class of
-  requirement; never add a workaround, compatibility layer, unsafe mechanism,
-  or speculative abstraction.
+- Derive architecture from fachlich owned obligations. Reuse and extend stable
+  mechanisms through owned rules and projections only while their design fits
+  those obligations. Demonstrate any mismatch and redesign the affected boundary
+  from its required target state; never preserve an ill-fitting design through
+  migration scaffolding, compatibility layers, attached special-case logic,
+  workarounds, unsafe mechanisms, or speculative abstractions.
 - Keep the CLI thin. Reusable logic belongs in libraries.
 - Apply the presentation boundary in `modeling.md`: no new product capability
   for editorial reference styling. Product checks for explicitly justified,
@@ -65,6 +68,10 @@ adapters, or Haddock.
 
 - Use an external Co-Author whenever specialist judgment materially shapes design or implementation. Haskell, type design, or a public API alone never makes co-authoring mandatory; material reliance on specialist judgment does.
 - The Co-Author contributes actively during both design and implementation and combines the exact metamodel, formal-methods, type-theory, idiomatic Haskell, API, or performance capabilities required by the assigned scope.
+- Material Core semantic or architectural changes require scoped independent
+  design review before implementation. Use `haskell-review.md` and governance
+  for review evidence and acceptance; design review never replaces final
+  candidate review.
 - Assign small semantically coherent packages with explicit write scope and one
   independently verifiable result.
 - Each handoff records capability, role, target contract, owned paths, contribution, changed paths, checks, unresolved findings, authorship-versus-review separation, and whether commit permission exists. Record its current package and next action in `.ai4x/HANDOFF.md` only after applicability is proven.
