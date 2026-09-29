@@ -56,6 +56,8 @@ Delegates and reviewers never query/mutate remote work state or start approval-r
 
 Prefer connected GitHub for supported reads; use `gh` for missing capabilities. Stage unpublished remote drafts under ignored `.ai4x/work/local/drafts/`; the published artifact belongs remotely. Every agent write requires verified `gertrud-ai4x`; never substitute another identity. Before publication report outgoing commits, scope, checks, verdict and follow-ups. Preserve the accepted files unchanged.
 
+For Git writes, verify the actual transport credentials and one effective push destination separately from the API identity. A verified `gh` account does not verify SSH. Use an explicit repository URL with command-scoped verified credentials; check URL rewrites first. Do not treat `git -c remote.<name>.url=...` as replacement: remote URLs are multivalued. Read back publication evidence and record the actual Git publisher separately from authorship; never rewrite historical provenance to match intent.
+
 # Verification And Backup
 
 Load `operations/local-verification.md` for local execution and recovery. Use `./utl/verification/local.sh checkpoint` for regular scoped backup commits; verify remote HEAD and report unbacked changes before claiming recoverability. Pure illustration checkpoints select licensing/model checks; required per-save CLI checks and unfinished-model findings remain. A backup is no merge acceptance.
