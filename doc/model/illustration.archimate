@@ -5,23 +5,32 @@
   <folder name="Application" id="id-634f7306037f4eea9f7f38a9b4ff22aa" type="application"/>
   <folder name="Technology &amp; Physical" id="id-b0f42a85659e4e589190108d914575c0" type="technology"/>
   <folder name="Motivation" id="id-0d9ca5963b00432babfde51f34841c08" type="motivation">
-    <element xsi:type="archimate:Principle" name="Respekt" id="id-6e1906a073404a3f9ba7707e97b97c8f">
-      <property key="o2i.type" value="Principle"/>
-      <property key="o2i.commitment" value="asserted"/>
-    </element>
-    <element xsi:type="archimate:Principle" name="Unabhängigkeit" id="id-808c774ec7d844cdbc0cdb44a50e3603">
-      <property key="o2i.type" value="Principle"/>
-      <property key="o2i.commitment" value="asserted"/>
-    </element>
-    <element xsi:type="archimate:Principle" name="Disziplin" id="id-7b23fe89d265432eadf72d26a0408a49">
-      <property key="o2i.type" value="Principle"/>
-      <property key="o2i.commitment" value="asserted"/>
-    </element>
-    <element xsi:type="archimate:Driver" name="#hgtt" id="id-935b83670dc14af89aa20194b5b9e906">
-      <documentation>Unsere Mission ist es, durch ein aufrichtiges Miteinander eine gute gemeinsame Zeit zu ermöglichen.</documentation>
-      <property key="o2i.type" value="Driver"/>
-      <property key="o2i.commitment" value="asserted"/>
-    </element>
+    <folder name="Ethos" id="id-62a405d8516448199f793ca04d655b34">
+      <element xsi:type="archimate:Principle" name="Disziplin" id="id-7b23fe89d265432eadf72d26a0408a49">
+        <documentation>Wir arbeiten sorgfältig, halten Zusagen ein und verfolgen vereinbarte Vorhaben konsequent.</documentation>
+        <property key="o2i.type" value="Principle"/>
+        <property key="o2i.commitment" value="asserted"/>
+      </element>
+      <element xsi:type="archimate:Principle" name="Respekt" id="id-6e1906a073404a3f9ba7707e97b97c8f">
+        <documentation>Wir nehmen die Menschen, ihre Anliegen und ihre Entscheidungsfreiheit ernst. Unterstützung bedeutet für uns, Menschen zu befähigen und ihre Verantwortung zu achten.</documentation>
+        <property key="o2i.type" value="Principle"/>
+        <property key="o2i.commitment" value="asserted"/>
+      </element>
+      <element xsi:type="archimate:Principle" name="Unabhängigkeit" id="id-808c774ec7d844cdbc0cdb44a50e3603">
+        <documentation>Wir bilden unser Urteil anhand nachvollziehbarer Gründe. Empfehlungen sollen nicht durch sachfremde Interessen oder eine schon vorab bevorzugte Lösung bestimmt werden.</documentation>
+        <property key="o2i.type" value="Principle"/>
+        <property key="o2i.commitment" value="asserted"/>
+      </element>
+    </folder>
+    <folder name="Mission" id="id-d3121bd91d154434a6a2a54bb6db3472">
+      <element xsi:type="archimate:Driver" name="Entscheiden und Verwirklichen ermöglichen" id="id-0fb433979a1e4fd28a6eb0a7cd1aa87f">
+        <documentation>Wir unterstützen Organisationen dabei, fundierte Entscheidungen zu treffen und ihre Vorhaben verlässlich umzusetzen.
+
+Ein kleines Beispiel: Eine Kundin möchte die Bearbeitung ihrer Kundenanliegen verbessern. Wir hören den Beteiligten zu (**Respekt**), prüfen Ursachen und mögliche Lösungen ergebnisoffen (**Unabhängigkeit**) und begleiten die vereinbarten Veränderungen sorgfältig (**Disziplin**). Darin wird unser gewählter Beitrag als Unternehmen sichtbar: begründetes Entscheiden und verlässliches Umsetzen ermöglichen.</documentation>
+        <property key="o2i.type" value="Driver"/>
+        <property key="o2i.commitment" value="asserted"/>
+      </element>
+    </folder>
   </folder>
   <folder name="Implementation &amp; Migration" id="id-f62caa15c6f044288dc338e1d944c5d2" type="implementation_migration"/>
   <folder name="Other" id="id-78c709b6965045098a313e86cfed43fb" type="other">
@@ -44,17 +53,20 @@
     <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-d45f5851223b4cfc9be307def575373f" source="id-93cb6c87616d4153bb2edcc3dc11ce8c" target="id-7b23fe89d265432eadf72d26a0408a49">
       <property key="o2i.commitment" value="asserted"/>
     </element>
-    <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-9f4f614d3c894e9d9e4f2ddccfc31ff5" source="id-565c7313f81243d39dc77bd7a187507a" target="id-935b83670dc14af89aa20194b5b9e906">
+    <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-9f4f614d3c894e9d9e4f2ddccfc31ff5" source="id-565c7313f81243d39dc77bd7a187507a" target="id-0fb433979a1e4fd28a6eb0a7cd1aa87f">
       <property key="o2i.commitment" value="asserted"/>
     </element>
-    <element xsi:type="archimate:AssociationRelationship" name="guides" id="id-2876ddb68ec7415cb4f840f41d331e44" source="id-6e1906a073404a3f9ba7707e97b97c8f" target="id-935b83670dc14af89aa20194b5b9e906" directed="true">
-      <documentation>Respekt prägt, wie wir aufrichtig miteinander umgehen.</documentation>
+    <element xsi:type="archimate:AssociationRelationship" name="guides" id="id-2876ddb68ec7415cb4f840f41d331e44" source="id-6e1906a073404a3f9ba7707e97b97c8f" target="id-0fb433979a1e4fd28a6eb0a7cd1aa87f" directed="true">
+      <documentation>Bzgl. „Wir unterstützen Organisationen“: Respekt prägt unser Verständnis von Unterstützung: Wir nehmen die beteiligten Menschen ernst und achten ihre Entscheidungsverantwortung.</documentation>
       <property key="o2i.commitment" value="asserted"/>
     </element>
-    <element xsi:type="archimate:AssociationRelationship" name="guides" id="id-aa5eb62304834e0e8cb17700c4465ba5" source="id-808c774ec7d844cdbc0cdb44a50e3603" target="id-935b83670dc14af89aa20194b5b9e906" directed="true">
+    <element xsi:type="archimate:AssociationRelationship" name="guides" id="id-aa5eb62304834e0e8cb17700c4465ba5" source="id-808c774ec7d844cdbc0cdb44a50e3603" target="id-0fb433979a1e4fd28a6eb0a7cd1aa87f" directed="true">
+      <documentation>Bzgl. „fundierte Entscheidungen zu treffen“: Unabhängigkeit verlangt, Gründe und Alternativen offen zu prüfen. Die Empfehlung muss sich am Anliegen rechtfertigen lassen.</documentation>
       <property key="o2i.commitment" value="asserted"/>
     </element>
-    <element xsi:type="archimate:AssociationRelationship" name="guides" id="id-f37903502edc4babaabd34a26501559d" source="id-7b23fe89d265432eadf72d26a0408a49" target="id-935b83670dc14af89aa20194b5b9e906" directed="true">
+    <element xsi:type="archimate:AssociationRelationship" name="guides" id="id-f37903502edc4babaabd34a26501559d" source="id-7b23fe89d265432eadf72d26a0408a49" target="id-0fb433979a1e4fd28a6eb0a7cd1aa87f" directed="true">
+      <documentation>Bzgl. „Vorhaben verlässlich umzusetzen“: Disziplin verlangt, aus Entscheidungen verbindliches Handeln werden zu lassen und Zusagen nachzuhalten.
+</documentation>
       <property key="o2i.commitment" value="asserted"/>
     </element>
     <element xsi:type="archimate:AssociationRelationship" name="guides" id="id-a04d39c8f03b4e23b6901c78d2ccac8c" source="id-93cb6c87616d4153bb2edcc3dc11ce8c" target="id-565c7313f81243d39dc77bd7a187507a" directed="true">
@@ -92,15 +104,16 @@
         </element>
         <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Illustration - AO - Mission" id="id-2033bc1e875044719a0ca847d322b9bc">
           <child xsi:type="archimate:DiagramObject" id="id-7c49e5cbdd4748638a8b814adc934bea" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-565c7313f81243d39dc77bd7a187507a">
-            <bounds x="60" y="24" width="120" height="55"/>
+            <bounds x="132" y="24" width="120" height="55"/>
             <feature name="deriveElementLineColor" value="false"/>
-            <sourceConnection xsi:type="archimate:Connection" id="id-63351c9433aa400cb9a9af39b28388e1" font="1|Arial|12.0|0|COCOA|1|ArialMT" textPosition="2" source="id-7c49e5cbdd4748638a8b814adc934bea" target="id-1e7613d8d9fe4a1f931f3f3e7f3bfcf6" archimateRelationship="id-9f4f614d3c894e9d9e4f2ddccfc31ff5"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-63351c9433aa400cb9a9af39b28388e1" font="1|Arial|12.0|0|COCOA|1|ArialMT" textPosition="2" source="id-7c49e5cbdd4748638a8b814adc934bea" target="id-03b29ad3a60e4af1986353a1d4a52956" archimateRelationship="id-9f4f614d3c894e9d9e4f2ddccfc31ff5"/>
           </child>
-          <child xsi:type="archimate:DiagramObject" id="id-1e7613d8d9fe4a1f931f3f3e7f3bfcf6" targetConnections="id-63351c9433aa400cb9a9af39b28388e1" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-935b83670dc14af89aa20194b5b9e906">
-            <bounds x="60" y="132" width="120" height="55"/>
+          <child xsi:type="archimate:DiagramObject" id="id-03b29ad3a60e4af1986353a1d4a52956" targetConnections="id-63351c9433aa400cb9a9af39b28388e1" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-0fb433979a1e4fd28a6eb0a7cd1aa87f">
+            <bounds x="24" y="120" width="337" height="79"/>
             <feature name="deriveElementLineColor" value="false"/>
+            <feature name="labelExpression" value="Wir unterstützen Organisationen dabei,&#xA;fundierte Entscheidungen zu treffen und&#xA;ihre Vorhaben verlässlich umzusetzen."/>
           </child>
-          <documentation>Zeigt #hgtt als Driver der Mission und seine explizite Kontextzuordnung.</documentation>
+          <documentation>Zeigt &quot;Entscheiden und Verwirklichen ermöglichen&quot; als Driver der Mission und seine explizite Kontextzuordnung.</documentation>
         </element>
       </folder>
       <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Illustration - A - Orientierung" id="id-ee53c8c771204dab96748b54e2b922ea">
@@ -117,29 +130,29 @@
           <child xsi:type="archimate:DiagramObject" id="id-bb763195886c4003a5a007509a16e5c4" targetConnections="id-0e00caec349a4d52bcf5f8fdcf7223d0" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-6e1906a073404a3f9ba7707e97b97c8f">
             <bounds x="12" y="24" width="120" height="55"/>
             <feature name="deriveElementLineColor" value="false"/>
-            <sourceConnection xsi:type="archimate:Connection" id="id-d1f7d60f08c84d41ba2f92383c8d2663" source="id-bb763195886c4003a5a007509a16e5c4" target="id-6807bbae2fdb46199e0d06e3e7a1b47c" archimateRelationship="id-2876ddb68ec7415cb4f840f41d331e44"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-d1f7d60f08c84d41ba2f92383c8d2663" source="id-bb763195886c4003a5a007509a16e5c4" target="id-ab37a84b3e9f478584d9f34f6c63657c" archimateRelationship="id-2876ddb68ec7415cb4f840f41d331e44"/>
           </child>
           <child xsi:type="archimate:DiagramObject" id="id-2ce88d7ea3ad4a948d80b642c82f8688" targetConnections="id-89e3ed57d5b74cc2939fbdb40be0e3c8" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-808c774ec7d844cdbc0cdb44a50e3603">
             <bounds x="144" y="24" width="120" height="55"/>
             <feature name="deriveElementLineColor" value="false"/>
-            <sourceConnection xsi:type="archimate:Connection" id="id-c865244e69f2435ab27bcf517dd24544" source="id-2ce88d7ea3ad4a948d80b642c82f8688" target="id-6807bbae2fdb46199e0d06e3e7a1b47c" archimateRelationship="id-aa5eb62304834e0e8cb17700c4465ba5"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-c865244e69f2435ab27bcf517dd24544" source="id-2ce88d7ea3ad4a948d80b642c82f8688" target="id-ab37a84b3e9f478584d9f34f6c63657c" archimateRelationship="id-aa5eb62304834e0e8cb17700c4465ba5"/>
           </child>
           <child xsi:type="archimate:DiagramObject" id="id-65e0e330e6a146958c9ed2cf1943f3a5" targetConnections="id-cf2e226f8a3846298444aa00a8c3a128" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-7b23fe89d265432eadf72d26a0408a49">
             <bounds x="276" y="24" width="120" height="55"/>
             <feature name="deriveElementLineColor" value="false"/>
-            <sourceConnection xsi:type="archimate:Connection" id="id-e65be08407fc4e7fbba4bfaa9e1e20aa" source="id-65e0e330e6a146958c9ed2cf1943f3a5" target="id-6807bbae2fdb46199e0d06e3e7a1b47c" archimateRelationship="id-f37903502edc4babaabd34a26501559d"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-e65be08407fc4e7fbba4bfaa9e1e20aa" source="id-65e0e330e6a146958c9ed2cf1943f3a5" target="id-ab37a84b3e9f478584d9f34f6c63657c" archimateRelationship="id-f37903502edc4babaabd34a26501559d"/>
           </child>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-4b3a87290833466a9c92506c5d932a09" targetConnections="id-b040755c23434b0ca0f441cd0db57653" font="1|Arial|14.0|0|COCOA|1|ArialMT" textAlignment="1" archimateElement="id-565c7313f81243d39dc77bd7a187507a">
           <bounds x="60" y="156" width="409" height="85"/>
           <feature name="deriveElementLineColor" value="false"/>
-          <sourceConnection xsi:type="archimate:Connection" id="id-317a3a194868474aa9d6781de1b78b40" source="id-4b3a87290833466a9c92506c5d932a09" target="id-6807bbae2fdb46199e0d06e3e7a1b47c" archimateRelationship="id-9f4f614d3c894e9d9e4f2ddccfc31ff5"/>
-          <child xsi:type="archimate:DiagramObject" id="id-6807bbae2fdb46199e0d06e3e7a1b47c" targetConnections="id-317a3a194868474aa9d6781de1b78b40 id-d1f7d60f08c84d41ba2f92383c8d2663 id-c865244e69f2435ab27bcf517dd24544 id-e65be08407fc4e7fbba4bfaa9e1e20aa" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-935b83670dc14af89aa20194b5b9e906">
-            <bounds x="144" y="12" width="120" height="55"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-838f16644ffa44a1aa88f40b68b3ee9a" source="id-4b3a87290833466a9c92506c5d932a09" target="id-ab37a84b3e9f478584d9f34f6c63657c" archimateRelationship="id-9f4f614d3c894e9d9e4f2ddccfc31ff5"/>
+          <child xsi:type="archimate:DiagramObject" id="id-ab37a84b3e9f478584d9f34f6c63657c" targetConnections="id-838f16644ffa44a1aa88f40b68b3ee9a id-d1f7d60f08c84d41ba2f92383c8d2663 id-c865244e69f2435ab27bcf517dd24544 id-e65be08407fc4e7fbba4bfaa9e1e20aa" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-0fb433979a1e4fd28a6eb0a7cd1aa87f">
+            <bounds x="120" y="12" width="169" height="61"/>
             <feature name="deriveElementLineColor" value="false"/>
           </child>
         </child>
-        <documentation>Zeigt, wie Respekt, Unabhängigkeit und Disziplin die Mission #hgtt leiten. Die Beziehungen zwischen den Primitiven begründen die Kontextrelation Ethos → Mission.</documentation>
+        <documentation>Zeigt, wie Respekt, Unabhängigkeit und Disziplin die Mission &quot;Entscheiden und Verwirklichen ermöglichen&quot; leiten. Die Beziehungen zwischen den Primitiven begründen die Kontextrelation Ethos → Mission.</documentation>
       </element>
     </folder>
     <folder name="B Geschäftsstrategie" id="id-978cad5612e442a8a096a0a51b3ed33a">

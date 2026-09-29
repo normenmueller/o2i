@@ -27,16 +27,16 @@ Zugehörigkeit aus. Sie heißt exakt `contextualizes`.
 Die [Kontextualisierungssicht](../../meta/o2i-syntax-contextualization.md) zeigt
 dieses allgemeine Muster.
 
-So sieht die View **O2I Illustration - Orientierung - Ethos** im Beispielmodell aus.
+So sieht die View **O2I Illustration - AO - Ethos** im Beispielmodell aus.
 Das Grouping steht oben;
 die drei Compositions ordnen ihm die Principles zu. Die ausgefüllte Raute
 kennzeichnet jeweils die Quellseite am Ethos.
 
-![Ethos mit Respekt, Unabhängigkeit und Disziplin](<../images/O2I Illustration - Orientierung - Ethos.png>)
+![Ethos mit Respekt, Unabhängigkeit und Disziplin](<../images/O2I Illustration - AO - Ethos.png>)
 
 ## 3. Welche Properties und Beziehungen setzen wir in Archi?
 
-Wir bauen eine eigene View **O2I Illustration - Orientierung - Ethos** auf.
+Wir bauen eine eigene View **O2I Illustration - AO - Ethos** auf.
 Sie zeigt genau diesen Lernschritt.
 Falls du das Beispielmodell verwendest, nutze seine bereits vorhandenen Elemente
 und Beziehungen erneut: Eine weitere View zeigt dieselben Modellobjekte.
@@ -47,7 +47,7 @@ und Beziehungen erneut: Eine weitere View zeigt dieselben Modellobjekte.
    Füge über **New** die Property `o2i.profile` mit dem Wert
    `o2i.archimate-profile@0.3` hinzu, falls sie noch fehlt.
 2. **View anlegen.** Wähle am View-Ordner im Modellbaum
-   **New > ArchiMate View**, nenne sie **O2I Illustration - Orientierung - Ethos**
+   **New > ArchiMate View**, nenne sie **O2I Illustration - AO - Ethos**
    und öffne sie per Doppelklick.
    Falls diese View bereits existiert, öffne sie.
 3. **Elemente platzieren.** Wähle in der Palette **Grouping**, klicke auf die
@@ -86,9 +86,9 @@ Prüfe nach dem Speichern aus dem Repository-Stamm. Beim eigenen Aufbau ersetzt
 du den Dateipfad durch deinen Speicherort:
 
 ```sh
-o2i validate doc/model/illustration.archimate --view "O2I Illustration - Orientierung - Ethos" --level profile
-o2i validate doc/model/illustration.archimate --view "O2I Illustration - Orientierung - Ethos" --level structure
-o2i validate doc/model/illustration.archimate --view "O2I Illustration - Orientierung - Ethos" --level semantics
+o2i validate doc/model/illustration.archimate --view "O2I Illustration - AO - Ethos" --level profile
+o2i validate doc/model/illustration.archimate --view "O2I Illustration - AO - Ethos" --level structure
+o2i validate doc/model/illustration.archimate --view "O2I Illustration - AO - Ethos" --level semantics
 ```
 
 Für den **hier beschriebenen Ethos-Schritt** erwarten wir dreimal Exit-Code `0`:
@@ -97,7 +97,7 @@ Ein Ethos benötigt mindestens ein eigenes Principle und keine zusätzliche
 Relationsevidenz. Unser Beispiel enthält drei.
 
 Die Befehle setzen die gespeicherte View
-**O2I Illustration - Orientierung - Ethos** voraus.
+**O2I Illustration - AO - Ethos** voraus.
 Fehlt sie noch, findet die CLI diesen Prüfgegenstand nicht. Fehlendes
 `o2i.commitment` scheitert an der Profile-Prüfung; fehlende Kontextualisierung
 eines Principle an der Strukturprüfung.

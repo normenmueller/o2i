@@ -29,9 +29,9 @@ Leseskizzen erklären den Zusammenhang; Archi-Exporte zeigen die gespeicherte Da
 
 Die Views der Orientierung heißen:
 
-- `O2I Illustration - Orientierung`
-- `O2I Illustration - Orientierung - Ethos`
-- `O2I Illustration - Orientierung - Mission`
+- `O2I Illustration - A - Orientierung`
+- `O2I Illustration - AO - Ethos`
+- `O2I Illustration - AO - Mission`
 
 PNG-Exporte liegen unter `doc/images/` und heißen exakt wie die jeweilige View,
 ergänzt um `.png`. In CLI-Befehlen stehen View-Namen mit Leerzeichen in Anführungszeichen.
@@ -39,8 +39,9 @@ ergänzt um `.png`. In CLI-Befehlen stehen View-Namen mit Leerzeichen in Anführ
 ## Reihenfolge
 
 Wir beginnen mit [einem Ethos](ethos.md): Respekt, Unabhängigkeit und Disziplin.
-Darauf bauen wir die Mission `#hgtt` (*honest good time together*) auf:
-„Durch ein aufrichtiges Miteinander eine gute gemeinsame Zeit ermöglichen.“
+Darauf bauen wir die Mission **Entscheiden und Verwirklichen ermöglichen** auf:
+„Wir unterstützen Organisationen dabei, fundierte Entscheidungen zu treffen und
+ihre Vorhaben verlässlich umzusetzen.“
 Die weiteren Schritte wachsen mit dem Beispiel.
 
 Das Szenario ist fiktiv. Seine Aussagen können im Modell verbindlich sein;

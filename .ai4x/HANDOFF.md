@@ -1,32 +1,32 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#115","currentNode":"company-mission-decision"}
+{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#115","currentNode":"company-vision-decision"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
 
-Co-develop the fictional company illustration in #115/#116 under #109. The immediate boundary is one Product Owner decision: the company Mission. The illustration is incomplete and not finally accepted.
+Co-develop the fictional company illustration in #115/#116 under #109. The Product Owner has saved the Ethos-Mission slice and requested its checkpoint commit and push. The next content decision is the company Vision. The illustration is incomplete and not finally accepted.
 
 # Authority
 
-No execution grant crosses this boundary. The immutable decision checkpoint is explicitly non-authorizing:
+No execution grant crosses this boundary. The historical Mission decision checkpoint is explicitly non-authorizing and predates the saved slice:
 https://github.com/normenmueller/o2i/issues/115#issuecomment-5602487736
 
-Re-fetch owning facts before continuing. This handoff authorizes no implementation, merge, Issue closure, release or cleanup; historical grants from the former return point do not apply here.
+Re-fetch owning facts before continuing. The bounded checkpoint request does not authorize merge, Issue closure, release or cleanup. This handoff creates no authority, and historical grants from the former return point do not apply here.
 
 # Current Facts
 
-- Attached working branch: `feat/116-illustration`. Product checkpoint `193707d3844145ec81d271b4e39e2a308b855f3b` is published. This successor changes only State and Handoff.
+- Attached working branch: `feat/116-illustration`. The native source is `doc/model/illustration.archimate`; its three PNG exports use the exact current View names. The Product Owner authored the Archi changes, with agent contributions to wording and explanations.
 - #115/#116 are in Refinement and jointly own story/model development. #116 records native identities, the saved checkpoint, unfinished findings and per-save CLI evidence.
-- #123/#124 are in In review: implemented, independently reviewed and backed up; trunk integration remains pending. No feature-branch PR is open at this checkpoint.
+- #123/#124 are in In review: implemented, independently reviewed and backed up; trunk integration remains pending.
 - Project O2I owns current workflow and view order: Overview, Focus, Backlog, All. Focus contains #115/#116 and #123/#124.
-- #109/#115 own the fictional Corporate -> Business -> Functional strategy storyline and its two-way contribution. No new Mission wording or technology choice is accepted.
-- Shared orientation requires explicit contextualized support; hierarchy alone supplies none. Existing values and #hgtt are optional starting material. Guide and golden-test requirements remain in #119/#118.
+- The saved Mission Driver is "Entscheiden und Verwirklichen ermöglichen". Its documentation contains the agreed purpose; the three Ethos Principles and their `guides` relations explain its normative grounding. The old `#hgtt` Driver is removed. Vision and technology choices remain open.
+- Shared orientation requires explicit contextualized support; hierarchy alone supplies none. #109/#115 own the broader storyline. Guide and golden-test requirements remain in #119/#118; existing guide references are synchronized without extending its lessons.
 
 # Material Risk
 
-Do not mistake the existing Ethos/Mission checkpoint for the agreed new company story, a tested model for demonstrated real effect, or reviewed feature commits for accepted trunk integration. Keep all reference content fictional. No native edit precedes agreement of its small slice. Known model incompleteness is recorded in #116 and does not prevent the next Mission decision.
+Do not mistake this checked slice for a complete illustration, observed effect or accepted trunk integration. Two empty orientation folders remain intentional unfinished-model findings. Keep all reference content fictional. No native edit precedes agreement of its small slice. The owning Issue decision record has not yet been synchronized with this checkpoint; no fresh cold-start eligibility is claimed.
 
 # Verification
 
@@ -34,12 +34,13 @@ Do not mistake the existing Ethos/Mission checkpoint for the agreed new company 
   https://github.com/normenmueller/o2i/issues/124#issuecomment-5601742281
 - #123 exact tooling review and checkpoint evidence:
   https://github.com/normenmueller/o2i/issues/123#issuecomment-5598732900
-- The continuity-only successor requires the focused checkpoint and a clean fresh single-branch restore, including LFS. The final revision and actual restore evidence are recorded as a separate immutable comment in #115; never infer them from this handoff.
+- Saved model SHA-256 `fb02ecec86041a2961301162e6f052ae7f30c7254be60a9bd32fd28389b76fc6`: Profile, Structure and Semantics passed for each of the three Views (nine CLI results). The CLI was freshly built with the pinned toolchain; repository model checks and 70 extractor tests passed. Current PNG exports were visually inspected.
+- Run the selected checkpoint stages before committing; verify the exact published branch head and LFS objects after pushing. A backup does not establish final acceptance or remote integration verification.
 
 # Next Action
 
-With the Product Owner, agree what enduring purpose the fictional service company serves, independently of a chosen technology, and formulate its Mission. Re-fetch #115 and its decision checkpoint first; respect any later owning decision. Develop the qualitative Vision afterward, then the next agreed native slice in #116.
+With the Product Owner, formulate the qualitative future state the company seeks through its Mission. Keep Vision distinct from the enduring contribution, a strategy, a technology choice and observed results. Agree wording before the next native slice in #116. Reconcile the saved checkpoint with current #115/#116 records before reconstructing work across sessions.
 
 # Local Return Point
 
-Use this tracked checkout on `feat/116-illustration` and current Issues #109/#115/#116 plus Project O2I. The decision record and separate restore proof in #115 replace runtime memory. No transcript, ignored draft, build cache, local pointer or surviving delegated work is needed.
+Use this tracked checkout on `feat/116-illustration`, its saved model and exports, and current Issues #109/#115/#116 plus Project O2I. The historical Mission return point predates this slice and must not silently replace it. No authority may be reconstructed from runtime memory or this handoff.
