@@ -1,42 +1,42 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"PAUSED","currentIssue":"#115","currentNode":"await-strategy-cascading"}
+{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#125","currentNode":"independent-design-before-core-implementation"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
 
-Preserve the fictional company illustration in #115/#116 under #109 while #125 corrects strategic cascading. The Product Owner explicitly paused illustration work. Resume at the company Vision after the independently accepted correction has been integrated by agreement. The illustration remains incomplete.
+Design and implement the strategic cascading correction owned by #125, then obtain exact-candidate independent acceptance and complete applicable verification. Follow the global authoring/review contracts. Product semantics belong to the White Paper and executable contracts, not this handoff.
 
 # Authority
 
-Re-fetch #125 and the owning illustration Issues before continuing. The current Product Owner decision authorizes isolation, preservation and visible dependency tracking; it does not authorize trunk merge, release, Issue closure or cleanup. This handoff creates no authority or cold-start eligibility. Do not reconstruct historical grants.
+Re-fetch https://github.com/normenmueller/o2i/issues/125 before reconstructing work. The Product Owner explicitly requested dedicated-branch implementation, specialist design collaboration, independent design review, backup and Board visibility. No trunk merge, release, tag, Issue closure or cleanup is authorized. This record creates no authority and claims no cold-start eligibility.
 
 # Current Facts
 
-- Parked branch: `feat/116-illustration`; saved product/tooling baseline: `0266299b6dbb304a8971bc893e0ac813e65d50e4`, verified on origin before isolation.
-- #125 owns the generic correction, quality criteria, specialist design/review and implementation. #115/#116 have native blocked-by dependencies on #125. Project O2I owns displayed status; re-fetch rather than infer it.
-- Correction branch: `feat/125-strategy-cascading`, based on this work line. Preserve #123/#124, whose trunk integration remains pending. Do not count their inherited changes as newly authored correction work.
-- Native illustration: `doc/model/illustration.archimate`; Ethos/Mission and three exports remain saved. Mission: "Entscheiden und Verwirklichen ermöglichen". Vision and technology choices remain open.
-- Only a preliminary White Paper correction draft existed at isolation; carry it to #125 without treating it as accepted. Core, Profile and native models had no correction edits.
+- Active branch: `feat/125-strategy-cascading`, based on parked `feat/116-illustration` at `0640c2ef68b3c1b6702663295fb5b99b73010af0`.
+- #115/#116 have native blocked-by dependencies on #125. Project O2I owns displayed status; refresh it when material.
+- The parked branch retains Ethos/Mission, its three exports, the company Vision return point, and #123/#124 whose trunk integration remains pending.
+- A preliminary White Paper draft is preserved as design input. No Core, Profile or native-model correction has been implemented.
+- Strategy and formalization Co-Authors identified affected contracts and collective coverage. Their initial suggestions are not an accepted software design.
+- The global authoring-contract clarification received independent scoped acceptance with no findings; SHA-256 `ed15043753667264e499bccab67efb51d74cf4a6e6e33f471fa1ff0144b6e70f`.
 
 # Material Risk
 
-Do not resume illustration content before the return condition. Keep fictional content and per-save native checks. Two empty illustration orientation folders remain intentional unfinished-model findings. Agents never edit `meta/o2i.archimate`. The complete agent-memory byte budget already fails at the saved baseline; no passing governance gate is claimed.
+Implementation must wait for independent review of the concrete software design. Match strategy/metamodel, formal-methods/Haskell and actual performance risks; add independent ArchiMate applicability review for changed Profile mappings. Authors never accept their own work. Agents never edit `meta/o2i.archimate`.
+
+The complete `.ai4x` byte budget already fails at product baseline `0266299b6dbb304a8971bc893e0ac813e65d50e4` (101186 bytes; cap 96000). Resolve this verification blocker without weakening the limit before claiming all-green acceptance. Do not expand the semantic correction silently into unrelated governance redesign.
 
 # Verification
 
-- #124 reviewed product checkpoint:
-  https://github.com/normenmueller/o2i/issues/124#issuecomment-5601742281
-- #123 reviewed tooling checkpoint:
-  https://github.com/normenmueller/o2i/issues/123#issuecomment-5598732900
-- Saved illustration SHA-256: `fb02ecec86041a2961301162e6f052ae7f30c7254be60a9bd32fd28389b76fc6`; prior nine Profile/Structure/Semantics results and 70 extractor tests apply only to those bytes.
-- Run checkpoint checks and verify published heads. Backup establishes preservation, not final acceptance or integration.
+- Parking checkpoint: licensing and 10 licensing tests passed; governance stopped on the known complete-memory budget breach. No complete passing checkpoint is claimed.
+- White Paper draft: scoped diff check and 37 paper utility tests passed; publication rendering, native synchronization and independent product acceptance remain outstanding.
+- Native illustration unchanged: SHA-256 `fb02ecec86041a2961301162e6f052ae7f30c7254be60a9bd32fd28389b76fc6`.
 
 # Next Action
 
-Wait for #125's independently accepted correction and agreed integration. Then reconcile #115/#116, return to this branch and formulate the company Vision with the Product Owner before the next native slice.
+Produce the smallest complete, human-readable software design under `spec/` with the capability-matched Co-Authors; use #125 for decisions and evidence references. Independently review semantics, types, boundaries, provenance, diagnostics, extension points and work bounds before Core implementation. No migration layer, workaround or attached special-case implementation.
 
 # Local Return Point
 
-Use the parked branch, saved illustration and current #109/#115/#116/#125 records. No temporary file or conversation history is required to identify the pause reason and return condition.
+Continue #125 on this branch. After accepted correction and agreed integration, return to `feat/116-illustration`, reconcile #115/#116 and resume the company Vision. The illustration remains paused until that condition holds.
