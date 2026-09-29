@@ -1,39 +1,50 @@
 # Scope
 
-This contract owns post-classification return-point reconstruction, durable authority continuity, and cold-start eligibility. Load it only after `.ai4x/BEHAVIOR.md` has classified handoff applicability. It owns no pointer validation, State parsing, branch comparison, applicability decision, decision-event rendering, workflow transition, or grant schema.
+Load only after `BEHAVIOR.md` classifies handoff applicability. This contract owns return-point reconstruction, durable authority continuity and cold-start eligibility. Bootstrap owns checkout/pointer/State validation and applicability; policy owns grant schemas and guards; `decision-handoff.md` owns event rendering.
 
-# Durable Sources
+# Sources And Reconstruction
 
-A fresh session reconstructs state only from the selected checkout's tracked repository artifacts, observed Git facts, an applicable `.ai4x/HANDOFF.md`, and current GitHub-native facts from the owning Issue, Project, Pull Request, and CI when material. GitHub is the single operational continuity target. Conversation transcripts, `resume`, prior-session runtime context, model recollection, cached remote results, ignored local files, local active-checkout pointers, host-specific snapshots, and second continuity targets are neither authority nor continuity sources.
+Use the selected checkout's tracked artifacts and observed Git facts, an applicable Handoff, and current owning GitHub Issue/Project/PR/CI facts when material. GitHub is the single operational continuity target. Transcripts, `resume`, prior-session context, model recollection, cached remote facts, ignored files, local pointers and host snapshots supply neither authority nor durable continuity.
 
-GitHub Issues own change contracts, decisions, dependencies, review evidence, and open state. The Project owns workflow status and Product Owner ordering. The canonical governance policy owns grant structure and lifecycle. Git and deterministic checks own implementation and verification artifacts. The handoff is a concise local reference to these owners and never replaces them.
+Apply `CONTEXT.md` statement ownership. A stale dependent reference yields to its current owner; conflicts inside/between owners block dependent work. Status, commits, clean trees, branch names, PRs and tests alone prove no completion, acceptance or authority.
 
-# Reconstruction
+| Applicability | Action |
+| --- | --- |
+| `applicable` | Validate fixed-path Handoff against closed `o2i.handoff/v1`. Reconcile Issue, objective, work status, authority reference, risks, checks, next action and return point with branch, revision, complete status and needed current remote facts. Preserve and identify dirty scope |
+| `dormant` | Exclude Handoff. Use tracked trunk/current owners. Dormancy proves only non-applicability; no acceptance, merge, completion, closure, Project or authority fact. Expected dormant content needs no refresh, mutation or history investigation |
+| `UNVERIFIED` | Continue only repository-file work independent of the unresolved return point/authority. Mark the exact uncertainty; obtain owning evidence before dependent action. Never infer a next action from Handoff |
 
-For an `applicable` result, validate `.ai4x/HANDOFF.md` against the `o2i.handoff/v1` closed schema before using any field. Reconcile its Issue, objective, work status, authority reference, risks, verification, next action, and local return point with the exact checkout branch, revision, complete status, and current owning remote facts needed for the next action. Preserve a dirty matching checkout and identify its scope; never discard or silently normalize it.
+# Durable Authority
 
-If active authority crosses the session boundary, load the canonical policy and reconstruct that grant only from its durable immutable Issue receipt and current lifecycle facts. Re-fetch the owning Issue, locate exactly one receipt for the grant ID, verify its required author identity, canonical bytes, approved payload and digest, unchanged Issue precondition, subject, actions, scope, target, exclusions, and current fulfillment, revocation, supersession, and material-match conditions. Zero, multiple, malformed, mismatched, stale, unverifiable, revoked, superseded, fulfilled, or materially invalid receipts leave authority `UNVERIFIED`. A handoff reference, transcript, or historical readback never repairs missing current evidence.
+For authority surviving a session, load canonical policy and re-fetch the owning Issue. Require exactly one immutable receipt for the grant ID and verify required author identity, canonical bytes, approved payload/digest, unchanged Issue precondition, subject, actions, scope, target, exclusions and current lifecycle facts.
 
-For a `dormant` result, do not open or use the handoff. Dormancy proves only non-applicability in the selected checkout; it proves no merge, completion, acceptance, Issue closure, Project state, or authority. Expected dormant tracked content is not a contradiction or repair target. Do not inspect branch or Pull Request history merely to explain it, mutate the State envelope or handoff, or require a refresh commit. Select the return point from tracked `trunk` and current owning remote facts when material.
-
-For `UNVERIFIED`, repository-file work that does not depend on a return point may continue, but no authority or next action may be inferred from the handoff. Stop at the first action whose safety depends on the unresolved fact. Mark the exact uncertainty and obtain or ask the Product Owner for the missing owning evidence instead of synthesizing it.
-
-When sources disagree, the current owning source prevails over stale dependent state. A conflict inside or between owners blocks dependent work until resolved in the relevant owner. Never infer completion, authority, or acceptance from workflow status, a commit, a clean tree, a branch name, a Pull Request, or tests alone.
+Zero/multiple, malformed, mismatched, stale or unverifiable receipts leave authority `UNVERIFIED`; revoked, superseded, fulfilled or materially invalid grants cannot authorize continuation. A handoff, transcript or historical readback cannot repair missing current evidence. Current explicit runtime/PO instructions retain bootstrap precedence; a continuity reference never manufactures authority.
 
 # Handoff Maintenance
 
-Maintain `.ai4x/HANDOFF.md` only on its applicable branch and only for an active authorized work unit. Use `ACTIVE` for design, implementation, investigation, correction, review, or publication preparation; `PAUSED` only for a genuine wait with one reason and return condition; and `COMPLETE` only when its recorded objective is complete. Record one current Issue or `NONE`, objective, authority reference, material risk, verification state, next action, and local return point. `NONE` is valid only for an explicit Issue-free Routine request.
+Maintain Handoff only for an active authorized work unit on its applicable branch. Record one current Issue (or `NONE` only for explicit Issue-free Routine work), objective, authority reference, material risk, checks, next action and local return point.
 
-Keep the handoff below its policy budget, repository-autark, and free of backlog history, duplicated normative policy, secrets, private data, session identifiers, or authority payloads. Reference durable owners rather than copying them. Updating a handoff records continuity but never creates authority, workflow state, acceptance, or evidence.
+- `ACTIVE`: design, implementation, investigation, correction, review or publication preparation.
+- `PAUSED`: genuine wait with one reason and return condition.
+- `COMPLETE`: recorded objective completed.
+
+Stay within policy budget. Reference durable owners; exclude backlog history, copied policy, secrets, private data, session identifiers and authority payloads. Handoff maintenance creates no authority, workflow state, acceptance or evidence. Audience and artifact lifetime belong to `operations/artifact-placement.md`.
 
 # Cold-Start Eligibility
 
-Every eligible cold start requires the selected branch head to be published exactly; a fresh single-branch clone to reproduce that revision with a clean tree; its tracked State and Handoff to classify `applicable`; the return point and every surviving authority to be durably materialized and freshly verified; no delegated or background work to remain; no required local-only or session state; and a current restore proof. Missing or unknown evidence denies eligibility. A proven dormant handoff is neutral to these gates and needs no refresh.
+Require every shared gate:
 
-A `completed-work-unit` boundary additionally requires Handoff status `COMPLETE`, the authorized work unit, deterministic and remote verification, corrections, and independent reviews to be complete, and no unresolved material fact or Product Owner decision.
+- Selected branch HEAD published exactly; a fresh single-branch clone reproduces it with a clean tree.
+- Tracked State/Handoff classify `applicable`; return point and surviving authority are durably materialized and freshly verified.
+- No delegated/background work, required local-only/session state or missing restore proof.
 
-An `active-product-owner-decision` boundary instead requires Handoff status `ACTIVE`; one exact pending Product Owner decision as the immediate next action; an immutable, current owning-Issue record that is explicitly not authority; every required local change committed and pushed; the incomplete and unaccepted state stated explicitly; and no other unresolved material fact. The checkpoint preserves work but never implies acceptance, completion, verification, authority, or workflow state.
+Unknown or missing evidence denies eligibility. A dormant checkout needs no refresh for ordinary work, but cannot establish cold-start eligibility: policy requires applicable State/Handoff.
 
-When eligible and when cold start is the single recommendation, render only the canonical `cold_start` event from `.ai4x/governance/decision-handoff.md`. Its three fixed actions are the sole transition instructions. Derive the repository root from the selected checkout; do not include an absolute host path, payload, digest, snapshot locator, or `resume`. Passing every gate means both the session and local working copy are dispensable because a fresh GitHub checkout is sufficient; it never requires their deletion. Session deletion permanently removes the current session and descendants, so never recommend it before every gate passes.
+| Boundary | Additional gates |
+| --- | --- |
+| `completed-work-unit` | Handoff `COMPLETE`; authorized work, deterministic/remote checks, corrections and independent reviews complete; no unresolved material fact or PO decision |
+| `active-product-owner-decision` | Handoff `ACTIVE`; one exact pending PO decision is next; immutable current owning-Issue record explicitly grants no authority; all required local edits committed/pushed; incomplete/unaccepted state explicit; no other unresolved material fact |
 
-An ordinary greeting carries no state. A long transport snapshot or payload-bearing startup prompt is exceptional recovery only when the return point could not be durably materialized before interruption; it is never routine continuity and never overrides a repository-owned source.
+A checkpoint establishes neither acceptance nor authority. If all gates pass and cold start is the single recommendation, render only the canonical event in `decision-handoff.md` and its three fixed actions. Derive the checkout root; include no host path, payload, digest, snapshot locator or `resume`. The proof makes session and local copy dispensable without requiring deletion. Session deletion removes descendants too; never recommend it early.
+
+A greeting carries no state. Payload-bearing startup is exceptional recovery only when durable materialization failed before interruption; it never overrides repository owners or becomes routine continuity.

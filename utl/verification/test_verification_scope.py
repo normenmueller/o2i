@@ -76,6 +76,8 @@ class VerificationPathMatrixTests(unittest.TestCase):
                 "paper",
             },
             ".github/workflows/verify.yml": set(scope.STAGES),
+            "utl/verification/local.sh": set(scope.STAGES),
+            "utl/verification/README.md": set(scope.STAGES),
             "meta/o2i.archimate": {"licensing", "model", "haskell"},
             "spec/lib/adapter/amx/src/O2I/Adapter/AMX.hs": {
                 "licensing",
@@ -321,6 +323,7 @@ class CheckpointVerificationTests(unittest.TestCase):
             "spec/cli/src/app/Main.hs", "README.md", "utl/verify.sh",
             ".github/workflows/verify.yml", "future/unknown.txt",
             "doc/model/tool.py", "meta/o2i.archimate",
+            "utl/verification/local.sh", "utl/verification/README.md",
         ):
             with self.subTest(other=other), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)

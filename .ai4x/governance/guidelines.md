@@ -1,76 +1,63 @@
-# O2I Governance Guidelines
+# Scope And Owners
 
-O2I governance protects product quality and clear authority with the least process justified by actual risk. It defines no fachliche O2I semantics. Executable workflow, grant, gate, event, provenance, owner-route, and budget rules belong only to `policy.json`; agents use its generated `policy.agent.md` route.
+Load for risk classification, Issues, Project administration, review, remote work or publication. Governance defines no O2I fachliche semantics. `policy.json` owns executable transitions, grants, gates, events, provenance, routes and budgets; `policy.agent.md` is its generated retrieval projection. Apply the precedence in `BEHAVIOR.md`: current explicit Product Owner and runtime instructions outrank repository ceremonies. Do not request again authority already supplied for the same subject and scope; technical permission, verified identity and material safeguards remain necessary.
 
-## Operating Principles
+| Fact | Owner |
+| --- | --- |
+| Problem, target, scope, acceptance, dependencies, decisions, review evidence, open/closed state | Owning GitHub Issue |
+| Bounded Issue-free Routine work | Explicit Product Owner request; creates no durable product contract or Project item |
+| Prerequisite relation | Native Issue Dependency; order alone creates none |
+| Workflow status and Product Owner ordering | GitHub Project O2I |
+| Implementation and verification evidence | Git commits and deterministic checks |
+| Local return-point references | Applicable `.ai4x/HANDOFF.md`; never authority |
+| Human contribution guidance | Generated `CONTRIBUTING.md` projection |
 
-- Prefer working software, executable evidence, and clear ownership over ceremony.
-- Apply more process only when impact, irreversibility, or blast radius justifies it.
-- Preserve accepted evidence for its exact revision and scope without claiming permanent defect-freedom.
-- Record each fact once in its owning system.
-- Never weaken deterministic verification, type safety, repository autonomy, documentation quality, security, or publication checks to save effort.
+Record facts once at their owner. Prefer working software, executable evidence and clear ownership over ceremony. Preserve exact-revision acceptance; it never proves permanent defect-freedom. Never weaken verification, types, autonomy, documentation, security or publication checks to save effort.
 
-## Repository Authority
+# Risk Path
 
-- A GitHub Issue owns its problem, target, scope, acceptance criteria, dependencies, material decisions, review evidence, and open or closed state.
-- An explicit Product Owner request may own bounded Issue-free Routine work; it creates no Project item, dependency, or durable product contract and still requires the current structured grant before mutation.
-- Native Issue Dependencies own genuine prerequisite relations. Project order never creates a dependency.
-- GitHub Project `O2I` owns workflow status and Product Owner ordering only. It owns no product contract, acceptance fact, or authority grant.
-- Git commits own implementation artifacts; deterministic checks own verification evidence.
-- `.ai4x/HANDOFF.md` is a local return point, never an authority source. `CONTRIBUTING.md` is a generated human projection.
+Classify by actual impact, reversibility and blast radius, not labels or file count. If inspection leaves ambiguity, use the next safer path.
 
-## Risk-Proportionate Paths
+| Class | Trigger | Minimum path |
+| --- | --- | --- |
+| Routine | Reversible local, semantics-preserving fixes, refactoring, tests, docs, CI, tooling or administration | Understandable Issue or explicit bounded PO request; focused candidate; relevant checks; author self-review. Independent review when inspection and tests cannot close material risk |
+| Significant | Public contract, cross-capability ownership, migration or material user/repository impact without protected meaning change | Issue with decision and material alternatives; exact execution authority; relevant checks; independent reviewer matched to primary risk |
+| Protected | Fachliche terminology/metamodel, normative syntax, irreversible compatibility, release/publication authority, security-sensitive behavior or governance authority | Explicit PO decision; Issue with problem, benefit, target, scope, non-goals, risks and observable acceptance; independent risk-matched specialist review; complete applicable verification; exact authority for each protected mutation/publication |
 
-Classify the actual change by impact, reversibility, and blast radius. Labels aid discovery but never determine process.
+Add reviewers only for distinct material risks. Require a digest/immutable manifest for external authority, release artifacts, security-sensitive evidence or another stated integrity need. Apply the global design standard; classification does not authorize a migration or workaround.
 
-### Routine
+# Workflow And Authority
 
-Routine work is reversible, local, and semantics-preserving: focused fixes, refactoring without public-contract change, tests, documentation corrections, CI, tooling, and repository administration.
+Policy owns allowed transitions and authority gates. `Ready` means refined and unblocked, never authorized. An atomic work-unit grant covers its listed design, implementation, checks, corrections, commit and publication actions through its target; approval consumption does not consume that grant. Request new authority only for scope/target expansion, an exclusion, material mismatch or an uncovered action. Host permission is independent; denial blocks execution without creating or revoking PO authority.
 
-Minimum path: one understandable Issue or explicit bounded Product Owner request, one focused candidate, relevant deterministic checks, and author self-review. Add independent review only when tests and inspection cannot credibly close a material risk.
+| Status | Observable meaning |
+| --- | --- |
+| Refinement | Material product/design decision is being prepared |
+| In progress | Active design, implementation, investigation or correction |
+| In review | Complete candidate undergoing required checks or awaiting bounded publication |
+| Paused | Genuine wait with one reason and return condition |
+| Done | Accepted, published when required, closed and green |
 
-### Significant
+`10/10` means all required verdicts `accepted`, zero blocking/advisory findings, all exact-candidate local/remote checks green, and intact author/reviewer separation. Never report a numerical review score. Completed-work cleanup has its own contract and authority.
 
-Significant work affects a public contract, crosses capability ownership, performs a migration, or has material user or repository blast radius without changing protected fachliche meaning.
+# Sub-Issues And Later Findings
 
-Minimum path: one Issue containing the decision and material alternatives, an exact execution grant, relevant deterministic verification, and at least one independent reviewer matched to the primary risk. Add reviewers only for distinct material risks.
+Use native Sub-Issues when they clarify a multi-part deliverable. The parent owns integrated scope, authority, acceptance and publication; a child owns only its bounded deliverable and adds no authority.
 
-### Protected
+Reproduce later concerns against the accepted revision and authority. Classify as predecessor defect, current-work responsibility, contract ambiguity or non-finding; preserve unchanged historical evidence. A confirmed predecessor defect normally gets a linked correction Issue. Block only the dependent unsafe action; the finding authorizes no workaround, weakened check or semantic expansion.
 
-Protected work changes fachliche terminology or metamodel semantics, normative syntax, irreversible compatibility, release or publication authority, security-sensitive behavior, or repository governance authority.
+# Review
 
-Minimum path: explicit Product Owner decision, an Issue stating problem, benefit, target, scope, non-goals, risks, and observable acceptance, risk-selected independent specialist review, complete applicable verification, and an exact grant for every protected mutation or publication. Existing authority is not requested again for actions already inside its active target.
+Load `TEAM.md` for capability assignment, collaboration timing and independence. Each review names exact subject/scope, reviewer capability, checks, findings and verdict: `accepted`, `accepted with follow-ups` or `changes required`. Acceptance requires no blocker. Each blocker states a target-state remedy; separate advisory work. Later edits require review of their changed risk surface.
 
-Require a digest or immutable manifest only for externally supplied authority, a release artifact, security-sensitive evidence, or another stated integrity need. File count and uncertainty alone do not escalate process. If classification remains ambiguous after inspection, choose the next safer path.
+# Remote Work
 
-## Workflow Practice
+Delegates and reviewers never query/mutate remote work state or start approval-requiring commands. The primary supplies exact material remote facts or reports them unavailable. When GitHub is unavailable, continue only an already active local scope and infer no remote fact.
 
-The canonical policy owns states and transitions. `Ready` describes a refined, unblocked Issue and never authorizes work. The Board reflects work; it does not manufacture authority. Any Project mutation therefore requires the same current subject grant, transition guard, identity, and technical permission as every other mutation.
+Prefer connected GitHub for supported reads; use `gh` for missing capabilities. Stage unpublished remote drafts under ignored `.ai4x/work/local/drafts/`; the published artifact belongs remotely. Every agent write requires verified `gertrud-ai4x`; never substitute another identity. Before publication report outgoing commits, scope, checks, verdict and follow-ups. Preserve the accepted files unchanged.
 
-An active grant is one atomic work-unit authority through its target, not a sequence of action-level approvals. It remains effective across covered design, collaboration, implementation, verification, review corrections, commit, and publication actions explicitly listed in it. New authority is required only for expanded scope or target, an exclusion, a material mismatch, or an action absent from the grant. Host or tool permission is an independent technical gate: denial blocks execution but neither creates nor revokes Product Owner authority.
+# Verification And Backup
 
-Use `Refinement` only while a material product or design decision needs preparation. `In progress` covers active design, implementation, investigation, reproduction, and correction. `In review` means a complete candidate is undergoing required checks or awaiting bounded publication. `Paused` is only a genuine wait with one reason and return condition. `Done` requires accepted, published when required, closed, and green evidence. Cleanup is separately governed by `cleanup.md`.
+Load `operations/local-verification.md` for local execution and recovery. Use `./utl/verification/local.sh checkpoint` for regular scoped backup commits; verify remote HEAD and report unbacked changes before claiming recoverability. Pure illustration checkpoints select licensing/model checks; required per-save CLI checks and unfinished-model findings remain. A backup is no merge acceptance.
 
-`10/10` is Product Owner shorthand for every required verdict being `accepted`, zero blocking or advisory findings, all exact-candidate local and remote checks green, and intact authorship-versus-review separation. It is never a review score.
-
-## Stories And Integration Findings
-
-Use native Sub-Issues only when they improve visibility of a multi-part deliverable. The parent owns integrated scope, authority, acceptance, and publication; a Story owns only its bounded deliverable and adds no scope or authority.
-
-A later concern is an acceptance challenge, not retroactive invalidation. Reproduce it against the accepted revision and authority, classify it as predecessor defect, current-work responsibility, contract ambiguity, or non-finding, and preserve unchanged historical evidence. A confirmed predecessor defect normally receives a linked correction Issue. A challenge blocks only the dependent unsafe action and never authorizes workaround, compatibility, weakened verification, or semantic expansion.
-
-## Review And Collaboration
-
-Load `TEAM.md` when collaboration or review is required. Every review identifies its exact subject and scope, reviewer capability, checks, findings, and one verdict: `accepted`, `accepted with follow-ups`, or `changes required`. Numerical scores are prohibited. Acceptance requires no blocking finding. Each blocking finding states one target-state remedy; advisory work is separately identified. An author, Co-Author, or implementer never independently accepts their own candidate. Later changes require review only for their changed risk surface.
-
-## Remote Facts And Publication
-
-Delegated agents and independent reviewers never query or mutate remote Issue, Project, review, or CI state. They request each material fact from the primary agent, which returns the unmodified result or reports it unavailable. They never start approval-requiring commands; the primary agent runs any authorized command in the main thread. When GitHub is unavailable, continue only an already active local scope and infer no remote fact.
-
-Prefer the connected GitHub application for covered reads and use `gh` only when required capability is absent. Stage unpublished drafts for remote writes only under ignored `.ai4x/work/local/drafts/`; the published content belongs to its remote owner. Agent remote writes require the verified `gertrud-ai4x` identity and stop when it is unavailable. Never impersonate an unavailable identity. Before publication, report outgoing commits, scope, verification, review verdict, and follow-ups; change no reviewed file after acceptance.
-
-## Verification
-
-Keep feature branches backed up through regular scoped commits and pushes. Verify remote HEAD and report unbacked changes before declaring a recoverable source state. For backup commits, run `./utl/verify.sh checkpoint`. Pure illustration changes select licensing and model checks; per-save CLI checks still apply. Record unfinished-model findings. Checkpoints grant no final acceptance or merge authority.
-
-Verification is deterministic and network-independent. Integration uses the regular path matrix; unknown or shared scope selects the complete suite. Checkpoints do not change Pull Request, manual-dispatch or release verification. Before a release tag, run `./utl/verify.sh`. Direct branch pushes do not trigger GitHub Actions. Never use `[skip ci]` as routine workflow.
+`utl/verify.sh` owns deterministic, network-independent checks and the regular path matrix. Unknown/shared integration scope selects the complete suite. Before a release tag run `./utl/verification/local.sh all` explicitly; the starter defaults to checkpoint. Checkpoint selection never changes PR/manual/release verification. Direct branch pushes do not trigger Actions; do not routinely use `[skip ci]`.

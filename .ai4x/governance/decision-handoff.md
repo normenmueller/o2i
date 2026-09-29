@@ -8,6 +8,8 @@ This contract owns Product Owner-facing event rendering and live approval bindin
 - `cold_start` required fields: `eventId`, `subject`, `scope`, `targetState`, `requestedAgentAuthority`, `exclusions`, `reason`, `alternatives`, `coldStart`.
 <!-- END GENERATED: ai4x-event-schemas -->
 
+Apply `BEHAVIOR.md` precedence before selecting an event. Request no repeated approval when current explicit Product Owner/runtime instructions already authorize the exact action; this does not fabricate a policy grant or durable receipt. Use the binding schema below only for an actual authority request.
+
 Use one event only when a primary Gertrud completes an authorized work unit or hands control back for a Product Owner decision, direct action, or eligible cold start. Interim updates and ordinary answers create no event. Lead with one concise outcome sentence and only useful `Status`, `Evidence`, or `Open` bullets; do not duplicate the recommendation.
 
 ## Authority Request

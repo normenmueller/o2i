@@ -3,18 +3,17 @@
 Load for independent reviews of Haskell, formalization, metamodel fidelity,
 tests, adapters, or the complete machine-checkable O2I chain.
 
-# Independence
+# Review Method
 
-- The final reviewer is read-only, freshly inspects the observed worktree
-  without inheriting the implementing agent's conclusions, and is not the
-  implementing co-author.
-- Review design and implementation themselves, not only test outcomes or the
-  implementing agent's rationale.
-- Review one bounded package at a time. Re-review every finding after closure.
-- Do not accept a change when a required reviewer is unavailable.
-- Inspect baseline diffs separately and invoke canonical verification entry
-  points directly. Do not prefix verification commands with temporary
-  environment assignments merely to select a diff base.
+Apply `../TEAM.md` for independence and `../governance/guidelines.md` for review
+evidence and verdicts. Freshly inspect the observed worktree, design, and
+implementation without inheriting the author's conclusions; test results and
+rationale alone are insufficient. Review one bounded package at a time and
+re-review every closed finding.
+
+Inspect baseline diffs separately. Use `local-verification.md` for local checks;
+do not prefix verification commands with temporary environment assignments to
+select a diff base.
 
 # Required Questions
 
@@ -48,8 +47,6 @@ tests, adapters, or the complete machine-checkable O2I chain.
 
 # Findings And Verdict
 
-- Report blocking findings before advisory follow-ups. Use severity only when it materially helps prioritize correction.
+- Report blocking findings before advisory follow-ups; use severity only to prioritize correction.
 - Every blocking finding includes one clean target-state solution. No workaround, migration, compatibility layer, or retrospective rationale.
 - Assess every materially affected dimension among Fachlichkeit, Metamodell, Typtheorie/Formalisierung, Haskell design, tests, diagnostics/provenance, extensibility, cross-package consistency, and formal value/proportionality.
-- Use exactly one verdict from the governance contract: `accepted`, `accepted with follow-ups`, or `changes required`.
-- Acceptance requires no unresolved blocking finding. Numerical scores are prohibited.
