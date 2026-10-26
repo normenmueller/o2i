@@ -16,7 +16,7 @@ Product Owner operating instruction: assign every newly created Issue to both `n
 
 # Current Facts
 
-- Current branch remains `feat/125-strategy-cascading`; no #128 implementation checkout was selected. Fresh Project observations: #128 `Refinement`, #125 `Ready`.
+- Current branch remains `feat/125-strategy-cascading`; no #128 implementation checkout was selected. Fresh Project observations: #128 `Ready`, #125 `Ready`; neither status supplies implementation authority.
 - md2pdf #8 is closed as completed; its native dependency link remains recorded. Both assignees and Gertrud's repository access remain available.
 - Stable v0.2.6 is published; tag object `c5f89ae6bde09ae192da290efce45e253544b785` resolves to `2ded5ac8fa39e40a665fd6acf13e94fa58a9c2ee`, also the merged PR #9 commit. Recheck release facts before implementation.
 - O2I still binds 0.2.4. Accepted trunk observed at `36968ccb1f2c4c9cbd7c1d6bd09092596dc242b5`; re-fetch before creating a dedicated #128 candidate. Carry only universal memory commits `a5eee20`, `d302397`, `5453bdd`, not branch-bound handoffs or unfinished #125 product changes.
