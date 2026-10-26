@@ -30,6 +30,8 @@ Add reviewers only for distinct material risks. Require a digest/immutable manif
 
 Policy owns allowed transitions and authority gates. `Ready` means refined and unblocked, never authorized. An atomic work-unit grant covers its listed design, implementation, checks, corrections, commit and publication actions through its target; approval consumption does not consume that grant. Request new authority only for scope/target expansion, an exclusion, material mismatch or an uncovered action. Host permission is independent; denial blocks execution without creating or revoking PO authority.
 
+Keep Project status aligned with observed work at workflow boundaries and before PO decisions or handoffs. Apply only authorized, allowed transitions, preserve PO ordering, and verify remote readback. If authority or access prevents an update, explicitly report the discrepancy or UNVERIFIED state, intended correction and blocker.
+
 | Status | Observable meaning |
 | --- | --- |
 | Refinement | Material product/design decision is being prepared |
