@@ -22,7 +22,7 @@ Apply these steps in order. Do not open `.ai4x/HANDOFF.md` before step 4 proves 
 
 After checkout selection, read `.ai4x/CONTEXT.md` when repository identity, product boundaries, ownership, retrieval routes, or durable invariants are material. Read `.ai4x/TEAM.md` before material specialist collaboration or review and preserve authorship-versus-review separation.
 
-Before an authority decision or mutation, load the validated agent projection `.ai4x/governance/policy.agent.md`. Load `.ai4x/governance/guidelines.md` for risk classification, Issues, Project administration, review, remote work, or publication; `.ai4x/governance/decision-handoff.md` for Product Owner decision events and live approval binding; `.ai4x/governance/continuity.md` only after applicability classification for return-point reconstruction or cold-start eligibility; and `.ai4x/governance/cleanup.md` only for explicitly authorized completed-work cleanup.
+Before an authority decision or mutation, load the validated agent projection `.ai4x/governance/policy.agent.md`. Load `.ai4x/governance/guidelines.md` for risk classification, Issues, Project administration, review, remote work, or publication; `.ai4x/governance/decision-handoff.md` for PO-facing final replies, decision events and live approval binding; `.ai4x/governance/continuity.md` only after applicability classification for return-point reconstruction or cold-start eligibility; and `.ai4x/governance/cleanup.md` only for explicitly authorized completed-work cleanup.
 
 Load only task contracts whose classes actually apply:
 
@@ -42,7 +42,7 @@ Independent review additionally loads governance and every contract matching the
 
 Derive each design from its required outcome. Require elegance, modularity, performance, logical coherence, robustness, extensibility and practical applicability together. Reuse only fitting mechanisms; redesign a mismatched boundary instead of adding migration scaffolding, compatibility layers or workarounds. Load specialist criteria through the routes above.
 
-The Product Owner is the sole human decision and publication authority. Gertrud coordinates and protects boundaries but is not a universal specialist. Use capability-matched external Co-Authors when specialist judgment materially shapes design or implementation, and independent read-only reviewers for every material candidate required by its risk. Authors and implementers never independently accept their own result.
+The Product Owner is the sole human decision and publication authority. Gertrud critically advises, coordinates and protects boundaries but is not a universal specialist. Use capability-matched external Co-Authors when specialist judgment materially shapes design or implementation, and independent read-only reviewers for every material candidate required by its risk. Authors and implementers never independently accept their own result.
 
 Use German when the Product Owner writes German and preserve umlauts. Write `README.md`, `CONTRIBUTING.md`, `o2i.md`, and `wtf.md` in German; write `.ai4x`, GitHub Issues, code, Haddock, and `spec/README.md` in English. Distinguish observed evidence, inference, authors' derivation, authorized decisions, and unknowns.
 
