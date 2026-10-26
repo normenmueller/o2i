@@ -1,42 +1,43 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#125","currentNode":"await-product-owner-implementation-start"}
+{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#128","currentNode":"await-product-owner-renderer-repair-scope"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
 
-Reconstruct the prepared #125 design and single pending implementation-start decision in a fresh session. The readiness briefing is complete. No Core, Profile or native-model cascading correction has been implemented. ACTIVE denotes the Product Owner decision boundary, not implementation authority.
+Continue from the completed #128 refinement and prepare the next bounded renderer-repair decision. Restore PDF functionality before starting #125. Updating only md2pdf to 0.2.5 does not repair the reproduced leading-umlaut failure. No #128 product correction or #125 cascading implementation has started.
 
 # Authority
 
-Re-fetch https://github.com/normenmueller/o2i/issues/125 and its immutable open-decision record: https://github.com/normenmueller/o2i/issues/125#issuecomment-5894723274. The record explicitly grants no authority. #126 is complete; its integration authority cannot authorize #125. No implementation-start grant survives this boundary. Obtain the Product Owner's explicit start signal before implementation; a greeting, Ready status or design acceptance cannot supply it. This handoff alone establishes neither authority nor cold-start eligibility.
+Re-fetch https://github.com/normenmueller/o2i/issues/128 and its refinement evidence: https://github.com/normenmueller/o2i/issues/128#issuecomment-6418420751. The PO authorized operating-memory backup and refinement through a concrete recommendation; those results create no implementation-start or foreign-repository authority. A generic renderer correction needs its own subject-bound work unit before a corrected stable release is integrated through #128. Keep #125's independent start boundary: https://github.com/normenmueller/o2i/issues/125#issuecomment-5894723274. Status, design acceptance and this handoff supply no authority. No cold-start eligibility is claimed.
 
 Product Owner operating instruction: assign every newly created Issue to both `normenmueller` and `gertrud-ai4x`; verify the remote assignees.
 
 # Current Facts
 
-- Branch: `feat/125-strategy-cascading`; illustration remains parked on `feat/116-illustration`. #115/#116 depend on #125.
-- Human-facing design: `spec/design/strategy-cascading.md`, SHA-256 `37bf3a3a1ef13ebcb5918589417d40e3f284bf6fd8b5b03cf971761d69a65bbb`. Independent software-design verdict: accepted, without blocking or advisory findings.
-- Saved White Paper wording remains preliminary. Preserve the illustration's Ethos/Mission, exports and company-Vision return point.
-- #126 is complete. PR #127 merged accepted candidate `0202bc77290690d3a176b7db45c5e68b51e8c10c` into trunk as `36968ccb1f2c4c9cbd7c1d6bd09092596dc242b5`; both feature branches were synchronized. Completion and preservation evidence: https://github.com/normenmueller/o2i/issues/126#issuecomment-5894635312.
+- Current branch remains `feat/125-strategy-cascading`; no #128 implementation checkout was selected. Fresh Project observations: #128 `Refinement`, #125 `Ready`.
+- Accepted trunk observed at `36968ccb1f2c4c9cbd7c1d6bd09092596dc242b5`; re-fetch before choosing a dedicated #128 candidate baseline. #126 completion: https://github.com/normenmueller/o2i/issues/126#issuecomment-5894635312.
+- O2I still binds md2pdf 0.2.4 at `8ab76cd31129b778165f9f090391e91139be9ddc`. Latest stable observed: 0.2.5 at `c8cb54cf5bddc68353c6cc9c7707a7524188915f`; recheck at implementation time. All 23 renderer library files are unchanged between these revisions.
+- #125 design remains `spec/design/strategy-cascading.md`, SHA-256 `37bf3a3a1ef13ebcb5918589417d40e3f284bf6fd8b5b03cf971761d69a65bbb`, independently accepted as software design only. Paper wording remains preliminary.
+- Illustration remains parked on `feat/116-illustration`; #115/#116 depend on #125. Preserve Ethos/Mission, exports and company-Vision return point.
 
 # Material Risk
 
-Design acceptance does not establish implementation acceptance. Follow current authoring/review contracts, including independent review of actual Profile applicability and final product changes. Agents never edit `meta/o2i.archimate`. The preliminary paper is not yet synchronized with the implementation or rendered PDF.
+The failure is reproduced without O2I's header, but the precise cause within renderer/Pandoc/Listings remains UNKNOWN. No actual Ubuntu CI run or full-paper acceptance is established. Preserve umlauts and fachliche content. A version-only update cannot be reported as PDF repair. Global Homebrew may stay current stable; qualify the relevant project/CI combination together rather than silently accepting a moving baseline. Broader toolchain changes need confirmed scope. Never regenerate an accepted PDF from preliminary #125 wording. Agents never edit `meta/o2i.archimate`.
 
 # Verification
 
-All local stages and five required remote checks passed for the #126 candidate; independent source reviews accepted it. Branch-specific preservation checks and published heads belong to #126. The unchanged design hash binds its existing review; no complete product acceptance is claimed for the unfinished #125 candidate.
+The owning #128 comment records the complete reproduction recipe, exact releases, tool/archive identities, comparison matrix, limits and expert recommendation. Thirteen local renders: two renderer revisions and two Pandoc/crossref pairs, each with ASCII/internal-umlaut/leading-umlaut cases, plus the generic case without O2I header. Eight controls pass with text preserved; all five leading-umlaut cases fail with exit 43. This includes CI-version Pandoc 3.9/crossref 0.3.24 on macOS/TeX Live 2026, not Ubuntu CI.
 
-Local verification maintenance (2026-10-14, explicitly PO-authorized): rebuilt only `utl/verification/.local/python` with existing Python 3.15.0 after relocation and removal of Python 3.14. Pins remain reuse 6.2.0/jsonschema 4.26.0; updated transitive dependencies: MarkupSafe 3.0.4, charset-normalizer 3.5.2, rpds-py 2026.9.1. `pip check` and renderer identity pass; broken interpreter links are resolved. Checkpoint passed licensing, governance, model, Haskell and API stages, then exited 43 during PDF rendering: `lstinline ended by EOL` at paper line 808. An isolated one-line example fails for inline code starting with `ü`; ASCII-first/internal-umlaut controls pass. No paper or renderer change was made; full acceptance remains open. Retained rollback: `.local/python.before-rstr-repair` under verification. Renderer 0.2.4 and the acquisition revision in `doc/resources/md2pdf.json` remain unchanged. The documented clone/checkout succeeded independently in temporary storage; all 123 O2I LFS objects were downloaded/hash-verified over the selected SSH source. rstr's incomplete advertised-ref/partial-clone proof is not evidence of a lost renderer. Recreate local environments through `utl/verification/README.md`. PO-authorized publication covers this maintenance note only. The O2I team owns the PDF follow-up and rollback disposition; neither starts #125 implementation. No product source changed.
+Publication and verification Co-Authors shaped the recommendation; independent read-only review accepted its exact published body with no blocking or advisory findings. The operating-memory changes passed scoped licensing/governance checkpoints and independent reviews. Actual HTTPS Git publisher and commit author/committer: `gertrud-ai4x`; the dedicated configuration route is in governance guidelines. No #128 or #125 product acceptance is claimed.
 
 # Next Action
 
-Read the current owning Issue and review evidence, then present the single pending decision: start the accepted #125 design within its existing scope and exclusions. Await the explicit signal. Only afterward implement in capability-sized packages with specialist Co-Authors, applicable checks and independent candidate review.
+Present the bounded recommendation: investigate and correct the generic failure in the renderer's owning work unit, then integrate a corrected stable release through #128 on accepted trunk with local/CI qualification, actual paper rendering and independent acceptance. Obtain exact authority before foreign-repository work or product implementation. A broad Homebrew/Pandoc/library upgrade is not a demonstrated repair. #125 remains unstarted.
 
 # Local Return Point
 
-Continue #125 here only after the start boundary. After accepted correction and agreed integration, reconcile #115/#116 and return to the company Vision on `feat/116-illustration`.
+After accepted PDF recovery, return to #125's own start decision on this branch. After accepted cascading correction and agreed integration, reconcile #115/#116 and return to company Vision on `feat/116-illustration`.
 
 No scratch or local installation owns required continuity. Restore missing verification tools through `operations/local-verification.md` and `utl/verification/README.md`; fetch remote facts rather than reconstructing them from a previous session.
