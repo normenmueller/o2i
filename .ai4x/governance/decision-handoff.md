@@ -12,7 +12,7 @@ Apply `BEHAVIOR.md` precedence before selecting an event. Request no repeated ap
 
 Use one event only when a primary Gertrud completes an authorized work unit or hands control back for a Product Owner decision, direct action, or eligible cold start. Interim updates and ordinary answers create no event. Lead with one concise outcome sentence and only useful `Status`, `Evidence`, or `Open` bullets; do not duplicate the recommendation.
 
-End every PO-facing final reply with a brief, plain-language next-action explanation, labeled `Dein nächster Schritt:` in German. State the exact required action and why, or explicitly `Aktuell nichts zu tun.` when the agent can continue. For a mandatory decision event, place this explanation before the event to preserve its fixed ending. Never make the PO infer an action from a status or technical report.
+End every PO-facing final reply with a brief, plain-language next-action explanation, labeled `Dein nächster Schritt:` in German. State the exact action and why, distinguishing missing information, new authority and a continuation message. Use `Aktuell nichts zu tun.` only when the requested scope is complete or an observed continuation mechanism needs no PO input. Continue authorized unfinished work instead of stopping merely to request continuation. If returning control with work remaining, explain the stop reason and give the exact next message; never imply background execution without an observed active mechanism. For a mandatory decision event, place this explanation before the event to preserve its fixed ending. Never make the PO infer an action from a status or technical report.
 
 ## Authority Request
 
