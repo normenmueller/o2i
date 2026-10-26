@@ -499,6 +499,9 @@ verify_paper() {
   python3 -B -m unittest discover \
     -s utl/paper -p 'test_check_pdf_freshness.py'
 
+  info "Checking inline code through the O2I publication renderer."
+  python3 -B utl/paper/check-inline-code.py --root "$root"
+
   paper="$work/paper"
   mkdir -p "$paper/spec/lib/core" "$paper/doc/paper"
   cp README.md ACKNOWLEDGEMENTS.md "$paper/"

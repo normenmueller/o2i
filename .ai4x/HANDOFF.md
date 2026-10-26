@@ -1,7 +1,7 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#128","currentNode":"renderer-integration-preparation"}
+{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#128","currentNode":"renderer-candidate-verification"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
@@ -16,22 +16,23 @@ New Issues must be assigned to both `normenmueller` and `gertrud-ai4x`, then ver
 
 # Current Facts
 
-- Selected checkout/branch: `fix/128-md2pdf-026`, from freshly verified accepted trunk `36968ccb1f2c4c9cbd7c1d6bd09092596dc242b5`. Product implementation has not yet started; branch-bound State/Handoff are being initialized.
+- Selected checkout/branch: `fix/128-md2pdf-026`, from accepted trunk `36968ccb1f2c4c9cbd7c1d6bd09092596dc242b5`. The native Issue Development branch link is remotely verified.
 - #128 is remotely verified `In progress`; #125 remains `Ready` and unstarted. Preserve `feat/125-strategy-cascading` and `feat/116-illustration` independently.
-- Stable md2pdf 0.2.6 tag resolves to `2ded5ac8fa39e40a665fd6acf13e94fa58a9c2ee`; upstream #8 is closed. O2I's current renderer contract is still 0.2.4 until the authorized change.
-- Carry the reviewed universal operating-memory updates as separate commits, excluding branch-bound State/Handoff and unfinished #125 product content.
+- O2I's renderer contract now binds stable md2pdf 0.2.6 to `2ded5ac8fa39e40a665fd6acf13e94fa58a9c2ee`; upstream #8 is closed. Isolated tools are reconstructed, including hindent 6.2.1.
+- Universal operating-memory updates are preserved as separate commits through remotely verified backup `488d8e0b5a3c33e5759c5c4a6ce92472b87d4572`, excluding unfinished #125 product content.
+- The regenerated accepted paper and unchanged-schema manifest accompany a five-case actual-PDF regression in `utl/paper/check-inline-code.py`, called by the canonical paper stage. Accepted prose, models and image assets remain unchanged.
 
 # Material Risk
 
-The renderer fix uses an internal Listings scanner. Local preflight passed, but the actual Ubuntu CI and complete accepted O2I paper remain unverified. Keep the narrow version/acquisition contract and existing freshness schema; no general toolchain upgrade or text workaround. Preserve umlauts, fachliche meaning, parked models and preliminary #125 wording. Agents never edit `meta/o2i.archimate`.
+The renderer fix uses an internal Listings scanner. Actual Ubuntu CI and final independent acceptance remain outstanding. Keep the narrow version/acquisition contract and existing freshness schema; no general toolchain upgrade or text workaround. Preserve umlauts, fachliche meaning, parked models and preliminary #125 wording. Agents never edit `meta/o2i.archimate`.
 
 # Verification
 
-The owning preflight records two one-page PDFs and twelve preserved code spans per tool pair, including leading German characters and the original failure; both current and CI-version Pandoc/crossref pairs passed on macOS/TeX Live 2026. Co-Author advice and independent preflight acceptance are recorded there. No complete product candidate, full-paper or Ubuntu acceptance is claimed. Applicable implementation checks and final independent review remain outstanding.
+The new integration regression passes all five PDF text cases with 0.2.6 and fails with 0.2.4 at the original leading-umlaut Listings error. Full-paper rendering/sealing succeeded: 56 pages, PDF SHA-256 `addb772bf3f92aa746f1092678cc218e718f64202fbcf0917ee59e44754a540a`. Baseline text comparison differs only in one bibliography URL's wrapping. All-page overview and detailed listing inspection found no visual regression; specialist figure QA continues. Governance/licensing checks passed; complete local verification, Ubuntu CI and independent review are in progress or outstanding. Publish final evidence in the owning Issue and PR, not only scratch.
 
 # Next Action
 
-Restore isolated verification tools, preserve universal memory updates, jointly design the small O2I renderer regression, update the exact renderer pin, regenerate and visually inspect the accepted paper PDF/manifest, and run applicable local and actual Ubuntu checks. Commit coherent units, push meaningful backups, keep the Project current, obtain independent review and publish the ready-for-review PR. Surface only material new PO decisions or blockers requiring PO action.
+Complete applicable local checks and specialist visual QA, commit and back up the coherent renderer candidate, open its linked PR, verify actual Ubuntu CI, obtain independent exact-candidate review and correct findings. Keep Project status current and publish the ready-for-review PR only when green and accepted. Surface only material new PO decisions or blockers requiring PO action.
 
 # Local Return Point
 
