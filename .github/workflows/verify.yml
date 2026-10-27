@@ -157,6 +157,7 @@ jobs:
 
       - name: Restore Haskell dependencies and tools
         if: steps.scope.outputs.haskell == 'true'
+        id: haskell_cache
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
@@ -166,6 +167,14 @@ jobs:
           key: haskell-dependencies-${{ runner.os }}-ghc-${{ env.GHC_VERSION }}-cabal-${{ env.CABAL_VERSION }}-hindent-${{ env.HINDENT_VERSION }}-${{ hashFiles('spec/.ghc-version', 'spec/cabal.project', 'spec/cabal.project.freeze', 'spec/cabal.foundation.project', 'spec/cabal.foundation.project.freeze', 'spec/**/*.cabal') }}
           restore-keys: |
             haskell-dependencies-${{ runner.os }}-ghc-${{ env.GHC_VERSION }}-cabal-${{ env.CABAL_VERSION }}-hindent-${{ env.HINDENT_VERSION }}-
+
+      - name: Report Haskell dependency cache
+        if: steps.scope.outputs.haskell == 'true'
+        env:
+          O2I_HASKELL_CACHE_HIT: ${{ steps.haskell_cache.outputs.cache-hit }}
+        run: |
+          printf '[o2i|info] Haskell dependency cache restore: cache-hit=%s.\n' \
+            "${O2I_HASKELL_CACHE_HIT:-unreported}"
 
       - name: Install Foundation verification tools
         if: steps.scope.outputs.haskell == 'true'

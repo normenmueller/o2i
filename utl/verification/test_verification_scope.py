@@ -635,6 +635,63 @@ pathlib.Path('probe.json').write_text(json.dumps({'tmp': os.environ['TMPDIR'], '
             self.assertFalse((root / "paper-continued").exists())
             self.assertNotIn("Verification stage passed", result.stdout)
 
+    def timed_stage(self, root: Path, status: int) -> None:
+        runner = root / "utl/verify.sh"
+        source = runner.read_text(encoding="utf-8")
+        source = re.sub(
+            r"(?ms)^verify_haskell\(\) \{.*?^\}",
+            lambda match: (
+                'verify_haskell() {\n'
+                '  begin_phase "Fixture first"\n'
+                '  begin_phase "Fixture second"\n'
+                f"  sh -c 'exit {status}'\n"
+                '  touch phase-continued\n'
+                '  finish_phase 0\n'
+                '}'),
+            source, count=1,
+        )
+        runner.write_text(source, encoding="utf-8")
+
+    def test_phase_timings_report_elapsed_and_preserve_success_or_failure(self) -> None:
+        for status in (0, 7):
+            with self.subTest(status=status), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.repository(root)
+                self.timed_stage(root, status)
+                self.executable(
+                    root / "global-bin/date",
+                    '#!/bin/sh\n'
+                    'if [ ! -f clock ]; then echo 10 > clock; fi\n'
+                    'value=$(cat clock)\n'
+                    'echo "$((value + 7))" > clock\n'
+                    'echo "$value"\n',
+                )
+                result = self.run_starter(root, "haskell")
+                self.assertEqual(status, result.returncode, result.stderr)
+                timings = [line for line in result.stdout.splitlines() if "Timing:" in line]
+                self.assertEqual([
+                    "[o2i|info] Timing: Fixture first; elapsed_seconds=7; exit_status=0.",
+                    f"[o2i|info] Timing: Fixture second; elapsed_seconds=7; exit_status={status}.",
+                ], timings)
+                self.assertEqual(status == 0, (root / "phase-continued").exists())
+                self.assertEqual(status == 0, "Verification stage passed" in result.stdout)
+                self.assertEqual([], list((root / "utl/verification/.local/tmp").iterdir()))
+
+    def test_unavailable_clock_never_changes_a_check_result(self) -> None:
+        for status in (0, 7):
+            with self.subTest(status=status), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.repository(root)
+                self.timed_stage(root, status)
+                self.executable(root / "global-bin/date", "#!/bin/sh\nexit 9\n")
+                result = self.run_starter(root, "haskell")
+                self.assertEqual(status, result.returncode, result.stderr)
+                self.assertIn(
+                    f"Timing: Fixture second; elapsed_seconds=UNKNOWN; exit_status={status}.",
+                    result.stdout,
+                )
+                self.assertEqual(status == 0, (root / "phase-continued").exists())
+
     def test_starter_refuses_missing_python_and_shadowed_isolated_python(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -757,6 +814,29 @@ reason=path-matrix""",
 
 class VerificationWorkflowTests(unittest.TestCase):
     """Keep all required checks visible while heavy work is conditional."""
+
+    def test_cache_diagnostic_reports_raw_outcomes_without_a_verdict(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        report = workflow.split(
+            "      - name: Report Haskell dependency cache\n", maxsplit=1,
+        )[1].split("\n      - name:", maxsplit=1)[0]
+        self.assertIn("if: steps.scope.outputs.haskell == 'true'", report)
+        self.assertIn("${{ steps.haskell_cache.outputs.cache-hit }}", report)
+        script = report.split("        run: |\n", maxsplit=1)[1]
+        script = "\n".join(line.removeprefix("          ") for line in script.splitlines())
+        for value, expected in (("true", "true"), ("false", "false"), ("", "unreported")):
+            with self.subTest(cache_hit=value):
+                environment = os.environ.copy()
+                environment["O2I_HASKELL_CACHE_HIT"] = value
+                result = subprocess.run(
+                    ["sh", "-eu", "-c", script], env=environment,
+                    capture_output=True, text=True,
+                )
+                self.assertEqual(0, result.returncode, result.stderr)
+                self.assertEqual(
+                    f"[o2i|info] Haskell dependency cache restore: cache-hit={expected}.\n",
+                    result.stdout,
+                )
 
     def test_haskell_job_consumes_the_frozen_foundation_contract(self) -> None:
         content = WORKFLOW.read_text(encoding="utf-8")
