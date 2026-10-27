@@ -20,6 +20,7 @@ REVISION = re.compile(r"[0-9a-f]{40}")
 FULL_PATHS = frozenset(
     {
         ".gitattributes",
+        "utl/haskell/phase_clock.py",
         "utl/verification/local.sh",
         "utl/verification/verification_scope.py",
         "utl/verification/test_verification_scope.py",
@@ -72,6 +73,8 @@ HASKELL_PATHS = frozenset(
         "utl/haskell/test_check_atomic_cutover.py",
         "utl/haskell/test_check_cabal_plan.py",
         "utl/haskell/test_check_haskell_api_contracts.py",
+        "utl/haskell/test_verify_stage.py",
+        "utl/haskell/verify-stage.sh",
     }
 )
 PAPER_PATHS = frozenset(

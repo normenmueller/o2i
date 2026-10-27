@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Main
-  ( main
+module O2I.Core.Test.Structure
+  ( tests
   ) where
 
 import Data.List (sort)
@@ -38,24 +38,23 @@ import O2I.Structure.Internal
   , structureDefectRule
   , structureRuleId
   )
-import Test.Tasty (TestTree, defaultMain, testGroup)
+import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit ((@?=), assertBool, testCase)
 
-main :: IO ()
-main =
-  defaultMain
-    (testGroup
-       "selected-View Structure"
-       [ acceptedProjectionIsCanonical
-       , inputBoundaryIsComplete
-       , contextualizationRulesAreAtomic
-       , endpointAndRelationRulesAreExact
-       , collectiveFamilyRulesAreComplete
-       , duplicateHeavyClaimIdentityEvidenceIsLinear
-       , structureDefectAlgebraIsExact
-       , cardinalityEvidenceIsExact
-       , structureRuleOwnershipIsExact
-       ])
+tests :: TestTree
+tests =
+  testGroup
+    "selected-View Structure"
+    [ acceptedProjectionIsCanonical
+    , inputBoundaryIsComplete
+    , contextualizationRulesAreAtomic
+    , endpointAndRelationRulesAreExact
+    , collectiveFamilyRulesAreComplete
+    , duplicateHeavyClaimIdentityEvidenceIsLinear
+    , structureDefectAlgebraIsExact
+    , cardinalityEvidenceIsExact
+    , structureRuleOwnershipIsExact
+    ]
 
 acceptedProjectionIsCanonical :: TestTree
 acceptedProjectionIsCanonical =
