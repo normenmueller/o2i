@@ -22,6 +22,7 @@ Exclude trunk merge, Issue closure, cleanup, releases/tags, #125 implementation,
 - Specialist Co-Authors cannot independently accept their candidate.
 - Quality-first direction/design/evidence: https://github.com/normenmueller/o2i/issues/132#issuecomment-6446175657. Corrected tree `e6cfdb4757db10efc8abed03d53051683112a477` received independent Core and verifier source/cheap-check acceptance, without findings. Integrated runtime/CI acceptance remains outstanding.
 - All 238 Core leaves/assertion bodies are preserved and pass at one/two Tasty threads. Consolidation alone was locally slower with higher single-process test RSS. Native same-budget scheduling has accepted design/prototype evidence, not pipeline acceptance; exact context/costs belong to the Issue.
+- Canonical `local.sh all` passed on clean `e457d72170d6d8ebd50830daa6b61ac48d9ddc0f`: 938.281 seconds monotonic, including CLI/API/Haddock and independent archives; 654 Tasty leaves plus five other suites passed in each tree. Sampled compiler RSS on the 18-slot host needs baseline/resource assessment; do not claim universal improvement.
 - Original Linux Foundation run `40481510632`, job `122112699044`, passed; scope excludes CLI. Exact baseline phase/test counts belong to the Issue.
 - #125 remains open/Ready and unstarted, preserved at `47cf244fcfe29c393982fb973993c3f4a5bcd05a`. Its cold start is deferred until this optimization and refreshed preparation. Illustration remains parked.
 - PO completion expectations remain explicit: include exact authorized local/remote topic-branch cleanup after completed integration and recommend one concrete next step; preserve unrelated work and current authority boundaries.
@@ -32,11 +33,11 @@ Preserve assertions/groups, hidden modules, external compile-pass/fail and confo
 
 # Verification
 
-Original five-package baseline/Core inventory captured; discrepant wall-clock duration is not a clean benchmark. Missing-stage failure, clock/stage fixtures and path classification are independently closed; low-value metadata reporting removed. Tests: 46 Haskell utilities, 41 scope/starter, 53 governance, 10 licensing, 70 model and 57 paper plus rendering passed. Complete candidate/API/Haddock/archive, Linux and final independent checks remain outstanding. Publish evidence at #132/PR.
+Original baseline/Core inventory captured; discrepant old wall-clock duration is not a clean benchmark. Review findings are closed; low-value metadata reporting removed. Complete local verification passed; actual Linux Foundation, comparative resource assessment and final independent acceptance remain outstanding. Publish exact evidence at #132/PR.
 
 # Next Action
 
-Back up the source-reviewed candidate, then run canonical complete verification and actual Linux PR checks; correct and independently re-review any changed risk surface. Preserve scoped acceptance only while reviewed source is unchanged. Publish exact evidence and reviewed PR; align Project status. No cold start with local-only work/evidence.
+Publish the review candidate and obtain actual Linux PR checks plus bounded compiler-memory comparison; independently accept the exact integrated result before presenting the PO integration decision. Correct/re-review changed risk surfaces. Preserve scoped acceptance only for unchanged source; align Project status. No cold start with local-only work/evidence.
 
 # Local Return Point
 
