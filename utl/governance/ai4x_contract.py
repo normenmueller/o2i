@@ -1166,58 +1166,6 @@ def load_handoff_if_applicable(
 
 
 @dataclass(frozen=True)
-class BootstrapResult:
-    """Observable outcome of the applicability-first bootstrap path."""
-
-    classification: str
-    restart_required: bool
-    pointer: ActivePointer | None
-    handoff: Mapping[str, Any] | None
-
-
-def bootstrap_checkout(
-    *,
-    pointer_path: Path,
-    state_path: Path,
-    handoff_path: Path,
-    git_metadata: bool,
-    observed_branch: str | None,
-    clean: bool,
-    activate_pointer: Any,
-) -> BootstrapResult:
-    """Parse pointer then State, and open Handoff only for applicable evidence."""
-    if os.path.lexists(pointer_path):
-        try:
-            pointer = read_active_pointer(pointer_path)
-            activated = activate_pointer(pointer)
-        except (ContractError, OSError):
-            return BootstrapResult("UNVERIFIED", False, None, None)
-        if activated is not True:
-            return BootstrapResult("UNVERIFIED", False, pointer, None)
-        return BootstrapResult("activated_restart", True, pointer, None)
-    try:
-        state = read_state_envelope(state_path)
-    except (ContractError, OSError):
-        return BootstrapResult("UNVERIFIED", False, None, None)
-    classification = classify_applicability(
-        ApplicabilityEvidence(
-            "absent",
-            git_metadata,
-            observed_branch,
-            clean,
-            state["appliesOnBranch"],
-        )
-    )
-    if classification != "applicable":
-        return BootstrapResult(classification, False, None, None)
-    try:
-        handoff = read_handoff(handoff_path)
-    except (ContractError, OSError):
-        return BootstrapResult("UNVERIFIED", False, None, None)
-    return BootstrapResult(classification, False, None, handoff)
-
-
-@dataclass(frozen=True)
 class SourceUnit:
     """One canonical repository source counted in a load or budget union."""
 
@@ -1233,6 +1181,136 @@ def _git(*args: str, cwd: Path = ROOT) -> subprocess.CompletedProcess[bytes]:
         check=False,
         capture_output=True,
     )
+
+
+def _bootstrap_git(cwd: Path, *args: str, detached_ok: bool = False) -> str | None:
+    """Observe Git without optional index writes; never hide a failed command."""
+    try:
+        result = subprocess.run(
+            ["git", *args], cwd=cwd, check=False, capture_output=True,
+            env={**os.environ, "GIT_OPTIONAL_LOCKS": "0"}, timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise ContractError(f"Git {args[0]} unavailable: {type(error).__name__}") from error
+    if detached_ok and result.returncode == 1:
+        return None
+    if result.returncode != 0:
+        # Git/filter stderr can contain private paths or data; retain the cause class.
+        raise ContractError(f"Git {args[0]} failed (exit {result.returncode})")
+    try:
+        return result.stdout.decode("utf-8", errors="strict")
+    except UnicodeDecodeError as error:
+        raise ContractError(f"Git {args[0]} output is not strict UTF-8") from error
+
+
+def _observe_bootstrap_git(start: Path) -> dict[str, Any]:
+    """Collect the complete checkout evidence before inspecting its pointer."""
+    root = Path(_bootstrap_git(start, "rev-parse", "--show-toplevel").strip()).resolve()
+    if not start.is_relative_to(root):
+        raise ContractError("Git root does not contain the observed working directory")
+    common = _bootstrap_git(root, "rev-parse", "--git-common-dir").strip()
+    common_path = (root / common).resolve(strict=True)
+    if not common_path.is_dir():
+        raise ContractError("Git common directory is unavailable")
+    branch = _bootstrap_git(root, "symbolic-ref", "--quiet", "--short", "HEAD", detached_ok=True)
+    branch = branch.strip() if branch is not None else None
+    revision = _bootstrap_git(root, "rev-parse", "--verify", "HEAD").strip()
+    if re.fullmatch(r"[0-9a-f]{40,64}", revision) is None:
+        raise ContractError("Git revision is invalid")
+    status = _bootstrap_git(root, "status", "--short", "--branch", "--untracked-files=all")
+    if not status.startswith("## ") or not status.endswith("\n"):
+        raise ContractError("Git complete status is invalid")
+    current_branch = _bootstrap_git(
+        root, "symbolic-ref", "--quiet", "--short", "HEAD", detached_ok=True,
+    )
+    current_branch = current_branch.strip() if current_branch is not None else None
+    current_revision = _bootstrap_git(root, "rev-parse", "--verify", "HEAD").strip()
+    if (current_branch, current_revision) != (branch, revision):
+        raise ContractError("Git branch or revision changed during observation")
+    return {
+        "root": str(root), "commonGitDirectory": str(common_path),
+        "branch": branch, "revision": revision, "status": status,
+        "clean": len(status.splitlines()) == 1,
+    }
+
+
+def _bootstrap_file(root: Path, relative: str) -> Path:
+    """Require a readable checkout-contained regular file without reading it."""
+    path = root / relative
+    if not path.resolve(strict=True).is_relative_to(root) or not path.is_file():
+        raise ContractError(f"{relative}: not a checkout-contained regular file")
+    with path.open("rb"):
+        pass
+    return path
+
+
+def observe_bootstrap(start: Path) -> dict[str, Any]:
+    """Select and classify read-only; uncertainty never exposes a Handoff."""
+    result: dict[str, Any] = {
+        "schema": "o2i.bootstrap-result/v1", "classification": "UNVERIFIED",
+        "selectedCheckout": None, "observations": [], "handoff": None,
+        "diagnostic": None,
+    }
+    try:
+        observed = _observe_bootstrap_git(start.resolve(strict=True))
+        common = observed["commonGitDirectory"]
+        visited: set[Path] = set()
+        while True:
+            root = Path(observed["root"])
+            if root in visited:
+                raise ContractError("ACTIVE pointer is self-referential or cyclic")
+            visited.add(root)
+            result["observations"].append(observed)
+            pointer_path = root / ".ai4x/work/local/ACTIVE.md"
+            if not os.path.lexists(pointer_path):
+                break
+            if not pointer_path.resolve(strict=True).is_relative_to(root):
+                raise ContractError("ACTIVE pointer path escapes the checkout")
+            pointer = read_active_pointer(pointer_path)
+            target = (root / pointer.path).resolve(strict=True)
+            if target in visited:
+                raise ContractError("ACTIVE pointer is self-referential or cyclic")
+            if not target.is_relative_to(root) or not target.is_dir():
+                raise ContractError("ACTIVE target escapes the checkout or is unavailable")
+            candidate = _observe_bootstrap_git(target)
+            if (
+                Path(candidate["root"]) != target
+                or candidate["commonGitDirectory"] != common
+                or candidate["branch"] != pointer.expected_branch
+            ):
+                raise ContractError(
+                    "ACTIVE target checkout, common Git directory or branch mismatch"
+                )
+            for relative in ("AGENTS.md", ".ai4x/CONTEXT.md", ".ai4x/STATE.md"):
+                _bootstrap_file(target, relative)
+            # Restart the complete observation in the target; never read its State
+            # before checking its own pointer, and never mutate a checkout or ref.
+            observed = _observe_bootstrap_git(target)
+            if observed != candidate:
+                raise ContractError("ACTIVE target Git evidence changed during selection")
+        state = read_state_envelope(_bootstrap_file(root, ".ai4x/STATE.md"))
+        # One bounded recheck closes changes during State parsing; do not retry
+        # toward a favourable result or open Handoff from a mixed observation.
+        if _observe_bootstrap_git(root) != observed or os.path.lexists(pointer_path):
+            raise ContractError("Checkout evidence changed during State validation")
+        if read_state_envelope(_bootstrap_file(root, ".ai4x/STATE.md")) != state:
+            raise ContractError("State changed during applicability validation")
+        classification = classify_applicability(ApplicabilityEvidence(
+            "absent", True, observed["branch"], observed["clean"], state["appliesOnBranch"],
+        ))
+        if classification == "UNVERIFIED":
+            raise ContractError("State branch does not establish Handoff applicability")
+        if classification == "applicable":
+            handoff = _bootstrap_file(root, ".ai4x/HANDOFF.md")
+            result["handoff"] = {"path": str(handoff), "envelope": read_handoff(handoff)}
+        result["classification"] = classification
+        result["selectedCheckout"] = str(root)
+    except (ContractError, OSError, RuntimeError) as error:
+        # Do not print arbitrary OS exception text, which may contain private data.
+        result["diagnostic"] = (
+            str(error) if isinstance(error, ContractError) else type(error).__name__
+        )
+    return result
 
 
 def _resolve_tree(revision: str) -> str:
@@ -2002,11 +2080,17 @@ def _write_projections(policy: Mapping[str, Any]) -> None:
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("check", "render"))
+    parser.add_argument("command", choices=("check", "render", "bootstrap"))
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--revision")
     args = parser.parse_args(argv)
     try:
+        if args.command == "bootstrap":
+            if args.write or args.revision is not None:
+                raise ContractError("bootstrap accepts no write or revision option")
+            result = observe_bootstrap(Path.cwd())
+            print(json.dumps(result, ensure_ascii=False, allow_nan=False, indent=2))
+            return 1 if result["classification"] == "UNVERIFIED" else 0
         if args.write and args.revision is not None:
             raise ContractError("--write and --revision are mutually exclusive")
         if args.command == "render" and args.revision is not None:

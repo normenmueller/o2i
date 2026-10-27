@@ -4,7 +4,10 @@
 from __future__ import annotations
 
 import copy
+import contextlib
+import io
 import itertools
+import json
 from pathlib import Path
 import re
 import subprocess
@@ -432,130 +435,6 @@ class StateAndBudgetTests(unittest.TestCase):
         )
         loader.assert_called_once_with()
 
-    def test_bootstrap_reads_handoff_only_after_actual_applicability(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            state = root / "STATE.md"
-            handoff = root / "HANDOFF.md"
-            pointer = root / "ACTIVE.md"
-            state.write_bytes(STATE.read_bytes())
-            handoff.write_bytes(HANDOFF.read_bytes())
-            branch = contract.read_state_envelope(state)["appliesOnBranch"]
-            applicable = contract.bootstrap_checkout(
-                pointer_path=pointer,
-                state_path=state,
-                handoff_path=handoff,
-                git_metadata=True,
-                observed_branch=branch,
-                clean=False,
-                activate_pointer=mock.Mock(),
-            )
-            self.assertEqual("applicable", applicable.classification)
-            self.assertEqual(contract.HANDOFF_SCHEMA, applicable.handoff["schema"])
-            with mock.patch.object(contract, "read_handoff") as loader:
-                dormant = contract.bootstrap_checkout(
-                    pointer_path=pointer,
-                    state_path=state,
-                    handoff_path=handoff,
-                    git_metadata=True,
-                    observed_branch="trunk",
-                    clean=True,
-                    activate_pointer=mock.Mock(),
-                )
-                detached = contract.bootstrap_checkout(
-                    pointer_path=pointer,
-                    state_path=state,
-                    handoff_path=handoff,
-                    git_metadata=True,
-                    observed_branch=None,
-                    clean=True,
-                    activate_pointer=mock.Mock(),
-                )
-            self.assertEqual("dormant", dormant.classification)
-            self.assertEqual("UNVERIFIED", detached.classification)
-            loader.assert_not_called()
-
-    def test_bootstrap_rejects_pointer_and_handoff_uncertainty(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
-            state = root / "STATE.md"
-            handoff = root / "HANDOFF.md"
-            pointer = root / "ACTIVE.md"
-            state.write_bytes(STATE.read_bytes())
-            handoff.write_bytes(HANDOFF.read_bytes())
-            branch = contract.read_state_envelope(state)["appliesOnBranch"]
-            for source in (
-                "bad\n",
-                "Path: ../escape\nExpected branch: feat/1\n",
-                "Path: checkout\nExpected branch: bad branch\n",
-            ):
-                pointer.write_text(source, encoding="utf-8")
-                with self.subTest(source=source):
-                    result = contract.bootstrap_checkout(
-                        pointer_path=pointer,
-                        state_path=state,
-                        handoff_path=handoff,
-                        git_metadata=True,
-                        observed_branch=branch,
-                        clean=True,
-                        activate_pointer=mock.Mock(return_value=True),
-                    )
-                    self.assertEqual("UNVERIFIED", result.classification)
-                    self.assertIsNone(result.handoff)
-            pointer.write_text(
-                "Path: checkout\nExpected branch: feat/1\n", encoding="utf-8"
-            )
-            stale = contract.bootstrap_checkout(
-                pointer_path=pointer,
-                state_path=state,
-                handoff_path=handoff,
-                git_metadata=True,
-                observed_branch=branch,
-                clean=True,
-                activate_pointer=mock.Mock(return_value=False),
-            )
-            self.assertEqual("UNVERIFIED", stale.classification)
-            activated = contract.bootstrap_checkout(
-                pointer_path=pointer,
-                state_path=state,
-                handoff_path=handoff,
-                git_metadata=True,
-                observed_branch=branch,
-                clean=True,
-                activate_pointer=mock.Mock(return_value=True),
-            )
-            self.assertTrue(activated.restart_required)
-            self.assertIsNone(activated.handoff)
-            pointer.unlink()
-            target = root / "pointer-target"
-            target.write_text(
-                "Path: checkout\nExpected branch: feat/1\n", encoding="utf-8"
-            )
-            pointer.symlink_to(target.name)
-            symlinked = contract.bootstrap_checkout(
-                pointer_path=pointer,
-                state_path=state,
-                handoff_path=handoff,
-                git_metadata=True,
-                observed_branch=branch,
-                clean=True,
-                activate_pointer=mock.Mock(return_value=True),
-            )
-            self.assertEqual("UNVERIFIED", symlinked.classification)
-            pointer.unlink()
-            handoff.write_text("malformed\n", encoding="utf-8")
-            invalid_handoff = contract.bootstrap_checkout(
-                pointer_path=pointer,
-                state_path=state,
-                handoff_path=handoff,
-                git_metadata=True,
-                observed_branch=branch,
-                clean=True,
-                activate_pointer=mock.Mock(),
-            )
-            self.assertEqual("UNVERIFIED", invalid_handoff.classification)
-            self.assertIsNone(invalid_handoff.handoff)
-
     def test_active_pointer_read_is_bounded_before_overflow_rejection(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "ACTIVE.md"
@@ -667,6 +546,258 @@ class StateAndBudgetTests(unittest.TestCase):
         surface["wordCap"] = 1
         with self.assertRaises(contract.ContractError):
             contract.validate_budgets(policy)
+
+
+class ObservedBootstrapTests(unittest.TestCase):
+    """Exercise the real observer boundary and containment before Handoff access."""
+
+    def make_checkout(self, root: Path, branch: str = "feat/fixture") -> dict[str, object]:
+        (root / ".ai4x/work/local").mkdir(parents=True)
+        for relative in ("AGENTS.md", ".ai4x/CONTEXT.md"):
+            (root / relative).write_text("# Fixture\n", encoding="utf-8")
+        state = {"schema": contract.STATE_SCHEMA, "appliesOnBranch": branch,
+                 "handoffSchema": contract.HANDOFF_SCHEMA}
+        (root / ".ai4x/STATE.md").write_text(
+            contract.STATE_OPEN + "\n" + contract.canonical_state_object(state)
+            + "\n" + contract.STATE_CLOSE + "\n", encoding="utf-8",
+        )
+        (root / ".ai4x/HANDOFF.md").write_bytes(HANDOFF.read_bytes())
+        return {"root": str(root), "commonGitDirectory": str(root.parent / "common"),
+                "branch": branch, "revision": "a" * 40,
+                "status": "## " + branch + "\n", "clean": True}
+
+    def write_pointer(self, root: Path, path: str, branch: str = "feat/fixture") -> None:
+        (root / ".ai4x/work/local/ACTIVE.md").write_text(
+            f"Path: {path}\nExpected branch: {branch}\n", encoding="utf-8",
+        )
+
+    def test_successful_selection_restarts_before_reading_target_state(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve() / "root"
+            initial = self.make_checkout(root)
+            target = root / "selected"
+            selected = self.make_checkout(target)
+            selected["commonGitDirectory"] = initial["commonGitDirectory"]
+            self.write_pointer(root, "selected")
+            # The abandoned checkout's State must never be consumed.
+            (root / ".ai4x/STATE.md").write_text("invalid\n", encoding="utf-8")
+            with mock.patch.object(contract, "_observe_bootstrap_git", side_effect=(
+                initial, selected, selected, selected,
+            )), mock.patch.object(
+                contract, "read_state_envelope", wraps=contract.read_state_envelope,
+            ) as state:
+                result = contract.observe_bootstrap(root)
+            self.assertEqual("applicable", result["classification"])
+            self.assertEqual(str(target), result["selectedCheckout"])
+            self.assertEqual(
+                [mock.call(target / ".ai4x/STATE.md")] * 2, state.call_args_list,
+            )
+            self.assertEqual(str(target / ".ai4x/HANDOFF.md"), result["handoff"]["path"])
+
+    def test_dormant_detached_dirty_trunk_and_branch_mismatch_never_read_handoff(self) -> None:
+        for branch, clean, expected in (("trunk", True, "dormant"),
+                                       (None, True, "UNVERIFIED"),
+                                       ("trunk", False, "UNVERIFIED"),
+                                       ("feat/other", True, "UNVERIFIED")):
+            with self.subTest(branch=branch, clean=clean), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory).resolve()
+                observed = self.make_checkout(root)
+                observed.update(branch=branch, clean=clean)
+                with mock.patch.object(contract, "_observe_bootstrap_git", return_value=observed), \
+                     mock.patch.object(contract, "read_handoff") as handoff:
+                    result = contract.observe_bootstrap(root)
+                self.assertEqual(expected, result["classification"])
+                self.assertIsNone(result["handoff"])
+                handoff.assert_not_called()
+
+    def test_invalid_state_or_handoff_fails_closed_and_dirty_matching_branch_is_valid(self) -> None:
+        for invalid in (None, "STATE.md", "HANDOFF.md"):
+            with self.subTest(invalid=invalid), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory).resolve()
+                observed = self.make_checkout(root)
+                observed.update(clean=False, status="## feat/fixture\n M file\n")
+                if invalid is not None:
+                    (root / ".ai4x" / invalid).write_text("invalid\n", encoding="utf-8")
+                with mock.patch.object(contract, "_observe_bootstrap_git", return_value=observed), \
+                     mock.patch.object(contract, "read_handoff", wraps=contract.read_handoff) as handoff:
+                    result = contract.observe_bootstrap(root)
+                self.assertEqual("applicable" if invalid is None else "UNVERIFIED",
+                                 result["classification"])
+                if invalid == "STATE.md":
+                    handoff.assert_not_called()
+                if invalid is not None:
+                    self.assertIsNone(result["handoff"])
+                    self.assertIsNone(result["selectedCheckout"])
+
+    def test_pointer_rejects_self_cycle_escape_symlink_and_malformed_input(self) -> None:
+        kinds = ("self", "cycle", "escape", "symlink", "malformed", "stale", "absolute",
+                 "parent", "branch", "pointer-parent")
+        for kind in kinds:
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as directory:
+                base = Path(directory).resolve()
+                root = base / "root"
+                initial = self.make_checkout(root)
+                target = root / "selected"
+                selected = self.make_checkout(target)
+                selected["commonGitDirectory"] = initial["commonGitDirectory"]
+                pointer = root / ".ai4x/work/local/ACTIVE.md"
+                self.write_pointer(root, "selected")
+                if kind == "self":
+                    (root / "self").symlink_to(root, target_is_directory=True)
+                    self.write_pointer(root, "self")
+                elif kind == "cycle":
+                    (target / "back").symlink_to(root, target_is_directory=True)
+                    self.write_pointer(target, "back")
+                elif kind == "escape":
+                    (root / "escape").symlink_to(base, target_is_directory=True)
+                    self.write_pointer(root, "escape")
+                elif kind == "symlink":
+                    pointer.rename(pointer.with_name("saved"))
+                    pointer.symlink_to("saved")
+                elif kind == "malformed":
+                    pointer.write_text("bad\n", encoding="utf-8")
+                elif kind == "stale":
+                    self.write_pointer(root, "missing")
+                elif kind == "absolute":
+                    self.write_pointer(root, str(target))
+                elif kind == "parent":
+                    self.write_pointer(root, "../outside")
+                elif kind == "branch":
+                    self.write_pointer(root, "selected", "bad branch")
+                elif kind == "pointer-parent":
+                    local = pointer.parent
+                    local.rename(base / "outside")
+                    local.symlink_to(base / "outside", target_is_directory=True)
+                with mock.patch.object(contract, "_observe_bootstrap_git", side_effect=(
+                    initial, selected, selected,
+                )), mock.patch.object(contract, "read_state_envelope") as state, \
+                     mock.patch.object(contract, "read_handoff") as handoff:
+                    result = contract.observe_bootstrap(root)
+                self.assertEqual("UNVERIFIED", result["classification"])
+                self.assertIsNone(result["selectedCheckout"])
+                state.assert_not_called()
+                handoff.assert_not_called()
+
+    def test_target_requires_exact_git_marker_and_restart_proof(self) -> None:
+        for kind in ("root", "common", "branch", "marker", "restart"):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory).resolve() / "root"
+                initial = self.make_checkout(root)
+                target = root / "selected"
+                selected = self.make_checkout(target)
+                selected["commonGitDirectory"] = initial["commonGitDirectory"]
+                restarted = dict(selected)
+                self.write_pointer(root, "selected")
+                if kind == "root":
+                    selected["root"] = str(root)
+                elif kind == "common":
+                    selected["commonGitDirectory"] = "foreign"
+                elif kind == "branch":
+                    selected["branch"] = "feat/other"
+                elif kind == "marker":
+                    (target / ".ai4x/CONTEXT.md").unlink()
+                else:
+                    restarted["revision"] = "b" * 40
+                with mock.patch.object(contract, "_observe_bootstrap_git", side_effect=(
+                    initial, selected, restarted,
+                )), mock.patch.object(contract, "read_state_envelope") as state, \
+                     mock.patch.object(contract, "read_handoff") as handoff:
+                    result = contract.observe_bootstrap(root)
+                self.assertEqual("UNVERIFIED", result["classification"])
+                state.assert_not_called()
+                handoff.assert_not_called()
+
+    def test_failed_git_commands_and_unavailable_tools_stop_before_state_and_handoff(self) -> None:
+        commands = ("--show-toplevel", "--git-common-dir", "symbolic-ref", "--verify",
+                    "status", "missing", "timeout")
+        for command in commands:
+            with self.subTest(command=command), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory).resolve()
+                def run(args: list[str], **kwargs: object) -> subprocess.CompletedProcess:
+                    self.assertEqual("0", kwargs["env"]["GIT_OPTIONAL_LOCKS"])
+                    if command == "missing":
+                        raise FileNotFoundError("private diagnostic")
+                    if command == "timeout":
+                        raise subprocess.TimeoutExpired(args, 30)
+                    failed = command in args
+                    output = (str(root) + "\n").encode()
+                    if "symbolic-ref" in args:
+                        output = b"feat/fixture\n"
+                    if "--verify" in args:
+                        output = b"a" * 40 + b"\n"
+                    return subprocess.CompletedProcess(
+                        args, 128 if failed else 0, output, b"private diagnostic",
+                    )
+                with mock.patch.object(contract.subprocess, "run", side_effect=run), \
+                     mock.patch.object(contract, "read_state_envelope") as state, \
+                     mock.patch.object(contract, "read_handoff") as handoff:
+                    result = contract.observe_bootstrap(root)
+                self.assertEqual("UNVERIFIED", result["classification"])
+                self.assertIsNone(result["selectedCheckout"])
+                self.assertNotIn("private diagnostic", result["diagnostic"])
+                state.assert_not_called()
+                handoff.assert_not_called()
+
+    def test_branch_or_head_change_during_status_denies_before_state_or_handoff(self) -> None:
+        for changed in ("branch", "revision"):
+            with self.subTest(changed=changed), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory).resolve()
+                branch = "feat/fixture"
+                revision = "a" * 40
+                replies = (str(root), str(root), branch, revision, "## feat/fixture\n",
+                           "feat/other" if changed == "branch" else branch,
+                           "b" * 40 if changed == "revision" else revision)
+                with mock.patch.object(contract, "_bootstrap_git", side_effect=replies) as git, \
+                     mock.patch.object(contract, "read_state_envelope") as state, \
+                     mock.patch.object(contract, "read_handoff") as handoff:
+                    result = contract.observe_bootstrap(root)
+                self.assertEqual("UNVERIFIED", result["classification"])
+                self.assertIn("changed during observation", result["diagnostic"])
+                self.assertEqual(7, git.call_count)
+                self.assertEqual("status", git.call_args_list[4].args[1])
+                state.assert_not_called()
+                handoff.assert_not_called()
+
+    def test_changes_during_state_validation_deny_before_handoff(self) -> None:
+        for changed in ("branch", "revision", "state", "pointer"):
+            with self.subTest(changed=changed), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory).resolve()
+                observed = self.make_checkout(root)
+                rechecked = dict(observed)
+                state = dict(contract.read_state_envelope(root / ".ai4x/STATE.md"))
+                rechecked_state = dict(state)
+                if changed in ("branch", "revision"):
+                    rechecked[changed] = "changed"
+                elif changed == "state":
+                    rechecked_state["appliesOnBranch"] = "feat/other"
+                state_reads = 0
+                def read_state(path: Path) -> dict[str, object]:
+                    nonlocal state_reads
+                    state_reads += 1
+                    if changed == "pointer" and state_reads == 1:
+                        self.write_pointer(root, "missing")
+                    return state if state_reads == 1 else rechecked_state
+                with mock.patch.object(contract, "_observe_bootstrap_git", side_effect=(
+                    observed, rechecked,
+                )), mock.patch.object(contract, "read_state_envelope", side_effect=read_state), \
+                     mock.patch.object(contract, "read_handoff") as handoff:
+                    result = contract.observe_bootstrap(root)
+                self.assertEqual("UNVERIFIED", result["classification"])
+                self.assertIsNone(result["selectedCheckout"])
+                self.assertEqual(2 if changed == "state" else 1, state_reads)
+                handoff.assert_not_called()
+
+    def test_cli_returns_failure_and_structured_unverified_result_without_writes(self) -> None:
+        result = {"classification": "UNVERIFIED", "handoff": None, "diagnostic": "status failed"}
+        with mock.patch.object(contract, "observe_bootstrap", return_value=result), \
+             contextlib.redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(1, contract.main(["bootstrap"]))
+        self.assertEqual(result, json.loads(output.getvalue()))
+        for option in ("--write", "--revision=HEAD"):
+            with mock.patch.object(contract, "observe_bootstrap") as observe, \
+                 contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(1, contract.main(["bootstrap", option]))
+                observe.assert_not_called()
 
 
 class DecisionAndMutationTests(unittest.TestCase):
