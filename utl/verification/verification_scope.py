@@ -20,7 +20,6 @@ REVISION = re.compile(r"[0-9a-f]{40}")
 FULL_PATHS = frozenset(
     {
         ".gitattributes",
-        "utl/verification/README.md",
         "utl/verification/local.sh",
         "utl/verification/verification_scope.py",
         "utl/verification/test_verification_scope.py",
@@ -39,6 +38,7 @@ GOVERNANCE_PATHS = frozenset(
     {
         "AGENTS.md",
         "CONTRIBUTING.md",
+        "utl/verification/README.md",
         "utl/governance/ai4x_contract.py",
         "utl/governance/test_github_governance.py",
     }
@@ -79,6 +79,8 @@ PAPER_PATHS = frozenset(
         "ACKNOWLEDGEMENTS.md",
         "README.md",
         "utl/paper/render-paper.sh",
+        "utl/paper/verify-stage.sh",
+        "utl/paper/check-inline-code.py",
         "utl/paper/check-paper-assets.py",
         "utl/paper/check-pdf-freshness.py",
         "utl/paper/render-paper-figures.sh",

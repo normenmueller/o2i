@@ -1,44 +1,39 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#128","currentNode":"await-product-owner-128-implementation-start"}
+{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#125","currentNode":"await-product-owner-125-implementation-start"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
 
-The fixed stable md2pdf 0.2.6 release and downstream preflight are verified. Present the bounded #128 implementation decision through a reviewed PR candidate. No O2I renderer contract, product source, versioned PDF or manifest has changed; #125 remains unstarted.
+Resume the independently accepted strategic-cascading design owned by https://github.com/normenmueller/o2i/issues/125 after the established cold start. The one pending PO decision is whether to start implementation within that Issue's scope. Preparation is not implementation or product acceptance.
 
 # Authority
 
-Re-fetch https://github.com/normenmueller/o2i/issues/128 and its verified release/proposed scope: https://github.com/normenmueller/o2i/issues/128#issuecomment-6428371621. This record grants no implementation authority. The PO's release notification triggered verification and preparation, not product implementation. Obtain the exact #128 start grant before candidate changes. Keep #125's independent start boundary: https://github.com/normenmueller/o2i/issues/125#issuecomment-5894723274. Status, preflight acceptance and this handoff supply no authority. No cold-start eligibility is claimed.
+The current PO instruction authorizes synchronization, continuity corrections, checks, independent review, backup and cold-start preparation only. It creates no durable grant and does not survive the session. The owning Issue's non-authorizing start boundary remains https://github.com/normenmueller/o2i/issues/125#issuecomment-5894723274. Re-fetch current owning facts and obtain the explicit #125 implementation-start signal before product edits. A greeting, Ready status, accepted design, completed preparation or this Handoff supplies no implementation authority.
 
-Product Owner operating instruction: assign every newly created Issue to both `normenmueller` and `gertrud-ai4x`; verify the remote assignees.
+Exclude #125 implementation, native-model edits, trunk publication, Issue closure, releases/tags, illustration continuation and further cleanup.
 
 # Current Facts
 
-- Current branch remains `feat/125-strategy-cascading`; no #128 implementation checkout was selected. Fresh Project observations: #128 `Ready`, #125 `Ready`; neither status supplies implementation authority.
-- md2pdf #8 is closed as completed; its native dependency link remains recorded. Both assignees and Gertrud's repository access remain available.
-- Stable v0.2.6 is published; tag object `c5f89ae6bde09ae192da290efce45e253544b785` resolves to `2ded5ac8fa39e40a665fd6acf13e94fa58a9c2ee`, also the merged PR #9 commit. Recheck release facts before implementation.
-- O2I still binds 0.2.4. Accepted trunk observed at `36968ccb1f2c4c9cbd7c1d6bd09092596dc242b5`; re-fetch before creating a dedicated #128 candidate. Preserve the reviewed universal operating-memory updates from this branch as separate preparation commits; exclude branch-bound State/Handoff and unfinished #125 product changes.
-- #125 design remains `spec/design/strategy-cascading.md`, SHA-256 `37bf3a3a1ef13ebcb5918589417d40e3f284bf6fd8b5b03cf971761d69a65bbb`, independently accepted as software design only. Paper wording remains preliminary.
-- Illustration remains parked on `feat/116-illustration`; #115/#116 depend on #125. Preserve Ethos/Mission, exports and company-Vision return point.
+- Branch: `feat/125-strategy-cascading`. Accepted trunk `45d10c961ad7d68043929818359770bb78197227` is synchronized into the preserved preparation. #128/#130 are closed/Done; their accepted fixes and operating rules are integrated. Their completed authority is not reusable.
+- #125 is open/Ready. Its software design `spec/design/strategy-cascading.md` remains SHA-256 `37bf3a3a1ef13ebcb5918589417d40e3f284bf6fd8b5b03cf971761d69a65bbb`; independent software-design acceptance is recorded in the owning Issue. Implementation and concrete ArchiMate applicability retain their own reviews.
+- The preliminary #125 White Paper wording is preserved. It is deliberately ahead of executable implementation and the versioned PDF; do not report full product freshness or regenerate a publication from this unfinished state.
+- Illustration `feat/116-illustration` remains parked. Preserve its Ethos/Mission slice, exports and company-Vision return point; resume only after accepted cascading correction and agreed integration.
+- PO completion expectations are owned by `governance/guidelines.md` and `governance/decision-handoff.md`: actively close exact topic-branch cleanup under matching authority and recommend one concrete next step. They create no blanket authority.
 
 # Material Risk
 
-The fix uses an internal Listings scanner within Pandoc's tokenized passthrough wrapper. Actual Ubuntu package compatibility and the full O2I paper remain unverified. Preflight is not product acceptance. Preserve umlauts and fachliche content. No general toolchain or freshness-schema upgrade is justified by current evidence. Never accept a PDF from preliminary #125 wording or edit `meta/o2i.archimate`.
+Preserve exact design provenance, role/Strategy-instance binding, the shared lower Objective and existing qualification/contribution boundaries. This preparation changes no Core, Profile, native model or illustration content. Incomplete product verification is explicit; continuity acceptance never substitutes for future #125 product checks.
 
 # Verification
 
-The owning #128 release record contains the exact tag, twelve input cases, two tool combinations and proposed acceptance. Exact 0.2.6 source produced two one-page PDFs with all twelve expected strings preserved under Pandoc/crossref 3.12.1/0.3.26 and 3.9/0.3.24 on macOS/TeX Live 2026. Poppler previews were identical and visually inspected. This is not actual Ubuntu CI or a full O2I-paper build. The earlier failing 0.2.4/0.2.5 matrix remains in the prior refinement.
-
-Publication and verification Co-Authors support the narrow integration; independent read-only review accepted the exact preflight/proposal without findings. The published body and `gertrud-ai4x` author were read back. Earlier operating-memory checkpoints and reviews passed. No #128 or #125 product acceptance is claimed.
+Exact preparation revision, local checks, independent continuity/integration verdict, remote readback and fresh single-branch restoration evidence belong to #125. Re-fetch that evidence before relying on cold-start eligibility. Tracked State/Handoff must be applicable; scratch, local tools and session history own no required continuity.
 
 # Next Action
 
-Ask for approval of the published bounded #128 package through `In review`: isolated accepted-trunk candidate, exact 0.2.6 pin/install, small O2I PDF regression, accepted paper/PDF/manifest regeneration, applicable local and actual Ubuntu checks, corrections, independent exact-candidate review and PR publication. Exclude merge, Issue closure, releases/tags, cleanup, unrelated upgrades, native-model edits and #125 implementation. Proceed only after the explicit PO decision.
+Present the bounded #125 implementation-start decision from current owning facts. Recommend realizing the accepted design through an independently reviewed PR, with the Issue's required specialist co-authorship, native-model PO participation and complete applicable verification. Await the explicit start signal; do not start work merely from the greeting. The lighter remote-verification proposal remains separate and unimplemented.
 
 # Local Return Point
 
-After accepted PDF recovery, return to #125's own start decision on this branch. After accepted cascading correction and agreed integration, reconcile #115/#116 and return to company Vision on `feat/116-illustration`.
-
-No scratch or local installation owns required continuity. Restore missing verification tools through `operations/local-verification.md` and `utl/verification/README.md`; fetch remote facts rather than reconstructing them from a previous session.
+After the explicit start decision, work on this branch under #125. Restore tools through `operations/local-verification.md` and `utl/verification/README.md`. After accepted cascading correction and separately agreed integration, reconcile the illustration dependencies and return to company Vision.
