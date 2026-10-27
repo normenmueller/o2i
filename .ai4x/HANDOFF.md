@@ -16,11 +16,11 @@ Current explicit PO instructions request audit and concrete optimization with hi
 
 - Branch: `refactor/130-ai4x-lean`, initialized from `45cb1ad4e994873e9c2f6b94362d7d17f419a344`. It includes the separately backed-up PR-result/Routine guidance.
 - PR #129's accepted, green and PO-approved head is `aaa43ac9dc7aa88a59b81da0a4c101fd73918960`; its merge remains a separate pending PO decision. Preserve that PR and the parked #125/#116 work. #125 remains unstarted.
-- Three fresh read-only audits found concrete architecture, usability and efficiency defects. Their owning summary and constraints are in #130. No implementation acceptance is claimed.
+- Three fresh audits shaped the implementation. Co-Authors own corrections; non-author reviewers independently accept their exact scopes. Current findings, checks and acceptance belong to #130 and its PR, not this return-point reference.
 
 # Material Risk
 
-Preserve PO decision/publication authority, exact subject/scope/exclusions, identity/permission gates, anti-replay checks, same-checkout proof and receipt-based cross-session authority. Do not treat concise prose or status as authority. Resolve the legacy dual-assignee instruction's ownership/provenance through #130; do not silently discard or generalize it. Retain independent acceptance, unknown/shared verification closure and unchanged memory caps.
+Preserve PO decision/publication authority, exact subject/scope/exclusions, identity/permission gates, anti-replay checks, same-checkout proof and receipt-based cross-session authority. Do not treat concise prose or status as authority. The candidate gives dual-assignee guidance a durable owner; historical normative provenance remains UNVERIFIED in #130. Retain independent acceptance, unknown/shared verification closure and unchanged memory caps.
 
 # Verification
 
@@ -28,7 +28,7 @@ Audit baseline at `45cb1ad`: all existing contract checks pass, while semantic i
 
 # Next Action
 
-Implement coherent units with matched Co-Authors: executable bootstrap and concise kernel; consistent authority/payload/event/PO contracts; stage-specific setup and verification routing. Run cheap relevant checks and static review before final expensive CI. Preserve failures and unknowns; obtain independent review from non-authors. Keep Board and verified backups current.
+Re-fetch #130 and the PR for this branch; reconcile exact HEAD, complete local status, current findings, CI and independent verdicts. Complete only the still-authorized correction/check/review/publication scope. Once the exact candidate is green and independently accepted, present the concrete pending PO decision; merge and closure remain excluded. Keep Board and verified backups current. No task continues in the background merely because this reference names it.
 
 # Local Return Point
 

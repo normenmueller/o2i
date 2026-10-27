@@ -47,7 +47,7 @@
       "id": "decision-rendering",
       "owner": ".ai4x/governance/decision-handoff.md",
       "loadsWhen": "product-owner-decision-or-control-handoff",
-      "scope": "event rendering and live approval binding"
+      "scope": "concise human rendering of policy-owned decision events"
     },
     {
       "id": "session-continuity",
@@ -276,6 +276,11 @@
         "to": "Ready"
       },
       {
+        "id": "workflow.in-review-to-in-progress",
+        "from": "In review",
+        "to": "In progress"
+      },
+      {
         "id": "workflow.in-review-to-done",
         "from": "In review",
         "to": "Done"
@@ -342,7 +347,7 @@
     },
     {
       "id": "scope.expand",
-      "identityRequirement": "new-product-owner-grant"
+      "identityRequirement": "new-product-owner-authority"
     }
   ],
   "authorityGrant": {
@@ -420,6 +425,13 @@
         "expected-unchanged-issue-body-sha256",
         "complete-grant-receipt"
       ],
+      "serialization": "compact-JSON-receiptFields-order-UTF-8-unescaped-non-ASCII-with-terminal-LF-no-normalization",
+      "receiptFields": [
+        "decisionPayload",
+        "decisionPayloadSha256",
+        "expectedIssueBodySha256",
+        "grant"
+      ],
       "sameSessionReadbackRequired": true,
       "crossSessionReconstruction": {
         "authoritySource": "current-observable-remote-state-only",
@@ -440,11 +452,32 @@
       }
     }
   },
+  "liveInstruction": {
+    "requiredFields": [
+      "issuer",
+      "subject.repository",
+      "subject.issue",
+      "actionIds",
+      "resourceIds",
+      "scope",
+      "targetState",
+      "exclusions"
+    ],
+    "bindingRequires": [
+      "current-explicit-product-owner-or-runtime-instruction",
+      "same-live-exchange",
+      "unchanged-revalidated-facts",
+      "not-revoked-or-superseded",
+      "no-exclusion-is-crossed"
+    ],
+    "createsGrant": false,
+    "survivesSession": false
+  },
   "mutationGates": {
     "allRequired": true,
     "missingOrUnknown": "deny",
     "gates": [
-      "current-matching-subject-grant",
+      "current-matching-subject-authority",
       "event-specific-guards",
       "declared-and-verified-execution-identity",
       "technical-host-or-tool-permission"
@@ -485,6 +518,12 @@
     ],
     "missingOrUnknown": "deny"
   },
+  "eventSelection": {
+    "ordinary-result": "none",
+    "new-agent-authority-needed": "authority_request",
+    "direct-product-owner-action-needed": "product_owner_action",
+    "eligible-cold-start-recommended": "cold_start"
+  },
   "events": {
     "authority_request": {
       "createsGrant": true,
@@ -500,7 +539,31 @@
         "alternatives",
         "coldStart"
       ],
-      "approvalReply": "Freigegeben.",
+      "approvalReplies": [
+        "Freigabe",
+        "Freigabe.",
+        "Freigegeben",
+        "Freigegeben."
+      ],
+      "canonicalPayload": {
+        "encoding": "UTF-8",
+        "serialization": "compact-JSON-required-field-order-unescaped-non-ASCII-with-terminal-LF-no-normalization",
+        "excludedFields": [
+          "payloadFingerprint"
+        ],
+        "subjectFields": [
+          "repository",
+          "issue"
+        ],
+        "requestedAuthorityFields": [
+          "actionIds",
+          "resourceIds"
+        ],
+        "stringArrayFields": [
+          "exclusions",
+          "alternatives"
+        ]
+      },
       "bindingRequires": [
         "unique-request-id",
         "canonical-payload-fingerprint",
@@ -650,7 +713,7 @@
   "forbiddenActions": [
     {
       "id": "forbid-ready-as-authority",
-      "when": "Project-status-Ready-without-current-matching-grant",
+      "when": "Project-status-Ready-without-current-matching-authority",
       "selector": "all-actions"
     },
     {

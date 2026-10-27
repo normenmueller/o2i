@@ -14,6 +14,7 @@ import os
 from pathlib import Path, PurePosixPath
 import posixpath
 import re
+import stat
 import subprocess
 import sys
 from typing import Any
@@ -145,8 +146,10 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
             "workflow",
             "actions",
             "authorityGrant",
+            "liveInstruction",
             "mutationGates",
             "continuity",
+            "eventSelection",
             "events",
             "provenance",
             "forbiddenActions",
@@ -185,7 +188,7 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
         ("capability-routing", ".ai4x/TEAM.md", "collaboration-or-review-required", "capability routing and authorship-versus-review separation"),
         ("executable-governance", ".ai4x/governance/policy.json", "deterministic-evaluation-before-authority-decision-or-mutation", "workflow transitions, actions, grants, mutation gates, events, provenance, rule registry, and budgets"),
         ("governance-practice", ".ai4x/governance/guidelines.md", "risk-classification-issue-project-review-or-remote-work", "risk paths, Issue and Project ownership, reviews, and remote-work rules"),
-        ("decision-rendering", ".ai4x/governance/decision-handoff.md", "product-owner-decision-or-control-handoff", "event rendering and live approval binding"),
+        ("decision-rendering", ".ai4x/governance/decision-handoff.md", "product-owner-decision-or-control-handoff", "concise human rendering of policy-owned decision events"),
         ("session-continuity", ".ai4x/governance/continuity.md", "applicable-handoff-reconstruction-or-cold-start-evaluation", "post-classification reconstruction and cold-start eligibility"),
         ("completed-work-cleanup", ".ai4x/governance/cleanup.md", "explicit-completion-and-cleanup-grant", "cleanup preflight, destructive-action safeguards, deletion ordering, and postflight"),
         ("task-contracts", ".ai4x/operations/*.md", "matching-task-class", "task-class-specific design, implementation, and quality rules"),
@@ -350,6 +353,7 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
         ("workflow.in-progress-to-in-review", "In progress", "In review"),
         ("workflow.in-progress-to-paused", "In progress", "Paused"),
         ("workflow.paused-to-ready", "Paused", "Ready"),
+        ("workflow.in-review-to-in-progress", "In review", "In progress"),
         ("workflow.in-review-to-done", "In review", "Done"),
     ):
         raise ContractError("policy.workflow.transitions: unsupported v1 transition set")
@@ -388,7 +392,7 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
         ("release.publish", "verified-authorized-publisher"),
         ("tag.create", "verified-authorized-publisher"),
         ("protected.publication", "verified-authorized-publisher"),
-        ("scope.expand", "new-product-owner-grant"),
+        ("scope.expand", "new-product-owner-authority"),
     )
     if tuple(action_rows) != expected_actions:
         raise ContractError("policy.actions: unsupported v1 action vocabulary")
@@ -479,6 +483,8 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
             "mustBeFirstAuthorizedRemoteWrite",
             "immutableCommentRequired",
             "requiredContent",
+            "serialization",
+            "receiptFields",
             "sameSessionReadbackRequired",
             "crossSessionReconstruction",
         ),
@@ -505,6 +511,12 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
         "complete-grant-receipt",
     ):
         raise ContractError("durableReceipt.requiredContent: unsupported values")
+    if receipt["serialization"] != (
+        "compact-JSON-receiptFields-order-UTF-8-unescaped-non-ASCII-with-terminal-LF-no-normalization"
+    ) or receipt["receiptFields"] != [
+        "decisionPayload", "decisionPayloadSha256", "expectedIssueBodySha256", "grant",
+    ]:
+        raise ContractError("durableReceipt: unsupported canonical receipt format")
     reconstruction = _require_keys(
         receipt["crossSessionReconstruction"],
         (
@@ -540,6 +552,20 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
     ):
         raise ContractError("crossSessionReconstruction.rejects: unsupported values")
 
+    live = _require_keys(
+        top["liveInstruction"],
+        ("requiredFields", "bindingRequires", "createsGrant", "survivesSession"),
+        "policy.liveInstruction",
+    )
+    if _unique_strings(live["requiredFields"], "liveInstruction.requiredFields") != (
+        "issuer", "subject.repository", "subject.issue", "actionIds", "resourceIds",
+        "scope", "targetState", "exclusions",
+    ) or _unique_strings(live["bindingRequires"], "liveInstruction.bindingRequires") != (
+        "current-explicit-product-owner-or-runtime-instruction", "same-live-exchange",
+        "unchanged-revalidated-facts", "not-revoked-or-superseded", "no-exclusion-is-crossed",
+    ) or live["createsGrant"] is not False or live["survivesSession"] is not False:
+        raise ContractError("policy.liveInstruction: unsupported current instruction boundary")
+
     gates = _require_keys(
         top["mutationGates"],
         (
@@ -556,7 +582,7 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
         raise ContractError("policy.mutationGates: gates must be conjunctive and closed")
     gate_names = _unique_strings(gates["gates"], "policy.mutationGates.gates")
     if gate_names != (
-        "current-matching-subject-grant",
+        "current-matching-subject-authority",
         "event-specific-guards",
         "declared-and-verified-execution-identity",
         "technical-host-or-tool-permission",
@@ -570,6 +596,16 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
         raise ContractError("policy.mutationGates: transitions must be enumerated")
 
     _validate_continuity(top["continuity"])
+    selection = _require_keys(
+        top["eventSelection"],
+        ("ordinary-result", "new-agent-authority-needed",
+         "direct-product-owner-action-needed", "eligible-cold-start-recommended"),
+        "policy.eventSelection",
+    )
+    if tuple(selection.values()) != (
+        "none", "authority_request", "product_owner_action", "cold_start",
+    ):
+        raise ContractError("policy.eventSelection: unsupported event triggers")
 
     events = _require_keys(
         top["events"],
@@ -705,7 +741,7 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
     expected_forbidden = (
         {
             "id": "forbid-ready-as-authority",
-            "when": "Project-status-Ready-without-current-matching-grant",
+            "when": "Project-status-Ready-without-current-matching-authority",
             "selector": "all-actions",
         },
         {
@@ -833,7 +869,8 @@ def _validate_events(events: Mapping[str, Any]) -> None:
         (
             "createsGrant",
             "requiredFields",
-            "approvalReply",
+            "approvalReplies",
+            "canonicalPayload",
             "bindingRequires",
             "receiptRepeats",
             "requestLifecycle",
@@ -843,9 +880,22 @@ def _validate_events(events: Mapping[str, Any]) -> None:
     )
     if (
         authority["createsGrant"] is not True
-        or authority["approvalReply"] != "Freigegeben."
+        or _unique_strings(authority["approvalReplies"], "authority_request.approvalReplies")
+        != ("Freigabe", "Freigabe.", "Freigegeben", "Freigegeben.")
     ):
         raise ContractError("authority_request: invalid approval contract")
+    canonical = _require_keys(
+        authority["canonicalPayload"],
+        ("encoding", "serialization", "excludedFields", "subjectFields",
+         "requestedAuthorityFields", "stringArrayFields"),
+        "authority_request.canonicalPayload",
+    )
+    if tuple(canonical.values()) != (
+        "UTF-8", "compact-JSON-required-field-order-unescaped-non-ASCII-with-terminal-LF-no-normalization",
+        ["payloadFingerprint"], ["repository", "issue"], ["actionIds", "resourceIds"],
+        ["exclusions", "alternatives"],
+    ):
+        raise ContractError("authority_request: unsupported canonical payload format")
     expected_authority = {
         "requiredFields": (
             "requestId", "payloadFingerprint", "subject", "scope", "targetState",
@@ -1001,7 +1051,7 @@ def _validate_state_source(source: bytes, *, origin: str) -> Mapping[str, Any]:
     if canonical_state_object(state) != object_text:
         raise ContractError(f"{origin}: State object is not canonical")
     branch = state["appliesOnBranch"]
-    if not isinstance(branch, str) or not branch:
+    if not isinstance(branch, str) or not branch or "\0" in branch:
         raise ContractError(f"{origin}: invalid branch value")
     result = subprocess.run(
         ["git", "check-ref-format", "--branch", branch],
@@ -1014,10 +1064,15 @@ def _validate_state_source(source: bytes, *, origin: str) -> Mapping[str, Any]:
     return state
 
 
-def read_state_envelope(path: Path = STATE_PATH) -> Mapping[str, Any]:
+def read_state_envelope(
+    path: Path = STATE_PATH, *, checkout_root: Path | None = None,
+) -> Mapping[str, Any]:
     """Read only the bounded worktree State envelope and validate exact bytes."""
-    with path.open("rb") as handle:
-        source = handle.read(1025)
+    if checkout_root is not None:
+        source = _bootstrap_file(checkout_root, path.relative_to(checkout_root).as_posix(), 1025)
+    else:
+        with path.open("rb") as handle:
+            source = handle.read(1025)
     return _validate_state_source(source, origin=str(path))
 
 
@@ -1068,10 +1123,15 @@ def _validate_handoff_source(source: bytes, *, origin: str) -> Mapping[str, Any]
     return envelope
 
 
-def read_handoff(path: Path = HANDOFF_PATH) -> Mapping[str, Any]:
+def read_handoff(
+    path: Path = HANDOFF_PATH, *, checkout_root: Path | None = None,
+) -> Mapping[str, Any]:
     """Read the closed handoff only after applicability is established."""
-    with path.open("rb") as handle:
-        source = handle.read(5001)
+    if checkout_root is not None:
+        source = _bootstrap_file(checkout_root, path.relative_to(checkout_root).as_posix(), 5001)
+    else:
+        with path.open("rb") as handle:
+            source = handle.read(5001)
     return _validate_handoff_source(source, origin=str(path))
 
 
@@ -1091,14 +1151,20 @@ class ActivePointer:
     expected_branch: str
 
 
-def read_active_pointer(path: Path) -> ActivePointer:
+def read_active_pointer(path: Path, *, checkout_root: Path | None = None) -> ActivePointer:
     """Read a closed two-line pointer without following a symlink."""
     stat = path.lstat()
     if not path.is_file() or path.is_symlink() or not os.path.isfile(path):
         raise ContractError(f"{path}: pointer must be a non-symlink regular file")
     del stat
-    with path.open("rb") as handle:
-        source = handle.read(1025)
+    if checkout_root is not None:
+        source = _bootstrap_file(
+            checkout_root, path.relative_to(checkout_root).as_posix(), 1025,
+            allow_symlink=False,
+        )
+    else:
+        with path.open("rb") as handle:
+            source = handle.read(1025)
     if len(source) > 1024 or b"\r" in source or not source.endswith(b"\n"):
         raise ContractError(f"{path}: malformed active pointer bytes")
     try:
@@ -1109,6 +1175,8 @@ def read_active_pointer(path: Path) -> ActivePointer:
     if match is None:
         raise ContractError(f"{path}: malformed active pointer")
     relative, branch = match.groups()
+    if "\0" in relative or "\0" in branch:
+        raise ContractError("ACTIVE pointer contains NUL")
     relative_path = PurePosixPath(relative)
     if relative_path.is_absolute() or not relative_path.parts or ".." in relative_path.parts:
         raise ContractError(f"{path}: active pointer escapes the checkout")
@@ -1234,14 +1302,36 @@ def _observe_bootstrap_git(start: Path) -> dict[str, Any]:
     }
 
 
-def _bootstrap_file(root: Path, relative: str) -> Path:
-    """Require a readable checkout-contained regular file without reading it."""
+def _bootstrap_file(
+    root: Path, relative: str, limit: int = 0, *, allow_symlink: bool = True,
+) -> bytes:
+    """Read only the contained regular descriptor validated by this open walk."""
     path = root / relative
-    if not path.resolve(strict=True).is_relative_to(root) or not path.is_file():
+    target = (path.resolve(strict=True) if allow_symlink
+              else path.parent.resolve(strict=True) / path.name)
+    if not target.is_relative_to(root):
         raise ContractError(f"{relative}: not a checkout-contained regular file")
-    with path.open("rb"):
-        pass
-    return path
+    if not all(hasattr(os, flag) for flag in ("O_NOFOLLOW", "O_DIRECTORY", "O_NONBLOCK")):
+        raise ContractError("secure descriptor reads unavailable")
+    flags = os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK
+    # Walk canonical absolute components with NOFOLLOW on every open, including
+    # ancestors. A swap after resolve cannot redirect a later lexical reopen.
+    parent = os.open(target.anchor, flags | os.O_DIRECTORY)
+    try:
+        for component in target.parts[1:-1]:
+            child = os.open(component, flags | os.O_DIRECTORY, dir_fd=parent)
+            os.close(parent)
+            parent = child
+        descriptor = os.open(target.name, flags, dir_fd=parent)
+        try:
+            if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+                raise ContractError(f"{relative}: not a regular file")
+            with os.fdopen(descriptor, "rb", closefd=False) as handle:
+                return handle.read(limit)
+        finally:
+            os.close(descriptor)
+    finally:
+        os.close(parent)
 
 
 def observe_bootstrap(start: Path) -> dict[str, Any]:
@@ -1266,7 +1356,7 @@ def observe_bootstrap(start: Path) -> dict[str, Any]:
                 break
             if not pointer_path.resolve(strict=True).is_relative_to(root):
                 raise ContractError("ACTIVE pointer path escapes the checkout")
-            pointer = read_active_pointer(pointer_path)
+            pointer = read_active_pointer(pointer_path, checkout_root=root)
             target = (root / pointer.path).resolve(strict=True)
             if target in visited:
                 raise ContractError("ACTIVE pointer is self-referential or cyclic")
@@ -1288,12 +1378,13 @@ def observe_bootstrap(start: Path) -> dict[str, Any]:
             observed = _observe_bootstrap_git(target)
             if observed != candidate:
                 raise ContractError("ACTIVE target Git evidence changed during selection")
-        state = read_state_envelope(_bootstrap_file(root, ".ai4x/STATE.md"))
+        state_path = root / ".ai4x/STATE.md"
+        state = read_state_envelope(state_path, checkout_root=root)
         # One bounded recheck closes changes during State parsing; do not retry
         # toward a favourable result or open Handoff from a mixed observation.
         if _observe_bootstrap_git(root) != observed or os.path.lexists(pointer_path):
             raise ContractError("Checkout evidence changed during State validation")
-        if read_state_envelope(_bootstrap_file(root, ".ai4x/STATE.md")) != state:
+        if read_state_envelope(state_path, checkout_root=root) != state:
             raise ContractError("State changed during applicability validation")
         classification = classify_applicability(ApplicabilityEvidence(
             "absent", True, observed["branch"], observed["clean"], state["appliesOnBranch"],
@@ -1301,11 +1392,13 @@ def observe_bootstrap(start: Path) -> dict[str, Any]:
         if classification == "UNVERIFIED":
             raise ContractError("State branch does not establish Handoff applicability")
         if classification == "applicable":
-            handoff = _bootstrap_file(root, ".ai4x/HANDOFF.md")
-            result["handoff"] = {"path": str(handoff), "envelope": read_handoff(handoff)}
+            handoff = root / ".ai4x/HANDOFF.md"
+            result["handoff"] = {
+                "path": str(handoff), "envelope": read_handoff(handoff, checkout_root=root),
+            }
         result["classification"] = classification
         result["selectedCheckout"] = str(root)
-    except (ContractError, OSError, RuntimeError) as error:
+    except (ContractError, OSError, RuntimeError, ValueError) as error:
         # Do not print arbitrary OS exception text, which may contain private data.
         result["diagnostic"] = (
             str(error) if isinstance(error, ContractError) else type(error).__name__
@@ -1619,6 +1712,11 @@ def mutation_allowed(
     gate_evidence: Mapping[str, bool | None],
     transition: tuple[str, str] | None = None,
     active_conditions: Iterable[str] = (),
+    authority_source: str = "grant",
+    resource_id: str | None = None,
+    live_instruction: Mapping[str, Any] | None = None,
+    expected_instruction: Mapping[str, Any] | None = None,
+    instruction_evidence: Mapping[str, bool | None] | None = None,
 ) -> bool:
     """Evaluate one policy action from the canonical gates and transition set."""
     action_ids = {item["id"] for item in policy["actions"]}
@@ -1626,6 +1724,36 @@ def mutation_allowed(
     if action_id not in action_ids or tuple(gate_evidence) != gate_names:
         return False
     if not all(gate_evidence[name] is True for name in gate_names):
+        return False
+    if authority_source == "live-instruction":
+        fields = tuple(policy["liveInstruction"]["requiredFields"])
+        guards = tuple(policy["liveInstruction"]["bindingRequires"])
+        if (
+            not isinstance(live_instruction, dict) or tuple(live_instruction) != fields
+            or not isinstance(expected_instruction, dict) or tuple(expected_instruction) != fields
+            or not isinstance(instruction_evidence, dict) or tuple(instruction_evidence) != guards
+            or not all(instruction_evidence[guard] is True for guard in guards)
+            or live_instruction != expected_instruction
+            or live_instruction["issuer"] not in ("Product Owner", "runtime")
+        ):
+            return False
+        for field in fields:
+            value = live_instruction[field]
+            if field in {"actionIds", "resourceIds", "exclusions"}:
+                if (not isinstance(value, list) or not all(isinstance(v, str) and v for v in value)
+                        or len(set(value)) != len(value)):
+                    return False
+            elif not isinstance(value, str) or not value:
+                return False
+        if (not set(live_instruction["actionIds"]).issubset(action_ids)
+                or action_id not in live_instruction["actionIds"]
+                or resource_id not in live_instruction["resourceIds"]):
+            return False
+        if live_instruction["targetState"] == "In review":
+            active_conditions = (*active_conditions, "grant-target-ends-at-In-review")
+    elif authority_source != "grant" or any(value is not None for value in (
+        live_instruction, expected_instruction, instruction_evidence,
+    )):
         return False
     if action_id == "project.transition":
         if transition is None or not transition_allowed(policy, *transition):
@@ -1651,17 +1779,78 @@ def authority_reply_binds(
     event_type: str,
     reply: str,
     binding_evidence: Mapping[str, bool | None],
+    request: Mapping[str, Any],
+    expected_fingerprint: str,
 ) -> bool:
     """Evaluate the single-use binding predicate from the event policy."""
     event = policy["events"].get(event_type)
     if event is None or event.get("createsGrant") is not True:
         return False
+    try:
+        digest = hashlib.sha256(canonical_authority_payload(policy, request)).hexdigest()
+    except (ContractError, TypeError, ValueError, UnicodeError):
+        return False
     guards = tuple(event["bindingRequires"])
     return (
-        reply == event["approvalReply"]
+        reply in event["approvalReplies"]
+        and request["payloadFingerprint"] == expected_fingerprint == digest
         and tuple(binding_evidence) == guards
         and all(binding_evidence[guard] is True for guard in guards)
     )
+
+
+def canonical_authority_payload(policy: Mapping[str, Any], request: Mapping[str, Any]) -> bytes:
+    """Serialize exact approved content; the derived digest never hashes itself."""
+    event = policy["events"]["authority_request"]
+    request = _require_keys(request, tuple(event["requiredFields"]), "authority request")
+    spec = event["canonicalPayload"]
+    subject = _require_keys(request["subject"], tuple(spec["subjectFields"]), "request.subject")
+    for field, value in subject.items():
+        _require_string(value, f"request.subject.{field}")
+    if subject["issue"] != "NONE" and re.fullmatch(r"#[1-9][0-9]*", subject["issue"]) is None:
+        raise ContractError("request.subject.issue: expected Issue or explicit Routine NONE")
+    authority = _require_keys(
+        request["requestedAuthority"], tuple(spec["requestedAuthorityFields"]),
+        "request.requestedAuthority",
+    )
+    for field, value in authority.items():
+        if not _unique_strings(value, f"request.requestedAuthority.{field}"):
+            raise ContractError("request authority must name actions and resources")
+    if not set(authority["actionIds"]).issubset({item["id"] for item in policy["actions"]}):
+        raise ContractError("request authority contains unknown action")
+    for field in spec["stringArrayFields"]:
+        _unique_strings(request[field], f"request.{field}")
+    excluded = set(spec["excludedFields"])
+    for field, value in request.items():
+        if field not in excluded | {"subject", "requestedAuthority", *spec["stringArrayFields"]}:
+            _require_string(value, f"request.{field}")
+    payload = {field: request[field] for field in event["requiredFields"] if field not in excluded}
+    return (json.dumps(payload, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+            + "\n").encode("utf-8")
+
+
+def decision_event(policy: Mapping[str, Any], trigger: str) -> str | None:
+    """Select only a declared event purpose; ordinary results create no event."""
+    if trigger not in policy["eventSelection"]:
+        raise ContractError("unknown decision event trigger")
+    event = policy["eventSelection"][trigger]
+    return None if event == "none" else event
+
+
+def canonical_grant_receipt(
+    policy: Mapping[str, Any], grant: Mapping[str, Any], request: Mapping[str, Any],
+) -> bytes:
+    """Serialize the complete receipt; remote identity/freshness remain separate."""
+    grant = _require_keys(grant, tuple(policy["authorityGrant"]["requiredFields"]), "receipt.grant")
+    payload = canonical_authority_payload(policy, request)
+    receipt = {
+        "decisionPayload": decode_json(payload, origin="receipt.decisionPayload"),
+        "decisionPayloadSha256": hashlib.sha256(payload).hexdigest(),
+        "expectedIssueBodySha256": grant["expectedIssueBodySha256"],
+        "grant": grant,
+    }
+    return (json.dumps(receipt, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+            + "\n").encode("utf-8")
 
 
 def action_forbidden(
@@ -1699,6 +1888,8 @@ def grant_instance_valid(
     expected_binding: Mapping[str, Any],
     validity_evidence: Mapping[str, bool | None],
     current_lifecycle: str | None,
+    approved_request: Mapping[str, Any],
+    receipt_bytes: bytes,
 ) -> bool:
     """Validate a grant against independently supplied current binding facts."""
     contract = policy["authorityGrant"]
@@ -1744,6 +1935,21 @@ def grant_instance_valid(
                 return False
         elif grant_value != expected_value:
             return False
+    try:
+        digest = hashlib.sha256(canonical_authority_payload(policy, approved_request)).hexdigest()
+        if (
+            digest != approved_request["payloadFingerprint"]
+            or digest != grant["decisionPayloadSha256"]
+            or receipt_bytes != canonical_grant_receipt(policy, grant, approved_request)
+            or approved_request["subject"]["repository"] != grant["subject.repository"]
+            or approved_request["subject"]["issue"] != grant["subject.issue"]
+            or any(approved_request[field] != grant[field] for field in ("scope", "targetState", "exclusions"))
+            or any(approved_request["requestedAuthority"][field] != grant[field]
+                   for field in ("actionIds", "resourceIds"))
+        ):
+            return False
+    except (ContractError, TypeError, ValueError, UnicodeError):
+        return False
     validity = grant["validity"]
     rules = tuple(contract["validityRules"])
     if (
@@ -1869,6 +2075,11 @@ def render_agent_projection(policy: Mapping[str, Any]) -> str:
         + ", ".join(f"`{gate}`" for gate in gates["gates"])
         + ". Missing or unknown evidence denies execution; permission never creates or revokes authority."
     )
+    lines.append(
+        "Authority sources: a matching grant or a current explicit PO/runtime instruction. "
+        "Live instructions must match subject, actions, resources, scope, target and exclusions; "
+        "they create no grant and never survive a session."
+    )
     grant = policy["authorityGrant"]
     lines.append(
         f"Grant schema `{grant['schema']}` remains active until "
@@ -1884,7 +2095,10 @@ def render_agent_projection(policy: Mapping[str, Any]) -> str:
             + "."
         )
     lines.append(
-        "Only `authority_request` accepts the exact adjacent reply `Freigegeben.`; it is single-use, current-fact-bound, observable, and non-replayable."
+        "Ordinary results create no event. Only `authority_request` accepts an exact adjacent reply from "
+        + ", ".join(f"`{reply}`" for reply in policy["events"]["authority_request"]["approvalReplies"])
+        + "; binding is single-use, current-fact-bound and non-replayable. "
+        "Canonical request bytes exclude the derived fingerprint; receipt readback must match canonical bytes."
     )
     continuity = policy["continuity"]
     lines.extend(("", "# Cold Start Continuity", ""))
@@ -1939,13 +2153,13 @@ def render_contributing_projection(policy: Mapping[str, Any]) -> str:
         "",
         f"Erlaubte Übergänge: {transitions}. Jeder nicht aufgeführte Übergang ist verboten.",
         "",
-        "Eine Mutation benötigt gleichzeitig einen aktuellen Subject-Grant, die ereignisspezifischen Guards, die deklarierte und verifizierte Ausführungsidentität sowie die technische Host- oder Tool-Berechtigung. Fehlt eine Bedingung oder bleibt sie unbekannt, wird nicht ausgeführt. Eine technische Berechtigung erzeugt oder widerruft keine Product-Owner-Autorität.",
+        "Eine Mutation benötigt passende aktuelle Autorität, ereignisspezifische Guards, die deklarierte und verifizierte Ausführungsidentität sowie technische Host- oder Tool-Berechtigung. Autorität stammt aus einem passenden Grant oder einer aktuellen ausdrücklichen PO-/Runtime-Anweisung mit exakt passendem Gegenstand, Aktionen, Ressourcen, Umfang, Ziel und Ausschlüssen. Letztere erzeugt keinen Grant und gilt nicht über eine Session-Grenze hinaus. Unbekannte oder fehlende Bedingungen sperren die Ausführung; technische Berechtigung erzeugt oder widerruft keine Autorität.",
         "",
         "Ein gebundener Grant bleibt bis zu seinem Zielzustand wirksam; nur die Freigabeantwort wird einmalig verbraucht. Vor einer Session-Grenze muss genau ein vollständiger, unveränderlicher Grant-Beleg im owning Issue aktuell beobachtbar und durch die vorgeschriebene Machine-User-Identität verifizierbar sein.",
         "",
         "### Entscheidungsereignisse",
         "",
-        "`authority_request` fordert genau einen begrenzten Agenten-Grant an und akzeptiert allein die unmittelbar folgende, alleinstehende Antwort `Freigegeben.`. `product_owner_action` fordert genau eine Handlung des Product Owners und erzeugt keinen Grant. `cold_start` verwendet ausschließlich die drei festen Übergangsaktionen und erzeugt ebenfalls keinen Grant. Falsche, nicht angrenzende, überholte, rekonstruierte oder bereits verbrauchte Freigaben werden abgewiesen.",
+        "Gewöhnliche Ergebnisse benötigen kein Entscheidungsereignis. `authority_request` fordert einen begrenzten Agenten-Grant an und akzeptiert ausschließlich die unmittelbar folgende, alleinstehende Antwort aus dem geschlossenen, groß-/kleinschreibungssensitiven Policy-Vokabular. Kanonische Payloads und Belege bleiben prüfbar; der abgeleitete Fingerprint hasht sich nicht selbst. Falsche, überholte, rekonstruierte oder verbrauchte Freigaben werden abgewiesen. `product_owner_action` fordert eine PO-Handlung ohne Grant; `cold_start` nutzt ausschließlich die drei festen Übergangsaktionen und erzeugt ebenfalls keinen Grant.",
         "",
         "### Cold Start",
         "",
@@ -1957,21 +2171,17 @@ def render_contributing_projection(policy: Mapping[str, Any]) -> str:
         "",
         "Ein gewöhnlicher Work-Unit-Grant bis `In review` umfasst insbesondere nicht: "
         + ", ".join(f"`{item}`" for item in action_boundary)
-        + ". Scope- oder Zielerweiterung und das Überschreiten eines Ausschlusses benötigen einen neuen exakten Grant.",
+        + ". Scope- oder Zielerweiterung und das Überschreiten eines Ausschlusses benötigen neue exakte Product-Owner-Autorität.",
         CONTRIBUTING_CLOSE,
     ]
     return "\n".join(lines) + "\n"
 
 
 def render_decision_schema_manifest(policy: Mapping[str, Any]) -> str:
-    """Render the policy-owned event-field manifest embedded in the template."""
+    """Render the compact policy-owned event route; retain schemas at their owner."""
     lines = [DECISION_OPEN]
-    for name, event in policy["events"].items():
-        lines.append(
-            f"- `{name}` required fields: "
-            + ", ".join(f"`{field}`" for field in event["requiredFields"])
-            + "."
-        )
+    for trigger, event in policy["eventSelection"].items():
+        lines.append(f"- `{trigger}` → `{event}`.")
     lines.append(DECISION_CLOSE)
     return "\n".join(lines) + "\n"
 

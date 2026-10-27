@@ -6,6 +6,7 @@ from __future__ import annotations
 import copy
 import contextlib
 import io
+import hashlib
 import itertools
 import json
 from pathlib import Path
@@ -80,6 +81,23 @@ def issue_form_fields(path: Path) -> dict[str, bool]:
 def policy_copy() -> dict[str, object]:
     """Return one mutable exact copy of the canonical policy."""
     return copy.deepcopy(dict(contract.load_policy()))
+
+
+def request_fixture(policy: dict[str, object]) -> dict[str, object]:
+    """One exact, non-self-referential authority request with non-ASCII content."""
+    request = {
+        "requestId": "request-1", "payloadFingerprint": "",
+        "subject": {"repository": "o2i", "issue": "#103"},
+        "scope": "Issue #103", "targetState": "In review",
+        "requestedAuthority": {"actionIds": ["local.write", "project.transition"],
+                               "resourceIds": ["issue:#103"]},
+        "exclusions": ["merge"], "reason": "Prüfbare Änderung",
+        "alternatives": [], "coldStart": "not recommended",
+    }
+    request["payloadFingerprint"] = hashlib.sha256(
+        contract.canonical_authority_payload(policy, request),
+    ).hexdigest()
+    return request
 
 
 class PolicyShapeTests(unittest.TestCase):
@@ -190,6 +208,7 @@ class PolicyShapeTests(unittest.TestCase):
             ("In progress", "In review"),
             ("In progress", "Paused"),
             ("Paused", "Ready"),
+            ("In review", "In progress"),
             ("In review", "Done"),
         }
         observed = {(item["from"], item["to"]) for item in workflow["transitions"]}
@@ -267,7 +286,8 @@ class PolicyShapeTests(unittest.TestCase):
         )
         self.assertTrue(events["authority_request"]["createsGrant"])
         self.assertEqual(
-            "Freigegeben.", events["authority_request"]["approvalReply"]
+            ["Freigabe", "Freigabe.", "Freigegeben", "Freigegeben."],
+            events["authority_request"]["approvalReplies"]
         )
         for name in ("product_owner_action", "cold_start"):
             with self.subTest(event=name):
@@ -590,7 +610,8 @@ class ObservedBootstrapTests(unittest.TestCase):
             self.assertEqual("applicable", result["classification"])
             self.assertEqual(str(target), result["selectedCheckout"])
             self.assertEqual(
-                [mock.call(target / ".ai4x/STATE.md")] * 2, state.call_args_list,
+                [mock.call(target / ".ai4x/STATE.md", checkout_root=target)] * 2,
+                state.call_args_list,
             )
             self.assertEqual(str(target / ".ai4x/HANDOFF.md"), result["handoff"]["path"])
 
@@ -771,7 +792,7 @@ class ObservedBootstrapTests(unittest.TestCase):
                 elif changed == "state":
                     rechecked_state["appliesOnBranch"] = "feat/other"
                 state_reads = 0
-                def read_state(path: Path) -> dict[str, object]:
+                def read_state(path: Path, **kwargs: object) -> dict[str, object]:
                     nonlocal state_reads
                     state_reads += 1
                     if changed == "pointer" and state_reads == 1:
@@ -785,6 +806,106 @@ class ObservedBootstrapTests(unittest.TestCase):
                 self.assertEqual("UNVERIFIED", result["classification"])
                 self.assertIsNone(result["selectedCheckout"])
                 self.assertEqual(2 if changed == "state" else 1, state_reads)
+                handoff.assert_not_called()
+
+    def test_leaf_and_ancestor_swaps_cannot_read_foreign_bootstrap_bytes(self) -> None:
+        relatives = (".ai4x/HANDOFF.md", ".ai4x/STATE.md", ".ai4x/work/local/ACTIVE.md")
+        for relative, ancestor in itertools.product(relatives, (False, True)):
+            with self.subTest(relative=relative, ancestor=ancestor), tempfile.TemporaryDirectory() as directory:
+                base = Path(directory).resolve()
+                root = base / "root"
+                observed = self.make_checkout(root)
+                path = root / relative
+                if path.name == "ACTIVE.md":
+                    self.write_pointer(root, "missing")
+                foreign = base / "foreign"
+                foreign.mkdir()
+                foreign_path = foreign / path.name
+                foreign_bytes = path.read_bytes().replace(
+                    b"operating-contract-optimization", b"foreign-injected-return-point",
+                ).replace(b"feat/fixture", b"feat/foreign").replace(b"missing", b"foreign")
+                foreign_path.write_bytes(foreign_bytes)
+                real_resolve = Path.resolve
+                swapped = False
+                trigger = path.parent if path.name == "ACTIVE.md" else path
+                def resolve(candidate: Path, *args: object, **kwargs: object) -> Path:
+                    nonlocal swapped
+                    resolved = real_resolve(candidate, *args, **kwargs)
+                    if candidate == trigger and not swapped:
+                        swapped = True
+                        if ancestor:
+                            path.parent.rename(root / "saved-directory")
+                            path.parent.symlink_to(foreign, target_is_directory=True)
+                        else:
+                            path.unlink()
+                            path.symlink_to(foreign_path)
+                    return resolved
+                with mock.patch.object(contract, "_observe_bootstrap_git", return_value=observed), \
+                     mock.patch.object(Path, "resolve", resolve), \
+                     mock.patch.object(contract, "_validate_state_source", wraps=contract._validate_state_source) as state, \
+                     mock.patch.object(contract, "_validate_handoff_source", wraps=contract._validate_handoff_source) as handoff:
+                    result = contract.observe_bootstrap(root)
+                self.assertTrue(swapped)
+                self.assertEqual("UNVERIFIED", result["classification"])
+                self.assertIsNone(result["selectedCheckout"])
+                self.assertIsNone(result["handoff"])
+                handoff.assert_not_called()
+                if path.name != "HANDOFF.md":
+                    state.assert_not_called()
+
+    def test_swap_after_contained_read_never_reopens_foreign_handoff(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory).resolve()
+            root = base / "root"
+            observed = self.make_checkout(root)
+            path = root / ".ai4x/HANDOFF.md"
+            foreign = base / "foreign-handoff"
+            foreign.write_bytes(path.read_bytes().replace(
+                b"operating-contract-optimization", b"foreign-injected-return-point",
+            ))
+            read_contained = contract._bootstrap_file
+            def swap_after_read(checkout: Path, relative: str, *args: object, **kwargs: object) -> bytes:
+                source = read_contained(checkout, relative, *args, **kwargs)
+                if relative == ".ai4x/HANDOFF.md":
+                    path.unlink()
+                    path.symlink_to(foreign)
+                return source
+            with mock.patch.object(contract, "_observe_bootstrap_git", return_value=observed), \
+                 mock.patch.object(contract, "_bootstrap_file", side_effect=swap_after_read):
+                result = contract.observe_bootstrap(root)
+            self.assertEqual("applicable", result["classification"])
+            self.assertNotEqual("foreign-injected-return-point", result["handoff"]["envelope"]["currentNode"])
+
+    def test_contained_descriptor_read_preserves_limits_and_internal_symlink(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            source = root / "source"
+            source.write_bytes(b"abcdef")
+            (root / "link").symlink_to("source")
+            self.assertEqual(b"abc", contract._bootstrap_file(root, "link", 3))
+            with self.assertRaises(OSError):
+                contract._bootstrap_file(root, "link", 3, allow_symlink=False)
+
+    def test_nul_pointer_path_or_state_branch_returns_structured_unverified(self) -> None:
+        for kind in ("pointer", "state"):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory).resolve()
+                observed = self.make_checkout(root)
+                if kind == "pointer":
+                    self.write_pointer(root, "bad\0path")
+                else:
+                    state = dict(contract.read_state_envelope(root / ".ai4x/STATE.md"))
+                    state["appliesOnBranch"] = "bad\0branch"
+                    (root / ".ai4x/STATE.md").write_text(
+                        contract.STATE_OPEN + "\n" + contract.canonical_state_object(state)
+                        + "\n" + contract.STATE_CLOSE + "\n", encoding="utf-8",
+                    )
+                with mock.patch.object(contract, "_observe_bootstrap_git", return_value=observed), \
+                     mock.patch.object(contract, "read_handoff") as handoff:
+                    result = contract.observe_bootstrap(root)
+                self.assertEqual("UNVERIFIED", result["classification"])
+                self.assertIsNotNone(result["diagnostic"])
+                self.assertIsNone(result["selectedCheckout"])
                 handoff.assert_not_called()
 
     def test_cli_returns_failure_and_structured_unverified_result_without_writes(self) -> None:
@@ -840,7 +961,7 @@ class DecisionAndMutationTests(unittest.TestCase):
     def test_ready_without_matching_grant_denies_execution(self) -> None:
         policy = contract.load_policy()
         evidence = {name: True for name in policy["mutationGates"]["gates"]}
-        evidence["current-matching-subject-grant"] = False
+        evidence["current-matching-subject-authority"] = False
         self.assertFalse(
             contract.mutation_allowed(
                 policy,
@@ -851,6 +972,7 @@ class DecisionAndMutationTests(unittest.TestCase):
 
     def test_exact_adjacent_unused_reply_binds_once(self) -> None:
         policy = contract.load_policy()
+        request = request_fixture(policy)
         guards = tuple(policy["events"]["authority_request"]["bindingRequires"])
         passing = {name: True for name in guards}
         self.assertTrue(
@@ -859,6 +981,7 @@ class DecisionAndMutationTests(unittest.TestCase):
                 event_type="authority_request",
                 reply="Freigegeben.",
                 binding_evidence=passing,
+                request=request, expected_fingerprint=request["payloadFingerprint"],
             )
         )
         for name in guards:
@@ -871,11 +994,13 @@ class DecisionAndMutationTests(unittest.TestCase):
                         event_type="authority_request",
                         reply="Freigegeben.",
                         binding_evidence=values,
+                        request=request, expected_fingerprint=request["payloadFingerprint"],
                     )
                 )
 
     def test_wrong_event_reply_and_replay_never_bind(self) -> None:
         policy = contract.load_policy()
+        request = request_fixture(policy)
         guards = tuple(policy["events"]["authority_request"]["bindingRequires"])
         evidence = {name: True for name in guards}
         for event in ("product_owner_action", "cold_start"):
@@ -886,9 +1011,10 @@ class DecisionAndMutationTests(unittest.TestCase):
                         event_type=event,
                         reply="Freigegeben.",
                         binding_evidence=evidence,
+                        request=request, expected_fingerprint=request["payloadFingerprint"],
                     )
                 )
-        for reply in ("freigegeben.", "Freigegeben", " Freigegeben."):
+        for reply in ("freigegeben.", "Freigabe\n", " Freigegeben.", "OK", "Ja"):
             with self.subTest(reply=reply):
                 self.assertFalse(
                     contract.authority_reply_binds(
@@ -896,11 +1022,13 @@ class DecisionAndMutationTests(unittest.TestCase):
                         event_type="authority_request",
                         reply=reply,
                         binding_evidence=evidence,
+                        request=request, expected_fingerprint=request["payloadFingerprint"],
                     )
                 )
 
     def test_forbidden_actions_and_grant_instances_are_policy_driven(self) -> None:
         policy = contract.load_policy()
+        request = request_fixture(policy)
         condition = "grant-target-ends-at-In-review"
         self.assertTrue(
             contract.action_forbidden(policy, "issue.close", (condition,))
@@ -916,7 +1044,7 @@ class DecisionAndMutationTests(unittest.TestCase):
                 "issuer": "Product Owner",
                 "subject.repository": "o2i",
                 "subject.issue": "#103",
-                "decisionPayloadSha256": "a" * 64,
+                "decisionPayloadSha256": request["payloadFingerprint"],
                 "expectedIssueBodySha256": "b" * 64,
                 "actionIds": ["local.write", "project.transition"],
                 "resourceIds": ["issue:#103"],
@@ -933,6 +1061,7 @@ class DecisionAndMutationTests(unittest.TestCase):
         )
         expected = {name: copy.deepcopy(grant[name]) for name in required[:-2]}
         evidence = copy.deepcopy(grant["validity"])
+        receipt = contract.canonical_grant_receipt(policy, grant, request)
         self.assertTrue(
             contract.grant_instance_valid(
                 policy,
@@ -942,6 +1071,7 @@ class DecisionAndMutationTests(unittest.TestCase):
                 expected_binding=expected,
                 validity_evidence=evidence,
                 current_lifecycle="active",
+                approved_request=request, receipt_bytes=receipt,
             )
         )
         for field, value in (
@@ -961,6 +1091,7 @@ class DecisionAndMutationTests(unittest.TestCase):
                         expected_binding=expected,
                         validity_evidence=evidence,
                         current_lifecycle="active",
+                        approved_request=request, receipt_bytes=receipt,
                     )
                 )
         forged = copy.deepcopy(grant)
@@ -983,6 +1114,7 @@ class DecisionAndMutationTests(unittest.TestCase):
                 expected_binding=expected,
                 validity_evidence=evidence,
                 current_lifecycle="active",
+                approved_request=request, receipt_bytes=receipt,
             )
         )
         receipt_unknown = copy.deepcopy(evidence)
@@ -998,8 +1130,106 @@ class DecisionAndMutationTests(unittest.TestCase):
                 expected_binding=expected,
                 validity_evidence=receipt_unknown,
                 current_lifecycle="active",
+                approved_request=request, receipt_bytes=receipt,
             )
         )
+        for invalid_receipt in (b"", receipt + b" ", receipt.replace(b"#103", b"#999")):
+            with self.subTest(receipt=invalid_receipt[:20]):
+                self.assertFalse(contract.grant_instance_valid(
+                    policy, grant, action_id="local.write", resource_id="issue:#103",
+                    expected_binding=expected, validity_evidence=evidence,
+                    current_lifecycle="active", approved_request=request,
+                    receipt_bytes=invalid_receipt,
+                ))
+
+    def test_canonical_request_bytes_digest_tampering_and_closed_replies(self) -> None:
+        policy = contract.load_policy()
+        request = request_fixture(policy)
+        payload = contract.canonical_authority_payload(policy, request)
+        self.assertIn("Prüfbare Änderung".encode(), payload)
+        self.assertNotIn(b"payloadFingerprint", payload)
+        self.assertTrue(payload.endswith(b"\n"))
+        decoded = json.loads(payload)
+        self.assertEqual(
+            [key for key in request if key != "payloadFingerprint"], list(decoded),
+        )
+        guards = {name: True for name in policy["events"]["authority_request"]["bindingRequires"]}
+        for reply in policy["events"]["authority_request"]["approvalReplies"]:
+            self.assertTrue(contract.authority_reply_binds(
+                policy, event_type="authority_request", reply=reply,
+                binding_evidence=guards, request=request,
+                expected_fingerprint=request["payloadFingerprint"],
+            ))
+        for field in request:
+            tampered = copy.deepcopy(request)
+            value = tampered[field]
+            if isinstance(value, str):
+                tampered[field] = value + " changed"
+            elif isinstance(value, list):
+                value.append("changed")
+            else:
+                value[next(iter(value))] = "changed"
+            with self.subTest(field=field):
+                self.assertFalse(contract.authority_reply_binds(
+                    policy, event_type="authority_request", reply="Freigabe",
+                    binding_evidence=guards, request=tampered,
+                    expected_fingerprint=request["payloadFingerprint"],
+                ))
+        tampered = copy.deepcopy(request)
+        tampered["scope"] = "broader scope"
+        tampered["payloadFingerprint"] = hashlib.sha256(
+            contract.canonical_authority_payload(policy, tampered),
+        ).hexdigest()
+        self.assertFalse(contract.authority_reply_binds(
+            policy, event_type="authority_request", reply="Freigabe",
+            binding_evidence=guards, request=tampered,
+            expected_fingerprint=request["payloadFingerprint"],
+        ))
+        for invalid in ({**request, "extra": "field"}, dict(reversed(tuple(request.items())))):
+            with self.assertRaises(contract.ContractError):
+                contract.canonical_authority_payload(policy, invalid)
+        self.assertIsNone(contract.decision_event(policy, "ordinary-result"))
+        with self.assertRaises(contract.ContractError):
+            contract.decision_event(policy, "completed-work-needs-approval")
+
+    def test_live_instruction_is_exact_current_non_durable_authority(self) -> None:
+        policy = contract.load_policy()
+        live = {"issuer": "Product Owner", "subject.repository": "o2i", "subject.issue": "#103",
+                "actionIds": ["local.write", "project.transition"], "resourceIds": ["issue:#103"],
+                "scope": "Issue #103", "targetState": "In review", "exclusions": ["merge"]}
+        gates = {name: True for name in policy["mutationGates"]["gates"]}
+        evidence = {name: True for name in policy["liveInstruction"]["bindingRequires"]}
+        args = dict(action_id="local.write", resource_id="issue:#103", gate_evidence=gates,
+                    authority_source="live-instruction", live_instruction=live,
+                    expected_instruction=copy.deepcopy(live), instruction_evidence=evidence)
+        self.assertTrue(contract.mutation_allowed(policy, **args))
+        self.assertFalse(policy["liveInstruction"]["createsGrant"])
+        self.assertFalse(policy["liveInstruction"]["survivesSession"])
+        for field in live:
+            altered = copy.deepcopy(live)
+            altered[field] = ["changed"] if isinstance(altered[field], list) else "changed"
+            self.assertFalse(contract.mutation_allowed(policy, **{**args, "live_instruction": altered}))
+        for name in evidence:
+            for value in (False, None):
+                self.assertFalse(contract.mutation_allowed(
+                    policy, **{**args, "instruction_evidence": {**evidence, name: value}},
+                ))
+        for name in gates:
+            self.assertFalse(contract.mutation_allowed(
+                policy, **{**args, "gate_evidence": {**gates, name: None}},
+            ))
+        for extra in ({"action_id": "pull-request.merge"}, {"resource_id": "foreign"},
+                      {"authority_source": "historical-instruction"}, {"authority_source": "grant"}):
+            self.assertFalse(contract.mutation_allowed(policy, **{**args, **extra}))
+        self.assertTrue(contract.mutation_allowed(
+            policy, **{**args, "action_id": "project.transition", "transition": ("In review", "In progress")},
+        ))
+        merge = copy.deepcopy(live)
+        merge["actionIds"] = ["pull-request.merge"]
+        self.assertFalse(contract.mutation_allowed(policy, **{
+            **args, "action_id": "pull-request.merge", "live_instruction": merge,
+            "expected_instruction": copy.deepcopy(merge),
+        }))
 
     def test_cleanup_requires_every_completion_and_safety_fact(self) -> None:
         names = (
