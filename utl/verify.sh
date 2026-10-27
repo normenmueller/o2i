@@ -24,7 +24,55 @@ info() {
   printf '[o2i|info] %s\n' "$1"
 }
 
+verification_phase=
+verification_phase_started=
+
+finish_phase() {
+  if [ -z "${verification_phase:-}" ]; then
+    return 0
+  fi
+  verification_phase_end=$(date +%s 2>/dev/null) || verification_phase_end=
+  verification_elapsed=UNKNOWN
+  case "$verification_phase_started$verification_phase_end" in
+    '' | *[!0-9]*) ;;
+    *)
+      if [ -n "$verification_phase_started" ] &&
+        [ -n "$verification_phase_end" ] &&
+        [ "$verification_phase_end" -ge "$verification_phase_started" ]; then
+        verification_elapsed=$((verification_phase_end - verification_phase_started))
+      fi
+      ;;
+  esac
+  info "Timing: $verification_phase; elapsed_seconds=$verification_elapsed; exit_status=$1."
+  verification_phase=
+}
+
+begin_phase() {
+  finish_phase 0
+  verification_phase=$1
+  verification_phase_started=$(date +%s 2>/dev/null) || verification_phase_started=
+}
+
+# Preserve the failing check's status while reporting its active phase.
+trap 'verification_exit=$?; finish_phase "$verification_exit"; rm -rf "$work"' EXIT HUP INT TERM
+
 require() {
+  isolated_command=
+  if [ -n "${O2I_VERIFICATION_LOCAL_TOOLS:-}" ]; then
+    case "$1" in
+      python3 | reuse)
+        isolated_command="$O2I_VERIFICATION_LOCAL_TOOLS/python/bin/$1" ;;
+      hindent | md2pdf)
+        isolated_command="$O2I_VERIFICATION_LOCAL_TOOLS/bin/$1" ;;
+    esac
+  fi
+  if [ -n "$isolated_command" ] &&
+    { [ ! -x "$isolated_command" ] ||
+      [ "$(command -v "$1" 2>/dev/null || :)" != "$isolated_command" ]; }; then
+    printf '[o2i|error] Required isolated tool missing or shadowed: %s; see utl/verification/README.md.\n' \
+      "$isolated_command" >&2
+    exit 1
+  fi
   if ! command -v "$1" >/dev/null 2>&1; then
     printf '[o2i|error] Required command not found: %s\n' "$1" >&2
     exit 1
@@ -146,6 +194,7 @@ verify_haskell() {
     require "$command"
   done
 
+  begin_phase "Haskell toolchain"
   info "Checking the exact Haskell toolchain."
   require_version \
     "spec/.ghc-version" "9.10.3" "$(tr -d '\r\n' <spec/.ghc-version)"
@@ -175,6 +224,7 @@ verify_haskell() {
       "$@"
   }
 
+  begin_phase "Haskell compiled contracts"
   info "Checking compiled Haskell contract artifacts."
   python3 -B spec/lib/core/contract/compile.py --check
   python3 -B -m unittest discover \
@@ -203,6 +253,7 @@ verify_haskell() {
     python3 -B utl/haskell/check_atomic_cutover.py --root "$root"
   fi
 
+  begin_phase "Haskell package metadata"
   info "Checking package metadata."
   for package in $package_paths; do
     (cd "$package" && cabal --config-file="$cabal_config" -v0 check)
@@ -214,6 +265,7 @@ verify_haskell() {
   build_log="$logs/\$compiler-\$pkgid.log"
   test_log="$logs/\$compiler-\$pkgid-\$test-suite.log"
 
+  begin_phase "Haskell build and tests"
   info "Building and testing the Haskell specification with warnings as errors."
   if [ "$scope" = foundation ]; then
     run_project_cabal build \
@@ -246,6 +298,7 @@ verify_haskell() {
       --ghc-options=-Werror
   fi
 
+  begin_phase "Haskell Candidate Views and API contracts"
   info "Checking repository Candidate Views through AMX, Profile, and Core."
   candidate_view_checker=$(run_project_cabal list-bin \
     o2i-amx:o2i-amx-repository-view-check \
@@ -269,6 +322,7 @@ verify_haskell() {
       --builddir "$build"
   fi
 
+  begin_phase "Haskell API documentation"
   info "Building Haskell API documentation."
   if [ "$scope" = foundation ]; then
     haddock_log="$logs/foundation-haddock.log"
@@ -296,6 +350,7 @@ verify_haskell() {
       --haddock-option=--ignore-link-symbol=O2I.ArchiMate.Profile.Projection.ProposalCarrierOccurrenceEvidenceKind
   fi
 
+  begin_phase "Haskell source distributions"
   info "Checking independently buildable Haskell source distributions."
   source_dist="$work/source-dist"
   mkdir -p "$source_dist"
@@ -467,6 +522,7 @@ verify_haskell() {
     --offline \
     --ghc-options=-Werror
 
+  begin_phase "Haskell formatting"
   info "Checking Haskell formatting."
   if [ "$scope" = foundation ]; then
     find spec/lib/core spec/ctr/archimate spec/lib/operation \
@@ -480,74 +536,12 @@ verify_haskell() {
       -type f -name '*.hs' \
       -exec hindent --line-length 80 --validate {} +
   fi
+  finish_phase 0
 }
 
 verify_paper() {
-  for command in \
-    md2pdf pandoc pandoc-crossref pandoc-include pdflatex pdfinfo pdftoppm \
-    pdftotext pdftohtml python3; do
-    require "$command"
-  done
-
-  info "Checking White Paper source contracts."
-  python3 -B utl/paper/check-pdf-freshness.py sources --root .
-
-  info "Checking the expanded White Paper source."
-  (cd doc/paper && pandoc o2i.md --filter pandoc-include -t markdown) >/dev/null
-  python3 -B -m unittest discover \
-    -s utl/paper -p 'test_check_paper_assets.py'
-  python3 -B -m unittest discover \
-    -s utl/paper -p 'test_check_pdf_freshness.py'
-
-  info "Checking inline code through the O2I publication renderer."
-  python3 -B utl/paper/check-inline-code.py --root "$root"
-
-  paper="$work/paper"
-  mkdir -p "$paper/spec/lib/core" "$paper/doc/paper"
-  cp README.md ACKNOWLEDGEMENTS.md "$paper/"
-  cp doc/paper/o2i.md "$paper/doc/paper/"
-  cp -R doc/resources doc/images "$paper/doc/"
-  cp -R spec/lib/core/src "$paper/spec/lib/core/"
-
-  info "Rendering TikZ figures in an isolated paper workspace."
-  ./utl/paper/render-paper-figures.sh "$paper"
-  for figure in \
-    "O2I Nachweisfolge.png" \
-    "O2I Frameworkarchitektur.png"; do
-    if [ ! -s "$paper/doc/images/$figure" ]; then
-      printf '[o2i|error] Figure rendering produced no output: %s\n' "$figure" >&2
-      exit 1
-    fi
-  done
-
-  info "Checking White Paper image resources."
-  if ! (cd "$paper/doc/paper" && pandoc o2i.md --filter pandoc-include -t json) \
-    >"$work/paper.json" 2>"$work/pandoc-include.log"; then
-    cat "$work/pandoc-include.log" >&2
-    exit 1
-  fi
-  cat "$work/pandoc-include.log"
-  if grep -Fq "[WARNING] Included file not found:" \
-    "$work/pandoc-include.log"; then
-    printf '[o2i|error] White Paper contains an unresolved include.\n' >&2
-    exit 1
-  fi
-  python3 -B utl/paper/check-paper-assets.py \
-    --root "$paper" \
-    --source-directory "$paper/doc/paper" \
-    "$work/paper.json"
-
-  info "Building the White Paper in an isolated paper workspace."
-  (cd "$paper/doc/paper" && md2pdf -o "$work/o2i.pdf" -- o2i.md -H ../resources/o2i.icl)
-  if [ ! -s "$work/o2i.pdf" ]; then
-    printf '[o2i|error] White Paper build produced no PDF.\n' >&2
-    exit 1
-  fi
-  python3 -B utl/paper/check-pdf-freshness.py check \
-    --root . \
-    --versioned doc/paper/o2i.pdf \
-    --rendered "$work/o2i.pdf" \
-    --manifest doc/paper/o2i.pdf.manifest.json
+  . "$root/utl/paper/verify-stage.sh"
+  verify_paper_stage "$root" "$work"
 }
 
 verify_checkpoint() {

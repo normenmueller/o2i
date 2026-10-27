@@ -1,6 +1,6 @@
 # Scope And Owners
 
-Load for risk classification, Issues, Project administration, review, remote work or publication. Governance defines no O2I fachliche semantics. `policy.json` owns executable transitions, grants, gates, events, provenance, routes and budgets; `policy.agent.md` is its generated retrieval projection. Apply the precedence in `BEHAVIOR.md`: current explicit Product Owner and runtime instructions outrank repository ceremonies. Do not request again authority already supplied for the same subject and scope; technical permission, verified identity and material safeguards remain necessary.
+Load for risk classification, Issues, Project administration, review, remote work or publication. Governance defines no fachliche semantics. `policy.json` owns executable governance; `policy.agent.md` is its generated projection. Apply `BEHAVIOR.md` precedence: current explicit PO/runtime authority outranks ceremonies and differs from durable grants. Do not request existing same-subject/scope authority again; technical permission, verified identity and material safeguards remain required.
 
 | Fact | Owner |
 | --- | --- |
@@ -12,7 +12,7 @@ Load for risk classification, Issues, Project administration, review, remote wor
 | Local return-point references | Applicable `.ai4x/HANDOFF.md`; never authority |
 | Human contribution guidance | Generated `CONTRIBUTING.md` projection |
 
-Record facts once at their owner. Prefer working software, executable evidence and clear ownership over ceremony. Preserve exact-revision acceptance; it never proves permanent defect-freedom. Never weaken verification, types, autonomy, documentation, security or publication checks to save effort.
+Record facts once at their owner. Prefer working software, executable evidence and ownership over ceremony. Exact-revision acceptance proves no permanent defect-freedom. Never weaken verification, types, autonomy, documentation, security or publication checks to save effort.
 
 # Risk Path
 
@@ -28,7 +28,7 @@ Add reviewers only for distinct material risks. Require a digest/immutable manif
 
 # Workflow And Authority
 
-Policy owns allowed transitions and authority gates. `Ready` means refined and unblocked, never authorized. An atomic work-unit grant covers its listed design, implementation, checks, corrections, commit and publication actions through its target; approval consumption does not consume that grant. Request new authority only for scope/target expansion, an exclusion, material mismatch or an uncovered action. Host permission is independent; denial blocks execution without creating or revoking PO authority.
+Policy owns allowed transitions and authority gates. `Ready` means refined and unblocked, never authorized. PR review approval, including PO approval, does not itself authorize merge. An atomic work-unit grant covers its listed design, implementation, checks, corrections, commit and publication actions through its target; approval consumption does not consume that grant. Request new authority only for scope/target expansion, an exclusion, material mismatch or an uncovered action. Host permission is independent; denial blocks execution without creating or revoking PO authority.
 
 Keep Project status aligned with observed work at workflow boundaries and before PO decisions or handoffs. Apply only authorized, allowed transitions, preserve PO ordering, and verify remote readback. If authority or access prevents an update, explicitly report the discrepancy or UNVERIFIED state, intended correction and blocker.
 
@@ -54,6 +54,10 @@ Load `TEAM.md` for capability assignment, collaboration timing and independence.
 
 # Remote Work
 
+Open PRs with a brief PO-facing summary of achieved results and practical benefits; technical evidence follows. Handle Routine communication edits directly and proportionately.
+
+Assign new Issues to both `normenmueller` and `gertrud-ai4x`; verify remotely.
+
 Delegates and reviewers never query/mutate remote work state or start approval-requiring commands. The primary supplies exact material remote facts or reports them unavailable. When GitHub is unavailable, continue only an already active local scope and infer no remote fact.
 
 Prefer connected GitHub for supported reads; use `gh` for missing capabilities. Stage unpublished remote drafts under ignored `.ai4x/work/local/drafts/`; the published artifact belongs remotely. Every agent write requires verified `gertrud-ai4x`; never substitute another identity. Before publication report outgoing commits, scope, checks, verdict and follow-ups. Preserve the accepted files unchanged.
@@ -66,6 +70,6 @@ For Git writes, verify the actual transport credentials and one effective push d
 
 Load `operations/local-verification.md` for local execution and recovery. Use `./utl/verification/local.sh checkpoint` for regular scoped backup commits; verify remote HEAD and report unbacked changes before claiming recoverability. Pure illustration checkpoints select licensing/model checks; required per-save CLI checks and unfinished-model findings remain. A backup is no merge acceptance.
 
-Prefer small, coherent, internally consistent and independently understandable commits after applicable local checks; commit each completed unit before starting the next independently reviewable change. Keep unrelated work separate; do not split coupled changes merely to reduce size. Choose push timing by the value of unpublished work and recovery risk: back up meaningful progress promptly and before risky operations, handoff or session end, within current authority. Report unpublished commits or blocked checks explicitly. A local commit is not a remote backup; neither commit nor push establishes acceptance. Preserve required reviews and PR, manual and release checks; do not dispatch remote checks for every backup commit without a verification need.
+Make small, coherent, internally consistent, independently understandable commits after applicable local checks, before starting another independent unit. Separate unrelated work; keep coupled changes together. Time pushes by unpublished value and recovery risk: back up meaningful progress promptly and before risky operations, handoff or session end, within authority. Report unpublished commits or blocked checks. Local commits are not remote backups; commits and pushes establish no acceptance. Preserve required reviews and PR/manual/release checks; dispatch remote checks for backup commits only when verification requires them.
 
 `utl/verify.sh` owns deterministic, network-independent checks and the regular path matrix. Unknown/shared integration scope selects the complete suite. Before a release tag run `./utl/verification/local.sh all` explicitly; the starter defaults to checkpoint. Checkpoint selection never changes PR/manual/release verification. Backup branch pushes without an open PR do not trigger the Verify workflow; updates to an open PR do. Do not routinely use `[skip ci]`.
