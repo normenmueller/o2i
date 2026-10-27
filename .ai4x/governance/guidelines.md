@@ -54,6 +54,8 @@ Load `TEAM.md` for capability assignment, collaboration timing and independence.
 
 # Remote Work
 
+Open PRs with a brief PO-facing summary of achieved results and practical benefits; technical evidence follows. Handle Routine communication edits directly and proportionately.
+
 Delegates and reviewers never query/mutate remote work state or start approval-requiring commands. The primary supplies exact material remote facts or reports them unavailable. When GitHub is unavailable, continue only an already active local scope and infer no remote fact.
 
 Prefer connected GitHub for supported reads; use `gh` for missing capabilities. Stage unpublished remote drafts under ignored `.ai4x/work/local/drafts/`; the published artifact belongs remotely. Every agent write requires verified `gertrud-ai4x`; never substitute another identity. Before publication report outgoing commits, scope, checks, verdict and follow-ups. Preserve the accepted files unchanged.
