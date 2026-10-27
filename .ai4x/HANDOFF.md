@@ -1,35 +1,41 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#126","currentNode":"agent-memory-and-integration"}
+{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#128","currentNode":"pull-request-review"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
 
-Complete the authorized #123/#124 integration and holistic agent-memory correction owned by https://github.com/normenmueller/o2i/issues/126, then synchronize both feature branches.
+Implement the authorized md2pdf 0.2.6 integration through a ready-for-review PR with green required checks and independent exact-candidate acceptance. Work autonomously through implementation, verification and corrections. Do not merge or start #125.
 
 # Authority
 
-The current Product Owner explicitly requested this correction and integration. Re-fetch #126 for scope and current owning facts; runtime and explicit current instructions retain precedence. This handoff creates no authority or cross-session grant. Exclude #125 implementation, native metamodel edits, release publication, tag creation and destructive cleanup.
+Current explicit PO authority is recorded at https://github.com/normenmueller/o2i/issues/128#issuecomment-6428633968; re-fetch the owning Issue and that bounded start decision. Approved scope and preflight: https://github.com/normenmueller/o2i/issues/128#issuecomment-6428371621. Target ends at `In review`: reviewed PR and green checks, no unresolved required findings. Exclude merge, Issue closure, releases/tags, cleanup, unrelated upgrades, native-model edits, #125 implementation and acceptance of its preliminary paper. This handoff creates no authority or cold-start eligibility.
+
+New Issues must be assigned to both `normenmueller` and `gertrud-ai4x`, then verified remotely.
 
 # Current Facts
 
-Isolated branch: `fix/126-agent-memory-integration`, based on `trunk` at `8cbe854021a5a1608635891922cb00ff4857d242`. Complete #123/#124 and reusable verification/memory commits were cherry-picked after a read-only path-isolation audit. Integration verification and independent final acceptance remain pending.
-
-Parked remote branches: `feat/116-illustration` at `0640c2ef68b3c1b6702663295fb5b99b73010af0`; `feat/125-strategy-cascading` at `ac7102284e8e04565ac12e152ab1b2b614c85e63`. Preserve their native models, illustration, preliminary cascading prose/design and distinct return points.
+- Selected checkout/branch: `fix/128-md2pdf-026`, from accepted trunk `36968ccb1f2c4c9cbd7c1d6bd09092596dc242b5`. The native Issue Development branch link is remotely verified.
+- #128 is remotely verified `In review` with linked PR https://github.com/normenmueller/o2i/pull/129. Re-fetch its head, draft state, checks and review evidence; this handoff proves no final acceptance. #125 remains `Ready` and unstarted. Preserve `feat/125-strategy-cascading` and `feat/116-illustration` independently.
+- O2I's renderer contract now binds stable md2pdf 0.2.6 to `2ded5ac8fa39e40a665fd6acf13e94fa58a9c2ee`; upstream #8 is closed. Isolated tools are reconstructed, including hindent 6.2.1.
+- Universal operating-memory updates are preserved as separate commits through remotely verified backup `488d8e0b5a3c33e5759c5c4a6ce92472b87d4572`, excluding unfinished #125 product content.
+- The regenerated accepted paper and unchanged-schema manifest accompany a five-case actual-PDF regression in `utl/paper/check-inline-code.py`, called by the canonical paper stage. Accepted prose, models and image assets remain unchanged.
 
 # Material Risk
 
-The baseline agent memory exceeds its unchanged 96,000-byte cap. Correct duplication and competing routes with AI-agent architecture/governance Co-Author input and independent review; do not raise the cap or weaken safeguards. Preserve historical #123/#124 acceptance at their exact revisions.
+The renderer fix uses an internal Listings scanner. Require actual Ubuntu CI and independent acceptance on the current candidate. The first Ubuntu candidate passed inline-code and full-paper rendering but exposed lossy URL extraction in freshness comparison; correct only exact-character-preserving layout normalization and compare actual URI targets. Never reconstruct missing glyphs or weaken content checks. Keep the existing manifest schema; no general toolchain upgrade or text workaround. Preserve fachliche meaning and parked models. Agents never edit `meta/o2i.archimate`.
 
 # Verification
 
-Fresh complete local and required remote integration checks are outstanding.
+The first candidate's exact evidence and required corrections are recorded at https://github.com/normenmueller/o2i/issues/128#issuecomment-6430206614; use subsequent owning-Issue/PR evidence for the current result. The five-case regression passes on macOS and Ubuntu with 0.2.6 and fails with 0.2.4 at the original Listings error. Accepted prose, model and image assets remain unchanged. The 56-page PDF SHA-256 is `addb772bf3f92aa746f1092678cc218e718f64202fbcf0917ee59e44754a540a`; all-page and detailed specialist visual QA found no defect. Existing CI Pandoc/crossref versions also produced identical raster pages locally. Historical checks never accept a later head; keep exact-candidate local/remote evidence and independent verdicts at their remote owners.
 
 # Next Action
 
-Implement the reviewed memory plan, verify and independently review the complete candidate, integrate through the protected Pull Request workflow, synchronize both parked feature branches, and record accepted completion in the owning Issues and Project.
+Re-fetch PR #129 and the owning Issue. Complete any missing checks, independent review or necessary corrections under the bounded scope; keep coherent commits, verified backups and current Project state. Once the exact candidate is green, independently accepted and free of required/advisory findings, make the PR ready and hand control to the PO for review. Surface only material new PO decisions or blockers requiring PO action.
 
 # Local Return Point
 
-After #126, return to #125 on `feat/125-strategy-cascading`. Brief the Product Owner on readiness and Board placement; await the requested start signal before any cascading implementation. Illustration remains paused until its prerequisite is accepted.
+At a green reviewed #128 PR, hand control to the PO for its PR decision. Trunk integration and synchronization of parked branches remain separate decisions. After accepted PDF recovery, #125 keeps its own start boundary; after accepted cascading correction and agreed integration, return to company Vision on `feat/116-illustration`.
+
+Restore tools through `operations/local-verification.md` and `utl/verification/README.md`. No required continuity or authority belongs only to scratch or local installations.

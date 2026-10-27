@@ -109,6 +109,7 @@ class VerificationPathMatrixTests(unittest.TestCase):
             "doc/images/O2I Modellzustand.png": {"licensing", "paper"},
             "doc/resources/md2pdf.json": {"licensing", "paper"},
             "utl/paper/render-paper.sh": {"licensing", "paper"},
+            "utl/paper/check-inline-code.py": {"licensing", "paper"},
             "doc/model/illustration.archimate": {
                 "licensing", "model", "haskell", "paper",
             },

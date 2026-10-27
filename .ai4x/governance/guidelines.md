@@ -30,6 +30,8 @@ Add reviewers only for distinct material risks. Require a digest/immutable manif
 
 Policy owns allowed transitions and authority gates. `Ready` means refined and unblocked, never authorized. An atomic work-unit grant covers its listed design, implementation, checks, corrections, commit and publication actions through its target; approval consumption does not consume that grant. Request new authority only for scope/target expansion, an exclusion, material mismatch or an uncovered action. Host permission is independent; denial blocks execution without creating or revoking PO authority.
 
+Keep Project status aligned with observed work at workflow boundaries and before PO decisions or handoffs. Apply only authorized, allowed transitions, preserve PO ordering, and verify remote readback. If authority or access prevents an update, explicitly report the discrepancy or UNVERIFIED state, intended correction and blocker.
+
 | Status | Observable meaning |
 | --- | --- |
 | Refinement | Material product/design decision is being prepared |
@@ -56,10 +58,14 @@ Delegates and reviewers never query/mutate remote work state or start approval-r
 
 Prefer connected GitHub for supported reads; use `gh` for missing capabilities. Stage unpublished remote drafts under ignored `.ai4x/work/local/drafts/`; the published artifact belongs remotely. Every agent write requires verified `gertrud-ai4x`; never substitute another identity. Before publication report outgoing commits, scope, checks, verdict and follow-ups. Preserve the accepted files unchanged.
 
+For `gh`, select the dedicated `GH_CONFIG_DIR="$HOME/.config/gh-gertrud"` and verify `gh api user` returns `gertrud-ai4x`. Diagnose token scopes and Project collaborator access separately; never expand or substitute the personal account's permissions.
+
 For Git writes, verify the actual transport credentials and one effective push destination separately from the API identity. A verified `gh` account does not verify SSH. Use an explicit repository URL with command-scoped verified credentials; check URL rewrites first. Do not treat `git -c remote.<name>.url=...` as replacement: remote URLs are multivalued. Read back publication evidence and record the actual Git publisher separately from authorship; never rewrite historical provenance to match intent.
 
 # Verification And Backup
 
 Load `operations/local-verification.md` for local execution and recovery. Use `./utl/verification/local.sh checkpoint` for regular scoped backup commits; verify remote HEAD and report unbacked changes before claiming recoverability. Pure illustration checkpoints select licensing/model checks; required per-save CLI checks and unfinished-model findings remain. A backup is no merge acceptance.
 
-`utl/verify.sh` owns deterministic, network-independent checks and the regular path matrix. Unknown/shared integration scope selects the complete suite. Before a release tag run `./utl/verification/local.sh all` explicitly; the starter defaults to checkpoint. Checkpoint selection never changes PR/manual/release verification. Direct branch pushes do not trigger Actions; do not routinely use `[skip ci]`.
+Prefer small, coherent, internally consistent and independently understandable commits after applicable local checks; commit each completed unit before starting the next independently reviewable change. Keep unrelated work separate; do not split coupled changes merely to reduce size. Choose push timing by the value of unpublished work and recovery risk: back up meaningful progress promptly and before risky operations, handoff or session end, within current authority. Report unpublished commits or blocked checks explicitly. A local commit is not a remote backup; neither commit nor push establishes acceptance. Preserve required reviews and PR, manual and release checks; do not dispatch remote checks for every backup commit without a verification need.
+
+`utl/verify.sh` owns deterministic, network-independent checks and the regular path matrix. Unknown/shared integration scope selects the complete suite. Before a release tag run `./utl/verification/local.sh all` explicitly; the starter defaults to checkpoint. Checkpoint selection never changes PR/manual/release verification. Backup branch pushes without an open PR do not trigger the Verify workflow; updates to an open PR do. Do not routinely use `[skip ci]`.

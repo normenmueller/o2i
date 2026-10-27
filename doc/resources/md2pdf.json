@@ -1,6 +1,6 @@
 {
-  "acquisition_revision": "8ab76cd31129b778165f9f090391e91139be9ddc",
+  "acquisition_revision": "2ded5ac8fa39e40a665fd6acf13e94fa58a9c2ee",
   "schema": "o2i.publication-renderer/v1",
   "tool": "md2pdf",
-  "version": "0.2.4"
+  "version": "0.2.6"
 }

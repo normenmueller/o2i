@@ -485,7 +485,7 @@ verify_haskell() {
 verify_paper() {
   for command in \
     md2pdf pandoc pandoc-crossref pandoc-include pdflatex pdfinfo pdftoppm \
-    pdftotext python3; do
+    pdftotext pdftohtml python3; do
     require "$command"
   done
 
@@ -498,6 +498,9 @@ verify_paper() {
     -s utl/paper -p 'test_check_paper_assets.py'
   python3 -B -m unittest discover \
     -s utl/paper -p 'test_check_pdf_freshness.py'
+
+  info "Checking inline code through the O2I publication renderer."
+  python3 -B utl/paper/check-inline-code.py --root "$root"
 
   paper="$work/paper"
   mkdir -p "$paper/spec/lib/core" "$paper/doc/paper"

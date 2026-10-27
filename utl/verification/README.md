@@ -30,6 +30,32 @@ git -C utl/verification/.local/src/md2pdf checkout --detach "$md2pdf_revision"
 make -C utl/verification/.local/src/md2pdf PREFIX="$PWD/utl/verification/.local" install
 ```
 
+Für Pandoc und pandoc-crossref bestimmt der White-Paper-Job in
+[verify.yml](../../.github/workflows/verify.yml) die verwendeten Versionen.
+Installiere dieselben Versionen in `utl/verification/.local/bin`; der Starter
+bevorzugt sie gegenüber globalen Homebrew-Werkzeugen. Lade die zu deinem System
+passenden Archive aus den offiziellen Releases von
+[Pandoc](https://github.com/jgm/pandoc/releases) und
+[pandoc-crossref](https://github.com/lierdakil/pandoc-crossref/releases), prüfe
+ihre veröffentlichten SHA-256-Prüfsummen und entpacke sie. Übernimm nur die beiden
+ausführbaren Programme. Beispiel mit den entsprechend ersetzten Quellpfaden:
+
+```sh
+install -m 0755 /pfad/zum/entpackten/pandoc utl/verification/.local/bin/pandoc
+install -m 0755 /pfad/zum/entpackten/pandoc-crossref utl/verification/.local/bin/pandoc-crossref
+utl/verification/.local/bin/pandoc --version
+utl/verification/.local/bin/pandoc-crossref --version
+```
+
+Die ausgegebenen Versionen müssen mit dem verlinkten CI-Job übereinstimmen.
+Globale Installationen bleiben erhalten. Erzeuge das versionierte Paper mit
+dieser lokalen Werkzeugkette und prüfe es anschließend über den normalen Starter:
+
+```sh
+PATH="$PWD/utl/verification/.local/bin:$PWD/utl/verification/.local/python/bin:$PATH" ./utl/paper/render-paper.sh
+./utl/verification/local.sh paper
+```
+
 Die Einrichtung benötigt Downloads und die oben verlinkte Grundwerkzeugkette.
 Die Renderer-Revision stammt aus [dem Renderer-Vertrag](../../doc/resources/md2pdf.json).
 Der Starter installiert selbst nichts und weist eine fehlende lokale Umgebung

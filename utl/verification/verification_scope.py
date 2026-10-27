@@ -79,6 +79,7 @@ PAPER_PATHS = frozenset(
         "ACKNOWLEDGEMENTS.md",
         "README.md",
         "utl/paper/render-paper.sh",
+        "utl/paper/check-inline-code.py",
         "utl/paper/check-paper-assets.py",
         "utl/paper/check-pdf-freshness.py",
         "utl/paper/render-paper-figures.sh",
