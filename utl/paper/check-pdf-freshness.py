@@ -147,6 +147,30 @@ def pdf_uri_targets(path: Path) -> tuple[str, ...]:
     return tuple(sorted(targets))
 
 
+def _complete_uri_span(text: str, start: int, end: int) -> bool:
+    """Require prose boundaries; leave ambiguous URI continuations untouched."""
+    prefix = re.search(r"\S*\Z", text[:start]).group()
+    if prefix.strip("(<[{\"'"):
+        return False
+    previous = re.search(r"(\S+)(\s+)\Z", text[: start - len(prefix)])
+    if (
+        previous is not None
+        and ("\n" in previous.group(2) or "\r" in previous.group(2))
+        and re.match(
+            r"[A-Za-z][A-Za-z0-9+.-]*:\S+",
+            previous.group(1).lstrip("(<[{\"'"),
+        )
+    ):
+        return False
+    suffix = text[end:]
+    if not suffix.strip():
+        return True
+    # A bare space or newline followed by more text cannot certify an end:
+    # it might continue the displayed URI. Sentence/closing punctuation must
+    # itself end the token, so .ext, ?query and #fragment remain significant.
+    return re.match(r"[.,;!?)\]}>\"']+(?=\s|$)", suffix) is not None
+
+
 def normalize_uri_wraps(text: str, uri_targets: Sequence[str]) -> str:
     """Join only visible HTTP(S) targets with every lexical character intact."""
     targets = sorted(
@@ -164,7 +188,14 @@ def normalize_uri_wraps(text: str, uri_targets: Sequence[str]) -> str:
     )
     # Keep the extracted characters; annotations certify a match but never
     # supply a missing character or replace a displayed label with its target.
-    return pattern.sub(lambda match: re.sub(r"\s+", "", match.group()), text)
+    return pattern.sub(
+        lambda match: (
+            re.sub(r"\s+", "", match.group())
+            if _complete_uri_span(text, match.start(), match.end())
+            else match.group()
+        ),
+        text,
+    )
 
 
 def normalized_pdf_text(path: Path, uri_targets: Sequence[str] = ()) -> str:

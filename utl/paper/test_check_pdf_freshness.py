@@ -132,10 +132,85 @@ class PdfFreshnessTest(unittest.TestCase):
 
     def test_uri_normalization_preserves_visible_occurrence_counts(self) -> None:
         target = "https://example.test/a-b/c"
-        text = "https://example.test/a-\nb/c and https://example.test/a-b/\nc"
+        text = "https://example.test/a-\nb/c. And https://example.test/a-b/\nc."
         normalized = CHECKER.normalize_uri_wraps(text, (target, target))
-        self.assertEqual(f"{target} and {target}", normalized)
+        self.assertEqual(f"{target}. And {target}.", normalized)
         self.assertEqual(2, normalized.count(target))
+
+    def test_embedded_and_larger_uri_spans_are_not_normalized(self) -> None:
+        target = "https://example.test/a-b"
+        wrapped = "https://example.test/a-\nb"
+        for text in (
+            "nothttps://example.test/a- b",
+            "label" + wrapped,
+            "https://outside.test/" + wrapped,
+            "https://outside.test/\n" + wrapped,
+            wrapped + "MORE",
+            wrapped + "/more",
+            wrapped + ".ext",
+            wrapped + "?query",
+            wrapped + "#fragment",
+            wrapped + "\nMORE",
+            wrapped + "\n/more",
+            wrapped + " more",
+            "Label(" + wrapped + ")",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(text, CHECKER.normalize_uri_wraps(text, (target,)))
+
+    def test_sentence_and_parenthesis_boundaries_preserve_prose_punctuation(self) -> None:
+        target = "https://example.test/a-b"
+        wrapped = "https://example.test/a-\nb"
+        for prefix, suffix in (
+            ("URL: ", ". Next sentence."),
+            ("See (", ")."),
+            ("See [", "]; next item."),
+            ('See "', '".'),
+            ("", ", another reference."),
+        ):
+            with self.subTest(prefix=prefix, suffix=suffix):
+                self.assertEqual(
+                    prefix + target + suffix,
+                    CHECKER.normalize_uri_wraps(prefix + wrapped + suffix, (target,)),
+                )
+
+    def test_unpunctuated_multiple_spans_remain_ambiguous(self) -> None:
+        target = "https://example.test/a-b/c"
+        text = "https://example.test/a-\nb/c and https://example.test/a-b/\nc"
+        self.assertEqual(
+            "https://example.test/a-\nb/c and " + target,
+            CHECKER.normalize_uri_wraps(text, (target,)),
+        )
+
+    def test_other_uri_schemes_cannot_continue_into_a_target_across_layout_space(self) -> None:
+        target = "https://example.test/a-b"
+        wrapped = "https://example.test/a-\nb."
+        for prefix in (
+            "ftp://prefix/",
+            "custom:prefix/",
+            "git+ssh://prefix/",
+            "urn:example:prefix",
+            "(ftp://prefix/",
+        ):
+            for gap in ("\n", " \n", "\r\n", " \t\r\n\t "):
+                for opening in ("", "("):
+                    text = prefix + gap + opening + wrapped
+                    with self.subTest(prefix=prefix, gap=gap, opening=opening):
+                        self.assertEqual(
+                            text, CHECKER.normalize_uri_wraps(text, (target,))
+                        )
+
+    def test_bare_prose_labels_can_precede_targets_on_separate_lines(self) -> None:
+        target = "https://example.test/a-b"
+        for label in ("URL:", "Reference:"):
+            for gap in ("\n", " \n", "\r\n", " \t\r\n\t "):
+                for opening, closing in (("", "."), ("(", ").")):
+                    text = label + gap + opening + "https://example.test/a-\r\nb" + closing
+                    with self.subTest(label=label, gap=gap, opening=opening):
+                        self.assertEqual(
+                            label + gap + opening + target + closing,
+                            CHECKER.normalize_uri_wraps(text, (target,)),
+                        )
 
     def test_overlapping_uri_targets_prefer_the_complete_longer_match(self) -> None:
         short = "https://example.test/"
