@@ -14,9 +14,8 @@ esac
 root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd -P)
 local_tools="$root/utl/verification/.local"
 python_bin="$local_tools/python/bin"
-if [ ! -x "$python_bin/python3" ] || [ ! -x "$python_bin/reuse" ] ||
-   [ ! -x "$local_tools/bin/hindent" ] || [ ! -x "$local_tools/bin/md2pdf" ]; then
-  printf 'Local verification environment is missing; see utl/verification/README.md.\n' >&2
+if [ ! -x "$python_bin/python3" ]; then
+  printf 'Local Python environment is missing; see utl/verification/README.md.\n' >&2
   exit 1
 fi
 mkdir -p "$local_tools/tmp"
@@ -24,6 +23,8 @@ PATH="$local_tools/bin:$python_bin:$PATH"
 TMPDIR=$(CDPATH= cd -- "$local_tools/tmp" && pwd -P)
 # Fresh test directories must not accidentally discover the enclosing O2I Git repo.
 GIT_CEILING_DIRECTORIES="$TMPDIR${GIT_CEILING_DIRECTORIES:+:$GIT_CEILING_DIRECTORIES}"
-export PATH TMPDIR GIT_CEILING_DIRECTORIES
+# The canonical verifier checks isolated tools only when their stage needs them.
+O2I_VERIFICATION_LOCAL_TOOLS="$local_tools"
+export PATH TMPDIR GIT_CEILING_DIRECTORIES O2I_VERIFICATION_LOCAL_TOOLS
 cd "$root"
 exec "$root/utl/verify.sh" "$stage"
