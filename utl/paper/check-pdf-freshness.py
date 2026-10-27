@@ -122,10 +122,55 @@ def renderer_version_errors(root: Path) -> list[str]:
     ]
 
 
-def normalized_pdf_text(path: Path) -> str:
-    """Return metadata-independent PDF text with normalized word boundaries."""
+def pdf_uri_targets(path: Path) -> tuple[str, ...]:
+    """Read exact link targets, deduplicating annotations split across lines."""
     completed = subprocess.run(
-        ["pdftotext", "-enc", "UTF-8", "-nopgbrk", str(path), "-"],
+        ["pdfinfo", "-url", "-enc", "UTF-8", str(path)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode != 0:
+        detail = completed.stderr.strip() or "pdfinfo -url failed"
+        raise PdfFreshnessError(f"cannot inspect link targets in {path}: {detail}")
+    lines = completed.stdout.splitlines()
+    if not lines or lines[0].split() != ["Page", "Type", "URL"]:
+        raise PdfFreshnessError(f"cannot read link-target table from {path}")
+    targets = set()
+    for line in lines[1:]:
+        if not line.strip():
+            continue
+        match = re.fullmatch(r"\s*[1-9][0-9]*\s+Annotation\s+(\S+)\s*", line)
+        if match is None:
+            raise PdfFreshnessError(f"cannot read link-target row from {path}")
+        targets.add(match.group(1))
+    return tuple(sorted(targets))
+
+
+def normalize_uri_wraps(text: str, uri_targets: Sequence[str]) -> str:
+    """Join only visible HTTP(S) targets with every lexical character intact."""
+    targets = sorted(
+        {
+            target
+            for target in uri_targets
+            if re.fullmatch(r"https?://\S+", target, re.IGNORECASE)
+        },
+        key=lambda target: (-len(target), target),
+    )
+    if not targets:
+        return text
+    pattern = re.compile(
+        "|".join(r"\s*".join(re.escape(char) for char in target) for target in targets)
+    )
+    # Keep the extracted characters; annotations certify a match but never
+    # supply a missing character or replace a displayed label with its target.
+    return pattern.sub(lambda match: re.sub(r"\s+", "", match.group()), text)
+
+
+def normalized_pdf_text(path: Path, uri_targets: Sequence[str] = ()) -> str:
+    """Preserve raw text characters and ignore certified URI line wrapping."""
+    completed = subprocess.run(
+        ["pdftotext", "-raw", "-enc", "UTF-8", "-nopgbrk", str(path), "-"],
         check=False,
         capture_output=True,
         text=True,
@@ -133,7 +178,8 @@ def normalized_pdf_text(path: Path) -> str:
     if completed.returncode != 0:
         detail = completed.stderr.strip() or "pdftotext failed"
         raise PdfFreshnessError(f"cannot extract {path}: {detail}")
-    normalized = unicodedata.normalize("NFKC", completed.stdout)
+    unwrapped = normalize_uri_wraps(completed.stdout, uri_targets)
+    normalized = unicodedata.normalize("NFKC", unwrapped)
     return " ".join(normalized.split())
 
 
@@ -371,8 +417,12 @@ def rendered_publication_errors(versioned: Path, rendered: Path) -> list[str]:
             f"page count differs: versioned {versioned_pages}, "
             f"rendered {rendered_pages}"
         )
-    versioned_text = normalized_pdf_text(versioned)
-    rendered_text = normalized_pdf_text(rendered)
+    versioned_targets = pdf_uri_targets(versioned)
+    rendered_targets = pdf_uri_targets(rendered)
+    if versioned_targets != rendered_targets:
+        errors.append("publication link targets differ")
+    versioned_text = normalized_pdf_text(versioned, versioned_targets)
+    rendered_text = normalized_pdf_text(rendered, rendered_targets)
     if versioned_text != rendered_text:
         errors.append(_first_text_difference(versioned_text, rendered_text))
     return errors

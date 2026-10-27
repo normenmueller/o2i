@@ -78,11 +78,12 @@ class PdfFreshnessTest(unittest.TestCase):
             stdout="O2I  Syntax\nträgt\tWirkung.\n",
             stderr="",
         )
-        with patch.object(CHECKER.subprocess, "run", return_value=completed):
+        with patch.object(CHECKER.subprocess, "run", return_value=completed) as run:
             self.assertEqual(
                 "O2I Syntax trägt Wirkung.",
                 CHECKER.normalized_pdf_text(Path("paper.pdf")),
             )
+        self.assertIn("-raw", run.call_args.args[0])
 
     def test_text_normalization_preserves_word_boundaries(self) -> None:
         with patch.object(
@@ -98,6 +99,93 @@ class PdfFreshnessTest(unittest.TestCase):
                 CHECKER.normalized_pdf_text(Path("joined.pdf")),
             )
 
+    def test_uri_wraps_preserve_every_character_at_hyphens_and_slashes(self) -> None:
+        target = "https://example.test/culture-and/123/"
+        for text in (
+            "https://example.test/culture-\nand/123/",
+            "https://example.test/culture-and/\n123/",
+            "https://example.test/\nculture-and/123/",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(target, CHECKER.normalize_uri_wraps(text, (target,)))
+
+    def test_uri_wraps_never_supply_missing_or_changed_characters(self) -> None:
+        target = "https://example.test/culture-and/123/"
+        for text in (
+            "https://example.test/culture\nand/123/",
+            "https://example.test/culture-\nend/123/",
+            "https://example.test/culture-and/\n124/",
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(text, CHECKER.normalize_uri_wraps(text, (target,)))
+                self.assertNotEqual(target, " ".join(text.split()))
+
+    def test_unannotated_and_non_http_text_is_not_joined(self) -> None:
+        for text, targets in (
+            ("https://example.test/path/\n123", ()),
+            ("mailto:user@\nexample.test", ("mailto:user@example.test",)),
+            ("well-\nformed Key Result", ("https://example.test",)),
+            ("Read this label", ("https://example.test",)),
+        ):
+            with self.subTest(text=text):
+                self.assertEqual(text, CHECKER.normalize_uri_wraps(text, targets))
+
+    def test_uri_normalization_preserves_visible_occurrence_counts(self) -> None:
+        target = "https://example.test/a-b/c"
+        text = "https://example.test/a-\nb/c and https://example.test/a-b/\nc"
+        normalized = CHECKER.normalize_uri_wraps(text, (target, target))
+        self.assertEqual(f"{target} and {target}", normalized)
+        self.assertEqual(2, normalized.count(target))
+
+    def test_overlapping_uri_targets_prefer_the_complete_longer_match(self) -> None:
+        short = "https://example.test/"
+        long = short + "a-b/c"
+        self.assertEqual(
+            long,
+            CHECKER.normalize_uri_wraps(short + "a-\nb/c", (short, long)),
+        )
+
+    def test_uri_annotations_are_sorted_and_deduplicated(self) -> None:
+        completed = subprocess.CompletedProcess(
+            [],
+            0,
+            "Page  Type          URL\n"
+            " 8 Annotation https://example.test/b\n"
+            " 8 Annotation https://example.test/a\n"
+            " 8 Annotation https://example.test/b\n",
+            "",
+        )
+        with patch.object(CHECKER.subprocess, "run", return_value=completed):
+            self.assertEqual(
+                ("https://example.test/a", "https://example.test/b"),
+                CHECKER.pdf_uri_targets(Path("paper.pdf")),
+            )
+
+    def test_empty_uri_annotation_table_is_valid(self) -> None:
+        completed = subprocess.CompletedProcess([], 0, "Page Type URL\n", "")
+        with patch.object(CHECKER.subprocess, "run", return_value=completed):
+            self.assertEqual((), CHECKER.pdf_uri_targets(Path("paper.pdf")))
+
+    def test_malformed_uri_annotation_output_fails_closed(self) -> None:
+        for output in ("", "unexpected output\n", "Page Type URL\n8 Annotation\n"):
+            with self.subTest(output=output):
+                completed = subprocess.CompletedProcess([], 0, output, "")
+                with (
+                    patch.object(CHECKER.subprocess, "run", return_value=completed),
+                    self.assertRaises(CHECKER.PdfFreshnessError),
+                ):
+                    CHECKER.pdf_uri_targets(Path("paper.pdf"))
+
+    def test_text_and_uri_command_failures_fail_closed(self) -> None:
+        for operation in (CHECKER.normalized_pdf_text, CHECKER.pdf_uri_targets):
+            with self.subTest(operation=operation.__name__):
+                completed = subprocess.CompletedProcess([], 1, "", "cannot read PDF")
+                with (
+                    patch.object(CHECKER.subprocess, "run", return_value=completed),
+                    self.assertRaisesRegex(CHECKER.PdfFreshnessError, "cannot read PDF"),
+                ):
+                    operation(Path("paper.pdf"))
+
     def test_page_count_is_parsed(self) -> None:
         completed = subprocess.CompletedProcess(
             args=[],
@@ -111,6 +199,7 @@ class PdfFreshnessTest(unittest.TestCase):
     def test_render_comparison_reports_page_and_text_drift(self) -> None:
         with (
             patch.object(CHECKER, "pdf_page_count", side_effect=(72, 73)),
+            patch.object(CHECKER, "pdf_uri_targets", return_value=()),
             patch.object(
                 CHECKER,
                 "normalized_pdf_text",
@@ -126,6 +215,23 @@ class PdfFreshnessTest(unittest.TestCase):
                 CHECKER.rendered_publication_errors(
                     Path("versioned.pdf"),
                     Path("rendered.pdf"),
+                ),
+            )
+
+    def test_render_comparison_detects_changed_target_behind_unchanged_label(self) -> None:
+        with (
+            patch.object(CHECKER, "pdf_page_count", return_value=56),
+            patch.object(CHECKER, "normalized_pdf_text", return_value="Read this label"),
+            patch.object(
+                CHECKER,
+                "pdf_uri_targets",
+                side_effect=(("https://example.test/a",), ("https://example.test/b",)),
+            ),
+        ):
+            self.assertEqual(
+                ["publication link targets differ"],
+                CHECKER.rendered_publication_errors(
+                    Path("versioned.pdf"), Path("rendered.pdf")
                 ),
             )
 
