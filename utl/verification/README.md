@@ -110,6 +110,36 @@ Versionsbindungen, die Downloads und Installationen erzeugen `.local/` neu.
 Temporäre Prüfdaten entstehen beim nächsten Lauf. Benötigte Quellen, Ergebnisse
 oder Nachweise dürfen deshalb nie ausschließlich in `.local/` liegen.
 
+## Haskell-Laufzeiten und Diagnoseausgabe
+
+Die Haskell-Prüfung weist Build und Testaufruf getrennt aus. Dasselbe gilt für
+die Vorbereitung der Quellarchive sowie Build und Testaufruf aus frisch
+entpackten Quellen in einem eigenen Build-Verzeichnis. Die bestehenden
+Prüfungen bleiben erhalten; beide Paketumfänge prüfen dieselben Haddock-Warnungen.
+Ein Cabal-Testaufruf kann Planung oder Neuaufbau enthalten und misst deshalb
+keine reine Testausführungszeit.
+
+Die gekennzeichnete monotone Uhr liefert bei fehlenden oder ungültigen Werten
+`UNKNOWN`; es gibt keinen stillen Wechsel zur Systemzeit. Für Vergleiche müssen
+Uhr, Rechnerbedingungen, Werkzeuge und Abhängigkeitszustand vergleichbar sein.
+Rechner-Ruhezeiten werden je nach Plattform unterschiedlich behandelt.
+Der Prüfer meldet angeforderte Compiler- und Scheduling-Optionen. Nicht
+beobachtete effektive Einstellungen bleiben `UNKNOWN`.
+
+Cabals natives `--semaphore` koordiniert Modul- und Komponentenkompilierung bei
+Build, Test und Haddock innerhalb des bereits konfigurierten Jobs-Budgets. Der
+Prüfer überschreibt diese Jobzahl nicht. Leise Planungs- und API-Abfragen
+behalten dieselbe `-Werror`-Konfiguration. Das gemeinsame interne Core-Testprogramm
+kann zur Laufzeit mehr Spitzenspeicher benötigen; das Compiler-Scheduling
+verringert diese Laufzeitkosten nicht.
+
+`O2I_HASKELL_CABAL_VERBOSITY` erlaubt `1` als Vorgabe oder `2` für ausführlichere
+Build-, Test- und Haddock-Ausgaben. Maschinenlesbare Abfragen bleiben leise.
+Halte diese Diagnoseausgabe fest, wenn tatsächliche Compileraufrufe oder der
+effektive native Jobs-Pool untersucht werden sollen. Die Ausgabestufe ändert
+weder Prüfumfang noch Optimierung, Scheduling, Abhängigkeiten oder die Trennung
+der Archivprüfung.
+
 ## Ablage und Freigabe
 
 - `.local/python/` enthält die wiederherstellbare Werkzeugumgebung.

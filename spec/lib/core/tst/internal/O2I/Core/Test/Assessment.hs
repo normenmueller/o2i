@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Main
-  ( main
+module O2I.Core.Test.Assessment
+  ( tests
   ) where
 
 import Data.ByteString (ByteString)
@@ -71,11 +71,8 @@ import O2I.Trace.Grammar
   , traceVariables
   )
 import qualified O2I.Trace.Internal as TraceInternal
-import Test.Tasty (TestTree, defaultMain, testGroup)
+import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit ((@?=), assertBool, testCase)
-
-main :: IO ()
-main = defaultMain tests
 
 tests :: TestTree
 tests =

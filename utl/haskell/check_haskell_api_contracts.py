@@ -1040,6 +1040,7 @@ def compiler_command(
             )
     return command + [
         f"--builddir={build_dir}", "exec",
+        "--ghc-options=-Werror",
         "--",
         "ghc",
         "-v0",
@@ -1130,6 +1131,7 @@ def private_compiler_command(
         command.append(f"--project-file={project_file}")
     return command + [
         f"--builddir={build_dir}", "exec",
+        "--ghc-options=-Werror",
         "--",
         "ghc",
         "-v0",

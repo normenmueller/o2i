@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Main
-  ( main
+module O2I.Core.Test.Trace
+  ( tests
   ) where
 
 import Data.List (sort)
@@ -38,11 +38,8 @@ import O2I.Trace.Eval
 import O2I.Trace.Grammar
 import O2I.Trace.Index
 import O2I.Trace.Internal
-import Test.Tasty (TestTree, defaultMain, testGroup)
+import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (Assertion, (@?=), assertBool, assertFailure, testCase)
-
-main :: IO ()
-main = defaultMain tests
 
 tests :: TestTree
 tests =

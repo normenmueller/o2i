@@ -31,26 +31,20 @@ finish_phase() {
   if [ -z "${verification_phase:-}" ]; then
     return 0
   fi
-  verification_phase_end=$(date +%s 2>/dev/null) || verification_phase_end=
-  verification_elapsed=UNKNOWN
-  case "$verification_phase_started$verification_phase_end" in
-    '' | *[!0-9]*) ;;
-    *)
-      if [ -n "$verification_phase_started" ] &&
-        [ -n "$verification_phase_end" ] &&
-        [ "$verification_phase_end" -ge "$verification_phase_started" ]; then
-        verification_elapsed=$((verification_phase_end - verification_phase_started))
-      fi
-      ;;
-  esac
-  info "Timing: $verification_phase; elapsed_seconds=$verification_elapsed; exit_status=$1."
+  verification_phase_end=$(python3 -B "$root/utl/haskell/phase_clock.py" now 2>/dev/null) ||
+    verification_phase_end=
+  verification_elapsed=$(python3 -B "$root/utl/haskell/phase_clock.py" elapsed \
+    "$verification_phase_started" "$verification_phase_end" 2>/dev/null) ||
+    verification_elapsed=UNKNOWN
+  info "Timing: $verification_phase; elapsed_seconds=$verification_elapsed; clock=monotonic_ns; exit_status=$1."
   verification_phase=
 }
 
 begin_phase() {
   finish_phase 0
   verification_phase=$1
-  verification_phase_started=$(date +%s 2>/dev/null) || verification_phase_started=
+  verification_phase_started=$(python3 -B "$root/utl/haskell/phase_clock.py" now 2>/dev/null) ||
+    verification_phase_started=
 }
 
 # Preserve the failing check's status while reporting its active phase.
@@ -169,377 +163,21 @@ verify_model() {
 }
 
 verify_haskell() {
-  scope=${1:-complete}
-  case "$scope" in
-    foundation)
-      project_file=cabal.foundation.project
-      project_contract=spec/cabal.foundation.project
-      freeze_contract=spec/cabal.foundation.project.freeze
-      package_paths='spec/lib/core spec/ctr/archimate spec/lib/operation spec/lib/adapter/amx'
-      ;;
-    complete)
-      project_file=cabal.project
-      project_contract=spec/cabal.project
-      freeze_contract=spec/cabal.project.freeze
-      package_paths='spec/lib/core spec/ctr/archimate spec/lib/operation spec/lib/adapter/amx spec/cli'
-      ;;
-    *)
-      printf '[o2i|error] Unknown Haskell verification scope: %s.\n' \
-        "$scope" >&2
-      exit 2
-      ;;
-  esac
-
-  for command in cabal ghc ghc-pkg hindent python3 tar; do
-    require "$command"
-  done
-
-  begin_phase "Haskell toolchain"
-  info "Checking the exact Haskell toolchain."
-  require_version \
-    "spec/.ghc-version" "9.10.3" "$(tr -d '\r\n' <spec/.ghc-version)"
-  require_version "GHC" "9.10.3" "$(ghc --numeric-version)"
-  require_version "Cabal" "3.16.1.0" "$(cabal --numeric-version)"
-  require_version \
-    "base" "4.20.2.0" "$(ghc-pkg field base version --simple-output)"
-
-  cabal_config="$work/cabal.config"
-  cabal_logs="$work/cabal-logs"
-  mkdir -p "$cabal_logs"
-  if [ -f "${CABAL_CONFIG:-$HOME/.cabal/config}" ]; then
-    sed \
-      -e '/^[[:space:]]*logs-dir:/d' \
-      -e '/^[[:space:]]*build-summary:/d' \
-      "${CABAL_CONFIG:-$HOME/.cabal/config}" >"$cabal_config"
-  else
-    cabal --config-file="$cabal_config" user-config init
-  fi
-  printf '\nlogs-dir: %s\n' "$cabal_logs" >>"$cabal_config"
-  export CABAL_CONFIG="$cabal_config"
-
-  run_project_cabal() {
-    cabal --config-file="$cabal_config" -v0 \
-      --project-dir=spec \
-      --project-file="$project_file" \
-      "$@"
-  }
-
-  begin_phase "Haskell compiled contracts"
-  info "Checking compiled Haskell contract artifacts."
-  python3 -B spec/lib/core/contract/compile.py --check
-  python3 -B -m unittest discover \
-    -s spec/lib/core/contract -p 'test_compile.py'
-  python3 -B spec/ctr/archimate/contract/compile.py \
-    --core-companion spec/lib/core/semantics.json \
-    --check
-  O2I_CORE_COMPANION=spec/lib/core/semantics.json \
-    python3 -B -m unittest discover \
-    -s spec/ctr/archimate/contract -p 'test_compile.py'
-  python3 -B spec/lib/operation/contract/compile.py \
-    --core-companion spec/lib/core/semantics.json \
-    --profile-companion spec/ctr/archimate/profile.json \
-    --profile-diagnostic-inventory \
-      spec/ctr/archimate/contract/generated/o2i.archimate-profile.diagnostic-evidence-v1.json \
-    --core-owner-diagnostic-inventory \
-      spec/lib/core/contract/generated/o2i.core.owner-diagnostic-evidence-v1.json \
-    --check
-  O2I_CORE_COMPANION=spec/lib/core/semantics.json \
-    O2I_PROFILE_COMPANION=spec/ctr/archimate/profile.json \
-    python3 -B -m unittest discover \
-    -s spec/lib/operation/contract -p 'test_compile.py'
-
-  if [ "$scope" = complete ]; then
-    info "Checking the atomic target package cutover."
-    python3 -B utl/haskell/check_atomic_cutover.py --root "$root"
-  fi
-
-  begin_phase "Haskell package metadata"
-  info "Checking package metadata."
-  for package in $package_paths; do
-    (cd "$package" && cabal --config-file="$cabal_config" -v0 check)
-  done
-
-  build="$work/dist-newstyle"
-  logs="$work/logs"
-  mkdir -p "$build" "$logs"
-  build_log="$logs/\$compiler-\$pkgid.log"
-  test_log="$logs/\$compiler-\$pkgid-\$test-suite.log"
-
-  begin_phase "Haskell build and tests"
-  info "Building and testing the Haskell specification with warnings as errors."
-  if [ "$scope" = foundation ]; then
-    run_project_cabal build \
-      o2i-core o2i-archimate-profile o2i-operation o2i-amx \
-      --builddir="$build" \
-      --build-log="$build_log" \
-      --ghc-options=-Werror
-  else
-    run_project_cabal build all \
-      --builddir="$build" \
-      --build-log="$build_log" \
-      --ghc-options=-Werror
-  fi
-  python3 -B utl/haskell/check_cabal_plan.py \
-    --project "$project_contract" \
-    --freeze "$freeze_contract" \
-    --plan "$build/cache/plan.json"
-  if [ "$scope" = foundation ]; then
-    run_project_cabal test \
-      o2i-core o2i-archimate-profile o2i-operation o2i-amx \
-      --builddir="$build" \
-      --build-log="$build_log" \
-      --test-log="$test_log" \
-      --ghc-options=-Werror
-  else
-    run_project_cabal test all \
-      --builddir="$build" \
-      --build-log="$build_log" \
-      --test-log="$test_log" \
-      --ghc-options=-Werror
-  fi
-
-  begin_phase "Haskell Candidate Views and API contracts"
-  info "Checking repository Candidate Views through AMX, Profile, and Core."
-  candidate_view_checker=$(run_project_cabal list-bin \
-    o2i-amx:o2i-amx-repository-view-check \
-    --builddir="$build")
-  "$candidate_view_checker" "$root/meta/o2i.archimate"
-
-  info "Checking external Haskell API contracts."
-  python3 -B -m unittest discover \
-    -s utl/haskell -p 'test_*.py'
-  if [ "$scope" = foundation ]; then
-  python3 -B utl/haskell/check_haskell_api_contracts.py \
-      --project-dir "$root/spec" \
-      --project-file "$project_file" \
-      --builddir "$build" \
-      --package o2i-core \
-      --package o2i-archimate-profile \
-      --package o2i-operation
-  else
-    python3 -B utl/haskell/check_haskell_api_contracts.py \
-      --project-dir "$root/spec" \
-      --builddir "$build"
-  fi
-
-  begin_phase "Haskell API documentation"
-  info "Building Haskell API documentation."
-  if [ "$scope" = foundation ]; then
-    haddock_log="$logs/foundation-haddock.log"
-    if run_project_cabal haddock \
-        o2i-core o2i-archimate-profile o2i-operation o2i-amx \
-        --builddir="$build" \
-        --build-log="$build_log" \
-        --haddock-option=--ignore-link-symbol=O2I.ArchiMate.Profile.Projection.ProposalCarrierOccurrenceEvidenceKind \
-        >"$haddock_log" 2>&1; then
-      cat "$haddock_log"
-    else
-      cat "$haddock_log" >&2
-      exit 1
-    fi
-    if grep -Eq \
-      'Missing documentation for:|^Warning: .* (is ambiguous|is out of scope)\.|^Warning: .*could not find link destinations for:' \
-      "$haddock_log"; then
-      printf '[o2i|error] Foundation Haddock reported a documentation or link warning.\n' >&2
-      exit 1
-    fi
-  else
-    run_project_cabal haddock all \
-      --builddir="$build" \
-      --build-log="$build_log" \
-      --haddock-option=--ignore-link-symbol=O2I.ArchiMate.Profile.Projection.ProposalCarrierOccurrenceEvidenceKind
-  fi
-
-  begin_phase "Haskell source distributions"
-  info "Checking independently buildable Haskell source distributions."
-  source_dist="$work/source-dist"
-  mkdir -p "$source_dist"
-  source_packages='o2i-core o2i-archimate-profile o2i-operation o2i-amx'
-  if [ "$scope" = complete ]; then
-    source_packages="$source_packages o2i-cli"
-  fi
-  run_project_cabal sdist $source_packages \
-    --output-directory="$source_dist"
-
-  set -- "$source_dist"/o2i-core-*.tar.gz
-  if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
-    printf '[o2i|error] Expected exactly one o2i-core source archive.\n' >&2
+  if [ ! -f "$root/utl/haskell/verify-stage.sh" ] ||
+    [ ! -r "$root/utl/haskell/verify-stage.sh" ]; then
+    printf '[o2i|error] Required Haskell verification module is missing or unreadable.\n' >&2
     exit 1
   fi
-  core_archive=$1
-
-  set -- "$source_dist"/o2i-archimate-profile-*.tar.gz
-  if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
-    printf '[o2i|error] Expected exactly one ArchiMate Profile source archive.\n' >&2
-    exit 1
-  fi
-  profile_archive=$1
-
-  set -- "$source_dist"/o2i-operation-*.tar.gz
-  if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
-    printf '[o2i|error] Expected exactly one Operation source archive.\n' >&2
-    exit 1
-  fi
-  operation_archive=$1
-
-  set -- "$source_dist"/o2i-amx-*.tar.gz
-  if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
-    printf '[o2i|error] Expected exactly one AMX source archive.\n' >&2
-    exit 1
-  fi
-  amx_archive=$1
-
-  cli_archive=
-  if [ "$scope" = complete ]; then
-    set -- "$source_dist"/o2i-cli-*.tar.gz
-    if [ "$#" -ne 1 ] || [ ! -f "$1" ]; then
-      printf '[o2i|error] Expected exactly one CLI source archive.\n' >&2
-      exit 1
-    fi
-    cli_archive=$1
-  fi
-
-  core_inventory="$source_dist/core-inventory.txt"
-  profile_inventory="$source_dist/profile-inventory.txt"
-  operation_inventory="$source_dist/operation-inventory.txt"
-  amx_inventory="$source_dist/amx-inventory.txt"
-  cli_inventory="$source_dist/cli-inventory.txt"
-  tar -tzf "$core_archive" >"$core_inventory"
-  tar -tzf "$profile_archive" >"$profile_inventory"
-  tar -tzf "$operation_archive" >"$operation_inventory"
-  tar -tzf "$amx_archive" >"$amx_inventory"
-  if [ "$scope" = complete ]; then
-    tar -tzf "$cli_archive" >"$cli_inventory"
-  fi
-  core_root=$(sed -n '1s#/.*##p' "$core_inventory")
-  profile_root=$(sed -n '1s#/.*##p' "$profile_inventory")
-  operation_root=$(sed -n '1s#/.*##p' "$operation_inventory")
-  amx_root=$(sed -n '1s#/.*##p' "$amx_inventory")
-  cli_root=
-  if [ "$scope" = complete ]; then
-    cli_root=$(sed -n '1s#/.*##p' "$cli_inventory")
-  fi
-  if ! grep -Eq '/semantic-diagnostic-evidence\.json$' "$core_inventory"; then
-    printf '[o2i|error] Core source archive lacks the diagnostic companion.\n' >&2
-    exit 1
-  fi
-  if ! grep -Eq \
-    '/contract/generated/o2i\.core\.semantic-diagnostic-evidence-v1\.json$' \
-    "$core_inventory"; then
-    printf '[o2i|error] Core source archive lacks the generated diagnostic inventory.\n' >&2
-    exit 1
-  fi
-  if ! grep -Eq \
-    '/contract/generated/o2i\.core\.owner-diagnostic-evidence-v1\.json$' \
-    "$core_inventory"; then
-    printf '[o2i|error] Core source archive lacks the owner diagnostic inventory.\n' >&2
-    exit 1
-  fi
-  if ! grep -Eq '/profile\.json$' "$profile_inventory"; then
-    printf '[o2i|error] ArchiMate Profile source archive lacks profile.json.\n' >&2
-    exit 1
-  fi
-  if ! grep -Eq \
-    '/src/O2I/ArchiMate/Profile/Internal/Generated\.hs$' \
-    "$profile_inventory"; then
-    printf '[o2i|error] ArchiMate Profile source archive lacks generated Haskell.\n' >&2
-    exit 1
-  fi
-  if ! grep -Eq \
-    '/contract/generated/o2i\.archimate-profile\.diagnostic-evidence-v1\.json$' \
-    "$profile_inventory"; then
-    printf '[o2i|error] ArchiMate Profile source archive lacks the diagnostic inventory.\n' >&2
-    exit 1
-  fi
-  if ! grep -Eq '/contract/compile\.py$' "$profile_inventory" || \
-    ! grep -Eq '/contract/test_compile\.py$' "$profile_inventory"; then
-    printf '[o2i|error] ArchiMate Profile source archive lacks compiler tooling.\n' >&2
-    exit 1
-  fi
-
-  source_project="$source_dist/project"
-  mkdir -p "$source_project"
-  tar -xzf "$core_archive" -C "$source_project"
-  tar -xzf "$profile_archive" -C "$source_project"
-  tar -xzf "$operation_archive" -C "$source_project"
-  tar -xzf "$amx_archive" -C "$source_project"
-  if [ "$scope" = complete ]; then
-    tar -xzf "$cli_archive" -C "$source_project"
-  fi
-  if [ ! -d "$source_project/$core_root" ] || \
-    [ ! -d "$source_project/$profile_root" ] || \
-    [ ! -d "$source_project/$operation_root" ] || \
-    [ ! -d "$source_project/$amx_root" ] || \
-    { [ "$scope" = complete ] && [ ! -d "$source_project/$cli_root" ]; }; then
-    printf '[o2i|error] Cannot resolve unpacked Haskell source archives.\n' >&2
-    exit 1
-  fi
-  python3 -B utl/haskell/check_haskell_api_contracts.py \
-    --core-package-root "$source_project/$core_root"
-  if [ "$scope" = foundation ]; then
-    printf 'packages:\n  ./%s\n  ./%s\n  ./%s\n  ./%s\n\nindex-state: 2026-08-07T18:07:13Z\n' \
-      "$core_root" "$profile_root" "$operation_root" "$amx_root" \
-      >"$source_project/cabal.project"
-  else
-    printf 'packages:\n  ./%s\n  ./%s\n  ./%s\n  ./%s\n  ./%s\n\nindex-state: 2026-08-07T18:07:13Z\n' \
-      "$core_root" "$profile_root" "$operation_root" "$amx_root" \
-      "$cli_root" >"$source_project/cabal.project"
-  fi
-  cp "$freeze_contract" "$source_project/cabal.project.freeze"
-  python3 -B "$source_project/$core_root/contract/compile.py" --check
-  python3 -B -m unittest discover \
-    -s "$source_project/$core_root/contract" \
-    -p 'test_compile.py'
-  python3 -B "$source_project/$profile_root/contract/compile.py" \
-    --core-companion "$source_project/$core_root/semantics.json" \
-    --check
-  O2I_CORE_COMPANION="$source_project/$core_root/semantics.json" \
-    python3 -B -m unittest discover \
-    -s "$source_project/$profile_root/contract" \
-    -p 'test_compile.py'
-  python3 -B "$source_project/$operation_root/contract/compile.py" \
-    --core-companion "$source_project/$core_root/semantics.json" \
-    --profile-companion "$source_project/$profile_root/profile.json" \
-    --profile-diagnostic-inventory \
-      "$source_project/$profile_root/contract/generated/o2i.archimate-profile.diagnostic-evidence-v1.json" \
-    --core-owner-diagnostic-inventory \
-      "$source_project/$core_root/contract/generated/o2i.core.owner-diagnostic-evidence-v1.json" \
-    --check
-  O2I_CORE_COMPANION="$source_project/$core_root/semantics.json" \
-    O2I_PROFILE_COMPANION="$source_project/$profile_root/profile.json" \
-    O2I_PROFILE_DIAGNOSTIC_INVENTORY="$source_project/$profile_root/contract/generated/o2i.archimate-profile.diagnostic-evidence-v1.json" \
-    O2I_CORE_OWNER_DIAGNOSTIC_INVENTORY="$source_project/$core_root/contract/generated/o2i.core.owner-diagnostic-evidence-v1.json" \
-    python3 -B -m unittest discover \
-    -s "$source_project/$operation_root/contract" \
-    -p 'test_compile.py'
-  source_logs="$source_dist/logs"
-  mkdir -p "$source_logs"
-  cabal --config-file="$cabal_config" -v0 \
-    --project-dir="$source_project" test all \
-    --builddir="$source_project/dist-newstyle" \
-    --build-log="$source_logs/\$compiler-\$pkgid.log" \
-    --test-log="$source_logs/\$compiler-\$pkgid-\$test-suite.log" \
-    --offline \
-    --ghc-options=-Werror
-
-  begin_phase "Haskell formatting"
-  info "Checking Haskell formatting."
-  if [ "$scope" = foundation ]; then
-    find spec/lib/core spec/ctr/archimate spec/lib/operation \
-      spec/lib/adapter/amx \
-      -path '*/dist-newstyle' -prune -o \
-      -type f -name '*.hs' \
-      -exec hindent --line-length 80 --validate {} +
-  else
-    find spec \
-      -path '*/dist-newstyle' -prune -o \
-      -type f -name '*.hs' \
-      -exec hindent --line-length 80 --validate {} +
-  fi
-  finish_phase 0
+  . "$root/utl/haskell/verify-stage.sh"
+  verify_haskell_stage "${1:-complete}"
 }
 
 verify_paper() {
+  if [ ! -f "$root/utl/paper/verify-stage.sh" ] ||
+    [ ! -r "$root/utl/paper/verify-stage.sh" ]; then
+    printf '[o2i|error] Required paper verification module is missing or unreadable.\n' >&2
+    exit 1
+  fi
   . "$root/utl/paper/verify-stage.sh"
   verify_paper_stage "$root" "$work"
 }

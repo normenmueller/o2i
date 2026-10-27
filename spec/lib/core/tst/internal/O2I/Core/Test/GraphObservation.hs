@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main
-  ( main
+module O2I.Core.Test.GraphObservation
+  ( tests
   ) where
 
 import Data.List.NonEmpty (NonEmpty)
@@ -19,24 +19,23 @@ import O2I.Core.Graph.Commitment (Commitment(..))
 import O2I.Core.Graph.Observation.Index
 import O2I.Core.Graph.Observation.Internal
 import O2I.Core.Identity
-import Test.Tasty (TestTree, defaultMain, testGroup)
+import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit ((@?=), assertFailure, testCase)
 
-main :: IO ()
-main =
-  defaultMain
-    (testGroup
-       "canonical graph observations"
-       [ canonicalConstruction
-       , derivesCanonicalCarrierIdentity
-       , permutationIndependent
-       , rejectsInvalidScope
-       , rejectsOutsideObservation
-       , rejectsDuplicateObservation
-       , rejectsCrossKindDuplicate
-       , rejectsMissingCarrier
-       , reportsEveryMissingEndpointRole
-       ])
+tests :: TestTree
+tests =
+  testGroup
+    "canonical graph observations"
+    [ canonicalConstruction
+    , derivesCanonicalCarrierIdentity
+    , permutationIndependent
+    , rejectsInvalidScope
+    , rejectsOutsideObservation
+    , rejectsDuplicateObservation
+    , rejectsCrossKindDuplicate
+    , rejectsMissingCarrier
+    , reportsEveryMissingEndpointRole
+    ]
 
 canonicalConstruction :: TestTree
 canonicalConstruction =

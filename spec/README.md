@@ -166,6 +166,23 @@ The complete-project verification includes the CLI package:
 
 It uses `cabal.project` and its frozen package plan with the same required toolchain. Foundation verification covers its narrower four-package closure.
 
+Core's internal tests run in one `o2i-core-internal-test` component. The existing domain groups sit under the `Core internal` Tasty root; fully qualified and positional test paths gain that first segment. From `spec/`, `cabal test o2i-core` runs the internal tests and the separate public conformance suite. To select one internal domain:
+
+```sh
+cabal test o2i-core:o2i-core-internal-test \
+  --test-option=--pattern --test-option='/Core Qualification/'
+```
+
+External compile-pass/fail checks continue to consume the built public package and verify opaque constructors, hidden modules and scope boundaries separately. Both verification scopes enforce the same Haddock documentation/link-warning gate and package warning configuration; intentional API-fixture compiler arguments and diagnostic assertions remain distinct.
+
+The verifier reports separate command timings for builds, test calls, Haddock, source-archive preparation and independent archive build/test calls. Archive checks still use freshly unpacked sources and a separate fresh build tree. A Cabal test call can include planning or rebuilding, so its duration is not pure test execution time.
+
+Times use a labeled monotonic clock; invalid observations remain `UNKNOWN`. Suspend behavior is platform-dependent, and comparisons require matching host, clock, tool and cache conditions. The verifier reports requested compiler and scheduling options; unobserved effective settings remain `UNKNOWN`.
+
+Cabal's native `--semaphore` coordinates module and component compilation for build, test and Haddock within the existing configured jobs budget. The verifier sets no jobs override. Quiet planning and API-fixture commands retain the same `-Werror` configuration. The single Core internal test binary can require more peak runtime memory; compiler scheduling does not reduce that runtime cost.
+
+`O2I_HASKELL_CABAL_VERBOSITY` accepts `1` (default) or `2` (diagnostic). It affects build, test and Haddock output while machine-readable probes stay quiet. Capture diagnostic output when investigating actual compiler invocations or the effective native jobs pool. The verbosity setting changes neither check selection/frequency nor optimization, scheduling, dependencies or archive isolation.
+
 ## CLI Setup
 
 From the repository root, build the CLI and add its executable directory to the current shell's PATH:
