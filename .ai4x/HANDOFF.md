@@ -15,7 +15,7 @@ Current explicit PO instructions request audit and concrete optimization with hi
 # Current Facts
 
 - Branch: `refactor/130-ai4x-lean`, initialized from `45cb1ad4e994873e9c2f6b94362d7d17f419a344`. It includes the separately backed-up PR-result/Routine guidance.
-- PR #129's accepted, green and PO-approved head is `aaa43ac9dc7aa88a59b81da0a4c101fd73918960`; its merge remains a separate pending PO decision. Preserve that PR and the parked #125/#116 work. #125 remains unstarted.
+- Separately authorized PR #129 merged into `trunk` as `bd0d907195b51ec2ae10426c56558feb797d4390`; its tree matches accepted head `aaa43ac9dc7aa88a59b81da0a4c101fd73918960`. #128 is closed/Done. Preserve the parked #125/#116 work; #125 remains Ready and unstarted. Re-fetch owning facts before relying on them.
 - Three fresh audits shaped the implementation. Co-Authors own corrections; non-author reviewers independently accept their exact scopes. Current findings, checks and acceptance belong to #130 and its PR, not this return-point reference.
 
 # Material Risk

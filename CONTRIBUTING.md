@@ -46,10 +46,10 @@ Ein Review nennt exakten Gegenstand und Scope, Reviewer-Fähigkeit, Prüfungen, 
 
 ## Umsetzung
 
-- Änderungen bleiben im exakten Issue- oder Routine-Grant; neue fachliche Ideen erhalten einen eigenen Issue.
+- Änderungen bleiben im ausdrücklich autorisierten Issue- oder Routine-Umfang; neue fachliche Ideen erhalten einen eigenen Issue.
 - Markdown verwendet eine Quellzeile pro Absatz. Unmittelbar vor jeder manuellen Änderung wird der Zielbereich frisch gelesen, danach werden Änderung und Diff geprüft.
 - `meta/o2i.archimate` wird nie direkt durch Agenten editiert; Modelländerungen erfolgen schrittweise durch den Product Owner.
-- Commit-Messages sind kleingeschriebenes Englisch ohne Typpräfix. Issue-Commits führen `Refs #N`; agentische Commits zusätzlich den wahrheitsgetreuen Grant-Trailer.
+- Commit-Messages sind kleingeschriebenes Englisch ohne Typpräfix. Provenienz und Issue-Referenzen richten sich nach der generierten Governance-Übersicht.
 - Agentische Remote-Aktionen verwenden ausschließlich die verifizierte Identität `gertrud-ai4x`. Technische Berechtigung ersetzt keine Governance-Autorität.
 - Release-relevante Änderungen aktualisieren `CHANGELOG.md`.
 - Vor Commit laufen mindestens alle durch die Pfadmatrix ausgewählten lokalen Stufen; unbekannte oder gemeinsam genutzte Flächen wählen die vollständige Suite.
