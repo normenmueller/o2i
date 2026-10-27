@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Main
-  ( main
+module O2I.Core.Test.Semantics
+  ( tests
   ) where
 
 import Data.ByteString (ByteString)
@@ -41,11 +41,8 @@ import O2I.Semantics.Strategy (assessStrategyFormulations)
 import O2I.Structure
 import qualified O2I.Structure.Index as StructureIndex
 import O2I.Structure.Internal (StructureAssessment(..), wellFormedGraphIdentity)
-import Test.Tasty (TestTree, defaultMain, testGroup)
+import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (Assertion, (@?=), assertBool, assertFailure, testCase)
-
-main :: IO ()
-main = defaultMain tests
 
 tests :: TestTree
 tests =

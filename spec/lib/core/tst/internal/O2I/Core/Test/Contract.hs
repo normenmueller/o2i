@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 -- | Focused laws for the closed Core companion catalogs.
-module Main
-  ( main
+module O2I.Core.Test.Contract
+  ( tests
   ) where
 
 import qualified Data.List.NonEmpty as NonEmpty
@@ -10,11 +10,8 @@ import Data.Text (Text)
 import O2I.Core.Contract
 import qualified O2I.Core.Contract.Generated as Generated
 import qualified O2I.Core.Contract.Internal as Internal
-import Test.Tasty (TestTree, defaultMain, testGroup)
+import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (Assertion, (@?=), testCase)
-
-main :: IO ()
-main = defaultMain tests
 
 tests :: TestTree
 tests =

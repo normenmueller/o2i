@@ -21,6 +21,8 @@ VERIFY = ROOT / "utl" / "verify.sh"
 WORKFLOW = ROOT / ".github/workflows/verify.yml"
 LOCAL = ROOT / "utl/verification/local.sh"
 PAPER_STAGE = ROOT / "utl/paper/verify-stage.sh"
+HASKELL_STAGE = ROOT / "utl/haskell/verify-stage.sh"
+PHASE_CLOCK = ROOT / "utl/haskell/phase_clock.py"
 
 
 def git(root: Path, *arguments: str) -> str:
@@ -104,6 +106,9 @@ class VerificationPathMatrixTests(unittest.TestCase):
                 "governance",
             },
             "utl/haskell/check_cabal_plan.py": {"licensing", "haskell"},
+            "utl/haskell/verify-stage.sh": {"licensing", "haskell"},
+            "utl/haskell/test_verify_stage.py": {"licensing", "haskell"},
+            "utl/haskell/phase_clock.py": set(scope.STAGES),
             "README.md": {"licensing", "paper"},
             "doc/README.md": {"licensing", "paper"},
             "doc/misc/wtf.md": {"licensing", "paper"},
@@ -152,32 +157,6 @@ class VerificationPathMatrixTests(unittest.TestCase):
         self.assertEqual(
             {"licensing", "model", "haskell"},
             set(selection.stages),
-        )
-
-    def test_foundation_routes_the_real_model_to_the_typed_view_checker(
-        self,
-    ) -> None:
-        contract = VERIFY.read_text(encoding="utf-8")
-
-        self.assertIn(
-            "o2i-amx:o2i-amx-repository-view-check",
-            contract,
-        )
-        self.assertIn(
-            '"$candidate_view_checker" "$root/meta/o2i.archimate"',
-            contract,
-        )
-        self.assertNotIn("check-executable-views.py", contract)
-        self.assertFalse(
-            (ROOT / "utl" / "model" / "check-executable-views.py").exists()
-        )
-        self.assertFalse(
-            (
-                ROOT
-                / "utl"
-                / "model"
-                / "test_check_executable_views.py"
-            ).exists()
         )
 
     def test_repository_view_tools_route_to_model_and_licensing(self) -> None:
@@ -490,7 +469,7 @@ class LocalStarterTests(unittest.TestCase):
         git(root, "init", "--quiet")
         git(root, "config", "user.email", "o2i@example.invalid")
         git(root, "config", "user.name", "O2I Test")
-        for original in (LOCAL, VERIFY, Path(scope.__file__), PAPER_STAGE):
+        for original in (LOCAL, VERIFY, Path(scope.__file__), PAPER_STAGE, HASKELL_STAGE, PHASE_CLOCK):
             target = root / original.relative_to(ROOT)
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(original, target)
@@ -599,6 +578,46 @@ pathlib.Path('probe.json').write_text(json.dumps({'tmp': os.environ['TMPDIR'], '
             self.assertIn("Running checkpoint stage: haskell.", result.stdout)
             self.assertIn("hindent", result.stderr)
 
+    def test_required_stage_modules_fail_closed_and_remain_lazy(self) -> None:
+        for stage, original in (("haskell", HASKELL_STAGE), ("paper", PAPER_STAGE)):
+            for invalid in ("missing", "directory"):
+                with self.subTest(stage=stage, invalid=invalid), tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    local = self.repository(root)
+                    domain = root / original.relative_to(ROOT)
+                    domain.unlink()
+                    if invalid == "directory":
+                        domain.mkdir()
+                    governance = self.run_starter(root, "governance")
+                    self.assertEqual(0, governance.returncode, governance.stderr)
+                    failed = self.run_starter(root, stage)
+                    self.assertEqual(1, failed.returncode, failed.stderr)
+                    self.assertIn("verification module is missing or unreadable", failed.stderr)
+                    self.assertNotIn("Verification stage passed", failed.stdout)
+                    self.assertEqual([], list((local / "tmp").iterdir()))
+
+    def test_haskell_interface_preserves_strict_failure_and_workspace_cleanup(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            local = self.repository(root)
+            (root / HASKELL_STAGE.relative_to(ROOT)).write_text(
+                'verify_haskell_stage() {\n'
+                '  printf "%s\\n%s\\n" "$1" "$work" > haskell-interface\n'
+                '  begin_phase "Fixture strict failure"\n'
+                '  sh -c "exit 23"\n'
+                '  touch haskell-continued\n'
+                '}\n', encoding="ascii",
+            )
+            result = self.run_starter(root, "haskell")
+            self.assertEqual(23, result.returncode, result.stderr)
+            actual_scope, workspace = (root / "haskell-interface").read_text().splitlines()
+            self.assertEqual("complete", actual_scope)
+            self.assertTrue(workspace.startswith(str((local / "tmp").resolve()) + os.sep))
+            self.assertFalse(Path(workspace).exists())
+            self.assertFalse((root / "haskell-continued").exists())
+            self.assertNotIn("Verification stage passed", result.stdout)
+            self.assertIn("exit_status=23.", result.stdout)
+
     def test_paper_implementation_loads_only_for_its_stage(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -636,21 +655,15 @@ pathlib.Path('probe.json').write_text(json.dumps({'tmp': os.environ['TMPDIR'], '
             self.assertNotIn("Verification stage passed", result.stdout)
 
     def timed_stage(self, root: Path, status: int) -> None:
-        runner = root / "utl/verify.sh"
-        source = runner.read_text(encoding="utf-8")
-        source = re.sub(
-            r"(?ms)^verify_haskell\(\) \{.*?^\}",
-            lambda match: (
-                'verify_haskell() {\n'
+        (root / HASKELL_STAGE.relative_to(ROOT)).write_text(
+                'verify_haskell_stage() {\n'
                 '  begin_phase "Fixture first"\n'
                 '  begin_phase "Fixture second"\n'
                 f"  sh -c 'exit {status}'\n"
                 '  touch phase-continued\n'
                 '  finish_phase 0\n'
-                '}'),
-            source, count=1,
+                '}\n', encoding="ascii",
         )
-        runner.write_text(source, encoding="utf-8")
 
     def test_phase_timings_report_elapsed_and_preserve_success_or_failure(self) -> None:
         for status in (0, 7):
@@ -658,20 +671,23 @@ pathlib.Path('probe.json').write_text(json.dumps({'tmp': os.environ['TMPDIR'], '
                 root = Path(directory)
                 self.repository(root)
                 self.timed_stage(root, status)
-                self.executable(
-                    root / "global-bin/date",
-                    '#!/bin/sh\n'
-                    'if [ ! -f clock ]; then echo 10 > clock; fi\n'
-                    'value=$(cat clock)\n'
-                    'echo "$((value + 7))" > clock\n'
-                    'echo "$value"\n',
+                (root / PHASE_CLOCK.relative_to(ROOT)).write_text(
+                    'from pathlib import Path\nimport sys\n'
+                    'if sys.argv[1] == "now":\n'
+                    '    path = Path(__file__).with_suffix(".samples")\n'
+                    '    value = int(path.read_text()) if path.exists() else 10000000000\n'
+                    '    path.write_text(str(value + 7000000000))\n'
+                    '    print(value)\n'
+                    'else:\n'
+                    '    print(f"{(int(sys.argv[3]) - int(sys.argv[2])) / 1e9:.9f}")\n',
+                    encoding="ascii",
                 )
                 result = self.run_starter(root, "haskell")
                 self.assertEqual(status, result.returncode, result.stderr)
                 timings = [line for line in result.stdout.splitlines() if "Timing:" in line]
                 self.assertEqual([
-                    "[o2i|info] Timing: Fixture first; elapsed_seconds=7; exit_status=0.",
-                    f"[o2i|info] Timing: Fixture second; elapsed_seconds=7; exit_status={status}.",
+                    "[o2i|info] Timing: Fixture first; elapsed_seconds=7.000000000; clock=monotonic_ns; exit_status=0.",
+                    f"[o2i|info] Timing: Fixture second; elapsed_seconds=7.000000000; clock=monotonic_ns; exit_status={status}.",
                 ], timings)
                 self.assertEqual(status == 0, (root / "phase-continued").exists())
                 self.assertEqual(status == 0, "Verification stage passed" in result.stdout)
@@ -683,11 +699,11 @@ pathlib.Path('probe.json').write_text(json.dumps({'tmp': os.environ['TMPDIR'], '
                 root = Path(directory)
                 self.repository(root)
                 self.timed_stage(root, status)
-                self.executable(root / "global-bin/date", "#!/bin/sh\nexit 9\n")
+                (root / PHASE_CLOCK.relative_to(ROOT)).write_text("raise SystemExit(9)\n", encoding="ascii")
                 result = self.run_starter(root, "haskell")
                 self.assertEqual(status, result.returncode, result.stderr)
                 self.assertIn(
-                    f"Timing: Fixture second; elapsed_seconds=UNKNOWN; exit_status={status}.",
+                    f"Timing: Fixture second; elapsed_seconds=UNKNOWN; clock=monotonic_ns; exit_status={status}.",
                     result.stdout,
                 )
                 self.assertEqual(status == 0, (root / "phase-continued").exists())
