@@ -684,31 +684,39 @@
       },
       {
         "case": "agent-authored-and-committed",
-        "decisionAuthority": "current-grant-issuer",
+        "decisionAuthority": "current-authority-source-issuer",
         "contentAuthor": "agentIdentity",
         "commitActor": "agentIdentity",
         "remotePublisher": "separately-verified-identity"
       },
       {
         "case": "human-authored-or-committed",
-        "decisionAuthority": "current-grant-issuer",
+        "decisionAuthority": "current-authority-source-issuer",
         "contentAuthor": "direct-evidence-only",
         "commitActor": "direct-evidence-only",
         "remotePublisher": "separately-verified-identity"
       },
       {
         "case": "agent-remote-publication",
-        "decisionAuthority": "current-grant-issuer",
+        "decisionAuthority": "current-authority-source-issuer",
         "contentAuthor": "independent-observed-fact",
         "commitActor": "independent-observed-fact",
         "remotePublisher": "verified-gertrud-ai4x"
       }
     ],
-    "issueScopedAgentCommitTrailers": [
-      "Refs #N",
-      "O2I-Grant: <grant-id>"
-    ],
-    "decisionAuthorityRecord": "owning-Issue-durable-grant-receipt"
+    "issueScopedAgentCommitTrailers": {
+      "grant": [
+        "Refs #N",
+        "O2I-Grant: <grant-id>"
+      ],
+      "live-instruction": [
+        "Refs #N"
+      ]
+    },
+    "decisionAuthorityRecord": {
+      "grant": "owning-Issue-durable-grant-receipt",
+      "live-instruction": "current-explicit-instruction-with-observed-issuer"
+    }
   },
   "forbiddenActions": [
     {

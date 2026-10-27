@@ -692,17 +692,24 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
         matrix_rows.append(tuple(row.values()))
     if tuple(matrix_rows) != (
         ("product-owner-approval", "Product Owner", "no-inference", "no-inference", "no-inference"),
-        ("agent-authored-and-committed", "current-grant-issuer", "agentIdentity", "agentIdentity", "separately-verified-identity"),
-        ("human-authored-or-committed", "current-grant-issuer", "direct-evidence-only", "direct-evidence-only", "separately-verified-identity"),
-        ("agent-remote-publication", "current-grant-issuer", "independent-observed-fact", "independent-observed-fact", "verified-gertrud-ai4x"),
+        ("agent-authored-and-committed", "current-authority-source-issuer", "agentIdentity", "agentIdentity", "separately-verified-identity"),
+        ("human-authored-or-committed", "current-authority-source-issuer", "direct-evidence-only", "direct-evidence-only", "separately-verified-identity"),
+        ("agent-remote-publication", "current-authority-source-issuer", "independent-observed-fact", "independent-observed-fact", "verified-gertrud-ai4x"),
     ):
         raise ContractError("policy.provenance.matrix: unsupported v1 matrix")
-    if _unique_strings(
+    trailers = _require_keys(
         provenance["issueScopedAgentCommitTrailers"],
-        "provenance.issueScopedAgentCommitTrailers",
-    ) != ("Refs #N", "O2I-Grant: <grant-id>"):
+        ("grant", "live-instruction"), "provenance.issueScopedAgentCommitTrailers",
+    )
+    if tuple(trailers.values()) != (["Refs #N", "O2I-Grant: <grant-id>"], ["Refs #N"]):
         raise ContractError("policy.provenance: unsupported commit trailers")
-    if provenance["decisionAuthorityRecord"] != "owning-Issue-durable-grant-receipt":
+    records = _require_keys(
+        provenance["decisionAuthorityRecord"],
+        ("grant", "live-instruction"), "provenance.decisionAuthorityRecord",
+    )
+    if tuple(records.values()) != (
+        "owning-Issue-durable-grant-receipt", "current-explicit-instruction-with-observed-issuer",
+    ):
         raise ContractError("policy.provenance: unsupported decision record")
 
     forbidden = _require_sequence(top["forbiddenActions"], "policy.forbiddenActions")
@@ -2114,6 +2121,12 @@ def render_agent_projection(policy: Mapping[str, Any]) -> str:
         + ", ".join(f"`{fact}`" for fact in provenance["independentFacts"])
         + ". Approval never implies authorship, committer, or publisher identity."
     )
+    for source, trailers in provenance["issueScopedAgentCommitTrailers"].items():
+        lines.append(
+            f"- `{source}`: Issue-scoped agent commit trailers "
+            + ", ".join(f"`{trailer}`" for trailer in trailers)
+            + f"; authority record `{provenance['decisionAuthorityRecord'][source]}`."
+        )
     for rule in policy["forbiddenActions"]:
         if "actionIds" in rule:
             forbidden_text = ", ".join(f"`{item}`" for item in rule["actionIds"])
@@ -2168,6 +2181,10 @@ def render_contributing_projection(policy: Mapping[str, Any]) -> str:
         "### Provenienz und Grenzen",
         "",
         "Product-Owner-Entscheidungsautorität, tatsächliche Inhaltsautorschaft, Erzeuger des Git-Commit-Objekts und verifizierte Remote-Publisher-Identität sind unabhängige Fakten. Eine Freigabe macht den Product Owner niemals automatisch zum Autor, Co-Author, Committer oder Publisher.",
+        "",
+        "Issue-bezogene Agenten-Commits führen "
+        + ", ".join(f"`{trailer}`" for trailer in policy["provenance"]["issueScopedAgentCommitTrailers"]["live-instruction"])
+        + ". Bei Grant-Autorität kommt `O2I-Grant: <grant-id>` hinzu; ihr Autoritätsbeleg gehört unveränderlich ins owning Issue. Bei einer aktuellen ausdrücklichen Anweisung bleiben Quelle und beobachteter Aussteller maßgeblich; daraus entstehen weder Grant-ID noch dauerhafter Grant-Beleg.",
         "",
         "Ein gewöhnlicher Work-Unit-Grant bis `In review` umfasst insbesondere nicht: "
         + ", ".join(f"`{item}`" for item in action_boundary)

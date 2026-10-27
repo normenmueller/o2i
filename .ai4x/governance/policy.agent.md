@@ -50,6 +50,8 @@ Ordinary results create no event. Only `authority_request` accepts an exact adja
 # Provenance And Forbidden Actions
 
 Independent provenance facts: `product-owner-decision-authority`, `actual-content-authorship`, `git-commit-object-creator`, `verified-remote-publisher-identity`. Approval never implies authorship, committer, or publisher identity.
+- `grant`: Issue-scoped agent commit trailers `Refs #N`, `O2I-Grant: <grant-id>`; authority record `owning-Issue-durable-grant-receipt`.
+- `live-instruction`: Issue-scoped agent commit trailers `Refs #N`; authority record `current-explicit-instruction-with-observed-issuer`.
 - `forbid-ready-as-authority`: when `Project-status-Ready-without-current-matching-authority`, forbid selector `all-actions`.
 - `forbid-unlisted-transition`: when `workflow-transition-is-not-enumerated`, forbid `project.transition`.
 - `forbid-grant-activation-issue-mutation`: when `activating-or-materializing-a-grant`, forbid `issue.contract.mutate`.

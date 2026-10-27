@@ -365,6 +365,37 @@ class PolicyShapeTests(unittest.TestCase):
             set(provenance["approvalNeverImplies"]),
         )
 
+    def test_provenance_requires_only_the_actual_authority_sources_record_and_trailers(self) -> None:
+        policy = contract.load_policy()
+        provenance = policy["provenance"]
+        trailers = provenance["issueScopedAgentCommitTrailers"]
+        records = provenance["decisionAuthorityRecord"]
+        self.assertEqual(["Refs #N", "O2I-Grant: <grant-id>"], trailers["grant"])
+        self.assertEqual(["Refs #N"], trailers["live-instruction"])
+        self.assertEqual("owning-Issue-durable-grant-receipt", records["grant"])
+        self.assertEqual("current-explicit-instruction-with-observed-issuer", records["live-instruction"])
+        for row in provenance["matrix"][1:]:
+            self.assertEqual("current-authority-source-issuer", row["decisionAuthority"])
+        projection = contract.render_agent_projection(policy)
+        for source in ("grant", "live-instruction"):
+            line = next(line for line in projection.splitlines() if line.startswith(f"- `{source}`:"))
+            self.assertIn("`Refs #N`", line)
+            self.assertIn(f"`{records[source]}`", line)
+            self.assertEqual(source == "grant", "O2I-Grant" in line)
+        mutations = (
+            lambda p: p["issueScopedAgentCommitTrailers"]["live-instruction"].append("O2I-Grant: <grant-id>"),
+            lambda p: p["issueScopedAgentCommitTrailers"]["grant"].remove("O2I-Grant: <grant-id>"),
+            lambda p: p["issueScopedAgentCommitTrailers"]["live-instruction"].remove("Refs #N"),
+            lambda p: p["decisionAuthorityRecord"].__setitem__("live-instruction", records["grant"]),
+            lambda p: p["decisionAuthorityRecord"].__setitem__("grant", records["live-instruction"]),
+            lambda p: p["matrix"][1].__setitem__("decisionAuthority", "current-grant-issuer"),
+        )
+        for mutation in mutations:
+            invalid = copy.deepcopy(policy)
+            mutation(invalid["provenance"])
+            with self.assertRaises(contract.ContractError):
+                contract._validate_policy_shape(invalid)
+
     def test_generated_projections_are_byte_exact_and_identifier_complete(self) -> None:
         policy = contract.load_policy()
         contract.validate_projections(policy)

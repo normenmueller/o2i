@@ -29,6 +29,8 @@ GitHub ist das einzige operative Continuity-Ziel. Zulässig sind ein vollständi
 
 Product-Owner-Entscheidungsautorität, tatsächliche Inhaltsautorschaft, Erzeuger des Git-Commit-Objekts und verifizierte Remote-Publisher-Identität sind unabhängige Fakten. Eine Freigabe macht den Product Owner niemals automatisch zum Autor, Co-Author, Committer oder Publisher.
 
+Issue-bezogene Agenten-Commits führen `Refs #N`. Bei Grant-Autorität kommt `O2I-Grant: <grant-id>` hinzu; ihr Autoritätsbeleg gehört unveränderlich ins owning Issue. Bei einer aktuellen ausdrücklichen Anweisung bleiben Quelle und beobachteter Aussteller maßgeblich; daraus entstehen weder Grant-ID noch dauerhafter Grant-Beleg.
+
 Ein gewöhnlicher Work-Unit-Grant bis `In review` umfasst insbesondere nicht: `pull-request.merge`, `issue.close`, `completed-work.cleanup`, `release.publish`, `tag.create`, `protected.publication`, `scope.expand`. Scope- oder Zielerweiterung und das Überschreiten eines Ausschlusses benötigen neue exakte Product-Owner-Autorität.
 <!-- END GENERATED: ai4x-governance -->
 
