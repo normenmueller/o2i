@@ -6,12 +6,14 @@ from __future__ import annotations
 import argparse
 from hashlib import sha256
 import json
+import math
 from pathlib import Path
 import re
 import subprocess
 import sys
 import unicodedata
-from typing import Optional, Sequence
+from typing import Iterator, NamedTuple, Optional, Sequence
+import xml.etree.ElementTree as ET
 
 
 MANIFEST_SCHEMA = "o2i.paper-freshness/v2"
@@ -147,61 +149,131 @@ def pdf_uri_targets(path: Path) -> tuple[str, ...]:
     return tuple(sorted(targets))
 
 
-def _complete_uri_span(text: str, start: int, end: int) -> bool:
-    """Require prose boundaries; leave ambiguous URI continuations untouched."""
-    prefix = re.search(r"\S*\Z", text[:start]).group()
-    if prefix.strip("(<[{\"'"):
-        return False
-    previous = re.search(r"(\S+)(\s+)\Z", text[: start - len(prefix)])
-    if (
-        previous is not None
-        and ("\n" in previous.group(2) or "\r" in previous.group(2))
-        and re.match(
-            r"[A-Za-z][A-Za-z0-9+.-]*:\S+",
-            previous.group(1).lstrip("(<[{\"'"),
-        )
-    ):
-        return False
-    suffix = text[end:]
-    if not suffix.strip():
-        return True
-    # A bare space or newline followed by more text cannot certify an end:
-    # it might continue the displayed URI. Sentence/closing punctuation must
-    # itself end the token, so .ext, ?query and #fragment remain significant.
-    return re.match(r"[.,;!?)\]}>\"']+(?=\s|$)", suffix) is not None
+class _XmlFragment(NamedTuple):
+    text: str
+    target: Optional[str]
+    start: int
+    end: int
+    line: int
 
 
-def normalize_uri_wraps(text: str, uri_targets: Sequence[str]) -> str:
-    """Join only visible HTTP(S) targets with every lexical character intact."""
-    targets = sorted(
-        {
-            target
-            for target in uri_targets
-            if re.fullmatch(r"https?://\S+", target, re.IGNORECASE)
-        },
-        key=lambda target: (-len(target), target),
-    )
-    if not targets:
-        return text
-    pattern = re.compile(
-        "|".join(r"\s*".join(re.escape(char) for char in target) for target in targets)
-    )
-    # Keep the extracted characters; annotations certify a match but never
-    # supply a missing character or replace a displayed label with its target.
-    return pattern.sub(
-        lambda match: (
-            re.sub(r"\s+", "", match.group())
-            if _complete_uri_span(text, match.start(), match.end())
-            else match.group()
-        ),
-        text,
-    )
+def _xml_text_fragments(
+    node: ET.Element, target: Optional[str] = None
+) -> Iterator[tuple[str, Optional[str]]]:
+    """Retain actual text and link ownership through inline font elements."""
+    if node.tag == "a":
+        target = node.get("href")
+        if not target:
+            raise PdfFreshnessError("publication link XML has a missing target")
+    if node.text:
+        yield node.text, target
+    for child in node:
+        yield from _xml_text_fragments(child, target)
+        if child.tail:
+            yield child.tail, target
 
 
-def normalized_pdf_text(path: Path, uri_targets: Sequence[str] = ()) -> str:
+def _line_bounds(element: ET.Element) -> tuple[float, float]:
+    """Require finite, positive vertical geometry before certifying a wrap."""
+    try:
+        top = float(element.attrib["top"])
+        height = float(element.attrib["height"])
+    except (KeyError, ValueError) as error:
+        raise PdfFreshnessError("publication URI line geometry is invalid") from error
+    bottom = top + height
+    if not all(math.isfinite(value) for value in (top, height, bottom)) or height <= 0:
+        raise PdfFreshnessError("publication URI line geometry is invalid")
+    return top, bottom
+
+
+def _page_uri_joiners(page: ET.Element) -> tuple[str, list[tuple[int, int]]]:
+    """Find certified inter-line gaps as pairs of non-whitespace indices."""
+    fragments = []
+    characters = []
+    cursor = 0
+    lines = page.findall("text")
+    for line, element in enumerate(lines):
+        for text, target in _xml_text_fragments(element):
+            visible = "".join(char for char in text if not char.isspace())
+            end = cursor + len(visible)
+            fragments.append(_XmlFragment(text, target, cursor, end, line))
+            characters.append(visible)
+            cursor = end
+
+    joiners = []
+    index = 0
+    while index < len(fragments):
+        first = fragments[index]
+        target = first.target
+        end = index + 1
+        if target is None or re.fullmatch(r"https?://\S+", target, re.IGNORECASE) is None:
+            index = end
+            continue
+        while end < len(fragments) and fragments[end].target == target:
+            end += 1
+        group = fragments[index:end]
+        label = "".join(fragment.text for fragment in group)
+        # Poppler may include the sentence's closing punctuation in its link
+        # rectangle. Preserve it, and require the entire label to match.
+        if re.fullmatch(re.escape(target) + r"[.,;!?)\]}>\"']*", label):
+            uri_end = first.start + len(target)
+            for before, after in zip(group, group[1:]):
+                if (
+                    before.line != after.line
+                    and before.start < before.end < uri_end
+                    and after.start < after.end
+                ):
+                    _, before_bottom = _line_bounds(lines[before.line])
+                    after_top, _ = _line_bounds(lines[after.line])
+                    if after_top >= before_bottom:
+                        joiners.append((before.end - 1, after.start))
+        index = end
+    return "".join(characters), joiners
+
+
+def normalize_linked_uri_wraps(raw: str, link_xml: str) -> str:
+    """Remove only mapped URI layout gaps; raw text owns every other space."""
+    try:
+        document = ET.fromstring(link_xml)
+    except ET.ParseError as error:
+        raise PdfFreshnessError(f"cannot parse publication link XML: {error}") from error
+    if document.tag != "pdf2xml":
+        raise PdfFreshnessError("publication link XML has an invalid root")
+    pages = raw.split("\f")
+    count = len(pages) - (len(pages) > 1 and not pages[-1].strip())
+    xml_pages = document.findall("page")
+    if len(xml_pages) != count:
+        raise PdfFreshnessError("raw text and link XML page counts differ")
+    for index, page in enumerate(xml_pages):
+        if page.get("number") != str(index + 1):
+            raise PdfFreshnessError("publication link XML page order is invalid")
+        xml_characters, joiners = _page_uri_joiners(page)
+        if not joiners:
+            continue
+        text = pages[index]
+        positions = [offset for offset, char in enumerate(text) if not char.isspace()]
+        if "".join(text[offset] for offset in positions) != xml_characters:
+            raise PdfFreshnessError(
+                f"raw text and link XML characters differ on URI page {index + 1}"
+            )
+        parts = []
+        cursor = 0
+        for left, right in joiners:
+            start, end = positions[left] + 1, positions[right]
+            gap = text[start:end]
+            if gap and not gap.isspace():
+                raise PdfFreshnessError("publication URI gap contains visible characters")
+            parts.append(text[cursor:start])
+            cursor = end
+        parts.append(text[cursor:])
+        pages[index] = "".join(parts)
+    return "\f".join(pages)
+
+
+def normalized_pdf_text(path: Path) -> str:
     """Preserve raw text characters and ignore certified URI line wrapping."""
     completed = subprocess.run(
-        ["pdftotext", "-raw", "-enc", "UTF-8", "-nopgbrk", str(path), "-"],
+        ["pdftotext", "-raw", "-enc", "UTF-8", str(path), "-"],
         check=False,
         capture_output=True,
         text=True,
@@ -209,7 +281,16 @@ def normalized_pdf_text(path: Path, uri_targets: Sequence[str] = ()) -> str:
     if completed.returncode != 0:
         detail = completed.stderr.strip() or "pdftotext failed"
         raise PdfFreshnessError(f"cannot extract {path}: {detail}")
-    unwrapped = normalize_uri_wraps(completed.stdout, uri_targets)
+    links = subprocess.run(
+        ["pdftohtml", "-xml", "-i", "-stdout", "-hidden", "-enc", "UTF-8", str(path)],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if links.returncode != 0:
+        detail = links.stderr.strip() or "pdftohtml failed"
+        raise PdfFreshnessError(f"cannot extract link spans from {path}: {detail}")
+    unwrapped = normalize_linked_uri_wraps(completed.stdout, links.stdout)
     normalized = unicodedata.normalize("NFKC", unwrapped)
     return " ".join(normalized.split())
 
@@ -452,8 +533,8 @@ def rendered_publication_errors(versioned: Path, rendered: Path) -> list[str]:
     rendered_targets = pdf_uri_targets(rendered)
     if versioned_targets != rendered_targets:
         errors.append("publication link targets differ")
-    versioned_text = normalized_pdf_text(versioned, versioned_targets)
-    rendered_text = normalized_pdf_text(rendered, rendered_targets)
+    versioned_text = normalized_pdf_text(versioned)
+    rendered_text = normalized_pdf_text(rendered)
     if versioned_text != rendered_text:
         errors.append(_first_text_difference(versioned_text, rendered_text))
     return errors

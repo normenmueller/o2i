@@ -485,7 +485,7 @@ verify_haskell() {
 verify_paper() {
   for command in \
     md2pdf pandoc pandoc-crossref pandoc-include pdflatex pdfinfo pdftoppm \
-    pdftotext python3; do
+    pdftotext pdftohtml python3; do
     require "$command"
   done
 
