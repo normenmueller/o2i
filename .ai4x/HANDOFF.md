@@ -22,6 +22,10 @@ Native model semantics remain PO-owned. Exclude merge/direct trunk publication, 
 - Existing explicit PO operating clarifications are carried in `.ai4x/TEAM.md`, `governance/guidelines.md` and `governance/decision-handoff.md`. Only State/Handoff branch binding and return-point text change for isolation.
 - Software, Profile/prose, native/export and PDF independent reviews are accepted without findings on their exact source scopes. The PO performed native changes and PNG export. The source-grounded KPI explanation and 58-page PDF are synchronized. Whole isolated-candidate acceptance requires fresh-base checks and current PR evidence.
 
+# Material Risk
+
+Keep the shared Objective, exact role/owner binding, explicit macros and original evidence. Independent source acceptance does not substitute for isolated-base verification or grant new authority.
+
 # Verification
 
 The source checkpoint passed canonical licensing, governance, model, full Haskell and paper stages, including main/fresh-archive builds/tests, Candidate Views, external API contracts, Haddock, formatting and fresh PDF rendering. Both runtime passes include Core 256, Operation 199 and CLI 62; model tests total 70. Log SHA-256 `4c1823af8c2d3f665ff4f43b65d92b3bb8183eb33be3fa592d5d774fa1744129`. Revalidate isolated-base publication binding, applicable checks and independent acceptance; remote PR/CI facts belong to #125. Scratch owns no authority; no cold-start eligibility is claimed.
@@ -29,3 +33,7 @@ The source checkpoint passed canonical licensing, governance, model, full Haskel
 # Next Action
 
 Read current #125 evidence and PR/Project state. Finish isolated-candidate checks/review, back up and publish the PR, complete required CI and move #125 to In review. Then return the exact reviewed PR to the PO. Do not merge or resume the illustration without separate authority.
+
+# Local Return Point
+
+Use this isolated branch for #125. After accepted correction and separately authorized integration, return to the parked illustration's company Vision. Preserve the source checkpoint and all illustration refs.
