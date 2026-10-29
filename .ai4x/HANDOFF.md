@@ -14,21 +14,21 @@ The PO explicitly requested integration of accepted trunk, retirement of the sup
 
 # Current Facts
 
-Working branch: `feat/116-illustration`. The integration retains the complete parked and correction histories and current trunk. All nine illustration paths match their saved source; generic files match trunk. #125 and #135 are closed/Done.
+Working branch: `feat/116-illustration`. Published integration `65ddae1` retains the complete parked and correction histories and accepted trunk. All nine illustration paths match their saved source; generic files match trunk. The superseded 125 branch is removed locally/remotely. #125 and #135 are closed/Done; #109/#115/#116 are In progress.
 
 Mission: "Entscheiden und Verwirklichen ermöglichen". The next content decision is the company Vision. #109 owns the overall illustration, #115 the story and #116 native realization.
 
 # Material Risk
 
-Preserve model/export identities and all unique work. Retire the old 125 ref only after the full history is published on the illustration branch and preservation checks pass. No new product semantics or example-specific exception.
+Preserve model/export identities and all unique work. Fresh restoration from the published illustration branch and full ancestry prove preservation without the retired ref. No new product semantics or example-specific exception.
 
 # Verification
 
-The generic baseline is already accepted and green. Check the unchanged model with current tooling and affected CLI requests; record current results in the owning Issues. An unfinished checkpoint is not final reference acceptance.
+Licensing, governance, repository model checks and all nine current-CLI requests pass. Illustration snapshots regenerate successfully. The two existing empty orientation folders remain explicit unfinished-checkpoint findings. #116 owns exact evidence; this is not final reference acceptance.
 
 # Next Action
 
-Verify and publish the integrated checkpoint, remove the superseded 125 ref safely, then agree company Vision in #115. Do not restart Mission selection. Follow the normal per-save model checks in #116.
+Agree company Vision in #115. Do not restart Mission selection. Follow the normal per-save model checks in #116.
 
 # Local Return Point
 
