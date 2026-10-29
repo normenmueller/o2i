@@ -243,150 +243,142 @@ assessFit semanticIndex strategyResults claim claimOccurrence participants targe
                 CollectiveFitUnavailable
                   (CollectiveFitIdentityUnresolved NonEmpty.:| [])
                   []
-      where prerequisiteStates =
-              participantPrerequisites strategyResults participants
-                ++ targetPrerequisites strategyResults target
-            prerequisiteReasons =
-              Set.toAscList (Set.fromList (map fst prerequisiteStates))
-            blockers = Set.toAscList (Set.fromList (map snd prerequisiteStates))
-            targetFormulation = target >>= validStrategyInput strategyResults
-            participantsResolved =
-              all
-                (uncurry (identitySiteResolved . indexedPointer "/participants"))
-                (zip
-                   [0 :: Int ..]
-                   (NonEmpty.toList (collectiveParticipants input)))
-            targetResolved =
-              identitySiteResolved "/target" (collectiveTarget input)
-            targetGuidingPolicyResolved =
-              all
-                (uncurry
-                   (identitySiteResolved . indexedPointer "/targetGuidingPolicy"))
-                (zip
-                   [0 :: Int ..]
-                   (NonEmpty.toList (collectiveTargetGuidingPolicy input)))
-            pairwiseCoherenceResolved =
-              and
-                [ identitySiteResolved
-                  (nestedPointer "/pairwiseCoherence" index "participantA")
-                  (pairwiseParticipantA row)
-                  && identitySiteResolved
-                       (nestedPointer "/pairwiseCoherence" index "participantB")
-                       (pairwiseParticipantB row)
-                | (index, row) <-
-                    zip
-                      [0 :: Int ..]
-                      (NonEmpty.toList (collectivePairwiseCoherence input))
-                ]
-            participantCompatibilityResolved =
-              and
-                [ identitySiteResolved
-                  (nestedPointer "/participantCompatibility" index "participant")
-                  (compatibilityParticipant row)
-                | (index, row) <-
-                    zip
-                      [0 :: Int ..]
-                      (NonEmpty.toList
-                         (collectiveParticipantCompatibility input))
-                ]
-            allIdentitySitesResolved =
-              participantsResolved
-                && targetResolved
-                && targetGuidingPolicyResolved
-                && pairwiseCoherenceResolved
-                && participantCompatibilityResolved
-            identitySiteResolved pointer identifier =
-              collectiveIdentitySiteResolved
-                semanticIndex
+      where
+        prerequisiteStates =
+          participantPrerequisites strategyResults participants
+            ++ targetPrerequisites strategyResults target
+        prerequisiteReasons =
+          Set.toAscList (Set.fromList (map fst prerequisiteStates))
+        blockers = Set.toAscList (Set.fromList (map snd prerequisiteStates))
+        targetFormulation = target >>= validStrategyInput strategyResults
+        participantsResolved =
+          all
+            (uncurry (identitySiteResolved . indexedPointer "/participants"))
+            (zip [0 :: Int ..] (NonEmpty.toList (collectiveParticipants input)))
+        targetResolved = identitySiteResolved "/target" (collectiveTarget input)
+        targetGuidingPolicyResolved =
+          all
+            (uncurry
+               (identitySiteResolved . indexedPointer "/targetGuidingPolicy"))
+            (zip
+               [0 :: Int ..]
+               (NonEmpty.toList (collectiveTargetGuidingPolicy input)))
+        pairwiseCoherenceResolved =
+          and
+            [ identitySiteResolved
+              (nestedPointer "/pairwiseCoherence" index "participantA")
+              (pairwiseParticipantA row)
+              && identitySiteResolved
+                   (nestedPointer "/pairwiseCoherence" index "participantB")
+                   (pairwiseParticipantB row)
+            | (index, row) <-
+                zip
+                  [0 :: Int ..]
+                  (NonEmpty.toList (collectivePairwiseCoherence input))
+            ]
+        participantCompatibilityResolved =
+          and
+            [ identitySiteResolved
+              (nestedPointer "/participantCompatibility" index "participant")
+              (compatibilityParticipant row)
+            | (index, row) <-
+                zip
+                  [0 :: Int ..]
+                  (NonEmpty.toList (collectiveParticipantCompatibility input))
+            ]
+        allIdentitySitesResolved =
+          participantsResolved
+            && targetResolved
+            && targetGuidingPolicyResolved
+            && pairwiseCoherenceResolved
+            && participantCompatibilityResolved
+        identitySiteResolved pointer identifier =
+          collectiveIdentitySiteResolved semanticIndex claim pointer identifier
+        suppliedPairs =
+          sort
+            [ canonicalPair
+              (pairwiseParticipantA row)
+              (pairwiseParticipantB row)
+            | row <- NonEmpty.toList (collectivePairwiseCoherence input)
+            ]
+        compatibilityParticipants =
+          sort
+            (map
+               compatibilityParticipant
+               (NonEmpty.toList (collectiveParticipantCompatibility input)))
+        fitDefects =
+          [ defect
+          | participantsResolved
+          , defect <-
+              predicateDefect
+                Generated.CollectiveFitParticipantBindingRule
+                Generated.CollectiveFitParticipantBindingOccurrences
                 claim
-                pointer
-                identifier
-            suppliedPairs =
-              sort
-                [ canonicalPair
-                  (pairwiseParticipantA row)
-                  (pairwiseParticipantB row)
-                | row <- NonEmpty.toList (collectivePairwiseCoherence input)
-                ]
-            compatibilityParticipants =
-              sort
-                (map
-                   compatibilityParticipant
-                   (NonEmpty.toList (collectiveParticipantCompatibility input)))
-            fitDefects =
-              [ defect
-              | participantsResolved
-              , defect <-
-                  predicateDefect
-                    Generated.CollectiveFitParticipantBindingRule
-                    Generated.CollectiveFitParticipantBindingOccurrences
-                    claim
-                    claimOccurrence
-                    (sort participants
-                       == sort (NonEmpty.toList (collectiveParticipants input)))
-              ]
-                ++ [ defect
-                   | targetResolved
-                   , defect <-
-                       predicateDefect
-                         Generated.CollectiveFitTargetBindingRule
-                         Generated.CollectiveFitTargetBindingOccurrences
-                         claim
-                         claimOccurrence
-                         (Just (collectiveTarget input) == target)
-                   ]
-                ++ [ defect
-                   | targetGuidingPolicyResolved
-                   , defect <-
-                       predicateDefect
-                         Generated.CollectiveFitTargetGuidingPolicyRule
-                         Generated.CollectiveFitTargetGuidingPolicyOccurrences
-                         claim
-                         claimOccurrence
-                         (maybe
-                            False
-                            ((== Set.fromList
-                                   (NonEmpty.toList
-                                      (collectiveTargetGuidingPolicy input)))
-                               . Set.fromList
-                               . NonEmpty.toList
-                               . formulationGuidingPolicy)
-                            targetFormulation)
-                   ]
-                ++ predicateDefect
-                     Generated.CollectiveFitTargetTradeOffsRule
-                     Generated.CollectiveFitTargetTradeOffsOccurrences
+                claimOccurrence
+                (sort participants
+                   == sort (NonEmpty.toList (collectiveParticipants input)))
+          ]
+            ++ [ defect
+               | targetResolved
+               , defect <-
+                   predicateDefect
+                     Generated.CollectiveFitTargetBindingRule
+                     Generated.CollectiveFitTargetBindingOccurrences
+                     claim
+                     claimOccurrence
+                     (Just (collectiveTarget input) == target)
+               ]
+            ++ [ defect
+               | targetGuidingPolicyResolved
+               , defect <-
+                   predicateDefect
+                     Generated.CollectiveFitTargetGuidingPolicyRule
+                     Generated.CollectiveFitTargetGuidingPolicyOccurrences
                      claim
                      claimOccurrence
                      (maybe
                         False
                         ((== Set.fromList
                                (NonEmpty.toList
-                                  (collectiveTargetTradeOffs input)))
+                                  (collectiveTargetGuidingPolicy input)))
                            . Set.fromList
                            . NonEmpty.toList
-                           . formulationTradeOffs)
+                           . formulationGuidingPolicy)
                         targetFormulation)
-                ++ [ defect
-                   | pairwiseCoherenceResolved
-                   , defect <-
-                       predicateDefect
-                         Generated.CollectiveFitPairwiseCoherenceRule
-                         Generated.CollectiveFitPairwiseCoherenceOccurrences
-                         claim
-                         claimOccurrence
-                         (suppliedPairs == expectedPairs)
-                   ]
-                ++ [ defect
-                   | participantCompatibilityResolved
-                   , defect <-
-                       predicateDefect
-                         Generated.CollectiveFitParticipantCompatibilityRule
-                         Generated.CollectiveFitParticipantCompatibilityOccurrences
-                         claim
-                         claimOccurrence
-                         (compatibilityParticipants == sort participants)
-                   ]
+               ]
+            ++ predicateDefect
+                 Generated.CollectiveFitTargetTradeOffsRule
+                 Generated.CollectiveFitTargetTradeOffsOccurrences
+                 claim
+                 claimOccurrence
+                 (maybe
+                    False
+                    ((== Set.fromList
+                           (NonEmpty.toList (collectiveTargetTradeOffs input)))
+                       . Set.fromList
+                       . NonEmpty.toList
+                       . formulationTradeOffs)
+                    targetFormulation)
+            ++ [ defect
+               | pairwiseCoherenceResolved
+               , defect <-
+                   predicateDefect
+                     Generated.CollectiveFitPairwiseCoherenceRule
+                     Generated.CollectiveFitPairwiseCoherenceOccurrences
+                     claim
+                     claimOccurrence
+                     (suppliedPairs == expectedPairs)
+               ]
+            ++ [ defect
+               | participantCompatibilityResolved
+               , defect <-
+                   predicateDefect
+                     Generated.CollectiveFitParticipantCompatibilityRule
+                     Generated.CollectiveFitParticipantCompatibilityOccurrences
+                     claim
+                     claimOccurrence
+                     (compatibilityParticipants == sort participants)
+               ]
 
 indexedPointer :: Text.Text -> Int -> Text.Text
 indexedPointer parent index = parent <> "/" <> Text.pack (show index)

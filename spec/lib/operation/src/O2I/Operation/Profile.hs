@@ -139,7 +139,8 @@ compileProfileInventory supplied =
                     | descriptor <- NonEmpty.toList canonical
                     ]
               }
-      where canonical = NonEmpty.sortBy (comparing descriptorKey) entries
+      where
+        canonical = NonEmpty.sortBy (comparing descriptorKey) entries
 
 -- | Enumerate immutable Profile descriptors in canonical identity/token order.
 profileInventoryDescriptors :: ProfileInventory -> NonEmpty ProfileDescriptor
@@ -254,7 +255,8 @@ resolveProfile inventory (ProfileMarkerEvidence properties) =
               Nothing ->
                 ProfileReferenceUnknown unknownRule profileMarkerKey reference
               Just descriptor -> ProfileResolved (ResolvedProfile descriptor)
-          where reference = draftScalarText scalar
+          where
+            reference = draftScalarText scalar
 
 -- | Consume both incompatibilities or exact compatibility.
 foldProfileCompatibility ::

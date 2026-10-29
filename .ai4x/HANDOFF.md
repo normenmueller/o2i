@@ -12,19 +12,19 @@ Complete https://github.com/normenmueller/o2i/issues/125 through an independentl
 
 The PO authorized the implementation and PR target under receipt https://github.com/normenmueller/o2i/issues/125#issuecomment-6492270698. That immutable grant names the original source branch; never broaden its resource binding. Necessary reversible branch isolation follows current higher-priority runtime instructions within the same PO-authorized goal. This live execution route creates no new grant and is not durable authority. Revalidate current matching PO/runtime authority before mutation; Issue evidence alone creates none.
 
-Native model semantics remain PO-owned. Exclude merge/direct trunk publication, Issue closure, releases/tags, cleanup, ref rewriting, illustration continuation/integration, toolchain upgrades and lighter verification tiers.
+The PO additionally requested prebuilt Hindent 6.3.0 locally and in the same PR's CI, accepted formatting changes, requested contributor setup instructions and cancellation of the superseded run. Decision evidence: https://github.com/normenmueller/o2i/issues/125#issuecomment-6500207299. This current instruction supersedes only the earlier formatter exclusion; it creates no durable grant. Native model semantics remain PO-owned. Exclude merge/direct trunk publication, Issue closure, releases/tags, cleanup, ref rewriting, illustration continuation/integration, GHC/Cabal upgrades and lighter verification tiers.
 
 # Current Facts
 
 - Isolated branch: `feat/125-strategy-cascading-pr`, based on verified trunk `f53cc04d61481e830a263dd6f3f2fc2c2c32daae`. Original source is backed up at `d559db6387084d143390bee4e7734cd0f7f6a68f` on `feat/125-strategy-cascading`.
-- Product files retain the reviewed source bytes: 75-file manifest SHA-256 `b50a6f8659fab9c11f40ccac0e86853e01d48a2c1510b4a6481c346853521927`. The accepted design remains `spec/design/strategy-cascading.md`, SHA-256 `37bf3a3a1ef13ebcb5918589417d40e3f284bf6fd8b5b03cf971761d69a65bbb`.
+- The prior 75-file product checkpoint has manifest SHA-256 `b50a6f8659fab9c11f40ccac0e86853e01d48a2c1510b4a6481c346853521927`; ten subsequent Hindent changes are whitespace-only. The accepted design remains `spec/design/strategy-cascading.md`, SHA-256 `37bf3a3a1ef13ebcb5918589417d40e3f284bf6fd8b5b03cf971761d69a65bbb`.
 - Nine inherited parked illustration deltas are excluded; their isolated-branch contents remain at trunk. Preserve the original branch and remote `feat/116-illustration` at `e072614cf2157fd67e001981feb44e67007a3808`. #109/#115/#116 remain Paused; company Vision remains the later return point.
-- Existing explicit PO operating clarifications are carried in `.ai4x/TEAM.md`, `governance/guidelines.md` and `governance/decision-handoff.md`. Only State/Handoff branch binding and return-point text change for isolation.
+- PR https://github.com/normenmueller/o2i/pull/134 is draft; #125 remains In progress. Run 40889195184 is cancelled. Its completed combined REUSE/formatter installation took 13m52s; its cancelled Haskell stage establishes no completed duration or acceptance.
 - Software, Profile/prose, native/export and PDF independent reviews are accepted without findings on their exact source scopes. The PO performed native changes and PNG export. The source-grounded KPI explanation and 58-page PDF are synchronized. Whole isolated-candidate acceptance requires fresh-base checks and current PR evidence.
 
 # Material Risk
 
-Keep the shared Objective, exact role/owner binding, explicit macros and original evidence. Independent source acceptance does not substitute for isolated-base verification or grant new authority.
+Keep the shared Objective, exact role/owner binding, explicit macros and original evidence. Current Homebrew rebuild 2 of Hindent 6.3.0 removes GADT strictness and is rejected. The original unpatched, checksum-bound Homebrew bottle preserves it; CI uses the checksum-bound official Linux release. Require strictness smoke checks and actual-platform whole-source validation. Independent source acceptance does not substitute for updated-candidate verification or grant authority.
 
 # Verification
 
@@ -32,7 +32,7 @@ The source checkpoint passed canonical licensing, governance, model, full Haskel
 
 # Next Action
 
-Read current #125 evidence and PR/Project state. Finish isolated-candidate checks/review, back up and publish the PR, complete required CI and move #125 to In review. Then return the exact reviewed PR to the PO. Do not merge or resume the illustration without separate authority.
+Read current #125 evidence and PR/Project state. Finish formatter/setup implementation, complete local checks and independent updated-candidate review, update PR #134, complete CI and compare measured setup times. Move #125 to In review and return the reviewed PR to the PO. Do not merge or resume the illustration without separate authority.
 
 # Local Return Point
 

@@ -122,8 +122,22 @@ verify_haskell_stage() {
     "spec/.ghc-version" "9.10.3" "$(tr -d '\r\n' <spec/.ghc-version)"
   require_version "GHC" "9.10.3" "$(ghc --numeric-version)"
   require_version "Cabal" "3.16.1.0" "$(cabal --numeric-version)"
+  hindent_version=$(hindent --version)
+  require_version "Hindent" "hindent 6.3.0" "$hindent_version"
   require_version \
     "base" "4.20.2.0" "$(ghc-pkg field base version --simple-output)"
+
+  info "Checking Hindent preserves strict GADT fields."
+  hindent_probe="$work/hindent-strictness.hs"
+  cat >"$hindent_probe" <<'HASKELL'
+{-# LANGUAGE GADTs #-}
+
+module StrictnessProbe where
+
+data Probe where
+  Probe :: !Int -> Probe
+HASKELL
+  hindent --line-length 80 --validate "$hindent_probe"
 
   cabal_config="$work/cabal.config"
   cabal_logs="$work/cabal-logs"
