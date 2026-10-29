@@ -18,19 +18,19 @@ contractVersion = "0.3.0"
 
 contractSha256 :: Text
 contractSha256 =
-  "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
+  "31f6118b51844aaf1f275e7ad8ea8061c0aff97cdb281b83e2e9c43023e70e7f"
 
 contractShapeSha256 :: Text
 contractShapeSha256 =
-  "75ac10aed2730bdb154d166fcb8034f206d4822285b76a45d0ba966bf2265969"
+  "9fc00fe14c0f86efd332256d5aa80cd9dd4544290e3a8d99b9adbe642ab161cf"
 
 diagnosticContractSha256 :: Text
 diagnosticContractSha256 =
-  "8f752908c052ab9323418740d6bb1f8fcd9ec12e13af0c46e6bde8477d089d54"
+  "cd02ea89cecd0302669b0698be306713545e604cb88a6e21d4695d69e3f1d945"
 
 diagnosticContractShapeSha256 :: Text
 diagnosticContractShapeSha256 =
-  "79eae313c8658a1cf760687c115e31e9e2fce1bb36c7dff1c0504578f4f1a5be"
+  "8c36f1448a9381478f335e16c1fa45ea9b07e0f40dbf918204f3658f1260358e"
 
 data GeneratedCarrierCategory
   = GeneratedCarrierContext
@@ -598,7 +598,7 @@ data GeneratedSemanticRelation
   | GeneratedRelationStrategyPrincipleGuidesStrategyAction
   | GeneratedRelationStrategyActionContributesToStrategyKeyResult
   | GeneratedRelationStrategyPrincipleGuidesStrategyPrinciple
-  | GeneratedRelationStrategyKeyResultContributesToStrategyKeyResult
+  | GeneratedRelationStrategyKeyResultTranslatesIntoStrategyObjective
   | GeneratedRelationStrategyActionContributesToStrategyAction
   | GeneratedRelationStrategyKeyResultTranslatesIntoNeedObjective
   | GeneratedRelationNeedDriverGroundsNeedObjective
@@ -779,12 +779,12 @@ generatedSemanticRelationRow relation =
         GeneratedEndpointPrimitiveStrategyPrinciple
         GeneratedEndpointPrimitiveStrategyPrinciple
         GeneratedTokenGuides
-    GeneratedRelationStrategyKeyResultContributesToStrategyKeyResult ->
+    GeneratedRelationStrategyKeyResultTranslatesIntoStrategyObjective ->
       GeneratedSemanticRelationRow
-        GeneratedRelationStrategyKeyResultContributesToStrategyKeyResult
+        GeneratedRelationStrategyKeyResultTranslatesIntoStrategyObjective
         GeneratedEndpointPrimitiveStrategyKeyResult
-        GeneratedEndpointPrimitiveStrategyKeyResult
-        GeneratedTokenContributesTo
+        GeneratedEndpointPrimitiveStrategyObjective
+        GeneratedTokenTranslatesInto
     GeneratedRelationStrategyActionContributesToStrategyAction ->
       GeneratedSemanticRelationRow
         GeneratedRelationStrategyActionContributesToStrategyAction
@@ -979,7 +979,7 @@ generatedSemanticRelations =
        , GeneratedRelationStrategyPrincipleGuidesStrategyAction
        , GeneratedRelationStrategyActionContributesToStrategyKeyResult
        , GeneratedRelationStrategyPrincipleGuidesStrategyPrinciple
-       , GeneratedRelationStrategyKeyResultContributesToStrategyKeyResult
+       , GeneratedRelationStrategyKeyResultTranslatesIntoStrategyObjective
        , GeneratedRelationStrategyActionContributesToStrategyAction
        , GeneratedRelationStrategyKeyResultTranslatesIntoNeedObjective
        , GeneratedRelationNeedDriverGroundsNeedObjective
@@ -1247,6 +1247,9 @@ data GeneratedSemanticRuleIdentity
   | StrategyFormulationStrategyBindingRuleIdentity
   | StrategyFormulationTradeOffsRuleIdentity
   | StrategyFormulationVisionOrientationRuleIdentity
+  | StrategyRelationAssertedEndpointDependencyRuleIdentity
+  | StrategyRelationContributionSupportRuleIdentity
+  | StrategyRelationDirectionSupportRuleIdentity
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 generatedSemanticRuleIdentityText :: GeneratedSemanticRuleIdentity -> Text
@@ -1332,6 +1335,12 @@ generatedSemanticRuleIdentityText value =
       "core.strategy-formulation.trade-offs"
     StrategyFormulationVisionOrientationRuleIdentity ->
       "core.strategy-formulation.vision-orientation"
+    StrategyRelationAssertedEndpointDependencyRuleIdentity ->
+      "core.strategy-relation.asserted-endpoint-dependency"
+    StrategyRelationContributionSupportRuleIdentity ->
+      "core.strategy-relation.contribution-support"
+    StrategyRelationDirectionSupportRuleIdentity ->
+      "core.strategy-relation.direction-support"
 
 generatedSemanticRuleIdentityRank :: GeneratedSemanticRuleIdentity -> Int
 generatedSemanticRuleIdentityRank = fromEnum
@@ -1379,6 +1388,9 @@ generatedSemanticRuleIdentities =
        , StrategyFormulationStrategyBindingRuleIdentity
        , StrategyFormulationTradeOffsRuleIdentity
        , StrategyFormulationVisionOrientationRuleIdentity
+       , StrategyRelationAssertedEndpointDependencyRuleIdentity
+       , StrategyRelationContributionSupportRuleIdentity
+       , StrategyRelationDirectionSupportRuleIdentity
        ]
 
 semanticsRuleIds :: NonEmpty Text
@@ -1392,6 +1404,7 @@ data GeneratedSemanticEvidenceSchema
   | GeneratedParticipantClaimKeySchema
   | GeneratedStrategyKeySchema
   | GeneratedStrategyMemberKeySchema
+  | GeneratedStrategyRelationKeySchema
   | GeneratedAssertedDependencyKeySchema
   deriving (Bounded, Enum, Eq, Ord, Show)
 
@@ -1409,6 +1422,9 @@ data GeneratedSemanticEvidenceSchemaWitness (schema :: GeneratedSemanticEvidence
     :: GeneratedSemanticEvidenceSchemaWitness 'GeneratedStrategyKeySchema
   GeneratedStrategyMemberKeyWitness
     :: GeneratedSemanticEvidenceSchemaWitness 'GeneratedStrategyMemberKeySchema
+  GeneratedStrategyRelationKeyWitness
+    :: GeneratedSemanticEvidenceSchemaWitness
+         'GeneratedStrategyRelationKeySchema
   GeneratedAssertedDependencyKeyWitness
     :: GeneratedSemanticEvidenceSchemaWitness
          'GeneratedAssertedDependencyKeySchema
@@ -1423,6 +1439,7 @@ generatedSemanticEvidenceSchemaName witness =
     GeneratedParticipantClaimKeyWitness -> "ParticipantClaimKey"
     GeneratedStrategyKeyWitness -> "StrategyKey"
     GeneratedStrategyMemberKeyWitness -> "StrategyMemberKey"
+    GeneratedStrategyRelationKeyWitness -> "StrategyRelationKey"
     GeneratedAssertedDependencyKeyWitness -> "AssertedDependencyKey"
 
 generatedSemanticEvidenceSchemaFields ::
@@ -1435,6 +1452,8 @@ generatedSemanticEvidenceSchemaFields witness =
     GeneratedParticipantClaimKeyWitness -> "claim" :| ["participant"]
     GeneratedStrategyKeyWitness -> "strategy" :| []
     GeneratedStrategyMemberKeyWitness -> "strategy" :| ["member"]
+    GeneratedStrategyRelationKeyWitness ->
+      "relation" :| ["sourceStrategy", "targetStrategy"]
     GeneratedAssertedDependencyKeyWitness ->
       "dependent" :| ["endpoint", "context"]
 
@@ -1468,6 +1487,9 @@ data GeneratedSemanticOccurrenceSchema
   | StrategyFormulationKeyResultSubstantiationOccurrenceSchema
   | StrategyFormulationKeyResultsOccurrenceSchema
   | StrategyFormulationVisionOrientationOccurrenceSchema
+  | StrategyRelationAssertedEndpointDependencyOccurrenceSchema
+  | StrategyRelationContributionSupportOccurrenceSchema
+  | StrategyRelationDirectionSupportOccurrenceSchema
   deriving (Bounded, Enum, Eq, Ord, Show)
 
 data GeneratedSemanticOccurrenceEvidence (schema :: GeneratedSemanticOccurrenceSchema) occurrence where
@@ -1624,6 +1646,27 @@ data GeneratedSemanticOccurrenceEvidence (schema :: GeneratedSemanticOccurrenceS
     -> GeneratedSemanticOccurrenceEvidence
          'StrategyFormulationVisionOrientationOccurrenceSchema
          occurrence
+  StrategyRelationAssertedEndpointDependencyOccurrences
+    :: !occurrence
+    -> !occurrence
+    -> !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'StrategyRelationAssertedEndpointDependencyOccurrenceSchema
+         occurrence
+  StrategyRelationContributionSupportOccurrences
+    :: !occurrence
+    -> !occurrence
+    -> !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'StrategyRelationContributionSupportOccurrenceSchema
+         occurrence
+  StrategyRelationDirectionSupportOccurrences
+    :: !occurrence
+    -> !occurrence
+    -> !occurrence
+    -> GeneratedSemanticOccurrenceEvidence
+         'StrategyRelationDirectionSupportOccurrenceSchema
+         occurrence
 
 generatedSemanticOccurrenceEvidenceGroups ::
      GeneratedSemanticOccurrenceEvidence schema occurrence
@@ -1697,6 +1740,21 @@ generatedSemanticOccurrenceEvidenceGroups evidence =
       ("listed-key-result", NonEmpty.toList occurrence0) :| []
     StrategyFormulationVisionOrientationOccurrences occurrence0 ->
       ("unoriented-intent", [occurrence0]) :| []
+    StrategyRelationAssertedEndpointDependencyOccurrences occurrence0 occurrence1 occurrence2 ->
+      ("relation", [occurrence0])
+        :| [ ("source-strategy", [occurrence1])
+           , ("target-strategy", [occurrence2])
+           ]
+    StrategyRelationContributionSupportOccurrences occurrence0 occurrence1 occurrence2 ->
+      ("relation", [occurrence0])
+        :| [ ("source-strategy", [occurrence1])
+           , ("target-strategy", [occurrence2])
+           ]
+    StrategyRelationDirectionSupportOccurrences occurrence0 occurrence1 occurrence2 ->
+      ("relation", [occurrence0])
+        :| [ ("source-strategy", [occurrence1])
+           , ("target-strategy", [occurrence2])
+           ]
 
 data GeneratedSemanticRule (schema :: GeneratedSemanticEvidenceSchema) (occurrenceSchema :: GeneratedSemanticOccurrenceSchema) where
   CollectiveAssertedCollectiveCoverageRule
@@ -1815,6 +1873,18 @@ data GeneratedSemanticRule (schema :: GeneratedSemanticEvidenceSchema) (occurren
     :: GeneratedSemanticRule
          'GeneratedStrategyMemberKeySchema
          'StrategyFormulationVisionOrientationOccurrenceSchema
+  StrategyRelationAssertedEndpointDependencyRule
+    :: GeneratedSemanticRule
+         'GeneratedStrategyRelationKeySchema
+         'StrategyRelationAssertedEndpointDependencyOccurrenceSchema
+  StrategyRelationContributionSupportRule
+    :: GeneratedSemanticRule
+         'GeneratedStrategyRelationKeySchema
+         'StrategyRelationContributionSupportOccurrenceSchema
+  StrategyRelationDirectionSupportRule
+    :: GeneratedSemanticRule
+         'GeneratedStrategyRelationKeySchema
+         'StrategyRelationDirectionSupportOccurrenceSchema
 
 generatedSemanticRuleId :: GeneratedSemanticRule schema occurrenceSchema -> Text
 generatedSemanticRuleId =
@@ -1877,6 +1947,12 @@ generatedSemanticRuleIdentity rule =
       StrategyFormulationKeyResultsRuleIdentity
     StrategyFormulationVisionOrientationRule ->
       StrategyFormulationVisionOrientationRuleIdentity
+    StrategyRelationAssertedEndpointDependencyRule ->
+      StrategyRelationAssertedEndpointDependencyRuleIdentity
+    StrategyRelationContributionSupportRule ->
+      StrategyRelationContributionSupportRuleIdentity
+    StrategyRelationDirectionSupportRule ->
+      StrategyRelationDirectionSupportRuleIdentity
 
 generatedSemanticRuleRank ::
      GeneratedSemanticRule schema occurrenceSchema -> Int
@@ -1925,6 +2001,11 @@ generatedSemanticRuleEvidenceSchema rule =
     StrategyFormulationKeyResultsRule -> GeneratedStrategyKeyWitness
     StrategyFormulationVisionOrientationRule ->
       GeneratedStrategyMemberKeyWitness
+    StrategyRelationAssertedEndpointDependencyRule ->
+      GeneratedStrategyRelationKeyWitness
+    StrategyRelationContributionSupportRule ->
+      GeneratedStrategyRelationKeyWitness
+    StrategyRelationDirectionSupportRule -> GeneratedStrategyRelationKeyWitness
 
 data GeneratedSupplementalRuleIdentity
   = GeneratedSupplementalUtf8RuleIdentity
@@ -2139,6 +2220,10 @@ ruleIds =
        , "core.strategy-formulation.strategy-binding"
        , "core.strategy-formulation.trade-offs"
        , "core.strategy-formulation.vision-orientation"
+       , "core.strategy-relation.asserted-endpoint-dependency"
+       , "core.strategy-relation.contribution-support"
+       , "core.strategy-relation.direction-support"
+       , "core.strategy-relation.owner-distinctness"
        , "core.structured-proposition.commitment"
        , "core.structured-proposition.family"
        , "core.structured-proposition.identity"
@@ -2328,6 +2413,7 @@ structureRuleIds =
        , "core.contextualization.target-owner-cardinality"
        , "core.qualified-endpoint.catalog-membership"
        , "core.semantic-relation.compatibility"
+       , "core.strategy-relation.owner-distinctness"
        , "core.structured-proposition.commitment"
        , "core.structured-proposition.family"
        , "core.structured-proposition.identity"

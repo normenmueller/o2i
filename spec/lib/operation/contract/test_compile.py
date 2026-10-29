@@ -1627,6 +1627,27 @@ class OperationContractCompilerTest(unittest.TestCase):
         }
         self.assertFalse(validator.is_valid(ordinal_key_gap))
 
+    def test_strategy_relation_unavailability_retains_exact_blockers(self):
+        schema, validator = self.validate_schema_fixture()
+        result = self.validate_variant_fixture(schema, "semanticsUnavailable")
+        witness = {
+            "kind": "strategy-relation",
+            "relation": "macro-occurrence",
+            "blockers": [
+                {"strategy": "upper", "reason": "formulation-missing"},
+                {"strategy": "lower", "reason": "formulation-identity-unresolved"},
+            ],
+        }
+        result["execution"]["coreWitnesses"] = [witness]
+        self.assertTrue(validator.is_valid(result))
+        for broken in (
+            {**witness, "blockers": []},
+            {"kind": "strategy-relation", "blockers": witness["blockers"]},
+            {**witness, "blockers": [{"strategy": "upper", "reason": "unknown"}]},
+        ):
+            result["execution"]["coreWitnesses"] = [broken]
+            self.assertFalse(validator.is_valid(result))
+
     def test_rule_definition_failure_has_no_unencodable_authority(self):
         schema = json.loads(
             COMPILER.render_schema(self.validate_contract()[3][2])
@@ -1752,7 +1773,7 @@ class OperationContractCompilerTest(unittest.TestCase):
             authority["required"],
         )
         model_diagnostics = schema["$defs"]["modelDiagnostic"]["oneOf"]
-        self.assertEqual(197, len(model_diagnostics))
+        self.assertEqual(201, len(model_diagnostics))
         notation_diagnostics = [
             row
             for row in model_diagnostics

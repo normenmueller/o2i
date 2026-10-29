@@ -23,6 +23,17 @@ module O2I.Semantics
   , semanticDiagnosticRule
   , SituatedNeedAssessment
   , StrategyFormulationAssessment
+  , StrategyRelationAssessment
+  , StrategyRelationKind(..)
+  , StrategyRelationUnavailableReason(..)
+  , strategyRelationAssessments
+  , strategyRelationDisposition
+  , strategyRelationKind
+  , strategyRelationOccurrence
+  , strategyRelationSource
+  , strategyRelationTarget
+  , strategyRelationUnavailableReasons
+  , strategyRelationWitnesses
   , CollectiveStrategyRealizationAssessment
   , SubjectDisposition(..)
   , situatedNeedAssessments
@@ -77,6 +88,12 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Data.List.NonEmpty (NonEmpty)
 import O2I.Core.Contract (CoreRuleId)
 import qualified O2I.Core.Contract.Generated as Generated
+import O2I.Core.Graph.Observation
+  ( RelationObservation
+  , relationOccurrenceIdentity
+  , relationSourceOccurrence
+  , relationTargetOccurrence
+  )
 import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
 import qualified O2I.Semantics.Eval as Eval
 import O2I.Semantics.Input (BoundSupplementalInputs)
@@ -92,9 +109,15 @@ import O2I.Semantics.Internal
   , SituatedNeedAssessment
   , StrategyFormulationAssessment
   , StrategyFormulationUnavailableReason(..)
+  , StrategyRelationAssessment
+  , StrategyRelationUnavailableReason(..)
   , ValidatedCollectiveStrategyRealization
   )
 import qualified O2I.Semantics.Internal as Internal
+import O2I.Semantics.StrategyRelations.Evidence
+  ( StrategyRelationKind(..)
+  , relationProofWitnesses
+  )
 import O2I.Structure (WellFormedGraph)
 
 -- | Opaque aggregate result nominal in its producing selected-View scope.
@@ -203,6 +226,9 @@ data SemanticDiagnosticEliminator result = SemanticDiagnosticEliminator
   , eliminateCollectiveFitTargetGuidingPolicy :: ModelIdentity -> OccurrenceIdentity -> result
   , eliminateCollectiveFitTargetTradeOffs :: ModelIdentity -> OccurrenceIdentity -> result
   , eliminateContextualizationAssertedDependency :: OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> result
+  , eliminateStrategyRelationAssertedEndpointDependency :: OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> result
+  , eliminateStrategyRelationDirectionSupport :: OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> result
+  , eliminateStrategyRelationContributionSupport :: OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> OccurrenceIdentity -> result
   , eliminateSituatedNeedDriverAnchoring :: ModelIdentity -> ModelIdentity -> OccurrenceIdentity -> result
   , eliminateSituatedNeedDriverCardinality :: ModelIdentity -> result
   , eliminateSituatedNeedObjectiveCardinality :: ModelIdentity -> result
@@ -289,6 +315,33 @@ foldSemanticDiagnosticEvidence eliminator (SemanticDiagnosticEvidence defect) =
         dependentOccurrence
         endpointOccurrence
         contextOccurrence
+    eliminate Generated.StrategyRelationAssertedEndpointDependencyRule (Internal.SemanticStrategyRelationEvidenceKey relation source target) (Generated.StrategyRelationAssertedEndpointDependencyOccurrences relationOccurrence sourceOccurrence targetOccurrence) =
+      eliminateStrategyRelationAssertedEndpointDependency
+        eliminator
+        relation
+        source
+        target
+        relationOccurrence
+        sourceOccurrence
+        targetOccurrence
+    eliminate Generated.StrategyRelationDirectionSupportRule (Internal.SemanticStrategyRelationEvidenceKey relation source target) (Generated.StrategyRelationDirectionSupportOccurrences relationOccurrence sourceOccurrence targetOccurrence) =
+      eliminateStrategyRelationDirectionSupport
+        eliminator
+        relation
+        source
+        target
+        relationOccurrence
+        sourceOccurrence
+        targetOccurrence
+    eliminate Generated.StrategyRelationContributionSupportRule (Internal.SemanticStrategyRelationEvidenceKey relation source target) (Generated.StrategyRelationContributionSupportOccurrences relationOccurrence sourceOccurrence targetOccurrence) =
+      eliminateStrategyRelationContributionSupport
+        eliminator
+        relation
+        source
+        target
+        relationOccurrence
+        sourceOccurrence
+        targetOccurrence
     eliminate Generated.SituatedNeedDriverAnchoringRule (Internal.SemanticNeedMemberEvidenceKey need member) (Generated.SituatedNeedDriverAnchoringOccurrences occurrence) =
       eliminateSituatedNeedDriverAnchoring eliminator need member occurrence
     eliminate Generated.SituatedNeedDriverCardinalityRule (Internal.SemanticNeedEvidenceKey need) Generated.SituatedNeedDriverCardinalityOccurrences =
@@ -374,6 +427,71 @@ strategyFormulationAssessments ::
      SemanticAssessment scope -> [StrategyFormulationAssessment scope]
 strategyFormulationAssessments =
   Internal.storedStrategyAssessments . semanticResults
+
+-- | Deterministic results for explicitly modeled Strategy macro occurrences.
+strategyRelationAssessments ::
+     SemanticAssessment scope -> [StrategyRelationAssessment scope]
+strategyRelationAssessments =
+  Internal.storedStrategyRelationAssessments . semanticResults
+
+-- | Classify one explicit macro without erasing prerequisite distinctions.
+strategyRelationDisposition ::
+     StrategyRelationAssessment scope -> SubjectDisposition
+strategyRelationDisposition assessment =
+  case assessment of
+    Internal.StrategyRelationCandidate _ _ -> SubjectCandidate
+    Internal.StrategyRelationUnavailable _ _ _ -> SubjectUnavailable
+    Internal.StrategyRelationInvalid _ _ _ -> SubjectInvalid
+    Internal.StrategyRelationValid _ _ _ -> SubjectValid
+
+-- | The explicit direction or contribution meaning selected by this result.
+strategyRelationKind :: StrategyRelationAssessment scope -> StrategyRelationKind
+strategyRelationKind assessment =
+  case assessment of
+    Internal.StrategyRelationCandidate kind _ -> kind
+    Internal.StrategyRelationUnavailable kind _ _ -> kind
+    Internal.StrategyRelationInvalid kind _ _ -> kind
+    Internal.StrategyRelationValid kind _ _ -> kind
+
+-- | Original macro occurrence; no synthetic relation identity is introduced.
+strategyRelationOccurrence ::
+     StrategyRelationAssessment scope -> OccurrenceIdentity
+strategyRelationOccurrence =
+  relationOccurrenceIdentity . strategyRelationObservation
+
+-- | Exact source Strategy occurrence of the explicit macro.
+strategyRelationSource :: StrategyRelationAssessment scope -> OccurrenceIdentity
+strategyRelationSource = relationSourceOccurrence . strategyRelationObservation
+
+-- | Exact target Strategy occurrence of the explicit macro.
+strategyRelationTarget :: StrategyRelationAssessment scope -> OccurrenceIdentity
+strategyRelationTarget = relationTargetOccurrence . strategyRelationObservation
+
+-- | Exact blocking Strategies and each independent prerequisite reason.
+strategyRelationUnavailableReasons ::
+     StrategyRelationAssessment scope
+  -> [(ModelIdentity, StrategyRelationUnavailableReason)]
+strategyRelationUnavailableReasons assessment =
+  case assessment of
+    Internal.StrategyRelationUnavailable _ _ reasons -> NonEmpty.toList reasons
+    _ -> []
+
+-- | Original macro and primitive/ownership witnesses of a successful proof.
+strategyRelationWitnesses ::
+     StrategyRelationAssessment scope -> [OccurrenceIdentity]
+strategyRelationWitnesses assessment =
+  case assessment of
+    Internal.StrategyRelationValid _ _ proof -> relationProofWitnesses proof
+    _ -> []
+
+strategyRelationObservation ::
+     StrategyRelationAssessment scope -> RelationObservation scope
+strategyRelationObservation assessment =
+  case assessment of
+    Internal.StrategyRelationCandidate _ relation -> relation
+    Internal.StrategyRelationUnavailable _ relation _ -> relation
+    Internal.StrategyRelationInvalid _ relation _ -> relation
+    Internal.StrategyRelationValid _ relation _ -> relation
 
 -- | Enumerate deterministic assessments for all recognized collective claims.
 collectiveStrategyRealizationAssessments ::

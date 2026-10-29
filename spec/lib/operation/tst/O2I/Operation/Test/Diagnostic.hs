@@ -65,4 +65,4 @@ schemaAuthority = do
   schemaAuthorityReference diagnosticSchemaAuthority
     @?= "o2i.operation.diagnostic/v2"
   schemaDigestText (schemaAuthorityDigest diagnosticSchemaAuthority)
-    @?= "b187b2d429347474ba28d02bd73c173c508209636f950a054832926a5fc37121"
+    @?= "d12a4ebfe71d596f9dce81ee2a117588d190e7354687d62d8ec3697d810ab743"

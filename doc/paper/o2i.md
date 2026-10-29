@@ -362,6 +362,8 @@ Fit validiert damit nicht einzelne Bestandteile isoliert, sondern das Zusammensp
 
 Ein Strategiebeitrag behauptet weder vollständige Realisierung noch kollektiven Fit. Eine Strategie kann zu mehreren Strategien beitragen; umgekehrt kann eine Strategie Beiträge mehrerer Strategien erhalten. Jede Relation bleibt eine eigenständige Aussage mit eigener Begründung.
 
+Strategische Kaskadierung übersetzt einen Erfolgsbezug einer übergeordneten Strategie in die strategische Absicht einer untergeordneten Strategie. Ein eigener Erfolgsbezug der unteren Strategie, der genau diese Absicht stützt, vermittelt den Beitrag zum übergeordneten Erfolgsbezug. O2I führt diese Verknüpfung als Autorenableitung ein; sie ersetzt weder die eigene Diagnose noch die Vision-Ausrichtung der untergeordneten Strategie und erlaubt keine rechnerische Übertragung der Zielerreichung.
+
 > [!definition]
 > Eine **kollektive Strategierealisierung**[^collective-strategy-realization] bezeichnet die begründete Aussage, dass mindestens zwei beitragende Strategien eine Zielstrategie gemeinsam realisieren. Sie setzt individuelle Strategiebeiträge, kollektive Abdeckung und kollektiven Fit voraus.
 >
@@ -854,6 +856,8 @@ Ein Modell ist wohlgeformt, wenn Bezeichner eindeutig sind, Primitive- und Struk
 
 Der kompilierte Relations- und Endpunktvertrag sichert zulässige Kontext- und Primitive-Typen. Identitätsabhängige Invarianten konkreter Modellinstanzen prüft die Strukturauswertung; dazu gehört, dass eine Performance-Dimension und ihre Mitglieder durch dieselbe konkrete Kontextinstanz kontextualisiert werden. Erst eine erfolgreiche Auswertung erzeugt den opaken `WellFormedGraph`, der diese Garantien nach außen bewahrt. Ausführbare Tests prüfen diesen Vertrag, führen jedoch keine zusätzliche O2I-Semantik ein.
 
+Strategische Kaskadierung verbindet Primitives verschiedener Strategy-Instanzen. Auch `Strategy --directs--> Strategy` und `Strategy --contributes-to--> Strategy` verlangen verschiedene Endpunktinstanzen. Diese Identitätspflichten gelten ebenso für `Candidate` und sind unabhängig von ergänzenden Strategy-Formulierungen prüfbar.
+
 ### Semantische Gültigkeit
 
 Die folgende Übersicht normiert die modellinternen kontextbezogenen Mindestinhalte und ihre Relationsevidenz und grenzt die ergänzend bewertete Strategy-Formulierung davon ab. Nur die modellinternen Pflichten gehen in den `SemanticallyValidModel` ein; die vollständige Strategy-Formulierung bleibt eine fachliche Pflicht, ihr opaker Beweis ist jedoch ein Ergebnis des optionalen Assessments. Fehlt die ergänzende Eingabe, bleibt dieses Assessment nicht verfügbar, ohne den Modellbeweis zu verhindern. Eine existenzielle Pflicht verlangt mindestens einen passenden Relationszeugen für die jeweilige Kontextinstanz; eine universelle Pflicht gilt für jedes in der bezeichneten Rolle berücksichtigte Element.
@@ -1010,6 +1014,8 @@ Beispielsweise besteht eine belastbare Bedarfsqualifikation aus der
 persistierten Makrorelation
 `Strategy --qualifies--> Need` und einer zulässigen Begründung wie
 `Key Result @ Strategy --translates-into--> Objective @ Need`.
+
+Die strategische Kaskadierung verwendet ebenfalls eine ArchiMate `Influence` mit dem Label `translates-into`: vom `Outcome` des oberen Key Results zum `Goal` des unteren Objectives. Die Kontextualisierung unterscheidet diese Signatur von der Übersetzung in ein Need-Objective. Die untere `substantiates`-Relation endet am selben `Goal`; beide ursprünglichen Relationen bleiben eigenständig erhalten.
 
 ### Qualifikationsvorlage
 

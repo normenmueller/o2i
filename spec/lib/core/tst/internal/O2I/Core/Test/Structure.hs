@@ -29,6 +29,7 @@ import O2I.Structure.Internal
   , ContextualizationTargetOwnerCardinalityEvidence(..)
   , QualifiedEndpointCatalogMembershipEvidence(..)
   , SemanticRelationCompatibilityEvidence(..)
+  , StrategyRelationOwnerDistinctnessEvidence(..)
   , StructureAssessment(..)
   , StructureDefect(..)
   , StructureRule(..)
@@ -49,6 +50,7 @@ tests =
     , inputBoundaryIsComplete
     , contextualizationRulesAreAtomic
     , endpointAndRelationRulesAreExact
+    , strategyRelationsEnforceOwnerDistinctness
     , collectiveFamilyRulesAreComplete
     , duplicateHeavyClaimIdentityEvidenceIsLinear
     , structureDefectAlgebraIsExact
@@ -131,6 +133,75 @@ collectiveFamilyRulesAreComplete =
     ruleIds overlappingTarget overlappingTargetSelected
       `containsRule` "core.collective-strategy-realization.target-distinctness"
 
+strategyRelationsEnforceOwnerDistinctness :: TestTree
+strategyRelationsEnforceOwnerDistinctness =
+  testCase
+    "checks exact Strategy owners for Candidate and Asserted declarations without formulations" $ do
+    let distinctness = "core.strategy-relation.owner-distinctness"
+        selected = [carrierA, relationOccurrence]
+        translationSelected =
+          [ carrierA
+          , targetCarrier
+          , actionMember
+          , carrierB
+          , contextualizationOccurrence
+          , contextualizationSecond
+          , relationOccurrence
+          ]
+        contributes = exact "contributes-to" lookupCoreRelationToken
+    mapM_
+      (\commitment -> do
+         mapM_
+           (\token ->
+              ruleIds (selfStrategyMacro token commitment) selected
+                @?= [distinctness])
+           [directsToken, contributes]
+         ruleIds
+           (strategyTranslation carrierA commitment True)
+           translationSelected
+           @?= [distinctness]
+         ruleIds
+           (strategyTranslation targetCarrier commitment True)
+           translationSelected
+           @?= []
+         ruleIds
+           (strategyTranslation carrierA commitment False)
+           translationSelected
+           @?= ["core.contextualization.target-owner-cardinality"]
+         ruleIdsWithIndex
+           strategyAliasIdentityIndex
+           (strategyTranslation targetCarrier commitment True)
+           translationSelected
+           @?= [distinctness]
+         ruleIdsWithIndex
+           strategyAliasIdentityIndex
+           (structureProjection
+              [strategyCarrier carrierA, strategyCarrier targetCarrier]
+              []
+              [ relationProjection
+                  relationOccurrence
+                  carrierA
+                  directsToken
+                  targetCarrier
+                  commitment
+              ]
+              []
+              [])
+           [carrierA, targetCarrier, relationOccurrence]
+           @?= [distinctness])
+      [Candidate, Asserted]
+    defectFor
+      StrategyRelationOwnerDistinctnessRule
+      (strategyTranslation carrierA Asserted True)
+      translationSelected
+      @?= StrategyRelationOwnerDistinctnessDefect
+            (StrategyRelationOwnerDistinctnessEvidence
+               relationOccurrence
+               actionMember
+               carrierB
+               carrierA
+               carrierA)
+
 duplicateHeavyClaimIdentityEvidenceIsLinear :: TestTree
 duplicateHeavyClaimIdentityEvidenceIsLinear =
   testCase "emits one canonical defect for a duplicate-heavy claim identity" $ do
@@ -147,8 +218,8 @@ duplicateHeavyClaimIdentityEvidenceIsLinear =
 
 structureDefectAlgebraIsExact :: TestTree
 structureDefectAlgebraIsExact =
-  testCase "eliminates all twelve branches with exact typed evidence" $ do
-    map (foldStructureDefect branchEliminator) examples @?= [(0 :: Int) .. 11]
+  testCase "eliminates all branches with exact typed evidence" $ do
+    map (foldStructureDefect branchEliminator) examples @?= [(0 :: Int) .. 12]
     map structureDefectRule examples @?= expectedRules
     assertBool
       "a Structure rule permutation must not preserve exact associations"
@@ -206,6 +277,13 @@ structureDefectAlgebraIsExact =
               (CollectiveTargetDistinctnessEvidence
                  propositionOccurrence
                  (carrierA NonEmpty.:| []))
+          , StrategyRelationOwnerDistinctnessDefect
+              (StrategyRelationOwnerDistinctnessEvidence
+                 relationOccurrence
+                 carrierA
+                 carrierA
+                 carrierA
+                 carrierA)
           ]
   where
     examples =
@@ -255,6 +333,10 @@ structureDefectAlgebraIsExact =
           CollectiveTargetDistinctnessRule
           overlappingTarget
           overlappingTargetSelected
+      , defectFor
+          StrategyRelationOwnerDistinctnessRule
+          (selfStrategyMacro directsToken Asserted)
+          [carrierA, relationOccurrence]
       ]
     expectedRules =
       map
@@ -271,6 +353,7 @@ structureDefectAlgebraIsExact =
         , CollectiveTargetTypeRule
         , CollectiveTargetCardinalityRule
         , CollectiveTargetDistinctnessRule
+        , StrategyRelationOwnerDistinctnessRule
         ]
     branchEliminator =
       StructureDefectEliminator
@@ -286,6 +369,7 @@ structureDefectAlgebraIsExact =
         , eliminateCollectiveTargetType = const 9
         , eliminateCollectiveTargetCardinality = const 10
         , eliminateCollectiveTargetDistinctness = const 11
+        , eliminateStrategyRelationOwnerDistinctness = const 12
         }
 
 cardinalityEvidenceIsExact :: TestTree
@@ -481,6 +565,7 @@ identityEvidence = foldStructureDefect eliminator
         , eliminateContextualizationTargetCategory = const Nothing
         , eliminateContextualizationTargetOwnerCardinality = const Nothing
         , eliminateSemanticRelationCompatibility = const Nothing
+        , eliminateStrategyRelationOwnerDistinctness = const Nothing
         , eliminateStructuredPropositionIdentity =
             \evidence ->
               Just
@@ -730,6 +815,51 @@ incompatibleRelation =
 
 incompatibleRelationSelected :: [OccurrenceIdentity]
 incompatibleRelationSelected = [carrierA, carrierB, relationOccurrence]
+
+selfStrategyMacro :: CoreRelationToken -> Commitment -> StructureProjection
+selfStrategyMacro token commitment =
+  structureProjection
+    [strategyCarrier carrierA]
+    []
+    [relationProjection relationOccurrence carrierA token carrierA commitment]
+    []
+    []
+
+strategyTranslation ::
+     OccurrenceIdentity -> Commitment -> Bool -> StructureProjection
+strategyTranslation targetOwner commitment includeTargetOwnership =
+  structureProjection
+    ([strategyCarrier carrierA]
+       ++ [strategyCarrier targetOwner | targetOwner /= carrierA]
+       ++ [ carrierProjection actionMember primitiveCategory keyResult Asserted
+          , carrierProjection carrierB primitiveCategory objective Asserted
+          ])
+    ([ contextualizationProjection
+         contextualizationOccurrence
+         carrierA
+         actionMember
+         Asserted
+     ]
+       ++ [ contextualizationProjection
+            contextualizationSecond
+            targetOwner
+            carrierB
+            Asserted
+          | includeTargetOwnership
+          ])
+    [ relationProjection
+        relationOccurrence
+        actionMember
+        translates
+        carrierB
+        commitment
+    ]
+    []
+    []
+  where
+    keyResult = exact "KeyResult" lookupCoreO2IType
+    objective = exact "Objective" lookupCoreO2IType
+    translates = exact "translates-into" lookupCoreRelationToken
 
 oneParticipant :: StructureProjection
 oneParticipant =
@@ -1068,6 +1198,19 @@ duplicateClaimIdentityIndex =
               claimAlias
               (expectRight (modelIdentity "model-proposition"))
           : map model allOccurrences))
+
+strategyAliasIdentityIndex :: ModelIdentityIndex
+strategyAliasIdentityIndex =
+  expectRight
+    (buildModelIdentityIndex
+       (selectedViewSubject
+          : [ if identifier == targetCarrier
+              then modelOccurrence identifier sharedIdentity
+              else model identifier
+            | identifier <- allOccurrences
+            ]))
+  where
+    sharedIdentity = expectRight (modelIdentity "model-carrier-a")
 
 duplicateHeavyClaimOccurrences :: [OccurrenceIdentity]
 duplicateHeavyClaimOccurrences =

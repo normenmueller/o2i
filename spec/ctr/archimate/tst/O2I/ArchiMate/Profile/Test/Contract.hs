@@ -89,7 +89,7 @@ descriptorTest =
     Profile.profileDescriptorNotation descriptor @?= "archimate-3.2"
     Profile.profileDescriptorAdapterIds descriptor @?= ["amx"]
     Profile.profileDescriptorContractDigest descriptor
-      @?= "be8204d09d6dae8eda1fe6969d1bea62e3b35419108474ea8af177bb9030a3da"
+      @?= "bc04e9e36b27a090e7e257f30a051430da82665b6effc01c06f79fa9fd120633"
 
 mappingTest :: TestTree
 mappingTest =
@@ -306,7 +306,7 @@ closureDeterminismTest =
   where
     provenancePrefix =
       "o2i.archimate-profile|"
-        <> "be8204d09d6dae8eda1fe6969d1bea62e3b35419108474ea8af177bb9030a3da|"
+        <> "bc04e9e36b27a090e7e257f30a051430da82665b6effc01c06f79fa9fd120633|"
     activationSuffixes =
       [ "graph|classification.graph.activate.carrier|record:1|record:1|carrier:context"
       , "graph|classification.graph.activate.committed-element|record:1|record:1|reserved-placement:o2i.commitment"
@@ -465,6 +465,15 @@ relationApplicabilityTest =
           "Action"
           "CourseOfAction"
           "Action"
+      , relationCase
+          "Influence translates-into Objective -> Key Result"
+          "InfluenceRelationship"
+          False
+          "translates-into"
+          "Goal"
+          "Objective"
+          "Outcome"
+          "KeyResult"
       ]
     acceptedRelations =
       [ relationCase
@@ -476,6 +485,15 @@ relationApplicabilityTest =
           "Action"
           "CourseOfAction"
           "Action"
+      , relationCase
+          "Influence translates-into Key Result -> Objective"
+          "InfluenceRelationship"
+          False
+          "translates-into"
+          "Outcome"
+          "KeyResult"
+          "Goal"
+          "Objective"
       , relationCase
           "Association guides Principle -> Action"
           "AssociationRelationship"
@@ -945,7 +963,7 @@ unmarkedDisplayedElementTest =
   where
     stableConceptProvenance trigger =
       "o2i.archimate-profile|"
-        <> "be8204d09d6dae8eda1fe6969d1bea62e3b35419108474ea8af177bb9030a3da|"
+        <> "bc04e9e36b27a090e7e257f30a051430da82665b6effc01c06f79fa9fd120633|"
         <> "graph|graph.stable-concept|"
         <> trigger
         <> "|record:1|"

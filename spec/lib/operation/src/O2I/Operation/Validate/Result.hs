@@ -55,6 +55,7 @@ import O2I.Operation.View (SelectedView)
 import O2I.Semantics
   ( CollectiveFitUnavailableReason
   , StrategyFormulationUnavailableReason
+  , StrategyRelationUnavailableReason
   )
 import O2I.Semantics.Input (SupplementalInputDefect)
 import O2I.Structure (StructureInputDefect)
@@ -133,16 +134,20 @@ foldValidateFailure common supplemental internal failure =
 foldValidateUnavailabilityWitness ::
      (SourceOrdinal -> result)
   -> (ModelIdentity -> StrategyFormulationUnavailableReason -> result)
+  -> (OccurrenceIdentity -> NonEmpty
+                              (ModelIdentity, StrategyRelationUnavailableReason) -> result)
   -> (ModelIdentity -> NonEmpty CollectiveFitUnavailableReason -> [ModelIdentity] -> result)
   -> (ModelIdentity -> [ModelIdentity] -> result)
   -> (ModelIdentity -> ModelIdentity -> NonEmpty CollectiveFitUnavailableReason -> [ModelIdentity] -> result)
   -> ValidateUnavailabilityWitness
   -> result
-foldValidateUnavailabilityWitness binding strategy fit coverage primitive witness =
+foldValidateUnavailabilityWitness binding strategy relation fit coverage primitive witness =
   case witness of
     ValidateBindingUnavailable ordinal -> binding ordinal
     ValidateStrategyFormulationUnavailable subject reason ->
       strategy subject reason
+    ValidateStrategyRelationUnavailable occurrence reasons ->
+      relation occurrence reasons
     ValidateCollectiveFitUnavailable subject reasons blockers ->
       fit subject reasons blockers
     ValidateCollectiveCoverageUnavailable subject blockers ->

@@ -22,19 +22,19 @@ GENERATED_DIAGNOSTIC_INVENTORY = (
     / "contract/generated/o2i.archimate-profile.diagnostic-evidence-v1.json"
 )
 EXPECTED_SHAPE_SHA256 = (
-    "17a008818fc1e3cd0c590f74d9440892ce76a7f255c32fa84cd5831b11a3fcd1"
+    "03a68c7d2b8540aa0ef150e97f277b284aeb406d15e060b1cf148a61e9054b15"
 )
 EXPECTED_SHA256 = (
-    "be8204d09d6dae8eda1fe6969d1bea62e3b35419108474ea8af177bb9030a3da"
+    "bc04e9e36b27a090e7e257f30a051430da82665b6effc01c06f79fa9fd120633"
 )
 EXPECTED_CORE_SHA256 = (
-    "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
+    "31f6118b51844aaf1f275e7ad8ea8061c0aff97cdb281b83e2e9c43023e70e7f"
 )
 EXPECTED_FIXED_POINT_SEMANTICS_SHA256 = (
     "2bb2381468d8ec09b54879cd28d03acd0ede0ac519ba57c242979e749e233cb2"
 )
 EXPECTED_DIAGNOSTIC_INVENTORY_SHA256 = (
-    "fbc46ff02f5a0895b82fcd8da076cf3ba2533f993337c531af65726345d77471"
+    "398007d60fe0123f469ff779f4e010936322fb9246cce96c0b5648d4096160dd"
 )
 
 EXPECTED_PROFILE_EVIDENCE_KINDS = (
@@ -2422,7 +2422,7 @@ def validate_companion(
     require_exact(declared_shape, actual_shape, "declared Profile shape SHA-256")
     require_exact(actual_shape, EXPECTED_SHAPE_SHA256, "accepted Profile shape SHA-256")
     require_exact(sha256(payload), EXPECTED_SHA256, "accepted Profile file SHA-256")
-    require_exact(companion["schema"], "o2i.archimate-profile/target-v46", "Profile schema")
+    require_exact(companion["schema"], "o2i.archimate-profile/target-v47", "Profile schema")
     core = validate_core_binding(companion, core_companion)
     validate_resolution(companion)
     validate_reference_integrity(companion, core)

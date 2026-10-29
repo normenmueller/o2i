@@ -40,6 +40,12 @@ module O2I.Structure
   , semanticRelationCompatibilityRelation
   , semanticRelationCompatibilitySource
   , semanticRelationCompatibilityTarget
+  , StrategyRelationOwnerDistinctnessEvidence
+  , strategyRelationOwnerDistinctnessRelation
+  , strategyRelationOwnerDistinctnessSource
+  , strategyRelationOwnerDistinctnessTarget
+  , strategyRelationOwnerDistinctnessSourceOwner
+  , strategyRelationOwnerDistinctnessTargetOwner
   , StructuredPropositionIdentityEvidence
   , structuredPropositionIdentitySubject
   , structuredPropositionIdentityFirstOccurrence
@@ -264,6 +270,36 @@ semanticRelationCompatibilityTarget ::
      SemanticRelationCompatibilityEvidence -> OccurrenceIdentity
 semanticRelationCompatibilityTarget (SemanticRelationCompatibilityEvidence _ _ target) =
   target
+
+-- | Project the original Strategy relation whose owners coincide.
+strategyRelationOwnerDistinctnessRelation ::
+     StrategyRelationOwnerDistinctnessEvidence -> OccurrenceIdentity
+strategyRelationOwnerDistinctnessRelation (StrategyRelationOwnerDistinctnessEvidence relation _ _ _ _) =
+  relation
+
+-- | Project the original relation source endpoint.
+strategyRelationOwnerDistinctnessSource ::
+     StrategyRelationOwnerDistinctnessEvidence -> OccurrenceIdentity
+strategyRelationOwnerDistinctnessSource (StrategyRelationOwnerDistinctnessEvidence _ source _ _ _) =
+  source
+
+-- | Project the original relation target endpoint.
+strategyRelationOwnerDistinctnessTarget ::
+     StrategyRelationOwnerDistinctnessEvidence -> OccurrenceIdentity
+strategyRelationOwnerDistinctnessTarget (StrategyRelationOwnerDistinctnessEvidence _ _ target _ _) =
+  target
+
+-- | Project the structurally resolved source Strategy owner.
+strategyRelationOwnerDistinctnessSourceOwner ::
+     StrategyRelationOwnerDistinctnessEvidence -> OccurrenceIdentity
+strategyRelationOwnerDistinctnessSourceOwner (StrategyRelationOwnerDistinctnessEvidence _ _ _ owner _) =
+  owner
+
+-- | Project the structurally resolved target Strategy owner.
+strategyRelationOwnerDistinctnessTargetOwner ::
+     StrategyRelationOwnerDistinctnessEvidence -> OccurrenceIdentity
+strategyRelationOwnerDistinctnessTargetOwner (StrategyRelationOwnerDistinctnessEvidence _ _ _ _ owner) =
+  owner
 
 -- | Project the proposition occurrence chosen as deterministic subject.
 structuredPropositionIdentitySubject ::

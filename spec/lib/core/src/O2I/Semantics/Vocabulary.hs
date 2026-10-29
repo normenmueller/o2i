@@ -17,12 +17,14 @@ module O2I.Semantics.Vocabulary
   , situationAnchorEndpoints
   , tokenAnchors
   , tokenContributesTo
+  , tokenDirects
   , tokenGrounds
   , tokenGuides
   , tokenIsConstitutedBy
   , tokenOrients
   , tokenSubstantiates
   , tokenSurfaces
+  , tokenTranslatesInto
   , familyCollectiveStrategyRealization
   , roleCollectiveParticipant
   , roleCollectiveTarget
@@ -108,6 +110,9 @@ tokenAnchors = CoreRelationToken Generated.GeneratedTokenAnchors
 tokenContributesTo :: CoreRelationToken
 tokenContributesTo = CoreRelationToken Generated.GeneratedTokenContributesTo
 
+tokenDirects :: CoreRelationToken
+tokenDirects = CoreRelationToken Generated.GeneratedTokenDirects
+
 tokenGrounds :: CoreRelationToken
 tokenGrounds = CoreRelationToken Generated.GeneratedTokenGrounds
 
@@ -125,6 +130,9 @@ tokenSubstantiates = CoreRelationToken Generated.GeneratedTokenSubstantiates
 
 tokenSurfaces :: CoreRelationToken
 tokenSurfaces = CoreRelationToken Generated.GeneratedTokenSurfaces
+
+tokenTranslatesInto :: CoreRelationToken
+tokenTranslatesInto = CoreRelationToken Generated.GeneratedTokenTranslatesInto
 
 familyCollectiveStrategyRealization :: CoreStructuredPropositionFamilyId
 familyCollectiveStrategyRealization =
