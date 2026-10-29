@@ -119,6 +119,8 @@ URL: \url{https://publications.opengroup.org/c220}.
 The Open Group (2026): *ArchiMate 4 Specification*. C260.\
 URL: \url{https://publications.opengroup.org/standards/archimate/c260}.
 
+What Matters (o. J.): "Don't Confuse KPIs and OKRs". In: *OKRs Explained*. URL: \url{https://www.whatmatters.com/okrs-explained/kpis-and-okrs} (abgerufen am 29.10.2026).
+
 ## Literaturfunktion
 
 Die Literaturquellen werden nicht gleichgewichtig verwendet, sondern nach ihrer Funktion innerhalb von O2I:
@@ -131,7 +133,7 @@ TOGAF und ArchiMate stützen Situierung, indem sie fachliche Business-Architectu
 
 Rumelt (2011) und Porter (1996) stützen die Bedarfsqualifikation innerhalb der Operationalisierung, indem sie strategische Relevanz aus Herausforderung, Positionierung, Trade-offs und Aktivitätssystem begründbar machen. Doerr (2018) stützt Operationalisierung über Objectives und Key Results als überprüfbare Umsetzungs- und Evidenzformen.
 
-Parmenter (2020) stützt Performance-Logik und KPI-Disziplin. Barr (2014) ergänzt die methodische KPI-Entwicklung über eine praktische Performance-Measurement-Methodik. Doerr (2018) ergänzt Wirkung und Messung durch Ziel- und Ergebnisbezüge.
+Parmenter (2020) stützt Performance-Logik und KPI-Disziplin. Barr (2014) ergänzt die methodische KPI-Entwicklung über eine praktische Performance-Measurement-Methodik. Doerr (2018) ergänzt Wirkung und Messung durch Ziel- und Ergebnisbezüge. What Matters (o. J.) erläutert ergänzend als Praxisquelle die Unterscheidung und das Zusammenspiel von KPIs und OKRs.
 
 The Open Group (2025, 2026) stützt die Modellierungsebene: TOGAF liefert den Enterprise-Architecture-Bezug, ArchiMate liefert die standardisierte Modellierungssprache, mit der O2I-Modelle an Architekturartefakte anschlussfähig werden.
 
@@ -538,9 +540,11 @@ In O2I misst eine Messung eine Situation (`Measure --measures--> Situation`). St
 > [!definition]
 > Ein **KPI** (en.: *key performance indicator*; meta: `KPI`)[^kpi] bezeichnet eine stabile, entscheidungsrelevante Messgröße innerhalb einer `Measure`. Seine KPI-Definition legt Maßeinheit, zulässigen Wertebereich, Messmethode und fachliche Interpretation verbindlich fest. Messbeobachtungen sowie Effekt- und Zielkriterien beziehen sich auf diese Definition.
 >
-> [^kpi]: *Quellenanker*: Parmenter (2020) für die stabile, entscheidungsrelevante Definition von KPIs; Barr (2014) für Messmethode und fachliche Interpretation aussagefähiger Performance-Maße. *Autorenableitung*: O2I fasst diese Merkmale in einer validierbaren KPI-Definition zusammen.
+> [^kpi]: *Quellenanker*: Parmenter (2020) für die Unterscheidung verschiedener Arten von Performance-Maßen; Barr (2014) für Messmethode und fachliche Interpretation aussagefähiger Performance-Maße. *Autorenableitung*: O2I fasst diese Merkmale in einer validierbaren KPI-Definition zusammen und verwendet KPI breiter als Parmenter, der Result Indicators und Performance Indicators sowie deren jeweilige Schlüsselindikatoren unterscheidet.
 
 `Measure` und KPI bezeichnen unterschiedliche Modellebenen: `Measure` ist der fachliche Messrahmen; ein KPI ist eine stabile, entscheidungsrelevante Messgröße innerhalb dieses Rahmens. Die Evidenzebene repräsentiert ihre verbindliche Semantik durch genau eine validierte `KPIDefinition` je verwendetem KPI.
+
+KPIs werden danach ausgewählt oder entwickelt, welche angestrebten Ergebnisse beobachtbar werden sollen. Objectives und die mit ihnen verbundenen Key Results geben dafür den fachlichen Ziel- und Ergebnisbezug vor. Ein geeigneter KPI muss noch nicht bestehen; seine Messdefinition wird für die spätere Bewertung verbindlich festgelegt. Ein Key Result einer Intervention kann für diesen KPI einen angestrebten Ergebniszustand formulieren. Das Zielkriterium und der Zieltermin im Nachweisentwurf machen dessen Erreichung bewertbar. Diese O2I-Verknüpfung konkretisiert die methodische KPI-Entwicklung nach Barr (2014) und die Unterscheidung von Messgröße und Ergebnisziel bei Doerr (2018) und What Matters (o. J.).
 
 Messung ist nicht Wirkung selbst. Sie macht Zustände und Veränderungen beobachtbar und liefert Evidenz, die erst durch Nachweislogik als Wirkung gelesen werden kann.
 

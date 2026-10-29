@@ -393,8 +393,8 @@ See o2i.md: Metamodell / Situationsanker.</documentation>
     <element xsi:type="archimate:InfluenceRelationship" name="contributes-to" id="id-763f8779cc2e40c8b633cb66fd588537" source="id-21a7bff043fe4a79b42b3456c96eb1d0" target="id-3aea1d97d93149ea8f798a86bda548a4"/>
     <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-5ce5c560038040f68a5b04d1f4a9f040" source="id-dc7ff95229114e4d8679435ef8a15e4e" target="id-21a7bff043fe4a79b42b3456c96eb1d0"/>
     <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-a47328668d2c4bac8322ac20adc48888" source="id-dc7ff95229114e4d8679435ef8a15e4e" target="id-beb3184c33554858935c51ea8959567c"/>
-    <element xsi:type="archimate:InfluenceRelationship" name="contributes-to" id="id-93db81b6971147dfb93f6f32d55385b7" source="id-5da5508c8e1b485bb632cee51bd6ff49" target="id-3aea1d97d93149ea8f798a86bda548a4">
-      <documentation>Hinweis: diese Relation zeigt Erfolgsbeitrag.</documentation>
+    <element xsi:type="archimate:InfluenceRelationship" name="translates-into" id="id-93db81b6971147dfb93f6f32d55385b7" source="id-3aea1d97d93149ea8f798a86bda548a4" target="id-b6b7316e5f2d472f82cb6360db59077a">
+      <documentation>Der obere Key Result wird in das Objective der unteren Strategie übersetzt.</documentation>
     </element>
     <element xsi:type="archimate:InfluenceRelationship" name="grounds" id="id-ec6ef962190347bdbd3c8588f42507e1" source="id-8d15273def204bb6ad8a6832593418dc" target="id-256181acce574ac7b73cab4c72b589bb"/>
     <element xsi:type="archimate:InfluenceRelationship" name="contributes-to" id="id-d1f087938df543208ce15dd696038285" source="id-c80c65d1f98149c8aa25bc7dd2bbcada" target="id-21a7bff043fe4a79b42b3456c96eb1d0">
@@ -581,7 +581,7 @@ See o2i.md: Metamodell / Situationsanker.</documentation>
             <feature name="deriveElementLineColor" value="false"/>
             <feature name="lineStyle" value="1"/>
           </child>
-          <child xsi:type="archimate:DiagramObject" id="id-0360c015a25b4df782d354dbdc8981c2" targetConnections="id-4d4e40d6c7c44bd89a88e1800b18b278 id-20431e0f674340ff8df312e513accaa3 id-32ddc364365d40e08555b8703c10b2fc id-310f510d68654c108a8ced5fbd0b1404" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-b6b7316e5f2d472f82cb6360db59077a">
+          <child xsi:type="archimate:DiagramObject" id="id-0360c015a25b4df782d354dbdc8981c2" targetConnections="id-4d4e40d6c7c44bd89a88e1800b18b278 id-20431e0f674340ff8df312e513accaa3 id-32ddc364365d40e08555b8703c10b2fc id-310f510d68654c108a8ced5fbd0b1404 id-8fee6dc0026b47cfba62a19e7490e42e" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-b6b7316e5f2d472f82cb6360db59077a">
             <bounds x="284" y="120" width="186" height="56"/>
             <feature name="deriveElementLineColor" value="false"/>
             <feature name="iconColor" value="#feffff"/>
@@ -600,10 +600,6 @@ See o2i.md: Metamodell / Situationsanker.</documentation>
               <feature name="lineStyle" value="0"/>
               <feature name="labelExpression" value="80% of decisions reference&#xA;shared decision records ::&#xA;Key Result"/>
               <sourceConnection xsi:type="archimate:Connection" id="id-4d4e40d6c7c44bd89a88e1800b18b278" source="id-24539bae609346dc8abb98afe1d984e9" target="id-0360c015a25b4df782d354dbdc8981c2" archimateRelationship="id-0fbceeb209ae4c3bb0e3d6f3dadb369b"/>
-              <sourceConnection xsi:type="archimate:Connection" id="id-8fee6dc0026b47cfba62a19e7490e42e" source="id-24539bae609346dc8abb98afe1d984e9" target="id-68dab3e0c3a54c10bce54d6e2e77f442" archimateRelationship="id-93db81b6971147dfb93f6f32d55385b7">
-                <bendpoint startX="1014" startY="-1" endX="152" endY="558"/>
-                <bendpoint startX="1013" startY="-565" endX="151" endY="-2"/>
-              </sourceConnection>
               <sourceConnection xsi:type="archimate:Connection" id="id-55d2fa4188304e53a000e15983574219" source="id-24539bae609346dc8abb98afe1d984e9" target="id-b50a338e427f43e58f19ce740806a512" archimateRelationship="id-4e1299a004474c98be20ac2da89646ca">
                 <feature name="labelExpression" value="translates&#xA;into"/>
               </sourceConnection>
@@ -674,12 +670,16 @@ See o2i.md: Metamodell / Situationsanker.</documentation>
             <feature name="iconColor" value="#feffff"/>
             <feature name="lineStyle" value="0"/>
           </child>
-          <child xsi:type="archimate:DiagramObject" id="id-68dab3e0c3a54c10bce54d6e2e77f442" targetConnections="id-d3535cb1a11649b5913e5de4b210f0ae id-8fee6dc0026b47cfba62a19e7490e42e id-29a66093d85e4be1bb278c96ff0711fd" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-3aea1d97d93149ea8f798a86bda548a4">
+          <child xsi:type="archimate:DiagramObject" id="id-68dab3e0c3a54c10bce54d6e2e77f442" targetConnections="id-d3535cb1a11649b5913e5de4b210f0ae id-29a66093d85e4be1bb278c96ff0711fd" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-3aea1d97d93149ea8f798a86bda548a4">
             <bounds x="276" y="204" width="186" height="62"/>
             <feature name="deriveElementLineColor" value="false"/>
             <feature name="iconColor" value="#feffff"/>
             <feature name="lineStyle" value="0"/>
             <sourceConnection xsi:type="archimate:Connection" id="id-e1075b5fa48445cfbebb27ce9e6fca68" source="id-68dab3e0c3a54c10bce54d6e2e77f442" target="id-78b64b07e00540eca7cd60402ad68755" archimateRelationship="id-28bec17694a44648a503993ba4d7fba3"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-8fee6dc0026b47cfba62a19e7490e42e" source="id-68dab3e0c3a54c10bce54d6e2e77f442" target="id-0360c015a25b4df782d354dbdc8981c2" archimateRelationship="id-93db81b6971147dfb93f6f32d55385b7">
+              <bendpoint startX="151" startY="-2" endX="1015" endY="-433"/>
+              <bendpoint startX="151" startY="430" endX="1015" endY="-1"/>
+            </sourceConnection>
           </child>
           <child xsi:type="archimate:DiagramObject" id="id-cce7c4028e4a43fa80c40ccc831719a7" targetConnections="id-a696a54fa070426aad18934d8ab4ac54" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-dc7ff95229114e4d8679435ef8a15e4e">
             <bounds x="23" y="276" width="186" height="56"/>
