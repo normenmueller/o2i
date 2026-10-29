@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import hashlib
 import json
 import os
 import re
@@ -225,13 +226,32 @@ class RecoveryDocumentationTests(unittest.TestCase):
         workflow = WORKFLOW.read_text(encoding="utf-8")
         for variable, pattern in (
             ("REUSE_VERSION", r"reuse\[charset-normalizer\]==([0-9.]+)"),
-            ("HINDENT_VERSION", r"hindent-([0-9.]+)"),
-            ("GHC_VERSION", r"--with-compiler=ghc-([0-9.]+)"),
+            ("HINDENT_VERSION", r"hindent ([0-9.]+)"),
+            ("GHC_VERSION", r"ghcup (?:install|set) ghc ([0-9.]+)"),
+            ("CABAL_VERSION", r"ghcup (?:install|set) cabal ([0-9.]+)"),
         ):
             with self.subTest(tool=variable):
                 owned = set(re.findall(rf"(?m)^\s+{variable}: ([0-9.]+)$", workflow))
                 self.assertEqual(1, len(owned))
                 self.assertEqual(owned, set(re.findall(pattern, readme)))
+                if variable == "HINDENT_VERSION":
+                    self.assertIn(
+                        f'"Hindent" "hindent {next(iter(owned))}"',
+                        HASKELL_STAGE.read_text(encoding="utf-8"),
+                    )
+        checksums = set(re.findall(r"(?m)^\s+HINDENT_SHA256: ([a-f0-9]{64})$", workflow))
+        self.assertEqual(1, len(checksums))
+        self.assertEqual(
+            checksums,
+            set(re.findall(r"hindent_sha256='([a-f0-9]{64})'", readme)),
+        )
+        self.assertIn(
+            "hindent_bottle_sha256='5b3d7317ba8d50474ca4075b3a1964fcf3f97b24faf92b1543a63b88e19342ff'",
+            readme,
+        )
+        self.assertIn("5971856bb4f75779f111715efdff49a70c5967db/Formula/h/hindent.rb", readme)
+        self.assertNotIn("brew install --force-bottle hindent", readme)
+        self.assertNotIn("cabal install hindent", readme)
         self.assertIn(
             "check-pdf-freshness.py contract --root . --field acquisition-revision",
             readme,
@@ -831,6 +851,133 @@ reason=path-matrix""",
 class VerificationWorkflowTests(unittest.TestCase):
     """Keep all required checks visible while heavy work is conditional."""
 
+    def test_hindent_toolchain_guard_rejects_version_failure_and_semantic_regression(self) -> None:
+        verifier = VERIFY.read_text(encoding="utf-8")
+        version_function = "require_version() {" + verifier.split(
+            "require_version() {", maxsplit=1,
+        )[1].split("\n}\n", maxsplit=1)[0] + "\n}\n"
+        toolchain = HASKELL_STAGE.read_text(encoding="utf-8").split(
+            '  begin_phase "Haskell toolchain"\n', maxsplit=1,
+        )[1].split('  cabal_config=', maxsplit=1)[0]
+        script = version_function + 'info() { :; }\nwork="$O2I_TEST_WORK"\n' + toolchain + "echo GUARD_PASSED\n"
+        for version, status, loses_strictness, expected in (
+            ("6.3.0", 0, False, 0), ("6.2.1", 0, False, 1),
+            ("", 0, False, 1), ("6.3.0", 23, False, 23), ("6.3.0", 0, True, 1),
+        ):
+            with self.subTest(version=version, status=status, loses_strictness=loses_strictness), \
+                    tempfile.TemporaryDirectory() as directory:
+                tools = Path(directory)
+                for command, output in (("ghc", "9.10.3"), ("cabal", "3.16.1.0"),
+                                        ("ghc-pkg", "4.20.2.0")):
+                    path = tools / command
+                    path.write_text(f"#!/bin/sh\nprintf '%s\\n' '{output}'\n")
+                    path.chmod(0o755)
+                path = tools / "hindent"
+                path.write_text(
+                    f"#!{sys.executable}\nimport pathlib, sys\n"
+                    "if sys.argv[1:] == ['--version']:\n"
+                    f"    print('hindent {version}')\n    sys.exit({status})\n"
+                    "source = pathlib.Path(sys.argv[-1]).read_text()\n"
+                    "assert 'Probe :: !Int -> Probe' in source\n"
+                    f"formatted = source.replace('!Int', 'Int') if {loses_strictness!r} else source\n"
+                    "sys.exit(formatted != source)\n",
+                )
+                path.chmod(0o755)
+                result = subprocess.run(
+                    ["sh", "-eu", "-c", script], cwd=ROOT,
+                    env={**os.environ, "PATH": str(tools) + os.pathsep + os.environ["PATH"],
+                         "O2I_TEST_WORK": str(tools)},
+                    capture_output=True, text=True,
+                )
+                self.assertEqual(expected, result.returncode, result.stderr)
+                self.assertEqual(expected == 0, "GUARD_PASSED" in result.stdout)
+                if expected == 1 and not loses_strictness:
+                    self.assertIn("Hindent hindent 6.3.0 is required", result.stderr)
+
+    def test_hindent_download_and_cache_are_checked_before_execution(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        step = workflow.split(
+            "      - name: Install and verify Hindent\n", maxsplit=1,
+        )[1].split("\n      - name:", maxsplit=1)[0]
+        script = "\n".join(
+            line.removeprefix("          ")
+            for line in step.split("        run: |\n", maxsplit=1)[1].splitlines()
+        )
+        # Redirect only the installation root; never touch the actual user's tools.
+        script = script.replace("$HOME", "$O2I_TEST_TOOL_ROOT")
+        for cached, corrupt, version, format_status, architecture in (
+            (False, False, "6.3.0", 0, "x86_64"),
+            (True, False, "6.3.0", 0, "x86_64"),
+            (False, True, "6.3.0", 0, "x86_64"),
+            (True, True, "6.3.0", 0, "x86_64"),
+            (False, False, "6.2.1", 0, "x86_64"),
+            (False, False, "6.3.0", 19, "x86_64"),
+            (False, False, "6.3.0", 0, "aarch64"),
+        ):
+            with self.subTest(cached=cached, corrupt=corrupt, version=version,
+                              format_status=format_status, architecture=architecture), \
+                    tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                tools = root / "tools"
+                tools.mkdir()
+                calls = root / "calls"
+                artifact = root / "artifact"
+                content = (f"#!{sys.executable}\n" +
+                           "import json, os, sys\n"
+                           "with open(os.environ['PROBE_CALLS'], 'a') as log:\n"
+                           "    log.write(json.dumps(sys.argv[1:]) + '\\n')\n"
+                           "if sys.argv[1:] == ['--version']:\n"
+                           "    print('hindent ' + os.environ['PROBE_VERSION'])\n"
+                           "else:\n"
+                           "    sys.exit(int(os.environ['PROBE_FORMAT_STATUS']))\n").encode()
+                artifact.write_bytes(content + (b"# corrupt\n" if corrupt else b""))
+                installed = root / ".local/bin/hindent"
+                if cached:
+                    installed.parent.mkdir(parents=True)
+                    shutil.copyfile(artifact, installed)
+                    installed.chmod(0o755)
+                commands = {
+                    "uname": "import os, sys\nprint('Linux' if sys.argv[1] == '-s' else os.environ['PROBE_ARCH'])\n",
+                    "curl": "import os, pathlib, shutil, sys\n"
+                            "pathlib.Path(os.environ['PROBE_CURL']).touch()\n"
+                            "shutil.copyfile(os.environ['PROBE_ARTIFACT'], sys.argv[sys.argv.index('--output') + 1])\n",
+                    "sha256sum": "import hashlib, pathlib, sys\n"
+                                 "digest, name = sys.stdin.read().strip().split(None, 1)\n"
+                                 "sys.exit(hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest() != digest)\n",
+                }
+                for name, body in commands.items():
+                    command = tools / name
+                    command.write_text(f"#!{sys.executable}\n" + body)
+                    command.chmod(0o755)
+                (root / "spec").mkdir()
+                (root / "spec/Probe.hs").write_text("module Probe where\n")
+                environment = {
+                    **os.environ, "PATH": str(tools) + os.pathsep + os.environ["PATH"],
+                    "O2I_TEST_TOOL_ROOT": str(root), "GITHUB_PATH": str(root / "github-path"),
+                    "HINDENT_VERSION": "6.3.0", "HINDENT_SHA256": hashlib.sha256(content).hexdigest(),
+                    "PROBE_ARTIFACT": str(artifact), "PROBE_CURL": str(root / "curl-ran"),
+                    "PROBE_CALLS": str(calls), "PROBE_VERSION": version,
+                    "PROBE_FORMAT_STATUS": str(format_status), "PROBE_ARCH": architecture,
+                }
+                result = subprocess.run(
+                    ["sh", "-eu", "-c", script], cwd=root, env=environment,
+                    capture_output=True, text=True,
+                )
+                success = not corrupt and version == "6.3.0" and format_status == 0 and architecture == "x86_64"
+                self.assertEqual(success, result.returncode == 0, result.stderr)
+                executed = [json.loads(line) for line in calls.read_text().splitlines()] if calls.exists() else []
+                if corrupt or architecture != "x86_64":
+                    self.assertEqual([], executed)
+                elif version != "6.3.0":
+                    self.assertEqual([["--version"]], executed)
+                else:
+                    self.assertEqual([
+                        ["--version"], ["--line-length", "80", "--validate", "spec/Probe.hs"],
+                    ], executed)
+                self.assertEqual(not cached and architecture == "x86_64", (root / "curl-ran").exists())
+                if corrupt and not cached:
+                    self.assertFalse(installed.exists())
+
     def test_cache_diagnostic_reports_raw_outcomes_without_a_verdict(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
         report = workflow.split(
@@ -866,6 +1013,11 @@ class VerificationWorkflowTests(unittest.TestCase):
         )[1].split("\n      - name:", maxsplit=1)[0]
         self.assertIn("CABAL_VERSION: 3.16.1.0", haskell_job)
         self.assertIn("GHC_VERSION: 9.10.3", haskell_job)
+        cache_keys = re.findall(r"(?m)^\s+(?:key: )?(haskell-dependencies-.*)$", haskell_job)
+        self.assertEqual(2, len(cache_keys))
+        for key in cache_keys:
+            self.assertIn("${{ runner.arch }}", key)
+            self.assertIn("${{ env.HINDENT_SHA256 }}", key)
         self.assertIn("REUSE_VERSION: 6.2.0", haskell_job)
         self.assertIn("timeout-minutes: 60", haskell_job)
         self.assertNotIn("CABAL_VERSION: 3.14.2.0", haskell_job)

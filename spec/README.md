@@ -150,6 +150,8 @@ Each Foundation package owns its source and test trees. `ctr/archimate/` contain
 
 ## Build And Verification Status
 
+For a fresh clone or fork, first follow the [local verification setup](../utl/verification/README.md). It documents the pinned toolchain and prebuilt formatter installation for macOS and Linux. Locally, use `./utl/verification/local.sh foundation` or `./utl/verification/local.sh haskell` to put those checkout-local tools on the verification path. CI invokes the same canonical verifier directly.
+
 The canonical repository-root verification command for the current Foundation and pull-request scope is:
 
 ```sh
@@ -185,7 +187,7 @@ Cabal's native `--semaphore` coordinates module and component compilation for bu
 
 ## CLI Setup
 
-From the repository root, build the CLI and add its executable directory to the current shell's PATH:
+Install the GHC/Cabal toolchain described in the [setup instructions](../utl/verification/README.md), then build the CLI from the repository root and add its executable directory to the current shell's PATH:
 
 ```sh
 cd spec
@@ -196,6 +198,8 @@ o2i --help
 ```
 
 Run Cabal from `spec/` so local build artifacts remain in `spec/dist-newstyle/`. The CLI provides `views`, `validate`, `trace`, `qualify`, `readiness`, and `assess`; command-specific help describes their inputs. Add `--json` for deterministic machine output. Start modeling with the [Ethos guide](../doc/guide/ethos.md).
+
+Hindent is a development verification tool; it is not a runtime dependency of the installed `o2i` command. Publication tools are needed only for the corresponding paper verification stage.
 
 ## License
 

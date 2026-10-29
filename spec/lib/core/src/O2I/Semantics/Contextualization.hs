@@ -100,5 +100,6 @@ dependencyDefect semanticIndex dependent endpoint =
                endpoint
                context)
         ]
-      where context = contextualizationOccurrenceIdentity contextualization
+      where
+        context = contextualizationOccurrenceIdentity contextualization
     _ -> []

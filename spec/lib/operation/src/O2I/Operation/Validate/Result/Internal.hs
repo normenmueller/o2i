@@ -34,6 +34,7 @@ import O2I.Operation.View (SelectedView)
 import O2I.Semantics
   ( CollectiveFitUnavailableReason
   , StrategyFormulationUnavailableReason
+  , StrategyRelationUnavailableReason
   )
 import O2I.Semantics.Input (SupplementalInputDefect)
 import O2I.Structure (StructureInputDefect)
@@ -75,6 +76,9 @@ data ValidateUnavailabilityWitness
   | ValidateStrategyFormulationUnavailable
       !ModelIdentity
       !StrategyFormulationUnavailableReason
+  | ValidateStrategyRelationUnavailable
+      !OccurrenceIdentity
+      !(NonEmpty (ModelIdentity, StrategyRelationUnavailableReason))
   | ValidateCollectiveFitUnavailable
       !ModelIdentity
       !(NonEmpty CollectiveFitUnavailableReason)

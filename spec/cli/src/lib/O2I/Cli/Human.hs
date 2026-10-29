@@ -382,6 +382,15 @@ consumeHumanValidateUnavailable =
     (\ordinal -> renderMany ["binding", renderNatural ordinal])
     (\subject reason ->
        renderMany ["strategy", consumeHumanModel subject, reason])
+    (\relation blockers ->
+       renderMany
+         [ "strategy-relation"
+         , consumeHumanOccurrence relation
+         , renderMany
+             [ renderMany [consumeHumanModel subject, reason]
+             | (subject, reason) <- NonEmpty.toList blockers
+             ]
+         ])
     (\subject reasons blockers ->
        renderMany
          [ "fit"
@@ -1854,6 +1863,13 @@ consumeHumanStructureEvidence =
           zeroMany "owner-cardinality"
       , HumanDiagnostic.eliminateHumanSemanticRelationCompatibility =
           three "relation"
+      , HumanDiagnostic.eliminateHumanStrategyRelationOwnerDistinctness =
+          \relation source target sourceOwner targetOwner ->
+            renderMany
+              ("strategy-relation-owners"
+                 : map
+                     consumeHumanOccurrence
+                     [relation, source, target, sourceOwner, targetOwner])
       , HumanDiagnostic.eliminateHumanStructuredPropositionIdentity =
           \owner source target identities ->
             renderMany
@@ -1986,8 +2002,26 @@ consumeHumanSemanticEvidence =
           nonEmpty "key-results"
       , HumanDiagnostic.eliminateHumanStrategyFormulationVisionOrientation =
           member "vision-orientation"
+      , HumanDiagnostic.eliminateHumanStrategyRelationAssertedEndpointDependency =
+          strategyRelation "strategy-endpoint-dependency"
+      , HumanDiagnostic.eliminateHumanStrategyRelationDirectionSupport =
+          strategyRelation "strategy-direction-support"
+      , HumanDiagnostic.eliminateHumanStrategyRelationContributionSupport =
+          strategyRelation "strategy-contribution-support"
       }
   where
+    strategyRelation branch relation source target relationOccurrence sourceOccurrence targetOccurrence =
+      renderMany
+        (branch
+           : map
+               consumeHumanOccurrence
+               [ relation
+               , source
+               , target
+               , relationOccurrence
+               , sourceOccurrence
+               , targetOccurrence
+               ])
     model branch identity = renderMany [branch, consumeHumanModel identity]
     field branch identity occurrence =
       renderMany

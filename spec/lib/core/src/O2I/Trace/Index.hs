@@ -556,7 +556,8 @@ buildSearchTree entries = fst (build (length entries) entries)
         [] -> error "Trace balanced search tree exhausted its input"
         (key, value):afterNode ->
           (SearchTreeNode key value left right, afterRight)
-          where (right, afterRight) = build (count - leftCount - 1) afterNode
+          where
+            (right, afterRight) = build (count - leftCount - 1) afterNode
       where
         leftCount = count `div` 2
         (left, afterLeft) = build leftCount remaining

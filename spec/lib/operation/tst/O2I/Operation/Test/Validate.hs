@@ -19,7 +19,12 @@ import qualified Data.Text as Text
 import Numeric.Natural (Natural)
 import qualified O2I.ArchiMate.Profile.Draft as Draft
 import O2I.ArchiMate.Profile.Resolution (compiledProfileDescriptor)
-import O2I.Core.Identity (modelIdentity, modelIdentityText)
+import O2I.Core.Identity
+  ( modelIdentity
+  , modelIdentityText
+  , occurrenceIdentity
+  , occurrenceIdentityText
+  )
 import O2I.Operation.Acquisition (InputSource, fileInput)
 import O2I.Operation.Acquisition.Internal (acquireWith)
 import O2I.Operation.Adapter
@@ -61,6 +66,7 @@ import O2I.Operation.View (ViewSelector, viewByName)
 import O2I.Semantics
   ( CollectiveFitUnavailableReason(..)
   , StrategyFormulationUnavailableReason(..)
+  , StrategyRelationUnavailableReason(..)
   )
 import OperationReportPublicObserver
   ( ObservedReportContract
@@ -83,6 +89,9 @@ tests =
         "retains Core unavailability without supplemental Binding defects"
         coreUnavailableWithoutSupplements
     , testCase "retains Binding-only unavailability" bindingOnlyUnavailable
+    , testCase
+        "retains macro occurrence and exact missing formulation blockers"
+        strategyRelationUnavailable
     , testCase
         "retains partial Binding and independent Semantics diagnostics"
         partialBindingWithSemanticDiagnostics
@@ -184,6 +193,7 @@ closedCoreUnavailabilityWitnessDocuments = do
   claim <- requireRight (modelIdentity "claim")
   participant <- requireRight (modelIdentity "participant")
   blocker <- requireRight (modelIdentity "blocker")
+  macro <- requireRight (occurrenceIdentity "macro")
   let collectiveReasons =
         CollectiveFitInputMissing
           :| [ CollectiveFitIdentityUnresolved
@@ -247,7 +257,30 @@ closedCoreUnavailabilityWitnessDocuments = do
               , "blockers" Aeson..= ["blocker" :: Text]
               ])
         ]
-  mapM_ (assertCoreWitnessDocument tool prepared) cases
+  let relationCases =
+        [ ( ValidateInternal.ValidateStrategyRelationUnavailable
+              macro
+              ((strategy, reason) :| [])
+          , Aeson.object
+              [ "kind" Aeson..= ("strategy-relation" :: Text)
+              , "relation" Aeson..= ("macro" :: Text)
+              , "blockers"
+                  Aeson..= [ Aeson.object
+                               [ "strategy" Aeson..= ("strategy" :: Text)
+                               , "reason" Aeson..= token
+                               ]
+                           ]
+              ])
+        | (reason, token) <-
+            [ ( StrategyRelationFormulationMissing
+              , "formulation-missing" :: Text)
+            , ( StrategyRelationFormulationIdentityUnresolved
+              , "formulation-identity-unresolved")
+            , (StrategyRelationFormulationInvalid, "formulation-invalid")
+            , (StrategyRelationFormulationCandidate, "formulation-candidate")
+            ]
+        ]
+  mapM_ (assertCoreWitnessDocument tool prepared) (cases <> relationCases)
 
 assertCoreWitnessDocument ::
      ToolDescriptor
@@ -940,6 +973,91 @@ positiveLevelTests =
         ]
     ]
 
+strategyRelationUnavailable :: Assertion
+strategyRelationUnavailable = do
+  let relation =
+        Draft.relationshipDraft
+          (draftIdentity "directs")
+          (draftLocation "directs")
+          [ Draft.typeFieldMember
+              [ Draft.draftTextScalar
+                  "AssociationRelationship"
+                  (draftLocation "type")
+              ]
+              (draftLocation "type-field")
+          , Draft.directedFieldMember
+              [Draft.draftBooleanScalar True (draftLocation "directed")]
+              (draftLocation "directed-field")
+          , Draft.nameFieldMember
+              [Draft.draftTextScalar "directs" (draftLocation "name")]
+              (draftLocation "name-field")
+          , Draft.referenceMember
+              (Draft.relationshipSourceReference
+                 (draftIdentity "upper")
+                 (draftLocation "source"))
+          , Draft.referenceMember
+              (Draft.relationshipTargetReference
+                 (draftIdentity "lower")
+                 (draftLocation "target"))
+          , draftProperty "macro-commitment" "o2i.commitment" "asserted"
+          ]
+      connection =
+        Draft.viewConnectionDraft
+          (draftIdentity "macro-connection")
+          (draftLocation "macro-connection")
+          [ Draft.referenceMember
+              (Draft.viewConnectionRelationshipReference
+                 (draftIdentity "directs")
+                 (draftLocation "connection-relation"))
+          , Draft.referenceMember
+              (Draft.viewConnectionSourceReference
+                 (draftIdentity "upper-node")
+                 (draftLocation "connection-source"))
+          , Draft.referenceMember
+              (Draft.viewConnectionTargetReference
+                 (draftIdentity "lower-node")
+                 (draftLocation "connection-target"))
+          ]
+      draft =
+        validateDraftWithViewMembers
+          [("upper", "Grouping", "Strategy"), ("lower", "Grouping", "Strategy")]
+          [Draft.childRecordMember relation]
+          [Draft.childRecordMember connection]
+  result <- runFixture draft []
+  witnesses <-
+    foldValidateResult
+      (const (assertFailure "macro fixture failed" >> pure []))
+      (const (assertFailure "macro fixture accepted" >> pure []))
+      (const (assertFailure "missing input became rejection" >> pure []))
+      (\values _ -> pure (NonEmpty.toList values))
+      result
+  let observe =
+        foldValidateUnavailabilityWitness
+          (const Nothing)
+          (\_ _ -> Nothing)
+          (\occurrence reasons ->
+             Just
+               ( occurrenceIdentityText occurrence
+               , [ (modelIdentityText subject, reason)
+                 | (subject, reason) <- NonEmpty.toList reasons
+                 ]))
+          (\_ _ _ -> Nothing)
+          (\_ _ -> Nothing)
+          (\_ _ _ _ -> Nothing)
+  case [value | witness <- witnesses, Just value <- [observe witness]] of
+    [(occurrence, blockers)] -> do
+      assertBool
+        "original macro occurrence retained"
+        (not (Text.null occurrence))
+      blockers
+        @?= [ ("upper", StrategyRelationFormulationMissing)
+            , ("lower", StrategyRelationFormulationMissing)
+            ]
+    values -> assertFailure ("expected one relation witness: " <> show values)
+  tool <- validateTool
+  document <- requireValidateDocument tool result
+  assertValidateSchema (encodeValidateResultDocument document)
+
 data WitnessObservation
   = BindingWitness !Integer
   | StrategyWitness !Text !StrategyFormulationUnavailableReason
@@ -1096,6 +1214,7 @@ observeWitness =
   foldValidateUnavailabilityWitness
     (BindingWitness . fromIntegral . sourceOrdinalValue)
     (\subject reason -> StrategyWitness (modelIdentityText subject) reason)
+    (\_ _ -> OtherSemanticWitness)
     (\_ _ _ -> OtherSemanticWitness)
     (\_ _ -> OtherSemanticWitness)
     (\_ _ _ _ -> OtherSemanticWitness)
@@ -1135,6 +1254,14 @@ validateDraftWithExtraMembers ::
   -> [Draft.DraftMember Draft.ModelRootRole]
   -> Draft.ProfileDraft
 validateDraftWithExtraMembers elements extras =
+  validateDraftWithViewMembers elements extras []
+
+validateDraftWithViewMembers ::
+     [(Text, Text, Text)]
+  -> [Draft.DraftMember Draft.ModelRootRole]
+  -> [Draft.DraftMember Draft.ViewRole]
+  -> Draft.ProfileDraft
+validateDraftWithViewMembers elements extras viewExtras =
   Draft.profileDraft
     (Draft.modelRootDraft
        (draftIdentity "model")
@@ -1154,7 +1281,8 @@ validateDraftWithExtraMembers elements extras =
                            (draftLocation "view-name-field")
                            : map
                                (Draft.childRecordMember . viewNode . first3)
-                               elements))
+                               elements
+                               <> viewExtras))
                  ]))
 
 typedElement :: Text -> Text -> Text -> Draft.ElementDraft

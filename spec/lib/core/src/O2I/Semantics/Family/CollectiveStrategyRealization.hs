@@ -6,6 +6,7 @@ module O2I.Semantics.Family.CollectiveStrategyRealization
   ( CollectiveWork(..)
   , assessCollectiveStrategyRealizations
   , assessCollectiveStrategyRealizationsWithWork
+  , assessCollectiveStrategyRealizationsPrepared
   ) where
 
 import Data.List (sort, sortOn)
@@ -21,7 +22,6 @@ import O2I.Core.Graph.Observation
   , carrierCommitment
   , carrierModelIdentity
   , relationOccurrenceIdentity
-  , relationTargetOccurrence
   )
 import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
 import O2I.Input.Internal.Types
@@ -32,6 +32,7 @@ import O2I.Input.Internal.Types
   )
 import O2I.Semantics.Index
 import O2I.Semantics.Internal
+import O2I.Semantics.StrategyRelations
 import O2I.Semantics.Vocabulary
 import O2I.Structure
   ( StructuredIncidenceObservation
@@ -65,6 +66,18 @@ assessCollectiveStrategyRealizationsWithWork ::
   -> [StrategyFormulationAssessment scope]
   -> [(CollectiveStrategyRealizationAssessment scope, CollectiveWork)]
 assessCollectiveStrategyRealizationsWithWork semanticIndex strategyAssessments =
+  assessCollectiveStrategyRealizationsPrepared
+    semanticIndex
+    strategyAssessments
+    (prepareStrategyRelations semanticIndex strategyAssessments)
+
+-- | Consume the same prepared Strategy evidence used by standalone macros.
+assessCollectiveStrategyRealizationsPrepared ::
+     SemanticIndex scope
+  -> [StrategyFormulationAssessment scope]
+  -> PreparedStrategyRelations scope
+  -> [(CollectiveStrategyRealizationAssessment scope, CollectiveWork)]
+assessCollectiveStrategyRealizationsPrepared semanticIndex strategyAssessments prepared =
   map assessCollective collectives
   where
     collectives =
@@ -72,14 +85,16 @@ assessCollectiveStrategyRealizationsWithWork semanticIndex strategyAssessments =
         ((== familyCollectiveStrategyRealization) . structuredPropositionFamily)
         (indexedStructuredPropositions semanticIndex)
     strategyResults = strategyAssessmentIndex strategyAssessments
-    assessCollective = assessOneCollective semanticIndex strategyResults
+    assessCollective =
+      assessOneCollective semanticIndex strategyResults prepared
 
 assessOneCollective ::
      SemanticIndex scope
   -> Map ModelIdentity (StrategyFormulationAssessment scope)
+  -> PreparedStrategyRelations scope
   -> StructuredPropositionObservation scope
   -> (CollectiveStrategyRealizationAssessment scope, CollectiveWork)
-assessOneCollective semanticIndex strategyResults proposition =
+assessOneCollective semanticIndex strategyResults relationSupport proposition =
   (assessment, work)
   where
     assessment =
@@ -136,7 +151,11 @@ assessOneCollective semanticIndex strategyResults proposition =
         target
         expectedParticipantPairs
     preparedSupport =
-      prepareCollectiveSupport semanticIndex strategyResults participants target
+      prepareCollectiveSupport
+        relationSupport
+        strategyResults
+        participants
+        target
     coverage =
       assessCoverage strategyResults claim participants target preparedSupport
     macroSupport =
@@ -224,150 +243,142 @@ assessFit semanticIndex strategyResults claim claimOccurrence participants targe
                 CollectiveFitUnavailable
                   (CollectiveFitIdentityUnresolved NonEmpty.:| [])
                   []
-      where prerequisiteStates =
-              participantPrerequisites strategyResults participants
-                ++ targetPrerequisites strategyResults target
-            prerequisiteReasons =
-              Set.toAscList (Set.fromList (map fst prerequisiteStates))
-            blockers = Set.toAscList (Set.fromList (map snd prerequisiteStates))
-            targetFormulation = target >>= validStrategyInput strategyResults
-            participantsResolved =
-              all
-                (uncurry (identitySiteResolved . indexedPointer "/participants"))
-                (zip
-                   [0 :: Int ..]
-                   (NonEmpty.toList (collectiveParticipants input)))
-            targetResolved =
-              identitySiteResolved "/target" (collectiveTarget input)
-            targetGuidingPolicyResolved =
-              all
-                (uncurry
-                   (identitySiteResolved . indexedPointer "/targetGuidingPolicy"))
-                (zip
-                   [0 :: Int ..]
-                   (NonEmpty.toList (collectiveTargetGuidingPolicy input)))
-            pairwiseCoherenceResolved =
-              and
-                [ identitySiteResolved
-                  (nestedPointer "/pairwiseCoherence" index "participantA")
-                  (pairwiseParticipantA row)
-                  && identitySiteResolved
-                       (nestedPointer "/pairwiseCoherence" index "participantB")
-                       (pairwiseParticipantB row)
-                | (index, row) <-
-                    zip
-                      [0 :: Int ..]
-                      (NonEmpty.toList (collectivePairwiseCoherence input))
-                ]
-            participantCompatibilityResolved =
-              and
-                [ identitySiteResolved
-                  (nestedPointer "/participantCompatibility" index "participant")
-                  (compatibilityParticipant row)
-                | (index, row) <-
-                    zip
-                      [0 :: Int ..]
-                      (NonEmpty.toList
-                         (collectiveParticipantCompatibility input))
-                ]
-            allIdentitySitesResolved =
-              participantsResolved
-                && targetResolved
-                && targetGuidingPolicyResolved
-                && pairwiseCoherenceResolved
-                && participantCompatibilityResolved
-            identitySiteResolved pointer identifier =
-              collectiveIdentitySiteResolved
-                semanticIndex
+      where
+        prerequisiteStates =
+          participantPrerequisites strategyResults participants
+            ++ targetPrerequisites strategyResults target
+        prerequisiteReasons =
+          Set.toAscList (Set.fromList (map fst prerequisiteStates))
+        blockers = Set.toAscList (Set.fromList (map snd prerequisiteStates))
+        targetFormulation = target >>= validStrategyInput strategyResults
+        participantsResolved =
+          all
+            (uncurry (identitySiteResolved . indexedPointer "/participants"))
+            (zip [0 :: Int ..] (NonEmpty.toList (collectiveParticipants input)))
+        targetResolved = identitySiteResolved "/target" (collectiveTarget input)
+        targetGuidingPolicyResolved =
+          all
+            (uncurry
+               (identitySiteResolved . indexedPointer "/targetGuidingPolicy"))
+            (zip
+               [0 :: Int ..]
+               (NonEmpty.toList (collectiveTargetGuidingPolicy input)))
+        pairwiseCoherenceResolved =
+          and
+            [ identitySiteResolved
+              (nestedPointer "/pairwiseCoherence" index "participantA")
+              (pairwiseParticipantA row)
+              && identitySiteResolved
+                   (nestedPointer "/pairwiseCoherence" index "participantB")
+                   (pairwiseParticipantB row)
+            | (index, row) <-
+                zip
+                  [0 :: Int ..]
+                  (NonEmpty.toList (collectivePairwiseCoherence input))
+            ]
+        participantCompatibilityResolved =
+          and
+            [ identitySiteResolved
+              (nestedPointer "/participantCompatibility" index "participant")
+              (compatibilityParticipant row)
+            | (index, row) <-
+                zip
+                  [0 :: Int ..]
+                  (NonEmpty.toList (collectiveParticipantCompatibility input))
+            ]
+        allIdentitySitesResolved =
+          participantsResolved
+            && targetResolved
+            && targetGuidingPolicyResolved
+            && pairwiseCoherenceResolved
+            && participantCompatibilityResolved
+        identitySiteResolved pointer identifier =
+          collectiveIdentitySiteResolved semanticIndex claim pointer identifier
+        suppliedPairs =
+          sort
+            [ canonicalPair
+              (pairwiseParticipantA row)
+              (pairwiseParticipantB row)
+            | row <- NonEmpty.toList (collectivePairwiseCoherence input)
+            ]
+        compatibilityParticipants =
+          sort
+            (map
+               compatibilityParticipant
+               (NonEmpty.toList (collectiveParticipantCompatibility input)))
+        fitDefects =
+          [ defect
+          | participantsResolved
+          , defect <-
+              predicateDefect
+                Generated.CollectiveFitParticipantBindingRule
+                Generated.CollectiveFitParticipantBindingOccurrences
                 claim
-                pointer
-                identifier
-            suppliedPairs =
-              sort
-                [ canonicalPair
-                  (pairwiseParticipantA row)
-                  (pairwiseParticipantB row)
-                | row <- NonEmpty.toList (collectivePairwiseCoherence input)
-                ]
-            compatibilityParticipants =
-              sort
-                (map
-                   compatibilityParticipant
-                   (NonEmpty.toList (collectiveParticipantCompatibility input)))
-            fitDefects =
-              [ defect
-              | participantsResolved
-              , defect <-
-                  predicateDefect
-                    Generated.CollectiveFitParticipantBindingRule
-                    Generated.CollectiveFitParticipantBindingOccurrences
-                    claim
-                    claimOccurrence
-                    (sort participants
-                       == sort (NonEmpty.toList (collectiveParticipants input)))
-              ]
-                ++ [ defect
-                   | targetResolved
-                   , defect <-
-                       predicateDefect
-                         Generated.CollectiveFitTargetBindingRule
-                         Generated.CollectiveFitTargetBindingOccurrences
-                         claim
-                         claimOccurrence
-                         (Just (collectiveTarget input) == target)
-                   ]
-                ++ [ defect
-                   | targetGuidingPolicyResolved
-                   , defect <-
-                       predicateDefect
-                         Generated.CollectiveFitTargetGuidingPolicyRule
-                         Generated.CollectiveFitTargetGuidingPolicyOccurrences
-                         claim
-                         claimOccurrence
-                         (maybe
-                            False
-                            ((== Set.fromList
-                                   (NonEmpty.toList
-                                      (collectiveTargetGuidingPolicy input)))
-                               . Set.fromList
-                               . NonEmpty.toList
-                               . formulationGuidingPolicy)
-                            targetFormulation)
-                   ]
-                ++ predicateDefect
-                     Generated.CollectiveFitTargetTradeOffsRule
-                     Generated.CollectiveFitTargetTradeOffsOccurrences
+                claimOccurrence
+                (sort participants
+                   == sort (NonEmpty.toList (collectiveParticipants input)))
+          ]
+            ++ [ defect
+               | targetResolved
+               , defect <-
+                   predicateDefect
+                     Generated.CollectiveFitTargetBindingRule
+                     Generated.CollectiveFitTargetBindingOccurrences
+                     claim
+                     claimOccurrence
+                     (Just (collectiveTarget input) == target)
+               ]
+            ++ [ defect
+               | targetGuidingPolicyResolved
+               , defect <-
+                   predicateDefect
+                     Generated.CollectiveFitTargetGuidingPolicyRule
+                     Generated.CollectiveFitTargetGuidingPolicyOccurrences
                      claim
                      claimOccurrence
                      (maybe
                         False
                         ((== Set.fromList
                                (NonEmpty.toList
-                                  (collectiveTargetTradeOffs input)))
+                                  (collectiveTargetGuidingPolicy input)))
                            . Set.fromList
                            . NonEmpty.toList
-                           . formulationTradeOffs)
+                           . formulationGuidingPolicy)
                         targetFormulation)
-                ++ [ defect
-                   | pairwiseCoherenceResolved
-                   , defect <-
-                       predicateDefect
-                         Generated.CollectiveFitPairwiseCoherenceRule
-                         Generated.CollectiveFitPairwiseCoherenceOccurrences
-                         claim
-                         claimOccurrence
-                         (suppliedPairs == expectedPairs)
-                   ]
-                ++ [ defect
-                   | participantCompatibilityResolved
-                   , defect <-
-                       predicateDefect
-                         Generated.CollectiveFitParticipantCompatibilityRule
-                         Generated.CollectiveFitParticipantCompatibilityOccurrences
-                         claim
-                         claimOccurrence
-                         (compatibilityParticipants == sort participants)
-                   ]
+               ]
+            ++ predicateDefect
+                 Generated.CollectiveFitTargetTradeOffsRule
+                 Generated.CollectiveFitTargetTradeOffsOccurrences
+                 claim
+                 claimOccurrence
+                 (maybe
+                    False
+                    ((== Set.fromList
+                           (NonEmpty.toList (collectiveTargetTradeOffs input)))
+                       . Set.fromList
+                       . NonEmpty.toList
+                       . formulationTradeOffs)
+                    targetFormulation)
+            ++ [ defect
+               | pairwiseCoherenceResolved
+               , defect <-
+                   predicateDefect
+                     Generated.CollectiveFitPairwiseCoherenceRule
+                     Generated.CollectiveFitPairwiseCoherenceOccurrences
+                     claim
+                     claimOccurrence
+                     (suppliedPairs == expectedPairs)
+               ]
+            ++ [ defect
+               | participantCompatibilityResolved
+               , defect <-
+                   predicateDefect
+                     Generated.CollectiveFitParticipantCompatibilityRule
+                     Generated.CollectiveFitParticipantCompatibilityOccurrences
+                     claim
+                     claimOccurrence
+                     (compatibilityParticipants == sort participants)
+               ]
 
 indexedPointer :: Text.Text -> Int -> Text.Text
 indexedPointer parent index = parent <> "/" <> Text.pack (show index)
@@ -492,14 +503,12 @@ assessPrimitiveSupport strategyResults claim claimOccurrence target targetOccurr
         (Set.toAscList . participantContributionWitnesses)
         participantSupport
 
--- | Exact work performed by collective support preparation.
+-- | Exact consumer work after graph-wide Strategy evidence preparation.
 data CollectiveWork = CollectiveWork
   { collectiveParticipantIndexEntries :: !Int
-  , collectiveParticipantPrimitiveLookups :: !Int
-  , collectiveTargetPrimitiveLookups :: !Int
-  , collectiveContributionSourceProbes :: !Int
-  , collectiveContributionTargetProbes :: !Int
-  , collectiveContributionRelationLookups :: !Int
+  , collectiveOwnerPairLookups :: !Int
+  , collectiveCoveredTargetMemberships :: !Int
+  , collectiveEmittedEvidenceMemberships :: !Int
   , collectivePairwiseComparisons :: !Int
   } deriving (Eq, Show)
 
@@ -515,22 +524,16 @@ data PreparedCollectiveSupport = PreparedCollectiveSupport
 data ParticipantSupport = ParticipantSupport
   { participantContributionWitnesses :: !(Set.Set OccurrenceIdentity)
   , participantCoveredTargets :: !(Set.Set OccurrenceIdentity)
-  , participantContributionWork :: !ContributionWork
-  }
-
-data ContributionWork = ContributionWork
-  { contributionSourceProbes :: !Int
-  , contributionTargetProbes :: !Int
-  , contributionRelationLookups :: !Int
+  , participantMembershipWork :: !(Int, Int)
   }
 
 prepareCollectiveSupport ::
-     SemanticIndex scope
+     PreparedStrategyRelations scope
   -> Map ModelIdentity (StrategyFormulationAssessment scope)
   -> [ModelIdentity]
   -> Maybe ModelIdentity
   -> PreparedCollectiveSupport
-prepareCollectiveSupport semanticIndex strategyResults participants target =
+prepareCollectiveSupport prepared strategyResults participants target =
   PreparedCollectiveSupport
     { preparedParticipantSupport = participantSupport
     , preparedTargetActions = targetActions
@@ -542,155 +545,45 @@ prepareCollectiveSupport semanticIndex strategyResults participants target =
     , preparedCollectiveWork =
         CollectiveWork
           { collectiveParticipantIndexEntries = Map.size participantSupport
-          , collectiveParticipantPrimitiveLookups =
-              sum (map participantPrimitiveLookups participantInputs)
-          , collectiveTargetPrimitiveLookups = targetPrimitiveLookups
-          , collectiveContributionSourceProbes =
-              sum (map contributionSourceProbes contributionWorks)
-          , collectiveContributionTargetProbes =
-              sum (map contributionTargetProbes contributionWorks)
-          , collectiveContributionRelationLookups =
-              sum (map contributionRelationLookups contributionWorks)
+          , collectiveOwnerPairLookups =
+              maybe 0 (const (length participantOccurrences)) targetOccurrence
+          , collectiveCoveredTargetMemberships =
+              sum (map (fst . participantMembershipWork) supportValues)
+          , collectiveEmittedEvidenceMemberships =
+              sum (map (snd . participantMembershipWork) supportValues)
           , collectivePairwiseComparisons = 0
           }
     }
   where
-    targetInput = target >>= validStrategyInput strategyResults
-    targetActionIdentities =
-      maybe [] (NonEmpty.toList . formulationActions) targetInput
-    targetKeyResultIdentities =
-      maybe [] (NonEmpty.toList . formulationKeyResults) targetInput
-    targetActions =
-      Set.fromList
-        (occurrencesForInputIdentities semanticIndex targetActionIdentities)
-    targetKeyResults =
-      Set.fromList
-        (occurrencesForInputIdentities semanticIndex targetKeyResultIdentities)
-    targetPrimitiveLookups =
-      length targetActionIdentities + length targetKeyResultIdentities
-    participantInputs =
-      [ (participant, formulation)
-      | participant <- participants
-      , Just formulation <- [validStrategyInput strategyResults participant]
+    occurrenceFor identifier =
+      case Map.lookup identifier strategyResults of
+        Just (StrategyFormulationValid proof) ->
+          Just (eligibleStrategyOccurrence proof)
+        _ -> Nothing
+    targetOccurrence = target >>= occurrenceFor
+    (targetActions, targetKeyResults) =
+      maybe
+        (Set.empty, Set.empty)
+        id
+        (targetOccurrence >>= requiredStrategyTargets prepared)
+    participantOccurrences =
+      [ (identifier, occurrence)
+      | identifier <- participants
+      , Just occurrence <- [occurrenceFor identifier]
       ]
     participantSupport =
       Map.fromList
-        [ ( participant
-          , participantSupportFor
-              semanticIndex
-              targetActions
-              targetKeyResults
-              formulation)
-        | (participant, formulation) <- participantInputs
+        [ (identifier, supportFor occurrence)
+        | (identifier, occurrence) <- participantOccurrences
         ]
+    supportFor occurrence =
+      case targetOccurrence >>= contributionForPair prepared occurrence of
+        Nothing -> ParticipantSupport Set.empty Set.empty (0, 0)
+        Just evidence ->
+          let ((covered, witnesses), membershipWork) =
+                contributionSummaryWithWork evidence
+           in ParticipantSupport witnesses covered membershipWork
     supportValues = Map.elems participantSupport
-    contributionWorks = map participantContributionWork supportValues
-
-participantPrimitiveLookups :: (ModelIdentity, StrategyFormulationInput) -> Int
-participantPrimitiveLookups (_, formulation) =
-  NonEmpty.length (formulationActions formulation)
-    + NonEmpty.length (formulationKeyResults formulation)
-
-participantSupportFor ::
-     SemanticIndex scope
-  -> Set.Set OccurrenceIdentity
-  -> Set.Set OccurrenceIdentity
-  -> StrategyFormulationInput
-  -> ParticipantSupport
-participantSupportFor semanticIndex targetActions targetKeyResults formulation =
-  ParticipantSupport
-    { participantContributionWitnesses =
-        contributionWitnesses actionEvidence
-          `Set.union` contributionWitnesses keyResultEvidence
-    , participantCoveredTargets =
-        contributionTargets actionEvidence
-          `Set.union` contributionTargets keyResultEvidence
-    , participantContributionWork =
-        combineContributionWork
-          (contributionWork actionEvidence)
-          (contributionWork keyResultEvidence)
-    }
-  where
-    actionEvidence =
-      collectContributionEvidence
-        semanticIndex
-        (occurrencesForInputIdentities
-           semanticIndex
-           (NonEmpty.toList (formulationActions formulation)))
-        targetActions
-    keyResultEvidence =
-      collectContributionEvidence
-        semanticIndex
-        (occurrencesForInputIdentities
-           semanticIndex
-           (NonEmpty.toList (formulationKeyResults formulation)))
-        targetKeyResults
-
-data ContributionEvidence = ContributionEvidence
-  { contributionWitnesses :: !(Set.Set OccurrenceIdentity)
-  , contributionTargets :: !(Set.Set OccurrenceIdentity)
-  , contributionWork :: !ContributionWork
-  }
-
-collectContributionEvidence ::
-     SemanticIndex scope
-  -> [OccurrenceIdentity]
-  -> Set.Set OccurrenceIdentity
-  -> ContributionEvidence
-collectContributionEvidence semanticIndex sources targets =
-  foldl' collect emptyContributionEvidence sources
-  where
-    collect evidence source =
-      mergeContributionEvidence evidence (evidenceForSource source)
-    evidenceForSource source =
-      ContributionEvidence
-        { contributionWitnesses =
-            Set.fromList (map relationOccurrenceIdentity relations)
-        , contributionTargets =
-            Set.fromList (map relationTargetOccurrence relations)
-        , contributionWork =
-            ContributionWork
-              { contributionSourceProbes = 1
-              , contributionTargetProbes = length outgoing
-              , contributionRelationLookups = length matchedTargets
-              }
-        }
-      where
-        outgoing =
-          assertedOutgoingTargets semanticIndex source tokenContributesTo
-        matchedTargets = filter (`Set.member` targets) outgoing
-        relations =
-          concatMap
-            (assertedMatchingRelations semanticIndex source tokenContributesTo)
-            matchedTargets
-
-emptyContributionEvidence :: ContributionEvidence
-emptyContributionEvidence =
-  ContributionEvidence Set.empty Set.empty (ContributionWork 0 0 0)
-
-mergeContributionEvidence ::
-     ContributionEvidence -> ContributionEvidence -> ContributionEvidence
-mergeContributionEvidence left right =
-  ContributionEvidence
-    { contributionWitnesses =
-        contributionWitnesses left `Set.union` contributionWitnesses right
-    , contributionTargets =
-        contributionTargets left `Set.union` contributionTargets right
-    , contributionWork =
-        combineContributionWork (contributionWork left) (contributionWork right)
-    }
-
-combineContributionWork ::
-     ContributionWork -> ContributionWork -> ContributionWork
-combineContributionWork left right =
-  ContributionWork
-    { contributionSourceProbes =
-        contributionSourceProbes left + contributionSourceProbes right
-    , contributionTargetProbes =
-        contributionTargetProbes left + contributionTargetProbes right
-    , contributionRelationLookups =
-        contributionRelationLookups left + contributionRelationLookups right
-    }
 
 componentDefects ::
      CollectiveStrategyRealizationComponents scope -> [SemanticDefect]
@@ -857,16 +750,6 @@ onlyIdentityAt semanticIndex occurrences =
   case map fst (identitiesAt semanticIndex occurrences) of
     [identifier] -> Just identifier
     _ -> Nothing
-
-occurrencesForInputIdentities ::
-     SemanticIndex scope -> [ModelIdentity] -> [OccurrenceIdentity]
-occurrencesForInputIdentities semanticIndex identifiers =
-  [ occurrence
-  | identifier <- identifiers
-  , occurrence <- occurrencesForModelIdentity semanticIndex identifier
-  , Just carrier <- [carrierAt semanticIndex occurrence]
-  , carrierCommitment carrier == Asserted
-  ]
 
 isAssertedCarrierAt :: SemanticIndex scope -> OccurrenceIdentity -> Bool
 isAssertedCarrierAt semanticIndex occurrence =

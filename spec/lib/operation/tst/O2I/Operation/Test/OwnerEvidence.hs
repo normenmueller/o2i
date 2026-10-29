@@ -92,7 +92,7 @@ tests =
         "retains and encodes real Profile owner evidence"
         profileOwnerEvidence
     , testCase
-        "retains and encodes real Structure evidence 12/12"
+        "retains and encodes real Structure evidence 13/13"
         structureOwnerEvidence
     , testCase
         "retains and encodes real generic Binding evidence 4/4"
@@ -356,7 +356,7 @@ structureOwnerEvidence = do
              , humanDiagnosticFamilies document))
   expected <- requireCoreResult CoreConformance.structureCorpusRuleIds
   map firstOf3 rows @?= map coreRuleIdText expected
-  length (nub (map firstOf3 rows)) @?= 12
+  length (nub (map firstOf3 rows)) @?= 13
   mapM_ (assertDocumentSchema . secondOf3) rows
   assertBool
     "a Structure diagnostic escaped its typed evidence family"
@@ -480,7 +480,7 @@ semanticsOwnerEvidence = do
       ("tst" </> "fixtures" </> "semantic-diagnostic-machine-v2.jsonl")
   expected <- requireCoreResult CoreConformance.semanticsCorpusRuleIds
   map firstOf3 rows @?= map coreRuleIdText expected
-  length (nub (map firstOf3 rows)) @?= 29
+  length (nub (map firstOf3 rows)) @?= 32
   mapM_ (assertDocumentSchema . secondOf3) rows
   semanticsMachineBaseline rows @?= checkedIn
   assertBool
@@ -753,6 +753,13 @@ humanStructureFamily =
       , Human.eliminateHumanContextualizationTargetCategory = two
       , Human.eliminateHumanContextualizationTargetOwnerCardinality = zeroMany
       , Human.eliminateHumanSemanticRelationCompatibility = three
+      , Human.eliminateHumanStrategyRelationOwnerDistinctness =
+          \relation source target sourceOwner targetOwner ->
+            consumeTag
+              "structure"
+              (map
+                 humanOccurrence
+                 [relation, source, target, sourceOwner, targetOwner])
       , Human.eliminateHumanStructuredPropositionIdentity =
           \owner source target values ->
             consumeTag
@@ -883,8 +890,25 @@ humanSemanticFamily =
           memberSupport
       , Human.eliminateHumanStrategyFormulationKeyResults = fields
       , Human.eliminateHumanStrategyFormulationVisionOrientation = member
+      , Human.eliminateHumanStrategyRelationAssertedEndpointDependency =
+          strategyRelation
+      , Human.eliminateHumanStrategyRelationDirectionSupport = strategyRelation
+      , Human.eliminateHumanStrategyRelationContributionSupport =
+          strategyRelation
       }
   where
+    strategyRelation relation source target relationOccurrence sourceOccurrence targetOccurrence =
+      consumeTag
+        "semantics"
+        (map
+           humanOccurrence
+           [ relation
+           , source
+           , target
+           , relationOccurrence
+           , sourceOccurrence
+           , targetOccurrence
+           ])
     consume values =
       foldr (\value result -> value `seq` result) "semantics" values
     model = HumanValue.foldHumanModelIdentity (\value -> value `seq` ())

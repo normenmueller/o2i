@@ -543,28 +543,29 @@ decodeModelIdentity ordinal pointer node =
         case modelIdentity decoded of
           Right identity -> pure identity
           Left _ -> grammar EvidenceInputScalarGrammarInvalid "ModelIdentity"
-      where decoded = jsonStringText source
-            malformedDefects =
-              [ EvidenceInputDefect
-                (rule "core.evidence-input.decode.model-identity.unicode-scalar")
-                EvidenceInputModelIdentityUnicodeScalarInvalid
-                ordinal
-                pointer
-                (EvidenceInputNaturalSubject "zeroBasedIndex" index
-                   :| [EvidenceInputNaturalSubject "codePoint" codePoint])
-              | JsonMalformedScalar index codePoint <-
-                  jsonStringMalformedScalars source
-              ]
-            nulDefects =
-              [ EvidenceInputDefect
-                (rule "core.evidence-input.decode.model-identity.nul")
-                EvidenceInputModelIdentityContainsNul
-                ordinal
-                pointer
-                (EvidenceInputNaturalSubject "zeroBasedIndex" index :| [])
-              | (index, value) <- zip [0 :: Natural ..] (Text.unpack decoded)
-              , value == '\NUL'
-              ]
+      where
+        decoded = jsonStringText source
+        malformedDefects =
+          [ EvidenceInputDefect
+            (rule "core.evidence-input.decode.model-identity.unicode-scalar")
+            EvidenceInputModelIdentityUnicodeScalarInvalid
+            ordinal
+            pointer
+            (EvidenceInputNaturalSubject "zeroBasedIndex" index
+               :| [EvidenceInputNaturalSubject "codePoint" codePoint])
+          | JsonMalformedScalar index codePoint <-
+              jsonStringMalformedScalars source
+          ]
+        nulDefects =
+          [ EvidenceInputDefect
+            (rule "core.evidence-input.decode.model-identity.nul")
+            EvidenceInputModelIdentityContainsNul
+            ordinal
+            pointer
+            (EvidenceInputNaturalSubject "zeroBasedIndex" index :| [])
+          | (index, value) <- zip [0 :: Natural ..] (Text.unpack decoded)
+          , value == '\NUL'
+          ]
     value -> kindFailure ordinal pointer "string" value
   where
     grammar kind expected =
@@ -589,7 +590,8 @@ canonicalString ordinal pointer schema node =
       | Text.null value || edgeWhitespace value ->
         scalarFailure ordinal pointer schema value
       | otherwise -> pure (normalize NFC value)
-      where value = jsonStringText source
+      where
+        value = jsonStringText source
     value -> kindFailure ordinal pointer "string" value
 
 decodeDecimal ::

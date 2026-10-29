@@ -24,7 +24,7 @@ import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified O2I.Core.Conformance.SemanticsSource as SemanticsSource
 import O2I.Core.Contract
-import O2I.Core.Graph.Observation (Commitment(Asserted))
+import O2I.Core.Graph.Observation (Commitment(Asserted, Candidate))
 import O2I.Core.Identity
 import qualified O2I.Semantics as Semantics
 import O2I.Semantics.Input
@@ -557,6 +557,8 @@ structureSources fixture =
       , fixtureCarrierB fixture
       , fixtureRelationOccurrence fixture
       ])
+  , ( selfStrategyRelation fixture
+    , [fixtureCarrierA fixture, fixtureRelationOccurrence fixture])
   , (wrongParticipantType fixture, canonicalSelected fixture)
   , (oneParticipant fixture, oneParticipantSelected fixture)
   , (duplicateParticipant fixture, canonicalSelected fixture)
@@ -565,7 +567,7 @@ structureSources fixture =
   , (overlappingTarget fixture, overlappingTargetSelected fixture)
   ]
 
-invalidDirectEndpoint, invalidContextualizationSource, invalidContextualizationTarget, missingContextOwner, incompatibleRelation, canonicalProjection, oneParticipant, duplicateParticipant, wrongParticipantType, noTarget, wrongTargetType, overlappingTarget ::
+invalidDirectEndpoint, invalidContextualizationSource, invalidContextualizationTarget, missingContextOwner, incompatibleRelation, selfStrategyRelation, canonicalProjection, oneParticipant, duplicateParticipant, wrongParticipantType, noTarget, wrongTargetType, overlappingTarget ::
      Fixture -> StructureProjection
 invalidDirectEndpoint fixture =
   structureProjection
@@ -639,6 +641,20 @@ incompatibleRelation fixture =
         (fixtureDirectsToken fixture)
         (fixtureCarrierB fixture)
         Asserted
+    ]
+    []
+    []
+
+selfStrategyRelation fixture =
+  structureProjection
+    [strategyCarrier fixture (fixtureCarrierA fixture)]
+    []
+    [ relationProjection
+        (fixtureRelationOccurrence fixture)
+        (fixtureCarrierA fixture)
+        (fixtureDirectsToken fixture)
+        (fixtureCarrierA fixture)
+        Candidate
     ]
     []
     []
