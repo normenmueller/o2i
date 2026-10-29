@@ -15,7 +15,7 @@ Follow `BEHAVIOR.md` precedence and these declared loading conditions.
 - `governance-practice`: `.ai4x/governance/guidelines.md`; load `risk-classification-issue-project-review-or-remote-work`.
 - `decision-rendering`: `.ai4x/governance/decision-handoff.md`; load `product-owner-decision-or-control-handoff`.
 - `session-continuity`: `.ai4x/governance/continuity.md`; load `applicable-handoff-reconstruction-or-cold-start-evaluation`.
-- `completed-work-cleanup`: `.ai4x/governance/cleanup.md`; load `explicit-completion-and-cleanup-grant`.
+- `completed-work-cleanup`: `.ai4x/governance/cleanup.md`; load `subject-bound-completion-and-cleanup-authority`.
 - `task-contracts`: `.ai4x/operations/*.md`; load `matching-task-class`.
 
 # Workflow And Authority
@@ -33,8 +33,9 @@ Follow `BEHAVIOR.md` precedence and these declared loading conditions.
 Actions: `local.write`, `git.commit.create`, `project.transition`, `remote.issue-comment.create`, `remote.push`, `remote.pull-request.publish`, `remote.evidence.publish`, `issue.contract.mutate`, `issue.close`, `pull-request.merge`, `completed-work.cleanup`, `release.publish`, `tag.create`, `protected.publication`, `scope.expand`.
 
 Every enumerated mutation requires all four gates: `current-matching-subject-authority`, `event-specific-guards`, `declared-and-verified-execution-identity`, `technical-host-or-tool-permission`. Missing or unknown evidence denies execution; permission never creates or revokes authority.
-Authority sources: a matching grant or a current explicit PO/runtime instruction. Live instructions must match subject, actions, resources, scope, target and exclusions; they create no grant and never survive a session.
-Grant schema `o2i.authority-grant/v1` remains active until `target-fulfilled`, `revoked`, `superseded`, `material-mismatch`. Consuming approval does not consume the grant. Its first authorized remote write is the immutable owning-Issue receipt; cross-session authority exists only when current remote state contains exactly one fully valid receipt.
+Authority: matching grant, exact session-only PO/runtime instruction, or standing PO PR completion.
+Standing completion: current exact-head `normenmueller` approval and integration-base checks gate merge; post-merge proof gates owning-Issue closure/Done. Cleanup covers only that PR's exact source branches/inactive linked worktrees under full preflight. Reconstruct from accepted policy/current GitHub, never other reviews or a new grant/event.
+Grant schema `o2i.authority-grant/v1` remains active until `target-fulfilled`, `revoked`, `superseded`, `material-mismatch`. Consuming approval does not consume the grant. Its first authorized remote write is the immutable owning-Issue receipt; cross-session grant authority requires exactly one currently valid receipt.
 
 # Decision Events
 

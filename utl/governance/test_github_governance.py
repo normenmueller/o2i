@@ -100,6 +100,34 @@ def request_fixture(policy: dict[str, object]) -> dict[str, object]:
     return request
 
 
+def completion_fixture(policy: dict[str, object], action: str) -> dict[str, object]:
+    """Fresh subject-bound PO review facts, not a grant or chat approval."""
+    rule = policy["pullRequestCompletion"]
+    subject = {"repository": "normenmueller/o2i", "pullRequest": "#134",
+               "issue": "#125", "head": "98c7debaafee5824c22788a08c1eae004c4c780e",
+               "headRef": "refs/heads/feat/125", "headRepository": "normenmueller/o2i"}
+    guards = list(rule["bindingRequires"])
+    if action == "pull-request.merge":
+        guards += rule["mergeRequires"]
+    if action in {"issue.close", "project.transition", "completed-work.cleanup"}:
+        guards += rule["afterMergeRequires"]
+    if action == "completed-work.cleanup":
+        guards += rule["cleanupRequires"]
+    return {
+        "subject": subject, "observedSubject": copy.deepcopy(subject),
+        "review": {"repository": subject["repository"], "pullRequest": subject["pullRequest"],
+                   "id": "42", "author": "normenmueller", "state": "APPROVED", "commit": subject["head"]},
+        "cleanupTarget": {
+            "kind": "local-branch", "repository": subject["repository"],
+            "pullRequest": subject["pullRequest"], "issue": subject["issue"],
+            "branch": subject["headRef"], "head": subject["head"], "name": subject["headRef"],
+            "observedBranch": subject["headRef"], "observedHead": subject["head"],
+            "observedName": subject["headRef"], "expectedIdentity": subject["head"], "observedIdentity": subject["head"],
+        } if action == "completed-work.cleanup" else None,
+        "evidence": {guard: True for guard in guards},
+    }
+
+
 class PolicyShapeTests(unittest.TestCase):
     """Keep the canonical policy closed, linked, and projection-complete."""
 
@@ -168,6 +196,12 @@ class PolicyShapeTests(unittest.TestCase):
             lambda p: p["workflow"]["transitions"][0].__setitem__("to", "Done"),
             lambda p: p["actions"][0].__setitem__("id", "local.erase"),
             lambda p: p["mutationGates"]["gates"].__setitem__(0, "maybe-grant"),
+            lambda p: p["pullRequestCompletion"].__setitem__("productOwnerLogin", "gertrud-ai4x"),
+            lambda p: p["pullRequestCompletion"]["actionIds"].append("release.publish"),
+            lambda p: p["pullRequestCompletion"]["bindingRequires"].pop(),
+            lambda p: p["pullRequestCompletion"]["subjectFields"].pop(),
+            lambda p: p["pullRequestCompletion"]["exclusions"].pop(),
+            lambda p: p["pullRequestCompletion"].__setitem__("createsGrant", True),
             lambda p: p["continuity"].__setitem__("operationalTarget", "iCloud"),
             lambda p: p["events"]["authority_request"]["requiredFields"].__setitem__(0, "anything"),
             lambda p: p["authorityGrant"]["validityRules"].__setitem__(0, "anything"),
@@ -1262,6 +1296,190 @@ class DecisionAndMutationTests(unittest.TestCase):
             "expected_instruction": copy.deepcopy(merge),
         }))
 
+    def test_po_pr_approval_authorizes_only_its_normal_completion_actions(self) -> None:
+        policy = contract.load_policy()
+        self.assertFalse(policy["pullRequestCompletion"]["createsGrant"])
+        resources = {"pull-request.merge": "pull-request:normenmueller/o2i#134", "issue.close": "issue:normenmueller/o2i#125",
+                     "project.transition": "project-item:O2I:normenmueller/o2i#125",
+                     "completed-work.cleanup": "cleanup:local-branch:normenmueller/o2i#134:refs/heads/feat/125",
+                     "remote.issue-comment.create": "issue:normenmueller/o2i#125",
+                     "remote.evidence.publish": "pull-request:normenmueller/o2i#134"}
+        gates = {name: True for name in policy["mutationGates"]["gates"]}
+        for action, resource in resources.items():
+            completion = completion_fixture(policy, action)
+            args = dict(action_id=action, resource_id=resource, gate_evidence=gates,
+                        authority_source="product-owner-pr-approval", pr_completion=completion)
+            if action == "project.transition":
+                args["transition"] = ("In review", "Done")
+            with self.subTest(action=action):
+                self.assertTrue(contract.mutation_allowed(policy, **args))
+                self.assertFalse(contract.mutation_allowed(policy, **{**args, "authority_source": "grant"}))
+                for name in gates:
+                    for value in (False, None):
+                        self.assertFalse(contract.mutation_allowed(policy, **{
+                            **args, "gate_evidence": {**gates, name: value},
+                        }))
+                for name in completion["evidence"]:
+                    for value in (False, None, 1):
+                        changed = copy.deepcopy(completion)
+                        changed["evidence"][name] = value
+                        self.assertFalse(contract.mutation_allowed(policy, **{**args, "pr_completion": changed}))
+                missing = copy.deepcopy(completion)
+                missing["evidence"].popitem()
+                self.assertFalse(contract.mutation_allowed(policy, **{**args, "pr_completion": missing}))
+                self.assertFalse(contract.mutation_allowed(policy, **{**args, "resource_id": "unrelated"}))
+        completion = completion_fixture(policy, "pull-request.merge")
+        for action in ("release.publish", "tag.create", "protected.publication", "scope.expand", "local.write"):
+            self.assertFalse(contract.pull_request_completion_allowed(
+                policy, action_id=action, resource_id="pull-request:normenmueller/o2i#134", completion=completion,
+            ))
+
+    def test_pr_completion_structurally_binds_each_action_target(self) -> None:
+        policy = contract.load_policy()
+        cases = {
+            "pull-request.merge": ["pull-request:normenmueller/o2i#999", "pull-request:other/repo#134",
+                                   "issue:normenmueller/o2i#125", "issue:normenmueller/o2i#134"],
+            "issue.close": ["issue:normenmueller/o2i#999", "issue:other/repo#125", "pull-request:normenmueller/o2i#134"],
+            "project.transition": ["project-item:O2I:normenmueller/o2i#999", "project-item:O2I:other/repo#125",
+                                   "issue:normenmueller/o2i#125", "pull-request:normenmueller/o2i#134"],
+            "completed-work.cleanup": ["pull-request:normenmueller/o2i#134", "issue:normenmueller/o2i#125",
+                                       "cleanup:local-branch:normenmueller/o2i#999:refs/heads/feat/125",
+                                       "cleanup:local-branch:other/repo#134:refs/heads/feat/125"],
+        }
+        for action, resources in cases.items():
+            completion = completion_fixture(policy, action)
+            for resource in resources:
+                with self.subTest(action=action, resource=resource):
+                    self.assertFalse(contract.pull_request_completion_allowed(
+                        policy, action_id=action, resource_id=resource, completion=completion,
+                    ))
+        for action in ("remote.issue-comment.create", "remote.evidence.publish"):
+            completion = completion_fixture(policy, action)
+            for resource in ("issue:normenmueller/o2i#125", "pull-request:normenmueller/o2i#134"):
+                self.assertTrue(contract.pull_request_completion_allowed(
+                    policy, action_id=action, resource_id=resource, completion=completion,
+                ))
+            for resource in ("issue:normenmueller/o2i#999", "pull-request:normenmueller/o2i#999",
+                             "issue:other/repo#125", "pull-request:other/repo#134", "project-item:O2I:normenmueller/o2i#125"):
+                self.assertFalse(contract.pull_request_completion_allowed(
+                    policy, action_id=action, resource_id=resource, completion=completion,
+                ))
+        # The removed arbitrary allowlist cannot override any structural target.
+        completion = completion_fixture(policy, "pull-request.merge")
+        completion["resourceIds"] = ["pull-request:normenmueller/o2i#999"]
+        self.assertFalse(contract.pull_request_completion_allowed(
+            policy, action_id="pull-request.merge", resource_id="pull-request:normenmueller/o2i#999", completion=completion,
+        ))
+
+    def test_pr_cleanup_requires_current_exact_pr_owned_preflight_target(self) -> None:
+        policy = contract.load_policy()
+        for kind in ("local-branch", "remote-branch", "linked-worktree"):
+            completion = completion_fixture(policy, "completed-work.cleanup")
+            target = completion["cleanupTarget"]
+            target["kind"] = kind
+            if kind == "linked-worktree":
+                target["name"] = target["observedName"] = ".ai4x/work/local/134-pr"
+                target["expectedIdentity"] = target["observedIdentity"] = "worktrees/134-pr"
+            resource = f"cleanup:{kind}:normenmueller/o2i#134:{target['name']}"
+            def allowed(value):
+                return contract.pull_request_completion_allowed(
+                    policy, action_id="completed-work.cleanup", resource_id=resource, completion=value,
+                )
+            with self.subTest(kind=kind):
+                self.assertTrue(allowed(completion))
+                for field in target:
+                    for value in (None, False, "unrelated"):
+                        changed = copy.deepcopy(completion)
+                        changed["cleanupTarget"][field] = value
+                        self.assertFalse(allowed(changed), (kind, field, value))
+                for field in target:
+                    changed = copy.deepcopy(completion)
+                    changed["cleanupTarget"].pop(field)
+                    self.assertFalse(allowed(changed), (kind, field))
+                for field in ("name", "expectedIdentity"):
+                    for value in ("/", "../unrelated", "*", ""):
+                        changed = copy.deepcopy(completion)
+                        changed["cleanupTarget"][field] = value
+                        self.assertFalse(allowed(changed))
+                for forbidden_kind in ("scratch", "stash", "superseded-continuity-source", "pull-request"):
+                    changed = copy.deepcopy(completion)
+                    changed["cleanupTarget"]["kind"] = forbidden_kind
+                    self.assertFalse(allowed(changed))
+
+    def test_fork_pr_completion_never_authorizes_foreign_or_same_named_base_branch_cleanup(self) -> None:
+        policy = contract.load_policy()
+        for action, resource in (
+            ("pull-request.merge", "pull-request:normenmueller/o2i#134"),
+            ("issue.close", "issue:normenmueller/o2i#125"),
+            ("project.transition", "project-item:O2I:normenmueller/o2i#125"),
+            ("remote.issue-comment.create", "issue:normenmueller/o2i#125"),
+        ):
+            completion = completion_fixture(policy, action)
+            completion["subject"]["headRepository"] = "fork/o2i"
+            completion["observedSubject"]["headRepository"] = "fork/o2i"
+            self.assertTrue(contract.pull_request_completion_allowed(
+                policy, action_id=action, resource_id=resource, completion=completion,
+            ))
+        for kind in ("local-branch", "remote-branch", "linked-worktree"):
+            completion = completion_fixture(policy, "completed-work.cleanup")
+            completion["subject"]["headRepository"] = "fork/o2i"
+            completion["observedSubject"]["headRepository"] = "fork/o2i"
+            completion["cleanupTarget"]["kind"] = kind
+            # Both the base's same-named branch and the fork's branch are outside this rule.
+            for repository in ("normenmueller/o2i", "fork/o2i"):
+                completion["cleanupTarget"]["repository"] = repository
+                self.assertFalse(contract.pull_request_completion_allowed(
+                    policy, action_id="completed-work.cleanup",
+                    resource_id=f"cleanup:{kind}:{repository}#134:refs/heads/feat/125", completion=completion,
+                ))
+
+    def test_pr_completion_rejects_changed_heads_subjects_and_non_po_reviews(self) -> None:
+        policy = contract.load_policy()
+        def allowed(value):
+            return contract.pull_request_completion_allowed(
+                policy, action_id="pull-request.merge", resource_id="pull-request:normenmueller/o2i#134", completion=value,
+            )
+        canonical = completion_fixture(policy, "pull-request.merge")
+        for field in canonical["subject"]:
+            changed = copy.deepcopy(canonical)
+            changed["observedSubject"][field] = "changed"
+            with self.subTest(subject=field):
+                self.assertFalse(allowed(changed))
+        for field, values in {
+            "repository": ["other/repository"], "pullRequest": ["#999"], "id": ["", "0", None],
+            "author": ["gertrud-ai4x", "another-reviewer", ""],
+            "state": ["DISMISSED", "CHANGES_REQUESTED", "COMMENTED", "PENDING", "approved"],
+            "commit": ["0" * 40, ""],
+        }.items():
+            for value in values:
+                changed = copy.deepcopy(canonical)
+                changed["review"][field] = value
+                with self.subTest(review=field, value=value):
+                    self.assertFalse(allowed(changed))
+        for value in (None, {}, {**canonical, "grantId": "invented"}):
+            self.assertFalse(allowed(value))
+
+    def test_pr_completion_keeps_post_merge_and_cleanup_gates_separate(self) -> None:
+        policy = contract.load_policy()
+        before_merge = completion_fixture(policy, "pull-request.merge")
+        for action in ("issue.close", "project.transition", "completed-work.cleanup"):
+            self.assertFalse(contract.pull_request_completion_allowed(
+                policy, action_id=action, resource_id="issue:normenmueller/o2i#125", completion=before_merge,
+            ))
+        cleanup = completion_fixture(policy, "completed-work.cleanup")
+        cleanup["cleanupTarget"]["name"] = "refs/heads/*"
+        self.assertFalse(contract.pull_request_completion_allowed(
+            policy, action_id="completed-work.cleanup", resource_id="cleanup:local-branch:normenmueller/o2i#134:refs/heads/*", completion=cleanup,
+        ))
+        completion = completion_fixture(policy, "project.transition")
+        gates = {name: True for name in policy["mutationGates"]["gates"]}
+        for transition in (("In review", "In progress"), ("Ready", "Done"), None):
+            self.assertFalse(contract.mutation_allowed(
+                policy, action_id="project.transition", resource_id="project-item:O2I:normenmueller/o2i#125",
+                authority_source="product-owner-pr-approval", pr_completion=completion,
+                gate_evidence=gates, transition=transition,
+            ))
+
     def test_cleanup_requires_every_completion_and_safety_fact(self) -> None:
         names = (
             "issue_accepted",
@@ -1269,7 +1487,7 @@ class DecisionAndMutationTests(unittest.TestCase):
             "remote_checks_green",
             "issue_closed",
             "project_done",
-            "cleanup_grant",
+            "cleanup_authority",
             "durability_proven",
             "target_identity_stable",
             "required_identity_verified",
@@ -1290,7 +1508,7 @@ class DecisionAndMutationTests(unittest.TestCase):
             "remote_checks_green": True,
             "issue_closed": False,
             "project_done": False,
-            "cleanup_grant": True,
+            "cleanup_authority": True,
             "durability_proven": True,
             "target_identity_stable": True,
             "required_identity_verified": True,
@@ -1305,7 +1523,7 @@ class DecisionAndMutationTests(unittest.TestCase):
             "issue_accepted",
             "publication_complete",
             "remote_checks_green",
-            "cleanup_grant",
+            "cleanup_authority",
             "durability_proven",
             "target_identity_stable",
             "required_identity_verified",

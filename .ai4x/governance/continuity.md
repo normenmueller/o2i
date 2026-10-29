@@ -16,9 +16,11 @@ Apply `CONTEXT.md` statement ownership. A stale dependent reference yields to it
 
 # Durable Authority
 
-For authority surviving a session, load canonical policy and re-fetch the owning Issue. Require exactly one immutable receipt for the grant ID and verify required author identity, canonical bytes, approved payload/digest, unchanged Issue precondition, subject, actions, scope, target, exclusions and current lifecycle facts.
+For grant authority surviving a session, load canonical policy and re-fetch the owning Issue. Require exactly one immutable receipt for the grant ID and verify required author identity, canonical bytes, approved payload/digest, unchanged Issue precondition, subject, actions, scope, target, exclusions and current lifecycle facts.
 
 Zero/multiple, malformed, mismatched, stale or unverifiable receipts leave authority `UNVERIFIED`; revoked, superseded, fulfilled or materially invalid grants cannot authorize continuation. A handoff, transcript or historical readback cannot repair missing current evidence. Current explicit runtime/PO instructions retain bootstrap precedence; a continuity reference never manufactures authority.
+
+Standing completion requires accepted versioned `pullRequestCompletion` and fresh GitHub PR/review/Issue/check facts: exact head/source branch, effective PO approval, independent acceptance, integration-base coverage, then approved-head/integration-tree publication and post-merge checks. Cleanup retains full preflight. Changed/dismissed/withdrawn approval, change requests or failed/unknown gates deny dependent actions. Review IDs locate evidence only; no transcript/receipt reconstruction or extension of implementation grants.
 
 # Handoff Maintenance
 

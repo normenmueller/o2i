@@ -28,9 +28,11 @@ Add reviewers only for distinct material risks. Require a digest/immutable manif
 
 # Workflow And Authority
 
-Policy owns allowed transitions and authority gates. `Ready` means refined and unblocked, never authorized. PR review approval, including PO approval, does not itself authorize merge. An atomic work-unit grant covers its listed design, implementation, checks, corrections, commit and publication actions through its target; approval consumption does not consume that grant. Request new authority only for scope/target expansion, an exclusion, material mismatch or an uncovered action. Host permission is independent; denial blocks execution without creating or revoking PO authority.
+Policy owns transitions/authority; `Ready` grants none. Grants retain scope/target after approval consumption. Under `pullRequestCompletion`, current exact-head PO GitHub `APPROVED` authorizes normal merge, owning-Issue closure/Done, completion evidence and exact safe cleanup without reapproval. Other reviews grant none. Reviews/checks must cover the integration base; closure needs approved-head/integration-tree publication. Changed/withdrawn approval, change requests, failed/unknown checks or unsafe cleanup block dependent actions. Scope, exclusions, identity and permission remain binding.
 
-Keep Project status aligned with observed work at workflow boundaries and before PO decisions or handoffs. Apply only authorized, allowed transitions, preserve PO ordering, and verify remote readback. If authority or access prevents an update, explicitly report the discrepancy or UNVERIFIED state, intended correction and blocker.
+Condition merge on the approved head (`sha`/`--match-head-commit`). Inspect merge-side closures: only the owning Issue may auto-close under merge authority. Distinguish this from explicit follow-up closure/Done/cleanup after post-merge proof.
+
+Align Project status at workflow/PO handoffs using authorized transitions, PO ordering and remote readback. If blocked, report actual/UNVERIFIED state, intended correction and missing authority/access.
 
 | Status | Observable meaning |
 | --- | --- |

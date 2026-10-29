@@ -58,7 +58,7 @@
     {
       "id": "completed-work-cleanup",
       "owner": ".ai4x/governance/cleanup.md",
-      "loadsWhen": "explicit-completion-and-cleanup-grant",
+      "loadsWhen": "subject-bound-completion-and-cleanup-authority",
       "scope": "cleanup preflight, destructive-action safeguards, deletion ordering, and postflight"
     },
     {
@@ -112,7 +112,7 @@
     {
       "from": "governance-practice",
       "to": "completed-work-cleanup",
-      "justification": "perform cleanup only under its dedicated grant"
+      "justification": "perform cleanup only under matching subject authority"
     },
     {
       "from": "bootstrap",
@@ -472,6 +472,71 @@
     ],
     "createsGrant": false,
     "survivesSession": false
+  },
+  "pullRequestCompletion": {
+    "productOwnerLogin": "normenmueller",
+    "actionIds": [
+      "pull-request.merge",
+      "issue.close",
+      "project.transition",
+      "completed-work.cleanup",
+      "remote.issue-comment.create",
+      "remote.evidence.publish"
+    ],
+    "subjectFields": [
+      "repository",
+      "pullRequest",
+      "issue",
+      "head",
+      "headRef",
+      "headRepository"
+    ],
+    "reviewFields": [
+      "repository",
+      "pullRequest",
+      "id",
+      "author",
+      "state",
+      "commit"
+    ],
+    "cleanupKinds": [
+      "local-branch",
+      "remote-branch",
+      "linked-worktree"
+    ],
+    "bindingRequires": [
+      "versioned-standing-rule-current-and-accepted",
+      "fresh-current-GitHub-observations",
+      "latest-effective-review-not-dismissed",
+      "no-withdrawal-or-outstanding-changes-requested",
+      "owning-Issue-and-exact-resource-match-subject",
+      "required-independent-reviews-accepted-without-findings",
+      "required-green-verification-covers-current-integration-base",
+      "no-current-PO-exclusion-is-crossed"
+    ],
+    "mergeRequires": [
+      "host-merge-conditioned-on-approved-head"
+    ],
+    "afterMergeRequires": [
+      "same-approved-head-and-verified-integration-tree-published",
+      "required-post-merge-verification-green"
+    ],
+    "cleanupRequires": [
+      "completed-work-entry-and-safe-exact-target-preflight",
+      "no-unique-or-required-recovery-data",
+      "per-target-identity-and-required-lease-revalidated"
+    ],
+    "scope": "normal-approved-PR-completion-evidence-merge-owning-Issue-close-Project-Done-and-exact-safe-cleanup",
+    "exclusions": [
+      "other-PRs-Issues-or-unrelated-resources",
+      "cleanup-of-default-protected-active-review-unmerged-or-recovery-resources",
+      "cleanup-of-stashes-scratch-or-superseded-continuity-sources",
+      "cleanup-of-foreign-head-repositories",
+      "unknown-unique-user-owned-or-required-recovery-data",
+      "releases-tags-publication-or-scope-expansion"
+    ],
+    "createsGrant": false,
+    "durableSource": "versioned-standing-rule-and-current-GitHub-PO-review-no-session-or-grant-receipt"
   },
   "mutationGates": {
     "allRequired": true,

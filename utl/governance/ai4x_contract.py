@@ -147,6 +147,7 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
             "actions",
             "authorityGrant",
             "liveInstruction",
+            "pullRequestCompletion",
             "mutationGates",
             "continuity",
             "eventSelection",
@@ -190,7 +191,7 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
         ("governance-practice", ".ai4x/governance/guidelines.md", "risk-classification-issue-project-review-or-remote-work", "risk paths, Issue and Project ownership, reviews, and remote-work rules"),
         ("decision-rendering", ".ai4x/governance/decision-handoff.md", "product-owner-decision-or-control-handoff", "concise human rendering of policy-owned decision events"),
         ("session-continuity", ".ai4x/governance/continuity.md", "applicable-handoff-reconstruction-or-cold-start-evaluation", "post-classification reconstruction and cold-start eligibility"),
-        ("completed-work-cleanup", ".ai4x/governance/cleanup.md", "explicit-completion-and-cleanup-grant", "cleanup preflight, destructive-action safeguards, deletion ordering, and postflight"),
+        ("completed-work-cleanup", ".ai4x/governance/cleanup.md", "subject-bound-completion-and-cleanup-authority", "cleanup preflight, destructive-action safeguards, deletion ordering, and postflight"),
         ("task-contracts", ".ai4x/operations/*.md", "matching-task-class", "task-class-specific design, implementation, and quality rules"),
     ):
         raise ContractError("policy.ruleOwners: unsupported v1 owner registry")
@@ -224,7 +225,7 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
         ("governance-practice", "executable-governance", "evaluate authority decisions and mutations deterministically"),
         ("governance-practice", "decision-rendering", "render a Product Owner decision or control handoff"),
         ("applicability-envelope", "session-continuity", "reconstruct only after applicability classification"),
-        ("governance-practice", "completed-work-cleanup", "perform cleanup only under its dedicated grant"),
+        ("governance-practice", "completed-work-cleanup", "perform cleanup only under matching subject authority"),
         ("bootstrap", "task-contracts", "load only contracts selected by the actual task class"),
     ):
         raise ContractError("policy.loadRoutes: unsupported v1 load graph")
@@ -565,6 +566,42 @@ def _validate_policy_shape(policy: Any) -> Mapping[str, Any]:
         "unchanged-revalidated-facts", "not-revoked-or-superseded", "no-exclusion-is-crossed",
     ) or live["createsGrant"] is not False or live["survivesSession"] is not False:
         raise ContractError("policy.liveInstruction: unsupported current instruction boundary")
+
+    completion = _require_keys(
+        top["pullRequestCompletion"],
+        ("productOwnerLogin", "actionIds", "subjectFields", "reviewFields", "cleanupKinds",
+         "bindingRequires", "mergeRequires", "afterMergeRequires", "cleanupRequires", "scope",
+         "exclusions", "createsGrant", "durableSource"),
+        "policy.pullRequestCompletion",
+    )
+    expected_completion = {
+        "productOwnerLogin": "normenmueller",
+        "actionIds": ["pull-request.merge", "issue.close", "project.transition", "completed-work.cleanup", "remote.issue-comment.create", "remote.evidence.publish"],
+        "subjectFields": ["repository", "pullRequest", "issue", "head", "headRef", "headRepository"],
+        "reviewFields": ["repository", "pullRequest", "id", "author", "state", "commit"],
+        "cleanupKinds": ["local-branch", "remote-branch", "linked-worktree"],
+        "bindingRequires": [
+            "versioned-standing-rule-current-and-accepted", "fresh-current-GitHub-observations",
+            "latest-effective-review-not-dismissed", "no-withdrawal-or-outstanding-changes-requested",
+            "owning-Issue-and-exact-resource-match-subject", "required-independent-reviews-accepted-without-findings",
+            "required-green-verification-covers-current-integration-base", "no-current-PO-exclusion-is-crossed",
+        ],
+        "mergeRequires": ["host-merge-conditioned-on-approved-head"],
+        "afterMergeRequires": ["same-approved-head-and-verified-integration-tree-published", "required-post-merge-verification-green"],
+        "cleanupRequires": ["completed-work-entry-and-safe-exact-target-preflight", "no-unique-or-required-recovery-data", "per-target-identity-and-required-lease-revalidated"],
+        "scope": "normal-approved-PR-completion-evidence-merge-owning-Issue-close-Project-Done-and-exact-safe-cleanup",
+        "exclusions": [
+            "other-PRs-Issues-or-unrelated-resources",
+            "cleanup-of-default-protected-active-review-unmerged-or-recovery-resources",
+            "cleanup-of-stashes-scratch-or-superseded-continuity-sources",
+            "cleanup-of-foreign-head-repositories",
+            "unknown-unique-user-owned-or-required-recovery-data", "releases-tags-publication-or-scope-expansion",
+        ],
+        "createsGrant": False,
+        "durableSource": "versioned-standing-rule-and-current-GitHub-PO-review-no-session-or-grant-receipt",
+    }
+    if completion != expected_completion or completion["createsGrant"] is not False:
+        raise ContractError("policy.pullRequestCompletion: unsupported standing completion boundary")
 
     gates = _require_keys(
         top["mutationGates"],
@@ -1724,6 +1761,7 @@ def mutation_allowed(
     live_instruction: Mapping[str, Any] | None = None,
     expected_instruction: Mapping[str, Any] | None = None,
     instruction_evidence: Mapping[str, bool | None] | None = None,
+    pr_completion: Mapping[str, Any] | None = None,
 ) -> bool:
     """Evaluate one policy action from the canonical gates and transition set."""
     action_ids = {item["id"] for item in policy["actions"]}
@@ -1733,6 +1771,8 @@ def mutation_allowed(
     if not all(gate_evidence[name] is True for name in gate_names):
         return False
     if authority_source == "live-instruction":
+        if pr_completion is not None:
+            return False
         fields = tuple(policy["liveInstruction"]["requiredFields"])
         guards = tuple(policy["liveInstruction"]["bindingRequires"])
         if (
@@ -1758,8 +1798,18 @@ def mutation_allowed(
             return False
         if live_instruction["targetState"] == "In review":
             active_conditions = (*active_conditions, "grant-target-ends-at-In-review")
+    elif authority_source == "product-owner-pr-approval":
+        if any(value is not None for value in (
+            live_instruction, expected_instruction, instruction_evidence,
+        )) or not pull_request_completion_allowed(
+            policy, action_id=action_id, resource_id=resource_id, completion=pr_completion,
+        ):
+            return False
+        if action_id == "project.transition" and transition != ("In review", "Done"):
+            return False
     elif authority_source != "grant" or any(value is not None for value in (
         live_instruction, expected_instruction, instruction_evidence,
+        pr_completion,
     )):
         return False
     if action_id == "project.transition":
@@ -1768,6 +1818,104 @@ def mutation_allowed(
     elif transition is not None:
         return False
     return not action_forbidden(policy, action_id, active_conditions)
+
+
+def pull_request_completion_allowed(
+    policy: Mapping[str, Any], *, action_id: str, resource_id: str | None,
+    completion: Mapping[str, Any] | None,
+) -> bool:
+    """Bind the standing completion rule to fresh, externally observed GitHub facts.
+
+    This pure predicate neither fetches remote state nor creates a grant. The
+    primary must establish every named guard from its current owning sources;
+    a review ID or cached successful result is never sufficient on its own.
+    """
+    rule = policy["pullRequestCompletion"]
+    if action_id not in rule["actionIds"]:
+        return False
+    try:
+        observed = _require_keys(
+            completion, ("subject", "observedSubject", "review", "cleanupTarget", "evidence"),
+            "PR completion",
+        )
+        subject = _require_keys(observed["subject"], tuple(rule["subjectFields"]), "completion.subject")
+        current = _require_keys(observed["observedSubject"], tuple(rule["subjectFields"]), "completion.observedSubject")
+        review = _require_keys(observed["review"], tuple(rule["reviewFields"]), "completion.review")
+        if (not all(isinstance(value, str) and value for value in subject.values())
+                or subject != current
+                or any(re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", subject[field]) is None
+                       for field in ("repository", "headRepository"))
+                or any(re.fullmatch(r"#[1-9][0-9]*", subject[field]) is None for field in ("pullRequest", "issue"))
+                or re.fullmatch(r"[0-9a-f]{40}", subject["head"]) is None
+                or not subject["headRef"].startswith("refs/heads/")
+                or not _exact_relative_name(subject["headRef"])
+                or review["repository"] != subject["repository"]
+                or review["pullRequest"] != subject["pullRequest"]
+                or not isinstance(review["id"], str)
+                or re.fullmatch(r"[1-9][0-9]*", review["id"]) is None
+                or review["author"] != rule["productOwnerLogin"]
+                or review["state"] != "APPROVED"
+                or review["commit"] != subject["head"]):
+            return False
+        repository = subject["repository"]
+        expected_resource = {
+            "pull-request.merge": f"pull-request:{repository}{subject['pullRequest']}",
+            "issue.close": f"issue:{repository}{subject['issue']}",
+            "project.transition": f"project-item:O2I:{repository}{subject['issue']}",
+        }.get(action_id)
+        if action_id == "completed-work.cleanup":
+            if subject["headRepository"] != repository:
+                return False
+            target = _require_keys(
+                observed["cleanupTarget"],
+                ("kind", "repository", "pullRequest", "issue", "branch", "head", "name",
+                 "observedBranch", "observedHead", "observedName", "expectedIdentity", "observedIdentity"),
+                "completion.cleanupTarget",
+            )
+            if (not all(isinstance(value, str) and value for value in target.values())
+                    or target["kind"] not in rule["cleanupKinds"]
+                    or any(target[field] != subject[field] for field in ("repository", "pullRequest", "issue", "head"))
+                    or target["branch"] != subject["headRef"]
+                    or target["observedBranch"] != target["branch"]
+                    or target["observedHead"] != target["head"]
+                    or target["observedName"] != target["name"]
+                    or target["expectedIdentity"] != target["observedIdentity"]
+                    or not _exact_relative_name(target["name"])
+                    or not _exact_relative_name(target["expectedIdentity"])):
+                return False
+            if target["kind"] != "linked-worktree" and (
+                target["name"] != subject["headRef"] or target["expectedIdentity"] != subject["head"]
+            ):
+                return False
+            expected_resource = f"cleanup:{target['kind']}:{repository}{subject['pullRequest']}:{target['name']}"
+        elif observed["cleanupTarget"] is not None:
+            return False
+        if action_id in {"remote.issue-comment.create", "remote.evidence.publish"}:
+            evidence_resources = {
+                f"pull-request:{repository}{subject['pullRequest']}",
+                f"issue:{repository}{subject['issue']}",
+            }
+            if resource_id not in evidence_resources:
+                return False
+        elif resource_id != expected_resource:
+            return False
+        guards = tuple(rule["bindingRequires"])
+        if action_id == "pull-request.merge":
+            guards += tuple(rule["mergeRequires"])
+        if action_id in {"issue.close", "project.transition", "completed-work.cleanup"}:
+            guards += tuple(rule["afterMergeRequires"])
+        if action_id == "completed-work.cleanup":
+            guards += tuple(rule["cleanupRequires"])
+        evidence = _require_keys(observed["evidence"], guards, "completion.evidence")
+        return all(evidence[guard] is True for guard in guards)
+    except (ContractError, TypeError, ValueError):
+        return False
+
+
+def _exact_relative_name(value: str) -> bool:
+    """Conservatively admit one exact ref/path/registered identity, never a root or pattern."""
+    return (re.fullmatch(r"[A-Za-z0-9._/-]+", value) is not None
+            and all(part not in ("", ".", "..") for part in value.split("/")))
 
 
 def transition_allowed(
@@ -1985,7 +2133,7 @@ def cleanup_allowed(
     remote_checks_green: bool | None,
     issue_closed: bool | None,
     project_done: bool | None,
-    cleanup_grant: bool | None,
+    cleanup_authority: bool | None,
     durability_proven: bool | None,
     target_identity_stable: bool | None,
     required_identity_verified: bool | None,
@@ -2000,7 +2148,7 @@ def cleanup_allowed(
         issue_accepted,
         publication_complete,
         remote_checks_green,
-        cleanup_grant,
+        cleanup_authority,
         durability_proven,
         target_identity_stable,
         required_identity_verified,
@@ -2083,15 +2231,19 @@ def render_agent_projection(policy: Mapping[str, Any]) -> str:
         + ". Missing or unknown evidence denies execution; permission never creates or revokes authority."
     )
     lines.append(
-        "Authority sources: a matching grant or a current explicit PO/runtime instruction. "
-        "Live instructions must match subject, actions, resources, scope, target and exclusions; "
-        "they create no grant and never survive a session."
+        "Authority: matching grant, exact session-only PO/runtime instruction, or standing PO PR completion."
+    )
+    completion = policy["pullRequestCompletion"]
+    lines.append(
+        f"Standing completion: current exact-head `{completion['productOwnerLogin']}` approval and integration-base checks gate merge; "
+        "post-merge proof gates owning-Issue closure/Done. Cleanup covers only that PR's exact source branches/inactive linked worktrees "
+        "under full preflight. Reconstruct from accepted policy/current GitHub, never other reviews or a new grant/event."
     )
     grant = policy["authorityGrant"]
     lines.append(
         f"Grant schema `{grant['schema']}` remains active until "
         + ", ".join(f"`{state}`" for state in grant["activeUntil"])
-        + ". Consuming approval does not consume the grant. Its first authorized remote write is the immutable owning-Issue receipt; cross-session authority exists only when current remote state contains exactly one fully valid receipt."
+        + ". Consuming approval does not consume the grant. Its first authorized remote write is the immutable owning-Issue receipt; cross-session grant authority requires exactly one currently valid receipt."
     )
     lines.extend(("", "# Decision Events", ""))
     for name, event in policy["events"].items():
@@ -2166,9 +2318,11 @@ def render_contributing_projection(policy: Mapping[str, Any]) -> str:
         "",
         f"Erlaubte Übergänge: {transitions}. Jeder nicht aufgeführte Übergang ist verboten.",
         "",
-        "Eine Mutation benötigt passende aktuelle Autorität, ereignisspezifische Guards, die deklarierte und verifizierte Ausführungsidentität sowie technische Host- oder Tool-Berechtigung. Autorität stammt aus einem passenden Grant oder einer aktuellen ausdrücklichen PO-/Runtime-Anweisung mit exakt passendem Gegenstand, Aktionen, Ressourcen, Umfang, Ziel und Ausschlüssen. Letztere erzeugt keinen Grant und gilt nicht über eine Session-Grenze hinaus. Unbekannte oder fehlende Bedingungen sperren die Ausführung; technische Berechtigung erzeugt oder widerruft keine Autorität.",
+        "Eine Mutation benötigt passende aktuelle Autorität, ereignisspezifische Guards, die deklarierte und verifizierte Ausführungsidentität sowie technische Host- oder Tool-Berechtigung. Autorität stammt aus einem passenden Grant, einer aktuellen ausdrücklichen PO-/Runtime-Anweisung oder der unten begrenzten PO-PR-Abschlussregel. Gegenstand, Aktionen, Ressourcen, Umfang, Ziel und Ausschlüsse müssen exakt passen. Eine aktuelle Anweisung erzeugt keinen Grant und gilt nicht über eine Session-Grenze hinaus. Unbekannte oder fehlende Bedingungen sperren die Ausführung; technische Berechtigung erzeugt oder widerruft keine Autorität.",
         "",
         "Ein gebundener Grant bleibt bis zu seinem Zielzustand wirksam; nur die Freigabeantwort wird einmalig verbraucht. Vor einer Session-Grenze muss genau ein vollständiger, unveränderlicher Grant-Beleg im owning Issue aktuell beobachtbar und durch die vorgeschriebene Machine-User-Identität verifizierbar sein.",
+        "",
+        "Ein wirksames GitHub-`APPROVED` des Product Owners `normenmueller` zum exakten aktuellen PR-Head autorisiert gemäß Abschlussregel Merge, zugehörige Abschlussbelege, Issue-Abschluss, Project `Done` und sichere Bereinigung der lokalen/entfernten PR-Quellbranch im selben Repository sowie ihrer inaktiven verknüpften Worktrees. Eine weitere Freigabe ist nicht nötig. Aktuelle Reviews und grüne Prüfungen müssen die Integrationsbasis abdecken; nach dem Merge sind genehmigter Head und geprüfter Integrationsbaum nachzuweisen. Geänderter Head, widerrufene Zustimmung, offene Änderungsforderungen, fehlende Prüfungen oder ungeklärte Daten sperren die Folgeaktion. Andere Reviews, fremde Ziele, Releases, Tags und Scope-Erweiterungen sind nicht umfasst.",
         "",
         "### Entscheidungsereignisse",
         "",
