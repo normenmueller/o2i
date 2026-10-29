@@ -10,25 +10,25 @@ Implement https://github.com/normenmueller/o2i/issues/135: the Product Owner's P
 
 # Authority
 
-Current explicit PO instruction defines this standing rule and authorizes its implementation. Decision evidence: https://github.com/normenmueller/o2i/issues/125#issuecomment-6502969904. Current live authority does not become a durable grant. Preserve exact-candidate review, verification, actor identity and cleanup safeguards. Publish this separate governance candidate for PO review; no release/tag or illustration continuation.
+The PO explicitly requested this standing rule: https://github.com/normenmueller/o2i/issues/125#issuecomment-6502969904. Publish the independently reviewed governance candidate for PO approval. Current live instructions create no durable grant. Release/tag and illustration continuation remain outside scope.
 
 # Current Facts
 
-PR #134 was merged by gertrud-ai4x at 3c42b80a5eaf08c0d7f2a3cf4473c9cb67475a95. Its tree exactly matches approved head 98c7debaafee5824c22788a08c1eae004c4c780e; parents are accepted trunk and approved head. #125 is CLOSED/Done. All required local and CI checks and independent reviews passed. The source checkpoint and parked illustration contain distinct work and remain protected.
+This branch starts from PR #134's published merge 3c42b80a5eaf08c0d7f2a3cf4473c9cb67475a95. #125 is closed/Done; its exact merged PR branch and inactive worktree are removed locally/remotely: https://github.com/normenmueller/o2i/issues/125#issuecomment-6503538702. Distinct source and illustration work remains protected.
 
-This branch starts from that published merge. The #135 Issue owns the policy scope and acceptance. A governance Co-Author shapes the rule, evaluator, tests and guidance; a separate read-only reviewer must accept the exact candidate.
+#135 owns the policy scope and acceptance. The Co-Author's candidate passed independent review and local checks. Four additional obsolete Remote refs are retired, with a fresh restore and exact postflight: https://github.com/normenmueller/o2i/issues/135#issuecomment-6503728542.
 
 # Material Risk
 
-Only current effective PO approval of the exact subject/head can authorize normal completion under the versioned rule. Changed/withdrawn approval, unknown or failing checks, uncovered integration base and unsafe cleanup stop dependent actions. Preserve existing grant/live-instruction behavior and provenance. Never delete unique, active, unmerged, recovery or unrelated work.
+Bind completion to current PO approval of the exact subject/head and verified integration. Apply policy guards and conditional native operations; unknown facts stop the dependent action. Preserve grant/live-instruction behavior, provenance, active/recovery resources and unique work.
 
 # Verification
 
-The inherited product candidate is verified; new governance checks and independent exact-candidate acceptance remain pending. Use the canonical path matrix unchanged. GitHub owns current remote facts; local scratch owns no authority or required continuation.
+Local governance/licensing, all 15 budgets and independent source review pass. Recheck this final metadata edit; CI remains required. Path selection is unchanged. GitHub owns remote facts; scratch supplies no authority or required continuation.
 
 # Next Action
 
-Implement the bounded standing completion rule and synchronized projections. Run required checks and independent review, publish the governance PR and return it for PO review. Complete safe #125 topic-branch cleanup after switching the validated active checkout here; preserve source/illustration refs.
+Publish #135's exact candidate, complete CI and return the PR for PO approval. Apply the completion rule after that approval without a second permission request. Preserve source/illustration refs.
 
 # Local Return Point
 

@@ -25,7 +25,7 @@ Keep canonical payloads, IDs, fingerprints and binding receipts in their policy-
 
 ## Approval And Durable Authority
 
-Only `authority_request` binds approval. Apply the policy's closed, case-sensitive reply set and all adjacency, freshness, subject, canonical-payload and single-use checks. Reject ambiguous, stale, reconstructed or reused approvals; neither a status nor a GitHub review grants merge authority. Never record chat or session identifiers.
+Only `authority_request` binds chat replies to grants; enforce closed case-sensitive replies, adjacency, freshness, subject, canonical payload and single use. Reject ambiguous/stale/reconstructed/reused replies. Status grants none. `pullRequestCompletion` separately authorizes normal completion/evidence under its current exact-head PO review, verification/integration and cleanup guards, without another approval or grant/event. Other reviews grant none. Exclude chat/session identifiers.
 
 Approval consumption does not consume its resulting work-unit grant. Before further remote execution, its first authorized remote write must create the complete immutable owning-Issue receipt and pass same-session readback under policy. After interruption, missing or unverifiable durable evidence cannot be repaired with a transcript or handoff. See `continuity.md` for reconstruction.
 
