@@ -10,7 +10,7 @@ Resume the company story in #115 and its native illustration in #116. Preserve t
 
 # Authority
 
-The PO explicitly requested integration of accepted trunk, retirement of the superseded 125 branch and return to #115/#116. Current instructions create no durable grant. Native model saves remain PO-owned; no new scenario content is implied by branch integration.
+The PO requests a cold start at the pending company Vision decision. #115 owns its immutable transition record; #116 owns checkpoint evidence. No agent grant survives this boundary. Reconstruct current facts and return that decision to the PO; no new scenario or native edit is authorized by this handoff. Native model saves remain PO-owned.
 
 # Current Facts
 
@@ -28,7 +28,7 @@ Licensing, governance, repository model checks and all nine current-CLI requests
 
 # Next Action
 
-Agree company Vision in #115. Do not restart Mission selection. Follow the normal per-save model checks in #116.
+After the cold start, reconstruct this branch from current GitHub facts and discuss the company Vision in #115 with the PO. Do not restart Mission selection. Follow the normal per-save model checks in #116 after the agreed native save.
 
 # Local Return Point
 
