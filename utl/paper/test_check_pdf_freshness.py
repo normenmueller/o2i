@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextlib import redirect_stderr, redirect_stdout
+from html import escape
 import importlib.util
 import io
 import json
@@ -12,6 +13,7 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+import xml.etree.ElementTree as ET
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -30,6 +32,24 @@ RENDERER_CONTRACT = {
     "version": "1.2.3",
 }
 MANIFEST_RENDERER = {"tool": "md2pdf", "version": "1.2.3"}
+
+
+def link_xml(*pages: str) -> str:
+    document = ET.Element("pdf2xml")
+    for number, text in enumerate(pages, start=1):
+        page = ET.SubElement(document, "page", number=str(number))
+        page.extend(ET.fromstring(f"<content>{text}</content>"))
+        for line, element in enumerate(page.findall("text")):
+            element.attrib.setdefault("top", str(line * 20))
+            element.attrib.setdefault("height", "12")
+    return ET.tostring(document, encoding="unicode")
+
+
+def xml_line(text: str, target: str | None = None) -> str:
+    content = escape(text)
+    if target is not None:
+        content = f'<a href="{escape(target, quote=True)}">{content}</a>'
+    return f"<text>{content}</text>"
 
 
 class PdfFreshnessTest(unittest.TestCase):
@@ -78,11 +98,14 @@ class PdfFreshnessTest(unittest.TestCase):
             stdout="O2I  Syntax\nträgt\tWirkung.\n",
             stderr="",
         )
-        with patch.object(CHECKER.subprocess, "run", return_value=completed):
+        xml = subprocess.CompletedProcess([], 0, link_xml(xml_line(completed.stdout)), "")
+        with patch.object(CHECKER.subprocess, "run", side_effect=(completed, xml)) as run:
             self.assertEqual(
                 "O2I Syntax trägt Wirkung.",
                 CHECKER.normalized_pdf_text(Path("paper.pdf")),
             )
+        self.assertIn("-raw", run.call_args_list[0].args[0])
+        self.assertEqual("pdftohtml", run.call_args_list[1].args[0][0])
 
     def test_text_normalization_preserves_word_boundaries(self) -> None:
         with patch.object(
@@ -90,13 +113,243 @@ class PdfFreshnessTest(unittest.TestCase):
             "run",
             side_effect=(
                 subprocess.CompletedProcess([], 0, "Key Result", ""),
+                subprocess.CompletedProcess([], 0, link_xml(xml_line("Key Result")), ""),
                 subprocess.CompletedProcess([], 0, "KeyResult", ""),
+                subprocess.CompletedProcess([], 0, link_xml(xml_line("KeyResult")), ""),
             ),
         ):
             self.assertNotEqual(
                 CHECKER.normalized_pdf_text(Path("spaced.pdf")),
                 CHECKER.normalized_pdf_text(Path("joined.pdf")),
             )
+
+    def test_owned_uri_wraps_preserve_characters_at_hyphens_and_slashes(self) -> None:
+        target = "https://example.test/culture-and/123/"
+        for split in (len("https://example.test/"), target.index("and"), target.index("123")):
+            for gap in ("\n", " \r\n\t "):
+                first, second = target[:split], target[split:]
+                xml = link_xml(xml_line(first, target) + xml_line(second + ".", target))
+                raw = first + gap + second + ".\n\f"
+                with self.subTest(split=split, gap=gap):
+                    self.assertEqual(
+                        target + ".\n\f", CHECKER.normalize_linked_uri_wraps(raw, xml)
+                    )
+
+    def test_uri_normalization_preserves_visible_occurrence_counts(self) -> None:
+        target = "https://example.test/a-b/c"
+        text = "https://example.test/a-\nb/c. And https://example.test/a-b/\nc."
+        xml = link_xml(
+            xml_line("https://example.test/a-", target)
+            + xml_line("b/c.", target)
+            + xml_line(" And ")
+            + xml_line("https://example.test/a-b/", target)
+            + xml_line("c.", target)
+        )
+        normalized = CHECKER.normalize_linked_uri_wraps(text, xml)
+        self.assertEqual(f"{target}. And {target}.", normalized)
+        self.assertEqual(2, normalized.count(target))
+
+    def test_complete_link_labels_never_supply_or_hide_uri_characters(self) -> None:
+        target = "https://example.test/a-b"
+        for parts in (
+            ("https://example.test/a", "b."),
+            ("https://example.test/a-", "c."),
+            ("nothttps://example.test/a-", "b."),
+            ("https://example.test/a-", "bMORE"),
+            ("https://example.test/a-", "b.ext"),
+            ("https://example.test/a-", "b?query"),
+            ("https://example.test/a-", "b#fragment"),
+            ("ftp://prefix/", "other/", "https://example.test/a-", "b."),
+            ("custom:prefix/", "part/", "(https://example.test/a-", "b.)"),
+            ("Read this", "ordinary label"),
+        ):
+            raw = "\n".join(parts)
+            xml = link_xml("".join(xml_line(part, target) for part in parts))
+            with self.subTest(parts=parts):
+                self.assertEqual(raw, CHECKER.normalize_linked_uri_wraps(raw, xml))
+
+    def test_unlinked_surroundings_do_not_become_part_of_an_owned_uri(self) -> None:
+        target = "https://example.test/a-b"
+        raw = "ftp://prefix/\nother/\n(https://example.test/a-\nb.)"
+        xml = link_xml(
+            xml_line("ftp://prefix/") + xml_line("other/") + xml_line("(")
+            + xml_line("https://example.test/a-", target)
+            + xml_line("b.", target) + xml_line(")")
+        )
+        self.assertEqual(
+            "ftp://prefix/\nother/\n(" + target + ".)",
+            CHECKER.normalize_linked_uri_wraps(raw, xml),
+        )
+
+    def test_font_chunks_never_invent_or_remove_ordinary_word_boundaries(self) -> None:
+        target = "https://example.test/a-b"
+        xml = link_xml(
+            "<text>Key</text><text><b>Result</b></text>"
+            + xml_line("https://example.test/a-", target) + xml_line("b.", target)
+        )
+        for words in ("KeyResult", "Key Result", "Key\nResult"):
+            raw = words + "\nhttps://example.test/a-\nb."
+            with self.subTest(words=words):
+                self.assertEqual(
+                    words + "\n" + target + ".",
+                    CHECKER.normalize_linked_uri_wraps(raw, xml),
+                )
+
+    def test_single_line_font_chunks_do_not_authorize_space_removal(self) -> None:
+        target = "https://example.test/a-b"
+        raw = "https://example.test/a- b."
+        xml = link_xml(
+            f'<text><a href="{target}">https://example.test/a-<b>b.</b></a></text>'
+        )
+        self.assertEqual(raw, CHECKER.normalize_linked_uri_wraps(raw, xml))
+
+    def test_same_row_and_overlapping_font_nodes_preserve_raw_space_and_linebreak(self) -> None:
+        target = "https://example.test/a-b"
+        for top in (10, 15):
+            xml = link_xml(
+                f'<text top="10" height="12" left="0" width="150">'
+                f'<a href="{target}">https://example.test/a-</a></text>'
+                f'<text top="{top}" height="12" left="200" width="10">'
+                f'<a href="{target}">b</a></text>'
+            )
+            for gap in (" ", "\n"):
+                raw = "https://example.test/a-" + gap + "b"
+                with self.subTest(top=top, gap=gap):
+                    self.assertEqual(raw, CHECKER.normalize_linked_uri_wraps(raw, xml))
+
+    def test_invalid_required_line_geometry_fails_closed(self) -> None:
+        target = "https://example.test/a-b"
+        raw = "https://example.test/a-\nb"
+        for attributes in (
+            {},
+            {"top": "bad", "height": "12"},
+            {"top": "nan", "height": "12"},
+            {"top": "0", "height": "inf"},
+            {"top": "0", "height": "0"},
+            {"top": "0", "height": "-1"},
+        ):
+            document = ET.fromstring(link_xml(
+                xml_line("https://example.test/a-", target) + xml_line("b", target)
+            ))
+            document.find("page/text").attrib.clear()
+            document.find("page/text").attrib.update(attributes)
+            with self.subTest(attributes=attributes), self.assertRaisesRegex(
+                CHECKER.PdfFreshnessError, "line geometry is invalid"
+            ):
+                CHECKER.normalize_linked_uri_wraps(raw, ET.tostring(document, encoding="unicode"))
+
+    def test_only_uri_internal_layout_gaps_are_removed(self) -> None:
+        target = "https://example.test/a-b"
+        raw = "https://example.test/a-\nb\n."
+        xml = link_xml(
+            xml_line("https://example.test/a-", target) + xml_line("b", target)
+            + xml_line(".", target)
+        )
+        self.assertEqual(target + "\n.", CHECKER.normalize_linked_uri_wraps(raw, xml))
+
+    def test_unlinked_internal_and_non_http_spans_remain_raw(self) -> None:
+        for target in (None, "paper.html#1", "mailto:user@example.test"):
+            raw = "https://example.test/a-\nb."
+            xml = link_xml(xml_line("https://example.test/a-", target) + xml_line("b.", target))
+            with self.subTest(target=target):
+                self.assertEqual(raw, CHECKER.normalize_linked_uri_wraps(raw, xml))
+
+    def test_ambiguous_adjacent_repetitions_and_cross_page_labels_remain_raw(self) -> None:
+        target = "https://example.test/a-b"
+        line = xml_line("https://example.test/a-", target) + xml_line("b.", target)
+        raw = "https://example.test/a-\nb.\nhttps://example.test/a-\nb."
+        self.assertEqual(raw, CHECKER.normalize_linked_uri_wraps(raw, link_xml(line + line)))
+        raw = "https://example.test/a-\fb."
+        self.assertEqual(
+            raw,
+            CHECKER.normalize_linked_uri_wraps(
+                raw, link_xml(xml_line("https://example.test/a-", target), xml_line("b.", target))
+            ),
+        )
+
+    def test_required_link_page_alignment_rejects_inserted_and_missing_glyphs(self) -> None:
+        target = "https://example.test/a-b"
+        raw = "Body https://example.test/a-\nb."
+        for body in ("Bod", "BodyX"):
+            xml = link_xml(
+                xml_line(body) + xml_line("https://example.test/a-", target) + xml_line("b.", target)
+            )
+            with self.subTest(body=body), self.assertRaisesRegex(
+                CHECKER.PdfFreshnessError, "characters differ on URI page 1"
+            ):
+                CHECKER.normalize_linked_uri_wraps(raw, xml)
+
+    def test_unlinked_pages_preserve_raw_text_despite_xml_only_clipped_glyphs(self) -> None:
+        target = "https://example.test/a-b"
+        raw = "https://example.test/a-\nb.\fDiagram\f"
+        xml = link_xml(
+            xml_line("https://example.test/a-", target) + xml_line("b.", target),
+            xml_line("Diagram") + xml_line("2"),
+        )
+        self.assertEqual(target + ".\fDiagram\f", CHECKER.normalize_linked_uri_wraps(raw, xml))
+
+    def test_invalid_xml_missing_targets_and_page_mismatches_fail_closed(self) -> None:
+        for xml in (
+            "invalid XML", "<wrong/>", "<pdf2xml/>",
+            '<pdf2xml><page number="2"><text>Body</text></page></pdf2xml>',
+            link_xml("<text><a>Body</a></text>"),
+        ):
+            with self.subTest(xml=xml), self.assertRaises(CHECKER.PdfFreshnessError):
+                CHECKER.normalize_linked_uri_wraps("Body", xml)
+
+    def test_xml_process_failure_fails_closed(self) -> None:
+        with (
+            patch.object(
+                CHECKER.subprocess, "run",
+                side_effect=(
+                    subprocess.CompletedProcess([], 0, "Body", ""),
+                    subprocess.CompletedProcess([], 1, "", "XML extraction failed"),
+                ),
+            ),
+            self.assertRaisesRegex(CHECKER.PdfFreshnessError, "XML extraction failed"),
+        ):
+            CHECKER.normalized_pdf_text(Path("paper.pdf"))
+
+    def test_uri_annotations_are_sorted_and_deduplicated(self) -> None:
+        completed = subprocess.CompletedProcess(
+            [],
+            0,
+            "Page  Type          URL\n"
+            " 8 Annotation https://example.test/b\n"
+            " 8 Annotation https://example.test/a\n"
+            " 8 Annotation https://example.test/b\n",
+            "",
+        )
+        with patch.object(CHECKER.subprocess, "run", return_value=completed):
+            self.assertEqual(
+                ("https://example.test/a", "https://example.test/b"),
+                CHECKER.pdf_uri_targets(Path("paper.pdf")),
+            )
+
+    def test_empty_uri_annotation_table_is_valid(self) -> None:
+        completed = subprocess.CompletedProcess([], 0, "Page Type URL\n", "")
+        with patch.object(CHECKER.subprocess, "run", return_value=completed):
+            self.assertEqual((), CHECKER.pdf_uri_targets(Path("paper.pdf")))
+
+    def test_malformed_uri_annotation_output_fails_closed(self) -> None:
+        for output in ("", "unexpected output\n", "Page Type URL\n8 Annotation\n"):
+            with self.subTest(output=output):
+                completed = subprocess.CompletedProcess([], 0, output, "")
+                with (
+                    patch.object(CHECKER.subprocess, "run", return_value=completed),
+                    self.assertRaises(CHECKER.PdfFreshnessError),
+                ):
+                    CHECKER.pdf_uri_targets(Path("paper.pdf"))
+
+    def test_text_and_uri_command_failures_fail_closed(self) -> None:
+        for operation in (CHECKER.normalized_pdf_text, CHECKER.pdf_uri_targets):
+            with self.subTest(operation=operation.__name__):
+                completed = subprocess.CompletedProcess([], 1, "", "cannot read PDF")
+                with (
+                    patch.object(CHECKER.subprocess, "run", return_value=completed),
+                    self.assertRaisesRegex(CHECKER.PdfFreshnessError, "cannot read PDF"),
+                ):
+                    operation(Path("paper.pdf"))
 
     def test_page_count_is_parsed(self) -> None:
         completed = subprocess.CompletedProcess(
@@ -111,6 +364,7 @@ class PdfFreshnessTest(unittest.TestCase):
     def test_render_comparison_reports_page_and_text_drift(self) -> None:
         with (
             patch.object(CHECKER, "pdf_page_count", side_effect=(72, 73)),
+            patch.object(CHECKER, "pdf_uri_targets", return_value=()),
             patch.object(
                 CHECKER,
                 "normalized_pdf_text",
@@ -126,6 +380,23 @@ class PdfFreshnessTest(unittest.TestCase):
                 CHECKER.rendered_publication_errors(
                     Path("versioned.pdf"),
                     Path("rendered.pdf"),
+                ),
+            )
+
+    def test_render_comparison_detects_changed_target_behind_unchanged_label(self) -> None:
+        with (
+            patch.object(CHECKER, "pdf_page_count", return_value=56),
+            patch.object(CHECKER, "normalized_pdf_text", return_value="Read this label"),
+            patch.object(
+                CHECKER,
+                "pdf_uri_targets",
+                side_effect=(("https://example.test/a",), ("https://example.test/b",)),
+            ),
+        ):
+            self.assertEqual(
+                ["publication link targets differ"],
+                CHECKER.rendered_publication_errors(
+                    Path("versioned.pdf"), Path("rendered.pdf")
                 ),
             )
 

@@ -401,6 +401,13 @@ semanticUnavailabilityWitnesses assessment = do
          ((== Semantics.SubjectUnavailable)
             . Semantics.strategyFormulationDisposition)
          (Semantics.strategyFormulationAssessments assessment))
+  relations <-
+    traverse
+      relationWitness
+      (filter
+         ((== Semantics.SubjectUnavailable)
+            . Semantics.strategyRelationDisposition)
+         (Semantics.strategyRelationAssessments assessment))
   collectives <-
     traverse
       collectiveWitnesses
@@ -408,7 +415,16 @@ semanticUnavailabilityWitnesses assessment = do
          ((== Semantics.SubjectUnavailable)
             . Semantics.collectiveStrategyRealizationDisposition)
          (Semantics.collectiveStrategyRealizationAssessments assessment))
-  NonEmpty.nonEmpty (strategies <> concat collectives)
+  NonEmpty.nonEmpty (strategies <> relations <> concat collectives)
+
+relationWitness ::
+     Semantics.StrategyRelationAssessment scope
+  -> Maybe ValidateUnavailabilityWitness
+relationWitness assessment =
+  ValidateStrategyRelationUnavailable
+    (Semantics.strategyRelationOccurrence assessment)
+    <$> NonEmpty.nonEmpty
+          (Semantics.strategyRelationUnavailableReasons assessment)
 
 strategyWitness ::
      Semantics.StrategyFormulationAssessment scope

@@ -82,6 +82,8 @@ CORE_SOURCE_FILES = frozenset(
         "src/O2I/Semantics/Internal.hs",
         "src/O2I/Semantics/SituatedNeed.hs",
         "src/O2I/Semantics/Strategy.hs",
+        "src/O2I/Semantics/StrategyRelations.hs",
+        "src/O2I/Semantics/StrategyRelations/Evidence.hs",
         "src/O2I/Semantics/Vocabulary.hs",
         "src/O2I/Structure.hs",
         "src/O2I/Structure/Index.hs",
@@ -257,6 +259,14 @@ CONTRACTS = (
                 "spec/lib/core/tst/api/compile-fail/"
                 "SemanticsCrossGenerationEvidence.hs",
                 (("GHC-25897", 2),),
+            ),
+            CompileFailure(
+                "spec/lib/core/tst/api/compile-fail/StrategyRelationCrossScope.hs",
+                (("GHC-25897", 1),),
+            ),
+            CompileFailure(
+                "spec/lib/core/tst/api/compile-fail/StrategyRelationOpaqueConstructors.hs",
+                (("GHC-88464", 1),),
             ),
             CompileFailure(
                 "spec/lib/core/tst/api/compile-fail/"
@@ -832,6 +842,11 @@ EVIDENCE_RECORD_UPDATES = (
     ),
     EvidenceRecordUpdate(
         "O2I.Structure",
+        "StrategyRelationOwnerDistinctnessEvidence",
+        "strategyRelationOwnerDistinctnessRelation",
+    ),
+    EvidenceRecordUpdate(
+        "O2I.Structure",
         "StructuredPropositionIdentityEvidence",
         "structuredPropositionIdentitySubject",
     ),
@@ -1040,6 +1055,7 @@ def compiler_command(
             )
     return command + [
         f"--builddir={build_dir}", "exec",
+        "--ghc-options=-Werror",
         "--",
         "ghc",
         "-v0",
@@ -1130,6 +1146,7 @@ def private_compiler_command(
         command.append(f"--project-file={project_file}")
     return command + [
         f"--builddir={build_dir}", "exec",
+        "--ghc-options=-Werror",
         "--",
         "ghc",
         "-v0",
@@ -1179,15 +1196,15 @@ def check_evidence_record_update_inventory() -> None:
         contract.module for contract in EVIDENCE_RECORD_UPDATES
     )
     expected_domains = Counter(
-        {"O2I.Structure": 12, "O2I.Semantics.Input": 19}
+        {"O2I.Structure": 13, "O2I.Semantics.Input": 19}
     )
     identities = {
         (contract.module, contract.evidence_type, contract.projection)
         for contract in EVIDENCE_RECORD_UPDATES
     }
-    if len(EVIDENCE_RECORD_UPDATES) != 31:
+    if len(EVIDENCE_RECORD_UPDATES) != 32:
         raise RuntimeError(
-            "Evidence record-update inventory must contain exactly 31 cases"
+            "Evidence record-update inventory must contain exactly 32 cases"
         )
     if domain_counts != expected_domains:
         raise RuntimeError(
@@ -1243,7 +1260,7 @@ def check_evidence_record_updates(
                 result,
             )
             executed += 1
-    if executed != 31:
+    if executed != 32:
         raise RuntimeError(
             f"Evidence record-update execution count differs: {executed}"
         )

@@ -319,6 +319,8 @@ data HumanStructureDiagnosticEliminator result = HumanStructureDiagnosticElimina
   , eliminateHumanContextualizationTargetOwnerCardinality :: HumanOccurrenceIdentity -> HumanStructureZeroOrMultipleOccurrences -> result
     -- | Consume semantic relation-compatibility evidence.
   , eliminateHumanSemanticRelationCompatibility :: HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> result
+    -- | Consume a Strategy relation and its non-distinct endpoint owners.
+  , eliminateHumanStrategyRelationOwnerDistinctness :: HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> result
     -- | Consume structured-proposition identity evidence.
   , eliminateHumanStructuredPropositionIdentity :: HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> [HumanOccurrenceIdentity] -> result
     -- | Consume collective participant-type evidence.
@@ -414,6 +416,12 @@ data HumanSemanticDiagnosticEliminator result = HumanSemanticDiagnosticEliminato
                                                                            HumanOccurrenceIdentity -> result
     -- | Consume Strategy vision-orientation evidence.
   , eliminateHumanStrategyFormulationVisionOrientation :: HumanModelIdentity -> HumanModelIdentity -> HumanOccurrenceIdentity -> result
+    -- | Consume an asserted macro's Candidate endpoint dependency.
+  , eliminateHumanStrategyRelationAssertedEndpointDependency :: HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> result
+    -- | Consume an explicit direction macro lacking primitive support.
+  , eliminateHumanStrategyRelationDirectionSupport :: HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> result
+    -- | Consume an explicit contribution macro lacking primitive support.
+  , eliminateHumanStrategyRelationContributionSupport :: HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> result
   }
 
 -- | Closed authority-typed diagnostic evidence family.
@@ -1150,6 +1158,20 @@ projectStructureDiagnosticEvidence evidence =
                    (Structure.semanticRelationCompatibilitySource value))
                 (projectOccurrenceIdentity
                    (Structure.semanticRelationCompatibilityTarget value))
+        , Structure.eliminateStrategyRelationOwnerDistinctness =
+            \value ->
+              eliminateHumanStrategyRelationOwnerDistinctness
+                eliminator
+                (projectOccurrenceIdentity
+                   (Structure.strategyRelationOwnerDistinctnessRelation value))
+                (projectOccurrenceIdentity
+                   (Structure.strategyRelationOwnerDistinctnessSource value))
+                (projectOccurrenceIdentity
+                   (Structure.strategyRelationOwnerDistinctnessTarget value))
+                (projectOccurrenceIdentity
+                   (Structure.strategyRelationOwnerDistinctnessSourceOwner value))
+                (projectOccurrenceIdentity
+                   (Structure.strategyRelationOwnerDistinctnessTargetOwner value))
         , Structure.eliminateStructuredPropositionIdentity =
             \value ->
               eliminateHumanStructuredPropositionIdentity
@@ -1319,6 +1341,8 @@ structureEvidenceCode =
           \_ _ -> "contextualization-target-owner-cardinality"
       , eliminateHumanSemanticRelationCompatibility =
           \_ _ _ -> "semantic-relation-compatibility"
+      , eliminateHumanStrategyRelationOwnerDistinctness =
+          \_ _ _ _ _ -> "strategy-relation-owner-distinctness"
       , eliminateHumanStructuredPropositionIdentity =
           \_ _ _ _ -> "structured-proposition-identity"
       , eliminateHumanCollectiveParticipantType =
@@ -1478,8 +1502,35 @@ projectSemanticDiagnosticEvidence =
                 (projectOccurrenceIdentity <$> occurrences)
       , Semantics.eliminateStrategyFormulationVisionOrientation =
           projectNeedMember eliminateHumanStrategyFormulationVisionOrientation
+      , Semantics.eliminateStrategyRelationAssertedEndpointDependency =
+          projectStrategyRelation
+            eliminateHumanStrategyRelationAssertedEndpointDependency
+      , Semantics.eliminateStrategyRelationDirectionSupport =
+          projectStrategyRelation eliminateHumanStrategyRelationDirectionSupport
+      , Semantics.eliminateStrategyRelationContributionSupport =
+          projectStrategyRelation
+            eliminateHumanStrategyRelationContributionSupport
       }
   where
+    projectStrategyRelation ::
+         (forall result. HumanSemanticDiagnosticEliminator result -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> HumanOccurrenceIdentity -> result)
+      -> OccurrenceIdentity
+      -> OccurrenceIdentity
+      -> OccurrenceIdentity
+      -> OccurrenceIdentity
+      -> OccurrenceIdentity
+      -> OccurrenceIdentity
+      -> HumanSemanticDiagnosticEvidence
+    projectStrategyRelation consume relation source target relationOccurrence sourceOccurrence targetOccurrence =
+      projected $ \eliminator ->
+        consume
+          eliminator
+          (projectOccurrenceIdentity relation)
+          (projectOccurrenceIdentity source)
+          (projectOccurrenceIdentity target)
+          (projectOccurrenceIdentity relationOccurrence)
+          (projectOccurrenceIdentity sourceOccurrence)
+          (projectOccurrenceIdentity targetOccurrence)
     projected ::
          (forall result. HumanSemanticDiagnosticEliminator result -> result)
       -> HumanSemanticDiagnosticEvidence
@@ -1591,6 +1642,12 @@ semanticEvidenceCode =
       , eliminateHumanStrategyFormulationKeyResults = \_ _ -> "StrategyKey"
       , eliminateHumanStrategyFormulationVisionOrientation =
           \_ _ _ -> "StrategyMemberKey"
+      , eliminateHumanStrategyRelationAssertedEndpointDependency =
+          \_ _ _ _ _ _ -> "StrategyRelationKey"
+      , eliminateHumanStrategyRelationDirectionSupport =
+          \_ _ _ _ _ _ -> "StrategyRelationKey"
+      , eliminateHumanStrategyRelationContributionSupport =
+          \_ _ _ _ _ _ -> "StrategyRelationKey"
       }
 
 toList :: Foldable collection => collection value -> [value]

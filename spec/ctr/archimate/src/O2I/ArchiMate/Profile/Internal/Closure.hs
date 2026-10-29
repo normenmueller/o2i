@@ -998,8 +998,9 @@ graphClosureResults profileIndex state rule =
                   (measuredWork measuredRecord)
                   [result subject viewOccurrence []]
             _ -> Measured (measuredWork measuredRecord) []
-          where measuredRecord =
-                  measuredMapLookup subject (indexRecords profileIndex)
+          where
+            measuredRecord =
+              measuredMapLookup subject (indexRecords profileIndex)
         _ -> none
     relationshipEndpoints sourceSide = collectMeasured endpoint facts
       where
@@ -1022,16 +1023,18 @@ graphClosureResults profileIndex state rule =
                             (measuredWork measuredRelationship
                                <> measuredWork measuredRecord)
                             []
-                      where measuredRecord =
-                              measuredMapLookup
-                                occurrence
-                                (indexRecords profileIndex)
+                      where
+                        measuredRecord =
+                          measuredMapLookup
+                            occurrence
+                            (indexRecords profileIndex)
                     Nothing -> Measured (measuredWork measuredRelationship) []
                 Nothing -> Measured (measuredWork measuredRelationship) []
-              where measuredRelationship =
-                      measuredMapLookup
-                        relationshipOccurrence
-                        (indexRelationships profileIndex)
+              where
+                measuredRelationship =
+                  measuredMapLookup
+                    relationshipOccurrence
+                    (indexRelationships profileIndex)
             _ -> none
         selectedEndpoint relationship =
           if sourceSide
@@ -1096,16 +1099,18 @@ graphClosureResults profileIndex state rule =
                             (measuredWork measuredRelationship
                                <> measuredWork measuredRecord)
                             []
-                      where measuredRecord =
-                              measuredMapLookup
-                                occurrence
-                                (indexRecords profileIndex)
+                      where
+                        measuredRecord =
+                          measuredMapLookup
+                            occurrence
+                            (indexRecords profileIndex)
                     Nothing -> Measured (measuredWork measuredRelationship) []
                 Nothing -> Measured (measuredWork measuredRelationship) []
-              where measuredRelationship =
-                      measuredMapLookup
-                        relationshipOccurrence
-                        (indexRelationships profileIndex)
+              where
+                measuredRelationship =
+                  measuredMapLookup
+                    relationshipOccurrence
+                    (indexRelationships profileIndex)
             _ -> none
         selectedEndpoint relationship =
           if sourceSide
@@ -1131,15 +1136,15 @@ graphClosureResults profileIndex state rule =
                 , ( GraphContextualization relationshipOccurrence source target
                   , evidence)
                 ]
-              where relationshipOccurrence =
-                      relationshipInfoOccurrence relationship
-                    evidence =
-                      closureEvidence
-                        GraphBranch
-                        ruleId
-                        target
-                        relationshipOccurrence
-                        [source, target]
+              where
+                relationshipOccurrence = relationshipInfoOccurrence relationship
+                evidence =
+                  closureEvidence
+                    GraphBranch
+                    ruleId
+                    target
+                    relationshipOccurrence
+                    [source, target]
             _ -> []
     contextOwners = collectMeasured contextOwner facts
       where
@@ -1157,8 +1162,9 @@ graphClosureResults profileIndex state rule =
                         | measuredValue measuredCarrier
                         ]
                 Nothing -> Measured (measuredWork measuredRecord) []
-              where measuredRecord =
-                      measuredMapLookup source (indexRecords profileIndex)
+              where
+                measuredRecord =
+                  measuredMapLookup source (indexRecords profileIndex)
             _ -> none
     carriersFromSegments participantSide = collectMeasured carrier facts
       where
@@ -1179,10 +1185,11 @@ graphClosureResults profileIndex state rule =
                             [relationshipOccurrence])
                       ]
                 _ -> Measured (measuredWork measuredRelationship) []
-              where measuredRelationship =
-                      measuredMapLookup
-                        relationshipOccurrence
-                        (indexRelationships profileIndex)
+              where
+                measuredRelationship =
+                  measuredMapLookup
+                    relationshipOccurrence
+                    (indexRelationships profileIndex)
             Nothing -> none
         selectedEndpoint relationship =
           if participantSide
@@ -1213,16 +1220,18 @@ graphClosureResults profileIndex state rule =
                             (measuredWork measuredRelationship
                                <> measuredWork measuredRecord)
                             []
-                      where measuredRecord =
-                              measuredMapLookup
-                                occurrence
-                                (indexRecords profileIndex)
+                      where
+                        measuredRecord =
+                          measuredMapLookup
+                            occurrence
+                            (indexRecords profileIndex)
                     Nothing -> Measured (measuredWork measuredRelationship) []
                 Nothing -> Measured (measuredWork measuredRelationship) []
-              where measuredRelationship =
-                      measuredMapLookup
-                        relationshipOccurrence
-                        (indexRelationships profileIndex)
+              where
+                measuredRelationship =
+                  measuredMapLookup
+                    relationshipOccurrence
+                    (indexRelationships profileIndex)
             Nothing -> none
         selectedEndpoint relationship =
           if participantSide
@@ -1261,10 +1270,11 @@ graphClosureResults profileIndex state rule =
                     | Just definition <- [propertyInfoDefinition property]
                     ]
                 Nothing -> Measured (measuredWork measuredProperty) []
-              where measuredProperty =
-                      measuredMapLookup
-                        propertyOccurrence
-                        (indexPropertyByOccurrence profileIndex)
+              where
+                measuredProperty =
+                  measuredMapLookup
+                    propertyOccurrence
+                    (indexPropertyByOccurrence profileIndex)
             _ -> none
 
 qualificationClosureResults ::
@@ -1375,26 +1385,23 @@ qualificationClosureResults profileIndex state rule =
                             (measuredWork measuredRelationship
                                <> measuredWork measuredRecord)
                             []
-                      where measuredRecord =
-                              measuredMapLookup
-                                endpoint
-                                (indexRecords profileIndex)
-                            measuredRoles =
-                              measuredPropertyValues
-                                profileIndex
-                                "o2i.role"
-                                relationshipOccurrence
-                            evidence =
-                              provenance
-                                relationshipOccurrence
-                                endpoint
-                                [proposal]
+                      where
+                        measuredRecord =
+                          measuredMapLookup endpoint (indexRecords profileIndex)
+                        measuredRoles =
+                          measuredPropertyValues
+                            profileIndex
+                            "o2i.role"
+                            relationshipOccurrence
+                        evidence =
+                          provenance relationshipOccurrence endpoint [proposal]
                     Nothing -> Measured (measuredWork measuredRelationship) []
                 Nothing -> Measured (measuredWork measuredRelationship) []
-              where measuredRelationship =
-                      measuredMapLookup
-                        relationshipOccurrence
-                        (indexRelationships profileIndex)
+              where
+                measuredRelationship =
+                  measuredMapLookup
+                    relationshipOccurrence
+                    (indexRelationships profileIndex)
             _ -> none
         factsFor proposal relationshipOccurrence endpoint evidence role =
           [ (QualificationMember endpoint, evidence)
@@ -1469,21 +1476,21 @@ qualificationClosureResults profileIndex state rule =
                             (measuredWork measuredRelationship
                                <> measuredWork measuredRecord)
                             []
-                      where measuredRecord =
-                              measuredMapLookup
-                                owner
-                                (indexRecords profileIndex)
-                            evidence =
-                              provenance
-                                contextualization
-                                owner
-                                [proposal, reference, endpoint]
+                      where
+                        measuredRecord =
+                          measuredMapLookup owner (indexRecords profileIndex)
+                        evidence =
+                          provenance
+                            contextualization
+                            owner
+                            [proposal, reference, endpoint]
                     Nothing -> Measured (measuredWork measuredRelationship) []
                 Nothing -> Measured (measuredWork measuredRelationship) []
-              where measuredRelationship =
-                      measuredMapLookup
-                        contextualization
-                        (indexRelationships profileIndex)
+              where
+                measuredRelationship =
+                  measuredMapLookup
+                    contextualization
+                    (indexRelationships profileIndex)
             _ -> none
     endpointContextualizations = collectMeasured contextualizations facts
       where
@@ -1557,10 +1564,11 @@ qualificationClosureResults profileIndex state rule =
                     | Just definition <- [propertyInfoDefinition property]
                     ]
                 Nothing -> Measured (measuredWork measuredProperty) []
-              where measuredProperty =
-                      measuredMapLookup
-                        propertyOccurrence
-                        (indexPropertyByOccurrence profileIndex)
+              where
+                measuredProperty =
+                  measuredMapLookup
+                    propertyOccurrence
+                    (indexPropertyByOccurrence profileIndex)
             _ -> none
 
 addGraphFact :: GraphProvenance -> GraphFact -> ProductState -> ProductState
@@ -1879,8 +1887,9 @@ graphContextualizationShapeBindingsMeasured profileIndex state =
                         ]
                     }
             Nothing -> Measured (measuredWork measuredRecord) []
-          where measuredRecord =
-                  measuredMapLookup source (indexRecords profileIndex)
+          where
+            measuredRecord =
+              measuredMapLookup source (indexRecords profileIndex)
 
 carrierRuleIds :: Text -> [Text]
 carrierRuleIds mappingId =
@@ -1912,8 +1921,9 @@ structuredSegmentBindingsMeasured profileIndex state =
                 , length (filter (== Just junction) endpoints) == 1
                 ]
             }
-          where measuredRelationships =
-                  measuredIncidentRelationships profileIndex junction
+          where
+            measuredRelationships =
+              measuredIncidentRelationships profileIndex junction
         _ -> Measured mempty []
 
 qualificationIncidenceBindingsMeasured ::

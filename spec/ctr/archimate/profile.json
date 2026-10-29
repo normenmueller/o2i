@@ -10,7 +10,7 @@
       "invalid-enum"
     ],
     "shapeDigestAlgorithm": "sha256-of-canonical-JSON-pointer-kind-and-exact-object-member-manifest-excluding-this-shapeSha256-member",
-    "shapeSha256": "17a008818fc1e3cd0c590f74d9440892ce76a7f255c32fa84cd5831b11a3fcd1"
+    "shapeSha256": "03a68c7d2b8540aa0ef150e97f277b284aeb406d15e060b1cf148a61e9054b15"
   },
   "applicabilityProvenance": {
     "archimateVersion": "3.2",
@@ -417,26 +417,6 @@
         },
         "matrixSymbol": "o",
         "matrixAdmittedSymbols": "nor",
-        "outcome": "applicable"
-      },
-      {
-        "subject": {
-          "kind": "core-relation-mapping-pair",
-          "relationMappingId": "relation-syntax:AssociationRelationship:true:contributes-to",
-          "coreRelationSemanticsId": "strategy-key-result-contributes-to-strategy-key-result"
-        },
-        "archimateRelationship": "AssociationRelationship",
-        "associationDirected": true,
-        "sourceElement": "Outcome",
-        "targetElement": "Outcome",
-        "matrixSourceLocator": {
-          "repository": "https://github.com/archimatetool/archi",
-          "revision": "b5bd0038922ab68b26eb78c97ff7efc2ff0bba82",
-          "path": "com.archimatetool.model/model/relationships.xml",
-          "locator": "line-2668:source=Outcome;target=Outcome"
-        },
-        "matrixSymbol": "o",
-        "matrixAdmittedSymbols": "cgnos",
         "outcome": "applicable"
       },
       {
@@ -1043,26 +1023,6 @@
         "subject": {
           "kind": "core-relation-mapping-pair",
           "relationMappingId": "relation-syntax:InfluenceRelationship:false:contributes-to",
-          "coreRelationSemanticsId": "strategy-key-result-contributes-to-strategy-key-result"
-        },
-        "archimateRelationship": "InfluenceRelationship",
-        "associationDirected": false,
-        "sourceElement": "Outcome",
-        "targetElement": "Outcome",
-        "matrixSourceLocator": {
-          "repository": "https://github.com/archimatetool/archi",
-          "revision": "b5bd0038922ab68b26eb78c97ff7efc2ff0bba82",
-          "path": "com.archimatetool.model/model/relationships.xml",
-          "locator": "line-2668:source=Outcome;target=Outcome"
-        },
-        "matrixSymbol": "n",
-        "matrixAdmittedSymbols": "cgnos",
-        "outcome": "applicable"
-      },
-      {
-        "subject": {
-          "kind": "core-relation-mapping-pair",
-          "relationMappingId": "relation-syntax:InfluenceRelationship:false:contributes-to",
           "coreRelationSemanticsId": "strategy-action-contributes-to-strategy-action"
         },
         "archimateRelationship": "InfluenceRelationship",
@@ -1482,6 +1442,26 @@
       {
         "subject": {
           "kind": "core-relation-mapping-pair",
+          "relationMappingId": "relation-syntax:InfluenceRelationship:false:translates-into",
+          "coreRelationSemanticsId": "strategy-key-result-translates-into-strategy-objective"
+        },
+        "archimateRelationship": "InfluenceRelationship",
+        "associationDirected": false,
+        "sourceElement": "Outcome",
+        "targetElement": "Goal",
+        "matrixSourceLocator": {
+          "repository": "https://github.com/archimatetool/archi",
+          "revision": "b5bd0038922ab68b26eb78c97ff7efc2ff0bba82",
+          "path": "com.archimatetool.model/model/relationships.xml",
+          "locator": "line-2660:source=Outcome;target=Goal"
+        },
+        "matrixSymbol": "n",
+        "matrixAdmittedSymbols": "nor",
+        "outcome": "applicable"
+      },
+      {
+        "subject": {
+          "kind": "core-relation-mapping-pair",
           "relationMappingId": "relation-syntax:RealizationRelationship:false:contributes-to",
           "coreRelationSemanticsId": "strategy-contributes-to-strategy"
         },
@@ -1518,26 +1498,6 @@
         "matrixSymbol": "r",
         "matrixAdmittedSymbols": "nor",
         "outcome": "applicable"
-      },
-      {
-        "subject": {
-          "kind": "core-relation-mapping-pair",
-          "relationMappingId": "relation-syntax:RealizationRelationship:false:contributes-to",
-          "coreRelationSemanticsId": "strategy-key-result-contributes-to-strategy-key-result"
-        },
-        "archimateRelationship": "RealizationRelationship",
-        "associationDirected": false,
-        "sourceElement": "Outcome",
-        "targetElement": "Outcome",
-        "matrixSourceLocator": {
-          "repository": "https://github.com/archimatetool/archi",
-          "revision": "b5bd0038922ab68b26eb78c97ff7efc2ff0bba82",
-          "path": "com.archimatetool.model/model/relationships.xml",
-          "locator": "line-2668:source=Outcome;target=Outcome"
-        },
-        "matrixSymbol": "r",
-        "matrixAdmittedSymbols": "cgnos",
-        "outcome": "inapplicable"
       },
       {
         "subject": {
@@ -2627,8 +2587,8 @@
       "structuredValueIds": "every-patternMappings.carrier.participantCompletenessValueProjection.mapping.*.valueId-occurs-exactly-once-in-the-bound-structuredPropositionFamily.participantCompleteness.values.*.id",
       "supplementalInputIsolation": "propertyMappings-contain-no-strategy-formulation-or-collective-fit-input-transport"
     },
-    "schema": "o2i.core-semantics/target-v47",
-    "sha256": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5",
+    "schema": "o2i.core-semantics/target-v48",
+    "sha256": "31f6118b51844aaf1f275e7ad8ea8061c0aff97cdb281b83e2e9c43023e70e7f",
     "subject": "exact-bytes",
     "version": "0.3.0"
   },
@@ -4970,7 +4930,7 @@
       "o2i.profile": "compiledProfileResolutionContract.modelMarker"
     }
   },
-  "schema": "o2i.archimate-profile/target-v46",
+  "schema": "o2i.archimate-profile/target-v47",
   "compiledProfileResolutionContract": {
     "owner": "Operation",
     "inventory": "closed-compiled-profile-descriptors",

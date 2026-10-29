@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Main
-  ( main
+module O2I.Core.Test.InputBinding
+  ( tests
   ) where
 
 import Data.List.NonEmpty (NonEmpty((:|)))
@@ -18,11 +18,8 @@ import O2I.Input.Internal.Types
 import O2I.Structure
 import qualified O2I.Structure.Index as StructureIndex
 import O2I.Structure.Internal (StructureAssessment(..))
-import Test.Tasty (TestTree, defaultMain, testGroup)
+import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit ((@?=), testCase)
-
-main :: IO ()
-main = defaultMain tests
 
 tests :: TestTree
 tests =

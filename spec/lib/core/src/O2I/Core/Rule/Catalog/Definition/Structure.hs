@@ -72,6 +72,11 @@ structureDefinitions =
            "Only relations admitted for the exact source and target types are valid."
            "Correct the relation token or one of its qualified endpoints."
        , define
+           "core.strategy-relation.owner-distinctness"
+           "Strategy direction, contribution and cascading translation connect different Strategy owners."
+           "A Strategy cannot direct, contribute to or cascade into itself, including Candidate declarations."
+           "Connect different Strategies or remove the self-relation."
+       , define
            "core.structured-proposition.commitment"
            "Every structured proposition has exactly one Candidate or Asserted commitment."
            "The complete proposition carries one explicit commitment state."

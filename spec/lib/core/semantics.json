@@ -10,9 +10,9 @@
       "invalid-enum"
     ],
     "shapeDigestAlgorithm": "sha256-of-canonical-JSON-pointer-kind-and-exact-object-member-manifest-excluding-this-shapeSha256-member",
-    "shapeSha256": "75ac10aed2730bdb154d166fcb8034f206d4822285b76a45d0ba966bf2265969"
+    "shapeSha256": "9fc00fe14c0f86efd332256d5aa80cd9dd4544290e3a8d99b9adbe642ab161cf"
   },
-  "schema": "o2i.core-semantics/target-v47",
+  "schema": "o2i.core-semantics/target-v48",
   "coreIdentity": {
     "identity": "o2i.core-semantics",
     "version": "0.3.0"
@@ -357,10 +357,10 @@
       "relationToken": "guides"
     },
     {
-      "id": "strategy-key-result-contributes-to-strategy-key-result",
+      "id": "strategy-key-result-translates-into-strategy-objective",
       "source": "primitive.strategy.key-result",
-      "target": "primitive.strategy.key-result",
-      "relationToken": "contributes-to"
+      "target": "primitive.strategy.objective",
+      "relationToken": "translates-into"
     },
     {
       "id": "strategy-action-contributes-to-strategy-action",
@@ -586,6 +586,11 @@
       "StrategyMemberKey": [
         "strategy",
         "member"
+      ],
+      "StrategyRelationKey": [
+        "relation",
+        "sourceStrategy",
+        "targetStrategy"
       ]
     },
     "evidenceKeyByRule": {
@@ -606,7 +611,10 @@
       "core.strategy-formulation.action-contributions": "StrategyMemberKey",
       "core.strategy-formulation.key-result-substantiation": "StrategyMemberKey",
       "core.strategy-formulation.intent-grounding": "StrategyMemberKey",
-      "core.strategy-formulation.intent-substantiation": "StrategyMemberKey"
+      "core.strategy-formulation.intent-substantiation": "StrategyMemberKey",
+      "core.strategy-relation.asserted-endpoint-dependency": "StrategyRelationKey",
+      "core.strategy-relation.direction-support": "StrategyRelationKey",
+      "core.strategy-relation.contribution-support": "StrategyRelationKey"
     },
     "defectIdentity": "rule-id-and-the-exact-evidence-key-schema-bound-by-evidenceKeyByRule"
   },
@@ -673,6 +681,61 @@
       "absentDisposition": "StrategyFormulationAssessmentUnavailable-not-model-defect"
     },
     "inputSchemaRef": "#supplementalInputSchema/$defs/StrategyFormulationInput"
+  },
+  "strategyRelationSemantics": {
+    "ownerDistinctness": {
+      "relations": [
+        "strategy-directs-strategy",
+        "strategy-contributes-to-strategy",
+        "strategy-key-result-translates-into-strategy-objective"
+      ],
+      "condition": "source-and-target-resolved-Strategy-owner-model-identities-are-different-even-across-repeated-occurrences",
+      "commitments": "candidate-and-asserted",
+      "prerequisites": "resolved-structural-ownership-only-no-supplemental-input",
+      "unresolvedOwnership": "preserve-primary-structural-diagnostic-without-guessed-distinctness"
+    },
+    "explicitClaims": "assess-only-persisted-macro-occurrences-never-synthesize-from-primitive-support",
+    "directionSupport": {
+      "macro": "strategy-directs-strategy",
+      "source": "upper-Strategy",
+      "target": "lower-Strategy",
+      "alternatives": [
+        "listed-upper-guiding-policy-Principle-guides-listed-lower-guiding-policy-Principle",
+        "listed-upper-Key-Result-translates-into-listed-lower-Intent-Objective"
+      ]
+    },
+    "contributionSupport": {
+      "macro": "strategy-contributes-to-strategy",
+      "source": "lower-Strategy",
+      "target": "upper-Strategy",
+      "alternatives": [
+        "listed-lower-Action-contributes-to-listed-upper-Action",
+        "listed-lower-Key-Result-substantiates-exact-listed-lower-Intent-Objective-and-listed-upper-Key-Result-translates-into-that-same-Objective"
+      ],
+      "reverseDirectionMacroRequired": false
+    },
+    "evidenceEligibility": "valid-Strategy-formulations-exact-listed-role-members-asserted-carriers-contextualizations-and-original-relations",
+    "objectiveJoin": "exact-lower-Objective-occurrence-and-owner-never-label-equality-or-transitivity",
+    "translationRoleBoundary": "unlisted-endpoints-remain-structurally-admitted-but-cannot-supply-support-no-standalone-role-defect",
+    "candidateDisposition": "diagnostic-only-never-asserted-support",
+    "assertedEndpointDependency": "asserted-macro-endpoint-Strategies-must-be-asserted",
+    "prerequisiteUnavailable": "missing-or-unresolved-formulation-is-unavailable-invalid-formulation-retains-primary-defects-neither-produces-empty-success-or-missing-support-defect",
+    "failure": "complete-valid-prerequisites-with-no-complete-alternative-produce-one-defect-at-the-explicit-macro",
+    "supportRepresentation": "closed-direction-and-contribution-alternatives-retain-original-occurrences-group-mediated-edges-by-exact-Objective-without-pair-products",
+    "sharedPreparation": "standalone-macros-and-collective-coverage-consume-one-indexed-Strategy-pair-support-preparation",
+    "workContract": "O((N+M+Q+W)*log(N+M+Q+1))-time-linear-prepared-memberships-and-requested-output-storage",
+    "workDimensions": {
+      "N": "carrier-relation-and-contextualization-occurrences",
+      "M": "listed-formulation-memberships",
+      "Q": "macro-requests-plus-collective-participant-incidences",
+      "W": "evidence-memberships-visited-when-materializing-selected-results"
+    },
+    "ruleIds": {
+      "ownerDistinctness": "core.strategy-relation.owner-distinctness",
+      "assertedEndpointDependency": "core.strategy-relation.asserted-endpoint-dependency",
+      "directionSupport": "core.strategy-relation.direction-support",
+      "contributionSupport": "core.strategy-relation.contribution-support"
+    }
   },
   "structuredPropositionSemantics": {
     "identity": "one-nonempty-model-wide-unique-claim-identity",
@@ -820,9 +883,13 @@
             "commitment": "asserted"
           },
           {
-            "semanticRelationId": "strategy-key-result-contributes-to-strategy-key-result",
-            "source": "one-key-result-in-the-key-participant-formulation",
-            "target": "one-key-result-in-the-target-formulation",
+            "semanticRelationIds": [
+              "strategy-key-result-substantiates-strategy-objective",
+              "strategy-key-result-translates-into-strategy-objective"
+            ],
+            "source": "one-key-result-in-the-key-participant-formulation-substantiates-one-listed-intent-Objective-of-that-participant",
+            "target": "one-key-result-in-the-target-formulation-translates-into-that-exact-same-participant-Objective",
+            "coverage": "the-original-translating-target-Key-Result-only",
             "commitment": "asserted"
           }
         ],
@@ -833,7 +900,7 @@
               "participant",
               "witnessOccurrences"
             ],
-            "witnessCardinality": "one-or-more-canonically-ordered-distinct-occurrences"
+            "witnessCardinality": "one-or-more-canonically-ordered-distinct-original-occurrences-preserving-both-mediated-edge-families"
           },
           "ParticipantPrimitiveSupportViolated": {
             "fields": [
@@ -1469,6 +1536,22 @@
       {
         "path": "/strategyFormulationSemantics/ruleIds/intentSubstantiation",
         "evidenceKind": "strategy-formulation-and-model-observation"
+      },
+      {
+        "path": "/strategyRelationSemantics/ruleIds/ownerDistinctness",
+        "evidenceKind": "strategy-relation-and-resolved-owner-observation"
+      },
+      {
+        "path": "/strategyRelationSemantics/ruleIds/assertedEndpointDependency",
+        "evidenceKind": "strategy-macro-and-endpoint-commitment-observation"
+      },
+      {
+        "path": "/strategyRelationSemantics/ruleIds/directionSupport",
+        "evidenceKind": "strategy-macro-and-prepared-primitive-support"
+      },
+      {
+        "path": "/strategyRelationSemantics/ruleIds/contributionSupport",
+        "evidenceKind": "strategy-macro-and-prepared-primitive-support"
       }
     ],
     "completeRuleInventory": [
@@ -1595,6 +1678,10 @@
       "core.strategy-formulation.strategy-binding",
       "core.strategy-formulation.trade-offs",
       "core.strategy-formulation.vision-orientation",
+      "core.strategy-relation.asserted-endpoint-dependency",
+      "core.strategy-relation.contribution-support",
+      "core.strategy-relation.direction-support",
+      "core.strategy-relation.owner-distinctness",
       "core.structured-proposition.commitment",
       "core.structured-proposition.family",
       "core.structured-proposition.identity",
@@ -1675,7 +1762,7 @@
         "derivedInventoryGroups"
       ],
       "ordering": "UTF8-bytewise-ruleId",
-      "cardinality": 195,
+      "cardinality": 199,
       "bijection": "exactly-one-complete-inventory-entry-per-emit-capable-rule-and-no-other-entry"
     }
   },
@@ -4444,7 +4531,10 @@
         "core.strategy-formulation.scope",
         "core.strategy-formulation.strategy-binding",
         "core.strategy-formulation.trade-offs",
-        "core.strategy-formulation.vision-orientation"
+        "core.strategy-formulation.vision-orientation",
+        "core.strategy-relation.asserted-endpoint-dependency",
+        "core.strategy-relation.contribution-support",
+        "core.strategy-relation.direction-support"
       ],
       "structure": [
         "core.collective-strategy-realization.participant-cardinality",
@@ -4458,6 +4548,7 @@
         "core.contextualization.target-owner-cardinality",
         "core.qualified-endpoint.catalog-membership",
         "core.semantic-relation.compatibility",
+        "core.strategy-relation.owner-distinctness",
         "core.structured-proposition.commitment",
         "core.structured-proposition.family",
         "core.structured-proposition.identity",

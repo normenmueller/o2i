@@ -516,7 +516,7 @@ class ProfileCompilerTest(unittest.TestCase):
         ]
         self.assertEqual(12, len(activation["alternatives"]))
         self.assertEqual(
-            "be8204d09d6dae8eda1fe6969d1bea62e3b35419108474ea8af177bb9030a3da",
+            "bc04e9e36b27a090e7e257f30a051430da82665b6effc01c06f79fa9fd120633",
             activation["authorityBinding"]["profileContractDigest"],
         )
         shared = by_identity[
@@ -729,7 +729,7 @@ class ProfileCompilerTest(unittest.TestCase):
             for row in rejected_decisions
         }
         self.assertEqual(expected, plans)
-        self.assertEqual(6, len(rejected_decisions))
+        self.assertEqual(5, len(rejected_decisions))
         for row in rejected_decisions:
             self.assertNotIn(
                 (
@@ -744,6 +744,49 @@ class ProfileCompilerTest(unittest.TestCase):
             {mapping for mapping, _, _ in rejected}
             <= {mapping for mapping, _, _ in plans}
         )
+
+    def test_cascading_and_need_translation_have_distinct_semantic_bindings(self) -> None:
+        decisions = [
+            row
+            for row in self.companion["applicabilityProvenance"]["decisions"]
+            if row["subject"]["kind"] == "core-relation-mapping-pair"
+        ]
+        old_family = "strategy-key-result-contributes-to-strategy-key-result"
+        self.assertFalse(
+            any(
+                row["subject"]["coreRelationSemanticsId"] == old_family
+                for row in decisions
+            )
+        )
+        self.assertNotIn(
+            old_family, {row["id"] for row in self.core["relationSemantics"]}
+        )
+        translation_mapping = (
+            "relation-syntax:InfluenceRelationship:false:translates-into"
+        )
+        translations = [
+            row
+            for row in decisions
+            if row["subject"]["relationMappingId"] == translation_mapping
+        ]
+        self.assertEqual(
+            {
+                "strategy-key-result-translates-into-need-objective",
+                "strategy-key-result-translates-into-strategy-objective",
+            },
+            {row["subject"]["coreRelationSemanticsId"] for row in translations},
+        )
+        self.assertEqual(2, len(translations))
+        for row in translations:
+            self.assertEqual("Outcome", row["sourceElement"])
+            self.assertEqual("Goal", row["targetElement"])
+            self.assertEqual("applicable", row["outcome"])
+            self.assertEqual(
+                ("InfluenceRelationship", False, "Outcome", "Goal"),
+                compiler.expected_relationship_applicability(
+                    self.companion, self.core, row["subject"]
+                ),
+            )
 
     def test_descriptor_shape_and_value_kinds_are_closed(self) -> None:
         missing = copy.deepcopy(self.companion)

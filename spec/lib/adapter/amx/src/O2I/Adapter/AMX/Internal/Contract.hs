@@ -134,16 +134,15 @@ decode rules rootRule versionRule bytes =
       case NonEmpty.nonEmpty diagnostics of
         Just failures -> decodeFailure failures
         Nothing -> decodedDraft (projectNativeDocument (NativeDocument root))
-      where diagnostics =
-              [ decodeDiagnostic
-                rootRule
-                (pathOccurrence (nativeElementPath root))
-              | nativeElementName root /= expectedRootName
-              ]
-                <> [ decodeDiagnostic versionRule (versionOccurrence root)
-                   | map nativeAttributeValue (lookupAttribute versionName root)
-                       /= ["5.0.0"]
-                   ]
+      where
+        diagnostics =
+          [ decodeDiagnostic rootRule (pathOccurrence (nativeElementPath root))
+          | nativeElementName root /= expectedRootName
+          ]
+            <> [ decodeDiagnostic versionRule (versionOccurrence root)
+               | map nativeAttributeValue (lookupAttribute versionName root)
+                   /= ["5.0.0"]
+               ]
 
 versionOccurrence :: NativeElement -> NonEmpty AdapterOccurrence
 versionOccurrence root =

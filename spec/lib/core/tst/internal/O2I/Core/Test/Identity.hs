@@ -2,7 +2,9 @@
 {-# LANGUAGE RankNTypes #-}
 
 -- | Focused laws for the profile-neutral identity and selected-View boundary.
-module Main where
+module O2I.Core.Test.Identity
+  ( tests
+  ) where
 
 import Control.Monad (forM_)
 import Data.List (isInfixOf)
@@ -25,9 +27,6 @@ import O2I.Core.Identity.Internal
   )
 import Test.Tasty
 import Test.Tasty.HUnit
-
-main :: IO ()
-main = defaultMain tests
 
 tests :: TestTree
 tests =

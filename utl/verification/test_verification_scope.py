@@ -4,9 +4,13 @@
 from __future__ import annotations
 
 from pathlib import Path
+import hashlib
+import json
+import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -16,6 +20,10 @@ import verification_scope as scope
 ROOT = Path(__file__).resolve().parents[2]
 VERIFY = ROOT / "utl" / "verify.sh"
 WORKFLOW = ROOT / ".github/workflows/verify.yml"
+LOCAL = ROOT / "utl/verification/local.sh"
+PAPER_STAGE = ROOT / "utl/paper/verify-stage.sh"
+HASKELL_STAGE = ROOT / "utl/haskell/verify-stage.sh"
+PHASE_CLOCK = ROOT / "utl/haskell/phase_clock.py"
 
 
 def git(root: Path, *arguments: str) -> str:
@@ -77,7 +85,7 @@ class VerificationPathMatrixTests(unittest.TestCase):
             },
             ".github/workflows/verify.yml": set(scope.STAGES),
             "utl/verification/local.sh": set(scope.STAGES),
-            "utl/verification/README.md": set(scope.STAGES),
+            "utl/verification/README.md": {"licensing", "governance"},
             "meta/o2i.archimate": {"licensing", "model", "haskell"},
             "spec/lib/adapter/amx/src/O2I/Adapter/AMX.hs": {
                 "licensing",
@@ -99,6 +107,9 @@ class VerificationPathMatrixTests(unittest.TestCase):
                 "governance",
             },
             "utl/haskell/check_cabal_plan.py": {"licensing", "haskell"},
+            "utl/haskell/verify-stage.sh": {"licensing", "haskell"},
+            "utl/haskell/test_verify_stage.py": {"licensing", "haskell"},
+            "utl/haskell/phase_clock.py": set(scope.STAGES),
             "README.md": {"licensing", "paper"},
             "doc/README.md": {"licensing", "paper"},
             "doc/misc/wtf.md": {"licensing", "paper"},
@@ -109,6 +120,8 @@ class VerificationPathMatrixTests(unittest.TestCase):
             "doc/images/O2I Modellzustand.png": {"licensing", "paper"},
             "doc/resources/md2pdf.json": {"licensing", "paper"},
             "utl/paper/render-paper.sh": {"licensing", "paper"},
+            "utl/paper/verify-stage.sh": {"licensing", "paper"},
+            "utl/paper/check-inline-code.py": {"licensing", "paper"},
             "doc/model/illustration.archimate": {
                 "licensing", "model", "haskell", "paper",
             },
@@ -145,32 +158,6 @@ class VerificationPathMatrixTests(unittest.TestCase):
         self.assertEqual(
             {"licensing", "model", "haskell"},
             set(selection.stages),
-        )
-
-    def test_foundation_routes_the_real_model_to_the_typed_view_checker(
-        self,
-    ) -> None:
-        contract = VERIFY.read_text(encoding="utf-8")
-
-        self.assertIn(
-            "o2i-amx:o2i-amx-repository-view-check",
-            contract,
-        )
-        self.assertIn(
-            '"$candidate_view_checker" "$root/meta/o2i.archimate"',
-            contract,
-        )
-        self.assertNotIn("check-executable-views.py", contract)
-        self.assertFalse(
-            (ROOT / "utl" / "model" / "check-executable-views.py").exists()
-        )
-        self.assertFalse(
-            (
-                ROOT
-                / "utl"
-                / "model"
-                / "test_check_executable_views.py"
-            ).exists()
         )
 
     def test_repository_view_tools_route_to_model_and_licensing(self) -> None:
@@ -229,6 +216,69 @@ class VerificationPathMatrixTests(unittest.TestCase):
                 {".ai4x/STATE.md", "README.md"},
                 repository_paths(root),
             )
+
+
+class RecoveryDocumentationTests(unittest.TestCase):
+    """Check recovery instructions at their documentation-owned boundary."""
+
+    def test_documented_tool_pins_match_the_workflow_owners(self) -> None:
+        readme = (ROOT / "utl/verification/README.md").read_text(encoding="utf-8")
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        for variable, pattern in (
+            ("REUSE_VERSION", r"reuse\[charset-normalizer\]==([0-9.]+)"),
+            ("HINDENT_VERSION", r"hindent ([0-9.]+)"),
+            ("GHC_VERSION", r"ghcup (?:install|set) ghc ([0-9.]+)"),
+            ("CABAL_VERSION", r"ghcup (?:install|set) cabal ([0-9.]+)"),
+        ):
+            with self.subTest(tool=variable):
+                owned = set(re.findall(rf"(?m)^\s+{variable}: ([0-9.]+)$", workflow))
+                self.assertEqual(1, len(owned))
+                self.assertEqual(owned, set(re.findall(pattern, readme)))
+                if variable == "HINDENT_VERSION":
+                    self.assertIn(
+                        f'"Hindent" "hindent {next(iter(owned))}"',
+                        HASKELL_STAGE.read_text(encoding="utf-8"),
+                    )
+        checksums = set(re.findall(r"(?m)^\s+HINDENT_SHA256: ([a-f0-9]{64})$", workflow))
+        self.assertEqual(1, len(checksums))
+        self.assertEqual(
+            checksums,
+            set(re.findall(r"hindent_sha256='([a-f0-9]{64})'", readme)),
+        )
+        self.assertIn(
+            "hindent_bottle_sha256='5b3d7317ba8d50474ca4075b3a1964fcf3f97b24faf92b1543a63b88e19342ff'",
+            readme,
+        )
+        self.assertIn("5971856bb4f75779f111715efdff49a70c5967db/Formula/h/hindent.rb", readme)
+        self.assertNotIn("brew install --force-bottle hindent", readme)
+        self.assertNotIn("cabal install hindent", readme)
+        self.assertIn(
+            "check-pdf-freshness.py contract --root . --field acquisition-revision",
+            readme,
+        )
+
+    def test_shell_examples_parse_and_relative_owner_links_resolve(self) -> None:
+        path = ROOT / "utl/verification/README.md"
+        readme = path.read_text(encoding="utf-8")
+        examples = re.findall(r"```sh\n(.*?)```", readme, flags=re.DOTALL)
+        self.assertTrue(examples)
+        for example in examples:
+            with self.subTest(example=example.splitlines()[0]):
+                parsed = subprocess.run(["sh", "-n"], input=example, capture_output=True, text=True)
+                self.assertEqual(0, parsed.returncode, parsed.stderr)
+        for link in re.findall(r"\]\(([^)]+)\)", readme):
+            if "://" not in link:
+                with self.subTest(link=link):
+                    self.assertTrue((path.parent / link.split("#", 1)[0]).is_file())
+
+    def test_shared_executable_and_unknown_paths_keep_full_scope(self) -> None:
+        for path in (*scope.FULL_PATHS, ".github/workflows/verify.yml", "future/unknown"):
+            with self.subTest(path=path):
+                self.assertEqual(scope.ALL_STAGES, scope.classify_paths((path,)).stages)
+                self.assertEqual(
+                    scope.ALL_STAGES,
+                    scope.classify_paths(("utl/verification/README.md", path)).stages,
+                )
 
 
 class CheckpointVerificationTests(unittest.TestCase):
@@ -427,6 +477,273 @@ class CheckpointVerificationTests(unittest.TestCase):
             self.assertEqual("licensing\n", (root / "calls").read_text())
 
 
+class LocalStarterTests(unittest.TestCase):
+    """Exercise the real starter and canonical dispatch with cheap tool fixtures."""
+
+    def executable(self, path: Path, source: str) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(source, encoding="utf-8")
+        path.chmod(0o755)
+
+    def repository(self, root: Path) -> Path:
+        git(root, "init", "--quiet")
+        git(root, "config", "user.email", "o2i@example.invalid")
+        git(root, "config", "user.name", "O2I Test")
+        for original in (LOCAL, VERIFY, Path(scope.__file__), PAPER_STAGE, HASKELL_STAGE, PHASE_CLOCK):
+            target = root / original.relative_to(ROOT)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(original, target)
+        (root / ".gitignore").write_text("utl/verification/.local/\n", encoding="ascii")
+        (root / ".ai4x").mkdir()
+        (root / ".ai4x/STATE.md").write_text("original\n", encoding="ascii")
+        for directory in ("utl/governance", "utl/licensing", "utl/model"):
+            (root / directory).mkdir(parents=True, exist_ok=True)
+        for path in (
+            "utl/governance/test_github_governance.py",
+            "utl/verification/test_verification_scope.py",
+            "utl/licensing/test_license_assignments.py", "utl/model/test_fixture.py",
+        ):
+            (root / path).write_text(
+                "import unittest\nclass Fixture(unittest.TestCase):\n    def test_fixture(self): pass\n",
+                encoding="ascii",
+            )
+        probe = """import json, os, pathlib, subprocess, tempfile
+with tempfile.TemporaryDirectory() as directory:
+    enclosing = subprocess.run(['git', '-C', directory, 'rev-parse', '--show-toplevel'], capture_output=True)
+    subprocess.run(['git', '-C', directory, 'init', '--quiet'], check=True)
+    own = subprocess.run(['git', '-C', directory, 'rev-parse', '--show-toplevel'], capture_output=True, text=True, check=True)
+pathlib.Path('probe.json').write_text(json.dumps({'tmp': os.environ['TMPDIR'], 'ceiling': os.environ['GIT_CEILING_DIRECTORIES'], 'enclosing': enclosing.returncode, 'own': own.stdout.strip()}))
+"""
+        (root / "utl/governance/ai4x_contract.py").write_text(probe, encoding="utf-8")
+        for path in (
+            "utl/licensing/check-license-texts.sh", "utl/haskell/check-package-licenses.sh",
+        ):
+            self.executable(root / path, "#!/bin/sh\nexit 0\n")
+        for path in (
+            "utl/licensing/check_license_assignments.py",
+            "utl/model/audit-archimate-model.py", "utl/model/extract-archimate-view.py",
+        ):
+            (root / path).write_text("", encoding="ascii")
+        git(root, "add", ".")
+        git(root, "commit", "--quiet", "-m", "fixture")
+        local = root / "utl/verification/.local"
+        (local / "python/bin").mkdir(parents=True)
+        (local / "python/bin/python3").symlink_to(sys.executable)
+        return local
+
+    def reuse(self, local: Path) -> None:
+        self.executable(
+            local / "python/bin/reuse",
+            f"#!{sys.executable}\nimport sys\nif '--version' in sys.argv: print('reuse, version 6.2.0')\n",
+        )
+
+    def run_starter(self, root: Path, *arguments: str) -> subprocess.CompletedProcess[str]:
+        environment = os.environ.copy()
+        environment["PATH"] = str(root / "global-bin") + os.pathsep + environment["PATH"]
+        return subprocess.run(
+            ["sh", str(root / "utl/verification/local.sh"), *arguments],
+            cwd=root, env=environment, capture_output=True, text=True,
+        )
+
+    def test_governance_uses_only_python_and_preserves_git_temp_isolation(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            local = self.repository(root)
+            result = self.run_starter(root, "governance")
+            self.assertEqual(0, result.returncode, result.stderr)
+            probe = json.loads((root / "probe.json").read_text())
+            temporary_root = str((local / "tmp").resolve())
+            self.assertEqual(temporary_root, probe["tmp"])
+            self.assertIn(temporary_root, probe["ceiling"].split(os.pathsep))
+            self.assertNotEqual(0, probe["enclosing"])
+            self.assertTrue(probe["own"].startswith(temporary_root + os.sep))
+
+    def test_default_checkpoint_needs_only_the_selected_isolated_tools(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            local = self.repository(root)
+            self.reuse(local)
+            (root / ".ai4x/STATE.md").write_text("changed\n", encoding="ascii")
+            result = self.run_starter(root)
+            self.assertEqual(0, result.returncode, result.stderr)
+            self.assertIn("Running checkpoint stage: licensing.", result.stdout)
+            self.assertIn("Running checkpoint stage: governance.", result.stdout)
+            self.assertNotIn("Running checkpoint stage: haskell.", result.stdout)
+            self.assertNotIn("Running checkpoint stage: paper.", result.stdout)
+
+    def test_selected_missing_isolated_tools_never_fall_back_to_global_tools(self) -> None:
+        for stage, tool in (("licensing", "reuse"), ("haskell", "hindent"), ("paper", "md2pdf")):
+            with self.subTest(stage=stage), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.repository(root)
+                for command in (tool, "cabal", "ghc", "ghc-pkg"):
+                    self.executable(root / "global-bin" / command, "#!/bin/sh\ntouch global-tool-ran\nexit 99\n")
+                result = self.run_starter(root, stage)
+                self.assertEqual(1, result.returncode, result.stderr)
+                self.assertIn("Required isolated tool missing or shadowed:", result.stderr)
+                self.assertIn(tool, result.stderr)
+                self.assertFalse((root / "global-tool-ran").exists())
+
+    def test_unknown_checkpoint_keeps_the_full_prerequisite_closure(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            local = self.repository(root)
+            self.reuse(local)
+            (root / "unknown.txt").write_text("unknown\n", encoding="ascii")
+            for command in ("cabal", "ghc", "ghc-pkg"):
+                self.executable(root / "global-bin" / command, "#!/bin/sh\nexit 99\n")
+            result = self.run_starter(root)
+            self.assertEqual(1, result.returncode, result.stderr)
+            self.assertIn("full (unknown-path)", result.stderr)
+            self.assertIn("Running checkpoint stage: haskell.", result.stdout)
+            self.assertIn("hindent", result.stderr)
+
+    def test_required_stage_modules_fail_closed_and_remain_lazy(self) -> None:
+        for stage, original in (("haskell", HASKELL_STAGE), ("paper", PAPER_STAGE)):
+            for invalid in ("missing", "directory"):
+                with self.subTest(stage=stage, invalid=invalid), tempfile.TemporaryDirectory() as directory:
+                    root = Path(directory)
+                    local = self.repository(root)
+                    domain = root / original.relative_to(ROOT)
+                    domain.unlink()
+                    if invalid == "directory":
+                        domain.mkdir()
+                    governance = self.run_starter(root, "governance")
+                    self.assertEqual(0, governance.returncode, governance.stderr)
+                    failed = self.run_starter(root, stage)
+                    self.assertEqual(1, failed.returncode, failed.stderr)
+                    self.assertIn("verification module is missing or unreadable", failed.stderr)
+                    self.assertNotIn("Verification stage passed", failed.stdout)
+                    self.assertEqual([], list((local / "tmp").iterdir()))
+
+    def test_haskell_interface_preserves_strict_failure_and_workspace_cleanup(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            local = self.repository(root)
+            (root / HASKELL_STAGE.relative_to(ROOT)).write_text(
+                'verify_haskell_stage() {\n'
+                '  printf "%s\\n%s\\n" "$1" "$work" > haskell-interface\n'
+                '  begin_phase "Fixture strict failure"\n'
+                '  sh -c "exit 23"\n'
+                '  touch haskell-continued\n'
+                '}\n', encoding="ascii",
+            )
+            result = self.run_starter(root, "haskell")
+            self.assertEqual(23, result.returncode, result.stderr)
+            actual_scope, workspace = (root / "haskell-interface").read_text().splitlines()
+            self.assertEqual("complete", actual_scope)
+            self.assertTrue(workspace.startswith(str((local / "tmp").resolve()) + os.sep))
+            self.assertFalse(Path(workspace).exists())
+            self.assertFalse((root / "haskell-continued").exists())
+            self.assertNotIn("Verification stage passed", result.stdout)
+            self.assertIn("exit_status=23.", result.stdout)
+
+    def test_paper_implementation_loads_only_for_its_stage(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            self.repository(root)
+            domain = root / PAPER_STAGE.relative_to(ROOT)
+            domain.write_text("exit 17\n", encoding="ascii")
+            governance = self.run_starter(root, "governance")
+            self.assertEqual(0, governance.returncode, governance.stderr)
+            paper = self.run_starter(root, "paper")
+            self.assertEqual(17, paper.returncode, paper.stderr)
+            self.assertNotIn("Verification stage passed", paper.stdout)
+
+    def test_paper_interface_preserves_strict_failure_and_workspace_cleanup(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            local = self.repository(root)
+            self.executable(local / "bin/md2pdf", "#!/bin/sh\nexit 0\n")
+            domain = root / PAPER_STAGE.relative_to(ROOT)
+            domain.write_text(
+                'verify_paper_stage() {\n'
+                '  require md2pdf\n'
+                '  printf "%s\\n%s\\n" "$1" "$2" > paper-interface\n'
+                '  false\n'
+                '  touch paper-continued\n'
+                '}\n',
+                encoding="ascii",
+            )
+            result = self.run_starter(root, "paper")
+            self.assertEqual(1, result.returncode, result.stderr)
+            actual_root, workspace = (root / "paper-interface").read_text().splitlines()
+            self.assertEqual(str(root.resolve()), actual_root)
+            self.assertTrue(workspace.startswith(str((local / "tmp").resolve()) + os.sep))
+            self.assertFalse(Path(workspace).exists())
+            self.assertFalse((root / "paper-continued").exists())
+            self.assertNotIn("Verification stage passed", result.stdout)
+
+    def timed_stage(self, root: Path, status: int) -> None:
+        (root / HASKELL_STAGE.relative_to(ROOT)).write_text(
+                'verify_haskell_stage() {\n'
+                '  begin_phase "Fixture first"\n'
+                '  begin_phase "Fixture second"\n'
+                f"  sh -c 'exit {status}'\n"
+                '  touch phase-continued\n'
+                '  finish_phase 0\n'
+                '}\n', encoding="ascii",
+        )
+
+    def test_phase_timings_report_elapsed_and_preserve_success_or_failure(self) -> None:
+        for status in (0, 7):
+            with self.subTest(status=status), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.repository(root)
+                self.timed_stage(root, status)
+                (root / PHASE_CLOCK.relative_to(ROOT)).write_text(
+                    'from pathlib import Path\nimport sys\n'
+                    'if sys.argv[1] == "now":\n'
+                    '    path = Path(__file__).with_suffix(".samples")\n'
+                    '    value = int(path.read_text()) if path.exists() else 10000000000\n'
+                    '    path.write_text(str(value + 7000000000))\n'
+                    '    print(value)\n'
+                    'else:\n'
+                    '    print(f"{(int(sys.argv[3]) - int(sys.argv[2])) / 1e9:.9f}")\n',
+                    encoding="ascii",
+                )
+                result = self.run_starter(root, "haskell")
+                self.assertEqual(status, result.returncode, result.stderr)
+                timings = [line for line in result.stdout.splitlines() if "Timing:" in line]
+                self.assertEqual([
+                    "[o2i|info] Timing: Fixture first; elapsed_seconds=7.000000000; clock=monotonic_ns; exit_status=0.",
+                    f"[o2i|info] Timing: Fixture second; elapsed_seconds=7.000000000; clock=monotonic_ns; exit_status={status}.",
+                ], timings)
+                self.assertEqual(status == 0, (root / "phase-continued").exists())
+                self.assertEqual(status == 0, "Verification stage passed" in result.stdout)
+                self.assertEqual([], list((root / "utl/verification/.local/tmp").iterdir()))
+
+    def test_unavailable_clock_never_changes_a_check_result(self) -> None:
+        for status in (0, 7):
+            with self.subTest(status=status), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                self.repository(root)
+                self.timed_stage(root, status)
+                (root / PHASE_CLOCK.relative_to(ROOT)).write_text("raise SystemExit(9)\n", encoding="ascii")
+                result = self.run_starter(root, "haskell")
+                self.assertEqual(status, result.returncode, result.stderr)
+                self.assertIn(
+                    f"Timing: Fixture second; elapsed_seconds=UNKNOWN; clock=monotonic_ns; exit_status={status}.",
+                    result.stdout,
+                )
+                self.assertEqual(status == 0, (root / "phase-continued").exists())
+
+    def test_starter_refuses_missing_python_and_shadowed_isolated_python(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            local = self.repository(root)
+            (local / "python/bin/python3").unlink()
+            missing = self.run_starter(root, "governance")
+            self.assertEqual(1, missing.returncode, missing.stderr)
+            self.assertIn("Local Python environment is missing", missing.stderr)
+            (local / "python/bin/python3").symlink_to(sys.executable)
+            (local / "bin").mkdir()
+            (local / "bin/python3").symlink_to(sys.executable)
+            shadowed = self.run_starter(root, "governance")
+            self.assertEqual(1, shadowed.returncode, shadowed.stderr)
+            self.assertIn("Required isolated tool missing or shadowed", shadowed.stderr)
+
+
 class VerificationDiffTests(unittest.TestCase):
     """Keep event and Git-range fallbacks safe."""
 
@@ -534,6 +851,156 @@ reason=path-matrix""",
 class VerificationWorkflowTests(unittest.TestCase):
     """Keep all required checks visible while heavy work is conditional."""
 
+    def test_hindent_toolchain_guard_rejects_version_failure_and_semantic_regression(self) -> None:
+        verifier = VERIFY.read_text(encoding="utf-8")
+        version_function = "require_version() {" + verifier.split(
+            "require_version() {", maxsplit=1,
+        )[1].split("\n}\n", maxsplit=1)[0] + "\n}\n"
+        toolchain = HASKELL_STAGE.read_text(encoding="utf-8").split(
+            '  begin_phase "Haskell toolchain"\n', maxsplit=1,
+        )[1].split('  cabal_config=', maxsplit=1)[0]
+        script = version_function + 'info() { :; }\nwork="$O2I_TEST_WORK"\n' + toolchain + "echo GUARD_PASSED\n"
+        for version, status, loses_strictness, expected in (
+            ("6.3.0", 0, False, 0), ("6.2.1", 0, False, 1),
+            ("", 0, False, 1), ("6.3.0", 23, False, 23), ("6.3.0", 0, True, 1),
+        ):
+            with self.subTest(version=version, status=status, loses_strictness=loses_strictness), \
+                    tempfile.TemporaryDirectory() as directory:
+                tools = Path(directory)
+                for command, output in (("ghc", "9.10.3"), ("cabal", "3.16.1.0"),
+                                        ("ghc-pkg", "4.20.2.0")):
+                    path = tools / command
+                    path.write_text(f"#!/bin/sh\nprintf '%s\\n' '{output}'\n")
+                    path.chmod(0o755)
+                path = tools / "hindent"
+                path.write_text(
+                    f"#!{sys.executable}\nimport pathlib, sys\n"
+                    "if sys.argv[1:] == ['--version']:\n"
+                    f"    print('hindent {version}')\n    sys.exit({status})\n"
+                    "source = pathlib.Path(sys.argv[-1]).read_text()\n"
+                    "assert 'Probe :: !Int -> Probe' in source\n"
+                    f"formatted = source.replace('!Int', 'Int') if {loses_strictness!r} else source\n"
+                    "sys.exit(formatted != source)\n",
+                )
+                path.chmod(0o755)
+                result = subprocess.run(
+                    ["sh", "-eu", "-c", script], cwd=ROOT,
+                    env={**os.environ, "PATH": str(tools) + os.pathsep + os.environ["PATH"],
+                         "O2I_TEST_WORK": str(tools)},
+                    capture_output=True, text=True,
+                )
+                self.assertEqual(expected, result.returncode, result.stderr)
+                self.assertEqual(expected == 0, "GUARD_PASSED" in result.stdout)
+                if expected == 1 and not loses_strictness:
+                    self.assertIn("Hindent hindent 6.3.0 is required", result.stderr)
+
+    def test_hindent_download_and_cache_are_checked_before_execution(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        step = workflow.split(
+            "      - name: Install and verify Hindent\n", maxsplit=1,
+        )[1].split("\n      - name:", maxsplit=1)[0]
+        script = "\n".join(
+            line.removeprefix("          ")
+            for line in step.split("        run: |\n", maxsplit=1)[1].splitlines()
+        )
+        # Redirect only the installation root; never touch the actual user's tools.
+        script = script.replace("$HOME", "$O2I_TEST_TOOL_ROOT")
+        for cached, corrupt, version, format_status, architecture in (
+            (False, False, "6.3.0", 0, "x86_64"),
+            (True, False, "6.3.0", 0, "x86_64"),
+            (False, True, "6.3.0", 0, "x86_64"),
+            (True, True, "6.3.0", 0, "x86_64"),
+            (False, False, "6.2.1", 0, "x86_64"),
+            (False, False, "6.3.0", 19, "x86_64"),
+            (False, False, "6.3.0", 0, "aarch64"),
+        ):
+            with self.subTest(cached=cached, corrupt=corrupt, version=version,
+                              format_status=format_status, architecture=architecture), \
+                    tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                tools = root / "tools"
+                tools.mkdir()
+                calls = root / "calls"
+                artifact = root / "artifact"
+                content = (f"#!{sys.executable}\n" +
+                           "import json, os, sys\n"
+                           "with open(os.environ['PROBE_CALLS'], 'a') as log:\n"
+                           "    log.write(json.dumps(sys.argv[1:]) + '\\n')\n"
+                           "if sys.argv[1:] == ['--version']:\n"
+                           "    print('hindent ' + os.environ['PROBE_VERSION'])\n"
+                           "else:\n"
+                           "    sys.exit(int(os.environ['PROBE_FORMAT_STATUS']))\n").encode()
+                artifact.write_bytes(content + (b"# corrupt\n" if corrupt else b""))
+                installed = root / ".local/bin/hindent"
+                if cached:
+                    installed.parent.mkdir(parents=True)
+                    shutil.copyfile(artifact, installed)
+                    installed.chmod(0o755)
+                commands = {
+                    "uname": "import os, sys\nprint('Linux' if sys.argv[1] == '-s' else os.environ['PROBE_ARCH'])\n",
+                    "curl": "import os, pathlib, shutil, sys\n"
+                            "pathlib.Path(os.environ['PROBE_CURL']).touch()\n"
+                            "shutil.copyfile(os.environ['PROBE_ARTIFACT'], sys.argv[sys.argv.index('--output') + 1])\n",
+                    "sha256sum": "import hashlib, pathlib, sys\n"
+                                 "digest, name = sys.stdin.read().strip().split(None, 1)\n"
+                                 "sys.exit(hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest() != digest)\n",
+                }
+                for name, body in commands.items():
+                    command = tools / name
+                    command.write_text(f"#!{sys.executable}\n" + body)
+                    command.chmod(0o755)
+                (root / "spec").mkdir()
+                (root / "spec/Probe.hs").write_text("module Probe where\n")
+                environment = {
+                    **os.environ, "PATH": str(tools) + os.pathsep + os.environ["PATH"],
+                    "O2I_TEST_TOOL_ROOT": str(root), "GITHUB_PATH": str(root / "github-path"),
+                    "HINDENT_VERSION": "6.3.0", "HINDENT_SHA256": hashlib.sha256(content).hexdigest(),
+                    "PROBE_ARTIFACT": str(artifact), "PROBE_CURL": str(root / "curl-ran"),
+                    "PROBE_CALLS": str(calls), "PROBE_VERSION": version,
+                    "PROBE_FORMAT_STATUS": str(format_status), "PROBE_ARCH": architecture,
+                }
+                result = subprocess.run(
+                    ["sh", "-eu", "-c", script], cwd=root, env=environment,
+                    capture_output=True, text=True,
+                )
+                success = not corrupt and version == "6.3.0" and format_status == 0 and architecture == "x86_64"
+                self.assertEqual(success, result.returncode == 0, result.stderr)
+                executed = [json.loads(line) for line in calls.read_text().splitlines()] if calls.exists() else []
+                if corrupt or architecture != "x86_64":
+                    self.assertEqual([], executed)
+                elif version != "6.3.0":
+                    self.assertEqual([["--version"]], executed)
+                else:
+                    self.assertEqual([
+                        ["--version"], ["--line-length", "80", "--validate", "spec/Probe.hs"],
+                    ], executed)
+                self.assertEqual(not cached and architecture == "x86_64", (root / "curl-ran").exists())
+                if corrupt and not cached:
+                    self.assertFalse(installed.exists())
+
+    def test_cache_diagnostic_reports_raw_outcomes_without_a_verdict(self) -> None:
+        workflow = WORKFLOW.read_text(encoding="utf-8")
+        report = workflow.split(
+            "      - name: Report Haskell dependency cache\n", maxsplit=1,
+        )[1].split("\n      - name:", maxsplit=1)[0]
+        self.assertIn("if: steps.scope.outputs.haskell == 'true'", report)
+        self.assertIn("${{ steps.haskell_cache.outputs.cache-hit }}", report)
+        script = report.split("        run: |\n", maxsplit=1)[1]
+        script = "\n".join(line.removeprefix("          ") for line in script.splitlines())
+        for value, expected in (("true", "true"), ("false", "false"), ("", "unreported")):
+            with self.subTest(cache_hit=value):
+                environment = os.environ.copy()
+                environment["O2I_HASKELL_CACHE_HIT"] = value
+                result = subprocess.run(
+                    ["sh", "-eu", "-c", script], env=environment,
+                    capture_output=True, text=True,
+                )
+                self.assertEqual(0, result.returncode, result.stderr)
+                self.assertEqual(
+                    f"[o2i|info] Haskell dependency cache restore: cache-hit={expected}.\n",
+                    result.stdout,
+                )
+
     def test_haskell_job_consumes_the_frozen_foundation_contract(self) -> None:
         content = WORKFLOW.read_text(encoding="utf-8")
         haskell_job = content.split("\n  haskell:\n", maxsplit=1)[1].split(
@@ -546,6 +1013,11 @@ class VerificationWorkflowTests(unittest.TestCase):
         )[1].split("\n      - name:", maxsplit=1)[0]
         self.assertIn("CABAL_VERSION: 3.16.1.0", haskell_job)
         self.assertIn("GHC_VERSION: 9.10.3", haskell_job)
+        cache_keys = re.findall(r"(?m)^\s+(?:key: )?(haskell-dependencies-.*)$", haskell_job)
+        self.assertEqual(2, len(cache_keys))
+        for key in cache_keys:
+            self.assertIn("${{ runner.arch }}", key)
+            self.assertIn("${{ env.HINDENT_SHA256 }}", key)
         self.assertIn("REUSE_VERSION: 6.2.0", haskell_job)
         self.assertIn("timeout-minutes: 60", haskell_job)
         self.assertNotIn("CABAL_VERSION: 3.14.2.0", haskell_job)

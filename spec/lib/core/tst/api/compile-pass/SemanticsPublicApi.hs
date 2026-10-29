@@ -76,6 +76,12 @@ diagnosticValues = foldSemanticDiagnosticEvidence eliminator
               , item contextOccurrence
               ]
         , eliminateSituatedNeedDriverAnchoring = member "driver-anchoring"
+        , eliminateStrategyRelationAssertedEndpointDependency =
+            relation "endpoint-dependency"
+        , eliminateStrategyRelationDirectionSupport =
+            relation "direction-support"
+        , eliminateStrategyRelationContributionSupport =
+            relation "contribution-support"
         , eliminateSituatedNeedDriverCardinality = one "driver-cardinality"
         , eliminateSituatedNeedObjectiveCardinality =
             one "objective-cardinality"
@@ -108,6 +114,8 @@ diagnosticValues = foldSemanticDiagnosticEvidence eliminator
             memberPair "intent-substantiation"
         }
     model = modelIdentityText
+    relation label first second third fourth fifth sixth =
+      label : map item [first, second, third, fourth, fifth, sixth]
     item = occurrenceIdentityText
     occurrences = map item . NonEmpty.toList
     fit tag claim occurrence = [tag, model claim, item occurrence]

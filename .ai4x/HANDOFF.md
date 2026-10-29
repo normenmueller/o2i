@@ -1,39 +1,35 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"PAUSED","currentIssue":"#115","currentNode":"await-strategy-cascading"}
+{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#116","currentNode":"resume-illustration-at-company-vision"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
 
-Preserve the incomplete fictional-company illustration in #115/#116 under #109. The Product Owner paused illustration work until #125's independently accepted correction and agreed integration. Resume at the company Vision.
+Resume the company story in #115 and its native illustration in #116. Preserve the saved Ethos/Mission; agree the company Vision before the next native edit.
 
 # Authority
 
-Re-fetch the owning illustration Issues, #125 and https://github.com/normenmueller/o2i/issues/126 before the next dependent action. Current #126 authority covers memory correction and branch integration; it neither starts #125 implementation nor resumes illustration content. This handoff creates no authority or cold-start eligibility.
-
-Product Owner operating instruction: assign every newly created Issue to both `normenmueller` and `gertrud-ai4x`; verify the remote assignees.
+The PO explicitly requested integration of accepted trunk, retirement of the superseded 125 branch and return to #115/#116. Current instructions create no durable grant. Native model saves remain PO-owned; no new scenario content is implied by branch integration.
 
 # Current Facts
 
-- Branch: `feat/116-illustration`. #115/#116 depend on #125; re-fetch current dependencies and Project status when material.
-- #126 owns #123/#124 integration, agent-memory correction and feature-branch synchronization. PR #127 merged accepted candidate `0202bc77290690d3a176b7db45c5e68b51e8c10c` into trunk as `36968ccb1f2c4c9cbd7c1d6bd09092596dc242b5`. Re-fetch #126 for final synchronization evidence.
-- `doc/model/illustration.archimate` preserves Ethos/Mission and three exports. Mission: "Entscheiden und Verwirklichen ermöglichen". Vision and technology choices remain open.
-- Saved illustration SHA-256: `fb02ecec86041a2961301162e6f052ae7f30c7254be60a9bd32fd28389b76fc6`.
-- Cascading design and preliminary wording remain on `feat/125-strategy-cascading`; #126 does not implement that correction.
+Working branch: `feat/116-illustration`. The integration retains the complete parked and correction histories and current trunk. All nine illustration paths match their saved source; generic files match trunk. #125 and #135 are closed/Done.
+
+Mission: "Entscheiden und Verwirklichen ermöglichen". The next content decision is the company Vision. #109 owns the overall illustration, #115 the story and #116 native realization.
 
 # Material Risk
 
-Keep fictional content and required per-save native checks. Two empty illustration orientation folders remain intentional unfinished-model findings. Agents never edit `meta/o2i.archimate`.
+Preserve model/export identities and all unique work. Retire the old 125 ref only after the full history is published on the illustration branch and preservation checks pass. No new product semantics or example-specific exception.
 
 # Verification
 
-All local stages and five required remote checks passed for the #126 candidate; independent source reviews accepted it. This does not establish #125 implementation acceptance. Preserve historical #123/#124 evidence at its reviewed revisions; synchronization checks and published heads belong to #126.
+The generic baseline is already accepted and green. Check the unchanged model with current tooling and affected CLI requests; record current results in the owning Issues. An unfinished checkpoint is not final reference acceptance.
 
 # Next Action
 
-Keep illustration paused until #125 acceptance and agreed integration. Reconcile #115/#116 before resuming.
+Verify and publish the integrated checkpoint, remove the superseded 125 ref safely, then agree company Vision in #115. Do not restart Mission selection. Follow the normal per-save model checks in #116.
 
 # Local Return Point
 
-Return to this branch and formulate the company Vision with the Product Owner before the next native slice.
+Continue here with company Vision. No native change before its content is agreed with the PO. Use current Issue/Project facts; scratch owns no authority or required continuation.

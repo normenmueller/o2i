@@ -95,7 +95,7 @@ class HaskellApiContractTest(unittest.TestCase):
         self.assertNotIn("o2i-core", command)
         self.assertEqual(command[-1], str(source))
 
-    def test_evidence_record_update_inventory_is_exactly_twelve_plus_nineteen(
+    def test_evidence_record_update_inventory_is_exactly_thirteen_plus_nineteen(
         self,
     ):
         contracts.check_evidence_record_update_inventory()
@@ -112,10 +112,10 @@ class HaskellApiContractTest(unittest.TestCase):
             )
             for contract in contracts.EVIDENCE_RECORD_UPDATES
         }
-        self.assertEqual(len(domains), 31)
-        self.assertEqual(domains.count("O2I.Structure"), 12)
+        self.assertEqual(len(domains), 32)
+        self.assertEqual(domains.count("O2I.Structure"), 13)
         self.assertEqual(domains.count("O2I.Semantics.Input"), 19)
-        self.assertEqual(len(identities), 31)
+        self.assertEqual(len(identities), 32)
 
     def test_evidence_record_update_inventory_rejects_missing_case(self):
         incomplete = contracts.EVIDENCE_RECORD_UPDATES[:-1]
@@ -123,7 +123,7 @@ class HaskellApiContractTest(unittest.TestCase):
         with patch.object(
             contracts, "EVIDENCE_RECORD_UPDATES", incomplete
         ):
-            with self.assertRaisesRegex(RuntimeError, "exactly 31"):
+            with self.assertRaisesRegex(RuntimeError, "exactly 32"):
                 contracts.check_evidence_record_update_inventory()
 
     @patch.object(contracts, "assert_compile_failure_at")
@@ -145,9 +145,9 @@ class HaskellApiContractTest(unittest.TestCase):
             Path("/tmp/o2i/build"),
         )
 
-        self.assertEqual(run.call_count, 31)
-        self.assertEqual(assert_failure.call_count, 31)
-        self.assertEqual(len(sources), 31)
+        self.assertEqual(run.call_count, 32)
+        self.assertEqual(assert_failure.call_count, 32)
+        self.assertEqual(len(sources), 32)
         for source, contract in zip(
             sources, contracts.EVIDENCE_RECORD_UPDATES
         ):

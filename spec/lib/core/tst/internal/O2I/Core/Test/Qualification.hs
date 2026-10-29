@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Main
-  ( main
+module O2I.Core.Test.Qualification
+  ( tests
   ) where
 
 import qualified Data.ByteString.Char8 as ByteString
@@ -26,11 +26,8 @@ import O2I.Semantics
 import O2I.Semantics.Input
 import O2I.Structure
 import qualified O2I.Structure.Internal as StructureInternal
-import Test.Tasty (TestTree, defaultMain, testGroup)
+import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (Assertion, (@?=), assertBool, assertFailure, testCase)
-
-main :: IO ()
-main = defaultMain tests
 
 tests :: TestTree
 tests =

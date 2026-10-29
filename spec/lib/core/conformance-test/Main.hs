@@ -16,11 +16,11 @@ main =
     (testGroup
        "Core public-source conformance"
        [ testCase
-           "covers Structure 12/12 through real producers"
+           "covers Structure 13/13 through real producers"
            structureCoverage
        , testCase "covers Binding 4/4 through real producers" bindingCoverage
        , testCase
-           "covers Semantics 29/29 through real producers"
+           "covers Semantics 32/32 through real producers"
            semanticsCoverage
        ])
 
@@ -43,13 +43,13 @@ structureCoverage =
                   NonEmpty.toList
                     (coreRulesForStage coreRuleCatalog structureRuleStage)
               ]
-      Set.size catalog @?= 15
+      Set.size catalog @?= 16
       assertBool
         ("observed="
            <> show (Set.toAscList observed)
            <> "; missing="
            <> show (Set.toAscList (catalog Set.\\ observed)))
-        (Set.size observed == 12)
+        (Set.size observed == 13)
       assertBool
         "observed Structure producers must belong to owner catalog"
         (observed `Set.isSubsetOf` catalog)
@@ -97,10 +97,10 @@ semanticsCoverage =
                   NonEmpty.toList
                     (coreRulesForStage coreRuleCatalog semanticsRuleStage)
               ]
-      Set.size catalog @?= 41
+      Set.size catalog @?= 44
       assertBool
         ("observed="
            <> show (Set.toAscList observed)
            <> "; extra="
            <> show (Set.toAscList (observed Set.\\ catalog)))
-        (Set.size observed == 29 && observed `Set.isSubsetOf` catalog)
+        (Set.size observed == 32 && observed `Set.isSubsetOf` catalog)

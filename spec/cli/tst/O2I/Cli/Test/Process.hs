@@ -172,11 +172,11 @@ ruleAuthorities ::
 ruleAuthorities =
   [ ( ["operation"]
     , "bootstrap.profile-adapter.adapter-id"
-    , "  authority=operation | subject=unavailable | contract=\"o2i.operation\" | version=\"0.3.0\" | sha256=\"71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff\"\n"
+    , "  authority=operation | subject=unavailable | contract=\"o2i.operation\" | version=\"0.3.0\" | sha256=\"1f3b2f5327e31aede2fb83f1eb7bf65c2040964db47280d10df27a1857db7848\"\n"
     , "  \"bootstrap.profile-adapter.adapter-id\" | \"preparation\" | expectation=\"The selected adapter identifier is admitted by the resolved compiled Profile.\" | meaning=\"A Profile explicitly declares which compiled adapters may project its notation.\" | action=\"Select an admitted adapter or update the compiled Profile contract.\"\n")
   , ( ["core"]
     , "core.assessment.actual-start.cardinality"
-    , "  authority=core | subject=unavailable | contract=\"o2i.core-semantics\" | version=\"0.3.0\" | sha256=\"193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5\"\n"
+    , "  authority=core | subject=unavailable | contract=\"o2i.core-semantics\" | version=\"0.3.0\" | sha256=\"31f6118b51844aaf1f275e7ad8ea8061c0aff97cdb281b83e2e9c43023e70e7f\"\n"
     , "  \"core.assessment.actual-start.cardinality\" | \"readiness-and-assessment\" | expectation=\"An assessment has exactly one actual start for the traced Intervention.\" | meaning=\"Assessment chronology begins from one unambiguous Intervention start.\" | action=\"Provide one actual start bound to the traced Intervention.\"\n")
   , ( ["adapter", "amx"]
     , "o2i.amx.decode.encoding"
@@ -184,7 +184,7 @@ ruleAuthorities =
     , "  \"o2i.amx.decode.encoding\" | \"preparation\" | expectation=\"The XML encoding is UTF-8.\" | meaning=\"Draft projection requires one complete, safely decoded native XML observation.\" | action=\"Save the AMX document with UTF-8 encoding.\"\n")
   , ( ["profile", "o2i.archimate-profile@0.3"]
     , "carrier:context"
-    , "  authority=profile | subject=\"o2i.archimate-profile@0.3\" | contract=\"o2i.archimate-profile\" | version=\"0.3.0\" | sha256=\"be8204d09d6dae8eda1fe6969d1bea62e3b35419108474ea8af177bb9030a3da\"\n"
+    , "  authority=profile | subject=\"o2i.archimate-profile@0.3\" | contract=\"o2i.archimate-profile\" | version=\"0.3.0\" | sha256=\"bc04e9e36b27a090e7e257f30a051430da82665b6effc01c06f79fa9fd120633\"\n"
     , "  \"carrier:context\" | \"profile\" | expectation=\"A displayed concept carrying an O2I type in [Ethos, Mission, Vision, Strategy, Situation, Need, Intervention, Measure] must use ArchiMate element 'Grouping' in carrier category 'Context'.\" | meaning=\"The carrier tuple is the compiled notation representation of those O2I types.\" | action=\"Use ArchiMate element 'Grouping' and an admitted o2i.type value.\"\n")
   ]
 

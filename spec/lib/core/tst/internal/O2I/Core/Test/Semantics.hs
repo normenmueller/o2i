@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RankNTypes #-}
 
-module Main
-  ( main
+module O2I.Core.Test.Semantics
+  ( tests
   ) where
 
 import Data.ByteString (ByteString)
@@ -31,6 +31,7 @@ import qualified O2I.Semantics.Eval as Eval
 import O2I.Semantics.Family.CollectiveStrategyRealization
   ( CollectiveWork(..)
   , assessCollectiveStrategyRealizations
+  , assessCollectiveStrategyRealizationsPrepared
   , assessCollectiveStrategyRealizationsWithWork
   )
 import O2I.Semantics.Index
@@ -38,20 +39,68 @@ import O2I.Semantics.Input
 import O2I.Semantics.Internal
 import O2I.Semantics.SituatedNeed (assessSituatedNeeds)
 import O2I.Semantics.Strategy (assessStrategyFormulations)
+import O2I.Semantics.StrategyRelations
 import O2I.Structure
 import qualified O2I.Structure.Index as StructureIndex
 import O2I.Structure.Internal (StructureAssessment(..), wellFormedGraphIdentity)
-import Test.Tasty (TestTree, defaultMain, testGroup)
+import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (Assertion, (@?=), assertBool, assertFailure, testCase)
-
-main :: IO ()
-main = defaultMain tests
 
 tests :: TestTree
 tests =
   testGroup
     "Core Semantics"
     [ testGroup
+        "Strategy cascading"
+        [ testCase
+            "retains both original edges and ownerships"
+            cascadingOriginalWitnesses
+        , testCase
+            "direction accepts policy and translation independently"
+            cascadingDirectionAlternatives
+        , testCase
+            "contribution accepts Action and Objective independently"
+            cascadingContributionAlternatives
+        , testCase
+            "primitive evidence does not invent a macro"
+            cascadingNoSyntheticMacro
+        , testCase
+            "Candidate translation cannot support an Asserted macro"
+            cascadingCandidateTranslation
+        , testCase
+            "valid Action alternative survives ineligible translation"
+            cascadingAlternativeIsolation
+        , testCase "Candidate macro stays diagnostic" cascadingCandidateMacro
+        , testCase
+            "missing and invalid formulation prerequisites stay distinct"
+            cascadingPrerequisites
+        , testCase
+            "joins the exact listed lower Intent only"
+            cascadingExactIntent
+        , testCase
+            "retains duplicate original translation occurrences"
+            cascadingDuplicateWitnesses
+        , testCase
+            "ordinary contribution does not imply complete collective coverage"
+            cascadingCollectiveBoundary
+        , testCase
+            "shared Objective work grows with edges, without their product"
+            cascadingObjectiveWork
+        , testCase
+            "rejected edges remain visible in exact work"
+            cascadingRejectedEdgeWork
+        , testCase "each macro pays only for selected output" cascadingMacroWork
+        , testCase
+            "collective requests reuse one graph preparation"
+            cascadingCollectiveWork
+        , testCase
+            "missing target formulation performs no owner-pair lookup"
+            cascadingMissingTargetWork
+        , testCase
+            "unavailable claims share wide target obligations"
+            cascadingUnavailableTargetWork
+        ]
+    , testGroup
         "aggregate"
         [ testCase "accepts a complete semantic model" aggregateAccepted
         , testCase
@@ -152,10 +201,10 @@ tests =
             "retains direct primitive-support occurrence roles"
             directPrimitiveSupportOccurrenceRoles
         , testCase
-            "executes the exact 29/29 real-producer matrix"
+            "executes the exact 32/32 real-producer matrix"
             realProducerOccurrenceMatrix
         , testCase
-            "publicly eliminates every field of all 29 real producers"
+            "publicly eliminates every field of all 32 real producers"
             publicProducerProjectionMatrix
         , testCase
             "preserves every cardinality and multi-role order"
@@ -174,6 +223,614 @@ tests =
             collectiveWorkScalesByTargetPrimitive
         ]
     ]
+
+-- These fixtures isolate explicit macro support from collective Fit and keep
+-- each Strategy's independent formulation obligations valid.
+cascadingProjection :: [RelationProjection] -> StructureProjection
+cascadingProjection extra =
+  structureProjection
+    completeCarriers
+    completeContextualizations
+    (completeStrategyRelations ++ extra)
+    []
+    []
+
+cascadingScenario ::
+     [RelationProjection]
+  -> [String]
+  -> [(Natural, ByteString)]
+  -> (forall scope. Public.SemanticAssessment scope -> Assertion)
+  -> Assertion
+cascadingScenario relations additional inputs inspect =
+  assertScenario
+    (completeModelOccurrences ++ segmentModels additional)
+    (cascadingProjection relations)
+    inputs
+    (\graph bound -> inspect (Public.assessSemantics graph bound))
+
+translation :: Commitment -> RelationProjection
+translation commitment =
+  relation
+    "primitive-target-translates-b-objective"
+    "strategy-target-key-result"
+    "translates-into"
+    "strategy-b-objective"
+    commitment
+
+direction :: Commitment -> RelationProjection
+direction commitment =
+  relation
+    "macro-target-directs-b"
+    "strategy-target"
+    "directs"
+    "strategy-b"
+    commitment
+
+policyDirection :: RelationProjection
+policyDirection =
+  relation
+    "policy-target-guides-b"
+    "strategy-target-principle"
+    "guides"
+    "strategy-b-principle"
+    Asserted
+
+actionContribution :: RelationProjection
+actionContribution =
+  relation
+    "primitive-a-contributes-target-action"
+    "strategy-a-action"
+    "contributes-to"
+    "strategy-target-action"
+    Asserted
+
+assertMacro ::
+     Public.SemanticAssessment scope
+  -> String
+  -> Public.SubjectDisposition
+  -> ([OccurrenceIdentity] -> Assertion)
+  -> Assertion
+assertMacro assessment name disposition inspect =
+  case filter
+         ((== occurrenceId name) . Public.strategyRelationOccurrence)
+         (Public.strategyRelationAssessments assessment) of
+    [result] -> do
+      Public.strategyRelationDisposition result @?= disposition
+      inspect (Public.strategyRelationWitnesses result)
+    outcomes ->
+      assertFailure ("unexpected macro outcomes: " ++ show (length outcomes))
+
+cascadingOriginalWitnesses :: Assertion
+cascadingOriginalWitnesses =
+  cascadingScenario [translation Asserted, macroRelation "b"] [] strategyInputs $ \assessment -> do
+    Public.semanticDisposition assessment @?= Public.SemanticAccepted
+    assertMacro assessment "macro-b-contributes-target" Public.SubjectValid $ \witnesses ->
+      mapM_
+        (\name ->
+           assertBool
+             ("missing original witness: " ++ name)
+             (occurrenceId name `elem` witnesses))
+        [ "primitive-target-translates-b-objective"
+        , "strategy-b-key-result-substantiates-objective"
+        , "owns-strategy-b-objective"
+        , "owns-strategy-b-key-result"
+        , "owns-strategy-target-key-result"
+        , "strategy-b"
+        , "strategy-target"
+        ]
+    length (Public.strategyRelationAssessments assessment) @?= 1
+
+cascadingDirectionAlternatives :: Assertion
+cascadingDirectionAlternatives =
+  mapM_ check [[translation Asserted], [policyDirection]]
+  where
+    check support =
+      cascadingScenario
+        (direction Asserted : support)
+        ["macro-target-directs-b", "policy-target-guides-b"]
+        strategyInputs $ \assessment ->
+        assertMacro
+          assessment
+          "macro-target-directs-b"
+          Public.SubjectValid
+          (const (pure ()))
+
+cascadingContributionAlternatives :: Assertion
+cascadingContributionAlternatives = do
+  cascadingScenario [actionContribution, macroRelation "a"] [] strategyInputs $ \assessment ->
+    assertMacro
+      assessment
+      "macro-a-contributes-target"
+      Public.SubjectValid
+      (const (pure ()))
+  cascadingOriginalWitnesses
+
+cascadingNoSyntheticMacro :: Assertion
+cascadingNoSyntheticMacro =
+  cascadingScenario [translation Asserted] [] strategyInputs $ \assessment ->
+    Public.strategyRelationAssessments assessment @?= []
+
+cascadingCandidateTranslation :: Assertion
+cascadingCandidateTranslation =
+  cascadingScenario [translation Candidate, macroRelation "b"] [] strategyInputs $ \assessment -> do
+    assertMacro
+      assessment
+      "macro-b-contributes-target"
+      Public.SubjectInvalid
+      (\witnesses -> witnesses @?= [])
+    map
+      (coreRuleIdText . Public.semanticDiagnosticRule)
+      (publicSemanticEvidence assessment)
+      @?= ["core.strategy-relation.contribution-support"]
+
+cascadingAlternativeIsolation :: Assertion
+cascadingAlternativeIsolation =
+  cascadingScenario
+    [ translation Candidate
+    , macroRelation "b"
+    , relation
+        "b-action-contribution"
+        "strategy-b-action"
+        "contributes-to"
+        "strategy-target-action"
+        Asserted
+    ]
+    ["b-action-contribution"]
+    strategyInputs $ \assessment ->
+    assertMacro assessment "macro-b-contributes-target" Public.SubjectValid $ \witnesses ->
+      assertBool
+        "Candidate relation entered support"
+        (occurrenceId "primitive-target-translates-b-objective"
+           `notElem` witnesses)
+
+cascadingCandidateMacro :: Assertion
+cascadingCandidateMacro =
+  cascadingScenario
+    [direction Candidate]
+    ["macro-target-directs-b"]
+    strategyInputs $ \assessment -> do
+    assertMacro
+      assessment
+      "macro-target-directs-b"
+      Public.SubjectCandidate
+      (\witnesses -> witnesses @?= [])
+    Public.semanticDisposition assessment @?= Public.SemanticAccepted
+
+cascadingPrerequisites :: Assertion
+cascadingPrerequisites = do
+  cascadingScenario
+    [translation Asserted, macroRelation "b"]
+    []
+    [(2, strategyInput "target")] $ \assessment ->
+    case Public.strategyRelationAssessments assessment of
+      [result] ->
+        Public.strategyRelationUnavailableReasons result
+          @?= [ ( modelId "strategy-b"
+                , Public.StrategyRelationFormulationMissing)
+              ]
+      _ -> assertFailure "missing macro result"
+  assertScenario
+    completeModelOccurrences
+    (structureProjection
+       completeCarriers
+       completeContextualizations
+       (filter
+          (/= last (strategyInternalRelations "b"))
+          completeStrategyRelations
+          ++ [translation Asserted, macroRelation "b"])
+       []
+       [])
+    strategyInputs $ \graph bound ->
+    case Public.strategyRelationAssessments (Public.assessSemantics graph bound) of
+      [result] -> do
+        Public.strategyRelationUnavailableReasons result
+          @?= [ ( modelId "strategy-b"
+                , Public.StrategyRelationFormulationInvalid)
+              ]
+        Public.semanticDisposition (Public.assessSemantics graph bound)
+          @?= Public.SemanticRejected
+      _ -> assertFailure "missing invalid-prerequisite macro result"
+
+cascadingExactIntent :: Assertion
+cascadingExactIntent =
+  assertScenario
+    (completeModelOccurrences
+       ++ carrierModels ["other-b-objective"]
+       ++ segmentModels ["owns-other-b-objective"])
+    (structureProjection
+       (primitiveCarrier "other-b-objective" "Objective" Asserted
+          : completeCarriers)
+       (ownership
+          "owns-other-b-objective"
+          "strategy-b"
+          "other-b-objective"
+          Asserted
+          : completeContextualizations)
+       (completeStrategyRelations
+          ++ [ relation
+                 "primitive-target-translates-b-objective"
+                 "strategy-target-key-result"
+                 "translates-into"
+                 "other-b-objective"
+                 Asserted
+             , macroRelation "b"
+             ])
+       []
+       [])
+    strategyInputs $ \graph bound ->
+    assertMacro
+      (Public.assessSemantics graph bound)
+      "macro-b-contributes-target"
+      Public.SubjectInvalid
+      (const (pure ()))
+
+cascadingDuplicateWitnesses :: Assertion
+cascadingDuplicateWitnesses =
+  cascadingScenario
+    [ translation Asserted
+    , relation
+        "translation-copy"
+        "strategy-target-key-result"
+        "translates-into"
+        "strategy-b-objective"
+        Asserted
+    , macroRelation "b"
+    ]
+    ["translation-copy"]
+    strategyInputs $ \assessment ->
+    assertMacro assessment "macro-b-contributes-target" Public.SubjectValid $ \witnesses ->
+      mapM_
+        (\name ->
+           assertBool
+             "duplicate occurrence was erased"
+             (occurrenceId name `elem` witnesses))
+        ["primitive-target-translates-b-objective", "translation-copy"]
+
+cascadingCollectiveBoundary :: Assertion
+cascadingCollectiveBoundary =
+  assertScenario
+    (completeModelOccurrences ++ segmentModels ["b-action-contribution"])
+    (structureProjection
+       completeCarriers
+       completeContextualizations
+       (completeStrategyRelations
+          ++ [ macroRelation "a"
+             , macroRelation "b"
+             , actionContribution
+             , relation
+                 "b-action-contribution"
+                 "strategy-b-action"
+                 "contributes-to"
+                 "strategy-target-action"
+                 Asserted
+             ])
+       [collectiveProposition]
+       collectiveIncidences)
+    completeInputs $ \graph bound -> do
+    let assessment = Public.assessSemantics graph bound
+    map
+      Public.strategyRelationDisposition
+      (Public.strategyRelationAssessments assessment)
+      @?= replicate 2 Public.SubjectValid
+    assertBool
+      "Action-only support covered an upper Key Result"
+      ("core.collective-strategy-realization.asserted-collective-coverage"
+         `elem` map
+                  (coreRuleIdText . Public.semanticDiagnosticRule)
+                  (publicSemanticEvidence assessment))
+
+cascadingObjectiveWork :: Assertion
+cascadingObjectiveWork = do
+  small <- work 4 4
+  manyLower <- work 16 4
+  both <- work 16 16
+  strategyRelationOccurrenceVisits manyLower
+    < 4 * strategyRelationOccurrenceVisits small @?= True
+  strategyRelationOccurrenceVisits both
+    < 4 * strategyRelationOccurrenceVisits small @?= True
+  strategyJoinObjectiveVisits small @?= strategyJoinObjectiveVisits both
+  strategyOwnerPairLookups both @?= 2
+  strategyEmittedEvidenceMemberships small @?= 2 * (1 + 5 * 4 + 7 * 4)
+  strategyEmittedEvidenceMemberships manyLower @?= 2 * (1 + 5 * 16 + 7 * 4)
+  strategyEmittedEvidenceMemberships both @?= 2 * (1 + 5 * 16 + 7 * 16)
+  where
+    work lowerWidth upperWidth =
+      requireRelationWork
+        (workModelOccurrences 2 lowerWidth upperWidth
+           ++ segmentModels (denseNames upperWidth))
+        (denseProjection lowerWidth upperWidth)
+        (workInputs 2 lowerWidth upperWidth)
+
+denseNames :: Int -> [String]
+denseNames width =
+  [ "dense-" ++ label ++ "-" ++ show number
+  | label <- ["p1", "p2"]
+  , number <- [1 .. width]
+  ]
+
+denseProjection :: Int -> Int -> StructureProjection
+denseProjection lowerWidth upperWidth =
+  denseCollectiveProjection lowerWidth upperWidth ["collective-claim"]
+
+denseCollectiveProjection :: Int -> Int -> [String] -> StructureProjection
+denseCollectiveProjection lowerWidth upperWidth claims =
+  structureProjection
+    (visionCarriers ++ concatMap workStrategyCarriers strategies)
+    (visionContextualizations
+       ++ concatMap workStrategyContextualizations strategies)
+    (concatMap workStrategyRelations strategies
+       ++ map workMacroRelation participants
+       ++ [ relation
+            ("dense-" ++ label ++ "-" ++ show number)
+            (workKeyResult "target" number)
+            "translates-into"
+            (strategyMember label "objective")
+            Asserted
+          | label <- participants
+          , number <- [1 .. upperWidth]
+          ])
+    [ structuredPropositionProjection
+      (occurrenceId claim)
+      collectiveFamily
+      completenessClosed
+      Asserted
+    | claim <- claims
+    ]
+    (concatMap denseIncidences claims)
+  where
+    participants = ["p1", "p2"]
+    strategies =
+      [("p1", lowerWidth), ("p2", lowerWidth), ("target", upperWidth)]
+
+denseIncidences :: String -> [StructuredIncidenceProjection]
+denseIncidences claim
+  | claim == "collective-claim" = workCollectiveIncidences ["p1", "p2"]
+  | otherwise =
+    [ structuredIncidenceProjection
+      (occurrenceId (claim ++ suffix))
+      (occurrenceId claim)
+      role
+      (occurrenceId endpoint)
+    | (suffix, role, endpoint) <-
+        [ ("-p1", participantRole, "strategy-p1")
+        , ("-p2", participantRole, "strategy-p2")
+        , ("-target", targetRole, "strategy-target")
+        ]
+    ]
+
+requireRelationWork ::
+     [ModelOccurrence]
+  -> StructureProjection
+  -> [(Natural, ByteString)]
+  -> IO StrategyRelationWork
+requireRelationWork occurrences projection inputs =
+  case runScenario occurrences projection inputs $ \graph bound ->
+         let index = buildSemanticIndex graph bound
+             strategies = assessStrategyFormulations index
+          in snd
+               (assessStrategyRelationsWithWork
+                  index
+                  strategies
+                  (prepareStrategyRelations index strategies)) of
+    Left problem ->
+      assertFailure problem >> pure (StrategyRelationWork 0 0 0 0 0 0 0 0)
+    Right result -> pure result
+
+cascadingRejectedEdgeWork :: Assertion
+cascadingRejectedEdgeWork = do
+  small <- work 0
+  larger <- work 40
+  strategyRelationBucketVisits larger
+    - strategyRelationBucketVisits small @?= 40
+  strategyRelationOccurrenceVisits larger
+    - strategyRelationOccurrenceVisits small @?= 80
+  strategyRoleMembershipLookups larger
+    - strategyRoleMembershipLookups small @?= 80
+  strategyEmittedEvidenceMemberships larger
+    @?= strategyEmittedEvidenceMemberships small
+  where
+    work :: Int -> IO StrategyRelationWork
+    work count =
+      let names = ["irrelevant-edge-" ++ show number | number <- [1 .. count]]
+          edges =
+            [ relation
+              name
+              "vision-objective"
+              "orients"
+              "strategy-b-objective"
+              Asserted
+            | name <- names
+            ]
+       in requireRelationWork
+            (completeModelOccurrences ++ segmentModels names)
+            (cascadingProjection
+               (translation Asserted : macroRelation "b" : edges))
+            strategyInputs
+
+cascadingMacroWork :: Assertion
+cascadingMacroWork = do
+  one <- work 1
+  sixteen <- work 16
+  strategyOwnerPairLookups one @?= 1
+  strategyOwnerPairLookups sixteen @?= 16
+  strategyEmittedEvidenceMemberships one @?= 13
+  strategyEmittedEvidenceMemberships sixteen @?= 16
+    * strategyEmittedEvidenceMemberships one
+  where
+    work :: Int -> IO StrategyRelationWork
+    work count =
+      let names = ["repeated-macro-" ++ show number | number <- [1 .. count]]
+       in requireRelationWork
+            (completeModelOccurrences ++ segmentModels names)
+            (cascadingProjection
+               (translation Asserted
+                  : [ relation
+                      name
+                      "strategy-b"
+                      "contributes-to"
+                      "strategy-target"
+                      Asserted
+                    | name <- names
+                    ]))
+            strategyInputs
+
+cascadingCollectiveWork :: Assertion
+cascadingCollectiveWork = do
+  (onePreparation, one) <- work ["collective-claim"]
+  (fourPreparation, four) <-
+    work ["collective-claim", "claim2", "claim3", "claim4"]
+  onePreparation @?= fourPreparation
+  map collectiveOwnerPairLookups one @?= [2]
+  map collectiveOwnerPairLookups four @?= replicate 4 2
+  map collectiveEmittedEvidenceMemberships four
+    @?= replicate 4 (2 * (5 * 16 + 7 * 16))
+  where
+    work claims =
+      let additional = filter (/= "collective-claim") claims
+          occurrences =
+            workModelOccurrences 2 16 16
+              ++ segmentModels (denseNames 16)
+              ++ carrierModels additional
+              ++ segmentModels
+                   [ claim ++ suffix
+                   | claim <- additional
+                   , suffix <- ["-p1", "-p2", "-target"]
+                   ]
+       in case runScenario
+                 occurrences
+                 (denseCollectiveProjection 16 16 claims)
+                 (workInputs 2 16 16) $ \graph bound ->
+                 let index = buildSemanticIndex graph bound
+                     strategies = assessStrategyFormulations index
+                     prepared = prepareStrategyRelations index strategies
+                  in ( preparedStrategyRelationWork prepared
+                     , map
+                         snd
+                         (assessCollectiveStrategyRealizationsPrepared
+                            index
+                            strategies
+                            prepared)) of
+            Left problem ->
+              assertFailure problem
+                >> pure (StrategyRelationWork 0 0 0 0 0 0 0 0, [])
+            Right result -> pure result
+
+cascadingMissingTargetWork :: Assertion
+cascadingMissingTargetWork =
+  case runScenario
+         (workModelOccurrences 2 1 1)
+         (workProjection 2 1 1)
+         (filter ((/= 2) . fst) (workInputs 2 1 1)) $ \graph bound ->
+         let index = buildSemanticIndex graph bound
+             strategies = assessStrategyFormulations index
+          in map
+               snd
+               (assessCollectiveStrategyRealizationsWithWork index strategies) of
+    Left problem -> assertFailure problem
+    Right [work] -> do
+      collectiveParticipantIndexEntries work @?= 2
+      collectiveOwnerPairLookups work @?= 0
+      collectiveCoveredTargetMemberships work @?= 0
+      collectiveEmittedEvidenceMemberships work @?= 0
+    Right results ->
+      assertFailure ("unexpected missing-target results: " ++ show results)
+
+cascadingUnavailableTargetWork :: Assertion
+cascadingUnavailableTargetWork = do
+  (narrowOnce, narrowClaims) <- work 2 4
+  (narrowRepeated, repeatedNarrowClaims) <- work 12 4
+  (wideOnce, wideClaims) <- work 2 128
+  (wideRepeated, repeatedWideClaims) <- work 12 128
+  narrowOnce @?= narrowRepeated
+  wideOnce @?= wideRepeated
+  strategyTargetMembershipVisits narrowOnce @?= 2 + 2 * 4
+  strategyTargetMembershipVisits wideOnce @?= 2 + 2 * 128
+  map
+    length
+    [narrowClaims, repeatedNarrowClaims, wideClaims, repeatedWideClaims]
+    @?= [2, 12, 2, 12]
+  mapM_
+    (mapM_ check)
+    [narrowClaims, repeatedNarrowClaims, wideClaims, repeatedWideClaims]
+  where
+    check (projection, metrics) = do
+      projection
+        @?= Just
+              ( Public.ComponentUnavailable
+              , [modelId "strategy-p2"]
+              , [Public.ComponentInvalid, Public.ComponentUnavailable])
+      collectiveParticipantIndexEntries metrics @?= 1
+      collectiveOwnerPairLookups metrics @?= 1
+      collectiveCoveredTargetMemberships metrics @?= 0
+      collectiveEmittedEvidenceMemberships metrics @?= 0
+    work ::
+         Int
+      -> Int
+      -> IO
+           ( StrategyRelationWork
+           , [( Maybe
+                  ( Public.ComponentDisposition
+                  , [ModelIdentity]
+                  , [Public.ComponentDisposition])
+              , CollectiveWork)])
+    work claimCount targetWidth =
+      let claims =
+            "collective-claim"
+              : [ "unavailable-claim-" ++ show number
+                | number <- [2 .. claimCount]
+                ]
+          extraClaims = drop 1 claims
+          configs = [("p1", 1), ("p2", 1), ("target", targetWidth)]
+          occurrences =
+            workModelOccurrences 2 1 targetWidth
+              ++ carrierModels extraClaims
+              ++ segmentModels
+                   [ claim ++ suffix
+                   | claim <- extraClaims
+                   , suffix <- ["-p1", "-p2", "-target"]
+                   ]
+          projection =
+            structureProjection
+              (visionCarriers ++ concatMap workStrategyCarriers configs)
+              (visionContextualizations
+                 ++ concatMap workStrategyContextualizations configs)
+              (concatMap workStrategyRelations configs
+                 ++ map workMacroRelation ["p1", "p2"])
+              [ structuredPropositionProjection
+                (occurrenceId claim)
+                collectiveFamily
+                completenessClosed
+                Asserted
+              | claim <- claims
+              ]
+              (concatMap denseIncidences claims)
+          inputs = filter ((/= 1) . fst) (workInputs 2 1 targetWidth)
+       in case runScenario occurrences projection inputs $ \graph bound ->
+                 let index = buildSemanticIndex graph bound
+                     strategies = assessStrategyFormulations index
+                     prepared = prepareStrategyRelations index strategies
+                     components result = do
+                       values <-
+                         Public.collectiveStrategyRealizationComponents result
+                       pure
+                         ( Public.collectiveCoverageDisposition values
+                         , Public.collectiveCoverageBlockingStrategies values
+                         , map
+                             Public.primitiveSupportDisposition
+                             (Public.collectivePrimitiveSupportAssessments
+                                values))
+                  in ( preparedStrategyRelationWork prepared
+                     , [ (components result, metrics)
+                       | (result, metrics) <-
+                           assessCollectiveStrategyRealizationsPrepared
+                             index
+                             strategies
+                             prepared
+                       ]) of
+            Left problem ->
+              assertFailure problem
+                >> pure (StrategyRelationWork 0 0 0 0 0 0 0 0, [])
+            Right result -> pure result
 
 aggregateAccepted :: Assertion
 aggregateAccepted =
@@ -869,7 +1526,7 @@ realProducerOccurrenceMatrix =
               ]
           actual = map (byRule Map.!) (map fst runtimeProducerOccurrenceOracle)
        in do
-            length runtimeProducerOccurrenceOracle @?= 29
+            length runtimeProducerOccurrenceOracle @?= 32
             Map.keysSet byRule
               @?= Map.keysSet (Map.fromList runtimeProducerOccurrenceOracle)
             actual @?= runtimeProducerOccurrenceOracle
@@ -888,7 +1545,7 @@ publicProducerProjectionMatrix =
               | defect <- defects
               ]
           publicByRule = Map.fromListWith min projections
-      Map.size internalByRule @?= 29
+      Map.size internalByRule @?= 32
       Map.keysSet publicByRule @?= Map.keysSet internalByRule
       publicByRule @?= internalByRule
 
@@ -910,6 +1567,8 @@ internalDiagnosticProjection defect =
         SemanticStrategyKey strategy -> [modelIdentityText strategy]
         SemanticStrategyMemberKey strategy member ->
           [modelIdentityText strategy, modelIdentityText member]
+        SemanticStrategyRelationKey relationOccurrence source target ->
+          map occurrenceIdentityText [relationOccurrence, source, target]
         SemanticFitClaimKey claim -> [modelIdentityText claim]
         SemanticParticipantClaimKey claim participant ->
           [modelIdentityText claim, modelIdentityText participant]
@@ -939,6 +1598,10 @@ publicDiagnosticProjection =
             exact
               (map item [dependent, endpoint, context])
               (map (\value -> [item value]) [first, second, third])
+      , Public.eliminateStrategyRelationAssertedEndpointDependency =
+          relationTriple
+      , Public.eliminateStrategyRelationDirectionSupport = relationTriple
+      , Public.eliminateStrategyRelationContributionSupport = relationTriple
       , Public.eliminateSituatedNeedDriverAnchoring = member
       , Public.eliminateSituatedNeedDriverCardinality = empty
       , Public.eliminateSituatedNeedObjectiveCardinality = empty
@@ -966,6 +1629,10 @@ publicDiagnosticProjection =
     item = occurrenceIdentityText
     many = map item . NonEmpty.toList
     fit claim occurrence = exact [model claim] [[item occurrence]]
+    relationTriple relationOccurrence source target first second third =
+      exact
+        (map item [relationOccurrence, source, target])
+        (map (\value' -> [item value']) [first, second, third])
     participantTriple claim participant first second third =
       exact
         [model claim, model participant]
@@ -1133,6 +1800,21 @@ runtimeProducerOccurrenceOracle =
     , [("listed-key-result", ["strategy-b-key-result"])])
   , ( "core.strategy-formulation.vision-orientation"
     , [("unoriented-intent", ["strategy-a-objective"])])
+  , ( "core.strategy-relation.asserted-endpoint-dependency"
+    , [ ("relation", ["macro-a-contributes-target"])
+      , ("source-strategy", ["strategy-a"])
+      , ("target-strategy", ["strategy-target"])
+      ])
+  , ( "core.strategy-relation.contribution-support"
+    , [ ("relation", ["macro-a-contributes-target"])
+      , ("source-strategy", ["strategy-a"])
+      , ("target-strategy", ["strategy-target"])
+      ])
+  , ( "core.strategy-relation.direction-support"
+    , [ ("relation", ["macro-target-directs-b"])
+      , ("source-strategy", ["strategy-target"])
+      , ("target-strategy", ["strategy-b"])
+      ])
   ]
 
 realProducerDefects :: Either String [SemanticDefect]
@@ -1140,6 +1822,15 @@ realProducerDefects =
   concat
     <$> sequence
           [ scenarioDefects
+              (segmentModels ["macro-target-directs-b"]
+                 ++ completeModelOccurrences)
+              unsupportedDirectionProjection
+              strategyInputs
+          , scenarioDefects
+              completeModelOccurrences
+              candidateMacroProjection
+              strategyInputs
+          , scenarioDefects
               contextualizationDependencyModels
               contextualizationDependencyProjection
               []
@@ -1223,6 +1914,15 @@ realProducerPublicProjections =
   concat
     <$> sequence
           [ scenarioPublicProjections
+              (segmentModels ["macro-target-directs-b"]
+                 ++ completeModelOccurrences)
+              unsupportedDirectionProjection
+              strategyInputs
+          , scenarioPublicProjections
+              completeModelOccurrences
+              candidateMacroProjection
+              strategyInputs
+          , scenarioPublicProjections
               contextualizationDependencyModels
               contextualizationDependencyProjection
               []
@@ -1445,8 +2145,7 @@ collectiveWorkScalesByParticipantPrimitive = do
   workOne <- requireCollectiveWork 2 1 1
   workThree <- requireCollectiveWork 2 3 1
   workThree @?= expectedCollectiveWork 2 3 1
-  collectiveContributionSourceProbes workThree @?= 3
-    * collectiveContributionSourceProbes workOne
+  collectiveOwnerPairLookups workThree @?= collectiveOwnerPairLookups workOne
   collectivePairwiseComparisons workThree
     @?= collectivePairwiseComparisons workOne
 
@@ -1455,10 +2154,7 @@ collectiveWorkScalesByTargetPrimitive = do
   workOne <- requireCollectiveWork 2 1 1
   workFour <- requireCollectiveWork 2 1 4
   workFour @?= expectedCollectiveWork 2 1 4
-  collectiveTargetPrimitiveLookups workFour @?= 4
-    * collectiveTargetPrimitiveLookups workOne
-  collectiveContributionSourceProbes workFour
-    @?= collectiveContributionSourceProbes workOne
+  collectiveOwnerPairLookups workFour @?= collectiveOwnerPairLookups workOne
   collectivePairwiseComparisons workFour
     @?= collectivePairwiseComparisons workOne
 
@@ -1490,15 +2186,11 @@ expectedCollectiveWork :: Int -> Int -> Int -> CollectiveWork
 expectedCollectiveWork participantCount participantWidth targetWidth =
   CollectiveWork
     { collectiveParticipantIndexEntries = participantCount
-    , collectiveParticipantPrimitiveLookups =
-        2 * participantCount * participantWidth
-    , collectiveTargetPrimitiveLookups = 2 * targetWidth
-    , collectiveContributionSourceProbes =
-        2 * participantCount * participantWidth
-    , collectiveContributionTargetProbes =
-        3 * participantCount * participantWidth
-    , collectiveContributionRelationLookups =
-        2 * participantCount * participantWidth
+    , collectiveOwnerPairLookups = participantCount
+    , collectiveCoveredTargetMemberships =
+        participantCount * (participantWidth + min participantWidth targetWidth)
+    , collectiveEmittedEvidenceMemberships =
+        17 * participantCount * participantWidth
     , collectivePairwiseComparisons =
         participantCount * (participantCount - 1) `div` 2
     }
@@ -1637,6 +2329,11 @@ data SemanticSummary = SemanticSummary
   , summaryCandidates :: ![Text]
   , summaryNeeds :: ![(Text, Public.SubjectDisposition)]
   , summaryStrategies :: ![(Text, Public.SubjectDisposition)]
+  , summaryStrategyRelations :: ![( Text
+                                  , Public.SubjectDisposition
+                                  , [Text]
+                                  , [( Text
+                                     , Public.StrategyRelationUnavailableReason)])]
   , summaryCollectives :: ![(Text, Public.SubjectDisposition)]
   , summaryComponents :: ![Maybe
                              ( Public.ComponentDisposition
@@ -1675,6 +2372,16 @@ summarizeAssessment assessment =
           , Public.collectiveStrategyRealizationDisposition result)
         | result <- Public.collectiveStrategyRealizationAssessments assessment
         ]
+    , summaryStrategyRelations =
+        [ ( occurrenceIdentityText (Public.strategyRelationOccurrence result)
+          , Public.strategyRelationDisposition result
+          , map occurrenceIdentityText (Public.strategyRelationWitnesses result)
+          , [ (modelIdentityText blocker, reason)
+            | (blocker, reason) <-
+                Public.strategyRelationUnavailableReasons result
+            ])
+        | result <- Public.strategyRelationAssessments assessment
+        ]
     , summaryComponents =
         [ componentSummary
           <$> Public.collectiveStrategyRealizationComponents result
@@ -1702,6 +2409,12 @@ publicDiagnosticOccurrences =
       , Public.eliminateCollectiveFitTargetGuidingPolicy = \_ value -> [value]
       , Public.eliminateCollectiveFitTargetTradeOffs = \_ value -> [value]
       , Public.eliminateContextualizationAssertedDependency =
+          \_ _ _ first second third -> [first, second, third]
+      , Public.eliminateStrategyRelationAssertedEndpointDependency =
+          \_ _ _ first second third -> [first, second, third]
+      , Public.eliminateStrategyRelationDirectionSupport =
+          \_ _ _ first second third -> [first, second, third]
+      , Public.eliminateStrategyRelationContributionSupport =
           \_ _ _ first second third -> [first, second, third]
       , Public.eliminateSituatedNeedDriverAnchoring = \_ _ value -> [value]
       , Public.eliminateSituatedNeedDriverCardinality = \_ -> []
@@ -2181,6 +2894,35 @@ completeStrategyRelations =
     (\label -> visionOrientation label : strategyInternalRelations label)
     ["a", "b", "target"]
 
+unsupportedDirectionProjection :: StructureProjection
+unsupportedDirectionProjection =
+  structureProjection
+    completeCarriers
+    completeContextualizations
+    (relation
+       "macro-target-directs-b"
+       "strategy-target"
+       "directs"
+       "strategy-b"
+       Asserted
+       : completeStrategyRelations)
+    []
+    []
+
+-- Endpoint-dependency production is isolated from collective macro-presence
+-- defects, whose deliberate missing-macro fixture targets Strategy b.
+candidateMacroProjection :: StructureProjection
+candidateMacroProjection =
+  structureProjection
+    (visionCarriers
+       ++ strategyCarriersWithCommitment "a" Candidate
+       ++ strategyCarriers "b"
+       ++ strategyCarriers "target")
+    completeContextualizations
+    (completeStrategyRelations ++ [macroRelation "a"])
+    []
+    []
+
 collectivePrimitiveRelations :: [RelationProjection]
 collectivePrimitiveRelations =
   [ relation
@@ -2190,10 +2932,10 @@ collectivePrimitiveRelations =
       "strategy-target-action"
       Asserted
   , relation
-      "primitive-b-contributes-target-key-result"
-      "strategy-b-key-result"
-      "contributes-to"
+      "primitive-target-translates-b-objective"
       "strategy-target-key-result"
+      "translates-into"
+      "strategy-b-objective"
       Asserted
   ]
 
@@ -2238,7 +2980,7 @@ completeModelOccurrences =
             ++ [ "macro-a-contributes-target"
                , "macro-b-contributes-target"
                , "primitive-a-contributes-target-action"
-               , "primitive-b-contributes-target-key-result"
+               , "primitive-target-translates-b-objective"
                , "claim-participant-a"
                , "claim-participant-b"
                , "claim-target"
@@ -2676,9 +3418,9 @@ workContributionRelations participants participantWidth targetWidth =
           Asserted
       , relation
           (workContributionName label "key-result" index)
-          (workKeyResult label index)
-          "contributes-to"
           (workKeyResult "target" (targetIndex index))
+          "translates-into"
+          (strategyMember label "objective")
           Asserted
       ]
     | label <- participants

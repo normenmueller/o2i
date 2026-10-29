@@ -15,7 +15,7 @@ Follow `BEHAVIOR.md` precedence and these declared loading conditions.
 - `governance-practice`: `.ai4x/governance/guidelines.md`; load `risk-classification-issue-project-review-or-remote-work`.
 - `decision-rendering`: `.ai4x/governance/decision-handoff.md`; load `product-owner-decision-or-control-handoff`.
 - `session-continuity`: `.ai4x/governance/continuity.md`; load `applicable-handoff-reconstruction-or-cold-start-evaluation`.
-- `completed-work-cleanup`: `.ai4x/governance/cleanup.md`; load `explicit-completion-and-cleanup-grant`.
+- `completed-work-cleanup`: `.ai4x/governance/cleanup.md`; load `subject-bound-completion-and-cleanup-authority`.
 - `task-contracts`: `.ai4x/operations/*.md`; load `matching-task-class`.
 
 # Workflow And Authority
@@ -27,19 +27,22 @@ Follow `BEHAVIOR.md` precedence and these declared loading conditions.
 - `workflow.in-progress-to-in-review`: `In progress` → `In review`.
 - `workflow.in-progress-to-paused`: `In progress` → `Paused`.
 - `workflow.paused-to-ready`: `Paused` → `Ready`.
+- `workflow.in-review-to-in-progress`: `In review` → `In progress`.
 - `workflow.in-review-to-done`: `In review` → `Done`.
 
 Actions: `local.write`, `git.commit.create`, `project.transition`, `remote.issue-comment.create`, `remote.push`, `remote.pull-request.publish`, `remote.evidence.publish`, `issue.contract.mutate`, `issue.close`, `pull-request.merge`, `completed-work.cleanup`, `release.publish`, `tag.create`, `protected.publication`, `scope.expand`.
 
-Every enumerated mutation requires all four gates: `current-matching-subject-grant`, `event-specific-guards`, `declared-and-verified-execution-identity`, `technical-host-or-tool-permission`. Missing or unknown evidence denies execution; permission never creates or revokes authority.
-Grant schema `o2i.authority-grant/v1` remains active until `target-fulfilled`, `revoked`, `superseded`, `material-mismatch`. Consuming approval does not consume the grant. Its first authorized remote write is the immutable owning-Issue receipt; cross-session authority exists only when current remote state contains exactly one fully valid receipt.
+Every enumerated mutation requires all four gates: `current-matching-subject-authority`, `event-specific-guards`, `declared-and-verified-execution-identity`, `technical-host-or-tool-permission`. Missing or unknown evidence denies execution; permission never creates or revokes authority.
+Authority: matching grant, exact session-only PO/runtime instruction, or standing PO PR completion.
+Standing completion: current exact-head `normenmueller` approval and integration-base checks gate merge; post-merge proof gates owning-Issue closure/Done. Cleanup covers only that PR's exact source branches/inactive linked worktrees under full preflight. Reconstruct from accepted policy/current GitHub, never other reviews or a new grant/event.
+Grant schema `o2i.authority-grant/v1` remains active until `target-fulfilled`, `revoked`, `superseded`, `material-mismatch`. Consuming approval does not consume the grant. Its first authorized remote write is the immutable owning-Issue receipt; cross-session grant authority requires exactly one currently valid receipt.
 
 # Decision Events
 
 - `authority_request` creates a grant; required fields: `requestId`, `payloadFingerprint`, `subject`, `scope`, `targetState`, `requestedAuthority`, `exclusions`, `reason`, `alternatives`, `coldStart`.
 - `product_owner_action` creates no grant; required fields: `eventId`, `subject`, `scope`, `targetState`, `requestedAgentAuthority`, `exclusions`, `reason`, `alternatives`, `coldStart`, `productOwnerAction`.
 - `cold_start` creates no grant; required fields: `eventId`, `subject`, `scope`, `targetState`, `requestedAgentAuthority`, `exclusions`, `reason`, `alternatives`, `coldStart`.
-Only `authority_request` accepts the exact adjacent reply `Freigegeben.`; it is single-use, current-fact-bound, observable, and non-replayable.
+Ordinary results create no event. Only `authority_request` accepts an exact adjacent reply from `Freigabe`, `Freigabe.`, `Freigegeben`, `Freigegeben.`; binding is single-use, current-fact-bound and non-replayable. Canonical request bytes exclude the derived fingerprint; receipt readback must match canonical bytes.
 
 # Cold Start Continuity
 
@@ -48,7 +51,9 @@ Only `authority_request` accepts the exact adjacent reply `Freigegeben.`; it is 
 # Provenance And Forbidden Actions
 
 Independent provenance facts: `product-owner-decision-authority`, `actual-content-authorship`, `git-commit-object-creator`, `verified-remote-publisher-identity`. Approval never implies authorship, committer, or publisher identity.
-- `forbid-ready-as-authority`: when `Project-status-Ready-without-current-matching-grant`, forbid selector `all-actions`.
+- `grant`: Issue-scoped agent commit trailers `Refs #N`, `O2I-Grant: <grant-id>`; authority record `owning-Issue-durable-grant-receipt`.
+- `live-instruction`: Issue-scoped agent commit trailers `Refs #N`; authority record `current-explicit-instruction-with-observed-issuer`.
+- `forbid-ready-as-authority`: when `Project-status-Ready-without-current-matching-authority`, forbid selector `all-actions`.
 - `forbid-unlisted-transition`: when `workflow-transition-is-not-enumerated`, forbid `project.transition`.
 - `forbid-grant-activation-issue-mutation`: when `activating-or-materializing-a-grant`, forbid `issue.contract.mutate`.
 - `forbid-ordinary-execution-completion`: when `grant-target-ends-at-In-review`, forbid `pull-request.merge`, `issue.close`, `completed-work.cleanup`, `release.publish`, `tag.create`, `protected.publication`, `scope.expand`.

@@ -306,6 +306,7 @@ consumeValidateUnavailability =
   Validate.foldHumanValidateUnavailability
     (const ())
     (\_ _ -> ())
+    (\_ _ -> ())
     (\_ _ _ -> ())
     (\_ _ -> ())
     (\_ _ _ _ -> ())

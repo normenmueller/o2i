@@ -363,7 +363,8 @@ indexedSelectedViewIdentity index selectedView =
              occurrence
              indexedIdentity
              suppliedIdentity)
-      where indexedIdentity = modelOccurrenceModelIdentity indexed
+      where
+        indexedIdentity = modelOccurrenceModelIdentity indexed
   where
     occurrence = modelOccurrenceIdentity selectedView
     suppliedIdentity = modelOccurrenceModelIdentity selectedView

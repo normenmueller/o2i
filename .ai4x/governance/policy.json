@@ -47,7 +47,7 @@
       "id": "decision-rendering",
       "owner": ".ai4x/governance/decision-handoff.md",
       "loadsWhen": "product-owner-decision-or-control-handoff",
-      "scope": "event rendering and live approval binding"
+      "scope": "concise human rendering of policy-owned decision events"
     },
     {
       "id": "session-continuity",
@@ -58,7 +58,7 @@
     {
       "id": "completed-work-cleanup",
       "owner": ".ai4x/governance/cleanup.md",
-      "loadsWhen": "explicit-completion-and-cleanup-grant",
+      "loadsWhen": "subject-bound-completion-and-cleanup-authority",
       "scope": "cleanup preflight, destructive-action safeguards, deletion ordering, and postflight"
     },
     {
@@ -112,7 +112,7 @@
     {
       "from": "governance-practice",
       "to": "completed-work-cleanup",
-      "justification": "perform cleanup only under its dedicated grant"
+      "justification": "perform cleanup only under matching subject authority"
     },
     {
       "from": "bootstrap",
@@ -276,6 +276,11 @@
         "to": "Ready"
       },
       {
+        "id": "workflow.in-review-to-in-progress",
+        "from": "In review",
+        "to": "In progress"
+      },
+      {
         "id": "workflow.in-review-to-done",
         "from": "In review",
         "to": "Done"
@@ -342,7 +347,7 @@
     },
     {
       "id": "scope.expand",
-      "identityRequirement": "new-product-owner-grant"
+      "identityRequirement": "new-product-owner-authority"
     }
   ],
   "authorityGrant": {
@@ -420,6 +425,13 @@
         "expected-unchanged-issue-body-sha256",
         "complete-grant-receipt"
       ],
+      "serialization": "compact-JSON-receiptFields-order-UTF-8-unescaped-non-ASCII-with-terminal-LF-no-normalization",
+      "receiptFields": [
+        "decisionPayload",
+        "decisionPayloadSha256",
+        "expectedIssueBodySha256",
+        "grant"
+      ],
       "sameSessionReadbackRequired": true,
       "crossSessionReconstruction": {
         "authoritySource": "current-observable-remote-state-only",
@@ -440,11 +452,97 @@
       }
     }
   },
+  "liveInstruction": {
+    "requiredFields": [
+      "issuer",
+      "subject.repository",
+      "subject.issue",
+      "actionIds",
+      "resourceIds",
+      "scope",
+      "targetState",
+      "exclusions"
+    ],
+    "bindingRequires": [
+      "current-explicit-product-owner-or-runtime-instruction",
+      "same-live-exchange",
+      "unchanged-revalidated-facts",
+      "not-revoked-or-superseded",
+      "no-exclusion-is-crossed"
+    ],
+    "createsGrant": false,
+    "survivesSession": false
+  },
+  "pullRequestCompletion": {
+    "productOwnerLogin": "normenmueller",
+    "actionIds": [
+      "pull-request.merge",
+      "issue.close",
+      "project.transition",
+      "completed-work.cleanup",
+      "remote.issue-comment.create",
+      "remote.evidence.publish"
+    ],
+    "subjectFields": [
+      "repository",
+      "pullRequest",
+      "issue",
+      "head",
+      "headRef",
+      "headRepository"
+    ],
+    "reviewFields": [
+      "repository",
+      "pullRequest",
+      "id",
+      "author",
+      "state",
+      "commit"
+    ],
+    "cleanupKinds": [
+      "local-branch",
+      "remote-branch",
+      "linked-worktree"
+    ],
+    "bindingRequires": [
+      "versioned-standing-rule-current-and-accepted",
+      "fresh-current-GitHub-observations",
+      "latest-effective-review-not-dismissed",
+      "no-withdrawal-or-outstanding-changes-requested",
+      "owning-Issue-and-exact-resource-match-subject",
+      "required-independent-reviews-accepted-without-findings",
+      "required-green-verification-covers-current-integration-base",
+      "no-current-PO-exclusion-is-crossed"
+    ],
+    "mergeRequires": [
+      "host-merge-conditioned-on-approved-head"
+    ],
+    "afterMergeRequires": [
+      "same-approved-head-and-verified-integration-tree-published",
+      "required-post-merge-verification-green"
+    ],
+    "cleanupRequires": [
+      "completed-work-entry-and-safe-exact-target-preflight",
+      "no-unique-or-required-recovery-data",
+      "per-target-identity-and-required-lease-revalidated"
+    ],
+    "scope": "normal-approved-PR-completion-evidence-merge-owning-Issue-close-Project-Done-and-exact-safe-cleanup",
+    "exclusions": [
+      "other-PRs-Issues-or-unrelated-resources",
+      "cleanup-of-default-protected-active-review-unmerged-or-recovery-resources",
+      "cleanup-of-stashes-scratch-or-superseded-continuity-sources",
+      "cleanup-of-foreign-head-repositories",
+      "unknown-unique-user-owned-or-required-recovery-data",
+      "releases-tags-publication-or-scope-expansion"
+    ],
+    "createsGrant": false,
+    "durableSource": "versioned-standing-rule-and-current-GitHub-PO-review-no-session-or-grant-receipt"
+  },
   "mutationGates": {
     "allRequired": true,
     "missingOrUnknown": "deny",
     "gates": [
-      "current-matching-subject-grant",
+      "current-matching-subject-authority",
       "event-specific-guards",
       "declared-and-verified-execution-identity",
       "technical-host-or-tool-permission"
@@ -485,6 +583,12 @@
     ],
     "missingOrUnknown": "deny"
   },
+  "eventSelection": {
+    "ordinary-result": "none",
+    "new-agent-authority-needed": "authority_request",
+    "direct-product-owner-action-needed": "product_owner_action",
+    "eligible-cold-start-recommended": "cold_start"
+  },
   "events": {
     "authority_request": {
       "createsGrant": true,
@@ -500,7 +604,31 @@
         "alternatives",
         "coldStart"
       ],
-      "approvalReply": "Freigegeben.",
+      "approvalReplies": [
+        "Freigabe",
+        "Freigabe.",
+        "Freigegeben",
+        "Freigegeben."
+      ],
+      "canonicalPayload": {
+        "encoding": "UTF-8",
+        "serialization": "compact-JSON-required-field-order-unescaped-non-ASCII-with-terminal-LF-no-normalization",
+        "excludedFields": [
+          "payloadFingerprint"
+        ],
+        "subjectFields": [
+          "repository",
+          "issue"
+        ],
+        "requestedAuthorityFields": [
+          "actionIds",
+          "resourceIds"
+        ],
+        "stringArrayFields": [
+          "exclusions",
+          "alternatives"
+        ]
+      },
       "bindingRequires": [
         "unique-request-id",
         "canonical-payload-fingerprint",
@@ -621,36 +749,44 @@
       },
       {
         "case": "agent-authored-and-committed",
-        "decisionAuthority": "current-grant-issuer",
+        "decisionAuthority": "current-authority-source-issuer",
         "contentAuthor": "agentIdentity",
         "commitActor": "agentIdentity",
         "remotePublisher": "separately-verified-identity"
       },
       {
         "case": "human-authored-or-committed",
-        "decisionAuthority": "current-grant-issuer",
+        "decisionAuthority": "current-authority-source-issuer",
         "contentAuthor": "direct-evidence-only",
         "commitActor": "direct-evidence-only",
         "remotePublisher": "separately-verified-identity"
       },
       {
         "case": "agent-remote-publication",
-        "decisionAuthority": "current-grant-issuer",
+        "decisionAuthority": "current-authority-source-issuer",
         "contentAuthor": "independent-observed-fact",
         "commitActor": "independent-observed-fact",
         "remotePublisher": "verified-gertrud-ai4x"
       }
     ],
-    "issueScopedAgentCommitTrailers": [
-      "Refs #N",
-      "O2I-Grant: <grant-id>"
-    ],
-    "decisionAuthorityRecord": "owning-Issue-durable-grant-receipt"
+    "issueScopedAgentCommitTrailers": {
+      "grant": [
+        "Refs #N",
+        "O2I-Grant: <grant-id>"
+      ],
+      "live-instruction": [
+        "Refs #N"
+      ]
+    },
+    "decisionAuthorityRecord": {
+      "grant": "owning-Issue-durable-grant-receipt",
+      "live-instruction": "current-explicit-instruction-with-observed-issuer"
+    }
   },
   "forbiddenActions": [
     {
       "id": "forbid-ready-as-authority",
-      "when": "Project-status-Ready-without-current-matching-grant",
+      "when": "Project-status-Ready-without-current-matching-authority",
       "selector": "all-actions"
     },
     {

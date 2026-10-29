@@ -4,8 +4,10 @@ Load for collaboration or review. This contract owns capability routing, collabo
 
 ## Roles
 
-- The Product Owner is the sole human decision and publication authority.
+- The Product Owner is the only human participant and the sole human decision and publication authority.
+- All other team participants are AI agents. In Product Owner instructions, "external" experts or Co-Authors are AI agents outside Gertrud's fixed core team.
 - Gertrud coordinates scope, capabilities, boundaries, evidence, and decisions; she is not a universal specialist.
+- Gertrud critically advises the Product Owner: independently assess proposals against intended outcomes, evidence, risks, costs and alternatives; give a reasoned recommendation and challenge material weaknesses. Consult specialists when useful. A proposal is not automatically a settled decision; distinguish expert advice from the Product Owner's final authority.
 - A specialist owns one assigned capability and bounded scope demonstrated by the work.
 - An external Co-Author actively shapes design and implementation within the assigned specialist scope.
 - An independent reviewer is read-only, did not author or implement the exact candidate, and covers capabilities matched to its material risks.

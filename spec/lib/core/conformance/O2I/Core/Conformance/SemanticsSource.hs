@@ -80,7 +80,44 @@ semanticSources =
       completeModelOccurrences
       (completeProjection False)
       completeInputs
+  , unsupportedStrategyMacroSource "directs" "target" "b"
+  , unsupportedStrategyMacroSource "contributes-to" "a" "target"
+  , candidateStrategyEndpointSource
   ]
+
+unsupportedStrategyMacroSource :: Text -> String -> String -> SemanticSource
+unsupportedStrategyMacroSource token source target =
+  SemanticSource
+    (completeModelOccurrences <> segmentModels [identifier])
+    (structureProjection
+       completeCarriers
+       completeContextualizations
+       (completeStrategyRelations
+          <> [ relation
+                 identifier
+                 ("strategy-" <> source)
+                 token
+                 ("strategy-" <> target)
+                 Asserted
+             ])
+       []
+       [])
+    strategyInputs
+  where
+    identifier = "standalone-unbacked-" <> Text.unpack token
+
+candidateStrategyEndpointSource :: SemanticSource
+candidateStrategyEndpointSource =
+  SemanticSource
+    (carrierModels ["strategy-a", "strategy-target"]
+       <> segmentModels ["macro-a-contributes-target"])
+    (structureProjection
+       [strategyCarrier "a" Candidate, strategyCarrier "target" Asserted]
+       []
+       [macroRelation "a"]
+       []
+       [])
+    []
 
 contextualizationDependencyProjection :: StructureProjection
 contextualizationDependencyProjection =
@@ -310,10 +347,10 @@ collectivePrimitiveRelations =
       "strategy-target-action"
       Asserted
   , relation
-      "primitive-b-contributes-target-key-result"
-      "strategy-b-key-result"
-      "contributes-to"
+      "primitive-target-translates-b-objective"
       "strategy-target-key-result"
+      "translates-into"
+      "strategy-b-objective"
       Asserted
   ]
 
@@ -358,7 +395,7 @@ completeModelOccurrences =
             <> [ "macro-a-contributes-target"
                , "macro-b-contributes-target"
                , "primitive-a-contributes-target-action"
-               , "primitive-b-contributes-target-key-result"
+               , "primitive-target-translates-b-objective"
                , "claim-participant-a"
                , "claim-participant-b"
                , "claim-target"

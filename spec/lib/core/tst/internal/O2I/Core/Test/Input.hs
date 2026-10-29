@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main
-  ( main
+module O2I.Core.Test.Input
+  ( tests
   ) where
 
 import Control.Monad (foldM, forM_)
@@ -25,11 +25,8 @@ import O2I.Input.Internal.Json
 import O2I.Input.Internal.Set
 import O2I.Input.Internal.Text
 import O2I.Input.Internal.Types
-import Test.Tasty (TestTree, defaultMain, testGroup)
+import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit ((@?=), testCase)
-
-main :: IO ()
-main = defaultMain tests
 
 tests :: TestTree
 tests =

@@ -23,6 +23,8 @@ module O2I.Semantics.Internal
   , sortSemanticDefects
   , StrategyFormulationUnavailableReason(..)
   , StrategyFormulationAssessment(..)
+  , StrategyRelationUnavailableReason(..)
+  , StrategyRelationAssessment(..)
   , GloballySituatedNeed(..)
   , SituatedNeedAssessment(..)
   , CollectiveFitUnavailableReason(..)
@@ -48,8 +50,13 @@ import Data.Text (Text)
 import O2I.Core.Contract (CoreRuleId)
 import qualified O2I.Core.Contract.Generated as Generated
 import O2I.Core.Contract.Internal (CoreRuleId(..))
+import O2I.Core.Graph.Observation (RelationObservation)
 import O2I.Core.Identity (ModelIdentity, OccurrenceIdentity)
 import O2I.Input.Internal.Types (CollectiveFitInput, StrategyFormulationInput)
+import O2I.Semantics.StrategyRelations.Evidence
+  ( StrategyRelationKind
+  , StrategyRelationProof
+  )
 import O2I.Structure (WellFormedGraph)
 import O2I.Structure.Internal (sameWellFormedGraph, wellFormedGraphIdentity)
 
@@ -95,6 +102,10 @@ data SemanticEvidence
   | SemanticNeedMemberKey !ModelIdentity !ModelIdentity
   | SemanticStrategyKey !ModelIdentity
   | SemanticStrategyMemberKey !ModelIdentity !ModelIdentity
+  | SemanticStrategyRelationKey
+      !OccurrenceIdentity
+      !OccurrenceIdentity
+      !OccurrenceIdentity
   | SemanticFitClaimKey !ModelIdentity
   | SemanticParticipantClaimKey !ModelIdentity !ModelIdentity
   | SemanticAssertedDependencyKey
@@ -118,6 +129,11 @@ data SemanticEvidenceKey schema where
     :: !ModelIdentity
     -> !ModelIdentity
     -> SemanticEvidenceKey 'Generated.GeneratedStrategyMemberKeySchema
+  SemanticStrategyRelationEvidenceKey
+    :: !OccurrenceIdentity
+    -> !OccurrenceIdentity
+    -> !OccurrenceIdentity
+    -> SemanticEvidenceKey 'Generated.GeneratedStrategyRelationKeySchema
   SemanticFitClaimEvidenceKey
     :: !ModelIdentity
     -> SemanticEvidenceKey 'Generated.GeneratedFitClaimKeySchema
@@ -187,6 +203,8 @@ eraseSemanticEvidenceKey evidence =
     SemanticStrategyEvidenceKey strategy -> SemanticStrategyKey strategy
     SemanticStrategyMemberEvidenceKey strategy member ->
       SemanticStrategyMemberKey strategy member
+    SemanticStrategyRelationEvidenceKey relation source target ->
+      SemanticStrategyRelationKey relation source target
     SemanticFitClaimEvidenceKey claim -> SemanticFitClaimKey claim
     SemanticParticipantClaimEvidenceKey claim participant ->
       SemanticParticipantClaimKey claim participant
@@ -245,6 +263,35 @@ data StrategyFormulationAssessment scope
   | StrategyFormulationCandidate !ModelIdentity !OccurrenceIdentity
   | StrategyFormulationInvalid !ModelIdentity !(NonEmpty SemanticDefect)
   | StrategyFormulationValid !(QualificationEligibleStrategy scope)
+  deriving (Eq, Show)
+
+-- | Exact prerequisite state blocking an explicit Strategy macro assessment.
+data StrategyRelationUnavailableReason
+  = StrategyRelationFormulationMissing
+  | StrategyRelationFormulationIdentityUnresolved
+  | StrategyRelationFormulationInvalid
+  | StrategyRelationFormulationCandidate
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+type role StrategyRelationAssessment nominal
+
+-- | Complete assessment of an explicit direction or contribution occurrence.
+-- Prerequisite invalidity remains distinguishable from absent inputs; its
+-- primary formulation defects are retained by their own assessment.
+data StrategyRelationAssessment scope
+  = StrategyRelationCandidate !StrategyRelationKind !(RelationObservation scope)
+  | StrategyRelationUnavailable
+      !StrategyRelationKind
+      !(RelationObservation scope)
+      !(NonEmpty (ModelIdentity, StrategyRelationUnavailableReason))
+  | StrategyRelationInvalid
+      !StrategyRelationKind
+      !(RelationObservation scope)
+      !(NonEmpty SemanticDefect)
+  | StrategyRelationValid
+      !StrategyRelationKind
+      !(RelationObservation scope)
+      !(StrategyRelationProof scope)
   deriving (Eq, Show)
 
 type role GloballySituatedNeed nominal
@@ -382,6 +429,7 @@ instance Show (SemanticallyValidModel scope) where
 data SemanticResults scope = SemanticResults
   { storedSituatedNeedAssessments :: ![SituatedNeedAssessment scope]
   , storedStrategyAssessments :: ![StrategyFormulationAssessment scope]
+  , storedStrategyRelationAssessments :: ![StrategyRelationAssessment scope]
   , storedCollectiveAssessments :: ![CollectiveStrategyRealizationAssessment
                                        scope]
   , storedCandidateOccurrences :: ![OccurrenceIdentity]

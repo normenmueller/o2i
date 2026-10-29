@@ -33,6 +33,7 @@ import O2I.Operation.Human.Value
   ( HumanAdapterSelection
   , HumanInputSource
   , HumanModelIdentity
+  , HumanOccurrenceIdentity
   , HumanSourceIdentity
   , HumanViewDescriptor
   , HumanViewSelector
@@ -42,6 +43,7 @@ import O2I.Operation.Human.Value.Internal
   , projectAdapterSelection
   , projectInputSource
   , projectModelIdentity
+  , projectOccurrenceIdentity
   , projectViewDescriptor
   , projectViewSelector
   )
@@ -69,6 +71,7 @@ import O2I.Operation.View (selectedViewDescriptor)
 import O2I.Semantics
   ( CollectiveFitUnavailableReason(..)
   , StrategyFormulationUnavailableReason(..)
+  , StrategyRelationUnavailableReason(..)
   )
 
 -- | Exact retained Validate request contract.
@@ -95,6 +98,9 @@ data HumanValidateContext =
 data HumanValidateUnavailability
   = HumanValidateBindingUnavailable Natural
   | HumanValidateStrategyUnavailable HumanModelIdentity Text
+  | HumanValidateStrategyRelationUnavailable
+      HumanOccurrenceIdentity
+      (NonEmpty (HumanModelIdentity, Text))
   | HumanValidateCollectiveFitUnavailable
       HumanModelIdentity
       (NonEmpty Text)
@@ -137,15 +143,18 @@ foldHumanValidateContext consume (HumanValidateContext envelope request complete
 foldHumanValidateUnavailability ::
      (Natural -> result)
   -> (HumanModelIdentity -> Text -> result)
+  -> (HumanOccurrenceIdentity -> NonEmpty (HumanModelIdentity, Text) -> result)
   -> (HumanModelIdentity -> NonEmpty Text -> [HumanModelIdentity] -> result)
   -> (HumanModelIdentity -> [HumanModelIdentity] -> result)
   -> (HumanModelIdentity -> HumanModelIdentity -> NonEmpty Text -> [HumanModelIdentity] -> result)
   -> HumanValidateUnavailability
   -> result
-foldHumanValidateUnavailability binding strategy fit coverage primitive unavailable =
+foldHumanValidateUnavailability binding strategy relation fit coverage primitive unavailable =
   case unavailable of
     HumanValidateBindingUnavailable ordinal -> binding ordinal
     HumanValidateStrategyUnavailable subject reason -> strategy subject reason
+    HumanValidateStrategyRelationUnavailable occurrence reasons ->
+      relation occurrence reasons
     HumanValidateCollectiveFitUnavailable subject reasons blockers ->
       fit subject reasons blockers
     HumanValidateCollectiveCoverageUnavailable subject blockers ->
@@ -228,6 +237,13 @@ projectUnavailable =
        HumanValidateStrategyUnavailable
          (projectModelIdentity subject)
          (strategyReasonText reason))
+    (\occurrence reasons ->
+       HumanValidateStrategyRelationUnavailable
+         (projectOccurrenceIdentity occurrence)
+         (fmap
+            (\(subject, reason) ->
+               (projectModelIdentity subject, relationReasonText reason))
+            reasons))
     (\subject reasons blockers ->
        HumanValidateCollectiveFitUnavailable
          (projectModelIdentity subject)
@@ -243,6 +259,15 @@ projectUnavailable =
          (projectModelIdentity participant)
          (fmap collectiveReasonText reasons)
          (map projectModelIdentity blockers))
+
+relationReasonText :: StrategyRelationUnavailableReason -> Text
+relationReasonText reason =
+  case reason of
+    StrategyRelationFormulationMissing -> "formulation-missing"
+    StrategyRelationFormulationIdentityUnresolved ->
+      "formulation-identity-unresolved"
+    StrategyRelationFormulationInvalid -> "formulation-invalid"
+    StrategyRelationFormulationCandidate -> "formulation-candidate"
 
 strategyReasonText :: StrategyFormulationUnavailableReason -> Text
 strategyReasonText reason =

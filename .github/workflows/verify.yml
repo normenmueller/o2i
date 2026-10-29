@@ -128,7 +128,8 @@ jobs:
     env:
       CABAL_VERSION: 3.16.1.0
       GHC_VERSION: 9.10.3
-      HINDENT_VERSION: 6.2.1
+      HINDENT_VERSION: 6.3.0
+      HINDENT_SHA256: 9b359816c72df2039ee9b88f70c6b70e8dd20008cbef315291d01fbfa3897cfa
       REUSE_VERSION: 6.2.0
 
     steps:
@@ -157,15 +158,24 @@ jobs:
 
       - name: Restore Haskell dependencies and tools
         if: steps.scope.outputs.haskell == 'true'
+        id: haskell_cache
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             ~/.cabal/packages
             ~/.cabal/store
             ~/.local/bin/hindent
-          key: haskell-dependencies-${{ runner.os }}-ghc-${{ env.GHC_VERSION }}-cabal-${{ env.CABAL_VERSION }}-hindent-${{ env.HINDENT_VERSION }}-${{ hashFiles('spec/.ghc-version', 'spec/cabal.project', 'spec/cabal.project.freeze', 'spec/cabal.foundation.project', 'spec/cabal.foundation.project.freeze', 'spec/**/*.cabal') }}
+          key: haskell-dependencies-${{ runner.os }}-${{ runner.arch }}-ghc-${{ env.GHC_VERSION }}-cabal-${{ env.CABAL_VERSION }}-hindent-${{ env.HINDENT_VERSION }}-${{ env.HINDENT_SHA256 }}-${{ hashFiles('spec/.ghc-version', 'spec/cabal.project', 'spec/cabal.project.freeze', 'spec/cabal.foundation.project', 'spec/cabal.foundation.project.freeze', 'spec/**/*.cabal') }}
           restore-keys: |
-            haskell-dependencies-${{ runner.os }}-ghc-${{ env.GHC_VERSION }}-cabal-${{ env.CABAL_VERSION }}-hindent-${{ env.HINDENT_VERSION }}-
+            haskell-dependencies-${{ runner.os }}-${{ runner.arch }}-ghc-${{ env.GHC_VERSION }}-cabal-${{ env.CABAL_VERSION }}-hindent-${{ env.HINDENT_VERSION }}-${{ env.HINDENT_SHA256 }}-
+
+      - name: Report Haskell dependency cache
+        if: steps.scope.outputs.haskell == 'true'
+        env:
+          O2I_HASKELL_CACHE_HIT: ${{ steps.haskell_cache.outputs.cache-hit }}
+        run: |
+          printf '[o2i|info] Haskell dependency cache restore: cache-hit=%s.\n' \
+            "${O2I_HASKELL_CACHE_HIT:-unreported}"
 
       - name: Install Foundation verification tools
         if: steps.scope.outputs.haskell == 'true'
@@ -174,14 +184,29 @@ jobs:
           sudo apt-get install --yes --no-install-recommends pipx
           pipx install "reuse[charset-normalizer]==$REUSE_VERSION"
 
+      - name: Install and verify Hindent
+        if: steps.scope.outputs.haskell == 'true'
+        run: |
+          test "$(uname -s)/$(uname -m)" = Linux/x86_64
           mkdir -p "$HOME/.local/bin"
           export PATH="$HOME/.local/bin:$PATH"
-          if ! command -v hindent >/dev/null 2>&1; then
-            cabal install "hindent-$HINDENT_VERSION" \
-              --installdir="$HOME/.local/bin" \
-              --overwrite-policy=always
+          hindent_binary="$HOME/.local/bin/hindent"
+          if [ ! -f "$hindent_binary" ]; then
+            hindent_download=$(mktemp)
+            trap 'rm -f "$hindent_download"' EXIT
+            curl --fail --location --retry 3 \
+              "https://github.com/mihaimaruseac/hindent/releases/download/v$HINDENT_VERSION/hindent" \
+              --output "$hindent_download"
+            printf '%s  %s\n' "$HINDENT_SHA256" "$hindent_download" | sha256sum --check --status
+            install -m 0755 "$hindent_download" "$hindent_binary"
           fi
+          printf '%s  %s\n' "$HINDENT_SHA256" "$hindent_binary" | sha256sum --check --status
+          hindent_version=$("$hindent_binary" --version)
+          test "$hindent_version" = "hindent $HINDENT_VERSION"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          find spec -path '*/dist-newstyle' -prune -o \
+            -type f -name '*.hs' \
+            -exec "$hindent_binary" --line-length 80 --validate {} +
 
       - name: Verify Haskell specification
         if: steps.scope.outputs.haskell == 'true'

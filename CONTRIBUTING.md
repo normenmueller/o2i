@@ -11,15 +11,17 @@
 
 Das Project zeigt Arbeitsstand und Product-Owner-Reihenfolge. `Ready` bedeutet ausschließlich: Der Issue-Vertrag ist geklärt, Voraussetzungen sind bekannt und kein bekannter Blocker verhindert den nächsten Schritt. Ein Status erzeugt niemals Autorität; beliebig viele Issues dürfen `Ready` sein, ihre vertikale Product-Owner-Reihenfolge bestimmt die Planung.
 
-Erlaubte Übergänge: `Backlog` → `Refinement`; `Refinement` → `Ready`; `Ready` → `In progress`; `In progress` → `In review`; `In progress` → `Paused`; `Paused` → `Ready`; `In review` → `Done`. Jeder nicht aufgeführte Übergang ist verboten.
+Erlaubte Übergänge: `Backlog` → `Refinement`; `Refinement` → `Ready`; `Ready` → `In progress`; `In progress` → `In review`; `In progress` → `Paused`; `Paused` → `Ready`; `In review` → `In progress`; `In review` → `Done`. Jeder nicht aufgeführte Übergang ist verboten.
 
-Eine Mutation benötigt gleichzeitig einen aktuellen Subject-Grant, die ereignisspezifischen Guards, die deklarierte und verifizierte Ausführungsidentität sowie die technische Host- oder Tool-Berechtigung. Fehlt eine Bedingung oder bleibt sie unbekannt, wird nicht ausgeführt. Eine technische Berechtigung erzeugt oder widerruft keine Product-Owner-Autorität.
+Eine Mutation benötigt passende aktuelle Autorität, ereignisspezifische Guards, die deklarierte und verifizierte Ausführungsidentität sowie technische Host- oder Tool-Berechtigung. Autorität stammt aus einem passenden Grant, einer aktuellen ausdrücklichen PO-/Runtime-Anweisung oder der unten begrenzten PO-PR-Abschlussregel. Gegenstand, Aktionen, Ressourcen, Umfang, Ziel und Ausschlüsse müssen exakt passen. Eine aktuelle Anweisung erzeugt keinen Grant und gilt nicht über eine Session-Grenze hinaus. Unbekannte oder fehlende Bedingungen sperren die Ausführung; technische Berechtigung erzeugt oder widerruft keine Autorität.
 
 Ein gebundener Grant bleibt bis zu seinem Zielzustand wirksam; nur die Freigabeantwort wird einmalig verbraucht. Vor einer Session-Grenze muss genau ein vollständiger, unveränderlicher Grant-Beleg im owning Issue aktuell beobachtbar und durch die vorgeschriebene Machine-User-Identität verifizierbar sein.
 
+Ein wirksames GitHub-`APPROVED` des Product Owners `normenmueller` zum exakten aktuellen PR-Head autorisiert gemäß Abschlussregel Merge, zugehörige Abschlussbelege, Issue-Abschluss, Project `Done` und sichere Bereinigung der lokalen/entfernten PR-Quellbranch im selben Repository sowie ihrer inaktiven verknüpften Worktrees. Eine weitere Freigabe ist nicht nötig. Aktuelle Reviews und grüne Prüfungen müssen die Integrationsbasis abdecken; nach dem Merge sind genehmigter Head und geprüfter Integrationsbaum nachzuweisen. Geänderter Head, widerrufene Zustimmung, offene Änderungsforderungen, fehlende Prüfungen oder ungeklärte Daten sperren die Folgeaktion. Andere Reviews, fremde Ziele, Releases, Tags und Scope-Erweiterungen sind nicht umfasst.
+
 ### Entscheidungsereignisse
 
-`authority_request` fordert genau einen begrenzten Agenten-Grant an und akzeptiert allein die unmittelbar folgende, alleinstehende Antwort `Freigegeben.`. `product_owner_action` fordert genau eine Handlung des Product Owners und erzeugt keinen Grant. `cold_start` verwendet ausschließlich die drei festen Übergangsaktionen und erzeugt ebenfalls keinen Grant. Falsche, nicht angrenzende, überholte, rekonstruierte oder bereits verbrauchte Freigaben werden abgewiesen.
+Gewöhnliche Ergebnisse benötigen kein Entscheidungsereignis. `authority_request` fordert einen begrenzten Agenten-Grant an und akzeptiert ausschließlich die unmittelbar folgende, alleinstehende Antwort aus dem geschlossenen, groß-/kleinschreibungssensitiven Policy-Vokabular. Kanonische Payloads und Belege bleiben prüfbar; der abgeleitete Fingerprint hasht sich nicht selbst. Falsche, überholte, rekonstruierte oder verbrauchte Freigaben werden abgewiesen. `product_owner_action` fordert eine PO-Handlung ohne Grant; `cold_start` nutzt ausschließlich die drei festen Übergangsaktionen und erzeugt ebenfalls keinen Grant.
 
 ### Cold Start
 
@@ -29,7 +31,9 @@ GitHub ist das einzige operative Continuity-Ziel. Zulässig sind ein vollständi
 
 Product-Owner-Entscheidungsautorität, tatsächliche Inhaltsautorschaft, Erzeuger des Git-Commit-Objekts und verifizierte Remote-Publisher-Identität sind unabhängige Fakten. Eine Freigabe macht den Product Owner niemals automatisch zum Autor, Co-Author, Committer oder Publisher.
 
-Ein gewöhnlicher Work-Unit-Grant bis `In review` umfasst insbesondere nicht: `pull-request.merge`, `issue.close`, `completed-work.cleanup`, `release.publish`, `tag.create`, `protected.publication`, `scope.expand`. Scope- oder Zielerweiterung und das Überschreiten eines Ausschlusses benötigen einen neuen exakten Grant.
+Issue-bezogene Agenten-Commits führen `Refs #N`. Bei Grant-Autorität kommt `O2I-Grant: <grant-id>` hinzu; ihr Autoritätsbeleg gehört unveränderlich ins owning Issue. Bei einer aktuellen ausdrücklichen Anweisung bleiben Quelle und beobachteter Aussteller maßgeblich; daraus entstehen weder Grant-ID noch dauerhafter Grant-Beleg.
+
+Ein gewöhnlicher Work-Unit-Grant bis `In review` umfasst insbesondere nicht: `pull-request.merge`, `issue.close`, `completed-work.cleanup`, `release.publish`, `tag.create`, `protected.publication`, `scope.expand`. Scope- oder Zielerweiterung und das Überschreiten eines Ausschlusses benötigen neue exakte Product-Owner-Autorität.
 <!-- END GENERATED: ai4x-governance -->
 
 ## Beitragsweg
@@ -44,10 +48,10 @@ Ein Review nennt exakten Gegenstand und Scope, Reviewer-Fähigkeit, Prüfungen, 
 
 ## Umsetzung
 
-- Änderungen bleiben im exakten Issue- oder Routine-Grant; neue fachliche Ideen erhalten einen eigenen Issue.
+- Änderungen bleiben im ausdrücklich autorisierten Issue- oder Routine-Umfang; neue fachliche Ideen erhalten einen eigenen Issue.
 - Markdown verwendet eine Quellzeile pro Absatz. Unmittelbar vor jeder manuellen Änderung wird der Zielbereich frisch gelesen, danach werden Änderung und Diff geprüft.
 - `meta/o2i.archimate` wird nie direkt durch Agenten editiert; Modelländerungen erfolgen schrittweise durch den Product Owner.
-- Commit-Messages sind kleingeschriebenes Englisch ohne Typpräfix. Issue-Commits führen `Refs #N`; agentische Commits zusätzlich den wahrheitsgetreuen Grant-Trailer.
+- Commit-Messages sind kleingeschriebenes Englisch ohne Typpräfix. Provenienz und Issue-Referenzen richten sich nach der generierten Governance-Übersicht.
 - Agentische Remote-Aktionen verwenden ausschließlich die verifizierte Identität `gertrud-ai4x`. Technische Berechtigung ersetzt keine Governance-Autorität.
 - Release-relevante Änderungen aktualisieren `CHANGELOG.md`.
 - Vor Commit laufen mindestens alle durch die Pfadmatrix ausgewählten lokalen Stufen; unbekannte oder gemeinsam genutzte Flächen wählen die vollständige Suite.
@@ -65,22 +69,26 @@ Ein Review nennt exakten Gegenstand und Scope, Reviewer-Fähigkeit, Prüfungen, 
 
 Die technische Haskell-Architektur, Installation und Nutzung beschreibt [`spec/README.md`](./spec/README.md).
 
+Nach einem frischen Clone oder Fork beginnt die Einrichtung mit der [Anleitung für lokale Prüfungen](./utl/verification/README.md). Sie beschreibt die erforderliche Werkzeugkette, die plattformspezifische Installation von Hindent als fertiges Binary und die Prüfung der gebundenen Versionen. Die [CLI-Einrichtung](./spec/README.md#cli-setup) zeigt anschließend Build und Nutzung des Kommandos `o2i`.
+
 ## Verifikation und White-Paper-Build
 
-Der vollständige lokale Vertrag lautet:
+Nach der Einrichtung lautet der vollständige lokale Vertrag:
 
 ```sh
-./utl/verify.sh
+./utl/verification/local.sh all
 ```
 
 Fokussierte Entwicklungsläufe verwenden `licensing`, `governance`, `model`, `foundation`, `haskell` oder `paper`. Die ausführbare Pfadmatrix liegt ausschließlich in `utl/verification/verification_scope.py`; Pull Requests zeigen alle fünf Remote-Checks, wobei nicht betroffene Stufen erfolgreich skippen.
 
+Für die Entwicklung an der Haskell-Spezifikation genügt zunächst `./utl/verification/local.sh haskell`; die zusätzliche Publikationswerkzeugkette wird erst für `paper` oder `all` benötigt. Der lokale Starter stellt die eingerichteten Werkzeuge bereit und ruft den unveränderten kanonischen Prüfer `utl/verify.sh` auf.
+
 Auf Feature-Branches sichern wir sinnvolle Arbeitsschritte regelmäßig durch Commits und Pushes. Vor der Meldung eines gesicherten Standes prüfen wir den Remote-Abgleich und benennen noch ungesicherte Änderungen. Entscheidungen und Arbeitsstände halten wir in den zugehörigen Issues fest.
 
-Für Backup-Zwischencommits verwenden wir `./utl/verify.sh checkpoint`. Der Lauf berücksichtigt vorgemerkte, weitere lokale und neue, nicht ignorierte Dateien. Bei reinen ArchiMate-Änderungen unter `doc/model/` genügen die Lizenz- und Modellstufen sowie die tatsächlichen CLI-Prüfungen nach jedem gespeicherten Modellierungsschritt. Offene Modellbefunde werden im Zwischenstand benannt. Die Prüfungen für Integration, Pull Requests und Releases bleiben verbindlich.
+Für Backup-Zwischencommits verwenden wir `./utl/verification/local.sh checkpoint`. Der Lauf berücksichtigt vorgemerkte, weitere lokale und neue, nicht ignorierte Dateien. Bei reinen ArchiMate-Änderungen unter `doc/model/` genügen die Lizenz- und Modellstufen sowie die tatsächlichen CLI-Prüfungen nach jedem gespeicherten Modellierungsschritt. Offene Modellbefunde werden im Zwischenstand benannt. Die Prüfungen für Integration, Pull Requests und Releases bleiben verbindlich.
 
-Das White Paper und seine TikZ-Abbildungen werden reproduzierbar erzeugt und versiegelt:
+Nach Einrichtung der Publikationswerkzeuge werden das White Paper und seine TikZ-Abbildungen reproduzierbar erzeugt und versiegelt:
 
 ```sh
-./utl/paper/render-paper.sh
+PATH="$PWD/utl/verification/.local/bin:$PWD/utl/verification/.local/python/bin:$PATH" ./utl/paper/render-paper.sh
 ```

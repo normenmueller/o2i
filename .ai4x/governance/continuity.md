@@ -16,13 +16,15 @@ Apply `CONTEXT.md` statement ownership. A stale dependent reference yields to it
 
 # Durable Authority
 
-For authority surviving a session, load canonical policy and re-fetch the owning Issue. Require exactly one immutable receipt for the grant ID and verify required author identity, canonical bytes, approved payload/digest, unchanged Issue precondition, subject, actions, scope, target, exclusions and current lifecycle facts.
+For grant authority surviving a session, load canonical policy and re-fetch the owning Issue. Require exactly one immutable receipt for the grant ID and verify required author identity, canonical bytes, approved payload/digest, unchanged Issue precondition, subject, actions, scope, target, exclusions and current lifecycle facts.
 
 Zero/multiple, malformed, mismatched, stale or unverifiable receipts leave authority `UNVERIFIED`; revoked, superseded, fulfilled or materially invalid grants cannot authorize continuation. A handoff, transcript or historical readback cannot repair missing current evidence. Current explicit runtime/PO instructions retain bootstrap precedence; a continuity reference never manufactures authority.
 
+Standing completion requires accepted versioned `pullRequestCompletion` and fresh GitHub PR/review/Issue/check facts: exact head/source branch, effective PO approval, independent acceptance, integration-base coverage, then approved-head/integration-tree publication and post-merge checks. Cleanup retains full preflight. Changed/dismissed/withdrawn approval, change requests or failed/unknown gates deny dependent actions. Review IDs locate evidence only; no transcript/receipt reconstruction or extension of implementation grants.
+
 # Handoff Maintenance
 
-Maintain Handoff only for an active authorized work unit on its applicable branch. Record one current Issue (or `NONE` only for explicit Issue-free Routine work), objective, authority reference, material risk, checks, next action and local return point.
+Maintain Handoff for the current authorized work unit on its applicable branch, including its completion or pending PO-decision boundary. Record one current Issue (or `NONE` only for explicit Issue-free Routine work), objective, authority reference, material risk, checks, next action and local return point. A completed grant cannot authorize further work; record the actual pending decision instead of implying continuation authority.
 
 - `ACTIVE`: design, implementation, investigation, correction, review or publication preparation.
 - `PAUSED`: genuine wait with one reason and return condition.
@@ -45,6 +47,6 @@ Unknown or missing evidence denies eligibility. A dormant checkout needs no refr
 | `completed-work-unit` | Handoff `COMPLETE`; authorized work, deterministic/remote checks, corrections and independent reviews complete; no unresolved material fact or PO decision |
 | `active-product-owner-decision` | Handoff `ACTIVE`; one exact pending PO decision is next; immutable current owning-Issue record explicitly grants no authority; all required local edits committed/pushed; incomplete/unaccepted state explicit; no other unresolved material fact |
 
-A checkpoint establishes neither acceptance nor authority. If all gates pass and cold start is the single recommendation, render only the canonical event in `decision-handoff.md` and its three fixed actions. Derive the checkout root; include no host path, payload, digest, snapshot locator or `resume`. The proof makes session and local copy dispensable without requiring deletion. Session deletion removes descendants too; never recommend it early.
+A checkpoint establishes neither acceptance nor authority. Once all gates pass and cold start is the single recommendation, use the established concise presentation and three fixed actions in `decision-handoff.md`; canonical records remain policy-owned. Derive the checkout root. The evidence makes session and local copy dispensable without requiring deletion. Session deletion removes descendants too; never recommend it early.
 
 A greeting carries no state. Payload-bearing startup is exceptional recovery only when durable materialization failed before interruption; it never overrides repository owners or becomes routine continuity.

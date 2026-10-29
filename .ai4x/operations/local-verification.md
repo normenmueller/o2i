@@ -13,9 +13,11 @@ lost project state from missing installations or recover authority from them.
    and prerequisite routes. Use its owning sources: CI and specification for
    toolchain versions; `doc/resources/md2pdf.json` for renderer acquisition.
 2. Observe the installed tools. If the local environment is absent, incomplete
-   or incompatible, reconstruct it from that procedure within the selected
-   checkout. Setup may need network/cache permission; verification installs
-   nothing implicitly. Preserve unrelated files and global installations.
+   or incompatible, reconstruct only the selected stages' prerequisites from
+   that procedure within the selected checkout. The starter needs local Python;
+   the canonical verifier enforces each selected stage's remaining tools. Setup
+   may need network/cache permission; verification installs nothing implicitly.
+   Preserve isolated-tool requirements, unrelated files and global installations.
 3. Run `./utl/verification/local.sh checkpoint` for an authorized backup, or the
    explicitly required canonical stage through the same starter. Retain normal
    stage selection and checks; never change pins merely to obtain a green run.

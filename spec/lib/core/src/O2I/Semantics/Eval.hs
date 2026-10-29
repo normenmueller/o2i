@@ -20,12 +20,16 @@ import O2I.Semantics.Contextualization
   ( assessAssertedContextualizationDependencies
   )
 import O2I.Semantics.Family.CollectiveStrategyRealization
-  ( assessCollectiveStrategyRealizations
+  ( assessCollectiveStrategyRealizationsPrepared
   )
 import O2I.Semantics.Index (buildSemanticIndex)
 import O2I.Semantics.Internal
 import O2I.Semantics.SituatedNeed (assessSituatedNeeds)
 import O2I.Semantics.Strategy (assessStrategyFormulations)
+import O2I.Semantics.StrategyRelations
+  ( assessStrategyRelations
+  , prepareStrategyRelations
+  )
 import O2I.Structure
   ( WellFormedGraph
   , structuredPropositionCommitment
@@ -57,7 +61,16 @@ assessSemantics graph inputs =
     semanticIndex = buildSemanticIndex graph inputs
     needs = assessSituatedNeeds semanticIndex
     strategies = assessStrategyFormulations semanticIndex
-    collectives = assessCollectiveStrategyRealizations semanticIndex strategies
+    preparedRelations = prepareStrategyRelations semanticIndex strategies
+    strategyRelations =
+      assessStrategyRelations semanticIndex strategies preparedRelations
+    collectives =
+      map
+        fst
+        (assessCollectiveStrategyRealizationsPrepared
+           semanticIndex
+           strategies
+           preparedRelations)
     contextualizationDefects =
       assessAssertedContextualizationDependencies semanticIndex graph
     defects =
@@ -65,14 +78,17 @@ assessSemantics graph inputs =
         (contextualizationDefects
            ++ concatMap situatedNeedDefects needs
            ++ concatMap strategyDefects strategies
+           ++ concatMap strategyRelationDefects strategyRelations
            ++ concatMap collectiveDefects collectives)
     unavailable =
       any strategyUnavailable strategies
+        || any strategyRelationUnavailable strategyRelations
         || any collectiveUnavailable collectives
     results =
       SemanticResults
         { storedSituatedNeedAssessments = needs
         , storedStrategyAssessments = strategies
+        , storedStrategyRelationAssessments = strategyRelations
         , storedCollectiveAssessments = collectives
         , storedCandidateOccurrences = candidateOccurrences graph
         }
@@ -89,6 +105,18 @@ strategyDefects assessment =
   case assessment of
     StrategyFormulationInvalid _ failures -> NonEmpty.toList failures
     _ -> []
+
+strategyRelationDefects :: StrategyRelationAssessment scope -> [SemanticDefect]
+strategyRelationDefects assessment =
+  case assessment of
+    StrategyRelationInvalid _ _ failures -> NonEmpty.toList failures
+    _ -> []
+
+strategyRelationUnavailable :: StrategyRelationAssessment scope -> Bool
+strategyRelationUnavailable assessment =
+  case assessment of
+    StrategyRelationUnavailable _ _ _ -> True
+    _ -> False
 
 collectiveDefects ::
      CollectiveStrategyRealizationAssessment scope -> [SemanticDefect]

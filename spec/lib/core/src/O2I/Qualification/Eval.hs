@@ -834,12 +834,11 @@ assessPair index needs strategies buckets need needRank strategy strategyRank =
               addQualificationWork
               emptyQualificationWork
               (map snd (firstResult : remainingResults)))
-          where firstResult =
-                  assessRoutedProposal index needProof strategyProof first
-                remainingResults =
-                  map
-                    (assessRoutedProposal index needProof strategyProof)
-                    remaining
+          where
+            firstResult =
+              assessRoutedProposal index needProof strategyProof first
+            remainingResults =
+              map (assessRoutedProposal index needProof strategyProof) remaining
   where
     needAssessment = Map.lookup need needs
     strategyAssessment = Map.lookup strategy strategies
