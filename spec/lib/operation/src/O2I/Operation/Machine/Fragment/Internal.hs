@@ -659,6 +659,21 @@ structureEvidenceFragment =
               , ( "target"
                 , [Structure.semanticRelationCompatibilityTarget value])
               ]
+      , Structure.eliminateStrategyRelationOwnerDistinctness =
+          \value ->
+            exact
+              "strategy-relation-owner-distinctness"
+              [ ( "relation"
+                , [Structure.strategyRelationOwnerDistinctnessRelation value])
+              , ( "source"
+                , [Structure.strategyRelationOwnerDistinctnessSource value])
+              , ( "target"
+                , [Structure.strategyRelationOwnerDistinctnessTarget value])
+              , ( "sourceOwner"
+                , [Structure.strategyRelationOwnerDistinctnessSourceOwner value])
+              , ( "targetOwner"
+                , [Structure.strategyRelationOwnerDistinctnessTargetOwner value])
+              ]
       , Structure.eliminateStructuredPropositionIdentity =
           \value ->
             exact
@@ -850,8 +865,22 @@ semanticDiagnosticEliminator wrap =
             ]
     , Semantics.eliminateStrategyFormulationVisionOrientation =
         strategyMember "unoriented-intent"
+    , Semantics.eliminateStrategyRelationAssertedEndpointDependency =
+        strategyRelation
+    , Semantics.eliminateStrategyRelationDirectionSupport = strategyRelation
+    , Semantics.eliminateStrategyRelationContributionSupport = strategyRelation
     }
   where
+    strategyRelation relation source target relationOccurrence sourceOccurrence targetOccurrence =
+      exact
+        "StrategyRelationKey"
+        [ occurrences "relation" [relation]
+        , occurrences "sourceStrategy" [source]
+        , occurrences "targetStrategy" [target]
+        , occurrences "relation" [relationOccurrence]
+        , occurrences "source-strategy" [sourceOccurrence]
+        , occurrences "target-strategy" [targetOccurrence]
+        ]
     exact kind fields = wrap kind (evidenceFragment [] fields)
     model role identity = fieldFragment role [modelIdentityFragment identity]
     occurrences role identities =

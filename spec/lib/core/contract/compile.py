@@ -25,19 +25,19 @@ GENERATED_OWNER_INVENTORY = (
     PACKAGE_ROOT / "contract/generated/o2i.core.owner-diagnostic-evidence-v1.json"
 )
 EXPECTED_SHAPE_SHA256 = (
-    "75ac10aed2730bdb154d166fcb8034f206d4822285b76a45d0ba966bf2265969"
+    "9fc00fe14c0f86efd332256d5aa80cd9dd4544290e3a8d99b9adbe642ab161cf"
 )
 EXPECTED_SHA256 = (
-    "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
+    "31f6118b51844aaf1f275e7ad8ea8061c0aff97cdb281b83e2e9c43023e70e7f"
 )
 EXPECTED_DIAGNOSTIC_SHAPE_SHA256 = (
-    "79eae313c8658a1cf760687c115e31e9e2fce1bb36c7dff1c0504578f4f1a5be"
+    "8c36f1448a9381478f335e16c1fa45ea9b07e0f40dbf918204f3658f1260358e"
 )
 EXPECTED_INVENTORY_SHA256 = (
-    "745d616eb9f9a91e6ced5c0d0d7b24917fe0bdd6d6af34a8d7f8fb56becfe22c"
+    "0062ff5fb940983a4b0121cd147972a0fff81293841370568a49e75caf1c001a"
 )
 EXPECTED_OWNER_INVENTORY_SHA256 = (
-    "1e728a31bcba2d4613df53326264df394a301684c33ea906c1ab18c6961aff7a"
+    "ddd15da40babc4d77650f4c0b59b6f210cfe475c00297ac088600f90fc91c2ff"
 )
 
 OCCURRENCE_AUTHORITY = (
@@ -70,6 +70,9 @@ OCCURRENCE_AUTHORITY = (
     ("core.strategy-formulation.key-result-substantiation", (("unsubstantiating-key-result", "one"), ("listed-intent", "one-or-more"))),
     ("core.strategy-formulation.key-results", (("listed-key-result", "one-or-more"),)),
     ("core.strategy-formulation.vision-orientation", (("unoriented-intent", "one"),)),
+    ("core.strategy-relation.asserted-endpoint-dependency", (("relation", "one"), ("source-strategy", "one"), ("target-strategy", "one"))),
+    ("core.strategy-relation.contribution-support", (("relation", "one"), ("source-strategy", "one"), ("target-strategy", "one"))),
+    ("core.strategy-relation.direction-support", (("relation", "one"), ("source-strategy", "one"), ("target-strategy", "one"))),
 )
 
 STRUCTURE_DIAGNOSTIC_AUTHORITY = (
@@ -109,6 +112,17 @@ STRUCTURE_DIAGNOSTIC_AUTHORITY = (
             ("relation", "occurrence-identity", "one"),
             ("source", "occurrence-identity", "one"),
             ("target", "occurrence-identity", "one"),
+        ),
+    ),
+    (
+        "core.strategy-relation.owner-distinctness",
+        "strategy-relation-owner-distinctness",
+        (
+            ("relation", "occurrence-identity", "one"),
+            ("source", "occurrence-identity", "one"),
+            ("target", "occurrence-identity", "one"),
+            ("sourceOwner", "occurrence-identity", "one"),
+            ("targetOwner", "occurrence-identity", "one"),
         ),
     ),
     (
@@ -539,7 +553,7 @@ def semantic_diagnostic_contract(
     require_exact(
         diagnostic["semanticsCompanion"],
         {
-            "schema": "o2i.core-semantics/target-v47",
+            "schema": "o2i.core-semantics/target-v48",
             "rawSha256": sha256(semantics_payload),
             "shapeSha256": EXPECTED_SHAPE_SHA256,
         },
@@ -568,7 +582,7 @@ def semantic_diagnostic_contract(
         },
         "additional semantic evidence-key mappings",
     )
-    require_exact(len(existing_mappings), 27, "existing diagnostic subject count")
+    require_exact(len(existing_mappings), 30, "existing diagnostic subject count")
     overlap = set(existing_mappings).intersection(additional_mappings)
     require_exact(overlap, set(), "disjoint diagnostic subject ownership")
 
@@ -629,7 +643,7 @@ def semantic_diagnostic_contract(
     require_exact(
         actual_authority,
         OCCURRENCE_AUTHORITY,
-        "exact 29-row occurrence authority",
+        "exact 32-row occurrence authority",
     )
     require_exact(
         list(mappings),
@@ -648,7 +662,7 @@ def semantic_diagnostic_contract(
             raise ValueError(
                 f"diagnostic evidence-key mapping {rule}: unknown schema {schema}"
             )
-    require_exact(len(mappings), 29, "complete diagnostic rule count")
+    require_exact(len(mappings), 32, "complete diagnostic rule count")
     return schemas, mappings, occurrences
 
 
@@ -800,7 +814,7 @@ def owner_diagnostic_inventory(
         subject = row["subjectEvidence"]
         subject_kind = (
             "occurrence-identity"
-            if subject["schema"] == "AssertedDependencyKey"
+            if subject["schema"] in {"AssertedDependencyKey", "StrategyRelationKey"}
             else "model-identity"
         )
         fields = tuple(
@@ -1259,7 +1273,7 @@ def haskell_semantic_contract(
 
 def compile_outputs() -> tuple[str, bytes]:
     companion, payload = load_companion()
-    require_exact(companion["schema"], "o2i.core-semantics/target-v47", "schema")
+    require_exact(companion["schema"], "o2i.core-semantics/target-v48", "schema")
     require_exact(
         companion["coreIdentity"],
         {"identity": "o2i.core-semantics", "version": "0.3.0"},

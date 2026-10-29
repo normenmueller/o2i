@@ -42,6 +42,8 @@ Keep Project status aligned with observed work at workflow boundaries and before
 
 `10/10` means all required verdicts `accepted`, zero blocking/advisory findings, all exact-candidate local/remote checks green, and intact author/reviewer separation. Never report a numerical review score. Completed-work cleanup has its own contract and authority.
 
+Include exact local/remote topic-branch cleanup in completed-work closure. Follow matching authority and `cleanup.md`; if excluded or blocked, present the remaining step explicitly. Preserve unrelated branches, worktrees and unique data.
+
 # Sub-Issues And Later Findings
 
 Use native Sub-Issues when they clarify a multi-part deliverable. The parent owns integrated scope, authority, acceptance and publication; a child owns only its bounded deliverable and adds no authority.

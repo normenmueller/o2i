@@ -13,7 +13,7 @@ This contract owns concise Product Owner communication. `policy.json` owns canon
 
 Lead with the achieved outcome and practical benefit; add only useful evidence, limitations or open points. Ordinary results, completed work, interim updates and answers require no decision event. Continue authorized unfinished work without requesting permission merely to continue.
 
-End final replies with a plain next-action explanation. Use `Dein nächster Schritt:` in German. Say `Aktuell nichts zu tun.` only when the requested scope is complete or an observed continuation mechanism needs no PO input. When returning control with work remaining, state the stop reason and next bounded action. Never imply background execution without an observed active mechanism.
+End final replies with a plain next-action explanation. Use `Dein nächster Schritt:` in German. After completing a work unit, recommend one concrete next step from current owning facts and explain its benefit; keep any new authority boundary explicit. Do not end with `Aktuell nichts zu tun.` while a known follow-up or decision remains. When returning control with work remaining, state the stop reason and next bounded action. Never imply background execution without an observed active mechanism. Put this explanation before a fixed decision event so its required ending remains intact.
 
 ## Decisions
 

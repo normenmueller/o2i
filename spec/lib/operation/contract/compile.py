@@ -2217,6 +2217,28 @@ def validate_result_schema(
             ),
             object_schema(
                 {
+                    "kind": {"const": "strategy-relation"},
+                    "relation": text_schema(pattern=TOOL_TEXT_PATTERN),
+                    "blockers": array_schema(
+                        object_schema(
+                            {
+                                "strategy": text_schema(pattern=TOOL_TEXT_PATTERN),
+                                "reason": {
+                                    "enum": [
+                                        "formulation-missing",
+                                        "formulation-identity-unresolved",
+                                        "formulation-invalid",
+                                        "formulation-candidate",
+                                    ]
+                                },
+                            }
+                        ),
+                        minimum=1,
+                    ),
+                }
+            ),
+            object_schema(
+                {
                     "kind": {"const": "collective-fit"},
                     "subject": text_schema(pattern=TOOL_TEXT_PATTERN),
                     "reasons": array_schema(collective_reasons, minimum=1),

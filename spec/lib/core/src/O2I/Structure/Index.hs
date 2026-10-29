@@ -15,8 +15,11 @@ import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
 import qualified Data.Set as Set
 import O2I.Core.Contract (CoreCarrierCategory, CoreO2IType)
+import qualified O2I.Core.Contract.Generated as Generated
 import O2I.Core.Contract.Internal
   ( CoreCarrierCategoryKind(..)
+  , CoreQualifiedEndpointId(..)
+  , CoreRelationToken(..)
   , coreCarrierCategoryKind
   , coreSemanticRelationIsCompatible
   , lookupCoreQualifiedEndpointFor
@@ -26,6 +29,7 @@ import O2I.Core.Graph.Observation.Internal
   , ContextualizationObservation(..)
   , RelationObservation(..)
   , ScopedGraphOccurrence(..)
+  , carrierModelIdentity
   , carrierQualifiedEndpoint
   )
 import O2I.Core.Identity (OccurrenceIdentity, SelectedViewScope)
@@ -136,7 +140,8 @@ assessValidProjection scope projection =
         ]
     carrierDefects = concatMap fst (Map.elems carrierAssessment)
     carriers = Map.mapMaybe singletonObservation carrierAssessment
-    relationAssessment = map (assessRelation carriers) (Map.elems relationSeeds)
+    relationAssessment =
+      map (assessRelation carriers ownersByMember) (Map.elems relationSeeds)
     relationDefects = concatMap fst relationAssessment
     relations = concatMap snd relationAssessment
     contextualizations =
@@ -356,16 +361,17 @@ carrierType (CarrierProjection _ _ o2iType _) = o2iType
 
 assessRelation ::
      Map OccurrenceIdentity (CarrierObservation scope)
+  -> Map OccurrenceIdentity [OccurrenceIdentity]
   -> RelationProjection
   -> ([StructureDefect], [RelationObservation scope])
-assessRelation carriers projection =
+assessRelation carriers ownersByMember projection =
   case (Map.lookup source carriers, Map.lookup target carriers) of
     (Just sourceCarrier, Just targetCarrier)
       | coreSemanticRelationIsCompatible
           token
           (carrierQualifiedEndpoint sourceCarrier)
           (carrierQualifiedEndpoint targetCarrier) ->
-        ( []
+        ( ownerDistinctnessDefects sourceCarrier targetCarrier
         , [ RelationObservation
               (ScopedGraphOccurrence occurrence)
               (ScopedGraphOccurrence source)
@@ -381,6 +387,54 @@ assessRelation carriers projection =
     _ -> ([], [])
   where
     RelationProjection occurrence source token target commitment = projection
+    ownerDistinctnessDefects sourceCarrier targetCarrier
+      | requiresDistinctStrategyOwners
+          token
+          (carrierQualifiedEndpoint sourceCarrier)
+          (carrierQualifiedEndpoint targetCarrier) =
+        [ StrategyRelationOwnerDistinctnessDefect
+          (StrategyRelationOwnerDistinctnessEvidence
+             occurrence
+             source
+             target
+             sourceOwner
+             targetOwner)
+        | Just sourceOwner <- [resolvedOwner source sourceCarrier]
+        , Just targetOwner <- [resolvedOwner target targetCarrier]
+        , sameStrategyIdentity sourceOwner targetOwner
+        ]
+      | otherwise = []
+    sameStrategyIdentity sourceOwner targetOwner =
+      case (Map.lookup sourceOwner carriers, Map.lookup targetOwner carriers) of
+        (Just sourceStrategy, Just targetStrategy) ->
+          carrierModelIdentity sourceStrategy
+            == carrierModelIdentity targetStrategy
+        _ -> False
+    resolvedOwner endpoint carrier =
+      case carrierQualifiedEndpoint carrier of
+        CoreQualifiedEndpointId Generated.GeneratedEndpointContextStrategy ->
+          Just endpoint
+        _ ->
+          case Map.findWithDefault [] endpoint ownersByMember of
+            [owner] -> Just owner
+            _ -> Nothing
+
+-- The closed generated vocabulary selects the three exact relation families;
+-- ownership is already resolved independently of supplemental formulation.
+requiresDistinctStrategyOwners ::
+     CoreRelationToken
+  -> CoreQualifiedEndpointId
+  -> CoreQualifiedEndpointId
+  -> Bool
+requiresDistinctStrategyOwners (CoreRelationToken token) (CoreQualifiedEndpointId source) (CoreQualifiedEndpointId target) =
+  case (token, source, target) of
+    (Generated.GeneratedTokenDirects, Generated.GeneratedEndpointContextStrategy, Generated.GeneratedEndpointContextStrategy) ->
+      True
+    (Generated.GeneratedTokenContributesTo, Generated.GeneratedEndpointContextStrategy, Generated.GeneratedEndpointContextStrategy) ->
+      True
+    (Generated.GeneratedTokenTranslatesInto, Generated.GeneratedEndpointPrimitiveStrategyKeyResult, Generated.GeneratedEndpointPrimitiveStrategyObjective) ->
+      True
+    _ -> False
 
 contextualizationObservation ::
      ContextualizationProjection -> ContextualizationObservation scope

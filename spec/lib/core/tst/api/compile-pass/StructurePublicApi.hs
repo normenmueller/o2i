@@ -54,6 +54,12 @@ data StructureEvidenceView
       OccurrenceIdentity
       OccurrenceIdentity
       OccurrenceIdentity
+  | StrategyOwnerDistinctnessView
+      OccurrenceIdentity
+      OccurrenceIdentity
+      OccurrenceIdentity
+      OccurrenceIdentity
+      OccurrenceIdentity
   | PropositionIdentityView
       OccurrenceIdentity
       OccurrenceIdentity
@@ -102,6 +108,14 @@ projectDefect = foldStructureEvidence eliminator
                 (structuredPropositionIdentityFirstOccurrence evidence)
                 (structuredPropositionIdentitySecondOccurrence evidence)
                 (structuredPropositionIdentityRemainingOccurrences evidence)
+        , eliminateStrategyRelationOwnerDistinctness =
+            \evidence ->
+              StrategyOwnerDistinctnessView
+                (strategyRelationOwnerDistinctnessRelation evidence)
+                (strategyRelationOwnerDistinctnessSource evidence)
+                (strategyRelationOwnerDistinctnessTarget evidence)
+                (strategyRelationOwnerDistinctnessSourceOwner evidence)
+                (strategyRelationOwnerDistinctnessTargetOwner evidence)
         , eliminateCollectiveParticipantType =
             \evidence ->
               ParticipantTypeView

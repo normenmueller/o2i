@@ -21,6 +21,7 @@ module O2I.Structure.Internal
   , ContextualizationTargetCategoryEvidence(..)
   , ContextualizationTargetOwnerCardinalityEvidence(..)
   , SemanticRelationCompatibilityEvidence(..)
+  , StrategyRelationOwnerDistinctnessEvidence(..)
   , StructuredPropositionIdentityEvidence(..)
   , CollectiveParticipantTypeEvidence(..)
   , CollectiveParticipantCardinalityEvidence(..)
@@ -185,6 +186,7 @@ data StructureRule
   | ContextualizationTargetCategoryRule
   | ContextualizationTargetOwnerCardinalityRule
   | SemanticRelationCompatibilityRule
+  | StrategyRelationOwnerDistinctnessRule
   | StructuredPropositionIdentityRule
   | CollectiveParticipantTypeRule
   | CollectiveParticipantCardinalityRule
@@ -210,6 +212,8 @@ structureRuleIdText rule =
     ContextualizationTargetOwnerCardinalityRule ->
       "core.contextualization.target-owner-cardinality"
     SemanticRelationCompatibilityRule -> "core.semantic-relation.compatibility"
+    StrategyRelationOwnerDistinctnessRule ->
+      "core.strategy-relation.owner-distinctness"
     StructuredPropositionIdentityRule -> "core.structured-proposition.identity"
     CollectiveParticipantTypeRule ->
       "core.collective-strategy-realization.participant-type"
@@ -264,6 +268,16 @@ data ContextualizationTargetOwnerCardinalityEvidence =
 -- | Evidence that a semantic relation has incompatible endpoints.
 data SemanticRelationCompatibilityEvidence =
   SemanticRelationCompatibilityEvidence
+    !OccurrenceIdentity
+    !OccurrenceIdentity
+    !OccurrenceIdentity
+  deriving (Eq, Ord, Show)
+
+-- | Original relation, endpoints and resolved equal Strategy owners.
+data StrategyRelationOwnerDistinctnessEvidence =
+  StrategyRelationOwnerDistinctnessEvidence
+    !OccurrenceIdentity
+    !OccurrenceIdentity
     !OccurrenceIdentity
     !OccurrenceIdentity
     !OccurrenceIdentity
@@ -336,6 +350,8 @@ data StructureDefect
   | ContextualizationTargetOwnerCardinalityDefect
       !ContextualizationTargetOwnerCardinalityEvidence
   | SemanticRelationCompatibilityDefect !SemanticRelationCompatibilityEvidence
+  | StrategyRelationOwnerDistinctnessDefect
+      !StrategyRelationOwnerDistinctnessEvidence
   | StructuredPropositionIdentityDefect !StructuredPropositionIdentityEvidence
   | CollectiveParticipantTypeDefect !CollectiveParticipantTypeEvidence
   | CollectiveParticipantCardinalityDefect
@@ -363,6 +379,8 @@ structureDefectRuleIdentity defect =
     ContextualizationTargetOwnerCardinalityDefect _ ->
       ContextualizationTargetOwnerCardinalityRule
     SemanticRelationCompatibilityDefect _ -> SemanticRelationCompatibilityRule
+    StrategyRelationOwnerDistinctnessDefect _ ->
+      StrategyRelationOwnerDistinctnessRule
     StructuredPropositionIdentityDefect _ -> StructuredPropositionIdentityRule
     CollectiveParticipantTypeDefect _ -> CollectiveParticipantTypeRule
     CollectiveParticipantCardinalityDefect _ ->
@@ -373,13 +391,14 @@ structureDefectRuleIdentity defect =
     CollectiveTargetCardinalityDefect _ -> CollectiveTargetCardinalityRule
     CollectiveTargetDistinctnessDefect _ -> CollectiveTargetDistinctnessRule
 
--- | Named total consumer for all twelve Structure rules.
+-- | Named total consumer for every diagnostic Structure rule.
 data StructureDefectEliminator result = StructureDefectEliminator
   { eliminateQualifiedEndpointCatalogMembership :: QualifiedEndpointCatalogMembershipEvidence -> result
   , eliminateContextualizationSourceCategory :: ContextualizationSourceCategoryEvidence -> result
   , eliminateContextualizationTargetCategory :: ContextualizationTargetCategoryEvidence -> result
   , eliminateContextualizationTargetOwnerCardinality :: ContextualizationTargetOwnerCardinalityEvidence -> result
   , eliminateSemanticRelationCompatibility :: SemanticRelationCompatibilityEvidence -> result
+  , eliminateStrategyRelationOwnerDistinctness :: StrategyRelationOwnerDistinctnessEvidence -> result
   , eliminateStructuredPropositionIdentity :: StructuredPropositionIdentityEvidence -> result
   , eliminateCollectiveParticipantType :: CollectiveParticipantTypeEvidence -> result
   , eliminateCollectiveParticipantCardinality :: CollectiveParticipantCardinalityEvidence -> result
@@ -403,6 +422,8 @@ foldStructureDefect eliminator defect =
       eliminateContextualizationTargetOwnerCardinality eliminator evidence
     SemanticRelationCompatibilityDefect evidence ->
       eliminateSemanticRelationCompatibility eliminator evidence
+    StrategyRelationOwnerDistinctnessDefect evidence ->
+      eliminateStrategyRelationOwnerDistinctness eliminator evidence
     StructuredPropositionIdentityDefect evidence ->
       eliminateStructuredPropositionIdentity eliminator evidence
     CollectiveParticipantTypeDefect evidence ->

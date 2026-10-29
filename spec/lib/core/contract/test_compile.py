@@ -151,6 +151,61 @@ class CoreContractCompilerTest(unittest.TestCase):
             )
             self.assertEqual(3, len(re.findall(rf"\b{constructor}\b", rendered)))
 
+    def test_cascading_replaces_direct_strategy_kr_contribution(self):
+        relations = {
+            row["id"]: row for row in self.companion["relationSemantics"]
+        }
+        self.assertNotIn(
+            "strategy-key-result-contributes-to-strategy-key-result", relations
+        )
+        self.assertEqual(
+            {
+                "id": "strategy-key-result-translates-into-strategy-objective",
+                "source": "primitive.strategy.key-result",
+                "target": "primitive.strategy.objective",
+                "relationToken": "translates-into",
+            },
+            relations["strategy-key-result-translates-into-strategy-objective"],
+        )
+        self.assertIn(
+            "strategy-key-result-translates-into-need-objective", relations
+        )
+        self.assertIn(
+            "intervention-key-result-contributes-to-strategy-key-result", relations
+        )
+
+    def test_strategy_relation_diagnostics_preserve_occurrence_identity(self):
+        inventory = json.loads(COMPILER.compile_owner_inventory())
+        structure = {
+            row["ruleId"]: row for row in inventory["owners"]["structure"]
+        }
+        fields = structure["core.strategy-relation.owner-distinctness"][
+            "alternatives"
+        ][0]["fields"]
+        self.assertEqual(
+            ["relation", "source", "target", "sourceOwner", "targetOwner"],
+            [field["roleId"] for field in fields],
+        )
+        semantic = {
+            row["ruleId"]: row for row in inventory["owners"]["semantics"]
+        }
+        for suffix in (
+            "asserted-endpoint-dependency", "contribution-support", "direction-support"
+        ):
+            with self.subTest(suffix=suffix):
+                row = semantic["core.strategy-relation." + suffix]
+                self.assertEqual("StrategyRelationKey", row["evidenceKind"])
+                self.assertEqual(3, row["subjectFieldCount"])
+                diagnostic_fields = row["alternatives"][0]["fields"]
+                self.assertEqual(
+                    ["relation", "sourceStrategy", "targetStrategy",
+                     "relation", "source-strategy", "target-strategy"],
+                    [field["roleId"] for field in diagnostic_fields],
+                )
+                for field in diagnostic_fields:
+                    self.assertEqual("occurrence-identity", field["valueKind"])
+                    self.assertEqual((1, 1), (field["minimum"], field["maximum"]))
+
     def test_canonical_companion_compiles_deterministically(self):
         first = COMPILER.compile_contract()
         second = COMPILER.compile_contract()
@@ -183,7 +238,7 @@ class CoreContractCompilerTest(unittest.TestCase):
         self.assertIn("generatedSemanticEvidenceSchemaFields", first)
         self.assertIn("generatedSemanticRuleEvidenceSchema", first)
         self.assertEqual(
-            7,
+            8,
             len(
                 re.findall(
                     r"^  Generated\w+Witness\n"
@@ -194,7 +249,7 @@ class CoreContractCompilerTest(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            29,
+            32,
             len(
                 re.findall(
                     r"^  \w+Rule\n"
@@ -205,7 +260,7 @@ class CoreContractCompilerTest(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            60,
+            63,
             len(
                 re.findall(
                     r"^  (?:=|\|) \w+RuleIdentity$",
@@ -248,7 +303,7 @@ class CoreContractCompilerTest(unittest.TestCase):
             "o2i.core.owner-diagnostic-evidence/v1", inventory["schema"]
         )
         self.assertEqual(
-            {"structure": 12, "binding": 4, "semantics": 29},
+            {"structure": 13, "binding": 4, "semantics": 32},
             {
                 owner: len(rows)
                 for owner, rows in inventory["owners"].items()
@@ -554,7 +609,7 @@ class CoreContractCompilerTest(unittest.TestCase):
 
         self.assert_occurrence_mutation_rejected(mutate)
 
-    def test_all_twenty_seven_occurrence_constructors_have_one_real_producer(self):
+    def test_all_occurrence_constructors_have_one_real_producer(self):
         source_root = COMPILER.PACKAGE_ROOT / "src/O2I/Semantics"
         production = "\n".join(
             path.read_text(encoding="utf-8")
@@ -562,6 +617,7 @@ class CoreContractCompilerTest(unittest.TestCase):
                 source_root / "Contextualization.hs",
                 source_root / "SituatedNeed.hs",
                 source_root / "Strategy.hs",
+                source_root / "StrategyRelations.hs",
                 source_root / "Family/CollectiveStrategyRealization.hs",
             )
         )
@@ -592,7 +648,7 @@ class CoreContractCompilerTest(unittest.TestCase):
             "assessPrimitiveSupport ::"
         )]
         primitive = source[source.index("assessPrimitiveSupport ::"):source.index(
-            "-- | Exact work performed by collective support preparation."
+            "-- | Exact consumer work after graph-wide Strategy evidence preparation."
         )]
         components = source[source.index("componentDefects ::"):source.index(
             "componentsUnavailable ::"
@@ -757,8 +813,8 @@ class CoreContractCompilerTest(unittest.TestCase):
         rules = COMPILER.rule_inventory(self.companion)
         stages = COMPILER.rule_stage_partition(self.companion, rules)
         schemas, mappings = self.semantic_evidence_contract(self.companion)
-        self.assertEqual(195, len(rules))
-        self.assertEqual(41, len(stages["semantics"]))
+        self.assertEqual(199, len(rules))
+        self.assertEqual(44, len(stages["semantics"]))
         self.assertEqual(
             {
                 "FitClaimKey": ["claim"],
@@ -767,10 +823,13 @@ class CoreContractCompilerTest(unittest.TestCase):
                 "ParticipantClaimKey": ["claim", "participant"],
                 "StrategyKey": ["strategy"],
                 "StrategyMemberKey": ["strategy", "member"],
+                "StrategyRelationKey": [
+                    "relation", "sourceStrategy", "targetStrategy"
+                ],
             },
             schemas,
         )
-        self.assertEqual(27, len(mappings))
+        self.assertEqual(30, len(mappings))
         self.assertTrue(set(mappings).issubset(stages["semantics"]))
         self.assertNotIn("core.contextualization.asserted-dependency", mappings)
         self.assertNotIn(

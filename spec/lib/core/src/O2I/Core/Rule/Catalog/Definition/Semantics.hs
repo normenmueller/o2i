@@ -33,9 +33,9 @@ semanticsDefinitions =
            "Add an Asserted Strategy-contributes-to-Strategy relation for the participant."
        , define
            "core.collective-strategy-realization.asserted-participant-primitive-support"
-           "Every participant has Asserted Action or Key Result support into the target formulation."
+           "Every participant has Asserted Action support or shared-Objective-mediated Key Result support into the target formulation."
            "Each participant's contribution must be evidenced below the macro relation."
-           "Add an Asserted admitted primitive support relation into the target Strategy."
+           "Provide an Asserted Action contribution or both original relations through the same listed participant Objective."
        , define
            "core.collective-strategy-realization.fit-pairwise-coherence"
            "Collective Fit records every distinct participant pair exactly once."
@@ -221,6 +221,21 @@ semanticsDefinitions =
            "Every listed Strategy intent Objective is oriented by at least one Vision Objective."
            "The strategic objective must connect to an explicit desired future state."
            "Add a Vision-Objective-orients-Strategy-Objective relation to the intent."
+       , define
+           "core.strategy-relation.asserted-endpoint-dependency"
+           "Every Asserted Strategy direction or contribution has Asserted endpoint Strategies."
+           "An Asserted macro cannot depend on a Candidate Strategy."
+           "Assert both endpoint Strategies or keep the macro Candidate."
+       , define
+           "core.strategy-relation.contribution-support"
+           "Every Asserted Strategy contribution has a complete admitted primitive support alternative."
+           "Contribution uses listed Actions or both original Key Result relations through the same lower Intent Objective."
+           "Provide a valid Action contribution or lower substantiation and upper translation sharing the exact lower Objective."
+       , define
+           "core.strategy-relation.direction-support"
+           "Every Asserted Strategy direction has a complete admitted primitive support alternative."
+           "Direction uses listed guiding-policy Principles or upper Key Result translation into a listed lower Intent Objective."
+           "Provide Asserted Principle guidance or cascading translation between the exact formulated Strategies."
        ]
 
 define :: Text -> Text -> Text -> Text -> CoreRuleDefinition

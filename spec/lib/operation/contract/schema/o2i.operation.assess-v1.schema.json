@@ -1250,7 +1250,7 @@
               "items": false
             },
             "contractDigest": {
-              "const": "be8204d09d6dae8eda1fe6969d1bea62e3b35419108474ea8af177bb9030a3da"
+              "const": "bc04e9e36b27a090e7e257f30a051430da82665b6effc01c06f79fa9fd120633"
             }
           }
         },
@@ -20301,6 +20301,179 @@
               "const": "structure"
             },
             "ruleId": {
+              "const": "core.strategy-relation.owner-distinctness"
+            },
+            "evidenceKind": {
+              "const": "strategy-relation-owner-distinctness"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "fields"
+                  ],
+                  "properties": {
+                    "fields": {
+                      "type": "array",
+                      "minItems": 5,
+                      "maxItems": 5,
+                      "prefixItems": [
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "relation"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "source"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "target"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "sourceOwner"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "targetOwner"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        }
+                      ],
+                      "items": false
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "ruleId",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "structure-assessment"
+            },
+            "owner": {
+              "const": "core"
+            },
+            "stage": {
+              "const": "structure"
+            },
+            "ruleId": {
               "const": "core.structured-proposition.identity"
             },
             "evidenceKind": {
@@ -24752,6 +24925,594 @@
               ]
             }
           }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "ruleId",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "semantics-assessment"
+            },
+            "owner": {
+              "const": "core"
+            },
+            "stage": {
+              "const": "semantics"
+            },
+            "ruleId": {
+              "const": "core.strategy-relation.asserted-endpoint-dependency"
+            },
+            "evidenceKind": {
+              "const": "StrategyRelationKey"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "fields"
+                  ],
+                  "properties": {
+                    "fields": {
+                      "type": "array",
+                      "minItems": 6,
+                      "maxItems": 6,
+                      "prefixItems": [
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "relation"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "sourceStrategy"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "targetStrategy"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "relation"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "source-strategy"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "target-strategy"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        }
+                      ],
+                      "items": false
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "ruleId",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "semantics-assessment"
+            },
+            "owner": {
+              "const": "core"
+            },
+            "stage": {
+              "const": "semantics"
+            },
+            "ruleId": {
+              "const": "core.strategy-relation.contribution-support"
+            },
+            "evidenceKind": {
+              "const": "StrategyRelationKey"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "fields"
+                  ],
+                  "properties": {
+                    "fields": {
+                      "type": "array",
+                      "minItems": 6,
+                      "maxItems": 6,
+                      "prefixItems": [
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "relation"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "sourceStrategy"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "targetStrategy"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "relation"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "source-strategy"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "target-strategy"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        }
+                      ],
+                      "items": false
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "producer",
+            "owner",
+            "stage",
+            "ruleId",
+            "evidenceKind",
+            "severity",
+            "disposition",
+            "evidence"
+          ],
+          "properties": {
+            "producer": {
+              "const": "semantics-assessment"
+            },
+            "owner": {
+              "const": "core"
+            },
+            "stage": {
+              "const": "semantics"
+            },
+            "ruleId": {
+              "const": "core.strategy-relation.direction-support"
+            },
+            "evidenceKind": {
+              "const": "StrategyRelationKey"
+            },
+            "severity": {
+              "const": "error"
+            },
+            "disposition": {
+              "const": "model-finding"
+            },
+            "evidence": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "fields"
+                  ],
+                  "properties": {
+                    "fields": {
+                      "type": "array",
+                      "minItems": 6,
+                      "maxItems": 6,
+                      "prefixItems": [
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "relation"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "sourceStrategy"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "targetStrategy"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "relation"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "source-strategy"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "role",
+                            "values"
+                          ],
+                          "properties": {
+                            "role": {
+                              "const": "target-strategy"
+                            },
+                            "values": {
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "pattern": "^[^\u0000]+$"
+                              },
+                              "minItems": 1,
+                              "maxItems": 1
+                            }
+                          }
+                        }
+                      ],
+                      "items": false
+                    }
+                  }
+                }
+              ]
+            }
+          }
         }
       ]
     },
@@ -26132,7 +26893,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
+                          "const": "1f3b2f5327e31aede2fb83f1eb7bf65c2040964db47280d10df27a1857db7848"
                         }
                       }
                     },
@@ -26180,7 +26941,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
+                          "const": "31f6118b51844aaf1f275e7ad8ea8061c0aff97cdb281b83e2e9c43023e70e7f"
                         }
                       }
                     }
@@ -26896,7 +27657,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
+                          "const": "1f3b2f5327e31aede2fb83f1eb7bf65c2040964db47280d10df27a1857db7848"
                         }
                       }
                     },
@@ -26944,7 +27705,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
+                          "const": "31f6118b51844aaf1f275e7ad8ea8061c0aff97cdb281b83e2e9c43023e70e7f"
                         }
                       }
                     }
@@ -27685,7 +28446,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
+                          "const": "1f3b2f5327e31aede2fb83f1eb7bf65c2040964db47280d10df27a1857db7848"
                         }
                       }
                     },
@@ -27733,7 +28494,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
+                          "const": "31f6118b51844aaf1f275e7ad8ea8061c0aff97cdb281b83e2e9c43023e70e7f"
                         }
                       }
                     }
@@ -28473,7 +29234,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
+                          "const": "1f3b2f5327e31aede2fb83f1eb7bf65c2040964db47280d10df27a1857db7848"
                         }
                       }
                     },
@@ -28521,7 +29282,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
+                          "const": "31f6118b51844aaf1f275e7ad8ea8061c0aff97cdb281b83e2e9c43023e70e7f"
                         }
                       }
                     }
@@ -29266,7 +30027,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
+                          "const": "1f3b2f5327e31aede2fb83f1eb7bf65c2040964db47280d10df27a1857db7848"
                         }
                       }
                     },
@@ -29314,7 +30075,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
+                          "const": "31f6118b51844aaf1f275e7ad8ea8061c0aff97cdb281b83e2e9c43023e70e7f"
                         }
                       }
                     }
@@ -31024,7 +31785,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
+                          "const": "1f3b2f5327e31aede2fb83f1eb7bf65c2040964db47280d10df27a1857db7848"
                         }
                       }
                     },
@@ -31072,7 +31833,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
+                          "const": "31f6118b51844aaf1f275e7ad8ea8061c0aff97cdb281b83e2e9c43023e70e7f"
                         }
                       }
                     }
@@ -35590,7 +36351,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
+                          "const": "1f3b2f5327e31aede2fb83f1eb7bf65c2040964db47280d10df27a1857db7848"
                         }
                       }
                     },
@@ -35638,7 +36399,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
+                          "const": "31f6118b51844aaf1f275e7ad8ea8061c0aff97cdb281b83e2e9c43023e70e7f"
                         }
                       }
                     }
@@ -36767,7 +37528,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
+                          "const": "1f3b2f5327e31aede2fb83f1eb7bf65c2040964db47280d10df27a1857db7848"
                         }
                       }
                     },
@@ -36815,7 +37576,7 @@
                           "const": "0.3.0"
                         },
                         "digest": {
-                          "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
+                          "const": "31f6118b51844aaf1f275e7ad8ea8061c0aff97cdb281b83e2e9c43023e70e7f"
                         }
                       }
                     }
@@ -38393,7 +39154,7 @@
                       "const": "0.3.0"
                     },
                     "digest": {
-                      "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
+                      "const": "1f3b2f5327e31aede2fb83f1eb7bf65c2040964db47280d10df27a1857db7848"
                     }
                   }
                 },
@@ -38441,7 +39202,7 @@
                       "const": "0.3.0"
                     },
                     "digest": {
-                      "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
+                      "const": "31f6118b51844aaf1f275e7ad8ea8061c0aff97cdb281b83e2e9c43023e70e7f"
                     }
                   }
                 }
@@ -41281,7 +42042,7 @@
                       "const": "0.3.0"
                     },
                     "digest": {
-                      "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
+                      "const": "1f3b2f5327e31aede2fb83f1eb7bf65c2040964db47280d10df27a1857db7848"
                     }
                   }
                 },
@@ -41329,7 +42090,7 @@
                       "const": "0.3.0"
                     },
                     "digest": {
-                      "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
+                      "const": "31f6118b51844aaf1f275e7ad8ea8061c0aff97cdb281b83e2e9c43023e70e7f"
                     }
                   }
                 }
@@ -47576,7 +48337,7 @@
                       "const": "0.3.0"
                     },
                     "digest": {
-                      "const": "71fd13edbcb66ef017398da7986925eead748d26625991f383fbdacc9432b8ff"
+                      "const": "1f3b2f5327e31aede2fb83f1eb7bf65c2040964db47280d10df27a1857db7848"
                     }
                   }
                 },
@@ -47624,7 +48385,7 @@
                       "const": "0.3.0"
                     },
                     "digest": {
-                      "const": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5"
+                      "const": "31f6118b51844aaf1f275e7ad8ea8061c0aff97cdb281b83e2e9c43023e70e7f"
                     }
                   }
                 }

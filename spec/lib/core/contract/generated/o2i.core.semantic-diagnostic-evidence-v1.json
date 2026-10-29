@@ -6,14 +6,14 @@
   },
   "companions": {
     "semantics": {
-      "schema": "o2i.core-semantics/target-v47",
-      "rawSha256": "193bd6b5f27413a4807182afb4ea7bfd682fa52441f0ed3d35523c6791d548c5",
-      "shapeSha256": "75ac10aed2730bdb154d166fcb8034f206d4822285b76a45d0ba966bf2265969"
+      "schema": "o2i.core-semantics/target-v48",
+      "rawSha256": "31f6118b51844aaf1f275e7ad8ea8061c0aff97cdb281b83e2e9c43023e70e7f",
+      "shapeSha256": "9fc00fe14c0f86efd332256d5aa80cd9dd4544290e3a8d99b9adbe642ab161cf"
     },
     "semanticDiagnosticEvidence": {
       "schema": "o2i.core-semantic-diagnostic-evidence/v1",
-      "rawSha256": "8f752908c052ab9323418740d6bb1f8fcd9ec12e13af0c46e6bde8477d089d54",
-      "shapeSha256": "79eae313c8658a1cf760687c115e31e9e2fce1bb36c7dff1c0504578f4f1a5be"
+      "rawSha256": "cd02ea89cecd0302669b0698be306713545e604cb88a6e21d4695d69e3f1d945",
+      "shapeSha256": "8c36f1448a9381478f335e16c1fa45ea9b07e0f40dbf918204f3658f1260358e"
     }
   },
   "diagnostics": [
@@ -506,6 +506,81 @@
       "occurrenceEvidence": [
         {
           "roleId": "unoriented-intent",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.strategy-relation.asserted-endpoint-dependency",
+      "subjectEvidence": {
+        "schema": "StrategyRelationKey",
+        "fields": [
+          "relation",
+          "sourceStrategy",
+          "targetStrategy"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "relation",
+          "cardinality": "one"
+        },
+        {
+          "roleId": "source-strategy",
+          "cardinality": "one"
+        },
+        {
+          "roleId": "target-strategy",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.strategy-relation.contribution-support",
+      "subjectEvidence": {
+        "schema": "StrategyRelationKey",
+        "fields": [
+          "relation",
+          "sourceStrategy",
+          "targetStrategy"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "relation",
+          "cardinality": "one"
+        },
+        {
+          "roleId": "source-strategy",
+          "cardinality": "one"
+        },
+        {
+          "roleId": "target-strategy",
+          "cardinality": "one"
+        }
+      ]
+    },
+    {
+      "ruleId": "core.strategy-relation.direction-support",
+      "subjectEvidence": {
+        "schema": "StrategyRelationKey",
+        "fields": [
+          "relation",
+          "sourceStrategy",
+          "targetStrategy"
+        ]
+      },
+      "occurrenceEvidence": [
+        {
+          "roleId": "relation",
+          "cardinality": "one"
+        },
+        {
+          "roleId": "source-strategy",
+          "cardinality": "one"
+        },
+        {
+          "roleId": "target-strategy",
           "cardinality": "one"
         }
       ]

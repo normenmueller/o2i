@@ -11,6 +11,7 @@ module O2I.Semantics.Index
   , buildSemanticIndex
   , semanticIndexGraphIdentity
   , indexedCarriers
+  , indexedRelations
   , carrierAt
   , occurrencesForModelIdentity
   , carriersAtEndpoint
@@ -79,6 +80,7 @@ type role SemanticIndex nominal
 data SemanticIndex scope = SemanticIndex
   { indexGraphIdentity :: !ModelIdentity
   , indexCarriers :: ![CarrierObservation scope]
+  , indexRelations :: ![RelationObservation scope]
   , indexCarrierByOccurrence :: !(Map
                                     OccurrenceIdentity
                                     (CarrierObservation scope))
@@ -118,6 +120,7 @@ buildSemanticIndex graph boundInputs@(BoundSupplementalInputs inputSet _) =
   SemanticIndex
     { indexGraphIdentity = wellFormedGraphIdentity graph
     , indexCarriers = carriers
+    , indexRelations = relations
     , indexCarrierByOccurrence =
         Map.fromList
           [(carrierOccurrenceIdentity carrier, carrier) | carrier <- carriers]
@@ -187,6 +190,10 @@ semanticIndexGraphIdentity = indexGraphIdentity
 
 indexedCarriers :: SemanticIndex scope -> [CarrierObservation scope]
 indexedCarriers = indexCarriers
+
+-- | Original relations in canonical occurrence order, including Candidates.
+indexedRelations :: SemanticIndex scope -> [RelationObservation scope]
+indexedRelations = indexRelations
 
 carrierAt ::
      SemanticIndex scope

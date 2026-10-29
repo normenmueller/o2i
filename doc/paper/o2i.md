@@ -119,6 +119,8 @@ URL: \url{https://publications.opengroup.org/c220}.
 The Open Group (2026): *ArchiMate 4 Specification*. C260.\
 URL: \url{https://publications.opengroup.org/standards/archimate/c260}.
 
+What Matters (o. J.): "Don't Confuse KPIs and OKRs". In: *OKRs Explained*. URL: \url{https://www.whatmatters.com/okrs-explained/kpis-and-okrs} (abgerufen am 29.10.2026).
+
 ## Literaturfunktion
 
 Die Literaturquellen werden nicht gleichgewichtig verwendet, sondern nach ihrer Funktion innerhalb von O2I:
@@ -131,7 +133,7 @@ TOGAF und ArchiMate stützen Situierung, indem sie fachliche Business-Architectu
 
 Rumelt (2011) und Porter (1996) stützen die Bedarfsqualifikation innerhalb der Operationalisierung, indem sie strategische Relevanz aus Herausforderung, Positionierung, Trade-offs und Aktivitätssystem begründbar machen. Doerr (2018) stützt Operationalisierung über Objectives und Key Results als überprüfbare Umsetzungs- und Evidenzformen.
 
-Parmenter (2020) stützt Performance-Logik und KPI-Disziplin. Barr (2014) ergänzt die methodische KPI-Entwicklung über eine praktische Performance-Measurement-Methodik. Doerr (2018) ergänzt Wirkung und Messung durch Ziel- und Ergebnisbezüge.
+Parmenter (2020) stützt Performance-Logik und KPI-Disziplin. Barr (2014) ergänzt die methodische KPI-Entwicklung über eine praktische Performance-Measurement-Methodik. Doerr (2018) ergänzt Wirkung und Messung durch Ziel- und Ergebnisbezüge. What Matters (o. J.) erläutert ergänzend als Praxisquelle die Unterscheidung und das Zusammenspiel von KPIs und OKRs.
 
 The Open Group (2025, 2026) stützt die Modellierungsebene: TOGAF liefert den Enterprise-Architecture-Bezug, ArchiMate liefert die standardisierte Modellierungssprache, mit der O2I-Modelle an Architekturartefakte anschlussfähig werden.
 
@@ -260,6 +262,13 @@ Abgeleitete Leitplanken begrenzen und orientieren die Guiding Policy, ohne die u
 
 Eine übergeordnete Strategie richtet eine untergeordnete Strategie aus: Sie gibt Richtung, Prioritäten, Leitplanken, Restriktionen oder Zielbezüge vor, ohne die untergeordnete Strategie vollständig zu determinieren. Die untergeordnete Strategie muss daraus eine eigene Diagnose, Guiding Policy und kohärente Handlungsfestlegungen für ihren eigenen Geltungsbereich ableiten.
 
+> [!definition]
+> **Strategische Kaskadierung**[^strategy-cascading] bezeichnet in O2I die Übersetzung eines angestrebten Ergebnisses der übergeordneten Strategie in eine qualitative Zielsetzung der untergeordneten Strategie.
+>
+> [^strategy-cascading]: *O2I-Autorenableitung*: Die Kaskadierung verbindet den Erfolgsbezug einer übergeordneten Strategie mit der eigenständigen Absicht einer untergeordneten Strategie. Ihre eigene Diagnose, Ausrichtung an der Vision und kohärente Handlungslogik bleiben erforderlich.
+
+Die untergeordnete Strategie bestimmt eigene Key Results, die diese Zielsetzung substantiieren. Der Zusammenhang zwischen den Key Results beider Strategien entsteht damit über die Zielsetzung der untergeordneten Strategie. Er beschreibt einen begründeten strategischen Beitrag; einen beobachteten Wirkungseintritt weist er nicht nach.
+
 #### Diagnose
 
 > [!definition]
@@ -354,6 +363,8 @@ Fit validiert damit nicht einzelne Bestandteile isoliert, sondern das Zusammensp
 > [^strategy-contribution]: *Autorenableitung in Anlehnung an Rumelt (2011) und Porter (1996)*: O2I formalisiert den einzeln begründeten Beitrag zwischen Strategien als eigenständige Relation, ohne daraus vollständige Realisierung oder Fit abzuleiten.
 
 Ein Strategiebeitrag behauptet weder vollständige Realisierung noch kollektiven Fit. Eine Strategie kann zu mehreren Strategien beitragen; umgekehrt kann eine Strategie Beiträge mehrerer Strategien erhalten. Jede Relation bleibt eine eigenständige Aussage mit eigener Begründung.
+
+Strategische Kaskadierung übersetzt einen Erfolgsbezug einer übergeordneten Strategie in die strategische Absicht einer untergeordneten Strategie. Ein eigener Erfolgsbezug der unteren Strategie, der genau diese Absicht stützt, vermittelt den Beitrag zum übergeordneten Erfolgsbezug. O2I führt diese Verknüpfung als Autorenableitung ein; sie ersetzt weder die eigene Diagnose noch die Vision-Ausrichtung der untergeordneten Strategie und erlaubt keine rechnerische Übertragung der Zielerreichung.
 
 > [!definition]
 > Eine **kollektive Strategierealisierung**[^collective-strategy-realization] bezeichnet die begründete Aussage, dass mindestens zwei beitragende Strategien eine Zielstrategie gemeinsam realisieren. Sie setzt individuelle Strategiebeiträge, kollektive Abdeckung und kollektiven Fit voraus.
@@ -529,9 +540,11 @@ In O2I misst eine Messung eine Situation (`Measure --measures--> Situation`). St
 > [!definition]
 > Ein **KPI** (en.: *key performance indicator*; meta: `KPI`)[^kpi] bezeichnet eine stabile, entscheidungsrelevante Messgröße innerhalb einer `Measure`. Seine KPI-Definition legt Maßeinheit, zulässigen Wertebereich, Messmethode und fachliche Interpretation verbindlich fest. Messbeobachtungen sowie Effekt- und Zielkriterien beziehen sich auf diese Definition.
 >
-> [^kpi]: *Quellenanker*: Parmenter (2020) für die stabile, entscheidungsrelevante Definition von KPIs; Barr (2014) für Messmethode und fachliche Interpretation aussagefähiger Performance-Maße. *Autorenableitung*: O2I fasst diese Merkmale in einer validierbaren KPI-Definition zusammen.
+> [^kpi]: *Quellenanker*: Parmenter (2020) für die Unterscheidung verschiedener Arten von Performance-Maßen; Barr (2014) für Messmethode und fachliche Interpretation aussagefähiger Performance-Maße. *Autorenableitung*: O2I fasst diese Merkmale in einer validierbaren KPI-Definition zusammen und verwendet KPI breiter als Parmenter, der Result Indicators und Performance Indicators sowie deren jeweilige Schlüsselindikatoren unterscheidet.
 
 `Measure` und KPI bezeichnen unterschiedliche Modellebenen: `Measure` ist der fachliche Messrahmen; ein KPI ist eine stabile, entscheidungsrelevante Messgröße innerhalb dieses Rahmens. Die Evidenzebene repräsentiert ihre verbindliche Semantik durch genau eine validierte `KPIDefinition` je verwendetem KPI.
+
+KPIs werden danach ausgewählt oder entwickelt, welche angestrebten Ergebnisse beobachtbar werden sollen. Objectives und die mit ihnen verbundenen Key Results geben dafür den fachlichen Ziel- und Ergebnisbezug vor. Ein geeigneter KPI muss noch nicht bestehen; seine Messdefinition wird für die spätere Bewertung verbindlich festgelegt. Ein Key Result einer Intervention kann für diesen KPI einen angestrebten Ergebniszustand formulieren. Das Zielkriterium und der Zieltermin im Nachweisentwurf machen dessen Erreichung bewertbar. Diese O2I-Verknüpfung konkretisiert die methodische KPI-Entwicklung nach Barr (2014) und die Unterscheidung von Messgröße und Ergebnisziel bei Doerr (2018) und What Matters (o. J.).
 
 Messung ist nicht Wirkung selbst. Sie macht Zustände und Veränderungen beobachtbar und liefert Evidenz, die erst durch Nachweislogik als Wirkung gelesen werden kann.
 
@@ -798,6 +811,21 @@ Key Result @ Strategy --translates-into--> Objective @ Need
 
 Diese Primitive-Relation kann begründen, warum eine konkrete Strategie einen konkreten Bedarf qualifiziert. Damit wird `Strategy --qualifies--> Need` nicht bloß behauptet, sondern über kontextualisierte Primitives motiviert.
 
+Zwischen zwei verschiedenen Strategy-Instanzen drückt `Key Result @ übergeordneter Strategy --translates-into--> Objective @ untergeordneter Strategy` die strategische Kaskadierung aus. Diese Relation begründet `übergeordnete Strategy --directs--> untergeordnete Strategy`. Auch ein `Principle` der übergeordneten Strategie, das ein `Principle` der untergeordneten Strategie durch `guides` leitet, kann diese Ausrichtung begründen.
+
+Der vermittelte Erfolgsbeitrag besteht aus zwei Relationen mit genau demselben unteren Objective:
+
+```text
+Key Result @ obere Strategy --translates-into--> Objective @ untere Strategy
+Key Result @ untere Strategy --substantiates--> Objective @ untere Strategy
+```
+
+Gemeinsam begründen sie `untere Strategy --contributes-to--> obere Strategy`. Eine eigenständige `Key Result @ Strategy --contributes-to--> Key Result @ Strategy`-Relation ist nicht zulässig. Ein Umsetzungsbeitrag kann weiterhin durch `Action @ beitragender Strategy --contributes-to--> Action @ Ziel-Strategy` begründet werden. Der Key-Result-Beitrag einer Intervention zu einer Strategie und die Übersetzung eines strategischen Key Results in ein Need-Objective behalten ihre eigenen Relationssignaturen.
+
+Jeder Begründungszeuge bindet die beteiligten Primitives in ihrer jeweiligen Rolle an die validierte Formulierung ihrer konkreten Strategy-Instanz. Beim vermittelten Erfolgsbeitrag gehören das Objective zur strategischen Absicht und das substantiierende Key Result zur selben unteren Strategie; das übersetzte Key Result gehört zur anderen, oberen Strategie. Die beteiligten Primitives, ihre Kontextualisierungen und beide Relationszeugen müssen `Asserted` sein, um einen behaupteten Beitrag zu begründen. Für Principle- und Action-Beiträge gelten die entsprechenden Rollenbindungen und derselbe Aussageanspruch.
+
+Die Makrorelation wird gesondert modelliert. Die beiden Primitive-Relationen erzeugen weder automatisch eine zusätzliche Relation noch eine allgemeine Transitivitätsregel. Sie erlauben auch keine rechnerische Übertragung von Zielerreichung oder einen Schluss auf beobachtete Wirkung. Die Kaskadierung verlangt nicht, dass jedes Objective einer Strategie aus einem übergeordneten Key Result hervorgeht; die eigene Diagnosebegründung und Vision-Ausrichtung bleiben für jedes gelistete Intent-Objective erforderlich.
+
 ## Wohlgeformtheit und Validierung
 
 Die aktuelle Foundation materialisiert eine notationunabhängige `StructureProjection`, aus der die Strukturauswertung entweder vollständige Diagnostik oder einen opaken `WellFormedGraph` erzeugt. Die anschließende Semantikauswertung prüft die globale Modellgrenze und kann ein `SemanticallyValidModel` erzeugen. Qualifikation, Wirkungstrace, Evidenzbereitschaft und Wirkungsevidenz bleiben davon getrennte fachliche Capabilities mit eigenen Eingaben, Ergebnissen und Diagnostik; sie werden nicht als weitere Konstruktoren einer monolithischen Validierungskette ausgegeben.
@@ -831,6 +859,8 @@ Skeleton           andernfalls; kein Kontext ist Elaborated
 Ein Modell ist wohlgeformt, wenn Bezeichner eindeutig sind, Primitive- und Strukturierungsinstanzen genau einer existierenden Kontextinstanz zugeordnet sind, Primitives nur in zulässigen Kontexten verwendet werden, Performance-Dimensionen nur in ihren zulässigen Rollen stehen, Situationsanker zulässige Formen besitzen und Relationsendpunkte typgerecht sind. Fehler werden akkumuliert, damit eine Prüfung sämtliche erkannten Strukturverletzungen gemeinsam ausweist.
 
 Der kompilierte Relations- und Endpunktvertrag sichert zulässige Kontext- und Primitive-Typen. Identitätsabhängige Invarianten konkreter Modellinstanzen prüft die Strukturauswertung; dazu gehört, dass eine Performance-Dimension und ihre Mitglieder durch dieselbe konkrete Kontextinstanz kontextualisiert werden. Erst eine erfolgreiche Auswertung erzeugt den opaken `WellFormedGraph`, der diese Garantien nach außen bewahrt. Ausführbare Tests prüfen diesen Vertrag, führen jedoch keine zusätzliche O2I-Semantik ein.
+
+Strategische Kaskadierung verbindet Primitives verschiedener Strategy-Instanzen. Auch `Strategy --directs--> Strategy` und `Strategy --contributes-to--> Strategy` verlangen verschiedene Endpunktinstanzen. Diese Identitätspflichten gelten ebenso für `Candidate` und sind unabhängig von ergänzenden Strategy-Formulierungen prüfbar.
 
 ### Semantische Gültigkeit
 
@@ -888,6 +918,8 @@ Eine kollektive Strategierealisierung ist semantisch gültig, wenn:
 6. strukturierte Fit-Evidenz paarweise Kohärenz, Guiding-Policy-Kompatibilität, Trade-off-Kompatibilität und tragfähige Interaktion belegt.
 
 Die strukturelle Zulässigkeit verlangt zusätzlich eine nichtleere, global eindeutige Claim-ID, bekannte und eindeutig gebundene Strategy-Teilnehmer, eine eindeutige Zielbindung sowie genau einen Wert für die Teilnehmer-Vollständigkeit. `Asserted` verlangt eine als `closed` erklärte Teilnehmermenge; `open` bleibt einem `Candidate` vorbehalten. Die Beitragsevidenz wird für jeden Beitragenden separat als zulässige `contributes-to`-Makroevidenz an genau diese Ziel-Strategy gebunden. Ihre Vereinigungsmenge muss die vollständigen Actions und Key Results der validierten Ziel-Strategy-Formulierung abdecken.
+
+Eine Ziel-Action wird durch einen direkten Action-Beitrag abgedeckt. Ein Ziel-Key-Result wird durch die vollständige Kaskadierung über ein Intent-Objective eines Beitragenden abgedeckt: Das Ziel-Key-Result wird in dieses Objective übersetzt, und ein Key Result desselben Beitragenden substantiiert genau dieses Objective. Beide Relationszeugen gehören zur Beitragsevidenz. Eine einzelne Übersetzung oder alleinige Action-Beiträge decken kein Ziel-Key-Result ab.
 
 Der kollektive Fit wird nicht im Modell referenziert, sondern für die jeweilige Operation als separates `CollectiveFitInput` an den Claim gebunden. Dieser Input muss denselben Teilnehmerkreis und dasselbe Ziel binden. Für jedes ungeordnete Teilnehmerpaar liegt genau eine nichtleere Kohärenzbegründung vor; für jeden Beitragenden genau eine nichtleere Begründung seiner Kompatibilität mit der gesamten Guiding Policy und den Trade-offs. Die gebundene Menge der Guiding-Policy-Principles und die gebundenen Trade-offs entsprechen jeweils vollständig der validierten Ziel-Strategy-Formulierung. Mindestens eine nichtleere Aussage begründet die tragfähige Interaktion der Beiträge. Fehlt der Input für einen `Asserted` Claim, ist dessen Fit-Bewertung nicht verfügbar; dies ist kein Modelldefekt und erfüllt die Fit-Pflicht nicht.
 
@@ -987,6 +1019,8 @@ persistierten Makrorelation
 `Strategy --qualifies--> Need` und einer zulässigen Begründung wie
 `Key Result @ Strategy --translates-into--> Objective @ Need`.
 
+Die strategische Kaskadierung verwendet ebenfalls eine ArchiMate `Influence` mit dem Label `translates-into`: vom `Outcome` des oberen Key Results zum `Goal` des unteren Objectives. Die Kontextualisierung unterscheidet diese Signatur von der Übersetzung in ein Need-Objective. Die untere `substantiates`-Relation endet am selben `Goal`; beide ursprünglichen Relationen bleiben eigenständig erhalten.
+
 ### Qualifikationsvorlage
 
 Eine Qualifikationsvorlage wird als ArchiMate `Assessment` mit `o2i.type = NeedQualificationProposal` dargestellt; daraus leitet das Profil die Trägerkategorie `QualificationProposal` ab. Die Vorlage besitzt kein `Commitment`. Ihre Dokumentation bewahrt null oder eine Begründung, und `o2i.source` bewahrt null oder mehrere Quellenbezüge, damit auch unvollständige Vorlagen diagnostizierbar bleiben. Für ein formal zulässiges Ergebnis verlangt der Core-Vertrag genau eine nichtleere normalisierte Begründung und mindestens eine normalisierte Quellenidentität. Gerichtete ArchiMate `Association`-Referenzen führen von der Vorlage zu Bedarf, Strategie, strategischem Key Result und Need-Objective. Jede Referenz trägt genau eine der Rollen `need`, `strategy`, `key-result` oder `objective` in `o2i.role`; eine zulässige Vorlage bindet jede Rolle genau einmal an einen Endpunkt des geforderten Typs. Diese Syntax persistiert ausschließlich die zu prüfende Vorlage und keine angenommene Qualifikation.
@@ -1069,7 +1103,9 @@ Damit adressiert die Strategy-Struktur zentrale Strategiebestandteile aus der Te
 
 Die zweite Strategie `Organizational transparency` ist im Layered Cake als übergeordnete Strategie modelliert. Ihre eigene Ethos- und Mission-Herleitung wird bewusst nicht ausmodelliert, damit die Sicht den Fokus auf Strategy-to-Strategy-Begründungen behält. Die Vision `Organizational transparency` richtet das strategische Objective `Make critical knowledge transparent and usable` aus. Die Diagnose `Hidden knowledge fragments organizational action` begründet dieses Objective; der `Key Result` `90% of critical decisions are traceable to shared evidence` substantiiert es. Die Action `Establish shared evidence practices` trägt zu diesem Key Result bei; das Principle `Default to shared evidence over private interpretation` leitet die Action.
 
-Zwischen beiden Strategien zeigt der Layered Cake zwei Begründungsebenen. `Default to shared evidence over private interpretation @ Organizational transparency` leitet `Act from evidence, not assumptions @ Shared understanding` und begründet damit die Makrorelation `Organizational transparency --directs--> Shared understanding`. Die Relation `80% of decisions reference shared decision records @ Shared understanding --contributes-to--> 90% of critical decisions are traceable to shared evidence @ Organizational transparency` zeigt den Erfolgsbeitrag. Zusätzlich zeigt `Create shared decision records @ Shared understanding --contributes-to--> Establish shared evidence practices @ Organizational transparency` den Umsetzungsbeitrag. Zusammen begründen diese Beitragsrelationen die Makrorelation `Shared understanding --contributes-to--> Organizational transparency`. Die Action-Relation begründet nicht `directs`; `directs` wird durch die Principle-Relation getragen.
+Zwischen beiden Strategien zeigt der Layered Cake Ausrichtung und Beitrag. `Default to shared evidence over private interpretation @ Organizational transparency` leitet `Act from evidence, not assumptions @ Shared understanding` und begründet damit die Makrorelation `Organizational transparency --directs--> Shared understanding`. Die Kaskadierung übersetzt zugleich `90% of critical decisions are traceable to shared evidence @ Organizational transparency` durch `translates-into` in `Make shared understanding actionable @ Shared understanding` und begründet ebenfalls diese Ausrichtung.
+
+Der untere Key Result `80% of decisions reference shared decision records` substantiiert genau dieses untere Objective. Über das gemeinsame Objective wird sein Erfolgsbeitrag zum oberen Key Result nachvollziehbar. Zusätzlich zeigt `Create shared decision records @ Shared understanding --contributes-to--> Establish shared evidence practices @ Organizational transparency` den Umsetzungsbeitrag. Der vermittelte Erfolgsbeitrag und der direkte Action-Beitrag begründen jeweils die Makrorelation `Shared understanding --contributes-to--> Organizational transparency`. Die Action-Relation begründet keine Ausrichtung, und die Prozentwerte beider Key Results lassen sich aus diesen Relationen nicht ineinander umrechnen.
 
 ## Situierung
 

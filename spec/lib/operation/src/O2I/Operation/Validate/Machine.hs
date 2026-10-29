@@ -19,7 +19,11 @@ import qualified Data.List.NonEmpty as NonEmpty
 import Data.Maybe (mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as Text
-import O2I.Core.Identity (ModelIdentity, modelIdentityText)
+import O2I.Core.Identity
+  ( ModelIdentity
+  , modelIdentityText
+  , occurrenceIdentityText
+  )
 import O2I.Operation.Acquisition
   ( AcquiredSupplementalSource
   , InputSource
@@ -71,6 +75,7 @@ import O2I.Operation.View
 import O2I.Semantics
   ( CollectiveFitUnavailableReason(..)
   , StrategyFormulationUnavailableReason(..)
+  , StrategyRelationUnavailableReason(..)
   )
 
 -- | One immutable completed Validate machine document.
@@ -229,6 +234,25 @@ coreWitnessFragment =
             , requiredMember "subject" (modelIdentityFragment subject)
             , requiredMember "reason" (textFragment (strategyReasonText reason))
             ]))
+    (\occurrence reasons ->
+       Just
+         (closedObjectFragment
+            [ requiredMember "kind" (textFragment "strategy-relation")
+            , requiredMember
+                "relation"
+                (textFragment (occurrenceIdentityText occurrence))
+            , requiredMember
+                "blockers"
+                (arrayFragment
+                   [ closedObjectFragment
+                     [ requiredMember "strategy" (modelIdentityFragment subject)
+                     , requiredMember
+                         "reason"
+                         (textFragment (relationReasonText reason))
+                     ]
+                   | (subject, reason) <- NonEmpty.toList reasons
+                   ])
+            ]))
     (\subject reasons blockers ->
        Just
          (collectiveFragment
@@ -277,6 +301,15 @@ modelIdentityArray = arrayFragment . map modelIdentityFragment
 
 modelIdentityFragment :: ModelIdentity -> CanonicalFragment
 modelIdentityFragment = textFragment . modelIdentityText
+
+relationReasonText :: StrategyRelationUnavailableReason -> Text
+relationReasonText reason =
+  case reason of
+    StrategyRelationFormulationMissing -> "formulation-missing"
+    StrategyRelationFormulationIdentityUnresolved ->
+      "formulation-identity-unresolved"
+    StrategyRelationFormulationInvalid -> "formulation-invalid"
+    StrategyRelationFormulationCandidate -> "formulation-candidate"
 
 strategyReasonText :: StrategyFormulationUnavailableReason -> Text
 strategyReasonText reason =
