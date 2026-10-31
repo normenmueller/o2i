@@ -99,6 +99,15 @@ Profile mappings, source apparatus, or publication prose into the model.
   5. run Haskell inspection for every affected executable View;
   6. inspect affected PNG exports when available.
 
+## Illustration Feedback
+
+Use illustration work to test understandability and applicability. Classify
+friction as a scenario, documentation or framework issue; correct justified
+gaps at their owners under current authority, verify, and return to the recorded
+slice. Reuse fitting Issues. At actual work-unit switches synchronize
+Issue/Project status, wait reason and return point under
+`../governance/guidelines.md`; keep administration at these boundaries.
+
 # Tool Responsibilities
 
 - Python hygiene: identifiers, references, usage, custom folders, View documentation.

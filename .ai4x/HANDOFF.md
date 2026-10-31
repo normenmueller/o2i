@@ -1,35 +1,37 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#116","currentNode":"resume-illustration-at-company-vision"}
+{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#119","currentNode":"build-orientation-syntax-reference"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
 
-Resume the company story in #115 and its native illustration in #116. Preserve the saved Ethos/Mission; agree the company Vision before the next native edit.
+Fix Ethos/Mission/Vision lookup under #119, then return to #116. #109 owns the learning/reference illustration and later Layered Cake replacement.
 
 # Authority
 
-The PO requests a cold start at the pending company Vision decision. #115 owns its immutable transition record; #116 owns checkpoint evidence. No agent grant survives this boundary. Reconstruct current facts and return that decision to the PO; no new scenario or native edit is authorized by this handoff. Native model saves remain PO-owned.
+Current PO instruction: bounded #119 reference correction and Issue/Board coordination; no semantic/Profile/evaluator change, full guide or Layered Cake deletion. Native saves remain PO-owned. No durable grant is claimed.
 
 # Current Facts
 
-Working branch: `feat/116-illustration`. Published integration `65ddae1` retains the complete parked and correction histories and accepted trunk. All nine illustration paths match their saved source; generic files match trunk. The superseded 125 branch is removed locally/remotely. #125 and #135 are closed/Done; #109/#115/#116 are In progress.
+Branch: `feat/116-illustration`, published HEAD `7eb5a5b`. #109/#119 are In progress; #115/#116 are Paused for this detour. Ordering creates no native dependency.
 
-Mission: "Entscheiden und Verwirklichen ermöglichen". The next content decision is the company Vision. #109 owns the overall illustration, #115 the story and #116 native realization.
+#115 owns the agreed company/Vision; #116 owns the saved slice and checks. Preserve `doc/model/illustration.archimate` and the PO's Goal-label expression in `meta/o2i.archimate`. These native changes remain uncommitted/unpushed.
+
+#119 owns the [accepted design](https://github.com/normenmueller/o2i/issues/119#issuecomment-6542329067): implement one isolated Candidate `O2I Syntax - Orientation` View. Implementation is unaccepted.
 
 # Material Risk
 
-Preserve model/export identities and all unique work. Fresh restoration from the published illustration branch and full ancestry prove preservation without the retired ref. No new product semantics or example-specific exception.
+Preserve identities and both models. Separate semantic types, mapping objects and Candidate examples; isolate closures. Add no semantic registry; green CLI proves no final acceptance.
 
 # Verification
 
-Licensing, governance, repository model checks and all nine current-CLI requests pass. Illustration snapshots regenerate successfully. The two existing empty orientation folders remain explicit unfinished-checkpoint findings. #116 owns exact evidence; this is not final reference acceptance.
+#116 owns evidence: model stage passes 70 tests; snapshots regenerate; all 12 illustration CLI requests accept. Vision support remains unfinished; two known empty folders remain; no new PNG inspected. Reference implementation and remote backup are outstanding.
 
 # Next Action
 
-After the cold start, reconstruct this branch from current GitHub facts and discuss the company Vision in #115 with the PO. Do not restart Mission selection. Follow the normal per-save model checks in #116 after the agreed native save.
+Guide the first PO save: six typed Candidate carriers and three contextualizations. Register the new View/preset/snapshot and verify. Then add six support/macrorelations and notes; complete reader walkthrough and independent review under #119.
 
 # Local Return Point
 
-Continue here with company Vision. No native change before its content is agreed with the PO. Use current Issue/Project facts; scratch owns no authority or required continuation.
+After verification, resume #115/#116 through the workflow and continue Vision's Mission/Ethos support. Do not restart wording. Full guide and Layered Cake replacement remain later. Scratch owns no continuity.
