@@ -288,7 +288,7 @@ Die untergeordnete Strategie bestimmt eigene Key Results, die diese Zielsetzung 
 >
 > [^diagnosis]: *Quellenanker*: Rumelt (2011).
 
-Eine Diagnose reduziert Komplexität, indem sie nicht die Gesamtheit aller beobachtbaren Probleme sammelt, sondern die strategisch relevante Herausforderung herausarbeitet. Dadurch wird zunächst bestimmbar, welchen Beitrag die strategische Absicht zur Vision leisten soll; erst danach wird bewertbar, ob die Guiding Policy tatsächlich auf diese Herausforderung passt.
+Eine Diagnose reduziert Komplexität: Sie arbeitet heraus, welche Herausforderung im jeweiligen Geltungsbereich unter den gegebenen Bedingungen für die Verwirklichung der Vision entscheidend ist. Dadurch wird zunächst bestimmbar, welchen Beitrag die strategische Absicht zur Vision leisten soll; erst danach wird bewertbar, ob die Guiding Policy tatsächlich auf diese Herausforderung passt.
 
 ##### Strategische Absicht
 
