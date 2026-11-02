@@ -1,37 +1,37 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#116","currentNode":"vision-mission-ethos-support"}
+{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#115","currentNode":"corporate-diagnosis"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
 
-#116: continue the saved company Vision with Mission/Ethos support. #109 owns the learning/reference illustration and Layered Cake replacement.
+#115: formulate the first Corporate strategy Diagnosis from the agreed two-part starting point; native realization follows under #116.
 
 # Authority
 
-Current PO instruction: resume after verified #119; preserve wording/identities and coordinate Issues/Board. PO owns native saves. Excludes new generic semantics, full guide and Layered Cake deletion. No durable grant claimed.
+Current PO instruction: co-develop story/model, preserve wording/identities and coordinate Issues/Board. PO owns native saves. No generic semantics change, full guide or Layered Cake deletion; no durable grant claimed.
 
 # Current Facts
 
-Branch: `feat/116-illustration`, published product checkpoint `4f44691`. #109/#115/#116 In progress; #119 Paused for the later guide. Remote readback verified; ordering creates no dependency.
+Branch: `feat/116-illustration`, published orientation checkpoint `cd25af7`. #115/#116 In progress; #119 Paused. Remote readback verified; ordering creates no dependency.
 
-#115 owns company/Vision. PO saved both Mission grounds relations in A Orientierung and reorganized folders. AO detail Views remain focused; Ethos guidance is pending. Preserve identities.
+#115 owns agreed scenario and two-part challenge: recognize/understand what and why before How; preserve coherence/commitment through realization. Exact Diagnosis wording and Driver labels remain Co-Author proposals.
 
-#119 reference correction is independently accepted and published at `5bb4519`; [review, checks and publication evidence](https://github.com/normenmueller/o2i/issues/119#issuecomment-6573081646). Full tutorial remains outside this acceptance.
+#116 owns [accepted orientation and publication evidence](https://github.com/normenmueller/o2i/issues/116#issuecomment-6576195622). #119 lookup correction is accepted at `5bb4519`; full tutorial remains later.
 
 # Material Risk
 
-Preserve identities and explicit Primitive/macrorelations. The Candidate syntax template is no company content. CLI acceptance proves neither complete fachliche support nor observed effect.
+Preserve identities and explicit support. A new incomplete Strategy starts as Candidate; invent no native diagnosis role property or partial formulation input. No full-chain or observed-effect acceptance.
 
 # Verification
 
-Published baseline passed full checkpoint. Latest save: snapshots, 81 model tests and 12 illustration CLI requests pass; two known empty folders remain. Updated overview PNG and final illustration acceptance remain pending.
+Full checkpoint passed; final folder-only delta additionally passed 81 model tests, snapshots, 12 CLI requests and independent acceptance. Three empty future-work folders remain: Formierung and two Orientierung. Model/PNG are backed up.
 
 # Next Action
 
-PO agreed Unabhängigkeit as Vision guidance. Add asserted directed Association guides from this Principle to Vision Objective and separately Ethos to Vision in A Orientierung; keep AO detail Views focused.
+Discuss Diagnosis Driver wording in #115. Paper Formierung hierarchy is advice only: Strategy contains constituents/interplay; CSFs are its peer. No Paper edit has started. Continue native Strategy only after the next content slice is agreed.
 
 # Local Return Point
 
-Mission grounding is saved in the overview; Ethos guidance follows. Do not restart wording. Full guide and Layered Cake replacement remain later. Scratch owns no continuity.
+Orientation is stable. Keep cross-context support in A Orientierung and AO detail Views focused. Full guide and Layered Cake replacement remain later. Scratch owns no continuity.
