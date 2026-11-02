@@ -1,37 +1,33 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#119","currentNode":"strategy-syntax-starter"}
+{"schema":"o2i.handoff/v1","workStatus":"PAUSED","currentIssue":"#119","currentNode":"diagnosis-positioning-return"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
 
-#119: make all eleven Strategy constituents and their graph/formulation entry locations discoverable, with individual/collective relation guidance.
+#119: pause the Strategy-semantics investigation at the PO's day-end request.
 
 # Authority
 
-Current PO request: fix Strategy lookup before the next instance slice. No Core/Profile meaning change or full tutorial. Native metamodel saves remain PO-owned.
+PO authorized preservation/backup and pause, not semantic changes. Next work requires explicit PO resume. Native metamodel saves remain PO-owned.
 
 # Current Facts
 
-Branch: `feat/116-illustration`, native checkpoint `5e73e9f` published. #119/#58/#109 In progress; #115/#116 Paused for this correction; #137 Done. Remote readback verified.
-
-#109/#115 own Unternehmen + two Geschäftsfelder: three Strategies, collective realization required. Field names/content and exact Diagnosis labels remain open.
-
-#116 owns [native preparation/checks](https://github.com/normenmueller/o2i/issues/116#issuecomment-6581309978).
+Branch: `feat/116-illustration`. #119 Paused, verified; #115/#116 retain their framework-correction wait. [Pause, evidence and exact return](https://github.com/normenmueller/o2i/issues/119#issuecomment-6587619596) own unfinished state and backup/restore follow-up.
 
 # Material Risk
 
-Distinguish graph, complete structured formulation and fachliche judgment. No invented native role properties or partial formulation input. Reference examples remain isolated Candidates.
+Preserve standard meanings or justify departures; legal syntax alone is insufficient. Separate scope, semantic function and presentation. No chosen role/subcontext design. Paused-work cold-start eligibility is an unresolved contract gap; no deletion recommendation.
 
 # Verification
 
-Documentation slice/design accepted; licensing/governance/Paper checkpoint passed. Native preparation: 81 tests, 18 CLI requests; five unfinished hygiene findings remain. New syntax Views are not saved yet.
+Diagnosis wording/PDF independently accepted; paper/governance/licensing passed. Native exploration is unaccepted: unregistered View, four extractor failures, three Profile rejections. Backup preserves bytes, not acceptance. #119 owns final publication/restore evidence.
 
 # Next Action
 
-PO begins O2I Syntax - Strategy with isolated Candidate Strategy, Driver and contextualizes. Verify, extend the pattern and add Strategy Relations; reuse the collective carrier. Exact starter is owned by #119.
+On explicit resume, compare Diagnosis and Positioning from Terminology, standard meanings and required O2I guarantees before choosing representation. Scope selection is separate. Semantic changes require separately bounded PO decision; preserve native exploration.
 
 # Local Return Point
 
-After complete reference review/backup, resume #115 with Scope first, then Paper constituent order with iteration. Preserve orientation and two-part Diagnosis concepts. Full guide waits for its accepted complete-chain condition; exact explanation wording is owned by #119.
+After the complete reference correction, resume #115 with Scope first. Preserve agreed orientation, two-part Diagnosis and Unternehmen + two Geschäftsfelder/collective realization. Full guide retains its accepted complete-chain start condition.
