@@ -1,33 +1,33 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"PAUSED","currentIssue":"#119","currentNode":"diagnosis-positioning-return"}
+{"schema":"o2i.handoff/v1","workStatus":"PAUSED","currentIssue":"#138","currentNode":"paused-cold-start-rule-first"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
 
-#119: pause the Strategy-semantics investigation at the PO's day-end request.
+Next session (planned 2026-11-03): #138 first, before further fachliche work under #119.
 
 # Authority
 
-PO authorized preservation/backup and pause, not semantic changes. Next work requires explicit PO resume. Native metamodel saves remain PO-owned.
+PO explicitly ordered #138 before #119. Tonight: ordering/handoff preservation only. Resume requires current PO instruction and owning facts. No policy design is accepted merely by scheduling.
 
 # Current Facts
 
-Branch: `feat/116-illustration`. #119 Paused, verified; #115/#116 retain their framework-correction wait. [Pause, evidence and exact return](https://github.com/normenmueller/o2i/issues/119#issuecomment-6587619596) own unfinished state and backup/restore follow-up.
+Branch: `feat/116-illustration`. [#138](https://github.com/normenmueller/o2i/issues/138): Backlog, Level Work, first manual Project position, verified. #119 remains Paused; #115/#116 retain their framework-correction wait. #138 owns the updated first-task order.
 
 # Material Risk
 
-Preserve standard meanings or justify departures; legal syntax alone is insufficient. Separate scope, semantic function and presentation. No chosen role/subcontext design. Paused-work cold-start eligibility is an unresolved contract gap; no deletion recommendation.
+Preserve every shared Cold Start safeguard. #138 adds the missing recurring pause route; no permanent policy change tonight. #119 owns the current-case PO exception and unaccepted native exploration. No O2I semantic/native change is authorized by this ordering.
 
 # Verification
 
-Diagnosis wording/PDF independently accepted; paper/governance/licensing passed. Native exploration is unaccepted: unregistered View, four extractor failures, three Profile rejections. Backup preserves bytes, not acceptance. #119 owns final publication/restore evidence.
+Accepted Diagnosis wording/PDF and prior restore evidence: #119. Native exploration stays unaccepted (unregistered View, four test failures, three Profile rejections). This update changes only the return order; #138 owns refreshed backup/restore evidence.
 
 # Next Action
 
-On explicit resume, compare Diagnosis and Positioning from Terminology, standard meanings and required O2I guarantees before choosing representation. Scope selection is separate. Semantic changes require separately bounded PO decision; preserve native exploration.
+On resume, address #138 with governance Co-Author, bounded design, required independent review and verification. Then return to #119: compare Diagnosis and Positioning from Terminology, standard meanings and required O2I guarantees before choosing representation.
 
 # Local Return Point
 
-After the complete reference correction, resume #115 with Scope first. Preserve agreed orientation, two-part Diagnosis and Unternehmen + two Geschäftsfelder/collective realization. Full guide retains its accepted complete-chain start condition.
+#138 -> #119 -> after complete reference correction, #115 with Scope first. Preserve orientation, two-part Diagnosis and Unternehmen + two Geschäftsfelder/collective realization. Full guide retains its complete-chain start condition.
