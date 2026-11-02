@@ -14,13 +14,13 @@ Current PO instruction: co-develop story/model and coordinate Issues/Board. PO o
 
 # Current Facts
 
-Branch: `feat/116-illustration`, published `f64e867`. #115/#116 In progress; #137 under #58 In review, #119 Paused. Remote return/status readback verified; ordering creates no dependency.
+Branch: `feat/116-illustration`. #115/#116 In progress; #137 under #58 In review, #119 Paused. Remote return/status readback verified; ordering creates no dependency.
 
 #115 owns agreed scenario and two-part challenge: recognize/understand what and why before How; preserve coherence/commitment through realization. Exact Diagnosis wording and Driver labels remain Co-Author proposals.
 
 #116 owns [accepted orientation and publication evidence](https://github.com/normenmueller/o2i/issues/116#issuecomment-6576195622). #119 lookup correction is accepted at `5bb4519`; full tutorial remains later.
 
-#137 [review/backup](https://github.com/normenmueller/o2i/issues/137#issuecomment-6577614662) is accepted and backed up; return condition met. PO/integrated review remains open.
+#137 [review/backup](https://github.com/normenmueller/o2i/issues/137) is accepted and backed up; return condition met. PO/integrated review remains open.
 
 # Material Risk
 
@@ -28,7 +28,7 @@ Preserve identities and explicit support. A new incomplete Strategy starts as Ca
 
 # Verification
 
-#137 final checkpoint passed; independent publication review accepted its exact seven-file candidate without findings. Fachtext and 82 anchors are preserved; PDF has 76 pages. Source/PDF backup is verified.
+#137 book/parts and PO-requested toc-depth 2 are independently accepted. Checkpoint passed; secnumdepth 3 and all 69 main/backmatter pages are preserved. PDF: 75 pages, two-page contents.
 
 # Next Action
 

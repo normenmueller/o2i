@@ -24,7 +24,7 @@ secPrefix:
   - "Kap."
   - "Kap."
 toc: yes
-toc-depth: 3
+toc-depth: 2
 secnumdepth: 3
 callout-theme: gray
 papersize: a4
