@@ -31,6 +31,10 @@ Ein kleines Beispiel: Eine Kundin möchte die Bearbeitung ihrer Kundenanliegen v
         <property key="o2i.commitment" value="asserted"/>
       </element>
     </folder>
+    <element xsi:type="archimate:Goal" name="Unsere Kunden erkennen und verstehen ihre Bedarfe, bilden sich ein begründetes Urteil und bringen wichtige Veränderungen verlässlich zum Ergebnis." id="id-bfcf558b2bd443a0b6f0300a13aadec8">
+      <property key="o2i.type" value="Objective"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
   </folder>
   <folder name="Implementation &amp; Migration" id="id-f62caa15c6f044288dc338e1d944c5d2" type="implementation_migration"/>
   <folder name="Other" id="id-78c709b6965045098a313e86cfed43fb" type="other">
@@ -40,6 +44,10 @@ Ein kleines Beispiel: Eine Kundin möchte die Bearbeitung ihrer Kundenanliegen v
     </element>
     <element xsi:type="archimate:Grouping" name="Mission" id="id-565c7313f81243d39dc77bd7a187507a">
       <property key="o2i.type" value="Mission"/>
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="archimate:Grouping" name="Vision" id="id-6b5aa0aa86854c6ba0f2b73a0c4ee64f">
+      <property key="o2i.type" value="Vision"/>
       <property key="o2i.commitment" value="asserted"/>
     </element>
   </folder>
@@ -70,6 +78,9 @@ Ein kleines Beispiel: Eine Kundin möchte die Bearbeitung ihrer Kundenanliegen v
       <property key="o2i.commitment" value="asserted"/>
     </element>
     <element xsi:type="archimate:AssociationRelationship" name="guides" id="id-a04d39c8f03b4e23b6901c78d2ccac8c" source="id-93cb6c87616d4153bb2edcc3dc11ce8c" target="id-565c7313f81243d39dc77bd7a187507a" directed="true">
+      <property key="o2i.commitment" value="asserted"/>
+    </element>
+    <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-d73883a3b7514cc08b015a139b6203be" source="id-6b5aa0aa86854c6ba0f2b73a0c4ee64f" target="id-bfcf558b2bd443a0b6f0300a13aadec8">
       <property key="o2i.commitment" value="asserted"/>
     </element>
   </folder>
@@ -114,6 +125,17 @@ Ein kleines Beispiel: Eine Kundin möchte die Bearbeitung ihrer Kundenanliegen v
             <feature name="labelExpression" value="Wir unterstützen Organisationen dabei,&#xA;fundierte Entscheidungen zu treffen und&#xA;ihre Vorhaben verlässlich umzusetzen."/>
           </child>
           <documentation>Zeigt &quot;Entscheiden und Verwirklichen ermöglichen&quot; als Driver der Mission und seine explizite Kontextzuordnung.</documentation>
+        </element>
+        <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Illustration - AO - Vision" id="id-f2c693a1ea7b4c158607ae893e2e4e29">
+          <child xsi:type="archimate:DiagramObject" id="id-ca4721f430e74ce09fa54ed52ad82f0f" font="1|Arial|14.0|0|COCOA|1|ArialMT" textAlignment="1" archimateElement="id-6b5aa0aa86854c6ba0f2b73a0c4ee64f">
+            <bounds x="72" y="60" width="409" height="73"/>
+            <feature name="deriveElementLineColor" value="false"/>
+            <sourceConnection xsi:type="archimate:Connection" id="id-bd3ff99d8c294753a9a2ad52614018f5" source="id-ca4721f430e74ce09fa54ed52ad82f0f" target="id-01696a6b3e64413b850a713cf95c0643" archimateRelationship="id-d73883a3b7514cc08b015a139b6203be"/>
+          </child>
+          <child xsi:type="archimate:DiagramObject" id="id-01696a6b3e64413b850a713cf95c0643" targetConnections="id-bd3ff99d8c294753a9a2ad52614018f5" textPosition="1" archimateElement="id-bfcf558b2bd443a0b6f0300a13aadec8">
+            <bounds x="108" y="180" width="337" height="85"/>
+          </child>
+          <documentation>Zeigt die vereinbarte Unternehmensvision als Objective und ihre explizite Zuordnung zum Kontext Vision.</documentation>
         </element>
       </folder>
       <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Illustration - A - Orientierung" id="id-ee53c8c771204dab96748b54e2b922ea">
