@@ -1057,6 +1057,26 @@ persistierten Makrorelation
 
 Die strategische Kaskadierung verwendet ebenfalls eine ArchiMate `Influence` mit dem Label `translates-into`: vom `Outcome` des oberen Key Results zum `Goal` des unteren Objectives. Die Kontextualisierung unterscheidet diese Signatur von der Übersetzung in ein Need-Objective. Die untere `substantiates`-Relation endet am selben `Goal`; beide ursprünglichen Relationen bleiben eigenständig erhalten.
 
+### Strategieformulierung
+
+Die vollständige Strategie verbindet zwei Darstellungsformen: Im Modellgraphen
+stehen die Strategy als `Grouping`, ihre kontextualisierten `Driver`,
+`Objective`, `Principle`, `Action` und `Key Result` sowie deren Beziehungen.
+Eine ergänzende Strategieformulierung bindet die Modellidentitäten an die
+Rollen Diagnose, Absicht, Guiding Policy, Handlungsfestlegungen und
+Erfolgsbezug und erfasst die sechs weiteren Strategiebestandteile textlich
+oder strukturiert. Beide Formen beschreiben dieselbe Wegentscheidung;
+die Formulierung ist für eine fachlich vollständige Strategie erforderlich.
+
+Der Core-Vertrag definiert dafür einen vollständigen
+`StrategyFormulationInput`, der über die Strategy-Identität an den Graphen
+gebunden und der prüfenden Operation separat übergeben wird. Das
+ArchiMate-Profil transportiert diesen Input nicht als Modelleigenschaften.
+Die [Modellierungsreferenz](../reference/strategy.md) ordnet allen elf
+Bestandteilen ihre konkreten Eingabeorte zu. Die Pflichten der
+Formulierungsprüfung bleiben unter
+[Semantische Gültigkeit](#semantische-gültigkeit) definiert.
+
 ### Qualifikationsvorlage
 
 Eine Qualifikationsvorlage wird als ArchiMate `Assessment` mit `o2i.type = NeedQualificationProposal` dargestellt; daraus leitet das Profil die Trägerkategorie `QualificationProposal` ab. Die Vorlage besitzt kein `Commitment`. Ihre Dokumentation bewahrt null oder eine Begründung, und `o2i.source` bewahrt null oder mehrere Quellenbezüge, damit auch unvollständige Vorlagen diagnostizierbar bleiben. Für ein formal zulässiges Ergebnis verlangt der Core-Vertrag genau eine nichtleere normalisierte Begründung und mindestens eine normalisierte Quellenidentität. Gerichtete ArchiMate `Association`-Referenzen führen von der Vorlage zu Bedarf, Strategie, strategischem Key Result und Need-Objective. Jede Referenz trägt genau eine der Rollen `need`, `strategy`, `key-result` oder `objective` in `o2i.role`; eine zulässige Vorlage bindet jede Rolle genau einmal an einen Endpunkt des geforderten Typs. Diese Syntax persistiert ausschließlich die zu prüfende Vorlage und keine angenommene Qualifikation.

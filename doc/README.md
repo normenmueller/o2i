@@ -7,6 +7,7 @@ Diese Dokumentation führt von den Begriffen zum eigenen Modell.
 | --- | --- |
 | [WTF](misc/wtf.md) | Begriffe kurz erklärt |
 | [Modellierungs-Guide](guide/README.md) | Ein fiktives Beispiel mit angeleiteten Archi-Schritten und passenden Views aufbauen und prüfen |
+| [Strategiebestandteile erfassen](reference/strategy.md) | Alle elf Bestandteile: Modellgraph und ergänzende Strategieformulierung mit ihren konkreten Eingabeorten |
 | [Beispielmodell](model/illustration.archimate) | Das gemeinsame, schrittweise wachsende Modell für Guide und Prüfungen |
 | [White Paper](paper/o2i.md) · [PDF](paper/o2i.pdf) | Fachliche Definitionen, Metamodell und konkrete Syntax |
 
