@@ -21,6 +21,7 @@ $if(geometry)$
 \usepackage[$for(geometry)$$geometry$$sep$,$endfor$]{geometry}
 $endif$
 \usepackage{amsmath,amssymb}
+\usepackage{eso-pic}
 $fonts.latex()$
 $font-settings.latex()$
 $common.latex()$
@@ -64,6 +65,19 @@ $endif$
 
 \begin{document}
 \frontmatter
+$if(publication-url)$
+\AddToShipoutPictureFG*{%
+  \AtPageLowerLeft{%
+    \raisebox{13mm}[0pt][0pt]{%
+      \makebox[\paperwidth][c]{%
+        \fontsize{7}{8.4}\selectfont
+        \href{$publication-url$}{%
+          \textcolor[gray]{0.48}{Publiziert unter \nolinkurl{$publication-url$}}}%
+      }%
+    }%
+  }%
+}
+$endif$
 \maketitle
 $if(abstract)$
 \chapter*{Kurzfassung}

@@ -4,7 +4,8 @@ documentclass: book
 classoption:
   - oneside
   - openany
-title: "Von Orientierung zur Wirkung\\thanks{Publiziert unter \\url{https://github.com/normenmueller/o2i}}"
+title: "Von Orientierung zur Wirkung"
+publication-url: "https://github.com/normenmueller/o2i"
 subtitle: "Begriffe und Relationen für wirksames Handeln"
 author: nemron
 version: "0.2"
