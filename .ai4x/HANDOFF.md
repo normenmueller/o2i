@@ -16,7 +16,7 @@ Current PO instruction: resume after verified #119; preserve wording/identities 
 
 Branch: `feat/116-illustration`, published product checkpoint `4f44691`. #109/#115/#116 In progress; #119 Paused for the later guide. Remote readback verified; ordering creates no dependency.
 
-#115 owns company/Vision; #116 owns the saved first Vision slice at `4f44691`. Its Mission/Ethos support is unfinished. Preserve both native models and persisted identities.
+#115 owns company/Vision. PO saved both Mission grounds relations in A Orientierung and reorganized folders. AO detail Views remain focused; Ethos guidance is pending. Preserve identities.
 
 #119 reference correction is independently accepted and published at `5bb4519`; [review, checks and publication evidence](https://github.com/normenmueller/o2i/issues/119#issuecomment-6573081646). Full tutorial remains outside this acceptance.
 
@@ -26,12 +26,12 @@ Preserve identities and explicit Primitive/macrorelations. The Candidate syntax 
 
 # Verification
 
-Canonical checkpoint passed, including complete Haskell and Paper. All 81 model tests, snapshots, 12 syntax and 12 illustration CLI requests pass. Illustration hygiene retains two known empty orientation folders; Vision support remains incomplete. Source changes are backed up.
+Published baseline passed full checkpoint. Latest save: snapshots, 81 model tests and 12 illustration CLI requests pass; two known empty folders remain. Updated overview PNG and final illustration acceptance remain pending.
 
 # Next Action
 
-Guide one PO save: reuse Mission/Driver in the Vision View and their contextualization; add asserted directed Association grounds from Driver to Vision Objective and separately Mission to Vision. Inspect source, snapshots, model checks and CLI after saving.
+PO agreed Unabhängigkeit as Vision guidance. Add asserted directed Association guides from this Principle to Vision Objective and separately Ethos to Vision in A Orientierung; keep AO detail Views focused.
 
 # Local Return Point
 
-Mission grounding first, then agree Ethos guidance. Do not restart wording. Full guide and Layered Cake replacement remain later. Scratch owns no continuity.
+Mission grounding is saved in the overview; Ethos guidance follows. Do not restart wording. Full guide and Layered Cake replacement remain later. Scratch owns no continuity.
