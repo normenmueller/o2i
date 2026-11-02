@@ -16,6 +16,7 @@ from focused_view_contract import (  # noqa: E402
     REQUIRED_VIEW_DOCUMENTATION,
     SYNTAX_COLLECTIVE_VIEW,
     SYNTAX_CONTEXTUALIZATION_VIEW,
+    SYNTAX_ORIENTATION_VIEW,
     SYNTAX_QUALIFICATION_VIEW,
     FocusedElement,
     FocusedRelation,
@@ -71,6 +72,7 @@ class FocusedViewContractTest(unittest.TestCase):
             name: cls._target_view(name)
             for name in (
                 SYNTAX_CONTEXTUALIZATION_VIEW,
+                SYNTAX_ORIENTATION_VIEW,
                 SYNTAX_COLLECTIVE_VIEW,
                 SYNTAX_QUALIFICATION_VIEW,
             )
@@ -173,7 +175,50 @@ class FocusedViewContractTest(unittest.TestCase):
             "metadata": contextualization["relationshipMetadata"],
         }
         relations = []
-        if view_name == SYNTAX_CONTEXTUALIZATION_VIEW:
+        if view_name == SYNTAX_ORIENTATION_VIEW:
+            for index, (source, target) in enumerate(
+                (
+                    ("Ethos", "Principle"),
+                    ("Mission", "Driver"),
+                    ("Vision", "Objective"),
+                )
+            ):
+                relations.append(
+                    cls._relation(
+                        f"orientation-context-{index}",
+                        by_name[f"<Name> :: O2I {source}"],
+                        by_name[f"<Name> :: O2I {target}"],
+                        **context_shape,
+                    )
+                )
+            semantic_metadata = next(
+                mapping["metadata"]
+                for mapping in cls.contract.relation_mappings
+                if mapping["relationName"] == "ethos-guides-mission"
+                and mapping["archimateRelationship"] == "AssociationRelationship"
+            )
+            for index, (source, label, target) in enumerate(
+                (
+                    ("Ethos", "guides", "Mission"),
+                    ("Ethos", "guides", "Vision"),
+                    ("Mission", "grounds", "Vision"),
+                    ("Principle", "guides", "Driver"),
+                    ("Principle", "guides", "Objective"),
+                    ("Driver", "grounds", "Objective"),
+                )
+            ):
+                relations.append(
+                    cls._relation(
+                        f"orientation-support-{index}",
+                        by_name[f"<Name> :: O2I {source}"],
+                        by_name[f"<Name> :: O2I {target}"],
+                        name=label,
+                        relationship="AssociationRelationship",
+                        directed=True,
+                        metadata=semantic_metadata,
+                    )
+                )
+        elif view_name == SYNTAX_CONTEXTUALIZATION_VIEW:
             for index, (source, target) in enumerate(
                 (
                     (
@@ -285,6 +330,240 @@ class FocusedViewContractTest(unittest.TestCase):
         for name, view in self.views.items():
             with self.subTest(view=name):
                 self.assertEqual([], validate_focused_view(self.contract, view))
+
+    def test_orientation_first_slice_reports_only_six_missing_relations(self) -> None:
+        view = self.views[SYNTAX_ORIENTATION_VIEW]
+        first_slice = replace(view, relations=view.relations[:3])
+
+        errors = validate_focused_view(self.contract, first_slice)
+
+        self.assertEqual(6, len(errors))
+        self.assertTrue(
+            all("requires orientation relation" in error for error in errors)
+        )
+        self.assertTrue(
+            all("exactly once; found 0" in error for error in errors)
+        )
+
+    def test_orientation_requires_every_contextualization_support_and_macro(self) -> None:
+        view = self.views[SYNTAX_ORIENTATION_VIEW]
+        for index, relation in enumerate(view.relations):
+            remaining = view.relations[:index] + view.relations[index + 1 :]
+            with self.subTest(relation=relation.identity, case="missing"):
+                self.assert_error(
+                    replace(view, relations=remaining),
+                    f"{relation.source_name!r} --{relation.name}--> "
+                    f"{relation.target_name!r} exactly once; found 0",
+                )
+            with self.subTest(relation=relation.identity, case="duplicate"):
+                self.assert_error(
+                    replace(view, relations=view.relations + (relation,)),
+                    "exactly once; found 2",
+                )
+
+    def test_orientation_relations_reject_reversed_or_wrong_endpoints(self) -> None:
+        view = self.views[SYNTAX_ORIENTATION_VIEW]
+        for index, relation in enumerate(view.relations):
+            reversed_relation = replace(
+                relation,
+                source=relation.target,
+                source_name=relation.target_name,
+                source_type=relation.target_type,
+                target=relation.source,
+                target_name=relation.source_name,
+                target_type=relation.source_type,
+            )
+            with self.subTest(relation=relation.identity, case="reversed"):
+                self.assert_error(
+                    replace(
+                        view,
+                        relations=view.relations[:index]
+                        + (reversed_relation,)
+                        + view.relations[index + 1 :],
+                    ),
+                    "contains uncontracted orientation relation",
+                )
+            with self.subTest(relation=relation.identity, case="foreign identity"):
+                self.assert_error(
+                    replace(
+                        view,
+                        relations=view.relations[:index]
+                        + (replace(relation, source="another-exemplar"),)
+                        + view.relations[index + 1 :],
+                    ),
+                    "does not match its displayed endpoints and Profile representation",
+                )
+        mission_ownership = view.relations[1]
+        vision = next(
+            node for node in view.elements
+            if node.name.endswith("O2I Vision")
+        )
+        wrong_context = replace(
+            mission_ownership,
+            source=vision.identity,
+            source_name=vision.name,
+            source_type=vision.archimate_element,
+        )
+        self.assert_error(
+            replace(
+                view,
+                relations=(view.relations[0], wrong_context) + view.relations[2:],
+            ),
+            "contains uncontracted orientation relation",
+        )
+
+    def test_orientation_requires_the_selected_directed_association_projection(self) -> None:
+        view = self.views[SYNTAX_ORIENTATION_VIEW]
+        relation = view.relations[3]
+        for changes in (
+            {"directed": False},
+            {"archimate_relationship": "InfluenceRelationship", "directed": False},
+        ):
+            with self.subTest(changes=changes):
+                self.assert_error(
+                    replace(
+                        view,
+                        relations=view.relations[:3]
+                        + (replace(relation, **changes),)
+                        + view.relations[4:],
+                    ),
+                    "does not match its displayed endpoints and Profile representation",
+                )
+
+    def test_orientation_candidate_and_commitment_are_required_everywhere(self) -> None:
+        view = self.views[SYNTAX_ORIENTATION_VIEW]
+        for field in ("elements", "relations"):
+            objects = getattr(view, field)
+            for index, item in enumerate(objects):
+                for replacement, message in (
+                    (
+                        "asserted",
+                        "property 'o2i.commitment' admits only ['candidate']",
+                    ),
+                    (
+                        None,
+                        "property 'o2i.commitment' requires exactly-one; found 0",
+                    ),
+                ):
+                    properties = tuple(
+                        (key, replacement if key == "o2i.commitment" else value)
+                        for key, value in item.properties
+                        if key != "o2i.commitment" or replacement is not None
+                    )
+                    candidate = replace(
+                        view,
+                        **{
+                            field: objects[:index]
+                            + (replace(item, properties=properties),)
+                            + objects[index + 1 :]
+                        },
+                    )
+                    with self.subTest(
+                        field=field, index=index, replacement=replacement
+                    ):
+                        self.assert_error(candidate, message)
+
+    def test_orientation_objective_uses_goal_and_exact_type(self) -> None:
+        view = self.views[SYNTAX_ORIENTATION_VIEW]
+        index = next(
+            index for index, node in enumerate(view.elements)
+            if node.name.endswith("O2I Objective")
+        )
+        node = view.elements[index]
+        for changed, message in (
+            (
+                replace(node, archimate_element="Outcome"),
+                "contains uncontracted focused node",
+            ),
+            (
+                replace(
+                    node,
+                    properties=(
+                        ("o2i.type", "KeyResult"),
+                        ("o2i.commitment", "candidate"),
+                    ),
+                ),
+                "property 'o2i.type' admits only ['Objective']",
+            ),
+        ):
+            with self.subTest(changed=changed):
+                self.assert_error(
+                    replace(
+                        view,
+                        elements=view.elements[:index]
+                        + (changed,)
+                        + view.elements[index + 1 :],
+                    ),
+                    message,
+                )
+
+    def test_orientation_requires_current_endpoint_mapping_authority(self) -> None:
+        view = self.views[SYNTAX_ORIENTATION_VIEW]
+        retained = tuple(
+            mapping for mapping in self.contract.relation_mappings
+            if not (
+                mapping["relationName"] == "ethos-guides-mission"
+                and mapping["archimateRelationship"] == "AssociationRelationship"
+            )
+        )
+        candidate = replace(self.contract, relation_mappings=retained)
+        with self.assertRaisesRegex(
+            ProfileContractError,
+            "requires one current directed Association mapping for 'ethos-guides-mission'; found 0",
+        ):
+            validate_focused_view(candidate, view)
+
+    def test_orientation_cannot_override_profile_commitment_values(self) -> None:
+        view = self.views[SYNTAX_ORIENTATION_VIEW]
+        metadata = replace_path(
+            self.contract.typed_claim_metadata,
+            ("properties", 1, "admittedValues"),
+            ("asserted",),
+        )
+        candidate = replace(self.contract, typed_claim_metadata=metadata)
+        with self.assertRaisesRegex(ProfileContractError, "outside Profile values"):
+            validate_focused_view(candidate, view)
+
+        index = next(
+            index for index, mapping in enumerate(self.contract.relation_mappings)
+            if mapping["relationName"] == "ethos-guides-mission"
+            and mapping["archimateRelationship"] == "AssociationRelationship"
+        )
+        mappings = replace_path(
+            self.contract.relation_mappings,
+            (index, "metadata", "properties", 0, "admittedValues"),
+            ("asserted",),
+        )
+        candidate = replace(self.contract, relation_mappings=mappings)
+        with self.assertRaisesRegex(ProfileContractError, "outside Profile values"):
+            validate_focused_view(candidate, view)
+
+    def test_orientation_semantic_relation_metadata_follows_its_source(self) -> None:
+        view = self.views[SYNTAX_ORIENTATION_VIEW]
+        index = next(
+            index for index, mapping in enumerate(self.contract.relation_mappings)
+            if mapping["relationName"] == "ethos-guides-mission"
+            and mapping["archimateRelationship"] == "AssociationRelationship"
+        )
+        mappings = replace_path(
+            self.contract.relation_mappings,
+            (index, "metadata", "properties", 0, "cardinality"),
+            "forbidden",
+        )
+        mappings = replace_path(
+            mappings,
+            (index, "metadata", "allowedO2IProperties"),
+            (),
+        )
+        candidate = replace(self.contract, relation_mappings=mappings)
+
+        errors = validate_focused_view(candidate, view)
+
+        self.assertTrue(
+            any("property 'o2i.commitment' requires forbidden; found 1" in error
+                for error in errors),
+            errors,
+        )
 
     def test_node_multiset_exposes_missing_duplicate_name_and_type(self) -> None:
         view = self.views[SYNTAX_CONTEXTUALIZATION_VIEW]

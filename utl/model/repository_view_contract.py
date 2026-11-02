@@ -141,6 +141,18 @@ def _project_relations(
 ) -> tuple[FrozenObject, ...]:
     syntax_by_id = _rows_by_id(profile["relationMappings"], "relation mapping")
     semantic_by_id = _rows_by_id(core["relationSemantics"], "Core relation")
+    semantic_metadata = profile["metadata"]["semanticRelation"]
+    relation_metadata = _metadata_contract(
+        (
+            _property_requirement(
+                "commitment",
+                semantic_metadata["commitmentKey"],
+                semantic_metadata["cardinality"],
+                semantic_metadata["commitmentValues"],
+            ),
+        ),
+        additional_policy=semantic_metadata["additionalO2IProperties"],
+    )
     projected = []
     for decision in profile["applicabilityProvenance"]["decisions"]:
         subject = decision["subject"]
@@ -173,6 +185,7 @@ def _project_relations(
                     "associationDirected": syntax[
                         "associationDirected"
                     ],
+                    "metadata": relation_metadata,
                 }
             )
         )

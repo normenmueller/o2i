@@ -9,6 +9,8 @@ Visualizes the executable ArchiMate conformance pattern for contextualizing O2I 
 
 A typed Context owns an element through composition[contextualizes]; visual nesting has no contextualization semantics. Exact carrier, metadata, and cardinality contracts are defined by spec/ctr/archimate/profile.json. The displayed carriers are Candidate syntax exemplars, not fachliche model instances.
 
+For the complete Ethos/Mission/Vision syntax example, see O2I Syntax - Orientation.
+
 ## Nodes
 
 - [<Name> :: O2I Driver] `<Name> :: O2I Driver` (Driver)

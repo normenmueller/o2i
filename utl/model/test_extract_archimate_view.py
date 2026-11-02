@@ -29,6 +29,7 @@ EXPECTED_PRESET_KEYS = {
     "syntax-carriers",
     "syntax-relations",
     "syntax-contextualization",
+    "syntax-orientation",
     "syntax-collective-strategy-realization",
     "syntax-need-qualification-proposal",
     "layered-cake",
@@ -64,6 +65,41 @@ class RepositoryViewContractTest(unittest.TestCase):
         self.assertEqual(len(view_names), len(set(view_names)))
         self.assertEqual(len(snapshots), len(set(snapshots)))
         self.assertEqual(model_views, set(view_names))
+
+    def test_orientation_carriers_are_isolated_from_other_views(self) -> None:
+        errors = EXTRACTOR.validate_model(self.root)
+
+        self.assertFalse(
+            any("shares isolated Candidate carrier" in error for error in errors),
+            errors,
+        )
+
+    def test_orientation_carrier_reuse_in_another_view_is_reported(self) -> None:
+        orientation = EXTRACTOR.find_view(
+            self.root, EXTRACTOR.SYNTAX_ORIENTATION_VIEW,
+        )
+        participant = orientation.find("child").get("archimateElement")
+        other = EXTRACTOR.find_view(
+            self.root, EXTRACTOR.SYNTAX_CONTEXTUALIZATION_VIEW,
+        )
+        ET.SubElement(
+            other,
+            "child",
+            {
+                EXTRACTOR.XSI_TYPE: "archimate:DiagramObject",
+                "id": "shared-orientation-carrier",
+                "archimateElement": participant,
+            },
+        )
+
+        errors = EXTRACTOR.validate_model(self.root)
+
+        self.assertIn(
+            f"{EXTRACTOR.SYNTAX_ORIENTATION_VIEW} shares isolated Candidate "
+            f"carrier {participant!r} with View "
+            f"{EXTRACTOR.SYNTAX_CONTEXTUALIZATION_VIEW!r}",
+            errors,
+        )
 
     def test_missing_required_view_is_reported(self) -> None:
         root = copy.deepcopy(self.root)
@@ -831,11 +867,13 @@ class RepositoryViewContractTest(unittest.TestCase):
             root,
             "<Name> :: O2I Mission",
             "Grouping",
+            view_name=EXTRACTOR.SYNTAX_CONTEXTUALIZATION_VIEW,
         )
         target = self._model_element(
             root,
             "<Name> :: O2I Driver",
             "Driver",
+            view_name=EXTRACTOR.SYNTAX_CONTEXTUALIZATION_VIEW,
         )
         ET.SubElement(
             relations_folder,
@@ -1312,12 +1350,18 @@ class RepositoryViewContractTest(unittest.TestCase):
         root: ET.Element,
         name: str,
         element_type: str,
+        *,
+        view_name: str | None = None,
     ) -> ET.Element:
+        visible = None if view_name is None else set(
+            EXTRACTOR.collect_view(EXTRACTOR.find_view(root, view_name))[0].values()
+        )
         matches = [
             element
             for element in root.iter("element")
             if element.get("name", "") == name
             and EXTRACTOR.xtype(element) == element_type
+            and (visible is None or element.get("id") in visible)
         ]
         self.assertEqual(1, len(matches), (name, element_type))
         return matches[0]

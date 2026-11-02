@@ -9,6 +9,8 @@ Provides a focused semantic overview of Ethos, Mission, Vision, and their orient
 
 This View is a presentation excerpt of the Context metamodel defined in o2i.md, not an independent semantic contract.
 
+For the complete Ethos/Mission/Vision syntax example, see O2I Syntax - Orientation.
+
 ## Notes
 
 - gibt es uns?

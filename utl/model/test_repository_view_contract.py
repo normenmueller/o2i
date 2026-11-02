@@ -172,6 +172,19 @@ class RepositoryViewContractTest(unittest.TestCase):
                 syntax["associationDirected"],
                 projected["associationDirected"],
             )
+            source_metadata = profile["metadata"]["semanticRelation"]
+            projected_metadata = projected["metadata"]
+            commitment = self.requirement(projected_metadata, "commitment")
+            self.assertEqual(source_metadata["commitmentKey"], commitment["key"])
+            self.assertEqual(source_metadata["cardinality"], commitment["cardinality"])
+            self.assertEqual(
+                frozen(source_metadata["commitmentValues"]),
+                commitment["admittedValues"],
+            )
+            self.assertEqual(
+                source_metadata["additionalO2IProperties"],
+                projected_metadata["additionalO2IProperties"],
+            )
 
         patterns = {
             row["id"]: row
@@ -842,6 +855,10 @@ class RepositoryViewContractTest(unittest.TestCase):
             ("metadata", "claimCarrier", "commitmentKey"),
             ("metadata", "claimCarrier", "cardinality"),
             ("metadata", "claimCarrier", "commitmentValues"),
+            ("metadata", "semanticRelation", "commitmentKey"),
+            ("metadata", "semanticRelation", "cardinality"),
+            ("metadata", "semanticRelation", "commitmentValues"),
+            ("metadata", "semanticRelation", "additionalO2IProperties"),
             (
                 "patternMappings",
                 context_index,

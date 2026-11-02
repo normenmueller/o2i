@@ -9,6 +9,8 @@ Visualizes the carrier mappings of the concrete ArchiMate profile defined by spe
 
 Each maps-to association maps an O2I type or closed type family to its ArchiMate carrier. The displayed elements and associations are unannotated mapping specifications, not executable O2I graph propositions or fachliche model instances.
 
+For the complete Ethos/Mission/Vision syntax example, see O2I Syntax - Orientation.
+
 ## Nodes
 
 - [Action] `Action` (Grouping)

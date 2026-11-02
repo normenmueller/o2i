@@ -16,11 +16,13 @@ from repository_view_contract import (
 
 
 SYNTAX_CONTEXTUALIZATION_VIEW = "O2I Syntax - Contextualization"
+SYNTAX_ORIENTATION_VIEW = "O2I Syntax - Orientation"
 SYNTAX_COLLECTIVE_VIEW = "O2I Syntax - Collective Strategy Realization"
 SYNTAX_QUALIFICATION_VIEW = "O2I Syntax - Need Qualification Proposal"
 FOCUSED_VIEW_NAMES = frozenset(
     {
         SYNTAX_CONTEXTUALIZATION_VIEW,
+        SYNTAX_ORIENTATION_VIEW,
         SYNTAX_COLLECTIVE_VIEW,
         SYNTAX_QUALIFICATION_VIEW,
     }
@@ -33,6 +35,12 @@ REQUIRED_CONTEXTUALIZATION_DOCUMENTATION = (
     "visual nesting has no contextualization semantics",
     "spec/ctr/archimate/profile.json",
     "Candidate syntax exemplars, not fachliche model instances",
+)
+REQUIRED_ORIENTATION_DOCUMENTATION = (
+    "Visualizes the ArchiMate syntax for Ethos, Mission and Vision.",
+    "Candidate syntax exemplars",
+    "spec/ctr/archimate/profile.json",
+    "meaning and minimum obligations by doc/paper/o2i.md",
 )
 REQUIRED_COLLECTIVE_DOCUMENTATION = (
     "Visualizes the executable ArchiMate conformance pattern for one O2I "
@@ -63,6 +71,7 @@ REQUIRED_QUALIFICATION_DOCUMENTATION = (
 )
 REQUIRED_VIEW_DOCUMENTATION = {
     SYNTAX_CONTEXTUALIZATION_VIEW: REQUIRED_CONTEXTUALIZATION_DOCUMENTATION,
+    SYNTAX_ORIENTATION_VIEW: REQUIRED_ORIENTATION_DOCUMENTATION,
     SYNTAX_COLLECTIVE_VIEW: REQUIRED_COLLECTIVE_DOCUMENTATION,
     SYNTAX_QUALIFICATION_VIEW: REQUIRED_QUALIFICATION_DOCUMENTATION,
 }
@@ -147,6 +156,41 @@ def qualification_role_name(role: FrozenObject) -> str:
     return f"<{placeholder}> :: O2I {words(role['o2iType'])}"
 
 
+def orientation_relation_mappings(
+    contract: RepositoryViewContract,
+) -> tuple[FrozenObject, ...]:
+    """Select this View's six relations from current Profile/Core mappings."""
+    names = (
+        "ethos-guides-mission",
+        "ethos-guides-vision",
+        "mission-grounds-vision",
+        "ethos-principle-guides-mission-driver",
+        "ethos-principle-guides-vision-objective",
+        "mission-driver-grounds-vision-objective",
+    )
+    result = []
+    for name in names:
+        matches = [
+            mapping
+            for mapping in contract.relation_mappings
+            if mapping["relationName"] == name
+            and mapping["archimateRelationship"] == "AssociationRelationship"
+            and mapping["associationDirected"] is True
+        ]
+        if len(matches) != 1:
+            raise ProfileContractError(
+                "Orientation View requires one current directed Association "
+                f"mapping for {name!r}; found {len(matches)}"
+            )
+        result.append(matches[0])
+    return tuple(result)
+
+
+def orientation_endpoint_name(endpoint: str) -> str:
+    """Name one selected qualified endpoint's displayed syntax exemplar."""
+    return "<Name> :: O2I " + endpoint.rsplit(".", 1)[-1].title()
+
+
 def syntax_pattern_nodes(
     contract: RepositoryViewContract,
 ) -> dict[str, tuple[SyntaxNodeContract, ...]]:
@@ -160,7 +204,23 @@ def syntax_pattern_nodes(
         "Mission",
     )
     typed_metadata = contextualization["carrierMetadata"]
+    orientation_endpoints = sorted(
+        {
+            mapping[side]
+            for mapping in orientation_relation_mappings(contract)
+            for side in ("source", "target")
+        }
+    )
     return {
+        SYNTAX_ORIENTATION_VIEW: tuple(
+            SyntaxNodeContract(
+                orientation_endpoint_name(endpoint),
+                endpoint_archimate_element(contract, endpoint),
+                endpoint.rsplit(".", 1)[-1].title(),
+                contract.typed_claim_metadata,
+            )
+            for endpoint in orientation_endpoints
+        ),
         SYNTAX_CONTEXTUALIZATION_VIEW: (
             SyntaxNodeContract(
                 "<Name> :: O2I Driver",
@@ -258,6 +318,8 @@ def validate_focused_view(
     errors.extend(_documentation_errors(view))
     if view.name == SYNTAX_CONTEXTUALIZATION_VIEW:
         errors.extend(_contextualization_errors(contract, view))
+    elif view.name == SYNTAX_ORIENTATION_VIEW:
+        errors.extend(_orientation_errors(contract, view))
     elif view.name == SYNTAX_COLLECTIVE_VIEW:
         errors.extend(_collective_errors(contract, view))
     else:
@@ -343,9 +405,19 @@ def _metadata_errors(
                 f"{cardinality}; found {len(values)}"
             )
             continue
+        source_values = tuple(requirement["admittedValues"])
+        selected_values = expected_values.get(requirement["role"])
+        if source_values and selected_values is not None and any(
+            value not in source_values for value in selected_values
+        ):
+            raise ProfileContractError(
+                f"focused-View property {key!r} cannot select values "
+                f"{list(selected_values)!r} outside Profile values "
+                f"{list(source_values)!r}"
+            )
         admitted = expected_values.get(
             requirement["role"],
-            tuple(requirement["admittedValues"]),
+            source_values,
         )
         invalid = [value for value in values if admitted and value not in admitted]
         if invalid:
@@ -403,7 +475,14 @@ def _node_errors(
                         f"element {contract.name!r}",
                         element.properties,
                         contract.metadata,
-                        {"type": (contract.o2i_type,)},
+                        {
+                            "type": (contract.o2i_type,),
+                            **(
+                                {"commitment": ("candidate",)}
+                                if view.name == SYNTAX_ORIENTATION_VIEW
+                                else {}
+                            ),
+                        },
                     )
                 )
     for (name, element_type), count in sorted(counts.items()):
@@ -442,6 +521,110 @@ def _documentation_errors(view: FocusedView) -> list[str]:
         errors.append(
             f"{view.name} element {carrier_name!r} documentation contains "
             "obsolete model-owned Fit-evidence"
+        )
+    return errors
+
+
+def _orientation_errors(
+    contract: RepositoryViewContract,
+    view: FocusedView,
+) -> list[str]:
+    """Check one fixed presentation, not arbitrary orientation instances."""
+    mappings = orientation_relation_mappings(contract)
+    contextualization = profile_pattern(contract, "contextualization")
+    if contextualization["targetIncomingCardinality"] != "exactly-one":
+        raise ProfileContractError(
+            "unsupported focused-View contextualization target cardinality: "
+            f"{contextualization['targetIncomingCardinality']}"
+        )
+    by_name = {element.name: element for element in view.elements}
+    expected_nodes = syntax_pattern_nodes(contract)[SYNTAX_ORIENTATION_VIEW]
+    if any(
+        sum(element.name == node.name for element in view.elements) != 1
+        for node in expected_nodes
+    ):
+        return []  # Node diagnostics already identify unresolved endpoints.
+
+    expected = {}
+    for mapping in mappings:
+        pair = (
+            orientation_endpoint_name(mapping["source"]),
+            mapping["label"],
+            orientation_endpoint_name(mapping["target"]),
+        )
+        expected[pair] = (
+            mapping["archimateRelationship"],
+            mapping["associationDirected"],
+            mapping["metadata"],
+        )
+    primitive_endpoints = {
+        mapping[side]
+        for mapping in mappings
+        for side in ("source", "target")
+        if mapping[side].startswith("primitive.")
+    }
+    for endpoint in primitive_endpoints:
+        owner = "context." + endpoint.split(".")[1]
+        pair = (
+            orientation_endpoint_name(owner),
+            contextualization["label"],
+            orientation_endpoint_name(endpoint),
+        )
+        expected[pair] = (
+            contextualization["archimateRelationship"],
+            contextualization["associationDirected"],
+            contextualization["relationshipMetadata"],
+        )
+
+    counts = Counter(
+        (relation.source_name, relation.name, relation.target_name)
+        for relation in view.relations
+    )
+    errors = []
+    for pair in sorted(expected):
+        if counts[pair] != 1:
+            errors.append(
+                f"{view.name} requires orientation relation "
+                f"{pair[0]!r} --{pair[1]}--> {pair[2]!r} exactly once; "
+                f"found {counts[pair]}"
+            )
+    for relation in view.relations:
+        pair = (relation.source_name, relation.name, relation.target_name)
+        if pair not in expected:
+            errors.append(
+                f"{view.name} contains uncontracted orientation relation "
+                f"{pair[0]!r} --{pair[1]}--> {pair[2]!r}"
+            )
+            continue
+        relationship, directed, metadata = expected[pair]
+        source, target = by_name[pair[0]], by_name[pair[2]]
+        if (
+            relation.source,
+            relation.source_type,
+            relation.target,
+            relation.target_type,
+            relation.archimate_relationship,
+            relation.directed,
+        ) != (
+            source.identity,
+            source.archimate_element,
+            target.identity,
+            target.archimate_element,
+            relationship,
+            directed,
+        ):
+            errors.append(
+                f"{view.name} orientation relation {relation.identity!r} "
+                "does not match its displayed endpoints and Profile representation"
+            )
+        errors.extend(
+            _metadata_errors(
+                view.name,
+                f"orientation relation {relation.identity!r}",
+                relation.properties,
+                metadata,
+                {"commitment": ("candidate",)},
+            )
         )
     return errors
 

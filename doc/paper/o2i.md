@@ -1014,6 +1014,24 @@ und nicht als fachliche binäre Relation interpretiert.
 
 Eine Kontext-Makrorelation und ihre Primitive-Begründung sind zwei unterschiedliche, gemeinsam erforderliche Aussagen. Der Profilvertrag bestimmt die ArchiMate-Repräsentation der Makrorelation endpunktsensitiv: `Strategy --directs--> Strategy` wird als ArchiMate `Influence`, `Strategy --directs--> Intervention` als gerichtete ArchiMate `Association` persistiert. Zulässige Relationen zwischen den kontextualisierten Primitives begründen die Makrorelation fachlich; sie ersetzen weder die Makrorelation noch werden sie durch diese ersetzt.
 
+@Fig:o2i-syntax-orientation-view zeigt die Kontextualisierung und Begründung
+der Orientierung gemeinsam. `Principle @ Ethos`, `Driver @ Mission` und
+`Objective @ Vision` erscheinen in ihren konkreten ArchiMate-Trägern.
+Die `contextualizes`-Kompositionen ordnen die Inhalte ihren Kontexten zu;
+`guides` und `grounds` verbinden die Primitives und die gesondert modellierten
+Kontexte. Mindestinhalte und existenzielle Relationszeugen sind unter
+[Semantische Gültigkeit](#semantische-gültigkeit) definiert.
+
+![O2I ArchiMate-Syntax der Orientierung](<../images/O2I Syntax - Orientation.png>){#fig:o2i-syntax-orientation-view width=95%}
+
+Die sechs Elemente der Vorlage tragen jeweils einmal `o2i.type` mit dem im
+Label genannten O2I-Typ und `o2i.commitment`; auch jede der neun Beziehungen
+trägt `o2i.commitment` genau einmal. Die Vorlage verwendet durchgängig
+`candidate`. Die sechs `guides`-/`grounds`-Beziehungen sind als gerichtete
+ArchiMate `Association` dargestellt. Für diese Endpunktpaare lässt das
+Profil auch `Influence` mit fehlender oder leerer Strength zu; Quelle,
+Ziel, Relationsname und Commitment bleiben dabei erhalten.
+
 Beispielsweise besteht eine belastbare Bedarfsqualifikation aus der
 persistierten Makrorelation
 `Strategy --qualifies--> Need` und einer zulässigen Begründung wie
@@ -1024,6 +1042,8 @@ Die strategische Kaskadierung verwendet ebenfalls eine ArchiMate `Influence` mit
 ### Qualifikationsvorlage
 
 Eine Qualifikationsvorlage wird als ArchiMate `Assessment` mit `o2i.type = NeedQualificationProposal` dargestellt; daraus leitet das Profil die Trägerkategorie `QualificationProposal` ab. Die Vorlage besitzt kein `Commitment`. Ihre Dokumentation bewahrt null oder eine Begründung, und `o2i.source` bewahrt null oder mehrere Quellenbezüge, damit auch unvollständige Vorlagen diagnostizierbar bleiben. Für ein formal zulässiges Ergebnis verlangt der Core-Vertrag genau eine nichtleere normalisierte Begründung und mindestens eine normalisierte Quellenidentität. Gerichtete ArchiMate `Association`-Referenzen führen von der Vorlage zu Bedarf, Strategie, strategischem Key Result und Need-Objective. Jede Referenz trägt genau eine der Rollen `need`, `strategy`, `key-result` oder `objective` in `o2i.role`; eine zulässige Vorlage bindet jede Rolle genau einmal an einen Endpunkt des geforderten Typs. Diese Syntax persistiert ausschließlich die zu prüfende Vorlage und keine angenommene Qualifikation.
+
+\Needspace{12\baselineskip}
 
 ### Kollektive Strategierealisierung
 

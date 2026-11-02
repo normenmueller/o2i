@@ -15,6 +15,7 @@ from focused_view_contract import (
     FOCUSED_VIEW_NAMES,
     SYNTAX_COLLECTIVE_VIEW,
     SYNTAX_CONTEXTUALIZATION_VIEW,
+    SYNTAX_ORIENTATION_VIEW,
     SYNTAX_QUALIFICATION_VIEW,
     FocusedElement,
     FocusedRelation,
@@ -87,6 +88,10 @@ PRESETS = {
     "syntax-contextualization": (
         SYNTAX_CONTEXTUALIZATION_VIEW,
         Path("meta/o2i-syntax-contextualization.md"),
+    ),
+    "syntax-orientation": (
+        SYNTAX_ORIENTATION_VIEW,
+        Path("meta/o2i-syntax-orientation.md"),
     ),
     "syntax-collective-strategy-realization": (
         SYNTAX_COLLECTIVE_VIEW,
@@ -1144,6 +1149,21 @@ def validate_model(root: ET.Element) -> list[str]:
                     f"{view_name} duplicates contracted relation: "
                     + format_contract_edge(duplicate)
                 )
+
+        if view_name == SYNTAX_ORIENTATION_VIEW:
+            participant_ids = set(object_targets.values())
+            for other in root.iter("element"):
+                if other is view or xtype(other) != "ArchimateDiagramModel":
+                    continue
+                shared = participant_ids.intersection(
+                    child.get("archimateElement")
+                    for child in other.iter("child")
+                )
+                for identifier in sorted(shared):
+                    errors.append(
+                        f"{view_name} shares isolated Candidate carrier "
+                        f"{identifier!r} with View {other.get('name', '')!r}"
+                    )
 
         if view_name in FOCUSED_VIEW_NAMES:
             errors.extend(

@@ -9,6 +9,8 @@ Visualizes the relation-representation families of the concrete ArchiMate profil
 
 Each <O2I relation name> placeholder represents one or more endpoint-compatible O2I relations that share the displayed ArchiMate relationship type and direction. The displayed relations are unannotated mapping specifications, not concrete model relations or executable O2I graph propositions. Exact endpoint-sensitive assignments remain defined by the profile contract.
 
+For the complete Ethos/Mission/Vision syntax example, see O2I Syntax - Orientation.
+
 ## Nodes
 
 - [ArchiMate Assessment] `ArchiMate Assessment` (Assessment)
