@@ -68,6 +68,7 @@
       <property key="o2i.type" value="Objective"/>
       <property key="o2i.commitment" value="candidate"/>
     </element>
+    <element xsi:type="archimate:Driver" name="_ :: O2I Driver" id="id-4d4a4b107b564e199548d04f9ea12002"/>
   </folder>
   <folder name="Implementation &amp; Migration" id="id-db81c99594df4e209210b0c681f98882" type="implementation_migration"/>
   <folder name="Other" id="id-b9bc8c62493d4d25bec1f06811abc961" type="other">
@@ -346,6 +347,14 @@ See o2i.md: Metamodell / Situationsanker.</documentation>
       <property key="o2i.type" value="Vision"/>
       <property key="o2i.commitment" value="candidate"/>
     </element>
+    <element xsi:type="archimate:Grouping" name="&lt;Strategy> :: O2I" id="id-12030fdb19904919a394aff03d65f631">
+      <property key="o2i.type" value="Strategy"/>
+      <property key="o2i.commitment" value="candidate"/>
+    </element>
+    <element xsi:type="archimate:Grouping" name="&lt;Diagnosos> :: O2I Strategy#Diagnosis" id="id-2519e5f6c0ae4a538ba2af1bb45f848e">
+      <property key="o2i.type" value="Strategy"/>
+      <property key="o2i.commitment" value="candidate"/>
+    </element>
   </folder>
   <folder name="Relations" id="id-df40b5f1fb2644a68446ad6dc198bc12" type="relations">
     <element xsi:type="archimate:InfluenceRelationship" name="guides" id="id-af654424795d4ba79318342f694d68fe" source="id-fc2d86c3ce2246a691f984b242fd5967" target="id-b72a61b51dea450894068f77a589d87d"/>
@@ -588,6 +597,10 @@ See o2i.md: Metamodell / Situationsanker.</documentation>
     <element xsi:type="archimate:AssociationRelationship" name="grounds" id="id-23a8a01da72e4c6c944ad485bd3758fd" source="id-1cc791c664164013a5b6ebf3db527748" target="id-0ec426199b0d48778069cb9b9966d067" directed="true">
       <property key="o2i.commitment" value="candidate"/>
     </element>
+    <element xsi:type="archimate:CompositionRelationship" name="contextualizes" id="id-b4ec2ef7681c496f8ef815aa4af023ab" source="id-12030fdb19904919a394aff03d65f631" target="id-2519e5f6c0ae4a538ba2af1bb45f848e">
+      <property key="o2i.commitment" value="candidate"/>
+    </element>
+    <element xsi:type="archimate:CompositionRelationship" id="id-3ff8fef580d2431eb7cf151d1774a40f" source="id-2519e5f6c0ae4a538ba2af1bb45f848e" target="id-4d4a4b107b564e199548d04f9ea12002"/>
   </folder>
   <folder name="Views" id="id-c4a47547d89649babef754e47e83c429" type="diagrams">
     <folder name="Illustration" id="id-f8adbfc1a975482da607ff5058deaf0a">
@@ -1601,12 +1614,12 @@ For the complete Ethos/Mission/Vision syntax example, see O2I Syntax - Orientati
           <bounds x="396" y="252" width="349" height="49"/>
           <feature name="deriveElementLineColor" value="false"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-76136a8abfd140d7915b37627353b288" font="1|Arial|14.0|0|COCOA|1|ArialMT" textAlignment="1" textPosition="1" archimateElement="id-1cf38dc66c7f4a06800c8bf89dd7f476">
+        <child xsi:type="archimate:DiagramObject" id="id-76136a8abfd140d7915b37627353b288" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-1cf38dc66c7f4a06800c8bf89dd7f476">
           <bounds x="144" y="120" width="174" height="55"/>
           <feature name="deriveElementLineColor" value="false"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-1d1d6564a75a41df8400a29c5e684bd0" source="id-76136a8abfd140d7915b37627353b288" target="id-732e3ac36216456cb48d223d0ae07761" archimateRelationship="id-47136e05b8ba4545aeea54721ce80c1f"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-134fad1fdb474960bb14d2a9e4fc97fe" font="1|Arial|14.0|0|COCOA|1|ArialMT" textAlignment="1" textPosition="1" archimateElement="id-44063ecc73024c70827811bed992dd39">
+        <child xsi:type="archimate:DiagramObject" id="id-134fad1fdb474960bb14d2a9e4fc97fe" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-44063ecc73024c70827811bed992dd39">
           <bounds x="483" y="120" width="175" height="55"/>
           <feature name="deriveElementLineColor" value="false"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-af48db74a4154b24abddf691187bcc43" source="id-134fad1fdb474960bb14d2a9e4fc97fe" target="id-e502ecc5930e4df484474eca413bfc5a" archimateRelationship="id-493e7df2cf8d4209b7eeadae5b99e91c"/>
@@ -1762,12 +1775,12 @@ For the complete Ethos/Mission/Vision syntax example, see O2I Syntax - Orientati
           <sourceConnection xsi:type="archimate:Connection" id="id-be40e7197a9249c88959c2b0dbf866a8" source="id-646db6c271d04826b1a78d11c102fa37" target="id-42e926a1270e462b866eb535bf9fc360" archimateRelationship="id-4f677b5e3ae14fad888403ca33abd789"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-c5606dabefaa4560b006207f47f2f516" source="id-646db6c271d04826b1a78d11c102fa37" target="id-af9798ddc28a4119b73f377fb4b360d7" archimateRelationship="id-29d4dd50cd144ef4ac0a73f21c0cb4b6"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-f48e0c48b9564ac19c89be51bde09616" targetConnections="id-be3133678f7a413cbccee6635e7922b9" font="1|Arial|14.0|0|COCOA|1|ArialMT" textAlignment="1" textPosition="1" archimateElement="id-911d349bd58d4fcea36a5a09061000a9">
+        <child xsi:type="archimate:DiagramObject" id="id-f48e0c48b9564ac19c89be51bde09616" targetConnections="id-be3133678f7a413cbccee6635e7922b9" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-911d349bd58d4fcea36a5a09061000a9">
           <bounds x="492" y="72" width="174" height="55"/>
           <feature name="deriveElementLineColor" value="false"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-49f57d016e014d0c8ed241c855eb7bf3" source="id-f48e0c48b9564ac19c89be51bde09616" target="id-af9798ddc28a4119b73f377fb4b360d7" archimateRelationship="id-45b67487587f465a9bdd2c26b3146c2e"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-6f095c9da56444b4a9c8ad35e018b6a7" targetConnections="id-931f0eaf5e56408a8c19ce6dc3c6cb90" font="1|Arial|14.0|0|COCOA|1|ArialMT" textAlignment="1" textPosition="1" archimateElement="id-e7b72ea11adb443fb972a1e3e21fa965">
+        <child xsi:type="archimate:DiagramObject" id="id-6f095c9da56444b4a9c8ad35e018b6a7" targetConnections="id-931f0eaf5e56408a8c19ce6dc3c6cb90" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-e7b72ea11adb443fb972a1e3e21fa965">
           <bounds x="120" y="72" width="174" height="55"/>
           <feature name="deriveElementLineColor" value="false"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-67690e43a2464af5951bf733cb12f176" source="id-6f095c9da56444b4a9c8ad35e018b6a7" target="id-42e926a1270e462b866eb535bf9fc360" archimateRelationship="id-a21ee9adfa2146f186cdc4bf00ef1f59"/>
@@ -1785,8 +1798,9 @@ For the complete Ethos/Mission/Vision syntax example, see O2I Syntax - Orientati
         <documentation>Visualizes the executable ArchiMate conformance pattern for one O2I NeedQualificationProposal. The Assessment carrier preserves a nonempty rationale and source. Four directed Association references use o2i.role to bind Need, Strategy, Key Result, and Objective. Exact carrier, metadata, and cardinality contracts are defined by spec/ctr/archimate/profile.json. Together, the displayed carriers form a syntax exemplar, not a fachliche model instance.</documentation>
       </element>
       <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Syntax - Orientation" id="id-099baa3ceade4520a696b678b73d2772">
-        <child xsi:type="archimate:DiagramObject" id="id-c305324932334527a56d7ef79210072c" textPosition="1" archimateElement="id-686b004bcc314bf0ab64bee14fc7487a">
+        <child xsi:type="archimate:DiagramObject" id="id-c305324932334527a56d7ef79210072c" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-686b004bcc314bf0ab64bee14fc7487a">
           <bounds x="60" y="48" width="173" height="55"/>
+          <feature name="deriveElementLineColor" value="false"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-77528998fca24fa5a868c98326b81d93" source="id-c305324932334527a56d7ef79210072c" target="id-8d1e17065f924d25bec7c0d99e05e48f" archimateRelationship="id-e42f30cc322d4cca86dd0cfec6771894"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-5a2b7e5e95894c7894a728072e5d587f" source="id-c305324932334527a56d7ef79210072c" target="id-8fc5e44d2459460e9feb056d167e8802" archimateRelationship="id-5447053ac4414f198646a216885ec964"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-d57fecf7638f46b4bf92f8a210405f0e" source="id-c305324932334527a56d7ef79210072c" target="id-20ec99a0a5b14d688f688b3765d6a780" archimateRelationship="id-e8deec2789dc4e9487524b1a776622f0">
@@ -1794,29 +1808,34 @@ For the complete Ethos/Mission/Vision syntax example, see O2I Syntax - Orientati
             <bendpoint startX="-122" startY="333" endX="-242" endY="-3"/>
           </sourceConnection>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-8d1e17065f924d25bec7c0d99e05e48f" targetConnections="id-77528998fca24fa5a868c98326b81d93" textPosition="1" archimateElement="id-ed5747a8a72b4576909825135ec6c733">
+        <child xsi:type="archimate:DiagramObject" id="id-8d1e17065f924d25bec7c0d99e05e48f" targetConnections="id-77528998fca24fa5a868c98326b81d93" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-ed5747a8a72b4576909825135ec6c733">
           <bounds x="60" y="156" width="173" height="55"/>
+          <feature name="deriveElementLineColor" value="false"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-c6c6daa1af954ae7b0b9485d17a979e7" source="id-8d1e17065f924d25bec7c0d99e05e48f" target="id-13a82e51da654b3ea752d8a7bc719681" archimateRelationship="id-51b08ce824b545cfb5f805589d0626b8"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-47bd0abd4ce84ddfa90c914a5d715e95" source="id-8d1e17065f924d25bec7c0d99e05e48f" target="id-5254c72a729242d38054ffc3118dc83a" archimateRelationship="id-98e14d4f6ae146bd82ac73c9b5001ddb"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-8fc5e44d2459460e9feb056d167e8802" targetConnections="id-5a2b7e5e95894c7894a728072e5d587f" textPosition="1" archimateElement="id-1cc791c664164013a5b6ebf3db527748">
+        <child xsi:type="archimate:DiagramObject" id="id-8fc5e44d2459460e9feb056d167e8802" targetConnections="id-5a2b7e5e95894c7894a728072e5d587f" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-1cc791c664164013a5b6ebf3db527748">
           <bounds x="312" y="48" width="173" height="55"/>
+          <feature name="deriveElementLineColor" value="false"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-c057996fbc6245d6bf44483952443646" source="id-8fc5e44d2459460e9feb056d167e8802" target="id-13a82e51da654b3ea752d8a7bc719681" archimateRelationship="id-56f84b0840f640109b52cf192f6ff96d"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-5b9998ccf6054e72829bdd28d6322030" source="id-8fc5e44d2459460e9feb056d167e8802" target="id-20ec99a0a5b14d688f688b3765d6a780" archimateRelationship="id-23a8a01da72e4c6c944ad485bd3758fd">
             <bendpoint startX="130" startY="21" endX="262" endY="-315"/>
             <bendpoint startX="130" startY="333" endX="262" endY="-3"/>
           </sourceConnection>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-13a82e51da654b3ea752d8a7bc719681" targetConnections="id-c057996fbc6245d6bf44483952443646 id-c6c6daa1af954ae7b0b9485d17a979e7" textPosition="1" archimateElement="id-947fbf620a474815a14e373a669d5fbe">
+        <child xsi:type="archimate:DiagramObject" id="id-13a82e51da654b3ea752d8a7bc719681" targetConnections="id-c057996fbc6245d6bf44483952443646 id-c6c6daa1af954ae7b0b9485d17a979e7" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-947fbf620a474815a14e373a669d5fbe">
           <bounds x="312" y="156" width="173" height="55"/>
+          <feature name="deriveElementLineColor" value="false"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-22519b5019ad4feea1160c10b2398f55" source="id-13a82e51da654b3ea752d8a7bc719681" target="id-5254c72a729242d38054ffc3118dc83a" archimateRelationship="id-c8a6c1d61e9649f7a703b9d95e7eae7f"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-20ec99a0a5b14d688f688b3765d6a780" targetConnections="id-d57fecf7638f46b4bf92f8a210405f0e id-5b9998ccf6054e72829bdd28d6322030" textPosition="1" archimateElement="id-0ec426199b0d48778069cb9b9966d067">
+        <child xsi:type="archimate:DiagramObject" id="id-20ec99a0a5b14d688f688b3765d6a780" targetConnections="id-d57fecf7638f46b4bf92f8a210405f0e id-5b9998ccf6054e72829bdd28d6322030" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-0ec426199b0d48778069cb9b9966d067">
           <bounds x="180" y="384" width="173" height="55"/>
+          <feature name="deriveElementLineColor" value="false"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-644eb2d967c2473bb7d79a20ce6b8a25" source="id-20ec99a0a5b14d688f688b3765d6a780" target="id-5254c72a729242d38054ffc3118dc83a" archimateRelationship="id-75c7397b5d89426cb96e4b9363fedc8a"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-5254c72a729242d38054ffc3118dc83a" targetConnections="id-644eb2d967c2473bb7d79a20ce6b8a25 id-47bd0abd4ce84ddfa90c914a5d715e95 id-22519b5019ad4feea1160c10b2398f55" textPosition="1" archimateElement="id-c8f167daf19543d5b0dcd8525362c3f3">
+        <child xsi:type="archimate:DiagramObject" id="id-5254c72a729242d38054ffc3118dc83a" targetConnections="id-644eb2d967c2473bb7d79a20ce6b8a25 id-47bd0abd4ce84ddfa90c914a5d715e95 id-22519b5019ad4feea1160c10b2398f55" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-c8f167daf19543d5b0dcd8525362c3f3">
           <bounds x="180" y="276" width="173" height="55"/>
+          <feature name="deriveElementLineColor" value="false"/>
         </child>
         <documentation>Visualizes the ArchiMate syntax for Ethos, Mission and Vision. The displayed elements are Candidate syntax exemplars. Exact syntax is defined by spec/ctr/archimate/profile.json; meaning and minimum obligations by doc/paper/o2i.md.
 
@@ -1825,6 +1844,23 @@ For this View's reading, see the paper's Metamodell / Syntax / Semantische Begr√
 The six displayed guides/grounds endpoint pairs admit directed Association or Influence with absent or empty Strength. Source, target, relation name and commitment remain unchanged.
 
 See O2I Orientierung for the conceptual overview. O2I Syntax - Carriers, O2I Syntax - Contextualization and O2I Syntax - Relations provide the general carrier, ownership and relation-family mappings.</documentation>
+      </element>
+      <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Syntax - Strategy" id="id-7c6f2be6d51f433aa6c1d5657299ae65">
+        <child xsi:type="archimate:DiagramObject" id="id-a59a339ee1d943668a2393e6e34f2c07" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-12030fdb19904919a394aff03d65f631">
+          <bounds x="36" y="36" width="205" height="68"/>
+          <feature name="deriveElementLineColor" value="false"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-50bfaf9472f4405190ad736226832285" source="id-a59a339ee1d943668a2393e6e34f2c07" target="id-838bb22921b545c8aa9123c342c8a1c4" archimateRelationship="id-b4ec2ef7681c496f8ef815aa4af023ab"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-5529078b873643e1a9bdc39b9e3423df" targetConnections="id-c5164a727c604090acd4534a6cb72d85" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-4d4a4b107b564e199548d04f9ea12002">
+          <bounds x="300" y="324" width="205" height="55"/>
+          <feature name="deriveElementLineColor" value="false"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-838bb22921b545c8aa9123c342c8a1c4" targetConnections="id-50bfaf9472f4405190ad736226832285" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-2519e5f6c0ae4a538ba2af1bb45f848e">
+          <bounds x="96" y="161" width="385" height="68"/>
+          <feature name="deriveElementLineColor" value="false"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-c5164a727c604090acd4534a6cb72d85" source="id-838bb22921b545c8aa9123c342c8a1c4" target="id-5529078b873643e1a9bdc39b9e3423df" archimateRelationship="id-3ff8fef580d2431eb7cf151d1774a40f"/>
+        </child>
+        <documentation>Candidate syntax example for Strategy contents. Mapping authority: spec/ctr/archimate/profile.json. Reading: doc/reference/strategy.md.</documentation>
       </element>
     </folder>
   </folder>
