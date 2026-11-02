@@ -7,7 +7,8 @@ cd "$root"
 
 python3 -B ./utl/paper/check-pdf-freshness.py renderer --root .
 ./utl/paper/render-paper-figures.sh
-(cd doc/paper && md2pdf -- o2i.md -H ../resources/o2i.icl)
+(cd doc/paper && md2pdf --template ../resources/o2i-book.tex -- \
+  o2i.md -H ../resources/o2i.icl --top-level-division=part)
 python3 -B ./utl/paper/check-pdf-freshness.py seal \
   --root . \
   --pdf doc/paper/o2i.pdf \

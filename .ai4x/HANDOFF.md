@@ -1,20 +1,20 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#115","currentNode":"corporate-diagnosis"}
+{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#137","currentNode":"paper-book-structure"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
 
-#115: formulate the first Corporate strategy Diagnosis from the agreed two-part starting point; native realization follows under #116.
+#137: implement the approved book/parts Paper structure with all eleven Strategy constituents visibly numbered; preserve fachliche meaning.
 
 # Authority
 
-Current PO instruction: co-develop story/model, preserve wording/identities and coordinate Issues/Board. PO owns native saves. No generic semantics change, full guide or Layered Cake deletion; no durable grant claimed.
+Current explicit PO approval covers the proposed Paper structure and bounded implementation. No semantic/native-model changes, dependency-pin changes, release or merge; no durable grant claimed.
 
 # Current Facts
 
-Branch: `feat/116-illustration`, published orientation checkpoint `cd25af7`. #115/#116 In progress; #119 Paused. Remote readback verified; ordering creates no dependency.
+Branch: `feat/116-illustration`, published `f07990f`. #137 under #58 In review; #115/#116 Paused for this correction, #119 remains Paused. Both assignees verified. Ordering creates no dependency.
 
 #115 owns agreed scenario and two-part challenge: recognize/understand what and why before How; preserve coherence/commitment through realization. Exact Diagnosis wording and Driver labels remain Co-Author proposals.
 
@@ -22,15 +22,15 @@ Branch: `feat/116-illustration`, published orientation checkpoint `cd25af7`. #11
 
 # Material Risk
 
-Preserve identities and explicit support. A new incomplete Strategy starts as Candidate; invent no native diagnosis role property or partial formulation input. No full-chain or observed-effect acceptance.
+Significant publication architecture. Preserve definitions, citations, references, figures and source freshness. Book-native front matter and matching canonical/isolated render configuration need publication Co-Author and independent review.
 
 # Verification
 
-Full checkpoint passed; final folder-only delta additionally passed 81 model tests, snapshots, 12 CLI requests and independent acceptance. Three empty future-work folders remain: Formierung and two Orientierung. Model/PNG are backed up.
+#137 final checkpoint passed: licensing, governance and isolated Paper/source binding. Body text and all 82 prior anchors are preserved. Independent publication review accepted the seven-file candidate without findings; 76 PDF pages inspected.
 
 # Next Action
 
-Discuss Diagnosis Driver wording in #115. Paper Formierung hierarchy is advice only: Strategy contains constituents/interplay; CSFs are its peer. No Paper edit has started. Continue native Strategy only after the next content slice is agreed.
+Commit and back up #137, publish its exact review/check evidence, then return to #115 Diagnosis wording. Parts A-D, continuous chapters and eleven numbered constituents are accepted; CSFs remain Strategy's peer.
 
 # Local Return Point
 

@@ -1,0 +1,97 @@
+% O2I book structure; shared typography is supplied by the pinned renderer.
+$document-metadata.latex()$
+$passoptions.latex()$
+\documentclass[
+$if(fontsize)$
+  $fontsize$,
+$endif$
+$if(papersize)$
+  $papersize$paper,
+$endif$
+$if(babel-lang)$
+  $babel-lang$,
+$endif$
+$for(classoption)$
+  $classoption$$sep$,
+$endfor$
+]{book}
+
+\usepackage{xcolor}
+$if(geometry)$
+\usepackage[$for(geometry)$$geometry$$sep$,$endfor$]{geometry}
+$endif$
+\usepackage{amsmath,amssymb}
+$fonts.latex()$
+$font-settings.latex()$
+$common.latex()$
+$for(header-includes)$
+$header-includes$
+$endfor$
+$after-header-includes.latex()$
+$hypersetup.latex()$
+
+\setcounter{secnumdepth}{$if(secnumdepth)$$secnumdepth$$else$3$endif$}
+\title{%
+$if(kind)$
+  {\small\itshape $kind$}\par\medskip
+$endif$
+  $title$
+$if(subtitle)$
+  \par\medskip{\large $subtitle$}
+$endif$
+}
+\author{%
+$for(author)$
+$if(author.name)$
+  $author.name$
+$else$
+  $author$
+$endif$
+$sep$\and
+$endfor$
+}
+\date{%
+$if(date)$
+  $date$$if(version)$, $endif$
+$endif$
+$if(version)$
+  v$version$
+$endif$
+$if(status)$
+  \space($status$)
+$endif$
+}
+
+\begin{document}
+\frontmatter
+\maketitle
+$if(abstract)$
+\chapter*{Kurzfassung}
+\addcontentsline{toc}{chapter}{Kurzfassung}
+$abstract$
+$endif$
+$for(include-before)$
+$include-before$
+$endfor$
+$if(toc)$
+\clearpage
+\setcounter{tocdepth}{$toc-depth$}
+\tableofcontents
+\clearpage
+\markboth{}{}
+$endif$
+$if(lof)$
+\listoffigures
+$endif$
+$if(lot)$
+\listoftables
+$endif$
+
+% The source places mainmatter after its epigraph and preface, and backmatter
+% before its conclusion and acknowledgements. No heading level is inferred here.
+$body$
+
+$for(include-after)$
+$include-after$
+$endfor$
+\end{document}

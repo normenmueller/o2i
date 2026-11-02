@@ -61,7 +61,9 @@ verify_paper_stage() {
     "$work/paper.json"
 
   info "Building the White Paper in an isolated paper workspace."
-  (cd "$paper/doc/paper" && md2pdf -o "$work/o2i.pdf" -- o2i.md -H ../resources/o2i.icl)
+  (cd "$paper/doc/paper" && md2pdf -o "$work/o2i.pdf" \
+    --template ../resources/o2i-book.tex -- \
+    o2i.md -H ../resources/o2i.icl --top-level-division=part)
   if [ ! -s "$work/o2i.pdf" ]; then
     printf '[o2i|error] White Paper build produced no PDF.\n' >&2
     exit 1

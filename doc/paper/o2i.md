@@ -1,5 +1,9 @@
 ---
 kind: "White Paper"
+documentclass: book
+classoption:
+  - oneside
+  - openany
 title: "Von Orientierung zur Wirkung\\thanks{Publiziert unter \\url{https://github.com/normenmueller/o2i}}"
 subtitle: "Begriffe und Relationen für wirksames Handeln"
 author: nemron
@@ -21,6 +25,7 @@ secPrefix:
   - "Kap."
 toc: yes
 toc-depth: 3
+secnumdepth: 3
 callout-theme: gray
 papersize: a4
 geometry:
@@ -48,7 +53,11 @@ geometry:
 \end{center}
 \newpage
 
-# Einleitung
+\mainmatter
+
+# Grundlegung
+
+## Einleitung
 
 O2I steht für *Orientation to Impact*.
 
@@ -85,9 +94,9 @@ Der Wirkungstrace ist die validierte relationale Struktur; relationale Nachvollz
 
 Das White Paper entfaltet O2I als Framework, indem es die fachliche Begriffswelt auf Basis der Standardliteratur terminologisch begründet, semantisch und syntaktisch im Metamodell formalisiert und ihre Anwendung anhand eines zusammenhängenden O2I-Wirkungsgraphen illustriert.
 
-# Fundament
+## Fundament
 
-## Literaturbasis
+### Literaturbasis
 
 Bourne, Humphrey; Jenkins, Mark; Parry, Emma (2019): "Mapping Espoused Organizational Values". In: *Journal of Business Ethics*, 159, S. 133-148. URL: https://doi.org/10.1007/s10551-017-3734-9.
 
@@ -121,7 +130,7 @@ URL: \url{https://publications.opengroup.org/standards/archimate/c260}.
 
 What Matters (o. J.): "Don't Confuse KPIs and OKRs". In: *OKRs Explained*. URL: \url{https://www.whatmatters.com/okrs-explained/kpis-and-okrs} (abgerufen am 29.10.2026).
 
-## Literaturfunktion
+### Literaturfunktion
 
 Die Literaturquellen werden nicht gleichgewichtig verwendet, sondern nach ihrer Funktion innerhalb von O2I:
 
@@ -139,7 +148,7 @@ The Open Group (2025, 2026) stützt die Modellierungsebene: TOGAF liefert den En
 
 Die Literaturquellen begründen damit unterschiedliche Funktionen innerhalb von O2I: Orientierung wird formiert, Formierung wird situiert und operationalisiert, und Wirkung wird über Messung, Nachweislogik und Modellierbarkeit nachvollziehbar gemacht.
 
-## Definitionsregel
+### Definitionsregel
 
 Eine Definition wird nicht bloß behauptet. Sie wird nur verwendet, wenn sie entweder direkt durch eine Quelle gestützt oder als Autorenableitung aus den verwendeten Quellen nachvollziehbar gemacht wird. Jede Definition und jede tragende Argumentationskette erhält deshalb einen Quellenanker oder eine explizite Kennzeichnung als Autorenableitung.
 
@@ -233,7 +242,9 @@ Diagnose, strategische Absicht und Guiding Policy bilden jeweils einen zusammenh
 
 Die Bezeichner der Sicht ordnen die textuellen Strategiebestandteile eindeutig zu: `Strategy#Scope` bezeichnet den Geltungsbereich, `Strategy#Anchoring` die strategische Verankerung, `Strategy#Derived Guardrails` die abgeleiteten Leitplanken, `Strategy#Diagnosis` die Diagnose, `Strategy#Intent` die strategische Absicht, `Strategy#Guiding Policy` die Guiding Policy, `Strategy#Positioning` die strategische Positionierung, `Strategy#Trade-offs` die Trade-offs, `Strategy#Coherent Action Commitments` die kohärenten Handlungsfestlegungen, `Strategy#Success Reference` den strategischen Erfolgsbezug und `Strategy#Fit` den Kohärenznachweis.
 
-#### Geltungsbereich
+#### Strategiebestandteile
+
+##### Geltungsbereich
 
 > [!definition]
 > Der **Geltungsbereich einer Strategie**[^scope] bezeichnet die organisatorische oder sachliche Einheit, für die eine Wegentscheidung gilt.
@@ -242,7 +253,7 @@ Die Bezeichner der Sicht ordnen die textuellen Strategiebestandteile eindeutig z
 
 Der Geltungsbereich rahmt die Strategie: Er legt fest, für welche Einheit Diagnose, strategische Absicht, Positionierung, Trade-offs, Handlungsfestlegungen und Fit zu beurteilen sind. Ohne klaren Geltungsbereich bleibt unbestimmt, worauf sich die Wegentscheidung bezieht und wer sie verantworten kann.
 
-#### Strategische Verankerung
+##### Strategische Verankerung
 
 > [!definition]
 > **Strategische Verankerung**[^anchoring] bezeichnet die organisatorische und prozessuale Einbettung, durch die eine Strategie entscheidbar, verantwortbar und umsetzbar wird: organisatorisch durch Zeitraum, Verantwortungsbereich, Entscheidungsebene und tragende Verantwortlichkeiten; prozessual durch Entscheidungswege und Umsetzungslogik.
@@ -251,7 +262,7 @@ Der Geltungsbereich rahmt die Strategie: Er legt fest, für welche Einheit Diagn
 
 Strategische Verankerung betrifft die Strategie insgesamt; sie wird besonders dort wirksam, wo kohärente Handlungsfestlegungen entscheidbar, verantwortbar und umsetzbar werden müssen.
 
-#### Abgeleitete Leitplanken
+##### Abgeleitete Leitplanken
 
 > [!definition]
 > **Abgeleitete Leitplanken**[^derived-guardrails] bezeichnen Vorgaben aus übergeordneten Strategien, Agenden, Prinzipien oder verbindlichen Rahmenbedingungen, an die eine Strategie anschließen muss.
@@ -269,7 +280,7 @@ Eine übergeordnete Strategie richtet eine untergeordnete Strategie aus: Sie gib
 
 Die untergeordnete Strategie bestimmt eigene Key Results, die diese Zielsetzung substantiieren. Der Zusammenhang zwischen den Key Results beider Strategien entsteht damit über die Zielsetzung der untergeordneten Strategie. Er beschreibt einen begründeten strategischen Beitrag; einen beobachteten Wirkungseintritt weist er nicht nach.
 
-#### Diagnose
+##### Diagnose
 
 > [!definition]
 > Die **Diagnose**[^diagnosis] beschreibt die für den jeweiligen Geltungsbereich strategisch entscheidende Herausforderung: Sie erklärt, warum die Vision unter gegebenen Bedingungen nicht ohne eine kohärente Wegentscheidung erreichbar ist.
@@ -278,7 +289,7 @@ Die untergeordnete Strategie bestimmt eigene Key Results, die diese Zielsetzung 
 
 Eine Diagnose reduziert Komplexität, indem sie nicht die Gesamtheit aller beobachtbaren Probleme sammelt, sondern die strategisch relevante Herausforderung herausarbeitet. Dadurch wird zunächst bestimmbar, welchen Beitrag die strategische Absicht zur Vision leisten soll; erst danach wird bewertbar, ob die Guiding Policy tatsächlich auf diese Herausforderung passt.
 
-#### Strategische Absicht
+##### Strategische Absicht
 
 > [!definition]
 > **Strategische Absicht**[^intent] bezeichnet den angestrebten Beitrag einer Strategie zur [Vision](#vision). Sie macht deutlich, welche Wirkung oder welcher Fortschritt durch die Wegentscheidung erreichbar werden soll, ohne bereits die konkrete Intervention festzulegen.
@@ -287,7 +298,7 @@ Eine Diagnose reduziert Komplexität, indem sie nicht die Gesamtheit aller beoba
 
 Strategische Absicht fokussiert die Strategie auf den Beitrag, den sie zur Vision leisten soll. Sie ist konkreter als Vision, aber noch nicht Guiding Policy: Sie beschreibt den intendierten Fortschritt, nicht den gewählten strategischen Ansatz.
 
-#### Guiding Policy / leitende Handlungslogik
+##### Guiding Policy / leitende Handlungslogik
 
 > [!definition]
 > Die **Guiding Policy**[^guiding-policy] bezeichnet den grundsätzlichen strategischen Ansatz, mit dem die diagnostizierte Herausforderung im Sinne der strategischen Absicht adressiert wird.
@@ -298,7 +309,7 @@ Die Guiding Policy übersetzt Diagnose und strategische Absicht in eine leitende
 
 Die Guiding Policy ist damit weder Vision noch strategische Absicht noch konkrete Handlungsfestlegung. Sie beschreibt nicht den angestrebten Zukunftszustand, nicht den intendierten Beitrag zur Vision und noch nicht die einzelnen strategierelevanten Entscheidungen oder Ressourcenbindungen. Sie leitet Positionierung und kohärente Handlungsfestlegungen, ohne diese bereits vollständig festzulegen.
 
-#### Strategische Positionierung
+##### Strategische Positionierung
 
 > [!definition]
 > **Strategische Positionierung**[^positioning] bezeichnet die bewusste Festlegung, wodurch sich der gewählte strategische Ansatz von relevanten Alternativen unterscheidet und welche Position dadurch eingenommen oder gestärkt wird.
@@ -309,7 +320,7 @@ Die Guiding Policy beschreibt den grundsätzlichen strategischen Ansatz; die str
 
 Strategische Positionierung richtet kohärente Handlungsfestlegungen aus. Entscheidungen und Ressourcenbindungen passen nur dann zur Strategie, wenn sie die gewählte Position stützen, sichtbar machen oder gegen relevante Alternativen abgrenzen.
 
-#### Trade-offs
+##### Trade-offs
 
 > [!definition]
 > **Trade-offs**[^trade-offs] bezeichnen bewusste Nicht-Entscheidungen: Sie legen fest, was ein handlungsfähiger Akteur nicht tut, um die gewählte Position nicht zu verwässern.
@@ -322,7 +333,7 @@ Trade-offs sind keine konkreten Maßnahmen. Sie begrenzen kohärente Handlungsfe
 
 Die Trade-offs einer Strategie bilden eine ungeordnete Menge fachlicher Ausschlüsse. Reihenfolge und Mehrfachnennung tragen keine zusätzliche Semantik; inhaltlich verschiedene Ausschlüsse bleiben unterscheidbar.
 
-#### Kohärente Handlungsfestlegungen
+##### Kohärente Handlungsfestlegungen
 
 > [!definition]
 > **Kohärente Handlungsfestlegungen**[^coherent-actions] bezeichnen strategierelevante Entscheidungen und Ressourcenbindungen, die die Guiding Policy ausführbar machen und zueinander passen müssen.
@@ -333,7 +344,7 @@ Kohärente Handlungsfestlegungen konkretisieren die Guiding Policy, ohne in oper
 
 Sie gehören zur Wegentscheidung, soweit sie deren Logik beweisbar machen. Detaillierte Projekte, Sprint-Objectives, OKRs und operative Aufgaben gehören zur Operationalisierung.
 
-#### Strategischer Erfolgsbezug
+##### Strategischer Erfolgsbezug
 
 > [!definition]
 > Ein **strategischer Erfolgsbezug**[^strategic-success-reference] bezeichnet ein vorab formuliertes, überprüfbares Ergebnis, dessen Erreichen den angestrebten Beitrag einer Strategie stützt.
@@ -344,7 +355,9 @@ Ein strategischer Erfolgsbezug verbindet strategische Absicht und kohärente Han
 
 Im O2I-Metamodell wird jeder strategische Erfolgsbezug durch mindestens ein `Key Result @ Strategy` modelliert. Diese Key Results gehören nur dann zur Strategie, wenn sie deren Wegentscheidung überprüfbar machen und mit strategischer Absicht sowie kohärenten Handlungsfestlegungen relational verbunden sind.
 
-#### Fit / Kohärenznachweis
+\Needspace{12\baselineskip}
+
+##### Fit / Kohärenznachweis
 
 > [!definition]
 > **Fit**[^fit] bezeichnet den Kohärenznachweis, dass Positionierung, Trade-offs, kohärente Handlungsfestlegungen und strategische Erfolgsbezüge zueinander passen und sich gegenseitig stützen.
@@ -355,7 +368,7 @@ Fit ist mehr als Widerspruchsfreiheit. Eine Strategie besitzt Fit, wenn ihre Han
 
 Fit validiert damit nicht einzelne Bestandteile isoliert, sondern das Zusammenspiel von Positionierung, Trade-offs, kohärenten Handlungsfestlegungen und strategischen Erfolgsbezügen. Fehlt dieser Fit, entsteht keine Strategie, sondern eine lose Sammlung einzelner Festlegungen und Ergebnisbezüge.
 
-### Strategiebeitrag und kollektive Strategierealisierung
+#### Zusammenwirken von Strategien {#strategiebeitrag-und-kollektive-strategierealisierung}
 
 > [!definition]
 > Ein **Strategiebeitrag**[^strategy-contribution] bezeichnet einen fachlich begründeten Beitrag einer Strategie zu einer anderen Strategie. Er wird in O2I als binäre Relation `Strategy --contributes-to--> Strategy` modelliert und durch zulässige Primitive-Relationen zwischen beiden Strategien belegt.
@@ -365,6 +378,8 @@ Fit validiert damit nicht einzelne Bestandteile isoliert, sondern das Zusammensp
 Ein Strategiebeitrag behauptet weder vollständige Realisierung noch kollektiven Fit. Eine Strategie kann zu mehreren Strategien beitragen; umgekehrt kann eine Strategie Beiträge mehrerer Strategien erhalten. Jede Relation bleibt eine eigenständige Aussage mit eigener Begründung.
 
 Strategische Kaskadierung übersetzt einen Erfolgsbezug einer übergeordneten Strategie in die strategische Absicht einer untergeordneten Strategie. Ein eigener Erfolgsbezug der unteren Strategie, der genau diese Absicht stützt, vermittelt den Beitrag zum übergeordneten Erfolgsbezug. O2I führt diese Verknüpfung als Autorenableitung ein; sie ersetzt weder die eigene Diagnose noch die Vision-Ausrichtung der untergeordneten Strategie und erlaubt keine rechnerische Übertragung der Zielerreichung.
+
+\Needspace{12\baselineskip}
 
 > [!definition]
 > Eine **kollektive Strategierealisierung**[^collective-strategy-realization] bezeichnet die begründete Aussage, dass mindestens zwei beitragende Strategien eine Zielstrategie gemeinsam realisieren. Sie setzt individuelle Strategiebeiträge, kollektive Abdeckung und kollektiven Fit voraus.
@@ -623,7 +638,7 @@ Damit bleibt Nachweislogik von Messung getrennt: Messung macht beobachtbar, Nach
 
 # Metamodell
 
-## Zweck
+::: {#zweck}
 
 Das O2I-Metamodell ist der formale Kern des O2I Frameworks. Es übersetzt die O2I-Terminologie in eine prüfbare Modellstruktur: Begriffe werden als Typen gefasst, konkrete Modellelemente werden als Instanzen dieser Typen beschrieben, Primitives erhalten ihre Bedeutung durch Interpretation in Kontexten, und die gestufte Validierung prüft, ob ein Modell die O2I-Wirkungslogik einhält.
 
@@ -633,6 +648,8 @@ Das Metamodell ersetzt die Terminologie nicht. Die Terminologie legt die fachlic
 
 > [!tldr]
 > Terminologie erklärt Bedeutung; das Metamodell formalisiert sie; die Haskell-Spezifikation macht sie maschinenprüfbar; Syntax stellt sie dar.
+
+:::
 
 ## Semantik
 
@@ -959,7 +976,7 @@ Die Evidenzebene besteht insbesondere aus `KPIDefinition`, `ValueDomain`, `Level
 
 Ihre Einordnung als Teil der Metamodellsemantik zeigt @Fig:o2i-framework-architecture.
 
-## Syntax
+## ArchiMate-Syntax {#syntax}
 
 Die Syntax beschreibt, wie die O2I-Semantik in einer Modellierungssprache dargestellt wird. O2I verwendet ArchiMate als visuelle Darstellungs- und Integrationssyntax, ohne die O2I-Semantik durch ArchiMate-Semantik zu ersetzen.
 
@@ -1083,6 +1100,8 @@ Eine View darf nur einen Teil der persistierten Teilnehmer darstellen. Die posit
 
 # Illustration
 
+## O2I Layered Cake
+
 Der O2I Layered Cake ist eine illustrative Übersicht eines fiktiven, durchgängigen O2I-Wirkungszusammenhangs. Die Sicht zeigt, wie O2I-Kontexte mit Primitives befüllt und Makrorelationen durch Primitive-Relationen begründet werden. Sie ist weder eine ausführbare O2I-Profilinstanz noch ein Konformitätsnachweis.
 
 \clearpage
@@ -1099,7 +1118,7 @@ Der O2I Layered Cake ist eine illustrative Übersicht eines fiktiven, durchgäng
 \restoregeometry
 \clearpage
 
-## Orientierung
+### Orientierung
 
 @Fig:o2i-layered-cake beginnt mit dem Übergang von `Ethos` zu `Mission`. Im Kontext `Ethos` werden `Respect`, `Discipline` und `Independence` als `Principle` interpretiert. `Respect` bezeichnet den normativen Maßstab für den Umgang mit Menschen. `Discipline` bezeichnet den Anspruch an Verlässlichkeit, Konsequenz und Ausführung. `Independence` bezeichnet den Anspruch, eigenständig zu urteilen und zu handeln.
 
@@ -1113,7 +1132,7 @@ Die Leitprinzipien aus `Ethos` prägen zugleich diese Vision. `Respect` verhinde
 
 Damit werden auch die Makrorelationen `Mission --grounds--> Vision` und `Ethos --guides--> Vision` durch Primitive-Relationen begründet.
 
-## Formierung
+### Formierung
 
 Aus Orientierung wird Formierung, sobald die Vision in eine strategische Wegentscheidung übersetzt wird.
 
@@ -1127,7 +1146,7 @@ Zwischen beiden Strategien zeigt der Layered Cake Ausrichtung und Beitrag. `Defa
 
 Der untere Key Result `80% of decisions reference shared decision records` substantiiert genau dieses untere Objective. Über das gemeinsame Objective wird sein Erfolgsbeitrag zum oberen Key Result nachvollziehbar. Zusätzlich zeigt `Create shared decision records @ Shared understanding --contributes-to--> Establish shared evidence practices @ Organizational transparency` den Umsetzungsbeitrag. Der vermittelte Erfolgsbeitrag und der direkte Action-Beitrag begründen jeweils die Makrorelation `Shared understanding --contributes-to--> Organizational transparency`. Die Action-Relation begründet keine Ausrichtung, und die Prozentwerte beider Key Results lassen sich aus diesen Relationen nicht ineinander umrechnen.
 
-## Situierung
+### Situierung
 
 Aus Formierung wird Situierung, sobald eine Strategie auf eine konkrete Situation trifft und Bedarfe sichtbar sowie strategisch qualifizierbar werden.
 
@@ -1137,7 +1156,7 @@ Im Need-Kontext beschreibt `Unshared and untraceable decisions create action unc
 
 Der Need-Kontext enthält bewusst keine Key Results. Ein Bedarf beschreibt, was benötigt wird, nicht wie Erfolg gemessen oder umgesetzt wird. Zielwerte und Messlogik werden später über `Intervention` und `Measure` operationalisiert. Auch die strategische Action `Create shared decision records` wird nicht direkt mit dem Need gleichgesetzt; sie bleibt eine kohärente strategische Handlungsfestlegung, die im nächsten Schritt eine Intervention leiten kann.
 
-## Operationalisierung
+### Operationalisierung
 
 Aus Situierung wird Operationalisierung, sobald ein wirkungsrelevanter Bedarf durch eine Intervention adressiert wird.
 
@@ -1147,7 +1166,7 @@ Die strategische Action `Create shared decision records` wird nicht mit der Inte
 
 Damit wird `Intervention --addresses--> Need` nicht als bloße Behauptung gelesen: Die Intervention setzt eine konkrete Action an, formuliert einen überprüfbaren Ergebnisbezug und verbindet diesen Ergebnisbezug relational mit dem wirkungsrelevanten Need-Objective.
 
-## Wirkung
+### Wirkung
 
 Aus Operationalisierung wird Wirkung erst, wenn die veränderte Situation messbar beobachtet und relational in den O2I-Graphen eingeordnet wird.
 
@@ -1159,7 +1178,9 @@ Vor dem geplanten und tatsächlichen Beginn der Intervention legt ein Evidenzpla
 
 Wirkung wird im Layered Cake daher nicht als isoliertes Modellelement behauptet. Sie wird durch die nachvollziehbare Kette von wirkungsrelevantem Bedarf, Intervention, veränderter Situation, strategisch gerahmter Messung und konsistenter Evidenz begründet. Fit bleibt dabei eine Validierungsfrage: Die Relationen von Vision, Strategie, Need, Intervention, Measure und Situation müssen kohärent zusammenpassen, damit eine Messbeobachtung als Evidenz für orientierte Wirkung gelesen werden darf.
 
-# Fazit
+\backmatter
+
+## Fazit {.unnumbered}
 
 O2I beschreibt ein Framework für Wirkungsarchitekturen: Es verbindet standardliteraturbasierte Terminologie und ein semantisch und syntaktisch ausgearbeitetes Metamodell zu einer prüfbaren Denk-, Modellierungs- und Nachweislogik für *orientierte Wirkung*.
 
@@ -1173,6 +1194,6 @@ O2I beschreibt ein Framework für Wirkungsarchitekturen: Es verbindet standardli
 
 O2I folgt damit einer einfachen Grundidee: *panta rhei* - alles fließt. Orientierung, Strategie, Bedarfe, Interventionen und Wirkung bleiben nicht statisch, sondern werden im Wirkungsgraphen fortlaufend nachvollziehbar, überprüfbar und lernfähig verbunden.
 
-# Danksagung
+## Danksagung {.unnumbered}
 
 !include ../../ACKNOWLEDGEMENTS.md
