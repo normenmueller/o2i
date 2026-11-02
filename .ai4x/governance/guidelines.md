@@ -32,7 +32,7 @@ Policy owns transitions/authority; `Ready` grants none. Grants retain scope/targ
 
 Condition merge on the approved head (`sha`/`--match-head-commit`). Inspect merge-side closures: only the owning Issue may auto-close under merge authority. Distinguish this from explicit follow-up closure/Done/cleanup after post-merge proof.
 
-Align Project status at workflow/PO handoffs using authorized transitions, PO ordering and remote readback. If blocked, report actual/UNVERIFIED state, intended correction and missing authority/access.
+Gertrud synchronizes Issues/Project at work changes, pause/resume, review, PO acceptance/completion and before handoff; teammates report transitions. Never await reminders. Respect authorized transitions/PO ordering; verify readback. If blocked, report actual/UNVERIFIED status, correction and missing authority/access.
 
 | Status | Observable meaning |
 | --- | --- |
