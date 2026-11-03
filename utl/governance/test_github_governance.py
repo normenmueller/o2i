@@ -333,38 +333,75 @@ class PolicyShapeTests(unittest.TestCase):
         policy = contract.load_policy()
         continuity = policy["continuity"]
         self.assertEqual("GitHub", continuity["operationalTarget"])
-        self.assertEqual(
-            {"completed-work-unit", "active-product-owner-decision"},
-            {item["id"] for item in continuity["boundaryKinds"]},
+        shared = (
+            "published-head-and-clean-fresh-clone",
+            "applicable-tracked-state-and-handoff",
+            "remote-return-point-and-authority-current",
+            "no-delegated-or-background-work",
+            "no-local-or-session-dependency",
+            "restore-proof-current",
         )
-        for boundary in continuity["boundaryKinds"]:
-            required = tuple(continuity["sharedRequiredEvidence"]) + tuple(
-                boundary["additionalRequiredEvidence"]
-            )
+        boundaries = (
+            ("completed-work-unit", "COMPLETE", (
+                "work-verification-corrections-and-reviews-complete",
+                "no-unresolved-fact-or-decision",
+            )),
+            ("active-product-owner-decision", "ACTIVE", (
+                "one-exact-current-non-authorizing-decision-next",
+                "all-required-changes-pushed",
+                "incomplete-and-unaccepted-state-explicit",
+                "no-other-unresolved-fact",
+            )),
+            ("explicit-work-pause", "PAUSED", (
+                "explicit-product-owner-pause-with-reason-and-return-condition",
+                "exact-next-subject-issue-and-unfinished-state-durable",
+                "all-required-changes-pushed",
+                "open-decisions-and-verification-findings-explicit",
+                "preservation-passed-without-inferred-product-acceptance-or-completion",
+                "authority-disposition-and-resume-requirements-explicit",
+            )),
+        )
+        self.assertEqual(shared, tuple(continuity["sharedRequiredEvidence"]))
+        self.assertEqual(
+            boundaries,
+            tuple((item["id"], item["handoffWorkStatus"],
+                   tuple(item["additionalRequiredEvidence"]))
+                  for item in continuity["boundaryKinds"]),
+        )
+        for kind, status, additional in boundaries:
+            required = shared + additional
             evidence = {name: True for name in required}
             arguments = {
-                "boundary_kind": boundary["id"],
-                "handoff_work_status": boundary["handoffWorkStatus"],
+                "boundary_kind": kind,
+                "handoff_work_status": status,
                 "evidence": evidence,
             }
-            with self.subTest(boundary=boundary["id"]):
+            with self.subTest(boundary=kind):
                 self.assertTrue(contract.cold_start_eligible(policy, **arguments))
+                for wrong_status in {"ACTIVE", "PAUSED", "COMPLETE", "UNKNOWN"} - {status}:
+                    self.assertFalse(contract.cold_start_eligible(
+                        policy, **{**arguments, "handoff_work_status": wrong_status},
+                    ))
                 self.assertFalse(
                     contract.cold_start_eligible(
                         policy,
-                        **{**arguments, "handoff_work_status": "PAUSED"},
+                        **{**arguments, "evidence": {**evidence, "extra": True}},
                     )
                 )
                 for name in required:
-                    for value in (False, None):
-                        incomplete = dict(evidence)
-                        incomplete[name] = value
-                        self.assertFalse(
-                            contract.cold_start_eligible(
-                                policy,
-                                **{**arguments, "evidence": incomplete},
+                    with self.subTest(guard=name):
+                        missing = {key: value for key, value in evidence.items() if key != name}
+                        self.assertFalse(contract.cold_start_eligible(
+                            policy, **{**arguments, "evidence": missing},
+                        ))
+                        for value in (False, None, 1, "true"):
+                            incomplete = {**evidence, name: value}
+                            self.assertFalse(
+                                contract.cold_start_eligible(
+                                    policy,
+                                    **{**arguments, "evidence": incomplete},
+                                )
                             )
-                        )
         self.assertFalse(
             contract.cold_start_eligible(
                 policy,
@@ -373,6 +410,59 @@ class PolicyShapeTests(unittest.TestCase):
                 evidence={},
             )
         )
+
+    def test_cold_start_policy_rejects_removed_guards_and_unknown_boundaries(self) -> None:
+        policy = contract.load_policy()
+        continuity = policy["continuity"]
+        guard_lists = [continuity["sharedRequiredEvidence"]] + [
+            item["additionalRequiredEvidence"] for item in continuity["boundaryKinds"]
+        ]
+        for index, guards in enumerate(guard_lists):
+            for name in guards:
+                invalid = copy.deepcopy(continuity)
+                target = (invalid["sharedRequiredEvidence"] if index == 0 else
+                          invalid["boundaryKinds"][index - 1]["additionalRequiredEvidence"])
+                target.remove(name)
+                with self.subTest(guard=name, boundary=index):
+                    with self.assertRaises(contract.ContractError):
+                        contract._validate_continuity(invalid)
+        invalid = copy.deepcopy(continuity)
+        invalid["boundaryKinds"].append({
+            "id": "any-checkpoint", "handoffWorkStatus": "PAUSED",
+            "additionalRequiredEvidence": [],
+        })
+        with self.assertRaises(contract.ContractError):
+            contract._validate_continuity(invalid)
+        invalid = copy.deepcopy(continuity)
+        invalid["boundaryKinds"][-1]["handoffWorkStatus"] = "ACTIVE"
+        with self.assertRaises(contract.ContractError):
+            contract._validate_continuity(invalid)
+
+    def test_paused_wip_requires_preservation_not_product_acceptance(self) -> None:
+        policy = contract.load_policy()
+        continuity = policy["continuity"]
+        pause = next(item for item in continuity["boundaryKinds"]
+                     if item["id"] == "explicit-work-pause")
+        # Attested preservation facts, not remote or product verification by this evaluator.
+        # A rejected model can be restored exactly with its failures and absent acceptance.
+        evidence = {name: True for name in continuity["sharedRequiredEvidence"]
+                    + pause["additionalRequiredEvidence"]}
+        arguments = {"boundary_kind": "explicit-work-pause",
+                     "handoff_work_status": "PAUSED", "evidence": evidence}
+        self.assertTrue(contract.cold_start_eligible(policy, **arguments))
+        self.assertNotIn("work-verification-corrections-and-reviews-complete", evidence)
+        self.assertNotIn("no-unresolved-fact-or-decision", evidence)
+        for guard in ("restore-proof-current", "open-decisions-and-verification-findings-explicit",
+                      "authority-disposition-and-resume-requirements-explicit"):
+            self.assertFalse(contract.cold_start_eligible(
+                policy, **{**arguments, "evidence": {**evidence, guard: False}},
+            ))
+        # Eligibility does not confer execution authority, even with an allowed action.
+        self.assertFalse(contract.mutation_allowed(
+            policy, action_id="local.write",
+            gate_evidence={name: name != "current-matching-subject-authority"
+                           for name in policy["mutationGates"]["gates"]},
+        ))
 
     def test_provenance_never_infers_identity_from_approval(self) -> None:
         provenance = contract.load_policy()["provenance"]

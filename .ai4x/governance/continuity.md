@@ -1,36 +1,36 @@
 # Scope
 
-Load only after `BEHAVIOR.md` classifies handoff applicability. This contract owns return-point reconstruction, durable authority continuity and cold-start eligibility. Bootstrap owns checkout/pointer/State validation and applicability; policy owns grant schemas and guards; `decision-handoff.md` owns event rendering.
+Load after bootstrap classifies applicability under `BEHAVIOR.md`. Owns return-point/authority reconstruction and Cold Start eligibility; bootstrap owns checkout/pointer/State validation, policy owns grants/guards, `decision-handoff.md` owns rendering.
 
 # Sources And Reconstruction
 
-Use the selected checkout's tracked artifacts and observed Git facts, an applicable Handoff, and current owning GitHub Issue/Project/PR/CI facts when material. GitHub is the single operational continuity target. Transcripts, `resume`, prior-session context, model recollection, cached remote facts, ignored files, local pointers and host snapshots supply neither authority nor durable continuity.
+Reconstruct from the selected checkout's tracked artifacts, observed Git, applicable Handoff and material current owning GitHub Issue/Project/PR/CI facts. GitHub alone owns operational continuity. Transcripts, `resume`, prior-session context, model recollection, cached remote facts, ignored files, local pointers and host snapshots supply neither authority nor continuity.
 
-Apply `CONTEXT.md` statement ownership. A stale dependent reference yields to its current owner; conflicts inside/between owners block dependent work. Status, commits, clean trees, branch names, PRs and tests alone prove no completion, acceptance or authority.
+Apply `CONTEXT.md` ownership; current owners supersede stale references. Owner conflicts block dependent work. Status/commits/clean trees/branches/PRs/tests prove no completion, acceptance or authority.
 
 | Applicability | Action |
 | --- | --- |
-| `applicable` | Validate fixed-path Handoff against closed `o2i.handoff/v1`. Reconcile Issue, objective, work status, authority reference, risks, checks, next action and return point with branch, revision, complete status and needed current remote facts. Preserve and identify dirty scope |
-| `dormant` | Exclude Handoff. Use tracked trunk/current owners. Dormancy proves only non-applicability; no acceptance, merge, completion, closure, Project or authority fact. Expected dormant content needs no refresh, mutation or history investigation |
-| `UNVERIFIED` | Continue only repository-file work independent of the unresolved return point/authority. Mark the exact uncertainty; obtain owning evidence before dependent action. Never infer a next action from Handoff |
+| `applicable` | Validate fixed-path closed `o2i.handoff/v1`. Reconcile all Handoff fields against branch/revision/complete status and needed current remote facts. Identify/preserve dirty scope |
+| `dormant` | Exclude Handoff; use tracked trunk/current owners. Proves only non-applicability, no acceptance/merge/completion/closure/Project/authority facts. Expected dormancy needs no refresh, mutation or history investigation |
+| `UNVERIFIED` | Only independent repository-file work. Mark exact uncertainty; obtain owning evidence before dependent action. Infer no next action from Handoff |
 
 # Durable Authority
 
-For grant authority surviving a session, load canonical policy and re-fetch the owning Issue. Require exactly one immutable receipt for the grant ID and verify required author identity, canonical bytes, approved payload/digest, unchanged Issue precondition, subject, actions, scope, target, exclusions and current lifecycle facts.
+Reconstruct surviving grants from canonical policy and the freshly fetched owning Issue. Require exactly one immutable receipt per grant ID; verify author identity, canonical bytes, approved payload/digest, unchanged Issue precondition, subject/actions/scope/target/exclusions and current lifecycle.
 
-Zero/multiple, malformed, mismatched, stale or unverifiable receipts leave authority `UNVERIFIED`; revoked, superseded, fulfilled or materially invalid grants cannot authorize continuation. A handoff, transcript or historical readback cannot repair missing current evidence. Current explicit runtime/PO instructions retain bootstrap precedence; a continuity reference never manufactures authority.
+Missing/ambiguous/malformed/mismatched/stale/unverifiable receipts leave authority `UNVERIFIED`. Revoked/superseded/fulfilled/materially invalid grants authorize nothing. Handoff/transcripts/historical readbacks cannot replace current evidence. Current explicit runtime/PO instructions retain precedence; continuity references create no authority.
 
-Standing completion requires accepted versioned `pullRequestCompletion` and fresh GitHub PR/review/Issue/check facts: exact head/source branch, effective PO approval, independent acceptance, integration-base coverage, then approved-head/integration-tree publication and post-merge checks. Cleanup retains full preflight. Changed/dismissed/withdrawn approval, change requests or failed/unknown gates deny dependent actions. Review IDs locate evidence only; no transcript/receipt reconstruction or extension of implementation grants.
+Standing completion requires accepted versioned `pullRequestCompletion` and fresh PR/review/Issue/check facts: exact head/source branch, effective PO approval, independent acceptance, integration-base coverage, then approved-head/integration-tree publication and post-merge checks. Cleanup requires full preflight. Changed/dismissed/withdrawn approval, change requests or failed/unknown gates deny. Review IDs only locate evidence; no transcript/receipt reconstruction or implementation-grant extension.
 
 # Handoff Maintenance
 
-Maintain Handoff for the current authorized work unit on its applicable branch, including its completion or pending PO-decision boundary. Record one current Issue (or `NONE` only for explicit Issue-free Routine work), objective, authority reference, material risk, checks, next action and local return point. A completed grant cannot authorize further work; record the actual pending decision instead of implying continuation authority.
+Maintain Handoff on the applicable branch through completion, pending PO decision or explicit pause. Record one current Issue (`NONE` only for explicit Issue-free Routine work), objective, authority reference, risk, checks, next action and local return point. A completed grant authorizes no further work; record the pending decision.
 
 - `ACTIVE`: design, implementation, investigation, correction, review or publication preparation.
 - `PAUSED`: genuine wait with one reason and return condition.
 - `COMPLETE`: recorded objective completed.
 
-Stay within policy budget. Reference durable owners; exclude backlog history, copied policy, secrets, private data, session identifiers and authority payloads. Handoff maintenance creates no authority, workflow state, acceptance or evidence. Audience and artifact lifetime belong to `operations/artifact-placement.md`.
+Respect policy budgets; reference durable owners. Exclude backlog history, copied policy, secrets/private data, session identifiers and authority payloads. Handoff creates no authority, workflow state, acceptance or evidence. Placement/lifetime: `operations/artifact-placement.md`.
 
 # Cold-Start Eligibility
 
@@ -40,13 +40,18 @@ Require every shared gate:
 - Tracked State/Handoff classify `applicable`; return point and surviving authority are durably materialized and freshly verified.
 - No delegated/background work, required local-only/session state or missing restore proof.
 
-Unknown or missing evidence denies eligibility. A dormant checkout needs no refresh for ordinary work, but cannot establish cold-start eligibility: policy requires applicable State/Handoff.
+Unknown/missing evidence denies. Dormancy needs no ordinary refresh but cannot establish Cold Start eligibility: State/Handoff must be applicable.
 
 | Boundary | Additional gates |
 | --- | --- |
 | `completed-work-unit` | Handoff `COMPLETE`; authorized work, deterministic/remote checks, corrections and independent reviews complete; no unresolved material fact or PO decision |
 | `active-product-owner-decision` | Handoff `ACTIVE`; one exact pending PO decision is next; immutable current owning-Issue record explicitly grants no authority; all required local edits committed/pushed; incomplete/unaccepted state explicit; no other unresolved material fact |
+| `explicit-work-pause` | Handoff `PAUSED`; explicit PO pause, reason/return condition; durable next subject/Issue/unfinished state; required changes committed/pushed; explicit decisions/findings; successful preservation without inferred acceptance/completion; explicit authority/resume conditions |
 
-A checkpoint establishes neither acceptance nor authority. Once all gates pass and cold start is the single recommendation, use the established concise presentation and three fixed actions in `decision-handoff.md`; canonical records remain policy-owned. Derive the checkout root. The evidence makes session and local copy dispensable without requiring deletion. Session deletion removes descendants too; never recommend it early.
+For a pause, the owning Issue records pause/return point and authority disposition, including surviving grants or their absence. Verified absence of resume authority satisfies authority evidence; missing/unverifiable evidence denies. Resume requires current explicit PO instruction and fresh owning facts; surviving grants retain all validity guards. Pause/Cold Start create no implementation/publication authority.
 
-A greeting carries no state. Payload-bearing startup is exceptional recovery only when durable materialization failed before interruption; it never overrides repository owners or becomes routine continuity.
+Unfinished/rejected WIP, including product-check failures, may be preserved only with exact state, rejection/unaccepted status, decisions and findings reconstructible from the published branch/current Issue. Successful preservation proves recoverability only, never validity, acceptance or completion. All shared guards still apply.
+
+Checkpoints create no acceptance/authority. Only after all gates pass and Cold Start is the sole recommendation, follow `decision-handoff.md`'s three fixed actions and policy records. Derive checkout root. Recovery permits, never requires deletion; session deletion removes descendants. Never recommend it early.
+
+A greeting carries no state. Startup payloads only recover failed durable materialization before interruption; they never override owners or become routine continuity.

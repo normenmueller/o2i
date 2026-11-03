@@ -46,7 +46,7 @@ Ordinary results create no event. Only `authority_request` accepts an exact adja
 
 # Cold Start Continuity
 
-`GitHub` alone. Boundaries: `completed-work-unit`, `active-product-owner-decision`. Load `session-continuity`; unknown denies; no local/session dependency; no checkpoint-derived acceptance or authority.
+`GitHub` alone. Boundaries: `completed-work-unit`, `active-product-owner-decision`, `explicit-work-pause`. Load `session-continuity`; unknown denies; no local/session dependency; no checkpoint-derived acceptance or authority.
 
 # Provenance And Forbidden Actions
 
