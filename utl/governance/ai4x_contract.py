@@ -878,6 +878,18 @@ def _validate_continuity(value: Any) -> None:
                 "no-other-unresolved-fact",
             ),
         ),
+        (
+            "explicit-work-pause",
+            "PAUSED",
+            (
+                "explicit-product-owner-pause-with-reason-and-return-condition",
+                "exact-next-subject-issue-and-unfinished-state-durable",
+                "all-required-changes-pushed",
+                "open-decisions-and-verification-findings-explicit",
+                "preservation-passed-without-inferred-product-acceptance-or-completion",
+                "authority-disposition-and-resume-requirements-explicit",
+            ),
+        ),
     )
     observed = []
     for index, item in enumerate(
@@ -2262,8 +2274,9 @@ def render_agent_projection(policy: Mapping[str, Any]) -> str:
     continuity = policy["continuity"]
     lines.extend(("", "# Cold Start Continuity", ""))
     lines.append(
-        f"`{continuity['operationalTarget']}` alone. Boundaries: `completed-work-unit`, "
-        "`active-product-owner-decision`. Load `session-continuity`; unknown denies; "
+        f"`{continuity['operationalTarget']}` alone. Boundaries: "
+        + ", ".join(f"`{item['id']}`" for item in continuity["boundaryKinds"])
+        + ". Load `session-continuity`; unknown denies; "
         "no local/session dependency; no checkpoint-derived acceptance or authority."
     )
     lines.extend(("", "# Provenance And Forbidden Actions", ""))
@@ -2330,7 +2343,7 @@ def render_contributing_projection(policy: Mapping[str, Any]) -> str:
         "",
         "### Cold Start",
         "",
-        "GitHub ist das einzige operative Continuity-Ziel. Zulässig sind ein vollständig abgeschlossener Arbeitsstand und eine aktive, vollständig veröffentlichte Entscheidungsgrenze. Beide benötigen einen sauberen Fresh-Clone-Beweis, ein passendes getracktes State/Handoff-Paar, aktuelle dauerhafte Autoritätsbelege und dürfen weder Transcript, `resume`, lokale Pointer, ignorierte Dateien, Host-Snapshots noch Modellgedächtnis voraussetzen. Ein aktiver Checkpoint macht Unfertigkeit und fehlende Akzeptanz ausdrücklich sichtbar und erzeugt selbst weder Akzeptanz noch Autorität.",
+        "GitHub ist das einzige operative Continuity-Ziel. Zulässig sind ein vollständig abgeschlossener Arbeitsstand, eine aktive, vollständig veröffentlichte Entscheidungsgrenze und eine ausdrücklich vom Product Owner angeordnete Arbeitspause mit `PAUSED`, Grund und Rückkehrbedingung. Alle drei benötigen einen sauberen Fresh-Clone-Beweis, ein passendes getracktes State/Handoff-Paar, aktuelle dauerhafte Autoritätsbelege und dürfen weder Transcript, `resume`, lokale Pointer, ignorierte Dateien, Host-Snapshots noch Modellgedächtnis voraussetzen. Bei einer Pause müssen der genaue nächste Gegenstand, das owning Issue, der unfertige Stand, offene Entscheidungen, abgelehnte Kandidaten und Prüfbefunde dauerhaft rekonstruierbar und alle erforderlichen Änderungen veröffentlicht sein. Erfolgreiche Sicherungsprüfungen belegen Wiederherstellbarkeit, keine Produktgültigkeit, Akzeptanz oder Fertigstellung. Die aktuelle Autoritätslage einschließlich fortbestehender Grants oder ihres Fehlens muss belegt sein; ein fehlender Beleg sperrt den Kaltstart. Pause und Kaltstart erzeugen keine neue Autorität; die Fortsetzung erfordert eine aktuelle ausdrückliche PO-Anweisung und frisch geprüfte owning Fakten. Bestehende Grants unterliegen weiterhin allen Gültigkeitsbedingungen.",
         "",
         "### Provenienz und Grenzen",
         "",

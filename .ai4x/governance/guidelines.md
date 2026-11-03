@@ -58,7 +58,7 @@ Load `TEAM.md` for capability assignment, collaboration timing and independence.
 
 # Remote Work
 
-Open PRs with a brief PO-facing summary of achieved results and practical benefits; technical evidence follows. Handle Routine communication edits directly and proportionately.
+Deliver every implementation through an owning-Issue-linked PR; `In review` requires it published. Lead with results/benefits, then technical evidence. Handle Routine communication edits directly and proportionately.
 
 Assign new Issues to both `normenmueller` and `gertrud-ai4x`; verify remotely.
 
