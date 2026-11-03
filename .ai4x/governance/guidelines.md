@@ -12,7 +12,7 @@ Load for risk classification, Issues, Project administration, review, remote wor
 | Local return-point references | Applicable `.ai4x/HANDOFF.md`; never authority |
 | Human contribution guidance | Generated `CONTRIBUTING.md` projection |
 
-Record facts once at their owner. Prefer working software, executable evidence and ownership over ceremony. Exact-revision acceptance proves no permanent defect-freedom. Never weaken verification, types, autonomy, documentation, security or publication checks to save effort.
+Before material operations, resolve from current owners: `(outcome, action, exact subject/resource/revision, authority, risk, guards/evidence, checks, expected result)`. Keep reasoning transient and facts at their sole owner; this tuple creates no artifact or authority. Prefer evidence over ceremony. Never weaken verification, types, autonomy, documentation, security or publication to save effort. Acceptance proves no permanent defect-freedom.
 
 # Risk Path
 
@@ -54,7 +54,7 @@ Reproduce later concerns against the accepted revision and authority. Classify a
 
 # Review
 
-Load `TEAM.md` for capability assignment, collaboration timing and independence. Each review names exact subject/scope, reviewer capability, checks, findings and verdict: `accepted`, `accepted with follow-ups` or `changes required`. Acceptance requires no blocker. Each blocker states a target-state remedy; separate advisory work. Later edits require review of their changed risk surface.
+Load `TEAM.md` for capability assignment, collaboration timing and independence. Each review names exact subject/scope, reviewer capability, checks, findings and verdict: `accepted`, `accepted with follow-ups` or `changes required`. Acceptance requires no blocker. Each blocker states a target-state remedy; separate advisory work. For later edits, review changed risk and confirm unchanged accepted parts still apply to the exact candidate/integration base. Governance/process reviewers challenge steps with no necessary assurance; prefer removing duplication to adding a review layer.
 
 # Remote Work
 
@@ -72,8 +72,6 @@ For Git writes, verify the actual transport credentials and one effective push d
 
 # Verification And Backup
 
-Load `operations/local-verification.md` for local execution and recovery. Use `./utl/verification/local.sh checkpoint` for regular scoped backup commits; verify remote HEAD and report unbacked changes before claiming recoverability. Pure illustration checkpoints select licensing/model checks; required per-save CLI checks and unfinished-model findings remain. A backup is no merge acceptance.
+Execution/recovery, scope selection and evidence reuse: `operations/local-verification.md`. `utl/verify.sh` owns deterministic, network-independent checks/routing. Preserve PR/manual/release requirements. Unknown/shared integration scope selects the full suite; before release tags explicitly run `./utl/verification/local.sh all`.
 
-Make small, coherent, internally consistent, independently understandable commits after applicable local checks, before starting another independent unit. Separate unrelated work; keep coupled changes together. Time pushes by unpublished value and recovery risk: back up meaningful progress promptly and before risky operations, handoff or session end, within authority. Report unpublished commits or blocked checks. Local commits are not remote backups; commits and pushes establish no acceptance. Preserve required reviews and PR/manual/release checks; dispatch remote checks for backup commits only when verification requires them.
-
-`utl/verify.sh` owns deterministic, network-independent checks and the regular path matrix. Unknown/shared integration scope selects the complete suite. Before a release tag run `./utl/verification/local.sh all` explicitly; the starter defaults to checkpoint. Checkpoint selection never changes PR/manual/release verification. Backup branch pushes without an open PR do not trigger the Verify workflow; updates to an open PR do. Do not routinely use `[skip ci]`.
+Use `./utl/verification/local.sh checkpoint` for scoped backups. Pure illustration checkpoints select licensing/model; per-save CLI checks and unfinished-model findings remain. Commit small, coherent, independently understandable checked units before another independent unit; keep coupled changes together and unrelated work separate. Push meaningful progress promptly within authority, considering unpublished value/recovery risk, and before risky operations, handoff or session end. Verify exact remote HEAD; report unbacked changes/blocked checks. Local commits are not remote backups; backups establish no acceptance. Dispatch backup checks only when required. Branch pushes without an open PR trigger no Verify; open PR updates do. No routine `[skip ci]`.

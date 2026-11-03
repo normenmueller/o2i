@@ -1,33 +1,33 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#138","currentNode":"pause-route-pr-approval"}
+{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#140","currentNode":"lean-agent-pr-approval"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
 
-Deliver #138 via PR: `fix/138-paused-cold-start` -> `trunk`.
+Clarify agent-facing .ai4x contracts under #140; PR delivery.
 
 # Authority
 
-Current explicit PO instruction: use a linked PR. No new grant. Later exact-head PO approval authorizes normal completion under `pullRequestCompletion`, with all guards; no reapproval.
+PO instruction in #140: .ai4x-only simplification and independent review. No graph/human docs/tool changes; no new grant.
 
 # Current Facts
 
-Base `f0260ca`; [PR #139](https://github.com/normenmueller/o2i/pull/139). Illustration branch/WIP preserved.
+Base `df6bad0`; [PR #141](https://github.com/normenmueller/o2i/pull/141). Illustration preserved.
 
 # Material Risk
 
-Protected governance; no native acceptance. Preserve shared guards and existing routes. Cleanup only the merged #138 PR's safe resources.
+Preserve policy guards, freshness and review independence.
 
 # Verification
 
-Local checkpoint and independent integration review accepted `ca4add4`; final PR CI pending. Evidence: #138/#139.
+Contracts reviewed at `3962679`; scope licensing/governance. CI/evidence: #140/#141.
 
 # Next Action
 
-Complete final checks; PO uses GitHub Approve on #139. Then normal merge/close/Done/safe cleanup under policy, without chat reapproval.
+After required CI, PO GitHub Approve; standing completion rule applies without chat reapproval.
 
 # Local Return Point
 
-#138 -> #119 (Diagnosis versus Positioning) -> #115 (Scope after framework correction). Owning Issues retain illustration constraints.
+#140 -> #119 Diagnosis/Positioning -> #115 Scope after framework correction; constraints remain Issue-owned.
