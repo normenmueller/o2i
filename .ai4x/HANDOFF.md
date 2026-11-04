@@ -1,20 +1,20 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"PAUSED","currentIssue":"#119","currentNode":"pause"}
+{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#119","currentNode":"analysis"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
 
-#119; return 2026-11-04.
+Boundaries: #119.
 
 # Authority
 
-Meeting; explicit PO resume.
+Live PO: analysis only.
 
 # Current Facts
 
-Governance 3152c25.
+#119: 6626386373, 6626431540.
 
 # Material Risk
 
@@ -22,11 +22,11 @@ Unaccepted WIP: #119.
 
 # Verification
 
-Restore proof: #119.
+Readbacks: #119.
 
 # Next Action
 
-Diagnosis/Positioning: #119.
+Diagnosis: #119.
 
 # Local Return Point
 
