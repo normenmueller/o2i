@@ -26,7 +26,7 @@ Readbacks: #119.
 
 # Next Action
 
-Diagnosis: #119.
+Follow #119.
 
 # Local Return Point
 
