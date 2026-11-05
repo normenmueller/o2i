@@ -1153,7 +1153,10 @@ def validate_model(root: ET.Element) -> list[str]:
         if view_name == SYNTAX_ORIENTATION_VIEW:
             participant_ids = set(object_targets.values())
             for other in root.iter("element"):
-                if other is view or xtype(other) != "ArchimateDiagramModel":
+                if (
+                    xtype(other) != "ArchimateDiagramModel"
+                    or other.get("name") not in SYNTAX_MAPPING_VIEWS
+                ):
                     continue
                 shared = participant_ids.intersection(
                     child.get("archimateElement")
@@ -1161,8 +1164,9 @@ def validate_model(root: ET.Element) -> list[str]:
                 )
                 for identifier in sorted(shared):
                     errors.append(
-                        f"{view_name} shares isolated Candidate carrier "
-                        f"{identifier!r} with View {other.get('name', '')!r}"
+                        f"{view_name} reuses executable Candidate carrier "
+                        f"{identifier!r} in mapping-only View "
+                        f"{other.get('name', '')!r}"
                     )
 
         if view_name in FOCUSED_VIEW_NAMES:

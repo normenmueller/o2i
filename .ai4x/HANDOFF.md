@@ -1,20 +1,20 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#119","currentNode":"analysis"}
+{"schema":"o2i.handoff/v1","workStatus":"PAUSED","currentIssue":"#119","currentNode":"analysis"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
 
-Boundaries: #119.
+Overnight pause: #119.
 
 # Authority
 
-Live PO: analysis only.
+No grant; fresh PO resume.
 
 # Current Facts
 
-#119: 6626386373, 6626431540.
+#119 pause/restore records.
 
 # Material Risk
 
@@ -22,12 +22,12 @@ Unaccepted WIP: #119.
 
 # Verification
 
-Readbacks: #119.
+#119 checks/restore.
 
 # Next Action
 
-Follow #119.
+#119 Need reuse.
 
 # Local Return Point
 
-#119 -> #115 Scope; see Issues.
+#119 -> #143 -> #115 Scope.

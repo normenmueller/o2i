@@ -66,39 +66,98 @@ class RepositoryViewContractTest(unittest.TestCase):
         self.assertEqual(len(snapshots), len(set(snapshots)))
         self.assertEqual(model_views, set(view_names))
 
-    def test_orientation_carriers_are_isolated_from_other_views(self) -> None:
-        errors = EXTRACTOR.validate_model(self.root)
+    def test_orientation_mission_pattern_can_be_reused_in_contextualization(self) -> None:
+        baseline = EXTRACTOR.validate_model(self.root)
+        view_name = EXTRACTOR.SYNTAX_CONTEXTUALIZATION_VIEW
+        view = EXTRACTOR.find_view(self.root, view_name)
+        object_targets, *_ = EXTRACTOR.collect_view(view)
+        shared_ids = []
+        replaced_ids = []
+        for name, carrier in (
+            ("<Name> :: O2I Mission", "Grouping"),
+            ("<Name> :: O2I Driver", "Driver"),
+        ):
+            shared = self._model_element(
+                self.root, name, carrier,
+                view_name=EXTRACTOR.SYNTAX_ORIENTATION_VIEW,
+            )
+            replaced = self._model_element(
+                self.root, name, carrier, view_name=view_name,
+            )
+            occurrence = self._view_occurrence(
+                view, object_targets, replaced.get("id"),
+            )
+            occurrence.set("archimateElement", shared.get("id"))
+            shared_ids.append(shared.get("id"))
+            replaced_ids.append(replaced.get("id"))
 
-        self.assertFalse(
-            any("shares isolated Candidate carrier" in error for error in errors),
-            errors,
+        shared_relations = [
+            element
+            for element in self.root.iter("element")
+            if EXTRACTOR.xtype(element) == "CompositionRelationship"
+            and element.get("name") == "contextualizes"
+            and (element.get("source"), element.get("target")) == tuple(shared_ids)
+        ]
+        self.assertEqual(1, len(shared_relations))
+        replaced_connections = [
+            connection
+            for connection in view.iter("sourceConnection")
+            if (
+                self._relationship_for(self.root, connection).get("source"),
+                self._relationship_for(self.root, connection).get("target"),
+            ) == tuple(replaced_ids)
+        ]
+        self.assertEqual(1, len(replaced_connections))
+        replaced_connections[0].set(
+            "archimateRelationship", shared_relations[0].get("id"),
         )
 
-    def test_orientation_carrier_reuse_in_another_view_is_reported(self) -> None:
-        orientation = EXTRACTOR.find_view(
-            self.root, EXTRACTOR.SYNTAX_ORIENTATION_VIEW,
-        )
-        participant = orientation.find("child").get("archimateElement")
-        other = EXTRACTOR.find_view(
-            self.root, EXTRACTOR.SYNTAX_CONTEXTUALIZATION_VIEW,
-        )
-        ET.SubElement(
-            other,
-            "child",
-            {
-                EXTRACTOR.XSI_TYPE: "archimate:DiagramObject",
-                "id": "shared-orientation-carrier",
-                "archimateElement": participant,
-            },
-        )
+        self.assertEqual(baseline, EXTRACTOR.validate_model(self.root))
 
-        errors = EXTRACTOR.validate_model(self.root)
+    def test_orientation_candidate_cannot_be_reused_in_mapping_views(self) -> None:
+        mission = self._model_element(
+            self.root, "<Name> :: O2I Mission", "Grouping",
+            view_name=EXTRACTOR.SYNTAX_ORIENTATION_VIEW,
+        )
+        for view_name in sorted(EXTRACTOR.SYNTAX_MAPPING_VIEWS):
+            with self.subTest(view=view_name):
+                root = copy.deepcopy(self.root)
+                view = EXTRACTOR.find_view(root, view_name)
+                ET.SubElement(
+                    view, "child",
+                    {
+                        EXTRACTOR.XSI_TYPE: "archimate:DiagramObject",
+                        "id": "shared-orientation-mission",
+                        "archimateElement": mission.get("id"),
+                    },
+                )
+
+                self.assertIn(
+                    f"{EXTRACTOR.SYNTAX_ORIENTATION_VIEW} reuses executable "
+                    f"Candidate carrier {mission.get('id')!r} in mapping-only "
+                    f"View {view_name!r}",
+                    EXTRACTOR.validate_model(root),
+                )
+
+    def test_shared_mission_cannot_replace_contextualization_strategy(self) -> None:
+        view_name = EXTRACTOR.SYNTAX_CONTEXTUALIZATION_VIEW
+        view = EXTRACTOR.find_view(self.root, view_name)
+        object_targets, *_ = EXTRACTOR.collect_view(view)
+        mission = self._model_element(
+            self.root, "<Name> :: O2I Mission", "Grouping",
+            view_name=EXTRACTOR.SYNTAX_ORIENTATION_VIEW,
+        )
+        strategy = self._model_element(
+            self.root, "<Name> :: O2I Strategy", "Grouping", view_name=view_name,
+        )
+        self._view_occurrence(view, object_targets, strategy.get("id")).set(
+            "archimateElement", mission.get("id"),
+        )
 
         self.assertIn(
-            f"{EXTRACTOR.SYNTAX_ORIENTATION_VIEW} shares isolated Candidate "
-            f"carrier {participant!r} with View "
-            f"{EXTRACTOR.SYNTAX_CONTEXTUALIZATION_VIEW!r}",
-            errors,
+            "O2I Syntax - Contextualization requires node "
+            "'<Name> :: O2I Strategy' (Grouping) exactly once; found 0",
+            EXTRACTOR.validate_model(self.root),
         )
 
     def test_missing_required_view_is_reported(self) -> None:
