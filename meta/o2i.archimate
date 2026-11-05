@@ -47,6 +47,10 @@
         <property key="o2i.type" value="Principle"/>
         <property key="o2i.commitment" value="candidate"/>
       </element>
+      <element xsi:type="archimate:Goal" name="&lt;Name> :: O2I Objective" id="id-2df409e85175496c85974fbc8010fe7a">
+        <property key="o2i.type" value="Objective"/>
+        <property key="o2i.commitment" value="candidate"/>
+      </element>
     </folder>
     <folder name="Meanings" id="id-09020eb700f1482498f567ee8e3a4c06">
       <element xsi:type="archimate:Meaning" name="Coherent Action" id="id-1667c49476464971872207ecd236283a"/>
@@ -62,10 +66,6 @@
       <element xsi:type="archimate:Meaning" name="WOHIN" id="id-0645e26eee7b4bf49df671f415323fb1"/>
       <element xsi:type="archimate:Meaning" name="WORAN" id="id-44e7b1aa0cb64e36bf8c6664b0f05eb0"/>
     </folder>
-    <element xsi:type="archimate:Goal" name="&lt;Name> :: O2I Objective" id="id-2df409e85175496c85974fbc8010fe7a">
-      <property key="o2i.type" value="Objective"/>
-      <property key="o2i.commitment" value="candidate"/>
-    </element>
   </folder>
   <folder name="Implementation &amp; Migration" id="id-db81c99594df4e209210b0c681f98882" type="implementation_migration"/>
   <folder name="Other" id="id-b9bc8c62493d4d25bec1f06811abc961" type="other">
@@ -1903,7 +1903,7 @@ For the complete Ethos/Mission/Vision syntax example, see O2I Syntax - Orientati
         <child xsi:type="archimate:DiagramObject" id="id-42e926a1270e462b866eb535bf9fc360" targetConnections="id-be40e7197a9249c88959c2b0dbf866a8 id-67690e43a2464af5951bf733cb12f176" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-c8e8f2d22857430e97450c717d1b9316">
           <bounds x="175" y="180" width="150" height="55"/>
           <feature name="deriveElementLineColor" value="false"/>
-          <feature name="labelExpression" value="&lt;Key Result>&#xA;:: O2I Key Result"/>
+          <feature name="labelExpression" value="&lt;Name> :: O2I&#xA;Key Result"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-17ef2a333d2e4e18a9826a46caf8110a" targetConnections="id-c5606dabefaa4560b006207f47f2f516 id-49f57d016e014d0c8ed241c855eb7bf3" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-2df409e85175496c85974fbc8010fe7a">
           <bounds x="468" y="180" width="150" height="55"/>
