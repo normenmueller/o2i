@@ -5,11 +5,11 @@
       <element xsi:type="archimate:CourseOfAction" name="ArchiMate Course of Action" id="id-25f3ffe61f93476db90607538dad5b22"/>
       <element xsi:type="archimate:Capability" name="ArchiMate Capability" id="id-7ca96021a0b9459d85d83ca8820f4a51"/>
       <element xsi:type="archimate:ValueStream" name="ArchiMate Value Stream" id="id-4373ec292e094ed9b260f7251c772a26"/>
+      <element xsi:type="archimate:Capability" name="&lt;A> :: O2I BusinessCapability" id="id-d8074a9d797f4e358cae71924b21a1eb">
+        <property key="o2i.type" value="BusinessCapability"/>
+        <property key="o2i.commitment" value="candidate"/>
+      </element>
     </folder>
-    <element xsi:type="archimate:Capability" name="&lt;A> :: O2I BusinessCapability" id="id-d8074a9d797f4e358cae71924b21a1eb">
-      <property key="o2i.type" value="BusinessCapability"/>
-      <property key="o2i.commitment" value="candidate"/>
-    </element>
   </folder>
   <folder name="Business" id="id-157de66f789f45a997de7ef0a668dbd7" type="business">
     <folder name="Syntax" id="id-2dae95b92e9c4d4da55e8adc163c8bf0">
@@ -1453,14 +1453,14 @@ This View explains the Strategy reading defined in o2i.md. Its constituents are 
       </element>
       <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Semantics - Context (copy)" id="id-335a452ba1304dfda5f7fd84d28b3a50">
         <child xsi:type="archimate:DiagramObject" id="id-dd3db668f3044c8fb69d94c7823a6944" targetConnections="id-97b3e3df95f34161b5b737b10b985e7d" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-209098a723f84d0787eab3cfed0e3db0">
-          <bounds x="708" y="168" width="181" height="73"/>
+          <bounds x="600" y="48" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-fb4c8953278e451da7530869ec52067f" source="id-dd3db668f3044c8fb69d94c7823a6944" target="id-c5264e8d417d471ab0a7c8df25a323f6" archimateRelationship="id-76fdb740fff743c5a118d7b977a1e72e"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-ab84ca0ae18a4e84bb78c369650e3aeb" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-cf054314f7e944cea52ff8ec082377f8">
-          <bounds x="432" y="168" width="181" height="73"/>
+          <bounds x="324" y="48" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
@@ -1468,14 +1468,14 @@ This View explains the Strategy reading defined in o2i.md. Its constituents are 
           <sourceConnection xsi:type="archimate:Connection" id="id-97b3e3df95f34161b5b737b10b985e7d" source="id-ab84ca0ae18a4e84bb78c369650e3aeb" target="id-dd3db668f3044c8fb69d94c7823a6944" archimateRelationship="id-bb43d55e900449e1b0ff3e0e8eec1f05"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-c5264e8d417d471ab0a7c8df25a323f6" targetConnections="id-cea2b75be0d44ab7bda4786e1c5c5029 id-fb4c8953278e451da7530869ec52067f" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-63a27d11822d4ef4b45e65b0e7231fc4">
-          <bounds x="576" y="288" width="181" height="73"/>
+          <bounds x="468" y="168" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-27f984eac04140e58e1dee85580f9a5e" source="id-c5264e8d417d471ab0a7c8df25a323f6" target="id-8c0507fcb1154feeae838acb4a5b6ae5" archimateRelationship="id-9acf0334482342e294ddf4be5096d66a"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-8c0507fcb1154feeae838acb4a5b6ae5" targetConnections="id-4e03b77e6a104f5d983a15411c2ab07e id-27f984eac04140e58e1dee85580f9a5e id-e2e633d9ab8844d7b87326a8a2a143e5" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-fc76733c15ce4d0fa08e1156adfa9879">
-          <bounds x="576" y="432" width="181" height="73"/>
+          <bounds x="468" y="312" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
@@ -1499,45 +1499,45 @@ This View explains the Strategy reading defined in o2i.md. Its constituents are 
           </sourceConnection>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-561e51638ccb4b8eb8fecf1ec7748af5" fillColor="#ffffff" textPosition="1" archimateElement="id-c9c995beb0e645a3a2ca7c4afc3e6e2c" type="1">
-          <bounds x="552" y="156" width="96" height="36"/>
+          <bounds x="444" y="36" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-3252a58e665a475ebed37afbcde40039" fillColor="#ffffff" textPosition="1" archimateElement="id-33a10d15dd4f40d3b963608b26edd48d" type="1">
-          <bounds x="828" y="156" width="96" height="36"/>
+          <bounds x="720" y="36" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-0659408b12044009aacfd2072a6e7c60" fillColor="#ffffff" textPosition="1" archimateElement="id-88ed849a9a7e4bd1a02ba7993d34d59d" type="1">
-          <bounds x="708" y="420" width="96" height="36"/>
+          <bounds x="600" y="300" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-5a04a021ce17442e870b3fa72c21fc8a" targetConnections="id-58a61345c05741ae843c4307b10fb49d id-1bb94363a4734dafaf3cc4168e574cb0 id-0ea4150d0dce4302a5e42d53f128fee0" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-643791bdae8f4829a2151d7b658d84f1">
-          <bounds x="240" y="432" width="181" height="73"/>
+          <bounds x="132" y="312" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-7918cb0570ec4274bd4a19834981c30b" fillColor="#ffffff" textPosition="1" archimateElement="id-ab44c37a5e4e44279f345e1b4b8a8904" type="1">
-          <bounds x="372" y="420" width="96" height="36"/>
+          <bounds x="264" y="300" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-6d2a42c2e74a4694ace2b2655b942100" targetConnections="id-1e9c32302342449b951e5f4755833024 id-bb9224f071ec43d0a2adcedb7d58051d id-07ecf313f72c4aeb8635dd09fa5bdedf" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-95420d4e66164023b79676213a6147e2">
-          <bounds x="240" y="288" width="181" height="73"/>
+          <bounds x="132" y="168" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-1bb94363a4734dafaf3cc4168e574cb0" source="id-6d2a42c2e74a4694ace2b2655b942100" target="id-5a04a021ce17442e870b3fa72c21fc8a" archimateRelationship="id-8b8d6f51c8f041d798805012298c0011"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-5895d2c693ee4f32acca2df4e71ad725" fillColor="#ffffff" textPosition="1" archimateElement="id-0645e26eee7b4bf49df671f415323fb1" type="1">
-          <bounds x="720" y="276" width="96" height="36"/>
+          <bounds x="612" y="156" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-bf947e49ec7f41138aaada3edeaed810" targetConnections="id-32f2b23a991d47efb361f3e209d0fc60" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-52230b6fa09b477fa7b7187f9bc03376">
-          <bounds x="240" y="583" width="181" height="73"/>
+          <bounds x="132" y="463" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
@@ -1549,7 +1549,7 @@ This View explains the Strategy reading defined in o2i.md. Its constituents are 
           <sourceConnection xsi:type="archimate:Connection" id="id-0ea4150d0dce4302a5e42d53f128fee0" source="id-bf947e49ec7f41138aaada3edeaed810" target="id-5a04a021ce17442e870b3fa72c21fc8a" archimateRelationship="id-930fd47be9404fc39840eab6224b373a"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-d40450af1aab465cba0781426e9f83c3" targetConnections="id-02d447806d8c469caedfb4cc22fc44a9 id-cd7f5d79f7ef4b0990be3b16af1fc8ef" font="1|Arial|14.0|0|COCOA|1|Arial" textPosition="1" archimateElement="id-a1eb98d8dd174918bb2a8adc88f87295">
-          <bounds x="576" y="583" width="181" height="73"/>
+          <bounds x="468" y="463" width="181" height="73"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="iconColor" value="#feffff"/>
           <feature name="lineStyle" value="0"/>
@@ -1560,17 +1560,17 @@ This View explains the Strategy reading defined in o2i.md. Its constituents are 
           </sourceConnection>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-e67dd52212bb4eb8954ee810397d37cb" fillColor="#ffffff" textPosition="1" archimateElement="id-88ed849a9a7e4bd1a02ba7993d34d59d" type="1">
-          <bounds x="372" y="571" width="96" height="36"/>
+          <bounds x="264" y="451" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-1f2a895506a0465e8a5595fc5e6a6012" fillColor="#ffffff" textPosition="1" archimateElement="id-d743fa428bab471e9850ad3113aacb3c" type="1">
-          <bounds x="372" y="276" width="96" height="36"/>
+          <bounds x="264" y="156" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-e5b45b2e3435471c8b92430ae3f311a7" fillColor="#ffffff" textPosition="1" archimateElement="id-44e7b1aa0cb64e36bf8c6664b0f05eb0" type="1">
-          <bounds x="708" y="571" width="96" height="36"/>
+          <bounds x="600" y="451" width="96" height="36"/>
           <feature name="deriveElementLineColor" value="false"/>
           <feature name="lineStyle" value="1"/>
         </child>
