@@ -1,6 +1,6 @@
 # Scope And Owners
 
-Load for risk classification, Issues, Project administration, review, remote work or publication. Governance defines no fachliche semantics. `policy.json` owns executable governance; `policy.agent.md` is its generated projection. Apply `BEHAVIOR.md` precedence: current explicit PO/runtime authority outranks ceremonies and differs from durable grants. Do not request existing same-subject/scope authority again; technical permission, verified identity and material safeguards remain required.
+Load for risk classification, Issues, Project administration, review, remote work or publication. No fachliche semantics. `policy.json` owns executable governance; `policy.agent.md` projects it. Under `BEHAVIOR.md`, current explicit PO/runtime authority outranks ceremonies and differs from durable grants. Do not request existing same-subject/scope authority again; technical permission, verified identity and material safeguards remain required.
 
 | Fact | Owner |
 | --- | --- |
@@ -60,7 +60,7 @@ Load `TEAM.md` for capability assignment, collaboration timing and independence.
 
 Deliver every implementation through an owning-Issue-linked PR; `In review` requires it published. Lead with results/benefits, then technical evidence. Handle Routine communication edits directly and proportionately.
 
-Assign new Issues to both `normenmueller` and `gertrud-ai4x`; verify remotely.
+New Issues: one type (`maintenance`/`framework-change`), relevant area labels, both assignees (`normenmueller`, `gertrud-ai4x`); verify remotely.
 
 Delegates and reviewers never query/mutate remote work state or start approval-requiring commands. The primary supplies exact material remote facts or reports them unavailable. When GitHub is unavailable, continue only an already active local scope and infer no remote fact.
 
