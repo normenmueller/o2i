@@ -6,7 +6,7 @@
 
 # Objective
 
-Normalize #119 naming.
+Clarify #143 basis.
 
 # Authority
 
@@ -14,7 +14,7 @@ Live PO resume; no grant.
 
 # Current Facts
 
-#119: 6721410503.
+#143: 6721530899.
 
 # Material Risk
 
@@ -26,7 +26,7 @@ Unaccepted WIP: #119.
 
 # Next Action
 
-PO save: Need label.
+Primitive relations.
 
 # Local Return Point
 
