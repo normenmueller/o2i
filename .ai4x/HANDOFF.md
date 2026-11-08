@@ -1,7 +1,7 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#119","currentNode":"analysis"}
+{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#143","currentNode":"analysis"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
@@ -30,4 +30,4 @@ Primitive relations.
 
 # Local Return Point
 
-#119 -> #143 -> #115 Scope.
+#143 -> #119 -> #115 Scope.
