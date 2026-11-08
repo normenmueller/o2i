@@ -247,10 +247,6 @@ See o2i.md: Metamodell / Situationsanker.</documentation>
         <property key="o2i.type" value="Vision"/>
         <property key="o2i.commitment" value="candidate"/>
       </element>
-      <element xsi:type="archimate:Grouping" name="&lt;Need> :: O2I Need" id="id-4b3015fba37a47548e273b601fc82258">
-        <property key="o2i.type" value="Need"/>
-        <property key="o2i.commitment" value="candidate"/>
-      </element>
     </folder>
     <folder name="Illustration" id="id-29aaa03a216c4ad18ad87fbfdfe96bd7">
       <folder name="Layered Cake" id="id-0ae0912d56934922b877dcdd0669f47d">
@@ -586,7 +582,7 @@ See o2i.md: Metamodell / Situationsanker.</documentation>
     <element xsi:type="archimate:AggregationRelationship" name="is-constituted-by" id="id-3ff2d6691c97431296e374502941aa3d" source="id-a55ed18372c44908b243a8ccc34db0c2" target="id-d8074a9d797f4e358cae71924b21a1eb">
       <property key="o2i.commitment" value="candidate"/>
     </element>
-    <element xsi:type="archimate:AssociationRelationship" name="surfaces" id="id-d078e325163f4c4197bd2bd9cb36ed23" source="id-a55ed18372c44908b243a8ccc34db0c2" target="id-4b3015fba37a47548e273b601fc82258" directed="true">
+    <element xsi:type="archimate:AssociationRelationship" name="surfaces" id="id-d078e325163f4c4197bd2bd9cb36ed23" source="id-a55ed18372c44908b243a8ccc34db0c2" target="id-911d349bd58d4fcea36a5a09061000a9" directed="true">
       <property key="o2i.commitment" value="candidate"/>
     </element>
   </folder>
@@ -1964,19 +1960,19 @@ See O2I Orientierung for the conceptual overview. O2I Syntax - Carriers, O2I Syn
           <bounds x="348" y="84" width="205" height="68"/>
           <feature name="deriveElementLineColor" value="false"/>
           <sourceConnection xsi:type="archimate:Connection" id="id-85257db99a4b4cf597280750b4798965" source="id-2c653a997f2e4af79cb97bb9d8f8c2b3" target="id-c4442b6778db4e3cbb542e0c4cb62fe9" archimateRelationship="id-3ff2d6691c97431296e374502941aa3d"/>
-          <sourceConnection xsi:type="archimate:Connection" id="id-203e2b3d918d46a085c10c0cd369003e" source="id-2c653a997f2e4af79cb97bb9d8f8c2b3" target="id-f9934d5669a3461ab87fb695281991d4" archimateRelationship="id-d078e325163f4c4197bd2bd9cb36ed23"/>
+          <sourceConnection xsi:type="archimate:Connection" id="id-203e2b3d918d46a085c10c0cd369003e" source="id-2c653a997f2e4af79cb97bb9d8f8c2b3" target="id-6a7eb25af3bf44a0a7ead9c8ee3dbb99" archimateRelationship="id-d078e325163f4c4197bd2bd9cb36ed23"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-c4442b6778db4e3cbb542e0c4cb62fe9" targetConnections="id-85257db99a4b4cf597280750b4798965" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-d8074a9d797f4e358cae71924b21a1eb">
           <bounds x="48" y="82" width="140" height="72"/>
           <feature name="lineStyle" value="1"/>
           <feature name="deriveElementLineColor" value="false"/>
         </child>
-        <child xsi:type="archimate:DiagramObject" id="id-f9934d5669a3461ab87fb695281991d4" targetConnections="id-203e2b3d918d46a085c10c0cd369003e" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-4b3015fba37a47548e273b601fc82258">
-          <bounds x="348" y="216" width="205" height="68"/>
-          <feature name="deriveElementLineColor" value="false"/>
-        </child>
         <child xsi:type="archimate:DiagramObject" id="id-f7af5d4fbe3449e2badaa2dfdeaaddc6" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-e7b72ea11adb443fb972a1e3e21fa965">
           <bounds x="684" y="216" width="205" height="68"/>
+          <feature name="deriveElementLineColor" value="false"/>
+        </child>
+        <child xsi:type="archimate:DiagramObject" id="id-6a7eb25af3bf44a0a7ead9c8ee3dbb99" targetConnections="id-203e2b3d918d46a085c10c0cd369003e" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-911d349bd58d4fcea36a5a09061000a9">
+          <bounds x="348" y="216" width="205" height="68"/>
           <feature name="deriveElementLineColor" value="false"/>
         </child>
         <documentation>Candidate syntax example for Strategy contents. Mapping authority: spec/ctr/archimate/profile.json. Reading: doc/reference/strategy.md.</documentation>
