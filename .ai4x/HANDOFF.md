@@ -6,7 +6,7 @@
 
 # Objective
 
-Resume #119 Need reuse.
+Normalize #119 naming.
 
 # Authority
 
@@ -14,7 +14,7 @@ Live PO resume; no grant.
 
 # Current Facts
 
-#119: 6721251048.
+#119: 6721410503.
 
 # Material Risk
 
@@ -26,7 +26,7 @@ Unaccepted WIP: #119.
 
 # Next Action
 
-PO save: Need reuse.
+PO save: Need label.
 
 # Local Return Point
 
