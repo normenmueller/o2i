@@ -33,6 +33,7 @@ path = [
   ".github/workflows/**",
   ".gitignore",
   "REUSE.toml",
+  "doc/design/strategy-cascading.md",
   "doc/paper/o2i.pdf.manifest.json",
   "spec/**",
   "utl/**",

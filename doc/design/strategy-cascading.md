@@ -1,6 +1,6 @@
 # Strategy cascading: proposed executable design
 
-This proposal explains the software change for [#125](https://github.com/normenmueller/o2i/issues/125). It is a design candidate for independent review, not an accepted implementation or another semantic authority. The [White Paper](../../doc/paper/o2i.md), particularly *Strategiebeitrag und kollektive Strategierealisierung*, *Relationen* and *Semantische Wohlgeformtheit*, owns the meaning. The [Core companion](../lib/core/semantics.json) will encode that meaning; the [ArchiMate Profile](../ctr/archimate/profile.json) owns its notation. This document describes how those contracts become checked, explainable evidence.
+This proposal explains the software change for [#125](https://github.com/normenmueller/o2i/issues/125). It is a design candidate for independent review, not an accepted implementation or another semantic authority. The [White Paper](../paper/o2i.md), particularly *Strategiebeitrag und kollektive Strategierealisierung*, *Relationen* and *Semantische Wohlgeformtheit*, owns the meaning. The [Core companion](../../spec/lib/core/semantics.json) will encode that meaning; the [ArchiMate Profile](../../spec/ctr/archimate/profile.json) owns its notation. This document describes how those contracts become checked, explainable evidence.
 
 ## Problem and preserved boundaries
 

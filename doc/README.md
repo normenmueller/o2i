@@ -16,6 +16,8 @@ Das White Paper vertieft die Regeln hinter den einzelnen Schritten.
 
 [Installation und CLI](../spec/README.md#cli-setup) sowie
 [Beiträge und Dokumentationsbau](../CONTRIBUTING.md) beschreiben die technische Arbeit.
+Der [Softwareentwurf zur Strategiekaskadierung](design/strategy-cascading.md)
+erläutert die Entwurfsgrundlage der zugehörigen Formalisierung.
 Abbildungen liegen unter [images/](images/), ihre Quellen und Render-Zubehör unter [resources/](resources/).
 
 [Zur Projektübersicht](../README.md)
