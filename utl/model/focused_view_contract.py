@@ -152,8 +152,7 @@ def qualification_proposal_name(qualification: FrozenObject) -> str:
 
 
 def qualification_role_name(role: FrozenObject) -> str:
-    placeholder = role["role"].replace("-", " ").title()
-    return f"<{placeholder}> :: O2I {words(role['o2iType'])}"
+    return "<Name> :: O2I " + words(role["o2iType"])
 
 
 def orientation_relation_mappings(

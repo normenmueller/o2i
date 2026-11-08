@@ -10,16 +10,16 @@ Visualizes the executable ArchiMate conformance pattern for one O2I NeedQualific
 ## Nodes
 
 - [<Name> :: O2I Key Result] `<Name> :: O2I Key Result` (Outcome)
+- [<Name> :: O2I Need] `<Name> :: O2I Need` (Grouping)
 - [<Name> :: O2I Need Qualification Proposal] `<Name> :: O2I Need Qualification Proposal` (Assessment)
 - [<Name> :: O2I Objective] `<Name> :: O2I Objective` (Goal)
 - [<Name> :: O2I Strategy] `<Name> :: O2I Strategy` (Grouping)
-- [<Need> :: O2I Need] `<Need> :: O2I Need` (Grouping)
 
 ## Relations
 
+- `<Name> :: O2I Need` --contextualizes--> `<Name> :: O2I Objective` (CompositionRelationship)
 - `<Name> :: O2I Need Qualification Proposal` --Association--> `<Name> :: O2I Key Result` (AssociationRelationship, directed)
+- `<Name> :: O2I Need Qualification Proposal` --Association--> `<Name> :: O2I Need` (AssociationRelationship, directed)
 - `<Name> :: O2I Need Qualification Proposal` --Association--> `<Name> :: O2I Objective` (AssociationRelationship, directed)
 - `<Name> :: O2I Need Qualification Proposal` --Association--> `<Name> :: O2I Strategy` (AssociationRelationship, directed)
-- `<Name> :: O2I Need Qualification Proposal` --Association--> `<Need> :: O2I Need` (AssociationRelationship, directed)
 - `<Name> :: O2I Strategy` --contextualizes--> `<Name> :: O2I Key Result` (CompositionRelationship)
-- `<Need> :: O2I Need` --contextualizes--> `<Name> :: O2I Objective` (CompositionRelationship)

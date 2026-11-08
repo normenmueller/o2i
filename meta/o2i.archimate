@@ -219,7 +219,7 @@ See o2i.md: Metamodell / Situationsanker.</documentation>
         <property key="o2i.type" value="PerformanceDimension"/>
         <property key="o2i.commitment" value="candidate"/>
       </element>
-      <element xsi:type="archimate:Grouping" name="&lt;Need> :: O2I Need" id="id-911d349bd58d4fcea36a5a09061000a9">
+      <element xsi:type="archimate:Grouping" name="&lt;Name> :: O2I Need" id="id-911d349bd58d4fcea36a5a09061000a9">
         <property key="o2i.type" value="Need"/>
         <property key="o2i.commitment" value="candidate"/>
       </element>
