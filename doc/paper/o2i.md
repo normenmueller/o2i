@@ -248,11 +248,11 @@ Die Bezeichner der Sicht ordnen die textuellen Strategiebestandteile eindeutig z
 ##### Geltungsbereich
 
 > [!definition]
-> Der **Geltungsbereich einer Strategie**[^scope] bezeichnet die organisatorische oder sachliche Einheit, für die eine Wegentscheidung gilt.
+> Der **Geltungsbereich einer Strategie** (en.: *scope*)[^scope] bezeichnet den organisatorisch oder fachlich abgegrenzten Bezugsbereich, für den eine strategische Wegentscheidung gilt.
 >
 > [^scope]: *Autorenableitung in Anlehnung an Rumelt (2011) und Porter (1996)*: Eine Wegentscheidung ist nur dann sinnvoll abgrenzbar, wenn klar ist, für welche Herausforderung, welche Positionierung und welches Aktivitätssystem sie gilt.
 
-Der Geltungsbereich rahmt die Strategie: Er legt fest, für welche Einheit Diagnose, strategische Absicht, Positionierung, Trade-offs, Handlungsfestlegungen und Fit zu beurteilen sind. Ohne klaren Geltungsbereich bleibt unbestimmt, worauf sich die Wegentscheidung bezieht und wer sie verantworten kann.
+Der Geltungsbereich rahmt die Strategie: Er legt fest, für welchen Bezugsbereich Diagnose, strategische Absicht, Positionierung, Trade-offs, Handlungsfestlegungen und Fit zu beurteilen sind. Ohne klaren Geltungsbereich bleibt unbestimmt, worauf sich die Wegentscheidung bezieht und wer sie verantworten kann.
 
 ##### Strategische Verankerung
 
