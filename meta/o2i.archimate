@@ -8,6 +8,7 @@
       <element xsi:type="archimate:Capability" name="&lt;A> :: O2I BusinessCapability" id="id-d8074a9d797f4e358cae71924b21a1eb">
         <property key="o2i.type" value="BusinessCapability"/>
         <property key="o2i.commitment" value="candidate"/>
+        <property key="o2i.state" value="planned"/>
       </element>
     </folder>
   </folder>
@@ -584,6 +585,9 @@ See o2i.md: Metamodell / Situationsanker.</documentation>
     </element>
     <element xsi:type="archimate:AssociationRelationship" name="surfaces" id="id-d078e325163f4c4197bd2bd9cb36ed23" source="id-a55ed18372c44908b243a8ccc34db0c2" target="id-911d349bd58d4fcea36a5a09061000a9" directed="true">
       <property key="o2i.commitment" value="candidate"/>
+    </element>
+    <element xsi:type="archimate:AssociationRelationship" name="takes-as-reference [design hypothesis]" id="id-4249c20a996d4c92b4a1476123bba7e9" source="id-e7b72ea11adb443fb972a1e3e21fa965" target="id-a55ed18372c44908b243a8ccc34db0c2" directed="true">
+      <documentation>Illustrative design hypothesis. Relation meaning, direction and Primitive support remain open. No admitted O2I Context relation or executable conformance claim.</documentation>
     </element>
   </folder>
   <folder name="Views" id="id-c4a47547d89649babef754e47e83c429" type="diagrams">
@@ -1556,7 +1560,7 @@ This View explains the Strategy reading defined in o2i.md. Its constituents are 
           <sourceConnection xsi:type="archimate:Connection" id="id-bb9224f071ec43d0a2adcedb7d58051d" source="id-d40450af1aab465cba0781426e9f83c3" target="id-6d2a42c2e74a4694ace2b2655b942100" archimateRelationship="id-03e6bf475386495e813c00c29ccc2607">
             <bendpoint startX="-42" startY="73" endX="294" endY="367"/>
             <bendpoint startX="-511" startY="73" endX="-175" endY="367"/>
-            <bendpoint startX="-511" startY="-275" endX="-175" endY="19"/>
+            <bendpoint startX="-510" startY="-319" endX="-174" endY="-24"/>
           </sourceConnection>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-e67dd52212bb4eb8954ee810397d37cb" fillColor="#ffffff" textPosition="1" archimateElement="id-88ed849a9a7e4bd1a02ba7993d34d59d" type="1">
@@ -1964,7 +1968,6 @@ See O2I Orientierung for the conceptual overview. O2I Syntax - Carriers, O2I Syn
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-c4442b6778db4e3cbb542e0c4cb62fe9" targetConnections="id-85257db99a4b4cf597280750b4798965" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-d8074a9d797f4e358cae71924b21a1eb">
           <bounds x="48" y="82" width="140" height="72"/>
-          <feature name="lineStyle" value="1"/>
           <feature name="deriveElementLineColor" value="false"/>
         </child>
         <child xsi:type="archimate:DiagramObject" id="id-f7af5d4fbe3449e2badaa2dfdeaaddc6" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-e7b72ea11adb443fb972a1e3e21fa965">
@@ -1978,6 +1981,33 @@ See O2I Orientierung for the conceptual overview. O2I Syntax - Carriers, O2I Syn
         <documentation>Candidate syntax example for Strategy contents. Mapping authority: spec/ctr/archimate/profile.json. Reading: doc/reference/strategy.md.</documentation>
       </element>
     </folder>
+    <element xsi:type="archimate:ArchimateDiagramModel" name="O2I Scratch - Situation" id="id-3a45dcc26a954ee68e48fd5bbb2e758d">
+      <child xsi:type="archimate:DiagramObject" id="id-0af31aa3e29f4a9587b4a651606c3bf7" targetConnections="id-f8298e75847c4cf3b2348d70441789ac" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-a55ed18372c44908b243a8ccc34db0c2">
+        <bounds x="144" y="120" width="205" height="68"/>
+        <feature name="deriveElementLineColor" value="false"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-9695982c5abc45fbb93ae3f017d5f474" source="id-0af31aa3e29f4a9587b4a651606c3bf7" target="id-5b09b4ec541146c5a76d3f31bb5529d3" archimateRelationship="id-3ff2d6691c97431296e374502941aa3d"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-5b09b4ec541146c5a76d3f31bb5529d3" targetConnections="id-9695982c5abc45fbb93ae3f017d5f474" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-d8074a9d797f4e358cae71924b21a1eb">
+        <bounds x="48" y="262" width="157" height="72"/>
+        <feature name="deriveElementLineColor" value="false"/>
+        <feature name="labelExpression" value="${name}&#xA;[planned]"/>
+      </child>
+      <child xsi:type="archimate:DiagramObject" id="id-8b9641f21e6c4be5b39e7b2ba71da79c" font="1|Arial|14.0|0|COCOA|1|ArialMT" textPosition="1" archimateElement="id-e7b72ea11adb443fb972a1e3e21fa965">
+        <bounds x="492" y="120" width="205" height="68"/>
+        <feature name="deriveElementLineColor" value="false"/>
+        <sourceConnection xsi:type="archimate:Connection" id="id-f8298e75847c4cf3b2348d70441789ac" source="id-8b9641f21e6c4be5b39e7b2ba71da79c" target="id-0af31aa3e29f4a9587b4a651606c3bf7" archimateRelationship="id-4249c20a996d4c92b4a1476123bba7e9">
+          <feature name="labelExpression" value="takes-as-reference"/>
+        </sourceConnection>
+      </child>
+      <child xsi:type="archimate:Note" id="id-5bfe14c4aeb5421f84fb584b1814b805" textAlignment="1">
+        <bounds x="672" y="60" width="185" height="80"/>
+        <content>Für welche Einheit gilt diese Wegentscheidung?</content>
+      </child>
+      <child xsi:type="archimate:Note" id="id-7c5872ddccd04a8498f5874d8a3a5543" textAlignment="1">
+        <bounds x="36" y="60" width="185" height="80"/>
+        <content>Welche Zustände und Bedingungen dieser Einheit werden zu welchem Zeitpunkt berücksichtigt?</content>
+      </child>
+    </element>
   </folder>
   <property key="author" value="Dr. Normen Müller"/>
   <property key="o2i.profile" value="o2i.archimate-profile@0.3"/>
