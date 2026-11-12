@@ -1,33 +1,33 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#143","currentNode":"analysis"}
+{"schema":"o2i.handoff/v1","workStatus":"PAUSED","currentIssue":"#143","currentNode":"metadata"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
 
-Clarify #143 basis.
+Clarify metadata.
 
 # Authority
 
-Live PO resume; no grant.
+No grant; fresh PO resume.
 
 # Current Facts
 
-#143: 6721530899.
+#143: 6835942700.
 
 # Material Risk
 
-Unaccepted WIP: #119.
+Unaccepted model WIP.
 
 # Verification
 
-#119 checks.
+Findings in #143.
 
 # Next Action
 
-Primitive relations.
+Resume after overnight rest.
 
 # Local Return Point
 
-#143 -> #119 -> #115 Scope.
+#143 -> #119 -> #115.
