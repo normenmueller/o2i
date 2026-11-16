@@ -1,6 +1,6 @@
 # Scope And Owners
 
-Load for risk classification, Issues, Project administration, review, remote work or publication. No fachliche semantics. `policy.json` owns executable governance; `policy.agent.md` projects it. Under `BEHAVIOR.md`, current explicit PO/runtime authority outranks ceremonies and differs from durable grants. Do not request existing same-subject/scope authority again; technical permission, verified identity and material safeguards remain required.
+Load for risk classification, Issues, Project administration, review, remote work or publication. Governance defines no fachliche semantics. `policy.json` owns executable governance; `policy.agent.md` is its generated projection. Apply `BEHAVIOR.md` precedence: current explicit PO/runtime authority outranks ceremonies and differs from durable grants. Do not request existing same-subject/scope authority again; technical permission, verified identity and material safeguards remain required.
 
 | Fact | Owner |
 | --- | --- |
@@ -32,7 +32,7 @@ Policy owns transitions/authority; `Ready` grants none. Grants retain scope/targ
 
 Condition merge on the approved head (`sha`/`--match-head-commit`). Inspect merge-side closures: only the owning Issue may auto-close under merge authority. Distinguish this from explicit follow-up closure/Done/cleanup after post-merge proof.
 
-Gertrud synchronizes Issues/Project at work changes, pause/resume, review, PO acceptance/completion and before handoff; teammates report transitions. Never await reminders. Respect authorized transitions/PO ordering; verify readback. If blocked, report actual/UNVERIFIED status, correction and missing authority/access.
+Align Project status at workflow/PO handoffs using authorized transitions, PO ordering and remote readback. If blocked, report actual/UNVERIFIED state, intended correction and missing authority/access.
 
 | Status | Observable meaning |
 | --- | --- |
@@ -60,7 +60,9 @@ Load `TEAM.md` for capability assignment, collaboration timing and independence.
 
 Deliver every implementation through an owning-Issue-linked PR; `In review` requires it published. Lead with results/benefits, then technical evidence. Handle Routine communication edits directly and proportionately.
 
-New Issues: one type (`maintenance`/`framework-change`), relevant area labels, both assignees (`normenmueller`, `gertrud-ai4x`); verify remotely.
+Assign new Issues to both `normenmueller` and `gertrud-ai4x`; verify remotely.
+
+On PR publication, assign `gertrud-ai4x`, request review from Product Owner `normenmueller`, and verify both remotely before the PO handoff.
 
 Delegates and reviewers never query/mutate remote work state or start approval-requiring commands. The primary supplies exact material remote facts or reports them unavailable. When GitHub is unavailable, continue only an already active local scope and infer no remote fact.
 

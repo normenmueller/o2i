@@ -14,7 +14,7 @@ No grant; fresh PO resume.
 
 # Current Facts
 
-#143: 6835942700.
+#143: 6918209333.
 
 # Material Risk
 
@@ -26,7 +26,7 @@ Findings in #143.
 
 # Next Action
 
-Resume after overnight rest.
+Resume after rest.
 
 # Local Return Point
 
