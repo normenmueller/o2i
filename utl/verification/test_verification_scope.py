@@ -252,9 +252,16 @@ class RecoveryDocumentationTests(unittest.TestCase):
         self.assertIn("5971856bb4f75779f111715efdff49a70c5967db/Formula/h/hindent.rb", readme)
         self.assertNotIn("brew install --force-bottle hindent", readme)
         self.assertNotIn("cabal install hindent", readme)
-        self.assertIn(
-            "check-pdf-freshness.py contract --root . --field acquisition-revision",
-            readme,
+        self.assertIn("[Renderer-Vertrag](../../doc/resources/md2pdf.json)", readme)
+        for command in (
+            "command -v md2pdf",
+            "md2pdf --version",
+            "python3 -B utl/paper/check-pdf-freshness.py renderer --root .",
+        ):
+            self.assertIn(command, readme)
+        self.assertRegex(
+            workflow,
+            r"check-pdf-freshness\.py contract\s+\\\s+--root \.\s+\\\s+--field acquisition-revision",
         )
 
     def test_shell_examples_parse_and_relative_owner_links_resolve(self) -> None:
@@ -572,7 +579,7 @@ pathlib.Path('probe.json').write_text(json.dumps({'tmp': os.environ['TMPDIR'], '
             self.assertNotIn("Running checkpoint stage: paper.", result.stdout)
 
     def test_selected_missing_isolated_tools_never_fall_back_to_global_tools(self) -> None:
-        for stage, tool in (("licensing", "reuse"), ("haskell", "hindent"), ("paper", "md2pdf")):
+        for stage, tool in (("licensing", "reuse"), ("haskell", "hindent")):
             with self.subTest(stage=stage), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
                 self.repository(root)
@@ -583,6 +590,52 @@ pathlib.Path('probe.json').write_text(json.dumps({'tmp': os.environ['TMPDIR'], '
                 self.assertIn("Required isolated tool missing or shadowed:", result.stderr)
                 self.assertIn(tool, result.stderr)
                 self.assertFalse((root / "global-tool-ran").exists())
+
+    def test_path_renderer_requires_the_declared_release_without_local_installation(self) -> None:
+        contract = json.loads((ROOT / "doc/resources/md2pdf.json").read_text())
+        expected = contract["version"]
+        for version in (expected, "999.0.0", None):
+            with self.subTest(version=version), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                local = self.repository(root)
+                checker = root / "utl/paper/check-pdf-freshness.py"
+                shutil.copy2(ROOT / checker.relative_to(root), checker)
+                resources = root / "doc/resources"
+                resources.mkdir(parents=True)
+                (resources / "md2pdf.json").write_text(json.dumps(contract), encoding="ascii")
+                (root / PAPER_STAGE.relative_to(ROOT)).write_text(
+                    'verify_paper_stage() {\n'
+                    '  require md2pdf\n'
+                    '  python3 -B utl/paper/check-pdf-freshness.py renderer --root "$1"\n'
+                    '}\n', encoding="ascii",
+                )
+                commands = root / "global-bin"
+                commands.mkdir()
+                for command in ("dirname", "mkdir", "mktemp", "rm"):
+                    (commands / command).symlink_to(shutil.which(command))
+                if version is not None:
+                    self.executable(
+                        commands / "md2pdf",
+                        f"#!/bin/sh\nprintf 'md2pdf, v{version}, (C) 2026 nemron\\n'\n",
+                    )
+                environment = os.environ.copy()
+                environment["PATH"] = str(commands)
+                result = subprocess.run(
+                    [shutil.which("sh"), str(root / LOCAL.relative_to(ROOT)), "paper"],
+                    cwd=root, env=environment, capture_output=True, text=True,
+                )
+                self.assertFalse((local / "bin/md2pdf").exists())
+                self.assertFalse((local / "src/md2pdf").exists())
+                self.assertEqual(0 if version == expected else 1, result.returncode, result.stderr)
+                if version == expected:
+                    self.assertIn("Publication renderer identity is current", result.stdout)
+                    self.assertIn("Verification stage passed: paper", result.stdout)
+                elif version is None:
+                    self.assertIn("Required command not found: md2pdf", result.stderr)
+                else:
+                    self.assertIn(f"differs from required {expected}", result.stderr)
+                if version != expected:
+                    self.assertNotIn("Verification stage passed", result.stdout)
 
     def test_unknown_checkpoint_keeps_the_full_prerequisite_closure(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

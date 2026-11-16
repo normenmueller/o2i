@@ -1,33 +1,33 @@
 # Handoff
 
 <!-- o2i-handoff-envelope-v1 -->
-{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#140","currentNode":"lean-agent-pr-approval"}
+{"schema":"o2i.handoff/v1","workStatus":"ACTIVE","currentIssue":"#144","currentNode":"installed-md2pdf"}
 <!-- /o2i-handoff-envelope-v1 -->
 
 # Objective
 
-Clarify agent-facing .ai4x contracts under #140; PR delivery.
+Use installed md2pdf through PATH, with version and paper checks.
 
 # Authority
 
-PO instruction in #140: .ai4x-only simplification and independent review. No graph/human docs/tool changes; no new grant.
+Current PO instruction: implement #144 through a checked PR. No grant or merge authority. Preserve #143 and existing worktree/archive data.
 
 # Current Facts
 
-Base `df6bad0`; [PR #141](https://github.com/normenmueller/o2i/pull/141). Illustration preserved.
+Base `3152c25`; `fix/144-installed-md2pdf`. Evidence owner: #144. Original #143 stays paused at `d8ffb2b`.
 
 # Material Risk
 
-Preserve policy guards, freshness and review independence.
+Retain version/PDF checks and other isolated tools. No worktree/archive retirement.
 
 # Verification
 
-Contracts reviewed at `3962679`; scope licensing/governance. CI/evidence: #140/#141.
+Analysis reviewed; candidate checks/review pending. Scope: all stages.
 
 # Next Action
 
-After required CI, PO GitHub Approve; standing completion rule applies without chat reapproval.
+Complete checks/review and prepare the PR. GitHub writes currently blocked by host approval review.
 
 # Local Return Point
 
-#140 -> #119 Diagnosis/Positioning -> #115 Scope after framework correction; constraints remain Issue-owned.
+#144 -> #143 metadata; no automatic resume.

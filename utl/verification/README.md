@@ -41,12 +41,13 @@ Weitere Werkzeuge werden nur für die tatsächlich gewählten Stufen benötigt.
 | `licensing` | REUSE in der lokalen Python-Umgebung |
 | `foundation` | REUSE, Haskell-Werkzeugkette und lokaler hindent |
 | `haskell` | Haskell-Werkzeugkette und lokaler hindent |
-| `paper` | Lokaler md2pdf und die unten beschriebene Publikationswerkzeugkette |
+| `paper` | Installierter md2pdf in der gebundenen Version und die unten beschriebene Publikationswerkzeugkette |
 | `checkpoint`, `all` | Vereinigung der Voraussetzungen ihrer gewählten Stufen |
 
 Unbekannte oder nicht ermittelbare Änderungen wählen weiterhin alle Stufen.
-Lokales Python, REUSE, hindent und md2pdf werden bei Bedarf ausdrücklich aus
+Lokales Python, REUSE und hindent werden bei Bedarf ausdrücklich aus
 `.local/` verlangt; fehlende Exemplare ersetzt der Prüfer nicht durch globale Werkzeuge.
+md2pdf wird über `PATH` aufgerufen und gegen die gebundene Releaseversion geprüft.
 Der Starter installiert nichts automatisch.
 
 Für Haskell installierst du zunächst [GHCup nach der offiziellen
@@ -147,18 +148,30 @@ find spec -path '*/dist-newstyle' -prune -o \
 Damit müssen beide Plattformen dieselben eingecheckten Dateien unverändert
 akzeptieren. Globale Werkzeuge ersetzen die isolierte Installation nicht.
 
-Die Paper-Prüfung benötigt den gebundenen Renderer. Führe den Clone-Schritt nur
-aus, wenn das Quellverzeichnis noch fehlt; eine vorhandene Installation wird aus
-derselben gebundenen Revision wiederhergestellt:
+Die Paper-Prüfung verwendet eine reguläre Installation von
+[md2pdf](https://github.com/normenmueller/md2pdf). Die benötigte Releaseversion
+steht im [Renderer-Vertrag](../../doc/resources/md2pdf.json). Installiere diese
+Version nach der md2pdf-Anleitung mit ihren Renderer-Ressourcen so, dass das
+Programm über `PATH` erreichbar ist. Prüfe die Auswahl mit demselben
+Werkzeugvorrang wie beim Starter:
 
 ```sh
-md2pdf_revision=$(python3 -B utl/paper/check-pdf-freshness.py contract --root . --field acquisition-revision)
-if [ ! -d utl/verification/.local/src/md2pdf ]; then
-  git clone --filter=blob:none --no-checkout https://github.com/normenmueller/md2pdf.git utl/verification/.local/src/md2pdf
-fi
-git -C utl/verification/.local/src/md2pdf checkout --detach "$md2pdf_revision"
-make -C utl/verification/.local/src/md2pdf PREFIX="$PWD/utl/verification/.local" install
+(
+PATH="$PWD/utl/verification/.local/bin:$PWD/utl/verification/.local/python/bin:$PATH"
+export PATH
+command -v md2pdf
+md2pdf --version
+python3 -B utl/paper/check-pdf-freshness.py renderer --root .
+)
 ```
+
+Die vollständige Paper-Prüfung meldet fehlende oder abweichende Versionen als
+Fehler. Eine Aktualisierung der regulären Installation kann deshalb die Prüfung
+eines älteren Checkouts mit anderer Versionsbindung stoppen. O2I installiert
+keinen Ersatz und benötigt keinen dauerhaften md2pdf-Quellclone. CI bezieht
+dieselbe gebundene Revision vorübergehend auf ihrem Runner. Vorhandene Werkzeuge
+in `.local/bin` haben beim Starter weiterhin Vorrang im `PATH`; `command -v`
+zeigt, welches Programm ausgewählt wird.
 
 Für Pandoc und pandoc-crossref bestimmt der White-Paper-Job in
 [verify.yml](../../.github/workflows/verify.yml) die verwendeten Versionen.
@@ -192,7 +205,8 @@ Governance- oder Lizenzprüfung nicht benötigt.
 
 Die Einrichtung zusätzlicher Werkzeuge benötigt Downloads und die oben
 verlinkte Grundwerkzeugkette.
-Die Renderer-Revision stammt aus [dem Renderer-Vertrag](../../doc/resources/md2pdf.json).
+Releaseversion und CI-Bezugsrevision stammen aus
+[dem Renderer-Vertrag](../../doc/resources/md2pdf.json).
 Der Starter weist eine fehlende lokale Python-Umgebung vor dem Prüflauf zurück;
 weitere fehlende Voraussetzungen meldet die betroffene Stufe. Nach Verschieben
 des Checkouts muss die Python-Umgebung neu erstellt werden.
