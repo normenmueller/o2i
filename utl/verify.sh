@@ -56,7 +56,7 @@ require() {
     case "$1" in
       python3 | reuse)
         isolated_command="$O2I_VERIFICATION_LOCAL_TOOLS/python/bin/$1" ;;
-      hindent | md2pdf)
+      hindent)
         isolated_command="$O2I_VERIFICATION_LOCAL_TOOLS/bin/$1" ;;
     esac
   fi
